@@ -1,5 +1,4 @@
-/*
-  $Id$
+/*  $Id$
 */
 
 #if !defined __Cpp_Header__smsccmd_h__
@@ -40,6 +39,8 @@ enum CommandId
   FORWARD,
   QUERY,
   ALERT,
+  GENERIC_NACK,
+  UNBIND_RESP,
 };
 
 
@@ -99,9 +100,11 @@ struct _SmscCommand
     case UNKNOWN:
     case FORWARD:
     case ALERT:
+    case GENERIC_NACK:
+    case UNBIND_RESP:
       //__unreachable__("incorrect state dat != NULL && cmdid == UNKNOWN");
       //__warning__("uninitialized command");
-                        break;
+      break;
     default:
       __unreachable__("unprocessed cmdid");
     }
@@ -254,6 +257,28 @@ public:
     return cmd;
   }
 
+  static SmscCommand makeGenericNack(uint32_t dialogId,uint32_t status)
+  {
+    SmscCommand cmd;
+    cmd.cmd=new _SmscCommand;
+    _SmscCommand& _cmd=*cmd.cmd;
+    _cmd.ref_count=1;
+    _cmd.cmdid=GENERIC_NACK;
+    _cmd.dta=(void*)status;
+    _cmd.dialogId=dialogId;
+  }
+
+  static SmscCommand makeUnbindResp(uint32_t dialogId,uint32_t status)
+  {
+    SmscCommand cmd;
+    cmd.cmd=new _SmscCommand;
+    _SmscCommand& _cmd=*cmd.cmd;
+    _cmd.ref_count=1;
+    _cmd.cmdid=UNBIND_RESP;
+    _cmd.dta=(void*)status;
+    _cmd.dialogId=dialogId;
+  }
+
 
   ~SmscCommand() {
      //__trace__(__PRETTY_FUNCTION__);
@@ -404,6 +429,22 @@ public:
         xsm->header.set_commandStatus(makeSmppStatus(c.get_resp()->get_status()));
         xsm->set_messageId(c.get_resp()->get_messageId());
         return reinterpret_cast<SmppHeader*>(xsm.release());
+      }
+    case GENERIC_NACK:
+      {
+        auto_ptr<PduGenericNack> gnack(new PduGenericNack);
+        gnack->header.set_commandId(SmppCommandSet::GENERIC_NACK);
+        gnack->header.set_sequenceNumber(c.get_dialogId());
+        gnack->header.set_commandStatus((uint32_t)c.dta);
+        return reinterpret_cast<SmppHeader*>(gnack.release());
+      }
+    case UNBIND_RESP:
+      {
+        auto_ptr<PduUnbindResp> unb(new PduUnbindResp);
+        unb->header.set_commandId(SmppCommandSet::UNBIND_RESP);
+        unb->header.set_sequenceNumber(c.get_dialogId());
+        unb->header.set_commandStatus((uint32_t)c.dta);
+        return reinterpret_cast<SmppHeader*>(unb.release());
       }
     default:
       __unreachable__("unknown commandid");

@@ -258,11 +258,12 @@ int Socket::ReadAll(char* buf,int size)
   return size;
 }
 
-int Socket::WriteAll(const char *buf,int bufsize)
+int Socket::WriteAll(const void *buf,int bufsize)
 {
   int wr,count=0;
+  const char *_buf=(const char*)buf;
   do{
-    wr=Write(buf+count,bufsize-count);
+    wr=Write(_buf+count,bufsize-count>1024?1024:bufsize-count);
     if(wr<=0)return -1;
     count+=wr;
   }while(count!=bufsize);

@@ -371,6 +371,12 @@ public:
     if(!link)return 0;
     return &link->_keyval._value;
   }
+  T* GetPtr(pchashstr key)
+  {
+    Link* link=FindLink(key);
+    if(!link)return 0;
+    return &link->_keyval._value;
+  }
 
   T& operator[](pchashstr key)
   {
@@ -413,6 +419,25 @@ public:
       return 1;
     }
   }
+
+  inline T* SetItem(pchashstr key,const T& value)
+  {
+    unsigned index;
+    Link *link=FindLinkEx(key,index);
+    if(link)
+    {
+      link->_keyval._value=value;
+      return &link->_keyval._value;
+    }else
+    {
+      _count++;
+      if(ResizeHash())index=HashFunc(key) % _bucketsnum;
+      T* v=&_buckets[index].Add(key)->_keyval._value;
+      *v=value;
+      return v;
+    }
+  }
+
   void First(){_iterindex=0;_iterlink=NULL;};
 
   class Iterator{

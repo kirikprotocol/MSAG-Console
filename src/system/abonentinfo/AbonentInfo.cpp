@@ -49,29 +49,34 @@ int AbonentInfoSme::Execute()
     putIncomingCommand(resp);
 
     getSmsText(sms,body,sizeof(body));
-    Address a(body);
-    Address d;
-    if(!smsc->AliasToAddress(a,d))
+    try{
+      Address a(body);
+      Address d;
+      if(!smsc->AliasToAddress(a,d))
+      {
+        d=a;
+      }
+      p=smsc->getProfiler()->lookup(d);
+      char answ[MAX_SHORT_MESSAGE_LENGTH];
+      sprintf(answ,"%s:%d,%d",body,1,p.codepage);
+
+      int len=strlen(answ);
+      //char buf7[MAX_SHORT_MESSAGE_LENGTH];
+      //int len7=ConvertTextTo7Bit(answ,len,buf7,sizeof(buf7),CONV_ENCODING_ANSI);
+
+      s.setOriginatingAddress(sms->getDestinationAddress());
+      s.setDestinationAddress(sms->getOriginatingAddress());
+      s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,answ,len);
+      s.setIntProperty(Tag::SMPP_SM_LENGTH,len);
+      s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
+
+
+      resp=SmscCommand::makeSumbmitSm(s,getNextSequenceNumber());
+      putIncomingCommand(resp);
+    }catch(...)
     {
-      d=a;
     }
-    p=smsc->getProfiler()->lookup(d);
-    char answ[MAX_SHORT_MESSAGE_LENGTH];
-    sprintf(answ,"%s:%d,%d",body,1,p.codepage);
 
-    int len=strlen(answ);
-    //char buf7[MAX_SHORT_MESSAGE_LENGTH];
-    //int len7=ConvertTextTo7Bit(answ,len,buf7,sizeof(buf7),CONV_ENCODING_ANSI);
-
-    s.setOriginatingAddress(sms->getDestinationAddress());
-    s.setDestinationAddress(sms->getOriginatingAddress());
-    s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,answ,len);
-    s.setIntProperty(Tag::SMPP_SM_LENGTH,len);
-    s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
-
-
-    resp=SmscCommand::makeSumbmitSm(s,getNextSequenceNumber());
-    putIncomingCommand(resp);
   }
   return 0;
 }

@@ -71,7 +71,7 @@ public:
   int ReadAll(char* buf,int size);
   int readChar();
   int Write(const char *buf,int bufsize);
-  int WriteAll(const char *buf,int bufsize);
+  int WriteAll(const void *buf,int bufsize);
   int Gets(char *buf, int len);
   void Done();
   int Printf(char* fmt,...);

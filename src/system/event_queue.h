@@ -27,7 +27,7 @@ typedef uint64_t MsgIdType;
 //typedef uint64_t StateType;
 //typedef uint64_t CommandType;
 
-const int MAX_COMMAND_PROCESSED = 200;
+const int MAX_COMMAND_PROCESSED = 2000;
 const int LOCK_LIFE_LENGTH = 8;
 
 using std::runtime_error;

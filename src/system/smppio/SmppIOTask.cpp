@@ -275,27 +275,50 @@ int SmppInputThread::Execute()
             }break;
             case SmppCommandSet::UNBIND:
             {
-              PduUnbindResp resp;
-              resp.get_header().set_commandId(SmppCommandSet::UNBIND_RESP);
-              resp.get_header().set_commandStatus(SmppStatusSet::ESME_ROK);
-              resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-              SmscCommand cmd(pdu);
               try{
-                ss->getProxy()->putIncomingCommand(cmd);
+                ss->getProxy()->putIncomingCommand
+                (
+                  SmscCommand::makeUnbindResp
+                  (
+                    pdu->get_sequenceNumber(),
+                    SmppStatusSet::ESME_ROK
+                  )
+                );
               }catch(...)
               {
               }
               //ss->getSocket()->setData(SOCKET_SLOT_KILL,1);
             }break;
-            default:
+            case SmppCommandSet::SUBMIT_SM:
+            case SmppCommandSet::SUBMIT_SM_RESP:
+            case SmppCommandSet::DELIVERY_SM:
+            case SmppCommandSet::DELIVERY_SM_RESP:
             {
               SmscCommand cmd(pdu);
               try{
                 ss->getProxy()->putIncomingCommand(cmd);
+                break;
               }catch(...)
               {
               }
-            }break;
+              //
+              // Это так и задумано, здесь не должно быть break!
+              //
+            }
+            default:
+            {
+              SmscCommand cmd=
+                SmscCommand::makeGenericNack
+                (
+                  pdu->get_sequenceNumber(),
+                  SmppStatusSet::ESME_RINVCMDID
+                );
+              try{
+                ss->getProxy()->putCommand(cmd);
+              }catch(...)
+              {
+              }
+            }
           }
           disposePdu(pdu);
         }
