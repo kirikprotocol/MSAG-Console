@@ -68,14 +68,17 @@ void CheckList::save(bool printErrorCodes,
 	{
 		TestCase* tc = *it;
 		int mag = count(tc->id.begin(), tc->id.end(), '.');
-		int correct = 0, incorrect = 0;
-		for (TcMap::const_iterator it2 = tcMap.find(tc->id); it2 != tcMap.end() &&
-			!it2->first.compare(0, tc->id.length(), tc->id); it2++)
+		TcMap::const_iterator itSelf = tcMap.find(tc->id);
+		__require__(itSelf != tcMap.end());
+		int correct = itSelf->second->correct;
+		int incorrect = itSelf->second->incorrect;
+		TcMap::const_iterator itSub = tcMap.lower_bound(tc->id + '.');
+		TcMap::const_iterator itSubEnd = tcMap.lower_bound(tc->id + '/');
+		for (; itSub != itSubEnd; itSub++)
 		{
-			correct += it2->second->correct;
-			incorrect += it2->second->incorrect;
+			correct += itSub->second->correct;
+			incorrect += itSub->second->incorrect;
 		}
-
 		os << cnt++ << "|" << string(4 * mag, ' ').c_str() << tc->desc << "|" <<
 			(incorrect ? "Нет" : (correct ? "Да" : "-"));
 		if (printExecCount)
