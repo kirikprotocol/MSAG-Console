@@ -36,8 +36,19 @@ namespace smsc { namespace distrlist
             throw(ConfigException);
         virtual ~DistrListManager();
 
+        virtual void addDistrList(const DistrList& list) 
+            throw(SQLException, ListAlreadyExistsException);
+        virtual void deleteDistrList(string dlName)
+            throw(SQLException, ListNotExistsException);
+        virtual DistrList getDistrList(string dlName)
+            throw(SQLException, ListNotExistsException) = 0;
+        virtual Array<DistrList> list()
+            throw(SQLException) = 0;
+        
         virtual Array<Address> members(string dlName, const Address& submitter)
             throw(SQLException, IllegalSubmitterException);
+        virtual bool checkPermission(string dlName, const Address& submitter)
+            throw(SQLException, ListNotExistsException);
 
         virtual void addPrincipal(const Principal& prc)
             throw(SQLException, PrincipalAlreadyExistsException);
@@ -48,6 +59,12 @@ namespace smsc { namespace distrlist
             throw(SQLException, ListNotExistsException, MemberNotExistsException);
         virtual void deleteMembers(string dlName) 
             throw(SQLException, ListNotExistsException);
+
+        virtual void grantPosting(string dlName, const Address& submitter) 
+            throw(SQLException, ListNotExistsException, 
+                  PrincipalNotExistsException, SubmitterAlreadyExistsException);
+        virtual void revokePosting(string dlName, const Address& submitter)
+            throw(SQLException, ListNotExistsException, SubmitterNotExistsException);
 
     };
 

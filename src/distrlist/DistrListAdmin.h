@@ -36,16 +36,26 @@ namespace smsc { namespace distrlist
         }
     };
     
-    /*struct Member
-    {
-    };*/
-
-
-    /*
     struct DistrList
     {
-    };*/
+        string  name;
+        int     maxEl;
+        bool    system;
+        string  owner;
 
+        DistrList(string name="", int maxEl=0, bool system=true, string owner="")
+            : name(name), maxEl(maxEl), system(system), owner(owner) {};
+        DistrList(const DistrList& dl)
+            : name(dl.name), maxEl(dl.maxEl), system(dl.system), owner(dl.owner) {};
+        virtual ~DistrList() {};
+
+        DistrList& operator=(const DistrList& dl) {
+            name = dl.name; maxEl = dl.maxEl;
+            system = dl.system; owner = dl.owner;
+            return (*this);
+        }
+
+    };
     
     class DistrListAdmin
     {
@@ -56,9 +66,20 @@ namespace smsc { namespace distrlist
     public:
 
         virtual ~DistrListAdmin() {};
+        
+        virtual void addDistrList(const DistrList& list) 
+            throw(SQLException, ListAlreadyExistsException) = 0;
+        virtual void deleteDistrList(string dlName)
+            throw(SQLException, ListNotExistsException) = 0;
+        virtual DistrList getDistrList(string dlName)
+            throw(SQLException, ListNotExistsException) = 0;
+        virtual Array<DistrList> list()
+            throw(SQLException) = 0;
 
         virtual Array<Address> members(string dlName, const Address& submitter)
             throw(SQLException, IllegalSubmitterException) = 0;
+        virtual bool checkPermission(string dlName, const Address& submitter)
+            throw(SQLException, ListNotExistsException) = 0;
         
         virtual void addPrincipal(const Principal& prc) 
             throw(SQLException, PrincipalAlreadyExistsException) = 0;
@@ -70,20 +91,12 @@ namespace smsc { namespace distrlist
         virtual void deleteMembers(string dlName) 
             throw(SQLException, ListNotExistsException) = 0;
 
-        
-        /*
-        virtual void grantPosting(string dlName) = 0;
-        virtual void revokePosting(string dlName) = 0;
+        virtual void grantPosting(string dlName, const Address& submitter) 
+            throw(SQLException, ListNotExistsException, 
+                  PrincipalNotExistsException, SubmitterAlreadyExistsException) = 0;
+        virtual void revokePosting(string dlName, const Address& submitter)
+            throw(SQLException, ListNotExistsException, SubmitterNotExistsException) = 0;
 
-        virtual void addDistrList(const DistrList& list) = 0;
-        virtual void deleteDistrList(string dlName) = 0;
-        virtual Array<DistrList> distributionList() = 0;
-
-        virtual void addSysDistrList(const DistrList& list) = 0;
-        virtual void deleteSysDistrList(string dlName) = 0;
-        virtual Array<DistrList> sysDistrList() = 0;
-
-        virtual bool checkPermission(string dlName, string address) = 0;*/
     };
     
 }}

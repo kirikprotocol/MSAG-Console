@@ -31,6 +31,30 @@ namespace smsc { namespace distrlist
         virtual ~IllegalSubmitterException() throw() {};
     };
 
+    class SubmitterAlreadyExistsException : public Exception
+    {
+    public:
+
+        SubmitterAlreadyExistsException() : Exception() {};
+        SubmitterAlreadyExistsException(const char* fmt,...) 
+            : Exception() { SMSC_UTIL_EX_FILL(fmt); };
+        SubmitterAlreadyExistsException(const Exception& exc)
+            : Exception(exc.what()) {};
+        virtual ~SubmitterAlreadyExistsException() throw() {};
+    };
+    
+    class SubmitterNotExistsException : public Exception
+    {
+    public:
+
+        SubmitterNotExistsException() : Exception() {};
+        SubmitterNotExistsException(const char* fmt,...) 
+            : Exception() { SMSC_UTIL_EX_FILL(fmt); };
+        SubmitterNotExistsException(const Exception& exc)
+            : Exception(exc.what()) {};
+        virtual ~SubmitterNotExistsException() throw() {};
+    };
+    
     class PrincipalAlreadyExistsException : public Exception
     {
     public:
@@ -41,6 +65,18 @@ namespace smsc { namespace distrlist
         PrincipalAlreadyExistsException(const Exception& exc)
             : Exception(exc.what()) {};
         virtual ~PrincipalAlreadyExistsException() throw() {};
+    };
+    
+    class PrincipalNotExistsException : public Exception
+    {
+    public:
+
+        PrincipalNotExistsException() : Exception() {};
+        PrincipalNotExistsException(const char* fmt,...) 
+            : Exception() { SMSC_UTIL_EX_FILL(fmt); };
+        PrincipalNotExistsException(const Exception& exc)
+            : Exception(exc.what()) {};
+        virtual ~PrincipalNotExistsException() throw() {};
     };
     
     class ListNotExistsException : public Exception
@@ -91,7 +127,6 @@ namespace smsc { namespace distrlist
             : Exception(exc.what()) {};
         virtual ~MemberAlreadyExistsException() throw() {};
     };
-
 
 }}
 
