@@ -66,7 +66,7 @@ static void ResponseAlertSC(MapDialog* dialog);
 static void SendErrToSmsc(unsigned dialogid,unsigned code);
 static void ForwardMO(MapDialog* dialog);
 
-static void AbortMapDialog(unsigned dialogid,unsigned ssn)
+void AbortMapDialog(unsigned dialogid,unsigned ssn)
 {
   if ( dialogid == 0 ) return;
   Et96MapUAbortReq(ssn,dialogid,0,0,0,0);
