@@ -40,7 +40,7 @@ extern "C"{
 // Version 1
 
 USHORT_T Et96MapV1ForwardSmMT_MOConf (
-    ET96MAP_LOCAL_SSN_T localSsn,
+    ET96MAP_LOCAL_SSN_T lssn,
     ET96MAP_DIALOGUE_ID_T dialogid,
     ET96MAP_INVOKE_ID_T invokeId,
     ET96MAP_ERROR_FORW_SM_MT_T *errorForwardSMmt_sp,
@@ -64,7 +64,7 @@ USHORT_T Et96MapV1ForwardSmMT_MOConf (
 }
 
 USHORT_T Et96MapV1ForwardSmMOInd (
-    ET96MAP_LOCAL_SSN_T localSsn,
+    ET96MAP_LOCAL_SSN_T lssn,
     ET96MAP_DIALOGUE_ID_T dialogId,
     ET96MAP_INVOKE_ID_T invokeId,
     ET96MAP_SM_RP_DA_T *smRpDa_sp,
@@ -91,7 +91,7 @@ USHORT_T Et96MapV1ForwardSmMOInd (
 }
 
 USHORT_T Et96MapV1SendRInfoForSmConf (
-    ET96MAP_LOCAL_SSN_T localSsn,
+    ET96MAP_LOCAL_SSN_T lssn,
     ET96MAP_ET96MAP_DIALOGUE_ID_T dialogId,
     ET96MAP_INVOKE_ID_T invokeId,
     ET96MAP_IMSI_T *imsi_sp,
