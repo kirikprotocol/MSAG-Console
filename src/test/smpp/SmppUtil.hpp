@@ -20,10 +20,12 @@ using namespace smsc::test::sms; //constants
 
 #define __dumpSubmitSmPdu__(tc, id, pdu) \
 	if (pdu) { \
-		__trace2__("%s(): systemId = %s, sequenceNumber = %u, scheduleDeliveryTime = %ld, validityPeriod = %ld", \
+		time_t lt = time(NULL); tm t; char buf[30]; \
+		__trace2__("%s(): systemId = %s, sequenceNumber = %u, scheduleDeliveryTime = %ld, validityPeriod = %ld, system time = %s", \
 			tc, id.c_str(), (pdu)->get_header().get_sequenceNumber(), \
 			SmppUtil::string2time((pdu)->get_message().get_scheduleDeliveryTime(), time(NULL)), \
-			SmppUtil::string2time((pdu)->get_message().get_validityPeriod(), time(NULL))); \
+			SmppUtil::string2time((pdu)->get_message().get_validityPeriod(), time(NULL)), \
+			asctime_r(localtime_r(&lt, &t), buf)); \
 		(pdu)->dump(TRACE_LOG_STREAM); \
 	} else { \
 		__trace2__("%s(): pdu = NULL", tc); \
@@ -31,10 +33,12 @@ using namespace smsc::test::sms; //constants
 
 #define __dumpReplaceSmPdu__(tc, id, pdu) \
 	if (pdu) { \
-		__trace2__("%s(): systemId = %s, sequenceNumber = %u, scheduleDeliveryTime = %ld, validityPeriod = %ld", \
+		time_t lt = time(NULL); tm t; char buf[30]; \
+		__trace2__("%s(): systemId = %s, sequenceNumber = %u, scheduleDeliveryTime = %ld, validityPeriod = %ld, system time = %s", \
 			tc, id.c_str(), (pdu)->get_header().get_sequenceNumber(), \
 			SmppUtil::string2time((pdu)->get_scheduleDeliveryTime(), time(NULL)), \
-			SmppUtil::string2time((pdu)->get_validityPeriod(), time(NULL))); \
+			SmppUtil::string2time((pdu)->get_validityPeriod(), time(NULL)), \
+			asctime_r(localtime_r(&lt, &t), buf)); \
 		(pdu)->dump(TRACE_LOG_STREAM); \
 	} else { \
 		__trace2__("%s(): pdu = NULL", tc); \
@@ -42,8 +46,10 @@ using namespace smsc::test::sms; //constants
 
 #define __dumpPdu__(tc, id, pdu) \
 	if (pdu) { \
-		__trace2__("%s(): systemId = %s, sequenceNumber = %u", \
-			tc, id.c_str(), (pdu)->get_header().get_sequenceNumber()); \
+		time_t lt = time(NULL); tm t; char buf[30]; \
+		__trace2__("%s(): systemId = %s, sequenceNumber = %u, system time = %s", \
+			tc, id.c_str(), (pdu)->get_header().get_sequenceNumber(), \
+			asctime_r(localtime_r(&lt, &t), buf)); \
 		(pdu)->dump(TRACE_LOG_STREAM); \
 	} else { \
 		__trace2__("%s(): pdu = NULL", tc); \
