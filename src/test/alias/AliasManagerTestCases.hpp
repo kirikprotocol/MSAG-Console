@@ -111,10 +111,11 @@ private:
 	void addAlias(const char* tc, int num, const AliasInfo* alias);
 	void setupRandomAliasMatchWithQuestionMarks(AliasInfo* alias, int len);
 	//void setupRandomAliasMatchWithAsterisk(AliasInfo* alias, int adLen, int alLen);
+	void setupAliasHide(AliasInfo* alias);
 	void printFindResult(const char* name, const Address& param,
-		const AliasHolder* aliasHolder);
-	void printFindResult(const char* tc, const Address& param, bool found,
-		const Address& result);
+		const Address* result, const AliasInfo* aliasInfo);
+	void printFindResult(const char* tc, const Address& param,
+		const Address& result, bool found, bool hide);
 };
 
 }
