@@ -85,7 +85,7 @@ const char* NEW_MESSAGE_STATEMENT_SQL         = "INSERT INTO %s (ID, STATE, ABON
                                                 "VALUES (INFOSME_MESSAGES_SEQ.NEXTVAL, :STATE, :ABONENT, "
                                                 ":SEND_DATE, :MESSAGE)";
 const char* SELECT_MESSAGES_STATEMENT_SQL     = "SELECT ID, ABONENT, MESSAGE FROM %s WHERE "
-                                                "STATE=:STATE AND SEND_DATE<=:SEND_DATE ORDER BY ID ASC";
+                                                "STATE=:STATE AND SEND_DATE<=:SEND_DATE ORDER BY SEND_DATE ASC";
 
 
 Task::Task(TaskInfo& _info, DataSource* _dsOwn, DataSource* _dsInt) 

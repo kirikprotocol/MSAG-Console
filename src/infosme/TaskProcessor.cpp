@@ -878,6 +878,7 @@ bool TaskProcessor::setTaskEnabled(std::string taskId, bool enabled)
     Task* task = taskGuard.get();
     if (!task) return false; 
     task->setEnabled(enabled);
+    if (enabled) awake.Signal(); 
     return true;
 }
 void TaskProcessor::addSchedule(std::string scheduleId)
