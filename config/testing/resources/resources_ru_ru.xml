@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE locale_resources SYSTEM "file://locale_resources.dtd">
+
+<locale_resources>
+	<settings>
+		<section name="delimiter">
+			<param name="decimal">.</param>
+			<param name="list">,</param>
+		</section>
+	</settings>
+	<resources>
+		<section name="profiler">
+			<param name="msgDefault">Êîäèðîâêà òåêñòà ñîîáùåíèé óñòàíîâëåíà â default (òåïåðü âû íå áóäåòå ïîëó÷àòü ñîîáùåíèÿ ñ ðóññêèìè ñèìâîëàìè â òåêñòå, äàæå åñëè âàø òåëåôîí ïîääåðæèâàåò ucs2 ñîîáùåíèÿ)</param>
+			<param name="msgUCS2">Êîäèðîâêà òåêñòà ñîîáùåíèé óñòàíîâëåíà â ucs2 (òåïåðü âû ñìîæåòå ïîëó÷àòü ñîîáùåíèÿ ñîäåðæàùèå ðóññêèå ñèìâîëû â òåêñòå, îäíàêî âàø òåëåôîí äîëæåí ïîääåðæèâàòü ucs2 ñîîáùåíèÿ)</param>
+			<param name="msgLocaleChanged">Íàñòðîéêè locale óñïåøíî èçìåíåíû</param>
+			<param name="msgLocaleUnknown">Íåïðàâèëüíî çàäàí locale</param>
+			<param name="msgError"></param>
+		</section>
+		<section name="abonentinfo">
+			<param name="mobileFormat"></param>
+			<param name="smeFormat"></param>
+		</section>
+		<section name="receipt">
+			<section name="default">
+				<param name="deliveredFormat">*Ñîîáùåíèå íà $$string import="dest"$$ äîñòàâëåíî $$date pattern="dd-MM-yy HH:mm:ss" import="date"$$</param>
+				<param name="failedFormat">*Ñîîáùåíèå íà $$string import="dest"$$ îò $$date pattern="dd-MM-yy HH:mm:ss" import="date"$$ îáëîìàëîñü: $$string import="reason"$$. Ïîøëèòå ñîîáùåíèå íà $$string import="dest"$$ åùå ðàç è âîçìîæíî âàì ïîâåçåò íà ýòîò ðàç. Ñ óâàæåíèåì, smsc sme.</param>
+				<param name="notifyFormat"></param>
+			</section>
+		</section>
+		<section name="reason">
+			<param name="4">Íåïðàâèëüíûé òèï ñîåäèíåíèÿ sme</param>
+			<param name="20">Ïåðåïîëíåíèå î÷åðåäè</param>
+			<param name="100">Âðåìåííàÿ îøèáêà</param>
+			<param name="1026">Ñîîáùåíèå ïðîòóõëî</param>
+			<param name="1027">Òàéìàóò ïðè äîñòàâêå ñîîáùåíèÿ</param>
+		</section>
+	</resources>
+</locale_resources>
