@@ -58,7 +58,7 @@ namespace smsc { namespace mcisme
 
     public:
 
-        MCIModule(const Circuits& circuits) 
+        MCIModule(const Circuits& circuits, const ReleaseSettings& releaseSettings) 
             : Thread(), logger(Logger::getInstance("smsc.mcisme.MCIModule")), 
                 listener(0), bAttached(false), bNeedExit(false)
         {
@@ -67,6 +67,7 @@ namespace smsc { namespace mcisme
         #ifndef MCI_MODULE_TEST    
             module = MissedCallProcessor::instance();
             if (!module) throw Exception("Failed to instantiate MCI Module processor.");
+            module->setReleaseSettings(releaseSettings);
             module->setCircuits(circuits);
         #endif
             Thread::Start();

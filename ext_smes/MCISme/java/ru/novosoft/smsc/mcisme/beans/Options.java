@@ -45,6 +45,18 @@ public class Options extends MCISmeBean
   private int SPN = 0;
   private String TSM = "";
 
+  private int causeBusy          = 0;
+  private int causeNoReply       = 0;
+  private int causeUnconditional = 0;
+  private int causeAbsent        = 0;
+  private int causeOther         = 0;
+
+  private boolean informBusy          = false;
+  private boolean informNoReply       = false;
+  private boolean informUnconditional = false;
+  private boolean informAbsent        = false;
+  private boolean informOther         = false;
+
   private String  dataSourceType = "";
   private int     dataSourceConnections = 0;
   private String  dataSourceDbInstance = "";
@@ -95,6 +107,17 @@ public class Options extends MCISmeBean
         SPN = getConfig().getInt("MCISme.Circuits.spn");
         TSM = getConfig().getString("MCISme.Circuits.tsm");
 
+        causeBusy  = getConfig().getInt ("MCISme.Reasons.Busy.cause");
+        informBusy = getConfig().getBool("MCISme.Reasons.Busy.inform");
+        causeNoReply  = getConfig().getInt ("MCISme.Reasons.NoReply.cause");
+        informNoReply = getConfig().getBool("MCISme.Reasons.NoReply.inform");
+        causeUnconditional  = getConfig().getInt ("MCISme.Reasons.Unconditional.cause");
+        informUnconditional = getConfig().getBool("MCISme.Reasons.Unconditional.inform");
+        causeAbsent  = getConfig().getInt ("MCISme.Reasons.Absent.cause");
+        informAbsent = getConfig().getBool("MCISme.Reasons.Absent.inform");
+        causeOther   = getConfig().getInt ("MCISme.Reasons.Other.cause");
+        informOther  = getConfig().getBool("MCISme.Reasons.Other.inform");
+
         dataSourceType = getConfig().getString("MCISme.DataSource.type");
         dataSourceConnections = getConfig().getInt("MCISme.DataSource.connections");
         dataSourceDbInstance = getConfig().getString("MCISme.DataSource.dbInstance");
@@ -126,41 +149,53 @@ public class Options extends MCISmeBean
   {
     getConfig().setString("MCISme.Address", address);
     getConfig().setString("MCISme.SvcType", svcType);
-    getConfig().setInt("MCISme.ProtocolId", protocolId);
-    getConfig().setInt("MCISme.unrespondedMessagesMax", unrespondedMessagesMax);
-    getConfig().setInt("MCISme.unrespondedMessagesSleep", unrespondedMessagesSleep);
+    getConfig().setInt   ("MCISme.ProtocolId", protocolId);
+    getConfig().setInt   ("MCISme.unrespondedMessagesMax", unrespondedMessagesMax);
+    getConfig().setInt   ("MCISme.unrespondedMessagesSleep", unrespondedMessagesSleep);
     getConfig().setString("MCISme.responceWaitTime", responceWaitTime);
     getConfig().setString("MCISme.receiptWaitTime", receiptWaitTime);
-    getConfig().setInt("MCISme.inputQueueSize", inputQueueSize);
-    getConfig().setInt("MCISme.outputQueueSize", outputQueueSize);
-    getConfig().setInt("MCISme.maxRowsPerMessage", maxRowsPerMessage);
-    getConfig().setBool("MCISme.forceInform", forceInform);
-    getConfig().setBool("MCISme.forceNotify", forceNotify);
+    getConfig().setInt   ("MCISme.inputQueueSize", inputQueueSize);
+    getConfig().setInt   ("MCISme.outputQueueSize", outputQueueSize);
+    getConfig().setInt   ("MCISme.maxRowsPerMessage", maxRowsPerMessage);
+    getConfig().setBool  ("MCISme.forceInform", forceInform);
+    getConfig().setBool  ("MCISme.forceNotify", forceNotify);
 
-    getConfig().setInt("MCISme.SMPPThreadPool.max", smppThreadPoolMax);
-    getConfig().setInt("MCISme.SMPPThreadPool.init", smppThreadPoolInit);
+    getConfig().setInt   ("MCISme.SMPPThreadPool.max", smppThreadPoolMax);
+    getConfig().setInt   ("MCISme.SMPPThreadPool.init", smppThreadPoolInit);
 
     getConfig().setString("MCISme.Admin.host", adminHost);
-    getConfig().setInt("MCISme.Admin.port", adminPort);
+    getConfig().setInt   ("MCISme.Admin.port", adminPort);
 
     getConfig().setString("MCISme.SMSC.host", smscHost);
-    getConfig().setInt("MCISme.SMSC.port", smscPort);
+    getConfig().setInt   ("MCISme.SMSC.port", smscPort);
     getConfig().setString("MCISme.SMSC.sid", smscSid);
-    getConfig().setInt("MCISme.SMSC.timeout", smscTimeout);
+    getConfig().setInt   ("MCISme.SMSC.timeout", smscTimeout);
     getConfig().setString("MCISme.SMSC.password", smscPassword);
 
-    getConfig().setInt("MCISme.Circuits.hsn", HSN);
-    getConfig().setInt("MCISme.Circuits.spn", SPN);
+    getConfig().setInt   ("MCISme.Circuits.hsn", HSN);
+    getConfig().setInt   ("MCISme.Circuits.spn", SPN);
     getConfig().setString("MCISme.Circuits.tsm", TSM);
 
+    getConfig().setInt   ("MCISme.Reasons.Busy.cause", causeBusy);
+    getConfig().setBool  ("MCISme.Reasons.Busy.inform", informBusy);
+    getConfig().setInt   ("MCISme.Reasons.NoReply.cause", causeNoReply);
+    getConfig().setBool  ("MCISme.Reasons.NoReply.inform", informNoReply);
+    getConfig().setInt   ("MCISme.Reasons.Unconditional.cause", causeUnconditional);
+    getConfig().setBool  ("MCISme.Reasons.Unconditional.inform", informUnconditional);
+    getConfig().setInt   ("MCISme.Reasons.Absent.cause", causeAbsent);
+    getConfig().setBool  ("MCISme.Reasons.Absent.inform", informAbsent);
+    getConfig().setInt   ("MCISme.Reasons.Other.cause", causeOther);
+    getConfig().setBool  ("MCISme.Reasons.Other.inform", informOther);
+
     getConfig().setString("MCISme.DataSource.type", dataSourceType);
-    getConfig().setInt("MCISme.DataSource.connections", dataSourceConnections);
+    getConfig().setInt   ("MCISme.DataSource.connections", dataSourceConnections);
     getConfig().setString("MCISme.DataSource.dbInstance", dataSourceDbInstance);
     getConfig().setString("MCISme.DataSource.dbUserName", dataSourceDbUserName);
     getConfig().setString("MCISme.DataSource.dbUserPassword", dataSourceDbUserPassword);
-    getConfig().setBool("MCISme.DataSource.watchdog", dataSourceWatchdog);
+    getConfig().setBool  ("MCISme.DataSource.watchdog", dataSourceWatchdog);
     getConfig().setString("MCISme.DataSource.jdbc.driver", dataSourceJdbcDriver);
     getConfig().setString("MCISme.DataSource.jdbc.source", dataSourceJdbcSource);
+
     getMCISmeContext().setChangedOptions(true);
     return RESULT_DONE;
   }
@@ -515,6 +550,111 @@ public class Options extends MCISmeBean
     } catch (NumberFormatException e) {
       logger.debug("Invalid int MCISme.Circuits.spn parameter value: \"" + SPN + '"', e);
     }
+  }
+
+  public int getCauseBusyInt() {
+    return causeBusy;
+  }
+  public void setCauseBusyInt(int causeBusy) {
+    this.causeBusy = causeBusy;
+  }
+  public String getCauseBusy() {
+    return String.valueOf(causeBusy);
+  }
+  public void setCauseBusy(String causeBusy) {
+    try { this.causeBusy = Integer.decode(causeBusy).intValue(); } catch (NumberFormatException e) {
+      logger.debug("Invalid int MCISme.Reasons.Busy.cause parameter value: \"" + causeBusy + '"', e);
+    }
+  }
+  public boolean isInformBusy() {
+    return informBusy;
+  }
+  public void setInformBusy(boolean informBusy) {
+    this.informBusy = informBusy;
+  }
+
+  public int getCauseNoReplyInt() {
+    return causeNoReply;
+  }
+  public void setCauseNoReplyInt(int causeNoReply) {
+    this.causeNoReply = causeNoReply;
+  }
+  public String getCauseNoReply() {
+    return String.valueOf(causeNoReply);
+  }
+  public void setCauseNoReply(String causeNoReply) {
+    try { this.causeNoReply = Integer.decode(causeNoReply).intValue(); } catch (NumberFormatException e) {
+      logger.debug("Invalid int MCISme.Reasons.NoReply.cause parameter value: \"" + causeNoReply + '"', e);
+    }
+  }
+  public boolean isInformNoReply() {
+    return informNoReply;
+  }
+  public void setInformNoReply(boolean informNoReply) {
+    this.informNoReply = informNoReply;
+  }
+
+  public int getCauseUnconditionalInt() {
+    return causeUnconditional;
+  }
+  public void setCauseUnconditionalInt(int causeUnconditional) {
+    this.causeUnconditional = causeUnconditional;
+  }
+  public String getCauseUnconditional() {
+    return String.valueOf(causeUnconditional);
+  }
+  public void setCauseUnconditional(String causeUnconditional) {
+    try { this.causeUnconditional = Integer.decode(causeUnconditional).intValue(); } catch (NumberFormatException e) {
+      logger.debug("Invalid int MCISme.Reasons.Unconditional.cause parameter value: \"" + causeUnconditional + '"', e);
+    }
+  }
+  public boolean isInformUnconditional() {
+    return informUnconditional;
+  }
+  public void setInformUnconditional(boolean informUnconditional) {
+    this.informUnconditional = informUnconditional;
+  }
+
+  public int getCauseAbsentInt() {
+    return causeAbsent;
+  }
+  public void setCauseAbsentInt(int causeAbsent) {
+    this.causeAbsent = causeAbsent;
+  }
+  public String getCauseAbsent() {
+    return String.valueOf(causeAbsent);
+  }
+  public void setCauseAbsent(String causeAbsent) {
+    try { this.causeAbsent = Integer.decode(causeAbsent).intValue(); } catch (NumberFormatException e) {
+      logger.debug("Invalid int MCISme.Reasons.Absent.cause parameter value: \"" + causeAbsent + '"', e);
+    }
+  }
+  public boolean isInformAbsent() {
+    return informAbsent;
+  }
+  public void setInformAbsent(boolean informAbsent) {
+    this.informAbsent = informAbsent;
+  }
+
+  public int getCauseOtherInt() {
+    return causeOther;
+  }
+  public void setCauseOtherInt(int causeOther) {
+    this.causeOther = causeOther;
+  }
+  public String getCauseOther() {
+    return String.valueOf(causeOther);
+  }
+  public void setCauseOther(String causeOther) {
+    try { this.causeOther = Integer.decode(causeOther).intValue(); } catch (NumberFormatException e) {
+      logger.debug("Invalid int MCISme.Reasons.Other.cause parameter value: \"" + causeOther + '"', e);
+    }
+  }
+  public boolean isInformOther() {
+    return informOther;
+  }
+  public void setInformOther(boolean informOther) {
+    this.informOther = informOther;
   }
 
   public String getDataSourceType() {

@@ -134,7 +134,22 @@ TaskProcessor::TaskProcessor(ConfigView* config)
                               " Expecting hex string, found '%s'.", tsmStr ? tsmStr:"null");
     //smsc_log_debug(logger, "TSM = %lx (%ld)", tsmLong, tsmLong);
     circuits.ts = tsmLong;
-    mciModule = new MCIModule(circuits);
+    
+    std::auto_ptr<ConfigView> releaseSettingsCfgGuard(config->getSubConfig("Reasons"));
+    ConfigView* releaseSettingsCfg = releaseSettingsCfgGuard.get();
+    ReleaseSettings releaseSettings;
+    releaseSettings.busyCause           = releaseSettingsCfg->getInt ("Busy.cause");
+    releaseSettings.busyInform          = releaseSettingsCfg->getBool("Busy.inform") ? 1:0;
+    releaseSettings.noReplyCause        = releaseSettingsCfg->getInt ("NoReply.cause");
+    releaseSettings.noReplyInform       = releaseSettingsCfg->getBool("NoReply.inform") ? 1:0;
+    releaseSettings.unconditionalCause  = releaseSettingsCfg->getInt ("Unconditional.cause");
+    releaseSettings.unconditionalInform = releaseSettingsCfg->getBool("Unconditional.inform") ? 1:0;
+    releaseSettings.absentCause         = releaseSettingsCfg->getInt ("Absent.cause");
+    releaseSettings.absentInform        = releaseSettingsCfg->getBool("Absent.inform") ? 1:0;
+    releaseSettings.otherCause          = releaseSettingsCfg->getInt ("Other.cause");
+    releaseSettings.otherInform         = releaseSettingsCfg->getBool("Other.inform") ? 1:0;
+    
+    mciModule = new MCIModule(circuits, releaseSettings);
     
     responcesTracker.init(this, config);
 

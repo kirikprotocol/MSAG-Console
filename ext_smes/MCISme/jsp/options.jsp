@@ -15,9 +15,9 @@
 <div class=content>
 <input type=hidden name=initialized value=true>
 <div class=page_subtitle>General options</div>
-<table class=properties_list cellspacing=0>
-<col width="1%">
-<col width="99%">
+<table class=properties_list cellspacing=0 width="100%">
+<col width="20%">
+<col width="80%">
 <% int rowN = 0;%>
 <tr class=row<%=rowN++&1%>>
   <th>address</th>
@@ -109,8 +109,9 @@
 </tr>
 </table>
 <div class=page_subtitle>Circuits settings</div>
-<table class=properties_list <%rowN=0;%>>
-<col width="10%">
+<table class=properties_list cellspacing=0  width="100%" <%rowN=0;%>>
+<col width="20%">
+<col width="80%">
 <tr class=row<%=rowN++&1%>>
   <th>Hardware Selection Number</th>
   <td><input class=txt name=HSN value="<%=StringEncoderDecoder.encode(bean.getHSN())%>"></td>
@@ -124,9 +125,46 @@
   <td><input class=txt name=TSM value="<%=StringEncoderDecoder.encode(bean.getTSM())%>"></td>
 </tr>
 </table>
+<div class=page_subtitle>Release responce codes</div>
+<table class=properties_list cellspacing=0  width="100%" <%rowN=0;%>>
+<col width="39%">
+<col width="1%">
+<col width="60%">
+<tr class=row<%=rowN++&1%>>
+  <th>Reason</th>
+  <th>Responce code</th>
+  <th>Inform</th>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Busy</th>
+  <td><input class=txt name=causeBusy value="<%=StringEncoderDecoder.encode(bean.getCauseBusy())%>" validation="release_cause" onkeyup="resetValidation(this)"></td>
+  <td><input class=check type=checkbox name=informBusy value=true <%=bean.isInformBusy() ? "checked" : ""%>></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>No Reply</th>
+  <td><input class=txt name=causeNoReply value="<%=StringEncoderDecoder.encode(bean.getCauseNoReply())%>"  validation="release_cause" onkeyup="resetValidation(this)"></td>
+  <td><input class=check type=checkbox name=informNoReply value=true <%=bean.isInformNoReply() ? "checked" : ""%>></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Unconditional</th>
+  <td><input class=txt name=causeUnconditional value="<%=StringEncoderDecoder.encode(bean.getCauseUnconditional())%>"  validation="release_cause" onkeyup="resetValidation(this)"></td>
+  <td><input class=check type=checkbox name=informUnconditional value=true <%=bean.isInformUnconditional() ? "checked" : ""%>></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Absent</th>
+  <td><input class=txt name=causeAbsent value="<%=StringEncoderDecoder.encode(bean.getCauseAbsent())%>"  validation="release_cause" onkeyup="resetValidation(this)"></td>
+  <td><input class=check type=checkbox name=informAbsent value=true <%=bean.isInformAbsent() ? "checked" : ""%>></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Default</th>
+  <td><input class=txt name=causeOther value="<%=StringEncoderDecoder.encode(bean.getCauseOther())%>"  validation="release_cause" onkeyup="resetValidation(this)"></td>
+  <td><input class=check type=checkbox name=informOther value=true <%=bean.isInformOther() ? "checked" : ""%>></td>
+</tr>
+</table>
 <div class=page_subtitle>Data Source</div>
-<table class=properties_list <%rowN=0;%>>
-<col width="10%">
+<table class=properties_list cellspacing=0  width="100%" <%rowN=0;%>>
+<col width="20%">
+<col width="80%">
 <tr class=row<%=rowN++&1%>>
   <th>Data source type</th>
   <td><input class=txt name=dataSourceType value="<%=StringEncoderDecoder.encode(bean.getDataSourceType())%>"></td>
