@@ -44,7 +44,9 @@ struct ReleaseSettings {
   int noReplyCause, noReplyInform;
   int unconditionalCause, unconditionalInform;
   int absentCause, absentInform;
+  int detachCause, detachInform;
   int otherCause, otherInform;
+  bool skipUnknownCaller;
 };
 
 bool setCallingMask(const char* rx);
