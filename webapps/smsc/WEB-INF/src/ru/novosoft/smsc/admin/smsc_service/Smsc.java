@@ -28,6 +28,7 @@ import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.util.HashMap;
+import java.util.Collection;
 
 
 public class Smsc extends Service
@@ -48,7 +49,7 @@ public class Smsc extends Service
 	private Category logger = Category.getInstance(this.getClass());
 
 	public Smsc(ConfigManager configManager, NSConnectionPool connectionPool)
-			  throws AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException
+			throws AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
 		super(new ServiceInfo("SMSC",
 									 configManager.getConfig().getString("smsc.host"),
@@ -119,7 +120,7 @@ public class Smsc extends Service
 	}
 
 	private File getSmscConfFolder()
-			  throws Config.ParamNotFoundException, Config.WrongParamTypeException
+			throws Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
 		return new File(configManager.getConfig().getString("system.webapp folder"), "WEB-INF/smsc/conf");
 	}
@@ -161,7 +162,7 @@ public class Smsc extends Service
 	}
 
 	public void applyRoutes()
-			  throws AdminException
+			throws AdminException
 	{
 		saveSmesConfig();
 		saveRoutesConfig();
@@ -169,7 +170,7 @@ public class Smsc extends Service
 	}
 
 	public void applyAliases()
-			  throws AdminException
+			throws AdminException
 	{
 		try
 		{
@@ -208,7 +209,7 @@ public class Smsc extends Service
 	}
 
 	public Profile lookupProfile(Mask mask)
-			  throws AdminException
+			throws AdminException
 	{
 		HashMap args = new HashMap();
 		args.put("address", mask.getMask());
@@ -220,22 +221,22 @@ public class Smsc extends Service
 	}
 
 	public int updateProfile(Mask mask, Profile newProfile)
-			  throws AdminException
+			throws AdminException
 	{
 		HashMap args = new HashMap();
 		args.put("address", mask.getMask());
 		args.put("profile", newProfile.getStringRepresentation());
-		return ((Long)call(smsc_component, update_profile_method, Type.Types[Type.IntType], args)).intValue();
+		return ((Long) call(smsc_component, update_profile_method, Type.Types[Type.IntType], args)).intValue();
 	}
 
 	public QueryResultSet queryProfiles(ProfileQuery query)
-			  throws AdminException
+			throws AdminException
 	{
 		return profileDataSource.query(query);
 	}
 
 	public void saveSmesConfig()
-			  throws AdminException
+			throws AdminException
 	{
 		try
 		{
@@ -257,7 +258,7 @@ public class Smsc extends Service
 	}
 
 	public void saveRoutesConfig()
-			  throws AdminException
+			throws AdminException
 	{
 		try
 		{
@@ -276,5 +277,10 @@ public class Smsc extends Service
 		{
 			throw new AdminException("Couldn't save new routes settings: Couldn't write to destination config file: " + e.getMessage());
 		}
+	}
+
+	public void processCancelMessages(Collection messageIds)
+			throws AdminException
+	{
 	}
 }
