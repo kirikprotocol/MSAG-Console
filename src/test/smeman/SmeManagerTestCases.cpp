@@ -123,12 +123,22 @@ void SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int num)
 				case 1: //по умолчанию случайные ton и npi
 					break;
 				case 2: //ton = 1 и npi = 1 соответствует +7902986...
-					smeAddr->setTypeOfNumber(1);
-					smeAddr->setNumberingPlan(1);
+					{
+						smeAddr->setTypeOfNumber(1);
+						smeAddr->setNumberingPlan(1);
+						int len = rand1(MAX_ADDRESS_VALUE_LENGTH);
+						auto_ptr<char> val = rand_char(len, RAND_NUM);
+						smeAddr->setValue(len, val.get());
+					}
 					break;
 				case 3: //ton = 2 и npi = 1 соответствует 8902986...
-					smeAddr->setTypeOfNumber(2);
-					smeAddr->setNumberingPlan(1);
+					{
+						smeAddr->setTypeOfNumber(2);
+						smeAddr->setNumberingPlan(1);
+						int len = rand1(MAX_ADDRESS_VALUE_LENGTH);
+						auto_ptr<char> val = rand_char(len, RAND_NUM);
+						smeAddr->setValue(len, val.get());
+					}
 					break;
 				default:
 					throw s;
