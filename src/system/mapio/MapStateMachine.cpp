@@ -2443,7 +2443,22 @@ static void SendAlertToSMSC(MapDialog* dialog,ET96MAP_ADDRESS_T *mapAddr)
 {
   Address addr;
   ConvAddrMSISDN2Smc(mapAddr,&addr);
+    if( smsc::util::_map_cat->isDebugEnabled() ) {
+     {
+      char *text = new char[mapAddr->addressLength*4+1];
+      int k = 0;
+      for ( int i=0; i<mapAddr->addressLength; i++){
+        k+=sprintf(text+k,"%02x ",(unsigned)mapAddr->address[i]);
+      }
+      text[k]=0;
+      __log2__(smsc::util::_map_cat,log4cpp::Priority::DEBUG, 
+        "%s: mapaddress len=%d, type=%x, val=%s",__FUNCTION__, mapAddr->addressLength, mapAddr->typeOfAddress, text);
+      delete text;
+     }
+    }
+
   mkMapAddress( &dialog->m_msAddr, addr.value, addr.length );
+  __map_trace2__("%s: addr len=%d val=%s", __FUNCTION__, addr.length, addr.value );
   mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
   mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
   mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
