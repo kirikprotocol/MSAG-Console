@@ -33,4 +33,6 @@ public interface SMSCAppContext extends AppContext
 	public UserPreferences getUserPreferences();
 
 	public Statuses getStatuses();
+
+    public void destroy();
 }

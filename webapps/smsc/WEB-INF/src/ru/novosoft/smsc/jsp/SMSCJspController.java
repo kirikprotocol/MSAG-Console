@@ -5,9 +5,17 @@ import ru.novosoft.util.jsp.JspController;
 
 public class SMSCJspController extends JspController
 {
+    SMSCAppContext appContext;
+
 	protected ru.novosoft.util.jsp.AppContext initAppContext()
 	{
-		return new SMSCAppContextImpl(getInitParameter("config"));
+		appContext = new SMSCAppContextImpl(getInitParameter("config"));
+        return appContext;
 	}
+
+    public void destroy() {
+        appContext.destroy();
+        super.destroy();
+    }
 }
 
