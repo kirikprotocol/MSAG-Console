@@ -110,9 +110,11 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 		case SMPP_EXPIRED_STATE:
 			{
 				time_t sendTime = monitor->pduData->sendTime;
-				for (PduData* replacePduData = monitor->pduData->replacePdu; replacePduData; )
+				PduData* replacePduData = monitor->pduData->replacePdu;
+				while (replacePduData)
 				{
 					sendTime = replacePduData->sendTime;
+					replacePduData = replacePduData->replacePdu;
 				}
 				for (time_t t = sendTime; t <= sendTime + timeCheckAccuracy; t++)
 				{
@@ -159,9 +161,11 @@ AckText* SmscSmeTestCases::getExpectedResponse(
 	Address destAlias;
 	SmppUtil::convert(origPdu.getDest(), &destAlias);
 	time_t sendTime = monitor->pduData->sendTime;
-	for (PduData* replacePduData = monitor->pduData->replacePdu; replacePduData; )
+	PduData* replacePduData = monitor->pduData->replacePdu;
+	while (replacePduData)
 	{
 		sendTime = replacePduData->sendTime;
+		replacePduData = replacePduData->replacePdu;
 	}
 	for (time_t t = sendTime; t <= sendTime + timeCheckAccuracy; t++)
 	{
