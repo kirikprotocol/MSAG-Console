@@ -375,6 +375,10 @@ function showhide(elem)
 	<th class=label>defaultDataCoding:</th>
 	<td><input class=txtW name="profiler.defaultDataCoding" value="<%=StringEncoderDecoder.encode(bean.getStringParam("profiler.defaultDataCoding"))%>"></td>
 </tr>
+<tr class=row<%=(row++)&1%>>
+	<th class=label>defaultHide:</th>
+	<td><input class=check type=checkbox name="profiler.defaultHide" <%=bean.getBoolParam("profiler.defaultHide") ? "checked" : ""%> value=true></td>
+</tr>
 </table>
 </dd>
 <%-- ################################# sms ################################ --%>
