@@ -639,7 +639,7 @@ public:
     _SmscCommand& _cmd=*cmd.cmd;
     _cmd.ref_count=1;
     _cmd.cmdid=SMPP_PDU;
-    _cmd.dta=0;
+    _cmd.dta=pdu;
     _cmd.dialogId=0;
     return cmd;
   }
