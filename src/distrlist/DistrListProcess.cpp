@@ -285,8 +285,8 @@ void DistrListProcess::SendSubmitResp(ListTask* task) // удаляет из списка и мап
 
 void DistrListProcess::CheckTimeouts()
 {
-  time_t curTime = time(0)+WAIT_SUBMISSION;
-  while ( !task_sheduler.empty() && (task_sheduler.front()->startTime < curTime) )
+  time_t curTime = time(0);
+  while ( !task_sheduler.empty() && (task_sheduler.front()->startTime+WAIT_SUBMISSION < curTime) )
   {
     __trace2__(":DPL: T:%s task 0x%x(T:%s) was time out",
       ctime(&curTime),task_sheduler.front(),ctime(&task_sheduler.front()->startTime));
