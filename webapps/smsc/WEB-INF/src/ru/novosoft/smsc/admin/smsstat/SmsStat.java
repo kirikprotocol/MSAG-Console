@@ -74,15 +74,17 @@ public class SmsStat
     }
 
     private void flushStatistics(StatQuery query) {
+        boolean needFlush = true;
         if (query.isTillDateEnabled()) {
             long till = query.getTillDate().getTime();
             long curr = (new Date()).getTime();
-            if (till >= curr-3600) {
-                try {
-                    smsc.flushStatistics();
-                } catch (AdminException e) {
-                    e.printStackTrace();
-                }
+            needFlush = (till >= curr-3600);
+        }
+        if (needFlush) {
+            try {
+                smsc.flushStatistics();
+            } catch (AdminException e) {
+                e.printStackTrace();
             }
         }
     }
