@@ -357,6 +357,7 @@ struct _SmscCommand
   CommandId cmdid;
   uint32_t dialogId;
   void* dta;
+  int status;
   Mutex mutex;
   SmeProxy *proxy;
   int priority;
@@ -457,6 +458,10 @@ struct _SmscCommand
   bool is_reschedulingForward(){return ((ForwardData*)dta)->reschedule;}
   SmeIndex get_forwardDestSme(){return ((ForwardData*)dta)->idx;}
   SMSId get_forwardMsgId(){return ((ForwardData*)dta)->id;}
+
+  void set_status(int st){status=st;}
+  int get_status(){return status;} // for enquirelink and unbind
+
 };
 
 class SmscCommand
@@ -663,19 +668,20 @@ public:
     _SmscCommand& _cmd=*cmd.cmd;
     _cmd.ref_count=1;
     _cmd.cmdid=GENERIC_NACK;
-    _cmd.dta=(void*)status;
+    _cmd.status=status;
     _cmd.dialogId=dialogId;
     return cmd;
   }
 
-  static SmscCommand makeUnbindResp(uint32_t dialogId,uint32_t status)
+  static SmscCommand makeUnbindResp(uint32_t dialogId,uint32_t status,void* data)
   {
     SmscCommand cmd;
     cmd.cmd=new _SmscCommand;
     _SmscCommand& _cmd=*cmd.cmd;
     _cmd.ref_count=1;
     _cmd.cmdid=UNBIND_RESP;
-    _cmd.dta=(void*)status;
+    _cmd.dta=data;
+    _cmd.status=status;
     _cmd.dialogId=dialogId;
     return cmd;
   }
@@ -687,7 +693,7 @@ public:
     _SmscCommand& _cmd=*cmd.cmd;
     _cmd.ref_count=1;
     _cmd.cmdid=REPLACE_RESP;
-    _cmd.dta=(void*)status;
+    _cmd.status=status;
     _cmd.dialogId=dialogId;
     return cmd;
   }
@@ -712,7 +718,7 @@ public:
     _SmscCommand& _cmd=*cmd.cmd;
     _cmd.ref_count=1;
     _cmd.cmdid=CANCEL_RESP;
-    _cmd.dta=(void*)status;
+    _cmd.status=status;
     _cmd.dialogId=dialogId;
     return cmd;
   }
@@ -753,14 +759,15 @@ public:
     return cmd;
   }
 
-  static SmscCommand makeCommand(CommandId cmdId,uint32_t dialogId,uint32_t status)
+  static SmscCommand makeCommand(CommandId cmdId,uint32_t dialogId,uint32_t status,void* data)
   {
     SmscCommand cmd;
     cmd.cmd=new _SmscCommand;
     _SmscCommand& _cmd=*cmd.cmd;
     _cmd.ref_count=1;
     _cmd.cmdid=cmdId;
-    _cmd.dta=(void*)status;
+    _cmd.status=status;
+    _cmd.dta=data;
     _cmd.dialogId=dialogId;
     return cmd;
   }
@@ -1125,7 +1132,7 @@ public:
         auto_ptr<PduGenericNack> gnack(new PduGenericNack);
         gnack->header.set_commandId(SmppCommandSet::GENERIC_NACK);
         gnack->header.set_sequenceNumber(c.get_dialogId());
-        gnack->header.set_commandStatus(makeSmppStatus((uint32_t)c.dta));
+        gnack->header.set_commandStatus(makeSmppStatus((uint32_t)c.status));
         return reinterpret_cast<SmppHeader*>(gnack.release());
       }
     case UNBIND_RESP:
@@ -1133,7 +1140,7 @@ public:
         auto_ptr<PduUnbindResp> unb(new PduUnbindResp);
         unb->header.set_commandId(SmppCommandSet::UNBIND_RESP);
         unb->header.set_sequenceNumber(c.get_dialogId());
-        unb->header.set_commandStatus(makeSmppStatus((uint32_t)c.dta));
+        unb->header.set_commandStatus(makeSmppStatus((uint32_t)c.status));
         return reinterpret_cast<SmppHeader*>(unb.release());
       }
     case REPLACE_RESP:
@@ -1141,7 +1148,7 @@ public:
         auto_ptr<PduReplaceSmResp> repl(new PduReplaceSmResp);
         repl->header.set_commandId(SmppCommandSet::REPLACE_SM_RESP);
         repl->header.set_sequenceNumber(c.get_dialogId());
-        repl->header.set_commandStatus(makeSmppStatus((uint32_t)c.dta));
+        repl->header.set_commandStatus(makeSmppStatus((uint32_t)c.status));
         return reinterpret_cast<SmppHeader*>(repl.release());
       }
     case QUERY_RESP:
@@ -1164,7 +1171,7 @@ public:
         auto_ptr<PduReplaceSmResp> repl(new PduReplaceSmResp);
         repl->header.set_commandId(SmppCommandSet::CANCEL_SM_RESP);
         repl->header.set_sequenceNumber(c.get_dialogId());
-        repl->header.set_commandStatus(makeSmppStatus((uint32_t)c.dta));
+        repl->header.set_commandStatus(makeSmppStatus((uint32_t)c.status));
         return reinterpret_cast<SmppHeader*>(repl.release());
       }
     case ENQUIRELINK:
@@ -1180,7 +1187,7 @@ public:
         auto_ptr<PduEnquireLink> pdu(new PduEnquireLinkResp);
         pdu->header.set_commandId(SmppCommandSet::ENQUIRE_LINK_RESP);
         pdu->header.set_sequenceNumber(c.get_dialogId());
-        pdu->header.set_commandStatus(makeSmppStatus((uint32_t)c.dta));
+        pdu->header.set_commandStatus(makeSmppStatus((uint32_t)c.status));
         return reinterpret_cast<SmppHeader*>(pdu.release());
       }
     case SMPP_PDU:

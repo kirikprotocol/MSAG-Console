@@ -166,6 +166,7 @@ int SmppInputThread::Execute()
         }
         if(time(NULL)-ss->getLastUpdate()>inactivityTime && time(NULL)-ss->getLastEL()>5)
         {
+          __trace2__("eqlink for %p/%p/%p",ss,ss->getSocket(),ss->getProxy());
           ss->updateLastEL();
           if(ss->getProxy())
           {
@@ -175,7 +176,8 @@ int SmppInputThread::Execute()
               (
                 ENQUIRELINK,
                 ss->getProxy()->getNextSequenceNumber(),
-                0
+                0,
+                (void*)ss->getChannelType()
               )
             );
           }
@@ -264,7 +266,7 @@ int SmppInputThread::Execute()
             }
             continue;
           }
-          __trace2__("SmppInputThread: received commandId=%x",pdu->get_commandId());
+          __trace2__("SmppInputThread: received commandId=%x, socket=%p",pdu->get_commandId(),ss->getSocket());
           int errcode=Status::INVCMDID;
           switch(pdu->get_commandId())
           {
@@ -526,6 +528,8 @@ int SmppInputThread::Execute()
               }else
               {
                 ss->assignProxy(proxy);
+                __trace2__("assign proxy: %p/%p",ss,proxy);
+                __trace2__("assign proxy: %p/%p",((SmppSocket*)(ss->getSocket()->getData(SOCKET_SLOT_OUTPUTSMPPSOCKET))),proxy);
                 ((SmppSocket*)(ss->getSocket()->
                   getData(SOCKET_SLOT_OUTPUTSMPPSOCKET)))->
                   assignProxy(proxy);
@@ -543,10 +547,11 @@ int SmppInputThread::Execute()
                     SmscCommand::makeUnbindResp
                     (
                       pdu->get_sequenceNumber(),
-                      Status::OK
+                      Status::OK,
+                      (void*)ss->getChannelType()
                     )
                   );
-                  ss->getProxy()->close();
+                  //ss->getProxy()->close();
                   KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
                   ss->assignProxy(0);
                 }else
@@ -577,7 +582,8 @@ int SmppInputThread::Execute()
                     (
                       ENQUIRELINK_RESP,
                       pdu->get_sequenceNumber(),
-                      0
+                      Status::OK,
+                      (void*)ss->getChannelType()
                     )
                   );
                 }else
@@ -850,8 +856,8 @@ int SmppOutputThread::Execute()
 
         SmppHeader *pdu=cmd.makePdu(smeManager->getSmeInfo(ss->getProxy()->getSmeIndex()).forceDC);
         int cmdid=pdu->get_commandId();
-        trace2("SmppOutThread: commandId=%x, seq number:%d",
-          pdu->get_commandId(),pdu->get_sequenceNumber());
+        trace2("SmppOutThread: commandId=%x, seq number:%d,socket=%p",
+          pdu->get_commandId(),pdu->get_sequenceNumber(),ss->getSocket());
         int size=calcSmppPacketLength(pdu);
         char* buf=ss->getBuffer(size);
         SmppStream st;
@@ -862,13 +868,13 @@ int SmppOutputThread::Execute()
         s->setData(SOCKET_SLOT_OUTPUTMULTI,(void*)1);
         if(cmdid==SmppCommandSet::UNBIND_RESP)
         {
-          trace2("SmppOutputThread: UNBIND_RESP, killing proxy:%p",ss->getProxy());
-          try{
+          trace2("SmppOutputThread: UNBIND_RESP, killing proxy:%p/%p/%p",ss,ss->getSocket(),ss->getProxy());
+          /*try{
             smeManager->unregisterSmeProxy(ss->getProxy()->getSystemId());
           }catch(...)
           {
             __trace__("SmppOutputThread: failed to unregister");
-          }
+          }*/
           KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
           ss->assignProxy(0);
         }

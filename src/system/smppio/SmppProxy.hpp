@@ -116,7 +116,7 @@ public:
           errresp=SmscCommand::makeQuerySmResp(cmd->get_dialogId(),Status::INVBNDSTS,0,0,0,0);
           break;
         case UNBIND:
-          errresp=SmscCommand::makeUnbindResp(cmd->get_dialogId(),Status::INVBNDSTS);
+          errresp=SmscCommand::makeUnbindResp(cmd->get_dialogId(),Status::INVBNDSTS,cmd->dta);
           break;
         case REPLACE:
           errresp=SmscCommand::makeReplaceSmResp(cmd->get_dialogId(),Status::INVBNDSTS);
@@ -204,6 +204,8 @@ public:
       {
         int cmdid=cmd->get_commandId();
         __trace2__("check output for receiver:cmdid=%d",cmdid);
+        if((cmdid==ENQUIRELINK || cmdid==UNBIND_RESP) &&
+           ((int)cmd->dta)!=ctReceiver)return false;
         return !(
                  cmdid==SUBMIT_RESP ||
                  cmdid==SUBMIT_MULTI_SM_RESP ||
@@ -220,6 +222,8 @@ public:
         outqueue.Peek(cmd);
         int cmdid=cmd->get_commandId();
         __trace2__("check output for transmitter:cmdid=%d",cmdid);
+        if((cmdid==ENQUIRELINK || cmdid==UNBIND_RESP) &&
+           ((int)cmd->dta)!=ctTransmitter)return false;
         return (
                  cmdid==SUBMIT_RESP ||
                  cmdid==SUBMIT_MULTI_SM_RESP ||

@@ -937,7 +937,7 @@ StateType StateMachine::submit(Tuple& t)
   if(ri.suppressDeliveryReports)sms->setIntProperty(Tag::SMSC_SUPPRESS_REPORTS,1);
   int prio=sms->getPriority()+ri.priority;
   if(prio>SmeProxyPriorityMax)prio=SmeProxyPriorityMax;
-  sms->setPriority(ri.priority);
+  sms->setPriority(prio);
 
   //smsc->routeSms(sms,dest_proxy_index,dest_proxy);
   if ( !has_route )
@@ -1370,7 +1370,8 @@ StateType StateMachine::submit(Tuple& t)
       {
         sm->smsc->registerStatisticalEvent(StatEvents::etSubmitOk,sms);
       }
-      if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x1) // send response in case of datagram
+      if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x1 ||
+         ((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2 && sms->lastResult!=Status::OK))
       {
         SmscCommand resp = SmscCommand::makeSubmitSmResp
                              (
@@ -1483,6 +1484,10 @@ StateType StateMachine::submit(Tuple& t)
 
     return ENROUTE_STATE;
   }
+  if(isDatagram || isTransaction)
+  {
+    t.command->get_sms_and_forget();
+  }
   }catch(...)
   {
     sms->setLastResult(Status::SYSERR);
@@ -1585,13 +1590,16 @@ StateType StateMachine::submit(Tuple& t)
       sms->setDestinationAddress(dstOriginal);
       sms->setLastResult(Status::INVBNDSTS);
       sendNotifyReport(*sms,t.msgId,"service rejected");
-      try{
-        Descriptor d;
-        changeSmsStateToEnroute(*sms,t.msgId,d,Status::INVBNDSTS,rescheduleSms(*sms));
-        smsc->notifyScheduler();
-      }catch(...)
+      if(!isDatagram && !isTransaction)
       {
-        __warning__("SUBMIT: failed to change state to enroute");
+        try{
+          Descriptor d;
+          changeSmsStateToEnroute(*sms,t.msgId,d,Status::INVBNDSTS,rescheduleSms(*sms));
+          smsc->notifyScheduler();
+        }catch(...)
+        {
+          __warning__("SUBMIT: failed to change state to enroute");
+        }
       }
       smsLog->warn("SBMDLV: Attempt to putCommand for sme in invalid bind state, seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
         dialogId2,
@@ -1601,6 +1609,9 @@ StateType StateMachine::submit(Tuple& t)
         src_proxy->getSystemId(),
         ri.smeSystemId.c_str()
       );
+      Task t;
+      smsc->tasks.findAndRemoveTask(dest_proxy->getUniqueId(),dialogId2,&t);
+
       return DELIVERING_STATE;
     }
   }catch(exception& e)
@@ -1617,13 +1628,16 @@ StateType StateMachine::submit(Tuple& t)
     sms->setDestinationAddress(dstOriginal);
     sms->setLastResult(Status::THROTTLED);
     sendNotifyReport(*sms,t.msgId,"system failure");
-    try{
-      Descriptor d;
-      changeSmsStateToEnroute(*sms,t.msgId,d,Status::THROTTLED,rescheduleSms(*sms));
-      smsc->notifyScheduler();
-    }catch(...)
+    if(!isDatagram && !isTransaction)
     {
-      __warning__("SUBMIT: failed to change state to enroute");
+      try{
+        Descriptor d;
+        changeSmsStateToEnroute(*sms,t.msgId,d,Status::THROTTLED,rescheduleSms(*sms));
+        smsc->notifyScheduler();
+      }catch(...)
+      {
+        __warning__("SUBMIT: failed to change state to enroute");
+      }
     }
     Task t;
     smsc->tasks.findAndRemoveTask(dest_proxy->getUniqueId(),dialogId2,&t);
@@ -1642,13 +1656,16 @@ StateType StateMachine::submit(Tuple& t)
     sms->setDestinationAddress(dstOriginal);
     sms->setLastResult(Status::THROTTLED);
     sendNotifyReport(*sms,t.msgId,"system failure");
-    try{
-      Descriptor d;
-      changeSmsStateToEnroute(*sms,t.msgId,d,Status::THROTTLED,rescheduleSms(*sms));
-      smsc->notifyScheduler();
-    }catch(...)
+    if(!isDatagram && !isTransaction)
     {
-      __warning__("SUBMIT: failed to change state to enroute");
+      try{
+        Descriptor d;
+        changeSmsStateToEnroute(*sms,t.msgId,d,Status::THROTTLED,rescheduleSms(*sms));
+        smsc->notifyScheduler();
+      }catch(...)
+      {
+        __warning__("SUBMIT: failed to change state to enroute");
+      }
     }
     Task t;
     smsc->tasks.findAndRemoveTask(dest_proxy->getUniqueId(),dialogId2,&t);
@@ -1785,7 +1802,13 @@ StateType StateMachine::forward(Tuple& t)
     }
   }
 
-  smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
+  if(sms.getAttemptsCount()==0 && sms.hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
+  {
+    smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
+  }else
+  {
+    smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
+  }
 
   SmeProxy *dest_proxy=0;
   int dest_proxy_index;
@@ -2088,6 +2111,26 @@ StateType StateMachine::deliveryResp(Tuple& t)
         if(dgortr)
         {
           sms.state=UNDELIVERABLE;
+          if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)
+          {
+            SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
+            if(src_proxy)
+            {
+              SmscCommand resp=SmscCommand::makeSubmitSmResp
+                               (
+                                 /*messageId*/"0",
+                                 sms.dialogId,
+                                 sms.lastResult,
+                                 sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
+                               );
+              try{
+                src_proxy->putCommand(resp);
+              }catch(...)
+              {
+                __warning2__("DELIVERYRESP: failed to put transaction response command");
+              }
+            }
+          }
           try{
             store->createFinalizedSms(t.msgId,sms);
           }catch(...)
@@ -2129,6 +2172,26 @@ StateType StateMachine::deliveryResp(Tuple& t)
         if(dgortr)
         {
           sms.state=UNDELIVERABLE;
+          if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)
+          {
+            SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
+            if(src_proxy)
+            {
+              SmscCommand resp=SmscCommand::makeSubmitSmResp
+                               (
+                                 /*messageId*/"0",
+                                 sms.dialogId,
+                                 sms.lastResult,
+                                 sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
+                               );
+              try{
+                src_proxy->putCommand(resp);
+              }catch(...)
+              {
+                __warning2__("DELIVERYRESP: failed to put transaction response command");
+              }
+            }
+          }
           try{
             store->createFinalizedSms(t.msgId,sms);
           }catch(...)
@@ -2160,6 +2223,26 @@ StateType StateMachine::deliveryResp(Tuple& t)
         if(dgortr)
         {
           sms.state=UNDELIVERABLE;
+          if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)
+          {
+            SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
+            if(src_proxy)
+            {
+              SmscCommand resp=SmscCommand::makeSubmitSmResp
+                               (
+                                 /*messageId*/"0",
+                                 sms.dialogId,
+                                 sms.lastResult,
+                                 sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
+                               );
+              try{
+                src_proxy->putCommand(resp);
+              }catch(...)
+              {
+                __warning2__("DELIVERYRESP: failed to put transaction response command");
+              }
+            }
+          }
           try{
             store->createFinalizedSms(t.msgId,sms);
           }catch(...)
@@ -2413,8 +2496,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         regdel
       )
     {
-      SMS *prpt=new SMS;
-      SMS &rpt=*prpt;
+      SMS rpt;
       rpt.setOriginatingAddress(scAddress);
       char msc[]="";
       char imsi[]="";
@@ -2457,8 +2539,13 @@ StateType StateMachine::deliveryResp(Tuple& t)
       formatDeliver(fd,out);
       rpt.getDestinationAddress().getText(addr,sizeof(addr));
       __trace2__("RECEIPT: sending receipt to %s:%s",addr,out.c_str());
-      fillSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,140);
-      smsc->submitSms(prpt);
+      fillSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,140);
+
+      //smsc->submitSms(prpt);
+
+      submitReceipt(rpt);
+
+
       /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
       for(int i=0;i<arr.Count();i++)
       {
@@ -2843,8 +2930,9 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
               sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST);
 
   if(!(sms.getDeliveryReport() || regdel))return;
-  SMS *prpt=new SMS;
-  SMS &rpt=*prpt;
+  if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1 ||
+     (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)return;
+  SMS rpt;
   rpt.setOriginatingAddress(scAddress);
   char msc[]="";
   char imsi[]="";
@@ -2888,8 +2976,9 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   fd.scheme=si.receiptSchemeName.c_str();
 
   formatFailed(fd,out);
-  fillSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,140);
-  smsc->submitSms(prpt);
+  fillSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,140);
+  //smsc->submitSms(prpt);
+  submitReceipt(rpt);
   /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
   for(int i=0;i<arr.Count();i++)
   {
@@ -2909,8 +2998,9 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   if(!(sms.getDeliveryReport() || regdel))return;
   __trace2__("sendNotifyReport: attemptsCount=%d",sms.getAttemptsCount());
   if(sms.getAttemptsCount()!=0)return;
-  SMS *prpt=new SMS;
-  SMS &rpt=*prpt;
+  if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1 ||
+     (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)return;
+  SMS rpt;
   rpt.setOriginatingAddress(scAddress);
   char msc[]="";
   char imsi[]="";
@@ -2951,8 +3041,9 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
 
 
   formatNotify(fd,out);
-  fillSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,140);
-  smsc->submitSms(prpt);
+  fillSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,140);
+  //smsc->submitSms(prpt);
+  submitReceipt(rpt);
   /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
   for(int i=0;i<arr.Count();i++)
   {
@@ -2984,6 +3075,56 @@ void StateMachine::changeSmsStateToEnroute(SMS& sms,SMSId id,const Descriptor& d
   smsc->ChangeSmsSchedule(id,sms.getNextTime(),idx);
 }
 
+
+void StateMachine::submitReceipt(SMS& sms)
+{
+  SMSId msgId=store->getNextId();
+  time_t now=time(NULL);
+  sms.setSubmitTime(now);
+  Address dst=sms.getDestinationAddress();
+  if(!smsc->AliasToAddress(sms.getDestinationAddress(),dst))
+  {
+    dst=sms.getDestinationAddress();
+  }
+  sms.setDealiasedDestinationAddress(dst);
+
+  sms.setNextTime(time(NULL));
+
+  try{
+    int dest_proxy_index;
+    SmeProxy *dest_proxy;
+    smsc::router::RouteInfo ri;
+    if(smsc->routeSms(sms.getOriginatingAddress(),sms.getDealiasedDestinationAddress(),dest_proxy_index,dest_proxy,NULL))
+    {
+      sms.setRouteId(ri.routeId.c_str());
+      int prio=sms.getPriority()+ri.priority;
+      if(prio>SmeProxyPriorityMax)prio=SmeProxyPriorityMax;
+      sms.setPriority(prio);
+
+      sms.setSourceSmeId("smscsme");
+
+      sms.setDestinationSmeId(ri.smeSystemId.c_str());
+      sms.setServiceId(ri.serviceId);
+      sms.setArchivationRequested(ri.archived);
+      sms.setBillingRecord(ri.billing);
+
+      Profile profile=smsc->getProfiler()->lookup(dst);
+      sms.setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
+
+
+      store->createSms(sms,msgId,smsc::store::CREATE_NEW);
+      smsc->ChangeSmsSchedule(msgId,sms.getNextTime(),dest_proxy_index);
+    }else
+    {
+      __warning2__("There is no route for receipt %s->%s",
+        sms.getOriginatingAddress().toString().c_str(),
+        sms.getDealiasedDestinationAddress().toString().c_str());
+    }
+  }catch(...)
+  {
+    __warning2__("Faield to create receipt");
+  }
+}
 
 
 };//system

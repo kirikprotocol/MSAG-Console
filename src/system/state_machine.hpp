@@ -90,6 +90,8 @@ protected:
   void sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason);
 
   void changeSmsStateToEnroute(SMS& sms,SMSId id,const Descriptor& d,uint32_t failureCause,time_t nextTryTime,bool skipAttempt=false);
+
+  void submitReceipt(SMS& sms);
 };
 
 };//system

@@ -385,9 +385,7 @@ int Profiler::Execute()
     }
     sms = cmd->get_sms();
     int status=MAKE_COMMAND_STATUS(CMD_OK,0);
-    if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3f)!=3 &&
-       (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3f)!=0
-      )
+    if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3c)!=0)
     {
       status=MAKE_COMMAND_STATUS(CMD_ERR_PERM,Status::INVESMCLASS);
       resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),

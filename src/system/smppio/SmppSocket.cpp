@@ -108,7 +108,7 @@ smsc::smpp::SmppHeader* SmppSocket::decode()
 
 void SmppSocket::notifyOutThread()
 {
-  outThread->notify();
+  if(outThread)outThread->notify();
 }
 
 bool SmppSocket::hasOutput()
