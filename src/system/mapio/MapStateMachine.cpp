@@ -1061,7 +1061,7 @@ USHORT_T Et96MapDelimiterInd(
       SendSubmitCommand(dialog.get());
       break;
     case MAPST_WaitSpecDelimeter:
-      dialog_state == MAPST_WaitSmsConf;
+      dialog->state == MAPST_WaitSmsConf;
       SendSegmentedSms(dialog);
       break;
     //case MAPST_WaitSmsClose:
