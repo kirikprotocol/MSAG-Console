@@ -87,6 +87,16 @@
     <param name="mergeTimeout" type="int">600</param>
   </section>
 
+  <section name="directives">
+    <param name="a1" type="string">def</param>
+    <param name="a2" type="string">template</param>
+    <param name="a3" type="string">ack</param>
+    <param name="a4" type="string">noack</param>
+    <param name="a5" type="string">hide</param>
+    <param name="a6" type="string">unhide</param>
+    <param name="a7" type="string">flash</param>
+  </section>
+
   <section name="logger">
     <param name="initFile" type="string">log4cpp.init</param>
   </section>
