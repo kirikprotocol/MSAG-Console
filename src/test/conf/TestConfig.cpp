@@ -30,6 +30,7 @@ TestConfig::TestConfig()
 	//db sme
 	addrMap["dbSmeAddr"] = "+1597534682";
 	addrMap["dbSmeAlias"] = ".5.5.dbSmeAlias123";
+	addrMap["dbSmeInvalidAddr"] = ".5.5.dbSmeInvalidAddr123";
 	strMap["dbSmeSystemId"] = "dbSme";
 	strMap["dbSmeServiceType"] = "dBsmE";
 	intMap["dbSmeProtocolId"] = 23;
