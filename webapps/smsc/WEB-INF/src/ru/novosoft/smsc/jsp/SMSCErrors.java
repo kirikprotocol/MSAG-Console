@@ -175,6 +175,7 @@ public class SMSCErrors
         {
             private static final String B = error.B + "smsview.";
             public static final String QueryFailed = B + "QueryFailed";
+            public static final String DeleteFailed = B + "DeleteFailed";
         }
 	}
 
