@@ -26,6 +26,8 @@ void baseTc()
 		"Неправильные логин или пароль");
 	__reg_tc__("adminConsole.invalidCommands",
 		"Неправильные команды");
+	__reg_tc__("adminConsole.apply",
+		"Сохранение конфигов (команда apply)");
 }
 
 void aliasTc()
@@ -34,7 +36,7 @@ void aliasTc()
 		"Работа с алиасами через human admin console и script admin console");
 	//adminConsole.alias.add
 	__reg_tc__("adminConsole.alias.add",
-		"Команда add alias");
+		"Добавление алиаса (команда add alias)");
 	__reg_tc__("adminConsole.alias.add.correct",
 		"Правильно введенные данные (маски алиаса и адреса длиной от 1 до 20 символов)");
 	//adminConsole.alias.add.incorrect
@@ -56,7 +58,7 @@ void aliasTc()
 		"Выставлен признак сокрытия hide и поля address и alias содержат знаки \"?\"");
 	//adminConsole.alias.delete
 	__reg_tc__("adminConsole.alias.delete",
-		"Команда delete alias");
+		"Удаление алиаса (команда delete alias)");
 	__reg_tc__("adminConsole.alias.delete.existent",
 		"Удаление существующего алиаса");
 	__reg_tc__("adminConsole.alias.delete.missingRequiredParam",
@@ -67,7 +69,7 @@ void aliasTc()
 		"Неправильный формат алиаса");
 	//adminConsole.alias.view
 	__reg_tc__("adminConsole.alias.view",
-		"Команда view alias");
+		"Просмотр алиаса (команда view alias)");
 	__reg_tc__("adminConsole.alias.view.existent",
 		"Просмотр существующего алиаса");
 	__reg_tc__("adminConsole.alias.view.missingRequiredParam",
@@ -78,7 +80,7 @@ void aliasTc()
 		"Неправильный формат алиаса");
 	//adminConsole.alias.alter
 	__reg_tc__("adminConsole.alias.alter",
-		"Команда alter alias");
+		"Изменение алиаса (команда alter alias)");
 	__reg_tc__("adminConsole.alias.alter.correct",
 		"Правильно введенные данные (существующий алиас и маска адреса длиной от 1 до 20 символов)");
 	//adminConsole.alias.alter.incorrect
@@ -98,6 +100,9 @@ void aliasTc()
 		"Поля alias и address содержат различное количество знаков \"?\"");
 	__reg_tc__("adminConsole.alias.alter.incorrect.hideWithQuestionMarks",
 		"Выставлен признак сокрытия hide и поля address и alias содержат знаки \"?\"");
+	//adminConsole.alias.list
+	__reg_tc__("adminConsole.alias.list",
+		"Просмотр списка всех алиасов (команда list alias)");
 }
 
 AdminCheckList()
