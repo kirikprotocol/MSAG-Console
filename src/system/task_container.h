@@ -6,9 +6,12 @@
 #define __Cxx_Header__task_container_h__
 
 #include "sms/sms.h"
+#include "core/synchronyzation/Mutex.hpp"
 
 namespace smsc{
 namespace system{
+
+using namespace smsc::core::synchronization;
 
 #define TASK_CONTAINER_MAX_PROCESSED   (200*(8+1)) /* 200 msg/s * 8 sec */
 
@@ -42,6 +45,7 @@ class TaskContainer
   Task *first_task;
   Task *timeout_link_begin;
   Task *timeout_link_end;
+	Mutex mutex;
 public:
   TaskContainer():
     //first_task(pool),
@@ -60,11 +64,12 @@ public:
 
   bool getExpired(Task* t)
   {
-    unsigned long _time = time(NULL);
+    MutexGuard guard(mutex);
+		unsigned long _time = time(NULL);
     if ( timeout_link_begin && timeout_link_begin->timeout < _time )
     {
       *t = *timeout_link_begin;
-			__findAndRemove(timeout_link_begin);
+      __findAndRemove(timeout_link_begin);
       return true;
     }
     return false;
@@ -72,6 +77,7 @@ public:
 
   bool createTask(const Task& t)
   {
+    MutexGuard guard(mutex);
     //checkTimeout();
     if ( !first_task ) return false;
     Task* task = first_task;
@@ -103,6 +109,7 @@ public:
 
   bool findAndRemoveTask(uint32_t proxy_idx,uint32_t sequenceNumber,Task *res)
   {
+    MutexGuard guard(mutex);
     __require__(res);
     //checkTimeout();
     int hashcode = calcHashCode(proxy_idx,sequenceNumber);
@@ -157,14 +164,14 @@ public:
     if ( task->timeout_prev )
     {
       task->timeout_prev->timeout_next = task->timeout_next;
-			if ( task->timeout_next ) task->timeout_next->timeout_prev = task->timeout_prev;
+      if ( task->timeout_next ) task->timeout_next->timeout_prev = task->timeout_prev;
     }
     else
     {
       __require__( task == timeout_link_begin ); 
-			timeout_link_begin = task->timeout_next;
-			if (timeout_link_begin) timeout_link_begin->timeout_prev = 0;
-			else timeout_link_end = 0;
+      timeout_link_begin = task->timeout_next;
+      if (timeout_link_begin) timeout_link_begin->timeout_prev = 0;
+      else timeout_link_end = 0;
     }
 
     // add into free_list
