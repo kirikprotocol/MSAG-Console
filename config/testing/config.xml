@@ -42,10 +42,24 @@
 		<param name="state_machines_count" type="int">5</param>
 		<!-- last time will be repeated until max_valid_time -->
 		<param name="reschedule_table" type="string">30s,20s</param>
+		<param name="receipt_delivered" type="string">Your message sent to address $$string import="dest"$$ was successfully delivered on $$date pattern="dd MMMM yyyy, HH:mm:ss" import="date"$$</param>
+		<param name="receipt_failed" type="string">Ваше сообщение отправленное по адресу $$string import="dest"$$ sent at $$date pattern="dd-MMMM-yyyy hh:mm:ss t" import="date"$$ wasn't delivered, reason: $$string import="error"$$</param>
+		<param name="service_center_address" type="string">+111111111111</param>
+		<param name="systemId" type="string">smscsme</param>
+		<param name="service_type" type="string">SmSc</param>
+		<param name="protocol_id" type="int">3</param>
+	</section>
+
+	<section name="abonentinfo">
+		<param name="systemId" type="string">abonentinfo</param>
+		<param name="service_type" type="string">abnfo</param>
+		<param name="protocol_id" type="int">34</param>
 	</section>
 
 	<section name="profiler">
 		<param name="systemId" type="string">profiler</param>
+		<param name="service_type" type="string">pRof</param>
+		<param name="protocol_id" type="int">5</param>
 		<param name="defaultReport" type="string">NONE</param>
 		<param name="defaultDataCoding" type="string">DEFAULT</param>
 		<param name="msgReportNone" type="string">Уведомления доставки отключены (Delivery reports are disabled)</param>
