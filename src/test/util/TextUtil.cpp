@@ -249,7 +249,7 @@ void convert(bool udhi, uint8_t dc1, const char* str1, int len1,
 		}
 		//char transBuf[(int) ((len1 - udhLen) * 1.5) + 1]; //ù -> sch
 		int transLen = Transliterate(mbBuf, mbLen,
-			CONV_ENCODING_CP1251, str2 + udhLen, sizeof(len2 - udhLen));
+			CONV_ENCODING_CP1251, str2 + udhLen, len2 - udhLen);
 		__require__(len2 > udhLen + transLen);
 		len2 = udhLen + transLen;
 	}
