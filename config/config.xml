@@ -124,5 +124,10 @@
   <section name="sms">
     <param name="max_valid_time" type="int">1209600</param>
   </section>
+  
+  <section name="MscManager">
+    <param name="automaticRegistration" type="bool">true</param>
+    <param name="failureLimit" type="int">1000</param>
+  </section>
 
 </config>

@@ -102,9 +102,8 @@ MscManager::MscManager(DataSource& _ds, Manager& config)
     throw(ConfigException)
         : MscStatus(), MscAdmin(), ds(_ds)
 {
-    // TODO: Loadup parameters from config !
-    automaticRegistration = true;
-    failureLimit = 100;
+    automaticRegistration = config.getBool("MscManager.automaticRegistration");
+    failureLimit = config.getInt("MscManager.failureLimit");
 }
 MscManager::~MscManager()
 {
