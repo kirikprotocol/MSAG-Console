@@ -18,6 +18,8 @@ namespace smsc { namespace dbsme
         virtual void removeJob(std::string providerId, std::string jobId) = 0; 
         virtual void changeJob(std::string providerId, std::string jobId) = 0;
 
+        virtual void setProviderEnabled(std::string providerId, bool enabled) = 0;
+
 	    virtual ~DBSmeAdmin() {};
 
     protected:

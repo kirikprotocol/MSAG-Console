@@ -453,6 +453,9 @@ struct DBSmeAdminHandler : public DBSmeAdmin
     virtual void changeJob(std::string providerId, std::string jobId) {
         processor.changeJob(providerId, jobId);
     }
+    virtual void setProviderEnabled(std::string providerId, bool enabled) {
+        processor.setProviderEnabled(providerId, enabled);
+    }
 
     DBSmeAdminHandler(CommandProcessor& processor)
         : DBSmeAdmin(), processor(processor) {};

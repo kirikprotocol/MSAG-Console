@@ -207,10 +207,11 @@ void DataProvider::createDataSource(ConfigView* config)
 DataProvider::DataProvider(CommandProcessor* root, ConfigView* config, const MessageSet& mset)
     throw(ConfigException) 
         : log(Logger::getCategory("smsc.dbsme.DataProvider")), messages(mset, config),
-            usersCount(0), bFinalizing(false), owner(root), ds(0)
+            bFinalizing(false), bEnabled(false), owner(root), ds(0)
 {
     createDataSource(config);
 
+    bEnabled = config->getBool("enabled");
     std::auto_ptr<ConfigView> jobsCfgGuard(config->getSubConfig("Jobs"));
     ConfigView* jobsConfig = jobsCfgGuard.get();
     if (!jobsConfig) throw ConfigException("Jobs section missed !");
@@ -230,6 +231,8 @@ DataProvider::DataProvider(CommandProcessor* root, ConfigView* config, const Mes
         createJob(jobId, jobConfig);
         log.info("Loaded Job '%s'.", jobId);
     }
+
+    usersCount[0] = 0; usersCount[1] = 0;
 }
 
 DataProvider::~DataProvider() 
@@ -365,9 +368,17 @@ void DataProvider::removeJob(const char* id)
 void DataProvider::process(Command& command)
     throw(CommandProcessException)
 {
-    Job* job = 0;
     const Address& destination = command.getToAddress();
-    JobGuard jg = getJob(destination);
+    if (!isEnabled())
+    {
+        const char* message = messages.get(SERVICE_NOT_AVAIL);
+        log.warn("%s Requesting address: '.%d.%d.%s'",
+                 message ? message:SERVICE_NOT_AVAIL,
+                 destination.type, destination.plan, destination.value);
+        throw CommandProcessException(message ? message:SERVICE_NOT_AVAIL);
+    }
+    
+    Job* job = 0; JobGuard jg = getJob(destination);
     if (!(job = jg.get()))
     {
         const char* name = command.getJobName();
@@ -525,7 +536,21 @@ void CommandProcessor::changeJob(std::string providerId, std::string jobId)
         throw Exception("Cause is unknown");
     }
 }
+void CommandProcessor::setProviderEnabled(std::string providerId, bool enabled)
+{
+    const char* providerIdStr = providerId.c_str();
+    DataProvider* provider = 0;
+    
+    {
+        ProviderGuard pg = getProvider(providerIdStr);
+        DataProvider* provider = pg.get();
+    }
+    
+    if (!provider) 
+        throw Exception("Provider '%s' not exists.", providerIdStr);
 
+    provider->setEnabled(enabled);
+}
 
 }}
 

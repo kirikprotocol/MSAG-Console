@@ -43,8 +43,9 @@ namespace smsc { namespace dbsme
     using smsc::util::config::ConfigException;
 
     static const char* PROVIDER_NOT_FOUND  = "PROVIDER_NOT_FOUND";
+    static const char* SERVICE_NOT_AVAIL   = "SERVICE_NOT_AVAIL";
     static const char* JOB_NOT_FOUND       = "JOB_NOT_FOUND";
-
+    
     class DataProvider;
     class ProviderGuard;
     class CommandProcessor
@@ -93,6 +94,8 @@ namespace smsc { namespace dbsme
         void addJob   (std::string providerId, std::string jobId);
         void removeJob(std::string providerId, std::string jobId);
         void changeJob(std::string providerId, std::string jobId);
+
+        void setProviderEnabled(std::string providerId, bool enabled);
     };
 
     class DataProvider
@@ -105,10 +108,10 @@ namespace smsc { namespace dbsme
         
         Event       usersCountEvent;
         Mutex       usersCountLock;
-        long        usersCount;
+        long        usersCount[2];
         
-        Mutex       finalizingLock;
-        bool        bFinalizing;
+        Mutex       finalizingLock, enabledLock, setEnabledLock;
+        bool        bFinalizing, bEnabled;
 
         CommandProcessor*       owner;
         DataSource*             ds;
@@ -118,19 +121,20 @@ namespace smsc { namespace dbsme
         Hash<Job *>             jobsByAddress;  // jobs by address
         Hash<Job *>             jobsByName;     // jobs by sybolic & digital name
 
-        void doFinalization()
+        inline long* getUserCounter() {
+            MutexGuard guard(enabledLock);
+            return bEnabled ? &usersCount[0]:&usersCount[1];
+        };
+        
+        void doWait(bool total=true)
         {
-            {
-                MutexGuard guard(finalizingLock);
-                bFinalizing = true;
-            }
-            
             while (true) {
                 usersCountEvent.Wait(10);
                 MutexGuard guard(usersCountLock);
-                if (usersCount <= 0) break;
+                if (total && usersCount[0] <= 0 && usersCount[1] <= 0) break;
+                else if (!total && usersCount[0] <= 0) break;
             }
-        }
+        };
         
         void createDataSource(ConfigView* config) 
             throw(ConfigException);
@@ -148,21 +152,43 @@ namespace smsc { namespace dbsme
         DataProvider(CommandProcessor* root, ConfigView* config, const MessageSet& set)
             throw(ConfigException);
         
-        virtual void finalize() {
-            doFinalization();
+        virtual void finalize()
+        {
+            MutexGuard guard(setEnabledLock);
+            {
+                MutexGuard guard(finalizingLock);
+                if (bFinalizing) return;
+                bFinalizing = true;
+            }
+            doWait(true);
             delete this;
         }
         inline bool isFinalizing() {
             MutexGuard guard(finalizingLock);
             return bFinalizing;
         }
-
         virtual void process(Command& command)
             throw(CommandProcessException);
         
         void createJob(const char* id, ConfigView* jobConfig) 
             throw(ConfigException);
         void removeJob(const char* id);
+        
+        void setEnabled(bool enabled)
+        {
+            MutexGuard guard(setEnabledLock);
+            {
+                MutexGuard guard(enabledLock);
+                if (bEnabled == enabled) return;
+                if (enabled) { bEnabled = true; return; }
+            }
+            doWait(false);
+            if (ds) ds->closeConnections();
+        }
+        inline bool isEnabled() {
+            MutexGuard guard(enabledLock);
+            return bEnabled;
+        }
     };
 
     class ProviderGuard
@@ -170,34 +196,30 @@ namespace smsc { namespace dbsme
     private:
         
         ProviderGuard& operator=(const ProviderGuard& pg) {
-            changeProviderCounter(false);
-            provider = pg.provider;
-            changeProviderCounter(true);
             return *this;
         };
 
     protected:
         
         DataProvider* provider;
-        
-        inline void changeProviderCounter(bool increment) {
-           if (!provider) return;
-           MutexGuard guard(provider->usersCountLock);
-           if (increment) provider->usersCount++;
-           else provider->usersCount--;
-           provider->usersCountEvent.Signal();
-        }
+        long*         counter;
         
     public:
         
         ProviderGuard(DataProvider* provider=0) : provider(provider) {
-            changeProviderCounter(true);
+            if (!provider) return;
+            MutexGuard guard(provider->usersCountLock);
+            counter = provider->getUserCounter(); (*counter)++;
         }
         ProviderGuard(const ProviderGuard& pg) : provider(pg.provider) {
-            changeProviderCounter(true);
+            if (!provider) return;
+            MutexGuard guard(provider->usersCountLock);
+            counter = provider->getUserCounter(); (*counter)++;
         }
         virtual ~ProviderGuard() {
-            changeProviderCounter(false);
+            if (!provider || !counter) return;
+            MutexGuard guard(provider->usersCountLock);
+            (*counter)--; provider->usersCountEvent.Signal();
         }
     
         inline DataProvider* get() {

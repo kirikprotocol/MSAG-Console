@@ -26,7 +26,7 @@ namespace smsc { namespace dbsme
         DBSmeAdmin         &admin;
         Methods            methods;
         
-        enum { restartMethod, addJobMethod, removeJobMethod, changeJobMethod };
+        enum { restartMethod, addJobMethod, removeJobMethod, changeJobMethod, setProviderEnabledMethod };
         
         void error(const char* method, const char* param);
     
@@ -35,6 +35,7 @@ namespace smsc { namespace dbsme
         void addJob(const Arguments& args);
         void removeJob(const Arguments& args); 
         void changeJob(const Arguments& args);
+        void setProviderEnabled(const Arguments& args);
         
     public:
     
