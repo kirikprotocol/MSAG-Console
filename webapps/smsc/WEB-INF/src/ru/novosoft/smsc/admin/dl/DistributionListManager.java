@@ -463,10 +463,9 @@ public class DistributionListManager implements DistributionListAdmin
             while (rs.next()) {
                 String name  = rs.getString(1);
                 String owner = rs.getString(2);
-                boolean sys  = rs.wasNull();
-                if (sys) owner = null;
+                if (rs.wasNull()) owner = null;
                 int maxElements = rs.getInt(3);
-                list.add(new DistributionList(name, owner, maxElements, sys));
+                list.add(new DistributionList(name, owner, maxElements));
             }
             rs.close(); rs = null;
         } catch (Exception exc) {

@@ -12,14 +12,16 @@ public class DistributionList
     private String  name;
     private String  owner;
     private int     maxElements;
-    private boolean sys;
 
     public DistributionList() {
-        name = ""; sys = false; maxElements = 0;
+        name = ""; owner = null; maxElements = 0;
     }
-
-    public DistributionList(String name, String owner, int maxElements, boolean sys) {
-        this.name = name; this.owner = owner; this.sys = sys;
+    public DistributionList(String name, int maxElements) {
+        this.name = name; this.owner = null;
+        this.maxElements = maxElements;
+    }
+    public DistributionList(String name, String owner, int maxElements) {
+        this.name = name; this.owner = owner;
         this.maxElements = maxElements;
     }
 
@@ -29,8 +31,7 @@ public class DistributionList
     public String getOwner() { return owner; }
     public void setOwner(String owner) { this.owner = owner; }
 
-    public boolean isSys() { return sys; }
-    public void setSys(boolean sys) { this.sys = sys; }
+    public boolean isSys() { return owner == null; }
 
     public int getMaxElements() { return maxElements; }
     public void setMaxElements(int maxElements) { this.maxElements = maxElements; }
