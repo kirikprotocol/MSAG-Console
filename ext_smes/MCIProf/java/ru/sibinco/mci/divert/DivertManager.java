@@ -200,6 +200,7 @@ public class DivertManager
       String str = readTelnetString(ESC_SEMI);
       if (str == null || str.length() <= 0)
         throw new IOException("Got empty qwery string from MSC");
+      logger.debug("Auth got string: "+str);
       str = str.toUpperCase();
       if (needNvtIoDevice && checkQuery(NVT_IO_DEVICE, str)) {
         writeTelnetLine(mscNvtIODevice); needNvtIoDevice = false;
@@ -375,7 +376,7 @@ public class DivertManager
       {
         if (mscSocket != null) {
           try { if (is != null) is.close(); } catch (IOException e) { logger.error("MSC is close error", e); }
-          try { if (os != null) os.close(); } catch (IOException e) { logger.error("MSC os close error", e); } 
+          try { if (os != null) os.close(); } catch (IOException e) { logger.error("MSC os close error", e); }
           try { mscSocket.close(); } catch (IOException e) { logger.error("MSC socket close error", e); }
           mscSocket = null;
         }
