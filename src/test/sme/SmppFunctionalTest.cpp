@@ -1,5 +1,7 @@
 #include "system/smsc.hpp"
+#include "system/rescheduler.hpp"
 #include "system/smppio/SmppAcceptor.hpp"
+#include "profiler/profiler.hpp"
 #include "admin/util/SignalHandler.h"
 #include "store/StoreManager.h"
 #include "system/state_machine.hpp"
@@ -23,6 +25,7 @@
 
 using smsc::sme::SmeConfig;
 using smsc::util::config::Manager;
+using smsc::system::RescheduleCalculator;
 using smsc::test::sms::SmsUtil;
 using smsc::test::sms::operator<<;
 using smsc::test::smeman::SmeManagerTestCases;
@@ -390,6 +393,39 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 		sme.push_back(new TestSme(i, config, smeInfo[i]->systemId, *addr[i],
 			smeReg, aliasReg, routeReg)); //throws Exception
 	}
+	//печать таблицы маршрутов
+	__trace__("Route table");
+	for (int i = 0; i < numAddr; i++)
+	{
+		for (int j = 0; j < numAddr; j++)
+		{
+			Address& origAddr = *addr[i];
+			Address& destAlias = *addr[j];
+			string smeId = "<>";
+			bool smeAvailable = false;
+			const AliasHolder* aliasHolder =
+				aliasReg->findAddressByAlias(destAlias);
+			Address destAddr;
+			if (aliasHolder && aliasHolder->aliasToAddress(destAlias, destAddr))
+			{
+				const RouteHolder* routeHolder =
+					routeReg->lookup(origAddr, destAddr);
+				if (routeHolder)
+				{
+					smeId = routeHolder->route.smeSystemId;
+					smeAvailable = smeReg->isSmeAvailable(smeId);
+				}
+			}
+			ostringstream os;
+			os << "origAddr = " << origAddr << ", destAlias = " << destAlias;
+			__trace2__("%s, route to = %s, sme available = %s",
+				os.str().c_str(), smeId.c_str(), (smeAvailable ? "yes" : "no"));
+		}
+	}
+
+
+
+
 	for (int i = 0; i < numAddr; i++)
 	{
 		delete addr[i];
@@ -420,16 +456,19 @@ vector<TestSme*> TestSmsc::init(int numAddr, int numSme)
 	tp.preCreateThreads(15);
 	
 	smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance());
-	store=smsc::store::StoreManager::getMessageStore();
+	store = smsc::store::StoreManager::getMessageStore();
 
-	tp.startTask(new StateMachine(eventqueue,store,this));
-	tp.startTask(new StateMachine(eventqueue,store,this));
-	tp.startTask(new StateMachine(eventqueue,store,this));
-	tp.startTask(new StateMachine(eventqueue,store,this));
-	tp.startTask(new StateMachine(eventqueue,store,this));
+	int cnt = Manager::getInstance().getInt("core.state_machines_count");
+	for(int i = 0; i < cnt; i++)
+	{
+		tp.startTask(new StateMachine(eventqueue, store, this));
+	}
+	RescheduleCalculator::Init(Manager::getInstance().getString("core.reschedule_table"));
 
 	//smsc::admin::util::SignalHandler::registerShutdownHandler(new SmscSignalHandler(this));
 	//tp.startTask(new SpeedMonitor(eventqueue));
+
+    tp.startTask(new smsc::profiler::Profiler());
 	
 	return sme;
 }
@@ -498,6 +537,7 @@ void executeFunctionalTest(int numAddr, int numSme,
 	vector<TestSme*> sme = app->init(numAddr, numSme);
 	ThreadPool pool;
 	pool.startTask(new SmscStarter(app));
+	sleep(5);
 	//запуск sme
 	TestSmeTaskManager tm;
 	for (int i = 0; i < sme.size(); i++)
