@@ -4,15 +4,20 @@
 #include "sms/sms.h"
 #include "PduRegistry.hpp"
 #include "test/sms/SmsUtil.hpp"
+#include "smeman/smetypes.h"
 #include <map>
 #include <vector>
+#include <set>
 
 namespace smsc {
 namespace test {
 namespace core {
 
 using std::map;
+using std::vector;
+using std::set;
 using smsc::sms::Address;
+using smsc::smeman::SmeSystemId;
 using smsc::test::sms::ltAddress;
 
 /**
@@ -20,17 +25,27 @@ using smsc::test::sms::ltAddress;
  */
 class SmeRegistry
 {
-	typedef map<const Address, PduRegistry*, ltAddress> AddressMap;
+	struct SmeData
+	{
+		const SmeSystemId systemId;
+		PduRegistry* pduReg;
+		SmeData(const SmeSystemId& id, PduRegistry* reg)
+			: systemId(id), pduReg(reg) {}
+		SmeData(const SmeData& data)
+			: systemId(data.systemId), pduReg(data.pduReg) {}
+	};
+	typedef map<const Address, SmeData, ltAddress> AddressMap;
 	typedef vector<const Address*> AddressList;
+	typedef set<SmeSystemId> SmeSystemIdSet;
 	AddressMap addrMap;
 	AddressList addrList;
-	Address smscAddr;
+	SmeSystemIdSet smeIdSet;
 
 public:
 	SmeRegistry() {}
 	~SmeRegistry();
 
-	void registerSme(const Address& smeAddr);
+	void registerSme(const Address& smeAddr, const SmeSystemId& smeId);
 
 	void registerAddressWithNoSme(const Address& addr);
 	
@@ -38,9 +53,7 @@ public:
 
 	const Address* getRandomAddress() const;
 
-	bool isSmeRegistered(const Address& smeAddr) const;
-
-	const Address& getSmscAddr() const;
+	bool isSmeRegistered(const SmeSystemId& smeId) const;
 };
 
 }
