@@ -33,7 +33,7 @@ using smsc::core::synchronization::Mutex;
 #define __tc_ok__ \
 	if (chkList) { \
 		__require__(tc); \
-		__trace2__("%s: ok", tc->id.c_str()); \
+		__trace2__("tc = %s: ok", tc->id.c_str()); \
 		SyncTestCase _tc(tc); \
 		_tc->correct++; \
 	} \
@@ -42,7 +42,7 @@ using smsc::core::synchronization::Mutex;
 #define __tc_ok_cond__ \
 	if (chkList && isOk) { \
 		__require__(tc); \
-		__trace2__("%s: ok", tc->id.c_str()); \
+		__trace2__("tc = %s: ok", tc->id.c_str()); \
 		SyncTestCase _tc(tc); \
 		_tc->correct++; \
 	} \
@@ -51,7 +51,7 @@ using smsc::core::synchronization::Mutex;
 #define __tc_fail__(errCode) \
 	if (chkList) { \
 		__require__(tc); \
-		__trace2__("%s: err = %d", tc->id.c_str(), errCode); \
+		__trace2__("tc = %s: err = %d", tc->id.c_str(), errCode); \
 		isOk = false; \
 		SyncTestCase _tc(tc); \
 		_tc->incorrect++; \
@@ -67,7 +67,7 @@ using smsc::core::synchronization::Mutex;
 		} \
 		ostringstream s; \
 		copy(tmp.begin(), tmp.end(), ostream_iterator<int>(s, ",")); \
-		__trace2__("%s: err = %s", tc->id.c_str(), s.str().c_str()); \
+		__trace2__("tc = %s: err = %s", tc->id.c_str(), s.str().c_str()); \
 		isOk = false; \
 		SyncTestCase _tc(tc); \
 		_tc->incorrect++; \
@@ -96,7 +96,7 @@ using smsc::core::synchronization::Mutex;
 #define __tc12_ok__ \
 	if (chkList) { \
 		__require__(tc1 && tc2 && tc1 != tc2); \
-		__trace2__("%s, %s: ok", tc1->id.c_str(), tc2->id.c_str()); \
+		__trace2__("tc = %s, tc = %s: ok", tc1->id.c_str(), tc2->id.c_str()); \
 		SyncTestCase _tc1(tc1); \
 		_tc1->correct++; \
 		SyncTestCase _tc2(tc2); \
@@ -107,7 +107,7 @@ using smsc::core::synchronization::Mutex;
 #define __tc12_ok_cond__ \
 	if (chkList && isOk) { \
 		__require__(tc1 && tc2 && tc1 != tc2); \
-		__trace2__("%s, %s: ok", tc1->id.c_str(), tc2->id.c_str()); \
+		__trace2__("tc = %s, tc = %s: ok", tc1->id.c_str(), tc2->id.c_str()); \
 		SyncTestCase _tc1(tc1); \
 		_tc1->correct++; \
 		SyncTestCase _tc2(tc2); \
@@ -118,7 +118,7 @@ using smsc::core::synchronization::Mutex;
 #define __tc12_fail__(errCode) \
 	if (chkList) { \
 		__require__(tc1 && tc2 && tc1 != tc2); \
-		__trace2__("%s, %s: err = %d", tc1->id.c_str(), tc2->id.c_str(), errCode); \
+		__trace2__("tc = %s, tc = %s: err = %d", tc1->id.c_str(), tc2->id.c_str(), errCode); \
 		isOk = false; \
 		SyncTestCase _tc1(tc1); \
 		_tc1->incorrect++; \
@@ -137,7 +137,7 @@ using smsc::core::synchronization::Mutex;
 		} \
 		ostringstream s; \
 		copy(tmp.begin(), tmp.end(), ostream_iterator<int>(s, ",")); \
-		__trace2__("%s, %s: err = %s", tc1->id.c_str(), tc2->id.c_str(), s.str().c_str()); \
+		__trace2__("tc = %s, tc = %s: err = %s", tc1->id.c_str(), tc2->id.c_str(), s.str().c_str()); \
 		isOk = false; \
 		SyncTestCase _tc1(tc1); \
 		_tc1->incorrect++; \
