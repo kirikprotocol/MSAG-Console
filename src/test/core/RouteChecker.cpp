@@ -11,8 +11,8 @@ namespace core {
 using std::vector;
 using smsc::sms::Address;
 using smsc::sms::AddressValue;
-using smsc::test::sms::SmsUtil;
 using smsc::test::sms::operator!=;
+using smsc::test::sms::str;
 using smsc::test::smpp::SmppUtil;
 using namespace smsc::test; //config constants
 
@@ -112,20 +112,27 @@ vector<int> RouteChecker::checkRouteForNotification(PduSubmitSm& pdu1,
 	return res;
 }
 
-bool RouteChecker::isDestReachable(PduAddress& dest, bool checkSme) const
+bool RouteChecker::isDestReachable(PduAddress& src, PduAddress& dest,
+	bool checkSme) const
 {
 	//dest является алиасом
-	Address destAlias;
+	Address srcAddr, destAlias;
+	SmppUtil::convert(src, &srcAddr);
 	SmppUtil::convert(dest, &destAlias);
 	const Address destAddr = aliasReg->findAddressByAlias(destAlias);
 	//проверка маршрута
-	const RouteHolder* routeHolder = routeReg->lookup(smeAddr, destAddr);
+	const RouteHolder* routeHolder = routeReg->lookup(srcAddr, destAddr);
 	if (checkSme && routeHolder)
 	{
-		return smeReg->isSmeBound(routeHolder->route.smeSystemId);
+		bool bound = smeReg->isSmeBound(routeHolder->route.smeSystemId);
+		__trace2__("isDestReachable(): destAddr = %s, route = %s",
+			str(destAddr).c_str(), str(*routeHolder).c_str());
+		return bound;
 	}
 	else
 	{
+		__trace2__("isDestReachable(): destAddr = %s, route = %s",
+			str(destAddr).c_str(), routeHolder ? str(*routeHolder).c_str() : "NULL");
 		return routeHolder;
 	}
 }

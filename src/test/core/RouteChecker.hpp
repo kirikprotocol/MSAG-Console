@@ -35,7 +35,7 @@ public:
 
 	vector<int> checkRouteForNotification(PduDeliverySm& pdu1, PduDeliverySm& pdu2) const;
 
-	bool isDestReachable(PduAddress& destAddr, bool checkSme) const;
+	bool isDestReachable(PduAddress& src, PduAddress& destAddr, bool checkSme) const;
 
 	const RouteInfo* getRouteInfoForNormalSms(PduAddress& src,
 		PduAddress& dest) const;
