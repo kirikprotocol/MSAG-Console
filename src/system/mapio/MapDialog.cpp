@@ -28,9 +28,9 @@ struct MAP_SMS_ADDRESS{
   //unsigned char tonpi;
   union{
     struct{
-      unsigned npi:4;
-      unsigned ton:3;
       unsigned reserved_1:1;
+      unsigned ton:3;
+      unsigned npi:4;
     }st;
     unsigned char tonpi;
   };
