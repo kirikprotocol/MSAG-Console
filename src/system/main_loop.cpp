@@ -157,7 +157,7 @@ void Smsc::mainLoop()
         SMSId id = task.messageId;
         __trace2__("enqueue timeout Alert: dialogId=%d, proxyUniqueId=%d",
           task.sequenceNumber,task.proxy_id);
-        eventqueue.enqueue(id,SmscCommand::makeAlert());
+        eventqueue.enqueue(id,SmscCommand::makeAlert(task.sms));
       }
     }while(!frame.size());
 
@@ -284,7 +284,7 @@ void Smsc::mainLoop()
           SMSId id = task.messageId;
           __trace2__("enqueue timeout Alert: dialogId=%d, proxyUniqueId=%d",
             task.sequenceNumber,task.proxy_id);
-          eventqueue.enqueue(id,SmscCommand::makeAlert());
+          eventqueue.enqueue(id,SmscCommand::makeAlert(task.sms));
         }
       }
       timestruc_t tv={0,1000000};
@@ -327,13 +327,14 @@ void Smsc::processCommand(SmscCommand& cmd)
     {
       Task task;
       uint32_t dialogId = cmd->get_dialogId();
-      __trace2__("delivery response received. id=%d",dialogId);
 
       if (!tasks.findAndRemoveTask(cmd.getProxy()->getUniqueId(),dialogId,&task))
       {
         __warning2__("task not found for delivery response. Sid=%s, did=%d",cmd.getProxy()->getSystemId(),dialogId);
         return; //jump to begin of for
       }
+      __trace2__("delivery response received. seqnum=%d,msgId=%lld,sms=%p",dialogId,task.messageId,task.sms);
+      cmd->get_resp()->set_sms(task.sms);
       id=task.messageId;
       break;
     }

@@ -137,6 +137,7 @@ private:
   Descriptor descriptor;
   bool dataSm;
   int delay;
+  SMS* sms;
 public:
   void set_messageId(const char* msgid)
   {
@@ -160,8 +161,16 @@ public:
   int get_delay(){return delay;}
   void set_dataSm(){dataSm=true;}
   bool get_dataSm(){return dataSm;}
-  SmsResp() : messageId(0), status(0),dataSm(false),delay(-1) {};
-  ~SmsResp() { if ( messageId ) delete messageId; }
+
+  void set_sms(SMS* s){sms=s;}
+  SMS* get_sms(){return sms;}
+
+  SmsResp() : messageId(0), status(0),dataSm(false),delay(-1),sms(0) {};
+  ~SmsResp()
+  {
+    if ( messageId ) delete messageId;
+    if (sms)delete sms;
+  }
 };
 
 static inline void fillField(auto_ptr<char>& field,const char* text,int length=-1)
@@ -359,7 +368,8 @@ struct _SmscCommand
     {
     case DELIVERY:
     case SUBMIT:
-      delete ( (SMS*)dta );
+    case ALERT:
+      if(dta)delete ( (SMS*)dta );
       break;
 
     case SUBMIT_MULTI_SM:
@@ -405,7 +415,6 @@ struct _SmscCommand
       if(dta)delete (ForwardData*)dta;
       break;
     case UNKNOWN:
-    case ALERT:
     case GENERIC_NACK:
     case UNBIND_RESP:
     case REPLACE_RESP:
@@ -610,14 +619,14 @@ public:
     return cmd;
   }
 
-  static SmscCommand makeAlert()
+  static SmscCommand makeAlert(SMS *sms)
   {
     SmscCommand cmd;
     cmd.cmd = new _SmscCommand;
     _SmscCommand& _cmd = *cmd.cmd;
     _cmd.ref_count = 1;
     _cmd.cmdid = ALERT;
-    _cmd.dta = 0;
+    _cmd.dta = sms;
     _cmd.dialogId = 0;
     return cmd;
   }

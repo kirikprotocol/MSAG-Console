@@ -604,12 +604,14 @@ void Smsc::init(const SmscConfigs& cfg)
     __warning__("eventQueueLimit not found, using default(1000)");
   }
 
+  /*
   try{
     scheduler->setRescheduleLimit(cfg.cfgman->getInt("core.reschedule_limit"));
   }catch(...)
   {
     __warning__("reschedule_limit not found in config, using default");
   }
+  */
 
   {
     StatusSme *ss=new StatusSme(this,"StatusSme");

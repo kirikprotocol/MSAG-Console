@@ -13,6 +13,8 @@
 #include "system/status.h"
 #include "resourcemanager/ResourceManager.hpp"
 
+// строчка по русски, что б сработал autodetect :)
+
 namespace smsc{
 namespace system{
 
@@ -1250,32 +1252,38 @@ StateType StateMachine::submit(Tuple& t)
                 sms->getIntProperty(Tag::SMPP_SM_LENGTH)!=0));
 
 
-  try{
-    if(sms->getNextTime()<now)
-    {
-      sms->setNextTime(now);
-    }
-    store->createSms(*sms,t.msgId,
-      sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG)?smsc::store::SMPP_OVERWRITE_IF_PRESENT:smsc::store::CREATE_NEW);
-  }catch(...)
+  bool isDatagram=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1;
+  bool isTransaction=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2;
+  __trace2__("SUBMIT: isDg=%s, isTr=%s",isDatagram?"true":"false",isTransaction?"true":"false");
+  if(!isDatagram && !isTransaction)
   {
-    __warning2__("failed to create sms with id %lld",t.msgId);
-    sms->setLastResult(Status::SYSERR);
-    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
-    SmscCommand resp = SmscCommand::makeSubmitSmResp
-                         (
-                           /*messageId*/"0",
-                           dialogId,
-                           Status::SYSERR,
-                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
-                         );
     try{
-      src_proxy->putCommand(resp);
+      if(sms->getNextTime()<now)
+      {
+        sms->setNextTime(now);
+      }
+      store->createSms(*sms,t.msgId,
+        sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG)?smsc::store::SMPP_OVERWRITE_IF_PRESENT:smsc::store::CREATE_NEW);
     }catch(...)
     {
-      __trace__("SUBMIT: failed to put response command");
+      __warning2__("failed to create sms with id %lld",t.msgId);
+      sms->setLastResult(Status::SYSERR);
+      smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+      SmscCommand resp = SmscCommand::makeSubmitSmResp
+                           (
+                             /*messageId*/"0",
+                             dialogId,
+                             Status::SYSERR,
+                             sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                           );
+      try{
+        src_proxy->putCommand(resp);
+      }catch(...)
+      {
+        __trace__("SUBMIT: failed to put response command");
+      }
+      return ERROR_STATE;
     }
-    return ERROR_STATE;
   }
 
   //
@@ -1292,9 +1300,11 @@ StateType StateMachine::submit(Tuple& t)
   );
 
 
-  smsc->registerStatisticalEvent(StatEvents::etSubmitOk,sms);
-
+  if(!isDatagram && !isTransaction) // Store&Forward mode
   {
+
+    smsc->registerStatisticalEvent(StatEvents::etSubmitOk,sms);
+
     // sms сохранена в базе, с выставленным Next Time, таким образом
     // даже если дальше что-то обломится, потом будет еще попытка послать её
     // то бишь мы приняли sms в обработку, можно слать ok.
@@ -1322,13 +1332,63 @@ StateType StateMachine::submit(Tuple& t)
   }
 
   __trace2__("Sms scheduled to %d, now %d",(int)sms->getNextTime(),(int)now);
-  if(stime>now)
+  if(!isDatagram && !isTransaction && stime>now)
   {
     smsc->ChangeSmsSchedule(t.msgId,stime,dest_proxy_index);
     smsc->notifyScheduler();
     return ENROUTE_STATE;
   }
 
+  sms->dialogId=dialogId;
+
+
+  // этот код сработает только для Datagram и Transction режимов.
+  // то бишь на выходе из submit пошлётся submit response, ошибочный или нет...
+  // во всех случаях когда деливер не запихивается в проксю,
+  // у sms вызывается setLastError()
+  struct ResponseGuard{
+    SMS *sms;
+    SmeProxy* prx;
+    StateMachine* sm;
+    /*ResponseGuard():sms(0),prx(0),sm(0){}
+    ResponseGuard(const ResponseGuard& rg)
+    {
+      sms=rg.sms;
+      prx=rg.prx;
+      sm=rg.sm;
+    }*/
+    ResponseGuard(SMS* s,SmeProxy* p,StateMachine *st):sms(s),prx(p),sm(st){}
+    ~ResponseGuard()
+    {
+      if(!sms)return;
+      if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0 ||
+         (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x3)return;
+      if(sms->lastResult!=Status::OK)
+      {
+        sm->smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+      }else
+      {
+        sm->smsc->registerStatisticalEvent(StatEvents::etSubmitOk,sms);
+      }
+      if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x1) // send response in case of datagram
+      {
+        SmscCommand resp = SmscCommand::makeSubmitSmResp
+                             (
+                               /*messageId*/"0",
+                               sms->dialogId,
+                               sms->lastResult,
+                               sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                             );
+        try{
+          prx->putCommand(resp);
+        }catch(...)
+        {
+          __trace__("SUBMIT: failed to put response command");
+        }
+      }
+    }
+  };
+  ResponseGuard respguard(sms,src_proxy,this);
 
   if ( !dest_proxy )
   {
@@ -1383,7 +1443,7 @@ StateType StateMachine::submit(Tuple& t)
     sendNotifyReport(*sms,t.msgId,"destination unavailable");
     return ENROUTE_STATE;
   }
-  smsLog->debug(": seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+  smsLog->debug("SBM: seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
     dialogId2,
     t.msgId,dialogId,
     sms->getOriginatingAddress().toString().c_str(),
@@ -1393,7 +1453,8 @@ StateType StateMachine::submit(Tuple& t)
   );
   //Task task((uint32_t)dest_proxy_index,dialogId2);
   try{
-  Task task(dest_proxy->getUniqueId(),dialogId2);
+  Task task(dest_proxy->getUniqueId(),dialogId2,isDatagram || isTransaction?sms:0);
+  __trace2__("SUBMIT: task.sms=%p",task.sms);
   task.messageId=t.msgId;
   if ( !smsc->tasks.createTask(task,dest_proxy->getPreferredTimeout()) )
   {
@@ -1593,6 +1654,11 @@ StateType StateMachine::submit(Tuple& t)
     smsc->tasks.findAndRemoveTask(dest_proxy->getUniqueId(),dialogId2,&t);
     return ENROUTE_STATE;
   }
+  if(isDatagram || isTransaction)
+  {
+    t.command->get_sms_and_forget();
+  }
+  sms->lastResult=Status::OK;
   smsLog->debug("SBM: submit ok, seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
     dialogId2,
     t.msgId,dialogId,
@@ -1975,12 +2041,19 @@ StateType StateMachine::deliveryResp(Tuple& t)
   ////
 
   SMS sms;
-  try{
-    store->retriveSms((SMSId)t.msgId,sms);
-  }catch(exception& e)
+  bool dgortr=t.command->get_resp()->get_sms()!=0; //datagram or transaction
+  if(dgortr)
   {
-    smsLog->warn("DLVRSP: failed to retrieve sms:%s! msgId=%lld;st=%d",e.what(),t.msgId,t.command->get_resp()->get_status());
-    return UNKNOWN_STATE;
+    sms=*t.command->get_resp()->get_sms();
+  }else
+  {
+    try{
+      store->retriveSms((SMSId)t.msgId,sms);
+    }catch(exception& e)
+    {
+      smsLog->warn("DLVRSP: failed to retrieve sms:%s! msgId=%lld;st=%d",e.what(),t.msgId,t.command->get_resp()->get_status());
+      return UNKNOWN_STATE;
+    }
   }
   sms.destinationDescriptor=t.command->get_resp()->getDescriptor();
   if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK)
@@ -2012,6 +2085,17 @@ StateType StateMachine::deliveryResp(Tuple& t)
         }
         smsc->notifyScheduler();
         smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
+        if(dgortr)
+        {
+          sms.state=UNDELIVERABLE;
+          try{
+            store->createFinalizedSms(t.msgId,sms);
+          }catch(...)
+          {
+            __warning2__("DELIVERYRESP: failed to finalize sms:%lld",t.msgId);
+          }
+          return UNDELIVERABLE_STATE;
+        }
         return UNKNOWN_STATE;
       }break;
       case CMD_ERR_TEMP:
@@ -2042,6 +2126,17 @@ StateType StateMachine::deliveryResp(Tuple& t)
         smsc->notifyScheduler();
         sendNotifyReport(sms,t.msgId,"subscriber busy");
         smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
+        if(dgortr)
+        {
+          sms.state=UNDELIVERABLE;
+          try{
+            store->createFinalizedSms(t.msgId,sms);
+          }catch(...)
+          {
+            __warning2__("DELIVERYRESP: failed to finalize sms:%lld",t.msgId);
+          }
+          return UNDELIVERABLE_STATE;
+        }
         return UNKNOWN_STATE;
       }break;
       default:
@@ -2062,6 +2157,16 @@ StateType StateMachine::deliveryResp(Tuple& t)
         sms.setLastResult(GET_STATUS_CODE(t.command->get_resp()->get_status()));
         sendFailureReport(sms,t.msgId,UNDELIVERABLE_STATE,"permanent error");
         smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
+        if(dgortr)
+        {
+          sms.state=UNDELIVERABLE;
+          try{
+            store->createFinalizedSms(t.msgId,sms);
+          }catch(...)
+          {
+            __warning2__("DELIVERYRESP: failed to finalize sms:%lld",t.msgId);
+          }
+        }
         return UNDELIVERABLE_STATE;
       }
     }
@@ -2220,16 +2325,60 @@ StateType StateMachine::deliveryResp(Tuple& t)
     }
   }
 
-  try{
-    __trace__("change state to delivered");
-
-    store->changeSmsStateToDelivered(t.msgId,t.command->get_resp()->getDescriptor());
-
-    __trace__("change state to delivered: ok");
-  }catch(std::exception& e)
+  if(dgortr)
   {
-    __warning2__("change state to delivered exception:%s",e.what());
-    return UNKNOWN_STATE;
+    sms.state=DELIVERED;
+    smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms);
+    if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)
+    {
+      SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
+      if(src_proxy)
+      {
+        SmscCommand resp=SmscCommand::makeSubmitSmResp
+                         (
+                           /*messageId*/"0",
+                           sms.dialogId,
+                           sms.lastResult,
+                           sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
+                         );
+        try{
+          src_proxy->putCommand(resp);
+        }catch(...)
+        {
+          sms.state=UNDELIVERABLE;
+          try{
+            store->createFinalizedSms(t.msgId,sms);
+          }catch(...)
+          {
+            __warning2__("DELRESP: failed to finalize sms with msgId=%lld",t.msgId);
+            return UNDELIVERABLE_STATE;
+          }
+          return UNDELIVERABLE_STATE;
+        }
+      }
+    }
+    try{
+      store->createFinalizedSms(t.msgId,sms);
+    }catch(...)
+    {
+      __warning2__("DELRESP: failed to finalize sms with msgId=%lld",t.msgId);
+      return UNDELIVERABLE_STATE;
+    }
+    return DELIVERED_STATE;
+  }else
+  {
+
+    try{
+      __trace__("change state to delivered");
+
+      store->changeSmsStateToDelivered(t.msgId,t.command->get_resp()->getDescriptor());
+
+      __trace__("change state to delivered: ok");
+    }catch(std::exception& e)
+    {
+      __warning2__("change state to delivered exception:%s",e.what());
+      return UNKNOWN_STATE;
+    }
   }
   smsLog->debug("DLVRSP: DELIVERED, msgId=%lld",t.msgId);
   __trace__("DELIVERYRESP: registerStatisticalEvent");
@@ -2329,29 +2478,49 @@ StateType StateMachine::alert(Tuple& t)
   //time_t now=time(NULL);
   Descriptor d;
   SMS sms;
-  try{
-    store->retriveSms((SMSId)t.msgId,sms);
-  }catch(...)
+  if(t.command->get_sms())
   {
-    smsLog->warn("ALERT: Failed to retrieve sms:%lld",t.msgId);
-    return UNKNOWN_STATE;
+    sms=*t.command->get_sms();
+  }else
+  {
+    try{
+      store->retriveSms((SMSId)t.msgId,sms);
+    }catch(...)
+    {
+      smsLog->warn("ALERT: Failed to retrieve sms:%lld",t.msgId);
+      return UNKNOWN_STATE;
+    }
   }
   char bufsrc[64],bufdst[64];
   sms.getOriginatingAddress().toString(bufsrc,sizeof(bufsrc));
   sms.getDestinationAddress().toString(bufdst,sizeof(bufdst));
   smsLog->warn("ALERT: delivery timed out(%s->%s)",bufsrc,bufdst);
   sms.setLastResult(Status::DELIVERYTIMEDOUT);
-  try{
-    changeSmsStateToEnroute(sms,t.msgId,d,Status::DELIVERYTIMEDOUT,rescheduleSms(sms));
-  }catch(std::exception& e)
+  if(sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3==1 ||
+     sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3==2)
   {
-    __trace2__("ALERT: failed to change state to enroute:%s",e.what());
-  }catch(...)
+    sms.state=EXPIRED;
+    try{
+      store->createFinalizedSms(t.msgId,sms);
+    }catch(...)
+    {
+      smsLog->warn("ALERT: failed to finalize sms:%lld",t.msgId);
+    }
+    return EXPIRED_STATE;
+  }else
   {
-    __trace2__("ALERT: failed to change state to enroute");
+    try{
+      changeSmsStateToEnroute(sms,t.msgId,d,Status::DELIVERYTIMEDOUT,rescheduleSms(sms));
+    }catch(std::exception& e)
+    {
+      __warning2__("ALERT: failed to change state to enroute:%s",e.what());
+    }catch(...)
+    {
+      __warning2__("ALERT: failed to change state to enroute");
+    }
+    smsc->notifyScheduler();
+    sendNotifyReport(sms,t.msgId,"delivery attempt timed out");
   }
-  smsc->notifyScheduler();
-  sendNotifyReport(sms,t.msgId,"delivery attempt timed out");
   smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
   return UNKNOWN_STATE;
 }

@@ -831,6 +831,8 @@ struct SMS
   uint8_t     concatMsgRef;   // For concatenated messages only
   uint8_t     concatSeqNum;   //
 
+  int         dialogId;  // used for transaction mode, not stored in DB
+
   /**
   * Default конструктор, просто инициализирует поле state как ENROUTE
   * и прочие поля дефолтными значениями
@@ -839,7 +841,7 @@ struct SMS
     attempts(0), lastResult(0), oldResult(0),lastTime(0), nextTime(0),
     messageReference(0), needArchivate(true),
     deliveryReport(0), billingRecord(0), attach(false),
-    serviceId(0), priority(0),concatMsgRef(0),concatSeqNum(0)
+    serviceId(0), priority(0),concatMsgRef(0),concatSeqNum(0),dialogId(-1)
   {
     eServiceType[0]='\0'; routeId[0]='\0';
     srcSmeId[0]='\0'; dstSmeId[0]='\0';
@@ -875,7 +877,8 @@ struct SMS
     serviceId(sms.serviceId),
     priority(sms.priority),
     concatMsgRef(sms.concatMsgRef),
-    concatSeqNum(sms.concatSeqNum)
+    concatSeqNum(sms.concatSeqNum),
+    dialogId(sms.dialogId)
   {
     strncpy(eServiceType, sms.eServiceType, sizeof(eServiceType));
     strncpy(routeId, sms.routeId, sizeof(routeId));
@@ -917,10 +920,13 @@ struct SMS
     concatMsgRef=sms.concatMsgRef;
     concatSeqNum=sms.concatSeqNum;
 
+    dialogId=sms.dialogId;
+
     strncpy(eServiceType, sms.eServiceType, sizeof(eServiceType));
     strncpy(routeId, sms.routeId, sizeof(routeId));
     strncpy(srcSmeId, sms.srcSmeId, sizeof(srcSmeId));
     strncpy(dstSmeId, sms.dstSmeId, sizeof(dstSmeId));
+
 
     return (*this);
   };

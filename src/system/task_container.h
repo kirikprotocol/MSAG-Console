@@ -23,6 +23,7 @@ struct Task
   time_t creationTime;
   time_t timeout;
   smsc::sms::SMSId messageId;
+  smsc::sms::SMS  *sms;
   Task* next;
   Task* timeout_prev;
   Task* timeout_next;
@@ -30,8 +31,8 @@ struct Task
   smsc::sms::Address sourceAddress;
 
 
-  Task(uint32_t proxy = 0,uint32_t sequence = 0):
-    proxy_id(proxy),sequenceNumber(sequence) {}
+  Task(uint32_t proxy = 0,uint32_t sequence = 0,smsc::sms::SMS  *s=0):
+    proxy_id(proxy),sequenceNumber(sequence),sms(s) {}
   ~Task()
   {
   }
