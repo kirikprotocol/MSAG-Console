@@ -42,6 +42,7 @@ Mutex       countersLock;
 static log4cpp::Category& log = Logger::getCategory("smsc.dbsme.DBSme");
 
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
+const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
 
 class DBSmeTask : public ThreadedTask
 {
@@ -166,32 +167,46 @@ public:
         while (out && out[++outPos]) 
             if (out[outPos] == '\r' || out[outPos] == '\n') out[outPos] = ' ';
         
-        Array<SMS*> smsarr;
-        splitSms(&response, out, outLen, 
-                 CONV_ENCODING_CP1251, hasHighBit(out, outLen) ? 
-                 DataCoding::UCS2 : DataCoding::DEFAULT, smsarr);
-        
-        for (int i=0; i<smsarr.Count(); i++)
+        char* msgBuf = 0;
+        if(hasHighBit(out,outLen)) 
         {
-            PduSubmitSm sm; SMS* sms = smsarr[i];
-            if (sms)
-            {
-                sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
-                fillSmppPduFromSms(&sm, sms);
-                PduSubmitSmResp *resp = transmitter.submit(sm);
-
-                if (resp && resp->get_header().get_commandStatus()==0) {
-                    __trace2__("Response #%d accepted\n", i);
-                }
-                else {
-                    __trace2__("Response wasn't accepted\n");
-                }
-                
-                if (resp) disposePdu((SmppHeader*)resp);
-                delete sms;
+            int msgLen = outLen*2+4;
+            msgBuf = new char[msgLen];
+            ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf, msgLen, 
+                                   CONV_ENCODING_CP1251);
+            body.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::UCS2);
+            out = msgBuf; outLen = msgLen;
+        } 
+        else {
+            body.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::DEFAULT);
+        }
+        
+        try 
+        {
+            if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH) {
+                body.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, outLen);
+                body.setIntProperty(Tag::SMPP_SM_LENGTH, outLen);
+            } else {
+                body.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, out, 
+                                    (outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ? 
+                                     outLen : MAX_ALLOWED_PAYLOAD_LENGTH);
             }
         }
+        catch (...)
+        {
+            __trace__("Something is wrong with message body. "
+                      "Set/Get property failed"); 
+            if (msgBuf) delete msgBuf;
+            return;
+        }
 
+        PduSubmitSm sm;
+        sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+        fillSmppPduFromSms(&sm, &response);
+        PduSubmitSmResp *resp = transmitter.submit(sm);
+        if (resp) disposePdu((SmppHeader*)resp);
+        if (msgBuf) delete msgBuf; 
+        
         {
             MutexGuard guard(countersLock);
             if (requestsProcessingCount) requestsProcessingCount--;
@@ -423,7 +438,7 @@ int main(void)
             DBSmePduListener listener(processor, runner);
             SmppSession      session(cfg, &listener);
 
-	    sigset_t set;
+        sigset_t set;
             sigemptyset(&set);
             sigaddset(&set,SIGINT);
 //            sigset(SIGTERM, appSignalHandler);
