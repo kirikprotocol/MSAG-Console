@@ -508,7 +508,7 @@ static void SendRInfo(MapDialog* dialog)
       hiPrior = true;
     }
   }
-  __map_trace2__("MAP::%s dialogid:0x%x ssn:%d hiprior:%s ac:%d",__FUNCTION__,dialog_id,dialog->ssn,hiPrior?"true":"false", !sms?-1:sms->getAttemptsCount());
+  __map_trace2__("MAP::%s dialogid:0x%x ssn:%d hiprior:%s ac:%d",__FUNCTION__,dialog_id,dialog->ssn,hiPrior?"true":"false", sms?(int)sms->getAttemptsCount():-1);
   USHORT_T result = Et96MapOpenReq(
     SSN, dialog_id,
     &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 );
