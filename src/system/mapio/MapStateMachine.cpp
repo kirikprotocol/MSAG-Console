@@ -1368,7 +1368,7 @@ static void PauseOnImsiReq(MapDialog* map)
   }MAP_CATCH(dialogid_map,0);
 }
 
-static string GetUUSDSubsystem(
+static string GetUSSDSubsystem(
   const char* text,
   unsigned length)
 {
