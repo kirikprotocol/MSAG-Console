@@ -35,7 +35,7 @@ SmscTranscoder::SmscTranscoder(const XMLCh *const encodingName, const unsigned i
   iconvHandlerFrom = getIconv(ucs2, enc.get());
   if (iconvHandlerFrom == (iconv_t)-1)
     throw Exception("Could not open iconv for transcode from \"%s\" to \"%s\", errno:%d", enc.get(), ucs2, (int)errno);
-  iconvHandlerTo = iconv_open(enc.get(), ucs2);
+  iconvHandlerTo = getIconv(enc.get(), ucs2);
   if (iconvHandlerTo == (iconv_t)-1) {
     throw Exception("Could not open iconv for transcode from \"%s\" to \"%s\", errno:%d", ucs2, enc.get(), (int)errno);
   }
