@@ -28,22 +28,23 @@ TABLESPACE SMSC_IDX;
 DROP TABLE SMPPGW_STAT_SME;
 CREATE TABLE SMPPGW_STAT_SME
 (
-  period       NUMBER(22)     NOT NULL,
-  systemid     VARCHAR2(16)   NOT NULL,
-  accepted     NUMBER(22)     NOT NULL,
-  rejected     NUMBER(22)     NOT NULL,
-  delivered    NUMBER(22)     NOT NULL,
-  temperror    NUMBER(22)     NOT NULL,
-  permerror    NUMBER(22)     NOT NULL,
-  SmsTrOk      NUMBER(22)     NOT NULL,
-  SmsTrFailed  NUMBER(22)     NOT NULL,
-  SmsTrBilled  NUMBER(22)     NOT NULL,
-  UssdTrFromScOk NUMBER(22)     NOT NULL,
-  UssdTrFromScFailed NUMBER(22)     NOT NULL,
-  UssdTrFromScFailedBilled NUMBER(22)     NOT NULL,
-  UssdTrFromSmeOk          NUMBER(22)     NOT NULL,
-  UssdTrFromSmeFailed      NUMBER(22)     NOT NULL, 
-  UssdTrFromSmeFailedBilled NUMBER(22)     NOT NULL
+  period               NUMBER(22)     NOT NULL,
+  systemid             VARCHAR2(16)   NOT NULL,
+  providerid           NUMBER(22)     NOT NULL,
+  accepted             NUMBER(22)     NOT NULL,
+  rejected             NUMBER(22)     NOT NULL,
+  delivered            NUMBER(22)     NOT NULL,
+  temperror            NUMBER(22)     NOT NULL,
+  permerror            NUMBER(22)     NOT NULL,
+  SmsTrOk              NUMBER(22)     NOT NULL,
+  SmsTrFailed          NUMBER(22)     NOT NULL,
+  SmsTrBilled          NUMBER(22)     NOT NULL,
+  UssdTrFromScOk       NUMBER(22)     NOT NULL,
+  UssdTrFromScFailed   NUMBER(22)     NOT NULL,
+  UssdTrFromScBilled   NUMBER(22)     NOT NULL,
+  UssdTrFromSmeOk      NUMBER(22)     NOT NULL,
+  UssdTrFromSmeFailed  NUMBER(22)     NOT NULL, 
+  UssdTrFromSmeBilled  NUMBER(22)     NOT NULL
 ) TABLESPACE SMSC_DATA;
 
 CREATE INDEX SMPPGW_STAT_SME_IDX ON SMPPGW_STAT_SME (period)
@@ -72,6 +73,7 @@ CREATE TABLE SMPPGW_STAT_ROUTE
 (
   period       NUMBER(22)     NOT NULL,
   routeid      VARCHAR2(32)   NOT NULL,
+  providerid   NUMBER(22)     NOT NULL,
   accepted     NUMBER(22)     NOT NULL,
   rejected     NUMBER(22)     NOT NULL,
   delivered    NUMBER(22)     NOT NULL,
