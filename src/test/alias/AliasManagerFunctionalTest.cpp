@@ -151,7 +151,7 @@ void AliasManagerFunctionalTest::executeTest(
 	//На каждую пару адресов регистрация случайного количества алиасов
 	for (int i = 0; i < numAddr; i++)
 	{
-		for (int j = i; j < numAddr; j++)
+		for (int j = 0; j < numAddr; j++)
 		{
 			Address& origAlias = *addr[i];
 			Address& origAddr = *addr[j];
@@ -162,7 +162,7 @@ void AliasManagerFunctionalTest::executeTest(
 	//Поиск алиаса и адреса для каждой пары адресов
 	for (int i = 0; i < numAddr; i++)
 	{
-		for (int j = i; j < numAddr; j++)
+		for (int j = 0; j < numAddr; j++)
 		{
 			Address& origAlias = *addr[i];
 			Address& origAddr = *addr[j];
@@ -180,7 +180,7 @@ void AliasManagerFunctionalTest::executeTest(
 	//Поиск алиаса и адреса для каждой пары адресов
 	for (int i = 0; i < numAddr; i++)
 	{
-		for (int j = i; j < numAddr; j++)
+		for (int j = 0; j < numAddr; j++)
 		{
 			Address& origAlias = *addr[i];
 			Address& origAddr = *addr[j];
