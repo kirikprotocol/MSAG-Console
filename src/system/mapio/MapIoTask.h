@@ -108,6 +108,7 @@ struct MapDialog{
   bool hlrWasNotified:1;
   bool isQueryAbonentStatus:1;
   bool dropChain:1;
+  bool id_opened:1;
   Mutex mutex;
   MapState state;
   ET96MAP_DIALOGUE_ID_T dialogid_map;

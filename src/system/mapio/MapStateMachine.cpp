@@ -177,6 +177,7 @@ static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
   __trace2__("MAP::%s: ",__FUNCTION__);
   dialog->dropChain = false;
   dialog->associate = 0;
+  dialog->id_opened = false;
   if ( !dialog->isQueryAbonentStatus ) {
     __trace2__("MAP:%s: Preapre SMSC command",__FUNCTION__);
     dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
@@ -274,6 +275,7 @@ static void DropMapDialog(MapDialog* dialog){
 }
 
 static unsigned RemapDialog(MapDialog* dialog,unsigned ssn){
+  dialog->id_opened = false;
   return MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map,ssn);
 }
 
@@ -417,6 +419,7 @@ static void SendRInfo(MapDialog* dialog)
     throw MAPDIALOG_FATAL_ERROR(
       FormatText("MAP::SendRInfo: Et96MapOpenReq error 0x%x",result),MAP_FALURE);
   }
+  dialog->id_opened = true;
   bool hiPrior = false;
   if ( !dialog->isQueryAbonentStatus && dialog->sms.get() != 0 && dialog->sms->getIntProperty(Tag::SMPP_PRIORITY) > 0 )
     hiPrior = true;
@@ -938,6 +941,7 @@ static bool SendSms(MapDialog* dialog){
     result = Et96MapOpenReq(SSN,dialog->dialogid_map,&appContext,&dialog->destMscAddr,&dialog->scAddr,0,0,0);
     if ( result != ET96MAP_E_OK )
       throw MAPDIALOG_FATAL_ERROR(FormatText("MAP::SendSms: Et96MapOpenReq error 0x%x",result),MAP_FALURE);
+    dialog->id_opened = true;
   }
 
   dialog->smRpOa.typeOfAddress = ET96MAP_ADDRTYPE_SCADDR;
@@ -1185,6 +1189,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
           dialog.assign(dialog2->AddRef());
           dialogid_map = dialog->dialogid_map;
           dialogid_map = MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map,SSN);
+          dialog->id_opened = false;
           dialog->dialogid_smsc = dialogid_smsc;
           dialog->dropChain = false;
         }
@@ -1677,6 +1682,7 @@ USHORT_T Et96MapCloseInd(
       }else{
         if ( !dialog->routeErr ) {
           MapDialogContainer::getInstance()->reAssignDialog(dialogueId,localSsn);
+          dialog->id_opened = false;
           dialogueId = dialog->dialogid_map;
           dialog->state = MAPST_WaitMcsVersion;
           QueryMcsVersion(dialog.get());
@@ -2421,6 +2427,7 @@ static bool NeedNotifyHLR(MapDialog* dialog)
 static void NotifyHLR(MapDialog* dialog)
 {
   MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map,HLR_SSN);
+  dialog->id_opened = false;
   dialog->hlrWasNotified = true;
   USHORT_T result;
   ET96MAP_APP_CNTX_T appContext;
@@ -2435,6 +2442,8 @@ static void NotifyHLR(MapDialog* dialog)
     throw MAPDIALOG_FATAL_ERROR(
       FormatText("MAP::%s: Et96MapOpenReq error 0x%x",__FUNCTION__,result));
   }
+  dialog->id_opened = true;
+
   ET96MAP_DEL_OUTCOME_T deliveryOutcom;
   if ( dialog->wasDelivered ) {
     deliveryOutcom = ET96MAP_TRANSFER_SUCCESSFUL;
