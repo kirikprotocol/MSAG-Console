@@ -28,17 +28,17 @@ public class DivertSetPreprocessor extends DivertManagerState implements Scenari
   public void process(ScenarioState state) throws ProcessingException
   {
     String msg = state.getMessageString();
-    logger.info("Started with msg="+msg);
+    logger.debug("Started with msg="+msg);
     if (msg == null)
       throw new ProcessingException("Diver option is undefined", -1);
     msg = msg.trim();
-    if (msg.equals("1"))      state.setAttribute(Constants.ATTR_REASON, DivertInfo.BUSY);
+    if      (msg.equals("1")) state.setAttribute(Constants.ATTR_REASON, DivertInfo.BUSY);
     else if (msg.equals("2")) state.setAttribute(Constants.ATTR_REASON, DivertInfo.ABSENT);
     else if (msg.equals("3")) state.setAttribute(Constants.ATTR_REASON, DivertInfo.NOTAVAIL);
     else if (msg.equals("4")) state.setAttribute(Constants.ATTR_REASON, DivertInfo.UNCOND);
     else
       throw new ProcessingException("Diver option '"+msg+"' is unknown", -2);
-    logger.info("Ended with msg="+msg);
+    logger.debug("Ended");
   }
 
 }

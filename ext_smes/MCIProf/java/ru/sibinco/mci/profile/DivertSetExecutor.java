@@ -36,10 +36,8 @@ public class DivertSetExecutor extends DivertManagerState implements Executor
 
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
-    logger.info("Started");
     String pageResp = pageFormat.format(new Object[] {});
     Message resp = new Message(); resp.setMessageString(pageResp);
-    logger.info("Ended");
     return new ExecutorResponse(new Message[]{resp}, false);
   }
 }
