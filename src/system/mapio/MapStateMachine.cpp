@@ -1373,7 +1373,7 @@ static void PauseOnImsiReq(MapDialog* map)
     else 
     {
       __trace2__("MAP::%s using preparsed address",__FUNCTION__);
-      if (!dialog->hasIndAddress )
+      if (!map->hasIndAddress )
         throw runtime_error("MAP::%s MAP.did:{0x%x} has no originating address");
 #if !defined DISABLE_TRACING    
       {
