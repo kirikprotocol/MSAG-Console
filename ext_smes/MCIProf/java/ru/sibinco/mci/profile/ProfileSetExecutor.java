@@ -7,7 +7,6 @@ import org.apache.log4j.Category;
 
 import java.text.MessageFormat;
 import java.util.Properties;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.HashMap;
 

@@ -6,7 +6,6 @@ import ru.sibinco.smpp.appgw.scenario.ScenarioState;
 import ru.sibinco.smpp.appgw.util.Transliterator;
 
 import java.util.Properties;
-import java.io.IOException;
 import java.text.MessageFormat;
 
 /**

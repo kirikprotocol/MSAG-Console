@@ -4,7 +4,6 @@ import ru.sibinco.smpp.appgw.scenario.*;
 import ru.sibinco.smpp.appgw.util.Transliterator;
 
 import java.util.Properties;
-import java.io.IOException;
 
 import org.apache.log4j.Category;
 
@@ -34,8 +33,7 @@ public class DivertManagerPreprocessor extends DivertManagerState implements Sce
         String reason = (String)state.getAttribute(Constants.ATTR_REASON);
         if (reason != null && !msg.equals(Constants.OPTION_EXIT))
         {
-          String value = null;
-          msg = msg.trim();
+          String value = null; msg = msg.trim();
           if      (msg.equals("1")) value = Constants.OFF;
           else if (msg.equals("2")) value = Constants.VOICEMAIL;
           else if (msg.equals("3") && checkReason(reason)) value = Constants.SERVICE;

@@ -25,14 +25,19 @@ public class ProfileSetPreprocessor extends ProfileManagerState implements Scena
   public void process(ScenarioState state) throws ProcessingException
   {
     String msg = state.getMessageString();
-    if (msg == null) throw new ProcessingException("Profile option is undefined",
-                                                   ErrorCode.PAGE_EXECUTOR_EXCEPTION);
+    if (msg == null) {
+      final String err = "Profile option is undefined";
+      logger.error(err);
+      throw new ProcessingException(err, ErrorCode.PAGE_EXECUTOR_EXCEPTION);
+    }
     msg = msg.trim();
     if      (msg.equals("2")) state.setAttribute(Constants.ATTR_REASON, Constants.INFORM);
     else if (msg.equals("4")) state.setAttribute(Constants.ATTR_REASON, Constants.NOTIFY);
-    else throw new ProcessingException("Profile option '"+msg+"' is unknown",
-                                       ErrorCode.PAGE_EXECUTOR_EXCEPTION);
-
+    else {
+      final String err = "Profile option '"+msg+"' is unknown";
+      logger.error(err);
+      throw new ProcessingException(err, ErrorCode.PAGE_EXECUTOR_EXCEPTION);
+    }
     state.removeAttribute(Constants.ATTR_FORMATS);
   }
 
