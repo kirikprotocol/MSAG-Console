@@ -17,17 +17,14 @@
 #include "test/config/ConfigUtil.hpp"
 #include "test/util/TestTaskManager.hpp"
 #include "test/util/TextUtil.hpp"
-#include "SmppProfilerCheckList.hpp"
+#include "SystemSmeCheckList.hpp"
 #include "test/config/ConfigGenCheckList.hpp"
 #include "util/debug.h"
 #include <vector>
 #include <sstream>
 #include <iostream>
 
-//#define SIMPLE_TEST
-#ifdef SIMPLE_TEST
-	#undef ASSERT
-#endif
+//#define LOAD_TEST
 
 using smsc::sme::SmeConfig;
 using smsc::smeman::SmeInfo;
@@ -58,6 +55,7 @@ Profile defProfile;
 ProfileRegistry* profileReg;
 CheckList* smppChkList;
 CheckList* configChkList;
+SmppPduSender* pduSender;
 
 /**
  * Тестовая sme.
@@ -206,25 +204,26 @@ void TestSme::executeCycle()
 		evt.Wait(3000);
 		//тестовая последовательност команд
 		seq.clear();
-#ifdef SIMPLE_TEST
-	seq.push_back(201);
+#ifdef LOAD_TEST
+		seq.push_back(201);
 #else
-	seq.insert(seq.end(), 20, 1);
-	//seq.insert(seq.end(), 10, 2);
-	seq.push_back(3);
-	seq.push_back(4);
-	seq.push_back(5);
+		seq.insert(seq.end(), 20, 1);
+		seq.insert(seq.end(), 10, 2);
+		seq.push_back(3);
+		seq.push_back(4);
+		seq.push_back(5);
+		seq.push_back(6);
 #ifdef ASSERT
-	seq.push_back(101);
+		seq.push_back(101);
 #endif //ASSERT
-#endif //SIMPLE_TEST
-	random_shuffle(seq.begin(), seq.end());
+#endif //LOAD_TEST
+		random_shuffle(seq.begin(), seq.end());
 	}
 	idx = idx < seq.size() ? idx : 0;
 	switch (seq[idx++])
 	{
 		case 1: //правильная sms
-			protocolTc.submitSmCorrect(rand0(1), 1 /*RAND_TC*/);
+			protocolTc.submitSmCorrect(rand0(1), RAND_TC);
 			break;
 		case 2: //неправильная sms
 			protocolTc.submitSmIncorrect(rand0(1), RAND_TC);
@@ -238,7 +237,10 @@ void TestSme::executeCycle()
 		case 5: //обновление профиля некорректными данными
 			profilerTc.updateProfileIncorrect(rand0(1), getDataCoding(RAND_TC));
 			break;
-		case 6:
+		case 6: //отправка pdu smsc sme
+			smscSmeTc.submitSm(rand0(1));
+			break;
+		case 7:
 			protocolTc.replaceSm(rand0(1), RAND_TC);
 			break;
 		case 101: //asserts
@@ -281,7 +283,7 @@ uint32_t TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
 		return protocolTc.sendDeliverySmRespOk(pdu, rand0(1));
 	}
 	//на остальное ответить как придется
-#ifdef SIMPLE_TEST
+#ifdef LOAD_TEST
 	return protocolTc.sendDeliverySmRespOk(pdu, rand0(1));
 #else
 	switch (rand1(3))
@@ -293,7 +295,7 @@ uint32_t TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
 		default:
 			return protocolTc.sendDeliverySmRespOk(pdu, rand0(1));
 	}
-#endif //SIMPLE_TEST
+#endif //LOAD_TEST
 }
 
 void TestSme::updateStat()
@@ -361,6 +363,7 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 {
 	__require__(numSme <= numAddr);
 	__cfg_addr__(smscAddr);
+	__cfg_addr__(smscAlias);
 	__cfg_str__(smscSystemId);
 	__cfg_addr__(profilerAddr);
 	__cfg_addr__(profilerAlias);
@@ -489,17 +492,26 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 		route2.enabling = true;
 		tcRoute.addCorrectRouteMatch(&route2, NULL, RAND_TC);
 	}
-	//регистрация маршрутов smsc -> sme (delivery receipts)
+	//регистрация маршрутов sme <-> smsc (delivery receipts)
 	for (int i = 0; i < numAddr; i++)
 	{
 		//smsc -> sme
-		RouteInfo route;
-		route.source = smscAddr;
-		route.dest = *addr[i];
-		route.smeSystemId = smeInfo[i]->systemId;
-		route.enabling = true;
-		tcRoute.addCorrectRouteMatch(&route, NULL, RAND_TC);
+		RouteInfo route1;
+		route1.source = smscAddr;
+		route1.dest = *addr[i];
+		route1.smeSystemId = smeInfo[i]->systemId;
+		route1.enabling = true;
+		tcRoute.addCorrectRouteMatch(&route1, NULL, RAND_TC);
+		//sme -> smsc
+		RouteInfo route2;
+		route2.source = *addr[i];
+		route2.dest = smscAddr;
+		route2.smeSystemId = smscSystemId;
+		route2.enabling = true;
+		tcRoute.addCorrectRouteMatch(&route2, NULL, RAND_TC);
 	}
+	//маршруты между системными sme
+	cfgUtil.setupSystemSmeRoutes();
 	//tcRoute->commit();
 	//создание sme
 	vector<TestSme*> sme;
@@ -519,6 +531,7 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 		sme.push_back(new TestSme(i, config, fixture)); //throws Exception
 		fixture->pduHandler[smscAddr] = sme.back()->getDeliveryReceiptHandler();
 		fixture->pduHandler[profilerAddr] = sme.back()->getProfilerAckHandler();
+		fixture->pduSender = pduSender;
 		smeReg->bindSme(smeInfo[i]->systemId);
 	}
 	__trace__("*** Route table ***");
@@ -543,6 +556,11 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	for (int i = 0; i < numSme; i++)
 	{
 		cfgUtil.checkRoute(smscAddr, smscSystemId, *addr[i]);
+	}
+	//печать таблицы маршрутов sme->smsc
+	for (int i = 0; i < numSme; i++)
+	{
+		cfgUtil.checkRoute(*addr[i], smeInfo[i]->systemId, smscAlias);
 	}
 	if (!numBound)
 	{
@@ -572,15 +590,24 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	return sme;
 }
 
-/*
-void()
+void printRouteArcBillInfo(const char* fileName)
 {
 	__cfg_addr__(smscAddr);
 	__cfg_addr__(profilerAddr);
 	__cfg_addr__(profilerAlias);
-	ofstream report("routes.txt");
-	const vector<const Address*>& addrList = smeReg->getAddressList();
-	static string delim = "\t\t";
+	__cfg_addr__(dbSmeAddr);
+	__cfg_addr__(dbSmeAlias);
+	__cfg_addr__(dbSmeInvalidAddr);
+
+	ConfigUtil cfgUtil(smeReg, aliasReg, routeReg);
+	ofstream report(fileName);
+	vector<const Address*> addrList = smeReg->getAddressList();
+	addrList.push_back(&smscAddr);
+	addrList.push_back(&profilerAddr);
+	addrList.push_back(&profilerAlias);
+	addrList.push_back(&dbSmeAddr);
+	addrList.push_back(&dbSmeAlias);
+	addrList.push_back(&dbSmeInvalidAddr);
 	for (int i = 0; i < addrList.size(); i++)
 	{
 		for (int j = 0; j < addrList.size(); j++)
@@ -589,27 +616,21 @@ void()
 			if (cfgUtil.checkRouteArchBill(*addrList[i], *addrList[j],
 				archived, billing))
 			{
-				report << *addrList[i] << delim << *addrList[j] << delim <<
-					(archived ? "Y" : "N") << delim << (billing ? "Y" : "N") << endl;
+				string srcAddr = str(*addrList[i]);
+				string destAlias = str(*addrList[j]);
+				report << srcAddr << string(31 - srcAddr.length(), ' ') <<
+					destAlias << string(31 - destAlias.length(), ' ') <<
+					(archived ? "Y" : "N") << "     " <<
+					(billing ? "1" : "0") << endl;
 			}
 		}
 	}
-	//печать таблицы маршрутов sme<->profiler
-	for (int i = 0; i < numSme; i++)
-	{
-		cfgUtil.checkRoute2(*addr[i], smeInfo[i]->systemId, profilerAlias);
-	}
-	//печать таблицы маршрутов smsc->sme
-	for (int i = 0; i < numSme; i++)
-	{
-		cfgUtil.checkRoute(smscAddr, smscSystemId, *addr[i]);
-	}
 }
-*/
 
 void executeFunctionalTest(const string& smscHost, int smscPort)
 {
 	vector<TestSme*> sme;
+	ThreadPool threadPool;
 	TestSmeTaskManager tm;
 	tm.startTimer();
 	//обработка команд консоли
@@ -625,6 +646,7 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 			cout << "test <start|pause|resume> - pause/resume test execution" << endl;
 			cout << "stat - print statistics" << endl;
 			cout << "chklist - save checklist" << endl;
+			cout << "route info - save route arc/billing info" << endl;
 			cout << "dump pdu - dump pdu registry" << endl;
 			cout << "set delay <msec> - slow down test cycle execution" << endl;
 			cout << "quit [checklist] - stop test and quit, optionaly save checklist" << endl;
@@ -663,6 +685,7 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 			is >> cmd;
 			if (cmd == "start")
 			{
+				threadPool.startTask(pduSender);
 				SmppFunctionalTest::resize(sme.size());
 				for (int i = 0; i < sme.size(); i++)
 				{
@@ -699,6 +722,19 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 			configChkList->save();
 			configChkList->saveHtml();
 			cout << "Checklists saved" << endl;
+		}
+		else if (cmd == "route")
+		{
+			is >> cmd;
+			if (cmd == "info")
+			{
+				printRouteArcBillInfo("routes.txt");
+				cout << "Routes info saved to file routes.txt" << endl;
+			}
+			else
+			{
+				help = true;
+			}
 		}
 		else if (cmd == "dump")
 		{
@@ -743,6 +779,7 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 				configChkList->saveHtml();
 				cout << "Checklist saved" << endl;
 			}
+			threadPool.shutdown();
 			tm.stopTasks();
 			cout << "Total time = " << tm.getExecutionTime() << endl;
 			return;
@@ -775,8 +812,9 @@ int main(int argc, char* argv[])
 	defProfile.codepage = ProfileCharsetOptions::Default;
 	defProfile.reportoptions = ProfileReportOptions::ReportNone;
 	profileReg = new ProfileRegistry(defProfile);
-	smppChkList = new SmppProfilerCheckList();
+	smppChkList = new SystemSmeCheckList();
 	configChkList = new ConfigGenCheckList();
+	pduSender = new SmppPduSender();
 	try
 	{
 		executeFunctionalTest(smscHost, smscPort);
@@ -795,6 +833,7 @@ int main(int argc, char* argv[])
 	delete profileReg;
 	delete smppChkList;
 	delete configChkList;
+	//delete pduSender;
 	return 0;
 }
 
