@@ -1,4 +1,4 @@
-<project default="update" name="SMPP Gateway">
+<project default="update" name="SMPP Gateway web application">
 
   <property environment="env"/>
   <property name="java_src" location="WEB-INF/src"/>

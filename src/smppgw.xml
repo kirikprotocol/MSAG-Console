@@ -1,0 +1,135 @@
+<project name="smppgw" default="update">
+  <property environment="env"/>
+
+  <property name="sibinco.install_dir" location="${env.HOME}/install"/>
+  <property name="sibinco.build_dir" location="${env.HOME}/build"/>
+  <property name="sibinco.src_dir" location="."/>
+
+  <property name="sibinco.services" location="${sibinco.install_dir}/services"/>
+  <property name="sibinco.conf" location="${sibinco.install_dir}/conf"/>
+  <property name="sibinco.logs" location="${sibinco.install_dir}/logs"/>
+  <property name="sibinco.lib" location="${sibinco.install_dir}/lib"/>
+
+  <property name="daemon.install" location="${sibinco.install_dir}/daemon"/>
+  <property name="daemon.bin" location="${daemon.install}/bin"/>
+  <property name="daemon.conf" location="${daemon.install}/conf"/>
+  <property name="daemon.lib" location="${daemon.install}/lib"/>
+  <property name="daemon.logs" location="${daemon.install}/logs"/>
+  <property name="daemon.services" location="${daemon.install}/services"/>
+
+  <property name="gw.install" location="${daemon.services}/smppgw"/>
+  <property name="gw.bin" location="${gw.install}/bin"/>
+  <property name="gw.conf" location="${gw.install}/conf"/>
+  <property name="gw.lib" location="${gw.install}/lib"/>
+  <property name="gw.logs" location="${gw.install}/logs"/>
+
+  <target name="init">
+    <mkdir dir="${sibinco.install_dir}"/>
+    <mkdir dir="${sibinco.conf}"/>
+    <mkdir dir="${sibinco.logs}"/>
+    <mkdir dir="${sibinco.lib}"/>
+
+    <mkdir dir="${daemon.install}"/>
+    <mkdir dir="${daemon.bin}"/>
+    <mkdir dir="${daemon.conf}"/>
+    <mkdir dir="${daemon.services}"/>
+    <symlink link="${daemon.lib}" resource="${sibinco.lib}"/>
+    <symlink link="${daemon.logs}" resource="${sibinco.logs}"/>
+
+    <symlink link="${sibinco.services}" resource="${daemon.services}"/>
+
+    <mkdir dir="${gw.install}"/>
+    <mkdir dir="${gw.bin}"/>
+    <mkdir dir="${gw.conf}"/>
+    <symlink link="${gw.lib}" resource="${sibinco.lib}"/>
+    <symlink link="${gw.logs}" resource="${sibinco.logs}"/>
+
+    <symlink link="${sibinco.install_dir}/tomcat" resource="${env.CATALINA_HOME}"/>
+  </target>
+
+  <target name="clean">
+    <exec executable="make" failifexecutionfails="yes" failonerror="yes">
+      <arg line="clean"/>
+    </exec>
+  </target>
+
+  <target name="compile" depends="init">
+    <exec executable="make" failifexecutionfails="yes" failonerror="yes">
+      <arg line="deps"/>
+      <arg line="logger"/>
+      <arg line="db"/>
+      <arg line="smppgw"/>
+    </exec>
+  </target>
+
+  <target name="creates_files" depends="init">
+    <input message="Sibinco cvs root:[./..]" addproperty="sibinco.cvs" defaultvalue=".."/>
+    <property name="sibinco.cvs.conf" location="${sibinco.cvs}/config"/>
+
+    <copy todir="${sibinco.conf}" preservelastmodified="yes">
+      <fileset dir="${sibinco.cvs.conf}" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd SmeRecords.dtd smppgw/command_gw.dtd locale_resources.dtd routes.dtd"/>
+    </copy>
+    <copy file="${sibinco.cvs.conf}/daemon.xml"               tofile="${daemon.conf}/config.xml"/>
+    <copy file="${sibinco.cvs.conf}/logger.properties"        tofile="${daemon.conf}/logger.properties"/>
+    <copy file="${sibinco.cvs.conf}/logger.properties"        tofile="${sibinco.conf}/gw.logger.properties"/>
+    <copy file="${sibinco.cvs.conf}/command.dtd"              tofile="${sibinco.conf}/command.dtd"/>
+    <copy file="${sibinco.cvs.conf}/configuration.dtd"        tofile="${sibinco.conf}/configuration.dtd"/>
+    <copy file="${sibinco.cvs.conf}/response.dtd"             tofile="${sibinco.conf}/response.dtd"/>
+    <copy file="${sibinco.cvs.conf}/AliasRecords.dtd"         tofile="${sibinco.conf}/AliasRecords.dtd"/>
+    <copy file="${sibinco.cvs.conf}/SmeRecords.dtd"           tofile="${sibinco.conf}/SmeRecords.dtd"/>
+    <copy file="${sibinco.cvs.conf}/smppgw/command_gw.dtd"    tofile="${sibinco.conf}/command_gw.dtd"/>
+    <copy file="${sibinco.cvs.conf}/resourcemanager/locale_resources.dtd"     tofile="${sibinco.conf}/locale_resources.dtd"/>
+    <copy file="${sibinco.cvs.conf}/routes.dtd"               tofile="${sibinco.conf}/routes.dtd"/>
+    <copy file="${sibinco.cvs.conf}/smppgw/aliases.xml"       tofile="${sibinco.conf}/gw.aliases.xml"/>
+    <copy file="${sibinco.cvs.conf}/smppgw/config.xml"        tofile="${sibinco.conf}/gw.config.xml"/>
+    <copy file="${sibinco.cvs.conf}/smppgw/logger.properties" tofile="${sibinco.conf}/gw.logger.properties"/>
+    <copy file="${sibinco.cvs.conf}/smppgw/routes.xml"        tofile="${sibinco.conf}/gw.routes.xml"/>
+    <copy file="${sibinco.cvs.conf}/smppgw/routes.xml"        tofile="${sibinco.conf}/gw.routes_.xml"/>
+    <copy file="${sibinco.cvs.conf}/smppgw/routes.xml"        tofile="${sibinco.conf}/gw.routes__.xml"/>
+    <copy file="${sibinco.cvs.conf}/smppgw/sme.xml"           tofile="${sibinco.conf}/gw.sme.xml"/>
+
+    <symlink link="${daemon.conf}/command.dtd"               resource="${sibinco.conf}/command.dtd"/>
+    <symlink link="${daemon.conf}/configuration.dtd"         resource="${sibinco.conf}/configuration.dtd"/>
+    <symlink link="${daemon.conf}/response.dtd"              resource="${sibinco.conf}/response.dtd"/>
+    <symlink link="${sibinco.conf}/daemon.xml"               resource="${daemon.conf}/config.xml"/>
+    <symlink link="${sibinco.conf}/daemon.logger.properties" resource="${daemon.conf}/logger.properties"/>
+
+    <symlink link="${gw.conf}/AliasRecords.dtd"     resource="${sibinco.conf}/AliasRecords.dtd"/>
+    <symlink link="${gw.conf}/SmeRecords.dtd"       resource="${sibinco.conf}/SmeRecords.dtd"/>
+    <symlink link="${gw.conf}/command_gw.dtd"       resource="${sibinco.conf}/command_gw.dtd"/>
+    <symlink link="${gw.conf}/configuration.dtd"    resource="${sibinco.conf}/configuration.dtd"/>
+    <symlink link="${gw.conf}/locale_resources.dtd" resource="${sibinco.conf}/locale_resources.dtd"/>
+    <symlink link="${gw.conf}/response.dtd"         resource="${sibinco.conf}/response.dtd"/>
+    <symlink link="${gw.conf}/routes.dtd"           resource="${sibinco.conf}/routes.dtd"/>
+    <symlink link="${gw.conf}/aliases.xml"          resource="${sibinco.conf}/gw.aliases.xml"/>
+    <symlink link="${gw.conf}/config.xml"           resource="${sibinco.conf}/gw.config.xml"/>
+    <symlink link="${gw.conf}/logger.properties"    resource="${sibinco.conf}/gw.logger.properties"/>
+    <symlink link="${gw.conf}/routes.xml"           resource="${sibinco.conf}/gw.routes.xml"/>
+    <symlink link="${gw.conf}/routes_.xml"          resource="${sibinco.conf}/gw.routes_.xml"/>
+    <symlink link="${gw.conf}/routes__.xml"         resource="${sibinco.conf}/gw.routes__.xml"/>
+    <symlink link="${gw.conf}/sme.xml"              resource="${sibinco.conf}/gw.sme.xml"/>
+  </target>
+
+  <target name="cvs_update">
+    <cvs command="update" compressionlevel="9" failonerror="yes" quiet="yes"/>
+  </target>
+
+  <target name="build" depends="creates_files,compile">
+    <symlink link="${daemon.bin}/daemon" resource="${sibinco.build_dir}/bin/admin/daemon/smsc_ssdaemon"/>
+    <symlink link="${gw.bin}/service"    resource="${sibinco.build_dir}/bin/smppgw/smppgw"/>
+    <symlink link="${sibinco.lib}/libdb_exc.so" resource="${sibinco.build_dir}/bin/db/exceptions/libdb_exc.so"/>
+    <symlink link="${sibinco.lib}/libdb_oci.so" resource="${sibinco.build_dir}/bin/db/oci/libdb_oci.so"/>
+    <symlink link="${sibinco.lib}/liblogger.so" resource="${sibinco.build_dir}/bin/liblogger.so"/>
+  </target>
+
+  <target name="install" depends="update">
+  </target>
+
+  <target name="update" depends="init,cvs_update,build"/>
+
+  <target name="test">
+    <echoproperties prefix="sibinco"/>
+    <echoproperties prefix="daemon"/>
+    <echoproperties prefix="gw"/>
+  </target>
+</project>
