@@ -1001,120 +1001,99 @@ void SmppTransmitterTestCases::replaceSm(bool sync, int num)
 	}
 }
 
-void SmppTransmitterTestCases::sendDeliverySmRespOk(PduDeliverySm& pdu, int num)
+void SmppTransmitterTestCases::sendDeliverySmResp(PduDeliverySmResp& pdu, bool sync)
 {
-	TCSelector s(num, 2);
-	__decl_tc12__;
+	__decl_tc__;
 	try
 	{
-		//выбрать синхронный или асинхронный трансмитер
-		bool sync;
-		SmppTransmitter* transmitter;
-		switch (s.value())
+		if (sync)
 		{
-			case 1:
-				__tc1__("sendDeliverySmResp.sync");
-				transmitter = session->getSyncTransmitter();
-				sync = true;
-				break;
-			case 2:
-				__tc1__("sendDeliverySmResp.async");
-				transmitter = session->getAsyncTransmitter();
-				sync = false;
-				break;
-			default:
-				__unreachable__("Invalid num");
+			__tc__("sendDeliverySmResp.sync");
+			//__dumpPdu__("sendDeliverySmRespSyncBefore", systemId, pdu);
+			session->getSyncTransmitter()->sendDeliverySmResp(pdu);
+			__dumpPdu__("sendDeliverySmRespSyncAfter", systemId, &pdu);
 		}
-		//отправить респонс
+		else
+		{
+			__tc__("sendDeliverySmResp.async");
+			//__dumpPdu__("sendDeliverySmRespAsyncBefore", systemId, pdu);
+			session->getAsyncTransmitter()->sendDeliverySmResp(pdu);
+			__dumpPdu__("sendDeliverySmRespAsyncAfter", systemId, &pdu);
+		}
+		__tc_ok__;
+	}
+	catch (...)
+	{
+		__tc_fail__(100);
+		//error();
+		throw;
+	}
+}
+
+void SmppTransmitterTestCases::sendDeliverySmRespOk(PduDeliverySm& pdu, bool sync)
+{
+	__decl_tc__;
+	try
+	{
+		__tc__("sendDeliverySmResp.sendOk");
 		PduDeliverySmResp respPdu;
 		respPdu.get_header().set_sequenceNumber(pdu.get_header().get_sequenceNumber());
 		respPdu.get_header().set_commandStatus(ESME_ROK); //No Error
-		__tc2__("sendDeliverySmResp.sendOk");
-		__trace2__("sendDeliverySmResp%sBeforeOk", (sync ? "Sync" : "Async"));
-		transmitter->sendDeliverySmResp(respPdu);
-		__trace2__("sendDeliverySmResp%sAfterOk", (sync ? "Sync" : "Async"));
-		__tc12_ok__;
+		sendDeliverySmResp(respPdu, sync);
+		__tc_ok__;
 	}
 	catch(...)
 	{
-		__tc12_fail__(s.value());
+		__tc_fail__(100);
 		error();
 	}
 }
 
-void SmppTransmitterTestCases::sendDeliverySmRespErr(PduDeliverySm& pdu, int num)
+void SmppTransmitterTestCases::sendDeliverySmRespErr(PduDeliverySm& pdu,
+	bool sync, int num)
 {
-	int numTransmitter = 2; int numResp = 5;
-	TCSelector s(num, numTransmitter * numResp);
-	__decl_tc12__;
+	TCSelector s(num, 5);
+	__decl_tc__;
 	try
 	{
-		//выбрать синхронный или асинхронный трансмитер
-		bool sync;
-		SmppTransmitter* transmitter;
-		switch (s.value1(numTransmitter))
-		{
-			case 1:
-				__tc1__("sendDeliverySmResp.sync");
-				transmitter = session->getSyncTransmitter();
-				sync = true;
-				break;
-			case 2:
-				__tc1__("sendDeliverySmResp.async");
-				transmitter = session->getAsyncTransmitter();
-				sync = false;
-				break;
-			default:
-				__unreachable__("Invalid num");
-		}
-		//отправить респонс
 		PduDeliverySmResp respPdu;
 		respPdu.get_header().set_sequenceNumber(pdu.get_header().get_sequenceNumber());
-		switch (s.value2(numTransmitter))
+		switch (s.value())
 		{
 			case 1: //не отправлять респонс
-				__tc2__("sendDeliverySmResp.notSend");
-				__trace__("sendDeliverySmRespNo");
+				__tc__("sendDeliverySmResp.notSend");
 				break;
 			case 2: //отправить респонс с кодом ошибки 0x1-0xff
-				__tc2__("sendDeliverySmResp.sendWithErrCode");
+				__tc__("sendDeliverySmResp.sendWithErrCode");
 				respPdu.get_header().set_commandStatus(rand1(0xff));
-				__trace2__("sendDeliverySmResp%sBeforeErr1", (sync ? "Sync" : "Async"));
-				transmitter->sendDeliverySmResp(respPdu);
-				__trace2__("sendDeliverySmResp%sAfterErr1", (sync ? "Sync" : "Async"));
+				sendDeliverySmResp(respPdu, sync);
 				break;
 			case 3: //отправить респонс с кодом ошибки:
 				//0x100-0x3ff - Reserved for SMPP extension
 				//0x400-0x4ff - Reserved for SMSC vendor specific
-				__tc2__("sendDeliverySmResp.sendWithErrCode");
+				__tc__("sendDeliverySmResp.sendWithErrCode");
 				respPdu.get_header().set_commandStatus(rand2(0x100, 0x4ff));
-				__trace2__("sendDeliverySmResp%sBeforeErr2", (sync ? "Sync" : "Async"));
-				transmitter->sendDeliverySmResp(respPdu);
-				__trace2__("sendDeliverySmResp%sAfterErr2", (sync ? "Sync" : "Async"));
+				sendDeliverySmResp(respPdu, sync);
 				break;
 			case 4: //отправить респонс с кодом ошибки >0x500 - Reserved
-				__tc2__("sendDeliverySmResp.sendWithErrCode");
+				__tc__("sendDeliverySmResp.sendWithErrCode");
 				respPdu.get_header().set_commandStatus(rand2(0x500, INT_MAX));
-				__trace2__("sendDeliverySmResp%sBeforeErr3", (sync ? "Sync" : "Async"));
-				transmitter->sendDeliverySmResp(respPdu);
-				__trace2__("sendDeliverySmResp%sAfterErr3", (sync ? "Sync" : "Async"));
+				sendDeliverySmResp(respPdu, sync);
 				break;
 			case 5: //отправить респонс с неправильным sequence_number
-				__tc2__("sendDeliverySmResp.sendInvalidSequenceNumber");
+				__tc__("sendDeliverySmResp.sendInvalidSequenceNumber");
 				respPdu.get_header().set_sequenceNumber(INT_MAX);
 				respPdu.get_header().set_commandStatus(ESME_ROK); //No Error
-				__trace2__("sendDeliverySmResp%sBeforeInvalidSeqNum", (sync ? "Sync" : "Async"));
-				transmitter->sendDeliverySmResp(respPdu);
-				__trace2__("sendDeliverySmResp%sAfterInvalidSeqNum", (sync ? "Sync" : "Async"));
+				sendDeliverySmResp(respPdu, sync);
 				break;
 			default:
 				__unreachable__("Invalid num");
 		}
-		__tc12_ok__;
+		__tc_ok__;
 	}
 	catch(...)
 	{
-		__tc12_fail__(s.value());
+		__tc_fail__(s.value());
 		error();
 	}
 }

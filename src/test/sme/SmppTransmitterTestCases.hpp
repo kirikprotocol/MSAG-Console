@@ -55,12 +55,12 @@ public:
 	/**
 	 * Отправка синхронного или асинхронного deliver_sm_resp со статусом ok.
 	 */
-	void sendDeliverySmRespOk(PduDeliverySm& pdu, int num);
+	void sendDeliverySmRespOk(PduDeliverySm& pdu, bool sync);
 
 	/**
 	 * Отправка синхронного или асинхронного deliver_sm_resp с кодом ошибки.
 	 */
-	void sendDeliverySmRespErr(PduDeliverySm& pdu, int num);
+	void sendDeliverySmRespErr(PduDeliverySm& pdu, bool sync, int num);
 
 	/*
 		virtual PduSubmitSmResp* submit(PduSubmitSm& pdu)=0;
@@ -107,6 +107,7 @@ private:
 		time_t respTime);
 	void processReplaceSmAsync(PduData* pduData, PduReplaceSmResp* respPdu);
 	void sendReplaceSmPdu(PduReplaceSm* pdu, PduData* replacePduData, bool sync);
+	void sendDeliverySmResp(PduDeliverySmResp& pdu, bool sync);
 };
 
 }

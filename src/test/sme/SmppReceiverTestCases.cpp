@@ -210,21 +210,21 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 {
 	__trace__("processNormalSms()");
 	__decl_tc__;
-	__tc__("processDeliverySm.normalSms");
 	try
 	{
-		//в полученной pdu нет user_message_reference
-		if (!pdu.get_optional().has_userMessageReference())
-		{
-			__tc_fail__(1);
-			return;
-		}
 		Address origAlias;
 		SmppUtil::convert(pdu.get_message().get_source(), &origAlias);
 		Address origAddr = aliasReg->findAddressByAlias(origAlias);
 		//сначала поиск pdu по деалиасенному адресу отправителя, потом алиасенному
-		for (bool cont = true; cont; )
+		for (;;)
 		{
+			__tc__("processDeliverySm.normalSms");
+			//в полученной pdu нет user_message_reference
+			if (!pdu.get_optional().has_userMessageReference())
+			{
+				__tc_fail__(1);
+				break;
+			}
 			//перкрыть pduReg класса
 			PduRegistry* pduReg = smeReg->getPduRegistry(origAddr);
 			if (!pduReg)
@@ -233,6 +233,7 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 				if (origAddr == origAlias)
 				{
 					__tc_fail__(2);
+					break;
 				}
 			}
 			else
@@ -266,6 +267,7 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 					if (origAddr == origAlias)
 					{
 						__tc_fail__(3);
+						break;
 					}
 				}
 				else
@@ -340,7 +342,10 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 					__tc_ok_cond__;
 				}
 			}
-			cont = origAddr != origAlias;
+			if (origAddr == origAlias)
+			{
+				break;
+			}
 			origAddr = origAlias;
 		}
 	}

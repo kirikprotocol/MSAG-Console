@@ -202,19 +202,19 @@ void TestSme::onStopped()
 bool TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
 {
 #ifdef SIMPLE_TEST
-	tc.getTransmitter().sendDeliverySmRespOk(pdu, RAND_TC);
+	tc.getTransmitter().sendDeliverySmRespOk(pdu, rand0(1));
 	return true;
 #else
 	switch (rand1(3))
 	{
 		case 1:
-			tc.getTransmitter().sendDeliverySmRespErr(pdu, RAND_TC);
+			tc.getTransmitter().sendDeliverySmRespErr(pdu, rand0(1), RAND_TC);
 			return false;
 		case 2:
 			//не посылать респонс
 			return false;
 		default:
-			tc.getTransmitter().sendDeliverySmRespOk(pdu, RAND_TC);
+			tc.getTransmitter().sendDeliverySmRespOk(pdu, rand0(1));
 			return true;
 	}
 #endif //SIMPLE_TEST
