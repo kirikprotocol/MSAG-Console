@@ -7,7 +7,7 @@
 #include "util/config/Manager.h"
 #include "util/config/ConfigView.h"
 #include "emailsme/statuscodes.h"
-#include "util/regexp/RegExp.hpp"
+#include "util/regexp/RegExp.cpp"
 #include "core/buffers/Array.hpp"
 #include <signal.h>
 
@@ -304,7 +304,7 @@ int ProcessMessage(const char *msg,int len)
   sms.setEServiceType(cfg::serviceType.c_str());
   sms.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,cfg::protocolId);
 
-  sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
+  sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
   sms.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,text.c_str(),text.length());
   sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,text.length());
 

@@ -16,6 +16,8 @@
 #error "RegExp.hpp is for C++ only"
 #endif
 
+#define RE_STATIC_LOCALE
+
 #ifdef RE_SPINOZA_MODE
   #define RE_EXTERNAL_CTYPE
   #define NAMEDBRACKETS
@@ -34,18 +36,18 @@
   #define SetItem setitem
   #define GetPtr  getitem
 #else
-  #include "Hash.hpp"
+  #include "core/buffers/Hash.hpp"
 #endif
 #ifdef RELIB
 #include "List.hpp"
 #endif
 #endif
 
+
 namespace smsc{
 namespace util{
 namespace regexp{
 
-#define RE_STATIC_LOCALE
 
 #ifdef UNICODE
 typedef unsigned short rechar;
@@ -87,6 +89,8 @@ enum REError{
   errNoStorageForNB,
   //! Reference to undefined named bracket
   errReferenceToUndefinedNamedBracket,
+  //! Only fixed length look behind assertions are supported
+  errVariableLengthLookBehind,
 };
 
 //! Used internally
@@ -188,6 +192,7 @@ typedef struct tag_Match{
 
 //! Add named brackets and named backrefs
 #ifdef NAMEDBRACKETS
+using namespace smsc::core::buffers;
 //! Hash table with match info
 typedef Hash<SMatch> MatchHash;
 //! Pointer to hash MatchHash - passed to Match and Search methods
@@ -537,7 +542,7 @@ int RELibMatch(RELib& relib,MatchList& ml,const RECHAR* name,const RECHAR* start
 int RELibMatch(RELib& relib,MatchList& ml,const RECHAR* name,const RECHAR* start,const RECHAR* end);
 #endif
 
-};
+}; //namespace
 };
 };
 

@@ -3160,6 +3160,23 @@ void StateMachine::submitReceipt(SMS& sms)
       Profile profile=smsc->getProfiler()->lookup(dst);
       sms.setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
 
+      int pres=psSingle;
+      if(ri.smeSystemId=="MAP_PROXY")
+      {
+        pres=partitionSms(&sms,profile.codepage);
+      }
+      if(pres==psMultiple)
+      {
+        uint8_t msgref=smsc->getNextMR(dst);
+        sms.setConcatMsgRef(msgref);
+        sms.setConcatSeqNum(0);
+      }else if(pres!=psSingle)
+      {
+        __warning2__("Concatenation error %d for receipt %s->%s",pres,
+          sms.getOriginatingAddress().toString().c_str(),
+          sms.getDealiasedDestinationAddress().toString().c_str());
+        return;
+      }
 
       store->createSms(sms,msgId,smsc::store::CREATE_NEW);
       smsc->ChangeSmsSchedule(msgId,sms.getNextTime(),dest_proxy_index);

@@ -740,10 +740,7 @@ RegExp::~RegExp()
     code=NULL;
     #endif
   }
-  if(firstpage!=lastpage)
-  {
-    CleanStack();
-  }
+  CleanStack();
 #ifdef UNICODE
   delete firstptr;
 #endif
@@ -1018,6 +1015,142 @@ int RegExp::GetNum(const prechar src,int& i)
   return res;
 }
 
+static int CalcPatternLength(PREOpCode from,PREOpCode to)
+{
+  int len=0;
+  int altcnt=0;
+  int altlen=-1;
+  for(;from->prev!=to;from=from->next)
+  {
+    switch(from->op)
+    {
+      //zero width
+      case opLineStart:
+      case opLineEnd:
+      case opDataStart:
+      case opDataEnd:
+      case opWordBound:
+      case opNotWordBound:continue;
+
+      case opType:
+      case opNotType:
+
+      case opCharAny:
+      case opCharAnyAll:
+
+      case opSymbol:
+      case opNotSymbol:
+      case opSymbolIgnoreCase:
+      case opNotSymbolIgnoreCase:
+      case opSymbolClass:
+        len++;
+        altcnt++;
+        continue;
+
+#ifdef NAMEDBRACKETS
+      case opNamedBracket:
+#endif
+      case opOpenBracket:
+      {
+        int l=CalcPatternLength(from->next,from->bracket.pairindex->prev);
+        if(l==-1)return -1;
+        len+=l;
+        altcnt+=l;
+        from=from->bracket.pairindex;
+        continue;
+      }
+      case opClosingBracket:
+        break;
+
+      case opAlternative:
+        if(altlen!=-1 && altcnt!=altlen)return -1;
+        altlen=altcnt;
+        altcnt=0;
+        continue;
+
+      case opBackRef:
+#ifdef NAMEDBRACKETS
+      case opNamedBackRef:
+#endif
+        return -1;
+
+
+
+      case opRangesBegin:
+
+      case opRange:
+      case opMinRange:
+
+      case opSymbolRange:
+      case opSymbolMinRange:
+
+      case opNotSymbolRange:
+      case opNotSymbolMinRange:
+
+      case opAnyRange:
+      case opAnyMinRange:
+
+      case opTypeRange:
+      case opTypeMinRange:
+
+      case opNotTypeRange:
+      case opNotTypeMinRange:
+
+      case opClassRange:
+      case opClassMinRange:
+        if(from->range.min!=from->range.max)return -1;
+        len+=from->range.min;
+        altcnt+=from->range.min;
+        continue;
+
+      case opBracketRange:
+      case opBracketMinRange:
+      {
+        if(from->range.min!=from->range.max)return -1;
+        int l=CalcPatternLength(from->next,from->bracket.pairindex->prev);
+        if(l==-1)return -1;
+        len+=from->range.min*l;
+        altcnt+=from->range.min*l;
+        from=from->bracket.pairindex;
+        continue;
+      }
+
+
+      case opBackRefRange:
+      case opBackRefMinRange:
+
+    #ifdef NAMEDBRACKETS
+      case opNamedRefRange:
+      case opNamedRefMinRange:
+    #endif
+        return -1;
+
+      case opRangesEnd:
+
+      case opAssertionsBegin:
+
+      case opLookAhead:
+      case opNotLookAhead:
+      case opLookBehind:
+      case opNotLookBehind:
+        from=from->assert.pairindex;
+        continue;
+
+      case opAsserionsEnd:
+
+      case opNoReturn:
+        continue;
+
+    #ifdef RELIB
+      case opLibCall:
+        return -1;
+    #endif
+    }
+  }
+  if(altlen!=-1 && altlen!=altcnt)return -1;
+  return altlen==-1?len:altlen;
+}
+
 int RegExp::InnerCompile(const prechar src,int srclength,int options)
 {
   int i,j;
@@ -1266,7 +1399,6 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
       }
       case '|':
       {
-        if(lookbehind)return SetError(errSyntax,i);
         if(brackets[brdepth-1]->op==opAlternative)
         {
           brackets[brdepth-1]->alternative.nextalt=op;
@@ -1287,7 +1419,6 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
       }
       case '(':
       {
-        if(lookbehind)return SetError(errSyntax,i);
         op->op=opOpenBracket;
         if(src[i+1]=='?')
         {
@@ -1307,7 +1438,7 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
               {
                 op->op=opNotLookBehind;
               }else return SetError(errSyntax,i);
-              lookbehind=1;
+              lookbehind++;
             }break;
 #ifdef NAMEDBRACKETS
             case '{':
@@ -1353,7 +1484,6 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
       }
       case ')':
       {
-        lookbehind=0;
         op->op=opClosingBracket;
         brdepth--;
         while(brackets[brdepth]->op==opAlternative)
@@ -1384,21 +1514,19 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
             break;
           }
 #endif
-          case opLookAhead:
-          case opNotLookAhead:
           case opLookBehind:
           case opNotLookBehind:
           {
+            lookbehind--;
+            int l=CalcPatternLength(brackets[brdepth]->next,op->prev);
+            if(l==-1)return SetError(errVariableLengthLookBehind,i);
+            brackets[brdepth]->assert.length=l;
+          }// there is no break and this is correct!
+          case opLookAhead:
+          case opNotLookAhead:
+          {
             op->assert.pairindex=brackets[brdepth];
             brackets[brdepth]->assert.pairindex=op;
-            int l=0;
-            PREOpCode p=brackets[brdepth];
-            while(p!=op)
-            {
-              p=p->next;
-              l++;
-            }
-            brackets[brdepth]->assert.length=l-1;
             break;
           }
         }
@@ -1660,12 +1788,11 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
       case '?':
       case '{':
       {
-        if(lookbehind)return SetError(errSyntax,i);
         int min=0,max=0;
         switch(src[i])
         {
-          case '+':min=1;max=-1;break;
-          case '*':min=0;max=-1;break;
+          case '+':min=1;max=-2;break;
+          case '*':min=0;max=-2;break;
           case '?':
           {
             //if(src[i+1]=='?') return SetError(errInvalidQuantifiersCombination,i);
@@ -1685,7 +1812,7 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
               if(src[i+1]=='}')
               {
                 i++;
-                max=-1;
+                max=-2;
               }else
               {
                 i++;
@@ -1976,6 +2103,7 @@ inline int RegExp::StrCmp(prechar& str,prechar start,prechar end)
 
 
 #define MINSKIP(cmp) \
+            { int j; \
             switch(op->next->op) \
             { \
               case opSymbol: \
@@ -2027,6 +2155,7 @@ inline int RegExp::StrCmp(prechar& str,prechar start,prechar end)
                 while(str<end && cmp && !GetBit(cl,str[1]) && st->max--!=0)str++; \
                 break; \
               } \
+            } \
             }
 
 #ifdef RELIB
@@ -2622,6 +2751,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
           }else
           {
             MINSKIP(*str!=0x0d && *str!=0x0a);
+            if(st->max==-1)break;
           }
         }else
         {
@@ -2631,10 +2761,25 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
           st->startstr=str;
           if(!minimizing)
           {
-            str=end;
+            if(st->max)
+            {
+              if(str+st->max<end)
+              {
+                str+=st->max;
+                st->max=0;
+              }else
+              {
+                st->max-=end-str;
+                str=end;
+              }
+            }else
+            {
+              str=end;
+            }
           }else
           {
             MINSKIP(1);
+            if(st->max==-1)break;
           }
         }
         if(OP.range.max==j)continue;
@@ -2664,6 +2809,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
           }else
           {
             MINSKIP(TOLOWER(*str)==OP.range.symbol);
+            if(st->max==-1)break;
           }
         }else
         {
@@ -2679,6 +2825,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
           }else
           {
             MINSKIP(*str==OP.range.symbol);
+            if(st->max==-1)break;
           }
         }
         if(OP.range.max==j)continue;
@@ -2708,6 +2855,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
           }else
           {
             MINSKIP(TOLOWER(*str)!=OP.range.symbol);
+            if(st->max==-1)break;
           }
         }else
         {
@@ -2723,6 +2871,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
           }else
           {
             MINSKIP(*str!=OP.range.symbol);
+            if(st->max==-1)break;
           }
         }
         if(OP.range.max==j)continue;
@@ -2750,6 +2899,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         }else
         {
           MINSKIP(GetBit(OP.range.symbolclass,*str));
+          if(st->max==-1)break;
         }
         if(OP.range.max==j)continue;
         st->savestr=str;
@@ -2776,6 +2926,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         }else
         {
           MINSKIP((ISTYPE(*str,OP.range.type)));
+          if(st->max==-1)break;
         }
         if(OP.range.max==j)continue;
         st->savestr=str;
@@ -2802,6 +2953,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         }else
         {
           MINSKIP((ISTYPE(*str,OP.range.type))==0);
+          if(st->max==-1)break;
         }
         if(OP.range.max==j)continue;
         st->savestr=str;
@@ -2835,7 +2987,12 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
 #else
         m=&match[OP.range.refindex];
 #endif
-        if(!m || m->start==-1 || m->end==-1)break;
+        if(!m)break;
+        if(m->start==-1 || m->end==-1)
+        {
+          if(j==0)continue;
+          else break;
+        }
 
         for(i=0;i<j;i++)
         {
@@ -2849,6 +3006,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         }else
         {
           MINSKIP(StrCmp(str,start+m->start,start+m->end));
+          if(st->max==-1)break;
         }
         if(OP.range.max==j)continue;
         st->savestr=str;
@@ -2916,24 +3074,25 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
       case opLookBehind:
       case opNotLookBehind:
       {
-        st->op=OP.op;
-        st->savestr=str;
-        st->pos=op;
-        st->forward=1;
         if(str-OP.assert.length<start)
         {
           if(OP.op==opLookBehind)break;
           op=OP.assert.pairindex;
           continue;
         }
+        st->op=OP.op;
+        st->savestr=str;
+        st->pos=op;
+        st->forward=1;
         str-=OP.assert.length;
         PushState();
-        /*if(OP.assert.nextalt)
+        if(OP.assert.nextalt)
         {
           st->op=opAlternative;
           st->pos=OP.assert.nextalt;
+          st->savestr=str;
           PushState();
-        }*/
+        }
         continue;
       }
       case opNoReturn:
@@ -3686,12 +3845,12 @@ int RegExp::Optimize()
       }
       case opType:
       {
-        for(i=0;i<255;i++)if(ISTYPE(i,OP.type))first[i]=1;
+        for(i=0;i<256;i++)if(ISTYPE(i,OP.type))first[i]=1;
         break;
       }
       case opNotType:
       {
-        for(i=0;i<255;i++)if(!(ISTYPE(i,OP.type)))first[i]=1;
+        for(i=0;i<256;i++)if(!(ISTYPE(i,OP.type)))first[i]=1;
         break;
       }
       case opSymbol:
@@ -3913,7 +4072,7 @@ int RegExp::SearchEx(const RECHAR* datastart,const RECHAR* textstart,const RECHA
   if(minlength!=0 && tempend-start<minlength)return 0;
   if(code->bracket.nextalt==0 && code->next->op==opDataStart)
   {
-    return InnerMatch(start,tempend,match,matchcount
+    return InnerMatch(str,tempend,match,matchcount
 #ifdef NAMEDBRACKETS
     ,hmatch
 #endif
@@ -4177,6 +4336,6 @@ int RELibMatch(RELib& relib,MatchList& ml,const char* name,const char* start,con
 
 #endif
 
-};
+}; //namespace XClasses
 };
 };
