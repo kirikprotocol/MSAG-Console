@@ -73,20 +73,20 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
         message.set_validityPeriod(smpp_time);
     }
   }
-	pdu->optional.set_userMessageReference(sms->getMessageReference());
-	{
-		char buff[64];
-		memset(buff,0,sizeof(buff));
-		sprintf(buff,"%ld",sms->getReceiptSmsId());
-		pdu->optional.set_receiptedMessageId(buff);
-	}
-	{
-		char buff[7];
-		memset(buff,0,sizeof(buff));
-		sms->getEServiceType(buff);
-		pdu->message.set_serviceType(buff);
-	}
-	pdu->message.set_esmClass(sms->getEsmClass());
+  pdu->optional.set_userMessageReference(sms->getMessageReference());
+  {
+    char buff[64];
+    memset(buff,0,sizeof(buff));
+    sprintf(buff,"%lld",sms->getReceiptSmsId());
+    pdu->optional.set_receiptedMessageId(buff);
+  }
+  {
+    char buff[7];
+    memset(buff,0,sizeof(buff));
+    sms->getEServiceType(buff);
+    pdu->message.set_serviceType(buff);
+  }
+  pdu->message.set_esmClass(sms->getEsmClass());
   return true;
 }
 
@@ -124,18 +124,18 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
       sms->setOriginatingAddress(originatingAddr);
       sms->setDestinationAddress(destinationAddr);
     }
-    
+
     //__require__ ( message.shortMessage.size() == message.smLength );
     //sms->setMessageBody(message.smLength, message.dataCoding, false, message.shortMessage.cstr());
     sms->setMessageBody((unsigned char)message.shortMessage.size(), (unsigned char)message.dataCoding, false, (uint8_t*)message.shortMessage.cstr());
     sms->setProtocolIdentifier(message.protocolId);
     sms->setPriority(message.priorityFlag);
-    
+
     if ( message.scheduleDeliveryTime.cstr() )
       sms->setWaitTime(smppTime2CTime(message.scheduleDeliveryTime));
     else
       sms->setWaitTime(0);
-    
+
     if ( message.validityPeriod.cstr() )
       sms->setValidTime(smppTime2CTime(message.validityPeriod));
     else
@@ -144,24 +144,24 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
     sms->setDeliveryReport(message.registredDelivery);
   }
   if ( pdu->optional.has_userMessageReference() )
-		sms->setMessageReference(pdu->optional.get_userMessageReference());
-	else
-		sms->setMessageReference(0);
-	if ( pdu->optional.has_receiptedMessageId() )
-	{
-		smsc::sms::SMSId id = 0;
-		if ( !scanf(pdu->optional.get_receiptedMessageId(),"%ld",&id) )
-		{
-			__warning__("error when processing receiptedMessageId");
-			__watch__(pdu->optional.get_receiptedMessageId());
-		}
-		sms->setReceiptSmsId(id);
-	}
-	else
-		sms->setReceiptSmsId(0);
-	sms->setEServiceType(pdu->message.get_serviceType());
-	sms->setEsmClass(pdu->message.get_esmClass());
-	return true;
+    sms->setMessageReference(pdu->optional.get_userMessageReference());
+  else
+    sms->setMessageReference(0);
+  if ( pdu->optional.has_receiptedMessageId() )
+  {
+    smsc::sms::SMSId id = 0;
+    if ( !scanf(pdu->optional.get_receiptedMessageId(),"%ld",&id) )
+    {
+      __warning__("error when processing receiptedMessageId");
+      __watch__(pdu->optional.get_receiptedMessageId());
+    }
+    sms->setReceiptSmsId(id);
+  }
+  else
+    sms->setReceiptSmsId(0);
+  sms->setEServiceType(pdu->message.get_serviceType());
+  sms->setEsmClass(pdu->message.get_esmClass());
+  return true;
 }
 
 };
