@@ -48,5 +48,22 @@
   <section name="sms">
     <param name="max_valid_time" type="int">1209600</param>
   </section>
+  
+  <section name="StartupLoader">
+    <section name="DataSourceDrivers">
+      <section name="OCIDataSourceDriver">
+        <param name="type" type="string">OCI</param>
+        <param name="loadup" type="string">../db/oci/libdb_oci.so</param>
+      </section>
+    </section>
+  </section>
+  
+  <section name="DataSource">
+    <param name="type" type="string">OCI</param>
+    <param name="connections" type="int">5</param>
+    <param name="dbInstance" type="string">DBS_ORCL</param>
+    <param name="dbUserName" type="string">smsc</param>
+    <param name="dbUserPassword" type="string">smsc</param>
+  </section>
 
 </config>
