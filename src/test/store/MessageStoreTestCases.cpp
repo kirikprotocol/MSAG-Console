@@ -323,7 +323,8 @@ TCResult* MessageStoreTestCases::storeReplaceCorrectSms(SMSId* idp, SMS* existen
 		//destination address and service_type. Сообщение должно быть в 
 		//ENROTE state.
 		sms.setOriginatingAddress(existentSms->getOriginatingAddress());
-		sms.setDestinationAddress(existentSms->getDestinationAddress());
+		//sms.setDestinationAddress(existentSms->getDestinationAddress());
+		sms.setDealiasedDestinationAddress(existentSms->getDealiasedDestinationAddress());
 		EService serviceType;
 		existentSms->getEServiceType(serviceType);
 		sms.setEServiceType(serviceType);
