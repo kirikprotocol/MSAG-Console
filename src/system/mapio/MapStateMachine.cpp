@@ -1876,7 +1876,7 @@ static inline
 void DoProvErrorProcessing(ET96MAP_PROV_ERR_T *provErrCode_p )
 {
   if ( provErrCode_p != 0 ){
-    if( isErrorPermanent( Status::MAP_PROVIDER_ERR_BASE+*provErrCode_p ) ) {
+    if( Status::isErrorPermanent( Status::MAP_PROVIDER_ERR_BASE+*provErrCode_p ) ) {
       throw MAPDIALOG_FATAL_ERROR(
         FormatText("MAP::%s fatal *provErrCode_p: 0x%x",__func__,*provErrCode_p),
         Status::MAP_PROVIDER_ERR_BASE+*provErrCode_p);
@@ -1894,7 +1894,7 @@ void DoMAPErrorProcessor(
   ET96MAP_PROV_ERR_T *provErrCode_p )
 {
   if ( errorCode != 0 ){
-    if( isErrorPermanent( MAP_ERRORS_BASE+errorCode ) ) {
+    if( Status::isErrorPermanent( MAP_ERRORS_BASE+errorCode ) ) {
       throw MAPDIALOG_FATAL_ERROR(
         FormatText("MAP::%s perm error errorCode: 0x%x",
                    __func__,
@@ -3058,7 +3058,7 @@ USHORT_T Et96MapV2UnstructuredSSRequestConf(
     __require__(dialog->ssn==localSsn);
     dialog->isUSSD = true;
     try {
-      DoMAPErrorProcessor(errorUnstructuredSSReq_sp?errorUnstructuredSSReq_sp->errorCode:0,provErrCode_p provErrCode_p);
+      DoMAPErrorProcessor(errorUnstructuredSSReq_sp?errorUnstructuredSSReq_sp->errorCode:0,provErrCode_p);
     } catch (MAPDIALOG_ERROR& er) {
       __map_trace2__( "%s: %s", __func__, er.what() );
       SendErrToSmsc(dialog->dialogid_smsc, er.code );
@@ -3138,7 +3138,7 @@ USHORT_T Et96MapV2UnstructuredSSNotifyConf(
     __require__(dialog->ssn==localSsn);
     dialog->isUSSD = true;
     try {
-      DoMAPErrorProcessor(errorUssdNotify_sp?errorUssdNotify_sp->errorCode:0,provErrCode_p provErrCode_p);
+      DoMAPErrorProcessor(errorUssdNotify_sp?errorUssdNotify_sp->errorCode:0,provErrCode_p);
     } catch (MAPDIALOG_ERROR& er) {
       __map_trace2__( "%s: %s", __func__, er.what() );
       SendErrToSmsc(dialog->dialogid_smsc, er.code );

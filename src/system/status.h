@@ -1,4 +1,3 @@
-#ifndef __SMSC_SYSTEM_STATUS_H__
 #define __SMSC_SYSTEM_STATUS_H__
 
 namespace smsc{
@@ -106,9 +105,13 @@ static const int MAP_UNEXPECTED_LINKED_OPERATION=1151; // !
 
 static const int MAP_ERR_BASE=1152;
 static const int UNKSUBSCRIBER=1153; // 1 - Unknown subscriber !
-static const int UNDEFSUBSCRIBER=1157; // 2 - Unidentified subscriber
+static const int MAPINVDESTREF=1154; // 2 - !
+static const int MAPINVORIGREF=1155; // 3 - !
+static const int UNDEFSUBSCRIBER=1157; // 5 - Unidentified subscriber
 static const int ABSENTSUBSCRIBERSM=1158; // 6 - Absent subscriber SM
+static const int ROAMINGNOTALWD=1160; // 8
 static const int ILLEGALSUBSCRIBER=1161; // 9 - Illegal subscriber !
+static const int TELSVCNOTPROVIS=1163; // 12 - Teleservice not provisioned
 static const int INVEQUIPMENT=1164; // 12 - Illegal Equipment !
 static const int CALLBARRED=1165; // 13 - Call Barred
 static const int CUGREJECT=1167; // 15 - CUG reject
@@ -116,6 +119,7 @@ static const int FACILITYNOTSUPP=1173; // 21 - Facility Not Supported !
 static const int ABSENTSUBSCR=1179; // 27 - Absent Subscriber
 static const int SUBSCRBUSYMT=1183; //Subscriber Busy for MT SMS.
 static const int SMDELIFERYFAILURE=1184; //SM Delivery Failure
+static const int MSGLISTFULL=1185; // 
 static const int SYSFAILURE=1186; // 34 - System Failure
 static const int DATAMISSING=1187; // 35 - Data Missing !
 static const int UNEXPDATA=1188; // 36 - Unexpected Data value !
@@ -1279,16 +1283,16 @@ static const bool errorStatus[1280] = {
 1, // MAP_UNEXPECTED_LINKED_OPERATION=1151
 0, // MAP_ERR_BASE=1152
 1, // UNKSUBSCRIBER=1153 1 - Unknown subscriber
-1, // reserved
-1, // reserved
+1, // INVDESTREF=1154
+1, // INVORIGREF=1155
 1, // reserved
 0, // UNDEFSUBSCRIBER=1157 2 - Unidentified subscriber
 0, // ABSENTSUBSCRIBERSM=1158 6 - Absent subscriber SM
 1, // reserved
-1, // reserved
+0, // ROAMINGNOTALWD=1160
 1, // ILLEGALSUBSCRIBER=1161 9 - Illegal subscriber
 1, // reserved
-1, // reserved
+0, // TELSBVCNOTPROVIS=1163
 1, // INVEQUIPMENT=1164 12 - Illegal Equipment !
 0, // CALLBARRED=1165 13 - Call Barred
 1, // reserved
@@ -1310,7 +1314,7 @@ static const bool errorStatus[1280] = {
 1, // reserved
 0, // SUBSCRBUSYMT=1183 Subscriber Busy for MT SMS.
 0, // SMDELIFERYFAILURE=1184; //SM Delivery Failure
-1, // reserved
+0, // MSGWLISTFULL=1185
 0, // SYSFAILURE=1186 34 - System Failure
 1, // DATAMISSING=1187 35 - Data Missing !
 1, // UNEXPDATA=1188 36 - Unexpected Data value !
