@@ -91,7 +91,7 @@
 
 <div class=secButtons>
 <input class=btn type=submit name=btnAdd value="Add new visitor" title="Add new visitor mask">
-<input class=btn type=submit name=btnDel value="Delete selected" title="Delete selected">
+<input class=btn type=button name=btnDel value="Delete selected" title="Delete selected" onClick="noValidationSubmit(this)">
 </div>
 <%}%>
 

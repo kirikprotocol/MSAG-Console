@@ -67,9 +67,9 @@ function validateField_mask(elem)
 	var special_pattern1 = RegExp(special_pattern_header + "[ _\\-0-9A-Za-z]{1,20}\\?{0,19}$");
 	var special_pattern2 = RegExp(special_pattern_header + "([ _\\-0-9A-Za-z]|\\?){1,20}$");
 
-	return elem.value == null 
+	return elem.value == null
 		|| (
-			   (elem.value.match(        pattern1) == null || elem.value.match(        pattern2) == null) 
+			   (elem.value.match(        pattern1) == null || elem.value.match(        pattern2) == null)
 			&& (elem.value.match(special_pattern1) == null || elem.value.match(special_pattern2) == null)
 		   )
 		? validationError(elem, "Invalid mask")
@@ -83,7 +83,7 @@ function validateField_routeMask(elem)
 
 function validateField_select(elem)
 {
-	return (elem.selectedIndex == 0) 
+	return (elem.selectedIndex == 0)
 		? validationError(elem, "Please, select something")
 		: true;
 }
@@ -129,8 +129,8 @@ function validateField_positive(elem)
 
 function validateField_unsigned(elem)
 {
-	var r = RegExp("^d+$");
-	return elem.value == null || elem.value.trim().match(r) == null
+	var r = RegExp("^(\\s*)(\\d+)(\\s*)$");
+	return elem.value == null || elem.value.match(r) == null
 		? validationError(elem, "value must be decimal without sign")
 		: true;
 }
@@ -208,11 +208,11 @@ function selectFirstTextInput()
 	var inputs = document.all.tags("INPUT");
 	if (inputs!=null)
 	{
-		for (i=0; i<inputs.length; i++) 
+		for (i=0; i<inputs.length; i++)
 		{
 			try {
-			if (inputs[i].type == "text" 
-					&& !inputs[i].readOnly 
+			if (inputs[i].type == "text"
+					&& !inputs[i].readOnly
 					&& !inputs[i].disabled
 					&& inputs[i].currentStyle.display != "none"
 				)
@@ -221,10 +221,17 @@ function selectFirstTextInput()
 				return;
 			}
 			}
-			catch (to_trash) 
+			catch (to_trash)
 			{ // do nothing
 			}
 		}
 	}
 }
 
+function noValidationSubmit(buttonElem)
+{
+  document.all.jbutton.name  = buttonElem.name;
+  document.all.jbutton.value = buttonElem.value;
+  opForm.submit();
+  return false;
+}

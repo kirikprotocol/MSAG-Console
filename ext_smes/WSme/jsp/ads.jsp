@@ -93,7 +93,7 @@
 </thead>
 <tr class=row0>
 	<th class=label>Id:</th>
-	<td><input class=txtW type="text" name=newId  value="<%= bean.getNewId()%>" size=25 maxlength=25></td>
+	<td><input class=txtW type="text" name=newId  value="<%= StringEncoderDecoder.encode(bean.getNewId())%>" validation="unsigned" onkeyup="resetValidation(this)" size=25 maxlength=25></td>
 </tr>
 <tr class=row1>
 	<th class=label>Language:</th>
@@ -107,7 +107,7 @@
 
 <div class=secButtons>
 <input class=btn type=submit name=btnAdd value="Add new message" title="Add new message">
-<input class=btn type=submit name=btnDel value="Delete selected" title="Delete selected">
+<input class=btn type=button name=btnDel value="Delete selected" title="Delete selected" onClick="noValidationSubmit(this)">
 </div>
 <%}%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

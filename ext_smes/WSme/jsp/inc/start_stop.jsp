@@ -31,8 +31,8 @@ refreshStatus();
 </script>
 WSme is <%= wsmeStatus(bean.getWSmeStatus(), "WSME_STATUS_ELEM_ID")%>
 <div class=secButtons>
-<input class=btn type=submit id=btnStart name=btnStart value="Start" title="Start WSme" <%=bean.getWSmeStatus() != ServiceInfo.STATUS_STOPPED ? "disabled" : ""%>>
-<input class=btn type=submit id=btnStop name=btnStop value="Stop" title="Stop  WSme" <%=bean.getWSmeStatus() != ServiceInfo.STATUS_RUNNING ? "disabled" : ""%>>
+<input class=btn type=button id=btnStart name=btnStart value="Start" title="Start WSme" <%=bean.getWSmeStatus() != ServiceInfo.STATUS_STOPPED ? "disabled" : ""%> onClick="noValidationSubmit(this)">
+<input class=btn type=button id=btnStop name=btnStop value="Stop" title="Stop  WSme" <%=bean.getWSmeStatus() != ServiceInfo.STATUS_RUNNING ? "disabled" : ""%> onClick="noValidationSubmit(this)">
 <script>
 function refreshWSmeStartStopButtonsStatus()
 {

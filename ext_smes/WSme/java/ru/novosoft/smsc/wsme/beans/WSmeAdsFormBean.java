@@ -52,7 +52,7 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
     System.out.println("WSmeAds::addNewAd() called");
     int result = RESULT_OK;
     try {
-      wsme.addAd(Integer.parseInt(newId), newLang, newAd);
+      wsme.addAd(Integer.parseInt(newId.trim()), newLang, newAd);
     }
     catch (NumberFormatException exc) {
       result = error(WSmeErrors.error.admin.ParseError, exc.getMessage());
