@@ -313,7 +313,7 @@ inline void mkMapAddress( ET96MAP_ADDRESS_T *addr, const char *saddr, unsigned l
     addr->address[sz-1] |= 0xF0;
   } 
 }
-
+            
 inline void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
   sa->setTypeOfNumber((ma->addr[0]>>4)&0x7);
   sa->setNumberingPlan(ma->addr[0]&0xf);
@@ -347,15 +347,12 @@ inline void ConvAddrMSISDN2Smc(const ET96MAP_ADDRESS_T* ma,Address* sa)
   if ( ma->addressLength != 0 ){
     char sa_val[21] = {0,};
     int i = 0;
-    for ( i=0; i<(ma->addressLength)*2;){
-      if ( (ma->address[(i>>1)]&0x0f) == 0xf ) break;
-      sa_val[i]=(ma->address[(i>>1)]&0x0f)+0x30;
-      ++i;
-      if ( i<(ma->addressLength)*2 ){
-        if ( (ma->address[(i>>1)]>>4) == 0xf ) break;
-        sa_val[i] = (ma->address[(i>>1)]>>4)+0x30;
-        ++i;
-      }else break;
+    for ( ;i<(ma->addressLength);i++){
+      if( i % 2 == 0 ) {
+        sa_val[i] = ma->address[i/2]&0x0f;
+      } else {
+        sa_val[i] = ma->address[i/2]>>4;
+      }
     }
     {
       char b[256] = {0,};
