@@ -58,6 +58,7 @@ public:
         )
       );*/
       __warning2__("SmppProxy::putCommand: command is invalid for bindstate:%d",cmd->get_commandId());
+      throw InvalidProxyCommandException();
       return;
     }
     {
@@ -83,6 +84,36 @@ public:
 
   void putIncomingCommand(const SmscCommand& cmd)
   {
+    if(!CheckValidOutgoingCmd(cmd))
+    {
+      SmscCommand errresp;
+      switch(cmd->get_commandId())
+      {
+        case DELIVERY:
+          errresp=SmscCommand::makeDeliverySmResp("",cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS);
+          break;
+        case SUBMIT:
+          errresp=SmscCommand::makeSubmitSmResp("",cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS);
+          break;
+        case QUERY:
+          errresp=SmscCommand::makeQuerySmResp(cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS,0,0,0,0);
+          break;
+        case UNBIND:
+          errresp=SmscCommand::makeUnbindResp(cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS);
+          break;
+        case REPLACE:
+          errresp=SmscCommand::makeReplaceSmResp(cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS);
+          break;
+        case CANCEL:
+          errresp=SmscCommand::makeCancelSmResp(cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS);
+          break;
+        default:
+          errresp=SmscCommand::makeGenericNack(cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS);
+      }
+      //cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS
+      putCommand(errresp);
+      return;
+    }
     {
       MutexGuard g(mutexin);
       if(!opened)
@@ -92,18 +123,6 @@ public:
       if(inqueue.Count()==SMPP_PROXY_QUEUE_LIMIT)
       {
         throw ProxyQueueLimitException();
-      }
-      if(!CheckValidOutgoingCmd(cmd))
-      {
-        putCommand
-        (
-          SmscCommand::makeGenericNack
-          (
-            cmd->get_dialogId(),
-            SmppStatusSet::ESME_RINVBNDSTS
-          )
-        );
-        return;
       }
       inqueue.Push(cmd);
     }

@@ -9,7 +9,6 @@
 #include "core/buffers/XHash.hpp"
 
 #include "util/config/Manager.h"
-#include "util/config/ConfigView.h"
 
 #include "db/DataSource.h"
 #include "db/DataSourceLoader.h"
@@ -426,32 +425,15 @@ int Profiler::Execute()
   return 0;
 }
 
-void Profiler::loadFromDB()
+void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
 {
+  ds=datasrc;
   using namespace smsc::db;
   using smsc::util::config::Manager;
   using smsc::util::config::ConfigView;
   using smsc::util::config::ConfigException;
 
-  const char* OCI_DS_FACTORY_IDENTITY = "OCI";
-
   const char* sql = "SELECT * FROM SMS_PROFILE";
-
-  ConfigView *dsConfig;
-
-  //Manager::init("config.xml");
-  Manager& manager = Manager::getInstance();
-
-  dsConfig = new ConfigView(manager, "StartupLoader");
-  DataSourceLoader::loadup(dsConfig);
-
-  ds = DataSourceFactory::getDataSource(OCI_DS_FACTORY_IDENTITY);
-  if (!ds) throw Exception("Failed to get DataSource");
-  ConfigView* config =
-      new ConfigView(Manager::getInstance(),"DataSource");
-
-  ds->init(config);
-  __trace__("Profiler: init ok");
 
   ConnectionGuard connection(ds);
 

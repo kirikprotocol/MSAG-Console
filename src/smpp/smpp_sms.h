@@ -143,9 +143,6 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
   if ( sms->hasIntProperty(Tag::SMPP_PRIORITY))
     pdu->message.set_priorityFlag(sms->getIntProperty(Tag::SMPP_PRIORITY));
 
-  if ( sms->hasIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG))
-    pdu->message.set_replaceIfPresentFlag(sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG));
-
   pdu->message.set_esmClass(sms->getIntProperty(Tag::SMPP_ESM_CLASS));
 
   if ( sms->hasIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG) )

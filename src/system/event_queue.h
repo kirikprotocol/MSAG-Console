@@ -190,6 +190,11 @@ class EventQueue
   Event event;
   Mutex mutex;
 
+  Mutex perfMutex;
+  uint64_t successCounter;
+  uint64_t errorCounter;
+  uint64_t rescheduleCounter;
+
   typedef std::multimap<int,Locker*> LockerQueue;
   typedef std::pair<int,Locker*> LockerPair;
   LockerQueue unlocked;
@@ -203,6 +208,9 @@ public:
   {
     for(int i=0;i<PRIORITIES_COUNT;i++)counts[i]=0;
     processed=0;
+    successCounter=0;
+    errorCounter=0;
+    rescheduleCounter=0;
   }
 
   ~EventQueue() {}
@@ -218,6 +226,32 @@ public:
     __synchronized__
     hcnt=hash.getCount();
     ucnt=unlocked.size();
+  }
+
+  void incSuccess()
+  {
+    MutexGuard g(perfMutex);
+    successCounter++;
+  }
+
+  void incError()
+  {
+    MutexGuard g(perfMutex);
+    errorCounter++;
+  }
+
+  void incReschedule()
+  {
+    MutexGuard g(perfMutex);
+    rescheduleCounter++;
+  }
+
+  void getPerfData(uint64_t& succ,uint64_t& err,uint64_t& resch)
+  {
+    MutexGuard g(perfMutex);
+    succ=successCounter;
+    err=errorCounter;
+    resch=rescheduleCounter;
   }
 
   int calcWeight(int prio)

@@ -14,6 +14,7 @@
 #include "util/Logger.h"
 #include "system/smscsme.hpp"
 #include "util/regexp/RegExp.hpp"
+#include "util/config/ConfigView.h"
 
 //#define ENABLE_MAP_SYM
 
@@ -52,7 +53,8 @@ Smsc::~Smsc()
 
 class SpeedMonitor:public smsc::core::threads::ThreadedTask{
 public:
-  SpeedMonitor(EventQueue& eq):queue(eq){}
+  SpeedMonitor(EventQueue& eq,performance::PerformanceListener* pl):
+    queue(eq),perlListener(pl){}
   int Execute()
   {
     uint64_t cnt,last=0;
@@ -61,6 +63,10 @@ public:
     clock_gettime(CLOCK_REALTIME,&start);
     Event ev;
     __trace__("enter SpeedMonitor");
+    cntshift[0]=0;
+    cntshift[1]=0;
+    cntshift[2]=0;
+    uint64_t lastPerfCnt[3]={0,0,0};
     for(;;)
     {
       //sleep(1);
@@ -84,6 +90,9 @@ public:
       last=cnt;
       lasttime=now;
       if(isStopping)break;
+      uint64_t perf[3];
+      queue.getPerfData(perf[0],perf[1],perf[2]);
+      //for
     }
     return 0;
   }
@@ -93,6 +102,10 @@ public:
   }
 protected:
   EventQueue& queue;
+  int cnt[3][60];
+  int cntshift[3];
+  //time_t
+  performance::PerformanceListener* perlListener;
 };
 
 extern void loadRoutes(RouteManager* rm,smsc::util::config::route::RouteConfig& rc);
@@ -246,7 +259,26 @@ void Smsc::init(const SmscConfigs& cfg)
 
   //smsc::admin::util::SignalHandler::registerShutdownHandler(new SmscSignalHandler(this));
 
-  tp.startTask(new SpeedMonitor(eventqueue));
+  tp.startTask(new SpeedMonitor(eventqueue,&perfDataDisp));
+
+  {
+    using namespace smsc::db;
+    using smsc::util::config::ConfigView;
+    ConfigView *dsConfig;
+    const char* OCI_DS_FACTORY_IDENTITY = "OCI";
+
+
+    dsConfig = new smsc::util::config::ConfigView(*cfg.cfgman, "StartupLoader");
+    DataSourceLoader::loadup(dsConfig);
+
+    dataSource = DataSourceFactory::getDataSource(OCI_DS_FACTORY_IDENTITY);
+    if (!dataSource) throw Exception("Failed to get DataSource");
+    ConfigView* config =
+        new ConfigView(*cfg.cfgman,"DataSource");
+
+    dataSource->init(config);
+  }
+
 
   {
     char *rep=cfg.cfgman->getString("profiler.defaultReport");
@@ -285,7 +317,7 @@ void Smsc::init(const SmscConfigs& cfg)
     profiler->serviceType=cfg.cfgman->getString("profiler.service_type");
     profiler->protocolId=cfg.cfgman->getInt("profiler.protocol_id");
   }
-  profiler->loadFromDB();
+  profiler->loadFromDB(dataSource);
 
   tp.startTask(profiler);
 
@@ -338,6 +370,16 @@ void Smsc::init(const SmscConfigs& cfg)
 
   smscHost=cfg.cfgman->getString("smpp.host");
   smscPort=cfg.cfgman->getInt("smpp.port");
+
+  {
+    performance::PerformanceServer *perfSrv=new performance::PerformanceServer
+    (
+      cfg.cfgman->getString("core.performance.host"),
+      cfg.cfgman->getInt("core.performance.port"),
+      &perfDataDisp
+    );
+    tp.startTask(perfSrv);
+  }
 
   smsc::util::regexp::RegExp::InitLocale();
 }

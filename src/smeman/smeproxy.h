@@ -32,6 +32,11 @@ class ProxyQueueLimitException : public std::exception
   virtual const char* what() const throw() {return "";}
 };
 
+class InvalidProxyCommandException: public std::exception
+{
+  virtual const char* what() const throw() {return "";}
+};
+
 static std::string nullstr="";
 
 // abstract

@@ -17,6 +17,11 @@
 #include "profiler/profiler.hpp"
 #include "system/smscsme.hpp"
 #include "system/cancel_agent.hpp"
+#include "system/performance.hpp"
+
+#include "db/DataSource.h"
+#include "db/DataSourceLoader.h"
+
 
 namespace smsc{
 namespace system{
@@ -97,6 +102,8 @@ protected:
   int smscPort;
   SmscSme *smscsme;
   CancelAgent *cancelAgent;
+  performance::PerformanceDataDispatcher perfDataDisp;
+  smsc::db::DataSource *dataSource;
 };
 
 };//system

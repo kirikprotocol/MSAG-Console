@@ -87,7 +87,7 @@ int main(int argc,char* argv[])
   MyListener lst;
   SmppSession ss(cfg,&lst);
   try{
-    ss.connect();
+    ss.connect();//BindType::Transmitter);
     PduSubmitSm sm;
     SMS s;
 //    const char *dst="2";

@@ -167,7 +167,7 @@ public:
     return seq++;
   }
 
-  void loadFromDB();
+  void loadFromDB(smsc::db::DataSource *datasrc);
 
   string msgRepNone;
   string msgRepFull;

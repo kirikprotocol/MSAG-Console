@@ -262,6 +262,7 @@ StateType StateMachine::submit(Tuple& t)
       src_proxy->putCommand(resp);
     }catch(...)
     {
+      __warning__("SUBMIT_SM: failed to put response command");
     }
     __warning__("SUBMIT_SM: invalid schedule");
     return ERROR_STATE;
@@ -576,7 +577,21 @@ StateType StateMachine::submit(Tuple& t)
     if(prio<0)prio=0;
     if(prio>=32)prio=31;
     delivery->set_priority(prio);
-    dest_proxy->putCommand(delivery);
+    try{
+      dest_proxy->putCommand(delivery);
+    }catch(InvalidProxyCommandException& e)
+    {
+      sendFailureReport(*sms,t.msgId,UNDELIVERABLE_STATE,"undeliverable");
+      __trace__("SUBMIT: Attempt to putCommand for sme in invalid bind state");
+      try{
+        Descriptor d;
+        store->changeSmsStateToUndeliverable(t.msgId,d,0);
+      }catch(...)
+      {
+        __trace__("SUBMIT: Failed to change state to undeliverable");
+      }
+      return UNDELIVERABLE_STATE;
+    }
   }catch(...)
   {
     __trace__("SUBMIT: failed to put delivery command");
@@ -721,7 +736,21 @@ StateType StateMachine::forward(Tuple& t)
       sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
     }
     SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
-    dest_proxy->putCommand(delivery);
+    try{
+      dest_proxy->putCommand(delivery);
+    }catch(InvalidProxyCommandException& e)
+    {
+      sendFailureReport(sms,t.msgId,UNDELIVERABLE_STATE,"undeliverable");
+      __trace__("SUBMIT: Attempt to putCommand for sme in invalid bind state");
+      try{
+        Descriptor d;
+        store->changeSmsStateToUndeliverable(t.msgId,d,0);
+      }catch(...)
+      {
+        __trace__("SUBMIT: Failed to change state to undeliverable");
+      }
+      return UNDELIVERABLE_STATE;
+    }
   }catch(...)
   {
     //TODO!!!: remove task and reschedule
