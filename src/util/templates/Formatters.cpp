@@ -6,6 +6,8 @@
 namespace smsc { namespace util { namespace templates
 {
 
+static const char* DEFAULT_VALUE_ERR = "Default value missed (type: %s).";
+
 Hash<Formatter *>  FormatterRegistry::formatters;
 
 OutputFormatter::OutputFormatter(const char* format)
@@ -72,7 +74,7 @@ void Int8Formatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
-            else throw FormattingException("Default value missed (int8).");
+            else throw FormattingException(DEFAULT_VALUE_ERR, "int8");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -106,7 +108,7 @@ void Int16Formatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
-            else throw FormattingException("Default value missed (int16).");
+            else throw FormattingException(DEFAULT_VALUE_ERR, "int16");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -140,7 +142,7 @@ void Int32Formatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
-            else throw FormattingException("Default value missed (int32).");
+            else throw FormattingException(DEFAULT_VALUE_ERR, "int32");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -174,7 +176,7 @@ void Int64Formatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
-            else throw FormattingException("Default value missed (int64).");
+            else throw FormattingException(DEFAULT_VALUE_ERR, "int64");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -208,7 +210,7 @@ void Uint8Formatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
-            else throw FormattingException("Default value missed (uint8).");
+            else throw FormattingException(DEFAULT_VALUE_ERR, "uint8");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -242,7 +244,7 @@ void Uint16Formatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
-            else throw FormattingException("Default value missed (uint16).");
+            else throw FormattingException(DEFAULT_VALUE_ERR, "uint16");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -276,7 +278,7 @@ void Uint32Formatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
-            else throw FormattingException("Default value missed (uint32).");
+            else throw FormattingException(DEFAULT_VALUE_ERR, "uint32");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -310,7 +312,7 @@ void Uint64Formatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
-            else throw FormattingException("Default value missed (uint64).");
+            else throw FormattingException(DEFAULT_VALUE_ERR, "uint64");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -344,7 +346,7 @@ void StringFormatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (!def) 
-                throw FormattingException("Default value missed (string).");
+                throw FormattingException(DEFAULT_VALUE_ERR, "string");
             else str = def;
         }
         else if (!adapter.isNull(arg))
@@ -414,7 +416,7 @@ void FloatFormatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
-            else throw FormattingException("Default value missed (float).");
+            else throw FormattingException(DEFAULT_VALUE_ERR, "float");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -457,7 +459,7 @@ void DoubleFormatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
-            else throw FormattingException("Default value missed (double).");
+            else throw FormattingException(DEFAULT_VALUE_ERR, "double");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -504,7 +506,7 @@ void LongDoubleFormatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
-            else throw FormattingException("Default value missed (long-double).");
+            else throw FormattingException(DEFAULT_VALUE_ERR, "long-double");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -587,13 +589,13 @@ void DateTimeFormatter::format(std::string& output,
     }
     else if (!def && !arg)
     {
-        throw FormattingException("Default value missed (date).");
+        throw FormattingException(DEFAULT_VALUE_ERR, "date");
     }
     else if (!adapter.isNull(arg))
     {
         date = adapter.getDateTime(arg);
     }
-    else throw FormattingException("Default value missed (date).");
+    else throw FormattingException(DEFAULT_VALUE_ERR, "date");
     
     localtime_r(&date, &tmdt); // ???
 
