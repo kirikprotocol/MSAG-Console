@@ -73,16 +73,16 @@ TCResult* MessageStoreTestCases::storeCorrectSM(SMSId* idp, SMS* smsp, int num)
 					__require__(false);
 			}
 			smsId = msgStore->store(sms);
+			if (idp != NULL && smsp != NULL)
+			{
+				*idp = smsId;
+				*smsp = sms;
+			}
 		}
 		catch(...)
 		{
 			res->addFailure(s.value());;
 		}
-	}
-	if (idp != NULL && smsp != NULL)
-	{
-		*idp = smsId;
-		*smsp = sms;
 	}
 	return res;
 }
