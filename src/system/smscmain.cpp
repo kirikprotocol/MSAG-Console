@@ -65,18 +65,9 @@ void atExitHandler(void)
 	smsc::logger::Logger::Shutdown();
 }
 
-void initLogger()
-{
-	char * logFileName = getenv("SMSC_LOGGER_PROPERTIES");
-	if (logFileName)
-		smsc::logger::Logger::Init(logFileName);
-	else
-		smsc::logger::Logger::Init("logger.properties");
-}
-
 int main(int argc,char* argv[])
 {
-  initLogger();
+  Logger::Init();
   
   atexit(atExitHandler);
   smsc::system::clearThreadSignalMask();

@@ -49,9 +49,9 @@ static int   unrespondedMessagesMax   = 100;
 static Event unrespondedMessagesEvent;
 static Mutex unrespondedMessagesLock;
 
-static smsc::logger::Logger *logger = Logger::getInstance("smsc.infosme.InfoSme");
+static smsc::logger::Logger *logger = 0;
 
-static smsc::admin::service::ServiceSocketListener adminListener; 
+static std::auto_ptr<smsc::admin::service::ServiceSocketListener> adminListener; 
 static bool bAdminListenerInited = false;
 
 static Event infoSmeWaitEvent;
@@ -451,20 +451,23 @@ static void appSignalHandler(int sig)
     if (sig==smsc::system::SHUTDOWN_SIGNAL || sig==SIGINT)
     {
         smsc_log_info(logger, "Stopping ...");
-        if (bAdminListenerInited) adminListener.shutdown();
+        if (bAdminListenerInited) adminListener->shutdown();
         setNeedStop(true);
     }
 }
 void atExitHandler(void)
 {
     smsc::util::xml::TerminateXerces();
+    smsc::logger::Logger::Shutdown();
 }
 
 int main(void)
 {
     int resultCode = 0;
 
-    Logger::Init("log4cpp.infosme");
+    Logger::Init();
+    logger = Logger::getInstance("smsc.infosme.InfoSme");
+    adminListener.reset(new smsc::admin::service::ServiceSocketListener());
     
     sigset_t set, old;
     sigemptyset(&set);
@@ -500,9 +503,9 @@ int main(void)
         ConfigView adminConfig(manager, "InfoSme.Admin");
         InfoSmeComponent admin(processor);                   
         ComponentManager::registerComponent(&admin); 
-        adminListener.init(adminConfig.getString("host"), adminConfig.getInt("port"));               
+        adminListener->init(adminConfig.getString("host"), adminConfig.getInt("port"));               
         bAdminListenerInited = true;
-        adminListener.Start();
+        adminListener->Start();
         
         ConfigView smscConfig(manager, "InfoSme.SMSC");
         InfoSmeConfig cfg(&smscConfig);
@@ -592,8 +595,8 @@ int main(void)
     
     if (bAdminListenerInited)
     {
-        adminListener.shutdown();
-        adminListener.WaitFor();
+        adminListener->shutdown();
+        adminListener->WaitFor();
     }
 
     DataSourceLoader::unload();

@@ -22,12 +22,13 @@ int main(int argc,char* argv[])
 {
 /*	try
 	{
+		Logger::Init();
+
 		// load configs
 		SmscConfigs cfgs;
 		Manager::init("../conf/config.xml");
 		cfgs.cfgman=&cfgs.cfgman->getInstance();
 
-		Logger::Init(cfgs.cfgman->getString("logger.initFile"));
 
 		SmeManConfig smemancfg;
 		smemancfg.load("../conf/sme.xml");

@@ -40,13 +40,13 @@ using namespace smsc::admin::service;
 
 using namespace smsc::wsme;
 
-static smsc::logger::Logger *logger = Logger::getInstance("smsc.wsme.WSme");
+static smsc::logger::Logger *logger = 0;
 static int messageLifePeriod;
 
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
 const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
 
-static smsc::admin::service::ServiceSocketListener adminListener;
+static std::auto_ptr<smsc::admin::service::ServiceSocketListener> adminListener;
 static bool bAdminListenerInited = false;
 
 static Event WSmeWaitEvent;
@@ -434,7 +434,7 @@ static void appSignalHandler(int sig)
     if (sig==SIGTERM || sig==SIGINT)
     {
         __trace__("Stopping ...");
-        if (bAdminListenerInited) adminListener.shutdown();
+        if (bAdminListenerInited) adminListener->shutdown();
         setNeedStop(true);
     }
 }
@@ -445,13 +445,12 @@ void atExitHandler(void)
 {
     //sigsend(P_PID, getppid(), SIGCHLD);
     smsc::util::xml::TerminateXerces();
+    smsc::logger::Logger::Shutdown();
 }
 
 int main(void)
 {
     int resultCode = 0;
-    Logger::Init("log4cpp.wsme");
-
     using smsc::db::DataSourceLoader;
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigView;
@@ -459,6 +458,10 @@ int main(void)
 
     //added by igork
     atexit(atExitHandler);
+
+    Logger::Init();
+    logger = Logger::getInstance("smsc.wsme.WSme");
+    adminListener.reset(new smsc::admin::service::ServiceSocketListener());
 
     try
     {
@@ -474,10 +477,10 @@ int main(void)
         ConfigView adminConfig(manager, "WSme.Admin");
         WSmeComponent wsmeAdmin(processor);
         ComponentManager::registerComponent(&wsmeAdmin);
-        adminListener.init(adminConfig.getString("host"),
+        adminListener->init(adminConfig.getString("host"),
                            adminConfig.getInt("port"));
         bAdminListenerInited = true;
-        adminListener.Start();
+        adminListener->Start();
 
         ConfigView mnConfig(manager, "WSme.ThreadPool");
         ConfigView ssConfig(manager, "WSme.SMSC");
@@ -556,8 +559,8 @@ int main(void)
 
     if (bAdminListenerInited)
     {
-        adminListener.shutdown();
-        adminListener.WaitFor();
+        adminListener->shutdown();
+        adminListener->WaitFor();
     }
     return resultCode;
 }

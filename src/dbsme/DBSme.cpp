@@ -41,9 +41,9 @@ using namespace smsc::admin::service;
 
 using namespace smsc::dbsme;
 
-static smsc::logger::Logger *logger = Logger::getInstance("smsc.dbsme.DBSme");
+static smsc::logger::Logger *logger = 0;
 
-static smsc::admin::service::ServiceSocketListener adminListener;
+static std::auto_ptr<smsc::admin::service::ServiceSocketListener> adminListener;
 static bool bAdminListenerInited = false;
 
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
@@ -481,6 +481,7 @@ void atExitHandler(void)
 {
     //sigsend(P_PID, getppid(), SIGCHLD);
     smsc::util::xml::TerminateXerces();
+    smsc::logger::Logger::Shutdown();
 }
 
 int main(void)
@@ -494,6 +495,9 @@ int main(void)
 
     //added by igork
     atexit(atExitHandler);
+    smsc::logger::Logger::Init();
+    logger = Logger::getInstance("smsc.dbsme.DBSme");
+    adminListener.reset(new smsc::admin::service::ServiceSocketListener());
 
     SQLJobFactory _sqlJobFactory;
     JobFactory::registerFactory(&_sqlJobFactory,
@@ -517,9 +521,9 @@ int main(void)
         ConfigView adminConfig(Manager::getInstance(), "DBSme.Admin");
         DBSmeComponent admin(adminHandler);
         ComponentManager::registerComponent(&admin);
-        adminListener.init(adminConfig.getString("host"), adminConfig.getInt("port"));
+        adminListener->init(adminConfig.getString("host"), adminConfig.getInt("port"));
         bAdminListenerInited = true;
-        adminListener.Start();
+        adminListener->Start();
 
         while (!isNeedStop())
         {
@@ -609,8 +613,8 @@ int main(void)
     }
 
     if (bAdminListenerInited) {
-        adminListener.shutdown();
-        adminListener.WaitFor();
+        adminListener->shutdown();
+        adminListener->WaitFor();
     }
 
     DataSourceLoader::unload();

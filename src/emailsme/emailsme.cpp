@@ -14,6 +14,7 @@
 #include "db/DataSource.h"
 #include "db/DataSourceLoader.h"
 #include "util/templates/Formatters.h"
+#include "util/xml/init.h"
 
 #include "emailsme/util/PipedChild.hpp"
 
@@ -709,8 +710,18 @@ static void ctrlc(int sig)
   thr_kill(cfg::mainId,16);
 }
 
+
+void atExitHandler(void)
+{
+    smsc::util::xml::TerminateXerces();
+	smsc::logger::Logger::Shutdown();
+}
+
 int main(int argc,char* argv[])
 {
+  smsc::logger::Logger::Init();
+  atexit(atExitHandler);
+
   sigset(16,disp);
   sigset(SIGINT,ctrlc);
   sigset(SIGTERM,ctrlc);

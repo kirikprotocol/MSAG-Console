@@ -82,6 +82,15 @@ void Logger::Init(const char * const configFileName)
 	}
 }
 
+void Logger::Init()
+{
+	char * logFileName = getenv("SMSC_LOGGER_PROPERTIES");
+	if (logFileName)
+		smsc::logger::Logger::Init(logFileName);
+	else
+		smsc::logger::Logger::Init("logger.properties");
+}
+
 void Logger::Shutdown()
 {
 	MutexGuard guard(static_mutex);

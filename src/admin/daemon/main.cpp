@@ -75,15 +75,6 @@ void shutdown_handler(int a, siginfo_t* info, void* p)
 		main_listener->shutdown();
 }
 
-void initLogger()
-{
-	char * logFileName = getenv("SMSC_LOGGER_PROPERTIES");
-	if (logFileName)
-		smsc::logger::Logger::Init(logFileName);
-	else
-		smsc::logger::Logger::Init("logger.properties");
-}
-
 void atExitHandler(void)
 {
   smsc::util::xml::TerminateXerces();
@@ -103,12 +94,13 @@ int main(int argc, char **argv)
     
 		daemonInit();
 
-    initLogger();
-    atexit(atExitHandler);
+		Logger::Init();
+		atexit(atExitHandler);
 
 		Manager::init(argv[1]);
 
 		chdir(Manager::getInstance().getString(CONFIG_HOME_PARAMETER));
+
 		Manager::deinit();
 		Manager::init(argv[1]);
 		Manager &manager = Manager::getInstance();
@@ -124,8 +116,8 @@ int main(int argc, char **argv)
 		DaemonSocketListener listener("smsc.admin.daemon.DaemonSocketListener");
 		listener.init(manager.getString(CONFIG_HOST_PARAMETER),
 			manager.getInt(CONFIG_PORT_PARAMETER));
-		DaemonCommandDispatcher::startAllServices();
 		listener.Start();
+		DaemonCommandDispatcher::startAllServices();
 
 		smsc_log_info(logger, "Started");
 

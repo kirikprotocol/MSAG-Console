@@ -147,7 +147,7 @@ extern "C"
 int main()
 {
   try {
-    smsc::logger::Logger::Init("proxysme.l4c");
+    smsc::logger::Logger::Init();
     smsc_log_info(smsc::logger::Logger::getInstance("smsc.proxysme.X"), "!!!!");
     smsc_log_info(smsc::logger::Logger::getInstance("smsc.proxysme.X"), "!!!! -- Starting");
     smsc_log_info(smsc::logger::Logger::getInstance("smsc.proxysme.X"), "!!!!");

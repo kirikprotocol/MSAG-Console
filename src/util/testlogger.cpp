@@ -37,7 +37,7 @@ void sigintdisp(int)
 int main(int argc,char* argv[])
 {
   signal(SIGINT,sigintdisp);
-  smsc::logger::Logger::Init("log4cpp.properties");
+  smsc::logger::Logger::Init();
   const int N=2;
   TestThread* tt[N];
   for(int i=0;i<N;i++)

@@ -613,7 +613,7 @@ int main(int argc,char* argv[])
            );
     return -1;
   }
-  Logger::Init("log4cpp.t");
+  Logger::Init();
   SmeConfig cfg;
   string host="smsc";
   int port=9001;

@@ -84,6 +84,7 @@ int main (int argc, char *argv[])
 		return -1;
 	}
  	try {
+		Logger::Init();
 		freopen("dumb.out", "w", stdout);
     freopen("dumb.err", "w", stderr);
 
@@ -91,7 +92,6 @@ int main (int argc, char *argv[])
 		Manager::init("conf/dumbServiceConfig.xml");
 		Manager &config = Manager::getInstance();
 	
-		Logger::Init(config.getString("dumbtest.loggerInitFile"));
 		
 		Logger *logger = Logger::getInstance("smsc.admin.service.test.ServiceSocketListenerTest");
 		

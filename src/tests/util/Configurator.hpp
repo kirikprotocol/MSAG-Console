@@ -40,7 +40,7 @@ namespace smsc {
 			  void init() {
 				if(!initialized) {
 				  //std::cout << "Initializing logger\n";
-				  smsc::logger::Logger::Init("log4cpp.test");
+				  smsc::logger::Logger::Init();
 				  initialized = true;
 				}
 			  }

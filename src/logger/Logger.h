@@ -50,6 +50,8 @@ public:
 	* \param configFileName имя файла конфигурации logger
 	**/
 	static void Init(const char * const configFileName);
+	static void Init();
+
 
 	/*!
 	* Деинициализирует logger. После этого его можно снова инициализировать.

@@ -194,7 +194,7 @@ Test tst[]={
 int main(int argc, char** argv)
 {
   smsc::util::regexp::RegExp::InitLocale();
-  Logger::Init("log4cpp.properties");
+  Logger::Init();
   const char *locales="en_us, en_gb, ru_ru";
   const char *defloc="en_us";
 
