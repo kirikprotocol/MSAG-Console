@@ -392,14 +392,14 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   }
   if ( encoding == 0 ){ // 7bit
     unsigned text_len;
-    const unsigned char* text = (const unsigned char*)sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
+    const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
     *pdu_ptr++ = text_len;
     pdu_ptr += ConvertText27bit(text,text_len,pdu_ptr);
     
   }else{ // UCS2
   }
   pdu->signalInfoLen  = pdu_ptr-(unsigned char*)pdu->signalInfo;
-  return pdu.release();
+  return pdu;
 #else
   return 0;
 #endif
@@ -424,11 +424,13 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
 	  smRpOa.addr[0] = m_scAddr.typeOfAddress;
 	  memcpy( smRpOa.addr+1, m_scAddr.address, (m_scAddr.addressLength+1)/2 );
 
-    auto_ptr<ET96MAP_SM_RP_UI_T> ui(mkDeliverPDU(sms.get()));// = mkDeliverPDU( oaddress, message ); 
+    //auto_ptr<ET96MAP_SM_RP_UI_T> ui(mkDeliverPDU(sms.get()));// = mkDeliverPDU( oaddress, message ); 
+    ET96MAP_SM_RP_UI_T ui;
+    mkDeliverPDU(sms.get(),&ui);
 
     USHORT_T result;
     __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq");
-	  result = Et96MapV2ForwardSmMTReq( SSN, dialogid, 1, &smRpDa, &smRpOa, ui.get(), FALSE);
+	  result = Et96MapV2ForwardSmMTReq( SSN, dialogid, 1, &smRpDa, &smRpOa, &ui, FALSE);
 	  if( result != ET96MAP_E_OK ) {
       __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq error 0x%x",result);
 	  }
