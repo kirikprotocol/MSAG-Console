@@ -1559,15 +1559,17 @@ StateType StateMachine::submit(Tuple& t)
          throw "Invalid sms";
       }
       bool rip=sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG)!=0;
-      if(rip && stime>now)
-      {
+      //if(rip || stime>now || )
+      //{
         store->createSms(*sms,t.msgId,smsc::store::SMPP_OVERWRITE_IF_PRESENT);
         sms->createdInStore=true;
-      }else
+      //}else
+      /*
       {
         smsc->getTempStore().AddSms(t.msgId,*sms);
         sms->createdInStore=false;
       }
+      */
 
     }catch(...)
     {
