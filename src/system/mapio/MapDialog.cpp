@@ -79,7 +79,7 @@ void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
       sa_val[i]=(ma->addr[(i>>1)+1]&0x0f)+0x30;
       ++i;
       if ( i<(ma->addrLen-1)*2 ){
-        if ( (ma->addr[(i>>1)+1]&0x0f) == 0xf ) break;
+        if ( (ma->addr[(i>>1)+1]>>4) == 0xf ) break;
         sa_val[i] = (ma->addr[(i>>1)+1]>>4)+0x30;
         ++i;
       }else break;
