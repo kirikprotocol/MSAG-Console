@@ -188,7 +188,7 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
     ET96MAP_SM_RP_OA_T* srcAddr,  
     ET96MAP_SM_RP_UI_T* ud )
 {
-#if defined USE_MAP  
+#if defined USE_MAPIO  
   __trace2__("MAP::MapDialog::Et96MapV2ForwardSmMOInd dta len %d",ud->signalInfoLen);
   setInvokeId(invokeId);
   SMS sms;
