@@ -66,6 +66,7 @@ enum CommandId
   SMPP_PDU,               //21
   SUBMIT_MULTI,           //22
   SUBMIT_MULTI_RESP,      //23
+  ALERT_NOTIFICATION,     //24
 };
 
 enum CommandStatus{
@@ -111,6 +112,12 @@ struct AbonentStatus{
   static const int OFFLINE=0;
   static const int ONLINE=1;
   static const int UNKNOWNVALUE=2;
+};
+
+struct AlertNotification{
+  Address src;
+  Address dst;
+  int status;
 };
 
 struct SmsResp
@@ -380,6 +387,9 @@ struct _SmscCommand
     case SMPP_PDU:
       if(dta)disposePdu((SmppHeader*)dta);
       break;
+    case ALERT_NOTIFICATION:
+      if(dta)delete (AlertNotification*)dta;
+      break;
     case UNKNOWN:
     case FORWARD:
     case ALERT:
@@ -415,6 +425,8 @@ struct _SmscCommand
   void set_address(const Address& addr) { *(Address*)dta = addr; }
 
   SmppHeader* get_smppPdu(){return (SmppHeader*)dta;}
+
+  AlertNotification& get_alertNotification(){return *(AlertNotification*)dta;}
 
   AbonentStatus& get_abonentStatus()
   {
@@ -738,6 +750,25 @@ public:
     _cmd.ref_count=1;
     _cmd.cmdid=SMPP_PDU;
     _cmd.dta=pdu;
+    _cmd.dialogId=0;
+    return cmd;
+  }
+
+  static SmscCommand makeAlertNotificationCommand(uint32_t dialogId,
+                                                  const Address& src,
+                                                  const Address& dst,
+                                                  int status)
+  {
+    SmscCommand cmd;
+    cmd.cmd=new _SmscCommand;
+    _SmscCommand& _cmd=*cmd.cmd;
+    _cmd.ref_count=1;
+    _cmd.cmdid=ALERT_NOTIFICATION;
+    AlertNotification *an=new AlertNotification;
+    an->src=src;
+    an->dst=dst;
+    an->status=status;
+    _cmd.dta=an;
     _cmd.dialogId=0;
     return cmd;
   }
@@ -1127,6 +1158,22 @@ public:
         SmppHeader* pdu=(SmppHeader*)c.dta;
         c.dta=0;
         return pdu;
+      }
+    case ALERT_NOTIFICATION:
+      {
+        auto_ptr<PduAlertNotification> pdu(new PduAlertNotification);
+        AlertNotification& an=c.get_alertNotification();
+        pdu->header.set_commandId(SmppCommandSet::ALERT_NOTIFICATION);
+        pdu->header.set_sequenceNumber(c.get_dialogId());
+        pdu->header.set_commandStatus(0);
+        pdu->source.set_typeOfNumber(an.src.type);
+        pdu->source.set_numberingPlan(an.src.plan);
+        pdu->source.set_value(an.src.value);
+        pdu->esme.set_typeOfNumber(an.dst.type);
+        pdu->esme.set_numberingPlan(an.dst.plan);
+        pdu->esme.set_value(an.dst.value);
+        pdu->optional.set_msAvailableStatus(an.status);
+        return reinterpret_cast<SmppHeader*>(pdu.release());
       }
     default:
       __unreachable__("unknown commandid");

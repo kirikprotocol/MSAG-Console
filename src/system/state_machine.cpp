@@ -358,9 +358,9 @@ void StateMachine::processDirectives(SMS& sms,Profile& p)
 
   Array<Directive> offsets;
   int i=0;
-  RegExp def("/#def\\s+(\\d+)#/");
+  RegExp def("/#def\\s+(\\d+)#/i");
   __require__(def.LastError()==regexp::errNone);
-  RegExp tmpl("/#template=(.*?)#/");
+  RegExp tmpl("/#template=(.*?)#/i");
   __require__(tmpl.LastError()==regexp::errNone);
   RegExp tmplparam("/\\s*\\{(\\w+)\\}=(\".*?\"|[^{\\s]+)/");
   __require__(tmplparam.LastError()==regexp::errNone);
@@ -406,6 +406,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p)
     {
       tmplname.assign(buf+m[1].start,m[1].end-m[1].start);
       __trace2__("DIRECT: template=%s",tmplname.c_str());
+      tmplname="templates."+tmplname;
       int j=m[0].end;
       n=10;
       string name,value;
