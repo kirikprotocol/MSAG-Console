@@ -1,7 +1,7 @@
 -sme/testsme testsme -lcore-network -lsms -lsocket -lsme -lcore-threads -lthread 
 -sme/testsme2 testsme2 -lcore-network -lsms -lsocket -lsme -lcore-threads -lthread
 #sme/testsme3 testsme3 -lcore-network -lsms -lsocket -lsme -lcore-threads -lthread
-sme/t t -lcore-network -lutil -lsms -lutil -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll -llog4cpp $(__LIBRARIES)
+sme/t t -lcore-network -lutil -lsms -lutil -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll -llog4cpp $(__LIBRARIES) -lreadline -ltermcap
 sme/flooder flooder -lcore-network -lutil -lsms -lutil -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll -llog4cpp $(__LIBRARIES)
 #sme/t2 t2 -lcore-network -lutil -lsms -lutil -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
 -sme/pingpong pingpong -lcore-network -lutil -lsms -lutil -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
