@@ -408,6 +408,7 @@ void extractSmsPart(SMS* sms,int partnum)
   sms->setIntProperty(Tag::SMPP_SM_LENGTH,newlen);
   sms->getMessageBody().dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
   sms->getMessageBody().dropProperty(Tag::SMSC_RAW_PAYLOAD);
+  sms->setIntProperty(Tag::SMPP_DATA_SM,0);
 }
 
 };//util
