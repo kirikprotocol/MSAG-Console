@@ -40,6 +40,8 @@ String destination_selected_string = request.getParameter("destination_selected"
 String source_masks = request.getParameter("source_masks");
 String destination_masks = request.getParameter("destination_masks");
 String isEnabling = request.getParameter("isEnabling");
+String isBilling = request.getParameter("isBilling");
+String isArchiving = request.getParameter("isArchiving");
 RouteList routeList = smsc.getRoutes();
 Route route = routeList.get(new_route_name);
 
@@ -56,6 +58,8 @@ if (!old_route_name.equals(new_route_name))
 route.updateSources(source_selected_string, source_masks, smsc.getSubjects());
 route.updateDestinations(destination_selected_string, destination_masks, smsc.getSubjects(), defaultSme);
 route.setEnabling(isEnabling != null && isEnabling.equals("true"));
+route.setBilling(isBilling != null && isBilling.equals("true"));
+route.setArchiving(isArchiving != null && isArchiving.equals("true"));
 %>
 <form method="post" action="edit_route_3.jsp">
   <h4>Edit Route</h4>

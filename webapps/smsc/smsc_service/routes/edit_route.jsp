@@ -36,6 +36,14 @@ available_dst.removeAll(selected_dst.getNames());
   			<td class="list" width="50%"><input type="checkbox" name="isEnabling" value="true" style="WIDTH: 100%"<%=route.isEnabling() ? " checked" : ""%>></td>
   		</tr>
   		<tr class="list">
+  			<th class="list" width="50%">Billing</th>
+  			<td class="list" width="50%"><input type="checkbox" name="isBilling" value="true" style="WIDTH: 100%"<%=route.isBilling() ? " checked" : ""%>></td>
+  		</tr>
+  		<tr class="list">
+  			<th class="list" width="50%">Archiving</th>
+  			<td class="list" width="50%"><input type="checkbox" name="isArchiving" value="true" style="WIDTH: 100%"<%=route.isArchiving() ? " checked" : ""%>></td>
+  		</tr>
+  		<tr class="list">
   			<th class="list" nowrap width="50%">Sources <a href="#" onclick="var newWin = window.open('create_subject.jsp',
 'create_subject','toolbar=no,width=640,height=240,status=no'); newWin.opener = window;return false">create subject</a></th>
   			<th class="list" nowrap width="50%">Destinations</th>

@@ -8,6 +8,9 @@ package ru.novosoft.smsc.admin.route;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.impl.SubjectDataSource;
+import ru.novosoft.smsc.jsp.util.tables.impl.SubjectQuery;
 
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -19,6 +22,7 @@ import java.util.Set;
 public class SubjectList
 {
   private Map subjects = new HashMap();
+  private SubjectDataSource dataSource = new SubjectDataSource();
 
   public SubjectList(Element listElement, SMEList smes)
           throws AdminException
@@ -49,12 +53,16 @@ public class SubjectList
     if (subjects.containsKey(s.getName()))
       throw new IllegalArgumentException("Source already contained");
 
+    dataSource.add(s);
     subjects.put(s.getName(), s);
   }
 
   public Subject remove(String subjectName)
   {
-    return (Subject) subjects.remove(subjectName);
+    Subject removed = (Subject) subjects.remove(subjectName);
+    if (removed != null)
+      dataSource.remove(removed);
+    return removed;
   }
 
   public int size()
@@ -89,5 +97,10 @@ public class SubjectList
       ((Subject) i.next()).store(out);
     }
     return out;
+  }
+
+  public QueryResultSet query(SubjectQuery query)
+  {
+    return dataSource.query(query);
   }
 }

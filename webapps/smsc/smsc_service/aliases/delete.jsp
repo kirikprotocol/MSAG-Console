@@ -3,8 +3,8 @@
 <h4>Aliases</h4>
 <h5>Delete alias:</h5>
 <%
-String address = request.getParameter("address");
-String alias = request.getParameter("alias");
+String address = request.getParameter("Address");
+String alias = request.getParameter("Alias");
 if (smsc.getAliases().remove(new Alias(new Mask(address), new Mask(alias))))
 {
   %>Alias "<%=alias%>&nbsp;-&gt;&nbsp;<%=address%>" deleted sucessfully.<%

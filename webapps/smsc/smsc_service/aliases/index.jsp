@@ -1,27 +1,15 @@
 <%@ include file="/common/header.jsp"%>
 <%@ include file="/smsc_service/menu.jsp"%>
+<%@ include file="/common/tables.jsp"%>
+<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.AliasQuery"%>
+<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.AliasFilter"%>
 <h4>Aliases</h4>
-
-<table class="list">
-  <thead class="list">
-    <tr class="list">
-      <th class="list" width="49%">Alias</th>
-      <th class="list" width="49%">Address</th>
-      <th width="2%" class="list"><a href="edit.jsp">Add</a></th>
-    </tr>
-  </thead>
-  <tbody class="list">
-    <% 
-    for (Iterator i = smsc.getAliases().iterator(); i.hasNext(); )
-    {
-      Alias a = (Alias) i.next();
-      %>
-      <tr class="list">
-        <td class="list"><%=a.getAlias().getMask()%></td>
-        <td class="list"><%=a.getAddress().getMask()%></td>
-        <td class="list"><a href="edit.jsp?alias=<%=URLEncoder.encode(a.getAlias().getMask())%>&address=<%=URLEncoder.encode(a.getAddress().getMask())%>">Edit</a>&nbsp;<a href="delete.jsp?alias=<%=URLEncoder.encode(a.getAlias().getMask())%>&address=<%=URLEncoder.encode(a.getAddress().getMask())%>">Delete</a></td>
-      </tr>
-    <%}%>
-  </tbody>
-</table>
+<%
+  String sort = request.getParameter("sort");
+  if (sort == null)
+    sort = "Alias";
+  Vector sortOrder = new Vector();
+  sortOrder.add(sort);
+  showTable(out, smsc.getAliases().query(new AliasQuery(10, new AliasFilter(), sortOrder, 0)));
+%>
 <%@ include file="/common/footer.jsp"%>

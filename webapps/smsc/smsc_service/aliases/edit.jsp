@@ -1,9 +1,9 @@
 <%@ include file="/common/header.jsp"%>
 <%@ include file="/smsc_service/menu.jsp"%>
 <%
-boolean isEdit = request.getParameter("address") != null && request.getParameter("alias") != null;
-String address = isEdit ? StringEncoderDecoder.encode(request.getParameter("address")) : "";
-String alias   = isEdit ? StringEncoderDecoder.encode(request.getParameter("alias"  )) : "";
+boolean isEdit = request.getParameter("Address") != null && request.getParameter("Alias") != null;
+String address = isEdit ? StringEncoderDecoder.encode(request.getParameter("Address")) : "";
+String alias   = isEdit ? StringEncoderDecoder.encode(request.getParameter("Alias"  )) : "";
 %>
 <h4>Aliases</h4>
 <h5><%=isEdit ? "Edit" : "Add"%> alias:</h5>

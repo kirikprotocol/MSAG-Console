@@ -1,35 +1,15 @@
 <%@ include file="/common/header.jsp"%>
 <%@ include file="/smsc_service/menu.jsp"%>
+<%@ include file="/common/tables.jsp"%>
+<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.SubjectQuery"%>
+<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.SubjectFilter"%>
 <h4>Subjects</h4>
 <%
-SubjectList subjects = smsc.getSubjects();
-%><table class="list" cellspacing="0">
-  <thead class="list">
-    <tr class="list">
-      <th class="list">Name</th>
-      <th class="list">Default&nbsp;SME</th>
-      <th class="list">Masks</th>
-      <th class="list"><a href="edit.jsp">Add</a></th>
-    </tr>
-  </thead>
-  <tbody><%
-for (Iterator i = subjects.iterator(); i.hasNext(); )
-{
-  Subject s = (Subject) i.next();
-  %><tr class="list">
-    <td class="list"><%=StringEncoderDecoder.encode(s.getName())%></td>
-    <td class="list"><%=StringEncoderDecoder.encode(s.getDefaultSme().getId())%></td>
-    <td class="list"><%
-    MaskList masks = s.getMasks();
-    for (Iterator j = masks.iterator(); j.hasNext();)
-    {
-      Mask m = (Mask) j.next();
-      %><%=StringEncoderDecoder.encode(m.getMask()) + (j.hasNext() ? "<br>" : "")%><%
-    }
-    %></td>
-    <td class="list"><a href="edit.jsp?name=<%=URLEncoder.encode(s.getName())%>">Edit</a>&nbsp;<a href="delete.jsp?name=<%=URLEncoder.encode(s.getName())%>">Delete</a></td>
-  </tr><%
-}
-
-%></tbody>
-</table><%@ include file="/common/footer.jsp"%>
+  String sort = request.getParameter("sort");
+  if (sort == null)
+    sort = "Name";
+  Vector sortOrder = new Vector();
+  sortOrder.add(sort);
+  showTable(out, smsc.getSubjects().query(new SubjectQuery(10, new SubjectFilter(), sortOrder, 0)));
+%>
+<%@ include file="/common/footer.jsp"%>

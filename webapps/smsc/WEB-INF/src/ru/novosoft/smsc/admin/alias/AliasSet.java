@@ -16,11 +16,15 @@ import java.io.PrintWriter;
 
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.impl.AliasQuery;
+import ru.novosoft.smsc.jsp.util.tables.impl.AliasDataSource;
 
 
 public class AliasSet
 {
   private Set aliases = new HashSet();
+  private AliasDataSource dataSource = new AliasDataSource();
 
   public AliasSet(Element aliasesElem)
   {
@@ -46,6 +50,7 @@ public class AliasSet
 
   public boolean add(Alias new_alias)
   {
+    dataSource.add(new_alias);
     return aliases.add(new_alias);
   }
 
@@ -56,6 +61,12 @@ public class AliasSet
 
   public boolean remove(Alias a)
   {
+    dataSource.remove(a);
     return aliases.remove(a);
+  }
+
+  public QueryResultSet query(AliasQuery query)
+  {
+    return dataSource.query(query);
   }
 }

@@ -3,7 +3,7 @@
 <%@ include file="/common/scripts.jsp"%>
 <h4>Subjects</h4>
 <%
-String name = request.getParameter("name");
+String name = request.getParameter("Name");
 boolean isCreate = name == null;
 Subject s = null;
 if (!isCreate)

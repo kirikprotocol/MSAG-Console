@@ -8,6 +8,10 @@ package ru.novosoft.smsc.admin.route;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.jsp.util.tables.impl.RouteDataSource;
+import ru.novosoft.smsc.jsp.util.tables.impl.SubjectQuery;
+import ru.novosoft.smsc.jsp.util.tables.impl.RouteQuery;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -18,6 +22,7 @@ import java.util.Map;
 public class RouteList
 {
   private Map map = new HashMap();
+  private RouteDataSource dataSource = new RouteDataSource();
 
   public RouteList()
   {
@@ -39,6 +44,7 @@ public class RouteList
     if (map.containsKey(r.getName()))
       throw new IllegalArgumentException("Route \"" + r.getName() + "\" already exist");
 
+    dataSource.add(r);
     map.put(r.getName(), r);
   }
 
@@ -59,7 +65,10 @@ public class RouteList
 
   public Route remove(String routeName)
   {
-    return (Route) map.remove(routeName);
+    Route r = (Route) map.remove(routeName);
+    if (r != null)
+      dataSource.remove(r);
+    return r;
   }
 
   public void rename(String oldRouteName, String newRouteName)
@@ -76,5 +85,10 @@ public class RouteList
       ((Route) i.next()).store(out);
     }
     return out;
+  }
+
+  public QueryResultSet query(RouteQuery query)
+  {
+    return dataSource.query(query);
   }
 }
