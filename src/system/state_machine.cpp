@@ -921,8 +921,7 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
-  if(sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3 &&
-     sms->getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
+  if(sms->getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
   {
     unsigned len;
     const unsigned char* msg;
@@ -1083,7 +1082,10 @@ StateType StateMachine::submit(Tuple& t)
                   (profile.divertActiveBlocked ?DF_BLOCK :0)|
                   (profile.divertActiveBarred  ?DF_BARRED:0)|
                   (profile.divertActiveCapacity?DF_CAPAC :0);
-  if(divertFlags && profile.divert.length()!=0 && !sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+  if(divertFlags && profile.divert.length()!=0 &&
+     !sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) &&
+     sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=3
+    )
   {
     debug2(smsLog, "divert for %s found",dst.toString().c_str());
     Address divDst;
@@ -1867,8 +1869,11 @@ StateType StateMachine::submit(Tuple& t)
 
     __trace2__("SUBMIT_SM: after processDirectives - delrep=%d, sdt=%d",(int)sms->getDeliveryReport(),sms->getNextTime());
 
-    __trace2__("SUBMIT_SM: dest_addr_subunit=%d",sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT));
+    //__trace2__("SUBMIT_SM: dest_addr_subunit=%d",sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT));
 
+    /*
+    // Этот кусок закомментирован так как никто уже не помнит
+       зачем он был написан.
     if(ri.smeSystemId=="MAP_PROXY" && sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03)
     {
       unsigned len=sms->getIntProperty(Tag::SMPP_SM_LENGTH);
@@ -1890,8 +1895,15 @@ StateType StateMachine::submit(Tuple& t)
         );
         return ERROR_STATE;
       }
-
     }
+    */
+    if(ri.smeSystemId=="MAP_PROXY" && sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03)
+    {
+      sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,DataCoding::UCS2|DataCoding::LATIN1);
+      sms->setIntProperty(Tag::SMSC_UDH_CONCAT,1);
+    }
+
+
 
     if(ri.smeSystemId=="MAP_PROXY" &&
        !sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT)&&
@@ -1948,6 +1960,7 @@ StateType StateMachine::submit(Tuple& t)
     {
       uint8_t msgref=smsc->getNextMR(dst);
       sms->setConcatMsgRef(msgref);
+
       sms->setConcatSeqNum(0);
     }
 
@@ -2480,7 +2493,9 @@ StateType StateMachine::submit(Tuple& t)
       try{
         Descriptor d;
         if(Status::isErrorPermanent(err))
+        {
           store->changeSmsStateToUndeliverable(t.msgId,d,err);
+        }
         else
           changeSmsStateToEnroute(*sms,t.msgId,d,err,rescheduleSms(*sms));
 
@@ -2539,12 +2554,14 @@ StateType StateMachine::forward(Tuple& t)
   if(!sms.Invalidate(__FILE__,__LINE__))
   {
     smsc_log_warn(smsLog, "Invalidate of %lld failed",t.msgId);
+    smsc->getScheduler()->InvalidSms(t.msgId);
     return ERROR_STATE;
   }
 
   if(sms.getState()==EXPIRED_STATE)
   {
     smsc_log_warn(smsLog, "FWD: sms in expired state msgId=%lld",t.msgId);
+    smsc->getScheduler()->InvalidSms(t.msgId);
     return EXPIRED_STATE;
   }
   time_t now=time(NULL);
@@ -2573,13 +2590,13 @@ StateType StateMachine::forward(Tuple& t)
     smsc_log_warn(smsLog, "Attempt to forward incomplete concatenated message %lld",t.msgId);
     try{
       Descriptor d;
+      smsc->getScheduler()->InvalidSms(t.msgId);
       store->changeSmsStateToUndeliverable
       (
         t.msgId,
         d,
         Status::SYSERR
       );
-      smsc->getScheduler()->InvalidSms(t.msgId);
     }catch(...)
     {
       __warning__("failed to change sms state to undeliverable");
@@ -2590,6 +2607,7 @@ StateType StateMachine::forward(Tuple& t)
   if(sms.getState()!=ENROUTE_STATE)
   {
     smsc_log_warn(smsLog, "FWD: sms msgId=%lld is not in enroute (%d)",t.msgId,sms.getState());
+    smsc->getScheduler()->InvalidSms(t.msgId);
     return sms.getState();
   }
   if( sms.getNextTime()>now && sms.getAttemptsCount()==0 && (!t.command->is_reschedulingForward() || sms.getLastResult()==0) )
@@ -2927,13 +2945,13 @@ StateType StateMachine::forward(Tuple& t)
         __warning__("attempt to forward concatenated message but all parts are delivered!!!");
         try{
           Descriptor d;
+          smsc->getScheduler()->InvalidSms(t.msgId);
           store->changeSmsStateToUndeliverable
           (
             t.msgId,
             d,
             Status::SYSERR
           );
-          smsc->getScheduler()->InvalidSms(t.msgId);
         }catch(...)
         {
           __warning2__("failed to change state of sms %lld to final ... again!!!",t.msgId);
@@ -3008,8 +3026,8 @@ StateType StateMachine::forward(Tuple& t)
       __trace__("FORWARD: change state to enroute");
         if(Status::isErrorPermanent(errstatus))
         {
-          store->changeSmsStateToUndeliverable(t.msgId,d,errstatus);
           smsc->getScheduler()->InvalidSms(t.msgId);
+          store->changeSmsStateToUndeliverable(t.msgId,d,errstatus);
         }
         else
           changeSmsStateToEnroute(sms,t.msgId,d,errstatus,rescheduleSms(sms));
@@ -3085,6 +3103,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
   if(t.state!=DELIVERING_STATE)
   {
     debug2(smsLog, "DLVRSP: state of SMS isn't DELIVERING!!! msgId=%lld;st=%d",t.msgId,t.command->get_resp()->get_status());
+    smsc->getScheduler()->InvalidSms(t.msgId);
     return t.state;
   }
   //smsc::sms::Descriptor d;
@@ -3186,6 +3205,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
     }catch(exception& e)
     {
       smsc_log_warn(smsLog, "DLVRSP: failed to retrieve sms:%s! msgId=%lld;st=%d",e.what(),t.msgId,t.command->get_resp()->get_status());
+      smsc->getScheduler()->InvalidSms(t.msgId);
       return UNKNOWN_STATE;
     }
     sms.destinationDescriptor=t.command->get_resp()->getDescriptor();
@@ -3629,13 +3649,12 @@ StateType StateMachine::deliveryResp(Tuple& t)
           sms.setLastResult(errstatus);
           if(Status::isErrorPermanent(errstatus))
           {
+            smsc->getScheduler()->InvalidSms(t.msgId);
             sendFailureReport(sms,t.msgId,UNDELIVERABLE_STATE,"permanent error");
             store->changeSmsStateToUndeliverable(t.msgId,d,errstatus);
-            smsc->getScheduler()->InvalidSms(t.msgId);
           }
           else
             changeSmsStateToEnroute(sms,t.msgId,d,errstatus,rescheduleSms(sms));
-
         }catch(...)
         {
           __warning__("CONCAT: failed to change state to enroute");
@@ -4069,7 +4088,7 @@ StateType StateMachine::replace(Tuple& t)
   }
 
 
-  if(sms.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x03 && sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
+  if(sms.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x03 && (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40))
   {
     if(
         t.command->get_replaceSm().smLength==0 ||
@@ -4090,6 +4109,7 @@ StateType StateMachine::replace(Tuple& t)
   );
   sms.setIntProperty(Tag::SMPP_SM_LENGTH,t.command->get_replaceSm().smLength);
 
+  /*
   if(sms.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03 &&
      !strcmp(sms.getDestinationSmeId(),"MAP_PROXY") &&
      t.command->get_replaceSm().smLength>140)
@@ -4097,6 +4117,7 @@ StateType StateMachine::replace(Tuple& t)
     __trace__("REPLACE: das=3, and smLength>140");
     __REPLACE__RESPONSE(INVMSGLEN);
   }
+  */
 
   if(!strcmp(sms.getDestinationSmeId(),"MAP_PROXY"))
   {
@@ -4471,7 +4492,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
     rpt.setValidTime(0);
     rpt.setDeliveryReport(0);
     rpt.setArchivationRequested(false);
-    //rpt.setIntProperty(Tag::SMPP_ESM_CLASS,regdel?0x20:0);
+    rpt.setIntProperty(Tag::SMPP_ESM_CLASS,0);
     rpt.setDestinationAddress(sms.getOriginatingAddress());
     rpt.setMessageReference(sms.getMessageReference());
     rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
@@ -4564,7 +4585,13 @@ void StateMachine::changeSmsStateToEnroute(SMS& sms,SMSId id,const Descriptor& d
     return;
   }
   sms.setNextTime(nextTryTime);
-  nextTryTime=smsc->getScheduler()->RescheduleSms(id,sms,smsc->getSmeIndex(sms.dstSmeId));
+  if(failureCause==Status::RESCHEDULEDNOW)
+  {
+    smsc->getScheduler()->AddScheduledSms(nextTryTime,id,sms.getDealiasedDestinationAddress(),smsc->getSmeIndex(sms.dstSmeId));
+  }else
+  {
+    nextTryTime=smsc->getScheduler()->RescheduleSms(id,sms,smsc->getSmeIndex(sms.dstSmeId));
+  }
 
 
   debug2(smsLog, "ENROUTE: msgId=%lld;lr=%d;or=%d;ntt=%u;ac=%d",id,sms.getLastResult(),sms.oldResult,nextTryTime,sms.getAttemptsCount());
