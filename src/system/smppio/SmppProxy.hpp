@@ -123,7 +123,7 @@ public:
       smppSocket->notifyOutThread();
       return;
     }
-    if(cmd->get_commandId()==ENQUIRELINK)
+    /*if(cmd->get_commandId()==ENQUIRELINK)
     {
       MutexGuard g(mutexout);
       if(!opened)return;
@@ -138,7 +138,8 @@ public:
         ,
         SmscCommandDefaultPriority
       );
-    }else if(cmd->get_commandId()==SMPP_PDU)
+    }else */
+    if(cmd->get_commandId()==SMPP_PDU)
     {
       MutexGuard g(mutexout);
       if(!opened)return;

@@ -29,12 +29,12 @@ typedef smsc::core::synchronization::Event ProxyMonitor;
 
 class ProxyQueueLimitException : public std::exception
 {
-  virtual const char* what() const throw() {return "";}
+  virtual const char* what() const throw() {return "Proxy Queue limit";}
 };
 
 class InvalidProxyCommandException: public std::exception
 {
-  virtual const char* what() const throw() {return "";}
+  virtual const char* what() const throw() {return "Invalid bind state";}
 };
 
 static std::string nullstr="";

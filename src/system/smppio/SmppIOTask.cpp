@@ -163,7 +163,7 @@ int SmppInputThread::Execute()
         {
           if(ss->getProxy())
           {
-            ss->getProxy()->putIncomingCommand
+            ss->getProxy()->putCommand
             (
               SmscCommand::makeCommand
               (
@@ -433,11 +433,19 @@ int SmppInputThread::Execute()
             }break;
             case SmppCommandSet::ENQUIRE_LINK:
             {
-              SmscCommand cmd(pdu);
+              //SmscCommand cmd(pdu);
               try{
                 if(ss->getProxy() && ss->getProxy()->isOpened())
                 {
-                  ss->getProxy()->putIncomingCommand(cmd);
+                  ss->getProxy()->putCommand
+                  (
+                    SmscCommand::makeCommand
+                    (
+                      ENQUIRELINK_RESP,
+                      pdu->get_sequenceNumber(),
+                      0
+                    )
+                  );
                 }else
                 {
                   PduEnquireLink pduresp;

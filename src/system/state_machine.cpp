@@ -674,11 +674,11 @@ StateType StateMachine::submit(Tuple& t)
     {
       sms->setOriginatingAddress(srcOriginal);
       sms->setDestinationAddress(dstOriginal);
-      sendNotifyReport(*sms,t.msgId,"facility not supported");
+      sendNotifyReport(*sms,t.msgId,"service rejected");
       __trace__("SUBMIT: Attempt to putCommand for sme in invalid bind state");
       try{
         Descriptor d;
-        store->changeSmsStateToEnroute(t.msgId,d,Status::THROTTLED,rescheduleSms(*sms));
+        store->changeSmsStateToEnroute(t.msgId,d,Status::INVBNDSTS,rescheduleSms(*sms));
         smsc->notifyScheduler();
       }catch(...)
       {
@@ -846,6 +846,8 @@ StateType StateMachine::forward(Tuple& t)
   }
   Address srcOriginal=sms.getOriginatingAddress();
   Address dstOriginal=sms.getDestinationAddress();
+  int errstatus=0;
+  const char* errtext;
   try{
     // send delivery
     Address src;
@@ -873,18 +875,29 @@ StateType StateMachine::forward(Tuple& t)
     }
     SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
     dest_proxy->putCommand(delivery);
-  }catch(...)
+  }
+  catch(InvalidProxyCommandException& e)
+  {
+    errstatus=Status::INVBNDSTS;
+    errtext="service rejected";
+  }
+  catch(...)
+  {
+    errstatus=Status::THROTTLED;
+    errtext="SME busy";
+  }
+  if(errstatus)
   {
     //TODO!!!: remove task and reschedule
-    __trace__("Failed to put delivery command");
+    __trace2__("FORWARD::Err %s",errtext);
     sms.setOriginatingAddress(srcOriginal);
     sms.setDestinationAddress(dstOriginal);
-    sendNotifyReport(sms,t.msgId,"facility not supported");
+    sendNotifyReport(sms,t.msgId,errtext);
     try{
       //time_t now=time(NULL);
       Descriptor d;
       __trace__("FORWARD: change state to enroute");
-      store->changeSmsStateToEnroute(t.msgId,d,Status::THROTTLED,rescheduleSms(sms));
+      store->changeSmsStateToEnroute(t.msgId,d,errstatus,rescheduleSms(sms));
       smsc->notifyScheduler();
     }catch(...)
     {
