@@ -167,6 +167,11 @@ struct Address
             memcmp(value, addr.value, length) == 0);
   };
 
+  inline int operator !=(const Address& addr)const
+  {
+    return !(*this==addr);
+  };
+
   bool operator<(const Address& addr)const
   {
     return type<addr.type ||
