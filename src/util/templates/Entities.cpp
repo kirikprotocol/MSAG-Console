@@ -284,6 +284,19 @@ bool ContextEnvironment::importInt(const char* key, int64_t &val)
     val = ints.Get(key);
     return true;
 }
+bool ContextEnvironment::exportDat(const char* key, time_t val)
+{
+    if (!key) return false;
+    if (dats.Exists(key)) dats.Delete(key);
+    dats.Insert(key, val);
+    return true;
+}
+bool ContextEnvironment::importDat(const char* key, time_t &val)
+{
+    if (!key || !dats.Exists(key)) return false;
+    val = dats.Get(key);
+    return true;
+}
 bool ContextEnvironment::exportFlt(const char* key, float val)
 {
     if (!key) return false;

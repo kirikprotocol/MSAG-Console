@@ -521,9 +521,7 @@ void DateTimeFormatter::format(std::string& output,
     FormatEntity& entity, GetAdapter& adapter, ContextEnvironment& ctx)
         throw(FormattingException, AdapterException)
 {
-    // export & import features are not implemented !!!
-
-    tm      tmdt;
+    tm      tmdt; 
     time_t  date;
     char    buff[256] = "";
 
@@ -531,7 +529,12 @@ void DateTimeFormatter::format(std::string& output,
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
     const char* pattern = entity.getOption(SMSC_DBSME_IO_FORMAT_PATTERN_OPTION);
     
-    if ((!arg || adapter.isNull(arg)) && def)
+    const char* imp = entity.getOption(SMSC_DBSME_IO_FORMAT_IMPORT_OPTION);
+    if (imp && ctx.importDat(imp, date))
+    {
+        // date = date;
+    }
+    else if ((!arg || adapter.isNull(arg)) && def)
     {
         if (strcmp(def, ioNowString) == 0)
         {
@@ -719,6 +722,10 @@ void DateTimeFormatter::format(std::string& output,
         ctime_r(&date, buff);   
         output += buff;
     }
+    
+    const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
+    if (exp) ctx.exportDat(exp, date);
+
 }
 
 }}}

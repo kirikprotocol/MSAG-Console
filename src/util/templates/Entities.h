@@ -8,7 +8,9 @@
  * @see 
  */
 
+#include <time.h>
 #include <iostream.h>
+
 #include <core/buffers/Hash.hpp>
 #include <core/buffers/Array.hpp>
 #include <util/Exception.hpp>
@@ -80,10 +82,11 @@ namespace smsc { namespace util { namespace templates
 
         Hash<std::string>   strs;
         Hash<int64_t>       ints;
+        Hash<time_t>        dats;
         Hash<float>         flts;
         Hash<double>        dbls;
         Hash<long double>   ldls;
-
+        
     public:
 
         ContextEnvironment() {};
@@ -93,6 +96,8 @@ namespace smsc { namespace util { namespace templates
         bool importStr(const char* key, char* &val);
         bool exportInt(const char* key, int64_t val);
         bool importInt(const char* key, int64_t &val);
+        bool exportDat(const char* key, time_t val);
+        bool importDat(const char* key, time_t &val);
         bool exportFlt(const char* key, float val);
         bool importFlt(const char* key, float &val);
         bool exportDbl(const char* key, double val);
