@@ -584,7 +584,7 @@ public:
           *(uint32_t*)(buffer+offs+2) = htonl(len);
           offs+=4+2;
 					__trace2__("Senc: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key:"NULL",len,offs,length);
-          __require__(offs+len<=length);
+          __require__(offs+len<=(unsigned)length);
           memcpy(buffer+offs,value->c_str(),len);
 					offs+=len;
         }
@@ -600,7 +600,7 @@ public:
           uint16_t tag = ntohs(*(uint16_t*)(buffer+pos));
           uint32_t len = ntohl(*(uint32_t*)(buffer+pos+2));
           pos+=4+2;
-          __require__(pos+len<=length);
+          __require__(pos+len<=(unsigned)length);
 					string* key = tag_hash.getStrKeyForString(tag);
 					__trace2__("Sdec: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key->c_str():"NULL",len,pos,length);
 					if ( key )
@@ -665,7 +665,7 @@ public:
           *(uint32_t*)(buffer+offs+2) = htonl(4);
           offs+=4+2;
 					__trace2__("Ienc: tag=%hd key=%s len=%hd pos=%d length=%d val=%d",tag,key?key:"NULL",len,offs,length,*value);
-          __require__(offs+len<=length);
+          __require__(offs+len<=(unsigned)length);
           //memcpy(buffer+pos,value->c_str(),len);
 					*(uint32_t*)(buffer+offs) = htonl(*value); 
 					offs+=4;
@@ -682,7 +682,7 @@ public:
           uint16_t tag = ntohs(*(uint16_t*)(buffer+pos));
           uint32_t len = ntohl(*(uint32_t*)(buffer+pos+2));
           pos+=4+2;
-          __require__(pos+len<=length);
+          __require__(pos+len<=(unsigned)length);
           string* key = tag_hash.getStrKeyForInt(tag);
           if ( key )
           {

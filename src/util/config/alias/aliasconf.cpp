@@ -149,7 +149,7 @@ AliasConfig::status AliasConfig::load(const char * const filename)
         //continue;
       }
       DOM_NodeList childs = node.getChildNodes();
-      logger.info("record added");
+      //logger.info("record added");
 			__trace2__("npi:%d,tni:%d,value:%20s", 
 								 record->aliasNpi,record->aliasTni,record->aliasValue);
       records.push_back(record.release());
