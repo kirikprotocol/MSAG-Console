@@ -335,6 +335,7 @@ namespace DataCoding{
   static const uint8_t DEFAULT              = 0;
   static const uint8_t BINARY               = BIT(2);
   static const uint8_t UCS2                 = BIT(3);
+  static const uint8_t SMSC7BIT             = 0xf0;
 #undef BIT
 };
 

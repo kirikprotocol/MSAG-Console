@@ -23,6 +23,7 @@ using smsc::core::threads::Thread;
 using smsc::core::network::Socket;
 using namespace smsc::smpp;
 using smsc::util::Exception;
+using std::exception;
 using namespace smsc::core::synchronization;
 using namespace smsc::core::buffers;
 
@@ -96,7 +97,7 @@ public:
     {
       try{
         pdu=receivePdu();
-      }catch(std::exception& e)
+      }catch(exception& e)
       {
         __trace2__("ex:%s",e.what());
         if(!stopped)listener->handleError(smppErrorNetwork);

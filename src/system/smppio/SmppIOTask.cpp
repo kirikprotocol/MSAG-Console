@@ -47,7 +47,7 @@ void SmppInputThread::addSocket(Socket* sock)
 
 void SmppInputThread::removeSocket(Socket *sock)
 {
-  MutexGuard g(mon);
+  mon.Lock();
   for(int i=0;i<sockets.Count();i++)
   {
     if(sockets[i]->getSocket()==sock)
@@ -58,11 +58,14 @@ void SmppInputThread::removeSocket(Socket *sock)
       }
       else
       {
+        mon.Unlock();
         killSocket(i);
+        mon.Lock();
       }
       break;
     }
   }
+  mon.Unlock();
 }
 
 void SmppInputThread::killSocket(int idx)
@@ -334,7 +337,9 @@ void SmppOutputThread::removeSocket(Socket *sock)
       }
       else
       {
+        mon.Unlock();
         killSocket(i);
+        mon.Lock();
       }
       break;
     }

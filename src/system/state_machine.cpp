@@ -192,7 +192,8 @@ StateType StateMachine::submit(Tuple& t)
   }
   if(sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)!=DataCoding::DEFAULT &&
      sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)!=DataCoding::UCS2 &&
-     sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)!=DataCoding::BINARY)
+     sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)!=DataCoding::BINARY &&
+     sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)!=DataCoding::SMSC7BIT)
   {
     SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::INVALIDDATACODING);
     try{
