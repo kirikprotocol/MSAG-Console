@@ -130,7 +130,7 @@ function setSort(sorting)
         <td><%if (retryOnFail   ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
         <td><%if (replaceMessage){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
         <td><%if (trackIntegrity){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-        <td nowrap><%=svcTypeEnc%></td>
+        <td nowrap><%=svcTypeEnc == null || svcTypeEnc.trim().length() == 0 ? "&nbsp;" : svcTypeEnc%></td>
       </tr><%
     }
     %></table><%@ include file="/WEB-INF/inc/navbar_nofilter.jsp"%><%
