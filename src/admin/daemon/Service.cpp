@@ -16,7 +16,7 @@ namespace admin {
 namespace daemon {
 
 pid_t Service::start()
-	throw (AdminException &)
+	throw (AdminException)
 {
 	if (getStatus() != stopped)
 	{
@@ -47,7 +47,7 @@ pid_t Service::start()
 }
 
 void Service::kill()
-	throw (AdminException &)
+	throw (AdminException)
 {
 	if (getStatus() != running)
 	{
@@ -74,7 +74,7 @@ void Service::kill()
 }
 
 void Service::shutdown()
-	throw (AdminException &)
+	throw (AdminException)
 {
 	if (getStatus() != running)
 	{

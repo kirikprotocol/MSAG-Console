@@ -38,7 +38,7 @@ public:
 	}
 
 	Method(DOM_Element methodElem)
-		throw (AdminException &)
+		throw (AdminException)
 	{
 		name = methodElem.getAttribute("method").transcode();
 		std::auto_ptr<char> methodReturnTypeString(methodElem.getAttribute("returnType").transcode());

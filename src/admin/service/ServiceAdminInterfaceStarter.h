@@ -21,13 +21,13 @@ public:
 	}
 
 	void addComponent(Component * component)
-		throw (AdminException &)
+		throw (AdminException)
 	{
 		ServiceCommandDispatcher::addComponent(component);
 	}
 
 	void start(const char * const host, in_port_t port)
-		throw (AdminException &)
+		throw (AdminException)
 	{
 		if (listener != 0)
 		{
@@ -41,11 +41,11 @@ public:
 	}
 
 	void shutdown()
-		throw (AdminException &)
+		throw (AdminException)
 	{
 		if (listener == 0)
 		{
-			throw new AdminException("Service Admin Interface not started");
+			throw AdminException("Service Admin Interface not started");
 		}
 		listener->shutdown();
 	}

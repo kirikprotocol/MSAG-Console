@@ -61,7 +61,7 @@ public:
 	virtual Response * handle(const Command * const command) throw (AdminException);
 
 protected:
-	static void addServicesFromConfig();
+	static void addServicesFromConfig() throw ();
 	log4cpp::Category &logger;
 	static ServicesList services;
 	static Mutex servicesListMutex;
@@ -72,12 +72,12 @@ protected:
 																	siginfo_t * info,
 																	void *some_pointer) throw ();
 	
-	Response * start_service    (const CommandStartService  * const command) throw (AdminException &);
-	Response * kill_service     (const CommandKillService   * const command) throw (AdminException &);
-	Response * shutdown_service (const CommandShutdown      * const command) throw (AdminException &);
-	Response * add_service      (const CommandAddService    * const command) throw (AdminException &);
-	Response * remove_service   (const CommandRemoveService * const command) throw (AdminException &);
-	Response * list_services    (const CommandListServices  * const command) throw (AdminException &);
+	Response * start_service    (const CommandStartService  * const command) throw (AdminException);
+	Response * kill_service     (const CommandKillService   * const command) throw (AdminException);
+	Response * shutdown_service (const CommandShutdown      * const command) throw (AdminException);
+	Response * add_service      (const CommandAddService    * const command) throw (AdminException);
+	Response * remove_service   (const CommandRemoveService * const command) throw (AdminException);
+	Response * list_services    (const CommandListServices  * const command) throw (AdminException);
 
 	void putServiceToConfig(const char * const serviceName,
 													const in_port_t servicePort,

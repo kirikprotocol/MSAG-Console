@@ -23,7 +23,7 @@ ResponseWriter::~ResponseWriter()
 }
 
 void ResponseWriter::write(Response& response)
-	throw (AdminException &)
+	throw (AdminException)
 {
 	const char * const message = response.getText();
 	size_t length = strlen(message);
@@ -32,7 +32,7 @@ void ResponseWriter::write(Response& response)
 }
 
 void ResponseWriter::writeLength(size_t length)
-	throw (AdminException &)
+	throw (AdminException)
 {
 	uint8_t buf[4];
 	for (int i=0; i<4; i++)
@@ -44,7 +44,7 @@ void ResponseWriter::writeLength(size_t length)
 }
 
 void ResponseWriter::writeBuf(const void * const buf, size_t len)
-	throw (AdminException &)
+	throw (AdminException)
 {
 	for (size_t writed = 0; writed < len; )
 	{

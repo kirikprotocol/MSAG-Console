@@ -25,7 +25,7 @@ protected:
 
 public:
 	ServiceCommand(DOM_Node commandNode)
-		throw (AdminException &)
+		throw (AdminException)
 		: method(commandNode),
 		  logger(Logger::getCategory("smsc.admin.service.ServiceCommand"))
 	{

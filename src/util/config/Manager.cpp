@@ -20,7 +20,7 @@ char * Manager::config_filename = 0;
 Manager * Manager::manager = 0;
 
 Manager::Manager()
-	throw(ConfigException &)
+	throw(ConfigException)
 {
 	initXerces();
 	DOMParser *parser = createParser();
@@ -67,7 +67,7 @@ DOMParser * Manager::createParser() {
  * out of it.
  */
 DOM_Document Manager::parse(DOMParser *parser, const char * const filename)
-  throw (ConfigException &)
+  throw (ConfigException)
 {
 	try
 	{
@@ -76,7 +76,7 @@ DOM_Document Manager::parse(DOMParser *parser, const char * const filename)
 		if (errorCount > 0) {
 			char exceptionMsg[1024];
 			snprintf(exceptionMsg, sizeof(exceptionMsg), "An %d errors occured during parsing \"%s\"", errorCount, filename);
-			throw new ConfigException(exceptionMsg);
+			throw ConfigException(exceptionMsg);
 		}
 	}
 	catch (const XMLException& e)
@@ -88,19 +88,19 @@ DOM_Document Manager::parse(DOMParser *parser, const char * const filename)
 		char exceptionMsg[1024];
 		snprintf(exceptionMsg, sizeof(exceptionMsg), "An error occured during parsing \"%s\" at file \"%s\" on line %d. Nested: %d: %s", filename, srcFile, line, code, message);
 		delete[] message;
-		throw new ConfigException(exceptionMsg);
+		throw ConfigException(exceptionMsg);
 	}
 	catch (const DOM_DOMException& e)
 	{
 		char msg[1024];
 		snprintf(msg, sizeof(msg), "A DOM error occured during parsing\"%s\". DOMException code: %i", filename, e.code);
-		throw new ConfigException(msg);
+		throw ConfigException(msg);
 	}
 	catch (...)
 	{
 		char msg[1024];
 		snprintf(msg, sizeof(msg), "An error occured during parsing \"%s\"", filename);
-		throw new ConfigException(msg);
+		throw ConfigException(msg);
 	}
 
 	return parser->getDocument();

@@ -18,7 +18,7 @@ public:
 	virtual const char * const getName() const = 0;
 	virtual const Methods & getMethods() const = 0;
 	virtual Variant call(const Method & method, const Arguments & args)
-		throw (AdminException &) = 0;
+		throw (AdminException) = 0;
 };
 
 typedef Hash<Component*> Components;

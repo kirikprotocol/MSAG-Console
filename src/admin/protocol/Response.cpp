@@ -34,7 +34,7 @@ Response::Response(Status status, const char * const data)
 }
 
 Response::Response(Status status, Variant v)
-	throw (AdminException &)
+	throw (AdminException)
 {
 	st = status;
 	static const char * VARIANT_HEADER = "<variant type=\"";

@@ -51,9 +51,9 @@ public:
 		deinit();
 	}
 
-	pid_t start() throw (AdminException &);
-	void kill() throw (AdminException &);
-	void shutdown() throw (AdminException &);
+	pid_t start() throw (AdminException);
+	void kill() throw (AdminException);
+	void shutdown() throw (AdminException);
 
 	const char * const getName() const {return name;}
 	const char * const getCommandLine() const {return command_line;}

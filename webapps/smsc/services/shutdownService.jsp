@@ -7,6 +7,6 @@
 	String host = request.getParameter("host");
 	serviceManager.shutdownService(name);
 %>
-<h1 align="center">Service <%=name%> shutted down</h1>
+<h1 align="center">Service <%=name%> sheduled for shutdown</h1>
 <%=action("Host \""+host+'"', "viewHost.jsp", "host", host)%>
 <%@include file="footer.jsp"%>

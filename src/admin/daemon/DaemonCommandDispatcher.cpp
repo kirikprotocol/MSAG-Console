@@ -8,6 +8,7 @@
 #include <admin/protocol/CommandListServices.h>
 #include <core/synchronization/Mutex.hpp>
 #include <util/signal.h>
+#include <util/config/Config.h>
 
 namespace smsc {
 namespace admin {
@@ -23,6 +24,7 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::util::setExtendedSignalHandler;
 using smsc::util::encode;
 using smsc::util::decode;
+using smsc::util::config::CStrSet;
 
 ServicesList DaemonCommandDispatcher::services;
 Mutex DaemonCommandDispatcher::servicesListMutex;
@@ -67,7 +69,7 @@ Response * DaemonCommandDispatcher::handle(const Command * const command)
 }
 
 Response * DaemonCommandDispatcher::start_service(const CommandStartService * const command)
-	throw (AdminException &)
+	throw (AdminException)
 {
 	logger.debug("start service");
 	if (command != 0)
@@ -97,7 +99,7 @@ Response * DaemonCommandDispatcher::start_service(const CommandStartService * co
 }
 
 Response * DaemonCommandDispatcher::kill_service(const CommandKillService * const command)
-	throw (AdminException &)
+	throw (AdminException)
 {
 	logger.debug("kill service");
 	if (command != 0)
@@ -125,7 +127,7 @@ Response * DaemonCommandDispatcher::kill_service(const CommandKillService * cons
 }
 
 Response * DaemonCommandDispatcher::shutdown_service(const CommandShutdown * const command)
-	throw (AdminException &)
+	throw (AdminException)
 {
 	logger.debug("shutdown service");
 	if (command != 0)
@@ -153,7 +155,7 @@ Response * DaemonCommandDispatcher::shutdown_service(const CommandShutdown * con
 }
 
 Response * DaemonCommandDispatcher::add_service(const CommandAddService * const command)
-	throw (AdminException &)
+	throw (AdminException)
 {
 /*	logger.debug("add service \"%s\" (%s) %u %s",
 							 command->getServiceName(),
@@ -221,7 +223,7 @@ void DaemonCommandDispatcher::putServiceToConfig(const char * const serviceName,
 }
 
 Response * DaemonCommandDispatcher::remove_service(const CommandRemoveService * const command)
-	throw (AdminException &)
+	throw (AdminException)
 {
 	if (command != 0)
 	{
@@ -264,7 +266,7 @@ void DaemonCommandDispatcher::removeServiceFromConfig(const char * const service
 }
 
 Response * DaemonCommandDispatcher::list_services(const CommandListServices * const command)
-	throw (AdminException &)
+	throw (AdminException)
 {
 	logger.debug("list services");
 	std::auto_ptr<char> text(0);
@@ -347,45 +349,59 @@ void DaemonCommandDispatcher::activateChildSignalHandler()
 }
 
 void DaemonCommandDispatcher::addServicesFromConfig()
+	throw ()
 {
-	std::set<char*> *childs = configManager->getChildSectionNames("services");
-	for (std::set<char*>::iterator i = childs->begin(); i != childs->end(); i++)
+	try
 	{
-		char * fullServiceName = *i;
-		char * dotpos = strrchr(fullServiceName, '.');
-		const size_t serviceNameBufLen = strlen(dotpos+1) +1;
-		std::string serviceName = decode(dotpos+1);
-
-		std::string prefix(fullServiceName);
-		prefix += '.';
-
-		std::string tmp = prefix;
-		tmp += "cmd_line";
-		const char * const serviceCmdLine = configManager->getString(tmp.c_str());
-
-		tmp = prefix;
-		tmp += "config";
-		const char * const serviceConfigFileName = configManager->getString(tmp.c_str());
-
-		tmp = prefix;
-		tmp += "port";
-		in_port_t servicePort = configManager->getInt(tmp.c_str());
-
-		tmp = prefix;
-		tmp += "args";
-		std::set<char*> *argNames = configManager->getChildSectionNames(tmp.c_str());
-		ServiceArguments serviceArgs(argNames->size(), "");
-		for (std::set<char*>::iterator j = argNames->begin(); j != argNames->end(); j++)
+		CStrSet *childs = configManager->getChildSectionNames("services");
+		for (CStrSet::iterator i = childs->begin(); i != childs->end(); i++)
 		{
-			char * argName = *j;
-			char * dp = strrchr(argName, '.');
-			serviceArgs[atoi(dp+1)] = configManager->getString(argName);
+			const char * fullServiceName = i->c_str();
+			char * dotpos = strrchr(fullServiceName, '.');
+			const size_t serviceNameBufLen = strlen(dotpos+1) +1;
+			std::string serviceName = decode(dotpos+1);
+		
+			std::string prefix(fullServiceName);
+			prefix += '.';
+		
+			std::string tmp = prefix;
+			tmp += "cmd_line";
+			const char * const serviceCmdLine = configManager->getString(tmp.c_str());
+		
+			tmp = prefix;
+			tmp += "config";
+			const char * const serviceConfigFileName = configManager->getString(tmp.c_str());
+		
+			tmp = prefix;
+			tmp += "port";
+			in_port_t servicePort = configManager->getInt(tmp.c_str());
+		
+			tmp = prefix;
+			tmp += "args";
+			CStrSet *argNames = configManager->getChildSectionNames(tmp.c_str());
+			ServiceArguments serviceArgs(argNames->size(), "");
+			for (CStrSet::iterator j = argNames->begin(); j != argNames->end(); j++)
+			{
+				const char * argName = j->c_str();
+				char * dp = strrchr(argName, '.');
+				serviceArgs[atoi(dp+1)] = configManager->getString(argName);
+			}
+		
+			services.add(new Service(serviceName.c_str(), serviceCmdLine, serviceConfigFileName, servicePort, serviceArgs));
+			delete argNames;
 		}
-
-		services.add(new Service(serviceName.c_str(), serviceCmdLine, serviceConfigFileName, servicePort, serviceArgs));
-		delete argNames;
+		delete childs;
 	}
-	delete childs;
+	catch (AdminException &e)
+	{
+		Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher").
+			error("Exception on adding services, nested: %s", e.what());
+	}
+	catch (...)
+	{
+		Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher").
+			error("Exception on adding services");
+	}
 }
 
 }

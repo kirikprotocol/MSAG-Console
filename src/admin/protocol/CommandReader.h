@@ -35,15 +35,15 @@ public:
 
 protected:
 	char * getCommandName(DOM_Document data);
-	void readMessageBody(XMLByte * buf, uint32_t len) throw (AdminException &);
-	uint32_t readMessageLength() throw (AdminException &);
+	void readMessageBody(XMLByte * buf, uint32_t len) throw (AdminException);
+	uint32_t readMessageLength() throw (AdminException);
 	log4cpp::Category &logger;
 	Socket * sock;
 	DOMParser * parser;
 	
 	DOMParser * createParser();
 	Command * createCommand(Command::Id id, DOM_Document data);
-	Command * parseCommand(InputSource &source) throw (AdminException &);
+	Command * parseCommand(InputSource &source) throw (AdminException);
 
 private:
 };

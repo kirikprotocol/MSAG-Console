@@ -31,13 +31,13 @@ class SocketListener : public Shutdownable, public Thread
 public:
 
 	SocketListener(const char * const debugCategory = "smsc.admin.util.SocketListener")
-		throw (AdminException &)
+		throw (AdminException)
 		: logger(Logger::getCategory(debugCategory))
 	{
 	}
 	
 	void init(const char * const hostName, in_port_t portToListen)
-		throw (AdminException &)
+		throw (AdminException)
 	{
 		isShutdownSignaled = false;
 
@@ -89,7 +89,7 @@ protected:
 /*	SocketListener(const char * const hostName,
 								 in_port_t portToListen,
 								 const char * const debugCategory = "smsc.admin.util.SocketListener")
-		throw (AdminException &)
+		throw (AdminException)
 		: logger(Logger::getCategory(debugCategory))
 	{
 		init(hostName, portToListen);

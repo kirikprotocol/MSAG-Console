@@ -14,7 +14,7 @@ using std::auto_ptr;
 using smsc::util::xml::getNodeText;
 
 void Config::parse(const DOM_Element &element)
-	throw (ConfigException &)
+	throw (ConfigException)
 {
 	try {
 		processNode(element,"");	
@@ -35,7 +35,7 @@ void Config::parse(const DOM_Element &element)
 
 void Config::processNode(const DOM_Element &element,
 												 const char * const prefix)
-	throw (DOM_DOMException &)
+	throw (DOM_DOMException)
 {
 	if (!element.isNull())
 	{
@@ -79,7 +79,7 @@ void Config::processNode(const DOM_Element &element,
 void Config::processParamNode(const DOM_Element &element,
 															const char * const name,
 															const char * const type)
-	throw (DOM_DOMException &)
+	throw (DOM_DOMException)
 {
 	//getting value
 	std::auto_ptr <char> value(getNodeText(element));
@@ -294,7 +294,7 @@ void Config::removeSection(const char * const sectionName)
 		(strParams, sectionName, sectionNameLen);
 }
 
-void collect_section_names_into_set(std::set<char*> &result,
+void collect_section_names_into_set(CStrSet &result,
 																		const char * const sectionName,
 																		const size_t sectionNameLen,
 																		const char * const name)
@@ -306,11 +306,12 @@ void collect_section_names_into_set(std::set<char*> &result,
 		char* dotpos = strchr(name+sectionNameLen+1, '.');
 		if (dotpos != 0)
 		{
-			char * sectName = new char[dotpos - name+1];
+			char sectName[dotpos - name+1];
 			memcpy(sectName, name, dotpos - name);
 			sectName[dotpos - name] = 0;
-			if (!result.insert(sectName).second)
-				delete sectName;
+			bool isInserted = result.insert(std::string(sectName)).second;
+			//if (isInserted)
+				//delete sectName;
 		}
 	}
 }

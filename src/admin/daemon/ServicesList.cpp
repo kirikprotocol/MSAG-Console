@@ -5,11 +5,11 @@ namespace smsc {
 namespace admin {
 namespace daemon {
 
-void ServicesList::add(Service *service) throw (AdminException &)
+void ServicesList::add(Service *service) throw (AdminException)
 {
 	log4cpp::Category &logger(Logger::getCategory("smsc.admin.daemon.ServicesList"));
 	if (services.Exists(service->getName()))
-		throw new AdminException("Service already exists in list");
+		throw AdminException("Service already exists in list");
 	services[service->getName()] = service;
 	#ifdef SMSC_DEBUG
 		logger.debug("Added service:\n  name=%s\n  cmd=%s\n  port=%u  pid=%u",
@@ -20,10 +20,10 @@ void ServicesList::add(Service *service) throw (AdminException &)
 	#endif
 }
 
-void ServicesList::remove(const char * const serviceName) throw (AdminException &)
+void ServicesList::remove(const char * const serviceName) throw (AdminException)
 {
 	if (!services.Exists(serviceName))
-		throw new AdminException("Service not found");
+		throw AdminException("Service not found");
 	if (services[serviceName]->getStatus() == Service::running)
 	{
 		services[serviceName]->kill();

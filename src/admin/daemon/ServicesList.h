@@ -25,13 +25,13 @@ public:
 	ServicesList()
 	{}
 
-	void add(Service *service) throw (AdminException &);
-	void remove(const char * const serviceName) throw (AdminException &);
+	void add(Service *service) throw (AdminException);
+	void remove(const char * const serviceName) throw (AdminException);
 	Service * get(const char * const serviceName);
 	char * getText() const;
 
 	Service* operator[](const char * const serviceName)
-		throw (AdminException &)
+		throw (AdminException)
 	{
 		return get(serviceName);
 	}

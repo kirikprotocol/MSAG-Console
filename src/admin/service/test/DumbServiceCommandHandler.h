@@ -65,7 +65,7 @@ public:
 	}
 
 	virtual Variant call(const Method & method, const Arguments & args)
-		throw (AdminException &)
+		throw (AdminException)
 	{
 		switch(method.getId())
 		{

@@ -49,7 +49,7 @@ public:
 	}
 
 	Variant(const Variant &copy)
-		throw (AdminException &)
+		throw (AdminException)
 	{
 		initByCopy(copy);
 	}

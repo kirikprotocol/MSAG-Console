@@ -34,7 +34,7 @@ class Manager
 {
 public:
 	static void init(const char * const configurationFileName)
-		throw (ConfigException &)
+		throw (ConfigException)
 	{
 		if (manager != 0)
 			throw ConfigException("Configuration manager already initialized");
@@ -66,7 +66,7 @@ public:
 	 * @see getBool()
 	 */
 	int32_t getInt(const char * const paramName)
-		throw (ConfigException &)
+		throw (ConfigException)
 	{
 		try {
 			return config.getInt(paramName);
@@ -90,7 +90,7 @@ public:
 	 * @see getBool()
 	 */
 	char * getString(const char * const paramName)
-		throw (ConfigException &)
+		throw (ConfigException)
 	{
 		try {
 			return config.getString(paramName);
@@ -114,7 +114,7 @@ public:
 	 * @see getString()
 	 */
 	bool getBool(const char * const paramName) const
-		throw (ConfigException &)
+		throw (ConfigException)
 	{
 		try {
 			return config.getBool(paramName);
@@ -165,7 +165,7 @@ protected:
 	 * @param config_filename
 	 *               Имя файла, в котором хранится конфигурация.
 	 */
-	Manager() throw(ConfigException &);
+	Manager() throw(ConfigException);
 	static Manager * manager;
 	Config config;
 
@@ -175,7 +175,7 @@ private:
 	void writeFooter(std::ostream &out);
 
 	DOMParser * createParser();
-	DOM_Document parse(DOMParser *parser, const char * const filename) throw (ConfigException &);
+	DOM_Document parse(DOMParser *parser, const char * const filename) throw (ConfigException);
 };
 
 }

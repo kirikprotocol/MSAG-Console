@@ -22,7 +22,7 @@ using smsc::util::cStringCopy;
 
 class smsc::util::config::Manager;
 
-typedef std::set<char *> CStrSet;
+typedef std::set<std::string> CStrSet;
 
 class Config {
 public:
@@ -31,7 +31,7 @@ public:
 	Config()
 	{}
 
-	Config(const DOM_Element &element) throw (ConfigException &)
+	Config(const DOM_Element &element) throw (ConfigException)
 	{
 		parse(element);
 	}
@@ -46,7 +46,7 @@ public:
 	 * @see getBool()
 	 */
 	int32_t getInt(const char * const paramName) const
-		throw (HashInvalidKeyException &)
+		throw (HashInvalidKeyException)
 	{
 		return intParams.Get(paramName);
 	}
@@ -61,7 +61,7 @@ public:
 	 * @see getBool()
 	 */
 	char * getString(const char * const paramName) const
-		throw (HashInvalidKeyException &)
+		throw (HashInvalidKeyException)
 	{
 		return strParams.Get(paramName);
 	}
@@ -76,7 +76,7 @@ public:
 	 * @see getString()
 	 */
 	bool getBool(const char * const paramName) const
-		throw (HashInvalidKeyException &)
+		throw (HashInvalidKeyException)
 	{
 		return boolParams.Get(paramName);
 	}
@@ -188,9 +188,9 @@ protected:
 	};
 
 	ConfigTree * createTree() const;
-	void parse(const DOM_Element &element) throw (ConfigException &);
-	void processNode(const DOM_Element &element, const char * const prefix) throw (DOM_DOMException &);
-	void processParamNode(const DOM_Element &element, const char * const name, const char * const type) throw (DOM_DOMException &);
+	void parse(const DOM_Element &element) throw (ConfigException);
+	void processNode(const DOM_Element &element, const char * const prefix) throw (DOM_DOMException);
+	void processParamNode(const DOM_Element &element, const char * const name, const char * const type) throw (DOM_DOMException);
 };
 
 }

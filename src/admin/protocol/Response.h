@@ -17,7 +17,7 @@ public:
 	};
 
 	Response(Status status, const char * const data);
-	Response(Status status, Variant v) throw (AdminException &);
+	Response(Status status, Variant v) throw (AdminException);
 	~Response();
 	const char * const getText() {return text;};
 	const char * const getStatusName(Status status);

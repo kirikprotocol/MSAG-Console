@@ -55,7 +55,7 @@ Command *CommandReader::read()
 }
 
 uint32_t CommandReader::readMessageLength()
-	throw (AdminException &)
+	throw (AdminException)
 {
 	uint32_t len = 0;
 	for (int i=0; i<4; i++)
@@ -70,7 +70,7 @@ uint32_t CommandReader::readMessageLength()
 }
 
 void CommandReader::readMessageBody(XMLByte * buf, uint32_t len)
-	throw (AdminException &)
+	throw (AdminException)
 {
 	buf[len]=0;
 	for (int readed=0; readed<len;)
@@ -83,7 +83,7 @@ void CommandReader::readMessageBody(XMLByte * buf, uint32_t len)
 }
 
 Command* CommandReader::parseCommand(InputSource &source)
-	throw (AdminException &)
+	throw (AdminException)
 {
 
 	try
@@ -114,12 +114,12 @@ Command* CommandReader::parseCommand(InputSource &source)
 		unsigned int line = e.getSrcLine();
 		logger.warn("An error occured during parsing on line %d. Nested: %d: %s", line, code, message);
 		delete[] message;
-		throw new AdminException("An errors occured during parsing");
+		throw AdminException("An errors occured during parsing");
 	}
 	catch (const DOM_DOMException& e)
 	{
 		logger.warn("A DOM error occured during parsing command. DOMException code: %i", e.code);
-		throw new AdminException("An errors occured during parsing");
+		throw AdminException("An errors occured during parsing");
 	}
 	catch (const AdminException & e)
 	{
@@ -128,7 +128,7 @@ Command* CommandReader::parseCommand(InputSource &source)
 	catch (...)
 	{
 		logger.warn("An error occured during parsing command");
-		throw new AdminException("An errors occured during parsing");
+		throw AdminException("An errors occured during parsing");
 	}
 }
 
