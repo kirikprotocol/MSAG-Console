@@ -360,8 +360,16 @@ int SmppInputThread::Execute()
                     set_commandStatus(SmppStatusSet::ESME_ROK);
                 }catch(SmeRegisterException& e)
                 {
+                  int err=SmppStatusSet::ESME_RBINDFAIL;
+                  switch(e.getReason())
+                  {
+                    case SmeRegisterFailReasons::rfUnknownSystemId:err=Status::INVSYSID;
+                    case SmeRegisterFailReasons::rfAlreadyRegistered:err=Status::ALYBND;
+                    case SmeRegisterFailReasons::rfInvalidPassword:err=Status::INVPASWD;
+                    //case SmeRegisterFailReasons::rfInternalError:;
+                  }
                   resppdu.get_header().
-                    set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                    set_commandStatus(err);
                   trace2("registration failed:%s",e.what());
                   //delete proxy;
                   err=true;

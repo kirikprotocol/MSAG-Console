@@ -689,6 +689,7 @@ StateType StateMachine::submit(Tuple& t)
 
   if ( !dest_proxy )
   {
+    smsc->registerStatisticalEvent(StatEvents::etDeliverErr,sms);
     __warning__("SUBMIT_SM: SME is not connected");
     try{
       //time_t now=time(NULL);
@@ -935,6 +936,7 @@ StateType StateMachine::forward(Tuple& t)
   if(!dest_proxy)
   {
     __trace__("FORWARD: no proxy");
+    smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
     try{
       sms.lastResult=Status::SMENOTCONNECTED;
       sendNotifyReport(sms,t.msgId,"destination unavailable");
@@ -1515,7 +1517,6 @@ StateType StateMachine::replace(Tuple& t)
     sms.lastResult=Status::INVSCHED;
     smsc->registerStatisticalEvent(StatEvents::etSubmitErr,&sms);
     __REPLACE__RESPONSE(INVSCHED);
-    return UNKNOWN_STATE;
   }
 
   sms.setValidTime(newvalid);
