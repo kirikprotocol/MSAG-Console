@@ -80,7 +80,7 @@ public:
     if(tail==end)tail=data;
     count--;
   }
-  int Count(){return count;}
+  int Count()const{return count;}
 
 protected:
   void Realloc(int sz)
