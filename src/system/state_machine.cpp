@@ -1881,6 +1881,7 @@ StateType StateMachine::forward(Tuple& t)
     {
       __warning__("FORWARD: failed to change state to enroute");
     }
+    smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
     smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
     return ENROUTE_STATE;
   };

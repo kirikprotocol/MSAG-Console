@@ -657,7 +657,7 @@ void extractSmsPart(SMS* sms,int partnum)
         memcpy(bufTr.get(),msg,udhlen);
         len+=udhlen;
         msg=bufTr.get();
-        sms->setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
+        dc=DataCoding::LATIN1;
         if(dstdc==DataCoding::SMSC7BIT)
         {
           auto_ptr<char> buf7(new char[len*2+1+udhlen]);
@@ -667,11 +667,27 @@ void extractSmsPart(SMS* sms,int partnum)
           len+=udhlen;
           msg=bufTr.get();
           if(len>udhlen+(len-udhlen)*8/7)len=udhlen+(len-udhlen)*8/7;
-          sms->setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::SMSC7BIT);
+          dc=DataCoding::SMSC7BIT;
         }else
         {
           if(len>140)len=140;
         }
+        if(sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
+        {
+          int dc=sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
+          int olddc=dc;
+          if((dc&0xc0)==0 || (dc&0xf0)==0xf0) //groups 00xx and 1111
+          {
+            dc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
+
+          }else if((dc&0xf0)==0xe0)
+          {
+            dc=0xd0 | (dc&0x0f);
+          }
+          sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
+          __trace2__("extractSmsPart: transliterate olddc(%x)->dc(%x)",olddc,dc);
+        }
+        sms->setIntProperty(Tag::SMPP_DATA_CODING,dc);
       }
       sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x40);
       sms->setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)msg,len);
