@@ -57,13 +57,18 @@ public class Response
     return 0;
   }
 
-  protected String getStatusString()
+  public static String getStatusString(byte status)
   {
     for (int i = 0; i < statuses.length; i++)
       if (statuses[i].status == status)
         return statuses[i].name;
 
     return "unknown";
+  }
+
+  public String getStatusString()
+  {
+    return getStatusString(status);
   }
 
   public String toString()

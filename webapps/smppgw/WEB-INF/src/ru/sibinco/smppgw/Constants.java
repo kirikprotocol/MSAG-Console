@@ -13,6 +13,13 @@ public class Constants
 
   public interface errors
   {
+    public interface status
+    {
+      public static final Constants COULDNT_APPLY_CONFIG = new Constants("error.status.couldnt_apply_config");
+      public static final Constants COULDNT_SAVE_CONFIG = new Constants("error.status.couldnt_save_config");
+    }
+
+
     public interface config
     {
       public static final Constants INVALID_INTEGER = new Constants("error.config.invalid_integer");

@@ -4,7 +4,13 @@
 <config>
 
   <param name="users_config_file" type="string">webapps/smppgw/WEB-INF/users.xml</param>
-  <param name="sme_file" type="string">S:\install\dumb_sme_host\daemon\services\SMSC\conf\sme.xml</param>
-  <param name="gw_config" type="string">webapps/smppgw/WEB-INF/gwconfig_example.xml</param>
-  <param name="gw_config_folder" type="string">webapps/smppgw/WEB-INF/</param>
+  <param name="sme_file" type="string">S:\install\daemon_gw\services\smppgw\conf\sme.xml</param>
+  <param name="gw_config" type="string">S:\install\daemon_gw\services\smppgw\conf\config.xml</param>
+  <param name="gw_config_folder" type="string">S:\install\daemon_gw\services\smppgw\conf</param>
+  <param name="gw name" type="string">smppgw</param>
+  <section name="gw daemon">
+    <param name="host" type="string">smsc</param>
+    <param name="port" type="int">6104</param>
+    <param name="folder" type="string">S:\install\daemon_gw</param>
+  </section>
 </config>

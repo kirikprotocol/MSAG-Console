@@ -1,5 +1,6 @@
 package ru.sibinco.smppgw.backend.protocol.commands;
 
+import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.protocol.Command;
 
 
@@ -12,9 +13,9 @@ public class Apply extends Command
 {
   private final String applyTarget;
 
-  public Apply(String applyTarget)
+  public Apply(String applyTarget) throws SibincoException
   {
-    super("apply");
+    super("apply", "file:///command_gw.dtd");
     this.applyTarget = applyTarget;
   }
 

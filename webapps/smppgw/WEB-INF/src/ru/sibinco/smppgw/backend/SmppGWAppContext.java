@@ -3,6 +3,8 @@ package ru.sibinco.smppgw.backend;
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.backend.daemon.Daemon;
+import ru.sibinco.lib.backend.daemon.ServiceInfo;
 import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.smppgw.backend.resources.ResourceManager;
 import ru.sibinco.smppgw.backend.routing.GwRoutingManager;
@@ -34,6 +36,8 @@ public class SmppGWAppContext
   private final SmscsManager smscsManager;
   private final GwRoutingManager gwRoutingManager;
   private final ResourceManager resourceManager;
+  private final Daemon gwDaemon;
+  private final Gateway gateway;
 
   private SmppGWAppContext(String config_filename) throws Throwable, ParserConfigurationException, SAXException, Config.WrongParamTypeException, Config.ParamNotFoundException, SibincoException
   {
@@ -48,6 +52,9 @@ public class SmppGWAppContext
       smscsManager = new SmscsManager(gwConfig);
       gwRoutingManager = new GwRoutingManager(new File(config.getString("gw_config_folder")), gwSmeManager);
       resourceManager = new ResourceManager(new File(config.getString("gw_config_folder")));
+      gwDaemon = new Daemon(config.getString("gw daemon.host"), config.getInt("gw daemon.port"), gwSmeManager, config.getString("gw daemon.folder"));
+      ServiceInfo gwServiceInfo = (ServiceInfo) gwDaemon.getServices().get(config.getString("gw name"));
+      gateway = new Gateway(gwServiceInfo);
     } catch (Throwable e) {
       logger.fatal("Could not initialize App Context", e);
       throw e;
@@ -99,5 +106,15 @@ public class SmppGWAppContext
   public ResourceManager getResourceManager()
   {
     return resourceManager;
+  }
+
+  public Daemon getGwDaemon()
+  {
+    return gwDaemon;
+  }
+
+  public Gateway getGateway()
+  {
+    return gateway;
   }
 }

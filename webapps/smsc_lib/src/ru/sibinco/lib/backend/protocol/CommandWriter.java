@@ -34,7 +34,6 @@ public class CommandWriter
       throw new SibincoException("Couldn't create XML Transormer", e);
     }
     //transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, "file:///command.dtd");
-    transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "file:///command.dtd");
     transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
     transformer.setOutputProperty(OutputKeys.INDENT, "yes");
     transformer.setOutputProperty(OutputKeys.METHOD, "xml");
@@ -44,12 +43,14 @@ public class CommandWriter
   public void write(Command command)
       throws SibincoException, IOException
   {
-    logger.debug("writing command " + command);
+    logger.debug("writing command " + command.getClass().getName() + " [" + command.getSystemId() + "]");
     final Document document = command.getDocument();
     try {
+      transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, command.getSystemId());
       transformer.transform(new DOMSource(document), new StreamResult(outBuffer));
       writeLength(outBuffer.size());
       outBuffer.writeTo(out);
+      logger.debug("Command:\n" + outBuffer.toString());
     } catch (TransformerException e) {
       logger.debug("Couldn't process command", e);
       throw new SibincoException("Couldn't process command", e);
