@@ -25,14 +25,14 @@ void SmsIndex::Init(ConfigView* cfg_)
   config.defAddrChunkSize=cfg.getInt("defAddrChunkSize");
 
   using smsc::util::config::CStrSet;
-  ConfigView *smeConfig=cfg.getSubConfig("smeAddrChunkSize");
-  if(smeConfig)
+  auto_ptr<ConfigView> smeConfig(cfg.getSubConfig("smeAddrChunkSize"));
+  if(smeConfig.get())
   {
-    auto_ptr<CStrSet> params(cfg.getIntParamNames());
+    auto_ptr<CStrSet> params(smeConfig->getIntParamNames());
     CStrSet::iterator i=params->begin();
     for(;i!=params->end();i++)
     {
-      config.smeAddrChunkSize.Insert(i->c_str(),cfg.getInt(i->c_str()));
+      config.smeAddrChunkSize.Insert(i->c_str(),smeConfig->getInt(i->c_str()));
     }
   }
 }
