@@ -258,6 +258,7 @@ public class SmsView
           ((query.getStorageType() == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) ?
                   "SMS_MSG":"SMS_ARC");
       sql += prepareWhereClause(query);
+      logger.debug(sql);
       return sql;
     }
     private String prepareCountString(SmsQuery query) {
@@ -265,6 +266,7 @@ public class SmsView
       sql += (query.getStorageType() == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) ?
                   "SMS_MSG":"SMS_ARC";
       sql += prepareWhereClause(query);
+      logger.debug(sql);
       return sql;
     }
 
