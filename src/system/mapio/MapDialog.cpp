@@ -25,19 +25,19 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
 }
 
 bool MapDialog::ProcessCmd(SmscCommand& cmd){
-  __trace2__("MapDialog::ProcessCmdToMsg: 0x%x",cmd->get_commandId());
+  __trace2__("MapDialog::ProcessCmd: 0x%x",cmd->get_commandId());
   switch ( cmd->get_commandId() ){
   case SUBMIT_RESP: {
       USHORT_T result = Et96MapV2ForwardSmMOResp(ssn,dialogid,invokeId,0);
       if ( result != ET96MAP_E_OK ) {
-        __trace2__("MapDialog::ProcessCmdToMsg: Et96MapV2ForwardSmMOResp return error 0x%hx",result);
+        __trace2__("MapDialog::ProcessCmd: Et96MapV2ForwardSmMOResp return error 0x%hx",result);
       }else{
-        __trace2__("MapDialog::ProcessCmdToMsg: Et96MapV2ForwardSmMOResp OK");
+        __trace2__("MapDialog::ProcessCmdg: Et96MapV2ForwardSmMOResp OK");
       }
       return true;
     }
   default:
-    __trace2__("MapDialog::ProcessCmdToMsg: here is no command %d",cmd->get_commandId());
+    __trace2__("MapDialog::ProcessCmdg: here is no command %d",cmd->get_commandId());
     return true;
   }
 }
