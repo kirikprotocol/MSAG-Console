@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE records SYSTEM "SmeRecords.dtd">
+<records>
+<smerecord type="smpp" uid="testSme">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value="ZIPC9HXoViWj"/>
+	<param name="password" value="testPwd"/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="666"/>
+	<param name="wantAlias" value="no"/>
+	<param name="timeout" value="8"/>
+	<param name="priority" value="26855"/>
+</smerecord>
+<smerecord type="smpp" uid="MAP_PROXY">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value="au249YaHcO0o"/>
+	<param name="password" value="OcwEd"/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="-958070784"/>
+	<param name="wantAlias" value="no"/>
+	<param name="timeout" value="7"/>
+	<param name="priority" value="22751"/>
+</smerecord>
+<smerecord type="smpp" uid="abonentinfo">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value="grGYvPVOSS4C"/>
+	<param name="password" value="Ypt7O"/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="-1536688128"/>
+	<param name="wantAlias" value="no"/>
+	<param name="timeout" value="25"/>
+	<param name="priority" value="18019"/>
+</smerecord>
+<smerecord type="smpp" uid="profiler">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value="WMzZc9HN8tZw"/>
+	<param name="password" value="8BTuPk"/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="-820248576"/>
+	<param name="wantAlias" value="no"/>
+	<param name="timeout" value="8"/>
+	<param name="priority" value="11463"/>
+</smerecord>
+<smerecord type="smpp" uid="smscsme">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value="KTh7KrOeHFYR"/>
+	<param name="password" value="9hv"/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="-1628635136"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="13"/>
+	<param name="priority" value="21584"/>
+</smerecord>
+</records>

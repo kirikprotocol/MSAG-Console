@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE routes SYSTEM "routes.dtd">
+<routes>
+<route id="route_1" billing="true" archiving="true" enabling="true" priority="15356" serviceId="1079640064">
+	<source>
+		<mask value="+1234567890"/>
+	</source>
+	<destination sme="testSme">
+		<mask value="+1234567890"/>
+	</destination>
+</route>
+</routes>

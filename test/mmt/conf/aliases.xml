@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE aliases SYSTEM "AliasRecords.dtd">
+<aliases>
+	<record addr="+1234567890" alias=".5.9.testAlias" hide="true"/>
+</aliases>
