@@ -16,6 +16,7 @@ TestConfig::TestConfig()
 	//различные времена
 	intMap["timeCheckAccuracy"] = 5; //5 сек
 	intMap["missingPduCheckInterval"] = 20; //20 сек
+	intMap["scCmdTimeout"] = 8; //макс время жизни команды в SC
 	intMap["maxValidPeriod"] = 150; //150 сек
 	intMap["maxWaitTime"] = 60; //max(waitTime)
 	intMap["maxDeliveryPeriod"] = 120; //max(validTime - waitTime)

@@ -461,7 +461,8 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 			default:
 				__unreachable__("Invalid respFlag");
 		}
-		monitor->deliveryStatus = deliveryResp.first;
+		monitor->respStatus = deliveryResp.first;
+		monitor->respTime = deliveryResp.second;
 		//для ussd единственная попытка доставки
 		if (monitor->pduData->intProps.count("ussdServiceOp"))
 		{

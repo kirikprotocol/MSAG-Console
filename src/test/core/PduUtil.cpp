@@ -389,7 +389,7 @@ DeliveryMonitor::DeliveryMonitor(const Address& _srcAddr, const Address& _destAd
 	time_t validTime, PduData* pduData, PduFlag flag)
 : ReschedulePduMonitor(waitTime, validTime, pduData, flag),
 	srcAddr(_srcAddr), destAddr(_destAddr), serviceType(_serviceType),
-	msgRef(_msgRef), state(ENROUTE), deliveryStatus(0)
+	msgRef(_msgRef), state(ENROUTE), respTime(0), respStatus(0)
 
 {
 	//__trace2__("monitor created: %s", str().c_str());
@@ -405,8 +405,8 @@ string DeliveryMonitor::str() const
 	ostringstream s;
 	s << ReschedulePduMonitor::str() << ", srcAddr = " << srcAddr <<
 		", destAddr = " << destAddr << ", serviceType = " << serviceType <<
-		", msgRef = " << (int) msgRef << ", state = " << state <<
-		", deliveryStatus = " << hex << deliveryStatus;
+		", msgRef = " << (int) msgRef << ", state = " << state << 
+		", respTime = " << respTime << ", respStatus = 0x" << hex << respStatus;
 	return s.str();
 }
 

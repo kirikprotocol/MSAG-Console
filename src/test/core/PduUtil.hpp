@@ -217,7 +217,8 @@ struct DeliveryMonitor : public ReschedulePduMonitor
 	const string serviceType;
 	const uint16_t msgRef;
 	State state; //статус сообщения в БД
-	uint32_t deliveryStatus; //command status из delivery респонса
+	time_t respTime;
+	uint32_t respStatus; //command status из delivery респонса
 
 	DeliveryMonitor(const Address& srcAddr, const Address& destAddr,
 		const string& serviceType, uint16_t msgRef, time_t waitTime,

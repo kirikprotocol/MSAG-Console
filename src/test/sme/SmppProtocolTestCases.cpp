@@ -1791,7 +1791,8 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespOk(
 		__tc_fail__(100);
 		error();
 	}
-	return make_pair(DELIVERY_STATUS_NO_RESPONSE, time(NULL));
+	return make_pair(DELIVERY_STATUS_NO_RESPONSE,
+		time(NULL) + fixture->smeInfo.timeout);
 }
 
 pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
@@ -1800,6 +1801,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
 	__trace2__("sendDeliverySmRespRetry(): sme timeout = %d", fixture->smeInfo.timeout);
 	TCSelector s(num, 5);
 	__decl_tc__;
+	time_t sendTime = time(NULL);
 	try
 	{
 		uint32_t commandStatus = ESME_ROK;
@@ -1811,6 +1813,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
 			case 1: //не отправлять респонс
 				__tc__("deliverySm.resp.sendRetry.notSend");
 				commandStatus = DELIVERY_STATUS_NO_RESPONSE;
+				sendTime += fixture->smeInfo.timeout;
 				break;
 			case 2: //временная ошибка на стороне sme, запрос на повторную доставку
 				__tc__("deliverySm.resp.sendRetry.tempAppError");
@@ -1827,6 +1830,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
 			case 4: //отправить респонс с неправильным sequence_number
 				__tc__("deliverySm.resp.sendRetry.invalidSequenceNumber");
 				commandStatus = DELIVERY_STATUS_NO_RESPONSE;
+				sendTime += fixture->smeInfo.timeout;
 				respPdu.get_header().set_sequenceNumber(INT_MAX);
 				respPdu.get_header().set_commandStatus(ESME_ROK);
 				fixture->transmitter->sendDeliverySmResp(respPdu, sync);
@@ -1835,6 +1839,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
 				{
 					__tc__("deliverySm.resp.sendRetry.sendAfterSmeTimeout");
 					commandStatus = DELIVERY_STATUS_NO_RESPONSE;
+					sendTime += fixture->smeInfo.timeout;
 					respPdu.get_header().set_commandStatus(ESME_ROK);
 					int timeout = 1000 * (fixture->smeInfo.timeout + 1);
 					__trace2__("sendAfterSmeTimeout(): timeout = %d", timeout);
@@ -1845,14 +1850,15 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
 				__unreachable__("Invalid num");
 		}
 		__tc_ok__;
-		return make_pair(commandStatus, time(NULL));
+		return make_pair(commandStatus, sendTime);
 	}
 	catch(...)
 	{
 		__tc_fail__(s.value());
 		error();
 	}
-	return make_pair(DELIVERY_STATUS_NO_RESPONSE, time(NULL));
+	return make_pair(DELIVERY_STATUS_NO_RESPONSE,
+		time(NULL) + fixture->smeInfo.timeout);
 }
 
 pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespError(
@@ -1912,7 +1918,8 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespError(
 		__tc_fail__(s.value());
 		error();
 	}
-	return make_pair(DELIVERY_STATUS_NO_RESPONSE, time(NULL));
+	return make_pair(DELIVERY_STATUS_NO_RESPONSE,
+		time(NULL) + fixture->smeInfo.timeout);
 }
 
 }
