@@ -390,8 +390,10 @@ vector<TestSme*> genConfig(int transceivers, int transmitters, int receivers,
 	__cfg_addr__(profilerAddr);
 	__cfg_addr__(profilerAlias);
 	__cfg_str__(profilerSystemId);
-	__cfg_addr__(abonentInfoAddr);
-	__cfg_addr__(abonentInfoAlias);
+	__cfg_addr__(abonentInfoAddrSmpp);
+	__cfg_addr__(abonentInfoAddrMap);
+	__cfg_addr__(abonentInfoAliasSmpp);
+	__cfg_addr__(abonentInfoAliasMap);
 	__cfg_str__(abonentInfoSystemId);
 	
 	__trace__("*** Generating config files ***");
@@ -505,7 +507,9 @@ vector<TestSme*> genConfig(int transceivers, int transmitters, int receivers,
 		cfgUtil.setupDuplexRoutes(*addr[i], smeInfo[i]->systemId,
 			profilerAddr, profilerSystemId);
 		cfgUtil.setupDuplexRoutes(*addr[i], smeInfo[i]->systemId,
-			abonentInfoAddr, abonentInfoSystemId);
+			abonentInfoAddrSmpp, abonentInfoSystemId);
+		cfgUtil.setupDuplexRoutes(*addr[i], smeInfo[i]->systemId,
+			abonentInfoAddrMap, abonentInfoSystemId);
 		cfgUtil.setupDuplexRoutes(*addr[i], smeInfo[i]->systemId,
 			smscAddr, smscSystemId);
 	}
@@ -557,8 +561,10 @@ vector<TestSme*> genConfig(int transceivers, int transmitters, int receivers,
 		fixture->pduHandler[smscAlias] = sme->getDeliveryReceiptHandler();
 		fixture->pduHandler[profilerAddr] = sme->getProfilerAckHandler();
 		fixture->pduHandler[profilerAlias] = sme->getProfilerAckHandler();
-		fixture->pduHandler[abonentInfoAddr] = sme->getAbonentInfoAckHandler();
-		fixture->pduHandler[abonentInfoAlias] = sme->getAbonentInfoAckHandler();
+		fixture->pduHandler[abonentInfoAddrSmpp] = sme->getAbonentInfoAckHandler();
+		fixture->pduHandler[abonentInfoAddrMap] = sme->getAbonentInfoAckHandler();
+		fixture->pduHandler[abonentInfoAliasSmpp] = sme->getAbonentInfoAckHandler();
+		fixture->pduHandler[abonentInfoAliasMap] = sme->getAbonentInfoAckHandler();
 		fixture->pduSender = pduSender;
 		smeReg->bindSme(smeInfo[i]->systemId, smeType);
 		smeList.push_back(sme); //throws Exception
@@ -584,7 +590,8 @@ vector<TestSme*> genConfig(int transceivers, int transmitters, int receivers,
 	//печать таблицы маршрутов sme<->abonent info
 	for (int i = 0; i < numSme; i++)
 	{
-		cfgUtil.checkRoute2(*addr[i], smeInfo[i]->systemId, abonentInfoAlias);
+		cfgUtil.checkRoute2(*addr[i], smeInfo[i]->systemId, abonentInfoAliasSmpp);
+		cfgUtil.checkRoute2(*addr[i], smeInfo[i]->systemId, abonentInfoAliasMap);
 	}
 	//печать таблицы маршрутов smsc->sme
 	for (int i = 0; i < numSme; i++)
@@ -626,8 +633,10 @@ void printRouteArcBillInfo(const char* fileName)
 	__cfg_addr__(smscAddr);
 	__cfg_addr__(profilerAddr);
 	__cfg_addr__(profilerAlias);
-	__cfg_addr__(abonentInfoAddr);
-	__cfg_addr__(abonentInfoAlias);
+	__cfg_addr__(abonentInfoAddrSmpp);
+	__cfg_addr__(abonentInfoAddrMap);
+	__cfg_addr__(abonentInfoAliasSmpp);
+	__cfg_addr__(abonentInfoAliasMap);
 	__cfg_addr__(dbSmeAddr);
 	__cfg_addr__(dbSmeAlias);
 	__cfg_addr__(dbSmeInvalidAddr);
@@ -637,8 +646,10 @@ void printRouteArcBillInfo(const char* fileName)
 	addrList.push_back(&smscAddr);
 	addrList.push_back(&profilerAddr);
 	addrList.push_back(&profilerAlias);
-	addrList.push_back(&abonentInfoAddr);
-	addrList.push_back(&abonentInfoAlias);
+	addrList.push_back(&abonentInfoAddrSmpp);
+	addrList.push_back(&abonentInfoAddrMap);
+	addrList.push_back(&abonentInfoAliasSmpp);
+	addrList.push_back(&abonentInfoAliasMap);
 	addrList.push_back(&dbSmeAddr);
 	addrList.push_back(&dbSmeAlias);
 	addrList.push_back(&dbSmeInvalidAddr);
@@ -790,6 +801,7 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 				continue;
 			}
 		}
+		/*
 		else if (cmd == "dump")
 		{
 			is >> cmd;
@@ -800,6 +812,7 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 				continue;
 			}
 		}
+		*/
 		else if (cmd == "set")
 		{
 			is >> cmd;
