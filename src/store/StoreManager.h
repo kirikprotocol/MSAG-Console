@@ -55,15 +55,15 @@ namespace smsc { namespace store
         static Mutex            fakeMutex;
     #endif
         
-        StorageConnectionPool*  pool;
-        
-        unsigned                maxTriesCount;
-        void loadMaxTriesCount(Manager& config);
+        static log4cpp::Category    &log;
     
     protected:
 
-        static log4cpp::Category        &log;
-
+        void loadMaxTriesCount(Manager& config);
+        unsigned                maxTriesCount;
+        
+        StorageConnectionPool*  pool;
+        
         class ReadyIdIterator : public IdIterator
         {
         private:
@@ -112,11 +112,11 @@ namespace smsc { namespace store
         void doChangeSmsStateToDeleted(StorageConnection* connection,
             SMSId id)
                 throw(StorageException, NoSuchMessageException);
-
+    
     public:
 
         RemoteStore(Manager& config)
-            throw(ConfigException, ConnectionFailedException);
+            throw(ConfigException, StorageException);
         virtual ~RemoteStore();
         
         void setPoolSize(unsigned size) {
@@ -461,7 +461,7 @@ namespace smsc { namespace store
     
     };
     
-    /*struct UpdateRecord
+    struct UpdateRecord
     {
         SMSId       id;
         
@@ -477,29 +477,136 @@ namespace smsc { namespace store
             : id(_id), state(_state), dst(_dst), fcs(_fcs), nt(_nt) {};
     };
 
-    class CashedStore : public MessageStore
+    class SmsCache
+    {
+    private:
+    
+        struct SMSIdIdx
+        {
+            static inline int CalcHash(const SMSId& id) {
+                return (int)id;
+            };
+        };
+        struct AddressIdx
+        {
+            Address oa, da; 
+            
+            AddressIdx(const Address& _oa, const Address& _da) 
+                : oa(_oa), da(_da) {};
+            AddressIdx(const AddressIdx& idx) 
+                : oa(idx.oa), da(idx.da) {};
+
+            inline int operator ==(const AddressIdx& idx) {
+                return (oa == idx.oa && da == idx.da);
+            };
+            static inline int addressHash() {
+                // Add real hash calculation code here !!!
+                return 0; 
+            };
+        };
+        struct ComplexStIdx : public AddressIdx
+        {
+            const char* st;
+
+            ComplexStIdx(const Address& _oa, const Address& _da, 
+                         const char* _st) 
+                : AddressIdx(_oa, _da), st(_st) {};
+            ComplexStIdx(const ComplexStIdx& idx) 
+                : AddressIdx(idx), st(idx.st) {};
+            
+            inline int operator ==(const ComplexStIdx& idx) {
+                return (AddressIdx::operator ==(idx) && 
+                        ((!st && !idx.st) || 
+                         (st && idx.st && strcmp(st, idx.st) == 0)));
+            };
+            static inline int CalcHash(const ComplexStIdx& idx) {
+                // Add real hash calculation code here !!!
+                return AddressIdx::addressHash()+(int)idx.st;
+            };
+        };
+        struct ComplexMrIdx : public AddressIdx
+        {
+            uint16_t mr;
+
+            ComplexMrIdx(const Address& _oa, const Address& _da, 
+                         uint16_t _mr) 
+                : AddressIdx(_oa, _da), mr(_mr) {};
+            ComplexMrIdx(const ComplexMrIdx& idx) 
+                : AddressIdx(idx), mr(idx.mr) {};
+                
+            inline int operator ==(const ComplexMrIdx& idx) {
+                return (AddressIdx::operator ==(idx) && 
+                        mr == idx.mr);
+            };
+            static inline int CalcHash(const ComplexMrIdx& idx) {
+                // Add real hash calculation code here !!!
+                return AddressIdx::addressHash()+idx.mr;
+            };
+        };
+
+        XHash<SMSId, SMS*, SMSIdIdx>                idCache;
+        XHash<ComplexMrIdx, SMS*, ComplexMrIdx>     mrCache;
+        XHash<ComplexStIdx, SMS*, ComplexStIdx>     stCache;
+
+    public:
+
+        SmsCache(int capacity=0);
+        virtual ~SmsCache();
+
+        bool delSms(SMSId id);
+        void putSms(SMSId id, SMS* sm);
+        
+        SMS* getSms(SMSId id);
+        SMS* getSms(const Address& oa, const Address& da, 
+                    const char* svc, SMSId& id);
+        SMS* getSms(const Address& oa, const Address& da, 
+                    uint16_t mr, SMSId& id);
+    };
+
+    class CachedStore : public RemoteStore
     {
     protected:
 
-        RemoteStore*            store;
+        SmsCache                cache;
+        Mutex                   cacheMutex;
 
-        Array<UpdateRecord *>   updates;
-        Mutex                   updatesMutex;
-        XHash<SMSId, SMS*>      cash;
-        Mutex                   cashMutex;
-        
-        static void addSmsToStoreCash(SMSId id, SMS& sms)
-            throw(DuplicateMessageException);
-        static void getSmsFromStoreCash(SMSId id, SMS& sms)
-            throw(NoSuchMessageException);
+        StorageConnection*      connection;
     
     public:
 
-        CashedStore(RemoteStore* base, Manager& config) 
-            throws(ConfigException) : MessageStore(), store(base) {};
-        virtual ~CashedStore() {};
-    
-    };*/
+        CachedStore(Manager& config) 
+            throw(ConfigException, StorageException);
+        virtual ~CachedStore();
+        
+        virtual void createSms(SMS& sms, SMSId id,
+                               const CreateMode flag = CREATE_NEW)
+                throw(StorageException, DuplicateMessageException);
+        virtual void retriveSms(SMSId id, SMS &sms)
+                throw(StorageException, NoSuchMessageException);
+        virtual void replaceSms(SMSId id, const Address& oa,
+            const uint8_t* newMsg, uint8_t newMsgLen,
+            uint8_t deliveryReport, time_t validTime = 0, time_t waitTime = 0)
+                throw(StorageException, NoSuchMessageException);
+        virtual void destroySms(SMSId id)
+                throw(StorageException, NoSuchMessageException);
+        virtual void changeSmsStateToEnroute(SMSId id,
+            const Descriptor& dst, uint32_t failureCause, time_t nextTryTime)
+                throw(StorageException, NoSuchMessageException);
+        virtual void changeSmsStateToDelivered(SMSId id,
+            const Descriptor& dst)
+                throw(StorageException, NoSuchMessageException);
+        virtual void changeSmsStateToUndeliverable(SMSId id,
+            const Descriptor& dst, uint32_t failureCause)
+                throw(StorageException, NoSuchMessageException);
+        virtual void changeSmsStateToExpired(SMSId id)
+                throw(StorageException, NoSuchMessageException);
+        virtual void changeSmsStateToDeleted(SMSId id)
+                throw(StorageException, NoSuchMessageException);
+        virtual IdIterator* getReadyForRetry(time_t retryTime)
+                throw(StorageException);
+        virtual time_t getNextRetryTime()
+                throw(StorageException);
+    };
 
 }}
 
