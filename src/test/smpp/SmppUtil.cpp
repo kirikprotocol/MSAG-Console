@@ -3,8 +3,6 @@
 #include "sms/sms.h"
 #include <ctime>
 
-#define __numTime__ rand1(2)
-
 namespace smsc {
 namespace test {
 namespace smpp {
@@ -47,17 +45,23 @@ const char* SmppUtil::time2string(time_t lt, char* str, int num)
 {
 	switch (num)
 	{
-		case 1: //Absolute time format
+		case 1: //GMT time format
 			{
 				int len = strftime(str, MAX_SMPP_TIME_LENGTH,
-					"%y%m%d%H%M%S0", gmtime(&lt));
+					"%y%m%d%H%M%S000+", gmtime(&lt));
+			}
+			break;
+		case 2: //local time format (+)
+			{
+				int len = strftime(str, MAX_SMPP_TIME_LENGTH,
+					"%y%m%d%H%M%S0", localtime(&lt));
 				sprintf(str + len, "%02d+", timezone / 900);
 			}
 			break;
-		case 2: //Relative time format
+		case 3: //Relative time format
 			{
 				time_t df = lt - time(NULL);
-				__require__(df > 0);
+				__require__(df >= 0);
 				tm t;
 				t.tm_year = (df / 31104000);
 				t.tm_mon = (df / 2592000) % 12;
@@ -66,7 +70,8 @@ const char* SmppUtil::time2string(time_t lt, char* str, int num)
 				t.tm_min = (df / 60) % 60;
 				t.tm_sec = df % 60;
 				//t.tm_wday; t.tm_yday; t.tm_isdst;
-				strftime(str, MAX_SMPP_TIME_LENGTH, "%y%m%d%H%M%S000R", &t);
+				sprintf(str, "%02d%02d%02d%02d%02d%02d000R",
+					t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
 			}
 			break;
 		default:
@@ -89,7 +94,7 @@ time_t SmppUtil::string2time(const char* str)
 		case '-':
 			t.tm_year += 100;
 			t.tm_mon -= 1;
-			return (mktime(&t) - timezone);
+			return (mktime(&t) - timezone + tz * 900);
 		case 'R':
 			return (time(NULL) + t.tm_year * 31104000 + t.tm_mon * 2592000 +
 				t.tm_mday * 86400 + t.tm_hour * 3600 + t.tm_min * 60 + t.tm_sec);

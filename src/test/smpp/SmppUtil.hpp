@@ -16,8 +16,8 @@ using namespace smsc::test::sms; //constants
 
 #define __maxValidPeriod__ (time(NULL) + 7 * 24 * 3600) //7 суток
 #define __checkTime__ (time(NULL) - 5) //5 секунд
-#define __numTime__ rand1(2)
-#define __absoluteTime__ 1
+#define __numTime__ rand1(3)
+#define __absoluteTime__ rand1(2)
 
 #define __dumpPdu__(tc, pdu) \
 	__trace2__("%s(): pdu = ", (tc)); \
