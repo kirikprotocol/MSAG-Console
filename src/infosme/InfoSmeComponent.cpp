@@ -6,12 +6,9 @@ namespace smsc { namespace infosme
 
 using namespace smsc::core::buffers;
 
-static const char* ARGUMENT_NAME_TASK_ID            = "taskId";
-static const char* ARGUMENT_NAME_TASK_IDS           = "taskIds";
-static const char* ARGUMENT_NAME_ENABLED            = "enabled";
-static const char* ARGUMENT_NAME_SCHEDULE_ID        = "scheduleId";
-static const char* ARGUMENT_NAME_OLD_SCHEDULE_ID    = "oldScheduleId";
-static const char* ARGUMENT_NAME_NEW_SCHEDULE_ID    = "newScheduleId";
+static const char* ARGUMENT_NAME_ID         = "id";
+static const char* ARGUMENT_NAME_IDS        = "ids";
+static const char* ARGUMENT_NAME_ENABLED    = "enabled";
 
 InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
     : logger(Logger::getCategory("smsc.infosme.InfoSmeComponent")), admin(admin)
@@ -32,31 +29,24 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
     Method flush_statistics((unsigned)flushStatisticsMethod, 
                             "flushStatistics", empty_params, StringType);
 
-    Parameters tasks_params;
-    tasks_params[ARGUMENT_NAME_TASK_IDS] = Parameter(ARGUMENT_NAME_TASK_IDS, StringListType);
-    Method add_tasks((unsigned)addTasksMethod, "addTasks", tasks_params, StringType);
-    Method remove_tasks((unsigned)removeTasksMethod, "removeTasks", tasks_params, StringType);
-    Method change_tasks((unsigned)changeTasksMethod, "changeTasks", tasks_params, StringType);
-    Method start_tasks((unsigned)startTasksMethod, "startTasks", tasks_params, StringType);
-    Method stop_tasks((unsigned)stopTasksMethod, "stopTasks", tasks_params, StringType);
+    Parameters ids_params;
+    ids_params[ARGUMENT_NAME_IDS] = Parameter(ARGUMENT_NAME_IDS, StringListType);
+    Method add_tasks((unsigned)addTasksMethod, "addTasks", ids_params, StringType);
+    Method remove_tasks((unsigned)removeTasksMethod, "removeTasks", ids_params, StringType);
+    Method change_tasks((unsigned)changeTasksMethod, "changeTasks", ids_params, StringType);
+    Method start_tasks((unsigned)startTasksMethod, "startTasks", ids_params, StringType);
+    Method stop_tasks((unsigned)stopTasksMethod, "stopTasks", ids_params, StringType);
+    Method add_schedules((unsigned)addSchedulesMethod, "addSchedules", ids_params, StringType);
+    Method remove_schedules((unsigned)removeSchedulesMethod, "removeSchedules", ids_params, StringType);
+    Method change_schedules((unsigned)changeSchedulesMethod, "changeSchedules", ids_params, StringType);
 
-    Parameters e_task_params;
-    e_task_params[ARGUMENT_NAME_TASK_ID] = Parameter(ARGUMENT_NAME_TASK_ID, StringType);
+    Parameters task_params;
+    task_params[ARGUMENT_NAME_ID] = Parameter(ARGUMENT_NAME_ID, StringType);
     Method is_task_enabled((unsigned)isTaskEnabledMethod, "isTaskEnabled",
-                            e_task_params, BooleanType);
-    e_task_params[ARGUMENT_NAME_ENABLED] = Parameter(ARGUMENT_NAME_ENABLED, BooleanType);
+                            task_params, BooleanType);
+    task_params[ARGUMENT_NAME_ENABLED] = Parameter(ARGUMENT_NAME_ENABLED, BooleanType);
     Method set_task_enabled((unsigned)setTaskEnabledMethod, "setTaskEnabled",
-                            e_task_params, StringType);
-
-    Parameters schedule_params;
-    schedule_params[ARGUMENT_NAME_SCHEDULE_ID] = Parameter(ARGUMENT_NAME_SCHEDULE_ID, StringType);
-    Method add_schedule((unsigned)addScheduleMethod, "addSchedule", schedule_params, StringType);
-    Method remove_schedule((unsigned)removeScheduleMethod, "removeSchedule", schedule_params, StringType);
-
-    Parameters e_schedule_params;
-    e_schedule_params[ARGUMENT_NAME_OLD_SCHEDULE_ID] = Parameter(ARGUMENT_NAME_OLD_SCHEDULE_ID, StringType);
-    e_schedule_params[ARGUMENT_NAME_NEW_SCHEDULE_ID] = Parameter(ARGUMENT_NAME_NEW_SCHEDULE_ID, StringType);
-    Method change_schedule((unsigned)changeScheduleMethod, "changeSchedule", e_schedule_params, StringType);
+                            task_params, StringType);
 
     methods[start_task_processor.getName()]         = start_task_processor;
     methods[stop_task_processor.getName()]          = stop_task_processor;
@@ -72,9 +62,9 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
     methods[stop_tasks.getName()]                   = stop_tasks;
     methods[is_task_enabled.getName()]              = is_task_enabled;
     methods[set_task_enabled.getName()]             = set_task_enabled;
-    methods[add_schedule.getName()]                 = add_schedule;
-    methods[remove_schedule.getName()]              = remove_schedule;
-    methods[change_schedule.getName()]              = change_schedule;
+    methods[add_schedules.getName()]                = add_schedules;
+    methods[remove_schedules.getName()]             = remove_schedules;
+    methods[change_schedules.getName()]             = change_schedules;
 }
 
 InfoSmeComponent::~InfoSmeComponent()
@@ -129,14 +119,14 @@ Variant InfoSmeComponent::call(const Method& method, const Arguments& args)
         case setTaskEnabledMethod:
             setTaskEnabled(args);
             break;
-        case addScheduleMethod:
-            addSchedule(args);
+        case addSchedulesMethod:
+            addSchedules(args);
             break;
-        case removeScheduleMethod:
-            removeSchedule(args);
+        case removeSchedulesMethod:
+            removeSchedules(args);
             break;
-        case changeScheduleMethod:
-            changeSchedule(args);
+        case changeSchedulesMethod:
+            changeSchedules(args);
             break;
         
         default:
@@ -168,11 +158,11 @@ void InfoSmeComponent::error(const char* method, const char* param)
 
 void InfoSmeComponent::addTasks(const Arguments& args)
 {
-    if (!args.Exists(ARGUMENT_NAME_TASK_IDS)) 
-        error("addTasks", ARGUMENT_NAME_TASK_IDS);
-    Variant arg = args[ARGUMENT_NAME_TASK_IDS];
+    if (!args.Exists(ARGUMENT_NAME_IDS)) 
+        error("addTasks", ARGUMENT_NAME_IDS);
+    Variant arg = args[ARGUMENT_NAME_IDS];
     if (arg.getType() != StringListType)
-        error("addTasks", ARGUMENT_NAME_TASK_IDS);
+        error("addTasks", ARGUMENT_NAME_IDS);
     
     StringList list = arg.getStringListValue();
     for (StringList::iterator it=list.begin(); it != list.end(); it++) {
@@ -184,11 +174,11 @@ void InfoSmeComponent::addTasks(const Arguments& args)
 }
 void InfoSmeComponent::removeTasks(const Arguments& args)
 {
-    if (!args.Exists(ARGUMENT_NAME_TASK_IDS)) 
-        error("removeTasks", ARGUMENT_NAME_TASK_IDS);
-    Variant arg = args[ARGUMENT_NAME_TASK_IDS];
+    if (!args.Exists(ARGUMENT_NAME_IDS)) 
+        error("removeTasks", ARGUMENT_NAME_IDS);
+    Variant arg = args[ARGUMENT_NAME_IDS];
     if (arg.getType() != StringListType)
-        error("removeTasks", ARGUMENT_NAME_TASK_IDS);
+        error("removeTasks", ARGUMENT_NAME_IDS);
     
     StringList list = arg.getStringListValue();
     for (StringList::iterator it=list.begin(); it != list.end(); it++) {
@@ -200,11 +190,11 @@ void InfoSmeComponent::removeTasks(const Arguments& args)
 }
 void InfoSmeComponent::changeTasks(const Arguments& args)
 {
-    if (!args.Exists(ARGUMENT_NAME_TASK_IDS)) 
-        error("changeTasks", ARGUMENT_NAME_TASK_IDS);
-    Variant arg = args[ARGUMENT_NAME_TASK_IDS];
+    if (!args.Exists(ARGUMENT_NAME_IDS)) 
+        error("changeTasks", ARGUMENT_NAME_IDS);
+    Variant arg = args[ARGUMENT_NAME_IDS];
     if (arg.getType() != StringListType)
-        error("changeTasks", ARGUMENT_NAME_TASK_IDS);
+        error("changeTasks", ARGUMENT_NAME_IDS);
     
     StringList list = arg.getStringListValue();
     for (StringList::iterator it=list.begin(); it != list.end(); it++) {
@@ -216,11 +206,11 @@ void InfoSmeComponent::changeTasks(const Arguments& args)
 }
 void InfoSmeComponent::startTasks(const Arguments& args)
 {
-    if (!args.Exists(ARGUMENT_NAME_TASK_IDS)) 
-        error("startTasks", ARGUMENT_NAME_TASK_IDS);
-    Variant arg = args[ARGUMENT_NAME_TASK_IDS];
+    if (!args.Exists(ARGUMENT_NAME_IDS)) 
+        error("startTasks", ARGUMENT_NAME_IDS);
+    Variant arg = args[ARGUMENT_NAME_IDS];
     if (arg.getType() != StringListType)
-        error("startTasks", ARGUMENT_NAME_TASK_IDS);
+        error("startTasks", ARGUMENT_NAME_IDS);
     
     StringList list = arg.getStringListValue();
     for (StringList::iterator it=list.begin(); it != list.end(); it++) {
@@ -232,11 +222,11 @@ void InfoSmeComponent::startTasks(const Arguments& args)
 }
 void InfoSmeComponent::stopTasks(const Arguments& args)
 {
-    if (!args.Exists(ARGUMENT_NAME_TASK_IDS)) 
-        error("stopTasks", ARGUMENT_NAME_TASK_IDS);
-    Variant arg = args[ARGUMENT_NAME_TASK_IDS];
+    if (!args.Exists(ARGUMENT_NAME_IDS)) 
+        error("stopTasks", ARGUMENT_NAME_IDS);
+    Variant arg = args[ARGUMENT_NAME_IDS];
     if (arg.getType() != StringListType)
-        error("stopTasks", ARGUMENT_NAME_TASK_IDS);
+        error("stopTasks", ARGUMENT_NAME_IDS);
     
     StringList list = arg.getStringListValue();
     for (StringList::iterator it=list.begin(); it != list.end(); it++) {
@@ -248,23 +238,23 @@ void InfoSmeComponent::stopTasks(const Arguments& args)
 }
 bool InfoSmeComponent::isTaskEnabled(const Arguments& args)
 {
-    if (!args.Exists(ARGUMENT_NAME_TASK_ID)) 
-        error("isTaskEnabled", ARGUMENT_NAME_TASK_ID);
-    Variant arg = args[ARGUMENT_NAME_TASK_ID];
+    if (!args.Exists(ARGUMENT_NAME_ID)) 
+        error("isTaskEnabled", ARGUMENT_NAME_ID);
+    Variant arg = args[ARGUMENT_NAME_ID];
     const char* taskId = (arg.getType() == StringType) ? arg.getStringValue():0;
     if (!taskId || taskId[0] == '\0')
-        error("isTaskEnabled", ARGUMENT_NAME_TASK_ID);
+        error("isTaskEnabled", ARGUMENT_NAME_ID);
     
     return admin.isTaskEnabled(taskId);
 }
 void InfoSmeComponent::setTaskEnabled(const Arguments& args)
 {
-    if (!args.Exists(ARGUMENT_NAME_TASK_ID)) 
-        error("setTaskEnabled", ARGUMENT_NAME_TASK_ID);
-    Variant arg = args[ARGUMENT_NAME_TASK_ID];
+    if (!args.Exists(ARGUMENT_NAME_ID)) 
+        error("setTaskEnabled", ARGUMENT_NAME_ID);
+    Variant arg = args[ARGUMENT_NAME_ID];
     const char* taskId = (arg.getType() == StringType) ? arg.getStringValue():0;
     if (!taskId || taskId[0] == '\0')
-        error("setTaskEnabled", ARGUMENT_NAME_TASK_ID);
+        error("setTaskEnabled", ARGUMENT_NAME_ID);
     
     if (!args.Exists(ARGUMENT_NAME_ENABLED)) 
         error("setTaskEnabled", ARGUMENT_NAME_ENABLED);
@@ -275,48 +265,53 @@ void InfoSmeComponent::setTaskEnabled(const Arguments& args)
     if (!admin.setTaskEnabled(taskId, arg.getBooleanValue()))
         throw AdminException("Failed to shange enabled state for task '%s'", taskId);
 }
-void InfoSmeComponent::addSchedule(const Arguments& args)
+void InfoSmeComponent::addSchedules(const Arguments& args)
 {
-    if (!args.Exists(ARGUMENT_NAME_SCHEDULE_ID)) 
-        error("addSchedule", ARGUMENT_NAME_SCHEDULE_ID);
-    Variant arg = args[ARGUMENT_NAME_SCHEDULE_ID];
-    const char* scheduleId = (arg.getType() == StringType) ? arg.getStringValue():0;
-    if (!scheduleId || scheduleId[0] == '\0')
-        error("addSchedule", ARGUMENT_NAME_SCHEDULE_ID);
-
-    if (!admin.addSchedule(scheduleId)) 
-        throw AdminException("Failed to add schedule '%s'", scheduleId);
-}
-void InfoSmeComponent::removeSchedule(const Arguments& args)
-{
-    if (!args.Exists(ARGUMENT_NAME_SCHEDULE_ID)) 
-        error("removeSchedule", ARGUMENT_NAME_SCHEDULE_ID);
-    Variant arg = args[ARGUMENT_NAME_SCHEDULE_ID];
-    const char* scheduleId = (arg.getType() == StringType) ? arg.getStringValue():0;
-    if (!scheduleId || scheduleId[0] == '\0')
-        error("removeSchedule", ARGUMENT_NAME_SCHEDULE_ID);
-
-    if (!admin.removeSchedule(scheduleId)) 
-        throw AdminException("Failed to remove schedule '%s'", scheduleId);
-}
-void InfoSmeComponent::changeSchedule(const Arguments& args)
-{
-    if (!args.Exists(ARGUMENT_NAME_OLD_SCHEDULE_ID)) 
-        error("changeSchedule", ARGUMENT_NAME_OLD_SCHEDULE_ID);
-    Variant arg = args[ARGUMENT_NAME_OLD_SCHEDULE_ID];
-    const char* oldScheduleId = (arg.getType() == StringType) ? arg.getStringValue():0;
-    if (!oldScheduleId || oldScheduleId[0] == '\0')
-        error("changeSchedule", ARGUMENT_NAME_OLD_SCHEDULE_ID);
+    if (!args.Exists(ARGUMENT_NAME_IDS)) 
+        error("addSchedules", ARGUMENT_NAME_IDS);
+    Variant arg = args[ARGUMENT_NAME_IDS];
+    if (arg.getType() != StringListType)
+        error("addSchedules", ARGUMENT_NAME_IDS);
     
-    if (!args.Exists(ARGUMENT_NAME_NEW_SCHEDULE_ID)) 
-        error("changeSchedule", ARGUMENT_NAME_NEW_SCHEDULE_ID);
-    arg = args[ARGUMENT_NAME_NEW_SCHEDULE_ID];
-    const char* newScheduleId = (arg.getType() == StringType) ? arg.getStringValue():0;
-    if (!newScheduleId || newScheduleId[0] == '\0')
-        error("changeSchedule", ARGUMENT_NAME_NEW_SCHEDULE_ID);
-
-    if (!admin.changeSchedule(oldScheduleId, newScheduleId)) 
-        throw AdminException("Failed to change schedule '%s' to '%s'", oldScheduleId, newScheduleId);
+    StringList list = arg.getStringListValue();
+    for (StringList::iterator it=list.begin(); it != list.end(); it++) {
+        const char* scheduleId = *it;
+        if (!scheduleId || scheduleId[0] == '\0') continue;
+        if (!admin.addSchedule(scheduleId))
+            throw AdminException("Failed to add schedule '%s'", scheduleId);
+    }
+}
+void InfoSmeComponent::removeSchedules(const Arguments& args)
+{
+    if (!args.Exists(ARGUMENT_NAME_IDS)) 
+        error("removeSchedules", ARGUMENT_NAME_IDS);
+    Variant arg = args[ARGUMENT_NAME_IDS];
+    if (arg.getType() != StringListType)
+        error("removeSchedules", ARGUMENT_NAME_IDS);
+    
+    StringList list = arg.getStringListValue();
+    for (StringList::iterator it=list.begin(); it != list.end(); it++) {
+        const char* scheduleId = *it;
+        if (!scheduleId || scheduleId[0] == '\0') continue;
+        if (!admin.removeSchedule(scheduleId))
+            throw AdminException("Failed to remove schedule '%s'", scheduleId);
+    }
+}
+void InfoSmeComponent::changeSchedules(const Arguments& args)
+{
+    if (!args.Exists(ARGUMENT_NAME_IDS)) 
+        error("changeSchedules", ARGUMENT_NAME_IDS);
+    Variant arg = args[ARGUMENT_NAME_IDS];
+    if (arg.getType() != StringListType)
+        error("changeSchedules", ARGUMENT_NAME_IDS);
+    
+    StringList list = arg.getStringListValue();
+    for (StringList::iterator it=list.begin(); it != list.end(); it++) {
+        const char* scheduleId = *it;
+        if (!scheduleId || scheduleId[0] == '\0') continue;
+        if (!admin.changeSchedule(scheduleId))
+            throw AdminException("Failed to change schedule '%s'", scheduleId);
+    }
 }
 
 }}

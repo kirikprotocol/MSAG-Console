@@ -31,7 +31,7 @@ namespace smsc { namespace infosme
             startTaskSchedulerMethod, stopTaskSchedulerMethod, isTaskSchedulerRunningMethod,
             flushStatisticsMethod, addTasksMethod, removeTasksMethod, changeTasksMethod, 
             startTasksMethod, stopTasksMethod, isTaskEnabledMethod, setTaskEnabledMethod,
-            addScheduleMethod, removeScheduleMethod, changeScheduleMethod
+            addSchedulesMethod, removeSchedulesMethod, changeSchedulesMethod
         };
         
         void error(const char* method, const char* param);
@@ -46,9 +46,9 @@ namespace smsc { namespace infosme
         void setTaskEnabled(const Arguments& args);
         bool isTaskEnabled(const Arguments& args);
 
-        void addSchedule(const Arguments& args);
-        void removeSchedule(const Arguments& args);
-        void changeSchedule(const Arguments& args);
+        void addSchedules(const Arguments& args);
+        void removeSchedules(const Arguments& args);
+        void changeSchedules(const Arguments& args);
         
     public:
     

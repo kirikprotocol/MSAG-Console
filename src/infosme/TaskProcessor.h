@@ -396,7 +396,7 @@ namespace smsc { namespace infosme
         
         virtual bool addSchedule(std::string scheduleId);
         virtual bool removeSchedule(std::string scheduleId);
-        virtual bool changeSchedule(std::string oldScheduleId, std::string newScheduleId);
+        virtual bool changeSchedule(std::string scheduleId);
         
     };
 

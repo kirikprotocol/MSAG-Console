@@ -833,12 +833,10 @@ bool TaskProcessor::removeSchedule(std::string scheduleId)
 {
     return scheduler.removeSchedule(scheduleId);
 }
-bool TaskProcessor::changeSchedule(std::string oldScheduleId, std::string newScheduleId)
+bool TaskProcessor::changeSchedule(std::string scheduleId)
 {
-    const char* old_schedule_id = oldScheduleId.c_str();
-    const char* schedule_id = newScheduleId.c_str();
-    if (!old_schedule_id || old_schedule_id[0] == '\0'
-         || !schedule_id || schedule_id[0] == '\0') return false;
+    const char* schedule_id = scheduleId.c_str();
+    if (!schedule_id || schedule_id[0] == '\0') return false;
 
     Schedule* schedule = 0;
     try
@@ -849,15 +847,14 @@ bool TaskProcessor::changeSchedule(std::string oldScheduleId, std::string newSch
         sprintf(scheduleSection, "InfoSme.Schedules.%s", schedule_id);
         ConfigView scheduleConfig(config, scheduleSection);
         
-        schedule = Schedule::create(&scheduleConfig, newScheduleId);
-        bool result = scheduler.changeSchedule(oldScheduleId, schedule);
+        schedule = Schedule::create(&scheduleConfig, scheduleId);
+        bool result = scheduler.changeSchedule(scheduleId, schedule);
         if (!result && schedule) delete schedule;
         return result;
     }
     catch (Exception& exc) {
         if (schedule) delete schedule;
-        logger.error("Failed to change schedule '%s' to '%s'. Details: %s", 
-                     old_schedule_id, schedule_id, exc.what());
+        logger.error("Failed to change schedule '%s'. Details: %s", schedule_id, exc.what());
     }
     catch (...) {
         if (schedule) delete schedule;
