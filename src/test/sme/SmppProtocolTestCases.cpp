@@ -1198,7 +1198,8 @@ void SmppProtocolTestCases::cancelSmCorrect(bool sync, int num)
 					//pdu->set_messageId();
 					//pdu->set_source();
 					pdu->set_dest(cancelPdu->get_message().get_dest());
-					pdu->set_serviceType(nvl(cancelPdu->get_message().get_serviceType()));
+					pdu->set_serviceType(
+						nvl(cancelPdu->get_message().get_serviceType()));
 					break;
 				case 5: //группа sms-ок пустая
 					{
@@ -1349,7 +1350,8 @@ void SmppProtocolTestCases::cancelSmIncorrect(bool sync, int num)
 						pdu->set_messageId(cancelPduData->strProps["smsId"].c_str());
 						//pdu->set_source();
 						//pdu->set_dest();
-						pdu->set_serviceType(cancelPdu->get_message().get_serviceType());
+						pdu->set_serviceType(
+							nvl(cancelPdu->get_message().get_serviceType()));
 					}
 					break;
 				case 9: //заданы правильные message_id, dest_addr и service_type
@@ -1358,7 +1360,8 @@ void SmppProtocolTestCases::cancelSmIncorrect(bool sync, int num)
 						pdu->set_messageId(cancelPduData->strProps["smsId"].c_str());
 						//pdu->set_source();
 						pdu->set_dest(cancelPdu->get_message().get_dest());
-						pdu->set_serviceType(cancelPdu->get_message().get_serviceType());
+						pdu->set_serviceType(
+							nvl(cancelPdu->get_message().get_serviceType()));
 					}
 					break;
 				case 10: //сообщение в финальном состоянии
