@@ -1,6 +1,7 @@
 #include "util/config/Manager.h"
 #include "store/StoreManager.h"
-#include "MessageStoreTestCases.hpp"
+#include "test/sms/SmsUtil.hpp"
+#include "test/util/Util.hpp"
 #include "test/util/TestTaskManager.hpp"
 #include <iostream>
 #include <sys/timeb.h>
@@ -9,8 +10,8 @@ using namespace std;
 using namespace smsc::sms;
 using namespace smsc::util::config;
 using namespace smsc::store;
-using namespace smsc::test::store;
 using namespace smsc::test::util;
+using smsc::test::sms::SmsUtil;
 
 /**
  * Предназначен для измерения производительности Message Store.
@@ -25,10 +26,10 @@ class MessageStoreLoadTestTask : public TestTask
 {
 private:
 	int taskNum;
-	MessageStoreTestCases* tc;
+	MessageStore* msgStore;
 
 public:
-	MessageStoreLoadTestTask(MessageStoreTestCases* tc, int taskNum);
+	MessageStoreLoadTestTask(MessageStore* msgStore, int taskNum);
 	virtual ~MessageStoreLoadTestTask() {}
 	virtual void executeCycle();
 	virtual void onStopped();
@@ -79,21 +80,41 @@ public:
 };
 
 //MessageStoreLoadTestTask methods
-MessageStoreLoadTestTask::MessageStoreLoadTestTask(MessageStoreTestCases* _tc,
-	int _taskNum) : TestTask("LoadTask", _taskNum), tc(_tc), taskNum(_taskNum)
+MessageStoreLoadTestTask::MessageStoreLoadTestTask(MessageStore* _msgStore,
+	int _taskNum) : TestTask("LoadTask", _taskNum), msgStore(_msgStore),
+	taskNum(_taskNum)
 {
-	__require__(tc);
+	__require__(msgStore);
 }
 
 void MessageStoreLoadTestTask::executeCycle()
 {
+	//отключить сеттер на SMPP_MESSAGE_PAYLOAD
+	static uint64_t mask = (uint64_t) 0xffffffffffffffff ^ (uint64_t) 0x100000;
 	for (int i = 0; i < 20; i++)
 	{
-		SMSId id;
-		SMS sms;
-		tc->storeCorrectSms(&id, &sms, RAND_TC);
-		tc->changeExistentSmsStateEnrouteToFinal(id, &sms, RAND_TC);
-		updateStat();
+		try
+		{
+			//create
+			SMS sms;
+			SmsUtil::setupRandomCorrectSms(&sms, mask, false);
+			SMSId smsId = msgStore->getNextId();
+			msgStore->createSms(sms, smsId, CREATE_NEW);
+			//load
+			SMS sms2;
+			msgStore->retriveSms(smsId, sms2);
+			//change state
+			Descriptor dst;
+			SmsUtil::setupRandomCorrectDescriptor(&dst);
+			dst.setSmeNumber(rand0(65535));
+			msgStore->changeSmsStateToDelivered(smsId, dst);
+			//stat
+			updateStat();
+		}
+		catch (...)
+		{
+			__warning__("Message store error");
+		}
 	}
 }
 
@@ -185,11 +206,10 @@ void executeLoadTest(int numThreads)
 {
 	MessageStoreLoadTest::init(numThreads);
 	MessageStoreLoadTestTaskManager tm;
-	MessageStoreTestCases tc(StoreManager::getMessageStore(), true); //throws exception
 	for (int i = 0; i < numThreads; i++)
 	{
 		MessageStoreLoadTestTask* task =
-			new MessageStoreLoadTestTask(&tc, i);
+			new MessageStoreLoadTestTask(StoreManager::getMessageStore(), i);
 		tm.addTask(task);
 	}
 	tm.startTimer();
