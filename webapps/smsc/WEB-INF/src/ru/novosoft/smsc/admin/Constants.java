@@ -16,4 +16,5 @@ public interface Constants
   public static final String SMSC_ERROR_MESSAGES_ATTRIBUTE_NAME = "SMSC_ERROR_MESSAGES_ATTRIBUTE";
 
   public static final String ARCHIVE_DAEMON_SVC_ID = "ArchiveDaemon";
+  String CONSOLE_SESSION_ID = "Console Session";
 }

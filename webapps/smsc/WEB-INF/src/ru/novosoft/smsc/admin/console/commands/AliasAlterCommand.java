@@ -1,17 +1,24 @@
 /**
+
  * Created by IntelliJ IDEA.
+
  * User: makarov
+
  * Date: Dec 16, 2002
+
  * Time: 6:54:05 PM
+
  * To change this template use Options | File Templates.
+
  */
 package ru.novosoft.smsc.admin.console.commands;
-
 
 import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.alias.Alias;
 import ru.novosoft.smsc.admin.route.Mask;
+import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.journal.Action;
 
 public class AliasAlterCommand implements Command
 {
@@ -38,13 +45,12 @@ public class AliasAlterCommand implements Command
             try {
                 Alias newAlias = new Alias(new Mask(address), new Mask(alias),
                         (hideSet) ? hide:smscAlias.isHide());
-                ctx.getSmsc().getAliases().remove(alias);
-                boolean ok = ctx.getSmsc().getAliases().add(newAlias);
+                boolean ok = ctx.getSmsc().getAliases().modify(new Alias(new Mask(alias), new Mask(alias), false), newAlias, new Action("console user", Constants.CONSOLE_SESSION_ID)); //todo: pass console user name to method
                 if (ok) {
                     ctx.setMessage(out+" altered");
                     ctx.setStatus(CommandContext.CMD_OK);
                 } else {
-                    ctx.getSmsc().getAliases().add(smscAlias);
+                    ctx.getSmsc().getAliases().add(smscAlias, new Action("console user", Constants.CONSOLE_SESSION_ID)); //todo: pass console user name to method
                     ctx.setMessage(out+" already exists or has equivalent");
                     ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                 }
@@ -62,6 +68,7 @@ public class AliasAlterCommand implements Command
     public String getId() {
         return "ALIAS_ALTER";
     }
-
 }
+
+
 

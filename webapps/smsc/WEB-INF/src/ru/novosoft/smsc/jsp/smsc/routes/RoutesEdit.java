@@ -14,6 +14,7 @@ import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import javax.servlet.http.HttpServletRequest;
+import java.security.Principal;
 import java.util.*;
 
 
@@ -26,7 +27,7 @@ public class RoutesEdit extends RouteBody
   protected int init(final List errors)
   {
     int result = super.init(errors);
-    if (result != RESULT_OK)
+    if (RESULT_OK != result)
       return result;
 
     for (Iterator i = routeSubjectManager.getSubjects().iterator(); i.hasNext();) {
@@ -34,15 +35,15 @@ public class RoutesEdit extends RouteBody
       selectedSmes.put(subj.getName(), subj.getDefaultSme().getId());
     }
 
-    if (routeId == null)
+    if (null == routeId)
       routeId = "";
-    if (srcSmeId == null)
+    if (null == srcSmeId)
       srcSmeId = "";
 
-    if (oldRouteId == null) {
+    if (null == oldRouteId) {
       oldRouteId = routeId;
       final Route r = routeSubjectManager.getRoutes().get(routeId);
-      if (r == null)
+      if (null == r)
         result = error(SMSCErrors.error.routes.nameNotSpecified);
       else {
         priority = r.getPriority();
@@ -57,7 +58,7 @@ public class RoutesEdit extends RouteBody
         srcMasks = (String[]) r.getSources().getMaskNames().toArray(new String[0]);
         checkedDestinations = (String[]) r.getDestinations().getSubjectNames().toArray(new String[0]);
         dstMasks = (String[]) r.getDestinations().getMaskNames().toArray(new String[0]);
-        dst_mask_sme_ = smeManager.getSmeNames().size() > 0 ? (String) smeManager.getSmeNames().iterator().next() : "";
+        dst_mask_sme_ = 0 < smeManager.getSmeNames().size() ? (String) smeManager.getSmeNames().iterator().next() : "";
         deliveryMode = r.getDeliveryMode();
         forwardTo = r.getForwardTo();
         hide = r.isHide();
@@ -78,12 +79,12 @@ public class RoutesEdit extends RouteBody
       }
     }
 
-    if (deliveryMode == null) deliveryMode = "default";
-    if (forwardTo == null) forwardTo = "";
-    if (checkedSources == null) checkedSources = new String[0];
-    if (checkedDestinations == null) checkedDestinations = new String[0];
-    if (srcMasks == null) srcMasks = new String[0];
-    if (dstMasks == null) dstMasks = new String[0];
+    if (null == deliveryMode) deliveryMode = "default";
+    if (null == forwardTo) forwardTo = "";
+    if (null == checkedSources) checkedSources = new String[0];
+    if (null == checkedDestinations) checkedDestinations = new String[0];
+    if (null == srcMasks) srcMasks = new String[0];
+    if (null == dstMasks) dstMasks = new String[0];
 
     checkedSources = Functions.trimStrings(checkedSources);
     checkedDestinations = Functions.trimStrings(checkedDestinations);
@@ -99,7 +100,7 @@ public class RoutesEdit extends RouteBody
   public int process(final HttpServletRequest request)
   {
     final int result = super.process(request);
-    if (result != RESULT_OK)
+    if (RESULT_OK != result)
       return result;
 
     final String subjprefix = "dst_sme_";
@@ -109,13 +110,13 @@ public class RoutesEdit extends RouteBody
       final String paramName = (String) i.next();
       if (paramName.startsWith(subjprefix)) {
         final String[] strings = (String[]) requestParameters.get(paramName);
-        if (strings.length > 0) {
+        if (0 < strings.length) {
           final String dstName = StringEncoderDecoder.decodeHEX(paramName.substring(subjprefix.length()));
           selectedSmes.put(dstName, strings[0]);
         }
       } else if (paramName.startsWith(maskprefix)) {
         final String[] strings = (String[]) requestParameters.get(paramName);
-        if (strings.length > 0) {
+        if (0 < strings.length) {
           final String dstName = StringEncoderDecoder.decodeHEX(paramName.substring(maskprefix.length()));
           selectedMaskSmes.put(dstName, strings[0]);
         }
@@ -127,19 +128,19 @@ public class RoutesEdit extends RouteBody
         selectedMaskSmes.put(mask, dst_mask_sme_);
     }
 
-    if (mbCancel != null)
+    if (null != mbCancel)
       return RESULT_DONE;
-    else if (mbSave != null)
+    else if (null != mbSave)
       return save(loginedPrincipal, sessionId);
 
     return result;
   }
 
-  protected int save(final java.security.Principal loginedPrincipal, final String sessionId)
+  protected int save(final Principal loginedPrincipal, final String sessionId)
   {
-    if (routeId == null || routeId.length() <= 0 || oldRouteId == null || oldRouteId.length() <= 0)
+    if (null == routeId || 0 >= routeId.length() || null == oldRouteId || 0 >= oldRouteId.length())
       return error(SMSCErrors.error.routes.nameNotSpecified);
-    if (priority < 0 || priority > Constants.MAX_PRIORITY)
+    if (0 > priority || Constants.MAX_PRIORITY < priority)
       return error(SMSCErrors.error.routes.invalidPriority, String.valueOf(priority));
 
     if (!routeId.equals(oldRouteId) && routeSubjectManager.getRoutes().contains(routeId))
@@ -166,7 +167,7 @@ public class RoutesEdit extends RouteBody
       for (int i = 0; i < dstMasks.length; i++) {
         final String mask = dstMasks[i];
         String smeId = (String) selectedMaskSmes.get(mask);
-        if (smeId == null)
+        if (null == smeId)
           smeId = dst_mask_sme_;
         final SME sme = smeManager.get(smeId);
         destinations.add(new Destination(new Mask(mask), sme));
@@ -183,7 +184,7 @@ public class RoutesEdit extends RouteBody
       if (oldRouteId.equals(routeId))
         journalAppend(SubjectTypes.TYPE_route, routeId, Actions.ACTION_MODIFY);
       else
-        journalAppend(SubjectTypes.TYPE_route, routeId, Actions.ACTION_MODIFY, new Date(), "old route ID", oldRouteId);
+        journalAppend(SubjectTypes.TYPE_route, routeId, Actions.ACTION_MODIFY, "old route ID", oldRouteId);
       appContext.getStatuses().setRoutesChanged(true);
       return RESULT_DONE;
     } catch (Throwable e) {

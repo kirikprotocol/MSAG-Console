@@ -20,6 +20,8 @@ import ru.novosoft.smsc.admin.service.*;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileDataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileQuery;
+import ru.novosoft.smsc.jsp.SMSCAppContextImpl;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.*;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.xml.Utils;
@@ -87,14 +89,14 @@ public class Smsc extends Service
   private long serviceRefreshTimeStamp = 0;
   private static final char LOGGER_DELIMITER = ',';
 
-  public Smsc(final String smscHost, final int smscPort, final String smscConfFolderString, final NSConnectionPool connectionPool) throws AdminException
+  public Smsc(final String smscHost, final int smscPort, final String smscConfFolderString, final NSConnectionPool connectionPool, SMSCAppContext smscAppContext) throws AdminException
   {
     super(new ServiceInfo(Constants.SMSC_SME_ID, smscHost, "", "", true, null, ServiceInfo.STATUS_STOPPED), smscPort);
 
     try {
       this.configFolder = new File(smscConfFolderString);
       final Document aliasesDoc = Utils.parse(new FileReader(new File(configFolder, "aliases.xml")));
-      aliases = new AliasSet(aliasesDoc.getDocumentElement());
+      aliases = new AliasSet(aliasesDoc.getDocumentElement(), smscAppContext);
       profileDataSource = new ProfileDataSource(connectionPool);
     } catch (FactoryConfigurationError error) {
       logger.error("Couldn't configure xml parser factory", error);

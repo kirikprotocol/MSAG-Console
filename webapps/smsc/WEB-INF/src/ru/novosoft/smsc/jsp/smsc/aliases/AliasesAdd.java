@@ -6,14 +6,14 @@
 package ru.novosoft.smsc.jsp.smsc.aliases;
 
 import ru.novosoft.smsc.admin.alias.Alias;
-import ru.novosoft.smsc.admin.journal.Actions;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Action;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.List;
+
 
 public class AliasesAdd extends SmscBean
 {
@@ -24,13 +24,13 @@ public class AliasesAdd extends SmscBean
   protected String address = null;
   protected boolean hide = false;
 
-  protected int init(List errors)
+  protected int init(final List errors)
   {
-    int result = super.init(errors);
-    if (result != RESULT_OK)
+    final int result = super.init(errors);
+    if (RESULT_OK != result)
       return result;
 
-    if (alias == null || address == null) {
+    if (null == alias || null == address) {
       alias = address = "";
       hide = false;
     }
@@ -38,25 +38,25 @@ public class AliasesAdd extends SmscBean
     return result;
   }
 
-  public int process(HttpServletRequest request)
+  public int process(final HttpServletRequest request)
   {
-    if (mbCancel != null)
+    if (null != mbCancel)
       return RESULT_DONE;
 
-    int result = super.process(request);
-    if (result != RESULT_OK)
+    final int result = super.process(request);
+    if (RESULT_OK != result)
       return result;
 
-    if (mbSave != null)
+    if (null != mbSave)
       return save();
 
     return RESULT_OK;
   }
 
-  private int countQuestions(String str)
+  private int countQuestions(final String str)
   {
     final int start = str.indexOf('?');
-    if (start >= 0)
+    if (0 <= start)
       return str.lastIndexOf('?') - start + 1;
     else
       return 0;
@@ -68,36 +68,35 @@ public class AliasesAdd extends SmscBean
       return error(SMSCErrors.error.aliases.invalidAddress, address);
     if (!Mask.isMaskValid(alias))
       return error(SMSCErrors.error.aliases.invalidAlias, alias);
-    if (isHide() && (address.indexOf('?') >= 0 || alias.indexOf('?') >= 0))
+    if (isHide() && (0 <= address.indexOf('?') || 0 <= alias.indexOf('?')))
       return error(SMSCErrors.error.aliases.HideWithQuestion);
     if (countQuestions(address) != countQuestions(alias))
       return error(SMSCErrors.error.aliases.QuestionCountsNotMathes);
 
     try {
-      Alias newAlias = new Alias(new Mask(address), new Mask(alias), hide);
+      final Alias newAlias = new Alias(new Mask(address), new Mask(alias), hide);
       if (smsc.getAliases().contains(newAlias))
         return error(SMSCErrors.error.aliases.alreadyExistsAlias, alias);
 
-      if (smsc.getAliases().add(newAlias)) {
-        journalAppend( SubjectTypes.TYPE_alias, newAlias.getAlias().getMask(), Actions.ACTION_ADD);
-        appContext.getStatuses().setAliasesChanged(true);
-        return RESULT_DONE;
-      } else
-        return error(SMSCErrors.error.aliases.alreadyExistsAddress, alias);
+      return smsc.getAliases().add(newAlias, new Action(loginedPrincipal.getName(), sessionId))
+             ? RESULT_DONE
+             : error(SMSCErrors.error.aliases.alreadyExistsAddress, alias);
     } catch (Throwable t) {
       logger.error("Couldn't add alias \"" + address + "\"-->\"" + alias + "\"", t);
       return error(SMSCErrors.error.aliases.cantAdd, alias);
     }
   }
 
-  /*************************** properties *********************************/
+  /**
+   * ************************ properties ********************************
+   */
 
   public String getMbSave()
   {
     return mbSave;
   }
 
-  public void setMbSave(String mbSave)
+  public void setMbSave(final String mbSave)
   {
     this.mbSave = mbSave;
   }
@@ -107,7 +106,7 @@ public class AliasesAdd extends SmscBean
     return mbCancel;
   }
 
-  public void setMbCancel(String mbCancel)
+  public void setMbCancel(final String mbCancel)
   {
     this.mbCancel = mbCancel;
   }
@@ -117,7 +116,7 @@ public class AliasesAdd extends SmscBean
     return alias;
   }
 
-  public void setAlias(String alias)
+  public void setAlias(final String alias)
   {
     this.alias = alias;
   }
@@ -127,7 +126,7 @@ public class AliasesAdd extends SmscBean
     return address;
   }
 
-  public void setAddress(String address)
+  public void setAddress(final String address)
   {
     this.address = address;
   }
@@ -137,7 +136,7 @@ public class AliasesAdd extends SmscBean
     return hide;
   }
 
-  public void setHide(boolean hide)
+  public void setHide(final boolean hide)
   {
     this.hide = hide;
   }

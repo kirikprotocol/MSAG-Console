@@ -3,51 +3,81 @@ package ru.novosoft.smsc.admin.journal;
 import java.text.DateFormat;
 import java.util.*;
 
+
 /**
- * Created by IntelliJ IDEA.
- * User: igork
- * Date: 04.11.2003
- * Time: 17:01:07
+ * Created by IntelliJ IDEA. User: igork Date: 04.11.2003 Time: 17:01:07
  */
 public class Action
 {
   private final String user;
   private final String sessionId;
-  private final byte subjectType;
-  private final String subjectId;
-  private final byte action;
+  private byte subjectType ;
+  private String subjectId ;
+  private byte action ;
   private final Date timestamp;
   private final Map additional;
 
   private static final DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
 
-  public Action(String user, String sessionId, byte subjectType, String subjectId, byte action, Date timestamp, Map additional)
+  public Action(final String user, final String sessionId)
   {
-    this.user = user == null ? "" : user;
-    this.sessionId = sessionId == null ? "" : sessionId;
+    this(user, sessionId, "[unknown]");
+  }
+
+  public Action(final String user, final String sessionId, final String subjectId)
+  {
+    this(user, sessionId, subjectId, new HashMap());
+  }
+
+  public Action(final String user, final String sessionId, final String subjectId, final String additionalKey, final String additionalValue)
+  {
+    this(user, sessionId, subjectId, new HashMap());
+    additional.put(additionalKey, additionalValue);
+  }
+
+  public Action(final String user, final String sessionId, final String subjectId, final Map additional)
+  {
+    this(user, sessionId, SubjectTypes.TYPE_UNKNOWN, subjectId, Actions.ACTION_UNKNOWN, additional);
+  }
+
+  protected Action(final String user, final String sessionId, final byte subjectType, final String subjectId, final byte action)
+  {
+    this(user, sessionId, subjectType, subjectId, action, new HashMap());
+  }
+
+  protected Action(final String user, final String sessionId, final byte subjectType, final String subjectId, final byte action, final String additionalKey, final String additionalValue)
+  {
+    this(user, sessionId, subjectType, subjectId, action, new HashMap());
+    additional.put(additionalKey, additionalValue);
+  }
+
+  protected Action(final String user, final String sessionId, final byte subjectType, final String subjectId, final byte action, final Map additional)
+  {
+    this.user = null == user ? "" : user;
+    this.sessionId = null == sessionId ? "" : sessionId;
+    this.subjectId = null == subjectId ? "<unknown>" : subjectId;
+    this.timestamp = new Date();
+    this.additional = null == additional ? new HashMap() : additional;
     this.subjectType = subjectType;
-    this.subjectId = subjectId == null ? "<unknown>" : subjectId;
     this.action = action;
-    this.timestamp = timestamp == null ? new Date() : timestamp;
-    this.additional = additional == null ? new HashMap() : additional;
   }
 
   public String toString()
   {
-    StringBuffer sb = new StringBuffer()
-            .append("Action [time:").append(dateFormat.format(timestamp))
-            .append(" user:").append(user)
-            .append(" session:").append(sessionId)
-            .append(" subjType:").append(SubjectTypes.typeToString(subjectType))
-            .append(" subjId:").append(subjectId)
-            .append(" action:").append(Actions.actionToString(action));
-    if (additional.size() > 0) {
+    final StringBuffer sb = new StringBuffer()
+        .append("Action [time:").append(dateFormat.format(timestamp))
+        .append(" user:").append(user)
+        .append(" session:").append(sessionId)
+        .append(" subjType:").append(SubjectTypes.typeToString(subjectType))
+        .append(" subjId:").append(subjectId)
+        .append(" action:").append(Actions.actionToString(action));
+    if (0 < additional.size()) {
       sb.append(" additional:[");
       for (Iterator i = additional.entrySet().iterator(); i.hasNext();) {
-        Map.Entry entry = (Map.Entry) i.next();
-        sb.append((String)entry.getKey());
+        final Map.Entry entry = (Map.Entry) i.next();
+        sb.append((String) entry.getKey());
         sb.append("=");
-        sb.append((String)entry.getValue());
+        sb.append((String) entry.getValue());
         if (i.hasNext())
           sb.append(", ");
       }
@@ -59,19 +89,19 @@ public class Action
 
   public String toJournalString()
   {
-    StringBuffer sb = new StringBuffer();
+    final StringBuffer sb = new StringBuffer();
     sb
-            .append(" user:").append(user)
-            .append(" ").append(Actions.actionToString(action))
-            .append(" ").append(SubjectTypes.typeToString(subjectType))
-            .append(" ").append(subjectId);
-    if (additional.size() > 0) {
+        .append(" user:").append(user)
+        .append(" ").append(Actions.actionToString(action))
+        .append(" ").append(SubjectTypes.typeToString(subjectType))
+        .append(" ").append(subjectId);
+    if (0 < additional.size()) {
       sb.append(" additional:[");
       for (Iterator i = additional.entrySet().iterator(); i.hasNext();) {
-        Map.Entry entry = (Map.Entry) i.next();
-        sb.append((String)entry.getKey());
+        final Map.Entry entry = (Map.Entry) i.next();
+        sb.append((String) entry.getKey());
         sb.append("=");
-        sb.append((String)entry.getValue());
+        sb.append((String) entry.getValue());
         if (i.hasNext())
           sb.append(", ");
       }
@@ -80,12 +110,12 @@ public class Action
     return sb.toString();
   }
 
-  public void setAdditionalValue(String key, String value)
+  public void setAdditionalValue(final String key, final String value)
   {
     additional.put(key, value);
   }
 
-  public String getAdditionalValue(String key)
+  public String getAdditionalValue(final String key)
   {
     return (String) additional.get(key);
   }
@@ -123,5 +153,20 @@ public class Action
   public Date getTimestamp()
   {
     return timestamp;
+  }
+
+  public void setSubjectType(final byte subjectType)
+  {
+    this.subjectType = subjectType;
+  }
+
+  public void setAction(final byte action)
+  {
+    this.action = action;
+  }
+
+  public void setSubjectId(String subjectId)
+  {
+    this.subjectId = subjectId;
   }
 }

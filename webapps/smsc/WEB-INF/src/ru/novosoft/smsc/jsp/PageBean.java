@@ -13,6 +13,7 @@ import ru.novosoft.smsc.admin.service.HostsManager;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.*;
+import java.security.Principal;
 
 public abstract class PageBean
 {
@@ -26,104 +27,104 @@ public abstract class PageBean
   protected List errors = null;
   protected SMSCAppContext appContext = null;
   protected HostsManager hostsManager = null;
-  protected java.security.Principal loginedPrincipal = null;
+  protected Principal loginedPrincipal = null;
   protected HttpSession session = null;
   protected String sessionId = null;
   protected UserPreferences preferences = null;
 
-  public int process(HttpServletRequest request)
+  public int process(final HttpServletRequest request)
   {
     this.errors = (List) request.getAttribute(Constants.SMSC_ERROR_MESSAGES_ATTRIBUTE_NAME);
-    if (errors == null) {
+    if (null == errors) {
       this.errors = new ArrayList();
       error(SMSCErrors.error.errorListNotInitialized);
     }
 
-    this.appContext = (ru.novosoft.smsc.jsp.SMSCAppContext) request.getAttribute("appContext");
-    if (this.appContext == null)
+    this.appContext = (SMSCAppContext) request.getAttribute("appContext");
+    if (null == this.appContext)
       return error(SMSCErrors.error.appContextNotInitialized);
 
     this.loginedPrincipal = request.getUserPrincipal();
-    if (this.appContext != null)
+    if (null != this.appContext)
       this.preferences = this.appContext.getUserPreferences(this.loginedPrincipal);
 
     session = request.getSession(false);
-    sessionId = session != null ? session.getId() : "unknown";
+    sessionId = null != session ? session.getId() : "unknown";
 
     return init(errors);
   }
 
-  protected int init(List errors)
+  protected int init(final List errors)
   {
     hostsManager = appContext.getHostsManager();
 
-    if (hostsManager == null)
+    if (null == hostsManager)
       return error(SMSCErrors.error.serviceManagerNotInitialized);
 
     return RESULT_OK;
   }
 
-  protected int error(String errorCode)
+  protected int error(final String errorCode)
   {
     return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_ERROR));
   }
 
-  protected int error(String errorCode, String param)
+  protected int error(final String errorCode, final String param)
   {
     return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_ERROR, param));
   }
 
-  protected int error(String errorCode, Throwable cause)
+  protected int error(final String errorCode, final Throwable cause)
   {
     return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_ERROR, cause));
   }
 
-  protected int error(String errorCode, String param, Throwable cause)
+  protected int error(final String errorCode, final String param, final Throwable cause)
   {
     return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_ERROR, param, cause));
   }
 
-  protected int warning(String errorCode)
+  protected int warning(final String errorCode)
   {
     return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_WARNING));
   }
 
-  protected int warning(String errorCode, String param)
+  protected int warning(final String errorCode, final String param)
   {
     return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_WARNING, param));
   }
 
-  protected int warning(String errorCode, Throwable cause)
+  protected int warning(final String errorCode, final Throwable cause)
   {
     return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_WARNING, cause));
   }
 
-  protected int warning(String errorCode, String param, Throwable cause)
+  protected int warning(final String errorCode, final String param, final Throwable cause)
   {
     return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_WARNING, param, cause));
   }
 
-  protected int message(String errorCode)
+  protected int message(final String errorCode)
   {
     return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_MESSAGE));
   }
 
-  protected int message(String errorCode, String param)
+  protected int message(final String errorCode, final String param)
   {
     return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_MESSAGE, param));
   }
 
-  protected int message(String errorCode, Throwable cause)
+  protected int message(final String errorCode, final Throwable cause)
   {
     return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_MESSAGE, cause));
   }
 
-  protected int message(String errorCode, String param, Throwable cause)
+  protected int message(final String errorCode, final String param, final Throwable cause)
   {
     return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_MESSAGE, param, cause));
   }
 
-  protected int _error(SMSCJspException e)
+  protected int _error(final SMSCJspException e)
   {
     errors.add(e);
     return RESULT_ERROR;
@@ -134,23 +135,23 @@ public abstract class PageBean
     return appContext;
   }
 
-  public java.security.Principal getLoginedPrincipal()
+  public Principal getLoginedPrincipal()
   {
     return loginedPrincipal;
   }
 
-  public void journalAppend(byte subjectType, String subjectId, byte action)
+  public void journalAppend(final byte subjectType, final String subjectId, final byte action)
   {
     appContext.getJournal().append(loginedPrincipal.getName(), sessionId, subjectType, subjectId, action);
   }
 
-  public void journalAppend(byte subjectType, String subjectId, byte action, Date timestamp, String additionalKey, String additionalValue)
+  public void journalAppend(final byte subjectType, final String subjectId, final byte action, final String additionalKey, final String additionalValue)
   {
-    appContext.getJournal().append(loginedPrincipal.getName(), sessionId, subjectType, subjectId, action, timestamp, additionalKey, additionalValue);
+    appContext.getJournal().append(loginedPrincipal.getName(), sessionId, subjectType, subjectId, action, additionalKey, additionalValue);
   }
 
-  public void journalAppend(byte subjectType, String subjectId, byte action, Date timestamp, Map additional)
+  public void journalAppend(final byte subjectType, final String subjectId, final byte action, final Map additional)
   {
-    appContext.getJournal().append(loginedPrincipal.getName(), sessionId, subjectType, subjectId, action, timestamp, additional);
+    appContext.getJournal().append(loginedPrincipal.getName(), sessionId, subjectType, subjectId, action, additional);
   }
 }

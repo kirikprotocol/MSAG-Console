@@ -119,7 +119,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
       loadLocaleMessages();
       createConnectionPool(webappConfig);
 
-      smsc = new Smsc(webappConfig.getString("smsc.host"), webappConfig.getInt("smsc.port"), webappConfig.getString("smsc.config folder"), connectionPool);
+      smsc = new Smsc(webappConfig.getString("smsc.host"), webappConfig.getInt("smsc.port"), webappConfig.getString("smsc.config folder"), connectionPool, this);
       smeManager = new SmeManagerImpl(smsc);
       routeSubjectManager = new RouteSubjectManagerImpl(smeManager);
       DaemonManager daemonManager = new DaemonManager(smeManager, webappConfig);
