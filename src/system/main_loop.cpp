@@ -163,7 +163,10 @@ void Smsc::mainLoop()
     try{
       cmd = src_proxy->getCommand();
       cmd.setProxy(src_proxy);
+      __trace2__("mainLoop: prio=%d",src_proxy->getPriority());
+      __require__(src_proxy->getPriority()>0);
       int prio=src_proxy->getPriority()/1024;
+      if(prio<0)prio=0;
       if(prio>=32)prio=31;
       cmd->set_priority(prio);
       cmd->sourceId=src_proxy->getSystemId();
@@ -218,7 +221,7 @@ void Smsc::mainLoop()
       }
       case __CMD__(HLRALERT):
       {
-        //alertAgent->putCommand(cmd);
+        alertAgent->putCommand(cmd);
         continue;
       }
     }
