@@ -9,8 +9,9 @@ namespace util{
 
 class Exception:public std::exception{
 public:
-  Exception(const char* msg):message(msg){}
-  virtual const char* what(){return message.c_str();}
+  Exception(const char* msg)throw():message(msg){}
+  virtual ~Exception()throw(){}
+  virtual const char* what()throw(){return message.c_str();}
 protected:
   std::string message;
 };
