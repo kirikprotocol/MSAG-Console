@@ -81,14 +81,14 @@ public:
 	TCResult* processIntermediateNotification(PduDeliverySm &pdu);
 	
 	//not implemented
-	virtual void processGenericNack(const PduGenericNack &pdu);
-	virtual void processDataSm(const PduDataSm &pdu);
-	virtual void processMultiResp(const PduMultiSmResp &pdu);
-	virtual void processReplaceSmResp(const PduReplaceSmResp &pdu);
-	virtual void processDataSmResp(const PduDataSmResp &pdu);
-	virtual void processQuerySmResp(const PduQuerySmResp &pdu);
-	virtual void processCancelSmResp(const PduCancelSmResp &pdu);
-	virtual void processAlertNotificatin(const PduAlertNotification &pdu);
+	virtual void processGenericNack(PduGenericNack &pdu);
+	virtual void processDataSm(PduDataSm &pdu);
+	virtual void processMultiResp(PduMultiSmResp &pdu);
+	virtual void processReplaceSmResp(PduReplaceSmResp &pdu);
+	virtual void processDataSmResp(PduDataSmResp &pdu);
+	virtual void processQuerySmResp(PduQuerySmResp &pdu);
+	virtual void processCancelSmResp(PduCancelSmResp &pdu);
+	virtual void processAlertNotificatin(PduAlertNotification &pdu);
 
 	/**
 	 * Отсутствие внутренних ошибок в smpp receiver.
