@@ -1006,13 +1006,13 @@ static bool SendSms(MapDialog* dialog){
   if( dialog->version > 1 ) {
     if( dialog->chain.size() != 0 ) {
       mms = TRUE;
-    } else if( dialog->sms.get()->hasBinProperty(Tag::SMSC_CONCATINFO) ) {
+    }/* else if( dialog->sms.get()->hasBinProperty(Tag::SMSC_CONCATINFO) ) {
       unsigned int ciLen;
       ConcatInfo *ci=(ConcatInfo*)dialog->sms.get()->getBinProperty(Tag::SMSC_CONCATINFO,&ciLen);
       if( dialog->sms.get()->getConcatSeqNum() < ci->num-1 ) {
         mms = TRUE;
       }
-    }
+    }*/
   }
   if ( dialog->version < 2 ) mms = false;
 //  mms = false;
