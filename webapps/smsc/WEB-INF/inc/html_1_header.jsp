@@ -106,6 +106,10 @@
 			main_menu_submenu_item(out, "/dl",                "MENU0_DL",            "Distribution lists");
       main_menu_submenu_i_fu(out, "/dl/principals.jsp", "MENU0_DL_PRINCIPALS", "Distribution lists - principals");
 			main_menu_end_item(out);
+
+			main_menu_begin_item(out, "MENU0_Help_menu", "MENU0_Help_submenu", "Help");
+			main_menu_submenu_i_fu(out, "/admin_guide.jsp",            "MENU0_ADMINGUIDE",        "Administration Guide");
+			main_menu_end_item(out);
 			%>
 			<td width="100%">&nbsp;</td>
 			<td><a ID=MENU0_LOGOUT href="logout.jsp">Logout</a></td>
