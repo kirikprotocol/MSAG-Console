@@ -127,6 +127,14 @@ function validateField_positive(elem)
 		: true;
 }
 
+function validateField_unsigned(elem)
+{
+	var r = RegExp("^d+$");
+	return elem.value == null || elem.value.trim().match(r) == null
+		? validationError(elem, "value must be decimal without sign")
+		: true;
+}
+
 function validateField_address(elem)
 {
 	if (elem.value == null || elem.value.length == 0)
@@ -156,6 +164,7 @@ function validateField(elem)
 		case "email": return validateField_email(elem);
 		case "positive": return validateField_positive(elem);
 		case "address": return validateField_address(elem);
+		case "unsigned": return validateField_unsigned(elem);
 	}
 	alert("unknown validation type:"+elem.validation);
 	return false;
