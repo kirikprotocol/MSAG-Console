@@ -51,6 +51,7 @@ public:
 
   void putIncomingCommand(const SmscCommand& cmd)
   {
+    __trace2__("MAPPROXY::putIncomingCommand");
     mutex.Lock();
     if(inqueue.Count()==MAP_PROXY_QUEUE_LIMIT)
     {
@@ -60,13 +61,16 @@ public:
     inqueue.Push(cmd);
     mutex.Unlock();
     managerMonitor->Signal();
+    __trace2__("MAPPROXY::putIncomingCommand OK");
   }
 
   SmscCommand getOutgoingCommand()
   {
+    __trace2__("MAPPROXY::getOutgoingCommand");
     MutexGuard g(mutex);
     SmscCommand cmd;
     outqueue.Shift(cmd);
+    __trace2__("MAPPROXY::getOutgoingCommand OK");
     return cmd;
   }
 
