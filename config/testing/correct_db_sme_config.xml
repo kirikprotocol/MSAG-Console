@@ -150,7 +150,9 @@ $$string export = "str" default="xxx"$$
 <param name="output" type="string">
 job-name: '$$string import="job-name"$$'
 from-address: /$$string import="from-address"$$/
+from-address-unified: /$$string import="from-address-unified"$$/
 to-address: \\$$string import="to-address"$$\\
+to-address-unified: \\$$string import="to-address-unified"$$\\
 string: \"$$string import="str"$$\",
 string_right : _$$string import="str" length=20 align="right"$$;
 string_center: -$$string import="str" length=20 align="center"$$.
@@ -333,7 +335,7 @@ $$int8 arg=1 default=80$$
 $$int16 arg=2 default=160$$
 $$int32 arg=3 default=320$$
 $$int64 arg=4 default=640$$
-$$float arg=5 default=160.16$$
+$$float arg=5 default=160.160000$$
 $$double arg=6 default=320.32$$
 $$long-double arg=7 default=640.64$$
 $$string arg=9 default="Empty"$$
@@ -360,7 +362,7 @@ $$int8 arg=1 default=80$$
 $$int16 arg=2 default=160$$
 $$int32 arg=3 default=320$$
 $$int64 arg=4 default=640$$
-$$float arg=5 default=160.16$$
+$$float arg=5 default=160.160000$$
 $$double arg=6 default=320.32$$
 $$long-double arg=7 default=640.64$$
 $$string arg=9 default="Empty"$$
