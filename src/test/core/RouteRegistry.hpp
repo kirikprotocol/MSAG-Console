@@ -3,6 +3,7 @@
 
 #include "sms/sms.h"
 #include "smeman/smetypes.h"
+#include "router/route_types.h"
 #include "RouteUtil.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include <map>
@@ -16,32 +17,55 @@ using std::map;
 using std::vector;
 using smsc::sms::Address;
 using smsc::smeman::SmeSystemId;
+using smsc::router::RouteId;
 using smsc::test::sms::ltAddress;
 
 class RouteRegistry
 {
 public:
-	RouteRegistry();
+	typedef map<const RouteId, const TestRouteData*> RouteMap;
+	class RouteIterator
+	{
+		RouteMap::iterator it, end;
+	public:
+		RouteIterator(RouteMap::iterator b, RouteMap::iterator e);
+		bool hasNext() const;
+		const TestRouteData* operator*() const;
+		const TestRouteData* operator->() const;
+		RouteIterator& operator++();
+		RouteIterator operator++(int);
+	};
+
+	RouteRegistry(){}
+
 	virtual ~RouteRegistry();
 
 	void putRoute(const TestRouteData& data);
 	
-	/**
-	 * @return адрес должен удал€тьс€ вызывающей стороной.
-	 */
-	const Address* getRandomReachableDestAddress(const Address& origAddr);
+	const RouteInfo* getRoute(RouteId routeId) const;
+
+	RouteIterator* iterator();
+
+	int size() const;
 
 	/**
 	 * @return адрес должен удал€тьс€ вызывающей стороной.
 	 */
-	const Address* getRandomNonReachableDestAddress(const Address& origAddr);
+	const Address* getRandomReachableDestAddress(const Address& origAddr) const;
 
-	const SmeSystemId* lookup(const Address& origAddr, const Address& destAddr);
+	/**
+	 * @return адрес должен удал€тьс€ вызывающей стороной.
+	 */
+	const Address* getRandomNonReachableDestAddress(const Address& origAddr) const;
+
+	const vector<uint32_t> lookup(const Address& origAddr,
+		const Address& destAddr) const;
 
 private:
 	typedef vector<const TestRouteData*> RouteList;
 	typedef map<const Address, RouteList, ltAddress> AddressMap;
 	AddressMap addrMap;
+	RouteMap routeMap;
 };
 
 }
