@@ -1330,14 +1330,23 @@ static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
     ussdEncoding = 0x44;
   }
   if( smsc::logger::_map_cat->isDebugEnabled() ) {
-    char *text = new char[bytes*4+1];
+    char *buf = new char[text_len*4+1];
     int k = 0;
     for ( int i=0; i<bytes; i++){
-      k+=sprintf(text+k,"%02x ",(unsigned)ussdString.ussdStr[i]);
+      k+=sprintf(buf+k,"%02x ",(unsigned)text[i]);
     }
-    text[k]=0;
-    __map_trace2__("USSD string enc=0x%02X ussdenc=0x%02X dump: %s",encoding,ussdEncoding,text);
-    delete text;
+    buf[k]=0;
+    __map_trace2__("USSD orig string enc=0x%02X dump: %s",encoding,buf);
+    delete buf;
+
+    buf = new char[bytes*4+1];
+    k = 0;
+    for ( int i=0; i<bytes; i++){
+      k+=sprintf(buf+k,"%02x ",(unsigned)ussdString.ussdStr[i]);
+    }
+    buf[k]=0;
+    __map_trace2__("USSD string ussdenc=0x%02X dump: %s",ussdEncoding,buf);
+    delete buf;
   }
 
   ussdString.ussdStrLen = bytes;
