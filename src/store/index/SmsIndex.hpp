@@ -158,7 +158,7 @@ public:
     cache.First();
     while(cache.Next(k,v))
     {
-      v->ds.Discard();
+      if(v->usedInLastTransaction)v->ds.Discard();
     }
   }
 

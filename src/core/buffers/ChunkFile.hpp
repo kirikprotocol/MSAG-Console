@@ -192,7 +192,15 @@ public:
     if(readonly)
       f.ROpen(file);
     else
+    {
+      std::string old=file;
+      old+=".old";
+      if(!File::Exists(file) && File::Exists(old.c_str()))
+      {
+        rename(old.c_str(),file);
+      }
       f.RWOpen(file);
+    }
     f.SetUnbuffered();
     isCached=cached;
     if(cached)f.OpenInMemory(0);

@@ -225,7 +225,13 @@ public:
     if(readonly)
       f.ROpen(file);
     else
+    {
+      if(!File::Exists(name.c_str()) && File::Exists((name+".old").c_str()))
+      {
+        rename((name+".old").c_str(),name.c_str());
+      }
       f.RWOpen(file);
+    }
     name=file;
     isCached=cached;
     isReadOnly=readonly;

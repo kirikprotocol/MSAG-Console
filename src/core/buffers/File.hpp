@@ -176,9 +176,11 @@ public:
       remove(tmp.c_str());
       throw FileException(FileException::errWriteFailed,filename.c_str());
     }
-    remove(filename.c_str());
+    std::string old=filename+".old";
     fclose(f);
+    rename(filename.c_str(),old.c_str());
     rename(tmp.c_str(),filename.c_str());
+    remove(old.c_str());
     f=g;
     fseek(f,0,SEEK_SET);
   }

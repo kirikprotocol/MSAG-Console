@@ -51,6 +51,15 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
 
   bool cached=true;
 
+  {
+    string idxfile=path;
+    idxfile+="smsid.idx";
+    if(!File::Exists(idxfile.c_str()) && File::Exists((idxfile+".old").c_str()))
+    {
+      rename((idxfile+".old").c_str(),idxfile.c_str());
+    }
+  }
+
   if(!File::Exists((path+"smsid.idx").c_str()))
   {
     ds.CreateNew();
