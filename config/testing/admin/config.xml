@@ -2,18 +2,22 @@
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 
 <config>
+	<section name="system">
+		<param name="webapp folder" type="string">/export/home/bryz/install/smsc_webapp</param>
+		<param name="users" type="string">users.xml</param>
+	</section>
 	<section name="daemons">
 		<section name="smsc">
 			<param name="port" type="int">15771</param>
 		</section>
 	</section>
-	<section name="system">
-		<param name="users" type="string">users.xml</param>
-		<param name="webapp folder" type="string">/export/home/bryz/install/smsc_webapp</param>
-	</section>
 	<section name="smsc">
 		<param name="host" type="string">smsc</param>
 		<param name="port" type="int">15871</param>
+	</section>
+	<section name="perfmon">
+		<param name="appletport" type="int">15071</param>
+		<param name="smscport" type="int">15171</param>
 	</section>
 	<section name="profiler">
 		<section name="jdbc">
@@ -23,8 +27,9 @@
 			<param name="driver" type="string">oracle.jdbc.driver.OracleDriver</param>
 		</section>
 	</section>
-	<section name="perfmon">
-		<param name="appletport" type="int">15071</param>
-		<param name="smscport" type="int">15171</param>
+	<section name="console">
+		<param name="enabled" type="bool">true</param>
+		<param name="humanPort" type="int">15571</param>
+		<param name="scriptPort" type="int">15471</param>
 	</section>
 </config>
