@@ -16,7 +16,7 @@
 	<section name="WSme">
 
 		<param name="SvcType" type="string">WSme</param>
-		<param name="ProtocolId" type="int">333</param>
+		<param name="ProtocolId" type="int">33</param>
         
 
 		<section name="ThreadPool">

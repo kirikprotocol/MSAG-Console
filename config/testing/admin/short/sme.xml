@@ -71,6 +71,20 @@
 	<param name="disabled" value="false"/>
 	<param name="mode" value="trx"/>
 </smerecord>
+<smerecord type="smpp" uid="wsme">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value="wsme"/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="-1263206400"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="16"/>
+	<param name="priority" value="4609"/>
+	<param name="disabled" value="false"/>
+	<param name="mode" value="trx"/>
+</smerecord>
 <smerecord type="smpp" uid="sme00">
 	<param name="typeOfNumber" value="0"/>
 	<param name="numberingPlan" value="0"/>
