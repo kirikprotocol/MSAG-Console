@@ -22,12 +22,14 @@
   <target name="distr" depends="build" description="installs the webapp">
     <ant antfile="../make_esme.xml" target="distr"/>
     <copy todir="${exploded}/bin" file="${BUILD_BIN}/${esme_bin_path}/mdAgent" />
+    <chmod file="${exploded}/bin/mdAgent" perm="775"/>  
     <copy todir="${exploded}/bin" file="${SMSC_DIR}/src/emailsme/mailreaper.pl" />
   </target>
 
   <target name="update" depends="build" description="update existing installation">
     <ant antfile="../make_esme.xml" target="update"/>
     <copy todir="${DISTR_DIR}/services/${esme_name}/bin" file="${BUILD_BIN}/${esme_bin_path}/mdAgent" />
+    <chmod file="${DISTR_DIR}/services/${esme_name}/bin/mdAgent" perm="775"/>
     <copy todir="${DISTR_DIR}/services/${esme_name}/bin" file="${SMSC_DIR}/src/emailsme/mailreaper.pl" />
   </target>
 
