@@ -22,6 +22,7 @@ TestConfig::TestConfig()
 	//адреса
 	addrMap["smscAddr"] = ".3.5.123abc";
 	addrMap["profilerAddr"] = ".3.5.456def";
+	addrMap["dbSmeAlias"] = ".2.3.9664jgch";
 	//ресурсы
 	strMap["cmdRespReportNone"] = 
 		"Now you will receive only requested delivery reports";
