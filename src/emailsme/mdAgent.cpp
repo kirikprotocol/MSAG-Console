@@ -150,6 +150,7 @@ int main(int argc,char* argv[])
     case StatusCodes::STATUS_CODE_NOUSER:return(EX_NOUSER);
     case StatusCodes::STATUS_CODE_TEMPORARYERROR:return(EX_TEMPFAIL);
   }
+  s.Abort();
   LOG(("OK\n"));
   return(EX_OK); // message sent successfully
 }

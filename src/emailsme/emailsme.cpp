@@ -13,7 +13,9 @@
 #include <signal.h>
 #include "db/DataSource.h"
 #include "db/DataSourceLoader.h"
+#include "util/templates/Formatters.h"
 
+#include "emailsme/util/PipedChild.hpp"
 
 using namespace smsc::sms;
 using namespace smsc::sme;
@@ -22,6 +24,7 @@ using namespace smsc::util;
 using namespace smsc::util::regexp;
 using namespace smsc::core::threads;
 using namespace smsc::core::synchronization;
+using namespace smsc::util::templates;
 
 using smsc::core::buffers::Hash;
 using smsc::core::buffers::Array;
@@ -29,6 +32,102 @@ using smsc::core::buffers::Array;
 using namespace smsc::emailsme;
 
 using namespace std;
+
+FILE *emlIn;
+FILE *emlOut;
+
+class EmptyGetAdapter:public GetAdapter{
+public:
+
+  virtual bool isNull(const char* key)
+      throw(AdapterException)
+  {
+    return false;
+  }
+
+  virtual const char* getString(const char* key)
+      throw(AdapterException)
+  {
+    return "";
+  }
+
+  virtual int8_t getInt8(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual int16_t getInt16(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual int32_t getInt32(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual int64_t getInt64(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+
+  virtual uint8_t getUint8(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual uint16_t getUint16(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual uint32_t getUint32(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual uint64_t getUint64(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+
+  virtual float getFloat(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual double getDouble(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual long double getLongDouble(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+
+  virtual time_t getDateTime(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+};
+
 
 namespace cfg{
  string sourceAddress;
@@ -43,7 +142,9 @@ namespace cfg{
  int defaultDailyLimit;
  int annotationSize;
  string maildomain;
+ string mailstripper;
  smsc::db::DataSource *dataSource;
+ OutputFormatter *msgFormat;
 };
 
 class ConnectionGuard{
@@ -198,7 +299,7 @@ void ReplaceString(string& s,const char* what,const char* to)
   }
 }
 
-int SendEMail(const string& from,const Array<string>& to,const string& subj,const string& body)
+int SendEMail(const string& from,const Array<string>& to,const string& subj,const string& body,bool rawMsg=false)
 {
   Socket s;
   if(s.Init(cfg::smtpHost.c_str(),cfg::smtpPort,0)==-1)
@@ -223,16 +324,19 @@ int SendEMail(const string& from,const Array<string>& to,const string& subj,cons
   }
   s.Puts("DATA\r\n");
   CheckCode(s,3);
-  s.Printf("From: %s\r\n",from.c_str());
-  string addr;
-  for(int i=0;i<to.Count();i++)
+  if(!rawMsg)
   {
-    addr+=to[i];
-    if(i!=to.Count()-1)addr+=',';
+    s.Printf("From: %s\r\n",from.c_str());
+    string addr;
+    for(int i=0;i<to.Count();i++)
+    {
+      addr+=to[i];
+      if(i!=to.Count()-1)addr+=',';
+    }
+    s.Printf("To: %s\r\n",addr.c_str());
+    if(subj.length())s.Printf("Subject: %s\r\n",subj.c_str());
+    s.Printf("\r\n");
   }
-  s.Printf("To: %s\r\n",addr.c_str());
-  if(subj.length())s.Printf("Subject: %s\r\n",subj.c_str());
-  s.Printf("\r\n");
   if(s.WriteAll(body.c_str(),body.length())==-1)throw Exception("Failed to write body");
   s.Puts("\r\n.\r\n");
   CheckCode(s,250);
@@ -379,7 +483,7 @@ void IncUsageCounter(const string& address)
 
 int ProcessMessage(const char *msg,int len)
 {
-  string line,name,value,body,from,to,subj;
+  string line,name,value,from,to;
   bool inheader=true;
   int pos=0;
   for(;;)
@@ -411,32 +515,56 @@ int ProcessMessage(const char *msg,int len)
         if(to.length()==0)return StatusCodes::STATUS_CODE_INVALIDMSG;
         continue;
       }
-      if(name=="Subject")
-      {
-        subj=value;
-        continue;
-      }
       continue;
     }
-    body+=(body.length()?"\n":"")+line;
+    break;
   }
-  if(from.length()==0 || to.length()==0)return StatusCodes::STATUS_CODE_INVALIDMSG;
-  string text=from;
-  if(subj.length())
-  {
-    text+="##";
-    text+=subj;
-    text+='#';
-  }
-  else text+=" ";
 
-  if(body.length()<cfg::annotationSize)
+  if(!util::childRunning)
   {
-    text+=body;
-  }else
+    if(emlIn)fclose(emlIn);
+    if(emlOut)fclose(emlOut);
+    if(util::ForkPipedCmd(cfg::mailstripper.c_str(),emlIn,emlOut)<=0)
+    {
+      return StatusCodes::STATUS_CODE_UNKNOWNERROR;
+    }
+  };
+  __trace2__("write msg size:%d",len);
+  fprintf(emlOut,"%d\n",len);fflush(emlOut);
+  __trace2__("write msg");
+  int sz=0;
+  while(sz<len)
   {
-    text+=body.substr(0,cfg::annotationSize);
+    int wr=fwrite(msg,1,len,emlOut);fflush(emlOut);
+    if(wr<=0)
+    {
+      return StatusCodes::STATUS_CODE_UNKNOWNERROR;
+    }
+    sz+=wr;
   }
+  __trace__("read resp len");
+  char buf[16];
+  if(!fgets(buf,sizeof(buf),emlIn))
+  {
+    return StatusCodes::STATUS_CODE_UNKNOWNERROR;
+  }
+  __trace2__("resp len=%d",len);
+  len=atoi(buf);
+  auto_ptr<char> newmsg(new char[len+1]);
+
+  sz=0;
+  while(sz<len)
+  {
+    int rv=fread(newmsg.get(),1,len-sz,emlIn);
+    if(rv==0 || rv==-1)return StatusCodes::STATUS_CODE_UNKNOWNERROR;
+    sz+=rv;
+  }
+  newmsg.get()[len]=0;
+
+  __trace2__("newmsg:%s",newmsg.get());
+
+  //cfg::annotationSize
+
 
   SMS sms;
   sms.setOriginatingAddress(cfg::sourceAddress.c_str());
@@ -448,12 +576,51 @@ int ProcessMessage(const char *msg,int len)
     try{
       Array<string> to;
       to.Push(fwd);
-      SendEMail(from,to,subj,body);
+      string body(msg,len);
+      SendEMail(from,to,"",body,true);
     }catch(exception& e)
     {
       __warning2__("Failed to forward msg to %s:%s",fwd.c_str(),e.what());
     }
   }
+
+  pos=0;
+  string subj;
+  GetNextLine(newmsg.get(),len,pos,from);
+  GetNextLine(newmsg.get(),len,pos,subj);
+  string text=newmsg.get()+pos;
+
+  ContextEnvironment ce;
+  EmptyGetAdapter ga;
+
+  int fldlen=subj.length()+from.length()+to.length();
+  if(text.length()>cfg::annotationSize-fldlen)
+  {
+    text=text.substr(0,cfg::annotationSize-fldlen);
+  }
+
+  pos=0;
+  while((pos=text.find("\"",pos))!=string::npos)
+  {
+    text.at(pos)='\'';
+  }
+  pos=0;
+  while((pos=subj.find("\"",pos))!=string::npos)
+  {
+    subj.at(pos)='\'';
+  }
+
+  ce.exportStr("from",ExtractEmail(from).c_str());
+  ce.exportStr("to",to.c_str());
+  ce.exportStr("subj",subj.c_str());
+  ce.exportStr("body",text.c_str());
+
+  text="";
+  cfg::msgFormat->format(text,ga,ce);
+
+  __trace2__("result:%s",text.c_str());
+
+
 
   sms.setDestinationAddress(dst.c_str());
   char msc[]="";
@@ -465,9 +632,18 @@ int ProcessMessage(const char *msg,int len)
   sms.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,cfg::protocolId);
 
   sms.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS,0);
-  sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
-  sms.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,text.c_str(),text.length());
-  sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,text.length());
+  if(hasHighBit(text.c_str(),text.length()))
+  {
+    auto_ptr<short> ucs2(new short[text.length()+1]);
+    ConvertMultibyteToUCS2(text.c_str(),text.length(),ucs2.get(),(text.length()+1)*2,CONV_ENCODING_CP1251);
+    sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::UCS2);
+    sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,(char*)ucs2.get(),text.length()*2);
+  }else
+  {
+    sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
+    sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,text.c_str(),text.length());
+  }
+  //sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,text.length());
 
   PduSubmitSm sm;
   sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
@@ -595,29 +771,44 @@ int main(int argc,char* argv[])
 
   cfg::maildomain=cfgman.getString("mail.domain");
 
+  Socket srv;
+
+  if(srv.InitServer(cfgman.getString("listener.host"),cfgman.getInt("listener.port"),0,0)==-1)
+  {
+    __warning2__("emailsme: Failed to init listener at %s:%d",cfgman.getString("listener.host"),cfgman.getInt("listener.port"));
+    return -1;
+  };
+  if(srv.StartServer()==-1)
+  {
+    __warning2__("Failed to start listener");
+    return -1;
+  };
+
+
+  cfg::mailstripper=cfgman.getString("mail.stripper");
+  if(util::ForkPipedCmd(cfg::mailstripper.c_str(),emlIn,emlOut)<=0)
+  {
+    __warning2__("Failed to execute mail stripper:%s",strerror(errno));
+    fprintf(stderr,"Failed to execute mail stripper:%s",strerror(errno));
+    return -1;
+  }
+
+  cfg::msgFormat=new OutputFormatter(cfgman.getString("mail.format"));
+
   cfg::defaultDailyLimit=cfgman.getInt("defaults.dailyLimit");
   cfg::annotationSize=cfgman.getInt("defaults.annotationSize");
+
+  __trace2__("defaults.annotationSize:%d",cfg::annotationSize);
 
   MyListener lst;
   SmppSession ss(cfg,&lst);
   cfg::tr=ss.getSyncTransmitter();
   cfg::sourceAddress=cfgman.getString("smpp.sourceAddress");
   lst.setTrans(cfg::tr);
-  Socket srv;
   XBuffer buf;
 
   while(!cfg::stopSme)
   {
-    if(srv.InitServer(cfgman.getString("listener.host"),cfgman.getInt("listener.port"),0)==-1)
-    {
-      __warning2__("emailsme: Failed to init listener");
-      return -1;
-    };
-    if(srv.StartServer()==-1)
-    {
-      __warning2__("Failed to start listener");
-      return -1;
-    };
     for(;;)
     {
       if(cfg::stopSme)break;
@@ -634,32 +825,37 @@ int main(int argc,char* argv[])
     for(;;)
     {
       __trace__("Waiting for connection");
-      auto_ptr<Socket> clnt(srv.Accept());
-      if(!clnt.get())break;
-      int sz;
-      clnt->setTimeOut(10);
-      __trace__("Got connection");
-      if(clnt->ReadAll((char*)&sz,4)==-1)continue;
-      sz=ntohl(sz);
-      __trace2__("Message size:%d",sz);
-      buf.setSize(sz);
-      if(clnt->ReadAll(buf.buffer,sz)==-1)continue;
-      __trace__("Processing message");
-      int retcode;
-      try{
-        retcode=ProcessMessage(buf.buffer,sz);
-      }catch(exception& e)
       {
-        __warning2__("process message failed:%s",e.what());
-        retcode=StatusCodes::STATUS_CODE_UNKNOWNERROR;
+        auto_ptr<Socket> clnt(srv.Accept());
+        if(!clnt.get())break;
+        int sz;
+        clnt->setTimeOut(10);
+        __trace__("Got connection");
+        if(clnt->ReadAll((char*)&sz,4)==-1)continue;
+        sz=ntohl(sz);
+        __trace2__("Message size:%d",sz);
+        buf.setSize(sz+1);
+        if(clnt->ReadAll(buf.buffer,sz)==-1)continue;
+        __trace__("Processing message");
+        int retcode;
+        try{
+          buf.buffer[sz]=0;
+          retcode=ProcessMessage(buf.buffer,sz);
+        }catch(exception& e)
+        {
+          __warning2__("process message failed:%s",e.what());
+          retcode=StatusCodes::STATUS_CODE_UNKNOWNERROR;
+        }
+        __trace2__("Processing finished, code=%d",retcode);
+        retcode=htonl(retcode);
+        clnt->WriteAll(&retcode,4);
       }
-      __trace2__("Processing finished, code=%d",retcode);
-      retcode=htonl(retcode);
-      clnt->WriteAll(&retcode,4);
     }
     ss.close();
-    srv.Close();
   }
+  __trace__("exiting");
+  //srv.Close();
+  srv.Abort();
   }catch(exception& e)
   {
     __warning2__("Top level exception:%s",e.what());
@@ -668,5 +864,7 @@ int main(int argc,char* argv[])
   {
     __warning2__("Top level exception:unknown");
   }
+  if(emlIn)fclose(emlIn);
+  if(emlOut)fclose(emlOut);
   return 0;
 }
