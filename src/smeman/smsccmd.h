@@ -731,6 +731,23 @@ public:
       PduXSm* xsm = reinterpret_cast<PduXSm*>(pdu);
       (SMS*)_cmd->dta =  new SMS;
       fetchSmsFromSmppPdu(xsm,(SMS*)(_cmd->dta));
+      SMS &s=*((SMS*)_cmd->dta);
+      if(s.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
+      {
+        unsigned len;
+        const unsigned char* data;
+        if(s.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+        {
+          data=(const unsigned char*)s.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+        }else
+        {
+          data=(const unsigned char*)s.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+        }
+        if(len==0 || *data>len || *data>s.getIntProperty(Tag::SMPP_SM_LENGTH))
+        {
+          throw Exception("SmscCommand: Invalid pdu (udhi length > message length)");
+        }
+      }
       //delete (SMS*)_cmd; _cmd = 0;
       goto end_construct;
     }
