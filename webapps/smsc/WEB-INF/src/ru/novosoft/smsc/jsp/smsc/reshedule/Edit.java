@@ -37,6 +37,9 @@ public class Edit extends Body {
       }
     }
 
+    if (editKey == null)
+      editKey = "";
+
     return result;
   }
 
@@ -56,7 +59,7 @@ public class Edit extends Body {
 
   private int save()
   {
-    if (!oldShedule.equals(getReshedule()) && isReshedulePresent())
+    if (!isDefaultReshedule() && !oldShedule.equals(getReshedule()) && isReshedulePresent())
       return error(SMSCErrors.error.smsc.reshedule.resheduleAlreadyPresent, getReshedule());
 
     try {

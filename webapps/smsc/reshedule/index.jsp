@@ -62,10 +62,21 @@ function clickEdit(value)
   return false;
 }
 </script>
-<%final int WIDTH = 1;%>
+<%final int WIDTH = 1;
+  String defaultReshedule = bean.getDefaultReshedule();
+  if (defaultReshedule == null || defaultReshedule.trim().length() == 0)
+    defaultReshedule = "&lt;not specified&gt;";
+%>
 <div class=page_subtitle>Rescheduling policies</div><br>
 <table class=list>
 <col width=1px>
+<tr class=row0>
+  <td>&nbsp;</td>
+  <td><a href="#" onClick="return clickEdit('<%=bean.getDefaultResheduleName()%>');"><%=defaultReshedule%></a></td>
+</tr>
+<tr  class=row1>
+<td>&nbsp;</td>
+<td>Default resheduling policy</td></tr>
 <%
   for (Iterator i = bean.getReshedules().iterator(); i.hasNext();) {
     String reshedule = (String) i.next();

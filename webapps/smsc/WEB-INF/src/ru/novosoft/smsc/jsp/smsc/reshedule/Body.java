@@ -17,6 +17,7 @@ public class Body extends PageBean {
   private String[] checkedErrs = null;
   protected Set checkedErrsSet = new HashSet();
   private Reshedules reshedules = null;
+  private boolean defaultReshedule = false;
 
   protected int init(List errors)
   {
@@ -41,18 +42,23 @@ public class Body extends PageBean {
 
   protected void getErrCodesFromConfig() throws AdminException
   {
-    checkedErrsSet.addAll(reshedules.getErrCodes(reshedule));
+    if (!defaultReshedule)
+      checkedErrsSet.addAll(reshedules.getErrCodes(reshedule));
   }
 
 
   protected void putSheduleToConfig() throws AdminException
   {
-    reshedules.putShedule(reshedule, checkedErrsSet);
+    if (defaultReshedule)
+      reshedules.setDefaultReshedule(reshedule);
+    else
+      reshedules.putShedule(reshedule, checkedErrsSet);
   }
 
   protected void removeShedule(String sheduleString)
   {
-    reshedules.removeShedule(sheduleString);
+    if (!defaultReshedule)
+      reshedules.removeShedule(sheduleString);
   }
 
   public boolean isErrChecked(String errCode)
@@ -67,7 +73,9 @@ public class Body extends PageBean {
 
   public void setReshedule(String reshedule)
   {
-    this.reshedule = reshedule;
+    logger.debug("Set reshedule: "+ reshedule);
+    defaultReshedule = Reshedules.DEFAULT_RESHEDULE_NAME.equals(reshedule);
+    this.reshedule = defaultReshedule ? reshedules.getDefaultReshedule() : reshedule;
   }
 
   public String[] getCheckedErrs()
@@ -98,5 +106,20 @@ public class Body extends PageBean {
   public boolean isErrorAssigned(String errorCode)
   {
     return reshedules.isErrorAssigned(errorCode);
+  }
+
+  public boolean isDefaultReshedule()
+  {
+    return defaultReshedule;
+  }
+
+  public void setDefaultReshedule(boolean defaultReshedule)
+  {
+    this.defaultReshedule = defaultReshedule;
+  }
+
+  public String getDefaultResheduleName()
+  {
+    return Reshedules.DEFAULT_RESHEDULE_NAME;
   }
 }

@@ -37,6 +37,7 @@ page_menu_end(out);
 <div class=content>
 <input type=hidden name=initialized value=true>
 <input type=hidden name=oldShedule value="<%=bean.getOldShedule()%>">
+<input type=hidden name=defaultReshedule value="<%=bean.isDefaultReshedule()%>">
 <%@ include file="body.jsp"%>
 </div><%
 page_menu_begin(out);

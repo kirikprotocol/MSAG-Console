@@ -159,6 +159,7 @@ public class SMSCErrors
         public static final String couldntSaveConfig = B + "couldntSaveConfig";
         public static final String couldntGetReshedules = B + "couldntGetReshedules";
         public static final String resheduleAlreadyPresent = B + "resheduleAlreadyPresent";
+        public static final String couldntGetResheduleInstance = B + "couldntGetResheduleInstance";
       }
 		}
 

@@ -16,8 +16,10 @@ import java.util.*;
  */
 class Reshedules {
   private static final String RESHEDULE_TABLE_PREFIX = "core.reshedule table";
+  private static final String RESHEDULE_DEFAULT = "core.reschedule_table";
   private static final String ERR_CODES_PREFIX = "smsc.errcode.";
   private static final String ERR_CODE_UNKNOWN = ERR_CODES_PREFIX + "unknown";
+  public static final String DEFAULT_RESHEDULE_NAME = "DEFAULT_RESHEDULE_NAME";
   public static final String[] ERR_CODES_ALL = {
     "8", "20", "69", "88", "100", "255", "1027", "1028", "1139", "1143", "1179", "1183", "1184", "1186"
 /*
@@ -174,5 +176,23 @@ class Reshedules {
   public boolean isAllErrorsAssigned()
   {
     return assignedErrorsSet.size() == ERR_CODES_ALL.length;
+  }
+
+  public String getDefaultReshedule()
+  {
+    try {
+      logger.debug("getDef: " + config.getString(RESHEDULE_DEFAULT));
+      return config.getString(RESHEDULE_DEFAULT);
+    } catch (Config.ParamNotFoundException e) {
+      return "";
+    } catch (Config.WrongParamTypeException e) {
+      logger.error("default reshedule \"" + RESHEDULE_DEFAULT + "\" is not string");
+      return "";
+    }
+  }
+
+  public void setDefaultReshedule(String defaultReshedule)
+  {
+    config.setString(RESHEDULE_DEFAULT, defaultReshedule);
   }
 }

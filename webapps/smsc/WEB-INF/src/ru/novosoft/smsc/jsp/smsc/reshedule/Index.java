@@ -43,6 +43,9 @@ public class Index extends PageBean {
 
     checkedShedulesSet.addAll(Arrays.asList(checkedShedules));
 
+    if (editKey == null)
+      editKey = "";
+
     return result;
   }
 
@@ -205,5 +208,15 @@ public class Index extends PageBean {
   public boolean isAllErrorsAssigned()
   {
     return reshedules.isAllErrorsAssigned();
+  }
+
+  public String getDefaultReshedule()
+  {
+    return reshedules.getDefaultReshedule();
+  }
+
+  public String getDefaultResheduleName()
+  {
+    return reshedules.DEFAULT_RESHEDULE_NAME;
   }
 }
