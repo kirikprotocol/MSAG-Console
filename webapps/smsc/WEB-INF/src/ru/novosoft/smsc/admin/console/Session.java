@@ -188,7 +188,7 @@ public abstract class Session extends Thread
                 }
             }
             catch (Exception e) {
-                //e.printStackTrace();
+                e.printStackTrace();
                 ctx.setMessage(e.getMessage());
                 ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
             }
