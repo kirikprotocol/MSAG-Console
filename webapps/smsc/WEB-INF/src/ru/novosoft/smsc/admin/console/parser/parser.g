@@ -461,16 +461,15 @@ profile_alias_opt[ProfileGenCommand cmd] {
 profile_encode_opt[ProfileGenCommand cmd] {
     cmd.setUssd7Bit(false);
 }
-	:	(OPT_ENCODE (VAL_DEF        { cmd.setGsm7Encoding(); }
-			    |VAL_UCS2       { cmd.setUcs2Encoding(); }
-			    |VAL_LATIN1     { cmd.setLatin1Encoding(); }
-			    |VAL_UCS2LATIN1 { cmd.setUcs2Latin1Encoding(); })
-			    (OPT_USSD7BIT   { cmd.setUssd7Bit(true); })?
-		)?
+	:	(VAL_DEF        { cmd.setGsm7Encoding(); }
+		|VAL_UCS2       { cmd.setUcs2Encoding(); }
+		|VAL_LATIN1     { cmd.setLatin1Encoding(); }
+		|VAL_UCS2LATIN1 { cmd.setUcs2Latin1Encoding(); })
+		(OPT_USSD7BIT   { cmd.setUssd7Bit(true); })?
 	;
 	exception
 	catch [RecognitionException ex] {
-           throw new RecognitionException("Profile encode options expected. Syntax: (default|ucs2|latin1|ucs2&latin1) [ussd7bit]");
+           throw new RecognitionException("Profile encoding options expected. Syntax: (default|ucs2|latin1|ucs2-latin1) [ussd7bit]");
 	}
     
 addprofile returns [ProfileAddCommand cmd] {

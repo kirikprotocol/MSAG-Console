@@ -71,7 +71,7 @@ tokens {
   VAL_DEF	= "default"	 ;
   VAL_UCS2	= "ucs2"	 ;
   VAL_LATIN1	= "latin1"	 ;
-  VAL_UCS2LATIN1= "ucs2&latin1"	 ;
+  VAL_UCS2LATIN1= "ucs2-latin1"	 ;
   VAL_STORE	= "store"	 ;
   VAL_FORWARD	= "forward"	 ;
   VAL_DATAGRAM  = "datagram"	 ;  

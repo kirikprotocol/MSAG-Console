@@ -28,7 +28,7 @@ public class ProfileAlterCommand extends ProfileGenCommand
             ctx.setMessage("expecting 'encoding', 'report', 'locale', 'alias', 'divert' option(s). "+
                            "Syntax: alter profile <profile_address> "+
                            "[report (full|none)] [locale <locale_name>] "+
-                           "[encoding (default|ucs2|latin1|ucs2&latin1) [ussd7bit]] "+
+                           "[encoding (default|ucs2|latin1|ucs2-latin1) [ussd7bit]] "+
                            "[alias [hide|nohide] [modifiable|notmodifiable]] "+
                            "[divert [(set <divert>)|clear] [active|inactive] [modifiable|notmodifiable]] ");
             ctx.setStatus(CommandContext.CMD_PARSE_ERROR);

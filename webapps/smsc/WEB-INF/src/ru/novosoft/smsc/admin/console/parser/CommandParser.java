@@ -2557,61 +2557,42 @@ public CommandParser(ParserSharedInputState state) {
 		try {      // for error handling
 			{
 			switch ( LA(1)) {
-			case OPT_ENCODE:
+			case VAL_DEF:
 			{
-				match(OPT_ENCODE);
-				{
-				switch ( LA(1)) {
-				case VAL_DEF:
-				{
-					match(VAL_DEF);
-					cmd.setGsm7Encoding();
-					break;
-				}
-				case VAL_UCS2:
-				{
-					match(VAL_UCS2);
-					cmd.setUcs2Encoding();
-					break;
-				}
-				case VAL_LATIN1:
-				{
-					match(VAL_LATIN1);
-					cmd.setLatin1Encoding();
-					break;
-				}
-				case VAL_UCS2LATIN1:
-				{
-					match(VAL_UCS2LATIN1);
-					cmd.setUcs2Latin1Encoding();
-					break;
-				}
-				default:
-				{
-					throw new NoViableAltException(LT(1), getFilename());
-				}
-				}
-				}
-				{
-				switch ( LA(1)) {
-				case OPT_USSD7BIT:
-				{
-					match(OPT_USSD7BIT);
-					cmd.setUssd7Bit(true);
-					break;
-				}
-				case EOF:
-				case TGT_ALIAS:
-				case OPT_DIVERT:
-				{
-					break;
-				}
-				default:
-				{
-					throw new NoViableAltException(LT(1), getFilename());
-				}
-				}
-				}
+				match(VAL_DEF);
+				cmd.setGsm7Encoding();
+				break;
+			}
+			case VAL_UCS2:
+			{
+				match(VAL_UCS2);
+				cmd.setUcs2Encoding();
+				break;
+			}
+			case VAL_LATIN1:
+			{
+				match(VAL_LATIN1);
+				cmd.setLatin1Encoding();
+				break;
+			}
+			case VAL_UCS2LATIN1:
+			{
+				match(VAL_UCS2LATIN1);
+				cmd.setUcs2Latin1Encoding();
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_USSD7BIT:
+			{
+				match(OPT_USSD7BIT);
+				cmd.setUssd7Bit(true);
 				break;
 			}
 			case EOF:
@@ -2629,7 +2610,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-			throw new RecognitionException("Profile encode options expected. Syntax: (default|ucs2|latin1|ucs2&latin1) [ussd7bit]");
+			throw new RecognitionException("Profile encoding options expected. Syntax: (default|ucs2|latin1|ucs2-latin1) [ussd7bit]");
 				
 		}
 	}
@@ -2717,7 +2698,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"default\"",
 		"\"ucs2\"",
 		"\"latin1\"",
-		"\"ucs2&latin1\"",
+		"\"ucs2-latin1\"",
 		"\"store\"",
 		"\"forward\"",
 		"\"datagram\"",

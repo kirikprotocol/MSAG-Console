@@ -54,7 +54,7 @@ VAL_NONE="none"=54
 VAL_DEF="default"=55
 VAL_UCS2="ucs2"=56
 VAL_LATIN1="latin1"=57
-VAL_UCS2LATIN1="ucs2&latin1"=58
+VAL_UCS2LATIN1="ucs2-latin1"=58
 VAL_STORE="store"=59
 VAL_FORWARD="forward"=60
 VAL_DATAGRAM="datagram"=61
