@@ -247,7 +247,7 @@ void AbonentInfoTestCases::queryAbonentInfoIncorrect(bool sync,
 			case 3: //некорректные симводы в адресе
 				__tc__("queryAbonentInfo.incorrect.invalidSymbols"); __tc_ok__;
 				input = "???";
-				correct = true; //прожевывает
+				//correct = true; //прожевывает
 				break;
 			case 4: //лишние слова в команде
 				__tc__("queryAbonentInfo.incorrect.extraWords"); __tc_ok__;
@@ -257,12 +257,12 @@ void AbonentInfoTestCases::queryAbonentInfoIncorrect(bool sync,
 			case 5: //заведомо неправильный ton
 				__tc__("queryAbonentInfo.incorrect.tonNpi"); __tc_ok__;
 				input = ".1000.1.123";
-				correct = true; //берет 1000 & 0xff
+				//correct = true; //берет 1000 & 0xff
 				break;
 			case 6: //заведомо неправильный npi
 				__tc__("queryAbonentInfo.incorrect.tonNpi"); __tc_ok__;
 				input = ".1.1000.123";
-				correct = true; //берет 1000 & 0xff
+				//correct = true; //берет 1000 & 0xff
 				break;
 			default:
 				__unreachable__("Invalid num");
