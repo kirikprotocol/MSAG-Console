@@ -64,6 +64,15 @@ auto_ptr<char> rand_char(int length)
 	return auto_ptr<char>(res);
 }
 
+void rand_char(int length, char* buf)
+{
+	for (int i = 0; i < length; i++)
+	{
+		buf[i] = 'A' + rand0(25);
+	}
+	buf[length] = 0;
+}
+
 bool TCResult::operator== (const TCResult& tcRes) const
 {
 	bool res = id == tcRes.getId() && choice == tcRes.getChoice() &&

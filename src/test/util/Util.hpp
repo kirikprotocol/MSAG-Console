@@ -36,6 +36,7 @@ int rand1(int maxValue);
 std::auto_ptr<uint8_t> rand_uint8_t(int length);
 
 std::auto_ptr<char> rand_char(int length);
+void rand_char(int length, char* buf);
 
 /**
  * Класс для хранения результатов выполнения тест кейса.
