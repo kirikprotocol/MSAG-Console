@@ -2,6 +2,8 @@
   $Id$
 */
 
+#define DISABLE_TRACING
+
 #include "route_manager.h"
 #include <stdexcept>
 #include <memory>
@@ -17,6 +19,7 @@ namespace router{
 using std::runtime_error;
 using std::auto_ptr;
 using std::sort;
+
 
 static inline void printRoute(RouteRecord* record)
 {
@@ -240,7 +243,7 @@ __synchronized__
   if (!sorted)
   {
     __qsort__(table,table_ptr,sizeof(RouteRecord*),route_pattern_compare);
-		sorted = true;
+    sorted = true;
     for ( int i=0; i < table_ptr; ++i )
       printRoute(table[i]);
   }
