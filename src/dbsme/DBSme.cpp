@@ -172,14 +172,14 @@ public:
         case SmppCommandSet::DELIVERY_SM:
             
             //((PduXSm*)pdu)->dump(TRACE_LOG_STREAM);
-            printf("\nReceived DELIVERY_SM Pdu.\n");
+            __trace2__("\nReceived DELIVERY_SM Pdu.\n");
             process();
             break;
         case SmppCommandSet::SUBMIT_SM_RESP:
-            printf("\nReceived SUBMIT_SM_RESP Pdu.\n");
+            __trace2__("\nReceived SUBMIT_SM_RESP Pdu.\n");
             break;
         default:
-            printf("\nReceived unsupported Pdu !\n");
+            __trace2__("\nReceived unsupported Pdu !\n");
             break;
         }
         
@@ -214,7 +214,7 @@ public:
         {
             int maxThreads = config->getInt("max");
             pool.setMaxThreads(maxThreads);
-            printf("Max threads count: %d\n", maxThreads);
+            __trace2__("Max threads count: %d\n", maxThreads);
         }
         catch (ConfigException& exc) 
         {
@@ -224,7 +224,7 @@ public:
         {
             int initThreads = config->getInt("init");
             pool.preCreateThreads(initThreads);
-            printf("Precreated threads count: %d\n", initThreads);
+            __trace2__("Precreated threads count: %d\n", initThreads);
         }
         catch (ConfigException& exc) 
         {
@@ -259,7 +259,7 @@ public:
     void handleError(int errorCode)
     {
         bDBSmeIsConnected = false;
-        printf("Transport error !!!\n");
+        __trace2__("Transport error !!!\n");
         log.error("Oops, Error handled! Code is: %d\n", errorCode);
     }
     
@@ -330,10 +330,10 @@ public:
 
 static void appSignalHandler(int sig)
 {
-    printf("Signal %d handled !\n", sig);
+    __trace2__("Signal %d handled !\n", sig);
     if (sig==SIGTERM || sig==SIGINT)
     {
-        printf("Stopping ... \n");
+        __trace2__("Stopping ... \n");
         bDBSmeIsStopped = true;
     }
 }
@@ -345,8 +345,6 @@ void atExitHandler(void)
     sigsend(P_PID, getppid(), SIGCHLD);
     smsc::util::xml::TerminateXerces();
 }
-
-
 
 int main(void) 
 {
@@ -360,11 +358,6 @@ int main(void)
 
     //added by igork
     atexit(atExitHandler);
-
-    
-    /*while (!bDBSmeIsStopped) sleep(1);
-    printf("Stopped.\n");
-    return 0;*/
     
     SQLJobFactory _sqlJobFactory;
     JobFactory::registerFactory(&_sqlJobFactory, 
@@ -394,7 +387,7 @@ int main(void)
             DBSmePduListener listener(processor, runner);
             SmppSession      session(cfg, &listener);
 
-            printf("Connecting to SMSC ... ");
+            __trace2__("Connecting to SMSC ... ");
             try
             {
                 session.connect();
@@ -402,31 +395,33 @@ int main(void)
                 listener.setTrans(session.getSyncTransmitter());
                 bDBSmeIsConnected = true;
             }
-            catch (exception& exc)
+            catch (SmppConnectException& exc)
             {
                 const char* msg = exc.what(); 
-                printf("Connect failed. Cause: %s\n", (msg) ? msg:"unknown");
+                __trace2__("Connect failed. Cause: %s\n", (msg) ? msg:"unknown");
                 bDBSmeIsConnected = false;
+                if (exc.getReason() == 
+                    SmppConnectException::Reason::invalidSystemId) throw;
                 sleep(cfg.timeOut);
                 continue;
             }
-            printf("Connected.\n");
+            __trace2__("Connected.\n");
             
             while (!bDBSmeIsStopped && bDBSmeIsConnected) 
             {
                 sleep(2);
                 MutexGuard guard(countersLock);
-                printf("\nRequests: %llu processing, %llu processed.\n"
-                       "Failures noticed: %llu\n",
-                       requestsProcessingCount, requestsProcessedCount,
-                       failuresNoticedCount);
+                /*__trace2__("\nRequests: %llu processing, %llu processed.\n"
+                           "Failures noticed: %llu\n",
+                           requestsProcessingCount, requestsProcessedCount,
+                           failuresNoticedCount);*/
             };
-            printf("Disconnecting from SMSC ...\n");
+            __trace2__("Disconnecting from SMSC ...\n");
         };
     }
     catch (exception& exc) 
     {
-        printf("Top level exception : %s\n", exc.what());
+        log.error("Top level exception : %s\n", exc.what());
         return -1;
     }
     return 0;
