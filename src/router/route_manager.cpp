@@ -24,8 +24,8 @@ using std::sort;
 int calcDefLengthAndCheck(Address* addr)
 {
   int cnt = 0;
-  throw_if_fail(addr->lenght<=20);
-  for ( int i=0; i < addr->lenght; ++i )
+  throw_if_fail(addr->length<=20);
+  for ( int i=0; i < addr->length; ++i )
   {
     if ( addr->value[i] == '?' || addr->value[i] == '*' ) break;
     ++cnt;
@@ -40,12 +40,12 @@ static inline void print(RouteRecord* record,const char* ppp= "")
     __trace2__("%s={SRC::%.20s(%d/?%d),n:%d,t:%d}{DST::%.20s(%d/?%d),n:%d,t:%d}",
              ppp,
              record->info.source.value,
-             record->info.source.lenght,
+             record->info.source.length,
              record->src_def,
              record->info.source.plan,
              record->info.source.type,
              record->info.dest.value,
-             record->info.dest.lenght,
+             record->info.dest.length,
              record->dest_def,
              record->info.dest.plan,
              record->info.dest.type
@@ -67,7 +67,7 @@ int sort_compare_pat_pat(RouteRecord* pat1, RouteRecord* pat2)
   int32_t result;
   result = (int32_t)pat1->info.dest.type - (int32_t)pat2->info.dest.type; ifn0goto;
   result = (int32_t)pat1->info.dest.plan - (int32_t)pat2->info.dest.plan; ifn0goto;
-  result = (int32_t)pat1->info.dest.lenght - (int32_t)pat2->info.dest.lenght; ifn0goto;
+  result = (int32_t)pat1->info.dest.length - (int32_t)pat2->info.dest.length; ifn0goto;
   result = 
     strncmp((char*)pat1->info.dest.value,
             (char*)pat2->info.dest.value,
@@ -77,7 +77,7 @@ int sort_compare_pat_pat(RouteRecord* pat1, RouteRecord* pat2)
 //---------------------------------------------------------------------//
   result = (int32_t)pat1->info.source.type - (int32_t)pat2->info.source.type; ifn0goto;
   result = (int32_t)pat1->info.source.plan - (int32_t)pat2->info.source.plan; ifn0goto;
-  result = (int32_t)pat1->info.source.lenght - (int32_t)pat2->info.source.lenght; ifn0goto;
+  result = (int32_t)pat1->info.source.length - (int32_t)pat2->info.source.length; ifn0goto;
   result = 
     strncmp((char*)pat1->info.source.value,
             (char*)pat2->info.source.value,
@@ -107,7 +107,7 @@ int compare_addr_addr_src(RouteRecord* rr1,
   int32_t result;
   result = (int32_t)pat1->type - (int32_t)pat2->type; ifn0goto;
   result = (int32_t)pat1->plan - (int32_t)pat2->plan; ifn0goto;
-  result = (int32_t)pat1->lenght - (int32_t)pat2->lenght; ifn0goto;
+  result = (int32_t)pat1->length - (int32_t)pat2->length; ifn0goto;
   result = 
     strncmp((char*)pat1->value,
             (char*)pat2->value,
@@ -139,7 +139,7 @@ int compare_addr_addr_dest(RouteRecord* rr1,
   int32_t result;
   result = (int32_t)pat1->type - (int32_t)pat2->type; ifn0goto;
   result = (int32_t)pat1->plan - (int32_t)pat2->plan; ifn0goto;
-  result = (int32_t)pat1->lenght - (int32_t)pat2->lenght; ifn0goto;
+  result = (int32_t)pat1->length - (int32_t)pat2->length; ifn0goto;
   result = 
     strncmp((char*)pat1->value,
             (char*)pat2->value,

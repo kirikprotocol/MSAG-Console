@@ -150,6 +150,7 @@ void Smsc::init(const SmscConfigs& cfg)
         rec->aliasTni,
         rec->aliasNpi,
         rec->aliasValue);
+			ai.hide = rec->hide;
       aliaser.addAlias(ai);
     }
     aliaser.commit();

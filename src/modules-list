@@ -2,12 +2,13 @@ smpp	"SMPP protocol implementation"
 core 	"SMSC core implementation"
 util	"Utility classes"
 sms		"SMS declaration"
-#store		"Store implementation"
+store		"Store implementation"
+db
 #storetest	"Service program to test store module"
-admin		"Administration subsystem"
+#admin		"Administration subsystem"
 smeman
 router
 system
 alias
-test
+#test
 profiler

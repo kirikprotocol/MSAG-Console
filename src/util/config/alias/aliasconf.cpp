@@ -79,7 +79,7 @@ AliasConfig::status AliasConfig::load(const char * const filename)
       record->addrValue = 0;
       //record->addr = attrs.getNamedItem("addr").getNodeValue().transcode();
       {
-        char* dta = attrs.getNamedItem("addr").getNodeValue().transcode();
+				char* dta = attrs.getNamedItem("addr").getNodeValue().transcode();
         record->addrValue = new char[21]; memset(record->addrValue,0,21);
         int scaned = sscanf(dta,".%d.%d.%20s",
              &record->addrTni,
@@ -113,6 +113,7 @@ AliasConfig::status AliasConfig::load(const char * const filename)
       }
       //record->alias = attrs.getNameItem("alias").getNodeValue().transcode();
       {
+				record->hide=!strcmp(attrs.getNamedItem("hide").getNodeValue().transcode(),"yes");
         char* dta = attrs.getNamedItem("addr").getNodeValue().transcode();
         record->aliasValue = new char[21]; memset(record->aliasValue,0,21);
         int scaned = sscanf(dta,".%d.%d.%20s",

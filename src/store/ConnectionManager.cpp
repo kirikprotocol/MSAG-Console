@@ -515,7 +515,8 @@ StorageConnection::StorageConnection(const char* instance,
         overwriteStmt(0L), storeStmt(0L), retriveStmt(0L), destroyStmt(0L), 
         replaceStmt(0L), replaceVTStmt(0L), replaceWTStmt(0L), replaceVWTStmt(0L), 
         toEnrouteStmt(0L), toDeliveredStmt(0L), toUndeliverableStmt(0L),
-        toExpiredStmt(0L), toDeletedStmt(0L)
+        toExpiredStmt(0L), toDeletedStmt(0L), setBodyStmt(0L), getBodyStmt(0L),
+        destroyBodyStmt(0L)
 {}
 
 void StorageConnection::connect()
@@ -544,6 +545,10 @@ void StorageConnection::connect()
         toUndeliverableStmt = new ToUndeliverableStatement(this);
         toExpiredStmt = new ToExpiredStatement(this);
         toDeletedStmt = new ToDeletedStatement(this);
+
+        setBodyStmt = new SetBodyStatement(this);
+        getBodyStmt = new GetBodyStatement(this);
+        destroyBodyStmt = new DestroyBodyStatement(this);
     }
     catch (StorageException& exc) 
     {
@@ -647,6 +652,24 @@ ToDeletedStatement* StorageConnection::getToDeletedStatement()
 {
     connect();
     return toDeletedStmt;
+}
+SetBodyStatement* StorageConnection::getSetBodyStatement()
+    throw(ConnectionFailedException)
+{
+    connect();
+    return setBodyStmt;
+}
+GetBodyStatement* StorageConnection::getGetBodyStatement()
+    throw(ConnectionFailedException)
+{
+    connect();
+    return getBodyStmt;
+}
+DestroyBodyStatement* StorageConnection::getDestroyBodyStatement()
+    throw(ConnectionFailedException)
+{
+    connect();
+    return destroyBodyStmt;
 }
 
 }}

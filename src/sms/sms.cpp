@@ -1,10 +1,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 #include "sms.h"
 
-namespace smsc { namespace sms
-{
+namespace smsc { 
+namespace sms{
 
 /*void Address::convertSemiToText(void)
 {
@@ -62,6 +63,21 @@ void Body::setBuffer(uint8_t* buffer,int length)
         memcpy(buff, buff, length);
     }
 }*/
+
+TagHash tag_hash;
+
+TagHash::TagHash()
+{
+	tagToKey = new SMSTag[SMS_BODY_TAGS_SET_SIZE];
+	#define SMS_IMPLEMENTATION
+	#include "sms.h"
+	SMS_BODY_TAGS_SET;
+}
+
+TagHash::~TagHash()
+{
+	delete[] tagToKey;
+}
 
 }}
 

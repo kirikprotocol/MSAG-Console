@@ -99,17 +99,16 @@ namespace smsc { namespace store
     static const char* sql;
     protected:
         
-        SMSId   rcptId;
-
-        OCIDate waitTime;
-        OCIDate nextTime;
-        OCIDate validTime;
-        OCIDate submitTime;
-
-        char    bHeaderIndicator;
-        char    bNeedArchivate;
-
-        sb2     indWaitTime, indNextTime, indSvcType;
+        OCIDate     nextTime;
+        OCIDate     validTime;
+        OCIDate     submitTime;
+        
+        int         bodyBufferLen;
+        uint8_t*    bodyBuffer;
+        
+        char        bNeedArchivate;
+        
+        sb2         indBody, indNextTime, indSvcType;
         
     public:
         
@@ -188,17 +187,18 @@ namespace smsc { namespace store
     static const char* sql;
     protected:
         
-        SMSId   newId, rcptId;
+        SMSId       newId;
 
-        OCIDate waitTime;
-        OCIDate nextTime;
-        OCIDate validTime;
-        OCIDate submitTime;
-
-        char    bHeaderIndicator;
-        char    bNeedArchivate;
-
-        sb2     indWaitTime, indNextTime, indSvcType;
+        OCIDate     nextTime;
+        OCIDate     validTime;
+        OCIDate     submitTime;
+        
+        int         bodyBufferLen;
+        uint8_t*    bodyBuffer;
+        
+        char        bNeedArchivate;
+        
+        sb2         indBody, indNextTime, indSvcType;
     
     public:
 
@@ -223,21 +223,21 @@ namespace smsc { namespace store
     static const char* sql;
     protected:
 
-        OCIDate waitTime;
         OCIDate validTime;
         OCIDate submitTime;
         OCIDate lastTime;
         OCIDate nextTime;
         
         uint8_t uState;
-        SMSId   rcptId;
-
-        char    bHeaderIndicator;
-        char    bNeedArchivate;
-
+        
+        int         bodyBufferLen;
+        uint8_t     bodyBuffer[MAX_BODY_LENGTH];
+        
+        char        bNeedArchivate;
+        
         sb2     indOA, indSrcMsc, indSrcImsi, indSrcSme;
         sb2     indDA, indDstMsc, indDstImsi, indDstSme;
-        sb2     indSvc, indWaitTime, indLastTime, indNextTime;
+        sb2     indSvc, indBody, indLastTime, indNextTime;
     
         RetriveStatement(Connection* connection, const char* sql,
                          bool assign=true) 
@@ -279,8 +279,13 @@ namespace smsc { namespace store
     static const char* sql;
     protected:
         
-        OCIDate wTime;
-        OCIDate vTime;
+        OCIDate     vTime;
+        OCIDate     wTime;
+        
+        int         bodyBufferLen;
+        uint8_t*    bodyBuffer;
+
+        sb2         indBody;
 
         ReplaceStatement(Connection* connection, const char* sql,
                          bool assign=true) throw(StorageException);
@@ -483,6 +488,60 @@ namespace smsc { namespace store
         virtual ~MinNextTimeStatement() {};
         
         time_t getMinNextTime()
+            throw(StorageException);
+    };
+
+    class BodyStatement : public SetIdStatement
+    {
+    protected:
+
+        OCILobLocator*  locator;
+        sb2             indBody;
+
+        BodyStatement(Connection* connection, const char* sql, 
+                      bool assign=false) 
+            throw(StorageException);
+    public:
+
+        virtual ~BodyStatement();
+    };
+
+    class SetBodyStatement : public BodyStatement
+    {
+    static const char* sql;
+    public:
+        
+        SetBodyStatement(Connection* connection, bool assign=true) 
+            throw(StorageException);
+        virtual ~SetBodyStatement() {};
+
+        void setBody(Body& body)
+            throw(StorageException);
+    };
+
+    class GetBodyStatement : public BodyStatement
+    {
+    static const char* sql;
+    public:
+        
+        GetBodyStatement(Connection* connection, bool assign=true) 
+            throw(StorageException);
+        virtual ~GetBodyStatement() {};
+        
+        bool getBody(Body& body)
+            throw(StorageException);
+    };
+    
+    class DestroyBodyStatement : public BodyStatement
+    {
+    static const char* sql;
+    public:
+        
+        DestroyBodyStatement(Connection* connection, bool assign=true) 
+            throw(StorageException);
+        virtual ~DestroyBodyStatement() {};
+        
+        bool destroyBody()
             throw(StorageException);
     };
 

@@ -31,12 +31,12 @@ struct HashKey{
   {
     addr=address;
     defLength=0;
-    while(defLength<address.lenght && address.value[defLength]!='?')defLength++;
+    while(defLength<address.length && address.value[defLength]!='?')defLength++;
   }
 
   bool operator==(const HashKey& key)
   {
-    return key.addr.lenght==addr.lenght &&
+    return key.addr.length==addr.length &&
            defLength==key.defLength &&
            key.addr.plan==addr.plan &&
            key.addr.type==addr.type &&
@@ -80,7 +80,7 @@ public:
       }
       k.defLength--;
     }
-    exact=k.defLength==address.lenght;
+    exact=k.defLength==address.length;
     return Get(k);
   }
   Profile& add(const Address& address,const Profile& profile)
@@ -206,7 +206,9 @@ int Profiler::Execute()
     }
     sms = cmd->get_sms();
     Address& addr=sms->getOriginatingAddress();
-    len = sms->getMessageBody().getData( (uint8_t*)body );
+    //len = sms->getMessageBody().getData( (uint8_t*)body );
+   	strncpy(body,sms->getStrProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE).c_str(),sizeof(body));
+   	len = sms->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
     if(!strncmp(body,"REPORT",6))
     {
       int i=7;
@@ -307,7 +309,7 @@ void Profiler::loadFromDB()
         }
       }
     }
-    addr.lenght=strlen((char*)addr.value);
+    addr.length=strlen((char*)addr.value);
     p.reportoptions=rs->getInt8(2);
     p.codepage=rs->getInt8(3);
     profiles->add(addr,p);

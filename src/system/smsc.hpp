@@ -50,9 +50,9 @@ public:
   {
     return aliaser.AliasToAddress(alias,addr);
   }
-  bool AddressToAlias(const Address& addr,Address& alias)
+  bool AddressToAlias(const Address& addr,Address& alias,bool* hide=0)
   {
-    return aliaser.AddressToAlias(addr,alias);
+    return aliaser.AddressToAlias(addr,alias,hide);
   }
 
   void notifyScheduler()

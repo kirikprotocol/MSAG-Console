@@ -385,6 +385,10 @@ namespace smsc { namespace store
         ToExpiredStatement*         toExpiredStmt;
         ToDeletedStatement*         toDeletedStmt;
         
+        SetBodyStatement*           setBodyStmt;
+        GetBodyStatement*           getBodyStmt;
+        DestroyBodyStatement*       destroyBodyStmt;
+        
     public:
 
         /**
@@ -552,7 +556,35 @@ namespace smsc { namespace store
          *                   базой данных
          */
         ToDeletedStatement*         getToDeletedStatement()
-            throw(ConnectionFailedException); 
+            throw(ConnectionFailedException);
+
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
+        SetBodyStatement* getSetBodyStatement()
+            throw(ConnectionFailedException);
+        
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
+        GetBodyStatement* getGetBodyStatement()
+            throw(ConnectionFailedException);
+        
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
+        DestroyBodyStatement* getDestroyBodyStatement()
+            throw(ConnectionFailedException);
+
     };
     
     /**

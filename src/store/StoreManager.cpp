@@ -68,7 +68,7 @@ void StoreManager::startup(Manager& config)
             pool = new StorageConnectionPool(config);
             archiver = new Archiver(config);
             generator = new IDGenerator(archiver->getLastUsedId());
-            archiver->Start();
+            //archiver->Start();
         }
         catch (StorageException& exc)
         {
@@ -112,8 +112,7 @@ void StoreManager::doCreateSms(StorageConnection* connection,
     Descriptor  dsc;
     sms.state = ENROUTE;
     sms.destinationDescriptor = dsc;
-    sms.lastTime = 0; sms.failureCause = 0; sms.attempts = 0;
-    //sms.submitTime = time(NULL);
+    sms.lastTime = 0; sms.lastResult = 0; sms.attempts = 0;
     
     if (flag == SMPP_OVERWRITE_IF_PRESENT)
     {
@@ -144,13 +143,30 @@ void StoreManager::doCreateSms(StorageConnection* connection,
             
             OverwriteStatement* overwriteStmt 
                 = connection->getOverwriteStatement();
+            DestroyBodyStatement* destroyBodyStmt
+                = connection->getDestroyBodyStatement();
             
-            overwriteStmt->bindOldId(retId);
-            overwriteStmt->bindNewId(id);
-            overwriteStmt->bindSms(sms);
             try
             {
+                destroyBodyStmt->setSMSId(retId);
+                destroyBodyStmt->destroyBody();
+                
+                overwriteStmt->bindOldId(retId);
+                overwriteStmt->bindNewId(id);
+                overwriteStmt->bindSms(sms);
+                
                 connection->check(overwriteStmt->execute());
+                
+                int bodyLen = sms.getMessageBody().getBufferLength();
+                if (bodyLen > MAX_BODY_LENGTH)
+                {
+                    SetBodyStatement* setBodyStmt 
+                        = connection->getSetBodyStatement();
+
+                    setBodyStmt->setSMSId(id);
+                    setBodyStmt->setBody(sms.getMessageBody());
+                }
+                
                 connection->commit();
             } 
             catch (StorageException& exc) 
@@ -186,6 +202,17 @@ void StoreManager::doCreateSms(StorageConnection* connection,
     try 
     {
         connection->check(storeStmt->execute(OCI_DEFAULT));
+        
+        int bodyLen = sms.getMessageBody().getBufferLength();
+        if (bodyLen > MAX_BODY_LENGTH)
+        {
+            SetBodyStatement* setBodyStmt 
+                = connection->getSetBodyStatement();
+
+            setBodyStmt->setSMSId(id);
+            setBodyStmt->setBody(sms.getMessageBody());
+        }
+
         connection->commit();
     } 
     catch (StorageException& exc) 
@@ -248,6 +275,17 @@ void StoreManager::doRetriveSms(StorageConnection* connection,
     {
         retriveStmt->check(status);
         retriveStmt->getSms(sms);
+
+        if (sms.attach)
+        {
+            GetBodyStatement* getBodyStmt
+                = connection->getGetBodyStatement();
+            
+            getBodyStmt->setSMSId(id);
+            getBodyStmt->getBody(sms.getMessageBody());
+
+            connection->commit();
+        }
     }
 }
 void StoreManager::retriveSms(SMSId id, SMS &sms)
@@ -291,10 +329,14 @@ void StoreManager::doDestroySms(StorageConnection* connection, SMSId id)
 
     DestroyStatement* destroyStmt
         = connection->getDestroyStatement();
+    DestroyBodyStatement* destroyBodyStmt
+        = connection->getDestroyBodyStatement();
     
-    destroyStmt->bindId(id);
     try 
     {
+        destroyBodyStmt->setSMSId(id);
+        destroyBodyStmt->destroyBody();
+        destroyStmt->bindId(id);
         connection->check(destroyStmt->execute());
     }
     catch (StorageException& exc) 
@@ -352,6 +394,19 @@ void StoreManager::doReplaceSms(StorageConnection* connection,
 {
     __require__(connection);
 
+    DestroyBodyStatement* destroyBodyStmt
+        = connection->getDestroyBodyStatement();
+    try
+    {
+        destroyBodyStmt->setSMSId(id);
+        destroyBodyStmt->destroyBody();
+    }
+    catch (StorageException& exc) 
+    {
+        connection->rollback();
+        throw exc;
+    }
+    
     ReplaceStatement* replaceStmt;
     if (waitTime == 0 && validTime == 0) 
     {
@@ -376,12 +431,22 @@ void StoreManager::doReplaceSms(StorageConnection* connection,
     
     replaceStmt->bindId(id);
     replaceStmt->bindOriginatingAddress((Address&) oa);
-    replaceStmt->bindBody((Body&) newBody);
+    replaceStmt->bindBody((Body &)newBody);
     replaceStmt->bindDeliveryReport((dvoid *) &deliveryReport,
                                     (sb4) sizeof(deliveryReport));
     try 
     {
         connection->check(replaceStmt->execute());
+        
+        int bodyLen = ((Body &)newBody).getBufferLength();
+        if (bodyLen > MAX_BODY_LENGTH)
+        {
+            SetBodyStatement* setBodyStmt 
+                = connection->getSetBodyStatement();
+
+            setBodyStmt->setSMSId(id);
+            setBodyStmt->setBody((Body &)newBody);
+        }
     }
     catch (StorageException& exc) 
     {
@@ -781,7 +846,6 @@ StoreManager::ReadyIdIterator::ReadyIdIterator(time_t retryTime)
     }
     catch (...)
     {
-        __trace__("Oops, exception !!!\n");
         StoreManager::pool->freeConnection(connection);
         throw;
     }
@@ -802,10 +866,8 @@ bool StoreManager::ReadyIdIterator::getNextId(SMSId &id)
         {
             connection->check(status);
             readyStmt->getSMSId(id);
-            __trace2__("Selected id = %llu", id);
             return true;
         }
-        __trace__("Select failed (no ids)");
     }
     return false;
 }
@@ -834,7 +896,6 @@ time_t StoreManager::getNextRetryTime()
         }
         catch (...)
         {
-            __trace__("Oops, exception !!!\n");
             StoreManager::pool->freeConnection(connection);
             throw;
         }
@@ -853,7 +914,6 @@ time_t StoreManager::getNextRetryTime()
             }
             catch (...)
             {
-                __trace__("Oops, exception !!!\n");
                 delete minTimeStmt;
                 StoreManager::pool->freeConnection(connection);
                 throw;

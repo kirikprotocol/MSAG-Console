@@ -25,6 +25,7 @@ struct AliasRecord
 	char* aliasValue;
 	int aliasTni;
 	int aliasNpi;
+	bool hide;
 };
 
 class AliasConfig

@@ -158,7 +158,7 @@ SetIdStatement::SetIdStatement(Connection* connection, const char* sql,
     throw(StorageException)
         : IdStatement(connection, sql, assign)
 {
-    bind((CONST text*)"ID", (sb4) strlen("ID"), SQLT_BIN, 
+    bind((CONST text*)"ID", (sb4) 2*sizeof(char), SQLT_BIN, 
          (dvoid *) &(smsId), (sb4) sizeof(smsId));
 }
 
@@ -273,12 +273,10 @@ const char* OverwriteStatement::sql = (const char*)
 "UPDATE SMS_MSG SET ID=:NEW_ID, MR=:MR,\
  SRC_MSC=:SRC_MSC, SRC_IMSI=:SRC_IMSI, SRC_SME_N=:SRC_SME_N,\
  DST_MSC=NULL, DST_IMSI=NULL, DST_SME_N=NULL,\
- WAIT_TIME=:WAIT_TIME, VALID_TIME=:VALID_TIME,\
- SUBMIT_TIME=:SUBMIT_TIME, ATTEMPTS=0, LAST_RESULT=0,\
+ VALID_TIME=:VALID_TIME, SUBMIT_TIME=:SUBMIT_TIME,\
+ ATTEMPTS=0, LAST_RESULT=0,\
  LAST_TRY_TIME=NULL, NEXT_TRY_TIME=:NEXT_TRY_TIME, SVC_TYPE=:SVC,\
- DR=:DR, ARC=:ARC, PRI=:PRI, PID=:PID,\
- UDHI=:UDHI, DCS=:DCS, UDL=:UDL, UD=:UD,\
- RCPT_ID=:RCPT_ID, ESM_CLASS=:ESM_CLASS\
+ DR=:DR, BR=:BR, ARC=:ARC, BODY=:BODY, BODY_LEN=:BODY_LEN\
  WHERE ID=:OLD_ID";
 OverwriteStatement::OverwriteStatement(Connection* connection, bool assign)
     throw(StorageException)
@@ -312,14 +310,6 @@ void OverwriteStatement::bindSms(SMS& sms)
          (sb4) sizeof(sms.originatingDescriptor.imsi));
     bind(i++, SQLT_UIN, (dvoid *)&(sms.originatingDescriptor.sme),
          (sb4) sizeof(sms.originatingDescriptor.sme));
-    if (sms.waitTime) 
-    {
-        convertDateToOCIDate(&(sms.waitTime), &waitTime);
-        indWaitTime = OCI_IND_NOTNULL;
-    } 
-    else indWaitTime = OCI_IND_NULL;
-    bind(i++, SQLT_ODT, (dvoid *) &(waitTime), 
-         (sb4) sizeof(waitTime), &indWaitTime);
     
     convertDateToOCIDate(&(sms.validTime), &validTime);
     bind(i++, SQLT_ODT, (dvoid *) &(validTime), 
@@ -343,28 +333,20 @@ void OverwriteStatement::bindSms(SMS& sms)
          (sb4) sizeof(sms.eServiceType), &indSvcType);
     bind(i++, SQLT_UIN, (dvoid *)&(sms.deliveryReport),
          (sb4) sizeof(sms.deliveryReport));
+    bind(i++, SQLT_UIN, (dvoid *)&(sms.billingRecord),
+         (sb4) sizeof(sms.billingRecord));
     bNeedArchivate = sms.needArchivate ? 'Y':'N';
     bind(i++, SQLT_AFC, (dvoid *) &(bNeedArchivate), 
          (sb4) sizeof(bNeedArchivate));
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.priority),
-         (sb4) sizeof(sms.priority));
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.protocolIdentifier),
-         (sb4) sizeof(sms.protocolIdentifier));
-    bHeaderIndicator = sms.messageBody.header ? 'Y':'N';
-    bind(i++, SQLT_AFC, (dvoid *) &(bHeaderIndicator), 
-         (sb4) sizeof(bHeaderIndicator));
-    bind(i++, SQLT_UIN, (dvoid *) &(sms.messageBody.scheme),
-         (sb4) sizeof(sms.messageBody.scheme));
-    bind(i++, SQLT_UIN, (dvoid *) &(sms.messageBody.lenght),
-         (sb4) sizeof(sms.messageBody.lenght));
-    bind(i++, SQLT_BIN, (dvoid *) (sms.messageBody.data),
-         (sb4) sizeof(sms.messageBody.data));
     
-    rcptId = UINT64_SWAP_LE_BE_CONSTANT(sms.receiptSmsId);
-    bind(i++, SQLT_BIN, (dvoid *) &(rcptId), 
-         (sb4) sizeof(rcptId));
-    bind(i++, SQLT_UIN, (dvoid *) &(sms.esmClass),
-         (sb4) sizeof(sms.esmClass));
+    bodyBufferLen = sms.messageBody.getBufferLength();
+    bodyBuffer = sms.messageBody.getBuffer();
+    indBody = (bodyBuffer && bodyBufferLen <= MAX_BODY_LENGTH) 
+                ? OCI_IND_NOTNULL : OCI_IND_NULL;
+    bind(i++, SQLT_BIN, (dvoid *) bodyBuffer,
+         (sb4) bodyBufferLen, &indBody);
+    bind(i++, SQLT_UIN, (dvoid *)&(bodyBufferLen),
+         (sb4) sizeof(bodyBufferLen));
 }
 
 /* --------------------------- StoreStatement ----------------------- */
@@ -372,14 +354,13 @@ const char* StoreStatement::sql = (const char*)
 "INSERT INTO SMS_MSG (ID, ST, MR,\
  OA_TON, OA_NPI, OA_VAL, SRC_MSC, SRC_IMSI, SRC_SME_N,\
  DA_TON, DA_NPI, DA_VAL,\
- WAIT_TIME, VALID_TIME, SUBMIT_TIME, ATTEMPTS, LAST_RESULT,\
- LAST_TRY_TIME, NEXT_TRY_TIME, SVC_TYPE, DR, ARC, PRI, PID,\
- UDHI, DCS, UDL, UD, RCPT_ID, ESM_CLASS)\
+ VALID_TIME, SUBMIT_TIME, ATTEMPTS, LAST_RESULT,\
+ LAST_TRY_TIME, NEXT_TRY_TIME, SVC_TYPE, DR, BR, ARC, BODY, BODY_LEN)\
  VALUES (:ID, :ST, :MR,\
  :OA_TON, :OA_NPI, :OA_VAL, :SRC_MSC, :SRC_IMSI, :SRC_SME_N,\
  :DA_TON, :DA_NPI, :DA_VAL,\
- :WAIT_TIME, :VALID_TIME, :SUBMIT_TIME, 0, 0, NULL, :NEXT_TRY_TIME,\
- :SVC, :DR, :ARC, :PRI, :PID, :UDHI, :DCS, :UDL, :UD, :RCPT_ID, :ESM_CLASS)";
+ :VALID_TIME, :SUBMIT_TIME, 0, 0, NULL, :NEXT_TRY_TIME,\
+ :SVC, :DR, :BR, :ARC, :BODY, :BODY_LEN)";
 StoreStatement::StoreStatement(Connection* connection, bool assign)
     throw(StorageException)
         : IdStatement(connection, StoreStatement::sql, assign)
@@ -419,15 +400,6 @@ void StoreStatement::bindSms(SMS& sms)
     bind(i++, SQLT_STR, (dvoid *) (sms.destinationAddress.value),
          (sb4) sizeof(sms.destinationAddress.value));
     
-    if (sms.waitTime) 
-    {
-        convertDateToOCIDate(&(sms.waitTime), &waitTime);
-        indWaitTime = OCI_IND_NOTNULL;
-    } 
-    else indWaitTime = OCI_IND_NULL;
-    bind(i++, SQLT_ODT, (dvoid *) &(waitTime), 
-         (sb4) sizeof(waitTime), &indWaitTime);
-    
     convertDateToOCIDate(&(sms.validTime), &validTime);
     bind(i++, SQLT_ODT, (dvoid *) &(validTime), 
          (sb4) sizeof(validTime));
@@ -451,28 +423,20 @@ void StoreStatement::bindSms(SMS& sms)
     
     bind(i++, SQLT_UIN, (dvoid *)&(sms.deliveryReport),
          (sb4) sizeof(sms.deliveryReport));
+    bind(i++, SQLT_UIN, (dvoid *)&(sms.billingRecord),
+         (sb4) sizeof(sms.billingRecord));
     bNeedArchivate = sms.needArchivate ? 'Y':'N';
     bind(i++, SQLT_AFC, (dvoid *) &(bNeedArchivate), 
          (sb4) sizeof(bNeedArchivate));
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.priority),
-         (sb4) sizeof(sms.priority));
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.protocolIdentifier),
-         (sb4) sizeof(sms.protocolIdentifier));
-    bHeaderIndicator = sms.messageBody.header ? 'Y':'N';
-    bind(i++, SQLT_AFC, (dvoid *) &(bHeaderIndicator), 
-         (sb4) sizeof(bHeaderIndicator));
-    bind(i++, SQLT_UIN, (dvoid *) &(sms.messageBody.scheme),
-         (sb4) sizeof(sms.messageBody.scheme));
-    bind(i++, SQLT_UIN, (dvoid *) &(sms.messageBody.lenght),
-         (sb4) sizeof(sms.messageBody.lenght));
-    bind(i++, SQLT_BIN, (dvoid *) (sms.messageBody.data),
-         (sb4) sizeof(sms.messageBody.data));
     
-    rcptId = UINT64_SWAP_LE_BE_CONSTANT(sms.receiptSmsId);
-    bind(i++, SQLT_BIN, (dvoid *) &(rcptId), 
-         (sb4) sizeof(rcptId));
-    bind(i++, SQLT_UIN, (dvoid *) &(sms.esmClass),
-         (sb4) sizeof(sms.esmClass));
+    bodyBufferLen = sms.messageBody.getBufferLength();
+    bodyBuffer = sms.messageBody.getBuffer();
+    indBody = (bodyBuffer && bodyBufferLen <= MAX_BODY_LENGTH) 
+                ? OCI_IND_NOTNULL : OCI_IND_NULL;
+    bind(i++, SQLT_BIN, (dvoid *) bodyBuffer,
+         (sb4) bodyBufferLen, &indBody);
+    bind(i++, SQLT_UIN, (dvoid *)&(bodyBufferLen),
+         (sb4) sizeof(bodyBufferLen));
 }
 
 /* --------------------------- RetriveStatement ----------------------- */
@@ -480,10 +444,9 @@ const char* RetriveStatement::sql = (const char*)
 "SELECT ST, MR,\
  OA_TON, OA_NPI, OA_VAL, SRC_MSC, SRC_IMSI, SRC_SME_N,\
  DA_TON, DA_NPI, DA_VAL, DST_MSC, DST_IMSI, DST_SME_N,\
- WAIT_TIME, VALID_TIME, SUBMIT_TIME,\
+ VALID_TIME, SUBMIT_TIME,\
  ATTEMPTS, LAST_RESULT, LAST_TRY_TIME, NEXT_TRY_TIME,\
- SVC_TYPE, DR, ARC, PRI, PID,\
- UDHI, DCS, UDL, UD, RCPT_ID, ESM_CLASS\
+ SVC_TYPE, DR, BR, ARC, BODY, BODY_LEN\
  FROM SMS_MSG WHERE ID=:ID";
 RetriveStatement::RetriveStatement(Connection* connection, bool assign)
     throw(StorageException)
@@ -538,17 +501,14 @@ void RetriveStatement::defineSms(SMS& sms)
     define(i++, SQLT_UIN, (dvoid *) &(sms.destinationDescriptor.sme),
            (sb4) sizeof(sms.destinationDescriptor.sme),
            (dvoid *)&(indDstSme));
-    define(i++, SQLT_ODT, (dvoid *) &(waitTime),
-           (sb4) sizeof(waitTime),
-           (dvoid *)&(indWaitTime));
     define(i++, SQLT_ODT, (dvoid *) &(validTime),
            (sb4) sizeof(validTime));
     define(i++, SQLT_ODT, (dvoid *) &(submitTime),
            (sb4) sizeof(submitTime));
     define(i++, SQLT_UIN, (dvoid *) &(sms.attempts),
            (sb4) sizeof(sms.attempts));
-    define(i++, SQLT_UIN, (dvoid *) &(sms.failureCause),
-           (sb4) sizeof(sms.failureCause));
+    define(i++, SQLT_UIN, (dvoid *) &(sms.lastResult),
+           (sb4) sizeof(sms.lastResult));
     define(i++, SQLT_ODT, (dvoid *) &(lastTime),
            (sb4) sizeof(lastTime),
            (dvoid *)&(indLastTime));
@@ -560,73 +520,62 @@ void RetriveStatement::defineSms(SMS& sms)
            (dvoid *) &(indSvc));
     define(i++, SQLT_UIN, (dvoid *) &(sms.deliveryReport),
            (sb4) sizeof(sms.deliveryReport));
+    define(i++, SQLT_UIN, (dvoid *) &(sms.billingRecord),
+           (sb4) sizeof(sms.billingRecord));
     define(i++, SQLT_AFC, (dvoid *) &(bNeedArchivate), 
            (sb4) sizeof(bNeedArchivate));
-    define(i++, SQLT_UIN, (dvoid *) &(sms.priority),
-           (sb4) sizeof(sms.priority));
-    define(i++, SQLT_UIN, (dvoid *) &(sms.protocolIdentifier),
-           (sb4) sizeof(sms.protocolIdentifier));
-    define(i++, SQLT_AFC, (dvoid *) &(bHeaderIndicator),
-           (sb4) sizeof(bHeaderIndicator));
-    define(i++, SQLT_UIN, (dvoid *) &(sms.messageBody.scheme),
-           (sb4) sizeof(sms.messageBody.scheme));
-    define(i++, SQLT_UIN, (dvoid *) &(sms.messageBody.lenght),
-           (sb4) sizeof(sms.messageBody.lenght));
-    define(i++, SQLT_BIN, (dvoid *) (sms.messageBody.data),
-           (sb4) sizeof(sms.messageBody.data));
-    define(i++, SQLT_BIN, (dvoid *) &(rcptId), 
-           (sb4) sizeof(rcptId));
-    define(i++, SQLT_UIN, (dvoid *) &(sms.esmClass),
-           (sb4) sizeof(sms.esmClass));
+    define(i++, SQLT_BIN, (dvoid *) (bodyBuffer), 
+           (sb4) sizeof(bodyBuffer), &indBody);
+    define(i++, SQLT_UIN, (dvoid *) &(bodyBufferLen), 
+           (sb4) sizeof(bodyBufferLen));
 }
 
 void RetriveStatement::getSms(SMS& sms)
 {
     sms.state = (State) uState;
     sms.needArchivate = (bNeedArchivate == 'Y');
-    sms.messageBody.header = (bHeaderIndicator == 'Y');
     
     if (indOA == OCI_IND_NOTNULL) {
-        sms.originatingAddress.lenght 
+        sms.originatingAddress.length 
             = strlen(sms.originatingAddress.value);
     } else {
         sms.originatingAddress.value[0] = '\0';
-        sms.originatingAddress.lenght = 0;
+        sms.originatingAddress.length = 0;
     }
     if (indDA == OCI_IND_NOTNULL) {
-        sms.destinationAddress.lenght 
+        sms.destinationAddress.length 
             = strlen(sms.destinationAddress.value);
     } else {
         sms.destinationAddress.value[0] = '\0';
-        sms.destinationAddress.lenght = 0;
+        sms.destinationAddress.length = 0;
     }
     if (indSrcImsi == OCI_IND_NOTNULL) {
-        sms.originatingDescriptor.imsiLenght 
+        sms.originatingDescriptor.imsiLength 
             = strlen(sms.originatingDescriptor.imsi);
     } else {
         sms.originatingDescriptor.imsi[0] = '\0';
-        sms.originatingDescriptor.imsiLenght = 0;
+        sms.originatingDescriptor.imsiLength = 0;
     }
     if (indSrcMsc == OCI_IND_NOTNULL) {
-        sms.originatingDescriptor.mscLenght 
+        sms.originatingDescriptor.mscLength 
             = strlen(sms.originatingDescriptor.msc);
     } else {
         sms.originatingDescriptor.msc[0] = '\0';
-        sms.originatingDescriptor.mscLenght = 0;
+        sms.originatingDescriptor.mscLength = 0;
     }
     if (indDstImsi == OCI_IND_NOTNULL) {
-        sms.destinationDescriptor.imsiLenght 
+        sms.destinationDescriptor.imsiLength 
             = strlen(sms.destinationDescriptor.imsi);
     } else {
         sms.destinationDescriptor.imsi[0] = '\0';
-        sms.destinationDescriptor.imsiLenght = 0;
+        sms.destinationDescriptor.imsiLength = 0;
     }
     if (indDstMsc == OCI_IND_NOTNULL) {
-        sms.destinationDescriptor.mscLenght 
+        sms.destinationDescriptor.mscLength 
             = strlen(sms.destinationDescriptor.msc);
     } else {
         sms.destinationDescriptor.msc[0] = '\0';
-        sms.destinationDescriptor.mscLenght = 0;
+        sms.destinationDescriptor.mscLength = 0;
     }
     
     if (indSrcSme != OCI_IND_NOTNULL) 
@@ -640,13 +589,13 @@ void RetriveStatement::getSms(SMS& sms)
     else convertOCIDateToDate(&lastTime, &(sms.lastTime));
     if (indNextTime != OCI_IND_NOTNULL) sms.nextTime = 0;
     else convertOCIDateToDate(&nextTime, &(sms.nextTime));
-    if (indWaitTime != OCI_IND_NOTNULL) sms.waitTime = 0;
-    else convertOCIDateToDate(&waitTime, &(sms.waitTime));
     
     convertOCIDateToDate(&submitTime, &(sms.submitTime));
     convertOCIDateToDate(&validTime, &(sms.validTime));
-    
-    sms.receiptSmsId = UINT64_SWAP_LE_BE_CONSTANT(rcptId);
+
+    sms.attach = (bodyBufferLen > MAX_BODY_LENGTH);
+    if (indBody != OCI_IND_NOTNULL) sms.messageBody.setBuffer(0,0);
+    else sms.messageBody.setBuffer(bodyBuffer, bodyBufferLen);
 }
 
 /* --------------------------- DestroyStatement ----------------------- */
@@ -667,7 +616,7 @@ void DestroyStatement::bindId(SMSId id)
 
 /* --------------------------- ReplaceStatement ----------------------- */        
 const char* ReplaceStatement::sql = (const char*)
-"UPDATE SMS_MSG SET DR=:DR, UDL=:UDL, UD=:UD\
+"UPDATE SMS_MSG SET DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN\
  WHERE ID=:ID AND ST=:ENROUTE AND\
  OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL";
 
@@ -709,10 +658,17 @@ void ReplaceStatement::bindOriginatingAddress(Address& oa)
 void ReplaceStatement::bindBody(Body& body)
     throw(StorageException)
 {
-    bind((CONST text *)"UDL", (sb4) 3*sizeof(char), 
-         SQLT_UIN, (dvoid *) &(body.lenght), (sb4) sizeof(body.lenght));
-    bind((CONST text *)"UD", (sb4) 2*sizeof(char),
-         SQLT_BIN, (dvoid *) (body.data), (sb4) sizeof(body.data));
+    bodyBufferLen = body.getBufferLength();
+    bodyBuffer = body.getBuffer();
+    indBody = (bodyBuffer && bodyBufferLen <= MAX_BODY_LENGTH) 
+                ? OCI_IND_NOTNULL : OCI_IND_NULL;
+    
+    bind((CONST text *)"BODY", (sb4) 4*sizeof(char),
+         SQLT_BIN, (dvoid *) bodyBuffer,
+         (sb4) bodyBufferLen, &indBody);
+    bind((CONST text *)"BODY_LEN", (sb4) 8*sizeof(char),
+         SQLT_UIN, (dvoid *)&(bodyBufferLen),
+         (sb4) sizeof(bodyBufferLen));
 }
 void ReplaceStatement::bindDeliveryReport(dvoid* dr, sb4 size)
     throw(StorageException)
@@ -735,7 +691,7 @@ void ReplaceStatement::bindWaitTime(time_t waitTime)
 }
 
 const char* ReplaceVTStatement::sql = (const char*)
-"UPDATE SMS_MSG SET DR=:DR, UDL=:UDL, UD=:UD,\
+"UPDATE SMS_MSG SET DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN,\
  VALID_TIME=:VT\
  WHERE ID=:ID AND ST=:ENROUTE AND\
  OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL";
@@ -744,8 +700,8 @@ ReplaceVTStatement::ReplaceVTStatement(Connection* connection, bool assign)
         : ReplaceStatement(connection, ReplaceVTStatement::sql, assign) {}
 
 const char* ReplaceWTStatement::sql = (const char*)
-"UPDATE SMS_MSG SET DR=:DR, UDL=:UDL, UD=:UD,\
- WAIT_TIME=:WT\
+"UPDATE SMS_MSG SET DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN,\
+ NEXT_TRY_TIME=:WT, LAST_TRY_TIME=NULL\
  WHERE ID=:ID AND ST=:ENROUTE AND\
  OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL";
 ReplaceWTStatement::ReplaceWTStatement(Connection* connection, bool assign)
@@ -753,8 +709,8 @@ ReplaceWTStatement::ReplaceWTStatement(Connection* connection, bool assign)
         : ReplaceStatement(connection, ReplaceWTStatement::sql, assign) {}
 
 const char* ReplaceVWTStatement::sql = (const char*)
-"UPDATE SMS_MSG SET DR=:DR, UDL=:UDL, UD=:UD,\
- VALID_TIME=:VT, WAIT_TIME=:WT\
+"UPDATE SMS_MSG SET DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN,\
+ VALID_TIME=:VT, NEXT_TRY_TIME=:WT, LAST_TRY_TIME=NULL\
  WHERE ID=:ID AND ST=:ENROUTE AND\
  OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL";
 ReplaceVWTStatement::ReplaceVWTStatement(Connection* connection, bool assign)
@@ -799,9 +755,9 @@ void ToEnrouteStatement::bindFailureCause(dvoid* cause, sb4 size)
 void ToEnrouteStatement::bindDestinationDescriptor(Descriptor& dst)
     throw(StorageException)
 {
-    indDstMsc = (!dst.mscLenght || !strlen(dst.msc)) ? 
+    indDstMsc = (!dst.mscLength || !strlen(dst.msc)) ? 
                 OCI_IND_NULL : OCI_IND_NOTNULL;
-    indDstImsi = (!dst.imsiLenght || !strlen(dst.imsi)) ? 
+    indDstImsi = (!dst.imsiLength || !strlen(dst.imsi)) ? 
                 OCI_IND_NULL : OCI_IND_NOTNULL;
 
     bind(4 , SQLT_STR, (dvoid *) (dst.msc), 
@@ -842,9 +798,9 @@ void ToDeliveredStatement::bindId(SMSId id)
 void ToDeliveredStatement::bindDestinationDescriptor(Descriptor& dst)
     throw(StorageException)
 {
-    indDstMsc = (!dst.mscLenght || !strlen(dst.msc)) ? 
+    indDstMsc = (!dst.mscLength || !strlen(dst.msc)) ? 
                 OCI_IND_NULL : OCI_IND_NOTNULL;
-    indDstImsi = (!dst.imsiLenght || !strlen(dst.imsi)) ? 
+    indDstImsi = (!dst.imsiLength || !strlen(dst.imsi)) ? 
                 OCI_IND_NULL : OCI_IND_NOTNULL;
 
     bind(3 , SQLT_STR, (dvoid *) (dst.msc), 
@@ -891,9 +847,9 @@ void ToUndeliverableStatement::bindFailureCause(dvoid* cause, sb4 size)
 void ToUndeliverableStatement::bindDestinationDescriptor(Descriptor& dst)
     throw(StorageException)
 {
-    indDstMsc = (!dst.mscLenght || !strlen(dst.msc)) ? 
+    indDstMsc = (!dst.mscLength || !strlen(dst.msc)) ? 
                 OCI_IND_NULL : OCI_IND_NOTNULL;
-    indDstImsi = (!dst.imsiLenght || !strlen(dst.imsi)) ? 
+    indDstImsi = (!dst.imsiLength || !strlen(dst.imsi)) ? 
                 OCI_IND_NULL : OCI_IND_NOTNULL;
 
     bind(4 , SQLT_STR, (dvoid *) (dst.msc), 
@@ -995,6 +951,144 @@ time_t MinNextTimeStatement::getMinNextTime()
         return minTime;
     }
     return 0;
+}
+
+BodyStatement::BodyStatement(Connection* connection, const char* sql, 
+                             bool assign=false) 
+    throw(StorageException)
+        : SetIdStatement(connection, sql, assign), 
+            indBody(OCI_IND_NOTNULL)
+{
+    // Allocate locator descriptor
+    check(OCIDescriptorAlloc((dvoid *)envhp, (dvoid **)&locator,
+                             (ub4)OCI_DTYPE_LOB, (size_t)0, (dvoid **)0));
+}
+BodyStatement::~BodyStatement()
+
+{
+    // Free locator descriptor
+    (void) OCIDescriptorFree((dvoid *) locator, (ub4) OCI_DTYPE_LOB);
+}
+
+const char* SetBodyStatement::sql = (const char*)
+"INSERT INTO SMS_ATCH (ID, BODY) VALUES (:ID, EMPTY_BLOB()) "
+"RETURNING BODY INTO :BODY";
+SetBodyStatement::SetBodyStatement(Connection* connection, bool assign)
+    throw(StorageException) 
+        : BodyStatement(connection, SetBodyStatement::sql, assign)
+{
+    bind((CONST text *)"BODY", (sb4) 4*sizeof(char),
+         SQLT_BLOB, (dvoid *) &locator, (sb4) 0, &indBody);
+}
+
+void SetBodyStatement::setBody(Body& body)
+    throw(StorageException)
+{
+    check(execute(OCI_DEFAULT, 1, 0));
+
+    int isOpen = false;
+    ub4 amount = body.getBufferLength();
+    ub4 offset = 1;
+
+    check(OCILobOpen(svchp, errhp, locator, OCI_LOB_READWRITE));
+    check(OCILobIsOpen(svchp, errhp, locator, &isOpen));
+    
+    if (isOpen)
+    {
+        uint8_t* buff = body.getBuffer();
+        
+        if (amount && buff)
+        {
+            ub4 size = amount;
+
+            check(OCILobWrite(svchp, errhp, locator, &amount, offset, 
+                              (dvoid *)buff, amount, OCI_ONE_PIECE, (dvoid *)0, 
+                              (sb4 (*)(dvoid *, dvoid *, ub4 *, ub1 *)) 0,
+                              (ub2) 0, (ub1) 0));
+
+            if (size != amount)
+                throw StorageException("Can't write %d bytes to SMS_ATCH::LOB. "
+                                       "Only %d bytes written.", size, amount);
+        }
+        check(OCILobClose(svchp, errhp, locator));
+    }
+    else throw StorageException("Can't open SMS_ATCH::LOB for writing.");
+}
+
+const char* GetBodyStatement::sql = (const char*)
+"SELECT BODY FROM SMS_ATCH WHERE ID=:ID FOR UPDATE";
+GetBodyStatement::GetBodyStatement(Connection* connection, bool assign)
+    throw(StorageException) 
+        : BodyStatement(connection, GetBodyStatement::sql, assign)
+{
+    define(1, SQLT_BLOB, (dvoid *) &locator, (sb4) 0, &indBody);
+}
+
+bool GetBodyStatement::getBody(Body& body)
+    throw(StorageException)
+{
+    check(execute(OCI_DEFAULT, 1, 0));
+
+    bool ret = false;
+    if (indBody != OCI_IND_NOTNULL)
+    {
+        body.setBuffer(0, 0);
+        return false;
+    }
+
+    int isOpen = false;
+    ub4 amount = 0;
+    ub4 offset = 1;
+
+    check(OCILobOpen(svchp, errhp, locator, OCI_LOB_READONLY));
+    check(OCILobIsOpen(svchp, errhp, locator, &isOpen));
+    
+    if (isOpen)
+    {
+        check(OCILobGetLength (svchp, errhp, locator, &amount));
+        if (amount)
+        {
+            ub4 size = amount;
+            uint8_t* buff = new uint8_t[amount];
+
+            check(OCILobRead(svchp, errhp, locator, &amount, offset,
+                             (dvoid *)buff, size, (dvoid *)0,
+                             (sb4 (*)(dvoid *, dvoid *, ub4, ub1)) 0,
+                             (ub2) 0, (ub1) 0));
+            
+            if (size != amount)
+                throw StorageException("Can't read %d bytes from SMS_ATCH::LOB. "
+                                       "Only %d bytes read.", size, amount);
+
+            body.setBuffer(buff, size);
+            ret = true;
+        }
+        else 
+        {
+            body.setBuffer(0, 0);
+            ret = false;
+        }
+        check(OCILobClose(svchp, errhp, locator));
+    }
+    else
+        throw StorageException("Can't open SMS_ATCH::LOB for reading.");
+    
+    return ret;
+}
+
+const char* DestroyBodyStatement::sql = (const char*)
+"DELETE FROM SMS_ATCH WHERE ID=:ID";
+DestroyBodyStatement::DestroyBodyStatement(Connection* connection, 
+                                           bool assign=true)
+    throw(StorageException)
+        : BodyStatement(connection, DestroyBodyStatement::sql, assign)
+{
+}
+bool DestroyBodyStatement::destroyBody()
+    throw(StorageException)
+{
+    check(execute(OCI_DEFAULT, 1, 0));
+    return (getRowsAffectedCount() ? true:false);
 }
 
 }}

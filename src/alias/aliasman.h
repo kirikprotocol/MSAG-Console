@@ -15,6 +15,7 @@ struct AliasInfo
 {
   Address addr;
   Address alias;
+	bool hide;
 };
 
 //struct AliasRecord;
@@ -42,6 +43,7 @@ struct APattern
   };
   int length;
   int defLength;
+	bool hide;
   //bool hasStar;
   //AliasRecord* greatUncertainty;
 };
@@ -105,7 +107,7 @@ class AliasTable
 {
 public:
   virtual bool AliasToAddress(const Address& alias, Address&  addr) = 0;
-  virtual bool AddressToAlias(const Address& addr, Address& alias) = 0;
+  virtual bool AddressToAlias(const Address& addr, Address& alias, bool* hode=0) = 0;
 };
 
 class AliasAdmin
@@ -163,7 +165,7 @@ public:
   }
 
   virtual bool AliasToAddress(const Address& alias, Address&  addr);
-  virtual bool AddressToAlias(const Address& addr, Address& alias);
+  virtual bool AddressToAlias(const Address& addr, Address& alias, bool* hode=0);
   
   virtual void addAlias(const AliasInfo& info);
   virtual void commit();

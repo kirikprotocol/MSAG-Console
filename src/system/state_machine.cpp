@@ -99,7 +99,7 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
-  if(sms->getWaitTime()>time(NULL)+maxValidTime)
+  if(sms->getNextTime()>time(NULL)+maxValidTime)
   {
     SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::INVALIDSCHEDULE);
     try{
@@ -139,8 +139,8 @@ StateType StateMachine::submit(Tuple& t)
     }
   }
 
-  __trace2__("Sms scheduled to %d, now %d",(int)sms->getWaitTime(),(int)time(NULL));
-  if(sms->getWaitTime()>time(NULL))
+  __trace2__("Sms scheduled to %d, now %d",(int)sms->getNextTime(),(int)time(NULL));
+  if(sms->getNextTime()>time(NULL))
   {
     smsc->notifyScheduler();
     return ENROUTE_STATE;
@@ -177,7 +177,8 @@ StateType StateMachine::submit(Tuple& t)
   try{
     // send delivery
     Address src;
-    if(smsc->AddressToAlias(sms->getOriginatingAddress(),src))
+		bool hide = false;
+    if(smsc->AddressToAlias(sms->getOriginatingAddress(),src,&hide) && hide)
     {
       sms->setOriginatingAddress(src);
     }
@@ -208,7 +209,8 @@ StateType StateMachine::forward(Tuple& t)
   SmeProxy *dest_proxy=0;
   int dest_proxy_index;
   Address src;
-  if(smsc->AddressToAlias(sms.getOriginatingAddress(),src))
+  bool hide = false;
+	if(smsc->AddressToAlias(sms.getOriginatingAddress(),src,&hide) && hide)
   {
     sms.setOriginatingAddress(src);
   }

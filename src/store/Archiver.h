@@ -102,19 +102,20 @@ namespace smsc { namespace store
         SMSId       id;
         SMS         sms;
         
-        OCIDate     waitTime;
+        int         bodyBufferLen;
+        uint8_t     bodyBuffer[MAX_BODY_LENGTH];
+        
         OCIDate     validTime;
         OCIDate     submitTime;
         OCIDate     lastTime;
         OCIDate     nextTime;
         
         uint8_t     uState;
-        char        bHeaderIndicator;
         char        bNeedArchivate;
 
         sb2         indOA, indSrcMsc, indSrcImsi, indSrcSme;
         sb2         indDA, indDstMsc, indDstImsi, indDstSme;
-        sb2         indWaitTime, indLastTime;
+        sb2         indBody, indLastTime;
         
         char* loadDBInstance(Manager& config, const char* cat)
             throw(ConfigException);

@@ -156,7 +156,7 @@ namespace smsc { namespace store
          */
         virtual void replaceSms(SMSId id, const Address& oa,
             const Body& newBody, uint8_t deliveryReport,
-            time_t validTime = 0, time_t waitTime = 0)
+            time_t validTime = 0, time_t nextTime = 0)
                 throw(StorageException, NoSuchMessageException) = 0; 
         
         /**
