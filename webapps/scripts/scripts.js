@@ -214,7 +214,7 @@ function validateField_reschedule(elem)
 }
 
 var release_causes = [1,2,3,4,5,8,9,16,17,18,19,20,21,22,27,28,29,31,34,38,41,42,43,44,46,47,
-                      50,53,55,57,58,62,63,65,69,70,79,87,88,90,91,95,97,99,102,103,110,111,127];
+                      50,53,55,57,58,62,63,65,69,70,79,83,84,87,88,90,91,95,97,99,102,103,110,111,121,127];
 function validateField_release_cause(elem)
 {
 	if (elem.value == null || elem.value.length == 0)
