@@ -647,6 +647,7 @@ public:
 		if (!checkComplete(10000))
 		{
 			__tc_fail__(1);
+			return;
 		}
 		setComplete(false);
 		//unbind
@@ -746,6 +747,7 @@ public:
 		if (!checkComplete(10000))
 		{
 			__tc_fail__(1);
+			return;
 		}
 		setComplete(false);
 		//произвольные pdu

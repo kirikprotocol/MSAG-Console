@@ -54,6 +54,7 @@ inline void BaseTestCases::error()
 	}
 	catch(exception& e)
 	{
+		__warning2__("%s", e.what());
 		getLog().error("[%d]\t%s", thr_self(), e.what());
 	}
 	catch(...)

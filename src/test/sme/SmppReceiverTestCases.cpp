@@ -50,7 +50,9 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 		{
 			//проверить и обновить response и delivery receipt мониторы
 			//по данным из респонса
+			fixture->pduReg->removeMonitor(monitor);
 			fixture->pduChecker->processSubmitSmResp(monitor, pdu, respTime);
+			//fixture->pduReg->registerMonitor(monitor);
 			//__dumpPdu__("processSubmitSmRespAfter", fixture->smeInfo.systemId, &pdu);
 		}
 		__tc_ok_cond__;
@@ -189,7 +191,7 @@ void SmppReceiverTestCases::processDataSm(PduDataSm &pdu)
 {
 	//__dumpPdu__("processDataSm", fixture->smeInfo.systemId, &pdu);
 	__decl_tc__;
-	__tc__("processDataSm");
+	__tc__("notImplemented.processDataSm");
 	__tc_fail__(100);
 }
 
@@ -197,7 +199,7 @@ void SmppReceiverTestCases::processMultiResp(PduMultiSmResp &pdu)
 {
 	//__dumpPdu__("processMultiResp", fixture->smeInfo.systemId, &pdu);
 	__decl_tc__;
-	__tc__("processMultiResp");
+	__tc__("notImplemented.processMultiResp");
 	__tc_fail__(100);
 }
 
@@ -205,7 +207,7 @@ void SmppReceiverTestCases::processDataSmResp(PduDataSmResp &pdu)
 {
 	//__dumpPdu__("processDataSmResp", fixture->smeInfo.systemId, &pdu);
 	__decl_tc__;
-	__tc__("processDataSmResp");
+	__tc__("notImplemented.processDataSmResp");
 	__tc_fail__(100);
 }
 
@@ -213,7 +215,7 @@ void SmppReceiverTestCases::processQuerySmResp(PduQuerySmResp &pdu)
 {
 	//__dumpPdu__("processQuerySmResp", fixture->smeInfo.systemId, &pdu);
 	__decl_tc__;
-	__tc__("processQuerySmResp");
+	__tc__("notImplemented.processQuerySmResp");
 	__tc_fail__(100);
 }
 
@@ -221,7 +223,7 @@ void SmppReceiverTestCases::processCancelSmResp(PduCancelSmResp &pdu)
 {
 	//__dumpPdu__("processCancelSmResp", fixture->smeInfo.systemId, &pdu);
 	__decl_tc__;
-	__tc__("processCancelSmResp");
+	__tc__("notImplemented.processCancelSmResp");
 	__tc_fail__(100);
 }
 
@@ -229,14 +231,14 @@ void SmppReceiverTestCases::processAlertNotification(PduAlertNotification &pdu)
 {
 	//__dumpPdu__("processAlertNotification", fixture->smeInfo.systemId, &pdu);
 	__decl_tc__;
-	__tc__("processAlertNotification");
+	__tc__("notImplemented.processAlertNotification");
 	__tc_fail__(100);
 }
 
 void SmppReceiverTestCases::handleError(int errorCode)
 {
 	__trace2__("handleError(): errorCode = %d", errorCode);
-	//abort();
+	__unreachable__("Fatal error");
 }
 
 }

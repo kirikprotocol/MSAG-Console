@@ -140,30 +140,27 @@ AckText* SmscSmeTestCases::getExpectedResponse(
 		s << "$Notif ";
 		s << SmsUtil::configString(destAlias) << " ";
 		s << df.format(t) << ": ";
-		switch (monitor->state)
+		switch (isAccepted(monitor->deliveryStatus))
 		{
-			case ENROUTE:
-			case EXPIRED:
-				switch (isAccepted(monitor->deliveryStatus))
-				{
-					case RESP_PDU_RESCHED:
-						s << "subscriber busy";
-						break;
-					case RESP_PDU_MISSING:
-						s << "delivery attempt timed out";
-						break;
-					/*
-					case ...:
-						s << "system failure";
-						break;
-					*/
-					default:
-						__unreachable__("Invalid respFlag");
-				}
+			case RESP_PDU_OK:
+				__unreachable__("Invalid delivery status");
+				//break;
+			case RESP_PDU_ERROR:
+				s << "destination unavailable";
 				break;
-			case UNDELIVERABLE:
-				s << "destination unavialable";
+			case RESP_PDU_RESCHED:
+				s << "subscriber busy";
 				break;
+			case RESP_PDU_MISSING:
+				s << "delivery attempt timed out";
+				break;
+			/*
+			case ...:
+				s << "system failure";
+				break;
+			*/
+			default:
+				__unreachable__("Invalid respFlag");
 		}
 		const pair<string, uint8_t> p = convert(s.str(), profile.codepage);
 		__trace2__("getExpectedResponse(): %s", p.first.c_str());
