@@ -135,3 +135,12 @@ CREATE TABLE SMS_IDS
 CREATE UNIQUE INDEX SMS_IDS_IDX ON SMS_IDS (ID)
 TABLESPACE SMSC_IDX;
 
+drop table sms_profile;
+CREATE TABLE sms_profile (
+  mask varchar(30) primary key,
+  reportinfo NUMBER(3),
+  codeset NUMBER(3)
+);
+
+CREATE UNIQUE INDEX SMS_PROFILE_MASK_IDX on sms_profile (mask)
+TABLESPACE SMSC_IDX;
