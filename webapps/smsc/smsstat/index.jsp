@@ -159,14 +159,20 @@ while (i.hasNext()) {
         %>
         <tr class=row1>
             <td align=right>
-          <% String errstr = appContext.getLocaleMessages(request.getLocale()).getString("smsc.errcode."+errid.errcode);
-             if( errstr != null ) {
+          <%
+          String errstr = null;
+          try {
+            appContext.getLocaleMessages(request.getLocale()).getString("smsc.errcode."+errid.errcode);
+          } catch(Exception e) {
+            System.err.println(e.getMessage());
+          }
+          if( errstr != null ) {
           %><%=errstr%>
           <%
-             } else {
+          } else {
           %><%=errid.errcode%>
           <%
-             }
+          }
           %>
             </td>
             <td align=right><%= errid.counter%></td>
