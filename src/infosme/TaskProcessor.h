@@ -25,6 +25,8 @@
 #include "TaskScheduler.h"
 #include "Task.h"
 
+#include "InfoSmeAdmin.h"
+
 namespace smsc { namespace infosme 
 {
     using namespace smsc::core::buffers;
@@ -184,7 +186,7 @@ namespace smsc { namespace infosme
         }
     };
 
-    class TaskProcessor : public TaskProcessorAdapter, public Thread
+    class TaskProcessor : public TaskProcessorAdapter, public InfoSmeAdmin, public Thread
     {
     private:
 
@@ -223,12 +225,6 @@ namespace smsc { namespace infosme
 
     public:
 
-        /**
-         * Creates TaskProcessor
-         *
-         * @param config
-         * @exception ConfigException throws when configuration is invalid
-         */
         TaskProcessor(ConfigView* config);
         virtual ~TaskProcessor();
 
@@ -260,6 +256,9 @@ namespace smsc { namespace infosme
         void processResponce(int seqNum, bool accepted, bool retry, std::string smscId="");
         void processReceipt (std::string smscId, bool delivered);
 
+        /* ------------------------ Admin interface ------------------------ */ 
+
+        // TODO: implement administrative part
     };
 
 }}

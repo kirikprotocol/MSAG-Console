@@ -96,7 +96,7 @@ void TaskContainer::resetWaitingTasks()
 /* ---------------------------- TaskProcessor ---------------------------- */
 
 TaskProcessor::TaskProcessor(ConfigView* config)
-    : TaskProcessorAdapter(), Thread(),
+    : TaskProcessorAdapter(), InfoSmeAdmin(), Thread(),
         logger(Logger::getCategory("smsc.infosme.TaskProcessor")), 
             bStarted(false), bNeedExit(false), taskTablesPrefix(0), 
                 dsInternalName(0), dsInternal(0), dsIntConnection(0), dsCommitInterval(1),
@@ -206,7 +206,7 @@ void TaskProcessor::dsInternalCommit(bool force)
     {
         if (force || nextTime <= currentTime) {
             if (dsIntConnection) dsIntConnection->commit();
-            nextTime += dsCommitInterval;
+            nextTime = currentTime + dsCommitInterval;
         }
     }
     catch (Exception& exc) {

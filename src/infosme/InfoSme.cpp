@@ -24,6 +24,7 @@
 #include <admin/service/ServiceSocketListener.h>
 
 #include "TaskProcessor.h"
+#include "InfoSmeComponent.h"
 
 using namespace smsc::sme;
 using namespace smsc::smpp;
@@ -366,6 +367,13 @@ int main(void)
         
         ConfigView tpConfig(manager, "InfoSme");
         TaskProcessor processor(&tpConfig);
+        
+        ConfigView adminConfig(manager, "InfoSme.Admin");
+        InfoSmeComponent admin(processor);                   
+        ComponentManager::registerComponent(&admin); 
+        adminListener.init(adminConfig.getString("host"), adminConfig.getInt("port"));               
+        bAdminListenerInited = true;
+        adminListener.Start();                                     
         
         ConfigView smscConfig(manager, "InfoSme.SMSC");
         InfoSmeConfig cfg(&smscConfig);

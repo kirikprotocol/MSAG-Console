@@ -13,7 +13,7 @@
     
     <section name="InfoSme">
 
-        <param name="address" type="string">.0.1.123</param>
+        <param name="Address" type="string">.0.1.123</param>
 	<param name="SvcType" type="string">InfoSme</param>
         <param name="ProtocolId" type="int">111</param>
 	<param name="dsIntCommitInterval" type="int">2</param>
@@ -23,6 +23,11 @@
             <param name="init" type="int">5</param>
         </section>  
             
+        <section name="Admin">
+            <param name="host" type="string">smsc</param>
+            <param name="port" type="int">9669</param>
+	</section>
+
         <section name="SMSC">
             <param name="host" type="string">smsc</param>
             <param name="port" type="int">9229</param>
