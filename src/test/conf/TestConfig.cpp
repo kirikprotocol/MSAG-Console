@@ -75,7 +75,7 @@ TestConfig::TestConfig()
 	strMap["profilerRespDataCodingDefault"] =
 		"”становлен режим приема сообщений в 7-bit кодировке (message character encoding is set to 7-bit)";
 	strMap["profilerRespDataCodingUcs2"] =
-		"Message character encoding is set to ucs2 encoding (now you will be able to receive messages with russian characters in the case your cell phone supports ucs...";
+		"Message character encoding is set to ucs2 encoding (now you will be able to receive messages with russian characters in the case your cell phone supports ucs2 messages)";
 	strMap["profilerRespInvalidCmdText"] =
 		"Ќеправильна€ команда (!@#$%^&*( )_+-=|\\:;'<,>.?/)";
 	//респонсы db sme
