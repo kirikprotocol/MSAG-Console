@@ -38,7 +38,7 @@ static inline void makeAddress(Address& addr,const string& mask)
   addr=Address(mask.c_str());
 }
 
-void loadRoutes(RouteManager* rm,const RouteConfig& rc)
+void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
 {
   try
   {
@@ -95,7 +95,7 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc)
         }
       }
     }
-    rm->commit();
+    rm->commit(traceit);
   }
   catch(...)
   {
