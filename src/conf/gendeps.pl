@@ -47,7 +47,12 @@ while(<IN>)
   print OUT "$builddir/bin/$bin : $builddir/obj/lib$lib/$src.o$libdeps\n";
   print OUT "\tmkdir -p `dirname \$@`\n";
   print OUT "\techo linking \$@\n";
-  print OUT "\t\$(CXX) \$(CXXFLAGS) -o \$@ \$< \$(LDFLAGS) @f\n\n";
+  print OUT "\t\$(CXX) \$(CXXFLAGS) -o \$@ \$< \$(LDFLAGS) @f";
+  if($ENV{MACHTYPE} eq 'sparc-sun-solaris')
+  {
+    print OURT ' -leinss7';
+  }
+  print OUT "\n\n";
   for my $l(@f)
   {
     $l=~s/^-l//;
