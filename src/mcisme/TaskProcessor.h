@@ -75,26 +75,6 @@ namespace smsc { namespace mcisme
         virtual int Execute();
     };
 
-    struct Message
-    {
-        int  seqNumber;
-        std::string abonent, message;
-        bool replace, notify;
-
-        Message(int seq=0, std::string abonent="", std::string message="",
-                bool replace=false, bool notify=false) 
-            : seqNumber(seq), abonent(abonent), message(message), replace(replace), notify(notify) {};
-        Message(const Message& msg) 
-            : seqNumber(msg.seqNumber), abonent(msg.abonent), message(msg.message),
-              replace(msg.replace), notify(msg.notify) {};
-        
-        Message& operator=(const Message& msg) {
-            seqNumber = msg.seqNumber;
-            abonent = msg.abonent; message = msg.message;
-            replace = msg.replace; notify = msg.notify;
-            return (*this);
-        };
-    };
     struct MessageSender
     {
         virtual int  getSequenceNumber() = 0;
@@ -242,7 +222,7 @@ namespace smsc { namespace mcisme
         
         Mutex   startLock;
         Event   exitedEvent;
-        bool    bStarted, bNeedExit,    bInQueueOpen, bOutQueueOpen;
+        bool    bStarted, bInQueueOpen, bOutQueueOpen;
         int                             maxInQueueSize, maxOutQueueSize;
         EventMonitor                    inQueueMonitor, outQueueMonitor;
         CyclicQueue<MissedCallEvent>    inQueue;
@@ -259,6 +239,8 @@ namespace smsc { namespace mcisme
         bool getFromOutQueue(Message& event);
         
         void initDataSource(ConfigView* config);
+
+        Task* getTask(const char* abonent, bool& newone);
 
         friend class EventRunner;
         virtual void processResponce(int seqNum, bool accepted, bool retry,
@@ -283,9 +265,13 @@ namespace smsc { namespace mcisme
             return (messageSender != 0);
         };
 
-        void Start();           // Thread for inQueue processing
+        void Run();             // outQueue processing
         void Stop();
-        virtual int Execute();
+        void Start();           
+        virtual int Execute();  // inQueue processing
+
+        void processEvent(const MissedCallEvent& event);
+        void processMessage(const Message& message);
 
         virtual void missed(MissedCallEvent& event) {
             putToInQueue(event);

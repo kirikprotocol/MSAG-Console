@@ -47,6 +47,17 @@ static int parseTime(const char* str)
     return hour*3600+minute*60+second;
 }
 
+static void checkAddress(const char* address)
+{
+    static const char* ADDRESS_ERROR_NULL_MESSAGE    = "Destination address is undefined.";
+    static const char* ADDRESS_ERROR_INVALID_MESSAGE = "Address '%s' is invalid";
+    
+    if (!address || address[0] == '\0')
+        throw Exception(ADDRESS_ERROR_NULL_MESSAGE);
+    if (!isMSISDNAddress(address))
+        throw Exception(ADDRESS_ERROR_INVALID_MESSAGE, address);
+}
+
 int EventRunner::Execute()
 {
     switch (method)
@@ -68,17 +79,15 @@ int EventRunner::Execute()
 
 void TaskProcessor::initDataSource(ConfigView* config)
 {
-    try 
-    {
+    try  {
         std::auto_ptr<char> dsIdentity(config->getString("type"));
         const char* dsIdentityStr = dsIdentity.get();
         ds = DataSourceFactory::getDataSource(dsIdentityStr);
         if (!ds) throw ConfigException("DataSource for '%s' identity "
                                        "wasn't registered !", dsIdentityStr);
         ds->init(config);
-    }
-    catch (ConfigException& exc)
-    {
+    } 
+    catch (ConfigException& exc) {
         if (ds) delete ds; ds = 0;
         throw;
     }
@@ -90,7 +99,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
         protocolId(0), svcType(0), address(0), messageSender(0), 
         ds(0), dsStatConnection(0), responceWaitTime(0), receiptWaitTime(0), 
         maxInQueueSize(10000), maxOutQueueSize(10000), // TODO init Queues Size
-        bStarted(false), bNeedExit(false), bInQueueOpen(false), bOutQueueOpen(false)
+        bStarted(false), bInQueueOpen(false), bOutQueueOpen(false)
 {
     smsc_log_info(logger, "Loading ...");
 
@@ -121,6 +130,8 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     statistics = new StatisticsManager(dsStatConnection);
     if (statistics) statistics->Start();
     */
+    Task::init(ds); // + statistics
+
     smsc_log_info(logger, "Load success.");
 }
 TaskProcessor::~TaskProcessor()
@@ -128,6 +139,7 @@ TaskProcessor::~TaskProcessor()
     this->Stop();
     eventManager.Stop();
     
+    // TODO: wait & delete all Tasks here !!!
     //if (statistics) delete statistics;
 
     if (dsStatConnection) ds->freeConnection(dsStatConnection);
@@ -151,7 +163,6 @@ void TaskProcessor::Start()
             taskIdsBySeqNum.Empty();
         }
         //resetWaitingTasks();
-        bNeedExit = false;
         openOutQueue();
         openInQueue();
         Thread::Start();
@@ -166,7 +177,6 @@ void TaskProcessor::Stop()
     if (bStarted)
     {
         smsc_log_info(logger, "Stopping ...");
-        bNeedExit = true;
         closeInQueue();
         closeOutQueue();
         exitedEvent.Wait();
@@ -176,15 +186,77 @@ void TaskProcessor::Stop()
 }
 int TaskProcessor::Execute()
 {
-    while (!bNeedExit)
+    static const char* ERROR_MESSAGE = "Failed to process notification. Details: %s";
+    
+    while (bInQueueOpen)
     {
-        MissedCallEvent event;
-        if (!getFromInQueue(event)) break;
-        
-        // TODO: process event
+        try
+        {
+            MissedCallEvent event;
+            if (!getFromInQueue(event)) break;
+            processEvent(event);
+
+        } catch (std::exception& exc) {
+            smsc_log_error(logger, ERROR_MESSAGE, exc.what());    
+        } catch (...) {
+            smsc_log_error(logger, ERROR_MESSAGE, "Cause is unknown");
+        }
     }
     exitedEvent.Signal();
     return 0;
+}
+void TaskProcessor::Run()
+{
+    static const char* ERROR_MESSAGE = "Failed to process message. Details: %s";
+
+    while (bOutQueueOpen)
+    {
+        try
+        {
+            Message message;
+            if (!getFromOutQueue(message)) break;
+            processMessage(message);
+
+        } catch (std::exception& exc) {
+            smsc_log_error(logger, ERROR_MESSAGE, exc.what());    
+        } catch (...) {
+            smsc_log_error(logger, ERROR_MESSAGE, "Cause is unknown");
+        }
+    }
+}
+
+Task* TaskProcessor::getTask(const char* abonent, bool& newone)
+{
+    // TODO: implement via TaskGuard ???
+    newone = false;
+    MutexGuard guard(tasksLock);
+    Task** taskPtr = tasks.GetPtr(abonent);
+    if (taskPtr) return *taskPtr;
+    Task* task = new Task(abonent);
+    tasks.Insert(abonent, task);
+    newone = true;
+    return task;
+}
+void TaskProcessor::processEvent(const MissedCallEvent& event)
+{
+    const char* abonent = event.to.c_str();
+    checkAddress(abonent);
+    
+    Message message;
+    {
+        bool newone = false;
+        Task* task = getTask(abonent, newone);
+        
+        MutexGuard taskLock(*task); // Lock while operating on task
+        task->addEvent(event);
+        if (!newone) return;        // Do not send message
+        task->formatMessage(message);
+    }
+    putToOutQueue(message);
+}
+void TaskProcessor::processMessage(const Message& message)
+{
+    // TODO: process out message (send it)
 }
 
 /* ------------------------ Input (notification) queue access ------------------------ */ 
@@ -221,6 +293,7 @@ bool TaskProcessor::getFromInQueue(MissedCallEvent& event)
         }
         inQueueMonitor.wait();
     } while (bInQueueOpen);
+    smsc_log_info(logger, "Input queue closed.");
     return false;
 }
 
@@ -258,6 +331,7 @@ bool TaskProcessor::getFromOutQueue(Message& message)
         }
         outQueueMonitor.wait();
     } while (bOutQueueOpen);
+    smsc_log_info(logger, "Output queue closed.");
     return false;
 }
 

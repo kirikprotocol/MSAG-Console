@@ -450,7 +450,7 @@ int main(void)
             mciSmeWaitEvent.Wait(0);
             while (!isNeedStop() && !isNeedReconnect())
             {
-                // TODO: processor.process();
+                // TODO: processor.Run();
                 mciSmeWaitEvent.Wait(100);
             }
             smsc_log_info(logger, "Disconnecting from SMSC ...");
