@@ -14,4 +14,12 @@
     <param name="host" type="string">smsc</param>
     <param name="port" type="int">6690</param>
   </section>
+  <section name="profiler">
+    <section name="jdbc">
+      <param name="source" type="string">jdbc:oracle:thin:@dbs.novosoft.ru:1521:ORCL</param>
+      <param name="driver" type="string">oracle.jdbc.driver.OracleDriver</param>
+      <param name="user" type="string">smsc3</param>
+      <param name="password" type="string">smsc3</param>
+    </section>
+  </section>
 </config>

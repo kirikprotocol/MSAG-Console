@@ -1,0 +1,18 @@
+package ru.novosoft.util.conpool;
+
+import javax.sql.*;
+
+public class NSConnectionPoolDataSource implements ConnectionPoolDataSource {
+  public javax.sql.PooledConnection getPooledConnection() {
+  }
+  public javax.sql.PooledConnection getPooledConnection(java.lang.String A, java.lang.String B) {
+  }
+  public int getLoginTimeout() {
+  }
+  public java.io.PrintWriter getLogWriter() {
+  }
+  public void setLogWriter(java.io.PrintWriter A) {
+  }
+  public void setLoginTimeout(int A) {
+  }
+}

@@ -12,9 +12,6 @@ public class SubjectQuery extends AbstractQueryImpl
 {
   public SubjectQuery (int expectedResultsQuantity, SubjectFilter filter, Vector sortOrder, int startPosition)
   {
-    this.expectedResultsQuantity = expectedResultsQuantity;
-    this.filter = filter;
-    this.sortOrder = sortOrder;
-    this.startPosition = startPosition;
+    super(expectedResultsQuantity, filter, sortOrder, startPosition);
   }
 }

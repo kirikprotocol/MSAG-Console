@@ -18,6 +18,14 @@ abstract class AbstractQueryImpl implements Query
   protected Vector sortOrder = null;
   protected int startPosition = 0;
 
+  public AbstractQueryImpl(int expectedResultsQuantity, Filter filter, Vector sortOrder, int startPosition)
+  {
+    this.expectedResultsQuantity = expectedResultsQuantity;
+    this.filter = filter;
+    this.sortOrder = sortOrder;
+    this.startPosition = startPosition;
+  }
+
   public int getExpectedResultsQuantity()
   {
     return expectedResultsQuantity;

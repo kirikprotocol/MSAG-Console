@@ -23,6 +23,8 @@
 </dl>
 <% 
 if (exception != null) {
+	System.out.println("Exception catched by error page: " + exception.getMessage());
+	exception.printStackTrace();
 	%><h2 style="color: Red;">Exception: <%=exception.getMessage()%></h2><%=exception.toString()%>
 	<pre><% exception.printStackTrace(new PrintWriter(out));%></pre><%
 }

@@ -23,8 +23,7 @@ abstract class AbstractDataSourceImpl implements DataSource
   protected AbstractDataSourceImpl(String[] columnNames)
   {
     this.columnNames = columnNames;
-    for (int i = 0; i < columnNames.length; i++)
-    {
+    for (int i = 0; i < columnNames.length; i++) {
       sorts.put(columnNames[i], new SortedVector(new DataItemComparator(columnNames[i])));
     }
   }
@@ -37,8 +36,7 @@ abstract class AbstractDataSourceImpl implements DataSource
   protected void add(DataItem item)
   {
     data.add(item);
-    for (Iterator i = sorts.values().iterator(); i.hasNext();)
-    {
+    for (Iterator i = sorts.values().iterator(); i.hasNext();) {
       ((SortedVector) i.next()).add(item);
     }
   }
@@ -46,8 +44,7 @@ abstract class AbstractDataSourceImpl implements DataSource
   protected void remove(DataItem item)
   {
     data.remove(item);
-    for (Iterator i = sorts.values().iterator(); i.hasNext();)
-    {
+    for (Iterator i = sorts.values().iterator(); i.hasNext();) {
       ((SortedVector) i.next()).remove(item);
     }
   }
@@ -56,8 +53,7 @@ abstract class AbstractDataSourceImpl implements DataSource
   {
     int count = position;
     int i = 0;
-    while (i < dataVector.size() && count > 0)
-    {
+    while (i < dataVector.size() && count > 0) {
       if (filter.isItemAllowed((DataItem) dataVector.get(i++)))
         count--;
     }
@@ -70,8 +66,7 @@ abstract class AbstractDataSourceImpl implements DataSource
   {
     int count = position;
     int i = dataVector.size() - 1;
-    while (i >= 0 && count > 0)
-    {
+    while (i >= 0 && count > 0) {
       if (filter.isItemAllowed((DataItem) dataVector.get(i--)))
         count--;
     }
@@ -84,8 +79,7 @@ abstract class AbstractDataSourceImpl implements DataSource
   {
     String sort = (String) query_to_run.getSortOrder().get(0);
     boolean isNegativeSort = false;
-    if (sort.charAt(0) == '-')
-    {
+    if (sort.charAt(0) == '-') {
       sort = sort.substring(1);
       isNegativeSort = true;
     }
@@ -101,11 +95,10 @@ abstract class AbstractDataSourceImpl implements DataSource
     Filter filter = query_to_run.getFilter();
     int count = query_to_run.getExpectedResultsQuantity();
     for (int i = isNegativeSort
-            ? findPositionAfterFilteringBackward(srcVector, filter, query_to_run.getStartPosition())
-            : findPositionAfterFiltering(srcVector, filter, query_to_run.getStartPosition());
+        ? findPositionAfterFilteringBackward(srcVector, filter, query_to_run.getStartPosition())
+        : findPositionAfterFiltering(srcVector, filter, query_to_run.getStartPosition());
          i >= 0 && i < srcVector.size() && results.size() < count;
-         i = isNegativeSort ? i - 1 : i + 1)
-    {
+         i = isNegativeSort ? i - 1 : i + 1) {
       DataItem item = (DataItem) srcVector.get(i);
       if (filter.isItemAllowed(item))
         results.add(item);

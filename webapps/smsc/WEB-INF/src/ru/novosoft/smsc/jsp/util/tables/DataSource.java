@@ -5,8 +5,10 @@
  */
 package ru.novosoft.smsc.jsp.util.tables;
 
+import ru.novosoft.smsc.admin.AdminException;
+
 
 public interface DataSource
 {
-  QueryResultSet query(Query query_to_run);
+  QueryResultSet query(Query query_to_run) throws AdminException;
 }

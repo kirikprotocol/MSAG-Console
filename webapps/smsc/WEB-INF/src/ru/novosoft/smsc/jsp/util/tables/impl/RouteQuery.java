@@ -12,9 +12,6 @@ public class RouteQuery extends AbstractQueryImpl
 {
   public RouteQuery(int expectedResultsQuantity, RouteFilter filter, Vector sortOrder, int startPosition)
   {
-    this.expectedResultsQuantity = expectedResultsQuantity;
-    this.filter = filter;
-    this.sortOrder = sortOrder;
-    this.startPosition = startPosition;
+    super(expectedResultsQuantity, filter, sortOrder, startPosition);
   }
 }

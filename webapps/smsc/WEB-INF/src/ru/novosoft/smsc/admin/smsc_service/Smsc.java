@@ -19,6 +19,9 @@ import ru.novosoft.smsc.admin.service.*;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.config.ConfigManager;
 import ru.novosoft.smsc.util.xml.Utils;
+import ru.novosoft.smsc.jsp.util.tables.impl.ProfileDataSource;
+import ru.novosoft.smsc.jsp.util.tables.impl.ProfileQuery;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
@@ -39,16 +42,17 @@ public class Smsc extends Service
   private RouteList routes = null;
   private SubjectList subjects = null;
   private AliasSet aliases = null;
+  private ProfileDataSource profileDataSource = null;
 
   private Category logger = Category.getInstance(this.getClass());
 
   public Smsc(ConfigManager configManager)
-          throws AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException
+      throws AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException
   {
     super(new ServiceInfo("SMSC",
-                          configManager.getConfig().getString("smsc.host"),
-                          configManager.getConfig().getInt("smsc.port"),
-                          "", null));
+        configManager.getConfig().getString("smsc.host"),
+        configManager.getConfig().getInt("smsc.port"),
+        "", null));
 
     this.configManager = configManager;
 
@@ -59,8 +63,7 @@ public class Smsc extends Service
     lookup_profile_method = (Method) smsc_component.getMethods().get("lookup_profile");
     update_profile_method = (Method) smsc_component.getMethods().get("update_profile");
 
-    try
-    {
+    try {
       final File smscConfFolder = getSmscConfFolder();
       Document smesDoc = Utils.parse(new FileInputStream(new File(smscConfFolder, "sme.xml")));
       Document routesDoc = Utils.parse(new FileInputStream(new File(smscConfFolder, "routes.xml")));
@@ -69,29 +72,25 @@ public class Smsc extends Service
       subjects = new SubjectList(routesDoc.getDocumentElement(), smes);
       routes = new RouteList(routesDoc.getDocumentElement(), subjects, smes);
       aliases = new AliasSet(aliasesDoc.getDocumentElement());
-    }
-    catch (FactoryConfigurationError error)
-    {
+      profileDataSource = new ProfileDataSource(
+          configManager.getConfig().getString("profiler.jdbc.source"),
+          configManager.getConfig().getString("profiler.jdbc.driver"),
+          configManager.getConfig().getString("profiler.jdbc.user"),
+          configManager.getConfig().getString("profiler.jdbc.password")
+      );
+    } catch (FactoryConfigurationError error) {
       logger.error("Couldn't configure xml parser factory", error);
       throw new AdminException("Couldn't configure xml parser factory: " + error.getMessage());
-    }
-    catch (ParserConfigurationException e)
-    {
+    } catch (ParserConfigurationException e) {
       logger.error("Couldn't configure xml parser", e);
       throw new AdminException("Couldn't configure xml parser: " + e.getMessage());
-    }
-    catch (SAXException e)
-    {
+    } catch (SAXException e) {
       logger.error("Couldn't parse", e);
       throw new AdminException("Couldn't parse: " + e.getMessage());
-    }
-    catch (IOException e)
-    {
+    } catch (IOException e) {
       logger.error("Couldn't read", e);
       throw new AdminException("Couldn't read: " + e.getMessage());
-    }
-    catch (NullPointerException e)
-    {
+    } catch (NullPointerException e) {
       logger.error("Couldn't parse", e);
       throw new AdminException("Couldn't parse: " + e.getMessage());
     }
@@ -113,7 +112,7 @@ public class Smsc extends Service
   }
 
   private File getSmscConfFolder()
-    throws Config.ParamNotFoundException, Config.WrongParamTypeException
+      throws Config.ParamNotFoundException, Config.WrongParamTypeException
   {
     return new File(configManager.getConfig().getString("system.webapp folder"), "WEB-INF/smsc/conf");
   }
@@ -155,54 +154,40 @@ public class Smsc extends Service
   }
 
   public void applyRoutes()
-          throws AdminException
+      throws AdminException
   {
 
-    try
-    {
+    try {
       final File smscConfFolder = getSmscConfFolder();
 
       storeSmes(new PrintWriter(new FileOutputStream(new File(smscConfFolder, "sme.xml")), true)).close();
       storeRoutes(new PrintWriter(new FileOutputStream(new File(smscConfFolder, "routes.xml")), true)).close();
 
       call(smsc_component, apply_routes_method, Type.Types[Type.StringType], new HashMap());
-    }
-    catch (Config.ParamNotFoundException e)
-    {
+    } catch (Config.ParamNotFoundException e) {
       throw new AdminException("Couldn't apply_routes new settings: Administration application misconfigured: " + e.getMessage());
-    }
-    catch (Config.WrongParamTypeException e)
-    {
+    } catch (Config.WrongParamTypeException e) {
       throw new AdminException("Couldn't apply_routes new settings: Administration application misconfigured: " + e.getMessage());
-    }
-    catch (FileNotFoundException e)
-    {
+    } catch (FileNotFoundException e) {
       throw new AdminException("Couldn't apply_routes new settings: Couldn't write to destination config file: " + e.getMessage());
     }
   }
 
   public void applyAliases()
-          throws AdminException
+      throws AdminException
   {
 
-    try
-    {
+    try {
       final File smscConfFolder = getSmscConfFolder();
 
       storeAliases(new PrintWriter(new FileOutputStream(new File(smscConfFolder, "aliases.xml")), true)).close();
 
       call(smsc_component, apply_aliases_method, Type.Types[Type.StringType], new HashMap());
-    }
-    catch (Config.ParamNotFoundException e)
-    {
+    } catch (Config.ParamNotFoundException e) {
       throw new AdminException("Couldn't apply_routes new settings: Administration application misconfigured: " + e.getMessage());
-    }
-    catch (Config.WrongParamTypeException e)
-    {
+    } catch (Config.WrongParamTypeException e) {
       throw new AdminException("Couldn't apply_routes new settings: Administration application misconfigured: " + e.getMessage());
-    }
-    catch (FileNotFoundException e)
-    {
+    } catch (FileNotFoundException e) {
       throw new AdminException("Couldn't apply_routes new settings: Couldn't write to destination config file: " + e.getMessage());
     }
   }
@@ -219,17 +204,23 @@ public class Smsc extends Service
     args.put("address", mask.getMask());
     Object result = call(smsc_component, lookup_profile_method, Type.Types[Type.StringType], args);
     if (result instanceof String)
-      return new Profile((String) result);
+      return new Profile(mask, (String) result);
     else
       throw new AdminException("Error in response");
   }
 
   public void updateProfile(Mask mask, Profile newProfile)
-    throws AdminException
+      throws AdminException
   {
     HashMap args = new HashMap();
     args.put("address", mask.getMask());
     args.put("profile", newProfile.getStringRepresentation());
     call(smsc_component, update_profile_method, Type.Types[Type.BooleanType], args);
+  }
+
+  public QueryResultSet queryProfiles(ProfileQuery query)
+      throws AdminException
+  {
+    return profileDataSource.query(query);
   }
 }
