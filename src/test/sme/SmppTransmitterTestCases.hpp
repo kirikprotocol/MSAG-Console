@@ -88,11 +88,15 @@ private:
 	PduData* getNonReplaceRescheduledEnrotePdu();
 	template <class Message>
 	void checkRegisteredDelivery(Message& m);
-	PduData* registerSubmitSm(PduSubmitSm* pdu, PduData* replacePduData);
-	void processSubmitSmSync(PduData* pduData, PduSubmitSmResp* respPdu);
+	PduData* registerSubmitSm(PduSubmitSm* pdu, PduData* replacePduData,
+		time_t submitTime);
+	void processSubmitSmSync(PduData* pduData, PduSubmitSmResp* respPdu,
+		time_t respTime);
 	void processSubmitSmAsync(PduData* pduData, PduSubmitSmResp* respPdu);
-	PduData* registerReplaceSm(PduReplaceSm* pdu, PduData* replacePduData);
-	void processReplaceSmSync(PduData* pduData, PduReplaceSmResp* respPdu);
+	PduData* registerReplaceSm(PduReplaceSm* pdu, PduData* replacePduData,
+		time_t submitTime);
+	void processReplaceSmSync(PduData* pduData, PduReplaceSmResp* respPdu,
+		time_t respTime);
 	void processReplaceSmAsync(PduData* pduData, PduReplaceSmResp* respPdu);
 };
 

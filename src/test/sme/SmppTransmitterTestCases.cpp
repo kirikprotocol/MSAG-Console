@@ -181,13 +181,13 @@ void SmppTransmitterTestCases::checkRegisteredDelivery(Message& m)
 
 //предварительная регистрация pdu, требуется внешняя синхронизация
 PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
-	PduData* replacePduData)
+	PduData* replacePduData, time_t submitTime)
 {
 	__require__(pduReg);
 	PduData* pduData = new PduData(pdu->get_optional().get_userMessageReference(),
-		time(NULL),
-		max(time(NULL), SmppUtil::string2time(pdu->get_message().get_scheduleDeliveryTime(), time(NULL))),
-		SmppUtil::string2time(pdu->get_message().get_validityPeriod(), time(NULL)),
+		submitTime,
+		max(submitTime, SmppUtil::string2time(pdu->get_message().get_scheduleDeliveryTime(), submitTime)),
+		SmppUtil::string2time(pdu->get_message().get_validityPeriod(), submitTime),
 		reinterpret_cast<SmppHeader*>(pdu));
 	//для флагов самые простые проверки, остальное делается в
 	//checkSubmitSmResp, checkSubmitTime, checkWaitTime, checkValidTime
@@ -214,7 +214,7 @@ PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 //обновить smsId, sequenceNumber в PduRegistry и проверить pdu
 //требуется внешняя синхронизация
 void SmppTransmitterTestCases::processSubmitSmSync(PduData* pduData,
-	PduSubmitSmResp* respPdu)
+	PduSubmitSmResp* respPdu, time_t respTime)
 {
 	__require__(pduReg);
 	__require__(pduData);
@@ -230,7 +230,7 @@ void SmppTransmitterTestCases::processSubmitSmSync(PduData* pduData,
 	}
 	else
 	{
-		pduChecker->processSubmitSmResp(pduData, *respPdu, time(NULL));
+		pduChecker->processSubmitSmResp(pduData, *respPdu, respTime);
 		delete respPdu; //disposePdu
 	}
 	__tc_ok_cond__;
@@ -553,23 +553,24 @@ void SmppTransmitterTestCases::submitSm(bool sync, int num)
 					{
 						MutexGuard mguard(pduReg->getMutex());
 						pdu->get_header().set_sequenceNumber(0); //не известен
-						pduData = registerSubmitSm(pdu, replacePduData); //all times, msgRef
+						pduData = registerSubmitSm(pdu, replacePduData, time(NULL)); //all times, msgRef
 					}
 					__dumpSubmitSmPdu__("submitSmSyncBefore", systemId, pdu);
 					PduSubmitSmResp* respPdu = session->getSyncTransmitter()->submit(*pdu);
 					__dumpSubmitSmPdu__("submitSmSyncAfter", systemId, pdu);
 					{
 						MutexGuard mguard(pduReg->getMutex());
-						processSubmitSmSync(pduData, respPdu); //smsId, sequenceNumber
+						processSubmitSmSync(pduData, respPdu, time(NULL)); //smsId, sequenceNumber
 					}
 				}
 				else
 				{
 					MutexGuard mguard(pduReg->getMutex());
 					__dumpSubmitSmPdu__("submitSmAsyncBefore", systemId, pdu);
+					time_t submitTime = time(NULL);
 					PduSubmitSmResp* respPdu = session->getAsyncTransmitter()->submit(*pdu);
 					__dumpSubmitSmPdu__("submitSmAsyncAfter", systemId, pdu);
-					PduData* pduData = registerSubmitSm(pdu, replacePduData); //all times, msgRef, sequenceNumber
+					PduData* pduData = registerSubmitSm(pdu, replacePduData, submitTime); //all times, msgRef, sequenceNumber
 					processSubmitSmAsync(pduData, respPdu);
 				}
 				//pdu life time определяется PduRegistry
@@ -604,7 +605,7 @@ void SmppTransmitterTestCases::submitSm(bool sync, int num)
 
 //предварительная регистрация pdu, требуется внешняя синхронизация
 PduData* SmppTransmitterTestCases::registerReplaceSm(PduReplaceSm* pdu,
-	PduData* replacePduData)
+	PduData* replacePduData, time_t submitTime)
 {
 	if (replacePduData)
 	{
@@ -617,7 +618,7 @@ PduData* SmppTransmitterTestCases::registerReplaceSm(PduReplaceSm* pdu,
 		resPdu->get_message().set_registredDelivery(pdu->get_registredDelivery());
 		resPdu->get_message().set_smDefaultMsgId(pdu->get_smDefaultMsgId());
 		resPdu->get_message().set_shortMessage(pdu->get_shortMessage(), pdu->size_shortMessage());
-		PduData* pduData = registerSubmitSm(resPdu, replacePduData);
+		PduData* pduData = registerSubmitSm(resPdu, replacePduData, submitTime);
 		pduData->smsId = replacePduData->smsId;
 		return pduData;
 	}
@@ -638,7 +639,7 @@ PduData* SmppTransmitterTestCases::registerReplaceSm(PduReplaceSm* pdu,
 //обновить sequenceNumber в PduRegistry и проверить pdu
 //требуется внешняя синхронизация
 void SmppTransmitterTestCases::processReplaceSmSync(PduData* pduData,
-	PduReplaceSmResp* respPdu)
+	PduReplaceSmResp* respPdu, time_t respTime)
 {
 	__require__(pduData);
 	__dumpPdu__("processReplaceSmRespSync", systemId, respPdu);
@@ -651,7 +652,7 @@ void SmppTransmitterTestCases::processReplaceSmSync(PduData* pduData,
 	}
 	else
 	{
-		pduChecker->processReplaceSmResp(pduData, *respPdu, time(NULL));
+		pduChecker->processReplaceSmResp(pduData, *respPdu, respTime);
 		delete respPdu; //disposePdu
 	}
 	__tc_ok_cond__;
@@ -825,23 +826,24 @@ void SmppTransmitterTestCases::replaceSm(bool sync, int num)
 					{
 						MutexGuard mguard(pduReg->getMutex());
 						pdu->get_header().set_sequenceNumber(0); //не известен
-						pduData = registerReplaceSm(pdu, replacePduData);
+						pduData = registerReplaceSm(pdu, replacePduData, time(NULL));
 					}
 					__dumpReplaceSmPdu__("replaceSmSyncBefore", systemId, pdu);
 					PduReplaceSmResp* respPdu = session->getSyncTransmitter()->replace(*pdu);
 					__dumpReplaceSmPdu__("replaceSmSyncAfter", systemId, pdu);
 					{
 						MutexGuard mguard(pduReg->getMutex());
-						processReplaceSmSync(pduData, respPdu);
+						processReplaceSmSync(pduData, respPdu, time(NULL));
 					}
 				}
 				else
 				{
 					MutexGuard mguard(pduReg->getMutex());
 					__dumpReplaceSmPdu__("replaceSmAsyncBefore", systemId, pdu);
+					time_t submitTime = time(NULL);
 					PduReplaceSmResp* respPdu = session->getAsyncTransmitter()->replace(*pdu);
 					__dumpReplaceSmPdu__("replaceSmAsyncAfter", systemId, pdu);
-					PduData* pduData = registerReplaceSm(pdu, replacePduData);
+					PduData* pduData = registerReplaceSm(pdu, replacePduData, submitTime);
 					processReplaceSmAsync(pduData, respPdu);
 				}
 				//pdu life time определяется PduRegistry
@@ -916,7 +918,7 @@ void SmppTransmitterTestCases::sendDeliverySmRespOk(PduDeliverySm& pdu, int num)
 
 void SmppTransmitterTestCases::sendDeliverySmRespErr(PduDeliverySm& pdu, int num)
 {
-	int numTransmitter = 2; int numResp = 6;
+	int numTransmitter = 2; int numResp = 5;
 	TCSelector s(num, numTransmitter * numResp);
 	__decl_tc12__;
 	try
