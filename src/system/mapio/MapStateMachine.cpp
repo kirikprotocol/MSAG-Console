@@ -1580,6 +1580,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
       ost << dialog->ussdSequence;
       //dialog->sms->setStrProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,message_reference.str());
     }
+    __trace2__("MAP::%s:USSD request %s",__FUNCTION__,RouteToString(dialog.get()).c_str());
     //SendSubmitCommand (dialog.get());
   }MAP_CATCH(__dialogid_map,0);
   return ET96MAP_E_OK;
