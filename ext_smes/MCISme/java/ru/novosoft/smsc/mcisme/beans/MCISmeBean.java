@@ -36,7 +36,7 @@ public class MCISmeBean extends PageBean
   public final static String INFORM_TEMPLATES_SECTION_NAME = TEMPLATES_SECTION_NAME+".Inform";
   public final static String NOTIFY_TEMPLATES_SECTION_NAME = TEMPLATES_SECTION_NAME+".Notify";
 
-  public final static String MCI_PROF_DS_FILE     = "executor.properties";
+  public final static String MCI_PROF_DS_FILE     = "executor.pool.properties";
   public final static String MCI_PROF_MTF_FILE    = "templates.properties";
   public final static String MCI_PROF_MSC_FILE    = "commutator.properties";
   public final static String MCI_PROF_DS_COMMENT  = "MCI Profile DataSource settings";
