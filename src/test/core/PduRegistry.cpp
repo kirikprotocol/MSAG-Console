@@ -10,14 +10,15 @@ PduRegistry::~PduRegistry()
 	__trace2__("~PduRegistry(): size = %d", seqNumMap.size());
 	for (SeqNumMap::iterator it = seqNumMap.begin(); it != seqNumMap.end(); it++)
 	{
-		disposePdu(it->second->pdu);
-		delete it->second;
+		PduData* pduData = it->second;
+		disposePdu(pduData->pdu);
+		delete pduData;
 	}
 }
 
 void PduRegistry::putPdu(PduData& data)
 {
-	__require__(data.pdu);
+	__require__(data.pdu && data.pdu->get_sequenceNumber());
 	PduData* pduData = new PduData(data);
 	seqNumMap[pduData->pdu->get_sequenceNumber()] = pduData;
 	if (pduData->smsId)
@@ -42,6 +43,15 @@ void PduRegistry::putPdu(PduData& data)
 	}
 }
 
+void PduRegistry::updateSmsId(PduData* pduData)
+{
+	__require__(pduData);
+	if (pduData->smsId)
+	{
+		idMap[pduData->smsId] = pduData;
+	}
+}
+
 PduData* PduRegistry::getPdu(uint16_t msgRef)
 {
 	MsgRefMap::const_iterator it = msgRefMap.find(msgRef);
@@ -63,6 +73,8 @@ PduData* PduRegistry::getPdu(const SMSId smsId)
 bool PduRegistry::removePdu(PduData* pduData)
 {
 	__require__(pduData && pduData->pdu);
+	__trace2__("PduRegistry::removePdu(): sequenceNumber = %u",
+		pduData->pdu->get_sequenceNumber());
 	seqNumMap.erase(pduData->pdu->get_sequenceNumber());
 	if (pduData->smsId)
 	{

@@ -109,7 +109,7 @@ public:
 		}
 	};
 
-	PduRegistry() {}
+	PduRegistry() : msgRef(1) {}
 	~PduRegistry();
 
 	Mutex& getMutex()
@@ -123,10 +123,12 @@ public:
 	}
 
 	/**
-	 * Регистрация pdu. Допускается повторная перерегистрация pdu.
+	 * Регистрация pdu. Повторная перерегистрация pdu не допускается.
 	 * В последнем случае обновляются таблицы поиска по ключевым полям.
 	 */
 	void putPdu(PduData& pduData);
+
+	void updateSmsId(PduData* pduData);
 
 	/**
 	 * Поиск оригинального pdu при получении его на стороне получателя.
