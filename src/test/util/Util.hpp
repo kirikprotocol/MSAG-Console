@@ -112,7 +112,10 @@ inline bool TCResult::value() const
 //TCSelector inline member functions definitions
 inline TCSelector::~TCSelector()
 {
-	delete[] val;
+	if (val)
+	{
+		delete[] val;
+	}
 }
 
 inline int TCSelector::value() const

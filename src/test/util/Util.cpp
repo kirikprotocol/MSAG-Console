@@ -35,7 +35,7 @@ auto_ptr<char> rand_char(int length)
 	char* res = new char[length];
 	for (int i = 0; i < length; i++)
 	{
-		res[i] = 65 + rand0(26);
+		res[i] = 64 + rand1(26);
 	}
 	return auto_ptr<char>(res);
 }
@@ -54,7 +54,8 @@ bool TCResult::operator== (const TCResult& tcRes) const
 	return res;
 }
 
-TCSelector::TCSelector(int _val, int _maxVal, int _base) : pos(0)
+TCSelector::TCSelector(int _val, int _maxVal, int _base)
+	: pos(0), val(NULL)
 {
 	switch (_val)
 	{
@@ -94,17 +95,21 @@ TCSelector::TCSelector(int _val, int _maxVal, int _base) : pos(0)
 ostream& operator<< (ostream& os, const TCResult& res)
 {
 	os << res.getId() << "(" << res.getChoice() << ")";
-	os << "{";
 	const vector<int>& failures = res.getFailures();
-	for (int i = 0; i < failures.size(); i++)
+	if (failures.size())
 	{
-		if (i > 0)
+		os << "{";
+		for (int i = 0; i < failures.size(); i++)
 		{
-			os << ",";
+			if (i > 0)
+			{
+				os << ",";
+			}
+			os << failures[i];
 		}
-		os << failures[i];
+		os << "}";
 	}
-	os << "}";
+	return os;
 }
 
 }
