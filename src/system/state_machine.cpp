@@ -58,12 +58,12 @@ StateType StateMachine::submit(Tuple& t)
   if(smsc->AliasToAddress(sms->getDestinationAddress(),dst))
   {
     __trace2__("ALIAS:%20s->%20s",sms->getDestinationAddress().value,dst.value);
-    sms->setDealiasedDestinationAddress(dst);
   }
   else
   {
     dst=sms->getDestinationAddress();
   }
+  sms->setDealiasedDestinationAddress(dst);
 
   bool has_route = smsc->routeSms(sms->getOriginatingAddress(),
                           dst,
@@ -168,6 +168,7 @@ StateType StateMachine::submit(Tuple& t)
     {
       sms->setOriginatingAddress(src);
     }
+    sms->setDestinationAddress(dst);
     SmscCommand delivery = SmscCommand::makeDeliverySm(*sms,dialogId2);
     dest_proxy->putCommand(delivery);
   }catch(...)
@@ -244,6 +245,7 @@ StateType StateMachine::forward(Tuple& t)
   }
   try{
     // send delivery
+    sms.setDestinationAddress(sms.getDealiasedDestinationAddress());
     SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
     dest_proxy->putCommand(delivery);
   }catch(...)
