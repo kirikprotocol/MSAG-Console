@@ -71,7 +71,7 @@ select * from dual
 $$date  pattern  =  "dd.MM.yyyy hh-mm-ss t"  export  =  "dt"  default  =  "today"  $$
 						</param>
 <param name="output" type="string">
-Date: $$date  pattern  =  "!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/wMMMMMMMMwwyyWyyyyWWyyyyyydyyyyyyyyddhdddhhddddhhhMhhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt"  import  =  "dt"  $$-->
+Date: $$date  pattern  =  "!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/wMMMMMMMMwwyyWyyyyWWyyyyyydyyyyyyyyddhdddhhddddhhhMhhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt"  import  =  "dt"  $$
 </param>
 					</section>
 
@@ -109,9 +109,6 @@ Date: $$date		pattern		=		"!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/wMMMMMMMMwwy
 </param>
 					</section>
 
-					<!-- tc2: ??????? ???????? ? ????????? ????? ?? ??????????
-					?? ????????? ? input, ?????????????? ????????? ????? ?
-					escape ??????? ? output -->
 					<section name="OtherFormatJob">
 						<param name="name" type="string">OtherFormatJob</param>
 						<param name="type" type="string">sql-job</param>
@@ -120,23 +117,30 @@ Date: $$date		pattern		=		"!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/wMMMMMMMMwwy
 select * from dual
 						</param>
 						<param name="input" type="string">
-$$int16 export = "numInt16" default=16$$
+$$int8 export = "numInt8" default=8$$
 $$int16 export = "numInt16" default=16$$
 $$int32 export = "numInt32" default=32$$
+$$int64 export = "numInt64" default=64$$
 $$float export = "numFloat" default=16.16$$
 $$double export = "numDouble" default=32.32$$
+$$long-double export = "numLongDouble" default=64.64$$
 $$string export = "str" default="xxx"$$
 						</param>
 <param name="output" type="string">
-from-address: '$$string import="from-address"$$';
+job-name: '$$string import="job-name"$$'
+from-address: /$$string import="from-address"$$/
+to-address: \\$$string import="to-address"$$\\
 string: \"$$string import="str"$$\",
-string_right : $$string import="str" length=30 align="right"$$,
-string_center: $$string import="str" length=30 align="center"$$,
-string_left  : $$string import="str" length=30 align="left"$$;
-int16: (--\$$$int16 import="numInt16"$$--),
-int32: (++\$$$int32 import="numInt32"$$++),
-float: (**\$$$float import="numFloat"$$**),
-double: (::\$$$double import="numDouble"$$::);
+string_right : _$$string import="str" length=20 align="right"$$;
+string_center: -$$string import="str" length=20 align="center"$$.
+string_left  : +$$string import="str" length=20 align="left"$$?
+int8: \$$$int8 import="numInt8"$$!
+int16: &lt;$$int16 import="numInt16"$$@
+int32: &gt;$$int32 import="numInt32"$$#
+int64: ($$int64 import="numInt64"$$)
+float: *$$float precision="1" import="numFloat"$$%
+double: &amp;$$double digits="3" exponent="yes" import="numDouble"$$|
+long-double: =$$long-double digits="2" exponent="no" import="numLongDouble"$$^
 </param>
 					</section>
 
@@ -188,10 +192,10 @@ values (:1, :2, :3, :4, :5, :6, :7, :8, :9, :10)
 						</param>
 						<param name="input" type="string">
 $$int32 arg=1 export="id"$$
-$$uint16 arg=7 export="numUint8" default=7$$
+$$uint8 arg=7 export="numUint8" default=7$$
 $$uint16 arg=8 export="numUint16" default=15$$
 $$uint32 arg=9 export="numUint32" default=31$$
-$$uint32 arg=10 export="numUint64" default=63$$
+$$uint64 arg=10 export="numUint64" default=63$$
 $$float arg=4 export="numFloat" default=15.15$$
 $$double arg=5 export="numDouble" default=31.31$$
 $$long-double arg=6 export="numLongDouble" default=63.63$$
