@@ -127,8 +127,7 @@ struct AlertNotification{
 };
 
 struct ForwardData{
-  ForwardData(SmeIndex idx,SMSId id,bool reschedule):idx(idx),id(id),reschedule(reschedule),allowDivert(false){}
-  SmeIndex idx;
+  ForwardData(SMSId id,bool reschedule):id(id),reschedule(reschedule),allowDivert(false){}
   SMSId id;
   bool reschedule;
   bool allowDivert;
@@ -546,7 +545,6 @@ struct _SmscCommand
   }
 
   bool is_reschedulingForward(){return ((ForwardData*)dta)->reschedule;}
-  SmeIndex get_forwardDestSme(){return ((ForwardData*)dta)->idx;}
   SMSId get_forwardMsgId(){return ((ForwardData*)dta)->id;}
 
   bool get_forwardAllowDivert(){return ((ForwardData*)dta)->allowDivert;}
@@ -759,14 +757,14 @@ public:
     return cmd;
   }
 
-  static SmscCommand makeForward(SmeIndex idx,SMSId id,bool reschedule=false)
+  static SmscCommand makeForward(SMSId id,bool reschedule=false)
   {
     SmscCommand cmd;
     cmd.cmd = new _SmscCommand;
     _SmscCommand& _cmd = *cmd.cmd;
     _cmd.ref_count = 1;
     _cmd.cmdid = FORWARD;
-    _cmd.dta = new ForwardData(idx,id,reschedule);
+    _cmd.dta = new ForwardData(id,reschedule);
     _cmd.dialogId = 0;
     return cmd;
   }
