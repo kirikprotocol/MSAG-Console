@@ -39,46 +39,57 @@ public:
 		//unbind
 		__reg_tc__("unbind", "Завершение соединения с SC");
 		//submitSm
-		__reg_tc__("submitSm",
+		__reg_tc__("submitSm", "Отправка submit_sm pdu");
+		__reg_tc__("submitSm.sync", "Отправка синхронного submit_sm pdu");
+		__reg_tc__("submitSm.async", "Отправка асинхронного submit_sm pdu");
+		//submitSm.correct
+		__reg_tc__("submitSm.correct",
 			"Отправка submit_sm pdu с правильными значениями полей");
-		__reg_tc__("submitSm.serviceTypeMarginal",
+		__reg_tc__("submitSm.correct.serviceTypeMarginal",
 			"Предельные значения длины поля service_type");
-		__reg_tc__("submitSm.waitTimePast",
+		__reg_tc__("submitSm.correct.waitTimePast",
 			"Время schedule_delivery_time в прошлом (доставка уже должна была начаться)");
-		__reg_tc__("submitSm.validTimePast",
-			"Время validity_period в прошлом (сообщение никогда не будет доставлено)");
-		__reg_tc__("submitSm.validTimeExceeded",
+		__reg_tc__("submitSm.correct.validTimeExceeded",
 			"Время validity_period больше максимально срока валидности установленного для SC");
-		__reg_tc__("submitSm.waitTimeInvalid",
-			"Значение schedule_delivery_time превышает validity_period");
-		__reg_tc__("submitSm.smLengthMarginal",
+		__reg_tc__("submitSm.correct.waitTimeImmediate",
+			"Установить немедленную доставку сообщения (schedule_delivery_time = NULL)");
+		__reg_tc__("submitSm.correct.validTimeDefault",
+			"Установить срок валидности по умолчанию (validity_period = NULL)");
+		__reg_tc__("submitSm.correct.smLengthMarginal",
 			"Предельные значения длины тела сообщения");
-		__reg_tc__("submitSm.checkMap",
+		__reg_tc__("submitSm.correct.checkMap",
 			"Дублированное сообщение согласно MAP (совпадают source_addr, dest_addr и user_message_reference), но согласно SMPP существующее сообщение находящееся в очереди доставки замещено быть не может");
-		__reg_tc__("submitSm.notReplace",
+		__reg_tc__("submitSm.correct.notReplace",
 			"Дублированное сообщение (совпадают source_addr, dest_addr и service_type) без замещения существующего, находящегося в очереди доставки");
-		__reg_tc__("submitSm.serviceTypeNotMatch",
+		__reg_tc__("submitSm.correct.serviceTypeNotMatch",
 			"Совпадают source_addr и dest_addr, отличается service_type для сообщения находящегося в очереди доставки");
-		__reg_tc__("submitSm.replaceEnrote",
+		__reg_tc__("submitSm.correct.replaceEnrote",
 			"Дублированное сообщение (совпадают source_addr, dest_addr и service_type) с замещением существующего, находящегося в очереди доставки");
-		__reg_tc__("submitSm.replaceReplacedEnrote",
+		__reg_tc__("submitSm.correct.replaceReplacedEnrote",
 			"Дублированное сообщение (совпадают source_addr, dest_addr и service_type) с замещением уже ранее замещенного и находящегося в очереди доставки");
-		__reg_tc__("submitSm.replaceFinal",
+		__reg_tc__("submitSm.correct.replaceFinal",
 			"Дублированное сообщение (совпадают source_addr, dest_addr и service_type) с замещением уже доставленного");
-		__reg_tc__("submitSm.replaceRepeatedDeliveryEnrote",
+		__reg_tc__("submitSm.correct.replaceRepeatedDeliveryEnrote",
 			"Дублированное сообщение (совпадают source_addr, dest_addr и service_type) с замещением существующего, находящегося в очереди повторной доставки");
-		__reg_tc__("submitSm.sync",
-			"Отправка синхронного submit_sm pdu");
-		__reg_tc__("submitSm.async",
-			"Отправка асинхронного submit_sm pdu");
-		//submitSmAssert
-		__reg_tc__("submitSmAssert",
+		//submitSm.incorrect
+		__reg_tc__("submitSm.incorrect",
+			"Отправка submit_sm pdu с неправильными значениями полей");
+		__reg_tc__("submitSm.incorrect.validTimePast",
+			"Время validity_period в прошлом (сообщение никогда не будет доставлено)");
+		__reg_tc__("submitSm.incorrect.waitTimeInvalid1",
+			"Значение schedule_delivery_time больше validity_period");
+		__reg_tc__("submitSm.incorrect.waitTimeInvalid2",
+			"Значение schedule_delivery_time больше максимального validity_period для SC, срок валидности по умолчанию (validity_period = NULL)");
+		__reg_tc__("submitSm.incorrect.waitTimeInvalid3",
+			"Значения schedule_delivery_time меньше validity_period, но оба больше максимального validity_period для SC");
+		//submitSm.assert
+		__reg_tc__("submitSm.assert",
 			"Заполнение и отправка submit_sm pdu с недопустимыми значениями полей");
-		__reg_tc__("submitSmAssert.serviceTypeInvalid",
+		__reg_tc__("submitSm.assert.serviceTypeInvalid",
 			"Недопустимое значение длины поля service_type");
-		__reg_tc__("submitSmAssert.destAddrLengthInvalid",
+		__reg_tc__("submitSm.assert.destAddrLengthInvalid",
 			"Недопустимое значение длины поля адреса получателя");
-		__reg_tc__("submitSmAssert.msgLengthInvalid",
+		__reg_tc__("submitSm.assert.msgLengthInvalid",
 			"Недопустимое значение длины текста сообщения short_message");
 		//replaceSm
 		__reg_tc__("replaceSm",
