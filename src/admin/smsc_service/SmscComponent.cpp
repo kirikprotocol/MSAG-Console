@@ -452,6 +452,7 @@ throw (AdminException)
 		try
 		{
 			smsc_app_runner.reset(new SmscAppRunner(configs));
+			smsc::resourcemanager::ResourceManager::reload();
 			smsc_app_runner->Start();
 		}
 		catch (smsc::util::Exception &e)
