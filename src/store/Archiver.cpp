@@ -404,6 +404,7 @@ void Archiver::archivate(bool first)
             if (bNeedArchivate == 'Y')
             {
                 // insert BLOB body transfer here if needed !
+                rebindBody();
                 archiveInsertStmt->check(archiveInsertStmt->execute());
             } 
             
@@ -619,6 +620,17 @@ void Archiver::prepareStorageDeleteStmt() throw(StorageException)
                             (sb4) sizeof(id));
 }
 
+void Archiver::rebindBody() throw(StorageException)
+{
+    tripedBodyBufferLen = (bodyBufferLen<0 || 
+                           bodyBufferLen>MAX_BODY_LENGTH || 
+                           indBody != OCI_IND_NOTNULL) ? 0:bodyBufferLen;
+    
+    archiveInsertStmt->bind((CONST text *)"BODY", (sb4) 4*sizeof(char), 
+                            SQLT_BIN, (dvoid *) bodyBuffer,
+                            (sb4) tripedBodyBufferLen, &indBody);
+}
+
 const char* Archiver::archiveInsertSql = (const char*)
 "INSERT INTO SMS_ARC (ID, ST, MR, OA, DA, DDA, SVC_TYPE,\
  SRC_MSC, SRC_IMSI, SRC_SME_N, DST_MSC, DST_IMSI, DST_SME_N,\
@@ -689,10 +701,8 @@ void Archiver::prepareArchiveInsertStmt() throw(StorageException)
     archiveInsertStmt->bind(i++, SQLT_UIN, (dvoid *) &(sms.billingRecord), 
                             (sb4) sizeof(sms.billingRecord));
 
-    sb4 bodyLen = (bodyBufferLen <0 || bodyBufferLen > MAX_BODY_LENGTH ||
-                   indBody != OCI_IND_NOTNULL) ? 0:bodyBufferLen;
     archiveInsertStmt->bind(i++, SQLT_BIN, (dvoid *) bodyBuffer,
-                            (sb4) bodyLen, &indBody);
+                            (sb4) sizeof(bodyBuffer), &indBody);
     archiveInsertStmt->bind(i++, SQLT_UIN, (dvoid *)&(bodyBufferLen),
                             (sb4) sizeof(bodyBufferLen));
     

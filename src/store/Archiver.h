@@ -148,7 +148,7 @@ namespace smsc { namespace store
         
         char        svcType[10];
         unsigned    bodyTextLen;
-        int         bodyBufferLen;
+        int         bodyBufferLen, tripedBodyBufferLen;
         uint8_t     bodyBuffer[MAX_BODY_LENGTH];
         
         OCIDate     validTime;
@@ -179,6 +179,7 @@ namespace smsc { namespace store
 
         bool needCleaner(Manager& config);
 
+        void rebindBody() throw(StorageException);
         void prepareStorageSelectStmt() throw(StorageException);
         void prepareStorageDeleteStmt() throw(StorageException);
         void prepareArchiveInsertStmt() throw(StorageException);
