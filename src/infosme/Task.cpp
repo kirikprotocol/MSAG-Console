@@ -114,10 +114,12 @@ void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
     if (!msg_template || msg_template[0] == '\0')
         throw ConfigException("Message template for task empty or wasn't specified.");
     info.msgTemplate = msg_template;
-    const char* svc_type = config->getString("svcType");
-    if (info.replaceIfPresent && (!svc_type || svc_type[0] == '\0'))
-        throw ConfigException("Service type task empty or wasn't specified.");
-    info.svcType = svc_type;
+    info.svcType = "";
+    if (info.replaceIfPresent) {
+        try         { info.svcType = config->getString("svcType"); } 
+        catch (...) { info.svcType = "";}
+    }
+
     info.dsTimeout = 0;
     try { info.dsTimeout = config->getInt("dsTimeout"); } catch(...) {}
     if (info.dsTimeout < 0) info.dsTimeout = 0;
