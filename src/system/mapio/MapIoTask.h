@@ -89,7 +89,7 @@ struct MapDialog{
   string abonent;
   auto_ptr<SMS> sms;
   auto_ptr<ET96MAP_SM_RP_UI_T> auto_ui;
-  ET96MAP_APP_CNTX_T appContext;
+//  ET96MAP_APP_CNTX_T appContext;
   ET96MAP_ADDRESS_T m_msAddr;	
   ET96MAP_ADDRESS_T m_scAddr;	
   ET96MAP_SS7_ADDR_T scAddr;

@@ -44,7 +44,7 @@ struct MAPDIALOG_ERROR : public runtime_error
 struct MAPDIALOG_BAD_STATE : public MAPDIALOG_ERROR
 {
   MAPDIALOG_BAD_STATE(const string& s) :
-    MAPDIALOG_ERROR(dialogid,MAKE_ERRORCODE(CMD_ERR_FATAL,0),s){}
+    MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_FATAL,0),s){}
 };
 struct MAPDIALOG_TEMP_ERROR : public MAPDIALOG_ERROR
 {
@@ -84,7 +84,7 @@ static void QueryHlrVersion(MapDialog* dialog)
 {
   USHORT_T result = 
     Et96MapGetACVersionReq(SSN,&dialog->mshlrAddr,ET96MAP_SHORT_MSG_GATEWAY_CONTEXT);
-  if ( result != E96MAP_E_OK ) {
+  if ( result != ET96MAP_E_OK ) {
     throw MAPDIALOG_FATAL_ERROR(
       FormatText("MAP::QueryHlrVersion: error 0x%x when GetAcVersion",result));
   }
