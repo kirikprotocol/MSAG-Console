@@ -319,6 +319,7 @@ static void QueryHlrVersion(MapDialog* dialog)
     throw MAPDIALOG_FATAL_ERROR(
       FormatText("MAP::QueryHlrVersion: error 0x%x when GetAcVersion",result),MAP_FALURE);
   }
+  __trace2__("MAP::QueryHlrVersion: done");
 }
 
 static void QueryMcsVersion(MapDialog* dialog)
