@@ -71,6 +71,7 @@ bool LoadConfig(ProxyConfig& pconf)
     pconf.quelimit = 100;
   }catch(exception& e) {
     smsc::util::Logger::getCategory("smsc.proxysme").error("can't laod config: %s",e.what());
+    return false;
   }
 #endif
 }
@@ -78,11 +79,17 @@ bool LoadConfig(ProxyConfig& pconf)
 extern "C" 
 int main()
 {
-  smsc::util::Logger::Init("proxysme.l4c");
-  smsc::util::Logger::getCategory("smsc.proxysme.X").info("!!!!");
-  smsc::util::Logger::getCategory("smsc.proxysme.X").info("!!!! -- Starting");
-  smsc::util::Logger::getCategory("smsc.proxysme.X").info("!!!!");
-  
+  try {
+
+    smsc::util::Logger::Init("proxysme.l4c");
+    smsc::util::Logger::getCategory("smsc.proxysme.X").info("!!!!");
+    smsc::util::Logger::getCategory("smsc.proxysme.X").info("!!!! -- Starting");
+    smsc::util::Logger::getCategory("smsc.proxysme.X").info("!!!!");
+  }catch( exception& e ){
+    cerr << "can't init logger" << endl;
+    return -1;
+  }
+
   ProxyConfig pconf;
 
   if ( !LoadConfig(pconf) ) {
