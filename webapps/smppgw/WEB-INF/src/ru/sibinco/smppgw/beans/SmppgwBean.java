@@ -16,14 +16,19 @@ public abstract class SmppgwBean
 {
   protected SmppGWAppContext appContext;
   protected Logger logger = Logger.getLogger(this.getClass());
+  protected java.security.Principal loginedPrincipal = null;
 
   public void process(HttpServletRequest request, HttpServletResponse response) throws SmppgwJspException
   {
     appContext = (SmppGWAppContext) request.getAttribute("appContext");
+    loginedPrincipal = request.getUserPrincipal();
   }
 
-  public final SmppGWAppContext getAppContext()
-  {
+  public final SmppGWAppContext getAppContext() {
     return appContext;
+  }
+
+  public java.security.Principal getLoginedPrincipal() {
+    return loginedPrincipal;
   }
 }
