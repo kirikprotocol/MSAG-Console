@@ -91,6 +91,7 @@ __synchronized__
   return new SmeIteratorImpl(records.begin(),records.end());
 }
 
+#if 0
 void SmeManager::disableSme(const SmeSystemId& systemId)
 {
   /*
@@ -109,7 +110,7 @@ void SmeManager::enableSme(const SmeSystemId& systemId)
   records[index].info.disabled = false;*/
   __warning__("enableSme is not implemented");
 }
-
+#endif
 // ----- SmeTable implementation ---------------------------
 
 SmeIndex SmeManager::lookup(const SmeSystemId& systemId) const
@@ -124,7 +125,7 @@ SmeProxy* SmeManager::getSmeProxy(SmeIndex index) const
 __synchronized__
   SmeRecord* record = (SmeRecord*)(records.at(index));
   if ( record->deleted ) throw runtime_error("proxy deleted");
-	if ( !record->proxy ) return 0;
+  if ( !record->proxy ) return 0;
   return (SmeProxy*)(record);
 }
 

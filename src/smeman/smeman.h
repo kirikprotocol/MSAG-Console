@@ -92,35 +92,36 @@ class SmeManager :
   Records records;
   SmeIndex internalLookup(const SmeSystemId& systemId) const;
 public: 
-	virtual ~SmeManager()
-	{
-		Records::iterator it = records.begin();
-		for ( ; it != records.end(); ++it ) 
-		{
-			try
-			{
-				if ( (*it)->proxy )
-				{
-					__warning__((string("proxy with system id ")+(*it)->info.systemId).c_str());
-					dispatcher.detachSmeProxy((*it)->proxy);
-				}
-				delete (*it);
-			}
-			catch(...)
-			{
-				__warning__("error when detach proxy");
-			}
-		}
-	}
+  virtual ~SmeManager()
+  {
+    Records::iterator it = records.begin();
+    for ( ; it != records.end(); ++it ) 
+    {
+      try
+      {
+        if ( (*it)->proxy )
+        {
+          __warning__((string("proxy with system id ")+(*it)->info.systemId).c_str());
+          dispatcher.detachSmeProxy((*it)->proxy);
+        }
+        delete (*it);
+      }
+      catch(...)
+      {
+        __warning__("error when detach proxy");
+      }
+    }
+  }
   //....
   // SmeAdministrator implementation
   virtual void addSme(const SmeInfo& info);
   virtual void deleteSme(const SmeSystemId& systemId);
 //  virtual void store();
   virtual SmeIterator* iterator(); // client must destroy returned object
-  virtual void disableSme(const SmeSystemId& systemId);
+#if 0  
+	virtual void disableSme(const SmeSystemId& systemId);
   virtual void enableSme(const SmeSystemId& systemId);
-
+#endif
   // SmeTable implementation
   virtual SmeIndex lookup(const SmeSystemId& systemId) const;
   virtual SmeProxy* getSmeProxy(SmeIndex index) const;
