@@ -183,7 +183,7 @@ USHORT_T Et96MapPAbortInd(ET96MAP_LOCAL_SSN_T lssn,
   return ET96MAP_E_OK;
 }
 
-void mkAbonent(char* abonent,const ET96MAP_SS7_ADDR_T* a){
+/*void mkAbonent(char* abonent,const ET96MAP_SS7_ADDR_T* a){
   if ( a->ss7AddrLen != 0 ){
     int i = 0;
     for (; i<(a->ss7AddrLen-1)*2;){
@@ -200,7 +200,7 @@ void mkAbonent(char* abonent,const ET96MAP_SS7_ADDR_T* a){
   }else{
     throw runtime_error("MAP::mkAbonent ET96MAP_SM_RP_OA_T length should be greater than 0");
   }
-}
+}*/
 
 USHORT_T  Et96MapOpenInd(
 	ET96MAP_LOCAL_SSN_T lssn, 
@@ -215,10 +215,10 @@ USHORT_T  Et96MapOpenInd(
 	__trace2__("MAP::Et96MapOpenInd ssn 0x%x, dalogid 0x%x",lssn,dialogId);
   __trace2__("MAP::Et96MapOpenInd appCtx->type:0x%x, appCtx->version:0x%x ",appCtx->acType,appCtx->version); 
   try{
-    char abonent[32] = {0,};
-    mkAbonent(abonent,srcAddr);
+    //char abonent[32] = {0,};
+    //mkAbonent(abonent,0/*srcAddr*/);
     MapDialog* mdci = 
-		  MapDialogContainer::getInstance()->createDialog(dialogId,SSN,abonent);
+		  MapDialogContainer::getInstance()->createDialog(dialogId,SSN/*,0*/);
     __trace2__("MAP:: create dialog with ptr 0x%p, dialogid 0x%x",mdci,dialogId);
   	//mdci->localSsn = SSN;
     ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;

@@ -71,7 +71,7 @@ class MapDialog{
   unsigned smscDialogId;
   ET96MAP_INVOKE_ID_T invokeId;
   ET96MAP_LOCAL_SSN_T ssn;
-  char abonent[32];
+  auto_ptr<char> abonent;
   auto_ptr<SMS> sms;
   auto_ptr<ET96MAP_SM_RP_UI_T> auto_ui;
   ET96MAP_APP_CNTX_T appContext;
@@ -95,8 +95,14 @@ public:
   void setDialogId(USHORT_T ndid) { dialogid = ndid; }
   unsigned getSMSCDialogId() { return smscDialogId; }
   void setSMSCDialogId(unsigned did) {smscDialogId=did;}
-  const char* getAbonent() { return abonent;}
-  void setAbonent(const char* a) { memset(abonent,0,32); strncpy(abonent,a,31); }
+  const char* getAbonent() { 
+    return abonent.get();
+  }
+  void setAbonent(char* a) { 
+    abonent = auto_ptr<char>(new char[32]);
+    memset(abonent.get(),0,32); 
+    strncpy(abonent.get(),a,31); 
+  }
   virtual USHORT_T  Et96MapV2SendRInfoForSmConf ( 
     ET96MAP_LOCAL_SSN_T localSsn,
 		ET96MAP_DIALOGUE_ID_T dialogueId,
@@ -198,17 +204,17 @@ public:
     else return 0;
   }
   
-  MapDialog* createDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn,const char* abonent){
+  MapDialog* createDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn/*,const char* abonent*/){
     MutexGuard g(sync);
-    __trace2__("MAP::createSMSCDialog: try create dialog on abonent %s",abonent);
+    /*__trace2__("MAP::createSMSCDialog: try create dialog on abonent %s",abonent);
     if ( lock_map.Exists(abonent) ) {
       __trace2__("MAP::createSMSCDialog: locked");
       return 0;
-    }
+    }*/
     MapDialog* dlg = new MapDialog(dialogueid,lssn);
     dlg->setAbonent(abonent);
     hash.Insert(dialogueid,dlg);
-    lock_map.Insert(abonent,1);
+    //lock_map.Insert(abonent,1);
     __trace2__("MAP:: new dialog 0x%p for dialogid 0x%x",dlg,dialogueid);
     return dlg;
   }
