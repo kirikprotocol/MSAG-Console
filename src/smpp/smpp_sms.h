@@ -517,7 +517,7 @@ inline bool fetchSmsFromDataSmPdu(PduDataSm* pdu,SMS* sms,bool forceDC=false)
     //}
   }
 
-  fetchOptionals(pdu->optional,sms);
+  fetchOptionals(pdu->optional,sms,forceDC);
   sms->setEServiceType(pdu->data.get_serviceType());
   if(pdu->optional.has_qosTimeToLive())
   {
@@ -563,7 +563,7 @@ inline bool fillDataSmFromSms(PduDataSm* pdu,SMS* sms,bool forceDC=false)
     pdu->data.set_serviceType(buff);
   }
 
-  fillOptional(pdu->optional,sms);
+  fillOptional(pdu->optional,sms,forceDC);
   if(forceDC && sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
   {
     data.set_dataCoding((uint8_t)sms->getIntProperty(Tag::SMSC_ORIGINAL_DC));
