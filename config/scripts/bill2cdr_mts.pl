@@ -16,6 +16,8 @@ BEGIN{
   }
 }
 
+use vars qw($eoln);
+
 use FixedWidth;
 use CommaSeparated;
 
@@ -26,7 +28,7 @@ my $header='';
 my $footer='';
 my $crc='0'x32;
 
-our $eoln="\x0d\x0a";
+$eoln="\x0d\x0a";
 
 my $basedir=$0;
 if($basedir=~/^(.*)[\\\/][^\\\/]+$/)
