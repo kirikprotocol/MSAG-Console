@@ -43,21 +43,29 @@ public:
 		__reg_tc__("lookup", "ѕоиск профил€ дл€ заданного адреса");
 		//putCommand
 		__reg_tc__("putCommand", "”правление менеджером профилей через deliver_sm pdu");
-		__reg_tc__("putCommand.reportNoneMixedCase",
+		__reg_tc__("putCommand.cmdTextDefault",
+			"“екст команды в дефолтной кодировке SC");
+		__reg_tc__("putCommand.cmdTextUcs2",
+			"“екст команды в кодировке UCS2");
+		__reg_tc__("putCommand.reportOptions",
+			"»зменение опций уведомлени€ о доставке");
+		__reg_tc__("putCommand.reportOptions.reportNoneMixedCase",
 			"ќтказатьс€ от уведомлени€ о доставке (текст команды в смешанном регистре)");
-		__reg_tc__("putCommand.reportNoneSpaces",
+		__reg_tc__("putCommand.reportOptions.reportNoneSpaces",
 			"ќтказатьс€ от уведомлени€ о доставке (текст команды с лишними пробелами)");
-		__reg_tc__("putCommand.reportFullMixedCase",
+		__reg_tc__("putCommand.reportOptions.reportFullMixedCase",
 			"”становить прием уведомлений о доставке (текст команды в смешанном регистре)");
-		__reg_tc__("putCommand.reportFullSpaces",
+		__reg_tc__("putCommand.reportOptions.reportFullSpaces",
 			"”становить прием уведомлений о доставке (текст команды с лишними пробелами)");
-		__reg_tc__("putCommand.ucs2CodepageMixedCase",
+		__reg_tc__("putCommand.dataCoding",
+			"»зменение режима приема сообщений");
+		__reg_tc__("putCommand.dataCoding.ucs2CodepageMixedCase",
 			"”становить режим приема сообщений на русском €зыке (кодировка ucs2, текст команды в смешанном регистре)");
-		__reg_tc__("putCommand.ucs2CodepageSpaces",
+		__reg_tc__("putCommand.dataCoding.ucs2CodepageSpaces",
 			"”становить режим приема сообщений на русском €зыке (кодировка ucs2, текст команды с лишними пробелами)");
-		__reg_tc__("putCommand.defaultCodepageMixedCase",
+		__reg_tc__("putCommand.dataCoding.defaultCodepageMixedCase",
 			"ќтказатьс€ от режима приема сообщений на русском €зыке (текст команды в смешанном регистре)");
-		__reg_tc__("putCommand.defaultCodepageSpaces",
+		__reg_tc__("putCommand.dataCoding.defaultCodepageSpaces",
 			"ќтказатьс€ от режима приема сообщений на русском €зыке (текст команды с лишними пробелами)");
 		__reg_tc__("putCommand.incorrectText",
 			"Ќеправильный текст команды");
