@@ -93,7 +93,7 @@ int main(int argc,char* argv[])
         if(resp)disposePdu((SmppHeader*)resp);
 
       }
-      printf("%d\r",count);
+      printf("%d\r",count);fflush(stdout);
       e.Wait();
       send=1;
     }
