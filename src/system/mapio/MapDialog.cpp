@@ -49,11 +49,9 @@ void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
     char sa_val[21] = {0,};
     int i = 0;
     for ( ;i<ma->len;){
-      if ( (ma->val[(i>>1)]&0x0f) == 0xf ) break;
       sa_val[i]=(ma->val[(i>>1)]&0x0f)+0x30;
       ++i;
       if ( i < ma->len ){
-        if ( (ma->val[(i>>1)]&0x0f) == 0xf ) break;
         sa_val[i] = (ma->val[(i>>1)]>>4)+0x30;
         ++i;
       }else break;
@@ -76,9 +74,11 @@ void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
   if ( ma->addrLen != 0 ){
     char sa_val[21] = {0,};
     for ( int i=0; i<(ma->addrLen-1)*2;){
+      if ( (ma->addr[(i>>1)+1]&0x0f) == 0xf ) break;
       sa_val[i]=(ma->addr[(i>>1)+1]&0x0f)+0x30;
       ++i;
       if ( i<(ma->addrLen-1)*2 ){
+        if ( (ma->addr[(i>>1)+1]&0x0f) == 0xf ) break;
         sa_val[i] = (ma->addr[(i>>1)+1]>>4)+0x30;
         ++i;
       }else break;
