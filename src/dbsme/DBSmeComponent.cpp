@@ -8,9 +8,9 @@ DBSmeComponent::DBSmeComponent(DBSmeAdmin& admin)
     : logger(Logger::getCategory("smsc.dbsme.DBSmeComponent")), admin(admin)
 {
     Parameters empty_params;
-    Method apply((unsigned)applyChangesMethod, "apply", empty_params, StringType);
+    Method restart((unsigned)restartMethod, "restart", empty_params, StringType);
 
-    methods[apply.getName()] = apply;
+    methods[restart.getName()] = restart;
 }
 
 DBSmeComponent::~DBSmeComponent()
@@ -26,8 +26,8 @@ Variant DBSmeComponent::call(const Method& method, const Arguments& args)
         
         switch (method.getId())
         {
-        case applyChangesMethod:
-            admin.applyChanges(); 
+        case restartMethod:
+            admin.restart(); 
             break;
         
         default:

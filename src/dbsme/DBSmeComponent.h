@@ -28,7 +28,7 @@ namespace smsc { namespace dbsme
         
         enum
         {
-            applyChangesMethod
+            restartMethod
         };
         
         void error(const char* method, const char* param);

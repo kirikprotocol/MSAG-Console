@@ -129,14 +129,17 @@ public:
 
         SMS request;
         fetchSmsFromSmppPdu((PduXSm*)pdu, &request);
-        Body& requestBody = request.getMessageBody();
-        uint32_t userMessageReference =
-            requestBody.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
-        bool isRequestUSSD = 
-            requestBody.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ? 
-                (requestBody.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)
-                  == USSD_PSSR_IND) : false;
-
+        bool isReceipt = (request.hasIntProperty(Tag::SMPP_ESM_CLASS)) ? 
+            ((request.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3C) == 0x4) : false;
+        if (isReceipt || ((PduXSm*)pdu)->get_optional().has_receiptedMessageId()) {
+            logger.warn("Unexpected sms receipt handled. Skipped.");
+            return;
+        }
+        
+        uint32_t userMessageReference = request.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+        bool isRequestUSSD = request.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ? 
+                            (request.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == USSD_PSSR_IND) : false;
+        
         smsc::dbsme::Command command;
         command.setFromAddress(request.getOriginatingAddress());
         command.setToAddress(request.getDestinationAddress());
@@ -437,7 +440,7 @@ public:
 
 struct DBSmeAdminHandler : public DBSmeAdmin
 {
-    virtual void applyChanges()
+    virtual void restart()
     {
         logger.error("Administrator has requested restart");
         setNeedReinit(true);

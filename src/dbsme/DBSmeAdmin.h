@@ -12,7 +12,7 @@ namespace smsc { namespace dbsme
 {
     struct DBSmeAdmin
     {
-        virtual void applyChanges() = 0;
+        virtual void restart() = 0;
         
 	    virtual ~DBSmeAdmin() {};
 
