@@ -40,7 +40,7 @@ public:
   }
 
   void formatDeliver(const char* addr,time_t date,std::string& out);
-  void formatFailed(const char* addr,const char* err,std::string& out);
+  void formatFailed(const char* addr,const char* err,time_t date,std::string& out);
 
   void sendFailureReport(SMS& sms,MsgIdType msgId,const char* reason);
 

@@ -124,13 +124,14 @@ void StateMachine::formatDeliver(const char* addr,time_t date,std::string& out)
     __trace2__("FORMATTER: %s",e.what());
   }
 }
-void StateMachine::formatFailed(const char* addr,const char* err,std::string& out)
+void StateMachine::formatFailed(const char* addr,const char* err,time_t date,std::string& out)
 {
   if(!ofFailed)return;
   ReceiptGetAdapter ga;
   ContextEnvironment ce;
   ce.exportStr("dest",addr);
   ce.exportStr("error",err);
+  ce.exportDat("date",date);
 
   try{
     ofFailed->format(out,ga,ce);
@@ -218,6 +219,7 @@ StateType StateMachine::submit(Tuple& t)
   }
 
   time_t now=time(NULL);
+  sms->setSubmitTime(now);
 
   __trace2__("SUBMIT: seq=%d",dialogId);
   int dest_proxy_index;
@@ -641,7 +643,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       rpt.setArchivationRequested(false);
       rpt.setIntProperty(Tag::SMPP_ESM_CLASS,
         sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST) ||
-        sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)?4:0);
+        (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&1)==1?4:0);
       rpt.setDestinationAddress(sms.getOriginatingAddress());
       rpt.setMessageReference(sms.getMessageReference());
       rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
@@ -703,7 +705,7 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,const char* reason
   rpt.setArchivationRequested(false);
   rpt.setIntProperty(Tag::SMPP_ESM_CLASS,
     sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST) ||
-    sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)
+    (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&3)
     ?4:0);
   rpt.setDestinationAddress(sms.getOriginatingAddress());
   rpt.setMessageReference(sms.getMessageReference());
@@ -721,7 +723,7 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,const char* reason
   Array<SMS*> arr;
   string out;
   sms.getDestinationAddress().getText(addr,sizeof(addr));
-  formatFailed(addr,reason,out);
+  formatFailed(addr,reason,sms.getSubmitTime(),out);
   smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
   splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
   for(int i=0;i<arr.Count();i++)
