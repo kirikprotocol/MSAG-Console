@@ -262,7 +262,8 @@ public:
         }
         
         Address oa, da;
-        const char* oaStr = processor.getAddress();
+        const char* oaStr = info.address.c_str();
+        if (!oaStr || !oaStr[0]) oaStr = processor.getAddress();
         if (!oaStr || !convertMSISDNStringToAddress(oaStr, oa)) {
             smsc_log_error(logger, "Invalid originating address '%s'", oaStr ? oaStr:"-");
             return false;

@@ -91,6 +91,7 @@ namespace smsc { namespace infosme
         std::string querySql;
         std::string msgTemplate;
         std::string svcType;        // specified if replaceIfPresent == true
+        std::string address;
 
         int     dsTimeout, dsUncommitedInProcess, dsUncommitedInGeneration;
         int     messagesCacheSize, messagesCacheSleep;
@@ -101,7 +102,7 @@ namespace smsc { namespace infosme
               trackIntegrity(false), transactionMode(false), keepHistory(false),
               endDate(-1), retryTime(-1), validityPeriod(-1), validityDate(-1),
               activePeriodStart(-1), activePeriodEnd(-1), activeWeekDays(0),
-              dsId(""), tablePrefix(""), querySql(""), msgTemplate(""), svcType(""),
+              dsId(""), tablePrefix(""), querySql(""), msgTemplate(""), svcType(""), address(""),
               dsTimeout(0), dsUncommitedInProcess(1), dsUncommitedInGeneration(1), 
               messagesCacheSize(100), messagesCacheSleep(0) {};
         TaskInfo(const TaskInfo& info) 
@@ -113,7 +114,8 @@ namespace smsc { namespace infosme
               activePeriodStart(info.activePeriodStart), activePeriodEnd(info.activePeriodEnd),
               activeWeekDays(info.activeWeekDays),
               dsId(info.dsId), tablePrefix(info.tablePrefix), querySql(info.querySql), 
-              msgTemplate(info.msgTemplate), svcType(info.svcType), dsTimeout(info.dsTimeout),
+              msgTemplate(info.msgTemplate), svcType(info.svcType), address(info.address),
+              dsTimeout(info.dsTimeout),
               dsUncommitedInProcess(info.dsUncommitedInProcess),
               dsUncommitedInGeneration(info.dsUncommitedInGeneration),
               messagesCacheSize(info.messagesCacheSize), 
@@ -132,7 +134,7 @@ namespace smsc { namespace infosme
             activePeriodEnd = info.activePeriodEnd;
             activeWeekDays = info.activeWeekDays;
             dsId = info.dsId; tablePrefix = info.tablePrefix; querySql = info.querySql;
-            msgTemplate = info.msgTemplate; svcType = info.svcType;
+            msgTemplate = info.msgTemplate; svcType = info.svcType; address = info.address;
             dsTimeout = info.dsTimeout;
             dsUncommitedInProcess = info.dsUncommitedInProcess;
             dsUncommitedInGeneration = info.dsUncommitedInGeneration;
@@ -192,7 +194,7 @@ namespace smsc { namespace infosme
         
         int         currentPriorityFrameCounter;
 
-        Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt);
+        /*Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt);*/
         Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
              DataSource* dsOwn, DataSource* dsInt);
         
@@ -225,6 +227,9 @@ namespace smsc { namespace infosme
         }
         inline std::string getName() {
             return info.name;
+        }
+        inline std::string getAddress() {
+            return info.address;
         }
         inline int getPriority() {
             return info.priority;

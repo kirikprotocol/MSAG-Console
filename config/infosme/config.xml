@@ -121,6 +121,7 @@
     <section name="Tasks">
 
       <!--section name="Task1">
+        <param name="address" type="string">.0.1.4</param>
         <param name="activePeriodEnd" type="string">22:00:00</param>
         <param name="activePeriodStart" type="string">09:00:00</param>
         <param name="dsId" type="string">WORKING_DS1</param>
@@ -147,6 +148,7 @@
       </section-->
 
 	    <!--section name="Task2">
+		<param name="address" type="string">.0.1.4</param>
 		<param name="name" type="string">Task 2</param>
 		<param name="dsId" type="string">WORKING_DS2</param>
 		<param name="dsTimeout" type="int">10</param> 
@@ -171,6 +173,7 @@
 		<param name="uncommited" type="int">10</param>
 	    </section>	    
 	    <section name="Task3">
+		<param name="address" type="string">.0.1.4</param>
 		<param name="name" type="string">Task 3</param>
 		<param name="dsId" type="string">WORKING_DS1</param>
 		<param name="dsTimeout" type="int">10</param>

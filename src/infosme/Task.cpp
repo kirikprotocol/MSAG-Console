@@ -48,6 +48,7 @@ const char* SELECT_MESSAGES_STATEMENT_SQL     = "SELECT ID, ABONENT, MESSAGE FRO
                                                 "STATE=:STATE AND SEND_DATE<=:SEND_DATE ORDER BY SEND_DATE ASC";
 
 
+/*
 Task::Task(TaskInfo& _info, DataSource* _dsOwn, DataSource* _dsInt) 
     : logger(Logger::getInstance("smsc.infosme.Task")), formatter(0),
         usersCount(0), bFinalizing(false), bSelectedAll(false), dsOwn(dsOwn), dsInt(dsInt), 
@@ -58,7 +59,7 @@ Task::Task(TaskInfo& _info, DataSource* _dsOwn, DataSource* _dsInt)
     this->info = _info; this->dsOwn = _dsOwn; this->dsInt = _dsInt;
     formatter = new OutputFormatter(info.msgTemplate.c_str());
     trackIntegrity(true, true); // delete flag & generated messages
-}
+}*/
 Task::Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
            DataSource* _dsOwn, DataSource* _dsInt)
     : logger(Logger::getInstance("smsc.infosme.Task")), formatter(0),
@@ -121,6 +122,12 @@ void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
     if (info.priority <= 0 || info.priority > MAX_PRIORITY_VALUE)
         throw ConfigException("Task priority should be positive and less than %d.", 
                               MAX_PRIORITY_VALUE);
+    try { info.address = config->getString("address"); }
+    catch (...) { 
+        smsc_log_warn(logger, "<address> parameter missed for task '%s'. "
+                              "Using global definitions", info.id.c_str());
+        info.address = "";
+    }
     info.retryOnFail = config->getBool("retryOnFail");
     info.replaceIfPresent = config->getBool("replaceMessage");
     info.transactionMode = config->getBool("transactionMode");
