@@ -1,7 +1,7 @@
-#include <stdio.h>
+//#define NOMINMAX
 #include "sme/SmppBase.hpp"
+#include <stdio.h>
 #include "sms/sms.h"
-#include <unistd.h>
 #include "util/smstext.h"
 #include "core/buffers/Array.hpp"
 
@@ -13,6 +13,8 @@ using namespace smsc::core::buffers;
 
 
 int stopped=0;
+
+int rcnt=0;
 
 class MyListener:public SmppPduEventListener{
 public:
@@ -30,6 +32,7 @@ public:
     if(pdu->get_commandId()==SmppCommandSet::SUBMIT_SM_RESP)
     {
       //printf("\nReceived async submit sm resp:%d\n",pdu->get_commandStatus());
+      rcnt++;
     }
     disposePdu(pdu);
   }
@@ -112,6 +115,7 @@ int main(int argc,char* argv[])
     lst.setTrans(tr);
     s.setEServiceType("XXX");
     sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+    int cnt=0;
     while(!stopped)
     {
       for(int i=0;i<addrs.Count();i++)
@@ -121,6 +125,8 @@ int main(int argc,char* argv[])
         s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
         s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,msg.c_str(),msg.length());
         s.setIntProperty(Tag::SMPP_SM_LENGTH,msg.length());
+        fillSmppPduFromSms(&sm,&s);
+        atr->submit(sm);
         //Array<SMS*> smsarr;
         /*splitSms(&s,msg.c_str(),msg.length(),CONV_ENCODING_KOI8R,DataCoding::DEFAULT,smsarr);
         for(int x=0;x<smsarr.Count();x++)
@@ -129,6 +135,11 @@ int main(int argc,char* argv[])
           atr->submit(sm);
           delete smsarr[x];
         }*/
+        cnt++;
+      }
+      if((cnt%500)==0)
+      {
+        printf("%d/%d\r",rcnt,cnt);
       }
     }
   }
