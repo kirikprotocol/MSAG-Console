@@ -43,16 +43,16 @@ void Log_WinErrorMessage(const char* expr,const char* file, int line)
   a_ptr<char> buffer = new char[1024*4];
   //a_ptr<char> lpMsgBuf = new char[1024];
   char* lpMsgBuf = 0;
-  FormatMessage( 
-    FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-    FORMAT_MESSAGE_FROM_SYSTEM | 
+  FormatMessage(
+    FORMAT_MESSAGE_ALLOCATE_BUFFER |
+    FORMAT_MESSAGE_FROM_SYSTEM |
     FORMAT_MESSAGE_IGNORE_INSERTS,
     NULL,
     GetLastError(),
     MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
     (char*)&lpMsgBuf,
     0,
-    NULL 
+    NULL
   );
   wsprintf(buffer,"windows error %s\n  when %s at %s(%d)\n",(char*)lpMsgBuf,expr,file,line);
   LocalFree(lpMsgBuf);

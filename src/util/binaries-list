@@ -2,6 +2,6 @@
 # this file contains binaries definitions
 
 # binary name        source name	libraries
-#util/test1           test               -lc
+util/test1           test               -lc -lsms -lutil -lsms -lutil-recoder-recode_dll -lutil-templates
 #-util/test2          test               -lc
 #LeakHunter.so LeakHunter -shared

@@ -18,7 +18,7 @@ static inline void* smartMalloc(size_t size) { return malloc(size); }
 static inline void smartFree(void* p) { free(p); }
 
 static inline void* xx_new(size_t size)
-{ 
+{
   void* p = smartMalloc(size);
   __trace2__ ("new(%d) == %x", size,p);
   __require__ ( p != 0 );
@@ -26,7 +26,7 @@ static inline void* xx_new(size_t size)
 }
 
 static inline void _delete(void* p)
-{ 
+{
   __require__ ( p != 0 );
   __trace2__ ("delete(%x)", p);
   smartFree(p);
@@ -41,7 +41,7 @@ static inline void operator delete[](void* p) {xx_delete(p);}
 */
 /*class MemoryManagerUnit
 {
-public: 
+public:
   static inline void* operator new(size_t size) {xx_new(size);}
   static inline void* operator new[](size_t size) {xx_new(size);}
   static inline void operator delete(void* p) {xx_delete(p);}

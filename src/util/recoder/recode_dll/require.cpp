@@ -27,7 +27,7 @@ void __cdecl FatalError(const char* file,int line,const char* format,...){
   Log_Write(buff);
   MessageBox(0,buff,"fatal error",MB_OK|MB_ICONERROR);
   delete buff;
- 	TerminateProcess(GetCurrentProcess(),0);
+  TerminateProcess(GetCurrentProcess(),0);
 }
 
 char* GetImagePath()
@@ -56,12 +56,12 @@ char* GetFullPath(const char* file)
 #include <stdarg.h>
 
 void FatalError(const char* file,int line){
-	__trace2__("fatal error at %s(%d)",file,line);
-	abort();
+  __trace2__("fatal error at %s(%d)",file,line);
+  abort();
 }
 
 void FatalError(const char* file,int line,const char* format,...){
-	char* buff = new char[1024*16];
+  char* buff = new char[1024*16];
   int pos = sprintf(buff,"Fatal error at %s:%d\n\nReason: ",file,line);
   va_list arg;
   va_start(arg,format);
