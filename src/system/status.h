@@ -62,8 +62,9 @@ static const int DELIVERYTIMEDOUT=1027; //Delivery attempt timed out
 static const int SMENOTCONNECTED=1028; //Sme is not connected
 static const int BLOCKEDMSC=1029; //Msc is blocked
 static const int DELETED=1030; //Message deleted
-static const int USSDDLGNFOUND=1031; //	USSD dialog not found for response (PSSR_RESP)
+static const int USSDDLGNFOUND=1031; // USSD dialog not found for response (PSSR_RESP)
 static const int USSDMSGTOOLONG=1032; // USSD msg can't be concatenated or truncated
+static const int INCOMPLETECONCATMSG=1033; //not all parts of concatenated message received
 
 static const int RESCHEDULEDNOW=1134; // not error, message was rescheduled for immediate delivery
 

@@ -205,7 +205,7 @@ void transLiterateSms(SMS* sms,int datacoding)
   }
 
   sms->setIntProperty(Tag::SMPP_DATA_CODING,dc);
-  __trace2__("SUBMIT: converting ucs2->text(%d->%d), dc=%d",len,newlen,dc);
+  __trace2__("SUBMIT: converting %d->%d (%d->%d)",sms->getIntProperty(Tag::SMPP_DATA_CODING),dc,len,newlen);
   if(udhi)
   {
     memcpy(buf8.get(),udhiData,udhiDataLen);
@@ -363,7 +363,7 @@ int partitionSms(SMS* sms,int dstdc)
     //len+=udhilen;
   }
   __require__(len>=0 && len<=65535);
-  int maxlen=134;;
+  int maxlen=133;
   int exudhilen=CalcExUserDataLen(sms);
   if(exudhilen==-1)return psErrorUdhi;
   if(udhi && exudhilen)return psErrorUdhi;
@@ -421,7 +421,7 @@ int partitionSms(SMS* sms,int dstdc)
   int parts=1;
   uint16_t offsets[256];
   offsets[0]=0;
-  maxlen=140-6-exudhilen;
+  maxlen=140-7-exudhilen;
   if(dc==DataCoding::UCS2)
   {
     int lastword=0;
@@ -577,10 +577,10 @@ void extractSmsPart(SMS* sms,int partnum)
       msg=bufTr.get();
     }
   }
-  int maxlen=134;
+  int maxlen=133;
   if(dstdc==DataCoding::LATIN1 || dstdc==DataCoding::SMSC7BIT)
   {
-    maxlen=153;
+    maxlen=152;
   }
   unsigned int cilen;
   ConcatInfo *ci=(ConcatInfo *)sms->getBinProperty(Tag::SMSC_CONCATINFO,&cilen);
@@ -608,23 +608,35 @@ void extractSmsPart(SMS* sms,int partnum)
       __trace2__("extractSmsPart: transliterate olddc(%x)->dc(%x)",olddc,dc);
     }
   }
-  uint8_t buf[256];
-  buf[0]=5;
-  buf[1]=0;
-  buf[2]=3;
-  buf[3]=sms->getConcatMsgRef();
-  buf[4]=ci->num;
-  buf[5]=partnum+1;
-  memcpy(buf+6,msg+off,newlen);
-  newlen+=6;
+  if(!sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT))
+  {
+    uint8_t buf[256];
+    buf[0]=6;
+    buf[1]=8;
+    buf[2]=4;
+    buf[3]=sms->getConcatMsgRef()>>8;
+    buf[4]=sms->getConcatMsgRef()&0xff;
+    buf[5]=ci->num;
+    buf[6]=partnum+1;
+    memcpy(buf+7,msg+off,newlen);
+    newlen+=7;
 
-  sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x40);
-  sms->setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)buf,newlen);
-  sms->setIntProperty(Tag::SMPP_SM_LENGTH,newlen);
-  sms->getMessageBody().dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
-  sms->getMessageBody().dropProperty(Tag::SMSC_RAW_PAYLOAD);
-  sms->setIntProperty(Tag::SMPP_DATA_SM,0);
-  FillUd(sms);
+    sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x40);
+    sms->setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)buf,newlen);
+    sms->setIntProperty(Tag::SMPP_SM_LENGTH,newlen);
+    sms->getMessageBody().dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
+    sms->getMessageBody().dropProperty(Tag::SMSC_RAW_PAYLOAD);
+    sms->setIntProperty(Tag::SMPP_DATA_SM,0);
+    FillUd(sms);
+  }else
+  {
+    sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x40);
+    sms->setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)msg+off,newlen);
+    sms->setIntProperty(Tag::SMPP_SM_LENGTH,newlen);
+    sms->getMessageBody().dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
+    sms->getMessageBody().dropProperty(Tag::SMSC_RAW_PAYLOAD);
+    sms->setIntProperty(Tag::SMPP_DATA_SM,0);
+  }
 }
 
 };//util

@@ -635,6 +635,14 @@ void Smsc::init(const SmscConfigs& cfg)
     if(ok)tp.startTask(ss);
   }
 
+  mergeConcatTimeout=600;
+  try{
+    mergeConcatTimeout=cfg.cfgman->getInt("core.mergeTimeout");
+  }catch(...)
+  {
+    log.warn("core.mergeTimeout not found, using default(%d)",mergeConcatTimeout);
+  }
+
   log.info( "SMSC init complete" );
 
   }catch(exception& e)
@@ -723,6 +731,7 @@ void Smsc::shutdown()
 {
   __trace__("shutting down");
 
+  delete smscsme;
   smeman.unregisterSmeProxy("DSTRLST");
 
   tp.shutdown();

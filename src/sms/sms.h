@@ -828,7 +828,7 @@ struct SMS
   SmeSystemIdType srcSmeId;
   SmeSystemIdType dstSmeId;
 
-  uint8_t     concatMsgRef;   // For concatenated messages only
+  uint16_t    concatMsgRef;   // For concatenated messages only
   uint8_t     concatSeqNum;   //
 
   int         dialogId;  // used for transaction mode, not stored in DB
@@ -1567,12 +1567,12 @@ struct SMS
     return dstSmeId;
   };
 
-  inline void setConcatMsgRef(uint8_t newval)
+  inline void setConcatMsgRef(uint16_t newval)
   {
     concatMsgRef=newval;
   }
 
-  inline uint8_t getConcatMsgRef()
+  inline uint16_t getConcatMsgRef()
   {
     return concatMsgRef;
   }

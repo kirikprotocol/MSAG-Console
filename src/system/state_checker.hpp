@@ -48,6 +48,7 @@ public:
           case REPLACE:return true;
           case QUERY:return true;
           case CANCEL:return true;
+          case SUBMIT:return true;
           default:return false;
         }
       }

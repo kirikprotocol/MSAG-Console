@@ -28,16 +28,16 @@ public:
   {
     store=st;
   }
-  void setMR(const char* addr,uint8_t mr)
+  void setMR(const char* addr,uint16_t mr)
   {
     cache[addr]=mr;
   }
-  uint8_t getNextMR(const Address& addr)
+  uint16_t getNextMR(const Address& addr)
   {
     MutexGuard mg(mtx);
-    AddressValue straddr;
+    char straddr[MAX_FULL_ADDRESS_VALUE_LENGTH+5];
     addr.toString(straddr,sizeof(straddr));
-    uint8_t* dta=cache.GetPtr(straddr);
+    uint16_t* dta=cache.GetPtr(straddr);
     if(dta)
     {
       return ++(*dta);
@@ -50,7 +50,7 @@ public:
     }
   }
 protected:
-  Hash<uint8_t> cache;
+  Hash<uint16_t> cache;
   Mutex mtx;
   MessageStore* store;
 };

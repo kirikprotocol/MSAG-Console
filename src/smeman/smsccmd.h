@@ -280,6 +280,7 @@ struct CancelSm{
   auto_ptr<char> sourceAddr;
   auto_ptr<char> destAddr;
   bool internall;
+  bool force;
 
   CancelSm(PduCancelSm* pdu)
   {
@@ -288,6 +289,7 @@ struct CancelSm{
     fillSmppAddr(sourceAddr,pdu->get_source());
     fillSmppAddr(destAddr,pdu->get_dest());
     internall=false;
+    force=false;
   }
   CancelSm(SMSId id,const Address& oa,const Address& da)
   {
@@ -301,6 +303,16 @@ struct CancelSm{
     int idlen=sprintf(idbuf,"%lld",id);
     fillField(messageId,idbuf,idlen);
     internall=true;
+    force=false;
+  }
+
+  CancelSm(SMSId id)
+  {
+    char idbuf[32];
+    int idlen=sprintf(idbuf,"%lld",id);
+    fillField(messageId,idbuf,idlen);
+    internall=true;
+    force=true;
   }
 
 };
@@ -731,6 +743,18 @@ public:
     _cmd.ref_count = 1;
     _cmd.cmdid = CANCEL;
     _cmd.dta = new CancelSm(id,oa,da);
+    _cmd.dialogId = 0;
+    return cmd;
+  }
+
+  static SmscCommand makeCancel(SMSId id)
+  {
+    SmscCommand cmd;
+    cmd.cmd = new _SmscCommand;
+    _SmscCommand& _cmd = *cmd.cmd;
+    _cmd.ref_count = 1;
+    _cmd.cmdid = CANCEL;
+    _cmd.dta = new CancelSm(id);
     _cmd.dialogId = 0;
     return cmd;
   }

@@ -8,6 +8,8 @@
 
 #include <exception>
 
+#include "util/udh.hpp"
+
 namespace smsc{
 namespace system{
 
@@ -157,7 +159,8 @@ void Smsc::mainLoop()
         SMSId id = task.messageId;
         __trace2__("enqueue timeout Alert: dialogId=%d, proxyUniqueId=%d",
           task.sequenceNumber,task.proxy_id);
-        eventqueue.enqueue(id,SmscCommand::makeAlert(task.sms));
+        //eventqueue.enqueue(id,SmscCommand::makeAlert(task.sms));
+        generateAlert(id,task.sms);
       }
     }while(!frame.size());
 
@@ -171,6 +174,19 @@ void Smsc::mainLoop()
     //
     //
     //////
+
+    while(mergeCacheTimeouts.size()>0 && mergeCacheTimeouts.begin()->first<=time(NULL))
+    {
+      SMSId id=mergeCacheTimeouts.begin()->second;
+      eventqueue.enqueue(id,SmscCommand::makeCancel(id));
+      MergeCacheItem* pmci=reverseMergeCache.GetPtr(id);
+      if(pmci)
+      {
+        reverseMergeCache.Delete(id);
+        mergeCache.Delete(*pmci);
+      }
+      mergeCacheTimeouts.erase(mergeCacheTimeouts.begin());
+    }
 
 
     int submitCount=0;
@@ -284,7 +300,8 @@ void Smsc::mainLoop()
           SMSId id = task.messageId;
           __trace2__("enqueue timeout Alert: dialogId=%d, proxyUniqueId=%d",
             task.sequenceNumber,task.proxy_id);
-          eventqueue.enqueue(id,SmscCommand::makeAlert(task.sms));
+          generateAlert(id,task.sms);
+          //eventqueue.enqueue(id,SmscCommand::makeAlert(task.sms));
         }
       }
       timestruc_t tv={0,1000000};
@@ -312,6 +329,13 @@ void Smsc::mainLoop()
   } // end of main loop
 }
 
+
+void Smsc::generateAlert(SMSId id,SMS* sms)
+{
+  eventqueue.enqueue(id,SmscCommand::makeAlert(sms));
+}
+
+
 void Smsc::processCommand(SmscCommand& cmd)
 {
   SMSId id=0;
@@ -319,7 +343,54 @@ void Smsc::processCommand(SmscCommand& cmd)
   {
     case __CMD__(SUBMIT):
     {
-      id=store->getNextId();
+      if(cmd->get_sms()->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
+      {
+        SMS &sms=*cmd->get_sms();
+        unsigned int len;
+        unsigned char *body;
+        if(sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+        {
+          body=(unsigned char*)sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+        }else
+        {
+          body=(unsigned char*)sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+        }
+        uint16_t mr;
+        uint8_t idx,num;
+        bool havemoreudh;
+        bool haveconcat=smsc::util::findConcatInfo(body,mr,idx,num,havemoreudh);
+        if(haveconcat)
+        {
+          __trace2__("sms from %s have concat info:mr=%u, %u/%u",sms.getOriginatingAddress().toString().c_str(),(unsigned)mr,(unsigned)idx,(unsigned)num);
+          MergeCacheItem mci;
+          mci.mr=mr;
+          mci.oa=sms.getOriginatingAddress();
+          sms.setIntProperty(Tag::SMSC_MERGE_CONCAT,1);
+          sms.setConcatMsgRef(mr);
+          sms.setConcatSeqNum(0);
+          SMSId *pid=mergeCache.GetPtr(mci);
+          if(!pid)
+          {
+            __trace__("first piece");
+            id=store->getNextId();
+            mergeCache.Insert(mci,id);
+            reverseMergeCache.Insert(id,mci);
+            std::pair<time_t,SMSId> to(time(NULL)+mergeConcatTimeout,id);
+            mergeCacheTimeouts.push_back(to);
+          }else
+          {
+            __trace__("next piece");
+            sms.setIntProperty(Tag::SMSC_MERGE_CONCAT,2);
+            id=*pid;
+          }
+        }else
+        {
+          id=store->getNextId();
+        }
+      }else
+      {
+        id=store->getNextId();
+      }
       __trace2__("main loop submit: seq=%d, id=%lld",cmd->get_dialogId(),id);
       break;
     }

@@ -34,6 +34,8 @@
 
 #include <sys/types.h>
 
+#include "core/buffers/XHash.hpp"
+
 
 namespace smsc{
 namespace system{
@@ -359,9 +361,13 @@ public:
     return tcontrol->processCommand(cmd);
   }
 
-  void processCommand(SmscCommand& cmd);
 
 protected:
+
+  void processCommand(SmscCommand& cmd);
+
+  void generateAlert(SMSId id,SMS* sms);
+
   smsc::system::smppio::SmppSocketsManager ssockman;
   smsc::smeman::SmeManager smeman;
   Mutex routerSwitchMutex;
@@ -407,6 +413,35 @@ protected:
   int eventQueueLimit;
 
   smsc::core::threads::ThreadPool tp,tp2;
+
+  struct MergeCacheItem{
+    Address  oa;//originating address
+    uint16_t mr;//message reference
+    bool operator==(const MergeCacheItem& item)
+    {
+      return oa==item.oa && mr==item.mr;
+    }
+  };
+
+  struct MergeCacheHashFunc{
+    static unsigned inline int CalcHash(const MergeCacheItem& item)
+    {
+      unsigned int res=item.mr;
+      unsigned int mul=10;
+      for(int i=0;i<item.oa.length;i++)
+      {
+        res+=(item.oa.value[i]-'0')*mul;
+        mul*=10;
+        if(i==9)break;
+      }
+      return res;
+    }
+  };
+
+  smsc::core::buffers::XHash<MergeCacheItem,SMSId,MergeCacheHashFunc> mergeCache;
+  smsc::core::buffers::XHash<SMSId,MergeCacheItem> reverseMergeCache;
+  std::list<std::pair<time_t,SMSId> > mergeCacheTimeouts;
+  time_t mergeConcatTimeout;
 
   friend class StatusSme;
 

@@ -22,6 +22,9 @@ int permErrProb=0;
 
 int respDelay=0;
 
+
+bool autoAnswer=false;
+
 class MyListener:public SmppPduEventListener{
 public:
   void handleEvent(SmppHeader *pdu)
@@ -37,7 +40,7 @@ public:
         resp.set_messageId("");
         resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
         resp.get_header().set_commandStatus(SmppStatusSet::ESME_RMSGQFUL);
-        trans->sendDeliverySmResp(resp);
+        atrans->sendDeliverySmResp(resp);
         disposePdu(pdu);
         return;
       }
@@ -48,7 +51,7 @@ public:
         resp.set_messageId("");
         resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
         resp.get_header().set_commandStatus(SmppStatusSet::ESME_RX_P_APPN);
-        trans->sendDeliverySmResp(resp);
+        atrans->sendDeliverySmResp(resp);
         disposePdu(pdu);
         return;
       }else if(rnd<temperrProb+permErrProb+dontrespProb)
@@ -56,9 +59,14 @@ public:
         disposePdu(pdu);
         return;
       }
-      char buf[256];
+      char buf[65535];
       SMS s;
       fetchSmsFromSmppPdu((PduXSm*)pdu,&s);
+
+      unsigned msgsmlen,msgpllen;
+      s.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&msgsmlen);
+      s.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&msgpllen);
+      __trace2__("received msglen=%u/%u",msgsmlen,msgpllen);
       s.getOriginatingAddress().toString(buf,sizeof(buf));
       printf("\n==========\nFrom:%s\n",buf);
       s.getDestinationAddress().toString(buf,sizeof(buf));
@@ -69,11 +77,11 @@ public:
       {
         printf("MsgState:%d\n",s.getIntProperty(Tag::SMPP_MSG_STATE));
       }
-      if(getPduText((PduXSm*)pdu,buf,sizeof(buf))==-1)
+      if(getSmsText(&s,buf,sizeof(buf))==-1)
       {
-        int sz=((PduXSm*)pdu)->optional.size_messagePayload();
-        char *data=new char[sz*2];
-        if(getPduText((PduXSm*)pdu,data,sz*2)!=-1)
+        int sz=65536;
+        char *data=new char[sz];
+        if(getSmsText(&s,data,sz)!=-1)
         {
           printf("Message(payload):%s\n",data);
         }else
@@ -94,20 +102,34 @@ public:
         timestruc_t tv={sec,msec*1000000};
         nanosleep(&tv,0);
       }
+
+      if(autoAnswer)
+      {
+        printf("Autoanswered\n");
+        Address oa=s.getOriginatingAddress();
+        s.setOriginatingAddress(s.getDestinationAddress());
+        s.setDestinationAddress(oa);
+        PduSubmitSm sm;
+        sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+        fillSmppPduFromSms(&sm,&s);
+        atrans->submit(sm);
+      }
+
+
       if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
       {
         PduDeliverySmResp resp;
         resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
         resp.set_messageId("");
         resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-        trans->sendDeliverySmResp(resp);
+        atrans->sendDeliverySmResp(resp);
       }else
       {
         PduDataSmResp resp;
         resp.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
         resp.set_messageId("");
         resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-        trans->sendDataSmResp(resp);
+        atrans->sendDataSmResp(resp);
       }
     }else
     if(pdu->get_commandId()==SmppCommandSet::SUBMIT_SM_RESP)
@@ -123,12 +145,14 @@ public:
     stopped=1;
   }
 
-  void setTrans(SmppTransmitter *t)
+  void setTrans(SmppTransmitter *t,SmppTransmitter *at)
   {
     trans=t;
+    atrans=at;
   }
 protected:
   SmppTransmitter* trans;
+  SmppTransmitter* atrans;
 };
 
 int main(int argc,char* argv[])
@@ -146,6 +170,9 @@ int main(int argc,char* argv[])
            "\t -u send messages in unicode\n"
            "\t -7 send messages in 7 in 8 bit\n"
            "\t -d send messages as DATA_SM\n"
+           "\t -s send sms with ussd service op\n"
+           "\t -w autoanswer(ping pong) mode\n"
+           "\t -c receive only mode\n"
            "\t -m {D|T} send messages in datagram or transaction mode\n"
            "\t -e N probability of answer with temp error\n"
            "\t -r N probability of answer with perm error\n"
@@ -173,6 +200,8 @@ int main(int argc,char* argv[])
   int bindType=BindType::Transceiver;
 
   bool smsc7bit=false;
+  bool ussd=false;
+  bool receiveOnly=false;
 
   for(int i=2;i<argc;i+=2)
   {
@@ -192,6 +221,21 @@ int main(int argc,char* argv[])
       case 'd':
       {
         dataSm=true;
+        i--;
+      }continue;
+      case 's':
+      {
+        ussd=true;
+        i--;
+      }continue;
+      case 'c':
+      {
+        receiveOnly=true;
+        i--;
+      }continue;
+      case 'w':
+      {
+        autoAnswer=true;
         i--;
       }continue;
     }
@@ -274,7 +318,7 @@ int main(int argc,char* argv[])
   SmppSession ss(cfg,&lst);
   SmppTransmitter *tr=ss.getSyncTransmitter();
 
-  lst.setTrans(tr);
+  lst.setTrans(tr,ss.getAsyncTransmitter());
   try{
     ss.connect(bindType);
     PduSubmitSm sm;
@@ -309,9 +353,12 @@ int main(int argc,char* argv[])
 
     s.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,1234);
 
+    if(ussd)s.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,1);
+
     s.setEServiceType("XXX");
     char *addr=NULL;
     char *message=NULL;
+    if(!receiveOnly)
     while(!stopped)
     {
       if(addr)free(addr);
@@ -416,6 +463,11 @@ int main(int argc,char* argv[])
         fflush(stdout);
       }
       if(resp)disposePdu(resp);
+    }
+
+    if(receiveOnly)
+    {
+      while(!stopped){sleep(5);}
     }
   }
   catch(SmppConnectException& e)
