@@ -19,14 +19,15 @@
 			<param name="msgError">Неправильная команда (!@#$%^&*( )_+-=|\\:;'<,>.?/)</param>
 		</section>
 		<section name="abonentinfo">
-			<param name="mobileFormat">Abonent $$string import=abonent$$ is $$string import=status$$. msc $$string import=msc$$</param>
-			<param name="smeFormat">$$string import=abonent$$:$$int32 import=encoding$$,$$int32 import=status$$,$$string import=msc$$</param>
+			<param name="mobileFormat">Абонент $$string import="abonent"$$: статус $$string import="status"$$, msc $$string import="msc"$$</param>
+			<param name="smeFormat">Abonent $$string import="abonent"$$: status $$int32 import="status"$$, encoding $$int32 import="encoding"$$, msc $$string import="msc"$$</param>
 		</section>
 		<section name="receipt">
 			<section name="default">
 				<param name="deliveredFormat" type="string">*Your message sent to $$string import="dest"$$ was successfully delivered on $$date pattern="dd MMMM yyyy, HH:mm:ss" import="date"$$</param>
 				<param name="failedFormat" type="string">*Message to $$string import="dest"$$ sent on $$date pattern="dd MMMM yyyy, HH:mm:ss" import="date"$$ failed: $$string import="reason"$$. Resend the message to $$string import="dest"$$ once again and maybe you will have luck next time. Sincerely, smsc sme.</param>
-				<param name="notifyFormat" type="string">$????????? ?? $$string import="dest"$$ ?? $$date pattern="dd-MM-yy HH:mm:ss" import="date"$$ ??????????: $$string import="reason"$$</param>
+				<param name="deletedFormat">#Сообщение на $$string import="dest"$$ от $$date pattern="dd-MM-yy HH:mm:ss" import="date"$$ удалено</param>
+				<param name="notifyFormat" type="string">$Сообщение на $$string import="dest"$$ от $$date pattern="dd-MM-yy HH:mm:ss" import="date"$$ обломалось: $$string import="reason"$$</param>
 			</section>
 		</section>
 		<section name="reason">

@@ -17,7 +17,6 @@
 			<param name="msgError"></param>
 		</section>
 		<section name="abonentinfo">
-			<param name="mobileFormat"></param>
 			<param name="smeFormat"></param>
 		</section>
 		<section name="receipt">
