@@ -10,6 +10,7 @@ using namespace std;
 //#define SMSC_FORWARD_RESPONSE 0x001
 
 static unsigned __global_bind_counter = 0;
+static unsigned __pingPongWaitConter = 0;
 static bool MAP_dispatching = false;
 static bool MAP_isAlive = false;
 #define CORRECT_BIND_COUNTER 2
@@ -17,6 +18,12 @@ static bool MAP_isAlive = false;
 //struct SMSC_FORWARD_RESPONSE_T {
 //  ET96MAP_DIALOGUE_ID_T dialogId;
 //};
+
+MAPIO_TaskACVersionNotifier()
+{
+  __pingPongWaitConter = 0;
+}
+extern void MAPIO_QueryMscVersionInternal();
 
 void CloseDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId)
 {
@@ -98,6 +105,19 @@ void MapIoTask::dispatcher()
     MAP_dispatching = false;
     if ( ++timecounter == 60 ) {
       __trace2__("MAP: EINSS7CpMsgRecv_r TICK-TACK");
+      if ( __pingPongWaitCounter > 0 )  {
+        result = MSG_BROKEN_CONNECTION;
+        __trace2__("MAP:: ping-pong failed");
+      }
+      else{
+        try{
+          MAPIO_QueryMscVersionInternal();
+        }catch(exception& e){
+          result = MSG_BROKEN_CONNECTION;
+        }
+      }
+      ++__pingPongWaitConter;
+
       if ( __global_bind_counter != CORRECT_BIND_COUNTER ){
         result = MSG_BROKEN_CONNECTION;
         __trace2__("MAP:: not all binders dinded");
@@ -167,6 +187,7 @@ void MapIoTask::init(unsigned timeout)
 {
   USHORT_T err;
   __global_bind_counter = 0;
+  __pingPongWaitConter = 0;
   err = MsgInit(MAXENTRIES);
   if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgInit, code 0x%hx",err); throw runtime_error("MsgInit error"); }
   err = MsgOpen(MY_USER_ID);

@@ -1,3 +1,4 @@
+
 #ifndef __SMSC_SMS_SMS_H__
 #define __SMSC_SMS_SMS_H__
 
