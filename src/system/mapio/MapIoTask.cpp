@@ -57,9 +57,11 @@ USHORT_T  Et96MapOpenInd(
     MapDialogCntItem* mdci = 
 		  MapDialogContainer::getInstance()->createDialog(dialogId);
   	mdci->localSsn = SSN;
-    Et96MapOpenResp(lssn,dialogId,ET96MAP_RESULT_OK,ET96MAP_NO_REASON,0,0,0);
+    ET96MAP_REASON_T reason = ET96MAP_NO_REASON;
+    Et96MapOpenResp(lssn,dialogId,ET96MAP_RESULT_OK,&reason,0,0,0);
   }catch(...){
-    Et96MapOpenResp(lssn,dialogId,ET96MAP_RESULT_NOT_OK,ET96MAP_NO_REASON,0,0,0);
+    ET96MAP_REASON_T reason = ET96MAP_NO_REASON;
+    Et96MapOpenResp(lssn,dialogId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0);
   }
   return ET96MAP_E_OK;
 }
