@@ -104,7 +104,7 @@ namespace smsc { namespace store
 
         Mutex               locationsLock;
         Hash<std::string>   locations;
-        std::string         directory;
+        std::string         baseDirectory, textDirectory;
 
         ThreadPool      queriesPool;
         
@@ -134,7 +134,11 @@ namespace smsc { namespace store
         }
         inline std::string getBaseDirectory() {
             MutexGuard guard(locationsLock);
-            return directory;
+            return baseDirectory;
+        }
+        inline std::string getTextDirectory() {
+            MutexGuard guard(locationsLock);
+            return textDirectory;
         }
     };
 

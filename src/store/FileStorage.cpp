@@ -8,6 +8,8 @@
 
 #include <smpp/smpp_structures.h>
 #include <util/csv/CSVFileEncoder.h>
+#include <util/recoder/recode_dll.h>
+#include <util/smstext.h>
 
 #include "Uint64Converter.h"
 #include "FileStorage.h"
@@ -31,11 +33,11 @@ const char* SMSC_LAST_BILLING_FILE_EXTENSION = "lst";
 const char* SMSC_PREV_BILLING_FILE_EXTENSION = "csv";
 const char* SMSC_LAST_ARCHIVE_FILE_EXTENSION = "rec";
 const char* SMSC_PREV_ARCHIVE_FILE_EXTENSION = "arc";
+const char* SMSC_TEXT_ARCHIVE_FILE_EXTENSION = "csv";
 const char* SMSC_ERRF_ARCHIVE_FILE_EXTENSION = "err";
 
 const char* SMSC_BILLING_FILE_NAME_PATTERN = "%04d%02d%02d_%02d%02d%02d";
 const char* SMSC_ARCHIVE_FILE_NAME_PATTERN = "%04d%02d%02d_%02d%02d%02d";
-const char* SMSC_PERSIST_FILE_NAME_PATTERN = "%02d.arc";
 const char* SMSC_PERSIST_DIR_NAME_PATTERN  = "%04d%02d%02d";
 
 const uint16_t SMSC_ARCHIVE_VERSION_INFO = 0x0001;
@@ -769,5 +771,200 @@ bool PersistentStorage::readRecord(SMSId& id, SMS& sms, const fpos_t* pos /*= 0 
     this->open(true);
     return FileStorage::load(id, sms, pos);
 }
+
+
+bool TextDumpStorage::create()
+{
+    if (storageFile) return false;
+    
+    std::string fullFilePath = storageLocation+'/'+storageFileName;
+    const char* fullFilePathStr = fullFilePath.c_str();
+    storageFile = fopen(fullFilePathStr, "r");
+    
+    bool needFile = true;
+    if (storageFile)  { // opened for reading
+        fclose(storageFile); storageFile = 0;
+        needFile = false;
+    } 
+
+    storageFile = fopen(fullFilePathStr, "ab+");
+    if (!storageFile) {
+        Exception exc("Failed to open file '%s' for writing. Details: %s", 
+                      fullFilePathStr, strerror(errno));
+        throw StorageException(exc.what());
+    }
+    if (fseek(storageFile, 0, SEEK_END)) {
+        int error = ferror(storageFile);
+        Exception exc("Failed to seek EOF. Details: %s", strerror(error));
+        fclose(storageFile); storageFile = 0;
+        throw StorageException(exc.what());
+    }
+    return needFile;
+}
+
+void TextDumpStorage::open()
+{
+    static const char* SMSC_TXT_ARCHIVE_HEADER_TEXT = 
+        "ID,SUBMIT,FINALIZED,STATUS,ROUTE_ID,SRC_ADDR,SRC_SME_ID,"
+        "DST_ADDR,DST_SME_ID,DST_ADDR_DEALIASED,MESSAGE\n";
+    
+    if (TextDumpStorage::create()) {
+        FileStorage::write(SMSC_TXT_ARCHIVE_HEADER_TEXT, strlen(SMSC_TXT_ARCHIVE_HEADER_TEXT));
+        FileStorage::flush();
+    }
+}
+
+static void decodeMessage(uint8_t* msg, int msgLen, int encoding, std::string& message)
+{
+    if (encoding == DataCoding::LATIN1)
+    {           
+        std::auto_ptr<char> textGuard(new char[msgLen+1]);
+        char* text = textGuard.get();
+        memcpy(text, msg, msgLen);
+        text[msgLen] = '\0'; message += text;
+    }
+    else if (encoding == DataCoding::SMSC7BIT)
+    {
+        std::auto_ptr<char> textGuard(new char[msgLen*2+1]);
+        char* text = textGuard.get();
+        int textLen = ConvertSMSC7BitToLatin1((const char *)msg, msgLen, text);
+        if (textLen >= 0 && textLen <= msgLen*2) {
+            text[textLen] = '\0'; message += text;
+        } else {
+            message += "<< ERR: Failed to convert from SMSC7BIT encoding >>";
+        }
+    }
+    else if (encoding == DataCoding::UCS2)
+    {
+        std::auto_ptr<char> textGuard(new char[msgLen*2+1]);
+        char* text = textGuard.get();
+        int textLen = ConvertUCS2ToMultibyte((const short *)msg, msgLen, text, msgLen*2, CONV_ENCODING_LATIN1);
+        if (textLen >= 0 && textLen <= msgLen*2) {
+            text[textLen] = '\0'; message += text;
+        } else {
+            message += "<< ERR: Failed to convert from UCS2 encoding >>";
+        }
+    }
+    else if (encoding == DataCoding::BINARY)
+    { 
+        char strbuff[256];
+        message += "<< BIN: ";
+        for (int i=0; i<msgLen; i++) {
+            sprintf(strbuff, "%02X ", msg[i]); message += strbuff;
+        } message += ">>";
+    }
+    else
+    {
+        char strbuff[256];
+        sprintf(strbuff, "<< ERR: Unsupported encoding (%d) >>", encoding);
+        message += strbuff;
+    }
+}
+
+static void convertMessage(uint8_t* msg, int start, int msgLen, 
+                           bool udh, int encoding, std::string& message)
+{
+    if (!udh) decodeMessage(msg+start, msgLen, encoding, message);
+    else
+    {
+        char strbuff[1024];
+        int headerLen = ((int)msg[start])&0xFF; // convert negative byte to int
+        if( headerLen > msgLen-1 ) {
+            sprintf(strbuff, "<< ERR: UDH greater then message %d/%d >>", headerLen, msgLen-1);
+            message += strbuff;
+        }
+        else {
+            message += "<< UDH: ";
+            for (int i=0; i<headerLen; i++) {
+                sprintf(strbuff, "%02X ", msg[start+1+i]); message += strbuff;
+            } message += ">>";
+
+            int textLen = msgLen-headerLen-1;
+            if( textLen > 0 ) decodeMessage(msg+(start+headerLen+1), textLen, encoding, message);
+        }
+    }
+}
+
+static void parseMessageBody(const Body& body, std::string& message)
+{
+    int encoding = (body.hasIntProperty(Tag::SMPP_DATA_CODING)) ? 
+                    body.getIntProperty(Tag::SMPP_DATA_CODING) : DataCoding::SMSC7BIT;
+    int esmClass = (body.hasIntProperty(Tag::SMPP_ESM_CLASS)) ?
+                    body.getIntProperty(Tag::SMPP_ESM_CLASS) : 0;
+    
+    unsigned msgLen  = 0; bool isPayload = false;
+    uint8_t* msg = (uint8_t *)body.getBinProperty(Tag::SMPP_SHORT_MESSAGE, &msgLen);
+    if (!msg || msgLen == 0) {
+        if(body.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD)) {
+            msg = (uint8_t *)body.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, &msgLen);
+            isPayload = true;
+        }
+    }
+    if (!msg || msgLen == 0) return; // No message tags difined
+
+    if (body.hasIntProperty(Tag::SMSC_MERGE_CONCAT))
+    {
+        unsigned concatInfoLen = 0;
+        ConcatInfo* concatInfo = 0;
+        if (!body.hasBinProperty(Tag::SMSC_CONCATINFO) ||
+            !(concatInfo = (ConcatInfo *)body.getBinProperty(Tag::SMSC_CONCATINFO, &concatInfoLen)) || 
+            concatInfoLen <= 0 || concatInfo->num <= 0) {
+            message = "<< ERR: Invalid or missed ConcatInfo part >>"; return;
+        }
+
+        unsigned partsEncodingLen = 0;
+        uint8_t* partsEncoding = (body.hasBinProperty(Tag::SMSC_DC_LIST)) ?
+                        (uint8_t*)body.getBinProperty(Tag::SMSC_DC_LIST, &partsEncodingLen):0;
+        if (!partsEncodingLen) partsEncoding = 0;
+        if (partsEncoding && partsEncodingLen != concatInfo->num) {
+            message = "<< ERR: Invalid parts encoding count >>"; return;
+        }
+        
+        for (int i=0; i<concatInfo->num; i++)
+        {
+            uint16_t offset = concatInfo->getOff(i);
+            int len = msgLen-offset;
+            if (i < concatInfo->num-1) {
+                uint16_t offset_next = concatInfo->getOff(i+1);
+                len = offset_next-offset;
+            }
+            if (len < 0) message += "<< ERR: Invalid ConcatInfo offset >>";
+            else convertMessage(msg, offset, len, true, 
+                                (partsEncoding) ? partsEncoding[i]:encoding, message);
+        }
+    }
+    else convertMessage(msg, 0, msgLen, ((esmClass & 0x40) == 0x40), encoding, message);
+}
+
+void TextDumpStorage::writeRecord(SMSId id, SMS& sms)
+{
+    MutexGuard guard(storageFileLock);
+    
+    this->open();
+
+    std::string out = "";
+    CSVFileEncoder::addUint64  (out, id);
+    CSVFileEncoder::addDateTime(out, sms.submitTime);
+    CSVFileEncoder::addDateTime(out, sms.lastTime);
+    CSVFileEncoder::addUint32  (out, sms.lastResult);
+    CSVFileEncoder::addString  (out, sms.routeId);
+
+    std::string oa = sms.originatingAddress.toString();
+    CSVFileEncoder::addString  (out, oa.c_str());
+    CSVFileEncoder::addString  (out, sms.srcSmeId);
+    std::string da = sms.destinationAddress.toString();
+    CSVFileEncoder::addString  (out, da.c_str());
+    CSVFileEncoder::addString  (out, sms.dstSmeId);
+    std::string dda = sms.dealiasedDestinationAddress.toString();
+    CSVFileEncoder::addString  (out, dda.c_str());
+
+    std::string message = "";
+    parseMessageBody(sms.getMessageBody(), message);
+    CSVFileEncoder::addString  (out, message.c_str(), true);
+    
+    write(out.c_str(), out.length());
+    flush();
+}
+
 
 }}

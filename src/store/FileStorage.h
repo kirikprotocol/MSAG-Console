@@ -31,7 +31,8 @@ namespace smsc { namespace store
     extern const char* SMSC_PREV_BILLING_FILE_EXTENSION;
     extern const char* SMSC_LAST_ARCHIVE_FILE_EXTENSION;
     extern const char* SMSC_PREV_ARCHIVE_FILE_EXTENSION;
-    extern const char* SMSC_PERSIST_FILE_NAME_PATTERN;
+    extern const char* SMSC_TEXT_ARCHIVE_FILE_EXTENSION;
+
     extern const char* SMSC_PERSIST_DIR_NAME_PATTERN;
 
     class FileStorage
@@ -156,12 +157,30 @@ namespace smsc { namespace store
 
     public:
 
-        PersistentStorage(std::string location, std::string filename) 
+        PersistentStorage(const std::string& location, const std::string& filename) 
             : FileStorage(), storageFileName(filename) { storageLocation = location; };
         virtual ~PersistentStorage() {};
 
         bool readRecord(SMSId& id, SMS& sms, const fpos_t* pos=0);
         void writeRecord(SMSId id, SMS& sms, fpos_t* pos=0);
+    };
+
+    class TextDumpStorage : public FileStorage
+    {
+    protected:
+
+        std::string storageFileName;
+
+        bool create();
+        void open();
+
+    public:
+
+        TextDumpStorage(const std::string& location, const std::string& filename) 
+            : FileStorage(), storageFileName(filename) { storageLocation = location; };
+        virtual ~TextDumpStorage() {};
+
+        void writeRecord(SMSId id, SMS& sms);
     };
     
 

@@ -135,7 +135,8 @@ function delParam(sectionName, paramName)
     //################################## Locations #############################
     startSection(out, "Locations", "Locations", true);
       startParams(out);
-        param(out, "destination", "ArchiveDaemon.Locations.destination", bean.getStringParam("ArchiveDaemon.Locations.destination"));
+        param(out, "archive destination", "ArchiveDaemon.Locations.baseDestination", bean.getStringParam("ArchiveDaemon.Locations.baseDestination"));
+        param(out, "textual destination", "ArchiveDaemon.Locations.textDestination", bean.getStringParam("ArchiveDaemon.Locations.textDestination"));
       finishParams(out);
       startSection(out, "sources", "sources", true);
         final String baseSrcSection = SmsDaemonFormBean.LOC_SOURCES_SECTION;

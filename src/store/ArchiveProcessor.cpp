@@ -57,7 +57,8 @@ void ArchiveProcessor::init(ConfigView* config)
     MutexGuard guard(locationsLock);
     std::auto_ptr<ConfigView> locCfgGuard(config->getSubConfig("Locations"));
     ConfigView* locCfg = locCfgGuard.get();
-    directory = locCfg->getString("destination");
+    baseDirectory = locCfg->getString("baseDestination");
+    textDirectory = locCfg->getString("textDestination");
     std::auto_ptr<ConfigView> sourcesCfgGuard(locCfg->getSubConfig("sources"));
     ConfigView* sourcesCfg = sourcesCfgGuard.get();
 
@@ -87,7 +88,7 @@ void ArchiveProcessor::init(ConfigView* config)
     smsc_log_info(log, "Initing indexator system ...");
 
     std::auto_ptr<ConfigView> indexatorCfgGuard(config->getSubConfig("Indexator"));
-    indexator = new SmsIndex(directory.c_str());
+    indexator = new SmsIndex(baseDirectory.c_str());
     indexator->Init(indexatorCfgGuard.get());
     
     smsc_log_info(log, "Init Ok.");
@@ -167,7 +168,8 @@ void ArchiveProcessor::process()
     smsc_log_debug(log, "Processed.");
 }
 
-static bool switchDate(time_t date1, time_t date2, char* destinationFile, char* destinationDir=0)
+static bool switchDate(time_t date1, time_t date2, char* destinationFile, 
+                       char* destinationDir=0, bool addExt=true)
 {
     tm dt1, dt2; gmtime_r(&date1, &dt1); gmtime_r(&date2, &dt2);
 
@@ -180,7 +182,8 @@ static bool switchDate(time_t date1, time_t date2, char* destinationFile, char* 
         result = true;
     }
     if (date1 <= 0 || dt1.tm_hour != dt2.tm_hour) {
-        sprintf(destinationFile, SMSC_PERSIST_FILE_NAME_PATTERN, dt2.tm_hour);
+        sprintf(destinationFile, "%02d%s%s", dt2.tm_hour, 
+                (addExt) ? ".":"", (addExt) ? SMSC_PREV_ARCHIVE_FILE_EXTENSION:"");
         result = true;
     }
     return result;
@@ -190,7 +193,8 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
 {
     Query::ProcessArchiveGuard archiveGuard;
 
-    PersistentStorage* destination = 0;
+    PersistentStorage*  arcDestination = 0;
+    TextDumpStorage*    txtDestination = 0;
     
     char destinationFileName[64];
     char destinationDirName[64];
@@ -209,22 +213,35 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
                 {
                     SMSId id; SMS sms; 
                     if (!source.readRecord(id, sms, 0)) break;
-                    if (switchDate(lastProcessedTime, sms.lastTime, 
-                                   destinationFileName, destinationDirName) || !destination)
+                    if (switchDate(lastProcessedTime, sms.lastTime, destinationFileName, destinationDirName, false) 
+                        || !arcDestination || !txtDestination)
                     {
-                        if (destination) delete destination;
+                        if (arcDestination) delete arcDestination;
+                        if (txtDestination) delete txtDestination;
                         
-                        std::string destinationLocation = directory+'/'+destinationDirName;
-                        FileStorage::createDir(destinationLocation);
-                        destination = new PersistentStorage(destinationLocation, destinationFileName);
+                        std::string arcLocation = baseDirectory+'/'+destinationDirName;
+                        std::string txtLocation = textDirectory+'/'+destinationDirName;
+                        std::string arcFileName = destinationFileName;
+                        std::string txtFileName = destinationFileName;
+                        arcFileName += '.'; arcFileName += SMSC_PREV_ARCHIVE_FILE_EXTENSION;
+                        txtFileName += '.'; txtFileName += SMSC_TEXT_ARCHIVE_FILE_EXTENSION;
+
+                        FileStorage::createDir(arcLocation);
+                        FileStorage::createDir(txtLocation);
+                        
+                        arcDestination = new PersistentStorage(arcLocation, arcFileName);
+                        txtDestination = new TextDumpStorage(txtLocation, txtFileName);
+
                         lastProcessedTime = sms.lastTime;
                     }
                     
                     fpos_t position = 0;
-                    destination->writeRecord(id, sms, &position);
+                    txtDestination->writeRecord(id, sms);
+                    arcDestination->writeRecord(id, sms, &position);
+                    
                     //smsc_log_debug(log, "Archive file position=%lld", position);
                     
-                    indexator->IndexateSms(destinationDirName,id, (uint64_t)position, sms);
+                    indexator->IndexateSms(destinationDirName, id, (uint64_t)position, sms);
                 }
             }
 
@@ -245,7 +262,8 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
         }
     }
 
-    if (destination) delete destination;
+    if (arcDestination) delete arcDestination;
+    if (txtDestination) delete txtDestination;
 }
 
 /* -------------------------- Query Implementation ------------------------- */
@@ -333,8 +351,8 @@ void Query::findFilesByQuery(QueryMessage* query, const std::string& location,
     for (int i=0; i<allFiles.Count(); i++)
     {
         std::string file = allFiles[i];
-        int32_t hour; 
-        if (sscanf(file.c_str(), SMSC_PERSIST_FILE_NAME_PATTERN, &hour) != 1) {
+        int32_t hour;
+        if (sscanf(file.c_str(), "%02d.arc", &hour) != 1) {
             smsc_log_warn(log, "Invalid archive file name format '%s'", file.c_str());    
             continue;
         }

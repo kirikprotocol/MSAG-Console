@@ -2,5 +2,5 @@
 # this file contains binaries definitions
 
 # binary name source name libraries         
-store/ArchiveDaemon   	  ArchiveDaemon	 -ldl -ladmin-util -ladmin-protocol -ladmin-service -ladmin-util -ladmin-protocol -ladmin-daemon -ladmin  -lstore -lstore-index -lcore-network -lsocket  -lutil-templates -lutil-templates -lcore-buffers -lcore-threads -lcore-buffers -lutil-config -lutil-xml -lutil -lcore-threads -lpthread -lxerces-c -lsms $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -llogger -lnsl $(XERCES_LIB)
-store/ArchiveDumper   	  ArchiveDumper	 -ldl -lstore -lcore-buffers -lutil-config -lutil-xml -lutil -lpthread -lxerces-c -lsms $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -llogger -lnsl $(XERCES_LIB)
+store/ArchiveDaemon   	  ArchiveDaemon	 -ldl -ladmin-util -ladmin-protocol -ladmin-service -ladmin-util -ladmin-protocol -ladmin-daemon -ladmin  -lstore -lstore-index -lcore-network -lsocket  -lutil-templates -lutil-recoder-recode_dll -lcore-buffers -lcore-threads -lcore-buffers -lutil-config -lutil-xml -lutil -lcore-threads -lpthread -lxerces-c -lsms $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -llogger -lnsl $(XERCES_LIB)
+store/ArchiveDumper   	  ArchiveDumper	 -ldl -lstore -lcore-buffers -lutil-config -lutil-xml -lutil -lutil-recoder-recode_dll -lpthread -lxerces-c -lsms $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -llogger -lnsl $(XERCES_LIB)

@@ -18,7 +18,8 @@
     </section>
   
     <section name="Locations">
-	<param name="destination" type="string">arc</param>
+	<param name="baseDestination" type="string">arc</param>
+	<param name="textDestination" type="string">txt</param>
 	<section name="sources">
 	    <param name="src_dir1" type="string">/usr/home/makarov/install/daemon/services/SMSC/arc</param>
 	</section>
