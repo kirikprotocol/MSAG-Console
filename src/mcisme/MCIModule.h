@@ -74,7 +74,7 @@ namespace smsc { namespace mcisme
             if (!module) throw Exception("Failed to instantiate MCI Module processor.");
             module->setReleaseSettings(releaseSettings);
             module->setCircuits(circuits);
-            setCallingMask(rx);
+            if (!setCallingMask(rx)) throw Exception("Failed to compile calling mask '%s'.", rx ? rx:"");
         #endif
             Thread::Start();
 
