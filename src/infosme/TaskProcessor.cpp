@@ -212,6 +212,11 @@ void TaskProcessor::Start()
     if (!bStarted)
     {
         logger.info("Starting ...");
+
+        if (!isMessageSenderAssigned()) {
+            logger.error("Failed to start processing. Message sender is undefined.");
+            return;
+        }
         {
             MutexGuard snGuard(taskIdsBySeqNumLock);
             taskIdsBySeqNum.Empty();

@@ -327,6 +327,10 @@ namespace smsc { namespace infosme
             MutexGuard guard(messageSenderLock);
             messageSender = sender;
         }
+        bool isMessageSenderAssigned() {
+            MutexGuard guard(messageSenderLock);
+            return (messageSender != 0);
+        }
 
         virtual bool putTask(Task* task);
         virtual bool addTask(Task* task);
