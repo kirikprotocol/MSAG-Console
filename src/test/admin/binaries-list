@@ -1,0 +1,3 @@
+#binary name			source name		libraries
+test/ConfigurationMaster	ConfigurationMaster
+test/DatabaseMaster		DatabaseMaster		-ltest-util -lstore -lsmpp -lsms -lcore-threads -lutil-config -lutil-recoder-recode_dll -lutil-xml -lutil -L$(__LIBS)
