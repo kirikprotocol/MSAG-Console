@@ -4,7 +4,6 @@
 #include "store/StoreManager.h"
 #include "MessageStoreTestCases.hpp"
 #include "test/util/TestTaskManager.hpp"
-#include "test/util/TCResultFilter.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include <iostream>
 #include <sstream>
@@ -35,9 +34,9 @@ void executeTest(MessageStoreTestCases& tc)
 	vector<SMS*> sms;
 	
 	__new__;
-	cout << *tc.storeCorrectSms(id.back(), sms.back(), 12) << endl;
-	cout << *tc.loadExistentSms(*id.back(), *sms.back()) << endl;
-	cout << *tc.checkReadyForRetrySms(id, sms, 1);
+	tc.storeCorrectSms(id.back(), sms.back(), 12);
+	tc.loadExistentSms(*id.back(), *sms.back());
+	tc.checkReadyForRetrySms(id, sms, 1);
 
 /*
 	cout << *tc.storeCorrectSms(&id, &sms, 1) << endl;
@@ -66,7 +65,7 @@ int main(int argc, char* argv[])
 	{
 		Manager::init("config.xml");
 		StoreManager::startup(Manager::getInstance());
-		MessageStoreTestCases tc(StoreManager::getMessageStore()); //throws exception
+		MessageStoreTestCases tc(StoreManager::getMessageStore(), NULL); //throws exception
 		executeTest(tc);
 		StoreManager::shutdown();
 		exit(0);

@@ -3,6 +3,7 @@
 #include "core/synchronization/Event.hpp"
 #include "store/StoreManager.h"
 #include "MessageStoreTestCases.hpp"
+#include "MessageStoreCheckList.hpp"
 #include "test/util/TestTaskManager.hpp"
 #include <iostream>
 #include <map>
@@ -34,17 +35,15 @@ class MessageStoreBusinessCycleTestTask : public TestTask
 {
 private:
 	int taskNum;
-	MessageStoreTestCases tc; //throws exception
+	MessageStoreTestCases* tc;
 	Event evt;
 
 public:
-	MessageStoreBusinessCycleTestTask(int taskNum);
+	MessageStoreBusinessCycleTestTask(MessageStoreTestCases* tc, int taskNum);
 	virtual ~MessageStoreBusinessCycleTestTask() {}
 	virtual void executeCycle();
 	virtual void onStopped();
-
-private:
-	void process(const TCResult* res);
+	void updateStat();
 };
 
 /**
@@ -76,10 +75,7 @@ class MessageStoreBusinessCycleTest
 {
 private:
 	typedef vector<MessageStoreBusinessCycleTestTaskStat> TaskStatList;
-	typedef map<const string, int> TCStatMap;
-
 	static TaskStatList taskStat;
-	static TCStatMap tcStat;
 
 public:
 	static int delay;
@@ -89,11 +85,9 @@ public:
 	static void resize(int newSize);
 	static void onStopped(int taskNum);
 	static bool isStopped();
-	static void process(int taskNum, const TCResult* res);
-	static void printOpsStatByTask();
-	static void printOpsStatByTC();
+	static void updateStat(int taskNum);
+	static void printStat();
 	static int getOps();
-	static int getFinalStateOps();
 };
 
 void debug(const char* str)
@@ -103,10 +97,14 @@ void debug(const char* str)
 }
 
 //MessageStoreBusinessCycleTestTask methods
-MessageStoreBusinessCycleTestTask::MessageStoreBusinessCycleTestTask(int _taskNum)
-	: TestTask("BusinessCycleTask", _taskNum), taskNum(_taskNum) {}
+MessageStoreBusinessCycleTestTask::MessageStoreBusinessCycleTestTask(
+	MessageStoreTestCases* _tc, int _taskNum)
+	: TestTask("BusinessCycleTask", _taskNum), tc(_tc), taskNum(_taskNum)
+{
+	__require__(tc);
+}
 
-#define PREPARE_FOR_NEW_SMS \
+#define __prepare_for_new_sms__ \
 	id.push_back(new SMSId()); \
 	sms.push_back(new SMS());
 
@@ -129,8 +127,9 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 	vector<SMS*> sms;
 
 	//Сохранение правильного sms (только одно sms создаем в цикле)
-	PREPARE_FOR_NEW_SMS
-	process(tc.storeCorrectSms(id.back(), sms.back(), RAND_TC));
+	__prepare_for_new_sms__;
+	tc->storeCorrectSms(id.back(), sms.back(), RAND_TC);
+	updateStat();
 	
 	//Сохранение правильного sms с параметрами похожими на уже существующий sms
 	//Сохранение дублированного sms
@@ -147,56 +146,62 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 		switch (s.value())
 		{
 			case 1: //только одно sms создаем в цикле
-				PREPARE_FOR_NEW_SMS
-				process(tc.storeCorrectSms(id.back(), sms.back(),
-					*id[0], *sms[0], RAND_TC));
+				__prepare_for_new_sms__;
+				tc->storeSimilarSms(id.back(), sms.back(), *id[0], *sms[0], RAND_TC);
+				updateStat();
 				break;
 			case 2:
 				if (duplicatesOk)
 				{
-					PREPARE_FOR_NEW_SMS
-					process(tc.storeDuplicateSms(id.back(), sms.back(),
-						*id[0], *sms[0]));
+					__prepare_for_new_sms__;
+					tc->storeDuplicateSms(id.back(), sms.back(), *id[0], *sms[0]);
+					updateStat();
 				}
 				break;
 			case 3:
 				for (int i = 0; i < id.size(); i++)
 				{
-					process(tc.storeRejectDuplicateSms(*sms[i]));
+					tc->storeRejectDuplicateSms(*sms[i]);
+					updateStat();
 				}
 				break;
 			case 4:
 				for (int i = 0; !duplicatesOk && i < id.size(); i++)
 				{
-					process(tc.storeReplaceCorrectSms(id[i], sms[i]));
+					tc->storeReplaceCorrectSms(id[i], sms[i]);
+					updateStat();
 				}
 				break;
 			case 5:
-				process(tc.storeIncorrectSms(RAND_TC));
+				tc->storeIncorrectSms(RAND_TC);
+				updateStat();
 				break;
 			case 6:
 				for (int i = 0; i < id.size(); i++)
 				{
-					process(tc.changeExistentSmsStateEnrouteToEnroute(*id[i],
-						sms[i], RAND_TC));
+					tc->changeExistentSmsStateEnrouteToEnroute(*id[i], sms[i], RAND_TC);
+					updateStat();
 				}
 				break;
 			case 7:
 				for (int i = 0; i < id.size(); i++)
 				{
-					process(tc.replaceCorrectSms(*id[i], sms[i], RAND_TC));
+					tc->replaceCorrectSms(*id[i], sms[i], RAND_TC);
+					updateStat();
 				}
 				break;
 			case 8:
 				for (int i = 0; i < id.size(); i++)
 				{
-					process(tc.replaceIncorrectSms(*id[i], *sms[i], RAND_TC));
+					tc->replaceIncorrectSms(*id[i], *sms[i], RAND_TC);
+					updateStat();
 				}
 				break;
 			default: //9..15
 				for (int i = 0; i < id.size(); i++)
 				{
-					process(tc.loadExistentSms(*id[i], *sms[i]));
+					tc->loadExistentSms(*id[i], *sms[i]);
+					updateStat();
 				}
 		}
 	}
@@ -205,7 +210,8 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 	evt.Wait(100 * rand0(30)); //проверка переноса в архив упорядоченно по last_time
 	for (int i = 0; i < id.size(); i++)
 	{
-		process(tc.changeExistentSmsStateEnrouteToFinal(*id[i], sms[i], RAND_TC));
+		tc->changeExistentSmsStateEnrouteToFinal(*id[i], sms[i], RAND_TC);
+		updateStat();
 	}
 	
 	//Перевод sms в финальном состоянии в любое другое состояние
@@ -219,26 +225,30 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 			case 1:
 				for (int i = 0; i < id.size(); i++)
 				{
-					process(tc.changeFinalSmsStateToAny(*id[i], RAND_TC));
+					tc->changeFinalSmsStateToAny(*id[i], RAND_TC);
+					updateStat();
 				}
 				break;
 			case 2: //только одно sms создаем в цикле
-				PREPARE_FOR_NEW_SMS
-				process(tc.storeReplaceSmsInFinalState(id.back(), sms.back(), *sms[0]));
+				__prepare_for_new_sms__;
+				tc->storeReplaceSmsInFinalState(id.back(), sms.back(), *sms[0]);
+				updateStat();
 				//обязательно перевести созданное сообщение в финальной состояние
-				process(tc.changeExistentSmsStateEnrouteToFinal(
-					*id.back(), sms.back(), RAND_TC));
+				tc->changeExistentSmsStateEnrouteToFinal(*id.back(), sms.back(), RAND_TC);
+				updateStat();
 				break;
 			case 3:
 				for (int i = 0; i < id.size(); i++)
 				{
-					process(tc.replaceFinalSms(*id[i], *sms[i]));
+					tc->replaceFinalSms(*id[i], *sms[i]);
+					updateStat();
 				}
 				break;
 			default: //4..5
 				for (int i = 0; i < id.size(); i++)
 				{
-					process(tc.loadExistentSms(*id[i], *sms[i]));
+					tc->loadExistentSms(*id[i], *sms[i]);
+					updateStat();
 				}
 		}
 	}
@@ -252,14 +262,18 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 		switch (s.value())
 		{
 			case 1:
-				process(tc.changeFinalSmsStateToAny(badId, RAND_TC));
+				tc->changeFinalSmsStateToAny(badId, RAND_TC);
+				updateStat();
 				break;
 			case 2:
-				process(tc.replaceIncorrectSms(badId, *sms[0], RAND_TC));
-				//process(tc.replaceFinalSms(badId, *sms[0]);
+				tc->replaceIncorrectSms(badId, *sms[0], RAND_TC);
+				updateStat();
+				//tc->replaceFinalSms(badId, *sms[0]);
+				//updateStat();
 				break;
 			case 3:
-				process(tc.loadNonExistentSms(badId));
+				tc->loadNonExistentSms(badId);
+				updateStat();
 				break;
 		}
 	}
@@ -277,9 +291,9 @@ inline void MessageStoreBusinessCycleTestTask::onStopped()
 	MessageStoreBusinessCycleTest::onStopped(taskNum);
 }
 
-inline void MessageStoreBusinessCycleTestTask::process(const TCResult* res)
+inline void MessageStoreBusinessCycleTestTask::updateStat()
 {
-	MessageStoreBusinessCycleTest::process(taskNum, res);
+	MessageStoreBusinessCycleTest::updateStat(taskNum);
 }
 
 //MessageStoreBusinessCycleTestTaskManager methods
@@ -294,9 +308,6 @@ int MessageStoreBusinessCycleTest::delay = 0;
 MessageStoreBusinessCycleTest::TaskStatList
 	MessageStoreBusinessCycleTest::taskStat =
 	MessageStoreBusinessCycleTest::TaskStatList();
-MessageStoreBusinessCycleTest::TCStatMap
-	MessageStoreBusinessCycleTest::tcStat =
-	MessageStoreBusinessCycleTest::TCStatMap();
 	
 inline void MessageStoreBusinessCycleTest::resize(int newSize)
 {
@@ -318,18 +329,12 @@ inline bool MessageStoreBusinessCycleTest::isStopped()
 	return stopped;
 }
 
-void MessageStoreBusinessCycleTest::process(int taskNum, const TCResult* res)
+void MessageStoreBusinessCycleTest::updateStat(int taskNum)
 {
-	if (res)
-	{
-		//обновить статистику
-		taskStat[taskNum].ops++;
-	    tcStat[res->getId()]++;
-	    delete res;
-	}
+	taskStat[taskNum].ops++;
 }
 	
-void MessageStoreBusinessCycleTest::printOpsStatByTask()
+void MessageStoreBusinessCycleTest::printStat()
 {
 	int totalOps = 0;
 	for (int i = 0; i < taskStat.size(); i++)
@@ -337,20 +342,6 @@ void MessageStoreBusinessCycleTest::printOpsStatByTask()
 		int ops = taskStat[i].ops;
 		totalOps += ops;
 		cout << "BusinessTestTask_" << i << ": ops = " << ops << endl;
-	}
-	cout << "Total ops = " << totalOps << endl;
-	cout << "-----------------------------" << endl;
-}
-
-void MessageStoreBusinessCycleTest::printOpsStatByTC()
-{
-	int totalOps = 0;
-	for (TCStatMap::iterator it = tcStat.begin(); it != tcStat.end(); it++)
-	{
-		const string& tcId = it->first;
-		int ops = it->second;
-		totalOps += ops;
-		cout << tcId << ": ops = " << ops << endl;
 	}
 	cout << "Total ops = " << totalOps << endl;
 	cout << "-----------------------------" << endl;
@@ -366,30 +357,17 @@ int MessageStoreBusinessCycleTest::getOps()
 	return totalOps;
 }
 
-int MessageStoreBusinessCycleTest::getFinalStateOps()
-{
-	int storeOps = 0;
-	for (TCStatMap::iterator it = tcStat.begin(); it != tcStat.end(); it++)
-	{
-		const string& tcId = it->first;
-		if (tcId == TC_CHANGE_EXISTENT_SMS_STATE_ENROUTE_TO_FINAL)
-		{
-			int ops = it->second;
-			storeOps += ops;
-		}
-	}
-	return storeOps;
-}
-
 //test body
 void executeBusinessCycleTest(int numThreads)
 {
 	MessageStoreBusinessCycleTest::resize(numThreads);
 	MessageStoreBusinessCycleTestTaskManager tm;
+	MessageStoreCheckList chkList;
+	MessageStoreTestCases tc(StoreManager::getMessageStore(), &chkList); //throws exception
 	for (int i = 0; i < numThreads; i++)
 	{
 		MessageStoreBusinessCycleTestTask* task =
-			new MessageStoreBusinessCycleTestTask(i);
+			new MessageStoreBusinessCycleTestTask(&tc, i);
 		tm.addTask(task);
 	}
 	tm.startTimer();
@@ -406,6 +384,7 @@ void executeBusinessCycleTest(int numThreads)
 			cout << "arc <start|stop> - start/stop archiver" << endl;
 			cout << "stat - print statistics" << endl;
 			cout << "rtstat - print runtime statistics" << endl;
+			cout << "chklist - save checklist" << endl;
 			cout << "1 - archiver activation statistics" << endl;
 			cout << "set pool <newSize> - change pool size" << endl;
 			cout << "set delay <msec> - slow down test cycle execution" << endl;
@@ -467,8 +446,7 @@ void executeBusinessCycleTest(int numThreads)
 		else if (cmd == "stat")
 		{
 			cout << "Time = " << tm.getExecutionTime() << endl;
-			MessageStoreBusinessCycleTest::printOpsStatByTask();
-			MessageStoreBusinessCycleTest::printOpsStatByTC();
+			MessageStoreBusinessCycleTest::printStat();
 		}
 		else if (cmd == "rtstat")
 		{
@@ -491,11 +469,15 @@ void executeBusinessCycleTest(int numThreads)
 				(StoreManager::isArchivationInProgress() ? "running" : "idle") 
 				<< endl;
 		}
+		else if (cmd == "chklist")
+		{
+			const char* fileName = "message_store.chk";
+			chkList.save(fileName);
+			cout << "Check list saved to file " << fileName << endl;
+		}
 		else if (cmd == "1")
 		{
 			cout << "Time = " << tm.getExecutionTime() << endl;
-			cout << "Final messages = " <<
-				MessageStoreBusinessCycleTest::getFinalStateOps() << endl;
 			cout << "Archiver status = " <<
 				(StoreManager::isArchiverStarted() ? "started" : "stopped") << endl;
 			cout << "Archivation status = " <<

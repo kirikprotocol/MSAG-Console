@@ -25,16 +25,14 @@ class MessageStoreLoadTestTask : public TestTask
 {
 private:
 	int taskNum;
-	MessageStoreTestCases tc; //throws exception
+	MessageStoreTestCases* tc;
 
 public:
-	MessageStoreLoadTestTask(int taskNum);
+	MessageStoreLoadTestTask(MessageStoreTestCases* tc, int taskNum);
 	virtual ~MessageStoreLoadTestTask() {}
 	virtual void executeCycle();
 	virtual void onStopped();
-
-private:
-	void doStat(const TCResult* res);
+	void updateStat();
 };
 
 /**
@@ -74,15 +72,18 @@ public:
 	static void init(int numThreads);
 	static bool isStopped();
 	static void onStopped(int taskNum);
-	static void doStat(int taskNum, const TCResult* res);
+	static void updateStat(int taskNum);
 	static void printStatus();
 	static float getRate();
 	static int getOps();
 };
 
 //MessageStoreLoadTestTask methods
-MessageStoreLoadTestTask::MessageStoreLoadTestTask(int _taskNum)
-	: TestTask("LoadTask", _taskNum), taskNum(_taskNum) {}
+MessageStoreLoadTestTask::MessageStoreLoadTestTask(MessageStoreTestCases* _tc,
+	int _taskNum) : TestTask("LoadTask", _taskNum), tc(_tc), taskNum(_taskNum)
+{
+	__require__(tc);
+}
 
 void MessageStoreLoadTestTask::executeCycle()
 {
@@ -90,8 +91,9 @@ void MessageStoreLoadTestTask::executeCycle()
 	{
 		SMSId id;
 		SMS sms;
-		doStat(tc.storeCorrectSms(&id, &sms, RAND_TC));
-		doStat(tc.changeExistentSmsStateEnrouteToFinal(id, &sms, RAND_TC));
+		tc->storeCorrectSms(&id, &sms, RAND_TC);
+		tc->changeExistentSmsStateEnrouteToFinal(id, &sms, RAND_TC);
+		updateStat();
 	}
 }
 
@@ -100,9 +102,9 @@ inline void MessageStoreLoadTestTask::onStopped()
 	MessageStoreLoadTest::onStopped(taskNum);
 }
 
-inline void MessageStoreLoadTestTask::doStat(const TCResult* res)
+inline void MessageStoreLoadTestTask::updateStat()
 {
-	MessageStoreLoadTest::doStat(taskNum, res);
+	MessageStoreLoadTest::updateStat(taskNum);
 }
 
 //MessageStoreLoadTestTaskManager methods
@@ -139,12 +141,9 @@ inline void MessageStoreLoadTest::onStopped(int taskNum)
 	taskStat[taskNum].stopped = true;
 }
 
-inline void MessageStoreLoadTest::doStat(int taskNum, const TCResult* res)
+inline void MessageStoreLoadTest::updateStat(int taskNum)
 {
-	if (res && strcmp(res->getId(), TC_STORE_CORRECT_SMS) == 0)
-	{
-		taskStat[taskNum].ops++;
-	}
+	taskStat[taskNum].ops++;
 }
 
 void MessageStoreLoadTest::printStatus()
@@ -186,10 +185,11 @@ void executeLoadTest(int numThreads)
 {
 	MessageStoreLoadTest::init(numThreads);
 	MessageStoreLoadTestTaskManager tm;
+	MessageStoreTestCases tc(StoreManager::getMessageStore(), NULL); //throws exception
 	for (int i = 0; i < numThreads; i++)
 	{
 		MessageStoreLoadTestTask* task =
-			new MessageStoreLoadTestTask(i);
+			new MessageStoreLoadTestTask(&tc, i);
 		tm.addTask(task);
 	}
 	tm.startTimer();
@@ -202,9 +202,9 @@ void executeLoadTest(int numThreads)
 		if (help)
 		{
 			help = false;
-			cout << "'rate' - print rate" << endl;
-			cout << "'stat' - print statistics" << endl;
-			cout << "'quit' - quit" << endl;
+			cout << "rate - print rate" << endl;
+			cout << "stat - print statistics" << endl;
+			cout << "quit - quit" << endl;
 		}
 
 		//обработка команд

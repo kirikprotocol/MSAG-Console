@@ -35,110 +35,88 @@ void printResult(const char* name, int size, float time)
 		cout << "super performance!" << endl;
 	}
 }
-
+#define __prepare_for_new_sms__ \
+	id.push_back(new SMSId()); \
+	sms.push_back(new SMS());
+	
+#define __prepare_for_new_sms2__ \
+	SMSId id1; \
+	SMS sms1;
+	
 void executeBenchmarkTest(const int size)
 {
-	MessageStoreTestCases tc; //throws exception
-	SMSId id[size];
-	SMSId newId[size];
-	SMS sms[size];
+	MessageStoreTestCases tc(StoreManager::getMessageStore(), NULL); //throws exception
+	vector<SMSId*> id;
+	vector<SMS*> sms;
 	getTime(); //init timer
 
-	//создание SM
-	SMS newSMS;
+	//Сохранение правильного sms
 	for (int i = 0; i < size; i++)
 	{
-		delete tc.storeCorrectSM(&id[i], &sms[i], RAND_TC);
-		delete tc.storeCorrectSM(&newId[i], &newSMS, id[i], sms[i], RAND_TC);
+		__prepare_for_new_sms__;
+		tc.storeCorrectSms(id.back(), sms.back(), RAND_TC);
 	}
-	printResult("storeCorrectSM", 2 * size, getTime());
-	
-	//сохранение дублированного SM с отказом
 	for (int i = 0; i < size; i++)
 	{
-		delete tc.storeRejectDuplicateSM(sms[i]);
+		__prepare_for_new_sms2__;
+		tc.storeSimilarSms(&id1, &sms1, *id[i], *sms[i], RAND_TC);
 	}
-	printResult("storeRejectDuplicateSM", size, getTime());
-
-	//сохранение неправильного SM
+	printResult("storeCorrectSms", 2 * size, getTime());
+	//Сохранение дублированного sms
 	for (int i = 0; i < size; i++)
 	{
-		delete tc.storeIncorrectSM(RAND_TC);
+		__prepare_for_new_sms2__;
+		tc.storeDuplicateSms(&id1, &sms1, *id[i], *sms[i]);
 	}
-	printResult("storeIncorrectSM", size, getTime());
-
-	//установка правильного статуса
 	for (int i = 0; i < size; i++)
 	{
-		delete tc.setCorrectSMStatus(id[i], &sms[i], RAND_TC);
+		tc.storeRejectDuplicateSms(*sms[i]);
 	}
-	printResult("setCorrectSMStatus", size, getTime());
-
-	//некорректное изменение статуса SM
+	printResult("storeDuplicateSms", 2 * size, getTime());
+	//Сохранение sms с замещением существующего
 	for (int i = 0; i < size; i++)
 	{
-		delete tc.setIncorrectSMStatus(id[i]);
+		tc.storeReplaceCorrectSms(id[i], sms[i]);
 	}
-	printResult("setIncorrectSMStatus", size, getTime());
-
-	//замещение SM
 	for (int i = 0; i < size; i++)
 	{
-		delete tc.replaceCorrectSM(id[i], &sms[i], RAND_TC);
+		__prepare_for_new_sms2__;
+		tc.storeReplaceSmsInFinalState(&id1, &sms1, *sms[i]);
 	}
-	printResult("replaceCorrectSM", size, getTime());
-
-	//некорректное замещение SM
+	printResult("storeReplaceSms", 2 * size, getTime());
+	//установка статуса
 	for (int i = 0; i < size; i++)
 	{
-		delete tc.replaceIncorrectSM(id[i], sms[i], RAND_TC);
+		tc.changeExistentSmsStateEnrouteToEnroute(*id[i], sms[i], RAND_TC);
 	}
-	printResult("replaceIncorrectSM", size, getTime());
-
-	//чтение SM
 	for (int i = 0; i < size; i++)
 	{
-		delete tc.loadExistentSM(id[i], sms[i]);
+		tc.changeExistentSmsStateEnrouteToFinal(*id[i], sms[i], RAND_TC);
 	}
-	printResult("loadExistentSM", size, getTime());
-
-	//удаление SM
 	for (int i = 0; i < size; i++)
 	{
-		delete tc.deleteExistentSM(id[i]);
-		delete tc.deleteExistentSM(newId[i]);
+		tc.changeFinalSmsStateToAny(*id[i], RAND_TC);
 	}
-	printResult("deleteExistentSM", 2 * size, getTime());
-
-	//изменение статуса несуществующих SM
+	printResult("changeSmsState", 3 * size, getTime());
+	//обновление sms
 	for (int i = 0; i < size; i++)
 	{
-		delete tc.setNonExistentSMStatus(id[i], RAND_TC);
+		tc.replaceCorrectSms(*id[i], sms[i], RAND_TC);
 	}
-	printResult("setNonExistentSMStatus", size, getTime());
-
-	//замещение несуществующих SM
 	for (int i = 0; i < size; i++)
 	{
-		delete tc.replaceNonExistentSM(id[i], RAND_TC);
+		tc.replaceFinalSms(*id[i], *sms[i]);
 	}
-	printResult("replaceNonExistentSM", size, getTime());
-
-	//чтение несуществующих SM
+	printResult("replaceSms", 2 * size, getTime());
+	//чтение sms
 	for (int i = 0; i < size; i++)
 	{
-		delete tc.loadNonExistentSM(id[i], RAND_TC);
+		tc.loadExistentSms(*id[i], *sms[i]);
 	}
-	printResult("loadNonExistentSM", size, getTime());
-
-	//удаление несуществующих SM
-	for (int i = 0; i < size; i++)
-	{
-		delete tc.deleteNonExistentSM(id[i], RAND_TC);
-	}
-
-	//печать результатов
-	printResult("deleteNonExistentSM", size, getTime());
+	printResult("loadSms", size, getTime());
+	//удалить объекты
+	for_each(id.begin(), id.end(), Deletor<SMSId>());
+	for_each(sms.begin(), sms.end(), Deletor<SMS>());
 }
 
 /**
