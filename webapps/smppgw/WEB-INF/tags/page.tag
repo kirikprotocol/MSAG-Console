@@ -4,13 +4,14 @@
  taglib prefix="sm-mm" tagdir="/WEB-INF/tags/main_menu"%><%@
 
  tag body-content="scriptless"              %><%@
- attribute name="beanClass" required="false" %><%@
- attribute name="title"     required="true" %><%@
- attribute name="menu"      required="false" %><%@
- attribute name="form_method"     required="false" %><%@
+ attribute name="beanClass"    required="false" %><%@
+ attribute name="title"        required="true" %><%@
+ attribute name="menu"         required="false" %><%@
+ attribute name="form_method"  required="false" %><%@
  attribute name="form_uri"     required="false" %><%@
- attribute name="form_enctype"     required="false"%><%@
- attribute name="onLoad"     required="false"%><%
+ attribute name="form_enctype" required="false"%><%@
+ attribute name="onLoad"       required="false"%><%@
+ attribute name="rawBody"      required="false"%><%
   if (jspContext.getAttribute("beanClass") == null) //!pageContext
   {
     final StringBuffer buffer = new StringBuffer();
@@ -163,10 +164,14 @@
           <c:when test="${!empty beanClass}"><sm:bean className="ru.sibinco.smppgw.beans.${beanClass}"/></c:when>
           <c:otherwise><c:if test="${!empty generatedBeanClass}"><sm:bean className="ru.sibinco.smppgw.beans.${generatedBeanClass}"/></c:if></c:otherwise>
         </c:choose>
-        <sm:content menu="${menu}">
-          <jsp:doBody/>
-        </sm:content>
-
+        <c:choose>
+          <c:when test="${!empty rawBody}">${rawBody}</c:when>
+          <c:otherwise>
+            <sm:content menu="${menu}">
+              <jsp:doBody/>
+            </sm:content>
+          </c:otherwise>
+        </c:choose>
       </form>
     </td>
     <td width=30 background="/images/smsc_07.jpg" rowspan=3></td>
