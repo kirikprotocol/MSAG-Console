@@ -37,7 +37,7 @@ struct SmppResponseSender
 struct SmeAcknowledgementHandler
 {
 	virtual void processSmeAcknowledgement(SmeAckMonitor* monitor,
-		PduDeliverySm &pdu) = NULL;
+		PduDeliverySm &pdu, time_t recvTime) = NULL;
 };
 
 struct SmppFixture
