@@ -304,12 +304,10 @@ public:
             {
               if ( StateChecker::stateIsFinal(locker->state) )
               {
-                LockerQueue::iterator tmp=iter;
-                tmp++;
                 unlocked.erase(iter);
-                iter=tmp;
                 hash.remove(locker->msgId);
                 delete locker;
+                iter=unlocked.begin();
                 continue;
               }
             }
