@@ -393,12 +393,12 @@ void Archiver::archivate(bool first)
         if (status == OCI_NO_DATA) return;
         storageSelectStmt->check(status);
         
-        convertStringToAddress(oa, sms.originatingAddress);
-        convertStringToAddress(da, sms.destinationAddress);
-        convertStringToAddress(dda, sms.dealiasedDestinationAddress);
-
         do
         {
+            convertStringToAddress(oa, sms.originatingAddress);
+            convertStringToAddress(da, sms.destinationAddress);
+            convertStringToAddress(dda, sms.dealiasedDestinationAddress);
+            
             billing(first);
             
             if (bNeedArchivate == 'Y')
