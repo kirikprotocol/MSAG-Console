@@ -209,9 +209,10 @@ void transLiterateSms(SMS* sms)
 
 static int CalcExUserDataLen(SMS* sms)
 {
-  if(sms->hasIntProperty(Tag::SMPP_SOURCE_PORT))
+  if(sms->hasIntProperty(Tag::SMPP_SOURCE_PORT) || sms->hasIntProperty(Tag::SMPP_DESTINATION_PORT))
   {
-    if(!sms->hasIntProperty(Tag::SMPP_DESTINATION_PORT))return -1;
+    if(!sms->hasIntProperty(Tag::SMPP_DESTINATION_PORT)||
+       !sms->hasIntProperty(Tag::SMPP_SOURCE_PORT))return -1;
     int rv=1+1;//tag+len
     if(sms->getIntProperty(Tag::SMPP_SOURCE_PORT)<256 &&
        sms->getIntProperty(Tag::SMPP_DESTINATION_PORT)<256)
