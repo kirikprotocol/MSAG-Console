@@ -77,7 +77,7 @@ public:
       }
     }
     timeLine.erase(timeLine.begin());
-    return SmscCommand::makeForward(d.idx,d.id,false);
+    return SmscCommand::makeForward(d.idx,d.id,d.resched);
   }
   virtual SmeProxyState getState()const
   {
@@ -114,15 +114,17 @@ protected:
   int rescheduleLimit;
   time_t lastCheck;
   struct Data{
-    Data():id(0),idx(0){}
+    Data():id(0),idx(0),resched(false){}
     Data(const Data& d)
     {
       id=d.id;
       idx=d.idx;
+      resched=d.resched;
     }
-    Data(SMSId id,SmeIndex idx):id(id),idx(idx){}
+    Data(SMSId id,SmeIndex idx,bool res=false):id(id),idx(idx),resched(res){}
     SMSId id;
     SmeIndex idx;
+    bool resched;
   };
   typedef std::multimap<time_t,Data> TimeLineMap;
   typedef std::pair<time_t,Data> TimeIdPair;

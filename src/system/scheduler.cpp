@@ -105,12 +105,14 @@ int Scheduler::Execute()
     if(it!=timeLine.end())
     {
       r=it->first;
-      lastCheck=r+1;
+      if(r>lastCheck)lastCheck=r+1;
+      else r=0;
     }
     if(r==0)
       mon.wait();
     else
       if(r>t)mon.wait((r-t)*1000);
+    prxmon->Signal();
   }
   return 0;
 }
@@ -138,7 +140,7 @@ void Scheduler::UpdateSmsSchedule(time_t old,SMSId id,time_t newtime,SmeIndex id
       if(i->second.id==id)
       {
         timeLine.erase(i);
-        timeLine.insert(TimeIdPair(newtime,Data(id,idx)));
+        timeLine.insert(TimeIdPair(newtime,Data(id,idx,true)));
         CacheItem *ci=smeCountCache.GetPtr(idx);
         if(ci)
         {
@@ -153,8 +155,8 @@ void Scheduler::UpdateSmsSchedule(time_t old,SMSId id,time_t newtime,SmeIndex id
       }
     };
   }
-  timeLine.insert(TimeIdPair(newtime,Data(id,idx)));
-  mon.notify();
+  //timeLine.insert(TimeIdPair(newtime,Data(id,idx)));
+  //mon.notify();
 }
 
 int Scheduler::getSmeCount(SmeIndex idx,time_t time)
