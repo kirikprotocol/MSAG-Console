@@ -168,9 +168,6 @@ DbSmeTestRecord* DbSmeUpdateJobTestCases::createDuplicateKeyJobInput()
 	return rec;
 }
 
-#define __update__(field) \
-	if (rec->check##field()) { r->set##field(rec->get##field()); }
-
 const string DbSmeUpdateJobTestCases::processJobFirstOutput(const string& text,
 	DbSmeTestRecord* rec)
 {
@@ -195,17 +192,9 @@ const string DbSmeUpdateJobTestCases::processJobFirstOutput(const string& text,
 		while (DbSmeTestRecord* r = it->next())
 		{
 			__require__(r->checkId());
-
 			rowsAffected++;
 			//обновить запись
-			__update__(Int16);
-			__update__(Int32);
-			__update__(Float);
-			__update__(Double);
-			__update__(Date);
-			__update__(String);
-			__update__(QuotedString);
-			__update__(FromAddr);
+			r->update(*rec);
 		}
 		delete it;
 		__tc__("processDbSmeRes.update.recordsAffected"); __tc_ok__;
