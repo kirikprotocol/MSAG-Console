@@ -49,6 +49,8 @@ Statement* Connection::getStatement(const char* id, const char* sql)
 {
     if (!id || id[0] == '\0' || !sql || sql[0] == '\0') return 0;
 
+    connect();
+
     MutexGuard guard(statementsRegistryLock);
     Statement* statement = _getStatement(id);
     if (!statement)
@@ -97,6 +99,8 @@ Routine* Connection::getRoutine(const char* id)
 Routine* Connection::getRoutine(const char* id, const char* call, bool func)
 {
     if (!id || id[0] == '\0' || !call || call[0] == '\0') return 0;
+
+    connect();
 
     MutexGuard guard(routinesRegistryLock);
     Routine* routine = _getRoutine(id);
