@@ -259,6 +259,11 @@ public class HostsManager
 		return serviceManager.getInfo(serviceId);
 	}
 
+  public Service getService(String smeId) throws AdminException
+  {
+    return serviceManager.get(smeId);
+  }
+
 /*
 	public synchronized Daemon getSmscDaemon()
 	{
