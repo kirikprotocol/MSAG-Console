@@ -2,13 +2,11 @@
 #include "test/util/Util.hpp"
 #include "test/sms/SmsUtil.hpp"
 
-#include <iostream>
-using namespace std;
-
 namespace smsc {
 namespace test {
 namespace core {
 
+using namespace std;
 using namespace smsc::test::util;
 using smsc::test::sms::SmsUtil;
 
@@ -117,10 +115,10 @@ const Address* RouteRegistry::getRandomNonReachableDestAddress(
 	return (res.size() ? new Address(res[rand0(res.size() - 1)]->destAddr) : NULL);
 }
 
-const vector<uint32_t> RouteRegistry::lookup(const Address& origAddr,
+const vector<const SmeProxy*> RouteRegistry::lookup(const Address& origAddr,
 	const Address& destAddr) const
 {
-	vector<uint32_t> res;
+	vector<const SmeProxy*> res;
 	AddressMap::const_iterator it = addrMap.find(origAddr);
 	if (it == addrMap.end())
 	{
@@ -132,11 +130,8 @@ const vector<uint32_t> RouteRegistry::lookup(const Address& origAddr,
 	for (int i = 0; i < routes.size(); i++)
 	{
 		//общие проверки
-		if (!routes[i]->match)
-		{
-			continue;
-		}
-		if (!SmsUtil::compareAddresses(destAddr, routes[i]->destAddr))
+		if (!routes[i]->match || routes[i]->proxy == NULL ||
+			!SmsUtil::compareAddresses(destAddr, routes[i]->destAddr))
 		{
 			continue;
 		}
@@ -182,7 +177,7 @@ const vector<uint32_t> RouteRegistry::lookup(const Address& origAddr,
 	}
 	for (int i = 0; i < tmp.size(); i++)
 	{
-		res.push_back(tmp[i]->proxyId);
+		res.push_back(tmp[i]->proxy);
 	}
 	return res;
 }

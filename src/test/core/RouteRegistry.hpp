@@ -58,7 +58,7 @@ public:
 	 */
 	const Address* getRandomNonReachableDestAddress(const Address& origAddr) const;
 
-	const vector<uint32_t> lookup(const Address& origAddr,
+	const vector<const SmeProxy*> lookup(const Address& origAddr,
 		const Address& destAddr) const;
 
 private:
