@@ -187,11 +187,13 @@ void SmeManager::unregisterSmeProxy(const SmeSystemId& systemId)
 // SmeDispatcher implementation
 SmeProxy* SmeManager::selectSmeProxy(unsigned long timeout,int* idx)
 {
-  SmeProxy* proxy = dispatcher.dispatchIn(timeout,idx);
-  if ( proxy )
+  int _idx;
+	SmeProxy* proxy = dispatcher.dispatchIn(timeout,&_idx);
+  if ( idx ) *idx = _idx;
+	if ( proxy )
   {
   __synchronized__
-    return (SmeProxy*)&(records[*idx]);
+    return (SmeProxy*)&(records[_idx]);
   }
   else return 0;
 }
