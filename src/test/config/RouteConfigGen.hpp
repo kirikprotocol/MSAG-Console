@@ -6,23 +6,24 @@
 #include "ConfigGen.hpp"
 #include "util/debug.h"
 #include <fstream>
+#include <memory>
 
 namespace smsc {
 namespace test {
 namespace config {
 
-using std::ofstream;
+using std::auto_ptr;
+using std::ostream;
 using std::vector;
 using smsc::router::RouteInfo;
 using smsc::test::core::RouteRegistry;
-using smsc::test::sms::ltAddress;
+using smsc::sms::Address;
 
 //компараторы
 
 class RouteConfigGen : public ConfigGen
 {
 	const RouteRegistry* routeReg;
-	static ltAddress ltAddr;
 
 public:
 	RouteConfigGen(const RouteRegistry* _routeReg)
@@ -35,25 +36,33 @@ public:
 
 	static bool ltSource(const RouteInfo* r1, const RouteInfo* r2);
 	static bool ltDest(const RouteInfo* r1, const RouteInfo* r2);
-	
+	static bool eqSource(const RouteInfo* r1, const RouteInfo* r2);
+	static bool eqDest(const RouteInfo* r1, const RouteInfo* r2);
+
 	virtual void saveConfig(const char* configFileName);
 	
 private:
-	void printSubject(ofstream& os, vector<const RouteInfo*>& routes,
-		int idx, char type, const char* prefix);
-	void printRouteStart(ofstream& os, vector<const RouteInfo*>& routes,
-		int idx, const char* prefix);
-	void printRouteEnd(ofstream& os);
-	void printSource(ofstream& os, vector<const RouteInfo*>& routes,
-		int idx, const char* prefix);
-	void printDest(ofstream& os, vector<const RouteInfo*>& routes,
-		int idx, const char* prefix);
-	void printSingleSourceMultipleDests(ofstream& os,
-		vector<const RouteInfo*>& routes);
-	void printMultipleSourcesSingleDest(ofstream& os,
-		vector<const RouteInfo*>& routes);
-	void printSingleSourceSingleDest(ofstream& os,
-		 vector<const RouteInfo*>& routes);
+	typedef vector<const RouteInfo*> Routes;
+
+	bool checkSubject(const Address& addr);
+	auto_ptr<char> genFakeAddress();
+	bool printFakeMask(ostream& os);
+	void printSubject(ostream& os, const RouteInfo* route, char type,
+		const char* prefix);
+	void printRouteStart(ostream& os, const RouteInfo* route, const char* prefix);
+	void printRouteEnd(ostream& os);
+	void printSource(ostream& os, const RouteInfo* route,
+		const char* prefix, bool printFake);
+	bool printFakeSource(ostream& os, const RouteInfo* route);
+	void printDest(ostream& os, const RouteInfo* route,
+		const char* prefix, bool printFake);
+	bool printFakeDest(ostream& os, const RouteInfo* route);
+	void printSubjects(ostream& os, const Routes& routes, const char* prefix);
+	void printRoutes(ostream& os, const Routes& routes, const char* prefix);
+	/*
+	template <class Pred>
+	const Routes selectRoutes(Routes& routes, Pred ltPred, Pred eqPred);
+	*/
 };
 
 }

@@ -1,6 +1,7 @@
 #include "RouteConfigGen.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include "test/core/RouteUtil.hpp"
+#include "test/util/Util.hpp"
 #include <algorithm>
 
 namespace smsc {
@@ -8,30 +9,19 @@ namespace test {
 namespace config {
 
 using namespace std;
+using namespace smsc::test::sms;
+using namespace smsc::test::util;
 using smsc::test::core::RouteHolder;
-using smsc::test::sms::SmsUtil;
 using smsc::test::sms::operator==;
 using smsc::test::sms::operator!=;
-
-ltAddress RouteConfigGen::ltAddr = ltAddress();
+using smsc::test::sms::operator<;
 
 bool RouteConfigGen::ltSource(const RouteInfo* r1, const RouteInfo* r2)
 {
-	if (!r1)
-	{
-		return false;
-	}
-	if (!r2)
-	{
-		return true;
-	}
-	if (ltAddr.operator()(r1->source, r2->source))
-	{
-		return true;
-	}
+	__require__(r1 && r2);
 	if (r1->source != r2->source)
 	{
-		return false;
+		return (r1->source < r2->source);
 	}
 	if (r1->billing != r2->billing)
 	{
@@ -41,31 +31,28 @@ bool RouteConfigGen::ltSource(const RouteInfo* r1, const RouteInfo* r2)
 	{
 		return r1->archived;
 	}
-	//bool paid;
-	if (ltAddr.operator()(r1->dest, r2->dest))
+	if (r1->enabling != r2->enabling)
 	{
-		return true;
+		return r1->enabling;
 	}
-	return false;
+	//bool paid;
+	if (r1->dest != r2->dest)
+	{
+		return (r1->dest < r2->dest);
+	}
+	return (r1->smeSystemId < r2->smeSystemId);
 }
 
 bool RouteConfigGen::ltDest(const RouteInfo* r1, const RouteInfo* r2)
 {
-	if (!r1)
-	{
-		return false;
-	}
-	if (!r2)
-	{
-		return true;
-	}
-	if (ltAddr.operator()(r1->dest, r2->dest))
-	{
-		return true;
-	}
+	__require__(r1 && r2);
 	if (r1->dest != r2->dest)
 	{
-		return false;
+		return (r1->dest < r2->dest);
+	}
+	if (r1->smeSystemId != r2->smeSystemId)
+	{
+		return (r1->smeSystemId < r2->smeSystemId);
 	}
 	if (r1->billing != r2->billing)
 	{
@@ -75,229 +62,303 @@ bool RouteConfigGen::ltDest(const RouteInfo* r1, const RouteInfo* r2)
 	{
 		return r1->archived;
 	}
-	//bool paid;
-	if (ltAddr.operator()(r1->source, r2->source))
+	if (r1->enabling != r2->enabling)
 	{
+		return r1->enabling;
+	}
+	//bool paid;
+	return (r1->source < r2->source);
+}
+
+bool RouteConfigGen::eqSource(const RouteInfo* r1, const RouteInfo* r2)
+{
+	__require__(r1 && r2);
+	return (r1->source == r2->source && r1->billing == r2->billing &&
+		r1->archived == r2->archived && r1->enabling == r2->enabling);
+}
+
+bool RouteConfigGen::eqDest(const RouteInfo* r1, const RouteInfo* r2)
+{
+	__require__(r1 && r2);
+	return (r1->dest == r2->dest && r1->smeSystemId == r2->smeSystemId &&
+		r1->billing == r2->billing && r1->archived == r2->archived &&
+		r1->enabling == r2->enabling);
+}
+
+bool RouteConfigGen::checkSubject(const Address& addr)
+{
+	return (addr.getLenght() % 2);
+}
+
+auto_ptr<char> RouteConfigGen::genFakeAddress()
+{
+	auto_ptr<char> tmp = rand_char(MAX_ADDRESS_LENGTH);
+	char* addr = new char[30];
+	sprintf(addr, ".%d.%d.%s", rand0(255), rand0(255), tmp.get());
+	return auto_ptr<char>(addr);
+}
+
+bool RouteConfigGen::printFakeMask(ostream& os)
+{
+	if (!rand0(3))
+	{
+		auto_ptr<char> tmp = genFakeAddress();
+		os << "\t<mask value=\"" << tmp.get() << "\"/>" << endl;
 		return true;
 	}
 	return false;
 }
 
-void RouteConfigGen::printSubject(ofstream& os, vector<const RouteInfo*>& routes,
-	int idx, char type, const char* prefix)
+void RouteConfigGen::printSubject(ostream& os, const RouteInfo* route,
+	char type, const char* prefix)
 {
-	__require__(routes[idx]);
-	if (idx % 2)
+	__require__(route);
+	switch (type)
 	{
-		switch (type)
-		{
-			case 's':
-				{
-					auto_ptr<char> tmp = SmsUtil::configString(routes[idx]->source);
-					os << "<subject_def id=\"" << prefix << "_" << idx << "\">" << endl;
-					os << "\t<mask value=\"" << tmp.get() << "\"/>" << endl;
-					os << "</subject_def>" << endl;
-				}
-				break;
-			case 'd':
-				{
-					auto_ptr<char> tmp = SmsUtil::configString(routes[idx]->dest);
-					os << "<subject_def id=\"" << prefix << "_" << idx << "\">" << endl;
-					os << "\t<mask value=\"" << tmp.get() << "\"/>" << endl;
-					os << "</subject_def>" << endl;
-				}
-				break;
-			default:
-				__unreachable__("Invalid address type");
-		}
+		case 's':
+			{
+				auto_ptr<char> tmp = SmsUtil::configString(route->source);
+				os << "<subject_def id=\"" << prefix << "_src_" << route->routeId <<
+					"\" defSme=\"" << route->smeSystemId << "\">" << endl;
+				printFakeMask(os);
+				os << "\t<mask value=\"" << tmp.get() << "\"/>" << endl;
+				printFakeMask(os);
+				os << "</subject_def>" << endl;
+			}
+			break;
+		case 'd':
+			{
+				auto_ptr<char> tmp = SmsUtil::configString(route->dest);
+				os << "<subject_def id=\"" << prefix << "_dst_" << route->routeId <<
+					"\" defSme=\"" << route->smeSystemId << "\">" << endl;
+				printFakeMask(os);
+				os << "\t<mask value=\"" << tmp.get() << "\"/>" << endl;
+				printFakeMask(os);
+				os << "</subject_def>" << endl;
+			}
+			break;
+		default:
+			__unreachable__("Invalid address type");
 	}
 }
 
-void RouteConfigGen::printRouteStart(ofstream& os, vector<const RouteInfo*>& routes,
-	int idx, const char* prefix)
+void RouteConfigGen::printRouteStart(ostream& os, const RouteInfo* route,
+	const char* prefix)
 {
-	__require__(routes[idx]);
-	os << "<route id=\"" << prefix << "_" << idx <<
-		"\" billing=\"" << (routes[idx]->billing ? "true" : "false") <<
-		"\" archiving=\"" << (routes[idx]->archived ? "true" : "false") <<
-		"\" enabling=\"" << (routes[idx]->enabling ? "true" : "false") << "\">" << endl;
+	__require__(route);
+	os << "<route id=\"" << prefix << "_route_" << route->routeId <<
+		"\" billing=\"" << (route->billing ? "true" : "false") <<
+		"\" archiving=\"" << (route->archived ? "true" : "false") <<
+		"\" enabling=\"" << (route->enabling ? "true" : "false") << "\">" << endl;
 	/*
 		RoutePriority priority - пока не используется
 		bool paid - вообще не используется, синоним billing
 	*/
 }
 
-void RouteConfigGen::printRouteEnd(ofstream& os)
+void RouteConfigGen::printRouteEnd(ostream& os)
 {
 	os << "</route>" << endl;
 }
 
-void RouteConfigGen::printSource(ofstream& os, vector<const RouteInfo*>& routes,
-	int idx, const char* prefix)
+void RouteConfigGen::printSource(ostream& os, const RouteInfo* route,
+	const char* prefix, bool printFake)
 {
-	__require__(routes[idx]);
-	os << "\t<source>" << endl;
-	if (idx % 2)
+	__require__(route);
+	if (printFake)
 	{
-		os << "\t\t<subject id=\"" << prefix << "_" << idx << "\"/>" << endl;
+		printFakeSource(os, route);
+	}
+	os << "\t<source>" << endl;
+	if (checkSubject(route->source))
+	{
+		os << "\t\t<subject id=\"" << prefix << "_src_" << route->routeId << "\"/>" << endl;
 	}
 	else
 	{
-		auto_ptr<char> tmp = SmsUtil::configString(routes[idx]->source);
+		auto_ptr<char> tmp = SmsUtil::configString(route->source);
 		os << "\t\t<mask value=\"" << tmp.get() << "\"/>" << endl;
 	}
 	os << "\t</source>" << endl;
+	if (printFake)
+	{
+		printFakeSource(os, route);
+	}
 }
 
-void RouteConfigGen::printDest(ofstream& os, vector<const RouteInfo*>& routes,
-	int idx, const char* prefix)
+bool RouteConfigGen::printFakeSource(ostream& os, const RouteInfo* route)
 {
-	__require__(routes[idx]);
-	os << "\t<destination sme=\"" << routes[idx]->smeSystemId << "\">" << endl;
-	if (idx % 2)
+	if (rand0(3))
 	{
-		os << "\t\t<subject id=\"" << prefix << "_" << idx << "\"/>" << endl;
+		__require__(route);
+		os << "\t<source>" << endl;
+		auto_ptr<char> tmp = genFakeAddress();
+		os << "\t\t<mask value=\"" << tmp.get() << "\"/>" << endl;
+		os << "\t</source>" << endl;
+		return true;
+	}
+	return false;
+}
+
+void RouteConfigGen::printDest(ostream& os, const RouteInfo* route,
+	const char* prefix, bool printFake)
+{
+	__require__(route);
+	if (printFake)
+	{
+		printFakeDest(os, route);
+	}
+	os << "\t<destination sme=\"" << route->smeSystemId << "\">" << endl;
+	if (checkSubject(route->dest))
+	{
+		os << "\t\t<subject id=\"" << prefix << "_dst_" << route->routeId << "\"/>" << endl;
 	}
 	else
 	{
-		auto_ptr<char> tmp = SmsUtil::configString(routes[idx]->dest);
+		auto_ptr<char> tmp = SmsUtil::configString(route->dest);
 		os << "\t\t<mask value=\"" << tmp.get() << "\"/>" << endl;
 	}
 	os << "\t</destination>" << endl;
+	if (printFake)
+	{
+		printFakeDest(os, route);
+	}
 }
 
-void RouteConfigGen::printSingleSourceMultipleDests(ofstream& os,
-	vector<const RouteInfo*>& routes)
+bool RouteConfigGen::printFakeDest(ostream& os, const RouteInfo* route)
 {
-	sort(routes.begin(), routes.end(), RouteConfigGen::ltSource);
-	os << "<!-- single source & multiple dests -->" << endl;
-	int idx = 0;
-	int count = 0;
-	for (int i = 1; i < routes.size(); i++)
+	if (rand0(3))
 	{
-		if (!routes[i])
+		__require__(route);
+		os << "\t<destination sme=\"" << route->smeSystemId << "\">" << endl;
+		auto_ptr<char> tmp = genFakeAddress();
+		os << "\t\t<mask value=\"" << tmp.get() << "\"/>" << endl;
+		os << "\t</destination>" << endl;
+		return true;
+	}
+	return false;
+}
+
+void RouteConfigGen::printSubjects(ostream& os, const Routes& routes,
+	const char* prefix)
+{
+	os << "<!-- " << prefix << " subjects -->" << endl;
+	for (Routes::const_iterator it = routes.begin(); it != routes.end(); it++)
+	{
+		if (checkSubject((*it)->source))
 		{
-			continue;
+			printSubject(os, *it, 's', prefix);
 		}
-		if (routes[idx]->source == routes[i]->source &&
-			routes[idx]->billing == routes[i]->billing &&
-			routes[idx]->archived == routes[i]->archived /* paid */)
+		if (checkSubject((*it)->dest))
 		{
-			count++;
+			printSubject(os, *it, 'd', prefix);
 		}
-		else if (count)
+	}
+}
+void RouteConfigGen::printRoutes(ostream& os, const Routes& routes,
+	const char* prefix)
+{
+	if (!routes.size())
+	{
+		return;
+	}
+	Routes::const_iterator it = routes.begin();
+	const RouteInfo* prevRoute = *it++;
+	os << "<!-- " << prefix << " routes -->" << endl;
+	bool fakeDest = rand0(1);
+	printRouteStart(os, prevRoute, prefix);
+	printSource(os, prevRoute, prefix, !fakeDest);
+	for (; it != routes.end(); it++)
+	{
+		if (eqSource(*it, prevRoute))
 		{
-			printSubject(os, routes, idx, 's', "ssmd_s");
-			for (int j = idx; j < i; j++)
-			{
-				if (routes[j])
-				{
-					printSubject(os, routes, j, 'd', "ssmd_d");
-				}
-			}
-			printRouteStart(os, routes, idx, "ssmd_r");
-			printSource(os, routes, idx, "ssmd_s");
-			for (int j = idx; j < i; j++)
-			{
-				if (routes[j])
-				{
-					printDest(os, routes, j, "ssmd_d");
-					routes[j] = NULL;
-				}
-			}
+			os << "<!-- eqSource -->" << endl;
+			printDest(os, prevRoute, prefix, fakeDest);
+		}
+		else if (eqDest(*it, prevRoute))
+		{
+			os << "<!-- eqDest -->" << endl;
+			printSource(os, *it, prefix, !fakeDest);
+		}
+		else
+		{
+			printDest(os, prevRoute, prefix, fakeDest);
 			printRouteEnd(os);
-			idx = i;
-			count = 0;
+			fakeDest = rand0(1);
+			printRouteStart(os, *it, prefix);
+			printSource(os, *it, prefix, !fakeDest);
 		}
+		prevRoute = *it;
 	}
+	printDest(os, prevRoute, prefix, fakeDest);
+	printRouteEnd(os);
 }
 
-void RouteConfigGen::printMultipleSourcesSingleDest(ofstream& os,
-	vector<const RouteInfo*>& routes)
+/*
+template <class Pred>
+const Routes RouteConfigGen::selectRoutes(Routes& routes, Pred ltPred, Pred eqPred)
 {
-	sort(routes.begin(), routes.end(), RouteConfigGen::ltDest);
-	os << "<!-- multiple sources & single dest -->" << endl;
-	int idx = 0;
-	int count = 0;
-	for (int i = 1; i < routes.size(); i++)
+	Routes res;
+	sort(routes.begin(), routes.end(), ltPred);
+    Routes::iterator it = adjacent_find(routes.begin(), routes.end(), eqPred);
+	while (it != routes.end())
 	{
-		if (!routes[i])
+		res.push_back(*it);
+		it = routes.erase(it);
+		while (it != routes.end() || !eqPred(*it, src.back()))
 		{
-			continue;
+			res.push_back(*it);
+			it = routes.erase(it);
 		}
-		if (routes[idx]->dest == routes[i]->dest &&
-			routes[idx]->billing == routes[i]->billing &&
-			routes[idx]->archived == routes[i]->archived /* paid */)
-		{
-			count++;
-		}
-		else if (count)
-		{
-			for (int j = idx; j < i; j++)
-			{
-				if (routes[j])
-				{
-					printSubject(os, routes, j, 's', "mssd_s");
-				}
-			}
-			printSubject(os, routes, idx, 'd', "mssd_d");
-			printRouteStart(os, routes, idx, "mssd_r");
-			for (int j = idx; j < i; j++)
-			{
-				if (routes[j])
-				{
-					printSource(os, routes, j, "mssd_s");
-					routes[j] = NULL;
-				}
-			}
-			printDest(os, routes, idx, "mssd_d");
-			printRouteEnd(os);
-			idx = i;
-			count = 0;
-		}
+		it = adjacent_find(it, routes.end(), eqPred);
 	}
+	return res;
 }
-
-void RouteConfigGen::printSingleSourceSingleDest(ofstream& os,
-	vector<const RouteInfo*>& routes)
-{
-	//генерация конфига
-	os << "<!-- single source & single dest -->" << endl;
-	for (int i = 0; i < routes.size(); i++)
-	{
-		if (!routes[i])
-		{
-			continue;
-		}
-		printSubject(os, routes, i, 's', "sssd_s");
-		printSubject(os, routes, i, 'd', "sssd_d");
-		printRouteStart(os, routes, i, "sssd_r");
-		printSource(os, routes, i, "sssd_s");
-		printDest(os, routes, i, "sssd_d");
-		printRouteEnd(os);
-	}
-}
+*/
 
 void RouteConfigGen::saveConfig(const char* configFileName)
 {
 	__require__(configFileName);
 	//список маршрутов
-	vector<const RouteInfo*> routes;
+	Routes routes;
 	RouteRegistry::RouteIterator* it = routeReg->iterator();
 	__require__(it);
 	while (const RouteHolder* routeHolder = it->next())
 	{
+		/*
+		RouteInfo* routeInfo = new RouteInfo(routeHolder->route);
+		routeInfo.routeId = i++;
+		routes.push_back(routeInfo);
+		*/
 		routes.push_back(&routeHolder->route);
 	}
 	delete it;
+	/*
+	const Routes routes_ssmd =
+		selectRoutes(routes, RouteConfigGen::ltSource, RouteConfigGen::eqSource);
+	const Routes routes_mssd =
+		selectRoutes(routes, RouteConfigGen::ltDest, RouteConfigGen::eqDest);
+	*/
 	//генерация конфига
 	ofstream os(configFileName);
 	os << "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>" << endl;
 	os << "<!DOCTYPE routes SYSTEM \"routes.dtd\">" << endl;
 	os << "<routes>" << endl;
-	printSingleSourceMultipleDests(os, routes);
-	printMultipleSourcesSingleDest(os, routes);
-	printSingleSourceSingleDest(os, routes);
+	//subjects
+	/*
+	printSubjects(os, routes_ssmd, "ssmd");
+	printSubjects(os, routes_mssd, "mssd");
+	*/
+	printSubjects(os, routes, "sssd");
+	//routes
+	/*
+	os << "<!-- single source & multiple dests -->" << endl;
+	printRoutes(os, routes_ssmd, "ssmd");
+	os << "<!-- multiple sources & single dest -->" << endl;
+	printRoutes(os, routes_mssd, "mssd");
+	*/
+	os << "<!-- single source & single dest -->" << endl;
+	printRoutes(os, routes, "sssd");
 	os << "</routes>" << endl;
 }
 
