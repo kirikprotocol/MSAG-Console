@@ -648,10 +648,10 @@ void DoMTConfErrorProcessor(
     }
     if ( fatal ) 
       throw MAPDIALOG_FATAL_ERROR(
-        FormatText("MAP::%s fatal *errorForwardSMmt_sp: 0x%x",__PRETTY_FUCTION__,errorForwardSMmt_sp->errorCode));
+        FormatText("MAP::%s fatal *errorForwardSMmt_sp: 0x%x",__PRETTY_FUNCTION__,errorForwardSMmt_sp->errorCode));
     else
       throw MAPDIALOG_TEMP_ERROR(
-        FormatText("MAP::%s temp *errorForwardSMmt_sp: 0x%x",__PRETTY_FUCTION__,errorForwardSMmt_sp->errorCode));
+        FormatText("MAP::%s temp *errorForwardSMmt_sp: 0x%x",__PRETTY_FUNCTION__,errorForwardSMmt_sp->errorCode));
   }
   /*else if (provErrCode_p){
     throw MAPDIALOG_TEMP_ERROR(
@@ -664,10 +664,10 @@ void DoMTConfErrorProcessor(
          *provErrCode_p == 0x09 || // invalid responce recived
          (*provErrCode_p > 0x0a && *provErrCode_p <= 0x10)) // unxpected component end other
       throw MAPDIALOG_FATAL_ERROR(
-        FormatText("MAP::%s fatal *provErrCode_p: 0x%x",__PRETTY_FUCTION__,*provErrCode_p));
+        FormatText("MAP::%s fatal *provErrCode_p: 0x%x",__PRETTY_FUNCTION__,*provErrCode_p));
     else
       throw MAPDIALOG_TEMP_ERROR(
-        FormatText("MAP::%s temp *provErrCode_p: 0x%x",__PRETTY_FUCTION__,*provErrCode_p));
+        FormatText("MAP::%s temp *provErrCode_p: 0x%x",__PRETTY_FUNCTION__,*provErrCode_p));
   }
 }
 
@@ -685,12 +685,12 @@ void DoRInfoErrorProcessor(
     if ( fatal )
       throw MAPDIALOG_FATAL_ERROR(
         FormatText("MAP::%s fatal errorSendRoutingInfoForSm_sp->errorCode: 0x%x",
-                   __PRETTY_FUCTION__,
+                   __PRETTY_FUNCTION__,
                    errorSendRoutingInfoForSm_sp->errorCode));
     else      
       throw MAPDIALOG_TEMP_ERROR(
         FormatText("MAP::%s temp errorSendRoutingInfoForSm_sp->errorCode: 0x%x",
-                 __PRETTY_FUCTION__,
+                 __PRETTY_FUNCTION__,
                  errorSendRoutingInfoForSm_sp->errorCode));
   }
   if ( provErrCode_p != 0 ){
@@ -700,10 +700,10 @@ void DoRInfoErrorProcessor(
          *provErrCode_p == 0x09 || // invalid responce recived
          (*provErrCode_p > 0x0a && *provErrCode_p <= 0x10)) // unxpected component end other
       throw MAPDIALOG_FATAL_ERROR(
-        FormatText("MAP::%s fatal *provErrCode_p: 0x%x",__PRETTY_FUCTION__,*provErrCode_p));
+        FormatText("MAP::%s fatal *provErrCode_p: 0x%x",__PRETTY_FUNCTION__,*provErrCode_p));
     else
       throw MAPDIALOG_TEMP_ERROR(
-        FormatText("MAP::%s temp *provErrCode_p: 0x%x",__PRETTY_FUCTION__,*provErrCode_p));
+        FormatText("MAP::%s temp *provErrCode_p: 0x%x",__PRETTY_FUNCTION__,*provErrCode_p));
   }
 }
 
