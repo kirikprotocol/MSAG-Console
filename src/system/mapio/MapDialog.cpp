@@ -31,6 +31,7 @@ inline char GetChar(const char*& ptr,unsigned& shift){
     shift&=0x7;
     ++ptr;
   }
+  __trace2__("MAP: 7bit : %x",(unsigned char)val);
   return lll_7bit_2_8bit[val];
 }
 
