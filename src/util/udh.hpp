@@ -3,10 +3,13 @@
 
 #include <inttypes.h>
 #include <memory>
+#include "sms/sms.h"
 #include "util/debug.h"
 
 namespace smsc{
 namespace util{
+
+using namespace smsc::sms;
 
 inline bool findConcatInfo(unsigned char* body,uint16_t& mr,uint8_t& idx,uint8_t& num,bool& havemoreudh)
 {
