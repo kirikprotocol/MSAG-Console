@@ -50,6 +50,7 @@ const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
 
 static smsc::logger::Logger *logger = 0;
 
+static TaskProcessor*         taskProcessor = 0;
 static ServiceSocketListener* adminListener = 0; 
 static bool bAdminListenerInited = false;
 
@@ -67,7 +68,7 @@ static bool  bMCISmeIsConnecting = false;
 static void setNeedStop(bool stop=true) {
     MutexGuard gauard(needStopLock);
     bMCISmeIsStopped = stop;
-    if (stop) mciSmeWaitEvent.Signal(); // TODO: replace by processor EventMonitor
+    if (taskProcessor) taskProcessor->Stop();
 }
 static bool isNeedStop() {
     MutexGuard gauard(needStopLock);
@@ -77,7 +78,7 @@ static bool isNeedStop() {
 static void setNeedReconnect(bool reconnect=true) {
     MutexGuard gauard(needReconnectLock);
     bMCISmeIsConnected = !reconnect;
-    if (reconnect) mciSmeWaitEvent.Signal();
+    if (reconnect && taskProcessor) taskProcessor->Stop();
 }
 static bool isNeedReconnect() {
     MutexGuard gauard(needReconnectLock);
@@ -235,12 +236,16 @@ public:
             return false;
         }
         
-        smsc_log_debug(logger, "%s%s message #%lld for %s: %s", (message.replace) ? "Replacing ":"Sending",
-                       (message.replace) ? message.smsc_id.c_str():"", message.id, message.abonent.c_str(),
-                       message.message.c_str());
+        smsc_log_debug(logger, "%s%s message #%lld seqNum=%ld for %s: %s", (message.replace) ? "Replacing ":"Sending",
+                       (message.replace) ? message.smsc_id.c_str():"", message.id, seqNumber,
+                        message.abonent.c_str(), message.message.c_str());
 
-        // TODO: implement message sending 
-
+        if (message.message.length() > MAX_ALLOWED_MESSAGE_LENGTH) {
+            smsc_log_error(logger, "Message #%lld to send is too large: len=%d, max=%d",
+                           message.id, message.message.length(), MAX_ALLOWED_MESSAGE_LENGTH);
+            return false;
+        }
+        
         Address oa, da;
         const char* oaStr = processor.getAddress(); // TODO: caller address for notifications
         if (!oaStr || !convertMSISDNStringToAddress(oaStr, oa)) {
@@ -252,74 +257,66 @@ public:
             smsc_log_error(logger, "Invalid destination address '%s'", daStr ? daStr:"-");
             return false;
         }
-
-        SMS sms; 
-        sms.setOriginatingAddress(oa); sms.setDestinationAddress(da);
-        sms.setArchivationRequested(false); sms.setDeliveryReport(1);
         
-        // TODO: reschedule table for message.attempts
-        
-        sms.setValidTime(time(NULL)+3600); // TODO: define it
-        sms.setEServiceType(processor.getSvcType());
-        sms.setIntProperty(Tag::SMPP_PROTOCOL_ID, processor.getProtocolId());
-        sms.setIntProperty(Tag::SMPP_ESM_CLASS, 0); // default mode (not transactional)
-        sms.setIntProperty(Tag::SMPP_PRIORITY, 0);
-        sms.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY, 1);
-        
-        const char* out = message.message.c_str();
-        int outLen = message.message.length();
-        char* msgBuf = 0;
-        if(hasHighBit(out,outLen)) {
-            int msgLen = outLen*2;
-            msgBuf = new char[msgLen];
-            ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf, msgLen, CONV_ENCODING_CP1251);
-            sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::UCS2);
-            out = msgBuf; outLen = msgLen;
-        } 
-        else sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
-        
-        try 
-        {
-            if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH) {
-                sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, outLen);
-                sms.setIntProperty(Tag::SMPP_SM_LENGTH, outLen);
-            } else {
-                sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, out, 
-                                   (outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ? outLen :  MAX_ALLOWED_PAYLOAD_LENGTH);
-            }
-        } 
-        catch (...) {
-            smsc_log_error(logger, "Something is wrong with message body. Set/Get property failed"); 
-            if (msgBuf) delete msgBuf; msgBuf = 0;
-            return false;
-        }
-        if (msgBuf) delete msgBuf;
-
         if (message.replace)
         {
-            /*
-             __cstr_property__(messageId)                // fill
-             __cstr_property__(scheduleDeliveryTime)     // TODO: fill ???
-             __cstr_property__(validityPeriod)           // filled by fillSmppPduFromSms
-             __int_property__(uint8_t,registredDelivery) // filled by fillSmppPduFromSms
-             __int_property__(uint8_t,smDefaultMsgId)    // do not fill        
-            */
             PduReplaceSm sm;
-            sm.get_header().set_sequenceNumber(seqNumber);
-            sm.get_header().set_commandId(SmppCommandSet::REPLACE_SM);
+            
             sm.set_messageId(message.smsc_id.c_str());
-            fillSmppPduFromSms((PduXSm*)&sm, &sms);
+            sm.get_source().set_typeOfNumber(oa.type);
+            sm.get_source().set_numberingPlan(oa.plan);
+            sm.get_source().set_value(oa.value);
+            char timeBuffer[64];
+            cTime2SmppTime(time(NULL)+3600, timeBuffer); // TODO: define validityPeriod (time) here !
+            sm.set_validityPeriod(timeBuffer);
+            cTime2SmppTime(time(NULL)+60*message.attempts, timeBuffer); // TODO: reschedule table for message.attempts
+            sm.set_scheduleDeliveryTime(timeBuffer);
+            sm.set_registredDelivery(1);
+            sm.set_smDefaultMsgId(0); // ???
+            sm.shortMessage.copy(message.message.c_str(), message.message.length());
+            
+            sm.get_header().set_commandLength(sm.size());
+            sm.get_header().set_commandId(SmppCommandSet::REPLACE_SM);
+            sm.get_header().set_commandStatus(0);
+            sm.get_header().set_sequenceNumber(seqNumber);
+            
             asyncTransmitter->sendPdu(&(sm.get_header()));
         }
         else
         {
-            /*
-             __cstr_property__(scheduleDeliveryTime) // TODO: fill ???
-            */
             PduSubmitSm  sm;
-            sm.get_header().set_sequenceNumber(seqNumber);
+            
+            EService svcType;
+            strncpy(svcType, processor.getSvcType(), MAX_ESERVICE_TYPE_LENGTH);
+            svcType[MAX_ESERVICE_TYPE_LENGTH]='\0';
+                
+            sm.get_message().set_serviceType(svcType);
+            sm.get_message().get_source().set_typeOfNumber(oa.type);
+            sm.get_message().get_source().set_numberingPlan(oa.plan);
+            sm.get_message().get_source().set_value(oa.value);
+            sm.get_message().get_dest()  .set_typeOfNumber(da.type);
+            sm.get_message().get_dest()  .set_numberingPlan(da.plan);
+            sm.get_message().get_dest()  .set_value(da.value);
+            sm.get_message().set_esmClass(0); // default mode (not transactional)
+            sm.get_message().set_protocolId(processor.getProtocolId());
+            sm.get_message().set_priorityFlag(0);
+            char timeBuffer[64];
+            cTime2SmppTime(time(NULL)+3600, timeBuffer); // TODO: define validityPeriod (time) here !
+            sm.get_message().set_validityPeriod(timeBuffer);
+            cTime2SmppTime(time(NULL)+60*message.attempts, timeBuffer); // TODO: reschedule table for message.attempts
+            sm.get_message().set_scheduleDeliveryTime(timeBuffer);
+            sm.get_message().set_registredDelivery(1);
+            sm.get_message().set_replaceIfPresentFlag(0);
+            sm.get_message().set_dataCoding(DataCoding::LATIN1);
+            sm.get_message().set_smDefaultMsgId(0); // ???
+            sm.get_message().set_shortMessage(message.message.c_str(), message.message.length());
+            //sm.get_message().shortMessage.copy(message.message.c_str(), message.message.length());
+            
+            sm.get_header().set_commandLength(sm.size(false));
             sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
-            fillSmppPduFromSms((PduXSm*)&sm, &sms);
+            sm.get_header().set_commandStatus(0);
+            sm.get_header().set_sequenceNumber(seqNumber);
+            
             asyncTransmitter->sendPdu(&(sm.get_header()));
         }
         
@@ -374,12 +371,15 @@ public:
 
         if (!trafficst) TrafficControl::incIncoming();
 
-        const char* msgid = ((PduXSmResp*)pdu)->get_messageId();
         std::string msgId = ""; 
-        if (!msgid || msgid[0] == '\0') accepted = false;
-        else msgId = msgid;
+        if (!replace) {
+            const char* msgid = ((PduXSmResp*)pdu)->get_messageId();
+            if (!msgid || msgid[0] == '\0') accepted = false;
+            else msgId = msgid;
+        }
 
-        processor.invokeProcessResponce(seqNum, accepted, retry, immediate, replace_failed, msgId);
+        processor.invokeProcessResponce(seqNum, accepted, retry, immediate,
+                                        replace, replace_failed, msgId);
     }
 
     void processReceipt (SmppHeader *pdu)
@@ -545,6 +545,7 @@ int main(void)
         bAdminListenerInited = true;
         
         TaskProcessor processor(&tpConfig);
+        taskProcessor = &processor;
         
         /*
         MCISmeComponent admin(processor);                   
@@ -594,18 +595,17 @@ int main(void)
             sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
             sigprocmask(SIG_SETMASK, &set, &old);
             
-            while (!isNeedStop() && !isNeedReconnect())
-            {
-                smsc_log_info(logger, "Running messages send loop...");
-                processor.Run();
-                smsc_log_info(logger, "Message send loop exited.");
-            }
+            smsc_log_info(logger, "Running messages send loop...");
+            processor.Run();
+            smsc_log_info(logger, "Message send loop exited.");
+            
             smsc_log_info(logger, "Disconnecting from SMSC ...");
             TrafficControl::stopControl();
             processor.Stop();
             processor.assignMessageSender(0);
             session.close();
         }
+        taskProcessor = 0;
     }
     catch (SmppConnectException& exc) {
         if (exc.getReason() == SmppConnectException::Reason::bindFailed)

@@ -63,7 +63,8 @@ int EventRunner::Execute()
     switch (method)
     {
     case processResponceMethod:
-        processor.processResponce(seqNum, delivered, retry, immediate, replace_failed, smscId);
+        processor.processResponce(seqNum, delivered, retry, immediate,
+                                  replace, replace_failed, smscId);
         break;
     case processReceiptMethod:
         processor.processReceipt (smscId, delivered, retry);
@@ -97,8 +98,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     : Thread(), MissedCallListener(), MCISmeAdmin(), 
         logger(Logger::getInstance("smsc.mcisme.TaskProcessor")), 
         protocolId(0), svcType(0), address(0), mciModule(0), messageSender(0), 
-        ds(0), dsStatConnection(0), responceWaitTime(0), receiptWaitTime(0), 
-        maxInQueueSize(10000), maxOutQueueSize(10000),
+        ds(0), dsStatConnection(0), maxInQueueSize(10000), maxOutQueueSize(10000),
         bStarted(false), bInQueueOpen(false), bOutQueueOpen(false)
 {
     smsc_log_info(logger, "Loading ...");
@@ -112,12 +112,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     try { svcType = config->getString("SvcType"); }
     catch(ConfigException& exc) { svcType = 0; };
     
-    responceWaitTime = parseTime(config->getString("responceWaitTime"));
-    if (responceWaitTime <= 0) 
-        throw ConfigException("Invalid value for 'responceWaitTime' parameter.");
-    receiptWaitTime = parseTime(config->getString("receiptWaitTime"));
-    if (receiptWaitTime <= 0) 
-        throw ConfigException("Invalid value for 'receiptWaitTime' parameter.");
+    responcesTracker.init(this, config);
 
     maxInQueueSize  = config->getInt("inputQueueSize");
     maxOutQueueSize = config->getInt("outputQueueSize");
@@ -140,13 +135,11 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 }
 TaskProcessor::~TaskProcessor()
 {
-    this->Stop();
     eventManager.Stop();
+    this->Stop();
+    
     if (mciModule) delete mciModule;
-
-    // TODO: wait & delete all Tasks here !!!
     // if (statistics) delete statistics;
-
     if (dsStatConnection) ds->freeConnection(dsStatConnection);
     if (ds) delete ds;
 }
@@ -154,7 +147,6 @@ TaskProcessor::~TaskProcessor()
 void TaskProcessor::Start()
 {
     MutexGuard guard(startLock);
-    
     if (!bStarted)
     {
         smsc_log_info(logger, "Starting ...");
@@ -163,19 +155,15 @@ void TaskProcessor::Start()
             smsc_log_error(logger, "Failed to start processing. Message sender is undefined.");
             return;
         }
-        {
-            MutexGuard snGuard(messagesBySeqNumLock);
-            messagesBySeqNum.Empty();
-        }
         
-        smsc_log_info(logger, "Loading processing tasks ...");
-        tasks = Task::loadupAll(); // TODO: start active messages sending ...
-        smsc_log_info(logger, "Processing tasks loaded.");
-
         openOutQueue();
         openInQueue();
+        loadupTasks();
+        
         Thread::Start();
+        responcesTracker.Start();
         if (mciModule) mciModule->Start();
+        
         bStarted = true;
         smsc_log_info(logger, "Started.");
     }
@@ -183,21 +171,24 @@ void TaskProcessor::Start()
 void TaskProcessor::Stop()
 {
     MutexGuard  guard(startLock);
-    
     if (bStarted)
     {
         smsc_log_info(logger, "Stopping ...");
         if (mciModule) mciModule->Stop();
+        responcesTracker.Stop();
+        
         closeInQueue();
         closeOutQueue();
         exitedEvent.Wait();
+        unloadTasks();
+
         bStarted = false;
         smsc_log_info(logger, "Stoped.");
     }
 }
 int TaskProcessor::Execute()
 {
-    static const char* ERROR_MESSAGE = "Failed to process notification. Details: %s";
+    static const char* ERROR_MESSAGE = "Failed to process missed call event. Details: %s";
     
     while (bInQueueOpen)
     {
@@ -234,6 +225,31 @@ void TaskProcessor::Run()
             smsc_log_error(logger, ERROR_MESSAGE, "Cause is unknown");
         }
     }
+}
+
+void TaskProcessor::loadupTasks()
+{
+    MutexGuard guard(tasksMonitor);
+    smsc_log_info(logger, "Loading processing tasks ...");
+    lockedTasks.Empty();
+    tasks = Task::loadupAll();
+    smsc_log_info(logger, "Processing tasks loaded. Resending messages...");
+    Message message;
+    char* abonent=0; Task* task = 0; tasks.First();
+    while (tasks.Next(abonent, task))
+        if (task && task->formatMessage(message))
+            putToOutQueue(message, true);
+    smsc_log_info(logger, "All loaded tasks messages added to output queue.");
+}
+void TaskProcessor::unloadTasks()
+{
+    MutexGuard guard(tasksMonitor);
+    smsc_log_info(logger, "Unloading processing tasks ...");
+    char* abonent=0; Task* task = 0; tasks.First();
+    while (tasks.Next(abonent, task)) 
+        if (task) delete task;
+    tasks.Empty(); lockedTasks.Empty();
+    smsc_log_info(logger, "Processing tasks unloaded.");
 }
 
 Task* TaskProcessor::getTask(const char* abonent)
@@ -317,6 +333,7 @@ void TaskProcessor::lockSmscId(const char* smsc_id)
 {
     MutexGuard guard(smscIdMonitor);
     while (lockedSmscIds.Exists(smsc_id)) smscIdMonitor.wait();
+    lockedSmscIds.Insert(smsc_id, true);
 }
 void TaskProcessor::freeSmscId(const char* smsc_id)
 {
@@ -346,7 +363,7 @@ void TaskProcessor::processEvent(const MissedCallEvent& event)
 {
     const char* abonent = event.to.c_str();
     checkAddress(abonent);
-    
+
     Message message;
     {
         TaskAccessor taskAccessor(this);
@@ -355,6 +372,8 @@ void TaskProcessor::processEvent(const MissedCallEvent& event)
         Task* task = taskAccessor.getTask(abonent, isNewTask); // possible loads task
         if (!task) throw Exception("Failed to obtain task for abonent: %s", abonent);
         task->addEvent(event); // adds event to task chain & inassigned into DB 
+        smsc_log_debug(logger, "Event for %s added to %s task. Events=%d",
+                       abonent, (isNewTask) ? "new":"existed", task->eventsCount());
         if (!isNewTask || !task->formatMessage(message)) return;
     }
     putToOutQueue(message);
@@ -372,53 +391,38 @@ void TaskProcessor::processMessage(const Message& message)
     }
 
     int seqNum = messageSender->getSequenceNumber();
-    {
-        {
-            MutexGuard snGuard(messagesBySeqNumLock);
-            if (messagesBySeqNum.Exist(seqNum)) {
-                smsc_log_warn(logger, "Sequence id=%d was already used !", seqNum);
-                messagesBySeqNum.Delete(seqNum);
-            }
-            messagesBySeqNum.Insert(seqNum, message);
-        }
-        MutexGuard respGuard(responceWaitQueueLock);
-        responceWaitQueue.Push(ResponceTimer(time(NULL)+responceWaitTime, seqNum));
-        // Add responce waiting. If timeout will be reached => need resend message (TODO: Check thread ???)
-    }
-
-    if (!messageSender->send(seqNum, message))
-    {
-        smsc_log_error(logger, "Failed to send message #%lld to '%s'.", message.id, message.abonent.c_str());
-        MutexGuard snGuard(messagesBySeqNumLock);
-        if (messagesBySeqNum.Exist(seqNum)) messagesBySeqNum.Delete(seqNum);
+    if (!responcesTracker.putResponceData(seqNum, message)) {
+        smsc_log_error(logger, "Sequence id=%d was already used !", seqNum);
         return;
     }
+
+    if (!messageSender->send(seqNum, message)) {
+        smsc_log_error(logger, "Failed to send message #%lld to '%s'.", message.id, message.abonent.c_str());
+        //Message failedMessage; popResponceData(seqNum, failedMessage); ???
+        return;
+    }
+    
     smsc_log_debug(logger, "Sent message #%lld to '%s'.", message.id, message.abonent.c_str());
 }
 
 /* ------------------------ Main processing ------------------------ */ 
 
 void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool immediate,
-                                    bool replace_failed, std::string smscId)
+                                    bool replace, bool replace_failed, std::string smscId)
 {
-    smsc_log_debug(logger, "Responce: seqNum=%d, smscId=%s, accepted=%d, retry=%d, immediate=%d, rep_failed=%d",
-                   seqNum, smscId.c_str(), accepted, retry, immediate, replace_failed);
-
-    const char* smsc_id = (smscId.length() > 0) ? 0:smscId.c_str();
-    SmscIdAccessor smscIdAccessor(this, smsc_id); // lock smsc_id if exists
-    if (smsc_id) smsc_log_debug(logger, "Responce lock smscId=%s", smsc_id);
+    smsc_log_debug(logger, "Responce (%s): seqNum=%d, smscId=%s, accepted=%d, retry=%d, immediate=%d, rep_failed=%d",
+                   replace ? "replace":"submit", seqNum, smscId.c_str(), accepted, retry, immediate, replace_failed);
 
     Message message; // get message by sequence number assigned in sender
-    {   
-        Message* messagePtr = 0;
-        MutexGuard snGuard(messagesBySeqNumLock);
-        if (!(messagePtr = messagesBySeqNum.GetPtr(seqNum))) {
-            smsc_log_warn(logger, "Unable to locate message for sequence number: %d", seqNum);
-            return;
-        }
-        message = *messagePtr;
-        messagesBySeqNum.Delete(seqNum);
+    if (!responcesTracker.popResponceData(seqNum, message)) {   
+        smsc_log_warn(logger, "Unable to locate message for sequence number: %d", seqNum);
+        return;
     }
+    
+    if (replace) smscId=message.smsc_id;
+    const char* smsc_id = (smscId.length() > 0) ? smscId.c_str():0;
+    SmscIdAccessor smscIdAccessor(this, smsc_id); // lock smsc_id if exists
+    if (smsc_id) smsc_log_debug(logger, "Responce lock smscId=%s", smsc_id);
     
     bool  needKillTask = false;
     bool  isMessageToSend = false;
@@ -448,7 +452,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
             }
             else        // permanent error
             {
-                if (replace_failed)
+                if (replace && replace_failed)
                 {
                     smsc_log_debug(logger, "Message #%lld (smsc_id=%s) replace error for abonent: %s",
                                    message.id, smsc_id ? smsc_id:"-",message.abonent.c_str());
@@ -515,7 +519,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
             }
             
             ReceiptData receipt; // check for processed receipt
-            if (popReceiptData(smsc_id, receipt))
+            if (responcesTracker.popReceiptData(smsc_id, receipt))
                 processReceipt(task, receipt.delivered, receipt.retry, smsc_id);
 
             if (needKillTask) taskAccessor.delTask(message.abonent.c_str());
@@ -537,6 +541,8 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
     Message message;
     if (Task::getMessage(smsc_id, message)) // in WAIT_RCPT state
     {
+        smsc_log_debug(logger, "Receipt found message with smscId=%s.", smsc_id);
+
         bool isTaskNew = false;
         TaskAccessor taskAccessor(this);
         Task* task = taskAccessor.getTask(message.abonent.c_str(), isTaskNew);
@@ -550,9 +556,9 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
     }
     else // message by smsc_id not found => wait responce
     {
-        smsc_log_debug(logger, "Receipt waiting for responce with smscId=%s.", smsc_id);
+        smsc_log_debug(logger, "Receipt waiting responce with smscId=%s.", smsc_id);
 
-        if (!putReceiptData(smsc_id, ReceiptData(delivered, retry)))
+        if (!responcesTracker.putReceiptData(smsc_id, ReceiptData(delivered, retry)))
             smsc_log_error(logger, "Failed to add receipt data. SMSC id=%lld already used", smsc_id);
     }
 }
@@ -575,25 +581,153 @@ void TaskProcessor::processReceipt(Task* task, bool delivered, bool retry,
     // do not kill task here !!!
 }
 
-/* ---------------------- Technical: receipts & responces ordering --------------------- */ 
+/* ---------------------- Technical: receipts & responces waiting & ordering --------------------- */ 
 
-bool TaskProcessor::popReceiptData(const char* smsc_id, ReceiptData& receipt)            
+void ResponcesTracker::init(TaskProcessor* _processor, ConfigView* config)
 {
-    MutexGuard guard(receiptsLock);
+    responceWaitTime = parseTime(config->getString("responceWaitTime"));
+    if (responceWaitTime <= 0) 
+        throw ConfigException("Invalid value for 'responceWaitTime' parameter.");
+    receiptWaitTime = parseTime(config->getString("receiptWaitTime"));
+    if (receiptWaitTime <= 0) 
+        throw ConfigException("Invalid value for 'receiptWaitTime' parameter.");
+    
+    this->processor = _processor;
+}
+void ResponcesTracker::Start()
+{
+    MutexGuard guard(startLock);
+    if (!bStarted)
+    {
+        bNeedExit = false; 
+        cleanup();
+        Thread::Start();
+        bStarted = true;
+    }
+}
+void ResponcesTracker::Stop()
+{
+    MutexGuard guard(startLock);
+    if (bStarted)
+    {
+        bNeedExit = true;
+        {
+            MutexGuard guard(responcesMonitor);
+            responcesMonitor.notifyAll();
+        }
+        exitedEvent.Wait();
+        cleanup();
+        bStarted = false;
+    }
+}
+int ResponcesTracker::Execute()
+{
+    time_t lastCurrent = -1;
+
+    ResponceTimer respTimer; ReceiptTimer  rcptTimer;
+    while (!bNeedExit)
+    {
+        MutexGuard guard(responcesMonitor);
+        
+        time_t nextTime = -1;
+        time_t currentTime = time(NULL);
+        
+        if (currentTime > lastCurrent) {
+            printf("In/Out queues: %04ld/%04ld\r", processor->getInQueueSize(), processor->getOutQueueSize());
+            fflush(stdout);
+            lastCurrent = currentTime;
+        }
+        
+        if (responceWaitQueue.Count() > 0)
+        {
+            respTimer = responceWaitQueue[0];
+            if (respTimer.timer <= currentTime)
+            {
+                responceWaitQueue.Shift(respTimer);
+                Message* message = messages.GetPtr(respTimer.seqNum);
+                if (message) {
+                    smsc_log_warn(logger, "Responce for message #%lld is timed out", message->id);
+                    processor->putToOutQueue(*message, true);
+                    messages.Delete(respTimer.seqNum);
+                }
+                else { responcesMonitor.wait(100); continue; }
+            }
+            else nextTime = respTimer.timer;
+        }
+
+        if (receiptWaitQueue.Count() > 0)
+        {
+            rcptTimer = receiptWaitQueue[0];
+            if (rcptTimer.timer <= currentTime)
+            {
+                receiptWaitQueue.Shift(rcptTimer);
+                const char* smsc_id = rcptTimer.smscId.c_str();
+                ReceiptData* receipt = receipts.GetPtr(smsc_id);
+                if (receipt) {
+                    smsc_log_warn(logger, "Responce for receipted smsc_id=%s is timed out", smsc_id);
+                    receipts.Delete(smsc_id);
+                } 
+                else if (nextTime < 0) { responcesMonitor.wait(100); continue; }
+            }
+            else if (nextTime<0 || nextTime>rcptTimer.timer) {
+                nextTime = rcptTimer.timer;
+            }
+        }
+        
+        if (nextTime < 0) responcesMonitor.wait();
+        else if (nextTime <= currentTime) responcesMonitor.wait(100);
+        else responcesMonitor.wait((currentTime-nextTime)*1000);
+    }
+    exitedEvent.Signal();
+    return 0;
+}
+
+void ResponcesTracker::cleanup()
+{
+    MutexGuard guard(responcesMonitor);
+    messages.Empty(); receipts.Empty();
+    responceWaitQueue.Clean(); receiptWaitQueue.Clean();
+    responcesMonitor.notifyAll();
+}
+bool ResponcesTracker::putResponceData(int seqNum, const Message& message)
+{
+    MutexGuard guard(responcesMonitor);
+    Message* messagePtr = messages.GetPtr(seqNum);
+    if (messagePtr) return false;
+    messages.Insert(seqNum, message);
+    responceWaitQueue.Push(ResponceTimer(time(NULL)+responceWaitTime, seqNum));
+    responcesMonitor.notifyAll();
+    return true;
+}
+bool ResponcesTracker::popResponceData(int seqNum, Message& message)
+{
+    MutexGuard guard(responcesMonitor);
+    Message* messagePtr = messages.GetPtr(seqNum);
+    if (!messagePtr) return false;
+    message = *messagePtr;
+    messages.Delete(seqNum);
+    responcesMonitor.notifyAll();
+    return true;
+}
+
+bool ResponcesTracker::putReceiptData(const char* smsc_id, const ReceiptData& receipt)            
+{
+    MutexGuard guard(responcesMonitor);
+    ReceiptData* receiptPtr = receipts.GetPtr(smsc_id);
+    if (receiptPtr) return false;
+    receipts.Insert(smsc_id, receipt);
+    receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, smsc_id));
+    responcesMonitor.notifyAll();
+    return true;
+}
+bool ResponcesTracker::popReceiptData(const char* smsc_id, ReceiptData& receipt)            
+{
+    MutexGuard guard(responcesMonitor);
     ReceiptData* receiptPtr = receipts.GetPtr(smsc_id);
     if (!receiptPtr) return false;
     receipt = *receiptPtr;
     receipts.Delete(smsc_id);
-    return true;
-}
-bool TaskProcessor::putReceiptData(const char* smsc_id, const ReceiptData& receipt)            
-{
-    MutexGuard guard(receiptsLock);
-    ReceiptData* receiptPtr = receipts.GetPtr(smsc_id);
-    if (receiptPtr) return false;
-    receipts.Insert(smsc_id, receipt);
-    MutexGuard recptGuard(receiptWaitQueueLock);
-    receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, smsc_id));
+    responcesMonitor.notifyAll();
     return true;
 }
 
@@ -612,7 +746,7 @@ void TaskProcessor::closeInQueue() {
 bool TaskProcessor::putToInQueue(const MissedCallEvent& event)
 {
     MutexGuard guard(inQueueMonitor);
-    while (bInQueueOpen && inQueue.Count() > maxInQueueSize) {
+    while (bInQueueOpen && (inQueue.Count() >= maxInQueueSize)) {
         inQueueMonitor.wait();
     }
     if (!bInQueueOpen) return false;
@@ -647,10 +781,10 @@ void TaskProcessor::closeOutQueue() {
     bOutQueueOpen = false;
     outQueueMonitor.notifyAll();
 }
-bool TaskProcessor::putToOutQueue(const Message& message)
+bool TaskProcessor::putToOutQueue(const Message& message, bool force/*=false*/)
 {
     MutexGuard guard(outQueueMonitor);
-    while (bOutQueueOpen && outQueue.Count() > maxOutQueueSize) {
+    while (!force && bOutQueueOpen && (outQueue.Count() >= maxOutQueueSize)) {
         outQueueMonitor.wait();
     }
     if (!bOutQueueOpen) return false;

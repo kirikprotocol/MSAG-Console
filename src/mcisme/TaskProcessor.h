@@ -55,7 +55,7 @@ namespace smsc { namespace mcisme
         TaskProcessor&  processor;
 
         int             seqNum;
-        bool            delivered, retry, immediate, replace_failed;
+        bool            delivered, retry, immediate, replace, replace_failed;
         std::string     smscId;
 
     public:
@@ -63,15 +63,16 @@ namespace smsc { namespace mcisme
         virtual const char* taskName() { return "MCISmeEvent"; };
 
         EventRunner(EventMethod method, TaskProcessor& processor, int seqNum,
-                    bool accepted, bool retry, bool immediate, bool replace_failed, std::string smscId="")
+                    bool accepted, bool retry, bool immediate, 
+                    bool replace, bool replace_failed, std::string smscId="")
             : method(method), processor(processor), seqNum(seqNum),
               delivered(accepted), retry(retry), immediate(immediate), 
-              replace_failed(replace_failed), smscId(smscId) {};
+              replace(replace), replace_failed(replace_failed), smscId(smscId) {};
         EventRunner(EventMethod method, TaskProcessor& processor, std::string smscId,
                     bool delivered, bool retry)
             : method(method), processor(processor), seqNum(0),
               delivered(delivered), retry(retry), immediate(false),
-              replace_failed(false), smscId(smscId) {};
+              replace(false), replace_failed(false), smscId(smscId) {};
 
         virtual ~EventRunner() {};
         virtual int Execute();
@@ -173,6 +174,45 @@ namespace smsc { namespace mcisme
         }
     };
 
+    class ResponcesTracker : public Thread
+    {
+    private:
+        
+        smsc::logger::Logger *logger;
+
+        TaskProcessor*  processor;
+
+        Mutex           startLock;
+        bool            bStarted, bNeedExit;
+        Event           exitedEvent;
+
+        EventMonitor              responcesMonitor;
+        IntHash<Message>          messages;
+        Hash   <ReceiptData>      receipts;
+        Array  <ResponceTimer>    responceWaitQueue; // used for responce waiting after submit|replace
+        Array  <ReceiptTimer>     receiptWaitQueue;  // used for responce waiting after receipt come
+
+        int                       responceWaitTime, receiptWaitTime;
+
+    public:
+
+        ResponcesTracker() 
+            : Thread(), logger(Logger::getInstance("smsc.mcisme.ResponceTracker")),
+                processor(0), bStarted(false), bNeedExit(false), responceWaitTime(0), receiptWaitTime(0) {};
+        ~ResponcesTracker() { Stop(); };
+
+        void Start(); void Stop();
+        virtual int Execute();
+        
+        void cleanup();
+        void init(TaskProcessor* processor, ConfigView* config);
+        
+        bool putResponceData(int seqNum, const Message& message);
+        bool popResponceData(int seqNum, Message& message);
+        bool popReceiptData (const char* smsc_id, ReceiptData& receipt);
+        bool putReceiptData (const char* smsc_id, const ReceiptData& receipt);
+    };
+
     class TaskProcessor : public Thread, public MissedCallListener, public MCISmeAdmin
     {
     private:
@@ -182,11 +222,12 @@ namespace smsc { namespace mcisme
         int     protocolId;
         char    *svcType, *address;
 
-        ThreadManager   eventManager;
-        MCIModule*      mciModule;
+        ThreadManager       eventManager;
+        ResponcesTracker    responcesTracker;
+        MCIModule*          mciModule;
 
-        Mutex           messageSenderLock;
-        MessageSender*  messageSender;
+        Mutex               messageSenderLock;
+        MessageSender*      messageSender;
         
         DataSource*     ds;
         Connection*     dsStatConnection;
@@ -196,14 +237,6 @@ namespace smsc { namespace mcisme
         Hash<Task *>    tasks, lockedTasks; // Hash for tasks by abonent
         EventMonitor    smscIdMonitor;
         Hash<bool>      lockedSmscIds;
-
-        int                responceWaitTime, receiptWaitTime;
-        Mutex              messagesBySeqNumLock, responceWaitQueueLock, receiptWaitQueueLock;
-        IntHash<Message>   messagesBySeqNum;
-        Mutex              receiptsLock;
-        Hash<ReceiptData>  receipts;
-        Array<ResponceTimer>    responceWaitQueue; // used for responce waiting after submit|replace
-        Array<ReceiptTimer>     receiptWaitQueue;  // used for responce waiting after receipt come
         
         Mutex   startLock;
         Event   exitedEvent;
@@ -213,6 +246,10 @@ namespace smsc { namespace mcisme
         CyclicQueue<MissedCallEvent>    inQueue;
         CyclicQueue<Message>            outQueue;
         
+        void loadupTasks();
+        void unloadTasks();
+
+        friend class ResponcesTracker;
         void openInQueue();
         void closeInQueue();
         bool putToInQueue(const MissedCallEvent& event);
@@ -220,17 +257,14 @@ namespace smsc { namespace mcisme
         
         void openOutQueue();
         void closeOutQueue();
-        bool putToOutQueue(const Message& event);
+        bool putToOutQueue(const Message& event, bool force=false);
         bool getFromOutQueue(Message& event);
         
         void initDataSource(ConfigView* config);
 
-        bool popReceiptData(const char* smsc_id, ReceiptData& receipt);
-        bool putReceiptData(const char* smsc_id, const ReceiptData& receipt);
-
         friend class EventRunner;
         virtual void processResponce(int seqNum, bool accepted, bool retry, bool immediate,
-                                     bool replace_failed, std::string smscId="");
+                                     bool replace, bool replace_failed, std::string smscId="");
         virtual void processReceipt (std::string smscId, bool delivered, bool retry);
 
         void processReceipt(Task* task, bool delivered, bool retry, 
@@ -263,10 +297,9 @@ namespace smsc { namespace mcisme
         bool  freeTask(const char* abonent);
 
         void Run();             // outQueue processing
-        void Stop();
-        void Start();           
         virtual int Execute();  // inQueue processing
-
+        void Start(); void Stop();
+        
         void processEvent(const MissedCallEvent& event);
         void processMessage(const Message& message);
 
@@ -275,10 +308,11 @@ namespace smsc { namespace mcisme
         };
         
         virtual bool invokeProcessResponce(int seqNum, bool accepted, bool retry, bool immediate,
-                                           bool replace_failed, std::string smscId="")
+                                           bool replace, bool replace_failed, std::string smscId="")
         {
             return eventManager.startThread(new EventRunner(processResponceMethod, *this, seqNum,
-                                                            accepted, retry, immediate, replace_failed, smscId));
+                                                            accepted, retry, immediate, 
+                                                            replace, replace_failed, smscId));
         };
         virtual bool invokeProcessReceipt (std::string smscId, bool delivered, bool retry)
         {

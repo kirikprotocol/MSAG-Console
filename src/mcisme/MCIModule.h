@@ -13,6 +13,9 @@
 
 #include "misscall/callproc.hpp"
 
+#define MCI_MODULE_TEST YES
+//#undef  MCI_MODULE_TEST
+
 namespace smsc { namespace mcisme 
 {
     using std::string;
@@ -39,12 +42,13 @@ namespace smsc { namespace mcisme
         bool    bStarted, bNeedExit;
         
         inline MissedCallProcessor* instantiateModule() {
-            /*
+        #ifndef MCI_MODULE_TEST
             MissedCallProcessor *mcp = MissedCallProcessor::instance();
             if (!mcp) smsc_log_error(logger, "Failed to instantiate MCI Module processor.");
             return mcp;
-            */
+        #else
             return 0;
+        #endif 
         }
     
     public:
@@ -67,12 +71,12 @@ namespace smsc { namespace mcisme
             if (!bStarted) {
                 smsc_log_info(logger, "Starting ...");
                 bNeedExit = false; 
-                /*
+        #ifndef MCI_MODULE_TEST
                 MissedCallProcessor *mcp = instantiateModule();
                 if (mcp && listener) {
                     mcp->addMissedCallListener(listener);
                 }
-                */
+        #endif
                 Thread::Start(); bStarted = true;
                 smsc_log_info(logger, "Started.");
             }
@@ -85,39 +89,49 @@ namespace smsc { namespace mcisme
             if (bStarted) {
                 smsc_log_info(logger, "Stopping ...");
                 bNeedExit = true; 
-                /*MissedCallProcessor *mcp = instantiateModule();
+        #ifndef MCI_MODULE_TEST
+                MissedCallProcessor *mcp = instantiateModule();
                 if (mcp) { 
                     mcp->stop(); mcp->removeMissedCallListener();
-                }*/
+                }
+        #endif
                 exitedEvent.Wait(); bStarted = false;
                 smsc_log_info(logger, "Stoped.");
             }
         }
+        
+        #ifdef MCI_MODULE_TEST
         void test()
         {
             MissedCallEvent event; char abonent[128];
-            for (int i=0; i<10000 && !bNeedExit; i++)
+            Event sleepEvent;
+            for (int i=0; i<10 && !bNeedExit; i++)
             {
                 for (int j=0; j<10 && !bNeedExit; j++)
                 {
                     event.time = time(NULL)+i;
                     sprintf(abonent, "+790290%05d", i);       event.to   = abonent;
-                    sprintf(abonent, "+790290%05d", 10000-i); event.from = abonent;
+                    sprintf(abonent, "+790290%05d", 10000-j); event.from = abonent;
                     listener->missed(event);
+                    sleepEvent.Wait(500);
                 }
             }
         }
+        #endif
+        
         virtual int Execute()
         {
             while (!bNeedExit)
             {
                 try
-                {   /*
+                {   
+        #ifndef MCI_MODULE_TEST                    
                     MissedCallProcessor *mcp = instantiateModule();
                     if (!mcp) break;
                     mcp->run();
-                    */
+        #else                    
                     test();
+        #endif
                 } 
                 catch (std::exception& exc) {
                     smsc_log_error(logger, "MCI Module failure. Reason: %s", exc.what());

@@ -49,12 +49,12 @@ const char* DELETE_ALL_EVT_SQL  = "DELETE FROM MCISME_EVT_SET WHERE MSG_ID=:MSG_
 /* ----------------------- Access to current message ids (MCI_CUR_MSG) ----------------------- */
 
 const char* INS_CURRENT_MSG_ID  = "INS_CURRENT_MSG_ID";
-//const char* DEL_CURRENT_MSG_ID  = "DEL_CURRENT_MSG_ID";
+const char* DEL_CURRENT_MSG_ID  = "DEL_CURRENT_MSG_ID";
 const char* GET_CURRENT_MSG_ID  = "GET_CURRENT_MSG_ID";
 const char* SET_CURRENT_MSG_ID  = "SET_CURRENT_MSG_ID";
 
 const char* INS_CURRENT_MSG_SQL = "INSERT INTO MCISME_CUR_MSG (ABONENT, ID) VALUES (:ABONENT, :ID)";
-//const char* DEL_CURRENT_MSG_SQL = "DELETE FROM MCISME_CUR_MSG WHERE ABONENT=:ABONENT";
+const char* DEL_CURRENT_MSG_SQL = "DELETE FROM MCISME_CUR_MSG WHERE ABONENT=:ABONENT";
 const char* ALL_CURRENT_MSG_SQL = "SELECT ABONENT, ID FROM MCISME_CUR_MSG";
 const char* GET_CURRENT_MSG_SQL = "SELECT ID FROM MCISME_CUR_MSG WHERE ABONENT=:ABONENT"; // check is null
 const char* SET_CURRENT_MSG_SQL = "UPDATE MCISME_CUR_MSG SET ID=:ID WHERE ABONENT=:ABONENT";
@@ -117,6 +117,8 @@ bool Task::getMessage(const char* smsc_id, Message& message, Connection* connect
 {
     __require__(smsc_id);
 
+    smsc_log_info(logger, "Get message by smscId=%s", smsc_id);
+
     bool messageExists = false;
     bool isConnectionGet = false;
     try
@@ -137,7 +139,9 @@ bool Task::getMessage(const char* smsc_id, Message& message, Connection* connect
         if (rs && rs->fetchNext())
         {
             message.id       = rs->getUint64(1);
-            messageExists    = (rs->getUint8 (2) == WAIT_RCPT);
+            uint8_t msgState = rs->getUint8(2);
+            //smsc_log_debug(logger, "Get message by smscId=%s st=%d", smsc_id, msgState);
+            messageExists    = (msgState == WAIT_RCPT);
             message.abonent  = rs->getString(3);
             message.attempts = 0; message.eventCount = 0;
             message.message = ""; message.smsc_id = smsc_id;
@@ -183,7 +187,7 @@ Hash<Task *> Task::loadupAll()
                 task->loadup(rs->getUint64(2), connection);
                 tasks.Insert(abonent, task);
             }
-            else smsc_log_error(logger, "Dublicate current message found for abonent: %s");
+            else smsc_log_error(logger, "Duplicate current message found for abonent: %s");
         }
         
         if (connection) ds->freeConnection(connection);
@@ -230,7 +234,8 @@ void Task::loadup(uint64_t currId, Connection* connection/*=0*/) // private
         
         uint8_t messageState = curRs->getUint8(1); // TODO: For what ???
         const char* smsc_id = (curRs->isNull(2)) ? 0:curRs->getString(2);
-        cur_smsc_id = (smsc_id) ? smsc_id:"";
+        if (smsc_id) { bNeedReplace = true;  cur_smsc_id  = smsc_id;}
+        else         { bNeedReplace = false; cur_smsc_id  = ""; }
         
         /* SELECT ID, DT, CALLER, MSG_ID FROM MCISME_EVT_SET 
            WHERE ABONENT=:ABONENT AND (MSG_ID=:MSG_ID OR MSG_ID IS NULL) ORDER BY ID */
@@ -285,11 +290,11 @@ void Task::loadup()
         ResultSet* rs = rsGuard.get();
         if (!rs)
             throw Exception(OBTAIN_RESULTSET_ERROR_MESSAGE, "task loadup");
-        if (rs->fetchNext() && rs->isNull(1)) {
+        if (rs->fetchNext() && !rs->isNull(1)) {
             currentMessageId = rs->getUint64(1);
             loadup(currentMessageId, connection);
         } else {
-            currentMessageId = 0;
+            currentMessageId=0; bNeedReplace=false; cur_smsc_id="";
             events.Clean();
         }
         
@@ -305,7 +310,7 @@ static const char*  constShortEngMonthesNames[12] = {
     "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
-static int maxEventsPerMessage = 10; // TODO: do it configurable
+static int maxEventsPerMessage = 5; // TODO: do it configurable
 
 int Message::countEvents(const std::string& message)
 {
@@ -380,10 +385,9 @@ bool Task::formatMessage(Message& message)
 
     __require__(ds);
     
-    message.id = 0; message.attempts = 0;
-    message.abonent = abonent; message.message = ""; message.smsc_id = "";
-    message.eventCount = 0; message.replace = false;
-
+    message.id = 0; message.attempts = 0; message.abonent = abonent; 
+    message.message = ""; message.eventCount = 0;
+    
     Connection* connection = 0;
     try
     {
@@ -391,9 +395,11 @@ bool Task::formatMessage(Message& message)
         if (!connection)
             throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
         
-        if (currentMessageId==0) doNewCurrent(connection); // makes new current message
+        // create new current message & clear replace flag
+        if (currentMessageId==0) doNewCurrent(connection); 
         message.id = currentMessageId;
-
+        message.replace = bNeedReplace; message.smsc_id = cur_smsc_id; 
+        
         /* UPDATE MCISME_EVT_SET SET MSG_ID=:MSG_ID WHERE ID=:ID */
         Statement* assignEvtStmt = connection->getStatement(UPDATE_MSG_EVT_ID, UPDATE_MSG_EVT_SQL);
         if (!assignEvtStmt)
@@ -471,6 +477,7 @@ void Task::doNewCurrent(Connection* connection)
             throw Exception("Failed to set message #%lld current", msgId);
     }
     currentMessageId = msgId;
+    bNeedReplace = false; cur_smsc_id = "";
 }
 void Task::doWait(Connection* connection, const char* smsc_id, const MessageState& state)
 {
@@ -541,7 +548,8 @@ void Task::waitReceipt(const char* smsc_id)
 }
 void Task::waitReceipt(int eventCount, const char* smsc_id)
 {
-    smsc_log_info(logger, "Wait receipt & roll for abonent: %s", abonent.c_str());
+    smsc_log_info(logger, "Wait receipt & roll(%ld) for abonent: %s", 
+                  eventCount, abonent.c_str());
 
     __require__(ds);
     Connection* connection = 0;
@@ -585,13 +593,25 @@ Array<std::string> Task::finalizeMessage(const char* smsc_id,
         if (!connection)
             throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
 
-        if (!msg_id) {
-            Message message;
+        if (!msg_id)
+        {
+            Message message; // load msg_id by smsc_id
             if (!Task::getMessage(smsc_id, message, connection))
                 throw Exception("Message for smsc_id=%s not found", smsc_id);
             msg_id = message.id;
         }
-        
+        if (currentMessageId && msg_id == currentMessageId)
+        {
+            /* DELETE FROM MCISME_CUR_MSG WHERE ABONENT=:ABONENT */
+            Statement* delCurMsgStmt = connection->getStatement(DEL_CURRENT_MSG_ID, DEL_CURRENT_MSG_SQL);
+            if (!delCurMsgStmt) 
+                throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "remove current message");
+            delCurMsgStmt->setString(1, abonent.c_str());
+            if (!delCurMsgStmt->executeUpdate())
+                smsc_log_warn(logger, "Failed to remove current message #%lld for abonent: %s",
+                              msg_id, abonent.c_str());
+        }
+
         /* DELETE FROM MCISME_MSG_SET WHERE ID=:ID */
         Statement* delMsgStmt = connection->getStatement(DELETE_ANY_MSG_ID, DELETE_ANY_MSG_SQL);
         if (!delMsgStmt) 
