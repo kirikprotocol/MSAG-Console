@@ -21,6 +21,8 @@
       <sm-ep:list title="name" name="id" values="${smes}" valueTitles="${smes}" readonly="${!bean.add}"/>
       <sm-ep:txt title="host" name="host" validation="nonEmpty"/>
       <sm-ep:txt title="port" name="port" validation="port"/>
+      <sm-ep:txt title="alternate host" name="altHost"/><%--todo: implement--%>
+      <sm-ep:txt title="alternate port" name="altPort" validation="port"/>
       <sm-ep:txt title="systemId" name="systemId" validation="nonEmpty"/>
       <sm-ep:txt title="password" name="password"/><!--type="password"-->
       <sm-ep:txt title="responseTimeout" name="responseTimeout" validation="positive"/>

@@ -152,7 +152,7 @@ public class Index extends SmppgwBean
   {
     try {
       appContext.getGwRoutingManager().apply();
-      appContext.getGwSmeManager().apply();
+      appContext.getGwSmeManager().store();
       if (Proxy.StatusConnected == appContext.getGateway().getStatus())
         appContext.getGateway().apply("routes");
       appContext.getStatuses().setRoutesChanged(false);
@@ -167,7 +167,7 @@ public class Index extends SmppgwBean
     try {
       appContext.getSmscsManager().store(appContext.getGwConfig());
       appContext.getProviderManager().store(appContext.getGwConfig());
-      appContext.getGwSmeManager().apply();
+      appContext.getGwSmeManager().store();
       appContext.getGwConfig().save();
       if (Proxy.StatusConnected == appContext.getGateway().getStatus())
         appContext.getGateway().apply("config");

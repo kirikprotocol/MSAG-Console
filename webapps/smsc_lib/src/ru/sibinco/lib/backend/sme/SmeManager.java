@@ -68,7 +68,7 @@ public class SmeManager
     return smes;
   }
 
-  public void apply() throws SibincoException
+  public void store() throws SibincoException
   {
     try {
       store(new PrintWriter(new FileWriter(configFilename))).close();

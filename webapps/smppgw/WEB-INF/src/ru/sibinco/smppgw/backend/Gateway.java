@@ -4,8 +4,7 @@ import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.daemon.ServiceInfo;
 import ru.sibinco.lib.backend.protocol.Proxy;
 import ru.sibinco.lib.backend.protocol.Response;
-import ru.sibinco.smppgw.backend.protocol.commands.Apply;
-import ru.sibinco.smppgw.backend.protocol.commands.UpdateSmeInfo;
+import ru.sibinco.smppgw.backend.protocol.commands.*;
 import ru.sibinco.smppgw.backend.sme.GwSme;
 
 
@@ -22,6 +21,11 @@ public class Gateway extends Proxy
     id = gwServiceInfo.getId();
   }
 
+  public String getId()
+  {
+    return id;
+  }
+
   public void apply(final String subject) throws SibincoException
   {
     final Response response = super.runCommand(new Apply(subject));
@@ -33,11 +37,20 @@ public class Gateway extends Proxy
   {
     final Response response = super.runCommand(new UpdateSmeInfo(gwSme));
     if (Response.StatusOk != response.getStatus())
-      throw new SibincoException("Couldn't apply, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+      throw new SibincoException("Couldn't update sme info, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
   }
 
-  public String getId()
+  public void deleteSme(final String smeId) throws SibincoException
   {
-    return id;
+    final Response response = super.runCommand(new DeleteSme(smeId));
+    if (Response.StatusOk != response.getStatus())
+      throw new SibincoException("Couldn't delete sme, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+  }
+
+  public void addSme(GwSme gwSme) throws SibincoException
+  {
+    final Response response = super.runCommand(new AddSme(gwSme));
+    if (Response.StatusOk != response.getStatus())
+      throw new SibincoException("Couldn't update sme info, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
   }
 }

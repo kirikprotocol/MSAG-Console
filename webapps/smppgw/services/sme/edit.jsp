@@ -3,7 +3,7 @@
 <sm:page>
   <jsp:attribute name="title">
     <c:choose>
-      <c:when test="${param.add}">Create new user</c:when>
+      <c:when test="${param.add}">Create new SME</c:when>
       <c:otherwise>Edit SME "${param.editId}"</c:otherwise>
     </c:choose>
   </jsp:attribute>

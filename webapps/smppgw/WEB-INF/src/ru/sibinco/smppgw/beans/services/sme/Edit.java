@@ -70,7 +70,7 @@ public class Edit extends EditBean
 
   protected void save() throws SmppgwJspException
   {
-    if (null == id || 0 == id.length() || (!isAdd() && (null == getEditId() || 0 == getEditId().length())))
+    if (null == id || 0 == id.length() || !isAdd() && (null == getEditId() || 0 == getEditId().length()))
       throw new SmppgwJspException(Constants.errors.sme.SME_ID_NOT_SPECIFIED);
 
     if (null == password)
@@ -92,7 +92,11 @@ public class Edit extends EditBean
     }
     final Gateway gateway = appContext.getGateway();
     try {
-      gateway.updateSmeInfo(newGwSme);
+      if (isAdd())
+        gateway.addSme(newGwSme);
+      else
+        gateway.updateSmeInfo(newGwSme);
+      appContext.getGwSmeManager().store();
     } catch (SibincoException e) {
       if (Proxy.StatusConnected == gateway.getStatus()) {
         throw new SmppgwJspException(Constants.errors.sme.COULDNT_APPLY, id, e);
