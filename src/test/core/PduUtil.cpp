@@ -402,8 +402,19 @@ void DeliveryReceiptMonitor::reschedule(time_t _startTime)
 	//решедулить только если pdu ни разу не была получена
 	__require__(!lastTime && !lastAttempt);
 	__cfg_int__(maxValidPeriod);
-	startTime = _startTime;
-	validTime = startTime + maxValidPeriod;
+	switch (flag)
+	{
+		case PDU_REQUIRED_FLAG:
+		case PDU_MISSING_ON_TIME_FLAG:
+			startTime = _startTime;
+			validTime = startTime + maxValidPeriod;
+			flag = PDU_REQUIRED_FLAG;
+			break;
+		case PDU_RECEIVED_FLAG:
+		case PDU_NOT_EXPECTED_FLAG:
+			__unreachable__("Invalid flag");
+			break;
+	}
 }
 
 string DeliveryReceiptMonitor::str() const
