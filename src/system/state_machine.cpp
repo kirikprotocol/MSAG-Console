@@ -935,10 +935,12 @@ StateType StateMachine::forward(Tuple& t)
   }
   if(sms.getState()!=ENROUTE_STATE)
   {
+    __trace2__("FORWARD: sms is not in enroute (%d)",sms.getState());
     return sms.getState();
   }
-  if(sms.getNextTime()>now)
+  if(!t.command->is_reschedulingForward() && sms.getNextTime()>now)
   {
+    __trace__("FORWARD: nextTime>now");
     return sms.getState();
   }
   if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
