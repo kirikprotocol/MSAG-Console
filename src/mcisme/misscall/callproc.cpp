@@ -18,6 +18,7 @@ using smsc::misscall::util::getReturnCodeDescription;
 #define MAXENTRIES 1000
 #define USER USER02_ID
 #define MGMT_VER 6
+#define MCIERROR 999
 
 int going;
 
@@ -192,6 +193,7 @@ void MissedCallProcessor::stop()
 int MissedCallProcessor::run()
 {
   USHORT_T result;
+  USHORT_T extresult;
   
   result = EINSS7CpMsgInitNoSig(MAXENTRIES);
   if (result != 0) {
@@ -258,6 +260,7 @@ int MissedCallProcessor::run()
           cancelTimer(&stacktimer);
           smsc_log_error(missedCallProcessorLogger,
                          "ss7 stack is still not running, exiting...");
+          result = MCIERROR;
           goto unbindmgmt;
         }
         if (checkTimer(&waitstacktimer))
@@ -305,6 +308,7 @@ int MissedCallProcessor::run()
           smsc_log_error(missedCallProcessorLogger,
                          "Resource group availability timer is expired",
                          result,getReturnCodeDescription(result));
+          result = MCIERROR;
           goto unbindisup;
         }
         break;
@@ -332,6 +336,7 @@ int MissedCallProcessor::run()
         {
           smsc_log_error(missedCallProcessorLogger,
                          "EINSS7_MgmtApiSendBindReq() confirmation timer is expired");
+          result = MCIERROR;
           goto unbindmgmt; /* just in case */
         }
         break;
@@ -340,6 +345,7 @@ int MissedCallProcessor::run()
         {
           smsc_log_error(missedCallProcessorLogger,
                          "EINSS7_I97IsupBindReg() confirmation timer is expired");
+          result = MCIERROR;
           goto unbindisup; /* just in case */
         }
         break;
@@ -348,6 +354,7 @@ int MissedCallProcessor::run()
         {
           smsc_log_error(missedCallProcessorLogger,
                          "EINSS7_MgmtApiSendMgmtReq() confirmation timer is expired");
+          result = MCIERROR;
           goto unbindmgmt;
         }
         break;
@@ -356,13 +363,16 @@ int MissedCallProcessor::run()
         {
           smsc_log_error(missedCallProcessorLogger,
                          "EINSS7_MgmtApiSendOrderReq() confirmation timer is expired");
+          result = MCIERROR;
           goto unbindmgmt;
         }
         break;
       case MGMTBINDERROR:
+        result = MCIERROR;
         goto unbindmgmt;
         break;
       case ISUPBINDERROR:
+        result = MCIERROR;
         goto unbindisup;
         break;
     } /* end of switch ( state ) */
@@ -409,36 +419,36 @@ int MissedCallProcessor::run()
   }
 
 unbindisup:
-  result = EINSS7_I97IsupUnBindReq();
-  if( result != 0 )
+  extresult = EINSS7_I97IsupUnBindReq();
+  if( extresult != 0 )
     smsc_log_error(missedCallProcessorLogger,
                    "EINSS7_I97IsupUnBindReq failed with code %d(%s)",
-                    result,getReturnCodeDescription(result));
+                    extresult,getReturnCodeDescription(extresult));
 unbindmgmt:
-  result = EINSS7_MgmtApiSendUnbindReq(USER,MGMT_ID);
-  if( result != 0 )
+  extresult = EINSS7_MgmtApiSendUnbindReq(USER,MGMT_ID);
+  if( extresult != 0 )
     smsc_log_error(missedCallProcessorLogger,
                    "EINSS7_MgmtApiSendUnbindReq(%d,%d) failed with code %d(%s)",
-                    USER,MGMT_ID,result,getReturnCodeDescription(result));
+                    USER,MGMT_ID,extresult,getReturnCodeDescription(extresult));
 msgrelmgmt:
-  result = MsgRel(USER,MGMT_ID);
-  if( result != 0 )
+  extresult = MsgRel(USER,MGMT_ID);
+  if( extresult != 0 )
     smsc_log_error(missedCallProcessorLogger,
                    "MsgRel(%d,%d) failed with code %d(%s)",
-                    USER,MGMT_ID,result,getReturnCodeDescription(result));
+                    USER,MGMT_ID,extresult,getReturnCodeDescription(extresult));
 
 msgrelisup:
-  result = MsgRel(USER,ISUP_ID);
-  if( result != 0 )
+  extresult = MsgRel(USER,ISUP_ID);
+  if( extresult != 0 )
     smsc_log_error(missedCallProcessorLogger,
                    "MsgRel(%d,%d) failed with code %d(%s)",
-                    USER,ISUP_ID,result,getReturnCodeDescription(result));
+                    USER,ISUP_ID,extresult,getReturnCodeDescription(extresult));
 msgclose:
-  result = MsgClose(USER);
-  if( result != 0 )
+  extresult = MsgClose(USER);
+  if( extresult != 0 )
     smsc_log_error(missedCallProcessorLogger,
                    "MsgClose(%d) failed with code %d(%s)",
-                    USER,result,getReturnCodeDescription(result));
+                    USER,extresult,getReturnCodeDescription(extresult));
 msgexit:
   MsgExit();
 msginit:
