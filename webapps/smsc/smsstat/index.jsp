@@ -46,12 +46,14 @@
 	<td nowrap><input type=text id="tillDate" name="tillDate" class=calendarField value="<%=bean.getTillDate()%>" maxlength=20><button class=calendarButton type=button onclick="return showCalendar(tillDate, false, true);">...</button></td>
 </tr>
 </table>
+</div>
 <%
 page_menu_begin(out);
 page_menu_button(out, "mbQuery",  "Query !",  "Run query");
 page_menu_space(out);
 page_menu_end(out);
 %>
+<div class=content>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ results ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <%
 Statistics stat = bean.getStatistics();
@@ -70,7 +72,7 @@ if (stat != null) {
     <th width="25%"><div align=right>Rescheduled</div></th>
 </tr>
 <tr class=row1>
-    <th>Total SMS processed:</th>
+    <td>Total SMS processed:</td>
     <td align=right><%= total.accepted%></td>
     <td align=right><%= total.finalized%></td>
     <td align=right><%= total.rescheduled%></td>
@@ -81,7 +83,7 @@ while (i.hasNext()) {
     DateCountersSet date = (DateCountersSet)i.next();
     SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
 %>  <tr class=row0>
-        <th><%= formatter.format(date.getDate())%></th>
+        <td><%= formatter.format(date.getDate())%></td>
         <td align=right><%= date.accepted%></td>
         <td align=right><%= date.finalized%></td>
         <td align=right><%= date.rescheduled%></td>
@@ -91,7 +93,7 @@ while (i.hasNext()) {
     while (j.hasNext()) {
         HourCountersSet hour = (HourCountersSet)j.next();
     %>  <tr class=row1>
-            <th>&nbsp;&nbsp;&nbsp;<%= ((hour.getHour() < 10)? "0"+hour.getHour():""+hour.getHour())%></th>
+            <td>&nbsp;&nbsp;&nbsp;<%= ((hour.getHour() < 10)? "0"+hour.getHour():""+hour.getHour())%></td>
             <td align=right><%= hour.accepted%></td>
             <td align=right><%= hour.finalized%></td>
             <td align=right><%= hour.rescheduled%></td>
@@ -103,7 +105,7 @@ while (i.hasNext()) {
     if (i.hasNext()) {
 %>
 <tr>
-    <td colspan=4><div class=secView>SME activity</div></td>
+    <td colspan=4><div class=page_subtitle>SME activity</div></td>
 </tr>
 <tr class=row0>
     <th width="25%"><div align=right>SME Id</div></th>
@@ -127,7 +129,7 @@ while (i.hasNext()) {
     if (i.hasNext()) {
 %>
 <tr>
-    <td colspan=4> <div class=secView>Traffic by routes</div></td>
+    <td colspan=4> <div class=page_subtitle>Traffic by routes</div></td>
 </tr>
 <tr class=row0>
     <th width="25%"><div align=right>Route Id</div></th>

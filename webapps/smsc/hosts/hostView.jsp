@@ -3,6 +3,8 @@
 <jsp:setProperty name="bean" property="*"/>
 <%@page import="ru.novosoft.smsc.jsp.smsc.hosts.HostView, ru.novosoft.smsc.admin.service.ServiceInfo"%>
 <%
+isServiceStatusNeeded = true;
+isServiceStatusColored = true;
 switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
 {
 	case HostView.RESULT_OK:

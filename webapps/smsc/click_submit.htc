@@ -2,8 +2,15 @@
 <SCRIPT LANGUAGE="JScript">
 function clickSubmit()
 {
-	if (this.onclick != null && this.onclick() == false)
-		return false;
+/*	if (this.onclick != null && this.onclick() == false)
+		return false;*/
+	if(this.jbuttonOnclick)
+	{  
+		var f;  
+		eval('f=function(){' + this.jbuttonOnclick + '}');  
+		return f();
+	}  
+	
 	if (opForm.onsubmit() == false)
 		return false;
 		
