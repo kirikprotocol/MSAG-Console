@@ -245,9 +245,25 @@ void executeBusinessCycleTest(int numThreads)
 				tm.printOpsStatByTask();
 				tm.printOpsStatByTC();
 				break;
+			case 'p':
+				cout << "Current pool size = " <<
+					StoreManager::getPoolSize() << endl;
+				cout << "Enter new pool size: ";
+				unsigned newSize;
+				cin >> newSize;
+				StoreManager::setPoolSize(newSize);
+				break;
 			default:
 				cout << "Time = " << tm.getExecutionTime() << endl;
-				cout << "Total operations = " << tm.getOps() << endl;
+				cout << "Total ops = " << tm.getOps() << endl;
+				cout << "Connection pool size = " <<
+					StoreManager::getPoolSize() << endl;
+				cout << "Connections count = " <<
+					StoreManager::getConnectionsCount() << endl;
+				cout << "Busy connections count = " <<
+					StoreManager::getBusyConnectionsCount() << endl;
+				cout << "Idle connections count = " <<
+					StoreManager::getIdleConnectionsCount() << endl;
 		}
 	}
 }
