@@ -332,19 +332,14 @@ USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
     }
   }
   releaseConnection(isupHead_sp,causeValue);
-  if (redirectionInfo_sp)
+  /*
+   * some exchange doesn't provide redirection information
+   * so use presence of original called number as
+   * call forward/divert indication
+   */
+  if (original)
   {
-    switch (redirectionInfo_sp->redirecting)
-    {
-      case EINSS7_I97_CALL_RER          :
-      case EINSS7_I97_CALL_RER_RESTR    :
-      case EINSS7_I97_CALL_FORW         :
-      case EINSS7_I97_CALL_FORW_RESTR   :
-      case EINSS7_I97_CALL_RER_RED_RES  :
-      case EINSS7_I97_CALL_FORW_RED_RES :
-      case 0x07                         : /* spare */
-        registerEvent(calling,original);
-    }
+    registerEvent(calling,original);
   }
   return EINSS7_I97_REQUEST_OK;
 }
