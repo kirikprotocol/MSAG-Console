@@ -115,6 +115,7 @@ public:
   
   MapDialog* getDialog(ET96MAP_DIALOGUE_ID_T dialogueid){
     MapDialog* dlg = 0;
+    __trace2__("MAP:: find for dialogid 0x%x, result addr 0x%x",dialogueid,&dlg);
     if ( hash.Get(dialogueid,dlg) ) {
       __trace2__("MAP:: find dialog 0x%x for dialogid 0x%x",dlg,dialogueid);
       return dlg;

@@ -16,7 +16,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-
+#include "util/debug.h"
 namespace smsc{
 namespace core{
 namespace buffers{
@@ -322,9 +322,12 @@ public:
   }
   int Get(const KT& key,VT& value)const
   {
+    __trace2__("MAP:: XHash value addr 0x%x",&value);
     Link* link=FindLink(key);
+    __trace2__("MAP:: XHash link 0x%x",link);
     if(!link)return 0;
     value=link->_keyval._value;
+    __trace2__("MAP:: XHash value 0x%x",value);
     return 1;
   }
 
