@@ -58,8 +58,8 @@ USHORT_T EINSS7_I97TBeginInd(   UCHAR_T ssn,
                                 USHORT_T userInfoLength,
                                 UCHAR_T *userInfo_p)
 {
-  fprintf("BeginInd: ssn=%d, userId=%d, dId=%d\n",
-    ssn,userId,dialogueId);
+  fprintf(stderr,"BeginInd: ssn=%d, userId=%d, dId=%d\n",
+    (int)ssn,(int)userId,(int)dialogueId);
   fprintf(stderr,"BeginInd: ac_length=%d\n",appContextLength);
   Dump(appContext_p,appContextLength);
   fprintf(stderr,"BeginInd: ui_length=%d\n",userInfoLength);
@@ -81,8 +81,8 @@ USHORT_T EINSS7_I97TInvokeInd(  UCHAR_T ssn,
                                 USHORT_T paramLength,
                                 UCHAR_T *parameters_p)
 {
-  fprintf("InvokeInd: ssn=%d, userId=%d, dId=%d, invokeId=%d\n",
-    ssn,userId,dialogueId,invokeId);
+  fprintf(stderr,"InvokeInd: ssn=%d, userId=%d, dId=%d, invokeId=%d\n",
+    (int)ssn,(int)userId,(int)dialogueId,(int)invokeId);
 
   fprintf(stderr,"InvokeInd: op_length=%d\n",operationLength);
   Dump(operationCode_p,operationLength);
