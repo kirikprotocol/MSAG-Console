@@ -98,7 +98,7 @@ extern void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
 class MapDialogContainer{
   static MapDialogContainer* container;
   static Mutex sync_object;
-  static Mutex sync;
+  Mutex sync;
   MapProxy proxy;
   XHash<ET96MAP_DIALOGUE_ID_T,MapDialog*,hash_func_ET96MAP_DID> hash;
   
