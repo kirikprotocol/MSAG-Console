@@ -204,7 +204,7 @@ public:
       {
         int cmdid=cmd->get_commandId();
         __trace2__("check output for receiver:cmdid=%d",cmdid);
-        if((cmdid==ENQUIRELINK || cmdid==UNBIND_RESP) &&
+        if((cmdid==ENQUIRELINK || cmdid==ENQUIRELINK_RESP || cmdid==UNBIND_RESP) &&
            ((int)cmd->dta)!=ctReceiver)return false;
         return !(
                  cmdid==SUBMIT_RESP ||
@@ -222,7 +222,7 @@ public:
         outqueue.Peek(cmd);
         int cmdid=cmd->get_commandId();
         __trace2__("check output for transmitter:cmdid=%d",cmdid);
-        if((cmdid==ENQUIRELINK || cmdid==UNBIND_RESP) &&
+        if((cmdid==ENQUIRELINK || cmdid==ENQUIRELINK_RESP || cmdid==UNBIND_RESP) &&
            ((int)cmd->dta)!=ctTransmitter)return false;
         return (
                  cmdid==SUBMIT_RESP ||
