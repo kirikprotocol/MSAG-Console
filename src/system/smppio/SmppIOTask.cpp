@@ -332,6 +332,7 @@ int SmppInputThread::Execute()
                       SmppStatusSet::ESME_ROK
                     )
                   );
+                  ss->assignProxy(0);
                 }else
                 {
                   SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVBNDSTS);
@@ -345,6 +346,8 @@ int SmppInputThread::Execute()
             //case SmppCommandSet::SUBMIT_SM_RESP:
             //case SmppCommandSet::DELIVERY_SM:
             case SmppCommandSet::DELIVERY_SM_RESP:
+            case SmppCommandSet::REPLACE_SM:
+            case SmppCommandSet::QUERY_SM:
             {
               try{
                 SmscCommand cmd(pdu);
@@ -362,6 +365,7 @@ int SmppInputThread::Execute()
                 break;
               }catch(...)
               {
+                __trace__("Failed to build command from pdu, sending gnack");
               }
               //
               // Это так и задумано, здесь не должно быть break!

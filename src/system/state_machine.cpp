@@ -179,6 +179,8 @@ int StateMachine::Execute()
       case DELIVERY_RESP:st=deliveryResp(t);break;
       case FORWARD:st=forward(t);break;
       case ALERT:st=alert(t);break;
+      case REPLACE:st=replace(t);break;
+      case QUERY:st=query(t);break;
       default:
         __warning__("UNKNOWN COMMAND");
         st=ERROR_STATE;
@@ -836,6 +838,96 @@ StateType StateMachine::alert(Tuple& t)
   sendNotifyReport(sms,t.msgId,"delivery attempt timed out");
   return UNKNOWN_STATE;
 }
+
+StateType StateMachine::replace(Tuple& t)
+{
+  __trace2__("REPLACE:msgid=%lld",t.msgId);
+  try{
+    Address addr(t.command->get_replaceSm().sourceAddr.get());
+    store->replaceSms(t.msgId,addr,
+      (uint8_t*)t.command->get_replaceSm().shortMessage.get(),
+      t.command->get_replaceSm().smLength,
+      t.command->get_replaceSm().registeredDelivery,
+      t.command->get_replaceSm().validityPeriod!=(time_t)-1?
+        t.command->get_replaceSm().validityPeriod:0,
+      t.command->get_replaceSm().scheduleDeliveryTime!=(time_t)-1?
+        t.command->get_replaceSm().scheduleDeliveryTime:0
+
+      );
+//  }catch(NoSuchMessageException& e)
+//  {
+    //
+  }catch(...)
+  {
+    //
+    t.command.getProxy()->putCommand
+    (
+      SmscCommand::makeReplaceSmResp
+      (
+        t.command->get_dialogId(),
+        SmscCommand::Status::REPLACEFAIL
+      )
+    );
+    return UNKNOWN_STATE;
+  }
+  t.command.getProxy()->putCommand
+  (
+    SmscCommand::makeReplaceSmResp
+    (
+      t.command->get_dialogId(),
+      SmscCommand::Status::OK
+    )
+  );
+  smsc->notifyScheduler();
+  return ENROUTE;
+}
+
+StateType StateMachine::query(Tuple& t)
+{
+  __trace2__("QUERY:msguid=%lld",t.msgId);
+  SMS sms;
+  try{
+    Address addr(t.command->get_querySm().sourceAddr.get());
+    store->retriveSms(t.msgId,sms);
+  }catch(...)
+  {
+    t.command.getProxy()->putCommand
+    (
+      SmscCommand::makeQuerySmResp
+      (
+        t.command->get_dialogId(),
+        SmscCommand::Status::QUERYFAIL,
+        t.msgId,
+        0,
+        0,
+        0
+      )
+    );
+    return UNKNOWN_STATE;
+  }
+  int state=7;
+  switch(sms.getState())
+  {
+    case ENROUTE:      state=1;break;
+    case DELIVERED:    state=2;break;
+    case EXPIRED:      state=3;break;
+    case DELETED:      state=4;break;
+    case UNDELIVERABLE:state=5;break;
+  }
+  t.command.getProxy()->putCommand
+  (
+    SmscCommand::makeQuerySmResp
+    (
+      t.command->get_dialogId(),
+      SmscCommand::Status::OK,
+      t.msgId,
+      sms.getLastTime(),
+      state,
+      0
+    )
+  );
+}
+
 
 void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const char* reason)
 {

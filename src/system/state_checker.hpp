@@ -45,6 +45,8 @@ public:
         switch(cmd->cmdid)
         {
           case FORWARD:return true;
+          case REPLACE:return true;
+          case QUERY:return true;
           default:return false;
         }
       }

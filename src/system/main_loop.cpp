@@ -192,6 +192,17 @@ void Smsc::mainLoop()
           continue; //jump to begin of for
         }
         id=task.messageId;
+        break;
+      }
+      case __CMD__(REPLACE):
+      {
+        sscanf(cmd->get_replaceSm().messageId.get(),"%lld",&id);
+        break;
+      }
+      case __CMD__(QUERY):
+      {
+        sscanf(cmd->get_querySm().messageId.get(),"%lld",&id);
+        break;
       }
     }
     eventqueue.enqueue(id,cmd);

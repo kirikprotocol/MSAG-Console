@@ -67,7 +67,8 @@ protected:
   StateType forward(Tuple& t);
   StateType deliveryResp(Tuple& t);
   StateType alert(Tuple& t);
-
+  StateType replace(Tuple& t);
+  StateType query(Tuple& t);
 };
 
 };//system
