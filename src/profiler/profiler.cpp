@@ -107,6 +107,7 @@ Profiler::Profiler(const Profile& pr,SmeRegistrar* psmeman,const char* sysId)
   profiles=new ProfilesTable(pr,400000);
   systemId=sysId;
   smeman=psmeman;
+  seq=1;
 }
 
 Profiler::~Profiler()
