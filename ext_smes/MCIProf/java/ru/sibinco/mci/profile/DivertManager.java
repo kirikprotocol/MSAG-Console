@@ -61,11 +61,13 @@ public class DivertManager
       try { is.close(); } catch (Throwable th) {}
     }
 
+    /*
     try {
       synchronized(mscSocketLock) { connect(); } // estabilish connection to MSC
     } catch (IOException e) {
       throw new ScenarioInitializationException("Connection to commutator '"+mscHost+":"+mscPort+"' failed", e);
     }
+    */
   }
 
   private final static int ESC_IAC = 255;
@@ -156,7 +158,10 @@ public class DivertManager
   {
     if (mscSocket == null || !(mscSocket.isConnected()))
     {
-      if (mscSocket != null) { is.close(); os.close(); mscSocket.close(); }
+      if (mscSocket != null) {
+        if (is != null) is.close(); if (os != null) os.close();
+        mscSocket.close(); mscSocket = null;
+      }
       mscSocket = new Socket(mscHost, mscPort);
       is = mscSocket.getInputStream(); os = mscSocket.getOutputStream();
 
