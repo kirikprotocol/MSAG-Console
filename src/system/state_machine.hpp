@@ -44,8 +44,10 @@ public:
       lastResult=errcode;
       if (errcode >= 1152) lastResultGsm= errcode- 1152;
       else if(errcode == 1025)  lastResultGsm=134;
+      else if(errcode == 1026)  lastResultGsm=132;
       else if(errcode == 1029)  lastResultGsm=135;
       else if(errcode == 1027)  lastResultGsm=131;
+      else if(errcode == 1030)  lastResultGsm=136;
       else lastResultGsm = 137;
     }
   };
