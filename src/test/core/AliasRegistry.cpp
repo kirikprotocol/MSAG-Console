@@ -49,24 +49,22 @@ inline int AliasRegistry::compareAddr(const Address& a1, const Address& a2)
 	return a1.getLenght();
 }
 
-bool AliasRegistry::checkInverseTransformation(const Address& src1,
-	const Address& dest1, const Address& src2, const Address& dest2)
+bool AliasRegistry::checkAddr2Alias2AddrTransformation(const AliasInfo& alias1,
+	const AliasInfo& alias2)
 {
-	//new: src1, dest1
-	//existing: src2, dest2
-	//check: src1->dest1->src1
-	int len = compareAddr(dest1, dest2);
+	//addr->alias->addr
+	int len = compareAddr(alias1.alias, alias2.alias);
 	if (len >= 0)
 	{
-		int destPartLen = getPartLen(dest1.value, '?');
-		if (len == destPartLen)
+		int destPartLen = getPartLen(alias1.alias.value, '?');
+		if (len == destPartLen && alias1.hide)
 		{
-			int srcPartLen = getPartLen(src1.value, '?');
-			if (compareAddr(src1, src2) != srcPartLen)
+			int srcPartLen = getPartLen(alias1.addr.value, '?');
+			if (compareAddr(alias1.addr, alias2.addr) != srcPartLen)
 			{
 				return false;
 			}
-			if (strcmp(src2.value + srcPartLen, dest2.value + destPartLen) != 0)
+			if (strcmp(alias2.addr.value + srcPartLen, alias2.alias.value + destPartLen) != 0)
 			{
 				return false;
 			}
@@ -96,16 +94,15 @@ bool AliasRegistry::putAlias(const AliasInfo& alias)
 		__trace2__("%s", os.str().c_str());
 		return false;
 	}
-	//алиасы допускающие неоднозначные преобразования addr->alias->addr или
-	//alias->addr->alias не сохраняются (проверка только для '?', '*' не проверяю)
-	for (AddressMap::const_iterator it = addrMap.begin(); it != addrMap.end(); it++)
+	//должно выполняться правило: d(a(A)) = A
+	//проверка только для '?', '*' не проверяю
+	__require__(addrMap.size() <= aliasMap.size());
+	for (AddressMap::const_iterator it = aliasMap.begin(); it != aliasMap.end(); it++)
 	{
 		const AliasInfo& info = it->second->aliasInfo;
-		//alias->addr->alias
-		if (!checkInverseTransformation(alias.alias, alias.addr, info.alias, info.addr) ||
-			!checkInverseTransformation(info.alias, info.addr, alias.alias, alias.addr))
-			/*!checkInverseTransformation(alias.addr, alias.alias, info.addr, info.alias) ||
-			!checkInverseTransformation(info.addr, info.alias, alias.addr, alias.alias)*/
+		//addr->alias->addr
+		if (!checkAddr2Alias2AddrTransformation(alias, info) ||
+			!checkAddr2Alias2AddrTransformation(info, alias))
 		{
 			ostringstream os;
 			os << "AliasRegistry::putAlias(): " << alias <<
@@ -113,36 +110,59 @@ bool AliasRegistry::putAlias(const AliasInfo& alias)
 			__trace2__("%s", os.str().c_str());
 			return false;
 		}
+		/*
+		//alias->addr->alias
+		if (!checkAlias2Addr2AliasTransformation(alias, info) ||
+			!checkAlias2Addr2AliasTransformation(info, alias))
+		{
+			ostringstream os;
+			os << "AliasRegistry::putAlias(): " << alias <<
+				" conflicts with exising " << info;
+			__trace2__("%s", os.str().c_str());
+			return false;
+		}
+		*/
 	}
 	//добавить алиас
 	AliasHolder* holder = new AliasHolder(alias);
-	addrMap[alias.addr] = holder;
+	if (alias.hide)
+	{
+		addrMap[alias.addr] = holder;
+	}
 	aliasMap[alias.alias] = holder;
+	{
+		ostringstream os;
+		os << "AliasRegistry::putAlias(): " << alias << " added successfully";
+		__trace2__("%s", os.str().c_str());
+	}
 	return true;
 }
 
 void AliasRegistry::clear()
 {
-	for (AddressMap::iterator it = addrMap.begin(); it != addrMap.end(); it++)
+	__require__(addrMap.size() <= aliasMap.size());
+	for (AddressMap::iterator it = aliasMap.begin(); it != aliasMap.end(); it++)
 	{
 		delete it->second;
 	}
-	//для aliasMap ничего удалять не нужно, т.к. объекты в aliasMap и addrMap общие
+	//для addrMap ничего удалять не нужно, т.к. объекты в aliasMap и addrMap общие
 	addrMap.clear();
 	aliasMap.clear();
 }
 
 AliasRegistry::AliasIterator* AliasRegistry::iterator() const
 {
-	__require__(addrMap.size() == aliasMap.size());
-	return new AliasIterator(addrMap.begin(), addrMap.end());
+	__require__(addrMap.size() <= aliasMap.size());
+	return new AliasIterator(aliasMap.begin(), aliasMap.end());
 }
 
-const AliasHolder* AliasRegistry::findAliasByAddress(const Address& addr) const
+auto_ptr<const Address> AliasRegistry::findAliasByAddress(const Address& addr,
+	const AliasInfo** aliasInfo) const
 {
 	Address tmp(addr);
 	AddressValue addrVal;
 	int addrLen = tmp.getValue(addrVal);
+	AliasHolder* aliasHolder = NULL;
 	for (int len = 0 ; len <= addrLen; len++)
 	{
 		if (len)
@@ -153,7 +173,9 @@ const AliasHolder* AliasRegistry::findAliasByAddress(const Address& addr) const
 		AddressMap::const_iterator it = addrMap.find(tmp);
 		if (it != addrMap.end())
 		{
-			return it->second;
+			aliasHolder = it->second;
+			__require__(aliasHolder);
+			break;
 		}
 		/*
 		if (addrLen - len < MAX_ADDRESS_VALUE_LENGTH)
@@ -168,14 +190,28 @@ const AliasHolder* AliasRegistry::findAliasByAddress(const Address& addr) const
 		}
 		*/
 	}
-	return NULL;
+	//если не задано явное преобразование addr->alias, то alias=addr
+	Address* alias(new Address(addr));
+	aliasInfo = NULL;
+	if (aliasHolder)
+	{
+		if (aliasInfo)
+		{
+			*aliasInfo = &aliasHolder->aliasInfo;
+		}
+		bool res = aliasHolder->addressToAlias(addr, *alias);
+		__require__(res);
+	}
+	return auto_ptr<const Address>(alias);
 }
 
-const AliasHolder* AliasRegistry::findAddressByAlias(const Address& alias) const
+auto_ptr<const Address> AliasRegistry::findAddressByAlias(const Address& alias,
+	const AliasInfo** aliasInfo) const
 {
 	Address tmp(alias);
 	AddressValue aliasVal;
 	int aliasLen = tmp.getValue(aliasVal);
+	AliasHolder* aliasHolder = NULL;
 	for (int len = 0 ; len <= aliasLen; len++)
 	{
 		if (len)
@@ -186,7 +222,9 @@ const AliasHolder* AliasRegistry::findAddressByAlias(const Address& alias) const
 		AddressMap::const_iterator it = aliasMap.find(tmp);
 		if (it != aliasMap.end())
 		{
-			return it->second;
+			aliasHolder = it->second;
+			__require__(aliasHolder);
+			break;
 		}
 		/*
 		if (aliasLen - len < MAX_ADDRESS_VALUE_LENGTH)
@@ -201,7 +239,19 @@ const AliasHolder* AliasRegistry::findAddressByAlias(const Address& alias) const
 		}
 		*/
 	}
-	return NULL;
+	//если не задано явное преобразование alias->addr, то addr=alias
+	Address* addr(new Address(alias));
+	aliasInfo = NULL;
+	if (aliasHolder)
+	{
+		if (aliasInfo)
+		{
+			*aliasInfo = &aliasHolder->aliasInfo;
+		}
+		bool res = aliasHolder->aliasToAddress(alias, *addr);
+		__require__(res);
+	}
+	return auto_ptr<const Address>(addr);
 }
 
 }
