@@ -40,7 +40,7 @@ public class AliasAlterCommand implements Command
         boolean ok = ctx.getSmsc().getAliases().remove(alias);
         if (!ok) {
             ctx.setMessage(out+" not exists");
-            ctx.setResult(-1);
+            ctx.setResult(CommandContext.CMD_PROCESS_ERROR);
             return;
         }
         try {
@@ -49,12 +49,12 @@ public class AliasAlterCommand implements Command
         } catch (Exception e) {
             e.printStackTrace();
             ctx.setMessage("Failed to update "+out+". Cause: "+e.getMessage());
-            ctx.setResult(-2);
+            ctx.setResult(CommandContext.CMD_PROCESS_ERROR);
             return;
         }
 
         ctx.setMessage(out+" updated");
-        ctx.setResult(0);
+        ctx.setResult(CommandContext.CMD_OK);
     }
 }
 

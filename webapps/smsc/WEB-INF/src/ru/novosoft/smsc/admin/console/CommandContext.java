@@ -11,9 +11,13 @@ import ru.novosoft.smsc.admin.smsc_service.Smsc;
 
 public class CommandContext
 {
+    public final static int CMD_OK   = 0;
+    public final static int CMD_PARSE_ERROR = 100;
+    public final static int CMD_PROCESS_ERROR = 200;
+
     protected Smsc smsc;
-    protected String message = null;
-    protected int result = 0;
+    protected int result = CMD_OK;
+    protected String message = "No message";
 
     public CommandContext(Smsc smsc) {
         this.smsc = smsc;

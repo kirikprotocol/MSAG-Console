@@ -21,6 +21,7 @@ public class ScriptSession extends Session
     }
 
     protected void display(PrintWriter writer, CommandContext ctx) {
-        writer.println(ctx.getMessage()+'\r');
+        // todo implement it
+        writer.print(ctx.getMessage()+'\r');
     }
 }

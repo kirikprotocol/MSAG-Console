@@ -26,7 +26,7 @@ public class AliasViewCommand implements Command
     {
         return "Alias '"+alias.getAlias().getMask()+"'"+
                " = Address '"+alias.getAddress().getMask()+"'"+
-               " ("+((alias.isHide()) ? "hidden":"public")+")";
+               " ("+((alias.isHide()) ? "hide":"nohide")+")";
     }
     public void process(CommandContext ctx)
     {

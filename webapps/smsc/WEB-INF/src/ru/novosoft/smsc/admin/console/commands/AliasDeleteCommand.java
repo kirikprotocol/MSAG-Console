@@ -22,7 +22,7 @@ public class AliasDeleteCommand implements Command
     {
         boolean ok = ctx.getSmsc().getAliases().remove(alias);
         ctx.setMessage((ok) ? "Alias '"+alias+"' deleted" : "Alias '"+alias+"' not found");
-        ctx.setResult((ok) ? 0:-1);
+        ctx.setResult((ok) ? CommandContext.CMD_OK : CommandContext.CMD_PROCESS_ERROR);
     }
 }
 

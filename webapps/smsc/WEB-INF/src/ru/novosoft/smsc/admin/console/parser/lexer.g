@@ -24,6 +24,8 @@ tokens {
   TGT_PROFILE	= "profile"	;
   TGT_SUBJECT	= "subject"	;
 
+  OPT_HIDE	= "hide"	;
+  OPT_NOHIDE	= "nohide"	;
   OPT_BILL	= "bill"	;
   OPT_NOBILL	= "nobill"	;
   OPT_ARCH	= "arc"		;

@@ -234,11 +234,9 @@ viewroute[CommandContext ctx, RouteViewCommand cmd]
 /* ----------------------- Alias command parsers ----------------------- */
 
 addalias[CommandContext ctx, AliasAddCommand cmd]
-	:	(qname:STRING | name:ID) 
-		{
-		    String out = (qname == null) ? name.getText():qname.getText();
-		    System.out.println("Add alias="+out);
-		    cmd.setAlias(out);
+	:	(alias:ADDRESS) {
+		    System.out.println("Add alias="+alias.getText());
+		    cmd.setAlias(alias.getText());
 		}
 		(val:ADDRESS) {
 		    cmd.setAddress(val.getText());
@@ -250,20 +248,16 @@ addalias[CommandContext ctx, AliasAddCommand cmd]
 		}
 	;
 delalias[CommandContext ctx, AliasDeleteCommand cmd]
-	:	(qname:STRING | name:ID) 
-		{
-		    String out = (qname == null) ? name.getText():qname.getText();
-		    System.out.println("Add alias="+out);
-		    cmd.setAlias(out);
+	:	(alias:ADDRESS) {
+		    System.out.println("Delete alias="+alias.getText());
+		    cmd.setAlias(alias.getText());
 		    cmd.process(ctx);
 		}
 	;
 altalias[CommandContext ctx, AliasAlterCommand cmd]
-	:	(qname:STRING | name:ID) 
-		{
-		    String out = (qname == null) ? name.getText():qname.getText();
-		    System.out.println("Alter alias="+out);
-		    cmd.setAlias(out);
+	:	(alias:ADDRESS) {
+		    System.out.println("Alter alias="+alias.getText());
+		    cmd.setAlias(alias.getText());
 		}
 		(val:ADDRESS) {
 		    cmd.setAddress(val.getText());
@@ -275,18 +269,15 @@ altalias[CommandContext ctx, AliasAlterCommand cmd]
 		}
 	;
 lstalias[CommandContext ctx, AliasListCommand cmd]
-	:	(WS)? 
-		{
+	:	(WS)? {
 		    System.out.println("List alias");
 		    cmd.process(ctx);
 		}
 	;
 viewalias[CommandContext ctx, AliasViewCommand cmd]
-	:	(qname:STRING | name:ID) 
-		{
-		    String out = (qname == null) ? name.getText():qname.getText();
-		    System.out.println("View alias="+out);
-		    cmd.setAlias(out);
+	:	(alias:ADDRESS) {
+		    System.out.println("View alias="+alias.getText());
+		    cmd.setAlias(alias.getText());
 		    cmd.process(ctx);
 		}
 	;

@@ -37,18 +37,17 @@ public class AliasAddCommand implements Command
         try {
             Alias smscAlias = new Alias(new Mask(address), new Mask(alias), hide);
             ok = ctx.getSmsc().getAliases().add(smscAlias);
+            if (ok) {
+                ctx.setMessage(out+" added");
+                ctx.setResult(CommandContext.CMD_OK);
+            } else {
+                ctx.setMessage(out+" already exists");
+                ctx.setResult(CommandContext.CMD_PROCESS_ERROR);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             ctx.setMessage("Failed to add "+out+". Cause: "+e.getMessage());
-            ctx.setResult(-1);
-            return;
-        }
-        if (ok) {
-            ctx.setMessage(out+" added");
-            ctx.setResult(0);
-        } else {
-            ctx.setMessage(out+" already exists");
-            ctx.setResult(-2);
+            ctx.setResult(CommandContext.CMD_PROCESS_ERROR);
         }
     }
 }

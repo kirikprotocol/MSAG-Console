@@ -456,35 +456,17 @@ public CommandParser(ParserSharedInputState state) {
 		CommandContext ctx, AliasAddCommand cmd
 	) throws RecognitionException, TokenStreamException {
 		
-		Token  qname = null;
-		Token  name = null;
+		Token  alias = null;
 		Token  val = null;
 		
 		try {      // for error handling
 			{
-			switch ( LA(1)) {
-			case STRING:
-			{
-				qname = LT(1);
-				match(STRING);
-				break;
-			}
-			case ID:
-			{
-				name = LT(1);
-				match(ID);
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
+			alias = LT(1);
+			match(ADDRESS);
 			}
 			
-					    String out = (qname == null) ? name.getText():qname.getText();
-					    System.out.println("Add alias="+out);
-					    cmd.setAlias(out);
+					    System.out.println("Add alias="+alias.getText());
+					    cmd.setAlias(alias.getText());
 					
 			{
 			val = LT(1);
@@ -685,34 +667,16 @@ public CommandParser(ParserSharedInputState state) {
 		CommandContext ctx, AliasDeleteCommand cmd
 	) throws RecognitionException, TokenStreamException {
 		
-		Token  qname = null;
-		Token  name = null;
+		Token  alias = null;
 		
 		try {      // for error handling
 			{
-			switch ( LA(1)) {
-			case STRING:
-			{
-				qname = LT(1);
-				match(STRING);
-				break;
-			}
-			case ID:
-			{
-				name = LT(1);
-				match(ID);
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
+			alias = LT(1);
+			match(ADDRESS);
 			}
 			
-					    String out = (qname == null) ? name.getText():qname.getText();
-					    System.out.println("Add alias="+out);
-					    cmd.setAlias(out);
+					    System.out.println("Delete alias="+alias.getText());
+					    cmd.setAlias(alias.getText());
 					    cmd.process(ctx);
 					
 		}
@@ -911,35 +875,17 @@ public CommandParser(ParserSharedInputState state) {
 		CommandContext ctx, AliasAlterCommand cmd
 	) throws RecognitionException, TokenStreamException {
 		
-		Token  qname = null;
-		Token  name = null;
+		Token  alias = null;
 		Token  val = null;
 		
 		try {      // for error handling
 			{
-			switch ( LA(1)) {
-			case STRING:
-			{
-				qname = LT(1);
-				match(STRING);
-				break;
-			}
-			case ID:
-			{
-				name = LT(1);
-				match(ID);
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
+			alias = LT(1);
+			match(ADDRESS);
 			}
 			
-					    String out = (qname == null) ? name.getText():qname.getText();
-					    System.out.println("Alter alias="+out);
-					    cmd.setAlias(out);
+					    System.out.println("Alter alias="+alias.getText());
+					    cmd.setAlias(alias.getText());
 					
 			{
 			val = LT(1);
@@ -1287,34 +1233,16 @@ public CommandParser(ParserSharedInputState state) {
 		CommandContext ctx, AliasViewCommand cmd
 	) throws RecognitionException, TokenStreamException {
 		
-		Token  qname = null;
-		Token  name = null;
+		Token  alias = null;
 		
 		try {      // for error handling
 			{
-			switch ( LA(1)) {
-			case STRING:
-			{
-				qname = LT(1);
-				match(STRING);
-				break;
-			}
-			case ID:
-			{
-				name = LT(1);
-				match(ID);
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
+			alias = LT(1);
+			match(ADDRESS);
 			}
 			
-					    String out = (qname == null) ? name.getText():qname.getText();
-					    System.out.println("View alias="+out);
-					    cmd.setAlias(out);
+					    System.out.println("View alias="+alias.getText());
+					    cmd.setAlias(alias.getText());
 					    cmd.process(ctx);
 					
 		}
@@ -1807,6 +1735,8 @@ public CommandParser(ParserSharedInputState state) {
 		"\"route\"",
 		"\"profile\"",
 		"\"subject\"",
+		"\"hide\"",
+		"\"nohide\"",
 		"\"bill\"",
 		"\"nobill\"",
 		"\"arc\"",
@@ -1829,28 +1759,26 @@ public CommandParser(ParserSharedInputState state) {
 		"ADDRESS",
 		"COMMA",
 		"ESC",
-		"DIGIT",
-		"OPT_HIDE",
-		"OPT_NOHIDE"
+		"DIGIT"
 	};
 	
 	private static final long _tokenSet_0_data_[] = { 2L, 0L };
 	public static final BitSet _tokenSet_0 = new BitSet(_tokenSet_0_data_);
-	private static final long _tokenSet_1_data_[] = { 14680066L, 0L };
+	private static final long _tokenSet_1_data_[] = { 58720258L, 0L };
 	public static final BitSet _tokenSet_1 = new BitSet(_tokenSet_1_data_);
-	private static final long _tokenSet_2_data_[] = { 12582914L, 0L };
+	private static final long _tokenSet_2_data_[] = { 50331650L, 0L };
 	public static final BitSet _tokenSet_2 = new BitSet(_tokenSet_2_data_);
-	private static final long _tokenSet_3_data_[] = { 2097154L, 0L };
+	private static final long _tokenSet_3_data_[] = { 8388610L, 0L };
 	public static final BitSet _tokenSet_3 = new BitSet(_tokenSet_3_data_);
-	private static final long _tokenSet_4_data_[] = { 33554512L, 0L };
+	private static final long _tokenSet_4_data_[] = { 134217808L, 0L };
 	public static final BitSet _tokenSet_4 = new BitSet(_tokenSet_4_data_);
-	private static final long _tokenSet_5_data_[] = { 1048656L, 0L };
+	private static final long _tokenSet_5_data_[] = { 4194384L, 0L };
 	public static final BitSet _tokenSet_5 = new BitSet(_tokenSet_5_data_);
-	private static final long _tokenSet_6_data_[] = { 16777216L, 0L };
+	private static final long _tokenSet_6_data_[] = { 67108864L, 0L };
 	public static final BitSet _tokenSet_6 = new BitSet(_tokenSet_6_data_);
-	private static final long _tokenSet_7_data_[] = { 50331728L, 0L };
+	private static final long _tokenSet_7_data_[] = { 201326672L, 0L };
 	public static final BitSet _tokenSet_7 = new BitSet(_tokenSet_7_data_);
-	private static final long _tokenSet_8_data_[] = { 17179869186L, 0L };
+	private static final long _tokenSet_8_data_[] = { 68719476738L, 0L };
 	public static final BitSet _tokenSet_8 = new BitSet(_tokenSet_8_data_);
 	
 	}
