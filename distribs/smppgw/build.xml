@@ -171,17 +171,21 @@ Targets:
     </chmod>
   </target>
 
-  <target name="create_distr" depends="create_distr_tree, update">
+  <target name="extra_libs" depends="create_distr_tree_update">
     <copy todir="${DISTR_DIR}/lib" flatten="yes" failonerror="yes">
       <fileset includesfile="extra_libs.list"/>
     </copy>
     <copy todir="${DISTR_DIR}/lib" file="extra_lib_links.list" flatten="yes"/>
     <symlink action="recreate">
-      <fileset dir="${DISTR_DIR}/lib" file="extra_lib_links.list"/> 
+      <fileset dir="${DISTR_DIR}/lib" file="extra_lib_links.list"/>
     </symlink>
+    <delete file="${DISTR_DIR}/lib/extra_lib_links.list"/>
   </target>
 
-  <target name="distr" depends="create_distr, configure">
+  <target name="create_distr" depends="create_distr_tree, update">
+  </target>
+
+  <target name="distr" depends="create_distr, extra_libs, configure">
   </target>
 
 </project>
