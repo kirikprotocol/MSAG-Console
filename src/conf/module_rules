@@ -103,7 +103,7 @@ deps:
 	    for i in $$XXXX ; do \
 	    printf "%s" "$(SMSC_BUILDDIR)/obj/$(LIBRARY)/" >> \
 	    $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.deps; \
-	    OPT=`perl -e '$$_="$(CXXFLAGS)";s/(?<=\s)\+w2?\s//g;print $$_;'`; \
+	    OPT=`perl -e '$$_="$(CXXFLAGS)";s/(?<=\s)\+w2?\s//g;s/-library=stlport4//;print $$_;'`; \
 		gcc -MM $$OPT $(SMSC_SRCDIR)/$(PACKAGEDIR)/$$i.cpp >>\
 		      $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.deps; \
 	    done; \
