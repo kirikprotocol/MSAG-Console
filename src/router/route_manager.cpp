@@ -25,6 +25,7 @@ using std::sort;
 
 static inline void printRoute(RouteRecord* record)
 {
+  __trace2__("%x\n",record);
   __trace2__("%%%% R(%s:%x->%s:%x)",
              record->pattern.src_addressPattern,
              record->pattern.src_addressPattern_32[0],
@@ -91,20 +92,20 @@ static inline int compare_pataddr( const RoutePattern& pattern,
   result = compare_dest(2); ifn0goto;
   result = compare_dest(3); ifn0goto;
   result = compare_dest(4); ifn0goto;
-	__trace2__("check_src_length: %c : P%d ? A%d",
-						 pattern.src_hasStar?'*':' ',
-						 pattern.src_length,
-						 addr.src_length);
-	result = pattern.src_hasStar?0:
-			((int)pattern.src_length)-((int)addr.src_length)?-1:0;
-	ifn0goto;
-	__trace2__("check_dest_length: %c : P%d ? A%d",
-						 pattern.dest_hasStar?'*':' ',
-						 pattern.dest_length,
-						 addr.dest_length);
-	result = pattern.dest_hasStar?0:
-			((int)pattern.dest_length)-((int)addr.dest_length)?-1:0;
-	ifn0goto;
+  __trace2__("check_src_length: %c : P%d ? A%d",
+             pattern.src_hasStar?'*':' ',
+             pattern.src_length,
+             addr.src_length);
+  result = pattern.src_hasStar?0:
+      ((int)pattern.src_length)-((int)addr.src_length)?-1:0;
+  ifn0goto;
+  __trace2__("check_dest_length: %c : P%d ? A%d",
+             pattern.dest_hasStar?'*':' ',
+             pattern.dest_length,
+             addr.dest_length);
+  result = pattern.dest_hasStar?0:
+      ((int)pattern.dest_length)-((int)addr.dest_length)?-1:0;
+  ifn0goto;
 result_:
   __trace2__("=== %d",result);
         return (int32_t)result;
@@ -139,12 +140,12 @@ static inline int compare_patpat( const RoutePattern& pat1,
   result = compare_dest(2); ifn0goto;
   result = compare_dest(3); ifn0goto;
   result = compare_dest(4); ifn0goto;
-	result = (pat1.src_hasStar||pat2.src_hasStar)?0:
-			((int)pat1.src_length)-((int)pat2.src_length);
-	ifn0goto;
-	result = (pat1.src_hasStar||pat2.src_hasStar)?0:
-			((int)pat1.dest_length)-((int)pat2.dest_length);
-	ifn0goto;
+  result = (pat1.src_hasStar||pat2.src_hasStar)?0:
+      ((int)pat1.src_length)-((int)pat2.src_length);
+  ifn0goto;
+  result = (pat1.src_hasStar||pat2.src_hasStar)?0:
+      ((int)pat1.dest_length)-((int)pat2.dest_length);
+  ifn0goto;
 result_:
   //__trace2__("=== %d",result);
   return result;
@@ -201,11 +202,11 @@ __synchronized__
   memset(addrVal,0,sizeof(addrVal));
   undefVal = 20;
   length = routeInfo.source.getValue(addrVal);
-	record->pattern.src_length = length;
+  record->pattern.src_length = length;
   //__require__( length < 21 );
-	if ( length >= 21 ) throw runtime_error("assertin 'source addr length < 21' failed");
+  if ( length >= 21 ) throw runtime_error("assertin 'source addr length < 21' failed");
   memset(addrPattern,0,sizeof(addrPattern));
-	record->pattern.src_hasStar = false;
+  record->pattern.src_hasStar = false;
   for ( int i=0; i<length; ++i )
   {
     switch(addrVal[i])
@@ -213,7 +214,7 @@ __synchronized__
     case '?': // any part
       break;
     case '*': // only end of value
-			record->pattern.src_hasStar = true;
+      record->pattern.src_hasStar = true;
       goto end_src_pattern_loop;
     default:
       --undefVal;
@@ -231,26 +232,26 @@ __synchronized__
 
   undefVal = 20;
   memset(addrVal,0,21);
-	length = routeInfo.dest.getValue(addrVal);
-	record->pattern.dest_length = length;
+  length = routeInfo.dest.getValue(addrVal);
+  record->pattern.dest_length = length;
   //__require__( length < 21 );
-	if ( length >= 21 ) throw runtime_error("assertoin 'dest addr length < 21' failed");
+  if ( length >= 21 ) throw runtime_error("assertoin 'dest addr length < 21' failed");
   memset(addrPattern,0xff,sizeof(addrPattern));
-	addrPattern[20] = 0;
-	record->pattern.dest_hasStar = false;
+  addrPattern[20] = 0;
+  record->pattern.dest_hasStar = false;
   for ( int i=0; i<20; ++i )
   {
     switch(addrVal[i])
     {
     case '?': // any part
-			addrPattern[i] = 0;
+      addrPattern[i] = 0;
       break;
     case '*': // only end of value
-			record->pattern.dest_hasStar = true;
-			memset(addrPattern+i,0,20-i);
+      record->pattern.dest_hasStar = true;
+      memset(addrPattern+i,0,20-i);
       goto end_dest_pattern_loop;
     default:
-			//addrPattern[i] = 0xff;
+      //addrPattern[i] = 0xff;
       --undefVal;
     }
   }
@@ -273,7 +274,8 @@ __synchronized__
   }
 
   table[table_ptr++] = record.release();
-  printRoute(table[table_ptr-1]);
+  __trace2__("%x\n",table[table_ptr-1]);
+	printRoute(table[table_ptr-1]);
   sorted = false;
 }
 
@@ -287,12 +289,12 @@ static inline void makeAddress( RouteAddress* addr, const Address* source, const
   addr->dest_numberingPlan = dest->getNumberingPlan();
   length = source->getValue((char*)addr->src_address);
   //__require__( length < 21 );
-	if ( length >= 21 ) throw runtime_error("assertion 'source addr length < 21' failed");
-	addr->src_length = length;
+  if ( length >= 21 ) throw runtime_error("assertion 'source addr length < 21' failed");
+  addr->src_length = length;
   length = dest->getValue((char*)addr->dest_address);
   //__require__( length < 21 );
-	if ( length >= 21 ) throw runtime_error("assertion 'dest addr length < 21' failed");
-	addr->dest_length = length;
+  if ( length >= 21 ) throw runtime_error("assertion 'dest addr length < 21' failed");
+  addr->dest_length = length;
 }
 
 
@@ -307,7 +309,7 @@ __synchronized__
   {
     __qsort__(table,table_ptr,sizeof(RouteRecord*),route_pattern_compare);
     sorted = true;
-		__trace2__("___ route table, size=%d ___",table_ptr);
+    __trace2__("___ route table, size=%d ___",table_ptr);
     for ( int i=0; i < table_ptr; ++i )
       printRoute(table[i]);
   }
@@ -388,7 +390,7 @@ __synchronized__
       }
       else ok_route = ok_route->ok_next;
     }
-		__require__(record);
+    __require__(record);
     if ( record->ok_next )
     {
       __warning__("more then one route found, use anyone");
