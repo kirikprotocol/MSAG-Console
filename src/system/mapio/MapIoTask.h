@@ -123,7 +123,9 @@ enum MapState{
   MAPST_WaitDelClose = 29,
   MAPST_WaitAlertDelimiter = 30,
   MAPST_WaitNextMMS = 31,
-  MAPST_SendNextMMS = 32
+  MAPST_SendNextMMS = 32,
+  MAPST_WaitFwdMOOpenConf = 33,
+  MAPST_WaitFwdMOConf = 34
 };
 
 class hash_func_ET96MAP_DID{

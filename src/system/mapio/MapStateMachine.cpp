@@ -239,9 +239,13 @@ static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
     mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
     mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
   }
-  __map_trace__("StartDialogProcessing: Query HLR AC version");
-  dialog->state = MAPST_WaitHlrVersion;
-  QueryHlrVersion(dialog);
+  if( dialog->sms->hasStrProperty( Tag::SMSC_FORWARD_MO_TO ) ) {
+    ForwardMO( dialog );
+  } else {
+    __map_trace__("StartDialogProcessing: Query HLR AC version");
+    dialog->state = MAPST_WaitHlrVersion;
+    QueryHlrVersion(dialog);
+  }
 }
 
 static void NotifyHLR(MapDialog* dialog);
@@ -595,6 +599,47 @@ void ResponseMO(MapDialog* dialog,unsigned status)
   }
 }
 
+static void ForwardMO(MapDialog* dialog) {
+  ET96MAP_ADDRESS_T fwdAddr;
+  ET96MAP_SS7_ADDR_T destAddr;
+  ET96MAP_SM_RP_DA_T smRpDa;
+  ET96MAP_SM_RP_OA_T smRpOa;
+  ET96MAP_SM_RP_UI_T ui;
+
+  smsc::sms::SMS *sms = dialog->sms.get();
+  smsc::sms::Address addr(sms->getStrProperty(Tag::SMSC_FORWARD_MO_TO));
+  if( !sms->hasBinProperty(Tag::SMSC_MO_PDU) )
+    throw MAPDIALOG_FATAL_ERROR(FormatText("MAP::ForwardMO: SMS has SMSC_FORWARD_MO_TO but has no SMSC_MO_PDU 0x%x",result),smsc::system::Status::DATAMISSING);
+
+  dialog->state = MAPST_WaitFwdMOConf;
+  dialog->version = 2;
+  ET96MAP_APP_CNTX_T appContext;
+  appContext.acType = ET96MAP_SHORT_MSG_MO_RELAY;
+  SetVersion(appContext,dialog->version);
+
+  mkMapAddress( &fwdAddr, addr.getValue(), addr.getLength() );
+  mkSS7GTAddress( &destAddr, &fwdAddr, 8 );
+
+  mkRP_DA_Address( &smRpDa, addr.getValue(), addr.getLength(), ET96MAP_ADDRTYPE_SCADDR );
+  mkRP_OA_Address( &smRpOa, dialog->sms->getOriginatingAddress().getValue(), dialog->sms->getOriginatingAddress().getLength(), ET96MAP_ADDRTYPE_MSISDN );
+  unsigned length;
+  const char* mo_pdu = sms->getBinProperty(Tag::SMSC_MO_PDU, &length);
+  memcpy(ui.signalInfo, mo_pdu, length );
+  ui.signalInfoLen = (UCHAR_T)length;
+
+  USHORT_T result = Et96MapOpenReq( SSN, dialog->dialogid_map, ctx, destAddr, dialog->scAddr, 0, 0, 0 );
+  if ( result != ET96MAP_E_OK )
+    throw MAPDIALOG_FATAL_ERROR(FormatText("MAP::ForwardMO: Et96MapOpenReq error 0x%x",result),MAP_FALURE);
+
+  result = Et96MapV2ForwardSmMOReq(SSN,dialog->dialogid_map, 0, &smRpDa, &smRpOa, &ui);
+  if ( result != ET96MAP_E_OK )
+    throw MAPDIALOG_FATAL_ERROR(FormatText("MAP::ForwardMO: Et96MapV2ForwardSmMOReq error 0x%x",result),MAP_FALURE);
+  
+  result = Et96MapDelimiterReq(SSN,dialog->dialogid_map, 0, 0);
+  if ( result != ET96MAP_E_OK )
+    throw MAPDIALOG_FATAL_ERROR(FormatText("MAP::ForwardMO: Et96MapV2ForwardSmMOReq error 0x%x",result),MAP_FALURE);
+}
+
 static inline
 unsigned ParseSemiOctetU(unsigned char v)
 {
@@ -621,6 +666,7 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
   }
   auto_ptr<SMS> _sms ( new SMS() );
   SMS& sms = *_sms.get();
+  sms.setBinProperty(Tag::SMSC_MO_PDU, (const char *)ud->signalInfo, ud->signalInfoLen );
   Address src_addr;
   Address dest_addr;
   SMS_SUMBMIT_FORMAT_HEADER* ssfh = (SMS_SUMBMIT_FORMAT_HEADER*)ud->signalInfo;
@@ -1092,11 +1138,14 @@ static void SendNextMMS(MapDialog* dialog)
 static void SendSegmentedSms(MapDialog* dialog)
 {
   USHORT_T result;
-  CheckLockedByMO(dialog);
+// We have already opened dialog and don't need to check this condition.
+//  CheckLockedByMO(dialog);
   if ( dialog->version == 2 ) {
     result = Et96MapV2ForwardSmMTReq( dialog->ssn, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), dialog->mms);
   }else if ( dialog->version == 1 ) {
-    result = Et96MapV1ForwardSmMT_MOReq( dialog->ssn, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get());
+//    result = Et96MapV1ForwardSmMT_MOReq( dialog->ssn, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get());
+    throw MAPDIALOG_FATAL_ERROR(
+      FormatText("MAP::SendSegmentedSms: MAPv1 do not support/required segmentation dialogid 0x%x",dialog->dialogid_map),MAP_FALURE);
   }else throw runtime_error(
     FormatText("MAP::SendSegmentedSms: incorrect dialog version %d",dialog->version));
   if( result != ET96MAP_E_OK )
@@ -1582,6 +1631,15 @@ USHORT_T Et96MapOpenConf (
         DropMapDialog(dialog.get());
       }
       // nothing;
+      break;
+    case MAPST_WaitFwdMOOpenConf:
+      if( openResult == ET96MAP_RESULT_NOT_OK) {
+        DoProvErrorProcessing(provErrCode_p);
+        throw MAPDIALOG_FATAL_ERROR(
+          FormatText("MAP::%s connection opening error, reason %d",__FUNCTION__,refuseReason_p?*refuseReason_p:0),
+          refuseReason_p?(MAP_ERRORS_BASE+*refuseReason_p):MAP_FALURE);
+      }
+      dialog->state = MAPST_WaitFwdMOConf;
       break;
     case MAPST_RInfoFallBack:
     case MAPST_WaitSpecOpenConf:
@@ -2075,6 +2133,58 @@ USHORT_T Et96MapV1ForwardSmMOInd (
 {
   return Et96MapVxForwardSmMOInd_Impl(localSsn,dialogueId,invokeId,smRpDa_sp,smRpOa_sp,smRpUi_sp,1);
 }
+
+extern "C"
+USHORT_T Et96MapV2ForwardSmMOConf(ET96MAP_LOCAL_SSN_T localSsn, 
+                                ET96MAP_DIALOGUE_ID_T dialogueId,
+                                ET96MAP_INVOKE_ID_T invokeId,
+                                ET96MAP_ERROR_FORW_SM_MO_T* errorForwardSMmo_sp, 
+                                ET96MAP_PROV_ERR_T* provErrCode_p) {
+  unsigned dialogid_map = dialogueId;
+  unsigned dialogid_smsc = 0;
+  MAP_TRY{
+    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map,localSsn));
+    if ( dialog.isnull() ) {
+      unsigned _di = dialogid_map;
+      dialogid_map = 0;
+      throw MAPDIALOG_ERROR(
+        FormatText("MAP::%s dialog 0x%x is not present",__FUNCTION__,_di));
+    }
+    __require__(dialog->ssn==localSsn);
+    dialogid_smsc = dialog->dialogid_smsc;
+
+    try {
+      try{ DoProvErrorProcessing(provErrCode_p);}
+      catch(MAPDIALOG_ERROR& e) { throw MAPDIALOG_XERROR(e.code,e.what()); }
+
+      if ( errorForwardSMmo_sp )
+      {
+        throw MAPDIALOG_FATAL_XERROR(FormatText("errorForwardSMmo_sp->errorCode == 0x%x, reason if need 0x%x",errorForwardSMmo_sp->errorCode,errorForwardSMmo_sp->u.smDeliveryFailureReason_s.reason),
+            MAP_ERRORS_BASE+errorForwardSMmo_sp->errorCode);
+      }
+
+    }catch(MAPDIALOG_XERROR& e){
+      __map_trace2__("MAP::<nonfatal exepction> %s",e.what());
+      SendErrToSmsc(dialog->dialogid_smsc,e.code);
+      dialog->dialogid_smsc = 0; // далее смсцентр ничего не знает о диалоге
+      dialog->wasDelivered = false;
+    }
+
+    switch( dialog->state ){
+    case MAPST_WaitFwdMOConf:
+      if( dialog->dialogid_smsc != 0 ) {
+        dialog->wasDelivered = true;
+      }
+      dialog->state = MAPST_WaitSmsClose;
+      break;
+    default:
+      throw MAPDIALOG_BAD_STATE(
+        FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialogid_map,dialogid_smsc));
+    }
+  }MAP_CATCH(dialogid_map,dialogid_smsc,localSsn);
+  return ET96MAP_E_OK;
+}
+
 
 extern "C"
 USHORT_T Et96MapV2ForwardSmMOInd (

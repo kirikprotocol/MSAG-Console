@@ -31,6 +31,8 @@ struct RouteInfo
   smsc::smeman::SmeSystemId srcSmeSystemId;
   smsc::sms::Address source;
   smsc::sms::Address dest;
+  uint8_t deliveryMode;
+  std::string forwardTo;
 };
 
 }; // namespace router

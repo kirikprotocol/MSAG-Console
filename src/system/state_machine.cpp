@@ -990,85 +990,126 @@ StateType StateMachine::submit(Tuple& t)
   sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
   int pres=psSingle;
 
+  bool isForwardTo = false;
+  if( ri.forwardTo.length() > 0 && !strcmp(ri.smeSystemId.c_str(), "MAP_PROXY") ) {
+    sms->setStrProperty( Tag::SMSC_FORWARD_MO_TO, ri.forwardTo.c_str());
+    // force forward(transaction) mode
+    sms->setIntProperty( Tag::SMPP_ESM_CLASS, sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x02 );
+    isForwardTo = true;
+  }
 
-  ////
-  //
-  //  Directives
-  //
+  if( !isForwardTo ) {
+    ////
+    //
+    //  Directives
+    //
 
-  try{
-    processDirectives(*sms,profile,srcprof);
-  }catch(std::exception& e)
-  {
-    __warning2__("Failed to process directives due to exception:%s",e.what());
-    sms->setLastResult(Status::SUBMITFAIL);
-    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
-    SmscCommand resp = SmscCommand::makeSubmitSmResp
-                         (
-                           /*messageId*/"0",
-                           dialogId,
-                           Status::SUBMITFAIL,
-                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
-                         );
     try{
-      src_proxy->putCommand(resp);
-    }catch(...)
+      processDirectives(*sms,profile,srcprof);
+    }catch(std::exception& e)
     {
-      __trace__("SUBMIT: failed to put response command");
+      __warning2__("Failed to process directives due to exception:%s",e.what());
+      sms->setLastResult(Status::SUBMITFAIL);
+      smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+      SmscCommand resp = SmscCommand::makeSubmitSmResp
+                           (
+                             /*messageId*/"0",
+                             dialogId,
+                             Status::SUBMITFAIL,
+                             sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                           );
+      try{
+        src_proxy->putCommand(resp);
+      }catch(...)
+      {
+        __trace__("SUBMIT: failed to put response command");
+      }
+      return ERROR_STATE;
     }
-    return ERROR_STATE;
-  }
 
-  if(sms->getValidTime()==0 || sms->getValidTime()>now+maxValidTime)
-  {
-    sms->setValidTime(now+maxValidTime);
-    __trace2__("maxValidTime=%d",maxValidTime);
-  }
-
-  __trace2__("Valid time for sms %lld=%u",t.msgId,(unsigned int)sms->getValidTime());
-
-
-
-  if(sms->getNextTime()>now+maxValidTime || sms->getNextTime()>sms->getValidTime())
-  {
-    sms->setLastResult(Status::INVSCHED);
-    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
-    SmscCommand resp = SmscCommand::makeSubmitSmResp
-                         (
-                           /*messageId*/"0",
-                           dialogId,
-                           Status::INVSCHED,
-                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
-                         );
-    try{
-      src_proxy->putCommand(resp);
-    }catch(...)
+    if(sms->getValidTime()==0 || sms->getValidTime()>now+maxValidTime)
     {
-      __trace__("SUBMIT: failed to put response command");
+      sms->setValidTime(now+maxValidTime);
+      __trace2__("maxValidTime=%d",maxValidTime);
     }
-    smsLog->warn("SBM: invalid schedule time(%d) Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s",
-      sms->getNextTime(),
-      t.msgId,dialogId,
-      sms->getOriginatingAddress().toString().c_str(),
-      sms->getDestinationAddress().toString().c_str(),
-      src_proxy->getSystemId()
-    );
-    return ERROR_STATE;
-  }
 
-  __trace2__("SUBMIT_SM: after processDirectives - delrep=%d, sdt=%d",(int)sms->getDeliveryReport(),sms->getNextTime());
+    __trace2__("Valid time for sms %lld=%u",t.msgId,(unsigned int)sms->getValidTime());
 
-  __trace2__("SUBMIT_SM: dest_addr_subunit=%d",sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT));
 
-  if(ri.smeSystemId=="MAP_PROXY" && sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03)
-  {
-    unsigned len=sms->getIntProperty(Tag::SMPP_SM_LENGTH);
-    if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+
+    if(sms->getNextTime()>now+maxValidTime || sms->getNextTime()>sms->getValidTime())
     {
-      sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+      sms->setLastResult(Status::INVSCHED);
+      smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+      SmscCommand resp = SmscCommand::makeSubmitSmResp
+                           (
+                             /*messageId*/"0",
+                             dialogId,
+                             Status::INVSCHED,
+                             sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                           );
+      try{
+        src_proxy->putCommand(resp);
+      }catch(...)
+      {
+        __trace__("SUBMIT: failed to put response command");
+      }
+      smsLog->warn("SBM: invalid schedule time(%d) Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s",
+        sms->getNextTime(),
+        t.msgId,dialogId,
+        sms->getOriginatingAddress().toString().c_str(),
+        sms->getDestinationAddress().toString().c_str(),
+        src_proxy->getSystemId()
+      );
+      return ERROR_STATE;
     }
-    __trace2__("SUBMIT_SM: sim specific, len=%d",len);
-    if(len>140)
+
+    __trace2__("SUBMIT_SM: after processDirectives - delrep=%d, sdt=%d",(int)sms->getDeliveryReport(),sms->getNextTime());
+
+    __trace2__("SUBMIT_SM: dest_addr_subunit=%d",sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT));
+
+    if(ri.smeSystemId=="MAP_PROXY" && sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03)
+    {
+      unsigned len=sms->getIntProperty(Tag::SMPP_SM_LENGTH);
+      if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+      {
+        sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+      }
+      __trace2__("SUBMIT_SM: sim specific, len=%d",len);
+      if(len>140)
+      {
+        sms->setLastResult(Status::INVMSGLEN);
+        smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+        SmscCommand resp = SmscCommand::makeSubmitSmResp
+                           (
+                             /*messageId*/"0",
+                             dialogId,
+                             Status::INVMSGLEN,
+                             sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                           );
+        try{
+          src_proxy->putCommand(resp);
+        }catch(...)
+        {
+        }
+        smsLog->warn("SBM: invalid message length(%d) Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+          len,
+          t.msgId,dialogId,
+          sms->getOriginatingAddress().toString().c_str(),
+          sms->getDestinationAddress().toString().c_str(),
+          src_proxy->getSystemId(),
+          ri.smeSystemId.c_str()
+        );
+        return ERROR_STATE;
+      }
+
+    }
+
+    if(ri.smeSystemId=="MAP_PROXY")
+    {
+      pres=partitionSms(sms,profile.codepage);
+    }
+    if(pres==psErrorLength)
     {
       sms->setLastResult(Status::INVMSGLEN);
       smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
@@ -1083,7 +1124,10 @@ StateType StateMachine::submit(Tuple& t)
         src_proxy->putCommand(resp);
       }catch(...)
       {
+        __trace__("SUBMIT:Failed to put command");
       }
+      unsigned int len;
+      const char *msg=sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
       smsLog->warn("SBM: invalid message length(%d) Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
         len,
         t.msgId,dialogId,
@@ -1095,152 +1139,114 @@ StateType StateMachine::submit(Tuple& t)
       return ERROR_STATE;
     }
 
-  }
-
-  if(ri.smeSystemId=="MAP_PROXY")
-  {
-    pres=partitionSms(sms,profile.codepage);
-  }
-  if(pres==psErrorLength)
-  {
-    sms->setLastResult(Status::INVMSGLEN);
-    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
-    SmscCommand resp = SmscCommand::makeSubmitSmResp
-                       (
-                         /*messageId*/"0",
-                         dialogId,
-                         Status::INVMSGLEN,
-                         sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
-                       );
-    try{
-      src_proxy->putCommand(resp);
-    }catch(...)
+    if(pres==psErrorUdhi)
     {
-      __trace__("SUBMIT:Failed to put command");
+      sms->setLastResult(Status::SUBMITFAIL);
+      smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+      SmscCommand resp = SmscCommand::makeSubmitSmResp
+                           (
+                             /*messageId*/"0",
+                             dialogId,
+                             Status::SUBMITFAIL,
+                             sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                           );
+      try{
+        src_proxy->putCommand(resp);
+      }catch(...)
+      {
+        __warning__("SUBMIT_SM: failed to put response command");
+      }
+      smsLog->warn("SBM: udhi present in concatenated message!!! Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+        t.msgId,dialogId,
+        sms->getOriginatingAddress().toString().c_str(),
+        sms->getDestinationAddress().toString().c_str(),
+        src_proxy->getSystemId(),
+        ri.smeSystemId.c_str()
+      );
+      return ERROR_STATE;
     }
-    unsigned int len;
-    const char *msg=sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
-    smsLog->warn("SBM: invalid message length(%d) Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
-      len,
-      t.msgId,dialogId,
-      sms->getOriginatingAddress().toString().c_str(),
-      sms->getDestinationAddress().toString().c_str(),
-      src_proxy->getSystemId(),
-      ri.smeSystemId.c_str()
-    );
-    return ERROR_STATE;
-  }
 
-  if(pres==psErrorUdhi)
-  {
-    sms->setLastResult(Status::SUBMITFAIL);
-    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
-    SmscCommand resp = SmscCommand::makeSubmitSmResp
-                         (
-                           /*messageId*/"0",
-                           dialogId,
-                           Status::SUBMITFAIL,
-                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
-                         );
-    try{
-      src_proxy->putCommand(resp);
-    }catch(...)
+    if(pres==psErrorUssd)
     {
-      __warning__("SUBMIT_SM: failed to put response command");
+      sms->setLastResult(Status::USSDMSGTOOLONG);
+      smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+      SmscCommand resp = SmscCommand::makeSubmitSmResp
+                           (
+                             /*messageId*/"0",
+                             dialogId,
+                             Status::USSDMSGTOOLONG,
+                             sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                           );
+      try{
+        src_proxy->putCommand(resp);
+      }catch(...)
+      {
+        __warning__("SUBMIT_SM: failed to put response command");
+      }
+      smsLog->warn("SBM: ussd message too long!!! Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+        t.msgId,dialogId,
+        sms->getOriginatingAddress().toString().c_str(),
+        sms->getDestinationAddress().toString().c_str(),
+        src_proxy->getSystemId(),
+        ri.smeSystemId.c_str()
+      );
+      return ERROR_STATE;
     }
-    smsLog->warn("SBM: udhi present in concatenated message!!! Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
-      t.msgId,dialogId,
-      sms->getOriginatingAddress().toString().c_str(),
-      sms->getDestinationAddress().toString().c_str(),
-      src_proxy->getSystemId(),
-      ri.smeSystemId.c_str()
-    );
-    return ERROR_STATE;
-  }
 
-  if(pres==psErrorUssd)
-  {
-    sms->setLastResult(Status::USSDMSGTOOLONG);
-    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
-    SmscCommand resp = SmscCommand::makeSubmitSmResp
-                         (
-                           /*messageId*/"0",
-                           dialogId,
-                           Status::USSDMSGTOOLONG,
-                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
-                         );
-    try{
-      src_proxy->putCommand(resp);
-    }catch(...)
+
+    if(pres==psMultiple)
     {
-      __warning__("SUBMIT_SM: failed to put response command");
+      uint8_t msgref=smsc->getNextMR(dst);
+      sms->setConcatMsgRef(msgref);
+      sms->setConcatSeqNum(0);
     }
-    smsLog->warn("SBM: ussd message too long!!! Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
-      t.msgId,dialogId,
-      sms->getOriginatingAddress().toString().c_str(),
-      sms->getDestinationAddress().toString().c_str(),
-      src_proxy->getSystemId(),
-      ri.smeSystemId.c_str()
-    );
-    return ERROR_STATE;
+
+    __trace2__("SUBMIT_SM: Replace if present for message %lld=%d",t.msgId,sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG));
+    __trace2__("SUBMIT_SM: SMPP_USSD_SERVICE_OP for %lld=%d",t.msgId,sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP));
+    //
+    // End of checks. Ready to put sms to database
+    //
+    ////
+    ////
+    //
+    // Traffic Control
+    //
+
+    if(!smsc->allowCommandProcessing(t.command))
+    {
+      sms->setLastResult(Status::THROTTLED);
+      smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+      SmscCommand resp = SmscCommand::makeSubmitSmResp
+                           (
+                             /*messageId*/"0",
+                             dialogId,
+                             Status::THROTTLED,
+                             sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                           );
+      try{
+        src_proxy->putCommand(resp);
+      }catch(...)
+      {
+        __warning__("SUBMIT_SM: failed to put response command");
+      }
+      smsLog->warn("SBM: traffic control denied message Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+        t.msgId,dialogId,
+        sms->getOriginatingAddress().toString().c_str(),
+        sms->getDestinationAddress().toString().c_str(),
+        src_proxy->getSystemId(),
+        ri.smeSystemId.c_str()
+      );
+      return ERROR_STATE;
+    }
+
+    //
+    // End of traffic Control
+    //
+    ////
   }
 
-
-  if(pres==psMultiple)
-  {
-    uint8_t msgref=smsc->getNextMR(dst);
-    sms->setConcatMsgRef(msgref);
-    sms->setConcatSeqNum(0);
-  }
-
-  __trace2__("SUBMIT_SM: Replace if present for message %lld=%d",t.msgId,sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG));
-  __trace2__("SUBMIT_SM: SMPP_USSD_SERVICE_OP for %lld=%d",t.msgId,sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP));
 
   time_t stime=sms->getNextTime();
-
-  //
-  // End of checks. Ready to put sms to database
-  //
-  ////
-
-  ////
-  //
-  // Traffic Control
-  //
-
-  if(!smsc->allowCommandProcessing(t.command))
-  {
-    sms->setLastResult(Status::THROTTLED);
-    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
-    SmscCommand resp = SmscCommand::makeSubmitSmResp
-                         (
-                           /*messageId*/"0",
-                           dialogId,
-                           Status::THROTTLED,
-                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
-                         );
-    try{
-      src_proxy->putCommand(resp);
-    }catch(...)
-    {
-      __warning__("SUBMIT_SM: failed to put response command");
-    }
-    smsLog->warn("SBM: traffic control denied message Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
-      t.msgId,dialogId,
-      sms->getOriginatingAddress().toString().c_str(),
-      sms->getDestinationAddress().toString().c_str(),
-      src_proxy->getSystemId(),
-      ri.smeSystemId.c_str()
-    );
-    return ERROR_STATE;
-  }
-
-  //
-  // End of traffic Control
-  //
-  ////
-
-
 
   ////
   //
@@ -1512,72 +1518,77 @@ StateType StateMachine::submit(Tuple& t)
     sendNotifyReport(*sms,t.msgId,"system failure");
     return ENROUTE_STATE;
   }
+
   Address srcOriginal=sms->getOriginatingAddress();
   Address dstOriginal=sms->getDestinationAddress();
   try{
-    // send delivery
-    Address src;
-    __trace2__("SUBMIT: wantAlias=%s, hide=%s",smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias?"true":"false",sms->getIntProperty(Tag::SMSC_HIDE)?"true":"false");
-    if(
-        smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias &&
-        sms->getIntProperty(Tag::SMSC_HIDE) &&
-        smsc->AddressToAlias(sms->getOriginatingAddress(),src)
-      )
-    {
-      sms->setOriginatingAddress(src);
-    }
-    sms->setDestinationAddress(dst);
 
-    // profile lookup performed before partitioning
-    //profile=smsc->getProfiler()->lookup(dst);
-    //
-    if(!sms->hasBinProperty(Tag::SMSC_CONCATINFO) && sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3)
-    {
-      using namespace smsc::profiler::ProfileCharsetOptions;
+    if( !isForwardTo ) {
+      // send delivery
+      Address src;
+      __trace2__("SUBMIT: wantAlias=%s, hide=%s",smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias?"true":"false",sms->getIntProperty(Tag::SMSC_HIDE)?"true":"false");
       if(
-         (
-           (sms->getIntProperty(Tag::SMSC_DSTCODEPAGE)==Default ||
-            sms->getIntProperty(Tag::SMSC_DSTCODEPAGE)==Latin1
-           )
-           && sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2
-         ) ||
-         (
-           (sms->getIntProperty(Tag::SMSC_DSTCODEPAGE)&Latin1)!=Latin1 &&
-           sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::LATIN1
-         )
+          smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias &&
+          sms->getIntProperty(Tag::SMSC_HIDE) &&
+          smsc->AddressToAlias(sms->getOriginatingAddress(),src)
         )
       {
-        try{
-          transLiterateSms(sms,sms->getIntProperty(Tag::SMSC_DSTCODEPAGE));
-          if(sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
-          {
-            int dc=sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
-            int olddc=dc;
-            if((dc&0xc0)==0 || (dc&0xf0)==0xf0) //groups 00xx and 1111
-            {
-              dc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
-
-            }else if((dc&0xf0)==0xe0)
-            {
-              dc=0xd0 | (dc&0x0f);
-            }
-            sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
-            __trace2__("SUBMIT: transliterate olddc(%x)->dc(%x)",olddc,dc);
-          }
-        }catch(exception& e)
-        {
-          __warning2__("SUBMIT:Failed to transliterate: %s",e.what());
-        }
+        sms->setOriginatingAddress(src);
       }
-    }else
-    {
-      extractSmsPart(sms,0);
+      sms->setDestinationAddress(dst);
+
+      // profile lookup performed before partitioning
+      //profile=smsc->getProfiler()->lookup(dst);
+      //
+      if(!sms->hasBinProperty(Tag::SMSC_CONCATINFO) && sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3)
+      {
+        using namespace smsc::profiler::ProfileCharsetOptions;
+        if(
+           (
+             (sms->getIntProperty(Tag::SMSC_DSTCODEPAGE)==Default ||
+              sms->getIntProperty(Tag::SMSC_DSTCODEPAGE)==Latin1
+             )
+             && sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2
+           ) ||
+           (
+             (sms->getIntProperty(Tag::SMSC_DSTCODEPAGE)&Latin1)!=Latin1 &&
+             sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::LATIN1
+           )
+          )
+        {
+          try{
+            transLiterateSms(sms,sms->getIntProperty(Tag::SMSC_DSTCODEPAGE));
+            if(sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
+            {
+              int dc=sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
+              int olddc=dc;
+              if((dc&0xc0)==0 || (dc&0xf0)==0xf0) //groups 00xx and 1111
+              {
+                dc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
+
+              }else if((dc&0xf0)==0xe0)
+              {
+                dc=0xd0 | (dc&0x0f);
+              }
+              sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
+              __trace2__("SUBMIT: transliterate olddc(%x)->dc(%x)",olddc,dc);
+            }
+          }catch(exception& e)
+          {
+            __warning2__("SUBMIT:Failed to transliterate: %s",e.what());
+          }
+        }
+      }else
+      {
+        extractSmsPart(sms,0);
+      }
+
+      if(sms->hasBinProperty(Tag::SMSC_CONCATINFO))
+      {
+        sms->setIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND,1);
+      }
     }
 
-    if(sms->hasBinProperty(Tag::SMSC_CONCATINFO))
-    {
-      sms->setIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND,1);
-    }
     SmscCommand delivery = SmscCommand::makeDeliverySm(*sms,dialogId2);
     unsigned bodyLen=0;
     delivery->get_sms()->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&bodyLen);
