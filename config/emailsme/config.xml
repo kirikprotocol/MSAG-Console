@@ -8,7 +8,7 @@
       <param name="timeout" type="int">0</param>
       <param name="systemId" type="string">emailsme</param>
       <param name="password" type="string"></param>
-      <param name="sourceAddress" type="string">.2.1.200</param>
+      <param name="sourceAddress" type="string">.0.1.200</param>
       <param name="serviceType" type="string">EML</param>
       <param name="protocolId" type="int">34</param>
       <param name="retryTime" type="int">5</param>
@@ -19,15 +19,31 @@
     <param name="port" type="int">9003</param>
   </section>
 
+  <section name="mail">
+    <param name="domain" type="string">smsc.office.aurorisoft.com</param>
+  </section>
+
   <section name="smtp">
     <param name="host" type="string">meta.office.aurorisoft.com</param>
     <param name="port" type="int">25</param>
   </section>
 
+  <section name="defaults">
+    <param name="dailyLimit" type="int">20</param>
+  </section>
+
+  <section name="StartupLoader">
+    <section name="DataSourceDrivers">
+      <section name="OCIDataSourceDriver">
+        <param name="type" type="string">OCI</param>
+        <param name="loadup" type="string">../db/oci/libdb_oci.so</param>
+      </section>
+    </section>
+  </section>
   <section name="DataSource">
     <param name="type" type="string">OCI</param>
     <param name="connections" type="int">5</param>
-    <param name="dbInstance" type="string">SMSCDB</param>
+    <param name="dbInstance" type="string">SMSC</param>
     <param name="dbUserName" type="string">smsc_skv</param>
     <param name="dbUserPassword" type="string">smsc_skv</param>
   </section>
