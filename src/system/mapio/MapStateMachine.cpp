@@ -1235,6 +1235,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
               {
                 unsigned mr = cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)&0x0ffff;
                 if ( dialog->ussdMrRef != mr )
+                  SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
                   throw MAPDIALOG_FATAL_ERROR(
                     FormatText("MAP::putCommand: Opss, bad message_reference 0x%x must be 0x%x",
                       mr,dialog->ussdMrRef));
