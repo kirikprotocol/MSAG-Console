@@ -10,7 +10,7 @@
 namespace smsc { namespace sms
 {
     const int MAX_ADDRESS_VALUE_LENGTH = 21;
-    const int MAX_SHORT_MESSAGE_LENGTH = 170;
+    const int MAX_SHORT_MESSAGE_LENGTH = 200;
     
     typedef char		AddressValue[MAX_ADDRESS_VALUE_LENGTH+1];
     typedef uint8_t  	SMSData[MAX_SHORT_MESSAGE_LENGTH];
