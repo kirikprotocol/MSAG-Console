@@ -1,5 +1,5 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%><%
-%><%@ page import="ru.novosoft.smsc.jsp.smsc.Index,"%>
+%><%@ page import="ru.novosoft.smsc.jsp.smsc.Index"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
