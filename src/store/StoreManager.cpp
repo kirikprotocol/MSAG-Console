@@ -1173,9 +1173,19 @@ void RemoteStore::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
     sms.destinationDescriptor = dst;
 
     char buf[MAX_ADDRESS_VALUE_LENGTH*4+12];
-    sprintf(buf,"Org: %s/%s, Dst:%s/%s",sms.originatingDescriptor.msc,sms.originatingDescriptor.imsi,
-                       sms.destinationDescriptor.msc,sms.destinationDescriptor.imsi
-                      );
+    if(sms.originatingDescriptor.mscLength && sms.originatingDescriptor.imsiLength &&
+       sms.destinationDescriptor.mscLength && sms.destinationDescriptor.imsiLength)
+    {
+      sprintf(buf,"Org: %s/%s, Dst:%s/%s",sms.originatingDescriptor.msc,sms.originatingDescriptor.imsi,
+                         sms.destinationDescriptor.msc,sms.destinationDescriptor.imsi
+                        );
+    }else if(sms.originatingDescriptor.mscLength && sms.originatingDescriptor.imsiLength)
+    {
+      sprintf(buf,"Org: %s/%s",sms.originatingDescriptor.msc,sms.originatingDescriptor.imsi);
+    }else if(sms.destinationDescriptor.mscLength && sms.destinationDescriptor.imsiLength)
+    {
+      sprintf(buf,"Dst:%s/%s",sms.destinationDescriptor.msc,sms.destinationDescriptor.imsi);
+    }
     sms.setStrProperty(Tag::SMSC_DESCRIPTORS,buf);
 
     doFinalizeSms(id, sms, true);
