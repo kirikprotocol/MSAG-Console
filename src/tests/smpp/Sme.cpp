@@ -6,9 +6,13 @@ namespace smsc {
 	namespace test {
 		namespace smpp {
 
+			///////////////////////////////////////////
+			// SmeFactory
+			//////////////////////////////////////////
+
 			SmeFactory::GenericSmeHandlerMap SmeFactory::handlers;
 
-			GenericSmeHandler SmeFactory::createSme(ContextHandler ctx) {
+			GenericSmeHandler SmeFactory::createSme(ContextHandler ctx) throw(SmeConfigurationException) {
 				try {
 					string smeId = ctx->getAttribute("class");
 					GenericSmeHandlerMap::const_iterator itr = handlers.find(smeId);
@@ -26,11 +30,76 @@ namespace smsc {
 				}
 			}
 
-			log4cpp::Category& BasicSme::log = smsc::test::util::logger.getLog("smsc.test.util.ContextConfigurator");
-
+			///////////////////////////////////////////
+			// BasicSme
+			//////////////////////////////////////////
+			log4cpp::Category& BasicSme::log = smsc::test::util::logger.getLog("smsc.test.smpp.BasicSme");
 			BasicSme::Registrator BasicSme::reg;
 
-			void BasicSme::init(ContextHandler ctx) {
+			class BasicListener : public smsc::sme::SmppPduEventListener {
+				smsc::sme::SmppTransmitter* transmitter;
+			public:
+				void setTransmitter(smsc::sme::SmppTransmitter* transmitter) {
+					this->transmitter = transmitter;
+				}
+
+				void handleEvent(smsc::smpp::SmppHeader *pdu) {
+					std::cout << "Received PDU" << std::endl;
+
+					if (pdu->get_commandId() == smsc::smpp::SmppCommandSet::DELIVERY_SM  ||
+							pdu->get_commandId() == smsc::smpp::SmppCommandSet::DATA_SM) {
+						char buf[256];
+						smsc::sms::SMS s;
+						fetchSmsFromSmppPdu((smsc::smpp::PduXSm*)pdu,&s);
+						s.getOriginatingAddress().toString(buf,sizeof(buf));
+						printf("\n==========\nFrom:%s\n",buf);
+						s.getDestinationAddress().toString(buf,sizeof(buf));
+						printf("To:%s\n",buf);
+						printf("DCS:%d\n",s.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING));
+						printf("UMR:%d\n",s.getIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE));
+						if (smsc::util::getPduText((smsc::smpp::PduXSm*)pdu,buf,sizeof(buf))==-1) {
+							int sz=((smsc::smpp::PduXSm*)pdu)->optional.size_messagePayload();
+							char *data=new char[sz+1];
+							if (smsc::util::getPduText((smsc::smpp::PduXSm*)pdu,buf,sizeof(buf))==-1) {
+								printf("Message(payload):%s\n",data);
+							} else {
+								printf("Error: faield to retrieve message");
+							}
+							delete [] data;
+						} else {
+							printf("Message:%s\n",buf);
+						}
+						printf("==========\n");
+						fflush(stdout);
+						if (pdu->get_commandId() == smsc::smpp::SmppCommandSet::DELIVERY_SM) {
+							smsc::smpp::PduDeliverySmResp resp;
+							resp.get_header().set_commandId(smsc::smpp::SmppCommandSet::DELIVERY_SM_RESP);
+							resp.set_messageId("");
+							resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+							transmitter->sendDeliverySmResp(resp);
+						} else {
+							smsc::smpp::PduDataSmResp resp;
+							resp.get_header().set_commandId(smsc::smpp::SmppCommandSet::DATA_SM_RESP);
+							resp.set_messageId("");
+							resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+							transmitter->sendDataSmResp(resp);
+						}
+					} else
+						if (pdu->get_commandId() == smsc::smpp::SmppCommandSet::SUBMIT_SM_RESP) {
+						printf("\nReceived async submit sm resp:%d\n",pdu->get_commandStatus());
+					}
+					//rl_forced_update_display();
+					disposePdu(pdu);
+
+				}
+				void handleError(int errorCode)
+				{
+					std::cout << "Error with errorcode = " << errorCode << std::endl;
+				}
+			};
+
+
+			void BasicSme::init(ContextHandler &ctx) throw(SmeConfigurationException) {
 				try {
 					log.debug("BasicSme::init ***enter***");
 					// Общие параметры: хост и порт SMSC
@@ -68,95 +137,121 @@ namespace smsc {
 					} catch (smsc::test::util::ObjectNotFoundException ex) {
 						log.warn(ex.what());
 					}
+
 					log.debug("BasicSme::init ***exit***");
 				} catch (std::runtime_error ex) {
 					throw SmeConfigurationException(ex.what());
 				}
 			}
 
-			class BasicListener : public smsc::sme::SmppPduEventListener {
-        smsc::sme::SmppTransmitter* transmitter;
-			public:
-				void setTransmitter(smsc::sme::SmppTransmitter* transmitter) {
-					this->transmitter = transmitter;
-				}
+			std::string BasicSme::toString() throw() {
+				std::ostringstream sout;
+				sout << "### ESME {" << std::endl;
+				sout << "  host = " << getConfig().host << std::endl;
+				sout << "  port = " << getConfig().port << std::endl;
+				sout << "  sid = " << getConfig().sid << std::endl;
+				sout << "  password = " << getConfig().password << std::endl;
+				sout << "  Orig address = " << getConfig().origAddr << std::endl;
+				sout << "  System Type = " << getConfig().systemType << std::endl;
+				sout << "  timeout = " << getConfig().timeOut << std::endl;
+				sout << "} ### ESME" << std::endl;
 
-				void handleEvent(smsc::smpp::SmppHeader *pdu) {
-					std::cout << "Received PDU" << std::endl;
+				return sout.str();
+			}
 
-					if(pdu->get_commandId() == smsc::smpp::SmppCommandSet::DELIVERY_SM  ||
-						 pdu->get_commandId() == smsc::smpp::SmppCommandSet::DATA_SM)
-					{
-						char buf[256];
-						smsc::sms::SMS s;
-						fetchSmsFromSmppPdu((smsc::smpp::PduXSm*)pdu,&s);
-						s.getOriginatingAddress().toString(buf,sizeof(buf));
-						printf("\n==========\nFrom:%s\n",buf);
-						s.getDestinationAddress().toString(buf,sizeof(buf));
-						printf("To:%s\n",buf);
-						printf("DCS:%d\n",s.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING));
-						printf("UMR:%d\n",s.getIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE));
-						if(smsc::util::getPduText((smsc::smpp::PduXSm*)pdu,buf,sizeof(buf))==-1)
-						{
-							int sz=((smsc::smpp::PduXSm*)pdu)->optional.size_messagePayload();
-							char *data=new char[sz+1];
-							if(smsc::util::getPduText((smsc::smpp::PduXSm*)pdu,buf,sizeof(buf))==-1)
-							{
-								printf("Message(payload):%s\n",data);
-							}else
-							{
-								printf("Error: faield to retrieve message");
-							}
-							delete [] data;
-						}else
-						{
-							printf("Message:%s\n",buf);
-						}
-						printf("==========\n");
-						fflush(stdout);
-						if(pdu->get_commandId() == smsc::smpp::SmppCommandSet::DELIVERY_SM)
-						{
-							smsc::smpp::PduDeliverySmResp resp;
-							resp.get_header().set_commandId(smsc::smpp::SmppCommandSet::DELIVERY_SM_RESP);
-							resp.set_messageId("");
-							resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-							transmitter->sendDeliverySmResp(resp);
-						}else
-						{
-							smsc::smpp::PduDataSmResp resp;
-							resp.get_header().set_commandId(smsc::smpp::SmppCommandSet::DATA_SM_RESP);
-							resp.set_messageId("");
-							resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-							transmitter->sendDataSmResp(resp);
-						}
-					}else
-					if(pdu->get_commandId() == smsc::smpp::SmppCommandSet::SUBMIT_SM_RESP)
-					{
-						printf("\nReceived async submit sm resp:%d\n",pdu->get_commandStatus());
+			void BasicSme::bind(const int bindType) throw(PduListenerException, IllegalSmeOperation) {
+				if(session == 0) {
+					if(listener != 0) {
+						session = new smsc::sme::SmppSession(cfg, listener.getObjectPtr());
+					} else {
+						throw IllegalSmeOperation("IllegalSmeOperation: can't bind new session with null listener");
 					}
-					//rl_forced_update_display();
-					disposePdu(pdu);
-
 				}
-				void handleError(int errorCode)
-				{
-					std::cout << "Error with errorcode = " << errorCode << std::endl;
-				}
-			};
-
-			void BasicSme::bind() {
 				try {
-					BasicListener lst;
-					smsc::sme::SmppSession session(cfg, &lst);
-					smsc::sme::SmppTransmitter *tr = session.getSyncTransmitter();
-					lst.setTransmitter(tr);
-					session.connect();
-					for(;;) {
+					session->connect(bindType);
+					listener->checkError();
+				} catch (smsc::sme::SmppConnectException ex) {
+					std::ostringstream msg;
+					msg << "PduListenerException: smsc::sme::SmppConnectException occured\n" << ex.getReason();
+					throw PduListenerException(msg.str(), ex.getReason());
+				}
+			}
+
+			void BasicSme::unbind() throw(PduListenerException, IllegalSmeOperation) {
+				if (session != 0) {
+					try {
+						SmppSessionHandler oldSess = session;
+						session = SmppSessionHandler();
+						oldSess->close();
+						listener->checkError();
+					} catch (smsc::sme::SmppConnectException ex) {
+						//std::ostringstream msg;
+						//msg << "PduListenerException (non-fatal): smsc::sme::SmppConnectException occured\n" << ex.getReason();
+						// throw PduListenerException(msg.str(), ex.getReason());
+					} catch (PduListenerException ex) {
+					  //std::ostringstream msg;
+					  //msg << "PduListenerException (non-fatal): smsc::sme::SmppConnectException occured\n" << ex.getReason();
 					}
-					session.close();
-				} catch (std::exception &ex) {
-					log.error("Error when binding: %s", ex.what());
-					std::cout << ex.what() << std::endl;
+				} else {
+					throw IllegalSmeOperation("IllegalSmeOperation: can't unbind null session");
+				}
+			}
+
+			///////////////////////////////////////////
+			// BindSme
+			//////////////////////////////////////////
+			BindSme::Registrator BindSme::reg;
+
+			void BindSme::bind(const int bindType) throw(PduListenerException) {
+				if(session == 0) {
+				  BasicSme::bind(bindType);
+				} else {//issue Bind PDU
+				  smsc::smpp::PduBindTRX pdu;
+				  int expectedbindresp;
+				  switch (bindType) {
+				  case smsc::sme::BindType::Transceiver:
+					  pdu.get_header().set_commandId(smsc::smpp::SmppCommandSet::BIND_TRANCIEVER);
+					  expectedbindresp=smsc::smpp::SmppCommandSet::BIND_TRANCIEVER_RESP;
+					  break;
+				  case smsc::sme::BindType::Transmitter:
+					  pdu.get_header().set_commandId(smsc::smpp::SmppCommandSet::BIND_TRANSMITTER);
+					  expectedbindresp=smsc::smpp::SmppCommandSet::BIND_TRANSMITTER_RESP;
+					  break;
+				  case smsc::sme::BindType::Receiver:
+					  pdu.get_header().set_commandId(smsc::smpp::SmppCommandSet::BIND_RECIEVER);
+					  expectedbindresp=smsc::smpp::SmppCommandSet::BIND_RECIEVER_RESP;
+					  break;
+				  default:
+  					  std::ostringstream sout;
+					  sout << "BindError: Unknown bind type " << bindType;
+					  throw PduListenerException(sout.str(), 0);
+				  }
+				  pdu.set_systemId(cfg.sid.c_str());
+				  pdu.set_password(cfg.password.c_str());
+				  pdu.set_systemType(cfg.systemType.c_str());
+				  int seq=session->getNextSeq();
+				  pdu.get_header().set_sequenceNumber(seq);
+
+				  smsc::sme::SmppTransmitter *strans = session->getSyncTransmitter();
+
+				  smsc::smpp::PduBindTRXResp *resp=(smsc::smpp::PduBindTRXResp*)strans->sendPdu((smsc::smpp::SmppHeader*)&pdu);
+
+				  if (!resp || resp->get_header().get_commandId()!=expectedbindresp ||
+						  resp->get_header().get_sequenceNumber()!=pdu.get_header().get_sequenceNumber() ||
+						  resp->get_header().get_commandStatus()!=smsc::smpp::SmppStatusSet::ESME_ROK) {
+					  /*int reason=!resp?SmppConnectException::Reason::timeout :
+							   resp->get_header().get_commandId()!=expectedbindresp ||
+							   resp->get_header().get_sequenceNumber()!=pdu.get_header().get_sequenceNumber() ?
+							   SmppConnectException::Reason::smppError:
+							   resp->get_header().get_commandStatus()==smsc::smpp::SmppStatusSet::ESME_RBINDFAIL?
+							   SmppConnectException::Reason::bindFailed:
+							   SmppConnectException::Reason::unknown;*/
+					  int status = resp->get_header().get_commandStatus();
+					  if (resp)disposePdu((smsc::smpp::SmppHeader*)resp);
+					  std::ostringstream sout;
+					  sout << "An error status has been received: " << status;
+					  throw PduListenerException(sout.str(), status);
+				  }
 				}
 			}
 

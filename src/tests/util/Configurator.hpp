@@ -6,6 +6,8 @@
 #include <iterator>
 #include <stdexcept>
 #include <iostream>
+#include <sstream>
+#include <list>
 // XML
 #include <xercesc/dom/DOM_Document.hpp>
 #include <xercesc/dom/DOM_Element.hpp>
@@ -23,6 +25,7 @@
 #include <logger/Logger.h>
 
 #include "Handler.hpp"
+#include "ProtectedCopy.hpp"
 
 namespace smsc {
 	namespace test {
@@ -75,12 +78,16 @@ namespace smsc {
 				}
 			};
 
+			// typedefs
 			class Context;
 			typedef Handler<Context> ContextHandler;
 			typedef multimap<string, ContextHandler > ContextHandlerMultiMap;
+			typedef ContextHandlerMultiMap::iterator ContextHandlerIterator;
+			typedef std::pair<ContextHandlerIterator, ContextHandlerIterator> ContextHandlerIteratorPair;
 			typedef map<string, string> AttributeMap;
+			typedef std::list<ContextHandler> ContextHandlerList;
 
-			class Context {
+			class Context : public ProtectedCopy {
 			private:
 				string name;
 				string value;
@@ -120,8 +127,13 @@ namespace smsc {
 					throw ObjectNotFoundException("ObjectNotFoundException: Can't find subcontext \"" + subContextName + "\" in context " + getName());
 				}
 
-				ContextHandlerMultiMap::iterator findSubcontext(const string& subContextName) {
-					return subcontext.find(subContextName);
+				ContextHandlerList findSubcontext(const string& subContextName) {
+  					ContextHandlerList lst;
+					ContextHandlerIteratorPair subContexts = subcontext.equal_range(subContextName);
+					for(ContextHandlerIterator itr = subContexts.first; itr != subContexts.second; ++itr) {
+						lst.push_back(itr->second);
+					}
+					return lst;
 				}
 
 				void addSubcontext(const ContextHandler& subCtx) {
@@ -140,16 +152,16 @@ namespace smsc {
 				void setValue(const string& value) {
 					this->value = value;
 				}
-				void print() {
-					print("  ", "  ");
+				std::string toString() {
+					return toString("  ", "  ");
 				}
-				void print(string tab, string indent);
+				std::string toString(string tab, string indent);
 			};
 
 			class ContextConfigurator;
 			typedef Handler<ContextConfigurator> ContextConfiguratorHandler;
 
-			class ContextConfigurator {
+			class ContextConfigurator : public ProtectedCopy {
 			private:
 				static ContextConfiguratorHandler config;
 				map<string, ContextHandler> contexts;

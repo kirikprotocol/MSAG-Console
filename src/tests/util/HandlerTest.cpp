@@ -6,12 +6,13 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "Handler.hpp"
+#include "ProtectedCopy.hpp"
 
 namespace smsc {
 	namespace test {
 		namespace util {
 
-			class A {
+			class A : public ProtectedCopy {
 			public:
 				int a;
 				int b;

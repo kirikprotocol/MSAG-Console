@@ -35,7 +35,7 @@ namespace smsc {
 					}
 					try {
 						ContextHandler root = config->getContext("default_context");
-						root->print();
+						std::cout << root->toString();
 					} catch (ObjectNotFoundException ex) {
 						std::cout <<  std::endl << ex.what();
 						CPPUNIT_FAIL("ObjectNotFoundException has occured");

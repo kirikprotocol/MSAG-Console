@@ -83,9 +83,14 @@ namespace smsc {
 				Handler& operator = (const Handler<T>& handler) {
 					if (objectPtr != handler.objectPtr) {
 						release();
-						objectPtr = handler.objectPtr;
-						referenceCount = handler.referenceCount;
-						++(*referenceCount);
+						if(handler != 0) {
+						  objectPtr = handler.objectPtr;
+						  referenceCount = handler.referenceCount;
+						  ++(*referenceCount);
+						} else {
+						  objectPtr = 0;
+						  referenceCount = 0;
+						}
 					}
 					return *this;
 				}
@@ -102,6 +107,14 @@ namespace smsc {
 					}
 					return *this;
 				}
+
+				/*friend bool operator==(const Handler<T>& handler, const int addr) {
+					return handler.objectPtr == addr;
+				}
+
+				friend bool operator==(const int addr, const Handler<T>& handler) {
+					return handler.objectPtr == addr;
+				}*/
 
 				friend bool operator==(const Handler<T>& handler, const T* objectPtr) {
 					return handler.objectPtr == objectPtr;
@@ -142,6 +155,10 @@ namespace smsc {
 				/*operator T& () const {
 					return *checkPointer(objectPtr);
 				}*/
+
+				T* getObjectPtr() {
+				  return objectPtr;
+				}
 
 				~Handler() {
 					release();

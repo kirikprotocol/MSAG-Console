@@ -18,21 +18,25 @@ namespace smsc {
 			ContextConfiguratorHandler ContextConfigurator::config = new ContextConfigurator();
 
 
-			void Context::print(string tab, string indent) {
-				using std::cout;
-				cout << tab << "Context {\n";
-				cout << tab << tab << "name = " << getName();
-				cout << tab << tab << "value = " << getValue() << "\n";
-				cout << tab << tab << "Attributes ######\n";
+			std::string Context::toString(string tab, string indent) {
+				using std::ostringstream;
+
+				ostringstream sout;
+
+				sout << tab << "Context {\n";
+				sout << tab << tab << "name = " << getName();
+				sout << tab << tab << "value = " << getValue() << "\n";
+				sout << tab << tab << "Attributes ######\n";
 				typedef AttributeMap::const_iterator AIter;
 				for (AIter itr = attributes.begin(); itr != attributes.end(); ++itr) {
-					cout << tab << tab << "name = " << itr->first << ", value = " << itr->second << "\n";
+					sout << tab << tab << "name = " << itr->first << ", value = " << itr->second << "\n";
 				}
 				typedef ContextHandlerMultiMap::const_iterator SIter;
 				for (SIter itr = subcontext.begin(); itr != subcontext.end(); ++itr) {
-					itr->second->print(tab+tab, indent);
+					itr->second->toString(tab+tab, indent);
 				}
-				cout << tab << "}\n";
+				sout << tab << "}\n";
+				return sout.str();
 			}
 
 			Handler<DOMParser> ContextConfigurator::createParser() {
