@@ -606,6 +606,13 @@ void Smsc::init(const SmscConfigs& cfg)
   addr.getValue( addrval );
   scAddr = addrval;
 
+  Address addr(cfg.cfgman->getString("core.ussd_center_address"));
+  AddressValue addrval1;
+  addr.getValue( addrval1 );
+  ussdCenterAddr = addrval1;
+
+  ussdSSN=cfg.cfgman->getInt("core.ussd_ssn");
+
   {
     TrafficControl::TrafficControlConfig tccfg;
     tccfg.smsc=this;
@@ -695,7 +702,7 @@ void Smsc::run()
       );
     tp.startTask(acc);
     Event mapiostarted;
-    MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr);
+    MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr,ussdCenterAddr,ussdSSN);
     tp.startTask(mapio);
     accstarted.Wait();
     mapiostarted.Wait();

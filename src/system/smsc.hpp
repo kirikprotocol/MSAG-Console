@@ -416,6 +416,8 @@ protected:
   uint64_t deliverErrPermCounter;
   uint64_t rescheduleCounter;
   string scAddr;
+  string ussdCenterAddr;
+  int    ussdSSN;
   time_t startTime;
 
   int eventQueueLimit;
