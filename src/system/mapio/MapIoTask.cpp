@@ -100,6 +100,7 @@ void MapIoTask::dispatcher()
     if ( result == MSG_TIMEOUT ) continue;
     if ( result == MSG_BROKEN_CONNECTION ){
       __trace2__("MAP: Broken connection");
+restart:
       warning_if(MsgRel(MY_USER_ID,ETSIMAP_ID)!=MSG_OK);
       bool ok = false;
       while ( !ok ){
@@ -130,7 +131,8 @@ void MapIoTask::dispatcher()
     }
     if ( result != MSG_OK ) {
       __trace2__("MAP: error at MsgRecv with code x%hx",result);
-      return;
+      //return;
+      goto restart;
     }
     
     __trace2__("MAP: MsgRecv receive msg with "
