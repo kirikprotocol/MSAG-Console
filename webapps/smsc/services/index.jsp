@@ -55,12 +55,14 @@ function viewService(serviceId)
 
 <table class=secRep cellspacing=1 width="100%">
 <col width="1%">
+<col width="1%">
 <col width="60%" align=left>
 <col width="20%" align=left>
 <col width="20%" align=center>
 <thead>
 <tr>
 	<th class=ico><img src="<%=CPATH%>/img/ico16_checked_sa.gif" class=ico16 alt=""></th>
+	<th>&nbsp;</th>
 	<th>service</th>
 	<th>host</th>
 	<th>status</th>
@@ -80,6 +82,7 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 %>
 <tr class=row<%=row&1%>>
 	<td class=check><input class=check type=checkbox name=serviceIds value="<%=encodedServiceId%>" <%=serviceIds.contains(serviceId) ? "checked" : ""%>></td>
+	<td><a href="serviceEditSme.jsp?serviceId=<%=encodedServiceId%>">edit</a></td>
 	<%
 	if (bean.isServiceAdministrable(serviceId))
 	{

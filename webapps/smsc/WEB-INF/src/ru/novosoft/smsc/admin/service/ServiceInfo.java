@@ -169,4 +169,11 @@ public class ServiceInfo
 				return "unknown";
 		}
 	}
+
+	public SME setSme(SME sme)
+	{
+		SME old_sme = this.sme;
+		this.sme = sme;
+		return old_sme;
+	}
 }

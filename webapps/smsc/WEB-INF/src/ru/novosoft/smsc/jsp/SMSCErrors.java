@@ -34,6 +34,7 @@ public class SMSCErrors
 			public static final String NotAllParametersDefined = B + "NotAllParametersDefined";
 			public static final String ServiceIdNotDefined = B + "ServiceIdNotDefined";
 			public static final String ServiceIdTooLong = B + "ServiceIdTooLong";
+			public static final String ServiceNotFound = B + "ServiceNotFound";
 		}
 
 		public static class hosts
