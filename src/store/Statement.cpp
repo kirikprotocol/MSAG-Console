@@ -517,43 +517,45 @@ void RetriveStatement::getSms(SMS& sms)
     sms.needArchivate = (bNeedArchivate == 'Y');
     sms.messageBody.header = (bHeaderIndicator == 'Y');
     
-    if (indSrcImsi) {
-        sms.originatingDescriptor.imsi[0] = '\0';
-        sms.originatingDescriptor.imsiLenght = 0;
-    } else {
+    if (indSrcImsi != OCI_IND_NOTNULL) {
         sms.originatingDescriptor.imsiLenght 
             = strlen(sms.originatingDescriptor.imsi);
-    }
-    if (indSrcMsc) {
-        sms.originatingDescriptor.msc[0] = '\0';
-        sms.originatingDescriptor.mscLenght = 0;
     } else {
+        sms.originatingDescriptor.imsi[0] = '\0';
+        sms.originatingDescriptor.imsiLenght = 0;
+    }
+    if (indSrcMsc != OCI_IND_NOTNULL) {
         sms.originatingDescriptor.mscLenght 
             = strlen(sms.originatingDescriptor.msc);
-    }
-    if (indDstImsi) {
-        sms.destinationDescriptor.imsi[0] = '\0';
-        sms.destinationDescriptor.imsiLenght = 0;
     } else {
+        sms.originatingDescriptor.msc[0] = '\0';
+        sms.originatingDescriptor.mscLenght = 0;
+    }
+    if (indDstImsi != OCI_IND_NOTNULL) {
         sms.destinationDescriptor.imsiLenght 
             = strlen(sms.destinationDescriptor.imsi);
-    }
-    if (indDstMsc) {
-        sms.destinationDescriptor.msc[0] = '\0';
-        sms.destinationDescriptor.mscLenght = 0;
     } else {
+        sms.destinationDescriptor.imsi[0] = '\0';
+        sms.destinationDescriptor.imsiLenght = 0;
+    }
+    if (indDstMsc != OCI_IND_NOTNULL) {
         sms.destinationDescriptor.mscLenght 
             = strlen(sms.destinationDescriptor.msc);
+    } else {
+        sms.destinationDescriptor.msc[0] = '\0';
+        sms.destinationDescriptor.mscLenght = 0;
     }
     
-    if (indSrcSme) sms.originatingDescriptor.sme = 0;
-    if (indDstSme) sms.destinationDescriptor.sme = 0;
+    if (indSrcSme != OCI_IND_NOTNULL) 
+        sms.originatingDescriptor.sme = 0;
+    if (indDstSme != OCI_IND_NOTNULL) 
+        sms.destinationDescriptor.sme = 0;
     
-    if (indLastTime) sms.lastTime = 0;
+    if (indLastTime != OCI_IND_NOTNULL) sms.lastTime = 0;
     else convertOCIDateToDate(&lastTime, &(sms.lastTime));
-    if (indNextTime) sms.nextTime = 0;
+    if (indNextTime != OCI_IND_NOTNULL) sms.nextTime = 0;
     else convertOCIDateToDate(&nextTime, &(sms.nextTime));
-    if (indWaitTime) sms.waitTime = 0;
+    if (indWaitTime != OCI_IND_NOTNULL) sms.waitTime = 0;
     else convertOCIDateToDate(&waitTime, &(sms.waitTime));
     
     convertOCIDateToDate(&submitTime, &(sms.submitTime));
@@ -699,10 +701,17 @@ void ToEnrouteStatement::bindFailureCause(dvoid* cause, sb4 size)
 void ToEnrouteStatement::bindDestinationDescriptor(Descriptor& dst)
     throw(StorageException)
 {
-    // Add checks for NULLs here (inds)
-    bind(3 , SQLT_STR, (dvoid *) (dst.msc), (sb4) sizeof(dst.msc));
-    bind(4 , SQLT_STR, (dvoid *) (dst.imsi), (sb4) sizeof(dst.imsi));
-    bind(5 , SQLT_UIN, (dvoid *)&(dst.sme), (sb4) sizeof(dst.sme));
+    indDstMsc = (!dst.mscLenght || !strlen(dst.msc)) ? 
+                OCI_IND_NULL : OCI_IND_NOTNULL;
+    indDstImsi = (!dst.imsiLenght || !strlen(dst.imsi)) ? 
+                OCI_IND_NULL : OCI_IND_NOTNULL;
+
+    bind(3 , SQLT_STR, (dvoid *) (dst.msc), 
+         (sb4) sizeof(dst.msc), &indDstMsc);
+    bind(4 , SQLT_STR, (dvoid *) (dst.imsi),
+         (sb4) sizeof(dst.imsi), &indDstImsi);
+    bind(5 , SQLT_UIN, (dvoid *)&(dst.sme),
+         (sb4) sizeof(dst.sme));
 }
 
 const char* ToDeliveredStatement::sql = (const char*)
@@ -730,10 +739,17 @@ void ToDeliveredStatement::bindId(SMSId id)
 void ToDeliveredStatement::bindDestinationDescriptor(Descriptor& dst)
     throw(StorageException)
 {
-    // Add checks for NULLs here (inds)
-    bind(2 , SQLT_STR, (dvoid *) (dst.msc), (sb4) sizeof(dst.msc));
-    bind(3 , SQLT_STR, (dvoid *) (dst.imsi), (sb4) sizeof(dst.imsi));
-    bind(4 , SQLT_UIN, (dvoid *)&(dst.sme), (sb4) sizeof(dst.sme));
+    indDstMsc = (!dst.mscLenght || !strlen(dst.msc)) ? 
+                OCI_IND_NULL : OCI_IND_NOTNULL;
+    indDstImsi = (!dst.imsiLenght || !strlen(dst.imsi)) ? 
+                OCI_IND_NULL : OCI_IND_NOTNULL;
+
+    bind(2 , SQLT_STR, (dvoid *) (dst.msc), 
+         (sb4) sizeof(dst.msc), &indDstMsc);
+    bind(3 , SQLT_STR, (dvoid *) (dst.imsi),
+         (sb4) sizeof(dst.imsi), &indDstImsi);
+    bind(4 , SQLT_UIN, (dvoid *)&(dst.sme),
+         (sb4) sizeof(dst.sme));
 }
 
 const char* ToUndeliverableStatement::sql = (const char*)
@@ -767,10 +783,17 @@ void ToUndeliverableStatement::bindFailureCause(dvoid* cause, sb4 size)
 void ToUndeliverableStatement::bindDestinationDescriptor(Descriptor& dst)
     throw(StorageException)
 {
-    // Add checks for NULLs here (inds)
-    bind(3 , SQLT_STR, (dvoid *) (dst.msc), (sb4) sizeof(dst.msc));
-    bind(4 , SQLT_STR, (dvoid *) (dst.imsi), (sb4) sizeof(dst.imsi));
-    bind(5 , SQLT_UIN, (dvoid *)&(dst.sme), (sb4) sizeof(dst.sme));
+    indDstMsc = (!dst.mscLenght || !strlen(dst.msc)) ? 
+                OCI_IND_NULL : OCI_IND_NOTNULL;
+    indDstImsi = (!dst.imsiLenght || !strlen(dst.imsi)) ? 
+                OCI_IND_NULL : OCI_IND_NOTNULL;
+
+    bind(3 , SQLT_STR, (dvoid *) (dst.msc), 
+         (sb4) sizeof(dst.msc), &indDstMsc);
+    bind(4 , SQLT_STR, (dvoid *) (dst.imsi),
+         (sb4) sizeof(dst.imsi), &indDstImsi);
+    bind(5 , SQLT_UIN, (dvoid *)&(dst.sme),
+         (sb4) sizeof(dst.sme));
 }
 
 const char* ToExpiredStatement::sql = (const char*)

@@ -320,7 +320,9 @@ namespace smsc { namespace store
     protected:
         
         OCIDate nextTime;
-    
+        
+        sb2     indDstMsc, indDstImsi;
+
     public:
 
         ToEnrouteStatement(Connection* connection, bool assign=true)
@@ -344,6 +346,10 @@ namespace smsc { namespace store
     class ToDeliveredStatement : public IdStatement
     {
     static const char* sql;
+    protected:
+
+        sb2     indDstMsc, indDstImsi;
+
     public:
 
         ToDeliveredStatement(Connection* connection, bool assign=true)
@@ -363,6 +369,10 @@ namespace smsc { namespace store
     class ToUndeliverableStatement : public IdStatement
     {
     static const char* sql;
+    protected:
+
+        sb2     indDstMsc, indDstImsi;
+
     public:
 
         ToUndeliverableStatement(Connection* connection, bool assign=true)
