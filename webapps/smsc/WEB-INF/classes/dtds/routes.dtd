@@ -10,6 +10,7 @@
 	serviceId CDATA #REQUIRED
 	suppressDeliveryReports (true|false) "false"
 	active (true|false) "true"
+	srcSmeId CDATA #IMPLIED
 >
 <!ELEMENT source (subject | mask)>
 <!ELEMENT destination (subject | mask)>

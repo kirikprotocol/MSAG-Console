@@ -32,6 +32,8 @@ public class RoutesEdit extends RouteBody
 
 		if (routeId == null)
 			routeId = "";
+		if (srcSmeId == null)
+			srcSmeId = "";
 
 		if (oldRouteId == null)
 		{
@@ -46,6 +48,7 @@ public class RoutesEdit extends RouteBody
 				billing = r.isBilling();
 				archiving = r.isArchiving();
 				serviceId = r.getServiceId();
+				srcSmeId = r.getSrcSmeId();
 				suppressDeliveryReports = r.isSuppressDeliveryReports();
 				active = r.isActive();
 				checkedSources = (String[]) r.getSources().getSubjectNames().toArray(new String[0]);
@@ -180,7 +183,7 @@ public class RoutesEdit extends RouteBody
 				return error(SMSCErrors.error.routes.destinationsIsEmpty);
 
 			routeSubjectManager.getRoutes().remove(oldRouteId);
-			routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations));
+			routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId));
 			appContext.getStatuses().setRoutesChanged(true);
 			return RESULT_DONE;
 		}

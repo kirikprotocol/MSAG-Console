@@ -49,64 +49,64 @@ page_menu_end(out);
 <% if (request.isUserInRole("routes"))
 {%>
 <tr class=row<%=(rowN++)&1%>>
-	<td><input class=check type=checkbox name=checks value=routes <%=!bean.isRoutesChanged() ? "disabled" : ""%>></td>
-	<td>Routes</td>
+	<td><input id=CHK_ROUTES class=check type=checkbox name=checks value=routes <%=!bean.isRoutesChanged() ? "disabled" : ""%>></td>
+	<td><label for=CHK_ROUTES>Routes</label></td>
 	<td><%=bean.isRoutesChanged() ? "<span class=Cf00>changed</span>" : "clear"%></td>
 </tr>
 <%}
 if (request.isUserInRole("subjects"))
 {%>
 <tr class=row<%=(rowN++)&1%>>
-	<td><input class=check type=checkbox name=checks value=subjects <%=!bean.isSubjectsChanged() ? "disabled" : ""%>></td>
-	<td>Subjects</td>
+	<td><input id=CHK_SUBJECTS class=check type=checkbox name=checks value=subjects <%=!bean.isSubjectsChanged() ? "disabled" : ""%>></td>
+	<td><label for=CHK_SUBJECTS>Subjects</label></td>
 	<td><%=bean.isSubjectsChanged() ? "<span class=Cf00>changed</span>" : "clear"%></td>
 </tr>
 <%}
 if (request.isUserInRole("aliases"))
 {%>
 <tr class=row<%=(rowN++)&1%>>
-	<td><input class=check type=checkbox name=checks value=aliases <%=!bean.isAliasesChanged() ? "disabled" : ""%>></td>
-	<td>Aliases</td>
+	<td><input id=CHK_ALIASES class=check type=checkbox name=checks value=aliases <%=!bean.isAliasesChanged() ? "disabled" : ""%>></td>
+	<td><label for=CHK_ALIASES>Aliases</label></td>
 	<td><%=bean.isAliasesChanged() ? "<span class=Cf00>changed</span>" : "clear"%></td>
 </tr>
 <%}%>
 <%--if (request.isUserInRole("profiles"))
 {%>
 <tr class=row<%=(rowN++)&1%>>
-	<td><input class=check type=checkbox name=checks value=profiles <%=!bean.isProfilesChanged() ? "disabled" : ""%>></td>
-	<td>Profiles</td>
+	<td><input id=CHK_PROFILES class=check type=checkbox name=checks value=profiles <%=!bean.isProfilesChanged() ? "disabled" : ""%>></td>
+	<td><label for=CHK_PROFILES>Profiles</label></td>
 	<td><%=bean.isProfilesChanged() ? "<span class=Cf00>changed</span>" : "clear"%></td>
 </tr>
 <%}--%>
 <%if (request.isUserInRole("hosts"))
 {%>
 <tr class=row<%=(rowN++)&1%>>
-	<td><input class=check type=checkbox name=checks value=hosts <%=!bean.isHostsChanged() ? "disabled" : ""%>></td>
-	<td>Hosts</td>
+	<td><input id=CHK_HOSTS class=check type=checkbox name=checks value=hosts <%=!bean.isHostsChanged() ? "disabled" : ""%>></td>
+	<td><label for=CHK_HOSTS>Hosts</label></td>
 	<td><%=bean.isHostsChanged() ? "<span class=Cf00>changed</span>" : "clear"%></td>
 </tr>
 <%}%>
 <%--if (request.isUserInRole("services"))
 {%>
 <tr class=row<%=(rowN++)&1%>>
-	<td><input class=check type=checkbox name=checks value=services <%=!bean.isServicesChanged() ? "disabled" : ""%>></td>
-	<td>Services</td>
+	<td><input id=CHK_SERVICES class=check type=checkbox name=checks value=services <%=!bean.isServicesChanged() ? "disabled" : ""%>></td>
+	<td><label for=CHK_SERVICES>Services</label></td>
 	<td><%=bean.isServicesChanged() ? "<span class=Cf00>changed</span>" : "clear"%></td>
 </tr>
 <%}--%>
 <%if (request.isUserInRole("users"))
 {%>
 <tr class=row<%=(rowN++)&1%>>
-	<td><input class=check type=checkbox name=checks value=users <%=!bean.isUsersChanged() ? "disabled" : ""%>></td>
-	<td>Users</td>
+	<td><input id=CHK_USERS class=check type=checkbox name=checks value=users <%=!bean.isUsersChanged() ? "disabled" : ""%>></td>
+	<td><label for=CHK_USERS>Users</label></td>
 	<td><%=bean.isUsersChanged() ? "<span class=Cf00>changed</span>" : "clear"%></td>
 </tr>
 <%}
 if (request.isUserInRole("smsc_service"))
 {%>
 <tr class=row<%=(rowN++)&1%>>
-	<td><input class=check type=checkbox name=checks value=smsc <%=!bean.isSmscChanged() ? "disabled" : ""%>></td>
-	<td>SMS Center</td>
+	<td><input id==CHK_SMSC class=check type=checkbox name=checks value=smsc <%=!bean.isSmscChanged() ? "disabled" : ""%>></td>
+	<td><label for=CHK_SMSC>SMS Center</label></td>
 	<td><%=bean.isSmscChanged() ? "<span class=Cf00>changed</span>" : "clear"%></td>
 </tr>
 <%}%>

@@ -20,6 +20,7 @@ public class RouteAddCommand extends RouteGenCommand
     private boolean active = true;
     private int serviceid;
     private int priority;
+	 private String srcSmeId = null;
 
     public void setBill(boolean bill) {
         this.bill = bill;
@@ -108,8 +109,11 @@ public class RouteAddCommand extends RouteGenCommand
                 }
             }
 
+			  //todo init srcSmeId properly
+			  srcSmeId = "";
+
             smscRoute = new Route(route, priority, allow, bill, arc, !receipt,
-                                  active, serviceid, srcList, dstList);
+                                  active, serviceid, srcList, dstList, srcSmeId);
 
             if (priority < 0 || priority > 32000)
                 throw new Exception("Priority value should be between 0 and 32000");
@@ -129,5 +133,14 @@ public class RouteAddCommand extends RouteGenCommand
         return "ROUTE_ADD";
     }
 
+	public String getSrcSmeId()
+	{
+		return srcSmeId;
+	}
+
+	public void setSrcSmeId(String srcSmeId)
+	{
+		this.srcSmeId = srcSmeId;
+	}
 }
 

@@ -29,6 +29,7 @@ public class RouteAlterCommand extends RouteGenCommand
     private boolean active = true;
     private int serviceid;
     private int priority;
+	private String srcSmeId = null;
 
     private boolean setBill = false;
     private boolean setArc = false;
@@ -82,11 +83,13 @@ public class RouteAlterCommand extends RouteGenCommand
                 return;
             }
 
+			  //todo init srcSmeId properly
+			  srcSmeId = "";
             Route newRoute = new Route(route,
                     oldRoute.getPriority(), oldRoute.isEnabling(), oldRoute.isBilling(),
                     oldRoute.isArchiving(), oldRoute.isSuppressDeliveryReports(),
 						        oldRoute.isActive() , oldRoute.getServiceId(),
-                    oldRoute.getSources(), oldRoute.getDestinations());
+                    oldRoute.getSources(), oldRoute.getDestinations(), srcSmeId);
 
             if (target == TARGET_SRC)
             {
@@ -249,5 +252,14 @@ public class RouteAlterCommand extends RouteGenCommand
         return "ROUTE_ALTER";
     }
 
+	public String getSrcSmeId()
+	{
+		return srcSmeId;
+	}
+
+	public void setSrcSmeId(String srcSmeId)
+	{
+		this.srcSmeId = srcSmeId;
+	}
 }
 

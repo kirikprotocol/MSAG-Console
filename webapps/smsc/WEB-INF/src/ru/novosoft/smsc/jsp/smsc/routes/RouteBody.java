@@ -21,6 +21,7 @@ public class RouteBody extends SmscBean
 	protected boolean suppressDeliveryReports = false;
 	protected boolean active = false;
 	protected int serviceId = 0;
+	protected String srcSmeId = null;
 	protected String[] checkedSources = null;
 	protected String[] srcMasks = null;
 	protected String[] checkedDestinations = null;
@@ -225,5 +226,15 @@ public class RouteBody extends SmscBean
 	public void setActive(boolean active)
 	{
 		this.active = active;
+	}
+
+	public String getSrcSmeId()
+	{
+		return srcSmeId;
+	}
+
+	public void setSrcSmeId(String srcSmeId)
+	{
+		this.srcSmeId = srcSmeId;
 	}
 }

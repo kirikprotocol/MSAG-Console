@@ -28,10 +28,10 @@ public class Route
 	private int serviceId = 0;
 	private boolean suppressDeliveryReports = false;
 	private boolean active;
+	private String srcSmeId;
 
-	public Route(String routeName, int priority, boolean isEnabling, boolean isBilling, boolean isArchiving, boolean isSuppressDeliveryReports, boolean active, int serviceId, SourceList sources, DestinationList destinations)
+	public Route(String routeName, int priority, boolean isEnabling, boolean isBilling, boolean isArchiving, boolean isSuppressDeliveryReports, boolean active, int serviceId, SourceList sources, DestinationList destinations, String srcSmeId)
 	{
-		this.active = active;
 		if (routeName == null)
 			throw new NullPointerException("Route name is null");
 		if (routeName.length() > Constants.ROUTE_ID_MAXLENGTH)
@@ -51,6 +51,7 @@ public class Route
 		this.serviceId = serviceId;
 		this.suppressDeliveryReports = isSuppressDeliveryReports;
 		this.active = active;
+		this.srcSmeId = srcSmeId;
 	}
 
 	public Route(String routeName)
@@ -70,6 +71,7 @@ public class Route
 		serviceId = 0;
 		suppressDeliveryReports = false;
 		active = false;
+		srcSmeId = "";
 	}
 
 	public Route(Element routeElem, SubjectList subjects, SmeManager smeManager) throws AdminException
@@ -88,6 +90,7 @@ public class Route
 		serviceId = Integer.decode(routeElem.getAttribute("serviceId")).intValue();
 		suppressDeliveryReports = Boolean.valueOf(routeElem.getAttribute("suppressDeliveryReports")).booleanValue();
 		active = Boolean.valueOf(routeElem.getAttribute("active")).booleanValue();
+		srcSmeId = routeElem.getAttribute("srcSmeId");
 	}
 
 	public String getName()
@@ -212,7 +215,7 @@ public class Route
 
 	public PrintWriter store(PrintWriter out)
 	{
-		out.println("  <route id=\"" + StringEncoderDecoder.encode(getName()) + "\" billing=\"" + isBilling() + "\" archiving=\"" + isArchiving() + "\" enabling=\"" + isEnabling() + "\" priority=\"" + getPriority() + "\" serviceId=\"" + getServiceId() + "\" suppressDeliveryReports=\"" + isSuppressDeliveryReports() + "\" active=\"" + isActive() + "\">");
+		out.println("  <route id=\"" + StringEncoderDecoder.encode(getName()) + "\" billing=\"" + isBilling() + "\" archiving=\"" + isArchiving() + "\" enabling=\"" + isEnabling() + "\" priority=\"" + getPriority() + "\" serviceId=\"" + getServiceId() + "\" suppressDeliveryReports=\"" + isSuppressDeliveryReports() + "\" active=\"" + isActive() + "\" srcSmeId=\"" + StringEncoderDecoder.encode(getSrcSmeId()) + "\">");
 		getSources().store(out);
 		getDestinations().store(out);
 		out.println("  </route>");
@@ -257,5 +260,15 @@ public class Route
 	public void setActive(boolean active)
 	{
 		this.active = active;
+	}
+
+	public String getSrcSmeId()
+	{
+		return srcSmeId;
+	}
+
+	public void setSrcSmeId(String srcSmeId)
+	{
+		this.srcSmeId = srcSmeId;
 	}
 }

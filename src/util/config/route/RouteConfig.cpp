@@ -145,6 +145,7 @@ throw (SubjectNotFoundException)
   std::auto_ptr<char> serviceIdStr(elem.getAttribute("serviceId").transcode());
   unsigned int priority = atoi(priorityStr.get());
   unsigned int serviceId = atoi(serviceIdStr.get());
+  std::auto_ptr<char> srcSmeSystemId(elem.getAttribute("srcSmeId").transcode());
   std::auto_ptr<Route> r(new Route(std::string(id.get()),
                                    priority,
                                    strcmp("true", billing.get()) == 0,
@@ -152,7 +153,8 @@ throw (SubjectNotFoundException)
                                    strcmp("true", enabling.get()) == 0,
                                    strcmp("true", suppressDeliveryReports.get()) == 0,
 																	 strcmp("true", active.get()) == 0,
-                                   serviceId)
+                                   serviceId,
+								   std::string(srcSmeSystemId.get()))
                          );
 
   DOM_NodeList srcs = elem.getElementsByTagName("source");

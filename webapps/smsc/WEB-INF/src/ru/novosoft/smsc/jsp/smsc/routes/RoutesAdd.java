@@ -21,6 +21,8 @@ public class RoutesAdd extends RouteBody
 
 		if (routeId == null)
 			routeId = "";
+		if (srcSmeId == null)
+			srcSmeId = "";
 
 		if (checkedSources == null)
 			checkedSources = new String[0];
@@ -139,7 +141,7 @@ public class RoutesAdd extends RouteBody
 			if (destinations.isEmpty())
 				return error(SMSCErrors.error.routes.destinationsIsEmpty);
 
-			routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations));
+			routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId));
 			appContext.getStatuses().setRoutesChanged(true);
 			return RESULT_DONE;
 		}

@@ -34,11 +34,23 @@
 	<th>&nbsp;</th>
 	<td><input id=active class=check type=checkbox name=active <%=bean.isActive() ? "checked" : ""%>>&nbsp;<label for=active>active</label></td>
 </tr>
-
 <tr class=row<%=(rowN++)&1%>>
 	<th>service ID:</th>
 	<td><input class=txtW name=serviceId value="<%=bean.getServiceId()%>" maxlength=5 validation="route_serviceId" onkeyup="resetValidation(this)"></td>
 </tr>
+<tr class=row<%=(rowN++)&1%>>
+	<th>srcSmeId:</th>
+	<td><select name=srcSmeId>
+		<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
+		{
+			String smeId = (String) j.next();
+			String encSmeId = StringEncoderDecoder.encode(smeId);
+			%><option value="<%=encSmeId%>" <%=smeId.equals(bean.getSrcSmeId()) ? "selected" : ""%>><%=encSmeId%></option><%
+		}
+		%>
+	</select></td>
+</tr>
+
 </table>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ sources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <table class=properties_list cellspacing=0 cellpadding=0>
