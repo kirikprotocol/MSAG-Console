@@ -17,6 +17,13 @@ using namespace smsc::test::smpp;
 using namespace smsc::test::core; //constants
 using namespace smsc::test::util;
 
+SmppProtocolTestCases::SmppProtocolTestCases(SmppFixture* _fixture)
+: fixture(_fixture), chkList(_fixture->chkList)
+{
+	sme = fixture->smeReg->getSme(fixture->systemId);
+	__require__(sme);
+}
+
 Category& SmppProtocolTestCases::getLog()
 {
 	static Category& log = Logger::getCategory("SmppProtocolTestCases");
@@ -755,7 +762,7 @@ uint32_t SmppProtocolTestCases::sendDeliverySmRespRetry(PduDeliverySm& pdu,
 	bool sync, int num)
 {
 	__trace__("sendDeliverySmRespRetry()");
-	TCSelector s(num, 4);
+	TCSelector s(num, 5);
 	__decl_tc__;
 	try
 	{
@@ -783,6 +790,16 @@ uint32_t SmppProtocolTestCases::sendDeliverySmRespRetry(PduDeliverySm& pdu,
 				respPdu.get_header().set_commandStatus(0xffffffff);
 				//respPdu.get_header().set_commandStatus(ESME_ROK); //No Error
 				fixture->transmitter->sendDeliverySmResp(respPdu, sync);
+				break;
+			case 5: //отправить респонс после sme timeout
+				{
+					__tc__("sendDeliverySmResp.sendRetry.sendAfterSmeTimeout");
+					__cfg_int__(sequentialPduInterval);
+					int timeout = 1000 * (sme->timeout + rand2(1, sequentialPduInterval));
+					__trace2__("sendAfterSmeTimeout(): sme timeout = %d, timeout = %d",
+						sme->timeout, timeout);
+					fixture->transmitter->sendDeliverySmResp(respPdu, sync, timeout);
+				}
 				break;
 			default:
 				__unreachable__("Invalid num");

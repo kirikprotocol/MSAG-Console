@@ -10,6 +10,7 @@ namespace test {
 namespace sme {
 
 using log4cpp::Category;
+using smsc::smeman::SmeInfo;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::CheckList;
 
@@ -20,9 +21,7 @@ using smsc::test::util::CheckList;
 class SmppProtocolTestCases : public BaseTestCases
 {
 public:
-	SmppProtocolTestCases(SmppFixture* _fixture)
-	: fixture(_fixture), chkList(_fixture->chkList) {}
-	
+	SmppProtocolTestCases(SmppFixture* fixture);
 	virtual ~SmppProtocolTestCases() {}
 
 	/**
@@ -70,7 +69,8 @@ public:
 protected:
 	SmppFixture* fixture;
 	CheckList* chkList;
-	
+	const SmeInfo* sme;
+
 	virtual Category& getLog();
 	PduData* getNonReplaceEnrotePdu();
 	PduData* getReplaceEnrotePdu();

@@ -11,6 +11,7 @@
 #include "test/core/RouteChecker.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include "SmppPduChecker.hpp"
+#include "SmppPduSender.hpp"
 #include <map>
 
 namespace smsc {
@@ -78,6 +79,7 @@ struct SmppFixture
 	SmppBaseTestCases* base;
 	SmppTransmitterTestCases* transmitter;
 	SmppReceiverTestCases* receiver;
+	SmppPduSender* pduSender;
 
 	SmppFixture(const SmeSystemId& systemId, const Address& smeAddr,
 		SmppResponseSender* respSender, const SmeRegistry* smeReg,

@@ -4,6 +4,7 @@
 #include "sme/SmppBase.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "SmppFixture.hpp"
+#include "SmppPduSender.hpp"
 #include "test/util/BaseTestCases.hpp"
 #include "test/util/CheckList.hpp"
 #include "util/debug.h"
@@ -38,7 +39,7 @@ public:
 
 	void sendReplaceSmPdu(PduReplaceSm* pdu, PduData* replacePduData, bool sync);
 
-	void sendDeliverySmResp(PduDeliverySmResp& pdu, bool sync);
+	void sendDeliverySmResp(PduDeliverySmResp& pdu, bool sync, int delay = 0);
 
 	/*
 		virtual PduSubmitSmResp* submit(PduSubmitSm& pdu)=0;
@@ -75,6 +76,18 @@ protected:
 	void processReplaceSmSync(PduData* pduData, PduReplaceSmResp* respPdu,
 		time_t respTime);
 	void processReplaceSmAsync(PduData* pduData);
+};
+
+class DeliverySmRespTask : public PduTask
+{
+	SmppTransmitterTestCases* transmitter;
+    PduDeliverySmResp pdu;
+	bool sync;
+public:
+	DeliverySmRespTask(SmppTransmitterTestCases* _transmitter,
+		PduDeliverySmResp& _pdu, bool _sync)
+	: transmitter(_transmitter), pdu(_pdu), sync(_sync) {}
+	virtual void sendPdu() { transmitter->sendDeliverySmResp(pdu, sync); }
 };
 
 }

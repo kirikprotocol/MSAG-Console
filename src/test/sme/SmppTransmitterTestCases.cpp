@@ -505,9 +505,18 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 	}
 }
 
-void SmppTransmitterTestCases::sendDeliverySmResp(PduDeliverySmResp& pdu, bool sync)
+void SmppTransmitterTestCases::sendDeliverySmResp(PduDeliverySmResp& pdu,
+	bool sync, int delay)
 {
 	__decl_tc__;
+	pdu.set_messageId("0");
+	if (delay)
+	{
+		__require__(fixture->pduSender);
+		DeliverySmRespTask* task = new DeliverySmRespTask(this, pdu, sync);
+		fixture->pduSender->schedulePdu(task, delay);
+		return;
+	}
 	try
 	{
 		if (sync)

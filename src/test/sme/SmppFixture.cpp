@@ -35,7 +35,8 @@ SmppFixture::SmppFixture(const SmeSystemId& _systemId, const Address& _smeAddr,
 	respSender(_respSender), smeReg(_smeReg), aliasReg(_aliasReg),
 	routeReg(_routeReg), pduReg(smeReg->getPduRegistry(smeAddr)),
 	profileReg(_profileReg), chkList(_chkList), routeChecker(NULL),
-	pduChecker(NULL), base(NULL), transmitter(NULL), receiver(NULL)
+	pduChecker(NULL), base(NULL), transmitter(NULL), receiver(NULL),
+	pduSender(NULL)
 {
 	//__require__(respSender);
 	__require__(smeReg);
