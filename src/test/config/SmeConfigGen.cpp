@@ -7,7 +7,7 @@ namespace test {
 namespace config {
 
 using namespace std;
-using smsc::smeman::SmeInfo;
+using namespace smsc::smeman;
 using namespace smsc::test::util;
 
 void SmeConfigGen::saveConfig(const char* configFileName)
