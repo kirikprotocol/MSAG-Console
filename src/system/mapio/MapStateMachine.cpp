@@ -287,12 +287,12 @@ static void SendOkToSmsc(/*unsigned dialogid*/MapDialog* dialog)
 
 static void CheckLockedByMO(MapDialog* dialog)
 {
-  XMOMAP::iterator it = x_momap.find(s_imsi);
+  XMOMAP::iterator it = x_momap.find(dialog->s_imsi);
   if ( it != x_momap.end() )
   {
     if ( it->second.startTime+GetMOLockTimeout() <= time(0) )
     {
-      it.erase(it);
+      x_momap.erase(it);
     }
     else
       throw MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,0),
