@@ -16,6 +16,7 @@ import java.util.Collection;
 public class Options extends MCISmeBean
 {
   private String address = "";
+  private String redirectionAddress = "";
   private String svcType = "";
   private String callingMask = "";
   private String calledMask = "";
@@ -216,6 +217,9 @@ public class Options extends MCISmeBean
         causeOther   = getConfig().getInt ("MCISme.Reasons.Other.cause");
         informOther  = getConfig().getBool("MCISme.Reasons.Other.inform");
 
+        try { redirectionAddress = getConfig().getString("MCISme.redirectionAddress"); } catch (Throwable th) {
+          redirectionAddress = address;
+        }
         dataSourceType = getConfig().getString("MCISme.DataSource.type");
         dataSourceConnections = getConfig().getInt("MCISme.DataSource.connections");
         dataSourceDbInstance = getConfig().getString("MCISme.DataSource.dbInstance");
@@ -264,6 +268,7 @@ public class Options extends MCISmeBean
   private int save()
   {
     getConfig().setString("MCISme.Address", address);
+    getConfig().setString("MCISme.redirectionAddress", redirectionAddress);
     getConfig().setString("MCISme.SvcType", svcType);
     getConfig().setInt   ("MCISme.ProtocolId",  protocolId);
     getConfig().setInt   ("MCISme.DaysValid", daysValid);
@@ -496,6 +501,13 @@ public class Options extends MCISmeBean
   }
   public void setAddress(String address) {
     this.address = address;
+  }
+
+  public String getRedirectionAddress() {
+    return redirectionAddress;
+  }
+  public void setRedirectionAddress(String redirectionAddress) {
+    this.redirectionAddress = redirectionAddress;
   }
 
   public int getUnrespondedMessagesMaxInt() {

@@ -21,8 +21,12 @@
 <col width="80%">
 <% int rowN = 0;%>
 <tr class=row<%=rowN++&1%>>
-  <th>address</th>
+  <th>Service address</th>
   <td><input class=txt name=address value="<%=StringEncoderDecoder.encode(bean.getAddress())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Redirection address</th>
+  <td><input class=txt name=redirectionAddress value="<%=StringEncoderDecoder.encode(bean.getRedirectionAddress())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Service type</th>
@@ -167,6 +171,8 @@ switchConstraint();
     (bean.getReleaseStrategyInt() == MCISmeBean.RELEASE_REDIRECT_STRATEGY) ? "selected":""%>>REDIRECT CALLS ON MSC</option>
     <option value="<%= MCISmeBean.RELEASE_PREFIXED_STRATEGY%>" <%=
     (bean.getReleaseStrategyInt() == MCISmeBean.RELEASE_PREFIXED_STRATEGY) ? "selected":""%>>USE PREFIXED B-NUMBERS</option>
+    <option value="<%= MCISmeBean.RELEASE_MIXED_STRATEGY   %>" <%=
+    (bean.getReleaseStrategyInt() == MCISmeBean.RELEASE_MIXED_STRATEGY   ) ? "selected":""%>>USE REDIRECT AND B-NUMBERS</option>
   </select>
   </td>
 </tr>
