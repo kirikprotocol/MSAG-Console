@@ -68,34 +68,34 @@ void MissedCallProcessor::run()
   result = EINSS7CpMsgInitNoSig(MAXENTRIES);
   if (result != 0) {
     smsc_log_error(missedCallProcessorLogger,"MsgInit Failed with code %d",result);
-    stop();
+    goto failed_msginit;
   }
 
   result = MsgOpen(USER);
   if (result != 0) {
     smsc_log_error(missedCallProcessorLogger,"MsgOpen failed with code %d",result);
-    stop();
+    goto failed_msgopen;
   }
 
   result = MsgConn(USER,ISUP_ID);
   if (result != 0) {
     smsc_log_error(missedCallProcessorLogger,"MsgConn to ISUP failed with code %d",result);
-    stop();
+    goto failed_msgconnisup;
   }
   result = MsgConn(USER,MGMT_ID);
   if (result != 0) {
     smsc_log_error(missedCallProcessorLogger,"MsgConn to MGMT failed with code %d",result);
-    stop();
+    goto failed_msgconnmgmt;
   }
   result = EINSS7_I97IsupBindReq(USER);
   if( result != EINSS7_I97_REQUEST_OK ) {
     smsc_log_error(missedCallProcessorLogger,"EINSS7_I97IsupBindReg() failed with code %d",result);
-    stop();
+    goto failed_sndbindisup;
   }
   result = EINSS7_MgmtApiSendBindReq(USER,MGMT_ID,MGMT_VER,NO_WAIT);
   if( result != EINSS7_MGMTAPI_REQUEST_OK ) {
     smsc_log_error(missedCallProcessorLogger,"EINSS7_MgmtApiSendBindReq() failed with code %d",result);
-    stop();
+    goto failed_sndbindmgmt;
   }
   smsc_log_debug(missedCallProcessorLogger,"MissedCallProcessor is started up");
   MSG_T message;
@@ -134,12 +134,18 @@ void MissedCallProcessor::run()
       EINSS7CpReleaseMsgBuffer(&message);
     }
   }
-  EINSS7_I97IsupUnBindReq();
   EINSS7_MgmtApiSendUnbindReq(USER,MGMT_ID);
+failed_sndbindmgmt:
+  EINSS7_I97IsupUnBindReq();
+failed_sndbindisup:
   MsgRel(USER,MGMT_ID);
+failed_msgconnmgmt:
   MsgRel(USER,ISUP_ID);
+failed_msgconnisup:
   MsgClose(USER);
+failed_msgopen:
   MsgExit();
+failed_msginit:
   smsc_log_debug(missedCallProcessorLogger,"MissedCallProcessor is down");
 }
 }//namespace misscall
@@ -188,8 +194,17 @@ void  fillEvent(EINSS7_I97_CALLINGNUMB_T *calling,
   time(&event.time);
   if (calling && calling->noOfAddrSign <= MAX_FULL_ADDRESS_VALUE_LENGTH)
   {
-	vector<char> addr(calling->noOfAddrSign +  1);
+    vector<char> addr(calling->noOfAddrSign +  1);
     unpack_addr(&addr[0], calling->addrSign_p, calling->noOfAddrSign);
+    if (calling->natureOfAddr == EINSS7_I97_NATIONAL_NO)
+    {
+      addr.insert(addr.begin(),'7'); // valid only for Russia!!!
+      addr.insert(addr.begin(),'+');
+    }
+    else if (calling->natureOfAddr == EINSS7_I97_INTERNATIONAL_NO)
+    {
+      addr.insert(addr.begin(),'+');
+    }
     event.from = &addr[0];
   }
   if (called && called->noOfAddrSign <= MAX_FULL_ADDRESS_VALUE_LENGTH)

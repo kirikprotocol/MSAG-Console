@@ -31,6 +31,10 @@ std::string getCallingNumberDescription(EINSS7_I97_CALLINGNUMB_T* calling)
   if (!calling) return "";
   vector<char> addr(calling->noOfAddrSign + 1);
   unpack_addr(&addr[0], calling->addrSign_p, calling->noOfAddrSign);
+  addr.insert(addr.begin(),calling->natureOfAddr + '0');
+  addr.insert(addr.begin(),'.');
+  addr.insert(addr.begin(),calling->numberPlan + '0');
+  addr.insert(addr.begin(),'.');
   char str[]="Calling=";
   char *end=str+sizeof(str)-1;
   addr.insert(addr.begin(),str,end);
@@ -51,6 +55,10 @@ std::string getOriginalNumberDescription(EINSS7_I97_ORIGINALNUMB_T* origNumb)
   if (!origNumb) return "";
   vector<char> addr(origNumb->noOfAddrSign + 1);
   unpack_addr(&addr[0], origNumb->addrSign_p, origNumb->noOfAddrSign);
+  addr.insert(addr.begin(),origNumb->natureOfAddr + '0');
+  addr.insert(addr.begin(),'.');
+  addr.insert(addr.begin(),origNumb->numberPlan + '0');
+  addr.insert(addr.begin(),'.');
   char str[]="Original=";
   char *end=str+sizeof(str)-1;
   addr.insert(addr.begin(),str,end);
