@@ -17,6 +17,8 @@ public:
 		: SmppProtocolCheckList("Результаты функционального тестирования Profiler через протокол SMPP", "smpp_profiler.chk")
 	{
 		//updateProfile
+		__reg_tc__("updateProfile",
+			"Отправка smpp сообщений менеджеру профилей");
 		__reg_tc__("updateProfile.cmdTextDefault",
 			"Текст команды в дефолтной кодировке SC");
 		__reg_tc__("updateProfile.cmdTextUcs2",
