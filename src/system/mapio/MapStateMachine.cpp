@@ -544,7 +544,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
 {
   unsigned dialogid_smsc = cmd->get_dialogId();
   unsigned dialogid_map = 0;
-  __trace2__(">>MAPPROXY::putCommand dialog:0x%x",dialogid_smsc);
+  __trace2__(">>MAPPROXY::putCommand dialog:0x%x (state:NONE)",dialogid_smsc);
   DialogRefGuard dialog;
   MAP_TRY {  
     if ( dialogid_smsc > 0xffff ) { // SMSC dialog
@@ -561,7 +561,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
           if ( dialog.isnull() ) {
             //throw MAPDIALOG_TEMP_ERROR("Can't create or attach dialog");
             //SendRescheduleToSmsc(dialogid_smsc);
-            __trace2__("MAP::%s: was scheduled",__FUNCTION__);
+            __trace2__("MAP::%s: was scheduled (state:NONE)",__FUNCTION__);
             return;
           }
         }else{
