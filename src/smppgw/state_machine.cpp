@@ -685,7 +685,7 @@ class RespRegistry{
 public:
 
   struct RegistryData{
-    SmeProxy* sme;
+    SmeProxy* srcProxy;
     int seq;
     StatInfo si;
     billing::TransactionIdType trId;
@@ -700,16 +700,16 @@ public:
 
     TransactionFinishMode finishTransaction;
 
-    RegistryData():sme(0),seq(0),trId(billing::InvalidTransactionId),finishTransaction(tfmContinue){}
-    RegistryData(SmeProxy* smeVal,int seqVal):sme(smeVal),seq(seqVal),trId(billing::InvalidTransactionId),finishTransaction(tfmContinue)
+    RegistryData():srcProxy(0),seq(0),trId(billing::InvalidTransactionId),finishTransaction(tfmContinue){}
+    RegistryData(SmeProxy* src,SmeProxy* dst,int seqVal):srcProxy(src),seq(seqVal),trId(billing::InvalidTransactionId),finishTransaction(tfmContinue)
     {
     }
-    RegistryData(SmeProxy* smeVal,int seqVal,const RouteInfo& riVal,billing::TransactionIdType trIdVal=billing::InvalidTransactionId):
-      sme(smeVal),seq(seqVal),si(smeVal,riVal),trId(trIdVal),finishTransaction(tfmContinue)
+    RegistryData(SmeProxy* src,SmeProxy* dst,int seqVal,const RouteInfo& riVal,billing::TransactionIdType trIdVal=billing::InvalidTransactionId):
+      srcProxy(src),seq(seqVal),si(dst,riVal),trId(trIdVal),finishTransaction(tfmContinue)
     {
     }
-    RegistryData(SmeProxy* smeVal,int seqVal,const RouteInfo& riVal,const TransactionMonitor::TransactionKey& key,TransactionMonitor::TrSmsStatus st):
-      sme(smeVal),seq(seqVal),si(smeVal,riVal),trId(billing::InvalidTransactionId),trKey(key),trSt(st)
+    RegistryData(SmeProxy* src,SmeProxy* dst,int seqVal,const RouteInfo& riVal,const TransactionMonitor::TransactionKey& key,TransactionMonitor::TrSmsStatus st):
+      srcProxy(src),seq(seqVal),si(dst,riVal),trId(billing::InvalidTransactionId),trKey(key),trSt(st)
     {
       if(trSt==TransactionMonitor::trSmeUssdBillEnd || trSt==TransactionMonitor::trScUssdBillEnd)
       {
@@ -944,6 +944,7 @@ void StateMachine::submit(SmscCommand& cmd)
       RespRegistry::RegistryData
       (
         src_proxy,
+        src_proxy,
         dialogId,
         ri,
         TransactionMonitor::makeKey(sms),
@@ -960,6 +961,7 @@ void StateMachine::submit(SmscCommand& cmd)
       dst_index,
       RespRegistry::RegistryData
       (
+        src_proxy,
         src_proxy,
         dialogId,
         ri,
@@ -1017,7 +1019,7 @@ void StateMachine::submitResp(SmscCommand& cmd)
   if(submitRegistry.Get(cmd->get_dialogId(),src_proxy->getSmeIndex(),rd))
   {
     dlgId=rd.seq;
-    dst_proxy=rd.sme;
+    dst_proxy=rd.srcProxy;
     debug1(smsLog,"record for submit resp found");
     cmd->set_dialogId(dlgId);
     int st=cmd->get_resp()->get_status();
@@ -1208,6 +1210,7 @@ void StateMachine::delivery(SmscCommand& cmd)
       dst_index,
       RespRegistry::RegistryData
       (
+        src_proxy,
         dst_proxy,
         dialogId,
         ri,
@@ -1225,6 +1228,7 @@ void StateMachine::delivery(SmscCommand& cmd)
       dst_index,
       RespRegistry::RegistryData
       (
+        src_proxy,
         dst_proxy,
         dialogId,
         ri
@@ -1271,7 +1275,7 @@ void StateMachine::deliveryResp(SmscCommand& cmd)
   if(deliverRegistry.Get(cmd->get_dialogId(),src_proxy->getSmeIndex(),rd))
   {
     dlgId=rd.seq;
-    dst_proxy=rd.sme;
+    dst_proxy=rd.srcProxy;
     int st=cmd->get_resp()->get_status();
 
     debug1(smsLog,"record for delivery resp found");
@@ -1335,6 +1339,7 @@ void StateMachine::replace(SmscCommand& cmd)
     replaceRegistry.Register(smsc,newdid,gwsme->getSmeIndex(),
        RespRegistry::RegistryData(
          cmd.getProxy(),
+         0,
          cmd->get_dialogId()
          ),gwsme->getPreferredTimeout()
        );
@@ -1355,7 +1360,7 @@ void StateMachine::replaceResp(SmscCommand& cmd)
   if(replaceRegistry.Get(cmd->get_dialogId(),src_proxy->getSmeIndex(),rd))
   {
     int dlgId=rd.seq;
-    SmeProxy* dst_proxy=rd.sme;
+    SmeProxy* dst_proxy=rd.srcProxy;
     int st=cmd->get_status();
     debug2(smsLog,"record for replace resp found, dlgId=%d",dlgId);
     cmd->set_dialogId(dlgId);
@@ -1390,7 +1395,7 @@ void StateMachine::query(SmscCommand& cmd)
   try{
     int newdid=gwsme->getNextSequenceNumber();
     queryRegistry.Register(smsc,newdid,gwsme->getSmeIndex(),
-       RespRegistry::RegistryData(cmd.getProxy(),cmd->get_dialogId()),
+       RespRegistry::RegistryData(cmd.getProxy(),0,cmd->get_dialogId()),
        gwsme->getPreferredTimeout()
        );
     cmd->set_dialogId(newdid);
@@ -1410,7 +1415,7 @@ void StateMachine::queryResp(SmscCommand& cmd)
   if(queryRegistry.Get(cmd->get_dialogId(),src_proxy->getSmeIndex(),rd))
   {
     int dlgId=rd.seq;
-    SmeProxy* dst_proxy=rd.sme;
+    SmeProxy* dst_proxy=rd.srcProxy;
     int st=cmd->get_status();
     debug2(smsLog,"record for quesy resp found, dlgId=%d",dlgId);
     cmd->set_dialogId(dlgId);
@@ -1444,7 +1449,7 @@ void StateMachine::cancel(SmscCommand& cmd)
   try{
     int newdid=gwsme->getNextSequenceNumber();
     cancelRegistry.Register(smsc,newdid,gwsme->getSmeIndex(),
-       RespRegistry::RegistryData(cmd.getProxy(),cmd->get_dialogId()),
+       RespRegistry::RegistryData(cmd.getProxy(),0,cmd->get_dialogId()),
        gwsme->getPreferredTimeout()
        );
     cmd->set_dialogId(newdid);
@@ -1463,7 +1468,7 @@ void StateMachine::cancelResp(SmscCommand& cmd)
   if(cancelRegistry.Get(cmd->get_dialogId(),src_proxy->getSmeIndex(),rd))
   {
     int dlgId=rd.seq;
-    SmeProxy* dst_proxy=rd.sme;
+    SmeProxy* dst_proxy=rd.srcProxy;
     int st=cmd->get_status();
     debug2(smsLog,"record for cancel resp found, dlgId=%d",dlgId);
     cmd->set_dialogId(dlgId);
