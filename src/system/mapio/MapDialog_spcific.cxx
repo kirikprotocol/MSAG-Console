@@ -278,7 +278,7 @@ inline void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
   }
 }
 
-inline void mkSS7GTAddress( ET96MAP_SS7_ADDR_T *addr, ET96MAP_ADDRESS_T *saddr, ET96MAP_LOCAL_SSN_T ssn) {
+inline void mkSS7GTAddress( ET96MAP_SS7_ADDR_T *addr, const ET96MAP_ADDRESS_T *saddr, ET96MAP_LOCAL_SSN_T ssn) {
   addr->ss7AddrLen = 5+(saddr->addressLength+1)/2;
   addr->ss7Addr[0] = 0x12; // SSN & GT
   addr->ss7Addr[1] = ssn;
@@ -300,7 +300,7 @@ inline void SS7ToText(  const ET96MAP_SS7_ADDR_T *addr , char* text ){
 }
 
 
-inline void mkMapAddress( ET96MAP_ADDRESS_T *addr, char *saddr, unsigned len) {
+inline void mkMapAddress( ET96MAP_ADDRESS_T *addr, const char *saddr, unsigned len) {
   unsigned i;
   int sz = (len+1)/2;
   addr->addressLength = len;

@@ -1338,7 +1338,7 @@ static void PauseOnImsiReq(MapDialog* map)
     FormatText("MAP::%s can't create dialog",__FUNCTION__));
   unsigned dialogid_map = dialog->dialogid_map;
   MAP_TRY{
-    if ( !dialog->sms ) 
+    if ( dialog->sms.get() == 0 ) 
       throw runtime_error(
         FormatText("MAP::%s has no SMS",__FUNCTION__);
     mkMapAddress( &dialog->m_msAddr, dialog->sms->getOriginatingAddress().value, dialog->sms->getOriginatingAddress().length );
