@@ -151,6 +151,7 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
     ET96MAP_SM_RP_OA_T* srcAddr,  
     ET96MAP_SM_RP_UI_T* ud )
 {
+#if defined USE_MAP  
   __trace2__("MAP::MapDialog::Et96MapV2ForwardSmMOInd dta len %d",ud->signalInfoLen);
   setInvokeId(invokeId);
   SMS sms;
@@ -200,10 +201,12 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
   proxy->putIncomingCommand(cmd);
   state = MAPST_WAIT_SUBMIT_RESPONSE;
   __trace2__("MAP::MapDialog::Et96MapV2ForwardSmMOInd OK");
+#endif
   return ET96MAP_E_OK;
 }
 
 bool MapDialog::ProcessCmd(const SmscCommand& cmd){
+#if defined USE_MAP  
   __trace2__("MAP::MapDialog::ProcessCmd");
   try{
     __trace2__("MAP::MapDialog::ProcessCmd: 0x%x",cmd->get_commandId());
@@ -225,6 +228,9 @@ bool MapDialog::ProcessCmd(const SmscCommand& cmd){
     __trace2__("MAP::exception %s",e.what());
     throw;
   }
+#else
+  return true;
+#endif
 }
 
 unsigned char  lll_7bit_2_8bit[128] = {
@@ -251,6 +257,7 @@ extern void CloseAndRemoveDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T
 
 void MapProxy::putCommand(const SmscCommand& cmd)
 {
+#if defined USE_MAP  
   MutexGuard g(mutex);
   uint32_t did = cmd->get_dialogId();
   __trace2__("MAPPROXY::putCommand");
@@ -279,5 +286,6 @@ void MapProxy::putCommand(const SmscCommand& cmd)
     throw;
   }
   //notifyOutThread();
+#endif
 }
 
