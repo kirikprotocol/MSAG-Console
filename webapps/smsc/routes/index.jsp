@@ -115,15 +115,15 @@ java.util.HashMap aq = new java.util.HashMap();
 // aq.put("multiple", null);
  aq.put("onenter", "return setSort('Route ID')");
 
-java.util.TreeSet o = new java.util.TreeSet();
-o.add("Sources Subj");
-o.add("Sources Mask");
-o.add("Dest Subj");
-o.add("Dest Mask");
-o.add("SMEs");
-o.add("Strict Filter");
-o.add("Show Sources list");
-o.add("Show Dest list");
+java.util.TreeMap o = new java.util.TreeMap();
+o.put("Sources Subj", "1");
+o.put("Sources Mask", "2");
+o.put("Dest Subj", "3");
+o.put("Dest Mask", "4");
+o.put("SMEs", "5");
+o.put("Strict Filter", "6");
+o.put("Show Sources list", "7");
+o.put("Show Dest list", "8");
 %>
 <input:select name="filterSelect" default="1"
     attributes="<%= as %>" options="<%= o %>"  />
