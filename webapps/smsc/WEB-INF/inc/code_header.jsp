@@ -1,5 +1,6 @@
 <%@
 page pageEncoding="windows-1251"%><%@
+page errorPage="/error.jsp"%><%@
 page contentType="text/html; charset=windows-1251"%><%@
 page session="true"%><%
 String TITLE = "SMS Center Administration Console";
@@ -15,8 +16,7 @@ final String CPATH = request.getContextPath() + "/smsc";
 final java.security.Principal loginedUserPrincipal = request.getUserPrincipal();
 ru.novosoft.smsc.jsp.SMSCAppContext appContext = (ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext");
 {
-%><%@
-page errorPage="/error.jsp"%><%@ 
+%><%@ 
 page import="java.util.*, 
              java.net.URLEncoder,
 			 ru.novosoft.smsc.util.StringEncoderDecoder"
