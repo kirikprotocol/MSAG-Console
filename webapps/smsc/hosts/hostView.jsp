@@ -66,8 +66,8 @@ function editService(serviceId)
 }
 </script>
 
-<div class=secInfo>Host information</div>
-<table class=list cellspacing=1 width="100%">
+<div class=page_subtitle>Host information</div>
+<table class=properties_list cellspacing=1 width="100%">
 <col width="15%" align=right>
 <col width="85%">
 <tbody>
@@ -84,7 +84,7 @@ function editService(serviceId)
 <input class=btn type=submit name=mbEdit value="Edit host" title="Edit host information">
 <input class=btn type=submit name=mbCancel value="Cancel" title="Return to hosts list">
 </div--%>
-<div class=secList>Host Services</div>
+<div class=page_subtitle>Host Services</div>
 <table class=list cellspacing=1 width="100%">
 <col width="1%">
 <col width="1%">
@@ -110,9 +110,9 @@ String encodedServiceId = StringEncoderDecoder.encode(serviceId);
 String serviceControl = (row == 0) ? "start" : "stop";
 %>
 <tr class=row<%=row&1%>>
-	<td class=check><input class=check type=checkbox name=serviceIds value="<%=encodedServiceId%>" <%=checkedServices.contains(serviceId) ? "checked" : ""%>></td>
+	<td><input class=check type=checkbox name=serviceIds value="<%=encodedServiceId%>" <%=checkedServices.contains(serviceId) ? "checked" : ""%>></td>
 	<td><a  href="#" title="Edit service parameters" onClick="return editService('<%=encodedServiceId%>');">edit</a></td>
-	<td class=name><a href="#" title="View service info" onClick="return viewService('<%=encodedServiceId%>');"><%=encodedServiceId%></a></td>
+	<td><a href="#" title="View service info" onClick="return viewService('<%=encodedServiceId%>');"><%=encodedServiceId%></a></td>
 	<td><%=serviceStatus(serviceId, service.getStatus(), "STATUS_ELEM_FOR_SERVICE_"+encodedServiceId)%></td>
 </tr>
 <%}}%>
@@ -127,6 +127,5 @@ page_menu_space(out);
 page_menu_button(out, "mbStartService",  "Start service(s)",  "Start selected service(s)");
 page_menu_button(out, "mbStopService", "Stop service(s)", "Stop selected service(s)");
 page_menu_end(out);
-%>
-<%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
+%><%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

@@ -20,30 +20,39 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_PROFILES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<table class=list cellspacing=0 cellspadding=1 width="100%">
-<col width="15%" align=right>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbApply",  "Apply",  "Apply filter");
+page_menu_button(out, "mbClear", "Clear", "Clear filter", "clickClear()");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_space(out);
+page_menu_end(out);
+%>
+<div class=content>
+<table class=properties_list cellspacing=0 cellspadding=0>
+<col width="15%">
 <col width="85%">
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Masks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=2 class=secInner><div class=secList>Masks</div></td></tr>
+<tr><td colspan=2><div class=page_subtitle>Masks</div></td></tr>
 <%
 int row = 0;
 for (int i=0; i<bean.getMasks().length; i++)
 {
 %>
 <tr class=row<%=(row++)&1%>>
-	<th class=label>&nbsp;</th>
-	<td><input class=txtW name=masks value="<%=bean.getMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
+	<th>&nbsp;</th>
+	<td><input class=txt name=masks value="<%=bean.getMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%}%>
 <tr class=row<%=(row++)&1%>>
-	<th class=label><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to filter"></th>
-	<td><input class=txtW name=masks validation="mask" onkeyup="resetValidation(this)"></td>
+	<th><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to filter"></th>
+	<td><input class=txt name=masks validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=2 class=secInner><div class=secView>Options</div></td></tr>
+<tr><td colspan=2 class=secInner><div class=page_subtitle>Options</div></td></tr>
 <%row = 0;%>
 <tr class=row<%=(row++)&1%>>
-	<th class=label>codepage:</th>
+	<th>codepage:</th>
 	<td><div class=select><select class=txt name=codepage>
 			<option value="-1" <%=-1 == bean.getCodepageByte() ? "selected" : ""%>>all</option>
 			<option value="<%=Profile.CODEPAGE_Default%>" <%=Profile.CODEPAGE_Default == bean.getCodepageByte() ? "selected" : ""%>>Default</option>
@@ -51,29 +60,32 @@ for (int i=0; i<bean.getMasks().length; i++)
 		</select></div></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
-	<th class=label>report&nbsp;mode:</th>
+	<th>report&nbsp;mode:</th>
 	<td><div class=select><select class=txt name=reportinfo>
 			<option value="-1" <%=-1 == bean.getReportinfoByte() ? "selected" : ""%>>all</option>
 			<option value="<%=Profile.REPORT_OPTION_None%>" <%=Profile.REPORT_OPTION_None == bean.getReportinfoByte() ? "selected" : ""%>>none</option>
 			<option value="<%=Profile.REPORT_OPTION_Full%>" <%=Profile.REPORT_OPTION_Full == bean.getReportinfoByte() ? "selected" : ""%>>full</option>
 		</select></div></td>
 </tr>
-<tr><td colspan=2 class=secInner><div class=secList>Locales</div></td></tr>
+<tr><td colspan=2><div class=page_subtitle>Locales</div></td></tr>
 <%for (Iterator i = bean.getRegisteredLocales().iterator(); i.hasNext();)
 {
 	String registeredLocale = (String) i.next();
 	String encRegisteredLocale = StringEncoderDecoder.encode(registeredLocale);
 	%>
 	<tr class=row<%=(row++)&1%>>
-		<th class=label>&nbsp;</th>
+		<th>&nbsp;</th>
 		<td><input class=check id="reg_loc_<%=encRegisteredLocale%>" type=checkbox name=checkedLocales value="<%=encRegisteredLocale%>" <%=bean.isLocaleChecked(registeredLocale) ? "checked" : ""%>>&nbsp;<label for="reg_loc_<%=encRegisteredLocale%>"><%=encRegisteredLocale%></label></td>
 	</tr><%
 }%>
 </table>
-<div class=secButtons>
-<input class=btn type=submit name=mbApply value="Apply" title="Apply filter">
-<input class=btn type=submit name=mbClear value="Clear" title="Clear filter" onclick="clickClear()">
-<input class=btn type=submit name=mbCancel value="Cancel" onClick="clickCancel()">
 </div>
-<%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbApply",  "Apply",  "Apply filter");
+page_menu_button(out, "mbClear", "Clear", "Clear filter", "clickClear()");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_space(out);
+page_menu_end(out);
+%><%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

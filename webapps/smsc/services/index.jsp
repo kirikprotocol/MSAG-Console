@@ -35,7 +35,16 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_SERVICES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbAddService",  "Add",  "Add service");
+page_menu_button(out, "mbDelete", "Delete", "Delete selected services", "return confirm('Are you sure to delete all selected services?')");
+page_menu_space(out);
+page_menu_button(out, "mbStartService",  "Start",  "Start selected services");
+page_menu_button(out, "mbStopService",  "Stop",  "Stop selected services");
+page_menu_button(out, "mbDisconnectServices",  "Disconnect",  "Disconnect all selected services", "return confirm('Are you sure to disconnect all selected services?')", bean.isSmscAlive());
+page_menu_end(out);
+%><div class=content>
 <input type=hidden name=serviceId>
 <input type=hidden name=hostId>
 <input type=hidden name=serviceType>
@@ -129,13 +138,15 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 <%}}%>
 </tbody>
 </table>
-<div class=secButtons>
-<input class=btn type=submit name=mbAddService value="Add" title="Add service">
-<input class=btn type=submit name=mbDelete value="Delete" title="Delete selected services" onclick="return confirm('Are you sure to delete all selected services?')">
-&nbsp;&nbsp;&nbsp;&nbsp;
-<input class=btn type=submit name=mbStartService value="Start" title="Start selected services">
-<input class=btn type=submit name=mbStopService value="Stop" title="Stop selected services">
-<input class=btn type=submit name=mbDisconnectServices value="Disconnect" title="Disconnect all selected services" onclick="return confirm('Are you sure to disconnect all selected services?')" <%=bean.isSmscAlive() ? "" : "disabled"%>>
 </div>
-<%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbAddService",  "Add",  "Add service");
+page_menu_button(out, "mbDelete", "Delete", "Delete selected services", "return confirm('Are you sure to delete all selected services?')");
+page_menu_space(out);
+page_menu_button(out, "mbStartService",  "Start",  "Start selected services");
+page_menu_button(out, "mbStopService",  "Stop",  "Stop selected services");
+page_menu_button(out, "mbDisconnectServices",  "Disconnect",  "Disconnect all selected services", "return confirm('Are you sure to disconnect all selected services?')", bean.isSmscAlive());
+page_menu_end(out);
+%><%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

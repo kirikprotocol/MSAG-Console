@@ -4,7 +4,7 @@
 body
 {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 11px;
+	font-size: 12px;
 	margin: 0px 0px 0px 0px;
 	background-color: #F3F0E3;
 	color: #161E49;
@@ -13,7 +13,7 @@ body
 body*
 {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 11px;
+	font-size: 12px;
 }
 table
 {
@@ -61,6 +61,10 @@ input.radio, input.check
 	height:1.2em;
 	padding:0px;
 	margin:0px;
+}
+input.radio
+{
+	border: 0px;
 }
 
 

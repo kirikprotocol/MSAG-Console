@@ -36,7 +36,7 @@ page_menu_button(out, "mbCancel", "Cancel", "Cancel user editing", "clickCancel(
 page_menu_space(out);
 page_menu_end(out);
 %><div class=content>
-<table class=list cellspacing=1 width="100%">
+<table class=properties_list cellspacing=1 width="100%">
 <col width="80%" align=left>
 <col width="20%" align=left>
 <thead>
@@ -52,7 +52,7 @@ page_menu_end(out);
 		final String categoryPriority = bean.getCategoryPriority(catName);
 		final String catNameEnc = StringEncoderDecoder.encode(catName);
 		%><tr class=row<%=(rowN++)&1%>>
-			<th class=label style="text-align:left;"><%=catNameEnc%>&nbsp;</th>
+			<th style="text-align:left;"><%=catNameEnc%>&nbsp;</th>
 			<td><select name="<%=bean.catParamNamePrefix + catNameEnc%>">
  				<option value="FATAL"  <%="FATAL".equalsIgnoreCase(categoryPriority)  ? " selected" : ""%>>FATAL</option>
  				<option value="ALERT"  <%="ALERT".equalsIgnoreCase(categoryPriority)  ? " selected" : ""%>>ALERT</option>

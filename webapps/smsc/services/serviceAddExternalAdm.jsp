@@ -47,6 +47,13 @@ MENU0_SELECTION = "MENU0_SERVICES";
 %><%@ 
 include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
+page_menu_begin(out);
+page_menu_button(out, "mbNext",  "Next",  "Next page");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_space(out);
+page_menu_end(out);
+%><div class=content>
+<%
 if (bean.getHostName() != null && bean.getStage() != 2)
 {
 %><input type=hidden name=hostName value="<%=bean.getHostName()%>"><%
@@ -60,12 +67,12 @@ switch (bean.getStage())
 	{%>
 	<input type="hidden" name="jsp" value="/services/serviceAddExternalAdm.jsp">
 	<div class=secInfo>Select service distribute:</div>
-	<table class=list cellspacing=1 width="100%">
+	<table class=properties_list cellspacing=0 cellpadding=0>
 	<col width="15%" align=right>
 	<col width="85%">
-	<tr class=rowLast>
+	<tr class=row0>
 		<th class=label>Distribute:</th>
-		<td><input class=txtW type=file name=distribute></td>
+		<td><input class=txt type=file name=distribute></td>
 	</tr>
 	</table>
 	<%}
@@ -73,7 +80,7 @@ switch (bean.getStage())
 	case 2:
 	{%>
 	<h3>hosting parameters:</h3>
-	<table class=list cellspacing=0 cellspadding=1 width="100%">
+	<table class=properties_list cellspacing=0 cellpadding=0>
 	<col width="15%" align=right>
 	<col width="85%">
 	<tr class=row0>
@@ -103,10 +110,10 @@ switch (bean.getStage())
 	case 3:
 	{
 		int rowN = 0;%>
-		<table class=list cellspacing=0 cellspadding=1 width="100%">
+		<table class=properties_list cellspacing=0 cellpadding=0>
 		<tr class=row<%=(rowN++)&1%>>
 			<th>System Id</th>
-			<td><input type="text" name="serviceId" readonly value="<%=StringEncoderDecoder.encode(bean.getServiceId())%>"></td>
+			<td><input class=text type="text" name="serviceId" readonly value="<%=StringEncoderDecoder.encode(bean.getServiceId())%>"></td>
 		</tr>
 		<%@include file="serviceSmeBody.jsp"%>
 		</table>
@@ -116,10 +123,12 @@ switch (bean.getStage())
 	{
 	}
 }%>
-
-<div class=secButtons>
-<input class=btn type=submit name=mbNext value="Next" title="Next page">
-<input class=btn type=submit name=mbCancel value="Cancel" onClick="clickCancel()">
 </div>
-<%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbNext",  "Next",  "Next page");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_space(out);
+page_menu_end(out);
+%><%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

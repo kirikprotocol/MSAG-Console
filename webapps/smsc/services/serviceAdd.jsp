@@ -27,9 +27,13 @@ if (request.getParameter("mbCancel") != null)
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_SERVICES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
-
-
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbNext",  "Next",  "Next page");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel");
+page_menu_space(out);
+page_menu_end(out);
+%><div class=content>
 <%if (hostName != null)
 {
 %><input type=hidden name=hostName value="<%=hostName%>"><%
@@ -38,17 +42,21 @@ MENU0_SELECTION = "MENU0_SERVICES";
 <table class=list cellspacing=1 width="100%">
 <tbody>
 <tr class=row0>
-	<td class=name><input type=radio name=serviceType id=internal value=internal>&nbsp;<label for=internal>Internal</label></td>
+	<td><input class=radio type=radio name=serviceType id=internal value=internal>&nbsp;<label for=internal>Internal</label></td>
 </tr>
 <%--tr class=row1>
 	<td class=name><input type=radio name=serviceType id=external value="external" checked><label for=external>External</label></td>
 </tr--%>
 <tr class=row1>
-	<td class=name><input type=radio name=serviceType id=external_adm value="external_adm" checked>&nbsp;<label for=external_adm>External&nbsp;Administrable</label></td>
+	<td><input class=radio type=radio name=serviceType id=external_adm value="external_adm" checked>&nbsp;<label for=external_adm>External&nbsp;Administrable</label></td>
 </tr>
-</table><div class=secButtons>
-<input class=btn type=submit name=mbNext value="Next" title="Next page">
-<input class=btn type=submit name=mbCancel value="Cancel">
+</table>
 </div>
-<%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbNext",  "Next",  "Next page");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel");
+page_menu_space(out);
+page_menu_end(out);
+%><%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>
