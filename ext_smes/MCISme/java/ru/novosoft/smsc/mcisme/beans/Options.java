@@ -490,7 +490,7 @@ public class Options extends MCISmeBean
     try {
       Integer.parseInt(TSM, 16);
     } catch (NumberFormatException e) {
-      logger.debug("Invalid int MCISme.Circuits.spn hex parameter value: \"" + TSM + '"', e);
+      logger.debug("Invalid int MCISme.Circuits.tsm hex parameter value: \"" + TSM + '"', e);
     }
   }
   public int getHSNInt() {
