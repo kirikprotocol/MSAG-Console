@@ -811,38 +811,38 @@ void Archiver::prepareBillingInsertStmt() throw(StorageException)
 
 /* --------------------- Archive Cleaner implementation -------------------- */ 
 
-const unsigned SMSC_ARCHIVER_CLEANUP_INTERVAL_LIMIT = 365; // days
-const unsigned SMSC_ARCHIVER_CLEANUP_INTERVAL_DEFAULT = 30; // days
-void Archiver::Cleaner::loadCleanupInterval(Manager& config)
+const unsigned SMSC_ARCHIVER_CLEANUP_AGE_INTERVAL_LIMIT   = 365; // days
+const unsigned SMSC_ARCHIVER_CLEANUP_AGE_INTERVAL_DEFAULT = 30;  // days
+void Archiver::Cleaner::loadCleanupAgeInterval(Manager& config)
 {
     int interval;
     try 
     {
-        interval = config.getInt("MessageStore.Archive.Cleaner.interval");
+        interval = config.getInt("MessageStore.Archive.Cleaner.age");
         if (interval <= 0 || 
-            interval > SMSC_ARCHIVER_CLEANUP_INTERVAL_LIMIT)
+            interval > SMSC_ARCHIVER_CLEANUP_AGE_INTERVAL_LIMIT)
         {
-            interval = SMSC_ARCHIVER_CLEANUP_INTERVAL_DEFAULT;
-            log.warn("Cleanup interval for archiver is incorrect "
+            interval = SMSC_ARCHIVER_CLEANUP_AGE_INTERVAL_DEFAULT;
+            log.warn("Cleanup age interval for archiver is incorrect "
                      "(should be between 1 and %u days) ! "
-                     "Config parameter: <MessageStore.Archive.Cleaner.interval> "
+                     "Config parameter: <MessageStore.Archive.Cleaner.age> "
                      "Using default: %u", 
-                     SMSC_ARCHIVER_CLEANUP_INTERVAL_LIMIT,
-                     SMSC_ARCHIVER_CLEANUP_INTERVAL_DEFAULT);
+                     SMSC_ARCHIVER_CLEANUP_AGE_INTERVAL_LIMIT,
+                     SMSC_ARCHIVER_CLEANUP_AGE_INTERVAL_DEFAULT);
         }
     } 
     catch (ConfigException& exc) 
     {
-        interval = SMSC_ARCHIVER_AWAKE_INTERVAL_DEFAULT;
-        log.warn("Cleanup interval for archiver missed "
+        interval = SMSC_ARCHIVER_CLEANUP_AGE_INTERVAL_DEFAULT;
+        log.warn("Cleanup age interval for archiver missed "
                  "(it should be between 1 and %u days) ! "
-                 "Config parameter: <MessageStore.Archive.Cleaner.interval> "
+                 "Config parameter: <MessageStore.Archive.Cleaner.age> "
                  "Using default: %u", 
-                 SMSC_ARCHIVER_CLEANUP_INTERVAL_LIMIT,
-                 SMSC_ARCHIVER_CLEANUP_INTERVAL_DEFAULT);
+                 SMSC_ARCHIVER_CLEANUP_AGE_INTERVAL_LIMIT,
+                 SMSC_ARCHIVER_CLEANUP_AGE_INTERVAL_DEFAULT);
     }
 
-    cleanupInterval = interval*3600*24; // in seconds
+    ageInterval = interval*3600*24; // in seconds
 }
 
 const unsigned SMSC_ARCHIVER_CLEANUP_AWAKE_INTERVAL_LIMIT = 3600; // seconds
@@ -879,13 +879,48 @@ void Archiver::Cleaner::loadCleanupAwakeInterval(Manager& config)
     awakeInterval = interval*1000; // in mseconds
 }
 
+const unsigned SMSC_ARCHIVER_CLEANUP_INTERVAL_LIMIT   = 3600; // seconds
+const unsigned SMSC_ARCHIVER_CLEANUP_INTERVAL_DEFAULT = 60;   // seconds
+void Archiver::Cleaner::loadCleanupInterval(Manager& config)
+{
+    int interval;
+    try 
+    {
+        interval = config.getInt("MessageStore.Archive.Cleaner.interval");
+        if (interval <= 0 || 
+            interval > SMSC_ARCHIVER_CLEANUP_INTERVAL_LIMIT)
+        {
+            interval = SMSC_ARCHIVER_CLEANUP_INTERVAL_DEFAULT;
+            log.warn("Cleanup interval for archiver is incorrect "
+                     "(should be between 1 and %u seconds) ! "
+                     "Config parameter: <MessageStore.Archive.Cleaner.interval> "
+                     "Using default: %u", 
+                     SMSC_ARCHIVER_CLEANUP_INTERVAL_LIMIT,
+                     SMSC_ARCHIVER_CLEANUP_INTERVAL_DEFAULT);
+        }
+    } 
+    catch (ConfigException& exc) 
+    {
+        interval = SMSC_ARCHIVER_CLEANUP_INTERVAL_DEFAULT;
+        log.warn("Cleanup interval for archiver missed "
+                 "(it should be between 1 and %u seconds) ! "
+                 "Config parameter: <MessageStore.Archive.Cleaner.interval> "
+                 "Using default: %u", 
+                 SMSC_ARCHIVER_CLEANUP_INTERVAL_LIMIT,
+                 SMSC_ARCHIVER_CLEANUP_INTERVAL_DEFAULT);
+    }
+
+    cleanupInterval = interval; // in seconds
+}
+
 Archiver::Cleaner::Cleaner(Manager& config, Connection* connection)
     throw(ConfigException) 
         : Thread(), log(Logger::getCategory("smsc.store.Archive.Cleaner")),
             bStarted(false), bNeedExit(false), cleanerConnection(connection)
 {
-    loadCleanupInterval(config);
-    loadCleanupAwakeInterval(config);
+    loadCleanupInterval(config);        // in seconds
+    loadCleanupAgeInterval(config);     // in seconds
+    loadCleanupAwakeInterval(config);   // in mseconds
     Start();
 }
 Archiver::Cleaner::~Cleaner()
@@ -953,13 +988,14 @@ void Archiver::Cleaner::cleanup()
     if (indDbTime != OCI_IND_NOTNULL) toDelete = 0;
     else Statement::convertOCIDateToDate(&dbTime, &toDelete);
 
-    time_t toTime = time(0) - cleanupInterval;
+    time_t toTime = time(0) - ageInterval;
     /*__trace2__("Archive cleanup from: %d to: %d (%d)", 
                toDelete, toTime, toTime-toDelete);*/
 
     while (toDelete>0 && toDelete<toTime && !bNeedExit)
     {
-        toDelete += 60;
+        toDelete += cleanupInterval;
+        if (toDelete > toTime) toDelete=toTime;
         Statement::convertDateToOCIDate(&toDelete, &dbTime);
         cleanerDeleteStmt->execute();
         cleanerConnection->commit();
