@@ -1,5 +1,5 @@
 /*
-	$Id$
+  $Id$
 */
 
 #include "aliasconf.h"
@@ -46,15 +46,15 @@ AliasConfig::AliasConfig()
 
 void AliasConfig::clear()
 {
-	{
-		for ( SRVector::iterator it = records.begin();
-				  it != records.end();
-					++it )
-		{
-			if ( *it ) delete *it;
-		}
-	}
-	records.clear();
+  {
+    for ( SRVector::iterator it = records.begin();
+          it != records.end();
+          ++it )
+    {
+      if ( *it ) delete *it;
+    }
+  }
+  records.clear();
 }
 
 AliasConfig::status AliasConfig::putRecord(AliasRecord *record)
@@ -75,39 +75,39 @@ AliasConfig::status AliasConfig::load(const char * const filename)
       DOM_Node node = list.item(i);
       DOM_NamedNodeMap attrs = node.getAttributes();
       auto_ptr<AliasRecord> record(new AliasRecord());
-			record->aliasValue = 0;
-			record->addrValue = 0;
+      record->aliasValue = 0;
+      record->addrValue = 0;
       //record->addr = attrs.getNamedItem("addr").getNodeValue().transcode();
-			{
-				char* dta = attrs.getNamedItem("addr").getNodeValue().transcode();
-				record->addrValue = new char[21]; memset(record->addrValue,0,21);
-				int scaned = sscanf(dta,"tni:%d,npi:%d,val:%20s",
-						 &record->addrTni,
-						 &record->addrNpi,
-						 &record->addrValue);
-				delete dta;
-				if ( scaned != 3 )
-				{
-					logger.warn("incorrect format of 'addr = \"%20s\"'",  dta);
-					continue;
-				}
-			}
+      {
+        char* dta = attrs.getNamedItem("addr").getNodeValue().transcode();
+        record->addrValue = new char[21]; memset(record->addrValue,0,21);
+        int scaned = sscanf(dta,"tni:%d,npi:%d,val:%20s",
+             &record->addrTni,
+             &record->addrNpi,
+             record->addrValue);
+        delete dta;
+        if ( scaned != 3 )
+        {
+          logger.warn("incorrect format of 'addr = \"%20s\"'",  dta);
+          continue;
+        }
+      }
       //record->alias = attrs.getNameItem("alias").getNodeValue().transcode();
-			{
-				char* dta = attrs.getNamedItem("alias").getNodeValue().transcode();
-				record->aliasValue = new char[21]; memset(record->aliasValue,0,21);
-				int scaned = sscanf(dta,"tni:%d,npi:%d,val:%20s",
-						 &record->aliasTni,
-						 &record->aliasNpi,
-						 &record->aliasValue);
-				delete dta;
-				if ( scaned != 3 )
-				{
-					logger.warn("incorrect format of 'alias =  \"%20s\"'", dta);
-					continue;
-				}
-			}
-			DOM_NodeList childs = node.getChildNodes();
+      {
+        char* dta = attrs.getNamedItem("alias").getNodeValue().transcode();
+        record->aliasValue = new char[21]; memset(record->aliasValue,0,21);
+        int scaned = sscanf(dta,"tni:%d,npi:%d,val:%20s",
+             &record->aliasTni,
+             &record->aliasNpi,
+             record->aliasValue);
+        delete dta;
+        if ( scaned != 3 )
+        {
+          logger.warn("incorrect format of 'alias =  \"%20s\"'", dta);
+          continue;
+        }
+      }
+      DOM_NodeList childs = node.getChildNodes();
       records.push_back(record.release());
     }
   } catch (DOMTreeReader::ParseException &e) {
@@ -126,13 +126,13 @@ AliasConfig::status AliasConfig::store(const char * const filename) const
     for (SRVector::const_iterator i = records.begin(); i != records.end(); i++)
     {
       out << "  <record "\
-				"addr=\"tni:" << (*i)->addrTni <<
-				",npi:" << (*i)->addrNpi <<
-				",val:" << (*i)->addrValue << "\" "\
-				"alias=\"tni:" << (*i)->aliasTni <<
-				",npi:" << (*i)->addrNpi <<
-				",val:" << (*i)->addrValue << "\"/>" << std::endl;
-		}
+        "addr=\"tni:" << (*i)->addrTni <<
+        ",npi:" << (*i)->addrNpi <<
+        ",val:" << (*i)->addrValue << "\" "\
+        "alias=\"tni:" << (*i)->aliasTni <<
+        ",npi:" << (*i)->addrNpi <<
+        ",val:" << (*i)->addrValue << "\"/>" << std::endl;
+    }
     out << "</aliases>" << std::endl;
   } catch (...) {
     logger.error("Some errors on Aliases records storing.");
@@ -150,4 +150,3 @@ AliasConfig::RecordIterator AliasConfig::getRecordIterator() const
 }
 }
 }
-
