@@ -52,11 +52,6 @@ public:
 	}
 
 	/**
-	 * Запись конфигурации
-	 */
-	void save();
-
-	/**
 	 *
 	 * @param paramName имя параметра
 	 * @return значение параметра типа int
@@ -83,6 +78,8 @@ public:
 	 *
 	 * @param paramName имя параметра
 	 * @return значение параметра типа String
+	 * @see getInt()
+	 * @see getBool()
 	 */
 	char * getString(const char * const paramName)
 		throw (ConfigException &)
@@ -122,6 +119,11 @@ public:
 		}
 	}
 
+	/**
+	 * Запись конфигурации
+	 */
+	void save();
+
 protected:
 	/**
 	 * Читает конфигурацию.
@@ -133,9 +135,73 @@ protected:
 	static Manager * manager;
 
 private:
+	class ConfigParam
+	{
+	public:
+		char * name;
+		enum types {intType, stringType, boolType} type;
+		char * value;
+
+		ConfigParam(const char * const _name,
+								types _type,
+								const char * const _value)
+		{
+			name = strdup(_name);
+			type = _type;
+			value = strdup(_value);
+		}
+		ConfigParam(const ConfigParam &copy)
+		{
+			name = strdup(copy.name);
+			type = copy.type;
+			value = strdup(copy.value);
+		}
+		~ConfigParam()
+		{
+			free(name);
+			free(value);
+		}
+	};
+	class ConfigTree
+	{
+	public:
+		ConfigTree(const char * const _name)
+		{
+			name = strdup(_name);
+		}
+		/*ConfigTree(const ConfigTree &copy)
+		{
+			name = strdup(copy.name);
+			params = copy.params;
+			sections = copy.sections;
+		}*/
+		~ConfigTree()
+		{
+			ConfigTree * value;
+			char * _name;
+			for (sections.First(); sections.Next(_name, value);)
+			{
+				delete value;
+				sections[_name]=0;
+			}
+			params.clear();
+			free(_name);
+		}
+
+		void addParam(const char * const name,
+		              ConfigParam::types type,
+		              const char * const value);
+		void write(std::ostream &out, std::string prefix);
+	private:
+		Hash<ConfigTree*>	sections;
+		std::vector<ConfigParam> params;
+		char * name;
+		ConfigTree* createSection(const char * const name);
+	};
 	static char * config_filename;
-	void writeNode(std::ostream &out, DOM_Node & node, unsigned int tabs);
+	ConfigTree * createTree();
 	void writeHeader(std::ostream &out);
+	void writeFooter(std::ostream &out);
 	Hash<long> longParams;
 	Hash<char *> strParams;
 	Hash<bool> boolParams;

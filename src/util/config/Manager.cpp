@@ -236,14 +236,14 @@ std::ostream & operator << (std::ostream & out, const DOMString & string)
  */
 void Manager::save()
 {
-/*	if (!document.isNull())
-	{
-		std::ostream *out = new std::ofstream(config_filename);
-		writeHeader(*out);
-		//writeNode(*out, main_node, 0);
-		out->flush();
-		delete out;
-	}*/
+	ConfigTree * tree = createTree();
+	std::ostream *out = new std::ofstream(config_filename);
+	writeHeader(*out);
+	tree->write(*out, "  ");
+	writeFooter(*out);
+	out->flush();
+	delete out;
+	delete tree;
 }
 
 void Manager::writeHeader(std::ostream &out)
@@ -253,51 +253,105 @@ void Manager::writeHeader(std::ostream &out)
 	out << "<config>" << std::endl;
 }
 
-bool isNodeHasElementChild(const DOM_Node & node)
+void Manager::writeFooter(std::ostream &out)
 {
-	if (!node.isNull())
-	{
-		DOM_NodeList list = node.getChildNodes();
-		for (unsigned int i=0; i<list.getLength(); i++)
-		{
-			if (list.item(i).getNodeType() == DOM_Node::ELEMENT_NODE)
-			{
-				return true;
-			}
-		}
-	}
-	return false;
+	out << "</config>" << std::endl;
 }
 
-void Manager::writeNode(std::ostream &out, DOM_Node & node, unsigned int tabs)
+Manager::ConfigTree * Manager::createTree()
 {
-	char prefix[tabs+1];
-	memset(prefix, '\t', tabs);
-	prefix[tabs] = 0;
+	ConfigTree * result = new ConfigTree("root");
 
-	out << prefix << '<' << node.getNodeName();
-	DOM_NamedNodeMap map = node.getAttributes();
-	for (unsigned int i=0; i<map.getLength(); i++)
+	char * _name;
+	
+	char * svalue;
+	for (strParams.First(); strParams.Next(_name, svalue);)
+		result->addParam(_name, ConfigParam::stringType, svalue);
+
+	long lvalue;
+	char tmp[33];
+	for (longParams.First(); longParams.Next(_name, lvalue);)
 	{
-		DOM_Node attr = map.item(i);
-		out << ' ' << attr.getNodeName() << "=\"" << attr.getNodeValue() << '"';
+		sprintf(tmp, "%i", lvalue);
+		result->addParam(_name, ConfigParam::intType, tmp);
 	}
-	if (isNodeHasElementChild(node))
+
+	bool bvalue;
+	for (boolParams.First(); boolParams.Next(_name, bvalue);)
+		result->addParam(_name, ConfigParam::boolType, bvalue ? "true" : "false");
+
+	return result;
+}
+
+void Manager::ConfigTree::addParam(const char * const _name,
+																	 ConfigParam::types type,
+																	 const char * const value)
+{
+	char *sname =	strdup(_name);
+	char *p = strrchr(sname, '.');
+	if (p != 0)
 	{
-		out << '>' << std::endl;
-		DOM_NodeList childs = node.getChildNodes();
-		for (unsigned int i=0; i<childs.getLength(); i++)
+		*p = 0;
+		ConfigTree* node = createSection(sname);
+		node->params.push_back(ConfigParam(strdup(p+1), type, strdup(value)));
+	}
+	else {
+		params.push_back(ConfigParam(strdup(_name), type, strdup(value)));
+	}
+	free(sname);
+}
+
+void Manager::ConfigTree::write(std::ostream &out, std::string prefix)
+{
+	char * _name;
+	ConfigTree *val;
+	std::string newPrefix(prefix + "  ");
+	for(sections.First(); sections.Next(_name, val);)
+	{
+		out << prefix << "<section name=\"" << _name << "\">" << std::endl;
+		val->write(out, newPrefix);
+		out << prefix << "</section>" << std::endl;
+	}
+
+	for (size_t i=0; i<params.size(); i++)
+	{
+		out << prefix << "<param name=\"" << params[i].name << "\" type=\"";
+		switch (params[i].type)
 		{
-			DOM_Node child = childs.item(i);
-			if (child.getNodeType() == DOM_Node::ELEMENT_NODE)
-			{
-				writeNode(out, child, tabs+1);
-			}
+		case ConfigParam::boolType:
+			out << "bool";
+			break;
+		case ConfigParam::intType:
+			out << "int";
+			break;
+		case ConfigParam::stringType:
+			out << "string";
+			break;
 		}
-		out << prefix << "</" << node.getNodeName() << '>' << std::endl;
-	} else {
-		out << "/>" << std::endl;
+		out << "\">" << params[i].value << "</param>" << std::endl;
 	}
+}
+
+Manager::ConfigTree* Manager::ConfigTree::createSection(const char * const _name)
+{
+	ConfigTree *t = this;
+	char * newName = strdup(_name);
+	char * n = newName;
+	for (char * p = strchr(n, '.'); p != 0; p = strchr(n, '.'))
+	{
+		*p=0;
+		if (!t->sections.Exists(n))
+		{
+			t->sections[n] = new ConfigTree(n);
+		}
+		t = t->sections[n];
+		n = p+1;
+	}
+	if (!t->sections.Exists(n))
+	{
+		t->sections[n] = new ConfigTree(n);
+	}
+	return t->sections[n];
 }
 
 }
