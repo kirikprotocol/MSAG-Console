@@ -19,7 +19,7 @@ static bool MAP_isAlive = false;
 //  ET96MAP_DIALOGUE_ID_T dialogId;
 //};
 
-MAPIO_TaskACVersionNotifier()
+void MAPIO_TaskACVersionNotifier()
 {
   __pingPongWaitCounter = 0;
 }

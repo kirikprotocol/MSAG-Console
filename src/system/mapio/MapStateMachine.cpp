@@ -133,7 +133,7 @@ static ET96MAP_SS7_ADDR_T* GetScAddr()
 {
   static ET96MAP_ADDRESS_T m_scAddr;
   static ET96MAP_SS7_ADDR_T scAddr;
-  static initialized = false;
+  static bool initialized = false;
   if ( !initialized ) {
     mkMapAddress( &m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
     mkSS7GTAddress( &scAddr, &m_scAddr, 8 );
@@ -142,7 +142,7 @@ static ET96MAP_SS7_ADDR_T* GetScAddr()
   return &scAddr;
 }
 
-extern MAPIO_TaskACVersionNotifier();
+extern void MAPIO_TaskACVersionNotifier();
 void MAPIO_QueryMscVersionInternal()
 {
   USHORT_T result = 
