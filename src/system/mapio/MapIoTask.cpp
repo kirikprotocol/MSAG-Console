@@ -540,8 +540,8 @@ int MapTracker::Execute(){
   Event e;
 #ifdef USE_MAP
   for(;;){
-    time_t t = time();
-    while(time()<(t+15)&&!isStopping)e.Wait(1000*(time()-(t+15)));
+    time_t t = time(0);
+    while(time(0)<(t+15)&&!isStopping)e.Wait(1000*(time(0)-(t+15)));
     if ( isStopping ) return;
     if ( MAP_dispathing && !MAP_isAlive ) {
       __trace2__("\n\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
