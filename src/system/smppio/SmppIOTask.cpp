@@ -28,8 +28,9 @@ const int SOCKET_SLOT_KILL=6;
 
 static void KillProxy(SmppProxy* proxy)
 {
-  if(!proxy->Unref())
+  if(proxy && !proxy->Unref())
   {
+    __trace2__("KILLPROXY: %p(%s)",proxy,proxy->getSystemId());
     delete proxy;
   }
 }
@@ -87,7 +88,10 @@ void SmppInputThread::killSocket(int idx)
     (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
   trace2("removing socket %p by input thread",s);
   int rcnt=m->removeSocket(s);
-  if(ss->getProxy())ss->getProxy()->close();
+  if(ss->getProxy())
+  {
+    ss->getProxy()->close();
+  }
   if(!rcnt && ss->getProxy())
   {
     try{
@@ -97,8 +101,8 @@ void SmppInputThread::killSocket(int idx)
     {
       __trace2__("failed to unregister");
     }
-    KillProxy(ss->getProxy());
   }
+  KillProxy(ss->getProxy());
   delete ss;
 }
 
@@ -167,8 +171,9 @@ int SmppInputThread::Execute()
           i--;
           continue;
         }
-        if(time(NULL)-ss->getLastUpdate()>inactivityTime)
+        if(time(NULL)-ss->getLastUpdate()>inactivityTime && time(NULL)-ss->getLastEL()>5)
         {
+          ss->updateLastEL();
           if(ss->getProxy())
           {
             ss->getProxy()->putCommand
@@ -283,7 +288,7 @@ int SmppInputThread::Execute()
                 ((PduBindTRXResp*)resp)->set_scInterfaceVersion(0x34);
                 SmscCommand cmd=SmscCommand::makeSmppPduCommand(resp);
                 ss->getProxy()->putIncomingCommand(cmd);
-                continue;
+                break;
               }
               PduBindTRX *bindpdu=
                 reinterpret_cast<smsc::smpp::PduBindTRX*>(pdu);
@@ -356,7 +361,7 @@ int SmppInputThread::Execute()
                   SmeIndex proxyIndex=smeManager->lookup(sid);
                   SmeInfo si=smeManager->getSmeInfo(proxyIndex);
                   proxy->setForceDC(si.forceDC);
-                  __trace2__("smid=%s, forceDC=%s",sid.c_str(),si.forceDC?"true":"false");
+                  __trace2__("NEWPROXY: p=%p, smid=%s, forceDC=%s",proxy,sid.c_str(),si.forceDC?"true":"false");
                   resppdu.get_header().
                     set_commandStatus(SmppStatusSet::ESME_ROK);
                 }catch(SmeRegisterException& e)
@@ -622,7 +627,10 @@ void SmppOutputThread::killSocket(int idx)
   SmppSocketsManager *m=
     (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
   int rcnt=m->removeSocket(s);
-  if(ss->getProxy())ss->getProxy()->close();
+  if(ss->getProxy())
+  {
+    ss->getProxy()->close();
+  }
   if(!rcnt && ss->getProxy())
   {
     __trace2__("unregistering smeId=%s",ss->getProxy()->getSystemId());
@@ -632,8 +640,8 @@ void SmppOutputThread::killSocket(int idx)
     {
       __trace2__("failed to unregister");
     }
-    KillProxy(ss->getProxy());
   }
+  KillProxy(ss->getProxy());
   delete ss;
 }
 

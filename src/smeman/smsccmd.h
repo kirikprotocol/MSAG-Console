@@ -374,7 +374,8 @@ struct _SmscCommand
     case QUERY:
       delete ( (QuerySm*)dta);
       break;
-
+    case QUERY_RESP:
+      delete ((QuerySmResp*)dta);
     case CANCEL:
       delete ( (CancelSm*)dta);
       break;
@@ -398,7 +399,6 @@ struct _SmscCommand
     case GENERIC_NACK:
     case UNBIND_RESP:
     case REPLACE_RESP:
-    case QUERY_RESP:
     case CANCEL_RESP:
     case ENQUIRELINK:
     case ENQUIRELINK_RESP:

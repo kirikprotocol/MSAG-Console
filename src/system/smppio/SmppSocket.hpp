@@ -28,7 +28,9 @@ public:
   SmppSocket(int sockmode,Socket* sock,int timeOut):
     mode(sockmode),
     socket(sock),
-    timeOut(timeOut)
+    timeOut(timeOut),
+    lastEnquireLink(0),
+    lastUpdate(0)
   {
     proxy=NULL;
     inThread=NULL;
@@ -77,6 +79,12 @@ public:
 
   time_t getLastUpdate(){return lastUpdate;}
 
+  void updateLastEL()
+  {
+    lastEnquireLink=time(NULL);
+  }
+  time_t getLastEL(){return lastEnquireLink;}
+
   char* getBuffer(int length);
 
   Socket* getSocket(){return socket;}
@@ -90,6 +98,7 @@ protected:
   int bufferOffset;
   int mode;
   time_t lastUpdate;
+  time_t lastEnquireLink;
   smsc::core::network::Socket* socket;
   int timeOut;
   SmppIOTask *inThread,*outThread;
