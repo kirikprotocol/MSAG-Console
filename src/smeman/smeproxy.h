@@ -38,7 +38,7 @@ class SmeProxy
 public: 
   //....
   virtual void close() = 0;
-  /// кидает ProxyQueueLimitException если был достигнут лимит 
+  /// кидает exception если был достигнут лимит 
   /// и длина очереди еще не упала до допустимого значения
   virtual void putCommand(const SmscCommand& command) = 0;
   virtual SmscCommand getCommand() = 0;

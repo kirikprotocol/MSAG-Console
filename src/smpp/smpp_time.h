@@ -22,7 +22,7 @@ inline bool cTime2SmppTime(time_t tval,char* buffer)
   if ( !tval ) return true;
   struct tm dtm;
   dtm = *localtime(&tval); // *gmtime(tval);
-	//__trace2__("input time: %s",asctime(&dtm));
+  //__trace2__("input time: %s",asctime(&dtm));
   dtm.tm_mon+=1;
   dtm.tm_year-=100;
   __ret0_if_fail__ ( dtm.tm_mon >= 1 && dtm.tm_mon <= 12 ); 
@@ -46,8 +46,8 @@ inline bool cTime2SmppTime(time_t tval,char* buffer)
         /*&utcfix*/'R');
   //__trace2__("result time: %s\n",buffer);
   //__watch__(writen);
-	//__require__(writen == 16);
-	__ret0_if_fail__(writen == 16);
+  //__require__(writen == 16);
+  __ret0_if_fail__(writen == 16);
   return 1;
 }
 
@@ -75,17 +75,17 @@ inline time_t smppTime2CTime(COStr& str)
           &ignore,
           &utc,
           &utcfix);
-	//__trace2__("input time: %.16s\n",dta);
+  __trace2_if_fail__( scaned == 16, "!!!!! input time: %.16s\n",dta);
   __ret0_if_fail__ ( scaned == 16 );
   __ret0_if_fail__ ( dtm.tm_mon >= 1 && dtm.tm_mon <= 12 ); 
   dtm.tm_mon-=1;
   __ret0_if_fail__ ( dtm.tm_year >= 0 && dtm.tm_mon <= 99 ); 
-	dtm.tm_year+=100;
+  dtm.tm_year+=100;
   __ret0_if_fail__ ( dtm.tm_mday >= 1 && dtm.tm_mday <= 31 );
   __ret0_if_fail__ ( dtm.tm_hour >= 0 && dtm.tm_hour <= 23 );
   __ret0_if_fail__ ( dtm.tm_min >= 0 && dtm.tm_min <= 59 );
   __ret0_if_fail__ ( dtm.tm_sec >=0 && dtm.tm_sec <= 59 );
-	//__trace2__("result time: %s",asctime(&dtm));
+  //__trace2__("result time: %s",asctime(&dtm));
 
   resultTime = mktime(&dtm);
   __ret0_if_fail__ ( resultTime != -1 );
