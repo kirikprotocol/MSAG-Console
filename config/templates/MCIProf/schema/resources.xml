@@ -53,6 +53,9 @@
     <str name="value_inform" value="сообщения"/>
     <str name="value_notify" value="нотификации"/>
 
+    <str name="error_db"      value="сбой в базе данных"/>
+    <str name="error_unknown" value="причина не известна"/>
+
     <str name="page_info">
 Уст-ки сервиса:
 0>назад
