@@ -212,7 +212,7 @@ public:
       return 0;
     }*/
     MapDialog* dlg = new MapDialog(dialogueid,lssn);
-    dlg->setAbonent(abonent);
+    //dlg->setAbonent(abonent);
     hash.Insert(dialogueid,dlg);
     //lock_map.Insert(abonent,1);
     __trace2__("MAP:: new dialog 0x%p for dialogid 0x%x",dlg,dialogueid);
