@@ -30,6 +30,11 @@ public:
 	void submitSmCorrect(bool sync, int num);
 
 	/**
+	 * Отправка корректной "сложной" submit_sm pdu другим sme.
+	 */
+	void submitSmCorrectComplex(bool sync, int num);
+
+	/**
 	 * Отправка некорректной submit_sm pdu другим sme.
 	 */
 	void submitSmIncorrect(bool sync, int num);

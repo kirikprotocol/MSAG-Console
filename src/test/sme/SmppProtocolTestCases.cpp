@@ -233,7 +233,7 @@ PduData* SmppProtocolTestCases::getPduByState(State state)
 
 void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 {
-	TCSelector s(num, 16);
+	TCSelector s(num, 11);
 	__decl_tc__;
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(maxValidPeriod);
@@ -246,8 +246,8 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 			PduSubmitSm* pdu = new PduSubmitSm();
 			const Address* destAlias = fixture->smeReg->getRandomAddress();
 			__require__(destAlias);
-			fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, *destAlias);
-			PduData* existentPduData = NULL;
+			fixture->transmitter->setupRandomCorrectSubmitSmPdu(
+				pdu, *destAlias, rand0(5));
 			PduData::IntProps intProps;
 			switch (s.value())
 			{
@@ -299,20 +299,71 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 					pdu->get_message().set_validityPeriod("");
 					break;
 				case 8: //пустое тело сообщения
-					__tc__("submitSm.correct.smLengthMarginal");
-					pdu->get_message().set_shortMessage(NULL, 0);
-					//pdu->get_message().set_shortMessage("", 0);
-					break;
-				case 9: //тело сообщения максимальной длины
+					if (!pdu->get_optional().has_messagePayload())
 					{
 						__tc__("submitSm.correct.smLengthMarginal");
-						ShortMessage msg;
-						rand_char(MAX_SM_LENGTH, msg);
-						pdu->get_message().set_shortMessage(msg, MAX_SM_LENGTH);
+						pdu->get_message().set_shortMessage(NULL, 0);
+						//pdu->get_message().set_shortMessage("", 0);
 					}
 					break;
+				case 9: //shortMessage максимальной длины
+					if (!pdu->get_optional().has_messagePayload())
+					{
+						__tc__("submitSm.correct.smLengthMarginal");
+						auto_ptr<char> tmp = rand_char(MAX_SM_LENGTH);
+						pdu->get_message().set_shortMessage(tmp.get(), MAX_SM_LENGTH);
+					}
+					break;
+				case 10: //messagePayload максимальной длины
+					if (!pdu->get_optional().has_messagePayload())
+					{
+						__tc__("submitSm.correct.messagePayloadLengthMarginal");
+						auto_ptr<char> tmp = rand_char(MAX_PAYLOAD_LENGTH);
+						pdu->get_optional().set_messagePayload(tmp.get(), MAX_PAYLOAD_LENGTH);
+					}
+					break;
+				case 11: //ussd запрос
+					__tc__("submitSm.correct.ussdRequest");
+					pdu->get_optional().set_ussdServiceOp(rand0(255));
+					//немедленная доставка, ussd не решедулится
+					pdu->get_message().set_scheduleDeliveryTime("");
+					//pdu->get_message().set_validityPeriod("");
+					break;
+				default:
+					__unreachable__("Invalid num");
+			}
+			//отправить и зарегистрировать pdu
+			fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync, &intProps);
+			__tc_ok__;
+		}
+		catch(...)
+		{
+			__tc_fail__(s.value());
+			error();
+		}
+	}
+}
+
+void SmppProtocolTestCases::submitSmCorrectComplex(bool sync, int num)
+{
+	TCSelector s(num, 7);
+	__decl_tc__;
+	__tc__("submitSm.correct");
+	for (; s.check(); s++)
+	{
+		try
+		{
+			PduSubmitSm* pdu = new PduSubmitSm();
+			const Address* destAlias = fixture->smeReg->getRandomAddress();
+			__require__(destAlias);
+			fixture->transmitter->setupRandomCorrectSubmitSmPdu(
+				pdu, *destAlias, rand0(5));
+			PduData* existentPduData = NULL;
+			PduData::IntProps intProps;
+			switch (s.value())
+			{
 				/*
-				case 9: //msgRef одинаковые (эквивалентно msgRef отсутствуют)
+				case 1: //msgRef одинаковые (эквивалентно msgRef отсутствуют)
 					//Согласно GSM 03.40 пункт 9.2.3.25 если совпадают
 					//TP-MR, TP-DA, OA, то при ETSI_REJECT_IF_PRESENT будет ошибка.
 					//Для SMPP все должно работать независимо от msgRef.
@@ -338,7 +389,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 					}
 					break;
 				*/
-				case 10: //отправка дублированного сообщения без замещения уже существующего
+				case 1: //отправка дублированного сообщения без замещения уже существующего
 					//Согласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 					//destination address and service_type. Сообщение должно быть в 
 					//ENROTE state.
@@ -366,7 +417,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						}
 					}
 					break;
-				case 11: //отправка дублированного сообщения с попыткой замещения
+				case 2: //отправка дублированного сообщения с попыткой замещения
 					//уже существующего, но service_type не совпадает.
 					//Согласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 					//destination address and service_type. Сообщение должно быть в 
@@ -394,7 +445,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						}
 					}
 					break;
-				case 12: //отправка дублированного сообщения с попыткой замещения
+				case 3: //отправка дублированного сообщения с попыткой замещения
 					//уже существующего, но dest_addr не совпадает.
 					//Согласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 					//destination address and service_type. Сообщение должно быть в 
@@ -426,7 +477,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						}
 					}
 					break;
-				case 13: //отправка дублированного сообщения с замещением уже существующего
+				case 4: //отправка дублированного сообщения с замещением уже существующего
 					//Согласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 					//destination address and service_type. Сообщение должно быть в 
 					//ENROTE state.
@@ -452,7 +503,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						}
 					}
 					break;
-				case 14: //отправка дублированного сообщения с замещением уже
+				case 5: //отправка дублированного сообщения с замещением уже
 					//ранее замещенного
 					//Согласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 					//destination address and service_type. Сообщение должно быть в 
@@ -479,7 +530,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						}
 					}
 					break;
-				case 15: //отправка дублированного сообщения с замещением уже
+				case 6: //отправка дублированного сообщения с замещением уже
 					//существующего, но находящегося уже в финальном состоянии.
 					//Согласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 					//destination address and service_type. Сообщение должно быть в 
@@ -508,7 +559,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						}
 					}
 					break;
-				case 16: //отправка дублированного сообщения с замещением уже
+				case 7: //отправка дублированного сообщения с замещением уже
 					//существующего, но находящегося уже в процессе повторной доставки.
 					//Согласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 					//destination address and service_type. Сообщение должно быть в 
@@ -552,7 +603,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 
 void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 {
-	TCSelector s(num, 12 /*17*/);
+	TCSelector s(num, 13 /*18*/);
 	__decl_tc__;
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(maxValidPeriod);
@@ -566,7 +617,7 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 			PduSubmitSm* pdu = new PduSubmitSm();
 			const Address* destAlias = fixture->smeReg->getRandomAddress();
 			__require__(destAlias);
-			fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, *destAlias);
+			fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, *destAlias, rand0(5));
 			switch (s.value())
 			{
 				case 1: //неправильный адрес отправителя
@@ -678,7 +729,22 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 						break;
 					}
 					break;
-				case 12:
+				case 12: //заданы оба short_message И message_payload
+					__tc__("submitSm.incorrect.bothMessageFields");
+					if (!pdu->get_message().size_shortMessage())
+					{
+						int len = rand1(MAX_SM_LENGTH);
+						auto_ptr<char> tmp = rand_char(len);
+						pdu->get_message().set_shortMessage(tmp.get(), len);
+					}
+					if (!pdu->get_optional().has_messagePayload())
+					{
+						int len = rand1(MAX_PAYLOAD_LENGTH);
+						auto_ptr<char> tmp = rand_char(len);
+						pdu->get_optional().set_messagePayload(tmp.get(), len);
+					}
+					break;
+				case 13:
 					__tc__("submitSm.incorrect.transactionRollback");
 					pdu->get_message().set_serviceType("-----");
 					break;
