@@ -111,6 +111,8 @@ o.put("reports", "5");
 %>
 <input:select name="mbFilter" default="0"
     attributes="<%= a %>" options="<%= o %>" />
+    &nbsp; Query: &nbsp;<input:text name="mbQuery"  />
+
 <br>
 <table class=list cellspacing=0 cellpadding=0 id=ROUTE_LIST_TABLE>
 <col width="1%">
