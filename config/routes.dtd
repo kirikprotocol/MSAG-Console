@@ -5,7 +5,7 @@
 	id CDATA #REQUIRED
 	billing (true | false) #REQUIRED
 	archiving (true | false) #REQUIRED
-	enabling (true | false) #IMPLIED
+	enabling (true | false) "true"
 >
 <!ELEMENT source (subject | mask)>
 <!ELEMENT destination (subject | mask)>
