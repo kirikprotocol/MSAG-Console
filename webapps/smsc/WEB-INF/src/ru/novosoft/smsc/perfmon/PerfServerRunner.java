@@ -11,6 +11,7 @@ public class PerfServerRunner extends Thread {
   Socket sock;
   Socket smscSock;
   PerfServer server;
+  SnapBufferReader inbuf = new SnapBufferReader();
 
   public PerfServerRunner(Socket sock, PerfServer server)
           throws IOException {
@@ -73,13 +74,47 @@ public class PerfServerRunner extends Thread {
     }
   }
 
-  protected short readNetworkShort(InputStream in)
+  class SnapBufferReader {
+    byte buf[] = new byte[1024];
+    int offset;
+    int size;
+    public SnapBufferReader() {
+      offset = 0;
+    }
+    public void resetOffset(){
+      offset = 0;
+    }
+    public int read() throws EOFException {
+      if( offset >= size ) throw new EOFException();
+      return ((int)buf[offset++])&0xFF;
+    }
+
+    public void fill( InputStream is, int len ) throws IOException {
+      offset = 0;
+      size = 0;
+      int cnt = 0;
+      while( size < len ) {
+        cnt = is.read(buf, size, len-size);
+        if( cnt == -1 ) throw new EOFException();
+        size += cnt;
+      }
+    }
+  }
+
+  protected short readNetworkShort(SnapBufferReader in)
           throws IOException {
     int ch1 = in.read();
     int ch2 = in.read();
-    if ((ch1 | ch2) < 0)
-      throw new EOFException();
     return (short) ((ch1 << 8) + ch2);
+  }
+
+  protected int readNetworkInt(SnapBufferReader in)
+          throws IOException {
+    int ch1 = in.read();
+    int ch2 = in.read();
+    int ch3 = in.read();
+    int ch4 = in.read();
+    return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + ch4);
   }
 
   protected int readNetworkInt(InputStream in)
@@ -88,54 +123,53 @@ public class PerfServerRunner extends Thread {
     int ch2 = in.read();
     int ch3 = in.read();
     int ch4 = in.read();
-    if ((ch1 | ch2 | ch3 | ch4) < 0)
+    if( ch1 == -1 || ch2 == -1 || ch3 == -1 || ch4 == -1)
       throw new EOFException();
-//        return ((ch4 << 24) + (ch3 << 16) + (ch2 << 8) + ch1);
     return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + ch4);
   }
 
-  protected long readNetworkLong(InputStream in)
+  protected long readNetworkLong(SnapBufferReader in)
           throws IOException {
     int i1 = readNetworkInt(in);
     int i2 = readNetworkInt(in);
 
     return ((long) (i2) << 32) + (i1 & 0xFFFFFFFFL);
-//        return ((long)(i1) << 32) + (i2 & 0xFFFFFFFFL);
   }
 
-  protected void readSnap(InputStream is, PerfSnap snap)
+  protected void readSnap(InputStream istream, PerfSnap snap)
           throws IOException {
-    int len = readNetworkInt(is);
-    int numOfCounters = readNetworkInt(is);
-    snap.last[PerfSnap.IDX_SUBMIT] = (long) readNetworkInt(is);
-    snap.avg[PerfSnap.IDX_SUBMIT] = (long) readNetworkInt(is);
-    snap.total[PerfSnap.IDX_SUBMIT] = readNetworkLong(is);
+    int len = readNetworkInt(istream);
+    inbuf.fill(istream, len);
+    int numOfCounters = readNetworkInt(inbuf);
+    snap.last[PerfSnap.IDX_SUBMIT] = (long) readNetworkInt(inbuf);
+    snap.avg[PerfSnap.IDX_SUBMIT] = (long) readNetworkInt(inbuf);
+    snap.total[PerfSnap.IDX_SUBMIT] = readNetworkLong(inbuf);
 
-    snap.last[PerfSnap.IDX_SUBMITERR] = (long) readNetworkInt(is);
-    snap.avg[PerfSnap.IDX_SUBMITERR] = (long) readNetworkInt(is);
-    snap.total[PerfSnap.IDX_SUBMITERR] = readNetworkLong(is);
+    snap.last[PerfSnap.IDX_SUBMITERR] = (long) readNetworkInt(inbuf);
+    snap.avg[PerfSnap.IDX_SUBMITERR] = (long) readNetworkInt(inbuf);
+    snap.total[PerfSnap.IDX_SUBMITERR] = readNetworkLong(inbuf);
 
-    snap.last[PerfSnap.IDX_DELIVER] = (long) readNetworkInt(is);
-    snap.avg[PerfSnap.IDX_DELIVER] = (long) readNetworkInt(is);
-    snap.total[PerfSnap.IDX_DELIVER] = readNetworkLong(is);
+    snap.last[PerfSnap.IDX_DELIVER] = (long) readNetworkInt(inbuf);
+    snap.avg[PerfSnap.IDX_DELIVER] = (long) readNetworkInt(inbuf);
+    snap.total[PerfSnap.IDX_DELIVER] = readNetworkLong(inbuf);
 
-    snap.last[PerfSnap.IDX_TEMPERR] = (long) readNetworkInt(is);
-    snap.avg[PerfSnap.IDX_TEMPERR] = (long) readNetworkInt(is);
-    snap.total[PerfSnap.IDX_TEMPERR] = readNetworkLong(is);
+    snap.last[PerfSnap.IDX_TEMPERR] = (long) readNetworkInt(inbuf);
+    snap.avg[PerfSnap.IDX_TEMPERR] = (long) readNetworkInt(inbuf);
+    snap.total[PerfSnap.IDX_TEMPERR] = readNetworkLong(inbuf);
 
-    snap.last[PerfSnap.IDX_DELIVERERR] = (long) readNetworkInt(is);
-    snap.avg[PerfSnap.IDX_DELIVERERR] = (long) readNetworkInt(is);
-    snap.total[PerfSnap.IDX_DELIVERERR] = readNetworkLong(is);
+    snap.last[PerfSnap.IDX_DELIVERERR] = (long) readNetworkInt(inbuf);
+    snap.avg[PerfSnap.IDX_DELIVERERR] = (long) readNetworkInt(inbuf);
+    snap.total[PerfSnap.IDX_DELIVERERR] = readNetworkLong(inbuf);
 
-    snap.last[PerfSnap.IDX_RETRY] = (long) readNetworkInt(is);
-    snap.avg[PerfSnap.IDX_RETRY] = (long) readNetworkInt(is);
-    snap.total[PerfSnap.IDX_RETRY] = readNetworkLong(is);
+    snap.last[PerfSnap.IDX_RETRY] = (long) readNetworkInt(inbuf);
+    snap.avg[PerfSnap.IDX_RETRY] = (long) readNetworkInt(inbuf);
+    snap.total[PerfSnap.IDX_RETRY] = readNetworkLong(inbuf);
 
-    snap.queueSize = readNetworkInt(is);
-    snap.uptime = readNetworkInt(is);
-    snap.sctime = readNetworkInt(is);
-    snap.processingSize = readNetworkInt(is);
-    snap.schedulerSize = readNetworkInt(is);
+    snap.queueSize = readNetworkInt(inbuf);
+    snap.uptime = readNetworkInt(inbuf);
+    snap.sctime = readNetworkInt(inbuf);
+    snap.processingSize = readNetworkInt(inbuf);
+    snap.schedulerSize = readNetworkInt(inbuf);
   }
 
   void fillDebugSnap(PerfSnap snap) {
