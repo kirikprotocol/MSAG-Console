@@ -418,6 +418,29 @@ int SmppInputThread::Execute()
             case SmppCommandSet::ENQUIRE_LINK_RESP:
             {
             }break;
+            case SmppCommandSet::ENQUIRE_LINK:
+            {
+              SmscCommand cmd(pdu);
+              try{
+                if(ss->getProxy() && ss->getProxy()->isOpened())
+                {
+                  ss->getProxy()->putIncomingCommand(cmd);
+                }else
+                {
+                  PduEnquireLink pduresp;
+                  pduresp.get_header().set_commandId(SmppCommandSet::ENQUIRE_LINK_RESP);
+                  pduresp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+                  char buf[64];
+                  SmppStream s;
+                  assignStreamWith(&s,buf,sizeof(buf),false);
+                  fillSmppPdu(&s,reinterpret_cast<SmppHeader*>(&pduresp));
+                  ss->getSocket()->WriteAll(buf,pduresp.size());
+                }
+              }catch(...)
+              {
+                __trace__("SmppInput: exception in putIncomingCommand, proxy limit or proxy died");
+              }
+            }break;
             case SmppCommandSet::SUBMIT_SM:
             //case SmppCommandSet::SUBMIT_SM_RESP:
             //case SmppCommandSet::DELIVERY_SM:
@@ -427,7 +450,6 @@ int SmppInputThread::Execute()
             case SmppCommandSet::DATA_SM:
             case SmppCommandSet::DATA_SM_RESP:
             case SmppCommandSet::CANCEL_SM:
-            case SmppCommandSet::ENQUIRE_LINK:
             {
               try{
                 SmscCommand cmd(pdu);
@@ -437,14 +459,7 @@ int SmppInputThread::Execute()
                     ss->getProxy()->putIncomingCommand(cmd);
                   }else
                   {
-                    PduEnquireLink pduresp;
-                    pduresp.get_header().set_commandId(SmppCommandSet::ENQUIRE_LINK_RESP);
-                    pduresp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-                    char buf[64];
-                    SmppStream s;
-                    assignStreamWith(&s,buf,sizeof(buf),false);
-                    fillSmppPdu(&s,reinterpret_cast<SmppHeader*>(&pduresp));
-                    ss->getSocket()->WriteAll(buf,pduresp.size());
+                    SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVBNDSTS);
                   }
                 }catch(...)
                 {
