@@ -1968,7 +1968,7 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
       }
 
       try{ DoProvErrorProcessing(provErrCode_p);}
-      catch(MAPDIALOG_ERROR& e) { throw MAPDIALOG_XERROR(e.what(),e.code); }
+      catch(MAPDIALOG_ERROR& e) { throw MAPDIALOG_XERROR(e.code,e.what()); }
 
       if ( errorForwardSMmt_sp )
       {
