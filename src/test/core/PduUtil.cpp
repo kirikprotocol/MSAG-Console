@@ -8,9 +8,16 @@ namespace core {
 
 using namespace smsc::test;
 
+DeliveryIterator::DeliveryIterator(time_t start, time_t end)
+	: startTime(start), endTime(end), attempt(0), time(start)
+{
+	__require__(start <= end);
+}
+
 DeliveryIterator& DeliveryIterator::operator++()
 {
-	attempt++;
+	static const int rescheduleSize =
+		sizeof(rescheduleTimes) / sizeof(*rescheduleTimes);
 	if (attempt < rescheduleSize)
 	{
 		time += rescheduleTimes[attempt];
@@ -23,29 +30,37 @@ DeliveryIterator& DeliveryIterator::operator++()
 	{
 		time = 0;
 	}
+	attempt++;
 	return *this;
 }
 
-time_t PduReceiptFlag::eval(time_t time, int& attempt, time_t& diff) const
+void PduReceiptFlag::eval(time_t time, int& attempt, time_t& diff,
+	time_t& nextTime, time_t& calcTime) const
 {
 	__require__(time);
 	DeliveryIterator it(startTime, endTime);
 	diff = INT_MAX;
-	time_t tmp = time - it.getTime();
-	while (it.getTime() && abs(tmp) < abs(diff))
+	for (; it.getTime(); it++)
 	{
-		diff = tmp;
+		__trace2__("it.getTime() = %ld", it.getTime());
+		time_t curDiff = it.getTime() - time;
+		if (abs(curDiff) > abs(diff))
+		{
+			break;
+		}
+		diff = curDiff;
 		attempt = it.getAttempt();
-		tmp = time - (it++).getTime();
+		calcTime = it.getTime();
 	}
-	return it.getTime();
+	nextTime = it.getTime();
 }
 
 time_t PduReceiptFlag::getNextTime(time_t t) const
 {
 	int attempt;
-	time_t diff;
-	return eval(t, attempt, diff);
+	time_t diff, nextTime, calcTime;
+	eval(t, attempt, diff, nextTime, calcTime);
+	return nextTime;
 }
 
 vector<int> PduReceiptFlag::checkSchedule(time_t recvTime) const
@@ -64,14 +79,15 @@ vector<int> PduReceiptFlag::checkSchedule(time_t recvTime) const
 	{
 		int attempt, lastAttempt = -1;
 		time_t diff, lastDiff = 0;
-		time_t nextTime = eval(recvTime, attempt, diff);
+		time_t nextTime, calcTime, lastNextTime, lastCalcTime;
+		eval(recvTime, attempt, diff, nextTime, calcTime);
 		if (lastTime)
 		{
 			__require__(lastTime >= startTime && lastTime <= endTime + timeCheckAccuracy);
-			eval(lastTime, lastAttempt, lastDiff);
+			eval(lastTime, lastAttempt, lastDiff, lastNextTime, lastCalcTime);
 		}
-		__trace2__("PduReceiptFlag::checkSchedule(): this = %p, startTime = %ld, endTime = %ld, recvTime = %ld, attempt = %d, diff = %ld, lastTime = %ld, lastAttempt = %d, lastDiff = %ld",
-			this, startTime, endTime, recvTime, attempt, diff, lastTime, lastAttempt, lastDiff);
+		__trace2__("PduReceiptFlag::checkSchedule(): this = %p, startTime = %ld, endTime = %ld, recvTime = %ld, attempt = %d, calcTime = %ld, diff = %ld, lastTime = %ld, lastAttempt = %d, lastCalcTime = %ld, lastDiff = %ld",
+			this, startTime, endTime, recvTime, attempt, calcTime, diff, lastTime, lastAttempt, lastCalcTime, lastDiff);
 		if (attempt - lastAttempt != 1)
 		{
 			res.push_back(3);
@@ -132,16 +148,17 @@ bool PduReceiptFlag::isPduMissing(time_t checkTime) const
 	}
 	int attempt, lastAttempt = -1;
 	time_t diff, lastDiff = 0;
-	eval(checkTime, attempt, diff);
+	time_t nextTime, calcTime, lastNextTime, lastCalcTime;
+	eval(checkTime, attempt, diff, nextTime, calcTime);
 	if (lastTime)
 	{
 		__require__(lastTime >= startTime && lastTime <= endTime + timeCheckAccuracy);
-		eval(lastTime, lastAttempt, lastDiff);
+		eval(lastTime, lastAttempt, lastDiff, lastNextTime, lastCalcTime);
 	}
 	if (attempt - lastAttempt != 1)
 	{
-		__trace2__("PduReceiptFlag::isPduMissing(): this = %p, startTime = %ld, endTime = %ld, checkTime = %ld, attempt = %d, diff = %ld, lastTime = %ld, lastAttempt = %d, lastDiff = %ld",
-			this, startTime, endTime, checkTime, attempt, diff, lastTime, lastAttempt, lastDiff);
+		__trace2__("PduReceiptFlag::isPduMissing(): this = %p, startTime = %ld, endTime = %ld, checkTime = %ld, attempt = %d, calcTime = %ld, diff = %ld, lastTime = %ld, lastAttempt = %d, lastCalcTime = %ld, lastDiff = %ld",
+			this, startTime, endTime, checkTime, attempt, calcTime, diff, lastTime, lastAttempt, lastCalcTime, lastDiff);
 		return true;
 	}
 	return false;

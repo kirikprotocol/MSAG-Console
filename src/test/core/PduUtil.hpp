@@ -30,8 +30,7 @@ class DeliveryIterator
 	int attempt;
 	time_t time;
 public:
-	DeliveryIterator(time_t start, time_t end)
-		: startTime(start), endTime(end), attempt(0), time(start) {}
+	DeliveryIterator(time_t start, time_t end);
 	DeliveryIterator& operator++();
 	DeliveryIterator& operator++(int) { return operator++(); }
 	time_t getTime() { return time; }
@@ -46,7 +45,8 @@ class PduReceiptFlag
 	time_t endTime; //окончание доставки pdu
 	time_t lastTime;
 
-	time_t eval(time_t time, int& attempt, time_t& diff) const;
+	void eval(time_t time, int& attempt, time_t& diff, time_t& nextTime,
+		time_t& calcTime) const;
 
 public:
 	PduReceiptFlag(int flg, time_t start, time_t end) :
