@@ -242,9 +242,9 @@ StoreStatement::StoreStatement(Connection* connection)
     
 const char* IsRejectedStatement::sql = (const char*)
 "SELECT NVL(COUNT(*), 0) FROM SMS_MSG\
- WHERE ( ST=:ST AND RD='Y' AND MR=:MR\
- AND OA_LEN=:OA_LEN AND OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL\
- AND DA_LEN=:DA_LEN AND DA_TON=:DA_TON AND DA_NPI=:DA_NPI AND DA_VAL=:DA_VAL )";
+ WHERE ST=:1 AND RD='Y' AND MR=:2\
+ AND OA_LEN=:3 AND OA_TON=:4 AND OA_NPI=:5 AND OA_VAL=:6\
+ AND DA_LEN=:7 AND DA_TON=:8 AND DA_NPI=:9 AND DA_VAL=:10";
     
 IsRejectedStatement::IsRejectedStatement(Connection* connection)
     throw(StorageException)
@@ -275,7 +275,7 @@ IsRejectedStatement::IsRejectedStatement(Connection* connection)
 
 bool IsRejectedStatement::isRejected()
 {
-    return ((count) ? false:true);
+    return ((count) ? true:false);
 }
 
 /* --------------------------- RetriveStatement ----------------------- */
