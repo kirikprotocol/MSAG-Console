@@ -557,8 +557,7 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
   __trace2__("MAP:: tp_vp len= %d", tpvpLen);
   unsigned char user_data_len = *(unsigned char*)(ud->signalInfo+2+tpvpLen+msa_len+2);
   __trace2__("MAP:: user_data_len = %d",user_data_len);
-  if ( user_data_len > (ud->signalInfoLen-(2+tpvpLen+msa_len+2+1) ))
-    throw runtime_error(FormatText("bad user_data_len %d must be <= %d, PDU len=%d",user_data_len,(ud->signalInfoLen-(2+tpvpLen+msa_len+2+1)),ud->signalInfoLen));
+  unsigned max_data_len = (ud->signalInfoLen-(2+tpvpLen+msa_len+2+1) );
   unsigned char* user_data = (unsigned char*)(ud->signalInfo+2+tpvpLen+msa_len+2+1);
   if ( ssfh->tp_vp != 0 )
   {
@@ -677,6 +676,19 @@ none_validity:;
     __trace2__("MAP:: unknown coding scheme 0x%x",user_data_coding);
     throw runtime_error("unknown coding scheme");
   }
+
+  if ( encoding == MAP_OCTET7BIT_ENCODING )
+  {
+    unsigned octet_data_len = (user_data_len+1)*7/8;
+    if ( octet_data_len > max_data_len )
+      throw runtime_error(FormatText("bad user_data_len %d must be <= %d, PDU len=%d",octet_data_len,max_data_len,ud->signalInfoLen));
+  }
+  else
+  {
+    if ( user_data_len > max_data_len )
+      throw runtime_error(FormatText("bad user_data_len %d must be <= %d, PDU len=%d",user_data_len,max_data_len,ud->signalInfoLen));
+  }
+  
   {
     if (  encoding == MAP_OCTET7BIT_ENCODING ){
       if ( ssfh->udhi){
