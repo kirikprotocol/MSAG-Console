@@ -1377,9 +1377,9 @@ static void PauseOnImsiReq(MapDialog* map)
         throw runtime_error("MAP::%s MAP.did:{0x%x} has no originating address");
 #if !defined DISABLE_TRACING    
         {
-          auto_ptr<char> b(new char[sizeof(E96MAP_ADDRESS_T)*3]);
-          memset(b.get(),0,sizeof(E96MAP_ADDRESS_T)*3+1);
-          for ( int i=0,k=0; i < sizeof(E96MAP_ADDRESS_T); ++i ) {
+          auto_ptr<char> b(new char[sizeof(ET96MAP_ADDRESS_T)*3]);
+          memset(b.get(),0,sizeof(ET96MAP_ADDRESS_T)*3+1);
+          for ( int i=0,k=0; i < sizeof(ET96MAP_ADDRESS_T); ++i ) {
             k += sprintf(b.get()+k,"%02x ",((char*)dialog->m_msAddr)+i);
           }
           __trace2__("MAP::%s ARRDDRESS: %s",__FUNCTION__,b.get());
