@@ -1034,7 +1034,16 @@ static long long NextSequence()
   return ++sequence;
 }
 
-static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog){  __map_trace2__("%s: dialogid 0x%x",__FUNCTION__,dialog->dialogid_map);  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0x0f;  unsigned encoding = cmd->get_sms()->getIntProperty(Tag::SMPP_DATA_CODING);  ET96MAP_USSD_STRING_T ussdString = {0,};  unsigned text_len;  const unsigned char* text = (const unsigned char*)cmd->get_sms()->getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&text_len);  if ( text_len > 160 ) 
+static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
+{
+  __map_trace2__("%s: dialogid 0x%x",__FUNCTION__,dialog->dialogid_map);
+  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0x0f;
+  unsigned encoding = cmd->get_sms()->getIntProperty(Tag::SMPP_DATA_CODING);
+  ET96MAP_USSD_STRING_T ussdString = {0,};
+  unsigned text_len;
+
+  const unsigned char* text = (const unsigned char*)cmd->get_sms()->getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&text_len);
+  if ( text_len > 160 ) 
     throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__FUNCTION__,dialog->dialogid_map,text_len));
 
   unsigned bytes = 0;
@@ -1309,7 +1318,7 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
     char text[32];
     SS7ToText(ss7Address_sp,text);
     string s_key(text);
-    __map_trace2__("%s: is exists %s?",__FUNCTION__,s_key.c_str());
+    __map_trace2__("%s: is exists %s? version %d",__FUNCTION__,s_key.c_str(),version);
     typedef multimap<string,unsigned>::iterator I;
     MutexGuard guard(x_map_lock);
     pair<I,I> range = x_map.equal_range(s_key);
@@ -1399,6 +1408,7 @@ USHORT_T Et96MapOpenConf (
     case MAPST_ImsiWaitOpenConf:
       if ( openResult == ET96MAP_RESULT_NOT_OK ){
         if ( refuseReason_p && *refuseReason_p == ET96MAP_APP_CONTEXT_NOT_SUPP ){
+          __map_trace2__("%s: context unsupported , version %d",__FUNCTION__,dialog->version);
           if ( dialog->version != 1 ){
             --dialog->version;
             dialogid_map = RemapDialog(dialog.get(),localSsn);
@@ -1427,6 +1437,9 @@ USHORT_T Et96MapOpenConf (
             FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialogid_map,dialogid_smsc),
             provErrCode_p?MAP_ERRORS_BASE+*provErrCode_p:MAP_FALURE);*/
           DoProvErrorProcessing(provErrCode_p);
+          throw MAPDIALOG_FATAL_ERROR(
+            FormatText("MAP::%s connection opening error , reason %d",__FUNCTION__,refuseReason_p?*refuseReason_p),
+            refuseReason_p?(MAP_ERRORS_BASE+*refuseReason_p):MAP_FALURE);
         }
       }
       switch(dialog->state){
