@@ -59,8 +59,7 @@ public abstract class UsersEditBean extends SmscBean
 
 	public boolean isUserInRole(String rolename)
 	{
-      //@todo implement
-		return true;
+		return rolesSet.contains(rolename);
 	}
 
 	/****************************************** properties ****************************************************/
@@ -91,7 +90,11 @@ public abstract class UsersEditBean extends SmscBean
 
 	public void setRoles(String[] roles)
 	{
+		if (roles == null)
+			roles = new String[0];
 		this.roles = roles;
+		rolesSet.clear();
+		rolesSet.addAll(Arrays.asList(roles));
 	}
 
 	public String getFirstName()

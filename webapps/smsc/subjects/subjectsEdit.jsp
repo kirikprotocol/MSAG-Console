@@ -19,7 +19,7 @@ switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("a
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_SUBJECTS";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<input type=hidden name=oldName value="<%=bean.getOldName()%>">
+<%boolean isNew = false;%>
 <%@ include file="subjectBody.jsp"%>
 <div class=secButtons>
 <input class=btn type=submit name=mbSave value="Save subject" title="Apply changes">

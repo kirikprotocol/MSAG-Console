@@ -22,7 +22,7 @@ public class DestinationList
 	}
 
 	public DestinationList(Element destinationListElement, SubjectList subjects, SMEList smes)
-			  throws AdminException
+			throws AdminException
 	{
 		NodeList list = destinationListElement.getElementsByTagName("destination");
 		for (int i = 0; i < list.getLength(); i++)
@@ -119,5 +119,16 @@ public class DestinationList
 			((Destination) i.next()).store(out);
 		}
 		return out;
+	}
+
+	public boolean isSubjectUsed(String subjectId)
+	{
+		for (Iterator i = destinations.values().iterator(); i.hasNext();)
+		{
+			Destination destination = (Destination) i.next();
+			if (destination.isSubject() && destination.getName().equals(subjectId))
+				return true;
+		}
+		return false;
 	}
 }

@@ -7,6 +7,7 @@ package ru.novosoft.smsc.admin.route;
 
 import org.w3c.dom.Element;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import java.io.PrintWriter;
@@ -29,6 +30,8 @@ public class Route
 	{
 		if (routeName == null)
 			throw new NullPointerException("Route name is null");
+		if (routeName.length() > Constants.ROUTE_ID_MAXLENGTH)
+			throw new IllegalArgumentException("Route name is too long");
 		if (sources == null)
 			throw new NullPointerException("Sources list is null");
 		if (destinations == null)
@@ -48,6 +51,8 @@ public class Route
 	{
 		if (routeName == null)
 			throw new NullPointerException("Route name is null");
+		if (routeName.length() > Constants.ROUTE_ID_MAXLENGTH)
+			throw new IllegalArgumentException("Route name is too long");
 
 		name = routeName;
 		src = new SourceList();
@@ -63,6 +68,10 @@ public class Route
 			  throws AdminException
 	{
 		name = routeElem.getAttribute("id");
+		if (name.length() > Constants.ROUTE_ID_MAXLENGTH)
+		{
+			throw new AdminException("Route name is too long: "+name.length()+" chars \"" + name+ '"');
+		}
 		src = new SourceList(routeElem, subjects);
 		dst = new DestinationList(routeElem, subjects, smes);
 		priority = Integer.decode(routeElem.getAttribute("priority")).intValue();
@@ -79,6 +88,8 @@ public class Route
 
 	public void setName(String name)
 	{
+		if (name.length() > Constants.ROUTE_ID_MAXLENGTH)
+			throw new IllegalArgumentException("Route name is too long");
 		this.name = name;
 	}
 

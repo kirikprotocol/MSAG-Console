@@ -2,13 +2,8 @@
 <!DOCTYPE users SYSTEM "file://users.dtd">
 
 <users>
-	<user login="user1" password="qwe" firstName="user1 first" lastName="user1 l" dept="user1 d" workPhone="user1 w" homePhone="user1 h" cellPhone="user1 c" email="user1@user1.user1">
-		<role name="smsView"/>
-		<role name="user"/>
-		<role name="admin"/>
-		<role name="super-admin"/>
-	</user>
-	<user login="superadmin" password="123" firstName="first" lastName="last" dept="dept" workPhone="work" homePhone="home" cellPhone="cell" email="email@email.com">
+	<user login="igork" password="asdlkj" firstName="?????" lastName="????????" dept="??????" workPhone="?? ????" homePhone="? ????" cellPhone="?? ?????" email="a@b">
+		<role name="apply"/>
 		<role name="smsView"/>
 		<role name="users"/>
 		<role name="routes"/>
@@ -17,8 +12,23 @@
 		<role name="profiles"/>
 		<role name="hosts"/>
 		<role name="services"/>
-		<role name="user"/>
-		<role name="admin"/>
-		<role name="super-admin"/>
+	</user>
+	<user login="user1" password="asd" firstName="user1 first" lastName="user1 l" dept="user1 d" workPhone="user1 w" homePhone="user1 h" cellPhone="user1 c" email="user1@user1.user1">
+		<role name="aliases"/>
+		<role name="smsView"/>
+		<role name="profiles"/>
+		<role name="routes"/>
+		<role name="subjects"/>
+	</user>
+	<user login="superadmin" password="123" firstName="first" lastName="last" dept="dept" workPhone="work" homePhone="home" cellPhone="cell" email="email@email.com">
+		<role name="apply"/>
+		<role name="smsView"/>
+		<role name="aliases"/>
+		<role name="services"/>
+		<role name="hosts"/>
+		<role name="routes"/>
+		<role name="profiles"/>
+		<role name="users"/>
+		<role name="subjects"/>
 	</user>
 </users>

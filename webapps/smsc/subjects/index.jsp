@@ -75,9 +75,9 @@ function navigate(direction)
 <thead>
 <tr>
 	<th>&nbsp;</th>
-	<th><a href="#" title="Sort by name" onclick='return setSort("Name")'>name</a></th>
-	<th><a href="#" title="Sort by default SME" onclick='return setSort("Default SME")'>default SME</a></th>
-	<th><a href="#" title="Sort by masks" onclick='return setSort("Masks")'>masks</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("Name") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by name" onclick='return setSort("Name")'>name</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("Default SME") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by default SME" onclick='return setSort("Default SME")'>default SME</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("Masks") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by masks" onclick='return setSort("Masks")'>masks</a></th>
 </tr>
 </thead>
 <tbody>

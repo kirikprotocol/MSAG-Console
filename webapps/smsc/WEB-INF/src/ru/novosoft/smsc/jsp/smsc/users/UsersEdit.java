@@ -27,7 +27,7 @@ public class UsersEdit
 			User user = userManager.getUser(login);
 			password = "";
 			confirmPassword = "";
-			roles = user.getRoles();
+			setRoles(user.getRoles());
 			firstName = user.getFirstName();
 			lastName = user.getLastName();
 			dept = user.getDept();

@@ -76,9 +76,9 @@ function navigate(direction)
 <thead>
 <tr>
 	<th>&nbsp;</th>
-	<th><a href="#" title="Sort by mask" onclick='return setSort("Alias")'>alias</a></th>
-	<th><a href="#" title="Sort by codepage" onclick='return setSort("Address")'>address</a></th>
-	<th><a href="#" title="Sort by report info" onclick='return setSort("Hide")'>hide</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("Alias") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by mask" onclick='return setSort("Alias")'>alias</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("Address") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by codepage" onclick='return setSort("Address")'>address</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("Hide") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by report info" onclick='return setSort("Hide")'>hide</a></th>
 </tr>
 </thead>
 <tbody>

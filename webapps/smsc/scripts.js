@@ -54,7 +54,7 @@ function validateField_port(elem)
 
 function validateField_mask(elem)
 {
-	var r = RegExp("((^\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(^\\+)|(^))\\d{0,21}(\\?{0,21}|\\*)$");
+	var r = RegExp("((^\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(^\\+7)|(^8))\\d{0,21}(\\?{0,21}|\\*)$");
 	return elem.value == null || elem.value.match(r) == null
 		? validationError(elem, "Invalid mask")
 		: true;

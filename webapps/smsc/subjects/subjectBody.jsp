@@ -5,7 +5,7 @@
 <tr><td colspan=2 class=secInner><div class=secView>Subject information</div></td></tr>
 <tr class=row<%=(rowN++)&1%>>
 	<th class=label>name:</th>
-	<td><input class=txtW name=name value="<%=bean.getName()%>"></td>
+	<td><input class=txtW name=name value="<%=bean.getName()%>" <%=isNew?"":"readonly"%>></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
 	<th class=label>default SME:</th>

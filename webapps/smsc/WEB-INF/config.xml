@@ -15,6 +15,11 @@
     <param name="host" type="string">smsc</param>
     <param name="port" type="int">6690</param>
   </section>
+  <section name="perfmon">
+    <param name="appletport" type="int">6695</param>
+    <param name="smscport" type="int">6696</param>
+  </section>
+  
   <section name="profiler">
     <section name="jdbc">
       <param name="source" type="string">jdbc:oracle:thin:@dbs.novosoft.ru:1521:ORCL</param>

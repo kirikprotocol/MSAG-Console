@@ -19,8 +19,6 @@ public class SubjectsEdit extends SmscBean
 	protected String mbSave = null;
 	protected String mbCancel = null;
 
-	protected String oldName = null;
-
 	protected String name = null;
 	protected String defSme = null;
 	protected String[] masks = null;
@@ -40,9 +38,6 @@ public class SubjectsEdit extends SmscBean
 			defSme = s.getDefaultSme().getId();
 			masks = (String[]) s.getMasks().getNames().toArray(new String[0]);
 		}
-
-		if (oldName == null)
-			oldName = name;
 
 		masks = trimStrings(masks);
 
@@ -65,30 +60,17 @@ public class SubjectsEdit extends SmscBean
 
 	protected int save()
 	{
-		if (!name.equals(oldName) && smsc.getSubjects().contains(name))
-			return error(SMSCErrors.error.subjects.alreadyExists, name);
-		else
+		try
 		{
-			try
-			{
-				if (oldName.equals(name))
-				{
-					Subject s = smsc.getSubjects().get(name);
-					s.setDefaultSme(smsc.getSmes().get(defSme));
-					s.setMasks(new MaskList(masks));
-				}
-				else
-				{
-					smsc.getSubjects().remove(oldName);
-					smsc.getSubjects().add(new Subject(name, masks, smsc.getSmes().get(defSme)));
-				}
-				appContext.getStatuses().setSubjectsChanged(true);
-				return RESULT_DONE;
-			}
-			catch (Throwable e)
-			{
-				return error(SMSCErrors.error.subjects.cantEdit, name, e);
-			}
+			Subject s = smsc.getSubjects().get(name);
+			s.setDefaultSme(smsc.getSmes().get(defSme));
+			s.setMasks(new MaskList(masks));
+			appContext.getStatuses().setSubjectsChanged(true);
+			return RESULT_DONE;
+		}
+		catch (Throwable e)
+		{
+			return error(SMSCErrors.error.subjects.cantEdit, name, e);
 		}
 	}
 
@@ -118,24 +100,9 @@ public class SubjectsEdit extends SmscBean
 		this.mbCancel = mbCancel;
 	}
 
-	public String getOldName()
-	{
-		return oldName;
-	}
-
-	public void setOldName(String oldName)
-	{
-		this.oldName = oldName;
-	}
-
 	public String getName()
 	{
 		return name;
-	}
-
-	public void setName(String name)
-	{
-		this.name = name;
 	}
 
 	public String getDefSme()

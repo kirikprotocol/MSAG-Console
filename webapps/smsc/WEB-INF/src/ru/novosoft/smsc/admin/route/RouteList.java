@@ -13,9 +13,7 @@ import ru.novosoft.smsc.jsp.util.tables.impl.RouteDataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.RouteQuery;
 
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 
 public class RouteList
@@ -28,7 +26,7 @@ public class RouteList
 	}
 
 	public RouteList(Element routeListElement, SubjectList subjects, SMEList smes)
-			  throws AdminException
+			throws AdminException
 	{
 		NodeList routeList = routeListElement.getElementsByTagName("route");
 		for (int i = 0; i < routeList.getLength(); i++)
@@ -100,5 +98,18 @@ public class RouteList
 	public boolean contains(String routeId)
 	{
 		return map.containsKey(routeId);
+	}
+
+	public boolean isSubjectUsed(String subjectId)
+	{
+		for (Iterator i = map.values().iterator(); i.hasNext();)
+		{
+			Route route = (Route) i.next();
+			if (route.getSources().isSubjectUsed(subjectId))
+				return true;
+			if (route.getDestinations().isSubjectUsed(subjectId))
+				return true;
+		}
+		return false;
 	}
 }

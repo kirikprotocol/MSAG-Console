@@ -5,11 +5,19 @@
 <link rel="STYLESHEET" type="text/css" href="<%=CPATH%>/colors.css">
 <link rel="STYLESHEET" type="text/css" href="<%=CPATH%>/common.css">
 <script src="<%=CPATH%>/scripts.js" type="text/javascript"></script>
+<script>
+function openPerfMon()
+{
+	open("<%=CPATH%>/perfmon/index.jsp", null, "channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=no,scrollbars=no,status=no,titlebar=no,toolbar=no,height=420,width=480");
+	return false;
+}
+</script>
 </head><body bgcolor="#FFFFFF">
 <table align=center height="100%" width="80%" cellspacing=0 cellpadding=0 class=wnd>
 <tr><td width="100%" class=title>SMS Service Center (Preliminary Beta Version)</td></tr>
 <tr><td class=tmenu><%
 	%><a ID=MENU0_HOME href="<%=CPATH%>">Home</a><%
+	%><a ID=MENU0_SMSVIEW href="<%=CPATH%>/perfmon/index.jsp" target="SMSC Perfomance monitor" onclick="return openPerfMon();">Perfomance monitor</a><%
 	%><a ID=MENU0_SMSVIEW href="<%=CPATH%>/smsview/index.jsp">SMS view</a><%
 	%><a ID=MENU0_USERS href="<%=CPATH%>/users/index.jsp">Users</a><%
 	%><a ID=MENU0_ROUTES href="<%=CPATH%>/routes/index.jsp">Routes</a><%

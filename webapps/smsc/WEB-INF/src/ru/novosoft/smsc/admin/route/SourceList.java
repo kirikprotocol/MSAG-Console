@@ -5,14 +5,13 @@
  */
 package ru.novosoft.smsc.admin.route;
 
+import org.apache.log4j.Category;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import org.apache.log4j.Category;
+import ru.novosoft.smsc.admin.AdminException;
 
 import java.io.PrintWriter;
 import java.util.*;
-
-import ru.novosoft.smsc.admin.AdminException;
 
 
 public class SourceList
@@ -128,5 +127,16 @@ public class SourceList
 			((Source) i.next()).store(out);
 		}
 		return out;
+	}
+
+	public boolean isSubjectUsed(String subjectId)
+	{
+		for (Iterator i = sources.values().iterator(); i.hasNext();)
+		{
+			Source source = (Source) i.next();
+			if (source.isSubject() && source.getName().equals(subjectId))
+				return true;
+		}
+		return false;
 	}
 }

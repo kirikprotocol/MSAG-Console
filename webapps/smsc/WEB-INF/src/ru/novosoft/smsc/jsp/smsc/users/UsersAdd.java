@@ -23,7 +23,7 @@ public class UsersAdd
 		{
 			password = "";
 			confirmPassword = "";
-			roles = new String[0];
+			setRoles(new String[0]);
 			firstName = "";
 			lastName = "";
 			dept = "";

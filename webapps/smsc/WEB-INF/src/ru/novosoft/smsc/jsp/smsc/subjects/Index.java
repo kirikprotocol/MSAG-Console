@@ -7,6 +7,7 @@ package ru.novosoft.smsc.jsp.smsc.subjects;
 
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
@@ -80,15 +81,21 @@ public class Index extends IndexBean
 
 	protected int deleteSubject()
 	{
+		int result = RESULT_OK;
 		for (int i = 0; i < checkedSubjects.length; i++)
 		{
 			String subject = checkedSubjects[i];
-			smsc.getSubjects().remove(subject);
-			appContext.getStatuses().setSubjectsChanged(true);
+			if (!smsc.getRoutes().isSubjectUsed(subject))
+			{
+				smsc.getSubjects().remove(subject);
+				appContext.getStatuses().setSubjectsChanged(true);
+			}
+			else
+				result = error(SMSCErrors.error.subjects.cantDelete, subject);
 		}
 		checkedSubjects = new String[0];
 		checkedSubjectsSet.clear();
-		return RESULT_OK;
+		return result;
 	}
 
 	public boolean isSubjectChecked(String alias)

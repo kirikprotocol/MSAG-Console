@@ -22,7 +22,7 @@ switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("a
 }
 MENU0_SELECTION = "MENU0_HOME";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<% if (request.isUserInRole("super-admin"))
+<% if (request.isUserInRole("apply"))
 {%>
 <table class=secRep cellspacing=1 cellpadding=0 width="100%">
 <col width="70%">
