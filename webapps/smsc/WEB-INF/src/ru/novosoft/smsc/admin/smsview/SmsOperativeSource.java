@@ -8,6 +8,8 @@ import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
 
 import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -30,7 +32,8 @@ public class SmsOperativeSource extends SmsSource
     //  context = ArchiveDaemonContext.getInstance(appContext);
     Smsc smsc = appContext.getSmsc();
     String configPath = smsc.getConfigFolder().getAbsolutePath();
-    int len = configPath.lastIndexOf("/") + 1;
+    int len = configPath.lastIndexOf("/") + 1; //windows
+    // if (len <0) len = configPath.lastIndexOf("/") + 1;//Solaris
     String absolutePath = configPath.substring(0, len);
     Config config = smsc.getSmscConfig();
 
@@ -57,6 +60,7 @@ public class SmsOperativeSource extends SmsSource
     FileInputStream input = null;
     SmsSet set = new SmsSet();
     set.setHasMore(false);
+    Map smes = new HashMap();
     int rowsMaximum = query.getRowsMaximum();
     if (rowsMaximum == 0) return set;
     boolean allReaded = false;
@@ -83,13 +87,14 @@ public class SmsOperativeSource extends SmsSource
         if (!allReaded || ((RsFileMessage) responce).isBodyRecived()) {
           if (!set.isHasMore()) {
             SmsRow smsNew = ((RsFileMessage) responce).getSms();
-            long msgId = smsNew.getId();
-            SmsRow smsOld = set.getRow(msgId);
-            if (smsOld != null) set.removeRow(smsOld);
-            set.addRow(smsNew);
+            Long msgId = new Long(smsNew.getId());
+            SmsRow smsOld = (SmsRow) smes.get(msgId);
+            if (smsOld != null) smes.remove(msgId);
+            //set.addRow(smsNew);
+            smes.put(msgId, smsNew);
           }
           if (--toReceive <= 0) {
-            toReceive = rowsMaximum - set.getRowsCount();
+            toReceive = rowsMaximum - smes.size();
             if (toReceive <= 0) {
               set.setHasMore(true);
               break;
@@ -112,7 +117,7 @@ public class SmsOperativeSource extends SmsSource
       ;
 
     }
-
+    set.addAll(smes.values());
     return set;
   }
 
@@ -221,6 +226,7 @@ public class SmsOperativeSource extends SmsSource
     InputStream input = null;
     SmsSet set = new SmsSet();
     set.setHasMore(true);
+    Map smes = new HashMap();
     int rowsMaximum = query.getRowsMaximum();
     if (rowsMaximum == 0) return 0;
     boolean allReaded = false;
@@ -242,13 +248,14 @@ public class SmsOperativeSource extends SmsSource
           if (!allReaded || ((RsFileMessage) responce).isBodyRecived()) {
             if (!set.isHasMore()) {
               SmsRow smsNew = ((RsFileMessage) responce).getSms();
-              long msgId = smsNew.getId();
-              SmsRow smsOld = set.getRow(msgId);
-              if (smsOld != null) set.removeRow(smsOld);
-              set.addRow(smsNew);
+              Long msgId = new Long(smsNew.getId());
+              SmsRow smsOld = (SmsRow) smes.get(msgId);
+              if (smsOld != null) smes.remove(msgId);
+              //set.addRow(smsNew);
+              smes.put(msgId, smsNew);
             }
             smsCount++;
-            toReceive = rowsMaximum - set.getRowsCount();
+            toReceive = rowsMaximum - smes.size();//set.getRowsCount();
             if (toReceive <= 0) {
               set.setHasMore(true);
             }
