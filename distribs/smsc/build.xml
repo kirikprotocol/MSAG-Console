@@ -38,7 +38,7 @@ Targets:
   </target>
 
   <target name="makedeps">
-    <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="deps"/>
+    <ant dir="${SRC_DIR}" target="deps"/>
   </target>
 
   <target name="makesmsc">
