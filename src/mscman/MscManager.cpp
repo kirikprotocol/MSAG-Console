@@ -326,6 +326,7 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
 
 void MscManagerImpl::report(const char* msc, bool status)
 {
+    if (!msc || !msc[0]) return;
     MutexGuard  guard(hashLock);
 
     bool needInsert = false;
@@ -347,6 +348,7 @@ void MscManagerImpl::report(const char* msc, bool status)
 }
 bool MscManagerImpl::check(const char* msc)
 {
+    if (!msc || !msc[0]) return false;
     MutexGuard  guard(hashLock);
 
     if (!mscs.Exists(msc)) return true;
@@ -358,6 +360,7 @@ bool MscManagerImpl::check(const char* msc)
 
 void MscManagerImpl::registrate(const char* msc)
 {
+    if (!msc || !msc[0]) return;
     MutexGuard  guard(hashLock);
 
     if (!mscs.Exists(msc))
@@ -370,6 +373,7 @@ void MscManagerImpl::registrate(const char* msc)
 }
 void MscManagerImpl::unregister(const char* msc)
 {
+    if (!msc || !msc[0]) return;
     MutexGuard  guard(hashLock);
 
     if (mscs.Exists(msc))
@@ -383,6 +387,7 @@ void MscManagerImpl::unregister(const char* msc)
 }
 void MscManagerImpl::block(const char* msc)
 {
+    if (!msc || !msc[0]) return;
     MutexGuard  guard(hashLock);
 
     if (mscs.Exists(msc))
@@ -398,6 +403,7 @@ void MscManagerImpl::block(const char* msc)
 }
 void MscManagerImpl::clear(const char* msc)
 {
+    if (!msc || !msc[0]) return;
     MutexGuard  guard(hashLock);
 
     if (mscs.Exists(msc))
