@@ -14,9 +14,10 @@ using smsc::sms::Address;
 using smsc::profiler::Profile;
 using smsc::test::sms::ltAddress;
 
-const int INCORRECT_COMMAND_TEXT = 0;
 const int UPDATE_REPORT_OPTIONS = 1;
 const int UPDATE_CODE_PAGE = 2;
+const int INCORRECT_COMMAND_TEXT = 3;
+const int INCORRECT_ESM_CLASS = 4;
 
 class ProfileRegistry
 {
