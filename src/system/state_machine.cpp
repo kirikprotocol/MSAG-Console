@@ -274,7 +274,9 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
-  if(sms->hasBinProperty(Tag::SMPP_SHORT_MESSAGE) && sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+  if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD) &&
+     sms->hasBinProperty(Tag::SMPP_SHORT_MESSAGE)   &&
+     sms->getIntProperty(Tag::SMPP_SM_LENGTH)!=0)
   {
     sms->lastResult=Status::SUBMITFAIL;
     smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
