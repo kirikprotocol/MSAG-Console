@@ -4,6 +4,7 @@
   <section name="services">
     <section name="SMSC">
       <param name="args" type="string"></param>
+      <param name="autostart" type="bool">false</param>
       <param name="port" type="int">6690</param>
     </section>
   </section>
