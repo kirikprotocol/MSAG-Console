@@ -772,6 +772,8 @@ const char * const getProfileCodepageStr(int codepage)
 	{
 	case smsc::profiler::ProfileCharsetOptions::Default: return "default";
 	case smsc::profiler::ProfileCharsetOptions::Ucs2:    return "UCS2";
+	case smsc::profiler::ProfileCharsetOptions::Latin1:  return "Latin1";
+	case smsc::profiler::ProfileCharsetOptions::Ucs2AndLat:  return "UCS2&Latin1";
 	default:                                             return "unknown";
 	}
 }
