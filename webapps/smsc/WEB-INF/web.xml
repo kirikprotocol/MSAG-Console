@@ -5,6 +5,7 @@
     "http://java.sun.com/dtd/web-app_2_3.dtd">
 
 <web-app>
+	
 	<servlet>
 		<servlet-name>smsc</servlet-name>
 		<servlet-class>ru.novosoft.smsc.jsp.SMSCJspController</servlet-class>
@@ -85,6 +86,8 @@
 		</web-resource-collection>
 		<auth-constraint>
 			<role-name>smsView</role-name>
+      <role-name>smsView_archive</role-name>
+      <role-name>smsView_operative</role-name>
 		</auth-constraint>
 		<user-data-constraint><transport-guarantee>NONE</transport-guarantee></user-data-constraint>
 	</security-constraint>
@@ -217,9 +220,15 @@
 	<security-role>
 		<role-name>perfmon</role-name>
 	</security-role>
+  <security-role>
+    <role-name>smsView</role-name>
+  </security-role>
 	<security-role>
-		<role-name>smsView</role-name>
+		<role-name>smsView_archive</role-name>
 	</security-role>
+  <security-role>
+    <role-name>smsView_operative</role-name>
+  </security-role>
 	<security-role>
 		<role-name>smsstat</role-name>
 	</security-role>

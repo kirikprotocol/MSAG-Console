@@ -213,7 +213,9 @@ public class SMSCErrors
 			private static final String B = error.B + "smsview.";
 			public static final String QueryFailed = B + "QueryFailed";
 			public static final String DeleteFailed = B + "DeleteFailed";
-		}
+      public static final String AccessDeniedToOperative = B + "AccessDeniedToOperative";
+      public static final String AccessDeniedToArchive = B + "AccessDeniedToArchive";
+    }
 	}
 
 	public static class warning

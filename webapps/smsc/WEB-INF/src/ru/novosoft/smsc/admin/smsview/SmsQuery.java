@@ -13,8 +13,8 @@ import java.util.Date;
 
 public class SmsQuery
 {
-  public static int SMS_OPERATIVE_STORAGE_TYPE = 100;
-  public static int SMS_ARCHIVE_STORAGE_TYPE = 200;
+  public final static int SMS_OPERATIVE_STORAGE_TYPE = 100;
+  public final static int SMS_ARCHIVE_STORAGE_TYPE = 200;
 
   private int    storageType = SMS_ARCHIVE_STORAGE_TYPE;
   private int    rowsMaximum = 500;

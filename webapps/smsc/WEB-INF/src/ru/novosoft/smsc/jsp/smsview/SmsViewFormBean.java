@@ -62,6 +62,20 @@ public class SmsViewFormBean extends IndexBean
       view.setSmsc(appContext.getSmsc());
     }
 
+    switch (getStorageType()) {
+      case SmsQuery.SMS_ARCHIVE_STORAGE_TYPE:
+        if (!request.isUserInRole("smsView") && !request.isUserInRole("smsView_archive"))
+          return error(SMSCErrors.error.smsview.AccessDeniedToArchive);
+        break;
+      case SmsQuery.SMS_OPERATIVE_STORAGE_TYPE:
+        if (!request.isUserInRole("smsView") && !request.isUserInRole("smsView_operative"))
+          return error(SMSCErrors.error.smsview.AccessDeniedToOperative);
+        break;
+      default:
+        //do nothing
+        break;
+    }
+
     if (mbRemove != null)
       result = processDeleteSelected();
     else if (mbDelete != null) {
