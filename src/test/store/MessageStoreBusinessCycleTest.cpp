@@ -5,10 +5,13 @@
 #include "MessageStoreTestCases.hpp"
 #include "test/util/TestTaskManager.hpp"
 #include <iostream>
+#include <sstream>
 #include <map>
 
 using namespace std;
 using namespace smsc::test::util;
+using log4cpp::Category;
+using smsc::util::Logger;
 using smsc::sms::SMS;
 using smsc::sms::SMSId;
 using smsc::util::config::Manager;
@@ -223,7 +226,7 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 	//Некорректное обновление несуществующего sms
 	//Чтение несуществующего sms
 	SMSId badId = 0xFFFFFFFFFFFFFFFF;
-	for (TCSelector s(RAND_SET_TC, 4); s.check(); s++)
+	for (TCSelector s(RAND_SET_TC, 3); s.check(); s++)
 	{
 		switch (s.value())
 		{
@@ -246,27 +249,6 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 		delete id[i];
 		delete sms[i];
 	}
-
-	/*
-	for (TCSelector s(RAND_SET_TC, 4); s.check(); s++)
-	{
-		switch (s.value())
-		{
-			case 1:
-				process(tc.setNonExistentSMStatus(id, RAND_TC));
-				break;
-			case 2:
-				process(tc.replaceNonExistentSM(id, RAND_TC));
-				break;
-			case 3:
-				process(tc.loadNonExistentSM(id, RAND_TC));
-				break;
-			case 4:
-				process(tc.deleteNonExistentSM(id, RAND_TC));
-				break;
-		}
-	}
-	*/
 }
 
 inline void MessageStoreBusinessCycleTestTask::onStopped()
@@ -317,8 +299,14 @@ inline bool MessageStoreBusinessCycleTest::isStopped()
 
 void MessageStoreBusinessCycleTest::process(int taskNum, const TCResult* res)
 {
+	static Category& log = Logger::getCategory("smsc.test.store.BusinessCycleTest");
 	if (res)
 	{
+		//вывод в лог
+		ostringstream os;
+		os << *res << endl;
+		log.debug("Task = %d, tc = %s", taskNum, os.str().c_str());
+		//обновить статистику
 		taskStat[taskNum].ops++;
 	    tcStat[res->getId()]++;
 	    delete res;
