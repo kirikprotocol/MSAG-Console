@@ -15,7 +15,8 @@ DbSmeTestRecord* DbSmePlSqlJobTestCases::newDefInput()
 	rec->setDouble(32.32);
 	rec->setLongDouble(64.64);
 	rec->setString("xxx");
-	rec->setDate(time(NULL));
+	rec->setDateType(DT_TODAY);
+	rec->setDate(getDate(DT_TODAY));
 	return rec;
 }
 
@@ -116,18 +117,6 @@ const string DbSmePlSqlJobTestCases::processProcedureJobOutput(const string& tex
 	__require__(rec);
 	__decl_tc__;
 	__tc__("processDbSmeRes.procedure"); __tc_ok__;
-	
-	__plsql__(Int8, 1);
-	__plsql__(Int16, 1);
-	__plsql__(Int32, 1);
-	__plsql__(Int64, 1);
-	__plsql__(Float, 1.1);
-	__plsql__(Double, 1.1);
-	__plsql__(LongDouble, 1.1);
-	__plsql__(String, "!!!");
-	__plsql__(QuotedString, "!!!");
-	__plsql__(Date, 3600);
-	
 	static const FloatFormatter ff;
 	static const DoubleFormatter df1(3, true);
 	static const DoubleFormatter df2(2, false);
@@ -135,16 +124,16 @@ const string DbSmePlSqlJobTestCases::processProcedureJobOutput(const string& tex
 	
 	ostringstream s;
 	bool res = true;
-	s << "ProcedureJob" << lineSeparator;
-	s << "float: " << getOutputFloat(rec, NULL, ff, res) << lineSeparator;
-	s << "double: " << getOutputDouble(rec, NULL, df1, res) << lineSeparator;
-	s << "long-double: " << getOutputLongDouble(rec, NULL, df2, res) << lineSeparator;
-	s << "date: " << getOutputDate(rec, NULL, df, res) << lineSeparator;
-	s << "string: " << getOutputString(rec, NULL, res) << lineSeparator;
-	s << "int8: " << getOutputInt8(rec, NULL, res) << lineSeparator;
-	s << "int16: " << getOutputInt16(rec, NULL, res) << lineSeparator;
-	s << "int32: " << getOutputInt32(rec, NULL, res) << lineSeparator;
-    s << "int64: " << getOutputInt64(rec, NULL, res) << lineSeparator;
+	s << lineSeparator << "job-name: ProcedureJob" << lineSeparator;
+	s << "float: " << ff.format(getOutputFloat(rec, NULL, res) + 1.1) << lineSeparator;
+	s << "double: " << df1.format(getOutputDouble(rec, NULL, res) + 1.1) << lineSeparator;
+	s << "long-double: " << df2.format(getOutputLongDouble(rec, NULL, res) + 1.1) << lineSeparator;
+	s << "date: " << df.format(getOutputDate(rec, NULL, res) + 3600) << lineSeparator;
+	s << "string: " << getOutputString(rec, NULL, res) << "!!!" << lineSeparator;
+	s << "int8: " << (getOutputInt8(rec, NULL, res) + 1) << lineSeparator;
+	s << "int16: " << (getOutputInt16(rec, NULL, res) + 1) << lineSeparator;
+	s << "int32: " << (getOutputInt32(rec, NULL, res) + 1) << lineSeparator;
+    s << "int64: " << (getOutputInt64(rec, NULL, res) + 1) << lineSeparator;
 	return s.str();
 }
 
@@ -154,18 +143,6 @@ const string DbSmePlSqlJobTestCases::processFunctionJobOutput(const string& text
 	__require__(rec);
 	__decl_tc__;
 	__tc__("processDbSmeRes.function"); __tc_ok__;
-
-	__plsql__(Int8, 1);
-	__plsql__(Int16, 1);
-	__plsql__(Int32, 1);
-	__plsql__(Int64, 1);
-	__plsql__(Float, 1.1);
-	__plsql__(Double, 1.1);
-	__plsql__(LongDouble, 1.1);
-	__plsql__(String, "!!!");
-	__plsql__(QuotedString, "!!!");
-	__plsql__(Date, 3600);
-	
 	static const FloatFormatter ff;
 	static const DoubleFormatter df1(3, true);
 	static const DoubleFormatter df2(2, false);
@@ -173,17 +150,17 @@ const string DbSmePlSqlJobTestCases::processFunctionJobOutput(const string& text
 	
 	ostringstream s;
 	bool res = true;
-	s << "FunctionJob" << lineSeparator;
+	s << lineSeparator << "job-name: FunctionJob" << lineSeparator;
 	s << "return: 5" << lineSeparator;
-	s << "date: " << getOutputDate(rec, NULL, df, res) << lineSeparator;
-	s << "string: " << getOutputString(rec, NULL, res) << lineSeparator;
-	s << "uint8: " << getOutputUint8(rec, NULL, res) << lineSeparator;
-	s << "uint16: " << getOutputUint16(rec, NULL, res) << lineSeparator;
-	s << "uint32: " << getOutputUint32(rec, NULL, res) << lineSeparator;
-    s << "uint64: " << getOutputUint64(rec, NULL, res) << lineSeparator;
-	s << "float: " << getOutputFloat(rec, NULL, ff, res) << lineSeparator;
-	s << "double: " << getOutputDouble(rec, NULL, df1, res) << lineSeparator;
-	s << "long-double: " << getOutputLongDouble(rec, NULL, df2, res) << lineSeparator;
+	s << "date: " << df.format(getOutputDate(rec, NULL, res) + 3600) << lineSeparator;
+	s << "string: " << getOutputString(rec, NULL, res) << "!!!" << lineSeparator;
+	s << "uint8: " << (getOutputUint8(rec, NULL, res) + 1) << lineSeparator;
+	s << "uint16: " << (getOutputUint16(rec, NULL, res) + 1) << lineSeparator;
+	s << "uint32: " << (getOutputUint32(rec, NULL, res) + 1)  << lineSeparator;
+    s << "uint64: " << (getOutputUint64(rec, NULL, res) + 1)  << lineSeparator;
+	s << "float: " << ff.format(getOutputFloat(rec, NULL, res) + 1.1) << lineSeparator;
+	s << "double: " << df1.format(getOutputDouble(rec, NULL, res) + 1.1) << lineSeparator;
+	s << "long-double: " << df2.format(getOutputLongDouble(rec, NULL, res) + 1.1) << lineSeparator;
 	return s.str();
 }
 
