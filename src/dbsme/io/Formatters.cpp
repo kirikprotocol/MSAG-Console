@@ -57,14 +57,14 @@ void Int8Formatter::format(
     const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
 
-    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
+    if ((!arg || adapter.isNull(arg)) && def)
     {
         output += def;
     }
-    else if (!adapter.isNull(entity.position))
+    else if (!adapter.isNull(arg))
     {
         char    buff[64] = "";
-        sprintf(buff, "%hd", adapter.getInt8(entity.position));
+        sprintf(buff, "%hd", adapter.getInt8(arg));
         output += buff;
     }
 }
@@ -75,14 +75,14 @@ void Int16Formatter::format(
     const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
 
-    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
+    if ((!arg || adapter.isNull(arg)) && def)
     {
         output += def;
     }
-    else if (!adapter.isNull(entity.position))
+    else if (!adapter.isNull(arg))
     {
         char    buff[64] = "";
-        sprintf(buff, "%d", adapter.getInt16(entity.position));
+        sprintf(buff, "%d", adapter.getInt16(arg));
         output += buff;
     }
 }
@@ -93,14 +93,14 @@ void Int32Formatter::format(
     const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
 
-    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
+    if ((!arg || adapter.isNull(arg)) && def)
     {
         output += def;
     }
-    else if (!adapter.isNull(entity.position))
+    else if (!adapter.isNull(arg))
     {
         char    buff[64] = "";
-        sprintf(buff, "%ld", adapter.getInt32(entity.position));
+        sprintf(buff, "%ld", adapter.getInt32(arg));
         output += buff;
     }
 }
@@ -111,14 +111,14 @@ void Uint8Formatter::format(
     const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
 
-    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
+    if ((!arg || adapter.isNull(arg)) && def)
     {
         output += def;
     }
-    else if (!adapter.isNull(entity.position))
+    else if (!adapter.isNull(arg))
     {
         char    buff[64] = "";
-        sprintf(buff, "%hu", adapter.getUint8(entity.position));
+        sprintf(buff, "%hu", adapter.getUint8(arg));
         output += buff;
     }
 }
@@ -129,14 +129,14 @@ void Uint16Formatter::format(
     const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
 
-    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
+    if ((!arg || adapter.isNull(arg)) && def)
     {
         output += def;
     }
-    else if (!adapter.isNull(entity.position))
+    else if (!adapter.isNull(arg))
     {
         char    buff[64] = "";
-        sprintf(buff, "%u", adapter.getUint16(entity.position));
+        sprintf(buff, "%u", adapter.getUint16(arg));
         output += buff;
     }
 }
@@ -147,14 +147,14 @@ void Uint32Formatter::format(
     const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
 
-    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
+    if ((!arg || adapter.isNull(arg)) && def)
     {
         output += def;
     }
-    else if (!adapter.isNull(entity.position))
+    else if (!adapter.isNull(arg))
     {
         char    buff[64] = "";
-        sprintf(buff, "%lu", adapter.getUint32(entity.position));
+        sprintf(buff, "%lu", adapter.getUint32(arg));
         output += buff;
     }
 }
@@ -165,13 +165,13 @@ void StringFormatter::format(
     const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
 
-    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
+    if ((!arg || adapter.isNull(arg)) && def)
     {
         output += def;
     }
-    else if (!adapter.isNull(entity.position))
+    else if (!adapter.isNull(arg))
     {
-        const char* str = adapter.getString(entity.position);
+        const char* str = adapter.getString(arg);
         if (str)
         {
             const char* align = entity.getOption("align");
@@ -184,18 +184,18 @@ void StringFormatter::format(
                 {
                     output += str;
                 }
-                else if (align == strstr(align, "center"))
+                else if (strcmp(align, "center") == 0)
                 {
                     output.append((str_len-tmp_len)/2, ' ');
                     output += str;
                     output.append((str_len-tmp_len)/2, ' ');
                 }
-                else if (align == strstr(align, "right"))
+                else if (strcmp(align, "right") == 0)
                 {
                     output.append(str_len-tmp_len, ' ');
                     output += str;
                 }
-                else if (align == strstr(align, "left"))
+                else if (strcmp(align, "left") == 0)
                 {
                     output += str; 
                     output.append(str_len-tmp_len, ' ');
@@ -219,11 +219,11 @@ void FloatFormatter::format(
     const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
     
-    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
+    if ((!arg || adapter.isNull(arg)) && def)
     {
         output += def;
     }
-    else if (!adapter.isNull(entity.position))
+    else if (!adapter.isNull(arg))
     {
         char    format[8] = "%f";
         const char* pre = 
@@ -234,7 +234,7 @@ void FloatFormatter::format(
             sprintf(format, "%%.%d%%f", precision);
         }
         char    buff[128] = "";
-        sprintf(buff, format, adapter.getFloat(entity.position));
+        sprintf(buff, format, adapter.getFloat(arg));
         output += buff;
     }
 }
@@ -245,11 +245,11 @@ void DoubleFormatter::format(
     const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
 
-    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
+    if ((!arg || adapter.isNull(arg)) && def)
     {
         output += def;
     }
-    else if (!adapter.isNull(entity.position))
+    else if (!adapter.isNull(arg))
     {
         char    format[8] = "%lg";
         const char* dgt = 
@@ -266,7 +266,7 @@ void DoubleFormatter::format(
             }
         }
         char    buff[128] = "";
-        sprintf(buff, format, adapter.getDouble(entity.position));
+        sprintf(buff, format, adapter.getDouble(arg));
         output += buff;
     }
 }
@@ -277,11 +277,11 @@ void LongDoubleFormatter::format(
     const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
 
-    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
+    if ((!arg || adapter.isNull(arg)) && def)
     {
         output += def;
     }
-    else if (!adapter.isNull(entity.position))
+    else if (!adapter.isNull(arg))
     {
         char    format[8] = "%Lg";
         const char* dgt = 
@@ -298,7 +298,7 @@ void LongDoubleFormatter::format(
             }
         }
         char    buff[256] = "";
-        sprintf(buff, format, adapter.getLongDouble(entity.position));
+        sprintf(buff, format, adapter.getLongDouble(arg));
         output += buff;
     }
 }
@@ -314,7 +314,7 @@ void DateTimeFormatter::format(
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
     const char* pattern = entity.getOption(SMSC_DBSME_IO_FORMAT_PATTERN_OPTION);
     
-    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
+    if ((!arg || adapter.isNull(arg)) && def)
     {
         if (strcmp(def, ioNowString) == 0)
         {
@@ -347,9 +347,9 @@ void DateTimeFormatter::format(
             return;
         }
     }
-    else if (!adapter.isNull(entity.position))
+    else if (!adapter.isNull(arg))
     {
-        date = adapter.getDateTime(entity.position);
+        date = adapter.getDateTime(arg);
     }
     else return;
     

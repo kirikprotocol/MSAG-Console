@@ -36,31 +36,30 @@ namespace smsc { namespace dbsme { namespace io
         
         virtual ~SetAdapter() {};
         
-        virtual void setString(int pos, const char* str, bool null=false)
+        virtual void setString(const char* key, const char* str, bool null=false)
+            throw(AdapterException) = 0;
+        virtual void setInt8(const char* key, int8_t val, bool null=false)
+            throw(AdapterException) = 0;
+        virtual void setInt16(const char* key, int16_t val, bool null=false)
+            throw(AdapterException) = 0;
+        virtual void setInt32(const char* key, int32_t val, bool null=false)
             throw(AdapterException) = 0;
         
-        virtual void setInt8(int pos, int8_t val, bool null=false)
+        virtual void setUint8(const char* key, uint8_t val, bool null=false)
             throw(AdapterException) = 0;
-        virtual void setInt16(int pos, int16_t val, bool null=false)
+        virtual void setUint16(const char* key, uint16_t val, bool null=false)
             throw(AdapterException) = 0;
-        virtual void setInt32(int pos, int32_t val, bool null=false)
-            throw(AdapterException) = 0;
-        
-        virtual void setUint8(int pos, uint8_t val, bool null=false)
-            throw(AdapterException) = 0;
-        virtual void setUint16(int pos, uint16_t val, bool null=false)
-            throw(AdapterException) = 0;
-        virtual void setUint32(int pos, uint32_t val, bool null=false)
+        virtual void setUint32(const char* key, uint32_t val, bool null=false)
             throw(AdapterException) = 0;
         
-        virtual void setFloat(int pos, float val, bool null=false)
+        virtual void setFloat(const char* key, float val, bool null=false)
             throw(AdapterException) = 0;
-        virtual void setDouble(int pos, double val, bool null=false)
+        virtual void setDouble(const char* key, double val, bool null=false)
             throw(AdapterException) = 0;
-        virtual void setLongDouble(int pos, long double val, bool null=false)
+        virtual void setLongDouble(const char* key, long double val, bool null=false)
             throw(AdapterException) = 0;
         
-        virtual void setDateTime(int pos, time_t time, bool null=false)
+        virtual void setDateTime(const char* key, time_t time, bool null=false)
             throw(AdapterException) = 0;
     };
     
@@ -74,34 +73,34 @@ namespace smsc { namespace dbsme { namespace io
 
             virtual ~GetAdapter() {};
         
-        virtual bool isNull(int pos)
+        virtual bool isNull(const char* key)
             throw(AdapterException) = 0;
         
-        virtual const char* getString(int pos)
+        virtual const char* getString(const char* key)
             throw(AdapterException) = 0;
         
-        virtual int8_t getInt8(int pos)
+        virtual int8_t getInt8(const char* key)
             throw(AdapterException) = 0;
-        virtual int16_t getInt16(int pos)
+        virtual int16_t getInt16(const char* key)
             throw(AdapterException) = 0;
-        virtual int32_t getInt32(int pos)
-            throw(AdapterException) = 0;
-        
-        virtual uint8_t getUint8(int pos)
-            throw(AdapterException) = 0;
-        virtual uint16_t getUint16(int pos)
-            throw(AdapterException) = 0;
-        virtual uint32_t getUint32(int pos)
+        virtual int32_t getInt32(const char* key)
             throw(AdapterException) = 0;
         
-        virtual float getFloat(int pos)
+        virtual uint8_t getUint8(const char* key)
             throw(AdapterException) = 0;
-        virtual double getDouble(int pos)
+        virtual uint16_t getUint16(const char* key)
             throw(AdapterException) = 0;
-        virtual long double getLongDouble(int pos)
+        virtual uint32_t getUint32(const char* key)
+            throw(AdapterException) = 0;
+        
+        virtual float getFloat(const char* key)
+            throw(AdapterException) = 0;
+        virtual double getDouble(const char* key)
+            throw(AdapterException) = 0;
+        virtual long double getLongDouble(const char* key)
             throw(AdapterException) = 0;
 
-        virtual time_t getDateTime(int pos)
+        virtual time_t getDateTime(const char* key)
             throw(AdapterException) = 0;
     };
 

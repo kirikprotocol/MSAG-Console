@@ -62,10 +62,11 @@ void Int8Parser::parse(
         || !result || !bytes || bytes<0)
         throw ParsingException("Error scanning int8 type. "
                                "Processing string: '%s'", str);
-    adapter.setInt8(entity.position, (int8_t)value);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+    adapter.setInt8(arg, (int8_t)value);
     if (!def) input.erase(0, bytes);
-    __trace2__("Pos: %d, Value: %hd, Less: <%s>", 
-               entity.position, value, input.c_str());
+    __trace2__("Arg-Pos: %s, Value: %hd, Less: <%s>", 
+               (arg) ? arg:"-", value, input.c_str());
 }
 void Int16Parser::parse(
     std::string& input, FormatEntity& entity, SetAdapter& adapter)
@@ -80,10 +81,11 @@ void Int16Parser::parse(
         || !result || !bytes || bytes<0)
         throw ParsingException("Error scanning int16 type. "
                                "Processing string: '%s'", str);
-    adapter.setInt16(entity.position, (int16_t)value);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+    adapter.setInt16(arg, (int16_t)value);
     if (!def) input.erase(0, bytes);
-    __trace2__("Pos: %d, Value: %d, Less: <%s>", 
-               entity.position, value, input.c_str());
+    __trace2__("Arg-Pos: %s, Value: %d, Less: <%s>", 
+               (arg) ? arg:"-", value, input.c_str());
 }
 void Int32Parser::parse(
     std::string& input, FormatEntity& entity, SetAdapter& adapter)
@@ -97,10 +99,11 @@ void Int32Parser::parse(
         || !result || !bytes || bytes<0)
         throw ParsingException("Error scanning int32 type. "
                                "Processing string: '%s'", str);
-    adapter.setInt32(entity.position, value);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+    adapter.setInt32(arg, (int32_t)value);
     if (!def) input.erase(0, bytes);
-    __trace2__("Pos: %d, Value: %ld, Less: <%s>", 
-               entity.position, value, input.c_str());
+    __trace2__("Arg-Pos: %s, Value: %ld, Less: <%s>", 
+               (arg) ? arg:"-", value, input.c_str());
 }
 void Uint8Parser::parse(
     std::string& input, FormatEntity& entity, SetAdapter& adapter)
@@ -114,10 +117,11 @@ void Uint8Parser::parse(
         || !result || !bytes || bytes<0)
         throw ParsingException("Error scanning uint8 type. "
                                "Processing string: '%s'", str);
-    adapter.setUint8(entity.position, (uint8_t)value);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+    adapter.setUint8(arg, (uint8_t)value);
     if (!def) input.erase(0, bytes);
-    __trace2__("Pos: %d, Value: %hu, Less: <%s>", 
-               entity.position, value, input.c_str());
+    __trace2__("Arg-Pos: %s, Value: %hu, Less: <%s>", 
+               (arg) ? arg:"-", value, input.c_str());
 }
 void Uint16Parser::parse(
     std::string& input, FormatEntity& entity, SetAdapter& adapter)
@@ -131,10 +135,11 @@ void Uint16Parser::parse(
         || !result || !bytes || bytes<0)
         throw ParsingException("Error scanning uint16 type. "
                                "Processing string: '%s'", str);
-    adapter.setUint16(entity.position, (uint16_t)value);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+    adapter.setUint16(arg, (uint16_t)value);
     if (!def) input.erase(0, bytes);
-    __trace2__("Pos: %d, Value: %u, Less: <%s>", 
-               entity.position, value, input.c_str());
+    __trace2__("Arg-Pos: %s, Value: %u, Less: <%s>", 
+               (arg) ? arg:"-", value, input.c_str());
 }
 void Uint32Parser::parse(
     std::string& input, FormatEntity& entity, SetAdapter& adapter)
@@ -148,10 +153,11 @@ void Uint32Parser::parse(
         || !result || !bytes || bytes<0)
         throw ParsingException("Error scanning uint32 type. "
                                "Processing string: '%s'", str);
-    adapter.setUint32(entity.position, value);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+    adapter.setUint32(arg, (uint32_t)value);
     if (!def) input.erase(0, bytes);
-    __trace2__("Pos: %d, Value: %lu, Less: <%s>", 
-               entity.position, value, input.c_str());
+    __trace2__("Arg-Pos: %s, Value: %lu, Less: <%s>", 
+               (arg) ? arg:"-", value, input.c_str());
 }
 void StringParser::parse(
     std::string& input, FormatEntity& entity, SetAdapter& adapter)
@@ -182,10 +188,11 @@ void StringParser::parse(
         throw ParsingException("Parameter of type string missed."
                                "Processing string: '%s'", str);
     
-    adapter.setString(entity.position, line.c_str());
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+    adapter.setString(arg, line.c_str());
     if (!def) input.erase(0, curPos);
-    __trace2__("Pos: %d, Value: '%s', Less: <%s>", 
-               entity.position, line.c_str(), input.c_str());
+    __trace2__("Arg-Pos: %s, Value: %s, Less: <%s>", 
+               (arg) ? arg:"-", line.c_str(), input.c_str());
 }
 void FloatParser::parse(
     std::string& input, FormatEntity& entity, SetAdapter& adapter)
@@ -199,10 +206,11 @@ void FloatParser::parse(
         || !result || !bytes || bytes<0)
         throw ParsingException("Error scanning float type. "
                                "Processing string: '%s'", str);
-    adapter.setFloat(entity.position, value);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+    adapter.setFloat(arg, value);
     if (!def) input.erase(0, bytes);
-    __trace2__("Pos: %d, Value: %f, Less: <%s>", 
-               entity.position, value, input.c_str());
+    __trace2__("Arg-Pos: %s, Value: %f, Less: <%s>", 
+               (arg) ? arg:"-", value, input.c_str());
 }
 void DoubleParser::parse(
     std::string& input, FormatEntity& entity, SetAdapter& adapter)
@@ -216,10 +224,11 @@ void DoubleParser::parse(
         || !result || !bytes || bytes<0)
         throw ParsingException("Error scanning double type. "
                                "Processing string: '%s'", str);
-    adapter.setDouble(entity.position, value);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+    adapter.setDouble(arg, value);
     if (!def) input.erase(0, bytes);
-    __trace2__("Pos: %d, Value: %le, Less: <%s>", 
-               entity.position, value, input.c_str());
+    __trace2__("Arg-Pos: %s, Value: %le, Less: <%s>", 
+               (arg) ? arg:"-", value, input.c_str());
 }
 void LongDoubleParser::parse(
     std::string& input, FormatEntity& entity, SetAdapter& adapter)
@@ -233,10 +242,11 @@ void LongDoubleParser::parse(
         || !result || !bytes || bytes<0)
         throw ParsingException("Error scanning long double type. "
                                "Processing string: '%s'", str);
-    adapter.setLongDouble(entity.position, value);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+    adapter.setLongDouble(arg, value);
     if (!def) input.erase(0, bytes);
-    __trace2__("Pos: %d, Value: %Le, Less: <%s>", 
-               entity.position, value, input.c_str());
+    __trace2__("Arg-Pos: %s, Value: %Le, Less: <%s>", 
+               (arg) ? arg:"-", value, input.c_str());
 }
 void DateTimeParser::parse(
     std::string& input, FormatEntity& entity, SetAdapter& adapter)
@@ -503,9 +513,11 @@ void DateTimeParser::parse(
         date = mktime(&tmdt);
     }
     
-    __trace2__("Scanned date is: %s", ctime(&date));
-    adapter.setDateTime(entity.position, date);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+    adapter.setDateTime(arg, date);
     if (!def) input.erase(0, strPos);
+    __trace2__("Arg-Pos: %s, Date: %s, Less: <%s>", 
+               (arg) ? arg:"-", ctime(&date), input.c_str());
 }
 
 }}}

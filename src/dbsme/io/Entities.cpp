@@ -129,9 +129,8 @@ FormatEntity::FormatEntity(std::string line, bool io, bool type)
         
         if (io) // formatter
         {
-            if (arg) position = atoi(arg);
-            else if (def) position = 0;
-            else throw FormatRenderingException(
+            if (!arg && !def)
+                throw FormatRenderingException(
                     "Neither '%s' nor '%s' option defined ! "
                     "Parsing format string: <%s>", 
                     SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION,
@@ -139,8 +138,8 @@ FormatEntity::FormatEntity(std::string line, bool io, bool type)
         }
         else    // parser
         {
-            if (arg) position = atoi(arg);
-            else throw FormatRenderingException(
+            if (!arg) 
+                throw FormatRenderingException(
                     "'%s' option wasn't defined ! "
                     "Parsing format string: <%s>", 
                     SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION, raw);
@@ -148,7 +147,7 @@ FormatEntity::FormatEntity(std::string line, bool io, bool type)
     }
     else 
     {
-        str = line; this->type = TEXT; position = 0;
+        str = line; this->type = TEXT;
     }
 }
 FormatEntity::~FormatEntity()

@@ -92,8 +92,7 @@ namespace smsc { namespace dbsme { namespace io
         EntityType          type;
         Hash<std::string>   options;
         std::string         str;
-        int                 position;
-
+        
         FormatEntity(std::string line, bool io, bool type=true)
             throw(FormatRenderingException);
         virtual ~FormatEntity();
