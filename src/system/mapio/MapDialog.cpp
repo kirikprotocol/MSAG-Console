@@ -696,7 +696,7 @@ bool MapDialog::ProcessCmd(const SmscCommand& cmd){
       USHORT_T result;
       sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
       {
-        __trace2__("MAP::DELIVERY_SM %d.%d.%20s->%d.%d.%20s",
+        __trace2__("MAP::DELIVERY_SM %d.%d.%s -> %d.%d.%s",
                    sms->getOriginatingAddress().getTypeOfNumber(),
                    sms->getOriginatingAddress().getNumberingPlan(),
                    sms->getOriginatingAddress().value,
