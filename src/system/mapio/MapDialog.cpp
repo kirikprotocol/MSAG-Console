@@ -515,6 +515,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
         if ( encoding == MAP_8BIT_ENCODING ) value |= 0x4;
       }
     }
+    __trace2__("MAP::mkDeliveryPDU: user data coding = 0x%x",value);
     *pdu_ptr++ = value;
   }
   {
