@@ -1544,7 +1544,29 @@ StateType StateMachine::forward(Tuple& t)
       }
     }else
     {
-      extractSmsPart(&sms,sms.getConcatSeqNum());
+      unsigned int len;
+      ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len);
+      if(sms.getConcatSeqNum()<ci->num)
+      {
+        extractSmsPart(&sms,sms.getConcatSeqNum());
+      }else
+      {
+        __warning__("attempt to forward concatenated message but all parts are delivered!!!");
+        try{
+          Descriptor d;
+          store->changeSmsStateToUndeliverable
+          (
+            t.msgId,
+            d,
+            Status::SYSERR
+          );
+        }catch(...)
+        {
+          __warning2__("failed to change state of sms %lld to final ... again!!!",t.msgId);
+        }
+        return ERROR_STATE;
+      }
+
     }
     if(t.command->is_reschedulingForward())
     {
@@ -1697,11 +1719,14 @@ StateType StateMachine::deliveryResp(Tuple& t)
   {
     unsigned int len;
     ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len);
-    sms.setConcatSeqNum(sms.getConcatSeqNum()+1);
-    store->changeSmsConcatSequenceNumber(t.msgId);
-    __trace2__("CONCAT: concatseqnum=%d for msdgId=%lld",sms.getConcatSeqNum(),t.msgId);
     if(sms.getConcatSeqNum()<ci->num)
     {
+      {
+        sms.setConcatSeqNum(sms.getConcatSeqNum()+1);
+        store->changeSmsConcatSequenceNumber(t.msgId);
+        __trace2__("CONCAT: concatseqnum=%d for msdgId=%lld",sms.getConcatSeqNum(),t.msgId);
+      }
+
       ////
       //
       //  send concatenated
