@@ -114,6 +114,9 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
             } else if (strcmp(name.get(), "timeout") == 0)
             {
               record->recdata.smppSme.timeout = strtoll(value.get(), (char**)0, 0);
+            } else if (strcmp(name.get(),"forceDC") == 0)
+            {
+              record->recdata.smppSme.forceDC=!strcmp(value.get(),"yes");
             } else if (strcmp(name.get(),"wantAlias") == 0)
             {
               record->recdata.smppSme.wantAlias=!strcmp(value.get(),"yes");

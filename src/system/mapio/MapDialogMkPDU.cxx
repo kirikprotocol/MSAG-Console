@@ -185,7 +185,10 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
     __trace2__("MAP::mkDeliveryPDU: user data coding = 0x%x",(unsigned)datacoding);
     if(!isrcpt)
     {
-      *pdu_ptr++ = datacoding;
+      if ( sms->getIntProperty(Tag::SMSC_FORCE_DC) ) {
+        *pdu_ptr++ = sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
+      }else
+        *pdu_ptr++ = datacoding;
     }
   }
   {

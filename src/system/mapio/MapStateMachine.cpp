@@ -553,6 +553,7 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
   __trace2__("MAP:: protocol_id = 0x%x",protocol_id);
   unsigned char user_data_coding = *(unsigned char*)(ud->signalInfo+2+msa_len+1);
   __trace2__("MAP:: user_data_encoding = 0x%x",user_data_coding);
+  sms.setIntProperty(Tag::SMSC_ORIGINAL_DC,user_data_coding);
   unsigned tpvpLen = (ssfh->tp_vp==0)?0:(ssfh->tp_vp==2)?1:7;
   __trace2__("MAP:: tp_vp len= %d", tpvpLen);
   unsigned char user_data_len = *(unsigned char*)(ud->signalInfo+2+tpvpLen+msa_len+2);
