@@ -78,7 +78,7 @@ public class ProfileManager
         if (key.startsWith(INFORM_TEMPLATE_PREFIX))
         {
           int pos = key.indexOf('.'); if (pos <= 0) continue;
-          int id = Integer.parseInt(key.substring(pos));
+          int id = Integer.parseInt(key.substring(pos+1));
           FormatType template = new FormatType(id, properties.getProperty(key));
           if (id == defaultInformId) DEFAULT_PROFILE_INFO.informFormat = template;
           informFormats.put(new Long(id), template);
@@ -86,7 +86,7 @@ public class ProfileManager
         else if (key.startsWith(NOTIFY_TEMPLATE_PREFIX))
         {
           int pos = key.indexOf('.'); if (pos <= 0) continue;
-          int id = Integer.parseInt(key.substring(pos));
+          int id = Integer.parseInt(key.substring(pos+1));
           FormatType template = new FormatType(id, properties.getProperty(key));
           if (id == defaultNotifyId) DEFAULT_PROFILE_INFO.notifyFormat = template;
           notifyFormats.put(new Long(id), template);
