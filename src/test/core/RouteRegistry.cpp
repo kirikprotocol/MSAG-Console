@@ -58,6 +58,7 @@ bool RouteRegistry::putRoute(const RouteInfo& route, SmeProxy* proxy)
 	RouteHolder* routeHolder = new RouteHolder(route, proxy);
 	addrMap[routeHolder->route.dest][routeHolder->route.source] = routeHolder;
 	routeMap[routeHolder->route.routeId] = routeHolder;
+	return true;
 }
 
 void RouteRegistry::clear()
@@ -102,8 +103,10 @@ const RouteHolder* RouteRegistry::lookup2(const AddressMap2& addrMap2,
 		AddressMap2::const_iterator it = addrMap2.find(addr);
 		ostringstream os;
 		os << addr;
+		/*
 		__trace2__("RouteRegistry::lookup2(): origAddr = %s, res = %d",
 			os.str().c_str(), (it == addrMap2.end() ? 0 : 1));
+		*/
 		if (it != addrMap2.end())
 		{
 			return it->second;
@@ -140,8 +143,10 @@ const RouteHolder* RouteRegistry::lookup(const Address& origAddr,
 		AddressMap::const_iterator it = addrMap.find(addr);
 		ostringstream os;
 		os << addr;
+		/*
 		__trace2__("RouteRegistry::lookup1(): destAddr = %s, res = %d",
 			os.str().c_str(), (it == addrMap.end() ? 0 : it->second.size()));
+		*/
 		if (it != addrMap.end())
 		{
 			const RouteHolder* routeHolder = lookup2(it->second, origAddr);
