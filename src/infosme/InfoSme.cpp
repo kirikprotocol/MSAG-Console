@@ -439,6 +439,10 @@ public:
         std::string msgId = ""; 
         if (!msgid || msgid[0] == '\0') accepted = false;
         else msgId = msgid;
+        
+        if (!accepted)
+            smsc_log_info(logger, "SMS #%s seqNum=%d wasn't accepted, errcode=%d",
+                          msgId, seqNum, status);
 
         processor.invokeProcessResponce(seqNum, accepted, retry, immediate, msgId);
     }
