@@ -167,7 +167,7 @@ public:
     int attempt=0;
     for(;;attempt++)
     {
-      if(attempt>=size/4)throw RTERROR("Too many Hash recalc attempts");
+      if(attempt>=size/2)throw RTERROR("Too many Hash recalc attempts");
       uint32_t hc=key.HashCode(attempt);
       uint32_t idx=(hc%size)*recsize;
       f.Seek(sizeof(DiskHashHeader)+idx);
