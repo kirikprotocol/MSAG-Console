@@ -114,7 +114,7 @@ namespace smsc { namespace stat
     {
     protected:
     
-		smsc::logger::Logger    logger;
+		smsc::logger::Logger    *logger;
         DataSource              &ds;
         
         SmsStat         statGeneral[2];

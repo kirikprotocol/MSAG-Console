@@ -121,7 +121,7 @@ int AbonentInfoSme::Execute()
   s.setArchivationRequested(false);
   s.setEServiceType(servType.c_str());
   s.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,protId);
-  smsc::logger::Logger log=smsc::logger::Logger::getInstance("smsc.system.AbonentInfoSme");
+  smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.system.AbonentInfoSme");
 
   while(!isStopping)
   {
@@ -135,7 +135,7 @@ int AbonentInfoSme::Execute()
     if(cmd->cmdid!=smsc::smeman::DELIVERY && cmd->cmdid!=smsc::smeman::QUERYABONENTSTATUS_RESP)
     {
       __trace2__("AbonentInfoSme: incorrect command submitted:%d",cmd->cmdid);
-      log.warn("Incorrect command received");
+      smsc_log_warn(log, "Incorrect command received");
       continue;
     }
     if(cmd->cmdid==smsc::smeman::DELIVERY)

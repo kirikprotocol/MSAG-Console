@@ -55,7 +55,7 @@ public:
   virtual Variant call(const Method& method, const Arguments& args) throw (AdminException)
   {
     if ( method.getId() == APPLAY_METHOD ) {
-      smsc::logger::Logger::getInstance("smsc.proxysme").info("applay method was called");
+      smsc_log_info(smsc::logger::Logger::getInstance("smsc.proxysme"), "applay method was called");
       need_reloading_config_ = true;
       return Variant("");
     }
@@ -66,7 +66,7 @@ public:
 
 bool LoadConfig(ProxyConfig& pconf)
 {
-  smsc::logger::Logger::getInstance("smsc.proxysme").info("loading config");
+  smsc_log_info(smsc::logger::Logger::getInstance("smsc.proxysme"), "loading config");
 #if defined _WIN32
   static const char* HOST = "smsc";
   static const int   PORT = 9992;
@@ -119,7 +119,7 @@ bool LoadConfig(ProxyConfig& pconf)
     pconf = x_pconf;
     return true;
   }catch(exception& e) {
-    smsc::logger::Logger::getInstance("smsc.proxysme").error("can't laod config: %s",e.what());
+    smsc_log_error(smsc::logger::Logger::getInstance("smsc.proxysme"), "can't laod config: %s",e.what());
     return false;
   }
 #endif
@@ -128,7 +128,7 @@ bool LoadConfig(ProxyConfig& pconf)
 #if !defined _WIN32
 static SMachine* machine = 0;
 void Stopper() {
-  smsc::logger::Logger::getInstance("smsc.proxysme").info("stop signal");
+  smsc_log_info(smsc::logger::Logger::getInstance("smsc.proxysme"), "stop signal");
   if ( machine ) machine->Stop();
 }
 void SetStopper(SMachine* m){
@@ -148,9 +148,9 @@ int main()
 {
   try {
     smsc::logger::Logger::Init("proxysme.l4c");
-    smsc::logger::Logger::getInstance("smsc.proxysme.X").info("!!!!");
-    smsc::logger::Logger::getInstance("smsc.proxysme.X").info("!!!! -- Starting");
-    smsc::logger::Logger::getInstance("smsc.proxysme.X").info("!!!!");
+    smsc_log_info(smsc::logger::Logger::getInstance("smsc.proxysme.X"), "!!!!");
+    smsc_log_info(smsc::logger::Logger::getInstance("smsc.proxysme.X"), "!!!! -- Starting");
+    smsc_log_info(smsc::logger::Logger::getInstance("smsc.proxysme.X"), "!!!!");
   }catch( exception& ){
     cerr << "can't init logger" << endl;
     return -1;
@@ -159,7 +159,7 @@ int main()
   ProxyConfig pconf;
   
   if ( !LoadConfig(pconf) ) {
-    smsc::logger::Logger::getInstance("smsc.proxysme").error("can't laod config, aborting process");
+    smsc_log_error(smsc::logger::Logger::getInstance("smsc.proxysme"), "can't laod config, aborting process");
     return -1;
   }
 
@@ -171,7 +171,7 @@ int main()
     adminListener.init(pconf.admin_host.c_str(),pconf.admin_port);               
     adminListener.Start();                                     
   }catch(exception& e){
-    smsc::logger::Logger::getInstance("smsc.proxysme").error("can't init admin interface: %s, skipped",e.what());
+    smsc_log_error(smsc::logger::Logger::getInstance("smsc.proxysme"), "can't init admin interface: %s, skipped",e.what());
   }
 
   for (;;) { 
@@ -184,7 +184,7 @@ int main()
 
     // перезачитаем конфиг
     if ( !LoadConfig(pconf) ) {
-      smsc::logger::Logger::getInstance("smsc.proxysme").error("can't relaod config, skipped");
+      smsc_log_error(smsc::logger::Logger::getInstance("smsc.proxysme"), "can't relaod config, skipped");
     }
     SetStopper(0);
   }

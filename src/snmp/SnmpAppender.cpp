@@ -6,7 +6,10 @@
 namespace smsc {
 namespace snmp {
 
+
+
 #ifdef LOGGER_LIB_LOG4CPP
+/*
 using log4cpp::LoggingEvent;
 SnmpAppender::SnmpAppender(const std::string& name, SnmpAgent *agent) :
 LayoutAppender(name),
@@ -29,8 +32,10 @@ void SnmpAppender::_append(const LoggingEvent& event)
 		agent->trap(message);
 	}
 }
+*/
 #else
-SnmpAppender::SnmpAppender(const std::string& name, SnmpAgent *agent)
+/*
+SnmpAppender::SnmpAppender(const char * const name, SnmpAgent *agent)
 	:Appender(), agent(agent)
 {
 }
@@ -51,6 +56,7 @@ void SnmpAppender::append(const InternalLoggingEvent& event)
 		agent->trap(message);
 	}
 }
+*/
 #endif
 }
 }

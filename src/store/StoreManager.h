@@ -60,7 +60,7 @@ namespace smsc { namespace store
         static Mutex            fakeMutex;
     #endif
 
-        static smsc::logger::Logger log;
+        static smsc::logger::Logger *log;
 
         Event       awake, exited;
         bool        bStarted, bNeedExit;
@@ -376,7 +376,7 @@ namespace smsc { namespace store
         static Cleaner                  *cleaner;
         static RemoteStore              *instance;
 
-        static smsc::logger::Logger     log;
+        static smsc::logger::Logger     *log;
 
         static bool needCache(Manager& config);
         static bool needCleaner(Manager& config);
@@ -590,7 +590,7 @@ namespace smsc { namespace store
         int         maxCacheCapacity;
         void loadMaxCacheCapacity(Manager& config);
 
-        static smsc::logger::Logger log;
+        static smsc::logger::Logger *log;
 
     public:
 

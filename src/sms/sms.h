@@ -1657,7 +1657,8 @@ struct SMS
     {
       if(messageBody.hasBinProperty(Tag::SMSC_RAW_SHORTMESSAGE))
       {
-        logger::_sms_err_cat->warn("both rawpayload and rawshortmessage present at %s:%d",file,line);
+		logger::_sms_err_cat->log_(logger::Logger::LEVEL_WARN, "both rawpayload and rawshortmessage present at %s:%d",file,line);
+		smsc_log_warn(logger::_sms_err_cat, "both rawpayload and rawshortmessage present at %s:%d",file,line);
         unsigned len;
         messageBody.getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&len);
         if(len==0)return true;

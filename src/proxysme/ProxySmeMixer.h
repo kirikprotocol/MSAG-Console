@@ -31,13 +31,13 @@ class Mixer;
 /// обработчик событий на SMPP трансмиттере
 class PduListener: public SmppPduEventListener
 {
-  smsc::logger::Logger    log_;
+  smsc::logger::Logger    *log_;
   DIRECTION               incom_dirct_; /// направление дл€ команд
   Queue&                  que_;         /// очередь команд
   SmppSession*            trx_;
   Mixer*                  mixer_;
 public:
-  PduListener(DIRECTION,Queue&,smsc::logger::Logger);
+  PduListener(DIRECTION,Queue&,smsc::logger::Logger*);
   virtual ~PduListener();
   virtual void handleEvent(SmppHeader *pdu);
   virtual void handleError(int errorCode);
@@ -55,7 +55,7 @@ enum SESSION_STATE {
 /// и управл€ющий трансмиттерами
 class Mixer { 
   const ProxyConfig&      config_;
-  smsc::logger::Logger    log_;
+  smsc::logger::Logger    *log_;
   Queue&                  que_;           /// очереь событий
   PduListener             listen_left_;   /// листенер левого трансмиттера
   PduListener             listen_right_;  /// листенер правого трансмиттера

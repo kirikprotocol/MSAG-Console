@@ -64,58 +64,58 @@ Variant WSmeComponent::call(const Method& method, const Arguments& args)
 {
     try 
     {
-        log.debug("call \"%s\"", method.getName());
+        smsc_log_debug(log, "call \"%s\"", method.getName());
         
         switch (method.getId())
         {
         case addVisitorMethod:
-            log.debug("addVisitorMethod processing...");
+            smsc_log_debug(log, "addVisitorMethod processing...");
             addVisitor(args);
-            log.debug("addVisitorMethod processed.");
+            smsc_log_debug(log, "addVisitorMethod processed.");
             break;
         case removeVisitorMethod:
-            log.debug("removeVisitorMethod processing...");
+            smsc_log_debug(log, "removeVisitorMethod processing...");
             removeVisitor(args);
-            log.debug("removeVisitorMethod processed.");
+            smsc_log_debug(log, "removeVisitorMethod processed.");
             break;
         case addLangMethod:
-            log.debug("addLangMethod processing...");
+            smsc_log_debug(log, "addLangMethod processing...");
             addLang(args);
-            log.debug("addLangMethod processed.");
+            smsc_log_debug(log, "addLangMethod processed.");
             break;
         case removeLangMethod:
-            log.debug("removeLangMethod processing...");
+            smsc_log_debug(log, "removeLangMethod processing...");
             removeLang(args);
-            log.debug("removeLangMethod processed.");
+            smsc_log_debug(log, "removeLangMethod processed.");
             break;
         case addAdMethod:
-            log.debug("addAdMethod processing...");
+            smsc_log_debug(log, "addAdMethod processing...");
             addAd(args);
-            log.debug("addAdMethod processed.");
+            smsc_log_debug(log, "addAdMethod processed.");
             break;
         case removeAdMethod:
-            log.debug("removeAdMethod processing...");
+            smsc_log_debug(log, "removeAdMethod processing...");
             removeAd(args);
-            log.debug("removeAdMethod processed.");
+            smsc_log_debug(log, "removeAdMethod processed.");
             break;
 
         default:
-            log.debug("unknown method \"%s\" [%u]", method.getName(), method.getId());
+            smsc_log_debug(log, "unknown method \"%s\" [%u]", method.getName(), method.getId());
             throw AdminException("Unknown method \"%s\"", method.getName());
         }
 
         return Variant("");
     }
     catch (ProcessException &exc) {
-        log.debug("ProcessException: %s", exc.what());
+        smsc_log_debug(log, "ProcessException: %s", exc.what());
         throw AdminException(exc.what());
     }
     catch (AdminException &e) {
-        log.debug("AdminException: %s", e.what());
+        smsc_log_debug(log, "AdminException: %s", e.what());
         throw e;
     }
     catch (...) {
-        log.debug("... Exception");
+        smsc_log_debug(log, "... Exception");
         throw AdminException("Unknown exception catched during call");
     }
 }
@@ -125,7 +125,7 @@ void WSmeComponent::error(const char* method, const char* param)
 {
     ProcessException exc("Parameter '%s' missed or invalid "
                          "for WSmeComponent::%s()", param, method);
-    log.error(exc.what());
+    smsc_log_error(log, exc.what());
     throw exc;
 }
 void WSmeComponent::addVisitor(const Arguments& args)

@@ -167,7 +167,7 @@ enum{
   psMultiple,
   psErrorLength,
   psErrorUdhi,
-  psErrorUssd,
+  psErrorUssd
 };
 
 #pragma pack(1)

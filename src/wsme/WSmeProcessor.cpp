@@ -266,7 +266,7 @@ void VisitorManager::addVisitor(const std::string msisdn)
         if (statement) delete statement;
         if (connection) {
             try { connection->rollback(); } catch (Exception& eee) {
-                log.error("Rollback failed, Cause: %s", eee.what());
+                smsc_log_error(log, "Rollback failed, Cause: %s", eee.what());
             }
             ds.freeConnection(connection);
         }
@@ -312,7 +312,7 @@ void VisitorManager::removeVisitor(const std::string msisdn)
         if (statement) delete statement;
         if (connection) {
             try { connection->rollback(); } catch (Exception& eee) {
-                log.error("Rollback failed, Cause: %s", eee.what());
+                smsc_log_error(log, "Rollback failed, Cause: %s", eee.what());
             }
             ds.freeConnection(connection);
         }
@@ -492,7 +492,7 @@ void LangManager::addLang(const std::string mask, std::string lang)
         if (statement) delete statement;
         if (connection) {
             try { connection->rollback(); } catch (Exception& eee) {
-                log.error("Rollback failed, Cause: %s", eee.what());
+                smsc_log_error(log, "Rollback failed, Cause: %s", eee.what());
             }
             ds.freeConnection(connection);
         }
@@ -538,7 +538,7 @@ void LangManager::removeLang(const std::string mask)
         if (statement) delete statement;
         if (connection) {
             try { connection->rollback(); } catch (Exception& eee) {
-                log.error("Rollback failed, Cause: %s", eee.what());
+                smsc_log_error(log, "Rollback failed, Cause: %s", eee.what());
             }
             ds.freeConnection(connection);
         }
@@ -621,7 +621,7 @@ void AdRepository::loadUpAds()
         if (statement) delete statement;
         if (connection) ds.freeConnection(connection);
         InitException eee("Load ads failed, Cause: ", exc.what());
-        log.error(eee.what());
+        smsc_log_error(log, eee.what());
         throw eee;
     }
 }
@@ -704,7 +704,7 @@ void AdRepository::addAd(int id, const std::string lang, std::string ad)
         if (statement) delete statement;
         if (connection) {
             try { connection->rollback(); } catch (Exception& eee) {
-                log.error("Rollback failed, Cause: %s", eee.what());
+                smsc_log_error(log, "Rollback failed, Cause: %s", eee.what());
             }
             ds.freeConnection(connection);
         }
@@ -756,7 +756,7 @@ void AdRepository::removeAd(int id, const std::string lang)
         if (statement) delete statement;
         if (connection) {
             try { connection->rollback(); } catch (Exception& eee) {
-                log.error("Rollback failed, Cause: %s", eee.what());
+                smsc_log_error(log, "Rollback failed, Cause: %s", eee.what());
             }
             ds.freeConnection(connection);
         }
@@ -832,7 +832,7 @@ int AdHistory::Execute()
         }
         catch (ProcessException& exc)
         {
-            log.error("Exception occurred during history cleanup : %s",
+            smsc_log_error(log, "Exception occurred during history cleanup : %s",
                       exc.what());
         }
     }
@@ -872,11 +872,11 @@ void AdHistory::cleanup()
             try {
                 connection->rollback();
             } catch (Exception& eee) {
-                log.error("Rollback failed, Cause: %s", eee.what());
+                smsc_log_error(log, "Rollback failed, Cause: %s", eee.what());
             }
             ds.freeConnection(connection);
         }
-        log.error(exc.what());
+        smsc_log_error(log, exc.what());
         throw ProcessException(exc.what());
     }
 }
@@ -976,7 +976,7 @@ bool AdHistory::getId(const std::string msisdn, int& id)
     }
     catch (Exception& exc)
     {
-        log.error(exc.what());
+        smsc_log_error(log, exc.what());
         if (rs) delete rs;
         if (selectStmt) delete selectStmt;
         if (insertStmt) delete insertStmt;
@@ -985,7 +985,7 @@ bool AdHistory::getId(const std::string msisdn, int& id)
             try {
                 connection->rollback();
             } catch (Exception& eee) {
-                log.error("Rollback failed, Cause: %s", eee.what());
+                smsc_log_error(log, "Rollback failed, Cause: %s", eee.what());
             }
             ds.freeConnection(connection);
         }
@@ -1028,11 +1028,11 @@ void AdHistory::respondAd(const std::string msisdn,
             try {
                 connection->rollback();
             } catch (Exception& eee) {
-                log.error("Rollback failed, Cause: %s", eee.what());
+                smsc_log_error(log, "Rollback failed, Cause: %s", eee.what());
             }
             ds.freeConnection(connection);
         }
-        log.error(exc.what());
+        smsc_log_error(log, exc.what());
         throw ProcessException(exc.what());
     }
 }
@@ -1069,11 +1069,11 @@ void AdHistory::receiptAd(const std::string msgid, bool receipted)
             try {
                 connection->rollback();
             } catch (Exception& eee) {
-                log.error("Rollback failed, Cause: %s", eee.what());
+                smsc_log_error(log, "Rollback failed, Cause: %s", eee.what());
             }
             ds.freeConnection(connection);
         }
-        log.error(exc.what());
+        smsc_log_error(log, exc.what());
         throw ProcessException(exc.what());
     }
 }

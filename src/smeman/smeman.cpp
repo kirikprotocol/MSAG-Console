@@ -255,8 +255,7 @@ __synchronized__
     __trace2__("Invalid password for sme %s (%s!=%s)",systemId.c_str(),
       records[index]->info.password.c_str(),
       pwd.c_str());
-    smsc::logger::Logger::getInstance("smeman.register").
-      error("Attempt to register sme %s with invalid password",systemId.c_str());
+      smsc_log_error(smsc::logger::Logger::getInstance("smeman.register"), "Attempt to register sme %s with invalid password",systemId.c_str());
     throw SmeRegisterException(SmeRegisterFailReasons::rfInvalidPassword);
   }
   {

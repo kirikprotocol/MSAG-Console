@@ -37,7 +37,7 @@ public:
       bindFailed,
       smppError,
       timeout,
-      unknown,
+      unknown
     };
   };
   explicit SmppConnectException(int reason):reason(reason){}
@@ -94,7 +94,7 @@ struct Buffer{
 enum SmppError{
   smppErrorNetwork=0x1000,
   smppErrorInvalidPdu,
-  smppExiting,
+  smppExiting
 };
 
 class SmppPduEventListener{

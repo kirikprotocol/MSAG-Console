@@ -18,7 +18,7 @@ public:
     std::string s;
     while(!stopped)
     {
-      log->info("%d,%d,%d:%s",cnt1,cnt2,cnt3,s.c_str());
+      smsc_log_info(log, "%d,%d,%d:%s",cnt1,cnt2,cnt3,s.c_str());
       cnt1++;
       cnt2+=cnt1;
       cnt3+=cnt2;
@@ -44,7 +44,7 @@ int main(int argc,char* argv[])
   {
     char buf[64];
     sprintf(buf,"test.log.%d",i);
-    tt[i]=new TestThread(new smsc::logger::Logger(smsc::logger::Logger::getInstance(buf)));
+    tt[i]=new TestThread(smsc::logger::Logger::getInstance(buf));
     tt[i]->Start();
   }
   for(int i=0;i<N;i++)

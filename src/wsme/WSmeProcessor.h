@@ -54,8 +54,8 @@ namespace smsc { namespace wsme
     {
     private:
 
-        smsc::logger::Logger log;
-        DataSource&         ds;
+        smsc::logger::Logger *log;
+        DataSource&           ds;
 
         Mutex       visitorsLock;
         Hash<bool>  visitors;
@@ -81,7 +81,7 @@ namespace smsc { namespace wsme
     {
     private:
         
-        smsc::logger::Logger log;
+        smsc::logger::Logger *log;
         DataSource&         ds;
         
         std::string       defaultLang;
@@ -125,7 +125,7 @@ namespace smsc { namespace wsme
     {
     private:
         
-        smsc::logger::Logger log;
+        smsc::logger::Logger *log;
         DataSource&         ds;
 
         Mutex  adsLock;
@@ -156,7 +156,7 @@ namespace smsc { namespace wsme
     {
     private:
         
-        smsc::logger::Logger log;
+        smsc::logger::Logger *log;
         DataSource&         ds;
         
         AdIdManager&        idManager;
@@ -194,7 +194,7 @@ namespace smsc { namespace wsme
     {
     private:
 
-        smsc::logger::Logger log;
+        smsc::logger::Logger *log;
         
     protected:
 
@@ -229,7 +229,7 @@ namespace smsc { namespace wsme
     {
     private:
         
-        smsc::logger::Logger log;
+        smsc::logger::Logger *log;
         
     protected:
         

@@ -19,7 +19,7 @@ namespace smsc { namespace util { namespace config
     {
     protected:
         
-        static smsc::logger::Logger log;
+        static smsc::logger::Logger *log;
 
         Manager&    config;
         char*       category;

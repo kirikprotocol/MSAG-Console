@@ -39,7 +39,7 @@ Cleaner::Cleaner(Manager& config)
 }
 Cleaner::~Cleaner()
 {
-    log.info("Cleaner destruction ...");
+    smsc_log_info(log, "Cleaner destruction ...");
     
     this->Stop();
     
@@ -49,7 +49,7 @@ Cleaner::~Cleaner()
 
     if (cleanerConnection) delete cleanerConnection;
     
-    log.info("Cleaner destructed !");
+    smsc_log_info(log, "Cleaner destructed !");
 }
 void Cleaner::Start()
 {
@@ -89,7 +89,7 @@ int Cleaner::Execute()
         catch (StorageException& exc) 
         {
             awake.Wait(0); first = true;
-            log.error("Exception occurred during archive cleanup : %s",
+            smsc_log_error(log, "Exception occurred during archive cleanup : %s",
                       exc.what());
         }
     }
@@ -119,8 +119,8 @@ void Cleaner::cleanup()
         cleanerDeleteStmt->bind(1, SQLT_ODT, (dvoid *) &(dbTime), 
                                 (sb4) sizeof(dbTime));
         cleanerDeleteStmt->execute();
-        if( log.isDebugEnabled() ) 
-            log.debug("Archive cleanup: %d rows deleted (from %d to %d)",
+
+            smsc_log_debug(log, "Archive cleanup: %d rows deleted (from %d to %d)",
                       cleanerDeleteStmt->getRowsAffectedCount(), 
                       oldDelete, toDelete);
         cleanerConnection->commit();
@@ -196,7 +196,7 @@ void Cleaner::loadCleanupAgeInterval(Manager& config)
             interval > SMSC_CLEANUP_AGE_INTERVAL_LIMIT)
         {
             interval = SMSC_CLEANUP_AGE_INTERVAL_DEFAULT;
-            log.warn("Cleanup age interval for storage is incorrect "
+            smsc_log_warn(log, "Cleanup age interval for storage is incorrect "
                      "(should be between 1 and %u days) ! "
                      "Config parameter: <MessageStore.Cleaner.age> "
                      "Using default: %u", 
@@ -207,7 +207,7 @@ void Cleaner::loadCleanupAgeInterval(Manager& config)
     catch (ConfigException& exc) 
     {
         interval = SMSC_CLEANUP_AGE_INTERVAL_DEFAULT;
-        log.warn("Cleanup age interval for storage missed "
+        smsc_log_warn(log, "Cleanup age interval for storage missed "
                  "(it should be between 1 and %u days) ! "
                  "Config parameter: <MessageStore.Cleaner.age> "
                  "Using default: %u", 
@@ -230,7 +230,7 @@ void Cleaner::loadCleanupAwakeInterval(Manager& config)
             interval > SMSC_CLEANUP_AWAKE_INTERVAL_LIMIT)
         {
             interval = SMSC_CLEANUP_AWAKE_INTERVAL_DEFAULT;
-            log.warn("Awake interval for storage cleaner is incorrect "
+            smsc_log_warn(log, "Awake interval for storage cleaner is incorrect "
                      "(should be between 1 and %u seconds) ! "
                      "Config parameter: <MessageStore.Cleaner.awake> "
                      "Using default: %u", 
@@ -241,7 +241,7 @@ void Cleaner::loadCleanupAwakeInterval(Manager& config)
     catch (ConfigException& exc) 
     {
         interval = SMSC_CLEANUP_AWAKE_INTERVAL_DEFAULT;
-        log.warn("Awake interval for storage cleaner missed "
+        smsc_log_warn(log, "Awake interval for storage cleaner missed "
                  "(it should be between 1 and %u seconds) ! "
                  "Config parameter: <MessageStore.Cleaner.awake> "
                  "Using default: %u", 
@@ -264,7 +264,7 @@ void Cleaner::loadCleanupInterval(Manager& config)
             interval > SMSC_CLEANUP_INTERVAL_LIMIT)
         {
             interval = SMSC_CLEANUP_INTERVAL_DEFAULT;
-            log.warn("Cleanup interval for storage is incorrect "
+            smsc_log_warn(log, "Cleanup interval for storage is incorrect "
                      "(should be between 1 and %u seconds) ! "
                      "Config parameter: <MessageStore.Cleaner.interval> "
                      "Using default: %u", 
@@ -275,7 +275,7 @@ void Cleaner::loadCleanupInterval(Manager& config)
     catch (ConfigException& exc) 
     {
         interval = SMSC_CLEANUP_INTERVAL_DEFAULT;
-        log.warn("Cleanup interval for storage missed "
+        smsc_log_warn(log, "Cleanup interval for storage missed "
                  "(it should be between 1 and %u seconds) ! "
                  "Config parameter: <MessageStore.Cleaner.interval> "
                  "Using default: %u", 
@@ -298,7 +298,7 @@ char* Cleaner::loadDBInstance(Manager& config, const char* cat)
     } 
     catch (ConfigException& exc) 
     {
-        log.error("DB instance name wasn't specified ! "
+        smsc_log_error(log, "DB instance name wasn't specified ! "
                   "Config parameter: <%s>", cat);
         throw;
     }
@@ -315,7 +315,7 @@ char* Cleaner::loadDBUserName(Manager& config, const char* cat)
     } 
     catch (ConfigException& exc) 
     {
-        log.error("DB user name wasn't specified ! "
+        smsc_log_error(log, "DB user name wasn't specified ! "
                   "Config parameter: <%s>", cat);
         throw;
     }
@@ -332,7 +332,7 @@ char* Cleaner::loadDBUserPassword(Manager& config, const char* cat)
     } 
     catch (ConfigException& exc) 
     {
-        log.error("DB user password wasn't specified ! "
+        smsc_log_error(log, "DB user password wasn't specified ! "
                   "Config parameter: <%s>", cat);
         throw;
     }

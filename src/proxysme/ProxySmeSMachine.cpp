@@ -105,16 +105,14 @@ void SMachine::RecodeIfNeed(DIRECTION direct,SmppHeader* pdu) {
         }else if ( config_.left_dcs == DEFAULTDCS_LATIN1 ) {
           ConvertMsg_LATIN1_to_SMSC7BIT(p);
         }else
-          smsc::logger::Logger::getInstance("smsc.proxysme")
-            .error("invalid left default encoding value %x",config_.left_dcs);
+          smsc_log_error(smsc::logger::Logger::getInstance("smsc.proxysme"), "invalid left default encoding value %x",config_.left_dcs);
       } else { // RIGHT_TO_LEFT
         if ( config_.right_dcs == DEFAULTDCS_SMSC7BIT ) {
           ConvertMsg_SMSC7BIT_to_LATIN1(p);
         }else if ( config_.right_dcs == DEFAULTDCS_LATIN1 ) {
           ConvertMsg_LATIN1_to_SMSC7BIT(p);
         }else
-          smsc::logger::Logger::getInstance("smsc.proxysme")
-            .error("invalid right default encoding value %x",config_.right_dcs);
+          smsc_log_error(smsc::logger::Logger::getInstance("smsc.proxysme"), "invalid right default encoding value %x",config_.right_dcs);
       }
     }
   }
@@ -129,7 +127,7 @@ unsigned SMachine::ProcessCommands(SMachineNotifier& notifier)
     if ( !mixer_.IsConnected() ) {
       if ( mixer_.IsUnrecoverable() ) return END_PROCESSING;
       if ( !mixer_.Connect() ) {
-        smsc::logger::Logger::getInstance("smsc.proxysme").error("can't connect left/right smscs");
+        smsc_log_error(smsc::logger::Logger::getInstance("smsc.proxysme"), "can't connect left/right smscs");
         MacroSleep();
       }
       continue;

@@ -95,7 +95,7 @@ namespace smsc { namespace mscman
 
 Mutex MscManager::startupLock;
 MscManager* MscManager::instance = 0;
-smsc::logger::Logger MscManager::log =
+smsc::logger::Logger *MscManager::log =
     Logger::getInstance("smsc.mscman.MscManager");
 
 MscManager::MscManager(DataSource& _ds, Manager& config)
@@ -230,7 +230,7 @@ void MscManagerImpl::init(Manager& config)
     if (!connection)
     {
         InitException exc("Get connection to DB failed");
-        log.error(exc.what());
+        smsc_log_error(log, exc.what());
         throw exc;
     }
 
@@ -267,7 +267,7 @@ void MscManagerImpl::init(Manager& config)
     {
         if (rs) delete rs;
         if (statement) delete statement;
-        log.error(exc.what());
+        smsc_log_error(log, exc.what());
         throw InitException(exc.what());
     }
 }
@@ -318,7 +318,7 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
     }
     catch (Exception& exc)
     {
-        log.error("Process change failed. %s", exc.what());
+        smsc_log_error(log, "Process change failed. %s", exc.what());
         if (statement) delete statement;
         connection->rollback();
     }

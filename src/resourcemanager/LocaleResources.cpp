@@ -30,7 +30,7 @@ std::string strToLower(const std::string & str)
 
 void LocaleResources::processParams(const DOM_Element &elem, LocaleResources::_stringmap & settings, const std::string &prefix) throw ()
 {
-  smsc::logger::Logger logger(smsc::logger::Logger::getInstance("smsc.resourcemanager.LocaleResources"));
+  smsc::logger::Logger *logger = smsc::logger::Logger::getInstance("smsc.resourcemanager.LocaleResources");
   try
   {
     DOM_NodeList sectionList = elem.getChildNodes();
@@ -65,22 +65,22 @@ void LocaleResources::processParams(const DOM_Element &elem, LocaleResources::_s
   }
   catch (smsc::util::Exception &e)
   {
-    logger.error("Couldn't load locale: %s", e.what());
+    smsc_log_error(logger, "Couldn't load locale: %s", e.what());
   }
   catch (std::exception &e)
   {
-    logger.error("Couldn't load locale: %s", e.what());
+    smsc_log_error(logger, "Couldn't load locale: %s", e.what());
   }
   catch (...)
   {
-    logger.error("Couldn't load locale: Unknown exception in processParam");
+    smsc_log_error(logger, "Couldn't load locale: Unknown exception in processParam");
   }
 }
 
 LocaleResources::LocaleResources(const std::string & filename) throw ()
 {
   __trace2__("Load locale resources from \"%s\"\n", filename.c_str());
-  smsc::logger::Logger logger(smsc::logger::Logger::getInstance("smsc.resourcemanager.LocaleResources"));
+  smsc::logger::Logger *logger = smsc::logger::Logger::getInstance("smsc.resourcemanager.LocaleResources");
   try
   {
     DOMTreeReader reader;
@@ -106,39 +106,39 @@ LocaleResources::LocaleResources(const std::string & filename) throw ()
     XMLExcepts::Codes code = e.getCode();
     const char *srcFile = e.getSrcFile();
     unsigned int line = e.getSrcLine();
-    logger.error("Couldn't construct locale \"%s\": An error occured during parsing received (\"%s\") command on line %d. Nested: %d: %s",
+    smsc_log_error(logger, "Couldn't construct locale \"%s\": An error occured during parsing received (\"%s\") command on line %d. Nested: %d: %s",
                  filename.c_str(), srcFile, line, code, message.get());
     __trace2__("Locale resources from \"%s\" not loaded due to error: %s\n", filename.c_str(), message.get());
     return;
   }
   catch (const DOM_DOMException& e)
   {
-    logger.error("Couldn't construct locale \"%s\": DOMException code %i", filename.c_str(), e.code);
+    smsc_log_error(logger, "Couldn't construct locale \"%s\": DOMException code %i", filename.c_str(), e.code);
     __trace2__("Locale resources from \"%s\" not loaded due to error: DOMException code %i\n", filename.c_str(), e.code);
     return;
   }
   catch (const SAXException &e)
   {
     std::auto_ptr<char> message(DOMString(e.getMessage()).transcode());
-    logger.error("Couldn't construct locale \"%s\": %s", filename.c_str(), message.get());
+    smsc_log_error(logger, "Couldn't construct locale \"%s\": %s", filename.c_str(), message.get());
     __trace2__("Locale resources from \"%s\" not loaded due to error: %s\n", filename.c_str(), message.get());
     return;
   }
   catch (smsc::util::Exception &e)
   {
-    logger.error("Couldn't construct locale \"%s\": %s", filename.c_str(), e.what());
+    smsc_log_error(logger, "Couldn't construct locale \"%s\": %s", filename.c_str(), e.what());
     __trace2__("Locale resources from \"%s\" not loaded due to error: %s\n", filename.c_str(), e.what());
     return;
   }
   catch (std::exception &e)
   {
-    logger.error("Couldn't construct locale \"%s\": %s", filename.c_str(), e.what());
+    smsc_log_error(logger, "Couldn't construct locale \"%s\": %s", filename.c_str(), e.what());
     __trace2__("Locale resources from \"%s\" not loaded due to error: %s\n", filename.c_str(), e.what());
     return;
   }
   catch (...)
   {
-    logger.error("Couldn't construct locale \"%s\": Unknown exception in constructor", filename.c_str());
+    smsc_log_error(logger, "Couldn't construct locale \"%s\": Unknown exception in constructor", filename.c_str());
     __trace2__("Locale resources from \"%s\" not loaded due to errors\n", filename.c_str());
     return;
   }

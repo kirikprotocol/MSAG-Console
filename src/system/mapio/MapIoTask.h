@@ -78,7 +78,7 @@ enum MAPSTATS{
   MAPSTATS_NEWDIALOG,
   MAPSTATS_DISPOSEDIALOG,
   MAPSTATS_REMAPDIALOG,
-  MAPSTATS_REASSIGNDIALOG,
+  MAPSTATS_REASSIGNDIALOG
 };
 class MapDialog;
 
@@ -456,7 +456,7 @@ public:
     //  throw runtime_error("MAP::createOrAttachSMSCDialog: can't create MT dialog without abonent");
     MutexGuard g(sync);
     if ( dialogId_pool.size() == 0 ) {
-      smsc::logger::_mapdlg_cat->warn( "Dialog id POOL is empty" );
+      smsc_log_warn(smsc::logger::_mapdlg_cat, "Dialog id POOL is empty" );
       Dump();
       throw runtime_error("MAP:: POOL is empty");
     }
@@ -530,7 +530,7 @@ public:
       throw runtime_error("MAP:: reassign dialog: here is no did");
     }
     if ( dialogId_pool.size() == 0 ) {
-      smsc::logger::_mapdlg_cat->warn( "Dialog id POOL is empty" );
+      smsc_log_warn(smsc::logger::_mapdlg_cat, "Dialog id POOL is empty" );
       Dump();
       throw runtime_error("MAP:: POOL is empty");
     }

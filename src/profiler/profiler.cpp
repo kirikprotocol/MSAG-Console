@@ -204,8 +204,7 @@ int Profiler::update(const Address& address,const Profile& profile)
   }
   }catch(...)
   {
-    smsc::logger::Logger log=smsc::logger::Logger::getInstance("smsc.system.Profiler");
-    log.error("Database exception during profile update/insert");
+    smsc_log_error(smsc::logger::Logger::getInstance("smsc.system.Profiler"), "Database exception during profile update/insert");
     return pusError;
   }
 }
@@ -228,8 +227,7 @@ int Profiler::updatemask(const Address& address,const Profile& profile)
     }
   }catch(...)
   {
-    smsc::logger::Logger log=smsc::logger::Logger::getInstance("smsc.system.Profiler");
-    log.error("Database exception during mask profile update");
+    smsc_log_error(smsc::logger::Logger::getInstance("smsc.system.Profiler"), "Database exception during mask profile update");
     return pusError;
   }
 }
@@ -379,7 +377,7 @@ enum{
   msgDivertOn,
   msgDivertOff,
   msgDivertChanged,
-  msgInvalidParam,
+  msgInvalidParam
 };
 
 int Profiler::Execute()

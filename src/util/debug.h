@@ -131,9 +131,9 @@ static inline void warning2(const char* fmt,...)
 #define warning_if(expr) __warning2__(#expr)
 //  {if (expr) smsc::util::warningImpl("Warning !!! "#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__);}
 
-#define __warning2__(text,...) if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN)) smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,text,__VA_ARGS__)
+#define __warning2__(text,...) if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN)) smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_WARN,text,__VA_ARGS__)
 
-#define __log2__(category,priority,text,...) if(category->isLogLevelEnabled(priority)) category->log(priority,text,__VA_ARGS__)
+#define __log2__(category,priority,text,...) if(category->isLogLevelEnabled(priority)) category->log_(priority,text,__VA_ARGS__)
 
 #if !defined DISABLE_WATCHDOG
   #define __watchdog__(expr) __watchdog2__(expr,"GAW-GAW")
@@ -250,18 +250,18 @@ static inline void warning2(const char* fmt,...)
     smsc::util::watchtImpl(expr,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
   #define watchtext(expr,len) \
     smsc::util::watchtextImpl(expr,len,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
-  #define trace(text) if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_DEBUG,text)
+  #define trace(text) if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_DEBUG,text)
   #if defined ENABLE_FILE_NAME
-    #define trace2(format,...) if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_DEBUG,format,__VA_ARGS__)
+    #define trace2(format,...) if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_DEBUG,format,__VA_ARGS__)
   #else
-    #define trace2(format,...) if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_DEBUG,format,__VA_ARGS__)
+    #define trace2(format,...) if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_DEBUG,format,__VA_ARGS__)
   #endif
-  #define debug1(category,text) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) category->log(smsc::logger::Logger::LEVEL_DEBUG,text)
-  #define debug2(category,format,...) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) category->log(smsc::logger::Logger::LEVEL_DEBUG,format,__VA_ARGS__)
-  #define warn1(category,text) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN)) category->log(smsc::logger::Logger::LEVEL_WARN,text)
-  #define warn2(category,format,...) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN)) category->log(smsc::logger::Logger::LEVEL_WARN,format,__VA_ARGS__)
-  #define info1(category,text) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_INFO)) category->log(smsc::logger::Logger::LEVEL_INFO,text)
-  #define info2(category,format,...) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_INFO)) category->log(smsc::logger::Logger::LEVEL_INFO,format,__VA_ARGS__)
+  #define debug1(category,text) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) category->log_(smsc::logger::Logger::LEVEL_DEBUG,text)
+  #define debug2(category,format,...) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) category->log_(smsc::logger::Logger::LEVEL_DEBUG,format,__VA_ARGS__)
+  #define warn1(category,text) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN)) category->log_(smsc::logger::Logger::LEVEL_WARN,text)
+  #define warn2(category,format,...) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN)) category->log_(smsc::logger::Logger::LEVEL_WARN,format,__VA_ARGS__)
+  #define info1(category,text) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_INFO)) category->log_(smsc::logger::Logger::LEVEL_INFO,text)
+  #define info2(category,format,...) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_INFO)) category->log_(smsc::logger::Logger::LEVEL_INFO,format,__VA_ARGS__)
 #else
   #define watch(expr)
   #define watchx(expr)
@@ -301,7 +301,7 @@ namespace util{
     if (!expr)
     {
       if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_FATAL))
-         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_FATAL,
+         smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_FATAL,
          "\n*%s*<%s(%s):%d>\n\tassertin %s failed\n",
               ASSERT_LOG_DOMAIN,
               file,
@@ -318,7 +318,7 @@ namespace util{
     {
       char throw_message[512];
       if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
-         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,"\n*%.100s*[%d]<%.100s(%.100s):%d>\n\tassertin %.100s failed\n\n",
+         smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_WARN,"\n*%.100s*[%d]<%.100s(%.100s):%d>\n\tassertin %.100s failed\n\n",
               ASSERT_LOG_DOMAIN,
               thr_self(),
               file,
@@ -335,7 +335,7 @@ namespace util{
   {
     if ( !expr )
       if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
-         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
+         smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_WARN,
          "*%s*<%s(%s):%d>\n\tassertin %s failed\n",
               ASSERT_LOG_DOMAIN,
               file,
@@ -348,7 +348,7 @@ namespace util{
                           const char* file, const char* func, int line) throw()
   {
       if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_FATAL))
-         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_FATAL,
+         smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_FATAL,
          "\n*%s*<%s(%s):%d>\n\t%s\n",
               UNREACHABLE_LOG_DOMAIN,
               file,
@@ -361,7 +361,7 @@ namespace util{
                           const char* file, const char* func, int line)
   {
       if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
-         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
+         smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_WARN,
          "\n*%.100s*[%d]<%.100s(%.100s):%d>\n\t%.100s\n\n",
               UNREACHABLE_LOG_DOMAIN,
               thr_self(),
@@ -377,7 +377,7 @@ namespace util{
                             const char* file, const char* func, int line) throw()
   {
       if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
-         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
+         smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_WARN,
          "*%s*<%s(%s):%d>\n%s\n",
               UNREACHABLE_LOG_DOMAIN,
               file,
@@ -390,7 +390,7 @@ namespace util{
                         const char* file, const char* func, int line)
   {
       if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
-         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
+         smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_WARN,
        "*watch*: %s = %s     %s(%s):%d\n",
             expr,e?"true":"false",
             #if defined ENABLE_FILE_NAME
@@ -405,7 +405,7 @@ namespace util{
                         const char* file, const char* func, int line)
   {
       if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
-         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
+         smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_WARN,
          "*watch*: %s = %d     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
@@ -420,7 +420,7 @@ namespace util{
                         const char* file, const char* func, int line)
   {
       if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
-         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
+         smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_WARN,
          "*watch*: %s = %d     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
@@ -435,7 +435,7 @@ namespace util{
                          const char* file, const char* func, int line)
   {
       if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
-         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
+         smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_WARN,
          "*watch*: %s = %x     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
@@ -450,7 +450,7 @@ namespace util{
                          const char* file, const char* func, int line)
   {
       if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
-         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
+         smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_WARN,
          "*watch*: %s = %x     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
@@ -465,7 +465,7 @@ namespace util{
                         const char* file, const char* func, int line)
   {
       if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
-         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
+         smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_WARN,
          "*watch*: %s = '%c'     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
@@ -480,7 +480,7 @@ namespace util{
                         const char* file, const char* func, int line)
   {
       if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
-         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
+         smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_WARN,
          "*watch*: %s = %p     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
@@ -495,7 +495,7 @@ namespace util{
                          const char* file, const char* func, int line)
   {
       if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
-         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
+         smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_WARN,
          "*watch*: %s = %s     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
@@ -509,21 +509,21 @@ namespace util{
   inline void watchtextImpl(const char* e, int len, const char* expr,
                             const char* file, const char* func, int line)
   {
-    smsc::logger::_trace_cat->warn("*watch*: %s = '",expr);
-    fwrite(e,len,1,WATCH_LOG_STREAM);
-    fprintf(WATCH_LOG_STREAM,"'\t%s(%s):%d\n",
-            #if defined ENABLE_FILE_NAME
-              file,
-            #else
-              "",
-            #endif
-            func,line);
+	  smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_WARN, "*watch*: %s = '",expr);
+	  fwrite(e,len,1,WATCH_LOG_STREAM);
+	  fprintf(WATCH_LOG_STREAM,"'\t%s(%s):%d\n",
+#if defined ENABLE_FILE_NAME
+		  file,
+#else
+		  "",
+#endif
+		  func,line);
   }
 
   inline void warningImpl(const char* e, const char* file, const char* func, int line)
   {
       if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
-         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,"*WARNING*: %s",e);
+         smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_WARN,"*WARNING*: %s",e);
   }
 
   inline bool watchdogImpl(bool expr, const char* info, const char* e,
@@ -531,7 +531,7 @@ namespace util{
   {
     if ( !expr )
       if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
-         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
+         smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_WARN,
          "*%s*[%d]: %s     %s(%s):%d\n",info,thr_self(),e,
             #if defined ENABLE_FILE_NAME
               file,

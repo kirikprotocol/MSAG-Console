@@ -4,18 +4,26 @@
 #include <string>
 #include <stdarg.h>
 
-#ifdef LOGGER_LIB_LOG4CPP
-#include <log4cpp/Portability.hh>
-#include <log4cpp/LayoutAppender.hh>
-#else
-#include <log4cplus/appender.h>
-#endif
+#include "logger/Appender.h"
+#include "util/Properties.h"
 
 namespace smsc {
 namespace snmp {
 
 class SnmpAgent;
+
+class SnmpAppender : public smsc::logger::Appender {
+public:
+	SnmpAppender(const char * const _name, SnmpAgent *agent)
+		: Appender(_name)
+	{}
+	virtual ~SnmpAppender() {};
+		
+private:
+	SnmpAgent *agent;
+};
 #ifdef LOGGER_LIB_LOG4CPP
+/*
 using log4cpp::LayoutAppender;
 using log4cpp::LoggingEvent;
 class SnmpAppender : public LayoutAppender {
@@ -29,7 +37,9 @@ protected:
 private:
 	SnmpAgent *agent;
 };
+*/
 #else
+/*
 using log4cplus::Appender;
 using log4cplus::spi::InternalLoggingEvent;
 class SnmpAppender : public Appender {
@@ -43,6 +53,7 @@ protected:
 private:
 	SnmpAgent *agent;
 };
+*/
 #endif
 
 }

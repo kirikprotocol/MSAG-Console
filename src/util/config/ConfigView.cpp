@@ -6,7 +6,7 @@ namespace smsc { namespace util { namespace config
 using smsc::logger::Logger;
 
 /* ----------------------- Tree Configuration Management ------------------- */
-smsc::logger::Logger ConfigView::log = 
+smsc::logger::Logger *ConfigView::log = 
     Logger::getInstance("smsc.util.config.ConfigView");
 
 char* ConfigView::prepareSubSection(const char* sub)
@@ -91,7 +91,7 @@ int32_t ConfigView::getInt(const char* param, const char* error)
     }
     catch (ConfigException& exc)
     {
-        log.warn("Config parameter missed: <%s>. %s",
+        smsc_log_warn(log, "Config parameter missed: <%s>. %s",
                  section, (error) ? error:"");
         if (section) delete section;
         throw;
@@ -114,7 +114,7 @@ char* ConfigView::getString(const char* param, const char* error, bool check)
     catch (ConfigException& exc)
     {
         if (check)
-            log.warn("Config parameter missed: <%s>. %s",
+            smsc_log_warn(log, "Config parameter missed: <%s>. %s",
                      section, (error) ? error:"");
         if (section) delete section;
         if (check) throw;
@@ -134,7 +134,7 @@ bool ConfigView::getBool(const char* param, const char* error)
     }
     catch (ConfigException& exc)
     {
-        log.warn("Config parameter missed: <%s>. %s",
+        smsc_log_warn(log, "Config parameter missed: <%s>. %s",
                   section, (error) ? error:"");
         if (section) delete section;
         throw;

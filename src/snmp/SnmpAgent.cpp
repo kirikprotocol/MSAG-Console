@@ -60,8 +60,8 @@
 
       SnmpAgent::SnmpAgent(Smsc* _smsc)
       {
-        log=new smsc::logger::Logger(smsc::logger::Logger::getInstance("sms.snmp"));
-        smsc::logger::Logger tlog=smsc::logger::Logger::getInstance("sms.snmp.alarm");
+        log = smsc::logger::Logger::getInstance("sms.snmp");
+        smsc::logger::Logger *tlog=smsc::logger::Logger::getInstance("sms.snmp.alarm");//TODO implement SNMP Appender
     // TODO implement addAppender
         //tlog.addAppender(new SnmpAppender("-",this));
         agentlog = (void*)log;
@@ -72,7 +72,6 @@
       }
       SnmpAgent::~SnmpAgent()
       {
-        log->debug( "destructor" );
         agent = 0;
         smscptr = 0;
         agentlog = 0;
@@ -97,9 +96,9 @@
          {
            agent_check_and_process(1);
          }
-         log->debug("try to shutdown snmp agent");
+         smsc_log_debug(log, "try to shutdown snmp agent");
          snmp_shutdown("smscd");// at shutdown time
-         log->debug("snmp agent shutdowned");
+         smsc_log_debug(log, "snmp agent shutdowned");
          return 0;
       }
       void SnmpAgent::statusChange(smscStatus newstatus)
@@ -109,7 +108,7 @@
         memdup((uchar_t **) &statusSave,(uchar_t *) &status,sizeof(status));
         struct timeval t;t.tv_sec=0,t.tv_usec=10000;
         snmp_alarm_register_hr(t, 0, sendStatusNotification, (void*)statusSave);
-        log->debug("smsc status changed to %d, trap sent, saved = %d(%d)",newstatus,*statusSave,sizeof(status));
+        smsc_log_debug(log, "smsc status changed to %d, trap sent, saved = %d(%d)",newstatus,*statusSave,sizeof(status));
       }
 
       void SnmpAgent::trap(std::string &message)
@@ -177,7 +176,7 @@
         break;
       case MODE_SET_ACTION:
         //*it = (int) *(requests->requestvb->val.integer);
-        ((smsc::logger::Logger*)agentlog)->debug("hello from smscStatusHandler MODE_SET_ACTION");
+        smsc_log_debug( ((smsc::logger::Logger*)agentlog), "hello from smscStatusHandler MODE_SET_ACTION");
         if (agent)
         {
           if (status != smsc::snmp::SnmpAgent::OPER)
@@ -311,10 +310,10 @@
     switch (reqinfo->mode)
     {
       case MODE_GET:
-        ((smsc::logger::Logger*)agentlog)->debug("hello from stats handler");
+        smsc_log_debug(((smsc::logger::Logger*)agentlog), "hello from stats handler");
         for(i = 0; i <= reginfo->rootoid_len; i++ )
         {
-        ((smsc::logger::Logger*)agentlog)->debug("oid[%d] = %d",i,reginfo->rootoid[i]);
+        smsc_log_debug(((smsc::logger::Logger*)agentlog), "oid[%d] = %d",i,reginfo->rootoid[i]);
         }
         if (snmp_oid_compare(sumbitOkOid,OID_LENGTH(sumbitOkOid),
                              reginfo->rootoid, reginfo->rootoid_len) == 0)
@@ -322,7 +321,7 @@
           val.high = perf[0] >> 32;
           val.low  = perf[0] & 0xffffffff;
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
-         ((smsc::logger::Logger*)agentlog)->debug("submitOK req");
+         smsc_log_debug(((smsc::logger::Logger*)agentlog), "submitOK req");
         }
         else if (snmp_oid_compare(sumbitErrOid,OID_LENGTH(sumbitErrOid),
                              reginfo->rootoid, reginfo->rootoid_len) == 0)
@@ -330,7 +329,7 @@
           val.high = perf[1] >> 32;
           val.low  = perf[1] & 0xffffffff;
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
-        ((smsc::logger::Logger*)agentlog)->debug("submitErr req");
+        smsc_log_debug(((smsc::logger::Logger*)agentlog), "submitErr req");
         }
         else if (snmp_oid_compare(deliverOkOid,OID_LENGTH(deliverOkOid),
                              reginfo->rootoid, reginfo->rootoid_len) == 0)
@@ -338,7 +337,7 @@
           val.high = perf[2] >> 32;
           val.low  = perf[2] & 0xffffffff;
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
-        ((smsc::logger::Logger*)agentlog)->debug("delivwerOK req");
+        smsc_log_debug(((smsc::logger::Logger*)agentlog), "delivwerOK req");
         }
         else if (snmp_oid_compare(deliverErrOid,OID_LENGTH(deliverErrOid),
                              reginfo->rootoid, reginfo->rootoid_len) == 0)
@@ -346,7 +345,7 @@
           val.high = perf[3] >> 32;
           val.low  = perf[4] & 0xffffffff;
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
-        ((smsc::logger::Logger*)agentlog)->debug("deliverERR req");
+        smsc_log_debug(((smsc::logger::Logger*)agentlog), "deliverERR req");
         }
         else if (snmp_oid_compare(rescheduledOid,OID_LENGTH(rescheduledOid),
                              reginfo->rootoid, reginfo->rootoid_len) ==0)
@@ -354,11 +353,11 @@
           val.high = perf[5] >> 32;
           val.low  = perf[5] & 0xffffffff;
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
-        ((smsc::logger::Logger*)agentlog)->debug("rescheduled req");
+        smsc_log_debug(((smsc::logger::Logger*)agentlog), "rescheduled req");
         }
         else
         {
-        ((smsc::logger::Logger*)agentlog)->debug("compate does not work");
+        smsc_log_debug(((smsc::logger::Logger*)agentlog), "compate does not work");
           netsnmp_set_request_error(reqinfo, requests, SNMP_NOSUCHINSTANCE);
         }
         return SNMP_ERR_NOERROR;

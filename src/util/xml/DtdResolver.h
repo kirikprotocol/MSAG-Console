@@ -61,7 +61,7 @@ public:
   {
     #ifdef SMSC_DEBUG
       std::auto_ptr<char> translatedSystemId(XMLString::transcode(systemId));
-      logger.debug("Resolving entity \"%s\"", translatedSystemId.get());
+	  smsc_log_debug(logger, "Resolving entity \"%s\"", translatedSystemId.get());
     #endif
     if (XMLString::endsWith(systemId, DOMString(".dtd").rawBuffer()))
     {
@@ -83,7 +83,7 @@ public:
   }
 
 private:
-  Logger logger;
+  Logger *logger;
 
   InputSource * tryPrefix(const XMLCh * const dtdName, const char * const prefixChars)
   {
@@ -98,7 +98,7 @@ private:
 
     std::auto_ptr<char> dtdNameTranscodedToCallCFunctionStat(XMLString::transcode(tmpDtdName));
     if (stat(dtdNameTranscodedToCallCFunctionStat.get(), &s) == 0) {
-        logger.debug("DTD Resolved to \"%s\"", dtdNameTranscodedToCallCFunctionStat.get());
+		smsc_log_debug(logger, "DTD Resolved to \"%s\"", dtdNameTranscodedToCallCFunctionStat.get());
       return new LocalFileInputSource(tmpDtdName);
     } else
       return 0;

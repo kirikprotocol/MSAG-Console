@@ -44,7 +44,7 @@ namespace smsc { namespace store
     {
     private:
 
-        smsc::logger::Logger log;
+        smsc::logger::Logger *log;
 
         Event       awake, exited;
         bool        bStarted, bNeedExit;

@@ -224,7 +224,7 @@ RouteConfig::status RouteConfig::load(const char * const filename)
       Subject *s = createSubjectDef(elem);
       if (subjects.Exists(s->getId()))
       {
-        logger.warn("Duplicate of subject \"%s\" definition. Second subject definition skipped", s->getId());
+        smsc_log_warn(logger, "Duplicate of subject \"%s\" definition. Second subject definition skipped", s->getId());
       }
       else
       {
@@ -246,7 +246,7 @@ RouteConfig::status RouteConfig::load(const char * const filename)
       }
       catch (SubjectNotFoundException &ex)
       {
-        logger.error("incorrect subject id: subject not defined");
+        smsc_log_error(logger, "incorrect subject id: subject not defined");
       }
     }
   }

@@ -42,7 +42,7 @@ int StatusSme::Execute()
   s.setArchivationRequested(false);
   s.setEServiceType(servType.c_str());
   s.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,protId);
-  smsc::logger::Logger log=smsc::logger::Logger::getInstance("smsc.system.StatusSme");
+  smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.system.StatusSme");
 
   while(!isStopping)
   {
@@ -56,7 +56,7 @@ int StatusSme::Execute()
     if(cmd->cmdid!=smsc::smeman::DELIVERY)
     {
       __trace2__("StatusSme: incorrect command submitted:%d",cmd->cmdid);
-      log.warn("Incorrect command received");
+      smsc_log_warn(log, "Incorrect command received");
       continue;
     }
     sms=cmd->get_sms();

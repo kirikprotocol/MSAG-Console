@@ -147,7 +147,7 @@ void Smsc::mainLoop()
   CmdVector frame;
   SmeIndex smscSmeIdx=smeman.lookup("smscsme");
   Event e;
-  smsc::logger::Logger log=smsc::logger::Logger::getInstance("smsc.mainLoop");
+  smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.mainLoop");
   thr_setprio(thr_self(),127);
   for(;;)
   {

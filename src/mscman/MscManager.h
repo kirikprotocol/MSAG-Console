@@ -30,7 +30,7 @@ namespace smsc { namespace mscman
 
         static Mutex                startupLock;
         static MscManager*          instance;
-        static smsc::logger::Logger log;
+        static smsc::logger::Logger *log;
         
         DataSource&         ds;
         bool                automaticRegistration;

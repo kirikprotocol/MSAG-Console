@@ -15,7 +15,7 @@ namespace smsc { namespace wsme
     {
     private:
     
-        smsc::logger::Logger log;
+        smsc::logger::Logger *log;
 
         WSmeAdmin          &admin;
         Methods             methods;

@@ -43,9 +43,9 @@ Mutex        StoreManager::mutex;
 Cleaner*     StoreManager::cleaner = 0;
 RemoteStore* StoreManager::instance  = 0;
 
-smsc::logger::Logger StoreManager::log = Logger::getInstance("smsc.store.StoreManager");
-smsc::logger::Logger RemoteStore::log = Logger::getInstance("smsc.store.RemoteStore");
-smsc::logger::Logger CachedStore::log = Logger::getInstance("smsc.store.CachedStore");
+smsc::logger::Logger *StoreManager::log = Logger::getInstance("smsc.store.StoreManager");
+smsc::logger::Logger *RemoteStore::log = Logger::getInstance("smsc.store.RemoteStore");
+smsc::logger::Logger *CachedStore::log = Logger::getInstance("smsc.store.CachedStore");
 
 #ifdef SMSC_FAKE_MEMORY_MESSAGE_STORE
 IntHash<SMS*> RemoteStore::fakeStore(100000);
@@ -62,7 +62,7 @@ bool StoreManager::needCache(Manager& config)
     }
     catch (ConfigException& exc)
     {
-        log.warn("Config parameter: <MessageStore.Cache.enabled> missed. "
+        smsc_log_warn(log, "Config parameter: <MessageStore.Cache.enabled> missed. "
                  "Cache disabled.");
     }
     return cacheIsNeeded;
@@ -76,7 +76,7 @@ bool StoreManager::needCleaner(Manager& config)
     }
     catch (ConfigException& exc)
     {
-        log.warn("Config parameter: <MessageStore.Cleaner.enabled> missed. "
+        smsc_log_warn(log, "Config parameter: <MessageStore.Cleaner.enabled> missed. "
                  "Cleaner disabled.");
     }
     return cleanerIsNeeded;
@@ -88,7 +88,7 @@ void StoreManager::startup(Manager& config, SchedTimer* sched)
 
     if (!instance)
     {
-        log.info("Storage Manager is starting ... ");
+        smsc_log_info(log, "Storage Manager is starting ... ");
         try
         {
 
@@ -111,7 +111,7 @@ void StoreManager::startup(Manager& config, SchedTimer* sched)
             if (cleaner) { delete cleaner; cleaner = 0; }
             throw ConnectionFailedException(exc);
         }
-        log.info("Storage Manager was started up.");
+        smsc_log_info(log, "Storage Manager was started up.");
     }
 }
 
@@ -121,11 +121,11 @@ void StoreManager::shutdown()
 
     if (instance)
     {
-        log.info("Storage Manager is shutting down ...");
+        smsc_log_info(log, "Storage Manager is shutting down ...");
         delete instance; instance = 0;
-        log.info("Storage Manager shutting down cleaner...");
+        smsc_log_info(log, "Storage Manager shutting down cleaner...");
         if (cleaner) delete cleaner; cleaner = 0;
-        log.info("Storage Manager was shutdowned.");
+        smsc_log_info(log, "Storage Manager was shutdowned.");
     }
 }
 /* ------------------------------ Store Manager ----------------------------- */
@@ -140,7 +140,7 @@ void RemoteStore::loadMaxTriesCount(Manager& config)
             maxTriesCount > SMSC_MAX_TRIES_TO_PROCESS_OPERATION_LIMIT)
         {
             maxTriesCount = SMSC_MAX_TRIES_TO_PROCESS_OPERATION;
-            log.warn("Max tries count to process operation on MessageStore "
+            smsc_log_warn(log, "Max tries count to process operation on MessageStore "
                      "is incorrect (should be between 1 and %u) ! "
                      "Config parameter: <MessageStore.maxTriesCount> "
                      "Using default: %u",
@@ -151,7 +151,7 @@ void RemoteStore::loadMaxTriesCount(Manager& config)
     catch (ConfigException& exc)
     {
         maxTriesCount = SMSC_MAX_TRIES_TO_PROCESS_OPERATION;
-        log.warn("Max tries count to process operation on MessageStore "
+        smsc_log_warn(log, "Max tries count to process operation on MessageStore "
                  "wasn't specified ! "
                  "Config parameter: <MessageStore.maxTriesCount> "
                  "Using default: %d",
@@ -174,9 +174,9 @@ RemoteStore::RemoteStore(Manager& config, SchedTimer* sched)
 RemoteStore::~RemoteStore()
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-    log.info( "RemoteStore: Destroying connection pool" );
+    smsc_log_info(log,  "RemoteStore: Destroying connection pool" );
     if (pool) delete pool;
-    log.info( "RemoteStore: Connection pool destroyed" );
+    smsc_log_info(log,  "RemoteStore: Connection pool destroyed" );
 #endif
 
     Stop();
@@ -257,13 +257,13 @@ SMSId RemoteStore::doCreateSms(StorageConnection* connection,
             catch (StorageException& exc)
             {
                 try { connection->rollback(); } catch (...) {
-                    log.error("Failed to rollback");
+                    smsc_log_error(log, "Failed to rollback");
                 }
                 throw exc;
             }
             catch (...) {
                 try { connection->rollback(); } catch (...) {
-                    log.error("Failed to rollback");
+                    smsc_log_error(log, "Failed to rollback");
                 }
                 throw StorageException("unknown exception");
             }
@@ -311,13 +311,13 @@ SMSId RemoteStore::doCreateSms(StorageConnection* connection,
     catch (StorageException& exc)
     {
         try { connection->rollback(); } catch (...) {
-            log.error("Failed to rollback");
+            smsc_log_error(log, "Failed to rollback");
         }
         throw exc;
     }
     catch (...) {
         try { connection->rollback(); } catch (...) {
-            log.error("Failed to rollback");
+            smsc_log_error(log, "Failed to rollback");
         }
         throw StorageException("unknown exception");
     }
@@ -358,7 +358,7 @@ SMSId RemoteStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
             if (connection) pool->freeConnection(connection);
             if (iteration++ >= maxTriesCount)
             {
-                log.warn("Max tries count to store message "
+                smsc_log_warn(log, "Max tries count to store message "
                          "#%lld exceeded !\n", id);
                 throw;
             }
@@ -410,7 +410,7 @@ void RemoteStore::doChangeSmsConcatSequenceNumber(
     catch (StorageException& exc)
     {
         try { connection->rollback(); } catch (...) {
-            log.error("Failed to rollback");
+            smsc_log_error(log, "Failed to rollback");
         }
         throw exc;
     }
@@ -418,7 +418,7 @@ void RemoteStore::doChangeSmsConcatSequenceNumber(
     if (!seqNumStmt->wasUpdated())
     {
         try { connection->rollback(); } catch (...) {
-            log.error("Failed to rollback");
+            smsc_log_error(log, "Failed to rollback");
         }
         throw NoSuchMessageException(id);
     }
@@ -457,7 +457,7 @@ void RemoteStore::changeSmsConcatSequenceNumber(SMSId id, int8_t inc)
             if (connection) pool->freeConnection(connection);
             if (iteration++ >= maxTriesCount)
             {
-                log.warn("Max tries count to change "
+                smsc_log_warn(log, "Max tries count to change "
                          "sequence number in concatenneted message "
                          "#%lld exceeded !\n", id);
                 throw;
@@ -549,7 +549,7 @@ void RemoteStore::retriveSms(SMSId id, SMS &sms)
             if (connection) pool->freeConnection(connection);
             if (iteration++ >= maxTriesCount)
             {
-                log.warn("Max tries count to retrive message "
+                smsc_log_warn(log, "Max tries count to retrive message "
                          "#%lld exceeded !\n", id);
                 throw;
             }
@@ -589,7 +589,7 @@ void RemoteStore::doDestroySms(StorageConnection* connection, SMSId id)
     catch (StorageException& exc)
     {
         try { connection->rollback(); } catch (...) {
-            log.error("Failed to rollback");
+            smsc_log_error(log, "Failed to rollback");
         }
         throw;
     }
@@ -628,7 +628,7 @@ void RemoteStore::destroySms(SMSId id)
             if (connection) pool->freeConnection(connection);
             if (iteration++ >= maxTriesCount)
             {
-                log.warn("Max tries count to remove message "
+                smsc_log_warn(log, "Max tries count to remove message "
                          "#%lld exceeded !\n", id);
                 throw;
             }
@@ -730,7 +730,7 @@ void RemoteStore::doReplaceSms(StorageConnection* connection,
     catch (StorageException& exc)
     {
         try { connection->rollback(); } catch (...) {
-            log.error("Failed to rollback");
+            smsc_log_error(log, "Failed to rollback");
         }
         throw;
     }
@@ -738,7 +738,7 @@ void RemoteStore::doReplaceSms(StorageConnection* connection,
     if (!replaceStmt->wasReplaced())
     {
         try { connection->rollback(); } catch (...) {
-            log.error("Failed to rollback");
+            smsc_log_error(log, "Failed to rollback");
         }
         throw NoSuchMessageException(id);
     }
@@ -779,7 +779,7 @@ void RemoteStore::replaceSms(SMSId id, const Address& oa,
             if (connection) pool->freeConnection(connection);
             if (iteration++ >= maxTriesCount)
             {
-                log.warn("Max tries count to replace message "
+                smsc_log_warn(log, "Max tries count to replace message "
                          "#%lld exceeded !\n", id);
                 throw;
             }
@@ -868,7 +868,7 @@ void RemoteStore::doReplaceSms(StorageConnection* connection, SMSId id, SMS& sms
     catch (StorageException& exc)
     {
         try { connection->rollback(); } catch (...) {
-            log.error("Failed to rollback");
+            smsc_log_error(log, "Failed to rollback");
         }
         throw;
     }
@@ -876,7 +876,7 @@ void RemoteStore::doReplaceSms(StorageConnection* connection, SMSId id, SMS& sms
     if (!replaceStmt->wasReplaced())
     {
         try { connection->rollback(); } catch (...) {
-            log.error("Failed to rollback");
+            smsc_log_error(log, "Failed to rollback");
         }
         throw NoSuchMessageException(id);
     }
@@ -915,7 +915,7 @@ void RemoteStore::replaceSms(SMSId id, SMS& sms)
             if (connection) pool->freeConnection(connection);
             if (iteration++ >= maxTriesCount)
             {
-                log.warn("Max tries count to replace message "
+                smsc_log_warn(log, "Max tries count to replace message "
                          "#%lld exceeded !\n", id);
                 throw;
             }
@@ -961,7 +961,7 @@ void RemoteStore::doChangeSmsStateToEnroute(StorageConnection* connection,
     catch (StorageException& exc)
     {
         try { connection->rollback(); } catch (...) {
-            log.error("Failed to rollback");
+            smsc_log_error(log, "Failed to rollback");
         }
         throw exc;
     }
@@ -969,7 +969,7 @@ void RemoteStore::doChangeSmsStateToEnroute(StorageConnection* connection,
     if (!toEnrouteStmt->wasUpdated())
     {
         try { connection->rollback(); } catch (...) {
-            log.error("Failed to rollback");
+            smsc_log_error(log, "Failed to rollback");
         }
         throw NoSuchMessageException(id);
     }
@@ -1013,7 +1013,7 @@ void RemoteStore::changeSmsStateToEnroute(SMSId id,
             if (connection) pool->freeConnection(connection);
             if (iteration++ >= maxTriesCount)
             {
-                log.warn("Max tries count to update message state"
+                smsc_log_warn(log, "Max tries count to update message state"
                          "#%lld exceeded !\n", id);
                 throw;
             }
@@ -1129,7 +1129,7 @@ void RemoteStore::initBilling(Manager& config)
         std::string file = files[i];
         int fileNameLen = file.length();
         const char* fileNameStr = file.c_str();
-        log.debug("Found old billing file: %s", fileNameStr);
+        smsc_log_debug(log, "Found old billing file: %s", fileNameStr);
 
         char fileName[4096];//fileNameLen];
         strncpy(fileName, fileNameStr, fileNameLen-extLen);
@@ -1221,7 +1221,7 @@ int RemoteStore::Execute()
         }
         catch (StorageException& exc)
         {
-            awake.Wait(0); log.error("%s", exc.what());
+            awake.Wait(0); smsc_log_error(log, "%s", exc.what());
         }
     }
 
@@ -1327,7 +1327,7 @@ void RemoteStore::createBillingRecord(SMSId id, SMS& sms)
         CSVFileEncoder::addSeparator(out);
     CSVFileEncoder::addUint32(out, sms.messageBody.getShortMessageLength(), true);
 
-    //log.debug("Billing record is:\n%s", out.c_str());
+    //smsc_log_debug(log, "Billing record is:\n%s", out.c_str());
 
     writeToBillingFile(out);
 }
@@ -1340,14 +1340,14 @@ void RemoteStore::createArchiveRecord(SMSId id, SMS& sms)
 void RemoteStore::doFinalizeSms(SMSId id, SMS& sms, bool needDelete)
     throw(StorageException, NoSuchMessageException)
 {
-    log.debug("Finalizing msg#%lld", id);
+    smsc_log_debug(log, "Finalizing msg#%lld", id);
 
     // TODO: move it after destroySms for valid rollback
     if (sms.billingRecord) createBillingRecord(id, sms);
     if (sms.needArchivate) createArchiveRecord(id, sms);
 
     if (!needDelete && !sms.needArchivate) { // TODO: remove && !sms.needArchivate here
-        log.debug("Finalized msg#%lld" , id);
+        smsc_log_debug(log, "Finalized msg#%lld" , id);
         return;
     }
 
@@ -1375,24 +1375,24 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms, bool needDelete)
                 /* TODO: enable this !!!
                 doDestroySms(connection, id);*/
                 pool->freeConnection(connection);
-                log.debug("Finalized msg#%lld" , id);
+                smsc_log_debug(log, "Finalized msg#%lld" , id);
             }
             break;
         }
         catch (StorageException& exc)
         {
-            try { connection->rollback(); } catch (...) { log.error("Failed to rollback"); } // TODO: remove it !!
+            try { connection->rollback(); } catch (...) { smsc_log_error(log, "Failed to rollback"); } // TODO: remove it !!
             if (connection) pool->freeConnection(connection);
             if (iteration++ >= maxTriesCount)
             {
-                log.warn("Max tries count to finalize message "
+                smsc_log_warn(log, "Max tries count to finalize message "
                          "#%lld exceeded !\n", id);
                 throw;
             }
         }
         catch (...)
         {
-            try { connection->rollback(); } catch (...) { log.error("Failed to rollback"); } // TODO: remove it !!
+            try { connection->rollback(); } catch (...) { smsc_log_error(log, "Failed to rollback"); } // TODO: remove it !!
             if (connection) pool->freeConnection(connection);
             throw StorageException("Unknown exception thrown");
         }

@@ -400,19 +400,19 @@ Mutex& MAPSTATS_GetMutex(){
 }
 
 smsc::logger::Logger* MAPSTATS_GetLoggerSec() {
-  static smsc::logger::Logger* logger = new smsc::logger::Logger(smsc::logger::Logger::getInstance("map.stat.sec"));
+  static smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("map.stat.sec");
   return logger;
 }
 smsc::logger::Logger* MAPSTATS_GetLoggerMin() {
-  static smsc::logger::Logger* logger = new smsc::logger::Logger(smsc::logger::Logger::getInstance("map.stat.min"));
+  static smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("map.stat.min");
   return logger;
 }
 smsc::logger::Logger* MAPSTATS_GetLoggerHour() {
-  static smsc::logger::Logger* logger = new smsc::logger::Logger(smsc::logger::Logger::getInstance("map.stat.hour"));
+  static smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("map.stat.hour");
   return logger;
 }
 smsc::logger::Logger* MAPSTATS_GetLoggerDlg() {
-  static smsc::logger::Logger* logger = new smsc::logger::Logger(smsc::logger::Logger::getInstance("map.stat.dlg"));
+  static smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("map.stat.dlg");
   return logger;
 }
 
@@ -431,7 +431,7 @@ int MAPSTATS_reassign[3] = {0,0,0};
 enum {
   MAPSTATS__SEC,
   MAPSTATS__MIN,
-  MAPSTATS__HOUR,
+  MAPSTATS__HOUR
 };
 
 void MAPSTATS_DumpDialogLC(MapDialog* dialog)
@@ -441,7 +441,7 @@ void MAPSTATS_DumpDialogLC(MapDialog* dialog)
   long long maked_mks = dialog->maked_at_mks;
   long long mks = ((long long)tv.tv_sec)*1000*1000 + (long long)tv.tv_usec;
   long long cl = mks-maked_mks;
-  MAPSTATS_GetLoggerDlg()->info("dlg=%p (%x/%x) sec=%ld usec=%ld src=%s dst=%s",
+  smsc_log_info(MAPSTATS_GetLoggerDlg(), "dlg=%p (%x/%x) sec=%ld usec=%ld src=%s dst=%s",
                                 dialog,dialog->dialogid_map,dialog->dialogid_smsc,
                                 long(cl/(1000*1000)),long(cl%(1000*1000)),
                                 dialog->sms.get()?dialog->sms->getOriginatingAddress().value:"???",
@@ -455,7 +455,7 @@ void MAPSTATS_Flush(unsigned x,bool dump)
     case MAPSTATS__SEC:
       {
         smsc::logger::Logger* log = MAPSTATS_GetLoggerSec();
-        log->info("op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d/%d, rcv %d",
+        smsc_log_info(log, "op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d/%d, rcv %d",
                   MAPSTATS_open_in[0],
                   MAPSTATS_open_out[0],
                   MAPSTATS_close_in[0],
@@ -469,7 +469,7 @@ void MAPSTATS_Flush(unsigned x,bool dump)
     case MAPSTATS__MIN:
       {
         smsc::logger::Logger* log = MAPSTATS_GetLoggerMin();
-        log->info("op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d, rcv %d",
+        smsc_log_info(log, "op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d, rcv %d",
                   MAPSTATS_open_in[1],
                   MAPSTATS_open_out[1],
                   MAPSTATS_close_in[1],
@@ -482,7 +482,7 @@ void MAPSTATS_Flush(unsigned x,bool dump)
     case MAPSTATS__HOUR:
       {
         smsc::logger::Logger* log = MAPSTATS_GetLoggerHour();
-        log->info("op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d, rcv %d",
+        smsc_log_info(log, "op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d, rcv %d",
                   MAPSTATS_open_in[2],
                   MAPSTATS_open_out[2],
                   MAPSTATS_close_in[2],
@@ -564,8 +564,8 @@ void MAPSTATS_Update(MAPSTATS stats)
 
 void MAPSTATS_DumpDialog(MapDialog* dlg)
 {
-  static smsc::logger::Logger* logger = new smsc::logger::Logger(smsc::logger::Logger::getInstance("map.stat.dlgdump"));
-  logger->info("dlg/map/smsc 0x%x/0x%x/0x%x(%s) state: %d, %ld sec, {%s->%s}",
+  static smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("map.stat.dlgdump");
+  smsc_log_info(logger, "dlg/map/smsc 0x%x/0x%x/0x%x(%s) state: %d, %ld sec, {%s->%s}",
                dlg,
                dlg->dialogid_map,
                dlg->dialogid_smsc,

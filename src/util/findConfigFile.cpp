@@ -13,19 +13,21 @@ bool file_exist(const char * const filename)
   return stat(filename, &buf) == 0;
 }
 
-char get_filename_result[128];
+char get_filename_result[1024];
+const size_t filename_result_maxlen = sizeof(get_filename_result)/sizeof(get_filename_result[0]);
 
 const char * const findConfigFile(const char * const file_to_find)
-  throw (smsc::admin::AdminException)
+	throw (Exception)
 {
   if (file_exist(file_to_find))
   {
+    if (strlen(file_to_find)+1 > filename_result_maxlen)
+      throw smsc::util::Exception("Internal error in findConfigFile: insufficient internal buffer for result filename");
     strcpy(get_filename_result, file_to_find);
     return get_filename_result;
   }
   else
   {
-    //char buf[strlen(file_to_find)+8+1];
     TmpBuf<char,1024> buf(strlen(file_to_find)+8+1);
     strcpy(buf, "../conf/");
     strcat(buf, file_to_find);
@@ -50,7 +52,7 @@ const char * const findConfigFile(const char * const file_to_find)
   //char message[strlen(file_to_find) + 64];
   TmpBuf<char,1024> message(strlen(file_to_find) + 64);
   sprintf(message, "File \"%s\" not found", file_to_find);
-  throw smsc::admin::AdminException(message);
+  throw smsc::util::Exception(message);
 }
 
 }

@@ -145,10 +145,10 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
               {
                 record->recdata.smppSme.mode = MODE_TRX;
               } else {
-                logger.warn("unknown mode value \"%s\"", value.get());
+                smsc_log_warn(logger, "unknown mode value \"%s\"", value.get());
               }
             } else {
-              logger.warn("unknown param name \"%s\"", name.get());
+              smsc_log_warn(logger, "unknown param name \"%s\"", name.get());
             }
           }
         }
@@ -165,7 +165,7 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
       else if (strcmp(type.get(), "ss7"))
       {
         record->rectype = SS7_SME;
-        logger.warn("record type SS7_SME is not yet implemented. (UID = \"%s\"", record->smeUid);
+        smsc_log_warn(logger, "record type SS7_SME is not yet implemented. (UID = \"%s\"", record->smeUid);
         /*DOM_NodeList childs = node.getChildNodes();
         for (int j=0; j<childs.getLength(); j++)
         {
@@ -186,7 +186,7 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
       }
       else
       {
-        logger.warn("Unknown record type \"%s\", record skipped", type.get());
+        smsc_log_warn(logger, "Unknown record type \"%s\", record skipped", type.get());
         delete record;
         record = 0;
         continue;
@@ -244,12 +244,12 @@ SmeManConfig::status SmeManConfig::store(std::ostream &out)
         out << "  <smerecord type=\"ss7\" uid=\"" << rec->smeUid << "\">" << std::endl;
         out << "    not yet implemented" << std::endl;
         out << "  </smerecord>" << std::endl;
-        logger.warn("Storing SS7 SME records not yet implemented. (UID = \"%s\")", rec->smeUid);
+        smsc_log_warn(logger, "Storing SS7 SME records not yet implemented. (UID = \"%s\")", rec->smeUid);
       }
     }
     out << "</records>" << std::endl;
   } catch (...) {
-    logger.error("Some errors on SME records storing.");
+    smsc_log_error(logger, "Some errors on SME records storing.");
     return fail;
   }
   return success;

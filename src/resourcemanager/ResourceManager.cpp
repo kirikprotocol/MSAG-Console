@@ -71,7 +71,7 @@ void ResourceManager::init(const char * const localesString, const char * const 
 typedef std::list<std::string> _stringlist;
 void ResourceManager::init(const _stringlist & localeNames, const std::string & defaultLocaleName) throw()
 {
-  smsc::logger::Logger logger(smsc::logger::Logger::getInstance("smsc.resourcemanager.ResourceManager"));
+  smsc::logger::Logger *logger = smsc::logger::Logger::getInstance("smsc.resourcemanager.ResourceManager");
   defaultLocale = defaultLocaleName;
   instance.reset(new ResourceManager);
   bool isDefaultLocaleFound = false;
@@ -80,7 +80,7 @@ void ResourceManager::init(const _stringlist & localeNames, const std::string & 
     const std::string & name = *i;
     if (instance->locales.find(name) == instance->locales.end())
     {
-      logger.error("Resource file for locale \"%s\" not found.", name.c_str());
+      smsc_log_error(logger, "Resource file for locale \"%s\" not found.", name.c_str());
       continue;
     }
     isDefaultLocaleFound |= (name == defaultLocaleName);
@@ -88,7 +88,7 @@ void ResourceManager::init(const _stringlist & localeNames, const std::string & 
 
   if (!isDefaultLocaleFound)
   {
-    logger.error("Default locale \"%s\" not found in locales.", defaultLocaleName.c_str());
+    smsc_log_error(logger, "Default locale \"%s\" not found in locales.", defaultLocaleName.c_str());
   }
   instance.get()->validLocales=localeNames;
   __trace2__("ResMgr: this = %p set valid locales %p/%d <- %p/%d", instance.get(), &(instance.get()->validLocales), instance.get()->validLocales.size(), &localeNames, localeNames.size() );
@@ -103,7 +103,7 @@ void ResourceManager::reload(const char * const localesString, const char * cons
 
 ResourceManager::ResourceManager() throw ()
 {
-  smsc::logger::Logger logger(smsc::logger::Logger::getInstance("smsc.resourcemanager.ResourceManager"));
+  smsc::logger::Logger * logger = smsc::logger::Logger::getInstance("smsc.resourcemanager.ResourceManager");
   const char * const prefix = "resources_";
   const char * const suffix = ".xml";
   unsigned int prefixLength = strlen(prefix);
@@ -117,7 +117,7 @@ ResourceManager::ResourceManager() throw ()
     configDir = opendir(dirName = ".");
   if (configDir == 0)
   {
-    logger.error("Config dir not found");
+    smsc_log_error(logger, "Config dir not found");
   }
 
   for (dirent* entry = readdir(configDir); entry != 0; entry = readdir(configDir))

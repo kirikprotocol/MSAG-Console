@@ -197,7 +197,7 @@ extern void loadRoutes(RouteManager* rm,const smsc::util::config::route::RouteCo
 void Smsc::init(const SmscConfigs& cfg)
 {
   smsc::util::regexp::RegExp::InitLocale();
-  smsc::logger::Logger log=smsc::logger::Logger::getInstance("smsc.init");
+  smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.init");
   try{
   InitLicense(*cfg.licconfig);
   tp.preCreateThreads(15);
@@ -218,7 +218,7 @@ void Smsc::init(const SmscConfigs& cfg)
   //smsc::util::config::smeman::SmeManConfig smemancfg;
   //smemancfg.load("sme.xml");
   {
-    log.info( "Registering SMEs" );
+    smsc_log_info(log, "Registering SMEs" );
     smsc::util::config::smeman::SmeManConfig::RecordIterator i=cfg.smemanconfig->getRecordIterator();
     using namespace smsc::util::regexp;
     RegExp re;
@@ -257,7 +257,7 @@ void Smsc::init(const SmscConfigs& cfg)
         si.receiptSchemeName= rec->recdata.smppSme.receiptSchemeName;
         if(si.rangeOfAddress.length() && !re.Compile(si.rangeOfAddress.c_str(),OP_OPTIMIZE|OP_STRICT))
         {
-          log.error("Failed to compile rangeOfAddress for sme %s",si.systemId.c_str());
+          smsc_log_error(log, "Failed to compile rangeOfAddress for sme %s",si.systemId.c_str());
         }
         __trace2__("INIT: addSme %s(to=%d,wa=%s)",si.systemId.c_str(),si.timeout,si.wantAlias?"true":"false");
         //si.hostname=rec->recdata->smppSme.
@@ -274,11 +274,11 @@ void Smsc::init(const SmscConfigs& cfg)
           smeman.addSme(si);
         }catch(...)
         {
-          log.warn("UNABLE TO REGISTER SME:%s",si.systemId.c_str());
+          smsc_log_warn(log, "UNABLE TO REGISTER SME:%s",si.systemId.c_str());
         }
       }
     }
-    log.info( "SME registration done" );
+    smsc_log_info(log, "SME registration done" );
   }
   // initialize aliases
   /*{
@@ -307,9 +307,9 @@ void Smsc::init(const SmscConfigs& cfg)
   }*/
 
   reloadAliases(cfg);
-  log.info( "Aliases loaded" );
+  smsc_log_info(log, "Aliases loaded" );
   reloadRoutes(cfg);
-  log.info( "Routes loaded" );
+  smsc_log_info(log, "Routes loaded" );
 
   /*auto_ptr<RouteManager> router(new RouteManager());
 
@@ -356,17 +356,17 @@ void Smsc::init(const SmscConfigs& cfg)
 
   smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance(),0);
   store=smsc::store::StoreManager::getMessageStore();
-  log.info( "Initializing scheduler" );
+  smsc_log_info(log, "Initializing scheduler" );
   scheduler->Init(store,this);
 
   smeman.registerInternallSmeProxy("scheduler",scheduler);
 
   //tp.startTask(scheduler);
 
-  log.info( "Scheduler initialized" );
-  log.info( "Initializing MR cache" );
+  smsc_log_info(log, "Scheduler initialized" );
+  smsc_log_info(log, "Initializing MR cache" );
   mrCache.assignStore(store);
-  log.info( "MR cache inited" );
+  smsc_log_info(log, "MR cache inited" );
 
   {
     using smsc::util::config::CStrSet;
@@ -383,7 +383,7 @@ void Smsc::init(const SmscConfigs& cfg)
   }
 
   {
-    log.info( "Starting statemachines" );
+    smsc_log_info(log, "Starting statemachines" );
     int cnt=cfg.cfgman->getInt("core.state_machines_count");
     time_t maxValidTime=cfg.cfgman->getInt("sms.max_valid_time");
     for(int i=0;i<cnt;i++)
@@ -399,7 +399,7 @@ void Smsc::init(const SmscConfigs& cfg)
       );
       tp.startTask(m);
     }
-    log.info( "Statemachines started" );
+    smsc_log_info(log, "Statemachines started" );
   }
 
   RescheduleCalculator::InitDefault(cfg.cfgman->getString("core.reschedule_table"));
@@ -437,7 +437,7 @@ void Smsc::init(const SmscConfigs& cfg)
       remove("stats.txt");
     }
     tp.startTask(sm);
-    log.info( "Speedmonitor started" );
+    smsc_log_info(log, "Speedmonitor started" );
   }
   {
     using namespace smsc::db;
@@ -455,22 +455,22 @@ void Smsc::init(const SmscConfigs& cfg)
         new ConfigView(*cfg.cfgman,"DataSource");
 
     dataSource->init(config);
-    log.info( "Datasource configured" );
+    smsc_log_info(log, "Datasource configured" );
   }
   statMan=new smsc::stat::StatisticsManager(*dataSource);
   tp2.startTask(statMan);
-  log.info( "Statistics manager started" );
+  smsc_log_info(log, "Statistics manager started" );
 
   distlstman=new DistrListManager(*dataSource,*cfg.cfgman);
 
   distlstsme=new DistrListProcess(distlstman);
   tp.startTask(distlstsme);
-  log.info( "Distribution list processor started" );
+  smsc_log_info(log, "Distribution list processor started" );
 
   smeman.registerInternallSmeProxy("DSTRLST",distlstsme);
 
   smsc::mscman::MscManager::startup(*dataSource,*cfg.cfgman);
-  log.info( "MSC manager started" );
+  smsc_log_info(log, "MSC manager started" );
 
   /*
   smsc::resourcemanager::ResourceManager::init
@@ -479,9 +479,9 @@ void Smsc::init(const SmscConfigs& cfg)
     cfg.cfgman->getString("core.default_locale")
   );
   */
-  log.info( "Resource manager configured" );
+  smsc_log_info(log, "Resource manager configured" );
 
-  log.info( "Starting profiler" );
+  smsc_log_info(log, "Starting profiler" );
   {
     char *rep=cfg.cfgman->getString("profiler.defaultReport");
     char *dc=cfg.cfgman->getString("profiler.defaultDataCoding");
@@ -503,7 +503,7 @@ void Smsc::init(const SmscConfigs& cfg)
       defProfile.codepage=profiler::ProfileCharsetOptions::Ucs2;
     else
     {
-      log.warn("Profiler:Unrecognized default data coding");
+      smsc_log_warn(log, "Profiler:Unrecognized default data coding");
     }
     if(!strcmp(rep,"NONE"))
       defProfile.reportoptions=profiler::ProfileReportOptions::ReportNone;
@@ -511,7 +511,7 @@ void Smsc::init(const SmscConfigs& cfg)
       defProfile.reportoptions=profiler::ProfileReportOptions::ReportFull;
     else
     {
-      log.warn("Profiler:Unrecognized default report options");
+      smsc_log_warn(log, "Profiler:Unrecognized default report options");
     }
     profiler=new smsc::profiler::Profiler(defProfile,
                &smeman,
@@ -531,12 +531,12 @@ void Smsc::init(const SmscConfigs& cfg)
     }
     delete params;
   }
-  log.info( "Profiler configured" );
+  smsc_log_info(log, "Profiler configured" );
   profiler->loadFromDB(dataSource);
-  log.info( "Profiler data loaded" );
+  smsc_log_info(log, "Profiler data loaded" );
 
   tp2.startTask(profiler);
-  log.info( "Profiler started" );
+  smsc_log_info(log, "Profiler started" );
 
   try{
     smeman.registerInternallSmeProxy(
@@ -544,7 +544,7 @@ void Smsc::init(const SmscConfigs& cfg)
       profiler);
   }catch(...)
   {
-    log.warn("Failed to register profiler");
+    smsc_log_warn(log, "Failed to register profiler");
     __warning__("Failed to register profiler Sme");
   }
 
@@ -562,10 +562,10 @@ void Smsc::init(const SmscConfigs& cfg)
       smeman.registerInternallSmeProxy(
         cfg.cfgman->getString("abonentinfo.systemId"),
         abonentInfo);
-      log.info( "Abonent info started" );
+      smsc_log_info(log, "Abonent info started" );
     }catch(exception& e)
     {
-      log.warn("Failed to register abonentinfo");
+      smsc_log_warn(log, "Failed to register abonentinfo");
       __trace2__("Failed to register abonentinfo Sme:%s",e.what());
       __warning__("Failed to register abonentinfo Sme");
     }
@@ -580,10 +580,10 @@ void Smsc::init(const SmscConfigs& cfg)
     smeman.registerInternallSmeProxy(
       cfg.cfgman->getString("core.systemId"),
       smscsme);
-    log.info( "SMSC sme started" );
+    smsc_log_info(log, "SMSC sme started" );
   }catch(exception& e)
   {
-    log.warn("Failed to register smscsme");
+    smsc_log_warn(log, "Failed to register smscsme");
     __trace2__("Failed to register smscsme:%s",e.what());
     __warning__("Failed to register smscsme");
   }
@@ -591,11 +591,11 @@ void Smsc::init(const SmscConfigs& cfg)
 
   cancelAgent=new CancelAgent(eventqueue,store);
   tp.startTask(cancelAgent);
-  log.info( "Cancel agent started" );
+  smsc_log_info(log, "Cancel agent started" );
 
   alertAgent=new AlertAgent(this,store);
   tp.startTask(alertAgent);
-  log.info( "Alert agent started" );
+  smsc_log_info(log, "Alert agent started" );
 
 
   smscHost=cfg.cfgman->getString("smpp.host");
@@ -604,7 +604,7 @@ void Smsc::init(const SmscConfigs& cfg)
   ssockman.setInactivityTime(cfg.cfgman->getInt("smpp.inactivityTime"));
   ssockman.setInactivityTimeOut(cfg.cfgman->getInt("smpp.inactivityTimeOut"));
 
-  log.info( "MR cache loaded" );
+  smsc_log_info(log, "MR cache loaded" );
 
   {
     performance::PerformanceServer *perfSrv=new performance::PerformanceServer
@@ -614,7 +614,7 @@ void Smsc::init(const SmscConfigs& cfg)
       &perfDataDisp
     );
     tp2.startTask(perfSrv);
-    log.info( "Performance server started" );
+    smsc_log_info(log, "Performance server started" );
   }
 
   {
@@ -640,7 +640,7 @@ void Smsc::init(const SmscConfigs& cfg)
     tccfg.maxSmsPerSecond=cfg.cfgman->getInt("trafficControl.maxSmsPerSecond");
     if(tccfg.maxSmsPerSecond>license.maxsms)
     {
-      log.warn("maxSmsPerSecond in configuration is greater than license limit, adjusting\n");
+      smsc_log_warn(log, "maxSmsPerSecond in configuration is greater than license limit, adjusting\n");
       tccfg.maxSmsPerSecond=license.maxsms;
     }
     tccfg.shapeTimeFrame=cfg.cfgman->getInt("trafficControl.shapeTimeFrame");
@@ -691,19 +691,19 @@ void Smsc::init(const SmscConfigs& cfg)
     mergeConcatTimeout=cfg.cfgman->getInt("core.mergeTimeout");
   }catch(...)
   {
-    log.warn("core.mergeTimeout not found, using default(%d)",mergeConcatTimeout);
+    smsc_log_warn(log, "core.mergeTimeout not found, using default(%d)",mergeConcatTimeout);
   }
 
-  log.info( "SMSC init complete" );
+  smsc_log_info(log, "SMSC init complete" );
   }catch(exception& e)
   {
     __trace2__("Smsc::init exception:%s",e.what());
-    log.warn("Smsc::init exception:%s",e.what());
+    smsc_log_warn(log, "Smsc::init exception:%s",e.what());
     throw;
   }catch(...)
   {
     __trace__("Smsc::init exception:unknown");
-    log.warn("Smsc::init exception:unknown");
+    smsc_log_warn(log, "Smsc::init exception:unknown");
     throw;
   }
   __trace__("Smsc::init completed");
@@ -712,7 +712,7 @@ void Smsc::init(const SmscConfigs& cfg)
 
 void Smsc::run()
 {
-  smsc::logger::Logger log=smsc::logger::Logger::getInstance("smsc.run");
+  smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.run");
   //smsc::logger::Logger::getInstance("sms.snmp.alarm").debug("sample alarm");
 
   __trace__("Smsc::run");
@@ -787,12 +787,12 @@ void Smsc::run()
   {
 
     __trace2__("Smsc::run exception:(%s)%s",typeid(e).name(),e.what());
-    log.warn("Smsc::run exception:%s",e.what());
+    smsc_log_warn(log, "Smsc::run exception:%s",e.what());
     throw;
   }catch(...)
   {
     __trace__("Smsc::run exception:unknown");
-    log.warn("Smsc::run exception:unknown");
+    smsc_log_warn(log, "Smsc::run exception:unknown");
     throw;
   }
   __trace__("Smsc::run completed");

@@ -36,7 +36,7 @@ void ConnectionPool::loadMaxSize(Manager& config)
             size > SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE_LIMIT)
         {
             size = SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE;
-            log.warn("Maximum ConnectionPool size is incorrect "
+            smsc_log_warn(log, "Maximum ConnectionPool size is incorrect "
                      "(should be between 1 and %u) ! "
                      "Config parameter: <MessageStore.Connections.max> "
                      "Using default: %u",
@@ -47,7 +47,7 @@ void ConnectionPool::loadMaxSize(Manager& config)
     catch (ConfigException& exc) 
     {
         size = SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE;
-        log.warn("Maximum ConnectionPool size wasn't specified ! "
+        smsc_log_warn(log, "Maximum ConnectionPool size wasn't specified ! "
                  "Config parameter: <MessageStore.Connections.max> "
                  "Using default: %u",
                  SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE);
@@ -65,7 +65,7 @@ void ConnectionPool::loadInitSize(Manager& config)
         if (count > SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE_LIMIT)
         {
             count = SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE;
-            log.warn("Init ConnectionPool size is incorrect "
+            smsc_log_warn(log, "Init ConnectionPool size is incorrect "
                      "(should be between 0 and %u) ! "
                      "Config parameter: <MessageStore.Connections.init> "
                      "Using default: %u",
@@ -76,7 +76,7 @@ void ConnectionPool::loadInitSize(Manager& config)
     catch (ConfigException& exc) 
     {
         count = SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE;
-        log.warn("Init ConnectionPool size wasn't specified ! "
+        smsc_log_warn(log, "Init ConnectionPool size wasn't specified ! "
                  "Config parameter: <MessageStore.Connections.init> "
                  "Using default: %d",
                  SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE);
@@ -94,7 +94,7 @@ void ConnectionPool::loadDBInstance(Manager& config)
     } 
     catch (ConfigException& exc) 
     {
-        log.error("DB instance name wasn't specified ! "
+        smsc_log_error(log, "DB instance name wasn't specified ! "
                   "Config parameter: <MessageStore.Storage.dbInstance>");
         throw;
     }
@@ -111,7 +111,7 @@ void ConnectionPool::loadDBUserName(Manager& config)
     } 
     catch (ConfigException& exc) 
     {
-        log.error("DB user name wasn't specified ! "
+        smsc_log_error(log, "DB user name wasn't specified ! "
                   "Config parameter: <MessageStore.Storage.dbUserName>");
         throw;
     }
@@ -128,7 +128,7 @@ void ConnectionPool::loadDBUserPassword(Manager& config)
     } 
     catch (ConfigException& exc) 
     {
-        log.error("DB user password wasn't specified ! "
+        smsc_log_error(log, "DB user password wasn't specified ! "
                   "Config parameter: <MessageStore.Storage.dbUserPassword>");
         throw;
     }
@@ -149,7 +149,7 @@ ConnectionPool::ConnectionPool(Manager& config) throw(ConfigException)
     if (size < count) 
     {
         size = count;
-        log.warn("Specified size of ConnectionPool less than it's init size. "
+        smsc_log_warn(log, "Specified size of ConnectionPool less than it's init size. "
                  "Using maximum value defined:  %d", size);
     }
 
@@ -285,7 +285,7 @@ void ConnectionPool::setSize(unsigned new_size)
     if (new_size > SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE_LIMIT)
     {
         new_size = SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE_LIMIT;
-        log.warn("Attempt to change ConnectionPool size "
+        smsc_log_warn(log, "Attempt to change ConnectionPool size "
                  "by more than allowed value "
                  "Using maximum possible : %u",
                  SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE_LIMIT);
@@ -353,7 +353,7 @@ void Connection::connect()
     throw(ConnectionFailedException) 
 {
     if (isConnected && isDead) {
-        log.info("DB connection recreating ...");
+        smsc_log_info(log, "DB connection recreating ...");
         disconnect();
         //usleep(100000); //100 msec
         sleepOnReconnect.Wait(100);
@@ -495,7 +495,7 @@ void Connection::check(sword status)
     isDead = true;
 
     StorageException exc((const char *)errbuf, (int)errcode, (int)status);
-    log.error("Storage Exception : %s", exc.what());
+    smsc_log_error(log, "Storage Exception : %s", exc.what());
     throw exc;
 }
 

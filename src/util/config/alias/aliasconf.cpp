@@ -96,7 +96,7 @@ AliasConfig::status AliasConfig::load(const char * const filename)
         }
         catch (runtime_error &e)
         {
-          logger.error("exception on reading address \"%s\", nested: %s", dta.get(), e.what());
+          smsc_log_error(logger, "exception on reading address \"%s\", nested: %s", dta.get(), e.what());
           continue;
         }
         //continue;
@@ -120,7 +120,7 @@ AliasConfig::status AliasConfig::load(const char * const filename)
         }
         catch (runtime_error &e)
         {
-          logger.error("exception on reading alias \"%s\", nested: %s", dta.get(), e.what());
+          smsc_log_error(logger, "exception on reading alias \"%s\", nested: %s", dta.get(), e.what());
           continue;
         }
         //continue;
@@ -129,7 +129,7 @@ AliasConfig::status AliasConfig::load(const char * const filename)
       records.push_back(record.release());
     }
   } catch (ParseException &e) {
-    logger.warn("DomException:%s",e.what());
+    smsc_log_warn(logger, "DomException:%s",e.what());
     return fail;
   }
   return success;
@@ -173,7 +173,7 @@ AliasConfig::status AliasConfig::store(const char * const filename)
     }
     out << "</aliases>" << std::endl;
   } catch (...) {
-    logger.error("Some errors on Aliases records storing.");
+    smsc_log_error(logger, "Some errors on Aliases records storing.");
     return fail;
   }
   return success;

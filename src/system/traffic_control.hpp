@@ -44,7 +44,7 @@ public:
     totalCounter(cfg.shapeTimeFrame,10),
     totalCounterLong(cfg.smoothTimeFrame,10)
   {
-    log=new smsc::logger::Logger(smsc::logger::Logger::getInstance("smsc.tc"));
+    log = smsc::logger::Logger::getInstance("smsc.tc");
   }
 
 

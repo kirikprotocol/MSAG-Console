@@ -46,7 +46,7 @@ public:
 
 protected:
   DOMTreeReader reader;
-  smsc::logger::Logger logger;
+  smsc::logger::Logger *logger;
   RoutePVector routes;
   SubjectPHash subjects;
   std::auto_ptr<char> config_filename;

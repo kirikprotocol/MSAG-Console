@@ -80,7 +80,7 @@ int main(int argc,char* argv[])
     {
       fprintf(stderr, "WARNING: parameter \"logger.initFile\" not found in config - logger initialized by default\n");
     }
-    smsc::logger::Logger logger = Logger::getInstance("smscmain");
+    smsc::logger::Logger *logger = Logger::getInstance("smscmain");
 
     Hash<string> lic;
     {
@@ -88,27 +88,27 @@ int main(int argc,char* argv[])
       string sig=findConfigFile("license.sig");
       if(!CheckLicense(lf.c_str(),sig.c_str(),lic))
       {
-        logger.error("Invalid license\n");
+        smsc_log_error(logger, "Invalid license\n");
         return -1;
       }
     }
 
     cfgs.licconfig=&lic;
-    logger.info( "Starting up %s", getStrVersion());
+    smsc_log_info(logger,  "Starting up %s", getStrVersion());
     smsc::resourcemanager::ResourceManager::init(cfgs.cfgman->getString("core.locales"), cfgs.cfgman->getString("core.default_locale"));
-    logger.info( "Locale resources loaded" );
+    smsc_log_info(logger,  "Locale resources loaded" );
     smsc::util::config::smeman::SmeManConfig smemancfg;
     smemancfg.load(findConfigFile("sme.xml"));
     cfgs.smemanconfig=&smemancfg;
-    logger.info( "SME configuration loaded" );
+    smsc_log_info(logger,  "SME configuration loaded" );
     smsc::util::config::alias::AliasConfig aliascfg;
     aliascfg.load(findConfigFile("aliases.xml"));
     cfgs.aliasconfig=&aliascfg;
-    logger.info( "Alias configuration loaded" );
+    smsc_log_info(logger,  "Alias configuration loaded" );
     smsc::util::config::route::RouteConfig rc;
     rc.load(findConfigFile("routes.xml"));
     cfgs.routesconfig=&rc;
-    logger.info( "Route configuration loaded" );
+    smsc_log_info(logger,  "Route configuration loaded" );
 
     in_port_t servicePort = 0;
     if (argc > 1)

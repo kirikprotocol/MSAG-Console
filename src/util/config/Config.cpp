@@ -71,8 +71,7 @@ void Config::processNode(const DOM_Element &element,
         }
         else
         {
-          smsc::logger::Logger logger(Logger::getInstance("smsc.util.config.Config"));
-          logger.warn("Unknown node \"%s\" in section \"%s\"", nodeName.get(), prefix);
+          smsc_log_warn(Logger::getInstance("smsc.util.config.Config"), "Unknown node \"%s\" in section \"%s\"", nodeName.get(), prefix);
         }
       }
     }
@@ -111,15 +110,13 @@ void Config::processParamNode(const DOM_Element &element,
     }
     else
     {
-      smsc::logger::Logger logger(Logger::getInstance("smsc.util.config.Config"));
-      logger.warn("Unrecognized boolean value \"%s\" for parameter \"%s\". Setted to FALSE.", value.get(), name);
+      smsc_log_warn(Logger::getInstance("smsc.util.config.Config"), "Unrecognized boolean value \"%s\" for parameter \"%s\". Setted to FALSE.", value.get(), name);
       setBool(name, false);
     }
   }
   else
   {
-    smsc::logger::Logger logger(Logger::getInstance("smsc.util.config.Config"));
-    logger.warn("Unrecognized parameter type \"%s\" for parameter \"%s\"", type, name);
+    smsc_log_warn(Logger::getInstance("smsc.util.config.Config"), "Unrecognized parameter type \"%s\" for parameter \"%s\"", type, name);
   }
 }
 

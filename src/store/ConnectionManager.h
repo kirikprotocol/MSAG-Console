@@ -67,7 +67,7 @@ namespace smsc { namespace store
 
     private:
         
-        smsc::logger::Logger log;
+        smsc::logger::Logger *log;
         
         static Mutex    connectLock;
 
@@ -225,7 +225,7 @@ namespace smsc { namespace store
     {
     private:
 
-        smsc::logger::Logger log;
+        smsc::logger::Logger *log;
         
         EventMonitor    monitor;
         ConnectionQueue *head,*tail;

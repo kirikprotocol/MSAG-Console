@@ -71,7 +71,7 @@ public:
   RecordIterator getRecordIterator() const;
 protected:
   DOMTreeReader reader;
-  smsc::logger::Logger logger;
+  smsc::logger::Logger *logger;
   SRVector records;
   std::auto_ptr<char> config_filename;
 private:

@@ -205,23 +205,23 @@ void StatisticsManager::updateScheduled(const char* dstSmeId, const char* routeI
 
 int StatisticsManager::Execute()
 {
-    logger.debug("Execute() started (%d)", isStopping);
+    smsc_log_debug(logger, "Execute() started (%d)", isStopping);
     isStarted = true; bExternalFlush = false;
     while (!isStopping)
     {
         int toSleep = calculateToSleep();
-        logger.debug("Execute() >> Start wait %d", toSleep);
+        smsc_log_debug(logger, "Execute() >> Start wait %d", toSleep);
         awakeEvent.Wait(toSleep); // Wait for next hour begins ...
-        logger.debug("Execute() >> End wait");
+        smsc_log_debug(logger, "Execute() >> End wait");
 
         flushCounters(switchCounters());
         bExternalFlush = false;
         doneEvent.Signal();
-        logger.debug("Execute() >> Flushed");
+        smsc_log_debug(logger, "Execute() >> Flushed");
     }
     isStarted = false;
     exitEvent.Signal();
-    logger.debug("Execute() exited");
+    smsc_log_debug(logger, "Execute() exited");
     return 0;
 }
 
@@ -229,16 +229,16 @@ void StatisticsManager::stop()
 {
     MutexGuard guard(stopLock);
 
-    logger.debug("stop() called, started=%d", isStarted);
+    smsc_log_debug(logger, "stop() called, started=%d", isStarted);
     ThreadedTask::stop();
     if (isStarted)
     {
         bExternalFlush = true;
         awakeEvent.Signal();
-        logger.debug("stop() waiting finish ...");
+        smsc_log_debug(logger, "stop() waiting finish ...");
         exitEvent.Wait();
     }
-    logger.debug("stop() exited");
+    smsc_log_debug(logger, "stop() exited");
 }
 
 void StatisticsManager::flushStatistics()
@@ -301,7 +301,7 @@ void StatisticsManager::flushCounters(short index)
 {
     uint32_t period = calculatePeriod();
 
-    logger.debug("Flushing statistics for period: %d / %d", period, time(0));
+    smsc_log_debug(logger, "Flushing statistics for period: %d / %d", period, time(0));
 
     Connection* connection = 0;
 
@@ -414,7 +414,7 @@ void StatisticsManager::flushCounters(short index)
     catch (Exception& exc)
     {
         if (connection) connection->rollback();
-        logger.error(exc.what());
+        smsc_log_error(logger, exc.what());
     }
 
     if (insertStatSmeStmt)   delete insertStatSmeStmt;
