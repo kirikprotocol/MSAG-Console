@@ -1366,10 +1366,22 @@ static void PauseOnImsiReq(MapDialog* map)
       throw runtime_error(
         FormatText("MAP::%s has no SMS",__FUNCTION__));
     if ( !dialog->isUSSD )
+      __trace2__("MAP::%s make MAP mkMapAddress",__FUNCTION__);
       mkMapAddress( &dialog->m_msAddr, map->sms->getOriginatingAddress().value, map->sms->getOriginatingAddress().length );
     else {
+      __trace2__("MAP::%s using preparsed address",__FUNCTION__);
       if (!dialog->hasIndAddress )
         throw runtime_error("MAP::%s MAP.did:{0x%x} has no originating address");
+#if !defined DISABLE_TRACING    
+        {
+          auto_ptr<char> b(new char[sizeof(E96MAP_ADDRESS_T)*3]);
+          memset(b.get(),0,sizeof(E96MAP_ADDRESS_T)*3+1);
+          for ( int i=0,k=0; i < sizeof(E96MAP_ADDRESS_T); ++i ) {
+            k += sprintf(b.get()+k,"%02x ",((char*)dialog->m_msAddr)+i);
+          }
+          __trace2__("MAP::%s ARRDDRESS: %s",__FUNCTION__,b.get());
+        }
+#endif
     }
     mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
     mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
