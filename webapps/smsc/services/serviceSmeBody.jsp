@@ -42,7 +42,7 @@
 </tr>
 <tr class=row<%=(rowN++)&1%>>
 	<th>interface version</th>
-	<td><input class=txt type="text" name="interfaceVersion" value="3.4"></td>
+	<td><input class=txt type="text" name="interfaceVersion" value="<%=bean.getInterfaceVersion()==null||bean.getInterfaceVersion().length()==0?"3.4":bean.getInterfaceVersion()%>"></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
 	<th>range of address</th>
