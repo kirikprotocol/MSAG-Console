@@ -92,4 +92,20 @@ public class SnapBufferReader {
     offset+=sz;
     return s;
   }
+
+  public String readNetworkCFixedString(int maxLen) throws IOException {
+    int terminator = offset;
+    while( buf[terminator]!=0 ) terminator++;
+    String s = new String(buf, offset, terminator-offset);
+    offset+=maxLen;
+    return s;
+  }
+
+  public String readNetworkCFixedString(int maxLen, String charset) throws IOException {
+    int terminator = offset;
+    while( buf[terminator]!=0 ) terminator++;
+    String s = new String(buf, offset, terminator-offset, charset);
+    offset+=maxLen;
+    return s;
+  }
 }

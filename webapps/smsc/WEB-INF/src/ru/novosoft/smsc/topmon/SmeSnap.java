@@ -18,6 +18,8 @@ public class SmeSnap {
   public static final int SP_TEMPERROR = 4;
   public static final int SP_PERMERROR = 5;
 
+         static final int MAX_SME_STR_LEN = 16;
+
   public String smeId;
   public short  speed[] = new short[COUNTERS_NUM];
   public short  avgSpeed[] = new short[COUNTERS_NUM];
@@ -32,7 +34,7 @@ public class SmeSnap {
   }
 
   public void init( SnapBufferReader in ) throws IOException {
-    smeId = in.readNetworkString();
+    smeId = in.readNetworkCFixedString(MAX_SME_STR_LEN);
     for( int i = 0; i < COUNTERS_NUM; i++) {
       speed[i] = in.readNetworkShort();
       avgSpeed[i] = in.readNetworkShort();
