@@ -67,6 +67,13 @@ static const int USSDMSGTOOLONG=1032; // USSD msg can't be concatenated or trunc
 static const int INCOMPLETECONCATMSG=1033; //not all parts of concatenated message received !
 static const int DUPLICATECONCATPART=1034; //duplicate part of concatenated message !
 
+static const int MAP_UR_NO_REASON=1109;
+static const int MAP_USER_REASON_BASE=1110;
+static const int MAP_UR_RESOURCE_LIM_T=1110;
+static const int MAP_UR_RESOURCE_UNAVAIL=1111;
+static const int MAP_UR_APPL_PROC_CANCEL=1112;
+static const int MAP_UR_PROC_ERROR=1113;
+
 static const int MAP_PROVIDER_REASON_BASE=1120;
 static const int MAP_ABNORMAL_DIALOGUE = 1120;
 static const int MAP_PROVIDER_MALFUNCTION = 1121;
@@ -1228,7 +1235,6 @@ static const bool errorStatus[1280] = {
 1,
 1,
 1,
-1, // reserved 32
 1,
 1,
 1,
@@ -1240,16 +1246,17 @@ static const bool errorStatus[1280] = {
 1,
 1,
 1,
+0, // MAP_UR_NO_REASON=1109
+0, // MAP_USER_REASON_BASE=1110, MAP_UR_RESOURCE_LIM_T=1110;
+0, // MAP_UR_RESOURCE_UNAVAIL=1111
+0, // MAP_UR_APPL_PROC_CANCEL=1112
+0, // MAP_UR_PROC_ERROR=1113
 1,
 1,
 1,
 1,
 1,
-1,
-1,
-1,
-1,
-1, // reserved 21
+1, 
 0, // MAP_PROVIDER_REASON_BASE, MAP_ABNORMAL_DIALOGUE = 1120
 0, // MAP_PROVIDER_MALFUNCTION = 1121
 0, // MAP_TRANSACTION_RELEASED = 1122
