@@ -11,7 +11,7 @@ PACKAGEDIR = $(subst .,/,$(PACKAGE))
 #$(warning $(PACKAGEDIR))
 endif
 
-ifdef DEBUG
+ifeq ($(DEBUG),"YES")
 export DEBUG
 endif
 
