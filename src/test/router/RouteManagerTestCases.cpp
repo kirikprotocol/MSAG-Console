@@ -52,7 +52,15 @@ void RouteManagerTestCases::commit()
 	routeMan->commit();
 }
 
-TestCase* RouteManagerTestCases::setupRandomAddressMatch(Address& addr, int num)
+#define __tc_cond__(id1, id2) \
+	if (type == 's') { \
+		__tc__(id1 ".source" id2); \
+	} else if ( type == 'd') { \
+		__tc__(id1 ".dest" id2); \
+	}
+	
+TestCase* RouteManagerTestCases::setupRandomAddressMatch(Address& addr,
+	const char type, int num)
 {
 	__decl_tc__;
 	AddressValue addrVal;
@@ -61,15 +69,15 @@ TestCase* RouteManagerTestCases::setupRandomAddressMatch(Address& addr, int num)
 	switch(num)
 	{
 		case 1: //адрес без знаков подстановки (совпадает)
-			__tc__("addCorrectRoute.matchNoSubstSymbols");
+			__tc_cond__("addCorrectRoute", "MatchNoSubstSymbols");
 			break;
 		case 2: //адрес с одним или всеми '?' в конце
-			__tc__("addCorrectRoute.matchWithQuestionMarks");
+			__tc_cond__("addCorrectRoute", "MatchWithQuestionMarks");
 			memset(addrVal + addrLen - len, '?', len);
 			addr.setValue(addrLen, addrVal);
 			break;
 		case 3: //адрес целиком из '?'
-			__tc__("addCorrectRoute.matchEntirelyQuestionMarks");
+			__tc_cond__("addCorrectRoute", "MatchEntirelyQuestionMarks");
 			memset(addrVal, '?', addrLen);
 			addr.setValue(addrLen, addrVal);
 			break;
@@ -96,10 +104,11 @@ TestCase* RouteManagerTestCases::setupRandomAddressMatch(Address& addr, int num)
 	return tc;
 }
 
-TestCase* RouteManagerTestCases::setupRandomAddressNotMatch(Address& addr, int num)
+TestCase* RouteManagerTestCases::setupRandomAddressNotMatch(Address& addr,
+	const char type, int num)
 {
 	__decl_tc__;
-	__tc__("addCorrectRoute.matchNoSubstSymbols");
+	__tc_cond__("addCorrectRoute", "MatchNoSubstSymbols");
 	AddressValue addrVal;
 	uint8_t addrLen = addr.getValue(addrVal);
 	int len = rand1(addrLen);
@@ -108,7 +117,7 @@ TestCase* RouteManagerTestCases::setupRandomAddressNotMatch(Address& addr, int n
 		case 1: //адрес с лишним '?'
 			if (addrLen < MAX_ADDRESS_VALUE_LENGTH)
 			{
-				__tc__("addCorrectRoute.notMatchValueLength");
+				__tc_cond__("addCorrectRoute", "NotMatchValueLength");
 				memset(addrVal + addrLen - len, '?', len + 1);
 				addr.setValue(addrLen + 1, addrVal);
 				break;
@@ -117,23 +126,23 @@ TestCase* RouteManagerTestCases::setupRandomAddressNotMatch(Address& addr, int n
 		case 2: //адрес с недостающим '?'
 			if (addrLen > 1)
 			{
-				__tc__("addCorrectRoute.notMatchValueLength");
+				__tc_cond__("addCorrectRoute", "NotMatchValueLength");
 				memset(addrVal + addrLen - len, '?', len - 1);
 				addr.setValue(addrLen - 1, addrVal);
 				break;
 			}
 			//break;
 		case 3: //отличающийся адрес
-			__tc__("addCorrectRoute.notMatchValue");
+			__tc_cond__("addCorrectRoute", "NotMatchValue");
 			addrVal[len - 1] = '@';
 			addr.setValue(addrLen, addrVal);
 			break;
 		case 4: //адрес с несовпадающим typeOfNumber
-			__tc__("addCorrectRoute.notMatchType");
+			__tc_cond__("addCorrectRoute", "NotMatchType");
 			addr.setTypeOfNumber(addr.getTypeOfNumber() + 1);
 			break;
 		case 5: //адрес с несовпадающим numberingPlan
-			__tc__("addCorrectRoute.notMatchPlan");
+			__tc_cond__("addCorrectRoute", "NotMatchPlan");
 			addr.setNumberingPlan(addr.getNumberingPlan() + 1);
 			break;
 		default:
@@ -174,8 +183,8 @@ void RouteManagerTestCases::addCorrectRouteMatch(RouteInfo* route,
 		try
 		{
 			RouteUtil::setupRandomCorrectRouteInfo(route);
-			tc1 = setupRandomAddressMatch(route->source, s.value1(numMatch1));
-			tc2 = setupRandomAddressMatch(route->dest, s.value2(numMatch1));
+			tc1 = setupRandomAddressMatch(route->source, 's', s.value1(numMatch1));
+			tc2 = setupRandomAddressMatch(route->dest, 'd', s.value2(numMatch1));
 			char tcId[64];
 			sprintf(tcId, "addCorrectRouteMatch(%d,%d)",
 				s.value1(numMatch1), s.value2(numMatch1));
@@ -205,9 +214,9 @@ void RouteManagerTestCases::addCorrectRouteNotMatch(RouteInfo* route,
 			switch (s.value3(numMatch, numNotMatch))
 			{
 				case 1: //отличается origAddr
-					tc1 = setupRandomAddressNotMatch(route->source,
+					tc1 = setupRandomAddressNotMatch(route->source, 's',
 						s.value1(numNotMatch, numMatch));
-					tc2 = setupRandomAddressMatch(route->dest,
+					tc2 = setupRandomAddressMatch(route->dest, 'd',
 						s.value2(numNotMatch, numMatch));
 					sprintf(tcId, "addCorrectRouteNotMatch(%d,%d,%d)",
 						s.value1(numNotMatch, numMatch),
@@ -215,9 +224,9 @@ void RouteManagerTestCases::addCorrectRouteNotMatch(RouteInfo* route,
 						s.value3(numMatch, numNotMatch));
 					break;
 				case 2: //отличается destAddr
-					tc1 = setupRandomAddressMatch(route->source,
+					tc1 = setupRandomAddressMatch(route->source, 's',
 						s.value1(numMatch, numNotMatch));
-					tc2 = setupRandomAddressNotMatch(route->dest,
+					tc2 = setupRandomAddressNotMatch(route->dest, 'd',
 						s.value2(numMatch, numNotMatch));
 					sprintf(tcId, "addCorrectRouteNotMatch(%d,%d,%d)",
 						s.value1(numMatch, numNotMatch),

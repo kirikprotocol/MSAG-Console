@@ -87,8 +87,8 @@ private:
 
 	void debugRoute(const char* tc, const RouteInfo* route);
 	void addRoute(const char* tc, int num, const RouteInfo* route, SmeProxy* proxy);
-	TestCase* setupRandomAddressMatch(Address& addr, int num);
-	TestCase* setupRandomAddressNotMatch(Address& addr, int num);
+	TestCase* setupRandomAddressMatch(Address& addr, const char type, int num);
+	TestCase* setupRandomAddressNotMatch(Address& addr, const char type, int num);
 	void printLookupResult(const Address& origAddr, const Address& destAddr,
 		const RouteHolder* routeHolder, bool found, const SmeProxy* proxy);
 };
