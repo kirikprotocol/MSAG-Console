@@ -41,20 +41,24 @@ class DbSmeTestRecord : public PduDataObject
 public:
 	__field__(0, string, Job)
 	__field__(1, int, Id)
-	__field__(2, int, Int16)
-	__field__(3, int, Int32)
-	__field__(4, double, Float)
-	__field__(5, double, Double)
-	__field__(6, DateType, DateType)
-	__field__(7, time_t, Date)
-	__field__(8, string, String)
-	__field__(9, string, QuotedString)
-	__field__(10, string, FromAddr)
+	__field__(2, int, Int8)
+	__field__(3, int, Int16)
+	__field__(4, int, Int32)
+	__field__(5, int, Int64)
+	__field__(6, double, Float)
+	__field__(7, double, Double)
+	__field__(8, double, LongDouble)
+	__field__(9, DateType, DateType)
+	__field__(10, time_t, Date)
+	__field__(11, string, String)
+	__field__(12, string, QuotedString)
+	__field__(13, string, FromAddr)
+	__field__(14, string, ToAddr)
 	DbSmeTestRecord* getDefInput() const { return defInput; }
 	void setDefInput(DbSmeTestRecord* defInput);
 	bool checkDefInput() const { return defInput; }
 
-	DbSmeTestRecord() : mask(11, false), defInput(NULL) {}
+	DbSmeTestRecord() : mask(15, false), defInput(NULL) {}
 	virtual ~DbSmeTestRecord();
 	//Обновляет все поля, кроме Job, Id и DateType
 	void update(const DbSmeTestRecord& rec);
