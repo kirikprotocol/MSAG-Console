@@ -109,9 +109,10 @@ public class SMSCErrors
 			public static final String cantAdd = B + "cantAdd";
 			public static final String cantEdit = B + "cantEdit";
       public static final String cantSave = B + "cantSave";
+      public static final String cantLoad = B + "cantLoad";
+      public static final String cantRestore = B + "cantRestore";
       public static final String LoadAndCheckFailed = B + "loadAndCheckFailed";
       public static final String TraceRouteFailed = B + "TraceRouteFailed";
-      public static final String cantRestore = B + "cantRestore";
 			public static final String nameNotSpecified = B + "nameNotSpecified";
 			public static final String invalidPriority = B + "invalidPriority";
 			public static final String sourcesIsEmpty = B + "sourcesIsEmpty";

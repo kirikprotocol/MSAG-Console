@@ -121,32 +121,30 @@ public class Smsc extends Service
   public synchronized List loadRoutes(RouteSubjectManager routeSubjectManager)
       throws AdminException
 	{
-		routeSubjectManager.test();
-    List result = null;
-    if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
-		{
-			refreshComponents();
-			Object res = call(smsc_component, load_routes_method, Type.Types[Type.StringListType], new HashMap());
-      if (res instanceof List) result = (List)res;
-		}
-    return result;
+		routeSubjectManager.trace();
+    if (getInfo().getStatus() != ServiceInfo.STATUS_RUNNING)
+      throw new AdminException("SMSC is not running.");
+
+    refreshComponents();
+    Object res = call(smsc_component, load_routes_method, Type.Types[Type.StringListType], new HashMap());
+
+    return ((res instanceof List) ? (List)res : null);
 	}
 
   public synchronized List traceRoute(String dstAddress, String srcAddress, String srcSysId)
       throws AdminException
 	{
-		List result = null;
-    if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
-		{
-			refreshComponents();
-      HashMap args = new HashMap();
-      args.put("dstAddress", dstAddress);
-      args.put("srcAddress", srcAddress);
-      args.put("srcSysId", srcSysId);
-			Object res = call(smsc_component, trace_route_method, Type.Types[Type.StringListType], args);
-      if (res instanceof List) result = (List)res;
-		}
-    return result;
+    if (getInfo().getStatus() != ServiceInfo.STATUS_RUNNING)
+      throw new AdminException("SMSC is not running.");
+
+    refreshComponents();
+    HashMap args = new HashMap();
+    args.put("dstAddress", dstAddress);
+    args.put("srcAddress", srcAddress);
+    args.put("srcSysId", srcSysId);
+    Object res = call(smsc_component, trace_route_method, Type.Types[Type.StringListType], args);
+
+    return ((res instanceof List) ? (List)res : null);
 	}
 
   public synchronized void applyRoutes(RouteSubjectManager routeSubjectManager) throws AdminException

@@ -38,13 +38,11 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager
     load();
 	}
 
-	public RouteList getRoutes()
-	{
+	public RouteList getRoutes() {
 		return routes;
 	}
 
-	public SubjectList getSubjects()
-	{
+	public SubjectList getSubjects() {
 		return subjects;
 	}
 
@@ -59,7 +57,14 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager
 		return false;
 	}
 
-  private void copyFile(File source, File destination)
+  synchronized public boolean hasSavedConfiguration()
+  {
+    final File smscConfFolder = WebAppFolders.getSmscConfFolder();
+    File config = new File(smscConfFolder, SMSC_ROUTES_TEMPORAL_CONFIG);
+    return config.exists();
+  }
+
+  /*private void copyFile(File source, File destination)
       throws IOException
   {
     if (destination.exists()) destination.delete();
@@ -71,21 +76,18 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager
       int b = is.read(); if (b == -1) break; os.write(b);
     }
     os.flush(); os.close(); is.close();
-  }
+  }*/
 
-  synchronized public void load() throws AdminException
+  synchronized public void loadFromFile(String fileName) throws AdminException
   {
     try
     {
       final File smscConfFolder = WebAppFolders.getSmscConfFolder();
-      File primaryConfig = new File(smscConfFolder, SMSC_ROUTES_PRIMARY_CONFIG);
-      File temporalConfig = new File(smscConfFolder, SMSC_ROUTES_TEMPORAL_CONFIG);
+      File config = new File(smscConfFolder, fileName);
 
-      Document routesDoc = Utils.parse(new FileReader(primaryConfig));
+      Document routesDoc = Utils.parse(new FileReader(config));
       subjects = new SubjectList(routesDoc.getDocumentElement(), smeManager);
       routes = new RouteList(routesDoc.getDocumentElement(), subjects, smeManager);
-
-      copyFile(primaryConfig, temporalConfig);
     }
     catch (FactoryConfigurationError error)
     {
@@ -132,29 +134,21 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager
     }
   }
 
-  synchronized public void test() throws AdminException {
-    saveToFile(SMSC_ROUTES_TRACEABLE_CONFIG);
-  }
   synchronized public void save() throws AdminException {
     saveToFile(SMSC_ROUTES_TEMPORAL_CONFIG);
   }
+  synchronized public void restore() throws AdminException {
+    loadFromFile(SMSC_ROUTES_TEMPORAL_CONFIG);
+  }
 
-  synchronized public void apply() throws AdminException
-	{
-		save(); // save routes info into temporal file, than copy temporal to primary
-
-    try
-    {
-      final File smscConfFolder = WebAppFolders.getSmscConfFolder();
-      File primaryConfig = new File(smscConfFolder, SMSC_ROUTES_PRIMARY_CONFIG);
-      File temporalConfig = new File(smscConfFolder, SMSC_ROUTES_TEMPORAL_CONFIG);
-
-      copyFile(temporalConfig, primaryConfig);
-    }
-    catch (IOException e)
-    {
-      logger.error("Couldn't perform IO operation", e);
-      throw new AdminException("Couldn't perform IO operation: " + e.getMessage());
-    }
+  synchronized public void apply() throws AdminException {
+    saveToFile(SMSC_ROUTES_PRIMARY_CONFIG);
 	}
+  synchronized public void load() throws AdminException {
+    loadFromFile(SMSC_ROUTES_PRIMARY_CONFIG);
+  }
+
+  synchronized public void trace() throws AdminException {
+    saveToFile(SMSC_ROUTES_TRACEABLE_CONFIG);
+  }
 }

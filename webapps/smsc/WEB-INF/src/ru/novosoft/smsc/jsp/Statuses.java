@@ -10,11 +10,17 @@ public interface Statuses
 	boolean isRoutesChanged();
 	void setRoutesChanged(boolean routesChanged);
 
+  boolean isSubjectsChanged();
+  void setSubjectsChanged(boolean subjectsChanged);
+
   boolean isRoutesSaved();
   void setRoutesSaved(boolean routesSaved);
 
-	boolean isSubjectsChanged();
-	void setSubjectsChanged(boolean subjectsChanged);
+  public boolean isRoutesRestored();
+  public void setRoutesRestored(boolean routesRestored);
+
+  public boolean isRoutesLoaded();
+  public void setRoutesLoaded(boolean routesLoaded);
 
 	boolean isAliasesChanged();
 	void setAliasesChanged(boolean aliasesChanged);

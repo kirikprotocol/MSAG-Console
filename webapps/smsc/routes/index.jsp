@@ -39,15 +39,15 @@ MENU0_SELECTION = "MENU0_ROUTES";
 page_menu_begin(out);
 page_menu_button(out, "mbAdd",  "Add route",  "Add new route");
 page_menu_button(out, "mbDelete", "Delete route(s)", "Delete selected route(s)");
-if (appContext.getStatuses().isRoutesChanged() || appContext.getStatuses().isSubjectsChanged()) {
-  if (!appContext.getStatuses().isRoutesSaved()) {
-    page_menu_button(out, "mbSave", "Save", "Save routing configuration");
-  }
-  page_menu_button(out, "mbRestore", "Restore", "Restore routing configuration");
-}
+if (appContext.getStatuses().isRoutesChanged() || appContext.getStatuses().isSubjectsChanged())
+  if (!appContext.getStatuses().isRoutesRestored())
+    page_menu_button(out, "mbSave", "Save current", "Save current routing configuration");
+if (appContext.getStatuses().isRoutesSaved() && !appContext.getStatuses().isRoutesRestored())
+    page_menu_button(out, "mbRestore", "Load saved", "Load saved routing configuration");
+if (appContext.getStatuses().isRoutesChanged() || appContext.getStatuses().isSubjectsChanged())
+    page_menu_button(out, "mbLoad", "Restore applied", "Restore applied routing configuration");
 page_menu_space(out);
-page_menu_end(out);
-%>
+page_menu_end(out);%>
 <div class=content>
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
 <input type=hidden name=editRouteId>
@@ -126,14 +126,14 @@ String encRouteId = StringEncoderDecoder.encode(routeId);
 page_menu_begin(out);
 page_menu_button(out, "mbAdd",  "Add route",  "Add new route");
 page_menu_button(out, "mbDelete", "Delete route(s)", "Delete selected route(s)");
-if (appContext.getStatuses().isRoutesChanged() || appContext.getStatuses().isSubjectsChanged()) {
-  if (!appContext.getStatuses().isRoutesSaved()) {
-    page_menu_button(out, "mbSave", "Save", "Save routing configuration");
-  }
-  page_menu_button(out, "mbRestore", "Restore", "Restore routing configuration");
-}
+if (appContext.getStatuses().isRoutesChanged() || appContext.getStatuses().isSubjectsChanged())
+  if (!appContext.getStatuses().isRoutesRestored())
+    page_menu_button(out, "mbSave", "Save current", "Save current routing configuration");
+if (appContext.getStatuses().isRoutesSaved() && !appContext.getStatuses().isRoutesRestored())
+    page_menu_button(out, "mbRestore", "Load saved", "Load saved routing configuration");
+if (appContext.getStatuses().isRoutesChanged() || appContext.getStatuses().isSubjectsChanged())
+    page_menu_button(out, "mbLoad", "Restore applied", "Restore applied routing configuration");
 page_menu_space(out);
-page_menu_end(out);
-%>
+page_menu_end(out);%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

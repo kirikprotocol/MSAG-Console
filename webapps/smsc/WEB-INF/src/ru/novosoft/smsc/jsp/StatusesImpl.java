@@ -9,6 +9,8 @@ public class StatusesImpl implements Statuses
 {
 	private boolean routesChanged = false;
   private boolean routesSaved = false;
+  private boolean routesRestored = false;
+  private boolean routesLoaded = false;
 	private boolean subjectsChanged = false;
 	private boolean aliasesChanged = false;
 	private boolean profilesChanged = false;
@@ -17,33 +19,40 @@ public class StatusesImpl implements Statuses
 	private boolean usersChanged = false;
 	private boolean smscChanged = false;
 
-	public boolean isRoutesChanged()
-	{
+	public boolean isRoutesChanged() {
 		return routesChanged;
 	}
-	public void setRoutesChanged(boolean routesChanged)
-	{
+	public void setRoutesChanged(boolean routesChanged) {
 		this.routesChanged = routesChanged;
-    if (routesChanged) routesSaved = false;
+    if (routesChanged) { routesRestored  = false;  routesLoaded = false; }
 	}
 
-  public boolean isSubjectsChanged()
-  {
+  public boolean isSubjectsChanged() {
     return subjectsChanged;
   }
-  public void setSubjectsChanged(boolean subjectsChanged)
-  {
+  public void setSubjectsChanged(boolean subjectsChanged) {
     this.subjectsChanged = subjectsChanged;
-    if (subjectsChanged) routesSaved = false;
+    if (subjectsChanged) { routesRestored  = false;  routesLoaded = false; }
   }
 
-  public boolean isRoutesSaved()
-  {
+  public boolean isRoutesSaved() {
     return routesSaved;
   }
-  public void setRoutesSaved(boolean routesSaved)
-  {
+  public void setRoutesSaved(boolean routesSaved) {
     this.routesSaved = routesSaved;
+  }
+  public boolean isRoutesRestored() {
+    return routesRestored;
+  }
+  public void setRoutesRestored(boolean routesRestored) {
+    this.routesRestored = routesRestored;
+  }
+
+  public boolean isRoutesLoaded() {
+    return routesLoaded;
+  }
+  public void setRoutesLoaded(boolean routesLoaded) {
+    this.routesLoaded = routesLoaded;
   }
 
 	public boolean isAliasesChanged()

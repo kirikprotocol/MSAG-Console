@@ -114,15 +114,13 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 			WebAppFolders.init(smscConfig.getString("system.webapp folder"));
 
 			resourcesManager = new ResourcesManagerImpl();
-
-
-			loadLocaleMessages();
+      loadLocaleMessages();
 			createConnectionPool(smscConfig);
 
 			smsc = new Smsc(smscConfig, connectionPool);
 			smeManager = new SmeManagerImpl(smsc);
 			routeSubjectManager = new RouteSubjectManagerImpl(smeManager);
-			DaemonManager daemonManager = new DaemonManager(smeManager, smscConfig);
+      DaemonManager daemonManager = new DaemonManager(smeManager, smscConfig);
 			ServiceManagerImpl serviceManager = new ServiceManagerImpl();
 			serviceManager.add(smsc);
 			hostsManager = new HostsManager(daemonManager, serviceManager, smeManager, routeSubjectManager);
@@ -130,6 +128,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 			File usersConfig = new File(new File(smscConfig.getString("system.webapp folder"), "WEB-INF"), smscConfig.getString("system.users"));
 			startConsole();
 			userManager = new UserManager(usersConfig);
+      statuses.setRoutesSaved(routeSubjectManager.hasSavedConfiguration());
 			perfServer = new PerfServer(smscConfig);
 			perfServer.start();
 			System.out.println("SMSC Administartion Web Apllication Started  **************************************************");

@@ -36,6 +36,7 @@ public class Index extends IndexBean
 	protected String mbEdit = null;
   protected String mbSave = null;
   protected String mbRestore = null;
+  protected String mbLoad = null;
 
 	protected int init(List errors)
 	{
@@ -73,6 +74,10 @@ public class Index extends IndexBean
       int dresult = saveRoutes();
       return (dresult != RESULT_OK) ? dresult:RESULT_DONE;
     }
+    else if (mbLoad != null) {
+      int dresult = loadRoutes();
+      return (dresult != RESULT_OK) ? dresult:RESULT_DONE;
+    }
     else if (mbRestore != null) {
       int dresult = restoreRoutes();
       return (dresult != RESULT_OK) ? dresult:RESULT_DONE;
@@ -100,45 +105,55 @@ public class Index extends IndexBean
 		return RESULT_OK;
 	}
 
-  protected int saveRoutes()
+  protected int saveRoutes() // saves temporal configuration
   {
-    try
-    {
+    try {
       routeSubjectManager.save();
     }
     catch (AdminException exc) {
       return error(SMSCErrors.error.routes.cantSave, exc.getMessage());
     }
     appContext.getStatuses().setRoutesSaved(true);
+    appContext.getStatuses().setRoutesRestored(true);
     return RESULT_OK;
   }
 
-  protected int restoreRoutes()
+  protected int restoreRoutes() // loads saved configuration
   {
-    try
-    {
-      routeSubjectManager.load();
+    try {
+      routeSubjectManager.restore();
     }
     catch (AdminException exc) {
       return error(SMSCErrors.error.routes.cantRestore, exc.getMessage());
     }
-    appContext.getStatuses().setSubjectsChanged(false);
-    appContext.getStatuses().setRoutesChanged(false);
+    appContext.getStatuses().setSubjectsChanged(true);
+    appContext.getStatuses().setRoutesChanged(true);
     appContext.getStatuses().setRoutesSaved(true);
+    appContext.getStatuses().setRoutesRestored(true);
+    appContext.getStatuses().setRoutesLoaded(false);
     return RESULT_OK;
   }
 
-  public boolean isRoutesChanged()
+  protected int loadRoutes() // loads applied configuration
   {
-    return appContext.getStatuses().isRoutesChanged();
+    try {
+      routeSubjectManager.load();
+    }
+    catch (AdminException exc) {
+      return error(SMSCErrors.error.routes.cantLoad, exc.getMessage());
+    }
+    appContext.getStatuses().setSubjectsChanged(false);
+    appContext.getStatuses().setRoutesChanged(false);
+    appContext.getStatuses().setRoutesRestored(false);
+    appContext.getStatuses().setRoutesLoaded(false);
+    return RESULT_OK;
   }
-	public boolean isRouteChecked(String alias)
-	{
+
+  public boolean isRouteChecked(String alias) {
 		return checkedRouteIdsSet.contains(alias);
 	}
 
-	public QueryResultSet getRoutes()
-	{
+	public QueryResultSet getRoutes() {
 		return routes;
 	}
 
@@ -195,5 +210,12 @@ public class Index extends IndexBean
   }
   public void setMbRestore(String mbRestore) {
     this.mbRestore = mbRestore;
+  }
+
+  public String getMbLoad() {
+    return mbLoad;
+  }
+  public void setMbLoad(String mbLoad) {
+    this.mbLoad = mbLoad;
   }
 }

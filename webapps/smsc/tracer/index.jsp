@@ -28,6 +28,8 @@
   MENU0_SELECTION = "MENU0_TRACER";
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
+<%if (appContext.getStatuses().isRoutesLoaded()) {
+%>
 <div class=content>
 <div class=page_subtitle>Tracing parameters</div>
 <table class=properties_list cell>
@@ -48,12 +50,25 @@
   </tr>
 </table>
 </div><%
-  page_menu_begin(out);
-  page_menu_button(out, "mbCheck", "Load & Check", "Load & Check routing configuration");
-  page_menu_button(out, "mbTrace", "Trace route", "Trace route");
-  page_menu_space(out);
-  page_menu_end(out);
-
+page_menu_begin(out);
+page_menu_button(out, "mbTrace", "Trace route", "Trace route");
+page_menu_space(out);
+page_menu_end(out);
+} else { %>
+<div class=content>
+<table class=properties_list cell>
+  <tr class=row0><td>
+    <span class="C800"><b>Warning !</b></span><br><br>
+    <span class="C000">Active routing configuration is not loaded or has been changed.</span><br>
+    <span class="C000">Please loadup new routing information to route tracer.</span><br>&nbsp;
+  </td></tr>
+</table>
+</div><%
+page_menu_begin(out);
+page_menu_button(out, "mbCheck", "Loadup & Check", "Load & Check routing configuration");
+page_menu_space(out);
+page_menu_end(out);
+}
   String message = bean.getTraceMessage();
   List   traceResults = bean.getTraceResults();
   List   routeInfo = bean.getRouteInfo();

@@ -56,11 +56,6 @@ public class Index extends IndexBean
   {
     try
     {
-      if (!appContext.getStatuses().isRoutesSaved()) {
-        routeSubjectManager.save();
-        appContext.getStatuses().setRoutesSaved(true);
-      }
-
       traceResults = appContext.getSmsc().loadRoutes(routeSubjectManager);
       if (traceResults == null || traceResults.size() <= 0)
         throw new AdminException("Transport error, invalid responce.");
@@ -72,6 +67,7 @@ public class Index extends IndexBean
     catch (AdminException e) {
       return error(SMSCErrors.error.routes.LoadAndCheckFailed, e.getMessage());
     }
+    appContext.getStatuses().setRoutesLoaded(true);
     return RESULT_OK;
   }
 
@@ -109,10 +105,6 @@ public class Index extends IndexBean
   {
     try
     {
-      if (!appContext.getStatuses().isRoutesSaved()) {
-        routeSubjectManager.save();
-        appContext.getStatuses().setRoutesSaved(true);
-      }
       traceResults = appContext.getSmsc().traceRoute(dstAddress, srcAddress, srcSysId);
       if (traceResults == null || traceResults.size() <= 1)
         throw new AdminException("Transport error, invalid responce.");

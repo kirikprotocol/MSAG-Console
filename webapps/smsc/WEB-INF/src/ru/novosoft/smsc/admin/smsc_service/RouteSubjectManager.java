@@ -12,14 +12,16 @@ import ru.novosoft.smsc.admin.AdminException;
 public interface RouteSubjectManager
 {
 	RouteList getRoutes();
+  SubjectList getSubjects();
 
-	SubjectList getSubjects();
+	void apply() throws AdminException;   // save to primary config (Applied)
+  void load() throws AdminException;    // load from primary config (Applied)
 
-	void load() throws AdminException;
-  void save() throws AdminException;
-  void test() throws AdminException;
+  void save() throws AdminException;    // save to temporal config (Saved)
+  void restore() throws AdminException; // load from temporal config (Saved)
 
-  void apply() throws AdminException;
+  void trace() throws AdminException;   // save to traceable config (Traceable)
 
 	boolean isSmeUsed(String smeId);
+  boolean hasSavedConfiguration();
 }
