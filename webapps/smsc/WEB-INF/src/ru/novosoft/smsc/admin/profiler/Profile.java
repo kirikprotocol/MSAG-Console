@@ -13,7 +13,9 @@ import java.util.List;
 
 public class Profile {
 	public static final byte CODEPAGE_Default = 0;
+	public static final byte CODEPAGE_Latin1 = 3;
 	public static final byte CODEPAGE_UCS2 = 8;
+	public static final byte CODEPAGE_UCS2AndLatin1 = 11;
 	public static final byte REPORT_OPTION_None = 0;
 	public static final byte REPORT_OPTION_Full = 1;
 	public static final byte REPORT_OPTION_Final = 3;
@@ -102,8 +104,12 @@ public class Profile {
 		switch (codepage) {
 			case CODEPAGE_Default:
 				return "default";
+			case CODEPAGE_Latin1:
+				return "Latin1";
 			case CODEPAGE_UCS2:
 				return "UCS2";
+			case CODEPAGE_UCS2AndLatin1:
+				return "UCS2&Latin1";
 			default:
 				throw new AdminException("Unknown codepage: " + codepage);
 		}
@@ -120,6 +126,10 @@ public class Profile {
 			codepage = CODEPAGE_Default;
 		else if (codepageString.equalsIgnoreCase("UCS2"))
 			codepage = CODEPAGE_UCS2;
+		else if (codepageString.equalsIgnoreCase("Latin1"))
+			codepage = CODEPAGE_Latin1;
+		else if (codepageString.equalsIgnoreCase("UCS2&Latin1"))
+			codepage = CODEPAGE_UCS2AndLatin1;
 		else
 			throw new AdminException("Unknown codepage: " + codepageString);
 	}
