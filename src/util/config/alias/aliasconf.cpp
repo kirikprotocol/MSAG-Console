@@ -108,7 +108,7 @@ AliasConfig::status AliasConfig::load(const char * const filename)
           }
         }
         delete dta;
-        continue;
+        //continue;
       }
       //record->alias = attrs.getNameItem("alias").getNodeValue().transcode();
       {
@@ -141,7 +141,7 @@ AliasConfig::status AliasConfig::load(const char * const filename)
           }
         }
         delete dta;
-        continue;
+        //continue;
       }
       DOM_NodeList childs = node.getChildNodes();
       records.push_back(record.release());

@@ -1,9 +1,9 @@
+// $Id$
 #ifndef TEST_UTIL_UTIL
 #define TEST_UTIL_UTIL
 
 #include <ostream>
 #include <vector>
-#define ABORT_ON_FAILURE
 
 namespace smsc {
 namespace test {
