@@ -871,19 +871,23 @@ public:
           unsigned u = 0;
           unsigned uu = pduX->message.numberOfDests;
           for ( ; u < uu; ++u ) {
-            ((SubmitMultiSm*)_cmd->dta)->dests[u].dest_flag = pduX->message.dests[u].flag;
+            ((SubmitMultiSm*)_cmd->dta)->dests[u].dest_flag = (pduX->message.dests[u].flag == 0x02);
             __trace2__(":SUBMIT_MULTI_COMMAND: dest_flag = %d",pduX->message.dests[u].flag);
-            if ( pduX->message.dests[u].flag == 1 ) // SME address
+            if ( pduX->message.dests[u].flag == 0x01 ) // SME address
             {
               ((SubmitMultiSm*)_cmd->dta)->dests[u].value = pduX->message.dests[u].get_value();
               ((SubmitMultiSm*)_cmd->dta)->dests[u].ton = pduX->message.dests[u].get_typeOfNumber();
               ((SubmitMultiSm*)_cmd->dta)->dests[u].npi = pduX->message.dests[u].get_numberingPlan();
             }
-            else // Distribution list
+            else if (pduX->message.dests[u].flag == 0x02)// Distribution list
             {
               //__require__((strlen(pduX->message.dests[u].get_value())+1)<=sizeof(((SubmitMultiSm*)_cmd->dta)->dests[u].value));
               //strcpy(((SubmitMultiSm*)_cmd->dta)->dests[u].el.dl.dl_name,pduX->message.dests[u].get_value());
               ((SubmitMultiSm*)_cmd->dta)->dests[u].value = pduX->message.dests[u].get_value();
+            }
+            else {
+              __warning2__("submitmulti has invalid address flag 0x%x",pduX->message.dests[u].flag);
+              throw runtime_error("submitmulti has invalid address flag");
             }
             //((SubmitMultiSm*)_cmd->dta)->dests[u].dest_flag = pduX->message.dests[u].flag;
           }
