@@ -4,7 +4,7 @@
 namespace smsc { namespace infosme 
 {
 
-time_t Task::parseDateTime(const char* str)
+time_t parseDateTime(const char* str)
 {
     int year, month, day, hour, minute, second;
     if (!str || str[0] == '\0' ||
@@ -15,10 +15,24 @@ time_t Task::parseDateTime(const char* str)
     dt.tm_year = year - 1900; dt.tm_mon = month - 1; dt.tm_mday = day;
     dt.tm_hour = hour; dt.tm_min = minute; dt.tm_sec = second;
 
-    //printf("%02d.%02d.%02d %02d:%02d:%02d = %ld\n", day, month, year, hour, minute, second, time);
+    //printf("%02d.%02d.%04d %02d:%02d:%02d = %ld\n", day, month, year, hour, minute, second, time);
     return mktime(&dt);
 }
-time_t Task::parseTime(const char* str)
+time_t parseDate(const char* str)
+{
+    int year, month, day;
+    if (!str || str[0] == '\0' ||
+        sscanf(str, "%02d.%02d.%4d", 
+                    &day, &month, &year) != 3) return -1;
+    
+    tm  dt; dt.tm_isdst = 0;
+    dt.tm_year = year - 1900; dt.tm_mon = month - 1; dt.tm_mday = day;
+    dt.tm_hour = 0; dt.tm_min = 0; dt.tm_sec = 0;
+    
+    //printf("%02d:%02d:%04d = %ld\n", day, month, year, time);
+    return mktime(&dt);
+}
+time_t parseTime(const char* str)
 {
     int hour, minute, second;
     if (!str || str[0] == '\0' ||

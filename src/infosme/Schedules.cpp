@@ -3,99 +3,101 @@
 
 namespace smsc { namespace infosme 
 {
-    /* Advanced
-    
-    time_t  startDate;  // if -1 not defined, YYYY.MM.dd
-    time_t  endDate;    // if -1 not defined, YYYY.MM.dd
-    bool    repeat;     // default false
-    int     everyNSec;  // if -1 not defined. In seconds (minutes, hours), 
-    time_t  endTime;    // if -1 not defined. only HH:mm:ss
-    
-    */
 
 Schedule* Schedule::create(ConfigView* config, std::string id)
 {
     Schedule* schedule = 0;
 
-    const char* scheduleType = config->getString("scheduleType");
-    if (!scheduleType || scheduleType[0] == '\0')
+    const char* execute = config->getString("execute");
+    if (!execute || execute[0] == '\0')
         throw ConfigException("Schedule '%s' type empty or wasn't specified", 
                               id.c_str());
 
-    if (strcmp(scheduleType, SCHEDULE_TYPE_ONCE) == 0) {
+    if (strcmp(execute, SCHEDULE_TYPE_ONCE) == 0) {
         schedule = new OnceSchedule(id);
     }
-    else if (strcmp(scheduleType, SCHEDULE_TYPE_DAILY) == 0) {
+    else if (strcmp(execute, SCHEDULE_TYPE_DAILY) == 0) {
         schedule = new DailySchedule(id);
     }
-    else if (strcmp(scheduleType, SCHEDULE_TYPE_WEEKLY) == 0) {
+    else if (strcmp(execute, SCHEDULE_TYPE_WEEKLY) == 0) {
         schedule = new WeeklySchedule(id);
     }
-    else if (strcmp(scheduleType, SCHEDULE_TYPE_MONTHLY) == 0) {
+    else if (strcmp(execute, SCHEDULE_TYPE_MONTHLY) == 0) {
         schedule = new MonthlySchedule(id);
     }
-    else throw ConfigException("Type '%s' for schedule '%s' is unknown", 
-                               scheduleType, id.c_str());
+    else if (strcmp(execute, SCHEDULE_TYPE_INTERVAL) == 0) {
+        schedule = new IntervalSchedule(id);
+    }
+    else throw ConfigException("Execution mode '%s' for schedule '%s' is unknown", 
+                               execute, id.c_str());
 
     if (schedule) schedule->init(config);
     
     return schedule;
 }
-
+void Schedule::init(ConfigView* config, bool full)
+{
+    startTime = parseTime(config->getString("startTime")); 
+    if (startTime < 0)
+        throw ConfigException("Invalid startTime parameter.");
+    startDate = parseDate(config->getString("startDate"));
+    if (startDate <= 0)
+        throw ConfigException("Invalid startDate parameter.");
+    
+    if (full) {
+        endDate = -1; endTime = -1;
+        try { endDate = parseDate(config->getString("endDate")); } catch(...) {};
+        try { endTime = parseTime(config->getString("endTime")); } catch(...) {};
+    }
+}
 void OnceSchedule::init(ConfigView* config)
 {
+    Schedule::init(config, false);
 }
 time_t OnceSchedule::calulateNextTime()
 {
-    // time_t  startTime;  // only HH:mm:ss
-    // time_t  startDate;  // only YYYY.MM.dd
-    // Has no startTime & endDate in advanced
-
     if (startDate <= 0 || startTime < 0) return -1;
 
     time_t ct = time(NULL);
     time_t st = startDate + startTime;
-    if (ct <= st) return st;
-    
-    if (!advanced.repeat || advanced.everyNSec <= 0) return -1;
-    
-    bool   ets = advanced.endTime < 0;
-    time_t et = startDate+((ets) ? 0:advanced.endTime);
-    
-    while (st < ct && (ets ? (st < et):true)) st += advanced.everyNSec;
-    return (ets ? (st < et):true) ? st:-1;
+    return ((ct <= st) ? st:-1);
 }
 
 void DailySchedule::init(ConfigView* config)
 {
+    Schedule::init(config, true);
+
+    everyNDays = config->getInt("everyNDays");
+    if (everyNDays <= 0)
+        throw ConfigException("Invalid everyNDays parameter, should be positive.");
 }
 time_t DailySchedule::calulateNextTime()
 {
-    //time_t  startTime;  // only HH:mm:ss
-    //int     everyNDays;
-    
-    if (advanced.startDate <= 0 || startTime < 0) return -1;
+    if (startDate <= 0 || startTime < 0) return -1;
 
     time_t ct = time(NULL);
-    time_t st = advanced.startDate + startTime;
-    time_t deadLine = ((advanced.endDate >= 0) ? advanced.endDate:0) + 
-                      ((advanced.endTime >= 0) ? advanced.endTime:0);
+    time_t st = startDate + startTime;
+    time_t deadLine = ((endDate >= 0) ? endDate:0) + 
+                      ((endTime >= 0) ? endTime:0);
     if (ct >= deadLine) return -1;
     if (ct <= st && st <= deadLine) return st;
+    if (everyNDays <= 0) return -1;
     
-    if (everyNDays > 0)
-    {
-        while (st < ct && st < deadLine) {
-            st += 86400*everyNDays;
-        }
-        if (st >= ct && st <= deadLine) return st;
-        // use repeat here !!!
-    }
-    return -1;
+    int interval = 86400*everyNDays;
+    st = ((ct-st)/interval)*interval+interval;
+    return ((st <= deadLine) ? st:-1);
 }
 
 void WeeklySchedule::init(ConfigView* config)
 {
+    Schedule::init(config, true);
+
+    everyNWeeks = config->getInt("everyNWeeks");
+    if (everyNWeeks <= 0)
+        throw ConfigException("Invalid everyNWeeks parameter, should be positive.");
+    
+    weekDays = config->getString("weekDays");
+    // TODO: check weekDays.
 }
 time_t WeeklySchedule::calulateNextTime()
 {
@@ -104,10 +106,46 @@ time_t WeeklySchedule::calulateNextTime()
 
 void MonthlySchedule::init(ConfigView* config)
 {
+    Schedule::init(config, true);
+    
+    dayOfMonth = -1;
+    try { dayOfMonth = config->getInt("dayOfMonth"); } catch (...) {};
+    if (dayOfMonth == -1) {
+        weekN = config->getString("weekN"); // week number: first, second, thierd, fourth, last
+        weekDays = config->getString("weekDays");
+    }
+    monthDays = config->getString("monthDays");
+
+    // TODO: check weekDays && monthDays.
 }
 time_t MonthlySchedule::calulateNextTime()
 {
     return -1;
 }
+
+void IntervalSchedule::init(ConfigView* config)
+{
+    Schedule::init(config, true);
+    
+    intervalTime = config->getInt("intervalTime");
+    if (intervalTime <= 0) 
+        throw ConfigException("Invalid time interval.");
+}
+time_t IntervalSchedule::calulateNextTime()
+{
+    if (startDate <= 0 || startTime < 0) return -1;
+
+    time_t ct = time(NULL);
+    time_t st = startDate + startTime;
+    time_t deadLine = ((endDate >= 0) ? endDate:0) + 
+                      ((endTime >= 0) ? endTime:0);
+    if (ct >= deadLine) return -1;
+    if (ct <= st && st <= deadLine) return st;
+    if (intervalTime <= 0) return -1;
+    
+    st = ((ct-st)/intervalTime)*intervalTime+intervalTime;
+    return ((st <= deadLine) ? st:-1);
+}
+
 
 }}

@@ -35,6 +35,10 @@ namespace smsc { namespace infosme
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
+    extern time_t parseDateTime(const char* str);
+    extern time_t parseDate(const char* str);
+    extern time_t parseTime(const char* str);
+    
     struct Message
     {
 
@@ -128,9 +132,6 @@ namespace smsc { namespace infosme
         virtual ~Task() {};
 
     public:
-        
-        static time_t parseDateTime(const char* str);
-        static time_t parseTime(const char* str);
         
         Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt) 
             : usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt), bInProcess(false) 

@@ -123,7 +123,6 @@ void TaskScheduler::init(TaskProcessorAdapter* processor, ConfigView* config)
     
     this->processor = processor;
 
-    // TODO: load up task scheduling plan from config
     std::auto_ptr< std::set<std::string> > setGuard(config->getShortSectionNames());
     std::set<std::string>* set = setGuard.get();
     for (std::set<std::string>::iterator i=set->begin();i!=set->end();i++)
@@ -147,9 +146,10 @@ void TaskScheduler::init(TaskProcessorAdapter* processor, ConfigView* config)
             
             const char* tasksCur = tasksStr;
             std::string taskName = "";
-            while (*tasksCur)
+            
+            do
             {
-                if (*tasksCur == ',') {
+                if (*tasksCur == ',' || *tasksCur == '\0') {
                     const char* task_name = taskName.c_str();
                     if (!task_name || task_name[0] == '\0') {
                         delete schedule;
@@ -166,8 +166,8 @@ void TaskScheduler::init(TaskProcessorAdapter* processor, ConfigView* config)
                     taskName = "";
                 } 
                 else taskName += *tasksCur;
-                tasksCur++;
-            }
+            } 
+            while (*tasksCur++);
             
             if (!addSchedule(schedule)) {
                 delete schedule;
