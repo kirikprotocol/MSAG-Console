@@ -9,8 +9,8 @@ package ru.novosoft.smsc.util;
 public abstract class Version
 {
   public static final int VER_MAJOR = 1;
-  public static final int VER_MINOR = 8;
-  public static final int VER_BUILD = 1800;
-  public static final String VER_DATE = "Wed Sep  1 14:16:08 2004";
+  public static final int VER_MINOR = 9;
+  public static final int VER_BUILD = 1900;
+  public static final String VER_DATE = "Tue Jan  1 13:20:08 2005";
   public static final String VER_STR = "Sibinco SMSC Control Center ver " + VER_MAJOR + "." + VER_MINOR + " build " + VER_BUILD + " date " + VER_DATE;
 }
