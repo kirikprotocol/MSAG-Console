@@ -105,10 +105,10 @@ struct _SmscCommand
       __unreachable__("unprocessed cmdid");
     }
   }
-  uint32_t get_dialogId() { return dialogId; }
-  CommandId get_commandId() { return cmdid; }
-  SMS* get_sms() { return (SMS*)dta; }
-  SmsResp* get_resp() { return (SmsResp*)dta; }
+  uint32_t get_dialogId() const { return dialogId; }
+  CommandId get_commandId() const { return cmdid; }
+  SMS* get_sms() const { return (SMS*)dta; }
+  SmsResp* get_resp() const { return (SmsResp*)dta; }
 };
 
 class SmscCommand
@@ -407,7 +407,7 @@ public:
     return _cmd;
   }
 
-  _SmscCommand* operator->()
+  _SmscCommand* operator->() const
   {
     __require__(cmd);
     return cmd;

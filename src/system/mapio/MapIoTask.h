@@ -40,6 +40,8 @@ extern "C" {
 #include <et96map_sms.h>
 }
 
+#define SSN 8
+
 class hash_func_ET96MAP_DID{
 public:
   static inline int CalcHash(ET96MAP_DIALOGUE_ID_T id){

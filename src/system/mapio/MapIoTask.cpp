@@ -1,7 +1,6 @@
 
 #include "MapIoTask.h"
 
-#define SSN 8
 #define MAXENTRIES 10
 #define MY_USER_ID USER01_ID 
 using namespace std;
