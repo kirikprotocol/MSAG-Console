@@ -78,13 +78,22 @@ int main(int argc,char* argv[])
 {
   if(argc==1)
   {
-    printf("usage: %s systemid\n",argv[0]);
+    printf("usage: %s systemid host[:port] [sourceaddr]\n",argv[0]);
     return -1;
   }
   SmeConfig cfg;
-  cfg.host="smsc";
-
-  cfg.port=argc>2?atoi(argv[2]):9001;
+  string host=argc>2?argv[2]:"smsc";
+  int pos=host.find(":");
+  int port=9001;
+  if(pos>0)
+  {
+    port=atoi(host.substr(pos+1).c_str());
+    host.erase(pos);
+  }
+  string source=argv[1];
+  if(argc>3)source=argv[3];
+  cfg.host=host;
+  cfg.port=port;
   cfg.sid=argv[1];
   cfg.timeOut=10;
   cfg.password="";
@@ -96,7 +105,7 @@ int main(int argc,char* argv[])
     SMS s;
 //    const char *dst="2";
 //47.44.rymhrwDMy4
-    Address addr(cfg.sid.c_str());
+    Address addr(source.c_str());
     s.setOriginatingAddress(addr);
     char msc[]="123";
     char imsi[]="123";
