@@ -27,8 +27,10 @@
 using smsc::sme::SmeConfig;
 using smsc::smeman::SmeInfo;
 using smsc::alias::AliasInfo;
+using smsc::test::smpp::SmppUtil;
 using smsc::test::sms::SmsUtil;
 using smsc::test::sms::operator<<;
+using smsc::test::sms::operator==;
 using smsc::test::smeman::SmeManagerTestCases;
 using smsc::test::alias::AliasManagerTestCases;
 using smsc::test::router::RouteManagerTestCases;
@@ -40,6 +42,7 @@ using namespace std;
 using namespace smsc::sms;
 using namespace smsc::core::synchronization;
 using namespace smsc::core::threads; //ThreadPool, ThreadedTask
+using namespace smsc::profiler;
 using namespace smsc::test::sme;
 using namespace smsc::test::config;
 using namespace smsc::test::util;
@@ -189,10 +192,11 @@ void TestSme::executeCycle()
 #ifdef SIMPLE_TEST
 	seq.push_back(201);
 #else
-	//seq.insert(seq.end(), 15, 1);
+	seq.insert(seq.end(), 15, 1);
 	//seq.insert(seq.end(), 10, 2);
 	seq.insert(seq.end(), 10, 3);
-	seq.push_back(4);
+	seq.insert(seq.end(), 10, 4);
+	seq.push_back(5);
 #ifdef ASSERT
 	seq.push_back(101);
 #endif //ASSERT
@@ -208,13 +212,16 @@ void TestSme::executeCycle()
 		case 2: //неправильная sms
 			tc.submitSmIncorrect(rand0(1), RAND_TC);
 			break;
-		case 3: //обновление профиля корректными данными
-			tc.updateProfileCorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
+		case 3: //обновление настроек кодировки
+			tc.updateCodePageCorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 			break;
-		case 4: //обновление профиля некорректными данными
+		case 4: //обновление настроек уведомления о доствке
+			tc.updateReportOptionsCorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
+			break;
+		case 5: //обновление профиля некорректными данными
 			tc.updateProfileIncorrect(rand0(1), getDataCoding(RAND_TC));
 			break;
-		case 5:
+		case 6:
 			tc.replaceSm(rand0(1), RAND_TC);
 			break;
 		case 101: //asserts
@@ -244,8 +251,17 @@ void TestSme::onStopped()
 
 uint32_t TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
 {
+	//профайлеру ответить ok
+	Address addr;
+	SmppUtil::convert(pdu.get_message().get_source(), &addr);
+	__cfg_addr__(profilerAlias);
+	if (addr == profilerAlias)
+	{
+		return tc.sendDeliverySmRespOk(pdu, rand0(1));
+	}
+	//на остальное ответить как придется
 #ifdef SIMPLE_TEST
-	return tc.getTransmitter().sendDeliverySmRespOk(pdu, rand0(1));
+	return tc.sendDeliverySmRespOk(pdu, rand0(1));
 #else
 	switch (rand1(3))
 	{
@@ -723,7 +739,9 @@ int main(int argc, char* argv[])
 	smeReg = new SmeRegistry();
 	aliasReg = new AliasRegistry();
 	routeReg = new RouteRegistry();
-	ProfileUtil::setupRandomCorrectProfile(defProfile);
+	//ProfileUtil::setupRandomCorrectProfile(defProfile);
+	defProfile.codepage = ProfileCharsetOptions::Default;
+	defProfile.reportoptions = ProfileReportOptions::ReportNone;
 	profileReg = new ProfileRegistry(defProfile);
 	smppChkList = new SmppProfilerCheckList();
 	configChkList = new ConfigGenCheckList();
