@@ -9,11 +9,12 @@
 #define MY_USER_ID USER01_ID
 using namespace std;
 
+Mutex mapMutex;
+
 #ifdef USE_MAP
 
 //#define SMSC_FORWARD_RESPONSE 0x001
 
-Mutex mapMutex;
 static unsigned __global_bind_counter = 0;
 static unsigned __pingPongWaitCounter = 0;
 static bool MAP_dispatching = false;
@@ -595,7 +596,7 @@ void MapProxy::checkLogging() {
     __map_trace__("Disable trace for system TCAP_ID");
     MsgTraceOff( TCAP_ID );
   }
-*/  
+*/
 #endif
 }
 
