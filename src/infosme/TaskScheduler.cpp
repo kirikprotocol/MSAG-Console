@@ -135,11 +135,11 @@ int TaskScheduler::Execute()
     return 0;
 }
 
-void TaskScheduler::init(TaskProcessorAdapter* processor, ConfigView* config)
+void TaskScheduler::init(TaskProcessorAdapter* _processor, ConfigView* config)
 {
-    __require__(processor && config);
+    __require__(_processor && config);
     
-    this->processor = processor;
+    this->processor = _processor;
 
     std::auto_ptr< std::set<std::string> > setGuard(config->getShortSectionNames());
     std::set<std::string>* set = setGuard.get();
@@ -247,7 +247,7 @@ void TaskScheduler::removeTask(std::string taskId)
 
     char* key = 0; Schedule* schedule = 0; schedules.First();
     while (schedules.Next(key, schedule))
-        if (schedule) removeTask(taskId);
+        if (schedule) schedule->removeTask(taskId);
 }
 
 }}
