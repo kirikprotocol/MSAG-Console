@@ -41,6 +41,7 @@ TestConfig::TestConfig()
 	//map proxy
 	strMap["mapProxySystemId"] = "MAP_PROXY";
 	//abonent info
+	addrMap["abonentInfoAddr"] = "+444444444444";
 	strMap["abonentInfoSystemId"] = "abonentinfo";
 	//респонсы профайлера
 	strMap["profilerRespReportNone"] = 
