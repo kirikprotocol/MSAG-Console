@@ -601,7 +601,8 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
       }catch(exception& e){
         __trace2__("#except#MAP::PutCommand# when create dialog");
         __trace2__("   <exception>:%s",e.what());
-        throw MAPDIALOG_TEMP_ERROR("MAP::PutCommand: can't create dialog");
+        //throw MAPDIALOG_TEMP_ERROR("MAP::PutCommand: can't create dialog");
+        throw MAPDIALOG_FATAL_ERROR("MAP::PutCommand: can't create dialog");
       }
       if ( dialog.isnull() ) {
         __trace2__("MAP::putCommand: can't create SMSC->MS dialog (locked), request has bean attached");
