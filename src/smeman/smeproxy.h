@@ -74,13 +74,19 @@ public:
   /// и длина очереди еще не упала до допустимого значения
   virtual void putCommand(const SmscCommand& command) = 0;
   virtual bool getCommand(SmscCommand& cmd) = 0;
+
+  // этот метод добавдяе в cmds не более mx комманд.
+  // в mx же запихивается сколько именно он отдал.
+  // возвращаемое значение - сколько команд осталось.
+  // prx - это указатель на SmeRecord, который нужно
+  // присвоить команде.
   virtual int getCommandEx(std::vector<SmscCommand>& cmds,int& mx,SmeProxy* prx)
   {
     SmscCommand cmd;
     if(getCommand(cmd))
     {
-      cmds.push_back(cmd);
       cmd.setProxy(prx);
+      cmds.push_back(cmd);
       mx=1;
     }else
     {
