@@ -783,7 +783,7 @@ none_validity:;
   esm_class |= (ssfh->udhi?0x40:0);
   esm_class |= (ssfh->reply_path?0x80:0);
   sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
-  sms.setIntProperty(Tag::SMPP_SM_LENGTH,user_data_len);
+  //sms.setIntProperty(Tag::SMPP_SM_LENGTH,user_data_len);
   sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,protocol_id);
   sms.setMessageReference(ssfh->mr);
   if ( ssfh->srr ) sms.setIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST,1);
@@ -1043,7 +1043,7 @@ static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
   unsigned text_len;
 
   const unsigned char* text = (const unsigned char*)cmd->get_sms()->getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&text_len);
-  if ( text_len > 160 ) 
+  if ( text_len > 160 )
     throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__FUNCTION__,dialog->dialogid_map,text_len));
 
   unsigned bytes = 0;
@@ -1803,7 +1803,7 @@ USHORT_T Et96MapOpenInd (
         memcpy(&dialog->m_msAddr,specificInfo_sp->specificData+1,specificInfo_sp->specificInfoLen-1);
         dialog->m_msAddr.addressLength = x;
         dialog->hasIndAddress = true;
-/*        
+/*
 #if !defined DISABLE_TRACING
         {
           ostringstream ost;
@@ -2410,9 +2410,9 @@ USHORT_T Et96MapV2InformSCInd (
 
 static bool NeedNotifyHLR(MapDialog* dialog)
 {
-  return 
-  	!dialog->isUSSD &&
-  	!dialog->hlrWasNotified && dialog->hlrVersion != 0 &&
+  return
+    !dialog->isUSSD &&
+    !dialog->hlrWasNotified && dialog->hlrVersion != 0 &&
     ((!dialog->wasDelivered && !dialog->routeErr &&
       ( ((unsigned)dialog->subscriberAbsent != (unsigned)dialog->mwdStatus.mnrf)||
         ((unsigned)dialog->memoryExceeded != (unsigned)dialog->mwdStatus.mcef )

@@ -285,11 +285,12 @@ static bool FillUd(SMS* sms)
     if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
     {
       sms->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,buf,len);
+      sms->setIntProperty(Tag::SMPP_SM_LENGTH,0);
     }else
     {
       sms->setBinProperty(Tag::SMPP_SHORT_MESSAGE,buf,len);
+      sms->setIntProperty(Tag::SMPP_SM_LENGTH,len);
     }
-    sms->setIntProperty(Tag::SMPP_SM_LENGTH,len);
     sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x40);
   }
   return true;

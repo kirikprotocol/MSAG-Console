@@ -914,7 +914,7 @@ StateType StateMachine::submit(Tuple& t)
     processDirectives(*sms,profile,srcprof);
   }catch(...)
   {
-    __trace__("Failed to process directives due to exception");
+    __warning__("Failed to process directives due to exception");
     sms->lastResult=Status::SUBMITFAIL;
     smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
     SmscCommand resp = SmscCommand::makeSubmitSmResp

@@ -211,7 +211,7 @@ struct MapDialog{
     require ( ref_count == 0 );
     require ( chain.size() == 0 );
 //    if ( dialogid_smsc != 0 && dialogid_map != 0){
-//      require(dialogid_map < MAX_DIALOGID_POOLED); 
+//      require(dialogid_map < MAX_DIALOGID_POOLED);
     if ( dialogid_map < MAX_DIALOGID_POOLED )
       freeDialogueId(dialogid_map);
     //}
@@ -313,10 +313,10 @@ public:
   static MapDialogContainer* getInstance(){
     MutexGuard g(sync_object);
     if ( !container ) {
-	    container = new MapDialogContainer();
+      container = new MapDialogContainer();
       container->last_dump_time = 0;
       for (unsigned n=1;n<MAX_DIALOGID_POOLED;++n){
-      	container->dialogId_pool.push_back(n);
+        container->dialogId_pool.push_back(n);
       }
     }
     return container;
@@ -331,14 +331,14 @@ public:
   }
 
   unsigned getDialogCount() {
-    hash.Count();
+    return hash.Count();
   }
-  
+
   unsigned getNumberOfDialogs()
   {
     return lock_map.Count();
   }
-  
+
   MapProxy* getProxy() {
     return &proxy;
   }
@@ -351,7 +351,7 @@ public:
       dlg->AddRef();
       return dlg;
     }
-    else 
+    else
     {
       __mapdlg_trace2__("dialog not found for dialogid 0x%x",dialogueid);
       return 0;
@@ -487,7 +487,7 @@ public:
   virtual int Execute();
   virtual const char* taskName() { return "MapIoTask";}
   bool isStarted() {return is_started;}
-  MapIoTask(Event* startevent,const string& scAddr) : startevent(startevent),is_started(false) 
+  MapIoTask(Event* startevent,const string& scAddr) : startevent(startevent),is_started(false)
   {
     MapDialogContainer::SetSCAdress(scAddr);
   }
