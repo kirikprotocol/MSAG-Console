@@ -105,7 +105,7 @@ public:
   static MapDialogContainer* getInstance(){
     MutexGuard g(sync_object);
     if ( !container ) container = new MapDialogContainer();
-    __trace2__("access to container 0x%x",container);
+    __trace2__("MAP::access to container 0x%x",container);
     return container;
   }
   
