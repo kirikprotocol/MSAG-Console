@@ -132,7 +132,7 @@ public:
   void dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid){
     MapDialog* item = 0;
     if ( hash.Get(dialogueid,item) ){
-      __trace2__("MAP:: drop dialog 0x%x for dialogid 0x%x",dlg,dialogueid);
+      __trace2__("MAP:: drop dialog 0x%x for dialogid 0x%x",item,dialogueid);
       hash.Delete(dialogueid);
       delete item;
     }
