@@ -66,7 +66,8 @@ static const int USSDDLGNFOUND=1031; // USSD dialog not found for response (PSSR
 static const int USSDMSGTOOLONG=1032; // USSD msg can't be concatenated or truncated !
 static const int INCOMPLETECONCATMSG=1033; //not all parts of concatenated message received !
 static const int DUPLICATECONCATPART=1034; //duplicate part of concatenated message !
-static const int TRANSACTIONTIMEDOUT=1035; //duplicate part of concatenated message !
+static const int TRANSACTIONTIMEDOUT=1035; //
+static const int LOCKEDBYMO=1036; //MT should wait MO
 
 static const int MAP_UR_NO_REASON=1109;
 static const int MAP_USER_REASON_BASE=1110;
@@ -1173,8 +1174,8 @@ static const bool errorStatus[1280] = {
 1, // USSDMSGTOOLONG=1032; // USSD msg can't be concatenated or truncated !
 1, // INCOMPLETECONCATMSG=1033; //not all parts of concatenated message received !
 1, // DUPLICATECONCATPART=1034; //duplicate part of concatenated message !
-1,
-1,
+1, // TRANSACTIONTIMEDOUT=1035
+0, // LOCKEDBYMO=1036
 1,
 1,
 1,

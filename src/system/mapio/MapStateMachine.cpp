@@ -426,7 +426,7 @@ static void CheckLockedByMO(MapDialog* dialog)
     else{
       dialog->dropChain = true;
       __map_trace2__("MAP:UDHI:%s locked, reschedule NOW! recv(%d)",__func__,it->second.parts);
-      throw MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,15),
+      throw MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,Status::LOCKEDBYMO),
                             "MAP:: Locked by MO: reschedule NOW!");
     }
   }
