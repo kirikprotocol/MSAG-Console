@@ -852,7 +852,7 @@ USHORT_T Et96MapOpenInd (
     DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialog(dialogueId,SSN/*,0*/));
     if ( dialog.isnull() )
       throw runtime_error("MAP:: can't create dialog");
-    __trace2__("MAP:: create dialog with ptr 0x%p, dialogid 0x%x",dialog.get(),dialogId);
+    __trace2__("MAP:: create dialog with ptr 0x%p, dialogid 0x%x",dialog.get(),dialogueId);
     dialog->state = MAPST_WaitSms;
   }
   catch(exception& e)
@@ -869,7 +869,7 @@ USHORT_T Et96MapOpenInd (
 
 extern "C"
 USHORT_T Et96MapV2ForwardSmMOInd (
-  ET96MAP_LOCAL_SSN_T localSsn
+  ET96MAP_LOCAL_SSN_T localSsn,
   ET96MAP_DIALOGUE_ID_T dialogueId,
   ET96MAP_INVOKE_ID_T invokeId,
   ET96MAP_SM_RP_DA_T *smRpDa_sp,
