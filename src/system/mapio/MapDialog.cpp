@@ -86,7 +86,7 @@ unsigned ConvertText27bit(
   const unsigned char* text, int chars, unsigned char* bit7buf)
 {
   //__require__(chars<=255);
-  __trace2__("text length(%d) > 254",chars);
+  __trace2__("MAP::ConvertText27bit: text length(%d) > 254",chars);
   throw runtime_error("text length > 254");
   unsigned char* base = bit7buf;
   unsigned shift = 0;

@@ -163,13 +163,18 @@ USHORT_T  Et96MapCloseInd(ET96MAP_LOCAL_SSN_T ssn,
                          UCHAR_T priorityOrder)
 {
   __trace2__("MAP::Et96MapCloseInd did 0x%x",dialogId);
-  MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogId);
-  if ( mdci ){
-    if ( mdci->Et96MapCloseInd(ssn,
-                          dialogId,
-                          ud,
-                          priorityOrder) )
-      MapDialogContainer::getInstance()->dropDialog(dialogId);
+  try{
+    MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogId);
+    if ( mdci ){
+      if ( mdci->Et96MapCloseInd(ssn,
+                            dialogId,
+                            ud,
+                            priorityOrder) )
+        MapDialogContainer::getInstance()->dropDialog(dialogId);
+    }
+  }catch(...){
+    __trace2__("MAP::Et96MapCloseInd: catch exception when processing did 0x%x",dialogId);
+    MapDialogContainer::getInstance()->dropDialog(dialogId);
   }
   return ET96MAP_E_OK;
 }
