@@ -106,17 +106,16 @@ const string DbSmeTestCases::getCmdText(DbSmeTestRecord* rec,
 	return s.str();
 }
 
-void DbSmeTestCases::sendDbSmePdu(const string& input, PduData::IntProps* intProps,
-	PduData::StrProps* strProps, PduData::ObjProps* objProps, bool sync,
-	uint8_t dataCoding)
+void DbSmeTestCases::sendDbSmePdu(const Address& addr, const string& input,
+	PduData::IntProps* intProps, PduData::StrProps* strProps,
+	PduData::ObjProps* objProps, bool sync, uint8_t dataCoding)
 {
 	__decl_tc__;
 	try
 	{
 		//создать pdu
 		PduSubmitSm* pdu = new PduSubmitSm();
-		__cfg_addr__(dbSmeAlias);
-		transmitter->setupRandomCorrectSubmitSmPdu(pdu, dbSmeAlias,
+		transmitter->setupRandomCorrectSubmitSmPdu(pdu, addr,
 			OPT_ALL & ~OPT_MSG_PAYLOAD); //отключить messagePayload
 		//установить немедленную доставку
 		pdu->get_message().set_scheduleDeliveryTime("");
@@ -151,15 +150,23 @@ void DbSmeTestCases::sendDbSmePdu(const string& input,
 	DbSmeTestRecord* rec, bool sync, uint8_t dataCoding)
 {
 	__require__(rec);
+	__cfg_addr__(dbSmeAlias);
 	PduData::StrProps strProps;
 	strProps["input"] = input;
 	PduData::ObjProps objProps;
 	objProps["dbSmeRec"] = rec;
 	rec->ref();
-	sendDbSmePdu(input, NULL, &strProps, &objProps, sync, dataCoding);
+	sendDbSmePdu(dbSmeAlias, input, NULL, &strProps, &objProps, sync, dataCoding);
 }
 
 void DbSmeTestCases::sendDbSmePdu(const string& input,
+	const string& output, bool sync, uint8_t dataCoding)
+{
+	__cfg_addr__(dbSmeAlias);
+	sendDbSmePdu(dbSmeAlias, input, output, sync, dataCoding);
+}
+
+void DbSmeTestCases::sendDbSmePdu(const Address& addr, const string& input,
 	const string& output, bool sync, uint8_t dataCoding)
 {
 	PduData::StrProps strProps;
@@ -171,7 +178,7 @@ void DbSmeTestCases::sendDbSmePdu(const string& input,
 	ack->ref();
 	PduData::ObjProps objProps;
 	objProps["output"] = ack;
-	sendDbSmePdu(input, NULL, &strProps, &objProps, sync, dataCoding);
+	sendDbSmePdu(addr, input, NULL, &strProps, &objProps, sync, dataCoding);
 }
 
 void DbSmeTestCases::submitCorrectFormatDbSmeCmd(bool sync, uint8_t dataCoding, int num)
@@ -602,13 +609,26 @@ void DbSmeTestCases::submitIncorrectParamsDbSmeCmd(bool sync,
 	uint8_t dataCoding, int num)
 {
 	__decl_tc__;
-	TCSelector s(num, 3);
+	TCSelector s(num, 4);
 	for (; s.check(); s++)
 	{
+		__cfg_addr__(dbSmeAlias);
+		__cfg_addr__(dbSmeInvalidAddr);
 		string input, output;
+		Address addr = dbSmeAlias;
 		switch (s.value())
 		{
-			case 1: //отсутствуют обязательные параметры
+			case 1: //неправильный адрес
+				{
+					__tc__("submitDbSmeCmd.incorrect.invalidAddr"); __tc_ok__;
+					auto_ptr<char> tmp = rand_char(20);
+					input = tmp.get();
+					addr = dbSmeInvalidAddr;
+					__cfg_str__(dbSmeRespProviderNoFound);
+					output = dbSmeRespProviderNoFound;
+				}
+				break;
+			case 2: //неправильная задача
 				{
 					__tc__("submitDbSmeCmd.incorrect.invalidJob"); __tc_ok__;
 					auto_ptr<char> tmp = rand_char(20);
@@ -617,7 +637,7 @@ void DbSmeTestCases::submitIncorrectParamsDbSmeCmd(bool sync,
 					output = dbSmeRespJobNotFound;
 				}
 				break;
-			case 2: //отсутствуют обязательные параметры
+			case 3: //отсутствуют обязательные параметры
 				{
 					__tc__("submitDbSmeCmd.incorrect.missingParams"); __tc_ok__;
 					input = "InsertJob1";
@@ -625,7 +645,7 @@ void DbSmeTestCases::submitIncorrectParamsDbSmeCmd(bool sync,
 					output = dbSmeRespInputParse;
 				}
 				break;
-			case 3: //присутствуют лишние параметры
+			case 4: //присутствуют лишние параметры
 				{
 					__tc__("submitDbSmeCmd.incorrect.extraParams"); __tc_ok__;
 					input = "DateFormatJob1 1/1/02 12:0:0 AM str";
@@ -636,7 +656,7 @@ void DbSmeTestCases::submitIncorrectParamsDbSmeCmd(bool sync,
 			default:
 				__unreachable__("Invalid num");
 		}
-		sendDbSmePdu(input, output, sync, dataCoding);
+		sendDbSmePdu(addr, input, output, sync, dataCoding);
 	}
 }
 
@@ -738,6 +758,10 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	__check__(5, priorityFlag, 0);
 	__check__(6, registredDelivery, 0);
 	__check__(7, replaceIfPresentFlag, 0);
+	if (text.length() > getMaxChars(ack->dataCoding))
+	{
+		__tc_fail__(8);
+	}
     SmppOptional opt;
 	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());
 	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 10);
@@ -762,7 +786,8 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 		else
 		{
 			__tc__("processDbSmeRes.longOutput");
-			if (text.length() != getMaxChars(ack->dataCoding))
+			if (text.length() != getMaxChars(ack->dataCoding) &&
+				ack->text.length() % getMaxChars(ack->dataCoding) != 0)
 			{
 				__tc_fail__(1);
 			}

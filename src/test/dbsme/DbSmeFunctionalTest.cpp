@@ -276,6 +276,41 @@ void DbSmeFunctionalTest::printStat()
 	}
 }
 
+bool checkRoute(const Address& smeAddr, const SmeSystemId& smeId,
+	const Address& destAlias)
+{
+	bool routeOk = false;
+	ostringstream os;
+	os << "smeAddr = " << str(smeAddr) << ", smeId = " << smeId
+		<< ", destAlias = " << destAlias;
+	const Address destAddr = aliasReg->findAddressByAlias(destAlias);
+	const RouteHolder* routeHolder1 = routeReg->lookup(smeAddr, destAddr);
+	if (routeHolder1)
+	{
+		const SmeSystemId& smeId1 = routeHolder1->route.smeSystemId;
+		bool smeBound1 = smeReg->isSmeBound(smeId1);
+		os << ", route to = " << smeId1 << ", bound = " << (smeBound1 ? "yes" : "no");
+		const RouteHolder* routeHolder2 = routeReg->lookup(destAddr, smeAddr);
+		if (routeHolder2)
+		{
+			const SmeSystemId& smeId2 = routeHolder2->route.smeSystemId;
+			bool smeBound2 = smeReg->isSmeBound(smeId2);
+			os << ", back route to = " << smeId2 << ", bound = " << (smeBound2 ? "yes" : "no");
+			routeOk = true;
+		}
+		else
+		{
+			os << ", no back route";
+		}
+	}
+	else
+	{
+		os << ", no route";
+	}
+	__trace2__("%s", os.str().c_str());
+	return routeOk;
+}
+
 vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 {
 	__trace__("*** Generating config files ***");
@@ -288,6 +323,7 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 	
 	__cfg_addr__(dbSmeAddr);
 	__cfg_addr__(dbSmeAlias);
+	__cfg_addr__(dbSmeInvalidAddr);
 	__cfg_str__(dbSmeSystemId);
 	__cfg_addr__(profilerAddr);
 	__cfg_addr__(profilerAlias);
@@ -366,12 +402,16 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 		route1.smeSystemId = dbSmeSystemId;
 		route1.enabling = true;
 		tcRoute.addCorrectRouteMatch(&route1, NULL, RAND_TC);
+		route1.dest = dbSmeInvalidAddr;
+		tcRoute.addCorrectRouteMatch(&route1, NULL, RAND_TC);
 		//db sme -> sme
 		RouteInfo route2;
 		route2.source = dbSmeAddr;
 		route2.dest = *addr[i];
 		route2.smeSystemId = smeInfo[i]->systemId;
 		route2.enabling = true;
+		tcRoute.addCorrectRouteMatch(&route2, NULL, RAND_TC);
+		route2.source = dbSmeInvalidAddr;
 		tcRoute.addCorrectRouteMatch(&route2, NULL, RAND_TC);
 	}
 	//сохранение конфигов
@@ -403,34 +443,14 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 	int routeCount = 0;
 	for (int i = 0; i < numSme; i++)
 	{
-		ostringstream os;
-		os << "sme: addr = " << str(*addr[i]) << ", smeId = " << smeInfo[i]->systemId;
-		const Address& _smeAddr = *addr[i];
-		static const Address _dbSmeAddr = aliasReg->findAddressByAlias(dbSmeAlias);
-		const RouteHolder* routeHolder1 = routeReg->lookup(_smeAddr, _dbSmeAddr);
-		if (routeHolder1)
+		if (checkRoute(*addr[i], smeInfo[i]->systemId, dbSmeAlias))
 		{
-			const SmeSystemId& smeId1 = routeHolder1->route.smeSystemId;
-			bool smeBound1 = smeReg->isSmeBound(smeId1);
-			os << ", route to = " << smeId1 << ", bound = " << (smeBound1 ? "yes" : "no");
-			const RouteHolder* routeHolder2 = routeReg->lookup(_dbSmeAddr, _smeAddr);
-			if (routeHolder2)
-			{
-				const SmeSystemId& smeId2 = routeHolder2->route.smeSystemId;
-				bool smeBound2 = smeReg->isSmeBound(smeId2);
-				os << ", back route to = " << smeId2 << ", bound = " << (smeBound2 ? "yes" : "no");
-				routeCount++;
-			}
-			else
-			{
-				os << ", no back route";
-			}
+			routeCount++;
 		}
-		else
+		if (checkRoute(*addr[i], smeInfo[i]->systemId, dbSmeInvalidAddr))
 		{
-			os << ", no route";
+			routeCount++;
 		}
-		__trace2__("%s", os.str().c_str());
 	}
 	__require__(routeCount);
 	for (int i = 0; i < numSme; i++)

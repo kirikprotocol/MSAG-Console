@@ -75,12 +75,14 @@ void correctInputTc()
 void incorrectInputTc()
 {
 	__reg_tc__("submitDbSmeCmd.incorrect", "Отправка неправильной команды db sme");
+	__reg_tc__("submitDbSmeCmd.incorrect.invalidJob",
+		"Неправильное имя задачи");
+	__reg_tc__("submitDbSmeCmd.incorrect.invalidAddr",
+		"Неправильный адрес (не зарегистрирован data provider)");
 	__reg_tc__("submitDbSmeCmd.incorrect.missingParams",
 		"Отсутствуют обязательные параметры");
 	__reg_tc__("submitDbSmeCmd.incorrect.extraParams",
 		"Присутствуют лишние параметры");
-	__reg_tc__("submitDbSmeCmd.incorrect.invalidJob",
-		"Неправильное имя задачи");
 	//dateFormat
 	__reg_tc__("submitDbSmeCmd.incorrect.dateFormat",
 		"Формат даты не соответствует ожидаемому");
