@@ -430,7 +430,7 @@ void DeliveryReportMonitor::reschedule(time_t _checkTime)
 string DeliveryReportMonitor::str() const
 {
 	ostringstream s;
-	s << PduMonitor::str() << ", msgRef = %d" << (int) msgRef <<
+	s << PduMonitor::str() << ", msgRef = " << (int) msgRef <<
 		", state = " << state << ", deliveryStatus = " << deliveryStatus;
 	return s.str();
 }
@@ -480,7 +480,7 @@ SmeAckMonitor::~SmeAckMonitor()
 string SmeAckMonitor::str() const
 {
 	ostringstream s;
-	s << PduMonitor::str() << ", msgRef = %d" << (int) msgRef;
+	s << PduMonitor::str() << ", msgRef = " << (int) msgRef;
 	return s.str();
 }
 
