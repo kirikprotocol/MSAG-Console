@@ -8,5 +8,5 @@ export LANGUAGE=@LC_ALL@
 export NLS_LANG=@NLS_LANG@
 export LD_LIBRARY_PATH=./lib:$LD_LIBRARY_PATH
 cd @daemon.dir@
-nohup bin/daemon.sh daemon.pid &
-echo $! > daemon.pid
+nohup bin/daemon.sh ../daemon.pid &
+echo $! > ../daemon.pid
