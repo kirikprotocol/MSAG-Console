@@ -134,7 +134,7 @@ public class Functions
     return file;
   }
 
-  private static final DateFormat suffixDateFormat = new SimpleDateFormat(".dd.MM.yyyy.HH.mm.ss.SSS.'bak'");
+  private static final DateFormat suffixDateFormat = new SimpleDateFormat(".yyyy.MM.dd.HH.mm.ss.SSS.'bak'");
 
   public static synchronized File createNewFilenameForSave(final File filenameToSave)
   {
