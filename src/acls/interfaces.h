@@ -8,6 +8,8 @@ namespace smsc {
 namespace acls {
 
 typedef std::string    AclPhoneNumber;
+const string& AclPhoneAsString(const AclPhoneNumber& a) { return a; }
+
 typedef std::string    AclName;
 typedef std::string    AclDescription;
 typedef unsigned long  AclIdent;
