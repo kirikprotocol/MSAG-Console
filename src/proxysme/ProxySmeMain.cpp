@@ -12,6 +12,9 @@
 #include "ProxySmeSMachine.h"
 #include "ProxySmeQueue.h"
 #include "ProxySmeMixer.h"
+#if defined _WIN32
+#include "ProxySmeConfig.h"
+#endif
 #include "../logger/Logger.h"
 
 SMSC_SMEPROXY_BEGIN
@@ -22,6 +25,7 @@ using namespace smsc::core::synchronization;
 
 bool LoadConfig(ProxyConfig& pconf)
 {
+#if defined _WIN32
   static const char* HOST = "smsc";
   static const int   PORT = 9992;
   pconf.quelimit = 100;
@@ -45,6 +49,30 @@ bool LoadConfig(ProxyConfig& pconf)
   pconf.right.timeOut = 100;
 
   return true;
+#else
+  try {
+    ProxySmeConfig cfg("proxysme.cnf");
+    const ProxySmeConfig::sme& left = cfg.getLeft();
+    pconf.left.host = left.host;
+    pconf.left.port = left.port;
+    pconf.left.sid  = left.sid;
+    pconf.left.timeOut = left.timeOut;
+    pconf.left.systemType = left.systemType;
+    pconf.left.origAddr = left.origAddr;
+    pconf.left.password = left.password;
+    const ProxySmeConfig::sme& right = cfg.getRight();
+    pconf.right.host = right.host;
+    pconf.right.port = right.port;
+    pconf.right.sid  = right.sid;
+    pconf.right.timeOut = right.timeOut;
+    pconf.right.systemType = right.systemType;
+    pconf.right.origAddr = right.origAddr;
+    pconf.right.password = right.password;
+    pconf.quelimit = 100;
+  }catch(exception& e) {
+    smsc::util::Logger::getCategory("smsc.proxysme").error("can't laod config: %s",e.what());
+  }
+#endif
 }
 
 extern "C" 
