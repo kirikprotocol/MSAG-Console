@@ -78,6 +78,9 @@ static string FormatText(const char* format,...)
   return string(b.get());
 }
 
+#define MAP_ERRORS_BASE 0x480
+#define MAP_FALURE (/*MAP_ERRORS_BASE+34*/8)
+
 struct MAPDIALOG_ERROR : public runtime_error
 {
   unsigned code;
@@ -93,17 +96,17 @@ struct MAPDIALOG_BAD_STATE : public MAPDIALOG_ERROR
 };
 struct MAPDIALOG_TEMP_ERROR : public MAPDIALOG_ERROR
 {
-  MAPDIALOG_TEMP_ERROR(const string& s,unsigned c=1) :
+  MAPDIALOG_TEMP_ERROR(const string& s,unsigned c=MAP_FALURE) :
     MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_TEMP,c),s){}
 };
 struct MAPDIALOG_FATAL_ERROR : public MAPDIALOG_ERROR
 {
-  MAPDIALOG_FATAL_ERROR(const string& s,unsigned c=1) :
+  MAPDIALOG_FATAL_ERROR(const string& s,unsigned c=MAP_FALURE) :
     MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_FATAL,c),s){}
 };
 struct MAPDIALOG_HEREISNO_ID : public MAPDIALOG_ERROR
 {
-  MAPDIALOG_HEREISNO_ID(const string& s,unsigned c=1) :
+  MAPDIALOG_HEREISNO_ID(const string& s,unsigned c=MAP_FALURE) :
     MAPDIALOG_ERROR(0,s){}
 };
 
@@ -261,7 +264,7 @@ static void QueryHlrVersion(MapDialog* dialog)
   if ( result != ET96MAP_E_OK ) {
     x_map.erase(s_);
     throw MAPDIALOG_FATAL_ERROR(
-      FormatText("MAP::QueryHlrVersion: error 0x%x when GetAcVersion",result));
+      FormatText("MAP::QueryHlrVersion: error 0x%x when GetAcVersion",result),MAP_FALURE);
   }
 }
 
@@ -278,7 +281,7 @@ static void QueryMcsVersion(MapDialog* dialog)
   if ( result != ET96MAP_E_OK ) {
     x_map.erase(s_);
     throw MAPDIALOG_FATAL_ERROR(
-      FormatText("MAP::QueryMcsVersion: error 0x%x when GetAcVersion",result));
+      FormatText("MAP::QueryMcsVersion: error 0x%x when GetAcVersion",result),MAP_FALURE);
   }
 }
 
@@ -314,7 +317,7 @@ static void SendRInfo(MapDialog* dialog)
     &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 );
   if ( result != ET96MAP_E_OK ) {
     throw MAPDIALOG_FATAL_ERROR(
-      FormatText("MAP::SendRInfo: Et96MapOpenReq error 0x%x",result));
+      FormatText("MAP::SendRInfo: Et96MapOpenReq error 0x%x",result),MAP_FALURE);
   }
   bool hiPrior = false;
   if ( !dialog->isQueryAbonentStatus && dialog->sms.get() != 0 && dialog->sms->getIntProperty(Tag::SMPP_PRIORITY) > 0 ) 
@@ -331,13 +334,13 @@ static void SendRInfo(MapDialog* dialog)
     FormatText("MAP::SendRInfo: incorrect dialog version %d",dialog->version));
   if ( result != ET96MAP_E_OK ) {
     throw MAPDIALOG_FATAL_ERROR(
-      FormatText("MAP::SendRInfo: Et96MapVxSendRInfoForSmReq error 0x%x",result));
+      FormatText("MAP::SendRInfo: Et96MapVxSendRInfoForSmReq error 0x%x",result),MAP_FALURE);
   }
   __trace2__("MAP::SendRInfo: Et96MapVxSendRInfoForSmReq OK");
   result = Et96MapDelimiterReq(dialog->ssn, dialog_id, 0, 0 );
   if ( result != ET96MAP_E_OK ) {
     throw MAPDIALOG_FATAL_ERROR(
-      FormatText("MAP::SendRInfo: Et96MapDelimiterReq error 0x%x",result));
+      FormatText("MAP::SendRInfo: Et96MapDelimiterReq error 0x%x",result),MAP_FALURE);
   }
   __trace2__("MAP::SendRInfo: Et96MapOpenReq OK");
 }
@@ -619,7 +622,7 @@ static bool SendSms(MapDialog* dialog){
   if ( !dialog->mms ) {
     result = Et96MapOpenReq(SSN,dialog->dialogid_map,&appContext,&dialog->destMscAddr,&dialog->scAddr,0,0,0);
     if ( result != ET96MAP_E_OK )
-      throw MAPDIALOG_FATAL_ERROR(FormatText("MAP::SendSms: Et96MapOpenReq error 0x%x",result));
+      throw MAPDIALOG_FATAL_ERROR(FormatText("MAP::SendSms: Et96MapOpenReq error 0x%x",result),MAP_FALURE);
   }
   
   dialog->smRpOa.typeOfAddress = ET96MAP_ADDRTYPE_SCADDR;
@@ -635,7 +638,7 @@ static bool SendSms(MapDialog* dialog){
     result = Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 );
     if( result != ET96MAP_E_OK )
       throw MAPDIALOG_FATAL_ERROR(
-        FormatText("MAP::SendSMSCToMT: Et96MapDelimiterReq error 0x%x",result));
+        FormatText("MAP::SendSMSCToMT: Et96MapDelimiterReq error 0x%x",result),MAP_FALURE);
     segmentation = true;
   }else{
     __trace2__("MAP::SendSMSCToMT: Et96MapVxForwardSmMTReq");
@@ -647,12 +650,12 @@ static bool SendSms(MapDialog* dialog){
       FormatText("MAP::SendSMSCToMT: incorrect dialog version %d",dialog->version));
     if( result != ET96MAP_E_OK )
       throw MAPDIALOG_FATAL_ERROR(
-        FormatText("MAP::SendSMSCToMT: Et96MapVxForwardSmMTReq error 0x%x",result));
+        FormatText("MAP::SendSMSCToMT: Et96MapVxForwardSmMTReq error 0x%x",result),MAP_FALURE);
     __trace2__("MAP::SendSMSCToMT: Et96MapVxForwardSmMTReq OK");
     result = Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 );
     if( result != ET96MAP_E_OK ) 
       throw MAPDIALOG_FATAL_ERROR(
-        FormatText("MAP::SendSMSCToMT: Et96MapDelimiterReq error 0x%x",result));
+        FormatText("MAP::SendSMSCToMT: Et96MapDelimiterReq error 0x%x",result),MAP_FALURE);
   }
   if ( segmentation == SMS_SEGMENTATION )
     dialog->state = MAPST_WaitSpecOpenConf;
@@ -689,12 +692,12 @@ static void SendSegmentedSms(MapDialog* dialog)
     FormatText("MAP::SendSegmentedSms: incorrect dialog version %d",dialog->version));
   if( result != ET96MAP_E_OK )
     throw MAPDIALOG_FATAL_ERROR(
-      FormatText("MAP::SendSegmentedSms: Et96MapVxForwardSmMTReq error 0x%x",result));
+      FormatText("MAP::SendSegmentedSms: Et96MapVxForwardSmMTReq error 0x%x",result),MAP_FALURE);
   __trace2__("MAP::SendSegmentedSms: Et96MapVxForwardSmMTReq OK");
   result = Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 );
   if( result != ET96MAP_E_OK ) 
     throw MAPDIALOG_FATAL_ERROR(
-      FormatText("MAP::SendSegmentedSms: Et96MapDelimiterReq error 0x%x",result));
+      FormatText("MAP::SendSegmentedSms: Et96MapDelimiterReq error 0x%x",result),MAP_FALURE);
 }
 
 static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
@@ -1049,12 +1052,16 @@ USHORT_T Et96MapOpenConf (
           }else{
             //dialog->state = MAPST_BROKEN;
             throw MAPDIALOG_FATAL_ERROR(
-              FormatText("MAP::%s version alredy 1 and unsupported!",__FUNCTION__));
+              FormatText("MAP::%s version alredy 1 and unsupported!",__FUNCTION__),
+              refuseReason_p?(MAP_ERRORS_BASE+*refuseReason_p):MAP_FALURE));
           }
         }else{
           //dialog->state = MAPST_BROKEN;
-          throw MAPDIALOG_BAD_STATE(
-            FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialogid_map,dialogid_smsc));
+          //throw MAPDIALOG_BAD_STATE(
+          //  FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialogid_map,dialogid_smsc));
+          throw MAPDIALOG_FATAL_ERROR(
+            FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialogid_map,dialogid_smsc),
+            provErrCode_p?MAP_ERRORS_BASE+*provErrCode_p:MAP_FALURE);
         }
       }
       switch(dialog->state){
@@ -1104,10 +1111,10 @@ void DoMTConfErrorProcessor(
     }
     if ( fatal ) 
       throw MAPDIALOG_FATAL_ERROR(
-        FormatText("MAP::%s fatal *errorForwardSMmt_sp: 0x%x",__FUNCTION__,errorForwardSMmt_sp->errorCode));
+        FormatText("MAP::%s fatal *errorForwardSMmt_sp: 0x%x",__FUNCTION__,errorForwardSMmt_sp->errorCode),MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
     else
       throw MAPDIALOG_TEMP_ERROR(
-        FormatText("MAP::%s temp *errorForwardSMmt_sp: 0x%x",__FUNCTION__,errorForwardSMmt_sp->errorCode));
+        FormatText("MAP::%s temp *errorForwardSMmt_sp: 0x%x",__FUNCTION__,errorForwardSMmt_sp->errorCode),MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
   }
   /*else if (provErrCode_p){
     throw MAPDIALOG_TEMP_ERROR(
@@ -1120,10 +1127,10 @@ void DoMTConfErrorProcessor(
          *provErrCode_p == 0x09 || // invalid responce recived
          (*provErrCode_p > 0x0a && *provErrCode_p <= 0x10)) // unxpected component end other
       throw MAPDIALOG_FATAL_ERROR(
-        FormatText("MAP::%s fatal *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p));
+        FormatText("MAP::%s fatal *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p),MAP_ERRORS_BASE+*provErrCode_p);
     else
       throw MAPDIALOG_TEMP_ERROR(
-        FormatText("MAP::%s temp *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p));
+        FormatText("MAP::%s temp *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p),MAP_ERRORS_BASE+*provErrCode_p);
   }
 }
 #endif
@@ -1143,12 +1150,14 @@ void DoRInfoErrorProcessor(
       throw MAPDIALOG_FATAL_ERROR(
         FormatText("MAP::%s fatal errorSendRoutingInfoForSm_sp->errorCode: 0x%x",
                    __FUNCTION__,
-                   errorSendRoutingInfoForSm_sp->errorCode));
+                   errorSendRoutingInfoForSm_sp->errorCode),
+                   MAP_ERRORS_BASE+errorSendRoutingInfoForSm_sp->errorCode);
     else      
       throw MAPDIALOG_TEMP_ERROR(
         FormatText("MAP::%s temp errorSendRoutingInfoForSm_sp->errorCode: 0x%x",
                  __FUNCTION__,
-                 errorSendRoutingInfoForSm_sp->errorCode));
+                 errorSendRoutingInfoForSm_sp->errorCode),
+                 MAP_ERRORS_BASE+errorSendRoutingInfoForSm_sp->errorCode);
   }
   if ( provErrCode_p != 0 ){
     if ( *provErrCode_p == 0x02 || // unsupported service
@@ -1157,10 +1166,12 @@ void DoRInfoErrorProcessor(
          *provErrCode_p == 0x09 || // invalid responce recived
          (*provErrCode_p > 0x0a && *provErrCode_p <= 0x10)) // unxpected component end other
       throw MAPDIALOG_FATAL_ERROR(
-        FormatText("MAP::%s fatal *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p));
+        FormatText("MAP::%s fatal *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p),
+        MAP_ERRORS_BASE+*provErrCode_p);
     else
       throw MAPDIALOG_TEMP_ERROR(
-        FormatText("MAP::%s temp *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p));
+        FormatText("MAP::%s temp *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p),
+        MAP_ERRORS_BASE+*provErrCode_p);
   }
 }
 
@@ -1204,7 +1215,7 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
       {
         __trace2__("MAP::%s absent subscriber",__FUNCTION__);
         dialog->subscriberAbsent = true;
-        dialog->routeErr = MAKE_ERRORCODE(CMD_ERR_TEMP,0);
+        dialog->routeErr = MAKE_ERRORCODE(CMD_ERR_TEMP,MAP_ERRORS_BASE+27);
       }else{
         try {
           DoRInfoErrorProcessor(errorSendRoutingInfoForSm_sp,provErrCode_p);
@@ -1387,7 +1398,7 @@ USHORT_T Et96MapUAbortInd (
     dialogid_smsc = dialog->dialogid_smsc;
     __trace2__("MAP::%s dialog 0x%x , userReason: 0x%x",__FUNCTION__,dialogid_map,userReason_p?*userReason_p:-1);
     //throw runtime_error("UABORT");
-    throw MAPDIALOG_TEMP_ERROR("UABORT",userReason_p?*userReason_p:-1);
+    throw MAPDIALOG_TEMP_ERROR("UABORT",MAP_ERRORS_BASE+(userReason_p?*userReason_p:-1));
   }MAP_CATCH(dialogid_map,dialogid_smsc);
   return ET96MAP_E_OK;
 }
@@ -1408,7 +1419,7 @@ USHORT_T Et96MapPAbortInd(
         FormatText("MAP::%s MAP.did:{0x%x} is not present",__FUNCTION__,dialogueId));
     dialogid_smsc = dialog->dialogid_smsc;
     __trace2__("MAP::%s dialog 0x%x provReason: 0x%x",__FUNCTION__,dialogid_map,provReason);
-    throw MAPDIALOG_TEMP_ERROR("PABORT",provReason);
+    throw MAPDIALOG_TEMP_ERROR("PABORT",MAP_ERRORS_BASE+provReason);
   }MAP_CATCH(dialogid_map,dialogid_smsc);
   return ET96MAP_E_OK;
 }
@@ -1565,7 +1576,7 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
     __trace2__("MAP::%s:DELIVERY_SM %s",__FUNCTION__,RouteToString(dialog.get()).c_str());
     //DoMTConfErrorProcessor(errorForwardSMmt_sp,provErrCode_p);
     if ( provErrCode_p ) {
-      throw MAPDIALOG_FATAL_ERROR(FormatText("provErrCode_p == 0x%x",*provErrCode_p));
+      throw MAPDIALOG_FATAL_ERROR(FormatText("provErrCode_p == 0x%x",*provErrCode_p),MAP_ERRORS_BASE+*provErrCode_p);
     }
     if ( errorForwardSMmt_sp )
     {
@@ -1573,19 +1584,21 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
            errorForwardSMmt_sp->errorCode == 27 )
       {
         dialog->subscriberAbsent = true;
-        throw MAPDIALOG_TEMP_ERROR("MAP::absent subscriber");
+        throw MAPDIALOG_TEMP_ERROR("MAP::absent subscriber",MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
       }
       if ( errorForwardSMmt_sp->errorCode == 32 && 
         errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason == ET96MAP_SM_DELIVERY_FAILURE_REASON_MT_T::ET96MAP_MEM_CAPACITY_EXCEEDED )
       {
         dialog->memoryExceeded = true;
-        throw MAPDIALOG_TEMP_ERROR("MAP::memory exceeded");
+        throw MAPDIALOG_TEMP_ERROR("MAP::memory exceeded",MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
       }
       if ( errorForwardSMmt_sp->errorCode == 34 ) /*System failure*/
       {
-        throw MAPDIALOG_TEMP_ERROR(FormatText("errorForwardSMmt_sp->errorCode == 0x%x",errorForwardSMmt_sp->errorCode));
+        throw MAPDIALOG_TEMP_ERROR(FormatText("errorForwardSMmt_sp->errorCode == 0x%x",errorForwardSMmt_sp->errorCode),
+          MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
       }
-      throw MAPDIALOG_FATAL_ERROR(FormatText("errorForwardSMmt_sp->errorCode == 0x%x",errorForwardSMmt_sp->errorCode));
+      throw MAPDIALOG_FATAL_ERROR(FormatText("errorForwardSMmt_sp->errorCode == 0x%x",errorForwardSMmt_sp->errorCode),
+          MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
     }
     __trace2__("MAP::%s: 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
     switch( dialog->state ){
