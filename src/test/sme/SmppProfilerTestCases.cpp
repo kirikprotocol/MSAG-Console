@@ -282,14 +282,14 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 
 	const string text = decode(pdu.get_message().get_shortMessage(),
 		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding());
-	if (!monitor->pduData->objProps.count("output"))
+	if (!monitor->pduData->objProps.count("profilerOutput"))
 	{
 		AckText* ack = getExpectedResponse(monitor, pdu, recvTime);
 		ack->ref();
-		monitor->pduData->objProps["output"] = ack;
+		monitor->pduData->objProps["profilerOutput"] = ack;
 	}
 	AckText* ack =
-		dynamic_cast<AckText*>(monitor->pduData->objProps["output"]);
+		dynamic_cast<AckText*>(monitor->pduData->objProps["profilerOutput"]);
 	__require__(ack);
 	if (!ack->valid)
 	{

@@ -149,10 +149,8 @@ void SmppPduChecker::processResp(ResponseMonitor* monitor,
 		case PDU_RECEIVED_FLAG: //респонс уже получен ранее
 			__tc_fail__(1);
 			break;
-		case PDU_NOT_EXPECTED_FLAG: //респонс всегда должен быть
-			//break;
-		default:
-			__unreachable__("Unknown pduData->responseFlag");
+		default: //респонс всегда должен быть
+			__unreachable__("Invalid pduData->responseFlag");
 	}
 	__tc_ok_cond__;
 	if (respPdu.get_header().get_commandStatus() != ESME_ROK)
