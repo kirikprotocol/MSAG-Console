@@ -17,6 +17,7 @@ public class Options extends MCISmeBean
 {
   private String address = "";
   private String svcType = "";
+  private String callingMask = "";
   private int protocolId = 0;
   private int daysValid = 1;
   private int unrespondedMessagesMax = 0;
@@ -81,6 +82,7 @@ public class Options extends MCISmeBean
         address = getConfig().getString("MCISme.Address");
         svcType = getConfig().getString("MCISme.SvcType");
         protocolId = getConfig().getInt("MCISme.ProtocolId");
+        callingMask = getConfig().getString("MCISme.CallingMask");
         unrespondedMessagesMax = getConfig().getInt("MCISme.unrespondedMessagesMax");
         unrespondedMessagesSleep = getConfig().getInt("MCISme.unrespondedMessagesSleep");
         responceWaitTime = getConfig().getString("MCISme.responceWaitTime");
@@ -149,7 +151,8 @@ public class Options extends MCISmeBean
   {
     getConfig().setString("MCISme.Address", address);
     getConfig().setString("MCISme.SvcType", svcType);
-    getConfig().setInt   ("MCISme.ProtocolId", protocolId);
+    getConfig().setInt   ("MCISme.ProtocolId",  protocolId);
+    getConfig().setString("MCISme.CallingMask", callingMask);
     getConfig().setInt   ("MCISme.unrespondedMessagesMax", unrespondedMessagesMax);
     getConfig().setInt   ("MCISme.unrespondedMessagesSleep", unrespondedMessagesSleep);
     getConfig().setString("MCISme.responceWaitTime", responceWaitTime);
@@ -205,6 +208,13 @@ public class Options extends MCISmeBean
   }
   public void setSvcType(String svcType) {
     this.svcType = svcType;
+  }
+
+  public String getCallingMask() {
+    return callingMask;
+  }
+  public void setCallingMask(String callingMask) {
+    this.callingMask = callingMask;
   }
 
   public int getProtocolIdInt() {
