@@ -253,10 +253,15 @@ Targets:
   </target>
 
   <!-- external sme -->
-  <target name="dbSme_update">
+  <target name="dbSme_build">
+    <ant dir="${SRC_DIR}" target="mod">
+      <property name="MOD" value="dbsme"/>
+    </ant>
+  </target>
+  <target name="dbSme_update" depends="dbSme_build" >
     <ant dir="${SMSC_DIR}/ext_smes" target="dbSme_update"/>
   </target>
-  <target name="dbSme_distr">
+  <target name="dbSme_distr" depends="dbSme_build" >
     <ant dir="${SMSC_DIR}/ext_smes" target="dbSme_distr"/>
   </target>
 
