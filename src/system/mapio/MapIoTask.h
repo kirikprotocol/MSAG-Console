@@ -431,7 +431,10 @@ public:
 
   MapDialog* createDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn/*,const char* abonent*/,unsigned version=2){
     MutexGuard g(sync);
-    if( MAPSTATS_dialogs_in >= processLimit ) throw ProxyQueueLimitException(MAPSTATS_dialogs_in,processLimit);
+    if( MAPSTATS_dialogs_in >= processLimit ) {
+      Dump();
+      throw ProxyQueueLimitException(MAPSTATS_dialogs_in,processLimit);
+    }
     MAPSTATS_Update(MAPSTATS_NEWDIALOG_IN);
     MapDialog* dlg = new MapDialog(dialogueid,lssn,version);
     hash_.Insert(MKDID(dialogueid,lssn),dlg);
@@ -516,7 +519,10 @@ public:
         }
       }
     }
-    if( MAPSTATS_dialogs_out >= processLimit ) throw ProxyQueueLimitException(MAPSTATS_dialogs_out,processLimit);
+    if( MAPSTATS_dialogs_out >= processLimit*2 ) {
+      Dump();
+      throw ProxyQueueLimitException(MAPSTATS_dialogs_out,processLimit);
+    }
     ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
     MAPSTATS_Update(MAPSTATS_NEWDIALOG_OUT);
     MapDialog* dlg = new MapDialog(map_dialog,lssn);
@@ -540,7 +546,10 @@ public:
       Dump();
       throw runtime_error("MAP:: POOL is empty");
     }
-    if( MAPSTATS_dialogs_out >= processLimit ) throw ProxyQueueLimitException(MAPSTATS_dialogs_out,processLimit);
+    if( MAPSTATS_dialogs_out >= processLimit*2 ) {
+      Dump();
+      throw ProxyQueueLimitException(MAPSTATS_dialogs_out,processLimit);
+    }
     __mapdlg_trace__("try to create SMSC USSD dialog");
     ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
     MAPSTATS_Update(MAPSTATS_NEWDIALOG_OUT);

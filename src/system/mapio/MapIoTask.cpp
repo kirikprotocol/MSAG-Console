@@ -410,8 +410,9 @@ void MAPSTATS_DumpDialogLC(MapDialog* dialog)
     long long maked_mks = dialog->maked_at_mks;
     long long mks = ((long long)tv.tv_sec)*1000*1000 + (long long)tv.tv_usec;
     long long cl = mks-maked_mks;
-    smsc_log_info(MapDialogContainer::loggerStatDlg, "dlg=%p (%x/%x) sec=%ld usec=%ld src=%s dst=%s",
+    smsc_log_info(MapDialogContainer::loggerStatDlg, "dlg=%p (%x/%x) ussd=%s sec=%ld usec=%ld src=%s dst=%s",
                                   dialog,dialog->dialogid_map,dialog->dialogid_smsc,
+                                  dialog->isUSSD?"true":"false",
                                   long(cl/(1000*1000)),long(cl%(1000*1000)),
                                   dialog->sms.get()?dialog->sms->getOriginatingAddress().value:"???",
                                   dialog->sms.get()?dialog->sms->getDestinationAddress().value:"???");
@@ -540,11 +541,11 @@ void MAPSTATS_Update(MAPSTATS stats)
 void MAPSTATS_DumpDialog(MapDialog* dlg)
 {
   static smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("map.stat.dlgdump");
-  smsc_log_info(logger, "dlg/map/smsc 0x%x/0x%x/0x%x(%s) state: %d, %ld sec, {%s->%s}",
+  smsc_log_info(logger, "dlg/map/smsc 0x%x/0x%x/0x%x(%s) state: %d, %ld/%ld sec, {%s->%s}",
                dlg,
                dlg->dialogid_map,
                dlg->dialogid_smsc,
-               dlg->isUSSD?"USSD":"OTHER",
+               dlg->isUSSD?"USSD":"SMS",
                (int)dlg->state,
                (long)(time(0)-(dlg->maked_at_mks/1000000)),
                dlg->sms.get()?dlg->sms->getOriginatingAddress().value:"???",
