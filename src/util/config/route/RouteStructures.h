@@ -132,7 +132,7 @@ private:
 
 public:
   Route()
-    : id(), priority(0), sources(), destinations(), billing(false), archiving(false), enabling(true),suppressDeliveryReports(false), hide(true), replyPath(smsc::router::ReplyPathPass), serviceId(0), srcSmeSystemId(), deliveryMode(smsc::sms::SMSC_DEFAULT_MSG_MODE), forwardTo(), aclId(-1), forceDelivery(false), allowBlocked(false), providerId(-1)
+    : id(), priority(0), sources(), destinations(), billing(false), archiving(false), enabling(true),suppressDeliveryReports(false), hide(true), replyPath(smsc::router::ReplyPathPass), serviceId(0), srcSmeSystemId(), deliveryMode(smsc::sms::SMSC_DEFAULT_MSG_MODE), forwardTo(), aclId((AclIdent)-1), forceDelivery(false), allowBlocked(false), providerId(-1)
   {}
   Route(const Route &r)
     : id(r.id), priority(r.priority), sources(r.sources), destinations(r.destinations),

@@ -6,8 +6,14 @@
 #include <new>
 #include <unistd.h>
 #include <ucontext.h>
-#include <sys/frame.h>
 #include <signal.h>
+
+#ifdef linux
+#include <execinfo.h>
+#else
+#include <sys/frame.h>
+#endif
+
 
 namespace smsc{
 namespace util{
@@ -25,6 +31,13 @@ static const int FILL_PATTERN=0xcc;
 static const int POST_FILL_PATTERN=0xbb;
 static const int DELETE_PATTERN=0xdd;
 
+#ifdef linux
+
+static void BackTrace(void** dump)
+{
+  backtrace(dump,MAXTRACESIZE);
+}
+#else
 
 #if defined(sparc) || defined(__sparc)
 #define FRAME_PTR_REGISTER REG_SP
@@ -65,6 +78,7 @@ static void BackTrace(void** dump)
   }
   if(counter!=MAXTRACESIZE)dump[counter]=0;
 }
+#endif
 
 
 
@@ -121,7 +135,7 @@ public:
 
 
 static LeakHunter* lh=NULL;
-static mutex_t mtx=DEFAULTMUTEX;
+static pthread_mutex_t mtx=PTHREAD_MUTEX_INITIALIZER;;
 
 static void sigcheckpoint(int param)
 {
@@ -336,14 +350,14 @@ static void initlh()
   using namespace std;
   if(!lh)
   {
-    mutex_lock(&mtx);
+    pthread_mutex_lock(&mtx);
     if(!lh)
     {
       void *mem=malloc(sizeof(LeakHunter));
       lh=new(mem)LeakHunter();
       atexit(deletelh);
     }
-    mutex_unlock(&mtx);
+    pthread_mutex_unlock(&mtx);
   }
 }
 
