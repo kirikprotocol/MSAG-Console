@@ -54,10 +54,10 @@ struct RoutePattern
     uint8_t dest_addressPattern[21];
     int32_t dest_addressPattern_32[5];
   };
-	bool dest_hasStar;
-	bool src_hasStar;
-	uint8_t dest_length;
-	uint8_t src_length;
+  bool dest_hasStar;
+  bool src_hasStar;
+  uint8_t dest_length;
+  uint8_t src_length;
 };
 
 struct RouteAddress
@@ -83,8 +83,8 @@ struct RouteAddress
     uint8_t dest_address[21];
     int32_t dest_address_32[5];
   };
-	uint8_t src_length;
-	uint8_t dest_length;
+  uint8_t src_length;
+  uint8_t dest_length;
 };
 
 struct RouteRecord 

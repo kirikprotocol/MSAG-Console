@@ -26,12 +26,12 @@ struct APattern
       uint8_t numberingPlan;
     };
     int16_t num_n_plan;
-  };
+  }__attribute__((packed));
   union
   {
     uint8_t mask[21];
     int32_t mask_32[5];
-  };
+  }__attribute__((packed));
   union
   {
     uint8_t value[21];
@@ -39,6 +39,7 @@ struct APattern
   };
   int length;
   int defLength;
+	bool hasStar;
 };
 
 struct AValue
@@ -51,7 +52,7 @@ struct AValue
       uint8_t numberingPlan;
     };
     int16_t num_n_plan;
-  };
+  }__attribute__((packed));
   union
   {
     uint8_t value[21];

@@ -33,6 +33,12 @@ static inline int compare_patval( const APattern& pattern,
   result = compare_v(2); ifn0goto;
   result = compare_v(3); ifn0goto;
   result = compare_v(4); ifn0goto;
+  __trace2__("check_length: %c : P%d ? V%d",
+             pattern.hasStar?'*':' ',
+             pattern.length,
+             val.length);
+  result = pattern.hasStar?0:
+      ((int)pattern.length)-((int)val.length)?-1:0;
 result_:
   __trace2__("= %c == %d",result,result>0?'>':result<0?'<':'0');
   return (int32_t)result;
@@ -55,6 +61,13 @@ static inline int compare_patpat( const APattern& pat1,
   result = compare_v(2); ifn0goto;
   result = compare_v(3); ifn0goto;
   result = compare_v(4); ifn0goto;
+  __trace2__("check_length: %c : P%d ? A%d",
+             pat1.hasStar||pat2.hasStar?'*':' ',
+             pat1.length,
+             pat2.length);
+  result = pat1.hasStar||pat2.hasStar?0:
+      ((int)pat1.length)-((int)pat2.length)?-1:0;
+  ifn0goto;
 result_:
   __trace2__("= %c == %d",result,result>0?'>':result<0?'<':'0');
   return (int32_t)result;
@@ -163,6 +176,7 @@ static inline void makeAPattern(APattern& pat, const Address& addr)
   pat.defLength = 0;
   pat.length = length;
   bool undef = false;
+	pat.hasStar = false;
   for ( int i=0; i<length; ++i )
   {
     switch(buf[i])
@@ -171,7 +185,8 @@ static inline void makeAPattern(APattern& pat, const Address& addr)
       undef = true;
       break;
     case '*': // only end of value
-      goto for_break;
+      pat.hasStar = true;
+			goto for_break;
     default:
       if ( undef ) throw runtime_error("*,? may be only at end of pattern");
       ++pat.defLength;
