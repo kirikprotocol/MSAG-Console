@@ -6,18 +6,21 @@
 <col width="85%">
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <tr class=row0>
-	<th>mask:</th>
+	<th>mask</th>
 	<td><input class=txt name="mask" value="<%=bean.getMask() == null || bean.getMask().trim().length() == 0 ? ".0.0.0" : bean.getMask()%>" <%=isEdit ? "readonly" : ""%> validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <tr class=row1>
-	<th>codepage:</th>
+	<th>codepage</th>
 	<td><div class=select><select class=txt name=codepage>
-			<option value="<%=Profile.CODEPAGE_Default%>" <%=bean.getByteCodepage() == Profile.CODEPAGE_Default ? "SELECTED" : ""%>>Default</option>			<option value="<%=Profile.CODEPAGE_Latin1 %>" <%=bean.getByteCodepage() == Profile.CODEPAGE_Latin1    ? "SELECTED" : ""%>>Latin1</option>			<option value="<%=Profile.CODEPAGE_UCS2   %>" <%=bean.getByteCodepage() == Profile.CODEPAGE_UCS2    ? "SELECTED" : ""%>>UCS2</option>			<option value="<%=Profile.CODEPAGE_UCS2AndLatin1%>" <%=bean.getByteCodepage() == Profile.CODEPAGE_UCS2AndLatin1    ? "SELECTED" : ""%>>UCS2&Latin1</option>
+			<option value="<%=Profile.CODEPAGE_Default%>" <%=bean.getByteCodepage() == Profile.CODEPAGE_Default ? "SELECTED" : ""%>>Default</option>
+			<option value="<%=Profile.CODEPAGE_Latin1 %>" <%=bean.getByteCodepage() == Profile.CODEPAGE_Latin1    ? "SELECTED" : ""%>>Latin1</option>
+			<option value="<%=Profile.CODEPAGE_UCS2   %>" <%=bean.getByteCodepage() == Profile.CODEPAGE_UCS2    ? "SELECTED" : ""%>>UCS2</option>
+			<option value="<%=Profile.CODEPAGE_UCS2AndLatin1%>" <%=bean.getByteCodepage() == Profile.CODEPAGE_UCS2AndLatin1    ? "SELECTED" : ""%>>UCS2&Latin1</option>
 
 		</select></div></td>
 </tr>
 <tr class=row0>
-	<th>report mode:</th>
+	<th>report mode</th>
 	<td><div class=select><select class=txt name="report">
 			<option value="<%=Profile.REPORT_OPTION_None %>" <%=bean.getByteReport() == Profile.REPORT_OPTION_None  ? "SELECTED" : ""%>>none</option>
 			<option value="<%=Profile.REPORT_OPTION_Final%>" <%=bean.getByteReport() == Profile.REPORT_OPTION_Final ? "SELECTED" : ""%>>final only</option>
@@ -25,7 +28,7 @@
 		</select></div></td>
 </tr>
 <tr class=row1>
-	<th>locale:</th>
+	<th>locale</th>
 	<td><div class=select><select class=txt name="locale">
 		<%for (Iterator i = bean.getRegisteredLocales().iterator(); i.hasNext();)
 		{
@@ -38,12 +41,24 @@
 		</select></div></td>
 </tr>
 <tr class=row0>
-	<th>alias:</th>
+	<th>alias</th>
 	<td>
     <input class=check type=radio type="radio" name="aliasHide" value="true"  <%= (bean.isAliasHide()) ? "checked":""%>>Hide
     <input class=check type=radio type="radio" name="aliasHide" value="false" <%= (bean.isAliasHide()) ? "":"checked"%>>Unhide
-    <input class=check type=checkbox type="checkbox" name="aliasModifiable" valuue="true" <%= (bean.isAliasModifiable()) ? "checked":""%>>Modifiable
+    <input class=check type=checkbox type="checkbox" name="aliasModifiable" value="true" <%= (bean.isAliasModifiable()) ? "checked":""%>>Modifiable
   </td>
+</tr>
+<tr class=row1>
+	<th>divert</th>
+	<td><input class=txt name="divert" value="<%=bean.getDivert()%>" validation="address" onkeyup="resetValidation(this)"></td>
+</tr>
+<tr class=row0>
+	<th><label for=divertActive>divert active</label></th>
+	<td><input class=check type=checkbox type="checkbox" id=divertActive name="divertActive" value="true" <%= (bean.isDivertActive()) ? "checked":""%>></td>
+</tr>
+<tr class=row1>
+	<th><label for=divertModifiable>divert modifiable</label></th>
+	<td><input class=check type=checkbox type="checkbox" id=divertModifiable name="divertModifiable" value="true" <%= (bean.isDivertModifiable()) ? "checked":""%>></td>
 </tr>
 </table>
 </div>

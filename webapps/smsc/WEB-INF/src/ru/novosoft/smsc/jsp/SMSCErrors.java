@@ -75,7 +75,8 @@ public class SMSCErrors
 			public static final String invalidLocale = B + "invalidLocale";
 			public static final String couldntGetRegisteredLocales = B + "couldntGetRegisteredLocales";
 			public static final String couldntDelete = B + "couldntDelete";
-		}
+      public static final String couldntUpdate = B + "couldntUpdate";
+    }
 
 		public static class aliases
 		{

@@ -11,7 +11,8 @@ import ru.novosoft.smsc.admin.route.Mask;
 import java.util.List;
 import java.util.StringTokenizer;
 
-public class Profile {
+public class Profile
+{
   public static final byte CODEPAGE_Default = 0;
   public static final byte CODEPAGE_Latin1 = 3;
   public static final byte CODEPAGE_UCS2 = 8;
@@ -21,6 +22,9 @@ public class Profile {
   public static final byte REPORT_OPTION_Final = 3;
 
   private Mask mask;
+  private String divert;
+  private boolean divertActive;
+  private boolean divertModifiable;
 
   private byte codepage;
   private byte reportOptions;
@@ -37,6 +41,9 @@ public class Profile {
     setLocale((String) profileProperties.get(2));
     setAliasHide((String) profileProperties.get(3));
     setAliasModifiable((String) profileProperties.get(4));
+    setDivert((String) profileProperties.get(5));
+    setDivert_act((String) profileProperties.get(6));
+    setDivert_mod((String) profileProperties.get(7));
   }
 
   /**
@@ -46,6 +53,7 @@ public class Profile {
    * where &lt;codepage&gt; must be "default" or "UCS2" and &lt;report
    * options&gt; must be "full" or "none".
    */
+/*
   public Profile(Mask mask, String profileString) throws AdminException
   {
     this.mask = mask;
@@ -73,10 +81,14 @@ public class Profile {
     if (i < 5)
       throw new AdminException("profile string returned by SMSC misformatted: " + profileString);
   }
+*/
 
-  public Profile(Mask mask, byte codepage, byte reportOptions, String locale, boolean aliasHide, boolean aliasModifiable)
+  public Profile(Mask mask, byte codepage, byte reportOptions, String locale, boolean aliasHide, boolean aliasModifiable, String divert, boolean divertActive, boolean divertModifiable)
   {
     this.mask = mask;
+    this.divert = divert;
+    this.divertActive = divertActive;
+    this.divertModifiable = divertModifiable;
     setCodepage(codepage);
     setReportOptions(reportOptions);
     setLocale(locale);
@@ -84,9 +96,12 @@ public class Profile {
     this.aliasModifiable = aliasModifiable;
   }
 
-  public Profile(Mask mask, String codepage, String reportOptions, String locale, boolean aliasHide, boolean aliasModifiable) throws AdminException
+  public Profile(Mask mask, String codepage, String reportOptions, String locale, boolean aliasHide, boolean aliasModifiable, String divert, boolean divert_act, boolean divert_mod) throws AdminException
   {
     this.mask = mask;
+    this.divert = divert;
+    this.divertActive = divert_act;
+    this.divertModifiable = divert_mod;
     setCodepage(codepage);
     setReportOptions(reportOptions);
     setLocale(locale);
@@ -166,12 +181,12 @@ public class Profile {
       throw new AdminException("Unknown report option: " + reportoptionsString);
   }
 
-  public String getStringRepresentation() throws AdminException
+/*  public String getStringRepresentation() throws AdminException
   {
     return getCodepageString() + ',' + getReportOptionsString() + ',' + locale +
-        ',' + (aliasHide ? "true" : "false") + ',' + (aliasModifiable ? "true" : "false");
+            ',' + (aliasHide ? "true" : "false") + ',' + (aliasModifiable ? "true" : "false");
   }
-
+*/
   public Mask getMask()
   {
     return mask;
@@ -202,7 +217,7 @@ public class Profile {
   public void setAliasHide(String aliasHide)
   {
     this.aliasHide = (aliasHide.equalsIgnoreCase("true") ||
-        aliasHide.equalsIgnoreCase("hide"));
+            aliasHide.equalsIgnoreCase("hide"));
   }
 
   public boolean isAliasModifiable()
@@ -218,7 +233,7 @@ public class Profile {
   public void setAliasModifiable(String aliasModifiable)
   {
     this.aliasModifiable = (aliasModifiable.equalsIgnoreCase("true") ||
-        aliasModifiable.equalsIgnoreCase("modifiable"));
+            aliasModifiable.equalsIgnoreCase("modifiable"));
   }
 
   public static String getReportOptionsString(byte reportOptions) throws AdminException
@@ -233,5 +248,45 @@ public class Profile {
       default:
         throw new AdminException("Report option is not initialized");
     }
+  }
+
+  public String getDivert()
+  {
+    return divert;
+  }
+
+  public void setDivert(String divert)
+  {
+    this.divert = divert;
+  }
+
+  public boolean isDivertActive()
+  {
+    return divertActive;
+  }
+
+  public void setDivertActive(boolean divertActive)
+  {
+    this.divertActive = divertActive;
+  }
+
+  public void setDivert_act(String divert_act)
+  {
+    this.divertActive = divert_act.equalsIgnoreCase("true");
+  }
+
+  public boolean isDivertModifiable()
+  {
+    return divertModifiable;
+  }
+
+  public void setDivertModifiable(boolean divertModifiable)
+  {
+    this.divertModifiable = divertModifiable;
+  }
+
+  public void setDivert_mod(String divert_mod)
+  {
+    this.divertModifiable = divert_mod.equalsIgnoreCase("true");
   }
 }

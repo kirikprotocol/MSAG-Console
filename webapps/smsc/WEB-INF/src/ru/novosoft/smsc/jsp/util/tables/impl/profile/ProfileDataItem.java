@@ -19,5 +19,8 @@ public class ProfileDataItem extends AbstractDataItem
 		values.put("locale", profile.getLocale());
 		values.put("hidden", new Boolean(profile.isAliasHide()));
 		values.put("hidden_mod", new Boolean(profile.isAliasModifiable()));
+    values.put("divert", profile.getDivert());
+    values.put("divert_act", new Boolean(profile.isDivertActive()));
+    values.put("divert_mod", new Boolean(profile.isDivertModifiable()));
 	}
 }

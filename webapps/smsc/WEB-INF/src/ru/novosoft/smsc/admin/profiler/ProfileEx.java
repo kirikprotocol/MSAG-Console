@@ -22,9 +22,9 @@ public class ProfileEx extends Profile {
 	public ProfileEx(Mask mask, List profileProperties) throws AdminException
 	{
 		super(mask, profileProperties);
-		setMatchType((String) profileProperties.get(5));
+		setMatchType((String) profileProperties.get(8));
 		if (matchType != MATCH_DEFAULT)
-		setMatchAddress(new Mask((String) profileProperties.get(6)));
+		setMatchAddress(new Mask((String) profileProperties.get(9)));
 	}
 
 	public byte getMatchType()

@@ -75,6 +75,11 @@ function setSort(sorting)
 	<th><a href="#" <%=bean.getSort().endsWith("codeset")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by codepage"    onclick='return setSort("codeset")'   >codepage</a></th>
 	<th><a href="#" <%=bean.getSort().endsWith("reportinfo") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by report info" onclick='return setSort("reportinfo")'>report&nbsp;info</a></th>
 	<th><a href="#" <%=bean.getSort().endsWith("locale")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by locale"      onclick='return setSort("locale")'    >locale</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("hidden")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by locale"                 onclick='return setSort("hidden")'    >hidden</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("hidden_mod") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by locale"                 onclick='return setSort("hidden_mod")'>modifiable</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("divert")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert"                 onclick='return setSort("divert")'    >divert</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("divert_act") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert active flag"     onclick='return setSort("divert_act")'>divert active</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("divert_mod") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert modifiable flag" onclick='return setSort("divert_mod")'>divert modifiable</a></th>
 </tr>
 </thead>
 <tbody>
@@ -100,6 +105,11 @@ final String encProfileMask = StringEncoderDecoder.encode(profileMask);
 	<td><%=StringEncoderDecoder.encode((String)item.getValue("Codepage"))%></td>
 	<td><%=StringEncoderDecoder.encode((String)item.getValue("Report info"))%></td>
 	<td><%=StringEncoderDecoder.encode((String)item.getValue("locale"))%></td>
+  <td align=center><%if (((Boolean)item.getValue("hidden"    )).booleanValue()){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+  <td align=center><%if (((Boolean)item.getValue("hidden_mod")).booleanValue()){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+  <td><%=StringEncoderDecoder.encode((String)item.getValue("divert"))%></td>
+  <td align=center><%if (((Boolean)item.getValue("divert_act"    )).booleanValue()){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+  <td align=center><%if (((Boolean)item.getValue("divert_mod"    )).booleanValue()){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
 </tr>
 <%}}%>
 </tbody>

@@ -205,7 +205,17 @@ public class Smsc extends Service {
 		refreshComponents();
 		HashMap args = new HashMap();
 		args.put("address", mask.getMask());
-		args.put("profile", newProfile.getStringRepresentation());
+    List profileArg = new LinkedList();
+    profileArg.add(newProfile.getCodepageString());
+    profileArg.add(newProfile.getReportOptionsString());
+    profileArg.add(newProfile.getLocale());
+    profileArg.add(newProfile.isAliasHide() ? "true" : "false");
+    profileArg.add(newProfile.isAliasModifiable() ? "true" : "false");
+    profileArg.add(newProfile.getDivert());
+    profileArg.add(newProfile.isDivertActive() ? "true" : "false");
+    profileArg.add(newProfile.isDivertModifiable() ? "true" : "false");
+
+		args.put("profile", profileArg);
 		return ((Long) call(smsc_component, profile_update_method, Type.Types[Type.IntType], args)).intValue();
 	}
 

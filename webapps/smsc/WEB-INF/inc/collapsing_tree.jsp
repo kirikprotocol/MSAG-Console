@@ -54,7 +54,7 @@
 	{
 	  final boolean additionalPresented = additional != null && additional.length() > 0;
 	  out.print("<tr class=row" + ((row++) & 1) + (rowId == null || rowId.length() == 0 ? "" : " id=\"" + rowId + '"') + ">");
-	  out.print("<th nowrap>" + label + ":</th>");
+	  out.print("<th nowrap>" + label + "</th>");
 	  out.print("<td nowrap><input class=txt" + (isWide ? "W" : "") + " name=\"" + id + "\" id=\"" + id + "\" value=\"" + StringEncoderDecoder.encode(value) + "\""
 					+ (validation != null && validation.length() > 0 ? " validation=\"" + validation + "\" onkeyup=\"resetValidation(this)\"" : "") + "></td>");
 	  if (additionalPresented)
@@ -76,7 +76,7 @@
 	void param(JspWriter out, String label, String id, boolean value, String rowId) throws IOException
 	{
 		out.print("<tr class=row" + ((row++) & 1) + (rowId != null && rowId.length() > 0 ? " id=\"" + rowId + "\"" : "") + ">");
-		out.print("<th nowrap><label for=\"" + id + "\">" + label + ":</label></th>");
+		out.print("<th nowrap><label for=\"" + id + "\">" + label + "</label></th>");
 		out.print("<td><input class=check type=checkbox name=\"" + id + "\" id=\"" + id + "\" value=true " + (value ? "checked" : "") + "></td>");
 		out.print("</tr>");
 	}
@@ -103,7 +103,7 @@
 	void paramSelect(JspWriter out, String label, String id, Collection values, String selectedValue, String onChange, String style) throws IOException
 	{
 		out.print("<tr class=row" + ((row++) & 1) + ">");
-		out.print("<th nowrap>" + label + ":</th>");
+		out.print("<th nowrap>" + label + "</th>");
 		out.print("<td><select name=\"" + id + "\" id=\"" + id + "\""
               + (onChange != null && onChange.length() > 0 ? " onchange=\"" + onChange + "\"" : "")
               + (style    != null && style   .length() > 0 ? " style=\""    + style    + "\"" : "")
@@ -122,7 +122,7 @@
 	void paramTextarea(JspWriter out, String label, String id, String value) throws IOException
 	{
 	  out.print("<tr class=row" + ((row++) & 1) + ">");
-	  out.print("<th nowrap>" + label + ":</th>");
+	  out.print("<th nowrap>" + label + "</th>");
 	  out.print("<td><textarea name=\"" + id + "\">" + StringEncoderDecoder.encode(value) + "</textarea></td>");
 	  out.print("</tr>");
 	}

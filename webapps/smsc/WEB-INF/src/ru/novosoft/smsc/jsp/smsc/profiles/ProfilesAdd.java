@@ -13,80 +13,81 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 
 import java.util.List;
 
-public class ProfilesAdd extends ProfilesBean {
-	protected String mbSave = null;
-	protected String mbCancel = null;
+public class ProfilesAdd extends ProfilesBean
+{
+  protected String mbSave = null;
+  protected String mbCancel = null;
 
-	public ProfilesAdd()
-	{
-		report = Profile.REPORT_OPTION_None;
-		codepage = Profile.CODEPAGE_Default;
-	}
+  public ProfilesAdd()
+  {
+    report = Profile.REPORT_OPTION_None;
+    codepage = Profile.CODEPAGE_Default;
+  }
 
-	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
-	{
-		if (mbCancel != null)
-			return RESULT_DONE;
+  public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
+  {
+    if (mbCancel != null)
+      return RESULT_DONE;
 
-		int result = super.process(appContext, errors, loginedPrincipal);
-		if (result != RESULT_OK)
-			return result;
+    int result = super.process(appContext, errors, loginedPrincipal);
+    if (result != RESULT_OK)
+      return result;
 
-		if (mbSave != null)
-			return save();
+    if (mbSave != null)
+      return save();
 
-		return RESULT_OK;
-	}
+    return RESULT_OK;
+  }
 
-	protected int save()
-	{
-		logger.debug("Add new profile: " + mask);
-		if (!Mask.isMaskValid(mask))
-			return error(SMSCErrors.error.profiles.invalidMask, mask);
-		if (!appContext.getSmsc().isLocaleRegistered(locale))
-			return error(SMSCErrors.error.profiles.invalidLocale, locale);
+  protected int save()
+  {
+    logger.debug("Add new profile: " + mask);
+    if (!Mask.isMaskValid(mask))
+      return error(SMSCErrors.error.profiles.invalidMask, mask);
+    if (!appContext.getSmsc().isLocaleRegistered(locale))
+      return error(SMSCErrors.error.profiles.invalidLocale, locale);
 
-		try {
-			final Mask address = new Mask(mask);
-			Profile profile = new Profile(address, codepage, report, locale, aliasHide, aliasModifiable);
-			switch (smsc.profileUpdate(address, profile)) {
-				case 1: //pusUpdated
-				case 2: //pusInserted
-					appContext.getStatuses().setProfilesChanged(true);
-					return RESULT_DONE;
-				case 3: //pusUnchanged
-					return error(SMSCErrors.error.profiles.identicalToDefault);
-				case 4: //pusError
-					return error(SMSCErrors.error.unknown);
-				default:
-					return error(SMSCErrors.error.unknown);
-			}
-		} catch (AdminException e) {
-			logger.error("Couldn't add profile [\"" + mask + "\", " + codepage + ", " + report + ", " + locale + "]", e);
-			return error(SMSCErrors.error.profiles.couldntAdd, e);
-		}
-	}
+    try {
+      final Mask address = new Mask(mask);
+      Profile profile = new Profile(address, codepage, report, locale, aliasHide, aliasModifiable, divert, divertActive, divertModifiable);
+      switch (smsc.profileUpdate(address, profile)) {
+        case 1: //pusUpdated
+        case 2: //pusInserted
+          appContext.getStatuses().setProfilesChanged(true);
+          return RESULT_DONE;
+        case 3: //pusUnchanged
+          return error(SMSCErrors.error.profiles.identicalToDefault);
+        case 4: //pusError
+          return error(SMSCErrors.error.unknown);
+        default:
+          return error(SMSCErrors.error.unknown);
+      }
+    } catch (AdminException e) {
+      logger.error("Couldn't add profile [\"" + mask + "\", " + codepage + ", " + report + ", " + locale + "]", e);
+      return error(SMSCErrors.error.profiles.couldntAdd, e);
+    }
+  }
 
-	/*************************** properties *********************************/
+  /*************************** properties *********************************/
 
-	public String getMbSave()
-	{
-		return mbSave;
-	}
+  public String getMbSave()
+  {
+    return mbSave;
+  }
 
-	public void setMbSave(String mbSave)
-	{
-		this.mbSave = mbSave;
-	}
+  public void setMbSave(String mbSave)
+  {
+    this.mbSave = mbSave;
+  }
 
-	public String getMbCancel()
-	{
-		return mbCancel;
-	}
+  public String getMbCancel()
+  {
+    return mbCancel;
+  }
 
-	public void setMbCancel(String mbCancel)
-	{
-		this.mbCancel = mbCancel;
-	}
+  public void setMbCancel(String mbCancel)
+  {
+    this.mbCancel = mbCancel;
+  }
 
 }
