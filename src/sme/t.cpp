@@ -1,4 +1,6 @@
+#ifdef _WIN32
 #include <winsock2.h>
+#endif
 #include <stdio.h>
 #include "sme/SmppBase.hpp"
 #include "sms/sms.h"
