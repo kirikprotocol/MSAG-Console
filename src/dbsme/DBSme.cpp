@@ -81,8 +81,9 @@ public:
         Body& body = sms.getMessageBody();
 
         std::string input = body.getStrProperty(Tag::SMPP_SHORT_MESSAGE);
+        __trace2__("Input Data for DBSme '%s'", input.c_str());
         command.setInData(input.c_str());
-
+        
         try 
         {
             processor.process(command);
@@ -98,12 +99,17 @@ public:
             command.setOutData(exc.what());
         }
 
-        sms.setEServiceType(processor.getSvcType());
         sms.setDestinationAddress(command.getFromAddress());
         sms.setOriginatingAddress(command.getToAddress());
+        sms.setEServiceType(processor.getSvcType());
         sms.setArchivationRequested(false);
-        sms.setDeliveryReport(0);
         sms.setValidTime(time(NULL)+3600);
+        sms.setDeliveryReport(0);
+        
+        body.setIntProperty(Tag::SMPP_PROTOCOL_ID, processor.getProtocolId());
+        body.setIntProperty(Tag::SMPP_ESM_CLASS, 0xC3 /*11000011*/);
+        body.setIntProperty(Tag::SMPP_DATA_CODING, 0);
+        body.setIntProperty(Tag::SMPP_PRIORITY, 0);
         
         char* out = (char *)command.getOutData();
         int   outLen = (out) ? strlen(out) : 0;
@@ -114,12 +120,9 @@ public:
             int strLen = (outLen <= MAX_ALLOWED_MESSAGE_LENGTH) ?
                           outLen : MAX_ALLOWED_MESSAGE_LENGTH;
             strncpy(buff, out, strLen); buff[strLen] = '\0';
-
             body.setIntProperty(Tag::SMPP_SM_LENGTH, strLen);
             body.setStrProperty(Tag::SMPP_SHORT_MESSAGE, buff);
-            body.setIntProperty(Tag::SMPP_PROTOCOL_ID, 
-                                processor.getProtocolId());
-
+            
             PduSubmitSm sm;
             sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
             fillSmppPduFromSms(&sm,&sms);
@@ -145,8 +148,11 @@ public:
         switch (pdu->get_commandId())
         {
         case SmppCommandSet::DELIVERY_SM:
-            printf("\nReceived DELIVERY_SM Pdu. Message: '%s'\n",
-                   ((PduXSm*)pdu)->get_message().get_shortMessage());
+            
+            ((PduXSm*)pdu)->dump(TRACE_LOG_STREAM);
+            printf("\nReceived DELIVERY_SM Pdu.\n");
+            /*printf("\nReceived DELIVERY_SM Pdu. Message: '%s'\n",
+                   ((PduXSm*)pdu)->get_message().get_shortMessage());*/
             process();
             break;
         case SmppCommandSet::SUBMIT_SM_RESP:
