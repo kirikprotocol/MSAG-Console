@@ -242,6 +242,90 @@ void SmppPduChecker::processResp(ResponseMonitor* monitor,
 	}
 }
 
+void SmppPduChecker::processGenericNack(GenericNackMonitor* monitor,
+	PduGenericNack& respPdu, time_t respTime)
+{
+	__require__(monitor);
+	__decl_tc__;
+	__cfg_int__(timeCheckAccuracy);
+	__tc__("processGenericNack.checkHeader");
+	//проверки
+	if (respPdu.get_header().get_commandLength() != 16)
+	{
+		__tc_fail__(1);
+	}
+	if (respPdu.get_header().get_commandId() != GENERIC_NACK)
+	{
+		__tc_fail__(2);
+	}
+	if (respPdu.get_header().get_sequenceNumber() !=
+		monitor->pduData->pdu->get_sequenceNumber())
+	{
+		__tc_fail__(3);
+	}
+	__tc_ok_cond__;
+	__tc__("processGenericNack.checkTime");
+	time_t respDelay = respTime - monitor->pduData->submitTime;
+	if (respDelay < 0)
+	{
+		__tc_fail__(1);
+	}
+	else if (respDelay > timeCheckAccuracy)
+	{
+		__tc_fail__(2);
+	}
+	__tc_ok_cond__;
+	switch (respPdu.get_header().get_commandStatus())
+	{
+		case ESME_RINVCMDLEN:
+			__tc__("processGenericNack.checkStatusInvalidCommandLength");
+			if (monitor->pduData->pdu->get_commandLength() != 16)
+			{
+				__tc_fail__(1);
+			}
+			else
+			{
+				switch (monitor->pduData->pdu->get_commandId())
+				{
+					case UNBIND:
+						__tc_fail__(2);
+						break;
+					case ENQUIRE_LINK:
+						__tc_fail__(3);
+						break;
+					case SUBMIT_SM:
+					case DELIVERY_SM:
+					case BIND_TRANCIEVER:
+					case GENERIC_NACK:
+						//ok;
+						break;
+					default: //должно быть ESME_RINVCMDID
+						__tc_fail__(4);
+				}
+			}
+			__tc_ok_cond__;
+			break;
+		case ESME_RINVCMDID:
+			__tc__("processGenericNack.checkStatusInvalidCommandId");
+			switch (monitor->pduData->pdu->get_commandId())
+			{
+				case UNBIND:
+				case ENQUIRE_LINK:
+				case SUBMIT_SM:
+				case DELIVERY_SM:
+				case BIND_TRANCIEVER:
+				case GENERIC_NACK:
+					__tc_fail__(1);
+					break;
+			}
+			__tc_ok_cond__;
+			break;
+		default:
+			__tc__("processGenericNack.checkStatusOther");
+			__tc_fail__(respPdu.get_header().get_commandStatus());
+	}
+}
+
 }
 }
 }

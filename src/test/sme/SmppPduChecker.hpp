@@ -14,10 +14,7 @@ namespace sme {
 
 using std::set;
 using std::vector;
-using smsc::test::core::PduRegistry;
-using smsc::test::core::RouteChecker;
-using smsc::test::core::PduData;
-using smsc::test::core::ResponseMonitor;
+using namespace smsc::test::core; //monitors, PduRegistry, RouteChecker
 using smsc::test::util::CheckList;
 using namespace smsc::smpp; //pdu
 
@@ -32,6 +29,8 @@ public:
 	void processSubmitSmResp(ResponseMonitor* monitor, PduSubmitSmResp& respPdu,
 		time_t respTime);
 	void processReplaceSmResp(ResponseMonitor* monitor, PduReplaceSmResp& respPdu,
+		time_t respTime);
+	void processGenericNack(GenericNackMonitor* monitor, PduGenericNack& respPdu,
 		time_t respTime);
 
 private:
