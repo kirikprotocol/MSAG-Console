@@ -64,13 +64,13 @@ function editService(serviceId)
 </script>
 
 <table class=secRep cellspacing=1 width="100%">
+<col width="1%" align=center>
 <col width="1%">
-<col width="1%">
-<col width="60%" align=left>
-<col width="20%" align=left>
-<col align=center>
-<col align=center>
-<col align=center>
+<col align=left>
+<col width="1%" align=left>
+<col width="1%" align=center>
+<col width="1%" align=center>
+<col width="1%" align=center>
 <thead>
 <tr>
 	<th class=ico><img src="<%=CPATH%>/img/ico16_checked_sa.gif" class=ico16 alt=""></th>
@@ -94,7 +94,7 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 %>
 <tr class=row<%=row&1%>>
 	<td class=check><input class=check type=checkbox name=serviceIds value="<%=encodedServiceId%>" <%=serviceIds.contains(serviceId) ? "checked" : ""%>></td>
-	<td><a  href="#" title="Edit service parameters" onClick="return editService('<%=encodedServiceId%>');">edit</a></td>
+	<td class=name><a  href="#" title="Edit service parameters" onClick="return editService('<%=encodedServiceId%>');">edit</a></td>
 	<td class=name><%
 		if (bean.isServiceAdministrable(serviceId))
 		{
@@ -114,9 +114,9 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 			%>&nbsp;<%
 		}
 	%></td>
-	<td><%=bean.isServiceDisabled(serviceId) ? "<span style=\"color:red\">disabled</span>" : "<span style=\"color:green\">enabled</span>"%></td>
-	<td><%=smeStatus(serviceId, bean.isServiceConnected(serviceId), "CONNECTION_STATUSERVICE_"+encodedServiceId, bean.getSmeStatus(serviceId))%></td>
-	<td><%
+	<td class=name><%=bean.isServiceDisabled(serviceId) ? "<span style=\"color:red\">disabled</span>" : "<span style=\"color:green\">enabled</span>"%></td>
+	<td class=name><%=smeStatus(serviceId, bean.isServiceConnected(serviceId), "CONNECTION_STATUSERVICE_"+encodedServiceId, bean.getSmeStatus(serviceId))%></td>
+	<td class=name><%
 		if (bean.isService(serviceId))
 		{
 			%><%=serviceStatus(serviceId, bean.getServiceStatus(serviceId), "STATUS_ELEM_FOR_SERVICE_"+encodedServiceId)%><%
@@ -130,12 +130,12 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 </tbody>
 </table>
 <div class=secButtons>
-<input class=btn type=submit name=mbAddService value="Add service" title="Add service">
-<input class=btn type=submit name=mbDelete value="Delete service(s)" title="Delete selected services" onclick="return confirm('Are you sure to delete all selected services?')">
+<input class=btn type=submit name=mbAddService value="Add" title="Add service">
+<input class=btn type=submit name=mbDelete value="Delete" title="Delete selected services" onclick="return confirm('Are you sure to delete all selected services?')">
 &nbsp;&nbsp;&nbsp;&nbsp;
-<input class=btn type=submit name=mbStartService value="Start service(s)" title="Start selected services">
-<input class=btn type=submit name=mbStopService value="Stop service(s)" title="Stop selected services">
-<input class=btn type=submit name=mbDisconnectServices value="Disconnect service(s)" title="Disconnect all selected services" onclick="return confirm('Are you sure to disconnect all selected services?')" <%=bean.isSmscAlive() ? "" : "disabled"%>>
+<input class=btn type=submit name=mbStartService value="Start" title="Start selected services">
+<input class=btn type=submit name=mbStopService value="Stop" title="Stop selected services">
+<input class=btn type=submit name=mbDisconnectServices value="Disconnect" title="Disconnect all selected services" onclick="return confirm('Are you sure to disconnect all selected services?')" <%=bean.isSmscAlive() ? "" : "disabled"%>>
 </div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>
