@@ -538,8 +538,6 @@ void CommandProcessor::changeJob(std::string providerId, std::string jobId)
 }
 void CommandProcessor::setProviderEnabled(std::string providerId, bool enabled)
 {
-    MutexGuard guard(setEnabledLock);
-
     const char* providerIdStr = providerId.c_str();
     DataProvider* provider = 0;
     
