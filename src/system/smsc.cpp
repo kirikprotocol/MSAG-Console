@@ -163,9 +163,9 @@ public:
       d.eventQueueSize=equnl;
       d.inProcessingCount=eqhash-equnl;
 
-      int tcnt,tll,rs,ipc;
-      smsc->getScheduler()->getSmsCounts(tcnt,tll,rs,ipc);
-      d.inScheduler=tcnt;
+      Scheduler::SchedulerCounts cnts;
+      smsc->getScheduler()->getCounts(cnts);
+      d.inScheduler=cnts.timeLineCount+cnts.firstTimeCount;
 
       perfListener->reportGenPerformance(&d);
 

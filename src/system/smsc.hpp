@@ -314,9 +314,9 @@ public:
     eventqueue.getStats(hsize,qsize);
     eqsize=qsize;
     eqlocked=hsize-qsize;
-    int tcnt,tll,rs,ipc;
-    scheduler->getSmsCounts(tcnt,tll,rs,ipc);
-    schedsize=tcnt;
+    Scheduler::SchedulerCounts scnts;
+    scheduler->getCounts(scnts);
+    schedsize=scnts.timeLineCount+scnts.firstTimeCount;
   }
 
   RefferGuard<RouteManager> getRouterInstance()
