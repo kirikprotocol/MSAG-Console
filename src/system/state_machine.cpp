@@ -129,7 +129,9 @@ StateType StateMachine::submit(Tuple& t)
     // sms сохранена в базе, с выставленным Next Time, таким образом
     // даже если дальше что-то обломится, потом будет еще попытка послать её
     // то бишь мы приняли sms в обработку, можно слать ok.
-    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::OK);
+    char buf[64];
+    sprintf(buf,"%lld",t.msgId);
+    SmscCommand resp = SmscCommand::makeSubmitSmResp(buf, dialogId, SmscCommand::Status::OK);
     try{
       src_proxy->putCommand(resp);
     }catch(...)

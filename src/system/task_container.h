@@ -24,6 +24,10 @@ struct Task
   Task* next;
   Task* timeout_prev;
   Task* timeout_next;
+
+  smsc::sms::Address sourceAddress;
+
+
   Task(uint32_t proxy = 0,uint32_t sequence = 0):
     proxy_id(proxy),sequenceNumber(sequence) {}
   ~Task()
@@ -45,7 +49,7 @@ class TaskContainer
   Task *first_task;
   Task *timeout_link_begin;
   Task *timeout_link_end;
-	Mutex mutex;
+  Mutex mutex;
 public:
   TaskContainer():
     //first_task(pool),
@@ -65,7 +69,7 @@ public:
   bool getExpired(Task* t)
   {
     MutexGuard guard(mutex);
-		unsigned long _time = time(NULL);
+    unsigned long _time = time(NULL);
     if ( timeout_link_begin && timeout_link_begin->timeout < _time )
     {
       *t = *timeout_link_begin;
@@ -168,7 +172,7 @@ public:
     }
     else
     {
-      __require__( task == timeout_link_begin ); 
+      __require__( task == timeout_link_begin );
       timeout_link_begin = task->timeout_next;
       if (timeout_link_begin) timeout_link_begin->timeout_prev = 0;
       else timeout_link_end = 0;
