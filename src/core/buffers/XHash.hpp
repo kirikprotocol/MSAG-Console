@@ -25,7 +25,7 @@ class XHashInvalidKeyException{};
 
 class DefXHashFunc{
 public:
-  static inline int CalcHash(int key)
+  static inline unsigned int CalcHash(int key)
   {
     return key;
   }
@@ -40,7 +40,7 @@ class XHashKeyVal{
 public:
   KT _key;
   VT _value;
-  int _hash;
+  unsigned int _hash;
   XHashKeyVal(const XHashKeyVal& keyval):
     _key(keyval._key),
     _value(keyval._value),
@@ -211,12 +211,12 @@ private:
   Link* FindLink(const KT& key)const
   {
     if(!_bucketsnum)return NULL;
-    return _buckets[HF::CalcHash(key) % _bucketsnum].Find(key);
+    return _buckets[((unsigned int)HF::CalcHash(key)) % _bucketsnum].Find(key);
   }
   Link* FindLinkEx(const KT& key,unsigned &index)
   {
     if(!_bucketsnum)return NULL;
-    index=HF::CalcHash(key) % _bucketsnum;
+    index=((unsigned int)HF::CalcHash(key)) % _bucketsnum;
     return _buckets[index].Find(key);
   }
 
@@ -271,7 +271,7 @@ public:
   int Exists(const KT& key){ return FindLink(key)!=NULL;}
   int Delete(const KT& key)
   {
-    unsigned index=HF::CalcHash(key) % _bucketsnum;
+    unsigned index=((unsigned int)HF::CalcHash(key)) % _bucketsnum;
     if(_buckets[index].Remove(key))
     {
       _count--;
@@ -360,7 +360,7 @@ public:
     }else
     {
       _count++;
-      if(ResizeHash())index=HF::CalcHash(key) % _bucketsnum;
+      if(ResizeHash())index=((unsigned int)HF::CalcHash(key)) % _bucketsnum;
       return _buckets[index].Add(key)->_keyval._value;
     }
   }
@@ -386,7 +386,7 @@ public:
     }else
     {
       _count++;
-      if(ResizeHash())index=HF::CalcHash(key) % _bucketsnum;
+      if(ResizeHash())index=((unsigned int)HF::CalcHash(key)) % _bucketsnum;
       _buckets[index].Add(key)->_keyval._value=value;
       return 1;
     }
