@@ -315,7 +315,7 @@ int partitionSms(SMS* sms,int dstdc)
     int lastword=0;
     int lastpos=0;
     int l=0,wl=0;
-    for(int i=0;i<len;i++)
+    for(int i=0;i<=len;i++)
     {
       unsigned char c;
       c=msg[i];
