@@ -1,7 +1,8 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="java.util.*, java.text.SimpleDateFormat,
                  ru.novosoft.smsc.jsp.SMSCAppContext,
-                 ru.novosoft.smsc.util.StringEncoderDecoder"%>
+                 ru.novosoft.smsc.util.StringEncoderDecoder,
+                 ru.novosoft.smsc.jsp.SMSCJspException"%>
 <%@ page import="ru.novosoft.smsc.admin.smsstat.*"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsstat.*"%>
 <jsp:useBean id="smsStatFormBean" scope="session" class="ru.novosoft.smsc.jsp.smsstat.SmsStatFormBean" />
@@ -30,7 +31,7 @@
             break;
         default:
             STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
-            errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction));
+            errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
     }
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
