@@ -30,10 +30,12 @@ const int RAND_TC = -1;
 const int RAND_SET_TC = -2;
 
 //флаги управл€ющие генерацией случайных строк
-
-const int RAND_ALPHA_NUM = 0;
-const int RAND_ALPHA = 1;
-const int RAND_NUM = 2;
+const int RAND_LAT = 1;
+const int RAND_RUS = 2;
+const int RAND_NUM = 4;
+const int RAND_SYM = 8;
+const int RAND_DEF_SMS = 16;
+const int RAND_LAT_NUM = RAND_LAT + RAND_NUM;
 
 void init_rand();
 
@@ -48,8 +50,8 @@ double randDouble(int digits, int precision);
 std::auto_ptr<uint8_t> rand_uint8_t(int length);
 void rand_uint8_t(int length, uint8_t* buf);
 
-std::auto_ptr<char> rand_char(int length, int type = RAND_ALPHA_NUM);
-void rand_char(int length, char* buf, int type = RAND_ALPHA_NUM);
+std::auto_ptr<char> rand_char(int length, int type = RAND_LAT_NUM);
+void rand_char(int length, char* buf, int type = RAND_LAT_NUM);
 
 template <class T>
 struct Deletor

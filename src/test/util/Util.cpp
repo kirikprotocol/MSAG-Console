@@ -44,7 +44,10 @@ int rand1(int maxValue)
 	return rand2(1, maxValue);
 }
 
-static string randChars = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+static string digitChars = "1234567890";
+static string latinChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+static string rusChars = "ÀÁÂÃÄÅ¨ÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäå¸æçèéêëìíîïğñòóôõö÷øùúûüışÿ";
+static string symbolChars = "~`!@#$%^&*()-_=+\\|{[}];:'\",<.>/? ";
 
 double randDouble(int digits, int precision)
 {
@@ -53,7 +56,7 @@ double randDouble(int digits, int precision)
 	tmp[0] = rand0(1) ? '+' : '-';
 	for (int i = 1; i <= digits + 1; i++)
 	{
-		tmp[i] = randChars[rand0(9)];
+		tmp[i] = digitChars[rand0(9)];
 	}
 	tmp[digits - precision + 1] = '.';
 	tmp[digits + 2] = 0;
@@ -67,7 +70,7 @@ auto_ptr<uint8_t> rand_uint8_t(int length)
 	uint8_t* res = new uint8_t[length];
 	for (int i = 0; i < length; i++)
 	{
-		res[i] = randChars[rand0(randChars.size() - 1)];
+		res[i] = rand0(255);
 	}
 	return auto_ptr<uint8_t>(res);
 }
@@ -76,7 +79,7 @@ void rand_uint8_t(int length, uint8_t* buf)
 {
 	for (int i = 0; i < length; i++)
 	{
-		buf[i] = randChars[rand0(randChars.size() - 1)];
+		buf[i] = rand0(255);
 	}
 }
 
@@ -89,27 +92,27 @@ auto_ptr<char> rand_char(int length, int type)
 
 void rand_char(int length, char* buf, int type)
 {
-	int pos1, pos2;
-	switch (type)
+	static const int sz = latinChars.length() + rusChars.length() +
+		digitChars.length() + symbolChars.length() + 1;
+	if (type == RAND_DEF_SMS)
 	{
-		case RAND_ALPHA:
-			pos1 = 10;
-			pos2 = randChars.size() - 1;
-			break;
-		case RAND_ALPHA_NUM:
-			pos1 = 0;
-			pos2 = randChars.size() - 1;
-			break;
-		case RAND_NUM:
-			pos1 = 0;
-			pos2 = 9;
-			break;
-		default:
-			__unreachable__("Invalid type");
+		for (int i = 0; i < length; i++)
+		{
+			buf[i] = rand0(127);
+		}
 	}
-	for (int i = 0; i < length; i++)
+	else
 	{
-		buf[i] = randChars[rand2(pos1, pos2)];
+		string str;
+		str.reserve(sz);
+		if (type & RAND_LAT) { str += latinChars; }
+		if (type & RAND_RUS) { str += rusChars; }
+		if (type & RAND_NUM) { str += digitChars; }
+		if (type & RAND_SYM) { str += symbolChars; }
+		for (int i = 0; i < length; i++)
+		{
+			buf[i] = str[rand0(str.length() - 1)];
+		}
 	}
 	buf[length] = 0;
 }
