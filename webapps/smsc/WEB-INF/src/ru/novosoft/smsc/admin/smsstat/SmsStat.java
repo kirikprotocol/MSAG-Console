@@ -114,19 +114,18 @@ public class SmsStat
 
         while (rs.next())
         {
-            CountersSet hourCounters = new CountersSet(
-                    rs.getInt(2), rs.getInt(3), rs.getInt(4));
             int newPeriod = rs.getInt(1);
+            int hour = calculateHour(newPeriod);
+            HourCountersSet hourCounters = new HourCountersSet(
+                    rs.getInt(2), rs.getInt(3), rs.getInt(4), hour);
             if (dateCounters == null) { // on first iteration
                 Date date = calculateDate(newPeriod);
-                int start = calculateHour(newPeriod);
-                dateCounters = new DateCountersSet(date, start);
+                dateCounters = new DateCountersSet(date);
             }
             else if (needChangeDate(oldPeriod, newPeriod)) { // on date changed
                 stat.addDateStat(dateCounters);
                 Date date = calculateDate(newPeriod);
-                int start = calculateHour(newPeriod);
-                dateCounters = new DateCountersSet(date, start);
+                dateCounters = new DateCountersSet(date);
             }
             dateCounters.addHourStat(hourCounters);
             oldPeriod = newPeriod;

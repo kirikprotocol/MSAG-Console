@@ -48,104 +48,124 @@
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ results ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <%
 Statistics stat = bean.getStatistics();
-CountersSet total = stat.getTotal();
-Collection dates = stat.getDateStat();
 if (stat != null) {
+    CountersSet total = stat.getTotal();
+    Collection dates = stat.getDateStat();
 %>
-<div class=secView>General statistics</div>
 <table class=secRep cellspacing=1 width="100%">
-    <th></th>
-    <th>Accepted</th>
-    <th>Finalized</th>
-    <th>Rescheduled</th>
+<tr>
+    <td colspan=4><div class=secView>General statistics</div></td>
+</tr>
+<tr class=row0>
+    <th class=label width="25%">&nbsp;</th>
+    <th width="25%"><div align=right>Accepted</div></th>
+    <th width="25%"><div align=right>Finalized</div></th>
+    <th width="25%"><div align=right>Rescheduled</div></th>
+</tr>
 <tr class=row1>
-    <td><b>Total:</b></td>
-    <td><%= total.accepted%></td>
-    <td><%= total.finalized%></td>
-    <td><%= total.rescheduled%></td>
+    <th class=label>Total:</th>
+    <td align=right><%= total.accepted%></td>
+    <td align=right><%= total.finalized%></td>
+    <td align=right><%= total.rescheduled%></td>
 </tr>
 <%
 Iterator i = dates.iterator();
 while (i.hasNext()) {
     DateCountersSet date = (DateCountersSet)i.next();
-    int fromHour = date.getStartHour();
-    SimpleDateFormat formatter = new SimpleDateFormat("dd-MMMM-yyyy");
+    SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
 %>  <tr class=row0>
-        <td><%= formatter.format(date.getDate())%></td>
-        <td><%= date.accepted%></td>
-        <td><%= date.finalized%></td>
-        <td><%= date.rescheduled%></td>
+        <th class=label><%= formatter.format(date.getDate())%></th>
+        <td align=right><%= date.accepted%></td>
+        <td align=right><%= date.finalized%></td>
+        <td align=right><%= date.rescheduled%></td>
     </tr><%
     Collection hours = date.getHourStat();
     Iterator j = hours.iterator();
     while (j.hasNext()) {
-        CountersSet hour = (CountersSet)j.next();
+        HourCountersSet hour = (HourCountersSet)j.next();
     %>  <tr class=row1>
-            <td><%= fromHour++%></td>
-            <td><%= hour.accepted%></td>
-            <td><%= hour.finalized%></td>
-            <td><%= hour.rescheduled%></td>
+            <th class=label>&nbsp;&nbsp;&nbsp;<%= ((hour.getHour() < 10)? "0"+hour.getHour():""+hour.getHour())%></th>
+            <td align=right><%= hour.accepted%></td>
+            <td align=right><%= hour.finalized%></td>
+            <td align=right><%= hour.rescheduled%></td>
         </tr>
-    <%}%>
-<%}%>
-</table>
-<%
+  <%}
+}
     Collection smeids = stat.getSmeIdStat();
     i = smeids.iterator();
     if (i.hasNext()) {
 %>
-<div class=secView>SME activity statistics</div>
-<table class=secRep cellspacing=1 width="100%">
-    <th>SME Id</th>
-    <th>Sent</th>
-    <th>Received</th><%
+<tr>
+    <td colspan=4><div class=secView>SME activity statistics</div></td>
+</tr>
+<tr class=row0>
+    <th width="25%"><div align=right>SME Id</div></th>
+    <th width="25%"><div align=right>Sent</div></th>
+    <th width="25%"><div align=right>Received</div></th>
+    <th class=label width="25%">&nbsp;</th>
+</tr><%
         while (i.hasNext()) {
             SmeIdCountersSet smeid = (SmeIdCountersSet)i.next();
         %>
         <tr class=row1>
-            <td><%= smeid.smeid%></td>
-            <td><%= smeid.sent%></td>
-            <td><%= smeid.received%></td>
+            <td align=right><%= smeid.smeid%></td>
+            <td align=right><%= smeid.sent%></td>
+            <td align=right><%= smeid.received%></td>
+            <td align=right>&nbsp;</td>
         </tr><%
-        }%>
-</table>
-<% }
+        }
+    }
     Collection routeids = stat.getRouteIdStat();
     i = routeids.iterator();
     if (i.hasNext()) {
 %>
-<div class=secView>Route traffic statistics</div>
-<table class=secRep cellspacing=1 width="100%">
-    <th>Route Id</th>
-    <th>Processed</th><%
+<tr>
+    <td colspan=4> <div class=secView>Route traffic statistics</div></td>
+</tr>
+<tr class=row0>
+    <th width="25%"><div align=right>Route Id</div></th>
+    <th width="25%"><div align=right>Processed</div></th>
+    <th class=label width="25%">&nbsp;</th>
+    <th class=label width="25%">&nbsp;</th>
+</tr>  <%
         while (i.hasNext()) {
             RouteIdCountersSet routeid = (RouteIdCountersSet)i.next();
         %>
         <tr class=row1>
-            <td><%= routeid.routeid%></td>
-            <td><%= routeid.counter%></td>
+            <td align=right><%= routeid.routeid%></td>
+            <td align=right><%= routeid.counter%></td>
+            <td align=right>&nbsp;</td>
+            <td align=right>&nbsp;</td>
         </tr><%
-        }%>
-</table>
-<% }
+        }
+    }
     Collection errids = stat.getErrorStat();
     i = errids.iterator();
     if (i.hasNext()) {
 %>
-<div class=secView>SMS Status statistics</div>
-<table class=secRep cellspacing=1 width="100%">
-    <th>Error Code</th>
-    <th>Count</th><%
+<tr>
+    <td colspan=4><div class=secView>SMS Status statistics</div></td>
+</tr>
+<tr class=row0>
+    <th width="25%"><div align=right>Error Code</div></th>
+    <th width="25%"><div align=right>Count</div></th>
+    <th class=label width="25%">&nbsp;</th>
+    <th class=label width="25%">&nbsp;</th>
+</tr>  <%
         while (i.hasNext()) {
             ErrorCounterSet errid = (ErrorCounterSet)i.next();
         %>
         <tr class=row1>
-            <td><%= errid.errcode%></td>
-            <td><%= errid.counter%></td>
+            <td align=right><%= errid.errcode%></td>
+            <td align=right><%= errid.counter%></td>
+            <td align=right>&nbsp;</td>
+            <td align=right>&nbsp;</td>
         </tr><%
-        }%>
+        }
+    }
+%>
 </table>
-<% }
+<%
 } // stat != null%>
 
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
