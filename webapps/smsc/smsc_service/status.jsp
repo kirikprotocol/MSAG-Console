@@ -50,12 +50,13 @@ void printOptionsString(JspWriter out, HttpServletRequest request, List journalE
 {
   String journalRowId = checkboxValue + "JournalRow";
   out.println("<tr class=row" + (rowN&1) + ">");
-	out.println("  <td rowspan=" + (journalEntries.size()>0 ? 2 : 1) + " valign=top><input class=check type=checkbox name=checks value=" + checkboxValue + (!optionsChanged ? " disabled" : "") + "></td>");
-  String onClick = journalEntries.size() > 0 ? " class=clickable onClick='click" + journalRowId + "()'" : "";
-	out.println("  <td " + onClick + ">" + name + "</td>");
+  final boolean isJournalHasEntries = journalEntries.size()>0;
+  out.println("  <td rowspan=" + (isJournalHasEntries ? 2 : 1) + " valign=top><input class=check type=checkbox name=checks value=" + checkboxValue + (!optionsChanged ? " disabled" : "") + "></td>");
+  String onClick = isJournalHasEntries ? " class=clickable onClick='click" + journalRowId + "()'" : "";
+	out.println("  <td " + onClick + "><div id=\"" + journalRowId + "_div\"" + (isJournalHasEntries ? "class=collapsing_list_closed" : "class=collapsing_list_empty") + ">" + name + "</div></td>");
 	out.println("  <td " + onClick + ">" + (optionsChanged ? "<span class=Cf00>changed</span>" : "clear") + "</td>");
   out.println("</tr>");
-  if (journalEntries.size() > 0) {
+  if (isJournalHasEntries) {
     out.println("<tr id=" + journalRowId +"><td colspan=3>");
     printJournalEntries(out, request, journalEntries);
     out.println("</td></tr>");
@@ -63,8 +64,10 @@ void printOptionsString(JspWriter out, HttpServletRequest request, List journalE
     out.println("function click" + journalRowId + "() {");
     out.println("  if (" + journalRowId + ".runtimeStyle.display == 'none') {");
     out.println("    " + journalRowId + ".runtimeStyle.display = 'block';");
+    out.println("    " + journalRowId + "_div.className = 'collapsing_list_opened';");
     out.println("  } else {");
     out.println("    " + journalRowId + ".runtimeStyle.display = 'none';");
+    out.println("    " + journalRowId + "_div.className = 'collapsing_list_closed';");
     out.println("  }");
     out.println("}");
     out.println(journalRowId + ".runtimeStyle.display = 'none';</script>");
