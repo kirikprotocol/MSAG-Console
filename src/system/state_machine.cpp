@@ -247,9 +247,10 @@ StateType StateMachine::submit(Tuple& t)
 
   sms->setDeliveryReport(profile.reportoptions);
 
+  smsc::router::RouteInfo ri;
   bool has_route = smsc->routeSms(sms->getOriginatingAddress(),
                           dst,
-                          dest_proxy_index,dest_proxy);
+                          dest_proxy_index,dest_proxy,&ri);
   //smsc->routeSms(sms,dest_proxy_index,dest_proxy);
   if ( !has_route )
   {
@@ -264,6 +265,9 @@ StateType StateMachine::submit(Tuple& t)
     __warning__("SUBMIT_SM: no route");
     return ERROR_STATE;
   }
+
+  sms->setArchivationRequested(ri.archived);
+  sms->setBillingRecord(ri.billing);
 
   if(sms->getValidTime()==0 || sms->getValidTime()>now+maxValidTime)
   {
@@ -288,6 +292,7 @@ StateType StateMachine::submit(Tuple& t)
   __trace2__("Replace if present for message %lld=%d",t.msgId,sms->getIntProperty("SMPP_REPLACE_IF_PRESENT_FLAG"));
 
   time_t stime=sms->getNextTime();
+
 
   try{
     if(sms->getNextTime()<now)
@@ -468,7 +473,7 @@ StateType StateMachine::forward(Tuple& t)
   SmeProxy *dest_proxy=0;
   int dest_proxy_index;
 
-  bool has_route = smsc->routeSms(sms.getOriginatingAddress(),sms.getDealiasedDestinationAddress(),dest_proxy_index,dest_proxy);
+  bool has_route = smsc->routeSms(sms.getOriginatingAddress(),sms.getDealiasedDestinationAddress(),dest_proxy_index,dest_proxy,NULL);
   if ( !has_route )
   {
     __warning__("FORWARD: No route");
