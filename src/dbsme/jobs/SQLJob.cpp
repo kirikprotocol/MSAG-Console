@@ -93,8 +93,8 @@ void SQLJob::process(Command& command, Statement& stmt)
     ContextEnvironment ctx;
     FullAddressValue fromAddress, toAddress;
     FullAddressValue fromAddressUn, toAddressUn;
-    command.getFromAddress().getText(fromAddressUn, sizeof(fromAddress));
-    command.getToAddress().getText(toAddressUn, sizeof(toAddress));
+    command.getFromAddress().getText(fromAddress, sizeof(fromAddress));
+    command.getToAddress().getText(toAddress, sizeof(toAddress));
     command.getFromAddress().toString(fromAddressUn, sizeof(fromAddressUn));
     command.getToAddress().toString(toAddressUn, sizeof(toAddressUn));
     ctx.exportStr(SMSC_DBSME_SQL_JOB_FROM_ADDR, fromAddress);
@@ -102,6 +102,7 @@ void SQLJob::process(Command& command, Statement& stmt)
     ctx.exportStr(SMSC_DBSME_SQL_JOB_FROM_ADDR_UN, fromAddressUn);
     ctx.exportStr(SMSC_DBSME_SQL_JOB_TO_ADDR_UN, toAddressUn);
     ctx.exportStr(SMSC_DBSME_SQL_JOB_NAME, getName());
+
 
     command.setOutData("");
     
@@ -238,8 +239,8 @@ void PLSQLJob::process(Command& command, Routine& routine)
     ContextEnvironment ctx;
     FullAddressValue fromAddress, toAddress;
     FullAddressValue fromAddressUn, toAddressUn;
-    command.getFromAddress().getText(fromAddressUn, sizeof(fromAddress));
-    command.getToAddress().getText(toAddressUn, sizeof(toAddress));
+    command.getFromAddress().getText(fromAddress, sizeof(fromAddress));
+    command.getToAddress().getText(toAddress, sizeof(toAddress));
     command.getFromAddress().toString(fromAddressUn, sizeof(fromAddressUn));
     command.getToAddress().toString(toAddressUn, sizeof(toAddressUn));
     ctx.exportStr(SMSC_DBSME_SQL_JOB_FROM_ADDR, fromAddress);
