@@ -106,7 +106,7 @@ void loadRoutes(RouteManager* rm,RouteConfig& rc)
               __trace2__("sme sysid: %s",rinfo.smeSystemId.c_str());
               rinfo.billing = route->isBilling();
               //rinfo.paid =
-              rinfo.archiving=route->isArchiving();
+              rinfo.archived=route->isArchiving();
               rinfo.enabling = route->isEnabling();
               __trace2__("dest mask: %s",dest_mask_it->c_str());
               __trace2__("src mask: %s",src_mask_it->c_str());
