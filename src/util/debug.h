@@ -5,6 +5,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/timeb.h>
+#include <thread.h>
 #include <stdexcept>
 using std::runtime_error;
  
@@ -164,17 +166,19 @@ using std::runtime_error;
     smsc::util::watchtImpl(expr,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
   #define watchtext(expr,len) \
     smsc::util::watchtextImpl(expr,len,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
-  #define trace(text) trace2("%s",text)
+  #define trace(text) trace2("%s", text)
   #if defined ENABLE_FILE_NAME
-    #define trace2(format,args...) \
+    #define trace2(format,args...) { \
+      timeb __t__; ftime(&__t__); \
       fprintf(TRACE_LOG_STREAM,\
-        "*trace*: " format " \n\t"__FILE__"(%s):%d\n",\
-        ##args,__PRETTY_FUNCTION__,__LINE__);
+        "*trace* [%d %.3f]: " format " \n\t"__FILE__"(%s):%d\n",\
+        thr_self(), (__t__.time + __t__.millitm / 1000.0), ##args,__PRETTY_FUNCTION__,__LINE__); }
   #else
-    #define trace2(format,args...) \
+    #define trace2(format,args...) { \
+      timeb __t__; ftime(&__t__); \
       fprintf(TRACE_LOG_STREAM,\
-        "*trace*: " format "     (%s):%d\n",\
-        ##args,/*__PRETTY_FUNCTION__*/"",__LINE__);
+        "*trace* [%d %.3f]: " format "\n",\
+        thr_self(), (__t__.time + __t__.millitm / 1000.0), ##args); }
   #endif
 #else
   #define watch(expr)
