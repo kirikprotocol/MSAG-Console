@@ -232,14 +232,26 @@ public class Smsc extends Service
 
 	protected void checkComponents()
 	{
-		if (apply_aliases_method == null || apply_routes_method == null || lookup_profile_method == null || update_profile_method == null || flush_statistics_method == null || process_cancel_messages_method == null || msc_registrate_method == null || msc_unregister_method == null || msc_block_method == null || msc_clear_method == null || msc_list_method == null)
+		if (apply_aliases_method == null || 
+		    apply_routes_method == null || 
+		    lookup_profile_method == null || 
+		    update_profile_method == null || 
+		    flush_statistics_method == null || 
+		    process_cancel_messages_method == null || 
+		    apply_smsc_config_method == null ||
+		    apply_services_method == null ||
+		    msc_registrate_method == null || 
+		    msc_unregister_method == null || 
+		    msc_block_method == null || 
+		    msc_clear_method == null || 
+		    msc_list_method == null)
 		{
 			try
 			{
 				refreshComponents();
 				smsc_component = (Component) getInfo().getComponents().get("SMSC");
-				apply_routes_method = (Method) smsc_component.getMethods().get("apply_routes");
 				apply_aliases_method = (Method) smsc_component.getMethods().get("apply_aliases");
+				apply_routes_method = (Method) smsc_component.getMethods().get("apply_routes");
 				lookup_profile_method = (Method) smsc_component.getMethods().get("lookup_profile");
 				update_profile_method = (Method) smsc_component.getMethods().get("update_profile");
 				flush_statistics_method = (Method) smsc_component.getMethods().get("flush_statistics");
