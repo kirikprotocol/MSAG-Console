@@ -97,7 +97,7 @@ bool RouteChecker::isDestReachable(PduAddress& dest, bool checkSme) const
 		const RouteHolder* routeHolder = routeReg->lookup(smeAddr, destAddr);
 		if (checkSme && routeHolder)
 		{
-			return smeReg->isSmeAvailable(routeHolder->route.smeSystemId);
+			return smeReg->isSmeBound(routeHolder->route.smeSystemId);
 		}
 		else
 		{
