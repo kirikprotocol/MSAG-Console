@@ -55,37 +55,20 @@ StateType StateMachine::submit(Tuple& t)
     sms->getDestinationAddress().type,
     sms->getDestinationAddress().plan,
     sms->getDestinationAddress().value);
-  if(smsc->AliasToAddress(sms->getOriginatingAddress(),dst))
-  {
-    sms->setOriginatingAddress(dst);
-  }else
-  {
-    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::INVSRC);
-    try{
-      src_proxy->putCommand(resp);
-    }catch(...)
-    {
-    }
-    return ERROR_STATE;
-  }
   if(smsc->AliasToAddress(sms->getDestinationAddress(),dst))
   {
     __trace2__("ALIAS:%20s->%20s",sms->getDestinationAddress().value,dst.value);
-    sms->setDestinationAddress(dst);
+    sms->setDealiasedDestinationAddress(dst);
   }
   else
   {
-    __warning__("SUBMIT: NOALIAS");
-    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::INVDST);
-    try{
-      src_proxy->putCommand(resp);
-    }catch(...)
-    {
-    }
-    return ERROR_STATE;
+    dst=sms->getDestinationAddress();
   }
 
-  bool has_route = smsc->routeSms(sms,dest_proxy_index,dest_proxy);
+  bool has_route = smsc->routeSms(sms->getOriginatingAddress(),
+                          dst,
+                          dest_proxy_index,dest_proxy);
+  //smsc->routeSms(sms,dest_proxy_index,dest_proxy);
   if ( !has_route )
   {
     //send_no_route;
@@ -111,7 +94,10 @@ StateType StateMachine::submit(Tuple& t)
   }
 
   try{
-    sms->setNextTime(RescheduleCalculator::calcNextTryTime(time(NULL),1));
+    if(sms->getNextTime()<time(NULL))
+    {
+      sms->setNextTime(RescheduleCalculator::calcNextTryTime(time(NULL),1));
+    }
     store->createSms(*sms,t.msgId);
   }catch(...)
   {
@@ -207,13 +193,8 @@ StateType StateMachine::forward(Tuple& t)
   }
   SmeProxy *dest_proxy=0;
   int dest_proxy_index;
-  Address src;
-	if(smsc->AddressToAlias(sms.getOriginatingAddress(),src))
-  {
-    sms.setOriginatingAddress(src);
-  }
 
-  bool has_route = smsc->routeSms(&sms,dest_proxy_index,dest_proxy);
+  bool has_route = smsc->routeSms(sms.getOriginatingAddress(),sms.getDealiasedDestinationAddress(),dest_proxy_index,dest_proxy);
   if ( !has_route )
   {
     __warning__("FORWARD: No route");

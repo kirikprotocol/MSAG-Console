@@ -20,12 +20,12 @@ using std::auto_ptr;
 
 #define __CMD__(x) smsc::smeman::x
 
-bool Smsc::routeSms(SMS* sms, int& dest_idx,SmeProxy*& proxy)
+bool Smsc::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProxy*& proxy)
 {
   //smeman.getSmeProxy(0)
   proxy = 0;
-  bool ok = router.lookup(sms->getOriginatingAddress(),
-                          sms->getDestinationAddress(),
+  bool ok = router.lookup(org,
+                          dst,
                           proxy,
                           &dest_idx);
   return ok;

@@ -425,7 +425,8 @@ public:
     PduBindTRXResp *resp=(PduBindTRXResp*)strans.sendPdu((SmppHeader*)&pdu);
 
     if(!resp || resp->get_header().get_commandId()!=SmppCommandSet::BIND_TRANCIEVER_RESP ||
-       resp->get_header().get_sequenceNumber()!=pdu.get_header().get_sequenceNumber())
+       resp->get_header().get_sequenceNumber()!=pdu.get_header().get_sequenceNumber() ||
+       resp->get_header().get_commandStatus()!=SmppStatusSet::ESME_ROK)
     {
       disposePdu((SmppHeader*)resp);
       throw Exception("Unable to bind sme");

@@ -44,7 +44,7 @@ public:
   void mainLoop();
   void shutdown();
   TaskContainer tasks;
-  bool Smsc::routeSms(SMS* sms, int& dest_idx,SmeProxy*& proxy);
+  bool Smsc::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProxy*& proxy);
 
   bool AliasToAddress(const Address& alias,Address& addr)
   {
