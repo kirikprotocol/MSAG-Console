@@ -428,6 +428,7 @@ void DataProvider::process(Command& command)
 
     struct timeval utime, curtime;
     if( log->isInfoEnabled() ) gettimeofday( &utime, 0 );
+    const Address& from = command.getFromAddress();
     try
     {
         job->process(command, *ds);
@@ -435,7 +436,9 @@ void DataProvider::process(Command& command)
             long usecs;
             gettimeofday( &curtime, 0 );
             usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
-            smsc_log_info(log,  "job %s processed in s=%ld us=%ld", job->getName(), curtime.tv_sec-utime.tv_sec, usecs );
+            smsc_log_info(log,  "job %s processed in s=%ld us=%ld. From: '.%d.%d.%s'",
+			  job->getName(), curtime.tv_sec-utime.tv_sec, usecs,
+			  from.type, from.plan, from.value);
       }
     }
     catch (CommandProcessException& exc)
@@ -444,7 +447,9 @@ void DataProvider::process(Command& command)
           long usecs;
           gettimeofday( &curtime, 0 );
           usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
-          smsc_log_info(log,  "job %s unsuccsess in s=%ld us=%ld", job->getName(), curtime.tv_sec-utime.tv_sec, usecs );
+          smsc_log_info(log,  "job %s unsuccsess in s=%ld us=%ld From: '.%d.%d.%s'",
+			job->getName(), curtime.tv_sec-utime.tv_sec, usecs,
+			from.type, from.plan, from.value);
       }
       throw;
     }
