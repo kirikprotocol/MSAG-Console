@@ -9,6 +9,7 @@ namespace sme {
 
 using smsc::util::Logger;
 using smsc::core::synchronization::MutexGuard;
+using smsc::sme::SmppConnectException;
 using smsc::test::conf::TestConfig;
 using namespace smsc::test::core; //flags
 using namespace smsc::test::util;
@@ -49,6 +50,12 @@ bool SmppBaseTestCases::bindCorrectSme(int num)
 			fixture->session->connect();
 			__tc_ok_cond__;
 			return true;
+		}
+		catch (SmppConnectException& e)
+		{
+			__tc_fail__(100);
+			__trace2__("Bind failed: %s" , e.getTextReason());
+			return false;
 		}
 		catch(...)
 		{
@@ -183,7 +190,10 @@ void SmppBaseTestCases::checkMissingPdu(time_t checkTime)
 				break;
 			case INTERMEDIATE_NOTIFICATION_MONITOR:
 				__tc__("checkMissingPdu.intermediateNotification");
-				//break;
+				break;
+			case GENERIC_NACK_MONITOR:
+				__tc__("checkMissingPdu.genericNack");
+				break;
 			default:
 				__unreachable__("Invalid monitor type");
 		}
