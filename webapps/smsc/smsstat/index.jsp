@@ -141,6 +141,7 @@ while (i.hasNext()) {
             <td align=right><%= sme.rescheduled%></td>
             <td align=right><%= sme.temporal%></td>
         </tr><%
+          // TODO: add errors display here !!!
         }
     }
     Collection routeids = stat.getRouteIdStat();
@@ -171,6 +172,7 @@ while (i.hasNext()) {
             <td align=right><%= route.rescheduled%></td>
             <td align=right><%= route.temporal%></td>
         </tr><%
+          // TODO: add errors display here !!!
         }
     }
     Collection errids = stat.getErrorStat();

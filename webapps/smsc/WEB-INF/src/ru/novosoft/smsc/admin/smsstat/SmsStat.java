@@ -70,17 +70,43 @@ public class SmsStat
     if (query.isTillDateEnabled()) str += " period <= ? ";
     return str;
   }
+  private void bindStatePeriodPart(PreparedStatement stmt, StatQuery query, String id)
+      throws SQLException
+  {
+    int pos=1;
+    stmt.setString(pos++, id);
+    if (query.isFromDateEnabled())
+      stmt.setInt(pos++, calculatePeriod(query.getFromDate()));
+    if (query.isTillDateEnabled())
+      stmt.setInt(pos++, calculatePeriod(query.getTillDate()));
+  }
+  private String prepareStatePeriodPart(StatQuery query, String field) {
+    String str = "WHERE "+field+"=? ";
+    if (query.isFromDateEnabled() || query.isTillDateEnabled()) str += " AND ";
+    if (query.isFromDateEnabled()) {
+        str += " period >= ? ";
+        if (query.isTillDateEnabled()) str += " AND ";
+    }
+    if (query.isTillDateEnabled()) str += " period <= ? ";
+    return str;
+  }
   private String prepareSmsQuery(StatQuery query) {
     return SMS_QUERY+preparePeriodPart(query)+"GROUP BY period ORDER BY period ASC";
   }
   private String prepareSmeQuery(StatQuery query) {
     return SME_QUERY+preparePeriodPart(query)+"GROUP BY systemid";
   }
+  private String prepareSmeStateQuery(StatQuery query) {
+    return SME_STATE_QUERY+prepareStatePeriodPart(query, "systemid")+"GROUP BY errcode";
+  }
   private String prepareStateQuery(StatQuery query) {
     return STATE_QUERY+preparePeriodPart(query)+"GROUP BY errcode";
   }
   private String prepareRouteQuery(StatQuery query) {
     return ROUTE_QUERY+preparePeriodPart(query)+"GROUP BY routeid";
+  }
+  private String prepareRouteStateQuery(StatQuery query) {
+    return ROUTE_STATE_QUERY+prepareStatePeriodPart(query, "routeid")+"GROUP BY errcode";
   }
 
   private void flushStatistics(StatQuery query)
@@ -173,7 +199,9 @@ public class SmsStat
       throws SQLException
   {
     PreparedStatement stmt = getQuery(connection, query, prepareSmeQuery(query));
+    PreparedStatement errStmt = connection.prepareStatement(prepareSmeStateQuery(query));
     ResultSet rs = stmt.executeQuery();
+    ResultSet errRs = null;
 
     try {
       while (rs.next())
@@ -182,9 +210,45 @@ public class SmsStat
         SmeIdCountersSet set = new SmeIdCountersSet(
             rs.getInt(2), rs.getInt(3), rs.getInt(4), rs.getInt(5), rs.getInt(6), rs.getInt(7), smeId);
 
-        // TODO: load up errors set here !!!
-
+        bindStatePeriodPart(errStmt, query, smeId);
+        errRs = errStmt.executeQuery();
+        while (errRs.next()) {
+          set.addError(new ErrorCounterSet(errRs.getInt(1), errRs.getInt(2)));
+        }
         stat.addSmeIdStat(set);
+        errRs.close();
+      }
+    } catch (SQLException ex) {
+      throw ex;
+    } finally {
+      if (rs != null) rs.close();
+      if (stmt != null) stmt.close();
+      if (errStmt != null) errStmt.close();
+    }
+  }
+  private void processRouteQuery(Connection connection, StatQuery query)
+      throws SQLException
+  {
+    PreparedStatement stmt = getQuery(connection, query, prepareRouteQuery(query));
+    PreparedStatement errStmt = connection.prepareStatement(prepareRouteStateQuery(query));
+    ResultSet rs = stmt.executeQuery();
+    ResultSet errRs = null;
+
+    try
+    {
+      while (rs.next())
+      {
+        String routeId = rs.getString(1);
+        RouteIdCountersSet set = new RouteIdCountersSet(
+            rs.getInt(2), rs.getInt(3),rs.getInt(4),rs.getInt(5),rs.getInt(6),rs.getInt(7), routeId);
+
+        bindStatePeriodPart(errStmt, query, routeId);
+        errRs = errStmt.executeQuery();
+        while (errRs.next()) {
+          set.addError(new ErrorCounterSet(errRs.getInt(1), errRs.getInt(2)));
+        }
+        stat.addRouteIdStat(set);
+        errRs.close();
       }
     } catch (SQLException ex) {
       throw ex;
@@ -202,31 +266,6 @@ public class SmsStat
     try {
       while (rs.next()) {
         stat.addErrorStat(new ErrorCounterSet(rs.getInt(1), rs.getInt(2)));
-      }
-    } catch (SQLException ex) {
-      throw ex;
-    } finally {
-      if (rs != null) rs.close();
-      if (stmt != null) stmt.close();
-    }
-  }
-  private void processRouteQuery(Connection connection, StatQuery query)
-      throws SQLException
-  {
-    PreparedStatement stmt = getQuery(connection, query, prepareRouteQuery(query));
-    ResultSet rs = stmt.executeQuery();
-
-    try
-    {
-      while (rs.next())
-      {
-        String routeId = rs.getString(1);
-        RouteIdCountersSet set = new RouteIdCountersSet(
-            rs.getInt(2), rs.getInt(3),rs.getInt(4),rs.getInt(5),rs.getInt(6),rs.getInt(7), routeId);
-
-        // TODO: load up errors set here !!!
-
-        stat.addRouteIdStat(set);
       }
     } catch (SQLException ex) {
       throw ex;

@@ -7,13 +7,9 @@
  */
 package ru.novosoft.smsc.admin.smsstat;
 
-import java.util.Vector;
-import java.util.Collection;
-
-public class SmeIdCountersSet extends CountersSet
+public class SmeIdCountersSet extends ExtendedCountersSet
 {
   public String smeid;
-  private Vector errors = new Vector(); // contains ErrorCounterSet
 
   public SmeIdCountersSet(String smeid)
   {
@@ -25,19 +21,6 @@ public class SmeIdCountersSet extends CountersSet
   {
     super(accepted, rejected, delivered, failed, rescheduled, temporal);
     this.smeid = smeid;
-  }
-
-  public SmeIdCountersSet(CountersSet set, String smeid)
-  {
-    super(set);
-    this.smeid = smeid;
-  }
-
-  public void addError(ErrorCounterSet set) {
-    errors.addElement(set);
-  }
-  public Collection getErrors() {
-    return errors;
   }
 
 }

@@ -12,9 +12,8 @@ import java.util.Collection;
 
 public class Statistics
 {
-  private CountersSet total = new CountersSet();
+  private ExtendedCountersSet total = new ExtendedCountersSet();
   private Vector byDates    = new Vector(); // contains DateCountersSet
-  private Vector byError    = new Vector(); // contains ErrorCounterSet
   private Vector bySmeId    = new Vector(); // contains SmeIdCountersSet
   private Vector byRouteId  = new Vector(); // contains RouteIdCountersSet
 
@@ -31,10 +30,10 @@ public class Statistics
   }
 
   public void addErrorStat(ErrorCounterSet set) {
-    byError.addElement(set);
+    total.addError(set);
   }
   public Collection getErrorStat() {
-    return byError;
+    return total.getErrors();
   }
 
   public void addSmeIdStat(SmeIdCountersSet set) {

@@ -7,13 +7,9 @@
  */
 package ru.novosoft.smsc.admin.smsstat;
 
-import java.util.Vector;
-import java.util.Collection;
-
-public class RouteIdCountersSet extends CountersSet
+public class RouteIdCountersSet extends ExtendedCountersSet
 {
   public String routeid;
-  private Vector errors = new Vector(); // contains ErrorCounterSet
 
   public RouteIdCountersSet(String routeid)
   {
@@ -27,16 +23,4 @@ public class RouteIdCountersSet extends CountersSet
     this.routeid = routeid;
   }
 
-  public RouteIdCountersSet(CountersSet set, String routeid)
-  {
-    super(set);
-    this.routeid = routeid;
-  }
-
-  public void addError(ErrorCounterSet set) {
-    errors.addElement(set);
-  }
-  public Collection getErrors() {
-    return errors;
-  }
 }

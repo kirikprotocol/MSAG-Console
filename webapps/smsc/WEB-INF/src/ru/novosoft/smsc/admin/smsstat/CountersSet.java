@@ -7,6 +7,9 @@
  */
 package ru.novosoft.smsc.admin.smsstat;
 
+import java.util.Vector;
+import java.util.Collection;
+
 public class CountersSet
 {
   public int accepted = 0;
@@ -24,15 +27,11 @@ public class CountersSet
     this.delivered = delivered;  this.failed = failed;
     this.rescheduled = rescheduled; this.temporal = temporal;
   }
-  protected CountersSet(CountersSet set) {
-    this.accepted = set.accepted;  this.rejected = set.rejected;
-    this.delivered = set.delivered;  this.failed = set.failed;
-    this.rescheduled = set.rescheduled; this.temporal = set.temporal;
-  }
 
   protected void increment(CountersSet set) {
     this.accepted += set.accepted;  this.rejected += set.rejected;
     this.delivered += set.delivered;  this.failed += set.failed;
     this.rescheduled += set.rescheduled; this.temporal += set.temporal;
   }
+
 }
