@@ -363,6 +363,7 @@ namespace smsc { namespace store
          * время следующей попытки доставки не превышает указанного.
          * 
          * @param retryTime дата/время для выборки (текущее время)
+         * @param immediate признак для сообщений immediate
          * @return итератор над набором id сообщений, готовых
          *         к следующей попытке доставки
          * @exception StorageException
@@ -370,7 +371,7 @@ namespace smsc { namespace store
          *                   т.н когда хранилище недоступно.
          * @see IdIterator
          */
-        virtual IdIterator* getReadyForRetry(time_t retryTime) 
+        virtual IdIterator* getReadyForRetry(time_t retryTime, bool immediate=false) 
                 throw(StorageException) = 0;
         
         /**

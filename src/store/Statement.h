@@ -523,14 +523,16 @@ namespace smsc { namespace store
 
     class ReadyByNextTimeStatement : public IdStatement
     {
-    static const char* sql;
+    static const char* sql_raw;
+    static const char* sql_immediate;
     private:
         
         OCIDate rTime;
 
     public:
 
-        ReadyByNextTimeStatement(Connection* connection, bool assign=false)
+        ReadyByNextTimeStatement(Connection* connection, 
+                                 bool immediate=false, bool assign=false)
             throw(StorageException);
         virtual ~ReadyByNextTimeStatement() {};
         

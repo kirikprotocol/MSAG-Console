@@ -1200,7 +1200,7 @@ void RemoteStore::changeSmsStateToDeleted(SMSId id)
 /* --------------------- Sheduler's classes & methods -------------------- */
 
 RemoteStore::ReadyIdIterator::ReadyIdIterator(
-    StorageConnectionPool* _pool, time_t retryTime)
+    StorageConnectionPool* _pool, time_t retryTime, bool immediate)
         throw(StorageException)
             : IdIterator(), pool(_pool), connection(0), readyStmt(0)
 {
@@ -1260,10 +1260,10 @@ bool RemoteStore::ReadyIdIterator::getNextId(SMSId &id)
 #endif
 }
 
-IdIterator* RemoteStore::getReadyForRetry(time_t retryTime)
+IdIterator* RemoteStore::getReadyForRetry(time_t retryTime, bool immediate)
     throw(StorageException)
 {
-    return (new ReadyIdIterator(pool, retryTime));
+    return (new ReadyIdIterator(pool, retryTime, immediate));
 }
 
 time_t RemoteStore::getNextRetryTime()

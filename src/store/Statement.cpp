@@ -1171,14 +1171,21 @@ void ConcatDataStatement::setDestination(const Address& dda)
 
 /* --------------------- Sheduler's statements -------------------- */
 
-const char* ReadyByNextTimeStatement::sql = (const char*)
+const char* ReadyByNextTimeStatement::sql_raw = (const char*)
 "SELECT ID FROM SMS_MSG WHERE\
  NEXT_TRY_TIME<=:RT ORDER BY NEXT_TRY_TIME ASC";
+const char* ReadyByNextTimeStatement::sql_immediate = (const char*)
+"SELECT ID FROM SMS_MSG WHERE\
+ NEXT_TRY_TIME<=:RT AND LAST_RESULT=1134 ORDER BY NEXT_TRY_TIME ASC";
 ReadyByNextTimeStatement::ReadyByNextTimeStatement(Connection* connection,
-    bool assign) throw(StorageException)
-        : IdStatement(connection, ReadyByNextTimeStatement::sql, assign)
+    bool immediate, bool assign) throw(StorageException)
+        : IdStatement(connection, (immediate) ? 
+                      ReadyByNextTimeStatement::sql_immediate:
+                      ReadyByNextTimeStatement::sql_raw, 
+                      assign)
 {
-    __trace2__("%p : ReadyByNextTimeStatement creating ...", stmt);
+    __trace2__("%p : ReadyByNextTimeStatement creating %s ...", 
+               stmt, (immediate) ? "for immediate sms":"");
 
     define(1, SQLT_VNU, (dvoid *) &(smsId), (sb4) sizeof(smsId));
 }
