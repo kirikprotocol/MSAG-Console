@@ -4720,7 +4720,7 @@
 						    location   	(372, 501)
 						    anchor_loc 	1
 						    nlines     	2
-						    max_width  	750
+						    max_width  	756
 						    justify    	0
 						    label      	"OS")
 						icon       	"Actor"
@@ -21293,7 +21293,7 @@
 						    location   	(2046, 2330)
 						    anchor_loc 	1
 						    nlines     	2
-						    max_width  	968
+						    max_width  	973
 						    justify    	0
 						    label      	"User")
 						icon       	"Actor"
@@ -33189,7 +33189,7 @@
 					    max_height 	28350
 					    max_width  	21600
 					    origin_x   	0
-					    origin_y   	8156
+					    origin_y   	7124
 					    items      	(list diagram_item_list
 						(object Swimlane "" @1209
 						    line_color 	3342489
@@ -35751,7 +35751,7 @@
 							default_color 	TRUE)
 						    label      	(object ItemLabel
 							Parent_View 	@1330
-							location   	(1829, 3673)
+							location   	(1829, 3690)
 							fill_color 	13434879
 							anchor_loc 	1
 							nlines     	2

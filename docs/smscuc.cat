@@ -149,7 +149,7 @@
 			    logical_models 	(list unit_reference_list
 				(object UseCase "Протоколирование"
 				    quid       	"3C3D6F07021E"
-				    documentation 	"С целью обнаружения дефектов и сбоев функционирования SMSC осуществляет протоколирование своей работы с записью протокола на постоянный носитель. Все события, используемые для протоколирования, должны быть разбиты на категории и приоритеты. Категории могут образовывать иерархии. Это позволит гибко разрешать и запрещать протоколирование целых групп событий. Также должна быть предусмотрена возможность одновременного протоколирования по нескольким адресатам с указанием формата вывода. Протокол должен представлять собой текст, удобный для составления отчетов о сбоях. "))
+				    documentation 	"С целью обнаружения дефектов и сбоев функционирования SMSC осуществляет протоколирование своей работы с записью протокола на постоянный носитель. Все события, используемые для протоколирования, должны быть разбиты на категории и приоритеты. Категории могут образовывать иерархии. Это позволит гибко разрешать и запрещать протоколирование целых групп событий. Также должна быть предусмотрена возможность одновременного протоколирования в несколько каналов вывода с указанием выходного формата. Протокол должен представлять собой текст, удобный для составления отчетов о сбоях. "))
 			    logical_presentations 	(list unit_reference_list))
 			(object Class_Category "Сбор статистики"
 			    quid       	"3C3D9C880250"
@@ -163,9 +163,9 @@
 |Список статистических параметров может расширяться по мере разработки. Однако на данном этапе можно ограничиться следующими показателями
 |·	Число обработанных сообщений со времени последнего сброс счетчиков
 |·	Средняя скорость обработки со времени последнего сброс счетчиков
-|Возможность сохранения статистических показателей не предусматривается.
 |
-				    ))
+				    
+				    abstract   	TRUE))
 			    logical_presentations 	(list unit_reference_list)))
 		    logical_presentations 	(list unit_reference_list))
 		(object Class_Category "Базовые функции"
@@ -728,6 +728,23 @@
 			    logical_presentations 	(list unit_reference_list)))
 		    logical_presentations 	(list unit_reference_list))
 		(object Class_Category "Администрирование"
+		    attributes 	(list Attribute_Set
+			(object Attribute
+			    tool       	"RequisitePro"
+			    name       	"ReqProProjectPath"
+			    value      	"")
+			(object Attribute
+			    tool       	"RequisitePro"
+			    name       	"ReqProProjectGuid"
+			    value      	"")
+			(object Attribute
+			    tool       	"RequisitePro"
+			    name       	"ReqProDocType"
+			    value      	"")
+			(object Attribute
+			    tool       	"RequisitePro"
+			    name       	"ReqProReqType"
+			    value      	""))
 		    quid       	"3C3D9B99013E"
 		    documentation 	
 |Администратор может использовать функции, описанные в этой секции, для конфигурирования SMSC.
@@ -738,6 +755,23 @@
 		    exportControl 	"Public"
 		    logical_models 	(list unit_reference_list
 			(object UseCase "Администрирование"
+			    attributes 	(list Attribute_Set
+				(object Attribute
+				    tool       	"RequisitePro"
+				    name       	"ReqProProjectPath"
+				    value      	"")
+				(object Attribute
+				    tool       	"RequisitePro"
+				    name       	"ReqProDocType"
+				    value      	"")
+				(object Attribute
+				    tool       	"RequisitePro"
+				    name       	"ReqProReqType"
+				    value      	"")
+				(object Attribute
+				    tool       	"RequisitePro"
+				    name       	"ReqProProjectGuid"
+				    value      	""))
 			    quid       	"3C85E3D101FE")
 			(object Class_Category "Управление короткими адресами"
 			    quid       	"3C617425014D"
@@ -1148,7 +1182,197 @@
 					(object Inheritance_Relationship
 					    quid       	"3C85E41000C8"
 					    supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Администрирование"
-					    quidu      	"3C85E3D101FE")))
+					    quidu      	"3C85E3D101FE"))
+				    logical_presentations 	(list unit_reference_list
+					(object UseCaseDiagram "Управление внешними сервисами"
+					    quid       	"3CDFBD5B0174"
+					    title      	"Управление внешними сервисами"
+					    zoom       	100
+					    max_height 	28350
+					    max_width  	21600
+					    origin_x   	0
+					    origin_y   	0
+					    items      	(list diagram_item_list
+						(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление внешними сервисами::Управление внешними сервисами" @36
+						    location   	(734, 200)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@36
+							location   	(734, 338)
+							anchor_loc 	1
+							nlines     	2
+							max_width  	630
+							justify    	0
+							label      	"Управление внешними сервисами")
+						    icon_style 	"Icon"
+						    line_color 	3342489
+						    fill_color 	13434879
+						    quidu      	"3C4EACD00030")
+						(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление внешними сервисами::Зарегистрировать клиента" @37
+						    location   	(309, 612)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@37
+							location   	(309, 750)
+							anchor_loc 	1
+							nlines     	2
+							max_width  	630
+							justify    	0
+							label      	"Зарегистрировать клиента")
+						    icon_style 	"Icon"
+						    line_color 	3342489
+						    fill_color 	13434879
+						    quidu      	"3CDFBD8E01FA"
+						    height     	118)
+						(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление внешними сервисами::Удалить клиента" @38
+						    location   	(744, 620)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@38
+							location   	(744, 758)
+							anchor_loc 	1
+							nlines     	2
+							max_width  	630
+							justify    	0
+							label      	"Удалить клиента")
+						    icon_style 	"Icon"
+						    line_color 	3342489
+						    fill_color 	13434879
+						    quidu      	"3CDFBDFB002A"
+						    height     	118)
+						(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление внешними сервисами::Изменить параметры клиента" @39
+						    location   	(1250, 612)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@39
+							location   	(1250, 750)
+							anchor_loc 	1
+							nlines     	2
+							max_width  	630
+							justify    	0
+							label      	"Изменить параметры клиента")
+						    icon_style 	"Icon"
+						    line_color 	3342489
+						    fill_color 	13434879
+						    quidu      	"3CDFBE05036E"
+						    height     	118)
+						(object InheritView "" @40
+						    stereotype 	TRUE
+						    line_color 	3342489
+						    quidu      	"3CDFBE19027C"
+						    client     	@37
+						    supplier   	@36
+						    line_style 	0)
+						(object InheritView "" @41
+						    stereotype 	TRUE
+						    line_color 	3342489
+						    quidu      	"3CDFBE1B01DF"
+						    client     	@38
+						    supplier   	@36
+						    line_style 	0)
+						(object InheritView "" @42
+						    stereotype 	TRUE
+						    line_color 	3342489
+						    quidu      	"3CDFBE21001B"
+						    client     	@39
+						    supplier   	@36
+						    line_style 	0)
+						(object NoteView @43
+						    location   	(1422, 200)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@43
+							location   	(1212, 110)
+							fill_color 	13434879
+							nlines     	3
+							max_width  	384
+							label      	"Class Diagram: SME Management / SME Management")
+						    line_color 	3342489
+						    fill_color 	13434879
+						    width      	444
+						    height     	193
+						    quidu      	"3C68F1B8029D")
+						(object AttachView "" @44
+						    stereotype 	TRUE
+						    line_color 	3342489
+						    client     	@36
+						    supplier   	@43
+						    line_style 	0)
+						(object NoteView @45
+						    location   	(303, 925)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@45
+							location   	(165, 865)
+							fill_color 	13434879
+							nlines     	2
+							max_width  	240
+							label      	"Activity Diagram: Зарегистрировать клиента / Primary flow")
+						    line_color 	3342489
+						    fill_color 	13434879
+						    width      	300
+						    height     	132
+						    quidu      	"3CDFE79B0087")
+						(object AttachView "" @46
+						    stereotype 	TRUE
+						    line_color 	3342489
+						    client     	@45
+						    supplier   	@37
+						    line_style 	0)))))
 				(object UseCase "Зарегистрировать клиента"
 				    quid       	"3CDFBD8E01FA"
 				    superclasses 	(list inheritance_relationship_list
@@ -1203,11 +1427,11 @@
 						origin_x   	0
 						origin_y   	0
 						items      	(list diagram_item_list
-						    (object Swimlane "" @36
+						    (object Swimlane "" @47
 							line_color 	3342489
 							width      	450)
-						    (object NoteView @37
-							Parent_View 	@36
+						    (object NoteView @48
+							Parent_View 	@47
 							location   	(775, 72)
 							font       	(object Font
 							    size       	9
@@ -1220,7 +1444,7 @@
 							    color      	0
 							    default_color 	TRUE)
 							label      	(object ItemLabel
-							    Parent_View 	@37
+							    Parent_View 	@48
 							    location   	(12, 6)
 							    fill_color 	13434879
 							    nlines     	2
@@ -1232,8 +1456,8 @@
 							fill_color 	13434879
 							width      	1550
 							height     	144)
-						    (object StateView "Normal" "система отображает форму ввода  пареметров сервиса" @38
-							Parent_View 	@36
+						    (object StateView "Normal" "система отображает форму ввода  пареметров сервиса" @49
+							Parent_View 	@47
 							location   	(413, 420)
 							font       	(object Font
 							    size       	9
@@ -1246,7 +1470,7 @@
 							    color      	0
 							    default_color 	TRUE)
 							label      	(object ItemLabel
-							    Parent_View 	@38
+							    Parent_View 	@49
 							    location   	(413, 402)
 							    fill_color 	13434879
 							    anchor_loc 	1
@@ -1261,8 +1485,8 @@
 							width      	700
 							height     	143
 							autoResize 	TRUE)
-						    (object ActivityStateView "администратор заполняет форму и нажимает Next" @39
-							Parent_View 	@36
+						    (object ActivityStateView "администратор заполняет форму и нажимает Next" @50
+							Parent_View 	@47
 							location   	(413, 700)
 							font       	(object Font
 							    size       	9
@@ -1275,7 +1499,7 @@
 							    color      	0
 							    default_color 	TRUE)
 							label      	(object ItemLabel
-							    Parent_View 	@39
+							    Parent_View 	@50
 							    location   	(413, 669)
 							    fill_color 	13434879
 							    anchor_loc 	1
@@ -1291,16 +1515,16 @@
 							height     	169
 							annotation 	1
 							autoResize 	TRUE)
-						    (object TransView "" @40
+						    (object TransView "" @51
 							stereotype 	TRUE
 							line_color 	3342489
 							quidu      	"3CDFE9CB0335"
-							client     	@38
-							supplier   	@39
+							client     	@49
+							supplier   	@50
 							line_style 	0
 							x_offset   	FALSE)
-						    (object NoteView @41
-							Parent_View 	@36
+						    (object NoteView @52
+							Parent_View 	@47
 							location   	(1227, 423)
 							font       	(object Font
 							    size       	9
@@ -1313,7 +1537,7 @@
 							    color      	0
 							    default_color 	TRUE)
 							label      	(object ItemLabel
-							    Parent_View 	@41
+							    Parent_View 	@52
 							    location   	(908, 295)
 							    fill_color 	13434879
 							    nlines     	5
@@ -1329,14 +1553,14 @@
 							fill_color 	13434879
 							width      	663
 							height     	269)
-						    (object AttachView "" @42
+						    (object AttachView "" @53
 							stereotype 	TRUE
 							line_color 	3342489
-							client     	@38
-							supplier   	@41
+							client     	@49
+							supplier   	@52
 							line_style 	0)
-						    (object StateView "EndState" "$UNNAMED$24" @43
-							Parent_View 	@36
+						    (object StateView "EndState" "$UNNAMED$24" @54
+							Parent_View 	@47
 							location   	(412, 1165)
 							font       	(object Font
 							    size       	9
@@ -1349,7 +1573,7 @@
 							    color      	0
 							    default_color 	TRUE)
 							label      	(object ItemLabel
-							    Parent_View 	@43
+							    Parent_View 	@54
 							    location   	(466, 1123)
 							    nlines     	2
 							    max_width  	600
@@ -1358,8 +1582,8 @@
 							line_color 	3342489
 							quidu      	"3CDFEC8E03AA"
 							autoResize 	TRUE)
-						    (object StateView "Normal" "система сообщает об успешности операции" @44
-							Parent_View 	@36
+						    (object StateView "Normal" "система сообщает об успешности операции" @55
+							Parent_View 	@47
 							location   	(413, 964)
 							font       	(object Font
 							    size       	9
@@ -1372,7 +1596,7 @@
 							    color      	0
 							    default_color 	TRUE)
 							label      	(object ItemLabel
-							    Parent_View 	@44
+							    Parent_View 	@55
 							    location   	(413, 933)
 							    fill_color 	13434879
 							    anchor_loc 	1
@@ -1387,24 +1611,24 @@
 							width      	700
 							height     	169
 							autoResize 	TRUE)
-						    (object TransView "" @45
+						    (object TransView "" @56
 							stereotype 	TRUE
 							line_color 	3342489
 							quidu      	"3CDFEC8B0193"
-							client     	@39
-							supplier   	@44
+							client     	@50
+							supplier   	@55
 							line_style 	0
 							x_offset   	FALSE)
-						    (object TransView "" @46
+						    (object TransView "" @57
 							stereotype 	TRUE
 							line_color 	3342489
 							quidu      	"3CDFEC93011C"
-							client     	@44
-							supplier   	@43
+							client     	@55
+							supplier   	@54
 							line_style 	0
 							x_offset   	FALSE)
-						    (object NoteView @47
-							Parent_View 	@36
+						    (object NoteView @58
+							Parent_View 	@47
 							location   	(775, 215)
 							font       	(object Font
 							    size       	9
@@ -1417,7 +1641,7 @@
 							    color      	0
 							    default_color 	TRUE)
 							label      	(object ItemLabel
-							    Parent_View 	@47
+							    Parent_View 	@58
 							    location   	(12, 153)
 							    fill_color 	13434879
 							    nlines     	2
@@ -1427,8 +1651,8 @@
 							fill_color 	13434879
 							width      	1550
 							height     	137)
-						    (object NoteView @48
-							Parent_View 	@36
+						    (object NoteView @59
+							Parent_View 	@47
 							location   	(781, 1315)
 							font       	(object Font
 							    size       	9
@@ -1441,7 +1665,7 @@
 							    color      	0
 							    default_color 	TRUE)
 							label      	(object ItemLabel
-							    Parent_View 	@48
+							    Parent_View 	@59
 							    location   	(12, 1256)
 							    fill_color 	13434879
 							    nlines     	2
@@ -1465,196 +1689,7 @@
 					    quid       	"3CDFBE21001B"
 					    supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Управление внешними сервисами::Управление внешними сервисами"
 					    quidu      	"3C4EACD00030"))))
-			    logical_presentations 	(list unit_reference_list
-				(object UseCaseDiagram "Управление внешними сервисами"
-				    quid       	"3CDFBD5B0174"
-				    title      	"Управление внешними сервисами"
-				    zoom       	100
-				    max_height 	28350
-				    max_width  	21600
-				    origin_x   	0
-				    origin_y   	0
-				    items      	(list diagram_item_list
-					(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление внешними сервисами::Управление внешними сервисами" @49
-					    location   	(734, 200)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    label      	(object ItemLabel
-						Parent_View 	@49
-						location   	(734, 338)
-						anchor_loc 	1
-						nlines     	2
-						max_width  	630
-						justify    	0
-						label      	"Управление внешними сервисами")
-					    icon_style 	"Icon"
-					    line_color 	3342489
-					    fill_color 	13434879
-					    quidu      	"3C4EACD00030")
-					(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление внешними сервисами::Зарегистрировать клиента" @50
-					    location   	(309, 612)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    label      	(object ItemLabel
-						Parent_View 	@50
-						location   	(309, 750)
-						anchor_loc 	1
-						nlines     	2
-						max_width  	630
-						justify    	0
-						label      	"Зарегистрировать клиента")
-					    icon_style 	"Icon"
-					    line_color 	3342489
-					    fill_color 	13434879
-					    quidu      	"3CDFBD8E01FA"
-					    height     	118)
-					(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление внешними сервисами::Удалить клиента" @51
-					    location   	(744, 620)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    label      	(object ItemLabel
-						Parent_View 	@51
-						location   	(744, 758)
-						anchor_loc 	1
-						nlines     	2
-						max_width  	630
-						justify    	0
-						label      	"Удалить клиента")
-					    icon_style 	"Icon"
-					    line_color 	3342489
-					    fill_color 	13434879
-					    quidu      	"3CDFBDFB002A"
-					    height     	118)
-					(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление внешними сервисами::Изменить параметры клиента" @52
-					    location   	(1250, 612)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    label      	(object ItemLabel
-						Parent_View 	@52
-						location   	(1250, 750)
-						anchor_loc 	1
-						nlines     	2
-						max_width  	630
-						justify    	0
-						label      	"Изменить параметры клиента")
-					    icon_style 	"Icon"
-					    line_color 	3342489
-					    fill_color 	13434879
-					    quidu      	"3CDFBE05036E"
-					    height     	118)
-					(object InheritView "" @53
-					    stereotype 	TRUE
-					    line_color 	3342489
-					    quidu      	"3CDFBE19027C"
-					    client     	@50
-					    supplier   	@49
-					    line_style 	0)
-					(object InheritView "" @54
-					    stereotype 	TRUE
-					    line_color 	3342489
-					    quidu      	"3CDFBE1B01DF"
-					    client     	@51
-					    supplier   	@49
-					    line_style 	0)
-					(object InheritView "" @55
-					    stereotype 	TRUE
-					    line_color 	3342489
-					    quidu      	"3CDFBE21001B"
-					    client     	@52
-					    supplier   	@49
-					    line_style 	0)
-					(object NoteView @56
-					    location   	(1422, 200)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    label      	(object ItemLabel
-						Parent_View 	@56
-						location   	(1212, 110)
-						fill_color 	13434879
-						nlines     	3
-						max_width  	384
-						label      	"Class Diagram: SME Management / SME Management")
-					    line_color 	3342489
-					    fill_color 	13434879
-					    width      	444
-					    height     	193
-					    quidu      	"3C68F1B8029D")
-					(object AttachView "" @57
-					    stereotype 	TRUE
-					    line_color 	3342489
-					    client     	@49
-					    supplier   	@56
-					    line_style 	0)
-					(object NoteView @58
-					    location   	(303, 925)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    label      	(object ItemLabel
-						Parent_View 	@58
-						location   	(165, 865)
-						fill_color 	13434879
-						nlines     	2
-						max_width  	240
-						label      	"Activity Diagram: Зарегистрировать клиента / Primary flow")
-					    line_color 	3342489
-					    fill_color 	13434879
-					    width      	300
-					    height     	132
-					    quidu      	"3CDFE79B0087")
-					(object AttachView "" @59
-					    stereotype 	TRUE
-					    line_color 	3342489
-					    client     	@58
-					    supplier   	@50
-					    line_style 	0)))))
+			    logical_presentations 	(list unit_reference_list))
 			(object Class_Category "Управление пользователями"
 			    quid       	"3C61757E02C6"
 			    exportControl 	"Public"
@@ -1848,7 +1883,7 @@
 					location   	(155, 656)
 					anchor_loc 	1
 					nlines     	2
-					max_width  	889
+					max_width  	897
 					justify    	0
 					label      	"Administrator")
 				    icon       	"Actor"
@@ -2449,7 +2484,7 @@
 					location   	(1271, 811)
 					anchor_loc 	1
 					nlines     	2
-					max_width  	973
+					max_width  	983
 					justify    	0
 					label      	"Admin")
 				    icon       	"Actor"
@@ -2816,7 +2851,7 @@
 					location   	(1240, 780)
 					anchor_loc 	1
 					nlines     	2
-					max_width  	960
+					max_width  	968
 					justify    	0
 					label      	"Admin")
 				    icon       	"Actor"
@@ -3311,7 +3346,7 @@
 					location   	(1116, 997)
 					anchor_loc 	1
 					nlines     	2
-					max_width  	965
+					max_width  	973
 					justify    	0
 					label      	"Admin")
 				    icon       	"Actor"
@@ -3357,7 +3392,7 @@
 				location   	(279, 470)
 				anchor_loc 	1
 				nlines     	2
-				max_width  	954
+				max_width  	962
 				justify    	0
 				label      	"User")
 			    icon       	"Actor"
@@ -3456,7 +3491,7 @@
 				location   	(1116, 687)
 				anchor_loc 	1
 				nlines     	2
-				max_width  	952
+				max_width  	960
 				justify    	0
 				label      	"Admin")
 			    icon       	"Actor"
@@ -3572,7 +3607,7 @@
 	    max_height 	28350
 	    max_width  	21600
 	    origin_x   	0
-	    origin_y   	906
+	    origin_y   	0
 	    items      	(list diagram_item_list
 		(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Базовые функции::Маршрутизация сообщений::Маршрутизация сообщений" @145
 		    location   	(1023, 341)
@@ -3623,7 +3658,7 @@
 		    fill_color 	1567773
 		    quidu      	"3C3D6CF800B7")
 		(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление внешними сервисами::Управление внешними сервисами" @147
-		    location   	(1108, 1021)
+		    location   	(1054, 1054)
 		    font       	(object Font
 			size       	9
 			face       	"Arial"
@@ -3636,7 +3671,7 @@
 			default_color 	TRUE)
 		    label      	(object ItemLabel
 			Parent_View 	@147
-			location   	(1108, 1159)
+			location   	(1054, 1192)
 			anchor_loc 	1
 			nlines     	2
 			max_width  	642
@@ -3671,7 +3706,7 @@
 		    fill_color 	13434879
 		    quidu      	"3C4C5079009B")
 		(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление короткими адресами::Управление короткими адресами" @149
-		    location   	(1111, 1512)
+		    location   	(1085, 1519)
 		    font       	(object Font
 			size       	9
 			face       	"Arial"
@@ -3684,7 +3719,7 @@
 			default_color 	TRUE)
 		    label      	(object ItemLabel
 			Parent_View 	@149
-			location   	(1111, 1650)
+			location   	(1085, 1657)
 			anchor_loc 	1
 			nlines     	2
 			max_width  	636
@@ -3695,7 +3730,7 @@
 		    fill_color 	13434879
 		    quidu      	"3C4C504D02B5")
 		(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Администрирование" @150
-		    location   	(558, 1192)
+		    location   	(558, 1147)
 		    font       	(object Font
 			size       	9
 			face       	"Arial"
@@ -3708,7 +3743,7 @@
 			default_color 	TRUE)
 		    label      	(object ItemLabel
 			Parent_View 	@150
-			location   	(558, 1330)
+			location   	(558, 1285)
 			anchor_loc 	1
 			nlines     	2
 			max_width  	630
@@ -3759,7 +3794,7 @@
 			location   	(155, 1431)
 			anchor_loc 	1
 			nlines     	2
-			max_width  	772
+			max_width  	784
 			justify    	0
 			label      	"Administrator")
 		    icon       	"Actor"
@@ -3768,7 +3803,7 @@
 		    quidu      	"3C3C835302B9"
 		    autoResize 	TRUE)
 		(object AssociationViewNew "$UNNAMED$9" @155
-		    location   	(356, 1231)
+		    location   	(290, 1226)
 		    font       	(object Font
 			size       	9
 			face       	"Arial"
@@ -3785,7 +3820,7 @@
 		    roleview_list 	(list RoleViews
 			(object RoleView "$UNNAMED$10" @156
 			    Parent_View 	@155
-			    location   	(108, 177)
+			    location   	(42, 172)
 			    stereotype 	TRUE
 			    line_color 	3342489
 			    quidu      	"3C85E3EF026F"
@@ -3794,7 +3829,7 @@
 			    line_style 	0)
 			(object RoleView "$UNNAMED$11" @157
 			    Parent_View 	@155
-			    location   	(108, 177)
+			    location   	(42, 172)
 			    stereotype 	TRUE
 			    line_color 	3342489
 			    quidu      	"3C85E3EF0271"
@@ -3826,14 +3861,14 @@
 		    fill_color 	13434879
 		    quidu      	"3C3DAD4602B7")
 		(object AssociationViewNew "$UNNAMED$15" @159
-		    location   	(341, 1379)
+		    location   	(322, 1366)
 		    stereotype 	TRUE
 		    line_color 	3342489
 		    quidu      	"3C3DADD501CC"
 		    roleview_list 	(list RoleViews
 			(object RoleView "$UNNAMED$17" @160
 			    Parent_View 	@159
-			    location   	(-279, 15)
+			    location   	(-298, 2)
 			    font       	(object Font
 				size       	9
 				face       	"Arial"
@@ -3846,7 +3881,7 @@
 				default_color 	TRUE)
 			    label      	(object SegLabel @161
 				Parent_View 	@160
-				location   	(213, 1258)
+				location   	(255, 1281)
 				font       	(object Font
 				    size       	9
 				    face       	"Arial"
@@ -3875,7 +3910,7 @@
 			    line_style 	0)
 			(object RoleView "$UNNAMED$16" @162
 			    Parent_View 	@159
-			    location   	(-279, 15)
+			    location   	(-298, 2)
 			    font       	(object Font
 				size       	9
 				face       	"Arial"
@@ -3888,7 +3923,7 @@
 				default_color 	TRUE)
 			    label      	(object SegLabel @163
 				Parent_View 	@162
-				location   	(510, 1431)
+				location   	(430, 1382)
 				font       	(object Font
 				    size       	9
 				    face       	"Arial"
@@ -3946,7 +3981,7 @@
 			face       	"Arial"
 			charSet    	204
 			bold       	FALSE
-			italics    	FALSE
+			italics    	TRUE
 			underline  	FALSE
 			strike     	FALSE
 			color      	0
@@ -4063,7 +4098,7 @@
 		    ShowCompartmentStereotypes 	TRUE
 		    IncludeAttribute 	TRUE
 		    IncludeOperation 	TRUE
-		    location   	(155, 403)
+		    location   	(155, 465)
 		    font       	(object Font
 			size       	9
 			face       	"Arial"
@@ -4076,10 +4111,10 @@
 			default_color 	TRUE)
 		    label      	(object ItemLabel
 			Parent_View 	@170
-			location   	(155, 563)
+			location   	(155, 625)
 			anchor_loc 	1
 			nlines     	2
-			max_width  	777
+			max_width  	790
 			justify    	0
 			label      	"SME")
 		    icon       	"Actor"
@@ -4088,7 +4123,7 @@
 		    quidu      	"3C3C83310061"
 		    autoResize 	TRUE)
 		(object AssociationViewNew "$UNNAMED$0" @171
-		    location   	(345, 403)
+		    location   	(345, 435)
 		    font       	(object Font
 			size       	9
 			face       	"Arial"
@@ -4105,7 +4140,7 @@
 		    roleview_list 	(list RoleViews
 			(object RoleView "$UNNAMED$1" @172
 			    Parent_View 	@171
-			    location   	(190, 62)
+			    location   	(190, 94)
 			    stereotype 	TRUE
 			    line_color 	3342489
 			    quidu      	"3C85E2AF0201"
@@ -4114,7 +4149,7 @@
 			    line_style 	0)
 			(object RoleView "$UNNAMED$2" @173
 			    Parent_View 	@171
-			    location   	(190, 62)
+			    location   	(190, 94)
 			    stereotype 	TRUE
 			    line_color 	3342489
 			    quidu      	"3C85E2AF020C"
@@ -4122,7 +4157,7 @@
 			    supplier   	@170
 			    line_style 	0)))
 		(object AssociationViewNew "$UNNAMED$3" @174
-		    location   	(259, 342)
+		    location   	(304, 358)
 		    font       	(object Font
 			size       	9
 			face       	"Arial"
@@ -4139,7 +4174,7 @@
 		    roleview_list 	(list RoleViews
 			(object RoleView "$UNNAMED$4" @175
 			    Parent_View 	@174
-			    location   	(-423, 218)
+			    location   	(-378, 234)
 			    stereotype 	TRUE
 			    line_color 	3342489
 			    quidu      	"3C85E2F903C0"
@@ -4148,7 +4183,7 @@
 			    line_style 	0)
 			(object RoleView "$UNNAMED$5" @176
 			    Parent_View 	@174
-			    location   	(-423, 218)
+			    location   	(-378, 234)
 			    stereotype 	TRUE
 			    line_color 	3342489
 			    quidu      	"3C85E2F903D4"
@@ -4156,7 +4191,7 @@
 			    supplier   	@167
 			    line_style 	0)))
 		(object AssociationViewNew "$UNNAMED$6" @177
-		    location   	(372, 511)
+		    location   	(345, 530)
 		    font       	(object Font
 			size       	9
 			face       	"Arial"
@@ -4173,7 +4208,7 @@
 		    roleview_list 	(list RoleViews
 			(object RoleView "$UNNAMED$7" @178
 			    Parent_View 	@177
-			    location   	(-310, -171)
+			    location   	(-337, -152)
 			    stereotype 	TRUE
 			    line_color 	3342489
 			    quidu      	"3C85E32A0398"
@@ -4182,7 +4217,7 @@
 			    line_style 	0)
 			(object RoleView "$UNNAMED$8" @179
 			    Parent_View 	@177
-			    location   	(-310, -171)
+			    location   	(-337, -152)
 			    stereotype 	TRUE
 			    line_color 	3342489
 			    quidu      	"3C85E32A03AC"
@@ -4190,7 +4225,7 @@
 			    supplier   	@168
 			    line_style 	0)))
 		(object AssociationViewNew "$UNNAMED$12" @180
-		    location   	(434, 682)
+		    location   	(365, 645)
 		    font       	(object Font
 			size       	9
 			face       	"Arial"
@@ -4207,7 +4242,7 @@
 		    roleview_list 	(list RoleViews
 			(object RoleView "$UNNAMED$13" @181
 			    Parent_View 	@180
-			    location   	(279, 279)
+			    location   	(210, 242)
 			    stereotype 	TRUE
 			    line_color 	3342489
 			    quidu      	"3C85E7520280"
@@ -4216,7 +4251,7 @@
 			    line_style 	0)
 			(object RoleView "$UNNAMED$14" @182
 			    Parent_View 	@180
-			    location   	(279, 279)
+			    location   	(210, 242)
 			    stereotype 	TRUE
 			    line_color 	3342489
 			    quidu      	"3C85E7520282"
