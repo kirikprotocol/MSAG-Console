@@ -239,9 +239,9 @@ public class DivertManager
     divert = divert.trim();
     if (divert.equalsIgnoreCase(mciSmeAddress)) return Constants.SERVICE;
     if (divert.equalsIgnoreCase(voiceMailAddress)) return Constants.VOICEMAIL;
-    divert = "+"+divert;
-    if (divert.equalsIgnoreCase(mciSmeAddress)) return Constants.SERVICE;
-    if (divert.equalsIgnoreCase(voiceMailAddress)) return Constants.VOICEMAIL;
+    String _divert = "+"+divert;
+    if (_divert.equalsIgnoreCase(mciSmeAddress)) return Constants.SERVICE;
+    if (_divert.equalsIgnoreCase(voiceMailAddress)) return Constants.VOICEMAIL;
     return divert;
   }
   private String localToDivert(String local)  throws IOException
@@ -289,7 +289,7 @@ public class DivertManager
           String status = linest.nextToken();  // status
           if (!status.startsWith(ACTIVE_OP_STR)) continue;
           String address = linest.nextToken(); // fnum (forwarded to address)
-          if (ss.startsWith(REASON_BUSY))           info.setBusy(divertToLocal(address));
+          if      (ss.startsWith(REASON_BUSY))      info.setBusy(divertToLocal(address));
           else if (ss.startsWith(REASON_UNCOND))    info.setUncond(divertToLocal(address));
           else if (ss.startsWith(REASON_ABSENT))    info.setAbsent(divertToLocal(address));
           else if (ss.startsWith(REASON_NOT_AVAIL)) info.setNotavail(divertToLocal(address));
