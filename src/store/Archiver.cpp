@@ -234,6 +234,7 @@ void Archiver::Stop()
     if (bStarted)
     {
         exit.Signal();
+        job.Signal();
         exited.Wait();
         bStarted = false;
     }
