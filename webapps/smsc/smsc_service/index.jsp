@@ -77,12 +77,12 @@ refreshStartStopButtonsStatus();
 			finishParams(out);
 		finishSection(out);
 		//~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Archive.Cleaner ~~~~~~~~~~~~~~~~~~~~~~~~
-		startSection(out, "MessageStore.Archive.Cleaner", "Cleaner", false);
+		startSection(out, "MessageStore.Cleaner", "Cleaner", false);
 			startParams(out);
-				param(out, "enabled",         "MessageStore.Archive.Cleaner.enabled",  bean.getBoolParam("MessageStore.Cleaner.enabled"));
-				param(out, "age (days)",      "MessageStore.Archive.Cleaner.age",      bean.getIntParam( "MessageStore.Cleaner.age"));
-				param(out, "awake (seconds)", "MessageStore.Archive.Cleaner.awake",    bean.getIntParam( "MessageStore.Cleaner.awake"));
-				param(out, "interval",        "MessageStore.Archive.Cleaner.interval", bean.getIntParam( "MessageStore.Cleaner.interval"));
+				param(out, "enabled",         "MessageStore.Cleaner.enabled",  bean.getBoolParam("MessageStore.Cleaner.enabled"));
+				param(out, "age (days)",      "MessageStore.Cleaner.age",      bean.getIntParam( "MessageStore.Cleaner.age"));
+				param(out, "awake (seconds)", "MessageStore.Cleaner.awake",    bean.getIntParam( "MessageStore.Cleaner.awake"));
+				param(out, "interval",        "MessageStore.Cleaner.interval", bean.getIntParam( "MessageStore.Cleaner.interval"));
 			finishParams(out);
 		finishSection(out);
 		//~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Cache ~~~~~~~~~~~~~~~~~~~~~~~~
