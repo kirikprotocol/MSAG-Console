@@ -320,6 +320,46 @@ StateType StateMachine::submit(Tuple& t)
     __warning__("SUBMIT_SM: invalid datacoding");
     return ERROR_STATE;
   }
+
+  if(sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
+  {
+    unsigned len;
+    const unsigned char* msg;
+    if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+    {
+      msg=(const unsigned char*)sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+    }
+    else
+    {
+      msg=(const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+    }
+    if(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
+    {
+      len-=*msg;
+    }
+    ////
+    // Unicode message with odd length
+    if(len&2)
+    {
+      sms->lastResult=Status::INVMSGLEN;
+      smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+      SmscCommand resp = SmscCommand::makeSubmitSmResp
+                         (
+                           /*messageId*/"0",
+                           dialogId,
+                           Status::INVMSGLEN,
+                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                         );
+      try{
+        src_proxy->putCommand(resp);
+      }catch(...)
+      {
+      }
+      __warning__("SUBMIT_SM: invalid message length");
+    }
+  }
+
+
   if(sms->getValidTime()==-1)
   {
     sms->lastResult=Status::INVEXPIRY;
@@ -612,7 +652,12 @@ StateType StateMachine::submit(Tuple& t)
     if(profile.codepage==smsc::profiler::ProfileCharsetOptions::Default &&
        sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
     {
-      transLiterateSms(sms);
+      try{
+        transLiterateSms(sms);
+      }catch(exception& e)
+      {
+        __warning2__("Failed to transliterate: %s",e.what());
+      }
     }
     SmscCommand delivery = SmscCommand::makeDeliverySm(*sms,dialogId2);
     unsigned bodyLen=0;
@@ -640,6 +685,21 @@ StateType StateMachine::submit(Tuple& t)
       }
       return DELIVERING_STATE;
     }
+  }catch(exception& e)
+  {
+    __warning2__("SUBMIT: failed to put delivery command:%s",e.what());
+    sms->setOriginatingAddress(srcOriginal);
+    sms->setDestinationAddress(dstOriginal);
+    sendNotifyReport(*sms,t.msgId,"system failure");
+    try{
+      Descriptor d;
+      store->changeSmsStateToEnroute(t.msgId,d,Status::THROTTLED,rescheduleSms(*sms));
+      smsc->notifyScheduler();
+    }catch(...)
+    {
+      __trace__("SUBMIT: failed to change state to enroute");
+    }
+    return DELIVERING_STATE;
   }catch(...)
   {
     __trace__("SUBMIT: failed to put delivery command");
@@ -654,7 +714,6 @@ StateType StateMachine::submit(Tuple& t)
     {
       __trace__("SUBMIT: failed to change state to enroute");
     }
-
     return DELIVERING_STATE;
   }
   __trace2__("SUBMIT_SM:OK:%lld",t.msgId);
