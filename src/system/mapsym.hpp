@@ -3,6 +3,7 @@
 #include "sms/sms.h"
 #include "smeman/smeman.h"
 #include "core/synchronization/EventMonitor.hpp"
+#include "core/synchronization/Event.hpp"
 #include "core/threads/ThreadedTask.hpp"
 #include "util/debug.h"
 
@@ -160,26 +161,30 @@ public:
     const int MINLEN=5;
     const int MAXLEN=100;
     char msg[MAXLEN+1];
+    Event ev;
 
     const char *letters="abcdefghijklmnopqrstuvwxyz0123456789";
 
     while(!isStopping)
     {
-      int len=(int)(((double)rand())*(MAXLEN-MINLEN)/RAND_MAX+MINLEN);
-      for(int i=0;i<len;i++)
+      for(int j=0;j<50;j++)
       {
-        msg[i]=letters[rand()%strlen(letters)];
+        int len=(int)(((double)rand())*(MAXLEN-MINLEN)/RAND_MAX+MINLEN);
+        for(int i=0;i<len;i++)
+        {
+          msg[i]=letters[rand()%strlen(letters)];
+        }
+        sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,msg,len);
+        sms.setIntProperty(Tag::SMPP_SM_LENGTH,len);
+        try{
+          proxy->putIncomingCommand(
+            SmscCommand::makeSumbmitSm(sms,proxy->getNextSequenceNumber())
+          );
+        }catch(...)
+        {
+        }
       }
-      sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,msg,len);
-      sms.setIntProperty(Tag::SMPP_SM_LENGTH,len);
-      try{
-        proxy->putIncomingCommand(
-          SmscCommand::makeSumbmitSm(sms,proxy->getNextSequenceNumber())
-        );
-      }catch(...)
-      {
-      }
-      //sleep(1);
+      ev.Wait(10);
       thr_yield();
     }
     return 0;
