@@ -307,8 +307,8 @@ vector<int> SmppUtil::compareOptional(SmppOptional& p1, SmppOptional& p2,
 	if (check) { __require__(p.size_##field() == len_##field && \
 		!strncmp(p.get_##field(), str_##field.get(), len_##field)); }
 
-#define __set_text__(field, length) \
-	__trace_set__("set_text"); \
+#define __set_bin__(field, length) \
+	__trace_set__("set_bin"); \
 	int len_##field = length; \
 	auto_ptr<uint8_t> str_##field = rand_uint8_t(len_##field); \
 	p.set_##field((char*) str_##field.get(), len_##field); \
@@ -367,8 +367,8 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	__set_int__(uint8_t, replaceIfPresentFlag, !rand0(10));
 	__set_int__(uint8_t, dataCoding, getDataCoding(RAND_TC));
 	__set_int__(uint8_t, smDefaultMsgId, rand0(255)); //хбз что это такое
-	__set_text__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH));
-	mask &= 0xfffffffffffff7ff; //исключить userMessageReference
+	__set_bin__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH));
+	mask &= ~OPT_USER_MSG_REF; //исключить userMessageReference
 	setupRandomCorrectOptionalParams(pdu->get_optional(), mask, check);
 }
 
@@ -389,15 +389,15 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	__set_cstr2__(validityPeriod, time2string(validTime, tmp, time(NULL), __numTime__));
 	__set_int__(uint8_t, registredDelivery, rand0(255));
 	__set_int__(uint8_t, smDefaultMsgId, rand0(255)); //хбз что это такое
-	__set_text__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH));
+	__set_bin__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH));
 }
 
-#define __trace_set_optional__(name) \
-	/*__trace2__(name "[%d]: " #field, pos - 1);*/
+#define __trace_set_optional__(name, field) \
+	__trace2__(name "[%d]: " #field, pos - 1);
 	
 #define __set_optional_int__(type, field, value) \
 	if (mask[pos++]) { \
-		__trace_set_optional__("set_optional_int"); \
+		__trace_set_optional__("set_optional_int", field); \
 		type tmp_##field = value; \
 		opt.set_##field(tmp_##field); \
 		if (check) { intMap.insert(IntMap::value_type(#field, tmp_##field)); } \
@@ -406,7 +406,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 #define __set_optional_intarr__(field, value, length) \
 	if (mask[pos++]) { \
 		__require__(length <= 4); \
-		__trace_set_optional__("set_optional_intarr"); \
+		__trace_set_optional__("set_optional_intarr", field); \
 		uint8_t* tmp_##field = value; \
 		opt.set_##field(tmp_##field); \
 		if (check) { \
@@ -418,7 +418,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 
 #define __set_optional_ostr__(field, length) \
 	if (mask[pos++]) { \
-		__trace_set_optional__("set_optional_ostr"); \
+		__trace_set_optional__("set_optional_ostr", field); \
 		int len_##field = length; \
 		auto_ptr<char> str_##field = rand_char(len_##field); \
 		opt.set_##field(str_##field.get(), len_##field); \
@@ -429,9 +429,9 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 		} \
 	}
 
-#define __set_optional_text__(field, length) \
+#define __set_optional_bin__(field, length) \
 	if (mask[pos++]) { \
-		__trace_set_optional__("set_optional_text"); \
+		__trace_set_optional__("set_optional_bin", field); \
 		int len_##field = length; \
 		auto_ptr<uint8_t> str_##field = rand_uint8_t(len_##field); \
 		opt.set_##field((char*) str_##field.get(), len_##field); \
@@ -444,7 +444,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 
 #define __set_optional_cstr__(field, length) \
 	if (mask[pos++]) { \
-		__trace_set_optional__("set_optional_cstr"); \
+		__trace_set_optional__("set_optional_cstr", field); \
 		auto_ptr<char> str_##field = rand_char(length); \
 		opt.set_##field(str_##field.get()); \
 		if (check) { \
@@ -543,7 +543,7 @@ void SmppUtil::setupRandomCorrectOptionalParams(SmppOptional& opt,
 	__skip__; //__set_optional_int__(uint8_t, msAvailableStatus, rand0(255));
 	//int errCode = rand0(INT_MAX);
 	__skip__; //__set_optional_intarr__(networkErrorCode, (uint8_t*) &errCode, 3);
-	__set_optional_text__(messagePayload, rand0(65535));
+	__set_optional_bin__(messagePayload, rand0(65535));
 	__skip__; //__set_optional_int__(uint8_t, deliveryFailureReason, rand0(255));
 	__skip__; //__set_optional_int__(uint8_t, moreMessagesToSend, rand0(255));
 	__skip__; //__set_optional_int__(uint8_t, messageState, rand0(255));

@@ -144,7 +144,9 @@ void processDbSmeRes()
 	__reg_tc__("processDbSmeRes.defaultInput",
 		"Для отсутствующих input параметров берутся значения по умолчанию");
 	__reg_tc__("processDbSmeRes.defaultInput.int",
-		"Константа по умолчанию для целочисленных параметров типа int8, int16, int32, int64, uint8, uint16, uint32 и uint64");
+		"Константа по умолчанию для целочисленных параметров типа int8, int16, int32 и int64");
+	__reg_tc__("processDbSmeRes.defaultInput.uint",
+		"Константа по умолчанию для целочисленных параметров типа uint8, uint16, uint32 и uint64");
 	__reg_tc__("processDbSmeRes.defaultInput.float",
 		"Константа по умолчанию для параметров типа float, double и long double");
 	__reg_tc__("processDbSmeRes.defaultInput.string",

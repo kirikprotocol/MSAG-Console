@@ -2,7 +2,7 @@
 #define TEST_SME_SMPP_TRANSMITTER_TEST_CASES
 
 #include "sme/SmppBase.hpp"
-#include "smpp/smpp.h"
+#include "test/smpp/SmppUtil.hpp"
 #include "SmppFixture.hpp"
 #include "test/util/BaseTestCases.hpp"
 #include "test/util/CheckList.hpp"
@@ -15,6 +15,7 @@ namespace sme {
 using log4cpp::Category;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::CheckList;
+using smsc::test::smpp::OPT_ALL;
 using namespace smsc::smpp; //pdu
 
 class SmppTransmitterTestCases : BaseTestCases
@@ -25,7 +26,8 @@ public:
 	
 	virtual ~SmppTransmitterTestCases() {}
 
-	void setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu, const Address& destAlias);
+	void setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu, const Address& destAlias,
+		uint64_t mask = OPT_ALL);
 
 	void sendSubmitSmPdu(PduSubmitSm* pdu, PduData* existentPduData, bool sync,
 		PduData::IntProps* intProps = NULL, PduData::StrProps* strProps = NULL,

@@ -583,6 +583,7 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 				case 11: //недопустимый dataCoding
 					__tc__("submitSm.incorrect.dataCoding");
 					pdu->get_message().set_dataCoding(rand1(255));
+					break;
 				default:
 					__unreachable__("Invalid num");
 			}

@@ -66,10 +66,10 @@ void SmppTransmitterTestCases::checkRegisteredDelivery(Message& m)
 }
 
 void SmppTransmitterTestCases::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
-	const Address& destAlias)
+	const Address& destAlias, uint64_t mask)
 {
 	__require__(pdu);
-	SmppUtil::setupRandomCorrectSubmitSmPdu(pdu);
+	SmppUtil::setupRandomCorrectSubmitSmPdu(pdu, mask);
 	 //Default message Type (i.e. normal message)
 	pdu->get_message().set_esmClass(
 		pdu->get_message().get_esmClass() & 0xc3);
@@ -255,9 +255,9 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 					fixture->session->getSyncTransmitter()->submit(*pdu);
 				__require__(respPdu);
 				time_t respTime = time(NULL);
-				__dumpSubmitSmPdu__("submitSmSyncAfter", fixture->systemId, pdu);
 				{
 					MutexGuard mguard(fixture->pduReg->getMutex());
+					__dumpSubmitSmPdu__("submitSmSyncAfter", fixture->systemId, pdu);
 					processSubmitSmSync(pduData, respPdu, respTime);
 				}
 			}
