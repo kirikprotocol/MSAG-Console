@@ -126,7 +126,7 @@ unsigned ConvertText27bit(
   for ( unsigned i=0; i< chars; ++i ){
 #define __pchar(x) PutChar(bit7buf,shift,x)
 #define __escape(x) __pchar(0x1b); __pchar(x)
-    switch(in[i]){
+    switch(text[i]){
 		case '^': __escape(0x14); break;
 		case '\f':__escape(0x0a); break;
 		case '|': __escape(0x40); break;
