@@ -54,17 +54,13 @@
     </copy>
   </target>
 
-  <target name="install" depends="cvs_update,build" description="installs the webapp">
+  <target name="install" depends="build" description="installs the webapp">
     <copy todir="${CATALINA_BASE}/webapps/smppgw" preservelastmodified="yes">
       <fileset dir="${exploded}"/>
     </copy>
   </target>
 
-  <target name="cvs_update">
-    <cvs command="update" compressionlevel="9" failonerror="yes" quiet="yes"/>
-  </target>
-
-  <target name="update" depends="cvs_update,build" description="update existing installation">
+  <target name="update" depends="build" description="update existing installation">
     <copy todir="${CATALINA_BASE}/webapps/smppgw" preservelastmodified="yes">
       <fileset dir="${exploded}" excludes="WEB-INF/config.xml WEB-INF/users.xml" />
     </copy>
