@@ -12,11 +12,13 @@
 #include "core/synchronization/Mutex.hpp"
 #include "smeman/smsccmd.h"
 #include "system/state_checker.hpp"
+#include "system/traffic_control.hpp"
 //#include <stdexcept>
 #include <inttypes.h>
 //#include <stdint.h>
 #include <string.h>
 #include <list>
+#include "logger/Logger.h"
 
 #define DISABLE_LIST_DUMP
 
@@ -213,12 +215,14 @@ public:
   void enqueueEx(EnqueueVector& in)
   {
     __synchronized__
+    static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("eventqueue");
+    bool doSignal=false;
     for(EnqueueVector::iterator it=in.begin();it!=in.end();it++)
     {
       MsgIdType msgId=it->first;
       CommandType& command=it->second;
 
-      __trace2__("enqueue:cmd=%d, msgId=%lld, prio=%d",command->get_commandId(),msgId,command->get_priority());
+      debug2(log,"enqueue:cmd=%d, msgId=%lld, prio=%d",command->get_commandId(),msgId,command->get_priority());
       Locker* locker = hash.get(msgId);
 
       if ( !locker )
@@ -235,9 +239,10 @@ public:
       {
         locker->enqueued=true;
         queue.Push(locker,command->get_priority());
-        event.Signal();
+        doSignal=true;
       }
     }
+    if(doSignal)event.Signal();
   }
 
 
