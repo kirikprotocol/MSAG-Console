@@ -19,10 +19,11 @@ using smsc::util::config::ConfigException;
 
 int process(Statistics& stat)
 {
-    for (int i=0; i<100; i++)
+    for (int i=0; i<1000; i++)
     {
-        stat.updateIncoming("AAA");
-        stat.updateOutgoing("BBB", "RRR", i%2);
+        if (i%3) stat.updateScheduled();
+        if (i%2) stat.updateAccepted("AAA");
+        stat.updateChanged("BBB", "RRR", i%10);
     }
     printf("Statistics flushing ...\n");
     stat.flushStatistics();

@@ -16,7 +16,7 @@ StatisticsManager::~StatisticsManager()
     stop();
 }
 
-void StatisticsManager::updateIncoming(const char* srcSmeId) 
+void StatisticsManager::updateAccepted(const char* srcSmeId) 
 {
     MutexGuard  incomingGuard(incomingLock);
     MutexGuard  switchGuard(switchLock);
@@ -31,7 +31,7 @@ void StatisticsManager::updateIncoming(const char* srcSmeId)
         else stat->sent++;
     }
 }
-void StatisticsManager::updateOutgoing(const char* dstSmeId, 
+void StatisticsManager::updateChanged(const char* dstSmeId, 
     const char* routeId, int errcode = 0) 
 {
     MutexGuard  outgoingGuard(outgoingLock);
@@ -57,7 +57,7 @@ void StatisticsManager::updateOutgoing(const char* dstSmeId,
         else stat->received++;
     }
 }
-void StatisticsManager::updateSchedule() 
+void StatisticsManager::updateScheduled() 
 {
     MutexGuard  scheduleGuard(scheduleLock);
     MutexGuard  switchGuard(switchLock);

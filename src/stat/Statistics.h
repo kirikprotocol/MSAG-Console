@@ -26,11 +26,11 @@ namespace smsc { namespace stat
 
         virtual void flushStatistics() = 0;
 
-        virtual void updateIncoming(const char* srcSmeId) = 0;
-        virtual void updateOutgoing(const char* dstSmeId, 
+        virtual void updateScheduled() = 0;
+        virtual void updateAccepted(const char* srcSmeId) = 0;
+        virtual void updateChanged(const char* dstSmeId, 
             const char* routeId, int errcode = 0) = 0;
-        virtual void updateSchedule() = 0;
-
+        
         virtual ~Statistics() {};
         
     protected:

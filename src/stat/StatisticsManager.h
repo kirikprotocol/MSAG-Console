@@ -78,10 +78,10 @@ namespace smsc { namespace stat
 
         virtual void flushStatistics();
 
-        virtual void updateIncoming(const char* srcSmeId);
-        virtual void updateOutgoing(const char* dstSmeId, 
+        virtual void updateScheduled();
+        virtual void updateAccepted(const char* srcSmeId);
+        virtual void updateChanged(const char* dstSmeId, 
             const char* routeId, int errcode = 0);
-        virtual void updateSchedule();
         
         StatisticsManager(DataSource& ds);
         virtual ~StatisticsManager();
