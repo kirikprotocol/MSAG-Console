@@ -192,10 +192,17 @@ inline SmppHeader* fetchSmppPdu(SmppStream* stream)
   using namespace SmppCommandSet;
   class StreamGuard
   { 
-    SmppStream*& stream;
+    SmppStream* stream;
   public:
     StreamGuard(SmppStream* stream):stream(stream){}
-    ~StreamGuard(){if (stream->dataOffset < stream->dataLength) {__warning__("packet has left data, dropped");dropPdu(stream);}}
+    ~StreamGuard()
+		{
+			if (stream->dataOffset < stream->dataLength) 
+			{
+				__warning__("packet has left data, dropped");
+				dropPdu(stream);
+			}
+		}
   };
   __check_smpp_stream_invariant__ ( stream );
   StreamGuard guard(stream);
