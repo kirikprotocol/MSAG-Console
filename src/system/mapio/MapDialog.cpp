@@ -349,6 +349,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   oa->st.npi = sms->getOriginatingAddress().getNumberingPlan();
   oa->len = sms->getOriginatingAddress().getLength();
   unsigned oa_length = (oa->len+1)/2; 
+  __trace2__("MAP::mkDeliverPDU: oa_length: 0x%x", oa_length);
   {
     char* sval = sms->getOriginatingAddress().value;
     for ( int i=0; i<oa->len; ++i ){
@@ -377,6 +378,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
     MAP_TIMESTAMP* pdu_tm = (MAP_TIMESTAMP*)pdu_ptr;
     pdu_tm->year.first  =  ((tms->tm_year)%100)/10;
     pdu_tm->year.second  = tms->tm_year%10;
+    __trace2__("MAP::mkDeliverPDU: year: 0x%x, tms_year 0x%x",pdu_tm->year,tms->tm_year);
     pdu_tm->mon.first  =  (tms->tm_mon+1)/10;
     pdu_tm->mon.second  = (tms->tm_mon+1)%10;
     pdu_tm->day.first  =  tms->tm_mday/10;
@@ -399,6 +401,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   }else{ // UCS2
   }
   pdu->signalInfoLen  = pdu_ptr-(unsigned char*)pdu->signalInfo;
+  __trace2__("MAP::mkDeliverPDU: signalInfoLen 0x%x",pdu->signalInfoLen);
   return pdu;
 #else
   return 0;
