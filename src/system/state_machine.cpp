@@ -583,7 +583,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         }
         smsc::profiler::Profile p=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
         if(p.reportoptions==smsc::profiler::ProfileReportOptions::ReportFull ||
-           sms.getDeliveryReport())
+           (sms.getDeliveryReport()&0x3)!=0)
         {
           SMS rpt;
           rpt.setOriginatingAddress(scAddress);
