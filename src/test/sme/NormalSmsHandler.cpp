@@ -19,11 +19,7 @@ using namespace smsc::test::core;
 using namespace smsc::test::util;
 
 NormalSmsHandler::NormalSmsHandler(SmppFixture* _fixture)
-: fixture(_fixture), chkList(_fixture->chkList)
-{
-	sme = fixture->smeReg->getSme(fixture->systemId);
-	__require__(sme);
-}
+: fixture(_fixture), chkList(_fixture->chkList) {}
 
 Category& NormalSmsHandler::getLog()
 {
@@ -54,7 +50,7 @@ vector<int> NormalSmsHandler::checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2)
 		{
 			res.push_back(2);
 		}
-		else if (fixture->systemId != routeHolder->route.smeSystemId)
+		else if (fixture->smeInfo.systemId != routeHolder->route.smeSystemId)
 		{
 			res.push_back(3);
 		}
@@ -62,7 +58,7 @@ vector<int> NormalSmsHandler::checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2)
 	//правильность origAddr
 	if (routeHolder)
 	{
-		if (sme->wantAlias)
+		if (fixture->smeInfo.wantAlias)
 		{
 			const Address origAlias = fixture->aliasReg->findAliasByAddress(origAddr1);
 			if (origAlias != origAlias2)
@@ -152,8 +148,7 @@ void NormalSmsHandler::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu)
 }
 
 void NormalSmsHandler::updateDeliveryReceiptMonitor(DeliveryMonitor* monitor,
-	PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime,
-	uint32_t smeTimeout)
+	PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime, time_t respTime)
 {
 	__require__(monitor && pduReg);
 	__decl_tc__;
@@ -188,11 +183,11 @@ void NormalSmsHandler::updateDeliveryReceiptMonitor(DeliveryMonitor* monitor,
 					else
 					{
 						__require__(rcptMonitor->regDelivery == FINAL_SMSC_DELIVERY_RECEIPT);
-						rcptMonitor->reschedule(recvTime);
+						rcptMonitor->reschedule(respTime);
 					}
 					break;
 				case PDU_ERROR_FLAG:
-					rcptMonitor->reschedule(recvTime);
+					rcptMonitor->reschedule(respTime);
 					break;
 				case PDU_NOT_EXPECTED_FLAG:
 					__require__(rcptMonitor->getFlag() == PDU_NOT_EXPECTED_FLAG);
@@ -201,8 +196,7 @@ void NormalSmsHandler::updateDeliveryReceiptMonitor(DeliveryMonitor* monitor,
 					__tc_ok__;
 					if (deliveryStatus == 0xffffffff) //респонс не отослан
 					{
-						time_t waitTime = recvTime + (time_t) smeTimeout -
-							(time_t) timeCheckAccuracy;
+						time_t waitTime = recvTime + fixture->smeInfo.timeout - 1;
 						rcptMonitor->reschedule(max(monitor->getValidTime(), waitTime));
 					}
 					else
@@ -255,9 +249,7 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 		}
 		//перкрыть pduReg класса
 		PduRegistry* pduReg = fixture->smeReg->getPduRegistry(origAddr);
-		const SmeInfo* smeInfo = fixture->smeReg->getSme(origAddr);
 		__require__(pduReg);
-		__require__(smeInfo);
 		//получить оригинальную pdu
 		MutexGuard mguard(pduReg->getMutex());
 		DeliveryMonitor* monitor = pduReg->getDeliveryMonitor(
@@ -322,9 +314,9 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 		__tc_fail2__(monitor->checkSchedule(recvTime), 0);
 		__tc_ok_cond__;
 		//отправить респонс
-		uint32_t deliveryStatus =
+		pair<uint32_t, time_t> deliveryResp =
 			fixture->respSender->sendDeliverySmResp(pdu);
-		RespPduFlag respFlag = isAccepted(deliveryStatus);
+		RespPduFlag respFlag = isAccepted(deliveryResp.first);
 		//обновить статус delivery монитора
 		__tc__("processDeliverySm.normalSms.checkAllowed");
 		pduReg->removeMonitor(monitor);
@@ -332,8 +324,8 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 		pduReg->registerMonitor(monitor);
 		__tc_ok_cond__;
 		//обновить статус delivery receipt монитора
-		updateDeliveryReceiptMonitor(monitor, pduReg, deliveryStatus, recvTime,
-			smeInfo->timeout);
+		updateDeliveryReceiptMonitor(monitor, pduReg, deliveryResp.first, recvTime,
+			deliveryResp.second);
 	}
 	catch (TCException&)
 	{

@@ -16,11 +16,7 @@ using namespace smsc::test::core;
 using namespace smsc::test::util;
 
 SmeAcknowledgementHandler::SmeAcknowledgementHandler(SmppFixture* _fixture)
-: fixture(_fixture), chkList(_fixture->chkList)
-{
-	sme = fixture->smeReg->getSme(fixture->systemId);
-	__require__(sme);
-}
+: fixture(_fixture), chkList(_fixture->chkList) {}
 
 vector<int> SmeAcknowledgementHandler::checkRoute(PduSubmitSm& pdu1,
 	PduDeliverySm& pdu2) const
@@ -38,7 +34,7 @@ vector<int> SmeAcknowledgementHandler::checkRoute(PduSubmitSm& pdu1,
 	}
 	//правильность origAddr для pdu2
 	const RouteHolder* routeHolder = NULL;
-	if (!sme->wantAlias)
+	if (!fixture->smeInfo.wantAlias)
 	{
 		const Address destAddr = fixture->aliasReg->findAddressByAlias(destAlias1);
 		if (origAlias2 != destAddr)
@@ -64,7 +60,7 @@ vector<int> SmeAcknowledgementHandler::checkRoute(PduSubmitSm& pdu1,
 	{
 		res.push_back(4);
 	}
-	else if (fixture->systemId != routeHolder->route.smeSystemId)
+	else if (fixture->smeInfo.systemId != routeHolder->route.smeSystemId)
 	{
 		res.push_back(5);
 	}
@@ -197,17 +193,19 @@ void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		}
 		__tc_ok_cond__;
 		//отправить респонс, только ESME_ROK разрешено
-		uint32_t deliveryStatus = fixture->respSender->sendDeliverySmResp(pdu);
-		__require__(deliveryStatus == ESME_ROK);
-		RespPduFlag respFlag = isAccepted(deliveryStatus);
+		pair<uint32_t, time_t> deliveryResp =
+			fixture->respSender->sendDeliverySmResp(pdu);
+		__require__(deliveryResp.first == ESME_ROK);
+		RespPduFlag respFlag = isAccepted(deliveryResp.first);
 		//обновить статус delivery receipt монитора
-		updateDeliveryReceiptMonitor(monitor, pduReg, deliveryStatus, recvTime);
+		updateDeliveryReceiptMonitor(monitor, pduReg, deliveryResp.first, recvTime);
 	}
 	catch (TCException&)
 	{
 		//отправить респонс, только ESME_ROK разрешено
-		uint32_t deliveryStatus = fixture->respSender->sendDeliverySmResp(pdu);
-		__require__(deliveryStatus == ESME_ROK);
+		pair<uint32_t, time_t> deliveryResp =
+			fixture->respSender->sendDeliverySmResp(pdu);
+		__require__(deliveryResp.first == ESME_ROK);
 	}
 	catch(...)
 	{

@@ -154,11 +154,11 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 	//правильность адресов частично проверяется в fixture->routeChecker->checkRouteForAcknowledgementSms()
 	Address srcAlias;
 	SmppUtil::convert(pdu.get_message().get_source(), &srcAlias);
-	if (sme->wantAlias && srcAlias != smscAlias)
+	if (fixture->smeInfo.wantAlias && srcAlias != smscAlias)
 	{
 		__tc_fail__(2);
 	}
-	else if (!sme->wantAlias && srcAlias != smscAddr)
+	else if (!fixture->smeInfo.wantAlias && srcAlias != smscAddr)
 	{
 		__tc_fail__(3);
 	}

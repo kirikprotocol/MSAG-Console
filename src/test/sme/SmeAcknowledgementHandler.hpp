@@ -41,7 +41,6 @@ public:
 protected:
 	SmppFixture* fixture;
 	CheckList* chkList;
-	const SmeInfo* sme;
 
 	virtual Category& getLog() = NULL;
 	vector<int> checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2) const;

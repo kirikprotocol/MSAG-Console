@@ -224,7 +224,7 @@ void SmppTransmitterTestCases::processSubmitSmSync(PduData* pduData,
 {
 	__require__(pduData && respPdu && pduData->pdu->get_sequenceNumber() ==
 		respPdu->get_header().get_sequenceNumber());
-	__dumpPdu__("processSubmitSmRespSync", fixture->systemId, respPdu);
+	__dumpPdu__("processSubmitSmRespSync", fixture->smeInfo.systemId, respPdu);
 	__decl_tc__;
 	__tc__("processSubmitSmResp.sync");
 	if (!respPdu)
@@ -277,13 +277,13 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 					pduData = registerSubmitSm(pdu, existentPduData, submitTime,
 						intProps, strProps, objProps, pduType); //all times, msgRef
 				}
-				//__dumpSubmitSmPdu__("submitSmSyncBefore", fixture->systemId, pdu);
+				//__dumpSubmitSmPdu__("submitSmSyncBefore", fixture->smeInfo.systemId, pdu);
 				PduSubmitSmResp* respPdu =
 					fixture->session->getSyncTransmitter()->submit(*pdu);
 				time_t respTime = time(NULL);
 				{
 					MutexGuard mguard(fixture->pduReg->getMutex());
-					__dumpSubmitSmPdu__("submitSmSyncAfter", fixture->systemId, pdu);
+					__dumpSubmitSmPdu__("submitSmSyncAfter", fixture->smeInfo.systemId, pdu);
 					if (respPdu)
 					{
 						processSubmitSmSync(pduData, respPdu, respTime);
@@ -298,13 +298,13 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 			{
 				__tc__("submitSm.async");
 				MutexGuard mguard(fixture->pduReg->getMutex());
-				//__dumpSubmitSmPdu__("submitSmAsyncBefore", fixture->systemId, pdu);
+				//__dumpSubmitSmPdu__("submitSmAsyncBefore", fixture->smeInfo.systemId, pdu);
 				time_t submitTime = time(NULL);
 				PduSubmitSmResp* respPdu =
 					fixture->session->getAsyncTransmitter()->submit(*pdu);
 				__require__(!respPdu);
 				time_t responseTime = time(NULL);
-				__dumpSubmitSmPdu__("submitSmAsyncAfter", fixture->systemId, pdu);
+				__dumpSubmitSmPdu__("submitSmAsyncAfter", fixture->smeInfo.systemId, pdu);
 				PduData* pduData = registerSubmitSm(pdu, existentPduData,
 					submitTime, intProps, strProps, objProps, pduType); //all times, msgRef, sequenceNumber
 				processSubmitSmAsync(pduData);
@@ -423,7 +423,7 @@ void SmppTransmitterTestCases::processReplaceSmSync(PduData* pduData,
 {
 	__require__(pduData && respPdu && pduData->pdu->get_sequenceNumber() ==
 		respPdu->get_header().get_sequenceNumber());
-	__dumpPdu__("processReplaceSmRespSync", fixture->systemId, respPdu);
+	__dumpPdu__("processReplaceSmRespSync", fixture->smeInfo.systemId, respPdu);
 	__decl_tc__;
 	__tc__("processReplaceSmRespSync.sync");
 	if (!respPdu)
@@ -472,10 +472,10 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 					pdu->get_header().set_sequenceNumber(0); //не известен
 					pduData = registerReplaceSm(pdu, replacePduData, time(NULL));
 				}
-				__dumpReplaceSmPdu__("replaceSmSyncBefore", fixture->systemId, pdu);
+				__dumpReplaceSmPdu__("replaceSmSyncBefore", fixture->smeInfo.systemId, pdu);
 				PduReplaceSmResp* respPdu =
 					fixture->session->getSyncTransmitter()->replace(*pdu);
-				__dumpReplaceSmPdu__("replaceSmSyncAfter", fixture->systemId, pdu);
+				__dumpReplaceSmPdu__("replaceSmSyncAfter", fixture->smeInfo.systemId, pdu);
 				{
 					MutexGuard mguard(fixture->pduReg->getMutex());
 					processReplaceSmSync(pduData, respPdu, time(NULL));
@@ -485,11 +485,11 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 			{
 				__tc__("replaceSm.async");
 				MutexGuard mguard(fixture->pduReg->getMutex());
-				__dumpReplaceSmPdu__("replaceSmAsyncBefore", fixture->systemId, pdu);
+				__dumpReplaceSmPdu__("replaceSmAsyncBefore", fixture->smeInfo.systemId, pdu);
 				time_t submitTime = time(NULL);
 				PduReplaceSmResp* respPdu =
 					fixture->session->getAsyncTransmitter()->replace(*pdu);
-				__dumpReplaceSmPdu__("replaceSmAsyncAfter", fixture->systemId, pdu);
+				__dumpReplaceSmPdu__("replaceSmAsyncAfter", fixture->smeInfo.systemId, pdu);
 				PduData* pduData = registerReplaceSm(pdu, replacePduData, submitTime);
 				processReplaceSmAsync(pduData);
 			}
@@ -542,16 +542,16 @@ void SmppTransmitterTestCases::sendDeliverySmResp(PduDeliverySmResp& pdu,
 		if (sync)
 		{
 			__tc__("sendDeliverySmResp.sync");
-			//__dumpPdu__("sendDeliverySmRespSyncBefore", fixture->systemId, pdu);
+			//__dumpPdu__("sendDeliverySmRespSyncBefore", fixture->smeInfo.systemId, pdu);
 			fixture->session->getSyncTransmitter()->sendDeliverySmResp(pdu);
-			__dumpPdu__("sendDeliverySmRespSyncAfter", fixture->systemId, &pdu);
+			__dumpPdu__("sendDeliverySmRespSyncAfter", fixture->smeInfo.systemId, &pdu);
 		}
 		else
 		{
 			__tc__("sendDeliverySmResp.async");
-			//__dumpPdu__("sendDeliverySmRespAsyncBefore", fixture->systemId, pdu);
+			//__dumpPdu__("sendDeliverySmRespAsyncBefore", fixture->smeInfo.systemId, pdu);
 			fixture->session->getAsyncTransmitter()->sendDeliverySmResp(pdu);
-			__dumpPdu__("sendDeliverySmRespAsyncAfter", fixture->systemId, &pdu);
+			__dumpPdu__("sendDeliverySmRespAsyncAfter", fixture->smeInfo.systemId, &pdu);
 		}
 		__tc_ok__;
 	}

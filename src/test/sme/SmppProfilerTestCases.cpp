@@ -302,11 +302,11 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	__check__(1, serviceType, profilerServiceType);
 	Address srcAlias;
 	SmppUtil::convert(pdu.get_message().get_source(), &srcAlias);
-	if (sme->wantAlias && srcAlias != profilerAlias)
+	if (fixture->smeInfo.wantAlias && srcAlias != profilerAlias)
 	{
 		__tc_fail__(2);
 	}
-	else if (!sme->wantAlias && srcAlias != profilerAddr)
+	else if (!fixture->smeInfo.wantAlias && srcAlias != profilerAddr)
 	{
 		__tc_fail__(3);
 	}

@@ -42,14 +42,13 @@ public:
 protected:
 	SmppFixture* fixture;
 	CheckList* chkList;
-	const SmeInfo* sme;
 
 	virtual Category& getLog();
 	vector<int> checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2) const;
 	void compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu);
 	void updateDeliveryReceiptMonitor(DeliveryMonitor* monitor,
 		PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime,
-		uint32_t smeTimeout);
+		time_t respTime);
 };
 
 }

@@ -19,11 +19,7 @@ using namespace smsc::test::core;
 using namespace smsc::test::util;
 
 DeliveryReceiptHandler::DeliveryReceiptHandler(SmppFixture* _fixture)
-: fixture(_fixture), chkList(_fixture->chkList)
-{
-	sme = fixture->smeReg->getSme(fixture->systemId);
-	__require__(sme);
-}
+: fixture(_fixture), chkList(_fixture->chkList) {}
 
 vector<int> DeliveryReceiptHandler::checkRoute(PduSubmitSm& pdu1,
 	PduDeliverySm& pdu2) const
@@ -40,7 +36,7 @@ vector<int> DeliveryReceiptHandler::checkRoute(PduSubmitSm& pdu1,
 	}
 	//правильность маршрута
 	const RouteHolder* routeHolder = NULL;
-	if (sme->wantAlias)
+	if (fixture->smeInfo.wantAlias)
 	{
 		const Address origAddr2 = fixture->aliasReg->findAddressByAlias(origAlias2);
 		routeHolder = fixture->routeReg->lookup(origAddr2, destAddr2);
@@ -53,7 +49,7 @@ vector<int> DeliveryReceiptHandler::checkRoute(PduSubmitSm& pdu1,
 	{
 		res.push_back(3);
 	}
-	else if (fixture->systemId != routeHolder->route.smeSystemId)
+	else if (fixture->smeInfo.systemId != routeHolder->route.smeSystemId)
 	{
 		res.push_back(4);
 	}
@@ -147,15 +143,17 @@ void DeliveryReceiptHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		}
 		__tc_ok_cond__;
 		//отправить респонс, только ESME_ROK разрешено
-		uint32_t deliveryStatus = fixture->respSender->sendDeliverySmResp(pdu);
-		__require__(deliveryStatus == ESME_ROK);
-		RespPduFlag respFlag = isAccepted(deliveryStatus);
+		pair<uint32_t, time_t> deliveryResp =
+			fixture->respSender->sendDeliverySmResp(pdu);
+		__require__(deliveryResp.first == ESME_ROK);
+		RespPduFlag respFlag = isAccepted(deliveryResp.first);
 	}
 	catch (TCException&)
 	{
 		//отправить респонс, только ESME_ROK разрешено
-		uint32_t deliveryStatus = fixture->respSender->sendDeliverySmResp(pdu);
-		__require__(deliveryStatus == ESME_ROK);
+		pair<uint32_t, time_t> deliveryResp =
+			fixture->respSender->sendDeliverySmResp(pdu);
+		__require__(deliveryResp.first == ESME_ROK);
 	}
 	catch (...)
 	{
