@@ -19,19 +19,26 @@ void executeTest()
 {
 	SmeManagerTestCases tcSme;
 	RouteManagerTestCases tcRoute;
-	
-	Address addr1, addr2;
-	SmsUtil::setupRandomCorrectAddress(&addr1);
-	SmsUtil::setupRandomCorrectAddress(&addr2);
-
+	RouteRegistry routeReg;
+/*
+addCorrectSme(3)->
+addCorrectRouteMatch(46)->
+lookupRoute(1){104}
+*/
 	SmeInfo sme;
-	TestRouteData routeData(addr1, addr2);
+	cout << *tcSme.addCorrectSme(&sme, 3) << endl;
 
-	cout << *tcSme.addCorrectSme(&sme, 6) << endl;
-	cout << *tcSme.registerCorrectSmeProxy(sme.systemId) << endl;
-	cout << *tcRoute.addCorrectRoute(sme.systemId, &routeData, 1) << endl;
-	//cout << routeData << endl;
-	cout << *tcRoute.addIncorrectRoute(sme.systemId, *routeData.route, 1) << endl;
+	SmeProxy* proxy;
+	cout << *tcSme.registerCorrectSmeProxy(sme.systemId, &proxy) << endl;
+
+	Address origAddr, destAddr;
+	SmsUtil::setupRandomCorrectAddress(&origAddr);
+	SmsUtil::setupRandomCorrectAddress(&destAddr);
+	TestRouteData routeData(origAddr, destAddr, proxy);
+	cout << *tcRoute.addCorrectRouteMatch(sme.systemId, &routeData, 46) << endl;
+	routeReg.putRoute(routeData);
+	
+	cout << *tcRoute.lookupRoute(routeReg, origAddr, destAddr) << endl;
 
 /*
 	cout << *tcSme.addCorrectSme(&sme, 1) << endl;
