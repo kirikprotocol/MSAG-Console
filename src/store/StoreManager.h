@@ -2,6 +2,7 @@
 #define STORE_MANAGER_DECLARATIONS
 
 #include <oci.h>
+#include <orl.h>
 
 #include <core/synchronization/Mutex.hpp>
 #include <util/config/Manager.h>
@@ -23,7 +24,7 @@ namespace smsc { namespace store
     {
     private:
         
-        SMSId id;
+        SMSId   id;
         Mutex mutex;
 
     public:
@@ -31,7 +32,7 @@ namespace smsc { namespace store
         IDGenerator(SMSId _id) : id(_id) {};
         ~IDGenerator() {};
         
-        inline SMSId getNextId() 
+        inline SMSId& getNextId() 
         {
             MutexGuard guard(mutex);
             return ++id;
@@ -100,7 +101,7 @@ namespace smsc { namespace store
 
 
         virtual SMSId store(const SMS &sms)  
-            throw(StorageException);
+            throw(StorageException, DuplicateMessageException);
         virtual void retrive(SMSId id, SMS &sms)
             throw(StorageException, NoSuchMessageException);
         virtual void remove(SMSId id) 

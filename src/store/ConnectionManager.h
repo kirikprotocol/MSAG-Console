@@ -48,10 +48,11 @@ namespace smsc { namespace store
         OCIError*       errhp;  // OCI error handle
         OCISession*     sesshp; // OCI session handle
         
-        StoreStatement*     StoreStmt;
-        RemoveStatement*    RemoveStmt;
-        RetriveStatement*   RetriveStmt;
-        ReplaceStatement*   ReplaceStmt;
+        StoreStatement*         StoreStmt;
+        RemoveStatement*        RemoveStmt;
+        RetriveStatement*       RetriveStmt;
+        ReplaceStatement*       ReplaceStmt;
+        IsRejectedStatement*    IsRejectStmt;
 
         Mutex           mutex;
         
@@ -78,7 +79,7 @@ namespace smsc { namespace store
         SMSId getMessagesCount()
             throw(StorageException);
         void store(const SMS &sms, SMSId id) 
-            throw(StorageException);
+            throw(StorageException, DuplicateMessageException);
         void retrive(SMSId id, SMS &sms) 
             throw(StorageException, NoSuchMessageException);
         void remove(SMSId id) 

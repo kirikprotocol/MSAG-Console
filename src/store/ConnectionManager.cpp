@@ -387,9 +387,13 @@ void Connection::connect()
             RemoveStmt = new RemoveStatement(this);
             RetriveStmt = new RetriveStatement(this);
             ReplaceStmt = new ReplaceStatement(this);
+            IsRejectStmt = new IsRejectedStatement(this);
         } 
         catch (StorageException& exc) 
         {
+            if (IsRejectStmt) {
+                delete IsRejectStmt; IsRejectStmt = 0L;
+            }
             if (ReplaceStmt) {
                 delete ReplaceStmt; ReplaceStmt = 0L;
             }
@@ -425,6 +429,9 @@ void Connection::disconnect()
     
     if (isConnected)
     {
+        if (IsRejectStmt) {
+            delete IsRejectStmt; IsRejectStmt = 0L;
+        }
         if (ReplaceStmt) {
             delete ReplaceStmt; ReplaceStmt = 0L;
         }
@@ -461,17 +468,33 @@ SMSId Connection::getMessagesCount()
     SMSId   maxId;
     GetMaxIdStatement*  GetMaxIdStmt = new GetMaxIdStatement(this);
     checkErr(GetMaxIdStmt->execute(OCI_DEFAULT));
-    maxId = GetMaxIdStmt->getMaxSMSId();
+    GetMaxIdStmt->getMaxSMSId(maxId);
     delete GetMaxIdStmt;
     return maxId;
 }
 
 void Connection::store(const SMS &sms, SMSId id) 
-    throw(StorageException)
+    throw(StorageException, DuplicateMessageException)
 {
     MutexGuard  guard(mutex);
 
     connect();
+    
+    /*IsRejectStmt->setSMS(sms);
+    try
+    {
+        checkErr(IsRejectStmt->execute(OCI_DEFAULT));
+    }
+    catch (StorageException& exc) 
+    {
+        throw exc;
+    }
+    if (IsRejectStmt->isRejected())
+    {
+        DuplicateMessageException   exc;
+        log.debug(exc.what());
+        throw exc;
+    }*/
 
     StoreStmt->setSMS(sms);
     StoreStmt->setSMSId(id);

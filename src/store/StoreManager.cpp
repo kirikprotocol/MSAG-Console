@@ -7,8 +7,8 @@
 
 namespace smsc { namespace store 
 {
-/* ----------------------------- StoreManager -------------------------- */
 
+/* ----------------------------- StoreManager -------------------------- */
 using namespace smsc::sms;
 using smsc::util::Logger;
 using smsc::util::config::Manager;
@@ -105,7 +105,7 @@ void StoreManager::shutdown()
 }
 
 SMSId StoreManager::store(const SMS &sms) 
-    throw(StorageException)
+    throw(StorageException, DuplicateMessageException)
 {
     __require__(pool && generator);
     
@@ -121,6 +121,11 @@ SMSId StoreManager::store(const SMS &sms)
             connection->store(sms, id);
             pool->freeConnection(connection);
             break;
+        }
+        catch (DuplicateMessageException& exc) 
+        {
+            if (connection) pool->freeConnection(connection);
+            throw;
         }
         catch (StorageException& exc) 
         {

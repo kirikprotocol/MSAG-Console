@@ -96,6 +96,23 @@ namespace smsc { namespace store
         virtual ~StoreStatement() {};
     };
     
+    class IsRejectedStatement : public MessageStatement
+    {
+    private:
+        
+        static const char* sql;
+        
+        ub4 count;
+    
+    public:
+        
+        IsRejectedStatement(Connection* connection)
+            throw(StorageException);
+        virtual ~IsRejectedStatement() {};
+
+        bool isRejected();
+    };
+    
     class RetriveStatement : public MessageStatement
     {
     private:
@@ -140,10 +157,7 @@ namespace smsc { namespace store
             throw(StorageException);
         virtual ~RemoveStatement() {};
 
-        inline void setSMSId(SMSId id) {
-            smsId = id;
-        }
-        
+        void setSMSId(SMSId id);        
         bool wasRemoved();
     };
     
@@ -163,9 +177,7 @@ namespace smsc { namespace store
             throw(StorageException);
         virtual ~GetMaxIdStatement() {};
 
-        inline SMSId getMaxSMSId() {
-            return max;
-        }
+        void getMaxSMSId(SMSId& id);
     };
 
 }}

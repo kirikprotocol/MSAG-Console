@@ -106,6 +106,16 @@ namespace smsc { namespace store
         };
         virtual ~NoSuchMessageException() throw() {};
     };
+    
+    class DuplicateMessageException : public StoreException
+    {
+    public:
+
+        DuplicateMessageException() 
+            : StoreException("Storage already contains similar message !") {};
+
+        virtual ~DuplicateMessageException() throw() {};
+    };
 
 }}
 

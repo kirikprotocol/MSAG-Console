@@ -6,6 +6,25 @@
 
 namespace smsc { namespace store 
 {
+
+#define UINT64_SWAP_LE_BE_CONSTANT(val)      ((uint64_t) (\
+    (((uint64_t) (val) &                              \
+        (uint64_t) (0x00000000000000FFU)) << 56) |    \
+    (((uint64_t) (val) &                              \
+        (uint64_t) (0x000000000000FF00U)) << 40) |    \
+    (((uint64_t) (val) &                              \
+        (uint64_t) (0x0000000000FF0000U)) << 24) |    \
+    (((uint64_t) (val) &                              \
+        (uint64_t) (0x00000000FF000000U)) <<  8) |    \
+    (((uint64_t) (val) &                              \
+        (uint64_t) (0x000000FF00000000U)) >>  8) |    \
+    (((uint64_t) (val) &                              \
+        (uint64_t) (0x0000FF0000000000U)) >> 24) |    \
+    (((uint64_t) (val) &                              \
+        (uint64_t) (0x00FF000000000000U)) >> 40) |    \
+    (((uint64_t) (val) &                              \
+        (uint64_t) (0xFF00000000000000U)) >> 56)))
+
 /* ----------------------------- Statetment -------------------------- */
 
 Statement::Statement(Connection* connection, const char* sql) 
@@ -104,11 +123,11 @@ void MessageStatement::convertOCIDateToDate(OCIDate* oci_date, time_t* sms_date)
 
 void MessageStatement::setSMSId(const SMSId _smsId)
 {
-    smsId = _smsId;
+    smsId = UINT64_SWAP_LE_BE_CONSTANT(_smsId);
 }
 void MessageStatement::getSMSId(SMSId &_smsId)
 {
-    _smsId = smsId;
+    _smsId = UINT64_SWAP_LE_BE_CONSTANT(smsId);
 }
 
 void MessageStatement::setSMS(const SMS &_sms)
@@ -152,7 +171,7 @@ StoreStatement::StoreStatement(Connection* connection)
     throw(StorageException)
         : MessageStatement(connection, StoreStatement::sql)
 {
-    bind(1 , SQLT_UIN, (dvoid *) &smsId, (sb4) sizeof(smsId));
+    bind(1 , SQLT_BIN, (dvoid *) &smsId, (sb4) sizeof(smsId));
     bind(2 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
     bind(3 , SQLT_UIN, (dvoid *) &(sms.messageReference), 
          (sb4) sizeof(sms.messageReference));
@@ -202,6 +221,46 @@ StoreStatement::StoreStatement(Connection* connection)
          (sb4) sizeof(sms.messageBody.data));
 }
 
+/* ----------------------- IsRejectedStatement ---------------------- */
+    
+const char* IsRejectedStatement::sql = (const char*)
+"SELECT NVL(COUNT(*), 0) FROM SMS_MSG\
+ WHERE ( ST=:ST AND RD='Y' AND MR=:MR\
+ AND OA_LEN=:OA_LEN AND OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL\
+ AND DA_LEN=:DA_LEN AND DA_TON=:DA_TON AND DA_NPI=:DA_NPI AND DA_VAL=:DA_VAL )";
+    
+IsRejectedStatement::IsRejectedStatement(Connection* connection)
+    throw(StorageException)
+        : MessageStatement(connection, IsRejectedStatement::sql)
+{
+    bind(1 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
+    bind(2 , SQLT_UIN, (dvoid *) &(sms.messageReference),
+         (sb4) sizeof(sms.messageReference));
+    bind(3 , SQLT_UIN, (dvoid *)&(sms.originatingAddress.lenght),
+         (sb4) sizeof(sms.originatingAddress.lenght));
+    bind(4 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.type),
+         (sb4) sizeof(sms.originatingAddress.type));
+    bind(5 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.plan),
+         (sb4) sizeof(sms.originatingAddress.plan));
+    bind(6 , SQLT_STR, (dvoid *) (sms.originatingAddress.value),
+         (sb4) sizeof(sms.originatingAddress.value));
+    bind(7 , SQLT_UIN, (dvoid *)&(sms.destinationAddress.lenght),
+         (sb4) sizeof(sms.destinationAddress.lenght));
+    bind(8 , SQLT_UIN, (dvoid *) &(sms.destinationAddress.type),
+         (sb4) sizeof(sms.destinationAddress.type));
+    bind(9 , SQLT_UIN, (dvoid *) &(sms.destinationAddress.plan),
+         (sb4) sizeof(sms.destinationAddress.plan));
+    bind(10, SQLT_STR, (dvoid *) (sms.destinationAddress.value),
+         (sb4) sizeof(sms.destinationAddress.value));
+    
+    define(1 , SQLT_UIN, (dvoid *) &(count), (sb4) sizeof(count));
+}
+
+bool IsRejectedStatement::isRejected()
+{
+    return ((count) ? false:true);
+}
+
 /* --------------------------- RetriveStatement ----------------------- */
 const char* RetriveStatement::sql = (const char*)
 "SELECT ST, MR, RM, OA_LEN, OA_TON, OA_NPI, OA_VAL, DA_LEN, DA_TON,\
@@ -212,7 +271,7 @@ RetriveStatement::RetriveStatement(Connection* connection)
     throw(StorageException)
         : MessageStatement(connection, RetriveStatement::sql)
 {
-    bind(1, SQLT_UIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
+    bind(1, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
     
     define(1 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
     define(2 , SQLT_UIN, (dvoid *) &(sms.messageReference),
@@ -324,6 +383,9 @@ ReplaceStatement::ReplaceStatement(Connection* connection)
          (sb4) sizeof(sms.messageBody.lenght));
     bind(24, SQLT_BIN, (dvoid *) (sms.messageBody.data), 
          (sb4) sizeof(sms.messageBody.data));
+    
+    bind(25, SQLT_BIN, (dvoid *) &(smsId), 
+         (sb4) sizeof(smsId));
 }
 
 bool ReplaceStatement::wasReplaced() 
@@ -345,7 +407,11 @@ RemoveStatement::RemoveStatement(Connection* connection)
     throw(StorageException)
         : Statement(connection, RemoveStatement::sql)
 {
-    bind(1, SQLT_UIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
+    bind(1, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
+}
+void RemoveStatement::setSMSId(SMSId id) 
+{
+    smsId = UINT64_SWAP_LE_BE_CONSTANT(id);
 }
 
 bool RemoveStatement::wasRemoved() 
@@ -361,13 +427,18 @@ bool RemoveStatement::wasRemoved()
 
 /* --------------------------- GetMaxIdStatement ----------------------- */
 const char* GetMaxIdStatement::sql = (const char*)
-"SELECT NVL(MAX(ID), 0) FROM SMS_MSG";
+"SELECT NVL(MAX(ID), '0000000000000000') FROM SMS_MSG";
 
 GetMaxIdStatement::GetMaxIdStatement(Connection* connection)
     throw(StorageException)
         : Statement(connection, GetMaxIdStatement::sql)
 {
-    define(1, SQLT_UIN, (dvoid *) &(max), (sb4) sizeof(max));
+    define(1, SQLT_BIN, (dvoid *) &(max), (sb4) sizeof(max));
+}
+
+void GetMaxIdStatement::getMaxSMSId(SMSId& id) 
+{
+    id = UINT64_SWAP_LE_BE_CONSTANT(max);
 }
 
 

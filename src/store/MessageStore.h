@@ -2,6 +2,7 @@
 #define MESSAGE_STORE_DECLARATIONS
 
 #include <sms/sms.h>
+
 #include "StoreExceptions.h"
 
 namespace smsc { namespace store
@@ -11,7 +12,7 @@ namespace smsc { namespace store
     struct MessageStore 
     {
         virtual SMSId store(const SMS &sms)  
-            throw(StorageException) = 0;
+            throw(StorageException, DuplicateMessageException) = 0;
         
         virtual void retrive(SMSId id, SMS &sms)
             throw(StorageException, NoSuchMessageException) = 0;
