@@ -32,18 +32,18 @@ std::auto_ptr<char> rand_char(int length);
 class TCResult
 {
 private:
-	const std::string id;
+	const char* id;
 	const int choice;
 	std::vector<int> failures;
 
 public:
-	TCResult(const std::string& id, const int choice = 1);
-	TCResult(TCResult& tcRes);
-	const std::string& getId() const;
+	TCResult(const char* id, const int choice = 1);
+	TCResult(const TCResult& tcRes);
+	const char* getId() const;
 	int getChoice() const;
 	void addFailure(int subTC);
 	const std::vector<int>& getFailures() const;
-	bool value();
+	bool value() const;
 	bool operator== (const TCResult& tcRes) const;
 	friend std::ostream& operator<< (std::ostream& os, const TCResult& res);
 };
@@ -62,21 +62,21 @@ private:
 
 public:
 	TCSelector(int val, int maxVal);
-	int value();
-	bool check();
+	int value() const;
+	bool check() const;
 	TCSelector& operator++ (int);
-	int getChoice();
+	int getChoice() const;
 };
 
 //TCResult inline member functions definitions
-inline TCResult::TCResult(const std::string& _id, const int _choice)
+inline TCResult::TCResult(const char* _id, const int _choice)
 	: id(_id), choice(_choice) {}
 
-inline TCResult::TCResult(TCResult& tcRes)
+inline TCResult::TCResult(const TCResult& tcRes)
 	: id(tcRes.getId()), choice(tcRes.getChoice()), 
 	failures(tcRes.getFailures()) {}
 
-inline const std::string& TCResult::getId() const
+inline const char* TCResult::getId() const
 {
 	return id;
 }
@@ -96,18 +96,18 @@ inline const std::vector<int>& TCResult::getFailures() const
 	return failures;
 }
 
-inline bool TCResult::value()
+inline bool TCResult::value() const
 {
 	return failures.empty();
 }
 
 //TCSelector inline member functions definitions
-inline int TCSelector::value()
+inline int TCSelector::value() const
 {
 	return i;
 }
 
-inline bool TCSelector::check()
+inline bool TCSelector::check() const
 {
 	return (val == 0 ? i <= maxVal : first);
 }
@@ -119,7 +119,7 @@ inline TCSelector& TCSelector::operator++ (int)
 	return *this;
 }
 
-inline int TCSelector::getChoice()
+inline int TCSelector::getChoice() const
 {
 	return (val == -1 ? i : val);
 }
