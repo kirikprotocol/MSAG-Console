@@ -172,6 +172,10 @@ public:
     {
         return config.getChildSectionNames(sectionName);
     }
+    CStrSet* getChildShortSectionNames(const char * const sectionName)
+    {
+        return config.getChildShortSectionNames(sectionName);
+    }
     
     CStrSet *getChildIntParamNames(const char * const sectionName)
     {

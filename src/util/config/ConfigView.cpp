@@ -59,6 +59,11 @@ CStrSet* ConfigView::getSectionNames()
 {
     return config.getChildSectionNames(category);
 }
+CStrSet* ConfigView::getShortSectionNames()
+    throw (ConfigException)
+{
+    return config.getChildShortSectionNames(category);
+}
 CStrSet* ConfigView::getIntParamNames()
     throw (ConfigException)
 {

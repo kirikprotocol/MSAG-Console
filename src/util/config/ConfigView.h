@@ -39,6 +39,9 @@ namespace smsc { namespace util { namespace config
         
         CStrSet* getSectionNames()
             throw (ConfigException);
+        CStrSet* getShortSectionNames()
+            throw (ConfigException);
+
         CStrSet* getIntParamNames()
             throw (ConfigException);
         CStrSet* getBoolParamNames()
