@@ -11,6 +11,7 @@ workPhone CDATA #IMPLIED
 homePhone CDATA #IMPLIED
 cellPhone CDATA #IMPLIED
 email CDATA #IMPLIED
+providerId CDATA "-1"
 >
 
 <!ELEMENT role EMPTY>
