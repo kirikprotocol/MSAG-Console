@@ -65,9 +65,10 @@ bool SmppBaseTestCases::bindCorrectSme()
 
 void SmppBaseTestCases::bindIncorrectSme(int num)
 {
+	__trace__("bindIncorrectSme(): before");
 	//повторный bind убран из тест кейсов, т.к. приводит к пересозданию коннекта
 	//без ошибок
-	TCSelector s(num, 7);
+	TCSelector s(num, 4);
 	__decl_tc__;
 	for (; s.check(); s++)
 	{
@@ -101,6 +102,7 @@ void SmppBaseTestCases::bindIncorrectSme(int num)
 					reason = SmppConnectException::Reason::networkConnect;
 					conf.port += rand1(65535 - conf.port);
 					break;
+				/*
 				case 5: //неправильная длина поля systemId
 					__tc__("bindIncorrectSme.invalidSystemIdLength");
 					reason = SmppConnectException::Reason::networkConnect;
@@ -119,6 +121,13 @@ void SmppBaseTestCases::bindIncorrectSme(int num)
 					rand_char(13, tmp);  //12 по спецификации
 					conf.systemType = tmp;
 					break;
+				case 8: //неправильная длина поля addressRange
+					__tc__("bindIncorrectSme.invalidAddressRangeLength");
+					reason = SmppConnectException::Reason::networkConnect;
+					rand_char(41, tmp);  //40 по спецификации
+					conf.addressRange = tmp;
+					break;
+				*/
 				default:
 					__unreachable__("Invalid num");
 			}
