@@ -309,7 +309,14 @@ int partitionSms(SMS* sms,int dstdc)
   __trace2__("partitionSms: len=%d, dc=%d, dstdc=%d",len,dc,dstdc);
   bool udhi=sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40;
   int  udhilen=udhi?(1+*((unsigned char*)msg)):0;
-  if(udhilen>140)return psErrorUdhi;
+  int maxfulllen=140;
+  if(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+  {
+    maxfulllen=160;
+  }
+
+  if(udhilen>maxfulllen)return psErrorUdhi;
+
   auto_ptr<char> buf8;
   auto_ptr<char> bufTr;
   len-=udhilen;
@@ -326,16 +333,12 @@ int partitionSms(SMS* sms,int dstdc)
     dc=DataCoding::DEFAULT;
     //len+=udhilen;
   }
-  int maxlen=134,maxfulllen=140;
+  int maxlen=134;;
   int exudhilen=CalcExUserDataLen(sms);
   if(exudhilen==-1)return psErrorUdhi;
   if(udhi && exudhilen)return psErrorUdhi;
 
-  if(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP))
-  {
-    maxfulllen=160;
-  }
-  udhilen=exudhilen;
+  if(exudhilen)udhilen=exudhilen;
   int rv=psErrorUdhi;
   if(dc==DataCoding::DEFAULT)
   {
