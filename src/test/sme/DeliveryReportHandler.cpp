@@ -16,6 +16,7 @@ using smsc::test::sms::operator!=;
 using smsc::test::conf::TestConfig;
 using namespace smsc::smpp::SmppCommandSet;
 using namespace smsc::smpp::SmppStatusSet;
+using namespace smsc::smpp::DataCoding;
 using namespace smsc::profiler;
 using namespace smsc::test::core;
 using namespace smsc::test::smpp; //SmppUtil, constants
@@ -88,8 +89,25 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		PduRegistry* pduReg = fixture->smeReg->getPduRegistry(destAddr);
 		__require__(pduReg);
 		//тип pdu (delivery receipt '*' или intermediate notification '$')
-		__require__(pdu.get_message().size_shortMessage() > 0);
-		char pduType = *pdu.get_message().get_shortMessage();
+		char pduType;
+		switch (pdu.get_message().get_dataCoding())
+		{
+			case DEFAULT:
+			case SMSC7BIT:
+				__require__(pdu.get_message().size_shortMessage() > 0);
+				 pduType = *pdu.get_message().get_shortMessage();
+				break;
+			case UCS2:
+				{
+					__require__(pdu.get_message().size_shortMessage() > 1);
+					short tmp;
+					memcpy(&tmp, pdu.get_message().get_shortMessage(), 2);
+					pduType = ntohs(tmp);
+				}
+				break;
+			default:
+				__unreachable__("Invalid delivery report dataCoding");
+		}
 		//получить оригинальную pdu
 		MutexGuard mguard(pduReg->getMutex());
 		DeliveryReportMonitor* monitor = NULL;

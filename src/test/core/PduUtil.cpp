@@ -338,7 +338,12 @@ vector<int> ReschedulePduMonitor::update(time_t recvTime, RespPduFlag respFlag)
 		case PDU_MISSING_ON_TIME_FLAG:
 		case PDU_COND_REQUIRED_FLAG:
 			eval(recvTime, attempt, diff, nextTime, calcTime);
-			lastAttempt = attempt;
+			if (respFlag != RESP_PDU_CONTINUE)
+			{
+				//попытка доставки завершена
+				lastTime = recvTime;
+				lastAttempt = attempt;
+			}
 			switch (respFlag)
 			{
 				case RESP_PDU_OK:
@@ -352,7 +357,7 @@ vector<int> ReschedulePduMonitor::update(time_t recvTime, RespPduFlag respFlag)
 						setNotExpected();
 					}
 					else if (nextTime <= validTime &&
-							 nextTime + timeCheckAccuracy > validTime)
+						nextTime + timeCheckAccuracy > validTime)
 					{
 						setCondRequired();
 					}
@@ -369,7 +374,6 @@ vector<int> ReschedulePduMonitor::update(time_t recvTime, RespPduFlag respFlag)
 				default:
 					__unreachable__("Unknown resp flag");
 			}
-			lastTime = recvTime;
 			break;
 		case PDU_NOT_EXPECTED_FLAG:
 			res.push_back(1);

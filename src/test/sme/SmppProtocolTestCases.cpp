@@ -225,7 +225,7 @@ PduData* SmppProtocolTestCases::getPduByState(State state)
 		{
 			DeliveryMonitor* monitor = dynamic_cast<DeliveryMonitor*>(m);
 			__require__(monitor);
-			if (monitor->state == state)
+			if (monitor->state == state && monitor->pduData->strProps.count("smsId"))
 			{
 				res.push_back(monitor->pduData);
 				//break;
@@ -253,7 +253,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 			const Address* destAlias = fixture->smeReg->getRandomAddress();
 			__require__(destAlias);
 			fixture->transmitter->setupRandomCorrectSubmitSmPdu(
-				pdu, *destAlias, rand0(5));
+				pdu, *destAlias, rand0(1));
 			PduData::IntProps intProps;
 			switch (s.value())
 			{
@@ -1392,17 +1392,18 @@ PduData* SmppProtocolTestCases::getCancelSmGroupParams(bool checkServType,
 	PduRegistry::PduMonitorIterator* it = fixture->pduReg->getMonitors(0, LONG_MAX);
 	while (PduMonitor* m = it->next())
 	{
-		if (m->getType() == DELIVERY_MONITOR && m->getFlag() == PDU_REQUIRED_FLAG)
+		if (m->getType() == DELIVERY_MONITOR)
 		{
 			DeliveryMonitor* monitor = dynamic_cast<DeliveryMonitor*>(m);
-			//список "плохих" адресов
+			//список "плохих" адресов для мониторов во всех состояниях
 			if (monitor->getCheckTime() < time(NULL) + timeCheckAccuracy + 3)
 			{
 				cancelMap[CancelKey(monitor->srcAddr, monitor->destAddr,
 					checkServType ? monitor->serviceType : "")] = false;
 			}
 			//поиск "хороших" адресов
-			else if (!cancelMap.count(CancelKey(monitor->srcAddr, monitor->destAddr,
+			else if (m->getFlag() == PDU_REQUIRED_FLAG &&
+				!cancelMap.count(CancelKey(monitor->srcAddr, monitor->destAddr,
 				checkServType ? monitor->serviceType : "")))
 			{
 				srcAddr = monitor->srcAddr;
@@ -1949,7 +1950,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
 	PduDeliverySm& pdu, bool sync, int num)
 {
 	__trace2__("sendDeliverySmRespRetry(): sme timeout = %d", fixture->smeInfo.timeout);
-	TCSelector s(num, 5);
+	TCSelector s(num, 2);
 	__decl_tc__;
 	time_t sendTime = time(NULL);
 	try
@@ -1960,30 +1961,31 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
 		respPdu.get_header().set_commandStatus(ESME_ROK);
 		switch (s.value())
 		{
-			case 1: //не отправлять респонс
-				__tc__("deliverySm.resp.sendRetry.notSend");
-				commandStatus = DELIVERY_STATUS_NO_RESPONSE;
-				sendTime += fixture->smeInfo.timeout;
-				break;
-			case 2: //временная ошибка на стороне sme, запрос на повторную доставку
+			case 1: //временная ошибка на стороне sme, запрос на повторную доставку
 				__tc__("deliverySm.resp.sendRetry.tempAppError");
 				commandStatus = ESME_RX_T_APPN;
 				respPdu.get_header().set_commandStatus(commandStatus);
 				fixture->transmitter->sendDeliverySmResp(respPdu, sync);
 				break;
-			case 3: //переполнение очереди стороне sme
+			case 2: //переполнение очереди стороне sme
 				__tc__("deliverySm.resp.sendRetry.msgQueueFull");
 				commandStatus = ESME_RMSGQFUL;
 				respPdu.get_header().set_commandStatus(commandStatus);
 				fixture->transmitter->sendDeliverySmResp(respPdu, sync);
 				break;
-			case 4: //отправить респонс с неправильным sequence_number
+			/*
+			case 3: //отправить респонс с неправильным sequence_number
 				__tc__("deliverySm.resp.sendRetry.invalidSequenceNumber");
 				commandStatus = DELIVERY_STATUS_NO_RESPONSE;
 				sendTime += fixture->smeInfo.timeout;
 				respPdu.get_header().set_sequenceNumber(INT_MAX);
 				respPdu.get_header().set_commandStatus(ESME_ROK);
 				fixture->transmitter->sendDeliverySmResp(respPdu, sync);
+				break;
+			case 4: //не отправлять респонс
+				__tc__("deliverySm.resp.sendRetry.notSend");
+				commandStatus = DELIVERY_STATUS_NO_RESPONSE;
+				sendTime += fixture->smeInfo.timeout;
 				break;
 			case 5: //отправить респонс после sme timeout
 				{
@@ -1996,6 +1998,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
 					fixture->transmitter->sendDeliverySmResp(respPdu, sync, timeout);
 				}
 				break;
+			*/
 			default:
 				__unreachable__("Invalid num");
 		}

@@ -23,6 +23,8 @@
 #include "SystemSmeCheckList.hpp"
 #include "test/config/ConfigGenCheckList.hpp"
 #include "util/debug.h"
+#include "readline/readline.h"
+#include "readline/history.h"
 #include <vector>
 #include <sstream>
 #include <iostream>
@@ -225,8 +227,8 @@ int TestSmeFunc::Execute()
 	seq.insert(seq.end(), 15, 3);
 	//seq.insert(seq.end(), 5, 4);
 	//seq.insert(seq.end(), 5, 5);
-	//seq.insert(seq.end(), 5, 6);
-	//seq.insert(seq.end(), 5, 7);
+	seq.insert(seq.end(), 5, 6);
+	seq.insert(seq.end(), 5, 7);
 	seq.insert(seq.end(), 1, 8);
 	seq.insert(seq.end(), 1, 9);
 	seq.insert(seq.end(), 7, 10);
@@ -634,15 +636,30 @@ vector<TestSme*> genConfig(int transceivers, int transmitters, int receivers,
 	}
 	__trace__("*** Route table ***");
 	//печать таблицы маршрутов sme->sme
-	int numRoutes = 0;
-	int numBound = 0;
+	int numRoutes = 0, numBound = 0, numMap = 0;
 	for (int i = 0; i < numAddr; i++)
 	{
 		const vector<const Address*>& addrList = smeReg->getAddressList();
 		for (int j = 0; j < addrList.size(); j++)
 		{
-			cfgUtil.checkRoute(*addr[i], smeInfo[i]->systemId,
-				*addrList[j], &numRoutes, &numBound);
+			pair<SmeType, SmeSystemId> p = cfgUtil.checkRoute(*addr[i],
+				smeInfo[i]->systemId, *addrList[j]);
+			switch (p.first)
+			{
+				case SME_RECEIVER:
+				case SME_TRANSMITTER:
+				case SME_TRANSCEIVER:
+					numRoutes++;
+					numBound++;
+					if (p.second == "MAP_PROXY")
+					{
+						numMap++;
+					}
+					break;
+				case SME_NOT_BOUND:
+					numRoutes++;
+					break;
+			}
 		}
 	}
 	//печать таблицы маршрутов sme<->profiler
@@ -673,6 +690,7 @@ vector<TestSme*> genConfig(int transceivers, int transmitters, int receivers,
 	}
 	cout << "Valid routes: " << numRoutes << endl;
 	cout << "Valid routes with sme: " << numBound << endl;
+	cout << "Valid routes to MAP_PROXY: " << numMap << endl;
 	//сохранение конфигов
 	configChkList->reset();
 	SmeConfigGen smeCfg(smeReg, configChkList);
@@ -752,8 +770,7 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 	ThreadPool threadPool;
 	//обработка команд консоли
 	bool help = true;
-	string cmdLine;
-	while(help || getline(cin, cmdLine))
+	while(true)
 	{
 		//хелп
 		if (help)
@@ -770,6 +787,12 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 			continue;
 		}
 		//обработка команд
+		const char* cmdLine = readline(">");
+		if (!cmdLine)
+		{
+			return;
+		}
+		add_history(cmdLine);
 		istringstream is(cmdLine);
 		string cmd;
 		is >> cmd;
@@ -943,6 +966,7 @@ int main(int argc, char* argv[])
 		cout << "Failed to prepare environment" << endl;
 		exit(-1);
 	}
+    using_history();
 	smeReg = new SmeRegistry();
 	aliasReg = new AliasRegistry();
 	routeReg = new RouteRegistry();

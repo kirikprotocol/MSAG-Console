@@ -317,6 +317,8 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 		monitor->setCondRequired();
 		return;
 	}
+	//зафиксировать время изменения профиля
+	fixture->profileReg->setProfileUpdateTime(fixture->smeAddr, 0);
 	//проверить и обновить профиль
 	__tc__("updateProfile.ack.checkFields");
     SmppOptional opt;

@@ -47,8 +47,15 @@ protected:
 	virtual Category& getLog();
 	vector<int> checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2) const;
 
-	void compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu, time_t recvTime);
-	PduFlag compareMsgTextMap(DeliveryMonitor* monitor, PduSubmitSm& origPdu,
+	void compareMsgText(DeliveryMonitor* monitor, PduSubmitSm& origPdu,
+		PduDeliverySm& pdu, time_t recvTime);
+
+	PduFlag compareSegmentedMapMsgText(DeliveryMonitor* monitor,
+		PduSubmitSm& origPdu, PduDeliverySm& pdu, RespPduFlag respFlag,
+		SmsMsg* msg, int concatRefNum, int concatMaxNum, int concatSeqNum);
+	PduFlag compareSimpleMapMsgText(DeliveryMonitor* monitor,
+		PduSubmitSm& origPdu, PduDeliverySm& pdu, RespPduFlag respFlag, SmsMsg* msg);
+	PduFlag compareMapMsgText(DeliveryMonitor* monitor, PduSubmitSm& origPdu,
 		PduDeliverySm& pdu, RespPduFlag respFlag);
 
 	void registerIntermediateNotificationMonitor(const DeliveryMonitor* monitor,

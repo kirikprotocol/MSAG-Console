@@ -33,13 +33,13 @@ void rand_text(int& length, char* buf, uint8_t dataCoding, bool hostByteOrder)
 	switch (dataCoding)
 	{
 		case DEFAULT:
-			rand_char(length, buf, RAND_LAT_NUM + RAND_SYM);
+			rand_char(length, buf, RAND_LAT_NUM + RAND_SYM + RAND_WS);
 			break;
 		case UCS2:
 			{
 				int len = length / 2;
 				char msg[len + 1];
-				rand_char(len, msg, RAND_LAT_NUM + RAND_RUS + RAND_SYM);
+				rand_char(len, msg, RAND_LAT_NUM + RAND_RUS + RAND_SYM + RAND_WS);
 				short* _buf = (short*) buf;
 				length = ConvertMultibyteToUCS2(msg, len,
 					_buf, length, CONV_ENCODING_CP1251);
@@ -261,103 +261,6 @@ void convert(bool udhi, uint8_t dc1, const char* str1, int len1,
 		memcpy(str2, str1, len1);
 		len2 = len1;
 	}
-}
-
-vector<int> compare(bool udhi1, uint8_t dc1, const char* str1, int len1,
-	bool udhi2, uint8_t dc2, const char* str2, int len2, bool hostByteOrder)
-{
-	vector<int> res;
-	//udhi
-	if (udhi1 != udhi2)
-	{
-		res.push_back(1);
-		return res;
-	}
-	//нет текста
-	if (!len1 && len2)
-	{
-		res.push_back(2);
-		return res;
-	}
-	if (len1 && !len2)
-	{
-		res.push_back(3);
-		return res;
-	}
-	if (!len1 && !len2)
-	{
-		return res;
-	}
-	//проверки
-	__require__(str1 && str2);
-	//DEFAULT -> UCS2 не бывает
-	//UCS2 -> DEFAULT (в транслит)
-	if (dc1 == UCS2 && dc2 == DEFAULT)
-	{
-		char mbBuf[len1 + 1];
-		int mbLen;
-		int udhLen = udhi1 ? 1 + (unsigned char) *str1 : 0;
-		//udh проходит без изменений
-		if (udhLen)
-		{
-			if (udhLen > len2)
-			{
-				res.push_back(4);
-			}
-			else if (memcmp(str1, str2, udhLen))
-			{
-				res.push_back(5);
-			}
-		}
-		//остальное транслитерируется
-		if (hostByteOrder || ntohs(0x1234) == 0x1234)
-		{
-			int ucs2Len = len1 - udhLen;
-			const short* usc2Buf = (const short*) (str1 + udhLen);
-			mbLen = ConvertUCS2ToMultibyte(usc2Buf, ucs2Len,
-				mbBuf, sizeof(mbBuf), CONV_ENCODING_CP1251);
-		}
-		else
-		{
-			int ucs2Len = (len1 - udhLen) / 2;
-			short ucs2Buf[ucs2Len];
-			const short* _str1 = (const short*) (str1 + udhLen);
-			for (int i = 0; i < ucs2Len; i++)
-			{
-				ucs2Buf[i] = ntohs(*(_str1 + i));
-			}
-			mbLen = ConvertUCS2ToMultibyte(ucs2Buf, sizeof(ucs2Buf),
-				mbBuf, sizeof(mbBuf), CONV_ENCODING_CP1251);
-		}
-		char transBuf[(int) (len1 * 1.5) + 1]; //щ -> sch
-		int transLen = Transliterate(mbBuf, mbLen,
-			CONV_ENCODING_CP1251, transBuf, sizeof(transBuf));
-		if (transLen + udhLen != len2)
-		{
-			res.push_back(6);
-		}
-		else if (memcmp(transBuf, str2 + udhLen, transLen))
-		{
-			res.push_back(7);
-			//__trace2__("transBuf: %s\nstr2: %s", transBuf, str2);
-		}
-	}
-	else
-	{
-		if (dc1 != dc2)
-		{
-			res.push_back(8);
-		}
-		else if (len1 != len2)
-		{
-			res.push_back(9);
-		}
-		else if (memcmp(str1, str2, len1))
-		{
-			res.push_back(10);
-		}
-	}
-	return res;
 }
 
 uint8_t getDataCoding(int num)

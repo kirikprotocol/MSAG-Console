@@ -23,7 +23,7 @@ using namespace smsc::test::util;
 using namespace smsc::smpp::SmppCommandSet;
 //using smsc::test::sms::SmsUtil;
 
-static const int MAX_OSTR_PRINT_SIZE = 255;
+static const int MAX_OSTR_PRINT_SIZE = 1000;
 
 void pdu2file(const char* pduName, const string& id, SmppHeader* pdu)
 {
@@ -391,11 +391,13 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(maxDeliveryPeriod);
 	//пол€ сохран€ютс€ случайным образом
-	auto_ptr<uint8_t> randMask = rand_uint8_t(8);
-	mask &= *((uint64_t*) randMask.get());
+	auto_ptr<uint8_t> tmp = rand_uint8_t(8);
+	uint64_t randMask = *((uint64_t*) tmp.get());
+	randMask |= OPT_MSG_PAYLOAD; //оставить payload как есть
+	mask &= randMask;
 	
 	PduPartSm& p = pdu->get_message();
-	SmppTime tmp;
+	SmppTime t;
 	//set & check fields
 	__set_cstr__(serviceType, MAX_ESERVICE_TYPE_LENGTH);
 	__set_addr__(source);
@@ -405,8 +407,8 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	__set_int__(uint8_t, priorityFlag, rand0(255));
 	time_t waitTime = time(NULL) + rand0(maxWaitTime);
 	time_t validTime = waitTime + rand0(maxDeliveryPeriod);
-	__set_cstr2__(scheduleDeliveryTime, time2string(waitTime, tmp, time(NULL), __numTime__));
-	__set_cstr2__(validityPeriod, time2string(validTime, tmp, time(NULL), __numTime__));
+	__set_cstr2__(scheduleDeliveryTime, time2string(waitTime, t, time(NULL), __numTime__));
+	__set_cstr2__(validityPeriod, time2string(validTime, t, time(NULL), __numTime__));
 	__set_int__(uint8_t, registredDelivery, rand0(255));
 	__set_int__(uint8_t, replaceIfPresentFlag, !rand0(10));
 	uint8_t dataCoding = getDataCoding(RAND_TC);
@@ -437,14 +439,14 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(maxDeliveryPeriod);
 	PduReplaceSm& p = *pdu;
-	SmppTime tmp;
+	SmppTime t;
 	//set & check fields
 	__set_cstr__(messageId, MAX_MSG_ID_LENGTH);
 	__set_addr__(source);
 	time_t waitTime = time(NULL) + rand0(maxWaitTime);
 	time_t validTime = waitTime + rand0(maxDeliveryPeriod);
-	__set_cstr2__(scheduleDeliveryTime, time2string(waitTime, tmp, time(NULL), __numTime__));
-	__set_cstr2__(validityPeriod, time2string(validTime, tmp, time(NULL), __numTime__));
+	__set_cstr2__(scheduleDeliveryTime, time2string(waitTime, t, time(NULL), __numTime__));
+	__set_cstr2__(validityPeriod, time2string(validTime, t, time(NULL), __numTime__));
 	__set_int__(uint8_t, registredDelivery, rand0(255));
 	__set_int__(uint8_t, smDefaultMsgId, rand0(255)); //хбз что это такое
 	__set_bin__(shortMessage, rand2(3, MAX_SHORT_MESSAGE_LENGTH), dataCoding, udhi);

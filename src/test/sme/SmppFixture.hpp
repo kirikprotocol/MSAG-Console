@@ -59,22 +59,18 @@ struct AckText : public PduDataObject
 		: text(_text), dataCoding(_dataCoding), valid(_valid) {}
 };
 
-struct MapMsg : public PduDataObject
+struct SmsMsg : public PduDataObject
 {
 	bool udhi;
 	const char* msg;
 	int len;
 	uint8_t dataCoding;
-	int numSegments;
-	int offset;
-	int refNum;
-	int seqNum;
 	bool valid;
-	MapMsg(bool _udhi, const char* _msg, int _len, uint8_t _dataCoding,
-		int _numSegments, bool _valid)
-	: udhi(_udhi), msg(_msg), len(_len), dataCoding(_dataCoding),
-		numSegments(_numSegments), valid(_valid), offset(0), refNum(0), seqNum(1) {}
-	virtual ~MapMsg() { if (msg) delete msg; }
+	int offset;
+	SmsMsg(bool _udhi, const char* _msg, int _len, uint8_t _dataCoding, bool _valid)
+	: udhi(_udhi), msg(_msg), len(_len), dataCoding(_dataCoding), valid(_valid),
+		offset(0) {}
+	virtual ~SmsMsg() { if (msg) delete msg; }
 };
 
 class SmppBaseTestCases;

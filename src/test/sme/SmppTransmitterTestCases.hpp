@@ -107,7 +107,7 @@ protected:
 		time_t validTime, PduData* pduData);
 	void registerNullSmeMonitors(PduSubmitSm* pdu, uint16_t msgRef, time_t waitTime,
 		time_t validTime, uint32_t deliveryStatus, PduData* pduData);
-	MapMsg* getMapMsg(PduSubmitSm* pdu);
+	SmsMsg* getSmsMsg(PduSubmitSm* pdu);
 	PduData* prepareSubmitSm(PduSubmitSm* pdu, PduData* existentPduData,
 		time_t submitTime, PduData::IntProps* intProps,
 		PduData::StrProps* strProps, PduData::ObjProps* objProps, PduType pduType);

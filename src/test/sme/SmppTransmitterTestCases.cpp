@@ -78,51 +78,62 @@ SmppTransmitterTestCases::checkActionLocked(
 	__require__(monitor);
 	__cfg_int__(timeCheckAccuracy);
 	__cfg_int__(scCmdTimeout);
+	/*
 	if (monitor->getFlag() == PDU_NOT_EXPECTED_FLAG)
 	{
 		return make_pair(NOT_LOCKED, checkTime);
 	}
+	*/
 	//если доставлен хоть один кусочек конкатенированного map сообщения,
 	//то оно считается в delivering state и не канселится
-	MapMsg* msg = NULL;
-	if (monitor->pduData->objProps.count("map.msg"))
+	bool mapLocked = 0;
+	if (monitor->pduData->intProps.count("map.seqNum"))
 	{
-		msg = dynamic_cast<MapMsg*>(monitor->pduData->objProps["map.msg"]);
+		mapLocked = monitor->pduData->intProps["map.seqNum"] > 1; //нумерация сегментов с 1
 	}
 	//если сообщение в delivering state, то оно залочено
 	if (checkTime < monitor->getCheckTime() - timeCheckAccuracy)
 	{
-		//нумерация сегментов с 1
-		return (msg && msg->seqNum > 1 ?
-			make_pair(CHANGE_LOCKED, (time_t) 0) : make_pair(NOT_LOCKED, checkTime));
+		//именно respTime, а не lastTime поскольку при доставке сегментов на map proxy
+		//меняется только respTime, он не lastTime
+		if (monitor->respTime)
+		{
+			if (checkTime > monitor->respTime + timeCheckAccuracy)
+			{
+				return make_pair(mapLocked ? CHANGE_LOCKED : NOT_LOCKED, checkTime);
+			}
+			else if (checkTime > monitor->respTime - scCmdTimeout + timeCheckAccuracy)
+			{
+				return make_pair(mapLocked ? CHANGE_LOCKED : ALL_LOCKED, monitor->respTime);
+			}
+			else if (abs(checkTime < monitor->respTime - scCmdTimeout) <= timeCheckAccuracy)
+			{
+				return make_pair(mapLocked ? CHANGE_LOCKED : ALL_COND_LOCKED, monitor->respTime);
+			}
+			else //if (checkTime < monitor->respTime - scCmdTimeout - timeCheckAccuracy)
+			{
+				return make_pair(ALL_LOCKED, 0);
+			}
+		}
+		return make_pair(mapLocked ? CHANGE_LOCKED : NOT_LOCKED, checkTime);
 	}
-	else if (monitor->getLastTime() && checkTime > monitor->getLastTime())
+	else if (checkTime > monitor->getCheckTime() + timeCheckAccuracy)
 	{
-		__require__(monitor->getLastTime() <= monitor->respTime);
-		if (checkTime > monitor->respTime + timeCheckAccuracy)
+		switch (monitor->getFlag())
 		{
-			//нумерация сегментов с 1
-			return (msg && msg->seqNum > 1 ?
-				make_pair(CHANGE_LOCKED, (time_t) 0) : make_pair(NOT_LOCKED, checkTime));
+			case PDU_REQUIRED_FLAG:
+			case PDU_MISSING_ON_TIME_FLAG:
+			case PDU_NOT_EXPECTED_FLAG:
+				//не знаю чего делать
+				return make_pair(NOT_LOCKED, checkTime);
+			case PDU_COND_REQUIRED_FLAG:
+				//считаю что не будет
+				return make_pair(NOT_LOCKED, checkTime);
+			default:
+				__unreachable__("Invalid flag");
 		}
-		else if (checkTime > monitor->respTime - scCmdTimeout + timeCheckAccuracy)
-		{
-			return make_pair(ALL_LOCKED, monitor->respTime);
-		}
-		else if (abs(checkTime < monitor->respTime - scCmdTimeout) <= timeCheckAccuracy)
-		{
-			return make_pair(ALL_COND_LOCKED, monitor->respTime);
-		}
-		else if (checkTime < monitor->respTime - scCmdTimeout - timeCheckAccuracy)
-		{
-			return make_pair(ALL_LOCKED, 0);
-		}
-		__unreachable__("Invalid check time");
 	}
-	else
-	{
-		__unreachable__("Invalid monitor selected");
-	}
+	__unreachable__("Invalid monitor selected");
 }
 
 void SmppTransmitterTestCases::cancelMonitor(PduMonitor* monitor,
@@ -187,8 +198,7 @@ SmppTransmitterTestCases::CancelResult SmppTransmitterTestCases::cancelPduMonito
 			break;
 		case CHANGE_LOCKED: //канселить уже нельзя
 			__tc__("lockedSm.segmentedMap"); __tc_ok__;
-			__require__(lockInfo.second == cancelTime);
-			return CancelResult(msgRef, cancelTime, CancelResult::CANCEL_FAILED);
+			return CancelResult(msgRef, lockInfo.second, CancelResult::CANCEL_FAILED);
 		case ALL_LOCKED:
 			if (!lockInfo.second) //команда протухнет прежде, чем освободится лок
 			{
@@ -463,7 +473,7 @@ void SmppTransmitterTestCases::registerNullSmeMonitors(PduSubmitSm* pdu,
 	}
 }
 
-MapMsg* SmppTransmitterTestCases::getMapMsg(PduSubmitSm* pdu)
+SmsMsg* SmppTransmitterTestCases::getSmsMsg(PduSubmitSm* pdu)
 {
 	__cfg_int__(timeCheckAccuracy);
 	Address addr;
@@ -476,7 +486,6 @@ MapMsg* SmppTransmitterTestCases::getMapMsg(PduSubmitSm* pdu)
 	char* msg = NULL;
 	int len = 0;
 	uint8_t dataCoding;
-	int numSegments = 0;
 	if (pdu->get_message().size_shortMessage() &&
 		!pdu->get_optional().has_messagePayload())
 	{
@@ -499,35 +508,12 @@ MapMsg* SmppTransmitterTestCases::getMapMsg(PduSubmitSm* pdu)
 	}
 	else
 	{
-		return new MapMsg(false, NULL, 0, dataCoding, 0, valid);
+		len = 1;
+		msg = new char[len];
+		convert(false, pdu->get_message().get_dataCoding(), "", 0,
+			dataCoding, msg, len, profile.codepage, false);
 	}
-	if (dataCoding == DEFAULT || dataCoding == SMSC7BIT)
-	{
-		int msgLen = len;
-		//проверить на символы из расширенного набора
-		for (int i = udhi ? 1 + *(unsigned char*) msg : 0; i < len; i++)
-		{
-			switch (msg[i])
-			{
-				case '|':
-				case '^':
-				case '{':
-				case '}':
-				case '[':
-				case ']':
-				case '~':
-				case '\\':
-					msgLen++;
-					break;
-			}
-		}
-		numSegments = (msgLen + 152) / 153;
-	}
-	else //UCS2, BINARY
-	{
-		numSegments = (len + 133) / 134;
-	}
-	return new MapMsg(udhi, msg, len, dataCoding, numSegments, valid);
+	return new SmsMsg(udhi, msg, len, dataCoding, valid);
 }
 
 //предварительная регистрация pdu, требуется внешняя синхронизация
@@ -561,13 +547,14 @@ PduData* SmppTransmitterTestCases::prepareSubmitSm(PduSubmitSm* pdu,
 	//дополнительные фишки для map proxy
 	const RouteInfo* routeInfo = fixture->routeChecker->getRouteInfoForNormalSms(
 		pdu->get_message().get_source(), pdu->get_message().get_dest());
-	if (routeInfo && routeInfo->smeSystemId == "MAP_PROXY")
+	if (routeInfo)
 	{
-		MapMsg* msg = getMapMsg(pdu);
-		__trace2__("map msg registered: this = %p, udhi = %s, len = %d, dataCoding = %d, numSegments = %d, valid = %s",
-			msg, msg->udhi ? "true" : "false", msg->len, (int) msg->dataCoding, msg->numSegments, msg->valid ? "true" : "false");
+		SmsMsg* msg = getSmsMsg(pdu);
+		__trace2__("sms msg registered: this = %p, udhi = %s, len = %d, dc = %d, orig dc = %d, valid = %s",
+			msg, msg->udhi ? "true" : "false", msg->len, (int) msg->dataCoding, (int) pdu->get_message().get_dataCoding(), msg->valid ? "true" : "false");
 		msg->ref();
-		pduData->objProps["map.msg"] = msg;
+		bool mapDest = routeInfo->smeSystemId == "MAP_PROXY";
+		pduData->objProps[mapDest ? "map.msg" : "sms.msg"] = msg;
 	}
 	pduData->checkRes = fixture->pduChecker->checkSubmitSm(pduData);
 	pduData->ref();
@@ -1077,9 +1064,18 @@ PduData* SmppTransmitterTestCases::prepareQuerySm(PduQuerySm* pdu,
 	PduData* origPduData, time_t queryTime, PduData::IntProps* intProps,
 	PduData::StrProps* strProps, PduData::ObjProps* objProps)
 {
+	pdu->get_header().set_commandId(QUERY_SM); //проставляется в момент отправки query_sm
 	PduData* pduData = new PduData(reinterpret_cast<SmppHeader*>(pdu),
 		queryTime, intProps, strProps, objProps);
 	pduData->checkRes = fixture->pduChecker->checkQuerySm(pduData, origPduData);
+	if (origPduData)
+	{
+		__require__(origPduData->pdu->get_commandId() == SUBMIT_SM);
+		PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(origPduData->pdu);
+		__require__(origPdu->get_optional().has_userMessageReference());
+		uint16_t msgRef = origPdu->get_optional().get_userMessageReference();
+		pduData->intProps["msgRef"] = msgRef;
+	}
 	pduData->ref();
 	return pduData;
 }
@@ -1194,7 +1190,7 @@ void SmppTransmitterTestCases::sendQuerySmPdu(PduQuerySm* pdu,
 					fixture->session->getAsyncTransmitter()->query(*pdu);
 				__dumpPdu__("querySmAsyncAfter", fixture->smeInfo.systemId,
 					reinterpret_cast<SmppHeader*>(pdu));
-				PduData* pduData = prepareQuerySm(pdu, pduData,
+				PduData* pduData = prepareQuerySm(pdu, origPduData,
 					queryTime, intProps, strProps, objProps);
 				processQuerySmAsync(pduData);
 			}

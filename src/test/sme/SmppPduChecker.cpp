@@ -78,10 +78,8 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 	//map
 	if (pduData->objProps.count("map.msg"))
 	{
-		MapMsg* msg = dynamic_cast<MapMsg*>(pduData->objProps["map.msg"]);
+		SmsMsg* msg = dynamic_cast<SmsMsg*>(pduData->objProps["map.msg"]);
 		__require__(msg);
-		__trace2__("check map msg: this = %p, udhi = %s, len = %d, dataCoding = %d, numSegments = %d, valid = %s",
-			msg, msg->udhi ? "true" : "false", msg->len, (int) msg->dataCoding, msg->numSegments, msg->valid ? "true" : "false");
 		if (msg->udhi)
 		{
 			int msgLen = msg->len;
@@ -89,16 +87,45 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 			{
 				int udhLen = 1 + *(unsigned char*) msg->msg;
 				int textLen = msg->len - udhLen;
-				msgLen = udhLen + (textLen + 7) * 7 / 8;
+				for (int i = udhLen; i < msg->len; i++)
+				{
+					switch (msg->msg[i])
+					{
+						case '|':
+						case '^':
+						case '{':
+						case '}':
+						case '[':
+						case ']':
+						case '~':
+						case '\\':
+							textLen++;
+							break;
+					}
+				}
+				msgLen = udhLen + (textLen * 7 + 7) / 8;
 			}
 			if (msgLen > MAX_MAP_SM_LENGTH)
 			{
 				res.insert(ESME_RSUBMITFAIL);
 			}
 		}
-		else if (msg->numSegments > 255)
+		else
 		{
-			res.insert(ESME_RINVMSGLEN);
+			int numSegments; //примерное количество сегментов без учета переноса слов
+			int msgLen = msg->len;
+			if (msg->dataCoding == DEFAULT || msg->dataCoding == SMSC7BIT)
+			{
+				numSegments = (msg->len * 7/8 + 152) / 153;
+			}
+			else
+			{
+				numSegments = (msg->len + 133) / 134;
+			}
+			if (numSegments > 255)
+			{
+				res.insert(ESME_RINVMSGLEN);
+			}
 		}
 	}
 	//без проверки на bind статус
@@ -235,15 +262,7 @@ set<uint32_t> SmppPduChecker::checkQuerySm(PduData* pduData, PduData* origPduDat
 	__check_len__(ESME_RINVSRCADR,
 		pdu->get_source().get_value(), MAX_ADDRESS_LENGTH);
 	//проверки
-	if (!origPduData)
-	{
-		res.insert(ESME_RINVMSGID);
-	}
-	if (!pdu->get_messageId())
-	{
-		res.insert(ESME_RINVMSGID);
-	}
-	else
+	if (origPduData && pdu->get_messageId())
 	{
 		for (int i = 0; pdu->get_messageId()[i]; i++)
 		{
@@ -253,8 +272,11 @@ set<uint32_t> SmppPduChecker::checkQuerySm(PduData* pduData, PduData* origPduDat
 				break;
 			}
 		}
-		__require__(origPduData->strProps.count("smsId"));
-		if (origPduData->strProps["smsId"] != pdu->get_messageId())
+		if (!origPduData->strProps.count("smsId"))
+		{
+			res.insert(ESME_RINVMSGID);
+		}
+		else if (origPduData->strProps["smsId"] != pdu->get_messageId())
 		{
 			res.insert(ESME_RINVMSGID);
 		}
@@ -264,6 +286,10 @@ set<uint32_t> SmppPduChecker::checkQuerySm(PduData* pduData, PduData* origPduDat
 		{
 			res.insert(ESME_RINVSRCADR);
 		}
+	}
+	else
+	{
+		res.insert(ESME_RINVMSGID);
 	}
 	return res;
 }
@@ -571,9 +597,10 @@ void SmppPduChecker::processReplaceSmResp(ResponseMonitor* monitor,
 void SmppPduChecker::processQuerySmResp(ResponseMonitor* monitor,
 	PduQuerySmResp& respPdu, time_t respTime)
 {
-	__require__(monitor);
+	__require__(monitor && monitor->pduData->pdu->get_commandId() == QUERY_SM);
 	__decl_tc__;
 	__cfg_int__(timeCheckAccuracy);
+	PduQuerySm* pdu = reinterpret_cast<PduQuerySm*>(monitor->pduData->pdu);
 	//проверка флагов получения pdu
 	time_t respDelay = respTime - monitor->getCheckTime();
 	__tc__("querySm.resp.checkDuplicates");
@@ -604,7 +631,56 @@ void SmppPduChecker::processQuerySmResp(ResponseMonitor* monitor,
 		monitor->pduData->pdu->get_sequenceNumber());
 	__tc_ok_cond__;
 	__tc__("querySm.resp.checkFields");
+	__check__(1, strcmp(respPdu.get_messageId(), pdu->get_messageId()));
 	__tc_fail__(100);
+	if (monitor->pduData->intProps.count("msgRef"))
+	{
+		uint16_t msgRef = monitor->pduData->intProps["msgRef"];
+		DeliveryMonitor* deliveryMonitor = fixture->pduReg->getDeliveryMonitor(msgRef);
+		__require__(deliveryMonitor);
+		/*
+		switch (deliveryMonitor->getFlag())
+		{
+			case PDU_REQUIRED_FLAG:
+			case PDU_MISSING_ON_TIME_FLAG:
+				__check__(2, !respPdu.get_finalDate());
+				__check__(3, respPdu.get_messageState() == SMPP_ENROUTE_STATE);
+				__check__(4, respPdu.get_errorCode() == 0);
+				break;
+			case PDU_COND_REQUIRED_FLAG:
+				__unreachable__("Invalid flag");
+				break;
+			case PDU_NOT_EXPECTED_FLAG:
+				if (respTime < monitor->getValidTime())
+				{
+					__check__(2, !respPdu.get_finalDate());
+					__check__(3, respPdu.get_messageState() == SMPP_ENROUTE_STATE);
+					__check__(4, respPdu.get_errorCode() == 0);
+				}
+				else if (respTime > monitor->getValidTime() + timeCheckAccuracy)
+				{
+					__check__(2, !respPdu.get_finalDate());
+					__check__(3, respPdu.get_messageState() == SMPP_ENROUTE_STATE);
+					__check__(4, respPdu.get_errorCode() == 0);
+				}
+				else
+				{
+					__unreachable__("Invalid time");
+				}
+				break;
+			default:
+				__unreachable__("Invalid flag");
+
+		}
+		*/
+	}
+	else
+	{
+		__check__(10, !respPdu.get_finalDate());
+		__check__(11, respPdu.get_messageState() == 0);
+		__check__(11, respPdu.get_errorCode() == 0);
+	}
+	__tc_ok_cond__;
 	//set<uint32_t> checkRes = checkQuerySm(...);
 	const set<uint32_t>& checkRes = monitor->pduData->checkRes;
 	switch (respPdu.get_header().get_commandStatus())

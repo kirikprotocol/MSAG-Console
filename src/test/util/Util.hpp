@@ -35,18 +35,21 @@ const int RAND_LAT = 1;
 const int RAND_RUS = 2;
 const int RAND_NUM = 4;
 const int RAND_SYM = 8;
-const int RAND_DEF_SMS = 16;
+const int RAND_WS = 16;
+const int RAND_DEF_SMS = 32;
 const int RAND_LAT_NUM = RAND_LAT + RAND_NUM;
 
 static const char* digitChars = "1234567890";
 static const char* latinChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 static const char* rusChars = "ÀÁÂÃÄÅ¨ÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäå¸æçèéêëìíîïğñòóôõö÷øùúûüışÿ";
-static const char* symbolChars = "~ !@#$%^&*()-_=+\\|{[}];:'\",<.>/?";
+static const char* symbolChars = "~!@#$%^&*()-_=+\\|{[}];:'\",<.>/?";
+static const char* wsChars = " \n"; //íåò \t è \r
 
 const int digitCharsLen = strlen(digitChars);
 const int latinCharsLen = strlen(latinChars);
 const int rusCharsLen = strlen(rusChars);
 const int symbolCharsLen = strlen(symbolChars);
+const int wsCharsLen = strlen(wsChars);
 
 inline const char* nvl(const char* str) { return (str ? str : ""); }
 

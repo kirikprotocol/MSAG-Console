@@ -116,6 +116,11 @@ void rand_char(int length, char* buf, int type)
 		__require__(charTypes.size());
 		for (int i = 0; i < length; i++)
 		{
+			if ((type & RAND_WS) && !rand0(15))
+			{
+				buf[i] = wsChars[rand0(wsCharsLen - 1)];
+				continue;
+			}
 			switch (charTypes[rand0(charTypes.size() - 1)])
 			{
 				case RAND_LAT:
