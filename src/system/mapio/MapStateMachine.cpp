@@ -1107,8 +1107,7 @@ void DoRInfoErrorProcessor(
   }
 }
 
-extern "C"
-USHORT_T  Et96MapV2SendRInfoForSmConf ( 
+static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl( 
   ET96MAP_LOCAL_SSN_T localSsn,
   ET96MAP_DIALOGUE_ID_T dialogueId,
   ET96MAP_INVOKE_ID_T invokeId,
@@ -1116,11 +1115,18 @@ USHORT_T  Et96MapV2SendRInfoForSmConf (
   ET96MAP_ADDRESS_T *mscNumber_sp,
   ET96MAP_LMSI_T *lmsi_sp,
   ET96MAP_ERROR_ROUTING_INFO_FOR_SM_T *errorSendRoutingInfoForSm_sp,
-  ET96MAP_PROV_ERR_T *provErrCode_p )
+  ET96MAP_PROV_ERR_T *provErrCode_p,
+  unsigned version,
+  ET96MAP_MWD_SET_T *mwdSet,
+  ET96MAP_LOCATION_INFO_T *locationInfo_sp
+  )
 {
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
+    if ( version == 1 ) 
+      throw runtime_error(
+        FormatText("MAP::%s unsupported protocol version %d",__FUNCTION__,version));
     __trace2__("MAP::%s dialog 0x%x",__FUNCTION__,dialogid_map);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
     if ( dialog.isnull() ) {
@@ -1190,7 +1196,25 @@ USHORT_T Et96MapV1SendRInfoForSmConf (
   ET96MAP_ERROR_ROUTING_INFO_FOR_SM_T *errorSendRoutingInfoForSm_sp,
   ET96MAP_PROV_ERR_T *provErrCode_p)
 {
-  return ET96MAP_E_OK;
+  return Et96MapVxSendRInfoForSmConf_Impl(
+    localSsn,dialogueId,invokeId,imsi_sp,0,lmsi_sp,errorSendRoutingInfoForSm_sp,provErrCode_p,
+    1,mwdSet,locationInfo_sp);
+}
+
+extern "C"
+USHORT_T  Et96MapV2SendRInfoForSmConf ( 
+  ET96MAP_LOCAL_SSN_T localSsn,
+  ET96MAP_DIALOGUE_ID_T dialogueId,
+  ET96MAP_INVOKE_ID_T invokeId,
+  ET96MAP_IMSI_T *imsi_sp,
+  ET96MAP_ADDRESS_T *mscNumber_sp,
+  ET96MAP_LMSI_T *lmsi_sp,
+  ET96MAP_ERROR_ROUTING_INFO_FOR_SM_T *errorSendRoutingInfoForSm_sp,
+  ET96MAP_PROV_ERR_T *provErrCode_p )
+{
+  return Et96MapVxSendRInfoForSmConf_Impl(
+    localSsn,dialogueId,invokeId,imsi_sp,mscNumber_sp,lmsi_sp,errorSendRoutingInfoForSm_sp,provErrCode_p,
+    2,0,0);
 }
 
 extern "C"
@@ -1331,14 +1355,14 @@ USHORT_T Et96MapOpenInd (
   return ET96MAP_E_OK;
 }
 
-extern "C"
-USHORT_T Et96MapV2ForwardSmMOInd (
+static USHORT_T Et96MapVxForwardSmMOInd_Impl (
   ET96MAP_LOCAL_SSN_T localSsn,
   ET96MAP_DIALOGUE_ID_T dialogueId,
   ET96MAP_INVOKE_ID_T invokeId,
   ET96MAP_SM_RP_DA_T *smRpDa_sp,
   ET96MAP_SM_RP_OA_T *smRpOa_sp,
-  ET96MAP_SM_RP_UI_T *smRpUi_sp)
+  ET96MAP_SM_RP_UI_T *smRpUi_sp,
+  unsigned version)
 {
   bool open_confirmed = false;
   try{
@@ -1381,12 +1405,36 @@ USHORT_T Et96MapV2ForwardSmMOInd (
 }
 
 extern "C"
-USHORT_T Et96MapV2ForwardSmMTConf (
+USHORT_T Et96MapV1ForwardSmMOInd (
+  ET96MAP_LOCAL_SSN_T localSsn,
+  ET96MAP_DIALOGUE_ID_T dialogueId,
+  ET96MAP_INVOKE_ID_T invokeId,
+  ET96MAP_SM_RP_DA_T *smRpDa_sp,
+  ET96MAP_SM_RP_OA_T *smRpOa_sp,
+  ET96MAP_SM_RP_UI_T *smRpUi_sp)
+{
+  return Et96MapVxForwardSmMOInd_Impl(localSsn,dialogueId,invokeId,smRpDa_sp,smRpOa_sp,smRpUi_sp,1);
+}
+
+extern "C"
+USHORT_T Et96MapV2ForwardSmMOInd (
+  ET96MAP_LOCAL_SSN_T localSsn,
+  ET96MAP_DIALOGUE_ID_T dialogueId,
+  ET96MAP_INVOKE_ID_T invokeId,
+  ET96MAP_SM_RP_DA_T *smRpDa_sp,
+  ET96MAP_SM_RP_OA_T *smRpOa_sp,
+  ET96MAP_SM_RP_UI_T *smRpUi_sp)
+{
+  return Et96MapVxForwardSmMOInd_Impl(localSsn,dialogueId,invokeId,smRpDa_sp,smRpOa_sp,smRpUi_sp,2);
+}
+
+static USHORT_T Et96MapVxForwardSmMTConf_Impl (
   ET96MAP_LOCAL_SSN_T localSsn,
   ET96MAP_DIALOGUE_ID_T dialogueId,
   ET96MAP_INVOKE_ID_T invokeId,
   ET96MAP_ERROR_FORW_SM_MT_T *errorForwardSMmt_sp,
-  ET96MAP_PROV_ERR_T *provErrCode_p)
+  ET96MAP_PROV_ERR_T *provErrCode_p,
+  unsigned version)
 {
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
@@ -1414,6 +1462,28 @@ USHORT_T Et96MapV2ForwardSmMTConf (
     }
   }MAP_CATCH(dialogid_map,dialogid_smsc);
   return ET96MAP_E_OK;
+}
+
+extern "C"
+USHORT_T Et96MapV1ForwardSmMT_MOConf (
+  ET96MAP_LOCAL_SSN_T localSsn,
+  ET96MAP_DIALOGUE_ID_T dialogueId,
+  ET96MAP_INVOKE_ID_T invokeId,
+  ET96MAP_ERROR_FORW_SM_MT_T *errorForwardSMmt_sp,
+  ET96MAP_PROV_ERR_T *provErrCode_p)
+{
+  return Et96MapVxForwardSmMTConf_Impl(localSsn,dialogueId,invokeId,errorForwardSMmt_sp,provErrCode_p,1); 
+}
+
+extern "C"
+USHORT_T Et96MapV2ForwardSmMTConf (
+  ET96MAP_LOCAL_SSN_T localSsn,
+  ET96MAP_DIALOGUE_ID_T dialogueId,
+  ET96MAP_INVOKE_ID_T invokeId,
+  ET96MAP_ERROR_FORW_SM_MT_T *errorForwardSMmt_sp,
+  ET96MAP_PROV_ERR_T *provErrCode_p)
+{
+  return Et96MapVxForwardSmMTConf_Impl(localSsn,dialogueId,invokeId,errorForwardSMmt_sp,provErrCode_p,2); 
 }
 
 extern "C"
@@ -1711,12 +1781,13 @@ static void ResponseAlertSC(MapDialog* dialog)
 }
 
 extern "C"
-USHORT_T Et96MapV2AlertSCInd(
+USHORT_T Et96MapVxAlertSCInd_Impl(
   ET96MAP_LOCAL_SSN_T localSsn,
   ET96MAP_DIALOGUE_ID_T dialogueId,
   ET96MAP_INVOKE_ID_T invokeId,
   ET96MAP_ADDRESS_T *msisdnAlert_sp,
-  ET96MAP_ADDRESS_T *sCA_sp )
+  ET96MAP_ADDRESS_T *sCA_sp,
+  unsigned version)
 {
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
@@ -1745,6 +1816,28 @@ USHORT_T Et96MapV2AlertSCInd(
     }
   }MAP_CATCH(dialogid_map,dialogid_smsc);
   return ET96MAP_E_OK;
+}
+
+extern "C"
+USHORT_T Et96MapV2AlertSCInd(
+  ET96MAP_LOCAL_SSN_T localSsn,
+  ET96MAP_DIALOGUE_ID_T dialogueId,
+  ET96MAP_INVOKE_ID_T invokeId,
+  ET96MAP_ADDRESS_T *msisdnAlert_sp,
+  ET96MAP_ADDRESS_T *sCA_sp )
+{
+  return Et96MapVxAlertSCInd_Impl(localSsn,dialogueId,invokeId,msisdnAlert_sp,sCA_sp,2);
+}
+
+extern "C"
+USHORT_T Et96MapV1AlertSCInd(
+  ET96MAP_LOCAL_SSN_T localSsn,
+  ET96MAP_DIALOGUE_ID_T dialogueId,
+  ET96MAP_INVOKE_ID_T invokeId,
+  ET96MAP_ADDRESS_T *msisdnAlert_sp,
+  ET96MAP_ADDRESS_T *sCA_sp )
+{
+  return Et96MapVxAlertSCInd_Impl(localSsn,dialogueId,invokeId,msisdnAlert_sp,sCA_sp,1);
 }
 
 void RememberMwdStatus(MapDialog* dialog,ET96MAP_ADDRESS_T* alert,ET96MAP_MWD_STATUS_T* status)
@@ -1838,6 +1931,7 @@ static void NotifyHLR(MapDialog* dialog)
   dialog->state = MAPST_WaitDelRepConf;
 }
 
+extern "C"
 USHORT_T Et96MapV2ReportSmDelStatConf (
   ET96MAP_LOCAL_SSN_T localSsn,
   ET96MAP_DIALOGUE_ID_T dialogueId,
@@ -1847,6 +1941,19 @@ USHORT_T Et96MapV2ReportSmDelStatConf (
   ET96MAP_PROV_ERR_T *provErrCode_p)
 {
   // nothig;
+  return ET96MAP_E_OK;
+}
+
+extern "C"
+USHORT_T Et96MapV1ReportSmDelStatConf (
+  ET96MAP_LOCAL_SSN_T localSsn,
+  ET96MAP_DIALOGUE_ID_T dialogueId,
+  ET96MAP_INVOKE_ID_T invokeId,
+  ET96MAP_ERROR_REPORT_SM_DEL_STAT_T *errorReportSmDelStat_sp,
+  ET96MAP_PROV_ERR_T *provErrCode_p)
+{
+  // nothig;
+  return ET96MAP_E_OK;
 }
 
 #else
