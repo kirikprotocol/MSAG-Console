@@ -739,25 +739,12 @@ StateType StateMachine::forward(Tuple& t)
       sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
     }
     SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
-    try{
-      dest_proxy->putCommand(delivery);
-    }catch(InvalidProxyCommandException& e)
-    {
-      sendFailureReport(sms,t.msgId,UNDELIVERABLE_STATE,"undeliverable");
-      __trace__("SUBMIT: Attempt to putCommand for sme in invalid bind state");
-      try{
-        Descriptor d;
-        store->changeSmsStateToUndeliverable(t.msgId,d,0);
-      }catch(...)
-      {
-        __trace__("SUBMIT: Failed to change state to undeliverable");
-      }
-      return UNDELIVERABLE_STATE;
-    }
+    dest_proxy->putCommand(delivery);
   }catch(...)
   {
     //TODO!!!: remove task and reschedule
     __trace__("Failed to put delivery command");
+    sendNotifyReport(sms,t.msgId,"facility not supported");
     return ENROUTE_STATE;
   }
   return DELIVERING_STATE;

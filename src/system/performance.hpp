@@ -75,8 +75,9 @@ public:
 
     for(int i=0;i<sockets.Count();i++)
     {
-      int wr=sockets[i]->WriteAll((char*)data,sizeof(*data));
-      if(wr!=sizeof(*data))
+      int wr=sockets[i]->WriteAll((char*)&ld,sizeof(ld));
+
+      if(wr!=sizeof(ld))
       {
         sockets[i]->Abort();
         delete sockets[i];
