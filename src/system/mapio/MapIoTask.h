@@ -233,7 +233,7 @@ public:
       __trace2__("MAP::createSMSCDialog: locked");
       MapDialog* item = lock_map[abonent];
       if ( item == 0 ) {
-        __trace2__("MAP::%s dialog for abonent %s is not present!",__FUNCTION__,abonent);
+        __trace2__("MAP::%s dialog for abonent %s is not present!",__FUNCTION__,abonent.c_str());
         throw runtime_error("MAP::createOrAttachSMSCDialog: has no dialog for abonent ");
       }
       __trace2__("MAP::createOrAttachSMSCDialog: chain size %d",item->chain.size());
