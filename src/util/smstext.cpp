@@ -93,8 +93,16 @@ int fillSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int d
     dc=DataCoding::DEFAULT;
   }
   sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,dc);
-  sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf.get(),datalen);
-  sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,datalen);
+  if(datalen>255)
+  {
+    sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,"",0);
+    sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,0);
+    sms->setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,buf.get(),datalen);
+  }else
+  {
+    sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf.get(),datalen);
+    sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,datalen);
+  }
   return datalen;
 }
 
