@@ -143,7 +143,7 @@ void MapIoTask::dispatcher()
 
 void MapIoTask::init()
 {
-  USHORT_T err
+  USHORT_T err;
   err = MsgInit(MAXENTRIES);
   if ( err != MSG_OK ) { __trace2__("MAP: Erroat at MsgInit, code 0x%hx",err); throw runtime_error("MsgInit error"); }
 	err = MsgOpen(USER01_ID);
