@@ -1,9 +1,9 @@
 package ru.novosoft.smsc.admin.smsview;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.smsview.archive.Message;
 import ru.novosoft.smsc.admin.smsview.operative.RsFileMessage;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
 
 import java.io.*;
@@ -19,23 +19,20 @@ public class SmsOperativeSource extends SmsSource
 {
   private final static int MAX_SMS_FETCH_SIZE = 200;
   private String smsstorePath;
-  private static final String SECTION_NAME_smsstore = "smsstore";
-  private static final String PARAM_NAME_smsstore_path = "last used smsstore path";
+  private static final String SECTION_NAME_LocalStore = "LocalStore";
+  private static final String PARAM_NAME_filename = "filename";
   //protected boolean allReaded=false;
   // ArchiveDaemonContext context = null;
 
-  public void init(SMSCAppContext appContext) throws AdminException
+  public void init(Smsc smsc) throws AdminException
   {
     //  context = ArchiveDaemonContext.getInstance(appContext);
 
-    Config gwConfig;
-    gwConfig = appContext.getConfig();
+    Config config;
+    config = smsc.getSmscConfig();
 
-    if (!gwConfig.containsSection(SECTION_NAME_smsstore)) {
-      gwConfig.setString(SECTION_NAME_smsstore + '.' + PARAM_NAME_smsstore_path, "c:\\smsstore\\localstore.bin");
-    }
     try {
-      smsstorePath = gwConfig.getString(SECTION_NAME_smsstore + '.' + PARAM_NAME_smsstore_path);
+      smsstorePath = config.getString(SECTION_NAME_LocalStore + '.' + PARAM_NAME_filename);
     } catch (Config.ParamNotFoundException e) {
       e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
     } catch (Config.WrongParamTypeException e) {
