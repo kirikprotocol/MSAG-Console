@@ -721,16 +721,16 @@ Variant SmscComponent::traceRoute(const Arguments &args)
             std::auto_ptr<char> encSrcAddressText(getEncodedString(srcAddressText));
             std::auto_ptr<char> encDstAddressText(getEncodedString(dstAddressText));
             std::auto_ptr<char> encSmeSystemId(getEncodedString(info.smeSystemId.c_str()));
+	    std::auto_ptr<char> encForwardTo(getEncodedString(info.forwardTo.c_str()));
             std::auto_ptr<char> encSrcSmeSystemId(getEncodedString(info.srcSmeSystemId.c_str()));
-
-            //todo encode/decode ';' & ':' simbols
+	    	    
             sprintf(routeText, "route id:%s;source address:%s;destination address:%s;"
                                "sme system id:%s;source sme system id:%s;"
-                               "priority:%u;service id:%d;" 
+                               "priority:%u;service id:%d;delivery mode:%u;forward to:%s;" 
                                "billing:%s;archiving:%s;enabling:%s;suppress delivery reports:%s", 
                     encRouteId.get(), encSrcAddressText.get(), encDstAddressText.get(), 
                     encSmeSystemId.get(), encSrcSmeSystemId.get(), 
-                    info.priority, info.serviceId,
+                    info.priority, info.serviceId, info.deliveryMode, encForwardTo.get(),
                     (info.billing) ? "yes":"no" , (info.archived) ? "yes":"no",
                     (info.enabling) ? "yes":"no", (info.suppressDeliveryReports) ? "yes":"no");
             
