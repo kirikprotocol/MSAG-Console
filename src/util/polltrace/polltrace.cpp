@@ -30,17 +30,18 @@ public:
   {
     while(!stopping)
     {
-      sleep(1);
+      sleep(60);
       mtx.Lock();
-      fprintf(f,"Dump started at %d\n",time(NULL));
+      time_t now=time(NULL);;
+      fprintf(f,"Dump started at %d\n",now);
       stats.First();
       int key;
       PollEnterInfo *pi;
       while(stats.Next(key,pi))
       {
-        fprintf(f,"RA=%p, StartTime=%d\n",pi->ra,pi->t);
+        fprintf(f,"RA=%p, StartTime=%d(%d)\n",pi->ra,pi->t,now-pi->t);
       }
-      fprintf(f,"Dump finished at %d\n\n",time(NULL));
+      fprintf(f,"Dump finished at %d(%d)\n\n",time(NULL));
       fflush(f);
       mtx.Unlock();
     }

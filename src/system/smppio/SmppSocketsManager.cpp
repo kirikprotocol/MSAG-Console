@@ -52,6 +52,7 @@ void SmppSocketsManager::removeSocket(Socket* sock)
   sock->setData(0,(void*)x);
   if(sock->getData(0))return;
   trace2("deleting socket:%p",sock);
+  sock->Abort();
   delete sock;
 }
 

@@ -48,7 +48,7 @@ int AbonentInfoSme::Execute()
       SmscCommand::Status::OK);
     putIncomingCommand(resp);
 
-    getSmsText(sms,body);
+    getSmsText(sms,body,sizeof(body));
     Address a(body);
     p=profiler->lookup(a);
     char answ[MAX_SHORT_MESSAGE_LENGTH];

@@ -6,7 +6,6 @@
 namespace smsc{
 namespace system{
 
-using smsc::util::getSmsText;
 using smsc::smeman;
 
 int SmscSme::Execute()

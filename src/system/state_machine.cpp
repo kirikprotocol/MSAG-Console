@@ -242,7 +242,7 @@ StateType StateMachine::submit(Tuple& t)
     sms->getOriginatingAddress().plan,sms->getOriginatingAddress().value,
     profile.reportoptions,profile.codepage);
 
-  sms->setDeliveryReport(sms->getDeliveryReport()|profile.reportoptions);
+  sms->setDeliveryReport(profile.reportoptions);
 
   bool has_route = smsc->routeSms(sms->getOriginatingAddress(),
                           dst,
@@ -600,7 +600,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           __trace__("DELIVERYRESP: failed to change state to undeliverable");
         }
         if(//p.reportoptions==smsc::profiler::ProfileReportOptions::ReportFull ||
-           (sms.getDeliveryReport()&0x3)!=0)
+           (sms.getDeliveryReport()&0x3)!=0 || sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
         {
           SMS rpt;
           rpt.setOriginatingAddress(scAddress);
@@ -610,7 +610,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
           rpt.setValidTime(0);
           rpt.setDeliveryReport(0);
           rpt.setArchivationRequested(false);
-          rpt.setIntProperty(Tag::SMPP_ESM_CLASS,4);
+          rpt.setIntProperty(Tag::SMPP_ESM_CLASS,
+            sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST)?4:0);
           rpt.setDestinationAddress(sms.getOriginatingAddress());
           rpt.setMessageReference(sms.getMessageReference());
           rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
@@ -652,7 +653,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
   try{
     //smsc::profiler::Profile p=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
     if(//p.reportoptions==smsc::profiler::ProfileReportOptions::ReportFull ||
-       (sms.getDeliveryReport()&1)==1)
+       (sms.getDeliveryReport()&1)==1  || sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
     {
       SMS rpt;
       rpt.setOriginatingAddress(scAddress);
@@ -662,7 +663,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
       rpt.setValidTime(0);
       rpt.setDeliveryReport(0);
       rpt.setArchivationRequested(false);
-      rpt.setIntProperty(Tag::SMPP_ESM_CLASS,4);
+      rpt.setIntProperty(Tag::SMPP_ESM_CLASS,
+        sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST)?4:0);
       rpt.setDestinationAddress(sms.getOriginatingAddress());
       rpt.setMessageReference(sms.getMessageReference());
       rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
