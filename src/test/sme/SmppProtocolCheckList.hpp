@@ -190,6 +190,8 @@ void sendDeliverySmRespTc()
 		"Отправка синхронного deliver_sm_resp pdu");
 	__reg_tc__("sendDeliverySmResp.async",
 		"Отправка асинхронного deliver_sm_resp pdu");
+	__reg_tc__("sendDeliverySmResp.delay",
+		"Отправка deliver_sm_resp pdu с задержкой меньшей sme timeout");
 	__reg_tc__("sendDeliverySmResp.sendOk",
 		"Отправить респонс подтверждающий получение правильного deliver_sm");
 	//sendDeliverySmResp.sendRetry
