@@ -149,7 +149,7 @@ public:
     SmscCommand cmd;
     cmd.cmd = new _SmscCommand;
     _SmscCommand& _cmd = *cmd.cmd;
-		_cmd.ref_count = 1;
+    _cmd.ref_count = 1;
     _cmd.cmdid = SUBMIT;
     _cmd.dta = new SMS;
     *_cmd.get_sms() = sms;
@@ -162,7 +162,7 @@ public:
     SmscCommand cmd;
     cmd.cmd = new _SmscCommand;
     _SmscCommand& _cmd = *cmd.cmd;
-		_cmd.ref_count = 1;
+    _cmd.ref_count = 1;
     _cmd.cmdid = DELIVERY;
     _cmd.dta = new SMS;
     *_cmd.get_sms() = sms;
@@ -175,7 +175,7 @@ public:
     SmscCommand cmd;
     cmd.cmd = new _SmscCommand;
     _SmscCommand& _cmd = *cmd.cmd;
-		_cmd.ref_count = 1;
+    _cmd.ref_count = 1;
     _cmd.cmdid = SUBMIT_RESP;
     _cmd.dta = new SmsResp;
     _cmd.get_resp()->set_messageId(messageId);
@@ -188,7 +188,7 @@ public:
     SmscCommand cmd;
     cmd.cmd = new _SmscCommand;
     _SmscCommand& _cmd = *cmd.cmd;
-		_cmd.ref_count = 1;
+    _cmd.ref_count = 1;
     _cmd.cmdid = DELIVERY_RESP;
     _cmd.dta = new SmsResp;
     _cmd.get_resp()->set_messageId(messageId);
@@ -331,7 +331,7 @@ public:
   _SmscCommand* operator->()
   {
     __require__(cmd);
-		return cmd;
+    return cmd;
   }
 };
 
