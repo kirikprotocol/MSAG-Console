@@ -38,7 +38,7 @@ void ForwardResponse(ET96MAP_DIALOGUE_ID_T dialogId){
       throw runtime_error("MAP::bad dialogid");
     }
   }
-  USHORT_T result = Et96MapV2ForwardSmMOResp(SSN,dialogId,invokeId,0);
+  USHORT_T result = Et96MapV2ForwardSmMOResp(SSN,dialogId,mdci->invokeId,0);
   if ( result != ET96MAP_E_OK ){
     __trace2__("MAP::Et96MapV2ForwardSmMOInd error when send response on froward_sm");
     throw runtime_error("MAP::Et96MapV2ForwardSmMOInd error when send response on froward_sm");
