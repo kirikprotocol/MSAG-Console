@@ -108,6 +108,7 @@ private:
 	AliasRegistry* aliasReg;
 	
 	void debugAlias(const char* tc, int val, const AliasInfo* alias);
+	void addAlias(const char* tc, int num, const AliasInfo* alias);
 	void setupRandomAliasMatchWithQuestionMarks(AliasInfo* alias, int len);
 	//void setupRandomAliasMatchWithAsterisk(AliasInfo* alias, int adLen, int alLen);
 	void printFindResult(const char* name, const Address& param,
