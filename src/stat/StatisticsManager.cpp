@@ -263,7 +263,7 @@ short StatisticsManager::switchCounters()
 uint32_t StatisticsManager::calculatePeriod()
 {
     time_t currTime = time(0);
-    if (!bExternalFlush) currTime -= 3600;
+    if (!bExternalFlush) currTime -= 60;
     tm tmCT; localtime_r(&currTime, &tmCT);
     return  (tmCT.tm_year+1900)*1000000+(tmCT.tm_mon+1)*10000+
             (tmCT.tm_mday)*100+tmCT.tm_hour;
@@ -271,10 +271,9 @@ uint32_t StatisticsManager::calculatePeriod()
 int StatisticsManager::calculateToSleep() // returns msecs to next hour
 {
     time_t currTime = time(0);
-    time_t nextTime = currTime + 3600;
+    time_t nextTime = currTime + 60;
     tm tmNT; localtime_r(&nextTime, &tmNT);
-    tmNT.tm_sec = 0; tmNT.tm_min = 0;
-    nextTime = mktime(&tmNT);
+    tmNT.tm_sec = 0; nextTime = mktime(&tmNT);
     return (((nextTime-currTime)*1000)+1);
 }
 
