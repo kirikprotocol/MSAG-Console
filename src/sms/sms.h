@@ -41,8 +41,9 @@ namespace smsc { namespace sms
         /**
          * Default конструктор, просто инициализирует некоторые поля нулями
          */
-        Address() : lenght(0), type(0), plan(0) {
-            value[0] = '\0';
+        Address() : lenght(0), type(0), plan(0) 
+        {
+            value[0] = '0'; value[1] = '\0';
         };
         
         /**
@@ -104,6 +105,7 @@ namespace smsc { namespace sms
             else 
             {
                 memset(value, 0, sizeof(AddressValue));
+                value[0] = '0';
                 lenght = 0;
             }
         };
@@ -116,9 +118,15 @@ namespace smsc { namespace sms
          *               MAX_ADDRESS_VALUE_LENGTH+1, чтобы принять любое значение
          * @return длинна адреса
          */
-        inline uint8_t getValue(char* _value) const {
-            memcpy(_value, value, lenght*sizeof(uint8_t));
-            _value[lenght] = '\0';
+        inline uint8_t getValue(char* _value) const 
+        {
+            __require__(value);
+            
+            if (lenght)
+            {
+                memcpy(_value, value, lenght*sizeof(uint8_t));
+                _value[lenght] = '\0';
+            }
             return lenght;
         }
         
@@ -127,7 +135,8 @@ namespace smsc { namespace sms
          * 
          * @return длинна адреса
          */
-        inline uint8_t getLenght() const {
+        inline uint8_t getLenght() const 
+        {
             return lenght;
         };
        
@@ -136,7 +145,8 @@ namespace smsc { namespace sms
          * 
          * @param _type  тип адреса
          */
-        inline void setTypeOfNumber(uint8_t _type) {
+        inline void setTypeOfNumber(uint8_t _type) 
+        {
             type = _type;
         };
         
@@ -145,7 +155,8 @@ namespace smsc { namespace sms
          * 
          * @param _type  тип адреса
          */
-        inline uint8_t getTypeOfNumber() const { 
+        inline uint8_t getTypeOfNumber() const 
+        { 
             return type; 
         };
       
@@ -154,7 +165,8 @@ namespace smsc { namespace sms
          * 
          * @param _plan  план нумерации адреса
          */
-        inline void setNumberingPlan(uint8_t _plan) {
+        inline void setNumberingPlan(uint8_t _plan) 
+        {
             plan = _plan;
         };
         
@@ -163,7 +175,8 @@ namespace smsc { namespace sms
          * 
          * @return план нумерации адреса
          */
-        inline uint8_t getNumberingPlan() const {
+        inline uint8_t getNumberingPlan() const 
+        {
             return plan;
         };
     };
@@ -185,7 +198,8 @@ namespace smsc { namespace sms
         /**
          * Default конструктор, просто инициализирует некоторые поля нулями
          */
-        Body() : header(false), lenght(0), scheme(0) {
+        Body() : header(false), lenght(0), scheme(0) 
+        {
             //memset((void *)data, 0, sizeof(data));
         };
         
@@ -264,8 +278,14 @@ namespace smsc { namespace sms
          *               MAX_SMS_DATA_LENGTH, чтобы принять любое значение
          * @return длинна тела
          */
-        inline uint8_t getData(uint8_t* _data) const {
-            memcpy(_data, data, lenght*sizeof(uint8_t));
+        inline uint8_t getData(uint8_t* _data) const 
+        {
+            __require__(data);
+
+            if (lenght)
+            {
+                memcpy(_data, data, lenght*sizeof(uint8_t));
+            }
             return lenght;
         };
         
@@ -274,7 +294,8 @@ namespace smsc { namespace sms
          * 
          * @param _scheme схема кодирования тела сообщения
          */
-        inline void setCodingScheme(uint8_t _scheme) {
+        inline void setCodingScheme(uint8_t _scheme) 
+        {
             scheme = _scheme;
         };
         
@@ -283,7 +304,8 @@ namespace smsc { namespace sms
          * 
          * @return схема кодирования тела сообщения
          */
-        inline uint8_t getCodingScheme() const {
+        inline uint8_t getCodingScheme() const 
+        {
             return scheme;
         };
         
@@ -292,7 +314,8 @@ namespace smsc { namespace sms
          * 
          * @param _header признак наличия заголовка в теле сообщения
          */
-        inline void setHeaderIndicator(bool _header) {
+        inline void setHeaderIndicator(bool _header) 
+        {
             header = _header;
         };
         
@@ -301,7 +324,8 @@ namespace smsc { namespace sms
          * 
          * @return да / нет
          */
-        inline bool isHeaderIndicator() const {
+        inline bool isHeaderIndicator() const 
+        {
             return header;
         };
 
@@ -415,7 +439,8 @@ namespace smsc { namespace sms
          * 
          * @param state  новое состояние
          */
-        inline void setState(State state) {
+        inline void setState(State state) 
+        {
             this->state = state;
         };
         
@@ -424,7 +449,8 @@ namespace smsc { namespace sms
          * 
          * @return состояние сообщения
          */
-        inline State getState() const {
+        inline State getState() const 
+        {
             return state;
         };
 
@@ -464,7 +490,8 @@ namespace smsc { namespace sms
          * @return адрес отправителя
          * @see Address
          */
-        inline Address& getOriginatingAddress() {
+        inline Address& getOriginatingAddress() 
+        {
             return originatingAddress; 
         };
 
@@ -506,7 +533,8 @@ namespace smsc { namespace sms
          * @return адрес получателя
          * @see Address
          */
-        inline Address& getDestinationAddress() {
+        inline Address& getDestinationAddress() 
+        {
             return destinationAddress; 
         };
        
@@ -516,7 +544,8 @@ namespace smsc { namespace sms
          * @param time   дата, когда сообщение должно быть отправлено
          *               (не интервал ожидания).
          */
-        inline void setWaitTime(time_t time) {
+        inline void setWaitTime(time_t time) 
+        {
             waitTime = time;
         };
         
@@ -526,7 +555,8 @@ namespace smsc { namespace sms
          * @return дата, когда сообщение должно быть отправлено
          *         (не интервал ожидания).
          */
-        inline time_t getWaitTime() const {
+        inline time_t getWaitTime() const 
+        {
             return waitTime;
         };
         
@@ -536,7 +566,8 @@ namespace smsc { namespace sms
          * @param time   дата, до которой сообщение валидно
          *               (не интервал времени).
          */
-        inline void setValidTime(time_t time) {
+        inline void setValidTime(time_t time) 
+        {
             validTime = time;
         };
         
@@ -546,7 +577,8 @@ namespace smsc { namespace sms
          * @return time   дата, до которой сообщение валидно
          *         (не интервал времени).
          */
-        inline time_t getValidTime() const {
+        inline time_t getValidTime() const 
+        {
             return validTime;
         };
         
@@ -555,7 +587,8 @@ namespace smsc { namespace sms
          * 
          * @param time   время поступления сообщения в SMSC
          */
-        inline void setSubmitTime(time_t time) {
+        inline void setSubmitTime(time_t time) 
+        {
             submitTime = time;
         };
         
@@ -564,7 +597,8 @@ namespace smsc { namespace sms
          * 
          * @return время поступления сообщения в SMSC
          */
-        inline time_t getSubmitTime() const {
+        inline time_t getSubmitTime() const 
+        {
             return submitTime;
         };
         
@@ -573,7 +607,8 @@ namespace smsc { namespace sms
          * 
          * @param time   время последней попытки доставки сообщения из SMSC
          */
-        inline void setDeliveryTime(time_t time) {
+        inline void setDeliveryTime(time_t time) 
+        {
             deliveryTime = time;
         };
         
@@ -582,7 +617,8 @@ namespace smsc { namespace sms
          * 
          * @return время последней попытки доставки сообщения из SMSC
          */
-        inline time_t getDeliveryTime() const {
+        inline time_t getDeliveryTime() const 
+        {
             return deliveryTime;
         };
         
@@ -592,7 +628,8 @@ namespace smsc { namespace sms
          * 
          * @param mr     идентификационный номер сообщения (MR)
          */
-        inline void setMessageReference(uint8_t mr) {
+        inline void setMessageReference(uint8_t mr) 
+        {
             messageReference = mr;
         };
         
@@ -602,7 +639,8 @@ namespace smsc { namespace sms
          * 
          * @return идентификационный номер сообщения (MR)
          */
-        inline uint8_t getMessageReference() const {
+        inline uint8_t getMessageReference() const 
+        {
             return messageReference;
         };
        
@@ -613,7 +651,8 @@ namespace smsc { namespace sms
          * 
          * @param mi     идентификационный номер сообщения (SMI)
          */
-        inline void setMessageIdentifier(uint8_t mi) {
+        inline void setMessageIdentifier(uint8_t mi) 
+        {
             messageIdentifier = mi;
         };
         
@@ -624,7 +663,8 @@ namespace smsc { namespace sms
          * 
          * @return идентификационный номер сообщения (SMI)
          */
-        inline uint8_t getMessageIdentifier() const {
+        inline uint8_t getMessageIdentifier() const 
+        {
             return messageIdentifier;
         };
        
@@ -634,7 +674,8 @@ namespace smsc { namespace sms
          * 
          * @param pri    приоритет сообщения
          */
-        inline void setPriority(uint8_t pri) {
+        inline void setPriority(uint8_t pri) 
+        {
             priority = pri;
         };
         
@@ -644,7 +685,8 @@ namespace smsc { namespace sms
          * 
          * @return приоритет сообщения
          */
-        inline uint8_t getPriority() const {
+        inline uint8_t getPriority() const 
+        {
             return priority;
         };
        
@@ -654,7 +696,8 @@ namespace smsc { namespace sms
          * 
          * @param pid    прокол передачи сообщения
          */
-        inline void setProtocolIdentifier(uint8_t pid) {
+        inline void setProtocolIdentifier(uint8_t pid) 
+        {
             protocolIdentifier = pid;
         };
         
@@ -664,7 +707,8 @@ namespace smsc { namespace sms
          * 
          * @return прокол передачи сообщения
          */
-        inline uint8_t getProtocolIdentifier() const {
+        inline uint8_t getProtocolIdentifier() const 
+        {
             return protocolIdentifier;
         };
        
@@ -673,7 +717,8 @@ namespace smsc { namespace sms
          * 
          * @param req    признак, нужен ли отчет о доставке сообщения
          */
-        inline void setStatusReportRequested(bool req) {
+        inline void setStatusReportRequested(bool req) 
+        {
             statusReportRequested = req;
         };
         
@@ -682,7 +727,8 @@ namespace smsc { namespace sms
          * 
          * @return признак, нужен ли отчет о доставке сообщения (да / нет)
          */
-        inline bool isStatusReportRequested() const {
+        inline bool isStatusReportRequested() const 
+        {
             return statusReportRequested;
         };
        
@@ -692,7 +738,8 @@ namespace smsc { namespace sms
          * 
          * @param rej    признак, нужно ли отсекать сообщения дубликаты 
          */
-        inline void setRejectDuplicates(bool rej) {
+        inline void setRejectDuplicates(bool rej) 
+        {
             rejectDuplicates = rej;
         };
         
@@ -702,7 +749,8 @@ namespace smsc { namespace sms
          * 
          * @return признак, нужно ли отсекать сообщения дубликаты (да / нет)
          */
-        inline bool isRejectDuplicates() const {
+        inline bool isRejectDuplicates() const 
+        {
             return rejectDuplicates;
         };
        
@@ -712,7 +760,8 @@ namespace smsc { namespace sms
          * 
          * @param cause  причина отказа/некорректности/недоставки сообщения
          */
-        inline void setFailureCause(uint8_t cause) {
+        inline void setFailureCause(uint8_t cause) 
+        {
             failureCause = cause;
         };
         
@@ -722,7 +771,8 @@ namespace smsc { namespace sms
          * 
          * @return причина отказа/некорректности/недоставки сообщения
          */
-        inline uint8_t getFailureCause() const {
+        inline uint8_t getFailureCause() const 
+        {
             return failureCause;
         };
         
@@ -760,7 +810,8 @@ namespace smsc { namespace sms
          * @return тело сообщения
          * @see Body
          */
-        inline Body& getMessageBody() {
+        inline Body& getMessageBody() 
+        {
             return messageBody; 
         };
     };
