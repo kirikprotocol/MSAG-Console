@@ -66,17 +66,29 @@ public class SmsRow
   public String getOriginatingAddress() { return originatingAddress; }
   public void setOriginatingAddress(String address) throws AdminException {
     originatingAddress = address;
-    originatingAddressMask = new Mask(address);
+    try {
+      originatingAddressMask = new Mask(address);
+    } catch (Exception ex) {
+      originatingAddressMask = new Mask(".5.0.invalid_addr");
+    }
   }
   public String getDestinationAddress(){ return destinationAddress; };
   public void setDestinationAddress(String address) throws AdminException {
     destinationAddress = address;
-    destinationAddressMask = new Mask(address);
+    try {
+	destinationAddressMask = new Mask(address);
+    } catch (Exception ex) {
+      destinationAddressMask = new Mask(".5.0.invalid_addr");
+    }
   }
   public String getDealiasedDestinationAddress(){ return dealiasedDestinationAddress; };
   public void setDealiasedDestinationAddress(String address) throws AdminException {
     dealiasedDestinationAddress = address;
-    dealiasedDestinationAddressMask = new Mask(address);
+    try {
+      dealiasedDestinationAddressMask = new Mask(address);
+    } catch (Exception ex) {
+      dealiasedDestinationAddressMask = new Mask(".5.0.invalid_addr");
+    }
   }
   public String getToString() {
       return ((dealiasedDestinationAddress == null || dealiasedDestinationAddress.length() == 0 ||
