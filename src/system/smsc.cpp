@@ -7,6 +7,7 @@
 #include "store/StoreManager.h"
 #include "system/state_machine.hpp"
 #include "core/synchronization/Event.hpp"
+#include "system/scheduler.hpp"
 
 namespace smsc{
 namespace system{
@@ -166,6 +167,8 @@ void Smsc::init()
   tp.startTask(new StateMachine(eventqueue,store,this));
 
   smsc::admin::util::SignalHandler::registerShutdownHandler(new SmscSignalHandler(this));
+
+  tp.startTask(new Scheduler(eventqueue,store));
 
   tp.startTask(new SpeedMonitor(eventqueue));
 }

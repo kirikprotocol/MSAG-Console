@@ -81,7 +81,8 @@ public:
   }
   static bool stateIsSuperFinal(StateType state)
   {
-    return false;
+    return state==DELIVERED_STATE || state==UNDELIVERABLE_STATE ||
+           state==DELETED_STATE || state==EXPIRED_STATE;
   }
 };
 

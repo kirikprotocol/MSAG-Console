@@ -290,7 +290,7 @@ public:
             }
           }
         }
-#endif // LIST TEST        
+#endif // LIST TEST
         __watch__(first_unlocked);
         __watch__(last_unlocked);
         for (Locker* iter = first_unlocked;
@@ -298,7 +298,7 @@ public:
         {
           __trace2__("iterate unlocked lockers:%lld",iter->msgId);
           bool success = iter->getNextCommand(result.command);
-          if ( success || !iter->cmds )
+          if ( success || !iter->cmds || StateChecker::stateIsSuperFinal(iter->state))
           {
             Locker* locker = iter;
             __watch__(locker);
@@ -309,7 +309,7 @@ public:
             if ( success ) // получена доступная команда
             {
               // удаляем из списка активных
-#if !defined (DISABLE_ANY_CHECKS) && !defined(DISABLE_LIST_DUMP)              
+#if !defined (DISABLE_ANY_CHECKS) && !defined(DISABLE_LIST_DUMP)
               {
               __trace__("dump list before");
               Locker *iter2=first_unlocked;
@@ -331,7 +331,7 @@ public:
                 first_unlocked = locker->next_unlocked;
               }
 
-#if !defined (DISABLE_ANY_CHECKS) && !defined(DISABLE_LIST_DUMP)              
+#if !defined (DISABLE_ANY_CHECKS) && !defined(DISABLE_LIST_DUMP)
               {
               __trace__("dump list after");
               Locker *iter2=first_unlocked;
@@ -352,7 +352,7 @@ public:
               __trace__("returning from selectAndDequeue");
               return;
             }
-            else //( !iter->cmds ) вообще нет команд
+            else if( !locker->cmds || StateChecker::stateIsSuperFinal(locker->state)) //вообще нет команд
             {
               if ( StateChecker::stateIsFinal(locker->state) )
               {
@@ -413,7 +413,7 @@ public:
       ++counter;
 
 
-#if !defined (DISABLE_ANY_CHECKS) && !defined(DISABLE_LIST_DUMP)              
+#if !defined (DISABLE_ANY_CHECKS) && !defined(DISABLE_LIST_DUMP)
     {Locker *iter2=first_unlocked;
     __trace__("change state: list before");
     while(iter2)
@@ -435,7 +435,7 @@ public:
       first_unlocked = last_unlocked = locker;
     }
 
-#if !defined (DISABLE_ANY_CHECKS) && !defined(DISABLE_LIST_DUMP)              
+#if !defined (DISABLE_ANY_CHECKS) && !defined(DISABLE_LIST_DUMP)
     {Locker *iter2=first_unlocked;
     __trace__("change state: list after");
     while(iter2)
@@ -443,7 +443,7 @@ public:
       __trace2__("ptr:%p, id:%lld",iter2,iter2->msgId);
       iter2=iter2->next_unlocked;
     }}
-#endif // DUMP LIST    
+#endif // DUMP LIST
 
     __watch__(first_unlocked);
     __watch__(last_unlocked);
@@ -460,5 +460,3 @@ public:
 
 
 #endif
-
-

@@ -15,7 +15,6 @@ public:
   StateMachine(EventQueue& q,
                smsc::store::MessageStore* st,
                smsc::system::Smsc *app):
-
                eq(q),
                store(st),
                smsc(app){}
@@ -33,6 +32,7 @@ protected:
   StateType submit(Tuple& t);
   StateType forward(Tuple& t);
   StateType deliveryResp(Tuple& t);
+  StateType alert(Tuple& t);
 
 };
 

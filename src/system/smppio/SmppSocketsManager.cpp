@@ -15,9 +15,9 @@ void SmppSocketsManager::registerSocket(Socket* sock)
   {
     if(intasks[i]->socketsCount()<SM_SOCK_PER_THREAD)
     {
+      sock->setData(0,(void*)2);
       intasks[i]->addSocket(sock);
       outtasks[i]->addSocket(sock);
-      sock->setData(0,(void*)2);
       intasks[i]->notify();
       outtasks[i]->notify();
 
