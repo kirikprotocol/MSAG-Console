@@ -1307,7 +1307,7 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
   error.u.systemFailureNetworkResource_s.networkResourcePresent = 0;
   ET96MAP_USSD_STRING_T ussdString = {0,};
   unsigned char text[256];
-  if( cmd.isOk() ) {
+  if( cmd.IsOk() ) {
     if( cmd->get_commandId() == SUBMIT_RESP ) {
       sprintf( text, "Rejected %d", cmd->get_resp()->get_status() );
     } else {
@@ -1342,7 +1342,7 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
   }
   dialog->dropChain = true;
   dialog->state = MAPST_END;
-  if( cmd.isOk() && cmd->get_commandId() != SUBMIT_RESP) SendOkToSmsc(dialog);
+  if( cmd.IsOk() && cmd->get_commandId() != SUBMIT_RESP) SendOkToSmsc(dialog);
   DropMapDialog(dialog);
 }
 
