@@ -172,7 +172,7 @@ public class ServiceAddExternalAdm extends SmeBean
 		ServiceInfo serviceInfo = null;
 		try
 		{
-			serviceInfo = new ServiceInfo(serviceId, hostName, port, startupArgs, new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, "", rangeOfAddress, -1, wantAlias, forceDC, timeout, receiptSchemeName), ServiceInfo.STATUS_STOPPED);
+			serviceInfo = new ServiceInfo(serviceId, hostName, port, startupArgs, new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, "", rangeOfAddress, -1, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode), ServiceInfo.STATUS_STOPPED);
 		}
 		catch (NullPointerException e)
 		{

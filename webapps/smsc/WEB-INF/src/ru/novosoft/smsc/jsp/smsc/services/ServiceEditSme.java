@@ -52,6 +52,8 @@ public class ServiceEditSme extends SmeBean
 			wantAlias = sme.isWantAlias();
 			forceDC = sme.isForceDC();
 			receiptSchemeName = sme.getReceiptSchemeName();
+			disabled = sme.isDisabled();
+			mode = sme.getMode();
 		}
 
 		return RESULT_OK;
@@ -90,7 +92,7 @@ public class ServiceEditSme extends SmeBean
 
 		try
 		{
-			SME sme = new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password, rangeOfAddress, -1, wantAlias, forceDC, timeout, receiptSchemeName);
+			SME sme = new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password, rangeOfAddress, -1, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode);
 			if (hostsManager.isService(serviceId))
 				hostsManager.getServiceInfo(serviceId).setSme(sme);
 			appContext.getSmeManager().getSmes().remove(serviceId);

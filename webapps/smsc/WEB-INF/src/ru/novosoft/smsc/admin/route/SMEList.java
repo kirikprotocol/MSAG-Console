@@ -89,25 +89,7 @@ public class SMEList
 			}
 		});
 		for (Iterator i = values.iterator(); i.hasNext();)
-		{
-			SME sme = (SME) i.next();
-			out.println("  <smerecord type=\"" + (sme.getType() == SME.SMPP ? "smpp" : "ss7") + "\" uid=\"" + sme.getId() + "\">");
-
-			out.println("    <param name=\"priority\"          value=\"" + sme.getPriority() + "\"/>");
-			out.println("    <param name=\"typeOfNumber\"      value=\"" + sme.getTypeOfNumber() + "\"/>");
-			out.println("    <param name=\"numberingPlan\"     value=\"" + sme.getNumberingPlan() + "\"/>");
-			out.println("    <param name=\"interfaceVersion\"  value=\"" + sme.getInterfaceVersion() + "\"/>");
-			out.println("    <param name=\"systemType\"        value=\"" + StringEncoderDecoder.encode(sme.getSystemType()) + "\"/>");
-			out.println("    <param name=\"password\"          value=\"" + StringEncoderDecoder.encode(sme.getPassword()) + "\"/>");
-			out.println("    <param name=\"addrRange\"         value=\"" + StringEncoderDecoder.encode(sme.getAddrRange()) + "\"/>");
-			out.println("    <param name=\"smeN\"              value=\"" + sme.getSmeN() + "\"/>");
-			out.println("    <param name=\"wantAlias\"         value=\"" + (sme.isWantAlias() ? "yes" : "no") + "\"/>");
-			out.println("    <param name=\"forceDC\"           value=\"" + sme.isForceDC() + "\"/>");
-			out.println("    <param name=\"timeout\"           value=\"" + sme.getTimeout() + "\"/>");
-			out.println("    <param name=\"receiptSchemeName\" value=\"" + StringEncoderDecoder.encode(sme.getReceiptSchemeName()) + "\"/>");
-
-			out.println("  </smerecord>");
-		}
+			((SME) i.next()).store(out);
 		return out;
 	}
 

@@ -6,8 +6,8 @@ import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.daemon.Daemon;
 import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.route.SME;
-import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import ru.novosoft.smsc.admin.smsc_service.RouteSubjectManager;
+import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 
 import java.io.File;
 import java.util.*;
@@ -216,9 +216,9 @@ public class HostsManager
 		return smeManager.getSmeNames();
 	}
 
-	public synchronized SME addSme(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName) throws AdminException
+	public synchronized SME addSme(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName, boolean disabled, byte mode) throws AdminException
 	{
-		return smeManager.add(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, smeN, wantAlias, forceDC, timeout, receiptSchemeName);
+		return smeManager.add(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, smeN, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode);
 	}
 
 	public synchronized void removeSme(String smeId) throws AdminException
@@ -233,7 +233,7 @@ public class HostsManager
 	}
 
 
-	private boolean isSmeUsed(String smeId) throws AdminException
+	private boolean isSmeUsed(String smeId)
 	{
 		return routeSubjectManager.isSmeUsed(smeId);
 	}

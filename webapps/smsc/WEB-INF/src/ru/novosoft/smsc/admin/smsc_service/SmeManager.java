@@ -15,7 +15,8 @@ import java.util.Collection;
 public interface SmeManager
 {
 	SME add(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType,
-			  String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName)
+			  String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName,
+			  boolean disabled, byte mode)
 			throws AdminException;
 
 	SME add(SME newSme) throws AdminException;

@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.jsp.smsc.services;
 
 import ru.novosoft.smsc.jsp.PageBean;
+import ru.novosoft.smsc.admin.route.SME;
 
 /**
  * Created by igork
@@ -21,6 +22,8 @@ public class SmeBean extends PageBean
 	protected boolean wantAlias = false;
 	protected boolean forceDC = false;
 	protected String receiptSchemeName = "default";
+	protected boolean disabled = false;
+	protected byte mode = SME.MODE_TRX;
 
 	protected int convertInterfaceVersion(String version)
 	{
@@ -47,6 +50,8 @@ public class SmeBean extends PageBean
 		wantAlias = false;
 		forceDC = false;
 		receiptSchemeName = "default";
+		disabled = false;
+		mode = SME.MODE_TRX;
 	}
 
 	/******************************* properties ****************************************/
@@ -87,6 +92,11 @@ public class SmeBean extends PageBean
 		this.systemType = systemType;
 	}
 
+	public int getTypeOfNumberInt()
+	{
+		return typeOfNumber;
+	}
+
 	public String getTypeOfNumber()
 	{
 		return Integer.toString(typeOfNumber);
@@ -102,6 +112,11 @@ public class SmeBean extends PageBean
 		{
 			this.typeOfNumber = 0;
 		}
+	}
+
+	public int getNumberingPlanInt()
+	{
+		return numberingPlan;
 	}
 
 	public String getNumberingPlan()
@@ -196,5 +211,37 @@ public class SmeBean extends PageBean
 	public void setReceiptSchemeName(String receiptSchemeName)
 	{
 		this.receiptSchemeName = receiptSchemeName;
+	}
+
+	public boolean isDisabled()
+	{
+		return disabled;
+	}
+
+	public void setDisabled(boolean disabled)
+	{
+		this.disabled = disabled;
+	}
+
+	public byte getModeByte()
+	{
+		return mode;
+	}
+
+	public String getMode()
+	{
+		return Byte.toString(mode);
+	}
+
+	public void setMode(String mode)
+	{
+		try
+		{
+			this.mode = Byte.decode(mode).byteValue();
+		}
+		catch (NumberFormatException e)
+		{
+			this.mode = 0;
+		}
 	}
 }

@@ -7,12 +7,18 @@ package ru.novosoft.smsc.admin.route;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
+
+import java.io.PrintWriter;
 
 
 public class SME
 {
 	public static final byte SMPP = 0;
 	public static final byte SS7 = 1;
+	public static final byte MODE_TX = 1;
+	public static final byte MODE_RX = 2;
+	public static final byte MODE_TRX = 3;
 
 	private String id = null;
 	private int priority = 0;
@@ -28,6 +34,8 @@ public class SME
 	private int timeout = 0;
 	private boolean forceDC = false;
 	private String receiptSchemeName = null;
+	private boolean disabled = false;
+	private byte mode = MODE_TRX;
 
 	/**
 	 * Constructor
@@ -66,9 +74,7 @@ public class SME
 	 * @param receiptSchemeName ASCIIZ[32] с именем схемы отчетов о доставке
 	 * @throws NullPointerException if id, systemType, password, or addrRange is null
 	 */
-	public SME(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType,
-				  String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName)
-			  throws NullPointerException
+	public SME(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName, boolean disabled, byte mode) throws NullPointerException
 	{
 		if (id == null || systemType == null || password == null || addrRange == null)
 			throw new NullPointerException("SME System ID is null");
@@ -87,12 +93,13 @@ public class SME
 		this.timeout = timeout;
 		this.forceDC = forceDC;
 		this.receiptSchemeName = receiptSchemeName;
+		this.disabled = disabled;
+		this.mode = mode;
 		if (this.receiptSchemeName == null)
 			this.receiptSchemeName = "default";
 	}
 
-	public SME(Element smeElement)
-			  throws NullPointerException
+	public SME(Element smeElement) throws NullPointerException
 	{
 		this.receiptSchemeName = "default";
 		this.id = smeElement.getAttribute("uid").trim();
@@ -151,10 +158,54 @@ public class SME
 			{
 				receiptSchemeName = value;
 			}
+			else if (name.equals("disabled"))
+			{
+				disabled = Boolean.valueOf(value).booleanValue();
+			}
+			else if (name.equals("mode"))
+			{
+				mode = convertModeStr(value);
+			}
 		}
 
 		if (id == null || systemType == null || password == null || addrRange == null)
 			throw new NullPointerException("SME System ID is null");
+	}
+
+	public PrintWriter store(PrintWriter out)
+	{
+		out.println("  <smerecord type=\"" + getTypeStr() + "\" uid=\"" + id + "\">");
+
+		out.println("    <param name=\"priority\"          value=\"" + priority + "\"/>");
+		out.println("    <param name=\"typeOfNumber\"      value=\"" + typeOfNumber + "\"/>");
+		out.println("    <param name=\"numberingPlan\"     value=\"" + numberingPlan + "\"/>");
+		out.println("    <param name=\"interfaceVersion\"  value=\"" + interfaceVersion + "\"/>");
+		out.println("    <param name=\"systemType\"        value=\"" + StringEncoderDecoder.encode(systemType) + "\"/>");
+		out.println("    <param name=\"password\"          value=\"" + StringEncoderDecoder.encode(password) + "\"/>");
+		out.println("    <param name=\"addrRange\"         value=\"" + StringEncoderDecoder.encode(addrRange) + "\"/>");
+		out.println("    <param name=\"smeN\"              value=\"" + smeN + "\"/>");
+		out.println("    <param name=\"wantAlias\"         value=\"" + (wantAlias ? "yes" : "no") + "\"/>");
+		out.println("    <param name=\"forceDC\"           value=\"" + forceDC + "\"/>");
+		out.println("    <param name=\"timeout\"           value=\"" + timeout + "\"/>");
+		out.println("    <param name=\"receiptSchemeName\" value=\"" + StringEncoderDecoder.encode(receiptSchemeName) + "\"/>");
+		out.println("    <param name=\"disabled\"          value=\"" + disabled + "\"/>");
+		out.println("    <param name=\"mode\"              value=\"" + getModeStr() + "\"/>");
+
+		out.println("  </smerecord>");
+		return out;
+	}
+
+	private String getTypeStr()
+	{
+		switch (type)
+		{
+			case SMPP:
+				return "smpp";
+			case SS7:
+				return "ss7";
+			default:
+				return "unknown";
+		}
 	}
 
 	public boolean equals(Object obj)
@@ -230,13 +281,45 @@ public class SME
 		return forceDC;
 	}
 
-	public void setForceDC(boolean forceDC)
-	{
-		this.forceDC = forceDC;
-	}
-
 	public String getReceiptSchemeName()
 	{
 		return receiptSchemeName;
 	}
+
+	public boolean isDisabled()
+	{
+		return disabled;
+	}
+
+	public byte getMode()
+	{
+		return mode;
+	}
+
+	private String getModeStr()
+	{
+		switch (mode)
+		{
+			case MODE_TX:
+				return "tx";
+			case MODE_RX:
+				return "rx";
+			case MODE_TRX:
+				return "trx";
+			default:
+				return "unknown";
+		}
+	}
+
+	private static byte convertModeStr(String modeStr)
+	{
+		if ("tx".equalsIgnoreCase(modeStr))
+			return MODE_TX;
+		else if ("rx".equalsIgnoreCase(modeStr))
+			return MODE_RX;
+		else if ("trx".equalsIgnoreCase(modeStr))
+			return MODE_TRX;
+		return 0;
+	}
+
 }

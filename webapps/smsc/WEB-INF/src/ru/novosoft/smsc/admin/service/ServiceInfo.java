@@ -49,7 +49,7 @@ public class ServiceInfo
 		{
 			if (smes.contains(id))
 				throw new AdminException("Couldn't add new SMSC - already presented");
-			sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "");
+			sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX);
 		}
 		else
 		{
