@@ -138,6 +138,7 @@ void SetVersion(ET96MAP_APP_CNTX_T& ac,unsigned version){
 
 static void SendRInfo(MapDialog* dialog)
 {
+  __trace2__("MAP::%s: MAP.did: 0x%x",__FUNCTION__,dialog->dialogid_map);
   ET96MAP_APP_CNTX_T appContext;
   appContext.acType = ET96MAP_SHORT_MSG_GATEWAY_CONTEXT;
   SetVersion(appContext,dialog->version);
@@ -169,6 +170,7 @@ static void SendRInfo(MapDialog* dialog)
 
 void ResponseMO(MapDialog* dialog,unsigned status)
 {
+  __trace2__("MAP::%s: MAP.did: 0x%x",__FUNCTION__,dialog->dialogid_map);
   ET96MAP_ERROR_FORW_SM_MO_T err;
   memset(&err,0,sizeof(ET96MAP_ERROR_FORW_SM_MO_T));
   switch ( status )
@@ -216,7 +218,7 @@ void ResponseMO(MapDialog* dialog,unsigned status)
 
 static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_SM_RP_OA_T *srcAddr)
 {
-  __trace2__("MAP::%s",__FUNCTION__);  
+  __trace2__("MAP::%s: MAP.did: 0x%x",__FUNCTION__,dialog->dialogid_map);
   auto_ptr<SMS> _sms ( new SMS() );
   SMS& sms = *_sms.get();
   Address src_addr;
@@ -332,6 +334,7 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
 
 static void SendSubmitCommand(MapDialog* dialog)
 {
+  __trace2__("MAP::%s: MAP.did: 0x%x",__FUNCTION__,dialog->dialogid_map);
   if ( dialog->sms.get() == 0 )
     throw runtime_error("MAP::hereis no SMS for submiting");
   MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
@@ -410,7 +413,7 @@ static string RouteToString(MapDialog* dialog)
 }
 
 static bool SendSms(MapDialog* dialog){
-  __trace2__("MAP::SendSms: MAP.did 0x%x",dialog->dialogid_map);
+  __trace2__("MAP::%s: MAP.did: 0x%x",__FUNCTION__,dialog->dialogid_map);
   ET96MAP_APP_CNTX_T appContext;
   appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
   SetVersion(appContext,dialog->version);
@@ -1027,6 +1030,11 @@ USHORT_T Et96MapDelimiterInd(
       open_confirmed = true;
       break;
     case MAPST_WaitSmsMODelimiter2:
+      result = Et96MapOpenResp(SSN,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0);
+      if ( result != ET96MAP_E_OK )
+        throw runtime_error(
+          FormatText("MAP::Et96MapDelimiterInd: dialog opened error 0x%x",result));
+      __trace2__("MAP::Et96MapDelimiterInd: dialog opened");
       SendSubmitCommand(dialog.get());
       dialog->state = MAPST_WaitSubmitCmdConf;
       break;
