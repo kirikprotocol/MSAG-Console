@@ -10,6 +10,8 @@
 #include <core/threads/ThreadPool.hpp>
 #include <core/threads/Thread.hpp>
 #include <util/Logger.h>
+#include <util/debug.h>
+#include <core/synchronization/EventMonitor.hpp>
 
 namespace smsc {
 namespace admin {
@@ -21,6 +23,7 @@ using smsc::core::network::Socket;
 using smsc::core::threads::ThreadPool;
 using smsc::core::threads::Thread;
 using smsc::util::Logger;
+using smsc::core::synchronization::EventMonitor;
 
 template<class _T_CommandDispatcher>
 class SocketListener : public Thread
@@ -65,10 +68,16 @@ public:
   					logger.info("ServiceSocketListener shutdown");
   			}
   		}
-  		
-      sock.Abort();
+
+  		__trace2__( "ServiceSocketListener::logger 0x%p", &logger );
+      logger.info("ServiceSocketListener sock abort");
+//      sock.Abort();
+  		__trace2__( "ServiceSocketListener::logger 0x%p", &logger );
+      logger.info("ServiceSocketListener pool shutdown");
   		pool.shutdown();
+  		__trace2__( "ServiceSocketListener::logger 0x%p", &logger );
   		logger.info("ServiceSocketListener stopped");
+
     }
     catch (std::exception &e)
     {
@@ -78,6 +87,7 @@ public:
     {
       logger.error("Unknown Exception on listener thread\n");
     }
+    logger.error("ServiceSocketListener: stopped all");
     return 0;
 	}
 
@@ -86,6 +96,7 @@ public:
 		isShutdownSignaled = true;
     sock.Abort();
     logger.debug("ServiceSocketListener: server socket closed");
+    logger.debug("ServiceSocketListener: dead");
 	}
 
 protected:

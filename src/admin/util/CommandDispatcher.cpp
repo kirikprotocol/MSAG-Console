@@ -119,9 +119,17 @@ int CommandDispatcher::Execute()
 			}
 		}
 	} while (!isStopping && command.get() != 0
-					 && (command->getId() != Command::undefined)
-					 && (command->getId() != Command::shutdown_service));
+					 && (command->getId() != Command::undefined));
 	
+  if (isStopping) 
+  {
+    logger.debug("Command dispather stopped by flag");
+  }
+  else
+  {
+    logger.debug("Command dispather stopped by socket");
+  }
+
 	sock->Abort();
   delete sock;
   sock = 0;

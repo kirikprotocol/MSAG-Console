@@ -10,7 +10,7 @@ namespace service {
 
 using smsc::admin::AdminException;
 
-class AdminSocketManager
+class _AdminSocketManager
 {
 public:
 	static void start(const char * const host,

@@ -15,7 +15,6 @@ using std::cerr;
 using std::endl;
 using smsc::admin::AdminException;
 using smsc::admin::service::ComponentManager;
-using smsc::admin::service::AdminSocketManager;
 using smsc::admin::service::ServiceSocketListener;
 using smsc::admin::service::ServiceCommandDispatcher;
 using smsc::admin::service::test::DumbServiceCommandHandler;
@@ -33,6 +32,9 @@ int main (int argc, char *argv[])
 		return -1;
 	}
  	try {
+		freopen("dumb.out", "w", stdout);
+    freopen("dumb.err", "w", stderr);
+
 		int servicePort = atoi(argv[1]);
 		Manager::init("conf/dumbServiceConfig.xml");
 		Manager &config = Manager::getInstance();
@@ -48,12 +50,17 @@ int main (int argc, char *argv[])
 		DumbServiceCommandHandler main_component;
 		ComponentManager::registerComponent(&main_component);
  		logger.debug("Starting service");
-		DumbServiceShutdownHandler shutdown_handler;
-		DumbServiceShutdownHandler::registerShutdownHandler(&shutdown_handler);
+
+    ServiceSocketListener listener("smsc.admin.util.ServiceSocketListener");
 		std::auto_ptr<char> host(config.getString("dumbtest.host"));
-		AdminSocketManager::start(host.get(), servicePort);
- 		logger.debug("Service started");
-		AdminSocketManager::WaitFor();
+    listener.init(host.get(), servicePort);
+    listener.Start();
+    logger.debug("Service started");
+		
+    DumbServiceShutdownHandler shutdown_handler(listener);
+		DumbServiceShutdownHandler::registerShutdownHandler(&shutdown_handler);
+		
+    listener.WaitFor();
 		Manager::deinit();
  		logger.debug("Service stopped");
  	} catch (AdminException &e) {

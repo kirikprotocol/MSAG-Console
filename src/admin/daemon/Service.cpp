@@ -33,7 +33,7 @@ pid_t Service::start()
 	else
 	{	// child process
 		chdir(service_dir.get());
-		chmod(service_exe, S_IRWXU);
+		chmod(service_exe, S_IRWXU | S_IRGRP | S_IXGRP);
 		#ifdef SMSC_DEBUG
 			freopen("smsc_service.err", "a",  stderr);
 		#endif

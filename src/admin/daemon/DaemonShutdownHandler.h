@@ -22,7 +22,7 @@ public:
   {
     fprintf(stderr, "Stop signal received\n");
     listener.shutdown();
-    fprintf(stderr, "Daemon shutdow...\n");
+    fprintf(stderr, "Daemon shutdown...\n");
   }
 
 private:

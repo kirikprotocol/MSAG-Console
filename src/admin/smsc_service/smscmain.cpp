@@ -1,4 +1,4 @@
-#include <system/smsc.hpp>
+/*#include <system/smsc.hpp>
 #include <admin/service/ComponentManager.h>
 #include <admin/service/AdminSocketManager.h>
 #include <admin/smsc_service/SmscComponent.h>
@@ -16,10 +16,11 @@ using smsc::admin::smsc_service::SmscShutdownHandler;
 using smsc::admin::service::ComponentManager;
 using smsc::admin::service::AdminSocketManager;
 using smsc::util::config::alias::AliasConfig;
+*/
 
 int main(int argc,char* argv[])
 {
-	try
+/*	try
 	{
 		// load configs
 		SmscConfigs cfgs;
@@ -83,5 +84,5 @@ int main(int argc,char* argv[])
 		fprintf(stderr, "some exception occured\n");
 	}
 
-	return 0;
+*/	return 0;
 }

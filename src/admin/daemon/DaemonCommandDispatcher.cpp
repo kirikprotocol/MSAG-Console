@@ -1,5 +1,7 @@
 #include "DaemonCommandDispatcher.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <admin/protocol/Command.h>
 #include <admin/protocol/CommandStartService.h>
 #include <admin/protocol/CommandKillService.h>
@@ -333,14 +335,14 @@ void DaemonCommandDispatcher::childSignalListener(int signo,
 	}
 	
 	#ifdef SMSC_DEBUG
-		//log.debug("CHILD signal received");
+		log.debug("some CHILD signal received");
 	#endif
 	// ACTION: CHILD signal received
 	if (info->si_code <= 0)
 	{
 		{
 			#ifdef SMSC_DEBUG
-				//log.debug("Handmaked signal from child (marking %lu child as dead)", (unsigned long)info->si_pid);
+				log.debug("Handmaked signal from child (marking %lu child as dead)", (unsigned long)info->si_pid);
 			#endif
 			MutexGuard a(servicesListMutex);
 			if (const char * const serviceId = services.markServiceAsStopped(info->si_pid))
@@ -363,7 +365,7 @@ void DaemonCommandDispatcher::childSignalListener(int signo,
 		case CLD_DUMPED:
 			{
 				#ifdef SMSC_DEBUG
-					//log.debug("marking %lu child as dead", (unsigned long)info->si_pid);
+					log.debug("marking %lu child as dead", (unsigned long)info->si_pid);
 				#endif
 				MutexGuard a(servicesListMutex);
 				if (const char * const serviceId = services.markServiceAsStopped(info->si_pid))

@@ -4,9 +4,9 @@ namespace smsc {
 namespace admin {
 namespace service {
 
-ServiceSocketListener * AdminSocketManager::listener = 0;
+ServiceSocketListener * _AdminSocketManager::listener = 0;
 
-void AdminSocketManager::start(const char * const host,
+void _AdminSocketManager::start(const char * const host,
 															 const in_port_t port)
 	throw (AdminException)
 {
@@ -19,14 +19,25 @@ void AdminSocketManager::start(const char * const host,
 	listener->Start();
 }
 
-void AdminSocketManager::stop()
+void _AdminSocketManager::stop()
 	throw ()
 {
-	if (listener != 0)
+	try
 	{
-    listener->shutdown();
-		delete listener;
-    listener = 0;
+		if (listener != 0)
+		{
+			listener->shutdown();
+			delete listener;
+			listener = 0;
+		}
+	}
+	catch (Exception &e)
+	{
+		__trace2__("smsc::admin::service::AdminSocketManager.stop: Exception \"%s\"\n", e.what());
+	}
+	catch (...)
+	{
+		__trace2__("smsc::admin::service::AdminSocketManager.stop: Exception...\n");
 	}
 }
 

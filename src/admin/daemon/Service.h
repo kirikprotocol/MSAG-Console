@@ -91,6 +91,11 @@ public:
 		args.reset(cStringCopy(serviceArgs));
 	}
 
+  const char * const getServiceDir()
+  {
+    return service_dir.get();
+  }
+
 
 protected:
 	char ** createArguments();

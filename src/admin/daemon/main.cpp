@@ -11,7 +11,6 @@
 #include <admin/daemon/DaemonSocketListener.h>
 #include <admin/daemon/config_parameter_names.h>
 #include <admin/daemon/DaemonShutdownHandler.h>
-#include <admin/service/AdminSocketManager.h>
 #include <admin/util/SignalHandler.h>
 #include <util/config/ConfigException.h>
 #include <util/config/Manager.h>
@@ -19,20 +18,10 @@
 #include <util/signal.hpp>
 
 using smsc::admin::AdminException;
-using smsc::admin::daemon::DaemonSocketListener;
-using smsc::admin::daemon::CONFIG_HOME_PARAMETER;
-using smsc::admin::daemon::CONFIG_HOST_PARAMETER;
-using smsc::admin::daemon::CONFIG_LOGGER_CONFIG_PARAMETER;
-using smsc::admin::daemon::CONFIG_LOGGER_SECTION;
-using smsc::admin::daemon::CONFIG_PORT_PARAMETER;
-using smsc::admin::daemon::CONFIG_SERVICES_FOLDER_PARAMETER;
-using smsc::admin::daemon::CONFIG_SERVICES_SECTION;
-using smsc::admin::daemon::CONFIG_STDERR_PARAMETER;
+using namespace smsc::admin::daemon;
 
-using smsc::admin::service::AdminSocketManager;
 using smsc::admin::util::SignalHandler;
-using smsc::util::Logger;
-using smsc::util::setExtendedSignalHandler;
+using namespace smsc::util;
 using smsc::util::config::ConfigException;
 using smsc::util::config::Manager;
 
@@ -90,7 +79,7 @@ int main(int argc, char **argv)
 			return -1;
 		}
 		daemonInit();
-	
+
 		Manager::init(argv[1]);
 
 		chdir(Manager::getInstance().getString(CONFIG_HOME_PARAMETER));
@@ -117,7 +106,7 @@ int main(int argc, char **argv)
     DaemonShutdownHandler::registerShutdownHandler(&shutdownHandler);
 		logger.info("Started");
 
-    setExtendedSignalHandler(SIGPIPE, pipehandler); 
+    setExtendedSignalHandler(SIGPIPE, pipehandler);
 
 		listener.WaitFor();
 		logger.info("Stopped");
