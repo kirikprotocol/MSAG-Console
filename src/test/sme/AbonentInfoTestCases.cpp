@@ -17,6 +17,7 @@ using smsc::test::core::operator==;
 using smsc::test::core::operator!=;
 using smsc::test::sms::operator==;
 using smsc::test::sms::operator!=;
+using namespace std;
 using namespace smsc::smpp::SmppCommandSet;
 using namespace smsc::smpp::SmppStatusSet;
 using namespace smsc::smpp::DataCoding;

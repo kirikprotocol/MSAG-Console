@@ -3,6 +3,7 @@
 #include "util/debug.h"
 #include <cstdlib>
 #include <ctime>
+#include <iterator>
 
 namespace smsc {
 namespace test {

@@ -177,7 +177,7 @@ void TestSme::executeCycle()
 			exit(-1);
 		}
 		//установить профиль
-		profilerTc.updateCodePageCorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
+		profilerTc.updateCodePageCorrect(rand0(1), getTextDataCoding(RAND_TC), RAND_TC);
 		//подготовить последовательност команд
 		seq.insert(seq.end(), 5, 1); //format
 		seq.insert(seq.end(), 5, 2); //insert
@@ -403,8 +403,8 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 	dbSmeInfo.systemId = dbSmeSystemId;
 	dbSmeInfo.password = dbSmePassword;
 	vector<const Address*> addrList;
-	addrList.push_back(&dbSmeAddr);
-	addrList.push_back(&dbSmeInvalidAddr);
+	addrList.push_back(new Address(dbSmeAddr));
+	addrList.push_back(new Address(dbSmeInvalidAddr));
 	smeReg->registerSme(addrList, dbSmeInfo, false, true);
 	smeReg->bindSme(dbSmeInfo.systemId);
 	//алиас для db sme

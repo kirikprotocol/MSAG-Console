@@ -25,9 +25,9 @@ typedef enum
 {
 	QUOTED_PRINTABLE = 1,
 	BIT8 = 2,
-	//unsupported
 	BIT7 = 3,
 	BASE64 = 4,
+	//unsupported
 	BINARY = 5,
 	X_TOKEN = 6
 } TransferEncoding;

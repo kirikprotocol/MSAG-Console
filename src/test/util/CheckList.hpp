@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <iterator>
 
 namespace smsc {
 namespace test {
@@ -68,7 +69,7 @@ using smsc::core::synchronization::Mutex;
 			transform(tmp.begin(), tmp.end(), tmp.begin(), bind2nd(plus<int>(), shift)); \
 		} \
 		ostringstream s; \
-		copy(tmp.begin(), tmp.end(), ostream_iterator<int>(s, ",")); \
+		copy(tmp.begin(), tmp.end(), std::ostream_iterator<int>(s, ",")); \
 		__trace2__("tc = %s: err = %s", tc->id.c_str(), s.str().c_str()); \
 		isOk = false; \
 		SyncTestCase _tc(tc); \

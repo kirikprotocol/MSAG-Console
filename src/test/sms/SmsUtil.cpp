@@ -4,6 +4,7 @@
 #include <cstring>
 #include <map>
 #include <sstream>
+#include <iterator>
 
 namespace smsc {
 namespace test {

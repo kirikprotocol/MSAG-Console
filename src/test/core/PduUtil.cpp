@@ -2,6 +2,7 @@
 #include "test/util/Util.hpp"
 #include "util/debug.h"
 #include <sstream>
+#include <iterator>
 
 namespace smsc {
 namespace test {
@@ -14,7 +15,7 @@ using namespace smsc::sms;
 using namespace smsc::test::smpp;
 using namespace std;
 
-Mutex PduMonitor::mutex = Mutex();
+Mutex PduMonitor::mutex;
 uint32_t PduMonitor::counter = 1;
 
 void PduDataObject::ref()
