@@ -185,7 +185,7 @@ public class Index extends PageBean {
 			right_origAddr = config.getString("right.origAddr");
 			right_systemType = config.getString("right.systemType");
 			right_timeOut = config.getInt("right.timeOut");
-			left_rightDCS = config.getInt("left.rightDCS");
+			right_defaultDCS = config.getInt("right.defaultDCS");
 
 			queueLength = config.getInt("queueLength");
 			adminHost = config.getString("adminHost");
