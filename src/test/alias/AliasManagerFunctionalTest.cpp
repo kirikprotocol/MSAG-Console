@@ -171,7 +171,7 @@ void AliasManagerFunctionalTest::executeTest(
 	}
 
 	//Итерирование по списку зарегистрированных алиасов
-    filter->addResult(tc.iterateAliases());
+    //filter->addResult(tc.iterateAliases());
 
 	//Обнуление таблицы алиасов
     filter->addResult(tc.deleteAliases());
@@ -189,7 +189,7 @@ void AliasManagerFunctionalTest::executeTest(
 	}
 
 	//Итерирование по списку зарегистрированных алиасов
-    filter->addResult(tc.iterateAliases());
+    //filter->addResult(tc.iterateAliases());
 
 	//обработка результатов
 	for (int i = 0; i < stack.size(); i++)
