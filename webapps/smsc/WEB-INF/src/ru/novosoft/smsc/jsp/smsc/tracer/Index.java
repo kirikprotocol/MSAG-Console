@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.jsp.smsc.tracer;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.alias.Alias;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
@@ -121,10 +122,12 @@ public class Index extends IndexBean
     try {
       final Mask srcAddressMask = new Mask(srcAddress);
       final Mask dstAddressMask = new Mask(dstAddress);
-      if (appContext.getSmsc().getAliases().isContainsAlias(srcAddressMask) && appContext.getSmsc().getAliases().get(srcAddressMask.getMask()).isHide())
-        result
-        = message(SMSCErrors.error.routes.srcAddressIsAlias,
-                  srcAddress + " -> " + appContext.getSmsc().getAliases().getAddressByAlias(srcAddressMask).getAddress().getMask());
+      if (appContext.getSmsc().getAliases().isContainsAlias(srcAddressMask)) {
+        final Alias a = appContext.getSmsc().getAliases().getAliasByAddress(srcAddressMask);
+        if (a != null && a.isHide())
+          result = message(SMSCErrors.error.routes.srcAddressIsAlias,
+                           srcAddress + " -> " + appContext.getSmsc().getAliases().getAddressByAlias(srcAddressMask).getAddress().getMask());
+      }
       if (appContext.getSmsc().getAliases().isContainsAlias(dstAddressMask))
         result
         = warning(SMSCErrors.error.routes.dstAddressIsAlias,
