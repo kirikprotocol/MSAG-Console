@@ -329,14 +329,16 @@ void deliverySmTc()
 	//deliverySm.reports.deliveryReceipt
 	__reg_tc__("deliverySm.reports.deliveryReceipt",
 		"Подтверждения доставки");
-	__reg_tc__("deliverySm.reports.deliveryReceipt.checkAllowed",
-		"Проверка правомерности получения подтверждений доставки (в зависимости от настроек профиля и поля pdu registered_delivery, единственный раз по окончании доставки оригинальной pdu)");
+	__reg_tc__("deliverySm.reports.deliveryReceipt.transmitter",
+		"SC отправляет подтверждение доставки со статусом EXPIRED в момент времени validity_period, если sme-получатель зарегистрирован как transmitter");
+	__reg_tc__("deliverySm.reports.deliveryReceipt.notBound",
+		"SC отправляет подтверждение доставки со статусом EXPIRED в момент времени validity_period, если нет соединения с sme-получателем");
 	__reg_tc__("deliverySm.reports.deliveryReceipt.failureDeliveryReceipt",
 		"Подтверждение доставки на ошибку не доставляется в случае успешной доставки оригинального сообщения");
 	__reg_tc__("deliverySm.reports.deliveryReceipt.expiredDeliveryReceipt",
-		"Подтверждение доставки на ошибку при истечении срока валидности доставляется в момент времени validity period");
-	__reg_tc__("deliverySm.reports.deliveryReceipt.transmitter",
-		"При доставке сообщения sme зарегистрированной как transmitter, подтверждение доставки будет отправлено SC в момент времени validity_period");
+		"Подтверждение доставки при истечении срока валидности доставляется в момент времени validity_period, даже если последняя попытка доставки прошла раньше validity_period");
+	__reg_tc__("deliverySm.reports.deliveryReceipt.checkAllowed",
+		"Проверка правомерности получения подтверждений доставки (в зависимости от настроек профиля и поля pdu registered_delivery, единственный раз по окончании доставки оригинальной pdu)");
 	__reg_tc__("deliverySm.reports.deliveryReceipt.recvTimeChecks",
 		"Подтверждения доставки приходят в момент окончании доставки оригинальной pdu");
 	__reg_tc__("deliverySm.reports.deliveryReceipt.checkStatus",
@@ -346,12 +348,14 @@ void deliverySmTc()
 	//deliverySm.reports.intermediateNotification
 	__reg_tc__("deliverySm.reports.intermediateNotification",
 		"Промежуточные нотификации");
+	__reg_tc__("deliverySm.reports.intermediateNotification.transmitter",
+		"SC отправляет промежуточную нотификацию в момент времени schedule_delivery_time, если sme-получатель зарегистрирован как transmitter");
+	__reg_tc__("deliverySm.reports.intermediateNotification.notBound",
+		"SC отправляет промежуточную нотификацию в момент времени schedule_delivery_time, если нет соединения с sme-получателем");
 	__reg_tc__("deliverySm.reports.intermediateNotification.checkAllowed",
 		"Проверка правомерности получения промежуточных нотификаций (в зависимости от настроек профиля и поля pdu registered_delivery, единственный раз после первой зарешедуленой попытки доставки)");
 	__reg_tc__("deliverySm.reports.intermediateNotification.noRescheduling",
 		"Промежуточная нотификация не доставляется в случае, если sms не была зарешедулена");
-	__reg_tc__("deliverySm.reports.intermediateNotification.transmitter",
-		"При доставке сообщения sme зарегистрированной как transmitter, промежуточная нотификация будет отправлена SC в момент времени schedule_delivery_time");
 	__reg_tc__("deliverySm.reports.intermediateNotification.recvTimeChecks",
 		"Время доставки промежуточной нотификации соответсвует времени первой зарешедуленой попытки доставки оригинальной pdu");
 	__reg_tc__("deliverySm.reports.intermediateNotification.checkStatus",
@@ -510,8 +514,32 @@ void cancelSmTc()
 	__reg_tc__("cancelSm.incorrect.cancelFinal",
 		"Задан message_id существующего сообщения в финальном состоянии, source_addr совпадает, dest_addr и service_type нулевые");
 	//cancelSm.resp
+	__reg_tc__("cancelSm.resp",
+		"Получение cancel_sm_resp pdu");
+	__reg_tc__("cancelSm.resp.sync",
+		"Получение cancel_sm_resp pdu при синхронных cancel_sm запросах");
+	__reg_tc__("cancelSm.resp.async",
+		"Получение cancel_sm_resp pdu при асинхронных cancel_sm запросах");
+	__reg_tc__("cancelSm.resp.checkDuplicates",
+		"На каждый реквест приходит единственный респонс");
+	__reg_tc__("cancelSm.resp.checkTime",
+		"Правильное время получения респонса");
+	__reg_tc__("cancelSm.resp.checkHeader",
+		"Правильные значения полей хедера респонса (command_length, command_id, sequence_number)");
+	__reg_tc__("cancelSm.resp.checkCmdStatusOk",
+		"При отсутствии кода ошибки в поле command_status реквест cancel_sm действительно не содержит ошибок (сообщение существует и находится в ENROUTE состоянии, адреса source_addr и dest_addr заданы правильно и т.п.)");
+	__reg_tc__("cancelSm.resp.checkCmdStatusInvalidSourceAddr",
+		"Если код ошибки ESME_RINVSRCADR в поле command_status, то source_addr действительно не соответствует source_addr оригинального сообщения в БД");
+	__reg_tc__("cancelSm.resp.checkCmdStatusInvalidDestAddr",
+		"Если код ошибки ESME_RINVDSTADR в поле command_status, то dest_addr действительно не соответствует dest_addr оригинального сообщения в БД");
 	__reg_tc__("cancelSm.resp.checkCmdStatusInvalidBindStatus",
 		"Если код ошибки ESME_RINVBNDSTS в поле command_status, то действительно sme зарегистрированна как receiver");
+	__reg_tc__("cancelSm.resp.checkCmdStatusInvalidMsgId",
+		"Если код ошибки ESME_RINVMSGID в поле command_status, то действительно message_id задан неправильно");
+	__reg_tc__("cancelSm.resp.checkCmdStatusCancelFiled",
+		"Если код ошибки ESME_RCANCELFAIL в поле command_status, то действительно сообщение находится в финальном состоянии");
+	__reg_tc__("cancelSm.resp.checkCmdStatusOther",
+		"Прочие коды ошибок соответствуют спецификации");
 }
 
 void sendInvalidPduTc()
