@@ -1307,9 +1307,12 @@ StateType StateMachine::submit(Tuple& t)
 
       if(status!=Status::OK)
       {
+        sms->lastResult=status;
+        smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
         return ERROR_STATE;
       }
       // let deliver begin!
+      smsc->registerStatisticalEvent(StatEvents::etSubmitOk,sms);
 
       allowCreateSms=false;
 
