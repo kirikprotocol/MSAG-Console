@@ -1060,23 +1060,23 @@ bool MapDialog::ProcessCmd(const SmscCommand& cmd){
     case SUBMIT_RESP: {
       ET96MAP_ERROR_FORW_SM_MO_T err;
       memset(&err,0,sizeof(ET96MAP_ERROR_FORW_SM_MO_T));
-      switch ( cmd->get_resp()->get_status())
+      switch ( cmd->get_resp()->get_status() )
       { 
-      case SmsCommand::Status::OK: break;  
-      case SmsCommand::Status::SYSERROR:
+      case SmscCommand::Status::OK: break;  
+      case SmscCommand::Status::SYSERROR:
         err.errorCode = 32;
         break;
-      case SmsCommand::Status::INVSRC:
-      case SmsCommand::Status::INVDST:
-      case SmsCommand::Status::NOROTE:
+      case SmscCommand::Status::INVSRC:
+      case SmscCommand::Status::INVDST:
+      case SmscCommand::Status::NOROTE:
         err.errorCode = 9;
         break;
-      case SmsCommand::Status::DBERROR:
-      case SmsCommand::Status::INVALIDSCHEDULE:
+      case SmscCommand::Status::DBERROR:
+      case SmscCommand::Status::INVALIDSCHEDULE:
         err.errorCode = 32;
         break;
-      case SmsCommand::Status::INVALIDVALIDTIME:
-      case SmsCommand::Status::INVALIDDATACODING:
+      case SmscCommand::Status::INVALIDVALIDTIME:
+      case SmscCommand::Status::INVALIDDATACODING:
       default:
         err.errorCode = 36;
         break;
