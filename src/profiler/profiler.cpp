@@ -100,16 +100,19 @@ public:
 };
 
 
-Profiler::Profiler(const Profile& pr)
+Profiler::Profiler(const Profile& pr,SmeRegistrar* psmeman,const char* sysId)
 {
   state=VALID;
   managerMonitor=NULL;
   profiles=new ProfilesTable(pr,400000);
+  systemId=sysId;
+  smeman=psmeman;
 }
 
 Profiler::~Profiler()
 {
   delete profiles;
+  smeman->unregisterSmeProxy(systemId);
 }
 
 Profile& Profiler::lookup(const Address& address)

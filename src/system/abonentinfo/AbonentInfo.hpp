@@ -18,8 +18,14 @@ using namespace smsc::profiler;
 
 class AbonentInfoSme:public SmeProxy,public ThreadedTask{
 public:
-  AbonentInfoSme(ProfilerInterface* profiler):profiler(profiler)
+  AbonentInfoSme(ProfilerInterface* profiler,
+    SmeRegistrar* smeman,const char* sysId):profiler(profiler),smeman(smeman),systemId(sysId)
   {
+  }
+
+  ~AbonentInfoSme()
+  {
+    smeman->unregisterSmeProxy(systemId);
   }
 
   const char* taskName(){return "AbonentInfo";}
@@ -118,6 +124,8 @@ protected:
   SmeProxyState state;
   ProxyMonitor *managerMonitor;
   ProfilerInterface* profiler;
+  SmeRegistrar *smeman;
+  string systemId;
 };
 
 };//abonentinfo

@@ -226,7 +226,9 @@ void Smsc::init(const SmscConfigs& cfg)
     else if(!strcmp(rep,"FULL"))
       defProfile.reportoptions=profiler::ProfileReportOptions::ReportFull;
 
-    profiler=new smsc::profiler::Profiler(defProfile);
+    profiler=new smsc::profiler::Profiler(defProfile,
+               &smeman,
+               cfg.cfgman->getString("profiler.systemId"));
 
     profiler->msgRepNone=cfg.cfgman->getString("profiler.msgReportNone");
     profiler->msgRepFull=cfg.cfgman->getString("profiler.msgReportFull");
@@ -247,7 +249,7 @@ void Smsc::init(const SmscConfigs& cfg)
 
   {
     smsc::system::abonentinfo::AbonentInfoSme *ai=
-      new smsc::system::abonentinfo::AbonentInfoSme(profiler);
+      new smsc::system::abonentinfo::AbonentInfoSme(profiler,&smeman,"abonentinfo");
     tp.startTask(ai);
     try{
       smeman.registerSmeProxy("abonentinfo",ai);

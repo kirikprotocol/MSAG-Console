@@ -54,7 +54,7 @@ public:
 
 class Profiler:public ProfilerInterface,public SmeProxy, public ThreadedTask{
 public:
-  Profiler(const Profile& pr);
+  Profiler(const Profile& pr,SmeRegistrar* smeman,const char* sysId);
   virtual ~Profiler();
 
   int Execute();
@@ -172,7 +172,9 @@ protected:
   SmeProxyState state;
   ProxyMonitor *managerMonitor;
   ProfilesTable *profiles;
+  SmeRegistrar *smeman;
 
+  string systemId;
 
   smsc::db::DataSource *ds;
 

@@ -69,6 +69,11 @@ public:
   SmppThread():stopped(0)
   {
   }
+  void Start()
+  {
+    stopped=0;
+    Thread::Start();
+  }
   virtual void Stop()
   {
     stopped=1;
@@ -430,6 +435,11 @@ public:
        resp->get_header().get_commandStatus()!=SmppStatusSet::ESME_ROK)
     {
       disposePdu((SmppHeader*)resp);
+      reader.Stop();
+      writer.Stop();
+      socket.Close();
+      reader.WaitFor();
+      writer.WaitFor();
       throw Exception("Unable to bind sme");
     }
     closed=false;
