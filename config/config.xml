@@ -107,6 +107,17 @@
     <param name="protocol_id" type="int">34</param>
     <param name="service_type" type="string">prflr</param>
     <param name="systemId" type="string">profiler</param>
+    <section name="ussdOpsMapping">
+      <param name="REPORT NONE" type="int">0</param>
+      <param name="REPORT FULL" type="int">2</param>
+      <param name="REPORT FINAL" type="int">1</param>
+      <param name="LOCALE RU_RU" type="int">20</param>
+      <param name="LOCALE EN_EN" type="int">21</param>
+      <param name="DEFAULT" type="int">3</param>
+      <param name="UCS2" type="int">4</param>
+      <param name="HIDE" type="int">5</param>
+      <param name="UNHIDE" type="int">6</param>
+    </section>
   </section>
 
   <section name="smpp">
