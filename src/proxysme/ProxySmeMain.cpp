@@ -16,6 +16,7 @@
 #if !defined _WIN32
 #include "ProxySmeConfig.h"
 #include "signal.h"
+#include "../system/smsc.h"
 #endif
 #include "../logger/Logger.h"
 
