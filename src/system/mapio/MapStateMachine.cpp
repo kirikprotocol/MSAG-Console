@@ -953,7 +953,7 @@ USHORT_T Et96MapCloseInd(
     case MAPST_WaitSmsClose:
       // penging processing
       dialog->state = MAPST_CLOSED;
-      SendOkToSmsc(dialog->dialogid_smsc);
+      SendOkToSmsc(dialog.get());
       DropMapDialog(dialog.get());
       break;
     default:
@@ -1166,7 +1166,7 @@ USHORT_T Et96MapDelimiterInd(
       SendSegmentedSms(dialog.get());
       break;
     case MAPST_WaitSmsClose:
-      SendOkToSmsc(dialog->dialogid_smsc);
+      SendOkToSmsc(dialog.get());
       //dialog->state = MAPST_WaitSmsConf;
       SendNextMMS(dialog.get());
       break;

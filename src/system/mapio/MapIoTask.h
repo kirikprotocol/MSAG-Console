@@ -97,6 +97,7 @@ struct MapDialog{
  	ET96MAP_SM_RP_DA_T smRpDa;
   ET96MAP_SM_RP_OA_T smRpOa;
   list<SmscCommand> chain;
+  bool mms;
   unsigned version;
   MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned version=2) : 
     ref_count(1),
