@@ -53,7 +53,7 @@ USHORT_T Et96MapPAbortInd(ET96MAP_LOCAL_SSN_T lssn,
                           ET96MAP_DIALOGUE_ID_T dialogid,
                           ET96MAP_PROV_REASON_T reason,
                           ET96MAP_SOURCE_T source,
-                          UCHAR_T priorityOrder);
+                          UCHAR_T priorityOrder)
 {
   __trace2__("MAP::Et96MapPAbortInd")
   return ET96MAP_E_OK;
