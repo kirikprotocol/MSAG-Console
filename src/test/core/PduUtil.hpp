@@ -48,6 +48,13 @@ typedef enum
 	SME_ACK_MONITOR = 0x5
 } MonitorType;
 
+typedef enum
+{
+	PDU_NORMAL = 1, //pdu отправляемая тестовой sme
+	PDU_EXT_SME = 2, //pdu отправляемая внешней sme (db sme, profiler, ...)
+	PDU_NULL = 3 //pdu отправляемая в никуда (smscsme)
+} PduType;
+
 class PduDataObject
 {
 	int count;
