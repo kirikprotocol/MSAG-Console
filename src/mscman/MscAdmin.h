@@ -15,7 +15,7 @@ namespace smsc { namespace mscman
 
     struct MscInfo
     {
-        MscInfo(string msc, bool mLock=false, bool aLock=false, int fc=0)
+        MscInfo(string msc="", bool mLock=false, bool aLock=false, int fc=0)
             : mscNum(msc), manualLock(mLock), 
                 automaticLock(aLock), failureCount(fc) {};
         MscInfo(const MscInfo& info)

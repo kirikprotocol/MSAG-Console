@@ -190,7 +190,7 @@ int MscManagerImpl::Execute()
                 MutexGuard guard(changesLock);
                 result = changes.Shift(change);
             }
-            processChange(change);
+            if (result) processChange(change);
         }
     } 
     while (!bNeedExit);
@@ -224,7 +224,7 @@ void MscManagerImpl::init(Manager& config)
     // TODO: Load up extra params from config if needed
 
     connection = ds.getConnection();
-    if (!connection || !connection->isAvailable()) 
+    if (!connection) 
     {
         InitException exc("Get connection to DB failed");
         log.error(exc.what());
@@ -328,8 +328,9 @@ void MscManagerImpl::report(const char* msc, bool status)
     MutexGuard  guard(hashLock);
     
     bool needInsert = false;
-    MscInfo* info = mscs.Get(msc);
-    if (!info || !mscs.Exists(msc))
+    MscInfo* info = 0;
+    if (mscs.Exists(msc)) info = mscs.Get(msc);
+    if (!info)
     {
         info = new MscInfo(msc);
         mscs.Insert(msc, info);

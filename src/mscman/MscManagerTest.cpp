@@ -39,10 +39,25 @@ int main(void)
 
         MscManager::startup(*ds, Manager::getInstance());
         MscAdmin& admin = MscManager::getMscAdmin();
-        Array<MscInfo> info = admin.list();
+        MscStatus& status = MscManager::getMscStatus();
+
+        status.report("12345", true);
+        status.report("54321", false);
+        status.check("54321");
+
+        Array<MscInfo> infos = admin.list();
+        for (int i=0; i<infos.Count(); i++)
+        {
+            MscInfo info = infos[i];
+            printf("Msc: %s mLock=%d aLock=%d fCount=%d\n",
+                   info.mscNum.c_str(), info.manualLock, 
+                   info.automaticLock, info.failureCount);
+        }
+        MscManager::shutdown();
     }
     catch (Exception& exc) {
         printf("Ooops! Exception: %s", exc.what());
+        MscManager::shutdown();
     }
     
     return 0;
