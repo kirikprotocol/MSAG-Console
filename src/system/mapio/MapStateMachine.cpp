@@ -902,7 +902,7 @@ USHORT_T Et96MapDelimiterInd(
     case MAPST_WaitSms:
       dialog->state = MAPST_WaitSmsMOInd;
       reason = ET96MAP_NO_REASON;
-      result = Et96MapOpenResp(SSN,dialogId,ET96MAP_RESULT_OK,&reason,0,0,0);
+      result = Et96MapOpenResp(SSN,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0);
       if ( result != ET96MAP_E_OK )
         throw runtime_error(
           FormatText("MAP::Et96MapOpenInd dialog opened error 0x%x",result));
