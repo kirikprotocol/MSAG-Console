@@ -216,15 +216,21 @@ public class DivertManager
     }
     readTelnetString(ESC_PROMPT);
   }
+  private void disconnect()
+  {
+    if (mscSocket != null) {
+      try { if (is != null) is.close(); } catch (IOException e) { logger.error("MSC is close error", e); }
+      try { if (os != null) os.close(); } catch (IOException e) { logger.error("MSC os close error", e); }
+      try { mscSocket.close(); } catch (IOException e) { logger.error("MSC socket close error", e); }
+      is = null; os = null; mscSocket = null;
+    }
+  }
   private void connect() throws DivertManagerException, IOException
   {
     if (mscSocket == null || !(mscSocket.isConnected()))
     {
       try {
-        if (mscSocket != null) {
-          if (is != null) is.close(); if (os != null) os.close();
-          mscSocket.close(); mscSocket = null;
-        }
+        disconnect();
         logger.info("Connecting to MSC "+mscHost+":"+mscPort+"...");
         mscSocket = new Socket(mscHost, mscPort);
         is = mscSocket.getInputStream(); os = mscSocket.getOutputStream();
@@ -235,6 +241,7 @@ public class DivertManager
         autentificate();
         logger.info("Autentificated user="+mscUserCode);
       } catch (IOException exc) {
+        disconnect();
         logger.error("Connect to MSC "+mscHost+":"+mscPort+" error", exc);
         throw new DivertManagerException(exc, DivertManagerException.CONNECT);
       }
@@ -374,12 +381,7 @@ public class DivertManager
       }
       catch (IOException exc)
       {
-        if (mscSocket != null) {
-          try { if (is != null) is.close(); } catch (IOException e) { logger.error("MSC is close error", e); }
-          try { if (os != null) os.close(); } catch (IOException e) { logger.error("MSC os close error", e); }
-          try { mscSocket.close(); } catch (IOException e) { logger.error("MSC socket close error", e); }
-          mscSocket = null;
-        }
+        disconnect();
         logger.error("Communication with MSC error", exc);
         throw new DivertManagerException(exc, DivertManagerException.COMMUNICATION);
       }
@@ -419,12 +421,7 @@ public class DivertManager
       }
       catch (IOException exc)
       {
-        if (mscSocket != null) {
-          try { if (is != null) is.close(); } catch (IOException e) { logger.error("MSC is close error", e); }
-          try { if (os != null) os.close(); } catch (IOException e) { logger.error("MSC os close error", e); }
-          try { mscSocket.close(); } catch (IOException e) { logger.error("MSC socket close error", e); }
-          mscSocket = null;
-        }
+        disconnect();
         logger.error("Communication with MSC error", exc);
         throw new DivertManagerException(exc, DivertManagerException.COMMUNICATION);
       }
