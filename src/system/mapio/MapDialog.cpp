@@ -449,7 +449,7 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
   	result = Et96MapDelimiterReq( SSN, dialogid, 0, 0 );
     __trace2__("MAP::send response to SMSC");
     {
-      SmscCommand cmd = SmscCommand::makeDeliverySmResp(0,this->smscDialogId,0);
+      SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,0);
       MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
     }
     __trace2__("MAP::send response to SMSC OK");
