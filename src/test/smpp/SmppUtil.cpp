@@ -46,23 +46,25 @@ MessageId& SmppUtil::convert(const SMSId& smsId, MessageId& smppId)
 }
 */
 
-const char* SmppUtil::time2string(time_t lt, char* str, time_t base, int num)
+const char* SmppUtil::time2string(time_t lt, char* str, time_t base, int num, bool check)
 {
 	switch (num)
 	{
 		case 1: //GMT time format
 			{
+				tm t;
 				int len = strftime(str, MAX_SMPP_TIME_LENGTH,
-					"%y%m%d%H%M%S000+", gmtime(&lt));
+					"%y%m%d%H%M%S000+", gmtime_r(&lt, &t));
 			}
 			break;
 		case 2: //local time format (+)
 			{
+				tm t;
 				int len = strftime(str, MAX_SMPP_TIME_LENGTH,
-					"%y%m%d%H%M%S0", localtime(&lt));
-				int tz = timezone / 900;
+					"%y%m%d%H%M%S0", localtime_r(&lt, &t));
+				int qtz = -timezone / 900 + (t.tm_isdst ? 4 : 0);
 				//для Новосибирка export TZ=NSD-6, а timezone = -21600
-				sprintf(str + len, "%02d%c", abs(tz), tz < 0 ? '+' : '-');
+				sprintf(str + len, "%02d%c", abs(qtz), qtz < 0 ? '-' : '+');
 			}
 			break;
 		case 3: //Relative time format
@@ -82,12 +84,16 @@ const char* SmppUtil::time2string(time_t lt, char* str, time_t base, int num)
 			}
 			break;
 		default:
-			throw "";
+			__unreachable__("Invalid num");
+	}
+	if (check)
+	{
+		__require__(string2time(str, base, false) == lt);
 	}
 	return str;
 }
 
-time_t SmppUtil::string2time(const char* str, time_t base)
+time_t SmppUtil::string2time(const char* str, time_t base, bool check)
 {
 	int tz;
 	char p;
@@ -95,19 +101,36 @@ time_t SmppUtil::string2time(const char* str, time_t base)
 	t.tm_isdst = 0;
 	sscanf(str, "%2d%2d%2d%2d%2d%2d0%2d%c", &t.tm_year, &t.tm_mon, &t.tm_mday,
 		&t.tm_hour, &t.tm_min, &t.tm_sec, &tz, &p);
+	time_t lt;
+	char buf[MAX_SMPP_TIME_LENGTH];
 	switch (p)
 	{
 		case '+':
 			t.tm_year += 100;
 			t.tm_mon -= 1;
-			return (mktime(&t) + timezone + tz * 900);
+			lt = mktime(&t) - timezone - tz * 900;
+			if (check)
+			{
+				__require__(!strcmp(time2string(lt, buf, base, tz ? 2 : 1, false), str));
+			}
+			return lt;
 		case '-':
 			t.tm_year += 100;
 			t.tm_mon -= 1;
-			return (mktime(&t) + timezone - tz * 900);
+			lt = mktime(&t) - timezone + tz * 900;
+			if (check)
+			{
+				__require__(!strcmp(time2string(lt, buf, base, tz ? 2 : 1, false), str));
+			}
+			return lt;
 		case 'R':
-			return (base + t.tm_year * 31104000 + t.tm_mon * 2592000 +
-				t.tm_mday * 86400 + t.tm_hour * 3600 + t.tm_min * 60 + t.tm_sec);
+			lt = base + t.tm_year * 31104000 + t.tm_mon * 2592000 +
+				t.tm_mday * 86400 + t.tm_hour * 3600 + t.tm_min * 60 + t.tm_sec;
+			if (check)
+			{
+				__require__(!strcmp(time2string(lt, buf, base, 3, false), str));
+			}
+			return lt;
 		default:
 			__unreachable__("Invalid time format");
 	}

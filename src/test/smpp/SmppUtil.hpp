@@ -127,8 +127,8 @@ public:
 	static SMSId convert(const char* id);
 	static MessageId& convert(const SMSId& smsId, MessageId& smppId);
 	*/
-	static const char* time2string(time_t t, char* str, time_t base, int num);
-	static time_t string2time(const char* str, time_t base);
+	static const char* time2string(time_t t, char* str, time_t base, int num, bool check = true);
+	static time_t string2time(const char* str, time_t base, bool check = true);
 
 	//static bool compareAddresses(PduAddress& a1, PduAddress& a2);
 	
