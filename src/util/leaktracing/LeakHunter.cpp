@@ -19,7 +19,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#define MMAP_SIZE 1024*1024*1024
+#define MMAP_SIZE 512*1024*1024
 
 
 namespace smsc{
@@ -537,7 +537,7 @@ static void initlh()
       mmapfd=open("mmap",O_CREAT|O_RDWR,0666);
       if(mmapfd==-1)
       {
-        fprintf(stderr,"lh-open:%s\n",strerror(errno));
+        fprintf(stderr,"lh-open:%d\n",errno);
         exit(-1);
       }
       lseek(mmapfd,MMAP_SIZE,SEEK_SET);
@@ -547,7 +547,7 @@ static void initlh()
       void* addr=mmap(0,MMAP_SIZE,PROT_READ|PROT_WRITE,MAP_PRIVATE,mmapfd,0);
       if(addr==MAP_FAILED)
       {
-        fprintf(stderr,"lh-mmap:%s\n",strerror(errno));
+        fprintf(stderr,"lh-mmap:%d\n",errno);
         exit(-1);
       }
       mem=(char*)addr;
