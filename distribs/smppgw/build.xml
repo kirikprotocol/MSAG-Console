@@ -171,7 +171,7 @@ Targets:
     </chmod>
   </target>
 
-  <target name="extra_libs" depends="create_distr_tree_update">
+  <target name="extra_libs" depends="">
     <copy todir="${DISTR_DIR}/lib" flatten="yes" failonerror="yes">
       <fileset dir="/" includesfile="extra_libs.list"/>
     </copy>
