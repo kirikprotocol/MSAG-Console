@@ -111,7 +111,7 @@ public:
     else return 0;
   }
   MapDialog* createDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn){
-    auto_ptr<MapDialog> dlg = new MapDialog(dialogueid,lssn);
+    auto_ptr<MapDialog> dlg(new MapDialog(dialogueid,lssn));
     hash.Insert(dialogueid,dlg);
     return dlg.release();
   }
