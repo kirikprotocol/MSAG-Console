@@ -92,7 +92,7 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
           double speed=(double)responseCount*cfg.lookAheadTime/cfg.protectTimeFrame;
 
           if(deliveryCount-responseCount<=cfg.allowedDeliveryFailures &&
-             speed<scount)
+             speed>1 && speed<scount)
           {
             __info2__(log,"TC: deny - protect schedule limit for %s: %lf - %d",dest_proxy->getSystemId(),speed,scount);
             break;
@@ -126,7 +126,7 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
             double speed=(double)responseCount*cfg.lookAheadTime/cfg.protectTimeFrame;
 
             if(deliveryCount-responseCount<=cfg.allowedDeliveryFailures &&
-               speed<scount)
+               speed>1 && speed<scount)
             {
               __info2__(log,"TC: deny - protect schedule limit for %s: %lf - %d",src_proxy->getSystemId(),speed,scount);
               break;
