@@ -288,83 +288,119 @@ FormatEntityRenderer::~FormatEntityRenderer()
     clearEntities();
 }
 
-
+void ContextEnvironment::toUpperCase(const char* str, char* low)
+{
+    __require__(str && low);
+    
+    do *low++=toupper(*str);
+    while (*str++); 
+}
 bool ContextEnvironment::exportStr(const char* key, const char* val)
 {
     if (!key || !val) return false;
-    if (strs.Exists(key)) strs.Delete(key);
-    strs.Insert(key, std::string(val));
+    char ukey[strlen(key)+1];
+    toUpperCase(key, ukey);
+    if (strs.Exists(ukey)) strs.Delete(ukey);
+    strs.Insert(ukey, std::string(val));
     return true;
 }
 bool ContextEnvironment::importStr(const char* key, char* &val)
 {
-    if (!key || !strs.Exists(key)) return false;
-    val = (char *)(strs.Get(key).c_str());
+    if (!key) return false;
+    char ukey[strlen(key)+1];
+    toUpperCase(key, ukey);
+    if (!strs.Exists(ukey)) return false;
+    val = (char *)(strs.Get(ukey).c_str());
     return true;
 }
 bool ContextEnvironment::exportInt(const char* key, int64_t val)
 {
     if (!key) return false;
-    if (ints.Exists(key)) ints.Delete(key);
-    ints.Insert(key, val);
+    char ukey[strlen(key)+1];
+    toUpperCase(key, ukey);
+    if (ints.Exists(ukey)) ints.Delete(ukey);
+    ints.Insert(ukey, val);
     return true;
 }
 bool ContextEnvironment::importInt(const char* key, int64_t &val)
 {
-    if (!key || !ints.Exists(key)) return false;
-    val = ints.Get(key);
+    if (!key) return false;
+    char ukey[strlen(key)+1];
+    toUpperCase(key, ukey);
+    if (!ints.Exists(ukey)) return false;
+    val = ints.Get(ukey);
     return true;
 }
 bool ContextEnvironment::exportDat(const char* key, time_t val)
 {
     if (!key) return false;
-    if (dats.Exists(key)) dats.Delete(key);
-    dats.Insert(key, val);
+    char ukey[strlen(key)+1];
+    toUpperCase(key, ukey);
+    if (dats.Exists(ukey)) dats.Delete(ukey);
+    dats.Insert(ukey, val);
     return true;
 }
 bool ContextEnvironment::importDat(const char* key, time_t &val)
 {
-    if (!key || !dats.Exists(key)) return false;
-    val = dats.Get(key);
+    if (!key) return false;
+    char ukey[strlen(key)+1];
+    toUpperCase(key, ukey);
+    if (!dats.Exists(ukey)) return false;
+    val = dats.Get(ukey);
     return true;
 }
 bool ContextEnvironment::exportFlt(const char* key, float val)
 {
     if (!key) return false;
-    if (flts.Exists(key)) flts.Delete(key);
-    flts.Insert(key, val);
+    char ukey[strlen(key)+1];
+    toUpperCase(key, ukey);
+    if (flts.Exists(ukey)) flts.Delete(ukey);
+    flts.Insert(ukey, val);
     return true;
 }
 bool ContextEnvironment::importFlt(const char* key, float &val)
 {
-    if (!key || !flts.Exists(key)) return false;
-    val = flts.Get(key);
+    if (!key) return false;
+    char ukey[strlen(key)+1];
+    toUpperCase(key, ukey);
+    if (!flts.Exists(ukey)) return false;
+    val = flts.Get(ukey);
     return true;
 }
 bool ContextEnvironment::exportDbl(const char* key, double val)
 {
     if (!key) return false;
-    if (dbls.Exists(key)) dbls.Delete(key);
-    dbls.Insert(key, val);
+    char ukey[strlen(key)+1];
+    toUpperCase(key, ukey);
+    if (dbls.Exists(ukey)) dbls.Delete(ukey);
+    dbls.Insert(ukey, val);
     return true;
 }
 bool ContextEnvironment::importDbl(const char* key, double &val)
 {
-    if (!key || !dbls.Exists(key)) return false;
-    val = dbls.Get(key);
+    if (!key) return false;
+    char ukey[strlen(key)+1];
+    toUpperCase(key, ukey);
+    if (!dbls.Exists(ukey)) return false;
+    val = dbls.Get(ukey);
     return true;
 }
 bool ContextEnvironment::exportLdl(const char* key, long double val)
 {
     if (!key) return false;
-    if (ldls.Exists(key)) ldls.Delete(key);
-    ldls.Insert(key, val);
+    char ukey[strlen(key)+1];
+    toUpperCase(key, ukey);
+    if (ldls.Exists(ukey)) ldls.Delete(ukey);
+    ldls.Insert(ukey, val);
     return true;
 }
 bool ContextEnvironment::importLdl(const char* key, long double &val)
 {
-    if (!key || !ldls.Exists(key)) return false;
-    val = ldls.Get(key);
+    if (!key) return false;
+    char ukey[strlen(key)+1];
+    toUpperCase(key, ukey);
+    if (!ldls.Exists(ukey)) return false;
+    val = ldls.Get(ukey);
     return true;
 }
 

@@ -87,6 +87,8 @@ namespace smsc { namespace util { namespace templates
         Hash<double>        dbls;
         Hash<long double>   ldls;
         
+        static void toUpperCase(const char* str, char* low);
+
     public:
 
         ContextEnvironment() {};
