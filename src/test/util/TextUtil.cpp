@@ -42,7 +42,7 @@ void rand_text(int& length, char* buf, uint8_t dataCoding, bool hostByteOrder)
 				rand_char(length, msg, RAND_LAT_NUM + RAND_SYM + RAND_WS);
 				for (int i = 0; i < length; i++)
 				{
-					switch (buf[i])
+					switch (msg[i])
 					{
 						case '|':
 						case '^':
@@ -56,8 +56,7 @@ void rand_text(int& length, char* buf, uint8_t dataCoding, bool hostByteOrder)
 							break;
 					}
 				}
-				length = ConvertTextTo7Bit(msg, length - ext, buf, length,
-					CONV_ENCODING_CP1251);
+				length = ConvertLatin1ToSMSC7Bit(msg, length - ext, buf);
 			}
 			break;
 		case UCS2:
@@ -101,6 +100,8 @@ void rand_text2(int& length, char* buf, uint8_t dataCoding, bool udhi,
 	if (!udhi)
 	{
 		rand_text(length, buf, dataCoding, hostByteOrder);
+		__trace2__("rand_text2(): udhi = false, length = %d, dataCoding = %d, byteOrder = %s",
+			length, (int) dataCoding, hostByteOrder ? "host" : "network");
 		return;
 	}
 	__require__(length >= 3);
@@ -119,6 +120,8 @@ void rand_text2(int& length, char* buf, uint8_t dataCoding, bool udhi,
 	__require__(udhLen + msgLen + 1 <= length);
 	length = udhLen + msgLen + 1;
 	memcpy(buf + udhLen + 1, msg.get(), msgLen);
+	__trace2__("rand_text2(): udhi = true, length = %d (udhLen = %d, msgLen = %d), dataCoding = %d, byteOrder = %s",
+		length, udhLen, msgLen, (int) dataCoding, hostByteOrder ? "host" : "network");
 }
 
 auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen,
