@@ -183,7 +183,12 @@ void Smsc::init(const SmscConfigs& cfg)
     }
   }
   */
-  loadRoutes(&router,*cfg.routesconfig);
+  try{
+    loadRoutes(&router,*cfg.routesconfig);
+  }catch(...)
+  {
+    __warning__("Failed to load routes");
+  }
   smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance());
   store=smsc::store::StoreManager::getMessageStore();
 
@@ -224,15 +229,26 @@ void Smsc::init(const SmscConfigs& cfg)
     profiler=new smsc::profiler::Profiler(defProfile);
   }
   profiler->loadFromDB();
+
   tp.startTask(profiler);
 
-  smeman.registerSmeProxy(cfg.cfgman->getString("profiler.systemId"),profiler);
+  try{
+    smeman.registerSmeProxy(cfg.cfgman->getString("profiler.systemId"),profiler);
+  }catch(...)
+  {
+    __warning__("Failed to register profiler Sme");
+  }
 
   {
     smsc::system::abonentinfo::AbonentInfoSme *ai=
       new smsc::system::abonentinfo::AbonentInfoSme(profiler);
     tp.startTask(ai);
-    smeman.registerSmeProxy("abonentinfo",ai);
+    try{
+      smeman.registerSmeProxy("abonentinfo",ai);
+    }catch(...)
+    {
+      __warning__("Failed to register abonentinfo Sme");
+    }
   }
 
   smscHost=cfg.cfgman->getString("smpp.host");

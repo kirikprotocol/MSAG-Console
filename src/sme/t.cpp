@@ -78,7 +78,7 @@ int main(int argc,char* argv[])
   }
   SmeConfig cfg;
   cfg.host="smsc";
-  cfg.port=9001;
+  cfg.port=argc>2?atoi(argv[2]):9001;
   cfg.sid=argv[1];
   cfg.timeOut=10;
   cfg.password="";
@@ -105,7 +105,7 @@ int main(int argc,char* argv[])
     s.setArchivationRequested(false);
     //unsigned char message[]="SME test message";
     SmppTransmitter *tr=ss.getSyncTransmitter();
-    SmppTransmitter *atr=ss.getAsyncTransmitter();
+    //SmppTransmitter *atr=ss.getAsyncTransmitter();
     lst.setTrans(tr);
     s.setEServiceType("XXX");
     sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
