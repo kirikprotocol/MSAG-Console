@@ -31,7 +31,7 @@ namespace SmppOptionalTags{
   static const uint16_t qosTimeToLive     /*qos_time_to_live(5.3.2.9)*/ = 0x017;
   static const uint16_t payloadType        /*payload_type(5.3.2.10)*/ = 0x019;
   static const uint16_t additionalStatusInfoText /*additional_status_info_text(5.3.2.11)*/ = 0x01d;
-  static const uint16_t receiptedMessageId /*receipted_message_id(5.3.2.12)*/ = 0x01;
+  static const uint16_t receiptedMessageId /*receipted_message_id(5.3.2.12)*/ = 0x01e;
   static const uint16_t msMsgWaitFacilities/*ms_msg_wait_facilities(5.3.2.13)*/ = 0x030;
   static const uint16_t privacyIndicator   /*privacy_indicator(5.3.2.14)*/ = 0x0201;
   static const uint16_t sourceSubaddress   /*source_subaddress(5.3.2.15)*/ = 0x0202;
