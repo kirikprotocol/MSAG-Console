@@ -1,6 +1,6 @@
 #binary name				source name			libraries
-test/MessageStoreLoadTest               MessageStoreLoadTest            -L$(ORACLE_HOME)/lib -ltest-store -ltest-util -lcore-threads -lcore-buffers -lstore -lsms -lutil-config -lutil -llog4cpp -lxerces-c1_5_2 $(__OBJECTS) $(__LIBRARIES)
-test/MessageStoreIntegrityTestTC	MessageStoreIntegrityTestTC	-L$(ORACLE_HOME)/lib -ltest-store -ltest-util -lstore -lsms -lutil-config -lutil -llog4cpp -lxerces-c1_5_2 $(__OBJECTS) $(__LIBRARIES)
-test/MessageStoreBusinessCycleTest	MessageStoreBusinessCycleTest	-L$(ORACLE_HOME)/lib -ltest-store -ltest-util -lcore-threads -lcore-buffers -lstore -lsms -lutil-config -lutil -llog4cpp -lxerces-c1_5_2 $(__OBJECTS) $(__LIBRARIES)
-test/MessageStoreBenchmarkTest		MessageStoreBenchmarkTest	-L$(ORACLE_HOME)/lib -ltest-store -ltest-util -lstore -lsms -lutil-config -lutil -llog4cpp -lxerces-c1_5_2 $(__OBJECTS) $(__LIBRARIES)
--test/MessageStoreTest			MessageStoreTest		-L$(ORACLE_HOME)/lib -ltest-store -ltest-util -lcore-threads -lcore-buffers -lstore -lsms -lutil-config -lutil -llog4cpp -lxerces-c1_5_2 $(__OBJECTS) $(__LIBRARIES)
+test/MessageStoreLoadTest               MessageStoreLoadTest            -ltest-store -ltest-util $(__OTHER)
+test/MessageStoreIntegrityTestTC	MessageStoreIntegrityTestTC	-ltest-store -ltest-util $(__OTHER)
+test/MessageStoreBusinessCycleTest	MessageStoreBusinessCycleTest	-ltest-store -ltest-util $(__OTHER)
+test/MessageStoreBenchmarkTest		MessageStoreBenchmarkTest	-ltest-store -ltest-util $(__OTHER)
+-test/MessageStoreTest			MessageStoreTest		-ltest-store -ltest-util $(__OTHER)
