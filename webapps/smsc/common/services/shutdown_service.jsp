@@ -8,6 +8,6 @@ String serviceId = request.getParameter("serviceId");
 <%
 serviceManager.shutdownService(serviceId);
 %>
-<h2>Shutdown service <i><%=serviceManager.getServiceInfo(serviceId).getName()%></i> from host <i><%=host%></i>: </h2>
+<h2>Shutdown service <i><%=StringEncoderDecoder.encode(serviceId)%></i> from host <i><%=StringEncoderDecoder.encode(host)%></i>: </h2>
 Waiting for service shutdown...<br>
 <%@ include file="/common/footer.jsp"%>

@@ -2,7 +2,7 @@
 <%
 String serviceId = request.getParameter("serviceId");
 ServiceInfo s = serviceManager.getServiceInfo(serviceId);
-String name = s.getName();
+//String name = s.getName();
 String host = s.getHost();
 int    port = s.getPort();
 String args = s.getArgs();
@@ -11,9 +11,9 @@ String args = s.getArgs();
 	<input type="Hidden" name="host" value="<%=host%>">
 	<h2>Edit service:</h2>
 	<TABLE border="1" class="list" cellspacing="0">
-		<TR class="list">
+		<%/*<TR class="list">
 			<TH class="list">Service name</TH>
-			<TD class="list"><input name="serviceName" value="<%=name%>" style="width: 100%;" ></TD></TR>
+			<TD class="list"><input name="serviceName" value="<%=name%>" style="width: 100%;" ></TD></TR><%*/%>
 		<TR class="list">
 			<TH class="list">Service Id</TH>
 			<TD class="list"><input type="text" name="serviceId" value="<%=serviceId%>" readonly style="width: 100%;"></TD></TR>

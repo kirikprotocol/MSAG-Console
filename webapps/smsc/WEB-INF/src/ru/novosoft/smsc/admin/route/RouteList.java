@@ -5,17 +5,33 @@
  */
 package ru.novosoft.smsc.admin.route;
 
-import java.util.Vector;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import ru.novosoft.smsc.admin.AdminException;
+
+import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.HashMap;
 
 
 public class RouteList
 {
   private Map map = new HashMap();
 
-  public RouteList() {
+  public RouteList()
+  {
+  }
+
+  public RouteList(Element routeListElement, SubjectList subjects, SMEList smes)
+          throws AdminException
+  {
+    NodeList routeList = routeListElement.getElementsByTagName("route");
+    for (int i = 0; i < routeList.getLength(); i++)
+    {
+      Element routeElem = (Element) routeList.item(i);
+      put(new Route(routeElem, subjects, smes));
+    }
   }
 
   public void put(Route r)
@@ -51,5 +67,14 @@ public class RouteList
     Route r = remove(oldRouteName);
     r.setName(newRouteName);
     put(r);
+  }
+
+  public PrintWriter store(PrintWriter out)
+  {
+    for (Iterator i = iterator(); i.hasNext();)
+    {
+      ((Route) i.next()).store(out);
+    }
+    return out;
   }
 }

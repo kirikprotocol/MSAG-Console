@@ -1,0 +1,5 @@
+# $Id$
+# this file contains binaries definitions
+
+# binary name	source name		libraries																		description
+admin/smsc_service/smsc	smscmain	-L$(ORACLE_HOME)/lib -ladmin-util -ladmin-protocol -ladmin-service -ladmin-smsc_service -ladmin-util -ladmin-protocol -ladmin-daemon -ladmin	-lutil-config -lutil-config-smeman -lutil -lutil-xml	-lcore-threads -lcore-buffers -lcore-network 	-lsystem -lsystem-smppio -lsmeman -lrouter -lstore -lrt $(ORACLE_HOME)/lib/libclntsh.so -lutil -lcore-network	-llog4cpp -lxerces-c -lsocket -lthread -lalias -lutil-config-alias -lprofiler

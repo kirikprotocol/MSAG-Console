@@ -5,9 +5,13 @@
  */
 package ru.novosoft.smsc.admin.route;
 
+import org.w3c.dom.Element;
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
+
+import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.StringTokenizer;
-import java.util.Random;
 
 
 public class Route
@@ -16,6 +20,8 @@ public class Route
   private SourceList src = null;
   private DestinationList dst = null;
   private boolean enabling = true;
+  private boolean archiving = true;
+  private boolean billing = false;
 
   public Route(String routeName, boolean isEnabling, SourceList sources, DestinationList destinations)
   {
@@ -41,6 +47,17 @@ public class Route
     src = new SourceList();
     dst = new DestinationList();
     enabling = false;
+  }
+
+  public Route(Element routeElem, SubjectList subjects, SMEList smes)
+          throws AdminException
+  {
+    name = routeElem.getAttribute("id");
+    src = new SourceList(routeElem, subjects);
+    dst = new DestinationList(routeElem, subjects, smes);
+    enabling = routeElem.getAttribute("enabling").equalsIgnoreCase("true");
+    archiving = routeElem.getAttribute("archiving").equalsIgnoreCase("true");
+    billing = routeElem.getAttribute("billing").equalsIgnoreCase("true");
   }
 
   public String getName()
@@ -93,13 +110,15 @@ public class Route
   {
     SourceList source_selected = new SourceList();
     for (StringTokenizer tokenizer = new StringTokenizer(sourcesString, "\"", false);
-         tokenizer.hasMoreTokens();) {
+         tokenizer.hasMoreTokens();)
+    {
       String token = tokenizer.nextToken();
       source_selected.add(new Source(allSubjects.get(token)));
     }
 
     MaskList masks = new MaskList(masksString);
-    for (Iterator i = masks.iterator(); i.hasNext();) {
+    for (Iterator i = masks.iterator(); i.hasNext();)
+    {
       Mask m = (Mask) i.next();
       source_selected.add(new Source(m));
     }
@@ -110,16 +129,19 @@ public class Route
   }
 
   public void updateDestinations(String destinationsString, String masksString, SubjectList allSubjects, SME defaultSme)
+          throws AdminException
   {
     DestinationList list = new DestinationList();
     for (StringTokenizer tokenizer = new StringTokenizer(destinationsString, "\"", false);
-         tokenizer.hasMoreTokens();) {
+         tokenizer.hasMoreTokens();)
+    {
       String token = tokenizer.nextToken();
       list.add(new Destination(allSubjects.get(token)));
     }
 
     MaskList masks = new MaskList(masksString);
-    for (Iterator i = masks.iterator(); i.hasNext();) {
+    for (Iterator i = masks.iterator(); i.hasNext();)
+    {
       Mask m = (Mask) i.next();
       list.add(new Destination(m, defaultSme));
     }
@@ -137,5 +159,35 @@ public class Route
   public void setEnabling(boolean enabling)
   {
     this.enabling = enabling;
+  }
+
+  public boolean isBilling()
+  {
+    return billing;
+  }
+
+  public void setBilling(boolean billing)
+  {
+    this.billing = billing;
+  }
+
+  public boolean isArchiving()
+  {
+    return archiving;
+  }
+
+  public void setArchiving(boolean archiving)
+  {
+    this.archiving = archiving;
+  }
+
+  public PrintWriter store(PrintWriter out)
+  {
+    out.println("  <route id=\"" + StringEncoderDecoder.encode(getName()) + "\" billing=\"" + isBilling()
+                + "\" archiving=\"" + isArchiving() + "\" enabling=\"" + isEnabling() + "\">");
+    getSources().store(out);
+    getDestinations().store(out);
+    out.println("  </route>");
+    return out;
   }
 }

@@ -56,6 +56,7 @@ inline char * encode(const char * const src)
 		case '<': // &lt;
 			memcpy(d, "&lt;", 4);
 			d += 4;
+			break;
 		case '>': // &gt;
 			memcpy(d, "&gt;", 4);
 			d += 4;

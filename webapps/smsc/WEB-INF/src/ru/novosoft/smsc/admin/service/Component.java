@@ -31,7 +31,8 @@ public class Component
   {
     this.name = elem.getAttribute("name");
     NodeList list = elem.getElementsByTagName("method");
-    for (int i = 0; i < list.getLength(); i++) {
+    for (int i = 0; i < list.getLength(); i++)
+    {
       Element methodElem = (Element) list.item(i);
       Method newMethod = new Method(methodElem);
       methods.put(newMethod.getName(), newMethod);

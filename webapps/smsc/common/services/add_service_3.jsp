@@ -1,7 +1,7 @@
 <%@ page import="ru.novosoft.smsc.jsp.SMSCAppContext"%>
 <%@ include file="/common/header.jsp"%>
 <%
-  String service = request.getParameter("service") == null ? "" : request.getParameter("service");
+//  String service = request.getParameter("service") == null ? "" : request.getParameter("service");
   String host = request.getParameter("host") == null ? "" : request.getParameter("host");
   String portString = request.getParameter("port") == null ? "" : request.getParameter("port");
   String args = request.getParameter("args") == null ? "" : request.getParameter("args");
@@ -14,7 +14,7 @@
   String rangeOfAddress = request.getParameter("range of address") == null ? "" : request.getParameter("range of address");
   String smeNType = request.getParameter("sme ntype") == null ? "" : request.getParameter("sme ntype");
 
-  if (service.equals("") || host.equals("") || portString.equals("") || systemId.equals("") || systemType.equals("")
+  if (/*service.equals("") || */host.equals("") || portString.equals("") || systemId.equals("") || systemType.equals("")
           || typeOfNumberString.equals("") || numberingPlanString.equals("") || interfaceVersionString.equals("")
           || rangeOfAddress.equals("") || smeNType.equals(""))
     throw new Exception("Not all parameters defined");
@@ -40,7 +40,7 @@
     throw new Exception("Incompatible interface version \"" + interfaceVersionString + "\". 3.4 version supported only");
   int interfaceVersion = 0x34;
 
-  serviceManager.addService(service, host, port, args, systemId, systemType, typeOfNumber,
+  serviceManager.addService(/*service, */host, port, args, systemId, systemType, typeOfNumber,
                             numberingPlan, interfaceVersion, rangeOfAddress, smeNType);
 %>
 <h2>Add service <i><%=service%></i> to host <i><%=host%></i>: </h2>

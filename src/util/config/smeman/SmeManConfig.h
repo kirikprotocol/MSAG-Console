@@ -31,19 +31,26 @@ public:
 	};
 
 	SmeManConfig();
+	virtual ~SmeManConfig();
 
 	void clear();
 	status putRecord(SmeRecord *record);
 
 	status load(const char * const filename);
+	status reload();
 
 	status store(const char * const filename) const;
+	status store(std::ostream &out) const;
 
 	RecordIterator getRecordIterator() const;
+
+	std::string getText() const;
 protected:
 	DOMTreeReader reader;
 	log4cpp::Category &logger;
 	SRVector records;
+	std::auto_ptr<char> configFileName;
+
 private:
 };
 

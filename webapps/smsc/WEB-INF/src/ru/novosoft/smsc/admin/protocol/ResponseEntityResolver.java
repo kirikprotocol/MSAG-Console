@@ -23,9 +23,11 @@ public class ResponseEntityResolver implements EntityResolver
           throws SAXException, IOException
   {
     logger.debug("resolving entity \"" + systemId + "\"for response");
-    if (systemId.endsWith("response.dtd")) {
+    if (systemId.endsWith("response.dtd"))
+    {
       return new InputSource(new FileInputStream("/export/home/igork/cvs/smsc/config/response.dtd"));
-    } else
+    }
+    else
       return null;
   }
 }

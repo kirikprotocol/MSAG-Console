@@ -46,7 +46,9 @@ if ( success )
 #define SMSC_UTIL_CONFIG_SMEMAN_SMEMAN_STRUCTURES
 
 #include <inttypes.h>
+#include <log4cpp/Category.hh>
 #include <util/cstrings.h>
+#include <util/Logger.h>
 #include <string>
 
 namespace smsc {
@@ -55,6 +57,7 @@ namespace config {
 namespace smeman {
 
 using smsc::util::cStringCopy;
+using smsc::util::Logger;
 
 typedef enum{SMPP_SME,SS7_SME}RecordType;
 
@@ -104,20 +107,14 @@ struct SmeRecord
 		}
 	}
 
-	virtual ~SmeRecord()
+	~SmeRecord()
 	{
-		if (smeUid != 0)
-		{
-			delete[] smeUid;
-		}
+		if (smeUid != 0) delete[] smeUid;
 		if (rectype == SMPP_SME)
 		{
-			if (recdata.smppSme.systemType != 0)
-				delete[] recdata.smppSme.systemType;
-			if (recdata.smppSme.password != 0)
-				delete[] recdata.smppSme.password;
-			if (recdata.smppSme.addrRange != 0)
-				delete[] recdata.smppSme.addrRange;
+			if (recdata.smppSme.systemType != 0) delete[] recdata.smppSme.systemType;
+			if (recdata.smppSme.password != 0)   delete[] recdata.smppSme.password;
+			if (recdata.smppSme.addrRange != 0)  delete[] recdata.smppSme.addrRange;
 		} else {
 			// !!! not yet implemented
 		}

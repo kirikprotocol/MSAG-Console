@@ -9,10 +9,12 @@ import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.daemon.Daemon;
 import ru.novosoft.smsc.admin.daemon.DaemonManager;
+import ru.novosoft.smsc.admin.route.SME;
+import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.config.ConfigManager;
-import ru.novosoft.smsc.util.config.ConfigReader;
+import ru.novosoft.smsc.util.xml.Utils;
 
 import java.io.*;
 import java.util.*;
@@ -34,18 +36,22 @@ public class ServiceManager
   protected final static String SYSTEM_ID_PARAM_NAME = "system id";
   protected static ServiceManager serviceManager = null;
   private static boolean isInitialized = false;
-  protected static File webappFolder = new File("/export/home/igork/cvs/smsc/src/webapp/smsc");
-  protected static File webinfFolder = new File(webappFolder, "WEB-INF");
-  protected static File webinfLibFolder = new File(webinfFolder, "lib");
-  protected static File workFolder = new File(webinfFolder, "work");
-  protected static File daemonsFolder = new File(webinfFolder, "daemons");
+  protected static File webappFolder = null;
+  protected static File webinfFolder = null;
+  protected static File webinfLibFolder = null;
+  protected static File workFolder = null;
+  protected static File daemonsFolder = null;
+  protected static Smsc smsc = null;
 
   public static ServiceManager getInstance()
           throws IsNotInitializedException
   {
-    try {
+    try
+    {
       Category.getInstance(ServiceManager.class.getName()).debug("current folder: " + (new File(".")).getCanonicalPath());
-    } catch (IOException e) {
+    }
+    catch (IOException e)
+    {
     }
     if (!isInitialized)
       throw new IsNotInitializedException("Service Manager is not initialized. Make ServiceManager.Init(...) call before ServiceManager.getInstance()");
@@ -54,33 +60,49 @@ public class ServiceManager
     return serviceManager;
   }
 
-  public static void init(ConfigManager cfgManager)
+  public static void init(ConfigManager cfgManager, Smsc smscenter)
+          throws Config.ParamNotFoundException, Config.WrongParamTypeException
   {
     configManager = cfgManager;
     isInitialized = configManager != null;
+    webappFolder = new File(configManager.getConfig().getString("system.webapp folder"));
+    webinfFolder = new File(webappFolder, "WEB-INF");
+    webinfLibFolder = new File(webinfFolder, "lib");
+    workFolder = new File(webinfFolder, "work");
+    daemonsFolder = new File(webinfFolder, "daemons");
+    smsc = smscenter;
   }
 
 
   private Map services = new HashMap();
-  private DaemonManager daemonManager = new DaemonManager();
+  private DaemonManager daemonManager = null;
   protected static ConfigManager configManager = null;
   protected Category logger = Category.getInstance(this.getClass().getName());
 
   protected ServiceManager()
   {
     logger.debug("creating ServiceManager");
+    daemonManager = new DaemonManager(smsc);
     Config config = configManager.getConfig();
     Set daemons = config.getSectionChildSectionNames("daemons");
-    for (Iterator i = daemons.iterator(); i.hasNext();) {
+    for (Iterator i = daemons.iterator(); i.hasNext();)
+    {
       String encodedName = (String) i.next();
       String daemonName = StringEncoderDecoder.decodeDot(encodedName.substring(encodedName.lastIndexOf('.') + 1));
-      try {
+      try
+      {
         addDaemonInternal(daemonName, config.getInt(encodedName + ".port"));
-      } catch (AdminException e) {
+      }
+      catch (AdminException e)
+      {
         logger.error("Couldn't add daemon \"" + encodedName + "\"", e);
-      } catch (Config.ParamNotFoundException e) {
+      }
+      catch (Config.ParamNotFoundException e)
+      {
         logger.debug("Misconfigured daemon \"" + encodedName + "\", parameter port missing", e);
-      } catch (Config.WrongParamTypeException e) {
+      }
+      catch (Config.WrongParamTypeException e)
+      {
         logger.debug("Misconfigured daemon \"" + encodedName + "\", parameter port misformatted", e);
       }
     }
@@ -91,7 +113,8 @@ public class ServiceManager
   {
     Daemon d = daemonManager.addDaemon(host, port);
     Map newServices = d.listServices();
-    for (Iterator i = newServices.keySet().iterator(); i.hasNext();) {
+    for (Iterator i = newServices.keySet().iterator(); i.hasNext();)
+    {
       ServiceInfo info = (ServiceInfo) newServices.get((String) i.next());
       putService(new Service(info));
     }
@@ -103,9 +126,12 @@ public class ServiceManager
     addDaemonInternal(host, port);
     Config config = configManager.getConfig();
     config.setInt("daemons." + StringEncoderDecoder.encodeDot(host) + ".port", port);
-    try {
+    try
+    {
       configManager.save();
-    } catch (Exception e) {
+    }
+    catch (Exception e)
+    {
       logger.error("Couldn't save config", e);
     }
   }
@@ -122,7 +148,8 @@ public class ServiceManager
     OutputStream out = new BufferedOutputStream(new FileOutputStream(tmpFile));
 
     byte buffer[] = new byte[2048];
-    for (int readed = 0; (readed = in.read(buffer)) > -1;) {
+    for (int readed = 0; (readed = in.read(buffer)) > -1;)
+    {
       out.write(buffer, 0, readed);
     }
 
@@ -134,20 +161,22 @@ public class ServiceManager
   public synchronized String receiveNewService(InputStream in)
           throws AdminException
   {
-    try {
+    try
+    {
       File tmpFile = saveFileToTemp(in);
 
       ZipInputStream zin = new ZipInputStream(new BufferedInputStream(new FileInputStream(tmpFile)));
       ZipEntry entry = zin.getNextEntry();
       logger.debug("Receive new service:");
-      while (entry != null && !entry.getName().equals("config.xml")) {
+      while (entry != null && !entry.getName().equals("config.xml"))
+      {
         logger.debug("  Unzip entry: " + entry.getName());
         entry = zin.getNextEntry();
       }
       if (entry == null)
         throw new AdminException("/config.xml not found in distributive");
 
-      Config serviceConfig = ConfigReader.readConfig(zin);
+      Config serviceConfig = new Config(Utils.parse(zin));
       String systemId = serviceConfig.getString(SYSTEM_ID_PARAM_NAME);
 
       File renameTo = new File(workFolder, systemId + ".zip");
@@ -155,11 +184,17 @@ public class ServiceManager
         throw new AdminException("Couldn't rename \"" + tmpFile.getCanonicalPath() + "\" to \"" + renameTo.getCanonicalPath());
       logger.debug("Received new service \"" + systemId + "\"");
       return systemId;
-    } catch (Config.ParamNotFoundException e) {
+    }
+    catch (Config.ParamNotFoundException e)
+    {
       throw new AdminException("Couldn't find parameter \"" + SYSTEM_ID_PARAM_NAME + "\" in distributive config, nested: " + e.getMessage());
-    } catch (Config.WrongParamTypeException e) {
+    }
+    catch (Config.WrongParamTypeException e)
+    {
       throw new AdminException("Parameter \"" + SYSTEM_ID_PARAM_NAME + "\" in distributive config is not a string");
-    } catch (Exception e) {
+    }
+    catch (Exception e)
+    {
       throw new AdminException("Some exception occured, nested: " + e.getMessage());
     }
   }
@@ -178,7 +213,8 @@ public class ServiceManager
           throws IOException
   {
     ZipInputStream zin = new ZipInputStream(in);
-    for (ZipEntry e = zin.getNextEntry(); e != null; e = zin.getNextEntry()) {
+    for (ZipEntry e = zin.getNextEntry(); e != null; e = zin.getNextEntry())
+    {
       unZipFileFromArchive(folderUnpackTo, e.getName(), zin);
     }
     zin.close();
@@ -198,16 +234,25 @@ public class ServiceManager
   protected void moveJars(File serviceFolder, File jarsFolder)
   {
     File[] jars = serviceFolder.listFiles();
-    if (jars != null) {
-      for (int i = 0; i < jars.length; i++) {
-        if (jars[i].isFile() && jars[i].getName().endsWith(".jar")) {
+    if (jars != null)
+    {
+      for (int i = 0; i < jars.length; i++)
+      {
+        if (jars[i].isFile() && jars[i].getName().endsWith(".jar"))
+        {
           File newName = new File(jarsFolder, jars[i].getName());
-          try {
+          try
+          {
             jars[i].renameTo(newName);
-          } catch (Exception e) {
-            try {
+          }
+          catch (Exception e)
+          {
+            try
+            {
               logger.warn("couldn't rename \"" + jars[i].getCanonicalPath() + "\" to \"" + newName.getCanonicalPath() + '"');
-            } catch (IOException e1) {
+            }
+            catch (IOException e1)
+            {
             }
           }
         }
@@ -215,24 +260,26 @@ public class ServiceManager
     }
   }
 
-  public synchronized void addService(String service,
-                                      String host,
-                                      int port,
-                                      String args,
-                                      String systemId,
-                                      String systemType,
-                                      int typeOfNumber,
-                                      int numberingPlan,
-                                      int interfaceVersion,
-                                      String rangeOfAddress,
-                                      String smeNType)
+  public synchronized void addService(/*String service,*/
+          String host,
+          int port,
+          String args,
+          String systemId,
+          String systemType,
+          int typeOfNumber,
+          int numberingPlan,
+          int interfaceVersion,
+          String rangeOfAddress,
+          String smeNType)
           throws AdminException
   {
-    logger.debug("Add service \"" + service + '/' + systemId + "\" (" + host + ':' + port + ")");
-    try {
+    logger.debug("Add service \"" + systemId + "\" (" + host + ':' + port + ")");
+    try
+    {
       File serviceFolder = getServiceFolder(host, systemId);
+      File serviceWarFile = new File(workFolder, systemId + ".zip");
       unZipArchive(serviceFolder,
-                   new BufferedInputStream(new FileInputStream(new File(workFolder, systemId + ".zip"))));
+                   new BufferedInputStream(new FileInputStream(serviceWarFile)));
       File jspFolder = new File(serviceFolder, "jsp");
       File newJspFolder = getServiceJspsFolder(systemId);
       if (!jspFolder.renameTo(newJspFolder))
@@ -240,11 +287,16 @@ public class ServiceManager
       File newLogFolder = new File(serviceFolder, "log");
       newLogFolder.mkdir();
       moveJars(new File(serviceFolder, "lib"), webinfLibFolder);
-    } catch (IOException e) {
+      serviceWarFile.delete();
+    }
+    catch (IOException e)
+    {
       throw new AdminException("Couldn't unpack service, nested: " + e.getMessage());
     }
 
-    ServiceInfo serviceInfo = new ServiceInfo(service, systemId, host, port, args);
+    smsc.getSmes().add(new SME(systemId, SME.SMPP, typeOfNumber, numberingPlan, interfaceVersion,
+                               systemType, "", rangeOfAddress, Integer.decode(smeNType).intValue()));
+    ServiceInfo serviceInfo = new ServiceInfo(/*service, */systemId, host, port, args, smsc.getSmes());
 
     Daemon d = getDaemon(serviceInfo.getHost());
     if (services.containsKey(serviceInfo.getId()))
@@ -260,8 +312,10 @@ public class ServiceManager
   protected boolean recursiveDeleteFolder(File folder)
   {
     String[] childNames = folder.list();
-    if (childNames != null) {
-      for (int i = 0; i < childNames.length; i++) {
+    if (childNames != null)
+    {
+      for (int i = 0; i < childNames.length; i++)
+      {
         File child = new File(folder, childNames[i]);
         if (child.isDirectory())
           recursiveDeleteFolder(child);
@@ -291,7 +345,8 @@ public class ServiceManager
     Service s = getService(serviceId);
     Daemon d = getDaemon(s.getInfo().getHost());
     s.getInfo().setPid(d.startService(serviceId));
-    if (s.getInfo().isRunning()) {
+    if (s.getInfo().isRunning())
+    {
       s.refreshComponents();
     }
   }
@@ -332,11 +387,13 @@ public class ServiceManager
     if (!params.keySet().equals(args.keySet()))
       throw new AdminException("Wrong arguments");
     Map arguments = new HashMap();
-    for (Iterator i = params.values().iterator(); i.hasNext();) {
+    for (Iterator i = params.values().iterator(); i.hasNext();)
+    {
       Parameter p = (Parameter) i.next();
       if (args.get(p.getName()) == null)
         throw new AdminException("Parameter \"" + p.getName() + "\" not specified");
-      switch (p.getType().getId()) {
+      switch (p.getType().getId())
+      {
         case Type.StringType:
           {
             arguments.put(p.getName(), args.get(p.getName()));
@@ -378,7 +435,8 @@ public class ServiceManager
       throw new AdminException("Host \"" + host + "\" not connected");
 
     Set result = new HashSet();
-    for (Iterator i = services.keySet().iterator(); i.hasNext();) {
+    for (Iterator i = services.keySet().iterator(); i.hasNext();)
+    {
       Service s = getService((String) i.next());
       if (s.getInfo().getHost().equals(host))
         result.add(s.getInfo().getId());
@@ -400,9 +458,12 @@ public class ServiceManager
     refreshServices();
     Config config = configManager.getConfig();
     config.removeParam("daemons." + StringEncoderDecoder.encode(host) + ".port");
-    try {
+    try
+    {
       configManager.save();
-    } catch (Exception e) {
+    }
+    catch (Exception e)
+    {
       logger.error("Couldn't save config", e);
     }
   }
@@ -412,7 +473,8 @@ public class ServiceManager
   {
     Set serviceIds = getServiceIds(hostName);
     int result = 0;
-    for (Iterator i = serviceIds.iterator(); i.hasNext();) {
+    for (Iterator i = serviceIds.iterator(); i.hasNext();)
+    {
       String serviceId = (String) i.next();
       if (getServiceInfo(serviceId).isRunning())
         result++;
@@ -427,14 +489,15 @@ public class ServiceManager
   }
 
   public synchronized void setStartupParameters(String serviceId, String host,
-                                                String serviceName, int port, String args)
+                                                /*String serviceName, */int port, String args)
           throws AdminException
   {
     Service s = getService(serviceId);
     Daemon d = getDaemon(s.getInfo().getHost());
-    d.setServiceStartupParameters(serviceId, serviceName, port, args);
-    if (!s.getInfo().isRunning()) {
-      replaceService(new Service(new ServiceInfo(serviceName, serviceId, d.getHost(), port, args)));
+    d.setServiceStartupParameters(serviceId, /*serviceName, */port, args);
+    if (!s.getInfo().isRunning())
+    {
+      replaceService(new Service(new ServiceInfo(/*serviceName, */serviceId, d.getHost(), port, args, smsc.getSmes())));
     }
   }
 
@@ -443,7 +506,8 @@ public class ServiceManager
           throws AdminException
   {
     services.clear();
-    for (Iterator i = daemonManager.getHosts().iterator(); i.hasNext();) {
+    for (Iterator i = daemonManager.getHosts().iterator(); i.hasNext();)
+    {
       Daemon d = daemonManager.getDaemon((String) i.next());
       Map infos = d.listServices();
       for (Iterator j = infos.values().iterator(); j.hasNext();)
@@ -482,10 +546,14 @@ public class ServiceManager
           throws AdminException
   {
     services.put(s.getInfo().getId(), s);
-    if (s.getInfo().isRunning()) {
-      try {
+    if (s.getInfo().isRunning())
+    {
+      try
+      {
         s.refreshComponents();
-      } catch (AdminException e) {
+      }
+      catch (AdminException e)
+      {
         s.getInfo().setPid(0);
       }
     }

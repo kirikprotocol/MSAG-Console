@@ -41,7 +41,8 @@ public class Method
 
   public boolean equals(Object obj)
   {
-    if (obj != null && obj instanceof Method) {
+    if (obj != null && obj instanceof Method)
+    {
       Method o = (Method) obj;
       return name.equals(o.name) && type.equals(o.type) && params.equals(o.params);
     }
@@ -58,7 +59,8 @@ public class Method
     name = methodElem.getAttribute("name");
     type = Type.getInstance(methodElem.getAttribute("type"));
     NodeList list = methodElem.getElementsByTagName("param");
-    for (int i = 0; i < list.getLength(); i++) {
+    for (int i = 0; i < list.getLength(); i++)
+    {
       Element paramElem = (Element) list.item(i);
       Parameter p = new Parameter(paramElem);
       params.put(p.getName(), p);

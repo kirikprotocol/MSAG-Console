@@ -26,6 +26,7 @@ public:
 	~DOMTreeReader();
 
 	DOM_Document read(const char * const filename) throw (ParseException);
+	DOM_Document read(const InputSource & source) throw (ParseException);
 
 protected:
 	DOMParser *parser;

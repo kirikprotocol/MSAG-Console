@@ -42,13 +42,15 @@ public class Service extends Proxy
           throws AdminException
   {
     if (component != null && method != null
-            && method.equals(component.getMethods().get(method.getName()))) {
+            && method.equals(component.getMethods().get(method.getName())))
+    {
       Response r = runCommand(new CommandCall(info.getId(), component.getName(), method.getName(), returnType, arguments));
       if (r.getStatus() != Response.StatusOk)
         throw new AdminException("Error occured: " + r.getDataAsString());
       Element resultElem = (Element) r.getData().getElementsByTagName("variant").item(0);
       Type resultType = Type.getInstance(resultElem.getAttribute("type"));
-      switch (resultType.getId()) {
+      switch (resultType.getId())
+      {
         case Type.StringType:
           return Utils.getNodeText(resultElem);
         case Type.IntType:
@@ -58,7 +60,8 @@ public class Service extends Proxy
         default:
           throw new AdminException("Unknown result type");
       }
-    } else
+    }
+    else
       throw new AdminException("Incorrect method signature");
   }
 

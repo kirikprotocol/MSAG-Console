@@ -116,11 +116,13 @@ public class Config
   {
     int dotpos = sectionName.length();
     Set result = new HashSet();
-    for (Iterator i = params.keySet().iterator(); i.hasNext();) {
+    for (Iterator i = params.keySet().iterator(); i.hasNext();)
+    {
       String name = (String) i.next();
       if (name.length() > (dotpos + 1)
               && name.startsWith(sectionName)
-              && name.lastIndexOf('.') > dotpos) {
+              && name.lastIndexOf('.') > dotpos)
+      {
         result.add(name.substring(0, name.indexOf('.', dotpos + 1)));
       }
     }
@@ -134,9 +136,11 @@ public class Config
             : prefix + "." + elem.getAttribute("name");
 
     NodeList list = elem.getChildNodes();
-    for (int i = 0; i < list.getLength(); i++) {
+    for (int i = 0; i < list.getLength(); i++)
+    {
       Node node = (Node) list.item(i);
-      if (node.getNodeType() == Node.ELEMENT_NODE) {
+      if (node.getNodeType() == Node.ELEMENT_NODE)
+      {
         Element element = (Element) node;
         if (element.getNodeName().equals("section"))
           parseNode(fullName, element);
@@ -153,11 +157,16 @@ public class Config
             : prefix + "." + elem.getAttribute("name");
     String type = elem.getAttribute("type");
     String value = Utils.getNodeText(elem);
-    if (type.equalsIgnoreCase("int")) {
+    if (type.equalsIgnoreCase("int"))
+    {
       params.put(fullName, new Integer(value));
-    } else if (type.equalsIgnoreCase("boolean")) {
+    }
+    else if (type.equalsIgnoreCase("boolean"))
+    {
       params.put(fullName, new Boolean(value));
-    } else {
+    }
+    else
+    {
       params.put(fullName, value);
     }
   }

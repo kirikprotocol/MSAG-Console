@@ -5,7 +5,7 @@
 boolean show_source_adresses = process_trigger("show_source_adresses", session, request);
 boolean show_destination_adresses = process_trigger("show_destination_adresses", session, request);
 %>
-  <h4>Routes</h4>
+  <h4>Routes</h4><a href="show_smsc_data.jsp">Show SMSC data</a>
   <a href="route_filter.jsp">Filter</a> &nbsp;&nbsp;&nbsp; 
   <%=switch_trigger("index.jsp?", "show_source_adresses", "Show sources", "Hide sources", session, request)%>
   <%=switch_trigger("index.jsp?", "show_destination_adresses", "Show destinations", "Hide destinations", session, request)%>
@@ -17,7 +17,7 @@ boolean show_destination_adresses = process_trigger("show_destination_adresses",
 			</tr>
     </thead>
 		<tbody>
-      <% for (Iterator i = routeManager.getRoutes().iterator(); i.hasNext();) {
+      <% for (Iterator i = smsc.getRoutes().iterator(); i.hasNext();) {
         Route route = (Route) i.next(); %>
   			<tr class="list">
   				<td class="list" width="99%">

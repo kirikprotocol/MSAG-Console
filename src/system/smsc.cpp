@@ -235,7 +235,6 @@ void Smsc::shutdown()
   __trace__("shutting down");
   tp.shutdown();
   smsc::store::StoreManager::shutdown();
-  smsc::util::config::Manager::deinit();
 }
 
 };//system

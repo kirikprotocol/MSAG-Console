@@ -1,5 +1,6 @@
 <%@ include file="/common/header.jsp"%>
 <%@ include file="menu.jsp" %>
-SMSC admin module<br>
-<a href="apply.jsp">Apply current Route &amp; SME config</a>
+Applying current Route & SME config...
+<% smsc.apply(); %>
+Route & SME config applyed sucessfully.
 <%@ include file="/common/footer.jsp"%>

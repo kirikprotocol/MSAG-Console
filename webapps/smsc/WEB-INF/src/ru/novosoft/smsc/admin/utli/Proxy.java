@@ -66,17 +66,23 @@ public class Proxy
     if (getStatus() != StatusConnected)
       connect(host, port);
 
-    try {
+    try
+    {
       logger.debug("write command " + command);
       writer.write(command);
       logger.debug("reading response");
       return reader.read();
-    } catch (IOException e) {
-      try {
+    }
+    catch (IOException e)
+    {
+      try
+      {
         reconnect();
         writer.write(command);
         return reader.read();
-      } catch (IOException e1) {
+      }
+      catch (IOException e1)
+      {
         status = StatusDisconnected;
         throw new AdminException(e1.getMessage());
       }
@@ -87,11 +93,15 @@ public class Proxy
   {
     logger.debug("disconnect()");
     status = StatusDisconnected;
-    if (socket != null) {
-      try {
+    if (socket != null)
+    {
+      try
+      {
         socket.close();
         socket = null;
-      } catch (IOException e) {
+      }
+      catch (IOException e)
+      {
         logger.debug("Exception on closeSocket", e);
       }
     }
@@ -109,21 +119,27 @@ public class Proxy
           throws AdminException
   {
     logger.debug("connect to \"" + host + ':' + port + '"');
-    if (status == StatusDisconnected) {
+    if (status == StatusDisconnected)
+    {
       this.host = host;
       this.port = port;
-      try {
+      try
+      {
         socket = new Socket(host, port);
         out = socket.getOutputStream();
         in = socket.getInputStream();
         writer = new CommandWriter(out);
         reader = new ResponseReader(in);
         status = StatusConnected;
-      } catch (IOException e) {
-        logger.warn("Couldn't connect", e);
+      }
+      catch (IOException e)
+      {
+        logger.warn("Couldn't connect to \"" + host + ':' + port + '"', e);
         throw new AdminException("Couldn't connect to \"" + host + ':' + port + "\", nested: " + e.getMessage());
       }
-    } else {
+    }
+    else
+    {
       throw new AdminException("Already connected");
     }
   }

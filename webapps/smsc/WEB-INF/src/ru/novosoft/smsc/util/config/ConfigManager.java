@@ -7,6 +7,7 @@ package ru.novosoft.smsc.util.config;
 
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.util.xml.Utils;
 
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
@@ -73,7 +74,7 @@ public class ConfigManager
           throws FactoryConfigurationError, ParserConfigurationException, IOException, SAXException
   {
     InputStream inputStream = new BufferedInputStream(new FileInputStream(configFileName));
-    config = ConfigReader.readConfig(inputStream);
+    config = new Config(Utils.parse(inputStream));
   }
 
   public Config getConfig()
@@ -94,13 +95,19 @@ public class ConfigManager
     public void putParameter(String name, Object value)
     {
       int dotpos = name.indexOf('.');
-      if (dotpos < 0) {
+      if (dotpos < 0)
+      {
         params.put(name, value);
-      } else if (dotpos == 0) {
+      }
+      else if (dotpos == 0)
+      {
         putParameter(name.substring(1), value);
-      } else {
+      }
+      else
+      {
         SaveableConfigTree sec = (SaveableConfigTree) sections.get(name.substring(0, dotpos));
-        if (sec == null) {
+        if (sec == null)
+        {
           sec = new SaveableConfigTree();
           sections.put(name.substring(0, dotpos), sec);
         }
@@ -118,19 +125,29 @@ public class ConfigManager
     private void writeParams(OutputStream out, String prefix, Map parameters)
             throws WrongParamTypeException, IOException
     {
-      for (Iterator i = parameters.keySet().iterator(); i.hasNext();) {
+      for (Iterator i = parameters.keySet().iterator(); i.hasNext();)
+      {
         String paramName = (String) i.next();
         Object paramValue = parameters.get(paramName);
         out.write((prefix + "<param name=\"" + StringEncoderDecoder.encode(paramName) + "\" type=\"").getBytes());
-        if (paramValue instanceof String) {
+        if (paramValue instanceof String)
+        {
           out.write(("string\">" + ((String) paramValue) + "</param>\n").getBytes());
-        } else if (paramValue instanceof Integer) {
+        }
+        else if (paramValue instanceof Integer)
+        {
           out.write(("int\">" + StringEncoderDecoder.encode(String.valueOf(((Integer) paramValue).longValue())) + "</param>\n").getBytes());
-        } else if (paramValue instanceof Long) {
+        }
+        else if (paramValue instanceof Long)
+        {
           out.write(("int\">" + StringEncoderDecoder.encode(String.valueOf(((Long) paramValue).longValue())) + "</param>\n").getBytes());
-        } else if (paramValue instanceof Boolean) {
+        }
+        else if (paramValue instanceof Boolean)
+        {
           out.write(("bool\">" + StringEncoderDecoder.encode(String.valueOf(((Boolean) paramValue).booleanValue())) + "</param>\n").getBytes());
-        } else {
+        }
+        else
+        {
           throw new WrongParamTypeException("unknown type of parameter " + paramName);
         }
       }
@@ -139,7 +156,8 @@ public class ConfigManager
     private void writeSections(OutputStream out, String prefix, Map secs)
             throws IOException, WrongParamTypeException
     {
-      for (Iterator i = secs.keySet().iterator(); i.hasNext();) {
+      for (Iterator i = secs.keySet().iterator(); i.hasNext();)
+      {
         String secName = (String) i.next();
         SaveableConfigTree childs = (SaveableConfigTree) secs.get(secName);
         out.write((prefix + "<section name=\"" + StringEncoderDecoder.encode(secName) + "\">\n").getBytes());
@@ -153,7 +171,8 @@ public class ConfigManager
           throws IOException, WrongParamTypeException
   {
     org.apache.log4j.Category.getInstance(this.getClass()).debug("SAVE");
-    for (Iterator iii = config.params.keySet().iterator(); iii.hasNext();) {
+    for (Iterator iii = config.params.keySet().iterator(); iii.hasNext();)
+    {
       String name = (String) iii.next();
       org.apache.log4j.Category.getInstance(this.getClass()).debug(name);
     }
@@ -161,7 +180,8 @@ public class ConfigManager
     SaveableConfigTree tree = new SaveableConfigTree();
     File tmpFile = File.createTempFile("smsc_config_", ".xml.tmp", new File(configurationFileDir));
     OutputStream out = new FileOutputStream(tmpFile);
-    for (Iterator i = config.params.keySet().iterator(); i.hasNext();) {
+    for (Iterator i = config.params.keySet().iterator(); i.hasNext();)
+    {
       String name = (String) i.next();
       tree.putParameter(name, config.params.get(name));
     }

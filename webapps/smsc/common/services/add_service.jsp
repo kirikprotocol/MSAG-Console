@@ -5,9 +5,13 @@
 	<h2>Add service:</h2>
 	<h3>hosting parameters:</h3>
 	<table class="list">
-		<tr class="list">
+		<!--tr class="list">
 			<th class="list">Service name</th>
-			<td class="list"><input name="service" value="" style="width: 100%;"></td></tr>
+			<td class="list"><input name="service" value="" style="width: 100%;"></td></tr-->
+			<tr class="list">
+				<th class="list">Distribute</th>
+				<td class="list"><input type="file" name="distribute" style="width: 100%;"></td>
+			</tr>
 		<tr class="list">
 			<th class="list">Host</th>
 			<td class="list">
@@ -24,10 +28,6 @@
 			<tr class="list">
 				<th class="list">Port</th>
 				<td class="list"><input name="port" value="" style="width: 100%;"></td>
-			</tr>
-			<tr class="list">
-				<th class="list">Distribute</th>
-				<td class="list"><input type="file" name="distribute" style="width: 100%;"></td>
 			</tr>
 			<tr class="list" title="maybe, it is not useful">
 				<th class="list">Startup Arguments</th>

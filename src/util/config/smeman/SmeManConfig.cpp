@@ -33,12 +33,24 @@ SmeManConfig::status SmeManConfig::RecordIterator::fetchNext(SmeRecord *&record)
 }
 
 SmeManConfig::SmeManConfig()
-	: logger(smsc::util::Logger::getCategory("smsc.igork_tests.smeman.SmeManConfig"))
+	: logger(smsc::util::Logger::getCategory("smsc.util.config.smeman.SmeManConfig"))
 {
+}
+
+SmeManConfig::~SmeManConfig()
+{
+	clear();
 }
 
 void SmeManConfig::clear()
 {
+	for (SRVector::const_iterator i = records.begin(); i != records.end(); i++)
+	{
+		if (*i != 0)
+		{
+			delete (*i);
+		}
+	}
 	records.clear();
 }
 
@@ -52,6 +64,7 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
 {
 	try
 	{
+		configFileName.reset(cStringCopy(filename));
 		DOM_Document document = reader.read(filename);
 		DOM_Element elem = document.getDocumentElement();
 		DOM_NodeList list = elem.getElementsByTagName("smerecord");
@@ -135,16 +148,29 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
 				records.push_back(record);
 			}
 		}
-	} catch (DOMTreeReader::ParseException &e) {
+	} catch (...) {
 		return fail;
 	}
 	return success;
 }
 
+SmeManConfig::status SmeManConfig::reload()
+{
+	clear();
+	std::auto_ptr<char> cfn;
+	cfn = configFileName;
+	return load(cfn.get());
+}
+
 SmeManConfig::status SmeManConfig::store(const char * const filename) const
 {
+	std::ofstream out(filename);
+	return store(out);
+}
+
+SmeManConfig::status SmeManConfig::store(std::ostream &out) const
+{
 	try {
-		std::ofstream out(filename);
 		out << "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>" << std::endl;
 		out << "<!DOCTYPE records SYSTEM \"SmeRecords.dtd\">" << std::endl;
 		out << "<records>" << std::endl;
@@ -180,6 +206,15 @@ SmeManConfig::status SmeManConfig::store(const char * const filename) const
 SmeManConfig::RecordIterator SmeManConfig::getRecordIterator() const
 {
 	return RecordIterator(records);
+}
+
+std::string SmeManConfig::getText() const
+{
+	std::ostringstream out;
+	if (store(out) == success)
+		return out.str();
+	else
+		return std::string();
 }
 
 }

@@ -27,11 +27,15 @@ public class ResponseReader
   {
     int length = readLength();
     byte buffer[] = new byte[length];
-    for (int readed = 0; readed < length;) {
+    for (int readed = 0; readed < length;)
+    {
       int readedNow = 0;
-      try {
+      try
+      {
         readedNow = in.read(buffer, readed, length - readed);
-      } catch (IOException e) {
+      }
+      catch (IOException e)
+      {
         logger.info("Couldn't read response", e);
         throw e;
       }
@@ -47,11 +51,15 @@ public class ResponseReader
           throws IOException
   {
     int length = 0;
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++)
+    {
       int c = 0;
-      try {
+      try
+      {
         c = in.read();
-      } catch (IOException e) {
+      }
+      catch (IOException e)
+      {
         logger.info("Couldn't read response length", e);
         throw e;
       }

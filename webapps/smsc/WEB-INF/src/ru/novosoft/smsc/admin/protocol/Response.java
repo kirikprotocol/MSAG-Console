@@ -34,7 +34,8 @@ public class Response
     doc = null;
     status = 0;
     logger = Category.getInstance("smsc.admin.service.protocol.Response");
-    try {
+    try
+    {
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
       factory.setIgnoringComments(true);
       factory.setValidating(false);
@@ -46,19 +47,29 @@ public class Response
       doc = builder.parse(source);
       Element main = doc.getDocumentElement();
       status = parseStatus(main.getAttribute("status"));
-    } catch (FactoryConfigurationError error) {
+    }
+    catch (FactoryConfigurationError error)
+    {
       logger.warn("Unrecognized error in constructor", error);
       throw new AdminException(error.getMessage());
-    } catch (ParserConfigurationException e) {
+    }
+    catch (ParserConfigurationException e)
+    {
       logger.warn("Unrecognized error in constructor", e);
       throw new AdminException(e.getMessage());
-    } catch (SAXException e) {
+    }
+    catch (SAXException e)
+    {
       logger.warn("Unrecognized error in constructor", e);
       throw new AdminException(e.getMessage());
-    } catch (IOException e) {
+    }
+    catch (IOException e)
+    {
       logger.warn("Unrecognized error in constructor", e);
       throw new AdminException(e.getMessage());
-    } catch (Throwable t) {
+    }
+    catch (Throwable t)
+    {
       logger.warn("Unrecognized error in constructor", t);
       throw new AdminException(t.getMessage());
     }

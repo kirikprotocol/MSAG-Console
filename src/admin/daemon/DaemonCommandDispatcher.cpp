@@ -85,11 +85,11 @@ void DaemonCommandDispatcher::updateServiceFromConfig(Service * service)
 	serviceSectionName += tmpServiceId.get();
 
 	try {
-		std::string tmpName = serviceSectionName;
+		/*std::string tmpName = serviceSectionName;
 		tmpName += ".name";
-		const char * const serviceName = configManager->getString(tmpName.c_str());
+		const char * const serviceName = configManager->getString(tmpName.c_str());*/
 		
-		tmpName = serviceSectionName;
+		std::string tmpName = serviceSectionName;
 		tmpName += ".port";
 		const in_port_t servicePort = configManager->getInt(tmpName.c_str());
 	
@@ -97,7 +97,7 @@ void DaemonCommandDispatcher::updateServiceFromConfig(Service * service)
 		tmpName += ".args";
 		const char * const serviceArgs = configManager->getString(tmpName.c_str());
 
-		service->setName(serviceName);
+		//service->setName(serviceName);
 		service->setPort(servicePort);
 		service->setArgs(serviceArgs);
 	}
@@ -207,19 +207,19 @@ Response * DaemonCommandDispatcher::add_service(const CommandAddService * const 
 							 command->getConfigFileName());*/
 	if (command != 0)
 	{
-		if (command->getServiceId() != 0 && command->getServiceName() != 0)
+		if (command->getServiceId() != 0/* && command->getServiceName() != 0*/)
 		{
 			{
 				MutexGuard guard(servicesListMutex);
-				services.add(new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), command->getServiceId(), command->getServiceName(), command->getPort(), command->getArgs()));
+				services.add(new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), command->getServiceId(), /*command->getServiceName(), */command->getPort(), command->getArgs()));
 			}
-			putServiceToConfig(command->getServiceId(), command->getServiceName(), command->getPort(), command->getArgs());
+			putServiceToConfig(command->getServiceId(), /*command->getServiceName(), */command->getPort(), command->getArgs());
 			return new Response(Response::Ok, 0);
 		}
 		else
 		{
-			logger.warn("service name or service id not specified");
-			throw AdminException("service name or service id not specified");
+			logger.warn("service id not specified");
+			throw AdminException("service id not specified");
 		}
 	}
 	else
@@ -230,7 +230,7 @@ Response * DaemonCommandDispatcher::add_service(const CommandAddService * const 
 }
 
 void DaemonCommandDispatcher::putServiceToConfig(const char * const serviceId,
-																								 const char * const serviceName,
+																								 //const char * const serviceName,
 																								 const in_port_t servicePort,
 																								 const char * const serviceArgs)
 {
@@ -239,11 +239,11 @@ void DaemonCommandDispatcher::putServiceToConfig(const char * const serviceId,
 	std::auto_ptr<char> tmpServiceId(encodeDot(cStringCopy(serviceId)));
 	serviceSectionName += tmpServiceId.get();
 
-	std::string tmpName = serviceSectionName;
+	/*std::string tmpName = serviceSectionName;
 	tmpName += ".name";
-	configManager->setString(tmpName.c_str(), serviceName);
+	configManager->setString(tmpName.c_str(), serviceName);*/
 	
-	tmpName = serviceSectionName;
+	std::string tmpName = serviceSectionName;
 	tmpName += ".port";
 	configManager->setInt(tmpName.c_str(), servicePort);
 
@@ -405,11 +405,11 @@ void DaemonCommandDispatcher::addServicesFromConfig()
 			std::string prefix(fullServiceSection);
 			prefix += '.';
 		
-			std::string tmp = prefix;
+			/*std::string tmp = prefix;
 			tmp += "name";
-			std::auto_ptr<char> serviceName(configManager->getString(tmp.c_str()));
+			std::auto_ptr<char> serviceName(configManager->getString(tmp.c_str()));*/
 		
-			tmp = prefix;
+			std::string tmp = prefix;
 			tmp += "port";
 			in_port_t servicePort = configManager->getInt(tmp.c_str());
 		
@@ -417,7 +417,7 @@ void DaemonCommandDispatcher::addServicesFromConfig()
 			tmp += "args";
 			std::auto_ptr<char> serviceArgs(configManager->getString(tmp.c_str()));
 			
-			services.add(new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), serviceId.get(), serviceName.get(), servicePort, serviceArgs.get()));
+			services.add(new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), serviceId.get(), /*serviceName.get(), */servicePort, serviceArgs.get()));
 		}
 	}
 	catch (AdminException &e)
@@ -438,14 +438,14 @@ Response * DaemonCommandDispatcher::set_service_startup_parameters(const Command
 	logger.debug("set service startup parameters");
 	if (command != 0)
 	{
-		if (command->getServiceId() != 0 && command->getServiceName() != 0)
+		if (command->getServiceId() != 0/* && command->getServiceName() != 0*/)
 		{
 			MutexGuard guard(servicesListMutex);
 			Service *s = services[command->getServiceId()];
-			putServiceToConfig(command->getServiceId(), command->getServiceName(), command->getPort(), command->getArgs());
+			putServiceToConfig(command->getServiceId(), /*command->getServiceName(), */command->getPort(), command->getArgs());
 			if (!s->isRunning())
 			{
-				s->setName(command->getServiceName());
+				//s->setName(command->getServiceName());
 				s->setPort(command->getPort());
 				s->setArgs(command->getArgs());
 			}

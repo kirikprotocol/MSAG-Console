@@ -5,6 +5,12 @@
  */
 package ru.novosoft.smsc.admin.route;
 
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
+
+import java.io.PrintWriter;
+
 
 public class Source
 {
@@ -17,6 +23,24 @@ public class Source
       throw new NullPointerException("Subject is null");
 
     subj = s;
+  }
+
+  public Source(Element srcElem, SubjectList subjects)
+  {
+    NodeList list = srcElem.getElementsByTagName("subject");
+    if (list.getLength() > 0)
+    {
+      Element subjElem = (Element) list.item(0);
+      subj = subjects.get(subjElem.getAttribute("id"));
+      if (subj == null)
+        throw new NullPointerException("Subject is unknown");
+    }
+    else
+    {
+      list = srcElem.getElementsByTagName("mask");
+      Element maskElem = (Element) list.item(0);
+      mask = new Mask(maskElem.getAttribute("value"));
+    }
   }
 
   public Source(Mask m)
@@ -46,5 +70,16 @@ public class Source
       return subj.getMasks();
     else
       return new MaskList(mask);
+  }
+
+  public PrintWriter store(PrintWriter out)
+  {
+    out.println("    <source>");
+    if (isSubject())
+      out.println("      <subject id=\"" + StringEncoderDecoder.encode(subj.getName()) + "\"/>");
+    else
+      out.println("      <mask value=\"" + StringEncoderDecoder.encode(mask.getMask()) + "\"/>");
+    out.println("    </source>");
+    return out;
   }
 }

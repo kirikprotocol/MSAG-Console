@@ -5,6 +5,10 @@
  */
 package ru.novosoft.smsc.admin.route;
 
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
+import java.io.PrintWriter;
 import java.util.*;
 
 
@@ -14,6 +18,15 @@ public class SourceList
 
   public SourceList()
   {
+  }
+
+  public SourceList(Element sourceListElement, SubjectList subjects)
+  {
+    NodeList list = sourceListElement.getElementsByTagName("source");
+    for (int i = 0; i < list.getLength(); i++)
+    {
+      add(new Source((Element) list.item(i), subjects));
+    }
   }
 
   public void add(Source s)
@@ -74,7 +87,8 @@ public class SourceList
   public Set getSubjectNames()
   {
     Set result = new HashSet();
-    for (Iterator i = sources.values().iterator(); i.hasNext();) {
+    for (Iterator i = sources.values().iterator(); i.hasNext();)
+    {
       Source s = (Source) i.next();
       if (s.isSubject())
         result.add(s.getName());
@@ -86,12 +100,22 @@ public class SourceList
   public Set getMaskNames()
   {
     Set result = new HashSet();
-    for (Iterator i = sources.values().iterator(); i.hasNext();) {
+    for (Iterator i = sources.values().iterator(); i.hasNext();)
+    {
       Source s = (Source) i.next();
       if (!s.isSubject())
         result.addAll(s.getMasks().getNames());
     }
 
     return result;
+  }
+
+  public PrintWriter store(PrintWriter out)
+  {
+    for (Iterator i = iterator(); i.hasNext();)
+    {
+      ((Source) i.next()).store(out);
+    }
+    return out;
   }
 }

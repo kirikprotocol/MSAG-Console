@@ -5,7 +5,11 @@
  */
 package ru.novosoft.smsc.admin.route;
 
-import javax.servlet.http.HttpServletRequest;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import ru.novosoft.smsc.admin.AdminException;
+
+import java.io.PrintWriter;
 import java.util.*;
 
 
@@ -15,6 +19,16 @@ public class DestinationList
 
   public DestinationList()
   {
+  }
+
+  public DestinationList(Element destinationListElement, SubjectList subjects, SMEList smes)
+          throws AdminException
+  {
+    NodeList list = destinationListElement.getElementsByTagName("destination");
+    for (int i = 0; i < list.getLength(); i++)
+    {
+      add(new Destination((Element) list.item(i), subjects, smes));
+    }
   }
 
   public void add(Destination d)
@@ -52,7 +66,8 @@ public class DestinationList
     return destinations.keySet();
   }
 
-  public Destination remove(String name) {
+  public Destination remove(String name)
+  {
     return (Destination) destinations.remove(name);
   }
 
@@ -74,7 +89,8 @@ public class DestinationList
   public Set getSubjectNames()
   {
     Set result = new HashSet();
-    for (Iterator i = destinations.values().iterator(); i.hasNext();) {
+    for (Iterator i = destinations.values().iterator(); i.hasNext();)
+    {
       Destination d = (Destination) i.next();
       if (d.isSubject())
         result.add(d.getName());
@@ -86,12 +102,22 @@ public class DestinationList
   public Set getMaskNames()
   {
     Set result = new HashSet();
-    for (Iterator i = destinations.values().iterator(); i.hasNext();) {
+    for (Iterator i = destinations.values().iterator(); i.hasNext();)
+    {
       Destination d = (Destination) i.next();
       if (!d.isSubject())
         result.addAll(d.getMasks().getNames());
     }
 
     return result;
+  }
+
+  public PrintWriter store(PrintWriter out)
+  {
+    for (Iterator i = iterator(); i.hasNext();)
+    {
+      ((Destination) i.next()).store(out);
+    }
+    return out;
   }
 }

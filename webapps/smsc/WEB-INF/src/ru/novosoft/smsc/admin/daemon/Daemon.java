@@ -11,6 +11,7 @@ import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.protocol.*;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
+import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.utli.Proxy;
 
 import java.io.InputStream;
@@ -28,11 +29,13 @@ public class Daemon extends Proxy
   private CommandWriter writer;
   private ResponseReader reader;
   private Category logger = Category.getInstance(this.getClass().getName());
+  private Smsc smsc = null;
 
-  public Daemon(String host, int port)
+  public Daemon(String host, int port, Smsc smsc)
           throws AdminException
   {
     super(host, port);
+    this.smsc = smsc;
     connect(host, port);
   }
 
@@ -47,9 +50,12 @@ public class Daemon extends Proxy
       throw new AdminException("Couldn't start service \"" + serviceId + "\", nested:" + r.getDataAsString());
 
     String pidStr = r.getDataAsString().trim();
-    try {
+    try
+    {
       return Long.decode(pidStr).longValue();
-    } catch (NumberFormatException e) {
+    }
+    catch (NumberFormatException e)
+    {
       throw new AdminException("PID of new service misformatted (" + pidStr + "), nested:" + e.getMessage());
     }
   }
@@ -104,18 +110,19 @@ public class Daemon extends Proxy
     Map result = new HashMap();
 
     NodeList list = r.getData().getElementsByTagName("service");
-    for (int i = 0; i < list.getLength(); i++) {
-      ServiceInfo newInfo = new ServiceInfo((Element) list.item(i), host);
+    for (int i = 0; i < list.getLength(); i++)
+    {
+      ServiceInfo newInfo = new ServiceInfo((Element) list.item(i), host, smsc.getSmes());
       result.put(newInfo.getId(), newInfo);
     }
 
     return result;
   }
 
-  public void setServiceStartupParameters(String serviceId, String serviceName, int port, String args)
+  public void setServiceStartupParameters(String serviceId, /*String serviceName, */int port, String args)
           throws AdminException
   {
-    Response r = runCommand(new CommandSetServiceStartupParameters(serviceId, serviceName, port, args));
+    Response r = runCommand(new CommandSetServiceStartupParameters(serviceId, /*serviceName, */port, args));
     if (r.getStatus() != Response.StatusOk)
       throw new AdminException("Couldn't set service startup parameters \"" + serviceId + "\", nested:" + r.getDataAsString());
   }

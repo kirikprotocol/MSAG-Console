@@ -83,7 +83,7 @@ protected:
 	Response * set_service_startup_parameters (const CommandSetServiceStartupParameters * const command) throw (AdminException);
 
 	void putServiceToConfig(const char * const serviceId,
-													const char * const serviceName,
+													//const char * const serviceName,
 													const in_port_t servicePort,
 													const char * const serviceArgs);
 

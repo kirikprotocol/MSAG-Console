@@ -5,13 +5,13 @@
 <% 
 String old_name = request.getParameter("name"); 
 if (old_name == null) old_name = "";
-Route route = routeManager.getRoutes().get(old_name);
+Route route = smsc.getRoutes().get(old_name);
 if (route == null) route = new Route(old_name);
 
 Set available_src = new HashSet();
 Set available_dst = new HashSet();
-available_src.addAll(routeManager.getSubjects().getNames());
-available_dst.addAll(routeManager.getSubjects().getNames());
+available_src.addAll(smsc.getSubjects().getNames());
+available_dst.addAll(smsc.getSubjects().getNames());
 
 SourceList selected_src = route.getSources();
 Set masks_src = selected_src.getMaskNames();

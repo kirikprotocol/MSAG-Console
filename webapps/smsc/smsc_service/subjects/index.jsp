@@ -2,7 +2,7 @@
 <%@ include file="/smsc_service/menu.jsp"%>
 <h4>Subjects</h4>
 <%
-SubjectList subjects = routeManager.getSubjects();
+SubjectList subjects = smsc.getSubjects();
 %><table class="list" cellspacing="0">
   <thead class="list">
     <tr class="list">

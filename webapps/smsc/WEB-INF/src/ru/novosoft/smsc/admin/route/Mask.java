@@ -5,6 +5,10 @@
  */
 package ru.novosoft.smsc.admin.route;
 
+import ru.novosoft.smsc.util.StringEncoderDecoder;
+
+import java.io.PrintWriter;
+
 
 public class Mask
 {
@@ -29,5 +33,11 @@ public class Mask
       return mask.equals((Mask) obj);
     else
       return super.equals(obj);
+  }
+
+  public PrintWriter store(PrintWriter out)
+  {
+    out.println("    <mask value=\"" + StringEncoderDecoder.encode(mask) + "\"/>");
+    return out;
   }
 }

@@ -3,8 +3,8 @@
   String name = request.getParameter("name");
   String masks = request.getParameter("masks");
   String sme = request.getParameter("sme");
-  Subject s = new Subject(name, masks, new SME(sme));
-  routeManager.getSubjects().add(s);
+  Subject s = new Subject(name, masks, smsc.getSmes().get(sme));
+  smsc.getSubjects().add(s);
 %>
   <script language="JavaScript">
     function updateAndClose()

@@ -31,7 +31,7 @@ private:
 public:
 	Method(unsigned methodId,
 				 const char * const methodName,
-				 Parameters &methodParameters,
+				 const Parameters &methodParameters,
 				 Type methodReturnType)
 	{
 		init(methodId, methodName, methodParameters , methodReturnType);

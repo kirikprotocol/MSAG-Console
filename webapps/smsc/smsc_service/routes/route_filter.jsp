@@ -13,7 +13,7 @@
 					<table cellspacing="0" width="100%" border="1">
 						<tbody>
 							<tr>
-								<td><%=createSelector("available_src", routeManager.getSubjects().getNames(), "selected_src", new HashSet(), "source_selected")%></td>
+								<td><%=createSelector("available_src", smsc.getSubjects().getNames(), "selected_src", new HashSet(), "source_selected")%></td>
 							</tr>
 							<tr>
 								<td colspan>
@@ -30,7 +30,7 @@
 					<table cellspacing="0" width="100%" border="1">
 						<tbody>
 							<tr>
-								<td><%=createSelector("available_dst", routeManager.getSubjects().getNames(), "selected_dst", new HashSet(), "destination_selected")%></td>
+								<td><%=createSelector("available_dst", smsc.getSubjects().getNames(), "selected_dst", new HashSet(), "destination_selected")%></td>
 							</tr>
 							<tr>
 								<td colspan>

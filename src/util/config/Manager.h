@@ -6,7 +6,6 @@
 #include <xercesc/dom/DOM_Document.hpp>
 #include <xercesc/dom/DOM_Element.hpp>
 #include <xercesc/dom/DOM_DOMException.hpp>
-#include <log4cpp/Category.hh>
 
 #include <store/StoreConfig.h>
 #include <core/buffers/Hash.hpp>
@@ -38,26 +37,24 @@ public:
 	static void init(const char * const configurationFileName)
 		throw (ConfigException)
 	{
-		if (manager != 0)
+		if (manager.get() != 0)
 			throw ConfigException("Configuration manager already initialized");
-		if (config_filename != 0)
-			delete config_filename;
-		config_filename = cStringCopy(configurationFileName);
-		manager = new Manager();
+		config_filename.reset(cStringCopy(configurationFileName));
+		manager.reset(new Manager());
 	}
 
 	static void deinit()
 	{
-		if (manager != 0)
-		{
-			delete manager;
-			manager = 0;
-		}
-		if (config_filename != 0)
-		{
-			delete config_filename;
-			config_filename = 0;
-		}
+		manager.reset();
+		config_filename.reset();
+	}
+
+	static void reinit()
+	{
+		std::auto_ptr<char> filename;
+		filename = config_filename;
+		deinit();
+		init(filename.get());
 	}
 
 	/**
@@ -183,11 +180,11 @@ protected:
 	 *               Имя файла, в котором хранится конфигурация.
 	 */
 	Manager() throw(ConfigException);
-	static Manager * manager;
+	static std::auto_ptr<Manager> manager;
 	Config config;
 
 private:
-	static char * config_filename;
+	static std::auto_ptr<char> config_filename;
 	void writeHeader(std::ostream &out);
 	void writeFooter(std::ostream &out);
 

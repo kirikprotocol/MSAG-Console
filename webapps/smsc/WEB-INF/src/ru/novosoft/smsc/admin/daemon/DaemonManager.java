@@ -6,6 +6,7 @@
 package ru.novosoft.smsc.admin.daemon;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.smsc_service.Smsc;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,6 +16,12 @@ import java.util.Set;
 public class DaemonManager
 {
   private Map daemons = new HashMap();
+  private Smsc smsc = null;
+
+  public DaemonManager(Smsc smsc)
+  {
+    this.smsc = smsc;
+  }
 
   public Daemon addDaemon(String host, int port)
           throws AdminException
@@ -22,7 +29,7 @@ public class DaemonManager
     if (daemons.containsKey(host))
       throw new AdminException("Daemon already connected on host \"" + host + "\"");
 
-    Daemon d = new Daemon(host, port);
+    Daemon d = new Daemon(host, port, smsc);
     daemons.put(host, d);
     return d;
   }

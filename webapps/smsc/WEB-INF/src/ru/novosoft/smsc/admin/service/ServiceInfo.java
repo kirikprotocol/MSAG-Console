@@ -8,6 +8,8 @@ package ru.novosoft.smsc.admin.service;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.SME;
+import ru.novosoft.smsc.admin.route.SMEList;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,51 +17,64 @@ import java.util.Map;
 
 public class ServiceInfo
 {
-  protected String name = "";
+//  protected String name = "";
   protected String id = "";
   protected String host = "";
   protected int port = 0;
   protected String args = "";
   protected long pid = 0;
   protected Map components = new HashMap();
+  protected SME sme = null;
 
 
-  public ServiceInfo(Element serviceElement, String serviceHost)
+  public ServiceInfo(Element serviceElement, String serviceHost, SMEList smes)
           throws AdminException
   {
     host = serviceHost;
-    name = serviceElement.getAttribute("name");
+//    name = serviceElement.getAttribute("name");
     pid = Long.decode(serviceElement.getAttribute("pid")).longValue();
     port = Integer.decode(serviceElement.getAttribute("port")).intValue();
     id = serviceElement.getAttribute("id");
 
     args = serviceElement.getAttribute("args");
-    if (name.equals("") || id.equals("")) {
+    if (/*name.equals("") ||*/ id.equals(""))
+    {
       throw new AdminException("service name or service system id not specified in response");
     }
+    sme = smes.get(id);
+    if (sme == null)
+      throw new AdminException("Unknown SME ID: \"" + id + '"');
   }
 
-  public ServiceInfo(String name, String id, String host, int port, String args, long pid)
+  public ServiceInfo(/*String name, */String id, String host, int port, String args, long pid, SMEList smes)
+          throws AdminException
   {
-    this.name = name;
+//    this.name = name;
     this.host = host;
     this.port = port;
     this.args = args;
     this.pid = pid;
     this.id = id;
+    if (smes != null)
+    {
+      sme = smes.get(id);
+      if (sme == null)
+        throw new AdminException("Unknown SME ID: \"" + id + '"');
+    }
   }
 
-  public ServiceInfo(String name, String id, String host, int port, String args)
+  public ServiceInfo(/*String name, */String id, String host, int port, String args, SMEList smes)
+          throws AdminException
   {
-    this(name, id, host, port, args, 0);
+    this(/*name, */id, host, port, args, 0, smes);
   }
 
 
-  public String getName()
+/*  public String getName()
   {
     return name;
   }
-
+*/
   public String getHost()
   {
     return host;
@@ -104,10 +119,16 @@ public class ServiceInfo
   {
     components.clear();
     NodeList list = response.getElementsByTagName("component");
-    for (int i = 0; i < list.getLength(); i++) {
+    for (int i = 0; i < list.getLength(); i++)
+    {
       Element compElem = (Element) list.item(i);
       Component c = new Component(compElem);
       components.put(c.getName(), c);
     }
+  }
+
+  public SME getSme()
+  {
+    return sme;
   }
 }

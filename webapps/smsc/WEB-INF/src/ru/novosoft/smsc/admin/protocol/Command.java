@@ -28,17 +28,24 @@ public class Command
 
   protected Command(String commandName)
   {
-    try {
+    try
+    {
       DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
       document = builder.newDocument();
       Element elem = document.createElement("command");
       elem.setAttribute("name", StringEncoderDecoder.encode(commandName));
       document.appendChild(elem);
-    } catch (ParserConfigurationException e) {
+    }
+    catch (ParserConfigurationException e)
+    {
       e.printStackTrace();
-    } catch (FactoryConfigurationError error) {
+    }
+    catch (FactoryConfigurationError error)
+    {
       error.printStackTrace();
-    } catch (DOMException e) {
+    }
+    catch (DOMException e)
+    {
       e.printStackTrace();
     }
   }
@@ -63,9 +70,11 @@ public class Command
 
     result += prefix + "<" + name;
     NamedNodeMap attrs = doc.getAttributes();
-    for (int i = 0; i < attrs.getLength(); i++) {
+    for (int i = 0; i < attrs.getLength(); i++)
+    {
       Node node = attrs.item(i);
-      if (node.getNodeType() == Node.ATTRIBUTE_NODE) {
+      if (node.getNodeType() == Node.ATTRIBUTE_NODE)
+      {
         result += " " + node.getNodeName() + "=\"" + node.getNodeValue() + "\"";
         //logger.debug("[" + node.getNodeName() + '=' + node.getNodeValue());
       }
@@ -77,7 +86,8 @@ public class Command
       result += value;
 
     NodeList list = doc.getChildNodes();
-    for (int i = 0; i < list.getLength(); i++) {
+    for (int i = 0; i < list.getLength(); i++)
+    {
       Node node = list.item(i);
       if (node.getNodeType() == Node.ELEMENT_NODE)
         result += getText((Element) node, newPrefix);

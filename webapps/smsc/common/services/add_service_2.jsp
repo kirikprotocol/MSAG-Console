@@ -26,12 +26,12 @@ try {
   if( dataFile != null ) dataFile.close();
 }
 
-String service = request.getParameter("service") == null ? "" : request.getParameter("service");;
+//String service = request.getParameter("service") == null ? "" : request.getParameter("service");;
 String host = request.getParameter("host") == null ? "" : request.getParameter("host");
 String portString = request.getParameter("port") == null ? "" : request.getParameter("port");
 String args = request.getParameter("args") == null ? "" : request.getParameter("args");
 
-if (service.equals("") || host.equals("") || portString.equals("") || systemId.equals(""))
+if (/*service.equals("") || */host.equals("") || portString.equals("") || systemId.equals(""))
   throw new Exception("Not all parameters defined");
 
 int port = 0;

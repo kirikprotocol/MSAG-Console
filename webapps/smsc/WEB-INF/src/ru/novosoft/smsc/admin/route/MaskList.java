@@ -5,6 +5,7 @@
  */
 package ru.novosoft.smsc.admin.route;
 
+import java.io.PrintWriter;
 import java.util.*;
 
 
@@ -18,7 +19,8 @@ public class MaskList
 
   public MaskList(String masks)
   {
-    for (StringTokenizer tokenizer = new StringTokenizer(masks); tokenizer.hasMoreTokens();) {
+    for (StringTokenizer tokenizer = new StringTokenizer(masks); tokenizer.hasMoreTokens();)
+    {
       add(new Mask(tokenizer.nextToken()));
     }
   }
@@ -54,7 +56,8 @@ public class MaskList
   public String getText()
   {
     String result = "";
-    for (Iterator i = masks.keySet().iterator(); i.hasNext();) {
+    for (Iterator i = masks.keySet().iterator(); i.hasNext();)
+    {
       result += (String) i.next() + "<br>";
     }
     return result;
@@ -63,5 +66,14 @@ public class MaskList
   public Set getNames()
   {
     return masks.keySet();
+  }
+
+  public PrintWriter store(PrintWriter out)
+  {
+    for (Iterator i = iterator(); i.hasNext();)
+    {
+      ((Mask) i.next()).store(out);
+    }
+    return out;
   }
 }

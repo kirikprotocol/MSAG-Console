@@ -7,7 +7,7 @@ String name = request.getParameter("name");
 boolean isCreate = name == null;
 Subject s = null;
 if (!isCreate)
-  s = routeManager.getSubjects().get(name);
+  s = smsc.getSubjects().get(name);
 %>
 <h5><%=isCreate ? "Create" : "Edit"%>&nbsp;subject</h5>
 <form action="edit_2.jsp" method="post">

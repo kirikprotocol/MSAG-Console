@@ -38,7 +38,8 @@ public class CommandWriter
           throws IOException
   {
     byte len[] = new byte[4];
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++)
+    {
       len[3 - i] = (byte) (length & 0xff);
       length >>= 8;
     }

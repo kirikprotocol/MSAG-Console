@@ -23,8 +23,10 @@ public class StringEncoderDecoder
   public static String encode(String str)
   {
     String result = "";
-    for (int i = 0; i < str.length(); i++) {
-      switch (str.charAt(i)) {
+    for (int i = 0; i < str.length(); i++)
+    {
+      switch (str.charAt(i))
+      {
         case '<': // &lt;
           result += "&lt;";
           break;

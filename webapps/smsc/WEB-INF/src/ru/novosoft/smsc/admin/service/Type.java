@@ -10,7 +10,8 @@ public class Type
 {
   public boolean equals(Object obj)
   {
-    if (obj != null && obj instanceof Type) {
+    if (obj != null && obj instanceof Type)
+    {
       Type t = (Type) obj;
       return id == t.id;
     }
@@ -34,7 +35,8 @@ public class Type
 
   static public Type getInstance(String typeName)
   {
-    for (int i = 1; i < Types.length; i++) {
+    for (int i = 1; i < Types.length; i++)
+    {
       if (typeName.equals(Types[i].name))
         return Types[i];
     }

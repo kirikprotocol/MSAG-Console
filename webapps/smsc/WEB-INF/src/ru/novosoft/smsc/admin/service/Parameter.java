@@ -31,7 +31,8 @@ public class Parameter
 
   public boolean equals(Object obj)
   {
-    if (obj != null && obj instanceof Parameter) {
+    if (obj != null && obj instanceof Parameter)
+    {
       Parameter p = (Parameter) obj;
       return p.name.equals(name) && p.type.equals(type);
     }

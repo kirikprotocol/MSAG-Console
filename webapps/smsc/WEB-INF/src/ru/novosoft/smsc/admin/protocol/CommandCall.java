@@ -23,22 +23,30 @@ public class CommandCall extends ServiceCommand
     callElem.setAttribute("method", StringEncoderDecoder.encode(methodName));
     callElem.setAttribute("returnType", returnType.getName());
 
-    for (Iterator i = args.keySet().iterator(); i.hasNext();) {
+    for (Iterator i = args.keySet().iterator(); i.hasNext();)
+    {
       String paramName = (String) i.next();
       Object param = args.get(paramName);
       Element paramElem = document.createElement("param");
       callElem.appendChild(paramElem);
       paramElem.setAttribute("name", StringEncoderDecoder.encode(paramName));
-      if (param instanceof String) {
+      if (param instanceof String)
+      {
         paramElem.setAttribute("type", "string");
         paramElem.appendChild(document.createTextNode(StringEncoderDecoder.encode((String) param)));
-      } else if (param instanceof Integer) {
+      }
+      else if (param instanceof Integer)
+      {
         paramElem.setAttribute("type", "int");
         paramElem.appendChild(document.createTextNode(StringEncoderDecoder.encode(String.valueOf(((Integer) param).longValue()))));
-      } else if (param instanceof Long) {
+      }
+      else if (param instanceof Long)
+      {
         paramElem.setAttribute("type", "int");
         paramElem.appendChild(document.createTextNode(StringEncoderDecoder.encode(String.valueOf(((Long) param).longValue()))));
-      } else if (param instanceof Boolean) {
+      }
+      else if (param instanceof Boolean)
+      {
         paramElem.setAttribute("type", "bool");
         paramElem.appendChild(document.createTextNode(StringEncoderDecoder.encode(String.valueOf(((Boolean) param).booleanValue()))));
       }

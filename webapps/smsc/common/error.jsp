@@ -1,6 +1,5 @@
-<%@ page isErrorPage="true" %>
+<%@include file="/common/error_header.jsp"%>
 <%@ page import = "java.io.PrintWriter"%>
-<%@include file="/common/header.jsp"%>
 <h1 align="center" style="color=red">ERROR occured</h1>
 <h3>Request:</h3>
 <dl>
@@ -26,12 +25,6 @@
 if (exception != null) {
 	%><h2 style="color: Red;">Exception: <%=exception.getMessage()%></h2><%=exception.toString()%>
 	<pre><% exception.printStackTrace(new PrintWriter(out));%></pre><%
-}
-
-try {
-	//serviceManager.refreshServices();
-} catch (Throwable e)
-{
 }
 
 %>

@@ -5,16 +5,16 @@
 String name = request.getParameter("name");
 String smeId = request.getParameter("sme");
 String masks = request.getParameter("masks");
-Subject s = routeManager.getSubjects().get(name);
+Subject s = smsc.getSubjects().get(name);
 if (s != null)
 {
-  s.setDefaultSme(new SME(smeId));
+  s.setDefaultSme(smsc.getSmes().get(smeId));
   s.setMasks(new MaskList(masks));
   %>Subject edited sucessfully.<%
 }
 else
 {
-  routeManager.getSubjects().add(new Subject(name, masks, new SME(smeId)));
+  smsc.getSubjects().add(new Subject(name, masks, smsc.getSmes().get(smeId)));
   %>Subject added sucessfully.<%
 }
 %>

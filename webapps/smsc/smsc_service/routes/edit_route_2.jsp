@@ -31,7 +31,7 @@ Set serviceIDs = serviceManager.getServiceIds();
 if (serviceIDs.isEmpty())
   throw new NullPointerException("SME list is empty");
 
-SME defaultSme = new SME((String)serviceIDs.iterator().next());
+SME defaultSme = smsc.getSmes().get((String)serviceIDs.iterator().next());
 
 String old_route_name = request.getParameter("old_name");
 String new_route_name = request.getParameter("name");
@@ -40,7 +40,7 @@ String destination_selected_string = request.getParameter("destination_selected"
 String source_masks = request.getParameter("source_masks");
 String destination_masks = request.getParameter("destination_masks");
 String isEnabling = request.getParameter("isEnabling");
-RouteList routeList = routeManager.getRoutes();
+RouteList routeList = smsc.getRoutes();
 Route route = routeList.get(new_route_name);
 
 if (!old_route_name.equals(new_route_name))
@@ -53,8 +53,8 @@ if (!old_route_name.equals(new_route_name))
   routeList.put(route);
 }
 
-route.updateSources(source_selected_string, source_masks, routeManager.getSubjects());
-route.updateDestinations(destination_selected_string, destination_masks, routeManager.getSubjects(), defaultSme);
+route.updateSources(source_selected_string, source_masks, smsc.getSubjects());
+route.updateDestinations(destination_selected_string, destination_masks, smsc.getSubjects(), defaultSme);
 route.setEnabling(isEnabling != null && isEnabling.equals("true"));
 %>
 <form method="post" action="edit_route_3.jsp">

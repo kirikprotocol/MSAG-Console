@@ -16,8 +16,8 @@ using std::auto_ptr;
 using smsc::util::xml::DOMErrorLogger;
 using smsc::util::xml::initXerces;
 
-char * Manager::config_filename = 0;
-Manager * Manager::manager = 0;
+std::auto_ptr<char> Manager::config_filename;
+std::auto_ptr<Manager> Manager::manager;
 
 Manager::Manager()
 	throw(ConfigException)
@@ -25,7 +25,7 @@ Manager::Manager()
 	initXerces();
 	DOMParser *parser = createParser();
 
-	DOM_Document document = parse(parser, config_filename);
+	DOM_Document document = parse(parser, config_filename.get());
 	if (!document.isNull())
 	{
 		DOM_Element elem = document.getDocumentElement();
@@ -120,7 +120,7 @@ std::ostream & operator << (std::ostream & out, const DOMString & string)
  */
 void Manager::save()
 {
-	std::ostream *out = new std::ofstream(config_filename);
+	std::ostream *out = new std::ofstream(config_filename.get());
 	writeHeader(*out);
 	config.save(*out);
 	writeFooter(*out);

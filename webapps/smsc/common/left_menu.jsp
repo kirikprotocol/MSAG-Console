@@ -1,3 +1,4 @@
+<%{%>
 <ul compact>
 	<li><a href="<%=urlPrefix+smscPrefix%>/index.jsp">SMSC</a></li>
 	<ul compact>
@@ -12,8 +13,7 @@
 		for (Iterator i = hosts.iterator(); i.hasNext(); )
 		{
 			String hostName = (String) i.next();
-			String encodedHostName = URLEncoder.encode(hostName);
-			%><li><a href="<%=urlPrefix+hostsPrefix%>/view_host.jsp?host=<%=encodedHostName%>"><%=hostName%></a></li><%
+			%><li><a href="<%=urlPrefix+hostsPrefix%>/view_host.jsp?host=<%=URLEncoder.encode(hostName)%>"><%=StringEncoderDecoder.encode(hostName)%></a></li><%
 		} %>
 	</ul>
 	<li><a href="<%=urlPrefix+servicesPrefix%>/index.jsp">Services</a></li>
@@ -23,9 +23,9 @@
 		for (Iterator i = services.iterator(); i.hasNext(); )
 		{
 			String _serviceId = (String) i.next();
-			String serviceName = serviceManager.getServiceInfo(_serviceId).getName();
 			String encodedServiceId = URLEncoder.encode(_serviceId);
-			%><li><a href="<%=urlPrefix%>/esme_<%=URLEncoder.encode(_serviceId)%>"><%=serviceName%></a></li><%
+			%><li><a href="<%=urlPrefix%>/esme_<%=URLEncoder.encode(_serviceId)%>"><%=StringEncoderDecoder.encode(_serviceId)%></a></li><%
 		} %>
 	</ul>
 </ul>
+<%}%>

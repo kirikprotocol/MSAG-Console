@@ -11,9 +11,9 @@
 %>
 <table class="list" cellspacing="0">
 	<TR class="list">
-		<TH class="list">Service name</TH>
+		<TH class="list">Service&nbsp;ID</TH>
     <% if (isHostColumnNeeded) { %>
-		<TH class="list">Host name</TH>
+		<TH class="list">Host&nbsp;name</TH>
     <% } %>
 		<TH class="list">Status</TH>
 		<TH class="list" colSpan=3>Actions</TH>
@@ -29,12 +29,12 @@
 				String params = "host=" + URLEncoder.encode(hostName) + "&serviceId=" + URLEncoder.encode(_serviceId);
         ServiceInfo info = serviceManager.getServiceInfo(_serviceId);
 				boolean isRunning = info.getPid() != 0;
-        String serviceName = info.getName();
+        //String serviceName = info.getName();
 				%>
 				<TR class="list">
-					<TD class="list"><A href="<%=urlPrefix%>/esme_<%=URLEncoder.encode(_serviceId)%>"><%=serviceName%></a></TD>
+					<TD class="list"><A href="<%=urlPrefix%>/esme_<%=URLEncoder.encode(_serviceId)%>"><%=StringEncoderDecoder.encode(_serviceId)%></a></TD>
           <% if (isHostColumnNeeded) { %>
-					<TD class="list"><A href="<%=urlPrefix + hostsPrefix%>/view_host.jsp?<%=params%>"><%=hostName%></a></TD>
+					<TD class="list"><A href="<%=urlPrefix + hostsPrefix%>/view_host.jsp?<%=params%>"><%=StringEncoderDecoder.encode(hostName)%></a></TD>
           <% } %>
 					<TD class="list"><%=(isRunning ? "running" : "stopped")%></TD>
 					<% if (isRunning) { %>

@@ -12,7 +12,9 @@ class AdminException : public Exception
 {
 public:
 	AdminException(const AdminException &a);
-	AdminException(const char *	const msg);
+	AdminException(const char * const exceptionMessage, ...)
+		: Exception()
+	{SMSC_UTIL_EX_FILL(exceptionMessage);}
 };
 
 }

@@ -5,6 +5,10 @@
  */
 package ru.novosoft.smsc.admin.route;
 
+import ru.novosoft.smsc.util.StringEncoderDecoder;
+
+import java.io.PrintWriter;
+
 
 public class Subject
 {
@@ -51,5 +55,13 @@ public class Subject
   public void setMasks(MaskList masks)
   {
     this.masks = masks;
+  }
+
+  public PrintWriter store(PrintWriter out)
+  {
+    out.println("  <subject_def id=\"" + StringEncoderDecoder.encode(getName()) + "\" defSme=\"" + StringEncoderDecoder.encode(getDefaultSme().getId()) + "\">");
+    getMasks().store(out);
+    out.println("  </subject_def>");
+    return out;
   }
 }

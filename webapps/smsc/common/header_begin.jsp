@@ -1,11 +1,12 @@
 <% response.setHeader("Pragma", "no-cache");%>
 <% response.setHeader("Cache-Control", "no-cache");%>
-<%@ page errorPage="/common/error.jsp" %>
 <%@ page import = "ru.novosoft.smsc.*"%>
 <%@ page import = "ru.novosoft.smsc.admin.*"%>
 <%@ page import = "ru.novosoft.smsc.admin.route.*"%>
 <%@ page import = "ru.novosoft.smsc.admin.service.*"%>
-<%@ page import = "ru.novosoft.smsc.jsp.SMSCAppContext" %>
+<%@ page import = "ru.novosoft.smsc.admin.service.*"%>
+<%@ page import = "ru.novosoft.smsc.admin.smsc_service.Smsc"%>
+<%@ page import = "ru.novosoft.smsc.jsp.SMSCAppContext"%>
 <%@ page import = "ru.novosoft.smsc.util.*"%>
 <%@ page import = "ru.novosoft.smsc.util.config.*"%>
 <%@ page import = "javax.servlet.*"%>
@@ -23,7 +24,7 @@
 HttpSession ses = request.getSession();
 SMSCAppContext appContext = (SMSCAppContext)request.getAttribute("appContext");
 ServiceManager serviceManager = appContext.getServiceManager();
-RouteManager routeManager = appContext.getRouteManager();
+Smsc smsc = appContext.getSmsc();
 %>
 <%@ include file="/common/utils.jsp"%>
 <html>

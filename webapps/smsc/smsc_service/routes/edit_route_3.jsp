@@ -35,10 +35,10 @@ Set serviceIDs = serviceManager.getServiceIds();
 if (serviceIDs.isEmpty())
   throw new NullPointerException("SME list is empty");
 
-SME defaultSme = new SME((String)serviceIDs.iterator().next());
+//SME defaultSme = new SME((String)serviceIDs.iterator().next());
 
 String route_name = request.getParameter("name");
-Route route = routeManager.getRoutes().get(route_name);
+Route route = smsc.getRoutes().get(route_name);
 if (route == null)
   throw new Exception("Route not specified");
 
@@ -49,7 +49,7 @@ for (Iterator i = dsts.iterator(); i.hasNext(); )
   String smeId = request.getParameter(dst.getName());
   if (smeId == null)
     throw new Exception("SME not defined for destination \"" + dst.getName() + "\"");
-  dst.setSme(new SME(smeId));
+  dst.setSme(smsc.getSmes().get(smeId));
 }
 %>
   <h4>Edit Route:</h4>
