@@ -4,7 +4,7 @@
 
 #define SSN 8
 #define MAXENTRIES 10
-#define My_USER_ID USER01_ID 
+#define MY_USER_ID USER01_ID 
 using namespace std;
 
 #ifdef USE_MAPIO
