@@ -20,10 +20,17 @@ static void* threadstart=NULL;
 static int inbacktrace=0;
 static sigjmp_buf j;
 
+static void sighandler(int);
+
 static void BackTrace(void** trace)
 {
   inbacktrace=1;
-  if(sigsetjmp(j,0))return;
+  sigsetjmp(j,0);
+  if(!inbacktrace)
+  {
+    sigset(11,sighandler);
+    return;
+  }
 #define TRACE_BACK(n) \
   trace[n]=0;\
   trace[n]=__builtin_return_address(n+2);\
@@ -47,13 +54,17 @@ static void BackTrace(void** trace)
   TRACE_BACK(15)
   TRACE_BACK(16)
   TRACE_BACK(17)
-  TRACE_BACK(19)
+  TRACE_BACK(18)
   TRACE_BACK(19)
 }
 
 static void sighandler(int param)
 {
-  if(inbacktrace)siglongjmp(j,1);
+  if(inbacktrace)
+  {
+    inbacktrace=0;
+    siglongjmp(j,1);
+  }
   abort();
 }
 
