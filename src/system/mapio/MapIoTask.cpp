@@ -546,7 +546,7 @@ int MapTracker::Execute(){
       if ( xx > t+15 ) break;
       e.Wait(1000*(t-xx+15));
     }
-    __trace2__("MAP tracker:: alive %d dispatching %d",MAP_isAlive,MAP_dispatching);
+    //__trace2__("MAP tracker:: alive %d dispatching %d",MAP_isAlive,MAP_dispatching);
     if ( isStopping ) return 0;
     if ( MAP_dispatching && !MAP_isAlive ) {
       __trace2__("\n\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
