@@ -2,12 +2,14 @@ package ru.novosoft.smsc.jsp.smsview;
 
 import java.util.Date;
 import java.util.Vector;
+
 import ru.novosoft.util.jsp.AppContext;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 
 import ru.novosoft.smsc.admin.smsview.SmsQuery;
 import ru.novosoft.smsc.admin.smsview.SmsView;
 import ru.novosoft.smsc.admin.smsview.SmsSet;
+import ru.novosoft.smsc.admin.smsview.SmsRow;
 
 public class SmsViewFormBean extends SmsQuery
 {
