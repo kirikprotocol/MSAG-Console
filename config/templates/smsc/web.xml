@@ -327,11 +327,11 @@
     <role-name>services</role-name>
   </security-role>
   <security-role>
-    <role-name>acls</role-name>
     <description>Access Control List manager</description>
+    <role-name>acls</role-name>
   </security-role>
   <security-role>
-    <role-name>service_operator</role-name>
     <description>Can start/stop/disconnect service, service parameters editing prohibited</description>
+    <role-name>service_operator</role-name>
   </security-role>
 </web-app>
