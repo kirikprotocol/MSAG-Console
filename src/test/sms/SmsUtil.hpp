@@ -50,11 +50,11 @@ public:
 	static vector<int> compareMessages(const SMS& sms1, const SMS& sms2,
 		SmsCompareFlag flag = COMPARE_ALL);
 
-	static void setupRandomCorrectAddress(Address* addr);
+	static void setupRandomCorrectAddress(Address* addr, bool check = true);
 	
-	static void setupRandomCorrectAddress(Address* addr, int minLen, int maxLen);
+	static void setupRandomCorrectAddress(Address* addr, int minLen, int maxLen, bool check = true);
 	
-	static void setupRandomCorrectDescriptor(Descriptor* desc);
+	static void setupRandomCorrectDescriptor(Descriptor* desc, bool check = true);
 	
 	static void setupRandomCorrectBody(Body* body,
 		uint64_t mask = 0xffffffffffffffff, bool check = true);
