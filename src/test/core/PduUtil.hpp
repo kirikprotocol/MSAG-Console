@@ -3,6 +3,7 @@
 
 #include "smpp/smpp_structures.h"
 #include "test/sms/SmsUtil.hpp"
+#include "test/smpp/SmppUtil.hpp"
 #include "test/conf/TestConfig.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "profiler/profiler.hpp"
@@ -17,7 +18,7 @@ namespace test {
 namespace core {
 
 using smsc::sms::Address;
-using smsc::sms::State;
+using smsc::test::smpp::SmppState;
 using smsc::smpp::SmppHeader;
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
@@ -219,8 +220,8 @@ struct DeliveryMonitor : public ReschedulePduMonitor
 	const Address destAddr;
 	const string serviceType;
 	const uint16_t msgRef;
-	State state; //статус сообщения в БД
-	time_t respTime;
+	SmppState state; //статус сообщения в БД
+	time_t respTime; //время репонса или время удаления сообщения
 	uint32_t respStatus; //command status из delivery респонса
 
 	DeliveryMonitor(const Address& srcAddr, const Address& destAddr,
@@ -235,7 +236,7 @@ struct DeliveryMonitor : public ReschedulePduMonitor
 struct DeliveryReportMonitor : public PduMonitor
 {
 	const uint16_t msgRef;
-	State state; //статус сообщения в БД
+	SmppState state; //статус сообщения в БД
 	uint32_t deliveryStatus; //command status из delivery респонса
 
 	DeliveryReportMonitor(uint16_t msgRef, time_t checkTime, PduData* pduData,

@@ -11,6 +11,7 @@ using smsc::test::conf::TestConfig;
 using smsc::test::sms::operator<<;
 using smsc::test::util::operator<<;
 using namespace smsc::sms;
+using namespace smsc::test::smpp;
 using namespace std;
 
 Mutex PduMonitor::mutex = Mutex();
@@ -399,7 +400,7 @@ DeliveryMonitor::DeliveryMonitor(const Address& _srcAddr, const Address& _destAd
 	time_t validTime, PduData* pduData, PduFlag flag)
 : ReschedulePduMonitor(waitTime, validTime, pduData, flag),
 	srcAddr(_srcAddr), destAddr(_destAddr), serviceType(_serviceType),
-	msgRef(_msgRef), state(ENROUTE), respTime(0), respStatus(0)
+	msgRef(_msgRef), state(SMPP_ENROUTE_STATE), respTime(0), respStatus(0)
 
 {
 	//__trace2__("monitor created: %s", str().c_str());
@@ -422,12 +423,12 @@ string DeliveryMonitor::str() const
 
 DeliveryReportMonitor::DeliveryReportMonitor(uint16_t _msgRef, time_t checkTime,
 	PduData* pduData, PduFlag flag)
-: PduMonitor(checkTime, 0, pduData, flag), msgRef(_msgRef), state(ENROUTE),
+: PduMonitor(checkTime, 0, pduData, flag), msgRef(_msgRef), state(SMPP_ENROUTE_STATE),
 	deliveryStatus(0)
 {
 	__cfg_int__(maxValidPeriod);
 	validTime = checkTime + maxValidPeriod;
-	if (flag != PDU_REQUIRED_FLAG)
+	if (flag != PDU_REQUIRED_FLAG && flag != PDU_COND_REQUIRED_FLAG)
 	{
 		checkTime = validTime;
 	}
