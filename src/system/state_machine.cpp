@@ -1439,7 +1439,7 @@ StateType StateMachine::submit(Tuple& t)
       }
       if(!newsms.hasIntProperty(Tag::SMSC_MERGE_CONCAT))
       {
-        warn2(smsLog, "smsId=%llf:one more part of concatenated message received, but all parts are collected.",t.msgId);
+        warn2(smsLog, "smsId=%lld:one more part of concatenated message received, but all parts are collected.",t.msgId);
         submitResp(t,sms,Status::SUBMITFAIL);
         if(smsptr)delete smsptr;
         return ERROR_STATE;
@@ -1488,6 +1488,18 @@ StateType StateMachine::submit(Tuple& t)
         }
       }else
       {
+        if(newsms.hasBinProperty(Tag::SMSC_DC_LIST))
+        {
+          unsigned len;
+          newsms.getBinProperty(Tag::SMSC_DC_LIST,&len);
+          if(len!=num)
+          {
+            warn2(smsLog, "smsId=%lld: different number of parts detected %d!=%d.",t.msgId,len,num);
+            submitResp(t,sms,Status::INVOPTPARAMVAL);
+            if(smsptr)delete smsptr;
+            return ERROR_STATE;
+          }
+        }
         body=(unsigned char*)sms->getBinProperty(Tag::SMSC_MO_PDU,&len);
         dc=DataCoding::BINARY;
       }
@@ -1614,6 +1626,14 @@ StateType StateMachine::submit(Tuple& t)
             }
             tmp=newtmp;
           }
+          try{
+            processDirectives(newsms,profile,srcprof);
+          }catch(...)
+          {
+            warn2(smsLog, "Failed to process directives for sms with id=%lld",t.msgId);
+            submitResp(t,&newsms,Status::SUBMITFAIL);
+            return ERROR_STATE;
+          }
         }//isForwardTo
         newsms.setIntProperty(Tag::SMSC_MERGE_CONCAT,3); // final state
         if(!totalMoreUdh && !differentDc && !haveBinDc)//make single text message
@@ -1670,17 +1690,6 @@ StateType StateMachine::submit(Tuple& t)
         smsc->getTempStore().AddPtr(t.msgId,smsptr);
       }else
       {
-        if(allParts)
-        {
-          try{
-            processDirectives(newsms,profile,srcprof);
-          }catch(...)
-          {
-            warn2(smsLog, "Failed to process directives for sms with id=%lld",t.msgId);
-            submitResp(t,&newsms,Status::SUBMITFAIL);
-            return ERROR_STATE;
-          }
-        }
         try{
           store->replaceSms(t.msgId,newsms);
         }catch(...)
