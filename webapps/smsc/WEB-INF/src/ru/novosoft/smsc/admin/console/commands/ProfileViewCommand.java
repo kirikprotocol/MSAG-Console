@@ -30,7 +30,7 @@ public class ProfileViewCommand implements Command
            " Report: "+profile.getReportOptionsString()+
            " Locale: "+profile.getLocale()+
            " Encoding: "+profile.getCodepageString()+
-           " ussd7bit:"+((profile.isUssd7bit()) ? "on":"off")+
+           " ussd7bit: "+((profile.isUssd7bit()) ? "on":"off")+
            " Alias: "+(profile.isAliasHide() ? "hide":"nohide")+
            ", "+(profile.isAliasModifiable() ? "modifiable":"nomodifiable")+
            " Divert: "+((divert == null || divert.length() <= 0) ? "-":divert)+
