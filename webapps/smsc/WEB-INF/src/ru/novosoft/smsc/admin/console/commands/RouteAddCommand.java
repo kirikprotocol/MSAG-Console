@@ -16,6 +16,7 @@ public class RouteAddCommand extends RouteGenCommand
     private boolean bill = true;
     private boolean arc = true;
     private boolean allow = true;
+    private boolean reciept = true;
     private int serviceid;
     private int priority;
 
@@ -33,6 +34,9 @@ public class RouteAddCommand extends RouteGenCommand
     }
     public void setPriority(int priority) {
         this.priority = priority;
+    }
+    public void setReciept(boolean reciept) {
+        this.reciept = reciept;
     }
 
     public void process(CommandContext ctx)
@@ -100,9 +104,10 @@ public class RouteAddCommand extends RouteGenCommand
                 }
             }
 
-			  //todo MUST add suppressDeliveryReports property to route
-            smscRoute = new Route(route, priority, allow, bill, arc, false,
+			//todo check reciept or !reciept
+            smscRoute = new Route(route, priority, allow, bill, arc, !reciept,
                                   serviceid, srcList, dstList);
+
             if (priority < 0 || priority > 32000)
                 throw new Exception("Priority value should be between 0 and 32000");
             list.put(smscRoute);
