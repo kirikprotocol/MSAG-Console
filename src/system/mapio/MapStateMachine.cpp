@@ -1375,7 +1375,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           __map_trace2__("%s: dialogid 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
           StartDialogProcessing(dialog.get(),cmd);
         } else {
-          SendSms(dialog);
+          SendSms(dialog->get());
         }
       }
     }else{ // MAP dialog
