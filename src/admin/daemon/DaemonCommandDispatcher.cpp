@@ -50,6 +50,10 @@ public:
 	ChildShutdownWaiter() 
 		: logger(Logger::getCategory("smsc.admin.daemon.ChildShutdownWaiter")), isStopping(false)
 	{};
+	~ChildShutdownWaiter()
+	{
+		Stop();
+	}
 
 	void Stop()
 	{
