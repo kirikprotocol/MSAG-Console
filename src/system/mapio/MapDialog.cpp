@@ -1029,7 +1029,7 @@ USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
          *provErrCode_p == 0x03 || // mystyped parametor
          *provErrCode_p == 0x06 || // unexcpected responnse from peer
          *provErrCode_p == 0x09 || // invalid responce recived
-         (*provErrCode_p < 0x0a && *provErrrCode_p >= 0x10)) // unxpected component end other
+         (*provErrCode_p > 0x0a && *provErrCode_p <= 0x10)) // unxpected component end other
     {
       cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,MAKE_ERRORCODE(CMD_ERR_FATAL,MAP_NETWORKERROR));
     }else{
