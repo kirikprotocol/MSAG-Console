@@ -440,7 +440,7 @@ struct _SmscCommand
       // nothing to delete
       break;
     default:
-      __unreachable__("unprocessed cmdid");
+      __warning2__("~SmscCommand:unprocessed cmdid %d",cmdid);
     }
   }
 
