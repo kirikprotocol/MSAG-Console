@@ -523,7 +523,7 @@ const char* RetrieveStatement::sql = (const char*)
  VALID_TIME, SUBMIT_TIME,\
  ATTEMPTS, LAST_RESULT, LAST_TRY_TIME, NEXT_TRY_TIME,\
  SVC_TYPE, DR, BR, ARC, BODY, BODY_LEN,\
- ROUTE_ID, SVC_ID, PRTY, SRC_SME_ID, DST_SME_ID,\
+ ROUTE_ID, SVC_ID, PRTY, SRC_SME_ID, DST_SME_ID\
  FROM SMS_MSG WHERE ID=:ID";
 RetrieveStatement::RetrieveStatement(Connection* connection, bool assign)
     throw(StorageException)
@@ -868,7 +868,7 @@ ReplaceVWTStatement::ReplaceVWTStatement(Connection* connection, bool assign)
 const char* ToEnrouteStatement::sql = (const char*)
 "UPDATE SMS_MSG SET ATTEMPTS=ATTEMPTS+1, LAST_TRY_TIME=:CT,\
  NEXT_TRY_TIME=:NT, LAST_RESULT=:FCS,\
- DST_MSC=:MSC, DST_IMSI=:IMSI, DST_SME_N=:SME_N \
+ DST_MSC=:MSC, DST_IMSI=:IMSI, DST_SME_N=:SME_N\
  WHERE ID=:ID AND ST=:ENROUTE";
 ToEnrouteStatement::ToEnrouteStatement(Connection* connection, bool assign)
     throw(StorageException)
@@ -920,7 +920,7 @@ void ToEnrouteStatement::bindDestinationDescriptor(Descriptor& dst)
 const char* ToDeliveredStatement::sql = (const char*)
 "UPDATE SMS_MSG SET ATTEMPTS=ATTEMPTS+1, LAST_TRY_TIME=:CT,\
  NEXT_TRY_TIME=NULL, LAST_RESULT=0,\
- ST=:DELIVERED, DST_MSC=:MSC, DST_IMSI=:IMSI, DST_SME_N=:SME_N \
+ ST=:DELIVERED, DST_MSC=:MSC, DST_IMSI=:IMSI, DST_SME_N=:SME_N\
  WHERE ID=:ID AND ST=:ENROUTE";
 ToDeliveredStatement::ToDeliveredStatement(Connection* connection, bool assign)
     throw(StorageException)
@@ -965,7 +965,7 @@ void ToDeliveredStatement::bindDestinationDescriptor(Descriptor& dst)
 const char* ToUndeliverableStatement::sql = (const char*)
 "UPDATE SMS_MSG SET ATTEMPTS=ATTEMPTS+1, LAST_TRY_TIME=:CT,\
  NEXT_TRY_TIME=NULL, LAST_RESULT=:FCS,\
- ST=:UNDELIVERABLE, DST_MSC=:MSC, DST_IMSI=:IMSI, DST_SME_N=:SME_N \
+ ST=:UNDELIVERABLE, DST_MSC=:MSC, DST_IMSI=:IMSI, DST_SME_N=:SME_N\
  WHERE ID=:ID AND ST=:ENROUTE";
 ToUndeliverableStatement::ToUndeliverableStatement(
     Connection* connection, bool assign)
