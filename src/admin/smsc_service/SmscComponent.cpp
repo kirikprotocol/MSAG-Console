@@ -53,6 +53,8 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
 	sme_id_params["id"] = Parameter("id", StringType);
 	Parameters sme_ids_params;
 	sme_ids_params["ids"] = Parameter("ids", StringListType);
+	Parameters log_cats;
+	log_cats["categories"] = Parameter("categories", StringListType);
 
 	Method apply_routes     ((unsigned)applyRoutesMethod,     "apply_routes",      empty_params, StringType);
 	Method apply_aliases    ((unsigned)applyAliasesMethod,    "apply_aliases",     empty_params, StringType);
@@ -77,6 +79,9 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
 	Method sme_status     ((unsigned)smeStatusMethod,     "sme_status",      empty_params,   StringListType);
 	Method sme_disconnect ((unsigned)smeDisconnectMethod, "sme_disconnect",  sme_ids_params, BooleanType);
 
+	Method log_get_categories((unsigned)logGetCategoriesMethod, "log_get_categories",  empty_params, StringListType);
+	Method log_set_categories((unsigned)logSetCategoriesMethod, "log_set_categories",  log_cats, BooleanType);
+
 	methods[apply_routes     .getName()] = apply_routes;
 	methods[apply_aliases    .getName()] = apply_aliases;
 	methods[apply_smsc_config.getName()] = apply_smsc_config;
@@ -99,6 +104,9 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
 	methods[sme_update    .getName()] = sme_update;
 	methods[sme_status    .getName()] = sme_status;
 	methods[sme_disconnect.getName()] = sme_disconnect;
+
+	methods[log_get_categories.getName()] = log_get_categories;
+	methods[log_set_categories.getName()] = log_set_categories;
 
 	smsc_app_runner.reset(0);
 }
@@ -174,6 +182,11 @@ throw (AdminException)
 			case smeDisconnectMethod:
 				smeDisconnect(args);
 				return Variant(true);
+			case logGetCategoriesMethod:
+				return logGetCategories();
+			case logSetCategoriesMethod:
+				logSetCategories(args);
+				return Variant(true);
 
 			default:
 				logger.debug("unknown method \"%s\" [%u]", method.getName(), method.getId());
@@ -228,13 +241,13 @@ Variant SmscComponent::mscList()
 	}
 	return result;
 /*              Variant result(StringListType);
-		 result.appendValueToStringList("test1");
-		 result.appendValueToStringList("test2");
-		 result.appendValueToStringList("test3");
-		 result.appendValueToStringList("a1");
-		 result.appendValueToStringList("a3");
-		 result.appendValueToStringList("a2");
-		 return result;*/
+result.appendValueToStringList("test1");
+result.appendValueToStringList("test2");
+result.appendValueToStringList("test3");
+result.appendValueToStringList("a1");
+result.appendValueToStringList("a3");
+result.appendValueToStringList("a2");
+return result;*/
 }
 
 
@@ -837,6 +850,88 @@ void SmscComponent::smeDisconnect(const Arguments & args)
 			if (!i->next())
 				break;
 		}
+	}
+}
+
+Variant SmscComponent::logGetCategories(void)
+{
+	Variant result(service::StringListType);
+	typedef std::vector<log4cpp::Category *> Cats; 
+	Cats * cats = log4cpp::Category::getCurrentCategories();
+	for (Cats::iterator i = cats->begin(); i != cats->end(); i++)
+	{
+		log4cpp::Category * cat = *i;
+		std::string tmp(cat->getName());
+		tmp += ",";
+		tmp += log4cpp::Priority::getPriorityName(cat->getPriority());
+		result.appendValueToStringList(tmp.c_str());
+	}
+	delete cats;
+	return result;
+}
+
+void SmscComponent::setLogCat(const char * catStr)
+{
+	using namespace log4cpp;
+	using namespace std;
+
+	auto_ptr<char> str(new char[strlen(catStr) +1]);
+	strcpy(str.get(), catStr);
+	char * delim_pos = strrchr(str.get(), ',');
+	if (delim_pos != NULL)
+	{
+		char * value = delim_pos+1;
+		*delim_pos = 0;
+		
+		try {
+			Priority::Value priority = Priority::getPriorityValue(value);
+			if (strlen(str.get()) != 0)
+			{
+				Category &cat = Category::getInstance(str.get());
+				if (cat.getPriority() != priority)
+				{
+					logger.debug("Setting priority \"%s[%i]\" for category \"%s\"", value, priority, str.get());
+					cat.setPriority(priority);
+					logger.debug("Priority setted sucessfully for category \"%s\"", str.get());
+				}
+			}
+			else 
+			{
+				if (priority != Priority::NOTSET)
+				{
+					Category & cat = Category::getRoot();
+					if (cat.getPriority() != priority)
+					{
+						logger.debug("Setting priority \"%s[%i]\" for root category", value, priority);
+						Category::setRootPriority(priority);
+						logger.debug("Priority setted sucessfully for root category");
+					}
+				}
+				else
+					logger.error("tried to set NOTSET priority to root category. Ignored");
+			}
+		}
+		catch (std::invalid_argument & e)
+		{
+			logger.error("invalid logger category priority: \"%s\":\"%s\"", str.get(), value);
+		}
+		catch (...)
+		{
+			logger.error("unknown exception on setting priority \"%s\" to logger category \"%s\"", value, str.get());
+		}
+	}
+	else
+	{
+		logger.error("misformatted logger category string: \"%s\"", catStr);
+	}
+}
+
+void SmscComponent::logSetCategories(const Arguments & args)
+{
+	const StringList & cats = args.Get("categories").getStringListValue();
+	for (StringList::const_iterator i = cats.begin(); i != cats.end(); i++)
+	{
+		setLogCat(*i);
 	}
 }
 

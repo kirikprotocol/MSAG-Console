@@ -52,6 +52,8 @@ public class Smsc extends Service
 	private Method sme_update_method = null;
 	private Method sme_status = null;
 	private Method sme_disconnect = null;
+	private Method log_get_categories = null;
+	private Method log_set_categories = null;
 
 	private Map smeStatuses = new HashMap();
 
@@ -63,6 +65,7 @@ public class Smsc extends Service
 
 	private Category logger = Category.getInstance(this.getClass());
 	private long serviceRefreshTimeStamp = 0;
+	private static final char LOGGER_DELIMITER = ',';
 
 	public Smsc(Config config, NSConnectionPool connectionPool) throws AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
@@ -218,7 +221,7 @@ public class Smsc extends Service
 	protected void checkComponents()
 	{
 		super.checkComponents();
-		if (apply_aliases_method == null || apply_routes_method == null || lookup_profile_method == null || update_profile_method == null || flush_statistics_method == null || process_cancel_messages_method == null || apply_smsc_config_method == null || apply_services_method == null || msc_registrate_method == null || msc_unregister_method == null || msc_block_method == null || msc_clear_method == null || msc_list_method == null || sme_add_method == null || sme_remove_method == null || sme_update_method == null || sme_status == null || sme_disconnect == null)
+		if (apply_aliases_method == null || apply_routes_method == null || lookup_profile_method == null || update_profile_method == null || flush_statistics_method == null || process_cancel_messages_method == null || apply_smsc_config_method == null || apply_services_method == null || msc_registrate_method == null || msc_unregister_method == null || msc_block_method == null || msc_clear_method == null || msc_list_method == null || sme_add_method == null || sme_remove_method == null || sme_update_method == null || sme_status == null || sme_disconnect == null || log_get_categories == null || log_set_categories == null)
 		{
 			smsc_component = (Component) getInfo().getComponents().get("SMSC");
 			apply_aliases_method = (Method) smsc_component.getMethods().get("apply_aliases");
@@ -241,6 +244,8 @@ public class Smsc extends Service
 			sme_update_method = (Method) smsc_component.getMethods().get("sme_update");
 			sme_status = (Method) smsc_component.getMethods().get("sme_status");
 			sme_disconnect = (Method) smsc_component.getMethods().get("sme_disconnect");
+			log_get_categories = (Method) smsc_component.getMethods().get("log_get_categories");
+			log_set_categories = (Method) smsc_component.getMethods().get("log_set_categories");
 		}
 	}
 
@@ -359,7 +364,7 @@ public class Smsc extends Service
 		return result;
 	}
 
-	public DistributionListAdmin getDistributionListAdmin()
+	public synchronized DistributionListAdmin getDistributionListAdmin()
 	{
 		return distributionListAdmin;
 	}
@@ -385,7 +390,7 @@ public class Smsc extends Service
 		return params;
 	}
 
-	public void smeAdd(SME sme) throws AdminException
+	public synchronized void smeAdd(SME sme) throws AdminException
 	{
 		refreshComponents();
 		Object result = call(smsc_component, sme_add_method, Type.Types[Type.BooleanType], putSmeIntoMap(sme));
@@ -393,7 +398,7 @@ public class Smsc extends Service
 			throw new AdminException("Error in response");
 	}
 
-	public void smeRemove(String smeId) throws AdminException
+	public synchronized void smeRemove(String smeId) throws AdminException
 	{
 		refreshComponents();
 		Map params = new HashMap();
@@ -403,7 +408,7 @@ public class Smsc extends Service
 			throw new AdminException("Error in response");
 	}
 
-	public void smeUpdate(SME sme) throws AdminException
+	public synchronized void smeUpdate(SME sme) throws AdminException
 	{
 		refreshComponents();
 		Object result = call(smsc_component, sme_update_method, Type.Types[Type.BooleanType], putSmeIntoMap(sme));
@@ -411,7 +416,7 @@ public class Smsc extends Service
 			throw new AdminException("Error in response");
 	}
 
-	public SmeStatus getSmeStatus(String id) throws AdminException
+	public synchronized SmeStatus getSmeStatus(String id) throws AdminException
 	{
 		final long currentTime = System.currentTimeMillis();
 		if (currentTime - Constants.ServicesRefreshTimeoutMillis > serviceRefreshTimeStamp)
@@ -433,7 +438,7 @@ public class Smsc extends Service
 		return (SmeStatus) smeStatuses.get(id);
 	}
 
-	public void disconnectSmes(List smeIdsToDisconnect) throws AdminException
+	public synchronized void disconnectSmes(List smeIdsToDisconnect) throws AdminException
 	{
 		refreshComponents();
 		Map params = new HashMap();
@@ -441,5 +446,48 @@ public class Smsc extends Service
 		Object result = call(smsc_component, sme_disconnect, Type.Types[Type.BooleanType], params);
 		if (!(result instanceof Boolean && ((Boolean) result).booleanValue()))
 			throw new AdminException("Error in response");
+	}
+
+	public synchronized Map getLogCategories() throws AdminException
+	{
+		Map return_result = new HashMap();
+		refreshComponents();
+		Object resultO = call(smsc_component, log_get_categories, Type.Types[Type.StringListType], new HashMap());
+		if (resultO instanceof List)
+		{
+			List result = (List) resultO;
+			for (Iterator i = result.iterator(); i.hasNext();)
+			{
+				String cat = (String) i.next();
+				final int delim_pos = cat.lastIndexOf(LOGGER_DELIMITER);
+				if (delim_pos >= 0)
+				{
+					String name = cat.substring(0, delim_pos);
+					String value = cat.substring(delim_pos+1);
+					return_result.put(name, value);
+				}
+				else
+					logger.error("Error in response: string \"" + cat + "\" misformatted.");
+			}
+		}
+		else
+			throw new AdminException("Error in response");
+		return return_result;
+	}
+
+	public synchronized void setLogCategories(Map cats) throws AdminException
+	{
+		refreshComponents();
+		Map params = new HashMap();
+		LinkedList catsList = new LinkedList();
+		params.put("categories", catsList);
+		for (Iterator i = cats.entrySet().iterator(); i.hasNext();)
+		{
+			Map.Entry entry = (Map.Entry) i.next();
+			final String catName = (String) entry.getKey();
+			final String catPriority = (String) entry.getValue();
+			catsList.add(catName + LOGGER_DELIMITER + catPriority);
+		}
+		call(smsc_component, log_set_categories, Type.Types[Type.BooleanType], params);
 	}
 }

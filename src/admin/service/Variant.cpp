@@ -16,13 +16,13 @@ Variant::Variant(const Type variant_type)
   type = variant_type;
   switch (type)
   {
-  case StringType:
+  case service::StringType:
     strValue = "";
     break;
-  case LongType:
+  case service::LongType:
     longValue = 0;
     break;
-  case BooleanType:
+  case service::BooleanType:
     boolValue = false;
     break;
   case service::StringListType:

@@ -134,6 +134,8 @@ public class SMSCErrors
 			public static final String invalidParameter = B + "invalidParameter";
 			public static final String invalidIntParameter = B + "invalidIntParameter";
 			public static final String invalidBoolParameter = B + "invalidBoolParameter";
+			public static final String couldntGetLogCats = B + "couldntGetLogCats";
+			public static final String couldntSetLogCats = B + "couldntSetLogCats";
 		}
 
 		public static class commutators
