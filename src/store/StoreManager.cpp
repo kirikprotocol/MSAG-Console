@@ -18,20 +18,68 @@ using smsc::util::config::Manager;
 const unsigned SMSC_MAX_TRIES_TO_PROCESS_OPERATION = 3;
 const unsigned SMSC_MAX_TRIES_TO_PROCESS_OPERATION_LIMIT = 1000;
 
-Mutex StoreManager::mutex;
-Archiver* StoreManager::archiver = 0L;
-StorageConnectionPool* StoreManager::pool = 0L;
-IDGenerator* StoreManager::generator = 0L;
-StoreManager* StoreManager::instance = 0L;
-unsigned StoreManager::maxTriesCount = SMSC_MAX_TRIES_TO_PROCESS_OPERATION;
+Mutex        StoreManager::mutex;
+Archiver*    StoreManager::archiver = 0;
+IDGenerator* StoreManager::generator = 0;
+RemoteStore* StoreManager::instance  = 0;
+
 log4cpp::Category& StoreManager::log = Logger::getCategory("smsc.store.StoreManager");
+log4cpp::Category& RemoteStore::log = Logger::getCategory("smsc.store.RemoteStore");
 
 #ifdef SMSC_FAKE_MEMORY_MESSAGE_STORE
-IntHash<SMS*> StoreManager::fakeStore(100000);
-Mutex StoreManager::fakeMutex;
+IntHash<SMS*> RemoteStore::fakeStore(100000);
+Mutex RemoteStore::fakeMutex;
 #endif
 
-void StoreManager::loadMaxTriesCount(Manager& config)
+/* ------------------------------ Store Manager ----------------------------- */
+void StoreManager::startup(Manager& config)
+    throw(ConfigException, ConnectionFailedException)
+{
+    MutexGuard guard(mutex);
+
+    if (!instance)
+    {
+        log.info("Storage Manager is starting ... ");
+        try
+        {
+            instance = new RemoteStore(config);
+
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+            archiver = new Archiver(config);
+            generator = new IDGenerator(archiver->getLastUsedId());
+            archiver->Start();
+#else
+            generator = new IDGenerator(0);
+#endif
+        }
+        catch (StorageException& exc)
+        {
+            if (instance) { delete instance; instance = 0; }
+            if (archiver) { delete archiver; archiver = 0; }
+            if (generator) { delete generator; generator = 0; }
+            throw ConnectionFailedException(exc);
+        }
+        log.info("Storage Manager was started up.");
+    }
+}
+
+void StoreManager::shutdown()
+{
+    MutexGuard guard(mutex);
+
+    if (instance)
+    {
+        log.info("Storage Manager is shutting down ...");
+        delete instance; instance = 0;
+        if (generator) delete generator; generator = 0;
+        if (archiver) delete archiver; archiver = 0;
+        log.info("Storage Manager was shutdowned.");
+    }
+}
+/* ------------------------------ Store Manager ----------------------------- */
+
+/* ------------------------------ Remote Store ------------------------------ */
+void RemoteStore::loadMaxTriesCount(Manager& config) 
 {
     try
     {
@@ -59,67 +107,27 @@ void StoreManager::loadMaxTriesCount(Manager& config)
     }
 }
 
-void StoreManager::startup(Manager& config)
+RemoteStore::RemoteStore(Manager& config)
     throw(ConfigException, ConnectionFailedException)
+        : pool(0), maxTriesCount(SMSC_MAX_TRIES_TO_PROCESS_OPERATION)
 {
-    MutexGuard guard(mutex);
-
-    if (!instance)
-    {
-        log.info("Storage Manager is starting ... ");
-        loadMaxTriesCount(config);
-        try
-        {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-            pool = new StorageConnectionPool(config);
-            archiver = new Archiver(config);
-            generator = new IDGenerator(archiver->getLastUsedId());
-            archiver->Start();
-#else
-            pool = 0;
-            archiver  = 0;
-            generator = new IDGenerator(0);
-#endif
-        }
-        catch (StorageException& exc)
-        {
-            if (pool) {
-                delete pool; pool = 0L;
-            }
-            if (archiver) {
-                delete archiver; archiver = 0L;
-            }
-            if (generator) {
-                delete generator; generator = 0L;
-            }
-            throw ConnectionFailedException(exc);
-        }
-        instance = new StoreManager();
-        log.info("Storage Manager was started up.");
-    }
-}
-
-void StoreManager::shutdown()
-{
-    MutexGuard guard(mutex);
-
-#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-    if (pool && instance && generator && archiver)
-    {
-        log.info("Storage Manager is shutting down ...");
-        delete pool; pool = 0L;
-        delete instance; instance = 0L;
-        delete archiver; archiver = 0L;
-        delete generator; generator = 0L;
-        log.info("Storage Manager was shutdowned.");
-    }
-#else
-    if (generator) delete generator; generator = 0;
-    if (instance) delete instance; instance = 0;
+    loadMaxTriesCount(config);
+    pool = new StorageConnectionPool(config);
 #endif
 }
+RemoteStore::~RemoteStore() 
+{
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+    if (pool) delete pool;
+#endif
+}
+SMSId RemoteStore::getNextId()
+{
+    return StoreManager::getNextId();
+}
 
-void StoreManager::doCreateSms(StorageConnection* connection,
+void RemoteStore::doCreateSms(StorageConnection* connection,
     SMS& sms, SMSId id, const CreateMode flag)
         throw(StorageException, DuplicateMessageException)
 {
@@ -241,12 +249,12 @@ void StoreManager::doCreateSms(StorageConnection* connection,
         throw exc;
     }
 }
-void StoreManager::createSms(SMS& sms, SMSId id, const CreateMode flag)
+void RemoteStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
     throw(StorageException, DuplicateMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
-    __require__(pool && generator);
+    __require__(pool);
 
     StorageConnection* connection = 0L;
     unsigned iteration=1;
@@ -300,7 +308,7 @@ void StoreManager::createSms(SMS& sms, SMSId id, const CreateMode flag)
 #endif
 }
 
-void StoreManager::doRetrieveSms(StorageConnection* connection,
+void RemoteStore::doRetrieveSms(StorageConnection* connection,
     SMSId id, SMS &sms)
         throw(StorageException, NoSuchMessageException)
 {
@@ -331,7 +339,7 @@ void StoreManager::doRetrieveSms(StorageConnection* connection,
         }
     }
 }
-void StoreManager::retriveSms(SMSId id, SMS &sms)
+void RemoteStore::retriveSms(SMSId id, SMS &sms)
     throw(StorageException, NoSuchMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
@@ -378,7 +386,7 @@ void StoreManager::retriveSms(SMSId id, SMS &sms)
 #endif
 }
 
-void StoreManager::doDestroySms(StorageConnection* connection, SMSId id)
+void RemoteStore::doDestroySms(StorageConnection* connection, SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
     __require__(connection);
@@ -404,7 +412,7 @@ void StoreManager::doDestroySms(StorageConnection* connection, SMSId id)
 
     connection->commit();
 }
-void StoreManager::destroySms(SMSId id)
+void RemoteStore::destroySms(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
@@ -452,7 +460,7 @@ void StoreManager::destroySms(SMSId id)
 #endif
 }
 
-void StoreManager::doReplaceSms(StorageConnection* connection,
+void RemoteStore::doReplaceSms(StorageConnection* connection,
     SMSId id, const Address& oa,
     const uint8_t* newMsg, uint8_t newMsgLen,
     uint8_t deliveryReport, time_t validTime, time_t waitTime)
@@ -554,7 +562,7 @@ void StoreManager::doReplaceSms(StorageConnection* connection,
     }
     connection->commit();
 }
-void StoreManager::replaceSms(SMSId id, const Address& oa,
+void RemoteStore::replaceSms(SMSId id, const Address& oa,
     const uint8_t* newMsg, uint8_t newMsgLen,
     uint8_t deliveryReport, time_t validTime, time_t waitTime)
         throw(StorageException, NoSuchMessageException)
@@ -617,7 +625,7 @@ void StoreManager::replaceSms(SMSId id, const Address& oa,
 #endif
 }
 
-void StoreManager::doChangeSmsStateToEnroute(StorageConnection* connection,
+void RemoteStore::doChangeSmsStateToEnroute(StorageConnection* connection,
     SMSId id, const Descriptor& dst, uint32_t failureCause, time_t nextTryTime)
         throw(StorageException, NoSuchMessageException)
 {
@@ -649,7 +657,7 @@ void StoreManager::doChangeSmsStateToEnroute(StorageConnection* connection,
     }
     connection->commit();
 }
-void StoreManager::changeSmsStateToEnroute(SMSId id,
+void RemoteStore::changeSmsStateToEnroute(SMSId id,
     const Descriptor& dst, uint32_t failureCause, time_t nextTryTime)
         throw(StorageException, NoSuchMessageException)
 {
@@ -707,7 +715,7 @@ void StoreManager::changeSmsStateToEnroute(SMSId id,
 #endif
 }
 
-void StoreManager::doChangeSmsStateToDelivered(StorageConnection* connection,
+void RemoteStore::doChangeSmsStateToDelivered(StorageConnection* connection,
     SMSId id, const Descriptor& dst)
         throw(StorageException, NoSuchMessageException)
 {
@@ -736,7 +744,7 @@ void StoreManager::doChangeSmsStateToDelivered(StorageConnection* connection,
     }
     connection->commit();
 }
-void StoreManager::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
+void RemoteStore::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
     throw(StorageException, NoSuchMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
@@ -751,7 +759,7 @@ void StoreManager::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
         {
             connection = (StorageConnection *)pool->getConnection();
             doChangeSmsStateToDelivered(connection, id, dst);
-            archiver->incrementFinalizedCount();
+            StoreManager::incrementFinalizedCount();
             pool->freeConnection(connection);
             break;
         }
@@ -789,7 +797,7 @@ void StoreManager::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
 #endif
 }
 
-void StoreManager::doChangeSmsStateToUndeliverable(
+void RemoteStore::doChangeSmsStateToUndeliverable(
     StorageConnection* connection, SMSId id,
         const Descriptor& dst, uint32_t failureCause)
             throw(StorageException, NoSuchMessageException)
@@ -821,7 +829,7 @@ void StoreManager::doChangeSmsStateToUndeliverable(
     }
     connection->commit();
 }
-void StoreManager::changeSmsStateToUndeliverable(SMSId id,
+void RemoteStore::changeSmsStateToUndeliverable(SMSId id,
     const Descriptor& dst, uint32_t failureCause)
        throw(StorageException, NoSuchMessageException)
 {
@@ -838,7 +846,7 @@ void StoreManager::changeSmsStateToUndeliverable(SMSId id,
             connection = (StorageConnection *)pool->getConnection();
             doChangeSmsStateToUndeliverable(connection, id,
                                             dst,failureCause);
-            archiver->incrementFinalizedCount();
+            StoreManager::incrementFinalizedCount();
             pool->freeConnection(connection);
             break;
         }
@@ -876,7 +884,7 @@ void StoreManager::changeSmsStateToUndeliverable(SMSId id,
 #endif
 }
 
-void StoreManager::doChangeSmsStateToExpired(
+void RemoteStore::doChangeSmsStateToExpired(
     StorageConnection* connection, SMSId id)
         throw(StorageException, NoSuchMessageException)
 {
@@ -903,7 +911,7 @@ void StoreManager::doChangeSmsStateToExpired(
     }
     connection->commit();
 }
-void StoreManager::changeSmsStateToExpired(SMSId id)
+void RemoteStore::changeSmsStateToExpired(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
@@ -918,7 +926,7 @@ void StoreManager::changeSmsStateToExpired(SMSId id)
         {
             connection = (StorageConnection *)pool->getConnection();
             doChangeSmsStateToExpired(connection, id);
-            archiver->incrementFinalizedCount();
+            StoreManager::incrementFinalizedCount();
             pool->freeConnection(connection);
             break;
         }
@@ -955,7 +963,7 @@ void StoreManager::changeSmsStateToExpired(SMSId id)
 #endif
 }
 
-void StoreManager::doChangeSmsStateToDeleted(
+void RemoteStore::doChangeSmsStateToDeleted(
     StorageConnection* connection, SMSId id)
         throw(StorageException, NoSuchMessageException)
 {
@@ -983,7 +991,7 @@ void StoreManager::doChangeSmsStateToDeleted(
     }
     connection->commit();
 }
-void StoreManager::changeSmsStateToDeleted(SMSId id)
+void RemoteStore::changeSmsStateToDeleted(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
@@ -998,7 +1006,7 @@ void StoreManager::changeSmsStateToDeleted(SMSId id)
         {
             connection = (StorageConnection *)pool->getConnection();
             doChangeSmsStateToDeleted(connection, id);
-            archiver->incrementFinalizedCount();
+            StoreManager::incrementFinalizedCount();
             pool->freeConnection(connection);
             break;
         }
@@ -1038,12 +1046,13 @@ void StoreManager::changeSmsStateToDeleted(SMSId id)
 
 /* --------------------- Sheduler's classes & methods -------------------- */
 
-StoreManager::ReadyIdIterator::ReadyIdIterator(time_t retryTime)
-    throw(StorageException) : IdIterator()
+RemoteStore::ReadyIdIterator::ReadyIdIterator(
+    StorageConnectionPool* _pool, time_t retryTime) 
+        throw(StorageException) : IdIterator(), pool(_pool)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
-    connection = StoreManager::pool->getConnection();
+    connection = pool->getConnection();
     try
     {
         if (connection && !connection->isAvailable())
@@ -1060,22 +1069,22 @@ StoreManager::ReadyIdIterator::ReadyIdIterator(time_t retryTime)
     }
     catch (...)
     {
-        StoreManager::pool->freeConnection(connection);
+        pool->freeConnection(connection);
         throw;
     }
 #endif
 }
-StoreManager::ReadyIdIterator::~ReadyIdIterator()
+RemoteStore::ReadyIdIterator::~ReadyIdIterator()
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
     if (readyStmt) delete readyStmt;
-    StoreManager::pool->freeConnection(connection);
+    pool->freeConnection(connection);
 
 #endif
 }
 
-bool StoreManager::ReadyIdIterator::getNextId(SMSId &id)
+bool RemoteStore::ReadyIdIterator::getNextId(SMSId &id)
     throw(StorageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
@@ -1096,19 +1105,19 @@ bool StoreManager::ReadyIdIterator::getNextId(SMSId &id)
 #endif
 }
 
-IdIterator* StoreManager::getReadyForRetry(time_t retryTime)
+IdIterator* RemoteStore::getReadyForRetry(time_t retryTime)
     throw(StorageException)
 {
-    return (new ReadyIdIterator(retryTime));
+    return (new ReadyIdIterator(pool, retryTime));
 }
 
-time_t StoreManager::getNextRetryTime()
+time_t RemoteStore::getNextRetryTime()
     throw(StorageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
     time_t minTime = 0;
-    Connection* connection = StoreManager::pool->getConnection();
+    Connection* connection = pool->getConnection();
     if (connection)
     {
         MinNextTimeStatement* minTimeStmt = 0L;
@@ -1122,7 +1131,7 @@ time_t StoreManager::getNextRetryTime()
         }
         catch (...)
         {
-            StoreManager::pool->freeConnection(connection);
+            pool->freeConnection(connection);
             throw;
         }
 
@@ -1141,16 +1150,17 @@ time_t StoreManager::getNextRetryTime()
             catch (...)
             {
                 delete minTimeStmt;
-                StoreManager::pool->freeConnection(connection);
+                RemoteStore::pool->freeConnection(connection);
                 throw;
             }
         }
-        StoreManager::pool->freeConnection(connection);
+        pool->freeConnection(connection);
     }
     return minTime;
 #else
     return ((uint32_t)-1);
 #endif
 }
+/* ------------------------------ Remote Store ------------------------------ */
 
 }}

@@ -21,6 +21,9 @@
 #include <util/config/Manager.h>
 #include <util/Logger.h>
 
+#include <core/buffers/XHash.hpp>
+#include <core/buffers/Array.hpp>
+
 #include "MessageStore.h"
 #include "ConnectionManager.h"
 #include "Archiver.h"
@@ -37,108 +40,47 @@ namespace smsc { namespace store
 {
     using namespace smsc::sms;
     using namespace smsc::core::synchronization;
+    using namespace smsc::core::buffers;
+
     using smsc::util::Logger;
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigException;
-
-    /**
-     * Сервисный класс используемый для генерации следующего
-     * идентификационного номера для сообщения.
-     * Используется внутренне.
-     *
-     * @author Victor V. Makarov
-     * @version 1.0
-     */
-    class IDGenerator
+    
+    class RemoteStore : public MessageStore
     {
     private:
-
-        SMSId   id;
-        Mutex mutex;
-
-    public:
-
-        /**
-         * Конструктор, создаёт сервисный класс
-         *
-         * @param _id    последний использованный номер
-         *               для идентификации сообщений
-         */
-        IDGenerator(SMSId _id) : id(_id) {};
-
-        /**
-         * Пустой деструктор
-         */
-        ~IDGenerator() {};
-
-        /**
-         *
-         * @return возвращает следующий идентификационный номера сообщения.
-         */
-        inline SMSId getNextId()
-        {
-            MutexGuard guard(mutex);
-            return ++id;
-        };
-    };
-
-    /**
-     * Класс реализует подсистему хранения сообщений в контексте SMS центра.
-     * А именно, реализует интерфейс MessageStore доступный в единственном
-     * экземпляре.Выступает в роли фабрики и синглетона одновременно.
-     *
-     * Также содержит набор статических методов как для мониторинга
-     * работы подсистемы, так и для изменения некоторых параметров.
-     *
-     * Кроме того, подсистема контролирует подсистему архивации и
-     * создания биллинговых записей.
-     *
-     * @author Victor V. Makarov
-     * @version 1.0
-     * @see MessageStore
-     * @see SMS
-     */
-    class StoreManager : public MessageStore
-    {
-    private:
-
-        static Mutex mutex;
-
-        static IDGenerator              *generator;
-        static Archiver                 *archiver;
-        static StoreManager             *instance;
-        static StorageConnectionPool    *pool;
-        static log4cpp::Category        &log;
-
-        static unsigned             maxTriesCount;
-        static void loadMaxTriesCount(Manager& config);
 
     #ifdef SMSC_FAKE_MEMORY_MESSAGE_STORE
-        static IntHash<SMS*>     fakeStore;
+        static IntHash<SMS*>    fakeStore;
         static Mutex            fakeMutex;
     #endif
+        
+        StorageConnectionPool*  pool;
+        
+        unsigned                maxTriesCount;
+        void loadMaxTriesCount(Manager& config);
+    
+    protected:
+
+        static log4cpp::Category        &log;
 
         class ReadyIdIterator : public IdIterator
         {
         private:
 
             Connection*                 connection;
+            StorageConnectionPool*      pool;
             ReadyByNextTimeStatement*   readyStmt;
 
         public:
 
-            ReadyIdIterator(time_t retryTime)
+            ReadyIdIterator(StorageConnectionPool* pool, time_t retryTime)
                 throw(StorageException);
             virtual ~ReadyIdIterator();
 
             virtual bool getNextId(SMSId &id)
                 throw(StorageException);
         };
-
-    protected:
-
-        StoreManager() : MessageStore() {};
-        virtual ~StoreManager() {};
 
         void doCreateSms(StorageConnection* connection,
             SMS& sms, SMSId id, const CreateMode flag)
@@ -173,163 +115,46 @@ namespace smsc { namespace store
 
     public:
 
-        /**
-         * Метод создаёт и инициализирует подсистему хранения сообщений.
-         * Должен быть вызван один раз, перед непосредственным использованием
-         * подсистемы. Для получения интерфейса подсистемы следует
-         * воспользоваться методом getMessageStore()
-         *
-         * @param config интерфес для получения конфигурационных параметров
-         * @exception ConfigException
-         *                   возникает в случае некорректности и/или
-         *                   неполноты набора конфигурационных параметров.
-         * @exception ConnectionFailedException
-         *                   возникает при ошибке хранилища физической природы,
-         *                   т.н когда хранилище недоступно.
-         * @see StoreManager::getMessageStore()
-         * @see smsc::util::config::Manager
-         */
-        static void startup(Manager& config)
+        RemoteStore(Manager& config)
             throw(ConfigException, ConnectionFailedException);
-        /**
-         * Метод останавливает и уничтожает подсистему хранения сообщений.
-         * Должен быть вызван один раз, при завершении работы.
-         *
-         * Ожидает завершения текущего кванта работы, если запросы к
-         * подсистеме ещё находятся в процессе обработки.
-         */
-        static void shutdown();
-
-        /**
-         * Должен вызываться только после успешного вызова метода startup()
-         *
-         * @return возвращает интерфейс для непосредственной работы
-         *         с подсистемой хранения сообщений
-         * @see StoreManager::startup()
-         * @see MessageStore
-         */
-        static MessageStore* getMessageStore() {
-            return ((MessageStore *)instance);
-        }
-
-        /**
-         * Меняет размер пула соединений с хранилищем.
-         * В один момент времени одно соединение может использоваться
-         * только одним потоком управления.
-         *
-         * @param size   новый размер пула соединений
-         * @see ConnectionPool
-         */
-        static void setPoolSize(unsigned size) {
+        virtual ~RemoteStore();
+        
+        void setPoolSize(unsigned size) {
             __require__(pool);
             pool->setSize(size);
         }
-        /**
-         * @return текущий размер пула соединений
-         * @see ConnectionPool
-         */
-        static unsigned getPoolSize() {
+        unsigned getPoolSize() {
             __require__(pool);
             return pool->getSize();
         }
-
-        /**
-         * @return текущее количество соединений
-         * @see ConnectionPool
-         */
-        static unsigned getConnectionsCount() {
+        unsigned getConnectionsCount() {
             __require__(pool);
             return pool->getConnectionsCount();
         }
-        /**
-         * @return признак, есть ли свободные соединения
-         * @see ConnectionPool
-         */
-        static bool hasFreeConnections() {
+        bool hasFreeConnections() {
             __require__(pool);
             return pool->hasFreeConnections();
         }
-        /**
-         * @return текущее количество занятых соединений
-         * @see ConnectionPool
-         */
-        static unsigned getBusyConnectionsCount() {
+        unsigned getBusyConnectionsCount() {
             __require__(pool);
             return pool->getBusyConnectionsCount();
         }
-        /**
-         * @return текущее количество простаивающих соединений
-         * @see ConnectionPool
-         */
-        static unsigned getIdleConnectionsCount() {
+        unsigned getIdleConnectionsCount() {
             __require__(pool);
             return pool->getIdleConnectionsCount();
         }
-        /**
-         * @return текущее количество запросов ожидающих обработку
-         * @see ConnectionPool
-         */
-        static unsigned getPendingQueueLength() {
+        unsigned getPendingQueueLength() {
             __require__(pool);
             return pool->getPendingQueueLength();
         }
-
-        /**
-         * Позволяет принудительно активизировать подсистему архивации и
-         * создания биллинговых записей.
-         *
-         * @exception StorageException
-         *                   возникает при ошибке хранилища физической природы,
-         *                   т.н когда хранилище недоступно.
-         * @see Archiver
-         */
-        static void startArchiver()
-            throw (StorageException)
-        {
-            __require__(archiver);
-            return archiver->Start();
-        }
-        /**
-         * Позволяет принудительно остановить подсистему архивации и
-         * создания биллинговых записей.
-         *
-         * Ожидает завершения текущего минимального кванта работы архиватора.
-         * @see Archiver
-         */
-        static void stopArchiver() {
-            __require__(archiver);
-            return archiver->Stop();
-        }
-        /**
-         * @return Возвращает признак, запущена ли подсистема архивации
-         *         и создания биллинговых записей в настоящее время.
-         * @see Archiver
-         */
-        static bool isArchiverStarted() {
-            __require__(archiver);
-            return archiver->isStarted();
-        }
-        /**
-         * @return Возвращает признак, работает ли реально процесс архивации
-         *         и создания биллинговых записей в настоящее время.
-         * @see Archiver
-         */
-        static bool isArchivationInProgress() {
-            __require__(archiver);
-            return archiver->isInProgress();
-        }
-
+        
         /**
          * Реализация метода MessageStore для внешней генерация ключа.
          *
          * @see MessageStore
          * @see IdGenerator
          */
-        virtual SMSId getNextId()
-        {
-            __require__(generator);
-            return generator->getNextId();
-        };
+        virtual SMSId getNextId();
 
         /**
          * Реализация метода MessageStore
@@ -406,7 +231,275 @@ namespace smsc { namespace store
          */
         virtual time_t getNextRetryTime()
                 throw(StorageException);
+
     };
+    
+    /**
+     * Сервисный класс используемый для генерации следующего
+     * идентификационного номера для сообщения.
+     * Используется внутренне.
+     *
+     * @author Victor V. Makarov
+     * @version 1.0
+     */
+    class IDGenerator
+    {
+    private:
+        SMSId   id;
+        Mutex mutex;
+    public:
+        /**
+         * Конструктор, создаёт сервисный класс
+         *
+         * @param _id    последний использованный номер
+         *               для идентификации сообщений
+         */
+        IDGenerator(SMSId _id) : id(_id) {};
+        /**
+         * Пустой деструктор
+         */
+        ~IDGenerator() {};
+        /**
+         *
+         * @return возвращает следующий идентификационный номера сообщения.
+         */
+        inline SMSId getNextId() {
+            MutexGuard guard(mutex);
+            return ++id;
+        };
+    };
+
+    /**
+     * Класс реализует подсистему хранения сообщений в контексте SMS центра.
+     * А именно, реализует интерфейс MessageStore доступный в единственном
+     * экземпляре.Выступает в роли фабрики и синглетона одновременно.
+     *
+     * Также содержит набор статических методов как для мониторинга
+     * работы подсистемы, так и для изменения некоторых параметров.
+     *
+     * Кроме того, подсистема контролирует подсистему архивации и
+     * создания биллинговых записей.
+     *
+     * @author Victor V. Makarov
+     * @version 1.0
+     * @see MessageStore
+     * @see SMS
+     */
+    class StoreManager
+    {
+    private:
+
+        static Mutex mutex;
+
+        static IDGenerator              *generator;
+        static Archiver                 *archiver;
+        static RemoteStore              *instance;
+        
+        static log4cpp::Category        &log;
+
+    public:
+
+        /**
+         * Метод создаёт и инициализирует подсистему хранения сообщений.
+         * Должен быть вызван один раз, перед непосредственным использованием
+         * подсистемы. Для получения интерфейса подсистемы следует
+         * воспользоваться методом getMessageStore()
+         *
+         * @param config интерфес для получения конфигурационных параметров
+         * @exception ConfigException
+         *                   возникает в случае некорректности и/или
+         *                   неполноты набора конфигурационных параметров.
+         * @exception ConnectionFailedException
+         *                   возникает при ошибке хранилища физической природы,
+         *                   т.н когда хранилище недоступно.
+         * @see StoreManager::getMessageStore()
+         * @see smsc::util::config::Manager
+         */
+        static void startup(Manager& config)
+            throw(ConfigException, ConnectionFailedException);
+        /**
+         * Метод останавливает и уничтожает подсистему хранения сообщений.
+         * Должен быть вызван один раз, при завершении работы.
+         *
+         * Ожидает завершения текущего кванта работы, если запросы к
+         * подсистеме ещё находятся в процессе обработки.
+         */
+        static void shutdown();
+
+        /**
+         * Должен вызываться только после успешного вызова метода startup()
+         *
+         * @return возвращает интерфейс для непосредственной работы
+         *         с подсистемой хранения сообщений
+         * @see StoreManager::startup()
+         * @see MessageStore
+         */
+        static MessageStore* getMessageStore() {
+            return ((MessageStore *)instance);
+        }
+
+        static SMSId getNextId()
+        {
+            __require__(generator);
+            return generator->getNextId();
+        };
+
+        /**
+         * Меняет размер пула соединений с хранилищем.
+         * В один момент времени одно соединение может использоваться
+         * только одним потоком управления.
+         *
+         * @param size   новый размер пула соединений
+         * @see ConnectionPool
+         */
+        static void setPoolSize(unsigned size) {
+            __require__(instance);
+            instance->setPoolSize(size);
+        }
+        /**
+         * @return текущий размер пула соединений
+         * @see ConnectionPool
+         */
+        static unsigned getPoolSize() {
+            __require__(instance);
+            return instance->getPoolSize();
+        }
+        /**
+         * @return текущее количество соединений
+         * @see ConnectionPool
+         */
+        static unsigned getConnectionsCount() {
+            __require__(instance);
+            return instance->getConnectionsCount();
+        }
+        /**
+         * @return признак, есть ли свободные соединения
+         * @see ConnectionPool
+         */
+        static bool hasFreeConnections() {
+            __require__(instance);
+            return instance->hasFreeConnections();
+        }
+        /**
+         * @return текущее количество занятых соединений
+         * @see ConnectionPool
+         */
+        static unsigned getBusyConnectionsCount() {
+            __require__(instance);
+            return instance->getBusyConnectionsCount();
+        }
+        /**
+         * @return текущее количество простаивающих соединений
+         * @see ConnectionPool
+         */
+        static unsigned getIdleConnectionsCount() {
+            __require__(instance);
+            return instance->getIdleConnectionsCount();
+        }
+        /**
+         * @return текущее количество запросов ожидающих обработку
+         * @see ConnectionPool
+         */
+        static unsigned getPendingQueueLength() {
+            __require__(instance);
+            return instance->getPendingQueueLength();
+        }
+
+        /**
+         * Позволяет принудительно активизировать подсистему архивации и
+         * создания биллинговых записей.
+         *
+         * @exception StorageException
+         *                   возникает при ошибке хранилища физической природы,
+         *                   т.н когда хранилище недоступно.
+         * @see Archiver
+         */
+        static void startArchiver()
+            throw (StorageException) 
+        {
+            __require__(archiver);
+            return archiver->Start();
+        }
+        /**
+         * Позволяет принудительно остановить подсистему архивации и
+         * создания биллинговых записей.
+         *
+         * Ожидает завершения текущего минимального кванта работы архиватора.
+         * @see Archiver
+         */
+        static void stopArchiver() {
+            __require__(archiver);
+            return archiver->Stop();
+        }
+        /**
+         * @return Возвращает признак, запущена ли подсистема архивации
+         *         и создания биллинговых записей в настоящее время.
+         * @see Archiver
+         */
+        static bool isArchiverStarted() {
+            __require__(archiver);
+            return archiver->isStarted();
+        }
+        /**
+         * @return Возвращает признак, работает ли реально процесс архивации
+         *         и создания биллинговых записей в настоящее время.
+         * @see Archiver
+         */
+        static bool isArchivationInProgress() {
+            __require__(archiver);
+            return archiver->isInProgress();
+        }
+
+        static void incrementFinalizedCount(unsigned count=1) {
+            __require__(archiver);
+            archiver->incrementFinalizedCount();
+        }
+        static void decrementFinalizedCount(unsigned count=1) {
+            __require__(archiver);
+            archiver->decrementFinalizedCount();
+        }
+    
+    };
+    
+    /*struct UpdateRecord
+    {
+        SMSId       id;
+        
+        State       state;
+        Descriptor  dst;
+        uint32_t    fcs;
+        time_t      nt;
+
+        UpdateRecord(SMSId _id, State _state) 
+            : id(_id), state(_state), fcs(0), nt(0) {};
+        UpdateRecord(SMSId _id, State _state, const Descriptor& _dst,
+                     uint32_t _fcs = 0, time_t _nt = 0)
+            : id(_id), state(_state), dst(_dst), fcs(_fcs), nt(_nt) {};
+    };
+
+    class CashedStore : public MessageStore
+    {
+    protected:
+
+        RemoteStore*            store;
+
+        Array<UpdateRecord *>   updates;
+        Mutex                   updatesMutex;
+        XHash<SMSId, SMS*>      cash;
+        Mutex                   cashMutex;
+        
+        static void addSmsToStoreCash(SMSId id, SMS& sms)
+            throw(DuplicateMessageException);
+        static void getSmsFromStoreCash(SMSId id, SMS& sms)
+            throw(NoSuchMessageException);
+    
+    public:
+
+        CashedStore(RemoteStore* base, Manager& config) 
+            throws(ConfigException) : MessageStore(), store(base) {};
+        virtual ~CashedStore() {};
+    
+    };*/
 
 }}
 
