@@ -38,6 +38,9 @@ input, textarea, select
 	color: #161E49;
 	font-size: 100%;
 }
+input {
+	behavior : url(input.htc);
+}
 textarea
 {
 	height:80px;
