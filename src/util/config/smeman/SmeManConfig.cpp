@@ -128,6 +128,15 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
             }
           }
         }
+
+				if (record->recdata.smppSme.systemType == 0)
+					record->recdata.smppSme.systemType = cStringCopy("");
+				if (record->recdata.smppSme.password == 0)
+					record->recdata.smppSme.password = cStringCopy("");
+				if (record->recdata.smppSme.addrRange == 0)
+					record->recdata.smppSme.addrRange = cStringCopy("");
+				if (record->recdata.smppSme.receiptSchemeName == 0)
+					record->recdata.smppSme.receiptSchemeName = cStringCopy("default");
       }
       else if (strcmp(type.get(), "ss7"))
       {
