@@ -845,6 +845,38 @@ StateType StateMachine::submit(Tuple& t)
   {
     sms->setDeliveryReport(profile.reportoptions);
   }
+
+  sms->setIntProperty(Tag::SMSC_HIDE,profile.hide);
+
+  Profile srcprof=profile;
+
+  profile=smsc->getProfiler()->lookup(dst);
+
+  bool diverted=false;
+
+  if(profile.divertActive && profile.divert.length()!=0)
+  {
+    smsLog->info("divert for %s found",dst.toString().c_str());
+    sms->setStrProperty(Tag::SMSC_DIVERTED_TO,profile.divert.c_str());
+    diverted=true;
+    try{
+      dst=Address(profile.divert.c_str());
+    }catch(...)
+    {
+      smsLog->warn("INVALID DIVERT FOR %s - ADDRESS:%s",dst.toString().c_str(),profile.divert.c_str());
+      submitResp(t,sms,Status::INVDSTADR);
+      return ERROR_STATE;
+    }
+    Address tmp;
+    if(smsc->AliasToAddress(dst,tmp))
+    {
+      smsLog->info("Divert address dealiased:%s->%s",dst.toString().c_str(),tmp.toString().c_str());
+      dst=tmp;
+    }
+    profile=smsc->getProfiler()->lookup(dst);
+  }
+
+
   smsc::router::RouteInfo ri;
 
   ////
@@ -892,9 +924,6 @@ StateType StateMachine::submit(Tuple& t)
   sms->setBillingRecord(ri.billing);
 
 
-  sms->setIntProperty(Tag::SMSC_HIDE,profile.hide);
-  Profile srcprof=profile;
-  profile=smsc->getProfiler()->lookup(dst);
   sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
   int pres=psSingle;
 
@@ -1853,11 +1882,17 @@ StateType StateMachine::forward(Tuple& t)
   SmeProxy *dest_proxy=0;
   int dest_proxy_index;
 
+  Address dst=sms.getDealiasedDestinationAddress();
+  if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))
+  {
+    dst=sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str();
+  }
+
   smsc::router::RouteInfo ri;
   bool has_route = smsc->routeSms
                     (
                       sms.getOriginatingAddress(),
-                      sms.getDealiasedDestinationAddress(),
+                      dst,
                       dest_proxy_index,
                       dest_proxy,
                       &ri,
@@ -1976,7 +2011,7 @@ StateType StateMachine::forward(Tuple& t)
     {
       sms.setOriginatingAddress(src);
     }
-    Address dst=sms.getDealiasedDestinationAddress();
+    //Address dst=sms.getDealiasedDestinationAddress();
     sms.setDestinationAddress(dst);
     if(!sms.hasBinProperty(Tag::SMSC_CONCATINFO))
     {
@@ -2351,7 +2386,13 @@ StateType StateMachine::deliveryResp(Tuple& t)
       SmeProxy *dest_proxy=0;
       int dest_proxy_index;
 
-      bool has_route = smsc->routeSms(sms.getOriginatingAddress(),sms.getDealiasedDestinationAddress(),dest_proxy_index,dest_proxy,NULL);
+      Address dst=sms.getDealiasedDestinationAddress();
+      if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))
+      {
+        dst=sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str();
+      }
+
+      bool has_route = smsc->routeSms(sms.getOriginatingAddress(),dst,dest_proxy_index,dest_proxy,NULL);
       if ( !has_route )
       {
         __warning__("CONCAT: No route");
@@ -2427,7 +2468,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         {
           sms.setOriginatingAddress(src);
         }
-        Address dst=sms.getDealiasedDestinationAddress();
+        //Address dst=sms.getDealiasedDestinationAddress();
         sms.setDestinationAddress(dst);
 
         //

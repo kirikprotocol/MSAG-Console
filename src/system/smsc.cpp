@@ -460,6 +460,7 @@ void Smsc::init(const SmscConfigs& cfg)
 
     defProfile.hide=cfg.cfgman->getBool("profiler.defaultHide");
     defProfile.hideModifiable=cfg.cfgman->getBool("profiler.defaultHideModifiable");
+    defProfile.divertModifiable=cfg.cfgman->getBool("profiler.defaultDivertModifiable");
 
     if(!strcmp(dc,"DEFAULT"))
       defProfile.codepage=profiler::ProfileCharsetOptions::Default;

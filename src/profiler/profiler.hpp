@@ -49,13 +49,20 @@ struct Profile{
   int hide;
   bool hideModifiable;
 
+  std::string divert;
+  bool divertActive;
+  bool divertModifiable;
+
   bool operator==(const Profile& src)
   {
     return codepage==src.codepage &&
            reportoptions==src.reportoptions &&
            locale==src.locale &&
            hide==src.hide &&
-           hideModifiable==src.hideModifiable;
+           hideModifiable==src.hideModifiable &&
+           divert==src.divert &&
+           divertActive==src.divertActive &&
+           divertModifiable==src.divertModifiable;
   }
 
   void assign(const Profile& src)
@@ -65,6 +72,9 @@ struct Profile{
     locale=src.locale;
     hide=src.hide;
     hideModifiable=src.hideModifiable;
+    divert=src.divert;
+    divertActive=src.divertActive;
+    divertModifiable=src.divertModifiable;
   }
 };
 

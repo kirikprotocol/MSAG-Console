@@ -792,8 +792,8 @@ public:
     __require__((tag>>8)==SMS_INT_TAG);
     tag&=0xff;
     __require__(tag<=SMS_LAST_TAG);
-    prop.properties[tag].~OptionalProperty();
-    new(&prop.properties[tag]) OptionalProperty();
+    prop.properties[tag].isSet=0;
+    prop.properties[tag].iValue=0;
   }
 };
 

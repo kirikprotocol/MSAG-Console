@@ -267,7 +267,7 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   using smsc::util::config::Manager;
   using smsc::util::config::ConfigView;
   using smsc::util::config::ConfigException;
-  const char *sql="UPDATE SMS_PROFILE SET reportinfo=:1, codeset=:2, locale=:3, hidden=:4, hidden_mod=:5 where mask=:6";
+  const char *sql="UPDATE SMS_PROFILE SET reportinfo=:1, codeset=:2, locale=:3, hidden=:4, hidden_mod=:5,divert=:6,divert_act=:7,divert_mod=:8 where mask=:9";
   ConnectionGuard connection(ds);
   if(!connection.get())throw Exception("Profiler: Failed to get connection");
   auto_ptr<Statement> statement(connection->createStatement(sql));
@@ -276,11 +276,14 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   statement->setInt8(2,profile.codepage);
   char addrbuf[30];
   addr.toString(addrbuf,sizeof(addrbuf));
-  __trace2__("profiler: update %s=%d,%d,%s",addrbuf,profile.reportoptions,profile.codepage,profile.locale.c_str());
+  __trace2__("profiler: update %s=%d,%d,%s,d=%s",addrbuf,profile.reportoptions,profile.codepage,profile.locale.c_str(),profile.divert.c_str());
   statement->setString(3,profile.locale.c_str());
   statement->setInt8(4,profile.hide);
   statement->setString(5,profile.hideModifiable?"Y":"N");
-  statement->setString(6,addrbuf);
+  statement->setString(6,profile.divert.c_str());
+  statement->setString(7,profile.divertActive?"Y":"N");
+  statement->setString(8,profile.divertModifiable?"Y":"N");
+  statement->setString(9,addrbuf);
   statement->executeUpdate();
   connection->commit();
 }
@@ -291,8 +294,8 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   using smsc::util::config::Manager;
   using smsc::util::config::ConfigView;
   using smsc::util::config::ConfigException;
-  const char* sql = "INSERT INTO SMS_PROFILE (mask, reportinfo, codeset, locale,hidden,hidden_mod)"
-                      " VALUES (:1, :2, :3, :4, :5,:6)";
+  const char* sql = "INSERT INTO SMS_PROFILE (mask, reportinfo, codeset, locale,hidden,hidden_mod,divert,divert_act,divert_mod)"
+                      " VALUES (:1, :2, :3, :4, :5,:6,:7,:8,:9)";
 
   ConnectionGuard connection(ds);
 
@@ -307,6 +310,9 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   statement->setString(4,profile.locale.c_str());
   statement->setInt8(5, profile.hide);
   statement->setString(6, profile.hideModifiable?"Y":"N");
+  statement->setString(7,profile.divert.c_str());
+  statement->setString(8, profile.divertActive?"Y":"N");
+  statement->setString(9, profile.divertModifiable?"Y":"N");
   statement->executeUpdate();
   connection->commit();
 }
@@ -315,6 +321,8 @@ static const int _update_report=1;
 static const int _update_charset=2;
 static const int _update_locale=3;
 static const int _update_hide=4;
+static const int _update_divert_act=5;
+static const int _update_divert=6;
 
 
 void Profiler::internal_update(int flag,const Address& addr,int value,const char* svalue)
@@ -339,6 +347,16 @@ void Profiler::internal_update(int flag,const Address& addr,int value,const char
     if(!profile.hideModifiable)throw AccessDeniedException();
     profile.hide=value;
   }
+  if(flag==_update_divert_act)
+  {
+    if(!profile.divertModifiable)throw AccessDeniedException();
+    profile.divertActive=value;
+  }
+  if(flag==_update_divert)
+  {
+    if(!profile.divertModifiable)throw AccessDeniedException();
+    profile.divert=svalue;
+  }
   update(addr,profile);
 }
 
@@ -355,6 +373,10 @@ enum{
   msgUnhide,
   msgReportFinal,
   msgAccessDenied,
+  msgDivertOn,
+  msgDivertOff,
+  msgDivertChanged,
+  msgInvalidParam,
 };
 
 int Profiler::Execute()
@@ -435,16 +457,28 @@ int Profiler::Execute()
     try{
       if(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP))
       {
+        __trace2__("ussd service op=%d",sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP));
         char *str=body;
+        char *ptr=str;
+        while(ptr=strchr(ptr,'#'))*ptr='*';
 
         int code=-1;
         int pos;
-        if(sscanf(str,"%d%n",&code,&pos)==1 && str[pos]==0)
+        if(sscanf(str,"%d%n",&code,&pos)==1 && (str[pos]==0 || str[pos]=='*'))
         {
           __trace2__("Profiler: ussd op=%s(%d)",str,code);
           if(ussdCmdMap.Exist(code))
           {
-            strcpy(body,ussdCmdMap.Get(code).c_str());
+            string cmd=ussdCmdMap.Get(code);
+            if(cmd=="DIVERT TO")
+            {
+              cmd+=' ';
+              if(str[pos]=='*')
+              {
+                cmd.append(str+pos+1);
+              }
+            }
+            strcpy(body,cmd.c_str());
             __trace2__("Profiler: command mapped to %s",body);
             i=0;
             len=strlen(body);
@@ -529,7 +563,44 @@ int Profiler::Execute()
       {
         msg=msgUnhide;
         internal_update(_update_hide,addr,0);
+      }else
+      if(!strncmp(body+i,"DIVERT",6))
+      {
+        i+=6;
+        while(body[i] && isspace(body[i]))i++;
+        int j=i;
+        if(!strncmp(body+j,"TO",2))
+        {
+          while(body[i] && !isspace(body[i]))i++;
+          while(body[i] && isspace(body[i]))i++;
+          j=len-1;
+          while(j>i && isspace(body[j]))j--;
+          string div(body+i,body+j+1);
+          __trace2__("divert address=%s",div.c_str());
+          try{
+            Address addr(div.c_str());
+          }catch(...)
+          {
+            msg=msgInvalidParam;
+          }
+          if(msg==-1 && div.length()<21)
+          {
+            msg=msgDivertChanged;
+            internal_update(_update_divert,addr,0,div.c_str());
+          }
+        }else
+        if(!strncmp(body+j,"ON",2))
+        {
+          msg=msgDivertOn;
+          internal_update(_update_divert_act,addr,true,0);
+        }else
+        if(!strncmp(body+j,"OFF",3))
+        {
+          msg=msgDivertOff;
+          internal_update(_update_divert_act,addr,false,0);
+        }
       }
+
     }catch(AccessDeniedException& e)
     {
       msg=msgAccessDenied;
@@ -591,6 +662,22 @@ int Profiler::Execute()
       case msgAccessDenied:
       {
         msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgModificationDenied");
+      }break;
+      case msgDivertOn:
+      {
+        msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgDivertOn");
+      }break;
+      case msgDivertOff:
+      {
+        msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgDivertOff");
+      }break;
+      case msgDivertChanged:
+      {
+        msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgDivertChanged");
+      }break;
+      case msgInvalidParam:
+      {
+        msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgInvalidParam");
       }break;
       default:
       {
@@ -660,7 +747,7 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
   using smsc::util::config::ConfigView;
   using smsc::util::config::ConfigException;
 
-  const char* sql = "SELECT MASK, REPORTINFO, CODESET ,LOCALE, HIDDEN, HIDDEN_MOD FROM SMS_PROFILE";
+  const char* sql = "SELECT MASK, REPORTINFO, CODESET ,LOCALE, HIDDEN, HIDDEN_MOD, DIVERT,DIVERT_ACT,DIVERT_MOD FROM SMS_PROFILE";
 
 
   ConnectionGuard connection(ds);
@@ -682,6 +769,11 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
     p.hide=rs->getInt8(5);
     const char *hm=rs->getString(6);
     p.hideModifiable=hm?toupper(*hm)=='Y':false;
+    p.divert=rs->getString(7);
+    hm=rs->getString(8);
+    p.divertActive=hm?toupper(*hm)=='Y':false;
+    hm=rs->getString(9);
+    p.divertModifiable=hm?toupper(*hm)=='Y':false;
     profiles->add(addr,p);
   }
 }
