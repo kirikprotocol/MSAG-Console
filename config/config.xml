@@ -24,10 +24,10 @@
       <param name="interval" type="int">60000</param>
       <param name="finalized" type="int">1000</param>
       <param name="uncommited" type="int">50</param>
-        
+
       <section name="Cleaner">
         <param name="enabled" type="bool">true</param>
-	<param name="interval" type="int">30</param>
+  <param name="interval" type="int">30</param>
       </section>
     </section>
 
@@ -41,7 +41,7 @@
       <param name="enabled" type="bool">true</param>
       <param name="capacity" type="int">1000</param>
     </section>
-    
+
     <section name="Connections">
       <param name="max" type="int">10</param>
       <param name="init" type="int">5</param>
@@ -71,7 +71,7 @@
     <param name="protocol_id" type="int">34</param>
     <section name="performance">
       <param name="host" type="string">smsc</param>
-      <param name="port" type="int">9002</param>
+      <param name="port" type="int">9003</param>
     </section>
   </section>
 
