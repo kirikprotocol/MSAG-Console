@@ -16,13 +16,16 @@ TestConfig::TestConfig()
 	//различные времена
 	intMap["timeCheckAccuracy"] = 5; //5 сек
 	intMap["sequentialPduInterval"] = 10; //10 сек
-	intMap["maxValidPeriod"] = 86400; //1 сутки
+	intMap["maxValidPeriod"] = 150; //150 сек
 	intMap["maxWaitTime"] = 60; //max(waitTime)
 	intMap["maxDeliveryPeriod"] = 120; //max(validTime - waitTime)
 	//адреса
 	addrMap["smscAddr"] = ".3.5.123abc";
 	addrMap["profilerAddr"] = ".3.5.456def";
-	addrMap["dbSmeAlias"] = ".2.3.9664jgch";
+	//db sme
+	addrMap["dbSmeAddr"] = ".2.3.9664jgch";
+	addrMap["dbSmeAlias"] = ".1.3.piowe9816";
+	strMap["dbSmeSystemId"] = "dbSme";
 	//ресурсы
 	strMap["cmdRespReportNone"] = 
 		"Now you will receive only requested delivery reports";
