@@ -301,6 +301,7 @@ public:
 
   MapDialog* createDialogImsiReq(ET96MAP_LOCAL_SSN_T lssn,MapDialog* associate){
     MutexGuard g(sync);
+    if ( dialogId_pool.size() == 0 ) throw runtime_error("MAP:: POOL is empty");
     ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
     MapDialog* dlg = new MapDialog(map_dialog,lssn,2);
     dialogId_pool.pop_front();
@@ -316,6 +317,7 @@ public:
     //if ( abonent.length() == 0 )
     //  throw runtime_error("MAP::createOrAttachSMSCDialog: can't create MT dialog without abonent");
     MutexGuard g(sync);
+    if ( dialogId_pool.size() == 0 ) throw runtime_error("MAP:: POOL is empty");
     __trace2__("MAP::createOrAttachSMSCDialog: try create SMSC dialog on abonent %s",abonent.c_str());
     if ( ( abonent.length() != 0 ) && lock_map.Exists(abonent) ) {
       __trace2__("MAP::createSMSCDialog: locked");
@@ -352,6 +354,7 @@ public:
       __trace2__("MAP:: reassign dialog: here is no did 0x%x",did);
       throw runtime_error("MAP:: reassign dialog: here is no did");
     }
+    if ( dialogId_pool.size() == 0 ) throw runtime_error("MAP:: POOL is empty");
     ET96MAP_DIALOGUE_ID_T dialogid_map = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
     dialogId_pool.push_back(did);
     dlg->dialogid_map = dialogid_map;

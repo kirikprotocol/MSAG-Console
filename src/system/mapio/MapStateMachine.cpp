@@ -402,6 +402,9 @@ static void SendRInfo(MapDialog* dialog)
   __trace2__("MAP::%s: MAP.did: 0x%x",__FUNCTION__,dialog->dialogid_map);
   ET96MAP_APP_CNTX_T appContext;
   appContext.acType = ET96MAP_SHORT_MSG_GATEWAY_CONTEXT;
+  dialog->mwdStatus = 0;
+  dialog->memoryExceeded = false;
+  dialog->subscriberAbsent = false;
   SetVersion(appContext,dialog->version);
   //unsigned dialog_id = dialog->isMOreq?dialog->dialogid_req:dialog->dialogid_map;
   require ( dialog->ssn == SSN );
