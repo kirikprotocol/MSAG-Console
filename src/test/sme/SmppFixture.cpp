@@ -47,13 +47,11 @@ SmppFixture::SmppFixture(const SmeInfo& _smeInfo, const Address& _smeAddr,
 	if (pduReg && aliasReg && routeReg)
 	{
 		routeChecker = new RouteChecker(smeReg, aliasReg, routeReg);
-		pduChecker = new SmppPduChecker(pduReg, routeChecker, chkList);
 	}
 }
 
 SmppFixture::~SmppFixture()
 {
-	if (pduChecker) { delete pduChecker; pduChecker = NULL; }
 	if (routeChecker) { delete routeChecker; routeChecker = NULL; }
 	if (session)
 	{

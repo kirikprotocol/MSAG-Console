@@ -10,7 +10,7 @@
 #include "test/core/RouteRegistry.hpp"
 #include "test/core/RouteChecker.hpp"
 #include "test/sms/SmsUtil.hpp"
-#include "SmppPduChecker.hpp"
+#include "test/util/CheckList.hpp"
 #include "SmppPduSender.hpp"
 #include <map>
 
@@ -20,9 +20,11 @@ namespace sme {
 
 using std::map;
 using std::pair;
+using std::string;
 using smsc::sme::SmppSession;
 using smsc::smeman::SmeInfo;
 using smsc::sms::Address;
+using smsc::smpp::PduDeliverySm;
 using smsc::profiler::Profile;
 using smsc::test::core::AliasRegistry;
 using smsc::test::core::SmeAckMonitor;
@@ -59,6 +61,7 @@ struct AckText : public PduDataObject
 class SmppBaseTestCases;
 class SmppTransmitterTestCases;
 class SmppReceiverTestCases;
+class SmppPduChecker;
 
 typedef map<const Address, PduHandler*, ltAddress> PduHandlerMap;
 

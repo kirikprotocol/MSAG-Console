@@ -21,8 +21,8 @@ using namespace smsc::test::util;
 using namespace smsc::smpp::SmppCommandSet;
 
 DbSmeTestCases::DbSmeTestCases(SmppFixture* fixture, DbSmeRegistry* _dbSmeReg)
-: SmeAcknowledgementHandler(fixture, TestConfig::getStrProp("dbSmeServiceType"),
-	TestConfig::getIntProp("dbSmeProtocolId")), dbSmeReg(_dbSmeReg),
+: SmeAcknowledgementHandler(fixture, TestConfig::getStrParam("dbSmeServiceType"),
+	TestConfig::getIntParam("dbSmeProtocolId")), dbSmeReg(_dbSmeReg),
 	dateFormatTc(dbSmeReg, fixture->chkList),
 	otherFormatTc(dbSmeReg, fixture->chkList),
 	insertTc(dbSmeReg, fixture->chkList),

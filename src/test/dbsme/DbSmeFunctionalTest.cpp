@@ -1,6 +1,7 @@
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "test/sme/SmppBaseTestCases.hpp"
+#include "test/sme/SmppPduChecker.hpp"
 #include "test/sme/SmppTransmitterTestCases.hpp"
 #include "test/sme/SmppReceiverTestCases.hpp"
 #include "test/sme/SmscSmeTestCases.hpp"
@@ -59,6 +60,7 @@ class TestSme : public TestTask, SmppResponseSender
 	int smeNum;
 	SmppFixture* fixture;
 	SmppSession* session; //удаляется в fixture
+	SmppPduChecker pduChecker;
 	SmppBaseTestCases baseTc;
 	SmppTransmitterTestCases transmitterTc;
 	SmppReceiverTestCases receiverTc;
@@ -74,7 +76,7 @@ class TestSme : public TestTask, SmppResponseSender
 
 public:
 	TestSme(int smeNum, const SmeConfig& config, SmppFixture* fixture);
-	virtual ~TestSme() {}
+	virtual ~TestSme() { delete fixture; }
 	virtual void executeCycle();
 	virtual void onStopped();
 	PduHandler* getDeliveryReceiptHandler() { return &smscSmeTc; }
@@ -130,11 +132,12 @@ public:
 };
 
 //TestSme
-TestSme::TestSme(int num, const SmeConfig& config, SmppFixture* fixture)
+TestSme::TestSme(int num, const SmeConfig& config, SmppFixture* _fixture)
 	: TestTask("TestSme", num), smeNum(num), nextCheckTime(0),
-	baseTc(config, fixture), receiverTc(fixture), transmitterTc(fixture),
-	smscSmeTc(fixture), protocolTc(fixture), profilerTc(fixture),
-	dbSmeTc(fixture, dbSmeReg), boundOk(false), idx(0)
+	fixture(_fixture), pduChecker(_fixture), baseTc(config, _fixture),
+	receiverTc(_fixture), transmitterTc(_fixture), smscSmeTc(_fixture),
+	protocolTc(_fixture), profilerTc(_fixture), dbSmeTc(_fixture, dbSmeReg),
+	boundOk(false), idx(0)
 {
 	session = new SmppSession(config, &receiverTc);
 	fixture->session = session;

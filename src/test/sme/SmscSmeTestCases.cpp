@@ -111,7 +111,7 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 }
 
 #define __compare__(errCode, field, value) \
-	if (value != pdu.field) { __tc_fail__(errCode); }
+	if (value != field) { __tc_fail__(errCode); }
 
 void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 	PduDeliverySm& pdu, time_t recvTime)
@@ -150,7 +150,7 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 	__tc__("processDeliverySm.deliveryReceipt.checkFields");
 	//поля хедера проверяются в processDeliverySm()
 	//message
-	__compare__(1, get_message().get_serviceType(), smscServiceType);
+	__compare__(1, nvl(pdu.get_message().get_serviceType()), smscServiceType);
 	//правильность адресов частично проверяется в fixture->routeChecker->checkRouteForAcknowledgementSms()
 	Address srcAlias;
 	SmppUtil::convert(pdu.get_message().get_source(), &srcAlias);
@@ -162,7 +162,7 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 	{
 		__tc_fail__(3);
 	}
-	//__compare__(4, get_message().get_dest(), origPdu->get_message().get_source());
+	//__compare__(4, pdu.get_message().get_dest(), origPdu->get_message().get_source());
 	bool statusReport;
 	switch (origPdu->get_message().get_registredDelivery() & SMSC_DELIVERY_RECEIPT_BITS)
 	{
@@ -181,20 +181,20 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 	}
 	if (statusReport)
 	{
-		__compare__(4, get_message().get_esmClass(), ESM_CLASS_DELIVERY_RECEIPT);
+		__compare__(4, pdu.get_message().get_esmClass(), ESM_CLASS_DELIVERY_RECEIPT);
 	}
 	else if (monitor->regDelivery == ProfileReportOptions::ReportFull)
 	{
-		__compare__(5, get_message().get_esmClass(), ESM_CLASS_NORMAL_MESSAGE);
+		__compare__(5, pdu.get_message().get_esmClass(), ESM_CLASS_NORMAL_MESSAGE);
 	}
 	else
 	{
 		__tc_fail__(6);
 	}
-	__compare__(7, get_message().get_protocolId(), smscProtocolId);
-	__compare__(8, get_message().get_priorityFlag(), 0);
-	__compare__(9, get_message().get_registredDelivery(), 0);
-	__compare__(10, get_message().get_dataCoding(), ack->dataCoding);
+	__compare__(7, pdu.get_message().get_protocolId(), smscProtocolId);
+	__compare__(8, pdu.get_message().get_priorityFlag(), 0);
+	__compare__(9, pdu.get_message().get_registredDelivery(), 0);
+	__compare__(10, pdu.get_message().get_dataCoding(), ack->dataCoding);
 	if (text.length() > getMaxChars(ack->dataCoding))
 	{
 		__tc_fail__(11);

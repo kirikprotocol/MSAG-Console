@@ -1,4 +1,5 @@
 #include "SmppReceiverTestCases.hpp"
+#include "SmppPduChecker.hpp"
 #include "test/conf/TestConfig.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "core/synchronization/Mutex.hpp"

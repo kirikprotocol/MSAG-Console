@@ -12,6 +12,7 @@ namespace sme {
 using log4cpp::Category;
 using smsc::sme::SmeConfig;
 using smsc::sme::SmppPduEventListener;
+using smsc::smpp::SmppHeader;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::CheckList;
 

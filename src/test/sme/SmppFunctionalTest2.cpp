@@ -1,6 +1,7 @@
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "SmppBaseTestCases.hpp"
+#include "SmppPduChecker.hpp"
 #include "SmppTransmitterTestCases.hpp"
 #include "SmppReceiverTestCases.hpp"
 #include "SmscSmeTestCases.hpp"
@@ -66,6 +67,7 @@ class TestSme : public TestTask, SmppResponseSender
 	int smeNum;
 	SmppFixture* fixture;
 	SmppSession* session; //удаляется в fixture
+	SmppPduChecker pduChecker;
 	SmppBaseTestCases baseTc;
 	SmppTransmitterTestCases transmitterTc;
 	SmppReceiverTestCases receiverTc;
@@ -139,9 +141,10 @@ public:
 //TestSme
 TestSme::TestSme(int num, const SmeConfig& config, SmppFixture* _fixture)
 	: TestTask("TestSme", num), smeNum(num), nextCheckTime(0),
-	fixture(_fixture), baseTc(config, _fixture), receiverTc(_fixture),
-	transmitterTc(_fixture), smscSmeTc(_fixture), protocolTc(_fixture),
-	profilerTc(_fixture), abonentInfoTc(_fixture), boundOk(false), idx(0)
+	fixture(_fixture), pduChecker(_fixture), baseTc(config, _fixture),
+	receiverTc(_fixture), transmitterTc(_fixture), smscSmeTc(_fixture),
+	protocolTc(_fixture), profilerTc(_fixture), abonentInfoTc(_fixture),
+	boundOk(false), idx(0)
 {
 	session = new SmppSession(config, &receiverTc);
 	fixture->session = session;
