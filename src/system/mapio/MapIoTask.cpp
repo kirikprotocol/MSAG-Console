@@ -9,6 +9,10 @@ using namespace std;
 
 #ifdef USE_MAPIO
 
+struct SMSC_FROWARD_RESPONCE_T {
+  ET96MAP_DIALOGUE_ID_T dialogId;
+};
+
 static void CloseDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId)
 {
   Et96MapCloseReq (SSN,dialogId,ET96MAP_NORMAL_RELEASE,0,0,0);
@@ -21,6 +25,23 @@ static void CloseAndRemoveDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T
     __trace2__("close error, code 0x%hx",res);
   }
   MapDialogContainer::getInstance()->dropDialog(dialogId);
+}
+
+void FrwardResponse(ET96MAP_DIALOGUE_ID_T dialogId){
+  MapDialogCntItem* mdci = 
+    MapDialogContainer::getInstance()->createDialog(dialogId);
+  if ( mdci ) {
+    if ( !mdci ){
+      __trace2__("MAP::bad dialogid 0x%x",dialogId);
+      throw runtime_error("MAP::bad dialogid 0x%x",dialogId);
+    }
+  }
+  USHORT_T result = Et96MapV2ForwardSmMOResp(lssn,dialogId,invokeId,0);
+  if ( result != ET96MAP_E_OK ){
+    __trace2__("MAP::Et96MapV2ForwardSmMOInd error when send response on froward_sm");
+    throw runtime_error("MAP::Et96MapV2ForwardSmMOInd error when send response on froward_sm");
+  }
+  CloseAndRemoveDialog(SSN,dialogId);
 }
 
 extern "C"{
@@ -90,12 +111,19 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
       mdci->invokeId = invokeId;
       mdci->dialogue->Et96MapV2ForwardSmMOInd(
         SSN,dialogId,invokeId,dstAddr,srcAddr,ud);
-      USHORT_T result = Et96MapV2ForwardSmMOResp(lssn,dialogId,invokeId,0);
-      if ( result != ET96MAP_E_OK ){
-        __trace2__("MAP::Et96MapV2ForwardSmMOInd error when send response on froward_sm");
+      SMSC_FROWARD_RESPONCE_T* p = new SMSC_FROWARD_RESPONCE_T();
+      p->dialogId = dialogId;
+      MSG_T msg;
+      msg.primitive = SMSC_FORWARD_RESPONCE;
+      msg.sender = MY_USER_ID;
+      msg.receiver = MY_USER_ID;
+      msg.msg_p = (USHORT_T*)p;
+      msg.size = sizeof(SMSC_FORWARD_RESPONCE_T);
+      result =  MsgSend(&msg);
+      if ( result != MSG_OK ){
+        __trace2__("MAP::Et96MapV2ForwardSmMOInd MsgSend broken with code 0x%x",result);
         throw 0;
       }
-      CloseAndRemoveDialog(SSN,dialogId);
   	}catch(...){
   		__trace__("MAP::Et96MapV2ForwardSmMOInd catch exception");
       CloseAndRemoveDialog(SSN,dialogId);
@@ -151,7 +179,25 @@ void MapIoTask::dispatcher()
     }
     //if (EINSS7CpMsgRecv_r(&message,MSG_INFTIM)!=MSG_OK) return;
     if ( isStopping ) return;
-    Et96MapHandleIndication(&message);
+    if ( message.sender == message.receiver &&
+         message.sender == USER01_ID )
+    {
+      try{
+        if ( message.primitive == SMSC_FROWAR_RESPONCE ){
+          SMSC_FROWARD_RESPONCE_T* responce = (SMSC_FROWARD_RESPONCE_T*)message.msg_p;
+          if ( responce == 0 ) {
+            __trace2__("MAP::MessageProcessing Opss, forward responce has zero data");
+            throw 0;
+          }
+          ForwardResponse(responce->dialogId);
+        }
+      }catch(...){
+      }
+      delete message.msg_p;
+      message.size = 0;
+    }
+    else
+      Et96MapHandleIndication(&message);
     //result = Et96MapHandleIndication(&message);
     //if ( result != ET96MAP_E_OK ) {
     //  __trace2__("MAP: error at Et96MapHandleIndication with code x%hx",result);
