@@ -12,6 +12,22 @@
 	<param name="wantAlias" value="yes"/>
 	<param name="timeout" value="22"/>
 	<param name="priority" value="12007"/>
+	<param name="disabled" value="false"/>
+	<param name="mode" value="trx"/>
+</smerecord>
+<smerecord type="smpp" uid="DSTRLST">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value="2RnITsrGJV7d"/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="-926875648"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="22"/>
+	<param name="priority" value="12007"/>
+	<param name="disabled" value="false"/>
+	<param name="mode" value="trx"/>
 </smerecord>
 <smerecord type="smpp" uid="abonentinfo">
 	<param name="typeOfNumber" value="0"/>
@@ -24,6 +40,8 @@
 	<param name="wantAlias" value="no"/>
 	<param name="timeout" value="12"/>
 	<param name="priority" value="4811"/>
+	<param name="disabled" value="false"/>
+	<param name="mode" value="trx"/>
 </smerecord>
 <smerecord type="smpp" uid="profiler">
 	<param name="typeOfNumber" value="0"/>
@@ -36,6 +54,8 @@
 	<param name="wantAlias" value="no"/>
 	<param name="timeout" value="22"/>
 	<param name="priority" value="23595"/>
+	<param name="disabled" value="false"/>
+	<param name="mode" value="trx"/>
 </smerecord>
 <smerecord type="smpp" uid="smscsme">
 	<param name="typeOfNumber" value="0"/>
@@ -48,6 +68,8 @@
 	<param name="wantAlias" value="no"/>
 	<param name="timeout" value="16"/>
 	<param name="priority" value="4609"/>
+	<param name="disabled" value="false"/>
+	<param name="mode" value="trx"/>
 </smerecord>
 <smerecord type="smpp" uid="sme00">
 	<param name="typeOfNumber" value="0"/>
@@ -61,6 +83,8 @@
 	<param name="forceDC" value="false"/>
 	<param name="timeout" value="10"/>
 	<param name="priority" value="32"/>
+	<param name="disabled" value="false"/>
+	<param name="mode" value="rx"/>
 </smerecord>
 <smerecord type="smpp" uid="sme01">
 	<param name="typeOfNumber" value="0"/>
@@ -74,6 +98,8 @@
 	<param name="forceDC" value="false"/>
 	<param name="timeout" value="10"/>
 	<param name="priority" value="32"/>
+	<param name="disabled" value="false"/>
+	<param name="mode" value="tx"/>
 </smerecord>
 <smerecord type="smpp" uid="sme02">
 	<param name="typeOfNumber" value="0"/>
@@ -87,5 +113,52 @@
 	<param name="forceDC" value="false"/>
 	<param name="timeout" value="10"/>
 	<param name="priority" value="32"/>
+	<param name="disabled" value="false"/>
+	<param name="mode" value="trx"/>
+</smerecord>
+<smerecord type="smpp" uid="sme03">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="forceDC" value="false"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+	<param name="disabled" value="true"/>
+	<param name="mode" value="rx"/>
+</smerecord>
+<smerecord type="smpp" uid="sme04">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="forceDC" value="false"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+	<param name="disabled" value="true"/>
+	<param name="mode" value="tx"/>
+</smerecord>
+<smerecord type="smpp" uid="sme05">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="forceDC" value="false"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+	<param name="disabled" value="true"/>
+	<param name="mode" value="trx"/>
 </smerecord>
 </records>
