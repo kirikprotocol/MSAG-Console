@@ -15,7 +15,7 @@
   <fail if="INIT_FAILED" message="Please configure build.properties file"/>
   <available file="${TEMPLATE_PROPS}" property="TEMPLATE_PROPS_FOUND" value="yes"/>
   <fail unless="TEMPLATE_PROPS_FOUND" message="Template properties file not found"/>
-
+  <tstamp/>
   <property environment="env"/>
   <property name="DISTR_DIR" value="${BUILD_DIR}/distr"/>
   <property name="SRC_DIR" value="${SMSC_DIR}/src"/>
@@ -211,14 +211,17 @@ Targets:
   </target>
 
   <target name="notomcat" description="removes tomcat distrib from update. Use before tar">
-    <delete dir="${DISTR_DIR}/tomcat">
-      <exclude name="server/lib/sibinco_tomcat_auth_server.jar"/>
-      <exclude name="common/lib/sibinco_tomcat_auth_common.jar"/>
+    <delete>
+      <fileset dir="${DISTR_DIR}/tomcat">
+        <exclude name="server/lib/sibinco_tomcat_auth_server.jar"/>
+        <exclude name="common/lib/sibinco_tomcat_auth_common.jar"/>
+        <include name="**/*"/>
+      </fileset>
     </delete>
   </target>
 
   <target name="tar" description="tar distr directory">
-    <tar destfile="${DISTR_DIR}/smppgw_update.tar.gz" compression="gzip">
+    <tar destfile="${DISTR_DIR}/smppgw_update_${DSTAMP}_${TSTAMP}.tar.gz" compression="gzip">
       <tarfileset dir="${DISTR_DIR}" mode="775">
         <include name="daemon/bin/smsc_ssdaemon"/>
         <include name="services/smppgw/bin/smppgw"/>
