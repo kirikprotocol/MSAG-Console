@@ -152,7 +152,12 @@ const RouteHolder* RouteRegistry::lookup(const Address& origAddr,
 			const RouteHolder* routeHolder = lookup2(it->second, origAddr);
 			if (routeHolder)
 			{
-				return routeHolder;
+				//return routeHolder;
+				if (!routeHolder->route.enabling)
+				{
+					__trace__("Inhibit route found");
+				}
+				return (routeHolder->route.enabling ? routeHolder : NULL);
 			}
 		}
 		/*
