@@ -69,7 +69,7 @@ static inline void print(RouteRecord* record,const char* ppp= "")
   }
 }
 
-static inline 
+static inline
 string AddrToString(const Address& addr)
 {
   char buff[128] = {0};
@@ -226,7 +226,7 @@ RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& xcm
   {
     ostringstream ost;
     ost << (!xcmp?(strong?"strong":"weak  "):"none  ")
-      << " matching by source address with tuple {" 
+      << " matching by source address with tuple {"
       << AddrToString(node->record->info.source) << "} -> "
       << AddrToString(node->record->info.dest);
     trace_->push_back(ost.str());
@@ -279,7 +279,7 @@ RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& xcmp,vect
   {
     ostringstream ost;
     ost << (!xcmp?(strong?"strong":"weak  "):"none  ")
-      << " matching by dest address with tuple " 
+      << " matching by dest address with tuple "
       << AddrToString(node->record->info.source) << " -> {"
       << AddrToString(node->record->info.dest) << "}";
     trace_->push_back(ost.str());
@@ -428,18 +428,18 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<st
             {
               ostringstream ost;
               ost << "duplicated route "
-                << r0->info.routeId << ": " 
+                << r0->info.routeId << ": "
                 << AddrToString(r0->info.source) << "(" << r0->info.srcSmeSystemId << ")"
-                << " -> " 
+                << " -> "
                 << AddrToString(r0->info.dest) << "(" << r0->info.smeSystemId << ")";
               trace_->push_back(ost.str());
             }
             {
               ostringstream ost;
               ost << "       exists as "
-                << rec->info.routeId << ": " 
+                << rec->info.routeId << ": "
                 << AddrToString(rec->info.source) << "(" << rec->info.srcSmeSystemId << ")"
-                << " -> " 
+                << " -> "
                 << AddrToString(rec->info.dest) << "(" << rec->info.smeSystemId << ")";
               trace_->push_back(ost.str());
             }
@@ -634,7 +634,7 @@ __synchronized__
   proxy = 0;
   __require__(sme_table);
   // ....
-  
+
   smsc::smeman::SmeInfo src_smeinfo;
   if ( srcidx ) src_smeinfo = sme_table->getSmeInfo(srcidx);
 
@@ -645,12 +645,15 @@ __synchronized__
 
   RouteRecord* rec =  findInTree(&root,&source,&dest,trace_enabled_?&trace_:0);
   if ( !rec ) {
-    trace_.push_back("route not found");
+    if(trace_enabled_)
+    {
+      trace_.push_back("route not found");
+    }
     return false;
   }
   // изменение от 4 июля 2003, ищем альтернативный маршрут
   RouteRecord* rec0 = 0;
-  
+
   if ( trace_enabled_ ) {
     string s("lookup for alternative route with src proxy: '");
     if ( srcidx ) {
@@ -665,7 +668,7 @@ __synchronized__
   for ( ; rec != 0 ; rec = rec->alternate_pair ) {
     if ( trace_enabled_ ) {
       ostringstream ost;
-      ost << "check alternative route with src proxy: '" << 
+      ost << "check alternative route with src proxy: '" <<
         (rec->srcProxyIdx?rec->info.srcSmeSystemId:string("default")) << "'";
       trace_.push_back(ost.str());
     }
