@@ -8,6 +8,9 @@
   <property name="libs_path" value="defined in caller"/>
   <property name="DISTR_DIR" value="defined in caller"/>
   <property name="exploded" value="defined in caller"/>
+  <property name="SMSC_DIR" value="defined in caller"/>
+  <property name="TEMPLATE_PROPS" value="defined in caller"/>
+  <property name="TEMPL_DIR" value="defined in caller"/>
 
   <target name="help">
     <echo message="Do not build from this file directly"/>
@@ -46,12 +49,28 @@
     <ant antfile="../make_esme.xml" target="distr"/>
     <delete file="${exploded}/lib/${esme_name}.jar"/>
     <antcall target="copy_libs"/>
+    <copy todir="${exploded}/conf">
+      <fileset dir="${TEMPL_DIR}/${esme_name}" includes="*.properties"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <copy todir="${exploded}/schema">
+      <fileset dir="${TEMPL_DIR}/${esme_name}/schema" includes="**/*"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
   </target>
 
   <target name="update" depends="build" description="update existing installation">
     <ant antfile="../make_esme.xml" target="update"/>
     <delete file="${DISTR_DIR}/webapps/smsc/WEB-INF/lib/${esme_name}.jar"/>
     <antcall target="copy_libs"/>
+    <copy todir="${DISTR_DIR}/services/${esme_name}/conf">
+      <fileset dir="${TEMPL_DIR}/${esme_name}" includes="*.properties"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <copy todir="${DISTR_DIR}/services/${esme_name}/schema">
+      <fileset dir="${TEMPL_DIR}/${esme_name}/schema" includes="**/*"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
   </target>
 
   <target name="clean" description="clean up">
