@@ -135,6 +135,19 @@ void MissedCallProcessor::setCircuits(Circuits cics)
   UBL[5] = cics.ts >> 24 & 0xFF;
 }
 
+static ReleaseSettings relCauses = {
+/* busy     */ 0x11 /* called user busy    */, 0x01 /* inform              */,
+/* no reply */ 0x13 /* no answer from user */, 0x01 /* inform              */,
+/* uncond   */ 0x15 /* call rejected       */, 0x00 /* don't inform        */,
+/* absent   */ 0x14 /* subscriber absent   */, 0x01 /* inform              */,
+/* other    */ 0x15 /* call rejected       */, 0x01 /* inform just in case */
+};
+
+void MissedCallProcessor::setReleaseSettings(ReleaseSettings params)
+{
+  relCauses = params;
+}
+
 MissedCallProcessor* MissedCallProcessor::instance()
 {
   if ( processor == 0 ) {
@@ -463,6 +476,7 @@ using smsc::logger::Logger;
 using smsc::misscall::conftimer;
 using smsc::misscall::stacktimer;
 using smsc::misscall::waitstacktimer;
+using smsc::misscall::relCauses;
 using namespace smsc::misscall::util;
 using smsc::sms::MAX_FULL_ADDRESS_VALUE_LENGTH;
 
@@ -498,7 +512,7 @@ void  fillEvent(EINSS7_I97_CALLINGNUMB_T *calling,
   {
     vector<char> addr(calling->noOfAddrSign +  1);
     unpack_addr(&addr[0], calling->addrSign_p, calling->noOfAddrSign);
-    if( addr.size() > 0 ) {
+    if( calling->noOfAddrSign > 0 ) {
       if (calling->natureOfAddr == EINSS7_I97_NATIONAL_NO)
       {
         addr.insert(addr.begin(),'7'); // valid only for Russia!!!
@@ -515,7 +529,7 @@ void  fillEvent(EINSS7_I97_CALLINGNUMB_T *calling,
   {
     vector<char> addr(called->noOfAddrSign +  1);
     unpack_addr(&addr[0], called->addrSign_p, called->noOfAddrSign);
-    if( addr.size() > 0 ) {
+    if( called->noOfAddrSign > 0 ) {
       if (called->natureOfAddr == EINSS7_I97_NATIONAL_NO)
       {
         addr.insert(addr.begin(),'7'); // valid only for Russia!!!
@@ -559,7 +573,7 @@ USHORT_T releaseConnection(EINSS7_I97_ISUPHEAD_T *isupHead_sp, UCHAR_T causeValu
   cause.location = EINSS7_I97_ISUP_USER;
   cause.codingStd = EINSS7_I97_ITU_STAND;
   cause.rec = 0;
-  cause.causeValue = causeValue; /*0x14 = subscriber absent*/
+  cause.causeValue = causeValue;
   cause.lengthOfDiagnostics = 0;
   cause.diagnostics_p = 0;
 
@@ -631,7 +645,7 @@ USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
                  getRedirectingNumberDescription(redirecting).c_str(),
                  getOriginalNumberDescription(original).c_str()
                 );
-  UCHAR_T causeValue = 0x15; /* call rejected          */
+  UCHAR_T causeValue = relCauses.otherCause;
   UCHAR_T inform = 0;        /* need to register event */
 
   /*
@@ -647,19 +661,24 @@ USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
       switch (redirectionInfo_sp->lastReason)
       {
         case EINSS7_I97_USER_BUSY:
-          causeValue = 0x11; /* called user busy */
+          causeValue = relCauses.busyCause;
+          inform     = relCauses.busyInform;
           break;
-
         case EINSS7_I97_NO_REPLY:
-          causeValue = 0x13; /* no answer from user */
+          causeValue = relCauses.noReplyCause;
+          inform     = relCauses.noReplyInform;
           break;
-
         case EINSS7_I97_UNCOND:
-          causeValue = 0x15; /* call rejected */
-          inform = 0; /* don't inform when unconditional*/
+          causeValue = relCauses.unconditionalCause;
+          inform     = relCauses.unconditionalInform;
           break;
         case EINSS7_I97_MOB_NOT_REACHED:
-          causeValue = 0x14; /*subscriber absent*/
+          causeValue = relCauses.absentCause;
+          inform     = relCauses.absentInform;
+          break;
+        default:
+          causeValue = relCauses.otherCause;
+          inform     = relCauses.otherInform;
           break;
       }
     }

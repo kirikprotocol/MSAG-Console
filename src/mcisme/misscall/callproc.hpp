@@ -25,6 +25,13 @@ struct Circuits {
   int  spn;
   long ts;
 };
+struct ReleaseSettings {
+  int busyCause, busyInform;
+  int noReplyCause, noReplyInform;
+  int unconditionalCause, unconditionalInform;
+  int absentCause, absentInform;
+  int otherCause, otherInform;
+};
 class MissedCallProcessor{
   public:
     static MissedCallProcessor* instance();
@@ -34,6 +41,7 @@ class MissedCallProcessor{
     void removeMissedCallListener();
     void fireMissedCallEvent(MissedCallEvent& event);
     void setCircuits(Circuits cics);
+    void setReleaseSettings(ReleaseSettings params);
   private:
     MissedCallProcessor();
     MissedCallListener* listener;
