@@ -21,15 +21,20 @@ public:
   XmlStr(const XMLCh* const str);
   XmlStr(const char * const str);
   ~XmlStr();
-  
+
   const char * const c_str();
   const XMLCh * const x_str();
   char * c_release();
   XMLCh * x_release();
-  
+
+  bool operator==(const char* str)
+  {
+    return !strcmp(c_str(),str);
+  }
+
   operator const char  *() {return c_str();}
   operator const XMLCh *() {return x_str();}
-  
+
 private:
   const char * cstr;
   const XMLCh * xstr;
@@ -41,4 +46,3 @@ private:
 }
 }
 #endif // ifndef SMSC_UTIL_XML_UTIL_FUNCTIONS
-
