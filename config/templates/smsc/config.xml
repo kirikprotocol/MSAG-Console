@@ -34,6 +34,13 @@
       <param name="dbUserPassword" type="string">@db.password@</param>
     </section>
 
+    <section name="LocalStore">
+      <param name="filename" type="string">@localstore.filename@</param>
+      <param name="maxStoreSize" type="int">@localstore.maxstoresize@</param>
+      <param name="minRollTime" type="int">@localstore.minrolltime@</param>
+      <param name="msgidfile" type="string">@localstore.msgidfile@</param>
+    </section>
+
   </section>
 
   <section name="StartupLoader">
