@@ -1099,7 +1099,6 @@ StateType StateMachine::submit(Tuple& t)
           tmp=newtmp;
         }
         newsms.setIntProperty(Tag::SMSC_MERGE_CONCAT,3); // final state
-        newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(int)tmp.length());
         if(!totalMoreUdh && sms->getIntProperty(Tag::SMPP_DATA_CODING)!=DataCoding::BINARY)//make single text message
         {
           string newtmp;
@@ -1114,10 +1113,14 @@ StateType StateMachine::submit(Tuple& t)
           tmp=newtmp;
           newsms.messageBody.dropProperty(Tag::SMSC_CONCATINFO);
           newsms.messageBody.dropIntProperty(Tag::SMSC_MERGE_CONCAT);
+          newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(int)tmp.length());
           if(ri.smeSystemId=="MAP_PROXY")
           {
             pres=partitionSms(&newsms,profile.codepage);
           }
+        }else
+        {
+          newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(int)tmp.length());
         }
       }else
       {
