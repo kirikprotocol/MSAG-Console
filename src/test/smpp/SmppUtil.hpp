@@ -3,6 +3,7 @@
 
 #include "smpp/smpp_structures.h"
 #include "test/sms/SmsUtil.hpp"
+#include "util/debug.h"
 
 namespace smsc {
 namespace test {
@@ -14,8 +15,17 @@ using namespace smsc::smpp;
 using namespace smsc::test::sms; //constants
 
 #define __maxValidPeriod__ (time(NULL) + 7 * 24 * 3600) //7 суток
+#define __checkTime__ (time(NULL) - 5) //5 секунд
 #define __numTime__ rand1(2)
 #define __absoluteTime__ 1
+
+#define __dumpPdu__(tc, pdu) \
+	__trace2__("%s(): pdu = ", (tc)); \
+	(pdu).dump(TRACE_LOG_STREAM)
+
+#define __dumpPdu2__(tc, pdu) \
+	if (pdu) { __trace2__("%s(): pdu = ", (tc)); (pdu)->dump(TRACE_LOG_STREAM); } \
+	else __trace2__("%s(): pdu = NULL", (tc))
 
 typedef enum
 { 
