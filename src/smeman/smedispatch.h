@@ -21,6 +21,7 @@ class SmeProxyDispatcher
   {
     SmeProxyPriority prior;
     SmeProxy* proxy;
+		int idx;
     Unit* next;
     Unit* prev;
   };
@@ -30,8 +31,8 @@ class SmeProxyDispatcher
   core::synchronization::Mutex dispatch_lock;
 public:
   SmeProxyDispatcher(): queuedProxies(0),unqueuedProxies(0) {}
-  SmeProxy* dispatchIn();
-  void attachSmeProxy(SmeProxy* proxy);
+  SmeProxy* dispatchIn(unsigned long,int*);
+  void attachSmeProxy(SmeProxy* proxy,int idx);
   void detachSmeProxy(SmeProxy* proxy);
 };
 

@@ -53,10 +53,6 @@ void Smsc::init()
       smeman.addSme(si);
     }
   }
-}
-
-void Smsc::run()
-{
   tp.startTask(
     new smppio::SmppAcceptor(
       cfgman->getString("smpp.host"),
@@ -64,7 +60,13 @@ void Smsc::run()
       &ssockman
     )
   );
-  for(;;)sleep(1);
+}
+
+void Smsc::run()
+{
+  // некоторые действия до основного цикла 
+  mainLoop();
+  // и после него 
 }
 
 };//system

@@ -97,7 +97,7 @@ inline T& __fetch_x__ (SmppStream* stream, T& data)
         //__watch__((int)stream->dataOffset);
         //__watch__((int)stream->dataLength);
 //        __require__ (wasread==sizeof(T));
-//  __check_smpp_stream_invariant__ ( stream );
+//      __check_smpp_stream_invariant__ ( stream );
   //__throw_if_fail__(wasread==sizeof(T),BadStreamException);
   //stream->dataOffset+=wasread;
   return data;
@@ -337,5 +337,4 @@ inline void fetchOctetStr(SmppStream* stream,OStr& ostr,uint32_t octets)
 
 };
 };
-
 #endif

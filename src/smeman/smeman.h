@@ -72,7 +72,7 @@ public:
   virtual void registerSmeProxy(const SmeSystemId& systemId, SmeProxy* smeProxy);
 
   // SmeDispatcher implementation
-  virtual SmeProxy* selectSmeProxy();
+  virtual SmeProxy* selectSmeProxy(unsigned long timeout=0,int* idx=0);
 };
 
 }; // namespace smeman
