@@ -872,7 +872,7 @@ void DateTimeParser::parse(std::string& input,
         }
         else // scan date by default format
         {
-            if ((result = sscanf(str, "%d.%d.%d %d:%d:%d %n",
+            if ((result = sscanf(str, SMSC_DBSME_IO_DEFAULT_PARSE_PATTERN,
                 &tmdt.tm_mday, &tmdt.tm_mon, &tmdt.tm_year,
                 &tmdt.tm_hour, &tmdt.tm_min, &tmdt.tm_sec,
                 &bytes)) == EOF || !result || !bytes || bytes<0)

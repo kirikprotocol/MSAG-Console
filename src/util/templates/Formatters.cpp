@@ -595,7 +595,10 @@ void DateTimeFormatter::format(std::string& output,
     
     localtime_r(&date, &tmdt); // ???
 
-    if (pattern) // format date by user-desired pattern
+    if (!pattern || pattern[0] == '\0')
+        pattern = SMSC_DBSME_IO_DEFAULT_FORMAT_PATTERN;
+    
+    // format date by user-desired or default pattern
     {
         int curPos = 0;
         
@@ -745,7 +748,7 @@ void DateTimeFormatter::format(std::string& output,
             }
         }
     }
-    else // format date by default format
+    /*else // format date by default format
     {
         ctime_r(&date, buff);
         int buffLen = strlen(buff);
@@ -754,7 +757,7 @@ void DateTimeFormatter::format(std::string& output,
                 buff[buffLen] = '\0';
             else break;
         output += buff;
-    }
+    }*/
     
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
     if (exp) ctx.exportDat(exp, date);
