@@ -8,7 +8,7 @@ if [ -f logs/smsc.err ]; then
 fi
 while true;
 do
-./smsc 1>/dev/null 2>>logs/smsc.err&
+./bin/smsc 1>/dev/null 2>>logs/smsc.err&
 PID=$!
 export PID
 trap "kill -2 $PID;wait $PID" SIGINT
