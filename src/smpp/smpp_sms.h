@@ -310,7 +310,16 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
     sms->setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,
                         message.shortMessage.cstr()?message.shortMessage.cstr():"",message.shortMessage.length);
     sms->setIntProperty(Tag::SMPP_SM_LENGTH,(uint32_t)message.shortMessage.size());
-    sms->setIntProperty(Tag::SMPP_DATA_CODING,(uint32_t)message.dataCoding);
+    int dc=(uint32_t)message.dataCoding;
+    if((dc&0xf0)==0xf0 && (dc&0x08)==0)
+    {
+      sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,(dc&0x03)+1);
+      sms->setIntProperty(Tag::SMPP_DATA_CODING,(dc&0x04)?DataCoding::BINARY:DataCoding::SMSC7BIT);
+    }else
+    {
+      sms->setIntProperty(Tag::SMPP_DATA_CODING,dc);
+    }
+
     sms->setIntProperty(Tag::SMPP_PRIORITY,(uint32_t)message.priorityFlag);
     sms->setIntProperty(Tag::SMPP_PROTOCOL_ID,(uint32_t)message.protocolId);
 
