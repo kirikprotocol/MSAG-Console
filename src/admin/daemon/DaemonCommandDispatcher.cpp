@@ -146,12 +146,10 @@ public:
         (*i)->WaitFor();
         delete *i;
         to_del.push_back(i);
-        __trace2__("ChildShutdownWaiter::cleanStoppedWaiters : waiter for \"%s\" deleted", (*i)->getServiceId());
       }
     }
     for (std::vector<WAITERS::iterator>::const_iterator i = to_del.begin(); i != to_del.end(); i++) {
       startedWaiters.erase(*i);
-      __trace2__("ChildShutdownWaiter::cleanStoppedWaiters : waiter for \"%s\" deleted nahren", (**i)->getServiceId());
     }
     __trace__("ChildShutdownWaiter : clean stopped waiters finished");
   }
