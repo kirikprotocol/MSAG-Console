@@ -120,8 +120,8 @@ void Service::init(const char * const services_dir,
 									 const char * const serviceId,
 									 const in_port_t serviceAdminPort,
 									 const char * const serviceArgs,
-									 const pid_t servicePID = 0,
-                   const run_status serviceStatus = stopped)
+									 const pid_t servicePID,
+                   const run_status serviceStatus)
 {
 	service_dir.reset(new char[strlen(services_dir) + 1 + strlen(serviceId) + 1]);
 	strcpy(service_dir.get(), services_dir);
