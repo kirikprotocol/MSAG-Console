@@ -245,7 +245,7 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 			PduRegistry* pduReg = smeReg->getPduRegistry(origAddr);
 			if (!pduReg)
 			{
-				__trace2__("processNormalSms(): pduReg not found for addr = %s", str(origAddr).get());
+				__trace2__("processNormalSms(): pduReg not found for addr = %s", str(origAddr).c_str());
 				if (origAddr == origAlias)
 				{
 					__tc_fail__(2);
