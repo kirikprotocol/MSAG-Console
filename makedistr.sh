@@ -41,6 +41,7 @@ gzip -d tomcat.tar.gz
 tar -ixf tomcat.tar
 rm tomcat.tar
 cd $ORGDIR
+cp $SMSC_SRCDIR/webapp/smsc/WEB-INF/web.xml $DISTR_DIR/webapps/smsc/WEB-INF
 cp $SMSC_SRCDIR/webapp/smsc/WEB-INF/lib/*.jar $DISTR_DIR/webapps/smsc/WEB-INF/lib
 cp $SMSC_BUILDDIR/jars/smsc.jar $DISTR_DIR/webapps/smsc/WEB-INF/lib
 cp $SMSC_BUILDDIR/jars/smsc_tomcat_common.jar $DISTR_DIR/tomcat/common/lib
