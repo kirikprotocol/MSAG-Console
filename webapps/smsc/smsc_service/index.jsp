@@ -215,6 +215,7 @@ refreshStartStopButtonsStatus();
         param(out, "divert barred off",                         "profiler.ussdOpsMapping.DIVERT BARRED OFF",   bean.getIntParam("profiler.ussdOpsMapping.DIVERT BARRED OFF"));
         param(out, "divert capacity on",                        "profiler.ussdOpsMapping.DIVERT CAPACITY ON",  bean.getIntParam("profiler.ussdOpsMapping.DIVERT CAPACITY ON"));
         param(out, "divert capacity off",                       "profiler.ussdOpsMapping.DIVERT CAPACITY OFF", bean.getIntParam("profiler.ussdOpsMapping.DIVERT CAPACITY OFF"));
+        param(out, "divert status",                             "profiler.ussdOpsMapping.DIVERT STATUS",       bean.getIntParam("profiler.ussdOpsMapping.DIVERT STATUS"));
         param(out, "divert to",                                 "profiler.ussdOpsMapping.DIVERT TO",           bean.getIntParam("profiler.ussdOpsMapping.DIVERT TO"));
       finishParams(out);
     finishSection(out);
