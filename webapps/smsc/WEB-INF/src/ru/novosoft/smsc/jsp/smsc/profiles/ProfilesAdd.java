@@ -14,14 +14,16 @@ import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 import java.util.List;
 
-public class ProfilesAdd extends SmscBean
+public class ProfilesAdd extends ProfilesBean
 {
 	protected String mbSave = null;
 	protected String mbCancel = null;
 
-	protected String mask = "";
-	protected byte report = Profile.REPORT_OPTION_None;
-	protected byte codepage = Profile.CODEPAGE_Default;
+	public ProfilesAdd()
+	{
+		report = Profile.REPORT_OPTION_None;
+		codepage = Profile.CODEPAGE_Default;
+	}
 
 	public int process(SMSCAppContext appContext, List errors)
 	{
@@ -42,14 +44,16 @@ public class ProfilesAdd extends SmscBean
 		logger.debug("Add new profile: " + mask);
 		if (!Mask.isMaskValid(mask))
 			return error(SMSCErrors.error.profiles.invalidMask, mask);
+		if (!appContext.getSmsc().isLocaleRegistered(locale))
+			return error(SMSCErrors.error.profiles.invalidLocale, locale);
 
 		try
 		{
 			final Mask address = new Mask(mask);
-			Profile profile = new Profile(address, codepage, report);
+			Profile profile = new Profile(address, codepage, report, locale);
 			switch (smsc.updateProfile(address, profile))
 			{
-				case 1:	//pusUpdated
+				case 1: //pusUpdated
 				case 2: //pusInserted
 					appContext.getStatuses().setProfilesChanged(true);
 					return RESULT_DONE;
@@ -63,7 +67,7 @@ public class ProfilesAdd extends SmscBean
 		}
 		catch (AdminException e)
 		{
-			logger.error("Couldn't add profile [\"" + mask + "\", " + codepage + ", " + report + "]", e);
+			logger.error("Couldn't add profile [\"" + mask + "\", " + codepage + ", " + report + ", " + locale + "]", e);
 			return error(SMSCErrors.error.profiles.couldntAdd, e);
 		}
 	}
@@ -90,33 +94,4 @@ public class ProfilesAdd extends SmscBean
 		this.mbCancel = mbCancel;
 	}
 
-	public String getMask()
-	{
-		return mask;
-	}
-
-	public void setMask(String mask)
-	{
-		this.mask = mask;
-	}
-
-	public byte getReport()
-	{
-		return report;
-	}
-
-	public void setReport(byte report)
-	{
-		this.report = report;
-	}
-
-	public byte getCodepage()
-	{
-		return codepage;
-	}
-
-	public void setCodepage(byte codepage)
-	{
-		this.codepage = codepage;
-	}
 }

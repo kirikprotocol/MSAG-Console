@@ -10,6 +10,8 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
+import ru.novosoft.smsc.admin.dl.DistributionListManager;
 import ru.novosoft.smsc.admin.alias.AliasSet;
 import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.route.*;
@@ -50,6 +52,7 @@ public class Smsc extends Service
 
 	private SmeManager smeManager = null;
 	private RouteSubjectManager routeSubjectManager;
+	private DistributionListAdmin distributionListAdmin = null;
 
 	private AliasSet aliases = null;
 	private ProfileDataSource profileDataSource = null;
@@ -111,6 +114,8 @@ public class Smsc extends Service
 			logger.error("Couldn't parse", e);
 			throw new AdminException("Couldn't parse: " + e.getMessage());
 		}
+
+		distributionListAdmin = new DistributionListManager(connectionPool);
 	}
 
 	protected PrintWriter storeAliases(PrintWriter out)
@@ -357,5 +362,31 @@ public class Smsc extends Service
 			return (List) result;
 		else
 			throw new AdminException("Error in response");
+	}
+
+	public synchronized boolean isLocaleRegistered(String locale)
+	{
+		Config config = getSmscConfig();
+		String localesString = null;
+		try
+		{
+			localesString = config.getString("core.locales");
+		}
+		catch (Config.ParamNotFoundException e)
+		{
+			logger.warn("isLocaleRegistered: Parameter core.locales not found");
+			return false;
+		}
+		catch (Config.WrongParamTypeException e)
+		{
+			logger.warn("isLocaleRegistered: Parameter core.locales is not string");
+			return false;
+		}
+		return localesString.matches(".*\\b"+locale+"\\b.*");
+	}
+
+	public DistributionListAdmin getDistributionListAdmin()
+	{
+		return distributionListAdmin;
 	}
 }

@@ -58,14 +58,16 @@ function setSort(sorting)
 }
 </script>
 <table class=secRep cellspacing=1 width="100%">
-<col width="60%" align=left>
+<col width="40%" align=left>
+<col width="20%" align=left>
 <col width="20%" align=left>
 <col width="20%" align=left>
 <thead>
 <tr>
-	<th><a href="#" <%=bean.getSort().endsWith("mask")       ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by mask" onclick='return setSort("mask")'>mask</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("codeset")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by codepage" onclick='return setSort("codeset")'>codepage</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("mask")       ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by mask"        onclick='return setSort("mask")'      >mask</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("codeset")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by codepage"    onclick='return setSort("codeset")'   >codepage</a></th>
 	<th><a href="#" <%=bean.getSort().endsWith("reportinfo") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by report info" onclick='return setSort("reportinfo")'>report&nbsp;info</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("locale")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by locale"      onclick='return setSort("locale")'    >locale</a></th>
 </tr>
 </thead>
 <tbody>
@@ -87,6 +89,7 @@ DataItem item = (DataItem) i.next();
 		}%></td>
 	<td><%=StringEncoderDecoder.encode((String)item.getValue("Codepage"))%></td>
 	<td><%=StringEncoderDecoder.encode((String)item.getValue("Report info"))%></td>
+	<td><%=StringEncoderDecoder.encode((String)item.getValue("locale"))%></td>
 </tr>
 <%}}%>
 </tbody>

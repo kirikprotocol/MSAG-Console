@@ -2,11 +2,7 @@ package ru.novosoft.smsc.jsp.smsc.localeResources;
 
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
-import ru.novosoft.smsc.util.SortedList;
-import ru.novosoft.smsc.util.WebAppFolders;
 
-import java.io.File;
-import java.io.FilenameFilter;
 import java.util.*;
 
 /**
@@ -16,12 +12,14 @@ import java.util.*;
  */
 public class Index extends IndexBean
 {
+/*
 	public static final String PREFIX = "resources_";
 	public static final String BODY_PATTERN = ".{2,2}_.{2,2}";
 	public static final String SUFFIX = "\\.xml";
 	public static final String PATTERN = PREFIX + BODY_PATTERN + SUFFIX;
 	public static final int PREFIX_LENGTH = PREFIX.length();
 	public static final int BODY_LENGTH = 5;
+*/
 
 	private List locales = null;
 	private List reverseLocales = new LinkedList();
@@ -49,7 +47,7 @@ public class Index extends IndexBean
 		else
 			sort = preferences.getLocaleResourcesSortOrder();
 
-		locales = scanForLocales();
+		locales = appContext.getResourcesManager().list();
 		reverseLocales.addAll(locales);
 		Collections.reverse(reverseLocales);
 
@@ -61,22 +59,6 @@ public class Index extends IndexBean
 		checkedLocalesSet.clear();
 		checkedLocalesSet.addAll(Arrays.asList(checkedLocales));
 		return RESULT_OK;
-	}
-
-	private List scanForLocales()
-	{
-		SortedList result = new SortedList();
-		File confFolder = WebAppFolders.getSmscConfFolder();
-		String[] files = confFolder.list(new FilenameFilter()
-		{
-			public boolean accept(File dir, String name)
-			{
-				return name.matches(PATTERN);
-			}
-		});
-		for (int i = 0; i < files.length; i++)
-			result.add(files[i].substring(PREFIX_LENGTH, PREFIX_LENGTH + BODY_LENGTH));
-		return result;
 	}
 
 	public int process(SMSCAppContext appContext, List errors)

@@ -53,7 +53,7 @@ public class ProfileDataSource implements DataSource
 			connection = connectionPool.getConnection();
 			statement = connection.createStatement();
 
-			sqlResultSet = statement.executeQuery("select mask, reportinfo, codeset from sms_profile " + createWhereStatement((ProfileFilter) query_to_run.getFilter()) + " order by " + sortOrder);
+			sqlResultSet = statement.executeQuery("select mask, reportinfo, codeset, locale from sms_profile " + createWhereStatement((ProfileFilter) query_to_run.getFilter()) + " order by " + sortOrder);
 
 			int totalCount = 0;
 			// skip lines to start position
@@ -70,7 +70,8 @@ public class ProfileDataSource implements DataSource
 				//System.out.println("reportinfo = " + reportinfo);
 				byte codeset = sqlResultSet.getByte("codeset");
 				//System.out.println("codeset = " + codeset);
-				results.add(new ProfileDataItem(new Profile(new Mask(maskString), codeset, reportinfo)));
+				String locale = sqlResultSet.getString("locale");
+				results.add(new ProfileDataItem(new Profile(new Mask(maskString), codeset, reportinfo, locale)));
 			}
 
 			boolean isLast = true;

@@ -13,14 +13,9 @@ public class ProfileDataItem extends AbstractDataItem
 {
 	protected ProfileDataItem(Profile profile) throws AdminException
 	{
-		/*super();
-		System.out.println("profile = " + profile);
-		System.out.println("profile.getCodepageString() = " + profile.getCodepageString());
-		System.out.println("profile.getReportOptionsString() = " + profile.getReportOptionsString());
-		System.out.println("profile.getMask() = " + profile.getMask());
-		System.out.println("profile.getMask().getMask() = " + profile.getMask().getMask());*/
 		values.put("Mask", profile.getMask().getMask());
 		values.put("Codepage", profile.getCodepageString());
 		values.put("Report info", profile.getReportOptionsString());
+		values.put("locale", profile.getLocale());
 	}
 }

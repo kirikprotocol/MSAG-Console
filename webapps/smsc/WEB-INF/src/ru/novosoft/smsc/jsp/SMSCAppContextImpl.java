@@ -7,6 +7,8 @@ import ru.novosoft.smsc.admin.smsc_service.*;
 import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.admin.console.Console;
 import ru.novosoft.smsc.admin.route.RouteSubjectManagerImpl;
+import ru.novosoft.smsc.admin.resources.ResourcesManager;
+import ru.novosoft.smsc.admin.resources.ResourcesManagerImpl;
 import ru.novosoft.smsc.perfmon.PerfServer;
 import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.config.Config;
@@ -31,6 +33,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 	private PerfServer perfServer = null;
 	private SmeManager smeManager = null;
 	private RouteSubjectManager routeSubjectManager = null;
+	private ResourcesManager resourcesManager = null;
 
 	private Smsc smsc = null;
 	private NSConnectionPool connectionPool = null;
@@ -112,6 +115,8 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 			configManager = ConfigManager.getInstance();
 			final Config config = configManager.getConfig();
 			WebAppFolders.init(config.getString("system.webapp folder"));
+
+			resourcesManager = new ResourcesManagerImpl();
 
 			loadLocaleMessages();
 			createConnectionPool(config);
@@ -196,6 +201,11 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 	public RouteSubjectManager getRouteSubjectManager()
 	{
 		return routeSubjectManager;
+	}
+
+	public ResourcesManager getResourcesManager()
+	{
+		return resourcesManager;
 	}
 
 	public DataSource getConnectionPool()

@@ -9,6 +9,7 @@ import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.admin.service.HostsManager;
 import ru.novosoft.smsc.admin.smsc_service.*;
 import ru.novosoft.smsc.admin.users.UserManager;
+import ru.novosoft.smsc.admin.resources.ResourcesManager;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.util.jsp.AppContext;
 
@@ -40,4 +41,6 @@ public interface SMSCAppContext extends AppContext
 	SmeManager getSmeManager();
 
 	RouteSubjectManager getRouteSubjectManager();
+
+	ResourcesManager getResourcesManager();
 }

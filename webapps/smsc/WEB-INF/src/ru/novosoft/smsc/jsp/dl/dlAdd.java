@@ -62,7 +62,7 @@ public class dlAdd extends dlBody
 
 	private int save()
 	{
-		DistributionListAdmin admin = new DistributionListManager(appContext.getSmsc(), appContext.getConnectionPool());
+		DistributionListAdmin admin = appContext.getSmsc().getDistributionListAdmin();
 		try
 		{
 			admin.addDistributionList(new DistributionList(name, maxElements));

@@ -97,7 +97,7 @@ public class dlEdit extends dlBody
 	public int process(SMSCAppContext appContext, List errors)
 	{
 		if (admin == null)
-			admin = new DistributionListManager(appContext.getSmsc(), appContext.getConnectionPool());
+			admin = appContext.getSmsc().getDistributionListAdmin();
 
 		int result = super.process(appContext, errors);
 		if (result != RESULT_OK)

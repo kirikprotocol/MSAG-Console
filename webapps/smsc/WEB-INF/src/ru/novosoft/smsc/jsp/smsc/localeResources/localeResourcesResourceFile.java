@@ -1,7 +1,7 @@
 package ru.novosoft.smsc.jsp.smsc.localeResources;
 
 import org.apache.log4j.Category;
-import ru.novosoft.smsc.util.WebAppFolders;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
 
 import java.io.*;
 
@@ -22,39 +22,32 @@ public class localeResourcesResourceFile
 		return line;
 	}
 
-	public void printLocaleText(Writer out)
+	public void printLocaleText(SMSCAppContext appContext, Writer out)
 	{
-		File localeFile = new File(WebAppFolders.getSmscConfFolder(), Index.PREFIX + locale + ".xml");
-		if (!localeFile.exists())
-		{
-			Category.getInstance(this.getClass()).error("cannot find locale resource file \"" + localeFile.getAbsolutePath() + '"');
-			return;
-		}
-
 		try
 		{
-			BufferedReader in = new BufferedReader(new InputStreamReader(Thread.currentThread().getContextClassLoader().getResourceAsStream("dtds/locale_resources.dtd")));
+			BufferedReader inDtd = new BufferedReader(new InputStreamReader(Thread.currentThread().getContextClassLoader().getResourceAsStream("dtds/locale_resources.dtd")));
+			BufferedReader inLocale = appContext.getResourcesManager().getResource(locale);
 			out.write("<?xml version=\"1.0\" encoding=\"windows-1251\"?>\n");
 			out.write("<!DOCTYPE locale_resources [\n");
-			for (String line = skipHeader(in); line != null; line = in.readLine())
+			for (String line = skipHeader(inDtd); line != null; line = inDtd.readLine())
 				out.write(line);
-			in.close();
+			inDtd.close();
 			out.write("]>");
-			in = new BufferedReader(new FileReader(localeFile));
-			for (String line = skipHeader(in); line != null; line = in.readLine())
+			for (String line = skipHeader(inLocale); line != null; line = inLocale.readLine())
 			{
 				out.write(line);
 				out.write('\n');
 			}
-			in.close();
+			inLocale.close();
 		}
 		catch (FileNotFoundException e)
 		{
-			Category.getInstance(this.getClass()).error("cannot read locale resource file \"" + localeFile.getAbsolutePath() + '"');
+			Category.getInstance(this.getClass()).error("cannot find locale resource file for locale \"" + locale + '"', e);
 		}
 		catch (IOException e)
 		{
-			Category.getInstance(this.getClass()).error("cannot read locale resource file \"" + localeFile.getAbsolutePath() + "\", nested: " + e.getMessage());
+			Category.getInstance(this.getClass()).error("cannot read locale resource file for locale \"" + locale + "\", nested: " + e.getMessage());
 		}
 	}
 

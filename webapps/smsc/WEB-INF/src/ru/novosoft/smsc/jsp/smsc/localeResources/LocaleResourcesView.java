@@ -1,9 +1,8 @@
 package ru.novosoft.smsc.jsp.smsc.localeResources;
 
+import ru.novosoft.smsc.admin.resources.ResourcesManager;
 import ru.novosoft.smsc.jsp.*;
-import ru.novosoft.smsc.util.WebAppFolders;
 
-import java.io.File;
 import java.util.List;
 
 /**
@@ -14,7 +13,6 @@ import java.util.List;
 public class LocaleResourcesView extends PageBean
 {
 	private String locale = null;
-	private File localeFile = null;
 	private String mbDone = null;
 
 	protected int init(List errors)
@@ -23,11 +21,10 @@ public class LocaleResourcesView extends PageBean
 		if (result != RESULT_OK)
 			return result;
 
-      if (locale == null || locale.length() != Index.BODY_LENGTH || !locale.matches(Index.BODY_PATTERN))
+		if (locale == null || locale.length() != ResourcesManager.RESOURCE_FILENAME_BODY_LENGTH || !locale.matches(ResourcesManager.RESOURCE_FILENAME_BODY_PATTERN))
 			return error(SMSCErrors.error.localeResources.incorrectLocaleName, locale == null ? "" : locale);
 
-		localeFile = new File(WebAppFolders.getSmscConfFolder(), Index.PREFIX + locale + ".xml");
-		if (!localeFile.exists())
+		if (!appContext.getResourcesManager().isResourceFileExists(locale))
 			return error(SMSCErrors.error.localeResources.localeResourcesFileNotFound, locale);
 
 		return RESULT_OK;

@@ -42,7 +42,7 @@ public class DistributionListAdminFormBean extends IndexBean
 		//?
 		if (this.admin == null)
 		{
-			admin = new DistributionListManager(appContext.getSmsc(), appContext.getConnectionPool());
+			admin = appContext.getSmsc().getDistributionListAdmin();
 		}
 
 		if (pageSize == 0)

@@ -1,12 +1,10 @@
 package ru.novosoft.smsc.jsp.smsc.localeResources;
 
+import ru.novosoft.smsc.admin.resources.ResourcesManager;
 import ru.novosoft.smsc.jsp.*;
-import ru.novosoft.smsc.util.Functions;
-import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.util.jsp.MultipartDataSource;
 import ru.novosoft.util.jsp.MultipartServletRequest;
 
-import java.io.File;
 import java.util.List;
 
 /**
@@ -55,15 +53,10 @@ public class LocaleResourcesAdd extends PageBean
 					if (pos >= 0)
 						name = name.substring(pos + 1);
 
-					if (!name.matches(Index.PATTERN))
+					if (!name.matches(ResourcesManager.RESOURCE_FILENAME_PATTERN))
 						return error(SMSCErrors.error.localeResources.wrongFileName);
 
-					File file = new File(WebAppFolders.getSmscConfFolder(), name);
-
-					File tmpFile = Functions.saveFileToTemp(dataFile.getInputStream(), "locale_resource_", ".xml.tmp");
-					if (file.exists())
-						file.delete();
-					tmpFile.renameTo(file);
+					appContext.getResourcesManager().add(name.substring(ResourcesManager.RESOURCE_FILENAME_PREFIX_LENGTH, ResourcesManager.RESOURCE_FILENAME_PREFIX_LENGTH + ResourcesManager.RESOURCE_FILENAME_BODY_LENGTH), dataFile.getInputStream());
 
 					dataFile.close();
 					dataFile = null;

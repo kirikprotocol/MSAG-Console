@@ -21,4 +21,8 @@
 			<option value="<%=Profile.REPORT_OPTION_Full%>" <%=bean.getReport() == Profile.REPORT_OPTION_Full ? "SELECTED" : ""%>>full</option>
 		</select></div></td>
 </tr>
+<tr class=row1>
+	<th class=label>locale:</th>
+	<td><input class=txtW name="locale" value="<%=bean.getLocale() == null || bean.getLocale().trim().length() == 0 ? "en_en" : bean.getLocale()%>"></td>
+</tr>
 </table>

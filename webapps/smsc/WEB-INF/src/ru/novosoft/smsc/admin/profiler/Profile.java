@@ -8,6 +8,8 @@ package ru.novosoft.smsc.admin.profiler;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.Mask;
 
+import java.util.StringTokenizer;
+
 public class Profile
 {
 	public static final byte CODEPAGE_Default = 0;
@@ -19,6 +21,7 @@ public class Profile
 
 	private byte codepage;
 	private byte reportOptions;
+	private String locale;
 
 	/**
 	 * Constructs <code>Profile</code> from string returned by SMSC.
@@ -27,25 +30,38 @@ public class Profile
 	 * where &lt;codepage&gt; must be "default" or "UCS2" and &lt;report
 	 * options&gt; must be "full" or "none".
 	 */
-	public Profile(Mask mask, String profileString)
-			  throws AdminException
+	public Profile(Mask mask, String profileString) throws AdminException
 	{
 		this.mask = mask;
-		int delimPos = profileString.indexOf(',');
-		if (delimPos < 1)
-			throw new AdminException("profile string returned by SMSC misformatted");
-		String codepageString = profileString.substring(0, delimPos);
-		String reportoptionsString = profileString.substring(delimPos + 1);
-
-		setCodepage(codepageString);
-		setReportOptions(reportoptionsString);
+		int i = 0;
+		for (StringTokenizer tokenizer = new StringTokenizer(profileString, ",", false); tokenizer.hasMoreTokens();)
+		{
+			String token = tokenizer.nextToken().trim();
+			switch (i++)
+			{
+				case 0:
+					setCodepage(token);
+					break;
+				case 1:
+					setReportOptions(token);
+					break;
+				case 2:
+					setLocale(token);
+					break;
+			}
+		}
+		if (i < 3)
+			throw new AdminException("profile string returned by SMSC misformatted: " + profileString);
 	}
 
-	public Profile(Mask mask, byte codepage, byte reportOptions)
+	public Profile(Mask mask, byte codepage, byte reportOptions, String locale)
 	{
 		this.mask = mask;
 		this.codepage = codepage;
 		this.reportOptions = reportOptions;
+		this.locale = locale;
+		if (this.locale == null)
+			this.locale = "";
 	}
 
 	public byte getCodepage()
@@ -53,8 +69,7 @@ public class Profile
 		return codepage;
 	}
 
-	public String getCodepageString()
-			  throws AdminException
+	public String getCodepageString() throws AdminException
 	{
 		switch (codepage)
 		{
@@ -72,8 +87,7 @@ public class Profile
 		this.codepage = codepage;
 	}
 
-	public void setCodepage(String codepageString)
-			  throws AdminException
+	public void setCodepage(String codepageString) throws AdminException
 	{
 		if (codepageString.equalsIgnoreCase("default"))
 			codepage = CODEPAGE_Default;
@@ -88,8 +102,7 @@ public class Profile
 		return reportOptions;
 	}
 
-	public String getReportOptionsString()
-			  throws AdminException
+	public String getReportOptionsString() throws AdminException
 	{
 		switch (reportOptions)
 		{
@@ -107,8 +120,7 @@ public class Profile
 		this.reportOptions = reportOptions;
 	}
 
-	public void setReportOptions(String reportoptionsString)
-			  throws AdminException
+	public void setReportOptions(String reportoptionsString) throws AdminException
 	{
 		if (reportoptionsString.equalsIgnoreCase("full"))
 			reportOptions = REPORT_OPTION_Full;
@@ -118,14 +130,25 @@ public class Profile
 			throw new AdminException("Unknown report option: " + reportoptionsString);
 	}
 
-	public String getStringRepresentation()
-			  throws AdminException
+	public String getStringRepresentation() throws AdminException
 	{
-		return getCodepageString() + ',' + getReportOptionsString();
+		return getCodepageString() + ',' + getReportOptionsString() + ',' + locale;
 	}
 
 	public Mask getMask()
 	{
 		return mask;
+	}
+
+	public String getLocale()
+	{
+		return locale;
+	}
+
+	public void setLocale(String locale)
+	{
+		this.locale = locale;
+		if (this.locale == null)
+			this.locale = "";
 	}
 }

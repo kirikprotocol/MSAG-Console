@@ -10,18 +10,19 @@ import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
-import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 import java.util.List;
 
-public class ProfilesEdit extends SmscBean
+public class ProfilesEdit extends ProfilesBean
 {
 	protected String mbSave = null;
 	protected String mbCancel = null;
 
-	protected String mask = null;
-	protected byte report = -1;
-	protected byte codepage = -1;
+	public ProfilesEdit()
+	{
+		report = -1;
+		codepage = -1;
+	}
 
 	public int process(SMSCAppContext appContext, List errors)
 	{
@@ -39,6 +40,7 @@ public class ProfilesEdit extends SmscBean
 				Profile p = smsc.lookupProfile(new Mask(mask));
 				report = p.getReportOptions();
 				codepage = p.getCodepage();
+				locale = p.getLocale();
 			}
 			catch (AdminException e)
 			{
@@ -63,10 +65,10 @@ public class ProfilesEdit extends SmscBean
 		try
 		{
 			final Mask address = new Mask(mask);
-			Profile profile = new Profile(address, codepage, report);
+			Profile profile = new Profile(address, codepage, report, locale);
 			switch (smsc.updateProfile(address, profile))
 			{
-				case 1:	//pusUpdated
+				case 1: //pusUpdated
 				case 2: //pusInserted
 				case 3: //pusUnchanged
 					appContext.getStatuses().setProfilesChanged(true);
@@ -103,35 +105,5 @@ public class ProfilesEdit extends SmscBean
 	public void setMbCancel(String mbCancel)
 	{
 		this.mbCancel = mbCancel;
-	}
-
-	public String getMask()
-	{
-		return mask;
-	}
-
-	public void setMask(String mask)
-	{
-		this.mask = mask;
-	}
-
-	public byte getReport()
-	{
-		return report;
-	}
-
-	public void setReport(byte report)
-	{
-		this.report = report;
-	}
-
-	public byte getCodepage()
-	{
-		return codepage;
-	}
-
-	public void setCodepage(byte codepage)
-	{
-		this.codepage = codepage;
 	}
 }
