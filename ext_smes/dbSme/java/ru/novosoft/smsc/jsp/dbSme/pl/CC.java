@@ -5,8 +5,10 @@
  */
 package ru.novosoft.smsc.jsp.dbSme.pl;
 
-import ru.novosoft.smsc.admin.utli.Functions;
+import ru.novosoft.smsc.util.Functions;
+import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.jsp.dbSme.bl.DBSMEConfig;
+import ru.novosoft.smsc.admin.service.ServiceInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -26,7 +28,11 @@ public abstract class CC
 	public int process(HttpServletRequest request, HttpServletResponse response)
 			throws Exception
 	{
-		config = new DBSMEConfig(new File(new File(Functions.getAppContext(request).getSuperManager().getServiceFolder(DBSME_ID), "conf"), "config.xml"));
+		ServiceInfo dbsmeServiceInfo = Functions.getAppContext(request).getHostsManager().getServiceInfo(DBSME_ID);
+		if (dbsmeServiceInfo != null)
+		{
+			config = new DBSMEConfig(new File(new File(WebAppFolders.getServiceFolder(dbsmeServiceInfo.getHost(), DBSME_ID), "conf"), "config.xml"));
+		}
 		return loadData(request);
 	}
 
