@@ -27,6 +27,8 @@ using smsc::core::threads::Thread;
 int stopped=0;
 bool connected=false;
 
+bool hexinput=false;
+
 bool vcmode=false;
 
 
@@ -205,6 +207,7 @@ Option options[]={
 {"waitresp",'b',&waitRespMode},
 {"wrtimeot",'i',&waitRespTimeout},
 {"autoanswer",'b',&autoAnswer},
+{"hexinput",'b',&hexinput},
 };
 
 const int optionsCount=sizeof(options)/sizeof(Option);
@@ -1522,7 +1525,27 @@ int main(int argc,char* argv[])
         s.setIntProperty(Tag::SMPP_DESTINATION_PORT,dst_port);
       }
 
-      if(dataCoding==DataCoding::BINARY)//binary
+      /*
+      string hextmp;
+      char *hexsave=0;
+      if(hexinput && dataCoding!=DataCoding::BINARY)
+      {
+        char *ptr=message;
+        for(;;)
+        {
+          int n;
+          int c;
+          if(sscanf(ptr,"%02X%n",&c,&n)!=1)break;
+          hextmp.append(1,(char)c);
+          ptr+=n;
+        }
+        hexsave=message;
+        message=(char*)hextmp.c_str();
+        len=hextmp.length();
+      }
+      */
+
+      if(dataCoding==DataCoding::BINARY || hexinput)//binary
       {
         string tmp;
         char *ptr=message;
@@ -1534,7 +1557,7 @@ int main(int argc,char* argv[])
           tmp.append(1,(char)c);
           ptr+=n;
         }
-        s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::BINARY);
+        s.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
         s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),tmp.length());
         len=tmp.length();
       }else
@@ -1556,6 +1579,13 @@ int main(int argc,char* argv[])
         s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
         s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,message,len);
       }
+
+      /*
+      if(hexinput)
+      {
+        message=hexsave;
+      }
+      */
 
       if(waitRespMode)
       {
@@ -1632,24 +1662,27 @@ int main(int argc,char* argv[])
   {
     printf("unknown exception\n");
   }
-  printf("\nUnbinding\n");
-  try
+  if(connected)
   {
-    PduUnbind pdu;
-    pdu.get_header().set_commandId(SmppCommandSet::UNBIND);
-    pdu.get_header().set_sequenceNumber(ss.getNextSeq());
-    SmppHeader *resp=tr->sendPdu((SmppHeader*)&pdu);
-    if(resp)
+    printf("\nUnbinding\n");
+    try
     {
-      printf("Unbind response:status=%#x\n",resp->get_commandStatus());
-      disposePdu(resp);
-    }else
+      PduUnbind pdu;
+      pdu.get_header().set_commandId(SmppCommandSet::UNBIND);
+      pdu.get_header().set_sequenceNumber(ss.getNextSeq());
+      SmppHeader *resp=tr->sendPdu((SmppHeader*)&pdu);
+      if(resp)
+      {
+        printf("Unbind response:status=%#x\n",resp->get_commandStatus());
+        disposePdu(resp);
+      }else
+      {
+        printf("Unbind response timed out\n");
+      }
+    }catch(...)
     {
-      printf("Unbind response timed out\n");
+      printf("Exception during unbind\n");
     }
-  }catch(...)
-  {
-    printf("Exception during unbind\n");
   }
   ss.close();
   stopped=1;
