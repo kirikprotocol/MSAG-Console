@@ -460,7 +460,7 @@ void MapIoTask::init()
     __trace2__("MAP: SSN Bind error 0x%hx",bind_res);
     throw runtime_error("bind error");
   }
-  USHORT_T bind_res = Et96MapBindReq(MY_USER_ID, 147);
+  bind_res = Et96MapBindReq(MY_USER_ID, 147);
   if(bind_res!=ET96MAP_E_OK){
     __trace2__("MAP: 147 Bind error 0x%hx",bind_res);
     throw runtime_error("bind error");
