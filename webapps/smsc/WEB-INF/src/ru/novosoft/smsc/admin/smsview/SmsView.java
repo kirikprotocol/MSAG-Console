@@ -13,6 +13,7 @@ import java.sql.*;
 import javax.sql.*;
 
 import java.util.Vector;
+import java.util.ArrayList;
 //import java.util.Enumeration;
 
 import java.io.IOException;
@@ -121,12 +122,14 @@ public class SmsView
       return deleted;
     }
 
-    private boolean needLikeExpression(String str)
-    {
+    private boolean needExpression(String str) {
+      return (str != null && str.length() != 0 &&
+              !str.trim().equalsIgnoreCase("*"));
+    }
+    private boolean needLikeExpression(String str) {
       return (str.indexOf('*') >=0 || str.indexOf('?') >= 0);
     }
-    private String getLikeExpression(String str)
-    {
+    private String getLikeExpression(String str) {
       return (needLikeExpression(str)) ?
               str.trim().replace('*', '%').replace('?', '_').toUpperCase() :
               str.trim().toUpperCase();
@@ -135,12 +138,19 @@ public class SmsView
       throws SQLException
     {
       int pos=1;
-      stmt.setString(pos++, getLikeExpression(query.getSmsId()));
-      stmt.setString(pos++, getLikeExpression(query.getFromAddress()));
-      stmt.setString(pos++, getLikeExpression(query.getToAddress()));
-      stmt.setString(pos++, getLikeExpression(query.getRouteId()));
-      stmt.setString(pos++, getLikeExpression(query.getSrcSmeId()));
-      stmt.setString(pos++, getLikeExpression(query.getDstSmeId()));
+      if (needExpression(query.getSmsId()))
+          stmt.setString(pos++, getLikeExpression(query.getSmsId()));
+      if (needExpression(query.getFromAddress()))
+          stmt.setString(pos++, getLikeExpression(query.getFromAddress()));
+      if (needExpression(query.getToAddress()))
+          stmt.setString(pos++, getLikeExpression(query.getToAddress()));
+      if (needExpression(query.getRouteId()))
+          stmt.setString(pos++, getLikeExpression(query.getRouteId()));
+      if (needExpression(query.getSrcSmeId()))
+          stmt.setString(pos++, getLikeExpression(query.getSrcSmeId()));
+      if (needExpression(query.getDstSmeId()))
+          stmt.setString(pos++, getLikeExpression(query.getDstSmeId()));
+
       if (query.getFromDateEnabled())
         stmt.setTimestamp(pos++,
           new java.sql.Timestamp(query .getFromDate().getTime()));
@@ -157,22 +167,30 @@ public class SmsView
       sql += prepareWhereClause(query);
       return sql;
     }
+
+    private void addWherePart(ArrayList list, String field, String str) {
+        if (needExpression(str))
+            list.add("UPPER("+field+") "+((needLikeExpression(str)) ? "LIKE ?":"=?"));
+    }
     private String prepareWhereClause(SmsQuery query)
     {
-      String where = " WHERE UPPER(ID) ";
-      where += (needLikeExpression(query.getSmsId())) ? "LIKE ?":"=?";
-      where += " AND UPPER(OA) ";
-      where += (needLikeExpression(query.getFromAddress())) ? "LIKE ?":"=?";
-      where += " AND UPPER(DDA) ";
-      where += (needLikeExpression(query.getToAddress())) ? "LIKE ?":"=?";
-      where += " AND UPPER(ROUTE_ID) ";
-      where += (needLikeExpression(query.getRouteId())) ? "LIKE ?":"= ?";
-      where += " AND UPPER(SRC_SME_ID) ";
-      where += (needLikeExpression(query.getSrcSmeId())) ? "LIKE ?":"=?";
-      where += " AND UPPER(DST_SME_ID) ";
-      where += (needLikeExpression(query.getDstSmeId())) ? "LIKE ?":"=?";
-      if (query.getFromDateEnabled()) where += " AND SUBMIT_TIME >=?";
-      if (query.getTillDateEnabled()) where += " AND SUBMIT_TIME <=?";
+      ArrayList list = new ArrayList();
+
+      addWherePart(list, "ID", query.getSmsId());
+      addWherePart(list, "OA", query.getFromAddress());
+      addWherePart(list, "DDA", query.getToAddress());
+      addWherePart(list, "ROUTE_ID", query.getRouteId());
+      addWherePart(list, "SRC_SME_ID", query.getSrcSmeId());
+      addWherePart(list, "DST_SME_ID", query.getDstSmeId());
+
+      if (query.getFromDateEnabled()) list.add("SUBMIT_TIME >=?");
+      if (query.getTillDateEnabled()) list.add("SUBMIT_TIME <=?");
+
+      String where = (list.size() > 0) ? " WHERE ":"";
+      for (int i=0; i<list.size(); i++) {
+        where += (String)list.get(i);
+        if (i<list.size()-1) where += " AND ";
+      }
       return where;
     }
 
