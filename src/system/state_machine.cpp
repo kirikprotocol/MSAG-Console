@@ -183,7 +183,7 @@ int StateMachine::Execute()
       case QUERY:st=query(t);break;
       case CANCEL:st=cancel(t);break;
       default:
-        __warning__("UNKNOWN COMMAND");
+        __warning2__("UNKNOWN COMMAND:%d",t.command->cmdid);
         st=ERROR_STATE;
         break;
     }
@@ -488,7 +488,7 @@ StateType StateMachine::submit(Tuple& t)
       Descriptor d;
       __trace__("SUBMIT_SM: change state to enroute");
 
-      sendNotifyReport(*sms,t.msgId,"destination unavialable");
+      sendNotifyReport(*sms,t.msgId,"destination unavailable");
 
       store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(*sms));
       smsc->notifyScheduler();
