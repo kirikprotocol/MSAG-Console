@@ -333,11 +333,6 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms,bool forceDC=false)
       if ( (user_data_coding & 0xc0) == 0 ||  // 00xxxxxx
            (user_data_coding & 0xc0) == 0x40 )  // 01xxxxxx
       {
-        if ( user_data_coding&(1<<5) )
-        {
-          __trace2__("SmppToSms: required compression");
-          return false;
-        }
         encoding = user_data_coding&0x0c;
         if(encoding==0)encoding=DataCoding::SMSC7BIT;
         if(encoding==0x0c)encoding=DataCoding::BINARY;
@@ -345,7 +340,13 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms,bool forceDC=false)
         {
           sms->setIntProperty(Tag::SMPP_MS_VALIDITY,0x03);
         }
-        sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,(user_data_coding&0x03)+1);
+        int das=(user_data_coding&0x03)+1;
+        sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,das);
+        if ( das!=3 && (user_data_coding&(1<<5)) )
+        {
+          __trace2__("SmppToSms: required compression");
+          return false;
+        }
         if(sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03)
         {
           encoding=DataCoding::BINARY;
