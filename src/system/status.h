@@ -116,7 +116,7 @@ static const int TELSVCNOTPROVIS=1163; // 12 - Teleservice not provisioned
 static const int INVEQUIPMENT=1164; // 12 - Illegal Equipment !
 static const int CALLBARRED=1165; // 13 - Call Barred
 static const int CUGREJECT=1167; // 15 - CUG reject
-static const int FACILITYNOTSUPP=1173; // 21 - Facility Not Supported !
+static const int FACILITYNOTSUPP=1173; // 21 - Facility Not Supported
 static const int ABSENTSUBSCR=1179; // 27 - Absent Subscriber
 static const int SUBSCRBUSYMT=1183; //Subscriber Busy for MT SMS.
 static const int SMDELIFERYFAILURE=1184; //SM Delivery Failure
@@ -1303,7 +1303,7 @@ static const bool errorStatus[1280] = {
 1, // reserved
 1, // reserved
 1, // reserved
-1, // FACILITYNOTSUPP=1173 21 - Facility Not Supported !
+0, // FACILITYNOTSUPP=1173 21 - Facility Not Supported
 1, // reserved
 1, // reserved
 1, // reserved
