@@ -44,11 +44,6 @@ int rand1(int maxValue)
 	return rand2(1, maxValue);
 }
 
-static string digitChars = "1234567890";
-static string latinChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-static string rusChars = "ÀÁÂÃÄÅ¨ÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäå¸æçèéêëìíîïğñòóôõö÷øùúûüışÿ";
-static string symbolChars = "~`!@#$%^&*()-_=+\\|{[}];:'\",<.>/? ";
-
 double randDouble(int digits, int precision)
 {
 	__require__(digits > 0 && precision >= 0 && digits >= precision);
@@ -92,8 +87,8 @@ auto_ptr<char> rand_char(int length, int type)
 
 void rand_char(int length, char* buf, int type)
 {
-	static const int sz = latinChars.length() + rusChars.length() +
-		digitChars.length() + symbolChars.length() + 1;
+	static const int sz = strlen(latinChars) + strlen(rusChars) +
+		strlen(digitChars) + strlen(symbolChars) + 1;
 	if (type == RAND_DEF_SMS)
 	{
 		for (int i = 0; i < length; i++)

@@ -21,6 +21,7 @@ struct DatabaseMaster
 
 	void genSms();
 	const string str(int i);
+	const string getTonNpi(int i);
 };
 
 const string DatabaseMaster::str(int i)
@@ -30,46 +31,71 @@ const string DatabaseMaster::str(int i)
 	return buf;
 }
 
+const string DatabaseMaster::getTonNpi(int i)
+{
+	switch (i % 4)
+	{
+		case 0:
+			return ".0.0.";
+		case 1:
+			return ".0.1.";
+		case 2:
+			return ".1.0.";
+		case 3:
+			return ".1.1.";
+	}
+}
+
 void DatabaseMaster::genSms()
 {
 	Manager::init("config.xml");
 	StoreManager::startup(Manager::getInstance());
+	StoreManager::stopArchiver();
 	MessageStore* msgStore = StoreManager::getMessageStore();
 	for (int i = 0; i < count; i++)
 	{
 		Descriptor dst;
 		SMS sms;
-		sms.setSubmitTime(time(NULL) + 10 * count);
+		sms.setSubmitTime(time(NULL) + (i % 2 ? 10 : -10) * i);
 		sms.setValidTime(LONG_MAX);
 		sms.setNextTime(LONG_MAX);
-		string addr;
-		switch (i % 4)
-		{
-			case 0:
-				addr = ".0.0.";
-				break;
-			case 1:
-				addr = ".0.1.";
-				break;
-			case 2:
-				addr = ".1.0.";
-				break;
-			case 3:
-				addr = ".1.1.";
-				break;
-		}
-		string srcAddr = addr + str(i);
+		string srcAddr = getTonNpi(i) + str(i);
 		sms.setOriginatingAddress(srcAddr.c_str());
-		string destAddr = addr + str((i + shift) % count);
+		int i2 = (i + shift) % count;
+		string destAddr = getTonNpi(i2) + str(i2);
 		sms.setDestinationAddress(destAddr.c_str());
-		string destAddr2 = addr + str((i + 2 * shift) % count);
+		int i3 = (i + 2 * shift) % count;
+		string destAddr2 = getTonNpi(i3) + str(i3);
 		sms.setDealiasedDestinationAddress(destAddr2.c_str());
+		sms.setSourceSmeId(str(i % 2).c_str());
+		sms.setDestinationSmeId(str(i % 3).c_str());
+		sms.setRouteId(str(i % 4).c_str());
 		sms.setArchivationRequested(true);
 		ostringstream os;
-		os << "àáâãäå¸æçèéêëìíîïğñòóôõö÷øùúûüışÿ ";
-		os << "ÀÁÂÃÄÅ¨ÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞß ";
-		os << str(i);
-		uint8_t dataCoding = i % 2 ? DataCoding::DEFAULT : DataCoding::UCS2;
+		uint8_t dataCoding;
+		switch (i % 5)
+		{
+			case 0: //default (latin1)
+				dataCoding = DataCoding::DEFAULT;
+				os << str(i) << " (default):" << latinChars << digitChars << symbolChars;
+				break;
+			case 1: //ucs2
+				dataCoding = DataCoding::UCS2;
+				os << str(i) << " (ucs2):" << rusChars << digitChars;
+				break;
+			case 2: //ucs2 (äğóãèå ñèìâîëû)
+				dataCoding = DataCoding::UCS2;
+				os << str(i) << " (ucs2):" << latinChars << symbolChars;
+				break;
+			case 3: //smsc7bit
+				dataCoding = DataCoding::SMSC7BIT;
+				os << str(i) << " (smsc7bit):" << latinChars << digitChars << symbolChars;
+				break;
+			case 4: //binary
+				dataCoding = DataCoding::BINARY;
+				os << str(i) << " (binary):" << latinChars << digitChars;
+				break;
+		}
 		int msgLen;
 		auto_ptr<char> msg = encode(os.str(), dataCoding, msgLen);
 		sms.setIntProperty(Tag::SMPP_DATA_CODING, dataCoding);
@@ -96,6 +122,11 @@ void DatabaseMaster::genSms()
 				msgStore->changeSmsStateToDeleted(smsId2);
 				break;
 		}
+	}
+	StoreManager::startArchiver(); //ïåğåíåñòè ôèíàëèçèğîâàííûå çàïèñè â àğõèâ
+	while (StoreManager::isArchivationInProgress())
+	{
+		sleep(1);
 	}
 	StoreManager::shutdown();
 }

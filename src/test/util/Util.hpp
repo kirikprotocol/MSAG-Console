@@ -38,6 +38,11 @@ const int RAND_SYM = 8;
 const int RAND_DEF_SMS = 16;
 const int RAND_LAT_NUM = RAND_LAT + RAND_NUM;
 
+static const char* digitChars = "1234567890";
+static const char* latinChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+static const char* rusChars = "ÀÁÂÃÄÅ¨ÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäå¸æçèéêëìíîïğñòóôõö÷øùúûüışÿ";
+static const char* symbolChars = "~ !@#$%^&*()-_=+\\|{[}];:'\",<.>/?";
+
 inline const char* nvl(const char* str) { return (str ? str : ""); }
 
 void init_rand();

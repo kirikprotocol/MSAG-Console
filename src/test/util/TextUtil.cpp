@@ -59,6 +59,7 @@ auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen)
 	switch (dataCoding)
 	{
 		case DEFAULT:
+		case BINARY:
 			msgLen = text.length();
 			msg = new char[msgLen];
 			memcpy(msg, text.c_str(), msgLen);
@@ -71,6 +72,13 @@ auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen)
 				msg = new char[len];
 				msgLen = ConvertMultibyteToUCS2(text.c_str(), text.length(),
 					(short*) msg, len, CONV_ENCODING_CP1251);
+			}
+			break;
+		case SMSC7BIT:
+			{
+				int len = text.length() + 1;
+				msg = new char[len];
+				msgLen = ConvertLatin1ToSMSC7Bit(text.c_str(), text.length(), msg);
 			}
 			break;
 		default:
