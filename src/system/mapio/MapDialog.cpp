@@ -418,6 +418,13 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
     ET96MAP_APP_CNTX_T appContext;
   	appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
   	appContext.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
+
+    result = Et96MapOpenReq(ssn, dialogid, &appContext, &destMscAddr, &scAddr, 0, 0, 0 );
+    if ( result != ET96MAP_E_OK ) {
+      __trace2__("MAP::MapDialog::Et96MapCloseInd Et96MapOpenReq error 0x%x",result);
+      throw 0;
+    }
+
     ET96MAP_SM_RP_OA_T smRpOa;
 	  smRpOa.typeOfAddress = ET96MAP_ADDRTYPE_SCADDR;
 	  smRpOa.addrLen = (m_scAddr.addressLength+1)/2+1;
