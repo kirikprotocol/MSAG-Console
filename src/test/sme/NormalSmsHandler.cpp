@@ -93,6 +93,7 @@ void NormalSmsHandler::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu,
 		return;
 	}
 	//pdu
+	bool udhi = pdu.get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
 	uint8_t dc = pdu.get_message().get_dataCoding();
 	const char* sm = pdu.get_message().get_shortMessage();
 	uint8_t smLen = pdu.get_message().get_smLength();
@@ -101,6 +102,7 @@ void NormalSmsHandler::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu,
 	int mpLen = pdu.get_optional().has_messagePayload() ?
 		pdu.get_optional().size_messagePayload() : 0;
 	//origPdu
+	bool origUdhi = origPdu.get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
 	uint8_t origDc = origPdu.get_message().get_dataCoding();
 	const char* origSm = origPdu.get_message().get_shortMessage();
 	uint8_t origSmLen = origPdu.get_message().get_smLength();
@@ -128,8 +130,10 @@ void NormalSmsHandler::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu,
 				{
 					__tc__("deliverySm.normalSms.checkTextDiffDataCoding");
 				}
-				__tc_fail2__(compare(origDc, origSm, origSmLen, dc, sm, smLen, false), 0);
-				__tc_fail2__(compare(origDc, origMp, origMpLen, dc, mp, mpLen, false), 10);
+				__tc_fail2__(compare(origUdhi, origDc, origSm, origSmLen,
+					udhi, dc, sm, smLen, false), 0);
+				__tc_fail2__(compare(origUdhi, origDc, origMp, origMpLen,
+					udhi, dc, mp, mpLen, false), 20);
 				__tc_ok_cond__;
 			}
 			break;
@@ -142,8 +146,10 @@ void NormalSmsHandler::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu,
 			{
 				__tc__("deliverySm.normalSms.checkTextDiffDataCoding");
 			}
-			__tc_fail2__(compare(origDc, origSm, origSmLen, dc, sm, smLen, false), 0);
-			__tc_fail2__(compare(origDc, origMp, origMpLen, dc, mp, mpLen, false), 10);
+			__tc_fail2__(compare(origUdhi, origDc, origSm, origSmLen,
+				udhi, dc, sm, smLen, false), 0);
+			__tc_fail2__(compare(origUdhi, origDc, origMp, origMpLen,
+				udhi, dc, mp, mpLen, false), 20);
 			__tc_ok_cond__;
 			break;
 		default:
