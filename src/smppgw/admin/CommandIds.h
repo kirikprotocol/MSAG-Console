@@ -20,9 +20,11 @@ namespace CommandIds {
     apply,
     updateSmeInfo,
     addSme,
+    statusSme,
     deleteSme,
     traceRoute,
-    loadRoutes
+    loadRoutes,
+    regSmsc
   };
 }
 

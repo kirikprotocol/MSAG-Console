@@ -156,6 +156,7 @@ Response * SmppGwCommandDispatcher::handle(const Command * const command) throw 
   {
     SmppGwCommand * smppgwcommand;
     smppgwcommand = (SmppGwCommand *)command;
+    
 
     Response * result = smppgwcommand->CreateResponse(runner->getApp());
     DoActions(smppgwcommand->GetActions());

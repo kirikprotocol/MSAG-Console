@@ -22,6 +22,7 @@
 #include "smppgw/admin/CommandApply.h"
 #include "CommandUpdateSmeInfo.h"
 #include "CommandAddSme.h"
+#include "CommandStatusSme.h"
 #include "CommandDeleteSme.h"
 #include "CommandTraceRoute.h"
 #include "CommandLoadRoutes.h"
