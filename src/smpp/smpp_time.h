@@ -65,7 +65,7 @@ inline time_t smppTime2CTime(COStr& str)
   scaned =
     sscanf(dta,
   //        YY MM DD hh mm ss t  nn p
-            00,00,00,00,00,28,0,00,R
+          //  00,00,00,00,00,28,0,00,R
           "%2d%2d%2d%2d%2d%2d%1d%2d%c",
           &dtm.tm_year,
           &dtm.tm_mon,
