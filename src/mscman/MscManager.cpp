@@ -181,16 +181,20 @@ int MscManagerImpl::Execute()
     do 
     {
         flushEvent.Wait(); // ??? sleepInterval
+        __trace2__("Flush event signaled !");
 
         MscInfoChange change;
-        int result = 1;
-        while (result)
+        bool process = true;
+        while (process)
         {
             {
                 MutexGuard guard(changesLock);
-                result = changes.Shift(change);
+                if (changes.Count() > 0) {
+                    changes.Shift(change);
+                    process = true;
+                } else process = false;
             }
-            if (result) processChange(change);
+            if (process) processChange(change);
         }
     } 
     while (!bNeedExit);
@@ -325,6 +329,8 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
 
 void MscManagerImpl::report(const char* msc, bool status) 
 {
+    __trace2__("MscManager: Report called for '%s'", msc);
+
     MutexGuard  guard(hashLock);
     
     bool needInsert = false;
@@ -346,6 +352,8 @@ void MscManagerImpl::report(const char* msc, bool status)
 }
 bool MscManagerImpl::check(const char* msc) 
 { 
+    __trace2__("MscManager: Check called for '%s'", msc);
+
     MutexGuard  guard(hashLock);
 
     if (!mscs.Exists(msc)) return true;
@@ -357,6 +365,8 @@ bool MscManagerImpl::check(const char* msc)
 
 void MscManagerImpl::registrate(const char* msc) 
 {
+    __trace2__("MscManager: Registrate called for '%s'", msc);
+
     MutexGuard  guard(hashLock);
 
     if (!mscs.Exists(msc)) 
@@ -369,6 +379,8 @@ void MscManagerImpl::registrate(const char* msc)
 }
 void MscManagerImpl::unregister(const char* msc)
 {
+    __trace2__("MscManager: Unregister called for '%s'", msc);
+
     MutexGuard  guard(hashLock);
 
     if (mscs.Exists(msc)) 
@@ -382,6 +394,8 @@ void MscManagerImpl::unregister(const char* msc)
 }
 void MscManagerImpl::block(const char* msc)
 {
+    __trace2__("MscManager: Block called for '%s'", msc);
+
     MutexGuard  guard(hashLock);
 
     if (mscs.Exists(msc)) 
@@ -397,6 +411,8 @@ void MscManagerImpl::block(const char* msc)
 }
 void MscManagerImpl::clear(const char* msc) 
 {
+    __trace2__("MscManager: Clear called for '%s'", msc);
+
     MutexGuard  guard(hashLock);
 
     if (mscs.Exists(msc)) 
@@ -413,11 +429,15 @@ void MscManagerImpl::clear(const char* msc)
 }
 Array<MscInfo> MscManagerImpl::list() 
 {
-    MutexGuard  guard(hashLock);
+    __trace2__("MscManager: List called");
 
     Array<MscInfo> list; 
-    char* key; MscInfo* info = 0;
-    while (mscs.Next(key, info)) 
+
+    MutexGuard  guard(hashLock);
+    
+    mscs.First();
+    char* key=0; MscInfo* info = 0;
+    while (mscs.Next(key, info))
         if (info) list.Push(*info);
     
     return list;

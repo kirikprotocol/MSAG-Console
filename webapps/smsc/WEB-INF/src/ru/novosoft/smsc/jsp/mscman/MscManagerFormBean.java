@@ -9,6 +9,7 @@ package ru.novosoft.smsc.jsp.mscman;
 
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.admin.mscman.MscManager;
 import ru.novosoft.smsc.admin.AdminException;
 
@@ -58,13 +59,12 @@ public class MscManagerFormBean extends IndexBean
             else if (mbClear != null) manager.clear(mscKey);
             else if (mbUnregister != null) manager.unregister(mscKey);
             else if (mbRegister != null) manager.register(mscNum);
-
             mscs = manager.list();
             result = RESULT_OK;
         }
         catch (AdminException exc) {
             exc.printStackTrace();
-            result = RESULT_ERROR;
+            result = error(SMSCErrors.error.commutators.smscServerError, exc);
         }
         clearBeenProperties();
         return result;

@@ -36,6 +36,7 @@ public class MscManager
         for (int i=0; i<lst.size(); i++) {
             Object obj = lst.get(i);
             if (obj != null && obj instanceof String) {
+                //System.out.println("MscManager: "+i+" "+(String)obj);
                 mscs.add(new MscInfo((String)obj));
             }
         }

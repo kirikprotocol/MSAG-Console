@@ -15,7 +15,7 @@ public class MscInfo
     private final static String AUT0_LOCKED = "Locked automatically";
     private final static String NOT_LOCKED = "Available";
 
-    private final static String FIELDS_SEPARATOR = ";";
+    private final static String FIELDS_SEPARATOR = ",";
 
     private String   mscNum = "";
     private boolean  mLock  = false;
@@ -27,8 +27,8 @@ public class MscInfo
     {
         try {
             StringTokenizer st = new StringTokenizer(str, FIELDS_SEPARATOR);
-            String mscNum = st.nextToken();
-            if (mscNum == null) mscNum = "";
+            mscNum = st.nextToken();
+            if (mscNum == null || mscNum.length() <=0) mscNum = "<<undefined>>";
             String mLockStr = st.nextToken();
             mLock = (mLockStr == null) ? false:(mLockStr.equalsIgnoreCase("true"));
             String aLockStr = st.nextToken();
