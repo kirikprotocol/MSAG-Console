@@ -446,6 +446,9 @@ void MapIoTask::init()
   if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgOpen, code 0x%hx",err); throw runtime_error("MsgInit error"); }
   err = MsgConn(USER01_ID,ETSIMAP_ID);
   if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgConn, code 0x%hx",err); throw runtime_error("MsgInit error"); }
+  __trace2__("MAP:: pause self and wait map initialization");
+  sleep(5);
+  __trace2__("MAP:: continue self initialization");
 //  err = MsgConn(USER01_ID,USER01_ID);
 //  if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgConn on self, code 0x%hx",err); throw runtime_error("MsgInit error"); }
   MsgTraceOn( MY_USER_ID );
@@ -454,7 +457,12 @@ void MapIoTask::init()
   __trace__("MAP: Bind");
   USHORT_T bind_res = Et96MapBindReq(MY_USER_ID, SSN);
   if(bind_res!=ET96MAP_E_OK){
-    __trace2__("MAP: Bind error 0x%hx",bind_res);
+    __trace2__("MAP: SSN Bind error 0x%hx",bind_res);
+    throw runtime_error("bind error");
+  }
+  USHORT_T bind_res = Et96MapBindReq(MY_USER_ID, 147);
+  if(bind_res!=ET96MAP_E_OK){
+    __trace2__("MAP: 147 Bind error 0x%hx",bind_res);
     throw runtime_error("bind error");
   }
   __trace__("MAP: Ok");
