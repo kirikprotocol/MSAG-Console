@@ -68,10 +68,12 @@ function clickAddMapping()
 	newRow.className = "row" + (mapping_table_id.rows.length & 1);
 	newRow.id = "mapping_row_" + addressElem.value;
 	var newCell = document.createElement("td");
-	newCell.innerHTML = "<input class=txt name=\"<%=Index.MAPPING_SECTION_NAME%>." + addressElem.value + ".address\" value=\"" + addressElem.value + "\">";
+  var newSection = addressElem.value.replace(/[.]/g, "_");
+
+	newCell.innerHTML = "<input class=txt name=\"<%=Index.MAPPING_SECTION_NAME%>." + newSection + ".address\" value=\"" + addressElem.value + "\">";
 	newRow.appendChild(newCell);
 	newCell = document.createElement("td");
-	newCell.innerHTML = "<input class=txtW name=\"<%=Index.MAPPING_SECTION_NAME%>." + addressElem.value + ".alias\" value=\"" + aliasElem.value + "\">";
+	newCell.innerHTML = "<input class=txtW name=\"<%=Index.MAPPING_SECTION_NAME%>." + newSection + ".alias\" value=\"" + aliasElem.value + "\">";
 	newRow.appendChild(newCell);
 	newCell = document.createElement("td");
 	newCell.innerHTML = "<img src=\"/images/but_del.gif\" class=button jbuttonName=\"mbRemove\" jbuttonValue=\"Remove\" title=\"Remove this mapping\" jbuttonOnclick=\"return clickRemoveMapping('" + newRow.id + "');\">";
@@ -101,12 +103,12 @@ function clickRemoveMapping(id_to_remove)
 <%rowN = 0;
 	Collection mappingSectionNames = bean.getMappingSectionNames();
 	for (Iterator i = mappingSectionNames.iterator(); i.hasNext();) {
-		final String address = (String) i.next();
-    final String mappingSectionName = Index.MAPPING_SECTION_NAME + "." + address;
-		final String alias = bean.getString(mappingSectionName + ".alias");
+    final String section = (String) i.next();
+		final String address = bean.getString(section + ".address");
+		final String alias   = bean.getString(section + ".alias");
 		%><tr class=row<%=(rowN++)&1%> id=mapping_row_<%=StringEncoderDecoder.encode(address)%>>
-			<td><input class=txt name="<%=mappingSectionName%>.address" value="<%=address%>"></td>
-			<td><input class=txtW name="<%=mappingSectionName%>.alias" value="<%=alias%>"></td>
+			<td><input class=txt  name="<%=section%>.address" value="<%=address%>"></td>
+			<td><input class=txtW name="<%=section%>.alias"   value="<%=alias%>"></td>
 			<td><%button(out, "but_del.gif", "mbDel", "Remove", "Remove this mapping", "return clickRemoveMapping('mapping_row_" + StringEncoderDecoder.encode(address) + "');");%></td>
 		</tr><%
 	}

@@ -47,7 +47,6 @@ public abstract class IndexProperties extends MTSMSmeBean
       {
         //smppThreadPoolMax = getConfig().getInt("MTSMSme.SMPPThreadPool.max");
         //smppThreadPoolInit = getConfig().getInt("MTSMSme.SMPPThreadPool.init");
-
         //adminHost = getConfig().getString("MTSMSme.Admin.host");
         //adminPort = getConfig().getInt("MTSMSme.Admin.port");
 
@@ -91,10 +90,8 @@ public abstract class IndexProperties extends MTSMSmeBean
   {
     //getConfig().setInt   ("MTSMSme.SMPPThreadPool.max", smppThreadPoolMax);
     //getConfig().setInt   ("MTSMSme.SMPPThreadPool.init", smppThreadPoolInit);
-
     //getConfig().setString("MTSMSme.Admin.host", adminHost);
     //getConfig().setInt   ("MTSMSme.Admin.port", adminPort);
-
     getConfig().setString("MTSMSme.SMSC.host", smscHost);
     getConfig().setInt   ("MTSMSme.SMSC.port", smscPort);
     getConfig().setString("MTSMSme.SMSC.sid", smscSid);
@@ -168,7 +165,7 @@ public abstract class IndexProperties extends MTSMSmeBean
   }
 
   public List getMappingSectionNames() {
-    return new SortedList(getConfig().getSectionChildShortSectionNames(MAPPING_SECTION_NAME));
+    return new SortedList(getConfig().getSectionChildSectionNames(MAPPING_SECTION_NAME));
   }
 
   public int getInt(String paramName)
@@ -204,17 +201,22 @@ public abstract class IndexProperties extends MTSMSmeBean
     final String PREFIX = MAPPING_SECTION_NAME + '.';
 
     getConfig().removeSection(MAPPING_SECTION_NAME);
-    for (Iterator i = requestParams.keySet().iterator(); i.hasNext();) {
+    for (Iterator i = requestParams.keySet().iterator(); i.hasNext();)
+    {
       String paramName = (String) i.next();
-      if (paramName.startsWith(PREFIX) && paramName.endsWith("alias")) {
+      if (paramName.startsWith(PREFIX) && (paramName.endsWith("address") || paramName.endsWith("alias")))
+      {
         final String paramValue = getParamValue(requestParams.get(paramName));
-        if (paramValue != null)
-          getConfig().setString(paramName, paramValue);
+        if (paramValue != null) getConfig().setString(paramName, paramValue);
       }
     }
     if (mapping_new_address != null && mapping_new_address.length() > 0 &&
         mapping_new_alias != null && mapping_new_alias.length() > 0)
-      getConfig().setString(PREFIX + mapping_new_address + ".alias", mapping_new_alias);
+    {
+      String section = mapping_new_address.replace('.', '_');
+      getConfig().setString(PREFIX + section + ".address", mapping_new_address);
+      getConfig().setString(PREFIX + section + ".alias", mapping_new_alias);
+    }
 
     return RESULT_DONE;
   }
