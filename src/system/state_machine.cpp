@@ -677,7 +677,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
 StateType StateMachine::alert(Tuple& t)
 {
-  __trace__("ALERT!!!");
+  __trace2__("ALERT:%lld",t.msgId);
   //time_t now=time(NULL);
   try{
     Descriptor d;

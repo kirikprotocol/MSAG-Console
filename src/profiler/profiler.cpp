@@ -131,15 +131,21 @@ void Profiler::update(const Address& address,const Profile& profile)
 {
   MutexGuard g(mtx);
   bool exact;
+#ifndef DISABLE_TRACING
+  char buf[32];
+  address.getText(buf,sizeof(buf));
+#endif
   Profile &prof=profiles->find(address,exact);
   if(prof==profile)return;
   if(exact)
   {
     prof.assign(profile);
     dbUpdate(address,prof);
+    __trace2__("Profiler: update %s:%d.%d",buf,profile.codepage,profile.reportoptions);
   }else
   {
     dbInsert(address,profiles->add(address,profile));
+    __trace2__("Profiler: insert %s:%d.%d",buf,profile.codepage,profile.reportoptions);
   }
 }
 
