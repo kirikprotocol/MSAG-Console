@@ -10,9 +10,6 @@ package ru.novosoft.smsc.admin.smsview;
  */
 
 import java.util.Date;
-import java.util.TimeZone;
-import java.util.Locale;
-import java.util.GregorianCalendar;
 import java.text.SimpleDateFormat;
 
 public class SmsRow
@@ -26,6 +23,7 @@ public class SmsRow
   private Date   date = new Date();
   private String from = "from";
   private String to   = "to";
+  private String toDealiased   = "toDealiased";
   private int status  = 0;
   private String text = "Message text ";
   private boolean marked = false;
@@ -47,6 +45,12 @@ public class SmsRow
   public void setFrom(String address) { from = address; }
   public String getTo(){ return to; };
   public void setTo(String address) { to = address; }
+  public String getToDealiased(){ return toDealiased; };
+  public void setToDealiased(String address) { toDealiased = address; }
+  public String getToString() {
+      return ((toDealiased == null || toDealiased.length() == 0 ||
+               to.equalsIgnoreCase(toDealiased)) ? to:(to+" ("+toDealiased+")"));
+  }
   public String getDateString()
   {
       SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");

@@ -172,7 +172,7 @@ public class SmsView
 
     private String prepareQueryString(SmsQuery query)
     {
-      String sql = "SELECT ID, SUBMIT_TIME, OA, DDA, ST, BODY_LEN, BODY FROM ";
+      String sql = "SELECT ID, SUBMIT_TIME, OA, DA, DDA, ST, BODY_LEN, BODY FROM ";
       sql += (query.getStorageType() == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) ?
                   "SMS_MSG":"SMS_ARC";
       sql += prepareWhereClause(query);
@@ -224,6 +224,7 @@ public class SmsView
         row.setDate(rs.getTimestamp(pos++, cal));
         row.setFrom(rs.getString(pos++));
         row.setTo(rs.getString(pos++));
+        row.setToDealiased(rs.getString(pos++));
         row.setStatus(rs.getInt(pos++));
         int bodyLen = rs.getInt(pos++);
         if (bodyLen <= 0) {
