@@ -31,11 +31,16 @@ public:
   {
     inactivityTime=tm;
   }
+  void setInactivityTimeOut(int to)
+  {
+    inactivityTimeOut=to;
+  }
 protected:
   Array<SmppIOTask*> intasks,outtasks;
   ThreadPool *tp;
   int socketTimeOut;
   int inactivityTime;
+  int inactivityTimeOut;
   smsc::smeman::SmeManager* smeManager;
   Mutex mtxAdd,mtxRemove;
 };//SocketsManager

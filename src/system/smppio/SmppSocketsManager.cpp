@@ -28,7 +28,10 @@ void SmppSocketsManager::registerSocket(Socket* sock)
   SmppInputThread *in=new SmppInputThread(smeManager);
 
   in->setInactivityTime(inactivityTime);
+  in->setInactivityTimeOut(inactivityTimeOut);
   out->setInactivityTime(inactivityTime);
+  out->setInactivityTimeOut(inactivityTimeOut);
+
 
   out->assignIn(in);
   in->assignOut(out);

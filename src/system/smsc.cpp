@@ -512,6 +512,7 @@ void Smsc::init(const SmscConfigs& cfg)
   smscPort=cfg.cfgman->getInt("smpp.port");
   ssockman.setSmppSocketTimeout(cfg.cfgman->getInt("smpp.readTimeout"));
   ssockman.setInactivityTime(cfg.cfgman->getInt("smpp.inactivityTime"));
+  ssockman.setInactivityTimeOut(cfg.cfgman->getInt("smpp.inactivityTimeOut"));
 
   {
     performance::PerformanceServer *perfSrv=new performance::PerformanceServer

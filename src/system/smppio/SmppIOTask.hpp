@@ -38,11 +38,16 @@ public:
   {
     inactivityTime=ina;
   }
+  void setInactivityTimeOut(int to)
+  {
+    inactivityTimeOut=to;
+  }
 protected:
   Multiplexer mul;
   EventMonitor mon;
   Array<SmppSocket*> sockets;
   int inactivityTime;
+  int inactivityTimeOut;
 };
 
 class SmppInputThread:public SmppIOTask{

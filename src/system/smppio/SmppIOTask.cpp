@@ -151,10 +151,15 @@ int SmppInputThread::Execute()
           mul.add(s);
         }
         bool to=false;
-        if(s->getData(SOCKET_SLOT_KILL) || (to=ss->isConnectionTimedOut()))
+        if(
+          s->getData(SOCKET_SLOT_KILL) ||
+          ss->isConnectionTimedOut() ||
+          (ss->getProxy() && time(NULL)-ss->getLastUpdate()-inactivityTime>inactivityTimeOut)
+          )
         {
+          __trace__("SmppInputThread:: killing socket by request, timeout or invactivity timeout");
           s->Close();
-          if(to)outTask->removeSocket(s);
+          if(!s->getData(SOCKET_SLOT_KILL))outTask->removeSocket(s);
           killSocket(i);
           i--;
           continue;
