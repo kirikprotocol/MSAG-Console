@@ -60,6 +60,22 @@ uint8_t SmppTransmitterTestCases::getRegisteredDelivery(PduData* pduData)
 {
 	__require__(pduData);
 	__require__(pduData->objProps.count("senderData"));
+	//проверить наличие ack/noack директив
+	bool ack = pduData->intProps.count("directive.ack");
+	bool noack = pduData->intProps.count("directive.noack");
+	if (ack && noack)
+	{
+		__unreachable__("Both ack and noack set");
+	}
+	else if (ack)
+	{
+		return FINAL_SMSC_DELIVERY_RECEIPT;
+	}
+	else if (noack)
+	{
+		return NO_SMSC_DELIVERY_RECEIPT;
+	}
+	//проверка флага registred_delivery и опций профиля
 	SmsPduWrapper pdu(pduData);
 	uint8_t registredDelivery = pdu.getRegistredDelivery();
 	SenderData* senderData =
