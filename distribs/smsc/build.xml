@@ -258,7 +258,7 @@ Targets:
     <exec executable="tar" dir="${DISTR_DIR}" >
       <arg line="-cf ../smsc_${version}.tar ."/>
     </exec>
-    <gzip src="${DISTR_DIR}/../smsc_${version}.tar"/>
+    <gzip src="${DISTR_DIR}/../smsc_${version}.tar" destfile="${DISTR_DIR}/../smsc_${version}.tar.gz" />
   </target>
 
   <!-- external sme -->

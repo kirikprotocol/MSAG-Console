@@ -1,6 +1,7 @@
 <project name="dbSme build" default="help" basedir=".">
   <property name="esme_name" value="dbSme"/>
-  <property name="esme_bin" value="dbsme/DBSme"/>
+  <property name="esme_bin_path" value="dbsme"/>
+  <property name="esme_bin_name" value="DBSme"/>
 
   <target name="help">
     <echo message="Do not build from this file directly"/>

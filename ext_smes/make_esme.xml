@@ -4,7 +4,8 @@
   <property environment="env"/>
   <property name="TEMPLATE_PROPS" value="should be defined in calling script"/>
   <property name="esme_name" value="should be defined in calling script"/>
-  <property name="esme_bin" value="should be defined in calling script"/>
+  <property name="esme_bin_path" value="should be defined in calling script"/>
+  <property name="esme_bin_name" value="should be defined in calling script"/>
   <property name="DISTR_DIR" value="${BUILD_DIR}/distr"/>
   <property name="SRC_DIR" value="${SMSC_DIR}/src"/>
   <property name="BUILD_BIN" value="${BUILD_DIR}/bin"/>
@@ -55,7 +56,6 @@
     <copy tofile="${exploded}/bin/service" file="${TEMPL_DIR}/service/${esme_name}" preservelastmodified="yes">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
-    <copy todir="${exploded}/bin" file="${BUILD_BIN}/${esme_bin}" flatten="yes" preservelastmodified="yes"/>
     <copy tofile="${exploded}/logger.properties" file="${TEMPL_DIR}/logger/${esme_name}.logger" preservelastmodified="yes">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
@@ -66,8 +66,8 @@
   </target>
 
   <target name="update" description="update existing installation">
-    <copy todir="${DISTR_DIR}/services/${esme_name}/bin" file="${BUILD_BIN}/${esme_bin}" flatten="yes" preservelastmodified="yes"/>
-    <chmod file="${DISTR_DIR}/services/${esme_name}/bin/${esme_bin}" perm="775"/>  
+    <copy todir="${DISTR_DIR}/services/${esme_name}/bin" file="${BUILD_BIN}/${esme_bin_path}/${esme_bin_name}" flatten="yes" preservelastmodified="yes"/>
+    <chmod file="${DISTR_DIR}/services/${esme_name}/bin/${esme_bin_name}" perm="775"/>
     <copy todir="${DISTR_DIR}/conf/sql" preservelastmodified="yes">
       <fileset dir="${TEMPL_DIR}/sql" includes="${esme_name}.sql updates/${esme_name}*.sql"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
