@@ -200,7 +200,7 @@ void WSmeComponent::addAd(const Arguments& args)
     const char* lang = (arg.getType() == StringType) ? arg.getStringValue():0;
     if (!lang) 
         error("addAd()", ARGUMENT_NAME_LANG);
-    arg = args[ARGUMENT_NAME_LANG];
+    arg = args[ARGUMENT_NAME_AD];
     const char* ad = (arg.getType() == StringType) ? arg.getStringValue():0;
     if (!ad) 
         error("addAd()", ARGUMENT_NAME_AD);
