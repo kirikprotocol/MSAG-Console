@@ -171,7 +171,7 @@ void FileStorage::rollFileExtension(const std::string& location, const char* fil
 }
 bool FileStorage::createDir(const std::string& dir)
 {
-    if (mkdir(dir.c_str(), S_IRWXU|S_IXUSR|S_IROTH|S_IWOTH) != 0) { // TODO: define mode
+    if (mkdir(dir.c_str(), S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) { // TODO: define mode
         if (errno == EEXIST) return false;
         Exception exc("Failed to create directory '%s'. Details: %s",
                       dir.c_str(), strerror(errno));
