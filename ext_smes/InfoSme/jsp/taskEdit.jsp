@@ -53,6 +53,15 @@
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
+  <th>Originating address</th>
+  <td><%if (bean.isSmeRunning()) {
+    %><input class=txt name=name value="<%=StringEncoderDecoder.encode(bean.getAddress())%>"><%
+  } else {
+    %><%=StringEncoderDecoder.encode(bean.getAddress())%><%
+  }%>
+  </td>
+</tr>
+<tr class=row<%=rowN++&1%>>
   <th>Provider</th>
   <td><%if (bean.isSmeRunning()) {
     %><select name=provider><%

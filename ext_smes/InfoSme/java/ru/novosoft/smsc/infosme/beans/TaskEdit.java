@@ -118,6 +118,12 @@ public class TaskEdit extends InfoSmeBean
     this.task.setId(sectionName);
   }
 
+  public String getAddress() {
+    return task.getAddress();
+  }
+  public void setAddress(String address) {
+    this.task.setAddress(address);
+  }
   public String getProvider() {
     return task.getProvider();
   }

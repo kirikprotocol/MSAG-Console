@@ -21,6 +21,7 @@ public class Task
 
   private String id = "";
   private String name = "";
+  private String address = "";
   private String provider = "";
   private boolean enabled = false;
   private int priority = 0;
@@ -53,7 +54,8 @@ public class Task
     activeWeekDaysSet = new HashSet(activeWeekDays);
   }
 
-  public Task(String id, String name, String provider, boolean enabled, int priority, boolean retryOnFail, boolean replaceMessage,
+  public Task(String id, String name, String address, String provider,
+              boolean enabled, int priority, boolean retryOnFail, boolean replaceMessage,
               String svcType, String endDate, String retryTime, String validityPeriod, String validityDate,
               String activePeriodStart, String activePeriodEnd, Collection activeWeekDays,
               String query, String template, int dsTimeout,
@@ -63,6 +65,7 @@ public class Task
     this();
     this.id = id;
     this.name = name;
+    this.address = address;
     this.provider = provider;
     this.enabled = enabled;
     this.priority = priority;
@@ -95,6 +98,8 @@ public class Task
     final String prefix = TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(id);
     this.id = id;
     name = config.getString(prefix + ".name");
+    try { address = config.getString(prefix + ".address"); }
+    catch (Throwable th) { address = ""; }
     provider = config.getString(prefix + ".dsId");
     enabled = config.getBool(prefix + ".enabled");
     priority = config.getInt(prefix + ".priority");
@@ -129,6 +134,9 @@ public class Task
   {
     final String prefix = TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(id);
     config.setString(prefix + ".name", name);
+    if (address != null && address.trim().length() > 0) {
+      config.setString(prefix + ".address", address.trim());
+    }
     config.setString(prefix + ".dsId", provider);
     config.setBool(prefix + ".enabled", enabled);
     config.setInt(prefix + ".priority", priority);
@@ -175,6 +183,7 @@ public class Task
       Task task = (Task) obj;
       return this.id.equals(task.id)
               && this.name.equals(task.name)
+              && this.address.equals(task.address)
               && this.provider.equals(task.provider)
               && this.enabled == task.enabled
               && this.priority == task.priority
@@ -216,6 +225,13 @@ public class Task
   }
   public void setName(String name) {
     this.name = name;
+  }
+
+  public String getAddress() {
+    return address;
+  }
+  public void setAddress(String address) {
+    this.address = address;
   }
 
   public String getProvider() {
