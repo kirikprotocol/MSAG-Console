@@ -16,8 +16,9 @@ public:
 		: DbSmeJobTestCases(dbSmeReg, chkList) {}
 	const DateFormatter& getDateFormatter();
 	DbSmeTestRecord* createIntsJobInput();
-	DbSmeTestRecord* createDefaultsJobInput();
 	DbSmeTestRecord* createUintsJobInput();
+	DbSmeTestRecord* createIntDefaultsJobInput();
+	DbSmeTestRecord* createUintDefaultsJobInput();
 	DbSmeTestRecord* createZerosJobInput();
 	DbSmeTestRecord* createNullsJobInput();
 	DbSmeTestRecord* createDuplicateKeyJobInput();

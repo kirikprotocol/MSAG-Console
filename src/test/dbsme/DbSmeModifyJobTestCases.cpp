@@ -66,22 +66,6 @@ DbSmeTestRecord* DbSmeInsertJobTestCases::createIntsJobInput()
 	return rec;
 }
 
-DbSmeTestRecord* DbSmeInsertJobTestCases::createDefaultsJobInput()
-{
-	__require__(dbSmeReg);
-	__decl_tc__;
-	__tc__("submitDbSmeCmd.correct.job.insert"); __tc_ok__;
-	DbSmeTestRecord* rec = new DbSmeTestRecord();
-	rec->setJob("InsertJob1");
-	rec->setId(dbSmeReg->nextId());
-	rec->setDefInput(newDefInput1());
-	__tc__("submitDbSmeCmd.correct.defaultInput.int"); __tc_ok__;
-	__tc__("submitDbSmeCmd.correct.defaultInput.float"); __tc_ok__;
-	__tc__("submitDbSmeCmd.correct.defaultInput.string"); __tc_ok__;
-	__tc__("submitDbSmeCmd.correct.defaultInput.date"); __tc_ok__;
-	return rec;
-}
-
 DbSmeTestRecord* DbSmeInsertJobTestCases::createUintsJobInput()
 {
 	__require__(dbSmeReg);
@@ -100,6 +84,38 @@ DbSmeTestRecord* DbSmeInsertJobTestCases::createUintsJobInput()
 	setRandomInputLongDouble(rec);
 	setRandomInputString(rec, rand0(1));
 	setRandomInputDate(rec);
+	return rec;
+}
+
+DbSmeTestRecord* DbSmeInsertJobTestCases::createIntDefaultsJobInput()
+{
+	__require__(dbSmeReg);
+	__decl_tc__;
+	__tc__("submitDbSmeCmd.correct.job.insert"); __tc_ok__;
+	DbSmeTestRecord* rec = new DbSmeTestRecord();
+	rec->setJob("InsertJob1");
+	rec->setId(dbSmeReg->nextId());
+	rec->setDefInput(newDefInput1());
+	__tc__("submitDbSmeCmd.correct.defaultInput.int"); __tc_ok__;
+	__tc__("submitDbSmeCmd.correct.defaultInput.float"); __tc_ok__;
+	__tc__("submitDbSmeCmd.correct.defaultInput.string"); __tc_ok__;
+	__tc__("submitDbSmeCmd.correct.defaultInput.date"); __tc_ok__;
+	return rec;
+}
+
+DbSmeTestRecord* DbSmeInsertJobTestCases::createUintDefaultsJobInput()
+{
+	__require__(dbSmeReg);
+	__decl_tc__;
+	__tc__("submitDbSmeCmd.correct.job.insert"); __tc_ok__;
+	DbSmeTestRecord* rec = new DbSmeTestRecord();
+	rec->setJob("InsertJob2");
+	rec->setId(dbSmeReg->nextId());
+	rec->setDefInput(newDefInput1());
+	__tc__("submitDbSmeCmd.correct.defaultInput.uint"); __tc_ok__;
+	__tc__("submitDbSmeCmd.correct.defaultInput.float"); __tc_ok__;
+	__tc__("submitDbSmeCmd.correct.defaultInput.string"); __tc_ok__;
+	__tc__("submitDbSmeCmd.correct.defaultInput.date"); __tc_ok__;
 	return rec;
 }
 
@@ -255,6 +271,9 @@ const string DbSmeUpdateJobTestCases::processJobFirstOutput(const string& text,
 	if (rec->getJob() == "UpdateJob1")
 	{
 		__tc__("processDbSmeRes.update.ok"); __tc_ok__;
+		__tc__("processDbSmeRes.input.jobName"); __tc_ok__;
+		__tc__("processDbSmeRes.input.toAddress"); __tc_ok__;
+		__tc__("processDbSmeRes.input.fromAddress"); __tc_ok__;
 		bool res = true;
 		ostringstream os;
 		os << endl << "UpdateJob1:" << endl;
