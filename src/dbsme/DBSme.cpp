@@ -125,7 +125,7 @@ public:
                           outLen : MAX_ALLOWED_MESSAGE_LENGTH;
             
             int convLen = ConvertTextTo7Bit(out, strLen, buff, sizeof(buff), 
-                                            CONV_ENCODING_ANSI);
+                                            CONV_ENCODING_CP1251);
 
             body.setBinProperty(Tag::SMPP_SHORT_MESSAGE, buff, convLen);
             body.setIntProperty(Tag::SMPP_SM_LENGTH, convLen);
