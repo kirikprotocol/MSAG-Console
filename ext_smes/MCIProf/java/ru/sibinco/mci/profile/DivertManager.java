@@ -7,6 +7,8 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 import java.net.Socket;
 
+import org.apache.log4j.Category;
+
 /**
  * Created by: Serge Lugovoy
  * Date: 06.09.2004
@@ -16,6 +18,8 @@ public class DivertManager
 {
   private static DivertManager instance = null;
   private static Object syncObj = new Object();
+
+  private static Category logger = Category.getInstance(DivertManager.class);
 
   public static DivertManager getInstance() throws ScenarioInitializationException
   {
@@ -56,6 +60,8 @@ public class DivertManager
       mciSmeAddress    = properties.getProperty("MCISme.Address");
 
     } catch(Exception e) {
+      final String err = "Failed to load commutator properties";
+      logger.error("Failed to load commutator properties", e);
       throw new ScenarioInitializationException("Failed to load commutator properties", e);
     } finally {
       try { is.close(); } catch (Throwable th) {}
@@ -162,14 +168,17 @@ public class DivertManager
         if (is != null) is.close(); if (os != null) os.close();
         mscSocket.close(); mscSocket = null;
       }
+      logger.info("Connecting to MSC "+mscHost+":"+mscPort+"...");
       mscSocket = new Socket(mscHost, mscPort);
       is = mscSocket.getInputStream(); os = mscSocket.getOutputStream();
 
       // login using params MSC.nvtIODevice, MSC.USERCODE, MSC.PASSWORD
+      logger.info("Connected Ok");
       readTelnetString(ESC_SEMI); writeTelnetLine(mscNvtIODevice);
       readTelnetString(ESC_SEMI); writeTelnetLine(mscUserCode);
       readTelnetString(ESC_SEMI); writeTelnetLine(mscUserPassword);
       readTelnetString(ESC_PROMPT);
+      logger.info("Autentificated user="+mscUserCode);
     }
     else if (is.available() > 0)
     {
@@ -198,8 +207,11 @@ public class DivertManager
     // HGSSI:MSISDN=msisdn,SS=ss,FNUM=address,TIME=10;
     String command = COMMAND_SET + MSISDN_STR + checkAndConvertAddress(msisdn) +
                      ",SS=" + ss + ",FNUM=" + address + ",TIME=10;";
+    logger.info("Sending command: "+command);
     writeTelnetLine(command);
+    logger.info("Command sent");
     String responce = readTelnetString(ESC_PROMPT);
+    logger.info("Got responce: "+responce);
     if (responce == null || responce.length() <= 0 || !responce.startsWith(RESPONCE_OK))
       throw new IOException("Set divert settings failed. Details: "+responce);
   }
@@ -209,8 +221,11 @@ public class DivertManager
     // HGSSE:MSISDN=msisdn,SS=ss,KEEP;
     String command = COMMAND_DEL + MSISDN_STR + checkAndConvertAddress(msisdn) +
                      ",SS=" + ss + ",KEEP;";
+    logger.info("Sending command: "+command);
     writeTelnetLine(command);
+    logger.info("Command sent");
     String responce = readTelnetString(ESC_PROMPT);
+    logger.info("Got responce: "+responce);
     if (responce == null || responce.length() <= 0 || !responce.startsWith(RESPONCE_OK))
       throw new IOException("Del divert settings failed. Details: "+responce);
   }
@@ -221,9 +236,13 @@ public class DivertManager
   private String divertToLocal(String divert)
   {
     if (divert == null || divert.length() <= 0) return Constants.OFF;
-    else if (divert.equalsIgnoreCase(mciSmeAddress)) return Constants.SERVICE;
-    else if (divert.equalsIgnoreCase(voiceMailAddress)) return Constants.VOICEMAIL;
-    return (divert.startsWith("+")) ? divert.substring(1):divert;
+    divert = divert.trim();
+    if (divert.equalsIgnoreCase(mciSmeAddress)) return Constants.SERVICE;
+    if (divert.equalsIgnoreCase(voiceMailAddress)) return Constants.VOICEMAIL;
+    divert = "+"+divert;
+    if (divert.equalsIgnoreCase(mciSmeAddress)) return Constants.SERVICE;
+    if (divert.equalsIgnoreCase(voiceMailAddress)) return Constants.VOICEMAIL;
+    return divert;
   }
   private String localToDivert(String local)  throws IOException
   {
@@ -243,11 +262,13 @@ public class DivertManager
     synchronized(mscSocketLock)
     {
       connect();
-      String msisdn = checkAndConvertAddress(abonent);
-      String command = COMMAND_GET + MSISDN_STR + msisdn + ",SSDA;";
-      writeTelnetLine(command);
+      String command = COMMAND_GET + MSISDN_STR + checkAndConvertAddress(abonent) + ",SSDA;";
 
+      logger.info("Sending command: "+command);
+      writeTelnetLine(command);
+      logger.info("Command sent");
       String responce = readTelnetString(ESC_PROMPT);
+      logger.info("Got responce: "+responce);
       if (responce == null || responce.length() <= 0 || responce.trim().startsWith(RESPONCE_FAIL))
         throw new IOException("Get divert settings failed. Details: "+responce);
 
