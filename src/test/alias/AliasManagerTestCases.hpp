@@ -43,27 +43,27 @@ const char* const TC_ITERATE_ALIASES = "iterateAliases";
 class AliasManagerTestCases : BaseTestCases
 {
 public:
-	AliasManagerTestCases();
+	AliasManagerTestCases(AliasManager* manager);
 
 	virtual ~AliasManagerTestCases() {}
 
 	/**
-	 * –егистраци€ алиаса с преобразованием addr -> alias и alias -> addr.
+	 * –егистраци€ алиаса с преобразованием addr->alias и alias->addr.
 	 */
 	TCResult* addCorrectAliasMatch(TestAliasData* data, int num);
 
 	/**
-	 * –егистраци€ алиаса с преобразованием только alias -> addr.
+	 * –егистраци€ алиаса с преобразованием только alias->addr.
 	 */
 	TCResult* addCorrectAliasNotMatchAddress(TestAliasData* data, int num);
 
 	/**
-	 * –егистраци€ алиаса с преобразованием только addr -> alias.
+	 * –егистраци€ алиаса с преобразованием только addr->alias.
 	 */
 	TCResult* addCorrectAliasNotMatchAlias(TestAliasData* data, int num);
 
 	/**
-	 * –егистраци€ алиаса с переполнением адреса при alias -> addr или алиаса при addr -> alias.
+	 * –егистраци€ алиаса с переполнением адреса при alias->addr или алиаса при addr->alias.
 	 */
 	TCResult* addCorrectAliasException(TestAliasData* data, int num);
 
