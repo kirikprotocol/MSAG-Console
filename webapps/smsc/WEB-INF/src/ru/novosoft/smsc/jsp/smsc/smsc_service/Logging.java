@@ -125,9 +125,11 @@ public class Logging extends PageBean {
       String rootPriority = (String) logCategories.remove("");
       if (rootPriority == null) rootPriority = "NOTSET";
       rootCategory = new LoggerCategoryInfo("", "", rootPriority);
-      for (Iterator i = logCategories.entrySet().iterator(); i.hasNext();) {
-        Map.Entry entry = (Map.Entry) i.next();
-        rootCategory.addChild((String) entry.getKey(), (String) entry.getValue());
+      Collection keys = new SortedList(logCategories.keySet());
+      for (Iterator i = keys.iterator(); i.hasNext();) {
+        String key = (String) i.next();
+        String value = (String)logCategories.get(value);
+        rootCategory.addChild(key, value);
       }
     } catch (AdminException e) {
       rootCategory = new LoggerCategoryInfo("", "", "NOTSET");
