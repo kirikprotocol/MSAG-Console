@@ -15,7 +15,7 @@ public class ApplyCommand implements Command
     public void process(CommandContext ctx)
     {
         try {
-            //ctx.getSmsc().applyProfiles();
+            ctx.getSmsc().applyProfiles();
             ctx.getSmsc().applyAliases();
             ctx.getSmsc().applyRoutes();
             ctx.setMessage("Changes applied succesfully");
