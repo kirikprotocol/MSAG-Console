@@ -30,7 +30,7 @@ public class PerfServerRunner extends Thread {
             is = smscSock.getInputStream();
 //            snapGenerator(os);
           PerfSnap snap = new PerfSnap();
-          while(true) {
+          while(!isStopping) {
               readSnap( is, snap );
               snap.write( os );
               os.flush();

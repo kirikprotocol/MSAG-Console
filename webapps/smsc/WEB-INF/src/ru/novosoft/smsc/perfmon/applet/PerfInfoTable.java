@@ -70,8 +70,8 @@ public class PerfInfoTable extends Canvas {
                         new Color( bgColor.getRed()+16, bgColor.getGreen()+16, bgColor.getBlue()+16 ),
                         new Color( bgColor.getRed(), bgColor.getGreen()+32, bgColor.getBlue() ),
                         new Color( bgColor.getRed()+32, bgColor.getGreen(), bgColor.getBlue() ),
-                        new Color( bgColor.getRed(), bgColor.getGreen(), bgColor.getBlue()+32 ),
-                        new Color( bgColor.getRed()+32, bgColor.getGreen()+32, bgColor.getBlue() )
+                        new Color( bgColor.getRed()+32, bgColor.getGreen()+32, bgColor.getBlue()),
+                        new Color( bgColor.getRed(), bgColor.getGreen(), bgColor.getBlue()+32 )
                       };
 
 

@@ -72,12 +72,17 @@ public class PerfServer extends Thread {
             Socket sock = null;
             try {
                 sock = ssock.accept();
-                logger.debug("Client "+sock.getInetAddress().getHostAddress()+" connected");
-                PerfServerRunner sr = new PerfServerRunner( sock, this );
-                addRunner(sr);
-                sr.start();
+                try {
+                   logger.debug("Client "+sock.getInetAddress().getHostAddress()+" connected");
+                   PerfServerRunner sr = new PerfServerRunner( sock, this );
+                   addRunner(sr);
+                   sr.start();
+                } catch (IOException ee) {
+                    logger.warn("User connection error", ee );
+                }
             } catch (IOException ex) {
-                logger.warn("Error accepting connection", ex );
+                logger.error("Error accepting connection", ex );
+                break;
             }
         }
         synchronized( shutSemaphore ) {

@@ -114,7 +114,7 @@ public class PerformanceGraph extends Canvas {
       } else {
         g.setColor( colorGrid );
       }
-      g.drawLine( pad, yy, size.width-2*pad, yy );
+      g.drawLine( pad, yy, size.width-pad, yy );
     }
 
 
@@ -148,7 +148,6 @@ public class PerformanceGraph extends Canvas {
     if( snaps.size() > 1 ) {
         int maxheight = gmax*5;
         int viewableGraph = graphWidth/pixPerSecond;
-        System.out.println("szw="+size.width+" grw="+graphWidth+" pix="+pixPerSecond+" vig="+viewableGraph);
         int polyx[] = new int[viewableGraph];
         int polySucc[] = new int[viewableGraph];
         int polyErr[] = new int[viewableGraph];
@@ -192,7 +191,7 @@ public class PerformanceGraph extends Canvas {
           // redraw bottom grid line over graph to hide zero graphs
           int yy = size.height-bottomSpace;
           g.setColor( colorGridLight );
-          g.drawLine( pad, yy, size.width-2*pad, yy );
+          g.drawLine( pad, yy, size.width-pad, yy );
         }
     }
 

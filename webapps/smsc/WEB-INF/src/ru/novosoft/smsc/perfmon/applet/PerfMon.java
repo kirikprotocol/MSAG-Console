@@ -162,7 +162,7 @@ public class PerfMon extends Applet implements Runnable
           while (!isStopping) {
               snap.read( is );
               snap.calc();
-              System.out.println("Got snap: ls="+snap.last[PerfSnap.IDX_SUCCESS]+" le="+snap.last[PerfSnap.IDX_ERROR]+" upt="+snap.uptime+" tm="+(new Date(snap.sctime*1000)).toString());
+//              System.out.println("Got snap: ls="+snap.last[PerfSnap.IDX_SUCCESS]+" le="+snap.last[PerfSnap.IDX_ERROR]+" upt="+snap.uptime+" tm="+(new Date(snap.sctime*1000)).toString());
               uptimeLabel.setText( snap.strUptime );
               sctimeLabel.setText( snap.strSctime );
               perfbar.setSnap(snap);
