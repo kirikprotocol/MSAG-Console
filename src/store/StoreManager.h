@@ -121,6 +121,31 @@ namespace smsc { namespace store
                 throw(StorageException);
         };
 
+        class ConcatInitIterator : public ConcatDataIterator
+        {
+        private:
+            
+            Connection*                 connection;
+            ConcatDataStatement*        concatStmt;
+            StorageConnectionPool*      pool;
+        
+        public:
+
+            ConcatInitIterator(StorageConnectionPool* _pool)
+                throw(StorageException);
+            virtual ~ConcatInitIterator();
+
+            virtual bool getNext()
+                throw(StorageException);
+            
+            virtual const char* getDestination() {
+                return (concatStmt) ? concatStmt->getDestination():0;
+            }
+            virtual uint8_t getMessageReference() {
+                return (concatStmt) ? concatStmt->getMessageReference():0;
+            }
+        };
+
         SMSId doCreateSms(StorageConnection* connection,
             SMS& sms, SMSId id, const CreateMode flag)
                 throw(StorageException, DuplicateMessageException);
@@ -151,6 +176,10 @@ namespace smsc { namespace store
         void doChangeSmsStateToDeleted(StorageConnection* connection,
             SMSId id)
                 throw(StorageException, NoSuchMessageException);
+        void doChangeSmsConcatSequenceNumber(StorageConnection* connection,
+                                             SMSId id, int8_t inc) 
+                throw(StorageException, NoSuchMessageException); 
+
 
     public:
 
@@ -257,6 +286,21 @@ namespace smsc { namespace store
          */
         virtual void changeSmsStateToDeleted(SMSId id)
                 throw(StorageException, NoSuchMessageException);
+        
+        /**
+         * Реализация метода MessageStore
+         * @see MessageStore
+         */
+        virtual void changeSmsConcatSequenceNumber(SMSId id, int8_t inc=1) 
+                throw(StorageException, NoSuchMessageException); 
+
+        /**
+         * Реализация метода MessageStore
+         * @see MessageStore
+         */
+        virtual ConcatDataIterator* getConcatInitInfo()
+                throw(StorageException);
+        
         /**
          * Реализация метода MessageStore
          * @see MessageStore
@@ -603,6 +647,9 @@ namespace smsc { namespace store
                 throw(StorageException, NoSuchMessageException);
         virtual void changeSmsStateToDeleted(SMSId id)
                 throw(StorageException, NoSuchMessageException);
+        virtual void changeSmsConcatSequenceNumber(SMSId id, int8_t inc=1) 
+                throw(StorageException, NoSuchMessageException); 
+
     };
 
 }}

@@ -524,7 +524,7 @@ StorageConnection::StorageConnection(const char* instance,
         replaceWTStmt(0L), replaceVWTStmt(0L), 
         toEnrouteStmt(0L), toDeliveredStmt(0L), toUndeliverableStmt(0L),
         toExpiredStmt(0L), toDeletedStmt(0L), setBodyStmt(0L), getBodyStmt(0L),
-        destroyBodyStmt(0L)
+        destroyBodyStmt(0L), seqNumStmt(0L)
 {}
 
 void StorageConnection::connect()
@@ -558,6 +558,7 @@ void StorageConnection::connect()
         setBodyStmt = new SetBodyStatement(this);
         getBodyStmt = new GetBodyStatement(this);
         destroyBodyStmt = new DestroyBodyStatement(this);
+        seqNumStmt = new UpdateSeqNumStatement(this);
     }
     catch (StorageException& exc) 
     {
@@ -686,6 +687,13 @@ DestroyBodyStatement* StorageConnection::getDestroyBodyStatement()
     connect();
     return destroyBodyStmt;
 }
+UpdateSeqNumStatement* StorageConnection::getUpdateSeqNumStatement()
+    throw(ConnectionFailedException)
+{
+    connect();
+    return seqNumStmt;
+}
+
 
 }}
 

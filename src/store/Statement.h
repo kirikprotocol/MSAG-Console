@@ -119,7 +119,7 @@ namespace smsc { namespace store
         
         char        bNeedArchivate;
         
-        sb2         indBody, indNextTime, indSvcType;
+        sb2         indBody, indNextTime, indSvcType, indMsgRef;
         sb2         indRouteId, indSrcSmeId, indDstSmeId;
 
         FullAddressValue    oa, da, dda;
@@ -217,7 +217,7 @@ namespace smsc { namespace store
         
         char        bNeedArchivate;
         
-        sb2         indBody, indNextTime, indSvcType;
+        sb2         indBody, indNextTime, indSvcType, indMsgRef;
         sb2         indRouteId, indSrcSmeId, indDstSmeId;
     
     public:
@@ -521,6 +521,52 @@ namespace smsc { namespace store
         };
     };
     
+    class UpdateSeqNumStatement : public IdStatement
+    {
+    static const char* sql;
+    protected:
+
+        int8_t incVal;
+
+    public:
+
+        UpdateSeqNumStatement(Connection* connection, bool assign=true)
+            throw(StorageException);
+        virtual ~UpdateSeqNumStatement() {};
+
+        void bindId(SMSId id)
+            throw(StorageException);
+        void bindInc(int8_t inc)
+            throw(StorageException);
+
+        inline bool wasUpdated() {
+            return (getRowsAffectedCount() ? true:false);
+        };
+    };
+    
+    class ConcatDataStatement : public Statement
+    {
+    static const char* sql;
+    protected:
+        
+        OCIDate             submitTime;
+        FullAddressValue    dstAddr;
+        int8_t              msgRef;
+        
+    public:
+
+        ConcatDataStatement(Connection* connection, bool assign=false)
+            throw(StorageException);
+        ~ConcatDataStatement() {};
+        
+        const char* getDestination() {
+            return dstAddr;
+        }
+        uint8_t getMessageReference() {
+            return msgRef;
+        }
+    };
+
     class ReadyByNextTimeStatement : public IdStatement
     {
     static const char* sql;

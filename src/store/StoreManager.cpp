@@ -347,6 +347,95 @@ SMSId RemoteStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
 #endif
 }
 
+void RemoteStore::doChangeSmsConcatSequenceNumber(
+    StorageConnection* connection, SMSId id, int8_t inc) 
+        throw(StorageException, NoSuchMessageException)
+{
+    __require__(connection);
+
+    UpdateSeqNumStatement* seqNumStmt = 
+        connection->getUpdateSeqNumStatement();
+    seqNumStmt->bindId(id);
+    seqNumStmt->bindInc(inc);
+
+    try
+    {
+        connection->check(seqNumStmt->execute());
+    }
+    catch (StorageException& exc)
+    {
+        connection->rollback();
+        throw exc;
+    }
+
+    if (!seqNumStmt->wasUpdated())
+    {
+        connection->rollback();
+        throw NoSuchMessageException(id);
+    }
+    connection->commit();
+}
+
+void RemoteStore::changeSmsConcatSequenceNumber(SMSId id, int8_t inc) 
+    throw(StorageException, NoSuchMessageException)
+{
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+
+    __require__(pool);
+
+    StorageConnection* connection = 0L;
+    unsigned iteration=1;
+    while (true)
+    {
+        try
+        {
+            connection = (StorageConnection *)pool->getConnection();
+            if (connection) 
+            {
+                doChangeSmsConcatSequenceNumber(connection, id, inc);
+                pool->freeConnection(connection);
+            }
+            break;
+        }
+        catch (NoSuchMessageException& exc)
+        {
+            if (connection) pool->freeConnection(connection);
+            throw;
+        }
+        catch (StorageException& exc)
+        {
+            if (connection) pool->freeConnection(connection);
+            if (iteration++ >= maxTriesCount)
+            {
+                log.warn("Max tries count to change "
+                         "sequence number in concatenneted message "
+                         "#%d exceeded !\n", id); 
+                throw;
+            }
+        }
+    }
+
+#else
+
+    MutexGuard guard(fakeMutex);
+
+    if (!fakeStore.Exist(id))
+        throw NoSuchMessageException(id);
+
+    SMS* sms = fakeStore.Get(id);
+    if (sms)
+    {
+        if (!sms->hasBinProperty(Tag::Tag::SMSC_CONCATINFO))
+            throw NoSuchMessageException(id);
+
+        sms->concatSeqNum += inc;
+    }
+    else throw NoSuchMessageException(id);
+
+#endif
+}
+
+
 void RemoteStore::doRetrieveSms(StorageConnection* connection,
     SMSId id, SMS &sms)
         throw(StorageException, NoSuchMessageException)
@@ -1347,6 +1436,65 @@ IdIterator* RemoteStore::getReadyForCancel(const Address& oa,
     return (new CancelIdIterator(pool, oa, da, svcType));
 }
 
+RemoteStore::ConcatInitIterator::ConcatInitIterator(StorageConnectionPool* _pool)
+    throw(StorageException) 
+        : ConcatDataIterator(), pool(_pool), connection(0)
+{
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+
+    connection = pool->getConnection();
+    if (!connection) return;
+    try
+    {
+        if (connection && !connection->isAvailable()) 
+            connection->connect();
+        
+        concatStmt = new ConcatDataStatement(connection, false);
+        if (concatStmt)
+            connection->check(concatStmt->execute(OCI_DEFAULT, 0, 0));
+    }
+    catch (...)
+    {
+        pool->freeConnection(connection);
+        throw;
+    }
+#endif
+}
+RemoteStore::ConcatInitIterator::~ConcatInitIterator()
+{
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+    
+    if (concatStmt) delete concatStmt;
+    if (pool && connection) pool->freeConnection(connection);
+
+#endif
+}
+bool RemoteStore::ConcatInitIterator::getNext()
+    throw(StorageException)
+{
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+
+    if (concatStmt && connection && connection->isAvailable())
+    {
+        sword status = concatStmt->fetch();
+        if (status != OCI_NO_DATA)
+        {
+            connection->check(status);
+            return true;
+        }
+    }
+    return false;
+#else
+    return false;
+#endif
+}
+
+ConcatDataIterator* RemoteStore::getConcatInitInfo()
+    throw(StorageException)
+{
+    return (new ConcatInitIterator(pool));
+}
+
 /* ------------------------------ Remote Store ------------------------------ */
 
 /* ------------------------------- SMS Cache -------------------------------- */
@@ -1471,6 +1619,32 @@ void CachedStore::retriveSms(SMSId id, SMS &sms)
     RemoteStore::retriveSms(id, sms);
     __trace2__("smsId = %lld retrived DB.", id);
     
+    if (sms.state == ENROUTE)
+    {
+        sm = new SMS(sms);
+        MutexGuard cacheGuard(cacheMutex);
+        cache->putSms(id, sm);
+    }
+}
+
+void CachedStore::changeSmsConcatSequenceNumber(SMSId id, int8_t inc) 
+    throw(StorageException, NoSuchMessageException)
+{
+    __trace2__("Changing seqNum for smsId = %lld.", id);
+    RemoteStore::changeSmsConcatSequenceNumber(id, inc);
+    
+    SMS* sm = 0;
+    {
+        MutexGuard cacheGuard(cacheMutex);
+        sm = cache->getSms(id);
+        if (sm)
+        {
+            sm->concatSeqNum += inc;
+            return;
+        }
+    }
+    
+    SMS sms; RemoteStore::retriveSms(id, sms);
     if (sms.state == ENROUTE)
     {
         sm = new SMS(sms);

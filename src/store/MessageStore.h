@@ -58,6 +58,72 @@ namespace smsc { namespace store
             throw(StorageException) = 0;
     };
 
+    class ConcatDataIterator
+    {
+    protected:
+
+        /**
+         * Защищённый конструктор.
+         * Экземпляр интерфейса ConcatDataIterator может быть создан
+         * только через производный класс, например ConcatInitIterator
+         *
+         * @see StoreManager::ConcatInitIterator
+         */
+        ConcatDataIterator() {};
+        
+        /**
+         * Деструктор, уничтожает курсор и освобождает соединение
+         * с хранилищем. Должен быть реализован производным классом,
+         * например ConcatInitIterator.
+         *
+         * @see StoreManager::ConcatInitIterator
+         */
+        virtual ~ConcatDataIterator() {};
+        
+        /**
+         * Используется для получения следующего набора сервисных данных.
+         * Конкретные данные извлекаются методами:
+         *      getDestination() и getMessageReference().
+         *
+         * Реализуется производным классом, например ConcatInitIterator.
+         * 
+         * @return признак, был ли извлечены данные или это последние
+         * @exception StorageException
+         *                   возникает при ошибке хранилища физической природы,
+         *                   т.н когда хранилище недоступно.
+         *                   
+         * @see StoreManager::ConcatInitIterator
+         */
+        virtual bool getNext()
+            throw(StorageException) = 0;
+        
+        /**
+         * Возвращает строку-адрес для текущего длинного сообщения.
+         * Реализуется производным классом, например ConcatInitIterator.
+         * 
+         * @return строка-адрес для текущего длинного сообщения.
+         * @exception StorageException
+         *                   возникает при ошибке хранилища физической природы,
+         *                   т.н когда хранилище недоступно.
+         *                   
+         * @see StoreManager::ConcatInitIterator
+         */
+        virtual const char* getDestination()  = 0;
+        
+        /**
+         * Возвращает номер-ссылку для текущего длинного сообщения.
+         * Реализуется производным классом, например ConcatInitIterator.
+         * 
+         * @return номер-ссылку для текущего длинного сообщения.
+         * @exception StorageException
+         *                   возникает при ошибке хранилища физической природы,
+         *                   т.н когда хранилище недоступно.
+         *                   
+         * @see StoreManager::ConcatInitIterator
+         */
+        virtual uint8_t getMessageReference() = 0;
+    };
+
     /**
      * Допустимые режимы создания SMS в контексте вызова createSMS()
      *
@@ -258,6 +324,38 @@ namespace smsc { namespace store
          */
         virtual void changeSmsStateToDeleted(SMSId id) 
                 throw(StorageException, NoSuchMessageException) = 0; 
+        
+        /**
+         * Изменяет значение счётчика доставленных частей конкатенированного
+         * сообщения в хранилище сообщений. 
+         * 
+         * @param id     идентификационный номер сообщения в хранилище
+         * @param inc    на сколько нужно увеличить счётчик (default = 1)
+         * @exception StorageException
+         *                   возникает при ошибке хранилища физической природы,
+         *                   т.н когда хранилище недоступно.
+         * @exception NoSuchMessageException
+         *                   возникает если сообщение с указанным id
+         *                   не существует в хранилище 
+         *                   или сообщение не является конкатенированным. 
+         * @see SMS
+         */
+        virtual void changeSmsConcatSequenceNumber(SMSId id, int8_t inc=1) 
+                throw(StorageException, NoSuchMessageException) = 0; 
+
+        /**
+         * Возвращает итератор над набором сервисных данных по конкатенации.
+         * Используется для инициализации механизмов обработки
+         * конкатенированных сообщений.
+         *         
+         * @return итератор над набором сервисных данных по конкатенации.
+         * @exception StorageException
+         *                   возникает при ошибке хранилища физической природы,
+         *                   т.н когда хранилище недоступно.
+         * @see ConcatDataIterator
+         */
+        virtual ConcatDataIterator* getConcatInitInfo()
+                throw(StorageException) = 0;
         
         /**
          * Удаляет сообщение SMS из хранилища сообщений.

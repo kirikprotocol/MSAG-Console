@@ -303,7 +303,8 @@ const char* OverwriteStatement::sql = (const char*)
  NEXT_TRY_TIME=:NEXT_TRY_TIME, SVC_TYPE=:SVC,\
  DR=:DR, BR=:BR, ARC=:ARC, BODY=:BODY, BODY_LEN=:BODY_LEN,\
  ROUTE_ID=:ROUTE_ID, SVC_ID=:SVC_ID, PRTY=:PRTY,\
- SRC_SME_ID=:SRC_SME_ID, DST_SME_ID=:DST_SME_ID, TXT_LENGTH=:TXT_LENGTH\
+ SRC_SME_ID=:SRC_SME_ID, DST_SME_ID=:DST_SME_ID,\
+ TXT_LENGTH=:TXT_LENGTH, MSG_REF=:MSG_REF, SEQ_NUM=:SEQ_NUM\
  WHERE ID=:OLD_ID";
 OverwriteStatement::OverwriteStatement(Connection* connection, bool assign)
     throw(StorageException)
@@ -394,6 +395,13 @@ void OverwriteStatement::bindSms(SMS& sms)
     bodyTextLen = sms.messageBody.getShortMessageLength();
     bind(i++, SQLT_UIN, (dvoid *)&(bodyTextLen),
          (sb4) sizeof(bodyTextLen));
+    
+    indMsgRef = (sms.hasBinProperty(Tag::SMSC_CONCATINFO)) ? 
+                OCI_IND_NOTNULL:OCI_IND_NULL;
+    bind(i++, SQLT_UIN, (dvoid *)&(sms.concatMsgRef),
+         (sb4) sizeof(sms.concatMsgRef), &indMsgRef);
+    bind(i++, SQLT_UIN, (dvoid *)&(sms.concatSeqNum),
+         (sb4) sizeof(sms.concatSeqNum));
 }
 
 /* --------------------------- StoreStatement ----------------------- */
@@ -402,12 +410,13 @@ const char* StoreStatement::sql = (const char*)
  SRC_MSC, SRC_IMSI, SRC_SME_N,\
  VALID_TIME, SUBMIT_TIME, ATTEMPTS, LAST_RESULT,\
  LAST_TRY_TIME, NEXT_TRY_TIME, SVC_TYPE, DR, BR, ARC, BODY, BODY_LEN,\
- ROUTE_ID, SVC_ID, PRTY, SRC_SME_ID, DST_SME_ID, TXT_LENGTH)\
+ ROUTE_ID, SVC_ID, PRTY, SRC_SME_ID, DST_SME_ID, TXT_LENGTH, MSG_REF, SEQ_NUM)\
  VALUES (:ID, :ST, :MR, :OA, :DA, :DDA,\
  :SRC_MSC, :SRC_IMSI, :SRC_SME_N,\
  :VALID_TIME, :SUBMIT_TIME, 0, 0, NULL, :NEXT_TRY_TIME,\
  :SVC, :DR, :BR, :ARC, :BODY, :BODY_LEN,\
- :ROUTE_ID, :SVC_ID, :PRTY, :SRC_SME_ID, :DST_SME_ID, :TXT_LENGTH)";
+ :ROUTE_ID, :SVC_ID, :PRTY, :SRC_SME_ID, :DST_SME_ID,\
+ :TXT_LENGTH, :MSG_REF, :SEQ_NUM)";
 StoreStatement::StoreStatement(Connection* connection, bool assign)
     throw(StorageException)
         : IdStatement(connection, StoreStatement::sql, assign)
@@ -502,6 +511,13 @@ void StoreStatement::bindSms(SMS& sms)
     bodyTextLen = sms.messageBody.getShortMessageLength();
     bind(i++, SQLT_UIN, (dvoid *)&(bodyTextLen),
          (sb4) sizeof(bodyTextLen));
+
+    indMsgRef = (sms.hasBinProperty(Tag::SMSC_CONCATINFO)) ? 
+                OCI_IND_NOTNULL:OCI_IND_NULL;
+    bind(i++, SQLT_UIN, (dvoid *)&(sms.concatMsgRef),
+         (sb4) sizeof(sms.concatMsgRef), &indMsgRef);
+    bind(i++, SQLT_UIN, (dvoid *)&(sms.concatSeqNum),
+         (sb4) sizeof(sms.concatSeqNum));
 }
 
 /* --------------------------- RetrieveStatement ----------------------- */
@@ -511,7 +527,7 @@ const char* RetrieveStatement::sql = (const char*)
  VALID_TIME, SUBMIT_TIME,\
  ATTEMPTS, LAST_RESULT, LAST_TRY_TIME, NEXT_TRY_TIME,\
  SVC_TYPE, DR, BR, ARC, BODY, BODY_LEN,\
- ROUTE_ID, SVC_ID, PRTY, SRC_SME_ID, DST_SME_ID\
+ ROUTE_ID, SVC_ID, PRTY, SRC_SME_ID, DST_SME_ID, MSG_REF, SEQ_NUM\
  FROM SMS_MSG WHERE ID=:ID";
 RetrieveStatement::RetrieveStatement(Connection* connection, bool assign)
     throw(StorageException)
@@ -597,6 +613,11 @@ void RetrieveStatement::defineSms(SMS& sms)
            (sb4) sizeof(sms.srcSmeId), &indSrcSmeId);
     define(i++, SQLT_STR, (dvoid *) (sms.dstSmeId),
            (sb4) sizeof(sms.dstSmeId), &indDstSmeId);
+    
+    define(i++, SQLT_UIN, (dvoid *) &(sms.concatMsgRef), 
+           (sb4) sizeof(sms.concatMsgRef));
+    define(i++, SQLT_UIN, (dvoid *) &(sms.concatSeqNum), 
+           (sb4) sizeof(sms.concatSeqNum));
 }
 
 bool RetrieveStatement::getSms(SMS& sms)
@@ -1067,6 +1088,49 @@ void ToDeletedStatement::bindId(SMSId id)
     bind(1, SQLT_ODT, (dvoid *) &(currTime), (sb4) sizeof(currTime));
 }
     
+const char* UpdateSeqNumStatement::sql = (const char*)
+"UPDATE SMS_MSG SET SEQ_NUM=SEG_NUM+:INC,\
+ WHERE ID=:ID AND ST=:ENROUTE AND MSG_REF IS NOT NULL";
+UpdateSeqNumStatement::UpdateSeqNumStatement(Connection* connection, bool assign)
+    throw(StorageException)
+        : IdStatement(connection, UpdateSeqNumStatement::sql, assign)
+{
+    __trace2__("%p : UpdateSeqNumStatement creating ...", stmt);
+
+    bind((CONST text *)"ENROUTE", (sb4) 7*sizeof(char),
+         SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
+         (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
+}
+void UpdateSeqNumStatement::bindId(SMSId id)
+    throw(StorageException)
+{
+    setSMSId(id);
+    bind((CONST text *)"ID", (sb4) 2*sizeof(char), 
+         SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
+}
+void UpdateSeqNumStatement::bindInc(int8_t inc)
+    throw(StorageException)
+{
+    incVal = inc;
+    bind((CONST text *)"INC", (sb4) 3*sizeof(char), 
+         SQLT_UIN, (dvoid *)&(incVal), sizeof(incVal));
+}
+
+const char* ConcatDataStatement::sql = (const char*)
+"SELECT DDA, MSG_REF, MAX(SUBMIT_TIME) FROM SMS_MSG\
+ WHERE MSG_REF IS NOT NULL GROUP BY DDA";
+ConcatDataStatement::ConcatDataStatement(Connection* connection, bool assign)
+    throw(StorageException)
+        : Statement(connection, ConcatDataStatement::sql, assign)
+{
+    __trace2__("%p : ConcatDataStatement creating ...", stmt);
+    
+    dstAddr[0] = '\0'; msgRef = 0;
+    define(1, SQLT_STR, (dvoid *) (dstAddr), (sb4) sizeof(dstAddr));
+    define(2, SQLT_UIN, (dvoid *) &(msgRef), (sb4) sizeof(msgRef));
+    define(3, SQLT_ODT, (dvoid *) &(submitTime), (sb4) sizeof(submitTime));
+}
+
 /* --------------------- Sheduler's statements -------------------- */
 
 const char* ReadyByNextTimeStatement::sql = (const char*)

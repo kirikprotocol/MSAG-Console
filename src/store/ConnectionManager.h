@@ -394,6 +394,7 @@ namespace smsc { namespace store
         SetBodyStatement*           setBodyStmt;
         GetBodyStatement*           getBodyStmt;
         DestroyBodyStatement*       destroyBodyStmt;
+        UpdateSeqNumStatement*      seqNumStmt;
         
     public:
 
@@ -596,6 +597,15 @@ namespace smsc { namespace store
          *                   базой данных
          */
         DestroyBodyStatement* getDestroyBodyStatement()
+            throw(ConnectionFailedException);
+
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
+        UpdateSeqNumStatement* getUpdateSeqNumStatement()
             throw(ConnectionFailedException);
 
     };
