@@ -356,7 +356,7 @@ public:
     }
     if ( dialogId_pool.size() == 0 ) throw runtime_error("MAP:: POOL is empty");
     ET96MAP_DIALOGUE_ID_T dialogid_map = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
-    dialogId_pool.push_back(did);
+    if ( did < MAX_DIALOGID_POOLED ) dialogId_pool.push_back(did);
     dlg->dialogid_map = dialogid_map;
     dlg->ssn = ssn;
     dialogId_pool.pop_front();
