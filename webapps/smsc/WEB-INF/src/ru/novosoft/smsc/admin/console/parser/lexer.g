@@ -57,6 +57,7 @@ tokens {
   OPT_NLIST	= "numlist"	;
   OPT_NELEM	= "numelem"	;
   OPT_OWNER	= "owner"	;
+  OPT_LOCALE	= "locale"	;
 }
 
 WS    	: 	( STR_WS

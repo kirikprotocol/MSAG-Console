@@ -420,6 +420,9 @@ addprofile returns [ProfileAddCommand cmd] {
 	:	(mask:STR  { cmd.setMask(mask.getText());    })
 		(OPT_REPORT (VAL_FULL { cmd.setFullReport(); }
 			   | VAL_NONE { cmd.setNoneReport(); } ))
+		(OPT_LOCALE {
+		    cmd.setLocale(getnameid("Locale name"));
+		})
 		(OPT_ENCODE (VAL_DEF  { cmd.setGsm7Encoding(); }
 			   | VAL_UCS2 { cmd.setUcs2Encoding(); } ))?
 	;
@@ -434,6 +437,9 @@ altprofile returns [ProfileAlterCommand cmd] {
 	:	(addr:STR  { cmd.setAddress(addr.getText()); })
 		(OPT_REPORT (VAL_FULL { cmd.setFullReport(); }
 			   | VAL_NONE { cmd.setNoneReport(); } ))?
+		(OPT_LOCALE {
+		    cmd.setLocale(getnameid("Locale name"));
+		})?
 		(OPT_ENCODE (VAL_DEF  { cmd.setGsm7Encoding(); }
 			   | VAL_UCS2 { cmd.setUcs2Encoding(); } ))?
 	;

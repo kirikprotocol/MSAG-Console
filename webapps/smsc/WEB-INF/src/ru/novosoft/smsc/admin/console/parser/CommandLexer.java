@@ -77,6 +77,7 @@ public CommandLexer(LexerSharedInputState state) {
 	literals.put(new ANTLRHashString("src", this), new Integer(29));
 	literals.put(new ANTLRHashString("profile", this), new Integer(13));
 	literals.put(new ANTLRHashString("delete", this), new Integer(6));
+	literals.put(new ANTLRHashString("locale", this), new Integer(45));
 	literals.put(new ANTLRHashString("owner", this), new Integer(44));
 	literals.put(new ANTLRHashString("encoding", this), new Integer(39));
 	literals.put(new ANTLRHashString("deny", this), new Integer(26));

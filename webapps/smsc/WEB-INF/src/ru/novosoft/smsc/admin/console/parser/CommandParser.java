@@ -582,6 +582,12 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		}
 		{
+		match(OPT_LOCALE);
+		
+				    cmd.setLocale(getnameid("Locale name"));
+				
+		}
+		{
 		switch ( LA(1)) {
 		case OPT_ENCODE:
 		{
@@ -1285,6 +1291,28 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			}
 			}
+			break;
+		}
+		case EOF:
+		case OPT_ENCODE:
+		case OPT_LOCALE:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_LOCALE:
+		{
+			match(OPT_LOCALE);
+			
+					    cmd.setLocale(getnameid("Locale name"));
+					
 			break;
 		}
 		case EOF:
@@ -2130,6 +2158,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"numlist\"",
 		"\"numelem\"",
 		"\"owner\"",
+		"\"locale\"",
 		"WS",
 		"more input",
 		"quoted string",

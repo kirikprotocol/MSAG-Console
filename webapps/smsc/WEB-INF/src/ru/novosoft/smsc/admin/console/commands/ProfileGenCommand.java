@@ -17,20 +17,22 @@ public abstract class ProfileGenCommand implements Command
     protected boolean isReport = false;
     protected boolean isCodepage = false;
 
+    protected String locale;
+    protected boolean isLocale = false;
+
     public void setNoneReport() {
-        this.report = Profile.REPORT_OPTION_None;
-        isReport = true;
+        this.report = Profile.REPORT_OPTION_None; isReport = true;
     }
     public void setFullReport() {
-        this.report = Profile.REPORT_OPTION_Full;
-        isReport = true;
+        this.report = Profile.REPORT_OPTION_Full; isReport = true;
+    }
+    public void setLocale(String locale) {
+        this.locale = locale; isLocale = true;
     }
     public void setGsm7Encoding() {
-        this.codepage = Profile.CODEPAGE_Default;
-        isCodepage = true;
+        this.codepage = Profile.CODEPAGE_Default; isCodepage = true;
     }
     public void setUcs2Encoding() {
-        this.codepage = Profile.CODEPAGE_UCS2;
-        isCodepage = true;
+        this.codepage = Profile.CODEPAGE_UCS2; isCodepage = true;
     }
 }

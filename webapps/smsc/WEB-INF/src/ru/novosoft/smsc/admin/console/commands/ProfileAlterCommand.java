@@ -20,13 +20,12 @@ public class ProfileAlterCommand extends ProfileGenCommand
         this.address = address;
     }
 
-	 //todo add locale parameter
     public void process(CommandContext ctx)
     {
-        if (!isCodepage && !isReport) {
-            ctx.setMessage("expecting 'encoding' or 'report' option. "+
+        if (!isCodepage && !isReport && !isLocale) {
+            ctx.setMessage("expecting 'encoding', 'report' or 'locale' option. "+
                            "Syntax: alter profile <profile_address> "+
-                           "[report (full|none)] [encoding (ucs2|default)]");
+                           "[report (full|none)] [locale <locale_name>] [encoding (ucs2|default)]");
             ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
             return;
         }
@@ -38,15 +37,20 @@ public class ProfileAlterCommand extends ProfileGenCommand
                 ctx.setMessage(out+" not found");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             } else {
-                String beforeCp = profile.getCodepageString();
-                String beforeRp = profile.getReportOptionsString();
+                /*String beforeCp = profile.getCodepageString();
+                String beforeRp = profile.getReportOptionsString();*/
                 if (isCodepage) {
                     profile.setCodepage(codepage);
-                    System.out.println("profileAlterCmd: Cp set "+codepage);
+                    //System.out.println("profileAlterCmd: Cp set "+codepage);
                 }
                 if (isReport)   {
                     profile.setReportOptions(report);
-                    System.out.println("profileAlterCmd: Rp set "+report);
+                    //System.out.println("profileAlterCmd: Rp set "+report);
+                }
+                if (isLocale) {
+                    if (!ctx.getSmsc().isLocaleRegistered(locale))
+                        throw new Exception("Locale '"+locale+"' is not registered");
+                    profile.setLocale(locale);
                 }
                 switch (ctx.getSmsc().updateProfile(profileMask, profile))
                 {
@@ -67,10 +71,10 @@ public class ProfileAlterCommand extends ProfileGenCommand
                         ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                         break;
                 }
-                String afterCp = profile.getCodepageString();
+                /*String afterCp = profile.getCodepageString();
                 String afterRp = profile.getReportOptionsString();
                 System.out.println("profileAlterCmd Cp: "+beforeCp+" -> "+afterCp+" req: "+codepage);
-                System.out.println("profileAlterCmd Rp: "+beforeRp+" -> "+afterRp+" req: "+report);
+                System.out.println("profileAlterCmd Rp: "+beforeRp+" -> "+afterRp+" req: "+report);*/
             }
         } catch (Exception e) {
             ctx.setMessage("Couldn't alter "+out+". Cause: "+e.getMessage());
