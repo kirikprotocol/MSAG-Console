@@ -11,6 +11,7 @@ namespace test {
 namespace smeman {
 
 using std::vector;
+using std::ostream;
 using log4cpp::Category;
 using smsc::test::util::TCResult;
 using smsc::test::util::BaseTestCases;
@@ -32,6 +33,8 @@ const char* const TC_GET_EXISTENT_SME = "getExistentSme";
 const char* const TC_GET_NON_EXISTENT_SME = "getNonExistentSme";
 const char* const TC_ITERATE_SME = "iterateSme";
 const char* const TC_REGISTER_CORRECT_SME_PROXY = "registerCorrectSmeProxy";
+
+ostream& operator<< (ostream& os, const SmeInfo& sme);
 
 /**
  * Этот класс содержит test cases необходимые для тестирования подсистемы
@@ -119,6 +122,7 @@ private:
 	
 	void setupRandomCorrectSmeInfo(SmeInfo* info);
 	vector<int> compareSmeInfo(const SmeInfo& info1, const SmeInfo& info2);
+	void debugSme(SmeInfo& sme);
 };
 
 }

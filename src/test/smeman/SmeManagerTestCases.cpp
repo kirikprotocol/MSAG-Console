@@ -3,6 +3,7 @@
 #include "test/core/CoreTestManager.hpp"
 #include "smeman/smetypes.h"
 #include <map>
+#include <sstream>
 
 namespace smsc {
 namespace test {
@@ -14,6 +15,16 @@ using namespace smsc::test::util;
 using smsc::util::Logger;
 using test::core::CoreTestManager;
 
+ostream& operator<< (ostream& os, const SmeInfo& sme)
+{
+	os << "systemId = " << sme.systemId << "(" << sme.systemId.length() << ")";
+	os << ", disabled = " << (sme.disabled ? "true" : "false");
+	os << ", interfaceVersion = " << sme.interfaceVersion;
+	os << ", systemType = " << sme.systemType;
+	os << ", hostname = " << sme.hostname;
+	os << ", port = " << sme.port;
+}
+
 SmeManagerTestCases::SmeManagerTestCases()
 	: smeMan(CoreTestManager::getSmeManager()) {}
 
@@ -21,6 +32,13 @@ Category& SmeManagerTestCases::getLog()
 {
 	static Category& log = Logger::getCategory("SmeManagerTestCases");
 	return log;
+}
+
+void SmeManagerTestCases::debugSme(SmeInfo& sme)
+{
+	ostringstream os;
+	os << sme << endl;
+	getLog().debug("[%d]\t%s", thr_self(), os.str().c_str());
 }
 
 void SmeManagerTestCases::setupRandomCorrectSmeInfo(SmeInfo* info)
@@ -219,6 +237,7 @@ TCResult* SmeManagerTestCases::deleteExistentSme(const SmeSystemId& systemId)
 	TCResult* res = new TCResult(TC_DELETE_EXISTENT_SME);
 	try
 	{
+getLog().debug("deleteExistentSme(): systemId = %s", systemId.c_str());
 		smeMan->deleteSme(systemId);
 	}
 	catch(...)
@@ -406,6 +425,7 @@ TCResult* SmeManagerTestCases::iterateSme(const vector<SmeInfo*> sme)
 			//SmeProxy* proxy = iter->getSmeProxy();
 			//SmeIndex index = iter->getSmeIndex();
 			SmeInfo info = iter->getSmeInfo();
+debugSme(info);
 			bool found = false;
 			for (int i = 0; i < sme.size(); i++)
 			{
