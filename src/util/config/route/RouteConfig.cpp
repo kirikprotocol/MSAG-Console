@@ -174,8 +174,9 @@ throw (SubjectNotFoundException)
   XmlStr srcSmeSystemId(elem.getAttribute(XmlStr("srcSmeId")));
   XmlStr deliveryModeStr(elem.getAttribute(XmlStr("deliveryMode")));
   XmlStr forwardToStr(elem.getAttribute(XmlStr("forwardTo")));
+  XmlStr trafRulesStr(elem.getAttribute(XmlStr("trafficRules")));
 
-  std::auto_ptr<Route> r(new Route(std::string(id), 
+  std::auto_ptr<Route> r(new Route(std::string(id),
                                    priority,
                                    strcmp("true", billing) == 0,
                                    strcmp("true", archiving) == 0,
@@ -187,7 +188,8 @@ throw (SubjectNotFoundException)
                                    serviceId,
                                    std::string(srcSmeSystemId),
                                    strToDeliveryMode(deliveryModeStr),
-                                   std::string(forwardToStr))
+                                   std::string(forwardToStr),
+                                   std::string(trafRulesStr))
                          );
 
   DOMNodeList *srcs = elem.getElementsByTagName(XmlStr("source"));

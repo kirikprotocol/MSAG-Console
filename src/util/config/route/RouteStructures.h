@@ -118,6 +118,7 @@ private:
   std::string srcSmeSystemId;
   const uint8_t deliveryMode;
   std::string forwardTo;
+  std::string trafrules;
 
 
   friend class smsc::util::config::route::RouteConfig;
@@ -130,12 +131,12 @@ public:
     : id(r.id), priority(r.priority), sources(r.sources), destinations(r.destinations),
     billing(r.billing), archiving(r.archiving), enabling(r.enabling),suppressDeliveryReports(r.suppressDeliveryReports), serviceId(r.serviceId),
     active(r.active),hide(r.hide),forceReplyPath(r.forceReplyPath),
-    srcSmeSystemId(r.srcSmeSystemId), deliveryMode(r.deliveryMode), forwardTo(r.forwardTo)
+    srcSmeSystemId(r.srcSmeSystemId), deliveryMode(r.deliveryMode), forwardTo(r.forwardTo),trafrules(r.trafrules)
   {}
-  Route(const std::string & rid, const int prior, bool isBilling, bool isArchiving, bool isEnabling, bool isSuppressDR, bool isActive,bool isHide,bool isForceRP, int _serviceId, const std::string & _srcSmeSystemId, const uint8_t _deliveryMode, const std::string & _forwardTo)
+  Route(const std::string & rid, const int prior, bool isBilling, bool isArchiving, bool isEnabling, bool isSuppressDR, bool isActive,bool isHide,bool isForceRP, int _serviceId, const std::string & _srcSmeSystemId, const uint8_t _deliveryMode, const std::string & _forwardTo,const std::string& _trafrules)
     : id(rid), priority(prior), sources(), destinations(),
     billing(isBilling), archiving(isArchiving), enabling(isEnabling), suppressDeliveryReports(isSuppressDR), active(isActive), hide(isHide),forceReplyPath(isForceRP),serviceId(_serviceId),
-    srcSmeSystemId(_srcSmeSystemId), deliveryMode(_deliveryMode), forwardTo(_forwardTo)
+    srcSmeSystemId(_srcSmeSystemId), deliveryMode(_deliveryMode), forwardTo(_forwardTo),trafrules(_trafrules)
   {}
 
   ~Route()
@@ -160,6 +161,7 @@ public:
   const std::string & getSrcSmeSystemId() const { return srcSmeSystemId; }
   const uint8_t getDeliveryMode() const {return this->deliveryMode;}
   const std::string & getForwardTo() const {return this->forwardTo;}
+  const std::string& getTrafRules()const{return this->trafrules;}
 };
 //typedef std::vector<Route> RouteVector;
 typedef std::vector<Route*> RoutePVector;
