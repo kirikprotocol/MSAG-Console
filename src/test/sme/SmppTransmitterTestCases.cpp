@@ -409,7 +409,30 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 	__decl_tc__;
 	try
 	{
-		if (fixture->pduReg)
+		if (fixture->smeType != SME_TRANSMITTER && fixture->smeType == SME_TRANSCEIVER)
+		{
+			__require__(fixture->smeType == SME_RECEIVER);
+			__tc__("submitSm.receiver");
+			try
+			{
+				if (sync)
+				{
+					fixture->session->getSyncTransmitter()->submit(*pdu);
+				}
+				else
+				{
+					fixture->session->getAsyncTransmitter()->submit(*pdu);
+				}
+				//__tc_fail__(1);
+			}
+			catch (...)
+			{
+				__tc_ok__;
+				return;
+			}
+			throw Exception("Missing exception");
+		}
+		else if (fixture->pduReg)
 		{
 			if (sync)
 			{
