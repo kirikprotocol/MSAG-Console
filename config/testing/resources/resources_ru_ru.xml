@@ -23,7 +23,7 @@
 			<section name="default">
 				<param name="deliveredFormat">*Сообщение на $$string import="dest"$$ доставлено $$date pattern="dd-MM-yy HH:mm:ss" import="date"$$</param>
 				<param name="failedFormat">*Сообщение на $$string import="dest"$$ от $$date pattern="dd-MM-yy HH:mm:ss" import="date"$$ обломалось: $$string import="reason"$$. Пошлите сообщение на $$string import="dest"$$ еще раз и возможно вам повезет на этот раз. С уважением, smsc sme.</param>
-				<param name="notifyFormat"></param>
+				<param name="notifyFormat">$</param>
 			</section>
 		</section>
 		<section name="reason">
