@@ -48,6 +48,12 @@ void bindTc()
 	__reg_tc__("bind.incorrect.invalidAddressRangeLength",
 		"Длина поля address_range в bind pdu больше максимально допустимой");
 	//bind.resp
+	__reg_tc__("bind.resp.receiver",
+		"На bind_receiver реквест SC отправляет bind_receiver_resp респонс");
+	__reg_tc__("bind.resp.transmitter",
+		"На bind_transmitter реквест SC отправляет bind_transmitter_resp респонс");
+	__reg_tc__("bind.resp.transceiver",
+		"На bind_transceiver реквест SC отправляет bind_transceiver_resp респонс");
 	__reg_tc__("bind.resp.checkCommandStatus",
 		"В bind респонсе значение поля command_status равно ESME_ROK");
 	__reg_tc__("bind.resp.checkInterfaceVersion",
@@ -57,10 +63,10 @@ void bindTc()
 void unbindTc()
 {
 	__reg_tc__("unbind", "Завершение соединения с SC и unbind тест кейсы");
+	__reg_tc__("unbind.resp",
+		"На unbind реквест SC отправляет unbind_resp респонс");
 	__reg_tc__("unbind.resp.checkCommandStatus",
 		"В unbind респонсе значение поля command_status равно ESME_ROK");
-	__reg_tc__("unbind.resp.checkSocketClose",
-		"После отправки unbind респонса SC закрывает соединение");
 }
 
 void submitSmTc()
