@@ -225,6 +225,7 @@ private:
 	smsc::store::MessageStore* msgStore;
 	smsc::test::store::SMUtil smUtil;
 
+	void clearSM(smsc::sms::SMS& sms);
 	void setupRandomCorrectSM(smsc::sms::SMS& sms);
 };
 
