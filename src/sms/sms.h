@@ -20,9 +20,11 @@ keyToTag[Tag::x]=tag;
 
 #define SMS_BODY_INT_TAG 0
 #define SMS_BODY_STR_TAG 1
-#define SMS_BODY_UNKNOWN_TAG 2
+#define SMS_BODY_BIN_TAG 2
+#define SMS_BODY_UNKNOWN_TAG 3
 #define ISMSDEFTAG(n,x) SMSDEFTAG(SMS_BODY_INT_TAG,n,x);
 #define SSMSDEFTAG(n,x) SMSDEFTAG(SMS_BODY_STR_TAG,n,x);
+#define BSMSDEFTAG(n,x) SMSDEFTAG(SMS_BODY_BIN_TAG,n,x);
 
 #undef SMS_BODY_TAGS_SET
 #define SMS_BODY_TAGS_SET \
@@ -33,7 +35,7 @@ keyToTag[Tag::x]=tag;
   ISMSDEFTAG(4,SMPP_SM_LENGTH)\
   ISMSDEFTAG(5,SMPP_REGISTRED_DELIVERY)\
   ISMSDEFTAG(6,SMPP_PROTOCOL_ID)\
-  SSMSDEFTAG(7,SMPP_SHORT_MESSAGE)\
+  BSMSDEFTAG(7,SMPP_SHORT_MESSAGE)\
   ISMSDEFTAG(8,SMPP_PRIORITY)\
   ISMSDEFTAG(9,SMPP_USER_MESSAGE_REFERENCE)\
   ISMSDEFTAG(10,SMPP_USSD_SERVICE_OP)\
@@ -46,7 +48,7 @@ keyToTag[Tag::x]=tag;
   ISMSDEFTAG(17,SMPP_LANGUAGE_INDICATOR)\
   ISMSDEFTAG(18,SMPP_SAR_TOTAL_SEGMENTS)\
   ISMSDEFTAG(19,SMPP_NUMBER_OF_MESSAGES)\
-SSMSDEFTAG(20,SMPP_MESSAGE_PAYLOAD)
+  BSMSDEFTAG(20,SMPP_MESSAGE_PAYLOAD)
 
 #define SMS_BODY_TAGS_SET_SIZE 100
 
@@ -539,6 +541,18 @@ namespace smsc {
             throw runtime_error(buff);
           }*/ return 0;
           }
+          string* getStrKeyForBin(int tag)
+          {
+            throw_if(tag >= SMS_BODY_TAGS_SET_SIZE);
+            if ( tagToKey[tag].type == SMS_BODY_BIN_TAG )
+              return &tagToKey[tag].key;
+            else 
+            /*{
+            char buff[128];
+            snprintf(buff,sizeof(buff),"tag %d is not STRING PRPERTY tag",tag);
+            throw runtime_error(buff);
+          }*/ return 0;
+          }
           string* getStrKeyForInt(int tag)
           {
             throw_if(tag >= SMS_BODY_TAGS_SET_SIZE);
@@ -859,7 +873,7 @@ namespace smsc {
             len = ntohl(len);
             pos+=4+2;
             __require__(pos+len<=(unsigned)length);
-            string* key = tag_hash.getStrKeyForString(tag);
+            string* key = tag_hash.getStrKeyForBin(tag);
             __trace2__("Bdec: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key->c_str():"NULL",len,pos,length);
             if ( key )
             {
@@ -980,7 +994,7 @@ namespace smsc {
           int offs;
           offs = temporaryBodyStr.encode(buffer,0,length);
           offs = temporaryBodyInt.encode(buffer,offs,length);
-          offs = temporaryBodyInt.encode(buffer,offs,length);
+          offs = temporaryBodyBin.encode(buffer,offs,length);
         };
         
         int getRequiredBufferSize() const
