@@ -155,7 +155,15 @@ function showhide(elem)
 	<td><input class=check type=checkbox name="MessageStore.Archive.Cleaner.enabled" <%=bean.getBoolParam("MessageStore.Archive.Cleaner.enabled") ? "checked" : ""%> value=true></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
-	<th class=label>interval:</th>
+	<th class=label>age (days):</th>
+	<td><input class=txtW name="MessageStore.Archive.Cleaner.age" value="<%=bean.getIntParam("MessageStore.Archive.Cleaner.age")%>"></td>
+</tr>
+<tr class=row<%=(row++)&1%>>
+	<th class=label>awake (seconds):</th>
+	<td><input class=txtW name="MessageStore.Archive.Cleaner.awake" value="<%=bean.getIntParam("MessageStore.Archive.Cleaner.awake")%>"></td>
+</tr>
+<tr class=row<%=(row++)&1%>>
+	<th class=label>interval (seconds):</th>
 	<td><input class=txtW name="MessageStore.Archive.Cleaner.interval" value="<%=bean.getIntParam("MessageStore.Archive.Cleaner.interval")%>"></td>
 </tr>
 </table>
