@@ -414,6 +414,7 @@ protected:
           session.getAsyncTransmitter()->sendPdu((SmppHeader*)&el);
         }
       }
+      return true;
     }
   };
   class InnerSyncTransmitter:public SmppTransmitter{
