@@ -838,7 +838,7 @@ static void decodeMessage(uint8_t* msg, int msgLen, int encoding, std::string& m
     {
         std::auto_ptr<char> textGuard(new char[msgLen*2+1]);
         char* text = textGuard.get();
-        int textLen = ConvertUCS2ToMultibyte((const short *)msg, msgLen, text, msgLen*2, CONV_ENCODING_LATIN1);
+        int textLen = ConvertUCS2ToMultibyte((const short *)msg, msgLen, text, msgLen*2, CONV_ENCODING_CP1251);
         if (textLen >= 0 && textLen <= msgLen*2) {
             text[textLen] = '\0'; message += text;
         } else {
