@@ -146,7 +146,7 @@ extern void MAPIO_TaskACVersionNotifier();
 void MAPIO_QueryMscVersionInternal()
 {
   USHORT_T result = 
-    Et96MapGetACVersionReq(SSN,GetScAdd(),ET96MAP_SHORT_MSG_MT_RELAY);
+    Et96MapGetACVersionReq(SSN,GetScAddr(),ET96MAP_SHORT_MSG_MT_RELAY);
   if ( result != ET96MAP_E_OK ) {
     throw runtime_error(FormatText("MAP::QueryMcsVersion: error 0x%x when GetAcVersion",result));
   }
