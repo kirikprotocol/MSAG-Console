@@ -41,7 +41,7 @@ using namespace smsc::wsme;
 static bool bWSmeIsStopped   = false;
 static bool bWSmeIsConnected = false;
 
-static log4cpp::Category& log = Logger::getCategory("smsc.wsme.WSme");
+static log4cpp::Category& logger = Logger::getCategory("smsc.wsme.WSme");
 static int messageLifePeriod;
 
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
@@ -218,7 +218,7 @@ protected:
         catch (exception& exc)
         {
             __trace2__("Error handled: %s", exc.what());
-            log.error(exc.what());
+            logger.error(exc.what());
         }
     };
     
@@ -291,7 +291,7 @@ public:
         }
         catch (ConfigException& exc) 
         {
-            log.warn("Maximum thread pool size wasn't specified !");
+            logger.warn("Maximum thread pool size wasn't specified !");
         }
         try
         {
@@ -301,7 +301,7 @@ public:
         }
         catch (ConfigException& exc) 
         {
-            log.warn("Precreated threads count in pool wasn't specified !");
+            logger.warn("Precreated threads count in pool wasn't specified !");
         }
     };
     
@@ -334,7 +334,7 @@ public:
     {
         bWSmeIsConnected = false;
         __trace2__("Transport error !!!\n");
-        log.error("Oops, Error handled! Code is: %d\n", errorCode);
+        logger.error("Oops, Error handled! Code is: %d\n", errorCode);
     }
     
     void setTrans(SmppTransmitter *t)
@@ -471,7 +471,7 @@ int main(void)
             sigaddset(&set,SIGINT);
             sigset(SIGINT , appSignalHandler);
 
-            log.info("Connecting to SMSC ... ");
+            logger.info("Connecting to SMSC ... ");
             try
             {
                 listener.setTrans(session.getSyncTransmitter());
@@ -481,7 +481,7 @@ int main(void)
             catch (SmppConnectException& exc)
             {
                 const char* msg = exc.what(); 
-                log.error("Connect failed.\nCause: %s\n", (msg) ? msg:"unknown");
+                logger.error("Connect failed.\nCause: %s\n", (msg) ? msg:"unknown");
                 bWSmeIsConnected = false;
                 if (exc.getReason() == 
                     SmppConnectException::Reason::bindFailed) throw;
@@ -490,22 +490,22 @@ int main(void)
                 runner.shutdown();
                 continue;
             }
-            log.info("Connected.\n");
+            logger.info("Connected.\n");
             
             while (!bWSmeIsStopped && bWSmeIsConnected) sleep(2);
-            log.info("Disconnecting from SMSC ...\n");
+            logger.info("Disconnecting from SMSC ...\n");
             session.close();
             runner.shutdown();
         };
     }
     catch (ConfigException& exc) 
     {
-        log.error("Configuration invalid. Details: %s\n", exc.what());
+        logger.error("Configuration invalid. Details: %s\n", exc.what());
         resultCode = -2;
     }
     catch (exception& exc) 
     {
-        log.error("Top level exception: %s\n", exc.what());
+        logger.error("Top level exception: %s\n", exc.what());
         resultCode = -1;
     }
     
