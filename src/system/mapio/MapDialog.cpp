@@ -467,7 +467,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
     {
       unsigned char value = 0;
       if ( sms->hasIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES) ){
-        if ( encoding == MA_UCS2_ENCODING ){
+        if ( encoding == MAP_UCS2_ENCODING ){
           value = 0xe0;
           unsigned _val = sms->getIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES);
           value |= _val&0x3;
