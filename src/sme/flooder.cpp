@@ -43,6 +43,7 @@ public:
     }else
     if(pdu->get_commandId()==SmppCommandSet::SUBMIT_SM_RESP)
     {
+      __trace2__("received submit sm resp:%x, seq=%d\n",pdu->get_commandStatus(),pdu->get_sequenceNumber());
       //printf("\nReceived async submit sm resp:%d\n",pdu->get_commandStatus());
       if(pdu->get_commandStatus()==SmppStatusSet::ESME_ROK)
       {
@@ -73,7 +74,7 @@ int main(int argc,char* argv[])
 {
   if(argc!=6 && argc!=7 && argc!=8)
   {
-    printf("usage: %s systemid host[:port] sourceaddr addrlistfile message [num=1 [delay=10]]\n",argv[0]);
+    printf("usage: %s systemid host[:port] sourceaddr addrlistfile message/file [num=1 [delay=10]]\n",argv[0]);
     return -1;
   }
   Logger::Init("log4cpp.flooder");
@@ -92,6 +93,7 @@ int main(int argc,char* argv[])
   cfg.port=port;
   cfg.sid=argv[1];
   cfg.timeOut=10;
+  cfg.smppTimeOut=120;
   cfg.password=cfg.sid;
   MyListener lst;
   Array<string> addrs;
@@ -101,14 +103,34 @@ int main(int argc,char* argv[])
     printf("failed to open addresslistfile\n");
     return -1;
   }
-  char buf[1024];
+  char buf[4096];
   while(fgets(buf,sizeof(buf),f))
   {
     addrs.Push(buf);
     if(addrs[-1][addrs[-1].length()-1]==0x0a)addrs[-1].erase(addrs[-1].length()-1);
   }
+  fclose(f);
 
-  string msg=argv[5];
+  Array<string> msgs;
+
+  f=fopen(argv[5],"rt");
+  if(f)
+  {
+    while(fgets(buf,sizeof(buf),f))
+    {
+      msgs.Push(buf);
+      if(msgs[-1][msgs[-1].length()-1]==0x0a)msgs[-1].erase(msgs[-1].length()-1);
+    }
+    fclose(f);
+  }else
+  {
+    msgs.Push(argv[5]);
+  }
+
+  if(msgs.Count()==0)
+  {
+    msgs.Push("Empty message");
+  }
 
   int n=1;
   if(argc>=7)
@@ -124,6 +146,10 @@ int main(int argc,char* argv[])
   Event slev;
 
   SmppSession ss(cfg,&lst);
+  SmppTransmitter *tr=ss.getSyncTransmitter();
+  SmppTransmitter *atr=ss.getAsyncTransmitter();
+  lst.setTrans(tr);
+  int msgidx=0;
   try{
     ss.connect();
     PduSubmitSm sm;
@@ -145,9 +171,6 @@ int main(int argc,char* argv[])
     s.setIntProperty(Tag::SMPP_MS_VALIDITY,3);
 
     //unsigned char message[]="SME test message";
-    SmppTransmitter *tr=ss.getSyncTransmitter();
-    SmppTransmitter *atr=ss.getAsyncTransmitter();
-    lst.setTrans(tr);
     s.setEServiceType("XXX");
     sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
     int cnt=0;
@@ -162,11 +185,13 @@ int main(int argc,char* argv[])
           //Address dst(addrs[i].c_str());
           s.setDestinationAddress(addrs[i].c_str());
           s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
-          s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,msg.c_str(),msg.length());
-          s.setIntProperty(Tag::SMPP_SM_LENGTH,msg.length());
+          s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,msgs[msgidx].c_str(),msgs[msgidx].length());
+          s.setIntProperty(Tag::SMPP_SM_LENGTH,0);
           fillSmppPduFromSms(&sm,&s);
           atr->submit(sm);
           cnt++;
+          msgidx++;
+          if(msgidx>=msgs.Count())msgidx=0;
         }
       }
       slev.Wait(delay);

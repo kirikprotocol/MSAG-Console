@@ -144,7 +144,7 @@ public:
       }
       if(pdu)
       {
-        __trace2__("SmppReader: received pdu, cmdid=%d, seqnum=%d",pdu->get_commandId(),pdu->get_sequenceNumber());
+        __trace2__("SmppReader: received pdu, cmdid=%x, seqnum=%d",pdu->get_commandId(),pdu->get_sequenceNumber());
         listener->handleEvent(pdu);
         pdu=NULL;
       }else
@@ -316,10 +316,17 @@ public:
 };
 
 struct SmeConfig{
+  SmeConfig()
+  {
+    port=-1;
+    timeOut=10;
+    smppTimeOut=12;
+  }
   std::string host;
   int port;
   std::string sid;
   int timeOut;
+  int smppTimeOut;
   std::string password;
   std::string systemType;
   std::string origAddr;
@@ -376,7 +383,7 @@ protected:
       int seq=pdu->get_sequenceNumber();
       session.registerPdu(seq,&event);
       session.writer.enqueue(pdu);
-      event.Wait(10000);
+      event.Wait(session.cfg.smppTimeOut*1000);
       return session.getPduResponse(seq);
     };
 
@@ -593,6 +600,7 @@ protected:
     IntHash<Lock>::Iterator i=lock.First();
     Lock l;
     int key;
+    __trace2__("registerPdu seq=%d",seq);
     time_t now=time(NULL);
     __require__(!lock.Exist(seq));
     while(i.Next(key,l))
@@ -606,7 +614,7 @@ protected:
         }
       }
     }
-    l.timeOut=time(NULL)+10;
+    l.timeOut=time(NULL)+cfg.smppTimeOut;
     l.event=event;
     l.pdu=NULL;
     l.error=0;
@@ -862,6 +870,7 @@ protected:
       case BIND_TRANCIEVER_RESP:
       case BIND_TRANSMITTER_RESP:
       case BIND_RECIEVER_RESP:
+      case UNBIND_RESP:
       {
         if(lock.Exist(seq))
         {

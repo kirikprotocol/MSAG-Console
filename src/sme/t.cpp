@@ -20,6 +20,8 @@ int temperrProb=0;
 int dontrespProb=0;
 int permErrProb=0;
 
+int respDelay=0;
+
 class MyListener:public SmppPduEventListener{
 public:
   void handleEvent(SmppHeader *pdu)
@@ -81,6 +83,13 @@ public:
       }
       printf("==========\n");
       fflush(stdout);
+      if(respDelay)
+      {
+        int sec=respDelay/1000;
+        int msec=respDelay%1000;
+        timestruc_t tv={sec,msec*1000000};
+        nanosleep(&tv,0);
+      }
       if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
       {
         PduDeliverySmResp resp;
@@ -132,9 +141,11 @@ int main(int argc,char* argv[])
            "\t -t bind type (tx,rx,trx)\n"
            "\t -u send messages in unicode\n"
            "\t -d send messages as DATA_SM\n"
+           "\t -m {D|T} send messages in datagram or transaction mode\n"
            "\t -e N probability of answer with temp error\n"
            "\t -r N probability of answer with perm error\n"
            "\t -n N probability of not answering at all\n"
+           "\t -l N delay between deliver and response\n"
            );
     return -1;
   }
@@ -142,6 +153,8 @@ int main(int argc,char* argv[])
   SmeConfig cfg;
   string host="smsc";
   int port=9001;
+
+  int mode=0;
 
   bool unicode=false;
   bool dataSm=false;
@@ -225,6 +238,15 @@ int main(int argc,char* argv[])
       {
         dontrespProb=atoi(optarg);
       }break;
+      case 'l':
+      {
+        respDelay=atoi(optarg);
+      }break;
+      case 'm':
+      {
+        if(optarg[0]=='D')mode=1;
+        else if(optarg[0]=='T')mode=2;
+      }break;
       default:
       {
         fprintf(stderr,"Unknown option:%s\n",opt);
@@ -269,7 +291,7 @@ int main(int argc,char* argv[])
     s.setValidTime(0);
 
 
-    s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
+    s.setIntProperty(Tag::SMPP_ESM_CLASS,mode);
     s.setDeliveryReport(0);
     s.setArchivationRequested(false);
 
@@ -349,7 +371,14 @@ int main(int argc,char* argv[])
         printf("Accepted:%d bytes\n",len);fflush(stdout);
       }else
       {
-        printf("Wasn't accepted: %08X\n",resp?resp->get_commandStatus():-1);fflush(stdout);
+        if(resp)
+        {
+          printf("Wasn't accepted: %08X\n",resp->get_commandStatus());
+        }else
+        {
+          printf("Timed out\n");
+        }
+        fflush(stdout);
       }
       if(resp)disposePdu(resp);
     }
@@ -365,6 +394,20 @@ int main(int argc,char* argv[])
   catch(...)
   {
     printf("unknown exception\n");
+  }
+  {
+    PduUnbind pdu;
+    pdu.get_header().set_commandId(SmppCommandSet::UNBIND);
+    pdu.get_header().set_sequenceNumber(ss.getNextSeq());
+    SmppHeader *resp=tr->sendPdu((SmppHeader*)&pdu);
+    if(resp)
+    {
+      printf("unbind resp:%x-%x\n",resp->get_commandId(),resp->get_commandStatus());
+      disposePdu(resp);
+    }else
+    {
+      printf("unbind resp timed out\n");
+    }
   }
   ss.close();
   printf("Exiting\n");//////

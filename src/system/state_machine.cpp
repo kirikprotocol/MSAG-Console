@@ -1612,7 +1612,7 @@ StateType StateMachine::submit(Tuple& t)
       Task t;
       smsc->tasks.findAndRemoveTask(dest_proxy->getUniqueId(),dialogId2,&t);
 
-      return DELIVERING_STATE;
+      return ENROUTE_STATE;
     }
   }catch(exception& e)
   {
