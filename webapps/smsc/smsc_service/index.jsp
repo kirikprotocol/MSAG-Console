@@ -254,6 +254,10 @@ function showhide(elem)
 	<th class=label>inactivityTime:</th>
 	<td><input class=txtW name="smpp.inactivityTime" value="<%=bean.getIntParam("smpp.inactivityTime")%>"></td>
 </tr>
+<tr class=row<%=(row++)&1%>>
+	<th class=label>inactivityTimeOut:</th>
+	<td><input class=txtW name="smpp.inactivityTimeOut" value="<%=bean.getIntParam("smpp.inactivityTimeOut")%>"></td>
+</tr>
 </table>
 </dd>
 <%-- ################################## core ############################## --%>
