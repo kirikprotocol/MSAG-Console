@@ -37,13 +37,13 @@
   </target>
 
   <target name="build" depends="clean,compile" description="generate the distribution">
-    <mkdir dir="${BUILD_BIN}/${esme_bin_path}"/> 
+    <mkdir dir="${BUILD_BIN}/${esme_bin_path}"/>
     <echo file="${BUILD_BIN}/${esme_bin_path}/${esme_bin_name}" message="Fake binary file"/>
     <ant antfile="../make_esme.xml" target="build"/>
   </target>
 
   <target name="copy_libs">
-    <copy todir="${exploded}/bin" flatten="yes" preservelastmodified="yes" >
+    <copy todir="${LIBS_OUT_DIR}" flatten="yes" preservelastmodified="yes" >
       <fileset refid="project_libs"/>
       <fileset dir="${libs_path}" includes="log4j.jar classes12.jar"/>
     </copy>
@@ -52,7 +52,9 @@
   <target name="distr" depends="build" description="installs the webapp">
     <ant antfile="../make_esme.xml" target="distr"/>
     <delete file="${exploded}/lib/${esme_name}.jar"/>
-    <antcall target="copy_libs"/>
+    <antcall target="copy_libs">
+      <param name="LIBS_OUT_DIR" value="${exploded}/bin"/>
+    </antcall>
     <copy todir="${exploded}/conf">
       <fileset dir="${TEMPL_DIR}/${esme_name}" includes="*.properties"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
@@ -66,13 +68,11 @@
   <target name="update" depends="build" description="update existing installation">
     <ant antfile="../make_esme.xml" target="update"/>
     <delete file="${DISTR_DIR}/webapps/smsc/WEB-INF/lib/${esme_name}.jar"/>
-    <antcall target="copy_libs"/>
-    <copy todir="${DISTR_DIR}/services/${esme_name}/conf">
-      <fileset dir="${TEMPL_DIR}/${esme_name}" includes="*.properties"/>
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
-    </copy>
+    <antcall target="copy_libs">
+      <param name="LIBS_OUT_DIR" value="${DISTR_DIR}/services/${esme_name}/bin"/>
+    </antcall>
     <copy todir="${DISTR_DIR}/services/${esme_name}/schema">
-      <fileset dir="${TEMPL_DIR}/${esme_name}/schema" includes="**/*"/>
+      <fileset dir="${TEMPL_DIR}/${esme_name}/schema" includes="**/*.dtd"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
   </target>
