@@ -75,6 +75,14 @@ static const int MAP_MAINTENANCE_ACTIVITY = 1124;
 static const int MAP_VERSION_INCOMPATIBILITY = 1125;
 static const int MAP_DIALOGUE_TIMEOUT = 1126;
 
+static const int MAP_REFUSE_REASON_BASE=1128;
+static const int MAP_REFUSE_REASON_NO_REASON=1128;
+static const int MAP_REFUSE_REASON_INV_DEST_REF=1129;
+static const int MAP_REFUSE_REASON_INV_ORIG_REF=1130;
+static const int MAP_REFUSE_REASON_APP_CONTEXT_NOT_SUPP=1131;
+static const int MAP_REFUSE_REASON_NODE_NOT_REACHABLE=1132;
+static const int MAP_REFUSE_REASON_VERS_INCOMPATIBLE=1133;
+
 static const int RESCHEDULEDNOW=1134; // not error, message was rescheduled for immediate delivery
 
 static const int MAP_PROVIDER_ERR_BASE=1135;
