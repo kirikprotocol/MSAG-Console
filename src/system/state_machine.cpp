@@ -1169,7 +1169,7 @@ StateType StateMachine::submit(Tuple& t)
       {
         unsigned len;
         unsigned char* umrList=(unsigned char*)newsms.getBinProperty(Tag::SMSC_UMR_LIST,&len);
-        if(idx<len)
+        if(idx<=len)
         {
           umrList[idx-1]=sms->getMessageReference();
           newsms.setBinProperty(Tag::SMSC_UMR_LIST,(const char*)umrList,len);
