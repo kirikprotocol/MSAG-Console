@@ -1,4 +1,4 @@
-D:\serge\smsc\src\webapp\smsc\smsc_service\index.jsp<%@
+<%@
  include file="/WEB-INF/inc/code_header.jsp"%><%@
  page import="ru.novosoft.smsc.jsp.smsc.smsc_service.Index,
                  ru.novosoft.smsc.admin.service.ServiceInfo,
