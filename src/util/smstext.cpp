@@ -219,7 +219,6 @@ int partitionSms(SMS* sms,int dstdc)
   memcpy(bin+1,offsets,parts*2);
   int blen=parts*2+1;
   sms->setBinProperty(Tag::SMSC_CONCATINFO,bin,blen);
-  sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,dstdc);
   return psMultiple;
 }
 

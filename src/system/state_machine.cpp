@@ -517,6 +517,7 @@ StateType StateMachine::submit(Tuple& t)
   }
 
   profile=smsc->getProfiler()->lookup(dst);
+  sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
   int pres=psSingle;
   if(ri.smeSystemId=="MAP_PROXY")
   {
@@ -724,7 +725,7 @@ StateType StateMachine::submit(Tuple& t)
     //
     if(!sms->hasBinProperty(Tag::SMSC_CONCATINFO))
     {
-      if(profile.codepage==smsc::profiler::ProfileCharsetOptions::Default &&
+      if(sms->getIntProperty(Tag::SMSC_DSTCODEPAGE)==smsc::profiler::ProfileCharsetOptions::Default &&
          sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
       {
         try{
@@ -944,8 +945,8 @@ StateType StateMachine::forward(Tuple& t)
     sms.setDestinationAddress(dst);
     if(!sms.hasBinProperty(Tag::SMSC_CONCATINFO))
     {
-      smsc::profiler::Profile p=smsc->getProfiler()->lookup(dst);
-      if(p.codepage==smsc::profiler::ProfileCharsetOptions::Default &&
+
+      if(sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)==smsc::profiler::ProfileCharsetOptions::Default &&
          sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
       {
         transLiterateSms(&sms);
