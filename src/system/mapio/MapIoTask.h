@@ -328,7 +328,6 @@ class MapDialogContainer{
       return count;
     }
   };
-  static smsc::logger::Logger* loggerStatDlg;
   static MapDialogContainer* container;
   static Mutex sync_object;
   Mutex sync;
@@ -353,6 +352,8 @@ class MapDialogContainer{
     }
   }
 public:
+  static smsc::logger::Logger* loggerStatDlg;
+
   static void destroyInstance(){
     MutexGuard g(sync_object);
     if ( container ) {

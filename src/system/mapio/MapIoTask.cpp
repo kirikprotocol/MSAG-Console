@@ -296,6 +296,7 @@ void MapIoTask::init(unsigned)
 
 MapDialogContainer* MapDialogContainer::container = 0;
 Mutex MapDialogContainer::sync_object;
+smsc::logger::Logger* MapDialogContainer::loggerStatDlg = 0;
 
 int MapIoTask::Execute(){
   try {

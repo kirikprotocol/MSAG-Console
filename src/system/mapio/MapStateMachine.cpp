@@ -2480,7 +2480,6 @@ static USHORT_T Et96MapVxForwardSmMOInd_Impl (
   catch(exception& e)
   {
     __map_warn2__("%s: dialogid 0x%x <exception>:%s",__func__,dialogueId,e.what());
-    dialog->hlrVersion = 0;
     if ( !open_confirmed ){
       ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
       //MapDialogContainer::getInstance()->dropDialog(dialogueId);
