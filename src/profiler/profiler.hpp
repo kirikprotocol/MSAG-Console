@@ -35,19 +35,24 @@ struct Profile{
   int reportoptions;
   std::string locale;
   int hide;
+  bool hideModifiable;
+
   bool operator==(const Profile& src)
   {
     return codepage==src.codepage &&
            reportoptions==src.reportoptions &&
            locale==src.locale &&
-           hide==src.hide;
+           hide==src.hide &&
+           hideModifiable==src.hideModifiable;
   }
+
   void assign(const Profile& src)
   {
     codepage=src.codepage;
     reportoptions=src.reportoptions;
     locale=src.locale;
     hide=src.hide;
+    hideModifiable=src.hideModifiable;
   }
 };
 
