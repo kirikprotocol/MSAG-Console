@@ -101,7 +101,7 @@ static string FormatText(const char* format,...)
   return string(b.get());
 }
 
-#define MAP_ERRORS_BASE Status::MAP_ERR_BASE 
+#define MAP_ERRORS_BASE Status::MAP_ERR_BASE
 #define MAP_FALURE (/*MAP_ERRORS_BASE+34*/8)
 
 struct MAPDIALOG_ERROR : public runtime_error
@@ -426,11 +426,11 @@ static void SendRInfo(MapDialog* dialog)
   bool hiPrior = false;
   if ( !dialog->isQueryAbonentStatus && dialog->sms.get() != 0 && dialog->sms->getIntProperty(Tag::SMPP_PRIORITY) > 0 )
     hiPrior = true;
-  
-  // хак !!!! 
+
+  // хак !!!!
   if ( dialog->version != 2 && dialog->version != 1 ) dialog->version = 2;
   // !!!!!
-  
+
   if ( dialog->version == 2 ) {
     result = Et96MapV2SendRInfoForSmReq(dialog->ssn, dialog_id, 1, &dialog->m_msAddr,
       hiPrior ? ET96MAP_ATTEMPT_DELIVERY : ET96MAP_DO_NOT_ATTEMPT_DELIVERY,
@@ -654,7 +654,6 @@ parse_tvp_scheme2:
         throw runtime_error("bad tp_vp enhanced format");
       }
     }
-    __trace2__("MAP:%s: result time: %s ",__FUNCTION__,ctime(&timeValue));
     __trace2__("MAP:%s: set validity 0x%x (time:0x%x)",__FUNCTION__,timeValue,time(0));
     sms.setValidTime(timeValue);
 none_validity:;
@@ -831,7 +830,7 @@ static void SendSubmitCommand(MapDialog* dialog)
     istringstream(src_addr.value)>>dialog->ussdSequence;
     __trace2__("MAP::%s:USSD request %s",__FUNCTION__,RouteToString(dialog).c_str());
   }
-  
+
   try{
     MscManager::getMscStatus().report(dialog->s_msc.c_str(),true);
   }
@@ -1103,10 +1102,10 @@ static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
   DropMapDialog(dialog);
 }
 
-void MAPIO_PutCommand(const SmscCommand& cmd ){ 
+void MAPIO_PutCommand(const SmscCommand& cmd ){
   if ( MapDialogContainer::getInstance()->getNumberOfDialogs() > MAP_DIALOGS_LIMIT )
     SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_TEMP,Status::THROTTLED));
-  else MAPIO_PutCommand(cmd, 0 ); 
+  else MAPIO_PutCommand(cmd, 0 );
 }
 
 static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
@@ -1939,7 +1938,7 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
     /*if ( provErrCode_p ) {
       throw MAPDIALOG_FATAL_ERROR(FormatText("provErrCode_p == 0x%x",*provErrCode_p),MAP_ERRORS_BASE+*provErrCode_p);
     }*/
-    
+
     if ( provErrCode_p && *provErrCode_p == ET96MAP_NO_RESPONSE_FROM_PEER ) {
       MscManager::getMscStatus().report(dialog->s_msc.c_str(),false);
       throw MAPDIALOG_TEMP_ERROR("MSC",/*BLOCKEDMSC*/Status::MAP_PROVIDER_ERR_BASE+ET96MAP_NO_RESPONSE_FROM_PEER);
@@ -2452,7 +2451,7 @@ static void NotifyHLR(MapDialog* dialog)
   SetVersion(appContext,dialog->hlrVersion);
   unsigned dialog_id = dialog->dialogid_map;
   __trace2__("MAP::%s dialogid:0x%x ssn:%d",__FUNCTION__,dialog_id,dialog->ssn);
-  
+
   ET96MAP_DEL_OUTCOME_T deliveryOutcom;
   if ( dialog->wasDelivered ) {
     deliveryOutcom = ET96MAP_TRANSFER_SUCCESSFUL;

@@ -326,8 +326,8 @@ void DistrListProcess::CheckTimeouts()
   time_t curTime = time(0);
   while ( !task_sheduler.empty() && (task_sheduler.front()->startTime+WAIT_SUBMISSION < curTime) )
   {
-    __trace2__(":DPL: T:%s task 0x%x(T:%s) was time out",
-      ctime(&curTime),task_sheduler.front(),ctime(&task_sheduler.front()->startTime));
+    //__trace2__(":DPL: T:%s task 0x%x(T:%s) was time out",
+    //  ctime(&curTime),task_sheduler.front(),ctime(&task_sheduler.front()->startTime));
     SendSubmitResp(task_sheduler.front()); // удаляет из списка и мапы
   }
 }

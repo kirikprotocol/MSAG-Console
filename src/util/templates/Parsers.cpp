@@ -6,7 +6,7 @@
 
 namespace smsc { namespace util { namespace templates
 {
-    
+
 ParserRegistry::FakeHash ParserRegistry::parsers;
 
 InputParser::InputParser(const char* format)
@@ -33,23 +33,23 @@ void InputParser::parse(std::string& input,
 {
     int bytes = 0;
     const char* str = input.c_str();
-    while (str && isspace(str[bytes])) bytes++; 
+    while (str && isspace(str[bytes])) bytes++;
     if (bytes) input.erase(0, bytes);
-    
+
     for (int i=0; i<entities.Count(); i++)
     {
         FormatEntity* entity = entities[i];
         if (entity && entity->type < ET_TEXT)
         {
             __trace2__("Parsing arg of type: %s", ioEntityTypeStrings[entity->type]);
-            Parser* parser = 
+            Parser* parser =
                 ParserRegistry::getParser(ioEntityTypeStrings[entity->type]);
             if (parser)
             {
                 parser->parse(input, *entity, adapter, ctx);
 
                 bytes = 0; str = input.c_str();
-                while (str && isspace(str[bytes])) bytes++; 
+                while (str && isspace(str[bytes])) bytes++;
                 if (bytes) input.erase(0, bytes);
             }
             else throw ParsingException("Parser for type <%s> not defined !",
@@ -59,7 +59,7 @@ void InputParser::parse(std::string& input,
                                     ioEntityTypeStrings[entity->type]);
     }
 
-    if (input.length() > 0) 
+    if (input.length() > 0)
         throw ParsingException("Unexpected paramenters left in input : '%s'",
                                input.c_str());
 }
@@ -73,7 +73,7 @@ void Int8Parser::parse(std::string& input,
     int64_t impVal = 0;
     if (imp && ctx.importInt(imp, impVal))
     {
-        value = (int32_t)impVal;    
+        value = (int32_t)impVal;
     }
     else
     {
@@ -87,14 +87,14 @@ void Int8Parser::parse(std::string& input,
                                    "Processing string: '%s'", str);
         if (str != def) input.erase(0, bytes);
     }
-    
+
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
     if (exp) ctx.exportInt(exp, (int64_t)value);
-    
+
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
     if (arg) adapter.setInt8(arg, (int8_t)value);
-    
-    __trace2__("Arg-Pos: %s, Value: %d, Less: <%s>", 
+
+    __trace2__("Arg-Pos: %s, Value: %d, Less: <%s>",
                (arg) ? arg:"-", value, input.c_str());
 }
 void Int16Parser::parse(std::string& input,
@@ -106,7 +106,7 @@ void Int16Parser::parse(std::string& input,
     int64_t impVal = 0;
     if (imp && ctx.importInt(imp, impVal))
     {
-        value = (int32_t)impVal;    
+        value = (int32_t)impVal;
     }
     else
     {
@@ -120,14 +120,14 @@ void Int16Parser::parse(std::string& input,
                                    "Processing string: '%s'", str);
         if (str != def) input.erase(0, bytes);
     }
-    
+
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
     if (exp) ctx.exportInt(exp, (int64_t)value);
-    
+
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
     if (arg) adapter.setInt16(arg, (int16_t)value);
-    
-    __trace2__("Arg-Pos: %s, Value: %d, Less: <%s>", 
+
+    __trace2__("Arg-Pos: %s, Value: %d, Less: <%s>",
                (arg) ? arg:"-", value, input.c_str());
 }
 void Int32Parser::parse(std::string& input,
@@ -139,7 +139,7 @@ void Int32Parser::parse(std::string& input,
     int64_t impVal = 0;
     if (imp && ctx.importInt(imp, impVal))
     {
-        value = (int32_t)impVal;    
+        value = (int32_t)impVal;
     }
     else
     {
@@ -153,14 +153,14 @@ void Int32Parser::parse(std::string& input,
                                    "Processing string: '%s'", str);
         if (str != def) input.erase(0, bytes);
     }
-    
+
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
     if (exp) ctx.exportInt(exp, (int64_t)value);
-    
+
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
     if (arg) adapter.setInt32(arg, (int32_t)value);
-    
-    __trace2__("Arg-Pos: %s, Value: %ld, Less: <%s>", 
+
+    __trace2__("Arg-Pos: %s, Value: %ld, Less: <%s>",
                (arg) ? arg:"-", value, input.c_str());
 }
 void Int64Parser::parse(std::string& input,
@@ -172,7 +172,7 @@ void Int64Parser::parse(std::string& input,
     int64_t impVal = 0;
     if (imp && ctx.importInt(imp, impVal))
     {
-        value = impVal; 
+        value = impVal;
     }
     else
     {
@@ -186,14 +186,14 @@ void Int64Parser::parse(std::string& input,
                                    "Processing string: '%s'", str);
         if (str != def) input.erase(0, bytes);
     }
-    
+
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
     if (exp) ctx.exportInt(exp, (int64_t)value);
-    
+
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
     if (arg) adapter.setInt64(arg, (int64_t)value);
-    
-    __trace2__("Arg-Pos: %s, Value: %lld, Less: <%s>", 
+
+    __trace2__("Arg-Pos: %s, Value: %lld, Less: <%s>",
                (arg) ? arg:"-", value, input.c_str());
 }
 void Uint8Parser::parse(std::string& input,
@@ -205,7 +205,7 @@ void Uint8Parser::parse(std::string& input,
     int64_t impVal = 0;
     if (imp && ctx.importInt(imp, impVal))
     {
-        value = (uint32_t)impVal;   
+        value = (uint32_t)impVal;
     }
     else
     {
@@ -222,14 +222,14 @@ void Uint8Parser::parse(std::string& input,
                                    "Processing string: '%s'", str);
         if (str != def) input.erase(0, bytes);
     }
-    
+
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
     if (exp) ctx.exportInt(exp, (int64_t)value);
-    
+
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
     if (arg) adapter.setUint8(arg, (uint8_t)value);
-    
-    __trace2__("Arg-Pos: %s, Value: %u, Less: <%s>", 
+
+    __trace2__("Arg-Pos: %s, Value: %u, Less: <%s>",
                (arg) ? arg:"-", value, input.c_str());
 }
 void Uint16Parser::parse(std::string& input,
@@ -241,7 +241,7 @@ void Uint16Parser::parse(std::string& input,
     int64_t impVal = 0;
     if (imp && ctx.importInt(imp, impVal))
     {
-        value = (uint32_t)impVal;   
+        value = (uint32_t)impVal;
     }
     else
     {
@@ -258,14 +258,14 @@ void Uint16Parser::parse(std::string& input,
                                    "Processing string: '%s'", str);
         if (str != def) input.erase(0, bytes);
     }
-    
+
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
     if (exp) ctx.exportInt(exp, (int64_t)value);
-    
+
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
     if (arg) adapter.setUint16(arg, (uint16_t)value);
-    
-    __trace2__("Arg-Pos: %s, Value: %u, Less: <%s>", 
+
+    __trace2__("Arg-Pos: %s, Value: %u, Less: <%s>",
                (arg) ? arg:"-", value, input.c_str());
 }
 void Uint32Parser::parse(std::string& input,
@@ -277,7 +277,7 @@ void Uint32Parser::parse(std::string& input,
     int64_t impVal = 0;
     if (imp && ctx.importInt(imp, impVal))
     {
-        value = (uint32_t)impVal;   
+        value = (uint32_t)impVal;
     }
     else
     {
@@ -294,14 +294,14 @@ void Uint32Parser::parse(std::string& input,
                                    "Processing string: '%s'", str);
         if (str != def) input.erase(0, bytes);
     }
-    
+
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
     if (exp) ctx.exportInt(exp, (int64_t)value);
-    
+
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
     if (arg) adapter.setUint32(arg, (uint32_t)value);
-    
-    __trace2__("Arg-Pos: %s, Value: %lu, Less: <%s>", 
+
+    __trace2__("Arg-Pos: %s, Value: %lu, Less: <%s>",
                (arg) ? arg:"-", value, input.c_str());
 }
 void Uint64Parser::parse(std::string& input,
@@ -313,7 +313,7 @@ void Uint64Parser::parse(std::string& input,
     int64_t impVal = 0;
     if (imp && ctx.importInt(imp, impVal))
     {
-        value = (uint32_t)impVal;   
+        value = (uint32_t)impVal;
     }
     else
     {
@@ -330,14 +330,14 @@ void Uint64Parser::parse(std::string& input,
                                    "Processing string: '%s'", str);
         if (str != def) input.erase(0, bytes);
     }
-    
+
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
     if (exp) ctx.exportInt(exp, (int64_t)value);
-    
+
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
     if (arg) adapter.setUint64(arg, (uint64_t)value);
-    
-    __trace2__("Arg-Pos: %s, Value: %llu, Less: <%s>", 
+
+    __trace2__("Arg-Pos: %s, Value: %llu, Less: <%s>",
                (arg) ? arg:"-", value, input.c_str());
 }
 void StringParser::parse(std::string& input,
@@ -362,33 +362,33 @@ void StringParser::parse(std::string& input,
             if (str[curPos] == '\"')
             {
                 curPos++;
-                while (str[curPos] && !(str[curPos] == '\"')) 
+                while (str[curPos] && !(str[curPos] == '\"'))
                     line += str[curPos++];
                 if (str[curPos]) curPos++;
             }
             else
             {
-                while (str[curPos] && !isspace(str[curPos])) 
+                while (str[curPos] && !isspace(str[curPos]))
                     line += str[curPos++];
             }
-            
+
              input.erase(0, curPos);
         }
-        
+
         if (!line.length())
         {
             const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
             if (def) line += def;
         }
     }
-    
+
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
     if (exp) ctx.exportStr(exp, line.c_str());
-    
+
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
     if (arg) adapter.setString(arg, line.c_str());
-    
-    __trace2__("Arg-Pos: %s, Value: '%s', Less: <%s>", 
+
+    __trace2__("Arg-Pos: %s, Value: '%s', Less: <%s>",
                (arg) ? arg:"-", line.c_str(), input.c_str());
 }
 void FloatParser::parse(std::string& input,
@@ -400,7 +400,7 @@ void FloatParser::parse(std::string& input,
     double impVal = 0.0;
     if (imp && ctx.importDbl(imp, impVal))
     {
-        value = impVal; 
+        value = impVal;
     }
     else
     {
@@ -415,14 +415,14 @@ void FloatParser::parse(std::string& input,
                                    "Processing string: '%s'", str);
         if (str != def) input.erase(0, bytes);
     }
-    
+
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
     if (exp) ctx.exportDbl(exp, value);
-    
+
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
     if (arg) adapter.setDouble(arg, value);
-    
-    __trace2__("Arg-Pos: %s, Value: %lf, Less: <%s>", 
+
+    __trace2__("Arg-Pos: %s, Value: %lf, Less: <%s>",
                (arg) ? arg:"-", value, input.c_str());
 }
 void DoubleParser::parse(std::string& input,
@@ -434,7 +434,7 @@ void DoubleParser::parse(std::string& input,
     double impVal = 0.0;
     if (imp && ctx.importDbl(imp, impVal))
     {
-        value = impVal; 
+        value = impVal;
     }
     else
     {
@@ -448,14 +448,14 @@ void DoubleParser::parse(std::string& input,
                                    "Processing string: '%s'", str);
         if (str != def) input.erase(0, bytes);
     }
-    
+
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
     if (exp) ctx.exportDbl(exp, value);
 
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
     if (arg) adapter.setDouble(arg, value);
-    
-    __trace2__("Arg-Pos: %s, Value: %le, Less: <%s>", 
+
+    __trace2__("Arg-Pos: %s, Value: %le, Less: <%s>",
                (arg) ? arg:"-", value, input.c_str());
 }
 void LongDoubleParser::parse(std::string& input,
@@ -467,7 +467,7 @@ void LongDoubleParser::parse(std::string& input,
     long double impVal = 0.0;
     if (imp && ctx.importLdl(imp, impVal))
     {
-        value = impVal; 
+        value = impVal;
     }
     else
     {
@@ -481,14 +481,14 @@ void LongDoubleParser::parse(std::string& input,
                                    "Processing string: '%s'", str);
         if (str != def) input.erase(0, bytes);
     }
-    
+
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
     if (exp) ctx.exportLdl(exp, value);
-    
+
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
     if (arg) adapter.setLongDouble(arg, value);
-    
-    __trace2__("Arg-Pos: %s, Value: %Le, Less: <%s>", 
+
+    __trace2__("Arg-Pos: %s, Value: %Le, Less: <%s>",
                (arg) ? arg:"-", value, input.c_str());
 }
 
@@ -503,7 +503,7 @@ char* stringToUpperCase(const char* str)
 }
 bool compareStringsIgnoreCase(const char* str1, const char* str2)
 {
-    char* up1 = stringToUpperCase(str1); 
+    char* up1 = stringToUpperCase(str1);
     char* up2 = stringToUpperCase(str2);
     bool result = ((!up1 && !up2) || strcmp(up1, up2) == 0);
     //__trace2__("compare '%s' with '%s' result = %d", up1, up2, result);
@@ -518,10 +518,10 @@ void DateTimeParser::parse(std::string& input,
                         "Processing string: '%s' "
                         "Pattern is: '%s'";
     tm      tmdt;
-    time_t  date; 
-    
+    time_t  date;
+
     memset(&tmdt, 0, sizeof(tmdt));
-    
+
     const char* imp = entity.getOption(SMSC_DBSME_IO_FORMAT_IMPORT_OPTION);
     if (!imp || !ctx.importDat(imp, date))
     {
@@ -533,7 +533,7 @@ void DateTimeParser::parse(std::string& input,
         const char* str = input.c_str();
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
         if (!(str && *str) && def) str = def;
-        
+
         if (&str[strPos] == strstr(&str[strPos], ioNowString))
         {
             date = time(NULL);
@@ -585,16 +585,16 @@ void DateTimeParser::parse(std::string& input,
                     if (isDay) throw ParsingException(
                         "Invalid date/time pattern '%s'. "
                         "Day number already scanned !", pattern);
-                    
-                    if ((result = sscanf(&str[strPos], 
-                        (pattern[++curPos] == 'd') ? "%2d%n":"%d%n", 
+
+                    if ((result = sscanf(&str[strPos],
+                        (pattern[++curPos] == 'd') ? "%2d%n":"%d%n",
                         &tmdt.tm_mday, &bytes)) == EOF ||
-                        !result || !bytes || bytes<0 || 
+                        !result || !bytes || bytes<0 ||
                         tmdt.tm_mday<=0 || tmdt.tm_mday>31)
                         throw ParsingException(error, "Month day expected",
                                                str, pattern);
 
-                    __trace2__("Day %d <%s>", 
+                    __trace2__("Day %d <%s>",
                                tmdt.tm_mday, &str[strPos]);
                     if (pattern[curPos] == 'd') curPos++;
                     strPos += bytes; isDay = true;
@@ -605,7 +605,7 @@ void DateTimeParser::parse(std::string& input,
                     if (isMonth) throw ParsingException(
                         "Invalid date/time pattern '%s'. "
                         "Month already scanned !", pattern);
-                    
+
                     if (pattern[++curPos] == 'M')
                     {
                         if (pattern[++curPos] == 'M')
@@ -617,8 +617,8 @@ void DateTimeParser::parse(std::string& input,
                             for (i=0; i<12; i++)
                                 if (compareStringsIgnoreCase(
                                     buff.c_str(), (pattern[curPos] == 'M') ?
-                                    ioFullMonthesNames[i] : 
-                                    ioShortMonthesNames[i])) 
+                                    ioFullMonthesNames[i] :
+                                    ioShortMonthesNames[i]))
                                 {
                                     tmdt.tm_mon = i+1;
                                     break;
@@ -630,21 +630,21 @@ void DateTimeParser::parse(std::string& input,
 
                             if (pattern[curPos] == 'M') curPos++;
                         }
-                        else if ((result = sscanf(&str[strPos], "%2d%n", 
+                        else if ((result = sscanf(&str[strPos], "%2d%n",
                                 &tmdt.tm_mon, &bytes)) == EOF ||
                                 !result || !bytes || bytes<0 ||
                                  tmdt.tm_mon<=0 || tmdt.tm_mon>12)
                                 throw ParsingException(error, "Month number expected",
                                                        str, pattern);
                     }
-                    else if ((result = sscanf(&str[strPos], "%d%n", 
+                    else if ((result = sscanf(&str[strPos], "%d%n",
                             &tmdt.tm_mon, &bytes)) == EOF ||
                             !result || !bytes || bytes<0 ||
                              tmdt.tm_mon<=0 || tmdt.tm_mon>12)
                             throw ParsingException(error, "Month number expected",
                                                    str, pattern);
 
-                    __trace2__("Month %d <%s>", 
+                    __trace2__("Month %d <%s>",
                                tmdt.tm_mon, &str[strPos]);
                     tmdt.tm_mon--;
                     strPos += bytes; isMonth = true;
@@ -655,19 +655,19 @@ void DateTimeParser::parse(std::string& input,
                     if (isHour) throw ParsingException(
                         "Invalid date/time pattern '%s'. "
                         "Hour number already scanned !", pattern);
-                    
+
                     if ((result = sscanf(&str[strPos],
-                        (pattern[++curPos] == 'H') ? "%2d%n":"%d%n", 
+                        (pattern[++curPos] == 'H') ? "%2d%n":"%d%n",
                         &tmdt.tm_hour, &bytes)) == EOF ||
-                        !result || !bytes || bytes<0 || 
+                        !result || !bytes || bytes<0 ||
                         tmdt.tm_hour<0 || tmdt.tm_hour>23)
-                        throw ParsingException(error, 
+                        throw ParsingException(error,
                                                "[0,23] hour number expected",
                                                str, pattern);
 
-                    __trace2__("Hour (H) %d <%s>", 
+                    __trace2__("Hour (H) %d <%s>",
                                tmdt.tm_hour, &str[strPos]);
-                    
+
                     if (pattern[curPos] == 'H') curPos++;
                     strPos += bytes;
 
@@ -679,19 +679,19 @@ void DateTimeParser::parse(std::string& input,
                     if (isHour) throw ParsingException(
                         "Invalid date/time pattern '%s'. "
                         "Hour number already scanned !", pattern);
-                    
-                    if ((result = sscanf(&str[strPos], 
-                        (pattern[++curPos] == 'h') ? "%2d%n":"%d%n", 
+
+                    if ((result = sscanf(&str[strPos],
+                        (pattern[++curPos] == 'h') ? "%2d%n":"%d%n",
                         &tmdt.tm_hour, &bytes)) == EOF ||
-                        !result || !bytes || bytes<0 || 
+                        !result || !bytes || bytes<0 ||
                         tmdt.tm_hour<=0 || tmdt.tm_hour>12)
-                        throw ParsingException(error, 
+                        throw ParsingException(error,
                                                "[1,12] hour number expected",
                                                str, pattern);
 
-                    __trace2__("Hour (h) %d <%s>", 
+                    __trace2__("Hour (h) %d <%s>",
                                tmdt.tm_hour, &str[strPos]);
-                    
+
                     if (pattern[curPos] == 'h') curPos++;
                     strPos += bytes;
 
@@ -703,19 +703,19 @@ void DateTimeParser::parse(std::string& input,
                     if (isAMPM) throw ParsingException(
                         "Invalid date/time pattern '%s'. "
                         "AM/PM qualifer already scanned !", pattern);
-                    
+
                     curPos++;
                     std::string buff = "";
 
-                    while (str[strPos] && isalpha(str[strPos])) 
+                    while (str[strPos] && isalpha(str[strPos]))
                         buff += str[strPos++];
 
                     //__trace2__("AM/PM = %s", buff.c_str());
-                    if (compareStringsIgnoreCase(buff.c_str(), 
+                    if (compareStringsIgnoreCase(buff.c_str(),
                                                  ioDayTimeParts[0])) {
                         AMPM = false;
                     }
-                    else if (compareStringsIgnoreCase(buff.c_str(), 
+                    else if (compareStringsIgnoreCase(buff.c_str(),
                                                       ioDayTimeParts[1])) {
                         AMPM = true;
                     }
@@ -729,18 +729,18 @@ void DateTimeParser::parse(std::string& input,
                     if (isMins) throw ParsingException(
                         "Invalid date/time pattern '%s'. "
                         "Minutes number already scanned !", pattern);
-                    
-                    if ((result = sscanf(&str[strPos], 
-                        (pattern[++curPos] == 'm') ? "%2d%n":"%d%n", 
+
+                    if ((result = sscanf(&str[strPos],
+                        (pattern[++curPos] == 'm') ? "%2d%n":"%d%n",
                         &tmdt.tm_min, &bytes)) == EOF ||
-                        !result || !bytes || bytes<0 || 
+                        !result || !bytes || bytes<0 ||
                         tmdt.tm_min<0 || tmdt.tm_min>59)
                         throw ParsingException(error, "Minutes number expected",
                                                str, pattern);
 
-                    __trace2__("Minute %d <%s>", 
+                    __trace2__("Minute %d <%s>",
                                tmdt.tm_min, &str[strPos]);
-                    
+
                     if (pattern[curPos] == 'm') curPos++;
                     strPos += bytes; isMins = true;
                     continue;
@@ -750,11 +750,11 @@ void DateTimeParser::parse(std::string& input,
                     if (isSecs) throw ParsingException(
                         "Invalid date/time pattern '%s'. "
                         "Seconds number already scanned !", pattern);
-                    
-                    if ((result = sscanf(&str[strPos], 
-                        (pattern[++curPos] == 's') ? "%2d%n":"%d%n", 
+
+                    if ((result = sscanf(&str[strPos],
+                        (pattern[++curPos] == 's') ? "%2d%n":"%d%n",
                         &tmdt.tm_sec, &bytes)) == EOF ||
-                        !result || !bytes || bytes<0 || 
+                        !result || !bytes || bytes<0 ||
                         tmdt.tm_sec<0 || tmdt.tm_sec>59)
                         throw ParsingException(error, "Seconds number expected",
                                                str, pattern);
@@ -769,21 +769,21 @@ void DateTimeParser::parse(std::string& input,
                     {
                         if (pattern[curPos+2] == 'y')
                         {
-                            if (pattern[curPos+3] == 'y') 
+                            if (pattern[curPos+3] == 'y')
                             {
                                 if (isYear) throw ParsingException(
                                     "Invalid date/time pattern '%s'. "
                                     "Year number already scanned !", pattern);
-                                
-                                if ((result = sscanf(&str[strPos], "%4d%n", 
+
+                                if ((result = sscanf(&str[strPos], "%4d%n",
                                     &tmdt.tm_year, &bytes)) == EOF ||
                                     !result || !bytes || bytes<0 ||
                                     tmdt.tm_year < 1900)
-                                    throw ParsingException(error, 
+                                    throw ParsingException(error,
                                         "4-digit Year number expected",
                                         str, pattern);
-                                
-                                __trace2__("Year (yyyy) %d <%s>", 
+
+                                __trace2__("Year (yyyy) %d <%s>",
                                            tmdt.tm_year, &str[strPos]);
 
                                 curPos += 4; tmdt.tm_year -= 1900;
@@ -797,20 +797,20 @@ void DateTimeParser::parse(std::string& input,
                             if (isYear) throw ParsingException(
                                 "Invalid date/time pattern '%s'. "
                                 "Year number already scanned !", pattern);
-                            
-                            if ((result = sscanf(&str[strPos], "%2d%n", 
+
+                            if ((result = sscanf(&str[strPos], "%2d%n",
                                 &tmdt.tm_year, &bytes)) == EOF ||
                                 !result || !bytes || bytes<0 ||
                                 tmdt.tm_year < 0)
-                                throw ParsingException(error, 
+                                throw ParsingException(error,
                                     "2-digit Year number expected",
                                     str, pattern);
-                            
-                            __trace2__("Year (yy) %d <%s>", 
+
+                            __trace2__("Year (yy) %d <%s>",
                                        tmdt.tm_year, &str[strPos]);
-                            
+
                             curPos += 2;
-                            tmdt.tm_year = (tmdt.tm_year < 70) ? 
+                            tmdt.tm_year = (tmdt.tm_year < 70) ?
                                 tmdt.tm_year+100 : tmdt.tm_year;
                             strPos += bytes; isYear = true;
                             continue;
@@ -819,9 +819,9 @@ void DateTimeParser::parse(std::string& input,
                     // break missed => go to default !!!
                 }
                 default:
-                    
-                    if (isalnum(str[strPos]) || 
-                        isalnum(pattern[curPos]) || 
+
+                    if (isalnum(str[strPos]) ||
+                        isalnum(pattern[curPos]) ||
                         str[strPos] != pattern[curPos])
                             throw ParsingException(
                                 "Error scanning Date/Time format! "
@@ -829,7 +829,7 @@ void DateTimeParser::parse(std::string& input,
                                 "Processing string: '%s', position %d "
                                 "Pattern is: '%s', position %d",
                                 str, strPos, pattern, curPos);
-                    
+
                     strPos++; curPos++;
                     break;
                 }
@@ -839,11 +839,11 @@ void DateTimeParser::parse(std::string& input,
             {
                 if (isAMPM)
                 {
-                    if (AMPM && tmdt.tm_hour>0 && tmdt.tm_hour<12) 
-                        tmdt.tm_hour += 12; 
-                    else if (!AMPM && tmdt.tm_hour==12) 
+                    if (AMPM && tmdt.tm_hour>0 && tmdt.tm_hour<12)
+                        tmdt.tm_hour += 12;
+                    else if (!AMPM && tmdt.tm_hour==12)
                         tmdt.tm_hour = 0;
-                    
+
                     __trace2__("Hour (converted) %d", tmdt.tm_hour);
                 }
                 else throw ParsingException(error, "AM/PM qualifer missed",
@@ -864,40 +864,39 @@ void DateTimeParser::parse(std::string& input,
             tmdt.tm_isdst = 0;
             date = mktime(&tmdt);
             date -= (tmdt.tm_isdst==1) ? 3600:0;
-            
+
+            char ctbuf[128];
             __trace2__("Scanned user input: '%s' by pattern '%s'. "
-                       "Date: %s (%ld) <%d>", 
-                       str, pattern, ctime(&date), date, tmdt.tm_isdst);
-        } 
+                       "Date: %s (%ld) <%d>",
+                       str, pattern, ctime_r(&date,ctbuf), date, tmdt.tm_isdst);
+        }
         else // scan date by default format
         {
-            if ((result = sscanf(str, "%d.%d.%d %d:%d:%d %n", 
+            if ((result = sscanf(str, "%d.%d.%d %d:%d:%d %n",
                 &tmdt.tm_mday, &tmdt.tm_mon, &tmdt.tm_year,
                 &tmdt.tm_hour, &tmdt.tm_min, &tmdt.tm_sec,
                 &bytes)) == EOF || !result || !bytes || bytes<0)
                 throw ParsingException("Error scanning default Date/Time format."
                                        " Processing string: '%s'", str);
 
-            tmdt.tm_mon -= 1; tmdt.tm_year -= 1900; 
+            tmdt.tm_mon -= 1; tmdt.tm_year -= 1900;
             tmdt.tm_isdst = 0;
             date = mktime(&tmdt);
             date -= (tmdt.tm_isdst==1) ? 3600:0;
             strPos = bytes;
         }
-        
+
         if (str != def && strPos) input.erase(0, strPos);
     }
-    
+
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
     if (exp) ctx.exportDat(exp, date);
-    
+
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
     if (arg) adapter.setDateTime(arg, date);
-    
-    __trace2__("Arg-Pos: %s, Date: %s, Less: <%s>", 
+
+    __trace2__("Arg-Pos: %s, Date: %s, Less: <%s>",
                (arg) ? arg:"-", ctime(&date), input.c_str());
 }
 
 }}}
-
-

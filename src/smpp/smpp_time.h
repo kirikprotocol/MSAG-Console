@@ -21,7 +21,7 @@ inline bool cTime2SmppTime(time_t tval,char* buffer)
   buffer[16] = 0;
   if ( !tval ) return true;
   struct tm dtm;
-  dtm = *gmtime(&tval); // *gmtime(tval);
+  gmtime_r(&tval,&dtm); // *gmtime(tval);
   //__trace2__("input time: %s",asctime(&dtm));
   dtm.tm_mon+=1;
   dtm.tm_year-=100; // year = x-(1900+100)
@@ -79,51 +79,50 @@ inline time_t smppTime2CTime(COStr& str)
   if(scaned!=9)
   {
     __trace2__("time(%d):%16s",scaned,dta);
-		return (time_t)-1;
+    return (time_t)-1;
   }
   if (utcfix == '+' || utcfix == '-' )
-	{
-		dtm.tm_isdst = 0;
-		__trace2_if_fail__( scaned == 9, "!!!!! input time: %.16s\n",dta);
-		__retval_if_fail__ ( scaned == 9,(time_t)-1 );
-		__retval_if_fail__ ( dtm.tm_mon >= 1 && dtm.tm_mon <= 12,(time_t)-1 );
-		dtm.tm_mon-=1;
-		__retval_if_fail__ ( dtm.tm_year >= 0 && dtm.tm_mon <= 99,(time_t)-1 );
-		dtm.tm_year+=100; // year = x-1900
-		__retval_if_fail__ ( dtm.tm_mday >= 1 && dtm.tm_mday <= 31,(time_t)-1 );
-		__retval_if_fail__ ( dtm.tm_hour >= 0 && dtm.tm_hour <= 23,(time_t)-1 );
-		__retval_if_fail__ ( dtm.tm_min >= 0 && dtm.tm_min <= 59, (time_t)-1 );
-		__retval_if_fail__ ( dtm.tm_sec >=0 && dtm.tm_sec <= 59,(time_t)-1 );
-		//__trace2__("result time: %s",asctime(&dtm));
-		
-		resultTime = mktime(&dtm);
-		__retval_if_fail__ ( resultTime != -1,(time_t)-1 );
+  {
+    dtm.tm_isdst = 0;
+    __trace2_if_fail__( scaned == 9, "!!!!! input time: %.16s\n",dta);
+    __retval_if_fail__ ( scaned == 9,(time_t)-1 );
+    __retval_if_fail__ ( dtm.tm_mon >= 1 && dtm.tm_mon <= 12,(time_t)-1 );
+    dtm.tm_mon-=1;
+    __retval_if_fail__ ( dtm.tm_year >= 0 && dtm.tm_mon <= 99,(time_t)-1 );
+    dtm.tm_year+=100; // year = x-1900
+    __retval_if_fail__ ( dtm.tm_mday >= 1 && dtm.tm_mday <= 31,(time_t)-1 );
+    __retval_if_fail__ ( dtm.tm_hour >= 0 && dtm.tm_hour <= 23,(time_t)-1 );
+    __retval_if_fail__ ( dtm.tm_min >= 0 && dtm.tm_min <= 59, (time_t)-1 );
+    __retval_if_fail__ ( dtm.tm_sec >=0 && dtm.tm_sec <= 59,(time_t)-1 );
+    //__trace2__("result time: %s",asctime(&dtm));
+
+    resultTime = mktime(&dtm);
+    __retval_if_fail__ ( resultTime != -1,(time_t)-1 );
 #ifdef _WIN32
-		resultTime -= _timezone;
+    resultTime -= _timezone;
 #else
-		resultTime -= timezone;
+    resultTime -= timezone;
 #endif
-		if ( utcfix == '+' ) resultTime-=utc*60*15;
-		else resultTime+=utc*60*15;
-	}
-	else if ( utcfix == 'R' )
-	{
-		resultTime = time(0);
-		resultTime += ((unsigned long)dtm.tm_year)*60*60*24*365 +
-									((unsigned long)dtm.tm_mon)*60*60*24*30 +
-									((unsigned long)dtm.tm_mday)*60*60*24 +
-									((unsigned long)dtm.tm_hour)*60*60 +
-									((unsigned long)dtm.tm_min)*60 +
-									((unsigned long)dtm.tm_sec);
-		__trace2__("input time: %.16s\n",dta);
-		__trace2__("ctime: %s",ctime(&resultTime));
-	}
-	else
-	{ 
-		__trace2__("!!!!! input time: %.16s\n",dta);
-		__warning__("incorrect time format (utcfix field)");
-		return (time_t)-1;
-	}
+    if ( utcfix == '+' ) resultTime-=utc*60*15;
+    else resultTime+=utc*60*15;
+  }
+  else if ( utcfix == 'R' )
+  {
+    resultTime = time(0);
+    resultTime += ((unsigned long)dtm.tm_year)*60*60*24*365 +
+                  ((unsigned long)dtm.tm_mon)*60*60*24*30 +
+                  ((unsigned long)dtm.tm_mday)*60*60*24 +
+                  ((unsigned long)dtm.tm_hour)*60*60 +
+                  ((unsigned long)dtm.tm_min)*60 +
+                  ((unsigned long)dtm.tm_sec);
+    __trace2__("input time: %.16s\n",dta);
+  }
+  else
+  {
+    __trace2__("!!!!! input time: %.16s\n",dta);
+    __warning__("incorrect time format (utcfix field)");
+    return (time_t)-1;
+  }
   return resultTime;
 }
 
