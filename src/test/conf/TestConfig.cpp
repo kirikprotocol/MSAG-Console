@@ -24,7 +24,7 @@ TestConfig::TestConfig()
 		*min_element(rescheduleTimes.begin(), rescheduleTimes.end()) -
 		intMap["timeCheckAccuracy"];
 	//smsc sme
-	addrMap["smscAddr"] = "+111111111111";
+	addrMap["smscAddr"] = "+11111111111";
 	addrMap["smscAlias"] = ".3.3.smscSmeAlias123";
 	strMap["smscSystemId"] = "smscsme";
 	strMap["smscServiceType"] = "SmSc";
@@ -36,7 +36,7 @@ TestConfig::TestConfig()
 	strMap["profilerServiceType"] = "pRof";
 	intMap["profilerProtocolId"] = 5;
 	//db sme
-	addrMap["dbSmeAddr"] = "+333333333333";
+	addrMap["dbSmeAddr"] = "+3333333333333";
 	addrMap["dbSmeAlias"] = ".7.7.dbSmeAlias123";
 	addrMap["dbSmeInvalidAddr"] = ".7.7.dbSmeInvalidAddr123";
 	strMap["dbSmeSystemId"] = "dbSme";

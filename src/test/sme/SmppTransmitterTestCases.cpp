@@ -207,9 +207,9 @@ PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 		rcptMonitor->deliveryFlag = PDU_RECEIVED_FLAG;
 		rcptMonitor->deliveryStatus = ESME_ROK;
 	}
-	if (pduType == PDU_NULL)
+	else if (pduType == PDU_NULL)
 	{
-		rcptMonitor->deliveryFlag = PDU_NOT_EXPECTED_FLAG;
+		rcptMonitor->deliveryFlag = PDU_ERROR_FLAG;
 		rcptMonitor->deliveryStatus = ESME_RX_P_APPN;
 	}
 	fixture->pduReg->registerMonitor(rcptMonitor);

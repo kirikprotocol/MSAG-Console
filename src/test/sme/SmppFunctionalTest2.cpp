@@ -479,36 +479,40 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	{
 		//sme -> profiler
 		RouteInfo route1;
+		RouteUtil::setupRandomCorrectRouteInfo(&route1);
 		route1.source = *addr[i];
 		route1.dest = profilerAddr;
 		route1.smeSystemId = profilerSystemId;
 		route1.enabling = true;
-		tcRoute.addCorrectRouteMatch(&route1, NULL, RAND_TC);
+		routeReg->putRoute(route1, NULL);
 		//profiler -> sme
 		RouteInfo route2;
+		RouteUtil::setupRandomCorrectRouteInfo(&route2);
 		route2.source = profilerAddr;
 		route2.dest = *addr[i];
 		route2.smeSystemId = smeInfo[i]->systemId;
 		route2.enabling = true;
-		tcRoute.addCorrectRouteMatch(&route2, NULL, RAND_TC);
+		routeReg->putRoute(route2, NULL);
 	}
 	//регистрация маршрутов sme <-> smsc (delivery receipts)
 	for (int i = 0; i < numAddr; i++)
 	{
 		//smsc -> sme
 		RouteInfo route1;
+		RouteUtil::setupRandomCorrectRouteInfo(&route1);
 		route1.source = smscAddr;
 		route1.dest = *addr[i];
 		route1.smeSystemId = smeInfo[i]->systemId;
 		route1.enabling = true;
-		tcRoute.addCorrectRouteMatch(&route1, NULL, RAND_TC);
+		routeReg->putRoute(route1, NULL);
 		//sme -> smsc
 		RouteInfo route2;
+		RouteUtil::setupRandomCorrectRouteInfo(&route2);
 		route2.source = *addr[i];
 		route2.dest = smscAddr;
 		route2.smeSystemId = smscSystemId;
 		route2.enabling = true;
-		tcRoute.addCorrectRouteMatch(&route2, NULL, RAND_TC);
+		routeReg->putRoute(route2, NULL);
 	}
 	//маршруты между системными sme
 	cfgUtil.setupSystemSmeRoutes();
