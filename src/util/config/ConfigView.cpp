@@ -72,7 +72,7 @@ char* ConfigView::getString(const char* param, const char* error)
     try 
     {
         char* tmp = config.getString(section);   
-        char* result = new char[strlen(tmp)+1];
+        result = new char[strlen(tmp)+1];
         strcpy(result, tmp);
     }
     catch (ConfigException& exc)
