@@ -7,11 +7,11 @@
 #include "../core/synchronization/EventMonitor.hpp"
 #include "../core/threads/ThreadedTask.hpp"
 #include "../util/debug.h"
-#include "../system/smsc.hpp"
 #include "../core/buffers/Array.hpp"
 #include "DistrListAdmin.h"
 #include <map>
 #include <list>
+#include <time.h>
 
 namespace smsc{
 namespace distrlist{
@@ -31,15 +31,15 @@ class DistrListProcess : public ThreadedTask, public SmeProxy{
     bool success;           // удачность завершения посылки
   };
   struct ListTask{
-    unsigned startTime;
+    time_t startTime;
     unsigned count;           // количество елементов в задаче
     unsigned submited_count;  // количество элементов на которые прешол ответ
     LISTELEMENT list[MAX_COUNT];
     SmscCommand cmd;          // исходная команда
   };
   typedef pair<ListTask*,unsigned> TPAIR;
-  typedef map<unsigned,TPAIR> MAPTYPE; 
-  typedef list<ListTask*> LISTTYPE; 
+  typedef map<unsigned,TPAIR> MAPTYPE;
+  typedef list<ListTask*> LISTTYPE;
   MAPTYPE task_map;       // маппинг диалог <-> {задача,индекс элемента}
   LISTTYPE task_sheduler; // список задач упорядоченый по таймаутам
   DistrListAdmin* admin;

@@ -44,7 +44,7 @@ SmscCommand DistrListProcess::getCommand()
   return cmd;
 }
 
-SmeProxyState DistrListProcess::getState() const 
+SmeProxyState DistrListProcess::getState() const
 {
   return state;
 }
@@ -59,7 +59,7 @@ void DistrListProcess::init()
 
 //SmeProxyPriority DistrListProcess::getPriority() {return SmeProxyPriorityDefault;}
 //void DistrListProcess::setPriority(SmeProxyPriority) {}
-bool DistrListProcess::hasInput() const 
+bool DistrListProcess::hasInput() const
 {
   MutexGuard g(mon);
   return inQueue.Count()!=0;
@@ -129,7 +129,7 @@ int DistrListProcess::Execute()
     {
       SubmitResp(cmd);
     }
-    else 
+    else
     {
       __warning2__(":DLP: unknown cmd id %d",cmd->get_commandId());
     }
@@ -269,7 +269,7 @@ void DistrListProcess::SendSubmitResp(ListTask* task) // удаляет из списка и мап
       if ( !task->list[i].success ) {
         task_map.erase(task->list[i].dialogId); // остальные уже удалены
         ue[j].addr = task->list[i].addr;
-        ue[j].errcode = 0; // !!!!! must be fixed 
+        ue[j].errcode = 0; // !!!!! must be fixed
       }
     }
   }
@@ -280,7 +280,7 @@ void DistrListProcess::SendSubmitResp(ListTask* task) // удаляет из списка и мап
 
 void DistrListProcess::CheckTimeouts()
 {
-  unsigned curTime = time(0)+WAIT_SUBMISSION;
+  time_t curTime = time(0)+WAIT_SUBMISSION;
   while ( !task_sheduler.empty() && (task_sheduler.front()->startTime < curTime) )
   {
     __trace2__(":DPL: T:%s task 0x%x(T:%s) was time out",
@@ -289,5 +289,4 @@ void DistrListProcess::CheckTimeouts()
   }
 }
 
-}} // namespaces 
-
+}} // namespaces

@@ -419,6 +419,12 @@ void Smsc::init(const SmscConfigs& cfg)
   statMan=new smsc::stat::StatisticsManager(*dataSource);
   tp.startTask(statMan);
 
+  distlstman=new DistrListManager(*dataSource,*cfg.cfgman);
+
+  distlstsme=new DistrListProcess(distlstman);
+  tp.startTask(distlstsme);
+
+  smeman.registerInternallSmeProxy("DSTRLST",distlstsme);
 
   smsc::mscman::MscManager::startup(*dataSource,*cfg.cfgman);
 
@@ -618,6 +624,9 @@ void Smsc::run()
 void Smsc::shutdown()
 {
   __trace__("shutting down");
+
+  smeman.unregisterSmeProxy("DSTRLST");
+
   tp.shutdown();
 
   if(mapProxy)
@@ -625,6 +634,8 @@ void Smsc::shutdown()
     MapDialogContainer::getInstance()->unregisterSelf(&smeman);
     MapDialogContainer::dropInstance();
   }
+
+  delete distlstman;
 
   smsc::mscman::MscManager::shutdown();
 

@@ -300,6 +300,11 @@ void Smsc::mainLoop()
         abonentInfoProxy->putCommand(cmd);
         continue;
       }
+      case __CMD__(SUBMIT_MULTI):
+      {
+        distlstsme->putCommand(cmd);
+        continue;
+      }
     }
     __require__(cmd.getProxy()==src_proxy);
     eventqueue.enqueue(id,cmd);

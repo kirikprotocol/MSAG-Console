@@ -28,8 +28,8 @@ static inline int getSmsText(SMS* sms,char* buf,unsigned bufsize)
   if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)==0x40)
   {
     int l=(unsigned char)*data;
-    data+=l;
-    len-=l;
+    data+=l+1;
+    len-=l+1;
   }
   __trace2__("getSmsText: dc=%d, len=%d",coding,len);
   if(coding==DataCoding::UCS2)

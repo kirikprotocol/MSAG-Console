@@ -23,6 +23,8 @@
 #include "db/DataSource.h"
 #include "db/DataSourceLoader.h"
 
+#include "distrlist/DistrListManager.h"
+#include "distrlist/DistrListProcess.h"
 #include "stat/StatisticsManager.h"
 
 #include "system/mrcache.hpp"
@@ -39,7 +41,8 @@ using smsc::smeman::SmeProxy;
 using smsc::alias::AliasManager;
 using smsc::router::RouteManager;
 using smsc::router::RouteInfo;
-
+using smsc::distrlist::DistrListManager;
+using smsc::distrlist::DistrListProcess;
 //class smsc::store::MessageStore;
 
 template<class T>
@@ -329,6 +332,9 @@ protected:
   SmeProxy* mapProxy;
 
   MessageReferenceCache mrCache;
+
+  DistrListManager *distlstman;
+  DistrListProcess *distlstsme;
 
   Mutex perfMutex;
   uint64_t submitOkCounter;

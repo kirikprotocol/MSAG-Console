@@ -1,12 +1,4 @@
-//<<<<<<< smsccmd.h
-//<<<< smsccmd.h
 /*  $Id$
-=======
-/*  $Id$
->>>>>>> 1.90
-=======
-/*  $Id$
->>>>>>> 1.91
 */
 
 #if !defined __Cpp_Header__smsccmd_h__
