@@ -1,6 +1,7 @@
 <%@ page import="ru.novosoft.smsc.admin.profiler.Profile,
                  java.util.Iterator,
                  ru.novosoft.smsc.util.StringEncoderDecoder"%>
+<%--jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.profiles.ProfilesBean"/--%>
 <input type=hidden name=returnPath value="<%=bean.getReturnPath()%>">
 <div class=content>
 <div class=page_subtitle>Profile information</div>
@@ -58,8 +59,24 @@
 	<td><input class=txt name="divert" value="<%=bean.getDivert()%>" validation="address" onkeyup="resetValidation(this)"></td>
 </tr>
 <tr class=row0>
-	<th><label for=divertActive>divert active</label></th>
-	<td><input class=check type=checkbox type="checkbox" id=divertActive name="divertActive" value="true" <%= (bean.isDivertActive()) ? "checked":""%>></td>
+	<th><label for=divertActive>divert active unconditional</label></th>
+	<td><input class=check type=checkbox type="checkbox" id=divertActiveUnconditional name="divertActiveUnconditional" value="true" <%= (bean.isDivertActiveUnconditional()) ? "checked":""%>></td>
+</tr>
+<tr class=row1>
+	<th><label for=divertActive>divert active absent</label></th>
+	<td><input class=check type=checkbox type="checkbox" id=divertActiveAbsent name="divertActiveAbsent" value="true" <%= (bean.isDivertActiveAbsent()) ? "checked":""%>></td>
+</tr>
+<tr class=row0>
+	<th><label for=divertActive>divert active blocked</label></th>
+	<td><input class=check type=checkbox type="checkbox" id=divertActiveBlocked name="divertActiveBlocked" value="true" <%= (bean.isDivertActiveBlocked()) ? "checked":""%>></td>
+</tr>
+<tr class=row1>
+	<th><label for=divertActive>divert active barred</label></th>
+	<td><input class=check type=checkbox type="checkbox" id=divertActiveBarred name="divertActiveBarred" value="true" <%= (bean.isDivertActiveBarred()) ? "checked":""%>></td>
+</tr>
+<tr class=row1>
+	<th><label for=divertActive>divert active capacity</label></th>
+	<td><input class=check type=checkbox type="checkbox" id=divertActiveCapacity name="divertActiveCapacity" value="true" <%= (bean.isDivertActiveCapacity()) ? "checked":""%>></td>
 </tr>
 <tr class=row1>
 	<th><label for=divertModifiable>divert modifiable</label></th>

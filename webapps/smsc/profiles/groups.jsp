@@ -68,16 +68,20 @@ function setSort(sorting)
 <thead>
 <tr>
 	<th><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
-	<th><a href="#" <%=bean.getSort().endsWith("mask")       ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by mask"        onclick='return setSort("mask")'      >mask</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("codeset")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by codepage"    onclick='return setSort("codeset")'   >codepage</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("reportinfo") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by report info" onclick='return setSort("reportinfo")'>report&nbsp;info</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("locale")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by locale"      onclick='return setSort("locale")'    >locale</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("hidden")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by locale"                 onclick='return setSort("hidden")'    >hidden</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("hidden_mod") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by locale"                 onclick='return setSort("hidden_mod")'>modifiable</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("divert")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert"                 onclick='return setSort("divert")'    >divert</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("divert_act") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert active flag"     onclick='return setSort("divert_act")'>divert active</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("divert_mod") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert modifiable flag" onclick='return setSort("divert_mod")'>divert modifiable</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("ussd7bit")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by USSD as 7 bit flag"     onclick='return setSort("ussd7bit")'  >ussd 7 bit</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("mask")          ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by mask"                             onclick='return setSort("mask")'         >mask</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("codeset")       ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by codepage"                         onclick='return setSort("codeset")'      >codepage</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("reportinfo")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by report info"                      onclick='return setSort("reportinfo")'   >report&nbsp;info</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("locale")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by locale"                           onclick='return setSort("locale")'       >locale</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("hidden")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by locale"                           onclick='return setSort("hidden")'       >hidden</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("hidden_mod")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by locale"                           onclick='return setSort("hidden_mod")'   >modifiable</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("divert")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert"                           onclick='return setSort("divert")'       >divert</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("divert_actUnc") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert active unconditional flag" onclick='return setSort("divert_actUnc")'>divert active unconditional</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("divert_actAbs") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert active absent flag"        onclick='return setSort("divert_actAbs")'>divert active absent</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("divert_actBlo") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert active blocked flag"       onclick='return setSort("divert_actBlo")'>divert active blocked</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("divert_actBar") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert active barred flag"        onclick='return setSort("divert_actBar")'>divert active barred</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("divert_actCap") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert active capacity flag"      onclick='return setSort("divert_actCap")'>divert active capacity</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("divert_mod")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert modifiable flag"           onclick='return setSort("divert_mod")'   >divert modifiable</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("ussd7bit")      ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by USSD as 7 bit flag"               onclick='return setSort("ussd7bit")'     >ussd 7 bit</a></th>
 </tr>
 </thead>
 <tbody>
@@ -105,10 +109,14 @@ final String divertEnc = divert == null || divert.length() == 0 ? "&nbsp;" : Str
 	<td><%=StringEncoderDecoder.encode((String)item.getValue("Codepage"))%></td>
 	<td><%=StringEncoderDecoder.encode((String)item.getValue("Report info"))%></td>
 	<td><%=StringEncoderDecoder.encode((String)item.getValue("locale"))%></td>
-  <td align=center><%if (((Boolean)item.getValue("hidden"    )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-  <td align=center><%if (((Boolean)item.getValue("hidden_mod")).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+  <td align=center><%if (((Boolean)item.getValue("hidden"        )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+  <td align=center><%if (((Boolean)item.getValue("hidden_mod"    )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
   <td><%=divertEnc%></td>
-  <td align=center><%if (((Boolean)item.getValue("divert_act"    )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+  <td align=center><%if (((Boolean)item.getValue("divert_actUnc" )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+  <td align=center><%if (((Boolean)item.getValue("divert_actAbs" )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+  <td align=center><%if (((Boolean)item.getValue("divert_actBlo" )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+  <td align=center><%if (((Boolean)item.getValue("divert_actBar" )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+  <td align=center><%if (((Boolean)item.getValue("divert_actCap" )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
   <td align=center><%if (((Boolean)item.getValue("divert_mod"    )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
 	<td align=center><%if (((Boolean)item.getValue("ussd7bit"      )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
 </tr>

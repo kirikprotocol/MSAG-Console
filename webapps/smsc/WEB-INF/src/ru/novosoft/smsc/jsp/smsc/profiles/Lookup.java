@@ -36,7 +36,7 @@ public class Lookup extends PageBean
   private byte matchType = ProfileEx.MATCH_UNKNOWN;
   private Mask matchAddress = null;
   private String divert = "";
-  private boolean divertActive = false;
+  private String divertActive = "";
   private boolean divertModifiable = false;
 
   private String profileDealiased = null;
@@ -84,7 +84,7 @@ public class Lookup extends PageBean
         aliasHide = p.isAliasHide();
         aliasModifiable = p.isAliasModifiable();
         divert = p.getDivert();
-        divertActive = p.isDivertActive();
+        divertActive = p.getDivertActive();
         divertModifiable = p.isDivertModifiable();
         matchType = p.getMatchType();
         matchAddress = p.getMatchAddress();
@@ -254,7 +254,7 @@ public class Lookup extends PageBean
     return divert;
   }
 
-  public boolean isDivertActive()
+  public String getDivertActive()
   {
     return divertActive;
   }

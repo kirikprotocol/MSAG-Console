@@ -13,10 +13,7 @@ import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.QueryResultSetImpl;
 import ru.novosoft.util.conpool.NSConnectionPool;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 public class ProfileDataSource
 {
@@ -56,9 +53,11 @@ public class ProfileDataSource
       connection = connectionPool.getConnection();
       statement = connection.createStatement();
 
-      sqlResultSet = statement.executeQuery("select mask, reportinfo, codeset, locale, hidden, hidden_mod, divert, divert_act, divert_mod from sms_profile " +
-                                            createWhereStatement(query_to_run.getFilter(), query_to_run.getShow()) +
-                                            " order by " + sortOrder);
+      final String queryStr = "select mask, reportinfo, codeset, locale, hidden, hidden_mod, divert, divert_act, divert_mod from sms_profile " +
+                              createWhereStatement(query_to_run.getFilter(), query_to_run.getShow()) +
+                              " order by " + sortOrder;
+      sqlResultSet = statement.executeQuery(queryStr);
+      System.out.println("queryStr = " + queryStr);
 
       int totalCount = 0;
       // skip lines to start position
@@ -67,15 +66,16 @@ public class ProfileDataSource
       // retrieve data
       results = new QueryResultSetImpl(columnNames, query_to_run.getSortOrder());
       for (int i = 0; i < query_to_run.getExpectedResultsQuantity() && sqlResultSet.next(); i++, totalCount++) {
+        final String hidden = sqlResultSet.getString("hidden");
         results.add(new ProfileDataItem(new Profile(new Mask(sqlResultSet.getString("mask")),
                                                     (byte) (sqlResultSet.getShort("codeset") & 0x7F),
                                                     (sqlResultSet.getShort("codeset") & 0x80) != 0,
                                                     sqlResultSet.getByte("reportinfo"),
                                                     sqlResultSet.getString("locale"),
-                                                    sqlResultSet.getByte("hidden") != 0,
+                                                    hidden != null && hidden.length() > 0 && Character.toUpperCase(hidden.charAt(0)) == 'Y',
                                                     sqlResultSet.getString("hidden_mod").equalsIgnoreCase("Y"),
                                                     sqlResultSet.getString("divert"),
-                                                    sqlResultSet.getString("divert_act").equalsIgnoreCase("Y"),
+                                                    sqlResultSet.getString("divert_act"),
                                                     sqlResultSet.getString("divert_mod").equalsIgnoreCase("Y"))));
       }
 

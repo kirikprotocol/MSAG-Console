@@ -23,7 +23,13 @@ public class Profile
   private Mask mask;
   private boolean ussd7bit;
   private String divert;
-  private boolean divertActive;
+
+  // unconditional, absent, blocked, barred, capacity
+  private boolean divertActiveUnconditional;
+  private boolean divertActiveAbsent;
+  private boolean divertActiveBlocked;
+  private boolean divertActiveBarred;
+  private boolean divertActiveCapacity;
   private boolean divertModifiable;
 
   private byte codepage;
@@ -33,46 +39,63 @@ public class Profile
   private boolean aliasHide = false;
   private boolean aliasModifiable = true;
 
+  public Profile(Mask mask, byte codepage, boolean ussd7bit, byte reportOptions, String locale, boolean aliasHide, boolean aliasModifiable, String divert, boolean divertActiveUnconditional, boolean divertActiveAbsent, boolean divertActiveBlocked, boolean divertActiveBarred, boolean divertActiveCapacity, boolean divertModifiable)
+  {
+    this.mask = mask;
+    this.ussd7bit = ussd7bit;
+    this.divert = divert;
+    this.divertActiveUnconditional = divertActiveUnconditional;
+    this.divertActiveAbsent = divertActiveAbsent;
+    this.divertActiveBlocked = divertActiveBlocked;
+    this.divertActiveBarred = divertActiveBarred;
+    this.divertActiveCapacity = divertActiveCapacity;
+    this.divertModifiable = divertModifiable;
+    this.codepage = codepage;
+    this.reportOptions = reportOptions;
+    this.locale = locale;
+    this.aliasHide = aliasHide;
+    this.aliasModifiable = aliasModifiable;
+  }
+
+  public Profile(Mask mask, byte codepage, boolean ussd7bit, byte reportOptions, String locale, boolean aliasHide, boolean aliasModifiable, String divert, String divertActive, boolean divertModifiable)
+  {
+    this.mask = mask;
+    this.ussd7bit = ussd7bit;
+    this.divert = divert;
+    setDivertActive(divertActive);
+    this.divertModifiable = divertModifiable;
+    this.codepage = codepage;
+    this.reportOptions = reportOptions;
+    this.locale = locale;
+    this.aliasHide = aliasHide;
+    this.aliasModifiable = aliasModifiable;
+  }
+
+  public Profile(Mask mask, String codepage, String ussd7bit, String reportOptions, String locale, String aliasHide, String aliasModifiable, String divert, String divert_act, String divert_mod) throws AdminException
+  {
+    this.mask = mask;
+    setCodepage(codepage);
+    setUssd7bit(ussd7bit);
+    setReportOptions(reportOptions);
+    setLocale(locale);
+    setAliasHide(aliasHide);
+    setAliasModifiable(aliasModifiable);
+    setDivert(divert);
+    setDivertActive(divert_act);
+    setDivertModifiable(divert_mod);
+  }
+
   public Profile(Mask mask, List profileProperties) throws AdminException
   {
-    this.mask = mask;
-    setCodepage((String) profileProperties.get(0));
-    setReportOptions((String) profileProperties.get(1));
-    setLocale((String) profileProperties.get(2));
-    setAliasHide((String) profileProperties.get(3));
-    setAliasModifiable((String) profileProperties.get(4));
-    setDivert((String) profileProperties.get(5));
-    setDivert_act((String) profileProperties.get(6));
-    setDivert_mod((String) profileProperties.get(7));
-    setUssd7bit(Boolean.valueOf((String) profileProperties.get(8)).booleanValue());
-  }
-
-  public Profile(Mask mask, byte codepage, boolean ussd7bit, byte reportOptions, String locale, boolean aliasHide, boolean aliasModifiable, String divert, boolean divertActive, boolean divertModifiable)
-  {
-    this.mask = mask;
-    this.divert = divert;
-    this.divertActive = divertActive;
-    this.divertModifiable = divertModifiable;
-    setCodepage(codepage);
-    setUssd7bit(ussd7bit);
-    setReportOptions(reportOptions);
-    setLocale(locale);
-    this.aliasHide = aliasHide;
-    this.aliasModifiable = aliasModifiable;
-  }
-
-  public Profile(Mask mask, String codepage, String ussd7bit, String reportOptions, String locale, boolean aliasHide, boolean aliasModifiable, String divert, boolean divert_act, boolean divert_mod) throws AdminException
-  {
-    this.mask = mask;
-    this.divert = divert;
-    this.divertActive = divert_act;
-    this.divertModifiable = divert_mod;
-    setCodepage(codepage);
-    setReportOptions(reportOptions);
-    setLocale(locale);
-    this.aliasHide = aliasHide;
-    this.aliasModifiable = aliasModifiable;
-    setUssd7bit(ussd7bit);
+    this(mask, (String) profileProperties.get(0),
+         (String) profileProperties.get(8),
+         (String) profileProperties.get(1),
+         (String) profileProperties.get(2),
+         (String) profileProperties.get(3),
+         (String) profileProperties.get(4),
+         (String) profileProperties.get(5),
+         (String) profileProperties.get(6),
+         (String) profileProperties.get(7));
   }
 
   public byte getCodepage()
@@ -106,7 +129,7 @@ public class Profile
     this.codepage = codepage;
   }
 
-  public void setCodepage(String codepageString) throws AdminException
+  private void setCodepage(String codepageString) throws AdminException
   {
     if (codepageString.equalsIgnoreCase("default"))
       codepage = CODEPAGE_Default;
@@ -130,12 +153,26 @@ public class Profile
     return getReportOptionsString(reportOptions);
   }
 
+  public static String getReportOptionsString(byte reportOptions) throws AdminException
+  {
+    switch (reportOptions) {
+      case REPORT_OPTION_Full:
+        return "full";
+      case REPORT_OPTION_Final:
+        return "final";
+      case REPORT_OPTION_None:
+        return "none";
+      default:
+        throw new AdminException("Report option is not initialized");
+    }
+  }
+
   public void setReportOptions(byte reportOptions)
   {
     this.reportOptions = reportOptions;
   }
 
-  public void setReportOptions(String reportoptionsString) throws AdminException
+  private void setReportOptions(String reportoptionsString) throws AdminException
   {
     if (reportoptionsString.equalsIgnoreCase("full"))
       reportOptions = REPORT_OPTION_Full;
@@ -147,12 +184,6 @@ public class Profile
       throw new AdminException("Unknown report option: " + reportoptionsString);
   }
 
-/*  public String getStringRepresentation() throws AdminException
-  {
-    return getCodepageString() + ',' + getReportOptionsString() + ',' + locale +
-            ',' + (aliasHide ? "true" : "false") + ',' + (aliasModifiable ? "true" : "false");
-  }
-*/
   public Mask getMask()
   {
     return mask;
@@ -180,7 +211,7 @@ public class Profile
     this.aliasHide = aliasHide;
   }
 
-  public void setAliasHide(String aliasHide)
+  private void setAliasHide(String aliasHide)
   {
     this.aliasHide = (aliasHide.equalsIgnoreCase("true") ||
                       aliasHide.equalsIgnoreCase("hide"));
@@ -196,24 +227,10 @@ public class Profile
     this.aliasModifiable = aliasModifiable;
   }
 
-  public void setAliasModifiable(String aliasModifiable)
+  private void setAliasModifiable(String aliasModifiable)
   {
     this.aliasModifiable = (aliasModifiable.equalsIgnoreCase("true") ||
                             aliasModifiable.equalsIgnoreCase("modifiable"));
-  }
-
-  public static String getReportOptionsString(byte reportOptions) throws AdminException
-  {
-    switch (reportOptions) {
-      case REPORT_OPTION_Full:
-        return "full";
-      case REPORT_OPTION_Final:
-        return "final";
-      case REPORT_OPTION_None:
-        return "none";
-      default:
-        throw new AdminException("Report option is not initialized");
-    }
   }
 
   public String getDivert()
@@ -226,19 +243,24 @@ public class Profile
     this.divert = divert;
   }
 
-  public boolean isDivertActive()
+  public String getDivertActive()
   {
-    return divertActive;
+    StringBuffer result = new StringBuffer(5);
+    result.append(divertActiveUnconditional ? 'Y' : 'N');
+    result.append(divertActiveAbsent ? 'Y' : 'N');
+    result.append(divertActiveBlocked ? 'Y' : 'N');
+    result.append(divertActiveBarred ? 'Y' : 'N');
+    result.append(divertActiveCapacity ? 'Y' : 'N');
+    return result.toString();
   }
 
-  public void setDivertActive(boolean divertActive)
+  public void setDivertActive(String divertActive)
   {
-    this.divertActive = divertActive;
-  }
-
-  public void setDivert_act(String divert_act)
-  {
-    this.divertActive = divert_act.equalsIgnoreCase("true");
+    this.divertActiveUnconditional = Character.toUpperCase(divertActive.charAt(0)) == 'Y';
+    this.divertActiveAbsent = Character.toUpperCase(divertActive.charAt(1)) == 'Y';
+    this.divertActiveBlocked = Character.toUpperCase(divertActive.charAt(2)) == 'Y';
+    this.divertActiveBarred = Character.toUpperCase(divertActive.charAt(3)) == 'Y';
+    this.divertActiveCapacity = Character.toUpperCase(divertActive.charAt(4)) == 'Y';
   }
 
   public boolean isDivertModifiable()
@@ -251,7 +273,7 @@ public class Profile
     this.divertModifiable = divertModifiable;
   }
 
-  public void setDivert_mod(String divert_mod)
+  private void setDivertModifiable(String divert_mod)
   {
     this.divertModifiable = divert_mod.equalsIgnoreCase("true");
   }
@@ -266,8 +288,58 @@ public class Profile
     this.ussd7bit = ussd7bit;
   }
 
-  public void setUssd7bit(String ussd7bit)
+  private void setUssd7bit(String ussd7bit)
   {
     this.ussd7bit = Boolean.valueOf(ussd7bit).booleanValue();
+  }
+
+  public boolean isDivertActiveUnconditional()
+  {
+    return divertActiveUnconditional;
+  }
+
+  public void setDivertActiveUnconditional(boolean divertActiveUnconditional)
+  {
+    this.divertActiveUnconditional = divertActiveUnconditional;
+  }
+
+  public boolean isDivertActiveAbsent()
+  {
+    return divertActiveAbsent;
+  }
+
+  public void setDivertActiveAbsent(boolean divertActiveAbsent)
+  {
+    this.divertActiveAbsent = divertActiveAbsent;
+  }
+
+  public boolean isDivertActiveBlocked()
+  {
+    return divertActiveBlocked;
+  }
+
+  public void setDivertActiveBlocked(boolean divertActiveBlocked)
+  {
+    this.divertActiveBlocked = divertActiveBlocked;
+  }
+
+  public boolean isDivertActiveBarred()
+  {
+    return divertActiveBarred;
+  }
+
+  public void setDivertActiveBarred(boolean divertActiveBarred)
+  {
+    this.divertActiveBarred = divertActiveBarred;
+  }
+
+  public boolean isDivertActiveCapacity()
+  {
+    return divertActiveCapacity;
+  }
+
+  public void setDivertActiveCapacity(boolean divertActiveCapacity)
+  {
+    this.divertActiveCapacity = divertActiveCapacity;
   }
 }

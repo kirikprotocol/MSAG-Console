@@ -26,7 +26,11 @@ public class ProfilesBean extends SmscBean
   protected boolean aliasModifiable = false;
 
   protected String divert = "";
-  protected boolean divertActive = false;
+  protected boolean divertActiveUnconditional;
+  protected boolean divertActiveAbsent;
+  protected boolean divertActiveBlocked;
+  protected boolean divertActiveBarred;
+  protected boolean divertActiveCapacity;
   protected boolean divertModifiable = false;
 
   protected int init(List errors)
@@ -160,16 +164,6 @@ public class ProfilesBean extends SmscBean
     this.divert = divert;
   }
 
-  public boolean isDivertActive()
-  {
-    return divertActive;
-  }
-
-  public void setDivertActive(boolean divertActive)
-  {
-    this.divertActive = divertActive;
-  }
-
   public boolean isDivertModifiable()
   {
     return divertModifiable;
@@ -188,5 +182,55 @@ public class ProfilesBean extends SmscBean
   public void setUssd7bit(boolean ussd7bit)
   {
     this.ussd7bit = ussd7bit;
+  }
+
+  public boolean isDivertActiveUnconditional()
+  {
+    return divertActiveUnconditional;
+  }
+
+  public void setDivertActiveUnconditional(boolean divertActiveUnconditional)
+  {
+    this.divertActiveUnconditional = divertActiveUnconditional;
+  }
+
+  public boolean isDivertActiveAbsent()
+  {
+    return divertActiveAbsent;
+  }
+
+  public void setDivertActiveAbsent(boolean divertActiveAbsent)
+  {
+    this.divertActiveAbsent = divertActiveAbsent;
+  }
+
+  public boolean isDivertActiveBlocked()
+  {
+    return divertActiveBlocked;
+  }
+
+  public void setDivertActiveBlocked(boolean divertActiveBlocked)
+  {
+    this.divertActiveBlocked = divertActiveBlocked;
+  }
+
+  public boolean isDivertActiveBarred()
+  {
+    return divertActiveBarred;
+  }
+
+  public void setDivertActiveBarred(boolean divertActiveBarred)
+  {
+    this.divertActiveBarred = divertActiveBarred;
+  }
+
+  public boolean isDivertActiveCapacity()
+  {
+    return divertActiveCapacity;
+  }
+
+  public void setDivertActiveCapacity(boolean divertActiveCapacity)
+  {
+    this.divertActiveCapacity = divertActiveCapacity;
   }
 }
