@@ -40,7 +40,7 @@ public:
     mutex.Lock();
     if(signaled)
     {
-      signaled--;
+      signaled=0;
       mutex.Unlock();
       return 0;
     }
@@ -82,7 +82,7 @@ public:
 #else
     mutex.Lock();
     cond_signal(&event);
-    signaled++;
+    signaled=1;
     mutex.Unlock();
 #endif
   }
