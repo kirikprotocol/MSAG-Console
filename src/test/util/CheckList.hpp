@@ -17,6 +17,7 @@ using std::map;
 using std::set;
 using std::string;
 using std::vector;
+using std::pair;
 using smsc::core::synchronization::Mutex;
 
 //макросы для работы с тест кейсами
@@ -200,6 +201,14 @@ public:
 
 	void save(bool printErrorCodes = true,
 		bool printExecCount = true, bool printTcIds = true) const;
+
+	void saveHtml(bool printErrorCodes = true,
+		bool printExecCount = true, bool printTcIds = true) const;
+
+private:
+	int getTcMag(const TestCase* tc) const;
+	pair<int, int> CheckList::getCounts(const TestCase* tc) const;
+
 };
 
 }
