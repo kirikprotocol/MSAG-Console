@@ -104,7 +104,7 @@ static void QueryHlrVersion(MapDialog* dialog)
       FormatText("MAP::QueryHlrVersion: error 0x%x when GetAcVersion",result));
   }
   string s_((char*)dialog->mshlrAddr.ss7Addr,(char*)dialog->mshlrAddr.ss7Addr+sizeof(dialog->mshlrAddr.ss7Addr));
-  __trace2__("MAP::QueryHlrVersion: [store %s]=0x%x",s_.c_srt(),dialog->dialogid_map);
+  __trace2__("MAP::QueryHlrVersion: [store %s]=0x%x",s_.c_str(),dialog->dialogid_map);
   x_map[s_] = dialog->dialogid_map;
 }
 
