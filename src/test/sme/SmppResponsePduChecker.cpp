@@ -72,6 +72,7 @@ vector<int> SmppResponsePduChecker::checkSubmitSmResp(
 				replaceData->deliveryFlag = true;
 				replaceData->deliveryReceiptFlag = true;
 				replaceData->intermediateNotificationFlag = true;
+				replaceData->replacePdu = NULL;
 				if (replaceData->complete())
 				{
 					pduReg->removePdu(replaceData);
