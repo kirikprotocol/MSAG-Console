@@ -5,6 +5,7 @@
 #include "test/sms/SmsUtil.hpp"
 #include "test/conf/TestConfig.hpp"
 #include "core/synchronization/Mutex.hpp"
+#include "profiler/profiler.hpp"
 #include <ctime>
 #include <string>
 #include <map>
@@ -20,6 +21,7 @@ using smsc::core::synchronization::MutexGuard;
 using std::string;
 using std::map;
 using std::vector;
+using smsc::profiler::ProfileReportOptions::ReportNone;
 
 typedef enum
 {
@@ -86,6 +88,7 @@ public:
 	SmppHeader* const pdu;
 	const time_t submitTime;
 	const uint16_t msgRef;
+	const int reportOptions; //значение из профиля отправителя на момент отправки submit_sm
 	string smsId;
 	bool valid;
 	IntProps intProps;
@@ -95,8 +98,8 @@ public:
 	PduData* replacedByPdu; //pdu, которая замещает текущую pdu
 	
 	PduData(SmppHeader* pdu, time_t submitTime, uint16_t msgRef,
-		IntProps* intProps = NULL, StrProps* strProps = NULL,
-		ObjProps* objProps = NULL);
+		int reportOptions = ReportNone, IntProps* intProps = NULL,
+		StrProps* strProps = NULL, ObjProps* objProps = NULL);
 	~PduData();
 	
 	void ref();
@@ -172,6 +175,7 @@ public:
 	time_t getStartTime() const { return startTime; }
 	time_t getLastTime() const { return lastTime; }
 	time_t calcNextTime(time_t t) const;
+	int getLastAttempt() { return lastAttempt; }
 
 	/**
 	 * Проверки:
@@ -205,18 +209,31 @@ struct DeliveryMonitor : public ReschedulePduMonitor
 	virtual string str() const;
 };
 
-struct DeliveryReceiptMonitor : public ReschedulePduMonitor
+struct DeliveryReportMonitor : public PduMonitor
 {
-	uint8_t regDelivery; //значение из профиля отправителя на момент отправки submit_sm
 	PduFlag deliveryFlag; //флаг доставки сообщения
 	uint32_t deliveryStatus;
 
-	DeliveryReceiptMonitor(time_t startTime, PduData* pduData, PduFlag flag);
-	virtual ~DeliveryReceiptMonitor();
+	DeliveryReportMonitor(time_t checkTime, PduData* pduData, PduFlag flag);
+	virtual ~DeliveryReportMonitor();
 
-	void reschedule(time_t startTime);
-	virtual MonitorType getType() const { return DELIVERY_RECEIPT_MONITOR; }
+	void reschedule(time_t checkTime);
+	virtual MonitorType getType() const = NULL;
 	virtual string str() const;
+};
+
+struct DeliveryReceiptMonitor : public DeliveryReportMonitor
+{
+	DeliveryReceiptMonitor(time_t startTime, PduData* pduData, PduFlag flag)
+		: DeliveryReportMonitor(startTime, pduData, flag) {}
+	virtual MonitorType getType() const { return DELIVERY_RECEIPT_MONITOR; }
+};
+
+struct IntermediateNotificationMonitor : public DeliveryReportMonitor
+{
+	IntermediateNotificationMonitor(time_t startTime, PduData* pduData, PduFlag flag)
+		: DeliveryReportMonitor(startTime, pduData, flag) {}
+	virtual MonitorType getType() const { return INTERMEDIATE_NOTIFICATION_MONITOR; }
 };
 
 struct SmeAckMonitor : public PduMonitor
@@ -226,18 +243,6 @@ struct SmeAckMonitor : public PduMonitor
 	virtual ~SmeAckMonitor();
 
 	virtual MonitorType getType() const { return SME_ACK_MONITOR; }
-	virtual string str() const;
-};
-
-struct IntermediateNotificationMonitor : public PduMonitor
-{
-	uint8_t regDelivery; //значение из профиля отправителя на момент отправки submit_sm
-
-	IntermediateNotificationMonitor(time_t startTime, PduData* pduData,
-		PduFlag flag);
-	virtual ~IntermediateNotificationMonitor();
-
-	virtual MonitorType getType() const { return INTERMEDIATE_NOTIFICATION_MONITOR; }
 	virtual string str() const;
 };
 

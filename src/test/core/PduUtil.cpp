@@ -184,8 +184,10 @@ void PduDataObject::unref()
 }
 
 PduData::PduData(SmppHeader* _pdu, time_t _submitTime, uint16_t _msgRef,
-	IntProps* _intProps, StrProps* _strProps, ObjProps* _objProps)
-: pdu(_pdu), submitTime(_submitTime), msgRef(_msgRef), valid(false), count(0),
+	int _reportOptions, IntProps* _intProps,
+	StrProps* _strProps, ObjProps* _objProps)
+: pdu(_pdu), submitTime(_submitTime), msgRef(_msgRef),
+	reportOptions(_reportOptions), valid(false), count(0),
 	replacePdu(NULL), replacedByPdu(NULL)
 {
 	__require__(pdu);
@@ -249,6 +251,7 @@ string PduData::str() const
 	s << ", pdu = " << (void*) pdu;
 	s << ", msgRef = " << msgRef;
 	s << ", smsId = " << smsId;
+	s << ", reportOptions = " << reportOptions;
 	s << ", submitTime = " << submitTime;
 	s << ", valid = " << (valid ? "true" : "false");
 	s << ", replacePdu = " << (void*) replacePdu;
@@ -414,13 +417,13 @@ string DeliveryMonitor::str() const
 	return s.str();
 }
 
-DeliveryReceiptMonitor::DeliveryReceiptMonitor(time_t startTime,
+DeliveryReportMonitor::DeliveryReportMonitor(time_t checkTime,
 	PduData* pduData, PduFlag flag)
-: ReschedulePduMonitor(startTime, 0, pduData, flag), regDelivery(0xff),
-	deliveryFlag(PDU_REQUIRED_FLAG), deliveryStatus(0)
+: PduMonitor(checkTime, 0, pduData, flag), deliveryFlag(PDU_REQUIRED_FLAG),
+	deliveryStatus(0)
 {
 	__cfg_int__(maxValidPeriod);
-	validTime = startTime + maxValidPeriod;
+	validTime = checkTime + maxValidPeriod;
 	if (flag != PDU_REQUIRED_FLAG)
 	{
 		checkTime = validTime;
@@ -428,23 +431,20 @@ DeliveryReceiptMonitor::DeliveryReceiptMonitor(time_t startTime,
 	__trace2__("monitor created: %s", str().c_str());
 }
 
-DeliveryReceiptMonitor::~DeliveryReceiptMonitor()
+DeliveryReportMonitor::~DeliveryReportMonitor()
 {
 	__trace2__("monitor deleted: %s", str().c_str());
 }
 
-void DeliveryReceiptMonitor::reschedule(time_t _startTime)
+void DeliveryReportMonitor::reschedule(time_t _checkTime)
 {
-	//решедулить только если pdu ни разу не была получена
-	__require__(!lastTime && !lastAttempt);
 	__cfg_int__(maxValidPeriod);
 	switch (flag)
 	{
 		case PDU_REQUIRED_FLAG:
 		case PDU_MISSING_ON_TIME_FLAG:
-			startTime = _startTime;
-			checkTime = startTime;
-			validTime = startTime + maxValidPeriod;
+			checkTime = _checkTime;
+			validTime = checkTime + maxValidPeriod;
 			flag = PDU_REQUIRED_FLAG;
 			break;
 		default:
@@ -452,12 +452,11 @@ void DeliveryReceiptMonitor::reschedule(time_t _startTime)
 	}
 }
 
-string DeliveryReceiptMonitor::str() const
+string DeliveryReportMonitor::str() const
 {
 	ostringstream s;
-	s << ReschedulePduMonitor::str() << ", regDelivery = " << regDelivery <<
-		", deliveryFlag = " << deliveryFlag << ", deliveryStatus = " <<
-		deliveryStatus;
+	s << PduMonitor::str() << ", deliveryFlag = " << deliveryFlag <<
+		", deliveryStatus = " << deliveryStatus;
 	return s.str();
 }
 
@@ -482,31 +481,6 @@ string SmeAckMonitor::str() const
 {
 	ostringstream s;
 	s << PduMonitor::str() << ", startTime = " << startTime;
-	return s.str();
-}
-
-IntermediateNotificationMonitor::IntermediateNotificationMonitor(
-	time_t startTime, PduData* pduData, PduFlag flag)
-: PduMonitor(startTime, 0, pduData, flag), regDelivery(0xff)
-{
-	__cfg_int__(maxValidPeriod);
-	validTime = startTime + maxValidPeriod;
-	if (flag != PDU_REQUIRED_FLAG)
-	{
-		checkTime = validTime;
-	}
-	__trace2__("monitor created: %s", str().c_str());
-}
-
-IntermediateNotificationMonitor::~IntermediateNotificationMonitor()
-{
-	__trace2__("monitor deleted: %s", str().c_str());
-}
-
-string IntermediateNotificationMonitor::str() const
-{
-	ostringstream s;
-	s << PduMonitor::str() << ", regDelivery = " << (int) regDelivery;
 	return s.str();
 }
 
