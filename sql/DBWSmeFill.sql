@@ -1,0 +1,27 @@
+
+-- ******************* Welcome Sme sample data ******************* --
+
+-- Fill ad messages --
+
+INSERT INTO WSME_AD (ID, LANG, AD) VALUES (0, 'EN/EN', 'Hellow 0'); 
+INSERT INTO WSME_AD (ID, LANG, AD) VALUES (1, 'EN/EN', 'Hellow 1');
+INSERT INTO WSME_AD (ID, LANG, AD) VALUES (2, 'EN/EN', 'Hellow 2');
+INSERT INTO WSME_AD (ID, LANG, AD) VALUES (3, 'EN/EN', 'Hellow 3');
+
+INSERT INTO WSME_AD (ID, LANG, AD) VALUES (0, 'EN/US', 'Hy 0'); 
+INSERT INTO WSME_AD (ID, LANG, AD) VALUES (1, 'EN/US', 'Hy 1');
+INSERT INTO WSME_AD (ID, LANG, AD) VALUES (2, 'EN/US', 'Hy 2');
+INSERT INTO WSME_AD (ID, LANG, AD) VALUES (3, 'EN/US', 'Hy 3');
+
+-- Add visitor masks --
+INSERT INTO WSME_VISITORS (MASK) VALUES ('?');
+INSERT INTO WSME_VISITORS (MASK) VALUES ('??');
+INSERT INTO WSME_VISITORS (MASK) VALUES ('???');
+INSERT INTO WSME_VISITORS (MASK) VALUES ('.0.1.?');
+INSERT INTO WSME_VISITORS (MASK) VALUES ('.1.0.??');
+
+-- Add languagues for masks --
+
+INSERT INTO WSME_LANGS (MASK, LANG) VALUES ('?' , 'EN/US');
+INSERT INTO WSME_LANGS (MASK, LANG) VALUES ('??', 'EN/EN');
+
