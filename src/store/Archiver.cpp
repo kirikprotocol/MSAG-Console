@@ -96,7 +96,7 @@ void Archiver::loadMaxFinalizedCount(Manager& config)
     try 
     {
         maxFinalizedCount =
-            (unsigned)config.getInt("MessageStore.Archive.interval");
+            (unsigned)config.getInt("MessageStore.Archive.finalized");
         if (!maxFinalizedCount || 
             maxFinalizedCount > SMSC_ARCHIVER_MAX_FINALIZED_LIMIT)
         {
@@ -104,7 +104,7 @@ void Archiver::loadMaxFinalizedCount(Manager& config)
             log.warn("Maximum count of finalized messages "
                      "in storage (for Archiver activation) is incorrect "
                      "(should be between 1 and %u) ! "
-                     "Config parameter: <MessageStore.Archive.count> "
+                     "Config parameter: <MessageStore.Archive.finalized> "
                      "Using default: %u",
                      SMSC_ARCHIVER_MAX_FINALIZED_LIMIT,
                      SMSC_ARCHIVER_MAX_FINALIZED_DEFAULT);
@@ -115,7 +115,7 @@ void Archiver::loadMaxFinalizedCount(Manager& config)
         maxFinalizedCount = SMSC_ARCHIVER_MAX_FINALIZED_DEFAULT;
         log.warn("Maximum count of finalized messages "
                  "in storage (for Archiver activation) wasn't specified ! "
-                 "Config parameter: <MessageStore.Archive.count> "
+                 "Config parameter: <MessageStore.Archive.finalized> "
                  "Using default: %u",
                  SMSC_ARCHIVER_MAX_FINALIZED_DEFAULT);
     }
@@ -156,7 +156,7 @@ void Archiver::loadMaxUncommitedCount(Manager& config)
 
 Archiver::Archiver(Manager& config)
     throw(ConfigException, StorageException) 
-        : Thread(), finalizedCount(0),
+        : Thread(), finalizedCount(0), bStarted(false),
             log(Logger::getCategory("smsc.store.Archiver"))
 {
     storageDBInstance = 
@@ -185,16 +185,15 @@ Archiver::Archiver(Manager& config)
     archiveConnection = new Connection(
         archiveDBInstance, archiveDBUserName, archiveDBUserPassword);
 
-    startup();
+    //this->Start();
 }
 
 
 Archiver::~Archiver() 
 {
     __trace__("Archiver destruction ...");
-    exit.Signal();
-    __trace__("Stop signal sent, waiting ...");
-    exited.Wait();
+    
+    this->Stop();
     
     if (storageDBInstance) delete storageDBInstance;
     if (storageDBUserName) delete storageDBUserName;
@@ -212,6 +211,31 @@ Archiver::~Archiver()
     if (archiveConnection) delete archiveConnection;
     
     __trace__("Archiver destructed !");
+}
+
+void Archiver::Start() 
+    throw(StorageException)
+{
+    MutexGuard  guard(startLock);
+
+    if (!bStarted)
+    {
+        startup();
+        Thread::Start();
+        bStarted = true;
+    }
+}
+
+void Archiver::Stop() 
+{
+    MutexGuard  guard(startLock);
+
+    if (bStarted)
+    {
+        exit.Signal();
+        exited.Wait();
+        bStarted = false;
+    }
 }
 
 const char* Archiver::countSql = (const char*)
@@ -255,29 +279,6 @@ void Archiver::connect()
     }
 }
 
-const char* Archiver::storageMaxIdSql = (const char*)
-"SELECT NVL(MAX(ID), '0000000000000000') FROM SMS_MSG";
-const char* Archiver::archiveMaxIdSql = (const char*)
-"SELECT NVL(MAX(ID), '0000000000000000') FROM SMS_ARC";
-SMSId Archiver::getMaxId() 
-    throw(StorageException)
-{
-    connect();
-    SMSId storageId, archiveId;
-
-    GetIdStatement storageMaxIdStmt(storageConnection,
-                                    Archiver::storageMaxIdSql);
-    GetIdStatement archiveMaxIdStmt(archiveConnection, 
-                                    Archiver::archiveMaxIdSql);
-
-    storageMaxIdStmt.checkErr(storageMaxIdStmt.execute());
-    storageMaxIdStmt.getSMSId(storageId);
-    archiveMaxIdStmt.checkErr(archiveMaxIdStmt.execute());
-    archiveMaxIdStmt.getSMSId(archiveId);
-    
-    return ((storageId > archiveId) ? storageId : archiveId);
-}
-
 void Archiver::incrementFinalizedCount(unsigned count)
 {
     MutexGuard  guard(finalizedMutex);  
@@ -287,7 +288,8 @@ void Archiver::incrementFinalizedCount(unsigned count)
         if (!job.isSignaled()) 
         {
             job.Signal();
-            __trace__("Signal sent !");
+            __trace2__("Signal sent, Finalized count is : %d !", 
+                       finalizedCount);
         }
     }
 }
@@ -307,7 +309,7 @@ int Archiver::Execute()
     bool first=true;
     do 
     {
-        job.Wait(awakeInterval);
+        job.Wait((first) ? 0:awakeInterval);
         if (exit.isSignaled()) break;
         try 
         {
@@ -331,6 +333,8 @@ int Archiver::Execute()
 void Archiver::archivate(bool first)
     throw(StorageException) 
 {
+    MutexGuard  guard(processLock);
+
     connect();
 
     // do real job here
@@ -388,12 +392,37 @@ void Archiver::archivate(bool first)
     }
 }
 
+const char* Archiver::storageMaxIdSql = (const char*)
+"SELECT NVL(MAX(ID), '0000000000000000') FROM SMS_MSG";
+const char* Archiver::archiveMaxIdSql = (const char*)
+"SELECT NVL(MAX(ID), '0000000000000000') FROM SMS_ARC";
+SMSId Archiver::getMaxId() 
+    throw(StorageException)
+{
+    MutexGuard  guard(processLock);
+
+    connect();
+    SMSId storageId, archiveId;
+
+    GetIdStatement storageMaxIdStmt(storageConnection,
+                                    Archiver::storageMaxIdSql);
+    GetIdStatement archiveMaxIdStmt(archiveConnection, 
+                                    Archiver::archiveMaxIdSql);
+
+    storageMaxIdStmt.checkErr(storageMaxIdStmt.execute());
+    storageMaxIdStmt.getSMSId(storageId);
+    archiveMaxIdStmt.checkErr(archiveMaxIdStmt.execute());
+    archiveMaxIdStmt.getSMSId(archiveId);
+    
+    return ((storageId > archiveId) ? storageId : archiveId);
+}
+
 const char* Archiver::selectSql = (const char*)
 "SELECT ID, ST, MR, RM,\
  OA_LEN, OA_TON, OA_NPI, OA_VAL, DA_LEN, DA_TON, DA_NPI, DA_VAL,\
  VALID_TIME, WAIT_TIME, SUBMIT_TIME, DELIVERY_TIME,\
  SRR, RD, ARC, PRI, PID, FCS, DCS, UDHI, UDL, UD FROM SMS_MSG\
- WHERE NOT ST=:ST";
+ WHERE NOT ST=:ST ORDER BY ID ASC";
 void Archiver::prepareSelectStmt() throw(StorageException)
 {
     selectStmt->define(1, SQLT_BIN, (dvoid *) &(id),

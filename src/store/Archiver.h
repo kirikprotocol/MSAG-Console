@@ -32,6 +32,9 @@ namespace smsc { namespace store
         unsigned    maxUncommitedCount;
         unsigned    awakeInterval;
         
+        bool        bStarted;
+        Mutex       processLock, startLock;
+        
         static const char*  countSql;
         static const char*  storageMaxIdSql;
         static const char*  archiveMaxIdSql;
@@ -122,6 +125,10 @@ namespace smsc { namespace store
         void decrementFinalizedCount(unsigned count=1);
 
         virtual int Execute();
+        
+        void Start()
+            throw(StorageException);
+        void Stop();
     };
 
 }};
