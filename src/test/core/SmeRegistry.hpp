@@ -5,6 +5,7 @@
 #include "PduRegistry.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include "smeman/smetypes.h"
+#include "smeman/smeinfo.h"
 #include <map>
 #include <vector>
 #include <set>
@@ -17,6 +18,7 @@ using std::map;
 using std::vector;
 using std::set;
 using smsc::sms::Address;
+using smsc::smeman::SmeInfo;
 using smsc::smeman::SmeSystemId;
 using smsc::test::sms::ltAddress;
 
@@ -31,12 +33,12 @@ public:
 private:
 	struct SmeData
 	{
-		const SmeSystemId systemId;
 		PduRegistry* pduReg;
-		SmeData(const SmeSystemId& id, PduRegistry* reg)
-			: systemId(id), pduReg(reg) {}
+		SmeInfo* sme;
+		SmeData(PduRegistry* reg, SmeInfo* smeInfo)
+			: pduReg(reg), sme(smeInfo) {}
 		SmeData(const SmeData& data)
-			: systemId(data.systemId), pduReg(data.pduReg) {}
+			: pduReg(data.pduReg), sme(data.sme) {}
 	};
 	typedef map<const Address, SmeData, ltAddress> AddressMap;
 	typedef set<SmeSystemId> SmeSystemIdSet;
@@ -48,17 +50,19 @@ public:
 	SmeRegistry() {}
 	~SmeRegistry();
 
-	void registerSme(const Address& smeAddr, const SmeSystemId& smeId);
+	void registerSme(const Address& smeAddr, SmeInfo* sme);
 
-	void registerAddressWithNoSme(const Address& addr);
+	void clear();
 	
 	PduRegistry* getPduRegistry(const Address& smeAddr) const;
 
 	const Address* getRandomAddress() const;
 
-	bool isSmeRegistered(const SmeSystemId& smeId) const;
+	bool isSmeAvailable(const SmeSystemId& smeId) const;
 
-	const AddressList& list();
+	void saveConfig(const char* configFileName);
+	
+	void dump(FILE* log);
 };
 
 }
