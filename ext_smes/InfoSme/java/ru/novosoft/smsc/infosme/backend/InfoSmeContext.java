@@ -46,6 +46,8 @@ public class InfoSmeContext
   private int tasksPageSize = 20;
   private String schedulesSort = "name";
   private int schedulesPageSize = 20;
+  private String messagesSort = Message.SORT_BY_DATE;
+  private int messagesPageSize = 20;
 
   private boolean changedOptions = false;
   private boolean changedDrivers = false;
@@ -223,5 +225,17 @@ public class InfoSmeContext
   public DataSource getDataSource()
   {
     return dataSource;
+  }
+  public String getMessagesSort() {
+    return messagesSort;
+  }
+  public void setMessagesSort(String messagesSort) {
+    this.messagesSort = messagesSort;
+  }
+  public int getMessagesPageSize() {
+    return messagesPageSize;
+  }
+  public void setMessagesPageSize(int messagesPageSize) {
+    this.messagesPageSize = messagesPageSize;
   }
 }
