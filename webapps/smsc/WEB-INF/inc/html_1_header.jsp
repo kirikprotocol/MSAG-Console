@@ -18,7 +18,7 @@
 		<table cellspacing=0 cellpadding=0>
 		<tr>
 			<td width=236><IMG SRC="/images/smsc_04.jpg" WIDTH=236 HEIGHT=45 ALT=""></td>
-			<td bgcolor="#161E49"><span style="color: #6F77A3; font: bold 11px; vertical-align: -10px;">Version&nbsp;1.7</span></td>
+			<td bgcolor="#161E49"><span style="color: #6F77A3; font: bold 11px; vertical-align: -10px;">Version&nbsp;1.8</span></td>
 			<td width=12 background="/images/smsc_06.jpg"></td>
 		</tr>
 		</table>
