@@ -25,7 +25,8 @@ public class ProfileAddCommand extends ProfileGenCommand
         String out = "Profile for mask '"+mask+"'";
         try {
             Mask profileMask = new Mask(mask);
-            Profile profile = new Profile(profileMask, codepage, report);
+			   //todo add locale parameter
+            Profile profile = new Profile(profileMask, codepage, report, "");
             switch (ctx.getSmsc().updateProfile(profileMask, profile))
             {
                 case 1:	//pusUpdated

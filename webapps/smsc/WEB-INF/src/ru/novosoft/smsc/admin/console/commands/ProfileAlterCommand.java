@@ -20,6 +20,7 @@ public class ProfileAlterCommand extends ProfileGenCommand
         this.address = address;
     }
 
+	 //todo add locale parameter
     public void process(CommandContext ctx)
     {
         if (!isCodepage && !isReport) {
