@@ -54,6 +54,14 @@ Targets:
     </copy>
   </target>
 
+  <target name="updateweb">
+    <ant dir="${WEBSRC_DIR}" target="do_update"/>
+  </target>
+
+  <target name="installweb">
+    <ant dir="${WEBSRC_DIR}" target="do_install"/>
+  </target>
+
   <target name="rmdistr">
     <delete dir="${DISTR_DIR}"/>
   </target>
@@ -140,8 +148,7 @@ Targets:
 
   </target>
 
-  <target name="update" depends="create_update">
-    <ant antfile="${WEBSRC_DIR}/build.xml" dir="${WEBSRC_DIR}" target="update"/>
+  <target name="update" depends="create_update,updateweb">
   </target>
 
   <target name="configure">
@@ -242,8 +249,7 @@ Targets:
   <target name="create_distr" depends="create_distr_tree, create_update">
   </target>
 
-  <target name="distr" depends="create_distr, extra_libs, configure">
-    <ant antfile="${WEBSRC_DIR}/build.xml" dir="${WEBSRC_DIR}" target="install"/>
+  <target name="distr" depends="create_distr, extra_libs, installweb, configure">
   </target>
 
 </project>

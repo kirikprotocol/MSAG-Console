@@ -48,7 +48,7 @@ Targets:
     <untar compression="gzip" src="${SMSC_DIR}/config/tomcat/tomcat5.tar.gz" dest="${DISTR_DIR}/tomcat"/>
     <ant antfile="${WEBSRC_DIR}/build.xml" dir="${WEBSRC_DIR}" target="build"/>
     <copy todir="${DISTR_DIR}/webapps">
-      <fileset dir="${SRC_DIR}/webapp" includes="images/**/*, styles/**/*, scripts/**/*"/> 
+      <fileset dir="${WEBSRC_DIR}" includes="images/**/*, styles/**/*, scripts/**/*"/> 
     </copy>
   </target>
 

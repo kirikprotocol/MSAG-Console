@@ -78,7 +78,9 @@
     </copy>
   </target>
 
-  <target name="update" depends="build" description="copy files to distributive except of config files">
+  <target name="do_update" description="copy files to distributive except of config files">
+    <available file="${java_lib}/smsc.jar" property="BUILD_COMPLETE"/>
+    <fail unless="BUILD_COMPLETE" message="please run build first"/>
     <copy todir="${CATALINA_BASE}/webapps/smsc" preservelastmodified="yes">
       <fileset dir="${exploded}"/>
     </copy>
@@ -90,9 +92,14 @@
     </jar>
   </target>
 
+  <target name="update" depends="build,do_update" description="copy files to distributive except of config files">
+  </target>
+
   <target name="install" depends="update" description="copy files to distributive">
   </target>
 
+  <target name="do_install" depends="do_update" description="copy files to distributive">
+  </target>
 
   <target name="clean" description="clean up">
     <delete dir="${java_out}"/>
