@@ -298,7 +298,7 @@ static void DropMapDialog(MapDialog* dialog){
 
 static unsigned RemapDialog(MapDialog* dialog,unsigned ssn){
   dialog->id_opened = false;
-  return MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map,ssn);
+  return MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map,dialog->ssn,ssn);
 }
 
 static void SendRescheduleToSmsc(unsigned dialogid)
@@ -1686,7 +1686,7 @@ USHORT_T Et96MapCloseInd(
         DropMapDialog(dialog.get());
       }else{
         if ( !dialog->routeErr ) {
-          MapDialogContainer::getInstance()->reAssignDialog(dialogueId,localSsn);
+          MapDialogContainer::getInstance()->reAssignDialog(dialogueId,dialog->ssn,localSsn);
           dialog->id_opened = false;
           dialogueId = dialog->dialogid_map;
           dialog->state = MAPST_WaitMcsVersion;
@@ -2174,10 +2174,12 @@ static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string&
 static void PauseOnImsiReq(MapDialog* map)
 {
   bool success = false;
+  unsigned localSsn = 0;
   DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialogImsiReq(SSN,map));
   if (dialog.isnull()) throw runtime_error(
     FormatText("MAP::%s can't create dialog",__FUNCTION__));
   unsigned dialogid_map = dialog->dialogid_map;
+  localSsn = dialog->ssn;
   MAP_TRY{
     if ( map->sms.get() == 0 )
       throw runtime_error(
@@ -2212,7 +2214,7 @@ static void PauseOnImsiReq(MapDialog* map)
     //dialog->mshlrAddr = map->mshlrAddr;
     dialog->state = MAPST_ImsiWaitACVersion;
     QueryHlrVersion(dialog.get());
-  }MAP_CATCH(dialogid_map,0);
+  }MAP_CATCH(dialogid_map,0,localSsn);
 }
 
 static string GetUSSDSubsystem(

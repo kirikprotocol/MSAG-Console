@@ -309,7 +309,7 @@ class MapDialogContainer{
   void Dump() {
     if ( time(0) < last_dump_time+60 ) return;
     last_dump_time = time(0);
-    ET96MAP_DIALOGUE_ID_T key;
+    unsigned key;
     MapDialog* dlg;
     hash_.First();
     while(hash_.Next(key,dlg)) {
