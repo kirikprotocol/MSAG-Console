@@ -1368,6 +1368,63 @@ static void PauseOnImsiReq(MapDialog* map)
   }MAP_CATCH(dialogid_map,0);
 }
 
+static string GetUUSDSubsystem(
+  const char* text,
+  unsigned length)
+{
+  const char* p = text;
+  const char* pEnd = text+length;
+  for ( ; p < pEnd; ++p ) if ( *p != "#" && *p != '*' ) break;
+  const char* sBegin = p;
+  for ( ; p < pEnd; ++p ) if ( *p == "#" || *p == '*' ) break;
+  const char* sEnd = p;
+  return string(sBegin,sEnd);
+}
+
+USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
+  ET96MAP_LOCAL_SSN_T localSsn,
+  ET96MAP_DIALOGUE_ID_T dialogueId,
+  ET96MAP_INVOKE_ID_T invokeId,
+  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdDataCodingScheme,
+  ET96MAP_USSD_STRING_T ussdString_s,
+  ET96MAP_ADDRESS_T *msisdn_sp)
+{
+  unsigned __dialogid_map = 0;
+  MAP_TRY{
+    __trace2__("MAP::%s MAP.did:{0x%x}",__FUNCTION__,dialogueId);
+    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
+    if ( dialog.isnull() )
+      throw runtime_error(
+        FormatText("MAP::%s MAP.did:{0x%x} is not present",__FUNCTION__,dialogueId));
+    dialog->isUSSD = true;
+    __dialogid_map = dialogueId;
+    string subsytem;
+    auto_ptr<SMS> _sms ( new SMS() );
+    SMS& sms = *_sms.get();
+    Address src_addr = Address("911523");
+    Address dest_addr = Address(subsystem);
+    {
+      MicroString ms;
+      Convert7BitToSMSC7Bit(ussdString_s.ussdStr,ussdString_s.ussdStrLen,&ms,0);
+      subsystem = GetSubsystem(ms.bytes,ms.len);
+      __trace2__("MAP::%s sybsystem: %s",__FUNCTION__,subsystem.c_str());
+      sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,ms.bytes,ms.len);
+      sms.setIntProperty(Tag::SMPP_SM_LENGTH,ms.len);
+      sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)MAP_SMSC7BIT_ENCODING);
+    }
+    unsigned esm_class = 0;
+    sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
+    sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,0);
+    sms.setMessageReference(0);
+    sms.setOriginatingAddress(src_addr);
+    sms.setDestinationAddress(dest_addr);
+    dialog->sms = _sms;
+    dialog->state = MAPST_WaitSubmitCmdConf;
+    SendSubmitCommand (dialog.get());
+  }MAP_CATCH(__dialogid_map,0);
+  return ET96MAP_E_OK;
+}
+
 #else
 
 #include "MapDialog_spcific.cxx"

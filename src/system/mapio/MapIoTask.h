@@ -108,6 +108,7 @@ struct MapDialog{
   string s_imsi;
   string s_msc;
   MapDialog* associate;
+  bool isUSSD;
 //  bool isMOreq;
 //  unsigned dialogid_req;
   MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned version=2) : 
@@ -117,7 +118,8 @@ struct MapDialog{
     dialogid_smsc(0),
     mms(false),
     version(version),
-    associate(0)
+    associate(0),
+    isUSSD(false)
 //    isMOreq(false),
 //    dialogid_req(0)
     {}
@@ -163,6 +165,7 @@ struct MapDialog{
     //list<SmscCommand> chain;
     version = 0;
     mms = false;
+    isUSSD = false;
   }
 private:
   unsigned ref_count;
