@@ -18,7 +18,11 @@ public class Alias
 	public Alias(Mask address, Mask alias, boolean hide)
 			throws AdminException
 	{
-		if (address.getQuestionsCount() != alias.getQuestionsCount())
+		int aliasQuestionsCount = alias.getQuestionsCount();
+        int addressQuestionsCount = address.getQuestionsCount();
+        if (hide && (addressQuestionsCount > 0 || aliasQuestionsCount > 0))
+            throw new AdminException("alias incorrect - question marks aren't allowed for aliases with hide option");
+        if (addressQuestionsCount != aliasQuestionsCount)
 			throw new AdminException("alias incorrect - question marks in alias and address do not match");
 		this.address = address;
 		this.alias = alias;
