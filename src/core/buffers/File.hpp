@@ -27,6 +27,7 @@
 #else
 # include <netinet/in.h>
 # include <inttypes.h>
+# include <unistd.h>
 #endif
 
 
@@ -46,7 +47,7 @@ public:
   enum{
     errOpenFailed,errReadFailed,errEndOfFile,
     errWriteFailed,errSeekFailed,errFileNotOpened,
-    errRenameFailed
+    errRenameFailed,errUnlinkFailed
   };
   FileException(int err):errCode(err)
   {
@@ -106,6 +107,11 @@ public:
         return errbuf.c_str();
       case errRenameFailed:
         errbuf="Failed to rename file"+errbuf;
+        errbuf+=":";
+        errbuf+=strerror(error);
+        return errbuf.c_str();
+      case errUnlinkFailed:
+        errbuf="Failed to unlink file"+errbuf;
         errbuf+=":";
         errbuf+=strerror(error);
         return errbuf.c_str();
@@ -301,7 +307,7 @@ public:
     {
       if(bufferPosition+sz>fileSize)
       {
-        abort();
+        //abort();
         throw FileException(FileException::errEndOfFile,filename.c_str());
       }
       memcpy(buf,buffer+bufferPosition,sz);
@@ -316,7 +322,7 @@ public:
         throw FileException(FileException::errReadFailed,filename.c_str());
       else
       {
-        abort();
+        //abort();
         throw FileException(FileException::errEndOfFile,filename.c_str());
       }
     }
@@ -528,21 +534,84 @@ public:
     XWrite(l);
   }
 
-  static bool Exists(const char* file)
+  void Flush()
   {
-#ifdef _WIN32
-    struct _stat st;
-    return _stat(file,&st)==0;
-#else
-    struct stat st;
-    return stat(file,&st)==0;
-#endif
+    Check();
+    if(!inMemoryFile)fflush(f);
+  }
+
+  bool ReadLine(std::string& str)
+  {
+    Check();
+    if(inMemoryFile)
+    {
+      if(bufferPosition==fileSize)return false;
+      char* eoln=(char*)memchr(buffer+bufferPosition,'\n',fileSize-bufferPosition);
+      if(eoln==NULL)
+      {
+        str.assign(buffer+bufferPosition,fileSize-bufferPosition);
+      }else
+      {
+        eoln--;
+        if(*eoln==0x0d)eoln--;
+        str.assign(buffer+bufferPosition,eoln-buffer);
+      }
+      return true;
+    }else
+    {
+      offset_type off=Pos();
+      offset_type fsz=Size();
+      char buf[1024];
+      char *bufptr=buf;
+      int bufsize=1024;
+      for(;;)
+      {
+        if(fgets(bufptr,bufsize,f)==NULL)return false;
+        int len=strlen(bufptr);
+        if(bufptr[len-1]=='\n' || feof(f))
+        {
+          if(bufptr[len-1]=='\n')
+          {
+            len--;
+            if(len>0 && bufptr[len-1]==0x0d)len--;
+          }
+          str.assign(bufptr,len);
+          if(bufptr!=buf)delete [] bufptr;
+          return true;
+        }
+        bufsize*=2;
+        fsetpos(f,&off);
+        if(bufptr!=buf)delete [] bufptr;
+        bufptr=new char[bufsize];
+      }
+    }
   }
 
   void Rename(const char* newname)
   {
     if(rename(filename.c_str(),newname)!=0)throw FileException(FileException::errRenameFailed,filename.c_str());
     filename=newname;
+  }
+
+  static bool Exists(const char* file)
+  {
+#ifdef _WIN32
+    struct _stat st;
+    return _stat(file,&st)==0;
+#else
+    struct ::stat st;
+    return ::stat(file,&st)==0;
+#endif
+  }
+
+  static void Rename(const char* oldname,const char* newname)
+  {
+    if(rename(oldname,newname)!=0)throw FileException(FileException::errRenameFailed,oldname);
+  }
+
+  static void Unlink(const char* fn)
+  {
+    if(unlink(fn)!=0)throw FileException(FileException::errUnlinkFailed,fn);
   }
 
 protected:
