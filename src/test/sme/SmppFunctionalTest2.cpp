@@ -51,6 +51,8 @@ using namespace smsc::test::sme;
 using namespace smsc::test::config;
 using namespace smsc::test::util;
 
+class SyncObject;
+
 SmeRegistry* smeReg;
 AliasRegistry* aliasReg;
 RouteRegistry* routeReg;
@@ -59,11 +61,46 @@ ProfileRegistry* profileReg;
 CheckList* smppChkList;
 CheckList* configChkList;
 SmppPduSender* pduSender;
+SyncObject* syncObj;
+
+class SyncObject
+{
+	Mutex mutex;
+	Event readyEvent;
+	int smeCount;
+	int readyCount;
+public:
+	SyncObject() : smeCount(0), readyCount(0) {}
+	void reset()
+	{
+		MutexGuard mguard(mutex);
+		smeCount = 0;
+		readyCount = 0;
+	}
+	void registerSme()
+	{
+		MutexGuard mguard(mutex);
+		++smeCount;
+	}
+	void signalReady()
+	{
+		MutexGuard mguard(mutex);
+		if (++readyCount >= smeCount)
+		{
+			readyEvent.SignalAll();
+		}
+	}
+	bool waitStart(int timeout)
+	{
+		readyEvent.Wait(timeout);
+		return (readyCount == smeCount);
+	}
+};
 
 class TestSme : public ThreadedTask
 {
 protected:
-	Event event;
+	Event pauseEvent;
 	bool paused;
 	int tcCount;
 public:
@@ -72,8 +109,8 @@ public:
 	virtual const char* taskName() = NULL;
 	int getTcCount() { return tcCount; }
 	void pause() { paused = true; }
-	void resume() { paused = false; event.Signal();	}
-	void stop() { isStopping = true; event.Signal(); }
+	void resume() { paused = false; pauseEvent.Signal();	}
+	void stop() { isStopping = true; pauseEvent.Signal(); }
 };
 
 /**
@@ -104,6 +141,7 @@ public:
 		transmitterTc(_fixture), smscSmeTc(_fixture), protocolTc(_fixture),
 		profilerTc(_fixture), abonentInfoTc(_fixture)
 	{
+		syncObj->registerSme();
 		ostringstream os;
 		os << "TestSmeFunc" << smeNum;
 		name = os.str();
@@ -176,20 +214,20 @@ int TestSmeFunc::Execute()
 				__unreachable__("Invalid seq number");
 		}
 	}
-	sleep(5);
 	//тестовая последовательност команд
 	seq.clear();
 #ifdef LOAD_TEST
 	seq.push_back(201);
 #else
-	seq.insert(seq.end(), 30, 1);
-	seq.insert(seq.end(), 15, 2);
-	//seq.insert(seq.end(), 5, 3);
+	seq.insert(seq.end(), 20, 1);
+	seq.insert(seq.end(), 20, 2);
+	seq.insert(seq.end(), 15, 3);
 	//seq.insert(seq.end(), 5, 4);
 	//seq.insert(seq.end(), 5, 5);
 	//seq.insert(seq.end(), 5, 6);
-	seq.insert(seq.end(), 1, 7);
-	seq.insert(seq.end(), 7, 8);
+	//seq.insert(seq.end(), 5, 7);
+	seq.insert(seq.end(), 1, 8);
+	seq.insert(seq.end(), 7, 9);
 	seq.push_back(51);
 	seq.push_back(52);
 	seq.push_back(53);
@@ -202,14 +240,22 @@ int TestSmeFunc::Execute()
 #endif //ASSERT
 #endif //LOAD_TEST
 	random_shuffle(seq.begin(), seq.end());
+	//дождаться старта остальных sme
+	cout << taskName() << " ready" << endl;
+	syncObj->signalReady();
+	if (!syncObj->waitStart(10000))
+	{
+		__unreachable__("sme failed to start");
+	}
+	cout << taskName() << " run cycle" << endl;
 	while (!isStopping)
 	{
-		event.Wait(delay);
+		pauseEvent.Wait(delay);
 		executeCycle();
 		if (paused)
 		{
 			cout << taskName() << " paused" << endl;
-			event.Wait();
+			pauseEvent.Wait();
 			cout << taskName() << " resumed" << endl;
 		}
 	}
@@ -233,25 +279,28 @@ void TestSmeFunc::executeCycle()
 		case 1: //правильная sms
 			protocolTc.submitSmCorrect(rand0(1), RAND_TC);
 			break;
-		case 2: //неправильная sms
+		case 2: //правильная "сложная" sms
+			protocolTc.submitSmCorrectComplex(rand0(1), RAND_TC);
+			break;
+		case 3: //неправильная sms
 			protocolTc.submitSmIncorrect(rand0(1), RAND_TC);
 			break;
-		case 3:
+		case 4:
 			protocolTc.replaceSmCorrect(rand0(1), RAND_TC);
 			break;
-		case 4:
+		case 5:
 			protocolTc.replaceSmIncorrect(rand0(1), RAND_TC);
 			break;
-		case 5:
+		case 6:
 			protocolTc.querySmCorrect(rand0(1), RAND_TC);
 			break;
-		case 6:
+		case 7:
 			protocolTc.querySmIncorrect(rand0(1), RAND_TC);
 			break;
-		case 7:
+		case 8:
 			protocolTc.cancelSmCorrect(rand0(1), RAND_TC);
 			break;
-		case 8:
+		case 9:
 			protocolTc.cancelSmIncorrect(rand0(1), RAND_TC);
 			break;
 		//profilerTc
@@ -371,7 +420,7 @@ int TestSmeErr::Execute()
 		if (paused)
 		{
 			cout << taskName() << " paused" << endl;
-			event.Wait();
+			pauseEvent.Wait();
 			cout << taskName() << " resumed" << endl;
 		}
 	}
@@ -400,6 +449,7 @@ vector<TestSme*> genConfig(int transceivers, int transmitters, int receivers,
 	smeReg->clear();
 	aliasReg->clear();
 	routeReg->clear();
+	syncObj->reset();
 	SmeManagerTestCases tcSme(NULL, smeReg, NULL);
 	AliasManagerTestCases tcAlias(NULL, aliasReg, NULL);
 	RouteManagerTestCases tcRoute(NULL, routeReg, NULL);
@@ -879,6 +929,7 @@ int main(int argc, char* argv[])
 	smppChkList = new SystemSmeCheckList();
 	configChkList = new ConfigGenCheckList();
 	pduSender = new SmppPduSender();
+	syncObj = new SyncObject();
 	try
 	{
 		executeFunctionalTest(smscHost, smscPort);
@@ -897,6 +948,7 @@ int main(int argc, char* argv[])
 	delete profileReg;
 	delete smppChkList;
 	delete configChkList;
+	delete syncObj;
 	//delete pduSender;
 	return 0;
 }
