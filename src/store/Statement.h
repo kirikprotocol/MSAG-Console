@@ -251,7 +251,7 @@ namespace smsc { namespace store
         };
     };
 
-    class RetriveStatement : public IdStatement
+    class RetrieveStatement : public IdStatement
     {
     static const char* sql;
     protected:
@@ -274,16 +274,16 @@ namespace smsc { namespace store
 
         FullAddressValue    oa, da, dda;
     
-        RetriveStatement(Connection* connection, const char* sql,
+        RetrieveStatement(Connection* connection, const char* sql,
                          bool assign=true) 
             throw(StorageException) 
                 : IdStatement(connection, sql, assign) {};
     
     public:
         
-        RetriveStatement(Connection* connection, bool assign=true)
+        RetrieveStatement(Connection* connection, bool assign=true)
             throw(StorageException);
-        virtual ~RetriveStatement() {};
+        virtual ~RetrieveStatement() {};
 
         void bindId(SMSId id)
             throw(StorageException);
@@ -309,6 +309,34 @@ namespace smsc { namespace store
         };
     };
     
+    class RetrieveBodyStatement : public IdStatement
+    {
+    static const char* sql;
+    protected:
+
+        int                 bodyBufferLen;
+        uint8_t             bodyBuffer[MAX_BODY_LENGTH];
+        sb2                 indBody;
+        
+        FullAddressValue    oa;
+        
+    public:
+
+        RetrieveBodyStatement(Connection* connection, bool assign=true)
+            throw(StorageException);
+        virtual ~RetrieveBodyStatement() {};
+
+        void bindId(SMSId id)
+            throw(StorageException);
+        void bindOriginatingAddress(const Address& oa)
+            throw(StorageException);
+        
+        int getBodyLength(void)
+            throw(StorageException);
+        bool getBody(Body& body)
+            throw(StorageException);
+    };
+
     class ReplaceStatement : public IdStatement
     {
     static const char* sql;
@@ -334,7 +362,7 @@ namespace smsc { namespace store
         
         void bindId(SMSId id)
             throw(StorageException);
-        void bindOriginatingAddress(Address& oa)
+        void bindOriginatingAddress(const Address& oa)
             throw(StorageException);
         void bindBody(Body& body)
             throw(StorageException);

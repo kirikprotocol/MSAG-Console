@@ -465,29 +465,29 @@ void StoreStatement::bindSms(SMS& sms)
          (sb4) sizeof(bodyBufferLen));
 }
 
-/* --------------------------- RetriveStatement ----------------------- */
-const char* RetriveStatement::sql = (const char*)
+/* --------------------------- RetrieveStatement ----------------------- */
+const char* RetrieveStatement::sql = (const char*)
 "SELECT ST, MR, OA, DA, DDA,\
  SRC_MSC, SRC_IMSI, SRC_SME_N, DST_MSC, DST_IMSI, DST_SME_N,\
  VALID_TIME, SUBMIT_TIME,\
  ATTEMPTS, LAST_RESULT, LAST_TRY_TIME, NEXT_TRY_TIME,\
  SVC_TYPE, DR, BR, ARC, BODY, BODY_LEN\
  FROM SMS_MSG WHERE ID=:ID";
-RetriveStatement::RetriveStatement(Connection* connection, bool assign)
+RetrieveStatement::RetrieveStatement(Connection* connection, bool assign)
     throw(StorageException)
-        : IdStatement(connection, RetriveStatement::sql, assign)
+        : IdStatement(connection, RetrieveStatement::sql, assign)
 {
-    __trace2__("%d : RetriveStatement creating ...", stmt);
+    __trace2__("%d : RetrieveStatement creating ...", stmt);
 }
 
-void RetriveStatement::bindId(SMSId id)
+void RetrieveStatement::bindId(SMSId id)
     throw(StorageException)
 {
     setSMSId(id);
     bind(1 , SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
 }
 
-void RetriveStatement::defineSms(SMS& sms)
+void RetrieveStatement::defineSms(SMS& sms)
     throw(StorageException)
 {
     ub4 i=1;
@@ -547,7 +547,7 @@ void RetriveStatement::defineSms(SMS& sms)
            (sb4) sizeof(bodyBufferLen));
 }
 
-void RetriveStatement::getSms(SMS& sms)
+void RetrieveStatement::getSms(SMS& sms)
 {
     sms.state = (State) uState;
     sms.needArchivate = (bNeedArchivate == 'Y');
@@ -626,6 +626,60 @@ void DestroyStatement::bindId(SMSId id)
     bind(1 , SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
 }
 
+/* ----------------------- RetrieveBodyStatement ---------------------- */
+const char* RetrieveBodyStatement::sql = (const char*)
+"SELECT BODY, BODY_LEN FROM SMS_MSG WHERE ID=:ID AND ST=:ENROUTE AND OA=:OA";
+RetrieveBodyStatement::RetrieveBodyStatement(Connection* connection, bool assign) 
+    throw(StorageException)
+        : IdStatement(connection, RetrieveBodyStatement::sql, assign)
+{
+    bind((CONST text *)"ENROUTE", (sb4) 7*sizeof(char), 
+         SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE), 
+         (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
+    
+    indBody = OCI_IND_NOTNULL;
+    define(1 , SQLT_BIN, (dvoid *) (bodyBuffer), 
+           (sb4) sizeof(bodyBuffer), &indBody);
+    define(2 , SQLT_UIN, (dvoid *) &(bodyBufferLen), 
+           (sb4) sizeof(bodyBufferLen));
+}
+          
+void RetrieveBodyStatement::bindId(SMSId id)
+    throw(StorageException)
+{
+    setSMSId(id);
+    bind((CONST text *)"ID", (sb4) 2*sizeof(char), 
+         SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
+}
+void RetrieveBodyStatement::bindOriginatingAddress(const Address& address)
+    throw(StorageException)
+{
+    convertAddressToString(address, oa);
+    bind((CONST text *)"OA", (sb4) 2*sizeof(char),
+         SQLT_STR, (dvoid *) (oa), (sb4) sizeof(oa));
+}
+int RetrieveBodyStatement::getBodyLength(void)
+    throw(StorageException)
+{
+    return bodyBufferLen;
+}
+bool RetrieveBodyStatement::getBody(Body& body)
+    throw(StorageException)
+{
+    if (indBody != OCI_IND_NOTNULL) 
+    { 
+        body.setBuffer(0,0);
+        return false;
+    }
+    else 
+    {
+        uint8_t* setBuff = new uint8_t[bodyBufferLen];
+        memcpy(setBuff, bodyBuffer, bodyBufferLen);
+        body.setBuffer(setBuff, bodyBufferLen);
+    }
+    return true;
+}
+
 /* --------------------------- ReplaceStatement ----------------------- */        
 const char* ReplaceStatement::sql = (const char*)
 "UPDATE SMS_MSG SET DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN\
@@ -660,7 +714,7 @@ void ReplaceStatement::bindId(SMSId id)
     bind((CONST text *)"ID", (sb4) 2*sizeof(char), 
          SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
 }
-void ReplaceStatement::bindOriginatingAddress(Address& address)
+void ReplaceStatement::bindOriginatingAddress(const Address& address)
     throw(StorageException)
 {
     convertAddressToString(address, oa);

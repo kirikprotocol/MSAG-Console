@@ -371,7 +371,8 @@ namespace smsc { namespace store
         NeedRejectStatement*        needRejectStmt;
         OverwriteStatement*         overwriteStmt;
         StoreStatement*             storeStmt;
-        RetriveStatement*           retriveStmt;
+        RetrieveStatement*          retrieveStmt;
+        RetrieveBodyStatement*      retrieveBodyStmt;
         DestroyStatement*           destroyStmt;
         
         ReplaceStatement*           replaceStmt;
@@ -481,9 +482,16 @@ namespace smsc { namespace store
          *                   возникает в случае потери реального соединения с
          *                   базой данных
          */
-        RetriveStatement*       getRetriveStatement() 
+        RetrieveStatement*       getRetrieveStatement() 
             throw(ConnectionFailedException); 
-        
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
+        RetrieveBodyStatement*   getRetrieveBodyStatement() 
+            throw(ConnectionFailedException); 
         /**
          * @return подготовленный (хранимый) SQL оператор
          * @exception ConnectionFailedException

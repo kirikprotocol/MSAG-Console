@@ -130,13 +130,13 @@ namespace smsc { namespace store
         void doCreateSms(StorageConnection* connection,
             SMS& sms, SMSId id, const CreateMode flag)
                 throw(StorageException, DuplicateMessageException);
-        void doRetriveSms(StorageConnection* connection, 
+        void doRetrieveSms(StorageConnection* connection, 
             SMSId id, SMS& sms)
                 throw(StorageException, NoSuchMessageException);
         void doReplaceSms(StorageConnection* connection, 
             SMSId id, const Address& oa, 
-            const Body& newBody, uint8_t deliveryReport,
-            time_t validTime = 0, time_t waitTime = 0)
+            const uint8_t* newMsg, uint8_t newMsgLen,
+            uint8_t deliveryReport, time_t validTime = 0, time_t waitTime = 0)
                 throw(StorageException, NoSuchMessageException);
         void doDestroySms(StorageConnection* connection, SMSId id) 
                 throw(StorageException, NoSuchMessageException);
@@ -336,8 +336,8 @@ namespace smsc { namespace store
          * @see MessageStore 
          */
         virtual void replaceSms(SMSId id, const Address& oa,
-            const Body& newBody, uint8_t deliveryReport,
-            time_t validTime = 0, time_t waitTime = 0)
+            const uint8_t* newMsg, uint8_t newMsgLen,
+            uint8_t deliveryReport, time_t validTime = 0, time_t waitTime = 0)
                 throw(StorageException, NoSuchMessageException); 
         /**
          * Реализация метода MessageStore

@@ -512,8 +512,9 @@ StorageConnection::StorageConnection(const char* instance,
                                      const char* user, const char* password) 
     : Connection(instance, user, password), 
         needOverwriteSvcStmt(0L), needOverwriteStmt(0L), needRejectStmt(0L), 
-        overwriteStmt(0L), storeStmt(0L), retriveStmt(0L), destroyStmt(0L), 
-        replaceStmt(0L), replaceVTStmt(0L), replaceWTStmt(0L), replaceVWTStmt(0L), 
+        overwriteStmt(0L), storeStmt(0L), retrieveStmt(0L), retrieveBodyStmt(0L), 
+        destroyStmt(0L), replaceStmt(0L), replaceVTStmt(0L), 
+        replaceWTStmt(0L), replaceVWTStmt(0L), 
         toEnrouteStmt(0L), toDeliveredStmt(0L), toUndeliverableStmt(0L),
         toExpiredStmt(0L), toDeletedStmt(0L), setBodyStmt(0L), getBodyStmt(0L),
         destroyBodyStmt(0L)
@@ -529,7 +530,8 @@ void StorageConnection::connect()
     {
         storeStmt = new StoreStatement(this); 
         destroyStmt = new DestroyStatement(this); 
-        retriveStmt = new RetriveStatement(this); 
+        retrieveStmt = new RetrieveStatement(this); 
+        retrieveBodyStmt = new RetrieveBodyStatement(this); 
         needRejectStmt = new NeedRejectStatement(this); 
         needOverwriteStmt = new NeedOverwriteStatement(this); 
         needOverwriteSvcStmt = new NeedOverwriteSvcStatement(this);
@@ -587,11 +589,17 @@ StoreStatement* StorageConnection::getStoreStatement()
     connect();
     return storeStmt;
 }
-RetriveStatement* StorageConnection::getRetriveStatement() 
+RetrieveStatement* StorageConnection::getRetrieveStatement() 
     throw(ConnectionFailedException) 
 {
     connect();
-    return retriveStmt;
+    return retrieveStmt;
+}
+RetrieveBodyStatement* StorageConnection::getRetrieveBodyStatement() 
+    throw(ConnectionFailedException) 
+{
+    connect();
+    return retrieveBodyStmt;
 }
 DestroyStatement* StorageConnection::getDestroyStatement() 
     throw(ConnectionFailedException) 

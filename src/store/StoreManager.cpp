@@ -259,14 +259,14 @@ void StoreManager::createSms(SMS& sms, SMSId id, const CreateMode flag)
     }
 }
 
-void StoreManager::doRetriveSms(StorageConnection* connection, 
+void StoreManager::doRetrieveSms(StorageConnection* connection, 
     SMSId id, SMS &sms)
         throw(StorageException, NoSuchMessageException)
 {
     __require__(connection);
 
-    RetriveStatement* retriveStmt 
-        = connection->getRetriveStatement();
+    RetrieveStatement* retriveStmt 
+        = connection->getRetrieveStatement();
 
     retriveStmt->bindId(id);
     retriveStmt->defineSms(sms);
@@ -304,7 +304,7 @@ void StoreManager::retriveSms(SMSId id, SMS &sms)
         try 
         {
             connection = (StorageConnection *)pool->getConnection();
-            doRetriveSms(connection, id, sms);
+            doRetrieveSms(connection, id, sms);
             pool->freeConnection(connection);
             break;
         }
@@ -392,18 +392,41 @@ void StoreManager::destroySms(SMSId id)
 
 void StoreManager::doReplaceSms(StorageConnection* connection, 
     SMSId id, const Address& oa, 
-    const Body& newBody, uint8_t deliveryReport,
-    time_t validTime, time_t waitTime)
+    const uint8_t* newMsg, uint8_t newMsgLen,
+    uint8_t deliveryReport, time_t validTime, time_t waitTime)
         throw(StorageException, NoSuchMessageException)
 {
     __require__(connection);
 
-    DestroyBodyStatement* destroyBodyStmt
-        = connection->getDestroyBodyStatement();
+    Body    body;
+    RetrieveBodyStatement* retrieveBodyStmt 
+        = connection->getRetrieveBodyStatement();
     try
     {
-        destroyBodyStmt->setSMSId(id);
-        destroyBodyStmt->destroyBody();
+        retrieveBodyStmt->bindId(id);
+        retrieveBodyStmt->bindOriginatingAddress(oa);
+        
+        sword status = retrieveBodyStmt->execute();
+        if (status == OCI_NO_DATA) throw NoSuchMessageException(id);
+        else connection->check(status);
+        
+        if (!retrieveBodyStmt->getBody(body) ||
+             retrieveBodyStmt->getBodyLength() > MAX_BODY_LENGTH) 
+        {
+            GetBodyStatement* getBodyStmt
+                = connection->getGetBodyStatement();
+            
+            getBodyStmt->setSMSId(id);
+            getBodyStmt->getBody(body);
+            connection->commit(); // Need to reset BLOB (SELECT FOR UPDATE)
+            
+            DestroyBodyStatement* destroyBodyStmt 
+                = connection->getDestroyBodyStatement();
+            
+            destroyBodyStmt->setSMSId(id);
+            destroyBodyStmt->destroyBody();
+            connection->commit();
+        }
     }
     catch (StorageException& exc) 
     {
@@ -411,6 +434,15 @@ void StoreManager::doReplaceSms(StorageConnection* connection,
         throw exc;
     }
     
+    // Set Body fields here !!!
+    char* newStrMsg = new char[newMsgLen+1];
+    memcpy(newStrMsg, (const char *)newMsg, newMsgLen);
+    newStrMsg[newMsgLen] = '\0';
+    std::string newStringMessage(newStrMsg);
+    delete newStrMsg;
+    body.setStrProperty(Tag::SMPP_SHORT_MESSAGE, newStringMessage);
+    body.setIntProperty(Tag::SMPP_SM_LENGTH, (uint32_t)newMsgLen);
+
     ReplaceStatement* replaceStmt;
     if (waitTime == 0 && validTime == 0) 
     {
@@ -435,21 +467,21 @@ void StoreManager::doReplaceSms(StorageConnection* connection,
     
     replaceStmt->bindId(id);
     replaceStmt->bindOriginatingAddress((Address&) oa);
-    replaceStmt->bindBody((Body &)newBody);
+    replaceStmt->bindBody(body);
     replaceStmt->bindDeliveryReport((dvoid *) &deliveryReport,
                                     (sb4) sizeof(deliveryReport));
     try 
     {
         connection->check(replaceStmt->execute());
         
-        int bodyLen = ((Body &)newBody).getBufferLength();
+        int bodyLen = body.getBufferLength();
         if (bodyLen > MAX_BODY_LENGTH)
         {
             SetBodyStatement* setBodyStmt 
                 = connection->getSetBodyStatement();
 
             setBodyStmt->setSMSId(id);
-            setBodyStmt->setBody((Body &)newBody);
+            setBodyStmt->setBody(body);
         }
     }
     catch (StorageException& exc) 
@@ -466,8 +498,8 @@ void StoreManager::doReplaceSms(StorageConnection* connection,
     connection->commit();
 }
 void StoreManager::replaceSms(SMSId id, const Address& oa,
-    const Body& newBody, uint8_t deliveryReport,
-    time_t validTime, time_t waitTime)
+    const uint8_t* newMsg, uint8_t newMsgLen,
+    uint8_t deliveryReport, time_t validTime, time_t waitTime)
         throw(StorageException, NoSuchMessageException)
 {
     __require__(pool);
@@ -479,7 +511,7 @@ void StoreManager::replaceSms(SMSId id, const Address& oa,
         try 
         {
             connection = (StorageConnection *)pool->getConnection();
-            doReplaceSms(connection, id, oa, newBody,
+            doReplaceSms(connection, id, oa, newMsg, newMsgLen,
                          deliveryReport, validTime, waitTime);
             pool->freeConnection(connection);
             break;

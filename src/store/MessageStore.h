@@ -139,7 +139,8 @@ namespace smsc { namespace store
          * 
          * @param id        идентификационный номер сообщения в хранилище
          * @param oa        структура-адрес отправителя
-         * @param newBody   структура-новое тело сообщения
+         * @param newMsg    новое тело сообщения
+         * @param newMsgLen длинна нового тела сообщения
          * @param deliveryReport
          *                  новый признак отчёта о доставке сообщения
          * @param validTime новая дата/время до которого сообщение валидно
@@ -155,8 +156,8 @@ namespace smsc { namespace store
          * @see SMS
          */
         virtual void replaceSms(SMSId id, const Address& oa,
-            const Body& newBody, uint8_t deliveryReport,
-            time_t validTime = 0, time_t nextTime = 0)
+            const uint8_t* newMsg, uint8_t newMsgLen,
+            uint8_t deliveryReport, time_t validTime = 0, time_t nextTime = 0)
                 throw(StorageException, NoSuchMessageException) = 0; 
         
         /**
