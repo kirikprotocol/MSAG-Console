@@ -640,7 +640,7 @@ StateType StateMachine::submit(Tuple& t)
       {
         __trace__("SUBMIT: failed to change state to enroute");
       }
-      return ENROUTE_STATE;
+      return DELIVERING_STATE;
     }
   }catch(...)
   {
@@ -657,7 +657,7 @@ StateType StateMachine::submit(Tuple& t)
       __trace__("SUBMIT: failed to change state to enroute");
     }
 
-    return ENROUTE_STATE;
+    return DELIVERING_STATE;
   }
   __trace2__("SUBMIT_SM:OK:%lld",t.msgId);
   return DELIVERING_STATE;
@@ -1343,12 +1343,12 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   char msgid[60];
   sprintf(msgid,"%lld",msgId);
   rpt.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,msgid);
-  Array<SMS*> arr;
+  //Array<SMS*> arr;
   string out;
   sms.getDestinationAddress().getText(addr,sizeof(addr));
   formatNotify(addr,reason,sms.getSubmitTime(),out);
   smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
-  splitSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
+  trimSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage);
   smsc->submitSms(prpt);
   /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
   for(int i=0;i<arr.Count();i++)
