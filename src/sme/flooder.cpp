@@ -4,17 +4,26 @@
 #include "sms/sms.h"
 #include "util/smstext.h"
 #include "core/buffers/Array.hpp"
+#include "core/synchronization/EventMonitor.hpp"
 
 using namespace smsc::sms;
 using namespace smsc::sme;
 using namespace smsc::smpp;
 using namespace smsc::util;
 using namespace smsc::core::buffers;
+using namespace smsc::core::synchronization;
+
+const int MAX_UNRESPONDED_HIGH=5000;
+const int MAX_UNRESPONDED_LOW=2000;
 
 
 int stopped=0;
 
 int rcnt=0;
+
+int sent_unresp=0;
+
+EventMonitor em;
 
 class MyListener:public SmppPduEventListener{
 public:
@@ -33,6 +42,10 @@ public:
     {
       //printf("\nReceived async submit sm resp:%d\n",pdu->get_commandStatus());
       rcnt++;
+      em.Lock();
+      sent_unresp--;
+      if(sent_unresp<MAX_UNRESPONDED_LOW)em.notify();
+      em.Unlock();
     }
     disposePdu(pdu);
   }
@@ -116,6 +129,7 @@ int main(int argc,char* argv[])
     s.setEServiceType("XXX");
     sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
     int cnt=0;
+    time_t lasttime=time(NULL);
     while(!stopped)
     {
       for(int i=0;i<addrs.Count();i++)
@@ -137,10 +151,16 @@ int main(int argc,char* argv[])
         }*/
         cnt++;
       }
-      if((cnt%500)==0)
+      if((cnt%500)==0 || time(NULL)-lasttime>5)
       {
         printf("%d/%d\r",rcnt,cnt);
+        fflush(stdout);
+        lasttime=time(NULL);
       }
+      em.Lock();
+      sent_unresp+=addrs.Count();
+      if(sent_unresp>MAX_UNRESPONDED_HIGH)em.wait();
+      em.Unlock();
     }
   }
   catch(std::exception& e)

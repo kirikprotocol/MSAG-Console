@@ -46,9 +46,8 @@ public:
       {
         printf("%x ",(int)(unsigned char)buf[i]);
       }*/
-//      getPduText((PduXSm*)pdu,buf,sizeof(buf));
-//      printf("\n");
-//      printf("\nReceived:%s\n",buf);
+      getPduText((PduXSm*)pdu,buf,sizeof(buf));
+      printf("\nReceived:%s\n",buf);
       PduDeliverySmResp resp;
       resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
       resp.set_messageId("");
