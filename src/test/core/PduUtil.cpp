@@ -102,7 +102,7 @@ vector<int> PduReceiptFlag::update(time_t recvTime, bool accepted, time_t& nextT
 
 bool PduReceiptFlag::isPduMissing(time_t checkTime)
 {
-	if (checkTime < startTime || flag == PDU_RECEIVED_FLAG || flag == PDU_NOT_EXPECTED_FLAG)
+	if (checkTime < startTime || flag != PDU_REQUIRED_FLAG)
 	{
 		return false;
 	}

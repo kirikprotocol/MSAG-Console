@@ -192,7 +192,7 @@ auto_ptr<const Address> AliasRegistry::findAliasByAddress(const Address& addr,
 	}
 	//если не задано явное преобразование addr->alias, то alias=addr
 	Address* alias(new Address(addr));
-	aliasInfo = NULL;
+	*aliasInfo = NULL;
 	if (aliasHolder)
 	{
 		if (aliasInfo)
@@ -241,7 +241,7 @@ auto_ptr<const Address> AliasRegistry::findAddressByAlias(const Address& alias,
 	}
 	//если не задано явное преобразование alias->addr, то addr=alias
 	Address* addr(new Address(alias));
-	aliasInfo = NULL;
+	*aliasInfo = NULL;
 	if (aliasHolder)
 	{
 		if (aliasInfo)
