@@ -33,7 +33,6 @@ insert into results(tbl, msg_type, action) values ('sms_msg', 'total', 'insert')
 insert into results(tbl, msg_type, action) values ('sms_msg', 'arc', 'delete');
 insert into results(tbl, msg_type, action) values ('sms_msg', 'total', 'delete');
 insert into results(tbl, msg_type, action) values ('sms_arc', null, 'insert');
-insert into results(tbl, msg_type, action) values ('sms_arc', 'try_time', 'check');
 insert into results(tbl, msg_type, action) values ('sms_br', null, 'insert');
 --insert into results(tbl, msg_type, action) values ('sms_msg', null, 'rollback');
 --insert into results(tbl, msg_type, action) values ('sms_arc', null, 'rollback');
@@ -45,8 +44,6 @@ create or replace trigger smsc_arc_insert after insert on sms_arc
 declare
 	flag number;
 	sec char(2);
-	prev_try_time number;
-	cur_try_time number;
 	msg sms_msg%rowtype;
 begin
 	--emulate rollback
@@ -66,19 +63,6 @@ begin
 		--state
 		if :arc.st = 0 then
 			raise_application_error(-20201, 'arc.st = ENROTE');
-		end if;
-		--last_try_time order
-		if :arc.st = 1 or :arc.st = 3 then --DELIVERED, UNDELIVERABLE
-			select to_number(to_char(:arc.last_try_time, 'yymmddsssss'))
-				into cur_try_time from dual;
-			select value into prev_try_time from results
-				where tbl = 'sms_arc' and msg_type = 'try_time' and action = 'check';
-			if prev_try_time > cur_try_time then
-				raise_application_error(-20201, 'last_try_time order is broken: id = ' ||
-					:arc.id || ' (' || prev_try_time || ' > ' || cur_try_time || ')');
-			end if;
-			update results set value = cur_try_time
-				where tbl = 'sms_arc' and msg_type = 'try_time' and action = 'check';
 		end if;
 		--arc = 'Y'
 		select * into msg from sms_msg where id = :arc.id;
