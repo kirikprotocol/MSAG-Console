@@ -41,8 +41,8 @@ public class Service extends Proxy
    */
   public Object call(String componentId, String methodId, Type returnType, Map arguments) throws AdminException
   {
-    if (info.status != ServiceInfo.STATUS_RUNNING)
-      throw new AdminException("Service \"" + info.getId() + "\" is not running");
+//    if (info.status != ServiceInfo.STATUS_RUNNING)
+//      throw new AdminException("Service \"" + info.getId() + "\" is not running");
 
     refreshComponents();
 
