@@ -15,6 +15,7 @@
 #include "ProxySmeMixer.h"
 #if !defined _WIN32
 #include "ProxySmeConfig.h"
+#include "signal.h"
 #endif
 #include "../logger/Logger.h"
 
@@ -139,9 +140,6 @@ void SetStopper(SMachine* m){
 void SetStopper(SMachine*){}
 #endif
 
-
-#endif
-
 extern "C" 
 int main()
 {
@@ -170,14 +168,14 @@ int main()
     adminListener.init(pconf.admin_host.c_str(),pconf.admin_port);               
     adminListener.Start();                                     
   }catch(exception& e){
-    smsc::util::Logger::getCategory("smsc.proxysme").error("can't init admin interface, skipped");
+    smsc::util::Logger::getCategory("smsc.proxysme").error("can't init admin interface: %s, skipped",e.what());
   }
 
   for (;;) { 
     Queue     que(pconf);
     Mixer     mixer(que,pconf);
     SMachine  smachine(que,mixer,pconf);
-    SetStopper(smachine);
+    SetStopper(&smachine);
   
     if ( smachine.ProcessCommands(component) == END_PROCESSING ) break;
 
