@@ -247,7 +247,7 @@ void PLSQLJob::process(Command& command, DataSource& ds)
     }
     catch(std::exception& exc) 
     {
-        if (stmt) delete stmt;
+        if (routine) delete routine;
         try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
         ds.freeConnection(connection);
         log.warn("std::exception catched");
@@ -255,7 +255,7 @@ void PLSQLJob::process(Command& command, DataSource& ds)
     }
     catch(...) 
     {
-        if (stmt) delete stmt;
+        if (routine) delete routine;
         try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
         ds.freeConnection(connection);
         log.warn("... catched");
