@@ -13,7 +13,7 @@ const char* MSG_TEMPLATE_PARAM_COUNT   = "count";
 const char* MSG_TEMPLATE_PARAM_DATE    = "date";
 const char* MSG_TEMPLATE_PARAM_ROWS    = "rows";
 
-static const char*  UNKNOWN_CALLER = "<unknown>";
+static const char*  UNKNOWN_CALLER = "XXX";
 
 void keyIsNotSupported(const char* key) throw(AdapterException) {
     throw AdapterException(Exception("Argument '%s' is not supported by message formatter", key));

@@ -12,7 +12,8 @@ uint64_t    Task::currentId  = 0;
 uint64_t    Task::sequenceId = 0;
 bool        Task::bInformAll   = false;
 bool        Task::bNotifyAll   = false;
-int         Task::maxCallersCount = -1; // Disable callers check
+int         Task::maxCallersCount  = -1; // Disable distinct callers count check
+int         Task::maxMessagesCount = -1; // Disable messages count for abonent check
 
 /* ----------------------- Access to message ids generation (MCI_MSG_SEQ) -------------------- */
 
@@ -26,6 +27,8 @@ const char* DELETE_ANY_MSG_ID   = "DELETE_ANY_MSG_ID";
 const char* LOADUP_CUR_MSG_ID   = "LOADUP_CUR_MSG_ID";
 const char* SELECT_OLD_MSG_ID   = "SELECT_OLD_MSG_ID";
 const char* ROLLUP_CUR_MSG_ID   = "ROLLUP_CUR_MSG_ID";
+const char* LOADUP_TO_SKIP_ID   = "LOADUP_TO_SKIP_ID";
+const char* ROLLUP_TO_SKIP_ID   = "ROLLUP_TO_SKIP_ID";
 
 const char* CREATE_NEW_MSG_SQL  = "INSERT INTO MCISME_MSG_SET (ID, STATE, ABONENT, SMSC_ID) "
                                   "VALUES (:ID, :STATE, :ABONENT, NULL)";
@@ -34,7 +37,13 @@ const char* LOADUP_CUR_MSG_SQL  = "SELECT STATE, SMSC_ID FROM MCISME_MSG_SET WHE
 const char* SELECT_OLD_MSG_SQL  = "SELECT ID, STATE, ABONENT FROM MCISME_MSG_SET WHERE SMSC_ID=:SMSC_ID";
 const char* ROLLUP_CUR_MSG_SQL  = "UPDATE MCISME_MSG_SET SET STATE=:STATE, SMSC_ID=:SMSC_ID WHERE ID=:ID";
 
-const char* LOADUP_ALL_CUR_SQL = 
+const char* LOADUP_SKIPPED_SQL  = "SELECT ABONENT, ID, SMSC_ID FROM MCISME_MSG_SET "
+                                  "WHERE STATE=:STATE ORDER BY ABONENT, ID";
+const char* LOADUP_TO_SKIP_SQL  = "SELECT ID, SMSC_ID FROM MCISME_MSG_SET WHERE ABONENT=:ABONENT "
+                                  "AND STATE=:STATE ORDER BY ID FOR UPDATE";
+const char* ROLLUP_TO_SKIP_SQL  = "UPDATE MCISME_MSG_SET SET STATE=:STATE WHERE ID=:ID";
+
+const char* LOADUP_ALL_CUR_SQL  = 
 "SELECT MCISME_CUR_MSG.ABONENT, MCISME_CUR_MSG.ID, "
        "MCISME_ABONENTS.INFORM, MCISME_ABONENTS.NOTIFY, "
        "MCISME_ABONENTS.INFORM_ID, MCISME_ABONENTS.NOTIFY_ID, MCISME_ABONENTS.EVENT_MASK, "
@@ -91,13 +100,14 @@ const char* OBTAIN_RESULTSET_ERROR_MESSAGE  = "Failed to obtain result set for %
 
 /* ----------------------- Static part ----------------------- */
 
-void Task::init(DataSource* _ds, Statistics* _statistics, 
-                int _rowsPerMessage, int _maxCallersCount/*=-1*/)
+void Task::init(DataSource* _ds, Statistics* _statistics, int _rowsPerMessage,
+                int _maxCallersCount/*=-1*/, int _maxMessagesCount/*=-1*/)
 {
     Task::logger = Logger::getInstance("smsc.mcisme.Task");
     Task::ds = _ds; Task::statistics = _statistics;
     Task::currentId  = 0; Task::sequenceId = 0;
-    Task::maxCallersCount = _maxCallersCount;
+    Task::maxCallersCount  = _maxCallersCount;
+    Task::maxMessagesCount = _maxMessagesCount;
     Message::maxRowsPerMessage = _rowsPerMessage;
 }
 uint64_t Task::getNextId(Connection* connection/*=0*/)
@@ -171,9 +181,14 @@ bool Task::getMessage(const char* smsc_id, Message& message,
             uint8_t msgState = rs->getUint8(2);
             message.reset(rs->getString(3));
             message.id = msg_id; message.smsc_id = smsc_id;
-            if (msgState == MESSAGE_WAIT_CNCL)    { state = WAIT_CNCL; message.cancel = true; }
-            else if (msgState == MESSAGE_WAIT_RESP) state = WAIT_RESP;
-            else if (msgState == MESSAGE_WAIT_RCPT) state = WAIT_RCPT;
+            if (msgState == MESSAGE_WAIT_CNCL)      { 
+                state = WAIT_CNCL; message.cancel = true;
+            } 
+            else if (msgState == MESSAGE_WAIT_SKIP) { 
+                state = WAIT_SKIP; message.cancel = true; message.skip = true;
+            } 
+            else if (msgState == MESSAGE_WAIT_RESP)   state = WAIT_RESP;
+            else if (msgState == MESSAGE_WAIT_RCPT)   state = WAIT_RCPT;
             else state = UNKNOWNST;
             messageExists = true;
         }
@@ -219,12 +234,12 @@ Hash<Task *> Task::loadupAll()
         if (!allMsgsStmt)
             throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "all tasks loadup");
         
-        smsc_log_debug(logger, "Task: Running load all tasks statement ...");
+        smsc_log_debug(logger, "Task: running load all tasks statement ...");
         std::auto_ptr<ResultSet> rsGuard(allMsgsStmt->executeQuery());
         ResultSet* rs = rsGuard.get();
         if (!rs)
             throw Exception(OBTAIN_RESULTSET_ERROR_MESSAGE, "all tasks loadup");
-        smsc_log_debug(logger, "Task: All tasks fetching ...");
+        smsc_log_debug(logger, "Task: all tasks fetching ...");
 
         Task* task = 0;
         uint64_t lastMsgId = 0;
@@ -342,63 +357,9 @@ Hash<Task *> Task::loadupAll()
         throw;
     }
     
-    smsc_log_debug(logger, "Task: All tasks loaded");
+    smsc_log_debug(logger, "Task: all tasks loaded");
     return tasks;
 }
-
-/*
-Hash<Task *> Task::loadupAll()
-{
-    Hash<Task *> tasks;
-    
-    __require__(ds);
-    Connection* connection = 0;
-    try
-    {   
-        connection = ds->getConnection();
-        if (!connection) throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
-
-        // SELECT ABONENT, ID FROM MCISME_CUR_MSG 
-        std::auto_ptr<Statement> allMsgsStmtGuard(connection->createStatement(ALL_CURRENT_MSG_SQL));
-        Statement* allMsgsStmt = allMsgsStmtGuard.get();
-        if (!allMsgsStmt)
-            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "all tasks loadup");
-        
-        std::auto_ptr<ResultSet> rsGuard(allMsgsStmt->executeQuery());
-        ResultSet* rs = rsGuard.get();
-        if (!rs)
-            throw Exception(OBTAIN_RESULTSET_ERROR_MESSAGE, "all tasks loadup");
-
-        while (rs->fetchNext())
-        {
-            const char* abonent = rs->getString(1);
-            if (abonent && !tasks.Exists(abonent)) {
-                Task* task = new Task(abonent);
-                uint64_t nextId = rs->getUint64(2);
-                if (!task->loadup(nextId, connection)) continue;
-                MessageState state = task->getCurrentState();
-                int eventsCount = task->getEventsCount();
-                int newEventsCount = task->getNewEventsCount();
-                smsc_log_debug(logger, "Task: loaded for abonent %s (state=%d, events: all=%d new=%d)",
-                               abonent, (int)state, eventsCount, newEventsCount);
-                if (eventsCount > 0 && (state != WAIT_RCPT || newEventsCount > 0)) tasks.Insert(abonent, task);
-                else delete task;
-            }
-            else smsc_log_error(logger, "Task: duplicate current message found for abonent %s", 
-                                abonent ? abonent:"-");
-        }
-        
-        if (connection) ds->freeConnection(connection);
-    }
-    catch (Exception& exc) {
-        smsc_log_error(logger, "%s", exc.what());
-        if (connection) ds->freeConnection(connection);
-        throw;
-    }
-    
-    return tasks;
-}
-*/
 
 /* ----------------------- Main logic implementation ----------------------- */
 
@@ -503,6 +464,147 @@ void Task::loadCallersCount(Connection* connection)
         if (countRs->fetchNext() && !(countRs->isNull(1))) 
             callersCount = countRs->getUint32(1);
     }
+}
+
+
+// Used from loadupTasks()
+bool Task::loadupSkippedMessages(Array<Message>& cancels) // static
+{
+    // if max messages count check enabled
+    if (Task::maxMessagesCount <= 0) return false; 
+    cancels.Clean();
+
+    __require__(ds);
+
+    Connection* connection = 0;
+    try
+    {
+        connection = ds->getConnection();
+        if (!connection) throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
+        
+        /* SELECT ABONENT, ID, SMSC_ID FROM MCISME_MSG_SET WHERE STATE=:STATE ORDER BY ABONENT, ID */
+        std::auto_ptr<Statement> skippedStmtGuard(connection->createStatement(LOADUP_SKIPPED_SQL));
+        Statement* skippedStmt = skippedStmtGuard.get();
+        if (!skippedStmt)
+            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "skipped messages loadup");
+        skippedStmt->setUint8(1, WAIT_SKIP);
+
+        smsc_log_debug(logger, "Task: running load skipped messages statement ...");
+        std::auto_ptr<ResultSet> rsGuard(skippedStmt->executeQuery());
+        ResultSet* rs = rsGuard.get();
+        if (!rs)
+            throw Exception(OBTAIN_RESULTSET_ERROR_MESSAGE, "skipped messages loadup");
+        smsc_log_debug(logger, "Task: skipped messages fetching ...");
+
+        Message cancel; cancel.cancel = true; cancel.skip = true;
+        while (rs->fetchNext())
+        {
+            const char* abonent = rs->isNull(1) ? 0:rs->getString(1);
+            uint64_t id = rs->isNull(2) ? 0:rs->getUint64(2);
+            const char* smsc_id = rs->isNull(3) ? 0:rs->getString(3);
+            if (!abonent || !abonent[0] || !id || !smsc_id || !smsc_id[0]) {
+                smsc_log_warn(logger, "Invalid skip message #%lld for abonent %s (smscId=%s)",
+                              id, abonent ? abonent:"-", smsc_id ? smsc_id:"-");
+                continue;
+            }
+            cancel.id = id; cancel.abonent = abonent; 
+            cancel.smsc_id = smsc_id;
+            cancels.Push(cancel);
+        }
+
+        if (connection) ds->freeConnection(connection);
+    }
+    catch (Exception& exc) {
+        smsc_log_error(logger, "%s", exc.what());
+        if (connection) ds->freeConnection(connection);
+        throw;
+    }
+    
+    smsc_log_debug(logger, "Task: %d skipped messages loaded", cancels.Count());
+    return (cancels.Count() > 0);
+}
+// Used for each task on new event processing (if check enabled)
+bool Task::checkMessagesToSkip(Array<Message>& cancels)
+{
+    // if max messages count check enabled
+    if (Task::maxMessagesCount <= 0) return false;
+    cancels.Clean(); 
+
+    __require__(ds);
+
+    Connection* connection = 0;
+    try
+    {
+        connection = ds->getConnection();
+        if (!connection) throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
+        
+        /* SELECT ID, SMSC_ID FROM MCISME_MSG_SET WHERE ABONENT=:ABONENT 
+                  AND STATE=:STATE ORDER BY ID FOR UPDATE */
+        Statement* loadupStmt = connection->getStatement(LOADUP_TO_SKIP_ID, LOADUP_TO_SKIP_SQL);
+        if (!loadupStmt)
+            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "messages to skip loadup");
+        loadupStmt->setString(1, abonent.c_str());
+        loadupStmt->setUint8 (2, WAIT_RCPT);
+
+        smsc_log_debug(logger, "Task: running messages to skip statement ...");
+        std::auto_ptr<ResultSet> rsGuard(loadupStmt->executeQuery());
+        ResultSet* rs = rsGuard.get();
+        if (!rs)
+            throw Exception(OBTAIN_RESULTSET_ERROR_MESSAGE, "messages to skip loadup");
+        smsc_log_debug(logger, "Task: messages to skip fetching ...");
+        
+        Message cancel; cancel.reset(abonent);
+        cancel.cancel = true; cancel.skip = true;
+        while (rs->fetchNext())
+        {
+            uint64_t id = rs->isNull(1) ? 0:rs->getUint64(1);
+            if (id == currentMessageId) continue;
+            const char* smsc_id = rs->isNull(2) ? 0:rs->getString(2);
+            if (!id || !smsc_id || !smsc_id[0]) {
+                smsc_log_warn(logger, "Invalid message #%lld for abonent %s (smscId=%s)",
+                              id, abonent.c_str() ? abonent.c_str():"-", smsc_id ? smsc_id:"-");
+                continue;
+            }
+            cancel.id = id; cancel.smsc_id = smsc_id;
+            cancels.Push(cancel);
+        }
+        // +1 - current message
+        int toSkip = (cancels.Count()+1) - Task::maxMessagesCount;
+        if (toSkip > 0) // has messages to skip
+        { 
+            /* UPDATE MCISME_MSG_SET SET STATE=:STATE WHERE ID=:ID */
+            Statement* skipStmt = connection->getStatement(ROLLUP_TO_SKIP_ID, ROLLUP_TO_SKIP_SQL);
+            if (!skipStmt)
+                throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "message(s) skip");
+            skipStmt->setUint8(1, WAIT_SKIP);
+
+            int toDelete = cancels.Count()-toSkip;
+            if (toDelete > 0) cancels.Delete(toSkip, toDelete);
+            for (int i=0; i<cancels.Count(); i++) {
+                skipStmt->setUint64(2, cancels[i].id);
+                skipStmt->executeUpdate();
+            }
+            connection->commit();
+        } 
+        else // no messages to skip
+        { 
+            try { connection->rollback(); } catch (...) { smsc_log_error(logger, "failed to rollback"); }
+            cancels.Clean(); 
+        }
+
+        if (connection) ds->freeConnection(connection);
+    }
+    catch (Exception& exc) {
+        smsc_log_error(logger, "%s", exc.what());
+        if (connection) { 
+            try { connection->rollback(); } catch (...) { smsc_log_error(logger, "failed to rollback"); }
+            ds->freeConnection(connection);
+        }
+        throw;
+    }
+    
+    smsc_log_debug(logger, "Task: %d messages to skip", cancels.Count());
+    return (cancels.Count() > 0);
 }
 
 void Task::loadup()
@@ -866,8 +968,8 @@ void Task::waitReceipt(int eventCount, const char* smsc_id)
 
 // Delete message (by msg_id if defined, else getMessage(smsc_id)) & all assigned events
 // Return set of deleted events (for notification(s) processing) by caller
-Array<std::string> Task::finalizeMessage(const char* smsc_id, 
-                                         bool delivered, bool retry, uint64_t msg_id/*=0*/)
+Array<std::string> Task::finalizeMessage(const char* smsc_id, bool delivered,
+                                         uint64_t msg_id/*=0*/, bool needCallers/*=true*/)
 {
     smsc_log_debug(logger, "Task: finalizing message #%lld smscId=%s delivered=%d",
                    msg_id, (smsc_id) ? smsc_id:"-", (int)delivered);
@@ -903,18 +1005,21 @@ Array<std::string> Task::finalizeMessage(const char* smsc_id,
             smsc_log_warn(logger, "Task for abonent %s: failed to delete message #%lld. Message not found",
                           abonent.c_str(), msg_id);
 
-        /* SELECT DISTINCT(CALLER) FROM MCISME_EVT_SET WHERE MSG_ID=:MSG_ID */
-        Statement* getEvtStmt = connection->getStatement(GET_EVT_CALLER_ID, GET_EVT_CALLER_SQL);
-        if (!getEvtStmt) 
-            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "finalize message events");
-        getEvtStmt->setUint64(1, msg_id);
-        std::auto_ptr<ResultSet> rsGuard(getEvtStmt->executeQuery());
-        ResultSet* rs = rsGuard.get();
-        if (!rs)
-            throw Exception(OBTAIN_RESULTSET_ERROR_MESSAGE, "finalize message events");
-        while (rs->fetchNext()) {
-            const char* caller = (rs->isNull(1)) ? 0:rs->getString(1);
-            if (caller && caller[0]) callers.Push(caller);
+        if (needCallers)
+        {
+            /* SELECT DISTINCT(CALLER) FROM MCISME_EVT_SET WHERE MSG_ID=:MSG_ID */
+            Statement* getEvtStmt = connection->getStatement(GET_EVT_CALLER_ID, GET_EVT_CALLER_SQL);
+            if (!getEvtStmt) 
+                throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "finalize message events");
+            getEvtStmt->setUint64(1, msg_id);
+            std::auto_ptr<ResultSet> rsGuard(getEvtStmt->executeQuery());
+            ResultSet* rs = rsGuard.get();
+            if (!rs)
+                throw Exception(OBTAIN_RESULTSET_ERROR_MESSAGE, "finalize message events");
+            while (rs->fetchNext()) {
+                const char* caller = (rs->isNull(1)) ? 0:rs->getString(1);
+                if (caller && caller[0]) callers.Push(caller);
+            }
         }
 
         /* DELETE FROM MCISME_EVT_SET WHERE MSG_ID=:MSG_ID */

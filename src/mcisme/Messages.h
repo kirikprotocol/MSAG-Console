@@ -32,7 +32,7 @@ namespace smsc { namespace mcisme
         uint64_t    id;
         uint32_t    attempts;
         std::string abonent, message, smsc_id;
-        bool        cancel, notification;
+        bool        cancel, notification, skip;
         int         rowsCount, eventsCount;
 
         static int  maxRowsPerMessage;
@@ -40,20 +40,21 @@ namespace smsc { namespace mcisme
         Message() { reset(); };
         Message(const Message& msg) 
             : id(msg.id), attempts(msg.attempts), abonent(msg.abonent), message(msg.message),
-              smsc_id(msg.smsc_id), cancel(msg.cancel), notification(msg.notification),
-              rowsCount(msg.rowsCount), eventsCount(msg.eventsCount) {};
+              smsc_id(msg.smsc_id), cancel(msg.cancel), notification(msg.notification), 
+              skip(msg.skip), rowsCount(msg.rowsCount), eventsCount(msg.eventsCount) {};
         
         Message& operator=(const Message& msg) {
             id = msg.id; attempts = msg.attempts;
             abonent = msg.abonent; message = msg.message; smsc_id = msg.smsc_id; 
-            cancel = msg.cancel; notification = msg.notification;
+            cancel = msg.cancel; notification = msg.notification; skip = msg.skip;
             rowsCount = msg.rowsCount; eventsCount  = msg.eventsCount; 
             return (*this);
         };
 
         inline void reset(const std::string& _abonent="") {
             id = 0; attempts = 0; this->abonent = _abonent;
-            message = ""; smsc_id = ""; cancel = false; notification = false;
+            message = ""; smsc_id = ""; skip = false;
+            cancel = false; notification = false; 
             rowsCount = 0; eventsCount = 0; 
         };
         inline bool isFull() {

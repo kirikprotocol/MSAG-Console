@@ -208,6 +208,13 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     try { maxCallersCount = config->getInt("maxCallersCount"); } catch (...) { maxCallersCount = -1;
         smsc_log_warn(logger, "Parameter <MCISme.maxCallersCount> missed. Callers check disabled");
     }
+    int maxMessagesCount = -1;
+    try { maxMessagesCount = config->getInt("maxMessagesCount"); } catch (...) { maxMessagesCount = -1;
+        smsc_log_warn(logger, "Parameter <MCISme.maxMessagesCount> missed. Messages check disabled");
+    }
+    if (maxCallersCount > 0 && maxMessagesCount > 0)
+        throw ConfigException("MCISme supports only one constraint either by messages or callers. "
+                              "Use <MCISme.maxCallersCount> or <MCISme.maxMessagesCount> parameter.");
 
     std::auto_ptr<ConfigView> dsIntCfgGuard(config->getSubConfig("DataSource"));
     initDataSource(dsIntCfgGuard.get());
@@ -217,7 +224,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     if (statistics) statistics->Start();
     
     AbonentProfiler::init(ds, defaultReasonsMask, bDefaultInform, bDefaultNotify);
-    Task::init(ds, statistics, rowsPerMessage, maxCallersCount);
+    Task::init(ds, statistics, rowsPerMessage, maxCallersCount, maxMessagesCount);
     
     smsc_log_info(logger, "Load success.");
 }
@@ -328,7 +335,7 @@ void TaskProcessor::loadupTasks()
     smsc_log_info(logger, "Loading processing tasks ...");
     lockedTasks.Empty();
     tasks = Task::loadupAll();
-    smsc_log_info(logger, "Processing tasks loaded. Resending messages...");
+    smsc_log_info(logger, "Processing tasks loaded. Resending messages ...");
     
     Array<std::string> abonentsToSkip(10);
 
@@ -385,14 +392,27 @@ void TaskProcessor::loadupTasks()
         }
     }
 
-    // Delete skipped tasks
+    // Delete skipped tasks (has no events to send)
     for (int i=0; i<abonentsToSkip.Count(); i++) {
         const char* abonent = abonentsToSkip[i].c_str();
         if (abonent && abonent[0]) tasks.Delete(abonent);
     }
 
-    smsc_log_info(logger, "All loaded tasks messages added to output queue.");
+    smsc_log_info(logger, "Loading skipped messages ...");
+    Array<Message> cancels;
+    if (Task::loadupSkippedMessages(cancels))
+    {   // resend cancel(s) for messages skipped by max messages constraint (if defined)
+        smsc_log_info(logger, "Skipped messages loaded. Resubmitting cancels ...");
+        for (int i=0; i<cancels.Count(); i++) {
+            Message cancel = cancels[i];
+            smsc_log_debug(logger, "Loadup: skip message #%lld smscId=%s put to out queue",
+                           cancel.id, cancel.smsc_id.c_str());
+            putToOutQueue(cancel, true);
+        }
+    }
+    smsc_log_info(logger, "All loaded tasks messages added to output queue");
 }
+
 void TaskProcessor::unloadTasks()
 {
     MutexGuard guard(tasksMonitor);
@@ -545,6 +565,7 @@ void TaskProcessor::processEvent(const MissedCallEvent& event)
         return; // skip event if user mask not permit it
     }
 
+    Array<Message> cancels; bool needCancels = false;
     Message message; bool needMessage = false;
     if (profile.inform || Task::bInformAll)
     {
@@ -560,46 +581,56 @@ void TaskProcessor::processEvent(const MissedCallEvent& event)
             // task is new (was loaded for event) => kill task
             if (isNewTask) taskAccessor.delTask(abonent); 
             return; // skip event if callers count check failed
-        }
+        } 
+        else needCancels = task->checkMessagesToSkip(cancels);
+
         task->addEvent(event); // add new event to task chain (inassigned to message in DB)
         MessageState state = task->getCurrentState();
         smsc_log_debug(logger, "Event: for %s added to %s task (state=%d). Events=%d",
                        abonent, (isNewTask) ? "new":"existed", (int)state, task->getEventsCount());
 
-        if (!isNewTask && state != WAIT_RCPT) { 
-            smsc_log_debug(logger, "Event: is put off. Task for abonent %s "
-                           "is already processing events (state=%d)", abonent, (int)state);
-            return; // process event only if task not exists or task is awaiting receipt
-        } 
-
-        message.reset(abonent);
-        message.smsc_id = task->getCurrentSmscId();
-        const char* smsc_id = (message.smsc_id.length() > 0) ? message.smsc_id.c_str():0;
-
-        if (state == WAIT_RCPT && smsc_id && smsc_id[0])
+        // process event only if task not exists or task is awaiting receipt
+        if (isNewTask || state == WAIT_RCPT) 
         {
-            message.id = task->getCurrentMessageId(); 
-            if (message.id > 0) { // task is waiting receipt for incomplete message
-                smsc_log_debug(logger, "Event: message #%lld (smscId=%s) for abonent %s cancelling (extending)",
-                               message.id, (smsc_id) ? smsc_id:"-", abonent);
-                message.cancel = true; needMessage = true;
-                task->waitCancel(smsc_id);
+            message.reset(abonent);
+            message.smsc_id = task->getCurrentSmscId();
+            const char* smsc_id = (message.smsc_id.length() > 0) ? message.smsc_id.c_str():0;
+
+            if (state == WAIT_RCPT && smsc_id && smsc_id[0])
+            {
+                message.id = task->getCurrentMessageId(); 
+                if (message.id > 0) { // task is waiting receipt for incomplete message
+                    smsc_log_debug(logger, "Event: message #%lld (smscId=%s) for abonent %s cancelling (extending)",
+                                   message.id, (smsc_id) ? smsc_id:"-", abonent);
+                    message.cancel = true; needMessage = true;
+                    task->waitCancel(smsc_id);
+                } 
+                else smsc_log_error(logger, "Event: current message id is invalid for abonent %s", abonent);
             } 
-            else smsc_log_error(logger, "Event: current message id is invalid for abonent %s", abonent);
-        } 
-        else
-        {
-            if (task->formatMessage(message)) {
-                smsc_log_debug(logger, "Event: submitting new message #%lld, for abonent %s",
-                               message.id, abonent);
-                message.cancel = false; needMessage = true;
-                task->waitResponce();
+            else
+            {
+                if (task->formatMessage(message)) {
+                    smsc_log_debug(logger, "Event: submitting new message #%lld, for abonent %s",
+                                   message.id, abonent);
+                    message.cancel = false; needMessage = true;
+                    task->waitResponce();
+                }
+                else smsc_log_error(logger, "Event: failed to format new message for abonent %s", abonent);
             }
-            else smsc_log_error(logger, "Event: failed to format new message for abonent %s", abonent);
         }
+        else smsc_log_debug(logger, "Event: is put off. Task for abonent %s "
+                            "is already processing events (state=%d)", abonent, (int)state);
     } 
     else smsc_log_debug(logger, "Event: for abonent %s skipped (inform flag is off).", abonent);
 
+    if (needCancels) {
+        for (int i=0; i<cancels.Count(); i++) {
+            Message cancel = cancels[i];
+            smsc_log_debug(logger, "Task: skip message #%lld smscId=%s put to out queue",
+                           cancel.id, cancel.smsc_id.c_str());
+            putToOutQueue(cancel);
+        }
+    }
     if (needMessage) putToOutQueue(message);
 }
 
@@ -673,7 +704,7 @@ bool TaskProcessor::formatMessage(Task* task, Message& message)
     if (task->formatMessage(message)) {
         smsc_log_debug(logger, "Need send %d events more in message #%lld for abonent %s", 
                        message.eventsCount, message.id, task->getAbonent().c_str());
-        message.cancel = false;
+        message.cancel = false; message.skip = false;
         task->waitResponce();
         return true;
     }
@@ -730,7 +761,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
     const char* smsc_id = (smscId.length() > 0) ? smscId.c_str():0;
     SmscIdAccessor smscIdAccessor(this, smsc_id); // lock smsc_id if exists
     if (smsc_id) smsc_log_debug(logger, "Responce lock smscId=%s", smsc_id);
-    
+
     if (message.notification) {
         processNotificationResponce(message, accepted, retry, immediate, smscId);
         return;
@@ -743,6 +774,25 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
     if (bWasReceipted && (cancel || cancel_failed)) { 
         smsc_log_debug(logger, "Responce: cancel was receipted & already processed. "
                        "Message #%lld (smscId=%s), abonent %s", message.id, smsc_id, message.abonent.c_str());
+        return;
+    }
+    
+    if (message.skip) // finalize skipped message
+    {   
+        const char* abonent = message.abonent.c_str();
+        smsc_log_debug(logger, "Responce: finalizing skipped message #%lld (smscId=%s) for abonent %s", 
+                       message.id, smsc_id, abonent);
+        TaskAccessor taskAccessor(this); bool isNewTask = false;
+        Task* task = taskAccessor.getTask(abonent, isNewTask);
+        if (task) task->finalizeMessage(smsc_id, false, message.id, false);
+        else smsc_log_error(logger, "Unable to locate task for abonent %s", abonent);
+        if (isNewTask) taskAccessor.delTask(abonent);
+        // mark receipt to quit
+        if (!responcesTracker.putReceiptData(smsc_id, ReceiptData(false, false)))
+             smsc_log_warn(logger, "Failed to add receipt data (for skip message #%lld). "
+                           "smscId=%s already used", message.id, smsc_id);
+        else smsc_log_debug(logger, "Responce: skip message #%lld processed (smscId=%s) & "
+                            "mark receipt to quit", message.id, smsc_id);
         return;
     }
     
@@ -827,7 +877,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                                       smsc_id ? smsc_id:"-", message.abonent.c_str());
                         bWasReceipted = false;
                     }
-                    task->finalizeMessage(smsc_id, false, false, message.id);
+                    task->finalizeMessage(smsc_id, false, message.id, false);
                     needKillTask = true;
                 }
             }
@@ -917,7 +967,19 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool exp
                        message.id, smsc_id, abonent);
         
         TaskAccessor taskAccessor(this);
-        Task* task = taskAccessor.getTask(abonent); // do not create task! Task MUST be in map for valid responce.
+        if (message.skip) // finalize if message was skipped
+        { 
+            smsc_log_debug(logger, "Receipt: finalizing skipped message #%lld "
+                           "(smscId=%s) for abonent %s (1)", message.id, smsc_id, abonent);
+            bool isNewTask = false;
+            Task* task = taskAccessor.getTask(abonent, isNewTask);
+            if (task) task->finalizeMessage(smsc_id, delivered, message.id, false);
+            else smsc_log_error(logger, "Unable to locate task for abonent %s", abonent);
+            if (isNewTask) taskAccessor.delTask(abonent);
+            return;
+        }
+        // do not create task! Task MUST be in map for valid responce.
+        Task* task = taskAccessor.getTask(abonent); 
         if (!task) {
             smsc_log_error(logger, "Receipt: failed to obtain task for abonent %s", abonent);
             return;
@@ -946,6 +1008,7 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool exp
             return;
         }
 
+        // TODO: skipped messages processing
         MessageState state = UNKNOWNST;
         if (Task::getMessage(smsc_id, message, state)) // got message by smsc_id
         {
@@ -958,6 +1021,15 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool exp
             Task* task = taskAccessor.getTask(abonent, isNewTask);
             if (!task) {
                 smsc_log_error(logger, "Receipt: failed to obtain/create task for abonent %s", abonent);
+                return;
+            }
+
+            if (message.skip) // finalize if message was skipped
+            {
+                smsc_log_debug(logger, "Receipt: finalizing skipped message #%lld "
+                               "(smscId=%s) for abonent %s (2)", message.id, smsc_id, abonent);
+                task->finalizeMessage(smsc_id, delivered, message.id, false);
+                if (isNewTask) taskAccessor.delTask(abonent);
                 return;
             }
             
@@ -997,7 +1069,7 @@ void TaskProcessor::processReceipt(Task* task, bool delivered, bool expired,
                                    const char* smsc_id, uint64_t msg_id/*=0*/)
 {
     std::string        abonent = task->getAbonent();
-    Array<std::string> callers = task->finalizeMessage(smsc_id, delivered, expired, msg_id);
+    Array<std::string> callers = task->finalizeMessage(smsc_id, delivered, msg_id, true);
     if (callers.Count() <= 0) return;
 
     AbonentProfile profile = task->getAbonentProfile();

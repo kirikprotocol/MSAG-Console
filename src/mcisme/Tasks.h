@@ -38,12 +38,14 @@ namespace smsc { namespace mcisme
     static const uint8_t MESSAGE_WAIT_RESP  = 10; // ќжидает submit responce или готова к отправке
     static const uint8_t MESSAGE_WAIT_CNCL  = 20; // ќжидает cancel responce или готова к отмене
     static const uint8_t MESSAGE_WAIT_RCPT  = 30; // ќжидает delivery reciept
+    static const uint8_t MESSAGE_WAIT_SKIP  = 40; // ќжидает cancel (skipped)
 
     typedef enum {
         UNKNOWNST   = MESSAGE_UNKNOWNST,
         WAIT_RESP   = MESSAGE_WAIT_RESP,
         WAIT_CNCL   = MESSAGE_WAIT_CNCL,
-        WAIT_RCPT   = MESSAGE_WAIT_RCPT
+        WAIT_RCPT   = MESSAGE_WAIT_RCPT,
+        WAIT_SKIP   = MESSAGE_WAIT_SKIP
     } MessageState;
 
     struct TaskEvent : public MissedCallEvent
@@ -68,6 +70,7 @@ namespace smsc { namespace mcisme
         static Logger*      logger;
         static uint64_t     currentId, sequenceId; // id generation sequence control
         static int          maxCallersCount;       // maximum distinct callers
+        static int          maxMessagesCount;      // maximum messages for abonent
         
         uint64_t            currentMessageId;
         MessageState        currentMessageState;
@@ -88,8 +91,8 @@ namespace smsc { namespace mcisme
 
         static bool         bInformAll, bNotifyAll;
 
-        static void         init(DataSource* _ds, Statistics* _statistics,
-                                 int rowsPerMessage, int maxCallersCount = -1);
+        static void         init(DataSource* _ds, Statistics* _statistics, int rowsPerMessage, 
+                                 int maxCallersCount = -1, int maxMessagesCount = -1);
         static uint64_t     getNextId(Connection* connection=0);
         
         static bool         getMessage(const char* smsc_id, Message& message, 
@@ -124,6 +127,9 @@ namespace smsc { namespace mcisme
         inline uint64_t getCurrentMessageId() { return currentMessageId; };
         inline const MessageState getCurrentState() { return currentMessageState; };
         
+        static bool loadupSkippedMessages(Array<Message>& cancels);
+        bool checkMessagesToSkip(Array<Message>& cancels);
+
         // Adds new event to chain & inserts inassigned event to DB
         void addEvent(const MissedCallEvent& event);
 
@@ -133,7 +139,8 @@ namespace smsc { namespace mcisme
 
         // Deletes message (by msg_id if defined, else getMessage(smsc_id)) & all assigned events
         // Returns set of deleted events (for notification(s) processing) by caller
-        Array<std::string> finalizeMessage(const char* smsc_id, bool delivered, bool retry, uint64_t msg_id=0);
+        Array<std::string> finalizeMessage(const char* smsc_id, bool delivered,
+                                           uint64_t msg_id=0, bool needCallers=true);
 
         void waitCancel  (const char* smsc_id); // Makes current message WAIT_CNCL & set smsc_id
         void waitReceipt (const char* smsc_id); // Makes current message WAIT_RCPT & set smsc_id
