@@ -283,10 +283,10 @@ StateType StateMachine::forward(Tuple& t)
   try{
     try{
       //time_t now=time(NULL);
-      Descriptor d;
+      /*Descriptor d;
       __trace__("FORWARD: change state to enroute");
       store->changeSmsStateToEnroute(t.msgId,d,0,
-        RescheduleCalculator::calcNextTryTime(sms.getNextTime(),sms.getAttemptsCount()));
+        RescheduleCalculator::calcNextTryTime(sms.getNextTime(),sms.getAttemptsCount()));*/
     }catch(...)
     {
       __trace__("FORWARD: failed to change state to enroute");
