@@ -71,32 +71,31 @@ void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
 }
 
 void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
-  sa->setTypeOfNumber(1);
-  sa->setNumberingPlan(1);
-  /*if ( ma->addrLen != 0 ){
+  sa->setTypeOfNumber((ma->addr[0]>>4)&3);
+  sa->setNumberingPlan(ma->addr[0]&0xffff);
+  if ( ma->addrLen != 0 ){
     char sa_val[21] = {0,};
-    for ( int i=0; i<ma->addrLen*2;){
-      sa_val[i]=ma->addr[i>>1]&0x0f+0x30;
+    for ( int i=0; i<(ma->addrLen-1)*2;){
+      sa_val[i]=ma->addr[i>>1+1]&0x0f+0x30;
       ++i;
-      if ( i < ma->len ){
-        sa_val[i] = (ma->addr[i>>1]>>4)+0x30;
+      if ( i<(ma->addrLen-1)*2 ){
+        sa_val[i] = (ma->addr[i>>1+1]>>4)+0x30;
         ++i;
       }else break;
+    }
+    {
+      char b[256] = {0,};
+      int k = 0;
+      for ( int i=0; i<ma->len; ++i){
+        k+=sprintf(b+k,"%02x ",*((unsigned char*)sa_val+i));          
+      }
+      __trace2__("MAP::ConvAddrMap2Smc::adr value %s",b);
     }
     sa->setValue(ma->addrLen*2,sa_val);
   }else{
     char c = 0;
     sa->setValue(0,&c);
   }*/
-  sa->setValue((unsigned char)ma->addrLen,(char*)ma->addr);
-  {
-    char b[256] = {0,};
-    int k = 0;
-    for ( int i=0; i<ma->addrLen; ++i){
-      k+=sprintf(b+k,"%02x ",*((unsigned char*)ma->addr+i));          
-    }
-    __trace2__("MAP::ConvAddrMSISDN2Smc::adr value %s",b);
-  }
 }
 
 USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd( 
@@ -107,7 +106,7 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
     ET96MAP_SM_RP_OA_T* srcAddr,  
     ET96MAP_SM_RP_UI_T* ud )
 {
-  __trace2__("MAP::MapDialog::Et96MapV2ForwardSmMOInd");
+  __trace2__("MAP::MapDialog::Et96MapV2ForwardSmMOInd dta len %d",ud->signalInfoLen);
   setInvokeId(invokeId);
   SMS sms;
   Address src_addr;
