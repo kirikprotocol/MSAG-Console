@@ -1300,8 +1300,6 @@ static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
   ET96MAP_USSD_STRING_T ussdString = {0,};
   unsigned text_len;
 
-  __map_trace2__("%s: datacoding 0x%x",__func__,encoding);
-
   const unsigned char* text = (const unsigned char*)dialog->sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
   if(text_len==0 && dialog->sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
   {
@@ -1325,21 +1323,21 @@ static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
     }
     // if buffer have trailing 7 unfilled bits place <cr> there
     if( bytes*8-text_len*7 == 7 ) ussdString.ussdStr[bytes-1] |= (0x0D<<1);
-    if( smsc::logger::_map_cat->isDebugEnabled() ) {
-      char *text = new char[bytes*4+1];
-      int k = 0;
-      for ( int i=0; i<bytes; i++){
-        k+=sprintf(text+k,"%02x ",(unsigned)ussdString.ussdStr[i]);
-      }
-      text[k]=0;
-      __map_trace2__("USSD 7bit string %s",text);
-      delete text;
-    }
     ussdEncoding = 0x01;
   } else { //8 bit
     bytes = text_len;
     memcpy( ussdString.ussdStr, text, text_len );
     ussdEncoding = 0x44;
+  }
+  if( smsc::logger::_map_cat->isDebugEnabled() ) {
+    char *text = new char[bytes*4+1];
+    int k = 0;
+    for ( int i=0; i<bytes; i++){
+      k+=sprintf(text+k,"%02x ",(unsigned)ussdString.ussdStr[i]);
+    }
+    text[k]=0;
+    __map_trace2__("USSD string enc=0x%02X ussdenc=0x%02X dump: %s",encoding,ussdEncoding,text);
+    delete text;
   }
 
   ussdString.ussdStrLen = bytes;
@@ -1398,8 +1396,6 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
   ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0x0f;
   unsigned encoding = dialog->sms->getIntProperty(Tag::SMPP_DATA_CODING);
 
-  __map_trace2__("USSD request %s datacoding 0x%x",RouteToString(dialog).c_str(),encoding);
-
   const unsigned char* text = (const unsigned char*)dialog->sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
   if(text_len==0 && dialog->sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
   {
@@ -1422,21 +1418,21 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     }
     // if buffer have trailing 7 unfilled bits place <cr> there
     if( bytes*8-text_len*7 == 7 ) ussdString.ussdStr[bytes-1] |= (0x0D<<1);
-    if( smsc::logger::_map_cat->isDebugEnabled() ) {
-      char *text = new char[bytes*4+1];
-      int k = 0;
-      for ( int i=0; i<bytes; i++){
-        k+=sprintf(text+k,"%02x ",(unsigned)ussdString.ussdStr[i]);
-      }
-      text[k]=0;
-      __map_trace2__("USSD 7bit string %s",text);
-      delete text;
-    }
     ussdEncoding = 0x01;
   } else { //8 bit
     bytes = text_len;
     memcpy( ussdString.ussdStr, text, text_len );
     ussdEncoding = 0x44;
+  }
+  if( smsc::logger::_map_cat->isDebugEnabled() ) {
+    char *text = new char[bytes*4+1];
+    int k = 0;
+    for ( int i=0; i<bytes; i++){
+      k+=sprintf(text+k,"%02x ",(unsigned)ussdString.ussdStr[i]);
+    }
+    text[k]=0;
+    __map_trace2__("USSD string enc=0x%02X ussdenc=0x%02X dump: %s",encoding,ussdEncoding,text);
+    delete text;
   }
 
   ussdString.ussdStrLen = bytes;
