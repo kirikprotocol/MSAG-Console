@@ -170,7 +170,7 @@ Targets:
 
   <target name="extra_libs" depends="">
     <copy todir="${DISTR_DIR}/lib" flatten="yes" failonerror="yes">
-      <fileset dir="." includesfile="extra_libs.list"/>
+      <fileset dir="/" includesfile="./extra_libs.list"/>
     </copy>
     <copy todir="${DISTR_DIR}/lib" file="extra_lib_links.list" flatten="yes"/>
     <symlink action="recreate">
