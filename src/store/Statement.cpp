@@ -1172,10 +1172,10 @@ void ConcatDataStatement::setDestination(const Address& dda)
 /* --------------------- Sheduler's statements -------------------- */
 
 const char* ReadyByNextTimeStatement::sql_raw = (const char*)
-"SELECT ID FROM SMS_MSG WHERE\
+"SELECT ID, NEXT_TRY_TIME FROM SMS_MSG WHERE\
  NEXT_TRY_TIME<=:RT ORDER BY NEXT_TRY_TIME ASC";
 const char* ReadyByNextTimeStatement::sql_immediate = (const char*)
-"SELECT ID FROM SMS_MSG WHERE\
+"SELECT ID, NEXT_TRY_TIME FROM SMS_MSG WHERE\
  NEXT_TRY_TIME<=:RT AND LAST_RESULT=1134 ORDER BY NEXT_TRY_TIME ASC";
 ReadyByNextTimeStatement::ReadyByNextTimeStatement(Connection* connection,
     bool immediate, bool assign) throw(StorageException)
@@ -1187,7 +1187,10 @@ ReadyByNextTimeStatement::ReadyByNextTimeStatement(Connection* connection,
     __trace2__("%p : ReadyByNextTimeStatement creating %s ...", 
                stmt, (immediate) ? "for immediate sms":"");
 
+    indNextTime = OCI_IND_NOTNULL;
     define(1, SQLT_VNU, (dvoid *) &(smsId), (sb4) sizeof(smsId));
+    define(2, SQLT_ODT, (dvoid *) &(nextTime),
+           (sb4) sizeof(nextTime), (dvoid *)&indNextTime);
 }
 void ReadyByNextTimeStatement::bindRetryTime(time_t retryTime)
     throw(StorageException)
@@ -1196,6 +1199,15 @@ void ReadyByNextTimeStatement::bindRetryTime(time_t retryTime)
     bind((CONST text *)"RT", (sb4) 2*sizeof(char),
          SQLT_ODT, (dvoid *) &(rTime), (sb4) sizeof(rTime));
 }
+time_t ReadyByNextTimeStatement::getNextTime()
+    throw(StorageException)
+{
+    if (indNextTime != OCI_IND_NOTNULL) return 0;
+    time_t nextTryTime = 0;
+    convertOCIDateToDate(&nextTime, &nextTryTime);
+    return nextTryTime;
+}
+
 
 const char* MinNextTimeStatement::sql = (const char*)
 "SELECT MIN(NEXT_TRY_TIME) FROM SMS_MSG";

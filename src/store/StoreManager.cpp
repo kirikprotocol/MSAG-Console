@@ -1207,7 +1207,7 @@ void RemoteStore::changeSmsStateToDeleted(SMSId id)
 RemoteStore::ReadyIdIterator::ReadyIdIterator(
     StorageConnectionPool* _pool, time_t retryTime, bool immediate)
         throw(StorageException)
-            : IdIterator(), pool(_pool), connection(0), readyStmt(0)
+            : TimeIdIterator(), pool(_pool), connection(0), readyStmt(0)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
@@ -1244,18 +1244,19 @@ RemoteStore::ReadyIdIterator::~ReadyIdIterator()
 #endif
 }
 
-bool RemoteStore::ReadyIdIterator::getNextId(SMSId &id)
+bool RemoteStore::ReadyIdIterator::next()
     throw(StorageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
     if (!isNull && readyStmt && connection && connection->isAvailable())
     {
+        isNull = true;
         sword status = readyStmt->fetch();
         if (status != OCI_NO_DATA)
         {
             connection->check(status);
-            readyStmt->getSMSId(id);
+            isNull = false;
             return true;
         }
     }
@@ -1264,8 +1265,26 @@ bool RemoteStore::ReadyIdIterator::getNextId(SMSId &id)
     return false;
 #endif
 }
+SMSId RemoteStore::ReadyIdIterator::getId()
+    throw(StorageException)
+{
+    SMSId id = 0;
+    if (!isNull && readyStmt && connection && connection->isAvailable()) {
+        readyStmt->getSMSId(id);
+    }
+    return id;
+}
+time_t RemoteStore::ReadyIdIterator::getTime()
+    throw(StorageException)
+{
+    time_t nextTime = 0;
+    if (!isNull && readyStmt && connection && connection->isAvailable()) {
+        nextTime = readyStmt->getNextTime();
+    }
+    return nextTime;
+}
 
-IdIterator* RemoteStore::getReadyForRetry(time_t retryTime, bool immediate)
+TimeIdIterator* RemoteStore::getReadyForRetry(time_t retryTime, bool immediate)
     throw(StorageException)
 {
     return (new ReadyIdIterator(pool, retryTime, immediate));
@@ -1338,7 +1357,6 @@ RemoteStore::DeliveryIdIterator::DeliveryIdIterator(
         sword status = deliveryStmt->execute(OCI_DEFAULT, 0, 0);
         if (status != OCI_NO_DATA) connection->check(status);
         else isNull = true;
-
     }
     catch (...)
     {
@@ -1358,18 +1376,19 @@ RemoteStore::DeliveryIdIterator::~DeliveryIdIterator()
 
 #endif
 }
-bool RemoteStore::DeliveryIdIterator::getNextId(SMSId &id)
+bool RemoteStore::DeliveryIdIterator::next()
     throw(StorageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
     if (!isNull && deliveryStmt && connection && connection->isAvailable())
     {
+        isNull = true;
         sword status = deliveryStmt->fetch();
         if (status != OCI_NO_DATA)
         {
             connection->check(status);
-            deliveryStmt->getSMSId(id);
+            isNull = false;
             return true;
         }
     }
@@ -1377,6 +1396,15 @@ bool RemoteStore::DeliveryIdIterator::getNextId(SMSId &id)
 #else
     return false;
 #endif
+}
+SMSId RemoteStore::DeliveryIdIterator::getId()
+    throw(StorageException)
+{
+    SMSId id = 0;
+    if (!isNull && deliveryStmt && connection && connection->isAvailable()) {
+        deliveryStmt->getSMSId(id);
+    }
+    return id;
 }
 
 IdIterator* RemoteStore::getReadyForDelivery(const Address& da)
@@ -1425,17 +1453,18 @@ RemoteStore::CancelIdIterator::~CancelIdIterator()
 
 #endif
 }
-bool RemoteStore::CancelIdIterator::getNextId(SMSId &id)
+bool RemoteStore::CancelIdIterator::next()
     throw(StorageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
     if (!isNull && cancelStmt && connection && connection->isAvailable())
     {
+        isNull = true;
         sword status = cancelStmt->fetch();
         if (status != OCI_NO_DATA)
         {
             connection->check(status);
-            cancelStmt->getSMSId(id);
+            isNull = false;
             return true;
         }
     }
@@ -1443,6 +1472,15 @@ bool RemoteStore::CancelIdIterator::getNextId(SMSId &id)
 #else
     return false;
 #endif
+}
+SMSId RemoteStore::CancelIdIterator::getId()
+    throw(StorageException)
+{
+    SMSId id = 0;
+    if (!isNull && cancelStmt && connection && connection->isAvailable()) {
+        cancelStmt->getSMSId(id);
+    }
+    return id;
 }
 
 IdIterator* RemoteStore::getReadyForCancel(const Address& oa,

@@ -18,43 +18,38 @@ namespace smsc { namespace store
 {
     using namespace smsc::sms;
 
-    class IdIterator
+    class Iterator
     {
-    protected:
-
-        /**
-         * Защищённый конструктор.
-         * Экземпляр интерфейса IdIterator может быть создан
-         * только через производный класс, например ReadyIdIterator
-         *
-         * @see StoreManager::ReadyIdIterator
-         */
-        IdIterator() {};
+    protected: Iterator() {};
+    public:
+        
+        virtual bool next()
+            throw(StorageException) = 0;
+    };
     
+    class IdIterator : public Iterator
+    {
+    protected: IdIterator() : Iterator() {};
     public:
 
-        /**
-         * Деструктор, уничтожает курсор и освобождает соединение
-         * с хранилищем. Должен быть реализован производным классом,
-         * например ReadyIdIterator
-         *
-         * @see StoreManager::ReadyIdIterator
-         */
-        virtual ~IdIterator() {};
-
-        /**
-         * Используется для получения следующего id'а сообщения.
-         * Реализуется производным классом, например ReadyIdIterator.
-         * 
-         * @param id     ссылка для возврата id в случае успеха
-         * @return признак, был ли извлечён id или больше id'ов нет
-         * @exception StorageException
-         *                   возникает при ошибке хранилища физической природы,
-         *                   т.н когда хранилище недоступно.
-         *                   
-         * @see StoreManager::ReadyIdIterator
-         */
+        virtual SMSId  getId()
+            throw(StorageException) = 0;
+        
         virtual bool getNextId(SMSId& id)
+            throw(StorageException)
+        {
+            bool result = next();
+            if (result) id = getId();
+            return result;
+        };
+    };
+
+    class TimeIdIterator : public IdIterator
+    {
+    protected: TimeIdIterator() : IdIterator() {};
+    public:
+
+        virtual time_t getTime()
             throw(StorageException) = 0;
     };
 
@@ -358,20 +353,21 @@ namespace smsc { namespace store
                 throw(StorageException) = 0; 
         
         /**
-         * Возвращает итератор над набором id сообщений, готовых
+         * Возвращает итератор над набором id сообщений 
+         * с временем следующей попытки доставки, готовых
          * к следующей попытке доставки, т.е. те у которых
          * время следующей попытки доставки не превышает указанного.
          * 
          * @param retryTime дата/время для выборки (текущее время)
          * @param immediate признак для сообщений immediate
-         * @return итератор над набором id сообщений, готовых
+         * @return итератор над набором id & time сообщений, готовых
          *         к следующей попытке доставки
          * @exception StorageException
          *                   возникает при ошибке хранилища физической природы,
          *                   т.н когда хранилище недоступно.
-         * @see IdIterator
+         * @see TimeIdIterator
          */
-        virtual IdIterator* getReadyForRetry(time_t retryTime, bool immediate=false) 
+        virtual TimeIdIterator* getReadyForRetry(time_t retryTime, bool immediate=false) 
                 throw(StorageException) = 0;
         
         /**

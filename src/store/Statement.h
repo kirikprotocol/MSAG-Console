@@ -527,7 +527,8 @@ namespace smsc { namespace store
     static const char* sql_immediate;
     private:
         
-        OCIDate rTime;
+        OCIDate rTime, nextTime;
+        sb2 indNextTime;
 
     public:
 
@@ -537,6 +538,8 @@ namespace smsc { namespace store
         virtual ~ReadyByNextTimeStatement() {};
         
         void bindRetryTime(time_t retryTime)
+            throw(StorageException);
+        time_t getNextTime()
             throw(StorageException);
     };
     

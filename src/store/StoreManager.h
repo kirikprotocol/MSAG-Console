@@ -70,7 +70,7 @@ namespace smsc { namespace store
         StorageConnectionPool*  pool;
         SchedTimer*    scheduleTimer;
 
-        class ReadyIdIterator : public IdIterator
+        class ReadyIdIterator : public TimeIdIterator
         {
         private:
 
@@ -86,7 +86,11 @@ namespace smsc { namespace store
                 throw(StorageException);
             virtual ~ReadyIdIterator();
 
-            virtual bool getNextId(SMSId &id)
+            virtual bool next()
+                throw(StorageException);
+            virtual SMSId  getId()
+                throw(StorageException);
+            virtual time_t getTime()
                 throw(StorageException);
         };
 
@@ -106,7 +110,9 @@ namespace smsc { namespace store
                     throw(StorageException);
             virtual ~CancelIdIterator();
 
-            virtual bool getNextId(SMSId &id)
+            virtual bool next()
+                throw(StorageException);
+            virtual SMSId  getId()
                 throw(StorageException);
         };
 
@@ -126,7 +132,9 @@ namespace smsc { namespace store
                     throw(StorageException);
             virtual ~DeliveryIdIterator();
 
-            virtual bool getNextId(SMSId &id)
+            virtual bool next()
+                throw(StorageException);
+            virtual SMSId  getId()
                 throw(StorageException);
         };
 
@@ -302,7 +310,7 @@ namespace smsc { namespace store
          * Реализация метода MessageStore
          * @see MessageStore
          */
-        virtual IdIterator* getReadyForRetry(time_t retryTime, bool immediate=false)
+        virtual TimeIdIterator* getReadyForRetry(time_t retryTime, bool immediate=false)
                 throw(StorageException);
 
         /**
