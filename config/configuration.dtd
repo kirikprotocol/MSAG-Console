@@ -1,17 +1,9 @@
-<?xml encoding="ISO-8859-1"?>
+<!ENTITY % sectionbody "(section | param)*">
 
-<!ELEMENT configuration (db, log, map)>
-<!ELEMENT db (connections)>
-	<!ATTLIST db instance CDATA #REQUIRED>    <!-- const char * const-->
-	<!ATTLIST db userName CDATA #IMPLIED>     <!-- const char * const-->
-	<!ATTLIST db userPassword CDATA #IMPLIED> <!-- const char * const-->
-	<!ELEMENT connections (#PCDATA)>
-	    <!ATTLIST connections max CDATA #IMPLIED>  <!-- int -->
-	    <!ATTLIST connections init CDATA #IMPLIED> <!-- int -->
-	
-<!ELEMENT log (#PCDATA)>
-	<!ATTLIST log location CDATA #REQUIRED>
-<!ELEMENT map (#PCDATA)>
-	<!ATTLIST map hlr_address CDATA #REQUIRED>
-	<!ATTLIST map vlr_address CDATA #REQUIRED>
+<!ELEMENT config %sectionbody;>
 
+<!ELEMENT section %sectionbody;>
+<!ATTLIST section name CDATA #REQUIRED>
+
+<!ELEMENT param (#PCDATA)>
+<!ATTLIST param name CDATA #REQUIRED type (string|int|bool) #IMPLIED>
