@@ -19,9 +19,15 @@ class RouteTable
 {
         //
 public :
-  virtual int lookup(const Address& source,const Address& dest) = 0;
-  virtual RouteInfo getRouteInfo(int idx) = 0;
-  virtual SmeProxy* getSmeProxy(int idx) = 0;
+  
+	// throws Exception when route not found
+	//virtual SmeProxy* lookup(const Address& source,const Address& dest, RouteInfo* info=0) = 0;
+	
+	// return  thue when proxy found and false otherwise
+	virtual bool lookup(const Address& source, const Address& dest, SmeProxy*& proxy, RouteInfo* info=0) = 0;
+
+  //virtual RouteInfo getRouteInfo(int idx) = 0;
+  //virtual SmeProxy* getSmeProxy(int idx) = 0;
 };
 
 }; // namespace route
