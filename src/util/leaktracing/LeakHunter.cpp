@@ -26,7 +26,8 @@ namespace smsc{
 namespace util{
 namespace leaktracing{
 
-const int TRACESIZE=20;
+static const int TRACESIZE=20;
+static int PAGESIZE=-1;
 
 static void* threadstart=NULL;
 
@@ -111,9 +112,9 @@ static int allocated;
 
 void FixAlloc()
 {
-  if(allocated&4095)
+  if(allocated&(PAGESIZE-1))
   {
-    allocated+=4096-(allocated&4095);
+    allocated+=PAGESIZE-(allocated&(PAGESIZE-1));
   }
 }
 
@@ -421,8 +422,8 @@ static void PrintTrace()
 
 void LeakHunter::AddFreeBlock(BlockInfo* _bi)
 {
-  int rest=(4096-(_bi->size&0xfff))&0xfff;
-  int rsize=_bi->size+rest+4096;
+  int rest=(PAGESIZE-(_bi->size&(PAGESIZE-1)))&(PAGESIZE-1);
+  int rsize=_bi->size+rest+PAGESIZE;
   int idx=(rsize>>12)&(LH_HASHSIZE-1);
   if(szmemcounts[idx]==szmemsizes[idx])
   {
@@ -438,7 +439,7 @@ void LeakHunter::AddFreeBlock(BlockInfo* _bi)
   bi->addr=_bi->addr;
   bi->size=_bi->size;
   bi->id=idcnt++;
-  void* ptr=((char*)bi->addr)-(_bi->size&0xfff);
+  void* ptr=((char*)bi->addr)-(_bi->size&(PAGESIZE-1));
   mprotect(ptr,rsize,PROT_NONE);
   szmemcounts[idx]++;
 }
@@ -449,11 +450,11 @@ void* LeakHunter::FindFreeBlock(int sz)
   int i;
   for(i=szmemcounts[idx]-1;i>=0;i--)
   {
-    int rest=(4096-(szmemblocks[idx][i].size&0xfff))&0xfff;
-    int rsize=szmemblocks[idx][i].size+rest+4096;
+    int rest=(PAGESIZE-(szmemblocks[idx][i].size&(PAGESIZE-1)))&(PAGESIZE-1);
+    int rsize=szmemblocks[idx][i].size+rest+PAGESIZE;
     if(rsize==sz)
     {
-      void* ptr=((char*)szmemblocks[idx][i].addr)-(((int)szmemblocks[idx][i].addr)&0xfff);
+      void* ptr=((char*)szmemblocks[idx][i].addr)-(((int)szmemblocks[idx][i].addr)&(PAGESIZE-1));
       //fprintf(stderr,"FFB: ptr=%p\n",ptr);
       mprotect(ptr,rsize,PROT_READ|PROT_WRITE);
       if(szmemcounts[idx]-1-i>0)
@@ -531,6 +532,7 @@ static void initlh()
     mutex_lock(&mtx);
     if(!lh)
     {
+      PAGESIZE=sysconf(_SC_PAGESIZE);
       mmapfd=open("mmap",O_CREAT|O_RDWR,0666);
       if(mmapfd==-1)
       {
@@ -563,11 +565,12 @@ static void initlh()
 
 static void* xmalloc(size_t size)
 {
-  int rest=(4096-(size&0xfff))&0xfff;
+  using smsc::util::leaktracing::PAGESIZE;
+  int rest=(PAGESIZE-(size&(PAGESIZE-1)))&(PAGESIZE-1);
   int rsize=size+rest;
-  void *rv=smsc::util::leaktracing::lh->Alloc(rsize+4096);
+  void *rv=smsc::util::leaktracing::lh->Alloc(rsize+PAGESIZE);
   char *mem=(char*)rv;
-  mprotect(mem+rsize,4096,PROT_NONE);
+  mprotect(mem+rsize,PAGESIZE,PROT_NONE);
   rest&=~7;
   //fprintf(stderr,"rest=%d, allocated=%d, p=%p\n",rest,smsc::util::leaktracing::allocated,mem+rest);
   return mem+rest;
