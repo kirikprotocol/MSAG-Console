@@ -44,6 +44,7 @@ class SmppInputThread:public SmppIOTask{
 public:
   SmppInputThread(smsc::smeman::SmeManager* manager):
     smeManager(manager){}
+  virtual ~SmppInputThread();
   virtual void addSocket(Socket* sock);
   virtual void removeSocket(Socket *sock);
   void killSocket(int idx);
@@ -58,6 +59,7 @@ protected:
 
 class SmppOutputThread:public SmppIOTask{
 public:
+  virtual ~SmppOutputThread();
   virtual void addSocket(Socket* sock);
   virtual void removeSocket(Socket *sock);
   void killSocket(int idx);

@@ -25,6 +25,13 @@ const int SOCKET_SLOT_INPUTMULTI=4;
 const int SOCKET_SLOT_OUTPUTMULTI=5;
 const int SOCKET_SLOT_KILL=6;
 
+SmppInputThread::~SmppInputThread()
+{
+  while(sockets.Count())
+  {
+    removeSocket(sockets[0]->getSocket());
+  }
+}
 
 void SmppInputThread::addSocket(Socket* sock)
 {
@@ -268,6 +275,15 @@ int SmppInputThread::Execute()
   }
   return 0;
 }
+
+SmppOutputThread::~SmppOutputThread()
+{
+  while(sockets.Count())
+  {
+    removeSocket(sockets[0]->getSocket());
+  }
+}
+
 
 void SmppOutputThread::addSocket(Socket* sock)
 {

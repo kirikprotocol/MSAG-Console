@@ -57,6 +57,7 @@ StateType StateMachine::submit(Tuple& t)
   Address dst;
   if(smsc->AliasToAddress(sms->getDestinationAddress(),dst))
   {
+    __trace2__("ALIAS:%20s->%20s",sms->getDestinationAddress().value,dst.value);
     sms->setDestinationAddress(dst);
   }
 

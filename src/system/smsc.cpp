@@ -89,64 +89,65 @@ void Smsc::init(const SmscConfigs& cfg)
   */
   //smsc::util::config::smeman::SmeManConfig smemancfg;
   //smemancfg.load("sme.xml");
-	{
-		smsc::util::config::smeman::SmeManConfig::RecordIterator i=cfg.smemanconfig->getRecordIterator();
-		while(i.hasRecord())
-		{
-			smsc::util::config::smeman::SmeRecord *rec;
-			i.fetchNext(rec);
-			SmeInfo si;
-			/*
-			uint8_t typeOfNumber;
-			uint8_t numberingPlan;
-			uint8_t interfaceVersion;
-			std::string rangeOfAddress;
-			std::string systemType;
-			std::string password;
-			std::string hostname;
-			int port;
-			SmeSystemId systemId;
-			SmeNType SME_N;
-			bool  disabled;
-			*/
-			if(rec->rectype==smsc::util::config::smeman::SMPP_SME)
-			{
-				si.typeOfNumber=rec->recdata.smppSme.typeOfNumber;
-				si.numberingPlan=rec->recdata.smppSme.numberingPlan;
-				si.interfaceVersion=rec->recdata.smppSme.interfaceVersion;
-				si.rangeOfAddress=rec->recdata.smppSme.addrRange;
-				si.systemType=rec->recdata.smppSme.systemType;
-				si.password=rec->recdata.smppSme.password;
-				si.systemId=rec->smeUid;
-				//si.hostname=rec->recdata->smppSme.
-				si.disabled=false;
-				smeman.addSme(si);
-			}
-		}
-	}
+  {
+    smsc::util::config::smeman::SmeManConfig::RecordIterator i=cfg.smemanconfig->getRecordIterator();
+    while(i.hasRecord())
+    {
+      smsc::util::config::smeman::SmeRecord *rec;
+      i.fetchNext(rec);
+      SmeInfo si;
+      /*
+      uint8_t typeOfNumber;
+      uint8_t numberingPlan;
+      uint8_t interfaceVersion;
+      std::string rangeOfAddress;
+      std::string systemType;
+      std::string password;
+      std::string hostname;
+      int port;
+      SmeSystemId systemId;
+      SmeNType SME_N;
+      bool  disabled;
+      */
+      if(rec->rectype==smsc::util::config::smeman::SMPP_SME)
+      {
+        si.typeOfNumber=rec->recdata.smppSme.typeOfNumber;
+        si.numberingPlan=rec->recdata.smppSme.numberingPlan;
+        si.interfaceVersion=rec->recdata.smppSme.interfaceVersion;
+        si.rangeOfAddress=rec->recdata.smppSme.addrRange;
+        si.systemType=rec->recdata.smppSme.systemType;
+        si.password=rec->recdata.smppSme.password;
+        si.systemId=rec->smeUid;
+        //si.hostname=rec->recdata->smppSme.
+        si.disabled=false;
+        smeman.addSme(si);
+      }
+    }
+  }
   // initialize aliases
-	{
-		smsc::util::config::alias::AliasConfig::RecordIterator i = 
-																cfg.aliasconfig->getRecordIterator();
-		while(i.hasRecord())
-		{
-			smsc::util::config::alias::AliasRecord *rec;
-			i.fetchNext(rec);
-			smsc::alias::AliasInfo ai;
-			ai.addr = smsc::sms::Address(
-				strlen(rec->addrValue),
-				rec->addrTni,
-				rec->addrNpi,
-				rec->addrValue);
-			ai.alias = smsc::sms::Address(
-				strlen(rec->aliasValue),
-				rec->aliasTni,
-				rec->aliasNpi,
-				rec->aliasValue);
-			aliaser.addAlias(ai);
-		}
-		aliaser.commit();
-	}
+  {
+    smsc::util::config::alias::AliasConfig::RecordIterator i =
+                                cfg.aliasconfig->getRecordIterator();
+    while(i.hasRecord())
+    {
+      smsc::util::config::alias::AliasRecord *rec;
+      i.fetchNext(rec);
+      __trace2__("adding %20s %20s",rec->addrValue,rec->aliasValue);
+      smsc::alias::AliasInfo ai;
+      ai.addr = smsc::sms::Address(
+        strlen(rec->addrValue),
+        rec->addrTni,
+        rec->addrNpi,
+        rec->addrValue);
+      ai.alias = smsc::sms::Address(
+        strlen(rec->aliasValue),
+        rec->aliasTni,
+        rec->aliasNpi,
+        rec->aliasValue);
+      aliaser.addAlias(ai);
+    }
+    aliaser.commit();
+  }
   // initialize router (all->all)
   router.assign(&smeman);
   auto_ptr<SmeIterator> it(smeman.iterator());

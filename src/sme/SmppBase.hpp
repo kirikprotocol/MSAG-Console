@@ -300,6 +300,7 @@ protected:
     }
     SmppHeader* sendPdu(SmppHeader* pdu)
     {
+      Event event;
       int seq=(const_cast<SmppHeader*>(pdu))->get_sequenceNumber();
       session.registerPdu(seq,&event);
       session.writer.enqueue(pdu);
@@ -363,7 +364,6 @@ protected:
     };
   protected:
     SmppSession& session;
-    Event event;
   };
   class InnerAsyncTransmitter:public InnerSyncTransmitter{
   public:
@@ -377,7 +377,7 @@ protected:
     SmppHeader* sendPdu(SmppHeader* pdu)
     {
       int seq=pdu->get_sequenceNumber();
-      session.registerPdu(seq,&event);
+      session.registerPdu(seq,NULL);
       session.writer.enqueue(pdu);
       return NULL;
     };

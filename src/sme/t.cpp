@@ -21,6 +21,10 @@ public:
       resp.set_messageId("");
       resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
       trans->sendDeliverySmResp(resp);
+    }else
+    if(pdu->get_commandId()==SmppCommandSet::SUBMIT_SM_RESP)
+    {
+      printf("\nReceived async submit sm resp\n");
     }
   }
   void handleError(int errorCode)
@@ -46,7 +50,7 @@ int main(int argc,char* argv[])
   }
   SmeConfig cfg;
   cfg.host="smsc";
-  cfg.port=9002;
+  cfg.port=9001;
   cfg.sid=argv[1];
   cfg.timeOut=10;
   cfg.password="";
@@ -72,6 +76,7 @@ int main(int argc,char* argv[])
     s.setArchivationRequested(false);
     //unsigned char message[]="SME test message";
     SmppTransmitter *tr=ss.getSyncTransmitter();
+    SmppTransmitter *atr=ss.getAsyncTransmitter();
     lst.setTrans(tr);
     s.setEServiceType("XXX");
     sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
@@ -80,6 +85,20 @@ int main(int argc,char* argv[])
       unsigned char message[512];
       printf("Enter destination:");fflush(stdout);
       fgets((char*)message,sizeof(message),stdin);
+      if(!strcmp((char*)message,"quit\n"))
+      {
+        break;
+      }
+      int i=0;
+      while(message[i])
+      {
+        if(message[i]<32)
+        {
+          message[i]=0;
+          break;
+        }
+        i++;
+      }
       s.setDestinationAddress(strlen((char*)message),0,0,(char*)message);
       printf("Enter message:");fflush(stdout);
       fgets((char*)message,sizeof(message),stdin);
@@ -91,6 +110,7 @@ int main(int argc,char* argv[])
       s.setMessageBody(len,1,false,message);
       fillSmppPduFromSms(&sm,&s);
       PduSubmitSmResp *resp=tr->submit(sm);
+      atr->submit(sm);
       if(resp->get_header().get_commandStatus()==0)
       {
         printf("Accepted:%d bytes\n",len);fflush(stdout);
