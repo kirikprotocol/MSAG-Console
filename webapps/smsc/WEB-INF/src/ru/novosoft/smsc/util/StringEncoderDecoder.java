@@ -22,7 +22,7 @@ public class StringEncoderDecoder
 
   public static String encode(String str)
   {
-    StringBuffer result = new StringBuffer(str);
+    StringBuffer result = new StringBuffer(str.length());
     for (int i = 0; i < str.length(); i++)
     {
       switch (str.charAt(i))
