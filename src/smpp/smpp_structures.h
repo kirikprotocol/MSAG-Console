@@ -1253,7 +1253,7 @@ inline bool smppPduHasSms(SmppHeader* pdu)
   case SmppCommandSet::SUBMIT_SM:
   case SmppCommandSet::DELIVERY_SM:
   case SmppCommandSet::SUBMIT_MULTI:
-  //case SmppCommandSet::DATA_SM:
+  case SmppCommandSet::DATA_SM:
     return true;
   }
   return false;
