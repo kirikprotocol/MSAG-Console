@@ -147,7 +147,7 @@ public class SME
 			{
 				timeout = Integer.decode(value).intValue();
 			}
-			else if (name.equals("ASCIIZ с именем схемы отчетов о доставке"))
+			else if (name.equals("receiptSchemeName"))
 			{
 				receiptSchemeName = value;
 			}
