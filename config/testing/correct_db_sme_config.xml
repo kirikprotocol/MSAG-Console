@@ -31,7 +31,7 @@
 				<param name="address" type="string">.2.3.9664jgch</param>
 
 				<section name="DataSource">
-					<param name="type" type="string">oci</param>
+					<param name="type" type="string">OCI</param>
 					<param name="connections" type="int">3</param>
 					<param name="dbInstance" type="string">dbshock_orcl</param>
 					<param name="dbUserName" type="string">smsc</param>
@@ -43,8 +43,8 @@
 					<!-- tc1: ???????? ?? input ?????????? ? ????? ? output ????? export-import -->
 					<!-- tc2: ?????? ???? ?1, ???????? ?? ????????? now ? input,
 					???? ? ???? ????????? ????????? ???????? -->
-					<section name="DateFormat1">
-						<param name="name" type="string">DateFormat1</param>
+					<section name="DateFormatJob1">
+						<param name="name" type="string">DateFormatJob1</param>
 						<param name="type" type="string">sql-job</param>
 						<param name="query" type="bool">true</param>
 						<param name="sql" type="string">
@@ -60,8 +60,8 @@ Date: $$ date pattern = "w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y yy yyy y
 
 					<!-- tc2: ?????? ???? ?2, ???????? ?? ????????? today ? input,
 					???? ? ???? ????????? ???????? ????????? -->
-					<section name="DateFormat2">
-						<param name="name" type="string">DateFormat2</param>
+					<section name="DateFormatJob2">
+						<param name="name" type="string">DateFormatJob2</param>
 						<param name="type" type="string">sql-job</param>
 						<param name="query" type="bool">true</param>
 						<param name="sql" type="string">
@@ -77,15 +77,15 @@ Date: $$  date  pattern  =  "w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y yy y
 
 					<!-- tc2: ?????? ???? ?3, ???????? ?? ????????? yesterday ? input,
 					???? ? ???? ????????? ????????? ??????????? -->
-					<section name="DateFormat3">
-						<param name="name" type="string">DateFormat3</param>
+					<section name="DateFormatJob3">
+						<param name="name" type="string">DateFormatJob3</param>
 						<param name="type" type="string">sql-job</param>
 						<param name="query" type="bool">true</param>
 						<param name="sql" type="string">
 select * from dual
 						</param>
 						<param name="input" type="string">
-$$	date	pattern	=	"d-MMM-yy H m s t"	export	=	"dt"	default	=	"yesterday"	$$
+$$	date	pattern	=	"d-MMM-yy H m s"	export	=	"dt"	default	=	"yesterday"	$$
 						</param>
 						<param name="output" type="string">
 Date: $$	date	pattern	=	"w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y(yy((yyy)yyyy))yyyyy h hh hhh m mm mmm t tt"	import	=	"dt"	$$
@@ -94,15 +94,15 @@ Date: $$	date	pattern	=	"w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y(yy((yyy)
 
 					<!-- tc2: ?????? ???? ?4, ???????? ?? ????????? tomorrow ? input,
 					???? ? ???? ????????? ???????? ???????????? -->
-					<section name="DateFormat4">
-						<param name="name" type="string">DateFormat4</param>
+					<section name="DateFormatJob4">
+						<param name="name" type="string">DateFormatJob4</param>
 						<param name="type" type="string">sql-job</param>
 						<param name="query" type="bool">true</param>
 						<param name="sql" type="string">
 select * from dual
 						</param>
 						<param name="input" type="string">
-$$		date		pattern		=		"dd MMMM yyyy HH.mm.ss t"		export		=		"dt"		default		=		"tomorrow"		$$
+$$		date		pattern		=		"dd MMMM yyyy HH.mm.ss"		export		=		"dt"		default		=		"tomorrow"		$$
 						</param>
 						<param name="output" type="string">
 Date: $$		date		pattern		=		"w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y(yy((yyy)yyyy))yyyyy h hh hhh m mm mmm t tt"		import		=		"dt"		$$
@@ -112,7 +112,7 @@ Date: $$		date		pattern		=		"w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y(yy((
 					<!-- tc2: ??????? ???????? ? ????????? ????? ?? ??????????
 					?? ????????? ? input, ?????????????? ????????? ????? ?
 					escape ??????? ? output -->
-					<section name="OtherFormat">
+					<section name="OtherFormatJob">
 						<param name="name" type="string">OtherFormat</param>
 						<param name="type" type="string">sql-job</param>
 						<param name="query" type="bool">true</param>
@@ -127,16 +127,15 @@ $$double export = "numDouble" default=32.32$$
 $$string export = "str" default="xxx"$$
 						</param>
 						<param name="output" type="string">
-from-address: '$$string import="from-address"$$'.
-string: "$$string import="str" default="zzz"$$";
-string_right: $$string import="str" length=30 align="right" default="zzz"$$
-string_center: $$string import="str" length=30 align="center" default="zzz"$$
-string_left: $$string import="str" length=30 align="left" default="zzz"$$
-int16: (--\$$$int16 import="numInt16" default="160"$$--),
-int32: (++\$$$int32 import="numInt32" default="320"$$++),
-float: (**\$$$float import="numFloat" default="160.16"$$**),
-double: (::\$$$double import="numDouble" default="320.32"$$::);
-rows-affected: $$int32 arg=1$$
+from-address: '$$string import="from-address"$$';
+string: "$$string import="str"$$",
+string_right: $$string import="str" length=30 align="right"$$,
+string_center: $$string import="str" length=30 align="center"$$,
+string_left: $$string import="str" length=30 align="left"$$;
+int16: (--\$$$int16 import="numInt16"$$--),
+int32: (++\$$$int32 import="numInt32"$$++),
+float: (**\$$$float import="numFloat"$$**),
+double: (::\$$$double import="numDouble"$$::);
 						</param>
 					</section>
 
