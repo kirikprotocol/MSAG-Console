@@ -2128,6 +2128,11 @@ static void SendAlertToSMSC(MapDialog* dialog,ET96MAP_ADDRESS_T *mapAddr)
 static void ResponseAlertSC(MapDialog* dialog)
 {
   USHORT_T result;
+  ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
+  result = Et96MapOpenResp(dialog->ssn,dialog->dialogid_map,ET96MAP_RESULT_OK,&reason,0,0,0);
+  if ( result != ET96MAP_E_OK )
+    throw runtime_error(
+      FormatText("MAP::ResponseAlertSC:et96MapOpenResp: error 0x%hx",result));
   if ( dialog->version == 2 ){
     result = Et96MapV2AlertSCResp(dialog->ssn,dialog->dialogid_map,dialog->invokeId,0);
   }else if ( dialog->version == 1 ){
