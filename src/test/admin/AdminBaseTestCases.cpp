@@ -106,13 +106,20 @@ void AdminBaseTestCases::runTestCase(const char* id, const char* cmd,
 	bool isOk = true;
 	TestCase* tc = chkList->getTc(id);
 	sendRequest(cmd);
-	if (!checkResponse(humanConsole ? humanResp : NULL))
+	char echoResp[strlen(cmd) + 10];
+	sprintf(echoResp, "/^\\Q%s\\E$/m", cmd);
+	if (!checkResponse(echoResp))
 	{
 		__tc_fail__(1);
 	}
-	if (!checkResponse("^>$"))
+	if (!checkResponse(humanConsole ? humanResp : NULL))
 	{
 		__tc_fail__(2);
+	}
+	const char* promptResp = "/^>$/";
+	if (!checkResponse(promptResp))
+	{
+		__tc_fail__(3);
 	}
 	__tc_ok_cond__;
 }
@@ -133,6 +140,20 @@ bool AdminBaseTestCases::login(const char* login, const char* passwd,
 		"/^Welcome to SMSC Remote Console.$(^$)*>$/ms" :
 		"/^Authentication failed. Access denied.$/ms");
 	return res;
+}
+
+void AdminBaseTestCases::apply()
+{
+	__decl_tc__;
+	char cmd[64];
+	sprintf(cmd, "apply %s", shit);
+	sendRequest(cmd);
+	__tc__("adminConsole.apply");
+	if (!checkResponse("/Ok. Changes applied succesfully/m"))
+	{
+		__tc_fail__(1);
+	}
+	__tc_ok_cond__;
 }
 
 void AdminBaseTestCases::executeTestCases()
