@@ -19,10 +19,13 @@ DbSmeTestRecord* DbSmeDateFormatJobTestCases::createJobInput(
 		{DateFormatter("d-MMM-yy H m s") /*, DateFormatter("dd-MMM-yy HH mm ss")*/};
 	static const DateFormatter df4[] =
 		{DateFormatter("dd MMMM yyyy HH.mm.ss") /*, DateFormatter("d MMMM yyyy H.m.s")*/};
+	static const DateFormatter df5[] =
+			{DateFormatter("ddMMyyhhmmsst")};
 	static const int dfLen1 = sizeof(df1) / sizeof(*df1);
 	static const int dfLen2 = sizeof(df2) / sizeof(*df2);
 	static const int dfLen3 = sizeof(df3) / sizeof(*df3);
 	static const int dfLen4 = sizeof(df4) / sizeof(*df4);
+	static const int dfLen5 = sizeof(df5) / sizeof(*df5);
 	
 	DbSmeTestRecord* rec = new DbSmeTestRecord();
 	rec->setDefInput(new DbSmeTestRecord());
@@ -32,25 +35,31 @@ DbSmeTestRecord* DbSmeDateFormatJobTestCases::createJobInput(
 			rec->setJob("DateFormatJob1");
 			rec->getDefInput()->setDateType(DT_NOW);
 			rec->getDefInput()->setDate(time(NULL));
-			*df = df1 + rand0(dfLen1);
+			*df = df1 + rand0(dfLen1 - 1);
 			break;
 		case 2:
 			rec->setJob("DateFormatJob2");
 			rec->getDefInput()->setDateType(DT_TODAY);
 			rec->getDefInput()->setDate(getDate(DT_TODAY));
-			*df = df2 + rand0(dfLen2);
+			*df = df2 + rand0(dfLen2 - 1);
 			break;
 		case 3:
 			rec->setJob("DateFormatJob3");
 			rec->getDefInput()->setDateType(DT_YESTERDAY);
 			rec->getDefInput()->setDate(getDate(DT_YESTERDAY));
-			*df = df3 + rand0(dfLen3);
+			*df = df3 + rand0(dfLen3 - 1);
 			break;
 		case 4:
 			rec->setJob("DateFormatJob4");
 			rec->getDefInput()->setDateType(DT_TOMORROW);
 			rec->getDefInput()->setDate(getDate(DT_TOMORROW));
-			*df = df4 + rand0(dfLen4);
+			*df = df4 + rand0(dfLen4 - 1);
+			break;
+		case 5:
+			rec->setJob("DateFormatJob5");
+			rec->getDefInput()->setDateType(DT_TODAY);
+			rec->getDefInput()->setDate(getDate(DT_TODAY));
+			*df = df5 + rand0(dfLen5 - 1);
 			break;
 		default:
 			__unreachable__("Invalid jobNum");
@@ -73,7 +82,7 @@ const string DbSmeDateFormatJobTestCases::processJobFirstOutput(const string& te
 {
 	__decl_tc__;
 	__tc__("processDbSmeRes.select.singleRecord"); __tc_ok__;
-	static const DateFormatter df("!@#$%^&*( )_+-=|\\:;\'<,>.?/wMMMMMMMMHwwyyHHWyyyyHHHWWyyyyyydHHHHyyyyyyyyddshdddsshhddddssshhhMsssshhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt");
+	static const DateFormatter df("!@#$%^&*( )_+-=|\\:;\'<,>.?/yyyyyywMMMMMMMwwdddWhhhMMMMHHHWWmmmMMMssstyyyyMMddhhHHmmssttyyyyyyyyMMMMMMMMddddhhhhHHHHmmmmssssMMMMMyyMMMMMMdhHmsM");
 	static const string prefix("\nDate: ");
 	int jobNum;
 	if (!sscanf(rec->getJob().c_str(), "DateFormatJob%d", &jobNum))
@@ -105,6 +114,7 @@ const string DbSmeDateFormatJobTestCases::processJobFirstOutput(const string& te
 			case 2: //today
 			case 3: //yesterday
 			case 4: //tomorrow
+			case 5: //today
 				break;
 			default:
 				__unreachable__("Invalid jobNum");
