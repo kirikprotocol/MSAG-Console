@@ -29,6 +29,13 @@ namespace smpp{
 //using std::min;
 //using std::max;
 
+#ifdef DISABLE_SMPP_CHECKS
+#pragma push_macro("__require__")
+#undef __require__
+#define __require__(expr)
+#endif
+
+
 struct SmppStream
 {
   SmppHeader header;
@@ -356,6 +363,11 @@ inline void fetchOctetStr(SmppStream* stream,OStr& ostr,uint32_t octets)
   ostr.length = octets;
   __check_smpp_stream_invariant__ ( stream );
 }
+
+#ifdef DISABLE_SMPP_CHECKS
+#pragma pop_macro("__require__")
+#endif
+
 
 }
 }
