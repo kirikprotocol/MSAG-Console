@@ -53,10 +53,13 @@ AckText* AbonentInfoTestCases::getExpectedResponse(const string& input,
 		__tc__("processAbonentInfo.checkText");
 		__tc_fail__(-1); //статус абонента всегда 1
 		s << input << ":1," << profile.codepage;
-		return new AckText(s.str(), DEFAULT, valid);
+		AckText* ack = new AckText(s.str(), DEFAULT, valid);
+		__trace2__("getExpectedResponse(): input = %s, ack = %p", input.c_str(), ack);
+		return ack;
 	}
 	catch (...)
 	{
+		__trace2__("getExpectedResponse(): input = %s, ack = NULL", input.c_str());
 		return NULL;
 	}
 }
@@ -93,13 +96,13 @@ void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
 		pdu->get_message().set_dataCoding(dataCoding);
 		//отправить pdu
 		PduData::StrProps strProps;
-		strProps["abonentInfoInput"] = input;
+		strProps["abonentInfoTc.input"] = input;
 		PduData::ObjProps objProps;
 		AckText* ack = getExpectedResponse(input, time(NULL));
 		if (ack)
 		{
 			ack->ref();
-			objProps["abonentInfoOutput"] = ack;
+			objProps["abonentInfoTc.output"] = ack;
 		}
 		//при неправильно заданном адресе abonent info не пришлет ответ
 		PduType pduType = ack ? PDU_EXT_SME : PDU_NULL_OK;
@@ -195,7 +198,7 @@ AckText* AbonentInfoTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 {
 	__require__(monitor);
 	__cfg_int__(timeCheckAccuracy);
-	const string input = monitor->pduData->strProps["abonentInfoInput"];
+	const string input = monitor->pduData->strProps["abonentInfoTc.input"];
 	Address alias(input.c_str());
 	const Address addr = fixture->aliasReg->findAddressByAlias(alias);
 	//profile
@@ -218,15 +221,15 @@ void AbonentInfoTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	//декодировать
 	const string text = decode(pdu.get_message().get_shortMessage(),
 		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding());
-	if (!monitor->pduData->objProps.count("abonentInfoOutput"))
+	if (!monitor->pduData->objProps.count("abonentInfoTc.output"))
 	{
 		__unreachable__("specific to abonent info internals");
 		AckText* ack = getExpectedResponse(monitor, text, recvTime);
 		ack->ref();
-		monitor->pduData->objProps["abonentInfoOutput"] = ack;
+		monitor->pduData->objProps["abonentInfoTc.output"] = ack;
 	}
 	AckText* ack =
-		dynamic_cast<AckText*>(monitor->pduData->objProps["abonentInfoOutput"]);
+		dynamic_cast<AckText*>(monitor->pduData->objProps["abonentInfoTc.output"]);
 	__require__(ack);
 	if (!ack->valid)
 	{
@@ -244,7 +247,7 @@ void AbonentInfoTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	__tc_ok_cond__;
 	__tc__("processAbonentInfo.checkText");
 	__trace2__("abonent info cmd: input:\n%s\noutput:\n%s\nexpected:\n%s\n",
-		monitor->pduData->strProps["abonentInfoInput"].c_str(), text.c_str(), ack->text.c_str());
+		monitor->pduData->strProps["abonentInfoTc.input"].c_str(), text.c_str(), ack->text.c_str());
 	if (text != ack->text)
 	{
 		__tc_fail__(1);

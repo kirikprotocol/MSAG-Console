@@ -65,7 +65,8 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& text,
 		pdu->get_message().set_shortMessage(msg.get(), msgLen);
 		pdu->get_message().set_dataCoding(dataCoding);
 		//отправить pdu
-		fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync, intProps, NULL, NULL, PDU_EXT_SME);
+		fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync, intProps,
+			strProps, objProps, PDU_EXT_SME);
 		__tc_ok__;
 		//обновить профиль, ответные сообщения от профайлера и
 		//подтверждения доставки  уже по новым настройкам
@@ -73,13 +74,17 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& text,
 		{
 			time_t t;
 			Profile profile = fixture->profileReg->getProfile(fixture->smeAddr, t);
-			if (intProps->count("reportOptions"))
+			if (intProps->count("profilerTc.reportOptions"))
 			{
-				profile.reportoptions = intProps->find("reportOptions")->second;
+				__require__(!intProps->count("profilerTc.codePage"));
+				profile.reportoptions = (*intProps)["profilerTc.reportOptions"];
+				__trace2__("update pdofile: new report options = %d", profile.reportoptions);
 			}
-			if (intProps->count("codePage"))
+			if (intProps->count("profilerTc.codePage"))
 			{
-				profile.codepage = intProps->find("codePage")->second;
+				__require__(!intProps->count("profilerTc.reportOptions"));
+				profile.codepage = (*intProps)["profilerTc.codePage"];
+				__trace2__("update pdofile: new code page = %d", profile.codepage);
 			}
 			fixture->profileReg->putProfile(fixture->smeAddr, profile);
 		}
@@ -102,29 +107,32 @@ void SmppProfilerTestCases::updateReportOptionsCorrect(bool sync,
 		try
 		{
 			string text;
-			int cmdType = UPDATE_REPORT_OPTIONS;
 			PduData::IntProps intProps;
 			switch (s.value())
 			{
 				case 1: //report none
 					__tc__("updateProfile.reportOptions.reportNoneMixedCase");
 					text = "RePoRT NoNe";
-					intProps["reportOptions"] = ProfileReportOptions::ReportNone;
+					intProps["profilerTc.reportOptions"] =
+						ProfileReportOptions::ReportNone;
 					break;
 				case 2: //report none
 					__tc__("updateProfile.reportOptions.reportNoneSpaces");
 					text = "  rEpOrt  nOnE  ";
-					intProps["reportOptions"] = ProfileReportOptions::ReportNone;
+					intProps["profilerTc.reportOptions"] =
+						ProfileReportOptions::ReportNone;
 					break;
 				case 3: //report full
 					__tc__("updateProfile.reportOptions.reportFullMixedCase");
 					text = "RePoRT FuLL";
-					intProps["reportOptions"] = ProfileReportOptions::ReportFull;
+					intProps["profilerTc.reportOptions"] =
+						ProfileReportOptions::ReportFull;
 					break;
 				case 4: //report full
 					__tc__("updateProfile.reportOptions.reportFullSpaces");
 					text = "  rEpOrt  fUll  ";
-					intProps["reportOptions"] = ProfileReportOptions::ReportFull;
+					intProps["profilerTc.reportOptions"] =
+						ProfileReportOptions::ReportFull;
 					break;
 				default:
 					__unreachable__("Invalid num");
@@ -150,29 +158,28 @@ void SmppProfilerTestCases::updateCodePageCorrect(bool sync,
 		try
 		{
 			string text;
-			int cmdType = UPDATE_CODE_PAGE;
 			PduData::IntProps intProps;
 			switch (s.value())
 			{
 				case 1: //ucs2 codepage
 					__tc__("updateProfile.dataCoding.ucs2CodepageMixedCase");
 					text = "uCS2";
-					intProps["codePage"] = ProfileCharsetOptions::Ucs2;
+					intProps["profilerTc.codePage"] = ProfileCharsetOptions::Ucs2;
 					break;
 				case 2: //usc2 codepage
 					__tc__("updateProfile.dataCoding.ucs2CodepageSpaces");
 					text = "  Ucs2  ";
-					intProps["codePage"] = ProfileCharsetOptions::Ucs2;
+					intProps["profilerTc.codePage"] = ProfileCharsetOptions::Ucs2;
 					break;
 				case 3: //default codepage
 					__tc__("updateProfile.dataCoding.defaultCodepageMixedCase");
 					text = "DeFauLT";
-					intProps["codePage"] = ProfileCharsetOptions::Default;
+					intProps["profilerTc.codePage"] = ProfileCharsetOptions::Default;
 					break;
 				case 4: //default codepage
 					__tc__("updateProfile.dataCoding.defaultCodepageSpaces");
 					text = "  dEfAUlt  ";
-					intProps["codePage"] = ProfileCharsetOptions::Default;
+					intProps["profilerTc.codePage"] = ProfileCharsetOptions::Default;
 					break;
 				default:
 					__unreachable__("Invalid num");
@@ -195,7 +202,7 @@ void SmppProfilerTestCases::updateProfileIncorrect(bool sync, uint8_t dataCoding
 	try
 	{
 		PduData::IntProps intProps;
-		intProps["incorrectCmdText"] = 1;
+		intProps["profilerTc.incorrectCmdText"] = 1;
 		auto_ptr<char> tmp = rand_char(rand0(5));
 		sendUpdateProfilePdu(tmp.get(), &intProps, NULL, NULL, sync, dataCoding);
 		__tc_ok__;
@@ -231,12 +238,13 @@ AckText* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	const Profile& profile = fixture->profileReg->getProfile(addr, t);
 	bool valid = t + timeCheckAccuracy <= recvTime;
 	//проверка profiler reportOptions
-	if (monitor->pduData->intProps.count("reportOptions"))
+	if (monitor->pduData->intProps.count("profilerTc.reportOptions"))
 	{
+		__require__(!monitor->pduData->intProps.count("profilerTc.codePage"));
 		__tc__("updateProfile.ack.reportOptions.dataCoding"); __tc_ok__;
 		__cfg_str__(profilerRespReportNone);
 		__cfg_str__(profilerRespReportFull);
-		switch (monitor->pduData->intProps.find("reportOptions")->second)
+		switch (monitor->pduData->intProps["profilerTc.reportOptions"])
 		{
 			case ProfileReportOptions::ReportNone:
 				__get_resp__(profilerRespReportNone, profile.codepage, valid);
@@ -249,12 +257,13 @@ AckText* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 		}
 	}
 	//проверка profiler codePage
-	else if (monitor->pduData->intProps.count("codePage"))
+	if (monitor->pduData->intProps.count("profilerTc.codePage"))
 	{
+		__require__(!monitor->pduData->intProps.count("profilerTc.reportOptions"));
 		__tc__("updateProfile.ack.codePage.dataCoding"); __tc_ok__;
 		__cfg_str__(profilerRespDataCodingDefault);
 		__cfg_str__(profilerRespDataCodingUcs2);
-		switch (monitor->pduData->intProps.find("codePage")->second)
+		switch (monitor->pduData->intProps["profilerTc.codePage"])
 		{
 			case ProfileCharsetOptions::Default:
 				__get_resp__(profilerRespDataCodingDefault,
@@ -269,7 +278,7 @@ AckText* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 		}
 	}
 	//неправильный текст команды
-	else if (monitor->pduData->intProps.count("incorrectCmdText"))
+	if (monitor->pduData->intProps.count("profilerTc.incorrectCmdText"))
 	{
 		__tc__("updateProfile.ack.incorrectCmdText.dataCoding"); __tc_ok__;
 		__cfg_str__(profilerRespInvalidCmdText);
@@ -295,14 +304,14 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	}
 	const string text = decode(pdu.get_message().get_shortMessage(),
 		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding());
-	if (!monitor->pduData->objProps.count("profilerOutput"))
+	if (!monitor->pduData->objProps.count("profilerTc.output"))
 	{
 		AckText* ack = getExpectedResponse(monitor, pdu, recvTime);
 		ack->ref();
-		monitor->pduData->objProps["profilerOutput"] = ack;
+		monitor->pduData->objProps["profilerTc.output"] = ack;
 	}
 	AckText* ack =
-		dynamic_cast<AckText*>(monitor->pduData->objProps["profilerOutput"]);
+		dynamic_cast<AckText*>(monitor->pduData->objProps["profilerTc.output"]);
 	__require__(ack);
 	if (!ack->valid)
 	{

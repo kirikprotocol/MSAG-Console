@@ -192,14 +192,14 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 	//декодировать
 	const string text = decode(pdu.get_message().get_shortMessage(),
 		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding());
-	if (!monitor->pduData->objProps.count("deliveryReceiptOutput"))
+	if (!monitor->pduData->objProps.count("smscSmeTc.receiptOutput"))
 	{
 		AckText* ack = getExpectedResponse(monitor, origPdu, text, recvTime);
 		ack->ref();
-		monitor->pduData->objProps["deliveryReceiptOutput"] = ack;
+		monitor->pduData->objProps["smscSmeTc.receiptOutput"] = ack;
 	}
 	AckText* ack =
-		dynamic_cast<AckText*>(monitor->pduData->objProps["deliveryReceiptOutput"]);
+		dynamic_cast<AckText*>(monitor->pduData->objProps["smscSmeTc.receiptOutput"]);
 	__require__(ack);
 	if (!ack->valid)
 	{
@@ -315,14 +315,14 @@ void SmscSmeTestCases::processIntermediateNotification(
 	//декодировать
 	const string text = decode(pdu.get_message().get_shortMessage(),
 		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding());
-	if (!monitor->pduData->objProps.count("notificationOutput"))
+	if (!monitor->pduData->objProps.count("smscSmeTc.notificationOutput"))
 	{
 		AckText* ack = getExpectedResponse(monitor, origPdu, text, recvTime);
 		ack->ref();
-		monitor->pduData->objProps["notificationOutput"] = ack;
+		monitor->pduData->objProps["smscSmeTc.notificationOutput"] = ack;
 	}
 	AckText* ack =
-		dynamic_cast<AckText*>(monitor->pduData->objProps["notificationOutput"]);
+		dynamic_cast<AckText*>(monitor->pduData->objProps["smscSmeTc.notificationOutput"]);
 	__require__(ack);
 	if (!ack->valid)
 	{

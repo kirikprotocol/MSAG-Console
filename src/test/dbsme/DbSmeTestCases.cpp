@@ -177,9 +177,9 @@ void DbSmeTestCases::sendDbSmePdu(const string& input,
 	__require__(rec);
 	__cfg_addr__(dbSmeAlias);
 	PduData::StrProps strProps;
-	strProps["dbSmeInput"] = input;
+	strProps["dbSmeTc.input"] = input;
 	PduData::ObjProps objProps;
-	objProps["dbSmeRec"] = rec;
+	objProps["dbSmeTc.rec"] = rec;
 	rec->ref();
 	sendDbSmePdu(dbSmeAlias, input, NULL, &strProps, &objProps, sync, dataCoding);
 }
@@ -196,7 +196,7 @@ void DbSmeTestCases::sendDbSmePdu(const Address& addr, const string& input,
 {
 	__cfg_int__(timeCheckAccuracy);
 	PduData::StrProps strProps;
-	strProps["dbSmeInput"] = input;
+	strProps["dbSmeTc.input"] = input;
 	time_t t;
 	const Profile& profile = fixture->profileReg->getProfile(fixture->smeAddr, t);
 	const pair<string, uint8_t> p = convert(output, profile.codepage);
@@ -204,7 +204,7 @@ void DbSmeTestCases::sendDbSmePdu(const Address& addr, const string& input,
 	AckText* ack = new AckText(p.first, p.second, valid);
 	ack->ref();
 	PduData::ObjProps objProps;
-	objProps["dbSmeOutput"] = ack;
+	objProps["dbSmeTc.output"] = ack;
 	sendDbSmePdu(addr, input, NULL, &strProps, &objProps, sync, dataCoding);
 }
 
@@ -722,11 +722,11 @@ void DbSmeTestCases::submitIncorrectParamsDbSmeCmd(bool sync,
 AckText* DbSmeTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	PduDeliverySm& pdu, const string& text, time_t recvTime)
 {
-	__require__(monitor->pduData->objProps.count("dbSmeRec"));
+	__require__(monitor->pduData->objProps.count("dbSmeTc.rec"));
 	__cfg_int__(timeCheckAccuracy);
 	MutexGuard mguard(dbSmeReg->getMutex());
 	DbSmeTestRecord* rec = dynamic_cast<DbSmeTestRecord*>(
-		monitor->pduData->objProps["dbSmeRec"]);
+		monitor->pduData->objProps["dbSmeTc.rec"]);
 	HandlersMap::iterator it = handlers.find(rec->getJob());
 	__require__(it != handlers.end());
 	const string expected = it->second->processJobFirstOutput(text, rec);
@@ -756,14 +756,14 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	const string text = decode(pdu.get_message().get_shortMessage(),
 		pdu.get_message().size_shortMessage(), pdu.get_message().get_dataCoding());
 	__trace__("getExpectedResponse(): before");
-	if (!monitor->pduData->objProps.count("dbSmeOutput"))
+	if (!monitor->pduData->objProps.count("dbSmeTc.output"))
 	{
 		AckText* ack = getExpectedResponse(monitor, pdu, text, recvTime);
 		ack->ref();
-		monitor->pduData->objProps["dbSmeOutput"] = ack;
+		monitor->pduData->objProps["dbSmeTc.output"] = ack;
 	}
 	AckText* ack =
-		dynamic_cast<AckText*>(monitor->pduData->objProps["dbSmeOutput"]);
+		dynamic_cast<AckText*>(monitor->pduData->objProps["dbSmeTc.output"]);
 	__require__(ack);
 	__trace2__("getExpectedResponse(): after, ack = %p", ack);
 	if (!ack->valid)
@@ -785,7 +785,7 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	bool check;
 	int pos = findPos(text, ack->text, getMaxChars(ack->dataCoding), check);
 	__trace2__("db sme cmd: pos = %d, input:\n%s\noutput:\n%s\nexpected:\n%s\n",
-		pos, monitor->pduData->strProps["dbSmeInput"].c_str(), text.c_str(), ack->text.c_str());
+		pos, monitor->pduData->strProps["dbSmeTc.input"].c_str(), text.c_str(), ack->text.c_str());
 	if (pos == string::npos)
 	{
 		__tc_fail__(3);
