@@ -10,7 +10,6 @@
 #include "et96map_api_defines.h"
 #include "et96map_api_types.h"
 #include "et96map_dialogue.h"
-#include "hlrtask.h"
 
 #define MAXENTRIES 50
 #define SSN 6
