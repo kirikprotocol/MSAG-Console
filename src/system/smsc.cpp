@@ -1,6 +1,5 @@
 #include "system/smsc.hpp"
 #include "system/smppio/SmppAcceptor.hpp"
-#include "util/config/smeman/SmeManConfig.h"
 #include <memory>
 #include "admin/util/SignalHandler.h"
 #include "util/debug.h"
@@ -79,18 +78,18 @@ protected:
   EventQueue& queue;
 };
 
-void Smsc::init()
+void Smsc::init(const SmscConfigs& cfg)
 {
-  tp.preCreateThreads(5);
-  smsc::util::config::Manager::init("config.xml");
-  cfgman=&cfgman->getInstance();
+  tp.preCreateThreads(15);
+  //smsc::util::config::Manager::init("config.xml");
+  //cfgman=&cfgman->getInstance();
 
   /*
     register SME's
   */
-  smsc::util::config::smeman::SmeManConfig smemancfg;
-  smemancfg.load("sme.xml");
-  smsc::util::config::smeman::SmeManConfig::RecordIterator i=smemancfg.getRecordIterator();
+  //smsc::util::config::smeman::SmeManConfig smemancfg;
+  //smemancfg.load("sme.xml");
+  smsc::util::config::smeman::SmeManConfig::RecordIterator i=cfg.smemanconfig->getRecordIterator();
   while(i.hasRecord())
   {
     smsc::util::config::smeman::SmeRecord *rec;
@@ -123,13 +122,6 @@ void Smsc::init()
       smeman.addSme(si);
     }
   }
-  tp.startTask(
-    new smppio::SmppAcceptor(
-      cfgman->getString("smpp.host"),
-      cfgman->getInt("smpp.port"),
-      &ssockman
-    )
-  );
 
   // initialize router (all->all)
   router.assign(&smeman);
@@ -166,15 +158,28 @@ void Smsc::init()
   tp.startTask(new StateMachine(eventqueue,store,this));
   tp.startTask(new StateMachine(eventqueue,store,this));
 
-  smsc::admin::util::SignalHandler::registerShutdownHandler(new SmscSignalHandler(this));
-
-  tp.startTask(new Scheduler(eventqueue,store));
+  //smsc::admin::util::SignalHandler::registerShutdownHandler(new SmscSignalHandler(this));
 
   tp.startTask(new SpeedMonitor(eventqueue));
+
+  smscHost=cfg.cfgman->getString("smpp.host");
+  smscPort=cfg.cfgman->getInt("smpp.port");
+
 }
 
 void Smsc::run()
 {
+  tp.startTask(
+    new smppio::SmppAcceptor(
+      smscHost.c_str(),
+      smscPort,
+      &ssockman
+    )
+  );
+
+  tp.startTask(new Scheduler(eventqueue,store));
+
+
   // некоторые действия до основного цикла
   mainLoop();
   // и после него
