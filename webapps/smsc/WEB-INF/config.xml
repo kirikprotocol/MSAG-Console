@@ -34,6 +34,7 @@
   </section>
 
   <section name="console">
+    <param name="enabled" type="bool">true</param>
     <param name="humanPort" type="int">14228</param>
     <param name="scriptPort" type="int">14229</param>
   </section>
