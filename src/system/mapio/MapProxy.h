@@ -47,7 +47,7 @@ public:
   }
   void setPerformanceLimits(int newTimeOut,int newProcLimit)
   {
-    __mapproxy_trace2__("Setting proccessing limits on map proxy timeout=%d, limit=%d");
+    __mapproxy_trace2__("Setting proccessing limits on map proxy timeout=%d, limit=%d", newTimeOut, newProcLimit);
     processTimeOut=newTimeOut+newTimeOut/4;
     processLimit=newProcLimit;
   }
@@ -198,9 +198,6 @@ protected:
   ProxyMonitor *managerMonitor;
   smsc::logger::Logger* time_logger;
   SmeRegistrar *smereg;
-
-  int processTimeOut;
-  int processLimit;
 
   struct ControlItem{
     time_t submitTime;
