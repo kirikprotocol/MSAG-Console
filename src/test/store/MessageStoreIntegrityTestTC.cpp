@@ -13,32 +13,35 @@ using namespace smsc::test::store;
 using namespace smsc::test::util;
 using namespace smsc::util::config;
 
-
+#define PREPARE_FOR_NEW_SMS \
+	id.push_back(new SMSId()); \
+	sms.push_back(new SMS()); \
+	stack.push_back(new TCResultStack());
+	
 void executeIntegrityTest(TCResultFilter* filter, int listSize)
 {
 	cout << ".";
 	MessageStoreTestCases tc; //throws exception
-	SMSId id[listSize];
-	SMS sms[listSize];
-	TCResultStack stack[listSize];
+	vector<SMSId*> id;
+	vector<SMS*> sms;
+	vector<TCResultStack*> stack;
 
-	//создание SM, 100%
-	//cout << "Создание SM" << endl;
+	//Сохранение правильного sms, 1/1
 	for (int i = 0; i < listSize; i++)
 	{
-		TCResult* res = tc.storeCorrectSM(&id[i], &sms[i], RAND_TC);
-		stack[i].push_back(res);
+		PREPARE_FOR_NEW_SMS
+		TCResult* res = tc.storeCorrectSms(id.back(), sms.back(), RAND_TC);
+		stack.back()->push_back(res);
 	}
 	
-	//сохранение правильного SM с параметрами похожими на уже существующий SM, 1/15
-	//сохранение дублированного SM с отказом, 1/15
-	//сохранение неправильного SM, 1/15
-	//установка правильного статуса, 1/15
-	//некорректное изменение статуса SM, 1/15
-	//замещение SM, 1/15
-	//некорректное замещение SM, 1/15
-	//чтение SM, 8/15
-	//cout << "Издевательство над существующими SM" << endl;
+	//Сохранение правильного sms с параметрами похожими на уже существующий sms, 1/15
+	//Сохранение дублированного sms с отказом, 1/15
+	//Сохранение корректного sms с замещением уже существующегоб 1/15
+	//Сохранение неправильного sms, 1/15
+	//Обновление статуса sms в состоянии ENROUTE, 1/15
+	//Корректное обновление существующего sms, 1/15
+    //Некорректное обновление существующего sms, 1/15
+	//Чтение существующего sms, 8/15
 	for (TCSelector s(RAND_SET_TC, 15); s.check(); s++)
 	{
 		switch (s.value())
@@ -46,130 +49,167 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 			case 1:
 				for (int i = 0; i < listSize; i++)
 				{
-					SMSId newId;
-					SMS newSMS;
-					//создать
-					TCResult* res1 = tc.storeCorrectSM(&newId, &newSMS,
-						id[i], sms[i], RAND_TC);
-					stack[i].push_back(res1);
-					//прочитать
-					TCResult* res2 = tc.loadExistentSM(id[i], sms[i]);
-					stack[i].push_back(res2);
-					//удалить
-					TCResult* res3 = tc.deleteExistentSM(newId);
-					stack[i].push_back(res3);
+					PREPARE_FOR_NEW_SMS
+					TCResult* res = tc.storeCorrectSms(id.back(), sms.back(),
+						*id[i], *sms[i], RAND_TC);
+					stack.back()->push_back(res);
 				}
 				break;
 			case 2:
-				for (int i = 0; i < listSize; i++)
+				for (int i = 0; i < id.size(); i++)
 				{
-					TCResult* res = tc.storeRejectDuplicateSM(sms[i]);
-					stack[i].push_back(res);
+					TCResult* res = tc.storeRejectDuplicateSms(*sms[i]);
+					stack[i]->push_back(res);
 				}
 				break;
 			case 3:
+				for (int i = 0; i < id.size(); i++)
 				{
-					TCResult* res = tc.storeIncorrectSM(RAND_TC);
-					filter->addResult(res);
-					//stack[i].push_back(res);
+					TCResult* res = tc.storeReplaceCorrectSms(*id[i], sms[i]);
+					stack[i]->push_back(res);
 				}
 				break;
 			case 4:
-				for (int i = 0; i < listSize; i++)
 				{
-					TCResult* res = tc.setCorrectSMStatus(id[i], &sms[i], RAND_TC);
-					stack[i].push_back(res);
+					TCResult* res = tc.storeIncorrectSms(RAND_TC);
+					filter->addResult(res);
+					//stack[i]->push_back(res);
 				}
 				break;
 			case 5:
-				for (int i = 0; i < listSize; i++)
+				for (int i = 0; i < id.size(); i++)
 				{
-					TCResult* res = tc.setIncorrectSMStatus(id[i]);
-					stack[i].push_back(res);
+					TCResult* res = tc.changeExistentSmsStateEnrouteToEnroute(
+						*id[i], sms[i], RAND_TC);
+					stack[i]->push_back(res);
 				}
 				break;
 			case 6:
-				for (int i = 0; i < listSize; i++)
+				for (int i = 0; i < id.size(); i++)
 				{
-					TCResult* res = tc.replaceCorrectSM(id[i], &sms[i], RAND_TC);
-					stack[i].push_back(res);
+					TCResult* res = tc.replaceCorrectSms(*id[i], sms[i], RAND_TC);
+					stack[i]->push_back(res);
 				}
 				break;
 			case 7:
-				for (int i = 0; i < listSize; i++)
+				for (int i = 0; i < id.size(); i++)
 				{
-					TCResult* res = tc.replaceIncorrectSM(id[i], sms[i], RAND_TC);
-					stack[i].push_back(res);
+					TCResult* res = tc.replaceIncorrectSms(*id[i], *sms[i], RAND_TC);
+					stack[i]->push_back(res);
 				}
 				break;
-		default: //case = 8..15
-				for (int i = 0; i < listSize; i++)
+			default: //case = 8..15
+				for (int i = 0; i < id.size(); i++)
 				{
-					TCResult* res = tc.loadExistentSM(id[i], sms[i]);
-					stack[i].push_back(res);
+					TCResult* res = tc.loadExistentSms(*id[i], *sms[i]);
+					stack[i]->push_back(res);
 				}
 		}
 	}
 
-	//удаление SM, 100%
-	//cout << "Удаление SM" << endl;
-	for (int i = 0; i < listSize; i++)
+	//Перевод sms из ENROUTE в финальное состояние, 1/1
+	for (int i = 0; i < id.size(); i++)
 	{
-		TCResult* res = tc.deleteExistentSM(id[i]);
-		stack[i].push_back(res);
+		TCResult* res = tc.changeExistentSmsStateEnrouteToFinal(*id[i], 
+			sms[i], RAND_TC);
+		stack[i]->push_back(res);
 	}
-
-	//изменение статуса несуществующих SM
-	//замещение несуществующих SM
-	//чтение несуществующих SM
-	//удаление несуществующих SM
-	//cout << "Издевательство над удаленными SM" << endl;
+	
+	//Перевод sms в финальном состоянии в любое другое состояние, 1/4
+	//Сохранение sms с замещением существующего sms финальном состоянии, 1/4
+	//Чтение существующего sms, 2/4
 	for (TCSelector s(RAND_SET_TC, 4); s.check(); s++)
 	{
 		switch (s.value())
 		{
 			case 1:
-				for (int i = 0; i < listSize; i++)
+				for (int i = 0; i < id.size(); i++)
 				{
-					TCResult* res = tc.setNonExistentSMStatus(id[i], RAND_TC);
-					stack[i].push_back(res);
+					TCResult* res = tc.changeFinalSmsStateToAny(*id[i], RAND_TC);
+					stack[i]->push_back(res);
 				}
 				break;
 			case 2:
 				for (int i = 0; i < listSize; i++)
 				{
-					TCResult* res = tc.replaceNonExistentSM(id[i], RAND_TC);
-					stack[i].push_back(res);
+					PREPARE_FOR_NEW_SMS
+					TCResult* res = tc.storeReplaceSmsInFinalState(id.back(),
+						sms.back(), *id[i], *sms[i]);
+					stack[i]->push_back(res);
+				}
+				break;
+			default: //3..4
+				for (int i = 0; i < id.size(); i++)
+				{
+					TCResult* res = tc.loadExistentSms(*id[i], *sms[i]);
+					stack[i]->push_back(res);
+				}
+		}
+	}
+
+	//Удаление существующего sms, 1/1
+	for (int i = 0; i < id.size(); i++)
+	{
+		TCResult* res = tc.deleteExistentSms(*id[i]);
+		stack[i]->push_back(res);
+	}
+
+	//Перевод несуществующего sms в любое состояние, 1/4
+	//Некорректное обновление несуществующего sms, 1/4
+	//Чтение несуществующего sms, 1/4
+	//Удаление несуществующего sms, 1/4
+	for (TCSelector s(RAND_SET_TC, 4); s.check(); s++)
+	{
+		switch (s.value())
+		{
+			case 1:
+				for (int i = 0; i < id.size(); i++)
+				{
+					TCResult* res = tc.changeFinalSmsStateToAny(*id[i], RAND_TC);
+					stack[i]->push_back(res);
+				}
+				break;
+			case 2:
+				for (int i = 0; i < id.size(); i++)
+				{
+					TCResult* res = tc.replaceIncorrectSms(*id[i], *sms[i], RAND_TC);
+					stack[i]->push_back(res);
 				}
 				break;
 			case 3:
-				for (int i = 0; i < listSize; i++)
+				for (int i = 0; i < id.size(); i++)
 				{
-					TCResult* res = tc.loadNonExistentSM(id[i], RAND_TC);
-					stack[i].push_back(res);
+					TCResult* res = tc.loadNonExistentSms(*id[i]);
+					stack[i]->push_back(res);
 				}
 				break;
 			case 4:
-				for (int i = 0; i < listSize; i++)
+				for (int i = 0; i < id.size(); i++)
 				{
-					TCResult* res = tc.deleteNonExistentSM(id[i], RAND_TC);
-					stack[i].push_back(res);
+					TCResult* res = tc.deleteNonExistentSms(*id[i]);
+					stack[i]->push_back(res);
 				}
 				break;
 		}
 	}
 
-	//прочее
-	//cout << "Прочее" << endl;
+//Сохранение неправильного sms с проверкой на assert
 #ifdef ASSERT_THROW_IF_FAIL
 	filter->addResult(tc.storeAssertSM(ALL_TC));
 #endif
 
 	//обработка результатов
-	//cout << "Обработка результатов" << endl;
 	for (int i = 0; i < listSize; i++)
 	{
-		filter->addResultStack(stack[i]);
+		filter->addResultStack(*stack[i]);
+	}
+
+	//очистка памяти
+	for (int i = 0; i < id.size(); i++)
+	{
+		delete id[i];
+		delete sms[i];
+		delete stack[i];
 	}
 }
 
@@ -178,37 +218,39 @@ void saveCheckList(TCResultFilter* filter)
 	cout << "Сохранение checklist" << endl;
 	CheckList& cl = CheckList::getCheckList(CheckList::UNIT_TEST);
 	cl.startNewGroup("Message Store", "smsc::store");
-	//заимплементированные тест кейсы
-	cl.writeResult("Сохранение правильного SM",
-		filter->getResults(TC_STORE_CORRECT_SM));
-	cl.writeResult("Сохранение дублированного SM",
-		filter->getResults(TC_STORE_REJECT_DUPLICATE_SM));
-	cl.writeResult("Сохранение неправильного SM",
-		filter->getResults(TC_STORE_INCORRECT_SM));
-	cl.writeResult("Сохранение неправильного SM, проверка на assert",
-		filter->getResults(TC_STORE_ASSERT_SM));
-	cl.writeResult("Чтение существующего SM",
-		filter->getResults(TC_LOAD_EXISTENT_SM));
-	cl.writeResult("Чтение несуществующего SM",
-		filter->getResults(TC_LOAD_NON_EXISTENT_SM));
-	cl.writeResult("Удаление существующего SM",
-		filter->getResults(TC_DELETE_EXISTENT_SM));
-	cl.writeResult("Удаление несуществующего SM",
-		filter->getResults(TC_DELETE_NON_EXISTENT_SM));
-	cl.writeResult("Корректная замена существующего SM",
-		filter->getResults(TC_REPLACE_CORRECT_SM));
-	cl.writeResult("Замена существующего SM некорректными данными",
-		filter->getResults(TC_REPLACE_INCORRECT_SM));
-	cl.writeResult("Замена несуществующего SM",
-		filter->getResults(TC_REPLACE_NON_EXISTENT_SM));
+	//имплементированные тест кейсы
+	cl.writeResult("Сохранение правильного sms",
+		filter->getResults(TC_STORE_CORRECT_SMS));
+	cl.writeResult("Сохранение дублированного sms с отказом",
+		filter->getResults(TC_STORE_REJECT_DUPLICATE_SMS));
+	cl.writeResult("Сохранение корректного sms с замещением уже существующего",
+		filter->getResults(TC_STORE_REPLACE_CORRECT_SMS));
+	cl.writeResult("Сохранение sms с замещением существующего sms финальном состоянии",
+		filter->getResults(TC_STORE_REPLACE_SMS_IN_FINAL_STATE));
+	cl.writeResult("Сохранение неправильного sms",
+		filter->getResults(TC_STORE_INCORRECT_SMS));
+	cl.writeResult("Сохранение неправильного sms с проверкой на assert",
+		filter->getResults(TC_STORE_ASSERT_SMS));
+	cl.writeResult("Обновление статуса sms в состоянии ENROUTE",
+		filter->getResults(TC_CHANGE_EXISTENT_SMS_STATE_ENROUTE_TO_ENROUTE));
+	cl.writeResult("Перевод sms из ENROUTE в финальное состояние",
+		filter->getResults(TC_CHANGE_EXISTENT_SMS_STATE_ENROUTE_TO_FINAL));
+	cl.writeResult("Перевод несуществующего sms или sms в финальном состоянии в любое другое состояние",
+		filter->getResults(TC_CHANGE_FINAL_SMS_STATE_TO_ANY));
+	cl.writeResult("Корректное обновление существующего sms",
+		filter->getResults(TC_REPLACE_CORRECT_SMS));
+	cl.writeResult("Некорректное обновление существующего или обновление несуществующего sms",
+		filter->getResults(TC_REPLACE_INCORRECT_SMS));
+	cl.writeResult("Чтение существующего sms",
+		filter->getResults(TC_LOAD_EXISTENT_SMS));
+	cl.writeResult("Чтение несуществующего sms",
+		filter->getResults(TC_LOAD_NON_EXISTENT_SMS));
+	cl.writeResult("Удаление существующего sms",
+		filter->getResults(TC_DELETE_EXISTENT_SMS));
+	cl.writeResult("Удаление несуществующего sms",
+		filter->getResults(TC_DELETE_NON_EXISTENT_SMS));
 	
 	//пока еще незаимплементированные тест кейсы
-	cl.writeResult("Корректное изменение статуса SM",
-		filter->getResults(TC_SET_CORRECT_SM_STATUS));
-	cl.writeResult("Некорректное изменение статуса SM",
-		filter->getResults(TC_SET_INCORRECT_SM_STATUS));
-	cl.writeResult("Изменение статуса несуществующего SM",
-		filter->getResults(TC_SET_NON_EXISTENT_SM_STATUS));
 	cl.writeResult("Удаление существующих SM ожидающих доставки на определенный номер",
 		filter->getResults(TC_DELETE_EXISTENT_WAITING_SM_BY_NUMBER));
 	cl.writeResult("Удаление несуществующих SM ожидающих доставки на определенный номер",
