@@ -20,18 +20,24 @@ using namespace smsc::test::sms; //constants
 #define __numTime__ rand1(3)
 #define __absoluteTime__ rand1(2)
 
-#define __dumpPdu__(tc, id, pdu) \
-	__trace2__("%s(): systemId = %s, sequenceNumber = %u, pdu = ", \
-		tc, id.c_str(), pdu.get_header().get_sequenceNumber()); \
-	pdu.dump(TRACE_LOG_STREAM)
-
-#define __dumpPdu2__(tc, id, pdu) \
+#define __dumpSubmitSmPdu__(tc, id, pdu) \
 	if (pdu) { \
-		__trace2__("%s(): systemId = %s, sequenceNumber = %u, pdu = ", \
-			tc, id.c_str(), pdu->get_header().get_sequenceNumber()); \
-		pdu->dump(TRACE_LOG_STREAM); \
+		__trace2__("%s(): systemId = %s, sequenceNumber = %u, scheduleDeliveryTime = %ld, validityPeriod = %ld", \
+			tc, id.c_str(), (pdu)->get_header().get_sequenceNumber(), \
+			SmppUtil::string2time((pdu)->get_message().get_scheduleDeliveryTime()), \
+			SmppUtil::string2time((pdu)->get_message().get_validityPeriod())); \
+		(pdu)->dump(TRACE_LOG_STREAM); \
 	} else { \
-		__trace2__("%s(): pdu = NULL", (tc)); \
+		__trace2__("%s(): pdu = NULL", tc); \
+	}
+
+#define __dumpPdu__(tc, id, pdu) \
+	if (pdu) { \
+		__trace2__("%s(): systemId = %s, sequenceNumber = %u", \
+			tc, id.c_str(), (pdu)->get_header().get_sequenceNumber()); \
+		(pdu)->dump(TRACE_LOG_STREAM); \
+	} else { \
+		__trace2__("%s(): pdu = NULL", tc); \
 	}
 
 typedef enum
