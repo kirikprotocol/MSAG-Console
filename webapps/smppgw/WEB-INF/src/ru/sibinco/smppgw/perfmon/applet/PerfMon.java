@@ -67,8 +67,8 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
 
   public void init() {
     System.out.println("Initing...");
-    locale = new Locale(getParameter("locale.country").toLowerCase(), getParameter("locale.language").toLowerCase());
-    localeText = ResourceBundle.getBundle("ru.novosoft.smsc.perfmon.applet.text", locale);
+    locale = new Locale(getParameter("locale.language").toLowerCase(), getParameter("locale.country").toLowerCase() );
+    localeText = ResourceBundle.getBundle("ru.sibinco.smppgw.perfmon.applet.text", locale);
     dateFormat = new SimpleDateFormat(localeText.getString("sctime"));
     gridFormat = new SimpleDateFormat(localeText.getString("gridtime"));
 
