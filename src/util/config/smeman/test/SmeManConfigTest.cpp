@@ -25,6 +25,7 @@ std::ostream & operator <<(std::ostream &out, SmeRecord &record)
 	} else {
 		out << "  Type: SS7" << std::endl;
 	}
+	return out;
 }
 
 std::ostream & operator <<(std::ostream &out, SmeManConfig &config)
@@ -37,6 +38,7 @@ std::ostream & operator <<(std::ostream &out, SmeManConfig &config)
 		out << (*record);
 	}
 	out << "*************************************************" << std::endl;
+	return out;
 }
 
 int main(int argc, char ** argv)

@@ -17,7 +17,7 @@ SmeManConfig::RecordIterator::RecordIterator(SRVector const &records_vector)
 
 bool SmeManConfig::RecordIterator::hasRecord()
 {
-	iter != end;
+	return iter != end;
 }
 
 SmeManConfig::status SmeManConfig::RecordIterator::fetchNext(SmeRecord *&record)
@@ -55,7 +55,7 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
 		DOM_Document document = reader.read(filename);
 		DOM_Element elem = document.getDocumentElement();
 		DOM_NodeList list = elem.getElementsByTagName("smerecord");
-		for (int i=0; i<list.getLength(); i++)
+		for (unsigned i=0; i<list.getLength(); i++)
 		{
 			DOM_Node node = list.item(i);
 			DOM_NamedNodeMap attrs = node.getAttributes();
@@ -66,7 +66,7 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
 			{
 				record->rectype = SMPP_SME;
 				DOM_NodeList childs = node.getChildNodes();
-				for (int j=0; j<childs.getLength(); j++)
+				for (unsigned j=0; j<childs.getLength(); j++)
 				{
 					DOM_Node child = childs.item(j);
 					if (child.getNodeType() == DOM_Node::ELEMENT_NODE)
