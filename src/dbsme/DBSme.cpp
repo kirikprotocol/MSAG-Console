@@ -74,16 +74,16 @@ public:
         smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
         transmitter.sendDeliverySmResp(smResp);
 
-        SMS sms;
-        fetchSmsFromSmppPdu((PduXSm*)pdu, &sms);
+        SMS request;
+        fetchSmsFromSmppPdu((PduXSm*)pdu, &request);
 
         Command command;
-        command.setFromAddress(sms.getOriginatingAddress());
-        command.setToAddress(sms.getDestinationAddress());
+        command.setFromAddress(request.getOriginatingAddress());
+        command.setToAddress(request.getDestinationAddress());
         command.setJobName(0);
 
         char smsTextBuff[MAX_ALLOWED_MESSAGE_LENGTH+1];
-        getSmsText(&sms, (char *)&smsTextBuff);
+        getSmsText(&request, (char *)&smsTextBuff);
         command.setInData((const char*)smsTextBuff);
         __trace2__("Input Data for DBSme '%s'", smsTextBuff);
         
@@ -100,17 +100,20 @@ public:
             command.setOutData(exc.what()); // Error processing SMS !;
         }
 
-        sms.setDestinationAddress(command.getFromAddress());
-        sms.setOriginatingAddress(command.getToAddress());
-        sms.setEServiceType(processor.getSvcType());
-        sms.setArchivationRequested(false);
-        sms.setValidTime(time(NULL)+3600);
-        sms.setDeliveryReport(0);
+        SMS response;
+
+        response.setDestinationAddress(command.getFromAddress());
+        response.setOriginatingAddress(command.getToAddress());
+        response.setEServiceType(processor.getSvcType());
+        response.setArchivationRequested(false);
+        response.setValidTime(time(NULL)+3600);
+        response.setDeliveryReport(0);
         
-        Body& body = sms.getMessageBody();
+        Body& body = response.getMessageBody();
         body.setIntProperty(Tag::SMPP_PROTOCOL_ID, processor.getProtocolId());
         body.setIntProperty(Tag::SMPP_ESM_CLASS, 0 /*xx0000xx*/);
         body.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::DEFAULT);
+        body.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY, 0);
         body.setIntProperty(Tag::SMPP_PRIORITY, 0);
         
         char* out = (char *)command.getOutData();
@@ -133,7 +136,7 @@ public:
             
             PduSubmitSm sm;
             sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
-            fillSmppPduFromSms(&sm,&sms);
+            fillSmppPduFromSms(&sm, &response);
             dlResp = transmitter.submit(sm);
             if (dlResp) disposePdu((SmppHeader*)dlResp); dlResp = 0;
 
