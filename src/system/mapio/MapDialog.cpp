@@ -527,7 +527,11 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   unsigned encoding = sms->getIntProperty(Tag::SMPP_DATA_CODING);
   __trace2__("MAP::mkDeliveryPDU: encoding = 0x%x",encoding);
   unsigned char value;
-  if ( encoding != 0 && encoding != 0x08 && encoding != 0x3 && encoding != 0x4) {
+  if ( encoding != 0 && 
+       encoding != 0x08 && 
+       encoding != 0x03 && 
+       encoding != 0x04 && 
+       encoding != 0xf0) {
     __trace2__("MAP::mkDeliverPDU: unsuppprted encoding 0x%x",encoding);
     throw runtime_error("unsupported encoding");
   }
