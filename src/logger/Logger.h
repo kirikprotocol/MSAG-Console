@@ -17,47 +17,6 @@
 #define smsc_log_warn(logger_param_blahbalh_balh,...) if (!logger_param_blahbalh_balh->isWarnEnabled()) ;else logger_param_blahbalh_balh->log_(smsc::logger::Logger::LEVEL_WARN, __VA_ARGS__)
 #define smsc_log_info(logger_param_blahbalh_balh,...) if (!logger_param_blahbalh_balh->isInfoEnabled()) ;else logger_param_blahbalh_balh->log_(smsc::logger::Logger::LEVEL_INFO, __VA_ARGS__)
 #define smsc_log_debug(logger_param_blahbalh_balh,...) if (!logger_param_blahbalh_balh->isDebugEnabled()) ;else logger_param_blahbalh_balh->log_(smsc::logger::Logger::LEVEL_DEBUG, __VA_ARGS__)
-#else
-template <class T>
-inline void smsc_log_fatal(T* l,const char* stringFormat,...)
-{
-  va_list args;
-  va_start(args, stringFormat);
-  l->logva(smsc::logger::Logger::LEVEL_FATAL, stringFormat,args)
-  va_end(args);
-}
-template <class T>
-inline void smsc_log_error(T* l,const char* stringFormat,...)
-{
-  va_list args;
-  va_start(args, stringFormat);
-  l->logva(smsc::logger::Logger::LEVEL_ERROR, stringFormat,args);
-  va_end(args);
-}
-template <class T>
-inline void smsc_log_warn(T* l,const char* stringFormat,...)
-{
-  va_list args;
-  va_start(args, stringFormat);
-  l->logva(smsc::logger::Logger::LEVEL_WARN, stringFormat,args);
-  va_end(args);
-}
-template <class T>
-inline void smsc_log_info(T* l,const char* stringFormat,...)
-{
-  va_list args;
-  va_start(args, stringFormat);
-  l->logva(smsc::logger::Logger::LEVEL_INFO, stringFormat,args);
-  va_end(args);
-}
-template <class T>
-inline void smsc_log_debug(T* l,const char* stringFormat,...)
-{
-  va_list args;
-  va_start(args, stringFormat);
-  l->logva(smsc::logger::Logger::LEVEL_DEBUG, stringFormat,args);
-  va_end(args);
-}
 #endif
 
 using namespace smsc::core::buffers;
@@ -133,7 +92,7 @@ public:
   }
 
   inline bool isLogLevelEnabled(const LogLevel _logLevel) throw() {
-    MutexGuard guard(mutex);
+    //MutexGuard guard(mutex);
     return this->logLevel <= _logLevel;
   }
 
@@ -164,7 +123,7 @@ public:
 
   inline const LogLevel getLogLevel() throw()
   {
-    MutexGuard guard(mutex);
+    //MutexGuard guard(mutex);
     return logLevel;
   }
 
@@ -276,4 +235,50 @@ private:
 
 }
 }
+
+
+#ifdef _WIN32
+template <class T>
+inline void smsc_log_fatal(T* l,const char* stringFormat,...)
+{
+  va_list args;
+  va_start(args, stringFormat);
+  l->logva(smsc::logger::Logger::LEVEL_FATAL, stringFormat,args);
+  va_end(args);
+}
+template <class T>
+inline void smsc_log_error(T* l,const char* stringFormat,...)
+{
+  va_list args;
+  va_start(args, stringFormat);
+  l->logva(smsc::logger::Logger::LEVEL_ERROR, stringFormat,args);
+  va_end(args);
+}
+template <class T>
+inline void smsc_log_warn(T* l,const char* stringFormat,...)
+{
+  va_list args;
+  va_start(args, stringFormat);
+  l->logva(smsc::logger::Logger::LEVEL_WARN, stringFormat,args);
+  va_end(args);
+}
+template <class T>
+inline void smsc_log_info(T* l,const char* stringFormat,...)
+{
+  va_list args;
+  va_start(args, stringFormat);
+  l->logva(smsc::logger::Logger::LEVEL_INFO, stringFormat,args);
+  va_end(args);
+}
+template <class T>
+inline void smsc_log_debug(T* l,const char* stringFormat,...)
+{
+  va_list args;
+  va_start(args, stringFormat);
+  l->logva(smsc::logger::Logger::LEVEL_DEBUG, stringFormat,args);
+  va_end(args);
+}
+#endif
+
+
 #endif // ifndef SMSC_LOGGER_H_INCLUDED_C3A87A6B
