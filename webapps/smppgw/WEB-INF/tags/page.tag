@@ -120,8 +120,8 @@
         </sm-mm:section>
 
         <sm-mm:section menuId="MENU0_Statistics_menu" submenuId="MENU0_Statistics_submenu" name="Statistics">
-          <sm-mm:item url="perfmon"  name="Monitor"    target="SMSC Perfomance monitor" title="SMSC Perfomance monitor" onClick="return openPerfMon();"/>
-          <sm-mm:item url="smsstat"  name="Statistics" title=""/>
+          <sm-mm:item url="stat/monitor" name="Monitor"    target="SMPP GW Perfomance monitor" title="SMPP GW Perfomance monitor" onClick="return openPerfMon();"/>
+          <sm-mm:item url="stat/stat"    name="Statistics" title="SMPP GW Statistics"/>
         </sm-mm:section>
 
         <sm-mm:section menuId="MENU0_Routing_menu" submenuId="MENU0_Routing_submenu" name="Routing">
