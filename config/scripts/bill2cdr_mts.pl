@@ -18,6 +18,30 @@ my $addrrx=qr'7913\d{7}|913\d{7}|383213\d{4}|383214\d{4}|383291\d{4}|383292\d{4}
 my $mscrx=qr'79029860000|79139860001|79029869992';
 my $imsirx=qr'25001390\d{7}|2500598\d{8}';
 
+my $svclstfile=$0;
+if($svclstfile=~/[\\\/]/)
+{
+  $svclstfile=~s/([\\\/])[^\\\/]+/roamed_services.lst/;
+}else
+{
+  $svclstfile='roamed_services.lst';
+}
+
+print "svc=$svclstfile\n";
+
+my $svcrx;
+
+if(-e $svclstfile)
+{
+  open(F,$svclstfile);
+  my @l=<F>;
+  s/[\x0d\x0a]//g for(@l);
+  if(@l)
+  {
+    $svcrx='^(?:'.join('|',@l).')$';
+  }
+}
+
 @OUT_FIELDS=(
 {value=>'-1',width=>6},
 {field=>'RECORD_TYPE',width=>5},    # pos=7
@@ -134,7 +158,7 @@ sub outrow{
   my ($out,$fields)=@_;
 
   return unless $fields->{PAYER_ADDR}=~/$addrrx/;
-  return unless $fields->{PAYER_MSC}=~/$mscrx/;
+  return unless $fields->{PAYER_MSC}=~/$mscrx/ || ($svcrx && $fields->{OTHER_ADDR}=~/$svcrx/);
   return unless $fields->{PAYER_IMSI}=~/$imsirx/;
 
   for my $f(@OUT_FIELDS)
