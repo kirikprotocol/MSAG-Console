@@ -1137,7 +1137,7 @@ void SmppProtocolTestCases::cancelSmCorrect(bool sync, int num)
 {
 	__require__(fixture->pduReg);
 	__decl_tc__;
-	TCSelector s(num, 6);
+	TCSelector s(num, 4);
 	__tc__("cancelSm.correct");
 	for (; s.check(); s++)
 	{
@@ -1166,10 +1166,12 @@ void SmppProtocolTestCases::cancelSmCorrect(bool sync, int num)
 				__tc_ok__;
 				return;
 			}
+			__trace2__("cancelPduData = %p", cancelPduData);
 			//canceld pdu params
 			__require__(cancelPduData->strProps.count("smsId"));
 			__require__(cancelPduData->pdu->get_commandId() == SUBMIT_SM);
 			PduSubmitSm* cancelPdu = reinterpret_cast<PduSubmitSm*>(cancelPduData->pdu);
+			__require__(cancelPdu->get_message().get_source() == srcAddr);
 			switch (s.value())
 			{
 				case 1: //по message_id и source_addr с нулевыми service_type, dest_addr
@@ -1201,28 +1203,6 @@ void SmppProtocolTestCases::cancelSmCorrect(bool sync, int num)
 					pdu->set_serviceType(
 						nvl(cancelPdu->get_message().get_serviceType()));
 					break;
-				case 5: //группа sms-ок пустая
-					{
-						__tc__("cancelSm.correct.noSms");
-						//pdu->set_messageId();
-						//pdu->set_source();
-						Address addr; PduAddress smppAddr;
-						SmsUtil::setupRandomCorrectAddress(&addr);
-						SmppUtil::convert(addr, &smppAddr);
-						pdu->set_dest(smppAddr);
-						//pdu->set_serviceType();
-					}
-					break;
-				case 6: //группа sms-ок пустая
-					{
-						__tc__("cancelSm.correct.noSms");
-						//pdu->set_messageId();
-						//pdu->set_source();
-						pdu->set_dest(cancelPdu->get_message().get_dest());
-						auto_ptr<char> tmp = rand_char(MAX_ESERVICE_TYPE_LENGTH);
-						pdu->set_serviceType(tmp.get());
-					}
-					break;
 				default:
 					__unreachable__("Invalid num");
 			}
@@ -1242,12 +1222,13 @@ void SmppProtocolTestCases::cancelSmIncorrect(bool sync, int num)
 {
 	__require__(fixture->pduReg);
 	__decl_tc__;
-	TCSelector s(num, 10);
+	TCSelector s(num, 15);
 	__tc__("cancelSm.incorrect");
 	for (; s.check(); s++)
 	{
 		try
 		{
+			static /* const */ PduAddress nullAddr;
 			PduCancelSm* pdu = new PduCancelSm();
 			PduAddress srcAddr;
 			SmppUtil::convert(fixture->smeAddr, &srcAddr);
@@ -1325,16 +1306,40 @@ void SmppProtocolTestCases::cancelSmIncorrect(bool sync, int num)
 						//pdu->set_serviceType();
 					}
 					break;
-				case 6: //все поля пустые
+				case 6: //задан только source_addr
+					__tc__("cancelSm.incorrect.sourceAddrOnly");
+					//pdu->set_messageId();
+					//pdu->set_source();
+					//pdu->set_dest();
+					//pdu->set_serviceType();
+					break;
+				case 7: //задан только dest_addr
 					{
-						__tc__("cancelSm.incorrect.emptyFields");
+						__tc__("cancelSm.incorrect.destAddrOnly");
 						//pdu->set_messageId();
-						//pdu->set_source();
-						//pdu->set_dest();
+						pdu->set_source(nullAddr);
+						Address addr; PduAddress smppAddr;
+						SmsUtil::setupRandomCorrectAddress(&addr);
+						SmppUtil::convert(addr, &smppAddr);
+						pdu->set_dest(smppAddr);
 						//pdu->set_serviceType();
 					}
 					break;
-				case 7: //задан service_type без dest_addr
+				case 8: //задан только message_id
+					__tc__("cancelSm.incorrect.messageIdOnly");
+					pdu->set_messageId(cancelPduData->strProps["smsId"].c_str());
+					pdu->set_source(nullAddr);
+					//pdu->set_dest();
+					//pdu->set_serviceType();
+					break;
+				case 9: //все поля пустые
+					__tc__("cancelSm.incorrect.emptyFields");
+					//pdu->set_messageId();
+					pdu->set_source(nullAddr);
+					//pdu->set_dest();
+					//pdu->set_serviceType();
+					break;
+				case 10: //задан service_type без dest_addr
 					{
 						__tc__("cancelSm.incorrect.serviceTypeWithoutDestAddr");
 						//pdu->set_messageId();
@@ -1344,7 +1349,7 @@ void SmppProtocolTestCases::cancelSmIncorrect(bool sync, int num)
 						pdu->set_serviceType(tmp.get());
 					}
 					break;
-				case 8: //заданы правильные message_id и service_type
+				case 11: //заданы правильные message_id и service_type
 					{
 						__tc__("cancelSm.incorrect.messageIdWithServiceType");
 						pdu->set_messageId(cancelPduData->strProps["smsId"].c_str());
@@ -1354,7 +1359,7 @@ void SmppProtocolTestCases::cancelSmIncorrect(bool sync, int num)
 							nvl(cancelPdu->get_message().get_serviceType()));
 					}
 					break;
-				case 9: //заданы правильные message_id, dest_addr и service_type
+				case 12: //заданы правильные message_id, dest_addr и service_type
 					{
 						__tc__("cancelSm.incorrect.allFields");
 						pdu->set_messageId(cancelPduData->strProps["smsId"].c_str());
@@ -1364,7 +1369,7 @@ void SmppProtocolTestCases::cancelSmIncorrect(bool sync, int num)
 							nvl(cancelPdu->get_message().get_serviceType()));
 					}
 					break;
-				case 10: //сообщение в финальном состоянии
+				case 13: //сообщение в финальном состоянии
 					{
 						MutexGuard mguard(fixture->pduReg->getMutex());
 						cancelPduData = getFinalPdu(true);
@@ -1377,6 +1382,28 @@ void SmppProtocolTestCases::cancelSmIncorrect(bool sync, int num)
 							//pdu->set_dest();
 							//pdu->set_serviceType();
 						}
+					}
+					break;
+				case 14: //группа sms-ок пустая
+					{
+						__tc__("cancelSm.incorrect.noSms");
+						//pdu->set_messageId();
+						//pdu->set_source();
+						Address addr; PduAddress smppAddr;
+						SmsUtil::setupRandomCorrectAddress(&addr);
+						SmppUtil::convert(addr, &smppAddr);
+						pdu->set_dest(smppAddr);
+						//pdu->set_serviceType();
+					}
+					break;
+				case 15: //группа sms-ок пустая
+					{
+						__tc__("cancelSm.incorrect.noSms");
+						//pdu->set_messageId();
+						//pdu->set_source();
+						pdu->set_dest(cancelPdu->get_message().get_dest());
+						auto_ptr<char> tmp = rand_char(MAX_ESERVICE_TYPE_LENGTH);
+						pdu->set_serviceType(tmp.get());
 					}
 					break;
 				default:
