@@ -355,20 +355,17 @@ void ResponseMO(MapDialog* dialog,unsigned status)
   switch ( status )
   { 
   case Status::OK: break;  
-  case Status::SYSERROR:
+  case Status::SYSERR:
     err.errorCode = 32;
     break;
-  case Status::INVSRC:
-  case Status::INVDST:
+  case Status::INVSRCADR:
+  case Status::INVDSTADR:
   case Status::NOROUTE:
     err.errorCode = 5;
     break;
-  case Status::DBERROR:
-  case Status::INVALIDSCHEDULE:
+  case Status::INVSCHED:
     err.errorCode = 32;
     break;
-  case Status::INVALIDVALIDTIME:
-  case Status::INVALIDDATACODING:
   default:
     err.errorCode = 36;
     break;
