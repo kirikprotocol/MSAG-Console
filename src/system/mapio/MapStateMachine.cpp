@@ -505,7 +505,7 @@ static void SendRInfo(MapDialog* dialog)
         if( sms->getLastResult() != Status::ABSENTSUBSCR && 
             sms->getLastResult() != Status::SMDELIFERYFAILURE ) {
           hiPrior = true;
-        } else if( sms->getAttemptsCount()%4 == 0 ) {
+        } else if( (sms->getAttemptsCount()+1)%4 == 0 ) {
           hiPrior = true;
         }
       }
