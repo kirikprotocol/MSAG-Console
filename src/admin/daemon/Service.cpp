@@ -36,6 +36,14 @@ pid_t Service::start()
       { // child process
         chdir(service_dir.get());
         chmod(service_exe, S_IRWXU | S_IRGRP | S_IXGRP);
+
+        // close all (parent) streams
+        struct rlimit flim;
+        getrlimit(RLIMIT_NOFILE, &flim);
+        for (rlim_t i=0; i<flim.rlim_max; i++) {
+          close(i);
+        }
+        
         FILE* tmpStream;
         tmpStream = freopen("service.err", "a",  stderr);
         if (!tmpStream)
