@@ -12,6 +12,7 @@ import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.route.Route;
 import ru.novosoft.smsc.admin.route.Source;
 import ru.novosoft.smsc.admin.route.Destination;
+import ru.novosoft.smsc.admin.route.SME;
 
 import java.util.Iterator;
 
@@ -56,8 +57,11 @@ public class RouteViewCommand implements Command
         while (dsts.hasNext()) {
             Destination dst = (Destination)dsts.next();
             dstsStr += quoteString(dst.getName());
-            String smeId = dst.getSme().getId();
-            if (smeId != null) dstsStr += " ("+smeId+")";
+            SME sme = dst.getSme();
+            if (sme != null) {
+                String smeId = sme.getId();
+                if (smeId != null) dstsStr += " ("+smeId+")";
+            }
             if (dsts.hasNext()) dstsStr += ", ";
         }
         ctx.addResult("dsts : "+dstsStr);

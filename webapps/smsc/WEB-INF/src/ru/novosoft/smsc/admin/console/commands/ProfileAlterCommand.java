@@ -30,8 +30,8 @@ public class ProfileAlterCommand extends ProfileGenCommand
                 ctx.setMessage(out+" not found");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             } else {
-                profile.setCodepage(codepage);
-                profile.setReportOptions(report);
+                if (isCodepage) profile.setCodepage(codepage);
+                if (isReport)   profile.setReportOptions(report);
                 ctx.getSmsc().updateProfile(profileMask, profile);
                 ctx.setMessage(out+" altered");
                 ctx.setStatus(CommandContext.CMD_OK);

@@ -14,17 +14,23 @@ public abstract class ProfileGenCommand implements Command
 {
     protected byte report = Profile.REPORT_OPTION_None;
     protected byte codepage = Profile.CODEPAGE_Default;
+    protected boolean isReport = false;
+    protected boolean isCodepage = false;
 
     public void setNoneReport() {
         this.report = Profile.REPORT_OPTION_None;
+        isReport = true;
     }
     public void setFullReport() {
         this.report = Profile.REPORT_OPTION_Full;
+        isReport = true;
     }
     public void setGsm7Encoding() {
         this.codepage = Profile.CODEPAGE_Default;
+        isCodepage = true;
     }
     public void setUcs2Encoding() {
         this.codepage = Profile.CODEPAGE_UCS2;
+        isCodepage = true;
     }
 }
