@@ -1737,7 +1737,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           CloseMapDialog(dialog->dialogid_map,dialog->ssn);
           DropMapDialog(dialog.get());
         } else {
-          dialog->state == MAPST_ReadyNextUSSDCmd;
+          dialog->state = MAPST_ReadyNextUSSDCmd;
           __map_trace2__("set state %d for dlg 0x%p", dialog->state, dialog.get() );
         }
       }else if(dialog->state == MAPST_WaitSubmitUSSDRequestCloseConf) {
