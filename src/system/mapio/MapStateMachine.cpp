@@ -1381,6 +1381,7 @@ static string GetUSSDSubsystem(
   return string(sBegin,sEnd);
 }
 
+extern "C"
 USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
   ET96MAP_LOCAL_SSN_T localSsn,
   ET96MAP_DIALOGUE_ID_T dialogueId,

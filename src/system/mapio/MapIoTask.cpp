@@ -155,7 +155,7 @@ void MapIoTask::init(unsigned timeout)
   if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgInit, code 0x%hx",err); throw runtime_error("MsgInit error"); }
 	err = MsgOpen(MY_USER_ID);
   if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgOpen, code 0x%hx",err); throw runtime_error("MsgInit error"); }
-  err = MsgConn(USER01_ID,ETSIMAP_ID);
+  err = MsgConn(MY_USER_ID,ETSIMAP_ID);
   if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgConn, code 0x%hx",err); throw runtime_error("MsgInit error"); }
   __trace2__("MAP:: pause self and wait map initialization");
   sleep(timeout);
@@ -171,7 +171,7 @@ void MapIoTask::init(unsigned timeout)
     __trace2__("MAP: SSN Bind error 0x%hx",bind_res);
     throw runtime_error("bind error");
   }
-  bind_res = Et96MapBindReq(MY_USER_ID, 147);
+  bind_res = Et96MapBindReq(MY_USER_ID, USSD_SSN);
   if(bind_res!=ET96MAP_E_OK){
     __trace2__("MAP: 147 Bind error 0x%hx",bind_res);
     throw runtime_error("bind error");

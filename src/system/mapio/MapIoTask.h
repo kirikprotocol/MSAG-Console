@@ -41,6 +41,7 @@ extern "C" {
 }
 
 #define SSN 8
+#define USSD_SSN 6
 
 enum MapState{
   MAPST_UNKNOWN = 0,
