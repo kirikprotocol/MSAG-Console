@@ -88,7 +88,7 @@ public:
 	virtual void processDataSmResp(PduDataSmResp &pdu);
 	virtual void processQuerySmResp(PduQuerySmResp &pdu);
 	virtual void processCancelSmResp(PduCancelSmResp &pdu);
-	virtual void processAlertNotificatin(PduAlertNotification &pdu);
+	virtual void processAlertNotification(PduAlertNotification &pdu);
 
 	/**
 	 * Отсутствие внутренних ошибок в smpp receiver.
@@ -101,7 +101,7 @@ protected:
 private:
 	SmppSession* session;
 	const SmeSystemId systemId;
-	const Address& smeAddr;
+	const Address smeAddr;
 	const SmeRegistry* smeReg;
 	PduRegistry* pduReg;
 	const AliasRegistry* aliasReg;
