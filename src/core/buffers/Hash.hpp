@@ -369,7 +369,7 @@ public:
   {
     Link* link=FindLink(key);
     if(!link)return 0;
-    return link->_keyval._value;
+    return &link->_keyval._value;
   }
 
   T& operator[](pchashstr key)
