@@ -578,6 +578,16 @@ namespace smsc {
 				profile.locale = second_delimeter+1;
 			}
 
+			bool isMask(const Address & address)
+			{
+				for (unsigned i=0; i<address.length; i++)
+				{
+					if (address.value[i] == '?')
+						return true;
+				}
+				return false;
+			}
+
 			int SmscComponent::updateProfile(const Arguments & args) 
 			{
 				try
@@ -597,7 +607,10 @@ namespace smsc {
 						address.toString(addr_str, sizeof(addr_str)/sizeof(addr_str[0]));
 						logger.debug("Update Profile:\n  %s: Address: \"%s\", codepage:%u, report options:%u, locale:%s", addressString, addr_str, profile.codepage, profile.reportoptions, profile.locale.c_str());
 #endif
-						return profiler->update(address, profile);
+						if (isMask(address))
+							return profiler->updatemask(address, profile);
+						else
+							return profiler->update(address, profile);
 					}
 					else
 						throw	AdminException("SMSC is not running");
