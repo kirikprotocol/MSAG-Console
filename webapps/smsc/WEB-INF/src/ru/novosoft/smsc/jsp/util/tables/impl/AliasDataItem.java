@@ -14,5 +14,6 @@ public class AliasDataItem extends AbstractDataItem
   {
     values.put("Address", alias.getAddress().getMask());
     values.put("Alias", alias.getAlias().getMask());
+    values.put("Hide", new Boolean(alias.isHide()));
   }
 }

@@ -12,7 +12,7 @@ import ru.novosoft.smsc.jsp.util.tables.Query;
 
 public class AliasDataSource extends AbstractDataSourceImpl
 {
-  private static final String[] columnNames = {"Alias", "Address"};
+  private static final String[] columnNames = {"Alias", "Address", "Hide"};
 
   public AliasDataSource()
   {

@@ -27,7 +27,11 @@ void showTable(JspWriter out, QueryResultSet results)
           out.println(StringEncoderDecoder.encode((String)k.next()) + (k.hasNext() ? "<br>" : ""));
         }
         out.println("</td>");
-      } else {
+      } else if (value instanceof Boolean)
+	  {
+	  	out.println("    <td class=\"list\" style=\"width:1%\"><input disabled type=\"Checkbox\" " + (((Boolean)value).booleanValue() ? "checked" : "")+"/></td>");
+        params += URLEncoder.encode(columns[j]) + '=' + URLEncoder.encode(((Boolean)value).toString()) + '&';
+	  } else {
         out.println("    <td class=\"list\">" + StringEncoderDecoder.encode((String)value) + "</td>");
         params += URLEncoder.encode(columns[j]) + '=' + URLEncoder.encode((String)value) + '&';
       }

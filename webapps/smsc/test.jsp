@@ -7,6 +7,6 @@ AppContext ctx = (AppContext)request.getAttribute("appContext");
 %>
 <HTML>
 <BODY>
-Context config obj: <%=ctx.getConfig()%>
+Context config obj: <%=ses%>
 </BODY>
 </HTML>

@@ -5,12 +5,14 @@ String address = request.getParameter("address");
 String alias = request.getParameter("alias");
 String old_address = request.getParameter("old_address");
 String old_alias = request.getParameter("old_alias");
+boolean old_hide = request.getParameter("old_hide") != null && request.getParameter("old_hide").equalsIgnoreCase("true");
+boolean hide = request.getParameter("hide") != null && request.getParameter("hide").length() > 0;
 boolean isEdit = old_address.length() > 0 && old_alias.length() > 0;
 if (isEdit)
 {
-  smsc.getAliases().remove(new Alias(new Mask(old_address), new Mask(old_alias)));
+  smsc.getAliases().remove(new Alias(new Mask(old_address), new Mask(old_alias), old_hide));
 }
-smsc.getAliases().add(new Alias(new Mask(address), new Mask(alias)));
+smsc.getAliases().add(new Alias(new Mask(address), new Mask(alias), hide));
 %>
 <h4>Aliases</h4>
 <%

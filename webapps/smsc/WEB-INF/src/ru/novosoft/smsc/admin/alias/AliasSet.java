@@ -32,7 +32,10 @@ public class AliasSet
     for (int i = 0; i< aliasNodes.getLength(); i++)
     {
       Element aliasElem = (Element) aliasNodes.item(i);
-      add(new Alias(new Mask(aliasElem.getAttribute("addr")), new Mask(aliasElem.getAttribute("alias"))));
+      add(new Alias(new Mask(aliasElem.getAttribute("addr")),
+          new Mask(aliasElem.getAttribute("alias")),
+          aliasElem.getAttribute("hide").equalsIgnoreCase("true"))
+      );
     }
   }
 
@@ -43,6 +46,7 @@ public class AliasSet
       Alias a = (Alias) i.next();
       out.println("  <record addr=\"" + StringEncoderDecoder.encode(a.getAddress().getMask())
                   + "\" alias=\"" + StringEncoderDecoder.encode(a.getAlias().getMask())
+                  + "\" hide=\"" + (a.isHide() ? "true" : "false")
                   + "\"/>");
     }
     return out;
