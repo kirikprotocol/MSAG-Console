@@ -34,8 +34,9 @@ void Connection::unregisterAllStatements()
 Statement* Connection::getStatement(const char* id)
 {
     MutexGuard guard(statementsRegistryLock);
-    if (!id || id[0] == '\0' || !statementsRegistry.Exists(id)) return 0;
-    return statementsRegistry.Get(id);
+    if (!id || id[0] == '\0') return 0;
+    Statement** statementPtr = statementsRegistry.GetPtr(id);
+    return ((statementPtr) ? *statementPtr:0);
 }
 
 void ConnectionPool::loadPoolSize(ConfigView* config)
