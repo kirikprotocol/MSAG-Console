@@ -125,7 +125,7 @@ TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp,
 	const SMSId existentId, const SMS& existentSms, int num)
 {
-	TCSelector s(num, 8, 1000);
+	TCSelector s(num, 7, 1000);
 	TCResult* res = new TCResult(TC_STORE_CORRECT_SMS, s.getChoice());
 	//messageReference
 	uint8_t msgRef = existentSms.getMessageReference();
@@ -152,48 +152,45 @@ TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp,
 			SmsUtil::setupRandomCorrectSms(&sms);
 			SMSId smsId;
 			CreateMode flag = ETSI_REJECT_IF_PRESENT;
+			uint8_t shift = rand1(255);
 			switch(s.value())
 			{
-				case 1001: //разрешаю дубликаты
-					flag = CREATE_NEW;
-					sms = existentSms;
-					break;
-				case 1002: //отличие только в msgRef
-					sms.setMessageReference(msgRef + 1);
+				case 1001: //отличие только в msgRef
+					sms.setMessageReference(msgRef + shift);
 					sms.setOriginatingAddress(origAddr);
 					sms.setDestinationAddress(destAddr);
 					break;
-				case 1003: //отличие только в origAddrType
+				case 1002: //отличие только в origAddrType
 					sms.setMessageReference(msgRef);
-					sms.setOriginatingAddress(origAddrLength, origAddrType + 1,
-						origAddrPlan, origAddrValue);
+					sms.setOriginatingAddress(origAddrLength,
+						origAddrType + shift, origAddrPlan, origAddrValue);
 					sms.setDestinationAddress(destAddr);
 					break;
-				case 1004: //отличие только в origAddrPlan
+				case 1003: //отличие только в origAddrPlan
 					sms.setMessageReference(msgRef);
 					sms.setOriginatingAddress(origAddrLength, origAddrType,
-						origAddrPlan + 1, origAddrValue);
+						origAddrPlan + shift, origAddrValue);
 					sms.setDestinationAddress(destAddr);
 					break;
-				case 1005: //отличие только в origAddrValue
+				case 1004: //отличие только в origAddrValue
 						sms.setMessageReference(msgRef);
 						sms.setOriginatingAddress(randAddrLength, origAddrType,
 							origAddrPlan, randAddrValue.get());
 						sms.setDestinationAddress(destAddr);
 					break;
-				case 1006: //отличие только в destAddrType
+				case 1005: //отличие только в destAddrType
 					sms.setMessageReference(msgRef);
 					sms.setOriginatingAddress(origAddr);
-					sms.setDestinationAddress(destAddrLength, destAddrType + 1,
-						destAddrPlan, destAddrValue);
+					sms.setDestinationAddress(destAddrLength,
+						destAddrType + shift, destAddrPlan, destAddrValue);
 					break;
-				case 1007: //отличие только в destAddrPlan
+				case 1006: //отличие только в destAddrPlan
 					sms.setMessageReference(msgRef);
 					sms.setOriginatingAddress(origAddr);
 					sms.setDestinationAddress(destAddrLength, destAddrType,
-						destAddrPlan + 1, destAddrValue);
+						destAddrPlan + shift, destAddrValue);
 					break;
-				case 1008: //отличие только в destAddrValue
+				case 1007: //отличие только в destAddrValue
 						sms.setMessageReference(msgRef);
 						sms.setOriginatingAddress(origAddr);
 						sms.setDestinationAddress(randAddrLength, destAddrType,
@@ -220,6 +217,33 @@ TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp,
 			SmsUtil::clearSms(smsp);
 			res->addFailure(s.value());
 		}
+	}
+	return res;
+}
+
+TCResult* MessageStoreTestCases::storeDuplicateSms(SMSId* idp, SMS* smsp,
+	const SMSId existentId, const SMS& existentSms)
+{
+	TCResult* res = new TCResult(TC_STORE_DUPLICATE_SMS);
+	try
+	{
+		SMS sms(existentSms);
+		SMSId id = msgStore->createSms(sms, CREATE_NEW);
+		if (id == existentId)
+		{
+			res->addFailure(101);
+		}
+		if (idp != NULL && smsp != NULL)
+		{
+			*idp = id;
+			*smsp = sms;
+		}
+	}
+	catch(...)
+	{
+		*idp = 0;
+		SmsUtil::clearSms(smsp);
+		res->addFailure(100);
 	}
 	return res;
 }
@@ -442,6 +466,7 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToEnroute(
 #define SET_DELIVERED_SMS sms->state = DELIVERED; \
 	sms->destinationDescriptor = dst; \
 	sms->lastTime = time(NULL); \
+	sms->nextTime = 0; \
 	sms->failureCause = 0; \
 	sms->attempts++;
 
