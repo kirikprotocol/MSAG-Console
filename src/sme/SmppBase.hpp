@@ -55,7 +55,7 @@ public:
     }
     return "INVALID REASON";
   }
-  virtual const char* what()const{return getTextReason();}
+  virtual const char* what()const throw(){return getTextReason();}
 };
 
 
@@ -443,9 +443,13 @@ protected:
       return NULL;
     };
   };
+
+#ifdef _WIN32
   friend InnerAsyncTransmitter;
   friend InnerSyncTransmitter;
   friend InnerListener;
+#endif
+
 public:
   SmppSession(const SmeConfig& config,SmppPduEventListener* lst):
     cfg(config),

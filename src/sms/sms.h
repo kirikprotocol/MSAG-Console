@@ -998,7 +998,7 @@ namespace smsc {
           uint8_t* b = new uint8_t[len];
           memcpy(b,body.getBuffer(),len);
           setBuffer(b, len);*/
-          buff=auto_ptr<char>(0);
+          buff=auto_ptr<uint8_t>(0);
           temporaryBodyStr=body.temporaryBodyStr;
           temporaryBodyInt=body.temporaryBodyInt;
           temporaryBodyBin=body.temporaryBodyBin;
@@ -1014,7 +1014,7 @@ namespace smsc {
         Body& operator =(const Body& body)
         {
           buffLen=0;
-          buff=auto_ptr<char>(0);
+          buff=auto_ptr<uint8_t>(0);
           temporaryBodyStr=body.temporaryBodyStr;
           temporaryBodyInt=body.temporaryBodyInt;
           temporaryBodyBin=body.temporaryBodyBin;
