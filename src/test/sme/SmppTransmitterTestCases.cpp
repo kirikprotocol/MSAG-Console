@@ -44,6 +44,11 @@ void SmppTransmitterTestCases::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	 //Default message Type (i.e. normal message)
 	pdu->get_message().set_esmClass(
 		pdu->get_message().get_esmClass() & 0xc3);
+	//исключить data_coding = 0xf5
+	if (pdu->get_message().get_dataCoding() == 0xf5)
+	{
+		pdu->get_message().set_dataCoding(0);
+	}
 	//source
 	PduAddress srcAddr;
 	SmppUtil::convert(fixture->smeAddr, &srcAddr);
@@ -677,12 +682,14 @@ PduData* SmppTransmitterTestCases::prepareSms(SmppHeader* header,
 		pdu.getSource(), pdu.getDest());
 	//dataCoding
 	bool simMsg = false;
+	bool mobileEquipment = false;
 	if (fixture->smeInfo.forceDC)
 	{
 		uint8_t dc;
 		if (SmppUtil::extractDataCoding(pdu.getDataCoding(), dc, simMsg))
 		{
 			pduData->intProps["dataCoding"] = dc;
+			mobileEquipment = dc == 0xf5;
 		}
 	}
 	else if (routeInfo && routeInfo->smeSystemId == "MAP_PROXY" &&
@@ -913,6 +920,11 @@ void SmppTransmitterTestCases::setupRandomCorrectDataSmPdu(PduDataSm* pdu,
 	 //Default message Type (i.e. normal message)
 	pdu->get_data().set_esmClass(
 		pdu->get_data().get_esmClass() & 0xc3);
+	//исключить data_coding = 0xf5
+	if (pdu->get_data().get_dataCoding() == 0xf5)
+	{
+		pdu->get_data().set_dataCoding(0);
+	}
 	//source
 	PduAddress srcAddr;
 	SmppUtil::convert(fixture->smeAddr, &srcAddr);

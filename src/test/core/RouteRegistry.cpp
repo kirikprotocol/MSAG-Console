@@ -12,6 +12,7 @@ using smsc::sms::AddressValue;
 using namespace smsc::test::util;
 using smsc::test::sms::SmsUtil;
 using smsc::test::sms::operator<<;
+using smsc::test::sms::str;
 
 RouteRegistry::RouteIterator::RouteIterator(
 	AddressMap::const_iterator i1, AddressMap::const_iterator i2)
@@ -85,6 +86,59 @@ const RouteHolder* RouteRegistry::getRoute(RouteId routeId) const
 {
 	RouteMap::const_iterator it = routeMap.find(routeId);
 	return (it != routeMap.end() ? it->second : NULL);
+}
+
+const bool RouteRegistry::findDestAddress(const Address& origAddr, SmeSystemId destSmeId, Address& destAddr) const
+{
+	for (RouteMap::const_iterator it = routeMap.begin(); it != routeMap.end(); it++)
+	{
+		const RouteHolder* routeHolder = it->second;
+		//совпадение smeId
+		if (routeHolder->route.smeSystemId != destSmeId)
+		{
+			continue;
+		}
+		//source удовлетворяет маске 
+		const Address& origMask = routeHolder->route.source;
+		if (origAddr.getTypeOfNumber() != origMask.getTypeOfNumber() ||
+			origAddr.getNumberingPlan() != origMask.getNumberingPlan() ||
+			origAddr.getLenght() != origMask.getLenght())
+		{
+			continue;
+		}
+		const string addrValue = origAddr.value;
+		const string maskValue = origMask.value;
+		int len = maskValue.find('?');
+		if (len == string::npos)
+		{
+			len = maskValue.length();
+		}
+		if (addrValue.compare(0, len, maskValue, 0, len))
+		{
+			continue;
+		}
+		//подобрать dest
+		string destValue = routeHolder->route.dest.value;
+		for (int i = 0; i < destValue.length(); i++)
+		{
+			if (destValue[i] == '?')
+			{
+				destValue[i] = '0';
+			}
+		}
+		destAddr.setTypeOfNumber(routeHolder->route.dest.getTypeOfNumber());
+		destAddr.setNumberingPlan(routeHolder->route.dest.getNumberingPlan());
+		destAddr.setValue(destValue.length(), destValue.c_str());
+		//проверить
+		routeHolder = lookup(origAddr, destAddr);
+		if (routeHolder && routeHolder->route.smeSystemId == destSmeId)
+		{
+			__trace2__("findDestAddress(): destAddr = %s for origAddr = %s, destSmeId = %s", str(destAddr).c_str(), str(origAddr).c_str(), destSmeId.c_str());
+			return true;
+		}
+	}
+	__trace2__("findDestAddress(): destAddr not found for origAddr = %s, destSmeId = %s", str(origAddr).c_str(), destSmeId.c_str());
+	return false;
 }
 
 const RouteHolder* RouteRegistry::lookup2(const AddressMap2& addrMap2,

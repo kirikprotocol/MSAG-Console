@@ -2,70 +2,70 @@
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 
 <config>
-	<section name="StartupLoader">
-		<section name="DataSourceDrivers">
-			<section name="OCIDataSourceDriver">
-				<param name="loadup" type="string">/export/home/bryz/install/smsc/db/oci/libdb_oci.so</param>
-				<param name="type" type="string">OCI</param>
-			</section>
+    <section name="StartupLoader">
+        <section name="DataSourceDrivers">
+            <section name="OCIDataSourceDriver">
+                <param name="loadup" type="string">/usr/home/bryz/install/smsc/db/oci/libdb_oci.so</param>
+                <param name="type" type="string">OCI</param>
+            </section>
 
-		</section>
+        </section>
 
-	</section>
+    </section>
     
-	<section name="WSme">
-		<param name="ProtocolId" type="int">33</param>
-		<param name="SvcType" type="string">WSme</param>
-		<section name="AdManager">
-			<section name="History">
-				<param name="age" type="int">60</param> <!-- in days -->
-				<param name="ageInSeconds" type="bool">true</param>
-				<param name="cleanup" type="int">5</param> <!-- in seconds -->
-				<param name="messageLife" type="int">20</param> <!-- in seconds -->
-			</section>
+    <section name="WSme">
+        <param name="ProtocolId" type="int">33</param>
+        <param name="SvcType" type="string">WSme</param>
+        <section name="AdManager">
+            <section name="History">
+                <param name="age" type="int">60</param> <!-- in days -->
+                <param name="ageInSeconds" type="bool">true</param>
+                <param name="cleanup" type="int">5</param> <!-- in seconds -->
+                <param name="messageLife" type="int">20</param> <!-- in seconds -->
+            </section>
 
-		</section>
+        </section>
 
-		<section name="Admin">
-			<param name="host" type="string">smsc</param>
-			<param name="port" type="int">15382</param>
-			<section name="Web">
-				<section name="jdbc">
-					<param name="driver" type="string">oracle.jdbc.driver.OracleDriver</param>
-					<param name="password" type="string">smsc2</param>
-					<param name="source" type="string">jdbc:oracle:thin:@192.168.2.117:1521:ORCL</param>
-					<param name="user" type="string">smsc2</param>
-				</section>
+        <section name="Admin">
+            <param name="host" type="string">smsc</param>
+            <param name="port" type="int">15382</param>
+            <section name="Web">
+                <section name="jdbc">
+                    <param name="driver" type="string">oracle.jdbc.driver.OracleDriver</param>
+                    <param name="password" type="string">smsc_bryz</param>
+                    <param name="source" type="string">jdbc:oracle:thin:@dark:1521:SMSC</param>
+                    <param name="user" type="string">smsc_bryz</param>
+                </section>
 
-			</section>
+            </section>
 
-		</section>
+        </section>
 
-		<section name="DataSource">
-			<param name="connections" type="int">5</param>
-			<param name="dbInstance" type="string">smscdb</param>
-			<param name="dbUserName" type="string">smsc2</param>
-			<param name="dbUserPassword" type="string">smsc2</param>
-			<param name="type" type="string">OCI</param>
-		</section>
+        <section name="DataSource">
+            <param name="connections" type="int">5</param>
+            <param name="dbInstance" type="string">smsc</param>
+            <param name="dbUserName" type="string">smsc_bryz</param>
+            <param name="dbUserPassword" type="string">smsc_bryz</param>
+            <param name="type" type="string">OCI</param>
+        </section>
 
-		<section name="LangManager">
-			<param name="defaultLang" type="string">en_us</param>
-		</section>
+        <section name="LangManager">
+            <param name="defaultLang" type="string">en_us</param>
+        </section>
 
-		<section name="SMSC">
-			<param name="host" type="string">smsc</param>
-			<param name="password" type="string">WSmePass</param>
-			<param name="port" type="int">15971</param>
-			<param name="sid" type="string">WSme</param>
-			<param name="timeout" type="int">10</param>
-		</section>
+        <section name="SMSC">
+            <param name="host" type="string">smsc</param>
+            <param name="password" type="string">WSmePass</param>
+            <param name="port" type="int">15971</param>
+            <param name="sid" type="string">WSme</param>
+            <param name="timeout" type="int">10</param>
+        </section>
 
-		<section name="ThreadPool">
-			<param name="init" type="int">5</param>
-			<param name="max" type="int">15</param>
-		</section>
+        <section name="ThreadPool">
+            <param name="init" type="int">5</param>
+            <param name="max" type="int">15</param>
+        </section>
 
-	</section>
+    </section>
 
 </config>

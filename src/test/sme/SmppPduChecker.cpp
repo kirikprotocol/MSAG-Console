@@ -38,9 +38,44 @@ inline bool SmppPduChecker::checkTransmitter()
 	return true;
 }
 
-SmppPduChecker::MapMsgError SmppPduChecker::checkMapMsg(SmsMsg* msg)
+SmppPduChecker::MapMsgError SmppPduChecker::checkMapMsg(PduData* pduData)
 {
-	__require__(msg);
+	__require__(pduData);
+	if (!pduData->objProps.count("map.msg"))
+	{
+		return MSG_OK;
+	}
+	SmsPduWrapper pdu(pduData);
+	SmsMsg* msg = dynamic_cast<SmsMsg*>(pduData->objProps["map.msg"]);
+	bool srcPort = pdu.get_optional().has_sourcePort();
+	bool destPort = pdu.get_optional().has_destinationPort();
+	
+	if (srcPort && !destPort)
+	{
+		return MOBILE_EQUIPMENT_MISSING_PORT;
+	}
+	else if (!srcPort && destPort)
+	{
+		return MOBILE_EQUIPMENT_MISSING_PORT;
+	}
+	else if (msg->udhi && srcPort && destPort)
+	{
+		return MOBILE_EQUIPMENT_UDHI;
+	}
+	
+	int extraUdhLen = 0;
+	if (fixture->smeInfo.forceDC && pdu.getDataCoding() == 0xf5 && srcPort && destPort)
+	{
+		if (pdu.get_optional().get_sourcePort() <= 255 && pdu.get_optional().get_destinationPort() <= 255)
+		{
+			extraUdhLen = 4; //в udh добавляется tag 0x04 - Application port, 8 bit address
+		}
+		else
+		{
+			extraUdhLen = 6; //в udh добавляется tag 0x05 - Application port, 16 bit address
+		}
+	}
+	
 	if (msg->udhi)
 	{
 		int msgLen = msg->len;
@@ -69,7 +104,7 @@ SmppPduChecker::MapMsgError SmppPduChecker::checkMapMsg(SmsMsg* msg)
 			}
 			msgLen = udhLen + (textLen * 7 + 7) / 8;
 		}
-		if (msgLen > MAX_MAP_SM_LENGTH)
+		if (msgLen > MAX_MAP_SM_LENGTH - extraUdhLen)
 		{
 			return UDHI_SINGLE_SEGMENT_ERR;
 		}
@@ -84,13 +119,14 @@ SmppPduChecker::MapMsgError SmppPduChecker::checkMapMsg(SmsMsg* msg)
 		}
 		else
 		{
-			numSegments = (msg->len + 133) / 134;
+			numSegments = (msg->len + 133 - extraUdhLen) / (134 - extraUdhLen);
 		}
 		if (numSegments > 255)
 		{
 			return MAX_SEGMENTS_ERR;
 		}
 	}
+	
 	return MSG_OK;
 }
 
@@ -144,18 +180,16 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 		}
 	}
 	//map
-	if (pduData->objProps.count("map.msg"))
+	switch (checkMapMsg(pduData))
 	{
-		SmsMsg* msg = dynamic_cast<SmsMsg*>(pduData->objProps["map.msg"]);
-		switch (checkMapMsg(msg))
-		{
-			case UDHI_SINGLE_SEGMENT_ERR:
-				res.insert(ESME_RSUBMITFAIL);
-				break;
-			case MAX_SEGMENTS_ERR:
-				res.insert(ESME_RINVMSGLEN);
-				break;
-		}
+		case UDHI_SINGLE_SEGMENT_ERR:
+		case MOBILE_EQUIPMENT_MISSING_PORT:
+		case MOBILE_EQUIPMENT_UDHI:
+			res.insert(ESME_RSUBMITFAIL);
+			break;
+		case MAX_SEGMENTS_ERR:
+			res.insert(ESME_RINVMSGLEN);
+			break;
 	}
 	//без проверки на bind статус
 	SmeType destType = fixture->routeChecker->isDestReachable(
@@ -239,18 +273,16 @@ set<uint32_t> SmppPduChecker::checkDataSm(PduData* pduData)
 		res.insert(ESME_RINVMSGLEN);
 	}
 	//map
-	if (pduData->objProps.count("map.msg"))
+	switch (checkMapMsg(pduData))
 	{
-		SmsMsg* msg = dynamic_cast<SmsMsg*>(pduData->objProps["map.msg"]);
-		switch (checkMapMsg(msg))
-		{
-			case UDHI_SINGLE_SEGMENT_ERR:
-				res.insert(ESME_RSUBMITFAIL); //верно и для data_sm
-				break;
-			case MAX_SEGMENTS_ERR:
-				res.insert(ESME_RINVMSGLEN);
-				break;
-		}
+		case UDHI_SINGLE_SEGMENT_ERR:
+		case MOBILE_EQUIPMENT_MISSING_PORT:
+		case MOBILE_EQUIPMENT_UDHI:
+			res.insert(ESME_RSUBMITFAIL); //верно и для data_sm
+			break;
+		case MAX_SEGMENTS_ERR:
+			res.insert(ESME_RINVMSGLEN);
+			break;
 	}
 	//без проверки на bind статус
 	SmeType destType = fixture->routeChecker->isDestReachable(
@@ -347,18 +379,14 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 		}
 	}
 	//map
-	if (pduData->objProps.count("map.msg"))
+	switch (checkMapMsg(pduData))
 	{
-		SmsMsg* msg = dynamic_cast<SmsMsg*>(pduData->objProps["map.msg"]);
-		switch (checkMapMsg(msg))
-		{
-			case UDHI_SINGLE_SEGMENT_ERR:
-				res.insert(ESME_RREPLACEFAIL);
-				break;
-			case MAX_SEGMENTS_ERR:
-				__unreachable__("Impossible");
-				break;
-		}
+		case UDHI_SINGLE_SEGMENT_ERR:
+			res.insert(ESME_RREPLACEFAIL);
+			break;
+		case MAX_SEGMENTS_ERR:
+			__unreachable__("Impossible");
+			break;
 	}
 	//проверки
 	__cfg_int__(maxValidPeriod);

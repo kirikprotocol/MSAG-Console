@@ -101,8 +101,7 @@ void DatabaseMaster::genSms()
 {
 	int count = 100;
 	int shift = 1;
-	StoreManager::startup(Manager::getInstance());
-	StoreManager::stopArchiver();
+	StoreManager::startup(Manager::getInstance(), NULL);
 	MessageStore* msgStore = StoreManager::getMessageStore();
 	for (int i = 0; i < count; i++)
 	{
@@ -239,11 +238,6 @@ void DatabaseMaster::genSms()
 		}
 		__trace2__("message created: smsId = %llu, submitTime = %s, state = %s",
 			smsId2, strTime, state);
-	}
-	StoreManager::startArchiver(); //перенести финализированные записи в архив
-	while (StoreManager::isArchivationInProgress())
-	{
-		sleep(1);
 	}
 	StoreManager::shutdown();
 }

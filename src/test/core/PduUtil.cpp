@@ -73,6 +73,7 @@ PduData::~PduData()
 	disposePdu(pdu);
 	for (ObjProps::iterator it = objProps.begin(); it != objProps.end(); it++)
 	{
+		__trace2__("Delete obj prop %s", it->first.c_str());
 		__require__(it->second);
 		it->second->unref();
 	}

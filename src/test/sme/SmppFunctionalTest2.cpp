@@ -220,38 +220,39 @@ int TestSmeFunc::Execute()
 	//тестовая последовательност команд
 	seq.clear();
 #ifdef LOAD_TEST
-	seq.push_back(201);
+	seq.push_back(301);
 #else
 	///*
 	seq.insert(seq.end(), 20, 1);
 	seq.insert(seq.end(), 20, 2);
 	seq.insert(seq.end(), 15, 3);
-	seq.insert(seq.end(), 5, 4);
-	seq.insert(seq.end(), 5, 5);
-	seq.insert(seq.end(), 5, 6);
-	seq.insert(seq.end(), 5, 7);
-	seq.insert(seq.end(), 1, 8);
-	seq.insert(seq.end(), 1, 9);
-	seq.insert(seq.end(), 7, 10);
-	seq.insert(seq.end(), 20, 11);
-	seq.insert(seq.end(), 10, 12);
+	seq.insert(seq.end(), 5, 11);
+	seq.insert(seq.end(), 5, 12);
+	seq.insert(seq.end(), 5, 21);
+	seq.insert(seq.end(), 5, 22);
+	seq.insert(seq.end(), 1, 31);
+	seq.insert(seq.end(), 1, 32);
+	seq.insert(seq.end(), 7, 33);
+	seq.insert(seq.end(), 20, 41);
+	seq.insert(seq.end(), 10, 42);
 	//*/
-	seq.insert(seq.end(), 20, 13);
-	seq.insert(seq.end(), 10, 14);
-	seq.push_back(51);
-	seq.push_back(52);
-	seq.push_back(53);
-	seq.push_back(54);
-	seq.push_back(55);
-	///*
-	seq.push_back(61);
-	seq.push_back(62);
-	seq.push_back(71);
-	seq.push_back(72);
-	//*/
-	//seq.push_back(100);
-#ifdef ASSERT
+	seq.insert(seq.end(), 20, 51);
+	seq.insert(seq.end(), 10, 52);
+	
 	seq.push_back(101);
+	seq.push_back(102);
+	seq.push_back(103);
+	seq.push_back(104);
+	seq.push_back(105);
+	///*
+	seq.push_back(111);
+	seq.push_back(112);
+	seq.push_back(121);
+	seq.push_back(122);
+	//*/
+	//seq.push_back(201);
+#ifdef ASSERT
+	seq.push_back(202);
 #endif //ASSERT
 #endif //LOAD_TEST
 	random_shuffle(seq.begin(), seq.end());
@@ -301,81 +302,93 @@ void TestSmeFunc::executeCycle()
 		case 3: //неправильная sms
 			protocolTc.submitSmIncorrect(rand0(1), RAND_TC);
 			break;
-		case 4:
+		case 4: //спец sms на map proxy
+			protocolTc.submitSmMapSpecial(rand0(1), RAND_TC);
+			break;
+			
+		case 11:
 			protocolTc.replaceSmCorrect(rand0(1), RAND_TC);
 			break;
-		case 5:
+		case 12:
 			protocolTc.replaceSmIncorrect(rand0(1), RAND_TC);
 			break;
-		case 6:
+			
+		case 21:
 			protocolTc.querySmCorrect(rand0(1), RAND_TC);
 			break;
-		case 7:
+		case 22:
 			protocolTc.querySmIncorrect(rand0(1), RAND_TC);
 			break;
-		case 8:
+			
+		case 31:
 			protocolTc.cancelSmSingleCorrect(rand0(1), RAND_TC);
 			break;
-		case 9:
+		case 32:
 			protocolTc.cancelSmGroupCorrect(rand0(1), RAND_TC);
 			break;
-		case 10:
+		case 33:
 			protocolTc.cancelSmIncorrect(rand0(1), RAND_TC);
 			break;
-		case 11:
+			
+		case 41:
 			protocolTc.dataSmCorrect(rand0(1), RAND_TC);
 			break;
-		case 12:
+		case 42:
 			protocolTc.dataSmIncorrect(rand0(1), RAND_TC);
 			break;
-		case 13:
+			
+		case 51:
 			protocolTc.correctDirectives(rand0(1), TestCaseId(5));
 			break;
-		case 14:
+		case 52:
 			protocolTc.incorrectDirectives(rand0(1), TestCaseId(2));
 			break;
+			
 		//profilerTc
-		case 51: //обновление настроек кодировки
+		case 101: //обновление настроек кодировки
 			profilerTc.updateCodePageCorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 			break;
-		case 52: //обновление настроек уведомления о доствке
+		case 102: //обновление настроек уведомления о доствке
 			profilerTc.updateReportOptionsCorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 			break;
-		case 53: //обновление локали
+		case 103: //обновление локали
 			profilerTc.updateLocaleCorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 			break;
-		case 54: //обновление hide опции
+		case 104: //обновление hide опции
 			profilerTc.updateHideOptionsCorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 			break;
-		case 55: //обновление профиля некорректными данными
+		case 105: //обновление профиля некорректными данными
 			profilerTc.updateProfileIncorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 			break;
+			
 		//abonent info
-		case 61: //корректный запрос на abonent info
+		case 111: //корректный запрос на abonent info
 			abonentInfoTc.queryAbonentInfoCorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 			break;
-		case 62: //некорректный запрос на abonent info
+		case 112: //некорректный запрос на abonent info
 			abonentInfoTc.queryAbonentInfoIncorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 			break;
+			
 		//smsc sme
-		case 71: //отправка pdu smsc sme
+		case 121: //отправка pdu smsc sme
 			smscSmeTc.submitSm(rand0(1));
 			break;
-		case 72: //отправка pdu smsc sme
+		case 122: //отправка pdu smsc sme
 			smscSmeTc.dataSm(rand0(1));
 			break;
-		case 100:
+			
+		case 201:
 			protocolTc.sendInvalidPdu(rand0(1), RAND_TC);
 			break;
-		case 101: //asserts
+		case 202: //asserts
 			protocolTc.submitSmAssert(RAND_TC);
 			break;
 		/*
-		case 102:
+		case 203:
 			tc.replaceSmAssert(RAND_TC);
 			break;
 		*/
-		case 201: //исключительно правильная sms
+		case 301: //исключительно правильная sms
 			protocolTc.submitSmCorrect(rand0(1), 1);
 			break;
 		default:

@@ -53,12 +53,14 @@ private:
 	{
 		MSG_OK = 0,
 		UDHI_SINGLE_SEGMENT_ERR = 1, //установлен udhi и сообщение разбиваетс€ на несколько сегментов
-		MAX_SEGMENTS_ERR = 2 //кол-во сегментов > 255
+		MAX_SEGMENTS_ERR = 2, //кол-во сегментов > 255
+		MOBILE_EQUIPMENT_MISSING_PORT = 3, //не задан порт дл€ data_coding=0xf5
+		MOBILE_EQUIPMENT_UDHI = 4, //заданы одновременно порты и udhi дл€ data_coding=0xf5
 	} MapMsgError;
 
 
 	bool checkTransmitter();
-	MapMsgError checkMapMsg(SmsMsg* msg);
+	MapMsgError checkMapMsg(PduData* pduData);
 	void checkQuerySmRespStatus(ResponseMonitor* monitor, PduQuerySmResp& respPdu,
 		time_t respTime);
 	void updateRecipientData(PduData* pduData, time_t respTime);

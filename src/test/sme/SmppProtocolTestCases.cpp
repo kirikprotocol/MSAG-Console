@@ -25,7 +25,14 @@ using namespace smsc::test::core; //constants
 using namespace smsc::test::util;
 
 SmppProtocolTestCases::SmppProtocolTestCases(SmppFixture* _fixture)
-: fixture(_fixture), chkList(_fixture->chkList) {}
+: fixture(_fixture), chkList(_fixture->chkList), mapAddr(NULL)
+{
+	Address destAddr;
+	if (fixture->routeReg->findDestAddress(fixture->smeAddr, "MAP_PROXY", destAddr))
+	{
+		mapAddr = new Address(destAddr);
+	}
+}
 
 Category& SmppProtocolTestCases::getLog()
 {
@@ -889,6 +896,114 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 					}
 					break;
 				*/
+				default:
+					__unreachable__("Invalid num");
+			}
+			//отправить и зарегистрировать pdu
+			fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync);
+			__tc_ok__;
+		}
+		catch(...)
+		{
+			__tc_fail__(100);
+			error();
+		}
+	}
+}
+
+void SmppProtocolTestCases::submitSmMapSpecial(bool sync, int num)
+{
+	//отправка на MAP_PROXY
+	if (!mapAddr)
+	{
+		return;
+	}
+	TCSelector s(num, 9);
+	__decl_tc__;
+	__tc__("submitSm.mapSpecial");
+	for (; s.check(); s++)
+	{
+		__trace2__("submitSmMapSpecial(%d)", s.value());
+		try
+		{
+			PduSubmitSm* pdu = new PduSubmitSm();
+			fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, *mapAddr, rand0(5));
+			bool udhi = pdu->get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
+			bool msgLen = pdu->get_optional().has_messagePayload() ?
+				pdu->get_optional().size_messagePayload() : pdu->get_message().size_shortMessage();
+			switch (s.value())
+			{
+				case 1: //нет source_port и dest_port
+					__tc__("submitSm.mapSpecial.noPorts");
+					pdu->get_optional().field_present &= ~(SmppOptionalFields::sourcePort + SmppOptionalFields::destinationPort);
+                    break;
+				case 2: //не задан source_port
+					if (!udhi)
+					{
+						__tc__("submitSm.mapSpecial.missingPort");
+						pdu->get_optional().field_present &= ~SmppOptionalFields::sourcePort;
+						pdu->get_optional().set_destinationPort(rand0(65535));
+					}
+                    break;
+				case 3: //не задан dest_port
+					if (!udhi)
+					{
+						__tc__("submitSm.mapSpecial.missingPort");
+						pdu->get_optional().field_present &= ~SmppOptionalFields::destinationPort;
+						pdu->get_optional().set_sourcePort(rand0(65535));
+					}
+                    break;
+				case 4: //заданы dest_port и source_port до 255
+					if (!udhi)
+					{
+						__tc__("submitSm.mapSpecial.8bitPort");
+						pdu->get_optional().set_sourcePort(rand0(255));
+						pdu->get_optional().set_destinationPort(rand0(255));
+					}
+                    break;
+				case 5: //заданы dest_port и source_port до 65535
+					if (!udhi)
+					{
+						__tc__("submitSm.mapSpecial.16bitPort");
+						pdu->get_optional().set_sourcePort(rand0(65535));
+						pdu->get_optional().set_destinationPort(rand0(65535));
+					}
+                    break;
+				case 6: //заданы оба dest_port и source_port, но уже есть udhi
+					if (udhi)
+					{
+						__tc__("submitSm.mapSpecial.udhi&Ports");
+						pdu->get_message().set_esmClass(pdu->get_message().get_esmClass() | ESM_CLASS_UDHI_INDICATOR);
+						pdu->get_optional().set_sourcePort(rand0(65535));
+						pdu->get_optional().set_destinationPort(rand0(65535));
+					}
+                    break;
+				case 7: //больная sme c data_coding = 0xf5 с нарезкой без портов
+					if (!udhi && fixture->smeInfo.forceDC && msgLen > 134)
+					{
+						__tc__("submitSm.mapSpecial.mobileEquipment");
+						pdu->get_message().set_dataCoding(0xf5); //binary, dest_addr_subunit = Mobile Equipment
+						pdu->get_optional().field_present &= ~(SmppOptionalFields::sourcePort + SmppOptionalFields::destinationPort);
+					}
+					break;
+				case 8: //больная sme c data_coding=0xf5 с нарезкой и с портами
+					if (!udhi && fixture->smeInfo.forceDC && msgLen > 134)
+					{
+						__tc__("submitSm.mapSpecial.mobileEquipmentNoPorts");
+						pdu->get_message().set_dataCoding(0xf5); //binary, dest_addr_subunit = Mobile Equipment
+						pdu->get_optional().set_sourcePort(rand0(255));
+						pdu->get_optional().set_destinationPort(rand0(255));
+					}
+					break;
+				case 9: //больная sme c data_coding=0xf5 с нарезкой и с портами
+					if (!udhi && fixture->smeInfo.forceDC && msgLen > 134)
+					{
+						__tc__("submitSm.mapSpecial.mobileEquipmentWithPorts");
+						pdu->get_message().set_dataCoding(0xf5); //binary, dest_addr_subunit = Mobile Equipment
+						pdu->get_optional().set_sourcePort(rand0(65535));
+						pdu->get_optional().set_destinationPort(rand0(65535));
+					}
+					break;
 				default:
 					__unreachable__("Invalid num");
 			}

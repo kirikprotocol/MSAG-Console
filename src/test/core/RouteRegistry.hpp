@@ -17,6 +17,7 @@ using std::map;
 using std::vector;
 using smsc::sms::Address;
 using smsc::router::RouteId;
+using smsc::smeman::SmeSystemId;
 using smsc::test::sms::ltAddress;
 
 class RouteRegistry
@@ -47,7 +48,9 @@ public:
 	
 	const RouteHolder* getRoute(RouteId routeId) const;
 
-	const RouteHolder* lookup(const Address& origAddr,
+	const bool findDestAddress(const Address& origAddr, SmeSystemId destSmeId, Address& destAddr) const;
+	
+    const RouteHolder* lookup(const Address& origAddr,
 		const Address& destAddr) const;
 
 	int size() const;

@@ -457,7 +457,7 @@ PduFlag NormalSmsHandler::checkSegmentedMapMsgText(DeliveryMonitor* monitor,
 	}
 	else
 	{
-		if (smLen != 134 && smLen != sz)
+		if (smLen + udhLen != 140 && smLen != sz)
 		{
 			__tc_fail__(8);
 		}
@@ -583,6 +583,7 @@ PduFlag NormalSmsHandler::checkMapMsgText(DeliveryMonitor* monitor,
 	__require__(monitor && header);
 	__require__(monitor->pduData->objProps.count("map.msg"));
 	__require__(monitor->pduData->intProps.count("dataCoding"));
+	__require__(monitor->pduData->objProps.count("senderData"));
 	__decl_tc__;
 	SmsMsg* msg = dynamic_cast<SmsMsg*>(monitor->pduData->objProps["map.msg"]);
 	if (!msg->valid)
@@ -591,6 +592,7 @@ PduFlag NormalSmsHandler::checkMapMsgText(DeliveryMonitor* monitor,
 	}
 	//data coding только для больная sme -> нормальную и нормальная -> нормальную
 	SmsPduWrapper pdu(header, 0);
+	SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
 	if (!fixture->smeInfo.forceDC)
 	{
 		__tc__("sms.normalSms.map.checkDataCoding");
@@ -601,10 +603,27 @@ PduFlag NormalSmsHandler::checkMapMsgText(DeliveryMonitor* monitor,
 	bool udhi = pdu.getEsmClass() & ESM_CLASS_UDHI_INDICATOR;
 	uint8_t dataCoding = monitor->pduData->intProps["dataCoding"];
 	bool segmentedMsg = false;
+	
+	bool mobileEquipment8BitPorts = false;
+	bool mobileEquipment16BitPorts = false;
+	SenderData* senderData = dynamic_cast<SenderData*>(monitor->pduData->objProps["senderData"]);
+	if (origPdu.get_optional().has_sourcePort() && origPdu.get_optional().has_destinationPort())
+	{
+		if (origPdu.get_optional().get_sourcePort() <= 255 && origPdu.get_optional().get_destinationPort() <= 255)
+		{
+			mobileEquipment8BitPorts = true;
+		}
+		else
+		{
+			mobileEquipment16BitPorts = true;
+		}
+	}
+	
 	if (udhi && pdu.isDeliverSm() && pdu.get_message().size_shortMessage())
 	{
 		unsigned char* sm = (unsigned char*) pdu.get_message().get_shortMessage();
 		int udhLen = 1 + *sm;
+		
 		for (int i = 1; i < udhLen; )
 		{
 			//ie - informational element
@@ -617,11 +636,42 @@ PduFlag NormalSmsHandler::checkMapMsgText(DeliveryMonitor* monitor,
 				concatRefNum = sm[i++];
 				concatMaxNum = sm[i++];
 				concatSeqNum = sm[i++];
-				break;
+				continue;
+			}
+			else if (ieId == 0x04) //application port, 8 bit address
+			{
+				__require__(ieLen == 2);
+				__tc__("sms.normalSms.map.checkMobileEquipment");
+				__check__(1, mobileEquipment8BitPorts);
+				__check__(2, origPdu.get_optional().get_destinationPort() == sm[i++]);
+				__check__(3, origPdu.get_optional().get_sourcePort() == sm[i++]);
+				__tc_ok_cond__;
+				mobileEquipment8BitPorts = false;
+				continue;
+			}
+			else if (ieId == 0x05) //application port, 16 bit address
+			{
+				__require__(ieLen == 4);
+				__tc__("sms.normalSms.map.checkMobileEquipment");
+				uint16_t srcPort, destPort;
+				memcpy(&destPort, sm + i, 2); i += 2; destPort = ntohs(destPort);
+				memcpy(&srcPort, sm + i, 2); i += 2; srcPort = ntohs(srcPort);
+				__check__(5, mobileEquipment16BitPorts);
+				__check__(6, destPort == origPdu.get_optional().get_destinationPort());
+				__check__(7, srcPort == origPdu.get_optional().get_sourcePort());
+				__tc_ok_cond__;
+				mobileEquipment16BitPorts = false;
+				continue;
 			}
 			i += ieLen;
 		}
 	}
+	
+	__tc__("sms.normalSms.map.checkMobileEquipment");
+	__check__(10, !mobileEquipment8BitPorts);
+	__check__(11, !mobileEquipment16BitPorts);
+	__tc_ok_cond__;
+	
 	if (segmentedMsg)
 	{
 		return checkSegmentedMapMsgText(monitor, header, respFlag, dataCoding,

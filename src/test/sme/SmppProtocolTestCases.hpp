@@ -41,6 +41,11 @@ public:
 	void submitSmIncorrect(bool sync, int num);
 
 	/**
+	 * Отправка "хитрых" корректных и некорректных submit_sm pdu на map proxy.
+	 */
+	void submitSmMapSpecial(bool sync, int num);
+	
+	/**
 	 * Заполнение и отправка submit_sm pdu с недопустимыми значениями полей.
 	 */
 	void submitSmAssert(int num);
@@ -155,6 +160,7 @@ public:
 protected:
 	SmppFixture* fixture;
 	CheckList* chkList;
+	Address* mapAddr;
 
 	virtual Category& getLog();
 	PduData* getNonReplaceEnrotePdu();

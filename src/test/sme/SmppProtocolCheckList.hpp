@@ -174,6 +174,23 @@ void submitSmTc()
 		"ƒублированное сообщение (совпадают source_addr, dest_addr и service_type) с замещением уже доставленного");
 	__reg_tc__("submitSm.correct.replaceRepeatedDeliveryEnrote",
 		"ƒублированное сообщение (совпадают source_addr, dest_addr и service_type) с замещением существующего, наход€щегос€ в очереди повторной доставки");
+	//submitSm.mapSpecial
+	__reg_tc__("submitSm.mapSpecial",
+		"ќтправка специальных сообщений на MAP_PROXY");
+	__reg_tc__("submitSm.mapSpecial.noPorts",
+		"Ќе заданы оба source_port и dest_port не зависимо от udh");
+	__reg_tc__("submitSm.mapSpecial.missingPort",
+		"Ќе задан один из source_port или dest_port, udh не установлен");
+	__reg_tc__("submitSm.mapSpecial.8bitPort",
+		"«аданы оба source_port и dest_port со значени€ми меньше 255, udh не установлен");
+	__reg_tc__("submitSm.mapSpecial.16bitPort",
+		"«аданы оба source_port и dest_port со значени€ми одного или обоих портов больше 255, udh не установлен");
+	__reg_tc__("submitSm.mapSpecial.udhi&Ports",
+		"«аданы оба source_port и dest_port и установлен udh");
+	__reg_tc__("submitSm.mapSpecial.mobileEquipmentNoPorts",
+		"ќтправка длинных сообщений (с нарезкой) с больной sme с data_coding = 0xF5 (binary, dest_addr_subunit = Mobile Equipment) с незаданными source_port и destination_port");
+	__reg_tc__("submitSm.mapSpecial.mobileEquipmentWithPorts",
+		"ќтправка длинных сообщений (с нарезкой) с больной sme с data_coding = 0xF5 (binary, dest_addr_subunit = Mobile Equipment) с установленными source_port и destination_port");
 	//submitSm.incorrect
 	__reg_tc__("submitSm.incorrect",
 		"ќтправка submit_sm pdu с неправильными значени€ми полей");
@@ -719,6 +736,8 @@ void normalSmsTc()
 		"Sms получателем которых €вл€ютс€ мобильные телефоны");
 	__reg_tc__("sms.normalSms.map.checkDataCoding",
 		" одировка текста полученного sms соответствует настройкам профил€ получател€ на момент отправки сообщени€");
+	__reg_tc__("sms.normalSms.map.checkMobileEquipment",
+		"ƒл€ сообщени€ отправленного с больной sme c data_coding = 0xf5, если присутствуют опциональные пол€ source_port и destination_port, то эти пол€ пронос€тс€ в udhi");
 	//sms.normalSms.map.shortSms
 	__reg_tc__("sms.normalSms.map.shortSms",
 		" ороткие сообщени€ (<=140 байт) доставл€ютс€ одним sms");
