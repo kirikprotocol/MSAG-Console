@@ -13,7 +13,6 @@
               java.util.Arrays"
 %><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.smsc_service.Logging"
 /><jsp:setProperty name="bean" property="*"/><%
-  //todo ??????? ??????
   FORM_METHOD = "POST";
 	TITLE = "SMSC";
 	MENU0_SELECTION = "MENU0_SMSC_LOGGING";
