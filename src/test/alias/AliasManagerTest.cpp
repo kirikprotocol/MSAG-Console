@@ -19,7 +19,7 @@ void executeTest()
 */
 	AliasManager aliasMan;
 	AliasRegistry aliasReg;
-	AliasManagerTestCases tc(&aliasMan, &aliasReg);
+	AliasManagerTestCases tc(&aliasMan, &aliasReg, NULL);
 
 	Address alias, addr;
 	SmsUtil::setupRandomCorrectAddress(&alias);
@@ -28,12 +28,12 @@ void executeTest()
 	AliasInfo aliasInfo;
 	aliasInfo.alias = alias;
 	aliasInfo.addr = addr;
-	cout << *tc.addCorrectAliasMatch(&aliasInfo, 9) << endl;
+	tc.addCorrectAliasMatch(&aliasInfo, 9);
 
 	AliasInfo aliasInfo2;
 	aliasInfo2.alias = alias;
 	aliasInfo2.addr = addr;
-	cout << *tc.addCorrectAliasMatch(&aliasInfo, 9) << endl;
+	tc.addCorrectAliasMatch(&aliasInfo, 9);
 
 	/*
 	AliasInfo aliasInfo3;
@@ -42,7 +42,7 @@ void executeTest()
 	cout << *tc.addCorrectAliasMatch(&aliasInfo, 9) << endl;
 	*/
 	
-	cout << *tc.findAliasByAddress(addr) << endl;
+	tc.findAliasByAddress(addr);
 	//cout << *tc.findAddressByAlias(alias) << endl;
 /*
 	cout << *tc.addCorrectAliasMatch(&aliasInfo, 1) << endl;

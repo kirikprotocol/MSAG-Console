@@ -1,8 +1,8 @@
 #include "AliasManagerTestCases.hpp"
 #include "util/Logger.h"
 #include "test/sms/SmsUtil.hpp"
-#include "test/util/TCResultFilter.hpp"
-#include "test/util/CheckList.hpp"
+#include "AliasManagerCheckList.hpp"
+#include <sstream>
 
 using log4cpp::Category;
 using smsc::util::Logger;
@@ -10,8 +10,9 @@ using smsc::alias::AliasInfo;
 using smsc::test::sms::SmsUtil;
 using smsc::test::core::AliasRegistry;
 using smsc::test::core::operator<<;
-using namespace smsc::test::alias; //constants, AliasManagerTestCases
-using namespace smsc::test::util; //TCResultFilter, CheckList
+using namespace smsc::test::alias; //constants, AliasManagerTestCases, AliasManagerCheckList
+using namespace smsc::test::util; //TCSelector, Deletor
+using namespace std;
 
 static Category& log = Logger::getCategory("AliasManagerFunctionalTest");
 
@@ -22,14 +23,13 @@ class AliasManagerFunctionalTest
 	AliasManagerTestCases tc;
 	vector<Address*> addr;
 	//AliasRegistry aliasReg;
-	vector<TCResultStack*> stack;
 
 public:
-	AliasManagerFunctionalTest()
+	AliasManagerFunctionalTest(CheckList* chkList)
 		: aliasMan(new AliasManager()), aliasReg(new AliasRegistry()),
-		tc(aliasMan, aliasReg) {}
+		tc(aliasMan, aliasReg, chkList) {}
 	~AliasManagerFunctionalTest();
-	void executeTest(TCResultFilter* filter, int numAddr);
+	void executeTest(int numAddr);
 	void printAliases();
 
 private:
@@ -39,14 +39,7 @@ private:
 
 AliasManagerFunctionalTest::~AliasManagerFunctionalTest()
 {
-	for (int i  = 0; i < addr.size(); i++)
-	{
-		delete addr[i];
-	}
-	for (int i = 0; i < stack.size(); i++)
-	{
-		delete stack[i];
-	}
+	for_each(addr.begin(), addr.end(), Deletor<Address>());
 	delete aliasMan;
 	delete aliasReg;
 }
@@ -75,9 +68,6 @@ void AliasManagerFunctionalTest::executeTestCases(
 {
 	log.debug("*** start ***");
 
-	//Создание нового стека для пары alias, addr
-	stack.push_back(new TCResultStack());
-
 	//Регистрация алиаса с преобразованием addr->alias и alias->addr, 1/3
 	//Регистрация алиаса с преобразованием только alias->addr, 1/3
 	//Регистрация алиаса с преобразованием только addr->alias, 1/3
@@ -90,8 +80,7 @@ void AliasManagerFunctionalTest::executeTestCases(
 					AliasInfo aliasInfo;
 					aliasInfo.alias = alias;
 					aliasInfo.addr = addr;
-					TCResult* res = tc.addCorrectAliasMatch(&aliasInfo, RAND_TC);
-					stack.back()->push_back(res);
+					tc.addCorrectAliasMatch(&aliasInfo, RAND_TC);
 				}
 				break;
 			case 2:
@@ -99,9 +88,7 @@ void AliasManagerFunctionalTest::executeTestCases(
 					AliasInfo aliasInfo;
 					aliasInfo.alias = alias;
 					aliasInfo.addr = addr;
-					TCResult* res = tc.addCorrectAliasNotMatchAddress(
-						&aliasInfo, RAND_TC);
-					stack.back()->push_back(res);
+					tc.addCorrectAliasNotMatchAddress(&aliasInfo, RAND_TC);
 				}
 				break;
 			case 3:
@@ -109,9 +96,7 @@ void AliasManagerFunctionalTest::executeTestCases(
 					AliasInfo aliasInfo;
 					aliasInfo.alias = alias;
 					aliasInfo.addr = addr;
-					TCResult* res = tc.addCorrectAliasNotMatchAlias(
-						&aliasInfo, RAND_TC);
-					stack.back()->push_back(res);
+					tc.addCorrectAliasNotMatchAlias(&aliasInfo, RAND_TC);
 				}
 				break;
 			/*
@@ -120,22 +105,19 @@ void AliasManagerFunctionalTest::executeTestCases(
 					AliasInfo aliasInfo;
 					aliasInfo.alias = alias;
 					aliasInfo.addr = addr;
-					TCResult* res = tc.addCorrectAliasException(&aliasInfo, RAND_TC);
-					stack.back()->push_back(res);
+					tc.addCorrectAliasException(&aliasInfo, RAND_TC);
 				}
 				break;
 			case 5:
 			case 6:
 				{
-					TCResult* res = tc.findAliasByAddress(addr);
-					stack.back()->push_back(res);
+					tc.findAliasByAddress(addr);
 				}
 				break;
 			case 7:
 			case 8:
 				{
-					TCResult* res = tc.findAddressByAlias(alias);
-					stack.back()->push_back(res);
+					tc.findAddressByAlias(alias);
 				}
 				break;
 			*/
@@ -143,8 +125,7 @@ void AliasManagerFunctionalTest::executeTestCases(
 	}
 }
 
-void AliasManagerFunctionalTest::executeTest(
-	TCResultFilter* filter, int numAddr)
+void AliasManagerFunctionalTest::executeTest(int numAddr)
 {
 	//Подготовка списка адресов
 	for (int i = 0; i < numAddr; i++)
@@ -169,87 +150,31 @@ void AliasManagerFunctionalTest::executeTest(
 	//Поиск алиаса и адреса
 	for (int i = 0; i < numAddr; i++)
 	{
-		TCResult* res1 = tc.findAliasByAddress(*addr[i]);
-		TCResult* res2 = tc.findAddressByAlias(*addr[i]);
-		TCResult* res3 = tc.checkInverseTransformation(*addr[i]);
-		filter->addResult(res1);
-		filter->addResult(res2);
-		filter->addResult(res3);
-		delete res1;
-		delete res2;
-		delete res3;
+		tc.findAliasByAddress(*addr[i]);
+		tc.findAddressByAlias(*addr[i]);
+		tc.checkInverseTransformation(*addr[i]);
 	}
 
 	//Итерирование по списку зарегистрированных алиасов
-    //filter->addResult(tc.iterateAliases());
+    //tc.iterateAliases();
 
 	//Обнуление таблицы алиасов
-    filter->addResult(tc.deleteAliases());
+    tc.deleteAliases();
 
 	//Поиск алиаса и адреса для каждой пары адресов
 	for (int i = 0; i < numAddr; i++)
 	{
-		TCResult* res1 = tc.findAliasByAddress(*addr[i]);
-		TCResult* res2 = tc.findAddressByAlias(*addr[i]);
-		TCResult* res3 = tc.checkInverseTransformation(*addr[i]);
-		filter->addResult(res1);
-		filter->addResult(res2);
-		filter->addResult(res3);
-		delete res1;
-		delete res2;
-		delete res3;
+		tc.findAliasByAddress(*addr[i]);
+		tc.findAddressByAlias(*addr[i]);
+		tc.checkInverseTransformation(*addr[i]);
 	}
 
 	//Итерирование по списку зарегистрированных алиасов
-    //filter->addResult(tc.iterateAliases());
-
-	//обработка результатов
-	for (int i = 0; i < stack.size(); i++)
-	{
-		filter->addResultStack(*stack[i]);
-	}
+    //tc.iterateAliases();
 
 	//очистка памяти
-	for (int i = 0; i < addr.size(); i++)
-	{
-		delete addr[i];
-	}
+	for_each(addr.begin(), addr.end(), Deletor<Address>());
 	addr.clear();
-	for (int i = 0; i < stack.size(); i++)
-	{
-		delete stack[i];
-	}
-	stack.clear();
-}
-
-void saveCheckList(TCResultFilter* filter)
-{
-	cout << "Сохранение checklist" << endl;
-	CheckList& cl = CheckList::getCheckList(CheckList::UNIT_TEST);
-	cl.startNewGroup("Alias Manager", "smsc::alias");
-	//имплементированные тест кейсы
-	cl.writeResult("Регистрация алиаса с преобразованием addr->alias и alias->addr",
-		filter->getResults(TC_ADD_CORRECT_ALIAS_MATCH));
-	cl.writeResult("Регистрация алиаса с преобразованием только alias->addr",
-		filter->getResults(TC_ADD_CORRECT_ALIAS_NOT_MATCH_ADDRESS));
-	cl.writeResult("Регистрация алиаса с преобразованием только addr->alias",
-		filter->getResults(TC_ADD_CORRECT_ALIAS_NOT_MATCH_ALIAS));
-	/*
-	cl.writeResult("Регистрация алиаса с переполнением адреса при alias->addr или алиаса при addr->alias",
-		filter->getResults(TC_ADD_CORRECT_ALIAS_EXCEPTION));
-	cl.writeResult("Регистрация алиаса с некорректными параметрами",
-		filter->getResults(TC_ADD_INCORRECT_ALIAS));
-	*/
-	cl.writeResult("Обнуление таблицы алиасов",
-		filter->getResults(TC_DELETE_ALIASES));
-	cl.writeResult("Поиск алиаса по адресу",
-		filter->getResults(TC_FIND_ALIAS_BY_ADDRESS));
-	cl.writeResult("Поиск адреса по алиасу",
-		filter->getResults(TC_FIND_ADDRESS_BY_ALIAS));
-	cl.writeResult("Преобразование addr->alias->addr и alias->addr->alias однозначное",
-		filter->getResults(TC_CHECK_INVERSE_TRANSFORMATION));
-	cl.writeResult("Итерирование по списку зарегистрированных алиасов",
-		filter->getResults(TC_ITERATE_ALIASES));
 }
 
 /**
@@ -269,14 +194,13 @@ int main(int argc, char* argv[])
 	try
 	{
 		//Manager::init("config.xml");
-		TCResultFilter* filter = new TCResultFilter();
+		AliasManagerCheckList chkList;
 		for (int i = 0; i < numCycles; i++)
 		{
-			AliasManagerFunctionalTest test;
-			test.executeTest(filter, numAddr);
+			AliasManagerFunctionalTest test(&chkList);
+			test.executeTest(numAddr);
 		}
-		saveCheckList(filter);
-		delete filter;
+		chkList.save();
 	}
 	catch (...)
 	{

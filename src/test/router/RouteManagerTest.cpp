@@ -24,7 +24,7 @@ class RouteManagerTest
 public:
 	RouteManagerTest(SmeManager* smeMan, RouteManager* routeMan,
 		RouteRegistry* routeReg, SmeRegistry* smeReg)
-		: tcSme(smeMan, smeReg), tcRoute(routeMan, routeReg) {}
+		: tcSme(smeMan, smeReg, NULL), tcRoute(routeMan, routeReg, NULL) {}
 
 	void addRouteNotMatch(const Address& origAddr, const Address& destAddr,
 		int smeNum, bool needProxy, int routeNum);
@@ -38,11 +38,11 @@ void RouteManagerTest::addRouteNotMatch(const Address& origAddr,
 {
 	SmeInfo sme;
 	SmeProxy* proxy = NULL;
-	Address smeAlias;
-	cout << *tcSme.addCorrectSme(&smeAlias, &sme, smeNum) << endl;
+	Address smeAddr;
+	tcSme.addCorrectSme(&smeAddr, &sme, smeNum);
 	if (needProxy)
 	{
-		cout << *tcSme.registerCorrectSmeProxy(sme.systemId, &proxy) << endl;
+		tcSme.registerCorrectSmeProxy(sme.systemId, &proxy);
 	}
 	RouteInfo route;
 	route.smeSystemId = sme.systemId;
@@ -50,11 +50,11 @@ void RouteManagerTest::addRouteNotMatch(const Address& origAddr,
 	route.dest = destAddr;
 	if (routeNum < 1000)
 	{
-		cout << *tcRoute.addCorrectRouteNotMatch(&route, proxy, routeNum) << endl;
+		tcRoute.addCorrectRouteNotMatch(&route, proxy, routeNum);
 	}
 	else
 	{
-		cout << *tcRoute.addCorrectRouteNotMatch2(&route, proxy, routeNum) << endl;
+		tcRoute.addCorrectRouteNotMatch2(&route, proxy, routeNum);
 	}
 }
 
@@ -63,17 +63,17 @@ void RouteManagerTest::addRouteMatch(const Address& origAddr, const Address& des
 {
 	SmeInfo sme;
 	SmeProxy* proxy = NULL;
-	Address smeAlias;
-	cout << *tcSme.addCorrectSme(&smeAlias, &sme, smeNum) << endl;
+	Address smeAddr;
+	tcSme.addCorrectSme(&smeAddr, &sme, smeNum);
 	if (needProxy)
 	{
-		cout << *tcSme.registerCorrectSmeProxy(sme.systemId, &proxy) << endl;
+		tcSme.registerCorrectSmeProxy(sme.systemId, &proxy);
 	}
 	RouteInfo route;
 	route.smeSystemId = sme.systemId;
 	route.source = origAddr;
 	route.dest = destAddr;
-	cout << *tcRoute.addCorrectRouteMatch(&route, proxy, routeNum) << endl;
+	tcRoute.addCorrectRouteMatch(&route, proxy, routeNum);
 }
 
 void RouteManagerTest::execute()
@@ -90,14 +90,14 @@ void RouteManagerTest::execute()
 	addRouteMatch(origAddr, destAddr, 1, true, 1);
 	addRouteMatch(origAddr, destAddr, 1, true, 7);
 	tcRoute.commit();
-	cout << *tcRoute.lookupRoute(origAddr, destAddr) << endl;
+	tcRoute.lookupRoute(origAddr, destAddr);
 /*
-	cout << *tcRoute.addCorrectRouteMatch(sme.systemId, &routeData, 1) << endl;
-	cout << *tcRoute.addCorrectRouteNotMatch(sme.systemId, &routeData, 1) << endl;
-	cout << *tcRoute.addCorrectRouteNotMatch2(sme.systemId, &routeData, 1) << endl;
-	cout << *tcRoute.addIncorrectRoute(sme.systemId, routeInfo, 1) << endl;
-	cout << *tcRoute.lookupRoute(routeReg, origAddr, destAddr) << endl;
-	cout << *tcRoute.iterateRoutes(routeReg) << endl;
+	tcRoute.addCorrectRouteMatch(sme.systemId, &routeData, 1);
+	tcRoute.addCorrectRouteNotMatch(sme.systemId, &routeData, 1);
+	tcRoute.addCorrectRouteNotMatch2(sme.systemId, &routeData, 1);
+	tcRoute.addIncorrectRoute(sme.systemId, routeInfo, 1);
+	tcRoute.lookupRoute(routeReg, origAddr, destAddr);
+	tcRoute.iterateRoutes(routeReg);
 */
 
 }

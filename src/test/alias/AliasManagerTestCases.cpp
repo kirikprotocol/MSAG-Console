@@ -10,15 +10,18 @@ using smsc::sms::AddressValue;
 using smsc::util::Logger;
 using smsc::test::sms::SmsUtil;
 using smsc::test::sms::operator<<;
+using smsc::test::sms::operator!=;
 using smsc::test::core::operator<<;
 using namespace smsc::sms; //constants
 using namespace smsc::test::util;
 
-AliasManagerTestCases::AliasManagerTestCases(AliasManager* manager,
-	AliasRegistry* reg) : aliasMan(manager), aliasReg(reg)
+AliasManagerTestCases::AliasManagerTestCases(AliasManager* _aliasMan,
+	AliasRegistry* _aliasReg, CheckList* _chkList)
+	: aliasMan(_aliasMan), aliasReg(_aliasReg), chkList(_chkList)
 {
 	//__require__(aliasMan);
 	//__require__(aliasReg);
+	//__require__(chkList);
 }
 
 Category& AliasManagerTestCases::getLog()
@@ -119,11 +122,12 @@ void AliasManagerTestCases::addAlias(const char* tc, int num, const AliasInfo* a
 	}
 }
 
-TCResult* AliasManagerTestCases::addCorrectAliasMatch(AliasInfo* alias, int num)
+void AliasManagerTestCases::addCorrectAliasMatch(AliasInfo* alias, int num)
 {
 	__require__(alias);
 	TCSelector s(num, 3);
-	TCResult* res = new TCResult(TC_ADD_CORRECT_ALIAS_MATCH, s.getChoice());
+	__decl_tc__;
+	__tc__("addCorrectAlias.allMatchNoSubstSymbols"); //по умолчанию, там где не выполняются проверки
 	try
 	{
 		uint8_t addrLen = alias->addr.getLenght();
@@ -133,20 +137,24 @@ TCResult* AliasManagerTestCases::addCorrectAliasMatch(AliasInfo* alias, int num)
 		switch(s.value())
 		{
 			case 1: //адрес и алиас без знаков подстановки
+				//__tc__("addCorrectAlias.allMatchNoSubstSymbols");
 				break;
 			case 2: //адрес и алиас с одним или несколькими '?' в конце
 				if (minLen > 1)
 				{
+					__tc__("addCorrectAlias.allMatchWithQuestionMarks");
 					setupRandomAliasMatchWithQuestionMarks(alias, rand1(minLen - 1));
 				}
 				break;
 			case 3: //адрес или алиас целиком из '?'
+				__tc__("addCorrectAlias.allMatchEntirelyQuestionMarks");
 				setupRandomAliasMatchWithQuestionMarks(alias, minLen);
 				break;
 			/*
 			case 4: //адрес со '*' в конце, алиас со '*' в конце
 				if (addrLen > 1 && aliasLen > 1)
 				{
+					__tc__("...");
 					int adLen = rand1(addrLen - 1);
 					int alLen = rand1(aliasLen - 1);
 					setupRandomAliasMatchWithAsterisk(alias, adLen, alLen);
@@ -155,6 +163,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasMatch(AliasInfo* alias, int num)
 			case 5: //адрес со '*' в конце, алиас = '*'
 				if (addrLen > 1)
 				{
+					__tc__("...");
 					int adLen = rand1(addrLen - 1);
 					//int alLen = aliasLen;
 					setupRandomAliasMatchWithAsterisk(alias, adLen, aliasLen);
@@ -163,6 +172,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasMatch(AliasInfo* alias, int num)
 			case 6: //адрес со '*' в конце, алиас равен оригиналу + '*' в конце
 				if (addrLen > 1 && aliasLen < MAX_ADDRESS_VALUE_LENGTH)
 				{
+					__tc__("...");
 					int adLen = rand1(addrLen - 1);
 					//int alLen = 0;
 					setupRandomAliasMatchWithAsterisk(alias, adLen, 0);
@@ -171,6 +181,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasMatch(AliasInfo* alias, int num)
 			case 7: //адрес = '*', алиас со '*' в конце
 				if (aliasLen > 1)
 				{
+					__tc__("...");
 					//int adLen = addrLen;
 					int alLen = rand1(aliasLen - 1);
 					setupRandomAliasMatchWithAsterisk(alias, addrLen, alLen);
@@ -178,6 +189,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasMatch(AliasInfo* alias, int num)
 				break;
 			case 8: //адрес = '*', алиас = '*'
 				{
+					__tc__("...");
 					//int adLen = addrLen;
 					//int alLen = aliasLen;
 					setupRandomAliasMatchWithAsterisk(alias, addrLen, aliasLen);
@@ -186,6 +198,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasMatch(AliasInfo* alias, int num)
 			case 9: //адрес равен оригиналу + '*' в конце, алиас со '*' в конце
 				if (addrLen < MAX_ADDRESS_VALUE_LENGTH && aliasLen > 1)
 				{
+					__tc__("...");
 					//int adLen = 0;
 					int alLen = rand1(aliasLen - 1);
 					setupRandomAliasMatchWithAsterisk(alias, 0, alLen);
@@ -194,6 +207,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasMatch(AliasInfo* alias, int num)
 			case 10: //адрес равен оригиналу + '*' в конце, алиас равен оригиналу + '*' в конце
 				if (addrLen < MAX_ADDRESS_VALUE_LENGTH && aliasLen < MAX_ADDRESS_VALUE_LENGTH)
 				{
+					__tc__("...");
 					//int adLen = 0;
 					//int alLen = 0;
 					setupRandomAliasMatchWithAsterisk(alias, 0, 0);
@@ -205,22 +219,22 @@ TCResult* AliasManagerTestCases::addCorrectAliasMatch(AliasInfo* alias, int num)
 		}
 		setupAliasHide(alias);
 		addAlias("addCorrectAliasMatch", s.value(), alias);
+		__tc_ok__;
 	}
 	catch(...)
 	{
+		__tc_fail__(100);
 		error();
-		res->addFailure(100);
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAddress(
+void AliasManagerTestCases::addCorrectAliasNotMatchAddress(
 	AliasInfo* alias, int num)
 {
 	__require__(alias);
 	TCSelector s(num, 5);
-	TCResult* res = new TCResult(TC_ADD_CORRECT_ALIAS_NOT_MATCH_ADDRESS, s.getChoice());
+	__decl_tc__;
+	__tc__("addCorrectAlias.allMatchNoSubstSymbols"); //по умолчанию, там где не выполняются проверки
 	try
 	{
 		AddressValue addrVal, aliasVal, tmp;
@@ -231,6 +245,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAddress(
 		{
 			case 1: //в адресе отличается typeOfNumber
 				{
+					__tc__("addCorrectAlias.addrNotMatch.diffType");
 					int len = rand0(minLen);
 					setupRandomAliasMatchWithQuestionMarks(alias, len);
 					alias->addr.setTypeOfNumber(alias->addr.getTypeOfNumber() + 1);
@@ -238,6 +253,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAddress(
 				break;
 			case 2: //в адресе отличается numberingPlan
 				{
+					__tc__("addCorrectAlias.addrNotMatch.diffPlan");
 					int len = rand0(minLen);
 					setupRandomAliasMatchWithQuestionMarks(alias, len);
 					alias->addr.setNumberingPlan(alias->addr.getNumberingPlan() + 1);
@@ -246,6 +262,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAddress(
 			case 3: //в адресе отличается addressValue
 				if (minLen > 1)
 				{
+					__tc__("addCorrectAlias.addrNotMatch.diffValue");
 					int len = rand0(minLen - 1);
 					setupRandomAliasMatchWithQuestionMarks(alias, len);
 					alias->addr.getValue(tmp);
@@ -256,6 +273,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAddress(
 			case 4: //в адресе '?' меньше, чем нужно
 				if (addrLen > 1)
 				{
+					__tc__("addCorrectAlias.addrNotMatch.diffValueLength");
 					int len1 = rand1(min((int) aliasLen, addrLen - 1));
 					int len2 = rand1(addrLen - len1);
 					__require__(len1 > 0 && len2 > 0);
@@ -274,6 +292,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAddress(
 			case 5: //в адресе '?' больше, чем нужно
 				if (addrLen < MAX_ADDRESS_VALUE_LENGTH && aliasLen > 1)
 				{
+					__tc__("addCorrectAlias.addrNotMatch.diffValueLength");
 					int len = min(MAX_ADDRESS_VALUE_LENGTH - addrLen, aliasLen - 1);
 					int len2 = rand1(len);
 					int len1 = rand1(min(aliasLen - len2, (int) addrLen));
@@ -296,22 +315,22 @@ TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAddress(
 		}
 		setupAliasHide(alias);
 		addAlias("addCorrectAliasNotMatchAddress", s.value(), alias);
+		__tc_ok__;
 	}
 	catch(...)
 	{
+		__tc_fail__(100);
 		error();
-		res->addFailure(100);
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAlias(
+void AliasManagerTestCases::addCorrectAliasNotMatchAlias(
 	AliasInfo* alias, int num)
 {
 	__require__(alias);
 	TCSelector s(num, 5);
-	TCResult* res = new TCResult(TC_ADD_CORRECT_ALIAS_NOT_MATCH_ALIAS, s.getChoice());
+	__decl_tc__;
+	__tc__("addCorrectAlias.allMatchNoSubstSymbols"); //по умолчанию, там где не выполняются проверки
 	try
 	{
 		AddressValue addrVal, aliasVal, tmp;
@@ -322,6 +341,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAlias(
 		{
 			case 1: //в алиасе отличается typeOfNumber
 				{
+					__tc__("addCorrectAlias.aliasNotMatch.diffType");
 					int len = rand0(minLen);
 					setupRandomAliasMatchWithQuestionMarks(alias, len);
 					alias->alias.setTypeOfNumber(alias->alias.getTypeOfNumber() + 1);
@@ -329,6 +349,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAlias(
 				break;
 			case 2: //в алиасе отличается numberingPlan
 				{
+					__tc__("addCorrectAlias.aliasNotMatch.diffPlan");
 					int len = rand0(minLen);
 					setupRandomAliasMatchWithQuestionMarks(alias, len);
 					alias->alias.setNumberingPlan(alias->alias.getNumberingPlan() + 1);
@@ -337,6 +358,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAlias(
 			case 3: //в алиасе отличается addressValue
 				if (minLen > 1)
 				{
+					__tc__("addCorrectAlias.aliasNotMatch.diffValue");
 					int len = rand0(minLen - 1);
 					setupRandomAliasMatchWithQuestionMarks(alias, len);
 					alias->alias.getValue(tmp);
@@ -347,6 +369,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAlias(
 			case 4: //в алиасе '?' меньше, чем нужно
 				if (aliasLen > 1)
 				{
+					__tc__("addCorrectAlias.aliasNotMatch.diffValueLength");
 					int len1 = rand1(min((int) addrLen, aliasLen - 1));
 					int len2 = rand1(aliasLen - len1);
 					__require__(len1 > 0 && len2 > 0);
@@ -365,6 +388,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAlias(
 			case 5: //в алиасе '?' больше, чем нужно
 				if (aliasLen < MAX_ADDRESS_VALUE_LENGTH && addrLen > 1)
 				{
+					__tc__("addCorrectAlias.aliasNotMatch.diffValueLength");
 					int len = min(MAX_ADDRESS_VALUE_LENGTH - aliasLen, addrLen - 1);
 					int len2 = rand1(len);
 					int len1 = rand1(min(addrLen - len2, (int) aliasLen));
@@ -387,22 +411,21 @@ TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAlias(
 		}
 		setupAliasHide(alias);
 		addAlias("addCorrectAliasNotMatchAlias", s.value(), alias);
+		__tc_ok__;
 	}
 	catch(...)
 	{
+		__tc_fail__(100);
 		error();
-		res->addFailure(100);
 	}
-	debug(res);
-	return res;
 }
 
 /*
-TCResult* AliasManagerTestCases::addCorrectAliasException(
+void AliasManagerTestCases::addCorrectAliasException(
 	AliasInfo* alias, int num)
 {
 	TCSelector s(num, 4);
-	TCResult* res = new TCResult(TC_ADD_CORRECT_ALIAS_EXCEPTION, s.getChoice());
+	void res = new TCResult(TC_ADD_CORRECT_ALIAS_EXCEPTION, s.getChoice());
 	getLog().debugStream() << "[" << thr_self() <<
 		"]\taddCorrectAliasException(" << s.value() << ")";
 	try
@@ -491,19 +514,20 @@ TCResult* AliasManagerTestCases::addCorrectAliasException(
 	return res;
 }
 			
-TCResult* AliasManagerTestCases::addIncorrectAlias()
+void AliasManagerTestCases::addIncorrectAlias()
 {
 	//При добавлении дублированных алиасов (по addr или alias)
 	//выборка будет происходить случайным образом
-	TCResult* res = new TCResult(TC_ADD_INCORRECT_ALIAS);
+	void res = new TCResult(TC_ADD_INCORRECT_ALIAS);
 	debug(res);
 	return res;
 }
 */
 
-TCResult* AliasManagerTestCases::deleteAliases()
+void AliasManagerTestCases::deleteAliases()
 {
-	TCResult* res = new TCResult(TC_DELETE_ALIASES);
+	__decl_tc__;
+	__tc__("deleteAliases");
 	try
 	{
 		AliasInfo alias;
@@ -515,14 +539,13 @@ TCResult* AliasManagerTestCases::deleteAliases()
 		{
 			aliasReg->clear();
 		}
+		__tc_ok__;
 	}
 	catch(...)
 	{
+		__tc_fail__(100);
 		error();
-		res->addFailure(100);
 	}
-	debug(res);
-	return res;
 }
 
 void AliasManagerTestCases::printFindResult(const char* name,
@@ -563,10 +586,11 @@ void AliasManagerTestCases::printFindResult(const char* tc,
 	getLog().debug("[%d]\t%s", thr_self(), os.str().c_str());
 }
 
-TCResult* AliasManagerTestCases::findAliasByAddress(const Address& addr)
+void AliasManagerTestCases::findAliasByAddress(const Address& addr)
 {
 	__require__(aliasReg && aliasMan);
-	TCResult* res = new TCResult(TC_FIND_ALIAS_BY_ADDRESS);
+	__decl_tc__;
+	__tc__("findAliasByAddress");
 	const AliasInfo* aliasInfo;
 	auto_ptr<const Address> alias2 = aliasReg->findAliasByAddress(addr, &aliasInfo);
 	printFindResult("AliasRegistry::findAliasByAddress()", addr, alias2.get(), aliasInfo);
@@ -577,33 +601,34 @@ TCResult* AliasManagerTestCases::findAliasByAddress(const Address& addr)
 		printFindResult("AliasManager::AddressToAlias()", addr, alias, found);
 		if (!found && aliasInfo)
 		{
-			res->addFailure(101);
+			__tc_fail__(101);
 		}
 		else if (found && !aliasInfo)
 		{
-			res->addFailure(103);
+			__tc_fail__(103);
 		}
-		else if (found && aliasInfo && !SmsUtil::compareAddresses(alias, *alias2))
+		else if (found && aliasInfo && alias != *alias2)
 		{
-			res->addFailure(104);
+			__tc_fail__(104);
 		}
+		__tc_ok_cond__;
 	}
 	catch(...)
 	{
 		if (alias2.get())
 		{
+			__tc_fail__(100);
 			error();
-			res->addFailure(100);
 		}
+		__tc_ok_cond__;
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* AliasManagerTestCases::findAddressByAlias(const Address& alias)
+void AliasManagerTestCases::findAddressByAlias(const Address& alias)
 {
 	__require__(aliasReg && aliasMan);
-	TCResult* res = new TCResult(TC_FIND_ADDRESS_BY_ALIAS);
+	__decl_tc__;
+	__tc__("findAddressByAlias");
 	const AliasInfo* aliasInfo;
 	auto_ptr<const Address> addr2 = aliasReg->findAddressByAlias(alias, &aliasInfo);
 	printFindResult("AliasRegistry::findAddressByAlias()", alias, addr2.get(), aliasInfo);
@@ -614,33 +639,34 @@ TCResult* AliasManagerTestCases::findAddressByAlias(const Address& alias)
 		printFindResult("AliasManager::AliasToAddress()", alias, addr, found);
 		if (!found && aliasInfo)
 		{
-			res->addFailure(101);
+			__tc_fail__(101);
 		}
 		else if (found && !aliasInfo)
 		{
-			res->addFailure(102);
+			__tc_fail__(102);
 		}
-		else if (found && aliasInfo && !SmsUtil::compareAddresses(addr, *addr2))
+		else if (found && aliasInfo && addr != *addr2)
 		{
-			res->addFailure(103);
+			__tc_fail__(103);
 		}
+		__tc_ok_cond__;
 	}
 	catch(...)
 	{
 		if (addr2.get())
 		{
+			__tc_fail__(100);
 			error();
-			res->addFailure(100);
 		}
+		__tc_ok_cond__;
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* AliasManagerTestCases::checkInverseTransformation(const Address& addr)
+void AliasManagerTestCases::checkInverseTransformation(const Address& addr)
 {
 	__require__(aliasReg && aliasMan);
-	TCResult* res = new TCResult(TC_CHECK_INVERSE_TRANSFORMATION);
+	__decl_tc__;
+	__tc__("checkInverseTransformation");
 	try
 	{
 		//должно выполняться правило: d(a(A)) = A
@@ -651,11 +677,11 @@ TCResult* AliasManagerTestCases::checkInverseTransformation(const Address& addr)
 			__trace__("AliasManagerTestCases::checkInverseTransformation(): addr->alias->addr");
 			if (!aliasMan->AliasToAddress(alias2, addr2))
 			{
-				res->addFailure(101);
+				__tc_fail__(101);
 			}
-			else if (!SmsUtil::compareAddresses(addr, addr2))
+			else if (addr != addr2)
 			{
-				res->addFailure(102);
+				__tc_fail__(102);
 			}
 		}
 		/*
@@ -665,30 +691,28 @@ TCResult* AliasManagerTestCases::checkInverseTransformation(const Address& addr)
 			__trace__("AliasManagerTestCases::checkInverseTransformation(): alias->addr->alias");
 			if (!aliasMan->AddressToAlias(addr2, alias2))
 			{
-				res->addFailure(103);
+				__tc_fail__(103);
 			}
 			else if (!SmsUtil::compareAddresses(alias, alias2))
 			{
-				res->addFailure(104);
+				__tc_fail__(104);
 			}
 		}
 		*/
+		__tc_ok_cond__;
 	}
 	catch(...)
 	{
+		__tc_fail__(100);
 		error();
-		res->addFailure(100);
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* AliasManagerTestCases::iterateAliases()
+void AliasManagerTestCases::iterateAliases()
 {
-	TCResult* res = new TCResult(TC_ITERATE_ALIASES);
-	res->addFailure(100);
-	debug(res);
-	return res;
+	__decl_tc__;
+	__tc__("iterateAliases");
+	__tc_fail__(100);
 }
 
 }

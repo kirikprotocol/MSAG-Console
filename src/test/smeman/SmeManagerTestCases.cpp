@@ -369,14 +369,8 @@ void SmeManagerTestCases::getExistentSme(const SmeInfo& sme, SmeProxy* proxy)
 		SmeInfo _sme = smeMan->getSmeInfo(index);
 		proxy = smeMan->getSmeProxy(index);
 		vector<int> tmp = compareSmeInfo(sme, _sme);
-		if (tmp.size())
-		{
-			__tc_fail2__(tmp);
-		}
-		else
-		{
-			__tc_ok__;
-		}
+		__tc_fail2__(tmp);
+		__tc_ok_cond__;
 	}
 	catch(...)
 	{
@@ -453,12 +447,10 @@ void SmeManagerTestCases::iterateSme()
 			}
 		}
 		delete iter;
-		bool flag = true;
 		//итератор пропустил некоторые sme
 		if (numSme != smeReg->size())
 		{
 			__tc_fail__(102);
-			flag = false;
 		}
 		//перечислить отличия в sme
 		for (MismatchMap::iterator it = mismatch.begin(); it != mismatch.end(); it++)
@@ -466,13 +458,9 @@ void SmeManagerTestCases::iterateSme()
 			if (it->second)
 			{
 				__tc_fail__(it->first);
-				flag = false;
 			}
 		}
-		if (flag)
-		{
-			__tc_ok__;
-		}
+		__tc_ok_cond__;
 	}
 	catch(...)
 	{

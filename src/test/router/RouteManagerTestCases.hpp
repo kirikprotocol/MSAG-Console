@@ -27,14 +27,8 @@ using smsc::smeman::SmeProxy;
 using smsc::test::core::RouteRegistry;
 using smsc::test::core::RouteHolder;
 using smsc::test::util::BaseTestCases;
-using smsc::test::util::TCResult;
-
-//implemented
-const char* const TC_ADD_CORRECT_ROUTE_MATCH = "addCorrectRouteMatch";
-const char* const TC_ADD_CORRECT_ROUTE_NOT_MATCH = "addCorrectRouteNotMatch";
-const char* const TC_ADD_INCORRECT_ROUTE = "addIncorrectRoute";
-const char* const TC_LOOKUP_ROUTE = "lookupRoute";
-const char* const TC_ITERATE_ROUTES = "iterateRoutes";
+using smsc::test::util::CheckList;
+using smsc::test::util::TestCase;
 
 /**
  * Этот класс содержит test cases необходимые для тестирования подсистемы
@@ -45,7 +39,8 @@ const char* const TC_ITERATE_ROUTES = "iterateRoutes";
 class RouteManagerTestCases : BaseTestCases
 {
 public:
-	RouteManagerTestCases(RouteManager* routeMan, RouteRegistry* routeReg);
+	RouteManagerTestCases(RouteManager* routeMan, RouteRegistry* routeReg,
+		CheckList* chkList);
 
 	virtual ~RouteManagerTestCases() {}
 
@@ -54,33 +49,33 @@ public:
 	/**
 	 * Добавление корректного рабочего маршрута.
 	 */
-	TCResult* addCorrectRouteMatch(RouteInfo* route, SmeProxy* proxy, int num);
+	void addCorrectRouteMatch(RouteInfo* route, SmeProxy* proxy, int num);
 
 	/**
 	 * Добавление корректного нерабочего маршрута.
 	 */
-	TCResult* addCorrectRouteNotMatch(RouteInfo* route, SmeProxy* proxy, int num);
+	void addCorrectRouteNotMatch(RouteInfo* route, SmeProxy* proxy, int num);
 
 	/**
 	 * Добавление корректного маршрута с неправильными (непроверяемыми)
 	 * значениями.
 	 */
-	TCResult* addCorrectRouteNotMatch2(RouteInfo* route, SmeProxy* proxy, int num);
+	void addCorrectRouteNotMatch2(RouteInfo* route, SmeProxy* proxy, int num);
 
 	/**
 	 * Добавление некорректного маршрута.
 	 */
-	TCResult* addIncorrectRoute(const RouteInfo& existingRoute, int num);
+	void addIncorrectRoute(const RouteInfo& existingRoute, int num);
 
 	/**
 	 * Поиск маршрута.
 	 */
-	TCResult* lookupRoute(const Address& origAddr, const Address& destAddr);
+	void lookupRoute(const Address& origAddr, const Address& destAddr);
 
 	/*
 	 * Итерирование по списку маршрутов.
 	 */
-	//TCResult* iterateRoutes();
+	//void iterateRoutes();
 
 protected:
 	virtual Category& getLog();
@@ -88,10 +83,12 @@ protected:
 private:
 	RouteManager* routeMan;
 	RouteRegistry* routeReg;
+	CheckList* chkList;
+
 	void debugRoute(const char* tc, const RouteInfo* route);
 	void addRoute(const char* tc, int num, const RouteInfo* route, SmeProxy* proxy);
-	void setupRandomAddressMatch(Address& addr, int num);
-	void setupRandomAddressNotMatch(Address& addr, int num);
+	TestCase* setupRandomAddressMatch(Address& addr, int num);
+	TestCase* setupRandomAddressNotMatch(Address& addr, int num);
 	void printLookupResult(const Address& origAddr, const Address& destAddr,
 		const RouteHolder* routeHolder, bool found, const SmeProxy* proxy);
 };

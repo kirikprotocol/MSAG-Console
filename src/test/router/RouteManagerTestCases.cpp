@@ -25,12 +25,28 @@ using smsc::util::Logger;
 using smsc::sms::AddressValue;
 using smsc::test::core::RouteUtil;
 
+#define __decl_tc12__ \
+	TestCase* tc1 = NULL; \
+	TestCase* tc2 = NULL; \
+	bool isOk = true;
+
+#define __tc12_ok__ \
+	TestCase* tc; \
+	tc = tc1; __tc_ok__; \
+	tc = tc2; __tc_ok__;
+
+#define __tc12_fail__(errCode) \
+	TestCase* tc; \
+	tc = tc1; __tc_fail__(errCode); \
+	tc = tc2; __tc_fail__(errCode);
+
 RouteManagerTestCases::RouteManagerTestCases(RouteManager* _routeMan,
-	RouteRegistry* _routeReg)
-	: routeMan(_routeMan), routeReg(_routeReg)
+	RouteRegistry* _routeReg, CheckList* _chkList)
+	: routeMan(_routeMan), routeReg(_routeReg), chkList(_chkList)
 {
 	//__require__(routeMan);
 	//__require__(routeReg);
+	//__require__(chkList);
 }
 
 Category& RouteManagerTestCases::getLog()
@@ -52,20 +68,24 @@ void RouteManagerTestCases::commit()
 	routeMan->commit();
 }
 
-void RouteManagerTestCases::setupRandomAddressMatch(Address& addr, int num)
+TestCase* RouteManagerTestCases::setupRandomAddressMatch(Address& addr, int num)
 {
+	__decl_tc__;
 	AddressValue addrVal;
 	uint8_t addrLen = addr.getValue(addrVal);
 	int len = rand1(addrLen);
 	switch(num)
 	{
 		case 1: //адрес без знаков подстановки (совпадает)
+			__tc__("addCorrectRoute.matchNoSubstSymbols");
 			break;
 		case 2: //адрес с одним или всеми '?' в конце
+			__tc__("addCorrectRoute.matchWithQuestionMarks");
 			memset(addrVal + addrLen - len, '?', len);
 			addr.setValue(addrLen, addrVal);
 			break;
 		case 3: //адрес целиком из '?'
+			__tc__("addCorrectRoute.matchEntirelyQuestionMarks");
 			memset(addrVal, '?', addrLen);
 			addr.setValue(addrLen, addrVal);
 			break;
@@ -87,12 +107,15 @@ void RouteManagerTestCases::setupRandomAddressMatch(Address& addr, int num)
 			break;
 		*/
 		default:
-			throw "";
+			__unreachable__("Invalid num");
 	}
+	return tc;
 }
 
-void RouteManagerTestCases::setupRandomAddressNotMatch(Address& addr, int num)
+TestCase* RouteManagerTestCases::setupRandomAddressNotMatch(Address& addr, int num)
 {
+	__decl_tc__;
+	__tc__("addCorrectRoute.matchNoSubstSymbols");
 	AddressValue addrVal;
 	uint8_t addrLen = addr.getValue(addrVal);
 	int len = rand1(addrLen);
@@ -101,6 +124,7 @@ void RouteManagerTestCases::setupRandomAddressNotMatch(Address& addr, int num)
 		case 1: //адрес с лишним '?'
 			if (addrLen < MAX_ADDRESS_VALUE_LENGTH)
 			{
+				__tc__("addCorrectRoute.notMatchValueLength");
 				memset(addrVal + addrLen - len, '?', len + 1);
 				addr.setValue(addrLen + 1, addrVal);
 				break;
@@ -109,24 +133,29 @@ void RouteManagerTestCases::setupRandomAddressNotMatch(Address& addr, int num)
 		case 2: //адрес с недостающим '?'
 			if (addrLen > 1)
 			{
+				__tc__("addCorrectRoute.notMatchValueLength");
 				memset(addrVal + addrLen - len, '?', len - 1);
 				addr.setValue(addrLen - 1, addrVal);
 				break;
 			}
 			//break;
 		case 3: //отличающийся адрес
+			__tc__("addCorrectRoute.notMatchValue");
 			addrVal[len - 1] = '@';
 			addr.setValue(addrLen, addrVal);
 			break;
 		case 4: //адрес с несовпадающим typeOfNumber
+			__tc__("addCorrectRoute.notMatchType");
 			addr.setTypeOfNumber(addr.getTypeOfNumber() + 1);
 			break;
 		case 5: //адрес с несовпадающим numberingPlan
+			__tc__("addCorrectRoute.notMatchPlan");
 			addr.setNumberingPlan(addr.getNumberingPlan() + 1);
 			break;
 		default:
-			throw "";
+			__unreachable__("Invalid num");
 	}
+	return tc;
 }
 
 void RouteManagerTestCases::addRoute(const char* tc, int num,
@@ -150,88 +179,86 @@ void RouteManagerTestCases::addRoute(const char* tc, int num,
 	}
 }
 
-TCResult* RouteManagerTestCases::addCorrectRouteMatch(RouteInfo* route,
+void RouteManagerTestCases::addCorrectRouteMatch(RouteInfo* route,
 	SmeProxy* proxy, int num)
 {
 	int numMatch1 = 3; int numMatch2 = 3;
 	TCSelector s(num, numMatch1 * numMatch2);
-	TCResult* res = new TCResult(TC_ADD_CORRECT_ROUTE_MATCH, s.getChoice());
+	__decl_tc12__;
 	for (; s.check(); s++)
 	{
 		try
 		{
 			RouteUtil::setupRandomCorrectRouteInfo(route);
-			setupRandomAddressMatch(route->source, s.value1(numMatch1));
-			setupRandomAddressMatch(route->dest, s.value2(numMatch1));
-			char tc[64];
-			sprintf(tc, "addCorrectRouteMatch(%d,%d)",
+			tc1 = setupRandomAddressMatch(route->source, s.value1(numMatch1));
+			tc2 = setupRandomAddressMatch(route->dest, s.value2(numMatch1));
+			char tcId[64];
+			sprintf(tcId, "addCorrectRouteMatch(%d,%d)",
 				s.value1(numMatch1), s.value2(numMatch1));
-			addRoute(tc, s.value(), route, proxy);
+			addRoute(tcId, s.value(), route, proxy);
+			__tc12_ok__;
 		}
 		catch(...)
 		{
+			__tc12_fail__(1000);
 			error();
-			res->addFailure(1000);
 		}
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* RouteManagerTestCases::addCorrectRouteNotMatch(RouteInfo* route,
+void RouteManagerTestCases::addCorrectRouteNotMatch(RouteInfo* route,
 	SmeProxy* proxy, int num)
 {
 	int numMatch = 3; int numNotMatch = 5; int numType = 2;
 	TCSelector s(num, numMatch * numNotMatch * numType);
-	TCResult* res = new TCResult(TC_ADD_CORRECT_ROUTE_NOT_MATCH, s.getChoice());
+	__decl_tc12__;
 	for (; s.check(); s++)
 	{
 		try
 		{
-			char tc[64];
+			char tcId[64];
 			RouteUtil::setupRandomCorrectRouteInfo(route);
 			switch (s.value3(numMatch, numNotMatch))
 			{
 				case 1: //отличается origAddr
-					setupRandomAddressNotMatch(route->source,
+					tc1 = setupRandomAddressNotMatch(route->source,
 						s.value1(numNotMatch, numMatch));
-					setupRandomAddressMatch(route->dest,
+					tc2 = setupRandomAddressMatch(route->dest,
 						s.value2(numNotMatch, numMatch));
-					sprintf(tc, "addCorrectRouteNotMatch(%d,%d,%d)",
+					sprintf(tcId, "addCorrectRouteNotMatch(%d,%d,%d)",
 						s.value1(numNotMatch, numMatch),
 						s.value2(numNotMatch, numMatch),
 						s.value3(numMatch, numNotMatch));
 					break;
 				case 2: //отличается destAddr
-					setupRandomAddressMatch(route->source,
+					tc1 = setupRandomAddressMatch(route->source,
 						s.value1(numMatch, numNotMatch));
-					setupRandomAddressNotMatch(route->dest,
+					tc2 = setupRandomAddressNotMatch(route->dest,
 						s.value2(numMatch, numNotMatch));
-					sprintf(tc, "addCorrectRouteNotMatch(%d,%d,%d)",
+					sprintf(tcId, "addCorrectRouteNotMatch(%d,%d,%d)",
 						s.value1(numMatch, numNotMatch),
 						s.value2(numMatch, numNotMatch),
 						s.value3(numMatch, numNotMatch));
 					break;
 				default:
-					throw s;
+					__unreachable__("Invalid num");
 			}
-			addRoute(tc, s.value(), route, proxy);
+			addRoute(tcId, s.value(), route, proxy);
+			__tc12_ok__;
 		}
 		catch(...)
 		{
+			__tc12_fail__(1000);
 			error();
-			res->addFailure(1000);
 		}
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* RouteManagerTestCases::addCorrectRouteNotMatch2(RouteInfo* route,
+void RouteManagerTestCases::addCorrectRouteNotMatch2(RouteInfo* route,
 	SmeProxy* proxy, int num)
 {
 	TCSelector s(num, 4, 1000);
-	TCResult* res = new TCResult(TC_ADD_CORRECT_ROUTE_NOT_MATCH, s.getChoice());
+	__decl_tc__;
 	for (; s.check(); s++)
 	{
 		try
@@ -242,39 +269,42 @@ TCResult* RouteManagerTestCases::addCorrectRouteNotMatch2(RouteInfo* route,
 			switch(s.value())
 			{
 				case 1001: //origAddr.typeOfNumber вне диапазона
+					__tc__("addIncorrectRoute.invalidType");
 					route->source.setTypeOfNumber(rand2(0x7, 0xff));
 					break;
 				case 1002: //origAddr.numberingPlan вне диапазона
+					__tc__("addIncorrectRoute.invalidPlan");
 					route->source.setNumberingPlan(rand2(0x13, 0xff));
 					break;
 				case 1003: //destAddr.typeOfNumber вне диапазона
+					__tc__("addIncorrectRoute.invalidType");
 					route->dest.setTypeOfNumber(rand2(0x7, 0xff));
 					break;
 				case 1004: //destAddr.numberingPlan вне диапазона
+					__tc__("addIncorrectRoute.invalidPlan");
 					route->dest.setNumberingPlan(rand2(0x13, 0xff));
 					break;
 				default:
 					throw s;
 			}
-			char tc[64];
-			sprintf(tc, "addCorrectRouteNotMatch2(%d)", s.value());
-			addRoute(tc, s.value(), route, proxy);
+			char tcId[64];
+			sprintf(tcId, "addCorrectRouteNotMatch2(%d)", s.value());
+			addRoute(tcId, s.value(), route, proxy);
+			__tc_ok__;
 		}
 		catch(...)
 		{
+			__tc_fail__(s.value());
 			error();
-			res->addFailure(s.value());
 		}
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* RouteManagerTestCases::addIncorrectRoute(
+void RouteManagerTestCases::addIncorrectRoute(
 	const RouteInfo& existingRoute, int num)
 {
 	TCSelector s(num, 1);
-	TCResult* res = new TCResult(TC_ADD_INCORRECT_ROUTE, s.getChoice());
+	__decl_tc__;
 	for (; s.check(); s++)
 	{
 		try
@@ -293,29 +323,28 @@ TCResult* RouteManagerTestCases::addIncorrectRoute(
 				*/
 				case 1: //несуществующий smeSystemId
 					{
+						__tc__("addIncorrectRoute.invalidSmeId");
 						auto_ptr<char> tmp = rand_char(rand1(MAX_SYSTEM_ID_LENGTH));
 						route.smeSystemId = tmp.get();
 					}
 					break;
 				default:
-					throw s;
+					__unreachable__("Invalid num");
 			}
-			char tc[64];
-			sprintf(tc, "addIncorrectRoute(%d)", s.value());
-			debugRoute(tc, &route);
+			char tcId[64];
+			sprintf(tcId, "addIncorrectRoute(%d)", s.value());
+			debugRoute(tcId, &route);
 			if (routeMan)
 			{
 				routeMan->addRoute(route);
-				res->addFailure(101);
+				__tc_fail__(101);
 			}
 		}
 		catch(...)
 		{
-			//Ok
+			__tc_ok__;
 		}
 	}
-	debug(res);
-	return res;
 }
 
 void RouteManagerTestCases::printLookupResult(const Address& origAddr,
@@ -355,11 +384,12 @@ void RouteManagerTestCases::printLookupResult(const Address& origAddr,
 	__trace2__("%s", os.str().c_str());
 }
 
-TCResult* RouteManagerTestCases::lookupRoute(const Address& origAddr,
+void RouteManagerTestCases::lookupRoute(const Address& origAddr,
 	const Address& destAddr)
 {
 	__require__(routeReg && routeMan);
-	TCResult* res = new TCResult(TC_LOOKUP_ROUTE);
+	__decl_tc__;
+	__tc__("lookupRoute");
 	try
 	{
 		SmeProxy* proxy = NULL;
@@ -373,41 +403,40 @@ TCResult* RouteManagerTestCases::lookupRoute(const Address& origAddr,
 			{
 				if (proxy->getUniqueId() != routeHolder->proxy->getUniqueId())
 				{
-					res->addFailure(101);
+					__tc_fail__(101);
 				}
 			}
 			else if (proxy && !routeHolder->proxy)
 			{
-				res->addFailure(102);
+				__tc_fail__(102);
 			}
 			else if (!proxy && routeHolder->proxy)
 			{
-				res->addFailure(103);
+				__tc_fail__(103);
 			}
 		}
 		else if (found && !routeHolder)
 		{
-			res->addFailure(104);
+			__tc_fail__(104);
 		}
 		else if (!found && routeHolder)
 		{
-			res->addFailure(105);
+			__tc_fail__(105);
 		}
+		__tc_ok_cond__;
 	}
 	catch(...)
 	{
+		__tc_fail__(100);
 		error();
-		res->addFailure(100);
 	}
-	debug(res);
-	return res;
 }
 
 /*
-TCResult* RouteManagerTestCases::iterateRoutes()
+void RouteManagerTestCases::iterateRoutes()
 {
-	TCResult* res = new TCResult(TC_ITERATE_ROUTES);
-	res->addFailure(100);
+	void res = new TCResult(TC_ITERATE_ROUTES);
+	__tc_fail__(100);
 	debug(res);
 	return res;
 }
