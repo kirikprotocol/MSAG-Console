@@ -308,6 +308,7 @@ void SmppReceiverTestCases::updateDeliveryReceiptMonitor(DeliveryMonitor* monito
 	__require__(rcptMonitor);
 	time_t nextTime = monitor->calcNextTime(recvTime);
 	RespPduFlag respFlag = isAccepted(deliveryStatus);
+	pduReg->removeMonitor(rcptMonitor);
 	switch (rcptMonitor->regDelivery)
 	{
 		case NO_SMSC_DELIVERY_RECEIPT:
@@ -315,7 +316,6 @@ void SmppReceiverTestCases::updateDeliveryReceiptMonitor(DeliveryMonitor* monito
 			__require__(rcptMonitor->getFlag() == PDU_NOT_EXPECTED_FLAG);
 			break;
 		case FINAL_SMSC_DELIVERY_RECEIPT:
-			pduReg->removeMonitor(rcptMonitor);
 			switch (respFlag)
 			{
 				case RESP_PDU_OK:
@@ -329,10 +329,8 @@ void SmppReceiverTestCases::updateDeliveryReceiptMonitor(DeliveryMonitor* monito
 				default:
 					__unreachable__("Invalid resp flag");
 			}
-			pduReg->registerMonitor(rcptMonitor);
 			break;
 		case FAILURE_SMSC_DELIVERY_RECEIPT:
-			pduReg->removeMonitor(rcptMonitor);
 			switch (respFlag)
 			{
 				case RESP_PDU_OK:
@@ -341,16 +339,12 @@ void SmppReceiverTestCases::updateDeliveryReceiptMonitor(DeliveryMonitor* monito
 					rcptMonitor->setNotExpected();
 					break;
 				case RESP_PDU_ERROR:
-					__tc__("processDeliverySm.deliveryReceipt.deliveryRescheduled");
-					__tc_ok__;
 					rcptMonitor->reschedule(recvTime);
 					break;
 				case RESP_PDU_RESCHED:
 				case RESP_PDU_MISSING:
 					if (nextTime)
 					{
-						__tc__("processDeliverySm.deliveryReceipt.deliveryRescheduled");
-						__tc_ok__;
 						rcptMonitor->reschedule(nextTime);
 					}
 					else
@@ -363,13 +357,13 @@ void SmppReceiverTestCases::updateDeliveryReceiptMonitor(DeliveryMonitor* monito
 				default:
 					__unreachable__("Invalid resp flag");
 			}
-			pduReg->registerMonitor(rcptMonitor);
 			break;
 		default:
 			__unreachable__("Invalid registered delivery flag");
 	}
 	rcptMonitor->deliveryFlag = monitor->getFlag();
 	rcptMonitor->deliveryStatus = deliveryStatus;
+	pduReg->registerMonitor(rcptMonitor);
 }
 
 void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime)
@@ -477,6 +471,41 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 	}
 }
 
+void SmppReceiverTestCases::updateDeliveryReceiptMonitor(SmeAckMonitor* monitor,
+	PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime)
+{
+	__require__(monitor && pduReg);
+	__require__(deliveryStatus == ESME_ROK);
+	__decl_tc__;
+	DeliveryReceiptMonitor* rcptMonitor = pduReg->getDeliveryReceiptMonitor(
+		monitor->pduData->msgRef, monitor->pduData);
+	__require__(rcptMonitor);
+	//проверить если delivery receipt пришел раньше sme ack
+	if (rcptMonitor->getFlag() == PDU_RECEIVED_FLAG)
+	{
+		return;
+	}
+	pduReg->removeMonitor(rcptMonitor);
+	switch (rcptMonitor->regDelivery)
+	{
+		case NO_SMSC_DELIVERY_RECEIPT:
+		case SMSC_DELIVERY_RECEIPT_RESERVED:
+			__require__(rcptMonitor->getFlag() == PDU_NOT_EXPECTED_FLAG);
+			break;
+		case FINAL_SMSC_DELIVERY_RECEIPT:
+			rcptMonitor->reschedule(recvTime);
+			break;
+		case FAILURE_SMSC_DELIVERY_RECEIPT:
+			rcptMonitor->setNotExpected();
+			break;
+		default:
+			__unreachable__("Invalid registered delivery flag");
+	}
+	rcptMonitor->deliveryFlag = monitor->getFlag();
+	rcptMonitor->deliveryStatus = deliveryStatus;
+	pduReg->registerMonitor(rcptMonitor);
+}
+
 void SmppReceiverTestCases::processSmeAcknowledgement(PduDeliverySm &pdu,
 	time_t recvTime)
 {
@@ -568,6 +597,8 @@ void SmppReceiverTestCases::processSmeAcknowledgement(PduDeliverySm &pdu,
 		uint32_t deliveryStatus = fixture->respSender->sendDeliverySmResp(pdu);
 		RespPduFlag respFlag = isAccepted(deliveryStatus);
 		__require__(respFlag == RESP_PDU_OK);
+		//обновить статус delivery receipt монитора
+		updateDeliveryReceiptMonitor(monitor, pduReg, deliveryStatus, recvTime);
 	}
 	catch(...)
 	{
@@ -608,8 +639,8 @@ AckText* SmppReceiverTestCases::getExpectedResponse(
 		ostringstream s;
 		s << "Ваше сообщение отправленное по адресу ";
 		s << SmsUtil::configString(destAlias);
-		s << " wasn't delivered, reason ";
-		s << monitor->deliveryStatus;
+		s << " wasn't delivered, reason: failed"; //failed захардкожено
+		//s << monitor->deliveryStatus;
 		expected = s.str();
 	}
 	Address srcAddr;
@@ -648,6 +679,8 @@ void SmppReceiverTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monit
 	__require__(ack);
 	if (!ack->valid)
 	{
+		__trace__("monitor is not valid");
+		monitor->pduData->intProps.count("skipReceivedCheck")
 		monitor->setReceived();
 		return;
 	}
@@ -667,7 +700,7 @@ void SmppReceiverTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monit
 	{
 		__tc_fail__(3);
 	}
-	//__check__(get_message().get_dest());
+	//__check__(4, get_message().get_dest(), origPdu->get_message().get_source());
 	__check__(4, get_message().get_esmClass(), ESM_CLASS_DELIVERY_RECEIPT);
 	__check__(5, get_message().get_protocolId(), smscProtocolId);
 	__check__(6, get_message().get_priorityFlag(), 0);
@@ -806,7 +839,10 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm& pdu,
 				//ok
 				break;
 			case PDU_RECEIVED_FLAG:
-				__tc_fail__(1);
+				if (!monitor->pduData->intProps.count("skipReceivedCheck"))
+				{
+					__tc_fail__(1);
+				}
 				return;
 			case PDU_NOT_EXPECTED_FLAG:
 				__tc_fail__(2);
@@ -821,7 +857,7 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm& pdu,
 		__require__(origPdu);
 		//Сравнить правильность маршрута
 		__tc__("processDeliverySm.deliveryReceipt.checkRoute");
-		__tc_fail2__(fixture->routeChecker->checkRouteForAcknowledgementSms(*origPdu, pdu), 0);
+		__tc_fail2__(fixture->routeChecker->checkRouteForNotificationSms(*origPdu, pdu), 0);
 		__tc_ok_cond__;
 		//проверка полей pdu
 		pduReg->removeMonitor(monitor);

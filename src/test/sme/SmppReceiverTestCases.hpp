@@ -99,6 +99,8 @@ protected:
 	void compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu);
 	void updateDeliveryReceiptMonitor(DeliveryMonitor* monitor,
 		PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime);
+	void updateDeliveryReceiptMonitor(SmeAckMonitor* monitor,
+		PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime);
 	AckText* getExpectedResponse(DeliveryReceiptMonitor* monitor,
 		PduSubmitSm* origPdu, const string& text, time_t recvTime);
 	void processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
