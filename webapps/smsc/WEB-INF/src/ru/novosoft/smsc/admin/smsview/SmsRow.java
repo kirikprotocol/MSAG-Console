@@ -56,14 +56,14 @@ public class SmsRow
 
   public long getIdLong() {
     return
-            (((long)id[0])<<7)
-            &(((long)id[1])<<6)
-            &(((long)id[2])<<5)
-            &(((long)id[3])<<4)
-            &(((long)id[4])<<3)
-            &(((long)id[5])<<2)
-            &(((long)id[6])<<1)
-            &(((long)id[7]));
+            (((long)id[0])<<7*8)
+            ||(((long)id[1])<<6*8)
+            ||(((long)id[2])<<5*8)
+            ||(((long)id[3])<<4*8)
+            ||(((long)id[4])<<3*8)
+            ||(((long)id[5])<<2*8)
+            ||(((long)id[6])<<1*8)
+            ||(((long)id[7]));
   }
 
   public String getIdString() {
