@@ -1153,8 +1153,9 @@ CancelIdsStatement::CancelIdsStatement(Connection* connection,
     define(1, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId)); 
 }
 
+// ??? DA or DDA ???
 const char* DeliveryIdsStatement::sql = (const char*)
-"SELECT ID FROM SMS_MSG WHERE ST=:ENROUTE AND DDA=:DA"; // ??? DA or DDA ???
+"SELECT ID FROM SMS_MSG WHERE ST=:ENROUTE AND ATTEMPTS>0 AND DDA=:DA"; 
 DeliveryIdsStatement::DeliveryIdsStatement(Connection* connection, 
                                            const Address& _da, bool assign)
     throw(StorageException)
