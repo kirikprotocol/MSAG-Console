@@ -26,6 +26,11 @@ StoreManager* StoreManager::instance = 0L;
 unsigned StoreManager::maxTriesCount = SMSC_MAX_TRIES_TO_PROCESS_OPERATION;
 log4cpp::Category& StoreManager::log = Logger::getCategory("smsc.store.StoreManager");
 
+#ifdef SMSC_FAKE_MEMORY_MESSAGE_STORE
+IntHash<SMS> StoreManager::fakeStore;
+Mutex StoreManager::fakeMutex;
+#endif
+
 void StoreManager::loadMaxTriesCount(Manager& config)
 {
     try 
@@ -65,10 +70,15 @@ void StoreManager::startup(Manager& config)
         loadMaxTriesCount(config);
         try 
         {
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
             pool = new StorageConnectionPool(config);
             archiver = new Archiver(config);
             generator = new IDGenerator(archiver->getLastUsedId());
             archiver->Start();
+#else
+            archiver  = 0;
+            generator = new IDGenerator(0);
+#endif
         }
         catch (StorageException& exc)
         {
@@ -92,6 +102,7 @@ void StoreManager::shutdown()
 {
     MutexGuard guard(mutex);
 
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE    
     if (pool && instance && generator && archiver)
     {
         log.info("Storage Manager is shutting down ...");
@@ -101,6 +112,10 @@ void StoreManager::shutdown()
         delete generator; generator = 0L;
         log.info("Storage Manager was shutdowned.");
     }   
+#else
+    if (generator) delete generator; generator = 0;
+    if (instance) delete instance; instance = 0;
+#endif
 }
 
 void StoreManager::doCreateSms(StorageConnection* connection,
@@ -228,6 +243,8 @@ void StoreManager::doCreateSms(StorageConnection* connection,
 void StoreManager::createSms(SMS& sms, SMSId id, const CreateMode flag)
     throw(StorageException, DuplicateMessageException)
 {
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+       
     __require__(pool && generator);
     
     StorageConnection* connection = 0L;
@@ -257,6 +274,28 @@ void StoreManager::createSms(SMS& sms, SMSId id, const CreateMode flag)
             }
         }
     }
+
+#else
+    
+    Descriptor  dsc;
+    sms.state = ENROUTE;
+    sms.destinationDescriptor = dsc;
+    sms.lastTime = 0; sms.lastResult = 0; sms.attempts = 0;
+
+    MutexGuard guard(fakeMutex);
+    
+    if (flag == SMPP_OVERWRITE_IF_PRESENT && fakeStore.Exist(id))
+    {
+        fakeStore.Delete(id);
+    }
+    else if (flag == ETSI_REJECT_IF_PRESENT && fakeStore.Exist(id))
+    {
+        throw DuplicateMessageException();
+    }
+    
+    fakeStore.Insert(id, sms);
+
+#endif
 }
 
 void StoreManager::doRetrieveSms(StorageConnection* connection, 
@@ -293,6 +332,8 @@ void StoreManager::doRetrieveSms(StorageConnection* connection,
 void StoreManager::retriveSms(SMSId id, SMS &sms)
     throw(StorageException, NoSuchMessageException)
 {
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+    
     __require__(pool);
     
     StorageConnection* connection = 0L;
@@ -322,6 +363,17 @@ void StoreManager::retriveSms(SMSId id, SMS &sms)
             }
         }
     }
+
+#else
+    
+    MutexGuard guard(fakeMutex);
+
+    if (!fakeStore.Exist(id))
+        throw NoSuchMessageException(id);
+    
+    sms = fakeStore.Get(id);
+
+#endif
 }
 
 void StoreManager::doDestroySms(StorageConnection* connection, SMSId id) 
@@ -353,6 +405,8 @@ void StoreManager::doDestroySms(StorageConnection* connection, SMSId id)
 void StoreManager::destroySms(SMSId id) 
     throw(StorageException, NoSuchMessageException)
 {
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+    
     __require__(pool);
     
     StorageConnection* connection = 0L;
@@ -382,6 +436,17 @@ void StoreManager::destroySms(SMSId id)
             }
         }
     }
+
+#else
+    
+    MutexGuard guard(fakeMutex);
+    
+    if (!fakeStore.Exist(id))
+        throw NoSuchMessageException(id);
+
+    fakeStore.Delete(id);
+
+#endif
 }
 
 void StoreManager::doReplaceSms(StorageConnection* connection, 
@@ -491,6 +556,8 @@ void StoreManager::replaceSms(SMSId id, const Address& oa,
     uint8_t deliveryReport, time_t validTime, time_t waitTime)
         throw(StorageException, NoSuchMessageException)
 {
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+    
     __require__(pool);
     
     StorageConnection* connection = 0L;
@@ -521,6 +588,31 @@ void StoreManager::replaceSms(SMSId id, const Address& oa,
             }
         }
     }
+
+#else
+    
+    MutexGuard guard(fakeMutex);
+    
+    if (!fakeStore.Exist(id))
+        throw NoSuchMessageException(id);
+
+    SMS sms = fakeStore.Get(id);
+    fakeStore.Delete(id);
+
+    sms.setOriginatingAddress(oa);
+    sms.setDeliveryReport(deliveryReport);
+    sms.validTime = validTime;
+    sms.nextTime = waitTime;
+    sms.attempts = 0;
+
+    sms.getMessageBody().setBinProperty(Tag::SMPP_SHORT_MESSAGE, 
+        (const char*)newMsg, (unsigned)newMsgLen); 
+    sms.getMessageBody().setIntProperty(Tag::SMPP_SM_LENGTH, 
+        (uint32_t)newMsgLen);
+    
+    fakeStore.Insert(id, sms);
+
+#endif
 } 
 
 void StoreManager::doChangeSmsStateToEnroute(StorageConnection* connection,
@@ -559,6 +651,8 @@ void StoreManager::changeSmsStateToEnroute(SMSId id,
     const Descriptor& dst, uint32_t failureCause, time_t nextTryTime) 
         throw(StorageException, NoSuchMessageException)
 {
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+    
     __require__(pool);
     
     StorageConnection* connection = 0L;
@@ -589,6 +683,28 @@ void StoreManager::changeSmsStateToEnroute(SMSId id,
             }
         }
     }
+
+#else
+    
+    MutexGuard guard(fakeMutex);
+    
+    if (!fakeStore.Exist(id))
+        throw NoSuchMessageException(id);
+
+    SMS sms = fakeStore.Get(id);
+    if (sms.getState() != ENROUTE)
+        throw NoSuchMessageException(id);
+    
+    fakeStore.Delete(id);
+
+    sms.destinationDescriptor = dst;
+    sms.lastResult = failureCause;
+    sms.nextTime = nextTryTime;
+    sms.attempts++;
+    
+    fakeStore.Insert(id, sms);
+
+#endif
 }
 
 void StoreManager::doChangeSmsStateToDelivered(StorageConnection* connection, 
@@ -623,6 +739,8 @@ void StoreManager::doChangeSmsStateToDelivered(StorageConnection* connection,
 void StoreManager::changeSmsStateToDelivered(SMSId id, const Descriptor& dst) 
     throw(StorageException, NoSuchMessageException)
 {
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+    
     __require__(pool);
     
     StorageConnection* connection = 0L;
@@ -653,6 +771,21 @@ void StoreManager::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
             }
         }
     }
+
+#else
+    
+    MutexGuard guard(fakeMutex);
+    
+    if (!fakeStore.Exist(id))
+        throw NoSuchMessageException(id);
+    
+    SMS sms = fakeStore.Get(id);
+    if (sms.getState() != ENROUTE)
+        throw NoSuchMessageException(id);
+    
+    fakeStore.Delete(id);
+
+#endif
 }
 
 void StoreManager::doChangeSmsStateToUndeliverable(
@@ -691,6 +824,8 @@ void StoreManager::changeSmsStateToUndeliverable(SMSId id,
     const Descriptor& dst, uint32_t failureCause)
        throw(StorageException, NoSuchMessageException)
 {
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+    
     __require__(pool);
     
     StorageConnection* connection = 0L;
@@ -722,6 +857,21 @@ void StoreManager::changeSmsStateToUndeliverable(SMSId id,
             }
         }
     }
+
+#else
+    
+    MutexGuard guard(fakeMutex);
+    
+    if (!fakeStore.Exist(id))
+        throw NoSuchMessageException(id);
+    
+    SMS sms = fakeStore.Get(id);
+    if (sms.getState() != ENROUTE)
+        throw NoSuchMessageException(id);
+    
+    fakeStore.Delete(id);
+
+#endif
 }
 
 void StoreManager::doChangeSmsStateToExpired(
@@ -754,6 +904,8 @@ void StoreManager::doChangeSmsStateToExpired(
 void StoreManager::changeSmsStateToExpired(SMSId id) 
     throw(StorageException, NoSuchMessageException)
 {
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+    
     __require__(pool);
     
     StorageConnection* connection = 0L;
@@ -784,6 +936,21 @@ void StoreManager::changeSmsStateToExpired(SMSId id)
             }
         }
     }
+
+#else
+    
+    MutexGuard guard(fakeMutex);
+    
+    if (!fakeStore.Exist(id))
+        throw NoSuchMessageException(id);
+    
+    SMS sms = fakeStore.Get(id);
+    if (sms.getState() != ENROUTE)
+        throw NoSuchMessageException(id);
+    
+    fakeStore.Delete(id);
+
+#endif
 }
 
 void StoreManager::doChangeSmsStateToDeleted(
@@ -817,6 +984,8 @@ void StoreManager::doChangeSmsStateToDeleted(
 void StoreManager::changeSmsStateToDeleted(SMSId id) 
     throw(StorageException, NoSuchMessageException)
 {
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+    
     __require__(pool);
     
     StorageConnection* connection = 0L;
@@ -847,6 +1016,21 @@ void StoreManager::changeSmsStateToDeleted(SMSId id)
             }
         }
     }
+
+#else
+    
+    MutexGuard guard(fakeMutex);
+    
+    if (!fakeStore.Exist(id))
+        throw NoSuchMessageException(id);
+    
+    SMS sms = fakeStore.Get(id);
+    if (sms.getState() != ENROUTE)
+        throw NoSuchMessageException(id);
+    
+    fakeStore.Delete(id);
+
+#endif
 }
 
 /* --------------------- Sheduler's classes & methods -------------------- */
@@ -854,6 +1038,8 @@ void StoreManager::changeSmsStateToDeleted(SMSId id)
 StoreManager::ReadyIdIterator::ReadyIdIterator(time_t retryTime)
     throw(StorageException) : IdIterator()
 {
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+    
     connection = StoreManager::pool->getConnection();
     try
     {
@@ -874,16 +1060,23 @@ StoreManager::ReadyIdIterator::ReadyIdIterator(time_t retryTime)
         StoreManager::pool->freeConnection(connection);
         throw;
     }
+#endif
 }
 StoreManager::ReadyIdIterator::~ReadyIdIterator()
 {
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE    
+    
     if (readyStmt) delete readyStmt;
     StoreManager::pool->freeConnection(connection);
+
+#endif
 }
 
 bool StoreManager::ReadyIdIterator::getNextId(SMSId &id) 
     throw(StorageException) 
 {
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+    
     if (readyStmt && connection->isAvailable())
     {
         sword status = readyStmt->fetch();
@@ -895,6 +1088,9 @@ bool StoreManager::ReadyIdIterator::getNextId(SMSId &id)
         }
     }
     return false;
+#else
+    return false;
+#endif
 }
 
 IdIterator* StoreManager::getReadyForRetry(time_t retryTime) 
@@ -906,6 +1102,8 @@ IdIterator* StoreManager::getReadyForRetry(time_t retryTime)
 time_t StoreManager::getNextRetryTime() 
     throw(StorageException)
 {
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+    
     time_t minTime = 0;
     Connection* connection = StoreManager::pool->getConnection();
     if (connection)
@@ -947,6 +1145,9 @@ time_t StoreManager::getNextRetryTime()
         StoreManager::pool->freeConnection(connection);
     }
     return minTime;
+#else
+    return ((uint32_t)-1);
+#endif
 }
 
 }}
