@@ -29,6 +29,7 @@ namespace smsc { namespace store
         Mutex       finalizedMutex;
         int         finalizedCount;
         unsigned    maxFinalizedCount;
+        unsigned    maxUncommitedCount;
         unsigned    awakeInterval;
         
         static const char*  countSql;
@@ -94,6 +95,7 @@ namespace smsc { namespace store
         
         void loadAwakeInterval(Manager& config);
         void loadMaxFinalizedCount(Manager& config);
+        void loadMaxUncommitedCount(Manager& config);
 
         void prepareSelectStmt() throw(StorageException);
         void prepareInsertStmt() throw(StorageException);

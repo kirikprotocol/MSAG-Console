@@ -121,6 +121,39 @@ void Archiver::loadMaxFinalizedCount(Manager& config)
     }
 }
 
+const unsigned SMSC_ARCHIVER_MAX_UNCOMMITED_LIMIT = 100;
+const unsigned SMSC_ARCHIVER_MAX_UNCOMMITED_DEFAULT = 10;
+
+void Archiver::loadMaxUncommitedCount(Manager& config)
+{
+    try 
+    {
+        maxUncommitedCount =
+            (unsigned)config.getInt("MessageStore.Archive.uncommited");
+        if (!maxUncommitedCount || 
+            maxUncommitedCount > SMSC_ARCHIVER_MAX_UNCOMMITED_LIMIT)
+        {
+            maxUncommitedCount = SMSC_ARCHIVER_MAX_UNCOMMITED_DEFAULT;
+            log.warn("Maximum count of operations on storage, "
+                     "uncommited by Archiver, is incorrect "
+                     "(should be between 1 and %u) ! "
+                     "Config parameter: <MessageStore.Archive.uncommited> "
+                     "Using default: %u",
+                     SMSC_ARCHIVER_MAX_UNCOMMITED_LIMIT,
+                     SMSC_ARCHIVER_MAX_UNCOMMITED_DEFAULT);
+        }
+    } 
+    catch (ConfigException& exc) 
+    {
+        maxUncommitedCount = SMSC_ARCHIVER_MAX_UNCOMMITED_DEFAULT;
+        log.warn("Maximum count of operations on storage, "
+                 "uncommited by Archiver, wasn't specified ! "
+                 "Config parameter: <MessageStore.Archive.uncommited> "
+                 "Using default: %u",
+                 SMSC_ARCHIVER_MAX_UNCOMMITED_DEFAULT);
+    }
+}
+
 Archiver::Archiver(Manager& config)
     throw(ConfigException, StorageException) 
         : Thread(), finalizedCount(0),
@@ -141,6 +174,7 @@ Archiver::Archiver(Manager& config)
     
     loadAwakeInterval(config);
     loadMaxFinalizedCount(config);
+    loadMaxUncommitedCount(config);
 
     __require__(storageDBInstance && storageDBUserName && storageDBUserPassword);
     __require__(archiveDBInstance && archiveDBUserName && archiveDBUserPassword);
@@ -275,6 +309,7 @@ int Archiver::Execute()
     do 
     {
         job.Wait(awakeInterval);
+        if (exit.isSignaled()) break;
         try 
         {
             __trace__("Doing archivation job ...");
@@ -308,6 +343,7 @@ void Archiver::archivate(bool first)
         selectStmt->checkErr(status);
         do
         {
+            if (exit.isSignaled()) break;
             if (bNeedArchivate)
             {
                 if (first)
@@ -324,7 +360,7 @@ void Archiver::archivate(bool first)
                 }
             }
             deleteStmt->checkErr(deleteStmt->execute());
-            if (++uncommited == SMSC_ARCHIVER_TRANSACTION_COMMIT_INTERVAL)
+            if (++uncommited >= maxUncommitedCount) 
             {
                 archiveConnection->commit();
                 storageConnection->commit();
