@@ -146,4 +146,19 @@ public class AliasSet
     }
     return result;
   }
+
+  public Alias getAddressByAlias(Mask aliasToSearch)
+  {
+    Alias result = null;
+    for (Iterator i = aliases.iterator(); i.hasNext();) {
+      Alias alias = (Alias) i.next();
+      if (alias.getAlias().addressConfirm(aliasToSearch)) {
+        if (result == null)
+          result = alias;
+        else if (alias.getAlias().getQuestionsCount() < result.getAlias().getQuestionsCount())
+          result = alias;
+      }
+    }
+    return result;
+  }
 }

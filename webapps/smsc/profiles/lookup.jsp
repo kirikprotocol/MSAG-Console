@@ -20,13 +20,13 @@ switch(beanResult)
 	case Lookup.RESULT_ERROR:
 		break;
 	case Lookup.RESULT_ADD:
-		response.sendRedirect("profilesAdd.jsp?returnPath=lookup&mask=" + URLEncoder.encode(bean.getProfile()));
+		response.sendRedirect("profilesAdd.jsp?returnPath=lookup&mask=" + URLEncoder.encode(bean.getProfileDealiased() != null ? bean.getProfileDealiased() : bean.getProfile()));
 		return;
 	case Lookup.RESULT_REFRESH:
 		response.sendRedirect("lookup.jsp?mbRefreshed=true&profile=" + URLEncoder.encode(bean.getProfile() == null ? "" : bean.getProfile()));
 		return;
 	case Lookup.RESULT_EDIT:
-		response.sendRedirect("profilesEdit.jsp?returnPath=lookup&mask=" + URLEncoder.encode(bean.getProfile()));
+		response.sendRedirect("profilesEdit.jsp?returnPath=lookup&mask=" + URLEncoder.encode(bean.getProfileDealiased() != null ? bean.getProfileDealiased() : bean.getProfile()));
 		return;
 	case Lookup.RESULT_EDIT_MASK:
 		response.sendRedirect("profilesEdit.jsp?returnPath=lookup&mask=" + URLEncoder.encode(bean.getMatchAddress().getMask()));
@@ -64,7 +64,17 @@ abonent number <input class=txt name=profile value="<%=bean.getProfile() != null
 			default:
 				out.print("unknown");
 		}
-		%></div>
+
+    if (bean.getProfileDealiased() != null)
+    {
+      %><br>alias <%=bean.getProfile()%> dealiased to <%=bean.getProfileDealiased()%><%
+    }
+    if (bean.getMatchType() == ProfileEx.MATCH_EXACT && bean.getProfileAliased() != null)
+    {
+      %><br>profile <%=bean.getMatchAddress().getMask()%> has alias <%=bean.getProfileAliased()%><br><%
+    }
+		%>
+  </div>
 	<br>
 	<table class=properties_list cellspacing=0>
 	<col width="15%">

@@ -7,6 +7,8 @@ package ru.novosoft.smsc.jsp.smsc.profiles;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.alias.Alias;
+import ru.novosoft.smsc.admin.alias.AliasSet;
 import ru.novosoft.smsc.admin.profiler.ProfileEx;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
@@ -37,6 +39,9 @@ public class Lookup extends PageBean
   private boolean divertActive = false;
   private boolean divertModifiable = false;
 
+  private String profileDealiased = null;
+  private String profileAliased = null;
+
   private String mbAdd = null;
   private String mbEdit = null;
   private String mbDelete = null;
@@ -61,7 +66,17 @@ public class Lookup extends PageBean
 
     if (profile != null) {
       try {
-        ProfileEx p = appContext.getSmsc().profileLookupEx(new Mask(profile));
+        final Mask profileMask = new Mask(profile);
+        final AliasSet aliases = appContext.getSmsc().getAliases();
+        Alias alias = aliases.getAddressByAlias(profileMask);
+        if (alias != null)
+          profileDealiased = alias.getAddress().getMask();
+        ProfileEx p = appContext.getSmsc().profileLookupEx(profileDealiased != null ? new Mask(profileDealiased) : profileMask);
+        if (p.getMatchType() == ProfileEx.MATCH_EXACT) {
+          Alias aliased = aliases.getAliasByAddress(p.getMatchAddress());
+          if (aliased != null)
+            profileAliased = aliased.getAlias().getMask();
+        }
         codepage = p.getCodepageString();
         ussd7bit = p.isUssd7bit();
         reportOptions = p.getReportOptionsString();
@@ -247,5 +262,15 @@ public class Lookup extends PageBean
   public boolean isDivertModifiable()
   {
     return divertModifiable;
+  }
+
+  public String getProfileDealiased()
+  {
+    return profileDealiased;
+  }
+
+  public String getProfileAliased()
+  {
+    return profileAliased;
   }
 }
