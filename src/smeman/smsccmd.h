@@ -588,7 +588,7 @@ public:
     return cmd;
   }
 
-  static SmscCommand makeCancel(SMSId id,Address& oa,Address& da)
+  static SmscCommand makeCancel(SMSId id,const Address& oa,const Address& da)
   {
     SmscCommand cmd;
     cmd.cmd = new _SmscCommand;

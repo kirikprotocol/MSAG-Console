@@ -133,6 +133,11 @@ public:
     return getAliaserInstance()->AddressToAlias(addr,alias);
   }
 
+  void cancelSms(SMSId id,const Address& oa,const Address& da)
+  {
+    eventqueue.enqueue(id,SmscCommand::makeCancel(id,oa,da));
+  }
+
   void notifyScheduler()
   {
     scheduler->notify();
