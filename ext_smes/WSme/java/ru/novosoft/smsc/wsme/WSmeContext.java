@@ -29,7 +29,7 @@ public class WSmeContext
     this.appContext = appContext;
     try {
       wsmeService = this.appContext.getHostsManager().getService(Constants.WSME_SME_ID);
-      wsme = new WSme(wsmeService);
+      wsme = new WSme(wsmeService);      wsme.init();
     } catch (AdminException e) {
       System.out.println("Exception in initialization:");
       e.printStackTrace();

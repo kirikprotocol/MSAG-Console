@@ -29,12 +29,12 @@ compile:
 	@echo create package
 	@mkdir -p $(SME_BUILDDIR)/bin
 	@mkdir -p $(SME_BUILDDIR)/conf
-	@mkdir -p $(SME_BUILDDIR)/lib
 	@mkdir -p $(SME_BUILDDIR)/jsp
 	@mkdir -p $(SME_BUILDDIR)/jsp/inc
-	@cp -f $(SMSC_BUILDDIR)/bin/wsme/WSme $(SME_BUILDDIR)/bin/service
+	@cp -f service $(SME_BUILDDIR)/bin
+	@cp -f $(SMSC_BUILDDIR)/bin/wsme/WSme $(SME_BUILDDIR)/bin
 	@cp -f $(SMSC_BUILDDIR)/jars/wsme.jar  $(SME_BUILDDIR)/lib/wsme.jar
-	@cp -f $(DB_OCI_LIB) $(SME_BUILDDIR)/lib/libdb_oci.so
+	@cp -f log4cpp.properties $(SME_BUILDDIR)/log4cpp.properties
 	@cp -f ../../config/wsme/config.xml $(SME_BUILDDIR)/conf/config.xml
 	@cp -f ../../config/configuration.dtd $(SME_BUILDDIR)/conf/configuration.dtd
 	@cp -f ../../config/command.dtd $(SME_BUILDDIR)/conf/command.dtd

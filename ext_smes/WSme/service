@@ -1,0 +1,35 @@
+#! /bin/bash
+export LC_ALL=ru_RU.ANSI1251            
+export NLS_LANG=RUSSIAN_CIS.CL8MSWIN1251
+
+if [ ! -L lib ]; then
+  ln -s ../../../../../../lib lib
+fi
+
+if [ ! -L logs ]; then
+  ln -s ../../../../../../logs logs
+fi
+
+echo $$ >pid
+if [ -f logs/wsme.err ]; then
+  mv logs/wsme.err logs/wsme.err.old
+fi
+while true;
+do
+./bin/WSme 1>/dev/null 2>>logs/wsme.err&
+PID=$!
+export PID
+trap "kill -s SIGTERM $PID;wait $PID; exit" SIGTERM
+wait $PID
+if [ -f core ]; then
+  DATE=`perl -e '($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);printf("%04d%02d%02d%02d%02d%02d",$year+1900,$mon+1,$mday,$hour,$min,$sec)'`
+  mkdir "$DATE"
+  mv core "$DATE"
+  mv logs/wsme.err "$DATE"
+  if [ -f logs/wsme.err.old ]; then
+    mv logs/wsme.err.old "$DATE"
+  fi
+  mv logs/wsme.log* "$DATE"
+  cp -p ./bin/WSme "$DATE"
+fi
+done
