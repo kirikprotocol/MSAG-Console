@@ -6,28 +6,6 @@ namespace smsc { namespace wsme
 
 /* ----------------------------- WSmeProcessor ----------------------------- */
 
-/*class MutexGuardEx
-{
-    log4cpp::Category& log;
-    std::string method;
-    Mutex& mutex;
-
-public:
-
-    MutexGuardEx(Mutex& _mutex, log4cpp::Category& _log, std::string _method) 
-        : mutex(_mutex), log(_log), method(_method)
-    {
-        log.debug("Mutex locking <%s>", method.c_str());    
-        mutex.Lock();
-        log.debug("Mutex locked <%s>", method.c_str()); 
-    }
-    ~MutexGuardEx() {
-        log.debug("Mutex unlocking <%s>", method.c_str());  
-        mutex.Unlock();
-        log.debug("Mutex unlocked <%s>", method.c_str());   
-    }
-};*/
-
 WSmeProcessor::WSmeProcessor(ConfigView* config)
     //throw(ConfigException, InitException)
         : WSmeAdmin(), log(Logger::getCategory("smsc.wsme.WSmeProcessor")),
