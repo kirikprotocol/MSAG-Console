@@ -24,11 +24,14 @@ public class SmsViewFormBean extends IndexBean
 		"Oct", "Nov", "Dec"
 	};
 
-	private String mbDelete = null;
+	private String mbRemove = null;
+  private String mbDelete = null;
 	private String mbQuery = null;
-    private String mbClear = null;
+  private String mbClear = null;
 	private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
 	private String oldSort = null;
+
+  private Vector checkedRows = new Vector();
 
 	protected int init(List errors)
 	{
@@ -56,18 +59,19 @@ public class SmsViewFormBean extends IndexBean
 		if (result != RESULT_OK)
 			return result;
 
-		if (mbDelete != null)
-			result = processDeleteAll();
+    if (mbRemove != null)
+      result = processDeleteSelected();
+		else if (mbDelete != null)
+			result = processDeleteSet(rows);
 		else if (mbQuery != null)
 			result = processQuery();
-        else if (mbClear != null)
-            result = clearQuery();
+    else if (mbClear != null)
+      result = clearQuery();
 		else
 			result = processResortAndNavigate(false);
 
-		mbDelete = null;
-		mbQuery = null;
-        mbClear = null;
+		mbRemove = null; mbDelete = null;
+		mbQuery = null;  mbClear = null;
 
 		return result;
 	}
@@ -111,53 +115,68 @@ public class SmsViewFormBean extends IndexBean
 
 	public int processQuery()
 	{
-        rows = null; startPosition = 0; totalSize = 0; totalRowsCount = 0;
-        try {
-          totalRowsCount = view.getSmsCount(query);
-          rows = view.getSmsSet(query);
-          startPosition = 0;
-          totalSize = rows.getRowsCount();
-          processResortAndNavigate(true);
-          return RESULT_OK;
-        } catch (AdminException ex) {
-          ex.printStackTrace();
-          return error(SMSCErrors.error.smsview.QueryFailed, ex.getMessage());
-        }
+    rows = null; startPosition = 0; totalSize = 0; totalRowsCount = 0;
+    checkedRows.removeAllElements();
+    try {
+      totalRowsCount = view.getSmsCount(query);
+      rows = view.getSmsSet(query);
+      startPosition = 0;
+      totalSize = rows.getRowsCount();
+      processResortAndNavigate(true);
+      return RESULT_OK;
+    } catch (AdminException ex) {
+      ex.printStackTrace();
+      return error(SMSCErrors.error.smsview.QueryFailed, ex.getMessage());
+    }
 	}
 
-    public int clearQuery()
-    {
-        rows = null; startPosition = 0; totalSize = 0; totalRowsCount = 0;
-        query = new SmsQuery();
-        processResortAndNavigate(true);
-        return RESULT_OK;
+  public int clearQuery()
+  {
+    rows = null; startPosition = 0; totalSize = 0; totalRowsCount = 0;
+    checkedRows.removeAllElements();
+    query = new SmsQuery();
+    processResortAndNavigate(true);
+    return RESULT_OK;
+  }
+
+  public int processDeleteSet(SmsSet set)
+  {
+    try {
+        if (getStorageType() == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE)
+            deletedRowsCount = view.delArchiveSmsSet(set);
+        else
+            deletedRowsCount = view.delOperativeSmsSet(set);
+    } catch (AdminException ex) {
+      ex.printStackTrace();
+      return error(SMSCErrors.error.smsview.DeleteFailed, ex.getMessage());
     }
 
-	public int processDeleteAll()
-	{
-        try {
-            if (getStorageType() == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE)
-                deletedRowsCount = view.delArchiveSmsSet(rows);
-            else
-                deletedRowsCount = view.delOperativeSmsSet(rows);
-        } catch (AdminException ex) {
-          ex.printStackTrace();
-          return error(SMSCErrors.error.smsview.DeleteFailed, ex.getMessage());
-        }
+    return processQuery();
+  }
 
-        return processQuery();
-	}
+  public int processDeleteSelected()
+  {
+    SmsSet set = new SmsSet();
+    for (int i=0; i<rows.getRowsCount(); i++) {
+      SmsRow row = rows.getRow(i);
+      String rowId = Long.toString(row.getIdLong());
+      if (checkedRows.contains(rowId)) set.addRow(row);
+    }
+    return processDeleteSet(set);
+  }
 
 	public SmsRow getRow(int index)	{
-        return rows == null ? null : rows.getRow(index);
+    return rows == null ? null : rows.getRow(index);
 	}
 
+  public void refreshQuery() {
+    query = new SmsQuery();
+    setFromDate(null);
+    setTillDate(null);
+    checkedRows.removeAllElements();
+  }
+
 	/********************************* query delegeates *********************************/
-    public void refreshQuery() {
-        query = new SmsQuery();
-        setFromDate(null);
-        setTillDate(null);
-    }
 	public void setSort(String by) {
 		sort = by;
 	}
@@ -213,20 +232,16 @@ public class SmsViewFormBean extends IndexBean
 		query.setSmsId(id);
 	}
 
-    public String getFromDate()
-    {
+  public String getFromDate()
+  {
 		if (query.getFromDateEnabled())
 		{
 			SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
             return formatter.format(query.getFromDate());
 		}
-		else
-		{
-			return "";
-		}
+		else return "";
 	}
-
-    public void setFromDate(String dateString)
+  public void setFromDate(String dateString)
 	{
 		final boolean dateEnabled = dateString != null && dateString.trim().length() > 0;
 		query.setFromDateEnabled(dateEnabled);
@@ -252,12 +267,8 @@ public class SmsViewFormBean extends IndexBean
 			SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
             return formatter.format(query.getTillDate());
 		}
-		else
-		{
-			return "";
-		}
+		else return "";
 	}
-
 	public void setTillDate(String dateString)
 	{
 		final boolean dateEnabled = dateString != null && dateString.trim().length() > 0;
@@ -277,17 +288,35 @@ public class SmsViewFormBean extends IndexBean
 		}
 	}
 
-    public int getTotalRowsCount() {
-        return totalRowsCount;
-    }
-    public int getDeletedRowsCount() {
-        return deletedRowsCount;
-    }
+  public int getTotalRowsCount() {
+    return totalRowsCount;
+  }
+  public int getDeletedRowsCount() {
+    return deletedRowsCount;
+  }
 
 	public String getMbDelete() { return mbDelete; }
 	public void setMbDelete(String mbDelete) {	this.mbDelete = mbDelete; }
+  public String getMbRemove() { return mbRemove; }
+  public void setMbRemove(String mbRemove) {	this.mbRemove = mbRemove; }
 	public String getMbQuery() { return mbQuery; }
 	public void setMbQuery(String mbQuery) { this.mbQuery = mbQuery; }
-    public String getMbClear() { return mbClear; }
-    public void setMbClear(String mbClear) { this.mbClear = mbClear; }
+  public String getMbClear() { return mbClear; }
+  public void setMbClear(String mbClear) { this.mbClear = mbClear; }
+
+  public String[] getCheckedRows() {
+    return (checkedRows == null) ?
+        null : (String[])checkedRows.toArray();
+  }
+  public void setCheckedRows(String[] checkedRows) {
+    for (int i=0; i<checkedRows.length; i++) {
+      this.checkedRows.addElement(checkedRows[i]);
+      System.out.println("Row id: "+checkedRows[i]);
+    }
+  }
+  public boolean isRowChecked(long id) {
+    return (checkedRows == null) ?
+        false : checkedRows.contains(Long.toString(id));
+  }
+
 }

@@ -124,6 +124,7 @@ function setSort(sorting)
 <table class=secRep cellspacing=1 width="100%">
 <thead>
 <tr class=row0>
+  <th>&nbsp;</th>
   <th><a href="#" <%=bean.getSort().endsWith("name")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by SMS Id" onclick='return setSort("name")'>ID</a></th>
   <th><a href="#" <%=bean.getSort().endsWith("date")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Date" onclick='return setSort("date")'>Date/Valid</a></th>
   <th>Tried last/next</th>
@@ -138,12 +139,18 @@ int lastIndex = bean.getStartPosition()+bean.getPageSize();
 if (lastIndex >= bean.getTotalSize() || bean.getPageSize() < 0)
 	lastIndex = bean.getTotalSize();
 
-{int rowN=0; for (int cnt=firstIndex; cnt<=lastIndex; cnt++, rowN++) {
-  SmsRow row = bean.getRow(cnt-1);
-  if (row == null) { rowN--; continue; }
+{
+  int rowN=0;
+  for (int cnt=firstIndex; cnt<=lastIndex; cnt++, rowN++) {
+    SmsRow row = bean.getRow(cnt-1);
+    if (row == null) { rowN--; continue; }
+    long smsRowId = row.getIdLong();
 %><tr class=row<%=rowN&1%>0>
+      <td nowrap valign=top>
+        <input class=check type=checkbox name=checkedRows value="<%= smsRowId%>" <%=bean.isRowChecked(smsRowId) ? "checked" : ""%>>
+      </td>
       <td nowrap valign=top style="text-align: right">
-        <%= row.getIdLong()%><br>
+        <%= smsRowId%><br>
         <!--%= row.getAttempts()%-->
       </td>
       <td nowrap style="padding-left: 5px; border-left:dotted 1px #C0C0C0;">
@@ -182,14 +189,15 @@ if (lastIndex >= bean.getTotalSize() || bean.getPageSize() < 0)
       </td>
   </tr>
   <tr class=row<%=rowN&1%>1>
-      <td colspan=7 style="border-top:dotted 1px #C0C0C0;"><%= (row.getText()!=null&&row.getText().startsWith("&#")?row.getText():StringEncoderDecoder.encode(row.getText()))%>&nbsp;</td>
+      <td colspan=8 style="border-top:dotted 1px #C0C0C0;"><%= (row.getText()!=null&&row.getText().startsWith("&#")?row.getText():StringEncoderDecoder.encode(row.getText()))%>&nbsp;</td>
   </tr><%
 }}
 %></tbody>
 </table>
 <%@ include file="/WEB-INF/inc/navbar.jsp"%>
 <div class=secButtons>
-<input class=btn type="submit" name="mbDelete" value="Delete All selected rows">
+<input class=btn type="submit" name="mbRemove" value="Delete checked rows">
+<input class=btn type="submit" name="mbDelete" value="Delete All fetched rows">
 </div>
 <% } %>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

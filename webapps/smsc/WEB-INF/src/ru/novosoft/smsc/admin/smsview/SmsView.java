@@ -274,7 +274,7 @@ public class SmsView
         int fetchedCount = 0;
         while (rs.next() && rowsMaximum > fetchedCount++)
         {
-          System.out.println("SMSVIEW: got row");
+          //System.out.println("SMSVIEW: got row");
           SmsRow row = new SmsRow();
           int pos=1;
           byte id[] = rs.getBytes(pos++);
