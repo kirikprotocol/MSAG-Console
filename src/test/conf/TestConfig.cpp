@@ -29,6 +29,8 @@ TestConfig::TestConfig()
 	addrMap["dbSmeAddr"] = "+1597534682";
 	addrMap["dbSmeAlias"] = ".5.5.dbSmeAlias123";
 	strMap["dbSmeSystemId"] = "dbSme";
+	strMap["dbSmeServiceType"] = "dBsmE";
+	intMap["dbSmeProtocolId"] = 23;
 	//ресурсы
 	strMap["cmdRespReportNone"] = 
 		"Now you will receive only requested delivery reports";
