@@ -1276,7 +1276,7 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
       FormatText("MAP::%s Resp return error 0x%x",__FUNCTION__,result));
   CloseMapDialog(dialog->dialogid_map,dialog->ssn);
   dialog->state = MAPST_END;
-  SendOkToSmsc(dialog);
+  if( cmd ) SendOkToSmsc(dialog);
   DropMapDialog(dialog);
 }
 
@@ -2717,6 +2717,15 @@ USHORT_T Et96MapDelimiterInd(
       dialog->state = MAPST_WaitImsiReq;
       PauseOnImsiReq(dialog.get());
       break;
+    case MAPST_WaitUssdDelimiter:
+      reason = ET96MAP_NO_REASON;
+      result = Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0);
+      if ( result != ET96MAP_E_OK )
+        throw runtime_error(
+          FormatText("MAP::Et96MapDelimiterInd: dialog opened error 0x%x",result));
+      dialog->state = MAPST_WaitUssdImsiReq;
+      PauseOnImsiReq(dialog.get());
+      break;
     case MAPST_WaitSmsMODelimiter:
       open_confirmed = true;
       dialog->state = MAPST_WaitImsiReq;
@@ -2826,16 +2835,21 @@ unsigned char  lll_8bit_2_7bit[256] = {
 
 static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc)
 {
-  __map_trace2__("%s: ismsi %s, msc: %s",__FUNCTION__,s_imsi.c_str(),s_msc.c_str());
+  __map_trace2__("%s: ismsi %s, msc: %s, state %d",__FUNCTION__,s_imsi.c_str(),s_msc.c_str(), dialog->state);
   if ( dialog->state == MAPST_END ){// already closed
     return;
   }
   if ( s_imsi.length() == 0 || s_msc.length() == 0 )
   {
-    dialog->state = MAPST_WaitSubmitCmdConf;
-    ResponseMO(dialog,9);
-    CloseMapDialog(dialog->dialogid_map,dialog->ssn);
-    DropMapDialog(dialog);
+    if( dialog->state == MAPST_WaitUssdImsiReq) {
+      DoUSSRUserResponceError(0, dialog); // send system failure
+    } else {
+      ResponseMO(dialog,9);
+      dialog->state = MAPST_WaitSubmitCmdConf;
+      CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+      DropMapDialog(dialog);
+      break;
+    }
   }
   else
   {
@@ -2971,7 +2985,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     sms.setMessageReference(0);
     sms.setDestinationAddress(dest_addr);
     dialog->sms = _sms;
-    dialog->state = MAPST_WaitSmsMODelimiter2;
+    dialog->state = MAPST_WaitUssdDelimiter;
     //dialog->ussdSequence = NextSequence();
     dialog->ussdMrRef = MakeMrRef();
     dialog->sms->setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_IND);
