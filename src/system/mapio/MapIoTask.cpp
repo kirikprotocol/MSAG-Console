@@ -213,7 +213,6 @@ restart:
       snprintf( buf, 128, "prim=%d s=%ld us=%ld", message.primitive, curtime.tv_sec-utime.tv_sec, usecs );
       time_logger.debug( buf );
     }
-    utime=curtime;
   }
 }
 
