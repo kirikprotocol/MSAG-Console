@@ -39,10 +39,12 @@ typedef enum
 class SmsUtil
 {
 public:
-	static bool compareAddresses(const Address& a1, const Address& a2);
+	//static bool compareAddresses(const Address& a1, const Address& a2);
 
-	static bool compareDescriptors(const Descriptor& d1, const Descriptor& d2);
+	//static bool compareDescriptors(const Descriptor& d1, const Descriptor& d2);
 
+	//Использую вместо vector<int> operator==(const Body&, const Body&)
+	//для возможности добавления параметра compareFlag
 	static vector<int> compareMessageBodies(const Body& b1, const Body& b2);
 
 	static vector<int> compareMessages(const SMS& sms1, const SMS& sms2,
@@ -63,12 +65,21 @@ public:
 	static auto_ptr<char> configString(const Address& addr);
 };
 
+/*
 struct ltAddress
 {
 	bool operator() (const Address& a1, const Address& a2) const;
 };
+*/
 
 ostream& operator<< (ostream& os, const Address& a);
+bool operator== (const Address& a1, const Address& a2);
+bool operator!= (const Address& a1, const Address& a2);
+bool operator< (const Address& a1, const Address& a2);
+
+ostream& operator<< (ostream& os, const Descriptor& d);
+bool operator==(const Descriptor& d1, const Descriptor& d2);
+bool operator!=(const Descriptor& d1, const Descriptor& d2);
 
 }
 }
