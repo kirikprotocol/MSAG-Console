@@ -1,0 +1,12 @@
+# Set root category priority to DEBUG and its only appender to A1.
+
+rootCategory=DEBUG, rootAppender
+
+appender.rootAppender=RollingFileAppender
+appender.rootAppender.fileName=proxysme.log
+appender.rootAppender.maxFileSize=20000000
+appender.rootAppender.maxBackupIndex=5
+appender.rootAppender.append=true
+appender.rootAppender.layout=PatternLayout
+appender.rootAppender.layout.ConversionPattern=[%d{%m-%d %H:%M:%S,%l}] %c: %m%n
+
