@@ -135,7 +135,7 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
     {
       uint16_t tag;
       uint16_t length;
-      int nextDataOffset;
+      uint32_t nextDataOffset;
       fetchX(stream,tag);
       fetchX(stream,length);
       
@@ -173,7 +173,7 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
       /*qos_time_to_live(5.3.2.9)*/      macroFetchField(qosTimeToLive);
       /*payload_type(5.3.2.10)*/         macroFetchField(payloadType);
       /*additional_status_info_text(5.3.2.11)*/ 
-			                                   macroFetchCOctetStr(additionalStatusInfoText,256);
+                                         macroFetchCOctetStr(additionalStatusInfoText,256);
       /*receipted_message_id(5.3.2.12)*/ macroFetchCOctetStr(receiptedMessageId,65);
       /*ms_msg_wait_facilities(5.3.2.13)*/macroFetchField(msMsgWaitFacilities);
       /*privacy_indicator(5.3.2.14)*/    macroFetchField(privacyIndicator);

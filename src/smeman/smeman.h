@@ -74,6 +74,7 @@ public:
 
   // SmeDispatcher implementation
   virtual SmeProxy* selectSmeProxy(unsigned long timeout=0,int* idx=0);
+	virtual ~SmeManager(){}
 };
 
 }; // namespace smeman

@@ -24,19 +24,19 @@ SmeProxy* SmeProxyDispatcher::dispatchIn(unsigned long /*timeout*/,int* idx)
         if ( unit->proxy->hasInput() )
         {
           unit->prior = unit->proxy->getPriority();
-					if ( unit->prev ) unit->prev->next = unit->next; // remove from list
-					else
-					{
-						__require__ ( unit == unqueuedProxies );
-						unqueuedProxies = unit->next; // remove first elemment
-						if ( unqueuedProxies ) unqueuedProxies->prev = 0;
-					}
-					unit->next = queuedProxies;
-					unit->prev = 0;
-					if ( queuedProxies ) queuedProxies->prev = unit;
-					queuedProxies = unit;
-				}
-				unit = __next;
+          if ( unit->prev ) unit->prev->next = unit->next; // remove from list
+          else
+          {
+            __require__ ( unit == unqueuedProxies );
+            unqueuedProxies = unit->next; // remove first elemment
+            if ( unqueuedProxies ) unqueuedProxies->prev = 0;
+          }
+          unit->next = queuedProxies;
+          unit->prev = 0;
+          if ( queuedProxies ) queuedProxies->prev = unit;
+          queuedProxies = unit;
+        }
+        unit = __next;
       }
       if ( queuedProxies )
       {
@@ -102,7 +102,7 @@ __synchronized__
   Unit* unit = queuedProxies;
   while ( unit )
   {
-    if ( unit->proxy = proxy )
+    if ( unit->proxy == proxy )
     {
       if ( unit == queuedProxies ) 
       {
@@ -122,7 +122,7 @@ __synchronized__
   unit = unqueuedProxies;
   while ( unit )
   {
-    if ( unit->proxy = proxy )
+    if ( unit->proxy == proxy )
     {
       if ( unit == unqueuedProxies ) 
       {

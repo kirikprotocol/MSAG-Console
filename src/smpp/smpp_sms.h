@@ -37,7 +37,7 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
       char val[21];
       Address& addr = sms->getOriginatingAddress();
       int val_length = addr.getValue(val);
-      __require__ ( val_length <= sizeof(val) );   // fatal if out of range !!!!
+      __require__ ( val_length <= (signed int)sizeof(val) );   // fatal if out of range !!!!
       src.set_value(val);
       src.set_typeOfNumber(addr.getTypeOfNumber());
       src.set_numberingPlan(addr.getNumberingPlan());
@@ -47,7 +47,7 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
       char val[21];
       Address& addr = sms->getDestinationAddress();
       int val_length = addr.getValue(val);
-      __require__ ( val_length <= sizeof(val) );   // fatal if out of range !!!!
+      __require__ ( val_length <= (signed int)sizeof(val) );   // fatal if out of range !!!!
       dest.set_value(val);
       dest.set_typeOfNumber(addr.getTypeOfNumber());
       dest.set_numberingPlan(addr.getNumberingPlan());
@@ -56,7 +56,7 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
       char msg[256];
       const smsc::sms::Body& sms_body = sms->getMessageBody();
       int msg_length = sms_body.getData((uint8_t*)msg);
-      __require__(msg_length <= sizeof(msg));
+      __require__(msg_length <= (signed int)sizeof(msg));
       message.set_shortMessage(msg,msg_length);
       //message.set_smLength((uint8_t)msg_length);
       message.set_dataCoding((uint8_t)sms_body.getCodingScheme());
@@ -73,7 +73,7 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
         message.set_validityPeriod(smpp_time);
     }
   }
-	return true;
+  return true;
 }
 
 inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
@@ -129,7 +129,7 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
 
     sms->setDeliveryReport(message.registredDelivery);
   }
-	return true;
+  return true;
 }
 
 };

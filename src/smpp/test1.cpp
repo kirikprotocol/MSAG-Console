@@ -13,11 +13,11 @@ using namespace smsc::smpp;
 int main(void)
 {
 	fprintf(stderr,"begin test\n");
-	try{
+/*	try{
 		{
 			int fd = open("/tmp/smpp_pdu_test1",O_RDWR|O_CREAT|O_TRUNC);
 			SmppStream stream;
-			assignStreamWith(&stream,fd,false);
+			//assignStreamWith(&stream,fd,false);
 			PduSubmitSm pdu;
 			SmppHeader& pduHeader = pdu.get_header();
 			pduHeader.set_commandId(SmppCommandSet::SUBMIT_SM);
@@ -50,7 +50,7 @@ int main(void)
 			int fd = open("/tmp/smpp_pdu_test1",O_RDWR);
 			SmppStream stream;
 			auto_ptr<SmppHeader> pdu;
-			assignStreamWith(&stream,fd,true);
+			//assignStreamWith(&stream,fd,true);
 			pdu = auto_ptr<SmppHeader>(fetchSmppPdu(&stream));
 			__require__( pdu.get() != 0 );
 			dump_pdu(pdu.get());
@@ -62,5 +62,5 @@ int main(void)
 		__warning__("catch excpetion");
 	}
 	//unlink("/tmp/smpp_pdu_test1");
-	fprintf(stderr,"end test\n");
+	fprintf(stderr,"end test\n"); */
 }

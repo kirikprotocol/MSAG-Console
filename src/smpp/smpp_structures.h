@@ -900,7 +900,7 @@ inline uint32_t calcSmppPacketLength(SmppHeader* _pdu)
   using namespace SmppCommandSet;
 
   //uint32_t length = 4*4; // header
-  uint32_t pdusSize;
+  //uint32_t pdusSize;
   switch ( _pdu->commandId )
   {
   case GENERIC_NACK:  return reinterpret_cast<PduGenericNack*>(_pdu)->size();

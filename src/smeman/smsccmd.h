@@ -306,6 +306,7 @@ public:
     default:
       __unreachable__("unknown commandid");
     }
+		return 0; // for compiler 
   }
 
   SmscCommand(const SmscCommand& _cmd)

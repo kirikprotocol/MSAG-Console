@@ -50,7 +50,7 @@ void Smsc::mainLoop()
           if ( proxy != src_proxy )
           {
             dest_proxy = proxy;
-						dest_proxy_index = it->getSmeIndex();
+            dest_proxy_index = it->getSmeIndex();
             break;
           }
         }
@@ -86,9 +86,9 @@ void Smsc::mainLoop()
     case __CMD__(DELIVERY_RESP):
       {
         __trace__("mainLoop:DELIVERY_RESP");
-        uint32_t status = cmd->get_resp()->get_status();
+        //uint32_t status = cmd->get_resp()->get_status();
         uint32_t dialogId = cmd->get_dialogId();
-        const char* messageId = cmd->get_resp()->get_messageId();
+        //const char* messageId = cmd->get_resp()->get_messageId();
         Task task;
         // find and remove task
         if (!tasks.findAndRemoveTask((uint32_t)src_proxy_index,dialogId,&task))

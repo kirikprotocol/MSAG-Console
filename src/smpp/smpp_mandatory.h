@@ -40,7 +40,7 @@ static inline void fillPduAddress(SmppStream* stream,PduAddress& addr)
 static inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
 {
   using namespace SmppCommandSet;
-  int cmdid = _pdu->commandId;
+  uint32_t cmdid = _pdu->commandId;
   try
   {
     _pdu->set_commandLength(calcSmppPacketLength(_pdu));
@@ -194,7 +194,7 @@ public:
   {
     if (stream->dataOffset < stream->dataLength) 
     {
-			__warning__("packet has left data, dropped");
+      __warning__("packet has left data, dropped");
       dropPdu(stream);
     }
   }
@@ -210,7 +210,7 @@ static inline SmppHeader* fetchSmppPdu(SmppStream* stream)
   StreamGuard guard(stream);
   try
   {
-    int32_t cmdid = smppCommandId(stream);
+    uint32_t cmdid = smppCommandId(stream);
     switch ( cmdid )
     {
     case BIND_RECIEVER:
