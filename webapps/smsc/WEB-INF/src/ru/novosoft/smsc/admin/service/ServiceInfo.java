@@ -41,6 +41,9 @@ public class ServiceInfo
 		sme = smes.get(id);
 		if (sme == null)
 			throw new AdminException("Unknown SME ID: \"" + id + '"');
+
+		String pidStr = serviceElement.getAttribute("pid");
+		this.pid = (pidStr != null && pidStr.length() > 0) ? Long.decode(pidStr).longValue() : 0;
 	}
 
 	private ServiceInfo(String id, String host, int port, String args, long pid, SME sme)

@@ -259,6 +259,7 @@ public class ServiceManager
 		catch (AdminException e)
 		{
 			refreshService(serviceId);
+			throw e;
 		}
 	}
 
@@ -467,7 +468,6 @@ public class ServiceManager
 			}
 			catch (AdminException e)
 			{
-				s.getInfo().setPid(0);
 			}
 		}
 	}
