@@ -3077,7 +3077,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       unsigned len;
       unsigned char* lst=(unsigned char*)sms.getBinProperty(Tag::SMSC_UMR_LIST,&len);
       umrList.insert(umrList.end(),lst,lst+len);
-      umrIndex=sms.hasBinProperty(Tag::SMSC_CONCATINFO)?sms.getConcatSeqNum()-1:0;
+      umrIndex=sms.hasBinProperty(Tag::SMSC_CONCATINFO)?sms.getConcatSeqNum():0;
     }
   }
 
