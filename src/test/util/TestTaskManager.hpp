@@ -39,9 +39,16 @@ public:
 	
 	virtual int Execute()
 	{
-		while (executeFlag)
+		try
 		{
-			executeCycle();
+			while (executeFlag)
+			{
+				executeCycle();
+			}
+		}
+		catch(...)
+		{
+			__trace2__("Exception in task: %s", name)
 		}
 		onStopped();
 		return 0;
