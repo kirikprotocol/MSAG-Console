@@ -12,15 +12,23 @@ class ConfigException	: public std::exception
 public:
 	ConfigException(const char * const exceptionMessage)
 		throw ()
-		: message(exceptionMessage)
-	{};
+	{
+		message = new char[strlen(exceptionMessage) +1];
+		strcpy(message, exceptionMessage);
+	};
+
+	virtual ~ConfigException()
+		throw ()
+	{
+		delete[] message;
+	}
 
 	const char * what() const
 		throw()
 	{return message;};
 
 private:
-	const char * const message;
+	char * message;
 };
 
 }

@@ -34,6 +34,7 @@ class Manager
 {
 public:
 	static void init(const char * const configurationFileName)
+		throw (ConfigException &)
 	{
 		config_filename = new char[strlen(configurationFileName)+1];
 		strcpy(config_filename, configurationFileName);
@@ -63,9 +64,18 @@ public:
 	 * @see getBool()
 	 */
 	int32_t getInt(const char * const paramName)
-		throw (HashInvalidKeyException &)
+		throw (ConfigException &)
 	{
-		return config.getInt(paramName);
+		try {
+			return config.getInt(paramName);
+		}
+		catch (HashInvalidKeyException &e)
+		{
+			std::string s("Int key \"");
+			s += paramName;
+			s += "\" not found";
+			throw ConfigException(s.c_str());
+		}
 	}
 
 	/**
@@ -78,9 +88,18 @@ public:
 	 * @see getBool()
 	 */
 	char * getString(const char * const paramName)
-		throw (HashInvalidKeyException &)
+		throw (ConfigException &)
 	{
-		return config.getString(paramName);
+		try {
+			return config.getString(paramName);
+		}
+		catch (HashInvalidKeyException &e)
+		{
+			std::string s("String key \"");
+			s += paramName;
+			s += "\" not found";
+			throw ConfigException(s.c_str());
+		}
 	}
 
 	/**
@@ -93,9 +112,18 @@ public:
 	 * @see getString()
 	 */
 	bool getBool(const char * const paramName)
-		throw (HashInvalidKeyException &)
+		throw (ConfigException &)
 	{
-		return config.getBool(paramName);
+		try {
+			return config.getBool(paramName);
+		}
+		catch (HashInvalidKeyException &e)
+		{
+			std::string s("Bool key \"");
+			s += paramName;
+			s += "\" not found";
+			throw ConfigException(s.c_str());
+		}
 	}
 
 	/**
