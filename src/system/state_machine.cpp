@@ -239,7 +239,7 @@ StateType StateMachine::submit(Tuple& t)
   sms->setDealiasedDestinationAddress(dst);
   smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms->getOriginatingAddress());
   __trace2__("SUBMIT: lookup .%d.%d.%20s, result: %d,%d",sms->getOriginatingAddress().type,
-    sms->getOriginatingAddress().plan,dst.value,
+    sms->getOriginatingAddress().plan,sms->getOriginatingAddress().value,
     profile.reportoptions,profile.codepage);
 
   sms->setDeliveryReport(sms->getDeliveryReport()|profile.reportoptions);
@@ -679,7 +679,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
       string out;
       sms.getDestinationAddress().getText(addr,sizeof(addr));
       formatDeliver(addr,time(NULL),out);
-      __trace2__("RECEIPT: addr %s",addr);
+      rpt.getDestinationAddress().getText(addr,sizeof(addr));
+      __trace2__("RECEIPT: sending receipt to %s:%s",addr,out.c_str());
       smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
       splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
       for(int i=0;i<arr.Count();i++)
