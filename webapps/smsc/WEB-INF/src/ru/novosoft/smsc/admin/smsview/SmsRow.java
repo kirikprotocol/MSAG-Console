@@ -10,6 +10,7 @@ package ru.novosoft.smsc.admin.smsview;
  */
 
 import java.util.Date;
+import java.util.TimeZone;
 import java.text.SimpleDateFormat;
 
 public class SmsRow
@@ -46,7 +47,8 @@ public class SmsRow
   public void setTo(String address) { to = address; }
   public String getDateString() {
     SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-    return formatter.format(DateConvertor.convertGMTToLocal(date));
+    formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
+    return formatter.format(date);
   }
 	public Date getDate()
 	{
