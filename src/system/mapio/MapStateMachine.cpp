@@ -514,7 +514,7 @@ void MAPIO_PutCommand(const SmscCommand& cmd )
                       string(cmd->get_sms()->getDestinationAddress().value)));
         if ( dialog.isnull() ) {
           //throw MAPDIALOG_TEMP_ERROR("Can't create or attach dialog");
-          SendRescheduleToSmsc();
+          SendRescheduleToSmsc(dialogid_smsc);
           return;
         }
       }catch(exception& e){
