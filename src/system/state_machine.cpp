@@ -975,6 +975,8 @@ StateType StateMachine::submit(Tuple& t)
                           dst,
                           dest_proxy_index,dest_proxy,&ri,src_proxy->getSmeIndex());
 
+  __trace2__("hide=%s, forceRP=%s",ri.hide?"true":"false",ri.forceReplyPath?"true":"false");
+
   sms->setRouteId(ri.routeId.c_str());
   if(ri.suppressDeliveryReports)sms->setIntProperty(Tag::SMSC_SUPPRESS_REPORTS,1);
   int prio=sms->getPriority()+ri.priority;
@@ -1891,6 +1893,7 @@ StateType StateMachine::submit(Tuple& t)
       if(
           smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias &&
           sms->getIntProperty(Tag::SMSC_HIDE) &&
+          ri.hide &&
           smsc->AddressToAlias(sms->getOriginatingAddress(),src)
         )
       {
@@ -1946,6 +1949,11 @@ StateType StateMachine::submit(Tuple& t)
     {
       extractSmsPart(sms,0);
       sms->setIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND,1);
+    }
+
+    if(ri.forceReplyPath)
+    {
+      sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x80);
     }
 
     SmscCommand delivery = SmscCommand::makeDeliverySm(*sms,dialogId2);
@@ -2100,7 +2108,8 @@ StateType StateMachine::forward(Tuple& t)
     return EXPIRED_STATE;
   }
   time_t now=time(NULL);
-  if(sms.getValidTime()<=now && sms.getLastResult()!=0)
+  if((sms.getValidTime()<=now && sms.getLastResult()!=0) || //expired or
+     RescheduleCalculator::calcNextTryTime(now,sms.getLastResult(),sms.getAttemptsCount())==-1) //max attempts count reached
   {
     sms.setLastResult(Status::EXPIRED);
     smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
@@ -2354,6 +2363,7 @@ StateType StateMachine::forward(Tuple& t)
     if(
         smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias &&
         sms.getIntProperty(Tag::SMSC_HIDE) &&
+        ri.hide &&
         smsc->AddressToAlias(sms.getOriginatingAddress(),src)
       )
     {
@@ -2431,6 +2441,10 @@ StateType StateMachine::forward(Tuple& t)
       {
         sms.setIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND,1);
       }
+    }
+    if(ri.forceReplyPath)
+    {
+      sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)|0x80);
     }
     SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
     dest_proxy->putCommand(delivery);
@@ -2744,7 +2758,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
         dst=sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str();
       }
 
-      bool has_route = smsc->routeSms(sms.getOriginatingAddress(),dst,dest_proxy_index,dest_proxy,NULL);
+      smsc::router::RouteInfo ri;
+      bool has_route = smsc->routeSms(sms.getOriginatingAddress(),dst,dest_proxy_index,dest_proxy,&ri,smsc->getSmeIndex(sms.getSourceSmeId()));
       if ( !has_route )
       {
         __warning__("CONCAT: No route");
@@ -2880,7 +2895,10 @@ StateType StateMachine::deliveryResp(Tuple& t)
             sms.setIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND,1);
           }
         }
-
+        if(ri.forceReplyPath)
+        {
+          sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)|0x80);
+        }
 
         SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
         dest_proxy->putCommand(delivery);
@@ -3063,7 +3081,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       {
         rpt.setMessageReference(umrList[umrIndex]);
       }
-      rpt.setIntProperty(Tag::SMPP_MSG_STATE,DELIVERED_STATE);
+      rpt.setIntProperty(Tag::SMPP_MSG_STATE,SmppMessageState::DELIVERED);
       char addr[64];
       sms.getDestinationAddress().getText(addr,sizeof(addr));
       rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
@@ -3582,6 +3600,14 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   rpt.setMessageReference(sms.getMessageReference());
   rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
     sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+  switch(state)
+  {
+    case ENROUTE:state=SmppMessageState::ENROUTE;break;
+    case DELIVERED:state=SmppMessageState::DELIVERED;break;
+    case EXPIRED:state=SmppMessageState::EXPIRED;break;
+    case UNDELIVERABLE:state=SmppMessageState::UNDELIVERABLE;break;
+    case DELETED:state=SmppMessageState::DELETED;break;
+  }
   rpt.setIntProperty(Tag::SMPP_MSG_STATE,state);
   char addr[64];
   sms.getDestinationAddress().getText(addr,sizeof(addr));
@@ -3653,7 +3679,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   rpt.setMessageReference(sms.getMessageReference());
   rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
     sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
-  rpt.setIntProperty(Tag::SMPP_MSG_STATE,ENROUTE);
+  rpt.setIntProperty(Tag::SMPP_MSG_STATE,SmppMessageState::ENROUTE);
   char addr[64];
   sms.getDestinationAddress().getText(addr,sizeof(addr));
   rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
@@ -3707,6 +3733,7 @@ time_t StateMachine::rescheduleSms(SMS& sms)
   time_t basetime=time(NULL);
   time_t nextTryTime=RescheduleCalculator::calcNextTryTime(basetime,sms.getLastResult(),sms.getAttemptsCount());
   if(nextTryTime>sms.getValidTime())nextTryTime=sms.getValidTime();
+  if(nextTryTime==-1)nextTryTime=basetime;
   __trace2__("rescheduleSms: bt=%u ntt=%u",basetime,nextTryTime);
   return nextTryTime;
 }
