@@ -28,9 +28,11 @@ import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.smsc_service.CancelMessageData;
 import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.admin.*;
+import org.apache.log4j.Category;
 
 public class SmsView
 {
+    private org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(Class.class);
     private static int   MAX_SMS_BODY_LENGTH      = 1500;
     private static byte  INT_TAG_TYPE             = 0;
     private static byte  STR_TAG_TYPE             = 1;
