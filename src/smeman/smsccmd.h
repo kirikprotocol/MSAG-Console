@@ -126,10 +126,11 @@ struct AlertNotification{
 };
 
 struct ForwardData{
-  ForwardData(SmeIndex idx,SMSId id,bool reschedule):idx(idx),id(id),reschedule(reschedule){}
+  ForwardData(SmeIndex idx,SMSId id,bool reschedule):idx(idx),id(id),reschedule(reschedule),allowDivert(false){}
   SmeIndex idx;
   SMSId id;
   bool reschedule;
+  bool allowDivert;
 };
 
 struct SmsResp
@@ -141,7 +142,9 @@ private:
   bool dataSm;
   int delay;
   SMS* sms;
+  bool diverted;
 public:
+
   void set_messageId(const char* msgid)
   {
     if(!msgid)return;
@@ -149,9 +152,20 @@ public:
     messageId = new char[strlen(msgid)+1];
     strcpy(messageId,msgid);
   }
-  void set_status(uint32_t st) { status = st; }
-  const char* get_messageId() {return messageId;}
-  uint32_t get_status() { return status; }
+  void set_status(uint32_t st)
+  {
+    status = st;
+  }
+
+  const char* get_messageId()
+  {
+    return messageId;
+  }
+
+  uint32_t get_status()
+  {
+    return status;
+  }
   void setDescriptor(const Descriptor& dsc)
   {
     descriptor=dsc;
@@ -160,15 +174,43 @@ public:
   {
     return descriptor;
   }
-  void set_delay(int newdelay){delay=newdelay;}
-  int get_delay(){return delay;}
-  void set_dataSm(){dataSm=true;}
-  bool get_dataSm(){return dataSm;}
+  void set_delay(int newdelay)
+  {
+    delay=newdelay;
+  }
+  int get_delay()
+  {
+    return delay;
+  }
+  void set_dataSm()
+  {
+    dataSm=true;
+  }
+  bool get_dataSm()
+  {
+    return dataSm;
+  }
 
-  void set_sms(SMS* s){sms=s;}
-  SMS* get_sms(){return sms;}
+  void set_sms(SMS* s)
+  {
+    sms=s;
+  }
+  SMS* get_sms()
+  {
+    return sms;
+  }
 
-  SmsResp() : messageId(0), status(0),dataSm(false),delay(-1),sms(0) {};
+  bool get_diverted()
+  {
+    return diverted;
+  }
+
+  void set_diverted(bool val)
+  {
+    diverted=val;
+  }
+
+  SmsResp() : messageId(0), status(0),dataSm(false),delay(-1),sms(0),diverted(false) {};
   ~SmsResp()
   {
     if ( messageId ) delete messageId;
@@ -485,6 +527,9 @@ struct _SmscCommand
   bool is_reschedulingForward(){return ((ForwardData*)dta)->reschedule;}
   SmeIndex get_forwardDestSme(){return ((ForwardData*)dta)->idx;}
   SMSId get_forwardMsgId(){return ((ForwardData*)dta)->id;}
+
+  bool get_forwardAllowDivert(){return ((ForwardData*)dta)->allowDivert;}
+  void set_forwardAllowDivert(bool val){((ForwardData*)dta)->allowDivert=val;}
 
   void set_status(int st){status=st;}
   int get_status(){return status;} // for enquirelink and unbind
