@@ -1,8 +1,8 @@
 package ru.novosoft.smsc.jsp.smsc.reshedule;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
@@ -209,9 +209,9 @@ public class Index extends PageBean
     return checkedShedulesSet.contains(shedule);
   }
 
-  public boolean isAllErrorsAssigned()
+  public boolean isAllErrorsAssigned(Locale locale)
   {
-    return reshedules.isAllErrorsAssigned();
+    return reshedules.isAllErrorsAssigned(locale);
   }
 
   public String getDefaultReshedule()
@@ -221,6 +221,11 @@ public class Index extends PageBean
 
   public String getDefaultResheduleName()
   {
-    return reshedules.DEFAULT_RESHEDULE_NAME;
+    return Reshedules.DEFAULT_RESHEDULE_NAME;
+  }
+
+  public Set getAllErrorCodes(Locale locale) throws AdminException
+  {
+    return reshedules.getAllErrorCodes(locale);
   }
 }

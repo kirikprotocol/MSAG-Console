@@ -14,22 +14,24 @@ import java.util.*;
  * Date: Aug 26, 2003
  * Time: 3:03:54 PM
  */
-class Reshedules {
+class Reshedules
+{
   private static final String RESHEDULE_TABLE_PREFIX = "core.reshedule table";
   private static final String RESHEDULE_DEFAULT = "core.reschedule_table";
   private static final String ERR_CODES_PREFIX = "smsc.errcode.";
   private static final String ERR_CODE_UNKNOWN = ERR_CODES_PREFIX + "unknown";
   public static final String DEFAULT_RESHEDULE_NAME = "DEFAULT_RESHEDULE_NAME";
-  public static final String[] ERR_CODES_ALL = {
+/*  public Set err_codes_all = new HashSet();
+  {
     "8", "20", "69", "88", "100", "255", "1027", "1028", "1136", "1139", "1143", "1157", "1179", "1183", "1184", "1186"
-/*
     0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 17, 19, 20, 21, 51, 52, 64, 66, 67, 68, 69, 72, 73,
     80, 81, 83, 84, 85, 88, 97, 98, 99, 100, 101, 102, 103, 192, 193, 194, 195, 196, 254, 255, 260,
     1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1134, 1136, 1137, 1138, 1139, 1140, 1141, 1142, 1143,
     1144, 1145, 1146, 1147, 1148, 1149, 1150, 1151, 1153, 1154, 1155, 1157, 1158, 1160, 1161, 1163, 1164,
     1165, 1173, 1179, 1183, 1184, 1185, 1186, 1187, 1188
-*/
+
   };
+*/
 
   private static Reshedules instance = null;
 
@@ -173,9 +175,9 @@ class Reshedules {
     return assignedErrorsSet.contains(errorCode);
   }
 
-  public boolean isAllErrorsAssigned()
+  public boolean isAllErrorsAssigned(Locale locale)
   {
-    return assignedErrorsSet.size() == ERR_CODES_ALL.length;
+    return assignedErrorsSet.size() == getAllErrorCodes(locale).size();
   }
 
   public String getDefaultReshedule()
@@ -194,5 +196,10 @@ class Reshedules {
   public void setDefaultReshedule(String defaultReshedule)
   {
     config.setString(RESHEDULE_DEFAULT, defaultReshedule);
+  }
+
+  public Set getAllErrorCodes(Locale locale)
+  {
+    return appContext.getLocaleStrings(locale, ERR_CODES_PREFIX);
   }
 }

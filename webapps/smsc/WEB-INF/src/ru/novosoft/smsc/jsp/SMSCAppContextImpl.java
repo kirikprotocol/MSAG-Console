@@ -11,10 +11,7 @@ import ru.novosoft.smsc.admin.resources.ResourcesManagerImpl;
 import ru.novosoft.smsc.admin.route.RouteSubjectManagerImpl;
 import ru.novosoft.smsc.admin.service.HostsManager;
 import ru.novosoft.smsc.admin.service.ServiceManagerImpl;
-import ru.novosoft.smsc.admin.smsc_service.RouteSubjectManager;
-import ru.novosoft.smsc.admin.smsc_service.SmeManager;
-import ru.novosoft.smsc.admin.smsc_service.SmeManagerImpl;
-import ru.novosoft.smsc.admin.smsc_service.Smsc;
+import ru.novosoft.smsc.admin.smsc_service.*;
 import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.perfmon.PerfServer;
 import ru.novosoft.smsc.util.LocaleMessages;
@@ -236,6 +233,11 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
   public String getLocaleString(Locale locale, String key)
   {
     return localeMessages.getString(locale, key);
+  }
+
+  public Set getLocaleStrings(Locale locale, String prefix)
+  {
+    return localeMessages.getStrings(locale, prefix);
   }
 
   public Journal getJournal()

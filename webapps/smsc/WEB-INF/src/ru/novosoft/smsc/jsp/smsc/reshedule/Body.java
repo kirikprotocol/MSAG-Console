@@ -88,9 +88,9 @@ public class Body extends PageBean
     this.checkedErrs = checkedErrs;
   }
 
-  public String[] getAllErrCodes()
+  public Set getAllErrCodes(Locale locale)
   {
-    return Reshedules.ERR_CODES_ALL;
+    return reshedules.getAllErrorCodes(locale);
   }
 
   public String getErrorString(Locale locale, String errorCode)

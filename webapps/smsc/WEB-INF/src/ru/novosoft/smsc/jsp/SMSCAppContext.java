@@ -9,16 +9,15 @@ import ru.novosoft.smsc.admin.journal.Journal;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.admin.resources.ResourcesManager;
 import ru.novosoft.smsc.admin.service.HostsManager;
-import ru.novosoft.smsc.admin.smsc_service.RouteSubjectManager;
-import ru.novosoft.smsc.admin.smsc_service.SmeManager;
-import ru.novosoft.smsc.admin.smsc_service.Smsc;
+import ru.novosoft.smsc.admin.smsc_service.*;
 import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.util.jsp.AppContext;
 
 import javax.sql.DataSource;
-import java.util.*;
+import java.util.Locale;
+import java.util.Set;
 
 
 public interface SMSCAppContext extends AppContext
@@ -40,6 +39,8 @@ public interface SMSCAppContext extends AppContext
   void destroy();
 
   String getLocaleString(Locale locale, String key);
+
+  public Set getLocaleStrings(Locale locale, String prefix);
 
   SmeManager getSmeManager();
 

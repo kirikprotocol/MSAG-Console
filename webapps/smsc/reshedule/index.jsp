@@ -39,7 +39,7 @@ switch(bean.process(request))
 include file="/WEB-INF/inc/html_3_header.jsp"%><%@
 include file="/WEB-INF/inc/collapsing_tree.jsp"%><%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",  "Add",  "Add new reshedule policy", !bean.isAllErrorsAssigned());
+page_menu_button(out, "mbAdd",  "Add",  "Add new reshedule policy", !bean.isAllErrorsAssigned(request.getLocale()));
 page_menu_button(out, "mbDelete",  "Delete",  "Delete all checked reshedules", "return confirm('Are you sure to delete all checked reshedules?')");
 page_menu_space(out);
 page_menu_button(out, "mbSave",  "Save",  "Save current shedules to config");
@@ -85,7 +85,7 @@ function clickEdit(value)
     <td><a href="#" onClick="return clickEdit('<%=reshedule%>');"><%=reshedule%></a></td></tr>
 
  <%
-    int count = 0;
+    //int count = 0;
     if (resheduleErrors.size() <= 0 )
     {
  %>
@@ -108,7 +108,7 @@ function clickEdit(value)
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",  "Add",  "Add new reshedule policy", !bean.isAllErrorsAssigned());
+page_menu_button(out, "mbAdd",  "Add",  "Add new reshedule policy", !bean.isAllErrorsAssigned(request.getLocale()));
 page_menu_button(out, "mbDelete",  "Delete",  "Delete all checked reshedules", "return confirm('Are you sure to delete all checked reshedules?')");
 page_menu_space(out);
 page_menu_button(out, "mbSave",  "Save",  "Save current shedules to config");
