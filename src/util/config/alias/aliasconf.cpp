@@ -76,11 +76,13 @@ AliasConfig::status AliasConfig::load(const char * const filename)
   config_filename.reset(cStringCopy(filename));
   try
   {
+    smsc_log_debug(logger, "Starting to read aliases xml");
     smsc::util::xml::DOMTreeReader reader;
     DOMDocument *document = reader.read(filename);
     DOMElement *elem = document->getDocumentElement();
     DOMNodeList *list = elem->getElementsByTagName(XmlStr("record"));
-    for (unsigned i=0; i<list->getLength(); i++)
+    unsigned elementsLength = list->getLength();
+    for (unsigned i=0; i<elementsLength; i++)
     {
       DOMNode *node = list->item(i);
       DOMNamedNodeMap *attrs = node->getAttributes();
@@ -126,9 +128,9 @@ AliasConfig::status AliasConfig::load(const char * const filename)
         }
         //continue;
       }
-      DOMNodeList *childs = node->getChildNodes();
       records.push_back(record.release());
     }
+    smsc_log_debug(logger, "aliases done");
   } catch (ParseException &e) {
     smsc_log_warn(logger, "DomException:%s",e.what());
     return fail;
