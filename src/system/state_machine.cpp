@@ -1112,22 +1112,22 @@ StateType StateMachine::submit(Tuple& t)
   bool aclCheck=false;
   std::string aclAddr;
 
+  bool fromMap=src_proxy && !strcmp(src_proxy->getSystemId(),"MAP_PROXY");
+  bool toMap=dest_proxy && !strcmp(dest_proxy->getSystemId(),"MAP_PROXY");
+
+
+  if((fromMap || toMap) && !(fromMap && toMap))
   {
-    bool fromMap=src_proxy && !strcmp(src_proxy->getSystemId(),"MAP_PROXY");
-    bool toMap=dest_proxy && !strcmp(dest_proxy->getSystemId(),"MAP_PROXY");
-    if((fromMap || toMap) && !(fromMap && toMap))
+    char buf[MAX_ADDRESS_VALUE_LENGTH];
+    if(fromMap)
     {
-      char buf[MAX_ADDRESS_VALUE_LENGTH];
-      if(fromMap)
-      {
-        sms->getOriginatingAddress().getText(buf,sizeof(buf));
-      }else
-      {
-        sms->getDestinationAddress().getText(buf,sizeof(buf));
-      }
-      aclAddr=buf;
-      aclCheck=true;
+      sms->getOriginatingAddress().getText(buf,sizeof(buf));
+    }else
+    {
+      sms->getDestinationAddress().getText(buf,sizeof(buf));
     }
+    aclAddr=buf;
+    aclCheck=true;
   }
 
   if(aclCheck && ri.aclId!=-1 && !smsc->getAclMgr()->isGranted(ri.aclId,aclAddr))
@@ -1145,6 +1145,14 @@ StateType StateMachine::submit(Tuple& t)
       src_proxy->getSystemId()
     );
     return ERROR_STATE;
+  }
+
+  if(toMap)
+  {
+    if(ri.forceDelivery)
+    {
+      sms->setIntProperty(Tag::SMPP_PRIORITY,3);
+    }
   }
 
   if(smsc->getSmeInfo(dest_proxy_index).interfaceVersion==99)
@@ -4178,7 +4186,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   rpt.setValidTime(0);
   rpt.setDeliveryReport(0);
   rpt.setArchivationRequested(false);
-  rpt.setIntProperty(Tag::SMPP_ESM_CLASS,regdel?0x20:0);
+  //rpt.setIntProperty(Tag::SMPP_ESM_CLASS,regdel?0x20:0);
   rpt.setDestinationAddress(sms.getOriginatingAddress());
   rpt.setMessageReference(sms.getMessageReference());
   rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
@@ -4221,13 +4229,14 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
 
 
   formatNotify(fd,out);
-  if(sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
-  {
-    fillSms(&rpt,"",0,CONV_ENCODING_CP1251,profile.codepage,0);
-  }else
-  {
-    fillSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,0);
-  }
+  //if(sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
+  //{
+  //  fillSms(&rpt,"",0,CONV_ENCODING_CP1251,profile.codepage,0);
+  //}else
+  //{
+  fillSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,0);
+
+  //}
   //fillSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,140);
   //smsc->submitSms(prpt);
   submitReceipt(rpt,0x20);
