@@ -13,6 +13,8 @@
 	srcSmeId CDATA #IMPLIED
 	deliveryMode CDATA #REQUIRED
 	forwardTo CDATA #IMPLIED
+	hide CDATA #IMPLIED
+	forceReplayPath CDATA #IMPLIED
 >
 <!ELEMENT source (subject | mask)>
 <!ELEMENT destination (subject | mask)>
