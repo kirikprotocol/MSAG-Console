@@ -41,9 +41,9 @@ namespace smsc { namespace distrlist
         virtual void deleteDistrList(string dlName)
             throw(SQLException, ListNotExistsException);
         virtual DistrList getDistrList(string dlName)
-            throw(SQLException, ListNotExistsException) = 0;
+            throw(SQLException, ListNotExistsException);
         virtual Array<DistrList> list()
-            throw(SQLException) = 0;
+            throw(SQLException);
         
         virtual Array<Address> members(string dlName, const Address& submitter)
             throw(SQLException, IllegalSubmitterException);
