@@ -729,6 +729,16 @@ ostream& operator<< (ostream& os, PduDataSm& p)
 	return os;
 }
 
+ostream& operator<< (ostream& os, PduQuerySm& p)
+{
+	os << "PduQuerySm {" << endl;
+	os << p.get_header() << endl;
+	__str_prop__(messageId);
+	__prop__(source);
+	os << "}";
+	return os;
+}
+
 ostream& operator<< (ostream& os, PduXSmResp& p)
 {
 	os << "PduXSmResp {" << endl;

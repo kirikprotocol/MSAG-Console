@@ -43,8 +43,9 @@ void dumpPdu(const char* tc, const string& id, Pdu* pdu)
 		ostringstream os;
 		os << *pdu;
 		time_t lt = time(NULL); tm t; char buf[30];
+		SmppHeader* header = reinterpret_cast<SmppHeader*>(pdu);
 		__trace2__("%s(): systemId = %s, sequenceNumber = %u, system time = %s, pdu:\n%s",
-			tc, id.c_str(), pdu->get_header().get_sequenceNumber(),
+			tc, id.c_str(), header->get_sequenceNumber(),
 			asctime_r(localtime_r(&lt, &t), buf), os.str().c_str());
 	}
 	else
@@ -176,6 +177,7 @@ bool operator!=(PduAddress& a1, PduAddress& a2);
 __log_pdu__(PduXSm)
 __log_pdu__(PduReplaceSm)
 __log_pdu__(PduDataSm)
+__log_pdu__(PduQuerySm)
 __log_pdu__(PduXSmResp)
 __log_pdu__(PduReplaceSmResp)
 
