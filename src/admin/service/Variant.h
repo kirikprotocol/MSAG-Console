@@ -5,6 +5,7 @@
 #include <admin/service/Type.h>
 #include <core/buffers/Hash.hpp>
 #include <list>
+#include <string>
 
 namespace smsc {
 namespace admin {
@@ -47,6 +48,10 @@ public:
 	const StringList& getStringListValue() const throw (AdminException);
 
 	void appendValueToStringList(const char * const value) throw (AdminException);
+  void appendValueToStringList(const std::string & value) throw (AdminException)
+  {
+    appendValueToStringList(value.c_str());
+  }
 
 
 private:

@@ -94,8 +94,18 @@ protected:
   Variant logGetCategories(void);
   void logSetCategories(const Arguments & args);
 
-    Variant loadRoutes(void) throw (AdminException);
-    Variant traceRoute(const Arguments &args) throw (AdminException);
+  Variant loadRoutes(void) throw (AdminException);
+  Variant traceRoute(const Arguments &args) throw (AdminException);
+  
+  Variant aclListNames(const Arguments & args) throw (AdminException);
+  Variant aclGet(const Arguments & args) throw (AdminException);
+  Variant aclRemove(const Arguments & args) throw (AdminException);
+  Variant aclCreate(const Arguments & args) throw (AdminException);
+  Variant aclUpdateInfo(const Arguments & args) throw (AdminException);
+  Variant aclLookupAddresses(const Arguments & args) throw (AdminException);
+  Variant aclRemoveAddresses(const Arguments & args) throw (AdminException);
+  Variant aclAddAddresses(const Arguments & args) throw (AdminException);
+  
 
   SmscConfigs &configs;
   Methods methods;
@@ -108,7 +118,9 @@ protected:
     mscRegistrateMethod, mscUnregisterMethod, mscBlockMethod, mscClearMethod, mscListMethod,
     smeAddMethod, smeRemoveMethod, smeUpdateMethod, smeStatusMethod, smeDisconnectMethod,
     logGetCategoriesMethod, logSetCategoriesMethod,
-    traceRouteMethod, loadRoutesMethod
+    traceRouteMethod, loadRoutesMethod,
+    aclListNamesMethod, aclGetMethod, aclRemoveMethod, aclCreateMethod, aclUpdateInfoMethod,
+      aclLookupAddressesMethod, aclRemoveAddressesMethod, aclAddAddressesMethod    
   };
 
   smsc::core::synchronization::Mutex mutex;

@@ -13,6 +13,7 @@
 #include <util/config/route/RouteConfig.h>
 #include <mscman/MscManager.h>
 #include <resourcemanager/ResourceManager.hpp>
+#include "acls/interfaces.h"
 
 namespace smsc {
 namespace admin {
@@ -24,10 +25,11 @@ using namespace smsc::router;
 using namespace smsc::core::buffers;
 using namespace smsc::util::config;
 using namespace smsc::util::config::route;
-
+using namespace smsc::acls;
 
 using smsc::mscman::MscManager;
 using smsc::mscman::MscInfo;
+
 
 SmscComponent::SmscComponent(SmscConfigs &all_configs)
 : configs(all_configs),isStopping(false),
@@ -71,6 +73,24 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
   sme_ids_params["ids"] = Parameter("ids", StringListType);
   Parameters log_cats;
   log_cats["categories"] = Parameter("categories", StringListType);
+  
+  Parameters acl_id_params;
+  acl_id_params["id"] = Parameter("id", LongType);
+  Parameters acl_full_params;
+  acl_full_params["id"] = Parameter("id", LongType);
+  acl_full_params["name"] = Parameter("name", StringType);
+  acl_full_params["description"] = Parameter("description", StringType);
+  acl_full_params["addresses"] = Parameter("addresses", StringListType);
+  Parameters acl_info_params;
+  acl_info_params["id"] = Parameter("id", LongType);
+  acl_info_params["name"] = Parameter("name", StringType);
+  acl_info_params["description"] = Parameter("description", StringType);
+  Parameters acl_lookup_addresses_params;
+  acl_lookup_addresses_params["id"] = Parameter("id", LongType);
+  acl_lookup_addresses_params["prefix"] = Parameter("prefix", StringType);
+  Parameters acl_addresses_params;
+  acl_addresses_params["id"] = Parameter("id", LongType);
+  acl_addresses_params["addresses"] = Parameter("addresses", StringListType);
 
 
   /**************************** method declarations *************************/
@@ -86,7 +106,7 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
   trace_route_params["srcSysId"  ] = Parameter("srcSysId"  , StringType);
   Method trace_route           ((unsigned)traceRouteMethod, "trace_route", trace_route_params, StringListType);
   Method load_routes           ((unsigned)loadRoutesMethod, "load_routes", empty_params, StringListType);
-    bTemporalRoutesManagerConfigLoaded = false;
+  bTemporalRoutesManagerConfigLoaded = false;
 
   Method profile_lookup   ((unsigned)profileLookupMethod,   "lookup_profile",    lookup_params, StringListType);
   Method profile_lookup_ex((unsigned)profileLookupExMethod, "profile_lookup_ex", lookup_params, StringListType);
@@ -110,6 +130,15 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
 
   Method log_get_categories((unsigned)logGetCategoriesMethod, "log_get_categories",  empty_params, StringListType);
   Method log_set_categories((unsigned)logSetCategoriesMethod, "log_set_categories",  log_cats, BooleanType);
+
+  Method acl_list_names       ((unsigned)aclListNamesMethod,       "acl_list_names",        empty_params,                StringListType);
+  Method acl_get              ((unsigned)aclGetMethod,             "acl_get",               acl_id_params,               StringListType);
+  Method acl_remove           ((unsigned)aclRemoveMethod,          "acl_remove",            acl_id_params,               BooleanType);
+  Method acl_create           ((unsigned)aclCreateMethod,          "acl_create",            acl_full_params,             BooleanType);
+  Method acl_update_info      ((unsigned)aclUpdateInfoMethod,      "acl_update_info",       acl_info_params,             BooleanType);
+  Method acl_lookup_addresses ((unsigned)aclLookupAddressesMethod, "acl_lookup_addresses",  acl_lookup_addresses_params, StringListType);
+  Method acl_remove_addresses ((unsigned)aclRemoveAddressesMethod, "acl_remove_addresses",  acl_addresses_params,        BooleanType);
+  Method acl_add_addresses    ((unsigned)aclAddAddressesMethod,    "acl_add_addresses",     acl_addresses_params,        BooleanType);
 
   /***************************** method assigns *****************************/
   methods[apply_routes         .getName()] = apply_routes;
@@ -143,6 +172,15 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
 
   methods[load_routes.getName()] = load_routes;
   methods[trace_route.getName()] = trace_route;
+
+  methods[acl_list_names.getName()] = acl_list_names;
+  methods[acl_get.getName()] = acl_get;
+  methods[acl_remove.getName()] = acl_remove;
+  methods[acl_create.getName()] = acl_create;
+  methods[acl_update_info.getName()] = acl_update_info;
+  methods[acl_lookup_addresses.getName()] = acl_lookup_addresses;
+  methods[acl_remove_addresses.getName()] = acl_remove_addresses;
+  methods[acl_add_addresses.getName()] = acl_add_addresses;
 
   smsc_app_runner.reset(0);
 }
@@ -232,9 +270,26 @@ throw (AdminException)
         logSetCategories(args);
         return Variant(true);
       case loadRoutesMethod:
-                return loadRoutes();
+        return loadRoutes();
       case traceRouteMethod:
-                return traceRoute(args);
+        return traceRoute(args);
+      
+      case aclListNamesMethod:
+        return aclListNames(args);
+      case aclGetMethod:
+        return aclGet(args);
+      case aclRemoveMethod:
+        return aclRemove(args);
+      case aclCreateMethod:
+        return aclCreate(args);
+      case aclUpdateInfoMethod:
+        return aclUpdateInfo(args);
+      case aclLookupAddressesMethod:
+        return aclLookupAddresses(args);
+      case aclRemoveAddressesMethod:
+        return aclRemoveAddresses(args);
+      case aclAddAddressesMethod:
+        return aclAddAddresses(args);
 
       default:
         smsc_log_debug(logger, "unknown method \"%s\" [%u]", method.getName(), method.getId());
@@ -1296,6 +1351,169 @@ throw (AdminException)
   }
   return Variant("");
 }
+
+
+Variant SmscComponent::aclListNames(const Arguments & args) throw (AdminException)
+{
+  AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
+  typedef std::vector<AclNamedIdent> AclNames;
+  AclNames resultList;
+  aclmgr->enumerate(resultList);
+
+  Variant result(service::StringListType);
+  for (AclNames::const_iterator i = resultList.begin(); i != resultList.end(); i++)
+  {
+    const AclNamedIdent & ident(*i);
+    const size_t len = 3*sizeof(ident.first) + ident.second.length()+2;
+    std::auto_ptr<char> buffer(new char[len]);
+    snprintf(buffer.get(), len, "%lu,%s", ident.first, ident.second.c_str());
+    result.appendValueToStringList(buffer.get());
+  }
+  
+  return result;
+}
+
+Variant SmscComponent::aclGet(const Arguments & args) throw (AdminException)
+{
+  try {
+    AclIdent aclId = args.Get("id").getLongValue();
+    AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
+    AclInfo aclInfo = aclmgr->getInfo(aclId);
+    
+    Variant result(service::StringListType);
+    char buffer[256];
+    snprintf(buffer, sizeof(buffer), "%lu", aclInfo.ident);
+    result.appendValueToStringList(buffer);
+    result.appendValueToStringList(aclInfo.name);
+    result.appendValueToStringList(aclInfo.desctiption);
+    return result;
+  } catch (HashInvalidKeyException &e) {
+    throw new AdminException("Parameter id not found");
+  }
+}
+
+Variant SmscComponent::aclRemove(const Arguments & args) throw (AdminException)
+{
+  try {
+    AclIdent aclId = args.Get("id").getLongValue();
+    AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
+    aclmgr->remove(aclId);
+    
+    Variant result("removed");
+    return result;
+  } catch (HashInvalidKeyException &e) {
+    throw new AdminException("Parameter id not found");
+  }
+}
+
+Variant SmscComponent::aclCreate(const Arguments & args) throw (AdminException)
+{
+  try {
+    AclIdent aclId = args.Get("id").getLongValue();
+    const char * const name = args.Get("name").getStringValue();
+    const char * const description = args.Get("description").getStringValue();
+    
+    const StringList & addresses(args.Get("addresses").getStringListValue());
+    std::vector<AclPhoneNumber> phones;
+    for (StringList::const_iterator i = addresses.begin(); i != addresses.end(); i++)
+    {
+      const char * const addrStr = *i;
+      if (addrStr != NULL && addrStr[0] != 0)
+      {
+        std::string address(addrStr);
+        phones.push_back(address);
+      }
+    }
+    
+    AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
+    aclmgr->create(aclId, name, description, phones);    
+    
+    Variant result("created");
+    return result;
+  } catch (HashInvalidKeyException &e) {
+    throw new AdminException("Parameter id or name or description or adressess not found");
+  }
+}
+
+Variant SmscComponent::aclUpdateInfo(const Arguments & args) throw (AdminException)
+{
+  try {
+    AclIdent aclId = args.Get("id").getLongValue();
+    const char * const name = args.Get("name").getStringValue();
+    const char * const description = args.Get("description").getStringValue();
+    
+    AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
+    aclmgr->updateAclInfo(aclId, name, description);
+    
+    Variant result("updated");
+    return result;
+  } catch (HashInvalidKeyException &e) {
+    throw new AdminException("Parameter id or name or description not found");
+  }
+}
+
+Variant SmscComponent::aclLookupAddresses(const Arguments & args) throw (AdminException)
+{
+  try {
+    AclIdent aclId = args.Get("id").getLongValue();
+    const char * const prefix = args.Get("prefix").getStringValue();
+    
+    typedef std::vector<AclPhoneNumber> Phones;
+    Phones resultPhones;
+    
+    AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
+    aclmgr->lookupByPrefix(aclId, prefix, resultPhones);
+    
+    Variant result(service::StringListType);
+    for (Phones::const_iterator i = resultPhones.begin(); i != resultPhones.end(); i++) {
+      result.appendValueToStringList(*i);
+    }
+    return result;
+  } catch (HashInvalidKeyException &e) {
+    throw new AdminException("Parameter id or prefix not found");
+  }
+}
+
+Variant SmscComponent::aclRemoveAddresses(const Arguments & args) throw (AdminException)
+{
+  try {
+    AclIdent aclId = args.Get("id").getLongValue();
+    const StringList & addresses(args.Get("addresses").getStringListValue());
+
+    AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
+    for (StringList::const_iterator i = addresses.begin(); i != addresses.end(); i++)
+    {
+      std::string address(*i);
+      aclmgr->removePhone(aclId, address);
+    }
+    
+    Variant result("removed addresses");
+    return result;
+  } catch (HashInvalidKeyException &e) {
+    throw new AdminException("Parameter id or adressess not found");
+  }
+}
+
+Variant SmscComponent::aclAddAddresses(const Arguments & args) throw (AdminException)
+{
+  try {
+    AclIdent aclId = args.Get("id").getLongValue();
+    const StringList & addresses(args.Get("addresses").getStringListValue());
+
+    AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
+    for (StringList::const_iterator i = addresses.begin(); i != addresses.end(); i++)
+    {
+      std::string address(*i);
+      aclmgr->addPhone(aclId, address);
+    }
+    
+    Variant result("added addresses");
+    return result;
+  } catch (HashInvalidKeyException &e) {
+    throw new AdminException("Parameter id or adressess not found");
+  }
+}
+
 
 }
 }
