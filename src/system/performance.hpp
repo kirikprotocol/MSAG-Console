@@ -122,11 +122,13 @@ public:
     {
       __warning2__("Failed to init PerformanceServer:%s:%d",host.c_str(),port);
       sleep(5);
+      if(isStopping)return 0;
     }
     while(srv.StartServer()==-1)
     {
       __warning2__("Failed to start PerformanceServer:%s:%d",host.c_str(),port);
       sleep(5);
+      if(isStopping)return 0;
     }
     linger l;
     l.l_onoff=1;
