@@ -674,7 +674,8 @@ __synchronized__
   __trace2__("&---------- END --------------&");
   for ( int i =0; i<new_aliases_count; ++i )
   {
-    addIntoAddrTreeRecurse(&addrRootNode,tmp_vector[i]);
+		if ( tmp_vector[i]->alias.hide )
+			addIntoAddrTreeRecurse(&addrRootNode,tmp_vector[i]);
   }
   __qsort__(tmp_vector,new_aliases_count,sizeof(AliasRecord*),
             ali_sort_comparator);
@@ -688,8 +689,7 @@ __synchronized__
   __trace2__("&---------- END --------------&");
   for ( int i =0; i<new_aliases_count; ++i )
   {
-		if ( tmp_vector[i]->alias.hide )
-			addIntoAliasTreeRecurse(&aliasRootNode,tmp_vector[i]);
+		addIntoAliasTreeRecurse(&aliasRootNode,tmp_vector[i]);
   }
   delete tmp_vector;
   while(first_alias)
