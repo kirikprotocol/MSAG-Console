@@ -312,11 +312,12 @@ vector<int> SmppUtil::compareOptional(SmppOptional& p1, SmppOptional& p2,
 	if (check) { __require__(p.size_##field() == len_##field && \
 		!strncmp(p.get_##field(), str_##field.get(), len_##field)); }
 
-#define __set_bin__(field, length) \
+#define __set_bin__(field, length, dataCoding) \
 	__trace_set__("set_bin"); \
 	int len_##field = length; \
-	auto_ptr<uint8_t> str_##field = rand_uint8_t(len_##field); \
-	p.set_##field((char*) str_##field.get(), len_##field); \
+	uint8_t dc_##field = dataCoding; \
+	auto_ptr<char> str_##field = rand_text(len_##field, dc_##field); \
+	p.set_##field(str_##field.get(), len_##field); \
 	if (check) { __require__(p.size_##field() == len_##field && \
 		!memcmp(p.get_##field(), str_##field.get(), len_##field)); }
 
@@ -370,15 +371,16 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	__set_cstr2__(validityPeriod, time2string(validTime, tmp, time(NULL), __numTime__));
 	__set_int__(uint8_t, registredDelivery, rand0(255));
 	__set_int__(uint8_t, replaceIfPresentFlag, !rand0(10));
-	__set_int__(uint8_t, dataCoding, getDataCoding(RAND_TC));
+	uint8_t dataCoding = getDataCoding(RAND_TC);
+	__set_int__(uint8_t, dataCoding, dataCoding);
 	__set_int__(uint8_t, smDefaultMsgId, rand0(255)); //хбз что это такое
-	__set_bin__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH));
+	__set_bin__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH), dataCoding);
 	mask &= ~OPT_USER_MSG_REF; //исключить userMessageReference
 	setupRandomCorrectOptionalParams(pdu->get_optional(), mask, check);
 }
 
 void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
-	uint64_t mask, bool check)
+	uint8_t dataCoding, uint64_t mask, bool check)
 {
 	__require__(pdu);
 	__cfg_int__(maxWaitTime);
@@ -394,7 +396,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	__set_cstr2__(validityPeriod, time2string(validTime, tmp, time(NULL), __numTime__));
 	__set_int__(uint8_t, registredDelivery, rand0(255));
 	__set_int__(uint8_t, smDefaultMsgId, rand0(255)); //хбз что это такое
-	__set_bin__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH));
+	__set_bin__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH), dataCoding);
 }
 
 #define __trace_set_optional__(name, field) \
@@ -434,12 +436,13 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 		} \
 	}
 
-#define __set_optional_bin__(field, length) \
+#define __set_optional_bin__(field, length, dataCoding) \
 	if (mask[pos++]) { \
 		__trace_set_optional__("set_optional_bin", field); \
 		int len_##field = length; \
-		auto_ptr<uint8_t> str_##field = rand_uint8_t(len_##field); \
-		opt.set_##field((char*) str_##field.get(), len_##field); \
+		uint8_t dc_##field = dataCoding; \
+		auto_ptr<char> str_##field = rand_text(len_##field, dc_##field); \
+		opt.set_##field(str_##field.get(), len_##field); \
 		if (check) { \
 			OStr tmp_##field; \
 			tmp_##field.copy((char*) str_##field.get(), len_##field); \
@@ -500,7 +503,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	}
 
 void SmppUtil::setupRandomCorrectOptionalParams(SmppOptional& opt,
-	uint64_t _mask, bool check)
+	uint8_t dataCoding, uint64_t _mask, bool check)
 {
 	//пол€ сохран€ютс€ случайным образом
 	auto_ptr<uint8_t> tmp = rand_uint8_t(8);
@@ -548,7 +551,7 @@ void SmppUtil::setupRandomCorrectOptionalParams(SmppOptional& opt,
 	__skip__; //__set_optional_int__(uint8_t, msAvailableStatus, rand0(255));
 	//int errCode = rand0(INT_MAX);
 	__skip__; //__set_optional_intarr__(networkErrorCode, (uint8_t*) &errCode, 3);
-	__set_optional_bin__(messagePayload, rand0(65535));
+	__set_optional_bin__(messagePayload, rand0(65535), dataCoding);
 	__skip__; //__set_optional_int__(uint8_t, deliveryFailureReason, rand0(255));
 	__skip__; //__set_optional_int__(uint8_t, moreMessagesToSend, rand0(255));
 	__skip__; //__set_optional_int__(uint8_t, messageState, rand0(255));

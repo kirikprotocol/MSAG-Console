@@ -155,9 +155,9 @@ public:
 	static void setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 		uint64_t mask = OPT_ALL, bool check = true);
 	static void setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
-		uint64_t mask = OPT_ALL, bool check = true);
+		uint8_t dataCoding, uint64_t mask = OPT_ALL, bool check = true);
 	static void setupRandomCorrectOptionalParams(SmppOptional& opt,
-		uint64_t mask = OPT_ALL, bool check = true);
+		uint8_t dataCoding, uint64_t mask = OPT_ALL, bool check = true);
 
 };
 
