@@ -21,6 +21,7 @@ function openPerfMon()
 	%><a ID=MENU0_PERFMON href="<%=CPATH%>/perfmon/index.jsp" target="SMSC Perfomance monitor" onclick="return openPerfMon();">Monitor</a><%
 	%><a ID=MENU0_SMSVIEW href="<%=CPATH%>/smsview/index.jsp">SMS view</a><%
 	%><a ID=MENU0_SMSSTAT href="<%=CPATH%>/smsstat/index.jsp">Statistics</a><%
+	%><a ID=MENU0_MSCMAN href="<%=CPATH%>/mscman/index.jsp">MSCs</a><%
 	%><a ID=MENU0_USERS href="<%=CPATH%>/users/index.jsp">Users</a><%
 	%><a ID=MENU0_ROUTES href="<%=CPATH%>/routes/index.jsp">Routes</a><%
 	%><a ID=MENU0_SUBJECTS href="<%=CPATH%>/subjects/index.jsp">Subjects</a><%
