@@ -414,6 +414,7 @@ void MscManagerImpl::clear(const char* msc)
         {
             info->manualLock = false;
             info->automaticLock = false;
+            info->failureCount = 0;
             MscInfoChange change(UPDATE, *info);
             addChange(change);
         }
