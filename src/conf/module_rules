@@ -41,9 +41,17 @@ $(SMSC_BUILDDIR)/lib/$(LIBRARY).a : $(SMSC_BUILDDIR)/obj/$(LIBRARY) $(foreach x,
 	@$(AR) -r $@ $(foreach x,$(OBJECTS),$(SMSC_BUILDDIR)/obj/$(LIBRARY)/$(x))
 	@$(RANLIB) $@
 	
-rbuild: only $(MODULES)
+rbuild: only 
+	if [ -n "$(MODULES)" ] ; then \
+		XXXX="$(MODULES)";\
+		set -e; for i in $$XXXX; do make $$i.rbuild ; done ;\
+	fi	
 
-rclean: clean $(foreach x,$(MODULES),$(x).rclean)
+rclean: clean 
+	if [ -n "$(MODULES)" ] ; then \
+		XXXX="$(MODULES)";\
+		set -e; for i in $$XXXX; do make $$i.rclean ; done ;\
+	fi
 	
 clean: 
 	@echo "clean in $(PACKAGE)"
@@ -73,7 +81,8 @@ deps:
 	    > $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.binaries-rules
 	@if [ -n "$(MODULES)" ] ; then \
 	    XXXX="$(MODULES)" ;\
-	    for i in $$XXXX  ; do cd $$i ; make deps; done ; \
+			XWD=`pwd`; \
+	    set -e; for i in $$XXXX ; do  cd $$XWD/$$i ; make deps; done ; \
 	fi
 
 -include $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.deps

@@ -42,9 +42,11 @@ export CXXFLAGS
 export CFLAGS
 export LDFLAGS
 
-MODULES := $(shell cat modules-list | awk '{print $$1}' | grep -v "\#" )
+MODULES := $(shell cat modules-list | awk '/^[^\#]./{print $$1}' )
 SMSC_BUILDDIR_LIST = $(foreach x,lib bin obj etc doc,$(SMSC_BUILDDIR)/$(x))
-	
+
+#$(warning $(MODULES))
+
 all:	build
 	@echo >> /dev/null
 	
@@ -62,18 +64,28 @@ update:
 __build_message__:
 	@echo "build in SMSC"
 		
-build: __build_message__ $(SMSC_BUILDDIR_LIST) $(MODULES)
-	@echo >> /dev/null
+build: __build_message__ $(SMSC_BUILDDIR_LIST) 
+	@if [ -n "$(MODULES)" ]; then \
+	    XXXX="$(MODULES)"; \
+	    set -e; for i in $$XXXX; do make -s $$i.rbuild ; done; \
+	fi
 		
 ubuild: .update .build
 	@echo >> /dev/null
 
-clean:	$(foreach x,$(MODULES),$(x).rclean)
-	@echo >> /dev/null
+clean:	
+	@echo "clean all"
+	@if [ -n "$(MODULES)" ]; then \
+	    XXXX="$(MODULES)"; \
+	    set -e; for i in $$XXXX; do make -s $$i.rclean ; done; \
+	fi
 
-deps:	$(foreach x,$(MODULES),$(x).deps)
-	@echo >> /dev/null
-	
+deps:	
+	@echo "build dependencies"
+	@if [ -n "$(MODULES)" ]; then \
+	    XXXX="$(MODULES)"; \
+	    set -e; for i in $$XXXX; do make $$i.deps ; done; \
+	fi
 
 $(SMSC_BUILDDIR): $(SMSC_BUILDDIR_LIST)
 
@@ -85,7 +97,7 @@ override _modules = $(subst ., ,$@)
 override _module = $(firstword $(_modules))
 override _subtarget = $(if $(word 2, $(_modules)), $(patsubst $(_module).%,%,$@), rbuild )
 	@if [ -d $(_module) ]; then \
-	    cd $(_module); make -s $(_subtarget); \
+	    cd $(_module); make $(_subtarget); \
 	else \
 	    echo "'$(_module)' is not module"; exit 1;\
 	fi 
