@@ -14,6 +14,33 @@ PduRegistry::~PduRegistry()
 	clear();
 }
 
+void PduRegistry::registerMonitor(uint32_t seqNum, PduMonitor* monitor)
+{
+	__require__(monitor);
+	SeqNumKey key(seqNum, monitor->getType());
+	SeqNumMap::const_iterator it = seqNumMap.find(key);
+	__require__(it == seqNumMap.end());
+	seqNumMap[key] = monitor;
+}
+
+void PduRegistry::registerMonitor(uint16_t msgRef, PduMonitor* monitor)
+{
+	__require__(monitor);
+	MsgRefKey key = MsgRefKey(msgRef, monitor->getType(), monitor->getId());
+	MsgRefMap::const_iterator it = msgRefMap.find(key);
+	__require__(it == msgRefMap.end());
+	msgRefMap[key] = monitor;
+}
+
+void PduRegistry::registerMonitor(time_t t, PduMonitor* monitor)
+{
+	__require__(monitor);
+	TimeKey timeKey(t, monitor->getId());
+	TimeMap::const_iterator it = checkTimeMap.find(timeKey);
+	__require__(it == checkTimeMap.end());
+	checkTimeMap[timeKey] = monitor;
+}
+
 void PduRegistry::registerMonitor(PduMonitor* monitor)
 {
 	__require__(monitor);
@@ -30,31 +57,24 @@ void PduRegistry::registerMonitor(PduMonitor* monitor)
 		case RESPONSE_MONITOR:
 			{
 				ResponseMonitor* m = dynamic_cast<ResponseMonitor*>(monitor);
-				__require__(m);
-				SeqNumMap::const_iterator it = seqNumMap.find(m->sequenceNumber);
-				__require__(it == seqNumMap.end());
-				seqNumMap[m->sequenceNumber] = m;
+				registerMonitor(m->sequenceNumber, monitor);
 			}
 			break;
+		case GENERIC_NACK_MONITOR:
+			{
+				GenericNackMonitor* m = dynamic_cast<GenericNackMonitor*>(monitor);
+				registerMonitor(m->sequenceNumber, monitor);
+			}
 		case DELIVERY_MONITOR:
 		case DELIVERY_RECEIPT_MONITOR:
 		case INTERMEDIATE_NOTIFICATION_MONITOR:
 		case SME_ACK_MONITOR:
-			{
-				MsgRefKey msgRefKey = MsgRefKey(monitor->pduData->msgRef,
-					monitor->getId());
-				MsgRefMap::const_iterator it = msgRefMap.find(msgRefKey);
-				__require__(it == msgRefMap.end());
-				msgRefMap[msgRefKey] = monitor;
-			}
+			registerMonitor(monitor->pduData->msgRef, monitor);
 			break;
 		default:
 			__unreachable__("Invalid monitor type");
 	}
-	TimeKey timeKey(monitor->getCheckTime(), monitor->getId());
-	TimeMap::const_iterator it = checkTimeMap.find(timeKey);
-	__require__(it == checkTimeMap.end());
-	checkTimeMap[timeKey] = monitor;
+	registerMonitor(monitor->getCheckTime(), monitor);
 	__trace2__("monitor registered: pduReg = %p, monitor = %s",
 		this, monitor->str().c_str());
 }
@@ -73,26 +93,27 @@ void PduRegistry::clear()
 
 PduMonitor* PduRegistry::getMonitor(uint16_t msgRef, MonitorType type) const
 {
-	MsgRefMap::const_iterator it = msgRefMap.lower_bound(MsgRefKey(msgRef, 0));
-	MsgRefMap::const_iterator end = msgRefMap.upper_bound(MsgRefKey(msgRef, UINT_MAX));
+	MsgRefMap::const_iterator it = msgRefMap.lower_bound(MsgRefKey(msgRef, type, 0));
+	MsgRefMap::const_iterator end = msgRefMap.upper_bound(MsgRefKey(msgRef, type, UINT_MAX));
 	PduMonitor* monitor = NULL;
 	for (; it != end; it++)
 	{
-		PduMonitor* m = it->second;
-		__require__(m);
-		if (m->getType() == type)
-		{
-			__require__(!monitor); //едиственный монитор для msgRef
-			monitor = m;
-		}
+		__require__(!monitor); //едиственный монитор для msgRef
+		monitor = it->second;
+		__require__(monitor);
 	}
 	return monitor;
 }
 
+PduMonitor* PduRegistry::getMonitor(uint32_t seqNum, MonitorType type) const
+{
+	SeqNumMap::const_iterator it = seqNumMap.find(SeqNumKey(seqNum, type));
+	return (it == seqNumMap.end() ? NULL : it->second);
+}
+
 ResponseMonitor* PduRegistry::getResponseMonitor(uint32_t seqNum) const
 {
-	SeqNumMap::const_iterator it = seqNumMap.find(seqNum);
-	return (it == seqNumMap.end() ? NULL : it->second);
+	return reinterpret_cast<ResponseMonitor*>(getMonitor(seqNum, RESPONSE_MONITOR));
 }
 
 DeliveryMonitor* PduRegistry::getDeliveryMonitor(uint16_t msgRef) const
@@ -121,8 +142,14 @@ void PduRegistry::removeMonitor(PduMonitor* monitor)
 		case RESPONSE_MONITOR:
 			{
 				ResponseMonitor* m = dynamic_cast<ResponseMonitor*>(monitor);
-				__require__(m);
-				int res = seqNumMap.erase(m->sequenceNumber);
+				int res = seqNumMap.erase(SeqNumKey(m->sequenceNumber, monitor->getType()));
+				__require__(res);
+			}
+			break;
+		case GENERIC_NACK_MONITOR:
+			{
+				GenericNackMonitor* m = dynamic_cast<GenericNackMonitor*>(monitor);
+				int res = seqNumMap.erase(SeqNumKey(m->sequenceNumber, monitor->getType()));
 				__require__(res);
 			}
 			break;
@@ -132,7 +159,7 @@ void PduRegistry::removeMonitor(PduMonitor* monitor)
 		case SME_ACK_MONITOR:
 			{
 				int res = msgRefMap.erase(MsgRefKey(monitor->pduData->msgRef,
-					monitor->getId()));
+					monitor->getType(), monitor->getId()));
 				__require__(res);
 			}
 			break;

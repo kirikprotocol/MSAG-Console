@@ -27,16 +27,32 @@ using smsc::core::synchronization::MutexGuard;
 class PduRegistry
 {
 	//typedef map<const string, PduData*> SmsIdMap;
-	typedef map<const uint32_t, ResponseMonitor*> SeqNumMap;
+	struct SeqNumKey
+	{
+		const uint32_t seqNum;
+		const MonitorType type;
+		SeqNumKey(uint32_t _seqNum, MonitorType _type)
+		: seqNum(_seqNum), type(_type) {}
+		bool operator< (const SeqNumKey& key) const
+		{
+			if (seqNum != key.seqNum) { return (seqNum < key.seqNum); }
+			return type < key.type;
+		}
+	};
+	typedef map<const SeqNumKey, PduMonitor*> SeqNumMap;
 
 	struct MsgRefKey
 	{
 		const uint16_t msgRef;
+		const MonitorType type;
 		const uint32_t id;
-		MsgRefKey(uint16_t _msgRef, uint32_t _id) : msgRef(_msgRef), id(_id) {}
+		MsgRefKey(uint16_t _msgRef, MonitorType _type, uint32_t _id)
+		: msgRef(_msgRef), type(_type), id(_id) {}
 		bool operator< (const MsgRefKey& key) const
 		{
-			return (msgRef == key.msgRef ? (id < key.id) : (msgRef < key.msgRef));
+			if (msgRef != key.msgRef) { return (msgRef < key.msgRef); }
+			if (type != key.type) { return (type < key.type); }
+			return id < key.id;
 		}
 	};
 	typedef map<const MsgRefKey, PduMonitor*> MsgRefMap;
@@ -48,7 +64,8 @@ class PduRegistry
 		TimeKey(time_t t, uint32_t _id) : time(t), id(_id) {}
 		bool operator< (const TimeKey& key) const
 		{
-			return (time == key.time ? (id < key.id) : (time < key.time));
+			if (time != key.time) { return (time < key.time); }
+			return (id < key.id);
 		}
 	};
 	typedef map<const TimeKey, PduMonitor*> TimeMap;
@@ -108,6 +125,10 @@ public:
 
 protected:
 	PduMonitor* getMonitor(uint16_t msgRef, MonitorType type) const;
+	PduMonitor* getMonitor(uint32_t seqNum, MonitorType type) const;
+	void registerMonitor(uint32_t seqNum, PduMonitor* monitor);
+	void registerMonitor(uint16_t msgRef, PduMonitor* monitor);
+	void registerMonitor(time_t t, PduMonitor* monitor);
 };
 
 }
