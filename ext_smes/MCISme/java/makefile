@@ -1,5 +1,5 @@
 SERVLET_JAR := /export/home/smsc/tomcat/common/lib/servlet.jar
-CLASSPATH := ../../lib/classes12.jar:../../lib/log4j.jar:$(SERVLET_JAR):$(SMSC_BUILDDIR)/jars/smsc.jar:$(SMSC_SRCDIR)/webapp/smsc/WEB-INF/lib/nsjsp.jar
+CLASSPATH := ../../lib/classes12.jar:../../lib/log4j.jar:$(SERVLET_JAR):$(SMSC_BUILDDIR)/exploded/smsc/WEB-INF/lib/smsc.jar:$(SMSC_BUILDDIR)exploded/smsc/WEB-INF/lib/nsjsp.jar
 
 
 all: compile
