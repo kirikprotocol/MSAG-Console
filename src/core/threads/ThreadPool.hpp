@@ -67,6 +67,8 @@ public:
 
   void releaseThread(PooledThread* thread);
 
+  void shutdown();
+
   MemoryHeap* getMemoryHeap(const char* taskname,int rawheapsize,int blocksheapquantum);
 
   void Wait()

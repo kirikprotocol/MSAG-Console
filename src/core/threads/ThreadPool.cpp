@@ -79,8 +79,19 @@ static void disp(int sig)
 
 ThreadPool::~ThreadPool()
 {
+  shutdown();
+  trace("ThreadPool destroyed");
+}
+
+void ThreadPool::shutdown()
+{
   sigset(16,disp);
   Lock();
+  if(usedThreads.Count()==0 && freeThreads.Count()==0)
+  {
+    Unlock();
+    return;
+  }
   trace("stopping tasks");
   for(int i=0;i<usedThreads.Count();i++)
   {
@@ -106,6 +117,7 @@ ThreadPool::~ThreadPool()
     Unlock();
     Wait();
   }
+  Lock();
   for(int i=0;i<freeThreads.Count();i++)
   {
     freeThreads[i]->assignTask(NULL);
@@ -113,6 +125,8 @@ ThreadPool::~ThreadPool()
     freeThreads[i]->WaitFor();
     delete freeThreads[i];
   }
+  freeThreads.Clean();
+  Unlock();
 }
 
 MemoryHeap* ThreadPool::getMemoryHeap(const char* taskname,int rawheapsize,int blocksheapquantum)
