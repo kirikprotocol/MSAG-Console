@@ -251,14 +251,24 @@ void SmppTransmitterTestCases::registerTransmitterReportMonitors(PduData* pduDat
 	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT ||
 		regDelivery == FAILURE_SMSC_DELIVERY_RECEIPT)
 	{
+		bool reports = true;
 		if (pduData->intProps.count("ussdServiceOp"))
 		{
-			__tc__("deliverySm.reports.deliveryReceipt.ussdServiceOp");
+			__tc__("sms.reports.deliveryReceipt.ussdServiceOp");
 			__tc_ok__;
-			__tc__("deliverySm.reports.intermediateNotification.ussdServiceOp");
+			__tc__("sms.reports.intermediateNotification.ussdServiceOp");
 			__tc_ok__;
+			reports = false;
 		}
-		else
+		if (pduData->intProps.count("suppressDeliveryReports"))
+		{
+			__tc__("sms.reports.deliveryReceipt.suppressDeliveryReports");
+			__tc_ok__;
+			__tc__("sms.reports.intermediateNotification.suppressDeliveryReports");
+			__tc_ok__;
+			reports = false;
+		}
+		if (reports)
 		{
 			//intermediate notification
 			__tc__("deliverySm.reports.intermediateNotification.transmitter");
@@ -295,14 +305,24 @@ void SmppTransmitterTestCases::registerNotBoundReportMonitors(PduData* pduData)
 	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT ||
 		regDelivery == FAILURE_SMSC_DELIVERY_RECEIPT)
 	{
+		bool reports = true;
 		if (pduData->intProps.count("ussdServiceOp"))
 		{
-			__tc__("deliverySm.reports.deliveryReceipt.ussdServiceOp");
+			__tc__("sms.reports.deliveryReceipt.ussdServiceOp");
 			__tc_ok__;
-			__tc__("deliverySm.reports.intermediateNotification.ussdServiceOp");
+			__tc__("sms.reports.intermediateNotification.ussdServiceOp");
 			__tc_ok__;
+			reports = false;
 		}
-		else
+		if (pduData->intProps.count("suppressDeliveryReports"))
+		{
+			__tc__("sms.reports.deliveryReceipt.suppressDeliveryReports");
+			__tc_ok__;
+			__tc__("sms.reports.intermediateNotification.suppressDeliveryReports");
+			__tc_ok__;
+			reports = false;
+		}
+		if (reports)
 		{
 			//intermediate notification
 			__tc__("deliverySm.reports.intermediateNotification.notBound");
@@ -378,7 +398,7 @@ void SmppTransmitterTestCases::registerNormalSmeMonitors(PduData* pduData,
 					pdu.get_message().get_replaceIfPresentFlag() == 1)
 				{
 					existentPduData->ref();
-					deliveryMonitor->pduData->replacePdu = existentPduData;
+					pduData->replacePdu = existentPduData;
 					existentPduData->replacedByPdu = pduData;
 					CancelResult res =
 						cancelPduMonitors(existentPduData, pduData->sendTime, false, SMPP_ENROUTE_STATE);
@@ -386,7 +406,7 @@ void SmppTransmitterTestCases::registerNormalSmeMonitors(PduData* pduData,
 				}
 				else
 				{
-					deliveryMonitor->pduData->intProps["hasSmppDuplicates"] = 1;
+					pduData->intProps["hasSmppDuplicates"] = 1;
 					existentPduData->intProps["hasSmppDuplicates"] = 1;
 				}
 			}
@@ -427,12 +447,20 @@ void SmppTransmitterTestCases::registerExtSmeMonitors(PduData* pduData)
 	uint8_t regDelivery = getRegisteredDelivery(pduData);
 	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT)
 	{
+		bool report = true;
 		if (pduData->intProps.count("ussdServiceOp"))
 		{
-			__tc__("deliverySm.reports.deliveryReceipt.ussdServiceOp");
+			__tc__("sms.reports.deliveryReceipt.ussdServiceOp");
 			__tc_ok__;
+			report = false;
 		}
-		else
+		if (pduData->intProps.count("suppressDeliveryReports"))
+		{
+			__tc__("sms.reports.deliveryReceipt.suppressDeliveryReports");
+			__tc_ok__;
+			report = false;
+		}
+		if (report)
 		{
 			DeliveryReceiptMonitor* rcptMonitor = new DeliveryReceiptMonitor(
 				pdu.getMsgRef(), pdu.getWaitTime(), pduData, PDU_REQUIRED_FLAG);
@@ -462,12 +490,20 @@ void SmppTransmitterTestCases::registerNullSmeMonitors(PduData* pduData,
 	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT ||
 		(regDelivery == FAILURE_SMSC_DELIVERY_RECEIPT && deliveryStatus != ESME_ROK))
 	{
+		bool report = true;
 		if (pduData->intProps.count("ussdServiceOp"))
 		{
-			__tc__("deliverySm.reports.deliveryReceipt.ussdServiceOp");
+			__tc__("sms.reports.deliveryReceipt.ussdServiceOp");
 			__tc_ok__;
+			report = false;
 		}
-		else
+		if (pduData->intProps.count("suppressDeliveryReports"))
+		{
+			__tc__("sms.reports.deliveryReceipt.suppressDeliveryReports");
+			__tc_ok__;
+			report = false;
+		}
+		if (report)
 		{
 			DeliveryReceiptMonitor* rcptMonitor =  new DeliveryReceiptMonitor(
 				pdu.getMsgRef(), pdu.getWaitTime(), pduData, PDU_REQUIRED_FLAG);
@@ -560,6 +596,12 @@ PduData* SmppTransmitterTestCases::prepareSms(SmppHeader* header,
 			pduData->intProps["dataCoding"] = dc;
 		}
 	}
+	else if (pdu.get_optional().has_destAddrSubunit() &&
+		pdu.get_optional().get_destAddrSubunit() == AddrSubunitValue::SMART_CARD1)
+	{
+		pduData->intProps["dataCoding"] = BINARY;
+		simMsg = true;
+	}
 	else
 	{
 		pduData->intProps["dataCoding"] = pdu.getDataCoding();
@@ -569,6 +611,10 @@ PduData* SmppTransmitterTestCases::prepareSms(SmppHeader* header,
 		pdu.getSource(), pdu.getDest());
 	if (routeInfo && pduData->intProps.count("dataCoding"))
 	{
+		if (routeInfo->suppressDeliveryReports)
+		{
+			pduData->intProps["suppressDeliveryReports"] = 1;
+		}
 		SmsMsg* msg = getSmsMsg(header, pduData->intProps["dataCoding"]);
 		__trace2__("sms msg registered: this = %p, udhi = %s, len = %d, dc = %d, orig dc = %d, valid = %s",
 			msg, msg->udhi ? "true" : "false", msg->len, (int) msg->dataCoding, (int) pdu.getDataCoding(), msg->valid ? "true" : "false");
@@ -1100,6 +1146,7 @@ PduData* SmppTransmitterTestCases::prepareReplaceSm(PduReplaceSm* pdu,
 	Profile profile = fixture->profileReg->getProfile(srcAddr, t);
 	__require__(t <= sendTime); //с точностью до секунды
 	PduData* pduData = new PduData(resHeader, sendTime, intProps, strProps, objProps);
+	pduData->intProps["replaceSm"] = 1;
 	pduData->intProps["registredDelivery"] = pdu->get_registredDelivery();
 	pduData->intProps["reportOptions"] = profile.reportoptions;
 	if (resPdu.get_optional().has_ussdServiceOp())
@@ -1123,6 +1170,10 @@ PduData* SmppTransmitterTestCases::prepareReplaceSm(PduReplaceSm* pdu,
 			resPdu.getSource(), resPdu.getDest());
 		if (routeInfo)
 		{
+			if (routeInfo->suppressDeliveryReports)
+			{
+				pduData->intProps["suppressDeliveryReports"] = 1;
+			}
 			SmsMsg* msg = getSmsMsg(resHeader, pduData->intProps["dataCoding"]);
 			__trace2__("sms msg registered: this = %p, udhi = %s, len = %d, dc = %d, orig dc = %d, valid = %s",
 				msg, msg->udhi ? "true" : "false", msg->len, (int) msg->dataCoding, (int) resPdu.getDataCoding(), msg->valid ? "true" : "false");
