@@ -248,7 +248,7 @@
 								    location   	(224, 736)
 								    anchor_loc 	1
 								    nlines     	2
-								    max_width  	392
+								    max_width  	399
 								    justify    	0
 								    label      	"MS")
 								icon       	"Actor"
@@ -973,7 +973,7 @@
 								    location   	(1552, 624)
 								    anchor_loc 	1
 								    nlines     	2
-								    max_width  	445
+								    max_width  	453
 								    justify    	0
 								    label      	"SME")
 								icon       	"Actor"
@@ -1214,7 +1214,7 @@
 								fill_color 	13434879
 								quidu      	"3C3DA6EA039D")
 							    (object AssociationViewNew "" @57
-								location   	(1155, 703)
+								location   	(1153, 705)
 								font       	(object Font
 								    size       	9
 								    face       	"Arial"
@@ -1227,7 +1227,7 @@
 								    default_color 	TRUE)
 								stereotype 	(object SegLabel @58
 								    Parent_View 	@57
-								    location   	(1155, 596)
+								    location   	(1153, 598)
 								    font       	(object Font
 									size       	9
 									face       	"Arial"
@@ -1252,7 +1252,7 @@
 								roleview_list 	(list RoleViews
 								    (object RoleView "" @59
 									Parent_View 	@57
-									location   	(211, 31)
+									location   	(209, 33)
 									font       	(object Font
 									    size       	9
 									    face       	"Arial"
@@ -1265,7 +1265,7 @@
 									    default_color 	TRUE)
 									label      	(object SegLabel @60
 									    Parent_View 	@59
-									    location   	(1268, 587)
+									    location   	(1265, 589)
 									    font       	(object Font
 										size       	9
 										face       	"Arial"
@@ -1294,7 +1294,7 @@
 									line_style 	0)
 								    (object RoleView "" @61
 									Parent_View 	@57
-									location   	(211, 31)
+									location   	(209, 33)
 									font       	(object Font
 									    size       	9
 									    face       	"Arial"
@@ -1307,7 +1307,7 @@
 									    default_color 	TRUE)
 									label      	(object SegLabel @62
 									    Parent_View 	@61
-									    location   	(1000, 750)
+									    location   	(999, 751)
 									    font       	(object Font
 										size       	9
 										face       	"Arial"
@@ -1528,7 +1528,7 @@
 								    location   	(128, 304)
 								    anchor_loc 	1
 								    nlines     	2
-								    max_width  	395
+								    max_width  	403
 								    justify    	0
 								    label      	"MS")
 								icon       	"Actor"
@@ -1670,7 +1670,7 @@
 								    location   	(128, 320)
 								    anchor_loc 	1
 								    nlines     	2
-								    max_width  	411
+								    max_width  	419
 								    justify    	0
 								    label      	"MS")
 								icon       	"Actor"
@@ -1810,7 +1810,7 @@
 								    location   	(1552, 608)
 								    anchor_loc 	1
 								    nlines     	2
-								    max_width  	463
+								    max_width  	471
 								    justify    	0
 								    label      	"SME")
 								icon       	"Actor"
@@ -1839,7 +1839,7 @@
 								    location   	(144, 624)
 								    anchor_loc 	1
 								    nlines     	2
-								    max_width  	433
+								    max_width  	441
 								    justify    	0
 								    label      	"MS")
 								icon       	"Actor"
@@ -2018,7 +2018,7 @@
 								fill_color 	13434879
 								quidu      	"3C3DA6EA039D")
 							    (object AssociationViewNew "" @89
-								location   	(1246, 675)
+								location   	(1244, 676)
 								font       	(object Font
 								    size       	9
 								    face       	"Arial"
@@ -2031,7 +2031,7 @@
 								    default_color 	TRUE)
 								stereotype 	(object SegLabel @90
 								    Parent_View 	@89
-								    location   	(1197, 727)
+								    location   	(1195, 728)
 								    font       	(object Font
 									size       	9
 									face       	"Arial"
@@ -2056,7 +2056,7 @@
 								roleview_list 	(list RoleViews
 								    (object RoleView "" @91
 									Parent_View 	@89
-									location   	(750, -125)
+									location   	(748, -124)
 									font       	(object Font
 									    size       	9
 									    face       	"Arial"
@@ -2069,7 +2069,7 @@
 									    default_color 	TRUE)
 									label      	(object SegLabel @92
 									    Parent_View 	@91
-									    location   	(1277, 602)
+									    location   	(1273, 604)
 									    font       	(object Font
 										size       	9
 										face       	"Arial"
@@ -2098,7 +2098,7 @@
 									line_style 	0)
 								    (object RoleView "" @93
 									Parent_View 	@89
-									location   	(750, -125)
+									location   	(748, -124)
 									font       	(object Font
 									    size       	9
 									    face       	"Arial"
@@ -2449,7 +2449,7 @@
 								    location   	(160, 336)
 								    anchor_loc 	1
 								    nlines     	2
-								    max_width  	453
+								    max_width  	459
 								    justify    	0
 								    label      	"SME")
 								icon       	"Actor"
@@ -2589,7 +2589,7 @@
 								    location   	(160, 336)
 								    anchor_loc 	1
 								    nlines     	2
-								    max_width  	445
+								    max_width  	453
 								    justify    	0
 								    label      	"SME")
 								icon       	"Actor"
@@ -2778,7 +2778,7 @@
 								    location   	(240, 336)
 								    anchor_loc 	1
 								    nlines     	2
-								    max_width  	415
+								    max_width  	422
 								    justify    	0
 								    label      	"Administrator")
 								icon       	"Actor"
@@ -2904,7 +2904,7 @@
 								    location   	(192, 320)
 								    anchor_loc 	1
 								    nlines     	2
-								    max_width  	459
+								    max_width  	467
 								    justify    	0
 								    label      	"Administrator")
 								icon       	"Actor"
@@ -3791,6 +3791,15 @@
 				quid       	"3C42AF0300E2"
 				documentation 	"реализует логику маршрутизации сообщений"
 				stereotype 	"control"
+				exportControl 	"Private"
+				language   	"Java")
+			    (object Class "SMS Handler"
+				quid       	"3C4573DC0232"
+				exportControl 	"Private"
+				language   	"Java")
+			    (object Class "USSD Handler"
+				quid       	"3C4573EC014E"
+				exportControl 	"Private"
 				language   	"Java"))
 			logical_presentations 	(list unit_reference_list
 			    (object ClassDiagram "Main"
@@ -3853,7 +3862,7 @@
 					    location   	(943, 561)
 					    anchor_loc 	1
 					    nlines     	2
-					    max_width  	447
+					    max_width  	438
 					    justify    	0
 					    label      	"Message Router")
 					icon       	"control"
@@ -4292,6 +4301,283 @@
 				quidu      	"3BB069E500B5"
 				client     	@161
 				supplier   	@172
+				line_style 	0)))
+		    (object ClassDiagram "Main"
+			quid       	"3C45708800B0"
+			title      	"Main"
+			zoom       	100
+			max_height 	28350
+			max_width  	21600
+			origin_x   	0
+			origin_y   	0
+			items      	(list diagram_item_list
+			    (object CategoryView "Logical View::Design Model::SMPP gateway" @174
+				location   	(240, 688)
+				font       	(object Font
+				    size       	9
+				    face       	"Arial"
+				    charSet    	204
+				    bold       	FALSE
+				    italics    	FALSE
+				    underline  	FALSE
+				    strike     	FALSE
+				    color      	0
+				    default_color 	TRUE)
+				label      	(object ItemLabel
+				    Parent_View 	@174
+				    location   	(96, 651)
+				    fill_color 	13434879
+				    nlines     	2
+				    max_width  	288
+				    justify    	0
+				    label      	"SMPP gateway")
+				stereotype 	(object ItemLabel
+				    Parent_View 	@174
+				    location   	(96, 604)
+				    fill_color 	13434879
+				    anchor     	10
+				    nlines     	1
+				    max_width  	288
+				    justify    	0
+				    label      	"<<subsystem>>")
+				icon_style 	"Icon"
+				line_color 	3342489
+				fill_color 	13434879
+				quidu      	"3BB068820032"
+				width      	300
+				height     	180)
+			    (object CategoryView "Logical View::Design Model::SMS-GMSC" @175
+				location   	(1568, 224)
+				font       	(object Font
+				    size       	9
+				    face       	"Arial"
+				    charSet    	204
+				    bold       	FALSE
+				    italics    	FALSE
+				    underline  	FALSE
+				    strike     	FALSE
+				    color      	0
+				    default_color 	TRUE)
+				label      	(object ItemLabel
+				    Parent_View 	@175
+				    location   	(1424, 187)
+				    fill_color 	13434879
+				    nlines     	2
+				    max_width  	288
+				    justify    	0
+				    label      	"SMS-GMSC")
+				stereotype 	(object ItemLabel
+				    Parent_View 	@175
+				    location   	(1424, 140)
+				    fill_color 	13434879
+				    anchor     	10
+				    nlines     	1
+				    max_width  	288
+				    justify    	0
+				    label      	"<<subsystem>>")
+				icon_style 	"Icon"
+				line_color 	3342489
+				fill_color 	13434879
+				quidu      	"3BB067860102"
+				width      	300
+				height     	180)
+			    (object CategoryView "Logical View::Design Model::SMS-IWMSC" @176
+				location   	(1568, 1088)
+				font       	(object Font
+				    size       	9
+				    face       	"Arial"
+				    charSet    	204
+				    bold       	FALSE
+				    italics    	FALSE
+				    underline  	FALSE
+				    strike     	FALSE
+				    color      	0
+				    default_color 	TRUE)
+				label      	(object ItemLabel
+				    Parent_View 	@176
+				    location   	(1424, 1051)
+				    fill_color 	13434879
+				    nlines     	2
+				    max_width  	288
+				    justify    	0
+				    label      	"SMS-IWMSC")
+				stereotype 	(object ItemLabel
+				    Parent_View 	@176
+				    location   	(1424, 1004)
+				    fill_color 	13434879
+				    anchor     	10
+				    nlines     	1
+				    max_width  	288
+				    justify    	0
+				    label      	"<<subsystem>>")
+				icon_style 	"Icon"
+				line_color 	3342489
+				fill_color 	13434879
+				quidu      	"3BB067840073"
+				width      	300
+				height     	180)
+			    (object CategoryView "Logical View::Design Model::Billing gateway" @177
+				location   	(224, 1136)
+				font       	(object Font
+				    size       	9
+				    face       	"Arial"
+				    charSet    	204
+				    bold       	FALSE
+				    italics    	FALSE
+				    underline  	FALSE
+				    strike     	FALSE
+				    color      	0
+				    default_color 	TRUE)
+				label      	(object ItemLabel
+				    Parent_View 	@177
+				    location   	(80, 1099)
+				    fill_color 	13434879
+				    nlines     	2
+				    max_width  	288
+				    justify    	0
+				    label      	"Billing gateway")
+				stereotype 	(object ItemLabel
+				    Parent_View 	@177
+				    location   	(80, 1052)
+				    fill_color 	13434879
+				    anchor     	10
+				    nlines     	1
+				    max_width  	288
+				    justify    	0
+				    label      	"<<subsystem>>")
+				icon_style 	"Icon"
+				line_color 	3342489
+				fill_color 	13434879
+				quidu      	"3BB068C5029C"
+				width      	300
+				height     	180)
+			    (object CategoryView "Logical View::Design Model::Administration interface" @178
+				location   	(240, 176)
+				font       	(object Font
+				    size       	9
+				    face       	"Arial"
+				    charSet    	204
+				    bold       	FALSE
+				    italics    	FALSE
+				    underline  	FALSE
+				    strike     	FALSE
+				    color      	0
+				    default_color 	TRUE)
+				label      	(object ItemLabel
+				    Parent_View 	@178
+				    location   	(96, 139)
+				    fill_color 	13434879
+				    nlines     	2
+				    max_width  	288
+				    justify    	0
+				    label      	"Administration interface")
+				stereotype 	(object ItemLabel
+				    Parent_View 	@178
+				    location   	(96, 92)
+				    fill_color 	13434879
+				    anchor     	10
+				    nlines     	1
+				    max_width  	288
+				    justify    	0
+				    label      	"<<subsystem>>")
+				icon_style 	"Icon"
+				line_color 	3342489
+				fill_color 	13434879
+				quidu      	"3BB069D10110"
+				width      	300
+				height     	180)
+			    (object CategoryView "Logical View::Design Model::SC core" @179
+				location   	(960, 688)
+				font       	(object Font
+				    size       	9
+				    face       	"Arial"
+				    charSet    	204
+				    bold       	FALSE
+				    italics    	FALSE
+				    underline  	FALSE
+				    strike     	FALSE
+				    color      	0
+				    default_color 	TRUE)
+				label      	(object ItemLabel
+				    Parent_View 	@179
+				    location   	(797, 604)
+				    fill_color 	13434879
+				    nlines     	2
+				    max_width  	326
+				    justify    	0
+				    label      	"SC core")
+				stereotype 	(object ItemLabel
+				    Parent_View 	@179
+				    location   	(797, 557)
+				    fill_color 	13434879
+				    anchor     	10
+				    nlines     	1
+				    max_width  	326
+				    justify    	0
+				    label      	"<<subsystem>>")
+				icon_style 	"Icon"
+				line_color 	3342489
+				fill_color 	13434879
+				quidu      	"3BB0676100C3"
+				compartment 	(object Compartment
+				    Parent_View 	@179
+				    location   	(960, 706)
+				    font       	(object Font
+					size       	9
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    icon_style 	"Icon"
+				    fill_color 	13434879
+				    anchor     	2
+				    anchor_loc 	1
+				    nlines     	2
+				    max_width  	286
+				    justify    	0
+				    compartmentItems 	(list Compartment
+					"- SMS Handler"
+					"- USSD Handler"))
+				width      	338
+				height     	274)
+			    (object ImportView "" @180
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3BB067CC0013"
+				client     	@176
+				supplier   	@179
+				line_style 	0)
+			    (object ImportView "" @181
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3BB067C80234"
+				client     	@179
+				supplier   	@175
+				line_style 	0)
+			    (object ImportView "" @182
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3BB0689C0242"
+				client     	@179
+				supplier   	@174
+				line_style 	0)
+			    (object ImportView "" @183
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3BB068D30093"
+				client     	@179
+				supplier   	@177
+				line_style 	0)
+			    (object ImportView "" @184
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3BB069E500B5"
+				client     	@179
+				supplier   	@178
 				line_style 	0))))))
 	logical_presentations 	(list unit_reference_list
 	    (object ClassDiagram "Welcome"
@@ -4354,7 +4640,7 @@
 			origin_x   	0
 			origin_y   	0
 			items      	(list diagram_item_list
-			    (object NoteView @174
+			    (object NoteView @185
 				location   	(624, 160)
 				font       	(object Font
 				    size       	9
@@ -4367,7 +4653,7 @@
 				    color      	0
 				    default_color 	TRUE)
 				label      	(object ItemLabel
-				    Parent_View 	@174
+				    Parent_View 	@185
 				    location   	(21, 26)
 				    fill_color 	13434879
 				    nlines     	5
@@ -4393,7 +4679,7 @@
 		origin_x   	0
 		origin_y   	0
 		items      	(list diagram_item_list
-		    (object SubSysView "Component View::Implementation Model" @175
+		    (object SubSysView "Component View::Implementation Model" @186
 			location   	(736, 800)
 			font       	(object Font
 			    size       	9
@@ -4406,7 +4692,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@175
+			    Parent_View 	@186
 			    location   	(552, 713)
 			    fill_color 	13434879
 			    nlines     	2
@@ -4432,7 +4718,7 @@
 			quidu      	"34DBBD47019A"
 			supplier_is_device 	TRUE))
 		characteristics 	"fghfghddf"
-		scheduling 	"Executive"
+		scheduling 	"Preemptive"
 		processes  	(list processes))
 	    (object Processor "SME Server"
 		quid       	"3C3C76BA00B3"
@@ -4518,9 +4804,9 @@
 		max_height 	28350
 		max_width  	21600
 		origin_x   	0
-		origin_y   	168
+		origin_y   	1632
 		items      	(list diagram_item_list
-		    (object ProcessorView "SMSC Server" @176
+		    (object ProcessorView "SMSC Server" @187
 			location   	(992, 304)
 			font       	(object Font
 			    size       	9
@@ -4533,7 +4819,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@176
+			    Parent_View 	@187
 			    location   	(691, 98)
 			    nlines     	2
 			    max_width  	531
@@ -4545,7 +4831,7 @@
 			width      	606
 			height     	482
 			annotation 	0)
-		    (object DeviceView "SS7 interface" @177
+		    (object DeviceView "SS7 interface" @188
 			location   	(1584, 304)
 			font       	(object Font
 			    size       	9
@@ -4558,7 +4844,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@177
+			    Parent_View 	@188
 			    location   	(1461, 239)
 			    nlines     	2
 			    max_width  	175
@@ -4570,14 +4856,14 @@
 			width      	250
 			height     	200
 			annotation 	0)
-		    (object ConnectionView "" @178
+		    (object ConnectionView "" @189
 			stereotype 	TRUE
 			line_color 	4210816
 			quidu      	"34DBBD4B008C"
-			client     	@176
-			supplier   	@177
+			client     	@187
+			supplier   	@188
 			line_style 	0)
-		    (object DeviceView "TCP/IP interface" @179
+		    (object DeviceView "TCP/IP interface" @190
 			location   	(416, 304)
 			font       	(object Font
 			    size       	9
@@ -4590,7 +4876,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@179
+			    Parent_View 	@190
 			    location   	(305, 249)
 			    nlines     	2
 			    max_width  	150
@@ -4602,14 +4888,14 @@
 			width      	225
 			height     	180
 			annotation 	0)
-		    (object ConnectionView "" @180
+		    (object ConnectionView "" @191
 			stereotype 	TRUE
 			line_color 	4210816
 			quidu      	"3C3C76530015"
-			client     	@179
-			supplier   	@176
+			client     	@190
+			supplier   	@187
 			line_style 	0)
-		    (object ProcessorView "SME Server" @181
+		    (object ProcessorView "SME Server" @192
 			location   	(208, 1360)
 			font       	(object Font
 			    size       	9
@@ -4622,7 +4908,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@181
+			    Parent_View 	@192
 			    location   	(19, 1245)
 			    nlines     	2
 			    max_width  	306
@@ -4634,7 +4920,7 @@
 			width      	381
 			height     	300
 			annotation 	2)
-		    (object DeviceView "TCP/IP interface" @182
+		    (object DeviceView "TCP/IP interface" @193
 			location   	(208, 944)
 			font       	(object Font
 			    size       	9
@@ -4647,7 +4933,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@182
+			    Parent_View 	@193
 			    location   	(97, 889)
 			    nlines     	2
 			    max_width  	150
@@ -4659,21 +4945,21 @@
 			width      	225
 			height     	180
 			annotation 	0)
-		    (object ConnectionView "" @183
+		    (object ConnectionView "" @194
 			stereotype 	TRUE
 			line_color 	4210816
 			quidu      	"3C3C770701B8"
-			client     	@181
-			supplier   	@182
+			client     	@192
+			supplier   	@193
 			line_style 	0)
-		    (object ConnectionView "" @184
+		    (object ConnectionView "" @195
 			stereotype 	TRUE
 			line_color 	4210816
 			quidu      	"3C3C7719038B"
-			client     	@182
-			supplier   	@179
+			client     	@193
+			supplier   	@190
 			line_style 	0)
-		    (object NoteView @185
+		    (object NoteView @196
 			location   	(832, 640)
 			font       	(object Font
 			    size       	9
@@ -4686,7 +4972,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@185
+			    Parent_View 	@196
 			    location   	(694, 580)
 			    nlines     	2
 			    max_width  	240
@@ -4695,13 +4981,13 @@
 			fill_color 	16777215
 			width      	300
 			height     	132)
-		    (object AttachView "" @186
+		    (object AttachView "" @197
 			stereotype 	TRUE
 			line_color 	4210816
-			client     	@185
-			supplier   	@184
+			client     	@196
+			supplier   	@195
 			line_style 	0)
-		    (object NoteView @187
+		    (object NoteView @198
 			location   	(1584, 80)
 			font       	(object Font
 			    size       	9
@@ -4714,7 +5000,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@187
+			    Parent_View 	@198
 			    location   	(1406, 21)
 			    nlines     	2
 			    max_width  	321
@@ -4723,7 +5009,7 @@
 			fill_color 	16777215
 			width      	381
 			height     	131)
-		    (object ProcessorView "MSC" @188
+		    (object ProcessorView "MSC" @199
 			location   	(1584, 1344)
 			font       	(object Font
 			    size       	9
@@ -4736,7 +5022,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@188
+			    Parent_View 	@199
 			    location   	(1395, 1226)
 			    nlines     	2
 			    max_width  	306
@@ -4748,7 +5034,7 @@
 			width      	381
 			height     	306
 			annotation 	0)
-		    (object DeviceView "SS7 interface" @189
+		    (object DeviceView "SS7 interface" @200
 			location   	(1584, 944)
 			font       	(object Font
 			    size       	9
@@ -4761,7 +5047,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@189
+			    Parent_View 	@200
 			    location   	(1473, 889)
 			    nlines     	2
 			    max_width  	150
@@ -4773,21 +5059,21 @@
 			width      	225
 			height     	180
 			annotation 	0)
-		    (object ConnectionView "" @190
+		    (object ConnectionView "" @201
 			stereotype 	TRUE
 			line_color 	4210816
 			quidu      	"3C3C7A8B0040"
-			client     	@188
-			supplier   	@189
+			client     	@199
+			supplier   	@200
 			line_style 	0)
-		    (object ConnectionView "" @191
+		    (object ConnectionView "" @202
 			stereotype 	TRUE
 			line_color 	4210816
 			quidu      	"3C3C7A920339"
-			client     	@177
-			supplier   	@189
+			client     	@188
+			supplier   	@200
 			line_style 	0)
-		    (object NoteView @192
+		    (object NoteView @203
 			location   	(1152, 640)
 			font       	(object Font
 			    size       	9
@@ -4800,7 +5086,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@192
+			    Parent_View 	@203
 			    location   	(1014, 580)
 			    nlines     	2
 			    max_width  	240
@@ -4809,13 +5095,13 @@
 			fill_color 	16777215
 			width      	300
 			height     	132)
-		    (object AttachView "" @193
+		    (object AttachView "" @204
 			stereotype 	TRUE
 			line_color 	4210816
-			client     	@192
-			supplier   	@191
+			client     	@203
+			supplier   	@202
 			line_style 	0)
-		    (object NoteView @194
+		    (object NoteView @205
 			location   	(960, 304)
 			font       	(object Font
 			    size       	9
@@ -4828,7 +5114,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@194
+			    Parent_View 	@205
 			    location   	(822, 244)
 			    nlines     	2
 			    max_width  	240
@@ -4840,7 +5126,7 @@
 			fill_color 	16777215
 			width      	300
 			height     	132)
-		    (object DeviceView "TCP/IP interface" @195
+		    (object DeviceView "TCP/IP interface" @206
 			location   	(688, 928)
 			font       	(object Font
 			    size       	9
@@ -4853,7 +5139,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@195
+			    Parent_View 	@206
 			    location   	(577, 873)
 			    nlines     	2
 			    max_width  	150
@@ -4865,14 +5151,14 @@
 			width      	225
 			height     	180
 			annotation 	0)
-		    (object ConnectionView "" @196
+		    (object ConnectionView "" @207
 			stereotype 	TRUE
 			line_color 	3342489
 			quidu      	"3C44687B013B"
-			client     	@195
-			supplier   	@179
+			client     	@206
+			supplier   	@190
 			line_style 	0)
-		    (object ProcessorView "MIM Server" @197
+		    (object ProcessorView "MIM Server" @208
 			location   	(688, 1360)
 			font       	(object Font
 			    size       	9
@@ -4885,7 +5171,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@197
+			    Parent_View 	@208
 			    location   	(502, 1248)
 			    nlines     	2
 			    max_width  	300
@@ -4897,18 +5183,18 @@
 			width      	375
 			height     	294
 			annotation 	2)
-		    (object ConnectionView "" @198
+		    (object ConnectionView "" @209
 			stereotype 	TRUE
 			line_color 	3342489
 			quidu      	"3C4479ED00B0"
-			client     	@197
-			supplier   	@195
+			client     	@208
+			supplier   	@206
 			line_style 	0)
-		    (object AttachView "" @199
+		    (object AttachView "" @210
 			stereotype 	TRUE
 			line_color 	3342489
-			client     	@187
-			supplier   	@177
+			client     	@198
+			supplier   	@188
 			line_style 	0)))))
     properties 	(object Properties
 	attributes 	(list Attribute_Set
