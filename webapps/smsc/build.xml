@@ -96,6 +96,16 @@
     </copy>
   </target>
 
+  <target name="copy_docs">
+    <copy todir="${exploded}">
+      <fileset dir="${basedir}/../../docs/html">
+        <include name="SMSC Administration Guide.htm"/>
+        <include name="SMSC Administration Guide_files/*"/>
+        <exclude name="SMSC Administration Guide_files/CVS/*"/>
+      </fileset>
+    </copy>
+  </target>
+
   <target name="do_update" description="copy files to distributive except of config files">
     <available file="${java_lib}/smsc.jar" property="BUILD_COMPLETE"/>
     <fail unless="BUILD_COMPLETE" message="please run build first"/>
@@ -108,16 +118,9 @@
     <jar jarfile="${CATALINA_HOME}/common/lib/smsc_tomcat_common.jar">
       <fileset dir="${java_out}" includes="${auth_path}/Authenticator.class ${auth_path}/AuthenticatorProxy.class"/>
     </jar>
-    <copy todir="${exploded}">
-      <fileset dir="${basedir}/../../docs/html">
-        <include name="SMSC Administration Guide.htm"/>
-        <include name="SMSC Administration Guide_files/*"/>
-        <exclude name="SMSC Administration Guide_files/CVS/*"/>
-      </fileset>
-    </copy>
   </target>
 
-  <target name="update" depends="build,do_update" description="copy files to distributive except of config files">
+  <target name="update" depends="build,do_update,copy_docs" description="copy files to distributive except of config files">
   </target>
 
   <target name="install" depends="update" description="copy files to distributive">
