@@ -1165,7 +1165,7 @@ StateType StateMachine::submit(Tuple& t)
         return ERROR_STATE;
       }
 
-      if(newsms.hasIntProperty(Tag::SMSC_UMR_LIST))
+      if(newsms.hasBinProperty(Tag::SMSC_UMR_LIST))
       {
         unsigned len;
         unsigned char* umrList=(unsigned char*)newsms.getBinProperty(Tag::SMSC_UMR_LIST,&len);
