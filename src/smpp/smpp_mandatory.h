@@ -255,8 +255,10 @@ static inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
   catch(...)
   {
     __warning__ ("fill pdu error");
-    throw;
+    //throw;
+		return false;
   }
+	return true;
 }
 
 
@@ -502,7 +504,8 @@ static inline SmppHeader* fetchSmppPdu(SmppStream* stream)
   {
     dropPdu(stream);
     __warning__("parsing broken, reason: exception");
-    throw;
+    //throw;
+		return false;
   }
   /* --- unreachable ---
   __check_smpp_stream_invariant__ ( stream );
@@ -510,7 +513,8 @@ static inline SmppHeader* fetchSmppPdu(SmppStream* stream)
   trap:
     //dropPdu(stream); packet will droped by stream guard
     __warning__("parsing broken, reason: parse error");
-    throw BadStreamException();
+    //throw BadStreamException();
+		return false;
 }
 
 };

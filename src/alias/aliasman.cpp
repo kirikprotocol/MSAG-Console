@@ -1,28 +1,26 @@
 /*
   $Id$
 */
-#ifndef DISABLE_TRACING
-//#define DISABLE_TRACING
-#endif
+#define DISABLE_TRACING
 #include "aliasman.h"
 #include <stdexcept>
 #include <string>
 #include <stdlib.h>
 #include "util/debug.h"
-#include <memory>
+#include <memory>  
 #include <vector>
 #include <algorithm>
 
 //#define ENTER __trace2__("enter in %s",__PRETTY_FUNCTION__)
 //#define LEAVE __trace2__("leave from %s",__PRETTY_FUNCTION__)
 //#define LEAVE_(result) {LEAVE; __watch__(result); return result;}
-#define ENTER
-#define LEAVE
+#define ENTER 
+#define LEAVE 
 #define LEAVE_(result) return result;
 #define DUMP_ARRAY 0
 
 extern void __qsort__ (void *const pbase, size_t total_elems, size_t size,int(*cmp)(const void*,const void*));
-
+ 
 namespace smsc{
 namespace alias{
 
@@ -30,11 +28,11 @@ using namespace smsc::sms;
 using namespace std;
 
 #define __synchronized__
-inline
+inline 
 void print(const APattern& pattern,char* text)
 {
   __trace2__("#### %s = PATTERN {%s(len:%d/def:%d), npi: %d, ton: %d, num_n_plan: %d}",
-              text,
+              text, 
               pattern.value,
               pattern.length,
               pattern.defLength,
@@ -57,7 +55,7 @@ void print(const APattern& pattern,char* text)
 void print(const AValue& val,char* text)
 {
   __trace2__("#### %s = VALUE {%s(len:%d), npi: %d, ton: %d, num_n_plan: %d}",
-              text,
+              text, 
               val.value,
               val.length,
               val.numberingPlan,
@@ -71,14 +69,14 @@ void print(const AValue& val,char* text)
              val.value_32[4]
              );
 }
-inline
+inline 
 int compare_val_pat(const AValue& val, const APattern& pattern,bool& strong)
 {
   __trace2__("compare (value ? pattern)");
   print(val,"\tV:");
   print(pattern,"\tP:");
-//#define compare_v(n) \
-//  ((pattern.mask_32[n]&val.value_32[n]) - pattern.value_32[n])
+/*#define compare_v(n) \
+  ((pattern.mask_32[n]&val.value_32[n]) - pattern.value_32[n])*/
 #define ifn0goto {if ( result ) goto result_; }
   int32_t result;
   result = val.num_n_plan-pattern.num_n_plan; ifn0goto;
@@ -88,7 +86,7 @@ int compare_val_pat(const AValue& val, const APattern& pattern,bool& strong)
   result = compare_v(2); ifn0goto;
   result = compare_v(3); ifn0goto;
   result = compare_v(4); ifn0goto; */
-  result =
+  result = 
     strncmp((char*)val.value,(char*)pattern.value,pattern.defLength);
     ifn0goto;
   if ( pattern.defLength == val.length )
@@ -129,7 +127,7 @@ if ( strong )
       goto result_;
     }
   } */
-  result =
+  result = 
     strncmp((char*)pat1.value,(char*)pat2.value,min(pat1.defLength,pat2.defLength));
     ifn0goto;
   result = pat1.defLength - pat2.defLength; ifn0goto;
@@ -142,7 +140,7 @@ else
   result = compare_v(2); ifn0goto;
   result = compare_v(3); ifn0goto;
   result = compare_v(4); ifn0goto; */
-  result =
+  result = 
     strncmp((char*)pat1.value,(char*)pat2.value,min(pat1.defLength,pat2.defLength));
     ifn0goto;
   if ( pat1.defLength == pat2.defLength ) strong = true;
@@ -151,7 +149,7 @@ else
 result_:
   __trace2__("result(P1%cP2)%s%d",result>0?'>':result<0?'<':'=',
       (result==0)?strong?"(strong)":"(weak)":"",
-      result);
+      result); 
   return (int32_t)result;
 #undef if0ngoto
 }
@@ -164,13 +162,13 @@ static TreeNode* findNodeByAliasRecurse(TreeNode* node,AValue& val,int& cmp)
   __require__(node != 0);
   if (!node->alias ) {cmp = 0; goto find_child;}
   cmp =  compare_val_pat(val,*(node->alias),strong);
-  if ( strong ) // cmp == 0
+  if ( strong ) // cmp == 0 
     LEAVE_(node);
   if ( cmp == 0 ) // weak
   {
   find_child:
     /*
-      fix me here, change to binary search
+      fix me here, change to binary search 
     */
     //__watch__(node->child.size());
     /*for ( int i=0; i<node->child.size(); ++i )
@@ -180,22 +178,22 @@ static TreeNode* findNodeByAliasRecurse(TreeNode* node,AValue& val,int& cmp)
     }*/
     #if DUMP_ARRAY
     __trace2__("array has %d elements",node->child.size());
-    for ( int i=0; i<node->child.size(); ++i )
+    for ( unsigned i=0; i<node->child.size(); ++i )
     {
       print (*(node->child[i]->alias),"@@@@");
     }
     #endif
     int left = 1;
-    int right = node->child.size();
+    int right = (signed)node->child.size();
     if ( right > 0 ) for(;;)
     {
       int ptr = (right+left) >> 1;
       TreeNode* res = findNodeByAliasRecurse(node->child[ptr-1],val,cmp);
       if ( res ) LEAVE_(res);
       __require__( cmp != 0 );
-      if ( right > left  )
+      if ( right > left  ) 
       {
-        __require__ ( right <= node->child.size() );
+        __require__ ( right <= (signed)node->child.size() ); 
         //__require__ ( left < right );
         __require__ ( 0 < left );
         if ( cmp < 0 )right = ptr-1;
@@ -217,13 +215,13 @@ TreeNode* findNodeByAddrRecurse(TreeNode* node,AValue& val, int& cmp)
   __require__(node != 0);
   if ( !node->addr ) {cmp = 0; goto find_child;}
   cmp =  compare_val_pat(val,*(node->addr),strong);
-  if ( strong ) // cmp == 0
+  if ( strong ) // cmp == 0 
     LEAVE_(node);
   if ( cmp == 0 ) // weak
   {
   find_child:
     /*
-      fix me here, change to binary search
+      fix me here, change to binary search 
     */
     //__watch__(node->child.size());
     /*for ( int i=0; i<node->child.size(); ++i )
@@ -233,22 +231,22 @@ TreeNode* findNodeByAddrRecurse(TreeNode* node,AValue& val, int& cmp)
     }*/
     #if DUMP_ARRAY
     __trace2__("array has %d elements",node->child.size());
-    for ( int i=0; i<node->child.size(); ++i )
+    for ( unsigned i=0; i<node->child.size(); ++i )
     {
       print ( *(node->child[i]->addr),"@@@@");
     }
     #endif
     int left = 1;
-    int right = node->child.size();
+    int right = (signed)node->child.size();
     if ( right > 0 ) for(;;)
     {
       int ptr = (right+left) >> 1;
       TreeNode* res = findNodeByAddrRecurse(node->child[ptr-1],val,cmp);
       if ( res ) LEAVE_(res);
       __require__( cmp != 0 );
-      if ( right > left )
+      if ( right > left ) 
       {
-        __require__ ( right <= node->child.size() );
+        __require__ ( right <= (signed)node->child.size() ); 
         //__require__ ( left < right );
         __require__ ( 0 < left );
         if ( cmp < 0 )right = ptr-1;
@@ -270,7 +268,7 @@ int addIntoAliasTreeRecurse(TreeNode* node,AliasRecord* rec)
   if ( node->alias ) print(*node->alias,"node->alias");
   else __trace__("no node->alias");
   print(rec->alias,"rec->alias");
-
+  
   bool strong = false;
   int cmp = 0;
   if ( !node->alias ) goto find_child;
@@ -283,13 +281,13 @@ int addIntoAliasTreeRecurse(TreeNode* node,AliasRecord* rec)
       LEAVE_(0);
     }
     __trace2__("weak equal:")
-    if (node->alias->defLength > rec->alias.defLength)
+    if (node->alias->defLength > rec->alias.defLength) 
     {
       __unreachable__("incorrect tree");
     }
   find_child:
     /*
-      fix me here, change to binary search
+      fix me here, change to binary search 
     */
     /*for ( int i=0; i<node->child.size(); ++i )
     {
@@ -303,16 +301,16 @@ int addIntoAliasTreeRecurse(TreeNode* node,AliasRecord* rec)
     }
     #endif*/
     int left = 1;
-    int right = node->child.size();
+    int right = (signed)node->child.size();
     if ( right > 0 ) for(;;)
     {
       int ptr = (right+left) >> 1;
       cmp = addIntoAliasTreeRecurse(node->child[ptr-1],rec);
       if ( cmp == 0 ) LEAVE_(0);
       __require__( cmp != 0 );
-      if ( right > left )
+      if ( right > left ) 
       {
-        __require__ ( right <= node->child.size() );
+        __require__ ( right <= (signed)node->child.size() ); 
         //__require__ ( left < right );
         __require__ ( 0 < left );
         if ( cmp < 0 )right = ptr-1;
@@ -356,7 +354,7 @@ int addIntoAddrTreeRecurse(TreeNode* node,AliasRecord* rec)
     }
   find_child:
     /*
-      fix me here, change to binary search
+      fix me here, change to binary search 
     */
     /*for ( int i=0; i<node->child.size(); ++i )
     {
@@ -370,16 +368,16 @@ int addIntoAddrTreeRecurse(TreeNode* node,AliasRecord* rec)
     }
     #endif*/
     int left = 1;
-    int right = node->child.size();
+    int right = (signed)node->child.size();
     if ( right > 0 ) for(;;)
     {
       int ptr = (right+left) >> 1;
       cmp = addIntoAddrTreeRecurse(node->child[ptr-1],rec);
       if ( cmp == 0 ) LEAVE_(0);
       __require__( cmp != 0 );
-      if ( right > left )
+      if ( right > left ) 
       {
-        __require__ ( right <= node->child.size() );
+        __require__ ( right <= (signed)node->child.size() ); 
         //__require__ ( left < right );
         __require__ ( 0 < left );
         if ( cmp < 0 )right = ptr-1;
@@ -405,12 +403,12 @@ static inline void makeAliasFromValueByAddres(
   char buf[21];
   memset(buf,0,21);
   int ln = 0;
-
+  
   throw_if_fail(p.alias->defLength<21 && p.alias->defLength >= 0);
   if ( p.alias->defLength != 0 )
   memcpy(buf,p.alias->value,p.alias->defLength);
   ln = p.alias->defLength;
-
+  
   __require__(val.length-p.addr->defLength >= 0 );
   throw_if_fail(ln+(val.length-p.addr->defLength)<21);
   if ( val.length-p.addr->defLength != 0 )
@@ -420,7 +418,7 @@ static inline void makeAliasFromValueByAddres(
          val.length-p.addr->defLength);
     ln+=(val.length-p.addr->defLength);
   }
-
+  
   __require__(ln < 21 );
   throw_if_fail( ln >= 0 );
   if ( ln == 0 ) throw runtime_error("result alias has zero length");
@@ -456,7 +454,7 @@ static inline void makeAddressFromValueByAlias(
   __require__(ln < 21 );
   throw_if_fail( ln >= 0 );
   if ( ln == 0 ) throw runtime_error("result address has zero length");
-
+  
   addr.setNumberingPlan(p.addr->numberingPlan);
   addr.setTypeOfNumber(p.addr->typeOfNumber);
   addr.setValue(ln,buf);
@@ -496,7 +494,7 @@ static inline void makeAPattern(APattern& pat, const Address& addr)
       pat_mask[i] = 0xff;
     }
   }
-  for_break:;
+  //for_break:;
   memset(pat.value,0,21);
   for ( int i=0; i<length; ++i)
   {
@@ -576,7 +574,7 @@ __synchronized__
 
 void AliasManager::addAlias(const AliasInfo& info)
 {
-__synchronized__
+__synchronized__  
   ENTER;
   auto_ptr<AliasRecord> rec(new AliasRecord);
   makeAPattern(rec->alias,info.alias);
@@ -598,7 +596,7 @@ __synchronized__
 
 void AliasManager::clean()
 {
-__synchronized__
+__synchronized__  
   while(first_alias)
   {
     AliasRecord* r = first_alias;
@@ -642,7 +640,7 @@ int adr_sort_comparator(const void* pat1,const void* pat2)
 
 void AliasManager::commit()
 {
-__synchronized__
+__synchronized__  
   aliasRootNode.clean();
   addrRootNode.clean();
   AliasRecord** tmp_vector = new AliasRecord*[new_aliases_count];
@@ -699,3 +697,6 @@ __synchronized__
 
 }; // namespace alias
 }; // namespace smsc
+
+
+

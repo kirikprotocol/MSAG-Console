@@ -15,394 +15,410 @@
 
 extern void __qsort__ (void *const pbase, size_t total_elems, size_t size,int(*cmp)(const void*,const void*));
 
-
 namespace smsc {
 namespace router{
 using std::runtime_error;
 using std::auto_ptr;
 using std::sort;
 
-
-static inline void printRoute(RouteRecord* record)
+int calcDefLengthAndCheck(Address* addr)
 {
-  __trace2__("%x\n",record);
-  __trace2__("%%%% R(%s:%x->%s:%x)",
-             record->pattern.src_addressPattern,
-             record->pattern.src_addressPattern_32[0],
-             record->pattern.dest_addressPattern,
-             record->pattern.dest_addressPattern_32[0]);
+	int cnt = 0;
+	throw_if_fail(addr->lenght<20);
+	for ( int i=0; i < addr->lenght; ++i )
+	{
+		if ( addr->value[i] == '?' || addr->value[i] == '*' ) break;
+		++cnt;
+	}
+	return cnt;
 }
 
-#define is_a(pattern,address) ( compare_pataddr(pattern,address) == 0 )
-static inline int compare_pataddr( const RoutePattern& pattern,
-                                   const RouteAddress& addr )
+static inline void printRoute(RouteRecord* record,const char* = "")
 {
-      __trace2__("compare R(%s->%s) / A(%s->%s)",
-                                       pattern.src_addressPattern,
-                                       pattern.dest_addressPattern,
-                                       addr.src_address,
-                                       addr.dest_address
-                                               );
-      __trace2__("compare R(%lx->%lx) / A(%lx->%lx)",
-                                               pattern.src_addressPattern_32[0],
-                                               pattern.dest_addressPattern_32[0],
-                                               addr.src_address_32[0],
-                                               addr.dest_address_32[0]
-                                               );
-      __trace2__("compare R(%lx->%lx) / A(%lx->%lx)",
-                                               pattern.src_addressPattern_32[1],
-                                               pattern.dest_addressPattern_32[1],
-                                               addr.src_address_32[1],
-                                               addr.dest_address_32[1]
-                                               );
-      __trace2__("compare R(%lx->%lx) / A(%lx->%lx)",
-                                               pattern.src_addressPattern_32[2],
-                                               pattern.dest_addressPattern_32[2],
-                                               addr.src_address_32[2],
-                                               addr.dest_address_32[2]
-                                               );
-      __trace2__("compare R(%lx->%lx) / A(%lx->%lx)",
-                                               pattern.src_addressPattern_32[3],
-                                               pattern.dest_addressPattern_32[3],
-                                               addr.src_address_32[3],
-                                               addr.dest_address_32[3]
-                                               );
-      __trace2__("compare R(%lx->%lx) / A(%lx->%lx)",
-                                               pattern.src_addressPattern_32[4],
-                                               pattern.dest_addressPattern_32[4],
-                                               addr.src_address_32[4],
-                                               addr.dest_address_32[4]
-                                               );
-#define compare_src(n) \
-  (pattern.src_addressPattern_32[n] - \
-    (pattern.src_addressMask_32[n] & addr.src_address_32[n]))
-#define compare_dest(n) \
-  (pattern.dest_addressPattern_32[n] - \
-    (pattern.dest_addressMask_32[n] & addr.dest_address_32[n]))
+}
+
+inline 
+int sort_compare_pat_pat(RouteRecord* pat1, RouteRecord* pat2)
+{
+//__trace2__("compare (%s)(pattern ? pattern)",strong?"strong":"weak");
+//print(pat1,"\tP1");
+//print(pat2,"\tP2");
 #define ifn0goto {if (result) goto result_;}
-  int32_t result;
-  result = pattern.num_n_plan - addr.num_n_plan; ifn0goto;
-  result = compare_src(0); ifn0goto;
-  result = compare_src(1); ifn0goto;
-  result = compare_src(2); ifn0goto;
-  result = compare_src(3); ifn0goto;
-  result = compare_src(4); ifn0goto;
-  result = compare_dest(0); ifn0goto;
-  result = compare_dest(1); ifn0goto;
-  result = compare_dest(2); ifn0goto;
-  result = compare_dest(3); ifn0goto;
-  result = compare_dest(4); ifn0goto;
-  __trace2__("check_src_length: %c : P%d ? A%d",
-             pattern.src_hasStar?'*':' ',
-             pattern.src_length,
-             addr.src_length);
-  result = pattern.src_hasStar?0:
-      ((int)pattern.src_length)-((int)addr.src_length)?-1:0;
-  ifn0goto;
-  __trace2__("check_dest_length: %c : P%d ? A%d",
-             pattern.dest_hasStar?'*':' ',
-             pattern.dest_length,
-             addr.dest_length);
-  result = pattern.dest_hasStar?0:
-      ((int)pattern.dest_length)-((int)addr.dest_length)?-1:0;
-  ifn0goto;
+	int32_t result;
+  result = pat1->info.dest.type - pat2->info.dest.type; ifn0goto;
+  result = pat1->info.dest.plan - pat2->info.dest.plan; ifn0goto;
+  result = pat1->info.dest.lenght - pat2->info.dest.lenght; ifn0goto;
+	result = 
+		strncmp((char*)pat1->info.dest.value,
+						(char*)pat2->info.dest.value,
+						min(pat1->dest_def,pat2->dest_def));
+	ifn0goto;
+	result = pat1->dest_def - pat2->dest_def; ifn0goto;
+//---------------------------------------------------------------------//
+  result = pat1->info.source.type - pat2->info.source.type; ifn0goto;
+  result = pat1->info.source.plan - pat2->info.source.plan; ifn0goto;
+  result = pat1->info.source.lenght - pat2->info.source.lenght; ifn0goto;
+	result = 
+		strncmp((char*)pat1->info.dest.value,
+						(char*)pat2->info.dest.value,
+						min(pat1->src_def,pat2->src_def));
+	ifn0goto;
+	result = pat1->src_def - pat2->src_def; ifn0goto;
 result_:
-  __trace2__("=== %d",result);
-        return (int32_t)result;
+  __trace2__("(sort)result(P1%cP2)%d",result>0?'>':result<0?'<':'=',
+      result); 
+  return (int32_t)result;
 #undef if0ngoto
-#undef compare_src
-#undef compare_dest
 }
 
-static inline int compare_patpat( const RoutePattern& pat1,
-                                  const RoutePattern& pat2 )
+inline 
+int compare_addr_addr_src(RouteRecord* rr1,
+											RouteRecord* rr2,
+											bool& strong)
 {
-  /*__trace2__("compare R1(%s->%s) ? R2(%s->%s)",
-                                         pat1.src_addressPattern,
-                                         pat1.dest_addressPattern,
-                                         pat2.src_addressPattern,
-                                         pat2.dest_addressPattern
-                                                 );*/
-#define compare_src(n) \
-  ( pat1.src_addressPattern_32[n] - pat2.src_addressPattern_32[n] )
-#define compare_dest(n) \
-  ( pat1.dest_addressPattern_32[n] - pat2.dest_addressPattern_32[n] )
+//__trace2__("compare (%s)(pattern ? pattern)");
+//print(pat1,"\tP1");
+//print(pat2,"\tP2");
+	Address* pat1 = &rr1->info.source;
+	Address* pat2 = &rr2->info.source;
+	int pat1_def = rr1->src_def;
+	int pat2_def = rr2->src_def;
 #define ifn0goto {if (result) goto result_;}
-  int result;
-  result = pat1.num_n_plan - pat2.num_n_plan; ifn0goto;
-  result = compare_src(0); ifn0goto;
-  result = compare_src(1); ifn0goto;
-  result = compare_src(2); ifn0goto;
-  result = compare_src(3); ifn0goto;
-  result = compare_src(4); ifn0goto;
-  result = compare_dest(0); ifn0goto;
-  result = compare_dest(1); ifn0goto;
-  result = compare_dest(2); ifn0goto;
-  result = compare_dest(3); ifn0goto;
-  result = compare_dest(4); ifn0goto;
-  result = (pat1.src_hasStar||pat2.src_hasStar)?0:
-      ((int)pat1.src_length)-((int)pat2.src_length);
-  ifn0goto;
-  result = (pat1.src_hasStar||pat2.src_hasStar)?0:
-      ((int)pat1.dest_length)-((int)pat2.dest_length);
-  ifn0goto;
+	int32_t result;
+  result = pat1->type - pat2->type; ifn0goto;
+  result = pat1->plan - pat2->plan; ifn0goto;
+  result = pat1->lenght - pat2->lenght; ifn0goto;
+	result = 
+		strncmp((char*)pat1->value,
+						(char*)pat2->value,
+						min(pat1_def,pat2_def));
+	ifn0goto;
+	if ( pat1_def == pat2_def ) strong = true;
+	else strong = false;
 result_:
-  //__trace2__("=== %d",result);
-  return result;
-#undef ifn0goto
-#undef compare_src
-#undef compare_dest
+  __trace2__("result(P1%cP2)%s%d",result>0?'>':result<0?'<':'=',
+      (result==0)?strong?"(strong)":"(weak)":"",
+      result); 
+  return (int32_t)result;
+#undef if0ngoto
 }
 
-int route_compare(const void* route,const void* pattern)
+inline 
+int compare_addr_addr_dest(RouteRecord* rr1,
+											RouteRecord* rr2,
+											bool& strong)
 {
-  //__trace2__("%p ? %p",(*(int**)pattern),route);
-  return compare_pataddr((**(RouteRecord**)pattern).pattern,*(RouteAddress*)route);
+//__trace2__("compare (%s)(pattern ? pattern)");
+//print(pat1,"\tP1");
+//print(pat2,"\tP2");
+	Address* pat1 = &rr1->info.dest;
+	Address* pat2 = &rr2->info.dest;
+	int pat1_def = rr1->dest_def;
+	int pat2_def = rr2->dest_def;
+#define ifn0goto {if (result) goto result_;}
+	int32_t result;
+  result = pat1->type - pat2->type; ifn0goto;
+  result = pat1->plan - pat2->plan; ifn0goto;
+  result = pat1->lenght - pat2->lenght; ifn0goto;
+	result = 
+		strncmp((char*)pat1->value,
+						(char*)pat2->value,
+						min(pat1_def,pat2_def));
+	ifn0goto;
+	if ( pat1_def == pat2_def ) strong = true;
+	else strong = false;
+result_:
+  __trace2__("result(P1%cP2)%s%d",result>0?'>':result<0?'<':'=',
+      (result==0)?strong?"(strong)":"(weak)":"",
+      result); 
+  return (int32_t)result;
+#undef if0ngoto
 }
 
-int route_pattern_compare(const void* pat1,const void* pat2)
+int compare_patterns(const void* a1,const void* a2)
 {
-   return compare_patpat((**(RouteRecord**)pat2).pattern,(**(RouteRecord**)pat1).pattern);
+	//bool strong = true;
+	return sort_compare_pat_pat(*(RouteRecord**)a1,*(RouteRecord**)a2);
 }
 
 void RouteManager::assign(SmeTable* smetable) // for detach call with NULL
 {
 __synchronized__
-        smeTable = smetable;
+	sme_table = smetable;
 }
 
 RouteIterator* RouteManager::iterator()
 {
 __synchronized__
-        throw runtime_error("RouteManager::iterator() unsuppoerted");
-        return 0;
+	throw runtime_error("RouteManager::iterator() unsuppoerted");
+	return 0;
 }
 
 // RouteAdministrator implementaion
 void RouteManager::addRoute(const RouteInfo& routeInfo)
 {
 __synchronized__
-  auto_ptr<RouteRecord> record(new RouteRecord);
-  __require__(table_size>=table_ptr);
-  __require__(smeTable);
-
-  record->proxyIdx = smeTable->lookup(routeInfo.smeSystemId);
-      // throws SmeErr if not found
-
-  record->pattern.src_typeOfNumber = routeInfo.source.getTypeOfNumber();
-  record->pattern.dest_typeOfNumber = routeInfo.dest.getTypeOfNumber();
-  record->pattern.src_numberingPlan = routeInfo.source.getNumberingPlan();
-  record->pattern.dest_numberingPlan = routeInfo.dest.getNumberingPlan();
-
-  uint8_t length;
-  int undefVal;
-  char addrVal[21];
-  char addrPattern[21];
-
-  memset(addrVal,0,sizeof(addrVal));
-  undefVal = 20;
-  length = routeInfo.source.getValue(addrVal);
-  record->pattern.src_length = length;
-  //__require__( length < 21 );
-  if ( length >= 21 ) throw runtime_error("assertin 'source addr length < 21' failed");
-  memset(addrPattern,0,sizeof(addrPattern));
-  record->pattern.src_hasStar = false;
-  for ( int i=0; i<length; ++i )
-  {
-    switch(addrVal[i])
-    {
-    case '?': // any part
-      break;
-    case '*': // only end of value
-      record->pattern.src_hasStar = true;
-      goto end_src_pattern_loop;
-    default:
-      --undefVal;
-      addrPattern[i] = 0xff;
-    }
-  }
-  end_src_pattern_loop:
-  for ( int i=0; i<20; ++i)
-  {
-    addrVal[i] &= addrPattern[i];
-  }
-  memcpy(record->pattern.src_addressMask,addrPattern,21);
-  memcpy(record->pattern.src_addressPattern,addrVal,21);
-  record->src_pattern_undef = undefVal;
-
-  undefVal = 20;
-  memset(addrVal,0,21);
-  length = routeInfo.dest.getValue(addrVal);
-  record->pattern.dest_length = length;
-  //__require__( length < 21 );
-  if ( length >= 21 ) throw runtime_error("assertoin 'dest addr length < 21' failed");
-  memset(addrPattern,0xff,sizeof(addrPattern));
-  addrPattern[20] = 0;
-  record->pattern.dest_hasStar = false;
-  for ( int i=0; i<20; ++i )
-  {
-    switch(addrVal[i])
-    {
-    case '?': // any part
-      addrPattern[i] = 0;
-      break;
-    case '*': // only end of value
-      record->pattern.dest_hasStar = true;
-      memset(addrPattern+i,0,20-i);
-      goto end_dest_pattern_loop;
-    default:
-      //addrPattern[i] = 0xff;
-      --undefVal;
-    }
-  }
-  end_dest_pattern_loop:
-  for ( int i=0; i<20; ++i)
-  {
-    addrVal[i] &= addrPattern[i];
-  }
-  memcpy(record->pattern.dest_addressMask,addrPattern,21);
-  memcpy(record->pattern.dest_addressPattern,addrVal,21);
-  record->dest_pattern_undef = undefVal;
-
-  if ( table_size == table_ptr )
-  {
-    RouteRecord** tmp = new RouteRecord*[table_size+1024];
-    memcpy(tmp,table,sizeof(RouteRecord*)*table_size);
-    delete table;
-    table = tmp;
-    table_size+=1024;
-  }
-
-  table[table_ptr++] = record.release();
-  __trace2__("%x\n",table[table_ptr-1]);
-	printRoute(table[table_ptr-1]);
-  sorted = false;
+	auto_ptr<RouteRecord> r(new RouteRecord);
+	r->info = routeInfo;
+	r->src_def = calcDefLengthAndCheck(&r->info.source);
+	r->dest_def = calcDefLengthAndCheck(&r->info.dest);
+	r->next = new_first_record;
+	new_first_record = r.release();
 }
 
-static inline void makeAddress( RouteAddress* addr, const Address* source, const Address* dest)
+static 
+RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& cmp )
 {
-  uint8_t length;
-  memset(addr,0,sizeof(RouteAddress));
-  addr->src_typeOfNumber = source->getTypeOfNumber();
-  addr->dest_typeOfNumber = dest->getTypeOfNumber();
-  addr->src_numberingPlan = source->getNumberingPlan();
-  addr->dest_numberingPlan = dest->getNumberingPlan();
-  length = source->getValue((char*)addr->src_address);
-  //__require__( length < 21 );
-  if ( length >= 21 ) throw runtime_error("assertion 'source addr length < 21' failed");
-  addr->src_length = length;
-  length = dest->getValue((char*)addr->dest_address);
-  //__require__( length < 21 );
-  if ( length >= 21 ) throw runtime_error("assertion 'dest addr length < 21' failed");
-  addr->dest_length = length;
+	bool strong = false;
+	cmp = compare_addr_addr_src(r,node->record,strong);
+	if ( cmp == 0 )
+	{
+		if ( !strong )
+		{
+			RouteRecord* rec;
+			int left = 1;
+			int right = node->child.size();
+			if ( right > 0 ) for(;;)
+			{
+				int ptr = (right+left) >> 1;
+				rec = findInSrcTreeRecurse(node->child[ptr-1],r,cmp);
+				if ( rec ) return rec;
+				__require__( cmp != 0 );
+				if ( right > left ) 
+				{
+					if ( cmp < 0 )right = ptr-1;
+					else left = ptr+1;
+				}
+				else break;
+			}
+		}
+	}
+	return 0;
 }
 
+static 
+RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& cmp )
+{
+	bool strong = false;
+	cmp = compare_addr_addr_dest(r,node->record,strong);
+	if ( cmp == 0 )
+	{
+		if ( !strong )
+		{
+			// find by dest			
+			RouteRecord* rec;
+			int left = 1;
+			int right = node->child.size();
+			if ( right > 0 ) for(;;)
+			{
+				int ptr = (right+left) >> 1;
+				rec = findInTreeRecurse(node->child[ptr-1],r,cmp);
+				if ( rec ) return rec;
+				if ( right > left ) 
+				{
+					if ( cmp < 0 )right = ptr-1;
+					else left = ptr+1;
+				}
+				else break;
+			}
+		}
+		// find by source
+		{
+			RouteRecord* rec;
+			int left = 1;
+			int right = node->sources.size();
+			if ( right > 0 ) for(;;)
+			{
+				int ptr = (right+left) >> 1;
+				rec = findInSrcTreeRecurse(node->sources[ptr-1],r,cmp);
+				if ( rec ) return rec;
+				if ( right > left ) 
+				{
+					if ( cmp < 0 )right = ptr-1;
+					else left = ptr+1;
+				}
+				else break;
+			}
+		}
+	}
+	return 0;
+}
+
+inline 
+RouteRecord* findInTree(RouteTreeNode* node,
+												const Address* source,
+												const Address* dest)
+{
+	int cmp = 0;
+	RouteRecord r;
+	r.info.source = *source;
+	r.info.dest = *dest;
+	r.src_def = calcDefLengthAndCheck(&r.info.source);
+	r.dest_def = calcDefLengthAndCheck(&r.info.dest);
+	return findInTreeRecurse(node,&r,cmp);
+}
+
+
+static 
+int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec)
+{
+	bool strong = false;
+	int cmp = compare_addr_addr_src(rec,node->record,strong);
+	if ( cmp == 0 )
+	{
+		if ( !strong )
+		{
+			__warning__("duplicate route, is not added");
+		}
+		else
+		{
+			int left = 1;
+			int right = node->child.size();
+			if ( right > 0 ) for(;;)
+			{
+				int ptr = (right+left) >> 1;
+				cmp = addRouteIntoSrcTreeRecurse(node->child[ptr-1],rec);
+				if ( cmp == 0 ) return 0;
+				if ( right > left ) 
+				{
+					if ( cmp < 0 )right = ptr-1;
+					else left = ptr+1;
+				}
+				else break;
+			}
+			RouteSrcTreeNode* newSrcNode = new RouteSrcTreeNode;
+			newSrcNode->record = rec;
+			node->child.push_back(newSrcNode);
+			return 0;
+		}
+	}
+	return cmp;
+}
+
+static 
+int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec)
+{
+  __require__(node != 0);
+  //if ( node->alias ) print(*node->alias,"node->alias");
+  //else __trace__("no node->alias");
+  //print(rec->alias,"rec->alias");
+  
+  bool strong = false;
+  int cmp = 0;
+  if ( !node->record ) goto find_child;
+  cmp = compare_addr_addr_dest(rec,node->record,strong);
+  if ( cmp == 0 )
+  {
+    if ( strong )
+    {
+			int left = 1;
+			int right = node->child.size();
+			if ( right > 0 ) for(;;)
+			{
+				int ptr = (right+left) >> 1;
+				cmp = addRouteIntoSrcTreeRecurse(node->sources[ptr-1],rec);
+				if ( cmp == 0 ) return 0;
+				if ( right > left ) 
+				{
+					if ( cmp < 0 )right = ptr-1;
+					else left = ptr+1;
+				}
+				else break;
+			}
+    }
+    __trace2__("weak equal:")
+    if (node->record->dest_def > rec->dest_def) 
+    {
+      __unreachable__("incorrect tree");
+    }
+  find_child:
+    int left = 1;
+    int right = node->child.size();
+    if ( right > 0 ) for(;;)
+    {
+      int ptr = (right+left) >> 1;
+      cmp = addRouteIntoTreeRecurse(node->child[ptr-1],rec);
+      if ( cmp == 0 ) return 0;
+      if ( right > left ) 
+      {
+        if ( cmp < 0 )right = ptr-1;
+        else left = ptr+1;
+      }
+      else break;
+    }
+    __trace__("**** add element ****");
+    RouteTreeNode* newNode = new RouteTreeNode;
+    newNode->record = rec;
+    node->child.push_back(newNode);
+		RouteSrcTreeNode* newSrcNode = new RouteSrcTreeNode;
+		newSrcNode->record = rec;
+		newNode->sources.push_back(newSrcNode);
+    cmp = 0;
+  }
+	return cmp;
+}
+
+static 
+int addRouteIntoTree(RouteTreeNode* node,RouteRecord* rec)
+{
+	return addRouteIntoTreeRecurse(node,rec);
+}
+
+void RouteManager::commit()
+{
+	int count = 0;
+	RouteRecord* r = new_first_record;
+	for ( ; r != 0; r = r->next ) { ++count; }
+	if ( !count ) return;
+	auto_ptr<RouteRecord*> table(new RouteRecord*[count]);
+	r = new_first_record;
+	for ( int i=0; i < count; ++i )
+	{
+		__require__(r != 0);
+		table.get()[i] = r;
+		r = r->next;
+	}
+	__qsort__(table.get(),count,sizeof(RouteRecord*),compare_patterns);
+	{__synchronized__
+		root.clean();
+		for ( int i=0; i < count; ++i )
+		{
+			addRouteIntoTree(&root,table.get()[i]);
+		}
+		while ( first_record )
+		{
+			RouteRecord* r = first_record;
+			first_record = first_record->next;
+			delete r;
+		}
+		first_record = new_first_record;
+		new_first_record = 0;
+	}
+	//delete table;
+}
+
+void RouteManager::cancel()
+{
+	while ( new_first_record )
+	{
+		RouteRecord* r = new_first_record;
+		new_first_record = new_first_record->next;
+		delete r;
+	}
+}
 
 // RoutingTable implementation
 bool RouteManager::lookup(const Address& source, const Address& dest, SmeProxy*& proxy, int* idx, RouteInfo* info)
 {
 __synchronized__
   proxy = 0;
-  __require__(smeTable);
-  if ( !table_ptr ) return false;
-  if (!sorted)
-  {
-    __qsort__(table,table_ptr,sizeof(RouteRecord*),route_pattern_compare);
-    sorted = true;
-    __trace2__("___ route table, size=%d ___",table_ptr);
-    for ( int i=0; i < table_ptr; ++i )
-      printRoute(table[i]);
-  }
-  RouteAddress address;
-  proxy = 0;
-  makeAddress(&address,&source,&dest);
-  __trace2__("lookup route %s->%s",address.src_address,address.dest_address);
-  //RouteRecord* record = bsearch_record(&address,table,table_ptr);
-  RouteRecord** recordX = (RouteRecord**)bsearch(
-                        &address,table,table_ptr,sizeof(RouteRecord*),route_compare);
-  __trace2__("xroute == %p",recordX);
-        if (!recordX) return false;
-        RouteRecord* record = *recordX;
-  record->ok_next = 0;
-  RouteRecord* ok_route = record;
-  __trace2__("found route %s->%s",
-             ok_route->pattern.src_addressPattern,
-             ok_route->pattern.dest_addressPattern);
-  for (RouteRecord** r = recordX-1; r != table-1; --r )
-  {
-    if ( is_a((*r)->pattern,address) )
-    {
-      (*r)->ok_next = ok_route;
-      ok_route = *r;
-    }else break;
-  }
-  for (RouteRecord** r = recordX+1; r != table+table_ptr; ++r )
-  {
-    if ( is_a((*r)->pattern,address) )
-    {
-      (*r)->ok_next = ok_route;
-      ok_route = *r;
-    }else break;
-  }
-  record = 0;
-  int src_undef = 1000;
-  int dest_undef = 1000;
-  if ( ok_route->ok_next ) // has more then one routes
-  {
-    while ( ok_route )
-    {
-      __require__(ok_route != ok_route->ok_next);
-      if ( ok_route->dest_pattern_undef < dest_undef )
-      {
-        dest_undef = ok_route->dest_pattern_undef;
-        record = ok_route;
-        ok_route = ok_route->ok_next;
-        record->ok_next = 0;
-      }
-      else if ( ok_route->src_pattern_undef == src_undef )
-      {
-        RouteRecord* tmp = ok_route->ok_next;
-        ok_route->ok_next = record;
-        record = ok_route;
-        ok_route = tmp;
-      }
-      else ok_route = ok_route->ok_next;
-    }
-    __require__(record);
-    ok_route = record;
-    record = 0;
-    while ( ok_route )
-    {
-      __require__(ok_route != ok_route->ok_next);
-      if ( ok_route->src_pattern_undef < src_undef )
-      {
-        src_undef = ok_route->src_pattern_undef;
-        record = ok_route;
-        ok_route = ok_route->ok_next;
-        record->ok_next = 0;
-      }
-      else if ( ok_route->src_pattern_undef == src_undef )
-                        {
-        RouteRecord* tmp = ok_route->ok_next;
-        ok_route->ok_next = record;
-        record = ok_route;
-        ok_route = tmp;
-      }
-      else ok_route = ok_route->ok_next;
-    }
-    __require__(record);
-    if ( record->ok_next )
-    {
-      __warning__("more then one route found, use anyone");
-    }
-  }
-  else
-  {
-    record = ok_route;
-  }
-  proxy = smeTable->getSmeProxy(record->proxyIdx);
-  if ( info ) *info = record->info;
-  if ( idx ) *idx = record->proxyIdx;
+  __require__(sme_table);
+  // ....
+	RouteRecord* rec =  findInTree(&root,&source,&dest);
+	if ( !rec ) return false;
+	proxy = sme_table->getSmeProxy(rec->proxyIdx);
+  if ( info ) *info = rec->info;
+  if ( idx ) *idx = rec->proxyIdx;
   return true;
 }
 

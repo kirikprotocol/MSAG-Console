@@ -21,112 +21,96 @@ using smsc::smeman::SmeProxy;
 using smsc::smeman::SmeIndex;
 using smsc::smeman::SmeTable;
 
-struct RoutePattern
-{
-  union
-  {
-    struct
-    {
-      uint8_t dest_typeOfNumber;
-      uint8_t src_typeOfNumber;
-      uint8_t dest_numberingPlan;
-      uint8_t src_numberingPlan;
-    };
-    int32_t num_n_plan;
-  };
-  union
-  {
-    uint8_t src_addressMask[21];
-    int32_t src_addressMask_32[5];
-  };
-  union
-  {
-    uint8_t dest_addressMask[21];
-    int32_t dest_addressMask_32[5];
-  };
-  union
-  {
-    uint8_t src_addressPattern[21];
-    int32_t src_addressPattern_32[5];
-  };
-  union
-  {
-    uint8_t dest_addressPattern[21];
-    int32_t dest_addressPattern_32[5];
-  };
-  bool dest_hasStar;
-  bool src_hasStar;
-  uint8_t dest_length;
-  uint8_t src_length;
-};
+using namespace std;
 
-struct RouteAddress
+struct RouteValue
 {
-  union
-  {
-    struct
-    {
-      uint8_t dest_typeOfNumber;
-      uint8_t src_typeOfNumber;
-      uint8_t dest_numberingPlan;
-      uint8_t src_numberingPlan;
-    };
-    int32_t num_n_plan;
-  };
-  union
-  {
-    uint8_t src_address[21];
-    int32_t src_address_32[5];
-  };
-  union
-  {
-    uint8_t dest_address[21];
-    int32_t dest_address_32[5];
-  };
-  uint8_t src_length;
-  uint8_t dest_length;
+	uint8_t length;
+	uint8_t npi; // numbering plan
+	uint8_t tni; // type of number
+	uint8_t value[0];
 };
 
 struct RouteRecord 
 {
-  RouteInfo info;
-  //SmeProxy* proxy;
+  RouteInfo info; // has address
   SmeIndex proxyIdx;
-  RoutePattern pattern;
-  uint8_t src_pattern_undef;
-  uint8_t dest_pattern_undef;
-  //RouteIdentifier rid;
-  RouteRecord* ok_next;
-  RouteRecord() : ok_next(0) {}
+	uint8_t src_def;
+	uint8_t dest_def;
+  RouteRecord* next;
+  RouteRecord() : next(0) {}
 };
+
+struct RouteSrcTreeNode
+{
+	RouteRecord* record;
+	vector<RouteSrcTreeNode*> child;
+	RouteSrcTreeNode() : record(0) {}
+	~RouteSrcTreeNode()
+	{
+		clean();
+	}
+	void clean()
+	{
+		record = 0;
+		for ( unsigned i=0; i< child.size(); ++i ) 
+			{ if ( child[i] ) delete child[i]; }
+	}
+};
+
+struct RouteTreeNode
+{
+	RouteRecord* record;
+	vector<RouteTreeNode*> child;
+	vector<RouteSrcTreeNode*> sources;
+	RouteTreeNode() : record(0) {}
+	~RouteTreeNode()
+	{
+		clean();
+	}
+	void clean()
+	{
+		record = 0;
+		for ( unsigned i=0; i< child.size(); ++i ) 
+			{ if ( child[i] ) delete child[i]; }
+		for ( unsigned i=0; i< sources.size(); ++i ) 
+			{ if ( sources[i] ) delete sources[i]; }
+	}
+};
+
 
 class RouteManager : public RouteAdmin, public RouteTable
 {
-  // struct array (not need delete[] for calling destructors)
-  SmeTable* smeTable;
-  RouteRecord** table;
-  int table_size;
-        int table_ptr;
-        bool sorted;
-  //
+  SmeTable* sme_table;
+  RouteRecord* first_record;
+	RouteRecord* new_first_record;
+	RouteTreeNode  root;
 public :
-  RouteManager() : table_size(1024), table_ptr(0), sorted(false)
-  {
-    table=new RouteRecord*[table_size];
-  }
+  RouteManager() : sme_table(0),first_record(0),new_first_record(0)
+  {}
   
   virtual ~RouteManager() 
   {
-    for (int i=0; i<table_ptr; ++i) {
-      if (table[i]) delete table[i];
-    }
-    delete table;
+		while ( first_record )
+		{
+			RouteRecord* r = first_record;
+			first_record = first_record->next;
+			delete r;
+		}
+		while ( new_first_record )
+		{
+			RouteRecord* r = new_first_record;
+			new_first_record = new_first_record->next;
+			delete r;
+		}
   }
 
   void assign(SmeTable* smetable); // for detach call with NULL;
   RouteIterator* iterator();
   // RouteAdministrator implementaion 
   virtual void addRoute(const RouteInfo& routeInfo);
+	virtual void commit();
+	virtual void cancel();
   /*virtual void removeRoute(RouteId id);
   virtual void modifyRoute(RouteId id,const RouteInfo& routeInfo);*/
   // RoutingTable implementation

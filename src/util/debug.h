@@ -71,12 +71,17 @@
 #else
   #define __goto_if_fail__(expr,label)
   #define __ret_if_fail__(expr)
-  #define __ret0_if_fail__(expr)
-  #define __ret1_if_fail__(expr)
+  #define __ret0_if_fail__(expr) 
+  #define __ret1_if_fail__(expr) 
   #define __retneg_if_fail__(expr)
   #define __retval_if_fail__(expr,val)
   #define __throw_if_fail__(expr,except)
 #endif
+
+#define retval_if_fail(expr,val) \
+  if ( !__watchdog2__(expr,"return " #val) ) return val; else;
+#define ret0_if_fail(expr) retval_if_fail(expr,0) /*aka false*/
+#define ret1_if_fail(expr) retval_if_fail(expr,1) /*aka true*/
 
 #if !defined ( LOG_DOMAIN )
   #define LOG_DOMAIN "DEBUG"
@@ -143,8 +148,10 @@
 #endif
 
 #if !defined ( DISABLE_TRACING )
+  /*#define watch(expr) \
+    smsc::util::watchImpl(expr,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)*/
   #define watch(expr) \
-    smsc::util::watchImpl(expr,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
+    smsc::util::watchImpl(expr,#expr,"","",__LINE__)
   #define watchx(expr) \
     smsc::util::watchxImpl(expr,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
   #define watcht(expr) \

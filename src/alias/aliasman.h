@@ -83,10 +83,10 @@ struct TreeNode
   std::vector<TreeNode*> child;
   TreeNode() : alias(0), addr(0), child(0) {};
   ~TreeNode() 
-  { for ( int i=0; i < child.size(); ++i) if (child[i]) delete child[i];}
+  { for ( unsigned i=0; i < child.size(); ++i) if (child[i]) delete child[i];}
   void clean()
   { 
-    for ( int i=0; i < child.size(); ++i) if (child[i]) delete child[i]; 
+    for ( unsigned i=0; i < child.size(); ++i) if (child[i]) delete child[i]; 
     child = std::vector<TreeNode*>(0);
     alias = 0;
     addr = 0;
@@ -126,8 +126,8 @@ class AliasManager :
   //AliasRecord** adr_table;
 
   AliasRecord* first_alias;
-	AliasRecord* new_aliases;
-	int new_aliases_count;
+  AliasRecord* new_aliases;
+  int new_aliases_count;
   //int table_size;
   //int table_ptr;
   //bool sorted;
@@ -151,7 +151,7 @@ public:
   }*/
   
   AliasManager() : first_alias(0), new_aliases(0), new_aliases_count(0) {}
-  ~AliasManager()
+  virtual ~AliasManager()
   { 
     /*while ( first_alias ) 
     {
@@ -159,14 +159,14 @@ public:
       first_alias = first_alias->next;
       delete r;
     }*/
-		clean();
+    clean();
   }
 
   virtual bool AliasToAddress(const Address& alias, Address&  addr);
   virtual bool AddressToAlias(const Address& addr, Address& alias);
   
   virtual void addAlias(const AliasInfo& info);
-	virtual void commit();
+  virtual void commit();
   virtual void clean();
   virtual AliasIterator* iterator();
 };
