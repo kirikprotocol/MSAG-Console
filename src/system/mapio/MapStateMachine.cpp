@@ -13,6 +13,7 @@ using namespace std;
 
 static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc);
 static void PauseOnImsiReq(MapDialog* map);
+static const string& SC_ADDERSS() { static string s("79029869999"); return s;}
 
 string ImsiToString(const ET96MAP_IMSI_T* imsi)
 {
@@ -117,7 +118,7 @@ static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
   dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
   __trace2__("MAP::%s:DELIVERY_SM %s",__FUNCTION__,RouteToString(dialog).c_str());
   mkMapAddress( &dialog->m_msAddr, dialog->sms->getDestinationAddress().value, dialog->sms->getDestinationAddress().length );
-  mkMapAddress( &dialog->m_scAddr, "79029869999", 11 );
+  mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDERSS().c_str(), 11 );
   mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
   mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
   __trace2__("MAP::%s: Query HLR AC version",__FUNCTION__);
@@ -1331,21 +1332,23 @@ static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string&
 
 static void PauseOnImsiReq(MapDialog* map)
 {
-  unsigned dialogid_map = 0;
   bool success = false;
+  DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialogImsiReq(SSN,map));
+  if (dialog.isnull()) throw runtime_error(
+    FormatText("MAP::%s can't create dialog",__FUNCTION__));
+  unsigned dialogid_map = dialog->dialogid_map;
   MAP_TRY{
-    DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialogImsiReq(SSN,map));
-    if (dialog.isnull()) throw runtime_error(
-      FormatText("MAP::%s can't create dialog",__FUNCTION__));
-    dialogid_map = dialog->dialogid_map;
-    dialog->mshlrAddr = map->mshlrAddr;
+    if ( !dialog->sms ) 
+      throw runtime_error(
+        FormatText("MAP::%s has no SMS",__FUNCTION__);
+    mkMapAddress( &dialog->m_msAddr, dialog->sms->getOriginatingAddress().value, dialog->sms->getOriginatingAddress().length );
+    mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
+    mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
+    mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
+    __trace2__("MAP::%s: Query HLR AC version",__FUNCTION__);
+    //dialog->mshlrAddr = map->mshlrAddr;
     QueryHlrVersion(dialog.get());
-    success = true;
   }MAP_CATCH(dialogid_map,0);
-  if ( !success )
-  {
-    ContinueImsiReq(map,"","");
-  }
 }
 
 #else
