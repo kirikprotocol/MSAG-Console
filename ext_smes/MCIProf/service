@@ -24,7 +24,7 @@ for i in lib/*.jar ; do cls=$cls:$i ; done
 
 while true;
 do
-/usr/java14/bin/java -Dsmsc_mciprof -Xmx64M -classpath $cls ru.sibinco.smpp.appgw.ApplicationsGateWay conf/appgw.properties 1>/dev/null 2>>logs/mciprof.err&
+$JAVA_HOME/bin/java -Dsmsc_mciprof -Xmx64M -classpath $cls ru.sibinco.smpp.appgw.ApplicationsGateWay conf/appgw.properties 1>/dev/null 2>>logs/mciprof.err&
 PID=$!
 export PID
 trap "kill -s SIGTERM $PID;wait $PID; exit" SIGTERM

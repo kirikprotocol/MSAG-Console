@@ -55,7 +55,7 @@
       <zipfileset file="${basedir}/service" prefix="bin"/>
       <zipfileset dir="${mciprof_lib}"      prefix="lib"/>
       <zipfileset dir="${basedir}/jsp"      prefix="jsp"/>
-      <zipfileset dir="${basedir}/config"   prefix="config"/>
+      <zipfileset dir="${basedir}/config"   prefix="conf"/>
       <zipfileset dir="${basedir}/schema"   prefix="schema"/>
     </jar>
   </target>
