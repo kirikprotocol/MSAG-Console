@@ -75,12 +75,12 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
     mdci->dialogue->Et96MapV2ForwardSmMOInd(
       lssn,dialogId,invokeId,dstAddr,srcAddr,ud);
     
-    USHORT_T err = Et96MapV2ForwardSmMOResp(lssn,dialogId,invokeId,0);
+/*    USHORT_T err = Et96MapV2ForwardSmMOResp(lssn,dialogId,invokeId,0);
     if ( err != ET96MAP_E_OK ) {
       __trace2__("broken response with error 0x%hx",err);
       throw runtime_error("MAPIO::ERR broken response");
     }
-    CloseAndRemoveDialog(lssn,dialogId);
+    CloseAndRemoveDialog(lssn,dialogId);*/
 	}catch(...){
 		__trace__("MAP::Et96MapV2ForwardSmMOInd catch exception");
     CloseAndRemoveDialog(lssn,dialogId);
@@ -93,6 +93,12 @@ USHORT_T Et96MapDelimiterInd(
   UCHAR_T priorityOrder)
 {
   __trace2__("MAP::Et96MapDelimiterInd lssn 0x%hx, dialogId 0x%hx",lssn,dialogId);
+  USHORT_T err = Et96MapV2ForwardSmMOResp(lssn,dialogId,invokeId,0);
+  if ( err != ET96MAP_E_OK ) {
+    __trace2__("broken response with error 0x%hx",err);
+    throw runtime_error("MAPIO::ERR broken response");
+  }
+  CloseAndRemoveDialog(lssn,dialogId);
   return ET96MAP_E_OK;
 }
 
@@ -134,11 +140,12 @@ void MapIoTask::dispatcher()
     }
     //if (EINSS7CpMsgRecv_r(&message,MSG_INFTIM)!=MSG_OK) return;
     if ( isStopping ) return;
-    result = Et96MapHandleIndication(&message);
-    if ( result != ET96MAP_E_OK ) {
-      __trace2__("MAP: error at Et96MapHandleIndication with code x%hx",result);
+    Et96MapHandleIndication(&message);
+    //result = Et96MapHandleIndication(&message);
+    //if ( result != ET96MAP_E_OK ) {
+    //  __trace2__("MAP: error at Et96MapHandleIndication with code x%hx",result);
       //return;
-    }
+    //}
   }
 }
 

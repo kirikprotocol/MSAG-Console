@@ -2,7 +2,7 @@
 
 extern "C"{
 
-#define _CB(a) unsigned short a() {fprintf(stderr,"MAP::%s callback was called\n",#a); /*return ET96MAP_E_OK;*/ return 0;}
+#define _CB(a) unsigned short a() {__trace2__("MAP::%s callback was called\n",#a); /*return ET96MAP_E_OK;*/ return 0;}
 
 _CB(MapSubmitSMInd)              
 _CB(MapReportSMInd)
