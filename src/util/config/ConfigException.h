@@ -10,7 +10,7 @@ namespace config {
 class ConfigException	: public std::exception
 {
 public:
-	ConfigException(const char * const exceptionMessage)
+	ConfigException(const std::string & exceptionMessage)
 		throw ()
 		: message(exceptionMessage)
 	{}

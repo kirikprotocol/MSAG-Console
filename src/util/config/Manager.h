@@ -74,7 +74,7 @@ public:
 			std::string s("Int key \"");
 			s += paramName;
 			s += "\" not found";
-			throw ConfigException(s.c_str());
+			throw ConfigException(s);
 		}
 	}
 
@@ -98,7 +98,7 @@ public:
 			std::string s("String key \"");
 			s += paramName;
 			s += "\" not found";
-			throw ConfigException(s.c_str());
+			throw ConfigException(s);
 		}
 	}
 
@@ -122,7 +122,7 @@ public:
 			std::string s("Bool key \"");
 			s += paramName;
 			s += "\" not found";
-			throw ConfigException(s.c_str());
+			throw ConfigException(s);
 		}
 	}
 
