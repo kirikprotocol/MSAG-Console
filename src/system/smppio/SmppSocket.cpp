@@ -48,7 +48,7 @@ int SmppSocket::receive()
   if(bufferOffset>=4)
   {
     packetsize=ntohl(*((int*)buffer));
-    if(packetsize>70000 || packetsize<=0)
+    if(packetsize>70000 || packetsize<16)
     {
       socket->Close();
       return -1;
