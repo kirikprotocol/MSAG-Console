@@ -105,6 +105,7 @@ int Socket::canRead(int to)
   if(bufPos<inBuffer)return 1;
   if(to==0)to=timeOut;
   if(to==0)return 1;
+
   FD_ZERO(&fd);
   FD_SET(sock,&fd);
   tv.tv_sec=to;

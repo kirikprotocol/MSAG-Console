@@ -159,8 +159,14 @@ public:
     log=smsc::logger::Logger::getInstance("smppdump");
     running=false;
   }
+  static void sigdisp(int sig)
+  {
+  //  trace("got user signal");
+  }
   int Execute()
   {
+
+    sigset(16,sigdisp);
     SmppHeader *pdu;
     running=true;
     while(!stopped)
@@ -178,6 +184,7 @@ public:
       {
         __trace2__("SmppReader: received pdu, cmdid=%x, seqnum=%d",pdu->get_commandId(),pdu->get_sequenceNumber());
         listener->handleEvent(pdu);
+        __trace__("SmppReader: handle event ok");
         pdu=NULL;
       }else
       {
@@ -229,12 +236,14 @@ protected:
 
   SmppHeader* receivePdu()
   {
+    __trace__("SmppReader: receive pdu");
     lastUpdate=time(NULL);
     buf.offset=0;
     buf.setSize(64);
     while(buf.offset<4)
     {
       if(!IdleCheck())continue;
+      __trace2__("SmppReader: read socket %p",socket);
       int rd=socket->Read(buf.buffer+buf.offset,4-buf.offset);
       if(rd<=0)
       {
@@ -676,11 +685,12 @@ public:
   }
   void close()
   {
-    __trace2__("SmppSession: CLOSING %p",this);
     if(closed)return;
+    __trace2__("SmppSession: CLOSING %p",this);
     reader.Stop();
     writer.Stop();
     socket.Close();
+    reader.Kill(16);
     if(reader.isRunning())reader.WaitFor();
     if(reader.isRunning())writer.WaitFor();
     closed=true;

@@ -196,6 +196,7 @@ protected:
         warn2(log,"failed to construct command from pdu:%#X",pdu->get_commandId());
       }
       disposePdu(pdu);
+      debug2(log,"enqueue of pdu %p ok",pdu);
     }
     void handleError(int errorCode)
     {

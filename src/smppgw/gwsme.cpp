@@ -44,14 +44,11 @@ int GatewaySme::Execute()
     {
       SmscCommand cmd;
       {
-        debug1(log,"tick in");
         MutexGuard g(mutexout);
         while(!isStopping && isConnected() && outqueue.Count()==0)
         {
           mutexout.wait(1000);
-          debug1(log,"tick");
         }
-        debug1(log,"tick out");
         if(isStopping || !isConnected())break;
         outqueue.Pop(cmd);
       }
