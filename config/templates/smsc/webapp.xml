@@ -3,6 +3,12 @@
 
 <config>
 
+  <section name="categories">
+   <param name="1" type="string">category1</param>
+    <param name="2" type="string">supercategory</param>
+    <param name="3" type="string">super puper category mega giga</param>
+    <param name="last used category id" type="int">3</param>
+  </section>
   <section name="console">
     <param name="enabled" type="bool">false</param>
     <param name="humanPort" type="int">@console.human.port@</param>
@@ -34,7 +40,12 @@
       <param name="password" type="string">@db.password@</param>
     </section>
   </section>
-
+  <section name="providers">
+    <param name="1" type="string">hello</param>
+    <param name="2" type="string">mark</param>
+    <param name="3" type="string">burger</param>
+    <param name="last used provider id" type="int">3</param>
+  </section>
   <section name="smsc">
     <param name="config folder" type="string">services/SMSC/conf</param>
     <param name="host" type="string">@connect.host@</param>
