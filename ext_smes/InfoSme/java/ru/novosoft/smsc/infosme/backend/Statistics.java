@@ -20,6 +20,7 @@ public class Statistics
     return counters;
   }
   public void addDateStat(DateCountersSet set) {
+    countersByDates.addElement(set);
     counters.increment(set);
   }
   public Collection getCountersByDates() {
