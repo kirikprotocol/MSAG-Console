@@ -69,7 +69,14 @@ public:
 		{
 			return longParams[paramName];
 		}
-		return 0;
+		else
+		{
+			std::string msg;
+			msg += "Integer parameter ";
+			msg += paramName;
+			msg += "not found";
+			throw ConfigException(msg.c_str());
+		}
 	}
 
 	/**
@@ -78,11 +85,18 @@ public:
 	 * @return значение параметра типа String
 	 */
 	char * getString(const char * const paramName)
+		throw (ConfigException &)
 	{
 		if (strParams.Exists(paramName))
 			return strParams[paramName];
 		else
-			return 0;
+		{
+			std::string msg;
+			msg += "String parameter ";
+			msg += paramName;
+			msg += "not found";
+			throw ConfigException(msg.c_str());
+		}
 	}
 
 	/**
@@ -98,7 +112,14 @@ public:
 		{
 			return boolParams[paramName];
 		}
-		return 0;
+		else
+		{
+			std::string msg;
+			msg += "Boolean parameter ";
+			msg += paramName;
+			msg += "not found";
+			throw ConfigException(msg.c_str());
+		}
 	}
 
 protected:

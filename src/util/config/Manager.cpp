@@ -30,25 +30,6 @@ Manager::Manager()
 	{
 		DOM_Element elem = document.getDocumentElement();
 		processTree(elem);
-
-		char * key;
-		char * value;
-		for (strParams.First(); strParams.Next(key, value);)
-		{
-			std::cout << key << ": " << value << "\n\r";
-		}
-
-		long ivalue;
-		for (strParams.First(); longParams.Next(key, ivalue);)
-		{
-			std::cout << key << ": " << ivalue << "\n\r";
-		}
-
-		bool bvalue;
-		for (strParams.First(); boolParams.Next(key, bvalue);)
-		{
-			std::cout << key << ": " << bvalue << "\n\r";
-		}
 	} else {
 		logger.debug("Parse result is null");
 	}
