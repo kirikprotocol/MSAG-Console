@@ -92,13 +92,13 @@ void ResourceManager::init(const _stringlist & localeNames, const std::string & 
 
 void ResourceManager::reload(const char * const localesString, const char * const defaultLocaleStr) throw ()
 {
+  MutexGuard g(mtx);
   instance.reset(new ResourceManager);
   init(localesString, defaultLocaleStr);
 }
 
 ResourceManager::ResourceManager() throw ()
 {
-  MutexGuard g(mtx);
   log4cpp::Category &logger(smsc::util::Logger::getCategory("smsc.resourcemanager.ResourceManager"));
   const char * const prefix = "resources_";
   const char * const suffix = ".xml";
@@ -137,7 +137,6 @@ ResourceManager::ResourceManager() throw ()
 
 ResourceManager::~ResourceManager() throw ()
 {
-  MutexGuard g(mtx);
   for (_LocalesMap::iterator i = locales.begin(); i != locales.end(); i++)
   {
     delete i->second;
