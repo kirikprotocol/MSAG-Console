@@ -1,0 +1,5 @@
+# $Id$
+# this file contains binaries definitions
+
+# binary name					source name		libraries			
+resourcemanager/test/functionality_test		functionality_test	-lresourcemanager -lutil-xml -lutil -llog4cpp -lxerces-c

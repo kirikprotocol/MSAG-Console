@@ -2,22 +2,41 @@
 #define __RESOURCE_MANAGER_HPP__
 
 #include <string>
+#include <map>
+#include <resourcemanager/LocaleResources.hpp>
+#include <util/Exception.hpp>
+
+using smsc::util::Exception;
 
 namespace smsc{
 namespace resourcemanager{
 
 class ResourceManager{
 public:
-  // возвращает строку из сетингов для определленой локали и ключа.
-  string getSetting(const string& locale,const string& key);
-  // возвращает строку из сетингов для дефолтной локали и ключа.
-  string getSetting(const string& key );
-  // возвращает строку из ресурса для определленой локали и ключа.
-  string getString(const string& locale, const string& key);
-  // возвращает строку из ресурса для дефолтной локали и ключа.
-  string getString(const string& key);
+	~ResourceManager();
+
+  // тючтЁр∙рхЄ ёЄЁюъє шч ёхЄшэуют фы  юяЁхфхыыхэющ ыюърыш ш ъы■ўр.
+  std::string getSetting(const std::string& locale,const std::string& key);
+  // тючтЁр∙рхЄ ёЄЁюъє шч ёхЄшэуют фы  фхЇюыЄэющ ыюърыш ш ъы■ўр.
+  std::string getSetting(const std::string& key );
+  // тючтЁр∙рхЄ ёЄЁюъє шч ЁхёєЁёр фы  юяЁхфхыыхэющ ыюърыш ш ъы■ўр.
+  std::string getString(const std::string& locale, const std::string& key);
+  // тючтЁр∙рхЄ ёЄЁюъє шч ЁхёєЁёр фы  фхЇюыЄэющ ыюърыш ш ъы■ўр.
+  std::string getString(const std::string& key);
 
   static ResourceManager& getInstance();
+
+	#ifdef SMSC_DEBUG
+	void dump(std::ostream & outStream);
+	#endif //#ifdef SMSC_DEBUG
+
+private:
+	static std::auto_ptr<ResourceManager> instance;
+	static const std::string defaultLocale;
+	typedef std::map<std::string, LocaleResources*> _LocalesMap;
+	_LocalesMap locales;
+
+	ResourceManager() throw (Exception);
 };
 
 };//resourcemanager
