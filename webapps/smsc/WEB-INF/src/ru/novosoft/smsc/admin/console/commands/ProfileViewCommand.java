@@ -29,17 +29,30 @@ public class ProfileViewCommand implements Command
   {
     String divert = profile.getDivert();
     Mask aliasAlias = (alias != null) ? alias.getAlias():null;
-    return "Profile '"+profile.getMask().getMask()+"'"+
-           " Report: "+profile.getReportOptionsString()+
-           " Locale: "+profile.getLocale()+
-           " Encoding: "+profile.getCodepageString()+
-           " ussd7bit: "+((profile.isUssd7bit()) ? "on":"off")+
-           " Alias: "+((aliasAlias != null) ? aliasAlias.getMask():"-")+
-           " "+(profile.isAliasHide() ? "hide":"nohide")+
-           ", "+(profile.isAliasModifiable() ? "modifiable":"nomodifiable")+
-           " Divert: "+((divert == null || divert.length() <= 0) ? "-":divert)+
-           ", "+(profile.isDivertActive() ? "active":"inactive")+
-           ", "+(profile.isDivertModifiable() ? "modifiable":"nomodifiable");
+    String result = "Profile '"+profile.getMask().getMask()+"'"+
+      " Report: "+profile.getReportOptionsString()+
+      " Locale: "+profile.getLocale()+
+      " Encoding: "+profile.getCodepageString()+
+      " ussd7bit: "+((profile.isUssd7bit()) ? "on":"off")+
+      " Alias: "+((aliasAlias != null) ? aliasAlias.getMask():"-")+
+      (profile.isAliasHide() ? " hide":" nohide")+
+      (profile.isAliasModifiable() ? " modifiable":" notmodifiable")+
+      " Divert: "+((divert == null || divert.length() <= 0) ? "-":divert);
+
+    if (profile.isDivertActiveAbsent() || profile.isDivertActiveBarred() ||
+        profile.isDivertActiveBlocked() || profile.isDivertActiveCapacity() ||
+        profile.isDivertActiveUnconditional())
+    {
+      result += " on:"; int count = 0;
+      if (profile.isDivertActiveAbsent()) { count++; result+="absent"; }
+      if (profile.isDivertActiveBarred()) { if (count++ != 0) result+=","; result+="barred"; }
+      if (profile.isDivertActiveBlocked()) { if (count++ != 0) result+=","; result+="blocked"; }
+      if (profile.isDivertActiveCapacity()) { if (count++ != 0) result+=","; result+="capacity"; }
+      if (profile.isDivertActiveUnconditional()) { if (count != 0) result+=","; result+="unconditional"; }
+    }
+    else result += " off";
+    result += (profile.isDivertModifiable() ? " modifiable":" notmodifiable");
+    return result;
   }
 
   public void process(CommandContext ctx)

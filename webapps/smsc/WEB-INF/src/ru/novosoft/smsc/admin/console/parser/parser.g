@@ -436,14 +436,17 @@ viewsubject returns [SubjectViewCommand cmd] {
 /* ----------------------- Profile command parsers --------------------- */
 
 profile_divert_opt[ProfileGenCommand cmd]
-	:	(OPT_ACTIVE   { cmd.setDivertActive(true);  }
-		|OPT_INACTIVE { cmd.setDivertActive(false); })?
+	:	(OPT_ABSENT   { cmd.setDivertActiveAbsent(true);       })?
+		(OPT_BARRED   { cmd.setDivertActiveBarred(true);       })?
+		(OPT_BLOCKED  { cmd.setDivertActiveBlocked(true);      })?
+		(OPT_CAPACITY { cmd.setDivertActiveCapacity(true);     })?
+		(OPT_UNCONDIT { cmd.setDivertActiveUnconditional(true);})?
 		(OPT_MODIF    { cmd.setDivertModifiable(true);  }
 		|OPT_NOTMODIF { cmd.setDivertModifiable(false); })?		
 	;
 	exception
 	catch [RecognitionException ex] {
-           throw new RecognitionException("Profile devert options expected. Syntax: [active|inactive] [modifiable|notmodifiable]");
+           throw new RecognitionException("Profile devert options expected. Syntax: [absent][barred][blocked][capacity][unconditional] [modifiable|notmodifiable]");
 	}
 
 profile_alias_opt[ProfileGenCommand cmd] {
@@ -502,7 +505,9 @@ altprofile returns [ProfileAlterCommand cmd] {
 		(OPT_DIVERT { cmd.setDivertOptions(true); }
 			    ((OPT_SET   { cmd.setDivert(getnameid("Divert value")); })|
 			     (OPT_CLEAR { cmd.setDivert(""); }))?
-			     profile_divert_opt[cmd] )?
+			    ((OPT_OFF   { cmd.setDivertActiveOn(false); })|
+			     (OPT_ON    { cmd.setDivertActiveOn(true);  }))?
+			    profile_divert_opt[cmd] )?
 	;
 	exception[addr]
 	catch [RecognitionException ex] {

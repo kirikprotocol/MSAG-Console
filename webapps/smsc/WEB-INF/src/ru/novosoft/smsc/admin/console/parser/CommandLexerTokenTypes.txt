@@ -40,29 +40,36 @@ OPT_OWNER="owner"=40
 OPT_LOCALE="locale"=41
 OPT_ACTIVE="active"=42
 OPT_INACTIVE="inactive"=43
-OPT_MODIF="modifiable"=44
-OPT_NOTMODIF="notmodifiable"=45
-OPT_DIVERT="divert"=46
-OPT_DM="dm"=47
-OPT_FWD="fwd"=48
-OPT_SRCSME="srcsme"=49
-OPT_SET="set"=50
-OPT_CLEAR="clear"=51
-OPT_USSD7BIT="ussd7bit"=52
-VAL_FULL="full"=53
-VAL_NONE="none"=54
-VAL_DEF="default"=55
-VAL_UCS2="ucs2"=56
-VAL_LATIN1="latin1"=57
-VAL_UCS2LATIN1="ucs2-latin1"=58
-VAL_STORE="store"=59
-VAL_FORWARD="forward"=60
-VAL_DATAGRAM="datagram"=61
-WS=62
-STR("more input")=63
-QSTR("quoted string")=64
-STR_WS=65
-STR_CHR=66
-COMMA("comma character ','")=67
-ESC=68
-DIGIT=69
+OPT_ABSENT="absent"=44
+OPT_BARRED="barred"=45
+OPT_BLOCKED="blocked"=46
+OPT_CAPACITY="capacity"=47
+OPT_UNCONDIT="unconditional"=48
+OPT_MODIF="modifiable"=49
+OPT_NOTMODIF="notmodifiable"=50
+OPT_DIVERT="divert"=51
+OPT_DM="dm"=52
+OPT_FWD="fwd"=53
+OPT_SRCSME="srcsme"=54
+OPT_SET="set"=55
+OPT_CLEAR="clear"=56
+OPT_USSD7BIT="ussd7bit"=57
+OPT_ON="on"=58
+OPT_OFF="off"=59
+VAL_FULL="full"=60
+VAL_NONE="none"=61
+VAL_DEF="default"=62
+VAL_UCS2="ucs2"=63
+VAL_LATIN1="latin1"=64
+VAL_UCS2LATIN1="ucs2-latin1"=65
+VAL_STORE="store"=66
+VAL_FORWARD="forward"=67
+VAL_DATAGRAM="datagram"=68
+WS=69
+STR("more input")=70
+QSTR("quoted string")=71
+STR_WS=72
+STR_CHR=73
+COMMA("comma character ','")=74
+ESC=75
+DIGIT=76

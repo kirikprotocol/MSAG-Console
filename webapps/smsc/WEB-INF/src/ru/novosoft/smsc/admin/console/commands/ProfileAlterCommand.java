@@ -23,14 +23,16 @@ public class ProfileAlterCommand extends ProfileGenCommand
     public void process(CommandContext ctx)
     {
         if (!isCodepage && !isReport && !isLocale && !isAliasHide && !isAliasModifiable &&
-            !isDivert && !isDivertActive && !isDivertModifiable)
+            isDivertOptions && !isDivert && !isDivertModifiable && !isDivertActiveAbsent &&
+            !isDivertActiveBarred && !isDivertActiveBlocked &&  !isDivertActiveCapacity &&
+            !isDivertActiveUnconditional)
         {
             ctx.setMessage("expecting 'encoding', 'report', 'locale', 'alias', 'divert' option(s). "+
                            "Syntax: alter profile <profile_address> "+
                            "[report (full|none)] [locale <locale_name>] "+
                            "[encoding (default|ucs2|latin1|ucs2-latin1) [ussd7bit]] "+
                            "[alias [hide|nohide] [modifiable|notmodifiable]] "+
-                           "[divert [(set <divert>)|clear] [active|inactive] [modifiable|notmodifiable]] ");
+                           "[divert [(set <divert>)|clear] [(on|off) [absent][barred][blocked][capacity][unconditional]] [modifiable|notmodifiable]]");
             ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
             return;
         }
@@ -48,11 +50,15 @@ public class ProfileAlterCommand extends ProfileGenCommand
                   profile.setCodepage(codepage);
                   profile.setUssd7bit(ussd7bit);
                 }
-                if (isReport)   profile.setReportOptions(report);
-                if (isAliasHide)        profile.setAliasHide(aliasHide);
-                if (isAliasModifiable)  profile.setAliasModifiable(aliasModifiable);
-                if (isDivert)           profile.setDivert(divert);
-                if (isDivertActive)     profile.setDivertActive(divertActive);
+                if (isReport) profile.setReportOptions(report);
+                if (isAliasHide) profile.setAliasHide(aliasHide);
+                if (isAliasModifiable) profile.setAliasModifiable(aliasModifiable);
+                if (isDivert) profile.setDivert(divert);
+                if (isDivertActiveAbsent) profile.setDivertActiveAbsent(divertActiveOn ? divertActiveAbsent:false);
+                if (isDivertActiveBarred) profile.setDivertActiveBarred(divertActiveOn ? divertActiveBarred:false);
+                if (isDivertActiveBlocked) profile.setDivertActiveBlocked(divertActiveOn ? divertActiveBlocked:false);
+                if (isDivertActiveCapacity) profile.setDivertActiveCapacity(divertActiveOn ? divertActiveCapacity:false);
+                if (isDivertActiveUnconditional) profile.setDivertActiveUnconditional(divertActiveOn ? divertActiveUnconditional:false);
                 if (isDivertModifiable) profile.setDivertModifiable(divertModifiable);
                 if (isLocale) {
                    if (!ctx.getSmsc().isLocaleRegistered(locale))

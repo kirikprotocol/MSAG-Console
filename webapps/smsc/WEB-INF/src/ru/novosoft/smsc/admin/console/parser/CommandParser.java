@@ -1540,8 +1540,48 @@ public CommandParser(ParserSharedInputState state) {
 				break;
 			}
 			case EOF:
-			case OPT_ACTIVE:
-			case OPT_INACTIVE:
+			case OPT_ABSENT:
+			case OPT_BARRED:
+			case OPT_BLOCKED:
+			case OPT_CAPACITY:
+			case OPT_UNCONDIT:
+			case OPT_MODIF:
+			case OPT_NOTMODIF:
+			case OPT_ON:
+			case OPT_OFF:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_OFF:
+			{
+				{
+				match(OPT_OFF);
+				cmd.setDivertActiveOn(false);
+				}
+				break;
+			}
+			case OPT_ON:
+			{
+				{
+				match(OPT_ON);
+				cmd.setDivertActiveOn(true);
+				}
+				break;
+			}
+			case EOF:
+			case OPT_ABSENT:
+			case OPT_BARRED:
+			case OPT_BLOCKED:
+			case OPT_CAPACITY:
+			case OPT_UNCONDIT:
 			case OPT_MODIF:
 			case OPT_NOTMODIF:
 			{
@@ -2421,16 +2461,100 @@ public CommandParser(ParserSharedInputState state) {
 		try {      // for error handling
 			{
 			switch ( LA(1)) {
-			case OPT_ACTIVE:
+			case OPT_ABSENT:
 			{
-				match(OPT_ACTIVE);
-				cmd.setDivertActive(true);
+				match(OPT_ABSENT);
+				cmd.setDivertActiveAbsent(true);
 				break;
 			}
-			case OPT_INACTIVE:
+			case EOF:
+			case OPT_BARRED:
+			case OPT_BLOCKED:
+			case OPT_CAPACITY:
+			case OPT_UNCONDIT:
+			case OPT_MODIF:
+			case OPT_NOTMODIF:
 			{
-				match(OPT_INACTIVE);
-				cmd.setDivertActive(false);
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_BARRED:
+			{
+				match(OPT_BARRED);
+				cmd.setDivertActiveBarred(true);
+				break;
+			}
+			case EOF:
+			case OPT_BLOCKED:
+			case OPT_CAPACITY:
+			case OPT_UNCONDIT:
+			case OPT_MODIF:
+			case OPT_NOTMODIF:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_BLOCKED:
+			{
+				match(OPT_BLOCKED);
+				cmd.setDivertActiveBlocked(true);
+				break;
+			}
+			case EOF:
+			case OPT_CAPACITY:
+			case OPT_UNCONDIT:
+			case OPT_MODIF:
+			case OPT_NOTMODIF:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_CAPACITY:
+			{
+				match(OPT_CAPACITY);
+				cmd.setDivertActiveCapacity(true);
+				break;
+			}
+			case EOF:
+			case OPT_UNCONDIT:
+			case OPT_MODIF:
+			case OPT_NOTMODIF:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_UNCONDIT:
+			{
+				match(OPT_UNCONDIT);
+				cmd.setDivertActiveUnconditional(true);
 				break;
 			}
 			case EOF:
@@ -2472,7 +2596,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-			throw new RecognitionException("Profile devert options expected. Syntax: [active|inactive] [modifiable|notmodifiable]");
+			throw new RecognitionException("Profile devert options expected. Syntax: [absent][barred][blocked][capacity][unconditional] [modifiable|notmodifiable]");
 				
 		}
 	}
@@ -2684,6 +2808,11 @@ public CommandParser(ParserSharedInputState state) {
 		"\"locale\"",
 		"\"active\"",
 		"\"inactive\"",
+		"\"absent\"",
+		"\"barred\"",
+		"\"blocked\"",
+		"\"capacity\"",
+		"\"unconditional\"",
 		"\"modifiable\"",
 		"\"notmodifiable\"",
 		"\"divert\"",
@@ -2693,6 +2822,8 @@ public CommandParser(ParserSharedInputState state) {
 		"\"set\"",
 		"\"clear\"",
 		"\"ussd7bit\"",
+		"\"on\"",
+		"\"off\"",
 		"\"full\"",
 		"\"none\"",
 		"\"default\"",

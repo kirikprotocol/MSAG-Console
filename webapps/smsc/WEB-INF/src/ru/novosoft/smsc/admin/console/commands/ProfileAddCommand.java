@@ -23,15 +23,19 @@ public class ProfileAddCommand extends ProfileGenCommand
   {
     String out = "Profile for mask '" + mask + "'";
 
-    if (isAliasOptions && !isAliasHide && !isAliasModifiable) {
+    if (isAliasOptions && !isAliasHide && !isAliasModifiable)
+    {
       ctx.setMessage("expecting alias option(s). "+
                      "Syntax: alias [hide|nohide] [modifiable|notmodifiable]");
       ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
       return;
     }
-    if (isDivertOptions && !isDivert && !isDivertActive && !isDivertModifiable) {
+    if (isDivertOptions && !isDivert && !isDivertModifiable &&
+        !isDivertActiveAbsent && !isDivertActiveBarred && !isDivertActiveBlocked &&
+        !isDivertActiveCapacity && !isDivertActiveUnconditional)
+    {
       ctx.setMessage("expecting divert option(s). "+
-                     "Syntax: divert <string> [active|inactive] [modifiable|notmodifiable]");
+        "Syntax: divert <string> [absent][barred][blocked][capacity][unconditional] [modifiable|notmodifiable]");
       ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
       return;
     }
@@ -43,7 +47,10 @@ public class ProfileAddCommand extends ProfileGenCommand
 
       Profile profile = new Profile(profileMask, codepage, ussd7bit, report, locale,
                                     aliasHide, aliasModifiable,
-                                    divert, divertActive, divertModifiable);
+                                    divert, divertActiveUnconditional, divertActiveAbsent,
+                                    divertActiveBlocked, divertActiveBarred, divertActiveCapacity,
+                                    divertModifiable);
+
       switch (ctx.getSmsc().profileUpdate(profileMask, profile))
       {
         case 1:	//pusUpdated

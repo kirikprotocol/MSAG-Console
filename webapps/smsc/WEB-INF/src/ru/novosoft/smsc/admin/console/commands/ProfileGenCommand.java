@@ -18,8 +18,14 @@ public abstract class ProfileGenCommand implements Command
 
   protected boolean aliasHide = false;
   protected boolean aliasModifiable = false;
+
   protected String  divert = "";
-  protected boolean divertActive = false;
+  protected boolean divertActiveOn = false;
+  protected boolean divertActiveAbsent = false;
+  protected boolean divertActiveBarred = false;
+  protected boolean divertActiveBlocked = false;
+  protected boolean divertActiveCapacity = false;
+  protected boolean divertActiveUnconditional = false;
   protected boolean divertModifiable = false;
 
   protected boolean isAliasOptions = false;
@@ -29,7 +35,11 @@ public abstract class ProfileGenCommand implements Command
   protected boolean isAliasHide = false;
   protected boolean isAliasModifiable = false;
   protected boolean isDivert = false;
-  protected boolean isDivertActive = false;
+  protected boolean isDivertActiveAbsent = false;
+  protected boolean isDivertActiveBarred = false;
+  protected boolean isDivertActiveBlocked = false;
+  protected boolean isDivertActiveCapacity = false;
+  protected boolean isDivertActiveUnconditional = false;
   protected boolean isDivertModifiable = false;
 
   protected String locale;
@@ -66,11 +76,27 @@ public abstract class ProfileGenCommand implements Command
   public void setAliasModifiable(boolean aliasModifiable) {
     this.aliasModifiable = aliasModifiable; isAliasModifiable = true;
   }
+
   public void setDivert(String divert) {
     this.divert = divert; isDivert = true; isDivertOptions = true;
   }
-  public void setDivertActive(boolean divertActive) {
-    this.divertActive = divertActive; isDivertActive = true;
+  public void setDivertActiveOn(boolean on) {
+    this.divertActiveOn = on; isDivertOptions = true;
+  }
+  public void setDivertActiveAbsent(boolean divertActiveAbsent) {
+    this.divertActiveAbsent = divertActiveAbsent; this.isDivertActiveAbsent = true;
+  }
+  public void setDivertActiveBarred(boolean divertActiveBarred) {
+    this.divertActiveBarred = divertActiveBarred; this.isDivertActiveBarred = true;
+  }
+  public void setDivertActiveBlocked(boolean divertActiveBlocked) {
+    this.divertActiveBlocked = divertActiveBlocked; this.divertActiveBlocked = true;
+  }
+  public void setDivertActiveCapacity(boolean divertActiveCapacity) {
+    this.divertActiveCapacity = divertActiveCapacity; this.isDivertActiveCapacity = true;
+  }
+  public void setDivertActiveUnconditional(boolean divertActiveUnconditional) {
+    this.divertActiveUnconditional = divertActiveUnconditional; this.isDivertActiveUnconditional = true;
   }
   public void setDivertModifiable(boolean divertModifiable) {
     this.divertModifiable = divertModifiable; isDivertModifiable = true;

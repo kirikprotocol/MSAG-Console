@@ -56,6 +56,11 @@ tokens {
   OPT_LOCALE	= "locale"	 ;
   OPT_ACTIVE	= "active"	 ;
   OPT_INACTIVE	= "inactive"	 ;
+  OPT_ABSENT	= "absent"	 ;
+  OPT_BARRED	= "barred"	 ;
+  OPT_BLOCKED	= "blocked"	 ;
+  OPT_CAPACITY	= "capacity"	 ;
+  OPT_UNCONDIT	= "unconditional";
   OPT_MODIF     = "modifiable"   ;
   OPT_NOTMODIF  = "notmodifiable";
   OPT_DIVERT    = "divert"	 ;
@@ -65,6 +70,8 @@ tokens {
   OPT_SET       = "set"	         ;
   OPT_CLEAR	= "clear"	 ;
   OPT_USSD7BIT	= "ussd7bit"	 ;
+  OPT_ON	= "on"		 ;
+  OPT_OFF	= "off"		 ;
   
   VAL_FULL	= "full"	 ;
   VAL_NONE	= "none"	 ;
