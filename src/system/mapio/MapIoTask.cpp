@@ -193,6 +193,8 @@ restart:
       __map_warn2__("Error at MsgRecv with code %d",result);
       if( !MAP_aborting ) {
         abort();
+      } else {
+        return;
       }
     }
 
