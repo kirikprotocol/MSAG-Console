@@ -78,6 +78,8 @@ public class PerfServer extends Thread {
                     PerfServerRunner sr = new PerfServerRunner(sock, this);
                     addRunner(sr);
                     sr.start();
+                } catch (SocketException ee) {
+                    logger.warn("User connection socket error "+ee.getMessage());
                 } catch (IOException ee) {
                     logger.warn("User connection error", ee);
                     try {
