@@ -3,6 +3,7 @@
 
 #include "DbSmeRegistry.hpp"
 #include "DateFormatter.hpp"
+#include "NumberFormatter.hpp"
 #include "test/conf/TestConfig.hpp"
 #include "test/util/CheckList.hpp"
 #include "test/util/Util.hpp"
@@ -74,6 +75,12 @@ type getOutput##typeName(const DbSmeTestRecord* rec, \
 	return 0; \
 }
 
+#define __get_output_float__(type, typeName, tcType) \
+const string getOutput##typeName(const DbSmeTestRecord* rec, \
+	const DbSmeTestRecord* defOutput, const NumberFormatter& f, bool& res) { \
+	return f.format(getOutput##typeName(rec, defOutput, res)); \
+}
+
 /**
  * Абстрактный класс для всех jobs.
  */
@@ -128,6 +135,9 @@ protected:
 	__get_output__(double, Float, "float")
 	__get_output__(double, Double, "float")
 	__get_output__(double, LongDouble, "float")
+	__get_output_float__(double, Float, "float")
+	__get_output_float__(double, Double, "float")
+	__get_output_float__(double, LongDouble, "float")
 	const string getOutputJobName(const DbSmeTestRecord* rec);
 	const string getOutputToAddress(const DbSmeTestRecord* rec);
 	const string getOutputFromAddress(const DbSmeTestRecord* rec);
