@@ -47,6 +47,8 @@ private:
 	CheckList* chkList;
 
 	bool checkTransmitter();
+	void checkQuerySmRespStatus(ResponseMonitor* monitor, PduQuerySmResp& respPdu,
+		time_t respTime);
 };
 
 }
