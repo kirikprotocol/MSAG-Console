@@ -1182,11 +1182,11 @@ bool MapDialog::ProcessCmd(const SmscCommand& cmd){
                    sms->getDestinationAddress().getNumberingPlan(),
                    sms->getDestinationAddress().value);
         // TRAP TEST
-        if ( memcmp(sms->getDestinationAddress().value,"79029151523",11) == 0 ){
+        /*if ( memcmp(sms->getDestinationAddress().value,"79029151523",11) == 0 ){
           EINSS7SOCKET_T sok = EINSS7CpMsgObtainSocket(USER01_ID,ETSIMAP_ID);
           __trace2__("MAP:: close socket 0x%x",(unsigned int)sok);
           close(sok);
-        }
+        }*/
       }
 
 	    mkMapAddress( &m_msAddr, sms->getDestinationAddress().value, sms->getDestinationAddress().length );
