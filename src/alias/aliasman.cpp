@@ -54,7 +54,7 @@ void print(const APattern& pattern,const char* text)
              pattern.mask_32[4]
              );*/
 }
-void print(const AValue& val,char* text)
+void print(const AValue& val,const char* text)
 {
   __trace2__("#### %s = VALUE {%s(len:%d), npi: %d, ton: %d, num_n_plan: %d}",
               text,
