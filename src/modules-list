@@ -4,11 +4,12 @@ util	"Utility classes"
 sms		"SMS declaration"
 store		"Store implementation"
 db
+dbsme
 #storetest	"Service program to test store module"
 admin		"Administration subsystem"
 smeman
 router
 system
 alias
-#test
 profiler
+#test
