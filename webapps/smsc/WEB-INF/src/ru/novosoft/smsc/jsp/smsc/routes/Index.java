@@ -6,6 +6,7 @@
 package ru.novosoft.smsc.jsp.smsc.routes;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.jsp.SMSCErrors;
@@ -13,6 +14,7 @@ import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteQuery;
+import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteFilter;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -30,13 +32,16 @@ public class Index extends IndexBean
   protected String[] checkedRouteIds = new String[0];
   protected Set checkedRouteIdsSet = new HashSet();
 
+  protected String filterSelect = null;
+  protected String query = null;
+
   protected String mbAdd = null;
   protected String mbDelete = null;
   protected String mbEdit = null;
   protected String mbSave = null;
   protected String mbRestore = null;
   protected String mbLoad = null;
-  protected String mbQuery = null;
+  private String mbQuickFilter = null;
 
   protected int init(List errors)
   {
@@ -78,6 +83,10 @@ public class Index extends IndexBean
       int dresult = restoreRoutes();
       return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
     }
+       else if (mbQuickFilter != null) {
+       int dresult = updateFilter();
+      return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
+    }
 
     logger.debug("Routes.Index - process with sorting [" + (String) preferences.getRoutesSortOrder().get(0) + "]");
     routes = routeSubjectManager.getRoutes().query(new RouteQuery(pageSize, preferences.getRoutesFilter(), preferences.getRoutesSortOrder(), startPosition));
@@ -88,7 +97,28 @@ public class Index extends IndexBean
     return RESULT_OK;
   }
 
-  protected int deleteRoutes()
+    private int updateFilter() {
+      try {
+        final RouteFilter routesFilter = preferences.getRoutesFilter();
+        if ("Dest Mask".equals(filterSelect))
+            routesFilter.setDestinationMaskStrings(new String[]{query});
+        else if ("Dest Subj".equals(filterSelect))
+            routesFilter.setDestinationSubjectNames(new String[]{query});
+        else if ("Sources Mask".equals(filterSelect))
+                    routesFilter.setSourceMaskStrings(new String[]{query});
+        else if ("Sources Subj".equals(filterSelect))
+                    routesFilter.setSourceSubjectNames(new String[]{query});
+        else if ("SMEs".equals(filterSelect))
+                    routesFilter.setSmeIds(new String[]{query});
+      } catch (AdminException e) {
+        return error(SMSCErrors.error.routes.CantUpdateFilter, e);
+      }
+
+      //todo implement
+        return RESULT_OK;
+    }
+
+    protected int deleteRoutes()
   {
     for (int i = 0; i < checkedRouteIds.length; i++) {
       String routeId = checkedRouteIds[i];
@@ -260,13 +290,29 @@ public class Index extends IndexBean
     this.mbLoad = mbLoad;
   }
 
-      public String getMbQuery()
+      public String getQuery()
   {
-    return mbQuery;
+    return query;
   }
 
-  public void setMbQuery(String mbQuery)
+  public void setQuery(String query)
   {
-    this.mbQuery = mbQuery;
+    this.query = query;
+  }
+
+  public String getFilterSelect() {
+    return filterSelect;
+  }
+
+  public void setFilterSelect(String filterSelect) {
+    this.filterSelect = filterSelect;
+  }
+
+  public String getMbQuickFilter() {
+    return mbQuickFilter;
+  }
+
+  public void setMbQuickFilter(String mbQuickFilter) {
+    this.mbQuickFilter = mbQuickFilter;
   }
 }

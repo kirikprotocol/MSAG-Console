@@ -134,7 +134,7 @@ o.put("SMEs", "5");
 <td><input:select name="filterSelect" default="1"
     attributes="<%= as %>" options="<%= o %>"  />
     &nbsp; Query: &nbsp;<input:text name="query"  /> </td>
-<td>  &nbsp;&nbsp;<%button(out, "but_filter.gif", "filterSelect", "Filter", "Filter", "return clickFilterSelect()");%>
+<td>  &nbsp;&nbsp;<%button(out, "but_filter.gif", "filterSelect", "Apply", "Filter", "return clickFilterSelect()");%>
   </td>
   </tr>
  </table>
