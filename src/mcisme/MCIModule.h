@@ -141,6 +141,7 @@ namespace smsc { namespace mcisme
                 event.time = time(NULL)+((int)random()%3600);
                 sprintf(abonent, "+79029%06d", number); event.to   = abonent;
                 sprintf(abonent, "+79029%06d", caller); event.from = abonent;
+                event.cause = ALL;
                 {
                     MutexGuard guard(attachLock);
                     if (bAttached && listener) listener->missed(event);

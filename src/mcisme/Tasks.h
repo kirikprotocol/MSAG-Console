@@ -51,11 +51,12 @@ namespace smsc { namespace mcisme
         uint64_t    id, msg_id;
 
         TaskEvent(const TaskEvent& evt) 
-            : id(evt.id), msg_id(evt.msg_id) { from=evt.from; to=evt.to; time=evt.time;};
+            : id(evt.id), msg_id(evt.msg_id) { from=evt.from; to=evt.to; time=evt.time; cause=evt.cause; };
         TaskEvent(const MissedCallEvent& evt, uint64_t _id, uint64_t _msg_id=0) 
-            : id(_id), msg_id(_msg_id) { from=evt.from; to=evt.to; time=evt.time; };
-        TaskEvent(std::string _from="", std::string _to="", time_t _time=0, uint64_t _id=0, uint64_t _msg_id=0)
-            : id(_id), msg_id(_msg_id) { from = _from; to = _to; time = _time; };
+            : id(_id), msg_id(_msg_id) { from=evt.from; to=evt.to; time=evt.time; cause=evt.cause; };
+        TaskEvent(std::string _from="", std::string _to="", time_t _time=0,
+                  uint64_t _id=0, uint64_t _msg_id=0, uint8_t _cause=ALL)
+            : id(_id), msg_id(_msg_id) { from = _from; to = _to; time = _time; cause = _cause; };
     };
 
     class Task

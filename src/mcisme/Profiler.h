@@ -19,15 +19,19 @@ namespace smsc { namespace mcisme
 
     struct AbonentProfile
     {
+        uint8_t eventMask;
         bool    inform, notify;
         int32_t informTemplateId, notifyTemplateId; // if -1 => default
-
-        AbonentProfile() : inform(true), notify(false), informTemplateId(-1), notifyTemplateId(-1) {};
-        AbonentProfile(const AbonentProfile& pro) : inform(pro.inform), notify(pro.notify), 
-            informTemplateId(pro.informTemplateId), notifyTemplateId(pro.notifyTemplateId) {};
+        
+        AbonentProfile() 
+            : eventMask(0xFF), inform(true), notify(false), informTemplateId(-1), notifyTemplateId(-1) {};
+        AbonentProfile(const AbonentProfile& pro) 
+            : eventMask(pro.eventMask), inform(pro.inform), notify(pro.notify), 
+              informTemplateId(pro.informTemplateId), notifyTemplateId(pro.notifyTemplateId) {};
         AbonentProfile& operator=(const AbonentProfile& pro) {
-            informTemplateId = pro.informTemplateId; notifyTemplateId = pro.notifyTemplateId;
+            eventMask = pro.eventMask;
             inform = pro.inform; notify = pro.notify;
+            informTemplateId = pro.informTemplateId; notifyTemplateId = pro.notifyTemplateId;
             return (*this);
         };
     };

@@ -21,13 +21,13 @@ const char* SET_ABONENT_PRO_ID  = "SET_ABONENT_PRO_ID";
 const char* INS_ABONENT_PRO_ID  = "INS_ABONENT_PRO_ID";
 const char* DEL_ABONENT_PRO_ID  = "DEL_ABONENT_PRO_ID";
 
-const char* GET_ABONENT_PRO_SQL = "SELECT INFORM, NOTIFY, INFORM_ID, NOTIFY_ID FROM MCISME_ABONENTS "
+const char* GET_ABONENT_PRO_SQL = "SELECT INFORM, NOTIFY, INFORM_ID, NOTIFY_ID, EVENT_MASK FROM MCISME_ABONENTS "
                                   "WHERE ABONENT=:ABONENT";
-const char* SET_ABONENT_PRO_SQL = "UPDATE MCISME_ABONENTS SET "
-                                  "INFORM=:INFORM, NOTIFY=:NOTIFY, INFORM_ID=:INFORM_ID, NOTIFY_ID=:NOTIFY_ID "
+const char* SET_ABONENT_PRO_SQL = "UPDATE MCISME_ABONENTS SET INFORM=:INFORM, NOTIFY=:NOTIFY, "
+                                  "INFORM_ID=:INFORM_ID, NOTIFY_ID=:NOTIFY_ID, EVENT_MASK=:EVENT_MASK "
                                   "WHERE ABONENT=:ABONENT";
-const char* INS_ABONENT_PRO_SQL = "INSERT INTO MCISME_ABONENTS (ABONENT, INFORM, INFORM_ID, NOTIFY_ID) "
-                                  "VALUES (:ABONENT, :INFORM, :INFORM_ID, :NOTIFY_ID)";
+const char* INS_ABONENT_PRO_SQL = "INSERT INTO MCISME_ABONENTS (ABONENT, INFORM, INFORM_ID, NOTIFY_ID, EVENT_MASK) "
+                                  "VALUES (:ABONENT, :INFORM, :INFORM_ID, :NOTIFY_ID, :EVENT_MASK)";
 const char* DEL_ABONENT_PRO_SQL = "DELETE FROM MCISME_ABONENTS WHERE ABONENT=:ABONENT";
 
 /* ----------------------- Main logic implementation (static functions) --------------------------------- */
@@ -84,7 +84,7 @@ void AbonentProfiler::setProfile(const char* abonent, const AbonentProfile& prof
         }
         
         /* UPDATE MCISME_ABONENTS SET INFORM=:INFORM, NOTIFY=:NOTIFY, 
-           INFORM_ID=:INFORM_ID, NOTIFY_ID=:NOTIFY_ID WHERE ABONENT=:ABONENT */
+           INFORM_ID=:INFORM_ID, NOTIFY_ID=:NOTIFY_ID, EVENT_MASK=:EVENT_MASK WHERE ABONENT=:ABONENT */
         Statement* setProStmt = connection->getStatement(SET_ABONENT_PRO_ID, SET_ABONENT_PRO_SQL);
         if (!setProStmt)
             throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "update abonent profile");
@@ -93,11 +93,12 @@ void AbonentProfiler::setProfile(const char* abonent, const AbonentProfile& prof
         setProStmt->setString(2, (profile.notify)   ? "Y":"N");
         setProStmt->setUint32(3, profile.informTemplateId, profile.informTemplateId < 0);
         setProStmt->setUint32(4, profile.notifyTemplateId, profile.notifyTemplateId < 0);
+        setProStmt->setUint8 (5, profile.eventMask);
         
         if (!setProStmt->executeUpdate())
         {
-            /* INSERT INTO MCISME_ABONENTS (ABONENT, INFORM, INFORM_ID, NOTIFY_ID)
-               VALUES (:ABONENT, :INFORM, :INFORM_ID, :NOTIFY_ID) */
+            /* INSERT INTO MCISME_ABONENTS (ABONENT, INFORM, INFORM_ID, NOTIFY_ID, EVENT_MASK)
+               VALUES (:ABONENT, :INFORM, :INFORM_ID, :NOTIFY_ID, :EVENT_MASK) */
             Statement* insProStmt = connection->getStatement(INS_ABONENT_PRO_ID, INS_ABONENT_PRO_SQL);
             if (!insProStmt)
                 throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "insert abonent profile");
@@ -107,6 +108,7 @@ void AbonentProfiler::setProfile(const char* abonent, const AbonentProfile& prof
             insProStmt->setString(3, (profile.notify)   ? "Y":"N");
             setProStmt->setUint32(4, profile.informTemplateId, profile.informTemplateId < 0);
             setProStmt->setUint32(5, profile.notifyTemplateId, profile.notifyTemplateId < 0);
+            setProStmt->setUint8 (6, profile.eventMask);
 
             if (!insProStmt->executeUpdate())
                 throw Exception("Failed to insert new profile record for abonent: %s", abonent);
@@ -136,7 +138,7 @@ AbonentProfile AbonentProfiler::getProfile(const char* abonent, Connection* conn
             isConnectionGet = true;
         }
 
-        /* SELECT INFORM, NOTIFY, INFORM_ID, NOTIFY_ID FROM MCISME_ABONENTS WHERE ABONENT=:ABONENT */
+        /* SELECT INFORM, NOTIFY, INFORM_ID, NOTIFY_ID, EVENT_MASK FROM MCISME_ABONENTS WHERE ABONENT=:ABONENT */
         Statement* getProStmt = connection->getStatement(GET_ABONENT_PRO_ID, GET_ABONENT_PRO_SQL);
         if (!getProStmt)
             throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "obtain abonent profile");
@@ -153,8 +155,9 @@ AbonentProfile AbonentProfiler::getProfile(const char* abonent, Connection* conn
             const char* notStr = rs->isNull(2) ? 0:rs->getString(2);
             profile.inform   = (infStr && (infStr[0]=='Y' || infStr[0]=='y'));
             profile.notify   = (notStr && (notStr[0]=='Y' || notStr[0]=='y'));
-            profile.informTemplateId = rs->isNull(3) ? -1:rs->getUint32(3);
-            profile.notifyTemplateId = rs->isNull(4) ? -1:rs->getUint32(4);
+            profile.informTemplateId = rs->isNull(3) ?   -1:rs->getUint32(3);
+            profile.notifyTemplateId = rs->isNull(4) ?   -1:rs->getUint32(4);
+            profile.eventMask        = rs->isNull(5) ? 0xFF:rs->getUint8 (5);
         }
         
         if (isConnectionGet) ds->freeConnection(connection);

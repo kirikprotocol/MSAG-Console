@@ -493,12 +493,24 @@ public:
     }
 };
 
+inline static bool checkEventMask(uint8_t userMask, uint8_t eventCause)
+{
+    return ((userMask & eventCause) == eventCause);
+}
 void TaskProcessor::processEvent(const MissedCallEvent& event)
 {
     const char* abonent = event.to.c_str();
     checkAddress(abonent);
     
+    AbonentProfile profile = AbonentProfiler::getProfile(abonent);
+    if (!checkEventMask(profile.eventMask, event.cause)) {
+        smsc_log_debug(logger, "Event: for abonent %s skipped (userMask=%02X, eventCause=%02X).",
+                       abonent, profile.eventMask, event.cause);
+        return; // skip event if user mask not permit it
+    }
+
     Message message; bool needMessage = false;
+    if (profile.inform || Task::bInformAll)
     {
         TaskAccessor taskAccessor(this);
 
@@ -506,47 +518,45 @@ void TaskProcessor::processEvent(const MissedCallEvent& event)
         Task* task = taskAccessor.getTask(abonent, isNewTask); 
         if (!task) throw Exception("Event: failed to obtain task for abonent %s", abonent);
 
-        AbonentProfile profile = task->getAbonentProfile();
-        if (profile.inform || Task::bInformAll)
+        task->addEvent(event); // add new event to task chain (inassigned to message in DB)
+        MessageState state = task->getCurrentState();
+        smsc_log_debug(logger, "Event: for %s added to %s task (state=%d). Events=%d",
+                       abonent, (isNewTask) ? "new":"existed", (int)state, task->getEventsCount());
+
+        if (!isNewTask && state != WAIT_RCPT) { 
+            smsc_log_debug(logger, "Event: is put off. Task for abonent %s "
+                           "is already processing events (state=%d)", abonent, (int)state);
+            return; // process event only if task not exists or task is awaiting receipt
+        } 
+
+        message.reset(abonent);
+        message.smsc_id = task->getCurrentSmscId();
+        const char* smsc_id = (message.smsc_id.length() > 0) ? message.smsc_id.c_str():0;
+
+        if (state == WAIT_RCPT && smsc_id && smsc_id[0])
         {
-            task->addEvent(event); // add new event to task chain (inassigned to message in DB)
-            MessageState state = task->getCurrentState();
-            smsc_log_debug(logger, "Event: for %s added to %s task (state=%d). Events=%d",
-                           abonent, (isNewTask) ? "new":"existed", (int)state, task->getEventsCount());
-            
-            if (!isNewTask && state != WAIT_RCPT) { 
-                smsc_log_debug(logger, "Event: is put off. Task for abonent %s "
-                               "is already processing events (state=%d)", abonent, (int)state);
-                return; // process event only if task not exists or task is awaiting receipt
+            message.id = task->getCurrentMessageId(); 
+            if (message.id > 0) { // task is waiting receipt for incomplete message
+                smsc_log_debug(logger, "Event: message #%lld (smscId=%s) for abonent %s cancelling (extending)",
+                               message.id, (smsc_id) ? smsc_id:"-", abonent);
+                message.cancel = true; needMessage = true;
+                task->waitCancel(smsc_id);
             } 
-
-            message.reset(abonent);
-            message.smsc_id = task->getCurrentSmscId();
-            const char* smsc_id = (message.smsc_id.length() > 0) ? message.smsc_id.c_str():0;
-
-            if (state == WAIT_RCPT && smsc_id && smsc_id[0])
-            {
-                message.id = task->getCurrentMessageId(); 
-                if (message.id > 0) { // task is waiting receipt for incomplete message
-                    smsc_log_debug(logger, "Event: message #%lld (smscId=%s) for abonent %s cancelling (extending)",
-                                   message.id, (smsc_id) ? smsc_id:"-", abonent);
-                    message.cancel = true; needMessage = true;
-                    task->waitCancel(smsc_id);
-                } 
-                else smsc_log_error(logger, "Event: current message id is invalid for abonent %s", abonent);
-            } 
-            else
-            {
-                if (task->formatMessage(message)) {
-                    smsc_log_debug(logger, "Event: submitting new message #%lld, for abonent %s",
-                                   message.id, abonent);
-                    message.cancel = false; needMessage = true;
-                    task->waitResponce();
-                }
-                else smsc_log_error(logger, "Event: failed to format new message for abonent %s", abonent);
+            else smsc_log_error(logger, "Event: current message id is invalid for abonent %s", abonent);
+        } 
+        else
+        {
+            if (task->formatMessage(message)) {
+                smsc_log_debug(logger, "Event: submitting new message #%lld, for abonent %s",
+                               message.id, abonent);
+                message.cancel = false; needMessage = true;
+                task->waitResponce();
             }
+            else smsc_log_error(logger, "Event: failed to format new message for abonent %s", abonent);
         }
-    }
+    } 
+    else smsc_log_debug(logger, "Event: for abonent %s skipped (inform flag is off).", abonent);
+
     if (needMessage) putToOutQueue(message);
 }
 
