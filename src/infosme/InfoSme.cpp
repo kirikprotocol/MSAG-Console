@@ -542,13 +542,16 @@ int main(void)
             smsc_log_warn(logger, "Parameter 'unrespondedMessagesSleep' value '%d' is too big. "
                           "The preffered max value is 500ms", unrespondedMessagesSleep);
         }
-        TaskProcessor processor(&tpConfig);
+        
         
         ConfigView adminConfig(manager, "InfoSme.Admin");
-        InfoSmeComponent admin(processor);                   
-        ComponentManager::registerComponent(&admin); 
         adminListener->init(adminConfig.getString("host"), adminConfig.getInt("port"));               
         bAdminListenerInited = true;
+        
+        TaskProcessor processor(&tpConfig);
+        
+        InfoSmeComponent admin(processor);                   
+        ComponentManager::registerComponent(&admin); 
         adminListener->Start();
         
         ConfigView smscConfig(manager, "InfoSme.SMSC");
