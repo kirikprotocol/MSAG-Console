@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE records SYSTEM "SmeRecords.dtd">
+<records>
+<smerecord type="smpp" uid="sme0">
+	<param name="typeOfNumber" value="1"/>
+	<param name="numberingPlan" value="1"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value="aaa"/>
+	<param name="password" value="sme0"/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="123"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="forceDC" value="false"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="12345"/>
+	<param name="receiptSchemeName" value="default"/>
+</smerecord>
+<smerecord type="smpp" uid="sme1">
+	<param name="typeOfNumber" value="1"/>
+	<param name="numberingPlan" value="1"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value="aaa"/>
+	<param name="password" value="sme1"/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="123"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="forceDC" value="false"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="12345"/>
+	<param name="receiptSchemeName" value="default"/>
+</smerecord>
+<smerecord type="smpp" uid="sme2">
+	<param name="typeOfNumber" value="1"/>
+	<param name="numberingPlan" value="1"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value="aaa"/>
+	<param name="password" value="sme2"/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="123"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="forceDC" value="false"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="12345"/>
+	<param name="receiptSchemeName" value="default"/>
+</smerecord>
+<smerecord type="smpp" uid="sme3">
+	<param name="typeOfNumber" value="1"/>
+	<param name="numberingPlan" value="1"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value="aaa"/>
+	<param name="password" value="sme3"/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="123"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="forceDC" value="false"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="12345"/>
+	<param name="receiptSchemeName" value="default"/>
+</smerecord>
+<smerecord type="smpp" uid="sme4">
+	<param name="typeOfNumber" value="1"/>
+	<param name="numberingPlan" value="1"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value="aaa"/>
+	<param name="password" value="sme4"/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="123"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="forceDC" value="false"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="12345"/>
+	<param name="receiptSchemeName" value="default"/>
+</smerecord>
+<smerecord type="smpp" uid="MAP_PROXY">
+	<param name="typeOfNumber" value="1"/>
+	<param name="numberingPlan" value="1"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value="aaa"/>
+	<param name="password" value="sme5"/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="123"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="forceDC" value="false"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="12345"/>
+	<param name="receiptSchemeName" value="default"/>
+</smerecord>
+
+<smerecord type="smpp" uid="DSTRLST">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value="1R2eF968bFv7"/>
+	<param name="password" value="12l"/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="-328269824"/>
+	<param name="wantAlias" value="no"/>
+	<param name="forceDC" value="true"/>
+	<param name="timeout" value="18"/>
+	<param name="priority" value="9674"/>
+	<param name="receiptSchemeName" value="default"/>
+</smerecord>
+<smerecord type="smpp" uid="abonentinfo">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value="40u573u9f337"/>
+	<param name="password" value="k22v3"/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="-520159232"/>
+	<param name="wantAlias" value="no"/>
+	<param name="forceDC" value="true"/>
+	<param name="timeout" value="25"/>
+	<param name="priority" value="17782"/>
+	<param name="receiptSchemeName" value="default"/>
+</smerecord>
+<smerecord type="smpp" uid="profiler">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value="15fPam74Sd26"/>
+	<param name="password" value="O"/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="-1135345664"/>
+	<param name="wantAlias" value="no"/>
+	<param name="forceDC" value="true"/>
+	<param name="timeout" value="8"/>
+	<param name="priority" value="11299"/>
+	<param name="receiptSchemeName" value="default"/>
+</smerecord>
+<smerecord type="smpp" uid="smscsme">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value="27Ij4Ri9q0bh"/>
+	<param name="password" value="0"/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="-779616256"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="forceDC" value="true"/>
+	<param name="timeout" value="17"/>
+	<param name="priority" value="23519"/>
+	<param name="receiptSchemeName" value="special"/>
+</smerecord>
+</records>
