@@ -14,25 +14,28 @@
 	<section name="MessageStore">
 		<param name="maxTriesCount" type="int">3</param>
 		<section name="Storage">
-			<param name="dbInstance" type="string">dbs_orcl</param>
+			<param name="dbInstance" type="string">smscdb</param>
 			<param name="dbUserName" type="string">smsc2</param>
 			<param name="dbUserPassword" type="string">smsc2</param>
 		</section>
 		<section name="Archive">
 			<param name="enabled" type="bool">true</param>
-			<param name="interval" type="int">20000</param>
-			<param name="finalized" type="int">150</param>
+			<param name="interval" type="int">40000</param>
+			<param name="finalized" type="int">300</param>
 			<param name="uncommited" type="int">10</param>
 		</section>
+		<section name="Cleaner">
+			<param name="enabled" type="bool">true</param>
+			<param name="interval" type="int">30</param>
+		</section>
 		<section name="Billing">
-			<param name="dbInstance" type="string">dbs_orcl</param>
+			<param name="dbInstance" type="string">smscdb</param>
 			<param name="dbUserName" type="string">smsc2</param>
 			<param name="dbUserPassword" type="string">smsc2</param>
 		</section>
 		<section name="Cache">
 			<param name="enabled" type="bool">true</param>
 			<param name="capacity" type="int">1000</param>
-			<param name="sleep" type="int">60000</param>
 		</section>
 		<section name="Connections">
 			<param name="max" type="int">3</param>
@@ -48,6 +51,8 @@
 	<section name="smpp">
 		<param name="port" type="int">15971</param>
 		<param name="host" type="string">smsc</param>
+		<param name="readTimeout" type="int">1</param>
+		<param name="inactivityTime" type="int">600</param>
 	</section>
 
 	<section name="core">
@@ -61,6 +66,11 @@
 		<param name="systemId" type="string">smscsme</param>
 		<param name="service_type" type="string">SmSc</param>
 		<param name="protocol_id" type="int">3</param>
+		
+		<section name="performance">
+			<param name="host" type="string">smsc</param>
+			<param name="port" type="int">9003</param>
+		</section>
 	</section>
 
 	<section name="abonentinfo">
@@ -98,7 +108,7 @@
 	<section name="DataSource">
 		<param name="type" type="string">OCI</param>
 		<param name="connections" type="int">3</param>
-		<param name="dbInstance" type="string">dbs_orcl</param>
+		<param name="dbInstance" type="string">smscdb</param>
 		<param name="dbUserName" type="string">smsc2</param>
 		<param name="dbUserPassword" type="string">smsc2</param>
 	</section>
