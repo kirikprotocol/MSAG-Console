@@ -1022,36 +1022,51 @@ void MessageStoreTestCases::compareReadyForRetrySmsList(const vector<SMSId*>& id
 	const vector<SMS*>& sms, time_t time, TCResult* res, int shift)
 {
 	//выбрать и отсортировать ids
-	vector<SmsIdTimePair> enroteIds;
+	typedef map<SMSId, time_t> IdMap;
+	IdMap enroteIds;
 	for (int i = 0; i < sms.size(); i++)
 	{
 		if (sms[i]->getState() == ENROUTE && sms[i]->getNextTime() > 0 &&
 			sms[i]->getNextTime() <= time)
 		{
-			enroteIds.push_back(SmsIdTimePair(*ids[i], sms[i]->getNextTime()));
+			enroteIds[*ids[i]] = sms[i]->getNextTime();
 		}
 	}
-	sort(enroteIds.begin(), enroteIds.end());
 	//сверить списки
 	SMSId id;
+	time_t prevTime = 0;
 	IdIterator* it = msgStore->getReadyForRetry(time);
-	for (int i = 0; i < enroteIds.size(); i++)
+	bool sortOrderOk = true;
+	bool idFound = true;
+	while (it->getNextId(id))
 	{
-		if (!it->getNextId(id))
+		IdMap::iterator idIt = enroteIds.find(id);
+		if (idIt == enroteIds.end())
 		{
-			res->addFailure(shift + 1);
-			break;
+			idFound = false;
+			continue;
 		}
-log.debug("dbid = %d, msid = %d", id, enroteIds[i].smsId);
-		if (id != enroteIds[i].smsId)
+		time_t curTime = idIt->second;
+		if (curTime < prevTime)
 		{
-			res->addFailure(shift + 2);
-			break;
+			sortOrderOk = false;
+			continue;
 		}
+		prevTime = curTime;
+		enroteIds.erase(idIt);
+//log.debug("dbid = %d, msid = %d", id, enroteIds[i].smsId);
 	}
-	if (it->getNextId(id))
+	if (!idFound)
 	{
-log.debug("dbid!!! = %d", id);
+		res->addFailure(shift + 1);
+	}
+	if (!sortOrderOk)
+	{
+		res->addFailure(shift + 2);
+	}
+	if (enroteIds.size())
+	{
+//log.debug("dbid!!! = %d", id);
 		res->addFailure(shift + 3);
 	}
 	delete it;
