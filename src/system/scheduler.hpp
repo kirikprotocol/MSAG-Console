@@ -46,6 +46,7 @@ public:
             queue.enqueue(ids[i],cmd);
             //thr_yield();
             e.Wait(10);
+            if(isStopping)break;
           }
           ids.Clean();
         }
@@ -53,6 +54,7 @@ public:
       {
         __trace__("Scheduler: Exception in getReadyForRetry");
       }
+      if(isStopping)break;
       it=NULL;
       __trace__("scheduler finished, sleeping");
       sleep(1);
