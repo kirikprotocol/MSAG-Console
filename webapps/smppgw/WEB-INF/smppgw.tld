@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee web-jsptaglibrary_2_0.xsd" version="2.0">
+  <description>A tag library.</description>
+  <tlib-version>1.0</tlib-version>
+  <short-name>SmppgwTagLibrary</short-name>
+  <uri>/smppgw</uri>
+  <function>
+    <description>Checks if string is present in string array.</description>
+    <name>contains</name>
+    <function-class>ru.sibinco.lib.backend.util.TagLibFunctions</function-class>
+    <function-signature>boolean contains( java.lang.String[] , java.lang.String)</function-signature>
+  </function>
+  <function>
+    <description>Checks if item (by id) is checked.</description>
+    <name>checked</name>
+    <function-class>ru.sibinco.lib.backend.util.TagLibFunctions</function-class>
+    <function-signature>boolean checked(ru.sibinco.lib.bean.TabledBean, java.lang.String)</function-signature>
+  </function>
+  <function>
+    <description>Checks if obj is boolean.</description>
+    <name>isBoolean</name>
+    <function-class>ru.sibinco.lib.backend.util.TagLibFunctions</function-class>
+    <function-signature>boolean isBoolean(java.lang.Object)</function-signature>
+  </function>
+  <function>
+    <description>Concatenates two strings (because EL or jstl cannot do it!).</description>
+    <name>concat</name>
+    <function-class>ru.sibinco.lib.backend.util.TagLibFunctions</function-class>
+    <function-signature>boolean concat(java.lang.String, java.lang.String)</function-signature>
+  </function>
+</taglib>
+

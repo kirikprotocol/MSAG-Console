@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app version="2.4"
+  xmlns="http://java.sun.com/xml/ns/j2ee"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+  <filter>
+    <filter-name>SmppGW</filter-name>
+    <filter-class>ru.sibinco.smppgw.beans.SmppGWFilter</filter-class>
+  </filter>
+  <display-name>SMPP Gateway</display-name>
+  <description>SMPP GatewayAdministrationApplication</description>
+  <context-param>
+    <description>Application config file</description>
+    <param-name>AppConfigFile</param-name>
+    <param-value>C:/Program Files/Apache Software Foundation/Tomcat 5.0/webapps/smppgw/WEB-INF/config.xml</param-value>
+  </context-param>
+  <jsp-config>
+    <taglib>
+      <taglib-uri>/smppgw</taglib-uri>
+      <taglib-location>/WEB-INF/smppgw.tld</taglib-location>
+    </taglib>
+    <!--jsp-property-group>
+      <display-name>SMPP Gateway</display-name>
+      <url-pattern>*.jsp</url-pattern>
+      <el-ignored>false</el-ignored>
+      <scripting-invalid>false</scripting-invalid>
+      <is-xml>false</is-xml>
+      <include-prelude>/WEB-INF/inc/prelude.jspf</include-prelude>
+      <include-coda>/WEB-INF/inc/coda.jspf</include-coda>
+    </jsp-property-group-->
+  </jsp-config>
+  <security-role>
+    <description>test description</description>
+    <role-name>admin</role-name>
+  </security-role>
+  <filter-mapping>
+    <filter-name>SmppGW</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+</web-app>

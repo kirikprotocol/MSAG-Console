@@ -1,0 +1,1 @@
+<jsp:forward page="edit.jsp" ><jsp:param name="add" value="true" /></jsp:forward>

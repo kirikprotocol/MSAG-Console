@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="WINDOWS-1251"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
+<config>
+
+  <param name="users_config_file" type="string">webapps/smppgw/WEB-INF/users.xml</param>
+  <param name="sme_file" type="string">S:\install\dumb_sme_host\daemon\services\SMSC\conf\sme.xml</param>
+  <param name="gw_config" type="string">webapps/smppgw/WEB-INF/gwconfig_example.xml</param>
+  <param name="gw_config_folder" type="string">webapps/smppgw/WEB-INF/</param>
+</config>
