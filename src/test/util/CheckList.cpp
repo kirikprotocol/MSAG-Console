@@ -117,6 +117,27 @@ void CheckList::save(bool printErrorCodes,
 	}
 }
 
+const string CheckList::toHtmlString(const string& str) const
+{
+	string res;
+	res.reserve(str.length() + 64);
+	for (int i = 0; i < str.length(); i++)
+	{
+		switch (str[i])
+		{
+			case '<':
+				res.append("&lt;");
+				break;
+			case '>':
+				res.append("&gt;");
+				break;
+			default:
+				res.append(str, i, 1);
+		}
+	}
+	return res;
+}
+
 void CheckList::saveHtml(bool printErrorCodes,
 		bool printExecCount, bool printTcIds) const
 {
@@ -170,7 +191,7 @@ void CheckList::saveHtml(bool printErrorCodes,
 		pair<int, int> counts = getCounts(tc);
 		os << "<tr>" << endl;
 		os << "<td align=\"center\">" << cnt++ << "</td>" << endl;
-		os << "<td align=\"left\" style=\"padding-left: " << (20 * mag + 2) << ";\">" << tc->desc << "</td>" <<	endl;
+		os << "<td align=\"left\" style=\"padding-left: " << (20 * mag + 2) << ";\">" << toHtmlString(tc->desc) << "</td>" << endl;
 		os << "<td align=\"center\">" << (counts.second ? "Нет" : (counts.first ? "Да" : "-")) << "</td>" << endl;
 		if (printExecCount)
 		{

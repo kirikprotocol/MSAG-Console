@@ -208,7 +208,7 @@ public:
 private:
 	int getTcMag(const TestCase* tc) const;
 	pair<int, int> CheckList::getCounts(const TestCase* tc) const;
-
+	const string toHtmlString(const string& str) const;
 };
 
 }
