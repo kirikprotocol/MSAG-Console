@@ -11,6 +11,18 @@ using namespace smsc::store;
 using namespace smsc::test::util;
 using namespace std;
 
+/**
+ * select * from sms_msg where oa like '.0.____' and dda like '.0.____' and
+ *   src_sme_id like '_0' and dst_sme_id like '_8' and
+ *   route_id like '_8' and id like '000000000000001_'
+ * oa = .0.???? (50 записей)
+ * da = .0.???? (25 записей)
+ * src_sme_id = ?0 (13 записей)
+ * dst_sme_id = ?8 (6 записей)
+ * route_id = ?8 (3 записи)
+ * submit_time = [09.09.2001 1:40:00, 09.09.2001 1:50:00] (2 записи)
+ * id = 000000000000001? (1 запись)
+ */
 struct DatabaseMaster
 {
 	const int count;
@@ -56,20 +68,24 @@ void DatabaseMaster::genSms()
 	{
 		Descriptor dst;
 		SMS sms;
-		sms.setSubmitTime(time(NULL) + (i % 2 ? 10 : -10) * i);
+		sms.setSubmitTime(1000000000 + (i % 2 ? 10 : -10) * i);
 		sms.setValidTime(LONG_MAX);
 		sms.setNextTime(LONG_MAX);
+		//oa
 		string srcAddr = getTonNpi(i) + str(i);
 		sms.setOriginatingAddress(srcAddr.c_str());
+		//dda
 		int i2 = (i + shift) % count;
 		string destAddr = getTonNpi(i2) + str(i2);
-		sms.setDestinationAddress(destAddr.c_str());
+		sms.setDealiasedDestinationAddress(destAddr.c_str());
+		//da
 		int i3 = (i + 2 * shift) % count;
 		string destAddr2 = getTonNpi(i3) + str(i3);
-		sms.setDealiasedDestinationAddress(destAddr2.c_str());
-		sms.setSourceSmeId(str(i % 2).c_str());
-		sms.setDestinationSmeId(str(i % 3).c_str());
-		sms.setRouteId(str(i % 4).c_str());
+		sms.setDestinationAddress(destAddr2.c_str());
+		//ids
+		sms.setSourceSmeId(str(i % 8).c_str());
+		sms.setDestinationSmeId(str(i % 16).c_str());
+		sms.setRouteId(str(i % 32).c_str());
 		sms.setArchivationRequested(true);
 		ostringstream os;
 		uint8_t dataCoding;
@@ -133,18 +149,7 @@ void DatabaseMaster::genSms()
 
 int main(int argc, char* argv[])
 {
-	int count = 23;
-	int shift = 1;
-	if (argc == 2)
-	{
-		count = atoi(argv[1]);
-	}
-	else if (argc == 3)
-	{
-		count = atoi(argv[1]);
-		shift = atoi(argv[2]);
-	}
-	DatabaseMaster gen(count, shift);
+	DatabaseMaster gen(100, 1);
 	gen.genSms();
 	return 0;
 }
