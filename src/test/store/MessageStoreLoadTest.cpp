@@ -1,5 +1,6 @@
 #include "util/debug.h"
 #include "util/config/Manager.h"
+#include "store/StoreManager.h"
 #include "MessageStoreTestCases.hpp"
 #include "test/util/TestTaskManager.hpp"
 #include <iostream>
@@ -8,6 +9,7 @@
 using namespace std;
 using namespace smsc::sms;
 using namespace smsc::util::config;
+using namespace smsc::store;
 using namespace smsc::test::store;
 using namespace smsc::test::util;
 
@@ -66,6 +68,17 @@ public:
 		ops1 = getOps();
 	}
 
+	void printStatus()
+	{
+		for (int i = 0; i < tasks.size(); i++)
+		{
+			const char* taskName = tasks[i]->taskName();
+			int ops = tasks[i]->getOps();
+			cout << taskName << ": ops = " << ops << endl;
+			//cout << i << ": ops = " << tasks[i]->getOps() << endl;
+		}
+	}
+
 	float getRate()
 	{
 		int ops2 = getOps();
@@ -88,21 +101,13 @@ public:
 	}
 };
 
-int main(int argc, char* argv[])
+void executeLoadTest(int numThreads)
 {
-    Manager::init("config.xml");
-	if (argc != 2)
-	{
-		cout << "Usage: MessageStoreLoadTest <numThreads>" << endl;
-		exit(0);
-	}
-	
-	//запустить таски
-	const int numThreads = atoi(argv[1]);
 	MessageStoreLoadTestTaskManager tm;
 	for (int i = 0; i < numThreads; i++)
 	{
-		tm.addTask(new MessageStoreLoadTestTask(i));
+		MessageStoreLoadTestTask* task = new MessageStoreLoadTestTask(i);
+		tm.addTask(task);
 	}
 	tm.startTimer();
 
@@ -115,13 +120,39 @@ int main(int argc, char* argv[])
 			case 'q':
 				tm.stopTasks();
 				cout << "Total operations = " << tm.getOps() << endl;
-				exit(0);
+				return;
+			case 's':
+				tm.printStatus();
 				break;
 			default:
 				cout << "Rate = " << tm.getRate()
 					<< " messages/second" << endl;
 		}
 	}
+}
+
+int main(int argc, char* argv[])
+{
+	if (argc != 2)
+	{
+		cout << "Usage: MessageStoreLoadTest <numThreads>" << endl;
+		exit(0);
+	}
+	
+	const int numThreads = atoi(argv[1]);
+	try
+	{
+		Manager::init("config.xml");
+		StoreManager::startup(Manager::getInstance());
+		executeLoadTest(numThreads);
+cout << "AAA" << endl;
+		StoreManager::shutdown();
+	}
+	catch (...)
+	{
+		cout << "Failed to execute test. See the logs" << endl;
+	}
+
 	return 0;
 }
 

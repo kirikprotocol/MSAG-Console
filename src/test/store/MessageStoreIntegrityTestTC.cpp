@@ -1,4 +1,5 @@
 #include "util/config/Manager.h"
+#include "store/StoreManager.h"
 #include "MessageStoreTestCases.hpp"
 #include "test/util/CheckList.hpp"
 #include "test/util/Util.hpp"
@@ -7,6 +8,7 @@
 
 using namespace std;
 using namespace smsc::sms;
+using namespace smsc::store;
 using namespace smsc::test::store;
 using namespace smsc::test::util;
 using namespace smsc::util::config;
@@ -65,13 +67,8 @@ TCResultFilter* newFilter()
 	return filter;
 }
 
-/**
- * Выполняет тестирование целостности данных (Data and Database Integrity 
- * Testing) и выводит результат по test cases в checklist.
- */
-int main(int argc, char* argv[])
+void executeIntegrityTest()
 {
-    Manager::init("config.xml");
 	MessageStoreTestCases tc; //throws exception
     TCResultFilter* filter = newFilter();
 
@@ -152,6 +149,25 @@ int main(int argc, char* argv[])
 	cl.writeResult("Создание записи для начисления оплаты", 
 		tc.createBillingRecord());
 	*/
+}
+
+/**
+ * Выполняет тестирование целостности данных (Data and Database Integrity 
+ * Testing) и выводит результат по test cases в checklist.
+ */
+int main(int argc, char* argv[])
+{
+	try
+	{
+		Manager::init("config.xml");
+		StoreManager::startup(Manager::getInstance());
+		executeIntegrityTest();
+		StoreManager::shutdown();
+	}
+	catch (...)
+	{
+		cout << "Failed to execute test. See the logs" << endl;
+	}
 
 	return 0;
 }

@@ -21,15 +21,10 @@ using namespace smsc::util::config;
 MessageStoreTestCases::MessageStoreTestCases()
 {
 	srand(time(NULL));
-	Manager& config = Manager::getInstance();
-	StoreManager::startup(config.getStoreConfig());
 	msgStore = StoreManager::getMessageStore();
 }
 
-MessageStoreTestCases::~MessageStoreTestCases()
-{
-	StoreManager::shutdown();
-}
+MessageStoreTestCases::~MessageStoreTestCases() {}
 
 void MessageStoreTestCases::setupRandomCorrectSM(SMS& sms)
 {

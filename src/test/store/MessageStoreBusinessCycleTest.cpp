@@ -1,5 +1,6 @@
 #include "util/debug.h"
 #include "util/config/Manager.h"
+#include "store/StoreManager.h"
 #include "MessageStoreTestCases.hpp"
 #include "test/util/TestTaskManager.hpp"
 #include <iostream>
@@ -7,6 +8,7 @@
 
 using namespace std;
 using namespace smsc::sms;
+using namespace smsc::store;
 using namespace smsc::util::config;
 using namespace smsc::test::store;
 using namespace smsc::test::util;
@@ -98,6 +100,15 @@ public:
 		ftime(&t1);
 	}
 
+	void printStatus()
+	{
+		for (int i = 0; i < tasks.size(); i++)
+		{
+			cout << tasks[i]->taskName() << ": ops = " << tasks[i]->getOps()
+				<< endl;
+		}
+	}
+
 	int getOps()
 	{
 		int ops = 0;
@@ -109,21 +120,14 @@ public:
 	}
 };
 
-int main(int argc, char* argv[])
+void executeBusinessCycleTest(int numThreads)
 {
-    Manager::init("config.xml");
-	if (argc != 2)
-	{
-		cout << "Usage: MessageStoreBusinessCycleTest <numThreads>" << endl;
-		exit(0);
-	}
-	
-	//запустить таски
-	const int numThreads = atoi(argv[1]);
 	MessageStoreBusinessCycleTestTaskManager tm;
 	for (int i = 0; i < numThreads; i++)
 	{
-		tm.addTask(new MessageStoreBusinessCycleTestTask(i));
+		MessageStoreBusinessCycleTestTask* task =
+			new MessageStoreBusinessCycleTestTask(i);
+		tm.addTask(task);
 	}
 
 	while (true)
@@ -135,12 +139,38 @@ int main(int argc, char* argv[])
 			case 'q':
 				tm.stopTasks();
 				cout << "Total operations = " << tm.getOps() << endl;
-				exit(0);
+				return;
+			case 's':
+				tm.printStatus();
 				break;
 			default:
 				cout << "Total operations = " << tm.getOps() << endl;
 		}
 	}
+}
+
+int main(int argc, char* argv[])
+{
+	if (argc != 2)
+	{
+		cout << "Usage: MessageStoreBusinessCycleTest <numThreads>" << endl;
+		exit(0);
+	}
+	
+	//запустить таски
+	const int numThreads = atoi(argv[1]);
+	try
+	{
+		Manager::init("config.xml");
+		StoreManager::startup(Manager::getInstance());
+		executeBusinessCycleTest(numThreads);
+		StoreManager::shutdown();
+	}
+	catch (...)
+	{
+		cout << "Failed to execute test. See the logs" << endl;
+	}
+
 	return 0;
 }
 
