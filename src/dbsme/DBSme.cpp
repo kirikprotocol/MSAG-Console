@@ -202,7 +202,7 @@ public:
     virtual int Execute()
     {
         __require__(pdu);
-
+        __trace2__("DBSME: Processing PDU.\n");
         switch (pdu->get_commandId())
         {
         case SmppCommandSet::DELIVERY_SM:
@@ -240,6 +240,7 @@ public:
     };
     virtual ~DBSmeTaskManager() 
     {
+        __trace2__("DBSME: deinit DBSmeTaskManager\n");
         pool.shutdown();
     };
 
@@ -289,6 +290,7 @@ public:
 
     void handleEvent(SmppHeader *pdu)
     {
+        __trace2__("DBSME: pdu received. Starting task...\n");
         manager.startTask(new DBSmeTask(pdu, processor, *trans));
     }
     
