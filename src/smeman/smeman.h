@@ -38,7 +38,7 @@ public:
   SmeProxy* proxy;
   bool deleted;
   SmeIndex idx;
-  Mutex mutex;
+  mutable Mutex mutex;
   virtual ~SmeRecord(){}
   virtual void putCommand(const SmscCommand& command)
   {
@@ -82,6 +82,15 @@ public:
   virtual const std::string& getSourceAddressRange()
   {
     return info.rangeOfAddress;
+  }
+  virtual const char* getSystemId()const
+  {
+    MutexGuard guard(mutex);
+    if ( proxy )
+    {
+      return proxy->getSystemId();
+    }
+    else throw runtime_error("proxy unregistred");
   }
 };
 

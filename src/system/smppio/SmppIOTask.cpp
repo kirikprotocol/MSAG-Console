@@ -82,7 +82,7 @@ void SmppInputThread::killSocket(int idx)
   if(ss->getProxy())
   {
     try{
-      smeManager->unregisterSmeProxy(ss->getProxy()->getId());
+      smeManager->unregisterSmeProxy(ss->getProxy()->getSystemId());
     }catch(...)
     {
     }

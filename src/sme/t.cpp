@@ -139,6 +139,7 @@ int main(int argc,char* argv[])
         }
         i++;
       }
+      if(!*message)continue;
       if(!strcmp((char*)message,"quit"))
       {
         break;

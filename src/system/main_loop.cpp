@@ -157,9 +157,20 @@ void Smsc::mainLoop()
     }
     while(!src_proxy);
 
-    SmscCommand cmd = src_proxy->getCommand();
-    cmd.setProxy(src_proxy);
+    SmscCommand cmd;
+
     SMSId id=0;
+    try{
+      cmd = src_proxy->getCommand();
+      cmd.setProxy(src_proxy);
+      int prio=src_proxy->getPriority()/1024;
+      if(prio>=32)prio=31;
+      cmd->set_priority(prio);
+      cmd->sourceId=src_proxy->getSystemId();
+    }catch(...)
+    {
+      __trace2__("Source proxy died after selection\n");
+    }
     switch(cmd->get_commandId())
     {
       case __CMD__(SUBMIT):

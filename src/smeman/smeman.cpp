@@ -169,6 +169,7 @@ __synchronized__
   }
   {
     MutexGuard guard(records[index]->mutex);
+    smeProxy->setPriority(records[index]->info.priority);
     records[index]->proxy = smeProxy;
     records[index]->uniqueId = nextProxyUniqueId();
   }
@@ -210,6 +211,7 @@ __synchronized__
   }
   {
     MutexGuard guard(records[index]->mutex);
+    smeProxy->setPriority(records[index]->info.priority);
     records[index]->proxy = smeProxy;
     records[index]->uniqueId = nextProxyUniqueId();
   }

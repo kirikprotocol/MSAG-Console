@@ -26,6 +26,7 @@ public:
       smsc(smsc),
       systemId(sysId)
   {
+    prio=SmeProxyPriorityDefault;
   }
 
   ~AbonentInfoSme()
@@ -104,7 +105,11 @@ public:
 
   SmeProxyPriority getPriority()const
   {
-    return SmeProxyPriorityDefault;
+    return prio;
+  }
+  void setPriority(SmeProxyPriority newprio)
+  {
+    prio=newprio;
   }
 
   bool hasInput()const
@@ -130,6 +135,8 @@ public:
     return seq++;
   }
 
+  const char* getSystemId()const{return systemId.c_str();}
+
   string servType;
   int protId;
 
@@ -142,6 +149,7 @@ protected:
   ProxyMonitor *managerMonitor;
   Smsc *smsc;
   string systemId;
+  SmeProxyPriority prio;
 };
 
 };//abonentinfo

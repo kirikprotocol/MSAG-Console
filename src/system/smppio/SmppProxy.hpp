@@ -3,6 +3,7 @@
 
 #include "smeman/smeproxy.h"
 #include "core/buffers/Array.hpp"
+#include "core/buffers/PriorityQueue.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "system/smppio/SmppSocket.hpp"
@@ -52,7 +53,7 @@ public:
         SmscCommand::makeGenericNack
         (
           cmd->get_dialogId(),
-          SmppStatusSet::ESME_RINVCMDID
+          SmppStatusSet::ESME_RINVBNDSTS
         )
       );
     }
@@ -63,7 +64,7 @@ public:
         throw ProxyQueueLimitException();
       }
       trace2("put command:%p",*((void**)&cmd));
-      outqueue.Push(cmd);
+      outqueue.Push(cmd,cmd->get_priority());
     }
     smppSocket->notifyOutThread();
   }
@@ -84,6 +85,17 @@ public:
       mutex.Unlock();
       throw ProxyQueueLimitException();
     }
+    if(!CheckValidOutgoingCmd(cmd))
+    {
+      putCommand
+      (
+        SmscCommand::makeGenericNack
+        (
+          cmd->get_dialogId(),
+          SmppStatusSet::ESME_RINVBNDSTS
+        )
+      );
+    }
     inqueue.Push(cmd);
     mutexin.Unlock();
     managerMonitor->Signal();
@@ -92,7 +104,7 @@ public:
   {
     mutexout.Lock();
     SmscCommand cmd;
-    outqueue.Shift(cmd);
+    outqueue.Pop(cmd);
     mutexout.Unlock();
     return cmd;
   }
@@ -143,12 +155,13 @@ public:
     id=newid;
   }
 
-  std::string getId(){return id;}
+  const char* getSystemId()const{return id.c_str();}
 
 protected:
   mutable Mutex mutex,mutexin,mutexout;
   std::string id;
-  smsc::core::buffers::Array<SmscCommand> inqueue,outqueue;
+  smsc::core::buffers::Array<SmscCommand> inqueue;
+  smsc::core::buffers::PriorityQueue<SmscCommand,Array<SmscCommand>,0,31> outqueue;
   int seq;
   int proxyType;
   SmeProxyState state;

@@ -138,7 +138,11 @@ public:
 
   SmeProxyPriority getPriority()const
   {
-    return SmeProxyPriorityDefault;
+    return prio;
+  }
+  void setPriority(SmeProxyPriority newprio)
+  {
+    prio=newprio;
   }
 
   //Profiler will never generate a command
@@ -174,6 +178,8 @@ public:
   string serviceType;
   int protocolId;
 
+  const char* getSystemId()const{return systemId.c_str();}
+
 protected:
   mutable EventMonitor mon;
   smsc::core::buffers::Array<SmscCommand> outQueue;
@@ -186,6 +192,7 @@ protected:
   Mutex mtx;
 
   string systemId;
+  SmeProxyPriority prio;
 
   smsc::db::DataSource *ds;
 

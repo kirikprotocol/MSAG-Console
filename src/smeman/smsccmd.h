@@ -18,6 +18,7 @@
 #include <string.h>
 #include <memory>
 #include <inttypes.h>
+#include "smeman/smetypes.h"
 
 namespace smsc{
 namespace smeman{
@@ -96,6 +97,8 @@ struct _SmscCommand
   void* dta;
   Mutex mutex;
   SmeProxy *proxy;
+  int priority;
+  SmeSystemId sourceId;
   _SmscCommand() : ref_count(0), dta(0){};
   ~_SmscCommand()
   {
@@ -124,6 +127,9 @@ struct _SmscCommand
   SMS* get_sms() const { return (SMS*)dta; }
   SMS* get_sms_and_forget() { SMS* s = (SMS*)dta; dta = 0; return s;}
   SmsResp* get_resp() const { return (SmsResp*)dta; }
+  int get_priority(){return priority;};
+  void set_priority(int newprio){priority=newprio;}
+  const char* get_sourceId(){return sourceId.c_str();}
 };
 
 class SmscCommand

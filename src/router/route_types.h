@@ -6,24 +6,25 @@
 #define __Cpp_Header__router_types_h__
 
 #include "smeman/smetypes.h"
+#include <string>
 #include "sms/sms.h"
 
 namespace smsc {
 namespace router {
 
 typedef int RoutePriority;
-static const RoutePriority RoutePriorityMax = 65000;
-static const RoutePriority RoutePriorityMin = 0;
+static const RoutePriority RoutePriorityMax = 32767;
+static const RoutePriority RoutePriorityMin = 1;
 
-typedef long RouteId;
+typedef std::string RouteId;
 
 struct RouteInfo
 {
   RoutePriority priority;
   bool billing;
-  bool paid;
   bool archived;
-	bool enabling;
+  bool enabling;
+  int serviceId;
   RouteId routeId;
   smsc::smeman::SmeSystemId smeSystemId;
   smsc::sms::Address source;

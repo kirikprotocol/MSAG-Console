@@ -22,6 +22,7 @@ struct SmeInfo
   std::string hostname;
   int port;
   SmeSystemId systemId;
+  SmeProxyPriority priority;
   SmeNType SME_N;
   bool  disabled;
   bool wantAlias;

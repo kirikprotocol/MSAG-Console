@@ -47,7 +47,8 @@ public:
   virtual SmscCommand getCommand() = 0;
   virtual SmeProxyState getState() const = 0;
   virtual void init() = 0;
-  virtual SmeProxyPriority getPriority() const = 0;
+  virtual SmeProxyPriority getPriority() {return SmeProxyPriorityDefault;};
+  virtual void setPriority(SmeProxyPriority){};
   virtual bool hasInput() const = 0;
   virtual void attachMonitor(ProxyMonitor* monitor) = 0; // for detach monitor call with NULL
   virtual bool attached() = 0; // check what proxy has attached monitor (proxy is attached to dispatcher)
@@ -56,6 +57,7 @@ public:
   virtual uint32_t getIndex() const {__unreachable__("must be implemented in proxy or wrapper");return 0;}
   virtual unsigned long getPreferredTimeout() { return 8; }
   virtual const std::string& getSourceAddressRange(){return nullstr;};
+  virtual const char * getSystemId() const = 0;
 };
 
 }; // namespace smeman

@@ -331,6 +331,9 @@ StateType StateMachine::submit(Tuple& t)
   bool has_route = smsc->routeSms(sms->getOriginatingAddress(),
                           dst,
                           dest_proxy_index,dest_proxy,&ri);
+  sms->setRouteId(ri.routeId.c_str());
+  sms->setPriority(ri.priority);
+
   //smsc->routeSms(sms,dest_proxy_index,dest_proxy);
   if ( !has_route )
   {
@@ -345,6 +348,12 @@ StateType StateMachine::submit(Tuple& t)
     __warning__("SUBMIT_SM: no route");
     return ERROR_STATE;
   }
+
+  sms->setSourceSmeId(t.command->get_sourceId());
+
+  sms->setDestinationSmeId(ri.smeSystemId.c_str());
+  sms->setServiceId(ri.serviceId);
+
 
   __trace2__("SUBMIT: archivation request for %lld/%d is %s",t.msgId,dialogId,ri.archived?"true":"false");
   sms->setArchivationRequested(ri.archived);
@@ -510,6 +519,7 @@ StateType StateMachine::submit(Tuple& t)
       sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
     }
     SmscCommand delivery = SmscCommand::makeDeliverySm(*sms,dialogId2);
+    delivery->set_priority(ri.priority);
     dest_proxy->putCommand(delivery);
   }catch(...)
   {

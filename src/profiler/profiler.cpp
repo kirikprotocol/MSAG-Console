@@ -109,6 +109,7 @@ Profiler::Profiler(const Profile& pr,SmeRegistrar* psmeman,const char* sysId)
   systemId=sysId;
   smeman=psmeman;
   seq=1;
+  prio=SmeProxyPriorityDefault;
 }
 
 Profiler::~Profiler()

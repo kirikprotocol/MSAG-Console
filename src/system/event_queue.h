@@ -30,6 +30,9 @@ typedef uint64_t MsgIdType;
 const int MAX_COMMAND_PROCESSED = 2000;
 const int LOCK_LIFE_LENGTH = 8;
 
+const int PRIORITIES_COUNT=32;
+const int MAX_PROCESSED_LOCKERS=1000;
+
 using std::runtime_error;
 
 struct Tuple
@@ -59,9 +62,9 @@ class EventQueue
     Locker* next_hash;
     MsgIdType msgId;
     StateType state;
-    Locker* next_unlocked;
     CmdRecord* cmds;
-    Locker() : locked(false), next_unlocked(0), cmds(0) {}
+    int priority;
+    Locker() : locked(false), cmds(0) {}
     ~Locker()
     {
       while ( cmds )
@@ -187,16 +190,19 @@ class EventQueue
   Event event;
   Mutex mutex;
 
-  Locker* first_unlocked;
-  Locker* last_unlocked;
+  typedef std::multimap<int,Locker*> LockerQueue;
+  typedef std::pair<int,Locker*> LockerPair;
+  LockerQueue unlocked;
+  int counts[PRIORITIES_COUNT];
+  int processed;
 
 public:
 #define __synchronized__ MutexGuard mguard(mutex);
 
   EventQueue() : counter(0)
   {
-    first_unlocked=0;
-    last_unlocked=0;
+    for(int i=0;i<PRIORITIES_COUNT;i++)counts[i]=0;
+    processed=0;
   }
 
   ~EventQueue() {}
@@ -211,13 +217,21 @@ public:
   {
     __synchronized__
     hcnt=hash.getCount();
-    ucnt=0;
-    Locker *l=first_unlocked;
-    while(l)
+    ucnt=unlocked.size();
+  }
+
+  int calcWeight(int prio)
+  {
+    if(prio>PRIORITIES_COUNT)prio=PRIORITIES_COUNT-1;
+    if(prio<0)prio=0;
+    counts[prio]++;
+    processed++;
+    if(processed>MAX_PROCESSED_LOCKERS)
     {
-      ucnt++;
-      l=l->next_unlocked;
+      processed=0;
+      for(int i=0;i<PRIORITIES_COUNT;i++)counts[i]=0;
     }
+    return counts[prio]*10000/PRIORITIES_COUNT;
   }
 
   // добавляет в запись команду (создает новую запись приее отсутствии)
@@ -234,17 +248,10 @@ public:
       locker = new Locker;
       hash.put(msgId,locker);
       locker->state = StateTypeValue::UNKNOWN_STATE;
-      if ( last_unlocked )
-      {
-        last_unlocked->next_unlocked = locker;
-        last_unlocked=locker;
-        locker->next_unlocked=0;
-      }
-      else
-      {
-        __require__(first_unlocked == 0);
-        first_unlocked = last_unlocked = locker;
-      }
+      locker->priority=command->get_priority();
+      int weight=calcWeight(locker->priority);
+      __trace2__("enqueue: prio=%d, weight=%d",locker->priority,weight);
+      unlocked.insert(LockerPair(weight,locker));
     }
     locker->msgId = msgId;
     locker->push_back(new CmdRecord(command));
@@ -263,150 +270,45 @@ public:
     for(;;)
     {
       {
-        //!trace("selanddeq: enter synchronized block");
       __synchronized__
-        //!trace("selanddeq: got mutex");
-        Locker* prev = 0;
-#if !defined ( DISABLE_ANY_CHECKS ) && !defined(DISABLE_LIST_DUMP)
+        for (LockerQueue::iterator iter = unlocked.begin();iter!=unlocked.end();)
         {
-          Locker *iter1,*iter2;
-          int i;
-          for(i=0;i<HashTable::TABLE_SIZE;i++)
+          bool success = (*iter).second->getNextCommand(result.command);
+          if ( success || !(*iter).second->cmds ||
+               StateChecker::stateIsSuperFinal((*iter).second->state))
           {
-            iter1=hash.table[i];
-            while(iter1)
-            {
-              if(!iter1->locked)
-              {
-                int ok=0;
-                iter2=first_unlocked;
-                while(iter2)
-                {
-                  if(iter2==iter1)
-                  {
-                    ok=1;
-                    break;
-                  }
-                  iter2=iter2->next_unlocked;
-                }
-                if(!ok)
-                {
-                  //!__watch__(iter1);
-                  iter2=first_unlocked;
-                  while(iter2)
-                  {
-                    //!__trace2__("ptr:%p, id:%lld",iter2,iter2->msgId);
-                    iter2=iter2->next_unlocked;
-                  }
-                  __require__(ok);
-                }
-              }
-              iter1=iter1->next_hash;
-            }
-          }
-        }
-#endif // LIST TEST
-        //!__watch__(first_unlocked);
-        //!__watch__(last_unlocked);
-        for (Locker* iter = first_unlocked;
-             iter != 0; ) //iter = iter->next_unlocked
-        {
-          //!__trace2__("iterate unlocked lockers:%lld",iter->msgId);
-          bool success = iter->getNextCommand(result.command);
-          if ( success || !iter->cmds || StateChecker::stateIsSuperFinal(iter->state))
-          {
-            Locker* locker = iter;
-            //!__watch__(locker);
-            iter = iter->next_unlocked;// prev не изменяется
-            __require__(!locker->locked);
+            Locker* locker = (*iter).second;
+            __trace2__("selectAndDequeue: weight=%d, msgId=%d",(*iter).first,locker->msgId);
 
+            __require__(!locker->locked);
 
             if ( success ) // получена доступная команда
             {
-              // удаляем из списка активных
-#if !defined (DISABLE_ANY_CHECKS) && !defined(DISABLE_LIST_DUMP)
-              {
-              __trace__("dump list before");
-              Locker *iter2=first_unlocked;
-              while(iter2)
-              {
-                __trace2__("ptr:%p, id:%lld",iter2,iter2->msgId);
-                iter2=iter2->next_unlocked;
-              }
-              }
-#endif // DUMP LIST
-              __trace2__("success:%p",locker);
-              if ( locker == last_unlocked ) last_unlocked = prev;
-              if ( prev )
-                 prev->next_unlocked = locker->next_unlocked;
-              else
-              {
-                __require__( locker == first_unlocked );
-                //!__watch__(locker->next_unlocked);
-                first_unlocked = locker->next_unlocked;
-              }
+              unlocked.erase(iter);
 
-#if !defined (DISABLE_ANY_CHECKS) && !defined(DISABLE_LIST_DUMP)
-              {
-              __trace__("dump list after");
-              Locker *iter2=first_unlocked;
-              while(iter2)
-              {
-                __trace2__("ptr:%p, id:%lld",iter2,iter2->msgId);
-                iter2=iter2->next_unlocked;
-              }
-              }
-#endif // DUMP LIST
-
-              locker->next_unlocked = 0;
               locker->locked = true;
               result.msgId = locker->msgId;
               result.state = locker->state;
-              //!__watch__(first_unlocked);
-              //!__watch__(last_unlocked);
-              //!__trace__("returning from selectAndDequeue");
               return;
             }
             else if( !locker->cmds || StateChecker::stateIsSuperFinal(locker->state)) //вообще нет команд
             {
               if ( StateChecker::stateIsFinal(locker->state) )
               {
-                // удаляем из списка активных
-                if ( locker == last_unlocked ) last_unlocked = prev;
-                if ( prev )
-                   prev->next_unlocked = locker->next_unlocked;
-                else
-                {
-                  __require__( locker == first_unlocked );
-                  //!__watch__(locker->next_unlocked);
-                  first_unlocked = locker->next_unlocked;
-                }
-
-                locker->next_unlocked = 0;
+                LockerQueue::iterator tmp=iter;
+                tmp++;
+                unlocked.erase(iter);
+                iter=tmp;
                 hash.remove(locker->msgId);
                 delete locker;
-              }
-              else
-              {
-                //locker->locked=true;
-                prev = locker;
+                continue;
               }
             }
           }
-          else // есть только ожидающие команды
-          {
-            // выбераем следующую запись
-            prev = iter;
-            iter = iter->next_unlocked;
-            // none
-          }
+          iter++;
         }
       }
-      //!__watch__(first_unlocked);
-      //!__watch__(last_unlocked);
-      //!__trace__("selanddeq:wait");
       event.Wait();
-      //!__trace__("selanddeq:wait finished");
       if(*quitting)return;
     }
   }
@@ -427,41 +329,8 @@ public:
     if ( StateChecker::stateIsFinal(state) )
       ++counter;
 
+    unlocked.insert(LockerPair(calcWeight(locker->priority),locker));
 
-#if !defined (DISABLE_ANY_CHECKS) && !defined(DISABLE_LIST_DUMP)
-    {Locker *iter2=first_unlocked;
-    __trace__("change state: list before");
-    while(iter2)
-    {
-      __trace2__("ptr:%p, id:%lld",iter2,iter2->msgId);
-      iter2=iter2->next_unlocked;
-    }}
-#endif // DUMP LIST
-
-    if ( last_unlocked )
-    {
-      last_unlocked->next_unlocked = locker;
-      last_unlocked = locker;
-      locker->next_unlocked=0;
-    }
-    else
-    {
-      __require__(first_unlocked == 0);
-      first_unlocked = last_unlocked = locker;
-    }
-
-#if !defined (DISABLE_ANY_CHECKS) && !defined(DISABLE_LIST_DUMP)
-    {Locker *iter2=first_unlocked;
-    //!__trace__("change state: list after");
-    while(iter2)
-    {
-      //!__trace2__("ptr:%p, id:%lld",iter2,iter2->msgId);
-      iter2=iter2->next_unlocked;
-    }}
-#endif // DUMP LIST
-
-    //!__watch__(first_unlocked);
-    //!__watch__(last_unlocked);
     event.Signal();
   }
 #undef __synchronized__

@@ -14,7 +14,7 @@
 #endif
 
 #include <new.h>
-#include <exception>
+#include <stdexcept>
 
 namespace smsc{
 namespace core{
@@ -154,7 +154,7 @@ public:
   const T& operator[](int index)const
   {
     if(index<0)index+=_count;
-    if(index>=_count)throw exception("Array:Index out of bounds");
+    if(index>=_count)throw std::runtime_error("Array:Index out of bounds");
     return const_cast<const T&>((const_cast<Array<T>*>(this))->Obj(index));
   }
 
@@ -335,6 +335,17 @@ public:
     _size=_count;
     _data=newdata;
     return oldsize;
+  }
+
+  void Init(int cnt)
+  {
+    Resize(cnt);
+    if(cnt>_count)
+    {
+      InitRange(_count,cnt);
+      _count=cnt;
+    }
+
   }
 
 };//Array

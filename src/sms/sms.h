@@ -89,7 +89,7 @@ namespace smsc {
     using smsc::core::buffers::XHash;
     using std::runtime_error;
     using std::auto_ptr;
-    
+
     const int USSD_PSSR = 1;
     const int USSD_USSR = 2;
     const int USSD_USSN = 3;
@@ -100,13 +100,13 @@ namespace smsc {
     const int MAX_ADDRESS_VALUE_LENGTH = 20;
     const int MAX_SHORT_MESSAGE_LENGTH = 255; // Depricated !!!
     const int MAX_BODY_LENGTH          = 1550;
-    
+
     typedef uint64_t    SMSId;
     typedef char        AddressValue[MAX_ADDRESS_VALUE_LENGTH+1];
-    typedef char        SmeSystemId[MAX_SMESYSID_TYPE_LENGTH+1];
+    typedef char        SmeSystemIdType[MAX_SMESYSID_TYPE_LENGTH+1];
     typedef char        EService[MAX_ESERVICE_TYPE_LENGTH+1];
     typedef char        RouteId[MAX_ROUTE_ID_TYPE_LENGTH+1];
-    
+
     /**
     * Структура Address предназначена для хранения
     * адресов в SMS сообщении.
@@ -1189,8 +1189,8 @@ namespace smsc {
         int32_t     serviceId;      // Additional fields
         int32_t     priority;       // Additional fields
 
-        SmeSystemId srcSmeId;
-        SmeSystemId dstSmeId;
+        SmeSystemIdType srcSmeId;
+        SmeSystemIdType dstSmeId;
 
         /**
         * Default конструктор, просто инициализирует поле state как ENROUTE
@@ -1275,7 +1275,7 @@ namespace smsc {
           strncpy(routeId, sms.routeId, sizeof(routeId));
           strncpy(srcSmeId, sms.srcSmeId, sizeof(srcSmeId));
           strncpy(dstSmeId, sms.dstSmeId, sizeof(dstSmeId));
-          
+
           return (*this);
         };
 
@@ -1730,12 +1730,12 @@ namespace smsc {
               strncpy(field, val, maxLen); field[maxLen]='\0';
             } else field[0]='\0';
         }
-        inline void getStringField(const char* field, char* val, int maxLen) const 
+        inline void getStringField(const char* field, char* val, int maxLen) const
         {
             __require__(val);
             val[0]='\0'; strncpy(val, field, maxLen); val[maxLen]='\0';
         }
-        
+
         /**
         * Метод устанавливает имя-тип сервиса SME.
         *
@@ -1835,7 +1835,7 @@ namespace smsc {
         {
           return routeId;
         };
-        
+
         /**
         * Метод устанавливает идентификатор sme-источника.
         *
@@ -1866,7 +1866,7 @@ namespace smsc {
         {
           return srcSmeId;
         };
-        
+
         /**
         * Метод устанавливает идентификатор sme-приёмника.
         *
@@ -1874,9 +1874,9 @@ namespace smsc {
         */
         inline void setDestinationSmeId(const char* id)
         {
-          setStringField(dstSmeId, id, MAX_SMESYSID_TYPE_LENGTH);   
+          setStringField(dstSmeId, id, MAX_SMESYSID_TYPE_LENGTH);
         };
-        
+
         /**
         * Метод возвращает идентификатор sme-приёмника
         *

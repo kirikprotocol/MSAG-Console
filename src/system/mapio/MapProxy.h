@@ -96,26 +96,26 @@ public:
   {
     return state;
   }
-  
+
   void init()
   {
     managerMonitor=0;
     state=VALID;
   }
-  
+
   virtual SmeProxyPriority getPriority()const{return SmeProxyPriorityDefault;}
-  
+
   bool hasInput()const
   {
     MutexGuard g(mutex);
     return inqueue.Count()!=0;
   }
-  
+
   virtual void attachMonitor(ProxyMonitor* mon)
   {
     managerMonitor=mon;
   }
-  
+
   virtual bool attached()
   {
     return managerMonitor!=NULL;
@@ -125,7 +125,7 @@ public:
   {
     MutexGuard g(mutex);
     __trace2__("MAP::Proxy:getNextSequenceNumber next number 0x%x",seq);
-    if (seq <  0x10000) seq = 0x10000; 
+    if (seq <  0x10000) seq = 0x10000;
     return seq++;
   }
 
@@ -137,6 +137,8 @@ public:
   virtual unsigned long getPreferredTimeout() { return 45; }
 
   std::string getId(){return id;}
+
+  const char* getSystemId()const{return id.c_str();}
 
 protected:
   mutable Mutex mutex;
