@@ -1152,13 +1152,17 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
     
     if ( dialog->state == MAPST_WaitRInfoConf )
     {
-      if ( errorSendRoutingInfoForSm_sp && errorSendRoutingInfoForSm_sp->errorCode == 6 ){
+      if ( errorSendRoutingInfoForSm_sp && 
+        (errorSendRoutingInfoForSm_sp->errorCode == 6 ) )
+      {
+        __trace2__("MAP::%s absent subscriber",__FUNCTION__);
         dialog->subscriberAbsent = true;
         dialog->routeErr = MAKE_ERRORCODE(CMD_ERR_TEMP,0);
       }else{
         try {
           DoRInfoErrorProcessor(errorSendRoutingInfoForSm_sp,provErrCode_p);
         }catch(MAPDIALOG_ERROR& e){
+          __trace2__("MAP::%s was error %s",__FUNCTION__,e.what());
           dialog->routeErr = e.code;
         }
       }
