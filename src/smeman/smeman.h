@@ -39,7 +39,7 @@ public:
   bool deleted;
   SmeIndex idx;
   Mutex mutex;
-	virtual ~SmeRecord(){}
+  virtual ~SmeRecord(){}
   virtual void putCommand(const SmscCommand& command)
   {
     MutexGuard guard(mutex);
@@ -78,7 +78,7 @@ public:
 };
   
 using core::synchronization::Mutex; 
-typedef std::vector<SmeRecord> Records;
+typedef std::vector<SmeRecord*> Records;
 
 class SmeManager : 
   public SmeAdministrator,
@@ -92,6 +92,26 @@ class SmeManager :
   Records records;
   SmeIndex internalLookup(const SmeSystemId& systemId) const;
 public: 
+	virtual ~SmeManager()
+	{
+		Records::iterator it = records.begin();
+		for ( ; it != records.end(); ++it ) 
+		{
+			try
+			{
+				if ( (*it)->proxy )
+				{
+					__warning__((string("proxy with system id ")+(*it)->info.systemId).c_str());
+					dispatcher.detachSmeProxy((*it)->proxy);
+				}
+				delete (*it);
+			}
+			catch(...)
+			{
+				__warning__("error when detach proxy");
+			}
+		}
+	}
   //....
   // SmeAdministrator implementation
   virtual void addSme(const SmeInfo& info);
@@ -119,7 +139,7 @@ public:
 
   // SmeDispatcher implementation
   virtual SmeProxy* selectSmeProxy(unsigned long timeout=0,int* idx=0);
-  virtual ~SmeManager(){}
+  //virtual ~SmeManager(){}
 };
 
 }; // namespace smeman

@@ -157,21 +157,14 @@ public:
     if ( task->timeout_prev )
     {
       task->timeout_prev->timeout_next = task->timeout_next;
+			if ( task->timeout_next ) task->timeout_next->timeout_prev = task->timeout_prev;
     }
     else
     {
-      timeout_link_begin = task->timeout_next;
-			timeout_link_begin->timeout_prev = 0;
-    }
-
-    if ( task->timeout_next )
-    {
-      task->timeout_next->timeout_prev = task->timeout_prev;
-    }
-    else
-    {
-      timeout_link_end = task->timeout_prev;
-			timeout_link_begin->timeout_next = 0;
+      __require__( task == timeout_link_begin ); 
+			timeout_link_begin = task->timeout_next;
+			if (timeout_link_begin) timeout_link_begin->timeout_prev = 0;
+			else timeout_link_end = 0;
     }
 
     // add into free_list

@@ -18,14 +18,14 @@ using core::synchronization::MutexGuard;
 void SmeManager::addSme(const SmeInfo& info)
 {
 __synchronized__
-  SmeRecord record;
-  record.info = info;
-  record.proxy = 0;
-  record.deleted = false;
-  record.idx = records.size();
+  auto_ptr<SmeRecord> record(new SmeRecord);
+  record->info = info;
+  record->proxy = 0;
+  record->deleted = false;
+  record->idx = records.size();
   SmeIndex index = internalLookup(info.systemId);
   if ( index != INVALID_SME_INDEX ) throw runtime_error("Already exists");
-  records.push_back(record);
+  records.push_back(record.release());
 }
 
 void SmeManager::deleteSme(const SmeSystemId& systemId)
@@ -33,16 +33,16 @@ void SmeManager::deleteSme(const SmeSystemId& systemId)
 __synchronized__
   SmeIndex index = internalLookup(systemId);
   if ( index == INVALID_SME_INDEX ) throw SmeError();
-  if ( records[index].proxy )
+  if ( records[index]->proxy )
   {
     // ???????  что делать если уже в работе , шутдаунить прокси, как корректно или абортом
     // к примеру так, но тогда , что делает close?
-    dispatcher.detachSmeProxy(records[index].proxy);
-    records[index].proxy->close();
+    dispatcher.detachSmeProxy(records[index]->proxy);
+    records[index]->proxy->close();
     //delete records[index].proxy;
-    records[index].proxy = 0;
+    records[index]->proxy = 0;
   }
-  records[index].deleted = true;
+  records[index]->deleted = true;
 }
 
 /*void SmeManager::store()
@@ -64,24 +64,24 @@ public:
     do{
       if (started&&ptr!=end) ++ptr;
       started = true;
-    }while ( ptr!=end && ptr->deleted );
+    }while ( ptr!=end && (*ptr)->deleted );
     return ptr != end;
   }
 
   virtual SmeProxy* getSmeProxy() const
   {
     if ( ptr == end ) throw runtime_error("out of data");
-    return (*ptr).proxy;
+    return (*ptr)->proxy;
   }
   virtual SmeInfo  getSmeInfo() const
   {
     if ( ptr == end ) throw runtime_error("out of data");
-    return (*ptr).info;
+    return (*ptr)->info;
   }
   virtual SmeIndex getSmeIndex() const
   {
     if ( ptr == end ) throw runtime_error("out of data");
-    return (*ptr).idx;
+    return (*ptr)->idx;
   }
 };
 
@@ -122,17 +122,17 @@ SmeIndex SmeManager::lookup(const SmeSystemId& systemId) const
 SmeProxy* SmeManager::getSmeProxy(SmeIndex index) const
 {
 __synchronized__
-  const SmeRecord* record = &(records.at(index));
+  SmeRecord* record = (SmeRecord*)(records.at(index));
   if ( record->deleted ) throw runtime_error("proxy deleted");
-  return const_cast<SmeProxy*>((const SmeProxy*)record);
+  return (SmeProxy*)(record);
 }
 
 SmeInfo SmeManager::getSmeInfo(SmeIndex index) const
 {
 __synchronized__
-  const SmeRecord& record = records.at(index);
-  if ( record.deleted ) throw runtime_error("proxy deleted");
-  return record.info;
+  const SmeRecord* record = records.at(index);
+  if ( record->deleted ) throw runtime_error("proxy deleted");
+  return record->info;
 }
 
 static uint32_t nextProxyUniqueId()
@@ -153,16 +153,16 @@ __synchronized__
   {
     throw runtime_error(string("unknown systm id:")+systemId);
   }
-  if ( records[index].proxy )
+  if ( records[index]->proxy )
   {
     __trace2__("Failed to register proxy with sid:%s",systemId.c_str());
     __warning__("Sme proxy with tihs systemId already registered");
     throw runtime_error(string("proxy with id ")+systemId+" already exists");
   }
   {
-    MutexGuard guard(records[index].mutex);
-    records[index].proxy = smeProxy;
-    records[index].uniqueId = nextProxyUniqueId();
+    MutexGuard guard(records[index]->mutex);
+    records[index]->proxy = smeProxy;
+    records[index]->uniqueId = nextProxyUniqueId();
   }
   dispatcher.attachSmeProxy(smeProxy,index);
 }
@@ -178,12 +178,12 @@ void SmeManager::unregisterSmeProxy(const SmeSystemId& systemId)
   }
 
   {
-    MutexGuard guard(records[index].mutex);
-    if ( records[index].proxy )
-      dispatcher.detachSmeProxy(records[index].proxy);
+    MutexGuard guard(records[index]->mutex);
+    if ( records[index]->proxy )
+      dispatcher.detachSmeProxy(records[index]->proxy);
     else
       __warning__("unregister null proxy");
-    records[index].proxy = 0;
+    records[index]->proxy = 0;
   }
 }
 
@@ -196,7 +196,7 @@ SmeProxy* SmeManager::selectSmeProxy(unsigned long timeout,int* idx)
   if ( proxy )
   {
   __synchronized__
-    return (SmeProxy*)&(records[_idx]);
+    return (SmeProxy*)(records[_idx]);
   }
   else return 0;
 }
@@ -206,8 +206,8 @@ SmeIndex SmeManager::internalLookup(const SmeSystemId& systemId) const
 //__synchronized__ не нужно поскольку вызывается из синхронизированных методов
   for ( Records::const_iterator p = records.begin(); p != records.end(); ++p )
   {
-    if ( p->deleted ) continue;
-    if ( p->info.systemId.compare(systemId) == 0 ) return p->idx;
+    if ( (*p)->deleted ) continue;
+    if ( (*p)->info.systemId.compare(systemId) == 0 ) return (*p)->idx;
   }
   return INVALID_SME_INDEX;
 }
