@@ -143,7 +143,7 @@ public:
   {
     MutexGuard g(mutex);
 //    __mapproxy_trace2__("getNextSequenceNumber next number 0x%x",seq);
-    if (seq <  0x10000) seq = 0x10000;
+    if (seq <  0x40000) seq = 0x40000;
     return seq++;
   }
 
@@ -162,7 +162,7 @@ protected:
   mutable Mutex mutex;
   std::string id;
   MapIOQueue inqueue,outqueue;
-  int seq;
+  uint32_t seq;
   SmeProxyState state;
   ProxyMonitor *managerMonitor;
   log4cpp::Category* time_logger;
