@@ -443,6 +443,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   unsigned char *pdu_ptr = pdu->signalInfo+1+2+oa_length;
   *pdu_ptr++ = (unsigned char)sms->getIntProperty(Tag::SMPP_PROTOCOL_ID);
   unsigned encoding = sms->getIntProperty(Tag::SMPP_DATA_CODING);
+  unsigned char value;
   if ( encoding != 0 && encoding != 0x08 && encoding != 0x3 && encoding != 0x4) {
     __trace2__("MAP::mkDeliverPDU: unsuppprted encoding 0x%x",encoding);
     throw runtime_error("unsupported encoding");
