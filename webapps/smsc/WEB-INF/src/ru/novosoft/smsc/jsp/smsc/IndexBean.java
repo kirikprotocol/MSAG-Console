@@ -37,7 +37,12 @@ public abstract class IndexBean extends SmscBean
 
 	/***************************************** properties **************************************************************/
 
-	public int getStartPosition()
+	public String getStartPosition()
+	{
+		return String.valueOf(startPosition);
+	}
+
+	public int getStartPositionInt()
 	{
 		return startPosition;
 	}
@@ -54,7 +59,12 @@ public abstract class IndexBean extends SmscBean
 		}
 	}
 
-	public int getTotalSize()
+	public String getTotalSize()
+	{
+		return String.valueOf(totalSize);
+	}
+
+	public int getTotalSizeInt()
 	{
 		return totalSize;
 	}
@@ -103,7 +113,12 @@ public abstract class IndexBean extends SmscBean
 		this.mbFilter = mbFilter;
 	}
 
-	public int getPageSize()
+	public String getPageSize()
+	{
+		return String.valueOf(pageSize);
+	}
+
+	public int getPageSizeInt()
 	{
 		return pageSize;
 	}

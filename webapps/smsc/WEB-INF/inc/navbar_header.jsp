@@ -1,8 +1,8 @@
 <%{
-int itemsTotal = bean.getTotalSize(); // 31
-int pageCurrent = bean.getStartPosition() / bean.getPageSize(); // 1
+int itemsTotal = bean.getTotalSizeInt(); // 31
+int pageCurrent = bean.getStartPositionInt() / bean.getPageSizeInt(); // 1
 int pageFirst = (pageCurrent -4) < 0 ? 0 : (pageCurrent -4); // 0
-int pageTotal = (itemsTotal / bean.getPageSize()) + ((itemsTotal % bean.getPageSize()) > 0 ? 1 : 0); // 2
+int pageTotal = (itemsTotal / bean.getPageSizeInt()) + ((itemsTotal % bean.getPageSizeInt()) > 0 ? 1 : 0); // 2
 int pageLast = (pageCurrent +4) > (pageTotal-1) ? (pageTotal-1) : (pageCurrent +4);
 String jscript = "navigatePage";
 %>
