@@ -13,6 +13,7 @@
     <param name="sid" type="string">left sid</param>
     <param name="systemType" type="string">left systemType</param>
     <param name="timeOut" type="int">1002</param>
+    <param name="defaultDCS" type="int">0</param>
   </section>
 
   <section name="right">
@@ -23,6 +24,7 @@
     <param name="sid" type="string">right sid</param>
     <param name="systemType" type="string">right systemType</param>
     <param name="timeOut" type="int">2002</param>
+    <param name="defaultDCS" type="int">0</param>
   </section>
 
 </config>

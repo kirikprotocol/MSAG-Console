@@ -6,7 +6,7 @@
 
 namespace smsc {
 namespace proxysme {
-
+enum {DEFAULTDCS_SMSC7BIT=0,DEFAULTDCS_LATIN1=3};
 using smsc::util::config::Config;
 
 class ProxySmeConfig {
@@ -18,7 +18,7 @@ public:
 		std::string password;
 		std::string origAddr;
 		std::string systemType;
-		int timeOut;
+		int timeOut;		int defaultDCS;
 	};
 	ProxySmeConfig(const char * const config_filename); //throw(smsc::util::Exception)
 	const sme & getLeft()  {return left;}

@@ -76,7 +76,7 @@ void ProxySmeConfig::fillSme(ProxySmeConfig::sme& smeItem, const char * const pr
 	setStrParam(smeItem.origAddr,    prefix, "origAddr", config);
 	setStrParam(smeItem.systemType,  prefix, "systemType", config);
 	setIntParam(smeItem.timeOut,     prefix, "timeOut", config);
-}
+	setIntParam(smeItem.defaultDCS,  prefix, "defaultDCS", config);}
 
 ProxySmeConfig::ProxySmeConfig(const char * const config_filename) //throw(smsc::util::Exception)
 {

@@ -28,6 +28,7 @@ public class Index extends PageBean {
 	private String left_origAddr = "";
 	private String left_systemType = "";
 	private int left_timeOut = 0;
+	private int left_defaultDCS = 0;
 
 	private String right_host = "";
 	private int right_port = 0;
@@ -36,6 +37,7 @@ public class Index extends PageBean {
 	private String right_origAddr = "";
 	private String right_systemType = "";
 	private int right_timeOut = 0;
+	private int right_defaultDCS = 0;
 
 	private int queueLength = 0;
 	private String adminHost = "";
@@ -324,6 +326,16 @@ public class Index extends PageBean {
 		this.left_timeOut = left_timeOut;
 	}
 
+	public int getLeft_defaultDCS()
+	{
+		return left_defaultDCS;
+	}
+
+	public void setLeft_defaultDCS(int left_defaultDCS)
+	{
+		this.left_defaultDCS = left_defaultDCS;
+	}
+
 	public String getRight_host()
 	{
 		return right_host;
@@ -420,6 +432,16 @@ public class Index extends PageBean {
 	public void setRight_timeOutInt(int right_timeOut)
 	{
 		this.right_timeOut = right_timeOut;
+	}
+
+	public int getRight_defaultDCS()
+	{
+		return right_defaultDCS;
+	}
+
+	public void setRight_defaultDCS(int right_defaultDCS)
+	{
+		this.right_defaultDCS = right_defaultDCS;
 	}
 
 	public String getQueueLength()

@@ -81,6 +81,15 @@
 	<th>timeOut</th>
 	<td><input class=txt name="left_timeOut" value="<%=bean.getLeft_timeOut()%>"></td>
 </tr>
+<tr class=row<%=row++&1%>>
+	<th>defaultDCS</th>
+	<td>
+	  <select class=txt name="left_defaultDCS">
+	    <option value="0" <%=bean.getLeft_defaultDCS()==0?"SELECTED":""%>>GSM default alphabet</option>
+	    <option value="0" <%=bean.getLeft_defaultDCS()==3?"SELECTED":""%>>Latin1 (ISO8859-1)</option>
+	  </select>
+	</td>
+</tr>
 </table>
 <%row = 0;%>
 <div class=page_subtitle>Right SME</div>
@@ -113,6 +122,15 @@
 <tr class=row<%=row++&1%>>
 	<th>timeOut</th>
 	<td><input class=txt name="right_timeOut" value="<%=bean.getRight_timeOut()%>"></td>
+</tr>
+<tr class=row<%=row++&1%>>
+	<th>defaultDCS</th>
+	<td>
+	  <select class=txt name="right_defaultDCS">
+	    <option value="0" <%=bean.getRight_defaultDCS()==0?"SELECTED":""%>>GSM default alphabet</option>
+	    <option value="0" <%=bean.getRight_defaultDCS()==3?"SELECTED":""%>>Latin1 (ISO8859-1)</option>
+	  </select>
+	</td>
 </tr>
 </table>
 </div><%
