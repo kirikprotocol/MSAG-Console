@@ -24,7 +24,7 @@ Targets:
   </target>
 
   <target name="makeweb">
-    <ant antfile="${WEBSRC_DIR}/build.xml" dir="${SRC_DIR}" target="build"/>
+    <ant antfile="${WEBSRC_DIR}/build.xml" dir="${WEBSRC_DIR}" target="build"/>
   </target>
 
   <target name="distr_properties">
@@ -82,7 +82,7 @@ Targets:
     <copy todir="${DISTR_DIR}/conf" preservelastmodified="yes" flatten="yes" >
       <fileset dir="${SRC_DIR}/conf" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd SmeRecords.dtd smppgw/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd"/>
     </copy>
-    <ant antfile="${WEBSRC_DIR}/build.xml" dir="${SRC_DIR}" target="update"/>
+    <ant antfile="${WEBSRC_DIR}/build.xml" dir="${WEBSRC_DIR}" target="update"/>
   </target>
 
   <target name="configure">
