@@ -61,8 +61,10 @@ public:
 
   virtual bool next()
   {
-    if (started&&ptr!=end) ++ptr;
-    started = true;
+    do{
+			if (started&&ptr!=end) ++ptr;
+			started = true;
+		}while ( ptr!=end && ptr->deleted );
     return ptr != end;
   }
 
