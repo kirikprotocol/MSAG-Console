@@ -90,6 +90,8 @@ vector<int> PduReceiptFlag::checkSchedule(time_t recvTime) const
 
 vector<int> PduReceiptFlag::update(time_t recvTime, bool accepted)
 {
+	__trace2__("PduReceiptFlag::update(): this = %p, recvTime = %ld, accepted = %s",
+		this, recvTime, accepted ? "true" : "false");
 	vector<int> res;
 	switch (flag)
 	{
