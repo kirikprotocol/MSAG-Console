@@ -12,123 +12,123 @@ using namespace smsc::sms;
 using smsc::util::Logger;
 
 Mutex StoreManager::mutex;
-ConnectionPool*	StoreManager::pool = 0L;
+ConnectionPool* StoreManager::pool = 0L;
 IDGenerator* StoreManager::generator = 0L;
 StoreManager* StoreManager::instance = 0L;
 
 void StoreManager::startup(StoreConfig* config)
-	throw(ConnectionFailedException)
+    throw(ConnectionFailedException)
 {
-	MutexGuard guard(mutex);
+    MutexGuard guard(mutex);
 
-	if (!instance)
-	{
+    if (!instance)
+    {
         pool = new ConnectionPool(config);
-		Connection* connection = pool->getConnection();
-		try
-		{
-			generator = new IDGenerator(connection->getMessagesCount());
-		}
-		catch (StorageException& exc) 
-		{
-			pool->freeConnection(connection);
-			throw ConnectionFailedException(exc);
-		}
-		pool->freeConnection(connection);
-		instance = new StoreManager();
-	}
+        Connection* connection = pool->getConnection();
+        try
+        {
+            generator = new IDGenerator(connection->getMessagesCount());
+        }
+        catch (StorageException& exc) 
+        {
+            pool->freeConnection(connection);
+            throw ConnectionFailedException(exc);
+        }
+        pool->freeConnection(connection);
+        instance = new StoreManager();
+    }
 }
-		
+        
 void StoreManager::shutdown() 
 {
-	MutexGuard guard(mutex);
+    MutexGuard guard(mutex);
 
-	if (pool) {
-		delete pool; pool = 0L;
-	}
-	if (instance) {
-		delete instance; instance = 0L;
-	}
-	if (generator) {
-		delete generator; generator = 0L;
-	}
+    if (pool) {
+        delete pool; pool = 0L;
+    }
+    if (instance) {
+        delete instance; instance = 0L;
+    }
+    if (generator) {
+        delete generator; generator = 0L;
+    }
 }
 
 const int MAX_TRIES_TO_PROCESS = 3;
 
 SMSId StoreManager::store(const SMS &sms) 
-	throw(StorageException)
+    throw(StorageException)
 {
-	__require__(pool && generator);
-	
-	int iteration=1;
+    __require__(pool && generator);
+    
+    int iteration=1;
     while(true)
-	{
-		Connection* connection = 0L;
-		try 
-		{
-			connection = pool->getConnection();
-			SMSId id = generator->getNextId();
-			connection->store(sms, id);
+    {
+        Connection* connection = 0L;
+        try 
+        {
+            connection = pool->getConnection();
+            SMSId id = generator->getNextId();
+            connection->store(sms, id);
             pool->freeConnection(connection);
-			return id;
-		} 
-		catch (ConnectionFailedException& exc) {
+            return id;
+        } 
+        catch (ConnectionFailedException& exc) {
             if (connection) pool->freeConnection(connection);
-			throw;
-		}
-		catch (StorageException& exc) 
-		{
-			if (connection) pool->freeConnection(connection);
+            throw;
+        }
+        catch (StorageException& exc) 
+        {
+            if (connection) pool->freeConnection(connection);
             log.debug("Storage Exception : %s\n", exc.what());
             if (iteration < MAX_TRIES_TO_PROCESS) 
-			{
-				iteration++;
-				continue;
+            {
+                iteration++;
+                continue;
             }
-			log.warn("Max tries count exceeded !\n");
+            log.warn("Max tries count exceeded !\n");
             throw;
-		}
-	}
+        }
+    }
 }
 
-SMS StoreManager::retrive(SMSId id) 
-	throw(StorageException, NoSuchMessageException)
+void StoreManager::retrive(SMSId id, SMS &sms) 
+    throw(StorageException, NoSuchMessageException)
 {
     __require__(pool);
     
-	int iteration=1;
+    int iteration=1;
     while (true)
-	{
-		Connection* connection = 0L;
-		try 
-		{
-			connection = pool->getConnection();
-			const SMS& sms = connection->retrive(id);
+    {
+        Connection* connection = 0L;
+        try 
+        {
+            connection = pool->getConnection();
+            connection->retrive(id, sms);
             pool->freeConnection(connection);
-			return SMS(sms);
-		}
-		catch (ConnectionFailedException& exc) {
-			if (connection) pool->freeConnection(connection);
-			throw;
-		}
-		catch (NoSuchMessageException& exc) {
-			if (connection) pool->freeConnection(connection);
-			throw;
-		}
-		catch (StorageException& exc) 
-		{
-			if (connection) pool->freeConnection(connection);
+            break;
+        }
+        catch (ConnectionFailedException& exc) {
+            if (connection) pool->freeConnection(connection);
+            throw;
+        }
+        catch (NoSuchMessageException& exc) {
+            if (connection) pool->freeConnection(connection);
+            throw;
+        }
+        catch (StorageException& exc) 
+        {
+            if (connection) pool->freeConnection(connection);
             log.debug("Storage Exception : %s\n", exc.what());
-			if (iteration < MAX_TRIES_TO_PROCESS) 
-			{
-				iteration++;
-				continue;
+            if (iteration < MAX_TRIES_TO_PROCESS) 
+            {
+                iteration++;
+                continue;
             }
             log.warn("Max tries count exceeded !\n");
-			throw;
-		}
-	}
+            throw;
+        }
+    }
 }
 /* ----------------------------- StoreManager -------------------------- */
 

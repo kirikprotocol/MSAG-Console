@@ -13,13 +13,13 @@ namespace smsc { namespace store
         virtual SMSId store(const SMS &sms) 
             throw(StorageException) = 0;
         
-        virtual SMS retrive(SMSId id) 
+        virtual void retrive(SMSId id, SMS &sms) 
             throw(StorageException, NoSuchMessageException) = 0;
 
-	protected:
+    protected:
 
-	    MessageStore() {};
-		virtual ~MessageStore() {};
+        MessageStore() {};
+        virtual ~MessageStore() {};
    };
 }}
 
