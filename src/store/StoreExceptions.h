@@ -1,6 +1,7 @@
 #ifndef STRORE_EXCEPTIONS_DECLARATIONS
 #define STRORE_EXCEPTIONS_DECLARATIONS
 
+#include <stdio.h>
 #include <string.h>
 #include <exception>
 
