@@ -132,6 +132,9 @@ struct MapDialog{
   ET96MAP_MWD_STATUS_T mwdStatus;
   unsigned routeErr;
   SmscCommand QueryAbonentCommand;
+  unsigned udhiRef;
+  unsigned udhiMsgNum;
+  unsigned udhiMsgCount;
 //  bool isMOreq;
 //  unsigned dialogid_req;
   MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned version=2) : 

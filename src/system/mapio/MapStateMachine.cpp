@@ -15,6 +15,15 @@ using namespace std;
 using namespace smsc::system;
 
 static const bool SMS_SEGMENTATION = true;
+static inline unsigned GetMOLockTimeout() {return 15;}
+
+struct XMOMAPLocker {
+  string imsi;
+  unsigned long startTime;
+  unsigned parts;
+  unsigned ref;
+};
+typedef map<XMOMAPLocker> XMOMAP;
 
 static Mutex x_map_lock;
 typedef multimap<string,unsigned> X_MAP;
@@ -22,6 +31,7 @@ static X_MAP x_map;
 static Mutex ussd_map_lock;
 typedef map<long long,unsigned> USSD_MAP; 
 static USSD_MAP ussd_map;
+static XMOMAP x_momap;
 
 static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc);
 static void PauseOnImsiReq(MapDialog* map);
@@ -111,7 +121,6 @@ struct MAPDIALOG_HEREISNO_ID : public MAPDIALOG_ERROR
   MAPDIALOG_HEREISNO_ID(const string& s,unsigned c=MAP_FALURE) :
     MAPDIALOG_ERROR(0,s){}
 };
-
 
 static void CloseMapDialog(unsigned dialogid,unsigned dialog_ssn){
   if ( dialogid == 0 ) return;
@@ -276,6 +285,21 @@ static void SendOkToSmsc(/*unsigned dialogid*/MapDialog* dialog)
   __trace2__("Send OK to SMSC done");
 }
 
+static void CheckLockedByMO(MapDialog* dialog)
+{
+  XMOMAP::iterator it = x_momap.find(s_imsi);
+  if ( it != x_momap.end() )
+  {
+    if ( it->second.startTime+GetMOLockTimeout() <= time(0) )
+    {
+      it.erase(it);
+    }
+    else
+      throw MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,0),
+                            "MAP:: Locked by MO: reschedule NOW!");
+  }
+}
+
 static void QueryHlrVersion(MapDialog* dialog)
 {
   MutexGuard guard(x_map_lock);
@@ -414,6 +438,36 @@ void ResponseMO(MapDialog* dialog,unsigned status)
   }else{
     __trace2__("MAP::ResponseMO: Et96MapVxForwardSmMOResp OK");
   }
+  unsigned INVALID = (unsigned)-1;
+  if ( dialog->udhiRef != INVALID )
+  {
+    XMOMAPLocker* locker;
+    XMOMAP::iterator it = x_momap.find(dialog->s_imsi);
+    if ( it == x_momap.end() )
+    {
+      XMOMAPLocker lockerX;
+      lockerX.imsi = dialog->s_imsi;
+      lockerX.ref = INVALID;
+      lockerX.parts = INVALID;
+      x_momap[dialog->s_imsi] = lockerX;
+    }
+    else locker = &(*it);
+    if ( locker->ref == dialog->udhiRef )
+    {
+      ++locker->parts;
+      if ( locker->parts >= dialog->udhiMsgCount )
+        x_momap.erase(dialog->s_imsi);
+      else
+        locker->startTime = time(0);
+    }
+    else
+    {
+      locker->ref = dialog->udhiRef;
+      locker->parts = 1;
+      locker->startTime = time(0);
+      //locker->imsi 
+    }
+  }
 }
 
 static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_SM_RP_OA_T *srcAddr)
@@ -515,6 +569,39 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
       sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,(const char*)user_data,user_data_len);
       sms.setIntProperty(Tag::SMPP_SM_LENGTH,user_data_len);
       sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)encoding);
+    }
+  }
+  {
+    if ( ssfh->udhi )
+    {
+      unsigned INVALID = (unsigned)-1;
+      unsigned ref = INVALID;
+      unsigned msgNum = INVALID;
+      unsigned msgCount = INVALID;
+
+      unsigned len = ((unsigned)*user_data)&0x0ff;
+      unsigned char* udh = user_data+1;
+      unsigned ptr = 0;
+      for (; ptr+2 < len; ptr+=2 )
+      {
+        unsigned elLength = udh[ptr+1];
+        if ( udh[ptr] == 0 || udh[ptr] == 8)
+        {
+          if ( udh[ptr] == 0 ) {
+            ref = udh[ptr+2];
+            msgCount = udh[ptr+3];
+            msgNum   = udh[ptr+4];
+          }else{
+            ref = ntohs((unsigned short*)(udh+ptr+2));
+            msgCount = udh[ptr+4];
+            msgNum   = udh[ptr+5];
+          }
+        }
+        else ptr+=elLength;
+      }
+      dialog->udhiRef = ref;
+      dialog->udhiMsgNum = msgNum;
+      dialog->udhiMsgCount = msgCount;
     }
   }
   unsigned esm_class = 0;
@@ -665,6 +752,7 @@ static bool SendSms(MapDialog* dialog){
     segmentation = true;
   }else{
     __trace2__("MAP::SendSMSCToMT: Et96MapVxForwardSmMTReq");
+    CheckLockedByMO();
     if ( dialog->version == 2 ) {
       result = Et96MapV2ForwardSmMTReq( dialog->ssn, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), FALSE);
     }else if ( dialog->version == 1 ){
@@ -706,6 +794,7 @@ static void SendNextMMS(MapDialog* dialog)
 static void SendSegmentedSms(MapDialog* dialog)
 {
   USHORT_T result;
+  CheckLockedByMO();
   __trace2__("MAP::SendSegmentedSms: Et96MapVxForwardSmMTReq");
   if ( dialog->version == 2 ) {
     result = Et96MapV2ForwardSmMTReq( dialog->ssn, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), dialog->mms);
