@@ -22,7 +22,7 @@ namespace profiler{
 
 using namespace smsc::core::buffers;
 using smsc::util::Exception;
-using smsc::util::getSmsText;
+using namespace smsc::util;
 
 struct HashKey{
   Address addr;
@@ -231,6 +231,7 @@ int Profiler::Execute()
 {
   SmscCommand cmd,resp;
   SMS *sms;
+  Array<SMS*> smsarr;
   int len;
   char body[MAX_SHORT_MESSAGE_LENGTH+1];
 //  char buf[MAX_SHORT_MESSAGE_LENGTH+1];
@@ -351,6 +352,7 @@ int Profiler::Execute()
 
     Profile pr=lookup(addr);
     __trace2__("profiler response:%s!",msgstr);
+    /*
     if(pr.codepage==ProfileCharsetOptions::Default)
     {
       //len=ConvertTextTo7Bit(msgstr,strlen(msgstr),body,sizeof(body),CONV_ENCODING_CP1251);
@@ -367,6 +369,13 @@ int Profiler::Execute()
     ans.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,len);
     SmscCommand answer=SmscCommand::makeSumbmitSm(ans,getNextSequenceNumber());
     putIncomingCommand(answer);
+    */
+    splitSms(&ans,msgstr,strlen(msgstr),CONV_ENCODING_CP1251,pr.codepage,smsarr);
+    for(int i=0;i<smsarr.Count();i++)
+    {
+      SmscCommand answer=SmscCommand::makeSumbmitSm(*smsarr[i],getNextSequenceNumber());
+      putIncomingCommand(answer);
+    }
   }
   return 0;
 }
