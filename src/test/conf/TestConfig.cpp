@@ -41,13 +41,17 @@ TestConfig::TestConfig()
 	addrMap["dbSmeInvalidAddr"] = ".7.7.dbSmeInvalidAddr123";
 	strMap["dbSmeSystemId"] = "dbSme";
 	strMap["dbSmeServiceType"] = "dBsmE";
-	intMap["dbSmeProtocolId"] = 23;
+	intMap["dbSmeProtocolId"] = 7;
 	strMap["dbSmePassword"] = "dbSmePasswd";
 	//map proxy
 	strMap["mapProxySystemId"] = "MAP_PROXY";
 	//abonent info
 	addrMap["abonentInfoAddr"] = "+444444444444";
+	addrMap["abonentInfoAlias"] = ".9.9.abonentInfoAlias123";
 	strMap["abonentInfoSystemId"] = "abonentinfo";
+	strMap["abonentInfoServiceType"] = "AboN";
+	intMap["abonentInfoProtocolId"] = 9;
+	strMap["abonentInfoPassword"] = "abonentInfoPasswd";
 	//респонсы профайлера
 	strMap["profilerRespReportNone"] = 
 		"Уведомления доставки отключены (Delivery reports are disabled)";
