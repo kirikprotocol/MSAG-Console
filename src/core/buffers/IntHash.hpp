@@ -4,6 +4,7 @@
 #define INTHASH_MAX_CHAIN_LENGTH 16
 
 #include <string.h>
+#include <stdexcept>
 
 namespace smsc{
 namespace core{
@@ -24,6 +25,7 @@ public:
     reflist=0;
     reflistsize=0;
 
+    emptycount=0;
   }
   IntHash(const IntHash& src)
   {
@@ -119,14 +121,14 @@ public:
     return res;
   }
 
-  T& Get(int key)const
+  const T& Get(int key)const
   {
-    if(!size || !count)throw 0;
-    unsigned idx;
+    if(!size || !count)throw std::runtime_error("get on empty inthash");
+    unsigned int idx;
     int attempt=0;
     do{
       idx=Index(key,attempt);
-      if(refcounts[idx]==0)throw 0;
+      if(refcounts[idx]==0)throw std::runtime_error("get on empty inthash");
       attempt++;
     }while(keys[idx]!=key);
     return values[idx];
@@ -135,7 +137,7 @@ public:
   T* GetPtr(int key)const
   {
     if(!size || !count)return 0;
-    unsigned idx;
+    unsigned int idx;
     int attempt=0;
     do{
       idx=Index(key,attempt);
