@@ -11,6 +11,7 @@ using smsc::util::Logger;
 using namespace smsc::sms; //constants
 using namespace smsc::test::smpp; //constants, SmppUtil
 using namespace smsc::test::sms; //constants
+using namespace smsc::smpp::SmppCommandSet;
 
 SmppTransmitterTestCases::SmppTransmitterTestCases(SmppSession* sess,
 	const Address& addr, const SmeRegistry* _smeReg,
@@ -78,6 +79,7 @@ TCResult* SmppTransmitterTestCases::submitSmAssert(int num)
 				default:
 					throw s;
 			}
+			__dumpPdu__("SmppTransmitterTestCases::submitSmAssert", pdu);
 			res->addFailure(s.value());
 		}
 		catch (...)
@@ -96,13 +98,13 @@ TCResult* SmppTransmitterTestCases::submitSmSync(int num)
 
 TCResult* SmppTransmitterTestCases::submitSmAsync(int num)
 {
-	return submitSm(TC_SUBMIT_SM_ASYNC, true, num);
+	return submitSm(TC_SUBMIT_SM_ASYNC, false, num);
 }
 
 //метод имеет внутреннюю синхронизацию по pduReg->getMutex()
 TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 {
-	TCSelector s(num, 11);
+	TCSelector s(num, 10);
 	TCResult* res = new TCResult(tc, s.getChoice());
 	for (; s.check(); s++)
 	{
@@ -127,42 +129,44 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 			PduData* replacePduData = NULL;
 			switch (s.value())
 			{
+				/*
 				case 1: //пустой serviceType
 					//pdu->get_message().set_serviceType(NULL);
 					pdu->get_message().set_serviceType("");
 					break;
-				case 2: //serviceType максимальной длины
+				*/
+				case 1: //serviceType максимальной длины
 					{
 						EService serviceType;
-						rand_char(MAX_ESERVICE_TYPE_LENGTH, serviceType);
+						rand_char(MAX_SERVICE_TYPE_LENGTH, serviceType);
 						pdu->get_message().set_serviceType(serviceType);
 					}
 					break;
-				case 3: //доставка уже должна была начаться
+				case 2: //доставка уже должна была начаться
 					{
 						SmppTime t;
 						SmppUtil::time2string(time(NULL) - rand1(60), t, __absoluteTime__);
 						pdu->get_message().set_scheduleDeliveryTime(t);
 					}
 					break;
-				case 4: //срок валидности уже закончился
+				case 3: //срок валидности уже закончился
 					{
 						SmppTime t;
 						SmppUtil::time2string(time(NULL) - rand1(60), t, __absoluteTime__);
 						pdu->get_message().set_validityPeriod(t);
 					}
 					break;
-				case 5: //срок валидности больше максимального
+				case 4: //срок валидности больше максимального
 					{
 						SmppTime t;
 						SmppUtil::time2string(__maxValidPeriod__ + 1, t, __absoluteTime__);
 						pdu->get_message().set_validityPeriod(t);
 					}
 					break;
-				case 6: //waitTime > validTime
+				case 5: //waitTime > validTime
 					{
 						SmppTime t;
-						time_t validTime = time(NULL) + rand0(60);
+						time_t validTime = time(NULL) + rand1(60);
 						time_t waitTime = validTime + rand1(60);
 						SmppUtil::time2string(waitTime, t, __numTime__);
 						pdu->get_message().set_scheduleDeliveryTime(t);
@@ -170,27 +174,31 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 						pdu->get_message().set_validityPeriod(t);
 					}
 					break;
-				case 7: //пустое тело сообщения
+				case 6: //пустое тело сообщения
 					pdu->get_message().set_shortMessage(NULL, 0);
 					//pdu->get_message().set_shortMessage("", 0);
 					break;
-				case 8: //тело сообщения максимальной длины
+				case 7: //тело сообщения максимальной длины
 					{
 						ShortMessage msg;
 						rand_char(MAX_MSG_BODY_LENGTH, msg);
 						pdu->get_message().set_shortMessage(msg, MAX_MSG_BODY_LENGTH);
 					}
 					break;
-				case 9: //msgRef одинаковые (эквивалентно msgRef отсутствуют)
+				case 8: //msgRef одинаковые (эквивалентно msgRef отсутствуют)
 					//Согласно GSM 03.40 пункт 9.2.3.25 если совпадают
 					//TP-MR, TP-DA, OA, то при ETSI_REJECT_IF_PRESENT будет ошибка.
 					//Для SMPP все должно работать независимо от msgRef.
 					if (pduReg)
 					{
-						const PduData* pendingPduData =
-							pduReg->getFirstPendingSubmitSmPdu(time(NULL) + rand2(10, 30));
+						PduRegistry::PduDataIterator* it =
+							pduReg->getPduByWaitTime(time(NULL) + rand2(20, 30), LONG_MAX);
+						PduData* pendingPduData = it->next();
+						delete it;
 						if (pendingPduData)
 						{
+							__require__(pendingPduData->pdu &&
+								pendingPduData->pdu->get_commandId() == SUBMIT_SM);
 							PduSubmitSm* pendingPdu =
 								reinterpret_cast<PduSubmitSm*>(pendingPduData->pdu);
 							//pdu->get_message().set_source(...);
@@ -201,16 +209,20 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 						}
 					}
 					break;
-				case 10: //отправка дублированного сообщения без замещения уже существующего
+				case 9: //отправка дублированного сообщения без замещения уже существующего
 					//Согласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 					//destination address and service_type. Сообщение должно быть в 
 					//ENROTE state.
 					if (pduReg)
 					{
-						const PduData* pendingPduData =
-							pduReg->getFirstPendingSubmitSmPdu(time(NULL) + rand2(10, 30));
+						PduRegistry::PduDataIterator* it =
+							pduReg->getPduByWaitTime(time(NULL) + rand2(20, 30), LONG_MAX);
+						PduData* pendingPduData = it->next();
+						delete it;
 						if (pendingPduData)
 						{
+							__require__(pendingPduData->pdu &&
+								pendingPduData->pdu->get_commandId() == SUBMIT_SM);
 							PduSubmitSm* pendingPdu =
 								reinterpret_cast<PduSubmitSm*>(pendingPduData->pdu);
 							pdu->get_message().set_serviceType(
@@ -222,16 +234,20 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 						}
 					}
 					break;
-				case 11: //отправка дублированного сообщения с замещением уже существующего
+				case 10: //отправка дублированного сообщения с замещением уже существующего
 					//Согласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 					//destination address and service_type. Сообщение должно быть в 
 					//ENROTE state.
 					if (pduReg)
 					{
-						replacePduData =
-							pduReg->getFirstPendingSubmitSmPdu(time(NULL) + rand2(10, 30));
+						PduRegistry::PduDataIterator* it =
+							pduReg->getPduByWaitTime(time(NULL) + rand2(20, 30), LONG_MAX);
+						replacePduData = it->next();
+						delete it;
 						if (replacePduData)
 						{
+							__require__(replacePduData->pdu &&
+								replacePduData->pdu->get_commandId() == SUBMIT_SM);
 							PduSubmitSm* replacePdu =
 								reinterpret_cast<PduSubmitSm*>(replacePduData->pdu);
 							pdu->get_message().set_serviceType(
@@ -256,7 +272,12 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 			PduSubmitSmResp* respPdu = NULL;
 			if (sync)
 			{
+				__dumpPdu2__("SmppTransmitterTestCases::submitSmSyncBefore", pdu);
 				respPdu = session->getSyncTransmitter()->submit(*pdu);
+				__dumpPdu2__("SmppTransmitterTestCases::submitSmSyncAfter", pdu);
+				__dumpPdu2__("SmppTransmitterTestCases::processSubmitSmRespSync", respPdu);
+				getLog().debug("[%d]\tsubmitSmSync(%d): seqNum = %d",
+					thr_self(), s.value(), pdu->get_header().get_sequenceNumber());
 				if (!respPdu)
 				{
 					res->addFailure(101);
@@ -264,7 +285,12 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 			}
 			else
 			{
+				__dumpPdu2__("SmppTransmitterTestCases::submitSmAsyncBefore", pdu);
 				respPdu = session->getAsyncTransmitter()->submit(*pdu);
+				__dumpPdu2__("SmppTransmitterTestCases::submitSmAsyncAfter", pdu);
+				__dumpPdu2__("SmppTransmitterTestCases::processSubmitSmRespAsync", respPdu);
+				getLog().debug("[%d]\tsubmitSmAsync(%d): seqNum = %d",
+					thr_self(), s.value(), pdu->get_header().get_sequenceNumber());
 				if (respPdu)
 				{
 					res->addFailure(102);
@@ -280,8 +306,11 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 					pduData.responseFlag = true;
 				}
 				pduData.msgRef = pdu->get_optional().get_userMessageReference();
+				pduData.submitTime = time(NULL);
 				pduData.waitTime =
 					SmppUtil::convert(pdu->get_message().get_scheduleDeliveryTime());
+				pduData.validTime =
+					SmppUtil::convert(pdu->get_message().get_validityPeriod());
 				//pduData.responseFlag = false;
 				pduData.deliveryFlag = false;
 				//если delivery receipt и intermediate notifications не должно быть,
@@ -301,7 +330,7 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 						responseChecker->checkSubmitSmResp(&pduData, *respPdu);
 					for (int i = 0; i < tmp.size(); i++)
 					{
-						res->addFailure(110 + tmp[i]);
+						res->addFailure(tmp[i] > 0 ? 110 + tmp[i] : tmp[i]);
 					}
 				}
 				pduReg->getMutex().Unlock();
