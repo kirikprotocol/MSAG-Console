@@ -1416,6 +1416,7 @@ StateType StateMachine::replace(Tuple& t)
     t.command->get_replaceSm().shortMessage.get(),
     t.command->get_replaceSm().smLength
   );
+  sms.setIntProperty(Tag::SMPP_SM_LENGTH,t.command->get_replaceSm().smLength);
 
   if(!strcmp(sms.getDestinationSmeId(),"MAP_PROXY"))
   {
