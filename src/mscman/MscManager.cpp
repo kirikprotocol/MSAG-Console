@@ -113,8 +113,7 @@ void MscManager::startup(DataSource& ds, Manager& config)
     throw(ConfigException, InitException)
 {
     MutexGuard guard(startupLock);
-  if (!log)
-    log = Logger::getInstance("smsc.mscman.MscManager");
+    if (!log) log = Logger::getInstance("smsc.mscman.MscManager");
     if (instance) throw InitException(MSCMAN_INSTANCE_EXIST);
     instance = new MscManagerImpl(ds, config);
     ((MscManagerImpl *)instance)->Start();
