@@ -573,10 +573,15 @@ void AdRepository::loadUpAds()
             AdsVal* adsByLang = (bNewId) ? new Hash<std::string>(0) : it->second;
 
             std::string adStr = ad ? ad:"";
-            if (adsByLang && !adsByLang->Exists(lang))
+            if (adsByLang && !adsByLang->Exists(lang)) {
                 adsByLang->Insert(lang, adStr);
-            if (bNewId)
+                __trace2__("Added lang='%s' for id=%d, ad='%s'", 
+                           lang, id, ad);
+            }
+            if (bNewId) {
                 ads.insert(AdsPair(id, adsByLang));
+                __trace2__("Inserted id=%d, ad='%s'", id, ad);
+            }
         }
         
         if (rs) delete rs;
@@ -880,7 +885,7 @@ bool AdHistory::getId(const std::string msisdn, int& id)
             id = idManager.getFirstId();
             __trace2__("History for '%s' not found, inserting id=%d",
                        msisdn.c_str(), id);
-            if (id>0)
+            if (id >= 0)
             {
                 insertStmt = connection->createStatement(SQL_INSERT_HISTORY_INFO);
                 insertStmt->setString  (1, msisdn.c_str());
@@ -911,7 +916,7 @@ bool AdHistory::getId(const std::string msisdn, int& id)
             } else {
                 id = idManager.getNextId(last_id);
                 __trace2__("Last id=%d, newid=%d", last_id, id);
-                if (id>0)
+                if (id >= 0)
                 {
                     updateStmt = connection->createStatement(SQL_UPDATE_NOTIFY_HISTORY_INFO);
                     updateStmt->setInt32   (1, id);
