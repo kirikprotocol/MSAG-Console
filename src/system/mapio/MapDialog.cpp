@@ -1083,7 +1083,7 @@ void  MapDialog::Et96MapOpenConf (
         fatal = provErrCodeFatal(*provErrCode_p);
       }
       if ( refuseReason_p ) {
-        const char* reason = "<Unknown-reason>"
+        const char* reason = "<Unknown-reason>";
         switch ( *refuseReason_p ) {
         case ET96MAP_NO_REASON: reason = "ET96MAP_NO_REASON"; break;
         case ET96MAP_INV_DEST_REF: 
