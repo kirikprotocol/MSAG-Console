@@ -802,7 +802,7 @@ void taif(
     {
       causeValue = relCauses.busyCause;
       eventType  = BUSY;
-      inform     = relCauses.unconditionalInform;
+      inform     = relCauses.busyInform;
     }
   }  
   releaseConnection(head,causeValue);
