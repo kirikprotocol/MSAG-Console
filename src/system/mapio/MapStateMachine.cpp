@@ -772,14 +772,17 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
         if ( dialog->isUSSD )
         {
           dialog->state = MAPST_USSDWaitResponce;
+          __trace2__("MAP::%s processing USSD submit responce");
           if ( cmd->get_resp()->get_status() != 0 )
           {
+            __trace2__("MAP::%s delivery error");
             DoUSSRUserResponceError(cmd,dialog.get());
             CloseMapDialog(dialog->dialogid_map,dialog->ssn);
             DropMapDialog(dialog.get());
           }
           else
           {
+            __trace2__("MAP::%s delivery ok");
             {
               MutexGuard ussd_map_guard( ussd_map_lock );
               ussd_map[dialog->ussdSequence] = dialog->dialogid_map;
