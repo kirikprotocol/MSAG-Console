@@ -37,6 +37,7 @@ public class Index extends IndexBean
   protected String mbRestore = null;
   protected String mbLoad = null;
   protected String mbFilter = null;
+  protected String mbQuery = null;
 
   protected int init(List errors)
   {
@@ -261,11 +262,20 @@ public class Index extends IndexBean
   }
      public String getMbFilter()
   {
-    return mbAdd;
+    return mbFilter;
   }
 
   public void setMbFilter(String mbFilter)
   {
     this.mbFilter = mbFilter;
+  }
+      public String getMbQuery()
+  {
+    return mbQuery;
+  }
+
+  public void setMbQuery(String mbQuery)
+  {
+    this.mbQuery = mbQuery;
   }
 }
