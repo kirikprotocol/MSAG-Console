@@ -76,9 +76,7 @@ void AliasManagerFunctionalTest::executeTestCases(
 	//–егистраци€ алиаса с преобразованием только addr->alias, 1/8
 	//–егистраци€ алиаса с переполнением адреса при alias->addr или
 	//	алиаса при addr->alias, 1/8
-	//ѕоиск алиаса по адресу, 2/8
-	//ѕоиск адреса по алиасу, 2/8
-	for (TCSelector s(RAND_SET_TC, 8); s.check(); s++)
+	for (TCSelector s(RAND_SET_TC, 4); s.check(); s++)
 	{
 		switch (s.value())
 		{
@@ -120,6 +118,7 @@ void AliasManagerFunctionalTest::executeTestCases(
 					stack.back()->push_back(res);
 				}
 				break;
+			/*
 			case 5:
 			case 6:
 				{
@@ -134,6 +133,7 @@ void AliasManagerFunctionalTest::executeTestCases(
 					stack.back()->push_back(res);
 				}
 				break;
+			*/
 		}
 	}
 }
@@ -158,6 +158,7 @@ void AliasManagerFunctionalTest::executeTest(
 			executeTestCases(origAlias, origAddr);
 		}
 	}
+	tc.commit();
 	
 	//ѕоиск алиаса и адреса дл€ каждой пары адресов
 	for (int i = 0; i < numAddr; i++)
