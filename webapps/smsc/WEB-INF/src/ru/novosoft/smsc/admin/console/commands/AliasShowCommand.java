@@ -50,7 +50,7 @@ public class AliasShowCommand implements Command
             }
         }
         catch (Exception e) {
-            ctx.setMessage("Couldn't list aliases "+out+". Cause: "+e.getMessage());
+            ctx.setMessage("Couldn't show aliases "+out+". Cause: "+e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             return;
         }

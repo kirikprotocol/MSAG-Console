@@ -98,17 +98,17 @@ view returns [Command cmd] {
 	|	TGT_PROFILE	cmd = viewprofile
 	;
 /* ----------------------- Show action parser --------------------- */
-show returns [Command cmd] {
+show returns [AliasShowCommand cmd] {
     cmd = null;
 }
 	:	TGT_ALIAS (addr:STR { 
-		    //cmd = new AliasShowCommand();
-		    //cmd.setAddress(addr.getText());   
+		    cmd = new AliasShowCommand();
+		    cmd.setAddress(addr.getText());   
 		})
 	;
 	exception[addr]
 	catch [RecognitionException ex] {
-	    throw new RecognitionException("Target address expected");
+	    throw new RecognitionException("Target address for aliases expected");
 	}
 	
 	
