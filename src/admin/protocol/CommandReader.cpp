@@ -16,6 +16,7 @@
 #include <core/network/Socket.hpp>
 #include <logger/Logger.h>
 #include <util/xml/DOMErrorLogger.h>
+#include <util/xml/DOMTreeReader.h>
 
 namespace smsc {
 namespace admin {
@@ -84,6 +85,7 @@ Command* CommandReader::parseCommand(DOMInputSource &source)
 
   try
   {
+    smsc::util::xml::DOMTreeReader reader;
     DOMDocument *data = reader.read(source);
 
     std::auto_ptr<char> command_name(getCommandName(data));

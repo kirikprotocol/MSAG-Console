@@ -5,19 +5,15 @@
 
 #include <inttypes.h>
 #include <vector>
+#include "logger/Logger.h"
 
 #ifndef SMSC_UTIL_CONFIG_ALIAS_ALIASCONFIG
 #define SMSC_UTIL_CONFIG_ALIAS_ALIASCONFIG
-
-#include <util/xml/DOMTreeReader.h>
 
 namespace smsc {
 namespace util {
 namespace config {
 namespace alias {
-
-using smsc::util::xml::DOMTreeReader;
-using smsc::util::xml::ParseException;
 
 struct AliasRecord
 {
@@ -85,7 +81,6 @@ public:
 
   RecordIterator getRecordIterator() const;
 protected:
-  DOMTreeReader reader;
   smsc::logger::Logger *logger;
   SRVector records;
   std::auto_ptr<char> config_filename;

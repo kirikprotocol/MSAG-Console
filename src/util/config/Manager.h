@@ -10,7 +10,6 @@
 #include "util/cstrings.h"
 #include "util/config/ConfigException.h"
 #include "util/config/Config.h"
-#include "util/xml/DOMTreeReader.h"
 
 namespace smsc   {
 namespace util   {
@@ -20,7 +19,6 @@ XERCES_CPP_NAMESPACE_USE
 using smsc::store::StoreConfig;
 using smsc::core::buffers::Hash;
 using smsc::util::cStringCopy;
-using namespace smsc::util::xml;
 
 /**
 * Класс, отвечающий за чтение и запись конфигурации системы.
@@ -205,7 +203,6 @@ protected:
 
 private:
 	static std::auto_ptr<char> config_filename;
-  DOMTreeReader reader;
 	void writeHeader(std::ostream &out);
 	void writeFooter(std::ostream &out);
 

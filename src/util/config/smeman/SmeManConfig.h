@@ -4,14 +4,11 @@
 #include "smeman_structures.h"
 #include <vector>
 
-#include <util/xml/DOMTreeReader.h>
-
 namespace smsc {
 namespace util {
 namespace config {
 namespace smeman {
 
-using smsc::util::xml::DOMTreeReader;
 
 class SmeManConfig
 {
@@ -47,7 +44,6 @@ public:
 
   std::string getText();
 protected:
-  DOMTreeReader reader;
   smsc::logger::Logger *logger;
   SRVector records;
   std::auto_ptr<char> configFileName;

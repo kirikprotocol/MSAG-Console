@@ -7,6 +7,7 @@
 #include "util/cstrings.h"
 #include "util/debug.h"
 #include "sms/sms_const.h"
+#include "util/xml/DOMTreeReader.h"
 
 namespace smsc {
 namespace util {
@@ -210,6 +211,7 @@ RouteConfig::status RouteConfig::load(const char * const filename)
   config_filename.reset(cStringCopy(filename));
   try
   {
+    DOMTreeReader reader;
     DOMDocument *document = reader.read(filename);
     DOMElement *elem = document->getDocumentElement();
     DOMNodeList *subj_defs = elem->getElementsByTagName(XmlStr("subject_def"));

@@ -5,6 +5,7 @@
 #include <xercesc/dom/DOM.hpp>
 #include "logger/Logger.h"
 #include "util/xml/utilFunctions.h"
+#include "util/xml/DOMTreeReader.h"
 
 namespace smsc {
 namespace util {
@@ -70,6 +71,7 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
   try
   {
     configFileName.reset(cStringCopy(filename));
+    smsc::util::xml::DOMTreeReader reader;
     DOMDocument *document = reader.read(filename);
     DOMElement *elem = document->getDocumentElement();
     DOMNodeList *list = elem->getElementsByTagName(XmlStr("smerecord"));

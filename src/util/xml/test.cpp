@@ -3,6 +3,7 @@
 #include "logger/Logger.h"
 #include "util/xml/utilFunctions.h"
 #include "util/xml/SmscTranscoder.h"
+#include "util/xml/init.h"
 #include <xercesc/util/TransENameMap.hpp>
 #include <xercesc/internal/IANAEncodings.hpp>
 
@@ -19,18 +20,22 @@ int main(int argc, char ** argv)
     return usage(argv[0]);
   
   smsc::logger::Logger::Init();
-  DOMTreeReader reader;
-  XMLTransService::Codes resCode = XMLTransService::Ok;
-  std::auto_ptr<XMLTranscoder> transcoder(XMLPlatformUtils::fgTransService->makeNewTranscoderFor("KOI8-R", resCode, 0x7FFF));
-  for (int i=0; i<1024; i++) {
-    cout << endl << i << " --------------------------------------------------------" << endl;
-    DOMDocument *doc = reader.read(argv[1]);
-    DOMElement *docElem = doc->getDocumentElement();
-    if (docElem)
-      cout << *docElem;
-    else 
-      cerr << "docElem is null" << endl;
+  initXerces();
+  {
+    for (int i=0; i<1024; i++) {
+      cout << i << " --------------------------------------------------------" << endl;
+      DOMTreeReader reader;
+      DOMDocument *doc = reader.read(argv[1]);
+      DOMElement *docElem = doc->getDocumentElement();
+      if (docElem)
+        cout << "docElem readed" << endl; //*docElem;
+      else 
+        cerr << "docElem is null" << endl;
+    }
+    cout << "finished" << endl;
   }
+  abort();
+  TerminateXerces();
 }
 
 int usage(char * name)

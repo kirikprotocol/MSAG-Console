@@ -6,7 +6,6 @@
 #include <admin/protocol/Command.h>
 #include <admin/AdminException.h>
 #include <core/network/Socket.hpp>
-#include <util/xml/DOMTreeReader.h>
 
 namespace smsc {
 namespace admin {
@@ -14,7 +13,6 @@ namespace protocol {
 
 using namespace xercesc;
 using smsc::core::network::Socket;
-using namespace smsc::util::xml;
 
 class CommandReader
 {
@@ -43,7 +41,6 @@ protected:
   uint32_t readMessageLength() throw (AdminException);
   smsc::logger::Logger *logger;
   Socket * sock;
-  DOMTreeReader reader;
 
   Command * createCommand(Command::Id id, const DOMDocument *data);
   Command * parseCommand(DOMInputSource &source) throw (AdminException);

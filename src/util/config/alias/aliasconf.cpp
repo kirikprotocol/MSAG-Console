@@ -12,6 +12,7 @@
 #include "util/debug.h"
 #include "util/xml/utilFunctions.h"
 #include "sms/sms.h"
+#include "util/xml/DOMTreeReader.h"
 
 namespace smsc {
 namespace util {
@@ -75,6 +76,7 @@ AliasConfig::status AliasConfig::load(const char * const filename)
   config_filename.reset(cStringCopy(filename));
   try
   {
+    smsc::util::xml::DOMTreeReader reader;
     DOMDocument *document = reader.read(filename);
     DOMElement *elem = document->getDocumentElement();
     DOMNodeList *list = elem->getElementsByTagName(XmlStr("record"));

@@ -4,6 +4,7 @@
 #include <errno.h>
 
 #include "logger/Logger.h"
+#include "util/xml/IconvRegistry.h"
 
 namespace smsc {
 namespace util {
@@ -18,32 +19,36 @@ const char * const ucs2("UCS-2BE");
 const char * const ucs2("UCS-2LE");
 #endif
 
+#ifdef SMSC_DEBUG
 static long instanceCounter = 0;
+#endif //SMSC_DEBUG
 ///////////////////////////////////////////////////////////////////////////////
 /// SmscTranscoder
 ///////////////////////////////////////////////////////////////////////////////
 SmscTranscoder::SmscTranscoder(const XMLCh *const encodingName, const unsigned int blockSize, MemoryManager *const manager)
   :XMLTranscoder(encodingName, blockSize, manager)
 {
+  #ifdef SMSC_DEBUG
   smsc_log_debug(Logger::getInstance("u.x.Trans"), "try to Construct %ld", instanceCounter);
+  #endif //SMSC_DEBUG
   std::auto_ptr<const char> enc(XMLString::transcode(encodingName));
-  iconvHandlerFrom = iconv_open(ucs2, enc.get());
+  iconvHandlerFrom = getIconv(ucs2, enc.get());
   if (iconvHandlerFrom == (iconv_t)-1)
     throw Exception("Could not open iconv for transcode from \"%s\" to \"%s\", errno:%d", enc.get(), ucs2, (int)errno);
   iconvHandlerTo = iconv_open(enc.get(), ucs2);
   if (iconvHandlerTo == (iconv_t)-1) {
-    iconv_close(iconvHandlerFrom);
     throw Exception("Could not open iconv for transcode from \"%s\" to \"%s\", errno:%d", ucs2, enc.get(), (int)errno);
   }
+  #ifdef SMSC_DEBUG
   smsc_log_debug(Logger::getInstance("u.x.Trans"), "Constructed %ld", instanceCounter++);
+  #endif //SMSC_DEBUG
 }
 
 SmscTranscoder::~SmscTranscoder()
 {
-  smsc_log_debug(Logger::getInstance("u.x.Trans"), "try to Destruct %ld", instanceCounter);
-  iconv_close(iconvHandlerFrom);
-  iconv_close(iconvHandlerTo);
+  #ifdef SMSC_DEBUG
   smsc_log_debug(Logger::getInstance("u.x.Trans"), "Destructored %ld", instanceCounter--);
+  #endif //SMSC_DEBUG
 }
 
 unsigned int SmscTranscoder::transcodeFrom(const XMLByte *const srcData,

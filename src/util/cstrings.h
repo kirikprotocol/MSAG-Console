@@ -114,6 +114,17 @@ inline char * trim(char * str)
 	return s;
 }
 
+inline bool cStringEquals(const char * const s1, const char * const s2)
+{
+  return    (s1 == 0 && s2 == 0)
+         || (s1 != 0 && s2 != 0 && strcmp(s1, s2) == 0);
+}
+
+inline bool cStringLess(const char * const s1, const char * const s2)
+{
+  return    (s1 == 0 && s2 != 0)
+         || (s1 != 0 && s2 != 0 && strcmp(s1, s2) < 0);
+}
 
 }				
 }

@@ -3,15 +3,13 @@
 
 #include <xercesc/dom/DOM.hpp>
 #include "util/config/route/RouteStructures.h"
-#include "util/xml/DOMTreeReader.h"
+#include "logger/Logger.h"
 
 namespace smsc {
 namespace util {
 namespace config {
 namespace route {
 
-using smsc::util::xml::DOMTreeReader;
-using smsc::util::xml::ParseException;
 using namespace xercesc;
 
 class SubjectNotFoundException {};
@@ -47,7 +45,6 @@ public:
   RouteIterator getRouteIterator() const;
 
 protected:
-  DOMTreeReader reader;
   smsc::logger::Logger *logger;
   RoutePVector routes;
   SubjectPHash subjects;

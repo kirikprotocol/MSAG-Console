@@ -7,6 +7,7 @@
 #include <core/synchronization/Mutex.hpp>
 #include <util/xml/SmscTranscoder.h>
 #include <util/xml/utilFunctions.h>
+#include <util/xml/IconvRegistry.h>
 
 #include <stdio.h>
 
@@ -42,6 +43,7 @@ void initXerces()
     addEncoding("WINDOWS-1251");
     addEncoding("KOI8-R");
     addEncoding(getLocalEncoding());
+    isXercesInitialized = true;
 	}
 }
 
@@ -51,6 +53,8 @@ void TerminateXerces()
 	if (isXercesInitialized)
 	{
 		XMLPlatformUtils::Terminate();
+    clearIconvs();
+    isXercesInitialized = false;
 	}
 }
 

@@ -8,6 +8,7 @@
 #include "util/xml/init.h"
 #include "util/xml/utilFunctions.h"
 #include "util/debug.h"
+#include "util/xml/DOMTreeReader.h"
 
 namespace smsc   {
 namespace util   {
@@ -28,6 +29,7 @@ Manager::Manager()
   try 
   {
     __trace__("reading config...");
+    DOMTreeReader reader;
     DOMDocument *document = reader.read(config_filename.get());
     if (document)
     {
