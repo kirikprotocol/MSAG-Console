@@ -22,7 +22,7 @@ static bool MAP_aborting = false;
   #define MAX_BIND_TIMEOUT 15
 
 string MapDialogContainer::USSD_ADRESS_VALUE = "79029869998";
-int    MapDialogContainer::ussdSSN = 6;
+ET96MAP_LOCAL_SSN_T MapDialogContainer::ussdSSN = 6;
 //struct SMSC_FORWARD_RESPONSE_T {
 //  ET96MAP_DIALOGUE_ID_T dialogId;
 //};
