@@ -84,6 +84,7 @@ void ResourceManager::init(const _stringlist & localeNames, const std::string & 
   {
     logger.error("Default locale \"%s\" not found in locales.", defaultLocaleName.c_str());
   }
+  instance.get()->validLocales=localeNames;
 }
 
 void ResourceManager::reload() throw ()
@@ -240,7 +241,11 @@ OutputFormatter* ResourceManager::getFormatter(const std::string& key) const thr
 bool ResourceManager::isValidLocale(const std::string& localeName)const
 {
   MutexGuard g(mtx);
-  return locales.find(localeName)!=locales.end();
+  for(_stringlist::const_iterator i=validLocales.begin();i!=validLocales.end();i++)
+  {
+    if(localeName==*i)return true;
+  }
+  return false;
 }
 
 

@@ -49,6 +49,7 @@ private:
   static std::string defaultLocale;
   typedef std::map<std::string, LocaleResources*> _LocalesMap;
   _LocalesMap locales;
+  std::list<std::string> validLocales;
 
   static void init(const std::list<std::string> & localeNames, const std::string & defaultLocaleName) throw();
   ResourceManager() throw ();

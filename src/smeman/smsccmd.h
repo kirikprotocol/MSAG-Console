@@ -768,7 +768,12 @@ public:
         int status=((SmsResp*)_cmd->dta)->get_status()&0xffff;
         switch(xsm->header.get_commandStatus())
         {
-          case SmppStatusSet::ESME_ROK: break;
+          case SmppStatusSet::ESME_ROK:
+          {
+            ((SmsResp*)_cmd->dta)->set_status(
+              MAKE_COMMAND_STATUS(CMD_OK,status)
+              );
+          }break;
           case SmppStatusSet::ESME_RX_T_APPN:
           case SmppStatusSet::ESME_RMSGQFUL:
           {
