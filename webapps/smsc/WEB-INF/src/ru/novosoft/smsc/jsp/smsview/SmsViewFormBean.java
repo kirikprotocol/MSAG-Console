@@ -17,6 +17,19 @@ public class SmsViewFormBean extends SmsQuery
   private SmsView view = new SmsView();
   private SMSCAppContext  context = null;
 
+  private int fromDateDay = 1;
+  private int fromDateMonth = 0;
+  private int fromDateYear = 2002;
+  private int fromDateHour = 0;
+  private int fromDateMinute = 0;
+  private int fromDateSecond = 0;
+
+  public String monthesNames[] = {
+    "January", "February", "March", "April",
+    "May", "June", "July", "August", "September",
+    "October", "November", "December"
+  };
+
   public void setAppContext(Object ctx) {
     if (context == null && ctx instanceof SMSCAppContext) {
       context = (SMSCAppContext)ctx;
@@ -25,6 +38,43 @@ public class SmsViewFormBean extends SmsQuery
   }
   public AppContext getAppContext() {
     return context;
+  }
+
+  public void setFromDateDay(int day) {
+    fromDateDay = day;
+  }
+  public int getFromDateDay() {
+    return fromDateDay;
+  }
+  public void setFromDateMonth(int month) {
+    fromDateMonth = month;
+  }
+  public int getFromDateMonth() {
+    return fromDateMonth;
+  }
+  public void setFromDateYear(int year) {
+    fromDateYear = year;
+  }
+  public int getFromDateYear() {
+    return fromDateYear;
+  }
+  public void setFromDateHour(int hour) {
+    fromDateHour = hour;
+  }
+  public int getFromDateHour() {
+    return fromDateHour;
+  }
+  public void setFromDateMinute(int minute) {
+    fromDateMinute = minute;
+  }
+  public int getFromDateMinute() {
+    return fromDateMinute;
+  }
+  public void setFromDateSecond(int second) {
+    fromDateSecond = second;
+  }
+  public int getFromDateSecond() {
+    return fromDateSecond;
   }
 
   public void processQuery() {
