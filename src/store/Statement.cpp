@@ -890,6 +890,59 @@ ReplaceVWTStatement::ReplaceVWTStatement(Connection* connection, bool assign)
     throw(StorageException)
         : ReplaceStatement(connection, ReplaceVWTStatement::sql, assign) {}
 
+const char* ReplaceAllStatement::sql = (const char*)
+"UPDATE SMS_MSG SET\
+ DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN, TXT_LENGTH=:TXT_LENGTH,\
+ VALID_TIME=:VT, NEXT_TRY_TIME=:WT, MSG_REF=:MSG_REF, SEQ_NUM=:SEQ_NUM\
+ WHERE ID=:ID AND ST=:ENROUTE AND OA=:OA";
+ReplaceAllStatement::ReplaceAllStatement(Connection* connection, bool assign)
+    throw(StorageException)
+        : ReplaceStatement(connection, ReplaceAllStatement::sql, assign) {}
+
+void ReplaceAllStatement::bindSms(SMS& sms)
+    throw(StorageException)
+{
+    ub4 i=1;
+
+    bind(i++, SQLT_UIN, (dvoid *)&(sms.deliveryReport), 
+         (sb4) sizeof(sms.deliveryReport));
+    
+    bodyBufferLen = sms.messageBody.getBufferLength();
+    bodyBuffer = sms.messageBody.getBuffer();
+    indBody = (bodyBuffer && bodyBufferLen <= MAX_BODY_LENGTH) 
+                ? OCI_IND_NOTNULL : OCI_IND_NULL;
+    bodyTextLen = sms.messageBody.getShortMessageLength();
+    bind(i++, SQLT_BIN, (dvoid *) bodyBuffer,
+         (sb4) bodyBufferLen, &indBody);
+    bind(i++, SQLT_UIN, (dvoid *)&(bodyBufferLen),
+         (sb4) sizeof(bodyBufferLen));
+    bind(i++, SQLT_UIN, (dvoid *)&(bodyTextLen),
+         (sb4) sizeof(bodyTextLen));
+    
+    convertDateToOCIDate(&(sms.validTime), &vTime);
+    bind(i++, SQLT_ODT, (dvoid *) &(vTime), (sb4) sizeof(vTime));
+    convertDateToOCIDate(&(sms.nextTime), &wTime);
+    bind(i++, SQLT_ODT, (dvoid *) &(wTime), (sb4) sizeof(wTime));
+    
+    try 
+    {
+        indMsgRef = (sms.hasBinProperty(Tag::SMSC_CONCATINFO)) ? 
+                    OCI_IND_NOTNULL:OCI_IND_NULL;
+    } 
+    catch (...) {
+        throw StorageException("Incorrect Sms body data. Set/Get Property failed!");
+    }
+
+    bind(i++, SQLT_UIN, (dvoid *)&(sms.concatMsgRef),
+         (sb4) sizeof(sms.concatMsgRef), &indMsgRef);
+    bind(i++, SQLT_UIN, (dvoid *)&(sms.concatSeqNum),
+         (sb4) sizeof(sms.concatSeqNum));
+    
+    convertAddressToString(sms.originatingAddress, oa);
+    bind((CONST text *)"OA", (sb4) 2*sizeof(char),
+         SQLT_STR, (dvoid *) (oa), (sb4) sizeof(oa));
+}
+
 /* ------------------------ ChangeStateStatements ----------------------- */
 const char* ToEnrouteStatement::sql = (const char*)
 "UPDATE SMS_MSG SET ATTEMPTS=ATTEMPTS+:ATT, LAST_TRY_TIME=:CT,\

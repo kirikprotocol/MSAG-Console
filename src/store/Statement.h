@@ -397,6 +397,23 @@ namespace smsc { namespace store
         virtual ~ReplaceVWTStatement() {};
     };
     
+    class ReplaceAllStatement : public ReplaceStatement
+    {
+    static const char* sql;
+    protected:
+        
+        sb2         indMsgRef;
+
+    public:
+        
+        ReplaceAllStatement(Connection* connection, bool assign=true)
+            throw(StorageException);
+        virtual ~ReplaceAllStatement() {};
+    
+        void bindSms(SMS& sms)
+            throw(StorageException);
+    };
+    
     class ToEnrouteStatement : public IdStatement
     {
     static const char* sql;

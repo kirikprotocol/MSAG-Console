@@ -241,7 +241,7 @@ namespace smsc { namespace store
          *                   не существует в хранилище.
          * @see SMS
          */
-        virtual void replaceSms(SMSId id, const SMS& sms)
+        virtual void replaceSms(SMSId id, SMS& sms)
                 throw(StorageException, NoSuchMessageException) = 0; 
 
         /**

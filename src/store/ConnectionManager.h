@@ -384,6 +384,7 @@ namespace smsc { namespace store
         ReplaceVTStatement*         replaceVTStmt;
         ReplaceWTStatement*         replaceWTStmt;
         ReplaceVWTStatement*        replaceVWTStmt;
+        ReplaceAllStatement*        replaceAllStmt;
         
         ToEnrouteStatement*         toEnrouteStmt;
         ToDeliveredStatement*       toDeliveredStmt;
@@ -530,7 +531,14 @@ namespace smsc { namespace store
          */
         ReplaceVWTStatement*    getReplaceVWTStatement() 
             throw(ConnectionFailedException); 
-        
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
+        ReplaceAllStatement*    getReplaceAllStatement() 
+            throw(ConnectionFailedException); 
         /**
          * @return подготовленный (хранимый) SQL оператор
          * @exception ConnectionFailedException

@@ -759,14 +759,14 @@ void RemoteStore::replaceSms(SMSId id, const Address& oa,
 #endif
 }
 
-void doReplaceSms(StorageConnection* connection, SMSId id, const SMS& sms)
+void doReplaceSms(StorageConnection* connection, SMSId id, SMS& sms)
     throw(StorageException, NoSuchMessageException)
 {
     __require__(connection);
     
     Body    body;
-    ReplaceVWTStatement* replaceStmt 
-        = connection->getReplaceVWTStatement();
+    ReplaceAllStatement* replaceStmt 
+        = connection->getReplaceAllStatement();
     RetrieveBodyStatement* retrieveBodyStmt
         = connection->getRetrieveBodyStatement();
     
@@ -791,12 +791,7 @@ void doReplaceSms(StorageConnection* connection, SMSId id, const SMS& sms)
         
         body = sms.getMessageBody();
         replaceStmt->bindId(id);
-        replaceStmt->bindBody(body);
-        replaceStmt->bindWaitTime(sms.nextTime);
-        replaceStmt->bindValidTime(sms.validTime);
-        replaceStmt->bindDeliveryReport((dvoid *) &sms.deliveryReport,
-                                        (sb4) sizeof(sms.deliveryReport));
-        replaceStmt->bindOriginatingAddress(sms.getOriginatingAddress());
+        replaceStmt->bindSms(sms);
         
         connection->check(replaceStmt->execute());
 
@@ -824,7 +819,7 @@ void doReplaceSms(StorageConnection* connection, SMSId id, const SMS& sms)
     connection->commit();
 }
 
-void RemoteStore::replaceSms(SMSId id, const SMS& sms)
+void RemoteStore::replaceSms(SMSId id, SMS& sms)
     throw(StorageException, NoSuchMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
@@ -1797,7 +1792,7 @@ void CachedStore::replaceSms(SMSId id, const Address& oa,
     MutexGuard cacheGuard(cacheMutex);
     cache->delSms(id);
 }
-void CachedStore::replaceSms(SMSId id, const SMS& sms)
+void CachedStore::replaceSms(SMSId id, SMS& sms)
     throw(StorageException, NoSuchMessageException)
 {
     

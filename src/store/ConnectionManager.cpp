@@ -520,8 +520,8 @@ StorageConnection::StorageConnection(const char* instance,
     : Connection(instance, user, password), 
         needOverwriteSvcStmt(0L), needOverwriteStmt(0L), needRejectStmt(0L), 
         overwriteStmt(0L), storeStmt(0L), retrieveStmt(0L), retrieveBodyStmt(0L), 
-        destroyStmt(0L), replaceStmt(0L), replaceVTStmt(0L), 
-        replaceWTStmt(0L), replaceVWTStmt(0L), 
+        destroyStmt(0L), replaceStmt(0L), replaceVTStmt(0L),
+        replaceWTStmt(0L), replaceVWTStmt(0L), replaceAllStmt(0L),
         toEnrouteStmt(0L), toDeliveredStmt(0L), toUndeliverableStmt(0L),
         toExpiredStmt(0L), toDeletedStmt(0L), setBodyStmt(0L), getBodyStmt(0L),
         destroyBodyStmt(0L), seqNumStmt(0L)
@@ -548,6 +548,7 @@ void StorageConnection::connect()
         replaceVTStmt = new ReplaceVTStatement(this); 
         replaceWTStmt = new ReplaceWTStatement(this); 
         replaceVWTStmt = new ReplaceVWTStatement(this); 
+        replaceAllStmt = new ReplaceAllStatement(this); 
 
         toEnrouteStmt = new ToEnrouteStatement(this);
         toDeliveredStmt = new ToDeliveredStatement(this);
@@ -638,6 +639,12 @@ ReplaceVWTStatement* StorageConnection::getReplaceVWTStatement()
 {
     connect();
     return replaceVWTStmt;
+}
+ReplaceAllStatement* StorageConnection::getReplaceAllStatement()
+    throw(ConnectionFailedException)
+{
+    connect();
+    return replaceAllStmt;
 }
 ToEnrouteStatement* StorageConnection::getToEnrouteStatement()
     throw(ConnectionFailedException)
