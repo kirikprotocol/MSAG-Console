@@ -3,28 +3,27 @@
 # Copyright (c) 2003 Sibinco, Russia.
 # All rights reserved.
 # 
-# nohup /opt/EINss7166/bin/stack.sh start >> /opt/EINss7166/bin/stack.log 2>&1 &
 
-SS7_HOME=/opt/EINss7166/
+EINSS7_LICENSE_FILE=/opt/EABss7009/.ss7_license
+export EINSS7_LICENSE_FILE
+SS7_HOME=/opt/EABss7009/
 export SS7_HOME
-SS7_CP_CONFIGFILE=/opt/EINss7166/bin/cp.cnf
+SS7_CP_CONFIGFILE=/opt/EABss7009/bin/cp.cnf
 export SS7_CP_CONFIGFILE
-XENVIRONMENT=/opt/EINss7166/bin/ss7mgr.res
+XENVIRONMENT=/opt/EABss7009/bin/ss7mgr.res
 export XENVIRONMENT
-DISPLAY=smsc.novosoft.ru:2
-export DISPLAY
 installdir="${SS7_HOME}bin/"
 cd $installdir
 curwd=`pwd`
 scriptname="stack.sh"
 
 bess="./ss7"
-be="cd /opt/EINss7166/bin/; ${bess} -t &"
+be="cd /opt/EABss7009/bin/; ${bess} -t &"
 logdss="./EinSS7LogD"
-logd="cd /opt/EINss7166/bin; ${logdss} &"
+logd="cd /opt/EABss7009/bin; ${logdss} &"
 ifess="./ife"
-ife="cd /opt/EINss7129/bin/; ${ifess} FEIF01 autostart ife01.cnf -t &"
-runcmd="cd /opt/EINss7166/bin/; ./ss7run ss7.cnf ETSIMAP TCAP SCCP MTPL3 MTPL2"
+ife="cd /opt/EABss7001/bin/; ${ifess} FEIF01 autostart ife01.cnf -t &"
+runcmd="cd /opt/EABss7009/bin/; ./ss7run ss7.cnf ETSIMAP TCAP SCCP MTPL3 MTPL2"
 
 
 startall ()
@@ -122,6 +121,19 @@ tryrestart ()
 	fi
     fi
 }
+trystop ()
+{
+    if [ -s "stack.pid" ]
+    then
+	oldpid=`cat stack.pid`
+	chk=`ps -f -p $oldpid | grep "$scriptname" | awk '{print $2}'`
+	if [ -n "$chk" ]
+	then
+            kill -USR2 ${chk}
+	    exit 13
+	fi
+    fi
+}
 repair ()
 {
         bepid=`ps -ef | grep "$bess" | grep -v grep | awk '{print $2}'`
@@ -171,6 +183,7 @@ case "$1" in
     trystart
     trap "dmb='KILLED'" CHLD
     trap "status='RESTART'" USR1
+    trap "status='STOP'" USR2
     status="START"
     while true;
     do
@@ -184,14 +197,21 @@ case "$1" in
 		stopall
 		trystart
 		status="START"
+	elif [ $status = "STOP" ]
+	    then
+		stopall
+		break
 	fi 
     done    
+    ;;
+'stop')
+    trystop
     ;;
 'restart')
     tryrestart
     ;;
 *)
-    echo "Usage: $0 { start | restart}"
+    echo "Usage: $0 { start | stop | restart}"
     ;;
 esac
 		
