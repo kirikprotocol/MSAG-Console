@@ -510,9 +510,9 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
                      ms_validity);
           throw runtime_error("bad ms_validity value");
         }
-        if ( encoding == MAP_UCS2_ENCODING ) val |= 0x8;
+        if ( encoding == MAP_UCS2_ENCODING ) value |= 0x8;
         //if ( encoding == 0 && encoding == 0x3 ) nothing
-        if ( encoding == MAP_8BIT_ENCODING ) val |= 0x4;
+        if ( encoding == MAP_8BIT_ENCODING ) value |= 0x4;
       }
     }
     *pdu_ptr++ = value;
