@@ -38,7 +38,7 @@ protected:
 	AckText* getExpectedResponse(SmeAckMonitor* monitor,
 		const string& text, time_t recvTime);
 	void processSmeAcknowledgement(SmeAckMonitor* monitor,
-		PduDeliverySm& pdu, time_t recvTime);
+		SmppHeader* header, time_t recvTime);
 };
 
 }

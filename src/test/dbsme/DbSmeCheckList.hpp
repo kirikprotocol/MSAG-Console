@@ -274,8 +274,14 @@ public:
 
 		//submitDbSmeCmd.correct
 		__reg_tc__("submitDbSmeCmd", "Отправка sms на db sme");
+		__reg_tc__("submitDbSmeCmd.submitSm",
+			"Отправка submit_sm pdu");
+		__reg_tc__("submitDbSmeCmd.dataSm",
+			"Отправка data_sm pdu");
 		__reg_tc__("submitDbSmeCmd.cmdTextDefault",
 			"Текст команды в дефолтной кодировке SC");
+		__reg_tc__("submitDbSmeCmd.cmdText7bit",
+			"Текст команды в 7bit кодировке SC");
 		__reg_tc__("submitDbSmeCmd.cmdTextUcs2",
 			"Текст команды в кодировке UCS2");
 		__reg_tc__("submitDbSmeCmd.jobNameMixedCase",

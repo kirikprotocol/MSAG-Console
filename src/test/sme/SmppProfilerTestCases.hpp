@@ -46,16 +46,15 @@ public:
 	 * ќтветные сообщение от profiler доставл€ютс€ правильно.
 	 */
 	virtual void processSmeAcknowledgement(SmeAckMonitor* monitor,
-		PduDeliverySm& pdu, time_t recvTime);
+		SmppHeader* header, time_t recvTime);
 
 protected:
 	virtual Category& getLog();
 	void sendUpdateProfilePdu(const string& text, PduData::IntProps* intProps,
 		PduData::StrProps* strProps, PduData::ObjProps* objProps, bool sync,
 		uint8_t dataCoding);
-	bool checkPdu(PduDeliverySm &pdu);
 	AckText* getExpectedResponse(SmeAckMonitor* monitor,
-		PduDeliverySm &pdu, time_t recvTime);
+		SmppHeader* header, time_t recvTime);
 };
 
 }

@@ -95,50 +95,44 @@ AckText* AbonentInfoTestCases::getExpectedResponse(const string& input,
 void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
 	bool sync, uint8_t dataCoding, bool correct)
 {
-	__decl_tc12__;
+	__decl_tc__;
 	try
 	{
-		//создать pdu
-		PduSubmitSm* pdu = new PduSubmitSm();
+		//текст сообщения
+		switch (dataCoding)
+		{
+			case DEFAULT:
+				__tc__("queryAbonentInfo.cmdTextDefault"); __tc_ok__;
+				break;
+			case SMSC7BIT:
+				__tc__("queryAbonentInfo.cmdText7bit"); __tc_ok__;
+				break;
+			case UCS2:
+				__tc__("queryAbonentInfo.cmdTextUcs2"); __tc_ok__;
+				break;
+			default:
+				__unreachable__("Invalid data coding"); __tc_ok__;
+		}
+		int msgLen;
+		auto_ptr<char> msg = encode(input, dataCoding, msgLen, false);
+		//адрес
 		__cfg_addr__(abonentInfoAliasSmpp);
 		__cfg_addr__(abonentInfoAliasMap);
 		Address abonentInfoAlias;
 		switch (rand1(2))
 		{
 			case 1:
-				__tc1__("queryAbonentInfo.smppAddr");
+				__tc__("queryAbonentInfo.smppAddr"); __tc_ok__;
 				abonentInfoAlias = abonentInfoAliasSmpp;
 				break;
 			case 2:
-				__tc1__("queryAbonentInfo.mapAddr");
+				__tc__("queryAbonentInfo.mapAddr"); __tc_ok__;
 				abonentInfoAlias = abonentInfoAliasMap;
 				break;
 			default:
 				__unreachable__("Invalid address");
 		}
-		//отключить short_message & message_payload
-		fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, abonentInfoAlias,
-			false, OPT_ALL & ~OPT_MSG_PAYLOAD);
-		//установить немедленную доставку
-		pdu->get_message().set_esmClass(0x0); //иначе abonent info отлупит
-		pdu->get_message().set_scheduleDeliveryTime("");
-		//текст сообщения
-		switch (dataCoding)
-		{
-			case DEFAULT:
-				__tc2__("queryAbonentInfo.cmdTextDefault");
-				break;
-			case UCS2:
-				__tc2__("queryAbonentInfo.cmdTextUcs2");
-				break;
-			default:
-				__unreachable__("Invalid data coding");
-		}
-		int msgLen;
-		auto_ptr<char> msg = encode(input, dataCoding, msgLen, false);
-		pdu->get_message().set_shortMessage(msg.get(), msgLen);
-		pdu->get_message().set_dataCoding(dataCoding);
-		//отправить pdu
+		//установить props
 		PduData::StrProps strProps;
 		strProps["abonentInfoTc.input"] = input;
 		PduData::ObjProps objProps;
@@ -155,13 +149,40 @@ void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
 		}
 		//при неправильно заданном адресе abonent info не пришлет ответ
 		PduType pduType = ack ? PDU_EXT_SME : PDU_NULL_OK;
-		fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync,
-			NULL, &strProps, &objProps, pduType);
-		__tc12_ok__;
+		if (rand0(1))
+		{
+			__tc__("queryAbonentInfo.submitSm");
+			PduSubmitSm* pdu = new PduSubmitSm();
+			//отключить short_message & message_payload
+			fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu,
+				abonentInfoAlias, false, OPT_ALL & ~OPT_MSG_PAYLOAD);
+			//установить немедленную доставку
+			pdu->get_message().set_esmClass(0x0); //иначе abonent info отлупит
+			pdu->get_message().set_scheduleDeliveryTime("");
+			pdu->get_message().set_dataCoding(dataCoding);
+			pdu->get_message().set_shortMessage(msg.get(), msgLen);
+			fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync,
+				NULL, &strProps, &objProps, pduType);
+		}
+		else
+		{
+			__tc__("queryAbonentInfo.submitSm");
+			PduDataSm* pdu = new PduDataSm();
+			//отключить short_message & message_payload
+			fixture->transmitter->setupRandomCorrectDataSmPdu(pdu,
+				abonentInfoAlias, OPT_ALL & ~OPT_MSG_PAYLOAD);
+			//установить немедленную доставку
+			pdu->get_data().set_esmClass(0x0); //иначе abonent info отлупит
+			pdu->get_data().set_dataCoding(dataCoding);
+			pdu->get_optional().set_messagePayload(msg.get(), msgLen);
+			fixture->transmitter->sendDataSmPdu(pdu, NULL, sync,
+				NULL, &strProps, &objProps, pduType);
+		}
+		__tc_ok__;
 	}
 	catch(...)
 	{
-		__tc12_fail__(100);
+		__tc_fail__(100);
 		error();
 		//throw;
 	}
@@ -286,16 +307,18 @@ AckText* AbonentInfoTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	return new AckText(s.str(), DEFAULT, valid);
 }
 
-#define __compare__(errCode, field, value) \
-	if (value != pdu.field) { __tc_fail__(errCode); }
+#define __check__(errCode, cond) \
+	if (!(cond)) { __tc_fail__(errCode); }
 
 void AbonentInfoTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
-	PduDeliverySm& pdu, time_t recvTime)
+	SmppHeader* header, time_t recvTime)
 {
 	__decl_tc__;
+	SmsPduWrapper pdu(header, 0);
+	__require__(pdu.isDeliverSm() && pdu.get_message().size_shortMessage());
 	//декодировать
 	const string text = decode(pdu.get_message().get_shortMessage(),
-		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding(), false);
+		pdu.get_message().size_shortMessage(), pdu.getDataCoding(), false);
 	if (!monitor->pduData->objProps.count("abonentInfoTc.output"))
 	{
 		__unreachable__("specific to abonent info internals");
@@ -314,19 +337,17 @@ void AbonentInfoTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	}
 	//проверить содержимое полученной pdu
 	__tc__("queryAbonentInfo.ack.checkFields");
-	__compare__(1, get_message().get_dataCoding(), ack->dataCoding);
-	if (text.length() > getMaxChars(ack->dataCoding))
-	{
-		__tc_fail__(2);
-	}
+	SmppOptional opt;
+	opt.set_userMessageReference(pdu.getMsgRef());
+	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 0);
 	__tc_ok_cond__;
-	__tc__("queryAbonentInfo.ack.checkText");
+
 	__trace2__("abonent info cmd: input:\n%s\noutput:\n%s\nexpected:\n%s\n",
 		monitor->pduData->strProps["abonentInfoTc.input"].c_str(), text.c_str(), ack->text.c_str());
-	if (text != ack->text)
-	{
-		__tc_fail__(1);
-	}
+
+	__tc__("queryAbonentInfo.ack.checkText");
+	__check__(1, pdu.getDataCoding() == ack->dataCoding);
+	__check__(2, text == ack->text);
 	__tc_ok_cond__;
 	monitor->setNotExpected();
 }

@@ -38,36 +38,56 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& text,
 	PduData::ObjProps* objProps, bool sync, uint8_t dataCoding)
 {
 	__decl_tc__;
+	__cfg_addr__(profilerAlias);
 	try
 	{
-		//создать pdu
-		PduSubmitSm* pdu = new PduSubmitSm();
-		__cfg_addr__(profilerAlias);
-		//отключить short_message & message_payload
-		fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, profilerAlias,
-			false, OPT_ALL & ~OPT_MSG_PAYLOAD);
-		//установить немедленную доставку
-		pdu->get_message().set_esmClass(0x0); //иначе профайлер отлупит
-		pdu->get_message().set_scheduleDeliveryTime("");
 		//текст сообщения
 		switch (dataCoding)
 		{
 			case DEFAULT:
-				__tc__("updateProfile.cmdTextDefault");
+				__tc__("updateProfile.cmdTextDefault"); __tc_ok__;
+				break;
+			case SMSC7BIT:
+				__tc__("updateProfile.cmdText7bit"); __tc_ok__;
 				break;
 			case UCS2:
-				__tc__("updateProfile.cmdTextUcs2");
+				__tc__("updateProfile.cmdTextUcs2"); __tc_ok__;
 				break;
 			default:
 				__unreachable__("Invalid data coding");
 		}
 		int msgLen;
 		auto_ptr<char> msg = encode(text, dataCoding, msgLen, false);
-		pdu->get_message().set_shortMessage(msg.get(), msgLen);
-		pdu->get_message().set_dataCoding(dataCoding);
-		//отправить pdu
-		fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync, intProps,
-			strProps, objProps, PDU_EXT_SME);
+		//submit_sm
+		if (rand0(1))
+		{
+			__tc__("updateProfile.submitSm");
+			PduSubmitSm* pdu = new PduSubmitSm();
+			//отключить short_message & message_payload
+			fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, profilerAlias,
+				false, OPT_ALL & ~OPT_MSG_PAYLOAD);
+			//установить немедленную доставку
+			pdu->get_message().set_esmClass(0x0); //иначе профайлер отлупит
+			pdu->get_message().set_scheduleDeliveryTime("");
+			pdu->get_message().set_dataCoding(dataCoding);
+			pdu->get_message().set_shortMessage(msg.get(), msgLen);
+			fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync, intProps,
+				strProps, objProps, PDU_EXT_SME);
+		}
+		else
+		{
+			__tc__("updateProfile.submitSm");
+			PduDataSm* pdu = new PduDataSm();
+			//отключить short_message & message_payload
+			fixture->transmitter->setupRandomCorrectDataSmPdu(pdu, profilerAlias,
+				OPT_ALL & ~OPT_MSG_PAYLOAD);
+			//установить немедленную доставку
+			pdu->get_data().set_esmClass(0x0); //иначе профайлер отлупит
+			pdu->get_data().set_dataCoding(dataCoding);
+			pdu->get_optional().set_messagePayload(msg.get(), msgLen);
+			fixture->transmitter->sendDataSmPdu(pdu, NULL, sync, intProps,
+				strProps, objProps, PDU_EXT_SME);
+		}
 		__tc_ok__;
 		//обновить профиль, ответные сообщения от профайлера и
 		//подтверждения доставки  уже по новым настройкам
@@ -227,12 +247,13 @@ void SmppProfilerTestCases::updateProfileIncorrect(bool sync, uint8_t dataCoding
 	}
 
 AckText* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
-	PduDeliverySm &pdu, time_t recvTime)
+	SmppHeader* header, time_t recvTime)
 {
 	__decl_tc__;
 	__cfg_int__(timeCheckAccuracy);
+	SmsPduWrapper pdu(header, 0);
 	Address addr;
-	SmppUtil::convert(pdu.get_message().get_dest(), &addr);
+	SmppUtil::convert(pdu.getDest(), &addr);
 	time_t t;
 	const Profile& profile = fixture->profileReg->getProfile(addr, t);
 	bool valid = t + timeCheckAccuracy <= recvTime;
@@ -287,8 +308,11 @@ AckText* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	__unreachable__("Invalid sms was sent to profiler");
 }
 
+#define __check__(errCode, cond) \
+	if (!(cond)) { __tc_fail__(errCode); }
+
 void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
-	PduDeliverySm& pdu, time_t recvTime)
+	SmppHeader* header, time_t recvTime)
 {
 	__require__(monitor);
 	__decl_tc__;
@@ -296,39 +320,41 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	{
 		return;
 	}
+	SmsPduWrapper pdu(header, 0);
+	__require__(pdu.isDataSm());
 	const string text = decode(pdu.get_message().get_shortMessage(),
-		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding(), false);
+		pdu.get_message().size_shortMessage(), pdu.getDataCoding(), false);
 	if (!monitor->pduData->objProps.count("profilerTc.output"))
 	{
-		AckText* ack = getExpectedResponse(monitor, pdu, recvTime);
+		AckText* ack = getExpectedResponse(monitor, header, recvTime);
 		ack->ref();
 		monitor->pduData->objProps["profilerTc.output"] = ack;
 	}
 	AckText* ack =
 		dynamic_cast<AckText*>(monitor->pduData->objProps["profilerTc.output"]);
 	__require__(ack);
-	if (ack->valid)
+	if (!ack->valid)
 	{
-		//зафиксировать время изменения профиля
-		fixture->profileReg->setProfileUpdateTime(fixture->smeAddr, 0);
-		//проверить и обновить профиль
-		__tc__("updateProfile.ack.checkFields");
-		SmppOptional opt;
-		opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());
-		__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 0);
-		__tc_ok_cond__;
-		__tc__("updateProfile.ack.checkText");
-		if (pdu.get_message().get_dataCoding() != ack->dataCoding)
-		{
-			__tc_fail__(1);
-		}
-		if (text != ack->text)
-		{
-			__trace2__("profiler ack text mismatch: received:\n%s\nexpected:\n%s\n",
-				text.c_str(), ack->text.c_str());
-			__tc_fail__(2);
-		}
+		__trace__("monitor is not valid");
+		monitor->setNotExpected();
+		return;
 	}
+	//зафиксировать время изменения профиля
+	fixture->profileReg->setProfileUpdateTime(fixture->smeAddr, 0);
+	//проверить и обновить профиль
+	__tc__("updateProfile.ack.checkFields");
+	SmppOptional opt;
+	opt.set_userMessageReference(pdu.getMsgRef());
+	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 0);
+	__tc_ok_cond__;
+
+	__trace2__("profiler ack text: output:\n%s\nexpected:\n%s\n",
+		text.c_str(), ack->text.c_str());
+
+	__tc__("updateProfile.ack.checkText");
+	__check__(1, pdu.getDataCoding() == ack->dataCoding);
+	__check__(2, text == ack->text);
+	__tc_ok_cond__;
 	monitor->setNotExpected();
 }
 

@@ -17,8 +17,14 @@ void profilerTc()
 	//updateProfile
 	__reg_tc__("updateProfile",
 		"Отправка smpp сообщений менеджеру профилей");
+	__reg_tc__("updateProfile.submitSm",
+		"Отправка submit_sm pdu");
+	__reg_tc__("updateProfile.dataSm",
+		"Отправка data_sm pdu");
 	__reg_tc__("updateProfile.cmdTextDefault",
 		"Текст команды в дефолтной кодировке SC");
+	__reg_tc__("updateProfile.cmdText7bit",
+		"Текст команды в 7bit кодировке SC");
 	__reg_tc__("updateProfile.cmdTextUcs2",
 		"Текст команды в кодировке UCS2");
 	__reg_tc__("updateProfile.reportOptions",
@@ -69,8 +75,14 @@ void abonentInfoTc()
 	//queryAbonentInfo
 	__reg_tc__("queryAbonentInfo",
 		"Отправка smpp сообщений abonent info sme");
+	__reg_tc__("queryAbonentInfo.submitSm",
+		"Отправка submit_sm pdu");
+	__reg_tc__("queryAbonentInfo.dataSm",
+		"Отправка data_sm pdu");
 	__reg_tc__("queryAbonentInfo.cmdTextDefault",
 		"Текст команды в дефолтной кодировке SC");
+	__reg_tc__("queryAbonentInfo.cmdText7bit",
+		"Текст команды в 7bit кодировке SC");
 	__reg_tc__("queryAbonentInfo.cmdTextUcs2",
 		"Текст команды в кодировке UCS2");
 	__reg_tc__("queryAbonentInfo.smppAddr",

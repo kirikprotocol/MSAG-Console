@@ -138,31 +138,50 @@ void DbSmeTestCases::sendDbSmePdu(const Address& addr, const string& input,
 	__decl_tc__;
 	try
 	{
-		//создать pdu
-		PduSubmitSm* pdu = new PduSubmitSm();
-		//отключить short_message & message_payload
-		fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, addr,
-			false, OPT_ALL & ~OPT_MSG_PAYLOAD);
-		//установить немедленную доставку
-		pdu->get_message().set_esmClass(0x0); //иначе db sme отлупит
-		pdu->get_message().set_scheduleDeliveryTime("");
 		//текст сообщения
 		switch (dataCoding)
 		{
 			case DEFAULT:
-				__tc__("submitDbSmeCmd.cmdTextDefault");
+				__tc__("submitDbSmeCmd.cmdTextDefault"); __tc_ok__;
+				break;
+			case SMSC7BIT:
+				__tc__("submitDbSmeCmd.cmdText7bit"); __tc_ok__;
 				break;
 			case UCS2:
-				__tc__("submitDbSmeCmd.cmdTextUcs2");
+				__tc__("submitDbSmeCmd.cmdTextUcs2"); __tc_ok__;
 				break;
 			default:
 				__unreachable__("Invalid data coding");
 		}
 		int msgLen;
 		auto_ptr<char> msg = encode(input, dataCoding, msgLen);
-		pdu->get_message().set_shortMessage(msg.get(), msgLen);
-		pdu->get_message().set_dataCoding(dataCoding);
-		fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync, intProps, strProps, objProps, PDU_EXT_SME);
+		if (rand0(1))
+		{
+			__tc__("submitDbSmeCmd.submitSm");
+			PduSubmitSm* pdu = new PduSubmitSm();
+			//отключить short_message & message_payload
+			fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, addr,
+				false, OPT_ALL & ~OPT_MSG_PAYLOAD);
+			//установить немедленную доставку
+			pdu->get_message().set_esmClass(0x0); //иначе db sme отлупит
+			pdu->get_message().set_scheduleDeliveryTime("");
+			pdu->get_message().set_dataCoding(dataCoding);
+			pdu->get_message().set_shortMessage(msg.get(), msgLen);
+			fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync, intProps, strProps, objProps, PDU_EXT_SME);
+		}
+		else
+		{
+			__tc__("submitDbSmeCmd.dataSm");
+			PduDataSm* pdu = new PduDataSm();
+			//отключить short_message & message_payload
+			fixture->transmitter->setupRandomCorrectDataSmPdu(pdu, addr,
+				OPT_ALL & ~OPT_MSG_PAYLOAD);
+			//установить немедленную доставку
+			pdu->get_data().set_esmClass(0x0); //иначе db sme отлупит
+			pdu->get_data().set_dataCoding(dataCoding);
+			pdu->get_optional().set_messagePayload(msg.get(), msgLen);
+			fixture->transmitter->sendDataSmPdu(pdu, NULL, sync, intProps, strProps, objProps, PDU_EXT_SME);
+		}
 		__tc_ok__;
 	}
 	catch(...)
