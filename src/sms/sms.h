@@ -89,7 +89,7 @@ namespace smsc {
 
     const int MAX_ESERVICE_TYPE_LENGTH = 5;
     const int MAX_ADDRESS_VALUE_LENGTH = 20;
-    const int MAX_SHORT_MESSAGE_LENGTH = 256; //depricated
+    const int MAX_SHORT_MESSAGE_LENGTH = 255; //depricated
     const int MAX_BODY_LENGTH          = 1650;
     // move it to SQL statements processing
 
