@@ -144,6 +144,7 @@ int main(int argc,char* argv[])
            "\t -p password (default == sid)\n"
            "\t -t bind type (tx,rx,trx)\n"
            "\t -u send messages in unicode\n"
+           "\t -7 send messages in 7 in 8 bit\n"
            "\t -d send messages as DATA_SM\n"
            "\t -m {D|T} send messages in datagram or transaction mode\n"
            "\t -e N probability of answer with temp error\n"
@@ -171,6 +172,8 @@ int main(int argc,char* argv[])
 
   int bindType=BindType::Transceiver;
 
+  bool smsc7bit=false;
+
   for(int i=2;i<argc;i+=2)
   {
     char *opt=argv[i];
@@ -179,6 +182,11 @@ int main(int argc,char* argv[])
       case 'u':
       {
         unicode=true;
+        i--;
+      }continue;
+      case '7':
+      {
+        smsc7bit=true;
         i--;
       }continue;
       case 'd':
@@ -353,11 +361,17 @@ int main(int argc,char* argv[])
 
       if(unicode)
       {
-        short *msg=new short[len+1];
-        ConvertMultibyteToUCS2(message,len,msg,len*2,CONV_ENCODING_KOI8R);
+        auto_ptr<short> msg(new short[len+1]);
+        ConvertMultibyteToUCS2(message,len,msg.get(),len*2,CONV_ENCODING_KOI8R);
         s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::UCS2);
         len*=2;
-        s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,(char*)msg,len);
+        s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,(char*)msg.get(),len);
+      }else if(smsc7bit)
+      {
+        auto_ptr<char> msg(new char[len*3+1]);
+        len=ConvertLatin1ToSMSC7Bit(message,len,msg.get());
+        s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::SMSC7BIT);
+        s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,msg.get(),len);
       }else
       {
         s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
