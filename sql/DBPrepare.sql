@@ -138,10 +138,10 @@ CREATE TABLE SMS_BILL
    PAYER_TON      NUMBER         NOT NULL,   -- filled by stored procedure (by OA/DDA)
    PAYER_NPI      NUMBER         NOT NULL,   -- filled by stored procedure (by OA/DDA)
    PAYER_IMSI     VARCHAR2(21)   NULL,       -- filled by stored procedure (by SRC/DST IMSI)
+   PAYER_MSC      VARCHAR2(21)   NULL,       -- filled by stored procedure (by SRC/DST MSC)
    OTHER_ADDR     VARCHAR2(21)   NULL,       -- filled by stored procedure (by OA/DDA)
    OTHER_TON      NUMBER         NULL,       -- filled by stored procedure (by OA/DDA)
    OTHER_NPI      NUMBER         NULL,       -- filled by stored procedure (by OA/DDA)
-   OTHER_MSC      VARCHAR2(21)   NULL,       -- filled by stored procedure (by SRC/DST MSC)
    ROUTE_ID       VARCHAR2(32)   NULL,       -- ROUTE_ID from SMS_MSG
    SERVICE_CODE   NUMBER         NULL,       -- SERVICE_ID from SMS_MSG
    TXT_LENGTH     NUMBER         NULL,       -- add it to SMS_MSG
@@ -171,25 +171,25 @@ BEGIN
    SELECT SMS_BILL_SEQ.NEXTVAL INTO billId FROM DUAL;
    INSERT INTO SMS_BILL 
      (ID, MSG_ID, CALL_DIRECTION, RECORD_TYPE, SUBMIT, FINALIZED, STATUS,
-      PAYER_ADDR, PAYER_TON, PAYER_NPI, PAYER_IMSI,
-      OTHER_ADDR, OTHER_TON, OTHER_NPI, OTHER_MSC,
+      PAYER_ADDR, PAYER_TON, PAYER_NPI, PAYER_IMSI, PAYER_MSC,
+      OTHER_ADDR, OTHER_TON, OTHER_NPI,
       ROUTE_ID, SERVICE_CODE, TXT_LENGTH) 
    VALUES 
      (billId, smsId, 'O', 10, smsSubmit, smsFinalized, smsStatus, 
-      smsOaVal, smsOaTon, smsOaNpi, smsOaImsi,
-      smsDaVal, smsDaTon, smsDaNpi, smsDaMsc,
+      smsOaVal, smsOaTon, smsOaNpi, smsOaImsi, smsOaMsc,
+      smsDaVal, smsDaTon, smsDaNpi, 
       smsRouteId, smsServiceId, smsTxtLen);
    
    SELECT SMS_BILL_SEQ.NEXTVAL INTO billId FROM DUAL;
    INSERT INTO SMS_BILL 
      (ID, MSG_ID, CALL_DIRECTION, RECORD_TYPE, SUBMIT, FINALIZED, STATUS,
-      PAYER_ADDR, PAYER_TON, PAYER_NPI, PAYER_IMSI,
-      OTHER_ADDR, OTHER_TON, OTHER_NPI, OTHER_MSC,
+      PAYER_ADDR, PAYER_TON, PAYER_NPI, PAYER_IMSI, PAYER_MSC,
+      OTHER_ADDR, OTHER_TON, OTHER_NPI, 
       ROUTE_ID, SERVICE_CODE, TXT_LENGTH) 
    VALUES 
      (billId, smsId, 'I', 20, smsSubmit, smsFinalized, smsStatus, 
-      smsDaVal, smsDaTon, smsDaNpi, smsDaImsi,
-      smsOaVal, smsOaTon, smsOaNpi, smsOaMsc,
+      smsDaVal, smsDaTon, smsDaNpi, smsDaImsi, smsDaMsc,
+      smsOaVal, smsOaTon, smsOaNpi, 
       smsRouteId, smsServiceId, smsTxtLen);
 
 END CREATE_BILLING_RECORD;
