@@ -598,6 +598,44 @@ TCResult* AliasManagerTestCases::findAddressByAlias(const Address& alias)
 	return res;
 }
 
+TCResult* AliasManagerTestCases::checkInverseTransformation(const Address& addr)
+{
+	TCResult* res = new TCResult(TC_CHECK_INVERSE_TRANSFORMATION);
+	try
+	{
+		Address alias = addr, addr2, alias2;
+		if (aliasMan->AddressToAlias(addr, alias2))
+		{
+			if (!aliasMan->AliasToAddress(alias2, addr2))
+			{
+				res->addFailure(101);
+			}
+			else if (!SmsUtil::compareAddresses(addr, addr2))
+			{
+				res->addFailure(102);
+			}
+		}
+		if (aliasMan->AliasToAddress(alias, addr2))
+		{
+			if (!aliasMan->AddressToAlias(addr2, alias2))
+			{
+				res->addFailure(103);
+			}
+			else if (!SmsUtil::compareAddresses(alias, alias2))
+			{
+				res->addFailure(104);
+			}
+		}
+	}
+	catch(...)
+	{
+		error();
+		res->addFailure(100);
+	}
+	debug(res);
+	return res;
+}
+
 TCResult* AliasManagerTestCases::iterateAliases()
 {
 	TCResult* res = new TCResult(TC_ITERATE_ALIASES);

@@ -158,20 +158,18 @@ void AliasManagerFunctionalTest::executeTest(
 	}
 	tc.commit();
 	
-	//ѕоиск алиаса и адреса дл€ каждой пары адресов
+	//ѕоиск алиаса и адреса
 	for (int i = 0; i < numAddr; i++)
 	{
-		for (int j = 0; j < numAddr; j++)
-		{
-			Address& origAlias = *addr[i];
-			Address& origAddr = *addr[j];
-			TCResult* res1 = tc.findAliasByAddress(origAddr);
-			TCResult* res2 = tc.findAddressByAlias(origAlias);
-			filter->addResult(res1);
-			filter->addResult(res2);
-			delete res1;
-			delete res2;
-		}
+		TCResult* res1 = tc.findAliasByAddress(*addr[i]);
+		TCResult* res2 = tc.findAddressByAlias(*addr[i]);
+		TCResult* res3 = tc.checkInverseTransformation(*addr[i]);
+		filter->addResult(res1);
+		filter->addResult(res2);
+		filter->addResult(res3);
+		delete res1;
+		delete res2;
+		delete res3;
 	}
 
 	//»терирование по списку зарегистрированных алиасов
@@ -183,17 +181,15 @@ void AliasManagerFunctionalTest::executeTest(
 	//ѕоиск алиаса и адреса дл€ каждой пары адресов
 	for (int i = 0; i < numAddr; i++)
 	{
-		for (int j = 0; j < numAddr; j++)
-		{
-			Address& origAlias = *addr[i];
-			Address& origAddr = *addr[j];
-			TCResult* res1 = tc.findAliasByAddress(origAddr);
-			TCResult* res2 = tc.findAddressByAlias(origAlias);
-			filter->addResult(res1);
-			filter->addResult(res2);
-			delete res1;
-			delete res2;
-		}
+		TCResult* res1 = tc.findAliasByAddress(*addr[i]);
+		TCResult* res2 = tc.findAddressByAlias(*addr[i]);
+		TCResult* res3 = tc.checkInverseTransformation(*addr[i]);
+		filter->addResult(res1);
+		filter->addResult(res2);
+		filter->addResult(res3);
+		delete res1;
+		delete res2;
+		delete res3;
 	}
 
 	//»терирование по списку зарегистрированных алиасов
@@ -242,6 +238,8 @@ void saveCheckList(TCResultFilter* filter)
 		filter->getResults(TC_FIND_ALIAS_BY_ADDRESS));
 	cl.writeResult("ѕоиск адреса по алиасу",
 		filter->getResults(TC_FIND_ADDRESS_BY_ALIAS));
+	cl.writeResult("ѕреобразование addr->alias->addr и alias->addr->alias однозначное",
+		filter->getResults(TC_CHECK_INVERSE_TRANSFORMATION));
 	cl.writeResult("»терирование по списку зарегистрированных алиасов",
 		filter->getResults(TC_ITERATE_ALIASES));
 }

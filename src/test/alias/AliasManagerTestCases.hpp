@@ -33,6 +33,7 @@ const char* const TC_ADD_CORRECT_ALIAS_NOT_MATCH_ALIAS =
 const char* const TC_DELETE_ALIASES = "deleteAliases";
 const char* const TC_FIND_ALIAS_BY_ADDRESS = "findAliasByAddress";
 const char* const TC_FIND_ADDRESS_BY_ALIAS = "findAddressByAlias";
+const char* const TC_CHECK_INVERSE_TRANSFORMATION = "checkInverseTransformation";
 const char* const TC_ITERATE_ALIASES = "iterateAliases";
 
 /**
@@ -88,6 +89,11 @@ public:
 	 * Поиск адреса по алиасу.
 	 */
 	TCResult* findAddressByAlias(const Address& alias);
+
+	/**
+	 * Преобразование addr->alias->addr и alias->addr->alias однозначное.
+	 */
+	TCResult* checkInverseTransformation(const Address& addr);
 
 	/**
 	 * Итерирование по списку зарегистрированных алиасов.
