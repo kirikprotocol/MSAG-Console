@@ -196,7 +196,7 @@ int partitionSms(SMS* sms,int dstdc)
     msg=bufTr.get();
   }
   int maxlen=134,maxfulllen=140;
-  if(dstdc==DataCoding::DEFAULT)
+  if(dc==DataCoding::DEFAULT || dstdc==DataCoding::DEFAULT)
   {
     if(udhi)
     {
