@@ -76,7 +76,9 @@
 	<section name="abonentinfo">
 		<param name="systemId" type="string">abonentinfo</param>
 		<param name="service_type" type="string">AboN</param>
-		<param name="protocol_id" type="int">9</param>
+		<param name="protocol_id" type="int">10</param>
+		<param name="smpp_access_address" type="string">+44444444444444</param>
+		<param name="mobile_access_address" type="string">+555555555555555</param>
 	</section>
 
 	<section name="profiler">
