@@ -283,7 +283,9 @@ void Smsc::init(const SmscConfigs& cfg)
   tp.startTask(profiler);
 
   try{
-    smeman.registerSmeProxy(cfg.cfgman->getString("profiler.systemId"),profiler);
+    smeman.registerInternallSmeProxy(
+      cfg.cfgman->getString("profiler.systemId"),
+      profiler);
   }catch(...)
   {
     log.warn("Failed to register profiler");
@@ -298,7 +300,9 @@ void Smsc::init(const SmscConfigs& cfg)
     ai->protId=cfg.cfgman->getInt("abonentinfo.protocol_id");
     tp.startTask(ai);
     try{
-      smeman.registerSmeProxy("abonentinfo",ai);
+      smeman.registerInternallSmeProxy(
+        cfg.cfgman->getString("abonentinfo.systemId"),
+        ai);
     }catch(exception& e)
     {
       log.warn("Failed to register abonentinfo");
@@ -312,7 +316,9 @@ void Smsc::init(const SmscConfigs& cfg)
   smscsme->protId=cfg.cfgman->getInt("core.protocol_id");
   tp.startTask(smscsme);
   try{
-    smeman.registerSmeProxy(cfg.cfgman->getString("core.systemId"),smscsme);
+    smeman.registerInternallSmeProxy(
+      cfg.cfgman->getString("core.systemId"),
+      smscsme);
   }catch(exception& e)
   {
     log.warn("Failed to register smscsme");

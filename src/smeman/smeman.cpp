@@ -2,6 +2,7 @@
   $Id$
 */
 #include "smeman.h"
+#include "util/Logger.h"
 #include <stdexcept>
 #include <string>
 
@@ -144,7 +145,8 @@ static uint32_t nextProxyUniqueId()
 }
 // ------ SmeRegistrar implementation --------------------------
 
-void SmeManager::registerSmeProxy(const SmeSystemId& systemId, SmeProxy* smeProxy)
+virtual void SmeManager::registerInternallSmeProxy(const SmeSystemId& systemId,
+                                SmeProxy* smeProxy)
 {
 __synchronized__
 
@@ -164,6 +166,47 @@ __synchronized__
     __trace2__("Failed to register proxy with sid:%s",systemId.c_str());
     __warning__("Sme proxy with tihs systemId already registered");
     throw runtime_error(string("proxy with id ")+systemId+" already exists");
+  }
+  {
+    MutexGuard guard(records[index]->mutex);
+    records[index]->proxy = smeProxy;
+    records[index]->uniqueId = nextProxyUniqueId();
+  }
+  dispatcher.attachSmeProxy(smeProxy,index);
+}
+
+
+void SmeManager::registerSmeProxy(const SmeSystemId& systemId,
+                                  const SmePassword& pwd,
+                                  SmeProxy* smeProxy)
+{
+__synchronized__
+
+  __require__ ( smeProxy != NULL );
+  {
+    SmeProxyPriority p = smeProxy->getPriority();
+    if (!( p > SmeProxyPriorityMinBr && p < SmeProxyPriorityMaxBr ))
+      throw runtime_error("proxy has incorrect priority");
+  }
+  SmeIndex index = internalLookup(systemId);
+  if ( index == INVALID_SME_INDEX )
+  {
+    throw runtime_error(string("unknown systm id:")+systemId);
+  }
+  if ( records[index]->proxy )
+  {
+    __trace2__("Failed to register proxy with sid:%s",systemId.c_str());
+    __warning__("Sme proxy with tihs systemId already registered");
+    throw runtime_error(string("proxy with id ")+systemId+" already exists");
+  }
+  if ( records[index]->info.password!=pwd)
+  {
+    __trace2__("Invalid password for sme %s (%s!=%s)",systemId.c_str(),
+      records[index]->info.password.c_str(),
+      pwd.c_str());
+    smsc::util::Logger::getCategory("smeman.register").
+      error("Attempt to register sme %s with invalid password",systemId.c_str());
+    throw runtime_error(string("Invalid password for sme:")+systemId);
   }
   {
     MutexGuard guard(records[index]->mutex);
@@ -212,7 +255,7 @@ SmeIndex SmeManager::internalLookup(const SmeSystemId& systemId) const
 //__synchronized__ не нужно поскольку вызывается из синхронизированных методов
   for ( Records::const_iterator p = records.begin(); p != records.end(); ++p )
   {
-    if ( (*p) == 0 ) 
+    if ( (*p) == 0 )
     {
       __warning__("iterator pointed on null element");
     }

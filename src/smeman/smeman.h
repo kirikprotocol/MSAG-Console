@@ -141,7 +141,11 @@ public:
   virtual SmeIndex getSmeIndex() const; // ?????
 */
   // SmeRegistrar implementation
-  virtual void registerSmeProxy(const SmeSystemId& systemId, SmeProxy* smeProxy);
+  virtual void registerSmeProxy(const SmeSystemId& systemId,
+                                const SmePassword& pwd,
+                                SmeProxy* smeProxy);
+  virtual void registerInternallSmeProxy(const SmeSystemId& systemId,
+                                SmeProxy* smeProxy);
   virtual void unregisterSmeProxy(const SmeSystemId& systemId);
 
   // SmeDispatcher implementation

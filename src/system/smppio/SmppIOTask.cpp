@@ -227,7 +227,10 @@ int SmppInputThread::Execute()
 
               try{
                 trace("try to register sme");
-                smeManager->registerSmeProxy(bindpdu->get_systemId(),proxy);
+                smeManager->registerSmeProxy(
+                  bindpdu->get_systemId(),
+                  bindpdu->get_password(),
+                  proxy);
                 proxy->setId(bindpdu->get_systemId());
                 resppdu.get_header().
                   set_commandStatus(SmppStatusSet::ESME_ROK);

@@ -14,6 +14,7 @@ namespace smeman {
 
 //typedef const char* SmeSystemId;
 typedef std::string SmeSystemId;
+typedef std::string SmePassword;
 typedef int32_t SmeIndex;
 typedef int SmeNType;
 
@@ -32,5 +33,3 @@ class SmeError : public std::exception
 
 
 #endif
-
-
