@@ -82,6 +82,22 @@ vector<int> compare(uint8_t dc1, const char* str1, int len1,
 	return res;
 }
 
+uint8_t getDataCoding(int num)
+{
+	const uint8_t dataCodings[] = {DATA_CODING_SMSC_DEFAULT, DATA_CODING_UCS2};
+	switch (num)
+	{
+		case RAND_TC:
+			return dataCodings[rand0(1)];
+		case 1:
+			return DATA_CODING_SMSC_DEFAULT;
+		case 2:
+			return DATA_CODING_UCS2;
+		default:
+			__unreachable__("Invalid num");
+	}
+}
+
 }
 }
 }
