@@ -29,6 +29,7 @@ const char* const TC_PROCESS_NORMAL_SMS = "processNormalSms";
 const char* const TC_PROCESS_DELIVERY_RECEIPT = "processDeliveryReceipt";
 const char* const TC_PROCESS_INTERMEDIATE_NOTIFICATION =
 	"processIntermediateNotification";
+const char* const TC_HANDLE_ERROR = "handleError";
 
 /**
  * Абстрактный класс для обработки результатов тест кейсов для
@@ -88,6 +89,10 @@ public:
 	virtual void processQuerySmResp(const PduQuerySmResp &pdu);
 	virtual void processCancelSmResp(const PduCancelSmResp &pdu);
 	virtual void processAlertNotificatin(const PduAlertNotification &pdu);
+
+	/**
+	 * Отсутствие внутренних ошибок в smpp receiver.
+	 */
 	virtual void handleError(int errorCode);
 
 protected:
