@@ -17,13 +17,17 @@ using namespace smsc::smpp::SmppCommandSet; //constants
 using namespace smsc::smpp::SmppStatusSet; //constants
 using namespace smsc::smpp::DataCoding; //constants
 
-static const int NO_ROUTE = 1;
-static const int INVALID_VALID_TIME = 2;
-static const int INVALID_WAIT_TIME = 3;
-static const int INVALID_DATA_CODING = 4;
-static const int INVALID_SERVICE_TYPE = 5;
-static const int INVALID_SOURCE_ADDR = 6;
-static const int TRANSACTION_ROLLBACK = 7;
+typedef enum
+{
+	NO_ROUTE = 1,
+	INVALID_VALID_TIME = 2,
+	INVALID_WAIT_TIME = 3,
+	INVALID_DATA_CODING = 4,
+	INVALID_SERVICE_TYPE = 5,
+	INVALID_SOURCE_ADDR = 6,
+	TRANSACTION_ROLLBACK = 7,
+	INVALID_BIND_STATUS = 8,
+} SmppError;
 
 set<int> SmppPduChecker::checkSubmitSm(PduData* pduData)
 {
@@ -36,9 +40,15 @@ set<int> SmppPduChecker::checkSubmitSm(PduData* pduData)
 	Address srcAddr;
 	SmppUtil::convert(pdu->get_message().get_source(), &srcAddr);
 	set<int> res;
-	//без проверки на bound sme
-	if (!fixture->routeChecker->isDestReachable(pdu->get_message().get_source(),
-		pdu->get_message().get_dest(), false))
+	//тип sme
+	if (fixture->smeType != SME_TRANSMITTER && fixture->smeType != SME_TRANSCEIVER)
+	{
+		res.insert(INVALID_BIND_STATUS);
+	}
+	//без проверки на bound cnfnec
+	SmeType destType = fixture->routeChecker->isDestReachable(
+		pdu->get_message().get_source(), pdu->get_message().get_dest());
+	if (destType == SME_NO_ROUTE)
 	{
 		res.insert(NO_ROUTE);
 	}
@@ -72,6 +82,11 @@ set<int> SmppPduChecker::checkSubmitSm(PduData* pduData)
 	{
 		res.insert(TRANSACTION_ROLLBACK);
 	}
+#ifndef DISABLE_TRACING
+	ostringstream s;
+	copy(res.begin(), res.end(), ostream_iterator<int>(s, ","));
+	__trace2__("checkSubmitSm(): res = %s", s.str().c_str());
+#endif
 	return res;
 }
 
@@ -208,6 +223,9 @@ void SmppPduChecker::processResp(ResponseMonitor* monitor,
 			break;
 		case ESME_RSYSERR:
 			__check__("processResp.checkCmdStatusSystemError", TRANSACTION_ROLLBACK);
+			break;
+		case ESME_RINVBNDSTS:
+			__check__("processResp.checkCmdStatusInvalidBindStatus", INVALID_BIND_STATUS);
 			break;
 		default:
 			__tc__("processResp.checkCmdStatusOther");

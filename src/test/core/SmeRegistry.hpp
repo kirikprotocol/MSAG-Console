@@ -22,6 +22,15 @@ using smsc::smeman::SmeInfo;
 using smsc::smeman::SmeSystemId;
 using smsc::test::sms::ltAddress;
 
+typedef enum
+{
+	SME_NO_ROUTE = 1,
+	SME_NOT_BOUND = 2,
+	SME_RECEIVER = 3,
+	SME_TRANSMITTER = 4,
+	SME_TRANSCEIVER = 5
+} SmeType;
+
 /**
  * Реестр sme. Все методы несинхронизованы и требуют внешней синхронизации.
  */
@@ -32,9 +41,9 @@ class SmeRegistry
 		const Address smeAddr;
 		const SmeInfo sme;
 		PduRegistry* pduReg;
-		bool bound;
+		SmeType smeType;
 		SmeData(const Address& _smeAddr, const SmeInfo& _sme, PduRegistry* _pduReg)
-		: smeAddr(_smeAddr), sme(_sme), pduReg(_pduReg), bound(false) {}
+		: smeAddr(_smeAddr), sme(_sme), pduReg(_pduReg), smeType(SME_NO_ROUTE) {}
 		~SmeData()
 		{
 			if (pduReg)
@@ -75,7 +84,7 @@ public:
 
 	void deleteSme(const SmeSystemId& smeId);
 
-	void bindSme(const SmeSystemId& smeId);
+	void bindSme(const SmeSystemId& smeId, SmeType smeType);
 
 	void clear();
 
@@ -91,8 +100,8 @@ public:
 
 	SmeIterator* iterator() const;
 
-	bool isSmeBound(const SmeSystemId& smeId) const;
-	bool isSmeBound(const Address& smeAddr) const;
+	SmeType getSmeBindType(const SmeSystemId& smeId) const;
+	SmeType getSmeBindType(const Address& smeAddr) const;
 
 	void dump(FILE* log) const;
 };

@@ -16,10 +16,9 @@ using smsc::alias::AliasInfo;
 using smsc::router::RouteInfo;
 using smsc::test::conf::TestConfig;
 using smsc::test::smeman::SmeManagerTestCases;
-using smsc::test::core::RouteHolder;
-using smsc::test::core::RouteUtil;
 using smsc::test::sms::operator==;
 using namespace smsc::test::sms;
+using namespace smsc::test::core;
 using namespace smsc::test::util;
 
 void ConfigUtil::setupSystemSme()
@@ -33,7 +32,7 @@ void ConfigUtil::setupSystemSme()
 	SmeManagerTestCases::setupRandomCorrectSmeInfo(&smscSme);
 	smscSme.systemId = smscSystemId;
 	smeReg->registerSme(smscAddr, smscSme, false, true);
-	smeReg->bindSme(smscSme.systemId);
+	smeReg->bindSme(smscSme.systemId, SME_TRANSCEIVER);
 	//алиас для smsc sme
 	AliasInfo smscAliasInfo;
 	smscAliasInfo.addr = smscAddr;
@@ -49,7 +48,7 @@ void ConfigUtil::setupSystemSme()
 	SmeManagerTestCases::setupRandomCorrectSmeInfo(&profilerSme);
 	profilerSme.systemId = profilerSystemId;
 	smeReg->registerSme(profilerAddr, profilerSme, false, true);
-	smeReg->bindSme(profilerSme.systemId);
+	smeReg->bindSme(profilerSme.systemId, SME_TRANSCEIVER);
 	//алиас для profiler
 	AliasInfo profilerAliasInfo;
 	profilerAliasInfo.addr = profilerAddr;
@@ -65,7 +64,7 @@ void ConfigUtil::setupSystemSme()
 	SmeManagerTestCases::setupRandomCorrectSmeInfo(&abonentInfoSme);
 	abonentInfoSme.systemId = abonentInfoSystemId;
 	smeReg->registerSme(abonentInfoAddr, abonentInfoSme, false, true);
-	smeReg->bindSme(abonentInfoSme.systemId);
+	smeReg->bindSme(abonentInfoSme.systemId, SME_TRANSCEIVER);
 	//алиас для abonent info
 	AliasInfo abonentInfoAliasInfo;
 	abonentInfoAliasInfo.addr = abonentInfoAddr;
@@ -79,7 +78,7 @@ void ConfigUtil::setupSystemSme()
 	SmeManagerTestCases::setupRandomCorrectSmeInfo(&mapProxySme);
 	mapProxySme.systemId = mapProxySystemId;
 	smeReg->registerSme("+123", mapProxySme, false, true);
-	smeReg->bindSme(mapProxySme.systemId);
+	smeReg->bindSme(mapProxySme.systemId, SME_TRANSCEIVER);
 }
 
 void ConfigUtil::setupSystemSmeRoutes()
@@ -159,17 +158,22 @@ void ConfigUtil::checkRoute(const Address& origAddr, const SmeSystemId& origSmeI
 			(*numRoutes)++;
 		}
 		const SmeSystemId& smeId = routeHolder->route.smeSystemId;
-		bool smeBound = smeReg->isSmeBound(smeId);
-		if (smeBound)
+		SmeType smeType = smeReg->getSmeBindType(smeId);
+		switch (smeType)
 		{
-			if (numBound)
-			{
-				(*numBound)++;
-			}
+			case SME_RECEIVER:
+			case SME_TRANSMITTER:
+			case SME_TRANSCEIVER:
+				if (numBound)
+				{
+					(*numBound)++;
+				}
+				break;
+			default: //SME_NO_ROUTE, SME_NOT_BOUND
+				;
 		}
-		__trace2__("route: origAddr = %s, origSmeId = %s, destAias = %s, route to = %s, sme bound = %s",
-			str(origAddr).c_str(), origSmeId.c_str(), str(destAlias).c_str(), smeId.c_str(),
-			(smeBound ? "yes" : "no"));
+		__trace2__("route: origAddr = %s, origSmeId = %s, destAias = %s, route to = %s, sme type = %d",
+			str(origAddr).c_str(), origSmeId.c_str(), str(destAlias).c_str(), smeId.c_str(), smeType);
 	}
 	else
 	{
@@ -186,22 +190,21 @@ void ConfigUtil::checkRoute2(const Address& origAddr, const SmeSystemId& origSme
 	if (routeHolder1)
 	{
 		const SmeSystemId& smeId1 = routeHolder1->route.smeSystemId;
-		bool smeBound1 = smeReg->isSmeBound(smeId1);
+		SmeType smeType1 = smeReg->getSmeBindType(smeId1);
 		const RouteHolder* routeHolder2 = routeReg->lookup(destAddr, origAddr);
 		if (routeHolder2)
 		{
 			const SmeSystemId& smeId2 = routeHolder2->route.smeSystemId;
-			bool smeBound2 = smeReg->isSmeBound(smeId2);
-			__trace2__("route: origAddr = %s, origSmeId = %s, destAias = %s, route to = %s, sme bound = %s, back route to = %s, sme bound = %s",
+			SmeType smeType2 = smeReg->getSmeBindType(smeId2);
+			__trace2__("route: origAddr = %s, origSmeId = %s, destAias = %s, route to = %s, sme type = %d, back route to = %s, sme type = %d",
 				str(origAddr).c_str(), origSmeId.c_str(), str(destAlias).c_str(),
-				smeId1.c_str(), (smeBound1 ? "yes" : "no"),
-				smeId2.c_str(), (smeBound2 ? "yes" : "no"));
+				smeId1.c_str(), smeType1, smeId2.c_str(), smeType2);
 		}
 		else
 		{
-			__trace2__("route: origAddr = %s, origSmeId = %s, destAias = %s, route to = %s, sme bound = %s, no back route",
+			__trace2__("route: origAddr = %s, origSmeId = %s, destAias = %s, route to = %s, sme type = %d, no back route",
 				str(origAddr).c_str(), origSmeId.c_str(), str(destAlias).c_str(),
-				smeId1.c_str(), (smeBound1 ? "yes" : "no"));
+				smeId1.c_str(), smeType1);
 		}
 	}
 	else

@@ -30,6 +30,7 @@ using smsc::test::core::AliasRegistry;
 using smsc::test::core::SmeAckMonitor;
 using smsc::test::core::PduRegistry;
 using smsc::test::core::RouteRegistry;
+using smsc::test::core::SmeType;
 using smsc::test::core::SmeRegistry;
 using smsc::test::core::ProfileRegistry;
 using smsc::test::core::RouteChecker;
@@ -67,6 +68,7 @@ typedef map<const Address, PduHandler*, ltAddress> PduHandlerMap;
 
 struct SmppFixture
 {
+	const SmeType smeType;
 	SmppSession* session;
 	const SmeInfo smeInfo;
 	const Address smeAddr;
@@ -85,7 +87,7 @@ struct SmppFixture
 	SmppReceiverTestCases* receiver;
 	SmppPduSender* pduSender;
 
-	SmppFixture(const SmeInfo& smeInfo, const Address& smeAddr,
+	SmppFixture(SmeType smeType, const SmeInfo& smeInfo, const Address& smeAddr,
 		SmppResponseSender* respSender, const SmeRegistry* smeReg,
 		const AliasRegistry* aliasReg, const RouteRegistry* routeReg,
 		ProfileRegistry* profileReg, CheckList* chkList);

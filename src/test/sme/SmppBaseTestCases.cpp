@@ -9,11 +9,11 @@ namespace sme {
 
 using smsc::util::Logger;
 using smsc::core::synchronization::MutexGuard;
-using smsc::sme::SmppConnectException;
 using smsc::test::conf::TestConfig;
+using namespace smsc::sme; //SmppConnectException, BindType
+using namespace smsc::smpp::SmppCommandSet;
 using namespace smsc::test::core; //flags
 using namespace smsc::test::util;
-using namespace smsc::smpp::SmppCommandSet;
 
 Category& SmppBaseTestCases::getLog()
 {
@@ -21,49 +21,45 @@ Category& SmppBaseTestCases::getLog()
 	return log;
 }
 
-bool SmppBaseTestCases::bindCorrectSme(int num)
+bool SmppBaseTestCases::bindCorrectSme()
 {
-	TCSelector s(num, 1);
 	__decl_tc__;
-	for (; s.check(); s++)
+	try
 	{
-		try
+		int bindType;
+		switch(fixture->smeType)
 		{
-			switch(s.value())
-			{
-				case 1: //BIND_TRANCIEVER
-					__tc__("bindCorrectSme.bindTransceiver");
-					break;
-				/*
-				case 2: //BIND_RECIEVER
-					__tc__("bindCorrectSme.bindReceiver");
-					__tc_fail__(1);
-					break;
-				case 3: //BIND_TRANSMITTER
-					__tc__("bindCorrectSme.bindTransmitter");
-					__tc_fail__(2);
-					break;
-				*/
-				default:
-					__unreachable__("Invalid num");
-			}
-			fixture->session->connect();
-			__tc_ok_cond__;
-			return true;
+			case SME_TRANSCEIVER:
+				__tc__("bindCorrectSme.bindTransceiver");
+				bindType = BindType::Transceiver;
+				break;
+			case SME_RECEIVER:
+				__tc__("bindCorrectSme.bindReceiver");
+				bindType = BindType::Receiver;
+				break;
+			case SME_TRANSMITTER:
+				__tc__("bindCorrectSme.bindTransmitter");
+				bindType = BindType::Transmitter;
+				break;
+			default:
+				__unreachable__("Invalid smeType");
 		}
-		catch (SmppConnectException& e)
-		{
-			__tc_fail__(100);
-			__trace2__("Bind failed: %s for systemId = %s, password = %s",
-				e.getTextReason(), fixture->smeInfo.systemId.c_str(), fixture->smeInfo.password.c_str());
-			return false;
-		}
-		catch(...)
-		{
-			__tc_fail__(100);
-			error();
-			return false;
-		}
+		fixture->session->connect(bindType);
+		__tc_ok_cond__;
+		return true;
+	}
+	catch (SmppConnectException& e)
+	{
+		__tc_fail__(100);
+		__trace2__("Bind failed: %s for systemId = %s, password = %s",
+			e.getTextReason(), fixture->smeInfo.systemId.c_str(), fixture->smeInfo.password.c_str());
+		return false;
+	}
+	catch(...)
+	{
+		__tc_fail__(100);
+		error();
+		return false;
 	}
 }
 

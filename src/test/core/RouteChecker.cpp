@@ -25,8 +25,7 @@ RouteChecker::RouteChecker(const SmeRegistry* _smeReg,
 	__require__(routeReg);
 }
 
-bool RouteChecker::isDestReachable(PduAddress& src, PduAddress& dest,
-	bool checkSme) const
+SmeType RouteChecker::isDestReachable(PduAddress& src, PduAddress& dest) const
 {
 	//dest является алиасом
 	Address srcAddr, destAlias;
@@ -35,19 +34,19 @@ bool RouteChecker::isDestReachable(PduAddress& src, PduAddress& dest,
 	const Address destAddr = aliasReg->findAddressByAlias(destAlias);
 	//проверка маршрута
 	const RouteHolder* routeHolder = routeReg->lookup(srcAddr, destAddr);
-	if (checkSme && routeHolder)
+	SmeType smeType;
+	if (routeHolder)
 	{
-		bool bound = smeReg->isSmeBound(routeHolder->route.smeSystemId);
-		__trace2__("isDestReachable(): destAddr = %s, route = %s, bound = %s",
-			str(destAddr).c_str(), str(*routeHolder).c_str(), bound ? "true" : "false");
-		return bound;
+		smeType = smeReg->getSmeBindType(routeHolder->route.smeSystemId);
+		__trace2__("isDestReachable(): destAddr = %s, route = %s, smeType = %d",
+				str(destAddr).c_str(), str(*routeHolder).c_str(), smeType);
 	}
 	else
 	{
-		__trace2__("isDestReachable(): destAddr = %s, route = %s",
-			str(destAddr).c_str(), routeHolder ? str(*routeHolder).c_str() : "NULL");
-		return routeHolder;
+		smeType = SME_NO_ROUTE;
+		__trace2__("isDestReachable(): destAddr = %s, no route", str(destAddr).c_str());
 	}
+	return smeType;
 }
 
 const RouteInfo* RouteChecker::getRouteInfoForNormalSms(PduAddress& src,

@@ -29,11 +29,12 @@ RespPduFlag PduHandler::isAccepted(uint32_t status)
 	}
 }
 
-SmppFixture::SmppFixture(const SmeInfo& _smeInfo, const Address& _smeAddr,
-	SmppResponseSender* _respSender, const SmeRegistry* _smeReg,
-	const AliasRegistry* _aliasReg, const RouteRegistry* _routeReg,
-	ProfileRegistry* _profileReg, CheckList* _chkList)
-: session(NULL), smeInfo(_smeInfo), smeAddr(_smeAddr),
+SmppFixture::SmppFixture(SmeType _smeType, const SmeInfo& _smeInfo,
+	const Address& _smeAddr, SmppResponseSender* _respSender,
+	const SmeRegistry* _smeReg, const AliasRegistry* _aliasReg,
+	const RouteRegistry* _routeReg, ProfileRegistry* _profileReg,
+	CheckList* _chkList)
+: smeType(_smeType), session(NULL), smeInfo(_smeInfo), smeAddr(_smeAddr),
 	respSender(_respSender), smeReg(_smeReg), aliasReg(_aliasReg),
 	routeReg(_routeReg), pduReg(smeReg->getPduRegistry(smeAddr)),
 	profileReg(_profileReg), chkList(_chkList), routeChecker(NULL),

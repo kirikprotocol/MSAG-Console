@@ -45,8 +45,6 @@ AckText* AbonentInfoTestCases::getExpectedResponse(const string& input,
 	{
 		Address alias(input.c_str());
 		const Address addr = fixture->aliasReg->findAddressByAlias(alias);
-		//status
-		bool bound = fixture->smeReg->isSmeBound(addr);
 		//profile
 		time_t t;
 		const Profile& profile = fixture->profileReg->getProfile(addr, t);
@@ -200,14 +198,13 @@ AckText* AbonentInfoTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	const string input = monitor->pduData->strProps["abonentInfoInput"];
 	Address alias(input.c_str());
 	const Address addr = fixture->aliasReg->findAddressByAlias(alias);
-	//status
-	bool bound = fixture->smeReg->isSmeBound(addr);
 	//profile
 	time_t t;
 	const Profile& profile = fixture->profileReg->getProfile(addr, t);
 	bool valid = t + timeCheckAccuracy <= recvTime;
 	ostringstream s;
-	s << input << ":" << (bound ? 1 : 0) << "," << profile.codepage;
+	//статус абонента всегда 1
+	s << input << ":1," << profile.codepage;
 	return new AckText(s.str(), DEFAULT, valid);
 }
 

@@ -74,12 +74,13 @@ void SmeRegistry::deleteSme(const SmeSystemId& smeId)
 	__unreachable__("Address not found");
 }
 
-void SmeRegistry::bindSme(const SmeSystemId& smeId)
+void SmeRegistry::bindSme(const SmeSystemId& smeId, SmeType smeType)
 {
 	SmeIdMap::iterator it = smeIdMap.find(smeId);
 	__require__(it != smeIdMap.end());
-	it->second->bound = true;
-	__trace2__("SmeRegistry::bindSme(): smeId = %s", smeId.c_str());
+	it->second->smeType = smeType;
+	__trace2__("SmeRegistry::bindSme(): smeId = %s, smeType = %d",
+		smeId.c_str(), smeType);
 }
 
 void SmeRegistry::clear()
@@ -141,16 +142,16 @@ SmeRegistry::SmeIterator* SmeRegistry::iterator() const
 	return new SmeIterator(smeIdMap.begin(), smeIdMap.end());
 }
 
-bool SmeRegistry::isSmeBound(const SmeSystemId& smeId) const
+SmeType SmeRegistry::getSmeBindType(const SmeSystemId& smeId) const
 {
 	SmeIdMap::const_iterator it = smeIdMap.find(smeId);
-	return (it != smeIdMap.end() && it->second->bound);
+	return (it == smeIdMap.end() ? SME_NOT_BOUND : it->second->smeType);
 }
 
-bool SmeRegistry::isSmeBound(const Address& smeAddr) const
+SmeType SmeRegistry::getSmeBindType(const Address& smeAddr) const
 {
 	AddressMap::const_iterator it = addrMap.find(smeAddr);
-	return (it != addrMap.end() && it->second->bound);
+	return (it == addrMap.end() ? SME_NOT_BOUND : it->second->smeType);
 }
 
 void SmeRegistry::dump(FILE* log) const

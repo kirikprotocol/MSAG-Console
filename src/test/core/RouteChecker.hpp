@@ -30,7 +30,7 @@ public:
 	RouteChecker(const SmeRegistry* smeReg, const AliasRegistry* aliasReg,
 		const RouteRegistry* routeReg);
 
-	bool isDestReachable(PduAddress& src, PduAddress& destAddr, bool checkSme) const;
+	SmeType isDestReachable(PduAddress& src, PduAddress& destAddr) const;
 
 	const RouteInfo* getRouteInfoForNormalSms(PduAddress& src,
 		PduAddress& dest) const;
