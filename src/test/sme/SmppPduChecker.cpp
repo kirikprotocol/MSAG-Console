@@ -175,6 +175,70 @@ set<uint32_t> SmppPduChecker::checkQuerySm(PduData* pduData, PduData* origPduDat
 	return res;
 }
 
+set<uint32_t> SmppPduChecker::checkCancelSm(PduData* pduData,
+	PduData* cancelPduData, PduFlag cancelPduFlag)
+{
+	__require__(pduData && pduData->pdu->get_commandId() == CANCEL_SM);
+	PduCancelSm* pdu = reinterpret_cast<PduCancelSm*>(pduData->pdu);
+	set<uint32_t> res;
+	//проверки
+	static /* const */ PduAddress nullAddr;
+	if (!checkTransmitter())
+	{
+		res.insert(ESME_RINVBNDSTS);
+	}
+	//cancel одиночной sms
+	if (pdu->get_messageId())
+	{
+		if (pdu->get_serviceType())
+		{
+			res.insert(ESME_RCANCELFAIL);
+		}
+		else if (!cancelPduData)
+		{
+			res.insert(ESME_RINVMSGID);
+		}
+		else if (cancelPduFlag != PDU_REQUIRED_FLAG)
+		{
+			res.insert(ESME_RCANCELFAIL);
+			res.insert(ESME_RINVMSGID); //если sms уже удалена архиватором
+		}
+		else
+		{
+			__require__(cancelPduData->strProps.count("smsId"));
+			if (cancelPduData->strProps["smsId"] != nvl(pdu->get_messageId()))
+			{
+				res.insert(ESME_RINVMSGID);
+			}
+			__require__(cancelPduData->pdu->get_commandId() == SUBMIT_SM);
+			PduSubmitSm* cancelPdu = reinterpret_cast<PduSubmitSm*>(cancelPduData->pdu);
+			if (pdu->get_source() != cancelPdu->get_message().get_source())
+			{
+				res.insert(ESME_RINVSRCADR);
+			}
+			if (pdu->get_dest() != nullAddr &&
+				pdu->get_dest() != cancelPdu->get_message().get_dest())
+			{
+				res.insert(ESME_RINVDSTADR);
+			}
+		}
+	}
+	//подмножество sms-ок
+	else
+	{
+		__require__(!pdu->get_messageId());
+		if (pdu->get_source() == nullAddr)
+		{
+			res.insert(ESME_RINVSRCADR);
+		}
+		if (pdu->get_dest() == nullAddr)
+		{
+			res.insert(ESME_RINVDSTADR);
+		}
+	}
+	return res;
+}
+
 #define __check__(errCode, cond) \
 	if (!(cond)) { \
 		__tc_fail__(errCode); \
@@ -422,6 +486,79 @@ void SmppPduChecker::processQuerySmResp(ResponseMonitor* monitor,
 			break;
 		default:
 			__tc__("querySm.resp.checkCmdStatusOther");
+			__tc_fail__(respPdu.get_header().get_commandStatus());
+	}
+	__tc_ok_cond__;
+}
+
+void SmppPduChecker::processCancelSmResp(ResponseMonitor* monitor,
+	PduCancelSmResp& respPdu, time_t respTime)
+{
+	__require__(monitor);
+	__decl_tc__;
+	__cfg_int__(timeCheckAccuracy);
+	//проверка флагов получения pdu
+	time_t respDelay = respTime - monitor->getCheckTime();
+	__tc__("cancelSm.resp.checkDuplicates");
+	switch (monitor->getFlag())
+	{
+		case PDU_REQUIRED_FLAG:
+		case PDU_MISSING_ON_TIME_FLAG:
+			__tc_ok__;
+			__tc__("cancelSm.resp.checkTime");
+			__check__(1, respDelay >= 0);
+			__check__(2, respDelay <= timeCheckAccuracy);
+			monitor->setNotExpected();
+			break;
+		case PDU_NOT_EXPECTED_FLAG: //респонс уже получен ранее
+			__tc_fail__(1);
+			break;
+		//case PDU_COND_REQUIRED_FLAG:
+		default: //респонс всегда должен быть
+			__unreachable__("Invalid response flag");
+	}
+	__tc_ok_cond__;
+	//проверки полей
+	__tc__("cancelSm.resp.checkHeader");
+	__check__(1, respPdu.get_header().get_commandLength() == 16);
+	__check__(2, respPdu.get_header().get_commandId() == CANCEL_SM_RESP);
+	__check__(3, respPdu.get_header().get_sequenceNumber() ==
+		monitor->pduData->pdu->get_sequenceNumber());
+	__tc_ok_cond__;
+	//проверка ошибок
+	//set<uint32_t> checkRes = checkCancelSm(monitor->pduData);
+	const set<uint32_t>& checkRes = monitor->pduData->checkRes;
+	switch (respPdu.get_header().get_commandStatus())
+	{
+		case ESME_ROK:
+			{
+				__tc__("cancelSm.resp.checkCmdStatusOk");
+				vector<int> chkRes(checkRes.begin(), checkRes.end());
+				__tc_fail2__(chkRes, 0);
+			}
+			break;
+		case ESME_RINVSRCADR:
+			__tc__("cancelSm.resp.checkCmdStatusInvalidSourceAddr");
+			__check__(1, checkRes.count(ESME_RINVSRCADR));
+			break;
+		case ESME_RINVDSTADR:
+			__tc__("cancelSm.resp.checkCmdStatusInvalidDestAddr");
+			__check__(1, checkRes.count(ESME_RINVDSTADR));
+			break;
+		case ESME_RINVBNDSTS:
+			__tc__("cancelSm.resp.checkCmdStatusInvalidBindStatus");
+			__check__(1, checkRes.count(ESME_RINVBNDSTS));
+			break;
+		case ESME_RINVMSGID:
+			__tc__("cancelSm.resp.checkCmdStatusInvalidMsgId");
+			__check__(1, checkRes.count(ESME_RINVMSGID));
+			break;
+		case ESME_RCANCELFAIL:
+			__tc__("cancelSm.resp.checkCmdStatusCancelFiled");
+			__check__(1, checkRes.count(ESME_RCANCELFAIL));
+			break;
+		default:
+			__tc__("cancelSm.resp.checkCmdStatusOther");
 			__tc_fail__(respPdu.get_header().get_commandStatus());
 	}
 	__tc_ok_cond__;

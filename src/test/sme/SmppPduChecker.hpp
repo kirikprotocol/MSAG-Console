@@ -29,11 +29,15 @@ public:
 	set<uint32_t> checkReplaceSm(PduData* pduData, PduData* replacePduData,
 		PduFlag replacePduFlag);
 	set<uint32_t> checkQuerySm(PduData* pduData, PduData* origPduData);
+	set<uint32_t> checkCancelSm(PduData* pduData, PduData* cancelPduData,
+		PduFlag cancelPduFlag);
 	void processSubmitSmResp(ResponseMonitor* monitor, PduSubmitSmResp& respPdu,
 		time_t respTime);
 	void processReplaceSmResp(ResponseMonitor* monitor, PduReplaceSmResp& respPdu,
 		time_t respTime);
 	void processQuerySmResp(ResponseMonitor* monitor, PduQuerySmResp& respPdu,
+		time_t respTime);
+	void processCancelSmResp(ResponseMonitor* monitor, PduCancelSmResp& respPdu,
 		time_t respTime);
 	void processGenericNack(GenericNackMonitor* monitor, PduGenericNack& respPdu,
 		time_t respTime);
