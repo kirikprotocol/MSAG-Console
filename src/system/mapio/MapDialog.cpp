@@ -560,7 +560,7 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
         if( result != ET96MAP_E_OK ) {
           __trace2__("MAP::Et96MapCloseInd:Et96MapDelimiterReq error 0x%x",result);
         }
-        __trace2__("MAP::send response to SMSC");
+        //__trace2__("MAP::send response to SMSC OK");
       }
       //return true;// :) optimization
       return false;
@@ -628,18 +628,18 @@ void MapDialog::Et96MapV2ForwardSmMTConf (
       cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,CMD_ERR_TEMP);
     }
     MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
-    __trace2__("MAP::Et96MapV2ForwardSmMTConf:did 0x%x was send %s to SMSC",dialogid,
+    __trace2__("MAP::Et96MapV2ForwardSmMTConf:did 0x%x/0x%x was send %s to SMSC",dialogid,smscDialogId, 
                fatal?"CMD_ERR_FATAL":"CMD_ERR_TEMP");
   }else if (provErrCode_p){
-    __trace2__("MAP::Et96MapV2ForwardSmMTConf:did 0x%x *provErrCode_p 0x%x",dialogid,*provErrCode_p);
+    __trace2__("MAP::Et96MapV2ForwardSmMTConf:did 0x%x/0x%x *provErrCode_p 0x%x",dialogid,smscDialogId,*provErrCode_p);
     SmscCommand cmd;
     cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,CMD_ERR_TEMP);
     MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
-    __trace2__("MAP::Et96MapV2ForwardSmMTConf:did 0x%x was send CMD_ERR_TEMP to SMSC",dialogid);
+    __trace2__("MAP::Et96MapV2ForwardSmMTConf:did 0x%x/0x%x was send CMD_ERR_TEMP to SMSC",dialogid,smscDialogId);
   }else{
     SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,CMD_OK);
     MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
-    __trace2__("MAP::Et96MapV2ForwardSmMTConf:did 0x%x was send OK to SMSC",dialogid);
+    __trace2__("MAP::Et96MapV2ForwardSmMTConf:did 0x%x/0x%x was send OK to SMSC",dialogid,smscDialogId);
   }
 #endif
 }

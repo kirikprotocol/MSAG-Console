@@ -113,6 +113,7 @@ public:
   uint32_t getNextSequenceNumber()
   {
     MutexGuard g(mutex);
+    __trace2__("MAP::Proxy:getNextSequenceNumber next number 0x%x",seq);
     if (seq <  0x10000) seq = 0x10000; 
     return seq++;
   }

@@ -73,6 +73,7 @@ public:
     if ( timeout_link_begin && timeout_link_begin->timeout < _time )
     {
       *t = *timeout_link_begin;
+      __trace2__("TASK::getExpired 0x%x:0x%x",t->sequenceNumber,t->proxy_id);
       __findAndRemove(timeout_link_begin);
       return true;
     }
