@@ -514,6 +514,8 @@ void Smsc::init(const SmscConfigs& cfg)
   ssockman.setInactivityTime(cfg.cfgman->getInt("smpp.inactivityTime"));
   ssockman.setInactivityTimeOut(cfg.cfgman->getInt("smpp.inactivityTimeOut"));
 
+  mrCache.loadFromStore(store);
+
   {
     performance::PerformanceServer *perfSrv=new performance::PerformanceServer
     (
