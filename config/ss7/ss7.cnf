@@ -48,13 +48,13 @@ CAA20116R5              ANSI-41 MAP File version number
 1                       Application Lost
 70                      Threshold high %
 30                      Threshold low %
-CAA20145R10             MAP File version
+CAA20145R10              MAP File version
 1                       Max Number of SSN
 1000                    Number of dialogues
 1000                    Number of transactions
 80                      Higher threshold %
 50                      Lower threshold %
-1                       Unbinds at loose of application connection
+0                       Unbinds at loose of application connection
 65                      S Timer
 225                     M Timer
 3000                    Ml Timer
@@ -250,7 +250,11 @@ FFFFFFFFh               Mask for allowed circuits in this group
 1                       Contents Indicator (1: SPC + SSN)
 15350                   SPC of the Remote SCCP SAP #1: (SSN 8)
 8                       SSN of the Remote SCCP SAP #1: (SSN 8)
-0                       N2 section
+1                       N2 section
+5                       Contents Indicator (5: SPC + SSN + Termination indication)
+4,0,1,4,79029869999     GT
+15347                   SPC of the Local SCCP SAP #1: (SSN 8)
+8                       SSN of the Local SCCP SAP #1: (SSN 8)
 0                       N3 section
 1                       N4 section
 15350                   SPC
