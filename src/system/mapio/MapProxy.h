@@ -3,6 +3,7 @@
 #define __SYSTEM_MAPIO_MAPPROXY_H__
 
 #include "smeman/smeproxy.h"
+#include "util/Logger.h"
 #include "core/buffers/Array.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "core/synchronization/EventMonitor.hpp"
@@ -33,7 +34,17 @@ public:
   virtual void putCommand(const SmscCommand& cmd)
   {
 //#if defined USE_MAP
+    struct timeval utime, curtime;
+    if( time_logger.isDebugEnabled() ) gettimeofday( &utime, 0 );
     ::MAPIO_PutCommand(cmd);
+    if( time_logger.isDebugEnabled() ) {
+      char buf[128];
+      long usecs;
+      gettimeofday( &curtime, 0 );
+      usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
+      snprintf( buf, 128, "cmdid=%d s=%ld us=%ld", cmd.get_commandId(), curtime.tv_sec-utime.tv_sec, usecs );
+      time_logger.debug( buf );
+    }
 //#endif
   }
   //{
@@ -147,6 +158,7 @@ protected:
   int seq;
   SmeProxyState state;
   ProxyMonitor *managerMonitor;
+  log4cpp::Category& time_logger = smsc::util::Logger::getCategory("map.otime");
 };
 
 };//mappio
