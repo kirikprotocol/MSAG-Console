@@ -39,7 +39,7 @@ SMSId StoreManager::store(SMS& sms)
 {
 	__require__(pool);
 	
-	int iteration=0;
+	int iteration=1;
     while(true)
 	{
 		try 
@@ -61,6 +61,7 @@ SMSId StoreManager::store(SMS& sms)
 				iteration++;
 				continue;
             }
+			printf("Max tries count exided !\n");
 			throw;
 		}
 	}
@@ -71,7 +72,7 @@ SMS& StoreManager::retrive(SMSId id)
 {
     __require__(pool);
     
-	int iteration=0;
+	int iteration=1;
     while (true)
 	{
 		try 
@@ -96,7 +97,8 @@ SMS& StoreManager::retrive(SMSId id)
 				iteration++;
 				continue;
             }
-            throw;
+            printf("Max tries count exided !\n");
+			throw;
 		}
 	}
 }

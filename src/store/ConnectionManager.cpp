@@ -194,6 +194,9 @@ text* Connection::sqlStoreLock = (text *)
 
 text* Connection::sqlStoreMaxId = (text *)
 "SELECT NVL(MAX(ID), 0) FROM SMS_MSG";
+
+/*text* Connection::sqlStoreMaxId = (text *)
+"SELECT NVL(ID, 0) FROM SMS_ID_LOCK WHERE TGT='SMS_MSG_TABLE'";*/
             
 text* Connection::sqlStoreInsert = (text *)
 "INSERT INTO SMS_MSG VALUES (:ID, :ST, :MR, :RM,\
@@ -335,8 +338,8 @@ Connection::Connection(ConnectionPool* pool)
 
 	checkConnErr(OCIBindByPos(stmtStoreInsert, &bndOAVal, errhp, (ub4) 8,
 							  (dvoid *)(sms.originatingAddress.value),
-							  (sb4) sizeof(AddressValue),
-							  SQLT_CHR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
+							  (sb4) sizeof(sms.originatingAddress.value),
+							  SQLT_STR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
 							  (ub4)0, (ub4 *)0, OCI_DEFAULT));
 
 	checkConnErr(OCIBindByPos(stmtStoreInsert, &bndDALen, errhp, (ub4) 9,
@@ -359,27 +362,30 @@ Connection::Connection(ConnectionPool* pool)
 
 	checkConnErr(OCIBindByPos(stmtStoreInsert, &bndDAVal, errhp, (ub4) 12,
 							  (dvoid *)(sms.destinationAddress.value),
-							  (sb4) sizeof(AddressValue),
-							  SQLT_CHR, (dvoid *)0, (ub2 *)0, (ub2 *)0, 
+							  (sb4) sizeof(sms.destinationAddress.value),
+							  SQLT_STR, (dvoid *)0, (ub2 *)0, (ub2 *)0, 
 							  (ub4)0, (ub4 *)0, OCI_DEFAULT));
 
 	checkConnErr(OCIBindByPos(stmtStoreInsert, &bndVTime, errhp, (ub4) 13,
-							  (dvoid *)(&validTime), (sb4) sizeof(validTime),
+							  (dvoid *) &(validTime), 
+							  (sb4) sizeof(validTime),
 							  SQLT_ODT, (dvoid *)0, (ub2 *)0, (ub2 *)0, 
 							  (ub4)0, (ub4 *)0, OCI_DEFAULT));
 
 	checkConnErr(OCIBindByPos(stmtStoreInsert, &bndWTime, errhp, (ub4) 14,
-							  (dvoid *)(&waitTime), (sb4) sizeof(waitTime),
+							  (dvoid *) &(waitTime), 
+							  (sb4) sizeof(waitTime),
 							  SQLT_ODT, (dvoid *)0, (ub2 *)0, (ub2 *)0,
 							  (ub4)0, (ub4 *)0, OCI_DEFAULT));
 
 	checkConnErr(OCIBindByPos(stmtStoreInsert, &bndSTime, errhp, (ub4) 15,
-							  (dvoid *)(&submitTime), (sb4) sizeof(submitTime),
-							  SQLT_ODT, (dvoid *)0, (ub2 *)0, (ub2 *)0, 
+							  (dvoid *) &(submitTime), 
+							  (sb4) sizeof(submitTime), SQLT_ODT, 
+							  (dvoid *)0, (ub2 *)0, (ub2 *)0, 
 							  (ub4)0, (ub4 *)0, OCI_DEFAULT));
 
 	checkConnErr(OCIBindByPos(stmtStoreInsert, &bndDTime, errhp, (ub4) 16,
-							  (dvoid *)(&deliveryTime),
+							  (dvoid *) &(deliveryTime),
 							  (sb4) sizeof(deliveryTime), 
 							  SQLT_ODT, (dvoid *)0, (ub2 *)0, (ub2 *)0,
 							  (ub4)0, (ub4 *)0, OCI_DEFAULT)); 
@@ -472,9 +478,9 @@ Connection::Connection(ConnectionPool* pool)
 								OCI_DEFAULT));
 
 	checkConnErr(OCIDefineByPos(stmtRetriveAll, &defOAVal, errhp, (ub4) 7,
-								(dvoid *) &(sms.originatingAddress.value), 
+								(dvoid *)(sms.originatingAddress.value), 
 								(sword) sizeof(sms.originatingAddress.value),
-								SQLT_CHR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
+								SQLT_STR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
 								OCI_DEFAULT));
 
 	checkConnErr(OCIDefineByPos(stmtRetriveAll, &defDALen, errhp, (ub4) 8,
@@ -496,9 +502,9 @@ Connection::Connection(ConnectionPool* pool)
 								OCI_DEFAULT));
 
 	checkConnErr(OCIDefineByPos(stmtRetriveAll, &defDAVal, errhp, (ub4) 11,
-								(dvoid *) &(sms.destinationAddress.value), 
+								(dvoid *)(sms.destinationAddress.value), 
 								(sword) sizeof(sms.destinationAddress.value),
-								SQLT_CHR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
+								SQLT_STR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
 								OCI_DEFAULT));
 
 	checkConnErr(OCIDefineByPos(stmtRetriveAll, &defVTime, errhp, (ub4) 12,
@@ -677,24 +683,32 @@ SMSId Connection::store(SMS& sms)
 
 	setSMS(sms);
 	
-	// lock table
-    checkErr(OCIStmtExecute(svchp, stmtStoreLock, errhp, (ub4) 1, (ub4) 0, 
-							(CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
-							OCI_DEFAULT));
+	try 
+	{
+		// lock table
+		checkErr(OCIStmtExecute(svchp, stmtStoreLock, errhp, (ub4) 1, (ub4) 0,
+								(CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
+								OCI_DEFAULT));
     
-	// "select max(id) from sms_msg"
-	checkErr(OCIStmtExecute(svchp, stmtStoreMaxId, errhp, (ub4) 1, (ub4) 0,
-							(CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
-							OCI_DEFAULT));
+		// get max(id) into smsId;
+		checkErr(OCIStmtExecute(svchp, stmtStoreMaxId, errhp, (ub4) 1, (ub4) 0,
+								(CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
+								OCI_DEFAULT));
     
-	smsId++; // If no data present in table smsId = 0 (NVL used)
+		smsId++; // If no data present in table smsId = 0 (NVL used)
     
-	// insert new sms row into table
-	checkErr(OCIStmtExecute(svchp, stmtStoreInsert, errhp, (ub4) 1, (ub4) 0,
-							(CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
-							OCI_DEFAULT));
-	
-	checkErr(OCITransCommit(svchp, errhp, OCI_DEFAULT));
+		// insert new sms row into table
+		checkErr(OCIStmtExecute(svchp, stmtStoreInsert, errhp, (ub4) 1, (ub4) 0,
+								(CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
+								OCI_DEFAULT));
+		
+		checkErr(OCITransCommit(svchp, errhp, OCI_DEFAULT));
+	} 
+	catch (StorageException& exc) 
+	{
+		checkErr(OCITransRollback(svchp, errhp, OCI_DEFAULT));
+		throw exc;
+	}
 
 	return smsId;
 }
