@@ -4,7 +4,7 @@ extern "C"{
 
 #define _CB(a) unsigned short a() {fprintf(stderr,"MAP::%s callback was called\n",#a);return 0;}
 
-/*_CB(MapSubmitSMInd)              
+_CB(MapSubmitSMInd)              
 _CB(MapReportSMInd)
 _CB(MapAlertInd)
 _CB(MapBeginInd)
@@ -53,6 +53,6 @@ _CB(Et96MapV2UnstructuredSSRequestConf)
 _CB(Et96MapV2UnstructuredSSNotifyConf)
 _CB(Et96MapV3AnyTimeInterrogationConf)
 _CB(Et96MapV3AnyTimeInterrogationInd)
-_CB(Et96MapV3ProvideSubscriberInfoConf)*/
+_CB(Et96MapV3ProvideSubscriberInfoConf)
 
 }
