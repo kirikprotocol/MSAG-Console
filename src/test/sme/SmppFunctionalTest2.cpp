@@ -106,10 +106,10 @@ public:
 
 //TestSme
 TestSme::TestSme(int _smeNum, const SmeConfig& config, const SmeSystemId& systemId,
-	const Address& smeAddr, const SmeRegistry* smeReg,
+	const Address& smeAlias, const SmeRegistry* smeReg,
 	const AliasRegistry* aliasReg, const RouteRegistry* routeReg)
 	: TestTask("TestSme", _smeNum), smeNum(_smeNum), nextCheckTime(0),
-	tc(config, systemId, smeAddr, smeReg, aliasReg, routeReg, this),
+	tc(config, systemId, smeAlias, smeReg, aliasReg, routeReg, this),
 	boundOk(false) {}
 
 void TestSme::executeCycle()
@@ -261,39 +261,6 @@ void SmppFunctionalTest::printOpsStatByTC()
 	cout << "-----------------------------" << endl;
 }
 
-void saveCheckList()
-{
-    cout << "Сохранение checklist" << endl;
-    CheckList& cl = CheckList::getCheckList(CheckList::UNIT_TEST);
-    cl.startNewGroup("Smpp", "smsc::smpp");
-    cl.writeResult("Bind sme зарегистрированной в smsc",
-        filter->getResults(TC_BIND_CORRECT_SME));
-    cl.writeResult("Bind sme с неправильными параметрами",
-        filter->getResults(TC_BIND_INCORRECT_SME));
-    cl.writeResult("Все подтверждений доставки, нотификации и sms доставляются и не теряются",
-        filter->getResults(TC_CHECK_MISSING_PDU));
-    cl.writeResult("Unbind для sme",
-        filter->getResults(TC_UNBIND));
-    cl.writeResult("Синхронная отправка submit_sm pdu другим sme",
-        filter->getResults(TC_SUBMIT_SM_SYNC));
-    cl.writeResult("Асинхронная отправка submit_sm pdu другим sme",
-        filter->getResults(TC_SUBMIT_SM_ASYNC));
-    cl.writeResult("Заполнение и отправка submit_sm pdu с недопустимыми значениями полей",
-        filter->getResults(TC_SUBMIT_SM_ASSERT));
-    cl.writeResult("Получение submit_sm_resp pdu для асинхронного submit_sm реквеста",
-        filter->getResults(TC_PROCESS_SUBMIT_SM_RESP));
-    cl.writeResult("Получение асинхронного deliver_sm pdu",
-        filter->getResults(TC_PROCESS_DELIVERY_SM));
-    cl.writeResult("Сообщения правильно доставляются от одного sme другому",
-        filter->getResults(TC_PROCESS_NORMAL_SMS));
-    cl.writeResult("Подтверждения доставки (delivery receipts) работают правильно",
-        filter->getResults(TC_PROCESS_DELIVERY_RECEIPT));
-    cl.writeResult("Промежуточные нотификации (intermediate notifications) работают правильно",
-        filter->getResults(TC_PROCESS_INTERMEDIATE_NOTIFICATION));
-    cl.writeResult("Отсутствие внутренних ошибок в smpp receiver",
-        filter->getResults(TC_HANDLE_ERROR));
-}
-
 void process(TCResult* res)
 {
 	if (res)
@@ -302,6 +269,7 @@ void process(TCResult* res)
 		delete res;
 	}
 }
+
 vector<TestSme*> genConfig(int numAddr, int numSme,
 	const string& smscHost, int smscPort)
 {
@@ -459,10 +427,44 @@ vector<TestSme*> genConfig(int numAddr, int numSme,
 	return sme;
 }
 
+void saveCheckList()
+{
+    cout << "Сохранение checklist" << endl;
+    CheckList& cl = CheckList::getCheckList(CheckList::UNIT_TEST);
+    cl.startNewGroup("Smpp", "smsc::smpp");
+    cl.writeResult("Bind sme зарегистрированной в smsc",
+        filter->getResults(TC_BIND_CORRECT_SME));
+    cl.writeResult("Bind sme с неправильными параметрами",
+        filter->getResults(TC_BIND_INCORRECT_SME));
+    cl.writeResult("Все подтверждений доставки, нотификации и sms доставляются и не теряются",
+        filter->getResults(TC_CHECK_MISSING_PDU));
+    cl.writeResult("Unbind для sme",
+        filter->getResults(TC_UNBIND));
+    cl.writeResult("Синхронная отправка submit_sm pdu другим sme",
+        filter->getResults(TC_SUBMIT_SM_SYNC));
+    cl.writeResult("Асинхронная отправка submit_sm pdu другим sme",
+        filter->getResults(TC_SUBMIT_SM_ASYNC));
+    cl.writeResult("Заполнение и отправка submit_sm pdu с недопустимыми значениями полей",
+        filter->getResults(TC_SUBMIT_SM_ASSERT));
+    cl.writeResult("Получение submit_sm_resp pdu для асинхронного submit_sm реквеста",
+        filter->getResults(TC_PROCESS_SUBMIT_SM_RESP));
+    cl.writeResult("Получение асинхронного deliver_sm pdu",
+        filter->getResults(TC_PROCESS_DELIVERY_SM));
+    cl.writeResult("Сообщения правильно доставляются от одного sme другому",
+        filter->getResults(TC_PROCESS_NORMAL_SMS));
+    cl.writeResult("Подтверждения доставки (delivery receipts) работают правильно",
+        filter->getResults(TC_PROCESS_DELIVERY_RECEIPT));
+    cl.writeResult("Промежуточные нотификации (intermediate notifications) работают правильно",
+        filter->getResults(TC_PROCESS_INTERMEDIATE_NOTIFICATION));
+    cl.writeResult("Отсутствие внутренних ошибок в smpp receiver",
+        filter->getResults(TC_HANDLE_ERROR));
+}
+
 void executeFunctionalTest(const string& smscHost, int smscPort)
 {
 	vector<TestSme*> sme;
 	TestSmeTaskManager tm;
+	tm.startTimer();
 	//обработка команд консоли
 	string cmd;
 	bool help = true;
@@ -582,19 +584,17 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 
 int main(int argc, char* argv[])
 {
-	if (argc < 3)
+	if (argc != 1 && argc != 3)
 	{
-		cout << "Usage: TestSmsc <numAddr> <numSme> [host] [port]" << endl;
+		cout << "Usage: TestSmsc [host] [port]" << endl;
 		exit(0);
 	}
-	const int numAddr = atoi(argv[1]);
-	const int numSme = atoi(argv[2]);
 	string smscHost = "smsc";
 	int smscPort = 15975;
-	if (argc == 5)
+	if (argc == 3)
 	{
-		smscHost = argv[3];
-		smscPort = atoi(argv[4]);
+		smscHost = argv[1];
+		smscPort = atoi(argv[2]);
 	}
 	try
 	{
