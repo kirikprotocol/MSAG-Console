@@ -52,19 +52,22 @@ class PduData
 public:
 	typedef map<const string, int> IntProps;
 	typedef map<const string, string> StrProps;
+	typedef map<const string, void*> ObjProps;
 
 	SmppHeader* const pdu;
 	const time_t submitTime;
 	const uint16_t msgRef;
 	string smsId;
 	bool valid;
-	map<const string, int> intProps;
-	map<const string, string> strProps;
+	IntProps intProps;
+	StrProps strProps;
+	ObjProps objProps;
 	PduData* replacePdu; //pdu, которая должна быть заменена текущей pdu
 	PduData* replacedByPdu; //pdu, которая замещает текущую pdu
 	
 	PduData(SmppHeader* pdu, time_t submitTime, uint16_t msgRef,
-		IntProps* intProps = NULL, StrProps* strProps = NULL);
+		IntProps* intProps = NULL, StrProps* strProps = NULL,
+		ObjProps* objProps = NULL);
 	~PduData();
 	
 	void ref();

@@ -169,7 +169,7 @@ Mutex PduMonitor::mutex = Mutex();
 uint32_t PduMonitor::counter = 1;
 
 PduData::PduData(SmppHeader* _pdu, time_t _submitTime, uint16_t _msgRef,
-	IntProps* _intProps, StrProps* _strProps)
+	IntProps* _intProps, StrProps* _strProps, ObjProps* _objProps)
 : pdu(_pdu), submitTime(_submitTime), msgRef(_msgRef), valid(false), count(0),
 	replacePdu(NULL), replacedByPdu(NULL)
 {
@@ -181,6 +181,10 @@ PduData::PduData(SmppHeader* _pdu, time_t _submitTime, uint16_t _msgRef,
 	if (_strProps)
 	{
 		strProps = *_strProps;
+	}
+	if (_objProps)
+	{
+		objProps = *_objProps;
 	}
 	__trace2__("PduData created = %p", this);
 }
