@@ -20,7 +20,7 @@
       <sm-ep:txt title="login" name="login" validation="nonEmpty"/><!--readonly="${!bean.add}" -->
       <sm-ep:txt title="password" name="password" type="password"/>
       <sm-ep:txt title="confirm password" name="confirmPassword" type="password"/>
-      <sm-ep:checks title="roles" name="roles" values="apply,smsc_service,locale_resources,dl,perfmon,smsView" valueTitles="Apply config changes,SMSC configuration,Locale resources uploading and viewing,Distribution Lists,Perfomance monitoring,SMS View"/>
+      <sm-ep:checks title="roles" name="roles" values="gw,routing,services" valueTitles="Gateway configuration,Routes configuration,Services"/>
       <sm-ep:txt title="first name" name="firstName" validation="nonEmpty"/>
       <sm-ep:txt title="last name" name="lastName" validation="nonEmpty"/>
       <sm-ep:txt title="departament" name="dept" validation="nonEmpty"/>

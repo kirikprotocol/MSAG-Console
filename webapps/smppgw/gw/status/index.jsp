@@ -12,7 +12,7 @@
     <table class="list" cellspacing="0">
       <col width="1px"/>
       <tr class="row0">
-        <td><input class="check" type="checkbox" name="subj" value="config"></td><td>GW config</td>
+        <td><input class="check" type="checkbox" name="subj" value="config"></td><td>GW config</td><td><sm:status changed="${bean.configChanged}"/></td>
       </tr>
     </table>
   </jsp:body>

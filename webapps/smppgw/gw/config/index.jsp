@@ -1,13 +1,6 @@
 <%@include file="/WEB-INF/inc/header.jspf"%>
 <script src="tree.js"></script>
-<sm:page>
-  <jsp:attribute name="title">
-    <c:choose>
-      <c:when test="${param.add}">Create new user</c:when>
-      <c:otherwise>Edit SME "${param.editId}"</c:otherwise>
-    </c:choose>
-  </jsp:attribute>
-
+<sm:page title="Edit SMPP GW configuration">
   <jsp:attribute name="menu">
     <sm-pm:menu>
       <sm-pm:item name="mbSave" value="Save" title="Save user info"/>

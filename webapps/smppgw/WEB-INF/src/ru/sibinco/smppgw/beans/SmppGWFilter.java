@@ -20,15 +20,18 @@ public class SmppGWFilter implements Filter
   private String defaultEncoding = "ISO-8859-1";
   FilterConfig config = null;
   SmppGWAppContext appContext = null;
+  private Logger logger;
 
-  public void init(FilterConfig config) throws ServletException
+  public void init(final FilterConfig config) throws ServletException
   {
+    logger = Logger.getLogger(this.getClass());
+
     defaultEncoding = Functions.getLocaleEncoding();
     this.config = config;
     try {
       appContext = SmppGWAppContext.getInstance(config.getServletContext().getInitParameter("AppConfigFile"));
     } catch (Throwable t) {
-      Logger.getLogger(this.getClass()).fatal("Could not initialize application", t);
+      logger.fatal("Could not initialize application", t);
       throw new ServletException("Could not initialize application", t);
     }
   }
@@ -40,17 +43,22 @@ public class SmppGWFilter implements Filter
     appContext = null;
   }
 
-  public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws ServletException, IOException
+  public void doFilter(final ServletRequest req, final ServletResponse resp, final FilterChain chain) throws ServletException, IOException
   {
+    if (logger == null) logger = Logger.getLogger(this.getClass());
+
+    if (logger.isDebugEnabled())
+      logger.debug("Request: " + req.getScheme() + " from " + req.getRemoteHost() + ':' + req.getRemotePort());
+
     if (config == null) {
-      Logger.getLogger(this.getClass()).fatal("Not initialized");
+      logger.fatal("Not initialized");
       return;
     }
 
     req.setCharacterEncoding(defaultEncoding);
     req.setAttribute("appContext", appContext);
     if (req instanceof HttpServletRequest) {
-      HttpServletRequest httpServletRequest = (HttpServletRequest) req;
+      final HttpServletRequest httpServletRequest = (HttpServletRequest) req;
       req.setAttribute("requestURI", new String(httpServletRequest.getRequestURI()));
     }
     chain.doFilter(req, resp);

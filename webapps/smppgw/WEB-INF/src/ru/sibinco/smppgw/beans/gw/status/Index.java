@@ -12,10 +12,7 @@ import java.io.IOException;
 
 
 /**
- * Created by IntelliJ IDEA.
- * User: igork
- * Date: 03.03.2004
- * Time: 18:39:37
+ * Created by IntelliJ IDEA. User: igork Date: 03.03.2004 Time: 18:39:37
  */
 public class Index extends SmppgwBean
 {
@@ -61,6 +58,7 @@ public class Index extends SmppgwBean
     try {
       appContext.getGwConfig().save();
       appContext.getGateway().apply();
+      appContext.getStatuses().setConfigChanged(false);
     } catch (SibincoException e) {
       logger.debug("Couldn't apply config", e);
       throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_CONFIG, e);
@@ -101,5 +99,10 @@ public class Index extends SmppgwBean
   public void setSubj(String[] subj)
   {
     this.subj = subj;
+  }
+
+  public boolean isConfigChanged()
+  {
+    return appContext.getStatuses().isConfigChanged();
   }
 }

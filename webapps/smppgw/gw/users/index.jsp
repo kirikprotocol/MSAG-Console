@@ -9,6 +9,6 @@
   </jsp:attribute>
   
   <jsp:body>
-    <sm:table bean="${bean}" columns="checkbox,login,firstName,lastName,dept" names="c,login,first name,last name,department" widths="1,25,25,25,25" edit="login"/>
+    <sm:table columns="checkbox,login,firstName,lastName,dept" names="c,login,first name,last name,department" widths="1,25,25,25,25" edit="login"/>
   </jsp:body>
 </sm:page>

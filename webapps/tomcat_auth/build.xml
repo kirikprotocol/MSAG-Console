@@ -1,0 +1,43 @@
+<project default="install" name="Sibinco Tomcat Authentication Module">
+
+  <property name="servlet_jar" location="${CATALINA_HOME}/common/lib/servlet-api.jar"/>
+  <property name="jmx_jar" location="${CATALINA_HOME}/bin/jmx.jar"/>
+  <property name="catalina_jar" location="${CATALINA_HOME}/server/lib/catalina.jar"/>
+
+  <target name="init">
+    <tstamp/>
+    <mkdir dir="server/classes"/>
+    <mkdir dir="common/classes"/>
+    <mkdir dir="webapp/classes"/>
+    <mkdir dir="lib"/>
+  </target>
+
+  <target name="compile" depends="init" description="compile the sources">
+    <!--echo message="Classpath: ${log4j_jar}:${jmx_jar}:${catalina_jar}"/--> 
+    <javac srcdir="common/src" destdir="common/classes" classpath="${jmx_jar}:${catalina_jar}"/>
+    <javac srcdir="server/src" destdir="server/classes" classpath="${jmx_jar}:${catalina_jar}"/>
+    <javac srcdir="webapp/src" destdir="webapp/classes" classpath="${jmx_jar}:${catalina_jar}"/>
+  </target>
+
+  <target name="build" depends="compile" description="generate the distribution">
+    <jar jarfile="lib/sibinco_tomcat_auth_server.jar" basedir="server/classes"/>
+    <jar jarfile="lib/sibinco_tomcat_auth_common.jar" basedir="common/classes"/>
+    <jar jarfile="lib/sibinco_tomcat_auth.jar"        basedir="webapp/classes"/>
+  </target>
+
+  <target name="rebuild" depends="clean,build" description="rebuild"/>
+
+  <target name="install" depends="build">
+    <copyfile src="lib/sibinco_tomcat_auth_server.jar" dest="${CATALINA_HOME}/server/lib/sibinco_tomcat_auth_server.jar"/>
+    <copyfile src="lib/sibinco_tomcat_auth_common.jar" dest="${CATALINA_HOME}/common/lib/sibinco_tomcat_auth_common.jar"/>
+  </target>
+
+  <target name="clean" description="clean up">
+    <delete dir="server/classes"/>
+    <delete dir="common/classes"/>
+    <delete dir="webapp/classes"/>
+    <delete file="lib/sibinco_tomcat_auth_server.jar"/>
+    <delete file="lib/sibinco_tomcat_auth_common.jar"/>
+    <delete file="lib/sibinco_tomcat_auth.jar"/>
+  </target>
+</project>

@@ -10,6 +10,7 @@ import ru.sibinco.smppgw.backend.resources.ResourceManager;
 import ru.sibinco.smppgw.backend.routing.GwRoutingManager;
 import ru.sibinco.smppgw.backend.sme.*;
 import ru.sibinco.smppgw.backend.users.UserManager;
+import ru.sibinco.tomcat_auth.XmlAuthenticator;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
@@ -17,10 +18,7 @@ import java.io.IOException;
 
 
 /**
- * Created by IntelliJ IDEA.
- * User: igork
- * Date: 25.02.2004
- * Time: 17:22:47
+ * Created by IntelliJ IDEA. User: igork Date: 25.02.2004 Time: 17:22:47
  */
 public class SmppGWAppContext
 {
@@ -38,8 +36,10 @@ public class SmppGWAppContext
   private final ResourceManager resourceManager;
   private final Daemon gwDaemon;
   private final Gateway gateway;
+  private final Statuses statuses;
 
-  private SmppGWAppContext(String config_filename) throws Throwable, ParserConfigurationException, SAXException, Config.WrongParamTypeException, Config.ParamNotFoundException, SibincoException
+  private SmppGWAppContext(final String config_filename) throws Throwable, ParserConfigurationException, SAXException, Config.WrongParamTypeException,
+                                                                Config.ParamNotFoundException, SibincoException
   {
     try {
       System.out.println("  **  config file:" + new File(config_filename).getAbsolutePath());
@@ -53,15 +53,18 @@ public class SmppGWAppContext
       gwRoutingManager = new GwRoutingManager(new File(config.getString("gw_config_folder")), gwSmeManager);
       resourceManager = new ResourceManager(new File(config.getString("gw_config_folder")));
       gwDaemon = new Daemon(config.getString("gw daemon.host"), config.getInt("gw daemon.port"), gwSmeManager, config.getString("gw daemon.folder"));
-      ServiceInfo gwServiceInfo = (ServiceInfo) gwDaemon.getServices().get(config.getString("gw name"));
+      final ServiceInfo gwServiceInfo = (ServiceInfo) gwDaemon.getServices().get(config.getString("gw name"));
       gateway = new Gateway(gwServiceInfo);
+      statuses = new Statuses();
+      XmlAuthenticator.init(new File(config.getString("users_config_file")));
     } catch (Throwable e) {
       logger.fatal("Could not initialize App Context", e);
       throw e;
     }
   }
 
-  public static synchronized SmppGWAppContext getInstance(String config_filename) throws Throwable, IOException, ParserConfigurationException, Config.ParamNotFoundException, SAXException, SibincoException
+  public static synchronized SmppGWAppContext getInstance(final String config_filename) throws Throwable, IOException, ParserConfigurationException,
+                                                                                               Config.ParamNotFoundException, SAXException, SibincoException
   {
     return instance != null
            ? instance
@@ -116,5 +119,10 @@ public class SmppGWAppContext
   public Gateway getGateway()
   {
     return gateway;
+  }
+
+  public Statuses getStatuses()
+  {
+    return statuses;
   }
 }

@@ -1,0 +1,26 @@
+<project default="" name="Sibinco Library">
+  <property name="sl_work" location="${work_path}/sibinco_lib"/>
+  <property name="java_src" location="src"/>
+  <property name="java_out" location="${sl_work}/out"/>
+
+  <target name="init">
+    <tstamp/>
+    <mkdir dir="${java_out}"/>
+  </target>
+
+  <target name="compile" depends="init" description="compile the sources">
+    <javac srcdir="${java_src}" destdir="${java_out}" classpath="${log4j_jar}"/>
+  </target>
+
+  <target name="dist" depends="clean,compile" description="generate the distribution">
+    <jar jarfile="${sibinco_lib}">
+      <fileset dir="${java_out}"/>
+      <fileset dir="${java_src}" excludes="**/*.java"/>
+    </jar>
+  </target>
+
+  <target name="clean" description="clean up">
+    <delete dir="${java_out}"/>
+    <delete file="${sibinco_lib}"/>
+  </target>
+</project>

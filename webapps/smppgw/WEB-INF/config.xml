@@ -3,7 +3,7 @@
 
 <config>
 
-  <param name="users_config_file" type="string">webapps/smppgw/WEB-INF/users.xml</param>
+  <param name="users_config_file" type="string">C:\Program Files\Apache Software Foundation\Tomcat 5.0\webapps\smppgw_work/WEB-INF/users.xml</param>
   <param name="sme_file" type="string">S:\install\daemon_gw\services\smppgw\conf\sme.xml</param>
   <param name="gw_config" type="string">S:\install\daemon_gw\services\smppgw\conf\config.xml</param>
   <param name="gw_config_folder" type="string">S:\install\daemon_gw\services\smppgw\conf</param>

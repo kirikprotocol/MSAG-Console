@@ -2,6 +2,7 @@ package ru.sibinco.smppgw.beans.gw.config;
 
 import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.smppgw.Constants;
+import ru.sibinco.smppgw.backend.Statuses;
 import ru.sibinco.smppgw.beans.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -10,10 +11,7 @@ import java.util.*;
 
 
 /**
- * Created by IntelliJ IDEA.
- * User: igork
- * Date: 03.03.2004
- * Time: 18:39:37
+ * Created by IntelliJ IDEA. User: igork Date: 03.03.2004 Time: 18:39:37
  */
 public class Index extends EditBean
 {
@@ -73,6 +71,7 @@ public class Index extends EditBean
   protected void save() throws SmppgwJspException
   {
     final Config gwConfig = appContext.getGwConfig();
+    final Statuses statuses = appContext.getStatuses();
     for (Iterator i = params.entrySet().iterator(); i.hasNext();) {
       Map.Entry entry = (Map.Entry) i.next();
       final Object parameter = gwConfig.getParameter((String) entry.getKey());
@@ -91,6 +90,7 @@ public class Index extends EditBean
           gwConfig.setString((String) entry.getKey(), (String) entry.getValue());
       } else
         gwConfig.setString((String) entry.getKey(), (String) entry.getValue());
+      statuses.setConfigChanged(true);
     }
     throw new DoneException();
   }

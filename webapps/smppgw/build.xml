@@ -1,0 +1,41 @@
+<project default="" name="SMPP Gateway">
+
+  <property name="smppgw_work" location="${work_path}/smppgw"/>
+  <property name="smppgw_dist" location="${dist_path}/smppgw.war"/>
+  <property name="java_src" location="WEB-INF/src"/>
+  <property name="java_out" location="${smppgw_work}/out"/>
+  <property name="java_lib" location="${smppgw_work}/WEB-INF/lib"/>
+
+  <target name="init">
+    <tstamp/>
+    <mkdir dir="${java_out}"/>
+    <mkdir dir="${java_lib}"/>
+  </target>
+
+  <target name="compile" depends="init" description="compile the sources">
+    <javac srcdir="${java_src}" destdir="${java_out}" classpath="${sibinco_lib}:${tomcat_auth_lib}:${log4j_jar}:${servlet_jar}"/>
+    <native2ascii encoding="Cp1251" src="${java_src}/locales" dest="${java_out}/locales"/>
+  </target>
+
+  <target name="dist" depends="clean,compile" description="generate the distribution">
+    <jar jarfile="${java_lib}/smppgw.jar">
+      <fileset dir="${java_out}"/>
+      <fileset dir="${java_src}" excludes="**/*.java,locales/**"/>
+    </jar>
+    <copy file="${tomcat_auth_lib}" todir="${smppgw_work}/WEB-INF/lib"/>
+    <copy file="${sibinco_lib}" todir="${smppgw_work}/WEB-INF/lib"/>
+    <jar jarfile="${smppgw_dist}">
+      <manifest>
+        <attribute name="file" value="WEB-INF/MANIFEST.MF"/>
+      </manifest>
+      <fileset dir="." excludes="WEB-INF/classes/**,WEB-INF/src/**,SmppGW.*,build.xml"/>
+      <fileset dir="${smppgw_work}" includes="WEB-INF/lib/*.jar"/>
+    </jar>
+  </target>
+
+  <target name="clean" description="clean up">
+    <delete dir="${java_out}"/>
+    <delete dir="${java_lib}"/>
+    <delete file="${smppgw_dist}"/>
+  </target>
+</project>
