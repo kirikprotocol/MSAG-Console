@@ -7,9 +7,11 @@
 namespace smsc{
 namespace system{
 
+using smsc::sms::SMSId;
+
 class SchedTimer{
 public:
-  virtual void ChangeSmsSchedule(SmsId id,time_t newtime)=0;
+  virtual void ChangeSmsSchedule(SMSId id,time_t newtime)=0;
 };
 
 
