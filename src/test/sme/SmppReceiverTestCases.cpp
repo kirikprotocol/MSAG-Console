@@ -118,6 +118,7 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 
 void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 {
+	__require__(session);
 	TCResult* res = new TCResult(TC_PROCESS_DELIVERY_SM);
 	//общая проверка полей
 	int failureCode = 1;
@@ -229,8 +230,7 @@ TCResult* SmppReceiverTestCases::processNormalSms(PduDeliverySm &pdu)
 					res->addFailure(105);
 				}
 				//Сравнить правильность маршрута
-				vector<int> tmp = routeChecker->checkRouteForNormalSms(
-					*origPdu, pdu, systemId, smeAddr);
+				vector<int> tmp = routeChecker->checkRouteForNormalSms(*origPdu, pdu);
 				for (int i = 0; i < tmp.size(); i++)
 				{
 					res->addFailure(120 + tmp[i]);
@@ -378,8 +378,8 @@ TCResult* SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu)
 					res->addFailure(212);
 				}
 				//Сравнить правильность маршрута
-				vector<int> tmp = routeChecker->checkRouteForNotification(
-					*origPdu, pdu, systemId, smeAddr, smeReg->getSmscAddr());
+				vector<int> tmp =
+					routeChecker->checkRouteForNotification(*origPdu, pdu);
 				for (int i = 0; i < tmp.size(); i++)
 				{
 					res->addFailure(220 + tmp[i]);
@@ -480,8 +480,8 @@ TCResult* SmppReceiverTestCases::processIntermediateNotification(
 					res->addFailure(305);
 				}
 				//Сравнить правильность маршрута
-				vector<int> tmp = routeChecker->checkRouteForNotification(
-					*origPdu, pdu, systemId, smeAddr, smeReg->getSmscAddr());
+				vector<int> tmp =
+					routeChecker->checkRouteForNotification(*origPdu, pdu);
 				for (int i = 0; i < tmp.size(); i++)
 				{
 					res->addFailure(320 + tmp[i]);
@@ -562,6 +562,9 @@ void SmppReceiverTestCases::processAlertNotificatin(const PduAlertNotification &
 
 void SmppReceiverTestCases::handleError(int errorCode)
 {
+	TCResult* res = new TCResult(TC_HANDLE_ERROR);
+	res->addFailure(errorCode);
+	resultHandler->process(res);
 }
 
 }
