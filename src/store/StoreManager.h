@@ -580,10 +580,13 @@ namespace smsc { namespace store
         StorageConnection*      connection;
 
         std::multimap<SMSId, UpdateRecord*> updates;
-        Mutex                               updateMutex;
+        Mutex                               updatesMutex;
         
         int                                 maxUncommitedCount;
         time_t                              maxSleepInterval;
+        
+        void loadMaxUncommitedCount(Manager& config);
+        void loadSleepInterval(Manager& config); 
 
         Event                               processEvent;
         Event                               exitedEvent;
@@ -591,14 +594,13 @@ namespace smsc { namespace store
         bool                                bNeedExit;
         bool                                bStarted;
         
-        
         void addUpdate(SMSId id, UpdateRecord* update)
             throw(StorageException, NoSuchMessageException);
-        bool delUpdate(SMSId id);
-
-        void processUpdates();
         void processUpdate(SMSId id, UpdateRecord* update)
             throw(StorageException, NoSuchMessageException);
+        bool delUpdates(SMSId id);
+        
+        void processUpdates();
 
     public:
 

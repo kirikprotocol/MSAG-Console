@@ -1240,24 +1240,79 @@ SMS* SmsCache::getSms(const Address& oa, const Address& da,
 const int SMSC_MAX_UNCOMMITED_UPDATES = 1000;
 const int SMSC_MAX_SLEEP_INTERVAL = 1000;
 
+void CachedStore::loadMaxUncommitedCount(Manager& config) 
+{
+    try
+    {
+        maxUncommitedCount = 
+            (unsigned)config.getInt("MessageStore.Cache.uncommited");
+        if (maxUncommitedCount <= 0 ||
+            maxUncommitedCount > SMSC_MAX_UNCOMMITED_UPDATES)
+        {
+            maxUncommitedCount = SMSC_MAX_UNCOMMITED_UPDATES;
+            log.warn("Maximum uncommited updates count parameter "
+                     "is incorrect (should be between 1 and %u) ! "
+                     "Config parameter: <MessageStore.Cache.uncommited> "
+                     "Using default: %u", SMSC_MAX_UNCOMMITED_UPDATES,
+                     SMSC_MAX_UNCOMMITED_UPDATES);
+        }
+    }
+    catch (ConfigException& exc)
+    {
+        maxUncommitedCount = SMSC_MAX_UNCOMMITED_UPDATES;
+        log.warn("Maximum uncommited updates count parameter "
+                 "wasn't specified ! "
+                 "Config parameter: <MessageStore.Cache.uncommited> "
+                 "Using default: %d", SMSC_MAX_UNCOMMITED_UPDATES);
+    }
+}
+void CachedStore::loadSleepInterval(Manager& config) 
+{
+    try
+    {
+        maxSleepInterval = 
+            (unsigned)config.getInt("MessageStore.Cache.sleep");
+        if (maxSleepInterval < 0 ||
+            maxSleepInterval > SMSC_MAX_SLEEP_INTERVAL)
+        {
+            maxSleepInterval = SMSC_MAX_SLEEP_INTERVAL;
+            log.warn("Time interval between updates applies parameter "
+                     "is incorrect (should be between 0 and %u) ! "
+                     "Config parameter: <MessageStore.Cache.sleep> "
+                     "Using default: %u", SMSC_MAX_SLEEP_INTERVAL,
+                     SMSC_MAX_SLEEP_INTERVAL);
+        }
+    }
+    catch (ConfigException& exc)
+    {
+        maxSleepInterval = SMSC_MAX_SLEEP_INTERVAL;
+        log.warn("Time interval between updates applies parameter "
+                 "wasn't specified ! "
+                 "Config parameter: <MessageStore.Cache.sleep> "
+                 "Using default: %d", SMSC_MAX_SLEEP_INTERVAL);
+    }
+}
+
 CachedStore::CachedStore(Manager& config) 
     throw(ConfigException, StorageException) 
         : RemoteStore(config), cache(SMSC_MAX_SMS_CACHE_CAPACITY),
             maxUncommitedCount(SMSC_MAX_UNCOMMITED_UPDATES),
-            maxSleepInterval(),
+            maxSleepInterval(SMSC_MAX_SLEEP_INTERVAL),
             bStarted(false), bNeedExit(false)
 {
+    loadMaxUncommitedCount(config);
+    loadSleepInterval(config);
+    
     __require__(pool);
     connection = (StorageConnection *)pool->getConnection();
-    // Exceptions ???
-
+    
     Start();
 }
 CachedStore::~CachedStore() 
 {
-    // Flush cash here, apply updates & etc ... 
-    Stop();
-    if (pool && connection)
+    Stop(); // Flush cash here, apply updates & etc ... 
+    
+    if (pool && connection) 
         pool->freeConnection(connection);
 }
 void CachedStore::Start() 
@@ -1431,13 +1486,13 @@ void CachedStore::addUpdate(SMSId id, UpdateRecord* update)
 
     SMS sms; retriveSms(id, sms);
 
-    MutexGuard guard(updateMutex);
+    MutexGuard guard(updatesMutex);
     updates.insert(std::pair<SMSId, UpdateRecord*>(id, update));
     if (updates.size() >= maxUncommitedCount) processEvent.Signal();
 }
-bool CachedStore::delUpdate(SMSId id)
+bool CachedStore::delUpdates(SMSId id)
 {
-    MutexGuard guard(updateMutex);
+    MutexGuard guard(updatesMutex);
     
     std::map<SMSId, UpdateRecord*>::iterator i;
     for (i = updates.find(id); i != updates.end(); ++i) 
@@ -1447,7 +1502,7 @@ bool CachedStore::delUpdate(SMSId id)
 }
 void CachedStore::processUpdates()
 {
-    MutexGuard guard(updateMutex);
+    MutexGuard guard(updatesMutex);
 
     try 
     {
