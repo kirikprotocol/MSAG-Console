@@ -176,6 +176,7 @@ throw (SubjectNotFoundException)
   XmlStr forwardToStr(elem.getAttribute(XmlStr("forwardTo")));
   XmlStr trafRulesStr(elem.getAttribute(XmlStr("trafficRules")));
   const AclIdent aclId(atol(XmlStr(elem.getAttribute(XmlStr("aclId")))));
+  XmlStr forceDelivery(elem.getAttribute(XmlStr("forceDelivery")));
 
   std::auto_ptr<Route> r(new Route(std::string(id),
                                    priority,
@@ -191,7 +192,8 @@ throw (SubjectNotFoundException)
                                    strToDeliveryMode(deliveryModeStr),
                                    std::string(forwardToStr),
                                    std::string(trafRulesStr),
-                                   aclId)
+                                   aclId,
+                                   strcmp("true", forceDelivery) == 0)
                          );
 
   DOMNodeList *srcs = elem.getElementsByTagName(XmlStr("source"));
@@ -297,14 +299,15 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
     {
       Route *r = *i;
       out << "  <route id=\""  << encode(r->getId())
-      << "\" billing=\""   << (r->isBilling() ? "true" : "false")
-      << "\" archiving=\"" << (r->isArchiving() ? "true" : "false")
-      << "\" enabling=\""  << (r->isEnabling() ? "true" : "false")
-      << "\" priority=\""  << r->getPriority()
-      << "\" serviceId=\""  << r->getServiceId()
+      << "\" billing=\""       << (r->isBilling() ? "true" : "false")
+      << "\" archiving=\""     << (r->isArchiving() ? "true" : "false")
+      << "\" enabling=\""      << (r->isEnabling() ? "true" : "false")
+      << "\" priority=\""      << r->getPriority()
+      << "\" serviceId=\""     << r->getServiceId()
       << "\" deliveryMode=\""  << deliveryModeToStr(r->getDeliveryMode())
-      << "\" forwardTo=\""  << r->getForwardTo()
-      << "\" aclId=\""      << r->getAclId()
+      << "\" forwardTo=\""     << r->getForwardTo()
+      << "\" aclId=\""         << r->getAclId()
+      << "\" forceDelivery=\"" << (r->isForceDelivery() ? "true" : "false")
       << "\">" << std::endl;
 
       Source src;
