@@ -1,7 +1,7 @@
 #ifndef __SMSC_SYSTEM_CANCELAGENT_HPP__
 #define __SMSC_SYSTEM_CANCELAGENT_HPP__
 
-#include "store/StoreManager.h"
+#include "scheduler.hpp"
 #include "system/event_queue.h"
 #include "core/threads/ThreadedTask.hpp"
 #include "core/buffers/Array.hpp"
@@ -11,7 +11,6 @@
 namespace smsc{
 namespace system{
 
-using smsc::store::MessageStore;
 using namespace smsc::smeman;
 using smsc::core::buffers::Array;
 using smsc::core::synchronization::Event;
@@ -19,8 +18,8 @@ using namespace smsc::smeman;
 
 class CancelAgent:public smsc::core::threads::ThreadedTask{
 public:
-  CancelAgent(EventQueue& eq,MessageStore* st):
-    eventQueue(eq),store(st){}
+  CancelAgent(EventQueue& eq,Scheduler* argSched,int argEventQueueLimit):
+    eventQueue(eq),sched(argSched),eventQueueLimit(argEventQueueLimit){}
 
   const char *taskName()
   {
@@ -31,6 +30,7 @@ public:
   {
     mon.Lock();
     Array<SMSId> ids;
+    SMS dummySms;
     while(!isStopping)
     {
       if(queue.Count()==0)mon.wait();
@@ -45,16 +45,20 @@ public:
         const smsc::smeman::CancelSm& c=cmd->get_cancelSm();
         if(c.sourceAddr.get() && c.destAddr.get())
         {
-          Address oa(c.sourceAddr.get());
-          Address da(c.destAddr.get());
-          smsc::store::IdIterator *it=store->getReadyForCancel(oa,da,c.serviceType.get());
-          SMSId id;
-          while(it->getNextId(id))
-          {
-            ids.Push(id);
-          }
+          dummySms.setOriginatingAddress(c.sourceAddr.get());
+          dummySms.setDealiasedDestinationAddress(c.destAddr.get());
+          dummySms.setEServiceType(c.serviceType.get());
+
+          __trace2__("CANCELAGENT: mass cancel request - %s/%s/%s",
+            dummySms.getOriginatingAddress().toString().c_str(),
+            dummySms.getDealiasedDestinationAddress().toString().c_str(),
+            dummySms.getEServiceType()
+          );
+
+          sched->getMassCancelIds(dummySms,ids);
+
           __trace2__("CANCELAGENT: found %d ids to cancel",ids.Count());
-          delete it;
+
           if(ids.Count()==0)
           {
             cmd.getProxy()->putCommand
@@ -79,7 +83,24 @@ public:
           for(int i=0;i<ids.Count();i++)
           {
             __trace2__("CANCELAGENT: sending command for %lld",ids[i]);
-            eventQueue.enqueue(ids[i],SmscCommand::makeCancel(ids[i],oa,da));
+            while
+            (
+              !eventQueue.enqueueEx
+               (
+                  ids[i],
+                  SmscCommand::makeCancel
+                  (
+                    ids[i],
+                    dummySms.getOriginatingAddress(),
+                    dummySms.getDealiasedDestinationAddress()
+                  ),
+                  eventQueueLimit/2
+               )
+            )
+            {
+              timestruc_t tv={0,10000000};
+              nanosleep(&tv,0);
+            }
           }
           ids.Empty();
         }
@@ -112,11 +133,13 @@ public:
     queue.Push(cmd);
   }
 
+
 protected:
   EventQueue &eventQueue;
-  MessageStore* store;
+  Scheduler* sched;
   EventMonitor mon;
   Array<SmscCommand> queue;
+  int eventQueueLimit;
 };
 
 }//system
