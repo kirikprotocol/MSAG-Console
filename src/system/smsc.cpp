@@ -677,7 +677,7 @@ void Smsc::init(const SmscConfigs& cfg)
     MOLockTimeout = 45;
   }
   try{
-    allowCallBarred=cfg.cfgman->getInt("map.allowCallBarred");
+    allowCallBarred=cfg.cfgman->getBool("map.allowCallBarred");
   } catch (...) {
     __warning__("map.allowCallBarred not found, disabled");
     allowCallBarred = false;

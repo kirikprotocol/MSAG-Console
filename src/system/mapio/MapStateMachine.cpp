@@ -2168,7 +2168,6 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
     case MAPST_ImsiWaitRInfo:
       {
         if ( dialog->routeErr ) {
-          __map_trace2__("%s: check code: %d, allowBarred: %d, state: %d", __func__, (int)errorSendRoutingInfoForSm_sp->errorCode, (int)MapDialogContainer::getAllowCallBarred(), (int)dialog->state);
           if(errorSendRoutingInfoForSm_sp->errorCode == 13 && 
              MapDialogContainer::getAllowCallBarred() == true && 
              dialog->state == MAPST_ImsiWaitRInfo) {
@@ -2178,6 +2177,7 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
             dialog->s_imsi = "";
             dialog->s_msc = "";
             dialog->routeErr = 0;
+            dialog->state = MAPST_ImsiWaitCloseInd;
           } else {
             dialog->s_imsi = "";
             dialog->s_msc = "";
