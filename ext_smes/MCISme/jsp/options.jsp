@@ -112,6 +112,22 @@
   <td><input class=txt name=smscPassword value="<%=StringEncoderDecoder.encode(bean.getSmscPassword())%>"></td>
 </tr>
 </table>
+<div class=page_subtitle>Circuits settings</div>
+<table class=properties_list <%rowN=0;%>>
+<col width="10%">
+<tr class=row<%=rowN++&1%>>
+  <th>Hardware Selection Number</th>
+  <td><input class=txt name=HSN value="<%=StringEncoderDecoder.encode(bean.getHSN())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Span</th>
+  <td><input class=txt name=SPN value="<%=StringEncoderDecoder.encode(bean.getSPN())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Timeslot mask (hex)</th>
+  <td><input class=txt name=TSM value="<%=StringEncoderDecoder.encode(bean.getTSM())%>"></td>
+</tr>
+</table>
 <div class=page_subtitle>Data Source</div>
 <table class=properties_list <%rowN=0;%>>
 <col width="10%">
