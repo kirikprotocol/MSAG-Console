@@ -28,6 +28,9 @@ public class CategoryManager
 
   public CategoryManager(final Config gwConfig) throws Config.WrongParamTypeException, Config.ParamNotFoundException, NumberFormatException
   { this.webappConfig=gwConfig;
+    if (!gwConfig.containsSection(SECTION_NAME_categories)) {
+     gwConfig.setInt(SECTION_NAME_categories+ '.' + PARAM_NAME_last_used_categories_id,0); 
+    }
     lastUsedCatId = gwConfig.getInt(SECTION_NAME_categories + '.' + PARAM_NAME_last_used_categories_id);
     final Collection categoryIds = gwConfig.getSectionChildShortParamsNames(SECTION_NAME_categories);
     for (Iterator i = categoryIds.iterator(); i.hasNext();) {

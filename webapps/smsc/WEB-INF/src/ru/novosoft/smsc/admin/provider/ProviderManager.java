@@ -28,6 +28,9 @@ public class ProviderManager extends AbstractDataSourceImpl implements DataSourc
   {
     super(COLUMN_NAMES);
     this.webappConfig = gwConfig;
+    if (!gwConfig.containsSection(SECTION_NAME_providers)) {
+     gwConfig.setInt(SECTION_NAME_providers+ '.' + PARAM_NAME_last_used_id,0);
+    }
     lastUsedId = gwConfig.getInt(SECTION_NAME_providers + '.' + PARAM_NAME_last_used_id);
     final Collection providerIds = gwConfig.getSectionChildShortParamsNames(SECTION_NAME_providers);
     for (Iterator i = providerIds.iterator(); i.hasNext();) {
