@@ -333,6 +333,7 @@ namespace TypeOfNumberValue{ /* SMPP v3.4 (5.2.5) */
 namespace DataCoding{
 #define BIT(x) (((uint8_t)1)<<((uint8_t)x))
   static const uint8_t DEFAULT              = 0;
+  static const uint8_t BINARY               = BIT(2);
   static const uint8_t UCS2                 = BIT(3);
 #undef BIT
 };
