@@ -68,7 +68,7 @@ static void CloseMapDialog(unsigned dialogid){
 static void TryDestroyDialog(unsigned);
 static string RouteToString(MapDialog*);
 
-static void StartDialogProcessing(MapDialog* dialog)
+static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
 {
   __trace2__("MAP::%s: ",__FUNCTION__);
   __trace2__("MAP:%s: Preapre SMSC command",__FUNCTION__);
