@@ -92,6 +92,7 @@ static void DropMapDialog_(unsigned dialogid){
   if ( dialogid == 0 ) return;
   DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid));
   if ( !dialog.isnull() ){
+    __trace2__("MAP::%s: 0x%x  (state CLOSED/ABORTED)",__FUNCTION__,dialog->dialogid_map);
     unsigned __dialogid_map = dialog->dialogid_map;
     unsigned __dialogid_smsc = 0;
     if ( dialog->chain.size() == 0 ) {
@@ -576,6 +577,8 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
         __trace2__("MAP::putCommand: can't create SMSC->MS dialog (locked), request has bean attached");
         // command has bean attached by dialog container
       }else{
+        dialog->state = MAPST_START;
+        __trace2__("MAP::%s: 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
         dialogid_map = dialog->dialogid_map;
         StartDialogProcessing(dialog.get(),cmd);
       }
@@ -585,6 +588,8 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
       if ( dialog.isnull() )
         throw MAPDIALOG_FATAL_ERROR(
           FormatText("MAP::putCommand: Opss, here is no dialog with id x%x",(ET96MAP_DIALOGUE_ID_T)dialogid_smsc));
+      dialog->state = MAPST_START;
+      __trace2__("MAP::%s: 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
       dialogid_map = dialogid_smsc;
       if ( dialog->state == MAPST_WaitSubmitCmdConf ){
         ResponseMO(dialog.get(),cmd->get_resp()->get_status());
