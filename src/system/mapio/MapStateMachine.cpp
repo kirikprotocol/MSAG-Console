@@ -770,6 +770,7 @@ USHORT_T  Et96MapV2SendRInfoForSmConf (
     dialogid_smsc = dialog->dialogid_smsc;
     __trace2__("MAP::%s:DELIVERY_SM %s",__FUNCTION__,RouteToString(dialog.get()).c_str());
     DoRInfoErrorProcessor(errorSendRoutingInfoForSm_sp,provErrCode_p);
+    __trace2__("MAP::%s: (state %d)",__FUNCTION__,dialog->state);
     switch( dialog->state ){
     case MAPST_WaitRInfoConf:
       {
@@ -840,6 +841,7 @@ USHORT_T Et96MapCloseInd(
         FormatText("MAP::dialog 0x%x is not present",_di));}
     dialogid_smsc = dialog->dialogid_smsc;
     __trace2__("MAP::%s:DELIVERY_SM %s",__FUNCTION__,RouteToString(dialog.get()).c_str());
+    __trace2__("MAP::%s: (state %d)",__FUNCTION__,dialog->state);
     switch( dialog->state ){
     case MAPST_WaitRInfoClose:
       MapDialogContainer::getInstance()->reAssignDialog(dialogueId);
@@ -943,6 +945,7 @@ USHORT_T Et96MapV2ForwardSmMOInd (
         FormatText("MAP::%s dialog 0x%x is not present",__FUNCTION__,dialogueId));
     }
     __trace2__("MAP::%s: %s",__FUNCTION__,RouteToString(dialog.get()).c_str());
+    __trace2__("MAP::%s: (state %d)",__FUNCTION__,dialog->state);
     switch( dialog->state ){
     case MAPST_WaitSms:
       dialog->state = MAPST_WaitSmsMODelimiter2;
@@ -995,6 +998,7 @@ USHORT_T Et96MapV2ForwardSmMTConf (
     dialogid_smsc = dialog->dialogid_smsc;
     __trace2__("MAP::%s:DELIVERY_SM %s",__FUNCTION__,RouteToString(dialog.get()).c_str());
     DoMTConfErrorProcessor(errorForwardSMmt_sp,provErrCode_p);
+    __trace2__("MAP::%s: (state %d)",__FUNCTION__,dialog->state);
     switch( dialog->state ){
     case MAPST_WaitSmsConf:
       dialog->state = MAPST_WaitSmsClose;
@@ -1024,6 +1028,7 @@ USHORT_T Et96MapDelimiterInd(
         FormatText("MAP::%s dialog 0x%x is not present",__FUNCTION__,dialogueId));
     }
     __trace2__("MAP::%s: %s",__FUNCTION__,RouteToString(dialog.get()).c_str());
+    __trace2__("MAP::%s: (state %d)",__FUNCTION__,dialog->state);
     switch( dialog->state ){
     case MAPST_WaitSms:
       dialog->state = MAPST_WaitSmsMOInd;

@@ -43,28 +43,28 @@ extern "C" {
 #define SSN 8
 
 enum MapState{
-  MAPST_UNKNOWN,
-  MAPST_WaitHlrVersion,
+  MAPST_UNKNOWN = 0,
+  MAPST_WaitHlrVersion = 1,
 //  MAPST_SendingRInfo,
-  MAPST_RInfoFallBack,
-  MAPST_WaitRInfoConf,
-  MAPST_WaitRInfoClose,
-  MAPST_WaitMcsVersion,
+  MAPST_RInfoFallBack = 2,
+  MAPST_WaitRInfoConf = 3,
+  MAPST_WaitRInfoClose = 4,
+  MAPST_WaitMcsVersion = 5,
 //  MAPST_SendingSms,
-  MAPST_WaitSpecOpenConf,
-  MAPST_WaitOpenConf,
-  MAPST_WaitSmsConf,
-  MAPST_WaitSpecDelimeter,
-  MAPST_WaitSmsClose,
-  MAPST_WaitSms,
-  MAPST_WaitSmsMOInd,
-  MAPST_WaitSmsMODelimiter,
-  MAPST_WaitSubmitCmdConf,
-  MAPST_WaitSmsMODelimiter2,
-  MAPST_START,
-  MAPST_CLOSED,
-  MAPST_ABORTED,
-  MAPST_BROKEN
+  MAPST_WaitSpecOpenConf = 6,
+  MAPST_WaitOpenConf = 7,
+  MAPST_WaitSmsConf = 8,
+  MAPST_WaitSpecDelimeter = 9,
+  MAPST_WaitSmsClose = 10,
+  MAPST_WaitSms = 11,
+  MAPST_WaitSmsMOInd = 12,
+  MAPST_WaitSmsMODelimiter = 13,
+  MAPST_WaitSubmitCmdConf = 14,
+  MAPST_WaitSmsMODelimiter2 = 15,
+  MAPST_START = 16,
+  MAPST_CLOSED = 17,
+  MAPST_ABORTED = 18,
+  MAPST_BROKEN = 19
 };
 
 class hash_func_ET96MAP_DID{
