@@ -47,23 +47,33 @@ namespace smsc { namespace dbsme
         
         virtual bool isNull(int pos)
             throw(SQLException, InvalidArgumentException) = 0;
-        virtual char* getString(int pos)
+        
+        virtual const char* getString(int pos)
             throw(SQLException, InvalidArgumentException) = 0;
+        
         virtual int8_t getInt8(int pos)
             throw(SQLException, InvalidArgumentException) = 0;
         virtual int16_t getInt16(int pos)
             throw(SQLException, InvalidArgumentException) = 0;
         virtual int32_t getInt32(int pos)
             throw(SQLException, InvalidArgumentException) = 0;
+        
         virtual uint8_t getUint8(int pos)
             throw(SQLException, InvalidArgumentException) = 0;
         virtual uint16_t getUint16(int pos)
             throw(SQLException, InvalidArgumentException) = 0;
         virtual uint32_t getUint32(int pos)
             throw(SQLException, InvalidArgumentException) = 0;
+        
+        virtual float getFloat(int pos)
+            throw(SQLException, InvalidArgumentException) = 0;
+        virtual double getDouble(int pos)
+            throw(SQLException, InvalidArgumentException) = 0;
+        virtual long double getLongDouble(int pos)
+            throw(SQLException, InvalidArgumentException) = 0;
+
         virtual time_t getDateTime(int pos)
             throw(SQLException, InvalidArgumentException) = 0;
-        /* ... */
     };
 
     class Statement
@@ -83,23 +93,32 @@ namespace smsc { namespace dbsme
         virtual ResultSet* executeQuery() 
             throw(SQLException) = 0;
         
-        virtual void setString(int pos, char* str)
+        virtual void setString(int pos, const char* str, bool null=false)
             throw(SQLException) = 0;
-        virtual void setInt8(int pos, int8_t val)
+        
+        virtual void setInt8(int pos, int8_t val, bool null=false)
             throw(SQLException) = 0;
-        virtual void setInt16(int pos, int16_t val)
+        virtual void setInt16(int pos, int16_t val, bool null=false)
             throw(SQLException) = 0;
-        virtual void setInt32(int pos, int32_t val)
+        virtual void setInt32(int pos, int32_t val, bool null=false)
             throw(SQLException) = 0;
-        virtual void setUint8(int pos, uint8_t val)
+        
+        virtual void setUint8(int pos, uint8_t val, bool null=false)
             throw(SQLException) = 0;
-        virtual void setUint16(int pos, uint16_t val)
+        virtual void setUint16(int pos, uint16_t val, bool null=false)
             throw(SQLException) = 0;
-        virtual void setUint32(int pos, uint32_t val)
+        virtual void setUint32(int pos, uint32_t val, bool null=false)
             throw(SQLException) = 0;
-        virtual void setDateTime(int pos, time_t time)
+        
+        virtual void setFloat(int pos, float val, bool null=false)
             throw(SQLException) = 0;
-        /* ... */
+        virtual void setDouble(int pos, double val, bool null=false)
+            throw(SQLException) = 0;
+        virtual void setLongDouble(int pos, long double val, bool null=false)
+            throw(SQLException) = 0;
+        
+        virtual void setDateTime(int pos, time_t time, bool null=false)
+            throw(SQLException) = 0;
     };
 
     class ConnectionPool;
@@ -199,6 +218,10 @@ namespace smsc { namespace dbsme
         DataSourceFactory() {};
         virtual ~DataSourceFactory() {};
         
+        virtual DataSource* createDataSource() = 0;
+        
+    public:
+
         static void registerFactory(DataSourceFactory* dsf, const char* key)
         {
             if (!registry)
@@ -208,10 +231,6 @@ namespace smsc { namespace dbsme
             registry->Insert(key, dsf);
         };
         
-        virtual DataSource* createDataSource() = 0;
-        
-    public:
-
         static DataSource* getDataSource(const char* key)
         {
             DataSourceFactory* dsf = (registry) ? registry->Get(key):0;

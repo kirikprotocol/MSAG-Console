@@ -47,7 +47,8 @@ void ConnectionPool::loadPoolSize(ConfigView* config)
 ConnectionPool::ConnectionPool(DataSource& _ds, ConfigView* config)
     throw(ConfigException) : ds(_ds), count(0),
         log(Logger::getCategory("smsc.dbsme.ConnectionPool")),
-            head(0L), tail(0L), queueLen(0)
+            idleHead(0L), idleTail(0L), idleCount(0),
+                head(0L), tail(0L), queueLen(0)
 {
     loadPoolSize(config);
 }

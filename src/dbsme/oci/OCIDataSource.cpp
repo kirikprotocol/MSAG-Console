@@ -3,21 +3,6 @@
 
 namespace smsc { namespace dbsme
 {
-/* ----------------------- OCI Connection Management ----------------------- */
-static OCIDataSourceFactory _OCIDataSourceFactory;
-
-const char* OCI_FACTORY_IDENTITY = "OCI";
-OCIDataSourceFactory::OCIDataSourceFactory() 
-    : DataSourceFactory() 
-{
-    printf("Registration: %s\n", OCI_FACTORY_IDENTITY);
-    DataSourceFactory::registerFactory(this, OCI_FACTORY_IDENTITY);
-}
-
-DataSource* OCIDataSourceFactory::createDataSource()
-{
-    return new OCIDataSource();
-}
 
 /* ------------------------ Connection implementation ---------------------- */
 
@@ -30,6 +15,7 @@ OCIConnection::OCIConnection(const char* instance,
             envhp(0), svchp(0), srvhp(0), errhp(0), sesshp(0)
 {
     __require__(dbInstance && dbUserName && dbUserPassword);
+    printf("Connection : %s %s %s\n", dbInstance, dbUserName, dbUserPassword);
 }
         
 OCIConnection::~OCIConnection() 
@@ -187,6 +173,46 @@ Statement* OCIConnection::createStatement(const char* sql)
     return new OCIStatement(this, sql);
 }
 
+/* ---------------- Helper for Binds & Defines implementation -------------- */
+
+OCIDataDescriptor::OCIDataDescriptor(ub2 _type, sb4 _size) 
+    : type(_type), size(_size), ind(OCI_IND_NOTNULL)
+{
+    __trace2__("Type is %d, Size is %d\n", type, (int)size);
+    
+    switch (type)
+    {
+    case SQLT_INT: case SQLT_UIN: case SQLT_NUM: case SQLT_FLT:
+        data = (dvoid *)&number;
+        size = sizeof(OCINumber);
+        type = SQLT_VNU;
+        break;
+    case SQLT_ODT: case SQLT_DAT:
+        data = (dvoid *)&date;
+        size = sizeof(OCIDate);
+        type = SQLT_ODT;
+        break;
+    case SQLT_CHR: case SQLT_STR:
+        data = (dvoid *)(new uint8_t[size = (int)size+1]);
+        ((char *)data)[0] = '\0';
+        type = SQLT_STR;
+        break;
+    
+    case SQLT_BIN:
+    case SQLT_PDN:
+    default:
+        printf("Type %d is not supported.\n", type);
+    }
+}
+
+OCIDataDescriptor::~OCIDataDescriptor()
+{
+    if (data && (type == SQLT_STR || type == SQLT_CHR))
+    {
+        delete ((uint8_t *)data);
+    }
+}
+
 /* ------------------------ Statement implementation ----------------------- */
 
 OCIStatement::OCIStatement(OCIConnection* connection, const char* sql) 
@@ -205,6 +231,12 @@ OCIStatement::OCIStatement(OCIConnection* connection, const char* sql)
 
 OCIStatement::~OCIStatement()
 {
+    while (descriptors.Count())
+    {
+        OCIDataDescriptor* descriptor=0L;
+        (void) descriptors.Pop(descriptor);
+        if (descriptor) delete descriptor;
+    }
     (void) OCIHandleFree(stmt, OCI_HTYPE_STMT);
 }
 
@@ -314,56 +346,199 @@ ResultSet* OCIStatement::executeQuery()
     return new OCIResultSet(this);
 }
 
-void OCIStatement::setString(int pos, char* str)
-    throw(SQLException)
+OCIDataDescriptor* OCIStatement::setField(int pos, ub2 type, ub4 size, 
+                                          bool null)
 {
-}
-void OCIStatement::setInt8(int pos, int8_t val)
-    throw(SQLException)
-{
-}
-void OCIStatement::setInt16(int pos, int16_t val)
-    throw(SQLException)
-{
+    OCIDataDescriptor* descriptor = 0;
+    if (descriptors.Count() < pos)
+    {
+        while (descriptors.Count() < pos-1)
+        {
+            descriptors.Push((OCIDataDescriptor *)0);
+        }
+        descriptor = new OCIDataDescriptor(type, size);
+        descriptors.Push(descriptor);
+    }
+    else
+    {
+        descriptor = descriptors[pos-1];
+        if (descriptor) delete descriptor;
+        descriptor = new OCIDataDescriptor(type, size);
+        descriptors[pos-1] = descriptor;
+    }
+    descriptor->ind = (null) ? OCI_IND_NULL : OCI_IND_NOTNULL;
+    return descriptor;
 }
 
-void OCIStatement::setInt32(int pos, int32_t val)
+void OCIStatement::setString(int pos, const char* str, bool null)
     throw(SQLException)
 {
+    OCIDataDescriptor* descriptor = 
+        setField(pos, SQLT_CHR, (str) ? strlen(str):0, null);
+    
+    if (!null) 
+    {
+        strcpy((char *)descriptor->data, str);
+    }
+    bind(pos, descriptor->type, descriptor->data,
+         descriptor->size, (dvoid *) &descriptor->ind);
 }
-void OCIStatement::setUint8(int pos, uint8_t val)
+void OCIStatement::setInt8(int pos, int8_t val, bool null)
     throw(SQLException)
 {
+    OCIDataDescriptor* descriptor = 
+        setField(pos, SQLT_INT, sizeof(int8_t), null);
+    
+    if (!null)
+    {
+        check(OCINumberFromInt(errhp, (CONST dvoid *)&val,
+                               (uword)sizeof(int8_t),
+                               (uword)OCI_NUMBER_SIGNED,
+                               (OCINumber *)&(descriptor->number)));
+    }
+    bind(pos, descriptor->type, descriptor->data,
+         descriptor->size, (dvoid *) &descriptor->ind);
 }
-void OCIStatement::setUint16(int pos, uint16_t val)
+void OCIStatement::setInt16(int pos, int16_t val, bool null)
     throw(SQLException)
 {
+    OCIDataDescriptor* descriptor = 
+        setField(pos, SQLT_INT, sizeof(int16_t), null);
+    
+    if (!null)
+    {
+        check(OCINumberFromInt(errhp, (CONST dvoid *)&val,
+                               (uword)sizeof(int16_t),
+                               (uword)OCI_NUMBER_SIGNED,
+                               (OCINumber *)&(descriptor->number)));
+    }
+    bind(pos, descriptor->type, descriptor->data,
+         descriptor->size, (dvoid *) &descriptor->ind);
 }
-void OCIStatement::setUint32(int pos, uint32_t val)
+void OCIStatement::setInt32(int pos, int32_t val, bool null)
     throw(SQLException)
 {
+    OCIDataDescriptor* descriptor = 
+        setField(pos, SQLT_INT, sizeof(int32_t), null);
+    
+    if (!null)
+    {
+        check(OCINumberFromInt(errhp, (CONST dvoid *)&val,
+                               (uword)sizeof(int32_t),
+                               (uword)OCI_NUMBER_SIGNED,
+                               (OCINumber *)&(descriptor->number)));
+    }
+    bind(pos, descriptor->type, descriptor->data,
+         descriptor->size, (dvoid *) &descriptor->ind);
 }
-void OCIStatement::setDateTime(int pos, time_t time)
+void OCIStatement::setUint8(int pos, uint8_t val, bool null)
     throw(SQLException)
 {
+    OCIDataDescriptor* descriptor = 
+        setField(pos, SQLT_UIN, sizeof(uint8_t), null);
+    
+    if (!null)
+    {
+        check(OCINumberFromInt(errhp, (CONST dvoid *)&val,
+                               (uword)sizeof(uint8_t),
+                               (uword)OCI_NUMBER_UNSIGNED,
+                               (OCINumber *)&(descriptor->number)));
+    }
+    bind(pos, descriptor->type, descriptor->data,
+         descriptor->size, (dvoid *) &descriptor->ind);
+}
+void OCIStatement::setUint16(int pos, uint16_t val, bool null)
+    throw(SQLException)
+{
+    OCIDataDescriptor* descriptor = 
+        setField(pos, SQLT_UIN, sizeof(uint16_t), null);
+    
+    if (!null)
+    {
+        check(OCINumberFromInt(errhp, (CONST dvoid *)&val,
+                               (uword)sizeof(uint16_t),
+                               (uword)OCI_NUMBER_UNSIGNED,
+                               (OCINumber *)&(descriptor->number)));
+    }
+    bind(pos, descriptor->type, descriptor->data,
+         descriptor->size, (dvoid *) &descriptor->ind);
+}
+void OCIStatement::setUint32(int pos, uint32_t val, bool null)
+    throw(SQLException)
+{
+    OCIDataDescriptor* descriptor = 
+        setField(pos, SQLT_UIN, sizeof(uint32_t), null);
+    
+    if (!null)
+    {
+        check(OCINumberFromInt(errhp, (CONST dvoid *)&val,
+                               (uword)sizeof(uint32_t),
+                               (uword)OCI_NUMBER_UNSIGNED,
+                               (OCINumber *)&(descriptor->number)));
+    }
+    bind(pos, descriptor->type, descriptor->data,
+         descriptor->size, (dvoid *) &descriptor->ind);
+}
+void OCIStatement::setFloat(int pos, float val, bool null)
+    throw(SQLException)
+{
+    OCIDataDescriptor* descriptor = 
+        setField(pos, SQLT_FLT, sizeof(float), null);
+    
+    if (!null)
+    {
+        check(OCINumberFromReal(errhp, (CONST dvoid *)&val,
+                               (uword)sizeof(float),
+                               (OCINumber *)&(descriptor->number)));
+    }
+    bind(pos, descriptor->type, descriptor->data,
+         descriptor->size, (dvoid *) &descriptor->ind);
+}
+void OCIStatement::setDouble(int pos, double val, bool null)
+    throw(SQLException)
+{
+    OCIDataDescriptor* descriptor = 
+        setField(pos, SQLT_FLT, sizeof(double), null);
+    
+    if (!null)
+    {
+        check(OCINumberFromReal(errhp, (CONST dvoid *)&val,
+                               (uword)sizeof(double),
+                               (OCINumber *)&(descriptor->number)));
+    }
+    bind(pos, descriptor->type, descriptor->data,
+         descriptor->size, (dvoid *) &descriptor->ind);
+}
+void OCIStatement::setLongDouble(int pos, long double val, bool null)
+    throw(SQLException)
+{
+    OCIDataDescriptor* descriptor = 
+        setField(pos, SQLT_FLT, sizeof(long double), null);
+    
+    if (!null)
+    {
+        check(OCINumberFromReal(errhp, (CONST dvoid *)&val,
+                               (uword)sizeof(long double),
+                               (OCINumber *)&(descriptor->number)));
+    }
+    bind(pos, descriptor->type, descriptor->data,
+         descriptor->size, (dvoid *) &descriptor->ind);
+}
+void OCIStatement::setDateTime(int pos, time_t time, bool null)
+    throw(SQLException)
+{
+    OCIDataDescriptor* descriptor = 
+        setField(pos, SQLT_ODT, sizeof(OCIDate), null);
+    
+    if (!null)
+    {
+        convertDateToOCIDate(&time, (OCIDate *)descriptor->data);
+    }
+    bind(pos, descriptor->type, descriptor->data,
+         descriptor->size, (dvoid *) &descriptor->ind);
 }
 
 /* ------------------------ ResultSet implementation ----------------------- */
-
-OCIResultSet::OCIDataDescriptor::OCIDataDescriptor(ub2 _type, sb4 _size) 
-        : type(_type), size(_size), ind(OCI_IND_NOTNULL)
-{
-    data = (type == SQLT_ODT) ? 
-            (dvoid *)&date : (dvoid *)(new uint8_t[size+1]);
-}
-
-OCIResultSet::OCIDataDescriptor::~OCIDataDescriptor()
-{
-    if (data && type != SQLT_ODT)
-    {
-        delete ((uint8_t *)data);
-    }
-}
 
 OCIResultSet::OCIResultSet(OCIStatement* statement)
     throw(SQLException)
@@ -373,28 +548,28 @@ OCIResultSet::OCIResultSet(OCIStatement* statement)
     
     owner->check(owner->execute(OCI_DEFAULT, 0, 0));
     // retrive describe info and process the set of defines here !
-
-    OCIParam *param;
+    
+    OCIParam *param = 0;
     ub4 counter = 1;
     
     /* Request a parameter descriptor for position 1 in the select-list */
     sb4 status = OCIParamGet(owner->stmt, OCI_HTYPE_STMT, 
-                             owner->errhp, (dvoid **) &param, (ub4) counter);
+                             owner->errhp, (dvoid **)&param, (ub4) counter);
     /* Loop only if a descriptor was successfully retrieved for
     current position, starting at 1 */
     while (status==OCI_SUCCESS) 
     {
-        ub2 type; ub4 size;
+        ub2 type = 0; ub4 size = 0;
 
         /* Retrieve the data type attribute */
-        owner->check(OCIAttrGet((dvoid*) param, (ub4) OCI_DTYPE_PARAM,
-                                (dvoid*) &type,(ub4 *) 0, 
+        owner->check(OCIAttrGet((dvoid *) param, (ub4) OCI_DTYPE_PARAM,
+                                (dvoid *) &type, (ub4 *) 0, 
                                 (ub4) OCI_ATTR_DATA_TYPE,
-                                (OCIError *) owner->errhp));
+                                (OCIError*) owner->errhp));
         /* Retrieve max data size */
-        owner->check(OCIAttrSet((dvoid *) param, (ub4) OCI_DTYPE_PARAM,
-                                (dvoid *) &size, (ub4) 0,
-                                (ub4)OCI_ATTR_DATA_SIZE,
+        owner->check(OCIAttrGet((dvoid *) param, (ub4) OCI_DTYPE_PARAM,
+                                (dvoid *) &size, (ub4 *) 0,
+                                (ub4) OCI_ATTR_DATA_SIZE,
                                 (OCIError *) owner->errhp));
         
         OCIDataDescriptor* descriptor = new OCIDataDescriptor(type, size);
@@ -402,9 +577,10 @@ OCIResultSet::OCIResultSet(OCIStatement* statement)
                       descriptor->size, (dvoid *) &descriptor->ind);
         descriptors.Push(descriptor);
         
+        owner->check(OCIDescriptorFree((dvoid *) param, OCI_DTYPE_PARAM));
         /* increment counter and get next descriptor, if there is one */
         status = OCIParamGet(owner->stmt, OCI_HTYPE_STMT, 
-                             owner->errhp, (dvoid **) &param, (ub4) ++counter);
+                             owner->errhp, (dvoid **)&param, (ub4) ++counter);
     }
 }
 
@@ -432,11 +608,11 @@ bool OCIResultSet::fetchNext()
     return false;
 }
 
-dvoid* OCIResultSet::getField(int pos, ub2 type, ub4 size)
+dvoid* OCIResultSet::getField(int pos)
     throw (InvalidArgumentException)
 {
-    OCIDataDescriptor* descriptor = descriptors[pos];
-    if (descriptor && descriptor->type == type && descriptor->size == size)
+    OCIDataDescriptor* descriptor = descriptors[pos-1];
+    if (descriptor)
     {
         return descriptor->data;
     }
@@ -446,7 +622,7 @@ dvoid* OCIResultSet::getField(int pos, ub2 type, ub4 size)
 bool OCIResultSet::isNull(int pos)
     throw (SQLException, InvalidArgumentException)
 {
-    OCIDataDescriptor* descriptor = descriptors[pos];
+    OCIDataDescriptor* descriptor = descriptors[pos-1];
     if (descriptor)
     {
         return ((descriptor->ind == OCI_IND_NOTNULL) ? false : true);
@@ -454,46 +630,116 @@ bool OCIResultSet::isNull(int pos)
     throw InvalidArgumentException();
 }
 
-char* OCIResultSet::getString(int pos)
+const char* OCIResultSet::getString(int pos)
     throw(SQLException, InvalidArgumentException)
 {
-    return 0;
+    return (const char*)getField(pos);
 }
+
 int8_t OCIResultSet::getInt8(int pos)
     throw(SQLException, InvalidArgumentException)
 {
-    return (*(int8_t *)(getField(pos, SQLT_INT, sizeof(int8_t))));
+    return (int8_t)getInt32(pos);
 }
 int16_t OCIResultSet::getInt16(int pos)
     throw(SQLException, InvalidArgumentException)
 {
-    return (*(int16_t *)(getField(pos, SQLT_INT, sizeof(int16_t))));
+    return (int16_t)getInt32(pos);
 }
 int32_t OCIResultSet::getInt32(int pos)
     throw(SQLException, InvalidArgumentException)
 {
-    return (*(int32_t *)(getField(pos, SQLT_INT, sizeof(int32_t))));
+    __require__(owner);
+
+    boolean     ok = FALSE;
+    int32_t     result = 0;
+    
+    OCINumber*  number = (OCINumber*)getField(pos);
+    owner->check(OCINumberIsInt(owner->errhp, (CONST OCINumber *)number, &ok));
+    if (ok != TRUE) 
+    {
+        throw InvalidArgumentException();
+    }
+    owner->check(OCINumberToInt(owner->errhp, (CONST OCINumber *)number,
+                                (uword) sizeof(int32_t), 
+                                (uword)OCI_NUMBER_SIGNED,
+                                (dvoid *) &result)); 
+    return result;
 }
 uint8_t OCIResultSet::getUint8(int pos)
     throw(SQLException, InvalidArgumentException)
 {
-    return (*(uint8_t *)(getField(pos, SQLT_UIN, sizeof(uint8_t))));
+    return (uint8_t)getUint32(pos);
 }
 uint16_t OCIResultSet::getUint16(int pos)
     throw(SQLException, InvalidArgumentException)
 {
-    return (*(uint16_t *)(getField(pos, SQLT_UIN, sizeof(uint16_t))));
+    return (uint16_t)getUint32(pos);
 }
 uint32_t OCIResultSet::getUint32(int pos)
     throw(SQLException, InvalidArgumentException)
 {
-    return (*(uint32_t *)(getField(pos, SQLT_UIN, sizeof(uint32_t))));
+    __require__(owner);
+
+    boolean     ok = FALSE;
+    uint32_t    result = 0;
+    
+    OCINumber*  number = (OCINumber*)getField(pos);
+    owner->check(OCINumberIsInt(owner->errhp, (CONST OCINumber *)number, &ok));
+    if (ok != TRUE) 
+    {
+        throw InvalidArgumentException();
+    }
+    owner->check(OCINumberToInt(owner->errhp, (CONST OCINumber *)number,
+                                (uword) sizeof(uint32_t),
+                                (uword)OCI_NUMBER_UNSIGNED,
+                                (dvoid *) &result));    
+    return result;
 }
+float OCIResultSet::getFloat(int pos)
+    throw(SQLException, InvalidArgumentException)
+{
+    __require__(owner);
+
+    boolean     ok = FALSE;
+    float       result = 0;
+    
+    OCINumber*  number = (OCINumber*)getField(pos);
+    owner->check(OCINumberToReal(owner->errhp, (CONST OCINumber *)number,
+                                 (uword) sizeof(float),
+                                 (dvoid *) &result));    
+    return result;
+}
+double OCIResultSet::getDouble(int pos)
+    throw(SQLException, InvalidArgumentException)
+{
+    boolean     ok = FALSE;
+    double      result = 0;
+    
+    OCINumber*  number = (OCINumber*)getField(pos);
+    owner->check(OCINumberToReal(owner->errhp, (CONST OCINumber *)number,
+                                 (uword) sizeof(double),
+                                 (dvoid *) &result));    
+    return result;
+}
+long double OCIResultSet::getLongDouble(int pos)
+    throw(SQLException, InvalidArgumentException)
+{
+    boolean     ok = FALSE;
+    long double result = 0;
+    
+    OCINumber*  number = (OCINumber*)getField(pos);
+    owner->check(OCINumberToReal(owner->errhp, (CONST OCINumber *)number,
+                                 (uword) sizeof(long double),
+                                 (dvoid *) &result));    
+    return result;
+}
+
 time_t OCIResultSet::getDateTime(int pos)
     throw(SQLException, InvalidArgumentException)
 {
     time_t sys_date;
-    OCIDate* oci_date = (OCIDate *)getField(pos, SQLT_ODT, sizeof(OCIDate));
+    OCIDate* oci_date = (OCIDate *)getField(pos);
     owner->convertOCIDateToDate(oci_date, &sys_date);
     return sys_date;
 }
@@ -513,6 +759,7 @@ OCIDriver::OCIDriver(ConfigView* config)
                                    "DB user name wasn't specified !");
     dbUserPassword = config->getString("dbUserPassword", 
                                     "DB user password wasn't specified !");
+    printf("Driver : %s %s %s\n", dbInstance, dbUserName, dbUserPassword);
 }
 
 OCIDriver::~OCIDriver() 

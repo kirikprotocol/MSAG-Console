@@ -17,6 +17,19 @@
 
 namespace smsc { namespace dbsme
 {
+    struct OCIDataDescriptor 
+    {
+        ub2         type;
+        sb4         size;
+        sb2         ind;
+        dvoid*      data;
+        OCIDate     date;
+        OCINumber   number;
+
+        OCIDataDescriptor(ub2 type, sb4 size);
+        ~OCIDataDescriptor();
+    };
+    
     class OCIStatement;
     class OCIResultSet : public ResultSet
     {
@@ -24,21 +37,9 @@ namespace smsc { namespace dbsme
         
         OCIStatement* owner;
 
-        struct OCIDataDescriptor 
-        {
-            ub2     type;
-            dvoid*  data;
-            OCIDate date;
-            sb4     size;
-            sb2     ind;
-    
-            OCIDataDescriptor(ub2 type, sb4 size);
-            ~OCIDataDescriptor();
-        };
-
         Array<OCIDataDescriptor *>  descriptors;
 
-        dvoid* getField(int pos, ub2 type, ub4 size)
+        dvoid* getField(int pos)
             throw (InvalidArgumentException);
 
     public:
@@ -52,20 +53,31 @@ namespace smsc { namespace dbsme
         
         virtual bool isNull(int pos)
             throw(SQLException, InvalidArgumentException);
-        virtual char* getString(int pos)
+
+        virtual const char* getString(int pos)
             throw(SQLException, InvalidArgumentException);
+        
         virtual int8_t getInt8(int pos)
             throw(SQLException, InvalidArgumentException);
         virtual int16_t getInt16(int pos)
             throw(SQLException, InvalidArgumentException);
         virtual int32_t getInt32(int pos)
             throw(SQLException, InvalidArgumentException);
+        
         virtual uint8_t getUint8(int pos)
             throw(SQLException, InvalidArgumentException);
         virtual uint16_t getUint16(int pos)
             throw(SQLException, InvalidArgumentException);
         virtual uint32_t getUint32(int pos)
             throw(SQLException, InvalidArgumentException);
+        
+        virtual float getFloat(int pos)
+            throw(SQLException, InvalidArgumentException);
+        virtual double getDouble(int pos)
+            throw(SQLException, InvalidArgumentException);
+        virtual long double getLongDouble(int pos)
+            throw(SQLException, InvalidArgumentException);
+        
         virtual time_t getDateTime(int pos)
             throw(SQLException, InvalidArgumentException);
         /* ... */
@@ -78,6 +90,8 @@ namespace smsc { namespace dbsme
     protected:
 
         OCIConnection   *owner;
+
+        Array<OCIDataDescriptor *>  descriptors;
 
         OCIEnv          *envhp;
         OCISvcCtx       *svchp;
@@ -107,6 +121,8 @@ namespace smsc { namespace dbsme
         
         ub4 getRowsAffectedCount();
 
+        OCIDataDescriptor* setField(int pos, ub2 type, ub4 size,
+                                    bool null=false);
     public:
 
         OCIStatement(OCIConnection* connection, const char* sql) 
@@ -120,23 +136,32 @@ namespace smsc { namespace dbsme
         virtual ResultSet* executeQuery() 
             throw(SQLException);
         
-        virtual void setString(int pos, char* str)
+        virtual void setString(int pos, const char* str, bool null=false)
             throw(SQLException);
-        virtual void setInt8(int pos, int8_t val)
+        
+        virtual void setInt8(int pos, int8_t val, bool null=false)
             throw(SQLException);
-        virtual void setInt16(int pos, int16_t val)
+        virtual void setInt16(int pos, int16_t val, bool null=false)
             throw(SQLException);
-        virtual void setInt32(int pos, int32_t val)
+        virtual void setInt32(int pos, int32_t val, bool null=false)
             throw(SQLException);
-        virtual void setUint8(int pos, uint8_t val)
+        
+        virtual void setUint8(int pos, uint8_t val, bool null=false)
             throw(SQLException);
-        virtual void setUint16(int pos, uint16_t val)
+        virtual void setUint16(int pos, uint16_t val, bool null=false)
             throw(SQLException);
-        virtual void setUint32(int pos, uint32_t val)
+        virtual void setUint32(int pos, uint32_t val, bool null=false)
             throw(SQLException);
-        virtual void setDateTime(int pos, time_t time)
+        
+        virtual void setFloat(int pos, float val, bool null=false)
             throw(SQLException);
-        /* ... */
+        virtual void setDouble(int pos, double val, bool null=false)
+            throw(SQLException);
+        virtual void setLongDouble(int pos, long double val, bool null=false)
+            throw(SQLException);
+        
+        virtual void setDateTime(int pos, time_t time, bool null=false)
+            throw(SQLException);
     };
     
     class OCIConnection : public Connection
@@ -214,11 +239,15 @@ namespace smsc { namespace dbsme
     {
     protected:
 
-        virtual DataSource* createDataSource();
+        virtual DataSource* createDataSource()
+        {
+            return new OCIDataSource();
+        };
         
     public:
 
-        OCIDataSourceFactory();
+        OCIDataSourceFactory() 
+            : DataSourceFactory() {};
         virtual ~OCIDataSourceFactory() {};
 
     };
