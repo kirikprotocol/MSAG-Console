@@ -14,11 +14,11 @@ namespace store {
 
 using namespace std;
 using namespace smsc::test::util; //TCSelector, TCResult
+using namespace smsc::test::sms; //constants, SmsUtil
 using namespace smsc::store; //StoreManager, CreateMode
 using namespace smsc::sms; //constants, SMSId, SMS, AddressValue, EService, ...
 using log4cpp::Category;
 using smsc::util::Logger;
-using smsc::test::sms::SmsUtil;
 using smsc::util::AssertException;
 
 Category& MessageStoreTestCases::log = Logger::getCategory("smsc.test.store.TestCases");
@@ -69,7 +69,7 @@ TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 				case 1: //ничего особенного
 					break;
 				case 2: //originatingAddress минимальной длины
-					//согласно SMPP v3.4 должно быть 0, но мы делаем так
+					//согласно SMPP v3.4 должно быть 0, но мы делаем 1
 					sms.setOriginatingAddress(1, 10, 20, "*");
 					break;
 				case 3: //originatingAddress максимальной длины

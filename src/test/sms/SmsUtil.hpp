@@ -16,6 +16,10 @@ using smsc::sms::SMS;
 using std::vector;
 using std::auto_ptr;
 
+const int MAX_ADDRESS_LENGTH = 21;
+const int MAX_MSG_BODY_LENGTH = 200;
+const int MAX_SERVICE_TYPE_LENGTH = 6;
+
 class SmsUtil
 {
 public:

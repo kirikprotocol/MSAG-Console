@@ -16,10 +16,6 @@ using smsc::sms::SMS;
 using smsc::store::MessageStore;
 using smsc::test::util::TCResult;
 
-const int MAX_ADDRESS_LENGTH = 21;
-const int MAX_MSG_BODY_LENGTH = 200;
-const int MAX_SERVICE_TYPE_LENGTH = 6;
-
 //implemented
 const char* const TC_STORE_CORRECT_SMS = "storeCorrectSms";
 const char* const TC_STORE_DUPLICATE_SMS = "storeDuplicateSms";
