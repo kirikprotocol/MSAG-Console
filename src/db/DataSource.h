@@ -32,18 +32,12 @@ namespace smsc { namespace db
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
-    class ResultSet
+    class GetPosQuery
     {
     protected:
-    
-        ResultSet() {};
-
+        GetPosQuery() {};
     public:
-        
-        virtual ~ResultSet() {};
-
-        virtual bool fetchNext()
-            throw(SQLException) = 0;
+        virtual ~GetPosQuery() {};
         
         virtual bool isNull(int pos)
             throw(SQLException, InvalidArgumentException) = 0;
@@ -79,24 +73,56 @@ namespace smsc { namespace db
         virtual time_t getDateTime(int pos)
             throw(SQLException, InvalidArgumentException) = 0;
     };
-
-    class Statement
+    
+    class GetKeyQuery
     {
     protected:
-        
-        Statement() {};
-
+        GetKeyQuery() {};
     public:
+        virtual ~GetKeyQuery() {};
         
-        virtual ~Statement() {};
+        virtual bool isNull(const char* key)
+            throw(SQLException, InvalidArgumentException) = 0;
+        
+        virtual const char* getString(const char* key)
+            throw(SQLException, InvalidArgumentException) = 0;
+        
+        virtual int8_t getInt8(const char* key)
+            throw(SQLException, InvalidArgumentException) = 0;
+        virtual int16_t getInt16(const char* key)
+            throw(SQLException, InvalidArgumentException) = 0;
+        virtual int32_t getInt32(const char* key)
+            throw(SQLException, InvalidArgumentException) = 0;
+        virtual int64_t getInt64(const char* key)
+            throw(SQLException, InvalidArgumentException) = 0;
+        
+        virtual uint8_t getUint8(const char* key)
+            throw(SQLException, InvalidArgumentException) = 0;
+        virtual uint16_t getUint16(const char* key)
+            throw(SQLException, InvalidArgumentException) = 0;
+        virtual uint32_t getUint32(const char* key)
+            throw(SQLException, InvalidArgumentException) = 0;
+        virtual uint64_t getUint64(const char* key)
+            throw(SQLException, InvalidArgumentException) = 0;
+        
+        virtual float getFloat(const char* key)
+            throw(SQLException, InvalidArgumentException) = 0;
+        virtual double getDouble(const char* key)
+            throw(SQLException, InvalidArgumentException) = 0;
+        virtual long double getLongDouble(const char* key)
+            throw(SQLException, InvalidArgumentException) = 0;
 
-        virtual void execute() 
-            throw(SQLException) = 0;
-        virtual uint32_t executeUpdate() 
-            throw(SQLException) = 0;
-        virtual ResultSet* executeQuery() 
-            throw(SQLException) = 0;
-        
+        virtual time_t getDateTime(const char* key)
+            throw(SQLException, InvalidArgumentException) = 0;
+    };
+
+    class SetPosQuery
+    {
+    protected:
+        SetPosQuery() {};
+    public:
+        virtual ~SetPosQuery() {};
+
         virtual void setString(int pos, const char* str, bool null=false)
             throw(SQLException) = 0;
         
@@ -126,6 +152,82 @@ namespace smsc { namespace db
             throw(SQLException) = 0;
         
         virtual void setDateTime(int pos, time_t time, bool null=false)
+            throw(SQLException) = 0;
+    };
+    
+    class SetKeyQuery
+    {
+    protected:
+        SetKeyQuery() {};
+    public:
+        virtual ~SetKeyQuery() {};
+
+        virtual void setString(const char* key, const char* str, bool null=false)
+            throw(SQLException) = 0;
+        
+        virtual void setInt8(const char* key, int8_t val, bool null=false)
+            throw(SQLException) = 0;
+        virtual void setInt16(const char* key, int16_t val, bool null=false)
+            throw(SQLException) = 0;
+        virtual void setInt32(const char* key, int32_t val, bool null=false)
+            throw(SQLException) = 0;
+        virtual void setInt64(const char* key, int64_t val, bool null=false)
+            throw(SQLException) = 0;
+        
+        virtual void setUint8(const char* key, uint8_t val, bool null=false)
+            throw(SQLException) = 0;
+        virtual void setUint16(const char* key, uint16_t val, bool null=false)
+            throw(SQLException) = 0;
+        virtual void setUint32(const char* key, uint32_t val, bool null=false)
+            throw(SQLException) = 0;
+        virtual void setUint64(const char* key, uint64_t val, bool null=false)
+            throw(SQLException) = 0;
+        
+        virtual void setFloat(const char* key, float val, bool null=false)
+            throw(SQLException) = 0;
+        virtual void setDouble(const char* key, double val, bool null=false)
+            throw(SQLException) = 0;
+        virtual void setLongDouble(const char* key, long double val, bool null=false)
+            throw(SQLException) = 0;
+        
+        virtual void setDateTime(const char* key, time_t time, bool null=false)
+            throw(SQLException) = 0;
+    };
+
+    class ResultSet : public GetPosQuery
+    {
+    protected:
+        ResultSet() {};
+    public:
+        virtual ~ResultSet() {};
+        
+        virtual bool fetchNext()
+            throw(SQLException) = 0;
+    };
+
+    class Statement : public SetPosQuery
+    {
+    protected:
+        Statement() {};
+    public:
+        virtual ~Statement() {};
+
+        virtual void execute() 
+            throw(SQLException) = 0;
+        virtual uint32_t executeUpdate() 
+            throw(SQLException) = 0;
+        virtual ResultSet* executeQuery() 
+            throw(SQLException) = 0;
+    };
+
+    class Routine : public SetKeyQuery, public GetKeyQuery
+    {
+    protected:
+        Routine() {};
+    public:
+        virtual ~Routine() {};
+        
+        virtual void execute() 
             throw(SQLException) = 0;
     };
 
@@ -165,6 +267,8 @@ namespace smsc { namespace db
         };
     
         virtual Statement* createStatement(const char* sql) 
+            throw(SQLException) = 0;
+        virtual Routine* createRoutine(const char* call, bool func=false) 
             throw(SQLException) = 0;
 
         virtual void connect() 

@@ -185,6 +185,21 @@ Statement* OCIConnection::createStatement(const char* sql)
     return new OCIStatement(this, sql);
 }
 
+Routine* OCIConnection::createRoutine(const char* call, bool func)
+    throw(SQLException)
+{
+    connect();
+    
+    std::string routine; std::string name = "";
+    routine += "BEGIN\n"; routine += call; routine += "\nEND;";
+    
+    int curPos = 0;
+    while (call && isspace(call[curPos])) curPos++;
+    while (call && isalnum(call[curPos])) name += call[curPos++];
+    
+    return new OCIRoutine(this, routine.c_str(), name.c_str(), func);
+}
+
 /* ---------------- Helper for Binds & Defines implementation -------------- */
 
 OCIDataDescriptor::OCIDataDescriptor(ub2 _type, sb4 _size) 
@@ -213,7 +228,7 @@ OCIDataDescriptor::OCIDataDescriptor(ub2 _type, sb4 _size)
     case SQLT_BIN:
     case SQLT_PDN:
     default:
-        printf("Type %d is not supported.\n", type);
+        __trace2__("Type %d is not supported.\n", type);
     }
 }
 
@@ -225,34 +240,26 @@ OCIDataDescriptor::~OCIDataDescriptor()
     }
 }
 
-/* ------------------------ Statement implementation ----------------------- */
+/* ------------------------ Query implementation ----------------------- */
 
-OCIStatement::OCIStatement(OCIConnection* connection, const char* sql) 
+OCIQuery::OCIQuery(OCIConnection* connection, const char* query) 
     throw(SQLException)
-        : Statement(), owner(connection)
+        : owner(connection)
 {
     __require__(owner);
-    
+
     envhp = owner->envhp; svchp = owner->svchp; errhp = owner->errhp;
-    
     check(OCIHandleAlloc((dvoid *)envhp, (dvoid **) &stmt,
                          OCI_HTYPE_STMT, 0, (dvoid **)0));
-    check(OCIStmtPrepare(stmt, errhp, (text *)sql, (ub4) strlen(sql),
+    check(OCIStmtPrepare(stmt, errhp, (text *)query, (ub4) strlen(query),
                          (ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT));
 }
-
-OCIStatement::~OCIStatement()
+OCIQuery::~OCIQuery()
 {
-    while (descriptors.Count())
-    {
-        OCIDataDescriptor* descriptor=0L;
-        (void) descriptors.Pop(descriptor);
-        if (descriptor) delete descriptor;
-    }
     (void) OCIHandleFree(stmt, OCI_HTYPE_STMT);
 }
 
-void OCIStatement::bind(ub4 pos, ub2 type, 
+void OCIQuery::bind(ub4 pos, ub2 type, 
                         dvoid* placeholder, sb4 size, dvoid* indp)
     throw(SQLException)
 {
@@ -263,7 +270,7 @@ void OCIStatement::bind(ub4 pos, ub2 type,
                        (ub4) OCI_DEFAULT));
 }
 
-void OCIStatement::bind(CONST text* name, sb4 name_len, ub2 type,
+void OCIQuery::bind(CONST text* name, sb4 name_len, ub2 type,
                         dvoid* placeholder, sb4 size, dvoid* indp)
     throw(SQLException)
 {
@@ -274,7 +281,7 @@ void OCIStatement::bind(CONST text* name, sb4 name_len, ub2 type,
                         (ub4) OCI_DEFAULT));
 }
 
-void OCIStatement::define(ub4 pos, ub2 type, 
+void OCIQuery::define(ub4 pos, ub2 type, 
                           dvoid* placeholder, sb4 size, dvoid* indp)
     throw(SQLException)
 {
@@ -283,7 +290,8 @@ void OCIStatement::define(ub4 pos, ub2 type,
                          placeholder, size, type, indp,
                          (ub2 *) 0, (ub2 *) 0, OCI_DEFAULT));
 }
-void OCIStatement::convertDateToOCIDate(time_t* sms_date, OCIDate* oci_date)
+
+void OCIQuery::convertDateToOCIDate(time_t* sms_date, OCIDate* oci_date)
 {
     tm dt; gmtime_r(sms_date, &dt);
 
@@ -293,7 +301,7 @@ void OCIStatement::convertDateToOCIDate(time_t* sms_date, OCIDate* oci_date)
                    (ub1)(dt.tm_min), (ub1)(dt.tm_sec));
 }
 
-void OCIStatement::convertOCIDateToDate(OCIDate* oci_date, time_t* sms_date)
+void OCIQuery::convertOCIDateToDate(OCIDate* oci_date, time_t* sms_date)
 {
     sb2 year;
     ub1 mon, mday, hour, min, sec;
@@ -307,6 +315,47 @@ void OCIStatement::convertOCIDateToDate(OCIDate* oci_date, time_t* sms_date)
     *sms_date = mktime(&dt) - timezone;
 }
 
+void OCIQuery::check(sword status) 
+    throw(SQLException) 
+{
+    __require__(owner);
+    owner->check(status);
+}
+        
+sword OCIQuery::execute(ub4 mode, ub4 iters, ub4 rowoff)
+    throw(SQLException)
+{
+    return OCIStmtExecute(svchp, stmt, errhp, iters, rowoff,
+                          (CONST OCISnapshot *) NULL, 
+                          (OCISnapshot *) NULL, mode);
+}
+
+sword OCIQuery::fetch()
+    throw(SQLException)
+{
+    return OCIStmtFetch(stmt, errhp, (ub4) 1, (ub4) OCI_FETCH_NEXT,
+                        (ub4) OCI_DEFAULT);
+}
+
+
+/* ------------------------ Statement implementation ----------------------- */
+
+OCIStatement::OCIStatement(OCIConnection* connection, const char* sql) 
+    throw(SQLException)
+        : Statement(), OCIQuery(connection, sql)
+{
+}
+
+OCIStatement::~OCIStatement()
+{
+    while (descriptors.Count())
+    {
+        OCIDataDescriptor* descriptor=0L;
+        (void) descriptors.Pop(descriptor);
+        if (descriptor) delete descriptor;
+    }
+}
+
 ub4 OCIStatement::getRowsAffectedCount()
 {
     ub4 res = 0; 
@@ -318,32 +367,10 @@ ub4 OCIStatement::getRowsAffectedCount()
     return res;
 }
 
-void OCIStatement::check(sword status) 
-    throw(SQLException) 
-{
-    __require__(owner);
-    owner->check(status);
-}
-        
-sword OCIStatement::execute(ub4 mode, ub4 iters, ub4 rowoff)
-    throw(SQLException)
-{
-    return OCIStmtExecute(svchp, stmt, errhp, iters, rowoff,
-                          (CONST OCISnapshot *) NULL, 
-                          (OCISnapshot *) NULL, mode);
-}
-
 void OCIStatement::execute() 
     throw(SQLException)
 {
-    check(execute(OCI_DEFAULT, 1, 0));
-}
-
-sword OCIStatement::fetch()
-    throw(SQLException)
-{
-    return OCIStmtFetch(stmt, errhp, (ub4) 1, (ub4) OCI_FETCH_NEXT,
-                        (ub4) OCI_DEFAULT);
+    check(OCIQuery::execute(OCI_DEFAULT, 1, 0));
 }
 
 uint32_t OCIStatement::executeUpdate() 
@@ -775,6 +802,208 @@ time_t OCIResultSet::getDateTime(int pos)
     OCIDate* oci_date = (OCIDate *)getField(pos);
     owner->convertOCIDateToDate(oci_date, &sys_date);
     return sys_date;
+}
+
+/* ------------------------ OCIRoutine implementation ---------------------- */
+        
+OCIRoutine::OCIRoutine(OCIConnection* connection, 
+                       const char* call, const char* name, bool func) 
+    throw(SQLException)
+        : Routine(), OCIQuery(connection, call)
+{
+    // Loadup routine parameters set here.
+
+    OCIParam    *parmh;     // parameter handle 
+    OCIParam    *arglst;    // list of args
+    OCIParam    *arg;       // argument handle
+    OCIDescribe *dschp;     // describe handle
+    
+    ub2         numargs, pos, level;
+    
+    // Allocate dschp here ????
+
+    /* get the describe handle for the table */
+    check(OCIDescribeAny(svchp, errhp, (text *)name, (ub4)strlen(name),
+                         OCI_OTYPE_NAME, 0, 
+                         (func) ? OCI_PTYPE_PROC : OCI_PTYPE_FUNC, dschp));
+    /* get the parameter handle */
+    check(OCIAttrGet(dschp, OCI_HTYPE_DESCRIBE, &parmh, 
+                     0, OCI_ATTR_PARAM, errhp));
+    /* get the number of arguments and the arg list */
+    check(OCIAttrGet(parmh, OCI_DTYPE_PARAM, &arglst,
+                     0, OCI_ATTR_LIST_ARGUMENTS, errhp));
+    check(OCIAttrGet(parmh, OCI_DTYPE_PARAM, &numargs, 0,
+                     OCI_ATTR_NUM_PARAMS, errhp));
+
+    __trace2__("Num-args is %d", numargs);
+
+    // For procedure, begin with 1 for function, begin with 0. 
+    for (ub4 i=((func) ? 0:1); i<numargs; i++) 
+    {
+        text*       atr; 
+        ub4         atrlen;
+        OCIParam   *innerlst;   
+        
+        check(OCIParamGet(arglst, OCI_DTYPE_PARAM, errhp, (void **)&arg, i));
+        
+        ub2 type = 0; ub4 size = 0;
+        check(OCIAttrGet(arg, OCI_DTYPE_PARAM, &atr, &atrlen, 
+                         OCI_ATTR_NAME, errhp)); 
+        check(OCIAttrGet(arg, OCI_DTYPE_PARAM, &type, 0, 
+                         OCI_ATTR_DATA_TYPE, errhp));
+        check(OCIAttrGet(arg, OCI_DTYPE_PARAM, &size, 0,
+                         OCI_ATTR_DATA_SIZE, errhp));
+        check(OCIAttrGet(arg, OCI_DTYPE_PARAM, &innerlst, 0,
+                         OCI_ATTR_LIST_ARGUMENTS, errhp));
+        if (innerlst) // check if the current argument is a record.
+            throw SQLException("RecordSet types management "
+                               "is not supported in PL/SQL routines!");
+
+        __trace2__("Arg #%d: '%s'", i, atr);
+        
+        /*OCIDataDescriptor* descriptor = new OCIDataDescriptor(type, size);
+        define(counter, descriptor->type, descriptor->data,
+               descriptor->size, (dvoid *) &descriptor->ind);
+        descriptors.Push(descriptor);*/
+        
+        check(OCIDescriptorFree(arg, OCI_DTYPE_PARAM));
+    }
+}
+OCIRoutine::~OCIRoutine()
+{
+    // Clean up descriptors hash here.
+    descriptors.First();
+    char* key; OCIDataDescriptor* descriptor = 0;
+    while (descriptors.Next(key, descriptor))
+        if (descriptor) delete descriptor;
+}
+
+void OCIRoutine::execute() 
+    throw(SQLException)
+{
+    check(OCIQuery::execute(OCI_DEFAULT, 1, 0));
+}
+bool OCIRoutine::isNull(const char* key)
+    throw(SQLException, InvalidArgumentException)
+{
+    return true;
+}
+void OCIRoutine::setString(const char* key, const char* str, bool null=false)
+    throw(SQLException)
+{
+}
+const char* OCIRoutine::getString(const char* key)
+    throw(SQLException, InvalidArgumentException)
+{
+    return 0;
+}
+void OCIRoutine::setInt8(const char* key, int8_t val, bool null=false)
+    throw(SQLException)
+{
+}
+int8_t OCIRoutine::getInt8(const char* key)
+    throw(SQLException, InvalidArgumentException)
+{
+    return 0;
+}
+void OCIRoutine::setInt16(const char* key, int16_t val, bool null=false)
+    throw(SQLException)
+{
+}
+int16_t OCIRoutine::getInt16(const char* key)
+    throw(SQLException, InvalidArgumentException)
+{
+    return 0;
+}
+void OCIRoutine::setInt32(const char* key, int32_t val, bool null=false)
+    throw(SQLException)
+{
+}
+int32_t OCIRoutine::getInt32(const char* key)
+    throw(SQLException, InvalidArgumentException)
+{
+    return 0;
+}
+void OCIRoutine::setInt64(const char* key, int64_t val, bool null=false)
+    throw(SQLException)
+{
+}
+int64_t OCIRoutine::getInt64(const char* key)
+    throw(SQLException, InvalidArgumentException)
+{
+    return 0;
+}
+void OCIRoutine::setUint8(const char* key, uint8_t val, bool null=false)
+    throw(SQLException)
+{
+}
+uint8_t OCIRoutine::getUint8(const char* key)
+    throw(SQLException, InvalidArgumentException)
+{
+    return 0;
+}
+void OCIRoutine::setUint16(const char* key, uint16_t val, bool null=false)
+    throw(SQLException)
+{
+}
+uint16_t OCIRoutine::getUint16(const char* key)
+    throw(SQLException, InvalidArgumentException)
+{
+    return 0;
+}
+void OCIRoutine::setUint32(const char* key, uint32_t val, bool null=false)
+    throw(SQLException)
+{
+}
+uint32_t OCIRoutine::getUint32(const char* key)
+    throw(SQLException, InvalidArgumentException)
+{
+    return 0;
+}
+void OCIRoutine::setUint64(const char* key, uint64_t val, bool null=false)
+    throw(SQLException)
+{
+}
+uint64_t OCIRoutine::getUint64(const char* key)
+    throw(SQLException, InvalidArgumentException)
+{
+    return 0;
+}
+void OCIRoutine::setFloat(const char* key, float val, bool null=false)
+    throw(SQLException)
+{
+}
+float OCIRoutine::getFloat(const char* key)
+    throw(SQLException, InvalidArgumentException)
+{
+    return 0;
+}
+void OCIRoutine::setDouble(const char* key, double val, bool null=false)
+    throw(SQLException)
+{
+}
+double OCIRoutine::getDouble(const char* key)
+    throw(SQLException, InvalidArgumentException)
+{
+    return 0;
+}
+void OCIRoutine::setLongDouble(const char* key, long double val, bool null=false)
+    throw(SQLException)
+{
+}
+long double OCIRoutine::getLongDouble(const char* key)
+    throw(SQLException, InvalidArgumentException)
+{
+    return 0;
+}
+void OCIRoutine::setDateTime(const char* key, time_t time, bool null=false)
+    throw(SQLException)
+{
+}
+time_t OCIRoutine::getDateTime(const char* key)
+    throw(SQLException, InvalidArgumentException)
+{
+    return 0;
 }
 
 /* -------------------------- Driver implementation ------------------------ */

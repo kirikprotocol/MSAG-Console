@@ -92,20 +92,17 @@ namespace smsc { namespace db { namespace oci
     };
     
     class OCIConnection;
-    class OCIStatement : public Statement
+    class OCIQuery
     {
-    friend class OCIResultSet;
     protected:
 
         OCIConnection   *owner;
-
-        Array<OCIDataDescriptor *>  descriptors;
-
+        
         OCIEnv          *envhp;
         OCISvcCtx       *svchp;
         OCIError        *errhp;
         OCIStmt         *stmt;
-
+    
         void convertDateToOCIDate(time_t* sms_date, OCIDate* oci_date);
         void convertOCIDateToDate(OCIDate* oci_date, time_t* sms_date);
         
@@ -126,6 +123,19 @@ namespace smsc { namespace db { namespace oci
             throw(SQLException);
         sword fetch()
             throw(SQLException);
+    
+        OCIQuery(OCIConnection* connection, const char* query) 
+            throw(SQLException);
+    public:
+        virtual ~OCIQuery();
+    };
+
+    class OCIStatement : public Statement, public OCIQuery
+    {
+    friend class OCIResultSet;
+    protected:
+
+        Array<OCIDataDescriptor *>  descriptors;
         
         ub4 getRowsAffectedCount();
 
@@ -136,6 +146,17 @@ namespace smsc { namespace db { namespace oci
         OCIStatement(OCIConnection* connection, const char* sql) 
             throw(SQLException);
         virtual ~OCIStatement();
+        
+        sword execute(ub4 mode, ub4 iters, ub4 rowoff)
+            throw(SQLException) 
+        { 
+            return OCIQuery::execute(mode, iters, rowoff);
+        };
+        sword fetch()
+            throw(SQLException)
+        {
+            return OCIQuery::fetch();
+        };
         
         virtual void execute() 
             throw(SQLException);
@@ -175,10 +196,93 @@ namespace smsc { namespace db { namespace oci
         virtual void setDateTime(int pos, time_t time, bool null=false)
             throw(SQLException);
     };
+
+    class OCIRoutine : public Routine, public OCIQuery
+    {
+    protected:
+
+        Hash<OCIDataDescriptor *>  descriptors;
+        
+        sword execute(ub4 mode, ub4 iters, ub4 rowoff)
+            throw(SQLException) 
+        { 
+            return OCIQuery::execute(mode, iters, rowoff);
+        };
+    
+    public:
+        
+        OCIRoutine(OCIConnection* connection, 
+                   const char* call, const char* name, bool func=false) 
+            throw(SQLException);
+        virtual ~OCIRoutine();
+        
+        virtual void execute() 
+            throw(SQLException);
+        
+        virtual void setString(const char* key, const char* str, bool null=false)
+            throw(SQLException);
+        virtual const char* getString(const char* key)
+            throw(SQLException, InvalidArgumentException);
+        
+        virtual void setInt8(const char* key, int8_t val, bool null=false)
+            throw(SQLException);
+        virtual int8_t getInt8(const char* key)
+            throw(SQLException, InvalidArgumentException);
+        virtual void setInt16(const char* key, int16_t val, bool null=false)
+            throw(SQLException);
+        virtual int16_t getInt16(const char* key)
+            throw(SQLException, InvalidArgumentException);
+        virtual void setInt32(const char* key, int32_t val, bool null=false)
+            throw(SQLException);
+        virtual int32_t getInt32(const char* key)
+            throw(SQLException, InvalidArgumentException);
+        virtual void setInt64(const char* key, int64_t val, bool null=false)
+            throw(SQLException);
+        virtual int64_t getInt64(const char* key)
+            throw(SQLException, InvalidArgumentException);
+        
+        virtual void setUint8(const char* key, uint8_t val, bool null=false)
+            throw(SQLException);
+        virtual uint8_t getUint8(const char* key)
+            throw(SQLException, InvalidArgumentException);
+        virtual void setUint16(const char* key, uint16_t val, bool null=false)
+            throw(SQLException);
+        virtual uint16_t getUint16(const char* key)
+            throw(SQLException, InvalidArgumentException);
+        virtual void setUint32(const char* key, uint32_t val, bool null=false)
+            throw(SQLException);
+        virtual uint32_t getUint32(const char* key)
+            throw(SQLException, InvalidArgumentException);
+        virtual void setUint64(const char* key, uint64_t val, bool null=false)
+            throw(SQLException);
+        virtual uint64_t getUint64(const char* key)
+            throw(SQLException, InvalidArgumentException);
+        
+        virtual void setFloat(const char* key, float val, bool null=false)
+            throw(SQLException);
+        virtual float getFloat(const char* key)
+            throw(SQLException, InvalidArgumentException);
+        virtual void setDouble(const char* key, double val, bool null=false)
+            throw(SQLException);
+        virtual double getDouble(const char* key)
+            throw(SQLException, InvalidArgumentException);
+        virtual void setLongDouble(const char* key, long double val, bool null=false)
+            throw(SQLException);
+        virtual long double getLongDouble(const char* key)
+            throw(SQLException, InvalidArgumentException);
+        
+        virtual void setDateTime(const char* key, time_t time, bool null=false)
+            throw(SQLException);
+        virtual time_t getDateTime(const char* key)
+            throw(SQLException, InvalidArgumentException);
+        
+        virtual bool isNull(const char* key)
+            throw(SQLException, InvalidArgumentException);
+    };
     
     class OCIConnection : public Connection
     {
-    friend class OCIStatement;
+    friend class OCIQuery;
     private:
         
         static Mutex    connectLock;
@@ -200,6 +304,8 @@ namespace smsc { namespace db { namespace oci
         virtual ~OCIConnection();
             
         virtual Statement* createStatement(const char* sql) 
+            throw(SQLException);
+        virtual Routine* createRoutine(const char* call, bool func=false) 
             throw(SQLException);
         
         virtual void connect() 
