@@ -71,6 +71,7 @@ class MapDialog{
   ET96MAP_INVOKE_ID_T invokeId;
   ET96MAP_LOCAL_SSN_T ssn;
   auto_ptr<SMS> sms;
+  auto_ptr<ET96MAP_SM_RP_UI_T> auto_ui;
   ET96MAP_APP_CNTX_T appContext;
   ET96MAP_ADDRESS_T m_msAddr;	
   ET96MAP_ADDRESS_T m_scAddr;	

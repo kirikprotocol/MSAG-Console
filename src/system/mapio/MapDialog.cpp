@@ -455,8 +455,8 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
       MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
     }
     __trace2__("MAP::send response to SMSC OK");
-    return true;// :) optimization
-    //return false;
+    //return true;// :) optimization
+    return false;
   }
   else if (state == MAPST_READY_FOR_CLOSE)
   {
