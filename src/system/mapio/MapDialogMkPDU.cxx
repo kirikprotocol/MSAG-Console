@@ -204,54 +204,56 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
       pdu_ptr+=sizeof(MAP_TIMESTAMP);
       //!!!TODO!!! expired
       *pdu_ptr++=sms->getIntProperty(Tag::SMPP_MSG_STATE)?0x63:0; //TP-Status
-      *pdu_ptr++=0x6; //TP-Parameter-Indicator 0110
-      *pdu_ptr++=datacoding;
+      //*pdu_ptr++=0;//0x6; //TP-Parameter-Indicator 0110
+      //*pdu_ptr++=datacoding;
     }
   }
-
-  if ( encoding == MAP_OCTET7BIT_ENCODING  || encoding == MAP_LATIN1_ENCODING ){
-    unsigned text_len;
-    const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
-    unsigned elen;
-    unsigned bytes;
-    bytes = ConvertText27bit(text,text_len,pdu_ptr+1,&elen);
-    *pdu_ptr++ = elen;
-    pdu_ptr += bytes;
-  }else if ( encoding == MAP_SMSC7BIT_ENCODING  ){ // 7bit
+  if(!isrcpt)
+  {
+    if ( encoding == MAP_OCTET7BIT_ENCODING  || encoding == MAP_LATIN1_ENCODING ){
       unsigned text_len;
       const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
-      if ( header->uu.s.udhi ){
-        unsigned udh_len = (unsigned)*text;
-        __trace2__("MAP::mkDeliverPDU: udh_len 0x%x",udh_len);
-        memcpy(pdu_ptr+1,text,udh_len+1);
-        unsigned x = (udh_len+1)*8;
-        if ( x%7 != 0 ) x+=7-(x%7);
-        unsigned symbols = text_len-udh_len-1;
-        __trace2__("MAP::mkDeliverPDU: text symbols 0x%x",symbols);
-        __trace2__("MAP::mkDeliverPDU: text bit offset 0x%x",x-(udh_len+1)*8);
-        unsigned _7bit_text_len = ConvertSMSC7bit27bit(
-          text+1+udh_len,
-          symbols,
-          pdu_ptr+udh_len+1+1,
-          x-(udh_len+1)*8);
-        *pdu_ptr++ = x/7+text_len+1;
-        pdu_ptr+= udh_len+_7bit_text_len+1;
-      }else{
-        *pdu_ptr++ = text_len;
-        pdu_ptr += ConvertSMSC7bit27bit(text,text_len,pdu_ptr);
+      unsigned elen;
+      unsigned bytes;
+      bytes = ConvertText27bit(text,text_len,pdu_ptr+1,&elen);
+      *pdu_ptr++ = elen;
+      pdu_ptr += bytes;
+    }else if ( encoding == MAP_SMSC7BIT_ENCODING  ){ // 7bit
+        unsigned text_len;
+        const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
+        if ( header->uu.s.udhi ){
+          unsigned udh_len = (unsigned)*text;
+          __trace2__("MAP::mkDeliverPDU: udh_len 0x%x",udh_len);
+          memcpy(pdu_ptr+1,text,udh_len+1);
+          unsigned x = (udh_len+1)*8;
+          if ( x%7 != 0 ) x+=7-(x%7);
+          unsigned symbols = text_len-udh_len-1;
+          __trace2__("MAP::mkDeliverPDU: text symbols 0x%x",symbols);
+          __trace2__("MAP::mkDeliverPDU: text bit offset 0x%x",x-(udh_len+1)*8);
+          unsigned _7bit_text_len = ConvertSMSC7bit27bit(
+            text+1+udh_len,
+            symbols,
+            pdu_ptr+udh_len+1+1,
+            x-(udh_len+1)*8);
+          *pdu_ptr++ = x/7+text_len+1;
+          pdu_ptr+= udh_len+_7bit_text_len+1;
+        }else{
+          *pdu_ptr++ = text_len;
+          pdu_ptr += ConvertSMSC7bit27bit(text,text_len,pdu_ptr);
+        }
+    }else{ // UCS2 || 8BIT
+      unsigned text_len;
+      const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
+      //unsigned size_x = /*pdu_ptr-(unsigned char*)pdu->signalInfo*;
+      if ( text_len > 140 ){
+        __trace2__("MAP::mkDeliverPDU:  UCS2 text length(%d) > 140",
+                  text_len);
+        throw runtime_error("MAP::mkDeliverPDU:  UCS2 text length > pdu_ptr-pdu->signalInfoLen");
       }
-  }else{ // UCS2 || 8BIT
-    unsigned text_len;
-    const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
-    //unsigned size_x = /*pdu_ptr-(unsigned char*)pdu->signalInfo*;
-    if ( text_len > 140 ){
-      __trace2__("MAP::mkDeliverPDU:  UCS2 text length(%d) > 140",
-                text_len);
-      throw runtime_error("MAP::mkDeliverPDU:  UCS2 text length > pdu_ptr-pdu->signalInfoLen");
+      memcpy(pdu_ptr+1,text,text_len);
+      *pdu_ptr++ = text_len;
+      pdu_ptr += text_len;
     }
-    memcpy(pdu_ptr+1,text,text_len);
-    *pdu_ptr++ = text_len;
-    pdu_ptr += text_len;
   }
   pdu->signalInfoLen  = pdu_ptr-(unsigned char*)pdu->signalInfo;
   //if ( pdu->signalInfoLen > 140 ) header->uu.s.mms = 1;
