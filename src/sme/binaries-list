@@ -1,0 +1,1 @@
+sme/testsme testsme -lcore-network -lsms -lsocket -lsme
