@@ -16,7 +16,7 @@
 			<param name="msgReportFull">Отчеты доставки разрешены</param>
 			<param name="msgLocaleChanged">Locale is successfully changed</param>
 			<param name="msgLocaleUnknown">Unknown locale</param>
-			<param name="msgError">Неправильная команда (!@#$%^&amp;*( )_+-=|\\:;'&lt;,&gt;.?/)</param>
+			<param name="msgError">Неправильная команда (!@#$%^&amp;*( )_+-=|\:;'&lt;,&gt;.?/)</param>
 		</section>
 		<section name="abonentinfo">
 			<param name="mobileFormat">Абонент $$string import="abonent"$$: статус $$string import="status"$$, msc $$string import="msc"$$</param>
@@ -106,5 +106,12 @@
 			<param name="1187">Data Missing</param>
 			<param name="1188">Unexpected Data value</param>
 		</section>
+
+		<section name="templates">
+			<param name="t0">Hello всем чувакам</param>
+			<param name="t1">Hello $$string import="name" default="world"$$</param>
+			<param name="t2">Hello $$string import="name1" default="world"$$ and $$string import="name2"$$ and all the other people in the world. If you have received this message please resend it to your ten friends and fill yourself happy. Sincerely, mega template.</param>
+		</section>
+
 	</resources>
 </locale_resources>

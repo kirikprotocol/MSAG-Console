@@ -38,5 +38,10 @@
 			<param name="1026">Сообщение протухло</param>
 			<param name="1027">Таймаут при доставке сообщения</param>
 		</section>
+
+		<section name="templates">
+			<param name="t1">Привет $$string import="name" default="мир"$$</param>
+			<param name="t2">Привет $$string import="name1" default="мир"$$ и $$string import="name2"$$ и все остальные. Перешлите это сообщение 10 своим друзьям. С приветом, мега темплейт.</param>
+		</section>
 	</resources>
 </locale_resources>

@@ -3,6 +3,7 @@
 
 <users>
 	<user login="superadmin" password="123" firstName="first" lastName="last" dept="dept" workPhone="work" homePhone="home" cellPhone="cell" email="email@email.com">
+		<role name="smsc_service"/>
 		<role name="services"/>
 		<role name="aliases"/>
 		<role name="smsView"/>
@@ -15,6 +16,7 @@
 		<role name="perfmon"/>
 	</user>
 	<user login="bryz" password="123" firstName="Vit" lastName="Bryz" dept="novosoft" workPhone="123" homePhone="123" cellPhone="123" email="bryz@novosoft.ru">
+		<role name="smsc_service"/>
 		<role name="apply"/>
 		<role name="perfmon"/>
 		<role name="smsView"/>
