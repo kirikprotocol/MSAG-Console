@@ -2,6 +2,7 @@
 #include "test/smpp/SmppUtil.hpp"
 #include "test/util/TextUtil.hpp"
 #include "test/conf/TestConfig.hpp"
+#include "test/core/ProfileUtil.hpp"
 #include "system/status.h"
 
 namespace smsc {
@@ -14,6 +15,8 @@ using smsc::test::sms::operator==;
 using smsc::test::sms::operator!=;
 using smsc::test::smpp::operator==;
 using smsc::test::smpp::operator!=;
+using smsc::test::core::operator==;
+using smsc::test::core::operator!=;
 using namespace std;
 using namespace smsc::test::core; //constants
 using namespace smsc::test::sms; //constants
@@ -553,6 +556,38 @@ set<uint32_t> SmppPduChecker::checkCancelSm(PduData* pduData,
 	return res;
 }
 
+void SmppPduChecker::updateRecipientData(PduData* pduData, time_t respTime)
+{
+	__require__(pduData && pduData->objProps.count("recipientData"));
+	__cfg_int__(timeCheckAccuracy);
+	RecipientData* recipientData =
+		dynamic_cast<RecipientData*>(pduData->objProps["recipientData"]);
+	if (!recipientData->validProfile)
+	{
+		return;
+	}
+	time_t t;
+	const Profile& recipientProfile =
+		fixture->profileReg->getProfile(recipientData->destAddr, t);
+	if (recipientData->profile == recipientProfile &&
+		respTime > t + timeCheckAccuracy)
+	{
+		return;
+	}
+	//обновить recipientData и sms.msg
+	recipientData->validProfile = false;
+	if (pduData->objProps.count("sms.msg"))
+	{
+		SmsMsg* msg = dynamic_cast<SmsMsg*>(pduData->objProps["sms.msg"]);
+		msg->valid = false;
+	}
+	if (pduData->objProps.count("map.msg"))
+	{
+		SmsMsg* msg = dynamic_cast<SmsMsg*>(pduData->objProps["map.msg"]);
+		msg->valid = false;
+	}
+}
+
 #define __check__(errCode, cond) \
 	if (!(cond)) { \
 		__tc_fail__(errCode); \
@@ -598,6 +633,8 @@ void SmppPduChecker::processSubmitSmResp(ResponseMonitor* monitor,
 	{
 		//обновить smsId у delivery receipt монитора
 		monitor->pduData->strProps["smsId"] = respPdu.get_messageId();
+		//проверить изменение профиля получателя с момента submit
+		updateRecipientData(monitor->pduData, respTime);
 	}
 	//set<uint32_t> checkRes = checkSubmitSm(monitor->pduData);
 	const set<uint32_t>& checkRes = monitor->pduData->checkRes;
@@ -711,6 +748,8 @@ void SmppPduChecker::processDataSmResp(ResponseMonitor* monitor,
 	{
 		//обновить smsId у delivery receipt монитора
 		monitor->pduData->strProps["smsId"] = respPdu.get_messageId();
+		//проверить изменение профиля получателя с момента submit
+		updateRecipientData(monitor->pduData, respTime);
 	}
 	//set<uint32_t> checkRes = checkDataSm(monitor->pduData);
 	const set<uint32_t>& checkRes = monitor->pduData->checkRes;
@@ -806,6 +845,11 @@ void SmppPduChecker::processReplaceSmResp(ResponseMonitor* monitor,
 		monitor->pduData->pdu->get_sequenceNumber());
 	__tc_ok_cond__;
 	//проверка ошибок
+	if (respPdu.get_header().get_commandStatus() == ESME_ROK)
+	{
+		//проверить изменение профиля получателя с момента submit
+		updateRecipientData(monitor->pduData, respTime);
+	}
 	//set<uint32_t> checkRes = checkReplaceSm(monitor->pduData);
 	const set<uint32_t>& checkRes = monitor->pduData->checkRes;
 	if (checkRes.size())

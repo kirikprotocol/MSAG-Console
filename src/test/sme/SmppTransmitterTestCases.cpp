@@ -59,10 +59,12 @@ uint8_t SmppTransmitterTestCases::getRegisteredDelivery(PduData* pduData)
 {
 	__require__(pduData);
 	__require__(pduData->intProps.count("registredDelivery"));
-	__require__(pduData->intProps.count("reportOptions"));
+	__require__(pduData->objProps.count("senderData"));
 	uint8_t registredDelivery = (uint8_t) pduData->intProps["registredDelivery"];
-	int reportOptions = pduData->intProps["reportOptions"];
-	switch (reportOptions)
+	SenderData* senderData =
+		dynamic_cast<SenderData*>(pduData->objProps["senderData"]);
+	__require__(senderData->validProfile);
+	switch (senderData->profile.reportoptions)
 	{
 		case ProfileReportOptions::ReportNone:
 			return (registredDelivery & SMSC_DELIVERY_RECEIPT_BITS);
@@ -518,21 +520,22 @@ void SmppTransmitterTestCases::registerNullSmeMonitors(PduData* pduData,
 	}
 }
 
-SmsMsg* SmppTransmitterTestCases::getSmsMsg(SmppHeader* header, uint8_t dc)
+SmsMsg* SmppTransmitterTestCases::getSmsMsg(PduData* pduData)
 {
-	__require__(header);
+	__require__(pduData && pduData->pdu);
+	__require__(pduData->objProps.count("recipientData"));
+	__require__(pduData->intProps.count("dataCoding"));
+	
 	__cfg_int__(timeCheckAccuracy);
-	SmsPduWrapper pdu(header, 0);
-	Address addr;
-	SmppUtil::convert(pdu.getDest(), &addr);
-	addr = fixture->aliasReg->findAddressByAlias(addr);
-	time_t t;
-	const Profile& profile = fixture->profileReg->getProfile(addr, t);
-	bool valid = t + timeCheckAccuracy <= time(NULL);
+	SmsPduWrapper pdu(pduData->pdu, 0);
+	RecipientData* recipientData =
+		dynamic_cast<RecipientData*>(pduData->objProps["recipientData"]);
+	uint8_t dc = pduData->intProps["dataCoding"];
 	bool udhi = pdu.getEsmClass() & ESM_CLASS_UDHI_INDICATOR;
 	char* msg = NULL;
 	int len = 0;
 	uint8_t dataCoding;
+	int codePage = recipientData->profile.codepage;
 	if (pdu.isSubmitSm() && pdu.get_message().size_shortMessage() &&
 		!pdu.get_optional().has_messagePayload())
 	{
@@ -540,7 +543,7 @@ SmsMsg* SmppTransmitterTestCases::getSmsMsg(SmppHeader* header, uint8_t dc)
 		msg = new char[len];
 		convert(udhi, dc, pdu.get_message().get_shortMessage(),
 			pdu.get_message().size_shortMessage(),
-			dataCoding, msg, len, profile.codepage, false);
+			dataCoding, msg, len, codePage, false);
 	}
 	else if (pdu.isSubmitSm() && pdu.get_optional().has_messagePayload() &&
 		!pdu.get_message().size_shortMessage())
@@ -549,7 +552,7 @@ SmsMsg* SmppTransmitterTestCases::getSmsMsg(SmppHeader* header, uint8_t dc)
 		msg = new char[len];
 		convert(udhi, dc, pdu.get_optional().get_messagePayload(),
 			pdu.get_optional().size_messagePayload(),
-			dataCoding, msg, len, profile.codepage, false);
+			dataCoding, msg, len, codePage, false);
 	}
 	else if (pdu.isDataSm() && pdu.get_optional().has_messagePayload())
 	{
@@ -557,15 +560,44 @@ SmsMsg* SmppTransmitterTestCases::getSmsMsg(SmppHeader* header, uint8_t dc)
 		msg = new char[len];
 		convert(udhi, dc, pdu.get_optional().get_messagePayload(),
 			pdu.get_optional().size_messagePayload(),
-			dataCoding, msg, len, profile.codepage, false);
+			dataCoding, msg, len, codePage, false);
 	}
 	else
 	{
 		len = 1;
 		msg = new char[len];
-		convert(false, dc, "", 0, dataCoding, msg, len, profile.codepage, false);
+		convert(false, dc, "", 0, dataCoding, msg, len, codePage, false);
 	}
-	return new SmsMsg(udhi, msg, len, dataCoding, valid);
+	return new SmsMsg(udhi, msg, len, dataCoding, recipientData->validProfile);
+}
+
+void SmppTransmitterTestCases::setupSenderRecipientData(PduData* pduData,
+	time_t sendTime)
+{
+	__require__(pduData && pduData->pdu);
+	__cfg_int__(timeCheckAccuracy);
+	SmsPduWrapper pdu(pduData->pdu, 0);
+	//sender data
+	Address srcAddr;
+	SmppUtil::convert(pdu.getSource(), &srcAddr);
+	time_t t1;
+	const Profile& senderProfile =
+		fixture->profileReg->getProfile(srcAddr, t1);
+	__require__(sendTime >= t1);
+	SenderData* senderData = new SenderData(srcAddr, senderProfile, true);
+	senderData->ref();
+	pduData->objProps["senderData"] = senderData;
+	//recipient data
+	Address destAlias;
+	SmppUtil::convert(pdu.getDest(), &destAlias);
+	const Address destAddr = fixture->aliasReg->findAddressByAlias(destAlias);
+	time_t t2;
+	const Profile& recipientProfile =
+		fixture->profileReg->getProfile(destAddr, t2);
+	RecipientData* recipientData =
+		new RecipientData(destAddr, recipientProfile, sendTime > t2 + timeCheckAccuracy);
+	recipientData->ref();
+	pduData->objProps["recipientData"] = recipientData;
 }
 
 //предварительная регистрация pdu, требуется внешняя синхронизация
@@ -576,14 +608,10 @@ PduData* SmppTransmitterTestCases::prepareSms(SmppHeader* header,
 	__require__(header);
 	__require__(fixture->pduReg);
 	SmsPduWrapper pdu(header, sendTime);
-	//report options
-	time_t t; //профиль нужно брать именно тот, что в profileReg, игнорируя profileUpdateTime
-	Profile profile = fixture->profileReg->getProfile(fixture->smeAddr, t);
-	__require__(t <= sendTime); //с точностью до секунды
-	//pdu data
 	PduData* pduData = new PduData(header, sendTime, intProps, strProps, objProps);
+	setupSenderRecipientData(pduData, sendTime);
+	//other
 	pduData->intProps["registredDelivery"] = pdu.getRegistredDelivery();
-	pduData->intProps["reportOptions"] = profile.reportoptions;
 	if (pdu.get_optional().has_ussdServiceOp())
 	{
 		pduData->intProps["ussdServiceOp"] = pdu.get_optional().get_ussdServiceOp();
@@ -618,7 +646,7 @@ PduData* SmppTransmitterTestCases::prepareSms(SmppHeader* header,
 		{
 			pduData->intProps["suppressDeliveryReports"] = 1;
 		}
-		SmsMsg* msg = getSmsMsg(header, pduData->intProps["dataCoding"]);
+		SmsMsg* msg = getSmsMsg(pduData);
 		__trace2__("sms msg registered: this = %p, udhi = %s, len = %d, dc = %d, orig dc = %d, valid = %s",
 			msg, msg->udhi ? "true" : "false", msg->len, (int) msg->dataCoding, (int) pdu.getDataCoding(), msg->valid ? "true" : "false");
 		msg->ref();
@@ -771,7 +799,7 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 				pduData = prepareSms(reinterpret_cast<SmppHeader*>(pdu),
 					existentPduData, time(NULL), intProps, strProps, objProps, pduType); //all times, msgRef
 			}
-			//__dumpPdu__("submitSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			__dumpPdu__("submitSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 			PduSubmitSmResp* respPdu =
 				fixture->session->getSyncTransmitter()->submit(*pdu);
 			{
@@ -785,7 +813,7 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 		{
 			__tc__("submitSm.async"); __tc_ok__;
 			MutexGuard mguard(fixture->pduReg->getMutex());
-			//__dumpPdu__("submitSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			__dumpPdu__("submitSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 			time_t submitTime = time(NULL);
 			PduSubmitSmResp* respPdu =
 				fixture->session->getAsyncTransmitter()->submit(*pdu);
@@ -939,7 +967,7 @@ void SmppTransmitterTestCases::sendDataSmPdu(PduDataSm* pdu,
 				pduData = prepareSms(reinterpret_cast<SmppHeader*>(pdu),
 					existentPduData, time(NULL), intProps, strProps, objProps, pduType); //all times, msgRef
 			}
-			//__dumpPdu__("dataSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			__dumpPdu__("dataSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 			PduDataSmResp* respPdu =
 				fixture->session->getSyncTransmitter()->data(*pdu);
 			{
@@ -953,7 +981,7 @@ void SmppTransmitterTestCases::sendDataSmPdu(PduDataSm* pdu,
 		{
 			__tc__("dataSm.async"); __tc_ok__;
 			MutexGuard mguard(fixture->pduReg->getMutex());
-			//__dumpPdu__("dataSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			__dumpPdu__("dataSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 			time_t dataTime = time(NULL);
 			PduDataSmResp* respPdu =
 				fixture->session->getAsyncTransmitter()->data(*pdu);
@@ -1109,6 +1137,11 @@ SmppHeader* SmppTransmitterTestCases::prepareResultSubmitSm(
 	}
 	else
 	{
+		PduAddress fakeAddr;
+		fakeAddr.set_typeOfNumber(0);
+		fakeAddr.set_numberingPlan(0);
+		fakeAddr.set_value("00000000000000000000");
+		resPdu->get_message().set_dest(fakeAddr);
 		resPdu->get_message().set_scheduleDeliveryTime(
 			pdu->get_scheduleDeliveryTime() ? pdu->get_scheduleDeliveryTime() : "");
 		resPdu->get_message().set_validityPeriod(
@@ -1142,16 +1175,10 @@ PduData* SmppTransmitterTestCases::prepareReplaceSm(PduReplaceSm* pdu,
 		}
 	}
 	__dumpPdu__("prepareReplaceSm", fixture->smeInfo.systemId, resHeader);
-	//report options
-	Address srcAddr;
-	SmppUtil::convert(pdu->get_source(), &srcAddr);
-	time_t t; //профиль нужно брать именно тот, что в profileReg, игнорируя profileUpdateTime
-	Profile profile = fixture->profileReg->getProfile(srcAddr, t);
-	__require__(t <= sendTime); //с точностью до секунды
 	PduData* pduData = new PduData(resHeader, sendTime, intProps, strProps, objProps);
+	setupSenderRecipientData(pduData, sendTime);
 	pduData->intProps["replaceSm"] = 1;
 	pduData->intProps["registredDelivery"] = pdu->get_registredDelivery();
-	pduData->intProps["reportOptions"] = profile.reportoptions;
 	if (resPdu.get_optional().has_ussdServiceOp())
 	{
 		pduData->intProps["ussdServiceOp"] = resPdu.get_optional().get_ussdServiceOp();
@@ -1177,7 +1204,7 @@ PduData* SmppTransmitterTestCases::prepareReplaceSm(PduReplaceSm* pdu,
 			{
 				pduData->intProps["suppressDeliveryReports"] = 1;
 			}
-			SmsMsg* msg = getSmsMsg(resHeader, pduData->intProps["dataCoding"]);
+			SmsMsg* msg = getSmsMsg(pduData);
 			__trace2__("sms msg registered: this = %p, udhi = %s, len = %d, dc = %d, orig dc = %d, valid = %s",
 				msg, msg->udhi ? "true" : "false", msg->len, (int) msg->dataCoding, (int) resPdu.getDataCoding(), msg->valid ? "true" : "false");
 			msg->ref();
@@ -1298,7 +1325,7 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 				pduData = prepareReplaceSm(pdu, replacePduData, time(NULL),
 					intProps, strProps, objProps);
 			}
-			//__dumpPdu__("replaceSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			__dumpPdu__("replaceSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 			PduReplaceSmResp* respPdu =
 				fixture->session->getSyncTransmitter()->replace(*pdu);
 			__dumpPdu__("replaceSmSyncAfter", fixture->smeInfo.systemId,
@@ -1312,7 +1339,7 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 		{
 			__tc__("replaceSm.async"); __tc_ok__;
 			MutexGuard mguard(fixture->pduReg->getMutex());
-			//__dumpPdu__("replaceSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			__dumpPdu__("replaceSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 			time_t submitTime = time(NULL);
 			PduReplaceSmResp* respPdu =
 				fixture->session->getAsyncTransmitter()->replace(*pdu);

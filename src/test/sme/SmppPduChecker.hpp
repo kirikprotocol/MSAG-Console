@@ -61,6 +61,7 @@ private:
 	MapMsgError checkMapMsg(SmsMsg* msg);
 	void checkQuerySmRespStatus(ResponseMonitor* monitor, PduQuerySmResp& respPdu,
 		time_t respTime);
+	void updateRecipientData(PduData* pduData, time_t respTime);
 };
 
 }

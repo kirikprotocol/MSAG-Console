@@ -106,7 +106,8 @@ protected:
 	void registerNormalSmeMonitors(PduData* pduData, PduData* existentPduData);
 	void registerExtSmeMonitors(PduData* pduData);
 	void registerNullSmeMonitors(PduData* pduData, uint32_t deliveryStatus);
-	SmsMsg* getSmsMsg(SmppHeader* header, uint8_t dc);
+	SmsMsg* getSmsMsg(PduData* pduData);
+	void setupSenderRecipientData(PduData* pduData, time_t sendTime);
 	PduData* prepareSms(SmppHeader* header, PduData* existentPduData,
 		time_t sendTime, PduData::IntProps* intProps,
 		PduData::StrProps* strProps, PduData::ObjProps* objProps, PduType pduType);

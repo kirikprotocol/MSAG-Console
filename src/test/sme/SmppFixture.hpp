@@ -59,6 +59,26 @@ struct AckText : public PduDataObject
 		: text(_text), dataCoding(_dataCoding), valid(_valid) {}
 };
 
+struct SenderData : public PduDataObject
+{
+	//bool forceDC;
+	const Address srcAddr;
+	const Profile profile;
+	bool validProfile;
+	SenderData(const Address& _srcAddr, const Profile& _profile, bool _validProfile)
+		: srcAddr(_srcAddr), profile(_profile), validProfile(_validProfile) {}
+};
+
+struct RecipientData : public PduDataObject
+{
+	//bool forceDC;
+	const Address destAddr;
+	const Profile profile;
+	bool validProfile;
+	RecipientData(const Address& _destAddr, const Profile& _profile, bool _validProfile)
+		: destAddr(_destAddr), profile(_profile), validProfile(_validProfile) {}
+};
+
 struct SmsMsg : public PduDataObject
 {
 	bool udhi;
