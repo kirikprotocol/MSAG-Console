@@ -1164,7 +1164,7 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
     __trace2__("MAP::%s: 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
     switch( dialog->state ){
     case MAPST_WaitRInfoConf:
-      if ( dialog->noRoute ) {
+      if ( dialog->routeErr ) {
         dialog->state = MAPST_WaitRInfoClose;
         break;
       }
@@ -1276,8 +1276,8 @@ USHORT_T Et96MapCloseInd(
         dialog->state = MAPST_CLOSED;
         dialogid_smsc = dialog->dialogid_smsc;
         //throw MAPDIALOG_ERROR(dialog->routeErr,"lisy error");
-        SendErrToSmsc(dialog.get(),dialog->routeErr);
-        DropMapDialog(dialog.get());
+        SendErrToSmsc(dialog,dialog->routeErr);
+        DropMapDialog(dialog);
       }
       break;
     case MAPST_WaitSmsClose:
