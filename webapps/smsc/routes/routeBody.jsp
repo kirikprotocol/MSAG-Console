@@ -1,3 +1,5 @@
+<%@ page import="ru.novosoft.smsc.util.*,
+                 java.util.*"%>
 <%int rowN = 0;%>
 <table class=secRep cellspacing=0 cellpadding=2 width="100%">
 <col width="15%" align=right>
@@ -35,10 +37,11 @@ for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();)
 {
 String name = (String) i.next();
 String encName = StringEncoderDecoder.encode(name);
+String hexName = StringEncoderDecoder.encodeHEX(name);
 %>
 <tr class=row<%=(rowN++)&1%>>
 <td>&nbsp;</td>
-<td colspan=2><input class=check id="subj_src_<%=encName%>" type=checkbox name=checkedSources value="<%=encName%>" <%=bean.isSrcChecked(name) ? "checked" : ""%>>&nbsp;<label for="subj_src_<%=encName%>"><%=encName%></label></td>
+<td colspan=2><input class=check id="subj_src_<%=hexName%>" type=checkbox name=checkedSources value="<%=encName%>" <%=bean.isSrcChecked(name) ? "checked" : ""%>>&nbsp;<label for="subj_src_<%=hexName%>"><%=encName%></label></td>
 </tr>
 <%}
 for (int i=0; i<bean.getSrcMasks().length; i++)
@@ -60,12 +63,13 @@ for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();)
 {
 String name = (String) i.next();
 String encName = StringEncoderDecoder.encode(name);
+String hexName = StringEncoderDecoder.encodeHEX(name);
 %>
 <tr class=row<%=(rowN++)&1%>>
 	<td>&nbsp;</td>
 	<td>
-		<input onclick="document.all.dst_sme_<%=encName%>.disabled=!this.checked" class=check id="subj_dst_<%=encName%>" type=checkbox name=checkedDestinations value="<%=encName%>" <%=bean.isDstChecked(name) ? "checked" : ""%>>&nbsp;<label for="subj_dst_<%=encName%>"><%=encName%></label></td>
-<td><select name=dst_sme_<%=encName%> <%=!bean.isDstChecked(name) ? "disabled" : ""%>>
+		<input onclick="document.all.dst_sme_<%=hexName%>.disabled=!this.checked" class=check id="subj_dst_<%=hexName%>" type=checkbox name=checkedDestinations value="<%=encName%>" <%=bean.isDstChecked(name) ? "checked" : ""%>>&nbsp;<label for="subj_dst_<%=hexName%>"><%=encName%></label></td>
+<td><select name=dst_sme_<%=hexName%> <%=!bean.isDstChecked(name) ? "disabled" : ""%>>
 		<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
 		{
 			String smeId = (String) j.next();
@@ -81,11 +85,12 @@ for (int i=0; i<bean.getDstMasks().length; i++)
 {
 String dstMask = bean.getDstMasks()[i];
 String encMask = StringEncoderDecoder.encode(dstMask);
+String hexMask = StringEncoderDecoder.encodeHEX(dstMask);
 %>
 <tr class=row<%=(rowN++)&1%>>
 <td>&nbsp;</td>
 	<td><input class=txtW name=dstMasks value="<%=encMask%>" validation="routeMask"></td>
-	<td><select name=dst_mask_sme_<%=encMask%> onkeyup="resetValidation(this)">
+	<td><select name=dst_mask_sme_<%=hexMask%> onkeyup="resetValidation(this)">
 		<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
 		{
 			String smeId = (String) j.next();
