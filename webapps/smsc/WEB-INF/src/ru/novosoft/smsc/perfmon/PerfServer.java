@@ -80,13 +80,21 @@ public class PerfServer extends Thread {
                     sr.start();
                 } catch (SocketException ee) {
                     logger.warn("User connection socket error "+ee.getMessage());
+                    if( sock != null ) {
+                      try {
+                        sock.close();
+                      } catch (IOException ex) {
+                        logger.warn("Can't close client socket", ex);
+                      }
+                    }
                 } catch (IOException ee) {
                     logger.warn("User connection error", ee);
-                } finally {
-                    try {
-                      sock.close();
-                    } catch (IOException ex) {
-                      logger.warn("Can't close client socket", ex);
+                    if( sock != null ) {
+                      try {
+                        sock.close();
+                      } catch (IOException ex) {
+                        logger.warn("Can't close client socket", ex);
+                      }
                     }
                 }
             } catch (IOException ex) {
