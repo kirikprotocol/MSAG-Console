@@ -11,14 +11,14 @@ public class SmeIdCountersSet extends ExtendedCountersSet implements Comparable
 {
   protected String smeid;
 
-  protected int SmsTrOk = 0;
-  protected int SmsTrFailed = 0;
-  protected int UssdTrFromScOk = 0;
-  protected int UssdTrFromScFailed = 0;
-  protected int UssdTrFromScBilled = 0;
-  protected int UssdTrFromSmeOk = 0;
-  protected int UssdTrFromSmeFailed = 0;
-  protected int UssdTrFromSmeBilled = 0;
+  protected int smsTrOk = 0;
+  protected int smsTrFailed = 0;
+  protected int ussdTrFromScOk = 0;
+  protected int ussdTrFromScFailed = 0;
+  protected int ussdTrFromScBilled = 0;
+  protected int ussdTrFromSmeOk = 0;
+  protected int ussdTrFromSmeFailed = 0;
+  protected int ussdTrFromSmeBilled = 0;
 
   public SmeIdCountersSet(int accepted, int rejected, int delivered, int tempError, int permError,
                           int smsTrOk, int smsTrFailed, int ussdTrFromScOk, int ussdTrFromScFailed,
@@ -27,14 +27,14 @@ public class SmeIdCountersSet extends ExtendedCountersSet implements Comparable
   {
     super(accepted, rejected, delivered, tempError, permError);
     this.smeid = smeid;
-    SmsTrOk = smsTrOk;
-    SmsTrFailed = smsTrFailed;
-    UssdTrFromScOk = ussdTrFromScOk;
-    UssdTrFromScFailed = ussdTrFromScFailed;
-    UssdTrFromScBilled = ussdTrFromScBilled;
-    UssdTrFromSmeOk = ussdTrFromSmeOk;
-    UssdTrFromSmeFailed = ussdTrFromSmeFailed;
-    UssdTrFromSmeBilled = ussdTrFromSmeBilled;
+    this.smsTrOk = smsTrOk;
+    this.smsTrFailed = smsTrFailed;
+    this.ussdTrFromScOk = ussdTrFromScOk;
+    this.ussdTrFromScFailed = ussdTrFromScFailed;
+    this.ussdTrFromScBilled = ussdTrFromScBilled;
+    this.ussdTrFromSmeOk = ussdTrFromSmeOk;
+    this.ussdTrFromSmeFailed = ussdTrFromSmeFailed;
+    this.ussdTrFromSmeBilled = ussdTrFromSmeBilled;
   }
 
   public int compareTo(Object o) {
@@ -47,27 +47,27 @@ public class SmeIdCountersSet extends ExtendedCountersSet implements Comparable
   }
 
   public int getSmsTrOk() {
-    return SmsTrOk;
+    return smsTrOk;
   }
   public int getSmsTrFailed() {
-    return SmsTrFailed;
+    return smsTrFailed;
   }
   public int getUssdTrFromScOk() {
-    return UssdTrFromScOk;
+    return ussdTrFromScOk;
   }
   public int getUssdTrFromScFailed() {
-    return UssdTrFromScFailed;
+    return ussdTrFromScFailed;
   }
   public int getUssdTrFromScBilled() {
-    return UssdTrFromScBilled;
+    return ussdTrFromScBilled;
   }
   public int getUssdTrFromSmeOk() {
-    return UssdTrFromSmeOk;
+    return ussdTrFromSmeOk;
   }
   public int getUssdTrFromSmeFailed() {
-    return UssdTrFromSmeFailed;
+    return ussdTrFromSmeFailed;
   }
   public int getUssdTrFromSmeBilled() {
-    return UssdTrFromSmeBilled;
+    return ussdTrFromSmeBilled;
   }
 }
