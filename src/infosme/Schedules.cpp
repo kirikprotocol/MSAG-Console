@@ -37,30 +37,23 @@ Schedule* Schedule::create(ConfigView* config, std::string id)
 }
 void Schedule::init(ConfigView* config, bool full)
 {
-    startTime = parseTime(config->getString("startTime")); 
-    if (startTime < 0)
-        throw ConfigException("Invalid startTime parameter.");
-    startDate = parseDate(config->getString("startDate"));
-    if (startDate <= 0)
-        throw ConfigException("Invalid startDate parameter.");
-    
+    startDateTime = parseDateTime(config->getString("startDateTime"));
+    if (startDateTime <= 0)
+        throw ConfigException("Invalid startDateTime parameter.");
+
     if (full) {
-        endDate = -1; endTime = -1;
-        try { endDate = parseDate(config->getString("endDate")); } catch(...) {};
-        try { endTime = parseTime(config->getString("endTime")); } catch(...) {};
+        deadLine = -1;
+        try { deadLine = parseDateTime(config->getString("endDateTime")); } catch(...) {};
     }
 }
+
 void OnceSchedule::init(ConfigView* config)
 {
     Schedule::init(config, false);
 }
 time_t OnceSchedule::calulateNextTime()
 {
-    if (startDate <= 0 || startTime < 0) return -1;
-
-    time_t ct = time(NULL);
-    time_t st = startDate + startTime;
-    return ((ct <= st) ? st:-1);
+    return ((startDateTime > 0 && time(NULL) < startDateTime) ? startDateTime:-1);
 }
 
 void DailySchedule::init(ConfigView* config)
@@ -73,18 +66,19 @@ void DailySchedule::init(ConfigView* config)
 }
 time_t DailySchedule::calulateNextTime()
 {
-    if (startDate <= 0 || startTime < 0) return -1;
+    if (startDateTime <= 0) return -1;
 
     time_t ct = time(NULL);
-    time_t st = startDate + startTime;
-    time_t deadLine = ((endDate >= 0) ? endDate:0) + 
-                      ((endTime >= 0) ? endTime:0);
+    time_t st = startDateTime;
     if (deadLine > 0 && ct >= deadLine) return -1;
-    if (ct <= st) return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
-    
+    if (ct < st) return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
     if (everyNDays <= 0) return -1;
-    int interval = 86400*everyNDays;
-    st += ((ct-st)/interval+1)*interval;
+
+    tm dt; localtime_r(&st, &dt);
+    int intervalInSeconds = 86400*everyNDays;
+    dt.tm_mday += ((ct-st)/intervalInSeconds+1)*everyNDays;
+    st = mktime(&dt); 
+
     return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
 }
 
@@ -167,56 +161,70 @@ void WeeklySchedule::init(ConfigView* config)
 }
 time_t WeeklySchedule::calulateNextTime()
 {
-    if (startDate <= 0 || startTime < 0 || everyNWeeks <= 0) return -1;
+    if (startDateTime <= 0) return -1;
     
     time_t ct = time(NULL);
-    time_t deadLine = ((endDate >= 0) ? endDate:0) + 
-                      ((endTime >= 0) ? endTime:0);
     if (deadLine > 0 && ct >= deadLine) return -1;
-    time_t st = startDate;
+    time_t st = startDateTime;
     
     tm dt; localtime_r(&st, &dt);
     dt.tm_mday -= ((dt.tm_wday == 0) ? 6:(dt.tm_wday-1));
-    st = mktime(&dt); // Понедельник стартовой недели.
+    st = mktime(&dt); // Понедельник первой стартовой недели.
 
-    int interval = 86400*7*everyNWeeks;
-    st += ((ct-st)/interval)*interval+startTime; // понедельник очередной недели + startTime
+    int intervalInDays = 7*everyNWeeks;
+    int intervalInSeconds = intervalInDays*86400;
+
+    if (ct >= st) { 
+        dt.tm_mday += ((ct-st)/intervalInSeconds)*intervalInDays;
+        st = mktime(&dt); // Понедельник очередной стартовой недели.
+    }
     
-    while (st < ct)
+    while (st < startDateTime || st <= ct)
     {
         if (deadLine > 0 && st >= deadLine) return -1;
         for (int i=0; i<7; i++) {
-            if (st < ct) st += weekDaysSet[i]*86400;
-            else return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
+            if (st <= ct) {
+                dt.tm_mday += weekDaysSet[i];
+                st = mktime(&dt);
+            }
+            else if (st > startDateTime) {
+                return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
+            }
         }
-        st += interval;
+        dt.tm_mday += intervalInDays;
+        st = mktime(&dt); // Переходим к следующей недели и ... 
+        dt.tm_mday -= ((dt.tm_wday == 0) ? 6:(dt.tm_wday-1));
+        st = mktime(&dt); // Берём на ней понедельник
     }
     
     return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
 }
 
-bool MonthesNamesParser::initWeekDayN(std::string weekDayNs)
+bool MonthesNamesParser::initWeekDay(std::string weekDayStr)
 {
-    // ',' separated list: first, second, third, fourth, last.
-    memset(&weekDayNSet, 0, sizeof(weekDayNSet));
-
-    const char* str = weekDayNs.c_str();
+    // Monday | Tuesday |  ...
+    const char* str = weekDayStr.c_str();
     if (!str || str[0] == '\0') return false;
     
-    std::string weekDayN = "";
-    do
-    {
-        if (*str == ',' || *str == '\0') {
-            int n = scanWeekDayN(weekDayN.c_str());
-            if (n < 0 || n > 4) return false;
-            weekDayNSet[n] = n;
-            weekDayN = "";
-        } 
-        else weekDayN += *str;
-    } 
-    while (*str++);
+    weekDay = scanWeekDay(str);
+    if (weekDay < 0 || weekDay > 6) {
+        weekDay = 0;
+        return false;
+    }
     return true;
-
+}
+bool MonthesNamesParser::initWeekDayN(std::string weekDayNStr)
+{
+    // first | second | third | fourth | last.
+    const char* str = weekDayNStr.c_str();
+    if (!str || str[0] == '\0') return false;
+    
+    int weekDayN = scanWeekDayN(str);
+    if (weekDayN < 0 || weekDayN > 4) {
+        weekDayN = 0;
+        return false;
+    }
+    return true;
 }
 bool MonthesNamesParser::initMonthesNames(std::string monthesNames)
 {
@@ -252,57 +260,103 @@ void MonthlySchedule::init(ConfigView* config)
                               "should be in interval [1, 31] or skipped when using weeks.");
     if (dayOfMonth == -1)
     {
+        if (!initWeekDay(config->getString("weekDay")))
+            throw ConfigException("Invalid weekDay parameter, should be one of "
+                                  "week days (Mon, Thu, ...).");
         if (!initWeekDayN(config->getString("weekDayN")))
-            throw ConfigException("Invalid weekDayN parameter, should be "
-                                  "',' separated list of week numbers: "
+            throw ConfigException("Invalid weekDayN parameter, should be one of: "
                                   "first, second, third, fourth, last.");
-        if (!initWeekDays(config->getString("weekDays")))
-            throw ConfigException("Invalid weekDay parameter, should be "
-                                  "',' separated list of week days.");
     }
     if (!initMonthesNames(config->getString("monthes")))
         throw ConfigException("Invalid monthes parameter, should be "
                               "',' separated list of monthes names.");
 }
+int getLastMonthDay(tm dt)
+{
+    for (int i=27; i<32; i++) {
+        dt.tm_mday = i;
+        (void) mktime(&dt);
+        if (dt.tm_mday != i) return i-1;
+    }
+    return -1;
+}
 time_t MonthlySchedule::calulateNextTime()
 {
-    if (startDate <= 0 || startTime < 0 || 
+    if (startDateTime <= 0 || 
         dayOfMonth == 0 || dayOfMonth > 31) return -1;
+    if (dayOfMonth < 0 && 
+        (weekDayN < 0 || weekDayN > 4) && (weekDay < 0 || weekDay > 6)) return -1;
     
     time_t ct = time(NULL);
-    time_t deadLine = ((endDate >= 0) ? endDate:0) + 
-                      ((endTime >= 0) ? endTime:0);
-    time_t st = startDate + startTime;
-    if (deadLine > 0 && (ct >= deadLine || st >= deadLine)) return -1;
+    if (deadLine > 0 && (ct >= deadLine || startDateTime >= deadLine)) return -1;
     
+    tm dt; localtime_r(&ct, &dt); // начинаем с текущего времени.
+    tm dtst; localtime_r(&startDateTime, &dtst);
+    dt.tm_hour = dtst.tm_hour; dt.tm_min = dtst.tm_min; dt.tm_sec = dtst.tm_sec;
+    time_t st = mktime(&dt); 
+
     while (1)
     {
-        tm dt; localtime_r(&st, &dt);
         if (dt.tm_mon < 0 || dt.tm_mon >= 12) return -1;
-        dt.tm_sec = 0; dt.tm_min = 0; dt.tm_hour = 0;
         
         if (dayOfMonth > 0)
         {
-            dt.tm_mday = dayOfMonth; 
-            time_t at = mktime(&dt) + startTime;
-            if (at > ct && at >= st) 
-                return ((deadLine <= 0) ? at:((at < deadLine) ? at:-1))
+            if (dayOfMonth <= getLastMonthDay(dt))
+            {
+                dt.tm_mday = dayOfMonth;  // задали день старта
+                st = mktime(&dt);        
+                if (st > ct && st >= startDateTime) 
+                    return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
+            }
         }
         else
         {
-            // TODO: calculate by weekDays number
-
+            int lastMonthDay = getLastMonthDay(dt);
+            if (weekDayN == 4) // search for last weekDay
+            {
+                for (dt.tm_mday = lastMonthDay; dt.tm_mday > 0; dt.tm_mday--)
+                {
+                    st = mktime(&dt); // нормализируем структуру, вычисляем день недели
+                    if (dt.tm_wday == ((weekDay == 6) ? 0:weekDay+1))
+                    {
+                        if (st > ct && st >= startDateTime) 
+                            return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
+                        else break; // try it in next month
+                    }
+                }
+            }
+            else // search for first | second | third | fourth weekDay
+            {
+                int found = 0;
+                for (dt.tm_mday = 1; dt.tm_mday <= lastMonthDay; dt.tm_mday++)
+                {
+                    st = mktime(&dt); // нормализируем структуру, вычисляем день недели
+                    if (dt.tm_wday == ((weekDay == 6) ? 0:weekDay+1))
+                    {
+                        if (found == weekDayN) {
+                            if (st > ct && st >= startDateTime) 
+                                return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
+                            else break; // try it in next month
+                        }
+                        found++;
+                    }
+                }
+            }
         }
 
-        // increase tm_mon by monthesNames
-        int start_mon = dt.tm_mon;
-        while (++dt.tm_mon < start_mon+12) {
+        // не нашли в текущем месяце, увеличиваем месяц
+        dt.tm_mday = 1;
+        int start_mon = dt.tm_mon;                // начинаем с текущего месяца
+        while (++dt.tm_mon < start_mon+12) {      // сканируем 12 месяцев после него
             int index = dt.tm_mon-start_mon;
-            if (index>=0 && index<12 && monthesNamesSet[index]) break;
+            if (index>=0 && index<12 && monthesNamesSet[index]) break; // выходим если нашли след. месяц
         }
-        if (dt.tm_mon >= start_mon+12) return -1; // no monthes found !!!
+        if (dt.tm_mon >= start_mon+12) return -1; // нечего не нашли => месяцев нет (ошибка инита)
+
+        (void)mktime(&dt); // нормализуем структуру dt, вычисляем нормальный месяц
     }
     
+    st = mktime(&dt);
     return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
 }
 
@@ -316,17 +370,15 @@ void IntervalSchedule::init(ConfigView* config)
 }
 time_t IntervalSchedule::calulateNextTime()
 {
-    if (startDate <= 0 || startTime < 0) return -1;
+    if (startDateTime <= 0) return -1;
 
     time_t ct = time(NULL);
-    time_t st = startDate + startTime;
-    time_t deadLine = ((endDate >= 0) ? endDate:0) + 
-                      ((endTime >= 0) ? endTime:0);
+    time_t st = startDateTime;
     if (deadLine > 0 && ct >= deadLine) return -1;
-    if (ct <= st) return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
+    if (ct < st) return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
     if (intervalTime <= 0) return -1;
     
-    st += ((ct-st)/intervalTime + 1)*intervalTime;
+    st += ((ct-st)/intervalTime + 1)*intervalTime; // no need to ajust daylight
     return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
 }
 

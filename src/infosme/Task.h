@@ -37,7 +37,7 @@ namespace smsc { namespace infosme
 
     extern time_t parseDateTime(const char* str);
     extern time_t parseDate(const char* str);
-    extern time_t parseTime(const char* str);
+    extern int    parseTime(const char* str);
     
     struct Message
     {

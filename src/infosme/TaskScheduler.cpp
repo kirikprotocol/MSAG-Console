@@ -147,13 +147,13 @@ void TaskScheduler::init(TaskProcessorAdapter* processor, ConfigView* config)
             const char* tasksCur = tasksStr;
             std::string taskName = "";
             
-            do
+            if (*tasksCur != '\0') do
             {
                 if (*tasksCur == ',' || *tasksCur == '\0') {
                     const char* task_name = taskName.c_str();
                     if (!task_name || task_name[0] == '\0') {
                         delete schedule;
-                        throw ConfigException("Task name is invalid.");
+                        throw ConfigException("Task names is invalid.");
                     }
                     if (!processor->getTaskContainerAdapter().hasTask(taskName)) {
                         delete schedule;
@@ -194,8 +194,11 @@ Schedule* TaskScheduler::getNextSchedule(time_t& scheduleTime)
         if (!schedule) continue;
         time_t time = schedule->calulateNextTime();
         if (time < 0) continue;
-        if (minimalTime < 0) minimalTime = time;
-        if (time < minimalTime) {
+        
+        printf("Schedule '%s' Next time: %s", 
+               schedule ? schedule->id.c_str():"-", ctime(&time));
+        
+        if (minimalTime < 0 || time < minimalTime) {
             minimalTime = time;
             nextSchedule = schedule;
         }

@@ -48,10 +48,9 @@ namespace smsc { namespace infosme
         std::string     id;
         ScheduleType    type;
         
-        time_t  startTime;  // only HH:mm:ss
-        time_t  startDate;  // only YYYY.MM.dd
-        time_t  endDate;    // if -1 not defined, only YYYY.MM.dd
-        time_t  endTime;    // if -1 not defined. only HH:mm:ss
+        
+        time_t  startDateTime;  // full YYYY.MM.dd HH:mm:ss
+        time_t  deadLine;       // full YYYY.MM.dd HH:mm:ss
         
         Mutex           taskNamesLock;
         Hash<bool>      taskNames;
@@ -92,10 +91,8 @@ namespace smsc { namespace infosme
 
     protected:
         
-        Schedule(std::string id, ScheduleType type, 
-                 time_t startTime=-1, time_t startDate=-1, time_t endTime=-1, time_t endDate=-1) 
-            : id(id), type(type), 
-              startTime(startTime), startDate(startDate), endTime(endTime), endDate(endDate) {};
+        Schedule(std::string id, ScheduleType type, time_t startDateTime=-1, time_t endDateTime=-1) 
+            : id(id), type(type), startDateTime(startDateTime), deadLine(endDateTime) {};
     };
 
     struct OnceSchedule : public Schedule
@@ -103,8 +100,8 @@ namespace smsc { namespace infosme
         OnceSchedule(std::string id)
             : Schedule(id, ONCE) {};
 
-        OnceSchedule(std::string id, time_t startTime, time_t startDate)
-            : Schedule(id, ONCE, startTime, startDate, -1, -1) {};
+        OnceSchedule(std::string id, time_t startDateTime)
+            : Schedule(id, ONCE, startDateTime, -1) {};
         
         virtual void init(ConfigView* config);
         virtual time_t calulateNextTime();
@@ -117,9 +114,9 @@ namespace smsc { namespace infosme
         DailySchedule(std::string id)
             : Schedule(id, DAILY), everyNDays(0) {};
         
-        DailySchedule(std::string id, time_t startTime, time_t startDate, int everyNDays,
-                      time_t endTime=-1, time_t endDate=-1)
-            : Schedule(id, DAILY, startTime, startDate, endTime, endDate), 
+        DailySchedule(std::string id, time_t startDateTime, int everyNDays,
+                      time_t endDateTime=-1)
+            : Schedule(id, DAILY, startDateTime, endDateTime), 
               everyNDays(everyNDays) {};
         
         virtual void init(ConfigView* config);
@@ -152,39 +149,40 @@ namespace smsc { namespace infosme
         WeeklySchedule(std::string id)
             : Schedule(id, WEEKLY), WeekDaysParser(), everyNWeeks(0) {};
         
-        WeeklySchedule(std::string id, time_t startTime, time_t startDate,
+        WeeklySchedule(std::string id, time_t startDateTime,
                        int everyNWeeks, std::string weekDays,
-                       time_t endTime=-1, time_t endDate=-1)
-            : Schedule(id, WEEKLY, startTime, startDate, endTime, endDate),
+                       time_t endDateTime=-1)
+            : Schedule(id, WEEKLY, startDateTime, endDateTime),
               WeekDaysParser(weekDays), everyNWeeks(everyNWeeks) {};
         
         virtual void init(ConfigView* config);
         virtual time_t calulateNextTime();
     };
     
-    class MonthesNamesParser : public WeekDaysParser
+    class MonthesNamesParser
     {
     protected:
         
-        int  weekDayNSet[5];
+        int  weekDayN, weekDay;
         bool monthesNamesSet[12];
         
     public:
         
-        MonthesNamesParser() : WeekDaysParser()
+        MonthesNamesParser() : weekDayN(0), weekDay(0)
         {
-            memset(&weekDayNSet, 0, sizeof(weekDayNSet));
             memset(&monthesNamesSet, 0, sizeof(monthesNamesSet));
         };
-        MonthesNamesParser(std::string weekDays, std::string weekDayN, std::string monthesNames)
-            : WeekDaysParser(weekDays)
+        MonthesNamesParser(std::string weekDay, std::string weekDayN, std::string monthesNames)
+            : weekDayN(0), weekDay(0)
         {
+            initWeekDay(weekDay);
             initWeekDayN(weekDayN);
             initMonthesNames(monthesNames);
         };
         virtual ~MonthesNamesParser() {};
 
-        bool initWeekDayN(std::string weekDayN); // ',' separated list second, third, fourth, last.
+        bool initWeekDay(std::string weekDay); // Mon | Thu | ...
+        bool initWeekDayN(std::string weekDayN); // second | third | fourth | last.
         bool initMonthesNames(std::string monthesNames); // ',' separated list Jan, Feb, ...
     };
     
@@ -195,11 +193,11 @@ namespace smsc { namespace infosme
         MonthlySchedule(std::string id)
             : Schedule(id, MONTHLY), MonthesNamesParser(), dayOfMonth(1) {};
 
-        MonthlySchedule(std::string id, time_t startTime, time_t startDate, int dayOfMonth, 
-                        std::string weekDayN, std::string weekDays, std::string monthesNames,
-                        time_t endTime=-1, time_t endDate=-1)
-            : Schedule(id, MONTHLY, startTime, startDate, endTime, endDate),
-              MonthesNamesParser(weekDays, weekDayN, monthesNames), dayOfMonth(dayOfMonth) {};
+        MonthlySchedule(std::string id, time_t startDateTime, int dayOfMonth, 
+                        std::string weekDayN, std::string weekDay, std::string monthesNames,
+                        time_t endDateTime=-1)
+            : Schedule(id, MONTHLY, startDateTime, endDateTime),
+              MonthesNamesParser(weekDay, weekDayN, monthesNames), dayOfMonth(dayOfMonth) {};
         
         virtual void init(ConfigView* config);
         virtual time_t calulateNextTime();
@@ -207,14 +205,14 @@ namespace smsc { namespace infosme
 
     struct IntervalSchedule : public Schedule
     {
-        time_t  intervalTime; // only HH:mm:ss
+        int     intervalTime; // only HH:mm:ss
 
         IntervalSchedule(std::string id)
             : Schedule(id, INTERVAL), intervalTime(0) {};
 
-        IntervalSchedule(std::string id, time_t startTime, time_t startDate, 
-                         time_t intervalTime, time_t endTime=-1, time_t endDate=-1)
-            : Schedule(id, INTERVAL, startTime, startDate, endTime, endDate),
+        IntervalSchedule(std::string id, time_t startDateTime, 
+                         int intervalTime, time_t endDateTime=-1)
+            : Schedule(id, INTERVAL, startDateTime, endDateTime),
               intervalTime(intervalTime) {};
         
         virtual void init(ConfigView* config);

@@ -106,6 +106,58 @@
 	</section>
 	
 	<section name="Schedules">
+
+	    <section name="Schedule 1 (once)">
+		<param name="execute" type="string">once</param>
+		<param name="tasks" type="string">Task2,Task1</param>
+		
+		<param name="startDateTime" type="string">03.09.2003 19:40:00</param>
+		
+	    </section>
+	    <section name="Schedule 2 (daily)">
+		<param name="execute" type="string">daily</param>
+		<param name="tasks" type="string"></param>
+		
+		<param name="startDateTime" type="string">03.09.2003 19:40:00</param>
+		<param name="endDateTime" type="string"></param>
+		<param name="everyNDays" type="int">2</param>			
+	    </section>
+	    <section name="Schedule 3 (weekly)">
+		<param name="execute" type="string">weekly</param>
+		<param name="tasks" type="string"></param>
+		
+		<param name="startDateTime" type="string">03.09.2003 19:40:00</param>
+		<param name="endDateTime" type="string"></param>
+		<param name="everyNWeeks" type="int">3</param>
+		<param name="weekDays" type="string">Mon,Thu,Fri</param>
+	    </section>
+	    <section name="Schedule 4 (monthly)">
+		<param name="execute" type="string">monthly</param>
+		<param name="tasks" type="string"></param>
+		
+		<param name="startDateTime" type="string">03.09.2003 19:40:00</param>
+		<param name="endDateTime" type="string"></param>
+		<param name="dayOfMonth" type="int">10</param>
+		<param name="monthes" type="string">Jun,Jul,Sep,Oct,Dec</param>
+	    </section>
+	    <section name="Schedule 5 (monthly)">
+		<param name="execute" type="string">monthly</param>
+		<param name="tasks" type="string"></param>
+		
+		<param name="startDateTime" type="string">03.09.2003 19:40:00</param>
+		<param name="endDateTime" type="string"></param>
+		<param name="weekDayN" type="string">second</param>
+		<param name="weekDay" type="string">Sat</param>
+		<param name="monthes" type="string">Jun,Jul,Sep,Oct,Dec</param>
+	    </section>
+	    <section name="Schedule 6 (interval)">
+		<param name="execute" type="string">interval</param>
+		<param name="tasks" type="string"></param>
+		
+		<param name="startDateTime" type="string">03.09.2003 19:40:00</param>
+		<param name="endDateTime" type="string"></param>
+		<param name="intervalTime" type="string">2:10:15</param>			
+	    </section>
 	</section>
 	
     </section>

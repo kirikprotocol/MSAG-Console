@@ -63,7 +63,7 @@ TaskGuard TaskContainer::getNextTask()
     if (prioritySum <= 0) return TaskGuard(0);
     
     int count = 0;
-    int random = (rand()%prioritySum)+1;
+    int random = ((rand()&0x7fffffff)%prioritySum)+1;
     
     char* key = 0; Task* task = 0; tasks.First();
     while (tasks.Next(key, task))
@@ -167,6 +167,7 @@ void TaskProcessor::Start()
         awake.Wait(0);
         Thread::Start();
         bStarted = true;
+        scheduler.Start();
         logger.info("Started.");
     }
 }
@@ -179,6 +180,7 @@ void TaskProcessor::Stop()
         logger.info("Stopping ...");
         bNeedExit = true;
         awake.Signal();
+        scheduler.Stop();
         exited.Wait();
         bStarted = false;
         logger.info("Stoped.");

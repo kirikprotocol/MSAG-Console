@@ -11,7 +11,7 @@ time_t parseDateTime(const char* str)
         sscanf(str, "%02d.%02d.%4d %02d:%02d:%02d", 
                     &day, &month, &year, &hour, &minute, &second) != 6) return -1;
     
-    tm  dt; dt.tm_isdst = 0;
+    tm  dt; dt.tm_isdst = -1;
     dt.tm_year = year - 1900; dt.tm_mon = month - 1; dt.tm_mday = day;
     dt.tm_hour = hour; dt.tm_min = minute; dt.tm_sec = second;
 
@@ -32,7 +32,7 @@ time_t parseDate(const char* str)
     //printf("%02d:%02d:%04d = %ld\n", day, month, year, time);
     return mktime(&dt);
 }
-time_t parseTime(const char* str)
+int parseTime(const char* str)
 {
     int hour, minute, second;
     if (!str || str[0] == '\0' ||
