@@ -83,14 +83,14 @@ public:
       */
       uint64_t tmp=ld.counters[i].total;
       unsigned char *ptr=(unsigned char *)&ld.counters[i].total;
-      ptr[0]=tmp>>56;
-      ptr[1]=(tmp>>48)&0xFF;
-      ptr[2]=(tmp>>40)&0xFF;
-      ptr[3]=(tmp>>32)&0xFF;
-      ptr[4]=(tmp>>24)&0xFF;
-      ptr[5]=(tmp>>16)&0xFF;
-      ptr[6]=(tmp>>8)&0xFF;
-      ptr[7]=tmp&0xFF;
+      ptr[0]=(unsigned char)(tmp>>56);
+      ptr[1]=(unsigned char)(tmp>>48)&0xFF;
+      ptr[2]=(unsigned char)(tmp>>40)&0xFF;
+      ptr[3]=(unsigned char)(tmp>>32)&0xFF;
+      ptr[4]=(unsigned char)(tmp>>24)&0xFF;
+      ptr[5]=(unsigned char)(tmp>>16)&0xFF;
+      ptr[6]=(unsigned char)(tmp>>8)&0xFF;
+      ptr[7]=(unsigned char)(tmp&0xFF);
     }
 
     ld.uptime=htonl(ld.uptime);
