@@ -110,6 +110,7 @@ void ProfilerTestCases::createProfileNotMatch(Address& addr, int num)
 	{
 		try
 		{
+			__tc__("createProfileMatch.noSubstSymbols");
 			Profile profile;
 			setupRandomCorrectProfile(profile);
 			AddressValue addrVal;
