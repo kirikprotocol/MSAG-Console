@@ -17,16 +17,19 @@ public class DivertManager
     }
   }
 
+  private DivertInfo info = new DivertInfo(Constants.VOICEMAIL, Constants.OFF, "+79139254896", null);
+
   protected DivertManager() {
     // TODO: init connection settings & estabilish connection to MSC
   }
   public DivertInfo getDivertInfo(String abonent)
   {
     // TODO: implement query to MSC
-    return new DivertInfo(Constants.VOICEMAIL, Constants.OFF, "+79139254896", null);
+    return info;
   }
   public void setDivertInfo(String abonent, DivertInfo info)
   {
+    this.info = info;
     // TODO: implement set on MSC
   }
 }
