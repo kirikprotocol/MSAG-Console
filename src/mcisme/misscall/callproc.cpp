@@ -655,7 +655,7 @@ USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
    */
   if (original)
   {
-    inform = 1;
+    inform = relCauses.otherInform;
     if (redirectionInfo_sp)
     {
       switch (redirectionInfo_sp->lastReason)
