@@ -13,7 +13,7 @@
   </bundle>
 
   <bundle name="divert">
-    <str name="value_off"         value="выключено"/>
+    <str name="value_off"         value="выкл"/>
     <str name="value_service"     value="сервис"/>
     <str name="value_voicemail"   value="голос.почта"/>
 
