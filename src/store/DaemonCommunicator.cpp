@@ -143,7 +143,7 @@ static int8_t convertProtocolDateToStr(char* str, time_t date)
         sprintf(str, PROTOCOL_DATETIME_PATTERN, tmdt.tm_mday, tmdt.tm_mon+1, tmdt.tm_year+1900,
                 tmdt.tm_hour, tmdt.tm_min, tmdt.tm_sec, &bytes);
     } 
-    else str[0]='/0';
+    else str[0]='\0';
     return (int8_t)bytes;
 }
 

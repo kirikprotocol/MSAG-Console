@@ -496,7 +496,7 @@ int Query::Execute()
 
     time_t lastProcessedTime = 0;
     PersistentStorage* source = 0;
-    char sourceFileName[64]; sourceFileName[0]='/0';
+    char sourceFileName[64]; sourceFileName[0]=0;
 
     try
     {
