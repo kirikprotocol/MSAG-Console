@@ -1,9 +1,10 @@
 <project default="update" name="Sibinco Library">
 
+  <property file="../build.properties"/>
   <property environment="env"/>
   <property name="java_src" location="src"/>
-  <property name="java_out" location="${env.HOME}/build/classes/tomcat_auth_lib"/>
-  <property name="jar_out" location="${env.HOME}/build/jars/sibinco_lib.jar"/>
+  <property name="java_out" location="${BUILD_DIR}/smsc_lib/classes"/>
+  <property name="jar_out" location="${BUILD_DIR}/jars/sibinco_lib.jar"/>
   <property name="log4j_jar" location="../smppgw/WEB-INF/lib/log4j.jar"/>
 
   <target name="init">

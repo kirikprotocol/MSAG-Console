@@ -38,6 +38,7 @@ public class SmppGWFilter implements Filter
 
   public void destroy()
   {
+    appContext.destroy();
     defaultEncoding = "ISO-8859-1";
     config = null;
     appContext = null;

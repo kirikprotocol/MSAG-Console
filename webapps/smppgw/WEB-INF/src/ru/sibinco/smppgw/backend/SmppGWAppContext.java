@@ -10,6 +10,7 @@ import ru.sibinco.smppgw.backend.resources.ResourceManager;
 import ru.sibinco.smppgw.backend.routing.GwRoutingManager;
 import ru.sibinco.smppgw.backend.sme.*;
 import ru.sibinco.smppgw.backend.users.UserManager;
+import ru.sibinco.smppgw.perfmon.PerfServer;
 import ru.sibinco.tomcat_auth.XmlAuthenticator;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -34,6 +35,7 @@ public class SmppGWAppContext
   private final SmscsManager smscsManager;
   private final GwRoutingManager gwRoutingManager;
   private final ResourceManager resourceManager;
+  private final PerfServer perfServer;
   private final Daemon gwDaemon;
   private final Gateway gateway;
   private final Statuses statuses;
@@ -58,11 +60,17 @@ public class SmppGWAppContext
       final ServiceInfo gwServiceInfo = (ServiceInfo) gwDaemon.getServices().get(config.getString("gw name"));
       gateway = new Gateway(gwServiceInfo);
       statuses = new Statuses();
+      perfServer = new PerfServer(config);
+      perfServer.start();
       XmlAuthenticator.init(new File(config.getString("users_config_file")));
     } catch (Throwable e) {
       logger.fatal("Could not initialize App Context", e);
       throw e;
     }
+  }
+
+  public void destroy() {
+    perfServer.shutdown();
   }
 
   public static synchronized SmppGWAppContext getInstance(final String config_filename) throws Throwable, IOException, ParserConfigurationException,

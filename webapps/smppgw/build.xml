@@ -1,15 +1,18 @@
-<project default="update" name="SMPP Gateway web application">
-
+<project default="update" basedir="." name="SMPP Gateway web application">
+  <property file="../build.properties"/>
   <property environment="env"/>
-  <property name="java_src" location="WEB-INF/src"/>
-  <property name="java_out" location="${env.HOME}/build/classes/smppgw"/>
-  <property name="exploded" location="${env.HOME}/build/exploded/smppgw"/>
+  <property name="java_src" location="${basedir}/WEB-INF/src"/>
+  <property name="java_out" location="${BUILD_DIR}/classes/smppgw"/>
+  <property name="exploded" location="${BUILD_DIR}/exploded/smppgw"/>
   <property name="java_lib" location="${exploded}/WEB-INF/lib"/>
+  <property name="perfmon_path" value="ru/sibinco/smppgw/perfmon"/>
+  <property name="perfmon_src" location="${java_src}/${perfmon_path}"/>
+  <property name="perfmon_out" location="${java_out}/${perfmon_path}"/>
 
-  <property name="sibinco_lib" location="${env.HOME}/build/jars/sibinco_lib.jar"/>
-  <property name="tomcat_auth_lib" location="${env.HOME}/build/jars/sibinco_tomcat_auth.jar"/>
+  <property name="sibinco_lib" location="${BUILD_DIR}/jars/sibinco_lib.jar"/>
+  <property name="tomcat_auth_lib" location="${BUILD_DIR}/jars/sibinco_tomcat_auth.jar"/>
   <property name="log4j_jar" location="WEB-INF/lib/log4j.jar"/>
-  <property name="servlet_jar" location="${env.CATALINA_HOME}/common/lib/servlet-api.jar"/>
+  <property name="servlet_jar" location="${CATALINA_HOME}/common/lib/servlet-api.jar"/>
 
   <target name="init">
     <tstamp/>
@@ -21,13 +24,26 @@
   <target name="compile" depends="init" description="compile the sources">
     <javac srcdir="${java_src}" destdir="${java_out}" classpath="${sibinco_lib}:${tomcat_auth_lib}:${log4j_jar}:${servlet_jar}"/>
     <native2ascii encoding="Cp1251" src="${java_src}/locales" dest="${java_out}/locales"/>
+    <native2ascii encoding="Cp1251" src="${perfmon_src}/applet" dest="${perfmon_out}/applet"/>
   </target>
 
   <target name="build" depends="clean,compile" description="generate the distribution">
     <jar jarfile="${java_lib}/smppgw.jar">
-      <fileset dir="${java_out}"/>
-      <fileset dir="${java_src}" excludes="**/*.java,locales/**"/>
+      <fileset dir="${java_out}" excludes="${perfmon_path}/applet/**" />
     </jar>
+    <unjar src="${sibinco_lib}" dest="${exploded}/unjar_tmp"/>
+    <mkdir dir="${exploded}/perfmon"/>
+    <jar jarfile="${exploded}/perfmon/perfmon.jar">
+      <fileset dir="${java_out}">
+        <include name="${perfmon_path}/applet/**"/>
+        <include name="${perfmon_path}/PerfSnap.class"/>
+      </fileset>
+      <fileset dir="${exploded}/unjar_tmp">
+        <include name="ru/sibinco/lib/backend/applet/**"/>
+        <include name="ru/sibinco/lib/backend/util/SnapBufferReader.class"/>
+      </fileset>
+    </jar>
+    <delete dir="${exploded}/unjar_tmp"/>
     <copy todir="${exploded}" preservelastmodified="yes">
       <fileset dir="." includes="**/*.jsp **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc"/>
     </copy>
@@ -39,7 +55,7 @@
   </target>
 
   <target name="install" depends="cvs_update,build" description="installs the webapp">
-    <copy todir="${env.CATALINA_HOME}/webapps/smppgw" preservelastmodified="yes">
+    <copy todir="${CATALINA_BASE}/webapps/smppgw" preservelastmodified="yes">
       <fileset dir="${exploded}"/>
     </copy>
   </target>
@@ -49,7 +65,7 @@
   </target>
 
   <target name="update" depends="cvs_update,build" description="update existing installation">
-    <copy todir="${env.CATALINA_HOME}/webapps/smppgw" preservelastmodified="yes">
+    <copy todir="${CATALINA_BASE}/webapps/smppgw" preservelastmodified="yes">
       <fileset dir="${exploded}" excludes="WEB-INF/config.xml WEB-INF/users.xml" />
     </copy>
   </target>
