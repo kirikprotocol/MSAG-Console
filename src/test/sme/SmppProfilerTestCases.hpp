@@ -13,16 +13,7 @@ using std::pair;
 using log4cpp::Category;
 using smsc::sme::SmeConfig;
 using smsc::test::core::PduData;
-using smsc::test::core::PduDataObject;
 using namespace smsc::smpp; //pdu
-
-struct ProfilerAck : public PduDataObject
-{
-	string text;
-	uint8_t dataCoding;
-	ProfilerAck(const string& _text, uint8_t _dataCoding)
-		: text(_text), dataCoding(_dataCoding) {}
-};
 
 /**
  * Тест кейсы для profiler через smpp протокол.
@@ -58,7 +49,7 @@ public:
 	 * Ответные сообщение от profiler доставляются правильно.
 	 */
 	virtual void processSmeAcknowledgement(SmeAckMonitor* monitor,
-		PduDeliverySm &pdu);
+		PduDeliverySm& pdu, time_t recvTime);
 
 protected:
 	virtual Category& getLog();
@@ -66,8 +57,8 @@ protected:
 		PduData::StrProps* strProps, PduData::ObjProps* objProps, bool sync,
 		uint8_t dataCoding);
 	bool checkPdu(PduDeliverySm &pdu);
-	ProfilerAck* getExpectedResponse(SmeAckMonitor* monitor,
-		PduDeliverySm &pdu);
+	AckText* getExpectedResponse(SmeAckMonitor* monitor,
+		PduDeliverySm &pdu, time_t recvTime);
 };
 
 }

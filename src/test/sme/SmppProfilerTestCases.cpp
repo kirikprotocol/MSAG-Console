@@ -194,26 +194,28 @@ void SmppProfilerTestCases::updateProfileIncorrect(bool sync, uint8_t dataCoding
 	}
 }
 
-#define __get_resp__(param, codepage) \
+#define __get_resp__(param, codepage, valid) \
 	switch (codepage) { \
 		case ProfileCharsetOptions::Default: { \
 			static const pair<string, uint8_t> p = convert(param, codepage); \
-			return new ProfilerAck(p.first, p.second); \
+			return new AckText(p.first, p.second, valid); \
 		} case ProfileCharsetOptions::Ucs2: { \
 			static const pair<string, uint8_t> p = convert(param, codepage); \
-			return new ProfilerAck(p.first, p.second); \
+			return new AckText(p.first, p.second, valid); \
 		} default: \
 			__unreachable__("Invalid codepage"); \
 	}
 
-ProfilerAck* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
-	PduDeliverySm &pdu)
+AckText* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
+	PduDeliverySm &pdu, time_t recvTime)
 {
 	__decl_tc__;
+	__cfg_int__(timeCheckAccuracy);
 	Address addr;
 	SmppUtil::convert(pdu.get_message().get_dest(), &addr);
 	time_t t;
 	const Profile& profile = fixture->profileReg->getProfile(addr, t);
+	bool valid = t + timeCheckAccuracy <= recvTime;
 	//проверка profiler reportOptions
 	if (monitor->pduData->intProps.count("reportOptions"))
 	{
@@ -223,10 +225,10 @@ ProfilerAck* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 		switch (monitor->pduData->intProps.find("reportOptions")->second)
 		{
 			case ProfileReportOptions::ReportNone:
-				__get_resp__(profilerRespReportNone, profile.codepage);
+				__get_resp__(profilerRespReportNone, profile.codepage, valid);
 				//break;
 			case ProfileReportOptions::ReportFull:
-				__get_resp__(profilerRespReportFull, profile.codepage);
+				__get_resp__(profilerRespReportFull, profile.codepage, valid);
 				//break;
 			default:
 				__unreachable__("Invalid reportoptions");
@@ -241,10 +243,12 @@ ProfilerAck* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 		switch (monitor->pduData->intProps.find("codePage")->second)
 		{
 			case ProfileCharsetOptions::Default:
-				__get_resp__(profilerRespDataCodingDefault, ProfileCharsetOptions::Default);
+				__get_resp__(profilerRespDataCodingDefault,
+					ProfileCharsetOptions::Default, true);
 				//break;
 			case ProfileCharsetOptions::Ucs2:
-				__get_resp__(profilerRespDataCodingUcs2, ProfileCharsetOptions::Ucs2);
+				__get_resp__(profilerRespDataCodingUcs2,
+					ProfileCharsetOptions::Ucs2, true);
 				//break;
 			default:
 				__unreachable__("Invalid codepage");
@@ -255,7 +259,7 @@ ProfilerAck* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	{
 		__tc__("processUpdateProfile.incorrectCmdText.dataCoding"); __tc_ok__;
 		__cfg_str__(profilerRespInvalidCmdText);
-		__get_resp__(profilerRespInvalidCmdText, profile.codepage);
+		__get_resp__(profilerRespInvalidCmdText, profile.codepage, valid);
 		//return ...;
 	}
 	__unreachable__("Invalid sms was sent to profiler");
@@ -267,7 +271,7 @@ ProfilerAck* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	}
 
 void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
-	PduDeliverySm &pdu)
+	PduDeliverySm& pdu, time_t recvTime)
 {
 	__require__(monitor);
 	__decl_tc__;
@@ -276,17 +280,22 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	__cfg_str__(profilerServiceType);
 	__cfg_int__(profilerProtocolId);
 
-	string text = decode(pdu.get_message().get_shortMessage(),
+	const string text = decode(pdu.get_message().get_shortMessage(),
 		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding());
 	if (!monitor->pduData->objProps.count("output"))
 	{
-		ProfilerAck* ack = getExpectedResponse(monitor, pdu);
+		AckText* ack = getExpectedResponse(monitor, pdu, recvTime);
 		ack->ref();
 		monitor->pduData->objProps["output"] = ack;
 	}
-	ProfilerAck* ack =
-		dynamic_cast<ProfilerAck*>(monitor->pduData->objProps["output"]);
+	AckText* ack =
+		dynamic_cast<AckText*>(monitor->pduData->objProps["output"]);
 	__require__(ack);
+	if (!ack->valid)
+	{
+		monitor->setReceived();
+		return;
+	}
 	//проверить и обновить профиль
 	__tc__("processUpdateProfile.checkFields");
 	__check__(1, serviceType, profilerServiceType);
@@ -304,14 +313,13 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	{
 		__tc_fail__(3);
 	}
-	__check__(4, dataCoding, ack->dataCoding);
-	__check__(5, protocolId, profilerProtocolId);
-	__check__(6, priorityFlag, 0);
-	__check__(7, registredDelivery, 0);
-	__check__(8, replaceIfPresentFlag, 0);
+	__check__(4, protocolId, profilerProtocolId);
+	__check__(5, priorityFlag, 0);
+	__check__(6, registredDelivery, 0);
+	__check__(7, dataCoding, ack->dataCoding);
 	if (text.length() > getMaxChars(ack->dataCoding))
 	{
-		__tc_fail__(9);
+		__tc_fail__(8);
 	}
     SmppOptional opt;
 	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());
