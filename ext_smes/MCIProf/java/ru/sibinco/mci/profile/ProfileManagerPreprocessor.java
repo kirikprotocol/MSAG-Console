@@ -30,10 +30,9 @@ public class ProfileManagerPreprocessor extends ProfileManagerState implements S
     if (state.getAttribute(Constants.ATTR_MAIN) == null)
     {
       String msg = state.getMessageString();
-      String reason = (String)state.getAttribute(Constants.ATTR_REASON);
       HashMap formats = (HashMap)state.getAttribute(Constants.ATTR_FORMATS);
 
-      if (msg == null || reason == null)
+      if (msg == null)
         throw new ProcessingException("Profile option is undefined", -1);
 
       msg = msg.trim();
@@ -48,6 +47,10 @@ public class ProfileManagerPreprocessor extends ProfileManagerState implements S
         }
         else // set inform or notify message format type
         {
+          String reason = (String)state.getAttribute(Constants.ATTR_REASON);
+          if (reason == null)
+            throw new ProcessingException("Profile option is undefined", -1);
+
           boolean inform = true;
           if      (reason.equals(Constants.INFORM)) inform = true;
           else if (reason.equals(Constants.NOTIFY)) inform = false;
