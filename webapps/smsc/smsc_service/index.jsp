@@ -88,6 +88,13 @@ refreshStartStopButtonsStatus();
         param(out, "port", "core.performance.port", bean.getIntParam(   "core.performance.port"));
       finishParams(out);
     finishSection(out);
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~ core.smeperfomance ~~~~~~~~~~~~~~~~~~~~~~~~~
+    startSection(out, "core.smeperformance", "Sme performance monitor", false);
+      startParams(out);
+        param(out, "host", "core.smeperformance.host", bean.getStringParam("core.smeperformance.host"));
+        param(out, "port", "core.smeperformance.port", bean.getIntParam(   "core.smeperformance.port"));
+      finishParams(out);
+    finishSection(out);
   finishSection(out);
   //################################## traffic control #############################
   startSection(out, "trafficControl", "Traffic control", false);

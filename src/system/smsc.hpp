@@ -239,37 +239,42 @@ public:
         statMan->updateAccepted(sms->getSourceSmeId(),sms->getRouteId());
         MutexGuard g(perfMutex);
         submitOkCounter++;
+        smePerfMonitor.incAccepted(sms->getSourceSmeId());
       }break;
       case etSubmitErr:
       {
         MutexGuard g(perfMutex);
         submitErrCounter++;
         statMan->updateRejected(sms->getSourceSmeId(),sms->getRouteId(), sms->getLastResult());
+        smePerfMonitor.incRejected(sms->getSourceSmeId(), sms->getLastResult());
       }break;
       case etDeliveredOk:
       {
         statMan->updateChanged(sms->getDestinationSmeId(),sms->getRouteId(),0);
         MutexGuard g(perfMutex);
         deliverOkCounter++;
+        smePerfMonitor.incDelivered(sms->getDestinationSmeId());
       }break;
       case etDeliverErr:
       {
         statMan->updateTemporal(sms->getDestinationSmeId(),sms->getRouteId(),sms->getLastResult());
         MutexGuard g(perfMutex);
         deliverErrTempCounter++;
+        smePerfMonitor.incFailed(sms->getDestinationSmeId(), sms->getLastResult());
       }break;
       case etUndeliverable:
       {
         statMan->updateChanged(sms->getDestinationSmeId(),sms->getRouteId(),sms->getLastResult());
         MutexGuard g(perfMutex);
         deliverErrPermCounter++;
+        smePerfMonitor.incFailed(sms->getDestinationSmeId(), sms->getLastResult());
       }break;
       case etRescheduled:
       {
         statMan->updateScheduled(sms->getDestinationSmeId(),sms->getRouteId());
-
         MutexGuard g(perfMutex);
         rescheduleCounter++;
+        smePerfMonitor.incRescheduled(sms->getDestinationSmeId());
       }break;
     }
   }
@@ -313,6 +318,12 @@ public:
     cnt[3]=deliverErrTempCounter;
     cnt[4]=deliverErrPermCounter;
     cnt[5]=rescheduleCounter;
+  }
+
+  uint8_t* getSmePerfData(uint32_t& smePerfDataSize)
+  {
+    MutexGuard g(perfMutex);
+    return smePerfMonitor.dump(smePerfDataSize);
   }
 
   void getStatData(int& eqsize,int& eqlocked,uint32_t& schedsize)
@@ -434,6 +445,7 @@ protected:
   CancelAgent *cancelAgent;
   AlertAgent *alertAgent;
   performance::PerformanceDataDispatcher perfDataDisp;
+  performance::PerformanceDataDispatcher perfSmeDataDisp;
   smsc::db::DataSource *dataSource;
 
   TrafficControl *tcontrol;
@@ -468,6 +480,8 @@ protected:
   string ussdCenterAddr;
   int    ussdSSN;
   time_t startTime;
+
+  performance::SmePerformanceMonitor smePerfMonitor;
 
   int eventQueueLimit;
 

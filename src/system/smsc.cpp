@@ -47,8 +47,10 @@ Smsc::~Smsc()
 
 class SpeedMonitor:public smsc::core::threads::ThreadedTask{
 public:
-  SpeedMonitor(EventQueue& eq,performance::PerformanceListener* pl,Smsc* psmsc):
-    queue(eq),perfListener(pl)
+  SpeedMonitor(EventQueue& eq,
+               performance::PerformanceListener* pl, performance::PerformanceListener* plsme,
+               Smsc* psmsc):
+    queue(eq),perfListener(pl), perfSmeListener(plsme)
   {
     start.tv_sec=0;
     start.tv_nsec=0;
@@ -163,12 +165,16 @@ public:
 
       d.inScheduler=smsc->GetSchedulerCount();
 
-      perfListener->reportPerformance(&d);
+      perfListener->reportGenPerformance(&d);
 
       for(i=0;i<performance::performanceCounters;i++)
       {
         lastPerfCnt[i]=perf[i];
       }
+
+      uint32_t smePerfDataSize = 0;
+      std::auto_ptr<uint8_t> smePerfData(smsc->getSmePerfData(smePerfDataSize));
+      perfSmeListener->reportSmePerformance(smePerfData.get(), smePerfDataSize);
     }
     return 0;
   }
@@ -188,6 +194,7 @@ protected:
   time_t times[60];
   timespec start;
   performance::PerformanceListener* perfListener;
+  performance::PerformanceListener* perfSmeListener;
   static Smsc* smsc;
 };
 
@@ -418,7 +425,7 @@ void Smsc::init(const SmscConfigs& cfg)
   }
 
   {
-    SpeedMonitor *sm=new SpeedMonitor(eventqueue,&perfDataDisp,this);
+    SpeedMonitor *sm=new SpeedMonitor(eventqueue,&perfDataDisp,&perfSmeDataDisp,this);
     FILE *f=fopen("stats.txt","rt");
     if(f)
     {
@@ -621,6 +628,16 @@ void Smsc::init(const SmscConfigs& cfg)
     );
     tp2.startTask(perfSrv);
     smsc_log_info(log, "Performance server started" );
+  }
+  {
+    performance::PerformanceServer *perfSrv=new performance::PerformanceServer
+    (
+      cfg.cfgman->getString("core.smeperformance.host"),
+      cfg.cfgman->getInt("core.smeperformance.port"),
+      &perfSmeDataDisp
+    );
+    tp2.startTask(perfSrv);
+    smsc_log_info(log, "SmePerformance server started" );
   }
 
   {
