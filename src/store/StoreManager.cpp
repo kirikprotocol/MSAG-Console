@@ -123,17 +123,17 @@ void RemoteStore::loadMaxTriesCount(Manager& config)
 RemoteStore::RemoteStore(Manager& config, SchedTimer* sched)
     throw(ConfigException, StorageException)
         : Thread(), log(Logger::getInstance("smsc.store.RemoteStore")),
-            bStarted(false), bNeedExit(false), currentId(0), sequenceId(0), 
+            bStarted(false), bNeedExit(false), currentId(0), sequenceId(0),
                 pool(0), scheduleTimer(sched), maxTriesCount(SMSC_MAX_TRIES_TO_PROCESS_OPERATION)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
     loadMaxTriesCount(config);
     pool = new StorageConnectionPool(config);
 #endif
-    
+
     billingStorage.init(config);
     archiveStorage.init(config);
-    
+
     Start();
 }
 RemoteStore::~RemoteStore()
@@ -782,7 +782,7 @@ void RemoteStore::replaceSms(SMSId id, const Address& oa,
 
     try
     {
-        sms->getMessageBody().setBinProperty(Tag::SMPP_SHORT_MESSAGE, 
+        sms->getMessageBody().setBinProperty(Tag::SMPP_SHORT_MESSAGE,
                                              (const char*)newMsg, (unsigned)newMsgLen);
         sms->getMessageBody().setIntProperty(Tag::SMPP_SM_LENGTH, (uint32_t)newMsgLen);
     }
@@ -1031,7 +1031,7 @@ int RemoteStore::Execute()
             archiveRest = archiveStorage.getStorageInterval();
             billingRest = billingStorage.getStorageInterval();
         }
-        
+
         while (toSleep > 0 && !bNeedExit)
         {
             if (toSleep > SERVICE_SLEEP) {
@@ -1049,7 +1049,7 @@ int RemoteStore::Execute()
         } catch (StorageException& exc) {
             awake.Wait(0); smsc_log_error(log, "%s", exc.what());
         }
-        
+
         try {  // rool archive file
             if (archive || bNeedExit) archiveStorage.roll();
         } catch (StorageException& exc) {
@@ -1095,7 +1095,7 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms, bool needDelete)
 
     if (sms.needArchivate) archiveStorage.createRecord(id, sms);
     if (sms.billingRecord) billingStorage.createRecord(id, sms);
-    
+
     if (needDelete)
     {
         __require__(pool);
@@ -1134,7 +1134,7 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms, bool needDelete)
             }
         }
     }
-    
+
     smsc_log_debug(log, "Finalized msg#%lld" , id);
 }
 
@@ -1171,6 +1171,13 @@ void RemoteStore::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
     sms.nextTime = 0;
     sms.lastResult = 0;
     sms.destinationDescriptor = dst;
+
+    char buf[MAX_ADDRESS_VALUE_LENGTH*4+12];
+    sprintf(buf,"Org: %s/%s, Dst:%s/%s",sms.originatingDescriptor.msc,sms.originatingDescriptor.imsi,
+                       sms.destinationDescriptor.msc,sms.destinationDescriptor.imsi
+                      );
+    sms.setStrProperty(Tag::SMSC_DESCRIPTORS,buf);
+
     doFinalizeSms(id, sms, true);
 
 #else
@@ -1348,13 +1355,13 @@ time_t RemoteStore::ReadyIdIterator::getTime()
     }
     return nextTime;
 }
-bool RemoteStore::ReadyIdIterator::getDstSmeId(char* buffer) 
+bool RemoteStore::ReadyIdIterator::getDstSmeId(char* buffer)
     throw(StorageException)
 {
     __require__(buffer);
     if (!isNull && readyStmt && connection && connection->isAvailable()) {
         return readyStmt->getDstSmeId(buffer);
-    } 
+    }
     buffer[0] = '\0';
     return false;
 }

@@ -988,6 +988,12 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
+  {
+    char buf[MAX_ADDRESS_VALUE_LENGTH+MAX_ADDRESS_VALUE_LENGTH+12];
+    sprintf(buf,"Org: %s/%s",sms->originatingDescriptor.msc,sms->originatingDescriptor.imsi);
+    sms->setStrProperty(Tag::SMSC_DESCRIPTORS,buf);
+  }
+
 
   time_t now=time(NULL);
   sms->setSubmitTime(now);
@@ -3066,6 +3072,16 @@ StateType StateMachine::deliveryResp(Tuple& t)
     }
     sms.destinationDescriptor=t.command->get_resp()->getDescriptor();
   }
+
+  {
+    char buf[MAX_ADDRESS_VALUE_LENGTH*4+12];
+    sprintf(buf,"Org: %s/%s, Dst:%s/%s",sms.originatingDescriptor.msc,sms.originatingDescriptor.imsi,
+                       sms.destinationDescriptor.msc,sms.destinationDescriptor.imsi
+                      );
+    sms.setStrProperty(Tag::SMSC_DESCRIPTORS,buf);
+  }
+
+
   if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK)
   {
     switch(GET_STATUS_TYPE(t.command->get_resp()->get_status()))

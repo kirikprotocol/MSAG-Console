@@ -502,6 +502,7 @@ struct Descriptor
   {
     return sme;
   };
+
 };
 
 static const string nullStr="";
