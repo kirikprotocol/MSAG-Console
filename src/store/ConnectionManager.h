@@ -85,16 +85,6 @@ namespace smsc { namespace store
 
     class Connection
     {
-    private:
-
-    static sb4 _failoverCallback(dvoid *svchp, dvoid *envhp,
-                         dvoid *fo_ctx, ub4 fo_type, ub4 fo_event) 
-    {
-        printf("Connection failure !!!\n");
-        return ((fo_ctx) ? (((Connection *)fo_ctx)->failoverCallback(
-            svchp, envhp, fo_ctx, fo_type, fo_event)) : ((sb4) 0));
-    };
-    
     protected:
         
         static text*    sqlGetMessagesCount;
@@ -154,10 +144,6 @@ namespace smsc { namespace store
         
         void checkErr(sword status) 
             throw(StorageException);
-
-        OCIFocbkStruct failover;
-        sb4 failoverCallback(dvoid *svchp, dvoid *envhp,
-                             dvoid *fo_ctx, ub4 fo_type, ub4 fo_event);
 
     public:
 

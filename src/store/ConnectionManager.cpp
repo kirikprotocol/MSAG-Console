@@ -105,7 +105,7 @@ void ConnectionPool::freeConnection(Connection* connection)
         if (tmp == connection) 
         {
             busy.Delete(i);
-            if (count < size)
+            if (count <= size)
             {
                 (void) idle.Push(connection);
                 monitor.notify();
@@ -563,6 +563,8 @@ Connection::Connection(ConnectionPool* pool)
 
 Connection::~Connection()
 {
+    MutexGuard  guard(mutex);
+
     __require__(envhp && errhp && svchp);
     
     // logoff from database server
@@ -694,6 +696,8 @@ void Connection::retrive(SMSId id, SMS &_sms)
 void Connection::remove(SMSId id) 
     throw(StorageException, NoSuchMessageException)
 {
+    MutexGuard  guard(mutex);
+
     smsId = id;
     checkErr(OCIStmtExecute(svchp, stmtRemove, errhp, (ub4) 1, (ub4) 0,
                             (CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
