@@ -55,7 +55,8 @@ void PduRegistry::registerMonitor(PduMonitor* monitor)
 	TimeMap::const_iterator it = checkTimeMap.find(timeKey);
 	__require__(it == checkTimeMap.end());
 	checkTimeMap[timeKey] = monitor;
-	__trace2__("monitor registered: pduReg = %p, %s", this, monitor->str().c_str());
+	__trace2__("monitor registered: pduReg = %p, monitor = {%s}, pduData = {%s}",
+		this, monitor->str().c_str(), monitor->pduData->str().c_str());
 }
 
 void PduRegistry::clear()
@@ -195,7 +196,7 @@ void PduRegistry::removeMonitor(PduMonitor* monitor)
 	int res = checkTimeMap.erase(TimeKey(monitor->getCheckTime(), monitor->getId()));
 	__require__(res);
 	//delete monitor;
-	__trace2__("monitor unregistered: pduReg = %p, %s", this, monitor->str().c_str());
+	__trace2__("monitor unregistered: pduReg = %p, pdu = {%s}", this, monitor->str().c_str());
 }
 
 PduRegistry::PduMonitorIterator* PduRegistry::getMonitors(time_t t1, time_t t2) const

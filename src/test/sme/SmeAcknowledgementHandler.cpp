@@ -80,6 +80,8 @@ void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		if (!monitor)
 		{
 			__tc_fail__(2);
+			__trace2__("getSmeAckMonitor(): pduReg = %p, userMessageReference = %d, monitor = NULL",
+				pduReg, pdu.get_optional().get_userMessageReference());
 			throw TCException();
 		}
 		if (!monitor->pduData->valid)
