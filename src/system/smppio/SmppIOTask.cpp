@@ -717,9 +717,15 @@ int SmppInputThread::Execute()
                     __warning__("SmppInput: exception in putIncomingCommand, proxy died?");
                   }
                   break;
-                }catch(...)
+                }
+                catch(std::exception& e)
                 {
-                  __trace__("Failed to build command from pdu, sending gnack");
+                  __warning2__("Failed to build command from pdu, sending gnack:%s",e.what());
+                  errcode=Status::INVOPTPARAMVAL;
+                }
+                catch(...)
+                {
+                  __warning__("Failed to build command from pdu, sending gnack");
                   errcode=Status::INVOPTPARAMVAL;
                 }
               }
