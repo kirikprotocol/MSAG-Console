@@ -185,7 +185,7 @@ void MapIoTask::dispatcher()
          message.sender == USER01_ID )
     {
       try{
-        if ( message.primitive == SMSC_FORWAR_RESPONSE ){
+        if ( message.primitive == SMSC_FORWARD_RESPONSE ){
           SMSC_FORWARD_RESPONSE_T* response = (SMSC_FORWARD_RESPONSE_T*)message.msg_p;
           if ( response == 0 ) {
             __trace2__("MAP::MessageProcessing Opss, forward response has zero data");
