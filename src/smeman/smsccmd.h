@@ -89,6 +89,7 @@ class SmscCommand
   _SmscCommand* cmd;
   void unref(_SmscCommand*& cmd)
   {
+    __trace__(__PRETTY_FUNCTION__);
     __require__ ( cmd != 0 );
     __require__ ( cmd->ref_count > 0 );
     if ( --(cmd->ref_count) == 0 )
@@ -99,21 +100,26 @@ class SmscCommand
   }
   _SmscCommand* ref(_SmscCommand* cmd)
   {
+    __trace__(__PRETTY_FUNCTION__);
     __require__ ( cmd != 0 );
     __require__ ( cmd->ref_count >= 0 );
-    ++(cmd->ref_count);
+		++(cmd->ref_count);
     return cmd;
   }
   
-  void copy(const _SmscCommand& _cmd)
+  /*void copy(const _SmscCommand* _cmd)
   {
+    __trace__(__PRETTY_FUNCTION__);
     if ( cmd ) unref(cmd);
-    cmd = ref(const_cast<_SmscCommand*>(&_cmd));
-  }
+    cmd = ref(const_cast<_SmscCommand*>(_cmd));
+  }*/
 
 
   void dispose() // for debuging ;(
-    { if (cmd) unref(cmd); }
+    { 
+			__trace__(__PRETTY_FUNCTION__);
+			if (cmd) unref(cmd); 
+		}
 
 public:
   
@@ -285,12 +291,17 @@ public:
   {
    // copy(_cmd.cmd);
    // if ( cmd ) unref(cmd);
-    cmd = ref((_SmscCommand*)(&_cmd.cmd));
+    __trace2__("%s(_cmd)",__PRETTY_FUNCTION__);
+		__watch__(_cmd);
+    cmd = ref(_cmd.cmd);
   }
 
   const SmscCommand& operator = (const SmscCommand& _cmd)
   {
     // copy(_cmd.cmd);
+    __trace2__("%s(_cmd)",__PRETTY_FUNCTION__);
+		__watch__(_cmd);
+		__watch__(cmd);
     if (cmd) unref(cmd);
     cmd = ref(_cmd.cmd);
     return _cmd;
