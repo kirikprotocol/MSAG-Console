@@ -134,7 +134,7 @@ public:
 			"Корректное обновление существующего sms");
 		__reg_tc__("replaceCorrectSms.replaceAll",
 			"Заменить все возможные поля");
-		__reg_tc__("replaceCorrectSms.waitTimeUnchanged",
+		__reg_tc__("replaceCorrectSms.nextTimeUnchanged",
 			"Оставить schedule_delivery_time без изменений (установить равным 0)");
 		__reg_tc__("replaceCorrectSms.validTimeUnchanged",
 			"Оставить validity_period без изменений (установить равным 0)");
