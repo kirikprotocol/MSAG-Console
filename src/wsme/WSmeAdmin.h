@@ -36,7 +36,7 @@ namespace smsc { namespace wsme
         virtual void removeLang(const std::string msisdn, 
                                 std::string lang, bool isLang=true)
             throw (ProcessException) = 0;
-        virtual void setDefaultLang(const std::string lang)
+        virtual std::string getDefaultLang()
             throw (ProcessException) = 0;
        
         virtual void addAd(int id, const std::string lang, bool isLang, 

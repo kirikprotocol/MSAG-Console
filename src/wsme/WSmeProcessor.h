@@ -62,7 +62,7 @@ namespace smsc { namespace wsme
         
     public:
 
-        VisitorManager(DataSource& _ds)
+        VisitorManager(DataSource& _ds, ConfigView* config)
             throw (InitException);
         virtual ~VisitorManager();
 
@@ -87,8 +87,9 @@ namespace smsc { namespace wsme
                 : mask(_mask), lang(_lang) {};
         };
         
-        DataSource& ds;
+        DataSource&     ds;
         
+        std::string     defaultLang;
         Mutex           langsLock;
         Array<LangInfo> langs;
         
@@ -97,12 +98,13 @@ namespace smsc { namespace wsme
 
     public:
 
-        LangManager(DataSource& _ds)
+        LangManager(DataSource& _ds, ConfigView* config)
             throw (InitException);
         virtual ~LangManager();
 
-        bool getLangCode(const std::string msisdn, std::string& lang)
+        std::string getLangCode(const std::string msisdn)
             throw (ProcessException);
+        std::string getDefaultLang();
     };
     
     struct AdIdManager
@@ -134,7 +136,7 @@ namespace smsc { namespace wsme
         virtual int getFirstId();
         virtual int getNextId(int id);
         
-        bool getAd(int id, const std::string lang, bool isLang, std::string& ad)
+        bool getAd(int id, const std::string lang, std::string& ad)
             throw (ProcessException);
     };
     
@@ -196,8 +198,7 @@ namespace smsc { namespace wsme
             throw(ConfigException, InitException);
         virtual ~AdManager();
 
-        bool getAd(const std::string msisdn, 
-                   const std::string lang, bool isLang,
+        bool getAd(const std::string msisdn, const std::string lang,
                    std::string& ad) 
             throw (ProcessException);
         void respondAd(const std::string msisdn, 

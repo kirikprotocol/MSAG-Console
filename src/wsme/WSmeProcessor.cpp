@@ -15,8 +15,8 @@ WSmeProcessor::WSmeProcessor(ConfigView* config)
     {
         init(config);
 
-        visitorManager = new VisitorManager(*ds);
-        langManager = new LangManager(*ds);
+        visitorManager = new VisitorManager(*ds, config);
+        langManager = new LangManager(*ds, config);
         adManager = new AdManager(*ds, config);
     } 
     catch (Exception& exc)
@@ -76,10 +76,9 @@ bool WSmeProcessor::processNotification(const std::string msisdn, std::string& o
 
     if (visitorManager->isVisitor(msisdn))
     {
-        std::string lang;
-        bool isLang = langManager->getLangCode(msisdn, lang);
-        __trace2__("Lang is '%s'", isLang ? lang.c_str():"DEFAULT");
-        return adManager->getAd(msisdn, lang, isLang, out);
+        std::string lang = langManager->getLangCode(msisdn);
+        __trace2__("Lang is '%s'", lang.c_str());
+        return adManager->getAd(msisdn, lang, out);
     }
     return false;
 }
@@ -106,7 +105,7 @@ void WSmeProcessor::processReceipt(const std::string msgid, bool receipted)
 /* ------------------------ Managers Implementation ------------------------ */
 
 /* ------------------------ VisitorManager ------------------------ */
-VisitorManager::VisitorManager(DataSource& _ds) 
+VisitorManager::VisitorManager(DataSource& _ds, ConfigView* config) 
     throw (InitException)
         : ds(_ds) 
 {
@@ -195,10 +194,26 @@ void VisitorManager::addVisitor(const std::string msisdn)
 
 /* ------------------------ LangManager ------------------------ */
 
-LangManager::LangManager(DataSource& _ds)
+LangManager::LangManager(DataSource& _ds, ConfigView* config)
     throw (InitException)
         : ds(_ds)
 {
+    ConfigView* langConfig = 0;
+    try
+    {
+        langConfig = config->getSubConfig("LangManager");
+        const char* lang = langConfig->getString("defaultLang");
+        if (!lang || lang[0] == '\0')
+            throw InitException("LangManager: defaultLang is not defined (empty)");
+        defaultLang = lang;
+        if (langConfig) delete langConfig;
+    }
+    catch (Exception& exc)
+    {
+        if (langConfig) delete langConfig;
+        throw InitException(exc.what());
+    }
+
     loadUpLangs();
 }
 LangManager::~LangManager()
@@ -207,12 +222,18 @@ LangManager::~LangManager()
     langs.Clean();
 }
 
+void convertStrToUpperCase(const char* str, char* upper)
+{
+    __require__(str && upper);
+    
+    do *upper++=toupper(*str);
+    while (*str++); 
+}
+
 const char* SQL_GET_LANGS = "SELECT MASK, LANG FROM WSME_LANGS";
 void LangManager::loadUpLangs()
     throw (InitException)
 {
-    MutexGuard  guard(langsLock);
-
     ResultSet* rs = 0;
     Statement* statement = 0; 
     Connection* connection = 0;
@@ -235,8 +256,17 @@ void LangManager::loadUpLangs()
         
         while (rs->fetchNext())
         {
-            LangInfo info(rs->getString(1), rs->getString(2));
-            langs.Push(info);
+            const char* mask = (rs->isNull(1)) ? 0:rs->getString(1);
+            const char* lang = (rs->isNull(2)) ? 0:rs->getString(2);
+            
+            if (!mask || mask[0]=='\0' || 
+                !lang || lang[0]=='\0') continue;
+            
+            LangInfo info(mask, lang ? lang:"");
+            {
+                MutexGuard  guard(langsLock);
+                langs.Push(info);
+            }
         }
         
         if (rs) delete rs;
@@ -251,20 +281,27 @@ void LangManager::loadUpLangs()
         throw InitException(exc.what());
     }
 }
-bool LangManager::getLangCode(const std::string msisdn, std::string& lang)
+std::string LangManager::getLangCode(const std::string msisdn)
     throw (ProcessException)
 {
     MutexGuard  guard(langsLock);
 
-    for (int i=0; i<langs.Count(); i++) {
+    for (int i=0; i<langs.Count(); i++)
+    {
         if (compareMaskAndAddress(langs[i].mask, msisdn)) {
-            lang = langs[i].lang;
-            return true;
+            const char* lang = langs[i].lang.c_str();
+            if (lang && lang[0] != '\0') return langs[i].lang;
+            else break;
         }
     }
-    
-    lang = "";
-    return false;
+        
+    return defaultLang;
+}
+std::string LangManager::getDefaultLang()
+{
+    MutexGuard guard(langsLock);
+    std::string lang = defaultLang;
+    return lang;
 }
 
 /* ------------------------ AdRepository ------------------------ */
@@ -313,12 +350,9 @@ void AdRepository::loadMaxAdId()
     }
 }
 
-const char* SQL_GET_AD_BY_ID =
-"SELECT AD FROM WSME_AD WHERE ID=:ID AND LANG IS NULL";
 const char* SQL_GET_AD_BY_ID_LANG =
 "SELECT AD FROM WSME_AD WHERE ID=:ID AND LANG=:LANG";
-bool AdRepository::getAd(int id, const std::string lang, bool isLang, 
-                         std::string& ad)
+bool AdRepository::getAd(int id, const std::string lang, std::string& ad)
     throw (ProcessException)
 {
     ResultSet* rs = 0;
@@ -334,12 +368,11 @@ bool AdRepository::getAd(int id, const std::string lang, bool isLang,
             throw ProcessException("Get connection failed");
         if (!connection->isAvailable()) connection->connect();
 
-        statement = connection->createStatement(
-            (isLang) ? SQL_GET_AD_BY_ID_LANG : SQL_GET_AD_BY_ID);
+        statement = connection->createStatement(SQL_GET_AD_BY_ID_LANG);
         if (!statement)
             throw ProcessException("Create statement failed");
         statement->setInt32 (1, id);
-        if (isLang) statement->setString(2, lang.c_str());    
+        statement->setString(2, lang.c_str());    
 
         ResultSet* rs = statement->executeQuery();
         if (!rs)
@@ -703,8 +736,7 @@ AdManager::~AdManager()
     if (repository) delete repository;
 }
 
-bool AdManager::getAd(const std::string msisdn, 
-                      const std::string lang, bool isLang, 
+bool AdManager::getAd(const std::string msisdn, const std::string lang,
                       std::string& ad)
     throw (ProcessException)
 {
@@ -713,7 +745,7 @@ bool AdManager::getAd(const std::string msisdn,
     __trace__("AdManager::getAd called");
     int id = 0;
     if (!(history->getId(msisdn, id))) return false;
-    return repository->getAd(id, lang, isLang, ad);
+    return repository->getAd(id, lang, ad);
 }
 
 void AdManager::respondAd(const std::string msisdn, 

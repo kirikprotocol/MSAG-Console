@@ -37,6 +37,10 @@
             <param name="password" type="string">3</param>
         </section>  
 	
+	<section name="LangManager">
+	    <param name="defaultLang" type="string">EN</param>
+	</section>
+	
 	<section name="AdManager">
 	    <section name="History">
 		<param name="keepPeriod" type="int">36000</param>
