@@ -1,13 +1,17 @@
 #ifndef SMSC_ADMIN_PROTOCOL_COMMAND_ADD_SERVICE
 #define SMSC_ADMIN_PROTOCOL_COMMAND_ADD_SERVICE
 
+#include <admin/AdminException.h>
 #include <admin/protocol/CommandService.h>
 #include <util/xml/utilFunctions.h>
+#include <admin/daemon/Service.h>
 
 namespace smsc {
 namespace admin {
 namespace protocol {
 
+using smsc::admin::AdminException;
+using smsc::admin::daemon::ServiceArguments;
 using smsc::util::xml::getNodeAttribute;
 using smsc::util::xml::getNodeText;
 
@@ -16,80 +20,83 @@ typedef std::pair<int, char *> CmdArgument;
 class CommandAddService : public CommandService
 {
 public:
-	CommandAddService(DOM_Document doc) : CommandService(doc)
+	CommandAddService(DOM_Document doc)	throw (AdminException)
+		: CommandService(add_service, doc)
 	{
-		setId(add_service);
-		
-		DOM_Element elem = doc.getDocumentElement();
-		DOM_NodeList list = elem.getElementsByTagName("service");
-		if (list.getLength() > 0)
+		logger.debug("Add service command");
+		try
 		{
-			std::vector<CmdArgument> cmd_args;
-			DOM_Node node = list.item(0);
-			DOM_NodeList childs = node.getChildNodes();
-			for (int i=0; i<childs.getLength(); i++)
+			DOM_Element elem = doc.getDocumentElement();
+			DOM_NodeList list = elem.getElementsByTagName("service");
+			if (list.getLength() > 0)
 			{
-				DOM_Node param = childs.item(i);
-				if (param.getNodeType() == DOM_Node::ELEMENT_NODE)
+				std::vector<CmdArgument> cmd_args;
+				DOM_Node serviceNode = list.item(0);
+				DOM_Element &serviceElem = (DOM_Element&) serviceNode;
+				serviceName = serviceElem.getAttribute("name").transcode();
+				cmdLine = serviceElem.getAttribute("cmd_line").transcode();
+				std::auto_ptr<char> portStr(serviceElem.getAttribute("port").transcode());
+				port = atol(portStr.get());
+	
+				DOM_NodeList argElems = serviceElem.getElementsByTagName("arg");
+				args.resize(argElems.getLength());
+				for (int i=0; i<argElems.getLength(); i++)
 				{
-					std::auto_ptr<char> paramName(param.getNodeName().transcode());
-					/*if (strcmp(paramName, "name") == 0)
+					DOM_Node argNode = argElems.item(i);
+					DOM_Element &argElem = (DOM_Element&) argNode;
+					std::auto_ptr<char> argNumStr(argElem.getAttribute("num").transcode());
+					try
 					{
-						serviceName = getNodeText(param);
+						args.at(atoi(argNumStr.get())) = getNodeText(argElem);
 					}
-					else*/ if (strcmp(paramName.get(), "cmd_line") == 0)
+					catch (std::out_of_range & o)
 					{
-						std::auto_ptr<char> text(getNodeText(param));
-						cmdLine = text.get();
-					}
-					else if (strcmp(paramName.get(), "port") == 0)
-					{
-						std::auto_ptr<char> portStr(getNodeText(param));
-						port = atol(portStr.get());
-					}
-					else if (strcmp(paramName.get(), "arg") == 0)
-					{
-						char * arg = getNodeText(param);
-						std::auto_ptr<char> num(getNodeAttribute(param, "num"));
-						cmd_args.push_back(CmdArgument(atoi(num.get()), arg));
-					}
-				}
-			}
-			args = new (char*)[cmd_args.size()+1];
-			args[cmd_args.size()] = 0;
-			for (int i=0; i<cmd_args.size(); i++)
-			{
-				args[i] = 0;
-				for (int j=0; j<cmd_args.size(); j++)
-				{
-					if (cmd_args[j].first = i)
-					{
-						args[i] = cmd_args[j].second;
-						break;
+						throw AdminException("Wrong argument number");
 					}
 				}
 			}
 		}
+		catch (...)
+		{
+			throw AdminException("Some exception occured");
+		}
 	}
 
-	const char * const getCmdLine() const
+	~CommandAddService()
+		throw()
 	{
-		return cmdLine.c_str();
+		if (cmdLine != 0)
+		{
+			delete[] cmdLine;
+		}
+		for (size_t i=0; i<args.size(); i++)
+		{
+			if (args[i] != 0)
+			{
+				delete[] args[i];
+				args[i]=0;
+			}
+		}
 	}
 
-	const char * const * const getArgs() const
+	const char * const getCmdLine() const throw()
+	{
+		return cmdLine;
+	}
+
+	const ServiceArguments getArgs() const throw ()
 	{
 		return args;
 	}
 
-	const in_port_t getPort() const
+	const in_port_t getPort() const throw ()
 	{
 		return port;
 	}
 protected:
-	std::string cmdLine;
+	char* cmdLine;
 	in_port_t port;
-	char ** args;
+	ServiceArguments args;
 };
 
 }

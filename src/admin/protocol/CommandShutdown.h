@@ -7,13 +7,12 @@ namespace smsc {
 namespace admin {
 namespace protocol {
 
-class CommandShutdown : public Command
+class CommandShutdown : public CommandService
 {
 public:
-	CommandShutdown(DOM_Document doc)
+	CommandShutdown(DOM_Document doc) throw ()
+		: CommandService(shutdown_service, doc)
 	{
-		setId(shutdown_service);
-		setData(doc);
 	}
 };
 

@@ -15,7 +15,7 @@
 			<th class="list">command line</th>
 			<th class="list">arguments</th>
 			<th class="list">PID</th>
-			<th  class="list" colspan=8>actions</th>
+			<th  class="list" colspan=4>actions</th>
 		</tr>
 		<%
 		try {
@@ -27,15 +27,12 @@
 					<td class="list"><%=s.getName()%></td>
 					<td class="list"><%=s.getPort()%></td>
 					<td class="list"><%=s.getCmdLine()%></td>
-					<td class="list"><%=s.getArgs()%></td>
+					<td class="list"><%=s.getArgs().toString()%></td>
 					<td class="list"><%=s.getPid() == 0 ? "stopped" : String.valueOf(s.getPid())%></td>
-					<td class="list"><%=action("remove", "removeService.jsp", "host", s.getHost(), "service", s.getName())%></td>
 					<td class="list"><%=action("start", "startService.jsp", "host", s.getHost(), "service", s.getName())%></td>
 					<td class="list"><%=action("shutdown", "shutdownService.jsp", "host", s.getHost(), "service", s.getName())%></td>
 					<td class="list"><%=action("kill", "killService.jsp", "host", s.getHost(), "service", s.getName())%></td>
-					<td class="list"><%=action("edit config", "editServiceConfig.jsp", "host", s.getHost(), "service", s.getName())%></td>
-					<td class="list"><%=action("view logs", "viewServiceLogs.jsp", "host", s.getHost(), "service", s.getName())%></td>
-					<td class="list"><%=action("view monitoring data", "viewMonitoring.jsp", "host", s.getHost(), "service", s.getName())%></td>
+					<td class="list"><%=action("remove", "removeService.jsp", "host", s.getHost(), "service", s.getName())%></td>
 				</tr><%
 			}
 		} catch (Throwable t) {

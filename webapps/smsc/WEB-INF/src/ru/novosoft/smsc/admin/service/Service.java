@@ -6,16 +6,14 @@
 package ru.novosoft.smsc.admin.service;
 
 import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import java.util.*;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.protocol.*;
+import ru.novosoft.smsc.admin.protocol.CommandCall;
+import ru.novosoft.smsc.admin.protocol.CommandListComponents;
+import ru.novosoft.smsc.admin.protocol.Response;
 import ru.novosoft.smsc.admin.utli.Proxy;
-import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.xml.Utils;
 
 public class Service extends Proxy
@@ -32,6 +30,58 @@ public class Service extends Proxy
   public ServiceInfo getInfo()
   {
     return info;
+  }
+
+  /**
+   * Вызывает метод на компоненте сервиса.
+   * @param arguments Map поименованных аргументов (String -> Object). Аргументы могут быть
+   * String Integer или Boolean класса.
+   * @return Значение, которое вернул вызванный метод (String, Integer или Boolean)
+   */
+  public Object call(Component component, Method method, Type returnType, Map arguments)
+          throws AdminException
+  {
+    if (component != null && method != null
+            && method.equals(component.getMethods().get(method.getName()))) {
+      Response r = runCommand(new CommandCall(info.getName(), component.getName(), method.getName(), returnType, arguments));
+      if (r.getStatus() != Response.StatusOk)
+        throw new AdminException("Error occured: " + r.getDataAsString());
+      Element resultElem = (Element) r.getData().getElementsByTagName("variant").item(0);
+      Type resultType = Type.getInstance(resultElem.getAttribute("type"));
+      switch (resultType.getId()) {
+        case Type.StringType:
+          return Utils.getNodeText(resultElem);
+        case Type.IntType:
+          return Long.decode(Utils.getNodeText(resultElem));
+        case Type.BooleanType:
+          return Boolean.valueOf(Utils.getNodeText(resultElem));
+        default:
+          throw new AdminException("Unknown result type");
+      }
+    } else
+      throw new AdminException("Incorrect method signature");
+  }
+
+  public void refreshComponents()
+          throws AdminException
+  {
+    Response r = runCommand(new CommandListComponents(info.getName()));
+    if (r.getStatus() != Response.StatusOk)
+      throw new AdminException("Error occured: " + r.getDataAsString());
+    info.setComponents(r.getData().getDocumentElement());
+  }
+
+/*  public void shutdown()
+          throws AdminException
+  {
+    if (info.getPid() == 0)
+      throw new AdminException("Service \"" + info.getName() + "\"not started");
+
+    Response response = runCommand(new CommandShutdownService(info.getName()));
+    if (response.getStatus() != Response.StatusOk)
+      throw new AdminException("Couldn't shutdown service, nested:" + response.getDataAsString());
+
+    info.setPid(0);
   }
 
   public Config getConfig()
@@ -93,17 +143,5 @@ public class Service extends Proxy
     if (response.getStatus() != Response.StatusOk)
       throw new AdminException("Couldn't set config, nested:" + response.getDataAsString());
   }
-
-  public void shutdown()
-          throws AdminException
-  {
-    if (info.getPid() == 0)
-      throw new AdminException("Service \"" + info.getName() + "\"not started");
-
-    Response response = runCommand(new CommandShutdownService());
-    if (response.getStatus() != Response.StatusOk)
-      throw new AdminException("Couldn't shutdown service, nested:" + response.getDataAsString());
-
-    info.setPid(0);
-  }
+*/
 }

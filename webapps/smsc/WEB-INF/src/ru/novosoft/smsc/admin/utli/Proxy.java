@@ -36,7 +36,7 @@ public class Proxy
   protected Proxy(String host, int port)
           throws AdminException
   {
-    logger.debug("Proxy("+host+", "+port+")");
+    logger.debug("Proxy(" + host + ", " + port + ")");
     this.host = host;
     this.port = port;
     status = StatusDisconnected;
@@ -60,7 +60,7 @@ public class Proxy
   public Response runCommand(Command command)
           throws AdminException
   {
-    logger.debug("runCommand(@"+command.getClass().getName()+")");
+    logger.debug("runCommand(@" + command.getClass().getName() + ")");
     logger.debug("  status = " + getStatus()
                  + " (" + (getStatus() != StatusConnected ? "disconnected" : "connected") + ")");
     if (getStatus() != StatusConnected)

@@ -11,9 +11,9 @@ namespace protocol {
 class CommandStartService : public CommandService
 {
 public:
-	CommandStartService(DOM_Document doc) : CommandService(doc)
+	CommandStartService(DOM_Document doc) throw ()
+		: CommandService(start_service, doc)
 	{
-		setId(start_service);
 	}
 };
 

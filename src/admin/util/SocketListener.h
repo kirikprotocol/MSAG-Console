@@ -7,7 +7,10 @@
 #include <log4cpp/Category.hh>
 #include <admin/AdminException.h>
 #include <admin/util/Shutdownable.h>
+#include <admin/util/ShutdownableList.h>
+#include <core/network/Socket.hpp>
 #include <core/threads/ThreadPool.hpp>
+#include <core/threads/Thread.hpp>
 #include <util/Logger.h>
 
 namespace smsc {
@@ -16,81 +19,69 @@ namespace util {
 
 using log4cpp::Category;
 using smsc::admin::AdminException;
+using smsc::admin::util::ShutdownableList;
+using smsc::core::network::Socket;
 using smsc::core::threads::ThreadPool;
+using smsc::core::threads::Thread;
 using smsc::util::Logger;
 
-template<class _T_CommandDispatcher, class _T_CommandHandler>
-class SocketListener : public Shutdownable {
+template<class _T_CommandDispatcher>
+class SocketListener : public Shutdownable, public Thread
+{
 public:
 
-	SocketListener(in_port_t portToListen,
-								 _T_CommandHandler * commandHandler,
+	SocketListener(const char * const hostName,
+								 in_port_t portToListen,
 								 const char * const debugCategory = "smsc.admin.util.SocketListener")
 		throw (AdminException &)
 		: logger(Logger::getCategory(debugCategory))
 	{
-		port = portToListen;
-		sock = 0;
 		isShutdownSignaled = false;
-		handler = commandHandler;
 
-		sock = socket(PF_INET, SOCK_STREAM, 0);
-		if (sock == -1)
+		if (sock.InitServer(hostName, portToListen, 10) != 0)
 		{
 			throw AdminException("socket fails");
 		}
+		logger.info("socket listener ready to start on port %i", portToListen);
 	}
 
-	void run() throw (AdminException &)
+	virtual int Execute()
 	{
-		sockaddr_in addr = {AF_INET, htons(port), INADDR_ANY};
-		if (bind(sock, (sockaddr *)&addr, sizeof(addr)) == -1)
-		{
-			throw AdminException("bind fails");
-		}
-
-		if (listen(sock, 5))
-		{
-			throw AdminException("listen fails");
-		}
-
-		logger.info("socket listener started on port %i", port);
-
+		ShutdownableList::addListener(this);
+		sock.StartServer();
+		
+		logger.info("socket listener started");
+		
 		while (!isShutdownSignaled)
 		{
-			sockaddr_in cl_addr = {0};
-			unsigned int cl_addr_size = sizeof(cl_addr);
-
-			int ns;
-			if ((ns=accept(sock, (sockaddr*)(&cl_addr), &cl_addr_size))==-1)
+			if (Socket *newSocket = sock.Accept())
 			{
-				if (isShutdownSignaled)
-					logger.info("ServiceSocketListener shutdown");
-				else
-					logger.warn("Socket accept fails");
+				pool.startTask(new _T_CommandDispatcher(newSocket));
 			}
 			else
 			{
-				pool.startTask(new _T_CommandDispatcher(this, ns, inet_ntoa(cl_addr.sin_addr), handler));
+				if (isShutdownSignaled)
+					logger.info("ServiceSocketListener shutdown");
 			}
 		}
+		
+		ShutdownableList::removeListener(this);
+		
+		return 0;
 	}
 
 	void shutdown()
 	{
 		isShutdownSignaled = true;
-		if (sock != 0)
-			close(sock);
-		sock = 0;
+		sock.Close();
 	}
 
 protected:
-	in_port_t port;
-	int sock;
+	//in_port_t port;
+	Socket sock;
 	bool isShutdownSignaled;
 	ThreadPool pool;
 	Category &logger;
-	_T_CommandHandler *handler;
 };
 
 }

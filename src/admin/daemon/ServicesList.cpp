@@ -44,13 +44,9 @@ char * ServicesList::getText() const
 	char * sname;
 	std::string result = "";
 
-	#ifdef SMSC_DEBUG
-		logger.debug("ServicesList::getText()");
-	#endif
-
 	for (_ServiceList::Iterator i = services.getIterator(); i.Next(sname, s); )
 	{
-		#ifdef SMSC_DEBUG
+/*		#ifdef SMSC_DEBUG
 			logger.debug("******************");
 			logger.debug("  name=%s", sname);
 			logger.debug("  name=%s", s.getName());
@@ -58,22 +54,22 @@ char * ServicesList::getText() const
 			logger.debug("  pid=%lu",  (unsigned long)s.getPort());
 			logger.debug("  cmd=%s", s.getCommandLine());
 		#endif
-		
+*/		
 		char pid[sizeof(pid_t)*3 + 1];
 		sprintf(pid, "%lu", (unsigned long)s.getPid());
 		char port[sizeof(in_port_t)*3 + 1];
 		sprintf(port, "%lu", (unsigned long)s.getPort());
 		
-		result += "<service><name>";
+		result += "<service name=\"";
 		result += s.getName();
-		result += "</name><pid>";
+		result += "\" pid=\"";
 		result += pid;
-		result += "</pid><command_line>";
+		result += "\" command_line=\"";
 		result += s.getCommandLine();
-		result += "</command_line><port>";
+		result += "\" port=\"";
 		result += port;
-		result += "</port>";
-		for (unsigned j=0; s.getArgs()[j] != 0; j++)
+		result += "\">";
+		for (unsigned j=0; j<s.getArgs().size(); j++)
 		{
 			char argNum[sizeof(unsigned)*3+1];
 			sprintf(argNum, "%u", j);
@@ -86,6 +82,17 @@ char * ServicesList::getText() const
 		result += "</service>\n";
 	}
 	return cStringCopy(result.c_str());
+}
+
+void ServicesList::markServiceAsStopped(pid_t old_pid)
+{
+	char * sname;
+	Service s;
+	for (_ServiceList::Iterator i = services.getIterator(); i.Next(sname, s); )
+	{
+		if (s.getPid() == old_pid)
+			s.setPid(0);
+	}
 }
 
 }

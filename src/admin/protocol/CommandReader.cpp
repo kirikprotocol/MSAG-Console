@@ -1,27 +1,24 @@
 #include "CommandReader.h"
 
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <inttypes.h>
-#include <unistd.h>
 #include <xercesc/framework/MemBufInputSource.hpp>
 #include <xercesc/parsers/DOMParser.hpp>
 #include <xercesc/dom/DOM_DOMException.hpp>
 #include <xercesc/dom/DOM_NamedNodeMap.hpp>
 #include <xercesc/dom/DOM_Node.hpp>
 
-#include <admin/protocol/CommandGetConfig.h>
-#include <admin/protocol/CommandSetConfig.h>
-#include <admin/protocol/CommandGetLogs.h>
-#include <admin/protocol/CommandGetMonitoringData.h>
+//#include <admin/protocol/CommandGetConfig.h>
+//#include <admin/protocol/CommandSetConfig.h>
+//#include <admin/protocol/CommandGetLogs.h>
+//#include <admin/protocol/CommandGetMonitoringData.h>
 #include <admin/protocol/CommandStartService.h>
 #include <admin/protocol/CommandShutdown.h>
 #include <admin/protocol/CommandKillService.h>
 #include <admin/protocol/CommandAddService.h>
 #include <admin/protocol/CommandRemoveService.h>
+#include <admin/protocol/CommandCall.h>
 #include <admin/protocol/CommandListServices.h>
+#include <admin/protocol/CommandListComponents.h>
+#include <core/network/Socket.hpp>
 #include <util/Logger.h>
 #include <util/xml/DOMErrorLogger.h>
 
@@ -30,9 +27,11 @@ namespace admin {
 namespace protocol {
 
 using smsc::util::xml::DOMErrorLogger;
+using smsc::core::network::Socket;
+using smsc::util::Logger;
 
-CommandReader::CommandReader(int admSocket)
-	: logger(smsc::util::Logger::getCategory("smsc.admin.protocol.CommandReader"))
+CommandReader::CommandReader(Socket * admSocket)
+	: logger(Logger::getCategory("smsc.admin.protocol.CommandReader"))
 {
 	sock = admSocket;
 	parser = createParser();
@@ -46,7 +45,7 @@ CommandReader::~CommandReader()
 }
 
 Command *CommandReader::read()
-	throw (AdminException &)
+	throw (AdminException)
 {
 	uint32_t len = readMessageLength();
 
@@ -54,7 +53,7 @@ Command *CommandReader::read()
 	readMessageBody(buf, len);
 
 	// parse message
-	MemBufInputSource is(buf, len, "fake_system_id");
+	MemBufInputSource is(buf, len, "received_command.xml");
 	return parseCommand(is);
 }
 
@@ -64,10 +63,11 @@ uint32_t CommandReader::readMessageLength()
 	uint32_t len = 0;
 	for (int i=0; i<4; i++)
 	{
-		uint8_t c;
-		if (recv(sock, &c, sizeof(c), 0) == 0)
-			throw AdminException("Connection broken");
-		len = (len << 8) + c;
+		int c = sock->readChar();
+		if (c == -1)
+			throw AdminException("Connection broken on reading message length");
+		else
+			len = (len << 8) + (uint8_t)c;
 	}
 	return len;
 }
@@ -78,10 +78,10 @@ void CommandReader::readMessageBody(XMLByte * buf, uint32_t len)
 	buf[len]=0;
 	for (int readed=0; readed<len;)
 	{
-		size_t readed_now = recv(sock, buf+readed, len-readed, 0);
+		size_t readed_now = sock->Read((char *)(buf+readed), len-readed);
+		if (readed_now == 0 || readed_now == -1)
+			throw AdminException("Connection broken on reading message body");
 		readed += readed_now;
-		if (readed_now == 0)
-			throw AdminException("Connection broken");
 	}
 }
 
@@ -126,7 +126,7 @@ Command* CommandReader::parseCommand(InputSource &source)
 	}
 	catch (const AdminException & e)
 	{
-		throw e;
+		throw;
 	}
 	catch (...)
 	{
@@ -156,14 +156,14 @@ char * CommandReader::getCommandName(DOM_Document data)
 Command * CommandReader::createCommand(Command::Id id, DOM_Document data) {
 	switch (id)
 	{
-	case Command::get_config:
+/*	case Command::get_config:
 		return new CommandGetConfig(data);
 	case Command::set_config:
 		return new CommandSetConfig(data);
 	case Command::get_logs:
 		return new CommandGetLogs(data);
 	case Command::get_monitoring:
-		return new CommandGetMonitoringData(data);
+		return new CommandGetMonitoringData(data);*/
 	case Command::start_service:
 		return new CommandStartService(data);
 	case Command::shutdown_service:
@@ -176,6 +176,10 @@ Command * CommandReader::createCommand(Command::Id id, DOM_Document data) {
 		return new CommandRemoveService(data);
 	case Command::list_services:
 		return new CommandListServices(data);
+	case Command::call:
+		return new CommandCall(data);
+	case Command::list_components:
+		return new CommandListComponents(data);
 	default:
 		logger.warn("Unknown command id \"%i\"", id);
 		throw AdminException("Unknown command");

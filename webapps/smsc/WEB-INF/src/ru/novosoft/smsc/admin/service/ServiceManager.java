@@ -12,7 +12,6 @@ import java.util.*;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.daemon.Daemon;
 import ru.novosoft.smsc.admin.daemon.DaemonManager;
-import ru.novosoft.smsc.util.config.Config;
 
 public class ServiceManager
 {
@@ -71,9 +70,6 @@ public class ServiceManager
   {
     Service s = getService(serviceName);
     Daemon d = getDaemon(s.getInfo().getHost());
-    if (s.getInfo().getPid() != 0) {
-      s.shutdown();
-    }
     d.removeService(serviceName);
     services.remove(serviceName);
   }
@@ -93,7 +89,7 @@ public class ServiceManager
     Daemon d = getDaemon(s.getInfo().getHost());
 
     try {
-      s.shutdown();
+      d.shutdownService(s.getInfo().getHost());
     } catch (AdminException e) {
       d.killService(serviceName);
     }
@@ -104,10 +100,11 @@ public class ServiceManager
           throws AdminException
   {
     Service s = getService(name);
-    s.shutdown();
+    Daemon d = getDaemon(s.getInfo().getHost());
+    d.shutdownService(name);
   }
 
-  public synchronized Config getServiceConfig(String name)
+/*  public synchronized Config getServiceConfig(String name)
           throws AdminException
   {
     Service s = getService(name);
@@ -127,7 +124,7 @@ public class ServiceManager
     Service s = getService(name);
     return s.getMonitoringData();
   }
-
+*/
   public synchronized Set getServiceNames()
   {
     return services.keySet();
@@ -136,6 +133,9 @@ public class ServiceManager
   public synchronized Set getServiceNames(String host)
           throws AdminException
   {
+    if (!getHosts().contains(host))
+      throw new AdminException("Host \"" + host + "\" not connected");
+
     Set result = new HashSet();
     for (Iterator i = services.keySet().iterator(); i.hasNext();) {
       Service s = getService((String) i.next());
@@ -157,13 +157,21 @@ public class ServiceManager
           throws AdminException
   {
     services.clear();
-    for (Iterator i = daemonManager.getHosts().iterator(); i.hasNext(); )
-    {
+    for (Iterator i = daemonManager.getHosts().iterator(); i.hasNext();) {
       Daemon d = daemonManager.getDaemon((String) i.next());
       Map infos = d.listServices();
-      for (Iterator j = infos.values().iterator(); j.hasNext(); ) {
+      for (Iterator j = infos.values().iterator(); j.hasNext();) {
         ServiceInfo info = (ServiceInfo) j.next();
-        services.put(info.getName(), new Service(info));
+        Service s = new Service(info);
+        if (info.getPid() != 0)
+        {
+          try {
+            s.refreshComponents();
+          } catch (AdminException e) {
+            s.getInfo().setPid(0);
+          }
+        }
+        services.put(s.getInfo().getName(), s);
       }
     }
   }

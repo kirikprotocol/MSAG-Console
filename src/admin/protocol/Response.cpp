@@ -1,10 +1,15 @@
 #include "Response.h"
 #include <sys/types.h>
 #include <string.h>
+#include <admin/service/Type.h>
 
 namespace smsc {
 namespace admin {
 namespace protocol {
+
+using smsc::admin::service::StringType;
+using smsc::admin::service::BooleanType;
+using smsc::admin::service::LongType;
 
 static const char * const RESPONSE_HEADER =
 "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n\
@@ -25,6 +30,49 @@ Response::names[Response::response_names_quantity] = {
 Response::Response(Status status, const char * const data)
 {
 	st = status;
+	init(data);
+}
+
+Response::Response(Status status, Variant v)
+	throw (AdminException &)
+{
+	st = status;
+	static const char * VARIANT_HEADER = "<variant type=\"";
+	static const char * VARIANT_MIDDLE = "\">";
+	static const char * VARIANT_FOOTER = "</variant>";
+	static const size_t VARIANT_TEMPLET_LENGTH =   strlen(VARIANT_HEADER)
+	                                             + strlen(VARIANT_MIDDLE)
+	                                             + strlen(VARIANT_FOOTER);
+	char buf[sizeof(long)*3+1] = {0};
+	const char * value = buf;
+	char *type = "unknown";
+	switch (v.getType())
+	{
+	case StringType:
+		value = v.getStringValue();
+		type = "string";
+		break;
+	case BooleanType:
+		value = v.getBooleanValue() ? "true" : "false";
+		type = "bool";
+		break;
+	case LongType:
+		sprintf(buf,  "%li", v.getLongValue());
+		type = "int";
+		break;
+	default:
+		throw AdminException("Unknown response value type");
+	}
+
+	std::auto_ptr<char> data(new char[VARIANT_TEMPLET_LENGTH+strlen(value)+1]);
+	sprintf(data.get(),  "%s%s%s%s%s", VARIANT_HEADER, type, VARIANT_MIDDLE,
+					                           value, VARIANT_FOOTER);
+	init(data.get());
+}
+
+
+void Response::init(const char * const data)
+{
 	const char * const status_name = getStatusName(st);
 	if (data != 0)
 	{

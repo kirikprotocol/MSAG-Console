@@ -14,10 +14,10 @@ public class DaemonManager
   private Map daemons = new HashMap();
 
   public Daemon addDaemon(String host, int port)
-    throws AdminException
+          throws AdminException
   {
     if (daemons.containsKey(host))
-      throw new AdminException("Daemon already connected on host \""+host+"\"");
+      throw new AdminException("Daemon already connected on host \"" + host + "\"");
 
     Daemon d = new Daemon(host, port);
     daemons.put(host, d);
@@ -25,17 +25,17 @@ public class DaemonManager
   }
 
   public void removeDaemon(String host)
-  throws AdminException
+          throws AdminException
   {
     if (!daemons.containsKey(host))
-      throw new AdminException("Daemon on host \""+host+"\" not known");
+      throw new AdminException("Daemon on host \"" + host + "\" not known");
 
     daemons.remove(host);
   }
 
   public Daemon getDaemon(String host)
   {
-    return (Daemon)daemons.get(host);
+    return (Daemon) daemons.get(host);
   }
 
   public Set getHosts()

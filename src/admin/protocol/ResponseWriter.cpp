@@ -12,7 +12,7 @@ namespace smsc {
 namespace admin {
 namespace protocol {
 
-ResponseWriter::ResponseWriter(int admSocket)
+ResponseWriter::ResponseWriter(Socket * admSocket)
 {
 	sock = admSocket;
 }
@@ -48,10 +48,10 @@ void ResponseWriter::writeBuf(const void * const buf, size_t len)
 {
 	for (size_t writed = 0; writed < len; )
 	{
-		size_t writed_now = send(sock, buf, len - writed, 0);
-		if (writed_now == -1)
+		size_t writed_now = sock->Write((const char *)(buf) + writed, len - writed);
+		if (writed_now == 0 || writed_now == -1)
 		{
-			throw AdminException("Write Error occured");
+			throw AdminException("Connect broken");
 		}
 		writed += writed_now;
 	}

@@ -8,7 +8,8 @@
 
 #include <log4cpp/NDC.hh>
 
-#include <util/config/Config.h>
+#include <admin/util/ShutdownableList.h>
+#include <core/network/Socket.hpp>
 #include <util/Logger.h>
 
 namespace smsc {
@@ -16,23 +17,22 @@ namespace admin {
 namespace util {
 
 using smsc::admin::AdminException;
-using smsc::util::config::Config;
+//using smsc::util::config::Config;
 
 const char * const CommandDispatcher::task_name = "CommandDispatcher";
 
-CommandDispatcher::CommandDispatcher(Shutdownable * parentListener,
-																		 int admSocket,
-																		 const char * const client_addr,
+CommandDispatcher::CommandDispatcher(Socket* admSocket,
+																		 //const char * const client_addr,
 																		 const char * const loggerCategory = "smsc.admin.util.CommandDispatcher")
 	: logger(smsc::util::Logger::getCategory(loggerCategory)),
 	  reader(admSocket),
 	  writer(admSocket)
 {
+	isShutdownSignaled = false;
 	sock = admSocket;
-	memcpy(cl_addr, client_addr, 15);
-	cl_addr[15] = 0;
-	logger.debug("Command dispatcher \"%s\" created.", cl_addr);
-	parent = parentListener;
+	//memcpy(cl_addr, client_addr, 15);
+	//cl_addr[15] = 0;
+	logger.debug("Command dispatcher created.");
 }
 
 CommandDispatcher::~CommandDispatcher()
@@ -44,73 +44,95 @@ CommandDispatcher::~CommandDispatcher()
 void CommandDispatcher::init()
 {
 	char thr[11];
-	logger.debug("Command dispather starting...");
 	std::sprintf(thr, "[%.8X]", thr_self());
-	char ndc[strlen(thr)+strlen(cl_addr)+1];
-	std::strcpy(ndc, thr);
-	std::strcat(ndc, cl_addr);
+	std::string ndc;
+	ndc += thr;
+	//ndc += cl_addr;
 	log4cpp::NDC::push(ndc);
-	logger.info("Command dispather started");
 }
 
 int CommandDispatcher::Execute()
 {
 	init();
 
+	ShutdownableList::addListener(this);
+	
+	logger.info("Command dispather started");
+	
 	std::auto_ptr<Command> command(0);
 	do
 	{
 		std::auto_ptr<Response> response(0);
 		try {
-			command.reset(reader.read());
-			response.reset(handle(command.get()));
+			while (!reader.canRead())
+			{
+				if (isShutdownSignaled)
+					break;
+			}
+			if (!isShutdownSignaled)
+			{
+				command.reset(reader.read());
+				response.reset(handle(command.get()));
+			}
 		}
 		catch (AdminException &e)
 		{
+			response.reset(0);
 			logger.warn("Command dispatching failed with exception: %s", e.what());
+			break;
 		}
 		catch (char * e)
 		{
+			response.reset(0);
 			logger.warn("Command dispatching failed with exception: %s", e);
+			break;
 		}
 		catch (...)
 		{
+			response.reset(0);
 			logger.warn("Command dispatching failed with unknown exception");
+			break;
 		}
 	
-		// writing response
-		try {
-			if (response.get() == 0)
-			{
-				response.reset(new Response(Response::Error, 0));
+		if (!isShutdownSignaled)
+		{
+			// writing response
+			try {
+				if (response.get() == 0)
+				{
+					response.reset(new Response(Response::Error, 0));
+				}
+				writer.write(*response);
 			}
-			writer.write(*response);
+			catch (AdminException &e)
+			{
+				logger.warn("Response writing failed with exception: %s", e.what());
+				break;
+			}
+			catch (char * e)
+			{
+				logger.warn("Response writing failed with exception: %s", e);
+				break;
+			}
+			catch (...)
+			{
+				logger.warn("Response writing failed with unknown exception");
+				break;
+			}
 		}
-		catch (AdminException &e)
-		{
-			logger.warn("Response writing failed with exception: %s", e.what());
-			break;
-		}
-		catch (char * e)
-		{
-			logger.warn("Response writing failed with exception: %s", e);
-			break;
-		}
-		catch (...)
-		{
-			logger.warn("Response writing failed with unknown exception");
-			break;
-		}
-	} while ((command->getId() != Command::undefined) &&
-					 (command->getId() != Command::shutdown_service));
+	} while (!isShutdownSignaled
+					 && (command->getId() != Command::undefined)
+					 && (command->getId() != Command::shutdown_service));
+	
+	ShutdownableList::removeListener(this);
 
-	close(sock);
+	sock->Close();
 	logger.info("Command dispather stopped");
 	log4cpp::NDC::pop();
+	return 0;
 }
 
 }
 }
 }
-
 

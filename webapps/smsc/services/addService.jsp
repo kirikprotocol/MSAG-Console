@@ -24,7 +24,7 @@
 	if (port == 0) 
 		throw new Exception("Port number not defined");
 	
-	serviceManager.addService(new ServiceInfo(name, host, port, cmdLine, new String[0]));
+	serviceManager.addService(new ServiceInfo(name, host, port, cmdLine, new Vector()));
 	%>
 	Service added sucessfully<br>
 	<%=action("Host \""+host+'"', "viewHost.jsp", "host", host)%>

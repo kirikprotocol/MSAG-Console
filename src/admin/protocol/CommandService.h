@@ -14,39 +14,30 @@ using smsc::util::xml::getNodeText;
 class CommandService : public Command
 {
 public:
-	CommandService(DOM_Document doc) : Command()
+	CommandService(Id comId, DOM_Document doc) throw ()
+		: Command(comId)
 	{
-		setId(undefined);
+		serviceName = 0;
 		setData(doc);
+		serviceName = doc.getDocumentElement().getAttribute("service").transcode();
+	}
 
-		DOM_Element elem = doc.getDocumentElement();
-		DOM_NodeList list = elem.getElementsByTagName("service");
-		if (list.getLength() > 0)
+	virtual ~CommandService()
+		throw()
+	{
+		if (serviceName != 0)
 		{
-			DOM_NodeList childs = list.item(0).getChildNodes();
-			for (unsigned i=0; i<childs.getLength(); i++)
-			{
-				DOM_Node child = childs.item(i);
-				if (child.getNodeType() == DOM_Node::ELEMENT_NODE)
-				{
-					std::auto_ptr<char> nodeName(child.getNodeName().transcode());
-					if (std::strcmp(nodeName.get(), "name") == 0)
-					{
-						std::auto_ptr<char> name(getNodeText(child));
-						serviceName = name.get();
-					}
-				}
-			}
+			delete serviceName;
 		}
 	}
 
-	const char * const getServiceName() const
+	const char * const getServiceName() const throw ()
 	{
-		return serviceName.c_str();
+		return serviceName;
 	}
 
 protected:
-	std::string serviceName;
+	char * serviceName;
 };
 
 }

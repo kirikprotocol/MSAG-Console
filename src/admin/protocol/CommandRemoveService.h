@@ -10,9 +10,9 @@ namespace protocol {
 class CommandRemoveService : public CommandService
 {
 public:
-	CommandRemoveService(DOM_Document doc) : CommandService(doc)
+	CommandRemoveService(DOM_Document doc) throw ()
+		: CommandService(remove_service, doc)
 	{
-		setId(remove_service);
 	}
 };
 

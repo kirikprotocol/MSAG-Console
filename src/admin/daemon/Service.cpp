@@ -4,6 +4,12 @@
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>
+#include <admin/util/Shutdownable.h>
+#include <admin/util/SignalHandler.h>
+//#include <admin/util/ShutdownSignalListener.h>
+
+//using smsc::admin::util::Shutdownable;
+using smsc::admin::util::SignalHandler;
 
 namespace smsc {
 namespace admin {
@@ -23,7 +29,17 @@ pid_t Service::start()
 	}
 	else
 	{	// child process
-		execv(command_line, args);
+		char ** arguments = new (char*)[args.size()+4];
+		arguments[args.size()+3] = 0;
+		arguments[0] = command_line;
+		arguments[1] = new char[sizeof(in_port_t)*3+1];
+		sprintf(arguments[1], "%lu", (unsigned long) port);
+		arguments[2] = "./";
+		for (size_t i=0; i<args.size(); i++)
+		{
+			arguments[i+3] = args[i];
+		}
+		execv(command_line, arguments);
 	}
 }
 
@@ -53,31 +69,55 @@ void Service::kill()
 	pid = 0;
 }
 
+void Service::shutdown()
+	throw (AdminException &)
+{
+	if (getStatus() != running)
+	{
+		throw AdminException("Service is not running");
+	}
+
+	int result = sigsend(P_PID, pid, SignalHandler::SHUTDOWN_SIGNAL);
+	if (result != 0)
+	{
+		switch (errno)
+		{
+		case EINVAL:
+			throw AdminException("Incorrect signal number");
+		case EPERM:
+			throw AdminException("Does not have permission to send the signal to Service process");
+		case ESRCH:
+      throw AdminException("No process or process group can be found corresponding to that specified by pid");
+		default:
+			throw AdminException("Unknown error");
+		}
+	}
+}
+
 void Service::init(const char * const serviceName,
 									 const char * const serviceCommandLine,
-									 in_port_t serviceAdminPort,
-									 const char * const * const serviceArgs,
-									 pid_t servicePID = 0)
+									 const in_port_t serviceAdminPort,
+									 const ServiceArguments &serviceArgs,
+									 const pid_t servicePID = 0)
 {
 	name = cStringCopy(serviceName);
 	command_line = cStringCopy(serviceCommandLine);
 	port = serviceAdminPort;
 	pid = servicePID;
-	args = new (char*)[2];
-	args[0] = cStringCopy(command_line);
-	args[1] = 0;
-	#ifdef SMSC_DEBUG
+	args = serviceArgs;
+/*	#ifdef SMSC_DEBUG
 		Logger::getCategory("smsc.admin.daemon.Service").debug("Initialized service:");
 		Logger::getCategory("smsc.admin.daemon.Service").debug("  name=%s", name == 0 ? "null" : name);
 		Logger::getCategory("smsc.admin.daemon.Service").debug("  command_line=%s", command_line  == 0 ? "null" : command_line);
 		Logger::getCategory("smsc.admin.daemon.Service").debug("  port=%lu", (unsigned long) port);
 		Logger::getCategory("smsc.admin.daemon.Service").debug("  pid=%lu", (unsigned long) pid);
 	#endif
+*/
 }
 
 void Service::deinit()
 {
-	Logger::getCategory("smsc.admin.daemon.Service").debug("deinit");
+//	Logger::getCategory("smsc.admin.daemon.Service").debug("deinit");
 
 	if (name != 0)
 		delete name;
@@ -90,16 +130,12 @@ void Service::deinit()
 	pid = 0;
 	port = 0;
 
-	if (args != 0)
+	for (size_t i=0; i<args.size(); i++)
 	{
-		for (int i=0; args[i] != 0; i++)
-		{
-			delete[] args[i];
-			args[i] = 0;
-		}
-		delete[] args;
-		args = 0;
+		delete[] args[i];
+		args[i] = 0;
 	}
+	args.resize(0);
 }
 
 }

@@ -6,6 +6,8 @@
 #include <admin/protocol/CommandAddService.h>
 #include <admin/protocol/CommandRemoveService.h>
 #include <admin/protocol/CommandListServices.h>
+#include <core/synchronization/Mutex.hpp>
+#include <util/signal.h>
 
 namespace smsc {
 namespace admin {
@@ -17,6 +19,11 @@ using smsc::admin::protocol::CommandKillService;
 using smsc::admin::protocol::CommandAddService;
 using smsc::admin::protocol::CommandRemoveService;
 using smsc::admin::protocol::CommandListServices;
+using smsc::core::synchronization::MutexGuard;
+using smsc::util::setExtendedSignalHandler;
+
+ServicesList DaemonCommandDispatcher::services;
+Mutex DaemonCommandDispatcher::servicesListMutex;
 
 Response * DaemonCommandDispatcher::handle(const Command * const command)
 	throw (AdminException &)
@@ -26,15 +33,17 @@ Response * DaemonCommandDispatcher::handle(const Command * const command)
 		switch (command->getId())
 		{
 		case Command::start_service:
-			return start_service(command);
+			return start_service((CommandStartService*)command);
 		case Command::kill_service:
-			return kill_service(command);
+			return kill_service((CommandKillService*)command);
+		case Command::shutdown_service:
+			return shutdown_service((CommandShutdown*)command);
 		case Command::add_service:
-			return add_service(command);
+			return add_service((CommandAddService*)command);
 		case Command::remove_service:
-			return remove_service(command);
+			return remove_service((CommandRemoveService*)command);
 		case Command::list_services:
-			return list_services(command);
+			return list_services((CommandListServices*)command);
 		default:
 			return new Response(Response::Error, "Unknown command");
 		}
@@ -53,52 +62,208 @@ Response * DaemonCommandDispatcher::handle(const Command * const command)
 	}
 }
 
-Response * DaemonCommandDispatcher::start_service(const Command * const command)
+Response * DaemonCommandDispatcher::start_service(const CommandStartService * const command)
 	throw (AdminException &)
 {
 	logger.debug("start service");
-	pid_t newPid = handler->start_service(dynamic_cast<const CommandStartService * const>(command));
-	std::auto_ptr<char> text(new char[sizeof(pid_t)*3 +1]);
-	sprintf(text.get(),  "%lu", (unsigned long) newPid);
-	return new Response(Response::Ok, text.get());
+	if (command != 0)
+	{
+		if (command->getServiceName() != 0)
+		{
+			pid_t newPid = 0;
+			{
+				MutexGuard guard(servicesListMutex);
+				newPid = services[command->getServiceName()].start();
+			}
+			std::auto_ptr<char> text(new char[sizeof(pid_t)*3 +1]);
+			sprintf(text.get(),  "%lu", (unsigned long) newPid);
+			return new Response(Response::Ok, text.get());
+		}
+		else
+		{
+			logger.warn("service name not specified");
+			throw AdminException("service name not specified");
+		}
+	}
+	else
+	{
+		logger.warn("null command received");
+		throw AdminException("null command received");
+	}
 }
 
-Response * DaemonCommandDispatcher::kill_service(const Command * const command)
+Response * DaemonCommandDispatcher::kill_service(const CommandKillService * const command)
 	throw (AdminException &)
 {
 	logger.debug("kill service");
-	handler->kill_service(dynamic_cast<const CommandKillService * const>(command));
-	return new Response(Response::Ok, 0);
+	if (command != 0)
+	{
+		if (command->getServiceName() != 0)
+		{
+			logger.debug("kill service \"%s\"", command->getServiceName());
+			{
+				MutexGuard guard(servicesListMutex);
+				services[command->getServiceName()].kill();
+			}
+			return new Response(Response::Ok, 0);
+		}
+		else
+		{
+			logger.warn("service name not specified");
+			throw AdminException("service name not specified");
+		}
+	}
+	else
+	{
+		logger.warn("null command received");
+		throw AdminException("null command received");
+	}
 }
 
-Response * DaemonCommandDispatcher::add_service(const Command * const command)
+Response * DaemonCommandDispatcher::shutdown_service(const CommandShutdown * const command)
 	throw (AdminException &)
 {
-	logger.debug("add service");
-	handler->add_service(dynamic_cast<const CommandAddService * const>(command));
-	return new Response(Response::Ok, 0);
+	logger.debug("shutdown service");
+	if (command != 0)
+	{
+		if (command->getServiceName() != 0)
+		{
+			logger.debug("shutdown service \"%s\"", command->getServiceName());
+			{
+				MutexGuard guard(servicesListMutex);
+				services[command->getServiceName()].shutdown();
+			}
+			return new Response(Response::Ok, 0);
+		}
+		else
+		{
+			logger.warn("service name not specified");
+			throw AdminException("service name not specified");
+		}
+	}
+	else
+	{
+		logger.warn("null command received");
+		throw AdminException("null command received");
+	}
 }
 
-Response * DaemonCommandDispatcher::remove_service(const Command * const command)
+Response * DaemonCommandDispatcher::add_service(const CommandAddService * const command)
 	throw (AdminException &)
 {
-	logger.debug("remove service");
-	handler->remove_service(dynamic_cast<const CommandRemoveService * const>(command));
-	return new Response(Response::Ok, 0);
+	logger.debug("add service \"%s\" (%s) %u",
+							 command->getServiceName(),
+							 command->getCmdLine(),
+							 command->getPort());
+	if (command != 0)
+	{
+		if (command->getServiceName() != 0 && command->getCmdLine() != 0)
+		{
+			{
+				MutexGuard guard(servicesListMutex);
+				services.add(Service(command->getServiceName(), command->getCmdLine(), command->getPort(), command->getArgs()));
+			}
+			return new Response(Response::Ok, 0);
+		}
+		else
+		{
+			logger.warn("service name or command line not specified");
+			throw AdminException("service name or command line not specified");
+		}
+	}
+	else
+	{
+		logger.warn("null command received");
+		throw AdminException("null command received");
+	}
 }
 
-Response * DaemonCommandDispatcher::list_services(const Command * const command)
+Response * DaemonCommandDispatcher::remove_service(const CommandRemoveService * const command)
+	throw (AdminException &)
+{
+	if (command != 0)
+	{
+		if (command->getServiceName() != 0)
+		{
+			{
+				MutexGuard guard(servicesListMutex);
+				Service &s(services[command->getServiceName()]);
+				logger.debug("remove service \"%s\"", command->getServiceName());
+				if (s.getStatus() == Service::running)
+				{
+					s.kill();
+				}
+				services.remove(s.getName());
+			}
+			return new Response(Response::Ok, 0);
+		}
+		else
+		{
+			logger.warn("service name not specified");
+			throw AdminException("service name not specified");
+		}
+	}
+	else
+	{
+		logger.warn("null command received");
+		throw AdminException("null command received");
+	}
+}
+
+Response * DaemonCommandDispatcher::list_services(const CommandListServices * const command)
 	throw (AdminException &)
 {
 	logger.debug("list services");
-	const CommandListServices * const list_Services_command = dynamic_cast<const CommandListServices * const>(command);
-	logger.debug("list_Services_command = %p", list_Services_command);
-	const ServicesList & list = handler->list_services(list_Services_command);
-	std::auto_ptr<char> text(list.getText());
+	std::auto_ptr<char> text(0);
+	{
+		MutexGuard guard(servicesListMutex);
+		text.reset(services.getText());
+	}
 	logger.debug("services list:\n%s\n", text.get());
 	return new Response(Response::Ok, text.get());
 }
 
+void DaemonCommandDispatcher::shutdown()
+{
+	smsc::admin::util::CommandDispatcher::shutdown();
+	logger.debug("shutdown");
+}
+
+void DaemonCommandDispatcher::childSignalListener(int signo,
+																									siginfo_t * info,
+																									void *some_pointer)
+	throw ()
+{
+	if (signo != SIGCHLD || info->si_signo != SIGCHLD)
+	{
+		return;
+	}
+	
+	// ACTION: CHILD signal received
+	switch (info->si_code)
+	{
+	case CLD_EXITED:
+	case CLD_KILLED:
+	case CLD_DUMPED:
+		{
+			MutexGuard a(servicesListMutex);
+			services.markServiceAsStopped(info->si_pid);
+		}
+		break;
+	case CLD_TRAPPED:
+	case CLD_STOPPED:
+	case CLD_CONTINUED:
+	default:
+		;// skip these signals
+	}
+}
+
+void DaemonCommandDispatcher::activateChildSignalHandler()
+{
+	setExtendedSignalHandler(SIGCHLD, childSignalListener);
+}
+
 }
 }
 }
+

@@ -12,9 +12,9 @@ using smsc::admin::protocol::Command;
 class CommandListServices : public Command
 {
 public:
-	CommandListServices(DOM_Document doc) : Command()
+	CommandListServices(DOM_Document doc) throw ()
+		: Command(list_services)
 	{
-		setId(list_services);
 		setData(doc);
 	}
 };

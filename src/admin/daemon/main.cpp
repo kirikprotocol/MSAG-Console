@@ -8,17 +8,25 @@
 
 #include <admin/AdminException.h>
 #include <admin/daemon/DaemonSocketListener.h>
-#include <admin/daemon/DaemonCommandHandler.h>
+#include <admin/service/AdminSocketManager.h>
+#include <admin/util/SignalHandler.h>
 #include <util/config/Manager.h>
 #include <util/Logger.h>
+#include <util/signal.h>
 
 using smsc::admin::AdminException;
 using smsc::admin::daemon::DaemonSocketListener;
-using smsc::admin::daemon::DaemonCommandHandler;
+using smsc::admin::service::AdminSocketManager;
+using smsc::admin::util::SignalHandler;
 using smsc::util::Logger;
+using smsc::util::setExtendedSignalHandler;
 using smsc::util::config::Manager;
 
-void daemonInit()
+namespace smsc {
+namespace admin {
+namespace daemon {
+
+void daemonInit(const char * const home)
 {
 	if (getppid() != 1)
 	{
@@ -38,19 +46,33 @@ void daemonInit()
 	{
 		close(i);
 	}
-	chdir("/export/home/igork/build/bin/admin/daemon/");
-	//chdir("/");
+	chdir(home);
+/*
 	openlog("SMSC Start/Stop daemon", LOG_PID | LOG_CONS, LOG_DAEMON);
 	syslog(LOG_INFO, "Starting");
 	closelog();
+*/
 }
+
+}
+}
+}
+
+using smsc::admin::daemon::daemonInit;
+using smsc::admin::daemon::DaemonCommandDispatcher;
 
 int main(int argc, char **argv)
 {
+	if (argc != 2)
+	{
+		std::cout << "Usage: smsc_admin_daemon <path to home directory>"
+			<< std::endl;
+		return -1;
+	}
 
 	try
 	{
-		//daemonInit();
+		//daemonInit(argv[1]);
 	}
 	catch (...)
 	{
@@ -66,11 +88,11 @@ int main(int argc, char **argv)
 		Manager::init("daemon.xml");
 		Manager manager = Manager::getInstance();
 		int32_t port = manager.getInt("admin.daemon.port");
-		DaemonCommandHandler handler;
-		DaemonSocketListener listener(port, &handler,
-																	"smsc.admin.daemon.DaemonSocketListener");
-		listener.run();
-		logger.info("Stop");
+		AdminSocketManager::start(manager.getString("admin.daemon.host"),
+															port,
+															"smsc.admin.daemon.DaemonSocketListener");
+		DaemonCommandDispatcher::activateChildSignalHandler();
+		logger.info("Started");
 	}
 	catch (AdminException &e)
 	{

@@ -3,7 +3,6 @@
 
 #include <admin/util/SocketListener.h>
 #include <admin/daemon/DaemonCommandDispatcher.h>
-#include <admin/daemon/DaemonCommandHandler.h>
 
 namespace smsc {
 namespace admin {
@@ -11,7 +10,7 @@ namespace daemon {
 
 using smsc::admin::util::SocketListener;
 
-typedef SocketListener<DaemonCommandDispatcher, DaemonCommandHandler> DaemonSocketListener;
+typedef SocketListener<DaemonCommandDispatcher> DaemonSocketListener;
 
 }
 }

@@ -5,9 +5,38 @@
  */
 package ru.novosoft.smsc.admin.service;
 
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
+import java.util.*;
+
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.util.xml.Utils;
+
 public class ServiceInfo
 {
-  public ServiceInfo(String name, String host, int port, String cmdLine, String[] args, long pid)
+  public ServiceInfo(Element serviceElement, String serviceHost)
+          throws AdminException
+  {
+    host = serviceHost;
+    name = serviceElement.getAttribute("name");
+    pid = Long.decode(serviceElement.getAttribute("pid")).longValue();
+    cmdLine = serviceElement.getAttribute("command_line");
+    port = Integer.decode(serviceElement.getAttribute("port")).intValue();
+
+    NodeList childs = serviceElement.getElementsByTagName("arg");
+    args.setSize(childs.getLength());
+    for (int j = 0; j < childs.getLength(); j++) {
+      Element argElem = (Element) childs.item(j);
+      int num = Integer.decode(argElem.getAttribute("num")).intValue();
+      args.set(num, Utils.getNodeText(argElem));
+    }
+    if (this.name.equals("") || this.cmdLine.equals("")) {
+      throw new AdminException("service name or command line not specified in response");
+    }
+  }
+
+  public ServiceInfo(String name, String host, int port, String cmdLine, Vector args, long pid)
   {
     this.name = name;
     this.host = host;
@@ -17,17 +46,18 @@ public class ServiceInfo
     this.pid = pid;
   }
 
-  public ServiceInfo(String name, String host, int port, String cmdLine, String[] args)
+  public ServiceInfo(String name, String host, int port, String cmdLine, Vector args)
   {
     this(name, host, port, cmdLine, args, 0);
   }
 
-  protected String name;
-  protected String host;
-  protected int port;
-  protected String cmdLine;
-  protected String[] args;
-  protected long pid;
+  protected String name = "";
+  protected String host = "";
+  protected int port = 0;
+  protected String cmdLine = "";
+  protected Vector args = new Vector();
+  protected long pid = 0;
+  protected Map components = new HashMap();
 
   public String getName()
   {
@@ -49,7 +79,7 @@ public class ServiceInfo
     return cmdLine;
   }
 
-  public String[] getArgs()
+  public Vector getArgs()
   {
     return args;
   }
@@ -62,5 +92,21 @@ public class ServiceInfo
   public void setPid(long pid)
   {
     this.pid = pid;
+  }
+
+  public Map getComponents()
+  {
+    return components;
+  }
+
+  public void setComponents(Element response)
+  {
+    components.clear();
+    NodeList list = response.getElementsByTagName("component");
+    for (int i = 0; i < list.getLength(); i++) {
+      Element compElem = (Element) list.item(i);
+      Component c = new Component(compElem);
+      components.put(c.getName(), c);
+    }
   }
 }

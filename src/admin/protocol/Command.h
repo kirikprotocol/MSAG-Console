@@ -6,56 +6,75 @@
 #include <log4cpp/Category.hh>
 
 #include <admin/AdminException.h>
+#include <util/Logger.h>
 
 using smsc::admin::AdminException;
+using smsc::util::Logger;
 
 namespace smsc {
 namespace admin {
 namespace protocol {
 
-class smsc::admin::protocol::CommandReader;
+//class smsc::admin::protocol::CommandReader;
 
 class Command {
-	friend class smsc::admin::protocol::CommandReader;
+//	friend class smsc::admin::protocol::CommandReader;
 
 public:
 	enum Id
 	{
 		undefined,
-		get_config,
+/*		get_config,
 		set_config,
 		get_logs,
-		get_monitoring,
+		get_monitoring,*/
 		start_service,
 		shutdown_service,
 		kill_service,
 		add_service,
 		remove_service,
-		list_services
+		list_services,
+		list_components,
+		call
 	};
+
+	Command(Id newId) throw ()
+		: logger(Logger::getCategory("smsc.admin.protocol.Command"))
+	{
+		id = newId;
+	}
+
+	Command(const char * const commandName) throw ()
+		: logger(Logger::getCategory("smsc.admin.protocol.Command"))
+	{
+		id = getCommandIdByName(commandName);
+	}
 	
-	virtual ~Command();
+	virtual ~Command()
+		throw ()
+	{
+		id = undefined;
+	}
 	
-	const Id getId() const             {return id;}
-	const char * const getName() const {return names[id].name;}
-	const DOM_Document getData() const {return data;}
+	const Id getId() const  throw ()             {return id;}
+	const char * const getName() const  throw () {return names[id].name;}
 	
+	static Id getCommandIdByName(const char * const name) throw ();
 protected:
+	const DOM_Document getData() const {return data;}
 	struct _Command {
 		char * name;
 		Id id;
 	};
 	
-	Command();
 	Id id;
 	DOM_Document data;
 	log4cpp::Category &logger;
-	static const uint8_t commands_quantity = 11;
+	static const uint8_t commands_quantity = 9;
 	static const _Command names[commands_quantity];
 	
-	void setId(Id newId)  {id = newId;}
-	static Id getCommandIdByName(const char * const name);
-	void setData(DOM_Document newData) {data = newData;}
+	void setId(Id newId) throw () {id = newId;}
+	void setData(DOM_Document newData) throw () {data = newData;}
 
 private:
 };

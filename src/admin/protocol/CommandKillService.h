@@ -10,9 +10,9 @@ namespace protocol {
 class CommandKillService : public CommandService
 {
 public:
-	CommandKillService(DOM_Document doc) : CommandService(doc)
+	CommandKillService(DOM_Document doc) throw ()
+		: CommandService(kill_service, doc)
 	{
-		setId(kill_service);
 	}
 };
 

@@ -16,6 +16,9 @@ using smsc::core::buffers::Hash;
 using smsc::util::cStringCopy;
 using smsc::util::Logger;
 
+/**
+ * Thread-safe list of services.
+ */
 class ServicesList
 {
 public:
@@ -33,6 +36,8 @@ public:
 	{
 		return get(serviceName);
 	}
+
+	void markServiceAsStopped(pid_t old_pid);
 
 protected:
 	typedef Hash<Service> _ServiceList;
