@@ -5,8 +5,7 @@
 					  ru.novosoft.smsc.jsp.SMSCErrors,
 					  java.util.Set, java.util.Iterator,
 					  ru.novosoft.smsc.util.StringEncoderDecoder,
-					  java.util.Collection, ru.novosoft.smsc.mcisme.beans.MCISmeBean,
-                 ru.novosoft.smsc.infosme.beans.TaskEdit"%>
+					  java.util.Collection, ru.novosoft.smsc.mcisme.beans.MCISmeBean"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.Template" />
 <jsp:setProperty name="bean" property="*"/>
 <%
