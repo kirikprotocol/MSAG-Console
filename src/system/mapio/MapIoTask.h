@@ -177,7 +177,7 @@ public:
     MutexGuard g(sync);
     ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
     MapDialog* dlg = new MapDialog(map_dialog,lssn);
-    dlg->setSmscDialogId (smsc_did);
+    dlg->setSMSCDialogId (smsc_did);
     hash.Insert(map_dialog,dlg);
     __trace2__("MAP:: new dialog 0x%x for dialogid 0x%x->0x%x",dlg,smsc_did,map_dialog);
     dialogId_pool.pop_front();

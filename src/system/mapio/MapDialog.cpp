@@ -261,9 +261,9 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
   	appContext.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
     ET96MAP_SM_RP_OA_T smRpOa;
 	  smRpOa.typeOfAddress = ET96MAP_ADDRTYPE_SCADDR;
-	  smRpOa.addrLen = (m_scaddr.addressLength+1)/2+1;
-	  smRpOa.addr[0] = m_scaddr.typeOfAddress;
-	  memcpy( smRpOa.addr+1, m_scaddr.address, (m_scaddr.addressLength+1)/2 );
+	  smRpOa.addrLen = (m_scAddr.addressLength+1)/2+1;
+	  smRpOa.addr[0] = m_scAddr.typeOfAddress;
+	  memcpy( smRpOa.addr+1, m_scAddr.address, (m_scAddr.addressLength+1)/2 );
 
     auto_ptr<ET96MAP_SM_RP_UI_T> ui(mkDeliverPDU(sms.get()));// = mkDeliverPDU( oaddress, message ); 
 
