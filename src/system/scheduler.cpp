@@ -11,10 +11,10 @@ void Scheduler::Init(MessageStore* st,Smsc* psmsc)
   {
     MutexGuard guard(mon);
     SMSId id;
-    SMS s;
     try{
       while(it->getNextId(id))
       {
+        SMS s;
         st->retriveSms(id,s);
         SmeIndex idx=psmsc->getSmeIndex(s.dstSmeId);
         timeLine.insert(TimeIdPair(it->getTime(),Data(id,idx)));

@@ -8,7 +8,6 @@ int AlertAgent::Execute()
 {
   mon.Lock();
   Array<SMSId> ids;
-  SMS s;
   while(!isStopping)
   {
     if(queue.Count()==0)mon.wait();
@@ -32,6 +31,7 @@ int AlertAgent::Execute()
       for(int i=0;i<ids.Count();i++)
       {
         try{
+          SMS s;
           store->retriveSms(ids[i],s);
           SmeIndex idx=psmsc->getSmeIndex(s.dstSmeId);
           psmsc->UpdateSmsSchedule(s.getNextTime(),ids[i],now,idx);
