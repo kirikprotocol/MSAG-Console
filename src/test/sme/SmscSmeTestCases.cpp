@@ -131,27 +131,45 @@ AckText* SmscSmeTestCases::getExpectedResponse(
 	//destAlias
 	Address destAlias;
 	SmppUtil::convert(origPdu->get_message().get_dest(), &destAlias);
-	switch (monitor->deliveryFlag)
+	for (time_t t = monitor->pduData->submitTime;
+		  t <= monitor->pduData->submitTime + timeCheckAccuracy; t++)
 	{
-		case PDU_REQUIRED_FLAG:
-		case PDU_EXPIRED_FLAG:
-			for (time_t t = monitor->pduData->submitTime;
-				  t <= monitor->pduData->submitTime + timeCheckAccuracy; t++)
-			{
-				static const DateFormatter df("ddMMyyHHmmss");
-				ostringstream s;
-				s << "$Нотиф ";
-				s << SmsUtil::configString(destAlias) << " ";
-				s << df.format(t) << ": ";
-				s << "temp error"; //захардкожено
-				//s << monitor->deliveryStatus;
-				const pair<string, uint8_t> p = convert(s.str(), profile.codepage);
-				if (p.first.find(text) != string::npos)
+		static const DateFormatter df("ddMMyyHHmmss");
+		ostringstream s;
+		s << "$Notif ";
+		s << SmsUtil::configString(destAlias) << " ";
+		s << df.format(t) << ": ";
+		switch (monitor->deliveryFlag)
+		{
+			case PDU_REQUIRED_FLAG:
+			case PDU_EXPIRED_FLAG:
+				switch (isAccepted(monitor->deliveryStatus))
 				{
-					return new AckText(p.first, p.second, valid);
+					case RESP_PDU_RESCHED:
+						s << "subscriber busy";
+						break;
+					case RESP_PDU_MISSING:
+						s << "delivery attempt timed out";
+						break;
+					/*
+					case ...:
+						s << "system failure";
+						break;
+					*/
+					default:
+						__unreachable__("Invalid respFlag");
 				}
-			}
-			break;
+				break;
+			case PDU_NOT_EXPECTED_FLAG:
+				s << "destination unavialable";
+				break;
+		}
+		const pair<string, uint8_t> p = convert(s.str(), profile.codepage);
+		__trace2__("getExpectedResponse(): %s", p.first.c_str());
+		if (p.first.find(text) != string::npos)
+		{
+			return new AckText(p.first, p.second, valid);
+		}
 	}
 	return new AckText("Unknown", DATA_CODING_SMSC_DEFAULT, valid);
 }
@@ -182,7 +200,7 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 	__require__(ack);
 	if (!ack->valid)
 	{
-		__trace__("monitor is not valid");
+		//monitor->setSkipChecks(1);
 		monitor->setReceived();
 		return;
 	}
@@ -231,7 +249,7 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 			__unreachable__("Invalid flag");
 	}
 	__trace2__("expected optional part:\n%s", str(opt).c_str());
-	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 0);
+	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 10);
 	__tc_ok_cond__;
 	__tc__("processDeliverySm.deliveryReport.deliveryReceipt.checkText");
 	__compare__(1, pdu.get_message().get_dataCoding(), ack->dataCoding);
@@ -291,7 +309,7 @@ void SmscSmeTestCases::processIntermediateNotification(
 	__require__(ack);
 	if (!ack->valid)
 	{
-		__trace__("monitor is not valid");
+		//monitor->setSkipChecks(1);
 		monitor->setReceived();
 		return;
 	}
@@ -305,7 +323,9 @@ void SmscSmeTestCases::processIntermediateNotification(
 	*((uint16_t*) (errCode + 1)) = rand0(65535);
 	switch(monitor->deliveryFlag)
 	{
-		case PDU_REQUIRED_FLAG:
+		case PDU_REQUIRED_FLAG: //темпоральная ошибка
+		case PDU_NOT_EXPECTED_FLAG: //есть маршрут, но sme не забиндена
+		case PDU_EXPIRED_FLAG: //pdu еще находится в ENROUTE, но уже не будет доставляться
 			opt.set_messageState(SMPP_ENROUTE_STATE);
 			opt.set_networkErrorCode(errCode);
 			break;
@@ -315,22 +335,14 @@ void SmscSmeTestCases::processIntermediateNotification(
 		case PDU_RECEIVED_FLAG:
 			__tc_fail__(2);
 			break;
-		case PDU_NOT_EXPECTED_FLAG:
-			__tc_fail__(3);
-			break;
-		case PDU_EXPIRED_FLAG:
-			//pdu еще находится в ENROUTE, но уже не будет доставляться
-			opt.set_messageState(SMPP_ENROUTE_STATE);
-			opt.set_networkErrorCode(errCode);
-			break;
 		case PDU_ERROR_FLAG:
-			__tc_fail__(4);
+			__tc_fail__(3);
 			break;
 		default:
 			__unreachable__("Invalid flag");
 	}
 	__trace2__("expected optional part:\n%s", str(opt).c_str());
-	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 0);
+	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 10);
 	__tc_ok_cond__;
 	__tc__("processDeliverySm.deliveryReport.intermediateNotification.checkText");
 	__compare__(1, pdu.get_message().get_dataCoding(), ack->dataCoding);
