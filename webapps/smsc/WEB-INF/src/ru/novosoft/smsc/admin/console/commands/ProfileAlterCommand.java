@@ -32,9 +32,25 @@ public class ProfileAlterCommand extends ProfileGenCommand
             } else {
                 if (isCodepage) profile.setCodepage(codepage);
                 if (isReport)   profile.setReportOptions(report);
-                ctx.getSmsc().updateProfile(profileMask, profile);
-                ctx.setMessage(out+" altered");
-                ctx.setStatus(CommandContext.CMD_OK);
+                switch (ctx.getSmsc().updateProfile(profileMask, profile))
+                {
+                    case 1:	//pusUpdated
+                        ctx.setMessage(out+" altered");
+                        ctx.setStatus(CommandContext.CMD_OK);
+                        break;
+                    case 2: //pusInserted
+                        ctx.setMessage(out+" added new");
+                        ctx.setStatus(CommandContext.CMD_OK);
+                        break;
+                    case 3: //pusUnchanged
+                        ctx.setMessage(out+" unchanged.");
+                        ctx.setStatus(CommandContext.CMD_OK);
+                        break;
+                    default: // pusError
+                        ctx.setMessage("Couldn't alter "+out+". Unknown cause");
+                        ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+                        break;
+                }
             }
         } catch (Exception e) {
             ctx.setMessage("Couldn't alter "+out+". Cause: "+e.getMessage());

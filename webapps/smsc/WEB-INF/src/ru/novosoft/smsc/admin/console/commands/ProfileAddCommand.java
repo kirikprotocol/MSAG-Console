@@ -10,6 +10,7 @@ package ru.novosoft.smsc.admin.console.commands;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.profiler.Profile;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 
 public class ProfileAddCommand extends ProfileGenCommand
 {
@@ -25,9 +26,25 @@ public class ProfileAddCommand extends ProfileGenCommand
         try {
             Mask profileMask = new Mask(mask);
             Profile profile = new Profile(profileMask, codepage, report);
-            ctx.getSmsc().updateProfile(profileMask, profile);
-            ctx.setMessage(out+" added");
-            ctx.setStatus(CommandContext.CMD_OK);
+            switch (ctx.getSmsc().updateProfile(profileMask, profile))
+            {
+                case 1:	//pusUpdated
+                    ctx.setMessage(out+" was updated");
+                    ctx.setStatus(CommandContext.CMD_OK);
+                    break;
+                case 2: //pusInserted
+                    ctx.setMessage(out+" added");
+                    ctx.setStatus(CommandContext.CMD_OK);
+                    break;
+                case 3: //pusUnchanged
+                    ctx.setMessage(out+" is identical to default.");
+                    ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+                    break;
+                default: // pusError
+                    ctx.setMessage("Couldn't add "+out+". Unknown cause");
+                    ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+                    break;
+            }
         } catch (Exception e) {
             ctx.setMessage("Couldn't add "+out+". Cause: "+e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
