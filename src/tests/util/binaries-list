@@ -1,0 +1,2 @@
+tests/util/HandlerTest HandlerTest -lcppunit
+tests/util/ConfiguratorTest ConfiguratorTest  -ltests-util -lcppunit -lxerces-c -llog4cpp $(__LIBRARIES)
