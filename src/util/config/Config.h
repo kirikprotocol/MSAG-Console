@@ -25,11 +25,9 @@ public:
 	friend class smsc::util::config::Manager;
 
 	Config()
-		: logger(Logger::getCategory("smsc.util.config.Config"))
 	{}
 
 	Config(const DOM_Element &element) throw (ConfigException &)
-		: logger(Logger::getCategory("smsc.util.config.Config"))
 	{
 		parse(element);
 	}
@@ -108,7 +106,6 @@ public:
 	}
 
 protected:
-	log4cpp::Category &logger;
 	Hash<int32_t> intParams;
 	Hash<char *> strParams;
 	Hash<bool> boolParams;

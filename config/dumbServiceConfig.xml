@@ -4,5 +4,6 @@
 <config>
     <section name="dumbtest">
 	<param name="host" type="string">smsc</param>
+	<param name="loggerInitFile" type="string">dumb.logger.init</param>
     </section>
 </config>

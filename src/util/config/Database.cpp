@@ -65,7 +65,7 @@ void Database::setMaxConnectionsCount(int newMax)
 	throw (DOM_DOMException)
 {
 	char str[32];
-	sprintf(str, "%.8i", newMax);
+	snprintf(str, sizeof(str), "%.8i", newMax);
 	node.setAttribute(connections_max_name, str);
 }
 
@@ -73,7 +73,7 @@ void Database::setInitConnectionsCount(int newInit)
 	throw (DOM_DOMException)
 {
 	char str[32];
-	sprintf(str, "%.8i", newInit);
+	snprintf(str, sizeof(str), "%.8i", newInit);
 	node.setAttribute(connections_init_name, str);
 }
 

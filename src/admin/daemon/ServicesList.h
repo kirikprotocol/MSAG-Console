@@ -23,7 +23,6 @@ class ServicesList
 {
 public:
 	ServicesList()
-		: logger(Logger::getCategory("smsc.admin.daemon.ServicesList"))
 	{}
 
 	void add(Service *service) throw (AdminException &);
@@ -42,7 +41,6 @@ public:
 protected:
 	typedef Hash<Service*> _ServiceList;
 	_ServiceList services;
-	log4cpp::Category &logger;
 };
 
 }

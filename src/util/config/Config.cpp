@@ -65,6 +65,7 @@ void Config::processNode(const DOM_Element &element,
 				}
 				else
 				{
+					log4cpp::Category &logger(Logger::getCategory("smsc.util.config.Config"));
 					logger.warn("Unknown node \"%s\" in section \"%s\"", nodeName.get(), prefix);
 				}
 			}
@@ -122,11 +123,14 @@ void Config::processParamNode(const DOM_Element &element,
 		}
 		else
 		{
-			logger.warn("Unrecognized boolean value \"%s\" for parameter \"%s\"", value.get(), name);
+			log4cpp::Category &logger(Logger::getCategory("smsc.util.config.Config"));
+			logger.warn("Unrecognized boolean value \"%s\" for parameter \"%s\". Setted to FALSE.", value.get(), name);
+			setBool(name, false);
 		}
 	}
 	else
 	{
+		log4cpp::Category &logger(Logger::getCategory("smsc.util.config.Config"));
 		logger.warn("Unrecognized parameter type \"%s\" for parameter \"%s\"", type, name);
 	}
 }
@@ -145,7 +149,7 @@ Config::ConfigTree * Config::createTree() const
 	char tmp[33];
 	for (Hash<int32_t>::Iterator i = intParams.getIterator(); i.Next(_name, lvalue);)
 	{
-		sprintf(tmp, "%i", lvalue);
+		snprintf(tmp, sizeof(tmp), "%i", lvalue);
 		result->addParam(_name, ConfigParam::intType, tmp);
 	}
 

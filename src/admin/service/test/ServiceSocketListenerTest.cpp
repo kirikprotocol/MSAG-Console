@@ -1,6 +1,4 @@
 #include <iostream>
-#include <util/config/Manager.h>
-#include <util/xml/init.h>
 #include <admin/service/ComponentManager.h>
 #include <admin/service/AdminSocketManager.h>
 #include <admin/service/ServiceAdminInterfaceStarter.h>
@@ -8,6 +6,9 @@
 #include <admin/service/ServiceCommandDispatcher.h>
 #include <admin/service/test/DumbServiceCommandHandler.h>
 #include <admin/service/test/DumbServiceShutdownHandler.h>
+#include <util/config/Manager.h>
+#include <util/xml/init.h>
+#include <util/config/ConfigException.h>
 
 using log4cpp::Category;
 using std::cout;
@@ -21,39 +22,31 @@ using smsc::admin::service::ServiceSocketListener;
 using smsc::admin::service::ServiceCommandDispatcher;
 using smsc::admin::service::test::DumbServiceCommandHandler;
 using smsc::admin::service::test::DumbServiceShutdownHandler;
+using smsc::util::config::ConfigException;
 using smsc::util::config::Manager;
 using smsc::util::Logger;
 using smsc::util::xml::initXerces;
 
 int main (int argc, char *argv[])
 {
-	initXerces();
 	char * configFileStr = 0;
 	if (argc < 3)
 	{
 		printf("suage: smsc_dumb_service port <full name of config file>\n\r");
-		//return -1;
-		Manager::init("config.xml");
-	} else {
-		Manager::init(argv[2]);
+		return -1;
 	}
-	int servicePort = 0;
-	if (argc < 2)
-	{
-		servicePort = 6677;
-	}
-	else
-	{
-		servicePort = atoi(argv[1]);
-	}
-
-	Category &logger(Logger::getCategory("smsc.admin.service.test.ServiceSocketListenerTest"));
  	try {
+		int servicePort = atoi(argv[1]);
+		Manager::init(argv[2]);
+		Manager &config = Manager::getInstance();
+	
+		Logger::Init(config.getString("dumbtest.loggerInitFile"));
+		
+		Category &logger(Logger::getCategory("smsc.admin.service.test.ServiceSocketListenerTest"));
+		
 		for (int i=0; i<argc; i++)
 			logger.debug("Param[%u]=\"%s\"", i, argv[i]);
- 		
 
-		Manager &config = Manager::getInstance();
 		logger.debug("Initializing service");
 		ComponentManager::registerComponent(new DumbServiceCommandHandler());
  		logger.debug("Starting service");
@@ -63,9 +56,11 @@ int main (int argc, char *argv[])
 		AdminSocketManager::WaitFor();
  		logger.debug("Service stopped");
  	} catch (AdminException &e) {
- 		logger.debug("Exception occured: \"%s\"", e.what());
+ 		Logger::getCategory("smsc.admin.service.test.ServiceSocketListenerTest").debug("Exception occured: \"%s\"", e.what());
+	} catch (ConfigException &e) {
+ 		Logger::getCategory("smsc.admin.service.test.ServiceSocketListenerTest").debug("Exception occured: \"%s\"", e.what());
  	} catch (...) {
- 		logger.debug("Unknown Exception occured");
+ 		Logger::getCategory("smsc.admin.service.test.ServiceSocketListenerTest").debug("Unknown Exception occured");
  	}
  	return 0;
 }

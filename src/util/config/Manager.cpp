@@ -1,10 +1,10 @@
 #include "Manager.h"
-#include "DOMTreeErrorReporter.h"
-#include "XmlUtils.h"
 #include <xercesc/parsers/DOMParser.hpp>
 #include <xercesc/dom/DOM_DOMException.hpp>
 #include <xercesc/dom/DOM_NamedNodeMap.hpp>
 #include <util/Logger.h>
+#include <util/config/XmlUtils.h>
+#include <util/xml/DOMErrorLogger.h>
 #include <fstream>
 
 namespace smsc   {
@@ -12,6 +12,7 @@ namespace util   {
 namespace config {
 
 using std::auto_ptr;
+using smsc::util::xml::DOMErrorLogger;
 
 const DOMString db_name(createDOMString("db"));
 const DOMString map_name(createDOMString("map"));
@@ -21,7 +22,6 @@ Manager * Manager::manager = 0;
 
 Manager::Manager()
 	throw(ConfigException &)
-	: logger(smsc::util::Logger::getCategory("smsc.util.config.Manager"))
 {
 	DOMParser *parser = createParser();
 
@@ -31,7 +31,7 @@ Manager::Manager()
 		DOM_Element elem = document.getDocumentElement();
 		config.parse(elem);
 	} else {
-		logger.debug("Parse result is null");
+    throw ConfigException("Parse result is null");
 	}
 
 //	delete parser->getErrorHandler();
@@ -46,18 +46,18 @@ Manager::Manager()
  * @return created parser
  */
 DOMParser * Manager::createParser() {
-	logger.debug("Entering createParser()");
+	//logger.debug("Entering createParser()");
 	DOMParser *parser = new DOMParser;
 	parser->setValidationScheme(DOMParser::Val_Always);
 	parser->setDoNamespaces(false);
 	parser->setDoSchema(false);
 	parser->setValidationSchemaFullChecking(false);
-	logger.debug("  Creating ErrorReporter");
-	DOMTreeErrorReporter *errReporter = new DOMTreeErrorReporter();
+	//logger.debug("  Creating ErrorReporter");
+	DOMErrorLogger *errReporter = new DOMErrorLogger();
 	parser->setErrorHandler(errReporter);
 	parser->setCreateEntityReferenceNodes(false);
 	parser->setToCreateXMLDeclTypeNode(false);
-	logger.debug("Leaving createParser()");
+	//logger.debug("Leaving createParser()");
 
 	return parser;
 }
@@ -74,8 +74,9 @@ DOM_Document Manager::parse(DOMParser *parser, const char * const filename)
 		parser->parse(filename);
 		int errorCount = parser->getErrorCount();
 		if (errorCount > 0) {
-			logger.error("An %d errors occured during parsing \"%s\"", errorCount, filename);
-			throw new ConfigException("An errors occured during parsing");
+			char exceptionMsg[1024];
+			snprintf(exceptionMsg, sizeof(exceptionMsg), "An %d errors occured during parsing \"%s\"", errorCount, filename);
+			throw new ConfigException(exceptionMsg);
 		}
 	}
 	catch (const XMLException& e)
@@ -84,19 +85,22 @@ DOM_Document Manager::parse(DOMParser *parser, const char * const filename)
 		XMLExcepts::Codes code = e.getCode();
 		const char *srcFile = e.getSrcFile();
 		unsigned int line = e.getSrcLine();
-		logger.error("An error occured during parsing \"%s\" at file \"%s\" on line %d. Nested: %d: %s", filename, srcFile, line, code, message);
+		char exceptionMsg[1024];
+		snprintf(exceptionMsg, sizeof(exceptionMsg), "An error occured during parsing \"%s\" at file \"%s\" on line %d. Nested: %d: %s", filename, srcFile, line, code, message);
 		delete[] message;
-		throw new ConfigException("An errors occured during parsing");
+		throw new ConfigException(exceptionMsg);
 	}
 	catch (const DOM_DOMException& e)
 	{
-		logger.error("A DOM error occured during parsing\"%s\". DOMException code: %i", filename, e.code);
-		throw new ConfigException("An errors occured during parsing");
+		char msg[1024];
+		snprintf(msg, sizeof(msg), "A DOM error occured during parsing\"%s\". DOMException code: %i", filename, e.code);
+		throw new ConfigException(msg);
 	}
 	catch (...)
 	{
-		logger.error("An error occured during parsing \"%s\"", filename);
-		throw new ConfigException("An errors occured during parsing");
+		char msg[1024];
+		snprintf(msg, sizeof(msg), "An error occured during parsing \"%s\"", filename);
+		throw new ConfigException(msg);
 	}
 
 	return parser->getDocument();

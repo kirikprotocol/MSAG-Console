@@ -44,7 +44,7 @@ CommandDispatcher::~CommandDispatcher()
 void CommandDispatcher::init()
 {
 	char thr[11];
-	std::sprintf(thr, "[%.8X]", thr_self());
+	snprintf(thr, sizeof(thr), "[%.8X]", thr_self());
 	std::string ndc;
 	ndc += thr;
 	//ndc += cl_addr;

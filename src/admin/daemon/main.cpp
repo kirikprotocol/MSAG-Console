@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <syslog.h>
 #include <signal.h>
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/resource.h>
@@ -10,6 +11,7 @@
 #include <admin/daemon/DaemonSocketListener.h>
 #include <admin/service/AdminSocketManager.h>
 #include <admin/util/SignalHandler.h>
+#include <util/config/ConfigException.h>
 #include <util/config/Manager.h>
 #include <util/Logger.h>
 #include <util/signal.h>
@@ -20,13 +22,14 @@ using smsc::admin::service::AdminSocketManager;
 using smsc::admin::util::SignalHandler;
 using smsc::util::Logger;
 using smsc::util::setExtendedSignalHandler;
+using smsc::util::config::ConfigException;
 using smsc::util::config::Manager;
 
 namespace smsc {
 namespace admin {
 namespace daemon {
 
-void daemonInit(const char * const home)
+void daemonInit()
 {
 	if (getppid() != 1)
 	{
@@ -46,12 +49,9 @@ void daemonInit(const char * const home)
 	{
 		close(i);
 	}
-	chdir(home);
-/*
-	openlog("SMSC Start/Stop daemon", LOG_PID | LOG_CONS, LOG_DAEMON);
-	syslog(LOG_INFO, "Starting");
-	closelog();
-*/
+	/*close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);*/
 }
 
 }
@@ -63,34 +63,29 @@ using smsc::admin::daemon::DaemonCommandDispatcher;
 
 int main(int argc, char **argv)
 {
-/*	if (argc != 2)
-	{
-		std::cout << "Usage: smsc_admin_daemon <path to home directory>"
-			<< std::endl;
-		return -1;
-	}
-
 	try
 	{
-		daemonInit(argv[1]);
-	}
-	catch (...)
-	{
-		printf("Some exception in daemon init\n\r");
-		exit(-1);
-	}
-*/	
-	log4cpp::Category &logger(Logger::getCategory("smsc.admin.daemon"));
+		if (argc != 2)
+		{
+			std::cout << "Usage: smsc_admin_daemon <full name of config file>"
+				<< std::endl;
+			return -1;
+		}
+		//daemonInit();
 	
-	try
-	{
-		logger.info("Start");
-		Manager::init("daemon.xml");
-		Manager manager = Manager::getInstance();
-/*		AdminSocketManager::start(manager.getString("admin.daemon.host"),
-															port,
-															"smsc.admin.daemon.DaemonSocketListener");
-*/		
+		Manager::init(argv[1]);
+		Manager &manager = Manager::getInstance();
+
+		chdir(manager.getString("admin.daemon.home"));
+		FILE * redirected_stderr = freopen(manager.getString("admin.daemon.stderr"), "w", stderr);
+		if (redirected_stderr == 0)
+			throw ConfigException("Couldn't redirect stderr");
+
+		Logger::Init(manager.getString("admin.daemon.logger.configFile"));
+		log4cpp::Category &logger(Logger::getCategory("smsc.admin.daemon"));
+	
+		logger.info("Starting...");
+		
 		DaemonSocketListener listener("smsc.admin.daemon.DaemonSocketListener");
 		listener.init(manager.getString("admin.daemon.host"),
 									manager.getInt("admin.daemon.port"));
@@ -101,13 +96,18 @@ int main(int argc, char **argv)
 		listener.WaitFor();
 		logger.info("Stopped");
 	}
+	catch (ConfigException &e)
+	{
+		Logger::getCategory("smsc.admin.daemon").info("ConfigException: %s\n\r", e.what());
+		exit(-1);
+	}
 	catch (AdminException &e)
 	{
-		logger.info("EXCEPTION: %s", e.what());
+		Logger::getCategory("smsc.admin.daemon").info("AdminException: %s", e.what());
 	}
 	catch (...)
 	{
-		logger.info("EXCEPTION: <unknown>");
+		Logger::getCategory("smsc.admin.daemon").info("Exception: <unknown>");
 	}
 }
 

@@ -75,9 +75,9 @@ Response * DaemonCommandDispatcher::start_service(const CommandStartService * co
 				MutexGuard guard(servicesListMutex);
 				newPid = services[command->getServiceName()]->start();
 			}
-			std::auto_ptr<char> text(new char[sizeof(pid_t)*3 +1]);
-			sprintf(text.get(),  "%lu", (unsigned long) newPid);
-			return new Response(Response::Ok, text.get());
+			char text[sizeof(pid_t)*3 +1];
+			snprintf(text, sizeof(text),  "%lu", (unsigned long) newPid);
+			return new Response(Response::Ok, text);
 		}
 		else
 		{

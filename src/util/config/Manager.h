@@ -74,7 +74,7 @@ public:
 			std::string s("Int key \"");
 			s += paramName;
 			s += "\" not found";
-			throw ConfigException(s);
+			throw ConfigException(s.c_str());
 		}
 	}
 
@@ -98,7 +98,7 @@ public:
 			std::string s("String key \"");
 			s += paramName;
 			s += "\" not found";
-			throw ConfigException(s);
+			throw ConfigException(s.c_str());
 		}
 	}
 
@@ -122,7 +122,7 @@ public:
 			std::string s("Bool key \"");
 			s += paramName;
 			s += "\" not found";
-			throw ConfigException(s);
+			throw ConfigException(s.c_str());
 		}
 	}
 
@@ -146,7 +146,6 @@ private:
 	static char * config_filename;
 	void writeHeader(std::ostream &out);
 	void writeFooter(std::ostream &out);
-	log4cpp::Category &logger;
 
 	DOMParser * createParser();
 	DOM_Document parse(DOMParser *parser, const char * const filename) throw (ConfigException &);

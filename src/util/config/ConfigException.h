@@ -1,30 +1,20 @@
 #ifndef SMSC_UTIL_CONFIG_CONFIGEXCEPTION
 #define SMSC_UTIL_CONFIG_CONFIGEXCEPTION
 
-#include <exception>
+#include <util/Exception.hpp>
 
 namespace smsc {
 namespace util {
 namespace config {
 
-class ConfigException	: public std::exception
+using smsc::util::Exception;
+
+class ConfigException	: public Exception
 {
 public:
-	ConfigException(const std::string & exceptionMessage)
-		throw ()
-		: message(exceptionMessage)
+	ConfigException(const char * const exceptionMessage)
+		: Exception(exceptionMessage)
 	{}
-
-	~ConfigException()
-		throw ()
-	{}
-
-	const char * what() const
-		throw()
-	{return message.c_str();}
-
-private:
-	std::string message;
 };
 
 }

@@ -5,32 +5,21 @@
 #include <xercesc/dom/DOM_Document.hpp>
 #include <xercesc/parsers/DOMParser.hpp>
 
+#include <util/Exception.hpp>
+
 namespace smsc {
 namespace util {
 namespace xml {
 
 using log4cpp::Category;
+using	smsc::util::Exception;
 
 class DOMTreeReader {
 public:
-	class ParseException : public std::exception
+	class ParseException : public Exception
 	{
 	public:
-		ParseException(std::string message)
-		{
-			mess = message;
-		}
-
-    virtual ~ParseException() throw()
-		{
-		}
-
-		virtual const char* what() const throw()
-		{
-			return mess.c_str();
-		}
-	private:
-		std::string mess;
+		ParseException(const char * const msg) : Exception(msg) {}
 	};
 
 	DOMTreeReader();
@@ -39,7 +28,6 @@ public:
 	DOM_Document read(const char * const filename) throw (ParseException);
 
 protected:
-	log4cpp::Category &logger;
 	DOMParser *parser;
 private:
 };

@@ -14,12 +14,12 @@ class DOMErrorLogger : public ErrorHandler
 public:
 	DOMErrorLogger()
 		: fSawErrors(false),
-		  logger(smsc::util::Logger::getCategory("smsc.util.xml.DOMErrorLogger"))
+		  loggerCategoryName("smsc.util.xml.DOMErrorLogger")
 	{}
 
 	DOMErrorLogger(const char * const categoryName)
 		: fSawErrors(false),
-		  logger(smsc::util::Logger::getCategory(categoryName))
+		  loggerCategoryName(categoryName)
 	{}
 
 	void warning(const SAXParseException& toCatch);
@@ -33,7 +33,7 @@ protected:
 
 private:
 	bool fSawErrors;
-	log4cpp::Category& logger;
+	const char * const loggerCategoryName;
 };
 
 }

@@ -27,6 +27,7 @@ protected:
 	enum MethodIds {getConfigId, getLogsId, getMonId, setConfigId};
 	Config config;
 	log4cpp::Category &logger;
+	std::string dumb_config;
 
 public:
 	DumbServiceCommandHandler()
@@ -71,8 +72,7 @@ public:
 		case getConfigId:
 			{
 				logger.debug("getConfig");
-				std::auto_ptr<char> conf(config.getTextRepresentation());
-				return Variant(conf.get());
+				return Variant(dumb_config.c_str());
 			}
 		case getLogsId:
 			logger.debug("getLogs");
@@ -93,7 +93,10 @@ public:
 	Variant setConfig(const Arguments &params)
 	{
 		logger.debug("setConfig:\n%s", params["config"].getStringValue());
+
 		//setConfig
+		dumb_config = params["config"].getStringValue();
+
 		return Variant("Config setted sucessfully");
 	}
 };

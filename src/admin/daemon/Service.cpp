@@ -33,12 +33,15 @@ pid_t Service::start()
 		arguments[args.size()+3] = 0;
 		arguments[0] = command_line;
 		arguments[1] = new char[sizeof(in_port_t)*3+1];
-		sprintf(arguments[1], "%lu", (unsigned long) port);
+		snprintf(arguments[1], sizeof(in_port_t)*3+1, "%lu", (unsigned long) port);
 		arguments[2] = config_file;
 		for (size_t i=0; i<args.size(); i++)
 		{
 			arguments[i+3] = args[i];
 		}
+		#ifdef SMSC_DEBUG
+			freopen("smsc_service.err", "a",  stderr);
+		#endif
 		execv(command_line, arguments);
 	}
 }

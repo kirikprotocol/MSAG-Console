@@ -52,7 +52,7 @@
 			<tr><th>name</th><td><input type="Text" name="service" value="dumb"></td></tr>
 			<tr><th>port</th><td><input type="Text" name="port" value="6677"></td></tr>
 			<tr><th>command line</th><td><input type="Text" name="cmdLine" value="/export/home/igork/build/bin/admin/service/smsc_dumb_service"></td></tr>
-			<tr><th>config file</th><td><input type="Text" name="config" value="/export/home/igork/build/bin/admin/daemon/config.xml"></td></tr>
+			<tr><th>config file</th><td><input type="Text" name="config" value="/export/home/igork/smsc_bin_daemon/dumbServiceConfig.xml"></td></tr>
 			<tr><td colspan="2"><input type="Submit" value="add service"></td></tr>
 		</table>
 	</form>

@@ -7,6 +7,7 @@ namespace daemon {
 
 void ServicesList::add(Service *service) throw (AdminException &)
 {
+	log4cpp::Category &logger(Logger::getCategory("smsc.admin.daemon.ServicesList"));
 	if (services.Exists(service->getName()))
 		throw new AdminException("Service already exists in list");
 	services[service->getName()] = service;
@@ -47,6 +48,7 @@ char * ServicesList::getText() const
 	for (_ServiceList::Iterator i = services.getIterator(); i.Next(sname, s); )
 	{
 /*		#ifdef SMSC_DEBUG
+			log4cpp::Category &logger(Logger::getCategory("smsc.admin.daemon.ServicesList"));
 			logger.debug("******************");
 			logger.debug("  name=%s", sname);
 			logger.debug("  name=%s", s.getName());
@@ -56,9 +58,9 @@ char * ServicesList::getText() const
 		#endif
 */		
 		char pid[sizeof(pid_t)*3 + 1];
-		sprintf(pid, "%lu", (unsigned long)s->getPid());
+		snprintf(pid, sizeof(pid), "%lu", (unsigned long)s->getPid());
 		char port[sizeof(in_port_t)*3 + 1];
-		sprintf(port, "%lu", (unsigned long)s->getPort());
+		snprintf(port, sizeof(port), "%lu", (unsigned long)s->getPort());
 		
 		result += "<service name=\"";
 		result += s->getName();
@@ -74,7 +76,7 @@ char * ServicesList::getText() const
 		for (unsigned j=0; j<s->getArgs().size(); j++)
 		{
 			char argNum[sizeof(unsigned)*3+1];
-			sprintf(argNum, "%u", j);
+			snprintf(argNum, sizeof(argNum), "%u", j);
 			result += "<arg num=\"";
 			result += argNum;
 			result += "\">";
@@ -89,6 +91,7 @@ char * ServicesList::getText() const
 void ServicesList::markServiceAsStopped(pid_t old_pid)
 {
 	#ifdef SMSC_DEBUG
+		log4cpp::Category &logger(Logger::getCategory("smsc.admin.daemon.ServicesList"));
 		logger.debug("Mark service %lu as dead", (unsigned long) old_pid);
 	#endif
 	char * sname;

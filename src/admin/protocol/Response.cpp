@@ -57,7 +57,7 @@ Response::Response(Status status, Variant v)
 		type = "bool";
 		break;
 	case LongType:
-		sprintf(buf,  "%li", v.getLongValue());
+		snprintf(buf, sizeof(buf), "%li", v.getLongValue());
 		type = "int";
 		break;
 	default:
@@ -65,7 +65,7 @@ Response::Response(Status status, Variant v)
 	}
 
 	std::auto_ptr<char> data(new char[VARIANT_TEMPLET_LENGTH+strlen(type)+strlen(value)+1]);
-	sprintf(data.get(),  "%s%s%s%s%s", VARIANT_HEADER, type, VARIANT_MIDDLE,
+	snprintf(data.get(), VARIANT_TEMPLET_LENGTH+strlen(type)+strlen(value)+1, "%s%s%s%s%s", VARIANT_HEADER, type, VARIANT_MIDDLE,
 					                           value, VARIANT_FOOTER);
 	init(data.get());
 }
