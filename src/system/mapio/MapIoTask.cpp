@@ -398,7 +398,7 @@ void MAPSTATS_DumpDialogLC(MapDialog* dialog)
   long long mks = ((long long)tv.tv_sec)*1000*1000 + (long long)tv.tv_usec;
   long long cl = mks-maked_mks;
   MAPSTATS_GetLoggerDlg()->info("dlg=%p (%x/%x) sec=%ld usec=%ld src=%s dst=%s",
-    dialog,dialog->dialogid_map,dialog->dialogid_smsc
+    dialog,dialog->dialogid_map,dialog->dialogid_smsc,
     long(cl/(1000*1000)),long(cl%(1000*1000)),
     dialog->sms.get()?dialog->sms->getOriginatingAddress().value:"???",
     dialog->sms.get()?dialog->sms->getDestinationAddress().value:"???");
