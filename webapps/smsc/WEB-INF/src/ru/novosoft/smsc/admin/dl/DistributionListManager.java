@@ -131,7 +131,7 @@ public class DistributionListManager implements DistributionListAdmin
 
             stmt = connection.prepareStatement(CHECK_MEMBER_SQL);
             stmt.setString(1, dlname);
-            stmt.setString(1, address);
+            stmt.setString(2, address);
             rs = stmt.executeQuery();
             if (rs.next() && rs.getInt(1) != 0)
               throw new MemberAlreadyExistsException(address, dlname);
