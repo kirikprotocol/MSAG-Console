@@ -92,8 +92,6 @@ private:
 	RouteManager* routeMan;
 	float setupRandomAddressMatch(Address& addr, int num);
 	void setupRandomAddressNotMatch(Address& addr, int num);
-	void setupRandomPriority(RoutePriority* priority, int num);
-	void debugRoute(const TestRouteData* route);
 	void printLookupResult(const Address& origAddr, const Address& destAddr,
 		const vector<const SmeProxy*>& ids, const SmeProxy* proxy);
 };
