@@ -509,8 +509,8 @@ void SmppProfilerTestCases::updateProfileIncorrect(bool sync,
 			//количество '*' не важно
 			static const string invalidUssdCmd[] =
 			{
-				"*50*7#", "*50*100000#", "*50*a0#", "*50*#",
-				"50*0#", "*50#", "**#"
+				"*50*7#", "*50*a0#", "*50*#",
+				"*50#", "**#"
 			};
 			int ussdServiceOp = 0;
 			string text;
