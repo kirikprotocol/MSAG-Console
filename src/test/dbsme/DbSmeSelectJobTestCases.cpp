@@ -127,6 +127,7 @@ const string DbSmeSelectJobTestCases::processSelectNullsJobOutput(
 const string DbSmeSelectJobTestCases::processSelectValuesJobOutput()
 {
 	__require__(dbSmeReg);
+	__decl_tc__;
 	DbSmeTestRecord defOutput;
 	defOutput.setInt8(80);
 	defOutput.setInt16(160);
@@ -153,8 +154,9 @@ const string DbSmeSelectJobTestCases::processSelectValuesJobOutput()
 	delete it;
 	if (!count)
 	{
-		//нет записей удовлетворяющих условиям
-		writeSelectJobRecord(os, NULL, &defOutput, 0);
+		__tc__("processDbSmeRes.select.noRecords"); __tc_ok__;
+		__cfg_str__(dbSmeRespQueryNull);
+		return dbSmeRespQueryNull;
 	}
 	return os.str();
 }
@@ -199,7 +201,7 @@ const string DbSmeSelectJobTestCases::processSelectNoDefaultsJobOutput()
 	}
 	else if	(!count)
 	{
-		__tc__("processDbSmeRes.select.noRecordNoDefaults"); __tc_ok__;
+		__tc__("processDbSmeRes.select.noRecords"); __tc_ok__;
 		__cfg_str__(dbSmeRespQueryNull);
 		return dbSmeRespQueryNull;
 	}
