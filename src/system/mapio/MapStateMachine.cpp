@@ -689,7 +689,7 @@ static void ForwardMO(MapDialog* dialog) {
   mkRP_OA_Address( &smRpOa, sms->getOriginatingAddress().value, sms->getOriginatingAddress().length, ET96MAP_ADDRTYPE_MSISDN );
   unsigned length;
   const char* mo_pdu = sms->getBinProperty(Tag::SMSC_MO_PDU, &length);
-
+  if( length > ET96MAP_MAX_SIGNAL_INFO_LEN ) throw runtime_error("MO PDU too long");
   memcpy(ui.signalInfo, mo_pdu, length );
   ui.signalInfoLen = (UCHAR_T)length;
 
