@@ -45,7 +45,7 @@ while(<IN>)
     #next if $lib eq $l;
     $libdeps.=" $builddir/lib/lib$l.a";
   }
-  print OUT "$builddir/bin/$bin : $builddir/obj/lib$lib/$src.o$libdeps\n";
+  print OUT "$builddir/bin/$bin : $builddir/obj/lib$lib/$src.o$libdeps \$(EXTRADEPS)\n";
   print OUT "\tmkdir -p `dirname \$@`\n";
   print OUT "\techo linking \$@\n";
   print OUT "\t\$(CXX) \$(CXXFLAGS) -o \$@ \$< \$(LDFLAGS) @f";
