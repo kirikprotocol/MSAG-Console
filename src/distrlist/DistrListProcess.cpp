@@ -235,6 +235,7 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
 void DistrListProcess::SubmitResp(SmscCommand& cmd)
 {
   /*map<pair<unsigned,pair<ListTask*,unsigned> > >*/
+  __trace2__(":DPL: %s",__FUNCTION__);
   MAPTYPE::iterator it = task_map.find(cmd->get_dialogId());
   if ( it != task_map.end() ) {
     TPAIR taskpair = it->second;
@@ -259,8 +260,10 @@ void DistrListProcess::SubmitResp(SmscCommand& cmd)
 
 void DistrListProcess::SendSubmitResp(ListTask* task) // удаляет из списка и мапы
 {
+  __trace2__(":DPL: %s",__FUNCTION__);
   unsigned status = 0;
   if ( task->count != task->submited_count ) status = Status::CNTSUBDL; /// !!!!!! must be fixed
+  __trace2__(":DPL: sending submit multi responce, status %d (%d smses not responsed)",status,task->count-task->submited_count);
   SmscCommand cmd = SmscCommand::makeSubmitMultiResp(0,task->cmd->get_dialogId(),status);
   if ( status != 0 ) {
     UnsuccessElement* ue = cmd->get_MultiResp()->get_unsuccess();

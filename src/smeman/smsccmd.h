@@ -1061,7 +1061,7 @@ public:
       {
         {
           auto_ptr<PduMultiSmResp> xsmR(new PduMultiSmResp);
-          xsmR->header.set_commandId(SmppCommandSet::SUBMIT_SM_RESP);
+          xsmR->header.set_commandId(SmppCommandSet::SUBMIT_MULTI_RESP);
           xsmR->header.set_sequenceNumber(c.get_dialogId());
           SubmitMultiResp* mr = c.get_MultiResp();
           xsmR->header.set_commandStatus(makeSmppStatus(mr->get_status()));
