@@ -694,7 +694,7 @@ public:
     __require__((tag>>8)==SMS_BIN_TAG);
     tag&=0xff;
     __require__(tag<=SMS_LAST_TAG);
-    if ( !HSNS_isEqual() ) {
+    if ( !HSNS_isEqual() && len != 0 ) {
       if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) || tag == unType(Tag::SMSC_RAW_SHORTMESSAGE))
       {
         __trace2__(":SMS::Body::%s processing SHORT_MESSAGE",__FUNCTION__);
@@ -757,9 +757,13 @@ trivial:
           auto_ptr<char> buffer;
           unsigned len;
           const char* orig = prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].getBin(&len);
-          buffer = auto_ptr<char>(new char[len]);
-          UCS_ntohs(buffer.get(),orig,len,prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt());
-          const_cast<Body*>(this)->setBinProperty(Tag::SMPP_SHORT_MESSAGE,buffer.get(),len);
+          if ( len > 0 ){
+            buffer = auto_ptr<char>(new char[len]);
+            UCS_ntohs(buffer.get(),orig,len,prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt());
+            const_cast<Body*>(this)->setBinProperty(Tag::SMPP_SHORT_MESSAGE,buffer.get(),len);
+          }else{
+            const_cast<Body*>(this)->setBinProperty(Tag::SMPP_SHORT_MESSAGE,"",len);
+          }
         }
       }
     }else{

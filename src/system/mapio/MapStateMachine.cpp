@@ -752,7 +752,7 @@ static bool SendSms(MapDialog* dialog){
     segmentation = true;
   }else{
     __trace2__("MAP::SendSMSCToMT: Et96MapVxForwardSmMTReq");
-    CheckLockedByMO();
+    CheckLockedByMO(dialog);
     if ( dialog->version == 2 ) {
       result = Et96MapV2ForwardSmMTReq( dialog->ssn, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), FALSE);
     }else if ( dialog->version == 1 ){
@@ -794,7 +794,7 @@ static void SendNextMMS(MapDialog* dialog)
 static void SendSegmentedSms(MapDialog* dialog)
 {
   USHORT_T result;
-  CheckLockedByMO();
+  CheckLockedByMO(dialog);
   __trace2__("MAP::SendSegmentedSms: Et96MapVxForwardSmMTReq");
   if ( dialog->version == 2 ) {
     result = Et96MapV2ForwardSmMTReq( dialog->ssn, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), dialog->mms);
