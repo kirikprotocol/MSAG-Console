@@ -1160,10 +1160,30 @@ StateType StateMachine::submit(Tuple& t)
         smsc::util::findConcatInfo(newbody+ci->getOff(i),mr0,idx0,num0,havemoreudh0);
         if(idx0==idx || num0!=num || mr0!=mr)
         {
-          submitResp(t,sms,Status::INVOPTPARAMVAL);
+          //submitResp(t,sms,Status::INVOPTPARAMVAL);
+
+          sms->setLastResult(Status::DUPLICATECONCATPART);
+          smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+          char buf[64];
+          sprintf(buf,"%lld",t.msgId);
+          SmscCommand resp = SmscCommand::makeSubmitSmResp
+                               (
+                                 buf,
+                                 t.command->get_dialogId(),
+                                 Status::OK,
+                                 sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                               );
+          try{
+            t.command.getProxy()->putCommand(resp);
+          }catch(...)
+          {
+            __warning__("SUBMIT_SM: failed to put response command");
+          }
+
+
           smsc_log_warn(smsLog, "Duplicate or invalid concatenated message part for id=%lld(idx:%d-%d,num:%d-%d,mr:%d-%d)",t.msgId,idx0,idx,num0,num,mr0,mr);
           if(smsptr)delete smsptr;
-          return ERROR_STATE;
+          return ENROUTE_STATE;
         }
       }
       if(isForwardTo)
