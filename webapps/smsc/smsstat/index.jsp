@@ -2,18 +2,18 @@
 <%@ page import="java.util.*, java.text.SimpleDateFormat"%>
 <%@ page import="ru.novosoft.smsc.admin.smsstat.*"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsstat.*"%>
-<jsp:useBean id="bean" scope="session" class="ru.novosoft.smsc.jsp.smsstat.SmsStatFormBean" />
+<jsp:useBean id="SmsStatBean" scope="session" class="ru.novosoft.smsc.jsp.smsstat.SmsStatFormBean" />
 <%
-    bean.setFromDate(null);
-    bean.setTillDate(null);
+    SmsStatBean.setFromDate(null);
+    SmsStatBean.setTillDate(null);
 %>
-<jsp:setProperty name="bean" property="*"/>
+<jsp:setProperty name="SmsStatBean" property="*"/>
 <%
     TITLE="SMSC Statistics utilite";
     MENU0_SELECTION = "MENU0_SMSSTAT";
 
     int beanResult = SmsStatFormBean.RESULT_OK;
-    switch(beanResult = bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
+    switch(beanResult = SmsStatBean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
     {
         case SmsStatFormBean.RESULT_DONE:
             response.sendRedirect("index.jsp");
@@ -37,9 +37,9 @@
 <table class=secRep width="100%">
 <tr class=row0>
 	<th class=label>From Date:</th>
-	<td nowrap><input type=text id="fromDate" name="fromDate" class=calendarField value="<%=bean.getFromDate()%>" maxlength=19 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(fromDate, false, true);">...</button></td>
+	<td nowrap><input type=text id="fromDate" name="fromDate" class=calendarField value="<%=SmsStatBean.getFromDate()%>" maxlength=19 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(fromDate, false, true);">...</button></td>
 	<th class=label>Till Date:</th>
-	<td nowrap><input type=text id="tillDate" name="tillDate" class=calendarField value="<%=bean.getTillDate()%>" maxlength=19><button class=calendarButton type=button onclick="return showCalendar(tillDate, false, true);">...</button></td>
+	<td nowrap><input type=text id="tillDate" name="tillDate" class=calendarField value="<%=SmsStatBean.getTillDate()%>" maxlength=19><button class=calendarButton type=button onclick="return showCalendar(tillDate, false, true);">...</button></td>
 </tr>
 </table>
 <div class=secButtons>
@@ -47,7 +47,7 @@
 </div>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ results ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <%
-Statistics stat = bean.getStatistics();
+Statistics stat = SmsStatBean.getStatistics();
 if (stat != null) {
     CountersSet total = stat.getTotal();
     Collection dates = stat.getDateStat();
