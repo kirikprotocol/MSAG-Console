@@ -117,9 +117,8 @@ inline time_t smppTime2CTime(COStr& str)
 	{ 
 		__trace2__("!!!!! input time: %.16s\n",dta);
 		__warning__("incorrect time format (utcfix field)");
-		return 0;
+		return (time_t)-1;
 	}
-
   return resultTime;
 }
 
