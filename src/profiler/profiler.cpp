@@ -380,9 +380,28 @@ int Profiler::Execute()
     int i;
     for(i=0;i<len;i++)body[i]=toupper(body[i]);
     i=0;
-    while(!isalpha(body[i]) && i<len)i++;
+    while(!isalnum(body[i]) && body[i]!='*' && i<len)i++;
     msg=-1;
     try{
+      if(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+      {
+        char *str=body;
+        if(*str=='*')str++;
+        str=strchr(str,'*');
+        if(str)
+        {
+          str++;
+          int code=atoi(str);
+          __trace2__("Profiler: ussd op=%s(%d)",str,code);
+          if(ussdCmdMap.Exist(code))
+          {
+            strcpy(body,ussdCmdMap.Get(code).c_str());
+            __trace2__("Profiler: command mapped to %s",body);
+            i=0;
+            len=strlen(body);
+          }
+        }
+      }
       if(!strncmp(body+i,"REPORT",6))
       {
         i+=7;
@@ -524,6 +543,10 @@ int Profiler::Execute()
     ans.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,protocolId);
     ans.setIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE,
       sms->getIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE));
+    if(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+    {
+      ans.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,1);
+    }
 
     Profile pr=lookup(addr);
     __trace2__("profiler response:%s!",msgstr.c_str());

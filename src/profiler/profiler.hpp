@@ -7,6 +7,7 @@
 #include "core/synchronization/Mutex.hpp"
 #include "core/threads/ThreadedTask.hpp"
 #include "smpp/smpp.h"
+#include "core/buffers/IntHash.hpp"
 
 namespace smsc{
 namespace db{
@@ -18,6 +19,8 @@ using namespace smsc::sms;
 using namespace smsc::smeman;
 using smsc::core::threads::ThreadedTask;
 using namespace smsc::core::synchronization;
+
+using smsc::core::buffers::IntHash;
 
 namespace ProfileReportOptions{
   static const int ReportNone  =0;
@@ -188,6 +191,11 @@ public:
 
   const char* getSystemId()const{return systemId.c_str();}
 
+  void addToUssdCmdMap(int cmd,const string& txt)
+  {
+    ussdCmdMap.Insert(cmd,txt);
+  }
+
 protected:
   mutable EventMonitor mon;
   smsc::core::buffers::Array<SmscCommand> outQueue;
@@ -198,6 +206,8 @@ protected:
   ProfilesTable *profiles;
   SmeRegistrar *smeman;
   Mutex mtx;
+
+  IntHash<string> ussdCmdMap;
 
   string systemId;
   SmeProxyPriority prio;

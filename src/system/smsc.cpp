@@ -450,6 +450,17 @@ void Smsc::init(const SmscConfigs& cfg)
 
     profiler->serviceType=cfg.cfgman->getString("profiler.service_type");
     profiler->protocolId=cfg.cfgman->getInt("profiler.protocol_id");
+
+    using smsc::util::config::CStrSet;
+    CStrSet *params=cfg.cfgman->getChildIntParamNames("profiler.ussdOpsMapping");
+    CStrSet::iterator i=params->begin();
+    for(;i!=params->end();i++)
+    {
+      string pn="profiler.ussdOpsMapping.";
+      pn+=*i;
+      profiler->addToUssdCmdMap(cfg.cfgman->getInt(pn.c_str()),*i);
+    }
+    delete params;
   }
   log.info( "Profiler configured" );
   profiler->loadFromDB(dataSource);

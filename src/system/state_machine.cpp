@@ -1051,7 +1051,8 @@ StateType StateMachine::submit(Tuple& t)
     sms->setConcatSeqNum(0);
   }
 
-  __trace2__("Replace if present for message %lld=%d",t.msgId,sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG));
+  __trace2__("SUBMIT_SM: Replace if present for message %lld=%d",t.msgId,sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG));
+  __trace2__("SUBMIT_SM: SMPP_USSD_SERVICE_OP for %lld=%d",t.msgId,sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP));
 
   time_t stime=sms->getNextTime();
 
