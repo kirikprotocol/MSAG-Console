@@ -20,6 +20,7 @@ import java.util.Vector;
 public class SmsView
 {
   private Smsc smsc = null;
+
   private SmsOperativeSource operative = new SmsOperativeSource();
   private SmsArchiveSource archive = new SmsArchiveSource();
 
@@ -27,8 +28,9 @@ public class SmsView
   {
     if (smsc == null) {
       this.smsc = appContext.getSmsc();
-      operative.setDataSource(appContext.getConnectionPool());
+     // operative.setDataSource(appContext.getConnectionPool());
       archive.init(appContext);
+      operative.init(appContext);
     }
   }
 

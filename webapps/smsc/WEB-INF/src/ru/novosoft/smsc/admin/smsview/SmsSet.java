@@ -19,7 +19,7 @@ public class SmsSet
 
   private Vector rows = new Vector();
   private boolean hasMore = false;
-
+  private int maxRows=0;
   public int getRowsCount()
   {
     return rows.size();
@@ -67,5 +67,15 @@ public class SmsSet
   public void setHasMore(boolean hasMore)
   {
     this.hasMore = hasMore;
+  }
+
+  public int getMaxRows()
+  {
+    return maxRows;
+  }
+
+  public void setMaxRows(int maxRows)
+  {
+    this.maxRows = maxRows;
   }
 }
