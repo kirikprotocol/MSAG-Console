@@ -121,6 +121,7 @@ StateType StateMachine::submit(Tuple& t)
       src_proxy->putCommand(resp);
     }catch(...)
     {
+      __trace__("SUBMIT: failed to put response command");
     }
     __warning__("SUBMIT_SM: no route");
     return ERROR_STATE;
@@ -140,6 +141,7 @@ StateType StateMachine::submit(Tuple& t)
       src_proxy->putCommand(resp);
     }catch(...)
     {
+      __trace__("SUBMIT: failed to put response command");
     }
     return ERROR_STATE;
   }
@@ -163,6 +165,7 @@ StateType StateMachine::submit(Tuple& t)
       src_proxy->putCommand(resp);
     }catch(...)
     {
+      __trace__("SUBMIT: failed to put response command");
     }
     return ERROR_STATE;
   }
@@ -178,6 +181,7 @@ StateType StateMachine::submit(Tuple& t)
       src_proxy->putCommand(resp);
     }catch(...)
     {
+      __trace__("SUBMIT: failed to put response command");
     }
   }
 
@@ -244,6 +248,7 @@ StateType StateMachine::submit(Tuple& t)
   }
   }catch(...)
   {
+    __trace__("SUBMIT: failed to create task");
     return ENROUTE_STATE;
   }
   try{
@@ -273,6 +278,7 @@ StateType StateMachine::submit(Tuple& t)
     dest_proxy->putCommand(delivery);
   }catch(...)
   {
+    __trace__("SUBMIT: failed to put delivery command");
     return ENROUTE_STATE;
   }
   __trace2__("SUBMIT_SM:OK:%lld",t.msgId);
