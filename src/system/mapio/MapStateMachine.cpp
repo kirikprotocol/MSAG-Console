@@ -596,7 +596,7 @@ parse_tvp_scheme2:
       {
       case 0: 
         __trace2__("MAP:%s: enhanced has no validity",__FUNCTION__);
-        goto nene_validity;
+        goto none_validity;
       case 0x1:
         if ( dta-tvp > 6 ) throw runtime_error("out of tvp data");
         tvp = dta;
