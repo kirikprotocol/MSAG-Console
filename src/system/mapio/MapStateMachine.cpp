@@ -114,6 +114,16 @@ struct MAPDIALOG_ERROR : public runtime_error
   MAPDIALOG_ERROR(const string& s) :
     runtime_error(s),code(MAKE_ERRORCODE(CMD_ERR_TEMP,0)){}
 };
+
+struct MAPDIALOG_XERROR : public runtime_error
+{
+  unsigned code;
+  MAPDIALOG_XERROR(unsigned code,const string& s) :
+    runtime_error(s),code(code){}
+  MAPDIALOG_XERROR(const string& s) :
+    runtime_error(s),code(MAKE_ERRORCODE(CMD_ERR_TEMP,0)){}
+};
+
 struct MAPDIALOG_BAD_STATE : public MAPDIALOG_ERROR
 {
   MAPDIALOG_BAD_STATE(const string& s) :
@@ -134,6 +144,17 @@ struct MAPDIALOG_HEREISNO_ID : public MAPDIALOG_ERROR
   MAPDIALOG_HEREISNO_ID(const string& s,unsigned c=MAP_FALURE) :
     MAPDIALOG_ERROR(0,s){}
 };
+struct MAPDIALOG_TEMP_XERROR : public MAPDIALOG_XERROR
+{
+  MAPDIALOG_TEMP_XERROR(const string& s,unsigned c=MAP_FALURE) :
+    MAPDIALOG_XERROR(MAKE_ERRORCODE(CMD_ERR_TEMP,c),s){}
+};
+struct MAPDIALOG_FATAL_XERROR : public MAPDIALOG_XERROR
+{
+  MAPDIALOG_FATAL_XERROR(const string& s,unsigned c=MAP_FALURE) :
+    MAPDIALOG_XERROR(MAKE_ERRORCODE(CMD_ERR_FATAL,c),s){}
+};
+
 
 static void CloseMapDialog(unsigned dialogid,unsigned dialog_ssn){
   if ( dialogid == 0 ) return;
@@ -1939,41 +1960,52 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
       throw MAPDIALOG_FATAL_ERROR(FormatText("provErrCode_p == 0x%x",*provErrCode_p),MAP_ERRORS_BASE+*provErrCode_p);
     }*/
 
-    if ( provErrCode_p && *provErrCode_p == ET96MAP_NO_RESPONSE_FROM_PEER ) {
-      MscManager::getMscStatus().report(dialog->s_msc.c_str(),false);
-      throw MAPDIALOG_TEMP_ERROR("MSC",/*BLOCKEDMSC*/Status::MAP_PROVIDER_ERR_BASE+ET96MAP_NO_RESPONSE_FROM_PEER);
+    try {
+
+      if ( provErrCode_p && *provErrCode_p == ET96MAP_NO_RESPONSE_FROM_PEER ) {
+        MscManager::getMscStatus().report(dialog->s_msc.c_str(),false);
+        throw MAPDIALOG_TEMP_XERROR("MSC",/*BLOCKEDMSC*/Status::MAP_PROVIDER_ERR_BASE+ET96MAP_NO_RESPONSE_FROM_PEER);
+      }
+
+      try{ DoProvErrorProcessing(provErrCode_p);}
+      catch(MAPDIALOG_ERROR& e) { throw MAPDIALOG_XERROR(e.what(),e.code); }
+
+      if ( errorForwardSMmt_sp )
+      {
+        if ( errorForwardSMmt_sp->errorCode == 5 ||
+             errorForwardSMmt_sp->errorCode == 27 )
+        {
+          dialog->subscriberAbsent = true;
+          throw MAPDIALOG_TEMP_XERROR("MAP::absent subscriber",MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
+        }
+        if ( errorForwardSMmt_sp->errorCode == 32 ) /*delivery error*/ {
+          if ( errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason == ET96MAP_SM_DELIVERY_FAILURE_REASON_MT_T::ET96MAP_MEM_CAPACITY_EXCEEDED )
+          {
+            dialog->memoryExceeded = true;
+            throw MAPDIALOG_TEMP_XERROR("MAP::memory exceeded",MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
+          }
+          else if ( errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason == ET96MAP_SM_DELIVERY_FAILURE_REASON_MT_T::ET96MAP_PROTOCOL_ERROR
+            || errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason == ET96MAP_SM_DELIVERY_FAILURE_REASON_MT_T::ET96MAP_MO_SERVICE_CENTER_CONGESTION )
+          {
+            throw MAPDIALOG_TEMP_XERROR(FormatText("MAP::Delivery failure reason 0x%x",errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason),MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
+          }
+        }
+        if ( errorForwardSMmt_sp->errorCode == 34 /*System failure*/||
+             errorForwardSMmt_sp->errorCode == 31 /*Busy*/)
+        {
+          throw MAPDIALOG_TEMP_XERROR(FormatText("errorForwardSMmt_sp->errorCode == 0x%x",errorForwardSMmt_sp->errorCode),
+            MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
+        }
+        throw MAPDIALOG_FATAL_XERROR(FormatText("errorForwardSMmt_sp->errorCode == 0x%x, reason if need 0x%x",errorForwardSMmt_sp->errorCode,errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason),
+            MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
+      }
+
+    }catch(MAPDIALOG_XERROR& e){
+      __map_trace2__("MAP::<nonfatal exepction> %s",e.what());
+      SendErrToSmsc(dialog->dialogid_smsc,e.code);
+      dialog->dialogid_smsc = 0; // далее смсцентр ничего не знает о диалоге
     }
 
-    DoProvErrorProcessing(provErrCode_p);
-    if ( errorForwardSMmt_sp )
-    {
-      if ( errorForwardSMmt_sp->errorCode == 5 ||
-           errorForwardSMmt_sp->errorCode == 27 )
-      {
-        dialog->subscriberAbsent = true;
-        throw MAPDIALOG_TEMP_ERROR("MAP::absent subscriber",MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
-      }
-      if ( errorForwardSMmt_sp->errorCode == 32 ) /*delivery error*/ {
-        if ( errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason == ET96MAP_SM_DELIVERY_FAILURE_REASON_MT_T::ET96MAP_MEM_CAPACITY_EXCEEDED )
-        {
-          dialog->memoryExceeded = true;
-          throw MAPDIALOG_TEMP_ERROR("MAP::memory exceeded",MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
-        }
-        else if ( errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason == ET96MAP_SM_DELIVERY_FAILURE_REASON_MT_T::ET96MAP_PROTOCOL_ERROR
-          || errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason == ET96MAP_SM_DELIVERY_FAILURE_REASON_MT_T::ET96MAP_MO_SERVICE_CENTER_CONGESTION )
-        {
-          throw MAPDIALOG_TEMP_ERROR(FormatText("MAP::Delivery failure reason 0x%x",errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason),MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
-        }
-      }
-      if ( errorForwardSMmt_sp->errorCode == 34 /*System failure*/||
-           errorForwardSMmt_sp->errorCode == 31 /*Busy*/)
-      {
-        throw MAPDIALOG_TEMP_ERROR(FormatText("errorForwardSMmt_sp->errorCode == 0x%x",errorForwardSMmt_sp->errorCode),
-          MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
-      }
-      throw MAPDIALOG_FATAL_ERROR(FormatText("errorForwardSMmt_sp->errorCode == 0x%x, reason if need 0x%x",errorForwardSMmt_sp->errorCode,errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason),
-          MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
-    }
     switch( dialog->state ){
     case MAPST_WaitSmsConf:
       dialog->wasDelivered = true;
