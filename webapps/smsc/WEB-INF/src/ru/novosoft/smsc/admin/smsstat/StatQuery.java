@@ -11,41 +11,38 @@ import java.util.Date;
 
 public class StatQuery
 {
-    private Date fromDate = new Date();
-    private Date tillDate = new Date();
+  private Date fromDate = new Date();
+  private Date tillDate = new Date();
 
-    private boolean fromDateEnabled = true;
-    private boolean tillDateEnabled = false;
+  private boolean fromDateEnabled = true;
+  private boolean tillDateEnabled = false;
 
-    public Date getFromDate() {
-        return fromDate;
-    }
+  public Date getFromDate() {
+    return fromDate;
+  }
+  public Date getTillDate() {
+    return tillDate;
+  }
 
-    public Date getTillDate() {
-        return tillDate;
-    }
+  public void setFromDate(Date fromDate) {
+    this.fromDate = fromDate;
+  }
+  public void setTillDate(Date tillDate) {
+    this.tillDate = tillDate;
+  }
 
-    public void setFromDate(Date fromDate) {
-        this.fromDate = fromDate;
-    }
+  public void setFromDateEnabled(boolean fromDateEnabled) {
+    this.fromDateEnabled = fromDateEnabled;
+  }
+  public boolean isFromDateEnabled() {
+    return fromDateEnabled;
+  }
 
-    public void setTillDate(Date tillDate) {
-        this.tillDate = tillDate;
-    }
+  public void setTillDateEnabled(boolean tillDateEnabled) {
+    this.tillDateEnabled = tillDateEnabled;
+  }
+  public boolean isTillDateEnabled() {
+    return tillDateEnabled;
+  }
 
-    public void setFromDateEnabled(boolean fromDateEnabled) {
-        this.fromDateEnabled = fromDateEnabled;
-    }
-
-    public void setTillDateEnabled(boolean tillDateEnabled) {
-        this.tillDateEnabled = tillDateEnabled;
-    }
-
-    public boolean isFromDateEnabled() {
-        return fromDateEnabled;
-    }
-
-    public boolean isTillDateEnabled() {
-        return tillDateEnabled;
-    }
 }

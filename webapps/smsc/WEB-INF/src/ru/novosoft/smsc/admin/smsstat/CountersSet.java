@@ -9,23 +9,30 @@ package ru.novosoft.smsc.admin.smsstat;
 
 public class CountersSet
 {
-    public int accepted = 0;
-    public int finalized = 0;
-    public int rescheduled = 0;
+  public int accepted = 0;
+  public int rejected = 0;
+  public int delivered = 0;
+  public int failed = 0;
+  public int rescheduled = 0;
+  public int temporal = 0;
 
-    CountersSet() {}
-    CountersSet(CountersSet set) {
-        accepted = set.accepted;
-        finalized = set.finalized;
-        rescheduled = set.rescheduled;
-    }
-    CountersSet(int a, int f, int r) {
-        accepted = a; finalized = f; rescheduled =r;
-    }
+  public CountersSet() {}
+  public CountersSet(int accepted, int rejected, int delivered,
+                     int failed, int rescheduled, int temporal)
+  {
+    this.accepted = accepted;  this.rejected = rejected;
+    this.delivered = delivered;  this.failed = failed;
+    this.rescheduled = rescheduled; this.temporal = temporal;
+  }
+  protected CountersSet(CountersSet set) {
+    this.accepted = set.accepted;  this.rejected = set.rejected;
+    this.delivered = set.delivered;  this.failed = set.failed;
+    this.rescheduled = set.rescheduled; this.temporal = set.temporal;
+  }
 
-    void increment(CountersSet set) {
-        accepted += set.accepted;
-        finalized += set.finalized;
-        rescheduled += set.rescheduled;
-    }
+  protected void increment(CountersSet set) {
+    this.accepted += set.accepted;  this.rejected += set.rejected;
+    this.delivered += set.delivered;  this.failed += set.failed;
+    this.rescheduled += set.rescheduled; this.temporal += set.temporal;
+  }
 }

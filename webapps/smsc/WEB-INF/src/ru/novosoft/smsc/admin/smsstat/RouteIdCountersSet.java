@@ -7,11 +7,36 @@
  */
 package ru.novosoft.smsc.admin.smsstat;
 
-public class RouteIdCountersSet {
-    public String routeid;
-    public int counter;
+import java.util.Vector;
+import java.util.Collection;
 
-    RouteIdCountersSet(String id, int count) {
-        routeid = id; this.counter = count;
-    }
+public class RouteIdCountersSet extends CountersSet
+{
+  public String routeid;
+  private Vector errors = new Vector(); // contains ErrorCounterSet
+
+  public RouteIdCountersSet(String routeid)
+  {
+    this.routeid = routeid;
+  }
+
+  public RouteIdCountersSet(int accepted, int rejected, int delivered,
+                            int failed, int rescheduled, int temporal, String routeid)
+  {
+    super(accepted, rejected, delivered, failed, rescheduled, temporal);
+    this.routeid = routeid;
+  }
+
+  public RouteIdCountersSet(CountersSet set, String routeid)
+  {
+    super(set);
+    this.routeid = routeid;
+  }
+
+  public void addError(ErrorCounterSet set) {
+    errors.addElement(set);
+  }
+  public Collection getErrors() {
+    return errors;
+  }
 }

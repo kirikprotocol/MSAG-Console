@@ -12,42 +12,42 @@ import java.util.Collection;
 
 public class Statistics
 {
-    private CountersSet total = new CountersSet();
-    private Vector byDates = new Vector(); // contains DateCountersSet
-    private Vector byError = new Vector(); // contains ErrorCounterSet
-    private Vector bySmeId = new Vector(); // contains SmeIdCountersSet
-    private Vector byRouteId = new Vector(); // contains RouteIdCountersSet
+  private CountersSet total = new CountersSet();
+  private Vector byDates    = new Vector(); // contains DateCountersSet
+  private Vector byError    = new Vector(); // contains ErrorCounterSet
+  private Vector bySmeId    = new Vector(); // contains SmeIdCountersSet
+  private Vector byRouteId  = new Vector(); // contains RouteIdCountersSet
 
-    public CountersSet getTotal() {
-        return total;
-    }
+  public CountersSet getTotal() {
+    return total;
+  }
 
-    public void addDateStat(DateCountersSet set) {
-        byDates.addElement(set);
-        total.increment(set);
-    }
-    public Collection getDateStat() {
-        return byDates;
-    }
+  public void addDateStat(DateCountersSet set) {
+    byDates.addElement(set);
+    total.increment(set);
+  }
+  public Collection getDateStat() {
+    return byDates;
+  }
 
-    public void addErrorStat(ErrorCounterSet set) {
-        byError.addElement(set);
-    }
-    public Collection getErrorStat() {
-        return byError;
-    }
+  public void addErrorStat(ErrorCounterSet set) {
+    byError.addElement(set);
+  }
+  public Collection getErrorStat() {
+    return byError;
+  }
 
-    public void addSmeIdStat(SmeIdCountersSet set) {
-        bySmeId.addElement(set);
-    }
-    public Collection getSmeIdStat() {
-        return bySmeId;
-    }
+  public void addSmeIdStat(SmeIdCountersSet set) {
+    bySmeId.addElement(set);
+  }
+  public Collection getSmeIdStat() {
+    return bySmeId;
+  }
 
-    public void addRouteIdStat(RouteIdCountersSet set) {
-        byRouteId.addElement(set);
-    }
-    public Collection getRouteIdStat() {
-        return byRouteId;
-    }
+  public void addRouteIdStat(RouteIdCountersSet set) {
+    byRouteId.addElement(set);
+  }
+  public Collection getRouteIdStat() {
+    return byRouteId;
+  }
 }

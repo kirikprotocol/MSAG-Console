@@ -9,10 +9,10 @@ package ru.novosoft.smsc.admin.smsstat;
 
 public class ErrorCounterSet
 {
-    public int errcode;
-    public int counter;
+  public int errcode;
+  public int counter;
 
-    ErrorCounterSet(int err, int count) {
-        errcode = err; counter = count;
-    }
+  ErrorCounterSet(int err, int count) {
+    errcode = err; counter = count;
+  }
 }

@@ -22,222 +22,249 @@ import java.text.ParseException;
 
 public class SmsStat
 {
-    private static final String SMS_QUERY =     // group by period
-        "SELECT period, sum(received), sum(finalized), sum(rescheduled) FROM sms_stat_sms ";
-    private static final String SME_QUERY =     // group by systemid
-        "SELECT systemid, sum(received), sum(sent) FROM sms_stat_sme ";
-    private static final String STATE_QUERY =   // group by errcode
-        "SELECT errcode, sum(counter) FROM sms_stat_state ";
-    private static final String ROUTE_QUERY =   // group by routeid
-        "SELECT routeid, sum(processed) FROM sms_stat_route ";
+  private final static String ERRORS_SET =
+    " errcode, sum(counter) ";
+  private final static String VALUES_SET =
+    " sum(accepted), sum(rejected), sum(delivered), sum(failed), sum(rescheduled), sum(temporal) ";
 
-    private static final String PERIOD_DATE_FORMAT = "yyyyMMddHH";
+  private final static String SMS_QUERY =   // group by period
+    "SELECT period,"+VALUES_SET+"FROM sms_stat_sms ";
+  private final static String SME_QUERY =  // group by systemid
+    "SELECT systemid,"+VALUES_SET+"FROM sms_stat_sme ";
+  private static final String ROUTE_QUERY =   // group by routeid
+    "SELECT routeid,"+VALUES_SET+"FROM sms_stat_route ";
 
-    private DataSource ds = null;
-    private Smsc smsc = null;
+  private static final String STATE_QUERY =       // group by errcode
+    "SELECT"+ERRORS_SET+"FROM sms_stat_state ";
+  private static final String SME_STATE_QUERY =   // group by errcode
+    "SELECT"+ERRORS_SET+"FROM sms_stat_sme_state ";
+  private static final String ROUTE_STATE_QUERY = // group by errcode
+    "SELECT"+ERRORS_SET+"FROM sms_stat_route_state ";
 
-    private Statistics stat = null;
+  private static final String PERIOD_DATE_FORMAT = "yyyyMMddHH";
 
-    public void setDataSource(DataSource ds) { this.ds = ds; }
-    public void setSmsc(Smsc smsc) { this.smsc = smsc; }
+  private DataSource ds = null;
+  private Smsc smsc = null;
 
-    private void bindPeriodPart(PreparedStatement stmt, StatQuery query)
-        throws SQLException
-    {
-        int pos=1;
-        if (query.isFromDateEnabled())
-          stmt.setInt(pos++, calculatePeriod(query.getFromDate()));
-        if (query.isTillDateEnabled())
-          stmt.setInt(pos++, calculatePeriod(query.getTillDate()));
+  private Statistics stat = null;
+
+  public void setDataSource(DataSource ds) { this.ds = ds; }
+  public void setSmsc(Smsc smsc) { this.smsc = smsc; }
+
+  private void bindPeriodPart(PreparedStatement stmt, StatQuery query)
+      throws SQLException
+  {
+    int pos=1;
+    if (query.isFromDateEnabled())
+      stmt.setInt(pos++, calculatePeriod(query.getFromDate()));
+    if (query.isTillDateEnabled())
+      stmt.setInt(pos++, calculatePeriod(query.getTillDate()));
+  }
+  private String preparePeriodPart(StatQuery query) {
+    String str = (query.isFromDateEnabled() ||
+                  query.isTillDateEnabled()) ? " WHERE ":"";
+    if (query.isFromDateEnabled()) {
+        str += " period >= ? ";
+        if (query.isTillDateEnabled()) str += " AND ";
     }
-    private String preparePeriodPart(StatQuery query) {
-        String str = (query.isFromDateEnabled() ||
-                      query.isTillDateEnabled()) ? " WHERE ":"";
-        if (query.isFromDateEnabled()) {
-            str += " period >= ? ";
-            if (query.isTillDateEnabled()) str += " AND ";
-        }
-        if (query.isTillDateEnabled()) str += " period <= ? ";
-        return str;
-    }
-    private String prepareSmsQuery(StatQuery query) {
-        return SMS_QUERY+preparePeriodPart(query)+"GROUP BY period ORDER BY period ASC";
-    }
-    private String prepareSmeQuery(StatQuery query) {
-        return SME_QUERY+preparePeriodPart(query)+"GROUP BY systemid";
-    }
-    private String prepareStateQuery(StatQuery query) {
-        return STATE_QUERY+preparePeriodPart(query)+"GROUP BY errcode";
-    }
-    private String prepareRouteQuery(StatQuery query) {
-        return ROUTE_QUERY+preparePeriodPart(query)+"GROUP BY routeid";
-    }
+    if (query.isTillDateEnabled()) str += " period <= ? ";
+    return str;
+  }
+  private String prepareSmsQuery(StatQuery query) {
+    return SMS_QUERY+preparePeriodPart(query)+"GROUP BY period ORDER BY period ASC";
+  }
+  private String prepareSmeQuery(StatQuery query) {
+    return SME_QUERY+preparePeriodPart(query)+"GROUP BY systemid";
+  }
+  private String prepareStateQuery(StatQuery query) {
+    return STATE_QUERY+preparePeriodPart(query)+"GROUP BY errcode";
+  }
+  private String prepareRouteQuery(StatQuery query) {
+    return ROUTE_QUERY+preparePeriodPart(query)+"GROUP BY routeid";
+  }
 
-    private void flushStatistics(StatQuery query) {
-        boolean needFlush = true;
-        if (query.isTillDateEnabled()) {
-            long till = query.getTillDate().getTime();
-            long curr = (new Date()).getTime();
-            needFlush = (till >= curr-3600);
-        }
-        if (needFlush) {
-            try {
-                smsc.flushStatistics();
-            } catch (AdminException e) {
-                e.printStackTrace();
-            }
-        }
+  private void flushStatistics(StatQuery query)
+  {
+    boolean needFlush = true;
+    if (query.isTillDateEnabled()) {
+        long till = query.getTillDate().getTime();
+        long curr = (new Date()).getTime();
+        needFlush = (till >= curr-3600);
     }
-    public Statistics getStatistics(StatQuery query)
-    {
-        flushStatistics(query);
-
-        Connection connection = null;
-        stat = new Statistics();
-        try
-        {
-            connection = ds.getConnection();
-
-            processSmsQuery(connection, query);
-            processSmeQuery(connection, query);
-            processStateQuery(connection, query);
-            processRouteQuery(connection, query);
-        }
-        catch (Exception exc) {
-            System.out.println("Operation with DB failed !");
-            exc.printStackTrace();
-        } finally {
-            try { if (connection != null) connection.close(); }
-            catch (Exception cexc) { cexc.printStackTrace(); }
-        }
-        return stat;
-    }
-
-    private PreparedStatement getQuery(Connection connection, StatQuery query, String sql)
-        throws SQLException
-    {
-        PreparedStatement stmt = connection.prepareStatement(sql);
-        bindPeriodPart(stmt, query);
-        return stmt;
-    }
-    private void processSmsQuery(Connection connection, StatQuery query)
-        throws SQLException
-    {
-        int oldPeriod = 0;
-        DateCountersSet dateCounters = null;
-        PreparedStatement stmt = getQuery(connection, query, prepareSmsQuery(query));
-        ResultSet rs = stmt.executeQuery();
-
-        try
-        {
-            while (rs.next())
-            {
-                int newPeriod = rs.getInt(1);
-                int hour = calculateHour(newPeriod);
-                HourCountersSet hourCounters = new HourCountersSet(
-                        rs.getInt(2), rs.getInt(3), rs.getInt(4), hour);
-                if (dateCounters == null) { // on first iteration
-                    Date date = calculateDate(newPeriod);
-                    dateCounters = new DateCountersSet(date);
-                }
-                else if (needChangeDate(oldPeriod, newPeriod)) { // on date changed
-                    stat.addDateStat(dateCounters);
-                    Date date = calculateDate(newPeriod);
-                    dateCounters = new DateCountersSet(date);
-                }
-                dateCounters.addHourStat(hourCounters);
-                oldPeriod = newPeriod;
-            }
-
-            if (dateCounters != null) stat.addDateStat(dateCounters);
-
-        } catch (SQLException ex) {
-            throw ex;
-        } finally {
-            if (rs != null) rs.close();
-            if (stmt != null) stmt.close();
-        }
-    }
-    private void processSmeQuery(Connection connection, StatQuery query)
-        throws SQLException
-    {
-        PreparedStatement stmt = getQuery(connection, query, prepareSmeQuery(query));
-        ResultSet rs = stmt.executeQuery();
-
+    if (needFlush) {
         try {
-            while (rs.next()) {
-                stat.addSmeIdStat(new SmeIdCountersSet(
-                        rs.getString(1), rs.getInt(2), rs.getInt(3)));
-            }
-        } catch (SQLException ex) {
-            throw ex;
-        } finally {
-            if (rs != null) rs.close();
-            if (stmt != null) stmt.close();
-        }
-    }
-    private void processStateQuery(Connection connection, StatQuery query)
-        throws SQLException
-    {
-        PreparedStatement stmt = getQuery(connection, query, prepareStateQuery(query));
-        ResultSet rs = stmt.executeQuery();
-
-        try {
-            while (rs.next()) {
-                stat.addErrorStat(new ErrorCounterSet(
-                        rs.getInt(1), rs.getInt(2)));
-            }
-        } catch (SQLException ex) {
-            throw ex;
-        } finally {
-            if (rs != null) rs.close();
-            if (stmt != null) stmt.close();
-        }
-    }
-    private void processRouteQuery(Connection connection, StatQuery query)
-        throws SQLException
-    {
-        PreparedStatement stmt = getQuery(connection, query, prepareRouteQuery(query));
-        ResultSet rs = stmt.executeQuery();
-
-        try {
-            while (rs.next()) {
-                stat.addRouteIdStat(new RouteIdCountersSet(
-                        rs.getString(1), rs.getInt(2)));
-            }
-        } catch (SQLException ex) {
-            throw ex;
-        } finally {
-            if (rs != null) rs.close();
-            if (stmt != null) stmt.close();
-        }
-    }
-
-    private boolean needChangeDate(int oldPeriod, int newPeriod) {
-        String oldStr = Integer.toString(oldPeriod);
-        String newStr = Integer.toString(newPeriod);
-        oldPeriod = Integer.parseInt(oldStr.substring(0, oldStr.length()-2));
-        newPeriod = Integer.parseInt(newStr.substring(0, newStr.length()-2));
-        return (oldPeriod != newPeriod);
-    }
-    private int calculatePeriod(Date date) {
-        SimpleDateFormat formatter = new SimpleDateFormat(PERIOD_DATE_FORMAT);
-        return Integer.parseInt(formatter.format(date));
-    }
-    private Date calculateDate(int period) {
-        Date converted = new Date();
-        String str = Integer.toString(period);
-        try {
-            SimpleDateFormat formatter = new SimpleDateFormat(PERIOD_DATE_FORMAT);
-            converted = formatter.parse(str);
-        }
-        catch (ParseException e) {
+            smsc.flushStatistics();
+        } catch (AdminException e) {
             e.printStackTrace();
         }
-        return converted;
     }
-    private int calculateHour(int period) {
-        String str = Integer.toString(period);
-        return Integer.parseInt(str.substring(str.length()-2));
+  }
+  public Statistics getStatistics(StatQuery query)
+  {
+    flushStatistics(query);
+
+    Connection connection = null;
+    stat = new Statistics();
+    try
+    {
+        connection = ds.getConnection();
+
+        processSmsQuery(connection, query);
+        processSmeQuery(connection, query);
+        processStateQuery(connection, query);
+        processRouteQuery(connection, query);
     }
+    catch (Exception exc) {
+        System.out.println("Operation with DB failed !");
+        exc.printStackTrace();
+    } finally {
+        try { if (connection != null) connection.close(); }
+        catch (Exception cexc) { cexc.printStackTrace(); }
+    }
+    return stat;
+  }
+
+  private PreparedStatement getQuery(Connection connection, StatQuery query, String sql)
+      throws SQLException
+  {
+    PreparedStatement stmt = connection.prepareStatement(sql);
+    bindPeriodPart(stmt, query);
+    return stmt;
+  }
+  private void processSmsQuery(Connection connection, StatQuery query)
+      throws SQLException
+  {
+    int oldPeriod = 0;
+    DateCountersSet dateCounters = null;
+    PreparedStatement stmt = getQuery(connection, query, prepareSmsQuery(query));
+    ResultSet rs = stmt.executeQuery();
+
+    try
+    {
+      while (rs.next())
+      {
+          int newPeriod = rs.getInt(1);
+          int hour = calculateHour(newPeriod);
+          HourCountersSet hourCounters = new HourCountersSet(
+                  rs.getInt(2), rs.getInt(3), rs.getInt(4), rs.getInt(5), rs.getInt(6), rs.getInt(7), hour);
+          if (dateCounters == null) { // on first iteration
+              Date date = calculateDate(newPeriod);
+              dateCounters = new DateCountersSet(date);
+          }
+          else if (needChangeDate(oldPeriod, newPeriod)) { // on date changed
+              stat.addDateStat(dateCounters);
+              Date date = calculateDate(newPeriod);
+              dateCounters = new DateCountersSet(date);
+          }
+          dateCounters.addHourStat(hourCounters);
+          oldPeriod = newPeriod;
+      }
+
+      if (dateCounters != null) stat.addDateStat(dateCounters);
+
+    } catch (SQLException ex) {
+        throw ex;
+    } finally {
+        if (rs != null) rs.close();
+        if (stmt != null) stmt.close();
+    }
+  }
+  private void processSmeQuery(Connection connection, StatQuery query)
+      throws SQLException
+  {
+    PreparedStatement stmt = getQuery(connection, query, prepareSmeQuery(query));
+    ResultSet rs = stmt.executeQuery();
+
+    try {
+      while (rs.next())
+      {
+        String smeId = rs.getString(1);
+        SmeIdCountersSet set = new SmeIdCountersSet(
+            rs.getInt(2), rs.getInt(3), rs.getInt(4), rs.getInt(5), rs.getInt(6), rs.getInt(7), smeId);
+
+        // TODO: load up errors set here !!!
+
+        stat.addSmeIdStat(set);
+      }
+    } catch (SQLException ex) {
+      throw ex;
+    } finally {
+      if (rs != null) rs.close();
+      if (stmt != null) stmt.close();
+    }
+  }
+  private void processStateQuery(Connection connection, StatQuery query)
+      throws SQLException
+  {
+    PreparedStatement stmt = getQuery(connection, query, prepareStateQuery(query));
+    ResultSet rs = stmt.executeQuery();
+
+    try {
+      while (rs.next()) {
+        stat.addErrorStat(new ErrorCounterSet(rs.getInt(1), rs.getInt(2)));
+      }
+    } catch (SQLException ex) {
+      throw ex;
+    } finally {
+      if (rs != null) rs.close();
+      if (stmt != null) stmt.close();
+    }
+  }
+  private void processRouteQuery(Connection connection, StatQuery query)
+      throws SQLException
+  {
+    PreparedStatement stmt = getQuery(connection, query, prepareRouteQuery(query));
+    ResultSet rs = stmt.executeQuery();
+
+    try
+    {
+      while (rs.next())
+      {
+        String routeId = rs.getString(1);
+        RouteIdCountersSet set = new RouteIdCountersSet(
+            rs.getInt(2), rs.getInt(3),rs.getInt(4),rs.getInt(5),rs.getInt(6),rs.getInt(7), routeId);
+
+        // TODO: load up errors set here !!!
+
+        stat.addRouteIdStat(set);
+      }
+    } catch (SQLException ex) {
+      throw ex;
+    } finally {
+      if (rs != null) rs.close();
+      if (stmt != null) stmt.close();
+    }
+  }
+
+  private boolean needChangeDate(int oldPeriod, int newPeriod)
+  {
+    String oldStr = Integer.toString(oldPeriod);
+    String newStr = Integer.toString(newPeriod);
+    oldPeriod = Integer.parseInt(oldStr.substring(0, oldStr.length()-2));
+    newPeriod = Integer.parseInt(newStr.substring(0, newStr.length()-2));
+    return (oldPeriod != newPeriod);
+  }
+  private int calculatePeriod(Date date)
+  {
+    SimpleDateFormat formatter = new SimpleDateFormat(PERIOD_DATE_FORMAT);
+    return Integer.parseInt(formatter.format(date));
+  }
+  private Date calculateDate(int period)
+  {
+    Date converted = new Date();
+    String str = Integer.toString(period);
+    try {
+      SimpleDateFormat formatter = new SimpleDateFormat(PERIOD_DATE_FORMAT);
+      converted = formatter.parse(str);
+    }
+    catch (ParseException e) {
+      e.printStackTrace();
+    }
+    return converted;
+  }
+  private int calculateHour(int period)
+  {
+    String str = Integer.toString(period);
+    return Integer.parseInt(str.substring(str.length()-2));
+  }
 }

@@ -64,19 +64,25 @@ if (stat != null) {
 %>
 <table class=list cellspacing=0>
 <tr>
-    <td colspan=4><div class=page_subtitle>General statistics</div></td>
+    <td colspan=7><div class=page_subtitle>General statistics</div></td>
 </tr>
 <tr class=row0>
-    <th width="25%">&nbsp;</th>
-    <th width="25%"><div align=right>Accepted</div></th>
-    <th width="25%"><div align=right>Finalized</div></th>
-    <th width="25%"><div align=right>Rescheduled</div></th>
+    <th width="22%">&nbsp;</th>
+    <th width="13%"><div align=right>Accepted</div></th>
+    <th width="13%"><div align=right>Rejected</div></th>
+    <th width="13%"><div align=right>Delivered</div></th>
+    <th width="13%"><div align=right>Failed</div></th>
+    <th width="13%"><div align=right>Rescheduled</div></th>
+    <th width="13%"><div align=right>Temporal</div></th>
 </tr>
 <tr class=row1>
     <td>Total SMS processed:</td>
     <td align=right><%= total.accepted%></td>
-    <td align=right><%= total.finalized%></td>
+    <td align=right><%= total.rejected%></td>
+    <td align=right><%= total.delivered%></td>
+    <td align=right><%= total.failed%></td>
     <td align=right><%= total.rescheduled%></td>
+    <td align=right><%= total.temporal%></td>
 </tr>
 <%
 Iterator i = dates.iterator();
@@ -86,8 +92,11 @@ while (i.hasNext()) {
 %>  <tr class=row0>
         <td><%= formatter.format(date.getDate())%></td>
         <td align=right><%= date.accepted%></td>
-        <td align=right><%= date.finalized%></td>
+        <td align=right><%= date.rejected%></td>
+        <td align=right><%= date.delivered%></td>
+        <td align=right><%= date.failed%></td>
         <td align=right><%= date.rescheduled%></td>
+        <td align=right><%= date.temporal%></td>
     </tr><%
     Collection hours = date.getHourStat();
     Iterator j = hours.iterator();
@@ -96,8 +105,11 @@ while (i.hasNext()) {
     %>  <tr class=row1>
             <td>&nbsp;&nbsp;&nbsp;<%= ((hour.getHour() < 10)? "0"+hour.getHour():""+hour.getHour())%></td>
             <td align=right><%= hour.accepted%></td>
-            <td align=right><%= hour.finalized%></td>
+            <td align=right><%= hour.rejected%></td>
+            <td align=right><%= hour.delivered%></td>
+            <td align=right><%= hour.failed%></td>
             <td align=right><%= hour.rescheduled%></td>
+            <td align=right><%= hour.temporal%></td>
         </tr>
   <%}
 }
@@ -106,22 +118,28 @@ while (i.hasNext()) {
     if (i.hasNext()) {
 %>
 <tr>
-    <td colspan=4><div class=page_subtitle>SME activity</div></td>
+    <td colspan=7><div class=page_subtitle>SME activity</div></td>
 </tr>
 <tr class=row0>
-    <th width="25%"><div align=right>SME Id</div></th>
-    <th width="25%"><div align=right>Sent</div></th>
-    <th width="25%"><div align=right>Received</div></th>
-    <th width="25%">&nbsp;</th>
+    <th width="22%">SME Id</th>
+    <th width="13%"><div align=right>Accepted</div></th>
+    <th width="13%"><div align=right>Rejected</div></th>
+    <th width="13%"><div align=right>Delivered</div></th>
+    <th width="13%"><div align=right>Failed</div></th>
+    <th width="13%"><div align=right>Rescheduled</div></th>
+    <th width="13%"><div align=right>Temporal</div></th>
 </tr><%
         while (i.hasNext()) {
-            SmeIdCountersSet smeid = (SmeIdCountersSet)i.next();
+            SmeIdCountersSet sme = (SmeIdCountersSet)i.next();
         %>
         <tr class=row1>
-            <td align=right><%= StringEncoderDecoder.encode(smeid.smeid)%></td>
-            <td align=right><%= smeid.sent%></td>
-            <td align=right><%= smeid.received%></td>
-            <td align=right>&nbsp;</td>
+            <td align=right><%= StringEncoderDecoder.encode(sme.smeid)%></td>
+            <td align=right><%= sme.accepted%></td>
+            <td align=right><%= sme.rejected%></td>
+            <td align=right><%= sme.delivered%></td>
+            <td align=right><%= sme.failed%></td>
+            <td align=right><%= sme.rescheduled%></td>
+            <td align=right><%= sme.temporal%></td>
         </tr><%
         }
     }
@@ -130,22 +148,28 @@ while (i.hasNext()) {
     if (i.hasNext()) {
 %>
 <tr>
-    <td colspan=4> <div class=page_subtitle>Traffic by routes</div></td>
+    <td colspan=7> <div class=page_subtitle>Traffic by routes</div></td>
 </tr>
 <tr class=row0>
-    <th width="25%"><div align=right>Route Id</div></th>
-    <th width="25%"><div align=right>Processed</div></th>
-    <th width="25%">&nbsp;</th>
-    <th width="25%">&nbsp;</th>
+    <th width="22%"><div align=right>Route Id</div></th>
+    <th width="13%"><div align=right>Accepted</div></th>
+    <th width="13%"><div align=right>Rejected</div></th>
+    <th width="13%"><div align=right>Delivered</div></th>
+    <th width="13%"><div align=right>Failed</div></th>
+    <th width="13%"><div align=right>Rescheduled</div></th>
+    <th width="13%"><div align=right>Temporal</div></th>
 </tr>  <%
         while (i.hasNext()) {
-            RouteIdCountersSet routeid = (RouteIdCountersSet)i.next();
+            RouteIdCountersSet route = (RouteIdCountersSet)i.next();
         %>
         <tr class=row1>
-            <td align=right><%= StringEncoderDecoder.encode(routeid.routeid)%></td>
-            <td align=right><%= routeid.counter%></td>
-            <td align=right>&nbsp;</td>
-            <td align=right>&nbsp;</td>
+            <td align=right><%= StringEncoderDecoder.encode(route.routeid)%></td>
+            <td align=right><%= route.accepted%></td>
+            <td align=right><%= route.rejected%></td>
+            <td align=right><%= route.delivered%></td>
+            <td align=right><%= route.failed%></td>
+            <td align=right><%= route.rescheduled%></td>
+            <td align=right><%= route.temporal%></td>
         </tr><%
         }
     }

@@ -9,18 +9,21 @@ package ru.novosoft.smsc.admin.smsstat;
 
 public class HourCountersSet extends CountersSet
 {
-    private int hour=0;
+  private int hour = 0;
 
-    HourCountersSet(int hour) {
-        this.hour = hour;
-    }
-    HourCountersSet(int a, int f, int r, int hour) {
-        super(a, f, r); this.hour = hour;
-    }
-    HourCountersSet(CountersSet set, int hour) {
-        super(set); this.hour = hour;
-    }
-    public int getHour() {
-        return hour;
-    }
+  public HourCountersSet(int hour) {
+    this.hour = hour;
+  }
+  public HourCountersSet(int accepted, int rejected, int delivered, int failed,
+                         int rescheduled, int temporal, int hour)
+  {
+    super(accepted, rejected, delivered, failed, rescheduled, temporal);
+    this.hour = hour;
+  }
+  public HourCountersSet(CountersSet set, int hour) {
+    super(set); this.hour = hour;
+  }
+  public int getHour() {
+    return hour;
+  }
 }
