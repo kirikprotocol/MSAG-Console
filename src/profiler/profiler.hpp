@@ -67,7 +67,7 @@ struct Profile{
   bool divertActive;
   bool divertActiveAbsent;
   bool divertActiveBlocked;
-  bool divertActiveBared;
+  bool divertActiveBarred;
   bool divertActiveCapacity;
   bool divertModifiable;
 
@@ -86,7 +86,7 @@ struct Profile{
     divertModifiable=false;
     divertActiveAbsent=false;
     divertActiveBlocked=false;
-    divertActiveBared=false;
+    divertActiveBarred=false;
     divertActiveCapacity=false;
 
     udhconcat=true;
@@ -110,7 +110,7 @@ struct Profile{
     divertActive=src.divertActive;
     divertActiveAbsent=src.divertActiveAbsent;
     divertActiveBlocked=src.divertActiveBlocked;
-    divertActiveBared=src.divertActiveBared;
+    divertActiveBarred=src.divertActiveBarred;
     divertActiveCapacity=src.divertActiveCapacity;
 
     udhconcat=src.udhconcat;
@@ -129,7 +129,7 @@ struct Profile{
            divertModifiable==src.divertModifiable &&
            divertActiveAbsent==src.divertActiveAbsent &&
            divertActiveBlocked==src.divertActiveBlocked &&
-           divertActiveBared==src.divertActiveBared &&
+           divertActiveBarred==src.divertActiveBarred &&
            divertActiveCapacity==src.divertActiveCapacity &&
            udhconcat==src.udhconcat
            ;

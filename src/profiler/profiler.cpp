@@ -317,7 +317,7 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   div[0]=profile.divertActive?'Y':'N';
   div[1]=profile.divertActiveAbsent?'Y':'N';
   div[2]=profile.divertActiveBlocked?'Y':'N';
-  div[3]=profile.divertActiveBared?'Y':'N';
+  div[3]=profile.divertActiveBarred?'Y':'N';
   div[4]=profile.divertActiveCapacity?'Y':'N';
   div[5]=0;
   statement->setString(7, div);
@@ -358,7 +358,7 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   div[0]=profile.divertActive?'Y':'N';
   div[1]=profile.divertActiveAbsent?'Y':'N';
   div[2]=profile.divertActiveBlocked?'Y':'N';
-  div[3]=profile.divertActiveBared?'Y':'N';
+  div[3]=profile.divertActiveBarred?'Y':'N';
   div[4]=profile.divertActiveCapacity?'Y':'N';
   div[5]=0;
   statement->setString(8, div);
@@ -380,7 +380,7 @@ static const int _update_udhconcat=9;
 
 static const int update_div_cond_Absent=1;
 static const int update_div_cond_Blocked=2;
-static const int update_div_cond_Bared=3;
+static const int update_div_cond_Barred=3;
 static const int update_div_cond_Capacity=4;
 
 static const int update_div_cond_OnBit=0x8000;
@@ -428,7 +428,7 @@ void Profiler::internal_update(int flag,const Address& addr,int value,const char
     {
       case update_div_cond_Absent:profile.divertActiveAbsent=on;break;
       case update_div_cond_Blocked:profile.divertActiveBlocked=on;break;
-      case update_div_cond_Bared:profile.divertActiveBared=on;break;
+      case update_div_cond_Barred:profile.divertActiveBarred=on;break;
       case update_div_cond_Capacity:profile.divertActiveCapacity=on;break;
     }
   }
@@ -787,7 +787,7 @@ int Profiler::Execute()
             }
           }else
           {
-            //(abs|absent)|(blk|blocked)|(bar|bared)|(cap|capacity)
+            //(abs|absent)|(blk|blocked)|(bar|barred)|(cap|capacity)
             if(arg2.length()==0)
             {
               if(arg1=="ON")
@@ -814,9 +814,9 @@ int Profiler::Execute()
                 {
                   internal_update(_update_divert_cond,addr,update_div_cond_Blocked|onbit,0);
                 }else
-                if(arg1=="BAR" || arg1=="BARED")
+                if(arg1=="BAR" || arg1=="BARRED")
                 {
-                  internal_update(_update_divert_cond,addr,update_div_cond_Bared|onbit,0);
+                  internal_update(_update_divert_cond,addr,update_div_cond_Barred|onbit,0);
                 }else
                 if(arg1=="CAP" || arg1=="CAPACITY")
                 {
@@ -942,7 +942,7 @@ int Profiler::Execute()
           DIV_ST(divertActive,"unconditional");
           DIV_ST(divertActiveAbsent,"absent");
           DIV_ST(divertActiveBlocked,"blocked");
-          DIV_ST(divertActiveBared,"bared");
+          DIV_ST(divertActiveBarred,"barred");
           DIV_ST(divertActiveCapacity,"capacity");
 #undef DIV_ST
           try{
@@ -1101,7 +1101,7 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
 
       if(len>1)p.divertActiveAbsent  =toupper(dopt[1])=='Y';
       if(len>2)p.divertActiveBlocked =toupper(dopt[2])=='Y';
-      if(len>3)p.divertActiveBared   =toupper(dopt[3])=='Y';
+      if(len>3)p.divertActiveBarred  =toupper(dopt[3])=='Y';
       if(len>4)p.divertActiveCapacity=toupper(dopt[4])=='Y';
     }
 
