@@ -53,8 +53,10 @@ public class Command
 	public String getText()
 	{
 		//logger.debug("start getText");
+    String encoding = null; // C++ code doesn't know about other codings // System.getProperty("file.encoding");
+    if( encoding == null ) encoding = "ISO-8859-1";
 		Element doc = document.getDocumentElement();
-		return "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n"
+		return "<?xml version=\"1.0\" encoding=\""+encoding+"\"?>\n"
 				  + "<!DOCTYPE command SYSTEM \"file:///command.dtd\">\n\n"
 				  + getText(doc, "");
 	}

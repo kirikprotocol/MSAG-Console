@@ -84,9 +84,9 @@ public class Smsc extends Service
 		try
 		{
 			final File smscConfFolder = getSmscConfFolder();
-			Document smesDoc = Utils.parse(new FileInputStream(new File(smscConfFolder, "sme.xml")));
-			Document routesDoc = Utils.parse(new FileInputStream(new File(smscConfFolder, "routes.xml")));
-			Document aliasesDoc = Utils.parse(new FileInputStream(new File(smscConfFolder, "aliases.xml")));
+			Document smesDoc = Utils.parse(new BufferedReader( new FileReader(new File(smscConfFolder, "sme.xml"))));
+			Document routesDoc = Utils.parse(new BufferedReader( new FileReader(new File(smscConfFolder, "routes.xml"))));
+			Document aliasesDoc = Utils.parse(new BufferedReader( new FileReader(new File(smscConfFolder, "aliases.xml"))));
 			smes = new SMEList(smesDoc.getDocumentElement());
 			subjects = new SubjectList(routesDoc.getDocumentElement(), smes);
 			routes = new RouteList(routesDoc.getDocumentElement(), subjects, smes);
@@ -143,7 +143,9 @@ public class Smsc extends Service
 
 	protected PrintWriter storeSmes(PrintWriter out)
 	{
-		out.println("<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>");
+    String encoding = null; // C++ code doesn't know about other codings // System.getProperty("file.encoding");
+    if( encoding == null ) encoding = "ISO-8859-1";
+		out.println("<?xml version=\"1.0\" encoding=\""+encoding+"\"?>");
 		out.println("<!DOCTYPE records SYSTEM \"file://SmeRecords.dtd\">");
 		out.println();
 		out.println("<records>");
@@ -156,7 +158,9 @@ public class Smsc extends Service
 
 	protected PrintWriter storeRoutes(PrintWriter out)
 	{
-		out.println("<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>");
+    String encoding = null; // C++ code doesn't know about other codings // System.getProperty("file.encoding");
+    if( encoding == null ) encoding = "ISO-8859-1";
+		out.println("<?xml version=\"1.0\" encoding=\""+encoding+"\"?>");
 		out.println("<!DOCTYPE routes SYSTEM \"file://routes.dtd\">");
 		out.println();
 		out.println("<routes>");
@@ -168,7 +172,9 @@ public class Smsc extends Service
 
 	protected PrintWriter storeAliases(PrintWriter out)
 	{
-		out.println("<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>");
+    String encoding = null; // C++ code doesn't know about other codings // System.getProperty("file.encoding");
+    if( encoding == null ) encoding = "ISO-8859-1";
+		out.println("<?xml version=\"1.0\" encoding=\""+encoding+"\"?>");
 		out.println("<!DOCTYPE aliases SYSTEM \"file://AliasRecords.dtd\">");
 		out.println();
 		out.println("<aliases>");

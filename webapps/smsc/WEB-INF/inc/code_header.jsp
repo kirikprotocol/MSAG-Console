@@ -1,4 +1,4 @@
-<%
+<%@page pageEncoding="windows-1251"%><%@page contentType="text/html; charset=windows-1251"%><%
 String TITLE = "SMS Center Administration Console";
 String BROWSER_TITLE = null;
 StringBuffer STATUS = new StringBuffer("");

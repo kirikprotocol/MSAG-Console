@@ -15,8 +15,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 
 public class Utils
@@ -34,6 +33,12 @@ public class Utils
   }
 
   static public Document parse(InputStream inputStream)
+          throws FactoryConfigurationError, ParserConfigurationException, SAXException, IOException, NullPointerException
+  {
+    return parse( new BufferedReader(new InputStreamReader(inputStream)));
+  }
+
+  static public Document parse(BufferedReader inputStream)
           throws FactoryConfigurationError, ParserConfigurationException, SAXException, IOException, NullPointerException
   {
     if (inputStream == null)

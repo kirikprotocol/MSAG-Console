@@ -95,7 +95,9 @@ public class UserManager implements DataSource
 	protected void store()
 			throws IOException
 	{
-		String result = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n"
+    String encoding = null; // C++ code doesn't know about other codings // System.getProperty("file.encoding");
+    if( encoding == null ) encoding = "ISO-8859-1";
+		String result = "<?xml version=\"1.0\" encoding=\""+encoding+"\"?>\n"
 				+ "<!DOCTYPE users SYSTEM \"file://users.dtd\">\n"
 				+ "\n"
 				+ "<users>\n";

@@ -7,8 +7,7 @@ package ru.novosoft.smsc.util.config;
 
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -54,36 +53,42 @@ public class SaveableConfigTree
 		}
 	}
 
-	public void write(OutputStream out, String prefix)
+  public void write(OutputStream out, String prefix)
+        throws ConfigManager.WrongParamTypeException, IOException
+  {
+    write( new PrintWriter( new OutputStreamWriter(out)), prefix);
+  }
+
+	public void write(PrintWriter out, String prefix)
 			  throws ConfigManager.WrongParamTypeException, IOException
 	{
 		writeParams(out, prefix, params);
 		writeSections(out, prefix, sections);
 	}
 
-	private void writeParams(OutputStream out, String prefix, Map parameters)
+	private void writeParams(PrintWriter out, String prefix, Map parameters)
 			  throws ConfigManager.WrongParamTypeException, IOException
 	{
 		for (Iterator i = parameters.keySet().iterator(); i.hasNext();)
 		{
 			String paramName = (String) i.next();
 			Object paramValue = parameters.get(paramName);
-			out.write((prefix + "<param name=\"" + StringEncoderDecoder.encode(paramName) + "\" type=\"").getBytes());
+			out.print((prefix + "<param name=\"" + StringEncoderDecoder.encode(paramName) + "\" type=\""));
 			if (paramValue instanceof String)
 			{
-				out.write(("string\">" + StringEncoderDecoder.encode((String) paramValue) + "</param>\n").getBytes());
+				out.println(("string\">" + StringEncoderDecoder.encode((String) paramValue) + "</param>"));
 			}
 			else if (paramValue instanceof Integer)
 			{
-				out.write(("int\">" + StringEncoderDecoder.encode(String.valueOf(((Integer) paramValue).longValue())) + "</param>\n").getBytes());
+				out.println(("int\">" + StringEncoderDecoder.encode(String.valueOf(((Integer) paramValue).longValue())) + "</param>"));
 			}
 			else if (paramValue instanceof Long)
 			{
-				out.write(("int\">" + StringEncoderDecoder.encode(String.valueOf(((Long) paramValue).longValue())) + "</param>\n").getBytes());
+				out.println(("int\">" + StringEncoderDecoder.encode(String.valueOf(((Long) paramValue).longValue())) + "</param>"));
 			}
 			else if (paramValue instanceof Boolean)
 			{
-				out.write(("bool\">" + StringEncoderDecoder.encode(String.valueOf(((Boolean) paramValue).booleanValue())) + "</param>\n").getBytes());
+				out.println(("bool\">" + StringEncoderDecoder.encode(String.valueOf(((Boolean) paramValue).booleanValue())) + "</param>"));
 			}
 			else
 			{
@@ -92,16 +97,16 @@ public class SaveableConfigTree
 		}
 	}
 
-	private void writeSections(OutputStream out, String prefix, Map secs)
+	private void writeSections(PrintWriter out, String prefix, Map secs)
 			  throws IOException, ConfigManager.WrongParamTypeException
 	{
 		for (Iterator i = secs.keySet().iterator(); i.hasNext();)
 		{
 			String secName = (String) i.next();
 			SaveableConfigTree childs = (SaveableConfigTree) secs.get(secName);
-			out.write((prefix + "<section name=\"" + StringEncoderDecoder.encode(secName) + "\">\n").getBytes());
+			out.println((prefix + "<section name=\"" + StringEncoderDecoder.encode(secName) + "\">"));
 			childs.write(out, prefix + "  ");
-			out.write((prefix + "</section>\n").getBytes());
+			out.println((prefix + "</section>\n"));
 		}
 	}
 }

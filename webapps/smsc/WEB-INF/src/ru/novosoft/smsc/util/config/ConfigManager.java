@@ -73,7 +73,7 @@ public class ConfigManager
   protected ConfigManager(String configFileName)
           throws FactoryConfigurationError, ParserConfigurationException, IOException, SAXException
   {
-    InputStream inputStream = new BufferedInputStream(new FileInputStream(configFileName));
+    BufferedReader inputStream = new BufferedReader(new FileReader(configFileName));
     config = new Config(Utils.parse(inputStream));
   }
 
@@ -87,12 +87,15 @@ public class ConfigManager
   {
     SaveableConfigTree tree = new SaveableConfigTree(config);
     File tmpFile = File.createTempFile("smsc_config_", ".xml.tmp", new File(configurationFileDir));
-    OutputStream out = new FileOutputStream(tmpFile);
-    out.write("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n".getBytes());
-    out.write("<!DOCTYPE config SYSTEM \"file://configuration.dtd\">\n\n".getBytes());
-    out.write("<config>\n".getBytes());
+    PrintWriter out = new PrintWriter( new FileWriter(tmpFile) );
+    String encoding = null; // C++ code doesn't know about other codings // System.getProperty("file.encoding");
+    if( encoding == null ) encoding = "ISO-8859-1";
+    out.println("<?xml version=\"1.0\" encoding=\""+encoding+"\"?>");
+    out.println("<!DOCTYPE config SYSTEM \"file://configuration.dtd\">");
+    out.println("");
+    out.println("<config>");
     tree.write(out, "  ");
-    out.write("</config>\n".getBytes());
+    out.println("</config>");
     out.flush();
     out.close();
 
