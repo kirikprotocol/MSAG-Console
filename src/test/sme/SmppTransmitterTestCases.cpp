@@ -4,6 +4,7 @@
 #include "test/conf/TestConfig.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include "test/smpp/SmppUtil.hpp"
+#include "test/core/ProfileUtil.hpp"
 #include "test/util/TextUtil.hpp"
 #include "system/status.h"
 #include "util/Exception.hpp"
@@ -16,6 +17,7 @@ using smsc::util::Logger;
 using smsc::util::Exception;
 using smsc::sme::SmppInvalidBindState;
 using smsc::test::conf::TestConfig;
+using smsc::test::core::str;
 using namespace smsc::sms; //constants
 using namespace smsc::profiler; //constants, Profile
 using namespace smsc::smpp::SmppCommandSet; //constants
@@ -507,6 +509,8 @@ SmsMsg* SmppTransmitterTestCases::getSmsMsg(PduData* pduData)
 	SmsPduWrapper pdu(pduData);
 	RecipientData* recipientData =
 		dynamic_cast<RecipientData*>(pduData->objProps["recipientData"]);
+	__require__(pduData->intProps.count("dataCoding"));
+	uint8_t dc = pduData->intProps["dataCoding"];
 	//проверить наличие темплейта
 	if (pduData->strProps.count("directive.template"))
 	{
@@ -535,24 +539,25 @@ SmsMsg* SmppTransmitterTestCases::getSmsMsg(PduData* pduData)
 			__unreachable__("Invalid template name");
 		}
 		//сохранить оригинальную ucs2 кодировку
-		uint8_t dc = p.second;
-		if (p.second != UCS2 && pdu.getDataCoding() == UCS2 &&
+		const string& text = p.first;
+		uint8_t dataCoding = p.second;
+		__trace2__("getSmsMsg() for template: sender dc = %d, recipient dc = %d, recipient profile = %s",
+			dc, dataCoding, str(recipientData->profile).c_str());
+		if (dataCoding != UCS2 && dc == UCS2 &&
 			recipientData->profile.codepage == ProfileCharsetOptions::Ucs2)
 		{
-			dc = UCS2;
+			dataCoding = UCS2;
 		}
 		//сохранить оригинальную smsc7bit кодировку
-		if (p.second == DEFAULT && pdu.getDataCoding() == SMSC7BIT)
+		if (dataCoding == DEFAULT && dc == SMSC7BIT)
 		{
-			dc = SMSC7BIT;
+			dataCoding = SMSC7BIT;
 		}
 		int msgLen;
-		auto_ptr<char> msg = encode(p.first, p.second, msgLen, false);
-		return new SmsMsg(false, msg.release(), msgLen, p.second, recipientData->validProfile);
+		auto_ptr<char> msg = encode(text, dataCoding, msgLen, false);
+		return new SmsMsg(false, msg.release(), msgLen, dataCoding, recipientData->validProfile);
 	}
 	//сконвертировать текст
-	__require__(pduData->intProps.count("dataCoding"));
-	uint8_t dc = pduData->intProps["dataCoding"];
 	bool udhi = pdu.getEsmClass() & ESM_CLASS_UDHI_INDICATOR;
 	char* msg = NULL;
 	int len = 0;
