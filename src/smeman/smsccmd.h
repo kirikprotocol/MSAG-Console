@@ -736,7 +736,7 @@ public:
       (SMS*)_cmd->dta =  new SMS;
       fetchSmsFromSmppPdu(xsm,(SMS*)(_cmd->dta),forceDC);
       SMS &s=*((SMS*)_cmd->dta);
-      if(s.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
+      if(s.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3 && s.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
       {
         unsigned len;
         const unsigned char* data;
