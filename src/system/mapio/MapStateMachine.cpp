@@ -1230,7 +1230,7 @@ USHORT_T Et96MapOpenInd (
           ostringstream ost;
           unsigned dlen = specificInfo_sp->specificData[1];
           for (unsigned i=0;i<dlen;++i) 
-            ost << hex << setfill('0') << setw(2) << (((unsigned)*(dialog->m_msAddr.address))&0x0ff) << " ";
+            ost << hex << setfill('0') << setw(2) << (((unsigned)*(dialog->m_msAddr.address[i]))&0x0ff) << " ";
           __trace2__("MAP::%s::adr(%d):%s",__FUNCTION__,dialog->m_msAddr.addressLength,ost.str().c_str());
         }
 #endif
