@@ -18,6 +18,7 @@ import ru.novosoft.smsc.admin.smsstat.Statistics;
 
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.util.Functions;
 
 public class SmsStatFormBean extends IndexBean
 {
@@ -46,7 +47,7 @@ public class SmsStatFormBean extends IndexBean
     if (mbQuery != null)
       statistics = stat.getStatistics(query);
     else if (!query.isFromDateEnabled()) {
-      query.setFromDate(new Date());
+      query.setFromDate(Functions.truncateTime(new Date()));
       query.setFromDateEnabled(true);
     }
 

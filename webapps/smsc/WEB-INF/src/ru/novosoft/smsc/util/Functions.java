@@ -134,4 +134,15 @@ public class Functions
       file = new File(directory, prefix + (filenameCounter++));
     return file;
   }
+
+  public static Date truncateTime(Date dateTime)
+  {
+    Calendar calendar = new GregorianCalendar();
+    calendar.setTime(dateTime);
+    calendar.set(Calendar.HOUR_OF_DAY, 0);
+    calendar.set(Calendar.MINUTE, 0);
+    calendar.set(Calendar.SECOND, 0);
+    calendar.set(Calendar.MILLISECOND, 0);
+    return calendar.getTime();
+  }
 }
