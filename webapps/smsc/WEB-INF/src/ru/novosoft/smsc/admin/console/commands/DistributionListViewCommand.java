@@ -11,6 +11,7 @@ import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.DistributionList;
+import ru.novosoft.smsc.admin.dl.Principal;
 import ru.novosoft.smsc.admin.dl.exceptions.ListNotExistsException;
 
 import java.util.Iterator;
@@ -44,7 +45,7 @@ public class DistributionListViewCommand implements Command
             String subInfo = "";
             i = admin.submitters(name).iterator();
             while (i.hasNext()) {
-                subInfo += (String)i.next();
+                subInfo += ((Principal)i.next()).getAddress();
                 if (i.hasNext()) subInfo += ", ";
             }
             ctx.addResult("Submitters: "+subInfo);
