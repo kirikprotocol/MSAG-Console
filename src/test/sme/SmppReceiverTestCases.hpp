@@ -47,7 +47,7 @@ struct ResultHandler
 class SmppReceiverTestCases : BaseTestCases, public SmppBaseReceiver
 {
 public:
-	SmppReceiverTestCases(const SmeSystemId& systemId, const Address& smeAlias,
+	SmppReceiverTestCases(const SmeSystemId& systemId, const Address& smeAddr,
 		const SmeRegistry* smeReg, const AliasRegistry* aliasReg,
 		const RouteRegistry* routeReg, ResultHandler* handler,
 		RouteChecker* routeChecker, SmppPduChecker* pduChecker);
@@ -110,7 +110,7 @@ protected:
 private:
 	SmppSession* session;
 	const SmeSystemId systemId;
-	const Address smeAlias;
+	const Address smeAddr;
 	const SmeRegistry* smeReg;
 	PduRegistry* pduReg;
 	const AliasRegistry* aliasReg;

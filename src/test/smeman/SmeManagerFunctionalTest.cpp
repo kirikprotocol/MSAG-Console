@@ -31,9 +31,9 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 	//Регистрация sme с корректными параметрами
 	for (int i = 0; i < listSize; i++)
 	{
-		Address smeAlias;
+		Address smeAddr;
 		SmeInfo sme;
-		TCResult* res = tc.addCorrectSme(&smeAlias, &sme, RAND_TC);
+		TCResult* res = tc.addCorrectSme(&smeAddr, &sme, RAND_TC);
 		stack.push_back(new TCResultStack());
 		stack.back()->push_back(res);
 	}
@@ -66,9 +66,9 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 				if (!emptySystemId)
 				{
 					emptySystemId = true;
-					Address smeAlias;
+					Address smeAddr;
 					SmeInfo sme;
-					TCResult* res = tc.addCorrectSmeWithEmptySystemId(&smeAlias, &sme);
+					TCResult* res = tc.addCorrectSmeWithEmptySystemId(&smeAddr, &sme);
 					stack.push_back(new TCResultStack());
 					stack.back()->push_back(res);
 				}
