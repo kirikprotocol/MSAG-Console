@@ -669,6 +669,7 @@ int main(int argc,char* argv[])
     ss.connect(bindType);
 
     char *addr=NULL;
+    string lastAddr;
     char *message=NULL;
 
     using_history();
@@ -721,6 +722,7 @@ int main(int argc,char* argv[])
       {
         try{
           Address dst((char*)addr);
+          lastAddr=addr;
           s.setDestinationAddress(dst);
         }catch(...)
         {
@@ -735,6 +737,9 @@ int main(int argc,char* argv[])
         add_history(message);
         msgHist=*history_get_history_state();
         rl_reset_line_state();
+      }else
+      {
+        s.setDestinationAddress(lastAddr.c_str());
       }
       if(!message)continue;
       int len=strlen(message);
