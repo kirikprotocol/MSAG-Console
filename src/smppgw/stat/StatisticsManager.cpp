@@ -61,7 +61,7 @@ void GWStatisticsManager::updateCounter(int counter,const StatInfo& si, int errc
   if(counter<cntServiceBase)
   {
     if(smeSt)incError(smeSt->errors,errcode);
-    if(routeSt)incError(smeSt->errors,errcode);
+    if(routeSt)incError(routeSt->errors,errcode);
   }
 
   if(smeSt && si.smeProviderId!=-1)smeSt->providerId=si.smeProviderId;
