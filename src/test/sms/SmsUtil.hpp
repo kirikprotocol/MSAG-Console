@@ -48,7 +48,7 @@ public:
 
 	static void setupRandomCorrectAddress(Address* addr);
 	
-	static void setupRandomCorrectAddressFull(Address* addr);
+	static void setupRandomCorrectAddress(Address* addr, int minLen, int maxLen);
 	
 	static void setupRandomCorrectDescriptor(Descriptor* desc);
 	

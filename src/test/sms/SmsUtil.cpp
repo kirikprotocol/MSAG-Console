@@ -170,26 +170,19 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2,
 
 void SmsUtil::setupRandomCorrectAddress(Address* addr)
 {
+	setupRandomCorrectAddress(addr, 1, MAX_ADDRESS_VALUE_LENGTH);
+}
+
+void SmsUtil::setupRandomCorrectAddress(Address* addr, int minLen, int maxLen)
+{
 	if (addr)
 	{
-		int len = rand1(MAX_ADDRESS_VALUE_LENGTH);
+		__require__(minLen > 0 && maxLen <= MAX_ADDRESS_VALUE_LENGTH);
+		int len = rand2(minLen, maxLen);
 		auto_ptr<char> val = rand_char(len);
 		addr->setTypeOfNumber((uint8_t) rand0(255));
 		addr->setNumberingPlan((uint8_t) rand0(255));
 		addr->setValue(len, val.get());
-	}
-}
-
-void SmsUtil::setupRandomCorrectAddressFull(Address* addr)
-{
-	if (addr)
-	{
-		//задаю максимальную длину адреса, т.к. в некоторых тест кейсах
-		//адрес - ключевое поле
-		auto_ptr<char> val = rand_char(MAX_ADDRESS_VALUE_LENGTH);
-		addr->setTypeOfNumber((uint8_t) rand0(255));
-		addr->setNumberingPlan((uint8_t) rand0(255));
-		addr->setValue(MAX_ADDRESS_VALUE_LENGTH, val.get());
 	}
 }
 	
