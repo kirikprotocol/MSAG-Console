@@ -808,6 +808,8 @@ public:
     prop.properties[tag].isSet=0;
     prop.properties[tag].iValue=0;
   }
+  void Print(FILE *f);
+
 };
 
 

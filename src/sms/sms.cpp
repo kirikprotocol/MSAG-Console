@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "sms.h"
+#include "util/smstext.h"
 
 #define __FUNCTION__ __func__
 
@@ -90,6 +91,7 @@ void Body::encode(uint8_t* buffer,int& length) const
       }
     }
   }
+  length=offset;
 };
 
 void Body::decode(uint8_t* buffer,int length)
@@ -164,9 +166,43 @@ void Body::setBinProperty(int tag,const char* value, unsigned len)
           throw runtime_error(":SMS::MessageBody::getBinProperty: ems_class must be set");
         unsigned encoding = prop.properties[unType(Tag::SMPP_DATA_CODING)].getInt();
         if ( encoding != 0x8 ) goto trivial;
-        auto_ptr<char> buffer(new char[len]);
-        UCS_htons(buffer.get(),value,len,prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt());
-        prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].setBin(buffer.get(),len);
+        if(prop.properties[unType(Tag::SMSC_MERGE_CONCAT)].isSet)
+        {
+          auto_ptr<char> buffer(new char[len]);
+          char *bufptr=buffer.get();
+          uint8_t *dcl=0;
+          if(prop.properties[unType(Tag::SMSC_DC_LIST)].isSet)
+          {
+            dcl=(uint8_t*)prop.properties[unType(Tag::SMSC_DC_LIST)].getBin(0);
+          }
+
+          smsc::util::ConcatInfo *ci=(smsc::util::ConcatInfo*)prop.properties[unType(Tag::SMSC_CONCATINFO)].getBin(0);
+
+          int esm=prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt();
+          for(int i=0;i<ci->num;i++)
+          {
+            int dc=dcl?dcl[i]:encoding;
+
+            int off=ci->getOff(i);
+            int partlen=i==ci->num-1?len-off:ci->getOff(i+1)-off;
+
+            if(dc==8)
+            {
+              UCS_htons(bufptr,value+off,partlen,esm);
+            }else
+            {
+              memcpy(bufptr,value+off,partlen);
+            }
+            bufptr+=partlen;
+          }
+
+          prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].setBin(buffer.get(),len);
+        }else
+        {
+          auto_ptr<char> buffer(new char[len]);
+          UCS_htons(buffer.get(),value,len,prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt());
+          prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].setBin(buffer.get(),len);
+        }
       }else{
         prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].setBin(value,len);
       }
@@ -182,9 +218,44 @@ void Body::setBinProperty(int tag,const char* value, unsigned len)
           throw runtime_error(":SMS::MessageBody::getBinProperty: ems_class must be set");
         unsigned encoding = prop.properties[unType(Tag::SMPP_DATA_CODING)].getInt();
         if ( encoding != 0x8 ) goto trivial;
-        auto_ptr<char> buffer(new char[len]);
-        UCS_htons(buffer.get(),value,len,prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt());
-        prop.properties[unType(Tag::SMSC_RAW_PAYLOAD)].setBin(buffer.get(),len);
+
+        if(prop.properties[unType(Tag::SMSC_MERGE_CONCAT)].isSet)
+        {
+          auto_ptr<char> buffer(new char[len]);
+          char *bufptr=buffer.get();
+          uint8_t *dcl=0;
+          if(prop.properties[unType(Tag::SMSC_DC_LIST)].isSet)
+          {
+            dcl=(uint8_t*)prop.properties[unType(Tag::SMSC_DC_LIST)].getBin(0);
+          }
+
+          smsc::util::ConcatInfo *ci=(smsc::util::ConcatInfo*)prop.properties[unType(Tag::SMSC_CONCATINFO)].getBin(0);
+
+          int esm=prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt();
+          for(int i=0;i<ci->num;i++)
+          {
+            int dc=dcl?dcl[i]:encoding;
+
+            int off=ci->getOff(i);
+            int partlen=i==ci->num-1?len-off:ci->getOff(i+1)-off;
+
+            if(dc==8)
+            {
+              UCS_htons(bufptr,value+off,partlen,esm);
+            }else
+            {
+              memcpy(bufptr,value+off,partlen);
+            }
+            bufptr+=partlen;
+          }
+
+          prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].setBin(buffer.get(),len);
+        }else
+        {
+          auto_ptr<char> buffer(new char[len]);
+          UCS_htons(buffer.get(),value,len,prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt());
+          prop.properties[unType(Tag::SMSC_RAW_PAYLOAD)].setBin(buffer.get(),len);
+        }
       }else{
         prop.properties[unType(Tag::SMSC_RAW_PAYLOAD)].setBin(value,len);
       }
@@ -263,6 +334,29 @@ trivial:
   }
   return prop.properties[tag].getBin(len);
 }
+
+void Body::Print(FILE* f)
+{
+  for(int i=0;i<=SMS_LAST_TAG;i++)
+  {
+    if(prop.properties[i].isSet)
+    {
+      switch(prop.properties[i].type)
+      {
+        case SMS_INT_TAG:
+          fprintf(f,"i:%s:%d=%d\n",Tag::tagNames[i],i,prop.properties[i].iValue);
+          break;
+        case SMS_STR_TAG:
+          fprintf(f,"s:%s:%d(%d)=%s\n",Tag::tagNames[i],i,prop.properties[i].sValue->length(),prop.properties[i].sValue->c_str());
+          break;
+        case SMS_BIN_TAG:
+          fprintf(f,"b:%s:%d(%d)=%s\n",Tag::tagNames[i],i,prop.properties[i].bValue->length(),prop.properties[i].bValue->c_str());
+          break;
+      }
+    }
+  }
+}
+
 
 
 }//sms

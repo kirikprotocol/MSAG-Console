@@ -93,6 +93,7 @@ namespace smsc{
 namespace sms{
 namespace Tag{
 extern int tagTypes[];
+extern const char* tagNames[];
 SMS_BODY_TAGS_SET
 }
 }
