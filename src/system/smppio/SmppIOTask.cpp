@@ -273,8 +273,8 @@ int SmppInputThread::Execute()
                 err=true;
               }
 
-              if(bindpdu->get_systemId()?bindpdu->get_systemId() &&
-                 strlen(bindpdu->get_systemId()?bindpdu->get_systemId())>15)
+              if(bindpdu->get_systemId() &&
+                 strlen(bindpdu->get_systemId())>15)
               {
                 resppdu.get_header().
                   set_commandStatus(SmppStatusSet::ESME_RINVSYSID);
