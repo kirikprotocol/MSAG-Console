@@ -33,7 +33,7 @@ if (request.getMethod().equals("POST"))
 <h1 align="center">SMSC SmsView utilite</h1>
 <form action="smsview.jsp" method=POST>
 <center>
-<table width="90%" cellpadding=4 cellspacing=2 border=0>
+<table width="95%" cellpadding=4 cellspacing=2 border=0>
 <tr>
     	<td colspan=3 valign=top>
     	<b>Source&nbsp;&nbsp;storage:&nbsp;&nbsp;</b>
@@ -51,7 +51,7 @@ if (request.getMethod().equals("POST"))
     	<td colspan=1>
       <b>Source&nbsp;address:</b><br>
     	<input type="text" name="fromAddress"
-        value="<%= formBean.getToAddress()%>" size=25>
+        value="<%= formBean.getFromAddress()%>" size=25>
       </td>
 
       <td colspan=1>
@@ -145,7 +145,6 @@ if (request.getMethod().equals("POST"))
         value="<%= formBean.getToDateSecond()%>">
       </td>
 
-
       <td colspan=1>
       <b>Rows&nbsp;to&nbsp;display:</b><br>
     	<select name="rowsToDisplay">
@@ -169,10 +168,11 @@ if (request.getMethod().equals("POST"))
       </td>
 </tr>
 <tr>
-   	<td align=center colspan=3>
-    	<input type="submit" name="query" value="Query !">
-  	</td>
+  <td colspan=3 align=center>
+    <input type="submit" name="query" value="Query !">
+  </td>
 </tr>
+</table>
 
 <%
 if (request.getMethod().equals("POST")) {
@@ -181,64 +181,55 @@ if (request.getMethod().equals("POST")) {
   if (lastIndex >= formBean.getRowsCount() ||
       formBean.getRowsToDisplay() < 0) lastIndex = formBean.getRowsCount();
 %>
+
+<hr size=0 align=center width="95%">
+<b>Total sms found </b><%= formBean.getRowsCount()%>
+<% if (formBean.getRowsCount()>0) { %>
+  <b>, displayed </b><%= firstIndex%>
+<% if (firstIndex != lastIndex) {%>... <%= lastIndex%> <%};%>
+<% } else { %>
+  <b>. Try to process another query. </b>
+<% } %>
+<hr size=0 align=center width="95%">
+
+<% if (formBean.getRowsCount()>0) { %>
+   <input type="submit" name="prev" value="<< Prev"
+     <%= formBean.isPrevEnabled() ? "":"disabled"%>>
+   <input type="submit" name="next" value="Next >>"
+     <%= formBean.isNextEnabled() ? "":"disabled"%>>
+<% } %>
+<hr size=0 align=center width="95%">
+
+<table width="95%" cellpadding=4 cellspacing=2 border=1>
 <tr>
-    <td align=left colspan=3>
-    <b>Total sms found </b><%= formBean.getRowsCount()%>
-    <% if (formBean.getRowsCount()>0) { %>
-        <b>, displayed </b><%= firstIndex%>
-        <% if (firstIndex != lastIndex) {%>... <%= lastIndex%> <%};%>
-    <% } else { %>
-        <b>. Try to process another query. </b>
-    <% } %>
-    </td>
+  <td width="25%"><b>Date</b></td>
+  <td width="10%"><b>From</b></td>
+  <td width="10%"><b>To</b></td>
+  <td width="10%"><b>Status</b></td>
+  <td><b>Message</b></td>
 </tr>
-<tr>
-    <td align=center colspan=3>
-    <% if (formBean.getRowsCount()>0) { %>
-      <input type="submit" name="prev" value="<< Prev"
-       <%= formBean.isPrevEnabled() ? "":"disabled"%>>
-      <input type="submit" name="next" value="Next >>"
-       <%= formBean.isNextEnabled() ? "":"disabled"%>>
-    <% } %>
-    </td>
-</tr>
-<tr>
-    <td colspan=3>
-    <table width="100%" border=1>
-      <tr>
-      <td width="30%"><b>Date</b></td>
-      <td width="10%"><b>From</b></td>
-      <td width="10%"><b>To</b></td>
-      <td width="10%"><b>Status</b></td>
-      <td><b>Message</b></td>
-      </tr>
-      <% for (int cnt=firstIndex; cnt<=lastIndex; cnt++) {
-          SmsRow row = formBean.getRow(cnt-1);
-      %>
-      <tr>
+<% for (int cnt=firstIndex; cnt<=lastIndex; cnt++) {
+  SmsRow row = formBean.getRow(cnt-1);
+%>
+  <tr>
       <td><%= row.getDate()%></td>
       <td><%= row.getFrom()%></td>
       <td><%= row.getTo()%></td>
       <td><%= row.getStatus()%></td>
-      <td><%= row.getText()+cnt%></td>
-      </tr>
-      <% } %>
-    </table>
-    </td>
-</tr>
-<tr>
-    <td align=center colspan=3>
-    <% if (formBean.getRowsCount()>0) { %>
-      <input type="submit" name="prev" value="<< Prev"
-       <%= formBean.isPrevEnabled() ? "":"disabled"%>>
-      <input type="submit" name="next" value="Next >>"
-       <%= formBean.isNextEnabled() ? "":"disabled"%>>
-    <% } %>
-    </td>
-</tr>
+      <td><%= "#"+cnt+" "+row.getText()%></td>
+  </tr>
+<% } %>
+</table>
+
+<hr size=0 align=center width="95%">
+<% if (formBean.getRowsCount()>0) { %>
+  <input type="submit" name="prev" value="<< Prev"
+    <%= formBean.isPrevEnabled() ? "":"disabled"%>>
+  <input type="submit" name="next" value="Next >>"
+    <%= formBean.isNextEnabled() ? "":"disabled"%>>
+<% } %>
 <% } %>
 
-</table>
 </center>
 </form>
 </body>
