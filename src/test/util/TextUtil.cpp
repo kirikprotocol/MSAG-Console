@@ -61,6 +61,28 @@ void rand_text(int& length, char* buf, uint8_t dataCoding, bool hostByteOrder)
 	}
 }
 
+auto_ptr<char> rand_text2(int& length, uint8_t dataCoding, bool udhi,
+	bool hostByteOrder)
+{
+	if (!udhi)
+	{
+		return rand_text(length, dataCoding, hostByteOrder);
+	}
+	int headerLen = rand0(length - 1);
+	__require__(headerLen >= 0);
+	auto_ptr<uint8_t> header = rand_uint8_t(headerLen);
+	int msgLen = length - headerLen - 1;
+	auto_ptr<char> msg = rand_text(msgLen, dataCoding, hostByteOrder);
+	__require__(msgLen >= 0);
+	__require__(headerLen + msgLen + 1 <= length);
+	length = headerLen + msgLen + 1;
+	char* buf = new char[length];
+	*buf = (unsigned char) headerLen;
+	memcpy(buf + 1, header.get(), headerLen);
+	memcpy(buf + headerLen + 1, msg.get(), msgLen);
+	return auto_ptr<char>(buf);
+}
+
 auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen,
 	bool hostByteOrder)
 {

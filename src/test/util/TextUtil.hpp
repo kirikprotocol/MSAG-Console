@@ -23,6 +23,9 @@ auto_ptr<char> rand_text(int& length, uint8_t dataCoding,
 void rand_text(int& length, char* buf, uint8_t dataCoding,
 	bool hostByteOrder);
 
+auto_ptr<char> rand_text2(int& length, uint8_t dataCoding, bool udhi,
+	bool hostByteOrder);
+
 string& mixedCase(string& str);
 
 auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen,
