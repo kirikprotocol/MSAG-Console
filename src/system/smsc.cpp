@@ -57,7 +57,7 @@ public:
   int Execute()
   {
     uint64_t cnt,last=0;
-    timespec now,lasttime;
+    timespec now={0,0},lasttime={0,0};
     double ut,tm,rate,avg;
     if(start.tv_sec==0)
       clock_gettime(CLOCK_REALTIME,&start);
@@ -69,7 +69,7 @@ public:
     int lastscnt=0;
     memset(perfCnt,0,sizeof(perfCnt));
     uint64_t lastPerfCnt[performance::performanceCounters]={0,};
-    now.tv_sec=0;
+    //now.tv_sec=0;
     int i;
     for(;;)
     {
