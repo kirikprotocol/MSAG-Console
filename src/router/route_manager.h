@@ -107,7 +107,7 @@ public :
   //RouteIterator* iterator();
   // RouteAdministrator implementaion 
   virtual void addRoute(const RouteInfo& routeInfo);
-  virtual void commit();
+  virtual void commit(bool = false);
   virtual void cancel();
   /*virtual void removeRoute(RouteId id);
   virtual void modifyRoute(RouteId id,const RouteInfo& routeInfo);*/

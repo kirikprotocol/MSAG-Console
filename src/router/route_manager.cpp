@@ -470,7 +470,7 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<st
 }
 
 static
-int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec)
+int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec,vector<string>* trace_)
 {
   __require__(node != 0);
   __trace2__("addRouteIntoTreeRecurse");
@@ -496,7 +496,7 @@ int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec)
       {
         int ptr = (right+left) >> 1;
         __require__(ptr > 0);
-        int cmp = addRouteIntoSrcTreeRecurse(node->sources[ptr-1],rec);
+        int cmp = addRouteIntoSrcTreeRecurse(node->sources[ptr-1],rec,trace_);
         if ( cmp == 0 ) return 0;
         //if ( right > left )
         //{
@@ -525,7 +525,7 @@ int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec)
     if ( right > 0 ) for(;right>=left;)
     {
       int ptr = (right+left) >> 1;
-      int cmp = addRouteIntoTreeRecurse(node->child[ptr-1],rec);
+      int cmp = addRouteIntoTreeRecurse(node->child[ptr-1],rec,trace_);
       if ( cmp == 0 ) return 0;
       //if ( right > left )
       //{
@@ -556,12 +556,12 @@ int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec)
 }
 
 static
-int addRouteIntoTree(RouteTreeNode* node,RouteRecord* rec)
+int addRouteIntoTree(RouteTreeNode* node,RouteRecord* rec,vector<string>* trace_)
 {
-  return addRouteIntoTreeRecurse(node,rec);
+  return addRouteIntoTreeRecurse(node,rec,trace_);
 }
 
-void RouteManager::commit()
+void RouteManager::commit(bool traceit)
 {
   __trace2__("commit!");
   int count = 0;
@@ -588,7 +588,7 @@ void RouteManager::commit()
 
     for ( int i=0; i < count; ++i )
     {
-      if ( table.get()[i] != 0 ) addRouteIntoTree(&root,table.get()[i]);
+      if ( table.get()[i] != 0 ) addRouteIntoTree(&root,table.get()[i],traceit?&trace_:0);
     }
     while ( first_record )
     {
