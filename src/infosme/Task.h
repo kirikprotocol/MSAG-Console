@@ -177,19 +177,8 @@ namespace smsc { namespace infosme
 
         virtual void init(ConfigView* config, std::string taskId, std::string tablePrefix);
         virtual ~Task();
-
-    public:
         
-        int         currentPriorityFrameCounter;
-
-        Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt);
-        Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
-             DataSource* dsOwn, DataSource* dsInt);
-        
-        bool createTable();
-        bool dropTable();
-
-        void finalize()
+        void doFinalization()
         {
             {
                 MutexGuard guard(finalizingLock);
@@ -202,6 +191,27 @@ namespace smsc { namespace infosme
                 MutexGuard guard(usersCountLock);
                 if (usersCount <= 0) break;
             }
+        }
+    
+    public:
+        
+        int         currentPriorityFrameCounter;
+
+        Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt);
+        Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
+             DataSource* dsOwn, DataSource* dsInt);
+        
+        bool createTable();
+        bool dropTable();
+
+        bool destroy() {
+            doFinalization();
+            bool result = dropTable();
+            delete this;
+            return result;
+        }
+        void finalize() {
+            doFinalization();
             delete this;
         }
         bool isFinalizing() {

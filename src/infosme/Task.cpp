@@ -54,7 +54,7 @@ Task::Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt)
     __require__(dsOwn && dsInt);
     this->info = info; this->dsOwn = dsOwn; this->dsInt = dsInt;
     formatter = new OutputFormatter(info.msgTemplate.c_str());
-    createTable();
+    //createTable();
 }
 Task::Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
      DataSource* dsOwn, DataSource* dsInt)
@@ -64,7 +64,7 @@ Task::Task(ConfigView* config, std::string taskId, std::string tablePrefix,
 {
     init(config, taskId, tablePrefix);
     formatter = new OutputFormatter(info.msgTemplate.c_str());
-    createTable();
+    //createTable();
 }
 Task::~Task()
 {

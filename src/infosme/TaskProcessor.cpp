@@ -144,21 +144,22 @@ bool TaskProcessor::addTask(Task* task)
 {
     __require__(task);
     bool result = putTask(task);
-    if (result) task->createTable();
+    if (result) result = task->createTable();
     return result;
 }
 bool TaskProcessor::deleteTask(std::string taskId)
 {
-    MutexGuard guard(tasksLock);
-    
-    const char* task_id = taskId.c_str();
-    if (!task_id || task_id[0] == '\0' || !tasks.Exists(task_id)) return false;
-    Task* task = tasks.Get(task_id);
-    if (!task) return false;
-    tasks.Delete(task_id);
-    task->finalize();
-    awake.Signal();
-    return true;
+    Task* task = 0;
+    {
+        MutexGuard guard(tasksLock);
+        const char* task_id = taskId.c_str();
+        if (!task_id || task_id[0] == '\0' || !tasks.Exists(task_id)) return false;
+        Task* task = tasks.Get(task_id);
+        if (!task) return false;
+        tasks.Delete(task_id);
+        awake.Signal();
+    }
+    return task->destroy();
 }
 bool TaskProcessor::hasTask(std::string taskId)
 {
