@@ -75,7 +75,7 @@ const char* SmppUtil::time2string(time_t lt, char* str, int num)
 	return str;
 }
 
-time_t string2time(const char* str)
+time_t SmppUtil::string2time(const char* str)
 {
 	int tz;
 	char p;
