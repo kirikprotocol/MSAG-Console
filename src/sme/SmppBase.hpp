@@ -215,7 +215,7 @@ public:
   virtual PduReplaceSmResp* replace(PduReplaceSm& pdu)=0;
 };
 
-class SmppBaseReceiver: SmppPduEventListener{
+class SmppBaseReceiver: public SmppPduEventListener{
 public:
   void handleEvent(SmppHeader *pdu)
   {
@@ -310,19 +310,19 @@ protected:
     void sendGenericNack(PduGenericNack& pdu)
     {
       pdu.get_header().set_commandId(SmppCommandSet::GENERIC_NACK);
-      pdu.get_header().set_sequenceNumber(session.getNextSeq());
+      //pdu.get_header().set_sequenceNumber(session.getNextSeq());
       session.writer.enqueue((SmppHeader*)&pdu);
     };
     void sendDeliverySmResp(PduDeliverySmResp& pdu)
     {
       pdu.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
-      pdu.get_header().set_sequenceNumber(session.getNextSeq());
+      //pdu.get_header().set_sequenceNumber(session.getNextSeq());
       session.writer.enqueue((SmppHeader*)&pdu);
     };
     void sendDataSmResp(PduDataSmResp& pdu)
     {
       pdu.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
-      pdu.get_header().set_sequenceNumber(session.getNextSeq());
+      //pdu.get_header().set_sequenceNumber(session.getNextSeq());
       session.writer.enqueue((SmppHeader*)&pdu);
     };
     PduSubmitSmResp* submit(PduSubmitSm& pdu)
