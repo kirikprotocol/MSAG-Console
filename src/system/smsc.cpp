@@ -666,6 +666,7 @@ void Smsc::init(const SmscConfigs& cfg)
       smsc_log_warn(log, "maxSmsPerSecond in configuration is greater than license limit, adjusting\n");
       tccfg.maxSmsPerSecond=license.maxsms;
     }
+    if(tccfg.maxSmsPerSecond==0)tccfg.maxSmsPerSecond=license.maxsms;
     tccfg.shapeTimeFrame=cfg.cfgman->getInt("trafficControl.shapeTimeFrame");
     tccfg.protectTimeFrame=cfg.cfgman->getInt("trafficControl.protectTimeFrame");
     tccfg.protectThreshold=cfg.cfgman->getInt("trafficControl.protectThreshold");
