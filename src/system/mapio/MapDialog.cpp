@@ -68,8 +68,8 @@ void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
 }
 
 void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
-  sa->setTypeOfNumber((ma->addr[0]>>4)&3);
-  sa->setNumberingPlan(ma->addr[0]&0xffff);
+  sa->setTypeOfNumber((ma->addr[0]>>4)&0x7);
+  sa->setNumberingPlan(ma->addr[0]&0xf);
   if ( ma->addrLen != 0 ){
     char sa_val[21] = {0,};
     for ( int i=0; i<(ma->addrLen-1)*2;){
