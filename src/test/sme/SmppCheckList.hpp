@@ -287,10 +287,12 @@ void processDeliveryReceiptTc()
 		"Проверка правильности маршрута (определение sme по адресу отправителя и адресу SC)");
 	__reg_tc__("processDeliverySm.deliveryReceipt.checkFields",
 		"Общая проверка правильности полей");
-	__reg_tc__("processDeliverySm.deliveryReceipt.checkProfile",
-		"Проверка соответствия настройкам профиля");
-	__reg_tc__("processDeliverySm.deliveryReceipt.checkStatus",
-		"Информации о доставленной pdu является корректной");
+	__reg_tc__("processDeliverySm.deliveryReceipt.checkFieldsExt",
+		"Проверка правильности полей в с учетом запрошенных опций (none, final, failure) подтверждения и настроек профиля на момент отправки оригинальной pdu");
+	__reg_tc__("processDeliverySm.deliveryReceipt.checkState",
+		"Информации о статусе доставленной pdu является корректной");
+	__reg_tc__("processDeliverySm.deliveryReceipt.checkErrorCode",
+		"Информации о коде ошибке в случае недоставки pdu является корректной");
 	__reg_tc__("processDeliverySm.deliveryReceipt.scheduleChecks",
 		"Корректная работа механизма повторной доставки (правильное время, нет пропусков между повторными доставками, отсутствие дублей)");
 }
@@ -327,10 +329,12 @@ void processIntermediateNotificationTc()
 		"Проверка правильности маршрута (определение sme по адресу отправителя и адресу SC)");
 	__reg_tc__("processDeliverySm.intermediateNotification.checkFields",
 		"Общая проверка правильности полей");
+	/*
 	__reg_tc__("processDeliverySm.intermediateNotification.checkProfile",
 		"Проверка соответствия настройкам профиля");
 	__reg_tc__("processDeliverySm.intermediateNotification.checkStatus",
 		"Информации о состоянии отправленной pdu является корректной");
+	*/
 	__reg_tc__("processDeliverySm.intermediateNotification.checkTime",
 		"Правильное время доставки");
 }
