@@ -1607,6 +1607,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                               createOrAttachSMSCUSSDDialog(
                                 dialogid_smsc,
                                 SSN,
+                                string(cmd->get_sms()->getDestinationAddress().value),
                                 cmd));
                     } catch (ChainIsVeryLong& e) {
                       __map_trace2__("%s: %s ",__func__,e.what());

@@ -527,7 +527,7 @@ public:
       Dump();
       throw runtime_error("MAP:: POOL is empty");
     }
-    __mapdlg_trace2__("try to create SMSC USSD dialog on abonent %s",abonent.c_str());
+    __mapdlg_trace__("try to create SMSC USSD dialog");
     ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
     MapDialog* dlg = new MapDialog(map_dialog,lssn);
     dialogId_pool.pop_front();
