@@ -10,6 +10,7 @@ namespace smsc  {
 namespace test  {
 namespace store {
 
+using log4cpp::Category;
 using smsc::sms::SMSId;
 using smsc::sms::SMS;
 using smsc::store::MessageStore;
@@ -232,6 +233,7 @@ public:
 	TCResult* createBillingRecord();
 
 private:
+	static Category& log;
 	MessageStore* msgStore;
 };
 
