@@ -203,6 +203,14 @@ static void SendRescheduleToSmsc(unsigned dialogid)
   __trace2__("Send RESCHEDULE NOW to SMSC OK");
 }
 
+static void SendAbonentStatusToSmsc(MapDialog* dialog,int status=AbonentStatus::UNKNOWN)
+{
+  __trace2__("MAP::%s: Send abonent status(%d) to SMSC ",__FUNCTION__,status);
+  SmscCommand cmd = SmscCommand::makeQueryAbonentStatusResp(dialog->QueryAbonentCommand->get_abonentStatus,status);
+  MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
+  __trace2__("MAP::%s: Send abonent status to SMSC OK",__FUNCTION__);
+}
+                        
 static void SendErrToSmsc(unsigned dialogid,unsigned code)
 {
   if ( dialogid == 0 ) return;
@@ -515,7 +523,7 @@ static void SendSubmitCommand(MapDialog* dialog)
 
 static const unsigned DIALOGID_BEFORE_CREATING = 0x10000;
 
-static void TryDestroyDialog(unsigned dialogid)
+static void TryDestroyDialog(unsigned dialogid,bool send_error = false,err_code=0)
 {
   {
     __trace2__("MAP::TryDestroyDialog: dialog 0x%x , reason error",dialogid);
@@ -525,6 +533,18 @@ static void TryDestroyDialog(unsigned dialogid)
       return;
     }
     __trace2__("MAP::%s: 0x%x  (state %d/TRY__DESTROY)",__FUNCTION__,dialog->dialogid_map,dialog->state);
+    if ( send_error )
+    {
+      try{
+        if ( dialog->isQueryAbonentStatus ){
+          SendAbonentStatusToSmsc(dialog.get(),AbonentStatus::UNKNOWN);
+        }else{
+          SendErrToSmsc(dialog->dialogid_smsc,err_code);
+        }
+      }catch(...){
+        __trace2__("MAP::%s: catched exception when send error response to smsc",__FUNCTION_);
+      }
+    }
     switch(dialog->state){
     case MAPST_ABORTED: 
       AbortMapDialog(dialog->dialogid_map,dialog->ssn);
@@ -564,13 +584,13 @@ static string RouteToString(MapDialog* dialog)
 }catch(MAPDIALOG_ERROR& err){\
   __trace2__("#ERR#MAP::%s# MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,__dialogid_map,__dialogid_smsc);\
   __trace2__("   <exception>:%s",err.what());\
-  TryDestroyDialog(__dialogid_map);\
-  SendErrToSmsc(__dialogid_smsc,err.code);\
+  TryDestroyDialog(__dialogid_map,true,err.code);\
+/*  SendErrToSmsc(__dialogid_smsc,err.code);*/\
 }catch(exception& e){\
   __trace2__("#except#MAP::%s# MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,__dialogid_map,__dialogid_smsc);\
   __trace2__("   <exception>:%s",e.what());\
-  TryDestroyDialog(__dialogid_map);\
-  SendErrToSmsc(__dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_FATAL,0));\
+  TryDestroyDialog(__dialogid_map,true,MAKE_ERRORCODE(CMD_ERR_FATAL,0)));\
+/*  SendErrToSmsc(__dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_FATAL,0))*/;\
 }
 
 static bool SendSms(MapDialog* dialog){
@@ -747,11 +767,11 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
   DialogRefGuard dialog;
   MAP_TRY {  
     if ( dialogid_smsc > 0xffff ) { // SMSC dialog
-      if ( cmd->get_commandId() != DELIVERY )
-        throw MAPDIALOG_BAD_STATE("MAP::putCommand: must be SMS DELIVERY");
+      if ( cmd->get_commandId() != DELIVERY && cmd->get_commandId() != QUERYABONENTSTATUS)
+        throw MAPDIALOG_BAD_STATE("MAP::putCommand: must be DELIVERY or QUERYABONENTSTATUS");
       try
       {
-        if ( cmd->get_sms()->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP ) )
+        if ( cmd->get_commandId() == DELIVERY  && cmd->get_sms()->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP ) )
         {
           unsigned serviceOp = cmd->get_sms()->getIntProperty(Tag::SMPP_USSD_SERVICE_OP );
           string s_seq(cmd->get_sms()->getDestinationAddress().value);// = "";//cmd->get_sms()->getStrProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
@@ -806,12 +826,21 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
             throw;
           }
         }else if ( !dialog2  ) {
-          dialog.assign(MapDialogContainer::getInstance()->
+          if ( cmd->get_commandId() == DELIVERY )
+            dialog.assign(MapDialogContainer::getInstance()->
                       createOrAttachSMSCDialog(
                         dialogid_smsc,
                         SSN,
                         string(cmd->get_sms()->getDestinationAddress().value),
                         cmd));
+          else // QUERYABONENTSTATUS
+            dialog.assign(MapDialogContainer::getInstance()->
+                      createOrAttachSMSCDialog(
+                        dialogid_smsc,
+                        SSN,
+                        /*string(cmd->get_sms()->getDestinationAddress().value)*/"",
+                        cmd));
+
           if ( dialog.isnull() ) {
             //throw MAPDIALOG_TEMP_ERROR("Can't create or attach dialog");
             //SendRescheduleToSmsc(dialogid_smsc);
@@ -833,6 +862,11 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
         __trace2__("MAP::putCommand: can't create SMSC->MS dialog (locked), request has bean attached");
         // command has bean attached by dialog container
       }else{
+        dialog->isQueryAbonentStatus = (cmd->get_commandId() == QUERYABONENTSTATUS);
+        if ( dialog->isQueryAbonentStatus )
+        {
+          dialog->QueryAbonentCommand = cmd;
+        }
         dialog->wasDelivered = false;
         dialog->hlrWasNotified = false;
         dialog->state = MAPST_START;
@@ -1273,18 +1307,27 @@ USHORT_T Et96MapCloseInd(
     __trace2__("MAP::%s: 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
     switch( dialog->state ){
     case MAPST_WaitRInfoClose:
-      if ( !dialog->routeErr ) {
-        MapDialogContainer::getInstance()->reAssignDialog(dialogueId,localSsn);
-        dialogueId = dialog->dialogid_map;
-        dialog->state = MAPST_WaitMcsVersion;
-        QueryMcsVersion(dialog.get());
-      }else{
-        __trace2__("MAP::%s: RIfno Return no route, close dialog");
+      if ( dialog->isQueryAbonentStatus ){
+        int status;
+        if (dialog->routeErr) status = AbonentStatus::OFFLINE;
+        else status = AbonentStatus::ONLINE;
+        SendAbonentStatusToSmsc(dialog.get(),status);
         dialog->state = MAPST_CLOSED;
-        dialogid_smsc = dialog->dialogid_smsc;
-        //throw MAPDIALOG_ERROR(dialog->routeErr,"lisy error");
-        SendErrToSmsc(dialog->dialogid_map,dialog->routeErr);
         DropMapDialog(dialog.get());
+      }else{
+        if ( !dialog->routeErr ) {
+          MapDialogContainer::getInstance()->reAssignDialog(dialogueId,localSsn);
+          dialogueId = dialog->dialogid_map;
+          dialog->state = MAPST_WaitMcsVersion;
+          QueryMcsVersion(dialog.get());
+        }else{
+          __trace2__("MAP::%s: RIfno Return no route, close dialog");
+          dialog->state = MAPST_CLOSED;
+          dialogid_smsc = dialog->dialogid_smsc;
+          //throw MAPDIALOG_ERROR(dialog->routeErr,"lisy error");
+          SendErrToSmsc(dialog->dialogid_map,dialog->routeErr);
+          DropMapDialog(dialog.get());
+        }
       }
       break;
     case MAPST_WaitSmsClose:

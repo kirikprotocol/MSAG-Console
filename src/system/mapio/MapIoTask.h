@@ -5,6 +5,7 @@ $Id$
 #include <stdio.h>
 #include <malloc.h>
 #include <memory.h>
+#include "../../util/debug.h"
 #include "../../sms/sms.h"
 #include "../../smeman/smsccmd.h"
 #include "../../smeman/smeman.h"
@@ -103,6 +104,7 @@ struct MapDialog{
   bool subscriberAbsent:1;
   bool memoryExceeded:1;
   bool hlrWasNotified:1;
+  bool isQueryAbonentStatus:1;
   Mutex mutex;
   MapState state;
   ET96MAP_DIALOGUE_ID_T dialogid_map;
@@ -129,6 +131,7 @@ struct MapDialog{
   unsigned ussdMrRef;
   ET96MAP_MWD_STATUS_T mwdStatus;
   unsigned routeErr;
+  SmscCommand QueryAbonentCommand;
 //  bool isMOreq;
 //  unsigned dialogid_req;
   MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned version=2) : 
@@ -288,11 +291,11 @@ public:
   }
   
   MapDialog* createOrAttachSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent, const SmscCommand& cmd){
-    if ( abonent.length() == 0 )
-      throw runtime_error("MAP::createOrAttachSMSCDialog: can't create MT dialog without abonent");
+    //if ( abonent.length() == 0 )
+    //  throw runtime_error("MAP::createOrAttachSMSCDialog: can't create MT dialog without abonent");
     MutexGuard g(sync);
     __trace2__("MAP::createOrAttachSMSCDialog: try create SMSC dialog on abonent %s",abonent.c_str());
-    if ( lock_map.Exists(abonent) ) {
+    if ( ( abonent.length() != 0 ) && lock_map.Exists(abonent) ) {
       __trace2__("MAP::createSMSCDialog: locked");
       MapDialog* item = lock_map[abonent];
       if ( item == 0 ) {
@@ -312,7 +315,7 @@ public:
     dlg->dialogid_smsc = smsc_did;
     dlg->abonent = abonent;
     hash.Insert(map_dialog,dlg);
-    lock_map.Insert(abonent,dlg);
+    if ( abonent.length() != 0 ) lock_map.Insert(abonent,dlg);
     __trace2__("MAP::createOrAttachSMSCDialog: new dialog 0x%p for dialogid 0x%x->0x%x",dlg,smsc_did,map_dialog);
     dlg->AddRef();
     return dlg;
