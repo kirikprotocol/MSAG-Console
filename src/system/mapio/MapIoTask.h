@@ -49,6 +49,22 @@ extern "C" {
 #define USSD_SSN 6
 #define HLR_SSN 6
 
+enum MAPSTATS{
+  MAPSTATS_GSMDIALOG_OPENIN,
+  MAPSTATS_GSMDIALOG_OPENOUT,
+  MAPSTATS_GSMDIALOG_CLOSEIN,
+  MAPSTATS_GSMDIALOG_CLOSEOUT,
+  MAPSTATS_GSMDIALOG_ABORTSELF,
+  MAPSTATS_GSMDIALOG_APORTIN,
+  MAPSTATS_GSMRECV,
+  MAPSTATS_NEWDIALOG,
+  MAPSTATS_DISPOSEDIALOG,
+  MAPSTATS_REMAPDIALOG,
+  MAPSTATS_REASSIGNDIALOG,
+};
+
+extern void MAPSTATS_Update(MAPSTATS);
+
 enum MapState{
   MAPST_UNKNOWN = 0,
   MAPST_WaitHlrVersion = 1,
@@ -164,7 +180,9 @@ struct MapDialog{
     ussdMrRef(0)
 //    isMOreq(false),
 //    dialogid_req(0)
-    {}
+  {
+    MAPSTATS_Update(MAPSTATS_NEWDIALOG);
+  }
   virtual ~MapDialog(){
     __trace2__("MAP::Dialog::~MapDialog 0x%x(0x%x)",dialogid_map,dialogid_smsc);
     require ( ref_count == 0 );
@@ -175,6 +193,7 @@ struct MapDialog{
     }
     if ( associate ) associate->Release();
     associate = 0;
+    MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG);
   }
   Mutex& getMutex(){return mutex;}
   void Release(){
@@ -352,6 +371,7 @@ public:
   }
 
   USHORT_T reAssignDialog(unsigned did,unsigned ssn){
+    MAPSTATS_Update(MAPSTATS_REASSIGNDIALOG);
     MutexGuard g(sync);
      __trace2__("MAP:: reassign dialog");
     MapDialog* dlg = 0;

@@ -52,6 +52,7 @@ static void SendErrToSmsc(unsigned dialogid,unsigned code);
 
 static void AbortMapDialog(unsigned dialogid,unsigned ssn)
 {
+  MAPSTATS_Update(MAPSTATS_MSGDIALOG_ABORT);
   Et96MapUAbortReq(ssn,dialogid,0,0,0,0);
 }
 
@@ -135,6 +136,7 @@ struct MAPDIALOG_HEREISNO_ID : public MAPDIALOG_ERROR
 
 static void CloseMapDialog(unsigned dialogid,unsigned dialog_ssn){
   if ( dialogid == 0 ) return;
+  MAPSTATS_Update(MAPSTATS_GSMDIALOG_CLOSE);
   USHORT_T res = Et96MapCloseReq (dialog_ssn,dialogid,ET96MAP_NORMAL_RELEASE,0,0,0);
   if ( res != ET96MAP_E_OK ){
     __trace2__("MAP::%s dialog 0x%x error, code 0x%hx",__FUNCTION__,dialogid,res);
@@ -1476,6 +1478,7 @@ USHORT_T Et96MapOpenConf (
       throw MAPDIALOG_BAD_STATE(
         FormatText("MAP::%s bad state %d",__FUNCTION__,dialog->state));
     }
+    MAPSTATS_Update(MAPSTATS_GSMDIALOG_OPENOUT);
   }MAP_CATCH(dialogid_map,dialogid_smsc);
   return ET96MAP_E_OK;
 }
@@ -1678,6 +1681,7 @@ USHORT_T Et96MapCloseInd(
       dialogid_map = 0;
       throw MAPDIALOG_HEREISNO_ID(
         FormatText("MAP::dialog 0x%x is not present",_di));}
+    MAPSTATS_Update(MAPSTATS_GSMDIALOG_CLOSEOUT);
     dialogid_smsc = dialog->dialogid_smsc;
     __trace2__("MAP::%s:DELIVERY_SM %s",__FUNCTION__,RouteToString(dialog.get()).c_str());
     __trace2__("MAP::%s: 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
@@ -1822,6 +1826,7 @@ USHORT_T Et96MapOpenInd (
     if ( dialog.isnull() )
       throw runtime_error("MAP:: can't create dialog");
     __trace2__("MAP:: create dialog with ptr 0x%p, dialogid 0x%x",dialog.get(),dialogueId);
+    MAPSTATS_Update(MAPSTATS_GSMDIALOG_OPENIN);
     dialog->state = MAPST_WaitSms;
   }
   catch(exception& e)
