@@ -394,7 +394,7 @@ int SmppInputThread::Execute()
               try{
                 if(ss->getProxy() && ss->getProxy()->isOpened())
                 {
-                  __trace__("UNBINDRESP sent");
+                  __trace__("UNBINDRESP sent for %p",ss->getProxy());
                   ss->getProxy()->putCommand
                   (
                     SmscCommand::makeUnbindResp
@@ -643,10 +643,12 @@ int SmppOutputThread::Execute()
         s->setData(SOCKET_SLOT_OUTPUTMULTI,(void*)1);
         if(cmdid==SmppCommandSet::UNBIND_RESP)
         {
+          trace2("SmppOutputThread: UNBIND_RESP, killing proxy:%p",ss->getProxy());
           try{
             smeManager->unregisterSmeProxy(ss->getProxy()->getSystemId());
           }catch(...)
           {
+            __trace__("SmppOutputThread: failed to unregister");
           }
           delete ss->getProxy();
           ss->assignProxy(0);
