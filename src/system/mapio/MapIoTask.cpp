@@ -367,12 +367,24 @@ void MapIoTask::dispatcher()
     if ( result == MSG_BROKEN_CONNECTION ){
       __trace2__("MAP: Broken connection");
       warning_if(MsgRel(MY_USER_ID,ETSIMAP_ID)!=MSG_OK);
-      result = MsgConn(USER01_ID,ETSIMAP_ID);
-      if ( result != MSG_OK ) { 
+      bool ok = false;
+      while ( !ok ){
+        try{
+          deinit();
+          init();
+          ok = true;
+        }catch(...){
+          __trace2__("MAP:: Error reinitialization");
+          sleep(1);
+        }
+      }
+      continue;
+      /*result = MsgConn(USER01_ID,ETSIMAP_ID);
+       ( result != MSG_OK ) { 
         __trace2__("MAP: Error at MsgConn, code 0x%hx",result); 
         throw runtime_error("MAP::MapIoTask: MsgConn error"); 
       }
-      continue;
+      continue;*/
     }
     if ( result != MSG_OK ) {
       __trace2__("MAP: error at MsgRecv with code x%hx",result);
