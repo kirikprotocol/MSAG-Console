@@ -52,7 +52,7 @@
 
   <target name="distr" depends="build" description="installs the webapp">
     <ant antfile="../make_esme.xml" target="distr"/>
-    <delete file="${exploded}/lib/${esme_name}.jar"/>
+    <move file="${exploded}/lib/${esme_name}.jar" todir="${exploded}/bin" />
     <antcall target="copy_libs">
       <param name="LIBS_OUT_DIR" value="${exploded}/bin"/>
     </antcall>
