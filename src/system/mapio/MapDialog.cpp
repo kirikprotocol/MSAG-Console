@@ -402,6 +402,13 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   }
   pdu->signalInfoLen  = pdu_ptr-(unsigned char*)pdu->signalInfo;
   __trace2__("MAP::mkDeliverPDU: signalInfoLen 0x%x",pdu->signalInfoLen);
+  {
+    char text[sizeof(*pdu)*4] = {0,};
+    int k = 0;
+    for ( int i=0; i<pdu->signalInfoLen; ++i){
+      k+=sprintf(text+k,"%02x ",(unsigned)pdu->signalInfo[i]);
+    }
+    __trace2__("MAP::mkDeliverPDU: PDU %s",text);
   return pdu;
 #else
   return 0;
