@@ -21,6 +21,7 @@ public class UsersAdd
 
 		if (login == null || firstName == null || lastName == null)
 		{
+			login = "";
 			password = "";
 			confirmPassword = "";
 			setRoles(new String[0]);
@@ -37,6 +38,9 @@ public class UsersAdd
 
 	protected int save()
 	{
+		if (login == null || login.trim().length() == 0)
+			return error(SMSCErrors.error.users.loginNotDefined);
+
 		User user = userManager.getUser(login);
 		if (user == null)
 		{

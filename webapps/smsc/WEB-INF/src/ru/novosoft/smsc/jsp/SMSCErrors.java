@@ -115,6 +115,7 @@ public class SMSCErrors
 			public static final String couldntApply = B + "couldntApply";
 			public static final String passwordNotDefined = B + "passwordNotDefined";
 			public static final String passwordNotConfirmed = B + "passwordNotConfirmed";
+			public static final String loginNotDefined = B + "loginNotDefined";
 		}
 
 		public static class smsc
@@ -178,11 +179,6 @@ public class SMSCErrors
 	public static class warning
 	{
 		private static final String B = SMSCErrors.B + "warning.";
-
-		public static class services
-		{
-			private static final String B = SMSCErrors.warning.B + "services.";
-		}
 
 		public static class hosts
 		{

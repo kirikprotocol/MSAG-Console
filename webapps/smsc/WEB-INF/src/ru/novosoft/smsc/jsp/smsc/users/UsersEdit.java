@@ -41,6 +41,9 @@ public class UsersEdit
 
 	protected int save()
 	{
+		if (login == null || login.trim().length() == 0)
+			return error(SMSCErrors.error.users.loginNotDefined);
+
 		User user = userManager.getUser(login);
 		if (user == null)
 		{ // add new user
