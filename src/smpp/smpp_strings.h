@@ -30,7 +30,7 @@ struct OStr //: public MemoryManagerUnit
   operator const char*(){__require__ (length==0 || text!=NULL); return text;}
   const char* cstr(){__require__ (length==0 || text!=NULL); return text;}
   uint16_t size() { __require__ (length==0 || text!=NULL);return length; }
-  void copy(const char* src, int src_length) 
+  void copy(const char* src, int src_length)
   {
     __require__ ( src_length >= 0 );
     __require__ ( src != NULL );
@@ -39,7 +39,7 @@ struct OStr //: public MemoryManagerUnit
     //if ( text ) delete text;
     //text = 0;
     dispose();
-    
+
     if ( !src_length  ) return;
 
     //text = (char*)smartMalloc(src_length);
@@ -48,15 +48,15 @@ struct OStr //: public MemoryManagerUnit
     memcpy(text,src,src_length);
     length = src_length;
   }
-	OStr(const OStr& ostr) : text(0), length(0)
-	{
-		copy(ostr.text, ostr.length);
-	}
-	OStr& operator =(const OStr& ostr)
-	{
-		copy(ostr.text, ostr.length);
-		return *this;
-	}
+  OStr(const OStr& ostr) : text(0), length(0)
+  {
+    copy(ostr.text, ostr.length);
+  }
+  OStr& operator =(const OStr& ostr)
+  {
+    copy(ostr.text, ostr.length);
+    return *this;
+  }
 };
 
 
@@ -75,13 +75,13 @@ struct COStr //: public MemoryManagerUnit
   operator const char*(){/*__require__(text!=NULL);*/ return text;}
   const char* cstr(){/*__require__(text!=NULL);*/ return text;}
   uint16_t size(){ return text ? strlen( text ) : 0 ; }
-  void copy(const char* src) 
+  void copy(const char* src)
   {
     __require__ ( src != NULL );
     //if ( text ) smartFree(text);
     //if ( text ) delete text;
     dispose();
-    
+
     int length = strlen(src);
     if ( !length  ) return;
     //text = (char*)smartMalloc(length+1);
@@ -90,15 +90,18 @@ struct COStr //: public MemoryManagerUnit
     memcpy(text,src,length+1);
     text[length]=0;
   }
-	COStr(const COStr& ostr) : text(0)
-	{
-		copy(ostr.text);
-	}
-	COStr& operator =(const COStr& ostr)
-	{
-		copy(ostr.text);
-		return *this;
-	}
+  COStr(const COStr& ostr) : text(0)
+  {
+    if(ostr.text)copy(ostr.text);
+  }
+  COStr& operator =(const COStr& ostr)
+  {
+    if(ostr.text)
+      copy(ostr.text);
+    else
+      text=0;
+    return *this;
+  }
 };
 
 
@@ -106,4 +109,3 @@ struct COStr //: public MemoryManagerUnit
 };
 
 #endif
-
