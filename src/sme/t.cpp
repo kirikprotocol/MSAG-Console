@@ -46,7 +46,7 @@ public:
       {
         printf("%x ",(int)(unsigned char)buf[i]);
       }*/
-      getPduText((PduXSm*)pdu,buf);
+      getPduText((PduXSm*)pdu,buf,sizeof(buf));
       printf("\n");
       printf("\nReceived:%s\n",buf);
       PduDeliverySmResp resp;
@@ -62,7 +62,7 @@ public:
   }
   void handleError(int errorCode)
   {
-    printf("error!\n");
+    printf("\n\n\nerror!\n\n\n");
     stopped=1;
   }
 
