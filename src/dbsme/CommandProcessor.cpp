@@ -53,9 +53,12 @@ CommandProcessor::~CommandProcessor()
     hashchar*       key = 0;
     DataProvider*   provider = 0;
 
+    providers.First();
     while (providers.Next(key, provider))
     {
+        //printf("Deleting provider '%s' ...\n", key);
         if (provider) delete provider;
+        //printf("Provider deleted !\n");
     }
 }
 
@@ -158,9 +161,12 @@ DataProvider::~DataProvider()
     hashchar*   key = 0;
     Job*        job = 0;
 
+    jobs.First();
     while (jobs.Next(key, job))
     {
+        //printf("Deleting job '%s' ...\n", key);
         if (job) delete job;
+        //printf("Job deleted !\n");
     }
 
     if (ds) delete ds;

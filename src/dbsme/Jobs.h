@@ -44,7 +44,7 @@ namespace smsc { namespace dbsme
         
         bool    isQuery;
 
-        Job() {};
+        Job() : sql(0), inputFormat(0), outputFormat(0) {};
 
     public:
 
