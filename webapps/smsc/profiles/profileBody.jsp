@@ -17,8 +17,9 @@
 <tr class=row1>
 	<th class=label>report mode:</th>
 	<td><div class=select><select class=txt name="report">
-			<option value="<%=Profile.REPORT_OPTION_None%>" <%=bean.getReport() == Profile.REPORT_OPTION_None ? "SELECTED" : ""%>>none</option>
-			<option value="<%=Profile.REPORT_OPTION_Full%>" <%=bean.getReport() == Profile.REPORT_OPTION_Full ? "SELECTED" : ""%>>full</option>
+			<option value="<%=Profile.REPORT_OPTION_None %>" <%=bean.getReport() == Profile.REPORT_OPTION_None  ? "SELECTED" : ""%>>none</option>
+			<option value="<%=Profile.REPORT_OPTION_Final%>" <%=bean.getReport() == Profile.REPORT_OPTION_Final ? "SELECTED" : ""%>>final only</option>
+			<option value="<%=Profile.REPORT_OPTION_Full %>" <%=bean.getReport() == Profile.REPORT_OPTION_Full  ? "SELECTED" : ""%>>full</option>
 		</select></div></td>
 </tr>
 <tr class=row1>

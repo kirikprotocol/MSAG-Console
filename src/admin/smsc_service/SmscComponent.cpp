@@ -522,6 +522,9 @@ namespace smsc {
 						case smsc::profiler::ProfileReportOptions::ReportFull:
 							result += "full";
 							break;
+						case smsc::profiler::ProfileReportOptions::ReportFinal:
+							result += "final";
+							break;
 						case smsc::profiler::ProfileReportOptions::ReportNone:
 							result += "none";
 							break;
@@ -567,6 +570,10 @@ namespace smsc {
 				if (memcmp("full", delimiter+1, second_delimeter - (delimiter+1)) == 0)
 				{
 					profile.reportoptions = smsc::profiler::ProfileReportOptions::ReportFull;
+				}
+				else if (memcmp("final", delimiter+1, second_delimeter - (delimiter+1)) == 0)
+				{
+					profile.reportoptions = smsc::profiler::ProfileReportOptions::ReportFinal;
 				}
 				else if (memcmp("none", delimiter+1, second_delimeter - (delimiter+1)) == 0)
 				{
