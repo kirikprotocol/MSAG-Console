@@ -13,20 +13,91 @@
 namespace smsc { namespace store 
 {
 using namespace smsc::sms;
+using smsc::util::Logger;
 using smsc::util::config::Manager;
 using smsc::util::config::ConfigException;
 
 /* ----------------------------- ConnectionPool ------------------------ */
+
+const unsigned SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE = 10;
+const unsigned SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE = 5;
+
+log4cpp::Category& ConnectionPool::log = 
+    Logger::getCategory("smsc.store.ConnectionPool");
+
+void ConnectionPool::loadMaxSize(Manager& config)
+{
+    try {
+        size = (unsigned)config.getInt("db.connections.max");
+    } catch (ConfigException& exc) {
+        size = SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE;
+        log.warn("ConnectionPool max size wasn't specified ! "
+                 "Using default: %d", size);
+    }
+}
+
+void ConnectionPool::loadInitSize(Manager& config)
+{
+    try {
+        count = (unsigned)config.getInt("db.connections.init");
+    } catch (ConfigException& exc) {
+        count = SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE;
+        log.warn("ConnectionPool init size wasn't specified ! "
+                 "Using default: %d", count);
+    }
+}
+
+void ConnectionPool::loadDBInstance(Manager& config)
+    throw(ConfigException)
+{
+    try {
+        dbInstance = config.getString("db.instance");   
+    } catch (ConfigException& exc) {
+        log.error("DB instance name wasn't specified !");
+        throw;
+    }
+}
+
+void ConnectionPool::loadDBUserName(Manager& config)
+    throw(ConfigException)
+{
+    try {
+        dbUserName = config.getString("db.user");   
+    } catch (ConfigException& exc) {
+        log.error("DB user name wasn't specified !");
+        throw;
+    }
+}
+
+void ConnectionPool::loadDBUserPassword(Manager& config)
+    throw(ConfigException)
+{
+    try {
+        dbUserPassword = config.getString("db.password");   
+    } catch (ConfigException& exc) {
+        log.error("DB user password wasn't specified !");
+        throw;
+    }
+}
+
 ConnectionPool::ConnectionPool(Manager& config)
     throw(ConfigException, ConnectionFailedException) 
 {
-    size = (unsigned)config.getInt("db.connections.max");
-    count = (unsigned)config.getInt("db.connections.init");
-    dbInstance = config.getString("db.instance");
-    dbUserName = config.getString("db.user");
-    dbUserPassword = config.getString("db.password");
     
-    __require__(size >= count && dbInstance && dbUserName && dbUserPassword);
+    loadMaxSize(config);
+    loadInitSize(config);
+    loadDBInstance(config);
+    loadDBUserName(config);
+    loadDBUserPassword(config);
+
+    if (size < count) 
+    {
+        size = count;
+        log.warn("Specified ConnectionPool size less than init size. "
+                  "Using max: %d", size);
+    }
+
+    __require__(dbInstance && dbUserName && dbUserPassword);
 
     for (int i=0; i<count; i++)
     {
@@ -58,7 +129,6 @@ ConnectionPool::~ConnectionPool()
         if (connection) delete connection;
     }
     
-    // ???
     delete dbInstance;
     delete dbUserName;
     delete dbUserPassword;

@@ -7,6 +7,7 @@
 #include <core/synchronization/EventMonitor.hpp>
 #include <core/buffers/Array.hpp>
 #include <util/config/Manager.h>
+#include <util/Logger.h>
 #include <sms/sms.h>
 
 #include "StoreConfig.h"
@@ -15,15 +16,19 @@
 
 namespace smsc { namespace store 
 {
+    using smsc::util::Logger;
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigException;
     using smsc::core::buffers::Array;
+
     using namespace smsc::core::synchronization;
     
     struct Connection;
     class ConnectionPool
     {
     private:
+
+        static log4cpp::Category    &log;
 
         unsigned    size;
         unsigned    count;
@@ -37,6 +42,16 @@ namespace smsc { namespace store
         Array<Connection *> idle;
         Array<Connection *> busy;
         Array<Connection *> dead;
+        
+        void loadMaxSize(Manager& config);
+        void loadInitSize(Manager& config);
+        
+        void loadDBInstance(Manager& config)
+            throw(ConfigException);
+        void loadDBUserName(Manager& config)
+            throw(ConfigException);
+        void loadDBUserPassword(Manager& config)
+            throw(ConfigException);
 
     public:
     
