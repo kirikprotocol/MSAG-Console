@@ -36,7 +36,7 @@ class RouteManagerFunctionalTest
 
 public:
 	RouteManagerFunctionalTest(SmeManager* smeMan, RouteManager* routeMan,
-		RouteRegistry* routeReg);
+		RouteRegistry* routeReg, SmeRegistry* smeReg);
 	~RouteManagerFunctionalTest();
 	void executeTest(TCResultFilter* filter, int numAddr);
 	void printRoutes();
@@ -49,8 +49,8 @@ private:
 };
 
 RouteManagerFunctionalTest::RouteManagerFunctionalTest(SmeManager* _smeMan,
-	RouteManager* _routeMan, RouteRegistry* _routeReg)
-	: smeMan(_smeMan), routeMan(_routeMan), tcSme(_smeMan),
+	RouteManager* _routeMan, RouteRegistry* _routeReg, SmeRegistry* _smeReg)
+	: smeMan(_smeMan), routeMan(_routeMan), tcSme(_smeMan, _smeReg),
 	tcRoute(_routeMan, _routeReg) {}
 
 RouteManagerFunctionalTest::~RouteManagerFunctionalTest()
@@ -104,7 +104,8 @@ RouteInfo RouteManagerFunctionalTest::prepareForNewRoute(
 {
 	//Для каждого маршрута - отдельная sme (для идентификации)
 	sme.push_back(new SmeInfo());
-	stack.back()->push_back(tcSme.addCorrectSme(sme.back(), RAND_TC));
+	Address smeAddr;
+	stack.back()->push_back(tcSme.addCorrectSme(&smeAddr, sme.back(), RAND_TC));
 	if (createProxy)
 	{
 		SmeProxy* p;
@@ -324,7 +325,8 @@ int main(int argc, char* argv[])
 			RouteManager routeMan;
 			routeMan.assign(&smeMan);
 			RouteRegistry routeReg;
-			RouteManagerFunctionalTest test(&smeMan, &routeMan, &routeReg);
+			SmeRegistry smeReg;
+			RouteManagerFunctionalTest test(&smeMan, &routeMan, &routeReg, &smeReg);
 			test.executeTest(filter, numAddr);
 			test.printRoutes();
 		}

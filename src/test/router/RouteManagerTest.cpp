@@ -23,8 +23,8 @@ class RouteManagerTest
 
 public:
 	RouteManagerTest(SmeManager* smeMan, RouteManager* routeMan,
-		RouteRegistry* routeReg)
-		: tcSme(smeMan), tcRoute(routeMan, routeReg) {}
+		RouteRegistry* routeReg, SmeRegistry* smeReg)
+		: tcSme(smeMan, smeReg), tcRoute(routeMan, routeReg) {}
 
 	void addRouteNotMatch(const Address& origAddr, const Address& destAddr,
 		int smeNum, bool needProxy, int routeNum);
@@ -38,7 +38,8 @@ void RouteManagerTest::addRouteNotMatch(const Address& origAddr,
 {
 	SmeInfo sme;
 	SmeProxy* proxy = NULL;
-	cout << *tcSme.addCorrectSme(&sme, smeNum) << endl;
+	Address smeAddr;
+	cout << *tcSme.addCorrectSme(&smeAddr, &sme, smeNum) << endl;
 	if (needProxy)
 	{
 		cout << *tcSme.registerCorrectSmeProxy(sme.systemId, &proxy) << endl;
@@ -62,7 +63,8 @@ void RouteManagerTest::addRouteMatch(const Address& origAddr, const Address& des
 {
 	SmeInfo sme;
 	SmeProxy* proxy = NULL;
-	cout << *tcSme.addCorrectSme(&sme, smeNum) << endl;
+	Address smeAddr;
+	cout << *tcSme.addCorrectSme(&smeAddr, &sme, smeNum) << endl;
 	if (needProxy)
 	{
 		cout << *tcSme.registerCorrectSmeProxy(sme.systemId, &proxy) << endl;
@@ -77,7 +79,6 @@ void RouteManagerTest::addRouteMatch(const Address& origAddr, const Address& des
 void RouteManagerTest::execute()
 {
 /*
-addCorrectSme(11)->registerCorrectSmeProxy(1)->addCorrectRouteMatch(5)->addIncorrectRoute(1){101}
 */
 	Address origAddr, destAddr;
 	SmsUtil::setupRandomCorrectAddress(&origAddr);
@@ -85,23 +86,11 @@ addCorrectSme(11)->registerCorrectSmeProxy(1)->addCorrectRouteMatch(5)->addIncor
 	cout << "origAddr = " << origAddr << endl;
 	cout << "destAddr = " << destAddr << endl;
 
-	//addRouteMatch(origAddr, destAddr, 11, true, 5);
-
-	SmeInfo sme;
-	SmeProxy* proxy = NULL;
-	cout << *tcSme.addCorrectSme(&sme, 11) << endl;
-	cout << *tcSme.registerCorrectSmeProxy(sme.systemId, &proxy) << endl;
-	
-	RouteInfo route;
-	route.smeSystemId = sme.systemId;
-	route.source = origAddr;
-	route.dest = destAddr;
-	//cout << *tcRoute.addCorrectRouteNotMatch(&route, proxy, 5) << endl;
-	cout << *tcRoute.addCorrectRouteMatch(&route, proxy, RAND_TC) << endl;
-	//cout << *tcRoute.addIncorrectRoute(route, 1) << endl;
+	addRouteNotMatch(origAddr, destAddr, 1, true, 2);
+	addRouteMatch(origAddr, destAddr, 1, true, 1);
+	addRouteMatch(origAddr, destAddr, 1, true, 7);
 	tcRoute.commit();
 	cout << *tcRoute.lookupRoute(origAddr, destAddr) << endl;
-
 /*
 	cout << *tcRoute.addCorrectRouteMatch(sme.systemId, &routeData, 1) << endl;
 	cout << *tcRoute.addCorrectRouteNotMatch(sme.systemId, &routeData, 1) << endl;
@@ -122,7 +111,8 @@ int main(int argc, char* argv[])
 		RouteManager routeMan;
 		routeMan.assign(&smeMan);
 		RouteRegistry routeReg;
-		RouteManagerTest test(&smeMan, &routeMan, &routeReg);
+		SmeRegistry smeReg;
+		RouteManagerTest test(&smeMan, &routeMan, &routeReg, &smeReg);
 		test.execute();
 	}
 	catch (...)
