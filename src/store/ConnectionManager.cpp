@@ -87,12 +87,12 @@ void ConnectionPool::loadDBInstance(Manager& config)
 {
     try 
     {
-        dbInstance = config.getString("MessageStore.dbInstance");   
+        dbInstance = config.getString("MessageStore.Storage.dbInstance");   
     } 
     catch (ConfigException& exc) 
     {
         log.error("DB instance name wasn't specified ! "
-                  "Config parameter: <MessageStore.dbInstance>");
+                  "Config parameter: <MessageStore.Storage.dbInstance>");
         throw;
     }
 }
@@ -102,12 +102,12 @@ void ConnectionPool::loadDBUserName(Manager& config)
 {
     try 
     {
-        dbUserName = config.getString("MessageStore.dbUserName");   
+        dbUserName = config.getString("MessageStore.Storage.dbUserName");   
     } 
     catch (ConfigException& exc) 
     {
         log.error("DB user name wasn't specified ! "
-                  "Config parameter: <MessageStore.dbUserName>");
+                  "Config parameter: <MessageStore.Storage.dbUserName>");
         throw;
     }
 }
@@ -117,12 +117,12 @@ void ConnectionPool::loadDBUserPassword(Manager& config)
 {
     try 
     {
-        dbUserPassword = config.getString("MessageStore.dbUserPassword");   
+        dbUserPassword = config.getString("MessageStore.Storage.dbUserPassword");   
     } 
     catch (ConfigException& exc) 
     {
         log.error("DB user password wasn't specified ! "
-                  "Config parameter: <MessageStore.dbUserPassword>");
+                  "Config parameter: <MessageStore.Storage.dbUserPassword>");
         throw;
     }
 }

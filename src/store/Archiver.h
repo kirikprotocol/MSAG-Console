@@ -5,22 +5,30 @@
 #include <orl.h>
 
 #include <sms/sms.h>
+#include <core/threads/Thread.hpp>
+#include <core/synchronization/Event.hpp>
 
 #include "ConnectionManager.h"
 
 namespace smsc { namespace store 
 {
+    using smsc::core::threads::Thread;
+    using smsc::core::synchronization::Event;
+
     using namespace smsc::sms;
     
-    class Archiver
+    class Archiver : public Thread
     {
     private:
+        
+        Event   exit, exited;
         
         log4cpp::Category   &log;
 
         static const char*  selectSql;
         static const char*  insertSql;
         static const char*  deleteSql;
+        static const char*  lookIdSql;
 
         const char*     storageDBInstance;
         const char*     storageDBUserName;
@@ -36,7 +44,10 @@ namespace smsc { namespace store
         Statement*      selectStmt;
         Statement*      insertStmt;
         Statement*      deleteStmt;
+        Statement*      lookIdStmt;
         
+        ub4             idCounter; // for lookId
+
         SMSId           id;
         uint8_t         uState;
         uint8_t         msgReference;
@@ -71,14 +82,21 @@ namespace smsc { namespace store
         const char* loadDBUserPassword(Manager& config, const char* cat)
             throw(ConfigException);
     
+        void prepareSelectStmt() throw(StorageException);
+        void prepareInsertStmt() throw(StorageException);
+        void prepareDeleteStmt() throw(StorageException);
+        void prepareLookIdStmt() throw(StorageException);
+    
+        void archivate(bool check)
+            throw(StorageException); 
+    
     public:
 
         Archiver(Manager& config)
             throw(ConfigException);
         virtual ~Archiver();
-
-        void archivate()
-            throw(StorageException); 
+    
+        virtual int Execute();
     };
 
 }};
