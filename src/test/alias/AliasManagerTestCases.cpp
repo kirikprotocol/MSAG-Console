@@ -465,7 +465,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasException(
 				}
 				break;
 			case 3: //преобразование алиас -> адрес вызывает переполнение адреса
-				if (aliasLen + addrLen > MAX_ADDRESS_VALUE_LENGTH)
+				if (aliasLen + addrLen > MAX_ADDRESS_VALUE_LENGTH + 1)
 				{
 					int adLen = rand1(aliasLen + addrLen - MAX_ADDRESS_VALUE_LENGTH - 1);
 					int alLen = rand2(aliasLen,
@@ -556,7 +556,8 @@ TCResult* AliasManagerTestCases::deleteAliases()
 }
 
 void AliasManagerTestCases::printFindResult(const char* tc,
-	const Address& param, bool found, const Address& result)
+	const Address& param, bool found, const Address& result,
+	const AliasRegistry::AliasList& data)
 {
 	ostringstream os;
 	os << tc << ": found = " << (found ? "true" : "false") <<
@@ -565,6 +566,25 @@ void AliasManagerTestCases::printFindResult(const char* tc,
 	{
 		os << ", result = " << result;
 	}
+	os << ", destAlias = (";
+	for (int i = 0; i < data.size(); i++)
+	{
+		if (i)
+		{
+			os << ",";
+		}
+		os << data[i]->destAlias;
+	}
+	os << "), destAddr = (";
+	for (int i = 0; i < data.size(); i++)
+	{
+		if (i)
+		{
+			os << ",";
+		}
+		os << data[i]->destAddr;
+	}
+	os << ")";
 	getLog().debug("[%d]\t%s", thr_self(), os.str().c_str());
 }
 
@@ -582,7 +602,7 @@ TCResult* AliasManagerTestCases::findAliasByAddress(
 	{
 		Address alias;
 		bool found = aliasMan->AddressToAlias(addr, alias);
-		printFindResult("AliasManager::AddressToAlias()", addr, found, alias);
+		printFindResult("AliasManager::AddressToAlias()", addr, found, alias, data);
 		if (!found && data.size())
 		{
 			res->addFailure(101);
@@ -638,7 +658,7 @@ TCResult* AliasManagerTestCases::findAddressByAlias(
 	{
 		Address addr;
 		bool found = aliasMan->AliasToAddress(alias, addr);
-		printFindResult("AliasManager::AliasToAddress()", alias, found, addr);
+		printFindResult("AliasManager::AliasToAddress()", alias, found, addr, data);
 		if (!found && data.size())
 		{
 			res->addFailure(101);
