@@ -96,6 +96,7 @@ void CommandProcessor::clean()
         __trace__("Provider destructed.");
     }
     allProviders.Clean();
+    idxProviders.Clean();
 }
 
 bool CommandProcessor::addProvider(const Address& address,
