@@ -2581,7 +2581,7 @@ static string GetUSSDRequestString(
   for ( ; p < pEnd; ++p ) if ( (*p != '#') && (*p != '*') ) break;
   const char* sBegin = p;
   for ( ; p < pEnd; ++p ) if ( (*p == '#') || (*p == '*') ) break;
-  if( p == pEnd ) return string;
+  if( p == pEnd ) return string();
   else {
     return string(p+1,pEnd);
   }
