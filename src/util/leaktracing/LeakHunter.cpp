@@ -45,15 +45,23 @@ static void BackTrace(void** dump)
   void* savpc;
   frame* savfp;
 
+  int skip=2;
+
   while(
     ((unsigned long)fp)>0x1000 &&
     (savpc = ((void*)fp->fr_savpc)) &&
     counter < MAXTRACESIZE
   )
   {
-    dump[counter]=savpc;
+    if(skip==0)
+    {
+      dump[counter]=savpc;
+      ++counter;
+    }else
+    {
+      skip--;
+    }
     fp = (::frame*)fp->fr_savfp;
-    ++counter;
   }
   if(counter!=MAXTRACESIZE)dump[counter]=0;
 }
