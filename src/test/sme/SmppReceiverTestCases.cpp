@@ -84,7 +84,7 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 			if (pduData->pdu->get_commandId() == SUBMIT_SM_RESP)
 			{
 				PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
-				vector<int> tmp = responseChecker->checkSubmitSmResp(*origPdu, pdu);
+				vector<int> tmp = responseChecker->checkSubmitSmResp(pduData, pdu);
 				for (int i = 0; i < tmp.size(); i++)
 				{
 					res->addFailure(10 + tmp[i]);
@@ -99,7 +99,7 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 			pduData->responseFlag = true;
 			if (pduData->complete())
 			{
-				pduReg->removePdu(*pduData);
+				pduReg->removePdu(pduData);
 			}
 			else
 			{
@@ -265,7 +265,7 @@ TCResult* SmppReceiverTestCases::processNormalSms(PduDeliverySm &pdu)
 				//закончить обработку
 				if (pduData->complete())
 				{
-					pduReg->removePdu(*pduData);
+					pduReg->removePdu(pduData);
 				}
 			}
 		}
@@ -413,7 +413,7 @@ TCResult* SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu)
 				//закончить обработку
 				if (pduData->complete())
 				{
-					pduReg->removePdu(*pduData);
+					pduReg->removePdu(pduData);
 				}
 			}
 		}
@@ -515,7 +515,7 @@ TCResult* SmppReceiverTestCases::processIntermediateNotification(
 				//закончить обработку
 				if (pduData->complete())
 				{
-					pduReg->removePdu(*pduData);
+					pduReg->removePdu(pduData);
 				}
 			}
 		}

@@ -8,7 +8,7 @@
 #include "test/core/PduRegistry.hpp"
 #include "test/core/AliasRegistry.hpp"
 #include "test/core/RouteRegistry.hpp"
-#include "test/core/SmeUtil.hpp"
+#include "test/core/RouteChecker.hpp"
 #include "SmppResponsePduChecker.hpp"
 
 namespace smsc {
