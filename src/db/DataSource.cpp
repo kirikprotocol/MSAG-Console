@@ -223,6 +223,9 @@ int WatchDog::Execute()
                 __trace2__("DS WatchDog> Timer #%u expired for connection %x. "
                            "Time: left=%d, sleep=%u, current=%u",
                            timer, cd.connection, left, cd.deadline, time(NULL));
+                timers.erase(timer);
+                timersLock.Unlock();
+
                 try 
                 {
                     if (cd.connection) cd.connection->abort();
@@ -239,8 +242,6 @@ int WatchDog::Execute()
                                "on connection %x failed! Unknown reason.",
                                cd.connection);
                 }
-                timers.erase(timer);
-                timersLock.Unlock();
             }
             else
             {

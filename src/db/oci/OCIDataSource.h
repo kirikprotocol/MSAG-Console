@@ -297,7 +297,8 @@ namespace smsc { namespace db { namespace oci
     friend class OCIQuery;
     private:
         
-        static Mutex    connectLock;
+        static Mutex    doConnectLock;
+        Mutex           connectLock;
         
         const char*     dbInstance;
         const char*     dbUserName;

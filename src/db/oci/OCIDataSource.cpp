@@ -18,7 +18,7 @@ namespace smsc { namespace db { namespace oci
 
 /* ------------------------ Connection implementation ---------------------- */
 
-Mutex OCIConnection::connectLock;
+Mutex OCIConnection::doConnectLock;
 
 const int FUNCTION_MAX_ARGUMENTS_COUNT  = 100;
 const char* FUNCTION_RETURN_ATTR_NAME   = "RETURN";
@@ -54,32 +54,36 @@ void OCIConnection::connect()
             envhp=0L; svchp=0L; srvhp=0L; errhp=0L; sesshp=0L;
 
             // open connection to DB and begin user session
-            check(OCIEnvCreate(&envhp, OCI_OBJECT|OCI_ENV_NO_MUTEX,
-                               (dvoid *)0, 0, 0, 0, (size_t) 0, (dvoid **)0));
-            check(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&errhp,
-                                 OCI_HTYPE_ERROR, (size_t) 0, (dvoid **)0));
-            check(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&srvhp,
-                                 OCI_HTYPE_SERVER, (size_t) 0, (dvoid **) 0));
-            check(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&svchp,
-                                 OCI_HTYPE_SVCCTX, (size_t) 0, (dvoid **) 0));
-            check(OCIServerAttach(srvhp, errhp, (text *)dbInstance,
-                                  strlen(dbInstance), OCI_DEFAULT));
-            check(OCIAttrSet((dvoid *)svchp, OCI_HTYPE_SVCCTX,
-                             (dvoid *)srvhp, (ub4) 0, OCI_ATTR_SERVER, errhp));
-            check(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&sesshp,
-                                 OCI_HTYPE_SESSION, (size_t) 0, (dvoid **) 0));
-            check(OCIAttrSet((dvoid *)sesshp, (ub4) OCI_HTYPE_SESSION,
-                             (dvoid *)dbUserName, (ub4)strlen(dbUserName),
-                             (ub4) OCI_ATTR_USERNAME, errhp));
-            check(OCIAttrSet((dvoid *)sesshp, (ub4) OCI_HTYPE_SESSION,
-                             (dvoid *)dbUserPassword,
-                             (ub4) strlen(dbUserPassword),
-                             (ub4) OCI_ATTR_PASSWORD, errhp));
-            check(OCISessionBegin(svchp, errhp, sesshp, OCI_CRED_RDBMS,
-                                  (ub4) OCI_DEFAULT));
-            check(OCIAttrSet((dvoid *)svchp, (ub4) OCI_HTYPE_SVCCTX,
-                             (dvoid *)sesshp, (ub4) 0,
-                             (ub4) OCI_ATTR_SESSION, errhp));
+            {
+                MutexGuard  guard(doConnectLock);
+
+                check(OCIEnvCreate(&envhp, OCI_OBJECT|OCI_ENV_NO_MUTEX,
+                                   (dvoid *)0, 0, 0, 0, (size_t) 0, (dvoid **)0));
+                check(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&errhp,
+                                     OCI_HTYPE_ERROR, (size_t) 0, (dvoid **)0));
+                check(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&srvhp,
+                                     OCI_HTYPE_SERVER, (size_t) 0, (dvoid **) 0));
+                check(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&svchp,
+                                     OCI_HTYPE_SVCCTX, (size_t) 0, (dvoid **) 0));
+                check(OCIServerAttach(srvhp, errhp, (text *)dbInstance,
+                                      strlen(dbInstance), OCI_DEFAULT));
+                check(OCIAttrSet((dvoid *)svchp, OCI_HTYPE_SVCCTX,
+                                 (dvoid *)srvhp, (ub4) 0, OCI_ATTR_SERVER, errhp));
+                check(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&sesshp,
+                                     OCI_HTYPE_SESSION, (size_t) 0, (dvoid **) 0));
+                check(OCIAttrSet((dvoid *)sesshp, (ub4) OCI_HTYPE_SESSION,
+                                 (dvoid *)dbUserName, (ub4)strlen(dbUserName),
+                                 (ub4) OCI_ATTR_USERNAME, errhp));
+                check(OCIAttrSet((dvoid *)sesshp, (ub4) OCI_HTYPE_SESSION,
+                                 (dvoid *)dbUserPassword,
+                                 (ub4) strlen(dbUserPassword),
+                                 (ub4) OCI_ATTR_PASSWORD, errhp));
+                check(OCISessionBegin(svchp, errhp, sesshp, OCI_CRED_RDBMS,
+                                      (ub4) OCI_DEFAULT));
+                check(OCIAttrSet((dvoid *)svchp, (ub4) OCI_HTYPE_SVCCTX,
+                                 (dvoid *)sesshp, (ub4) 0,
+                                 (ub4) OCI_ATTR_SESSION, errhp));
+            }
 
             isConnected = true; isDead = false;
         }
@@ -103,14 +107,17 @@ void OCIConnection::disconnect()
             (void) statements.Pop(statement);
             if (statement) delete statement;
         }
-
-        if (errhp && svchp) {
-        // logoff from database server
-            (void) OCILogoff(svchp, errhp);
-        }
-        if (envhp) {
-        // free envirounment handle, all derrived handles will be freed too
-            (void) OCIHandleFree(envhp, OCI_HTYPE_ENV);
+        
+        {
+            MutexGuard  guard(doConnectLock);
+            if (errhp && svchp) {
+            // logoff from database server
+                (void) OCILogoff(svchp, errhp);
+            }
+            if (envhp) {
+            // free envirounment handle, all derrived handles will be freed too
+                (void) OCIHandleFree(envhp, OCI_HTYPE_ENV);
+            }
         }
 
         isConnected = false; isDead = false;
@@ -135,7 +142,7 @@ void OCIConnection::abort()
     MutexGuard  guard(connectLock);
 
     // TODO: check that operation is still active on this connection !!!
-    if (svchp && errhp) {
+    if (isConnected && svchp && errhp) {
         check(OCIBreak(svchp, errhp));
     }
 }
