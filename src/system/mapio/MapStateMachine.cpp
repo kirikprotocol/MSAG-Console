@@ -374,15 +374,15 @@ static string RouteToString(MapDialog* dialog)
 #define MAP_TRY  try {
 #define MAP_CATCH(__dialogid_map,__dialogid_smsc)     \
 }catch(MAPDIALOG_HEREISNO_ID& x){\
-  __trace2__("#NOID#MAP::%s# MAP.did 0x%x, SMSC.did 0x%x",__PRETY_FUNCTION__,__dialogid_map,__dialogid_smsc);\
+  __trace2__("#NOID#MAP::%s# MAP.did 0x%x, SMSC.did 0x%x",__PRETTY_FUNCTION__,__dialogid_map,__dialogid_smsc);\
   __trace2__("   <exception>:%s",x.what());\
 }catch(MAPDIALOG_ERROR& err){\
-  __trace2__("#ERR#MAP::%s# MAP.did 0x%x, SMSC.did 0x%x",__PRETY_FUNCTION__,__dialogid_map,__dialogid_smsc);\
+  __trace2__("#ERR#MAP::%s# MAP.did 0x%x, SMSC.did 0x%x",__PRETTY_FUNCTION__,__dialogid_map,__dialogid_smsc);\
   __trace2__("   <exception>:%s",err.what());\
   TryDestroyDialog(__dialogid_map);\
   SendErrToSmsc(__dialogid_smsc,err.code);\
 }catch(exception& e){\
-  __trace2__("#except#MAP::%s# MAP.did 0x%x, SMSC.did 0x%x",__PRETY_FUNCTION__,__dialogid_map,__dialogid_smsc);\
+  __trace2__("#except#MAP::%s# MAP.did 0x%x, SMSC.did 0x%x",__PRETTY_FUNCTION__,__dialogid_map,__dialogid_smsc);\
   __trace2__("   <exception>:%s",e.what());\
   TryDestroyDialog(__dialogid_map);\
   SendErrToSmsc(__dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_FATAL,0));\
@@ -495,7 +495,7 @@ void MAPIO_PutCommand(const SmscCommand& cmd )
         DropMapDialog(dialog.get());
       }else 
         throw MAPDIALOG_BAD_STATE(
-          FormatText("MAP::%s bad state %d, did 0x%x, SMSC.did 0x%x",__PRETTY_FUNCTION__,dialog->state,dialog->dialogid,dialog->dialogid_smsc));
+          FormatText("MAP::%s bad state %d, did 0x%x, SMSC.did 0x%x",__PRETTY_FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
     }
   }MAP_CATCH(dialogid_map,dialogid_smsc);
 }
