@@ -141,6 +141,18 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     ConfigView* releaseSettingsCfg = releaseSettingsCfgGuard.get();
     
     ReleaseSettings releaseSettings;
+    try { releaseSettings.detachCause   = releaseSettingsCfg->getInt ("Detach.cause"); } catch (...) {
+        smsc_log_warn(logger, "Parameter <MCISme.Reasons.Detach.cause> missed.");
+        releaseSettings.detachCause = 0;
+    }
+    try { releaseSettings.detachInform  = releaseSettingsCfg->getBool("Detach.inform") ? 1:0; } catch (...) {
+        smsc_log_warn(logger, "Parameter <MCISme.Reasons.Detach.inform> missed.");
+        releaseSettings.detachInform = 0;
+    }
+    try { releaseSettings.skipUnknownCaller  = releaseSettingsCfg->getBool("skipUnknownCaller"); } catch (...) {
+        smsc_log_warn(logger, "Parameter <MCISme.Reasons.Detach.inform> missed. Skip is switched off.");
+        releaseSettings.skipUnknownCaller = false;
+    }
     try { releaseSettings.strategy = releaseSettingsCfg->getInt ("strategy"); } catch (...) {
         smsc_log_warn(logger, "Parameter <MCISme.Reasons.strategy> missed. Using default redirect strategy (MTS defualt)");
         releaseSettings.strategy = REDIRECT_STRATEGY;
@@ -149,7 +161,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
         releaseSettings.strategy != REDIRECT_STRATEGY) 
         throw ConfigException("Parameter <MCISme.Reasons.strategy> value '%d' is invalid.", 
                               releaseSettings.strategy);
-
+    
     releaseSettings.busyCause           = releaseSettingsCfg->getInt ("Busy.cause");
     releaseSettings.busyInform          = releaseSettingsCfg->getBool("Busy.inform") ? 1:0;
     releaseSettings.noReplyCause        = releaseSettingsCfg->getInt ("NoReply.cause");
