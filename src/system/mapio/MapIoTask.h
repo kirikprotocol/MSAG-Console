@@ -42,6 +42,29 @@ extern "C" {
 
 #define SSN 8
 
+enum MapState{
+  MAPST_WaitHlrVersion,
+  MAPST_SendingRInfo,
+  MAPST_RInfoFallBack,
+  MAPST_WaitRInfoConf,
+  MAPST_WaitRInfoClose,
+  MAPST_WaitMcsVersion,
+//  MAPST_SendingSms,
+  MAPST_WaitSpecOpenConf,
+  MAPST_WaitOpenConf,
+  MAPST_WaitSmsConf,
+  MAPST_WaitSpecDelimeter,
+  MAPST_WaitSmsClose,
+  MAPST_WaitSms,
+  MAPST_WaitSmsMOInd,
+  MAPST_WaitSmsMODelimiter,
+  MAPST_WaitSubmitCmdConf,
+  MAPST_WaitSmsMODelimiter2,
+  MAPST_CLOSED,
+  MAPST_ABORTED,
+  MAPST_BROKEN
+};
+
 class hash_func_ET96MAP_DID{
 public:
   static inline unsigned CalcHash(ET96MAP_DIALOGUE_ID_T id){
@@ -49,32 +72,17 @@ public:
   }
 };
 
-enum MapDialogState {
-  MAPST_START,
-  MAPST_WAIT_SUBMIT_RESPONSE,
-  MAPST_READY_FOR_SENDSMS,
-  MAPST_WAIT_RINFO,
-  MAPST_RINFOIND,
-  MAPST_READY_FOR_CLOSE,
-  MAPST_WAIT_SEGMINTATION,
-  MAPST_BROKEN,
-  MAPST_OPENCONF
-};
-
 extern void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
-
 
 /**
   \class MapDialog
 */
-class MapDialog{
+struct MapDialog{
   Mutex mutex;
-  unsigned ref_count;
-  MapDialogState state;
-  ET96MAP_DIALOGUE_ID_T dialogid;
-  unsigned smscDialogId;
+  MapState state;
+  ET96MAP_DIALOGUE_ID_T dialogid_map;
+  unsigned dialogid_smsc;
   ET96MAP_INVOKE_ID_T invokeId;
-  ET96MAP_LOCAL_SSN_T ssn;
   auto_ptr<char> abonent;
   auto_ptr<SMS> sms;
   auto_ptr<ET96MAP_SM_RP_UI_T> auto_ui;
@@ -87,7 +95,6 @@ class MapDialog{
  	ET96MAP_SM_RP_DA_T smRpDa;
   ET96MAP_SM_RP_OA_T smRpOa;
   unsigned version;
-public:
   MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned version=2) : 
     ref_count(1),
     state(MAPST_START), 
@@ -103,9 +110,7 @@ public:
       freeDialogueId(dialogid);
     }
   }
-  Mutex& getMutex(){
-    return mutex;
-  }
+  Mutex& getMutex(){return mutex;}
   void Release(){
     unsigned x = 0;
     mutex.Lock();
@@ -115,103 +120,9 @@ public:
       delete this;
     }
   }
-  void AddRef(){
-    MutexGuard g(mutex);
-    ++ref_count;
-  }
-  USHORT_T getDialogId() { return dialogid; }
-  void setDialogId(USHORT_T ndid) { dialogid = ndid; }
-  unsigned getSMSCDialogId() { return smscDialogId; }
-  void setSMSCDialogId(unsigned did) {smscDialogId=did;}
-  const char* getAbonent() { 
-    return abonent.get();
-  }
-  void setAbonent(const char* a) { 
-    abonent = auto_ptr<char>(new char[32]);
-    memset(abonent.get(),0,32); 
-    strncpy(abonent.get(),a,31); 
-  }
-  virtual USHORT_T  Et96MapV2SendRInfoForSmConf ( 
-    ET96MAP_LOCAL_SSN_T localSsn,
-		ET96MAP_DIALOGUE_ID_T dialogueId,
-		ET96MAP_INVOKE_ID_T invokeId,
-		ET96MAP_IMSI_T *imsi_sp,
-		ET96MAP_ADDRESS_T *mscNumber_sp,
-		ET96MAP_LMSI_T *lmsi_sp,
-		ET96MAP_ERROR_ROUTING_INFO_FOR_SM_T *errorSendRoutingInfoForSm_sp,
-		ET96MAP_PROV_ERR_T *provErrCode_p );
-  virtual USHORT_T  Et96MapV2ForwardSmMOInd( 
-    ET96MAP_LOCAL_SSN_T lssn, 
-    ET96MAP_DIALOGUE_ID_T dialogId,
-    ET96MAP_INVOKE_ID_T invokeId, 
-    ET96MAP_SM_RP_DA_T* dstAddr, 
-    ET96MAP_SM_RP_OA_T* srcAddr,  
-    ET96MAP_SM_RP_UI_T* ud );
-  virtual bool  Et96MapCloseInd(
-    ET96MAP_LOCAL_SSN_T ssn,
-    ET96MAP_DIALOGUE_ID_T did,
-    ET96MAP_USERDATA_T *ud,
-    UCHAR_T priorityOrder);
-  virtual void  Et96MapOpenConf (
-    ET96MAP_LOCAL_SSN_T localSsn,
-    ET96MAP_DIALOGUE_ID_T dialogueId,
-    ET96MAP_OPEN_RESULT_T openResult,
-    ET96MAP_REFUSE_REASON_T *refuseReason_p,
-    ET96MAP_SS7_ADDR_T *respondingAddr_sp,
-    ET96MAP_APP_CNTX_T *appContext_sp,
-    ET96MAP_USERDATA_T *specificInfo_sp,
-    ET96MAP_PROV_ERR_T *provErrCode_p);
-  void setInvokeId(ET96MAP_INVOKE_ID_T invokeId) {this->invokeId = invokeId;}
-  // возвращает истину если это последнее сообщение в диалоге и далее диалог
-  // должн быть закрыт
-  virtual bool ProcessCmd(const SmscCommand& cmd);
-  virtual void Et96MapPAbortInd(
-    ET96MAP_LOCAL_SSN_T lssn,
-    ET96MAP_DIALOGUE_ID_T dialogid,
-    ET96MAP_PROV_REASON_T reason,
-    ET96MAP_SOURCE_T source,
-    UCHAR_T priorityOrder);
-  virtual void Et96MapUAbortInd(
-    ET96MAP_LOCAL_SSN_T lssn,
-    ET96MAP_DIALOGUE_ID_T dialogid,
-    ET96MAP_USER_REASON_T *reason,
-    ET96MAP_DIAGNOSTIC_INFO_T* diag,
-    ET96MAP_USERDATA_T *ud,
-    UCHAR_T priorityOrder);
-  virtual void Et96MapV2ForwardSmMTConf (
-    ET96MAP_LOCAL_SSN_T localSsn,
-    ET96MAP_DIALOGUE_ID_T dialogid,
-    ET96MAP_INVOKE_ID_T invokeId,
-    ET96MAP_ERROR_FORW_SM_MT_T *errorForwardSMmt_sp,
-    ET96MAP_PROV_ERR_T *provErrCode_p);
-  virtual void Et96MapDelimiterInd(
-    ET96MAP_LOCAL_SSN_T lssn,
-    ET96MAP_DIALOGUE_ID_T dialogId,
-    UCHAR_T priorityOrder);
-// Version 1
-  virtual USHORT_T Et96MapV1ForwardSmMT_MOConf (
-    ET96MAP_LOCAL_SSN_T localSsn,
-    ET96MAP_DIALOGUE_ID_T dialogueId,
-    ET96MAP_INVOKE_ID_T invokeId,
-    ET96MAP_ERROR_FORW_SM_MT_T *errorForwardSMmt_sp,
-    ET96MAP_PROV_ERR_T *provErrCode_p);
-  virtual USHORT_T Et96MapV1ForwardSmMOInd (
-    ET96MAP_LOCAL_SSN_T localSsn,
-    ET96MAP_DIALOGUE_ID_T dialogueId,
-    ET96MAP_INVOKE_ID_T invokeId,
-    ET96MAP_SM_RP_DA_T *smRpDa_sp,
-    ET96MAP_SM_RP_OA_T *smRpOa_sp,
-    ET96MAP_SM_RP_UI_T *smRpUi_sp);
-  virtual USHORT_T Et96MapV1SendRInfoForSmConf (
-    ET96MAP_LOCAL_SSN_T localSsn,
-    ET96MAP_DIALOGUE_ID_T dialogueId,
-    ET96MAP_INVOKE_ID_T invokeId,
-    ET96MAP_IMSI_T *imsi_sp,
-    ET96MAP_LOCATION_INFO_T *locationInfo_sp,
-    ET96MAP_LMSI_T *lmsi_sp,
-    ET96MAP_MWD_SET_T *mwdSet,
-    ET96MAP_ERROR_ROUTING_INFO_FOR_SM_T *errorSendRoutingInfoForSm_sp,
-    ET96MAP_PROV_ERR_T *provErrCode_p);
+  void AddRef(){MutexGuard g(mutex);++ref_count;}
+private:
+  unsigned ref_count;
 };
 
 class DialogRefGuard{
@@ -237,16 +148,6 @@ public:
   MapDialog* operator->() { return dialog; }
   MapDialog* get() { return dialog; }
 };
-
-/**
-  \class MapDialogCntItem
-*/
-//struct MapDialogCntItem{
-  //ET96MAP_DIALOGUE_ID_T dialogueId;
-  //ET96MAP_LOCAL_SSN_T localSsn;
-  //ET96MAP_INVOKE_ID_T invokeId;
-  //auto_ptr<MapDialog> dialogue;
-//};
 
 extern ET96MAP_DIALOGUE_ID_T allocateDialogueId();
 
@@ -291,15 +192,8 @@ public:
   
   MapDialog* createDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn/*,const char* abonent*/,unsigned version=2){
     MutexGuard g(sync);
-    /*__trace2__("MAP::createSMSCDialog: try create dialog on abonent %s",abonent);
-    if ( lock_map.Exists(abonent) ) {
-      __trace2__("MAP::createSMSCDialog: locked");
-      return 0;
-    }*/
     MapDialog* dlg = new MapDialog(dialogueid,lssn,version);
-    //dlg->setAbonent(abonent);
     hash.Insert(dialogueid,dlg);
-    //lock_map.Insert(abonent,1);
     __trace2__("MAP:: new dialog 0x%p for dialogid 0x%x",dlg,dialogueid);
     dlg->AddRef();
     return dlg;
@@ -370,6 +264,7 @@ public:
   virtual int Execute();
   virtual const char* taskName() { return "MapTracker";}
 };
+
 /*
 */
 class MapIoTask : public ThreadedTask{
