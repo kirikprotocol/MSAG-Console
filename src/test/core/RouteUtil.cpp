@@ -12,15 +12,14 @@ using smsc::test::sms::operator<<;
 using namespace smsc::router;
 using namespace smsc::test::util;
 
-void RouteUtil::setupRandomCorrectRouteInfo(
-	const SmeSystemId& smeSystemId, RouteInfo* route)
+void RouteUtil::setupRandomCorrectRouteInfo(RouteInfo* route)
 {
 	route->priority = rand2(RoutePriorityMin, RoutePriorityMax);
 	route->billing = rand0(1);
 	route->paid = rand0(1);
 	route->archived = rand0(1);
 	route->routeId = (RouteId) rand0(INT_MAX);
-	route->smeSystemId = smeSystemId;
+	//route->smeSystemId = ...
 	//route->source = ...
 	//route->dest = ...
 }
@@ -78,22 +77,10 @@ ostream& operator<< (ostream& os, const RouteInfo& route)
 	return os;
 }
 
-ostream& operator<< (ostream& os, const TestRouteData& data)
+ostream& operator<< (ostream& os, const RouteHolder& holder)
 {
-	os << "match = " << (data.match ? "true" : "false");
-	os << ", origAddr = " << data.origAddr;
-	os << ", destAddr = " << data.destAddr;
-	os << ", origAddrMatch = " << data.origAddrMatch;
-	os << ", destAddrMatch = " << data.destAddrMatch;
-	if (data.proxy)
-	{
-		os << ", proxyId = " << (data.proxy->getUniqueId());
-	}
-	else
-	{
-		os << ", proxy = NULL";
-	}
-	os << ", route = {" << *data.route << "}";
+	os << "route = {" << holder.route;
+	os << "}, proxy = " << holder.proxy->getUniqueId();
 	return os;
 }
 

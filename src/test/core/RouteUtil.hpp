@@ -19,56 +19,27 @@ using smsc::router::RouteInfo;
 using smsc::smeman::SmeSystemId;
 using smsc::smeman::SmeProxy;
 
-struct TestRouteData
+struct RouteHolder
 {
-	bool match;
-	float origAddrMatch;
-	float destAddrMatch;
-	const Address origAddr;
-	const Address destAddr;
+	const RouteInfo route;
 	const SmeProxy* proxy;
-	RouteInfo* route;
-
-	TestRouteData(const Address& _origAddr, const Address& _destAddr,
-		SmeProxy* _proxy = NULL)
-		: match(false), origAddrMatch(0.0), destAddrMatch(0.0),
-		origAddr(_origAddr), destAddr(_destAddr),
-		proxy(_proxy), route (NULL) {}
-
-	TestRouteData(const TestRouteData& data)
-		: match(data.match), origAddrMatch(data.origAddrMatch),
-		destAddrMatch(data.destAddrMatch), origAddr(data.origAddr),
-		destAddr(data.destAddr), proxy(data.proxy),
-		route(NULL)
-	{
-		if (data.route)
-		{
-			route = new RouteInfo(*data.route);
-		}
-	}
-
-	~TestRouteData()
-	{
-		if (route)
-		{
-			delete route;
-		}
-		//delete proxy;
-	}
+	
+	RouteHolder(const RouteInfo& routeInfo, const SmeProxy* smeProxy)
+		: route(routeInfo), proxy(smeProxy) {}
+	~RouteHolder() {}
 };
 
 class RouteUtil
 {
 public:
-	static void setupRandomCorrectRouteInfo(const SmeSystemId& smeSystemId,
-		RouteInfo* info);
+	static void setupRandomCorrectRouteInfo(RouteInfo* info);
 
 	static vector<int> compareRoutes(const RouteInfo& route1,
 		const RouteInfo& route2);
 };
 
 ostream& operator<< (ostream& os, const RouteInfo& route);
-ostream& operator<< (ostream& os, const TestRouteData& data);
+ostream& operator<< (ostream& os, const RouteHolder& holder);
 
 }
 }
