@@ -53,6 +53,11 @@ bool SmeRegistry::isSmeRegistered(const SmeSystemId& smeId) const
 	return (it != smeIdSet.end());
 }
 
+const SmeRegistry::AddressList& SmeRegistry::list()
+{
+	return addrList;
+}
+
 }
 }
 }

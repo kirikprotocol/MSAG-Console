@@ -25,6 +25,10 @@ using smsc::test::sms::ltAddress;
  */
 class SmeRegistry
 {
+public:
+	typedef vector<const Address*> AddressList;
+
+private:
 	struct SmeData
 	{
 		const SmeSystemId systemId;
@@ -35,7 +39,6 @@ class SmeRegistry
 			: systemId(data.systemId), pduReg(data.pduReg) {}
 	};
 	typedef map<const Address, SmeData, ltAddress> AddressMap;
-	typedef vector<const Address*> AddressList;
 	typedef set<SmeSystemId> SmeSystemIdSet;
 	AddressMap addrMap;
 	AddressList addrList;
@@ -54,6 +57,8 @@ public:
 	const Address* getRandomAddress() const;
 
 	bool isSmeRegistered(const SmeSystemId& smeId) const;
+
+	const AddressList& list();
 };
 
 }
