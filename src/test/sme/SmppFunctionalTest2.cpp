@@ -322,11 +322,23 @@ pair<uint32_t, time_t> TestSmeFunc::sendDeliverySmResp(PduDeliverySm& pdu)
 int TestSmeErr::Execute()
 {
 	cout << taskName() << " started" << endl;
+	//подготовить последовательность команд
+	vector<int> seq;
+	seq.insert(seq.end(), 20, 1);
+	seq.insert(seq.end(), 20, 2);
+	seq.push_back(3);
+	seq.insert(seq.end(), 20, 4);
+	seq.push_back(5);
+	seq.insert(seq.end(), 3, 6);
+	seq.push_back(7);
+	seq.push_back(8);
+	random_shuffle(seq.begin(), seq.end());
+	//тест
 	SmppProtocolErrorTestCases tc(config, fixture->smeAddr, fixture->chkList);
 	while (!isStopping)
 	{
-		++tcCount;
-		switch (rand1(8))
+		int idx = ++tcCount % seq.size();
+		switch (seq[idx])
 		{
 			case 1:
 				tc.invalidBindScenario(RAND_TC);

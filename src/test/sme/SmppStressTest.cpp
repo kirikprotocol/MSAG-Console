@@ -36,14 +36,14 @@ class TestSme : public ThreadedTask
 	const int smscPort;
 	const Address smeAddr;
 	const SmeInfo smeInfo;
-	int count;
+	int tcCount;
 	bool paused;
 	Event event;
 	CheckList* chkList;
 public:
 	TestSme(const string& smscHost, int smscPort, const Address& smeAddr,
 		const SmeInfo& smeInfo, CheckList* chkList);
-	int getCount() { return count; }
+	int getTcCount() { return tcCount; }
 	
 	virtual int Execute();
 	virtual const char* taskName() { return "TestSme"; }
@@ -55,10 +55,22 @@ public:
 TestSme::TestSme(const string& _smscHost, int _smscPort, const Address& _smeAddr,
 	const SmeInfo& _smeInfo, CheckList* _chkList)
 : smscHost(_smscHost), smscPort(_smscPort), smeAddr(_smeAddr),
-	smeInfo(_smeInfo), count(0), paused(false), chkList(_chkList) {}
+	smeInfo(_smeInfo), tcCount(0), paused(false), chkList(_chkList) {}
 
 int TestSme::Execute()
 {
+	//подготовить последовательность команд
+	vector<int> seq;
+	seq.insert(seq.end(), 20, 1);
+	seq.insert(seq.end(), 20, 2);
+	seq.push_back(3);
+	seq.insert(seq.end(), 20, 4);
+	seq.push_back(5);
+	seq.insert(seq.end(), 3, 6);
+	seq.push_back(7);
+	seq.push_back(8);
+	random_shuffle(seq.begin(), seq.end());
+	//конфиг
 	SmeConfig conf;
 	conf.host = smscHost;
 	conf.port = smscPort;
@@ -70,7 +82,8 @@ int TestSme::Execute()
 	{
 		try
 		{
-			switch (rand1(8))
+			int idx = ++tcCount % seq.size();
+			switch (seq[idx])
 			{
 				case 1:
 					tc.invalidBindScenario(RAND_TC);
@@ -101,7 +114,6 @@ int TestSme::Execute()
 			}
 			__trace__("***Scenario completed***\n");
 			sleep(1); //подождать, чтобы освободился systemId
-			count++;
 			if (paused)
 			{
 				event.Wait();
@@ -229,7 +241,7 @@ void executeTest(const string& smscHost, int smscPort, CheckList* chkList)
 		{
 			for (int i = 0; i < sme.size(); i++)
 			{
-				cout << "sme[" << i << "]: " << sme[i]->getCount() << endl;
+				cout << "sme[" << i << "]: " << sme[i]->getTcCount() << endl;
 			}
 			continue;
 		}
