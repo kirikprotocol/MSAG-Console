@@ -45,6 +45,7 @@ public:
       return 0;
     }
     int retval=cond_wait(&event,&mutex.mutex);
+    signaled=0;
     mutex.Unlock();
     return retval;
 #endif
