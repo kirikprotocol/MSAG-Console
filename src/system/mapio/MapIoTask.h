@@ -64,7 +64,12 @@ enum MapState{
   MAPST_START = 16,
   MAPST_CLOSED = 17,
   MAPST_ABORTED = 18,
-  MAPST_BROKEN = 19
+  MAPST_BROKEN = 19,
+  MAPST_END = 20,
+  MAPST_ImsiWaitACVersion = 21,
+  MAPST_ImsiWaitOpenConf = 22,
+  MAPST_ImsiWaitRInfo = 23,
+  MAPST_ImsiWaitCloseInd = 24
 };
 
 class hash_func_ET96MAP_DID{
@@ -101,13 +106,19 @@ struct MapDialog{
   unsigned version;
   string s_imsi;
   string s_msc;
+  MapDialog assosiace;
+//  bool isMOreq;
+//  unsigned dialogid_req;
   MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned version=2) : 
     ref_count(1),
     state(MAPST_START), 
     dialogid_map(dialogid),
     dialogid_smsc(0),
     mms(false),
-    version(version)
+    version(version),
+    associate(0)
+//    isMOreq(false),
+//    dialogid_req(0)
     {}
   virtual ~MapDialog(){
     __trace2__("MAP::Dialog::~MapDialog 0x%x(0x%x)",dialogid_map,dialogid_smsc);
@@ -116,6 +127,8 @@ struct MapDialog{
     if ( dialogid_smsc != 0 && dialogid_map != 0){
       freeDialogueId(dialogid_map);
     }
+    if ( associate ) associate->Release();
+    associate = 0;
   }
   Mutex& getMutex(){return mutex;}
   void Release(){
@@ -229,6 +242,18 @@ public:
     return dlg;
   }
   
+  MapDialog* createDialogImsiReq(ET96MAP_LOCAL_SSN_T lssn,unsigned version=2,MapDialog* associate){
+    MutexGuard g(sync);
+    ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
+    MapDialog* dlg = new MapDialog(map_dialog,lssn,version);
+    dialogId_pool.pop_front();
+    hash.Insert(dialogueid,dlg);
+    __trace2__("MAP:: new dialog 0x%p for dialogid 0x%x",dlg,dialogueid);
+    dlg->AddRef();
+    dialog->associate->AddRef();
+    return dlg;
+  }
+  
   MapDialog* createOrAttachSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent, const SmscCommand& cmd){
     if ( abonent.length() == 0 )
       throw runtime_error("MAP::createOrAttachSMSCDialog: can't create MT dialog without abonent");
@@ -287,6 +312,7 @@ public:
       __trace2__("MAP:: drop dialog 0x%p for dialogid 0x%x",item,dialogueid);
       if ( item->abonent.length() != 0 ) lock_map.Delete(item->abonent);
       hash.Delete(dialogueid);
+      item->state = MAPST_END;
       item->Release();
     }else{
       __trace2__("MAP::dropDialog: has no dialog for dialogid 0x%x",dialogueid);
