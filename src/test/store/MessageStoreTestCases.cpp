@@ -148,9 +148,6 @@ TCResult* MessageStoreTestCases::storeCorrectSM(SMSId* idp, SMS* smsp,
 	uint8_t destAddrLength = destAddr.getValue(destAddrValue);
 	uint8_t destAddrType = destAddr.getTypeOfNumber();
 	uint8_t destAddrPlan = destAddr.getNumberingPlan();
-	//random address
-	int addrLength = rand1(MAX_ADDRESS_LENGTH); //задаем случайную длину адреса
-	char* addrValue = rand_char(addrLength).get();
 	for (; s.check(); s++)
 	{
 		SMS sms;
@@ -184,10 +181,13 @@ TCResult* MessageStoreTestCases::storeCorrectSM(SMSId* idp, SMS* smsp,
 					sms.setDestinationAddress(destAddr);
 					break;
 				case 1005: //отличие только в origAddrValue
-					sms.setMessageReference(msgRef);
-					sms.setOriginatingAddress(addrLength, origAddrType,
-						origAddrPlan, addrValue);
-					sms.setDestinationAddress(destAddr);
+					{
+						int addrLength = rand1(MAX_ADDRESS_LENGTH);
+						sms.setMessageReference(msgRef);
+						sms.setOriginatingAddress(addrLength, origAddrType,
+							origAddrPlan, rand_char(addrLength).get());
+						sms.setDestinationAddress(destAddr);
+					}
 					break;
 				case 1006: //отличие только в destAddrType
 					sms.setMessageReference(msgRef);
@@ -202,10 +202,13 @@ TCResult* MessageStoreTestCases::storeCorrectSM(SMSId* idp, SMS* smsp,
 						destAddrPlan + 1, destAddrValue);
 					break;
 				case 1008: //отличие только в destAddrValue
-					sms.setMessageReference(msgRef + 1);
-					sms.setOriginatingAddress(origAddr);
-					sms.setDestinationAddress(addrLength, destAddrType,
-						destAddrPlan, addrValue);
+					{
+						int addrLength = rand1(MAX_ADDRESS_LENGTH);
+						sms.setMessageReference(msgRef);
+						sms.setOriginatingAddress(origAddr);
+						sms.setDestinationAddress(addrLength, destAddrType,
+							destAddrPlan, rand_char(addrLength).get());
+					}
 					break;
 				default:
 					throw s;
