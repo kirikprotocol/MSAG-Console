@@ -229,7 +229,7 @@ int SmppInputThread::Execute()
                 trace("try to register sme");
                 smeManager->registerSmeProxy(
                   bindpdu->get_systemId(),
-                  bindpdu->get_password(),
+                  bindpdu->get_password()?bindpdu->get_password():"",
                   proxy);
                 proxy->setId(bindpdu->get_systemId());
                 resppdu.get_header().
