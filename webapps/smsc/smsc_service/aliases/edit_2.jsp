@@ -25,4 +25,4 @@ changed to "<%=alias%>&nbsp;-&gt;&nbsp;<%=address%>" sucessfully.
 <h5>Add alias:</h5>
 Alias "<%=alias%>&nbsp;-&gt;&nbsp;<%=address%>" added sucessfully.
 <%}%>
-<%@ include file="/sketches/footer.jsp"%>
+<%@ include file="/common/footer.jsp"%>

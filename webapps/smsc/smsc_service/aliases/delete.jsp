@@ -12,4 +12,4 @@ if (smsc.getAliases().remove(new Alias(new Mask(address), new Mask(alias))))
   %>Alias "<%=alias%>&nbsp;-&gt;&nbsp;<%=address%>" not found.<%
 }
 %>
-<%@ include file="/sketches/footer.jsp"%>
+<%@ include file="/common/footer.jsp"%>

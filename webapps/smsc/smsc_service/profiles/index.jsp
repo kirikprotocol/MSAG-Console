@@ -30,4 +30,4 @@
   {%>prev<%}
 %>
 <a href="?sort=<%=sort%>&startPosition=<%=startPosition + pagesize%>">next</a>
-<%@ include file="/sketches/footer.jsp"%>
+<%@ include file="/common/footer.jsp"%>

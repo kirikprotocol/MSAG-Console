@@ -30,4 +30,4 @@ boolean hide   = isEdit ? (request.getParameter("Hide") != null && request.getPa
   <input type="Hidden" name="old_hide"    value="<%=hide ? "true" : "false"%>">
   <input type="Submit">
 </form>
-<%@ include file="/sketches/footer.jsp"%>
+<%@ include file="/common/footer.jsp"%>
