@@ -13,7 +13,7 @@
   <property name="java_out" location="${BUILD_DIR}/classes/${esme_name}"/>
   <property name="exploded" location="${BUILD_DIR}/exploded/${esme_name}"/>
   <property name="java_lib" location="${exploded}/lib"/>
-  <property name="libs_path" location="../webapps/libs"/>
+  <property name="libs_path" location="${SMSC_DIR}/webapps/libs"/>
   <property name="smsc_package_path" value="ru/novosoft/smsc"/>
 
   <path id="esme_classpath">
