@@ -2347,7 +2347,7 @@ USHORT_T Et96MapPAbortInd(
 {
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
-  __map_trace2__("%s: dialogid 0x%x provReason 0x%x",__func__,dialogueId,provReason);
+  __map_trace2__("%s: dialogid 0x%x source=%d provReason=0x%x",__func__,dialogueId,source,provReason);
   MAP_TRY{
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn));
     if ( dialog.isnull() ) {
