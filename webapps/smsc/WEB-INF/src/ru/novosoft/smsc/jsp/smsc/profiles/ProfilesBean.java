@@ -33,6 +33,7 @@ public class ProfilesBean extends SmscBean
   protected boolean divertActiveCapacity;
   protected boolean divertModifiable = false;
   protected boolean udhConcat = false;
+  protected boolean translit = false;
 
   protected int init(List errors)
   {
@@ -243,5 +244,15 @@ public class ProfilesBean extends SmscBean
   public void setUdhConcat(boolean udhConcat)
   {
     this.udhConcat = udhConcat;
+  }
+
+  public boolean isTranslit()
+  {
+    return translit;
+  }
+
+  public void setTranslit(boolean translit)
+  {
+    this.translit = translit;
   }
 }

@@ -222,6 +222,7 @@ public class Smsc extends Service
     profileArg.add(newProfile.isDivertModifiable() ? "true" : "false");
     profileArg.add(newProfile.isUssd7bit() ? "true" : "false");
     profileArg.add(newProfile.isUdhConcat() ? "true" : "false");
+    profileArg.add(newProfile.isTranslit() ? "true" : "false");
 
     args.put("profile", profileArg);
     return ((Long) call(SMSC_COMPONENT_ID, PROFILE_UPDATE_METHOD_ID, Type.Types[Type.IntType], args)).intValue();

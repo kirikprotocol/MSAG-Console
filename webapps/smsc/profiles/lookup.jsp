@@ -134,6 +134,10 @@ abonent number <input class=txt name=profile value="<%=bean.getProfile() != null
     <th nowrap>UDH concatenate</th>
     <td><img src="/images/ic_<%=bean.isUdhConcat() ? "" : "not_"%>checked.gif"></td>
   </tr>
+  <tr class=row<%=(rowN++)&1%>>
+    <th nowrap>translit</th>
+    <td><img src="/images/ic_<%=bean.isTranslit() ? "" : "not_"%>checked.gif"></td>
+  </tr>
 	</table>
 	</div>
 	<%

@@ -50,7 +50,7 @@ public class ProfileAddCommand extends ProfileGenCommand
                                     aliasHide, aliasModifiable,
                                     divert, divertActiveUnconditional, divertActiveAbsent,
                                     divertActiveBlocked, divertActiveBarred, divertActiveCapacity,
-                                    divertModifiable, udhConcat);
+                                    divertModifiable, udhConcat, false); //todo: implement translit flag
 
       switch (ctx.getSmsc().profileUpdate(profileMask, profile)) {
         case 1:	//pusUpdated

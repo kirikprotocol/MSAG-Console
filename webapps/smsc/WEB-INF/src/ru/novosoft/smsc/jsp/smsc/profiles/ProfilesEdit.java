@@ -13,6 +13,7 @@ import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 public class ProfilesEdit extends ProfilesBean
 {
@@ -25,21 +26,18 @@ public class ProfilesEdit extends ProfilesBean
     codepage = -1;
   }
 
-  public int process(HttpServletRequest request)
+  protected int init(final List errors)
   {
-    if (mbCancel != null)
-      return RESULT_DONE;
-
-    int result = super.process(request);
-    if (result != RESULT_OK)
+    final int result = super.init(errors);
+    if (RESULT_OK != result)
       return result;
 
-    if (mask == null)
+    if (null == mask)
       return error(SMSCErrors.error.profiles.profileNotSpecified);
 
-    if (report == -1 && codepage == -1) {
+    if (-1 == report && -1 == codepage) {
       try {
-        Profile p = smsc.profileLookup(new Mask(mask));
+        final Profile p = smsc.profileLookup(new Mask(mask));
         report = p.getReportOptions();
         codepage = p.getCodepage();
         ussd7bit = p.isUssd7bit();
@@ -54,13 +52,26 @@ public class ProfilesEdit extends ProfilesBean
         divertActiveCapacity = p.isDivertActiveCapacity();
         divertModifiable = p.isDivertModifiable();
         udhConcat = p.isUdhConcat();
+        translit = p.isTranslit();
       } catch (AdminException e) {
         logger.error("Couldn't lookup profile \"" + mask + '"', e);
         return error(SMSCErrors.error.profiles.couldntLookup, mask, e);
       }
     }
 
-    if (mbSave != null)
+    return result;
+  }
+
+  public int process(final HttpServletRequest request)
+  {
+    if (null != mbCancel)
+      return RESULT_DONE;
+
+    final int result = super.process(request);
+    if (RESULT_OK != result)
+      return result;
+
+    if (null != mbSave)
       return save();
 
     return RESULT_OK;
@@ -73,7 +84,7 @@ public class ProfilesEdit extends ProfilesBean
 
     try {
       final Mask address = new Mask(mask);
-      Profile profile = new Profile(address, codepage, ussd7bit, report, locale, aliasHide, aliasModifiable, divert, divertActiveUnconditional, divertActiveAbsent, divertActiveBlocked, divertActiveBarred, divertActiveCapacity, divertModifiable, udhConcat);
+      final Profile profile = new Profile(address, codepage, ussd7bit, report, locale, aliasHide, aliasModifiable, divert, divertActiveUnconditional, divertActiveAbsent, divertActiveBlocked, divertActiveBarred, divertActiveCapacity, divertModifiable, udhConcat, translit);
       switch (smsc.profileUpdate(address, profile)) {
         case 1: //pusUpdated
           journalAppend(SubjectTypes.TYPE_profile, address.getMask(), Actions.ACTION_MODIFY);
@@ -104,7 +115,7 @@ public class ProfilesEdit extends ProfilesBean
     return mbSave;
   }
 
-  public void setMbSave(String mbSave)
+  public void setMbSave(final String mbSave)
   {
     this.mbSave = mbSave;
   }
@@ -114,7 +125,7 @@ public class ProfilesEdit extends ProfilesBean
     return mbCancel;
   }
 
-  public void setMbCancel(String mbCancel)
+  public void setMbCancel(final String mbCancel)
   {
     this.mbCancel = mbCancel;
   }

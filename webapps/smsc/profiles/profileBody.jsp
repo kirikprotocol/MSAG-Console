@@ -86,5 +86,9 @@
 	<th><label for=udhConcat>UDH concatenate</label></th>
 	<td><input class=check type=checkbox type="checkbox" id=udhConcat name="udhConcat" value="true" <%= (bean.isUdhConcat()) ? "checked":""%>></td>
 </tr>
+<tr class=row1>
+	<th><label for=translit>Translit</label></th>
+	<td><input class=check type=checkbox type="checkbox" id=translit name="translit" value="true" <%= (bean.isTranslit()) ? "checked":""%>></td>
+</tr>
 </table>
 </div>

@@ -46,6 +46,7 @@ public class Lookup extends PageBean
   private String profileDealiased = null;
   private String profileAliased = null;
   private boolean udhConcat = false;
+  private boolean translit = false;
 
   private String mbAdd = null;
   private String mbEdit = null;
@@ -98,6 +99,7 @@ public class Lookup extends PageBean
         matchType = p.getMatchType();
         matchAddress = p.getMatchAddress();
         udhConcat = p.isUdhConcat();
+        translit = p.isTranslit();
       } catch (Exception e) {
         logger.debug("Couldn't lookup profile \"" + profile + "\", nested: " + e.getMessage(), e);
         reportOptions = codepage = "unknown";
@@ -307,5 +309,15 @@ public class Lookup extends PageBean
   public boolean isUdhConcat()
   {
     return udhConcat;
+  }
+
+  public boolean isTranslit()
+  {
+    return translit;
+  }
+
+  public void setTranslit(boolean translit)
+  {
+    this.translit = translit;
   }
 }
