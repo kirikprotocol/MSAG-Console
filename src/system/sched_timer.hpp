@@ -15,7 +15,7 @@ public:
 };
 
 
-};//system
-};//smsc
+}//system
+}//smsc
 
 #endif

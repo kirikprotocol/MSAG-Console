@@ -48,11 +48,10 @@ public:
   static inline void operator delete[](void* p) {xx_delete(p);}
 };*/
 
-};
-};
+}
+}
 
 #undef smartMalloc
 #undef smartFree
 
 #endif
-

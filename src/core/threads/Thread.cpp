@@ -70,6 +70,6 @@ int Thread::WaitFor()
 }
 
 
-};//threads
-};//core
-};//smsc
+}//threads
+}//core
+}//smsc

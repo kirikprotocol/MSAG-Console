@@ -35,7 +35,7 @@ static void KillProxy(int ct,SmppProxy* proxy,SmeManager* smeManager)
       smeManager->unregisterSmeProxy(proxy->getSystemId());
     }catch(...)
     {
-      __trace2__("failed to unregister");
+      __trace__("failed to unregister");
     }
     __trace2__("KILLPROXY: %p(%s)",proxy,proxy->getSystemId());
     delete proxy;
@@ -287,7 +287,7 @@ int SmppInputThread::Execute()
                   ss->getProxy()->putCommand(cmd);
                 }catch(...)
                 {
-                  __trace2__("SmppInputThread: failed to put outgoing command");
+                  __trace__("SmppInputThread: failed to put outgoing command");
                 }
                 break;
               }
@@ -308,7 +308,7 @@ int SmppInputThread::Execute()
                 if(proxy)
                 {
                   rebindproxy=true;
-                  __trace2__("SmppProxy: rebind!");
+                  __trace__("SmppProxy: rebind!");
                 }
               }catch(...)
               {
@@ -351,7 +351,7 @@ int SmppInputThread::Execute()
                           err=true;
                         }else
                         {
-                          __trace2__("SmppProxy: upgrade to transceiver");
+                          __trace__("SmppProxy: upgrade to transceiver");
                           proxy->setProxyType(proxyTransceiver);
                           proxy->setReceiverSocket(ss);
                         }
@@ -382,7 +382,7 @@ int SmppInputThread::Execute()
                           err=true;
                         }else
                         {
-                          __trace2__("SmppProxy: upgrade to transceiver");
+                          __trace__("SmppProxy: upgrade to transceiver");
                           proxy->setProxyType(proxyTransceiver);
                           proxy->setTransmitterSocket(ss);
                         }
@@ -500,7 +500,7 @@ int SmppInputThread::Execute()
                 {
                   resppdu.get_header().
                     set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
-                  trace2("registration failed: unknown reason");
+                  __trace__("registration failed: unknown reason");
                   //delete proxy;
                   err=true;
                 }
@@ -984,6 +984,6 @@ int SmppOutputThread::Execute()
   return 0;
 } // Execute
 
-};//smppio
-};//system
-};//smsc
+}//smppio
+}//system
+}//smsc

@@ -55,7 +55,7 @@ private:
   ResourceManager() throw ();
 };
 
-};//resourcemanager
-};//smsc
+}//resourcemanager
+}//smsc
 
 #endif

@@ -245,7 +245,7 @@ public:
   }
 };
 
-}; // namespace system
-}; // namespace smsc
+} // namespace system
+} // namespace smsc
 
 #endif

@@ -109,7 +109,7 @@ namespace StatEvents{
   const int etDeliverErr   =4;
   const int etUndeliverable=5;
   const int etRescheduled  =6;
-};
+}
 
 struct SmscConfigs{
   smsc::util::config::Manager* cfgman;
@@ -468,6 +468,8 @@ protected:
     }
   };
 
+  struct MergeCacheHashFunc;
+  friend struct smsc::system::Smsc::MergeCacheHashFunc;
   struct MergeCacheHashFunc{
     static unsigned inline int CalcHash(const MergeCacheItem& item)
     {
@@ -492,8 +494,8 @@ protected:
 
 };
 
-};//system
-};//smsc
+}//system
+}//smsc
 
 
 #endif

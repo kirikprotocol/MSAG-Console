@@ -15,13 +15,17 @@ using smsc::util::xml::DOMTreeReader;
 
 std::string strToLower(const std::string & str)
 {
-	char dst[str.length()+1];
-	const char * const src = str.c_str();
-	const size_t length	= str.length();
-	for (int i=0; i<length; i++)
-		dst[i] = tolower(src[i]);
-	dst[length] = 0;
-	return dst;
+  /*char dst[str.length()+1];
+  const char * const src = str.c_str();
+  const size_t length = str.length();
+  for (int i=0; i<length; i++)
+    dst[i] = tolower(src[i]);
+  dst[length] = 0;*/
+  std::string dst;
+  const char * const src = str.c_str();
+  const size_t length = str.length();
+  for(int i=0;i<length;i++)dst+=(char)tolower(src[i]);
+  return dst;
 }
 
 void LocaleResources::processParams(const DOM_Element &elem, LocaleResources::_stringmap & settings, const std::string &prefix) throw ()
@@ -186,7 +190,7 @@ bool LocaleResources::hasString(const std::string& key)const throw()
 
 OutputFormatter* LocaleResources::getFormatter(const std::string& key)throw()
 {
-	std::string lower_key(strToLower(key));
+  std::string lower_key(strToLower(key));
   std::map<std::string,OutputFormatter*>::const_iterator i=formatters.find(lower_key);
   if(i!=formatters.end())
   {

@@ -115,7 +115,8 @@ int main(int argc, char **argv)
     printf("\nMsgInit Failed with code %d\n",result);
     exit(1);
   }
-  printf( "MsgInit\n");  result = MsgOpen(USER);
+  printf( "MsgInit\n");
+  result = MsgOpen(USER);
 
   if(result != 0) {
     printf("\nMsgOpen failed with code %d\n",result);
@@ -129,12 +130,14 @@ int main(int argc, char **argv)
     printf("\nMsgConn TCAP failed with code %d\n",result);
     exit(3);
   }
-  printf( "MsgConn TCAP\n");
+
+  printf( "MsgConn TCAP\n");
 /*  result = MsgConn(USER,USER);
   if(result != 0) {
     printf("\nMsgConn to myself failed with code %d\n",result);
     exit(3);
-  }*/
+  }
+*/
 
   result = EINSS7_I97TBindReq(SSN,USER, EINSS7_I97TCAP_WHITE_USER);
 
@@ -152,14 +155,16 @@ int main(int argc, char **argv)
 //    result = MsgRecv(&message);
     result = EINSS7CpMsgRecv_r( &message, 1000 );
 
-    if(result==MSG_TIMEOUT)continue;
+
+    if(result==MSG_TIMEOUT)continue;
 
     printf( "MsgRecv result=%d\n",result);
     if( result != MSG_OK ) going = 0;
     else {
         result = EINSS7_I97THandleInd(&message);
         EINSS7CpReleaseMsgBuffer(&message);
-        printf( "MsgHandle result=%d\n",result);        if(result != MSG_OK) going = 0;
+        printf( "MsgHandle result=%d\n",result);
+        if(result != MSG_OK) going = 0;
     }
 
   }

@@ -161,8 +161,8 @@ protected:
   Address mSrc;
 };
 
-};//abonentinfo
-};//system
-};//smsc
+}//abonentinfo
+}//system
+}//smsc
 
 #endif

@@ -146,8 +146,8 @@ protected:
     SmeIndex idx;
     bool resched;
   };
-  typedef std::multimap<time_t,Data> TimeLineMap;
-  typedef std::pair<time_t,Data> TimeIdPair;
+  typedef std::multimap<const time_t,Data> TimeLineMap;
+  typedef std::pair<const time_t,Data> TimeIdPair;
 
   struct CacheItem{
     time_t lastUpdate;
@@ -162,8 +162,8 @@ protected:
   ProxyMonitor* prxmon;
 };
 
-};//system
-};//smsc
+}//system
+}//smsc
 
 
 #endif

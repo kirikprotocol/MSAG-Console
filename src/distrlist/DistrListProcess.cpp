@@ -6,6 +6,8 @@
 #define DLP_TIMEOUT 1000
 #define WAIT_SUBMISSION (8)
 
+#define __FUNCTION__ __func__
+
 namespace smsc{
 namespace distrlist{
 
@@ -116,7 +118,7 @@ int DistrListProcess::Execute()
         SmscCommand cmdR = SmscCommand::makeSubmitMultiResp(0,cmd->get_dialogId(),Status::CNTSUBDL);
         cmd.getProxy()->putCommand(cmdR);
       }catch(BIG_MULTI&){
-        __trace2__(":DPL: <exception> counts of member of multi great then MAX_COUNT for task");
+        __trace__(":DPL: <exception> counts of member of multi great then MAX_COUNT for task");
         SmscCommand cmdR = SmscCommand::makeSubmitMultiResp(0,cmd->get_dialogId(),Status::CNTSUBDL);
         cmd.getProxy()->putCommand(cmdR);
       }
@@ -490,7 +492,7 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
     __trace2__(":DPL: task list 0x%x has been scheduled",task.get());
     task.release();
   }else{
-    __trace2__(":DPL: sending responce immediate");
+    __trace__(":DPL: sending responce immediate");
     SmscCommand cmd2 = SmscCommand::makeSubmitMultiResp("",task->cmd->get_dialogId(),0);
     cmd2->get_MultiResp()->set_unsuccessCount(0);
     SmeProxy* srcproxy =  task->cmd.getProxy();
@@ -506,7 +508,7 @@ void DistrListProcess::SubmitResp(SmscCommand& cmd)
   if ( it != task_map.end() ) {
     TPAIR taskpair = it->second;
     if ( taskpair.second >= taskpair.first->count ) {
-      __warning2__(":DPL: out of adresses range");
+      __warning__(":DPL: out of adresses range");
       // за пределом массива адресов !!!
     }else{
       ListTask* task = taskpair.first;
@@ -520,7 +522,7 @@ void DistrListProcess::SubmitResp(SmscCommand& cmd)
         task->count,
         task->submited_count);
       if ( task->submited_count == task->count ) {
-        __trace2__(":DPL: send submit responce");
+        __trace__(":DPL: send submit responce");
         SendSubmitResp(task);
       }
     }

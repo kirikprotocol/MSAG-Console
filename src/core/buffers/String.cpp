@@ -888,6 +888,6 @@ int String::ToInt()const
   return rv;
 }
 
-};//buffers
-};//core
-};//smsc
+}//buffers
+}//core
+}//smsc

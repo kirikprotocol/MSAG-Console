@@ -480,6 +480,6 @@ void MemoryHeap::releaseHeap()
 }
 
 
-};//buffers
-};//core
-};//smsc
+}//buffers
+}//core
+}//smsc

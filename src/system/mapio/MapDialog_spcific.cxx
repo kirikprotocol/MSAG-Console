@@ -9,7 +9,7 @@
 using namespace std;
 using namespace smsc::sms;
 using namespace smsc::smeman;
-  
+
 #define TP_VP_NONE  0
 #define TP_VP_REL   1
 #define TP_VP_ENCH  2
@@ -41,7 +41,7 @@ inline char GetChar(const unsigned char*& ptr,unsigned& shift){
   if ( shift > 1 )
     val |= (*(ptr+1) << (8-shift))&0x7f;
   shift += 7;
-  if ( shift >= 8 ) 
+  if ( shift >= 8 )
   {
     shift&=0x7;
     ++ptr;
@@ -59,7 +59,7 @@ inline void PutChar(unsigned char*& ptr,unsigned& shift,unsigned char val8bit,un
   if ( shift > 1 )
     *(ptr+1) = *(ptr+1) | (val >> (8-shift));
   shift += 7;
-  if ( shift >= 8 ) 
+  if ( shift >= 8 )
   {
     shift&=0x7;
     ++ptr;
@@ -130,16 +130,16 @@ inline unsigned ConvertText27bit(
 #define __pchar(x) PutChar(bit7buf,shift,x,bit7buf_end)
 #define __escape(x) __pchar(0x1b); __pchar(x); (*elen) += 2;
     switch(text[i]){
-		case '^': __escape(0x14); break;
-		case '\f':__escape(0x0a); break;
-		case '|': __escape(0x40); break;
-		case '{': __escape(0x28); break;
-		case '}': __escape(0x29); break;
-		case '[': __escape(0x3c); break;
-		case ']': __escape(0x3e); break;
-		case '~': __escape(0x3d); break;
-		case '\\':__escape(0x2f); break;
-		default:
+    case '^': __escape(0x14); break;
+    case '\f':__escape(0x0a); break;
+    case '|': __escape(0x40); break;
+    case '{': __escape(0x28); break;
+    case '}': __escape(0x29); break;
+    case '[': __escape(0x3c); break;
+    case ']': __escape(0x3e); break;
+    case '~': __escape(0x3d); break;
+    case '\\':__escape(0x2f); break;
+    default:
       PutChar(bit7buf,shift,lll_8bit_2_7bit[text[i]],bit7buf_end);
       (*elen) += 1;
     }
@@ -148,10 +148,12 @@ inline unsigned ConvertText27bit(
   }
   if( smsc::logger::_map_cat->isDebugEnabled() ){
     {
+      /*
       char b[chars+1];
       memcpy(b,text,chars);
       b[chars] = 0;
       __map_trace2__("latin1->7bit: %s",b);
+      */
     }
     {
       char b[255*4];
@@ -184,10 +186,12 @@ inline unsigned ConvertSMSC7bit27bit(
   }
   if( smsc::logger::_map_cat->isDebugEnabled() ){
     {
+      /*
       char b[chars+1];
       memcpy(b,text,chars);
       b[chars] = 0;
       __map_trace2__("SMSC7bit->7bit: %s",b);
+      */
     }
     {
       char b[255*4];
@@ -205,7 +209,7 @@ inline unsigned ConvertSMSC7bit27bit(
 }
 
 inline bool provErrCodeFatal( ET96MAP_PROV_ERR_T p ) {
-  return 
+  return
   (p == 0x02 || // unsupported service
    p == 0x03 || // mystyped parametor
    p == 0x06 || // unexcpected responnse from peer
@@ -215,21 +219,21 @@ inline bool provErrCodeFatal( ET96MAP_PROV_ERR_T p ) {
 
 #pragma pack(1)
 
-struct SMS_SUMBMIT_FORMAT_HEADER{ 
-  union{                          
-    struct{                       
-      unsigned reply_path:1;      
-      unsigned udhi:1;            
-      unsigned srr:1;             
-      unsigned tp_vp:2;           
-      unsigned reject_dupl:1;     
-      unsigned mg_type_ind:2;     
-    };                            
-    unsigned char _val_01;        
-  };                              
-  unsigned char mr;               
-};                                
-                                  
+struct SMS_SUMBMIT_FORMAT_HEADER{
+  union{
+    struct{
+      unsigned reply_path:1;
+      unsigned udhi:1;
+      unsigned srr:1;
+      unsigned tp_vp:2;
+      unsigned reject_dupl:1;
+      unsigned mg_type_ind:2;
+    };
+    unsigned char _val_01;
+  };
+  unsigned char mr;
+};
+
 struct MAP_SMS_ADDRESS{
   unsigned char len;
   //unsigned char tonpi;
@@ -316,7 +320,7 @@ inline void mkMapAddress( ET96MAP_ADDRESS_T *addr, const char *saddr, unsigned l
   addr->typeOfAddress = 0x91; // InterNational, ISDN
   for( i = 0; i < len; i++ ) {
     int bi = i/2;
-    if( i%2 == 1 ) { 
+    if( i%2 == 1 ) {
       addr->address[bi] |= ((saddr[i]-'0')<<4); // fill high octet
     } else {
       addr->address[bi] = (saddr[i]-'0')&0x0F; // fill low octet
@@ -324,9 +328,9 @@ inline void mkMapAddress( ET96MAP_ADDRESS_T *addr, const char *saddr, unsigned l
   }
   if( len%2 != 0 ) {
     addr->address[sz-1] |= 0xF0;
-  } 
+  }
 }
-            
+
 inline void mkRP_DA_Address( ET96MAP_SM_RP_DA_T *addr, const char *saddr, unsigned len, char type) {
   unsigned i;
   int sz = (len+1)/2;
@@ -335,7 +339,7 @@ inline void mkRP_DA_Address( ET96MAP_SM_RP_DA_T *addr, const char *saddr, unsign
   addr->addr[0] = 0x91; // InterNational, ISDN
   for( i = 0; i < len; i++ ) {
     int bi = i/2;
-    if( i%2 == 1 ) { 
+    if( i%2 == 1 ) {
       addr->addr[bi+1] |= ((saddr[i]-'0')<<4); // fill high octet
     } else {
       addr->addr[bi+1] = (saddr[i]-'0')&0x0F; // fill low octet
@@ -343,7 +347,7 @@ inline void mkRP_DA_Address( ET96MAP_SM_RP_DA_T *addr, const char *saddr, unsign
   }
   if( len%2 != 0 ) {
     addr->addr[sz] |= 0xF0;
-  } 
+  }
 }
 
 inline void mkRP_OA_Address( ET96MAP_SM_RP_OA_T *addr, const char *saddr, unsigned len, char type) {
@@ -354,7 +358,7 @@ inline void mkRP_OA_Address( ET96MAP_SM_RP_OA_T *addr, const char *saddr, unsign
   addr->addr[0] = 0x91; // InterNational, ISDN
   for( i = 0; i < len; i++ ) {
     int bi = i/2;
-    if( i%2 == 1 ) { 
+    if( i%2 == 1 ) {
       addr->addr[bi+1] |= ((saddr[i]-'0')<<4); // fill high octet
     } else {
       addr->addr[bi+1] = (saddr[i]-'0')&0x0F; // fill low octet
@@ -362,7 +366,7 @@ inline void mkRP_OA_Address( ET96MAP_SM_RP_OA_T *addr, const char *saddr, unsign
   }
   if( len%2 != 0 ) {
     addr->addr[sz] |= 0xF0;
-  } 
+  }
 }
 
 inline void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){

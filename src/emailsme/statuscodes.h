@@ -13,8 +13,8 @@ const int STATUS_CODE_TEMPORARYERROR     =  0x3;
 
 const int STATUS_CODE_UNKNOWNERROR       =  0x100;
 
-};//StatusCodes
-};//emailsme
-};//smsc
+}//StatusCodes
+}//emailsme
+}//smsc
 
 #endif

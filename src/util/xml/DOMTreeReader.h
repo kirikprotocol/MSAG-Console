@@ -14,19 +14,20 @@ namespace xml {
 using smsc::logger::Logger;
 using smsc::util::Exception;
 
+  class ParseException : public Exception
+  {
+  public:
+    ParseException(const char * const msg) : Exception(msg) {}
+  };
+
 class DOMTreeReader {
 public:
-	class ParseException : public Exception
-	{
-	public:
-		ParseException(const char * const msg) : Exception(msg) {}
-	};
 
-	DOMTreeReader();
-	~DOMTreeReader();
+  DOMTreeReader();
+  ~DOMTreeReader();
 
-	DOM_Document read(const char * const filename) throw (ParseException);
-	DOM_Document read(const InputSource & source) throw (ParseException);
+  DOM_Document read(const char * const filename) throw (ParseException);
+  DOM_Document read(const InputSource & source) throw (ParseException);
 
 protected:
   DOMParser *createParser();

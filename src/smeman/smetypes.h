@@ -28,8 +28,8 @@ class SmeError : public std::exception
   }
 };
 
-};
-};
+}
+}
 
 
 #endif

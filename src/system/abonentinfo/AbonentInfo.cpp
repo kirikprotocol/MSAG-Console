@@ -258,7 +258,7 @@ int AbonentInfoSme::Execute()
         __trace2__("AbonentInfo: Formatter exception %s",e.what());
       }catch(...)
       {
-        __trace2__("AbonentInfo: Formatter exception unknown");
+        __trace__("AbonentInfo: Formatter exception unknown");
       }
 
       int len=answ.length();
@@ -288,6 +288,6 @@ int AbonentInfoSme::Execute()
   return 0;
 }
 
-};//abonentinfo
-};//system
-};//smsc
+}//abonentinfo
+}//system
+}//smsc

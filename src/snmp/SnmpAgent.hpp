@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include "core/threads/ThreadedTask.hpp"
-namespace smsc{namespace system{class Smsc;};};
+namespace smsc{namespace system{class Smsc;}}
 namespace smsc{
 namespace snmp{
 
@@ -24,7 +24,7 @@ protected:
   smsc::system::Smsc* smsc;
 };
 
-};//snmp name space
-};//smsc name space
+}//snmp name space
+}//smsc name space
 
 #endif // __SMSC_SNMP_SNMPAGENT_HPP__

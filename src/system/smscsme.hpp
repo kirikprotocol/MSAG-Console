@@ -168,7 +168,7 @@ protected:
   SmeProxyPriority prio;
 };
 
-};//system
-};//smsc
+}//system
+}//smsc
 
 #endif

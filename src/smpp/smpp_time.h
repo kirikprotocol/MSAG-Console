@@ -126,7 +126,7 @@ inline time_t smppTime2CTime(COStr& str)
   return resultTime;
 }
 
-};
-};
+}
+}
 
 #endif

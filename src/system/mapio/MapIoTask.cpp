@@ -188,7 +188,7 @@ void MapIoTask::dispatcher()
             k+=sprintf(text+k,"%02x ",(unsigned)message.msg_p[i]);
           }
           text[k]=0;
-		  __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, "Decoding openInd: %s",text);
+      __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, "Decoding openInd: %s",text);
           delete text;
         }
       }
@@ -235,7 +235,7 @@ void MapIoTask::dispatcher()
           k+=sprintf(text+k,"%02x ",(unsigned)message.msg_p[i]);
         }
         text[k]=0;
-		__log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN, "error at Et96MapHandleIndication with code x%hx msg: %s",map_result,text);
+    __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN, "error at Et96MapHandleIndication with code x%hx msg: %s",map_result,text);
         delete text;
       }
     }
@@ -292,19 +292,19 @@ void MapIoTask::init(unsigned timeout)
 #else
 void MapIoTask::deinit(bool)
      {
-  __map_trace2__("MapIoTask::deinit: no map stack on this platform");
+  __map_trace__("MapIoTask::deinit: no map stack on this platform");
 }
 
 void MapIoTask::dispatcher()
 {
   Event e;
-  __map_trace2__("MapIoTask::dispatcher: no map stack on this platform");
+  __map_trace__("MapIoTask::dispatcher: no map stack on this platform");
   e.Wait();
 }
 
 void MapIoTask::init(unsigned)
 {
-  __map_trace2__("MapIoTask::init: no map stack on this platform");
+  __map_trace__("MapIoTask::init: no map stack on this platform");
 }
 
 #endif
@@ -371,26 +371,26 @@ int MapTracker::Execute(){
 void MapDialogContainer::registerSelf(SmeManager* smeman)
 {
   proxy->init();
-  __map_trace2__("register MAP_PROXY");
+  __map_trace__("register MAP_PROXY");
 //#if defined USE_MAP // !!!! temporary !!!!!
 //  smeman->registerSmeProxy("MAP_PROXY",proxy);
 //#else
   smeman->registerInternallSmeProxy("MAP_PROXY",proxy);
   proxy->assignSmeRegistrar(smeman);
 //#endif
-  __map_trace2__("register MAP_PROXY OK");
+  __map_trace__("register MAP_PROXY OK");
 }
 
 void MapDialogContainer::unregisterSelf(SmeManager* smeman)
 {
   //proxy.init();
-  __map_trace2__("unregister MAP_PROXY");
+  __map_trace__("unregister MAP_PROXY");
 //#if defined USE_MAP // !!!! temporary !!!!!
 //  smeman->registerSmeProxy("MAP_PROXY",&proxy);
 //#else
   smeman->unregisterSmeProxy("MAP_PROXY");
 //#endif
-  __map_trace2__("unregister MAP_PROXY OK");
+  __map_trace__("unregister MAP_PROXY OK");
 }
 
 

@@ -78,10 +78,9 @@ namespace smsc {
         int signaled;
       };//Event
 
-    };//namespace util
-  };//namespace test
-};//namespace smsc
+    }//namespace util
+  }//namespace test
+}//namespace smsc
 
 
 #endif
-

@@ -422,7 +422,7 @@ int Profiler::Execute()
 
       if(sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
       {
-        __warning2__("Profiler: received receipt!!!");
+        __warning__("Profiler: received receipt!!!");
         status=Status::OK;
         resp=SmscCommand::makeDeliverySmResp("",cmd->get_dialogId(),status);
         putIncomingCommand(resp);
@@ -431,7 +431,7 @@ int Profiler::Execute()
 
       if(sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) && sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=1)
       {
-        __warning2__("Profiler: ussd service op != 1");
+        __warning__("Profiler: ussd service op != 1");
         status=MAKE_COMMAND_STATUS(CMD_ERR_PERM,Status::INVOPTPARAMVAL);
         resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
                                              cmd->get_dialogId(),status);
@@ -791,5 +791,5 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
   }
 }
 
-};//profiler
-};//smsc
+}//profiler
+}//smsc

@@ -8,8 +8,8 @@ namespace util{
 extern bool childRunning;
 pid_t ForkPipedCmd(const char *cmd, FILE*& f_in,FILE*& f_out);
 
-};
-};
-};
+}
+}
+}
 
 #endif

@@ -38,7 +38,7 @@ namespace smsc {
 
 namespace logger{
 extern smsc::logger::Logger* _sms_err_cat;
-};
+}
 
 
 namespace sms  {
@@ -526,12 +526,12 @@ struct OptionalProperty{
         case SMS_STR_TAG:
         {
           if(!sValue)sValue=new string;
-          *sValue=*src.sValue;
+          sValue->assign(src.sValue->data(),src.sValue->length());
         }break;
         case SMS_BIN_TAG:
         {
           if(!bValue)bValue=new string;
-          *bValue=*src.bValue;
+          bValue->assign(src.bValue->data(),src.bValue->length());
         }break;
       }
     }
@@ -1669,7 +1669,7 @@ struct SMS
 
 };
 
-};//sms
-};//smsc
+}//sms
+}//smsc
 
 #endif

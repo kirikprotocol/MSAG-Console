@@ -23,9 +23,7 @@ public:
 };
 
 
-}; // namespace smeman
-}; // namespace smsc
+} // namespace smeman
+} // namespace smsc
 
 #endif
-
-

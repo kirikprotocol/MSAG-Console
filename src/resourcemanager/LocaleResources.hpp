@@ -39,7 +39,7 @@ private:
   void processParams(const DOM_Element &elem, _stringmap & settings, const std::string &prefix) throw ();
 };
 
-};//resourcemanager
-};//smsc
+}//resourcemanager
+}//smsc
 
 #endif

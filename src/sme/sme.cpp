@@ -123,5 +123,5 @@ bool BaseSme::sendBuffer(const char* buffer,int size)
 
 
 
-};//sme
-};//smsc
+}//sme
+}//smsc

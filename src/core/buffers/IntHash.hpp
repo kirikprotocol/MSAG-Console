@@ -335,8 +335,8 @@ protected:
 
 }; //IntHash
 
-};//buffers
-};//core
-};//smsc
+}//buffers
+}//core
+}//smsc
 
 #endif

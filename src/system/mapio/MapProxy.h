@@ -18,9 +18,9 @@ extern void MAPIO_PutCommand(const smsc::smeman::SmscCommand& cmd );
 namespace smsc{
 namespace logger{
 extern smsc::logger::Logger* _mapproxy_cat;
-};
-};
-#define __mapproxy_trace2__(format,args...) __log2__(smsc::logger::_mapproxy_cat,smsc::logger::Logger::LEVEL_DEBUG,format,##args)
+}
+}
+#define __mapproxy_trace2__(format,...) __log2__(smsc::logger::_mapproxy_cat,smsc::logger::Logger::LEVEL_DEBUG,format,__VA_ARGS__)
 #define __mapproxy_trace__(text) __debug__(smsc::logger::_mapproxy_cat,text)
 
 
@@ -58,7 +58,7 @@ public:
       long usecs;
       gettimeofday( &curtime, 0 );
       usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
-	  time_logger->debug("cmdid=%d s=%ld us=%ld", cmd->get_commandId(), curtime.tv_sec-utime.tv_sec, usecs );
+    time_logger->debug("cmdid=%d s=%ld us=%ld", cmd->get_commandId(), curtime.tv_sec-utime.tv_sec, usecs );
     }
 //#endif
   }
@@ -179,9 +179,9 @@ protected:
   SmeRegistrar *smereg;
 };
 
-};//mappio
-};//system
-};//smsc
+}//mappio
+}//system
+}//smsc
 
 
 #endif

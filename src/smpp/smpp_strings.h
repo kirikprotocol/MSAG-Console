@@ -105,7 +105,7 @@ struct COStr //: public MemoryManagerUnit
 };
 
 
-};
-};
+}
+}
 
 #endif

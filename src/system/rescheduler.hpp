@@ -32,7 +32,7 @@ protected:
 
 };//RescheduleCalculator
 
-};//system
-};//smsc
+}//system
+}//smsc
 
 #endif

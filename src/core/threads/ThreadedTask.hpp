@@ -69,8 +69,8 @@ protected:
   bool isStopping;
 };//ThreadedTask
 
-};//threads
-};//core
-};//smsc
+}//threads
+}//core
+}//smsc
 
 #endif

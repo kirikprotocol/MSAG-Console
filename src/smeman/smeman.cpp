@@ -344,5 +344,5 @@ SmeIndex SmeManager::internalLookup(const SmeSystemId& systemId) const
   return INVALID_SME_INDEX;
 }
 
-}; // namespace smeman
-}; // namespace smsc
+} // namespace smeman
+} // namespace smsc

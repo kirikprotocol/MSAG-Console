@@ -21,7 +21,7 @@ class SmeProxyDispatcher
   {
     SmeProxyPriority prior;
     SmeProxy* proxy;
-		int idx;
+    int idx;
     Unit* next;
     Unit* prev;
   };
@@ -37,9 +37,7 @@ public:
   void detachSmeProxy(SmeProxy* proxy);
 };
 
-}; // namespace smeman
-}; // namespace smsc
+} // namespace smeman
+} // namespace smsc
 
 #endif
-
-

@@ -357,6 +357,6 @@ inline void fetchOctetStr(SmppStream* stream,OStr& ostr,uint32_t octets)
   __check_smpp_stream_invariant__ ( stream );
 }
 
-};
-};
+}
+}
 #endif

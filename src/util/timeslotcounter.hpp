@@ -102,7 +102,7 @@ protected:
   TimeSlotCounter(const TimeSlotCounter&);
 };
 
-};//util
-};//smsc
+}//util
+}//smsc
 
 #endif

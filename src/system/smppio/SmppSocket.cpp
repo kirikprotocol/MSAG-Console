@@ -74,7 +74,7 @@ int SmppSocket::receive()
   int rd=socket->Read(buffer+bufferOffset,n);
   if(rd<=0)
   {
-    trace2("SmppSocket: read failed");
+    __trace__("SmppSocket: read failed");
     return -1;
   }
   bufferOffset+=rd;
@@ -117,6 +117,6 @@ bool SmppSocket::hasOutput()
 }
 
 
-};//smppio
-};//system
-};//smsc
+}//smppio
+}//system
+}//smsc

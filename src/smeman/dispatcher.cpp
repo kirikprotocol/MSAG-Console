@@ -37,10 +37,10 @@ SmeProxy* SmeProxyDispatcher::dispatchIn(unsigned long timeout,int* idx)
           __require__ ( unit->prior > SmeProxyPriorityMinBr &&
                         unit->prior < SmeProxyPriorityMaxBr );
           if ( unit->prev )
-					{ 
-						unit->prev->next = unit->next; // remove from list
-						if ( unit->next ) unit->next->prev = unit->prev;
-					}
+          {
+            unit->prev->next = unit->next; // remove from list
+            if ( unit->next ) unit->next->prev = unit->prev;
+          }
           else
           {
             __require__ ( unit == unqueuedProxies );
@@ -168,5 +168,5 @@ __synchronized__
   throw runtime_error("is not attached");
 }
 
-}; // namespace smeman
-}; // namespace smsc
+} // namespace smeman
+} // namespace smsc

@@ -121,8 +121,8 @@ protected:
   int channelType;
 };//smppioSocket
 
-};//smppio
-};//system
-};//smsc
+}//smppio
+}//system
+}//smsc
 
 #endif

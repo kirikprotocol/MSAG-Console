@@ -43,7 +43,7 @@ using namespace smsc::dbsme;
 
 static smsc::logger::Logger logger = Logger::getInstance("smsc.dbsme.DBSme");
 
-static smsc::admin::service::ServiceSocketListener adminListener; 
+static smsc::admin::service::ServiceSocketListener adminListener;
 static bool bAdminListenerInited = false;
 
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
@@ -104,12 +104,12 @@ protected:
     SmppTransmitter&    transmitter;
 
 public:
-    
-    DBSmeTask(SmppHeader* pdu, CommandProcessor& cp, SmppTransmitter& trans) 
+
+    DBSmeTask(SmppHeader* pdu, CommandProcessor& cp, SmppTransmitter& trans)
         : ThreadedTask(), pdu(pdu), processor(cp), transmitter(trans) {};
     virtual ~DBSmeTask() {};
 
-    virtual const char* taskName() 
+    virtual const char* taskName()
     {
         return "DBSmeTask";
     };
@@ -129,33 +129,33 @@ public:
 
         SMS request;
         fetchSmsFromSmppPdu((PduXSm*)pdu, &request);
-        bool isReceipt = (request.hasIntProperty(Tag::SMPP_ESM_CLASS)) ? 
+        bool isReceipt = (request.hasIntProperty(Tag::SMPP_ESM_CLASS)) ?
             ((request.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3C) == 0x4) : false;
         if (isReceipt || ((PduXSm*)pdu)->get_optional().has_receiptedMessageId()) {
             logger.warn("Unexpected sms receipt handled. Skipped.");
             return;
         }
-        
+
         uint32_t userMessageReference = request.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
-        bool isRequestUSSD = request.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ? 
+        bool isRequestUSSD = request.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
                             (request.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == USSD_PSSR_IND) : false;
-        
+
         smsc::dbsme::Command command;
         command.setFromAddress(request.getOriginatingAddress());
         command.setToAddress(request.getDestinationAddress());
         command.setJobName(0);
-        
+
         char smsTextBuff[MAX_ALLOWED_MESSAGE_LENGTH+1];
-        int smsTextBuffLen = getSmsText(&request, 
+        int smsTextBuffLen = getSmsText(&request,
             (char *)&smsTextBuff, sizeof(smsTextBuff));
         __require__(smsTextBuffLen < MAX_ALLOWED_MESSAGE_LENGTH);
-        
+
         int textPos = 0;
         const char* inputData = (const char *)&smsTextBuff[0];
         if (isRequestUSSD)
         {
             // replace '*' & '#' by spaces
-            while (smsTextBuff[textPos] && textPos<smsTextBuffLen) 
+            while (smsTextBuff[textPos] && textPos<smsTextBuffLen)
             {
                 if (smsTextBuff[textPos] == '*' ||
                     smsTextBuff[textPos] == '#') smsTextBuff[textPos] = ' ';
@@ -164,8 +164,8 @@ public:
         }
         command.setInData(inputData);
         __trace2__("Input Data for DBSme '%s'", (inputData) ? inputData:"");
-        
-        try 
+
+        try
         {
             processor.process(command);
         }
@@ -177,7 +177,7 @@ public:
             }
             command.setOutData(exc.what()); // Error processing SMS !;
         }
-        catch (std::exception& exc) 
+        catch (std::exception& exc)
         {
             {
                 MutexGuard guard(countersLock);
@@ -204,7 +204,7 @@ public:
         response.setArchivationRequested(false);
         response.setValidTime(time(NULL)+3600);
         response.setDeliveryReport(0);
-        
+
         Body& body = response.getMessageBody();
         body.setIntProperty(Tag::SMPP_PROTOCOL_ID, processor.getProtocolId());
         body.setIntProperty(Tag::SMPP_ESM_CLASS, 0 /*xx0000xx*/);
@@ -216,46 +216,46 @@ public:
             body.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, USSD_PSSR_RESP);
             // clear 0,1 bits and set them to datagram mode
             body.setIntProperty(Tag::SMPP_ESM_CLASS,
-                (body.getIntProperty(Tag::SMPP_ESM_CLASS)&~0x03)|0x01); 
+                (body.getIntProperty(Tag::SMPP_ESM_CLASS)&~0x03)|0x01);
         }
-        
+
         char* out = (char *)command.getOutData();
         int outLen = (out) ? strlen(out) : 0;
         __trace2__("Output Data '%s'", (out) ? out:"");
 
         int outPos = -1;
-        while (out && out[++outPos]) 
+        while (out && out[++outPos])
             if (out[outPos] == '\r' || out[outPos] == '\n') out[outPos] = ' ';
-        
+
         char* msgBuf = 0;
-        if(hasHighBit(out,outLen)) 
+        if(hasHighBit(out,outLen))
         {
             int msgLen = outLen*2;
             msgBuf = new char[msgLen];
-            ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf, msgLen, 
+            ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf, msgLen,
                                    CONV_ENCODING_CP1251);
             body.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::UCS2);
             out = msgBuf; outLen = msgLen;
-        } 
+        }
         else {
             body.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
         }
-        
-        try 
+
+        try
         {
             if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH) {
                 body.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, outLen);
                 body.setIntProperty(Tag::SMPP_SM_LENGTH, outLen);
             } else {
-                body.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, out, 
-                                    (outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ? 
+                body.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, out,
+                                    (outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ?
                                      outLen : MAX_ALLOWED_PAYLOAD_LENGTH);
             }
         }
         catch (...)
         {
             __trace__("Something is wrong with message body. "
-                      "Set/Get property failed"); 
+                      "Set/Get property failed");
             if (msgBuf) delete msgBuf;
             return;
         }
@@ -265,8 +265,8 @@ public:
         fillSmppPduFromSms(&sm, &response);
         PduSubmitSmResp *resp = transmitter.submit(sm);
         if (resp) disposePdu((SmppHeader*)resp);
-        if (msgBuf) delete msgBuf; 
-        
+        if (msgBuf) delete msgBuf;
+
         {
             MutexGuard guard(countersLock);
             if (requestsProcessingCount) requestsProcessingCount--;
@@ -277,45 +277,45 @@ public:
     virtual int Execute()
     {
         __require__(pdu);
-        __trace2__("DBSME: Processing PDU.");
+        __trace__("DBSME: Processing PDU.");
         switch (pdu->get_commandId())
         {
         case SmppCommandSet::DELIVERY_SM:
-            
+
             //((PduXSm*)pdu)->dump(TRACE_LOG_STREAM);
-            __trace2__("Received DELIVERY_SM Pdu.");
+            __trace__("Received DELIVERY_SM Pdu.");
             process();
             break;
         case SmppCommandSet::SUBMIT_SM_RESP:
-            __trace2__("Received SUBMIT_SM_RESP Pdu.");
+            __trace__("Received SUBMIT_SM_RESP Pdu.");
             break;
         default:
-            __trace2__("Received unsupported Pdu !");
+            __trace__("Received unsupported Pdu !");
             break;
         }
-        
+
         disposePdu(pdu); pdu=0;
         return 0;
     };
 };
 
-class DBSmeTaskManager 
+class DBSmeTaskManager
 {
 private:
 
     ThreadPool          pool;
-    
+
 public:
 
     DBSmeTaskManager() {};
     DBSmeTaskManager(ConfigView* config)
-        throw(ConfigException) 
+        throw(ConfigException)
     {
         init(config);
     };
-    virtual ~DBSmeTaskManager() 
+    virtual ~DBSmeTaskManager()
     {
-        __trace2__("DBSME: deinit DBSmeTaskManager");
+        __trace__("DBSME: deinit DBSmeTaskManager");
         shutdown();
     };
 
@@ -329,19 +329,19 @@ public:
         try {
             int maxThreads = config->getInt("max");
             pool.setMaxThreads(maxThreads);
-        } 
+        }
         catch (ConfigException& exc) {
             logger.warn("Maximum thread pool size wasn't specified !");
         }
         try {
             int initThreads = config->getInt("init");
             pool.preCreateThreads(initThreads);
-        } 
+        }
         catch (ConfigException& exc) {
             logger.warn("Precreated threads count in pool wasn't specified !");
         }
     };
-    
+
     void startTask(DBSmeTask* task)
     {
         pool.startTask(task);
@@ -351,28 +351,28 @@ public:
 class DBSmePduListener: public SmppPduEventListener
 {
 protected:
-    
+
     CommandProcessor&   processor;
     DBSmeTaskManager&   manager;
     SmppTransmitter*    trans;
 
 public:
-    
+
     DBSmePduListener(CommandProcessor& proc, DBSmeTaskManager& man)
         : SmppPduEventListener(), processor(proc), manager(man) {};
 
     void handleEvent(SmppHeader *pdu)
     {
-        __trace2__("DBSME: pdu received. Starting task...");
+        __trace__("DBSME: pdu received. Starting task...");
         manager.startTask(new DBSmeTask(pdu, processor, *trans));
     }
-    
+
     void handleError(int errorCode)
     {
         logger.error("Transport error handled! Code is: %d", errorCode);
         setNeedReconnect(true);
     }
-    
+
     void setTrans(SmppTransmitter *t)
     {
         trans=t;
@@ -382,14 +382,14 @@ public:
 class DBSmeConfig : public SmeConfig
 {
 private:
-    
+
     char *strHost, *strSid, *strPassword, *strSysType, *strOrigAddr;
 
 public:
-    
+
     DBSmeConfig(ConfigView* config)
         throw(ConfigException)
-            : SmeConfig(), strHost(0), strSid(0), strPassword(0), 
+            : SmeConfig(), strHost(0), strSid(0), strPassword(0),
                 strSysType(0), strOrigAddr(0)
     {
         // Mandatory fields
@@ -397,14 +397,14 @@ public:
         host = strHost;
         strSid = config->getString("sid", "DBSme id wasn't defined !");
         sid = strSid;
-        
+
         port = config->getInt("port", "SMSC port wasn't defined !");
         timeOut = config->getInt("timeout", "Connect timeout wasn't defined !");
-        
+
         // Optional fields
         try
         {
-            strPassword = 
+            strPassword =
                 config->getString("password",
                                   "DBSme password wasn't defined !");
             password = strPassword;
@@ -412,16 +412,16 @@ public:
         catch (ConfigException& exc) { password = ""; strPassword = 0; }
         try
         {
-            strSysType = 
-                config->getString("systemType", 
+            strSysType =
+                config->getString("systemType",
                                   "DBSme system type wasn't defined !");
             systemType = strSysType;
         }
         catch (ConfigException& exc) { systemType = ""; strSysType = 0; }
         try
         {
-            strOrigAddr = 
-                config->getString("origAddress", 
+            strOrigAddr =
+                config->getString("origAddress",
                                   "DBSme originating address wasn't defined !");
             origAddr = strOrigAddr;
         }
@@ -483,7 +483,7 @@ void atExitHandler(void)
     smsc::util::xml::TerminateXerces();
 }
 
-int main(void) 
+int main(void)
 {
     using smsc::db::DataSourceLoader;
     using smsc::util::config::Manager;
@@ -494,54 +494,54 @@ int main(void)
 
     //added by igork
     atexit(atExitHandler);
-    
+
     SQLJobFactory _sqlJobFactory;
-    JobFactory::registerFactory(&_sqlJobFactory, 
+    JobFactory::registerFactory(&_sqlJobFactory,
                                 SMSC_DBSME_SQL_JOB_IDENTITY);
     PLSQLJobFactory _plsqlJobFactory;
-    JobFactory::registerFactory(&_plsqlJobFactory, 
+    JobFactory::registerFactory(&_plsqlJobFactory,
                                 SMSC_DBSME_PLSQL_JOB_IDENTITY);
 
-    try 
+    try
     {
         logger.info(getStrVersion());
         Manager::init("config.xml");
-        
+
         ConfigView dsConfig(Manager::getInstance(), "StartupLoader");
         DataSourceLoader::loadup(&dsConfig);
 
         ConfigView cpConfig(Manager::getInstance(), "DBSme");
         CommandProcessor processor(&cpConfig);
-        
+
         DBSmeAdminHandler adminHandler(processor);
         ConfigView adminConfig(Manager::getInstance(), "DBSme.Admin");
-        DBSmeComponent admin(adminHandler);                   
-        ComponentManager::registerComponent(&admin); 
-        adminListener.init(adminConfig.getString("host"), adminConfig.getInt("port"));               
+        DBSmeComponent admin(adminHandler);
+        ComponentManager::registerComponent(&admin);
+        adminListener.init(adminConfig.getString("host"), adminConfig.getInt("port"));
         bAdminListenerInited = true;
         adminListener.Start();
-        
+
         while (!isNeedStop())
         {
             if (isNeedReinit())
             {
                 processor.clean();
                 Manager::reinit();
-                
+
                 DataSourceLoader::unload();
                 ConfigView dsConfig(Manager::getInstance(), "StartupLoader");
                 DataSourceLoader::loadup(&dsConfig);
-                
+
                 ConfigView cpConfig(Manager::getInstance(), "DBSme");
                 processor.init(&cpConfig);
-                
+
                 setNeedReinit(false);
             }
-            
+
             ConfigView mnConfig(Manager::getInstance(), "DBSme.ThreadPool");
             ConfigView ssConfig(Manager::getInstance(), "DBSme.SMSC");
             DBSmeConfig cfg(&ssConfig);
-            
+
             DBSmeTaskManager runner(&mnConfig);
             DBSmePduListener listener(processor, runner);
             SmppSession      session(cfg, &listener);
@@ -560,7 +560,7 @@ int main(void)
             }
             catch (SmppConnectException& exc)
             {
-                const char* msg = exc.what(); 
+                const char* msg = exc.what();
                 logger.error("Connect to SMSC failed. Cause: %s", (msg) ? msg:"unknown");
                 setNeedReconnect(true);
                 if (exc.getReason() == SmppConnectException::Reason::bindFailed) throw;
@@ -570,9 +570,9 @@ int main(void)
                 continue;
             }
             logger.info("Connected.");
-            
+
             bDBSmeWaitEvent.Wait(0);
-            while (!isNeedStop() && !isNeedReconnect() && !isNeedReinit()) 
+            while (!isNeedStop() && !isNeedReconnect() && !isNeedReinit())
             {
                 bDBSmeWaitEvent.Wait();
                 /*MutexGuard guard(countersLock);
@@ -607,7 +607,7 @@ int main(void)
         logger.error("Unknown exception: '...' caught. Exiting.");
         resultCode = -5;
     }
-    
+
     if (bAdminListenerInited) {
         adminListener.shutdown();
         adminListener.WaitFor();

@@ -15,13 +15,15 @@ struct AliasInfo
 {
   Address addr;
   Address alias;
-	bool hide;
+  bool hide;
 };
 
 //struct AliasRecord;
 
+
 struct APattern
 {
+#pragma pack(1)
   union
   {
     struct
@@ -30,7 +32,8 @@ struct APattern
       uint8_t numberingPlan;
     };
     int16_t num_n_plan;
-  }__attribute__((packed));
+  };
+#pragma pack()
   /*union
   {
     uint8_t mask[21];
@@ -43,13 +46,16 @@ struct APattern
   };
   int length;
   int defLength;
-	bool hide;
+  bool hide;
   //bool hasStar;
   //AliasRecord* greatUncertainty;
 };
 
+
+
 struct AValue
 {
+#pragma pack(1)
   union
   {
     struct
@@ -58,7 +64,8 @@ struct AValue
       uint8_t numberingPlan;
     };
     int16_t num_n_plan;
-  }__attribute__((packed));
+  };
+#pragma pack()
   union
   {
     uint8_t value[21];
@@ -84,11 +91,11 @@ struct TreeNode
   APattern* addr;
   std::vector<TreeNode*> child;
   TreeNode() : alias(0), addr(0), child(0) {};
-  ~TreeNode() 
+  ~TreeNode()
   { for ( unsigned i=0; i < child.size(); ++i) if (child[i]) delete child[i];}
   void clean()
-  { 
-    for ( unsigned i=0; i < child.size(); ++i) if (child[i]) delete child[i]; 
+  {
+    for ( unsigned i=0; i < child.size(); ++i) if (child[i]) delete child[i];
     child = std::vector<TreeNode*>(0);
     alias = 0;
     addr = 0;
@@ -118,7 +125,7 @@ public:
   virtual AliasIterator* iterator() = 0;
 };
 
-class AliasManager : 
+class AliasManager :
   public AliasTable,
   public AliasAdmin
 {
@@ -151,13 +158,13 @@ public:
     delete ali_table;
     delete adr_table;
   }*/
-  
+
   AliasManager() : first_alias(0), new_aliases(0), new_aliases_count(0) {}
   virtual ~AliasManager()
-  { 
-    /*while ( first_alias ) 
+  {
+    /*while ( first_alias )
     {
-      AliasRecord* r = first_alias; 
+      AliasRecord* r = first_alias;
       first_alias = first_alias->next;
       delete r;
     }*/
@@ -166,15 +173,14 @@ public:
 
   virtual bool AliasToAddress(const Address& alias, Address&  addr);
   virtual bool AddressToAlias(const Address& addr, Address& alias/*, bool* hode=0*/);
-  
+
   virtual void addAlias(const AliasInfo& info);
   virtual void commit();
   virtual void clean();
   virtual AliasIterator* iterator();
 };
 
-}; // namespace alias
-}; // namespace smsc
+} // namespace alias
+} // namespace smsc
 
 #endif
-

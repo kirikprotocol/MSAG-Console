@@ -15,17 +15,17 @@ namespace daemon {
 const char * const Service::service_exe = "bin/service";
 
 pid_t Service::start()
-	throw (AdminException)
+  throw (AdminException)
 {
   switch (status)
   {
   case starting:
-		throw AdminException("Service already starting");
+    throw AdminException("Service already starting");
   case running:
-		throw AdminException("Service already running");
+    throw AdminException("Service already running");
   case stopping:
-		throw AdminException("Service stopping");
-  case stopped: 
+    throw AdminException("Service stopping");
+  case stopped:
     {
       if (pid_t p = fork())
       { // parent process
@@ -33,7 +33,7 @@ pid_t Service::start()
         return pid = p;
       }
       else
-      {	// child process
+      { // child process
         chdir(service_dir.get());
         chmod(service_exe, S_IRWXU | S_IRGRP | S_IXGRP);
         FILE* tmpStream;
@@ -47,18 +47,18 @@ pid_t Service::start()
         {
           logger.error("reopen stdout error : %s",strerror(errno));
         }
-	sigset_t set;
-	sigemptyset(&set);
-	sigaddset(&set,17);
-	sigaddset(&set, SIGBUS);
-	sigaddset(&set, SIGFPE);
-	sigaddset(&set, SIGILL);
-	sigaddset(&set, SIGSEGV);
-	sigaddset(&set, SIGALRM);
-	sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
-	if(thr_sigsetmask(SIG_UNBLOCK,&set,NULL)!=0) {
-        	__warning__("Faield to update signal mask");
-	}
+  sigset_t set;
+  sigemptyset(&set);
+  sigaddset(&set,17);
+  sigaddset(&set, SIGBUS);
+  sigaddset(&set, SIGFPE);
+  sigaddset(&set, SIGILL);
+  sigaddset(&set, SIGSEGV);
+  sigaddset(&set, SIGALRM);
+  sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
+  if(thr_sigsetmask(SIG_UNBLOCK,&set,NULL)!=0) {
+          __warning__("Faield to update signal mask");
+  }
         execv(service_exe, createArguments());
         logger.error("Couldn't start service (\"%s/%s\"), nested: %u: %s",
                      service_dir.get(), service_exe, errno, strerror(errno));
@@ -72,133 +72,132 @@ pid_t Service::start()
 }
 
 void Service::kill()
-	throw (AdminException)
+  throw (AdminException)
 {
-	if (status == stopped)
-	{
-		throw AdminException("Service is not running");
-	}
+  if (status == stopped)
+  {
+    throw AdminException("Service is not running");
+  }
 
-	int result = sigsend(P_PID, pid, SIGKILL);
-	if (result != 0)
-	{
-		switch (errno)
-		{
-		case EINVAL:
-			throw AdminException("Incorrect signal number");
-		case EPERM:
-			throw AdminException("Does not have permission to send the signal to Service process");
+  int result = sigsend(P_PID, pid, SIGKILL);
+  if (result != 0)
+  {
+    switch (errno)
+    {
+    case EINVAL:
+      throw AdminException("Incorrect signal number");
+    case EPERM:
+      throw AdminException("Does not have permission to send the signal to Service process");
     case ESRCH:
       status = stopped;
-			pid = 0;
+      pid = 0;
       throw AdminException("No process or process group can be found corresponding to that specified by pid");
-		default:
-			throw AdminException("Unknown error");
-		}
-	}
+    default:
+      throw AdminException("Unknown error");
+    }
+  }
   status = stopped;
   pid = 0;
 }
 
 void Service::shutdown()
-	throw (AdminException)
+  throw (AdminException)
 {
-	if (status != running)
-	{
-		throw AdminException("Service is not running");
-	}
+  if (status != running)
+  {
+    throw AdminException("Service is not running");
+  }
 
-	logger.debug("sending %i signal to %u", smsc::system::SHUTDOWN_SIGNAL, pid);
-	int result = sigsend(P_PID, pid, smsc::system::SHUTDOWN_SIGNAL);
-	if (result != 0)
-	{
-		switch (errno)
-		{
-		case EINVAL:
-			throw AdminException("Incorrect signal number");
-		case EPERM:
-			throw AdminException("Does not have permission to send the signal to Service process");
-		case ESRCH:
+  logger.debug("sending %i signal to %u", smsc::system::SHUTDOWN_SIGNAL, pid);
+  int result = sigsend(P_PID, pid, smsc::system::SHUTDOWN_SIGNAL);
+  if (result != 0)
+  {
+    switch (errno)
+    {
+    case EINVAL:
+      throw AdminException("Incorrect signal number");
+    case EPERM:
+      throw AdminException("Does not have permission to send the signal to Service process");
+    case ESRCH:
       status = stopped;
-			pid = 0;
+      pid = 0;
       throw AdminException("No process or process group can be found corresponding to that specified by pid");
-		default:
-			throw AdminException("Unknown error");
-		}
-	}
+    default:
+      throw AdminException("Unknown error");
+    }
+  }
   status = stopping;
 }
 
 void Service::init(const char * const services_dir,
-				   const char * const serviceId,
-				   const in_port_t serviceAdminPort,
-				   const char * const serviceArgs,
-				   const pid_t servicePID,
+           const char * const serviceId,
+           const in_port_t serviceAdminPort,
+           const char * const serviceArgs,
+           const pid_t servicePID,
                    const run_status serviceStatus)
 {
-	service_dir.reset(new char[strlen(services_dir) + 1 + strlen(serviceId) + 1]);
-	strcpy(service_dir.get(), services_dir);
-	strcat(service_dir.get(), "/");
-	strcat(service_dir.get(), serviceId);
+  service_dir.reset(new char[strlen(services_dir) + 1 + strlen(serviceId) + 1]);
+  strcpy(service_dir.get(), services_dir);
+  strcat(service_dir.get(), "/");
+  strcat(service_dir.get(), serviceId);
 
-	id.reset(cStringCopy(serviceId));
-	port = serviceAdminPort;
-	pid = servicePID;
-	status = serviceStatus;
-	args.reset(cStringCopy(serviceArgs));
+  id.reset(cStringCopy(serviceId));
+  port = serviceAdminPort;
+  pid = servicePID;
+  status = serviceStatus;
+  args.reset(cStringCopy(serviceArgs));
 }
 
 char * substr(const char * from, const char * to)
 {
-	char *tmpbuf = new char[to - from +1];
-	memcpy(tmpbuf, from, to - from);
-	tmpbuf[to - from] = 0;
-	return tmpbuf;
+  char *tmpbuf = new char[to - from +1];
+  memcpy(tmpbuf, from, to - from);
+  tmpbuf[to - from] = 0;
+  return tmpbuf;
 }
 
 char ** Service::createArguments()
 {
-	char * port_str = new char[sizeof(in_port_t)*3+1];
-	snprintf(port_str, sizeof(in_port_t)*3+1, "%lu", (unsigned long) port);
-	
-	typedef std::vector<char *> chrvec;
-	chrvec args_vector;
-	args_vector.push_back(cStringCopy(service_exe));
-	args_vector.push_back(port_str);
+  char * port_str = new char[sizeof(in_port_t)*3+1];
+  snprintf(port_str, sizeof(in_port_t)*3+1, "%lu", (unsigned long) port);
 
-	///////////////////////////////////////
-	// parse arguments
-	///////////////////////////////////////
-	{
-		const char *p1 = args.get(), *p2 = args.get();
-		while (*p1!= 0)
-		{
-			if (isspace(*p1))
-			{
-				if (p1 == p2)
-				{
-					p2++;
-				} else {
-					args_vector.push_back(substr(p2, p1));
-					p2 = p1+1;
-				}
-			}
-			p1++;
-		}
-		if (*p2 != 0 && p2 != p1)
-			args_vector.push_back(substr(p2, p1));
-	}
+  typedef std::vector<char *> chrvec;
+  chrvec args_vector;
+  args_vector.push_back(cStringCopy(service_exe));
+  args_vector.push_back(port_str);
 
-	char ** arguments = new (char*)[args_vector.size()+1];
-	for (chrvec::size_type i = 0; i < args_vector.size(); i++)
-	{
-		arguments[i] = args_vector.at(i);
-	}
-	arguments[args_vector.size()] = 0;
-	return arguments;
+  ///////////////////////////////////////
+  // parse arguments
+  ///////////////////////////////////////
+  {
+    const char *p1 = args.get(), *p2 = args.get();
+    while (*p1!= 0)
+    {
+      if (isspace(*p1))
+      {
+        if (p1 == p2)
+        {
+          p2++;
+        } else {
+          args_vector.push_back(substr(p2, p1));
+          p2 = p1+1;
+        }
+      }
+      p1++;
+    }
+    if (*p2 != 0 && p2 != p1)
+      args_vector.push_back(substr(p2, p1));
+  }
+
+  char ** arguments = new char*[args_vector.size()+1];
+  for (chrvec::size_type i = 0; i < args_vector.size(); i++)
+  {
+    arguments[i] = args_vector.at(i);
+  }
+  arguments[args_vector.size()] = 0;
+  return arguments;
 }
 
 }
 }
 }
-

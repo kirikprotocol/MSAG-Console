@@ -63,6 +63,6 @@ int SmppSocketsManager::removeSocket(Socket* sock)
   return 0;
 }
 
-};//smppio
-};//system
-};//smsc
+}//smppio
+}//system
+}//smsc

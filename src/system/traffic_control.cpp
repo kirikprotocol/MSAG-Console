@@ -73,7 +73,7 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
         __trace2__("smeschedcount for %s = %d",si.systemId.c_str(),cfg.smsc->GetSmeScheduleCount(dstIdx,0));
         if(si.schedlimit!=0 && cfg.smsc->GetSmeScheduleCount(dstIdx,0)>=si.schedlimit)
         {
-          __info2__(log,"schedlimit");
+          __info__(log,"schedlimit");
           break;
         }
       }
@@ -97,7 +97,7 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
           __trace2__("smeschedcount(receipt) for %s=%d",src_proxy->getSystemId(),cfg.smsc->GetSmeScheduleCount(idx,0));
           if(si.schedlimit!=0 && cfg.smsc->GetSmeScheduleCount(idx,0)>=si.schedlimit)
           {
-            __info2__(log,"receipt schedlimit");
+            __info__(log,"receipt schedlimit");
             break;
           }
           IntTimeSlotCounter *dsrccnt=getTSC(deliverCnt,idx);
@@ -192,5 +192,5 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
 }
 
 
-};//system
-};//smsc
+}//system
+}//smsc

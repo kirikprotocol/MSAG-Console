@@ -54,5 +54,5 @@ int AlertAgent::Execute()
   return 0;
 }
 
-};//system
-};//smsc
+}//system
+}//smsc

@@ -16,6 +16,8 @@
 
 #include "StoreManager.h"
 
+#define __FUNCTION__ __func__
+
 namespace smsc { namespace store
 {
 
@@ -1053,7 +1055,7 @@ static void findFiles(std::string location, const char* ext, Array<std::string>&
         throw StorageException(exc.what());
     }
 
-    char entry[sizeof(struct dirent)+pathconf(locationStr, _PC_NAME_MAX)];
+    char entry[4096];//sizeof(struct dirent)+pathconf(locationStr, _PC_NAME_MAX)];
     //printf("Max name len=%d\n", pathconf(locationStr, _PC_NAME_MAX));
     struct dirent* pentry = 0;
 
@@ -1129,7 +1131,7 @@ void RemoteStore::initBilling(Manager& config)
         const char* fileNameStr = file.c_str();
         log.debug("Found old billing file: %s", fileNameStr);
 
-        char fileName[fileNameLen];
+        char fileName[4096];//fileNameLen];
         strncpy(fileName, fileNameStr, fileNameLen-extLen);
         fileName[fileNameLen-extLen] = '\0';
         changeFileExtension(billingLocation, fileName);

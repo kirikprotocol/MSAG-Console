@@ -110,7 +110,7 @@ static const char* const smpperrstr(const int smpp_command_status)
   #undef addcs
 }
 
-};//smpp
-};//smsc
+}//smpp
+}//smsc
 
 #endif

@@ -24,6 +24,7 @@ using namespace smsc::core::buffers;
 using namespace std;
 
 class DistrListProcess : public ThreadedTask, public SmeProxy{
+protected:
   enum {MAX_COUNT=256};
   struct LISTELEMENT{
     unsigned dialogId;
@@ -31,6 +32,8 @@ class DistrListProcess : public ThreadedTask, public SmeProxy{
     bool responsed;
     unsigned errcode;
   };
+  struct ListTask;
+  friend class DistrListProcess::ListTask;
   struct ListTask{
     time_t startTime;
     unsigned count;           // количество елементов в задаче
@@ -60,7 +63,7 @@ public:
   virtual SmscCommand getCommand();
   virtual SmeProxyState getState() const;
   virtual void init();
-  virtual SmeProxyPriority getPriority() {return SmeProxyPriorityDefault;};
+  virtual SmeProxyPriority getPriority()const {return SmeProxyPriorityDefault;};
   virtual void setPriority(SmeProxyPriority){};
   virtual bool hasInput() const;
   virtual void attachMonitor(ProxyMonitor* monitor); // for detach monitor call with NULL

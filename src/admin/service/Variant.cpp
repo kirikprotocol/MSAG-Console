@@ -11,7 +11,7 @@ using smsc::util::cStringCopy;
 using smsc::admin::AdminException;
 
 Variant::Variant(const Type variant_type)
-	throw (AdminException)
+  throw (AdminException)
 {
   type = variant_type;
   switch (type)
@@ -27,19 +27,19 @@ Variant::Variant(const Type variant_type)
     break;
   case service::StringListType:
     stringListValue = new StringList;
-		break;
+    break;
   default:
     type = undefined;
-		longValue = 0;
+    longValue = 0;
     throw AdminException("Unknow type of variant to create");
   }
 }
 
-Variant::Variant(const char * const value) 
+Variant::Variant(const char * const value)
   : type(StringType), strValue(cStringCopy(value))
 {}
 
-Variant::Variant(const long value) 
+Variant::Variant(const long value)
   : type(LongType), longValue(value)
 {}
 
@@ -87,7 +87,7 @@ void appendStringList(StringList * stringList, const char * const value)
 }
 
 Variant::Variant(const char * const value, Type variant_type)
-	throw (AdminException)
+  throw (AdminException)
 {
   type = variant_type;
   switch (type)
@@ -97,17 +97,17 @@ Variant::Variant(const char * const value, Type variant_type)
     break;
   case LongType:
     longValue = atol(value);
-		break;
+    break;
   case BooleanType:
     boolValue =    (strcmp(value,  "true") == 0)
                 || (strcmp(value,  "on") == 0)
                 || (strcmp(value,  "1") == 0)
                 || (strcmp(value,  "-1") == 0)
                 || (strcmp(value,  "yes") == 0);
-		break;
+    break;
   case service::StringListType:
     appendStringList(stringListValue = new StringList, value);
-	  break;
+    break;
   default:
     type = undefined;
     throw AdminException("Unknow type of variant to create");
@@ -121,7 +121,7 @@ Variant::Variant(const Variant &copy)
   initByCopy(copy);
 }
 
-Variant::Variant & Variant::operator = (const Variant & copy)
+Variant & Variant::operator = (const Variant & copy)
   throw (AdminException)
 {
   initByCopy(copy);
@@ -185,22 +185,22 @@ const StringList& Variant::getStringListValue() const
 
 char * quoteCommas(const char * const value)
 {
-	std::string result;
-	for (const char * i = value; *i != 0; i++)
-	{
-		if ((*i == ',') || (*i == '\\'))
-			result +=	'\\';
-		result += *i;
-	}
-	return cStringCopy(result.c_str());
+  std::string result;
+  for (const char * i = value; *i != 0; i++)
+  {
+    if ((*i == ',') || (*i == '\\'))
+      result += '\\';
+    result += *i;
+  }
+  return cStringCopy(result.c_str());
 }
 
-void Variant::appendValueToStringList(const char * const value) 
-	throw (AdminException)
+void Variant::appendValueToStringList(const char * const value)
+  throw (AdminException)
 {
   if (type != StringListType)
     throw AdminException("Illegal parameter type");
-	stringListValue->push_back(quoteCommas(value));
+  stringListValue->push_back(quoteCommas(value));
 }
 
 

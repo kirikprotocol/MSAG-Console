@@ -86,7 +86,7 @@ AliasConfig::status AliasConfig::load(const char * const filename)
       //record->addr = attrs.getNamedItem("addr").getNodeValue().transcode();
       {
         std::auto_ptr<char> dta(attrs.getNamedItem("addr").getNodeValue().transcode());
-        try 
+        try
         {
           smsc::sms::Address a(dta.get());
           record->addrValue = new char[smsc::sms::MAX_ADDRESS_VALUE_LENGTH+1];
@@ -128,7 +128,7 @@ AliasConfig::status AliasConfig::load(const char * const filename)
       DOM_NodeList childs = node.getChildNodes();
       records.push_back(record.release());
     }
-  } catch (DOMTreeReader::ParseException &e) {
+  } catch (ParseException &e) {
     logger.warn("DomException:%s",e.what());
     return fail;
   }
@@ -137,7 +137,7 @@ AliasConfig::status AliasConfig::load(const char * const filename)
 
 AliasConfig::status AliasConfig::reload()
 {
-  __trace2__("smsc::util::config::alias::AliasConfig - Reload config");
+  __trace__("smsc::util::config::alias::AliasConfig - Reload config");
   clear();
   std::auto_ptr<char> tmp = config_filename;
   status result = load(tmp.get());

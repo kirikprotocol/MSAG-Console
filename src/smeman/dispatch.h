@@ -13,16 +13,14 @@
 namespace smsc {
 namespace smeman {
 
-// abstract 
+// abstract
 class Dispatch
 {
 public:
   virtual SmeProxy* selectSmeProxy(unsigned long timeout=0,int* idx=0) = 0;
 };
 
-}; // namespace smeman
-}; // namespace smsc
+} // namespace smeman
+} // namespace smsc
 
 #endif
-
-

@@ -40,8 +40,8 @@ protected:
 #endif
 };//Thread
 
-};//threads
-};//core
-};//smsc
+}//threads
+}//core
+}//smsc
 
 #endif

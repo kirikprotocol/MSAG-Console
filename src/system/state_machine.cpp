@@ -343,7 +343,7 @@ int StateMachine::Execute()
     }
     catch(...)
     {
-      __warning2__("StateMachine::unknown exception");
+      __warning__("StateMachine::unknown exception");
     }
   }
   __trace__("exit state machine");
@@ -1636,7 +1636,7 @@ StateType StateMachine::submit(Tuple& t)
 
   if(!generateDeliver)
   {
-    __trace2__("leave non merged sms in enroute state");
+    __trace__("leave non merged sms in enroute state");
     return ENROUTE_STATE;
   }
 
@@ -1719,7 +1719,7 @@ StateType StateMachine::submit(Tuple& t)
             sm->changeSmsStateToEnroute(*sms,msgId,d,sms->lastResult,sm->rescheduleSms(*sms));
           }catch(...)
           {
-            __warning2__("SUBMIT: failed to change state to enroute");
+            __warning__("SUBMIT: failed to change state to enroute");
           }
         }
       }else
@@ -2209,7 +2209,7 @@ StateType StateMachine::forward(Tuple& t)
       __trace2__("FORWARD: Failed to send AlertNotification:%s",e.what());
     }catch(...)
     {
-      __trace2__("FORWARD: Failed to send AlertNotification:unknown");
+      __trace__("FORWARD: Failed to send AlertNotification:unknown");
     }
   }
 
@@ -2651,20 +2651,20 @@ StateType StateMachine::deliveryResp(Tuple& t)
       }break;
       default:
       {
-        try{
-          __trace__("DELIVERYRESP: change state to undeliverable");
-          if( !dgortr ) 
-          {
+        if(!dgortr)
+        {
+          try{
+            __trace__("DELIVERYRESP: change state to undeliverable");
             store->changeSmsStateToUndeliverable
             (
               t.msgId,
               sms.getDestinationDescriptor(),
               GET_STATUS_CODE(t.command->get_resp()->get_status())
             );
+          }catch(std::exception& e)
+          {
+            __warning2__("DELIVERYRESP: failed to change state to undeliverable:%s",e.what());
           }
-        }catch(std::exception& e)
-        {
-          __warning2__("DELIVERYRESP: failed to change state to enroute:%s",e.what());
         }
 
         sms.setLastResult(GET_STATUS_CODE(t.command->get_resp()->get_status()));
@@ -3118,7 +3118,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
     }
   }catch(std::exception& e)
   {
-    __trace2__("DELIVERY_RESP:failed to submit receipt");
+    __trace__("DELIVERY_RESP:failed to submit receipt");
   }
   return skipFinalizing?DELIVERING_STATE:DELIVERED_STATE;
 }
@@ -3208,7 +3208,7 @@ StateType StateMachine::alert(Tuple& t)
       __warning2__("ALERT: failed to change state to enroute:%s",e.what());
     }catch(...)
     {
-      __warning2__("ALERT: failed to change state to enroute");
+      __warning__("ALERT: failed to change state to enroute");
     }
     smsc->notifyScheduler();
     sendNotifyReport(sms,t.msgId,"delivery attempt timed out");
@@ -3793,7 +3793,7 @@ void StateMachine::submitReceipt(SMS& sms)
     }
   }catch(...)
   {
-    __warning2__("Faield to create receipt");
+    __warning__("Failed to create receipt");
   }
 }
 
@@ -3834,7 +3834,7 @@ void StateMachine::finalizeSms(SMSId id,SMS& sms)
         src_proxy->putCommand(resp);
       }catch(...)
       {
-        __warning2__("DELIVERYRESP: failed to put transaction response command");
+        __warning__("DELIVERYRESP: failed to put transaction response command");
       }
     }
   }
@@ -3847,5 +3847,5 @@ void StateMachine::finalizeSms(SMSId id,SMS& sms)
 }
 
 
-};//system
-};//smsc
+}//system
+}//smsc

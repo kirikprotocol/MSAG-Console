@@ -80,7 +80,7 @@ protected:
   Mutex mtx;
 };
 
-};//namespace system
-};//namespace smsc
+}//namespace system
+}//namespace smsc
 
 #endif

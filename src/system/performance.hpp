@@ -154,8 +154,8 @@ protected:
   int port;
 };
 
-};//performance
-};//system
-};//smsc
+}//performance
+}//system
+}//smsc
 
 #endif

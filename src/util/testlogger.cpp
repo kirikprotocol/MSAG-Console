@@ -25,6 +25,7 @@ public:
       s+='!';
       if(s.length()>10)s.erase(0,5);
     }
+    return 0;
   }
 };
 

@@ -1,6 +1,7 @@
 #ifndef __SMSC_SYSTEM_STATE_MACHINE_HPP__
 #define __SMSC_SYSTEM_STATE_MACHINE_HPP__
 
+#include "system/smsc.hpp"
 #include "core/threads/ThreadedTask.hpp"
 #include "store/StoreManager.h"
 #include "system/event_queue.h"
@@ -132,7 +133,7 @@ protected:
 
 };
 
-};//system
-};//smsc
+}//system
+}//smsc
 
 #endif

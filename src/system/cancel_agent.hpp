@@ -86,7 +86,7 @@ public:
 
       }catch(...)
       {
-        __trace2__("CANCELAGENT: batch cancel processing error");
+        __trace__("CANCELAGENT: batch cancel processing error");
         cmd.getProxy()->putCommand
         (
           SmscCommand::makeCancelSmResp
@@ -119,7 +119,7 @@ protected:
   Array<SmscCommand> queue;
 };
 
-};//system
-};//smsc
+}//system
+}//smsc
 
 #endif

@@ -6,6 +6,8 @@
 #if !defined (__Cxx_Header__EventQueue_h__)
 #define __Cxx_Header__EventQueue_h__
 
+#include "core/buffers/PriorityQueue.hpp"
+#include "core/buffers/CyclicQueue.hpp"
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "smeman/smsccmd.h"
@@ -14,7 +16,7 @@
 #include <inttypes.h>
 //#include <stdint.h>
 #include <string.h>
-#include <map>
+#include <list>
 
 #define DISABLE_LIST_DUMP
 
@@ -23,6 +25,7 @@ namespace system {
 
 using namespace smsc::smeman;
 using namespace smsc::core::synchronization;
+using namespace smsc::core::buffers;
 
 typedef uint64_t MsgIdType;
 //typedef uint64_t StateType;
@@ -30,9 +33,6 @@ typedef uint64_t MsgIdType;
 
 const int MAX_COMMAND_PROCESSED = 2000;
 const int LOCK_LIFE_LENGTH = 8;
-
-const int PRIORITIES_COUNT=32;
-const int MAX_PROCESSED_LOCKERS=1000;
 
 using std::runtime_error;
 
@@ -45,87 +45,43 @@ struct Tuple
 
 class EventQueue
 {
+  public:
   uint64_t counter;
-
-  // запись списка команд
-  struct CmdRecord
-  {
-    CommandType command;
-    unsigned long timeout;
-    CmdRecord(const CommandType& cmd) : command(cmd) {timeout = time(0)+LOCK_LIFE_LENGTH;}
-    CmdRecord* next;
-  };
 
   // запись таблицы блокировок
   struct Locker
   {
     bool locked;
+    bool enqueued;
     Locker* next_hash;
     MsgIdType msgId;
     StateType state;
-    CmdRecord* cmds;
-    CommandId lastCommand;
-    int priority;
-    Locker() : locked(false), cmds(0),lastCommand(UNKNOWN) {}
+    typedef std::list<CommandType> CmdList;
+    CmdList cmds;
+
+    Locker() : locked(false),enqueued(false){}
     ~Locker()
     {
-      while ( cmds )
-      {
-        CmdRecord* n = cmds->next;
-        delete cmds;
-        cmds = n;
-      }
     }
 
     void push_back(const CommandType& c)
     {
-      /*if(lastCommand==FORWARD && c->cmdid==FORWARD)
-      {
-        __trace__("Skipping forward");
-        return;
-      }*/
-      CmdRecord* cmd=new CmdRecord(c);
-      CmdRecord** iter = &cmds;
-      for ( ; *iter != 0; iter = &(*iter)->next );
-      *iter = cmd;
-      cmd->next = 0;
+      cmds.push_back(c);
     }
 
     // выберает следующую допустимую команду
     // возвращает true если команда найдена - false в обраном случае
     // удаляет все команды для которых возможен таймаут и он истек
-    bool getNextCommand(CommandType& c)
+    bool getNextCommand(CommandType& c,bool remove=true)
     {
-      CmdRecord** cmd = &cmds;
-      unsigned long t = time(0);
-      //!__trace2__("try to select command for %p(%lld)",this,msgId);
-      while(*cmd)
+      for(CmdList::iterator i=cmds.begin();i!=cmds.end();i++)
       {
-        /*
-        if ( StateChecker::commandHasTimeout((*cmd)->command) )
+        if(StateChecker::commandIsValid(state,*i))
         {
-          if ( t > ((*cmd)->timeout) )
-          {
-            // remove command
-            //!__trace2__("delete command:%lld (%lu/%lu)",msgId,t,(*cmd)->timeout);
-            CmdRecord* tmp = *cmd;
-            *cmd = (*cmd)->next;
-            delete tmp;
-            continue;
-          }
-        }
-        */
-        //!__trace2__("getnextcommand(%lld): %d,%d",msgId,state,(*cmd)->command->get_commandId());
-        if ( StateChecker::commandIsValid(state,(*cmd)->command) )
-        {
-          c = (*cmd)->command;
-          // remove command
-          CmdRecord* tmp = *cmd;
-          *cmd = (*cmd)->next;
-          delete tmp;
+          c = *i;
+          if(remove)cmds.erase(i);
           return true;
         }
-        cmd = &(*cmd)->next;
       }
       return false;
     }
@@ -195,25 +151,21 @@ class EventQueue
       //!__trace2__("deleting non-existent locker:%lld",key);
     }
     int getCount(){return count;}
-  } hash;
+  };
+  HashTable hash;
 
   Event event;
   Mutex mutex;
 
 
-  typedef std::multimap<int,Locker*> LockerQueue;
-  typedef std::pair<int,Locker*> LockerPair;
-  LockerQueue unlocked;
-  int counts[PRIORITIES_COUNT];
-  int processed;
+  typedef PriorityQueue<Locker*,CyclicQueue<Locker*>,0,31> LockerQueue;
+  LockerQueue queue;
 
 public:
 #define __synchronized__ MutexGuard mguard(mutex);
 
   EventQueue() : counter(0)
   {
-    for(int i=0;i<PRIORITIES_COUNT;i++)counts[i]=0;
-    processed=0;
   }
 
   ~EventQueue() {}
@@ -224,25 +176,11 @@ public:
     return counter;
   }
 
-  void getStats(int& hcnt,int& ucnt)
+  void getStats(int& hcnt,int& qcnt)
   {
     __synchronized__
     hcnt=hash.getCount();
-    ucnt=unlocked.size();
-  }
-
-  int calcWeight(int prio)
-  {
-    if(prio>PRIORITIES_COUNT)prio=PRIORITIES_COUNT-1;
-    if(prio<0)prio=0;
-    counts[prio]++;
-    processed++;
-    if(processed>MAX_PROCESSED_LOCKERS)
-    {
-      processed=0;
-      for(int i=0;i<PRIORITIES_COUNT;i++)counts[i]=0;
-    }
-    return counts[prio]*10000/PRIORITIES_COUNT;
+    qcnt=queue.Count();
   }
 
   // добавляет в запись команду (создает новую запись приее отсутствии)
@@ -252,22 +190,23 @@ public:
   __synchronized__
     __trace2__("enqueue:cmd=%d, msgId=%lld",command->get_commandId(),msgId);
     Locker* locker = hash.get(msgId);
-    //!__trace2__("enq: first=%p, last=%p, lock=%p",
-    //!  first_unlocked,last_unlocked,locker);
+
     if ( !locker )
     {
       locker = new Locker;
-      hash.put(msgId,locker);
       locker->state = StateTypeValue::UNKNOWN_STATE;
-      locker->priority=command->get_priority();
-      int weight=calcWeight(locker->priority);
-      //__trace2__("enqueue: prio=%d, weight=%d",locker->priority,weight);
-      unlocked.insert(LockerPair(weight,locker));
+      locker->msgId = msgId;
+
+      hash.put(msgId,locker);
     }
-    locker->msgId = msgId;
     locker->push_back(command);
-    //!__trace2__("enqueue: last unlocked=%p",last_unlocked);
-    event.Signal();
+    if(!locker->locked && !locker->enqueued &&
+       StateChecker::commandIsValid(locker->state,command))
+    {
+      locker->enqueued=true;
+      queue.Push(locker,command->get_priority());
+      event.Signal();
+    }
   }
 
 
@@ -277,45 +216,20 @@ public:
   // если нет записей с доступными командами ожидает нотификации
   void selectAndDequeue(Tuple& result,volatile bool* quitting)
   {
-    //!__trace__("enter selectAndDequeue");
     for(;;)
     {
       {
-      __synchronized__
-        for (LockerQueue::iterator iter = unlocked.begin();iter!=unlocked.end();)
+        __synchronized__
+        if(queue.Count()>0)
         {
-          bool success = (*iter).second->getNextCommand(result.command);
-          if ( success || !(*iter).second->cmds ||
-               StateChecker::stateIsSuperFinal((*iter).second->state))
-          {
-            Locker* locker = (*iter).second;
-            //__trace2__("selectAndDequeue: weight=%d, msgId=%lld",(*iter).first,locker->msgId);
-
-            __require__(!locker->locked);
-
-            if ( success ) // получена доступная команда
-            {
-              unlocked.erase(iter);
-
-              locker->locked = true;
-              locker->lastCommand = result.command->cmdid;
-              result.msgId = locker->msgId;
-              result.state = locker->state;
-              return;
-            }
-            else if( !locker->cmds || StateChecker::stateIsSuperFinal(locker->state)) //вообще нет команд
-            {
-              if ( StateChecker::stateIsFinal(locker->state) )
-              {
-                unlocked.erase(iter);
-                hash.remove(locker->msgId);
-                delete locker;
-                iter=unlocked.begin();
-                continue;
-              }
-            }
-          }
-          iter++;
+          Locker *l;
+          queue.Pop(l);
+          l->locked=true;
+          l->enqueued=false;
+          l->getNextCommand(result.command);
+          result.msgId=l->msgId;
+          result.state=l->state;
+          return;
         }
       }
       event.Wait();
@@ -339,9 +253,29 @@ public:
 
 
     if ( StateChecker::stateIsFinal(state) )
+    {
       ++counter;
+      if(locker->cmds.size()==0)
+      {
+        hash.remove(locker->msgId);
+        delete locker;
+        return;
+      }
+    }
 
-    unlocked.insert(LockerPair(calcWeight(locker->priority),locker));
+    if(StateChecker::stateIsSuperFinal(state))
+    {
+      hash.remove(locker->msgId);
+      delete locker;
+      return;
+    }
+
+    CommandType cmd;
+    if(locker->getNextCommand(cmd,false))
+    {
+      locker->enqueued=true;
+      queue.Push(locker,cmd->get_priority());
+    }
 
     event.Signal();
   }
@@ -351,8 +285,8 @@ public:
 #undef DISABLE_LIST_DUMP
 
 
-}; // namespace system
-}; // namespace cmsc
+} // namespace system
+} // namespace cmsc
 
 
 #endif

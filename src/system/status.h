@@ -100,8 +100,8 @@ static const int SYSFAILURE=1186; //System Failure
 static const int DATAMISSING=1187; //Data Missing
 static const int UNEXPDATA=1188; //Unexpected Data value
 
-};//Status
-};//system
-};//smsc
+}//Status
+}//system
+}//smsc
 
 #endif

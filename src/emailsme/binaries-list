@@ -2,6 +2,6 @@
 # this file contains binaries definitions
 
 # binary name        source name	libraries
-emailsme/mdAgent mdAgent -lcore-buffers -lcore-network -lsocket
-emailsme/emailsme emailsme -lcore-network -lutil -lsms -lutil -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll -lutil-config -L$(ORACLE_LIB) -lutil-xml $(__LIBRARIES) -lxerces-c -ldb -lemailsme-util -lutil-templates
+emailsme/mdAgent mdAgent -lcore-buffers -lcore-network -lsocket -lnsl
+emailsme/emailsme emailsme -lcore-network -lutil -lsms -lutil -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll -lutil-config -L$(ORACLE_LIB) -lutil-xml $(__LIBRARIES) $(XERCES_LIB) -ldb -lemailsme-util -lutil-templates -lnsl -ldl
 -emailsme/retest retest

@@ -3,6 +3,8 @@
 
 #include "sms.h"
 
+#define __FUNCTION__ __func__
+
 namespace smsc {
 namespace sms{
 
@@ -263,5 +265,5 @@ trivial:
 }
 
 
-};//sms
-};//smsc
+}//sms
+}//smsc

@@ -23,6 +23,7 @@ using smsc::smeman::SmeTable;
 
 using namespace std;
 
+/*
 struct RouteValue
 {
   uint8_t length;
@@ -30,8 +31,9 @@ struct RouteValue
   uint8_t tni; // type of number
   uint8_t value[0];
 };
+*/
 
-struct RouteRecord 
+struct RouteRecord
 {
   RouteInfo info; // has address
   SmeIndex proxyIdx;
@@ -52,7 +54,7 @@ struct RouteSrcTreeNode
   void clean()
   {
     record = 0;
-    for ( unsigned i=0; i< child.size(); ++i ) 
+    for ( unsigned i=0; i< child.size(); ++i )
       { if ( child[i] ) delete child[i]; }
   }
 };
@@ -67,9 +69,9 @@ struct RouteTreeNode
   void clean()
   {
     record = 0;
-    for ( unsigned i=0; i< child.size(); ++i ) 
+    for ( unsigned i=0; i< child.size(); ++i )
       { if ( child[i] ) delete child[i]; }
-    for ( unsigned i=0; i< sources.size(); ++i ) 
+    for ( unsigned i=0; i< sources.size(); ++i )
       { if ( sources[i] ) delete sources[i]; }
   }
 };
@@ -86,8 +88,8 @@ class RouteManager : public RouteAdmin, public RouteTable
 public :
   RouteManager() : sme_table(0),first_record(0),new_first_record(0),trace_enabled_(false)
   {}
-  
-  virtual ~RouteManager() 
+
+  virtual ~RouteManager()
   {
     while ( first_record )
     {
@@ -105,7 +107,7 @@ public :
 
   void assign(SmeTable* smetable); // for detach call with NULL;
   //RouteIterator* iterator();
-  // RouteAdministrator implementaion 
+  // RouteAdministrator implementaion
   virtual void addRoute(const RouteInfo& routeInfo);
   virtual void commit(bool = false);
   virtual void cancel();
@@ -115,7 +117,7 @@ public :
   //virtual int lookup( const smsc::sms::Address& source, const smsc::sms::Address& dest);
   //virtual RouteInfo getRouteInfo(int idx);
   //virtual SmeProxy* getSmeProxy(int idx);
-  
+
   //
   // return true when route found
   //    otherwise return false
@@ -127,7 +129,7 @@ public :
   virtual void enableTrace(bool);
 };
 
-}; // namespace route
-}; // namespace smsc
+} // namespace route
+} // namespace smsc
 
 #endif

@@ -74,7 +74,7 @@ void print(const AValue& val,char* text)
 inline
 int compare_val_pat(const AValue& val, const APattern& pattern,bool& strong)
 {
-  __trace2__("compare (value ? pattern)");
+  __trace__("compare (value ? pattern)");
   print(val,"\tV:");
   print(pattern,"\tP:");
 /*#define compare_v(n) \
@@ -522,10 +522,10 @@ __synchronized__
     makeAliasFromValueByAddres(*node,val,alias);
   }
   LEAVE;
-	/*if ( node && hide )
-	{
-		*hide = node->alias->hide;
-	}*/
+  /*if ( node && hide )
+  {
+    *hide = node->alias->hide;
+  }*/
   return node != 0;
 }
 
@@ -565,7 +565,7 @@ __synchronized__
   auto_ptr<AliasRecord> rec(new AliasRecord);
   makeAPattern(rec->alias,info.alias);
   makeAPattern(rec->addr,info.addr);
-	rec->alias.hide = info.hide;
+  rec->alias.hide = info.hide;
   //rec->info = info;
   __trace2__("+++++++ ADD ALIAS +++++++");
   print(rec->addr,"addr");
@@ -654,8 +654,8 @@ __synchronized__
   __trace2__("&---------- END --------------&");
   for ( int i =0; i<new_aliases_count; ++i )
   {
-		if ( tmp_vector[i]->alias.hide )
-			addIntoAddrTreeRecurse(&addrRootNode,tmp_vector[i]);
+    if ( tmp_vector[i]->alias.hide )
+      addIntoAddrTreeRecurse(&addrRootNode,tmp_vector[i]);
   }
   __qsort__(tmp_vector,new_aliases_count,sizeof(AliasRecord*),
             ali_sort_comparator);
@@ -669,7 +669,7 @@ __synchronized__
   __trace2__("&---------- END --------------&");
   for ( int i =0; i<new_aliases_count; ++i )
   {
-		addIntoAliasTreeRecurse(&aliasRootNode,tmp_vector[i]);
+    addIntoAliasTreeRecurse(&aliasRootNode,tmp_vector[i]);
   }
   delete tmp_vector;
   while(first_alias)
@@ -683,5 +683,5 @@ __synchronized__
   new_aliases_count = 0;
 }
 
-}; // namespace alias
-}; // namespace smsc
+} // namespace alias
+} // namespace smsc

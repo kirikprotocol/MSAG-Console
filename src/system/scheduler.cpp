@@ -160,7 +160,7 @@ void Scheduler::ChangeSmsSchedule(SMSId id,time_t newtime,SmeIndex idx)
     smeCountCache.Insert(idx,c);
   }
   mon.notify();
-  __trace2__("Scheduler: notify");
+  __trace__("Scheduler: notify");
 }
 
 void Scheduler::UpdateSmsSchedule(time_t old,SMSId id,time_t newtime,SmeIndex idx)
@@ -231,5 +231,5 @@ int Scheduler::getSmeCount(SmeIndex idx,time_t time)
 }
 
 
-};//system
-};//smsc
+}//system
+}//smsc

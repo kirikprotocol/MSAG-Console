@@ -12,7 +12,7 @@
 namespace smsc{
 namespace db{
 class DataSource;
-};
+}
 namespace profiler{
 
 using namespace smsc::sms;
@@ -26,20 +26,20 @@ namespace ProfileReportOptions{
   const int ReportNone  =0;
   const int ReportFull  =1;
   const int ReportFinal =3;
-};
+}
 
 namespace ProfileCharsetOptions{
   const int Default    =smsc::smpp::DataCoding::SMSC7BIT;
   const int Latin1     =smsc::smpp::DataCoding::LATIN1;
   const int Ucs2       =smsc::smpp::DataCoding::UCS2;
   const int Ucs2AndLat =smsc::smpp::DataCoding::UCS2 | smsc::smpp::DataCoding::LATIN1;
-};
+}
 
 namespace ProfilerMatchType{
   const int mtDefault=0;
   const int mtMask   =1;
   const int mtExact  =2;
-};
+}
 
 
 struct Profile{
@@ -246,7 +246,7 @@ protected:
 
 };
 
-};//profiler
-};//smsc
+}//profiler
+}//smsc
 
 #endif

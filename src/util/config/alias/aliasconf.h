@@ -1,5 +1,5 @@
 /*
-	$Id$
+  $Id$
 */
 
 
@@ -17,21 +17,23 @@ namespace config {
 namespace alias {
 
 using smsc::util::xml::DOMTreeReader;
+using smsc::util::xml::ParseException;
 
 struct AliasRecord
 {
-	char* addrValue;
-	int addrTni;
-	int addrNpi;
-	char* aliasValue;
-	int aliasTni;
-	int aliasNpi;
-	bool hide;
+  char* addrValue;
+  int addrTni;
+  int addrNpi;
+  char* aliasValue;
+  int aliasTni;
+  int aliasNpi;
+  bool hide;
 };
 
 class AliasConfig
 {
 protected:
+public:
   typedef std::vector<AliasRecord*> SRVector;
 public:
   enum status {success, fail};
@@ -48,15 +50,15 @@ public:
   };
 
   AliasConfig();
-	~AliasConfig()
-	{
-		for (SRVector::iterator it = records.begin(); 
-				 it != records.end() ; 
-				 ++it)
-		{
-			if ( *it ) delete *it;
-		}
-	}
+  ~AliasConfig()
+  {
+    for (SRVector::iterator it = records.begin();
+         it != records.end() ;
+         ++it)
+    {
+      if ( *it ) delete *it;
+    }
+  }
 
   void clear();
   status putRecord(AliasRecord *record);
@@ -81,4 +83,3 @@ private:
 }
 
 #endif //ifndef SMSC_UTIL_CONFIG_ALIAS_ALIASCONFIG
-

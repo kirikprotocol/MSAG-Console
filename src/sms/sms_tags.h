@@ -83,9 +83,9 @@ namespace sms{
 namespace Tag{
 extern int tagTypes[];
 SMS_BODY_TAGS_SET
-};
-};
-};
+}
+}
+}
 #endif
 
 #endif

@@ -46,7 +46,7 @@ static int messageLifePeriod;
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
 const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
 
-static smsc::admin::service::ServiceSocketListener adminListener; 
+static smsc::admin::service::ServiceSocketListener adminListener;
 static bool bAdminListenerInited = false;
 
 static Event WSmeWaitEvent;
@@ -88,22 +88,22 @@ static bool convertMSISDNStringToAddress(const char* string, Address& address)
     return true;
 };
 
-/*bool compareMaskAndAddress(const std::string mask, 
+/*bool compareMaskAndAddress(const std::string mask,
                            const std::string addr)
 {
-    try 
+    try
     {
         Address ma(mask.c_str());
         Address aa(addr.c_str());
-        
+
         if (ma.length != aa.length || ma.type != aa.type || ma.plan != aa.plan)
             return false;
 
         for (int i=0; i<ma.length; i++)
-            if ((ma.value[i] != '?') && (ma.value[i] != aa.value[i])) 
+            if ((ma.value[i] != '?') && (ma.value[i] != aa.value[i]))
                 return false;
-    } 
-    catch (...) 
+    }
+    catch (...)
     {
         return false;
     }
@@ -128,39 +128,39 @@ protected:
             smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
             transmitter.sendDeliverySmResp(smResp);
         }
-        
-        try 
+
+        try
         {
             SMS request;
             fetchSmsFromSmppPdu((PduXSm*)pdu, &request);
-            bool isReceipt = (request.hasIntProperty(Tag::SMPP_ESM_CLASS)) ? 
+            bool isReceipt = (request.hasIntProperty(Tag::SMPP_ESM_CLASS)) ?
                 ((request.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3C) == 0x4) : false;
 
-            __trace2__("SMPP_ESM_CLASS=%d", 
+            __trace2__("SMPP_ESM_CLASS=%d",
                        request.getIntProperty(Tag::SMPP_ESM_CLASS));
-            
+
             if (isReceipt)
             {
                 __trace__("Got receipt");
                 if (((PduXSm*)pdu)->get_optional().has_receiptedMessageId())
                 {
-                    const char* msgid = 
+                    const char* msgid =
                         ((PduXSm*)pdu)->get_optional().get_receiptedMessageId();
                     if (msgid && msgid[0] != '\0') {
                         __trace2__("Got receipt, msgid=%s", msgid);
                         processor.processReceipt(msgid, true);
                     }
-                        
+
                     // ??? TODO: check receipted or not
-                } 
+                }
                 return;
             }
-            
+
             char smsTextBuff[MAX_ALLOWED_MESSAGE_LENGTH+1];
-            int smsTextBuffLen = getSmsText(&request, 
+            int smsTextBuffLen = getSmsText(&request,
                 (char *)&smsTextBuff, sizeof(smsTextBuff));
             __require__(smsTextBuffLen < MAX_ALLOWED_MESSAGE_LENGTH);
-            
+
             __trace2__("Got notification message: %s", smsTextBuff);
 
             std::string msisdn;
@@ -172,12 +172,12 @@ protected:
             else
                 throw Exception("Visitor '%s' is not valid MSISDN address",
                                 (smsTextBuff) ? smsTextBuff:"");
-            
+
             __trace__("Processing notification message ...");
-            std::string outMsgStr = ""; 
+            std::string outMsgStr = "";
             if (processor.processNotification(msisdn, outMsgStr))
             {
-                SMS responce; 
+                SMS responce;
                 responce.setDestinationAddress(visitorAddress);
                 responce.setOriginatingAddress(request.getDestinationAddress());
                 responce.setArchivationRequested(false);
@@ -199,7 +199,7 @@ protected:
                 if(hasHighBit(out,outLen)) {
                     int msgLen = outLen*2;
                     msgBuf = new char[msgLen];
-                    ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf, msgLen, 
+                    ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf, msgLen,
                                            CONV_ENCODING_CP1251);
                     responce.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::UCS2);
                     out = msgBuf; outLen = msgLen;
@@ -212,13 +212,13 @@ protected:
                         responce.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, outLen);
                         responce.setIntProperty(Tag::SMPP_SM_LENGTH, outLen);
                     } else {
-                        responce.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, out, 
-                                                (outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ? 
+                        responce.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, out,
+                                                (outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ?
                                                 outLen : MAX_ALLOWED_PAYLOAD_LENGTH);
                     }
                 } catch (...) {
                     __trace__("Something is wrong with message body. "
-                              "Set/Get property failed"); 
+                              "Set/Get property failed");
                     if (msgBuf) delete msgBuf; msgBuf = 0;
                     throw; // ???
                 }
@@ -228,7 +228,7 @@ protected:
                 sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
                 fillSmppPduFromSms(&sm, &responce);
                 PduSubmitSmResp *resp = transmitter.submit(sm);
-                if (resp) 
+                if (resp)
                 {
                     // check responded or not, get msgid here
                     const char* msgid = ((PduXSmResp*)resp)->get_messageId();
@@ -236,7 +236,7 @@ protected:
                         __trace2__("Got responce, msgid=%s", msgid);
                         processor.processResponce(msisdn, msgid, true);
                     }
-                    
+
                     disposePdu((SmppHeader*)resp);
                 }
             }
@@ -248,10 +248,10 @@ protected:
             logger.error(exc.what());
         }
     };
-    
+
 public:
-    
-    WSmeTask(SmppHeader* pdu, WSmeProcessor& cp, SmppTransmitter& trans) 
+
+    WSmeTask(SmppHeader* pdu, WSmeProcessor& cp, SmppTransmitter& trans)
         : ThreadedTask(), pdu(pdu), processor(cp), transmitter(trans) {};
     virtual ~WSmeTask() {};
 
@@ -262,44 +262,44 @@ public:
     virtual int Execute()
     {
         __require__(pdu);
-        __trace2__("WSme: Processing PDU.\n");
-        
+        __trace__("WSme: Processing PDU.\n");
+
         switch (pdu->get_commandId())
         {
         case SmppCommandSet::DELIVERY_SM:
-            __trace2__("\nReceived DELIVERY_SM Pdu.\n");
+            __trace__("\nReceived DELIVERY_SM Pdu.\n");
             process();
             break;
         case SmppCommandSet::SUBMIT_SM_RESP:
-            __trace2__("\nReceived SUBMIT_SM_RESP Pdu.\n");
+            __trace__("\nReceived SUBMIT_SM_RESP Pdu.\n");
             break;
         default:
-            __trace2__("\nReceived unsupported Pdu !\n");
+            __trace__("\nReceived unsupported Pdu !\n");
             break;
         }
-        
+
         disposePdu(pdu); pdu=0;
         return 0;
     };
 };
 
-class WSmeTaskManager 
+class WSmeTaskManager
 {
 private:
 
     ThreadPool          pool;
-    
+
 public:
 
     WSmeTaskManager() {};
     WSmeTaskManager(ConfigView* config)
-        throw(ConfigException) 
+        throw(ConfigException)
     {
         init(config);
     };
-    virtual ~WSmeTaskManager() 
+    virtual ~WSmeTaskManager()
     {
-        __trace2__("WSme: deinit WSmeTaskManager\n");
+        __trace__("WSme: deinit WSmeTaskManager\n");
         shutdown();
     };
     void shutdown()
@@ -316,7 +316,7 @@ public:
             pool.setMaxThreads(maxThreads);
             __trace2__("Max threads count: %d\n", maxThreads);
         }
-        catch (ConfigException& exc) 
+        catch (ConfigException& exc)
         {
             logger.warn("Maximum thread pool size wasn't specified !");
         }
@@ -326,12 +326,12 @@ public:
             pool.preCreateThreads(initThreads);
             __trace2__("Precreated threads count: %d\n", initThreads);
         }
-        catch (ConfigException& exc) 
+        catch (ConfigException& exc)
         {
             logger.warn("Precreated threads count in pool wasn't specified !");
         }
     };
-    
+
     void startTask(WSmeTask* task)
     {
         pool.startTask(task);
@@ -341,13 +341,13 @@ public:
 class WSmePduListener: public SmppPduEventListener
 {
 protected:
-    
+
     WSmeProcessor&      processor;
     WSmeTaskManager&    manager;
     SmppTransmitter*    trans;
 
 public:
-    
+
     WSmePduListener(WSmeProcessor& proc, WSmeTaskManager& man)
         : SmppPduEventListener(), processor(proc), manager(man) {};
 
@@ -356,13 +356,13 @@ public:
         __trace__("WSme: pdu received. Starting task...");
         manager.startTask(new WSmeTask(pdu, processor, *trans));
     }
-    
+
     void handleError(int errorCode)
     {
         logger.error("Transport error handled! Code is: %d", errorCode);
         setNeedReconnect(true);
     }
-    
+
     void setTrans(SmppTransmitter *t)
     {
         trans=t;
@@ -372,14 +372,14 @@ public:
 class WSmeConfig : public SmeConfig
 {
 private:
-    
+
     char *strHost, *strSid, *strPassword, *strSysType, *strOrigAddr;
 
 public:
-    
+
     WSmeConfig(ConfigView* config)
         throw(ConfigException)
-            : SmeConfig(), strHost(0), strSid(0), strPassword(0), 
+            : SmeConfig(), strHost(0), strSid(0), strPassword(0),
                 strSysType(0), strOrigAddr(0)
     {
         // Mandatory fields
@@ -387,14 +387,14 @@ public:
         host = strHost;
         strSid = config->getString("sid", "WSme id wasn't defined !");
         sid = strSid;
-        
+
         port = config->getInt("port", "SMSC port wasn't defined !");
         timeOut = config->getInt("timeout", "Connect timeout wasn't defined !");
-        
+
         // Optional fields
         try
         {
-            strPassword = 
+            strPassword =
                 config->getString("password",
                                   "WSme password wasn't defined !");
             password = strPassword;
@@ -402,16 +402,16 @@ public:
         catch (ConfigException& exc) { password = ""; strPassword = 0; }
         try
         {
-            strSysType = 
-                config->getString("systemType", 
+            strSysType =
+                config->getString("systemType",
                                   "WSme system type wasn't defined !");
             systemType = strSysType;
         }
         catch (ConfigException& exc) { systemType = ""; strSysType = 0; }
         try
         {
-            strOrigAddr = 
-                config->getString("origAddress", 
+            strOrigAddr =
+                config->getString("origAddress",
                                   "WSme originating address wasn't defined !");
             origAddr = strOrigAddr;
         }
@@ -447,7 +447,7 @@ void atExitHandler(void)
     smsc::util::xml::TerminateXerces();
 }
 
-int main(void) 
+int main(void)
 {
     int resultCode = 0;
     Logger::Init("log4cpp.wsme");
@@ -459,12 +459,12 @@ int main(void)
 
     //added by igork
     atexit(atExitHandler);
-    
-    try 
+
+    try
     {
         Manager::init("config.xml");
         Manager& manager = Manager::getInstance();
-        
+
         ConfigView dsConfig(manager, "StartupLoader");
         DataSourceLoader::loadup(&dsConfig);
 
@@ -472,20 +472,20 @@ int main(void)
         WSmeProcessor processor(&cpConfig);
 
         ConfigView adminConfig(manager, "WSme.Admin");
-        WSmeComponent wsmeAdmin(processor);                   
-        ComponentManager::registerComponent(&wsmeAdmin); 
-        adminListener.init(adminConfig.getString("host"), 
-                           adminConfig.getInt("port"));               
+        WSmeComponent wsmeAdmin(processor);
+        ComponentManager::registerComponent(&wsmeAdmin);
+        adminListener.init(adminConfig.getString("host"),
+                           adminConfig.getInt("port"));
         bAdminListenerInited = true;
-        adminListener.Start();                                     
-        
+        adminListener.Start();
+
         ConfigView mnConfig(manager, "WSme.ThreadPool");
         ConfigView ssConfig(manager, "WSme.SMSC");
         WSmeConfig cfg(&ssConfig);
-        
-        messageLifePeriod = cpConfig.getInt("AdManager.History.messageLife", 
+
+        messageLifePeriod = cpConfig.getInt("AdManager.History.messageLife",
                                             "Message life period wasn't defined !");
-        
+
         while (!isNeedStop())
         {
             WSmeTaskManager runner(&mnConfig);
@@ -496,7 +496,7 @@ int main(void)
             sigemptyset(&set);
             sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
             sigset(smsc::system::SHUTDOWN_SIGNAL, appSignalHandler);
-            
+
             logger.info("Connecting to SMSC ... ");
             try
             {
@@ -506,7 +506,7 @@ int main(void)
             }
             catch (SmppConnectException& exc)
             {
-                const char* msg = exc.what(); 
+                const char* msg = exc.what();
                 logger.error("Connect to SMSC failed. Cause: %s\n", (msg) ? msg:"unknown");
                 setNeedReconnect(true);
                 if (exc.getReason() == SmppConnectException::Reason::bindFailed) throw exc;
@@ -516,7 +516,7 @@ int main(void)
                 continue;
             }
             logger.info("Connected.\n");
-            
+
             WSmeWaitEvent.Wait(0);
             while (!isNeedStop() && !isNeedReconnect()) {
                 WSmeWaitEvent.Wait();
@@ -532,28 +532,28 @@ int main(void)
             logger.error("Failed to bind WSme. Exiting.\n");
         resultCode = -1;
     }
-    catch (ConfigException& exc) 
+    catch (ConfigException& exc)
     {
         logger.error("Configuration invalid. Details: %s Exiting.\n", exc.what());
         resultCode = -2;
     }
-    catch (Exception& exc) 
+    catch (Exception& exc)
     {
         logger.error("Top level Exception: %s Exiting.\n", exc.what());
         resultCode = -3;
     }
-    catch (exception& exc) 
+    catch (exception& exc)
     {
         logger.error("Top level exception: %s Exiting.\n", exc.what());
         resultCode = -4;
     }
-    catch (...) 
+    catch (...)
     {
         logger.error("Unknown exception: ... caught. Exiting.\n");
         resultCode = -5;
     }
 
-    
+
     if (bAdminListenerInited)
     {
         adminListener.shutdown();
@@ -561,4 +561,3 @@ int main(void)
     }
     return resultCode;
 }
-

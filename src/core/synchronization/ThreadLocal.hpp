@@ -82,9 +82,9 @@ protected:
 #endif
 };//ThreadLocal
 
-};//synchronization
-};//core
-};//smsc
+}//synchronization
+}//core
+}//smsc
 
 
 #endif

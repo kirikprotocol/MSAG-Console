@@ -216,6 +216,6 @@ void ThreadPool::releaseThread(PooledThread* thread)
 }
 
 
-};//threads
-};//core
-};//smsc
+}//threads
+}//core
+}//smsc

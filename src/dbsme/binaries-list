@@ -5,5 +5,5 @@
 #dbsme/DBDriverTest   DBDriverTest	 -ldl -ldb -lutil-config -lutil-xml -lutil -lcore-threads -lthread -lxerces-c $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -llogger
 #dbsme/ComProcTest    CommandProcessorTest -ldl -lutil-templates -ldbsme-jobs -lutil-templates -ldbsme -ldb -lutil-config -lutil-xml -lutil -lcore-threads -lthread -lxerces-c $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -llogger
 #dbsme/LobTest        LobTest		 -ldl  -lsocket $(__OCI_LIB_SO__) -lrt
-dbsme/DBSme   	     DBSme		 -ldl -ladmin-util -ladmin-protocol -ladmin-service -ladmin-util -ladmin-protocol -ladmin-daemon -ladmin -lsocket -lcore-network -lutil-templates -ldbsme-jobs -lutil-templates -lcore-buffers -lcore-threads -lcore-buffers -ldbsme -ldb -lutil-config -lutil-xml -lutil -lutil-recoder-recode_dll -lcore-threads -lpthread -lxerces-c -lsms $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -llogger
+dbsme/DBSme   	     DBSme		 -ldl -ladmin-util -ladmin-protocol -ladmin-service -ladmin-util -ladmin-protocol -ladmin-daemon -ladmin -lsocket -lcore-network -lutil-templates -ldbsme-jobs -lutil-templates -lcore-buffers -lcore-threads -lcore-buffers -ldbsme -ldb -lutil-config -lutil-xml -lutil -lutil-recoder-recode_dll -lcore-threads -lpthread $(XERCES_LIB) -lsms $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -llogger -lnsl
 #dbsme/OCITest        OCITest		 -ldl  -lsocket $(__OCI_LIB_SO__) -lrt

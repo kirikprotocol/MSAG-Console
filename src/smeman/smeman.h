@@ -36,7 +36,7 @@ namespace SmeRegisterFailReasons{
   const int rfInvalidPassword=2;
   const int rfInternalError=3;
   const int rfDisabled=4;
-};
+}
 
 class SmeRegisterException:public std::exception{
 public:
@@ -99,7 +99,15 @@ public:
   virtual bool hasInput() const {__unreachable__("");return 0;}
   virtual SmeProxyState getState() const {__unreachable__("");return INVALID;}
   virtual void init(){__unreachable__("");}
-  virtual SmeProxyPriority getPriority() const {__unreachable__("");return 0;}
+  virtual SmeProxyPriority getPriority() const
+  {
+    MutexGuard guard(mutex);
+    if ( proxy )
+    {
+      return proxy->getPriority();
+    }
+    else throw runtime_error("proxy unregistred");
+  }
   virtual void attachMonitor(ProxyMonitor* monitor) {__unreachable__("");}
   virtual bool attached(){__unreachable__("");return 0;}
   virtual void close() {__unreachable__("");}
@@ -225,6 +233,6 @@ public:
   //virtual ~SmeManager(){}
 };
 
-}; // namespace smeman
-}; // namespace smsc
+} // namespace smeman
+} // namespace smsc
 #endif

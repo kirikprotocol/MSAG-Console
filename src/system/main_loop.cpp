@@ -139,6 +139,8 @@ void Smsc::mainLoop()
 }
 #endif
 
+
+
 void Smsc::mainLoop()
 {
   typedef std::vector<SmscCommand> CmdVector;
@@ -201,15 +203,26 @@ void Smsc::mainLoop()
       }catch(exception& e)
       {
         __trace2__("Source proxy died after selection: %s",e.what());
+#ifdef __GNUC__
         CmdVector::difference_type pos=std::distance(frame.begin(),i);
+#else
+        CmdVector::difference_type pos;
+        std::distance(frame.begin(),i,pos);
+#endif
         frame.erase(i);
         i=frame.begin()+pos;
         i--;
         continue;
       }catch(...)
       {
-        __trace2__("Source proxy died after selection");
+        __trace__("Source proxy died after selection");
+
+#ifdef __GNUC__
         CmdVector::difference_type pos=std::distance(frame.begin(),i);
+#else
+        CmdVector::difference_type pos;
+        std::distance(frame.begin(),i,pos);
+#endif
         frame.erase(i);
         i=frame.begin()+pos;
         i--;
@@ -273,7 +286,7 @@ void Smsc::mainLoop()
           eqsize+1<=eventQueueLimit
         )
         */
-      if(cntInstant+1<=maxsms*stf && eqsize+1<=eventQueueLimit)
+      if(cntInstant+1<=maxsms*stf && equnsize+1<=eventQueueLimit)
       {
         SmscCommand cmd=frame.back();
         frame.pop_back();
@@ -567,5 +580,5 @@ void Smsc::processCommand(SmscCommand& cmd)
 }
 
 
-};
-};
+}
+}

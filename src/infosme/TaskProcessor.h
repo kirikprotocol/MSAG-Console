@@ -25,35 +25,35 @@
 #include "StatisticsManager.h"
 #include "InfoSmeAdmin.h"
 
-namespace smsc { namespace infosme 
+namespace smsc { namespace infosme
 {
     using namespace smsc::core::buffers;
     using namespace smsc::core::threads;
     using namespace smsc::db;
-    
+
     using smsc::core::synchronization::Event;
     using smsc::core::synchronization::Mutex;
-    
+
     using smsc::logger::Logger;
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
     typedef enum { beginGenerationMethod, endGenerationMethod, dropAllMessagesMethod } TaskMethod;
-    
-    class TaskRunner : public TaskGuard, public ThreadedTask // for task method execution 
+
+    class TaskRunner : public TaskGuard, public ThreadedTask // for task method execution
     {
     private:
-        
+
         TaskMethod    method;
         Statistics*   statistics;
-        
+
     public:
-        
+
         TaskRunner(Task* task, TaskMethod method, Statistics* statistics = 0)
             : TaskGuard(task), ThreadedTask(), method(method), statistics(statistics) {};
         virtual ~TaskRunner() {};
-        
+
         virtual int Execute()
         {
             __require__(task);
@@ -96,11 +96,11 @@ namespace smsc { namespace infosme
 
         EventRunner(EventMethod method, TaskProcessorAdapter& processor, int seqNum,
                     bool accepted, bool retry, bool immediate, std::string smscId="")
-            : method(method), processor(processor), seqNum(seqNum), 
+            : method(method), processor(processor), seqNum(seqNum),
                 delivered(accepted), retry(retry), immediate(immediate), smscId(smscId) {};
-        EventRunner(EventMethod method, TaskProcessorAdapter& processor, 
+        EventRunner(EventMethod method, TaskProcessorAdapter& processor,
                     std::string smscId, bool delivered, bool retry)
-            : method(method), processor(processor), seqNum(0), 
+            : method(method), processor(processor), seqNum(0),
                 delivered(delivered), retry(retry), immediate(false), smscId(smscId) {};
 
         virtual ~EventRunner() {};
@@ -129,12 +129,12 @@ namespace smsc { namespace infosme
     struct MessageSender
     {
         virtual int  getSequenceNumber() = 0;
-        virtual bool send(std::string abonent, std::string message, 
+        virtual bool send(std::string abonent, std::string message,
                           TaskInfo info, int seqNum) = 0;
         virtual ~MessageSender() {};
 
     protected:
-        
+
         MessageSender() {};
     };
 
@@ -143,11 +143,11 @@ namespace smsc { namespace infosme
         std::string taskId;
         uint64_t    msgId;
 
-        TaskMsgId(std::string taskId="", uint64_t msgId=0) 
+        TaskMsgId(std::string taskId="", uint64_t msgId=0)
             : taskId(taskId), msgId(msgId) {};
-        TaskMsgId(const TaskMsgId& tmi) 
+        TaskMsgId(const TaskMsgId& tmi)
             : taskId(tmi.taskId), msgId(tmi.msgId) {};
-        
+
         TaskMsgId& operator=(const TaskMsgId& tmi) {
             taskId = tmi.taskId; msgId = tmi.msgId;
             return *this;
@@ -160,25 +160,25 @@ namespace smsc { namespace infosme
 
         smsc::logger::Logger logger;
         ThreadPool           pool;
-        
+
         Mutex               stopLock;
         bool                bStopping;
 
     public:
 
-        ThreadManager() : ThreadPool(), 
-            logger(Logger::getInstance("smsc.infosme.ThreadManager")), 
+        ThreadManager() : ThreadPool(),
+            logger(Logger::getInstance("smsc.infosme.ThreadManager")),
                 bStopping(false) {};
         virtual ~ThreadManager() {
             this->Stop();
             shutdown();
         };
-        
+
         void Stop() {
             MutexGuard guard(stopLock);
             bStopping = true;
         }
-        
+
         bool startThread(ThreadedTask* task) {
             MutexGuard guard(stopLock);
             if (!bStopping && task) {
@@ -188,7 +188,7 @@ namespace smsc { namespace infosme
             else if (task) delete task;
             return false;
         }
-        
+
         void init(ConfigView* config) // throw(ConfigException)
         {
             try {
@@ -225,11 +225,12 @@ namespace smsc { namespace infosme
     {
         time_t      timer;
         int         seqNum;
-        
+
         ResponceTimer(time_t timer=0, int seqNum=0): timer(timer), seqNum(seqNum) {};
         ResponceTimer(const ResponceTimer& rt) : timer(rt.timer), seqNum(rt.seqNum) {};
         ResponceTimer& operator=(const ResponceTimer& rt) {
             timer = rt.timer; seqNum = rt.seqNum;
+            return *this;
         }
 
     };
@@ -237,11 +238,12 @@ namespace smsc { namespace infosme
     {
         time_t      timer;
         std::string smscId;
-        
+
         ReceiptTimer(time_t timer=0, std::string smscId="") : timer(timer), smscId(smscId) {};
         ReceiptTimer(const ReceiptTimer& rt) : timer(rt.timer), smscId(rt.smscId) {};
         ReceiptTimer& operator=(const ReceiptTimer& rt) {
             timer = rt.timer; smscId = rt.smscId;
+            return *this;
         }
     };
 
@@ -253,13 +255,13 @@ namespace smsc { namespace infosme
 
         ThreadManager taskManager;
         ThreadManager eventManager;
-        
+
         TaskScheduler scheduler;    // for scheduled messages generation
         DataProvider  provider;     // to obtain registered data source by key
-        
+
         Hash<Task *>  tasks;
         Mutex         tasksLock;
-        
+
         Event       awake, exited;
         bool        bStarted, bNeedExit;
         Mutex       startLock;
@@ -269,7 +271,7 @@ namespace smsc { namespace infosme
         DataSource* dsInternal;
         Connection* dsIntConnection;
         Mutex       dsIntConnectionLock;
-        
+
         MessageSender*  messageSender;
         Mutex           messageSenderLock;
 
@@ -285,26 +287,26 @@ namespace smsc { namespace infosme
         Array<ReceiptTimer>     receiptWaitQueue;
         int                     responceWaitTime;
         int                     receiptWaitTime;
-        
+
         Connection*         dsStatConnection;
         StatisticsManager*  statistics;
 
         int     protocolId;
         char*   svcType;
         char*   address;
-        
+
         void processWaitingEvents(time_t time);
         bool processTask(Task* task);
         void resetWaitingTasks();
-        
+
         virtual void processMessage (Task* task, Connection* connection, uint64_t msgId,
                                      bool delivered, bool retry, bool immediate=false);
         friend class EventRunner;
         virtual void processResponce(int seqNum, bool accepted, bool retry, bool immediate,
                                      std::string smscId="", bool internal=false);
-        virtual void processReceipt (std::string smscId, 
+        virtual void processReceipt (std::string smscId,
                                      bool delivered, bool retry, bool internal=false);
-    
+
     public:
 
         TaskProcessor(ConfigView* config);
@@ -313,16 +315,16 @@ namespace smsc { namespace infosme
         int getProtocolId()      { return protocolId; };
         const char* getSvcType() { return (svcType) ? svcType:"InfoSme"; };
         const char* getAddress() { return address; };
-        
+
         virtual int Execute();
         void Start();
         void Stop();
-        
-        inline bool isStarted() { 
+
+        inline bool isStarted() {
             MutexGuard guard(startLock);
             return bStarted;
         };
-        
+
         void assignMessageSender(MessageSender* sender) {
             MutexGuard guard(messageSenderLock);
             messageSender = sender;
@@ -338,7 +340,7 @@ namespace smsc { namespace infosme
         virtual bool delTask(std::string taskId);
         virtual bool hasTask(std::string taskId);
         virtual TaskGuard getTask(std::string taskId);
-        
+
         virtual bool invokeEndGeneration(Task* task) {
             return taskManager.startThread(new TaskRunner(task, endGenerationMethod));
         };
@@ -349,23 +351,23 @@ namespace smsc { namespace infosme
             return taskManager.startThread(new TaskRunner(task, dropAllMessagesMethod));
         };
 
-        virtual bool invokeProcessResponce(int seqNum, bool accepted, 
-                                           bool retry, bool immediate, std::string smscId="") 
+        virtual bool invokeProcessResponce(int seqNum, bool accepted,
+                                           bool retry, bool immediate, std::string smscId="")
         {
-            return eventManager.startThread(new EventRunner(processResponceMethod, *this, 
+            return eventManager.startThread(new EventRunner(processResponceMethod, *this,
                                                             seqNum, accepted, retry, immediate, smscId));
         };
         virtual bool invokeProcessReceipt (std::string smscId, bool delivered, bool retry)
         {
-            return eventManager.startThread(new EventRunner(processReceiptMethod, *this, 
+            return eventManager.startThread(new EventRunner(processReceiptMethod, *this,
                                                             smscId, delivered, retry));
         };
-        
+
         bool getStatistics(std::string taskId, TaskStat& stat) {
             return (statistics) ? statistics->getStatistics(taskId, stat):false;
         };
 
-        /* ------------------------ Admin interface ------------------------ */ 
+        /* ------------------------ Admin interface ------------------------ */
 
         virtual void startTaskProcessor() {
             this->Start();
@@ -389,11 +391,11 @@ namespace smsc { namespace infosme
         virtual void flushStatistics() {
             if (statistics) statistics->flushStatistics();
         }
-        
+
         virtual void addTask(std::string taskId);
         virtual void removeTask(std::string taskId);
         virtual void changeTask(std::string taskId);
-        
+
         virtual bool startTask(std::string taskId);
         virtual bool stopTask(std::string taskId);
         virtual Array<std::string> getGeneratingTasks();
@@ -401,14 +403,13 @@ namespace smsc { namespace infosme
 
         virtual bool isTaskEnabled(std::string taskId);
         virtual bool setTaskEnabled(std::string taskId, bool enabled);
-        
+
         virtual void addSchedule(std::string scheduleId);
         virtual void removeSchedule(std::string scheduleId);
         virtual void changeSchedule(std::string scheduleId);
-        
+
     };
 
 }}
 
 #endif //SMSC_INFO_SME_TASK_PROCESSOR
-

@@ -382,11 +382,13 @@ void SmscComponent::processCancelMessage(const std::string &sid, const std::stri
     Address src(ssrc.c_str());
     Address dst(sdst.c_str());
 #ifdef SMSC_DEBUG
+    /*
     char src_[16+src.getLength()];
     src.toString(src_, sizeof(src_)/sizeof(char));
     char dst_[16+src.getLength()];
     dst.toString(dst_, sizeof(dst_)/sizeof(char));
     __trace2__("processCancelMessage: %llx[%s][%s]\n", id, src_, dst_);
+    */
 #endif
     smsc_app_runner->getApp()->cancelSms(id, src, dst);
     logger.info("message %s[%s][%s] canceled", sid.c_str(), ssrc.c_str(), sdst.c_str());
@@ -789,11 +791,11 @@ void SmscComponent::reReadConfigs()
 throw (AdminException)
 {
   configs.smemanconfig->reload();
-  __trace2__("reinit smsc config\n");
+  __trace__("reinit smsc config");
   configs.cfgman->reinit();
   configs.cfgman = & smsc::util::config::Manager::getInstance();
   smsc::resourcemanager::ResourceManager::reload(configs.cfgman->getString("core.locales"), configs.cfgman->getString("core.default_locale"));
-  __trace2__("config reinitialized\n");
+  __trace__("config reinitialized");
   configs.aliasconfig->reload();
   configs.routesconfig->reload();
 }
@@ -1186,10 +1188,10 @@ Variant SmscComponent::logGetCategories(void)
   Logger::LogCats * cats = Logger::getCurrentCategories();
   for (Logger::LogCats::iterator i = cats->begin(); i != cats->end(); i++)
   {
-	  std::string tmp(i->first);
-	  tmp += ","; 
-	  tmp += Logger::getLogLevelName(i->second);
-	  result.appendValueToStringList(tmp.c_str());
+    std::string tmp(i->first);
+    tmp += ",";
+    tmp += Logger::getLogLevelName(i->second);
+    result.appendValueToStringList(tmp.c_str());
   }
   delete cats;
   return result;
@@ -1207,7 +1209,7 @@ void SmscComponent::setLogCat(const char * catStr)
     char * value = delim_pos+1;
     *delim_pos = 0;
 
-	Logger::setCategoryLogLevel(str.get(), Logger::getLogLevel(value));
+  Logger::setCategoryLogLevel(str.get(), Logger::getLogLevel(value));
   }
   else
   {

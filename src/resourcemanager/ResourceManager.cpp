@@ -6,12 +6,14 @@
 #include <util/Exception.hpp>
 #include <logger/Logger.h>
 #include "util/debug.h"
+#include "core/buffers/TmpBuf.hpp"
 
 namespace smsc{
 namespace resourcemanager{
 
 using smsc::util::Exception;
 using namespace smsc::core::synchronization;
+using smsc::core::buffers::TmpBuf;
 
 std::auto_ptr<ResourceManager> ResourceManager::instance(0);
 std::string ResourceManager::defaultLocale("en_en");
@@ -37,28 +39,30 @@ void ResourceManager::init(const char * const localesString, const char * const 
   {
     while ((*str == ' ') || (*str == '\t')) str++;
     const unsigned int length = ptr-str;
-    char tmp[length+1];
+    //char tmp[length+1];
+    TmpBuf<char,64> tmp(length+1);
     strncpy(tmp,  str, length);
     tmp[length] = 0;
     char * tmpptr = tmp;
     while ((*tmpptr != ' ') && (*tmpptr != '\t') && (*tmpptr != 0)) tmpptr++;
     (*tmpptr) = 0;
-    __trace2__("ResMgr: add locale %s", tmp );
-    locales.push_back(tmp);
+    __trace2__("ResMgr: add locale %s", tmp.get() );
+    locales.push_back(tmp.get());
     str = ptr+1;
   }
   if ((*str != 0) && (strlen(str) > 0))
   {
     while ((*str == ' ') || (*str == '\t')) str++;
     const unsigned int length = strlen(str);
-    char tmp[length+1];
+    //char tmp[length+1];
+    TmpBuf<char,64> tmp(length+1);
     strncpy(tmp,  str, length);
     tmp[length] = 0;
     char * tmpptr = tmp;
     while ((*tmpptr != ' ') && (*tmpptr != '\t') && (*tmpptr != 0)) tmpptr++;
     (*tmpptr) = 0;
-    __trace2__("ResMgr: add locale %s", tmp );
-    locales.push_back(tmp);
+    __trace2__("ResMgr: add locale %s", tmp.get() );
+    locales.push_back(tmp.get());
   }
 
   init(locales, defaultLocale);
@@ -127,10 +131,11 @@ ResourceManager::ResourceManager() throw ()
       name += '/';
       name += entry->d_name;
       unsigned int localeNameLength = entryLength - (prefixLength + suffixLength);
-      char localeName[entryLength+1];
+      //char localeName[entryLength+1];
+      TmpBuf<char,64> localeName(entryLength+1);
       strncpy(localeName, entry->d_name + prefixLength, localeNameLength);
       localeName[localeNameLength] = 0;
-      locales[localeName] = new LocaleResources(name);
+      locales[localeName.get()] = new LocaleResources(name);
     }
   }
 }
@@ -266,5 +271,5 @@ void ResourceManager::dump(std::ostream & outStream) const
 }
 #endif //#ifdef SMSC_DEBUG
 
-};//resourcemanager
-};//smsc
+}//resourcemanager
+}//smsc

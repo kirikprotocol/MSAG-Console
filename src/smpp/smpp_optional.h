@@ -147,22 +147,22 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
       switch ( tag )
       {
     #define macroFetchField(field) \
-    case SmppOptionalTags::field :\
+    case SmppOptionalTags::field :{\
       fetchX(stream,opt->field);\
       opt->field_present |= SmppOptionalFields::field; \
-      break
+      }break
 
     #define macroFetchCOctetStr(field,maxlen) \
-    case SmppOptionalTags::field :\
+    case SmppOptionalTags::field :{\
       fetchCOctetStr(stream,opt->field,std::min((uint16_t)maxlen,(uint16_t)length));\
       opt->field_present |= SmppOptionalFields::field;   \
-      break
+      }break
 
     #define macroFetchOctetStr(field,len) \
-    case SmppOptionalTags::field :\
+    case SmppOptionalTags::field :{\
       fetchOctetStr(stream,opt->field,length);\
       opt->field_present |= SmppOptionalFields::field; \
-      break
+      }break
 
       /*dest_addr_subunit(5.3.2.1)*/     macroFetchField(destAddrSubunit);
       /*dest_network_type(5.3.2.3)*/     macroFetchField(destNetworkType);
@@ -180,17 +180,17 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
       /*ms_msg_wait_facilities(5.3.2.13)*/macroFetchField(msMsgWaitFacilities);
       /*privacy_indicator(5.3.2.14)*/    macroFetchField(privacyIndicator);
       /*source_subaddress(5.3.2.15)*/
-      case SmppOptionalTags::sourceSubaddress :
+      case SmppOptionalTags::sourceSubaddress :{
         __goto_if_fail__ ( length <= 23 , trap );
         fetchOctetStr(stream,opt->sourceSubaddress,length);
         opt->field_present |= SmppOptionalFields::sourceSubaddress;
-        break;
+        }break;
       /*dest_subaddress(5.3.2.16)*/
-      case SmppOptionalTags::destSubaddress :
+      case SmppOptionalTags::destSubaddress :{
         __goto_if_fail__ ( length <= 23 , trap );
         fetchOctetStr(stream,opt->destSubaddress,length);
         opt->field_present |= SmppOptionalFields::destSubaddress;
-        break;
+        }break;
       /*user_message_reference(5.3.2.17)*/macroFetchField(userMessageReference);
       /*user_response_code(5.3.2.18)*/    macroFetchField(userResponseCode);
       /*source_port(5.3.2.20)*/           macroFetchField(sourcePort);
@@ -202,29 +202,29 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
       /*sc_interface_version(5.3.2.25)*/  macroFetchField(scInterfaceVersion);
       /*callback_num_pres_ind(5.3.2.37)*/ macroFetchField(callbackNumPresInd);
       /*callback_num_atag(5.3.2.38)*/
-      case SmppOptionalTags::callbackNumAtag :
+      case SmppOptionalTags::callbackNumAtag :{
         __goto_if_fail__ ( length <= 65 , trap );
         fetchOctetStr(stream,opt->callbackNumAtag,length);
         opt->field_present |= SmppOptionalFields::callbackNumAtag;
-        break;
+        }break;
       /*number_of_messages(5.3.2.39)*/    macroFetchField(numberOfMessages);
       /*callback_num(5.3.2.36)*/
-      case SmppOptionalTags::callbackNum :
+      case SmppOptionalTags::callbackNum :{
         __goto_if_fail__ ( length <= 19 , trap );
         fetchOctetStr(stream,opt->callbackNum,length);
         opt->field_present |= SmppOptionalFields::callbackNum;
-        break;
+        }break;
       /*dpf_result(5.3.2.28)*/            macroFetchField(dpfResult);
       /*set_dpf(5.3.2.29)*/               macroFetchField(setDpf);
       /*ms_available_status(5.3.2.30)*/   macroFetchField(msAvailableStatus);
       /*network_error_code(5.3.2.31)*/
-      case SmppOptionalTags::networkErrorCode :
+      case SmppOptionalTags::networkErrorCode :{
         __goto_if_fail__ ( length == 3 , trap );
         fetchX(stream,opt->networkErrorCode[0]);
         fetchX(stream,opt->networkErrorCode[1]);
         fetchX(stream,opt->networkErrorCode[2]);
         opt->field_present |= SmppOptionalFields::networkErrorCode;
-        break;
+        }break;
       /*message_payload(5.3.2.32)*/       macroFetchOctetStr(messagePayload,length);
       /*delivery_failure_reason(5.3.2.33)*/macroFetchField(deliveryFailureReason);
       /*more_messages_to_send(5.3.2.34)*/ macroFetchField(moreMessagesToSend);
@@ -236,11 +236,11 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
       /*sms_signal(5.3.2.40)*/            macroFetchField(smsSignal);
       /*ms_validity(5.3.2.27)*/           macroFetchField(msValidity);
       /*alert_on_message_delivery(5.3.2.41)*/
-      case SmppOptionalTags::alertOnMessageDelivery :
+      case SmppOptionalTags::alertOnMessageDelivery :{
         __goto_if_fail__ ( length == 0 , trap );
         opt->set_alertOnMessageDelivery(true);
         opt->field_present |= SmppOptionalFields::alertOnMessageDelivery;
-        break;
+        }break;
       /*its_reply_type(5.3.2.42)*/        macroFetchField(itsReplyType);
       /*its_session_info(5.3.2.43)*/
       case SmppOptionalTags::itsSessionInfo :
@@ -280,7 +280,7 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
     throw BadStreamException();
 }
 
-};
-};
+}
+}
 
 #endif /* __Cxx_Header__smpp_optional_h__ */

@@ -45,7 +45,7 @@ protected:
   std::string message;
 };
 
-};//util
-};//smsc
+}//util
+}//smsc
 
 #endif

@@ -98,7 +98,7 @@ int main(int argc,char* argv[])
   cfg.smppTimeOut=120;
   cfg.password=cfg.sid;
   MyListener lst;
-  Array<string> addrs;
+  Array<char*> addrs;
   FILE *f=fopen(argv[4],"rt");
   if(!f)
   {
@@ -108,8 +108,9 @@ int main(int argc,char* argv[])
   char buf[4096];
   while(fgets(buf,sizeof(buf),f))
   {
-    addrs.Push(buf);
-    if(addrs[-1][addrs[-1].length()-1]==0x0a)addrs[-1].erase(addrs[-1].length()-1);
+    int l=strlen(buf);
+    if(buf[l-1]==0x0a){buf[l-1]=0;}
+    addrs.Push(strdup(buf));
   }
   fclose(f);
 
@@ -167,7 +168,7 @@ int main(int argc,char* argv[])
     //s.setSubmitTime(0);
     //s.setPriority(0);
     //s.setProtocolIdentifier(0);
-    s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
+    s.setIntProperty(Tag::SMPP_ESM_CLASS,1);
     s.setDeliveryReport(0);
     s.setArchivationRequested(false);
     s.setIntProperty(Tag::SMPP_MS_VALIDITY,3);
@@ -178,14 +179,15 @@ int main(int argc,char* argv[])
     int cnt=0;
     time_t lasttime=time(NULL);
     time_t starttime=lasttime;
+    int i=0;
     while(!stopped)
     {
       for(int j=0;j<n;j++)
       {
-        for(int i=0;i<addrs.Count();i++)
+        //for(int i=0;i<addrs.Count();i++)
         {
           //Address dst(addrs[i].c_str());
-          s.setDestinationAddress(addrs[i].c_str());
+          s.setDestinationAddress(addrs[i]);
           s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
           s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,msgs[msgidx].c_str(),msgs[msgidx].length());
           s.setIntProperty(Tag::SMPP_SM_LENGTH,0);
@@ -194,6 +196,8 @@ int main(int argc,char* argv[])
           cnt++;
           msgidx++;
           if(msgidx>=msgs.Count())msgidx=0;
+          i++;
+          if(i>=addrs.Count())i=0;
         }
       }
       slev.Wait(delay);

@@ -250,7 +250,7 @@ string MapEmailToAddress(const string& username,string& fwd)
   if(!connection.get())throw Exception("Failed to get db connection");
   auto_ptr<Statement> statement(connection->createStatement(sql));
   if(!statement.get())throw Exception("Failed to prepare statement");
-  __trace2__("MapEmailToAddress statement created");
+  __trace__("MapEmailToAddress statement created");
   time_t now=time(NULL);
   statement->setDateTime(1,now+24*60*60);
   statement->setString(2,username.c_str());
@@ -402,7 +402,7 @@ int processSms(const char* text,const char* fromaddress)
     if(rv!=ProcessSmsCodes::OK)return rv;
   }catch(...)
   {
-    __warning2__("SMTP session aborted");
+    __warning__("SMTP session aborted");
     return ProcessSmsCodes::UNABLETOSEND;
   }
   return ProcessSmsCodes::OK;
@@ -531,7 +531,7 @@ int ProcessMessage(const char *msg,int len)
   };
   __trace2__("write msg size:%d",len);
   fprintf(emlOut,"%d\n",len);fflush(emlOut);
-  __trace2__("write msg");
+  __trace__("write msg");
   int sz=0;
   while(sz<len)
   {
@@ -780,7 +780,7 @@ int main(int argc,char* argv[])
   };
   if(srv.StartServer()==-1)
   {
-    __warning2__("Failed to start listener");
+    __warning__("Failed to start listener");
     return -1;
   };
 
@@ -862,7 +862,7 @@ int main(int argc,char* argv[])
   }
   catch(...)
   {
-    __warning2__("Top level exception:unknown");
+    __warning__("Top level exception:unknown");
   }
   if(emlIn)fclose(emlIn);
   if(emlOut)fclose(emlOut);

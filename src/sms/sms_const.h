@@ -58,7 +58,7 @@ typedef enum {
   DELETED         = SMSC_BYTE_DELETED_STATE
 } State;
 
-};
-};
+}
+}
 
 #endif

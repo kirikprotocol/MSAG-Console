@@ -259,7 +259,7 @@ public:
       queue.Pop(pb);
       delete pb.buf;
     }
-    __trace2__("Exiting smppwriter");
+    __trace__("Exiting smppwriter");
     mon.Unlock();
     return 0;
   }
@@ -374,7 +374,7 @@ namespace BindType{
   const int Receiver = 1;
   const int Transmitter = 2;
   const int Transceiver = 3;
-};
+}
 
 class SmppSession{
 protected:
@@ -384,6 +384,8 @@ protected:
     SmppHeader *pdu;
     int error;
   };
+  class InnerListener;
+  friend class InnerListener;
   class InnerListener:public SmppPduEventListener{
   public:
     SmppSession& session;
@@ -417,6 +419,8 @@ protected:
       return true;
     }
   };
+  class InnerSyncTransmitter;
+  friend class InnerSyncTransmitter;
   class InnerSyncTransmitter:public SmppTransmitter{
   public:
 
@@ -497,6 +501,8 @@ protected:
   protected:
     SmppSession& session;
   };
+  class InnerAsyncTransmitter;
+  friend class InnerAsyncTransmitter;
   class InnerAsyncTransmitter:public InnerSyncTransmitter{
   public:
     InnerAsyncTransmitter(SmppSession& s):InnerSyncTransmitter(s)
@@ -964,8 +970,8 @@ protected:
   }
 };
 
-};//sme
-};//smsc
+}//sme
+}//smsc
 
 
 #endif

@@ -11,9 +11,9 @@
   extern "C" {
     void init_smsc(void);
     int smscStatusHandler(netsnmp_mib_handler *handler,
-				 netsnmp_handler_registration *reginfo,
-		                 netsnmp_agent_request_info *reqinfo,
-				 netsnmp_request_info *requests);
+         netsnmp_handler_registration *reginfo,
+                     netsnmp_agent_request_info *reqinfo,
+         netsnmp_request_info *requests);
     void sendStatusNotification(unsigned int clientreg, void *clientarg);
     void sendAlarmNotification(unsigned int clientreg, void *clientarg);
     int smscDescrHandler(netsnmp_mib_handler *handler,
@@ -53,8 +53,8 @@
     namespace snmp{
       using smsc::system::Smsc;
 
-      const char* SnmpAgent::taskName() 
-      { 
+      const char* SnmpAgent::taskName()
+      {
         return "SnmpAgent";
       }
 
@@ -62,7 +62,7 @@
       {
         log=new smsc::logger::Logger(smsc::logger::Logger::getInstance("sms.snmp"));
         smsc::logger::Logger tlog=smsc::logger::Logger::getInstance("sms.snmp.alarm");
-		// TODO implement addAppender
+    // TODO implement addAppender
         //tlog.addAppender(new SnmpAppender("-",this));
         agentlog = (void*)log;
         agent = (void*)this;
@@ -84,10 +84,10 @@
         agentStartTime.tv_sec--;
         agentStartTime.tv_usec += 1000000L;
         snmp_disable_stderrlog();  // print log errors to stderr
-        netsnmp_ds_set_boolean(NETSNMP_DS_APPLICATION_ID, 
+        netsnmp_ds_set_boolean(NETSNMP_DS_APPLICATION_ID,
                                NETSNMP_DS_AGENT_ROLE, 1);  // we are a subagent
         init_agent("smscd");  // initialize the agent library
-        init_smsc();          // initialize mib code here 
+        init_smsc();          // initialize mib code here
         init_snmp("smsc");    //read .conf files
       }
 
@@ -118,8 +118,8 @@
         snmp_alarm_register_hr(t, 0, sendAlarmNotification, strdup(message.c_str()));
       }
 
-    };//snmp name space
-  };//smsc name space
+    }//snmp name space
+  }//smsc name space
 
 
   extern "C"
@@ -356,7 +356,7 @@
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
         ((smsc::logger::Logger*)agentlog)->debug("rescheduled req");
         }
-        else 
+        else
         {
         ((smsc::logger::Logger*)agentlog)->debug("compate does not work");
           netsnmp_set_request_error(reqinfo, requests, SNMP_NOSUCHINSTANCE);

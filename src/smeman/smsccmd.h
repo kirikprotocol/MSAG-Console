@@ -101,16 +101,17 @@ struct AbonentStatus{
     isMobileRequest(false)
   {
   }
-  AbonentStatus(const AbonentStatus& as,int status,const string& msc):
+  AbonentStatus(const AbonentStatus& as,int status,const string& _msc):
     addr(as.addr),
     sourceAddr(as.sourceAddr),
     destAddr(as.destAddr),
     status(status),
     userMessageReference(as.userMessageReference),
     originalAddr(as.originalAddr),
-    isMobileRequest(as.isMobileRequest),
-    msc(msc)
+    isMobileRequest(as.isMobileRequest)
   {
+    //msc=_msc;
+    msc.assign(_msc.data(),_msc.length());
   }
   static const int OFFLINE=0;
   static const int ONLINE=1;
@@ -886,14 +887,14 @@ public:
       //case BIND_TRANSMITTER_RESP: reinterpret_cast<PduBindTRXResp*>(_pdu)->dump(log); break;
     case SmppCommandSet::QUERY_SM:
         _cmd->cmdid=QUERY;
-        (QuerySm*)_cmd->dta=new QuerySm(reinterpret_cast<PduQuerySm*>(pdu));
+        _cmd->dta=new QuerySm(reinterpret_cast<PduQuerySm*>(pdu));
         goto end_construct;
       //case QUERY_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
     case SmppCommandSet::DATA_SM:
       {
         _cmd->cmdid = SUBMIT;
         PduDataSm* dsm = reinterpret_cast<PduDataSm*>(pdu);
-        (SMS*)_cmd->dta =  new SMS;
+        _cmd->dta =  new SMS;
         if(!fetchSmsFromDataSmPdu(dsm,(SMS*)(_cmd->dta),forceDC))throw Exception("Invalid data coding");
         ((SMS*)_cmd->dta)->setIntProperty(Tag::SMPP_DATA_SM,1);
         goto end_construct;
@@ -909,7 +910,7 @@ public:
       //case UNBIND_RESP: reinterpret_cast<PduUnbindResp*>(_pdu)->dump(log); break;
     case SmppCommandSet::REPLACE_SM:
         _cmd->cmdid=REPLACE;
-        (ReplaceSm*)_cmd->dta=new ReplaceSm(reinterpret_cast<PduReplaceSm*>(pdu));
+        _cmd->dta=new ReplaceSm(reinterpret_cast<PduReplaceSm*>(pdu));
         goto end_construct;
     /*case SmppCommandSet::REPLACE_SM_RESP:
         _cmd->cmdid=REPLACE_RESP;
@@ -919,7 +920,7 @@ public:
     //case SmppCommandSet::REPLACE_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
       case SmppCommandSet::CANCEL_SM:
         _cmd->cmdid=CANCEL;
-        (CancelSm*)_cmd->dta=new CancelSm(reinterpret_cast<PduCancelSm*>(pdu));
+        _cmd->dta=new CancelSm(reinterpret_cast<PduCancelSm*>(pdu));
         goto end_construct;
       //case CANCEL_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
       //case BIND_TRANCIEVER: reinterpret_cast<PduBindTRX*>(_pdu)->dump(log); break;
@@ -974,7 +975,7 @@ public:
     {
 ///<<<<<<< smsccmd.h
       //PduXSm* xsm = reinterpret_cast<PduXSm*>(pdu);
-      (SMS*)_cmd->dta =  new SMS;
+      _cmd->dta =  new SMS;
       makeSMSBody((SMS*)_cmd->dta,pdu,forceDC);
       /*fetchSmsFromSmppPdu(xsm,(SMS*)(_cmd->dta),forceDC);
 =======
@@ -1005,7 +1006,7 @@ public:
     sms_resp:
     {
       PduXSmResp* xsm = reinterpret_cast<PduXSmResp*>(pdu);
-      (SmsResp*)_cmd->dta = new SmsResp;
+      _cmd->dta = new SmsResp;
       //fetchSmsFromSmppPdu(xsm,&_cmd->sms);
       ((SmsResp*)_cmd->dta)->set_messageId(xsm->get_messageId());
       ((SmsResp*)_cmd->dta)->set_status(xsm->header.get_commandStatus());
@@ -1285,7 +1286,7 @@ public:
   }
 };
 
-}; //smeman
-}; //smsc
+} //smeman
+} //smsc
 
 #endif

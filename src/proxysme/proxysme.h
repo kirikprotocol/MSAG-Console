@@ -19,9 +19,13 @@
 #define SMSC_SMEPROXY_END }}
 #define SMSC_SMEPROXY_SPACE smsc::proxysme
 
-namespace smsc { 
+namespace smsc {
   namespace proxysme {
-    enum {    DEFAULTDCS_SMSC7BIT=0,    DEFAULTDCS_LATIN1=3    };    // definition
+    enum {
+    DEFAULTDCS_SMSC7BIT=0,
+    DEFAULTDCS_LATIN1=3
+    };
+    // definition
   }
 }
 
@@ -43,5 +47,3 @@ extern void MicroSleep();
 extern void MacroSleep();
 
 #endif
-
-

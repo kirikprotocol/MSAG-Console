@@ -81,8 +81,8 @@ protected:
   Mutex& lock;
 };
 
-};//synchronization
-};//core
-};//smsc
+}//synchronization
+}//core
+}//smsc
 
 #endif

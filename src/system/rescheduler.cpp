@@ -86,7 +86,7 @@ time_t RescheduleCalculator::calcNextTryTime(time_t lasttry,int code,int attempt
     TimeArray *ta=CodesTable.Get(code);
     if(ta->Count()==0)
     {
-      __warning2__("Rescheduling table for error code %d is empty!!!");
+      __warning__("Rescheduling table for error code %d is empty!!!");
       return lasttry+60;
     }
     if(attempt>=ta->Count())attempt=ta->Count()-1;
@@ -104,5 +104,5 @@ time_t RescheduleCalculator::calcNextTryTime(time_t lasttry,int code,int attempt
 
 
 
-};//system
-};//smsc
+}//system
+}//smsc

@@ -38,6 +38,6 @@ struct SmeInfo
   SmeInfo(){}
 };
 
-}; // namespace smeman
-}; // namespace smsc
+} // namespace smeman
+} // namespace smsc
 #endif

@@ -73,9 +73,9 @@ public:
   operator phashstr(){return str;}
   operator phashstr() const {return str;}
 };
-};
+}
 
-static unsigned HashFunc(pchashstr key)
+static inline unsigned HashFunc(pchashstr key)
 {
   phashstr curr = (phashstr)key;
   unsigned count = *curr;
@@ -553,9 +553,9 @@ public:
 };
 
 
-};//buffers
-};//core
-};//smsc
+}//buffers
+}//core
+}//smsc
 
 
 #endif

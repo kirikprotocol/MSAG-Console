@@ -27,7 +27,7 @@ namespace StateTypeValue
 
   const int DELIVERING_STATE = 0x1001;
 
-};
+}
 
 using namespace StateTypeValue;
 
@@ -90,7 +90,7 @@ public:
   }
 };
 
-};//system
-};//smsc
+}//system
+}//smsc
 
 #endif

@@ -43,6 +43,6 @@ int Multiplexer::checkState(int mode,SockArray& ready,SockArray& error,int timeo
   return ready.Count()+error.Count();
 }
 
-};//network
-};//core
-};//smsc
+}//network
+}//core
+}//smsc

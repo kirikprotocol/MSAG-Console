@@ -21,9 +21,9 @@ using std::runtime_error;
 
 namespace smsc{
 namespace logger{
-	extern smsc::logger::Logger* _trace_cat;
-};
-};
+  extern smsc::logger::Logger* _trace_cat;
+}
+}
 
 #ifdef _WIN32
 
@@ -120,6 +120,8 @@ static inline void warning2(const char* fmt,...)
 #define require(expr) ccassert(expr)
 #define __require__(expr) ccassert(expr)
 
+#define __PRETTY_FUNCTION__ __func__
+
 // very hard checks and can't be disabled
 #define __abort_if_fail__(expr) \
   smsc::util::abortIfFail(expr,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
@@ -129,9 +131,9 @@ static inline void warning2(const char* fmt,...)
 #define warning_if(expr) __warning2__(#expr)
 //  {if (expr) smsc::util::warningImpl("Warning !!! "#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__);}
 
-#define __warning2__(text,arg...) if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN)) smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,text,##arg)
+#define __warning2__(text,...) if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN)) smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,text,__VA_ARGS__)
 
-#define __log2__(category,priority,text,arg...) if(category->isLogLevelEnabled(priority)) category->log(priority,text,##arg)
+#define __log2__(category,priority,text,...) if(category->isLogLevelEnabled(priority)) category->log(priority,text,__VA_ARGS__)
 
 #if !defined DISABLE_WATCHDOG
   #define __watchdog__(expr) __watchdog2__(expr,"GAW-GAW")
@@ -250,29 +252,29 @@ static inline void warning2(const char* fmt,...)
     smsc::util::watchtextImpl(expr,len,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
   #define trace(text) if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_DEBUG,text)
   #if defined ENABLE_FILE_NAME
-    #define trace2(format,args...) if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_DEBUG,format,##args)
+    #define trace2(format,...) if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_DEBUG,format,__VA_ARGS__)
   #else
-    #define trace2(format,args...) if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_DEBUG,format,##args)
+    #define trace2(format,...) if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_DEBUG,format,__VA_ARGS__)
   #endif
   #define debug1(category,text) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) category->log(smsc::logger::Logger::LEVEL_DEBUG,text)
-  #define debug2(category,format,args...) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) category->log(smsc::logger::Logger::LEVEL_DEBUG,format,##args)
+  #define debug2(category,format,...) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) category->log(smsc::logger::Logger::LEVEL_DEBUG,format,__VA_ARGS__)
   #define warn1(category,text) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN)) category->log(smsc::logger::Logger::LEVEL_WARN,text)
-  #define warn2(category,format,args...) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN)) category->log(smsc::logger::Logger::LEVEL_WARN,format,##args)
+  #define warn2(category,format,...) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN)) category->log(smsc::logger::Logger::LEVEL_WARN,format,__VA_ARGS__)
   #define info1(category,text) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_INFO)) category->log(smsc::logger::Logger::LEVEL_INFO,text)
-  #define info2(category,format,args...) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_INFO)) category->log(smsc::logger::Logger::LEVEL_INFO,format,##args)
+  #define info2(category,format,...) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_INFO)) category->log(smsc::logger::Logger::LEVEL_INFO,format,__VA_ARGS__)
 #else
   #define watch(expr)
   #define watchx(expr)
   #define watcht(expr)
   #define watchtext(expr)
   #define trace(text)
-  #define trace2(format,args...)
+  #define trace2(format,...)
   #define debug1(category,text)
-  #define debug2(category,format,args...)
+  #define debug2(category,format,...)
   #define warn1(category,text)
-  #define warn2(category,format,args...)
+  #define warn2(category,format,...)
   #define info1(category,text)
-  #define info2(category,format,args...)
+  #define info2(category,format,...)
 #endif
 #define __watch__(expr)     watch(expr)
 #define __watchx__(expr)    watchx(expr)
@@ -280,14 +282,14 @@ static inline void warning2(const char* fmt,...)
 #define __watchtext__(expr) watchtext(expr)
 #define __trace__(text)     trace(text)
 #define __debug__(category,text)     debug1(category,text)
-#define __debug2__(category,format,args...)     debug2(category,format,##args)
+#define __debug2__(category,format,...)     debug2(category,format,__VA_ARGS__)
 #define __warn__(category,text)     warn1(category,text)
-#define __warn2__(category,format,args...)     warn2(category,format,##args)
+#define __warn2__(category,format,...)     warn2(category,format,__VA_ARGS__)
 #define __info__(category,text)     info1(category,text)
-#define __info2__(category,format,args...)     info2(category,format,##args)
-#define __trace2__(format,args...)     trace2(format,##args)
-#define __trace2_if_fail__(expr,format,args...) \
-  {if (!expr) trace2(format,##args);}
+#define __info2__(category,format,...)     info2(category,format,__VA_ARGS__)
+#define __trace2__(format,...)     trace2(format,__VA_ARGS__)
+#define __trace2_if_fail__(expr,format,...) \
+  {if (!expr) trace2(format,__VA_ARGS__);}
 namespace smsc{
 namespace util{
 
@@ -376,7 +378,7 @@ namespace util{
   {
       if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
          smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
-         "*%s*<%s(%s):%d>\n\%s\n",
+         "*%s*<%s(%s):%d>\n%s\n",
               UNREACHABLE_LOG_DOMAIN,
               file,
               func,
@@ -539,8 +541,8 @@ namespace util{
               func,line);
     return expr;
   }
-};
-};
+}
+}
 
 #endif
 

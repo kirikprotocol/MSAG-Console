@@ -121,7 +121,7 @@ void OCIConnection::disconnect()
         // free envirounment handle, all derrived handles will be freed too
             (void) OCIHandleFree(envhp, OCI_HTYPE_ENV);
         }
-        
+
         isConnected = false; isDead = false;
         svchp = 0; envhp = 0; errhp = 0;
     }
@@ -317,10 +317,12 @@ void OCIQuery::bind(CONST text* name, sb4 name_len, ub2 type,
                         dvoid* placeholder, sb4 size, dvoid* indp)
     throw(SQLException)
 {
+    /*
     char nameStr[name_len+2];
     strncpy(nameStr, (const char*)name, name_len);
     nameStr[name_len] = 0;
     __trace2__("Bind by name: %s, type %d", nameStr, type);
+    */
 
     OCIBind *bind = 0;
     check(OCIBindByName(stmt, &bind, errhp, name, name_len,
@@ -537,8 +539,8 @@ void OCIStatement::setInt64(int pos, int64_t val, bool null)
                                    (uword)sizeof(int64_t),
                                    (uword)OCI_NUMBER_UNSIGNED,
                                    (OCINumber *)&(negative)));
-            check(OCINumberSub(errhp, (CONST OCINumber *)&zero, 
-                               (CONST OCINumber *)&negative, 
+            check(OCINumberSub(errhp, (CONST OCINumber *)&zero,
+                               (CONST OCINumber *)&negative,
                                (OCINumber *)&(descriptor->number)));
         }
         else {
@@ -796,7 +798,7 @@ int32_t OCIResultSet::getInt32(int pos)
     owner->check(OCINumberIsInt(owner->errhp, (CONST OCINumber *)number, &ok));
     if (ok != TRUE)
         throw InvalidArgumentException();
-    
+
     owner->check(OCINumberToInt(owner->errhp, (CONST OCINumber *)number,
                                 (uword) sizeof(int32_t),
                                 (uword)OCI_NUMBER_SIGNED,
@@ -815,7 +817,7 @@ int64_t OCIResultSet::getInt64(int pos)
     owner->check(OCINumberIsInt(owner->errhp, (CONST OCINumber *)number, &ok));
     if (ok != TRUE)
         throw InvalidArgumentException();
-    
+
     owner->check(OCINumberToInt(owner->errhp, (CONST OCINumber *)number,
                                 (uword) sizeof(int64_t),
                                 (uword)OCI_NUMBER_SIGNED,
@@ -844,7 +846,7 @@ uint32_t OCIResultSet::getUint32(int pos)
     owner->check(OCINumberIsInt(owner->errhp, (CONST OCINumber *)number, &ok));
     if (ok != TRUE)
         throw InvalidArgumentException();
-    
+
     owner->check(OCINumberToInt(owner->errhp, (CONST OCINumber *)number,
                                 (uword) sizeof(uint32_t),
                                 (uword)OCI_NUMBER_UNSIGNED,
@@ -863,7 +865,7 @@ uint64_t OCIResultSet::getUint64(int pos)
     owner->check(OCINumberIsInt(owner->errhp, (CONST OCINumber *)number, &ok));
     if (ok != TRUE)
         throw InvalidArgumentException();
-    
+
     owner->check(OCINumberToInt(owner->errhp, (CONST OCINumber *)number,
                                 (uword) sizeof(uint64_t),
                                 (uword)OCI_NUMBER_UNSIGNED,
@@ -930,12 +932,12 @@ OCIRoutine::OCIRoutine(OCIConnection* connection,
     ub4      bndSize  = FUNCTION_MAX_ARGUMENTS_COUNT;
     sb4      bndFound = 0 ;
     sb4      bndCurrent = 0;
-    text*    bndBvnp[bndSize];
-    ub1      bndBvnl[bndSize];
-    text*    bndInvp[bndSize];
-    ub1      bndInpl[bndSize];
-    ub1      bndDupl[bndSize];
-    OCIBind* bndHndl[bndSize];
+    text*    bndBvnp[FUNCTION_MAX_ARGUMENTS_COUNT];
+    ub1      bndBvnl[FUNCTION_MAX_ARGUMENTS_COUNT];
+    text*    bndInvp[FUNCTION_MAX_ARGUMENTS_COUNT];
+    ub1      bndInpl[FUNCTION_MAX_ARGUMENTS_COUNT];
+    ub1      bndDupl[FUNCTION_MAX_ARGUMENTS_COUNT];
+    OCIBind* bndHndl[FUNCTION_MAX_ARGUMENTS_COUNT];
 
     check(OCIStmtGetBindInfo (stmt, errhp, bndSize, 1, &bndFound,
                               bndBvnp, bndBvnl, bndInvp, bndInpl, bndDupl,
@@ -1221,12 +1223,12 @@ int32_t OCIRoutine::getInt32(const char* key)
 void OCIRoutine::setInt64(const char* key, int64_t val, bool null)
     throw(SQLException, InvalidArgumentException)
 {
-    OCIDataDescriptor* descriptor = findDescriptor(key);                
-    if (descriptor->type != SQLT_VNU)                                   
-        throw InvalidArgumentException();                               
-    
-    if (!null)                                                          
-    {                                                                   
+    OCIDataDescriptor* descriptor = findDescriptor(key);
+    if (descriptor->type != SQLT_VNU)
+        throw InvalidArgumentException();
+
+    if (!null)
+    {
         if (val < 0) {
             val = -val;
             val = UINT64_SWAP_LE_BE_CONSTANT(val);
@@ -1237,8 +1239,8 @@ void OCIRoutine::setInt64(const char* key, int64_t val, bool null)
                                    (uword)sizeof(int64_t),
                                    (uword)OCI_NUMBER_UNSIGNED,
                                    (OCINumber *)&(negative)));
-            check(OCINumberSub(errhp, (CONST OCINumber *)&zero, 
-                               (CONST OCINumber *)&negative, 
+            check(OCINumberSub(errhp, (CONST OCINumber *)&zero,
+                               (CONST OCINumber *)&negative,
                                (OCINumber *)&(descriptor->number)));
         }
         else {
@@ -1248,12 +1250,12 @@ void OCIRoutine::setInt64(const char* key, int64_t val, bool null)
                                    (uword)OCI_NUMBER_UNSIGNED,
                                    (OCINumber *)&(descriptor->number)));
         }
-        descriptor->ind = OCI_IND_NOTNULL;                              
-    }                                                                   
-    else descriptor->ind = OCI_IND_NULL;                                
-    
-    bind((text *)key, strlen(key), descriptor->type, descriptor->data,  
-         descriptor->size, (dvoid *) &descriptor->ind);                 
+        descriptor->ind = OCI_IND_NOTNULL;
+    }
+    else descriptor->ind = OCI_IND_NULL;
+
+    bind((text *)key, strlen(key), descriptor->type, descriptor->data,
+         descriptor->size, (dvoid *) &descriptor->ind);
 }
 int64_t OCIRoutine::getInt64(const char* key)
     throw(SQLException, InvalidArgumentException)

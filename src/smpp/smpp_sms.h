@@ -355,7 +355,7 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms,bool forceDC=false)
         sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,das);
         if ( das!=3 && (user_data_coding&(1<<5)) )
         {
-          __trace2__("SmppToSms: required compression");
+          __trace__("SmppToSms: required compression");
           return false;
         }
         if(sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03)
@@ -474,7 +474,7 @@ inline bool fetchSmsFromDataSmPdu(PduDataSm* pdu,SMS* sms,bool forceDC=false)
       sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,das);
       if ( das!=3 && (user_data_coding&(1<<5)) )
       {
-        __trace2__("SmppDataToSms: required compression");
+        __trace__("SmppDataToSms: required compression");
         return false;
       }
       if(sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03)
@@ -587,7 +587,7 @@ inline bool fillDataSmFromSms(PduDataSm* pdu,SMS* sms,bool forceDC=false)
   return true;
 }
 
-};
-};
+}
+}
 
 #endif

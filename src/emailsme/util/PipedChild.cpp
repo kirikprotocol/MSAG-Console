@@ -111,6 +111,6 @@ pid_t ForkPipedCmd(const char *cmd, FILE*& f_in,FILE*& f_out)
   return brPipe?-1:ret;
 }
 
-};
-};
-};
+}
+}
+}

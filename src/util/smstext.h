@@ -180,7 +180,7 @@ struct ConcatInfo{
 int partitionSms(SMS* sms,int dstdc);
 void extractSmsPart(SMS* sms,int partnum);
 
-};
-};
+}
+}
 
 #endif

@@ -697,7 +697,7 @@ void Smsc::init(const SmscConfigs& cfg)
     throw;
   }catch(...)
   {
-    __trace2__("Smsc::init exception:unknown");
+    __trace__("Smsc::init exception:unknown");
     log.warn("Smsc::init exception:unknown");
     throw;
   }
@@ -786,7 +786,7 @@ void Smsc::run()
     throw;
   }catch(...)
   {
-    __trace2__("Smsc::run exception:unknown");
+    __trace__("Smsc::run exception:unknown");
     log.warn("Smsc::run exception:unknown");
     throw;
   }
@@ -868,5 +868,5 @@ void Smsc::reloadAliases(const SmscConfigs& cfg)
   ResetAliases(aliaser.release());
 }
 
-};//system
-};//smsc
+}//system
+}//smsc

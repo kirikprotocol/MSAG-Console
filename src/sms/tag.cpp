@@ -18,6 +18,6 @@ SMS_BODY_TAGS_SET
 }
 }dummy;
 
-};
-};
-};
+}
+}
+}

@@ -1,5 +1,8 @@
 
 #include <dlfcn.h>
+#include <string.h>
+#include <errno.h>
+#include <unistd.h>
 
 #include "DataSourceLoader.h"
 
@@ -25,12 +28,12 @@ void DataSourceLoader::loadupDataSourceFactory(
         throw(LoadupException)
 {
     MutexGuard guard(loadupLock);
-    
+
     logger.info("Loading '%s' library, identity is '%s' ...", dlpath, identity);
     void* dlhandle = dlopen(dlpath, RTLD_LAZY);
     if (dlhandle)
     {
-        getDsfInstanceFn fnhandle = 
+        getDsfInstanceFn fnhandle =
             (getDsfInstanceFn)dlsym(dlhandle, "getDataSourceFactory");
         if (fnhandle)
         {
@@ -39,23 +42,24 @@ void DataSourceLoader::loadupDataSourceFactory(
             {
                 DataSourceFactory::registerFactory(dsf, identity);
             }
-            else 
+            else
             {
-                logger.error("Load of '%s' library. Call to getDataSourceFactory() failed ! ", dlpath); 
+                logger.error("Load of '%s' library. Call to getDataSourceFactory() failed ! ", dlpath);
                 dlclose(dlhandle);
                 throw LoadupException();
             }
         }
         else
         {
-            logger.error("Load of '%s' library. Call to dlsym() failed ! ", dlpath); 
+            logger.error("Load of '%s' library. Call to dlsym() failed ! ", dlpath);
             dlclose(dlhandle);
             throw LoadupException();
         }
     }
     else
     {
-        logger.error("Load of '%s' library. Call to dlopen() failed ! ", dlpath); 
+        char buf[256];
+        logger.error("Load of '%s' at '%s' library. Call to dlopen() failed:%s ! ", dlpath,getcwd(buf,sizeof(buf)),strerror(errno));
         throw LoadupException();
     }
     (void)handles.Push(dlhandle);
@@ -66,12 +70,12 @@ void DataSourceLoader::loadup(ConfigView* config)
     throw(ConfigException, LoadupException)
 {
     __require__(config); // load up libraries by config
-    
+
     std::auto_ptr<ConfigView> driversConfigGuard(config->getSubConfig("DataSourceDrivers"));
     ConfigView* driversConfig = driversConfigGuard.get();
     std::auto_ptr< std::set<std::string> > setGuard(driversConfig->getSectionNames());
     std::set<std::string>* set = setGuard.get();
-    
+
     for (std::set<std::string>::iterator i=set->begin();i!=set->end();i++)
     {
         const char* section = (const char *)i->c_str();
@@ -81,7 +85,7 @@ void DataSourceLoader::loadup(ConfigView* config)
         try
         {
             logger.info("Loading DataSourceDriver for section '%s'.", section);
-            
+
             std::auto_ptr<char> typeGuard(driverConfig->getString("type"));
             const char* type = typeGuard.get();
             std::auto_ptr<char> dlpathGuard(driverConfig->getString("loadup"));
@@ -106,15 +110,14 @@ void DataSourceLoader::unload()
 
    DataSourceFactory::unregisterFactories();
 
-   logger.info("Unloading DataSourceDrivers ..."); 
+   logger.info("Unloading DataSourceDrivers ...");
    while (handles.Count())
    {
        void* handle=0L;
        (void) handles.Pop(handle);
        if (handle) dlclose(handle);
    }
-   logger.info("DataSourceDrivers unloaded"); 
+   logger.info("DataSourceDrivers unloaded");
 }
 
 }}
-

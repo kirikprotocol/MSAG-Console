@@ -69,24 +69,26 @@ public:
   void releaseHeap();
 
 
-private:
+//protected:
   //general things
   MemoryManager *parentManager;
   char taskName[MM_MAX_TASK_NAME_SIZE];
 
   //Raw Heap staff
   int rawHeapPageSize;
-  typedef struct RawHeapPage{
+  struct RawHeapPage{
     int pageSize;
     int pageUsage;
     char* memPage;
     RawHeapPage *next;
-  } *PRawHeapPage;
+  };
+  typedef RawHeapPage *PRawHeapPage;
   PRawHeapPage firstRawPage;
   PRawHeapPage lastRawPage;
 
+  friend class RawHeapCheckPoint;
   struct RawHeapCheckPoint{
-    PRawHeapPage page;
+    MemoryHeap::PRawHeapPage page;
     int pageUsage;
   };
 
@@ -101,6 +103,7 @@ private:
   int blocksPerPool;
 
   typedef Array<char*> MemArray;
+  friend class BlocksHeapPooledPage;
   struct BlocksHeapPooledPage{
     MemArray freeBlocks;
     MemArray usedBlocks;
@@ -143,8 +146,8 @@ private:
   }
 };//MemoryManager
 
-};//buffers
-};//core
-};//smsc
+}//buffers
+}//core
+}//smsc
 
 #endif

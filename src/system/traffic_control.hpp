@@ -11,7 +11,7 @@ namespace smsc{
 
 namespace store{
 class MessageStore;
-};
+}
 
 namespace system{
 
@@ -95,7 +95,7 @@ protected:
   friend class StatusSme;
 };
 
-};//system
-};//smsc
+}//system
+}//smsc
 
 #endif

@@ -272,8 +272,8 @@ public:
   int LoadFromFile(const char* filename);
 };
 
-};//buffers
-};//core
-};//smsc
+}//buffers
+}//core
+}//smsc
 
 #endif

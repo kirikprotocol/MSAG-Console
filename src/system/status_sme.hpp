@@ -157,7 +157,7 @@ protected:
   Address mSrc;
 };
 
-};//system
-};//smsc
+}//system
+}//smsc
 
 #endif

@@ -45,7 +45,7 @@ protected:
   Array<SmscCommand> queue;
 };
 
-};//system
-};//smsc
+}//system
+}//smsc
 
 #endif

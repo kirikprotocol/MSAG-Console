@@ -90,9 +90,9 @@ protected:
 #endif
 };//EventMonitor
 
-};//synchronization
-};//core
-};//smsc
+}//synchronization
+}//core
+}//smsc
 
 
 #endif

@@ -714,5 +714,5 @@ void extractSmsPart(SMS* sms,int partnum)
   }
 }
 
-};//util
-};//smsc
+}//util
+}//smsc

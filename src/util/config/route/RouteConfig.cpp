@@ -135,28 +135,28 @@ throw (SubjectNotFoundException)
 
 const uint8_t strToDeliveryMode(const char * const deliveryModeStr)
 {
-	if (::stricmp("store", deliveryModeStr) == 0)
-		return smsc::sms::SMSC_STOREANDFORWARD_MSG_MODE;
-	if (::stricmp("forward", deliveryModeStr) == 0)
-		return smsc::sms::SMSC_TRANSACTION_MSG_MODE;
-	if (::stricmp("datagram", deliveryModeStr) == 0)
-		return smsc::sms::SMSC_DATAGRAM_MSG_MODE;
-	return smsc::sms::SMSC_DEFAULT_MSG_MODE;
+  if (::stricmp("store", deliveryModeStr) == 0)
+    return smsc::sms::SMSC_STOREANDFORWARD_MSG_MODE;
+  if (::stricmp("forward", deliveryModeStr) == 0)
+    return smsc::sms::SMSC_TRANSACTION_MSG_MODE;
+  if (::stricmp("datagram", deliveryModeStr) == 0)
+    return smsc::sms::SMSC_DATAGRAM_MSG_MODE;
+  return smsc::sms::SMSC_DEFAULT_MSG_MODE;
 }
 
 const char * const deliveryModeToStr(const uint8_t deliveryMode)
 {
-	switch (deliveryMode)
-	{
-	case smsc::sms::SMSC_STOREANDFORWARD_MSG_MODE:
-		return "store";
-	case smsc::sms::SMSC_TRANSACTION_MSG_MODE:
-		return "forward";
-	case smsc::sms::SMSC_DATAGRAM_MSG_MODE:
-		return "datagram";
-	default:
-		return "default";
-	}
+  switch (deliveryMode)
+  {
+  case smsc::sms::SMSC_STOREANDFORWARD_MSG_MODE:
+    return "store";
+  case smsc::sms::SMSC_TRANSACTION_MSG_MODE:
+    return "forward";
+  case smsc::sms::SMSC_DATAGRAM_MSG_MODE:
+    return "datagram";
+  default:
+    return "default";
+  }
 }
 
 Route * RouteConfig::createRoute(const DOM_Element &elem, const SubjectPHash &subjects)
@@ -182,11 +182,11 @@ throw (SubjectNotFoundException)
                                    strcmp("true", archiving.get()) == 0,
                                    strcmp("true", enabling.get()) == 0,
                                    strcmp("true", suppressDeliveryReports.get()) == 0,
-																	 strcmp("true", active.get()) == 0,
+                                   strcmp("true", active.get()) == 0,
                                    serviceId,
-								   std::string(srcSmeSystemId.get()),
-								   strToDeliveryMode(deliveryModeStr.get()),
-								   std::string(forwardToStr.get()))
+                   std::string(srcSmeSystemId.get()),
+                   strToDeliveryMode(deliveryModeStr.get()),
+                   std::string(forwardToStr.get()))
                          );
 
   DOM_NodeList srcs = elem.getElementsByTagName("source");
@@ -240,9 +240,9 @@ RouteConfig::status RouteConfig::load(const char * const filename)
       DOM_Element &elem = (DOM_Element &) node;
       try
       {
-				std::auto_ptr<Route> route(createRoute(elem, subjects));
-				if (route->isActive())
-					routes.push_back(route.release());
+        std::auto_ptr<Route> route(createRoute(elem, subjects));
+        if (route->isActive())
+          routes.push_back(route.release());
       }
       catch (SubjectNotFoundException &ex)
       {
@@ -250,7 +250,7 @@ RouteConfig::status RouteConfig::load(const char * const filename)
       }
     }
   }
-  catch (DOMTreeReader::ParseException &e)
+  catch (ParseException &e)
   {
     return fail;
   }
@@ -259,7 +259,7 @@ RouteConfig::status RouteConfig::load(const char * const filename)
 
 RouteConfig::status RouteConfig::reload()
 {
-  __trace2__("smsc::util::config::route::RouteConfig - Reload routes");
+  __trace__("smsc::util::config::route::RouteConfig - Reload routes");
   clear();
   std::auto_ptr<char> tmp = config_filename;
   status result = load(tmp.get());

@@ -55,7 +55,7 @@ protected:
   MessageStore* store;
 };
 
-};//system
-};//smsc
+}//system
+}//smsc
 
 #endif

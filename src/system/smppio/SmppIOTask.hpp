@@ -63,7 +63,7 @@ public:
   virtual void removeSocket(Socket *sock);
   void killSocket(int idx);
   virtual int Execute();
-  virtual char* taskName(){return "SmppInputThread";}
+  virtual const char* taskName(){return "SmppInputThread";}
   void assignOut(SmppIOTask *out){outTask=out;}
 protected:
   smsc::smeman::SmeManager* smeManager;
@@ -81,7 +81,7 @@ public:
   virtual void removeSocket(Socket *sock);
   void killSocket(int idx);
   virtual int Execute();
-  virtual char* taskName(){return "SmppOutputThread";}
+  virtual const char* taskName(){return "SmppOutputThread";}
   void assignIn(SmppIOTask *in){inTask=in;}
 protected:
   smsc::smeman::SmeManager* smeManager;
@@ -89,9 +89,9 @@ protected:
 };
 
 
-};//smppio
-};//system
-};//smsc
+}//smppio
+}//system
+}//smsc
 
 
 #endif

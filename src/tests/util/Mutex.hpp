@@ -35,9 +35,8 @@ namespace smsc {
         void operator=(const Mutex&);
       };//Mutex
 
-    };//namespace util
-  };//namespace test
-};//namespace smsc
+    }//namespace util
+  }//namespace test
+}//namespace smsc
 
 #endif
-

@@ -4,6 +4,28 @@
 #
 #
 
+# to compile with sun compiler, use CXX=CC
+ifndef CXX
+CXX:=g++
+endif
+export CXX
+
+ifeq ($(CXX),CC)
+XERCES_LIB:=-lxerces-c-CC
+SHARED_OPT:=-G
+SSL_LIB:=-L/usr/local/ssl/lib -lssl-CC -lcrypto-CC
+else
+XERCES_LIB:=-lxerces-c
+SHARED_OPT:=-shared
+SSL_LIB:=-L/usr/local/ssl/lib -lssl -lcrypto
+endif
+
+
+
+export XERCES_LIB
+export SHARED_OPT
+export SSL_LIB
+
 ifndef SMSC_SRCDIR
 #$(warning SMSC_SRCDIR is not defined)
 SMSC_SRCDIR:=$(PWD)
@@ -36,18 +58,29 @@ CAMMON_INCLUDES = -I$(SMSC_SRCDIR) -I/usr/local/include -I$(SS7_STACK_HOME)/src 
 # -DMAP_R12
 
 ifeq ($(LOG4CPP),YES)
-LOGGER_LIBRARY := log4cpp
+ifeq ($(CXX),CC)
+LOGGER_LIBRARY := /usr/local/lib/liblog4cpp-CC.a
+else
+LOGGER_LIBRARY := -llog4cpp
+endif
 export LOGGER_LIBRARY
 CAMMON_INCLUDES := $(CAMMON_INCLUDES) -DLOGGER_LIB_LOG4CPP
 else
-LOGGER_LIBRARY := log4cplus
+ifeq ($(CXX),CC)
+LOGGER_LIBRARY := /usr/local/lib/liblog4cplus-CC.a
+else
+LOGGER_LIBRARY := -llog4cplus
+endif
 export LOGGER_LIBRARY
 CAMMON_INCLUDES := $(CAMMON_INCLUDES) -DLOGGER_LIB_LOG4CPLUS
 endif
 
 
-CFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT
-CXXFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT
+CFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT -D_REENTRANT
+CXXFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT -D_REENTRANT
+ifeq ($(CXX),CC)
+CXXFLAGS:= $(CXXFLAGS) -features=extensions  -D_POSIX_PTHREAD_SEMANTICS
+endif
 LDFLAGS := -L$(SMSC_BUILDDIR)/lib
 
 ifneq ($(TRACE),YES)
@@ -71,8 +104,13 @@ export SNMP_LIBS
 endif
 
 ifdef WARNINGS
+ifeq ($(CXX),CC)
+CFLAGS := $(CFLAGS) +w +w2
+CXXFLAGS := $(CXXFLAGS) +w +w2
+else
 CFLAGS := $(CFLAGS) -Wall
 CXXFLAGS := $(CXXFLAGS) -Wall
+endif
 endif
 
 ifeq ($(DEBUG),YES)
@@ -85,8 +123,13 @@ CFLAGS := $(CFLAGS) -pg -g -a
 CXXFLAGS := $(CXXFLAGS) -pg -g -a
 else
 ifdef OPTI
+ifeq ($(CXX),CC)
+# TODO!!!: OPTIMIZATION OPTIONS
+$(warning optimization options not yet ready)
+else
 CFLAGS := $(CFLAGS) -O2 -finline-limit=2048 -DDISABLE_ANY_CHECKS
 CXXFLAGS := $(CXXFLAGS) -O2 -finline-limit=2048 -DDISABLE_ANY_CHECKS
+endif
 endif
 endif
 endif

@@ -3,11 +3,13 @@
 #include <util/debug.h>
 
 #include "Entities.h"
+#include "core/buffers/TmpBuf.hpp"
 
 namespace smsc { namespace util { namespace templates
 {
 
 using smsc::core::buffers::Hash;
+using smsc::core::buffers::TmpBuf;
 
 static bool ENTITY_TRACE = false;
 
@@ -305,14 +307,15 @@ int FormatEntityRenderer::getEntityType(const char* key, const char* option)
 void ContextEnvironment::toUpperCase(const char* str, char* low)
 {
     __require__(str && low);
-    
+
     do *low++=toupper(*str);
-    while (*str++); 
+    while (*str++);
 }
 bool ContextEnvironment::exportStr(const char* key, const char* val)
 {
     if (!key || !val) return false;
-    char ukey[strlen(key)+1];
+    //char ukey[strlen(key)+1];
+    TmpBuf<char,64> ukey(strlen(key)+1);
     toUpperCase(key, ukey);
     if (strs.Exists(ukey)) strs.Delete(ukey);
     strs.Insert(ukey, std::string(val));
@@ -321,7 +324,8 @@ bool ContextEnvironment::exportStr(const char* key, const char* val)
 bool ContextEnvironment::importStr(const char* key, char* &val)
 {
     if (!key) return false;
-    char ukey[strlen(key)+1];
+    //char ukey[strlen(key)+1];
+    TmpBuf<char,64> ukey(strlen(key)+1);
     toUpperCase(key, ukey);
     if (!strs.Exists(ukey)) return false;
     val = (char *)(strs.Get(ukey).c_str());
@@ -330,7 +334,8 @@ bool ContextEnvironment::importStr(const char* key, char* &val)
 bool ContextEnvironment::exportInt(const char* key, int64_t val)
 {
     if (!key) return false;
-    char ukey[strlen(key)+1];
+    //char ukey[strlen(key)+1];
+    TmpBuf<char,64> ukey(strlen(key)+1);
     toUpperCase(key, ukey);
     if (ints.Exists(ukey)) ints.Delete(ukey);
     ints.Insert(ukey, val);
@@ -339,7 +344,8 @@ bool ContextEnvironment::exportInt(const char* key, int64_t val)
 bool ContextEnvironment::importInt(const char* key, int64_t &val)
 {
     if (!key) return false;
-    char ukey[strlen(key)+1];
+    //char ukey[strlen(key)+1];
+    TmpBuf<char,64> ukey(strlen(key)+1);
     toUpperCase(key, ukey);
     if (!ints.Exists(ukey)) return false;
     val = ints.Get(ukey);
@@ -348,7 +354,8 @@ bool ContextEnvironment::importInt(const char* key, int64_t &val)
 bool ContextEnvironment::exportDat(const char* key, time_t val)
 {
     if (!key) return false;
-    char ukey[strlen(key)+1];
+    //char ukey[strlen(key)+1];
+    TmpBuf<char,64> ukey(strlen(key)+1);
     toUpperCase(key, ukey);
     if (dats.Exists(ukey)) dats.Delete(ukey);
     dats.Insert(ukey, val);
@@ -357,7 +364,8 @@ bool ContextEnvironment::exportDat(const char* key, time_t val)
 bool ContextEnvironment::importDat(const char* key, time_t &val)
 {
     if (!key) return false;
-    char ukey[strlen(key)+1];
+    //char ukey[strlen(key)+1];
+    TmpBuf<char,64> ukey(strlen(key)+1);
     toUpperCase(key, ukey);
     if (!dats.Exists(ukey)) return false;
     val = dats.Get(ukey);
@@ -366,7 +374,8 @@ bool ContextEnvironment::importDat(const char* key, time_t &val)
 bool ContextEnvironment::exportFlt(const char* key, float val)
 {
     if (!key) return false;
-    char ukey[strlen(key)+1];
+    //char ukey[strlen(key)+1];
+    TmpBuf<char,64> ukey(strlen(key)+1);
     toUpperCase(key, ukey);
     if (flts.Exists(ukey)) flts.Delete(ukey);
     flts.Insert(ukey, val);
@@ -375,7 +384,8 @@ bool ContextEnvironment::exportFlt(const char* key, float val)
 bool ContextEnvironment::importFlt(const char* key, float &val)
 {
     if (!key) return false;
-    char ukey[strlen(key)+1];
+    //char ukey[strlen(key)+1];
+    TmpBuf<char,64> ukey(strlen(key)+1);
     toUpperCase(key, ukey);
     if (!flts.Exists(ukey)) return false;
     val = flts.Get(ukey);
@@ -384,7 +394,8 @@ bool ContextEnvironment::importFlt(const char* key, float &val)
 bool ContextEnvironment::exportDbl(const char* key, double val)
 {
     if (!key) return false;
-    char ukey[strlen(key)+1];
+    //char ukey[strlen(key)+1];
+    TmpBuf<char,64> ukey(strlen(key)+1);
     toUpperCase(key, ukey);
     if (dbls.Exists(ukey)) dbls.Delete(ukey);
     dbls.Insert(ukey, val);
@@ -393,7 +404,8 @@ bool ContextEnvironment::exportDbl(const char* key, double val)
 bool ContextEnvironment::importDbl(const char* key, double &val)
 {
     if (!key) return false;
-    char ukey[strlen(key)+1];
+    //char ukey[strlen(key)+1];
+    TmpBuf<char,64> ukey(strlen(key)+1);
     toUpperCase(key, ukey);
     if (!dbls.Exists(ukey)) return false;
     val = dbls.Get(ukey);
@@ -402,7 +414,8 @@ bool ContextEnvironment::importDbl(const char* key, double &val)
 bool ContextEnvironment::exportLdl(const char* key, long double val)
 {
     if (!key) return false;
-    char ukey[strlen(key)+1];
+    //char ukey[strlen(key)+1];
+    TmpBuf<char,64> ukey(strlen(key)+1);
     toUpperCase(key, ukey);
     if (ldls.Exists(ukey)) ldls.Delete(ukey);
     ldls.Insert(ukey, val);
@@ -411,7 +424,8 @@ bool ContextEnvironment::exportLdl(const char* key, long double val)
 bool ContextEnvironment::importLdl(const char* key, long double &val)
 {
     if (!key) return false;
-    char ukey[strlen(key)+1];
+    //char ukey[strlen(key)+1];
+    TmpBuf<char,64> ukey(strlen(key)+1);
     toUpperCase(key, ukey);
     if (!ldls.Exists(ukey)) return false;
     val = ldls.Get(ukey);

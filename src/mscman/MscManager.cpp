@@ -17,7 +17,7 @@ namespace smsc { namespace mscman
     using namespace core::threads;
     using namespace core::buffers;
     using namespace core::synchronization;
-    
+
     const char* MSCMAN_NO_INSTANCE    = "MscManager wasn't instantiated";
     const char* MSCMAN_INSTANCE_EXIST = "MscManager already instantiated";
     const char* MSCMAN_NOT_STARTED    = "MscManager wasn't started";
@@ -31,12 +31,12 @@ namespace smsc { namespace mscman
             : MscInfo(""), op(UNKNOWN) {};
         MscInfoChange(MscInfoOp _op, const MscInfo& info)
             : MscInfo(info), op(_op) {};
-        MscInfoChange(MscInfoOp _op, string msc, bool mLock=false, 
+        MscInfoChange(MscInfoOp _op, string msc, bool mLock=false,
                       bool aLock=false, int fc=0)
             : MscInfo(msc, mLock, aLock, fc), op(_op) {};
         MscInfoChange(const MscInfoChange& info)
             : MscInfo(info), op(info.op) {};
-            
+
         MscInfoChange& operator=(const MscInfoChange& info) {
             op = info.op;
             MscInfo::operator=(info);
@@ -47,7 +47,7 @@ namespace smsc { namespace mscman
     class MscManagerImpl : public MscManager, public Thread
     {
     private:
-        
+
         static const char* selectSql;
         static const char* insertSql;
         static const char* updateSql;
@@ -60,11 +60,11 @@ namespace smsc { namespace mscman
         Event               flushEvent, exitedEvent;
 
         Connection*         connection;
-        
+
         Hash<MscInfo*>          mscs;
         Array<MscInfoChange>    changes;
         Mutex                   changesLock;
-        
+
         void addChange(const MscInfoChange& change, bool signal=true);
         void processChange(const MscInfoChange& change);
 
@@ -95,7 +95,7 @@ namespace smsc { namespace mscman
 
 Mutex MscManager::startupLock;
 MscManager* MscManager::instance = 0;
-smsc::logger::Logger MscManager::log = 
+smsc::logger::Logger MscManager::log =
     Logger::getInstance("smsc.mscman.MscManager");
 
 MscManager::MscManager(DataSource& _ds, Manager& config)
@@ -121,31 +121,31 @@ void MscManager::startup(DataSource& ds, Manager& config)
 void MscManager::shutdown()
 {
     MutexGuard guard(startupLock);
-    if (instance) 
+    if (instance)
     {
-        ((MscManagerImpl *)instance)->Stop();   
+        ((MscManagerImpl *)instance)->Stop();
         delete instance;
         instance = 0;
     }
 }
-MscManager& MscManager::getInstance() 
-    throw(InitException) 
+MscManager& MscManager::getInstance()
+    throw(InitException)
 {
     MutexGuard guard(startupLock);
     if (!instance) throw InitException(MSCMAN_NO_INSTANCE);
-    return (*instance); 
+    return (*instance);
 }
 
 
-/* ---------------------- MscManager implementation ---------------------- */ 
+/* ---------------------- MscManager implementation ---------------------- */
 MscManagerImpl::MscManagerImpl(DataSource& _ds, Manager& config)
     throw(ConfigException, InitException)
-        : MscManager(_ds, config), Thread(), 
-            bStarted(false), bNeedExit(false) 
+        : MscManager(_ds, config), Thread(),
+            bStarted(false), bNeedExit(false)
 {
     init(config);
 }
-MscManagerImpl::~MscManagerImpl() 
+MscManagerImpl::~MscManagerImpl()
 {
     MutexGuard  guard(hashLock);
 
@@ -157,7 +157,7 @@ MscManagerImpl::~MscManagerImpl()
 
     if (connection) ds.freeConnection(connection);
 }
-void MscManagerImpl::Start() 
+void MscManagerImpl::Start()
 {
     if (!bStarted)
     {
@@ -177,10 +177,10 @@ void MscManagerImpl::Stop()
 }
 int MscManagerImpl::Execute()
 {
-    do 
+    do
     {
         flushEvent.Wait(); // ??? sleepInterval
-        __trace2__("Flush event signaled !");
+        __trace__("Flush event signaled !");
 
         MscInfoChange change;
         bool process = true;
@@ -195,7 +195,7 @@ int MscManagerImpl::Execute()
             }
             if (process) processChange(change);
         }
-    } 
+    }
     while (!bNeedExit);
 
     bStarted = false;
@@ -227,7 +227,7 @@ void MscManagerImpl::init(Manager& config)
     // TODO: Load up extra params from config if needed
 
     connection = ds.getConnection();
-    if (!connection) 
+    if (!connection)
     {
         InitException exc("Get connection to DB failed");
         log.error(exc.what());
@@ -255,7 +255,7 @@ void MscManagerImpl::init(Manager& config)
             bool mLock = (mLockStr && mLockStr[0]=='Y' && mLockStr[1]=='\0');
             bool aLock = (aLockStr && aLockStr[0]=='Y' && aLockStr[1]=='\0');
             MscInfo* info = new MscInfo(mscNum, mLock, aLock, fc);
-            
+
             MutexGuard  guard(hashLock);
             mscs.Insert(mscNum, info);
         }
@@ -277,15 +277,15 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
     __require__(connection);
 
     __trace2__("Processing change on DB Op=%d "
-               "Msc:%s, mLock=%d, aLock=%d fc=%d", change.op, 
-               change.mscNum.c_str(), change.manualLock, 
+               "Msc:%s, mLock=%d, aLock=%d fc=%d", change.op,
+               change.mscNum.c_str(), change.manualLock,
                change.automaticLock, change.failureCount);
-    
-    Statement* statement = 0; 
+
+    Statement* statement = 0;
     try
     {
         if (!connection->isAvailable()) connection->connect();
-        
+
         switch (change.op)
         {
         case INSERT:
@@ -326,12 +326,12 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
 
 /* ------------------------ MscStatus implementation ------------------------ */
 
-void MscManagerImpl::report(const char* msc, bool status) 
+void MscManagerImpl::report(const char* msc, bool status)
 {
     __trace2__("MscManager: Report called for '%s'", msc);
 
     MutexGuard  guard(hashLock);
-    
+
     bool needInsert = false;
     MscInfo* info = 0;
     if (mscs.Exists(msc)) info = mscs.Get(msc);
@@ -342,15 +342,15 @@ void MscManagerImpl::report(const char* msc, bool status)
         mscs.Insert(msc, info);
         needInsert = true;
     }
-    
+
     if (status) info->automaticLock = false;
     else info->automaticLock = (++(info->failureCount) >= failureLimit);
 
     MscInfoChange change((needInsert) ? INSERT:UPDATE, *info);
     addChange(change);
 }
-bool MscManagerImpl::check(const char* msc) 
-{ 
+bool MscManagerImpl::check(const char* msc)
+{
     __trace2__("MscManager: Check called for '%s'", msc);
 
     MutexGuard  guard(hashLock);
@@ -358,17 +358,17 @@ bool MscManagerImpl::check(const char* msc)
     if (!mscs.Exists(msc)) return true;
     MscInfo* info = mscs.Get(msc);
     return !(info->manualLock || info->automaticLock);
-}   
+}
 
 /* ------------------------ MscAdmin implementation ------------------------ */
 
-void MscManagerImpl::registrate(const char* msc) 
+void MscManagerImpl::registrate(const char* msc)
 {
     __trace2__("MscManager: Registrate called for '%s'", msc);
 
     MutexGuard  guard(hashLock);
 
-    if (!mscs.Exists(msc)) 
+    if (!mscs.Exists(msc))
     {
         MscInfo* info = new MscInfo(msc, false, !automaticRegistration, 0);
         mscs.Insert(msc, info);
@@ -382,7 +382,7 @@ void MscManagerImpl::unregister(const char* msc)
 
     MutexGuard  guard(hashLock);
 
-    if (mscs.Exists(msc)) 
+    if (mscs.Exists(msc))
     {
         MscInfo* info = mscs.Get(msc);
         mscs.Delete(msc);
@@ -397,7 +397,7 @@ void MscManagerImpl::block(const char* msc)
 
     MutexGuard  guard(hashLock);
 
-    if (mscs.Exists(msc)) 
+    if (mscs.Exists(msc))
     {
         MscInfo* info = mscs.Get(msc);
         if (!info->manualLock)
@@ -408,13 +408,13 @@ void MscManagerImpl::block(const char* msc)
         }
     }
 }
-void MscManagerImpl::clear(const char* msc) 
+void MscManagerImpl::clear(const char* msc)
 {
     __trace2__("MscManager: Clear called for '%s'", msc);
 
     MutexGuard  guard(hashLock);
 
-    if (mscs.Exists(msc)) 
+    if (mscs.Exists(msc))
     {
         MscInfo* info = mscs.Get(msc);
         if (info->manualLock || info->automaticLock)
@@ -426,22 +426,21 @@ void MscManagerImpl::clear(const char* msc)
         }
     }
 }
-Array<MscInfo> MscManagerImpl::list() 
+Array<MscInfo> MscManagerImpl::list()
 {
-    __trace2__("MscManager: List called");
+    __trace__("MscManager: List called");
 
-    Array<MscInfo> list; 
+    Array<MscInfo> list;
 
     MutexGuard  guard(hashLock);
-    
+
     mscs.First();
     char* key=0; MscInfo* info = 0;
     while (mscs.Next(key, info))
         if (info) list.Push(*info);
-    
+
     return list;
 }
 
 
 }}
-

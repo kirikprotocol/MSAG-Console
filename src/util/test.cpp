@@ -14,6 +14,8 @@
 #include "system/state_machine.hpp"
 #include "util/regexp/RegExp.hpp"
 #include "logger/Logger.h"
+#include <errno.h>
+#include <string.h>
 
 using namespace smsc::sms;
 using namespace smsc::smpp;

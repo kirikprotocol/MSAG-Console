@@ -35,7 +35,7 @@ struct RouteInfo
   std::string forwardTo;
 };
 
-}; // namespace router
-}; // namespcase smsc
+} // namespace router
+} // namespcase smsc
 
 #endif

@@ -64,7 +64,7 @@ namespace SmppOptionalTags{
   static const uint16_t alertOnMessageDelivery /*alert_on_message_delivery(5.3.2.41)*/ = 0x130c;
   static const uint16_t itsReplyType        /*its_reply_type(5.3.2.42)*/ = 0x1380;
   static const uint16_t itsSessionInfo    /*its_session_info(5.3.2.43)*/ = 0x1383;
-};
+}
 
 namespace SmppOptionalLength{
   static const uint16_t destAddrSubunit  /*dest_addr_subunit(5.3.2.1)*/ = 1;
@@ -111,7 +111,7 @@ namespace SmppOptionalLength{
   static const uint16_t alertOnMessageDelivery /*alert_on_message_delivery(5.3.2.41)*/ = 0;
   static const uint16_t itsReplyType        /*its_reply_type(5.3.2.42)*/ = 1;
   static const uint16_t itsSessionInfo    /*its_session_info(5.3.2.43)*/ = 2;
-};
+}
 
 namespace SmppOptionalFields{
 #define BIT(x) ((uint64_t)1<<(x))
@@ -160,7 +160,7 @@ namespace SmppOptionalFields{
   static const uint64_t itsReplyType       /*its_reply_type(5.3.2.42)*/ = BIT(42);
   static const uint64_t itsSessionInfo     /*its_session_info(5.3.2.43)*/ = BIT(43);
 #undef BIT
-};
+}
 
 namespace SmppCommandSet{ /* SMPP v3.4 (5.1.2.1) */
   static const uint32_t GENERIC_NACK                 = 0x80000000;
@@ -190,7 +190,7 @@ namespace SmppCommandSet{ /* SMPP v3.4 (5.1.2.1) */
   static const uint32_t ALERT_NOTIFICATION           = 0x00000102;
   static const uint32_t DATA_SM                      = 0x00000103;
   static const uint32_t DATA_SM_RESP                 = 0x80000103;
-};
+}
 
 namespace SmppStatusSet
 {
@@ -244,7 +244,7 @@ namespace SmppStatusSet
   static const uint32_t ESME_RUNKNOWNERR          = 0x000000FF;
   static const uint32_t ESME_RINVDCS              = 0x00000104;
 
-};
+}
 
 namespace AddrSubunitValue{ /* SMPP v3.4 (5.3.2.1) */
   static const uint8_t UNKNOWN          = 0;
@@ -252,7 +252,7 @@ namespace AddrSubunitValue{ /* SMPP v3.4 (5.3.2.1) */
   static const uint8_t MOBILE_EQUIPMENT = 0x2;
   static const uint8_t SMART_CARD1      = 0x3;
   static const uint8_t EXTERNAL_UNIT    = 0x4;
-};
+}
 
 namespace NetworkTypeValue{ /* SMPP v3.4 (5.3.2.3) */
   static const uint8_t UNKNOWN          = 0;
@@ -264,7 +264,7 @@ namespace NetworkTypeValue{ /* SMPP v3.4 (5.3.2.3) */
   static const uint8_t IDEN             = 0x6;
   static const uint8_t AMPS             = 0x7;
   static const uint8_t PAGING_NETWORK   = 0x8;
-};
+}
 
 namespace BearerTypeValue{ /* SMPP v3.4 (5.3.2.5) */
   static const uint8_t UNKNOWN          = 0;
@@ -276,25 +276,25 @@ namespace BearerTypeValue{ /* SMPP v3.4 (5.3.2.5) */
   static const uint8_t DATA_TAC         = 0x6;
   static const uint8_t FLEX             = 0x7;
   static const uint8_t CELLCAST         = 0x8;
-};
+}
 
 namespace PyloadTypeValue{ /* SMPP v3.4 (5.3.2.10) */
   static const uint8_t WDP  = 0;
   static const uint8_t WCMP = 1;
-};
+}
 
 namespace MsValidityValue{ /* SMPP v3.4 (5.3.2.27) */
   static const uint8_t STORE_INDEFINITELY          = 0;
   static const uint8_t POWER_DOWN                  = 0x1;
   static const uint8_t SID_BASED_REGISTRATION_AREA = 0x2;
   static const uint8_t DISPLAY_ONLY                = 0x3;
-};
+}
 
 namespace MsAvailabilityStatus{ /* SMPP v3.4 (5.3.2.30) */
   static const uint8_t AVAILABLE                   = 0;
   static const uint8_t DENIED                      = 0x1;
   static const uint8_t UNAVAILABLE                 = 0x2;
-};
+}
 
 namespace UssdServiceOpValue{/* SMPP v3.4 (5.3.2.44) */
   static const int8_t PSSD_INDICATION        = 0;
@@ -305,7 +305,7 @@ namespace UssdServiceOpValue{/* SMPP v3.4 (5.3.2.44) */
   static const int8_t PSSR_RESPONSE          = 17;
   static const int8_t USSR_CONFIRM           = 18;
   static const int8_t USSN_CONFIRM           = 19;
-};
+}
 
 namespace NumberingPlanValue{ /* SMPP v3.4 (5.2.6) */
 #define BIT(x) (((uint8_t)1)<<((uint8_t)x))
@@ -320,7 +320,7 @@ namespace NumberingPlanValue{ /* SMPP v3.4 (5.2.6) */
   static const uint8_t INTERNET             = BIT(3) | BIT(2) | BIT(1);
   static const uint8_t WAP                  = BIT(4) | BIT(1);
 #undef BIT
-};
+}
 
 namespace TypeOfNumberValue{ /* SMPP v3.4 (5.2.5) */
 #define BIT(x) (((uint8_t)1)<<((uint8_t)x))
@@ -332,7 +332,7 @@ namespace TypeOfNumberValue{ /* SMPP v3.4 (5.2.5) */
   static const uint8_t ALPHANUMERIC         = BIT(2) | BIT(0);
   static const uint8_t ABBRIVIATED          = BIT(2) | BIT(1);
 #undef BIT
-};
+}
 
 namespace DataCoding{
 #define BIT(x) (((uint8_t)1)<<((uint8_t)x))
@@ -341,7 +341,7 @@ namespace DataCoding{
   static const uint8_t BINARY               = BIT(2);
   static const uint8_t UCS2                 = BIT(3);
 #undef BIT
-};
+}
 
 #define __int_property__(type,field) \
   type field;\
@@ -405,7 +405,8 @@ template<class T> unsigned CalcSize(T* arr,unsigned count)
 #else
 #define __LOG__ FILE*
 inline void fprintf_tab(__LOG__ log, int align) { for( int i=0; i<align; ++i) fprintf(log,"  ");}
-#define dump_text(format,args...) {fprintf_tab(log,align); fprintf(log,format"\n",##args);}
+#define dump_text1(format) {fprintf_tab(log,align); fprintf(log,format"\n");}
+#define dump_text(format,...) {fprintf_tab(log,align); fprintf(log,format"\n",__VA_ARGS__);}
 #define dump_uint(field) dump_text("%s = %u",#field,(uint32_t)field);
 #define dump_int(field) dump_text("%s = %u",#field,(int32_t)field);
 #define dump_ostr(field){ dump_text("%s: length= %u", #field, (uint32_t)field.size()); \
@@ -429,14 +430,14 @@ struct SmppHeader //: public MemoryManagerUnit
     sequenceNumber(0) {}
   inline void dump(__LOG__ log,int align)
   {
-    dump_text("SmppHeader{");
+    dump_text1("SmppHeader{");
     ++align;
     dump_uint(commandLength);
     dump_uint(commandId);
     dump_uint(commandStatus);
     dump_uint(sequenceNumber);
     --align;
-    dump_text("}");
+    dump_text1("}");
   }
 };
 
@@ -457,13 +458,13 @@ struct PduAddress //: public MemoryManagerUnit
   }
   inline void dump(__LOG__ log,int align)
   {
-    dump_text("PduAddress{");
+    dump_text1("PduAddress{");
     ++align;
     dump_uint(typeOfNumber);
     dump_uint(numberingPlan);
     dump_cstr(value);
     --align;
-    dump_text("} //PduAddress");
+    dump_text1("} //PduAddress");
   }
 };
 
@@ -483,7 +484,7 @@ struct PduDestAddress : public PduAddress
   }
   inline void dump(__LOG__ log,int align)
   {
-    dump_text("PduDestAddress{");
+    dump_text1("PduDestAddress{");
     ++align;
     dump_uint(flag);
     if ( flag == 0x1 )
@@ -496,7 +497,7 @@ struct PduDestAddress : public PduAddress
       dump_cstr(value);
     }
     --align;
-    dump_text("} //PduDestAddress");
+    dump_text1("} //PduDestAddress");
   }
 };
 
@@ -637,7 +638,7 @@ struct SmppOptional //: public MemoryManagerUnit
 #define _o_ostr_property__(field) if ( has_##field() ) { dump_ostr(field); }
   inline void dump(__LOG__ log,int align)
   {
-    dump_text("SmppOptional{");
+    dump_text1("SmppOptional{");
     ++align;
     _o_int_property__(uint8_t,destAddrSubunit)
     _o_int_property__(uint8_t,sourceAddrSubunit)
@@ -684,7 +685,7 @@ struct SmppOptional //: public MemoryManagerUnit
     _o_int_property__(uint8_t,ussdServiceOp)
     _o_int_property__(bool,alertOnMessageDelivery)
     --align;
-    dump_text("} //SmppOptional");
+    dump_text1("} //SmppOptional");
   }
 #undef _o_int_property__
 #undef _o_intarr_property__
@@ -707,13 +708,13 @@ struct PduOutBind //: public SmppHeader//MemoryManagerUnit
   }
   inline void dump(__LOG__ log,int align = 0)
   {
-    dump_text("SmppOutBind{");
+    dump_text1("SmppOutBind{");
     header.dump(log,align+1);
     ++align;
     dump_cstr(systemId);
     dump_cstr(password);
     --align;
-    dump_text("} //SmppOutBind");
+    dump_text1("} //SmppOutBind");
   }
 
 };
@@ -724,9 +725,9 @@ struct PduWithOnlyHeader //: public SmppHeader//MemoryManagerUnit
   inline uint32_t size() { return _s_ref_property__(SmppHeader,header); }
   inline void dump(__LOG__ log,int align = 0)
   {
-    dump_text("PduWithOnlyHeader{");
+    dump_text1("PduWithOnlyHeader{");
     header.dump(log,align+1);
-    dump_text("} //PduWithOnlyHeader");
+    dump_text1("} //PduWithOnlyHeader");
   }
 };
 
@@ -806,11 +807,11 @@ struct PduPartSm //: public MemoryManagerUnit
   }
   inline void dump(__LOG__ log,int align = 0)
   {
-    dump_text("PduPartSm{");
+    dump_text1("PduPartSm{");
     ++align;
     dump_cstr(serviceType);
-    dump_text("source = "); source.dump(log,align+1);
-    dump_text("dest = "); dest.dump(log,align+1);
+    dump_text1("source = "); source.dump(log,align+1);
+    dump_text1("dest = "); dest.dump(log,align+1);
     dump_uint(numberOfDests);
     //_s_ptr_property__(PduDestAddress,dests)
     dump_uint(esmClass);
@@ -825,7 +826,7 @@ struct PduPartSm //: public MemoryManagerUnit
     //dump_uint(get_smLength());
     dump_ostr(shortMessage);
     --align;
-    dump_text("} //PduPartSm");
+    dump_text1("} //PduPartSm");
   }
 };
 
@@ -845,11 +846,11 @@ struct PduXSm //: public SmppHeader//public MemoryManagerUnit
   }
   inline void dump(__LOG__ log,int align = 0)
   {
-    dump_text("PduXSm{");
+    dump_text1("PduXSm{");
     header.dump(log,align+1);
     message.dump(log,align+1);
     optional.dump(log,align+1);
-    dump_text("} //PduXSm");
+    dump_text1("} //PduXSm");
   }
   PduXSm()
   {
@@ -874,12 +875,12 @@ struct PduXSmResp //: public SmppHeader //MemoryManagerUnit
   }
   inline void dump(__LOG__ log,int align = 0)
   {
-    dump_text("PduXSmResp{");
+    dump_text1("PduXSmResp{");
     header.dump(log,align+1);
     ++align;
     dump_cstr(messageId);
     --align;
-    dump_text("} //PduXSm");
+    dump_text1("} //PduXSm");
   }
 };
 
@@ -905,13 +906,13 @@ struct PduDataSmResp //: public SmppHeader //MemoryManagerUnit
   }
   inline void dump(__LOG__ log,int align = 0)
   {
-    dump_text("PduXSmResp{");
+    dump_text1("PduXSmResp{");
     header.dump(log,align+1);
     ++align;
     dump_cstr(messageId);
     optional.dump(log,align);
     --align;
-    dump_text("} //PduXSm");
+    dump_text1("} //PduXSm");
   }
 };
 
@@ -944,12 +945,12 @@ struct PduMultiSmResp //: public SmppHeader//MemoryManagerUnit
   }
   inline void dump(__LOG__ log,int align = 0)
   {
-    dump_text("PduMultiResp{");
+    dump_text1("PduMultiResp{");
     header.dump(log,align+1);
     ++align;
     dump_cstr(messageId);
     --align;
-    dump_text("} //PduMultiResp");
+    dump_text1("} //PduMultiResp");
   }
   PduMultiSmResp() : noUnsuccess(0),sme(0) {}
   ~PduMultiSmResp()
@@ -982,16 +983,16 @@ struct PduBindTRX //: public SmppHeader//MemoryManagerUnit
   }
   inline void dump(__LOG__ log,int align = 0)
   {
-    dump_text("PduBindTRX{");
+    dump_text1("PduBindTRX{");
     header.dump(log,align+1);
     ++align;
     dump_cstr(systemId);
     dump_cstr(password);
     dump_cstr(systemType);
     dump_uint(interfaceVersion);
-    dump_text("address_range = "); addressRange.dump(log,align+1);
+    dump_text1("address_range = "); addressRange.dump(log,align+1);
     --align;
-    dump_text("} //PduBindTRX");
+    dump_text1("} //PduBindTRX");
   }
 };
 
@@ -1013,13 +1014,13 @@ struct PduBindTRXResp //: public SmppHeader//MemoryManagerUnit
   }
   inline void dump(__LOG__ log,int align = 0)
   {
-    dump_text("PduBindTRXResp{");
+    dump_text1("PduBindTRXResp{");
     header.dump(log,align+1);
     ++align;
     dump_cstr(systemId);
     dump_uint(scInterfaceVersion);
     --align;
-    dump_text("} //PduBindTRXResp");
+    dump_text1("} //PduBindTRXResp");
   }
 };
 
@@ -1049,17 +1050,17 @@ struct PduDataPartSm //: public MemoryManagerUnit
   }
   inline void dump(__LOG__ log,int align = 0)
   {
-    dump_text("PduPartSm{");
+    dump_text1("PduPartSm{");
     ++align;
     dump_cstr(serviceType);
-    dump_text("source = "); source.dump(log,align+1);
-    dump_text("dest = "); dest.dump(log,align+1);
+    dump_text1("source = "); source.dump(log,align+1);
+    dump_text1("dest = "); dest.dump(log,align+1);
     //_s_ptr_property__(PduDestAddress,dests)
     dump_uint(esmClass);
     dump_uint(registredDelivery);
     dump_uint(dataCoding);
     --align;
-    dump_text("} //PduPartSm");
+    dump_text1("} //PduPartSm");
   }
 };
 
@@ -1077,13 +1078,13 @@ struct PduDataSm
   }
   inline void dump(__LOG__ log,int align = 0)
   {
-    dump_text("PduDataSm{");
+    dump_text1("PduDataSm{");
     header.dump(log,align+1);
     ++align;
     data.dump(log,align);
     optional.dump(log,align);
     --align;
-    dump_text("} //PduDataSm");
+    dump_text1("} //PduDataSm");
   }
 };
 
@@ -1101,13 +1102,13 @@ struct PduQuerySm
   }
   inline void dump(__LOG__ log,int align = 0)
   {
-    dump_text("PduQuerySm{");
+    dump_text1("PduQuerySm{");
     header.dump(log,align+1);
     ++align;
     dump_cstr(messageId);
-    dump_text("source = "); source.dump(log,align);
+    dump_text1("source = "); source.dump(log,align);
     --align;
-    dump_text("} //PduQuerySm");
+    dump_text1("} //PduQuerySm");
   }
 };
 
@@ -1129,7 +1130,7 @@ struct PduQuerySmResp
   }
   inline void dump(__LOG__ log,int align = 0)
   {
-    dump_text("PduQuerySmResp{");
+    dump_text1("PduQuerySmResp{");
     header.dump(log,align+1);
     ++align;
     dump_cstr(messageId);
@@ -1137,7 +1138,7 @@ struct PduQuerySmResp
     dump_uint(messageState);
     dump_uint(errorCode);
     --align;
-    dump_text("} //PduQuerySmResp");
+    dump_text1("} //PduQuerySmResp");
   }
 };
 
@@ -1160,11 +1161,11 @@ struct PduCancelSm
   }
   inline void dump(__LOG__ log,int align = 0)
   {
-    dump_text("PduCancelSm{");
+    dump_text1("PduCancelSm{");
     header.dump(log,align+1);
     ++align;
     --align;
-    dump_text("} //PduCancelSm");
+    dump_text1("} //PduCancelSm");
   }
 };
 
@@ -1205,18 +1206,18 @@ struct PduReplaceSm
   }
   inline void dump(__LOG__ log,int align = 0)
   {
-    dump_text("PduReplaceSm{");
+    dump_text1("PduReplaceSm{");
     header.dump(log,align+1);
     ++align;
     dump_cstr(messageId);
-    dump_text("source = "); source.dump(log,align+1);
+    dump_text1("source = "); source.dump(log,align+1);
     dump_cstr(scheduleDeliveryTime);
     dump_cstr(validityPeriod);
     dump_uint(registredDelivery);
     dump_uint(smDefaultMsgId);
     dump_ostr(shortMessage);
     --align;
-    dump_text("} //PduReplaceSm");
+    dump_text1("} //PduReplaceSm");
   }
 };
 
@@ -1236,14 +1237,14 @@ struct PduAlertNotification
   }
   inline void dump(__LOG__ log,int align = 0)
   {
-    dump_text("PduAlertNotification{");
+    dump_text1("PduAlertNotification{");
     header.dump(log,align+1);
     ++align;
     source.dump(log,align);
     esme.dump(log,align);
     optional.dump(log,align);
     --align;
-    dump_text("} //PduAlertNotification");
+    dump_text1("} //PduAlertNotification");
   }
 };
 
@@ -1412,6 +1413,6 @@ static inline void disposePdu(SmppHeader* _pdu)
   }
 }
 
-};
-};
+}
+}
 #endif

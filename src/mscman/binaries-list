@@ -2,4 +2,4 @@
 # this file contains binaries definitions
 
 # binary name source name libraries         
-mscman/MscManTest    MscManagerTest -ldl -lmscman -ldb -lutil-config -lutil-xml -lutil -lcore-buffers -lcore-threads -lthread -lcore-buffers -lxerces-c $(__LIBRARIES) -lrt -llogger
+mscman/MscManTest    MscManagerTest -ldl -lmscman -ldb -lutil-config -lutil-xml -lutil -lcore-buffers -lcore-threads -lthread -lcore-buffers $(XERCES_LIB) $(__LIBRARIES) -lrt -llogger

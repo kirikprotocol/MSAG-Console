@@ -115,9 +115,9 @@ protected:
 #endif
 };//Event
 
-};//synchronization
-};//core
-};//smsc
+}//synchronization
+}//core
+}//smsc
 
 
 #endif

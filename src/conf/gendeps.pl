@@ -67,7 +67,10 @@ while(<IN>)
     print OUT "$builddir/lib/lib$l.a : __emptylib__\n";#.calclibdeps($l,"$srcdir/$lpath")."\n";
     print OUT "\t\@cd $srcdir/$lpath;make \$@\n\n";
   }
-  my $dep=`g++ -MM $ENV{GCCFLAGS} $srcdir/$pdir/$src.cpp`;
+  my $gccflags=$ENV{GCCFLAGS};
+  $gccflags=~s/(?<=\s)\+w2?\s//gsm;
+#  print STDERR "Exec:g++ -MM $gccflags $srcdir/$pdir/$src.cpp\n";
+  my $dep=`g++ -MM $gccflags $srcdir/$pdir/$src.cpp`;
   print OUT "$builddir/obj/lib$lib/$dep" if $dep;
   print OUT "\n\n";
 }

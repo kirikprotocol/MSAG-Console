@@ -69,9 +69,9 @@ protected:
   int checkState(int mode,SockArray& ready,SockArray& error,int timeout);
 };
 
-};//network
-};//core
-};//smsc
+}//network
+}//core
+}//smsc
 
 
 #endif

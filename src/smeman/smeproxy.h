@@ -73,7 +73,7 @@ public:
   virtual SmscCommand getCommand() = 0;
   virtual SmeProxyState getState() const = 0;
   virtual void init() = 0;
-  virtual SmeProxyPriority getPriority() {return SmeProxyPriorityDefault;};
+  virtual SmeProxyPriority getPriority()const {return SmeProxyPriorityDefault;};
   virtual void setPriority(SmeProxyPriority){};
   virtual bool hasInput() const = 0;
   virtual void attachMonitor(ProxyMonitor* monitor) = 0; // for detach monitor call with NULL
@@ -102,7 +102,7 @@ public:
   virtual void disconnect(){};
 };
 
-}; // namespace smeman
-}; // namespace smsc
+} // namespace smeman
+} // namespace smsc
 
 #endif

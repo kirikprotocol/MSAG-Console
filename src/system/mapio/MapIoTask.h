@@ -22,15 +22,15 @@ namespace smsc{
 namespace logger{
 extern smsc::logger::Logger* _map_cat;
 extern smsc::logger::Logger* _mapdlg_cat;
-};
-};
+}
+}
 
 using namespace smsc::util;
-#define __map_trace2__(format,args...) __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, format,##args)
+#define __map_trace2__(format,...) __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, format,__VA_ARGS__)
 #define __map_trace__(text) __debug__(smsc::logger::_map_cat,text)
-#define __map_warn2__(format,args...) __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN,format,##args)
+#define __map_warn2__(format,...) __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN,format,__VA_ARGS__)
 #define __map_warn__(text) __warn__(smsc::logger::_map_cat,text)
-#define __mapdlg_trace2__(format,args...) __log2__(smsc::logger::_mapdlg_cat,smsc::logger::Logger::LEVEL_DEBUG,format,##args)
+#define __mapdlg_trace2__(format,...) __log2__(smsc::logger::_mapdlg_cat,smsc::logger::Logger::LEVEL_DEBUG,format,__VA_ARGS__)
 #define __mapdlg_trace__(text) __debug__(smsc::logger::_mapdlg_cat,text)
 
 #include "../../core/buffers/XHash.hpp"
@@ -301,11 +301,11 @@ public:
   MapDialog* get() { return dialog; }
 };
 
-inline unsigned 
+inline unsigned
 MKDID(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn)
 {
-  return 
-    ((unsigned(dialogueid)&0xffff)|(unsigned(lssn)<<24)) 
+  return
+    ((unsigned(dialogueid)&0xffff)|(unsigned(lssn)<<24))
     & 0xff00ffff;
 }
 
@@ -380,7 +380,7 @@ public:
   static void SetUSSDSSN(int ssn) { ussdSSN = (ET96MAP_LOCAL_SSN_T)ssn; }
   static void setProxy( MapProxy* _proxy ) { proxy = _proxy; }
   MapProxy* getProxy() { return proxy; }
-  
+
   static void dropInstance()
   {
     MutexGuard g(sync_object);
@@ -474,13 +474,13 @@ public:
         __warn2__(smsc::logger::_mapdlg_cat,"Dialog locked too long id=%x.",item->dialogid_map);
         for (;!item->chain.empty();item->chain.pop_front())
         {
-	  //drop chain elements
+    //drop chain elements
         }
         _dropDialog( item->dialogid_map, item->ssn );
       } else {
         if( item->sms.get() && item->sms.get()->hasBinProperty(Tag::SMSC_CONCATINFO) ) {
           // check if it's really next part of concatenated message
-          if( !cmd->get_sms()->hasBinProperty(Tag::SMSC_CONCATINFO) ) 
+          if( !cmd->get_sms()->hasBinProperty(Tag::SMSC_CONCATINFO) )
             throw NextMMSPartWaiting("Waiting next part of concat message");
           if( item->sms.get()->getConcatMsgRef() != cmd->get_sms()->getConcatMsgRef() )
             throw NextMMSPartWaiting("Waiting next part of other concat message");
@@ -551,7 +551,7 @@ public:
     MutexGuard g(sync);
     _dropDialog(dialogueid,ssn);
   }
-  
+
   void _dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid,unsigned ssn){
     MapDialog* item = 0;
     if ( hash_.Get(MKDID(dialogueid,ssn),item) ){

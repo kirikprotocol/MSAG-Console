@@ -104,7 +104,8 @@ deps:
 	    for i in $$XXXX ; do \
 	    printf "%s" "$(SMSC_BUILDDIR)/obj/$(LIBRARY)/" >> \
 	    $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.deps; \
-		gcc -MM $(CXXFLAGS) $(SMSC_SRCDIR)/$(PACKAGEDIR)/$$i.cpp >>\
+	    OPT=`perl -e '$$_="$(CXXFLAGS)";s/(?<=\s)\+w2?\s//g;print $$_;'`; \
+		gcc -MM $$OPT $(SMSC_SRCDIR)/$(PACKAGEDIR)/$$i.cpp >>\
 		      $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.deps; \
 	    done; \
 	fi
@@ -128,6 +129,7 @@ __emptylib__:
 
 $(SMSC_BUILDDIR)/obj/$(LIBRARY)/%.o:$(SMSC_SRCDIR)/$(PACKAGEDIR)/%.cpp
 	@echo "compiling $<"
+#	@echo @$(CXX) $(CXXFLAGS) -c -o $@ $< 1>&2
 	@$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 #$(SMSC_BUILDDIR)/obj/*/%.o: $(SMSC_SRCDIR)/*/%.cpp

@@ -217,7 +217,7 @@ __synchronized__
 static
 RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& xcmp,vector<string>* trace_ )
 {
-  __trace2__("findInSrcTreeRecurse");
+  __trace__("findInSrcTreeRecurse");
   print(node->record,"\tnode->record");
   //print(r,"\tr");
   bool strong = false;
@@ -236,7 +236,7 @@ RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& xcm
   {
     if ( !strong )
     {
-      __trace2__("weak eqaul");
+      __trace__("weak eqaul");
       RouteRecord* rec;
       int left = 1;
       int right = node->child.size();
@@ -269,7 +269,7 @@ RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& xcm
 static
 RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& xcmp,vector<string>* trace_ )
 {
-  __trace2__("findInTreeRecurse");
+  __trace__("findInTreeRecurse");
   print(node->record,"\tnode->record");
   //print(r,"\tr");
   bool strong = false;
@@ -289,7 +289,7 @@ RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& xcmp,vect
   {
     if ( !strong )
     {
-      __trace2__("weak");
+      __trace__("weak");
     find_child:
       // find by dest
       RouteRecord* rec;
@@ -360,7 +360,7 @@ RouteRecord* findInTree(RouteTreeNode* node,
                         const Address* dest,
                         vector<string>* trace_)
 {
-  __trace2__("*** findInTree ***");
+  __trace__("*** findInTree ***");
   int cmp = 0;
   RouteRecord r;
   r.info.source = *source;
@@ -412,7 +412,7 @@ void dump(RouteTreeNode* node,int step)
 static
 int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<string>* trace_)
 {
-  __trace2__("addRouteIntoSrcTreeRecurse");
+  __trace__("addRouteIntoSrcTreeRecurse");
   print(node->record,"\tnode->record");
   print(rec,"\trec");
   bool strong = false;
@@ -449,7 +449,7 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<st
         }
       }
       if ( !conflicted ) {
-        __trace2__("*** add alternate src proxy ***");
+        __trace__("*** add alternate src proxy ***");
         rec->alternate_pair = node->record;
         node->record = rec;
         return 0;
@@ -457,7 +457,7 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<st
     }
     else //  weak
     {
-      __trace2__("week equal");
+      __trace__("week equal");
       int left = 1;
       int right = node->child.size();
       if ( right > 0 ) for(;right>=left;)
@@ -472,7 +472,7 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<st
         //}
         //else break;
       }
-      __trace2__("*** add src element ***");
+      __trace__("*** add src element ***");
       RouteSrcTreeNode* newSrcNode = new RouteSrcTreeNode;
       newSrcNode->record = rec;
       node->child.push_back(newSrcNode);
@@ -486,7 +486,7 @@ static
 int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec,vector<string>* trace_)
 {
   __require__(node != 0);
-  __trace2__("addRouteIntoTreeRecurse");
+  __trace__("addRouteIntoTreeRecurse");
   print(node->record,"\tnode->record");
   print(rec,"\trec");
   //if ( node->alias ) print(*node->alias,"node->alias");
@@ -520,14 +520,14 @@ int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec,vector<string>*
       }
       /*else
       {*/
-      __trace2__("*** add src element ***");
+      __trace__("*** add src element ***");
         RouteSrcTreeNode* newSrcNode = new RouteSrcTreeNode;
         newSrcNode->record = rec;
         node->sources.push_back(newSrcNode);
         return 0;
       //}
     }
-    __trace2__("weak equal:")
+    __trace__("weak equal:")
     if (node->record->dest_def > rec->dest_def)
     {
       __unreachable__("incorrect tree");
@@ -576,7 +576,7 @@ int addRouteIntoTree(RouteTreeNode* node,RouteRecord* rec,vector<string>* trace_
 
 void RouteManager::commit(bool traceit)
 {
-  __trace2__("commit!");
+  __trace__("commit!");
   int count = 0;
   RouteRecord* r = new_first_record;
   for ( ; r != 0; r = r->next ) { ++count; }
@@ -738,5 +738,5 @@ SmeProxy* RouteManager::getSmeProxy(int idx)
 {
 }*/
 
-}; // namespace router
-}; // namespace smsc
+} // namespace router
+} // namespace smsc

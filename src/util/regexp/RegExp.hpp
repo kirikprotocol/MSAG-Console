@@ -542,8 +542,8 @@ int RELibMatch(RELib& relib,MatchList& ml,const RECHAR* name,const RECHAR* start
 int RELibMatch(RELib& relib,MatchList& ml,const RECHAR* name,const RECHAR* start,const RECHAR* end);
 #endif
 
-}; //namespace
-};
-};
+} //namespace
+}
+}
 
 #endif

@@ -195,7 +195,7 @@ inline bool convertSarToUdh(SMS& sms)
   return true;
 }
 
-}; //util
-}; //smsc
+} //util
+} //smsc
 
 #endif

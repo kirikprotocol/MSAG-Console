@@ -122,8 +122,8 @@ public:
 
 };//Socket
 
-};//network
-};//core
-};//smsc
+}//network
+}//core
+}//smsc
 
 #endif

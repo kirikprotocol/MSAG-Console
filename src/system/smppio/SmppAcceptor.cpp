@@ -48,6 +48,6 @@ int SmppAcceptor::Execute()
   return 0;
 }
 
-};//smppio
-};//system
-};//smsc
+}//smppio
+}//system
+}//smsc

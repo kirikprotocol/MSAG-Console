@@ -45,8 +45,8 @@ protected:
   Mutex mtxAdd,mtxRemove;
 };//SocketsManager
 
-};//smppio
-};//system
-};//smsc
+}//smppio
+}//system
+}//smsc
 
 #endif

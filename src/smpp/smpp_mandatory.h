@@ -530,7 +530,7 @@ static inline SmppHeader* fetchSmppPdu(SmppStream* stream)
     return 0;
 }
 
-};
-};
+}
+}
 
 #endif

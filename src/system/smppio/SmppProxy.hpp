@@ -6,6 +6,7 @@
 #include "core/buffers/IntHash.hpp"
 #include <list>
 #include "core/buffers/PriorityQueue.hpp"
+#include "core/buffers/CyclicQueue.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "system/smppio/SmppSocket.hpp"
@@ -318,10 +319,10 @@ public:
       {
         proxyType=proxyTransmitter;
         smppReceiverSocket=0;
-        __trace2__("SmppProxy: downgrade to transmitter");
+        __trace__("SmppProxy: downgrade to transmitter");
       }else if(ct==ctTransmitter && proxyType==proxyTransceiver)
       {
-        __trace2__("SmppProxy: downgrade to receiver");
+        __trace__("SmppProxy: downgrade to receiver");
         proxyType=proxyReceiver;
         smppTransmitterSocket=0;
       }
@@ -367,7 +368,7 @@ protected:
   std::string id;
   SmeIndex smeIndex;
   smsc::core::buffers::Array<SmscCommand> inqueue;
-  smsc::core::buffers::PriorityQueue<SmscCommand,Array<SmscCommand>,0,31> outqueue;
+  smsc::core::buffers::PriorityQueue<SmscCommand,smsc::core::buffers::CyclicQueue<SmscCommand>,0,31> outqueue;
 
   struct ControlItem{
     time_t submitTime;
@@ -524,9 +525,9 @@ bool SmppProxy::CheckValidOutgoingCmd(const SmscCommand& cmd)
 }
 
 
-};//smppio
-};//system
-};//smsc
+}//smppio
+}//system
+}//smsc
 
 
 #endif

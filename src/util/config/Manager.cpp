@@ -32,9 +32,9 @@ Manager::Manager()
   DOM_Document document = parse(parser, config_filename.get());
   if (!document.isNull())
   {
-    __trace2__("reading config...\n");
+    __trace__("reading config...");
     DOM_Element elem = document.getDocumentElement();
-    __trace2__("config readed\n");
+    __trace__("config readed");
     config.parse(elem);
     __trace2__("parsed %u ints, %u booleans, %u strings\n",
                config.intParams.GetCount(),
