@@ -104,6 +104,7 @@
     <param name="defaultDataCoding" type="string">DEFAULT</param>
     <param name="defaultReport" type="string">NONE</param>
     <param name="defaultHide" type="bool">true</param>
+    <param name="defaultUssdIn7Bit" type="bool">false</param>
     <param name="defaultHideModifiable" type="bool">false</param>
     <param name="defaultDivertModifiable" type="bool">false</param>
     <param name="protocol_id" type="int">34</param>
