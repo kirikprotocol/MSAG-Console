@@ -531,7 +531,17 @@ public:
       its.li=queue.insert(d);
       its.mi=timedQueue.end();
       imap.insert(Id2IteratorsMap::value_type(d.id,its));
-      if(!inTimeLine && queue.begin()->expDate>sctime)headTime=sctime;
+      if(!inTimeLine)
+      {
+        time_t expDate=queue.begin()->expDate;
+        if(expDate>sctime)
+        {
+          headTime=sctime;
+        }else
+        {
+          headTime=expDate;
+        }
+      }
       queueSize++;
       return true;
     }
