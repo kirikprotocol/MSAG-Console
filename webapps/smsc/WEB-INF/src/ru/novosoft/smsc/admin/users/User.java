@@ -167,6 +167,8 @@ public class User implements Principal
 	public void setRoles(String[] roles)
 	{
 		this.roles = roles;
+		if (roles == null)
+			roles = new String[0];
 	}
 
 	public String getFirstName()
