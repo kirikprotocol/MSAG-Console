@@ -650,15 +650,16 @@ __synchronized__
   
   if ( trace_enabled_ ) {
     ostringstream ost;
-    ost << "lookup for alternative route with src proxy: '" << 
-      (srcidx?sme_table->getSmeInfo(srcidx).systemId:string("default")) << "'";
+    ost << "lookup for alternative route with src proxy: '" << srcidx << ":"  
+      << (srcidx?sme_table->getSmeInfo(srcidx).systemId:string("default")) << "'";
     trace_.push_back(ost.str());
   }
 
   for ( ; rec != 0 ; rec = rec->alternate_pair ) {
     if ( trace_enabled_ ) {
       ostringstream ost;
-      ost << "check alternative route with src proxy: '" << rec->info.srcSmeSystemId  << "'";
+      ost << "check alternative route with src proxy: '" << 
+        (rec->srcProxyIdx?rec->info.srcSmeSystemId:string("default")) << "'";
       trace_.push_back(ost.str());
     }
     if ( srcidx != 0 && rec->srcProxyIdx == srcidx ) {
