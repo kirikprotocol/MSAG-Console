@@ -32,6 +32,10 @@
   <td><input class=txt name=protocolId value="<%=StringEncoderDecoder.encode(bean.getProtocolId())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
+  <th>Validity period (days)</th>
+  <td><input class=txt name=daysValid value="<%=StringEncoderDecoder.encode(bean.getDaysValid())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
   <th>Unresponded messages max</th>
   <td><input class=txt name=unrespondedMessagesMax value="<%=StringEncoderDecoder.encode(bean.getUnrespondedMessagesMax())%>"></td>
 </tr>
@@ -56,8 +60,8 @@
   <td><input class=txt name=outputQueueSize value="<%=StringEncoderDecoder.encode(bean.getOutputQueueSize())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Max events per message</th>
-  <td><input class=txt name=maxEventsPerMessage value="<%=StringEncoderDecoder.encode(bean.getMaxEventsPerMessage())%>"></td>
+  <th>Max rows per message</th>
+  <td><input class=txt name=maxRowsPerMessage value="<%=StringEncoderDecoder.encode(bean.getMaxRowsPerMessage())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><label for=inform>Force inform</label></th>
@@ -66,6 +70,10 @@
 <tr class=row<%=rowN++&1%>>
   <th><label for=notify>Force notify</label></th>
   <td><input class=check type=checkbox name=forceNotify id=notify value=true <%=bean.isForceNotify() ? "checked" : ""%>></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th><label for=separate>Force separate</label></th>
+  <td><input class=check type=checkbox name=forceSeparate id=separate value=true <%=bean.isForceSeparate() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Tasks thread pool max</th>

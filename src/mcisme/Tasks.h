@@ -34,36 +34,57 @@ namespace smsc { namespace mcisme
 
     struct Message
     {
-        static int maxEventsPerMessage;
-
         uint64_t    id;
         uint32_t    attempts;
         std::string abonent, message, smsc_id;
-        int         eventCount;
         bool        replace, notification;
+        int         rowsCount, eventsCount;
+
+        static int  maxRowsPerMessage;
         
-        Message(uint64_t id=0, const std::string& abonent="", const std::string& _message="",
-                const std::string& smsc_id="", bool replace=false, bool notification=false) 
-            : id(id), attempts(0), abonent(abonent), message(_message), smsc_id(smsc_id),
-              eventCount(Message::countEvents(_message)), replace(replace), notification(notification) {};
+        Message() { reset(); };
         Message(const Message& msg) 
-            : id(msg.id), attempts(msg.attempts), abonent(msg.abonent), message(msg.message), smsc_id(msg.smsc_id),
-              eventCount(msg.eventCount), replace(msg.replace), notification(msg.notification) {};
+            : id(msg.id), attempts(msg.attempts), abonent(msg.abonent), message(msg.message),
+              smsc_id(msg.smsc_id), replace(msg.replace), notification(msg.notification),
+              rowsCount(msg.rowsCount), eventsCount(msg.eventsCount) {};
         
         Message& operator=(const Message& msg) {
             id = msg.id; attempts = msg.attempts;
-            abonent = msg.abonent; message = msg.message;
-            smsc_id = msg.smsc_id; eventCount = msg.eventCount;
+            abonent = msg.abonent; message = msg.message; smsc_id = msg.smsc_id; 
             replace = msg.replace; notification = msg.notification;
+            rowsCount = msg.rowsCount; eventsCount  = msg.eventsCount; 
             return (*this);
         };
 
-        static int countEvents(const std::string& message);
-
-        bool addEvent(const MissedCallEvent& event, bool force=false);
-        bool isFull();
+        inline void reset(const std::string& _abonent="") {
+            id = 0; attempts = 0; this->abonent = _abonent;
+            message = ""; smsc_id = ""; replace = false; notification = false;
+            rowsCount = 0; eventsCount = 0; 
+        };
+        inline bool isFull() {
+            return (rowsCount >= Message::maxRowsPerMessage);
+        };
     };
     
+    class MessageFormatter
+    {
+    private:
+
+        bool                    separate;
+        Hash <uint32_t>         counters;
+        Array<MissedCallEvent>  events;
+
+        bool isLastFromCaller(int index);
+    
+    public:
+
+        MessageFormatter(bool _separate) : separate(_separate) {};
+
+        bool canAdd(const MissedCallEvent& event);
+        void addEvent(const MissedCallEvent& event);
+        void formatMessage(Message& message);
+    };
+
     static const uint8_t MESSAGE_WAIT_RESP  = 10; // ќжидает submit|replace responce или готова к доставке
     static const uint8_t MESSAGE_WAIT_RCPT  = 20; // ќжидает delivery reciept
 
@@ -72,17 +93,19 @@ namespace smsc { namespace mcisme
         WAIT_RCPT   = MESSAGE_WAIT_RCPT
     } MessageState;
 
-    static const uint8_t ABONENT_NONE_SERVICE =  0; 
-    static const uint8_t ABONENT_SUBSCRIPTION = 10; 
-    static const uint8_t ABONENT_NOTIFICATION = 20;
-    static const uint8_t ABONENT_FULL_SERVICE = 30; 
-    
-    typedef enum {
-        NONE_SERVICE = ABONENT_NONE_SERVICE,
-        SUBSCRIPTION = ABONENT_SUBSCRIPTION,
-        NOTIFICATION = ABONENT_NOTIFICATION,
-        FULL_SERVICE = ABONENT_FULL_SERVICE
-    } AbonentService;
+    struct AbonentProfile
+    {
+        bool inform, notify, separate;
+
+        AbonentProfile(bool _inform=false, bool _notify=false, bool _separate=false)
+            : inform(_inform), notify(_notify), separate(_separate) {};
+        AbonentProfile(const AbonentProfile& pro)
+            : inform(pro.inform), notify(pro.notify), separate(pro.separate) {};
+        AbonentProfile& operator=(const AbonentProfile& pro) {
+            inform = pro.inform; notify = pro.notify; separate = pro.separate;
+            return (*this);
+        };
+    };
     
     struct TaskEvent : public MissedCallEvent
     {
@@ -104,8 +127,7 @@ namespace smsc { namespace mcisme
         static Statistics*  statistics;
         static Logger*      logger;
         static uint64_t     currentId, sequenceId;
-        static bool         bInformAll, bNotifyAll;
-
+        
         bool                bNeedReplace;
         std::string         abonent, cur_smsc_id;
         uint64_t            currentMessageId;
@@ -117,16 +139,17 @@ namespace smsc { namespace mcisme
 
     public:
 
-        static void         init(DataSource* _ds, Statistics* _statistics,
-                                 int eventsPerMessage, bool inform=false, bool notify=false);
+        static bool         bInformAll, bNotifyAll, bSeparateAll;
+
+        static void         init(DataSource* _ds, Statistics* _statistics, int rowsPerMessage);
         static uint64_t     getNextId(Connection* connection=0);
         
         static bool         getMessage(const char* smsc_id, Message& message, Connection* connection=0);
         static Hash<Task *> loadupAll();
 
-        static bool delService(const char* abonent);
-        static void setService(const char* abonent, const AbonentService& service);
-        static AbonentService getService(const char* abonent);
+        static bool delProfile(const char* abonent);
+        static void setProfile(const char* abonent, const AbonentProfile& profile);
+        static AbonentProfile getProfile(const char* abonent);
 
         Task(const std::string& _abonent)  
             : bNeedReplace(false), abonent(_abonent), cur_smsc_id(""), currentMessageId(0) {};

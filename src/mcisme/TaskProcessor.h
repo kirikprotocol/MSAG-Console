@@ -254,7 +254,7 @@ namespace smsc { namespace mcisme
 
         smsc::logger::Logger *logger;
 
-        int     protocolId;
+        int     protocolId, daysValid;
         char    *svcType, *address;
 
         ThreadManager       eventManager;
@@ -312,6 +312,7 @@ namespace smsc { namespace mcisme
         TaskProcessor(ConfigView* config);
         virtual ~TaskProcessor();
 
+        int getDaysValid()       { return daysValid;  };
         int getProtocolId()      { return protocolId; };
         const char* getSvcType() { return (svcType) ? svcType:"MCISme"; };
         const char* getAddress() { return address; };

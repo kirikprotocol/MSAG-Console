@@ -18,15 +18,17 @@ public class Options extends MCISmeBean
   private String address = "";
   private String svcType = "";
   private int protocolId = 0;
+  private int daysValid = 1;
   private int unrespondedMessagesMax = 0;
   private int unrespondedMessagesSleep = 0;
   private String responceWaitTime = "";
   private String receiptWaitTime = "";
   private int inputQueueSize=0;
   private int outputQueueSize=0;
-  private int maxEventsPerMessage=0;
+  private int maxRowsPerMessage=0;
   private boolean forceInform = false;
   private boolean forceNotify = false;
+  private boolean forceSeparate = false;
 
   private int smppThreadPoolMax = 0;
   private int smppThreadPoolInit = 0;
@@ -70,9 +72,10 @@ public class Options extends MCISmeBean
         receiptWaitTime = getConfig().getString("MCISme.receiptWaitTime");
         inputQueueSize = getConfig().getInt("MCISme.inputQueueSize");
         outputQueueSize = getConfig().getInt("MCISme.outputQueueSize");
-        maxEventsPerMessage = getConfig().getInt("MCISme.maxEventsPerMessage");
+        maxRowsPerMessage = getConfig().getInt("MCISme.maxRowsPerMessage");
         forceInform = getConfig().getBool("MCISme.forceInform");
         forceNotify = getConfig().getBool("MCISme.forceNotify");
+        forceSeparate = getConfig().getBool("MCISme.forceSeparate");
 
         smppThreadPoolMax = getConfig().getInt("MCISme.SMPPThreadPool.max");
         smppThreadPoolInit = getConfig().getInt("MCISme.SMPPThreadPool.init");
@@ -124,9 +127,10 @@ public class Options extends MCISmeBean
     getConfig().setString("MCISme.receiptWaitTime", receiptWaitTime);
     getConfig().setInt("MCISme.inputQueueSize", inputQueueSize);
     getConfig().setInt("MCISme.outputQueueSize", outputQueueSize);
-    getConfig().setInt("MCISme.maxEventsPerMessage", maxEventsPerMessage);
+    getConfig().setInt("MCISme.maxEventsPerMessage", maxRowsPerMessage);
     getConfig().setBool("MCISme.forceInform", forceInform);
     getConfig().setBool("MCISme.forceNotify", forceNotify);
+    getConfig().setBool("MCISme.forceSeparate", forceSeparate);
 
     getConfig().setInt("MCISme.SMPPThreadPool.max", smppThreadPoolMax);
     getConfig().setInt("MCISme.SMPPThreadPool.init", smppThreadPoolInit);
@@ -175,6 +179,25 @@ public class Options extends MCISmeBean
     } catch (NumberFormatException e) {
       logger.error("Invalid MCISme.ProtocolId parameter value: \"" + protocolId + '"', e);
       this.protocolId = 0;
+    }
+  }
+
+  public int getDaysValidInt() {
+    return daysValid;
+  }
+  public void setDaysValidInt(int daysValid) {
+    this.daysValid = daysValid;
+  }
+  public String getDaysValid() {
+    return String.valueOf(daysValid);
+  }
+  public void setDaysValid(String daysValid)
+  {
+    try {
+      this.daysValid = Integer.decode(daysValid).intValue();
+    } catch (NumberFormatException e) {
+      logger.error("Invalid MCISme.DaysValid parameter value: \"" + daysValid + '"', e);
+      this.daysValid = 1;
     }
   }
 
@@ -338,21 +361,21 @@ public class Options extends MCISmeBean
     }
   }
 
-  public int getMaxEventsPerMessageInt() {
-    return maxEventsPerMessage;
+  public int getMaxRowsPerMessageInt() {
+    return maxRowsPerMessage;
   }
-  public void setMaxEventsPerMessageInt(int maxEventsPerMessage) {
-    this.maxEventsPerMessage = maxEventsPerMessage;
+  public void setMaxRowsPerMessageInt(int maxRowsPerMessage) {
+    this.maxRowsPerMessage = maxRowsPerMessage;
   }
-  public String getMaxEventsPerMessage() {
-    return String.valueOf(maxEventsPerMessage);
+  public String getMaxRowsPerMessage() {
+    return String.valueOf(maxRowsPerMessage);
   }
-  public void setMaxEventsPerMessage(String maxEventsPerMessage)
+  public void setMaxRowsPerMessage(String maxRowsPerMessage)
   {
     try {
-      this.maxEventsPerMessage = Integer.decode(maxEventsPerMessage).intValue();
+      this.maxRowsPerMessage = Integer.decode(maxRowsPerMessage).intValue();
     } catch (NumberFormatException e) {
-      logger.debug("Invalid int MCISme.maxEventsPerMessage parameter value: " + maxEventsPerMessage + '"', e);
+      logger.debug("Invalid int MCISme.maxRowsPerMessage parameter value: " + maxRowsPerMessage + '"', e);
     }
   }
 
@@ -362,12 +385,17 @@ public class Options extends MCISmeBean
   public void setForceInform(boolean forceInform) {
     this.forceInform = forceInform;
   }
-
   public boolean isForceNotify() {
     return forceNotify;
   }
   public void setForceNotify(boolean forceNotify) {
     this.forceNotify = forceNotify;
+  }
+  public boolean isForceSeparate() {
+    return forceSeparate;
+  }
+  public void setForceSeparate(boolean forceSeparate) {
+    this.forceSeparate = forceSeparate;
   }
 
   public String getResponceWaitTime() {

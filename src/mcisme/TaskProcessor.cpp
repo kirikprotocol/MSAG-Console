@@ -99,7 +99,7 @@ void TaskProcessor::initDataSource(ConfigView* config)
 TaskProcessor::TaskProcessor(ConfigView* config)
     : Thread(), MissedCallListener(), AdminInterface(), 
         logger(Logger::getInstance("smsc.mcisme.TaskProcessor")), 
-        protocolId(0), svcType(0), address(0), messageSender(0), ds(0),
+        protocolId(0), daysValid(1), svcType(0), address(0), messageSender(0), ds(0),
         dsStatConnection(0), statistics(0), maxInQueueSize(10000), maxOutQueueSize(10000),
         bStarted(false), bInQueueOpen(false), bOutQueueOpen(false)
 {
@@ -113,6 +113,8 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     catch(ConfigException& exc) { protocolId = 0; };
     try { svcType = config->getString("SvcType"); }
     catch(ConfigException& exc) { svcType = 0; };
+    try { daysValid = config->getInt("DaysValid"); }
+    catch(ConfigException& exc) { daysValid = 1; };
     
     responcesTracker.init(this, config);
 
@@ -122,17 +124,19 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     std::auto_ptr<ConfigView> eventsThreadPoolCfgGuard(config->getSubConfig("SMPPThreadPool"));
     eventManager.init(eventsThreadPoolCfgGuard.get()); // loads up thread pool for events
     
-    bool inform = false;
-    try { inform = config->getBool("forceInform"); } catch (...) { inform = false;
+    try { Task::bInformAll = config->getBool("forceInform"); } catch (...) { Task::bInformAll = false;
         smsc_log_warn(logger, "Parameter <MCISme.forceInform> missed. Force inform for all abonents is off");
     }
-    bool notify = false;
-    try { notify = config->getBool("forceNotify"); } catch (...) { notify = false;
+    try { Task::bNotifyAll = config->getBool("forceNotify"); } catch (...) { Task::bNotifyAll = false;
         smsc_log_warn(logger, "Parameter <MCISme.forceNotify> missed. Force notify for all abonents is off");
     }
-    int eventsPerMessage = 5;
-    try { eventsPerMessage = config->getInt("maxEventsPerMessage"); } catch (...) { eventsPerMessage = 5;
-        smsc_log_warn(logger, "Parameter <MCISme.maxEventsPerMessage> is invalid. Using default %d", eventsPerMessage);
+    try { Task::bSeparateAll = config->getBool("forceSeparate"); } catch (...) { Task::bSeparateAll = false;
+        smsc_log_warn(logger, "Parameter <MCISme.forceSeparate> missed. Force separate for all abonents is off");
+    }
+
+    int rowsPerMessage = 5;
+    try { rowsPerMessage = config->getInt("maxRowsPerMessage"); } catch (...) { rowsPerMessage = 5;
+        smsc_log_warn(logger, "Parameter <MCISme.maxRowsPerMessage> is invalid. Using default %d", rowsPerMessage);
     }
     
     std::auto_ptr<ConfigView> dsIntCfgGuard(config->getSubConfig("DataSource"));
@@ -142,7 +146,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     statistics = new StatisticsManager(dsStatConnection);
     if (statistics) statistics->Start();
     
-    Task::init(ds, statistics, eventsPerMessage, inform, notify);
+    Task::init(ds, statistics, rowsPerMessage);
 
     smsc_log_info(logger, "Load success.");
 }
@@ -257,8 +261,8 @@ void TaskProcessor::loadupTasks()
         smsc_log_debug(logger, "Loaded task for abonent: %s. Events=%d", abonent, task->eventsCount());
 
         if (task->formatMessage(message)) {
-            smsc_log_debug(logger, "%s message put to out queue. Message events=%d",
-                           message.replace ? "Replace":"Send", message.eventCount);
+            smsc_log_debug(logger, "%s message put to out queue. Message events=%d rows=%d",
+                           message.replace ? "Replace":"Send", message.eventsCount, message.rowsCount);
             putToOutQueue(message, true);
         }
         else smsc_log_warn(logger, "Task for abonent: %s has no message to send", abonent);
@@ -394,9 +398,13 @@ void TaskProcessor::processEvent(const MissedCallEvent& event)
     const char* abonent = event.to.c_str();
     checkAddress(abonent);
     
-    AbonentService service = Task::getService(abonent);
-    //smsc_log_debug(logger, "Abonent %s service type=%d", abonent, service);
-    if (service == FULL_SERVICE || service == SUBSCRIPTION)
+    bool inform = Task::bInformAll;
+    if (!inform) {
+        AbonentProfile profile = Task::getProfile(abonent);
+        inform = profile.inform;
+    }
+    
+    if (inform)
     {
         Message message;
         {
@@ -529,7 +537,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                     {
                         if (message.isFull() || bWasReceipted) {
                             // set new current message & skip task events for old message
-                            task->waitReceipt(message.eventCount, smsc_id);
+                            task->waitReceipt(message.eventsCount, smsc_id);
                         }
                         else {
                             // set new current message but keep old task events
@@ -540,7 +548,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                         if (task->formatMessage(messageToSend))
                         { 
                             smsc_log_debug(logger, "Task has %d events more to send for abonent: %s (replace error)",
-                                           messageToSend.eventCount, messageToSend.abonent.c_str());
+                                           messageToSend.eventsCount, messageToSend.abonent.c_str());
                             isMessageToSend = true; messageToSend.replace = false;
                         } 
                         // if no more events to send => kill task
@@ -559,18 +567,18 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
         }
         else    // submit|replace was accepted by SMSC
         {
-            if (message.eventCount < task->eventsCount()) // some events were added to task
+            if (message.eventsCount < task->eventsCount()) // some events were added to task
             {
                 if (message.isFull() || bWasReceipted) // sent message is full or was receipted
                 {
                     // set new current message & skip task events for old message
-                    task->waitReceipt(message.eventCount, smsc_id);
+                    task->waitReceipt(message.eventsCount, smsc_id);
                     
                     // try send more events via submit next message 
                     if (task->formatMessage(messageToSend))
                     { 
                         smsc_log_debug(logger, "Task has %d events more to send for abonent: %s (%s)",
-                                       messageToSend.eventCount, messageToSend.abonent.c_str(), 
+                                       messageToSend.eventsCount, messageToSend.abonent.c_str(), 
                                        (bWasReceipted) ? "on receipt":"msg full");
                         isMessageToSend = true; messageToSend.replace = false;
                     } 
@@ -596,8 +604,8 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
             else // no events were added to task => set current message wait receipt & kill task
             {
                 if (message.isFull() || bWasReceipted) 
-                     task->waitReceipt(message.eventCount, smsc_id); // roll current
-                else task->waitReceipt(smsc_id);                     // do not roll current
+                     task->waitReceipt(message.eventsCount, smsc_id); // roll current
+                else task->waitReceipt(smsc_id);                      // do not roll current
                 needKillTask = true;
             }
         }
@@ -662,8 +670,12 @@ void TaskProcessor::processReceipt(Task* task, bool delivered, bool retry,
         
         if (!delivered || callers[i].length() <= 0) continue;
 
-        AbonentService service = Task::getService(callers[i].c_str());
-        if (service == FULL_SERVICE || service == NOTIFICATION)
+        bool notify = Task::bNotifyAll;
+        if (!notify) {
+            AbonentProfile profile = Task::getProfile(abonent.c_str());
+            notify = profile.notify;
+        }
+        if (notify)
         {
             Message message; message.abonent = callers[i]; 
             message.message = "Abonent "+abonent+" is online";

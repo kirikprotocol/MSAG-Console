@@ -16,6 +16,7 @@
         <param name="Address" type="string">555</param>
 	<param name="SvcType" type="string">MCISme</param>
         <param name="ProtocolId" type="int">111</param>
+	<param name="DaysValid"  type="int">1</param>
 	
 	<param name="unrespondedMessagesMax" type="int">5</param>
 	<param name="unrespondedMessagesSleep" type="int">20</param>
@@ -26,9 +27,10 @@
 	<param name="inputQueueSize"  type="int">1000</param>
 	<param name="outputQueueSize" type="int">1000</param>
 	
-	<param name="maxEventsPerMessage" type="int">5</param>
+	<param name="maxRowsPerMessage" type="int">5</param>
 	<param name="forceInform" type="bool">true</param>
 	<param name="forceNotify" type="bool">true</param>
+	<param name="forceSeparate" type="bool">false</param>
 			
         <section name="SMPPThreadPool">
             <param name="max" type="int">15</param>

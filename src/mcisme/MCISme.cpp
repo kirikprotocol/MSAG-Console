@@ -264,6 +264,7 @@ public:
             smsc_log_error(logger, "Invalid destination address '%s'", daStr ? daStr:"-");
             return false;
         }
+        time_t smsValidityDate = time(NULL) + processor.getDaysValid()*3600*24;
         
         if (message.replace)
         {
@@ -274,12 +275,12 @@ public:
             sm.get_source().set_numberingPlan(oa.plan);
             sm.get_source().set_value(oa.value);
             char timeBuffer[64];
-            cTime2SmppTime(time(NULL)+3600, timeBuffer); // TODO: define validityPeriod (time) here !
+            cTime2SmppTime(smsValidityDate, timeBuffer);
             sm.set_validityPeriod(timeBuffer);
-            cTime2SmppTime(time(NULL)+60*message.attempts, timeBuffer); // TODO: reschedule table for message.attempts
+            cTime2SmppTime(time(NULL)+60*message.attempts, timeBuffer);
             sm.set_scheduleDeliveryTime(timeBuffer);
             sm.set_registredDelivery(1);
-            sm.set_smDefaultMsgId(0); // ???
+            sm.set_smDefaultMsgId(0);
             sm.shortMessage.copy(message.message.c_str(), message.message.length());
             
             sm.get_header().set_commandLength(sm.size());
@@ -308,16 +309,15 @@ public:
             sm.get_message().set_protocolId(processor.getProtocolId());
             sm.get_message().set_priorityFlag(0);
             char timeBuffer[64];
-            cTime2SmppTime(time(NULL)+3600, timeBuffer); // TODO: define validityPeriod (time) here !
+            cTime2SmppTime(smsValidityDate, timeBuffer);
             sm.get_message().set_validityPeriod(timeBuffer);
-            cTime2SmppTime(time(NULL)+60*message.attempts, timeBuffer); // TODO: reschedule table for message.attempts
+            cTime2SmppTime(time(NULL)+60*message.attempts, timeBuffer);
             sm.get_message().set_scheduleDeliveryTime(timeBuffer);
             sm.get_message().set_registredDelivery((message.notification) ? 0:1);
             sm.get_message().set_replaceIfPresentFlag(0);
             sm.get_message().set_dataCoding(DataCoding::LATIN1);
-            sm.get_message().set_smDefaultMsgId(0); // ???
+            sm.get_message().set_smDefaultMsgId(0);
             sm.get_message().set_shortMessage(message.message.c_str(), message.message.length());
-            //sm.get_message().shortMessage.copy(message.message.c_str(), message.message.length());
             
             sm.get_header().set_commandLength(sm.size(false));
             sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);

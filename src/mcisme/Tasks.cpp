@@ -10,27 +10,30 @@ Statistics* Task::statistics = 0;
 
 uint64_t    Task::currentId  = 0;
 uint64_t    Task::sequenceId = 0;
-bool        Task::bInformAll = true;
-bool        Task::bNotifyAll = true;
+bool        Task::bInformAll   = true;
+bool        Task::bNotifyAll   = true;
+bool        Task::bSeparateAll = true;
 
-int         Message::maxEventsPerMessage = 5;
+int         Message::maxRowsPerMessage = 5;
 
 /* ----------------------- Access to message ids generation (MCI_MSG_SEQ) -------------------- */
 
 const char* GET_NEXT_SEQID_ID   = "GET_NEXT_SEQID_ID";
 const char* GET_NEXT_SEQID_SQL  = "SELECT MCISME_MSG_SEQ.NEXTVAL FROM DUAL";
 
-/* ----------------------- Access to abonents service (inform & notify) (MCISME_ABONENTS) ---- */
+/* ----------------------- Access to abonents profiles (inform, notify & separate) (MCISME_ABONENTS) ---- */
 
-const char* GET_ABONENT_SVC_ID  = "GET_ABONENT_SVC_ID";
-const char* SET_ABONENT_SVC_ID  = "SET_ABONENT_SVC_ID";
-const char* INS_ABONENT_SVC_ID  = "INS_ABONENT_SVC_ID";
-const char* DEL_ABONENT_SVC_ID  = "DEL_ABONENT_SVC_ID";
+const char* GET_ABONENT_PRO_ID  = "GET_ABONENT_PRO_ID";
+const char* SET_ABONENT_PRO_ID  = "SET_ABONENT_PRO_ID";
+const char* INS_ABONENT_PRO_ID  = "INS_ABONENT_PRO_ID";
+const char* DEL_ABONENT_PRO_ID  = "DEL_ABONENT_PRO_ID";
 
-const char* GET_ABONENT_SVC_SQL = "SELECT SERVICE FROM MCISME_ABONENTS WHERE ABONENT=:ABONENT";
-const char* SET_ABONENT_SVC_SQL = "UPDATE MCISME_ABONENTS SET SEVICE=:SERVICE WHERE ABONENT=:ABONENT";
-const char* INS_ABONENT_SVC_SQL = "INSERT INTO MCISME_ABONENTS (ABONENT, SERVICE) VALUES (:ABONENT, :SERVICE)";
-const char* DEL_ABONENT_SVC_SQL = "DELETE MCISME_ABONENTS WHERE ABONENT=:ABONENT";
+const char* GET_ABONENT_PRO_SQL = "SELECT INFORM, NOTIFY, SEPARATE FROM MCISME_ABONENTS WHERE ABONENT=:ABONENT";
+const char* SET_ABONENT_PRO_SQL = "UPDATE MCISME_ABONENTS SET "
+                                  "INFORM=:INFORM, NOTIFY=:NOTIFY, SEPARATE=:SEPARATE WHERE ABONENT=:ABONENT";
+const char* INS_ABONENT_PRO_SQL = "INSERT INTO MCISME_ABONENTS (ABONENT, INFORM, NOTIFY, SEPARATE) "
+                                  "VALUES (:ABONENT, :INFORM, :NOTIFY, :SEPARATE)";
+const char* DEL_ABONENT_PRO_SQL = "DELETE MCISME_ABONENTS WHERE ABONENT=:ABONENT";
 
 /* ----------------------- Access to current messages set (MCI_MSG_SET) ---------------------- */
 
@@ -87,14 +90,12 @@ const char* OBTAIN_RESULTSET_ERROR_MESSAGE  = "Failed to obtain result set for %
 
 /* ----------------------- Static part ----------------------- */
 
-void Task::init(DataSource* _ds, Statistics* _statistics,
-                int eventsPerMessage, bool inform, bool notify)
+void Task::init(DataSource* _ds, Statistics* _statistics, int rowsPerMessage)
 {
     Task::logger = Logger::getInstance("smsc.mcisme.Task");
     Task::ds = _ds; Task::statistics = _statistics;
     Task::currentId  = 0; Task::sequenceId = 0;
-    Message::maxEventsPerMessage = eventsPerMessage;
-    Task::bInformAll = inform; Task::bNotifyAll = notify;
+    Message::maxRowsPerMessage = rowsPerMessage;
 }
 uint64_t Task::getNextId(Connection* connection/*=0*/)
 {
@@ -162,14 +163,12 @@ bool Task::getMessage(const char* smsc_id, Message& message, Connection* connect
         ResultSet* rs = rsGuard.get();
         if (rs && rs->fetchNext())
         {
-            message.id       = rs->getUint64(1);
+            uint64_t msg_id  = rs->getUint64(1);
             uint8_t msgState = rs->getUint8(2);
-            //smsc_log_debug(logger, "Get message by smscId=%s st=%d", smsc_id, msgState);
             messageExists    = (msgState == WAIT_RCPT);
-            message.abonent  = rs->getString(3);
-            message.attempts = 0; message.eventCount = 0;
-            message.message = ""; message.smsc_id = smsc_id;
-            message.replace = false;
+            message.reset(rs->getString(3));
+            message.id       = msg_id; message.smsc_id  = smsc_id;
+            message.replace  = false;
         }
 
         if (connection && isConnectionGet) ds->freeConnection(connection);
@@ -227,7 +226,7 @@ Hash<Task *> Task::loadupAll()
     return tasks;
 }
 
-bool Task::delService(const char* abonent)
+bool Task::delProfile(const char* abonent)
 {
     __require__(ds);
 
@@ -239,17 +238,15 @@ bool Task::delService(const char* abonent)
         if (!connection) throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
 
         /* DELETE MCISME_ABONENTS WHERE ABONENT=:ABONENT */
-        Statement* delSvcStmt = connection->getStatement(DEL_ABONENT_SVC_ID, DEL_ABONENT_SVC_SQL);
-        if (!delSvcStmt)
-            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "delete abonent service");
+        Statement* delProStmt = connection->getStatement(DEL_ABONENT_PRO_ID, DEL_ABONENT_PRO_SQL);
+        if (!delProStmt)
+            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "delete abonent profile");
         
-        delSvcStmt->setString(1, abonent);
-        result = (delSvcStmt->executeUpdate()) ? true:false;
+        delProStmt->setString(1, abonent);
+        result = (delProStmt->executeUpdate()) ? true:false;
         
-        if (connection) {
-            connection->commit();
-            ds->freeConnection(connection);
-        }
+        connection->commit();
+        ds->freeConnection(connection);
     }
     catch (Exception& exc) {
         smsc_log_error(logger, "%s", exc.what());
@@ -259,7 +256,7 @@ bool Task::delService(const char* abonent)
     }
     return result;
 }
-void Task::setService(const char* abonent, const AbonentService& service)
+void Task::setProfile(const char* abonent, const AbonentProfile& profile)
 {
     __require__(ds);
 
@@ -269,30 +266,35 @@ void Task::setService(const char* abonent, const AbonentService& service)
         connection = ds->getConnection();
         if (!connection) throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
         
-        /* UPDATE MCISME_ABONENTS SET SEVICE=:SERVICE WHERE ABONENT=:ABONENT */
-        Statement* setSvcStmt = connection->getStatement(SET_ABONENT_SVC_ID, SET_ABONENT_SVC_SQL);
-        if (!setSvcStmt)
-            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "update abonent service");
+        /* UPDATE MCISME_ABONENTS SET INFORM=:INFORM, NOTIFY=:NOTIFY, SEPARATE=:SEPARATE WHERE ABONENT=:ABONENT */
+        Statement* setProStmt = connection->getStatement(SET_ABONENT_PRO_ID, SET_ABONENT_PRO_SQL);
+        if (!setProStmt)
+            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "update abonent profile");
+                                                    
+        setProStmt->setString(1, (profile.inform)   ? "Y":"N");
+        setProStmt->setString(2, (profile.notify)   ? "Y":"N");
+        setProStmt->setString(3, (profile.separate) ? "Y":"N");
+        setProStmt->setString(4, abonent);
         
-        setSvcStmt->setUint8 (1, (uint8_t)service);
-        setSvcStmt->setString(2, abonent);
-        if (!setSvcStmt->executeUpdate())
+        if (!setProStmt->executeUpdate())
         {
-            /* INSERT INTO MCISME_ABONENTS (ABONENT, SERVICE) VALUES (:ABONENT, :SERVICE) */
-            Statement* insSvcStmt = connection->getStatement(INS_ABONENT_SVC_ID, INS_ABONENT_SVC_SQL);
-            if (!insSvcStmt)
-                throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "insert abonent service");
+            /* INSERT INTO MCISME_ABONENTS (ABONENT, INFORM, NOTIFY, SEPARATE) 
+               VALUES (:ABONENT, :INFORM, :NOTIFY, :SEPARATE) */
+            Statement* insProStmt = connection->getStatement(INS_ABONENT_PRO_ID, INS_ABONENT_PRO_SQL);
+            if (!insProStmt)
+                throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "insert abonent profile");
             
-            insSvcStmt->setString(1, abonent);
-            insSvcStmt->setUint8 (2, (uint8_t)service);
-            if (!insSvcStmt->executeUpdate())
-                throw Exception("Failed to new insert service record for abonent: %s", abonent);
+            insProStmt->setString(1, abonent);
+            insProStmt->setString(2, (profile.inform)   ? "Y":"N");
+            insProStmt->setString(3, (profile.notify)   ? "Y":"N");
+            insProStmt->setString(4, (profile.separate) ? "Y":"N");
+
+            if (!insProStmt->executeUpdate())
+                throw Exception("Failed to insert new profile record for abonent: %s", abonent);
         }
         
-        if (connection) {
-            connection->commit();
-            ds->freeConnection(connection);
-        }
+        connection->commit();
+        ds->freeConnection(connection);
     }
     catch (Exception& exc) {
         smsc_log_error(logger, "%s", exc.what());
@@ -301,47 +303,37 @@ void Task::setService(const char* abonent, const AbonentService& service)
         if (connection) ds->freeConnection(connection);
     }
 }
-AbonentService Task::getService(const char* abonent)
+AbonentProfile Task::getProfile(const char* abonent)
 {
     __require__(ds);
 
-    if (bInformAll && bNotifyAll) return FULL_SERVICE;
-    
-    AbonentService service = NONE_SERVICE;
+    AbonentProfile profile;
     Connection* connection = 0;
     try
     {   
         connection = ds->getConnection();
         if (!connection) throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
 
-        /* SELECT SERVICE FROM MCISME_ABONENTS WHERE ABONENT=:ABONENT */
-        Statement* getSvcStmt = connection->getStatement(GET_ABONENT_SVC_ID, GET_ABONENT_SVC_SQL);
-        if (!getSvcStmt)
-            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "obtain abonent service");
+        /* SELECT INFORM, NOTIFY, SEPARATE FROM MCISME_ABONENTS WHERE ABONENT=:ABONENT */
+        Statement* getProStmt = connection->getStatement(GET_ABONENT_PRO_ID, GET_ABONENT_PRO_SQL);
+        if (!getProStmt)
+            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "obtain abonent profile");
         
-        getSvcStmt->setString(1, abonent);
-        std::auto_ptr<ResultSet> rsGuard(getSvcStmt->executeQuery());
+        getProStmt->setString(1, abonent);
+        std::auto_ptr<ResultSet> rsGuard(getProStmt->executeQuery());
         ResultSet* rs = rsGuard.get();
         if (!rs)
-            throw Exception(OBTAIN_RESULTSET_ERROR_MESSAGE, "obtain abonent service");
+            throw Exception(OBTAIN_RESULTSET_ERROR_MESSAGE, "obtain abonent profile");
         
-        if (rs->fetchNext() && !rs->isNull(1))
+        if (rs->fetchNext())
         {
-            switch(rs->getUint8(1))
-            {
-                case ABONENT_SUBSCRIPTION: service = (bNotifyAll) ? FULL_SERVICE:SUBSCRIPTION; break;
-                case ABONENT_NOTIFICATION: service = (bInformAll) ? FULL_SERVICE:NOTIFICATION; break;
-                case ABONENT_FULL_SERVICE: service = FULL_SERVICE; break;
-                case ABONENT_NONE_SERVICE:
-                default:                   service = NONE_SERVICE; break;
-            }
-        }
-
-        if (service == NONE_SERVICE)
-        {
-            if (bNotifyAll && bInformAll) service = FULL_SERVICE;
-            else if (bNotifyAll) service = NOTIFICATION; 
-            else if (bInformAll) service = SUBSCRIPTION;
+            const char* infStr = rs->isNull(1) ? 0:rs->getString(1);
+            const char* notStr = rs->isNull(2) ? 0:rs->getString(2);
+            const char* sepStr = rs->isNull(3) ? 0:rs->getString(3);
+            
+            profile.inform   = (infStr && (infStr[0]=='Y' || infStr[0]=='y'));
+            profile.notify   = (notStr && (notStr[0]=='Y' || notStr[0]=='y'));
+            profile.separate = (sepStr && (sepStr[0]=='Y' || sepStr[0]=='y'));
         }
         
         if (connection) ds->freeConnection(connection);
@@ -350,7 +342,7 @@ AbonentService Task::getService(const char* abonent)
         smsc_log_error(logger, "%s", exc.what());
         if (connection) ds->freeConnection(connection);
     }
-    return service;
+    return profile;
 }
 
 /* ----------------------- Main logic implementation ----------------------- */
@@ -465,29 +457,76 @@ static const char*  constShortEngMonthesNames[12] = {
     "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
+static const char*  UNKNOWN_CALLER = "<unknown>";
 
-int Message::countEvents(const std::string& message)
+bool MessageFormatter::canAdd(const MissedCallEvent& event)
 {
-    int counter = 0;
-    const char* msg = message.c_str();
-    while (msg && *msg) if (*msg++ == '\n') counter++;
-    return counter;
+    if (separate) return (events.Count() < Message::maxRowsPerMessage);
+    
+    const char* fromStr = (event.from.length() > 0) ? event.from.c_str():UNKNOWN_CALLER;
+    return ((counters.Exists(fromStr)) ? true:(counters.GetCount() < Message::maxRowsPerMessage));
 }
-bool Message::isFull()
+void MessageFormatter::addEvent(const MissedCallEvent& event)
 {
-    return (eventCount >= Message::maxEventsPerMessage);
-}
-bool Message::addEvent(const MissedCallEvent& event, bool force/*=false*/)
-{
-    if (!force && isFull()) return false;
+    int eventsCount = events.Count();
+    if (eventsCount > 0)
+    {
+        for (int i=0; i<eventsCount; i++) 
+            if (event.time < events[i].time) { events.Insert(i, event); break; }
+    }
+    if (events.Count() == eventsCount) events.Push(event);
 
-    char eventMessage[256];
-    tm dt; localtime_r(&event.time, &dt);
-    sprintf(eventMessage, "%s\n%s at %02d %s %02d:%02d", (eventCount > 0) ? "":"Missed call(s):", 
-            (event.from.length()>0) ? event.from.c_str():"<unknown>", dt.tm_mday,
-            constShortEngMonthesNames[dt.tm_mon], dt.tm_hour, dt.tm_min);
-    message += eventMessage; eventCount++;
+    if (!separate)
+    {
+        const char* fromStr = (event.from.length() > 0) ? event.from.c_str():UNKNOWN_CALLER;
+        uint32_t* recPtr = counters.GetPtr(fromStr);
+        if (recPtr) (*recPtr)++; else counters.Insert(fromStr, 1);
+    }
+}
+bool MessageFormatter::isLastFromCaller(int index)
+{
+    if (events.Count() <= 0 || index < 0 || index >= events.Count()) return false;
+    else if (index == events.Count()-1) return true;
+
+    const char* checkStr = (events[index].from.length() > 0) ? events[index].from.c_str():UNKNOWN_CALLER;
+    for (int i=index+1; i<events.Count(); i++)
+    {
+        const char* fromStr = (events[i].from.length() > 0) ? events[i].from.c_str():UNKNOWN_CALLER;
+        if (!strcmp(fromStr, checkStr)) return false;
+    }
     return true;
+}
+void MessageFormatter::formatMessage(Message& message)
+{
+    message.message = ""; message.rowsCount = 0; message.eventsCount = 0;
+    if (events.Count() <= 0) return;
+    
+    char eventMessage[256];
+    sprintf(eventMessage, "Missed call%s:", (events.Count() > 1) ? "s":"");
+    message.message = eventMessage;
+    message.eventsCount = events.Count(); 
+    
+    for (int i=0; i<events.Count(); i++)
+    {
+        MissedCallEvent event = events[i];
+        const char* fromStr = (event.from.length() > 0) ? event.from.c_str():UNKNOWN_CALLER;
+        uint32_t* recPtr = counters.GetPtr(fromStr);
+
+        if (separate || !recPtr || (recPtr && (*recPtr) <= 1))
+        {
+            tm dt; localtime_r(&event.time, &dt);
+            sprintf(eventMessage, "\n%s at %02d %s %02d:%02d", fromStr,
+                    dt.tm_mday, constShortEngMonthesNames[dt.tm_mon], dt.tm_hour, dt.tm_min);
+            message.message += eventMessage; message.rowsCount++;
+        }
+        else if (isLastFromCaller(i)) // if event is last from this caller => add it
+        {
+            tm dt; localtime_r(&event.time, &dt);
+            sprintf(eventMessage, "\n%s (%d) last at %02d %s %02d:%02d", fromStr,
+                    (*recPtr), dt.tm_mday, constShortEngMonthesNames[dt.tm_mon], dt.tm_hour, dt.tm_min);
+            message.message += eventMessage; message.rowsCount++;
+        }
+    }
 }
 
 void Task::addEvent(const MissedCallEvent& event)
@@ -538,27 +577,32 @@ bool Task::formatMessage(Message& message)
 
     __require__(ds);
     
-    message.id = 0; message.attempts = 0; message.abonent = abonent; 
-    message.message = ""; message.eventCount = 0;
-    
+    message.reset(abonent);
     Connection* connection = 0;
     try
     {
+        bool separate = Task::bSeparateAll;
+        if (!separate) {
+            AbonentProfile profile = Task::getProfile(abonent.c_str());
+            separate = profile.separate;
+        }
+        MessageFormatter formatter(separate); 
+        
         connection = ds->getConnection();
         if (!connection)
             throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
         
         // create new current message & clear replace flag
         if (currentMessageId==0) doNewCurrent(connection); 
-        message.id = currentMessageId;
-        message.replace = bNeedReplace; message.smsc_id = cur_smsc_id; 
+        message.id = currentMessageId; message.replace = bNeedReplace; message.smsc_id = cur_smsc_id; 
         
         /* UPDATE MCISME_EVT_SET SET MSG_ID=:MSG_ID WHERE ID=:ID */
         Statement* assignEvtStmt = connection->getStatement(UPDATE_MSG_EVT_ID, UPDATE_MSG_EVT_SQL);
         if (!assignEvtStmt)
             throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "assign event to message");
 
-        for (int i=0; i<events.Count() && !message.isFull(); i++) // add maximum events from chain to message
+        // add maximum events from chain to message
+        for (int i=0; i<events.Count() && formatter.canAdd(events[i]); i++) 
         {
             events[i].msg_id = currentMessageId;
 
@@ -569,11 +613,12 @@ bool Task::formatMessage(Message& message)
                                "Possible event was receipted", events[i].id, events[i].msg_id);
                 events.Delete(i);
             }
-            else message.addEvent(events[i], true);
+            else formatter.addEvent(events[i]);
         }
 
         connection->commit();
         ds->freeConnection(connection);
+        formatter.formatMessage(message);
     } 
     catch (Exception& exc)
     {
@@ -583,7 +628,7 @@ bool Task::formatMessage(Message& message)
         if (connection) ds->freeConnection(connection);
         throw;
     }
-    return (message.eventCount > 0);
+    return (message.eventsCount > 0);
 }
 
 void Task::doNewCurrent(Connection* connection)
@@ -742,6 +787,9 @@ void Task::waitReceipt(int eventCount, const char* smsc_id)
 Array<std::string> Task::finalizeMessage(const char* smsc_id, 
                                          bool delivered, bool retry, uint64_t msg_id/*=0*/)
 {
+    smsc_log_debug(logger, "Finalizing message #%lld smsc_id=%s delivered=%d",
+                   msg_id, smsc_id, delivered);
+
     Array<std::string> callers;
     
     // Delete message (by msg_id if defined, else getMessage(smsc_id)) & all assigned events
