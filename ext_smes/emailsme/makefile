@@ -34,6 +34,7 @@ compile:
 	@cp -f log4cpp.properties $(SME_BUILDDIR)/log4cpp.properties
 	@cp -f $(SMSC_BUILDDIR)/bin/emailsme/emailsme $(SME_BUILDDIR)/bin/
 	@cp -f $(SMSC_BUILDDIR)/jars/emailsme.jar  $(SME_BUILDDIR)/lib/emailsme.jar
+	@cp -f ../../src/emailsme/mailreaper.pl $(SME_BUILDDIR)/bin/
 	@cp -f ../../config/emailsme/config.xml $(SME_BUILDDIR)/conf/config.xml
 	@cp -f ../../config/configuration.dtd $(SME_BUILDDIR)/conf/configuration.dtd
 	@cp -f ../../config/command.dtd $(SME_BUILDDIR)/conf/command.dtd
