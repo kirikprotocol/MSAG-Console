@@ -19,6 +19,7 @@ class TCResultStack : public std::vector<const TCResult*>
 {
 public:
 	virtual ~TCResultStack();
+	void push_back(const TCResult* result);
 	bool operator== (const TCResult& result) const;
 	bool operator== (const TCResultStack& stack) const;
 };

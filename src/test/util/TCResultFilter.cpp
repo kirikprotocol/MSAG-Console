@@ -15,6 +15,15 @@ TCResultStack::~TCResultStack()
 	}
 }
 
+void TCResultStack::push_back(const TCResult* result)
+{
+	//игнорирую незаимплементированные test cases, которые возвращают NULL
+	if (result)
+	{
+		vector<const TCResult*>::push_back(result);
+	}
+}
+
 bool TCResultStack::operator== (const TCResultStack& stack) const
 {
 	if (size() < stack.size())
@@ -76,6 +85,12 @@ TCResultFilter::~TCResultFilter()
 
 void TCResultFilter::addResult(const TCResult* result)
 {
+	//проверка
+	if (!result)
+	{
+		return;
+	}
+
 	//зарегистрировать результат
 	const char* tcId = result->getId();
 	if (!resmap[tcId])
