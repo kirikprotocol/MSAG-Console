@@ -828,7 +828,7 @@ static void SendSubmitCommand(MapDialog* dialog)
 
 static const unsigned DIALOGID_BEFORE_CREATING = 0x10000;
 
-static void TryDestroyDialog(unsigned dialogid,bool send_error = false,unsigned err_code=0)
+static void TryDestroyDialog(unsigned dialogid,bool send_error,unsigned err_code)
 {
   {
     __map_trace2__("TryDestroyDialog: dialog 0x%x , reason error",dialogid);
