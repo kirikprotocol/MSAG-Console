@@ -131,6 +131,8 @@
       <param name="DIVERT ON" type="int">30</param>
       <param name="DIVERT OFF" type="int">31</param>
       <param name="DIVERT TO" type="int">40</param>
+      <param name="CONCAT ON" type="int">50</param>
+      <param name="CONCAT OFF" type="int">51</param>
     </section>
   </section>
 
