@@ -6,7 +6,7 @@ ru.novosoft.smsc.jsp.smsc.services.ServiceAddExternalAdm bean = services_service
 
 MultipartServletRequest multi = (MultipartServletRequest)request.getAttribute("multipart.request");
 if (multi != null)
-	request = (HttpServletRequest)multi;
+	request = multi;
 
 if (bean.getStage() == 2 && request.getParameter("jsp") != null)
 	FORM_URI = CPATH + request.getParameter("jsp");
@@ -39,6 +39,7 @@ if (bean.getStage() == 1)
 } else
 {
 	FORM_URI = CPATH+"/services/serviceAddExternalAdm.jsp";
+	FORM_ENCTYPE = "application/x-www-form-urlencoded";
 }
 
 TITLE = "Add service: step " + (bean.getStage() == 0 ? 2 : bean.getStage()+1);
@@ -52,8 +53,7 @@ page_menu_button(out, "mbNext",  "Next",  "Next page");
 page_menu_button(out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
-%><div class=content>
-<%
+%><div class=content><%
 if (bean.getHostName() != null && bean.getStage() != 2)
 {
 %><input type=hidden name=hostName value="<%=bean.getHostName()%>"><%

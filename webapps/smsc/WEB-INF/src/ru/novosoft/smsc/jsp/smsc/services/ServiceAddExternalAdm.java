@@ -23,8 +23,7 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-public class ServiceAddExternalAdm extends SmeBean
-{
+public class ServiceAddExternalAdm extends SmeBean {
 	private final static String SYSTEM_ID_PARAM_NAME = "system id";
 
 	private byte stage = 0;
@@ -44,32 +43,28 @@ public class ServiceAddExternalAdm extends SmeBean
 		if (result != RESULT_OK)
 			return result;
 
-		if (mbCancel != null)
-		{
+		if (mbCancel != null) {
 			mbCancel = null;
 			cleanup();
 			return RESULT_DONE;
-		}
-		else if (mbNext != null)
-		{
-			mbNext = null;
-			switch (stage)
-			{
-				case 0:
-					stage++;
-					return RESULT_OK;
-				case 1:
-					return RESULT_OK;
-				case 2:
-					return processStage2();
-				case 3:
-					return processStage3();
-				default:
-					return RESULT_DONE;
-			}
-		}
-		else
-			return RESULT_OK;
+		} else
+			if (mbNext != null) {
+				mbNext = null;
+				switch (stage) {
+					case 0:
+						stage++;
+						return RESULT_OK;
+					case 1:
+						return RESULT_OK;
+					case 2:
+						return processStage2();
+					case 3:
+						return processStage3();
+					default:
+						return RESULT_DONE;
+				}
+			} else
+				return RESULT_OK;
 	}
 
 	protected void cleanup()
@@ -94,48 +89,36 @@ public class ServiceAddExternalAdm extends SmeBean
 			return error("File not attached");
 
 		MultipartDataSource dataFile = null;
-		try
-		{
+		try {
 			dataFile = multi.getMultipartDataSource("distribute");
 			if (dataFile == null)
 				return error("Service distributive not attached");
-			if (dataFile.getContentType().equals("application/x-zip-compressed"))
-			{
+			if (dataFile.getContentType().equals("application/x-zip-compressed")) {
 				incomingZip = Functions.saveFileToTemp(dataFile.getInputStream(), "SMSC_SME_distrib_", ".zip.tmp");
 				dataFile.close();
 				dataFile = null;
 
 				checkServiceContent(incomingZip);
 				serviceId = extractSystemId(incomingZip);
-				if (hostsManager.getSmeIds().contains(serviceId))
-				{
+				if (hostsManager.getSmeIds().contains(serviceId)) {
 					incomingZip.delete();
 					incomingZip = null;
 					return error("Service \"" + serviceId + "\" already exists");
 				}
-			}
-			else
+			} else
 				return error("Distributive file must be zip compressed");
-		}
-		catch (Throwable t)
-		{
+		} catch (Throwable t) {
 			return error("Couldn't receive file", t);
-		}
-		finally
-		{
-			if (dataFile != null)
-			{
+		} finally {
+			if (dataFile != null) {
 				dataFile.close();
 				dataFile = null;
 			}
 		}
-		if (errors.size() == 0)
-		{
+		if (errors.size() == 0) {
 			stage++;
 			return RESULT_OK;
-		}
-		else
-		{
+		} else {
 			return RESULT_ERROR;
 		}
 	}
@@ -149,14 +132,12 @@ public class ServiceAddExternalAdm extends SmeBean
 		if (startupArgs == null)
 			startupArgs = "";
 
-		if (errors.size() == 0)
-		{
+		if (errors.size() == 0) {
 			stage++;
 			wantAlias = true;
 			forceDC = true;
 			return RESULT_OK;
-		}
-		else
+		} else
 			return RESULT_ERROR;
 	}
 
@@ -169,22 +150,16 @@ public class ServiceAddExternalAdm extends SmeBean
 
 
 		ServiceInfo serviceInfo = null;
-		try
-		{
+		try {
 			serviceInfo = new ServiceInfo(serviceId, hostName, port, startupArgs, new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, "", rangeOfAddress, -1, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode), ServiceInfo.STATUS_STOPPED);
-		}
-		catch (NullPointerException e)
-		{
+		} catch (NullPointerException e) {
 			return error(SMSCErrors.error.services.NotAllParametersDefined);
 		}
 
-		try
-		{
+		try {
 			hostsManager.deployAdministrableService(incomingZip, serviceInfo);
 			//appContext.getStatuses().setServicesChanged(true);
-		}
-		catch (AdminException e)
-		{
+		} catch (AdminException e) {
 			logger.error("Adding service \"" + serviceInfo.getId() + "\" to host \"" + serviceInfo.getHost() + "\" failed", e);
 			return error("Adding service \"" + serviceInfo.getId() + "\" to host \"" + serviceInfo.getHost() + "\" failed: " + e.getMessage());
 		}
@@ -208,13 +183,11 @@ public class ServiceAddExternalAdm extends SmeBean
 		boolean jspFound = false;
 		boolean configFound = false;
 
-		try
-		{
+		try {
 			ZipInputStream zin = new ZipInputStream(new BufferedInputStream(new FileInputStream(incomingZip)));
 			ZipEntry entry = zin.getNextEntry();
 
-			while (entry != null && !(serviceFound && confFound && jspFound && configFound))
-			{
+			while (entry != null && !(serviceFound && confFound && jspFound && configFound)) {
 				if (!serviceFound && entry.getName().equals("bin/services"))
 					serviceFound = true;
 				if (!confFound && (entry.getName().startsWith("conf/") || (entry.getName().equals("conf") && entry.isDirectory())))
@@ -227,9 +200,7 @@ public class ServiceAddExternalAdm extends SmeBean
 				entry = zin.getNextEntry();
 			}
 			zin.close();
-		}
-		catch (IOException e)
-		{
+		} catch (IOException e) {
 			logger.error("Couldn't check incoming services archive integrity", e);
 			throw new AdminException("Couldn't check incoming services archive integrity, nested: " + e.getMessage());
 		}
@@ -237,8 +208,7 @@ public class ServiceAddExternalAdm extends SmeBean
 
 	private String extractSystemId(File incomingZip) throws AdminException
 	{
-		try
-		{
+		try {
 			ZipInputStream zin = new ZipInputStream(new BufferedInputStream(new FileInputStream(incomingZip)));
 			ZipEntry entry = zin.getNextEntry();
 
@@ -250,39 +220,25 @@ public class ServiceAddExternalAdm extends SmeBean
 
 			Config serviceConfig = new Config(new InputStreamReader(zin));
 			return serviceConfig.getString(SYSTEM_ID_PARAM_NAME);
-		}
-		catch (IOException e)
-		{
+		} catch (IOException e) {
 			logger.error("Couldn't read or unzip incoming archive", e);
 			throw new AdminException("Couldn't read or unzip incoming archive, nested: " + e.getMessage());
-		}
-		catch (FactoryConfigurationError error)
-		{
+		} catch (FactoryConfigurationError error) {
 			logger.error("Couldn't parse incoming services configuration", error);
 			throw new AdminException("Couldn't parse incoming services configuration" + error.getMessage());
-		}
-		catch (ParserConfigurationException e)
-		{
+		} catch (ParserConfigurationException e) {
 			logger.error("Couldn't parse incoming services configuration", e);
 			throw new AdminException("Couldn't parse incoming services configuration" + e.getMessage());
-		}
-		catch (SAXException e)
-		{
+		} catch (SAXException e) {
 			logger.error("Couldn't parse incoming services configuration", e);
 			throw new AdminException("Couldn't parse incoming services configuration, nested: " + e.getMessage());
-		}
-		catch (NullPointerException e)
-		{
+		} catch (NullPointerException e) {
 			logger.error("Couldn't get incoming services id", e);
 			throw new AdminException("Couldn't get incoming services id, nested: " + e.getMessage());
-		}
-		catch (Config.ParamNotFoundException e)
-		{
+		} catch (Config.ParamNotFoundException e) {
 			logger.error("Couldn't get incoming services id", e);
 			throw new AdminException("Couldn't get incoming services id, nested: " + e.getMessage());
-		}
-		catch (Config.WrongParamTypeException e)
-		{
+		} catch (Config.WrongParamTypeException e) {
 			logger.error("Couldn't get incoming services id", e);
 			throw new AdminException("Couldn't get incoming services id, nested: " + e.getMessage());
 		}
@@ -323,12 +279,9 @@ public class ServiceAddExternalAdm extends SmeBean
 
 	public void setPort(String port)
 	{
-		try
-		{
+		try {
 			this.port = Integer.decode(port).intValue();
-		}
-		catch (NumberFormatException e)
-		{
+		} catch (NumberFormatException e) {
 			this.port = 0;
 		}
 	}

@@ -52,6 +52,7 @@ page_menu_end(out);
 <script>
 function viewService(serviceId)
 {
+	document.all.jbutton.value = "view";
 	document.all.jbutton.name = "mbView";
 	opForm.serviceId.value = serviceId;
 	opForm.submit();
@@ -59,6 +60,7 @@ function viewService(serviceId)
 }
 function editService(serviceId)
 {
+	document.all.jbutton.value = "edit service";
 	document.all.jbutton.name = "mbEditService";
 	opForm.serviceId.value = serviceId;
 	opForm.submit();

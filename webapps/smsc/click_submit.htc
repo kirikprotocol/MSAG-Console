@@ -7,8 +7,8 @@ function clickSubmit()
 	if (opForm.onsubmit() == false)
 		return false;
 		
-	opForm.jbutton.name = this.jbuttonName;
 	opForm.jbutton.value = this.jbuttonValue;
+	opForm.jbutton.name = this.jbuttonName;
 	opForm.submit();
 	return false;
 }

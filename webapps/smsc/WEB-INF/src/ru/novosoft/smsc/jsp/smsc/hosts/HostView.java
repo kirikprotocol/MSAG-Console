@@ -79,15 +79,7 @@ public class HostView extends SmscBean
 		}
 		else if (mbDelete != null)
 		{
-			if (serviceIds.length == 0)
-				return RESULT_OK;
-
-			String sis = "";
-			for (int i = 0; i < serviceIds.length; i++)
-			{
-				sis += serviceIds[i] + ", ";
-			}
-			return error("Delete services: " + sis);
+			return deleteServices();
 		}
 		else if (mbStartService != null)
 		{
@@ -107,6 +99,34 @@ public class HostView extends SmscBean
 		}
 		else
 			return RESULT_OK;
+	}
+
+	private int deleteServices()
+	{
+		if (serviceIds.length == 0)
+			return RESULT_OK;
+
+		List notRemoved = new LinkedList();
+		for (int i = 0; i < serviceIds.length; i++)
+		{
+			String id = serviceIds[i];
+			try
+			{
+				if (hostsManager.isService(id))
+					hostsManager.removeService(id);
+				else
+					hostsManager.removeSme(id);
+				//appContext.getStatuses().setServicesChanged(true);
+			}
+			catch (Throwable e)
+			{
+				error(SMSCErrors.error.services.coudntDeleteService, id);
+				logger.error("Couldn't delete service \"" + id + '"', e);
+				notRemoved.add(id);
+			}
+		}
+		serviceIds = (String[]) notRemoved.toArray(new String[0]);
+		return errors.size() == 0 ? RESULT_DONE : RESULT_ERROR;
 	}
 
 	protected int startServices()

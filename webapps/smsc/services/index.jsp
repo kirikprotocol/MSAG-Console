@@ -51,6 +51,7 @@ page_menu_end(out);
 <script>
 function viewHost(hostId)
 {
+	document.all.jbutton.value = "view host";
 	document.all.jbutton.name = "mbViewHost";
 	opForm.hostId.value = hostId;
 	opForm.submit();
@@ -58,6 +59,7 @@ function viewHost(hostId)
 }
 function viewService(serviceId)
 {
+	document.all.jbutton.value = "view";
 	document.all.jbutton.name = "mbView";
 	opForm.serviceId.value = serviceId;
 	opForm.submit();
@@ -65,6 +67,7 @@ function viewService(serviceId)
 }
 function editService(serviceId)
 {
+	document.all.jbutton.value = "edit";
 	document.all.jbutton.name = "mbEdit";
 	opForm.serviceId.value = serviceId;
 	opForm.submit();

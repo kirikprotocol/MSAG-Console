@@ -22,6 +22,10 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 }
 MENU0_SELECTION = "MENU0_NONE";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-
+<%
+page_menu_begin(out);
+page_menu_space(out);
+page_menu_end(out);
+%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>
