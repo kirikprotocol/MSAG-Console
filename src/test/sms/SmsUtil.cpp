@@ -167,8 +167,12 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, uint64_t 
 	__compare__(getPriority, 20);
 	__compare_str__(getSourceSmeId, 21);
 	__compare_str__(getDestinationSmeId, 22);
-	__compare__(getConcatMsgRef, 23);
-	__compare__(getConcatSeqNum, 24);
+	if (_sms1->hasBinProperty(Tag::SMSC_CONCATINFO) &&
+		_sms2->hasBinProperty(Tag::SMSC_CONCATINFO))
+	{
+		__compare__(getConcatMsgRef, 23);
+		__compare__(getConcatSeqNum, 24);
+	}
 	//body
 	__compare_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME, 101);
 	__compare_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG, 102);
@@ -326,50 +330,50 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc, bool check)
 
 #define __set_int_body_tag__(tagName, value) \
 	if (mask[pos++]) { \
-		__trace2__("set_int_body_tag: " #tagName ", pos = %d", pos); \
-		uint32_t tmp = value; \
-		sms->setIntProperty(Tag::tagName, tmp); \
+		/*__trace2__("set_int_body_tag: " #tagName ", pos = %d", pos);*/ \
+		uint32_t tmp_##tagName = value; \
+		sms->setIntProperty(Tag::tagName, tmp_##tagName); \
 		if (check) { \
-			intMap[Tag::tagName] = tmp; \
+			intMap[Tag::tagName] = tmp_##tagName; \
 		} \
 	}
 
 #define __set_str_body_tag__(tagName, length) \
 	if (mask[pos++]) { \
-		int len = length; \
+		int len_##tagName = length; \
 		/*__trace2__("set_str_body_tag: " #tagName ", pos = %d, length = %d", pos, len);*/ \
-		char* data = new char[len + 1]; \
-		rand_char(len, data); \
-		sms->setStrProperty(Tag::tagName, data); \
+		char* data_##tagName = new char[len_##tagName + 1]; \
+		rand_char(len_##tagName, data_##tagName); \
+		sms->setStrProperty(Tag::tagName, data_##tagName); \
 		if (check) { \
-			strMap.insert(StrMap::value_type(Tag::tagName, CheckData(len, data))); \
-		} else { delete data; } \
+			strMap.insert(StrMap::value_type(Tag::tagName, CheckData(len_##tagName, data_##tagName))); \
+		} else { delete data_##tagName; } \
 	}
 
-#define __set_bin_text_body_tag__(tagName, length, dataCoding, udhInd) \
+#define __set_bin_text_body_tag__(tagName, length, dataCoding, udhi) \
 	if (mask[pos++]) { \
-		int len = length; \
-		__trace2__("set_bin_body_tag: " #tagName ", pos = %d, length = %d", pos, len); \
-		char* data = new char[len + 1]; \
-		uint8_t dc = dataCoding; \
-		bool udhi = udhInd; \
-		rand_text2(len, data, dc, udhi, true); \
-		sms->setBinProperty(Tag::tagName, data, len); \
+		int len_##tagName = length; \
+		/*__trace2__("set_bin_body_tag: " #tagName ", pos = %d, length = %d", pos, len_##tagName);*/ \
+		char* data_##tagName = new char[len_##tagName + 1]; \
+		uint8_t dc_##tagName = dataCoding; \
+		bool udhi_##tagName = udhi; \
+		rand_text2(len_##tagName, data_##tagName, dc_##tagName, udhi_##tagName, true); \
+		sms->setBinProperty(Tag::tagName, data_##tagName, len_##tagName); \
 		if (check) { \
-			binMap.insert(BinMap::value_type(Tag::tagName, CheckData(len, data))); \
-		} else { delete data; } \
+			binMap.insert(BinMap::value_type(Tag::tagName, CheckData(len_##tagName, data_##tagName))); \
+		} else { delete data_##tagName; } \
 	}
 
 #define __set_bin_body_tag__(tagName, length) \
 	if (mask[pos++]) { \
-		int len = length; \
-		__trace2__("set_bin_body_tag: " #tagName ", pos = %d, length = %d", pos, len); \
-		char* data = new char[len + 1]; \
-		rand_uint8_t(len, (uint8_t*) data); \
-		sms->setBinProperty(Tag::tagName, data, len); \
+		int len_##tagName = length; \
+		/*__trace2__("set_bin_body_tag: " #tagName ", pos = %d, length = %d", pos, len_##tagName);*/ \
+		char* data_##tagName = new char[len_##tagName + 1]; \
+		rand_uint8_t(len_##tagName, (uint8_t*) data_##tagName); \
+		sms->setBinProperty(Tag::tagName, data_##tagName, len_##tagName); \
 		if (check) { \
-			binMap.insert(BinMap::value_type(Tag::tagName, CheckData(len, data))); \
-		} else { delete data; } \
+			binMap.insert(BinMap::value_type(Tag::tagName, CheckData(len_##tagName, data_##tagName))); \
+		} else { delete data_##tagName; } \
 	}
 
 #define __check_int_body_tag__(tagName) \
@@ -459,17 +463,17 @@ try
 	BinMap binMap;
 
 	//set fields
-	int msgLen = rand1(MAX_SM_LENGTH);
+	int msgLen = rand1(MAX_SMPP_SM_LENGTH);
 	__set_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME, time(NULL) + rand0(24 * 3600));
 	__set_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG, rand0(2));
 	__set_int_body_tag__(SMPP_ESM_CLASS, rand0(255));
-	bool udhInd = sms->getIntProperty(Tag::SMPP_ESM_CLASS) & UDHI_BIT;
+	bool udhi = sms->getIntProperty(Tag::SMPP_ESM_CLASS) & UDHI_BIT;
 	uint8_t dataCoding = getDataCoding(RAND_TC);
 	__set_int_body_tag__(SMPP_DATA_CODING, dataCoding);
 	__set_int_body_tag__(SMPP_SM_LENGTH, msgLen);
 	__set_int_body_tag__(SMPP_REGISTRED_DELIVERY, rand0(255));
 	__set_int_body_tag__(SMPP_PROTOCOL_ID, rand0(255));
-	__set_bin_text_body_tag__(SMPP_SHORT_MESSAGE, msgLen, dataCoding, udhInd);
+	__set_bin_text_body_tag__(SMPP_SHORT_MESSAGE, msgLen, dataCoding, udhi);
 	__set_int_body_tag__(SMPP_PRIORITY, rand0(255));
 	__set_int_body_tag__(SMPP_USER_MESSAGE_REFERENCE, rand0(65535));
 	__set_int_body_tag__(SMPP_USSD_SERVICE_OP, rand0(255));
