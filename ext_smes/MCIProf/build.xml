@@ -1,21 +1,70 @@
 <?xml version="1.0"?>
 
 <project name="MCIProf" default="build" basedir=".">
-    <description>Sportlive build file</description>
+
+  <description>
+    MCISme Profiler build file
+  </description>
+
   <property file="${basedir}/build.properties"/>
-  <fileset>
-    <include name="${build.dir}/lnadjnalsdnln"/>
-  </fileset>
-  <target name="compile" description="Compile">
+  <property name="java_src" location="${basedir}/java"/>
+  <property name="java_lib" location="${basedir}/lib"/>
+  <property name="mciprof_out" location="${build.dir}/mciprof"/>
+  <property name="mciprof_lib" location="${mciprof_out}/lib"/>
+
+  <fileset id="sources"  dir="${java_src}" includes="**/*.java" />
+  <fileset id="libs"  dir="${java_lib}" includes="**/*.jar" />
+
+  <path id="classpath">
+    <pathelement location="${java_src}"/>
+    <fileset refid="libs"/>
+  </path>
+
+  <target name="init" description="initialize">
+    <tstamp/>
+    <mkdir dir="${mciprof_out}"/>
+    <mkdir dir="${mciprof_lib}"/>
   </target>
+
+  <target name="clean" description="clean up">
+    <delete dir="${mciprof_out}"/>
+  </target>
+
+  <target name="compile" depends="init" description="compile java sources">
+    <javac srcdir="${java_src}" classpathref="classpath" debug="yes" destdir="${mciprof_out}"/>
+  </target>
+
   <target name="build" depends="compile" description="build all">
+    <jar jarfile="${mciprof_lib}/mciprof.jar">
+      <fileset dir="${mciprof_out}"/>
+    </jar>
   </target>
-  <target name="distr" depends="build" description="make war">
+
+  <target name="rebuild" depends="clean, build" description="re-build all"/>
+
+  <target name="distr" depends="rebuild" description="make war">
     <!-- должен сделать war с jar'ами, конфигами, схемами и т.д. и т.п. -->
-    
+    <copy todir="${mciprof_lib}" preservelastmodified="yes">
+      <fileset refid="libs"/>
+    </copy>
+    <jar destfile="${mciprof_out}/mciprof.war" basedir="${mciprof_out}">
+      <!-- TODO: include ./bin script(s) -->
+      <zipfileset dir="${mciprof_lib}"    prefix="lib"/>
+      <zipfileset dir="${basedir}/config" prefix="config"/>
+      <zipfileset dir="${basedir}/schema" prefix="schema"/>
+    </jar>
   </target>
-  <target name="update" depends="build" description="make update package">
-    <!-- должен сделать зип с jar'ами, schema.xml, resources.xml --> 
-  </target>  
+
+  <target name="cvs_update" description="udate files from cvs">
+    <cvs command="update" quiet="yes" failonerror="yes" compressionlevel="9"/>
+  </target>
+
+  <target name="update" depends="cvs_update, build" description="make update package">
+    <!-- должен сделать зип с jar'ами, schema.xml, resources.xml -->
+    <zip>
+      <zipfileset dir="${mciprof_lib}"    prefix="lib"/>
+      <zipfileset dir="${basedir}/schema" prefix="schema"/>
+    </zip>
+  </target>
   
 </project>
