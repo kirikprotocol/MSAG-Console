@@ -369,6 +369,7 @@ TCResult* RouteManagerTestCases::lookupRoute(const RouteRegistry& routeReg,
 	catch(...)
 	{
 		error();
+		printLookupResult(origAddr, destAddr, vector<const SmeProxy*>(), false, NULL);
 		res->addFailure(100);
 	}
 	debug(res);
