@@ -2,19 +2,23 @@
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 
 <config>
+  
   <section name="system">
     <param name="webapp folder" type="string">/export/home/igork/install/tomcat/webapps/smsc</param>
     <param name="users" type="string">users.xml</param>
   </section>
+  
   <section name="daemons">
     <section name="smsc">
       <param name="port" type="int">6680</param>
     </section>
   </section>
+  
   <section name="smsc">
     <param name="host" type="string">smsc</param>
     <param name="port" type="int">6690</param>
   </section>
+  
   <section name="perfmon">
     <param name="appletport" type="int">6695</param>
     <param name="smscport" type="int">6696</param>
@@ -28,4 +32,10 @@
       <param name="driver" type="string">oracle.jdbc.driver.OracleDriver</param>
     </section>
   </section>
+
+  <section name="console">
+    <param name="humanPort" type="int">14228</param>
+    <param name="scriptPort" type="int">14229</param>
+  </section>
+  
 </config>
