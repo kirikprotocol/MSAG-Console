@@ -263,6 +263,7 @@ public:
   }
 };
 
+inline
 void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId)
 {
   __trace2__("MAP::% dialogid 0x%x retuned to pool",__PRETTY_FUNCTION__,dialogueId);

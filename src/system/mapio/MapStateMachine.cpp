@@ -10,6 +10,7 @@ using namespace std;
 //using namespace smsc::core::buffers;
 
 #include "MapDialog_spcific.cxx"
+#include "MapDialogMkPDU.cxx"
 
 static string FormatText(const char* format,...)
 {
