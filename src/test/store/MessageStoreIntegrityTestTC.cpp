@@ -96,8 +96,9 @@ TCResultFilter* executeIntegrityTest()
 	//прочее
 	cout << "Прочее" << endl;
 	filter->addResult(tc.storeIncorrectSM(correctSM, ALL_TC));
+#ifdef ASSERT
 	filter->addResult(tc.storeAssertSM(ALL_TC));
-
+#endif
 	return filter;
 }
 
