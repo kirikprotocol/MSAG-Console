@@ -152,13 +152,18 @@ sub conv_addr{
   my $addr=shift;
   if($addr=~/(\d)\.(\d)\.(\d+)/)
   {
-    if($1 eq '1')
-    {
-      $addr="+$3";
-    }else
-    {
-      $addr=$3;
-    }
+    return $3;
+#    if($1 eq '1')
+#    {
+#      $addr="+$3";
+#    }else
+#    {
+#      $addr=$3;
+#    }
+  }
+  if($addr=~/\+(\d+)/)
+  {
+    return $1;
   }
   return $addr;
 }
@@ -172,7 +177,7 @@ sub datetotimestamp{
 
     $year+=1900;
     $mon++;
-    return "$year$mon$mday$hour$min$sec";
+    return sprintf("%04d%02d%02d%02d%02d%02d",$year,$mon,$mday,$hour,$min,$sec);
   }else
   {
     die "Failed to parse input date:$date";
