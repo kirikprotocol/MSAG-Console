@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE routes SYSTEM "file://routes.dtd">
+<routes>
+<subject_def id="subj00" defSme="sme00">
+	<mask value="00???"/>
+	<mask value="+00???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj01" defSme="sme01">
+	<mask value="01???"/>
+	<mask value="+01???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj02" defSme="sme02">
+	<mask value="02???"/>
+	<mask value="+02???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<route id="route00" billing="false" archiving="false" enabling="false" priority="0" serviceId="0">
+	<source>
+		<subject id="subj00"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme00">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme00">
+		<subject id="subj00"/>
+	</destination>
+</route>
+<route id="route01" billing="true" archiving="true" enabling="true" priority="1" serviceId="1">
+	<source>
+		<subject id="subj01"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme01">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme01">
+		<subject id="subj01"/>
+	</destination>
+</route>
+<route id="route02" billing="false" archiving="false" enabling="false" priority="2" serviceId="2">
+	<source>
+		<subject id="subj02"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme02">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme02">
+		<subject id="subj02"/>
+	</destination>
+</route>
+</routes>

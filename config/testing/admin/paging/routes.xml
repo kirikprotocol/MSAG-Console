@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<!DOCTYPE routes SYSTEM "routes.dtd">
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE routes SYSTEM "file://routes.dtd">
 <routes>
 <subject_def id="subj00" defSme="sme03">
 	<mask value="05???"/>

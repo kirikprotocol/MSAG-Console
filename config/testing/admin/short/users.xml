@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE users SYSTEM "file://users.dtd">
+
+<users>
+	<user login="superadmin" password="123" firstName="first" lastName="last" dept="dept" workPhone="work" homePhone="home" cellPhone="cell" email="email@email.com">
+		<role name="apply"/>
+		<role name="smsView"/>
+		<role name="aliases"/>
+		<role name="services"/>
+		<role name="hosts"/>
+		<role name="routes"/>
+		<role name="profiles"/>
+		<role name="users"/>
+		<role name="subjects"/>
+		<role name="perfmon"/>
+	</user>
+	<user login="bryz" password="123" firstName="Vit" lastName="Bryz" dept="novosoft" workPhone="123" homePhone="123" cellPhone="123" email="bryz@novosoft.ru">
+		<role name="apply"/>
+		<role name="smsView"/>
+		<role name="aliases"/>
+		<role name="services"/>
+		<role name="hosts"/>
+		<role name="routes"/>
+		<role name="profiles"/>
+		<role name="users"/>
+		<role name="subjects"/>
+		<role name="perfmon"/>
+	</user>
+	<user login="user00" password="pass00" firstName="first00" lastName="last00" dept="dept00" workPhone="123" homePhone="123" cellPhone="123" email="user00@mail.ru">
+	</user>
+	<user login="user01" password="pass01" firstName="first01" lastName="last01" dept="dept01" workPhone="123" homePhone="123" cellPhone="123" email="user01@mail.ru">
+	</user>
+	<user login="user02" password="pass02" firstName="first02" lastName="last02" dept="dept02" workPhone="123" homePhone="123" cellPhone="123" email="user02@mail.ru">
+	</user>
+</users>
