@@ -599,7 +599,7 @@ void checkMissingPduTc()
 void protocolError()
 {
 	__reg_tc__("protocolError", "Тестирование ошибочных ситуаций");
-	//invalidBind
+	//protocolError.invalidBind
 	__reg_tc__("protocolError.invalidBind",
 		"Отправка неправильной bind pdu (сразу после установления соединения с SC)");
 	__reg_tc__("protocolError.invalidBind.smallerSize1",
@@ -616,7 +616,7 @@ void protocolError()
 		"Если задан command_id неразрешенный для sme (pdu отправляемые исключительно SC), SC отправляет generic_nack с command_status = ESME_RINVCMDID");
 	__reg_tc__("protocolError.invalidBind.nonExistentCommandId",
 		"Если задан несуществующий в спецификации command_id, SC отправляет generic_nack с command_status = ESME_RINVBNDSTS");
-	//corruptedPdu
+	//protocolError.invalidPdu
 	__reg_tc__("protocolError.invalidPdu",
 		"Отправка неправильных pdu после установления соединения и успешного bind");
 	__reg_tc__("protocolError.invalidPdu.smallerSize1",
@@ -631,9 +631,17 @@ void protocolError()
 		"Если задан command_id неразрешенный для sme (pdu отправляемые исключительно SC), SC отправляет generic_nack с command_status = ESME_RINVCMDID");
 	__reg_tc__("protocolError.invalidPdu.nonExistentCommandId",
 		"Если задан несуществующий в спецификации command_id, SC отправляет generic_nack с command_status = ESME_RINVCMDID");
-	//submitAfterUnbind
+	//protocolError.submitAfterUnbind
 	__reg_tc__("protocolError.submitAfterUnbind",
 		"Pdu отправленные после unbind игнорируются SC");
+	__reg_tc__("protocolError.submitAfterUnbind.smallerSize1",
+		"Если размер pdu меньше 16 байт (размер хедера), SC закрывает соединение");
+	__reg_tc__("protocolError.submitAfterUnbind.smallerSize2",
+		"Если размер pdu меньше правильного, SC закрывает соединение");
+	__reg_tc__("protocolError.submitAfterUnbind.greaterSize1",
+		"Если размер pdu больше правильного, но меньше 64kb, SC закрывает соединение после таймаута");
+	__reg_tc__("protocolError.submitAfterUnbind.greaterSize2",
+		"Если размер pdu больше 100kb, SC закрывает соединение");
 	__reg_tc__("protocolError.submitAfterUnbind.allowedCommandId",
 		"Если задан command_id разрешенный для sme, но не bind, SC отправляет generic_nack с command_status = ESME_RINVBNDSTS");
 	__reg_tc__("protocolError.submitAfterUnbind.notAllowedCommandId",
@@ -651,15 +659,11 @@ void notImplementedTc()
 {
 	__reg_tc__("notImplemented", "Не имплементированные тест кейсы");
 	__reg_tc__("notImplemented.submitMulti", "Отправка submit_multi pdu");
-	__reg_tc__("notImplemented.processMultiResp", "Получение submit_multi_resp pdu");
+	__reg_tc__("notImplemented.submitMulti.resp", "Получение submit_multi_resp pdu");
 	__reg_tc__("notImplemented.dataSm", "Отправка data_sm pdu");
-	__reg_tc__("notImplemented.processDataSm", "Получение data_sm pdu");
-	__reg_tc__("notImplemented.processDataSmResp", "Получение data_sm_resp pdu");
-	__reg_tc__("notImplemented.querySm", "Отправка query_sm pdu");
-	__reg_tc__("notImplemented.processQuerySmResp", "Получение query_sm_resp pdu");
-	__reg_tc__("notImplemented.cancelSm", "Отправка cancel_sm pdu");
-	__reg_tc__("notImplemented.processCancelSmResp", "Получение cancel_sm_resp pdu");
-	__reg_tc__("notImplemented.processAlertNotification", "Получение alert_notification pdu");
+	__reg_tc__("notImplemented.dataSm.delivery", "Получение data_sm pdu");
+	__reg_tc__("notImplemented.dataSm.resp", "Получение data_sm_resp pdu");
+	__reg_tc__("notImplemented.alertNotification", "Получение alert_notification pdu");
 }
 
 void allProtocolTc()
