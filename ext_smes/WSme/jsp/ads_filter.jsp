@@ -32,7 +32,7 @@ FORM_METHOD="get";
       break;
     default:
       STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
-      errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction));
+      errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
   }
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
