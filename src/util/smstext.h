@@ -200,8 +200,36 @@ struct ConcatInfo{
 };
 #pragma pack()
 
-int partitionSms(SMS* sms,int dstdc);
+int partitionSms(SMS* sms);
 bool extractSmsPart(SMS* sms,int partnum);
+
+inline bool smsCanBeTransliterated(SMS* sms)
+{
+  int dc=sms->getIntProperty(Tag::SMPP_DATA_CODING);
+  if(dc!=DataCoding::UCS2)return false;
+  unsigned char* body;
+  unsigned len;
+  if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+  {
+    body=(unsigned char*)sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+  }else
+  {
+    body=(unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+  }
+  if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)==0x40)
+  {
+    int udhlen=*body;
+    body+=udhlen+1;
+    len-=udhlen+1;
+  }
+  unsigned short* ucsbody=(unsigned short*)body;
+  len/=2;
+  for(int i=0;i<len;i++)
+  {
+    if((ucsbody[i]&0xff00)!=0x0000 && (ucsbody[i]&0xff00)!=0x0400)return false;
+  }
+  return true;
+}
 
 }
 }

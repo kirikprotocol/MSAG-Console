@@ -51,6 +51,8 @@
       <param name="msgDivertOff">Divert deactivated</param>
       <param name="msgDivertChanged">Divert address changed</param>
       <param name="msgInvalidParam">Invalid parameter value</param>
+      <param name="msgTranslitOn">Messages from you will be transliterated if required</param>
+      <param name="msgTranslitOff">Messages from you will not be transliterated unless required</param>
     </section>
     <section name="abonentinfo">
       <param name="mobileFormat">Abonent $$string import=abonent$$ is $$string import=status$$. msc $$string import=msc$$</param>

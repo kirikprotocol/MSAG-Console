@@ -1041,10 +1041,23 @@ StateType StateMachine::submit(Tuple& t)
   }
 
   sms->setIntProperty(Tag::SMSC_HIDE,profile.hide);
+  sms->setIntProperty(Tag::SMSC_TRANSLIT,profile.translit);
 
   Profile srcprof=profile;
 
-  profile=smsc->getProfiler()->lookup(dst);
+  int profileMatchType;
+  std::string profileMatchAddress;
+  profile=smsc->getProfiler()->lookupEx(dst,profileMatchType,profileMatchAddress);
+
+  if(profileMatchType!=ProfilerMatchType::mtDefault)
+  {
+    sms->setIntProperty(Tag::SMSC_TRANSLIT,1);
+  }
+
+  if(!smsCanBeTransliterated(sms))
+  {
+    sms->setIntProperty(Tag::SMSC_TRANSLIT,0);
+  }
 
   bool diverted=false;
 
@@ -1603,7 +1616,8 @@ StateType StateMachine::submit(Tuple& t)
           newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(int)tmp.length());
           if(ri.smeSystemId=="MAP_PROXY")
           {
-            pres=partitionSms(&newsms,profile.codepage);
+            newsms.setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
+            pres=partitionSms(&newsms);
             if(pres==psMultiple)
             {
               uint8_t msgref=smsc->getNextMR(dst);
@@ -1830,7 +1844,7 @@ StateType StateMachine::submit(Tuple& t)
        !noPartitionSms
       )
     {
-      pres=partitionSms(sms,profile.codepage);
+      pres=partitionSms(sms);
     }
     if(pres==psErrorLength)
     {
@@ -2312,26 +2326,32 @@ StateType StateMachine::submit(Tuple& t)
            )
           )
         {
-          try{
-            transLiterateSms(sms,sms->getIntProperty(Tag::SMSC_DSTCODEPAGE));
-            if(sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
-            {
-              int dc=sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
-              int olddc=dc;
-              if((dc&0xc0)==0 || (dc&0xf0)==0xf0) //groups 00xx and 1111
-              {
-                dc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
-
-              }else if((dc&0xf0)==0xe0)
-              {
-                dc=0xd0 | (dc&0x0f);
-              }
-              sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
-              __trace2__("SUBMIT: transliterate olddc(%x)->dc(%x)",olddc,dc);
-            }
-          }catch(exception& e)
+          if(!(!diverted && sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2 &&
+             !sms->getIntProperty(Tag::SMSC_TRANSLIT)))
           {
-            __warning2__("SUBMIT:Failed to transliterate: %s",e.what());
+
+
+            try{
+              transLiterateSms(sms,sms->getIntProperty(Tag::SMSC_DSTCODEPAGE));
+              if(sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
+              {
+                int dc=sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
+                int olddc=dc;
+                if((dc&0xc0)==0 || (dc&0xf0)==0xf0) //groups 00xx and 1111
+                {
+                  dc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
+
+                }else if((dc&0xf0)==0xe0)
+                {
+                  dc=0xd0 | (dc&0x0f);
+                }
+                sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
+                __trace2__("SUBMIT: transliterate olddc(%x)->dc(%x)",olddc,dc);
+              }
+            }catch(exception& e)
+            {
+              __warning2__("SUBMIT:Failed to transliterate: %s",e.what());
+            }
           }
         }
       }
@@ -2717,7 +2737,7 @@ StateType StateMachine::forward(Tuple& t)
   if(doRepartition && ri.smeSystemId=="MAP_PROXY")
   {
     debug2(smsLog,"FWD: sms repartition %lld",t.msgId);
-    int pres=partitionSms(&sms,sms.getIntProperty(Tag::SMSC_DSTCODEPAGE));
+    int pres=partitionSms(&sms);
     if(pres!=psSingle && pres!=psMultiple)
     {
       debug2(smsLog,"FWD: divert failed - cannot concat, msgId=%lld",t.msgId);
@@ -2810,21 +2830,25 @@ StateType StateMachine::forward(Tuple& t)
            )
           )
         {
-          transLiterateSms(&sms,sms.getIntProperty(Tag::SMSC_DSTCODEPAGE));
-          if(sms.hasIntProperty(Tag::SMSC_ORIGINAL_DC))
+          if(!(!diverted && sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2 &&
+               !sms.getIntProperty(Tag::SMSC_TRANSLIT)))
           {
-            int dc=sms.getIntProperty(Tag::SMSC_ORIGINAL_DC);
-            int olddc=dc;
-            if((dc&0xc0)==0 || (dc&0xf0)==0xf0) //groups 00xx and 1111
+            transLiterateSms(&sms,sms.getIntProperty(Tag::SMSC_DSTCODEPAGE));
+            if(sms.hasIntProperty(Tag::SMSC_ORIGINAL_DC))
             {
-              dc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
+              int dc=sms.getIntProperty(Tag::SMSC_ORIGINAL_DC);
+              int olddc=dc;
+              if((dc&0xc0)==0 || (dc&0xf0)==0xf0) //groups 00xx and 1111
+              {
+                dc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
 
-            }else if((dc&0xf0)==0xe0)
-            {
-              dc=0xd0 | (dc&0x0f);
+              }else if((dc&0xf0)==0xe0)
+              {
+                dc=0xd0 | (dc&0x0f);
+              }
+              sms.setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
+              __trace2__("FORWARD: transliterate olddc(%x)->dc(%x)",olddc,dc);
             }
-            sms.setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
-            __trace2__("FORWARD: transliterate olddc(%x)->dc(%x)",olddc,dc);
           }
         }
       }
@@ -3254,7 +3278,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       if(!sms.hasIntProperty(Tag::SMSC_MERGE_CONCAT))
       {
         sms.getMessageBody().dropProperty(Tag::SMSC_CONCATINFO);
-        partitionSms(&sms,dc);
+        partitionSms(&sms);
       }
 
     }else // first part was delivered to original address
@@ -3997,7 +4021,7 @@ StateType StateMachine::replace(Tuple& t)
   if(!strcmp(sms.getDestinationSmeId(),"MAP_PROXY"))
   {
     try{
-      int pres=partitionSms(&sms,sms.getIntProperty(Tag::SMSC_DSTCODEPAGE));
+      int pres=partitionSms(&sms);
       if(pres==psErrorUdhi || pres==psErrorUdhi)
       {
         __trace2__("REPLACE: concatenation failed(%d)",pres);
@@ -4513,7 +4537,7 @@ void StateMachine::submitReceipt(SMS& sms,int type)
       int pres=psSingle;
       if(ri.smeSystemId=="MAP_PROXY")
       {
-        pres=partitionSms(&sms,profile.codepage);
+        pres=partitionSms(&sms);
       }
       if(pres==psMultiple)
       {

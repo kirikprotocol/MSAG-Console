@@ -182,7 +182,15 @@ void Smsc::mainLoop()
     //
     //////
 
-    while(mergeCacheTimeouts.Count()>0 && mergeCacheTimeouts.Front().first<=time(NULL))
+    time_t now=time(NULL);
+
+    if(license.expdate<now)
+    {
+      stopFlag=true;
+      break;
+    }
+
+    while(mergeCacheTimeouts.Count()>0 && mergeCacheTimeouts.Front().first<=now)
     {
       SMSId id=mergeCacheTimeouts.Front().second;
       MergeCacheItem* pmci=reverseMergeCache.GetPtr(id);
@@ -263,6 +271,11 @@ void Smsc::mainLoop()
 
     while(frame.size())
     {
+      if(license.expdate<now)
+      {
+        stopFlag=true;
+        break;
+      }
       int cntInstant=tcontrol->getTotalCount();
       int cntSmooth=tcontrol->getTotalCountLong();
       /*if(cntInstant+1>maxsms && cntSmooth+1000<=maxsms*smt*1000)

@@ -297,7 +297,7 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   using smsc::util::config::Manager;
   using smsc::util::config::ConfigView;
   using smsc::util::config::ConfigException;
-  const char *sql="UPDATE SMS_PROFILE SET reportinfo=:1, codeset=:2, locale=:3, hidden=:4, hidden_mod=:5,divert=:6,divert_act=:7,divert_mod=:8, udhconcat=:9 where mask=:10";
+  const char *sql="UPDATE SMS_PROFILE SET reportinfo=:1, codeset=:2, locale=:3, hidden=:4, hidden_mod=:5,divert=:6,divert_act=:7,divert_mod=:8, udhconcat=:9, translit=:10 where mask=:11";
   ConnectionGuard connection(ds);
   if(!connection.get())throw Exception("Profiler: Failed to get connection");
   auto_ptr<Statement> statement(connection->createStatement(sql));
@@ -324,7 +324,8 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   statement->setString(7, div);
   statement->setString(8,profile.divertModifiable?"Y":"N");
   statement->setString(9,profile.udhconcat?"Y":"N");
-  statement->setString(10,addrbuf);
+  statement->setString(10,profile.translit?"Y":"N");
+  statement->setString(11,addrbuf);
   statement->executeUpdate();
   connection->commit();
 }
@@ -335,8 +336,8 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   using smsc::util::config::Manager;
   using smsc::util::config::ConfigView;
   using smsc::util::config::ConfigException;
-  const char* sql = "INSERT INTO SMS_PROFILE (mask, reportinfo, codeset, locale,hidden,hidden_mod,divert,divert_act,divert_mod,udhconcat)"
-                      " VALUES (:1, :2, :3, :4, :5,:6,:7,:8,:9,:10)";
+  const char* sql = "INSERT INTO SMS_PROFILE (mask, reportinfo, codeset, locale,hidden,hidden_mod,divert,divert_act,divert_mod,udhconcat,translit)"
+                      " VALUES (:1, :2, :3, :4, :5,:6,:7,:8,:9,:10,:11)";
 
   ConnectionGuard connection(ds);
 
@@ -365,6 +366,7 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   statement->setString(8, div);
   statement->setString(9, profile.divertModifiable?"Y":"N");
   statement->setString(10,profile.udhconcat?"Y":"N");
+  statement->setString(11,profile.translit?"Y":"N");
   statement->executeUpdate();
   connection->commit();
 }
@@ -378,6 +380,7 @@ static const int _update_divert=6;
 static const int _update_charset_ussd=7;
 static const int _update_divert_cond=8;
 static const int _update_udhconcat=9;
+static const int _update_translit=10;
 
 static const int update_div_cond_Absent=1;
 static const int update_div_cond_Blocked=2;
@@ -447,6 +450,10 @@ void Profiler::internal_update(int flag,const Address& addr,int value,const char
   {
     profile.udhconcat=value;
   }
+  if(flag==_update_translit)
+  {
+    profile.translit=value;
+  }
   update(addr,profile);
 }
 
@@ -479,7 +486,9 @@ enum{
   msgDivertBarOn,
   msgDivertBarOff,
   msgDivertCapOn,
-  msgDivertCapOff
+  msgDivertCapOff,
+  msgTranslitOn,
+  msgTranslitOff
 };
 
 class DummyGetAdapter:public GetAdapter{
@@ -854,6 +863,17 @@ int Profiler::Execute()
             msg=msgConcatOff;
             internal_update(_update_udhconcat,addr,0,0);
           }
+        }else if(profCmd=="TRANSLIT")
+        {
+          if(arg1=="ON")
+          {
+            msg=msgTranslitOn;
+            internal_update(_update_translit,addr,1,0);
+          }else
+          {
+            msg=msgTranslitOff;
+            internal_update(_update_translit,addr,0,0);
+          }
         }
       }catch(AccessDeniedException& e)
       {
@@ -903,6 +923,8 @@ int Profiler::Execute()
         SIMPLERESP(msgDivertBarOff);
         SIMPLERESP(msgDivertCapOn);
         SIMPLERESP(msgDivertCapOff);
+        SIMPLERESP(msgTranslitOn);
+        SIMPLERESP(msgTranslitOff);
         //SIMPLERESP(msgAccessDenied);
         case msgAccessDenied:
         {
@@ -1157,7 +1179,7 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
   using smsc::util::config::ConfigView;
   using smsc::util::config::ConfigException;
 
-  const char* sql = "SELECT MASK, REPORTINFO, CODESET ,LOCALE, HIDDEN, HIDDEN_MOD, DIVERT,DIVERT_ACT,DIVERT_MOD,UDHCONCAT FROM SMS_PROFILE";
+  const char* sql = "SELECT MASK, REPORTINFO, CODESET ,LOCALE, HIDDEN, HIDDEN_MOD, DIVERT,DIVERT_ACT,DIVERT_MOD,UDHCONCAT,TRANSLIT FROM SMS_PROFILE";
   //const char* sql = "SELECT MASK FROM SMS_PROFILE";
 
 
@@ -1208,6 +1230,7 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
     p.divertModifiable=RsAsBool(rs.get(),9);
 
     p.udhconcat=RsAsBool(rs.get(),10);
+    p.translit=RsAsBool(rs.get(),11);
 
 
     //debug2(log,"init:%s=%s",addr.toString().c_str(),DumpProfile(p).c_str());

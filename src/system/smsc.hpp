@@ -405,7 +405,7 @@ public:
     int y,m,d;
     sscanf(lic["LicenseExpirationDate"].c_str(),"%d-%d-%d",&y,&m,&d);
     struct tm t={0,};
-    t.tm_year=y;
+    t.tm_year=y-1900;
     t.tm_mon=m;
     t.tm_mday=d;
     license.expdate=mktime(&t);
@@ -414,6 +414,19 @@ public:
     if(hostid!=gethostid())
     {
       throw runtime_error("");
+    }
+    if(license.expdate<time(NULL))
+    {
+      char x[]=
+      {
+      'L'^0x4c,'i'^0x4c,'c'^0x4c,'e'^0x4c,'n'^0x4c,'s'^0x4c,'e'^0x4c,' '^0x4c,'E'^0x4c,'x'^0x4c,'p'^0x4c,'i'^0x4c,'r'^0x4c,'e'^0x4c,'d'^0x4c,
+      };
+      std::string s;
+      for(int i=0;i<sizeof(x);i++)
+      {
+        s+=x[i]^0x4c;
+      }
+      throw runtime_error(s);
     }
   }
 
