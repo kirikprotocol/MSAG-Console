@@ -7,14 +7,15 @@ package ru.novosoft.smsc.jsp.smsc.hosts;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
+
 
 public class HostView extends SmscBean
 {
@@ -24,7 +25,7 @@ public class HostView extends SmscBean
   public static final int RESULT_EDIT_SERVICE = PRIVATE_RESULT + 3;
 
   protected String hostName = null;
-  protected String serviceIds[] = new String[0];
+  protected String[] serviceIds = new String[0];
   protected String serviceId = null;
 
   protected Map services = null;
@@ -36,12 +37,12 @@ public class HostView extends SmscBean
   protected String mbDelete = null;
   protected String mbStartService = null;
   protected String mbStopService = null;
-  protected String mbEditService = null;;
+  protected String mbEditService = null;
 
-  protected int init(List errors)
+  protected int init(final List errors)
   {
-    int result = super.init(errors);
-    if (result != RESULT_OK)
+    final int result = super.init(errors);
+    if (RESULT_OK != result)
       return result;
 
     try {
@@ -55,30 +56,30 @@ public class HostView extends SmscBean
     return RESULT_OK;
   }
 
-  public int process(HttpServletRequest request)
+  public int process(final HttpServletRequest request)
   {
-    int result = super.process(request);
-    if (result != RESULT_OK)
+    final int result = super.process(request);
+    if (RESULT_OK != result)
       return result;
 
-    if (serviceIds == null)
+    if (null == serviceIds)
       serviceIds = new String[0];
 
-    if (mbAddService != null) {
+    if (null != mbAddService) {
       return RESULT_ADD_SERVICE;
-    } else if (mbCancel != null) {
+    } else if (null != mbCancel) {
       return RESULT_DONE;
-    } else if (mbEdit != null) {
+    } else if (null != mbEdit) {
       return RESULT_EDIT;
-    } else if (mbDelete != null) {
+    } else if (null != mbDelete) {
       return deleteServices();
-    } else if (mbStartService != null) {
+    } else if (null != mbStartService) {
       return startServices();
-    } else if (mbStopService != null) {
+    } else if (null != mbStopService) {
       return stopServices();
-    } else if (mbEditService != null) {
+    } else if (null != mbEditService) {
       return RESULT_EDIT_SERVICE;
-    } else if (mbView != null) {
+    } else if (null != mbView) {
       return RESULT_VIEW;
     } else
       return RESULT_OK;
@@ -86,12 +87,12 @@ public class HostView extends SmscBean
 
   private int deleteServices()
   {
-    if (serviceIds.length == 0)
+    if (0 == serviceIds.length)
       return RESULT_OK;
 
-    List notRemoved = new LinkedList();
+    final List notRemoved = new LinkedList();
     for (int i = 0; i < serviceIds.length; i++) {
-      String id = serviceIds[i];
+      final String id = serviceIds[i];
       try {
         if (hostsManager.isService(id)) {
           hostsManager.removeService(id);
@@ -120,35 +121,29 @@ public class HostView extends SmscBean
       }
     }
     serviceIds = (String[]) notRemoved.toArray(new String[0]);
-    return errors.size() == 0 ? RESULT_DONE : RESULT_ERROR;
+    return 0 == errors.size() ? RESULT_DONE : RESULT_ERROR;
   }
 
   protected int startServices()
   {
     int result = RESULT_OK;
-    if (serviceIds.length == 0)
+    if (0 == serviceIds.length)
       return warning(SMSCErrors.warning.hosts.noServicesSelected);
 
-    List notStartedIds = new LinkedList();
+    final List notStartedIds = new LinkedList();
 
     for (int i = 0; i < serviceIds.length; i++) {
-      ServiceInfo s = (ServiceInfo) services.get(serviceIds[i]);
-      if (s == null)
+      final ServiceInfo s = (ServiceInfo) services.get(serviceIds[i]);
+      if (null == s)
         result = error(SMSCErrors.error.hosts.serviceNotFound, serviceIds[i]);
-      else if (s.getStatus() == ServiceInfo.STATUS_STOPPED) {
-        long pid = -1;
+      else if (ServiceInfo.STATUS_STOPPED == s.getStatus()) {
         try {
-          pid = hostsManager.startService(serviceIds[i]);
+          hostsManager.startService(serviceIds[i]);
         } catch (AdminException e) {
           notStartedIds.add(serviceIds[i]);
           result = error(SMSCErrors.error.hosts.couldntStartService, serviceIds[i], e);
           logger.error("Couldn't start services \"" + serviceIds[i] + '"', e);
           continue;
-        }
-        if (pid <= 0) {
-          notStartedIds.add(serviceIds[i]);
-          result = error(SMSCErrors.error.hosts.couldntStartService, serviceIds[i]);
-          logger.error("Couldn't start services \"" + serviceIds[i] + '"');
         }
       }
     }
@@ -160,16 +155,16 @@ public class HostView extends SmscBean
   {
     int result = RESULT_OK;
 
-    if (serviceIds.length == 0)
+    if (0 == serviceIds.length)
       return warning(SMSCErrors.warning.hosts.noServicesSelected);
 
-    List notStoppedIds = new LinkedList();
+    final List notStoppedIds = new LinkedList();
 
     for (int i = 0; i < serviceIds.length; i++) {
-      ServiceInfo s = (ServiceInfo) services.get(serviceIds[i]);
-      if (s == null)
+      final ServiceInfo s = (ServiceInfo) services.get(serviceIds[i]);
+      if (null == s)
         result = error(SMSCErrors.error.hosts.serviceNotFound, serviceIds[i]);
-      else if (s.getStatus() == ServiceInfo.STATUS_RUNNING) {
+      else if (ServiceInfo.STATUS_RUNNING == s.getStatus()) {
         try {
           hostsManager.shutdownService(serviceIds[i]);
         } catch (AdminException e) {
@@ -185,7 +180,7 @@ public class HostView extends SmscBean
 
   public int getServicesTotal()
   {
-    if (hostName != null && hostName.length() > 0) {
+    if (null != hostName && 0 < hostName.length()) {
       try {
         return hostsManager.getCountServices(hostName);
       } catch (AdminException e) {
@@ -197,7 +192,7 @@ public class HostView extends SmscBean
 
   public int getServicesRunning()
   {
-    if (hostName != null && hostName.length() > 0) {
+    if (null != hostName && 0 < hostName.length()) {
       try {
         return hostsManager.getCountRunningServices(hostName);
       } catch (AdminException e) {
@@ -228,7 +223,7 @@ public class HostView extends SmscBean
     return hostName;
   }
 
-  public void setHostName(String hostName)
+  public void setHostName(final String hostName)
   {
     this.hostName = hostName;
   }
@@ -238,7 +233,7 @@ public class HostView extends SmscBean
     return serviceIds;
   }
 
-  public void setServiceIds(String[] serviceIds)
+  public void setServiceIds(final String[] serviceIds)
   {
     this.serviceIds = serviceIds;
   }
@@ -248,7 +243,7 @@ public class HostView extends SmscBean
     return mbView;
   }
 
-  public void setMbView(String mbView)
+  public void setMbView(final String mbView)
   {
     this.mbView = mbView;
   }
@@ -258,7 +253,7 @@ public class HostView extends SmscBean
     return mbEdit;
   }
 
-  public void setMbEdit(String mbEdit)
+  public void setMbEdit(final String mbEdit)
   {
     this.mbEdit = mbEdit;
   }
@@ -268,7 +263,7 @@ public class HostView extends SmscBean
     return mbCancel;
   }
 
-  public void setMbCancel(String mbCancel)
+  public void setMbCancel(final String mbCancel)
   {
     this.mbCancel = mbCancel;
   }
@@ -278,7 +273,7 @@ public class HostView extends SmscBean
     return mbAddService;
   }
 
-  public void setMbAddService(String mbAddService)
+  public void setMbAddService(final String mbAddService)
   {
     this.mbAddService = mbAddService;
   }
@@ -288,7 +283,7 @@ public class HostView extends SmscBean
     return mbDelete;
   }
 
-  public void setMbDelete(String mbDelete)
+  public void setMbDelete(final String mbDelete)
   {
     this.mbDelete = mbDelete;
   }
@@ -298,7 +293,7 @@ public class HostView extends SmscBean
     return mbStartService;
   }
 
-  public void setMbStartService(String mbStartService)
+  public void setMbStartService(final String mbStartService)
   {
     this.mbStartService = mbStartService;
   }
@@ -308,7 +303,7 @@ public class HostView extends SmscBean
     return mbStopService;
   }
 
-  public void setMbStopService(String mbStopService)
+  public void setMbStopService(final String mbStopService)
   {
     this.mbStopService = mbStopService;
   }
@@ -318,7 +313,7 @@ public class HostView extends SmscBean
     return serviceId;
   }
 
-  public void setServiceId(String serviceId)
+  public void setServiceId(final String serviceId)
   {
     this.serviceId = serviceId;
   }
@@ -328,7 +323,7 @@ public class HostView extends SmscBean
     return mbEditService;
   }
 
-  public void setMbEditService(String mbEditService)
+  public void setMbEditService(final String mbEditService)
   {
     this.mbEditService = mbEditService;
   }

@@ -27,7 +27,7 @@ public class Index extends PageBean
 
   protected String serviceId = null;
   protected String hostId = null;
-  protected String serviceIds[] = new String[0];
+  protected String[] serviceIds = new String[0];
 
   protected String mbAddService = null;
   protected String mbDelete = null;
@@ -39,30 +39,30 @@ public class Index extends PageBean
   protected String mbDisconnectServices = null;
 
 
-  public int process(HttpServletRequest request)
+  public int process(final HttpServletRequest request)
   {
-    int result = super.process(request);
-    if (result != RESULT_OK)
+    final int result = super.process(request);
+    if (RESULT_OK != result)
       return result;
 
-    if (mbAddService != null)
+    if (null != mbAddService)
       return RESULT_ADD;
-    else if (mbDelete != null) {
+    else if (null != mbDelete) {
       if (request.isUserInRole("services"))
         return deleteServices();
       else
         return error(SMSCErrors.error.services.notAuthorizedForDeletingService);
-    } else if (mbStartService != null)
+    } else if (null != mbStartService)
       return startServices();
-    else if (mbStopService != null)
+    else if (null != mbStopService)
       return stopServices();
-    else if (mbView != null)
+    else if (null != mbView)
       return RESULT_VIEW;
-    else if (mbViewHost != null)
+    else if (null != mbViewHost)
       return RESULT_VIEW_HOST;
-    else if (mbEdit != null)
+    else if (null != mbEdit)
       return RESULT_EDIT;
-    else if (mbDisconnectServices != null)
+    else if (null != mbDisconnectServices)
       return disconnectServices();
     else
       return RESULT_OK;
@@ -70,22 +70,22 @@ public class Index extends PageBean
 
   public Collection getSmeIds()
   {
-    if (hostsManager == null) {
+    if (null == hostsManager) {
       error("Service Manager is null!!!");
       return new LinkedList();
     } else {
-      List smeIds = hostsManager.getSmeIds();
+      final List smeIds = hostsManager.getSmeIds();
       smeIds.remove(Constants.SMSC_SME_ID);
       return smeIds;
     }
   }
 
-  public boolean isService(String smeId)
+  public boolean isService(final String smeId)
   {
     return hostsManager.isService(smeId);
   }
 
-  public boolean isServiceAdministrable(String smeId)
+  public boolean isServiceAdministrable(final String smeId)
   {
     return hostsManager.isServiceAdministarble(smeId);
   }
@@ -96,9 +96,9 @@ public class Index extends PageBean
 
   protected int deleteServices()
   {
-    List notRemoved = new LinkedList();
+    final List notRemoved = new LinkedList();
     for (int i = 0; i < serviceIds.length; i++) {
-      String id = serviceIds[i];
+      final String id = serviceIds[i];
       try {
         if (hostsManager.isService(id)) {
           hostsManager.removeService(id);
@@ -129,40 +129,36 @@ public class Index extends PageBean
       }
     }
     serviceIds = (String[]) notRemoved.toArray(new String[0]);
-    return errors.size() == 0 ? RESULT_DONE : RESULT_ERROR;
+    return 0 == errors.size() ? RESULT_DONE : RESULT_ERROR;
   }
 
   protected int startServices()
   {
-    logger.debug("startServices: " + (serviceIds != null ? serviceIds.length : 0));
+    logger.debug("startServices: " + (null != serviceIds ? serviceIds.length : 0));
 
     int result = RESULT_OK;
-    if (serviceIds.length == 0)
+    if (0 == serviceIds.length)
       return warning(SMSCErrors.warning.hosts.noServicesSelected);
 
-    List notStartedIds = new LinkedList();
+    final List notStartedIds = new LinkedList();
 
     for (int i = 0; i < serviceIds.length; i++) {
-      final String serviceId = serviceIds[i];
-      if (hostsManager.isService(serviceId)) {
+      final String svcId = serviceIds[i];
+      if (hostsManager.isService(svcId)) {
         try {
-          if (hostsManager.getServiceInfo(serviceId).getStatus() == ServiceInfo.STATUS_STOPPED) {
-            if (hostsManager.startService(serviceId) <= 0) {
-              notStartedIds.add(serviceId);
-              result = error(SMSCErrors.error.hosts.couldntStartService, serviceId);
-              logger.error("Couldn't start services \"" + serviceId + '"');
-            }
+          if (ServiceInfo.STATUS_STOPPED == hostsManager.getServiceInfo(svcId).getStatus()) {
+            hostsManager.startService(svcId);
           } else
-            logger.debug("startServices: " + serviceId + " is " + hostsManager.getServiceInfo(serviceId).getStatusStr());
+            logger.debug("startServices: " + svcId + " is " + hostsManager.getServiceInfo(svcId).getStatusStr());
         } catch (AdminException e) {
-          notStartedIds.add(serviceId);
-          result = error(SMSCErrors.error.hosts.couldntStartService, serviceId, e);
-          logger.error("Couldn't start services \"" + serviceId + '"', e);
+          notStartedIds.add(svcId);
+          result = error(SMSCErrors.error.hosts.couldntStartService, svcId, e);
+          logger.error("Couldn't start services \"" + svcId + '"', e);
           continue;
         }
       } else {
-        notStartedIds.add(serviceId);
-        result = error(SMSCErrors.error.services.couldntStartInternalService, serviceId);
+        notStartedIds.add(svcId);
+        result = error(SMSCErrors.error.services.couldntStartInternalService, svcId);
       }
     }
     serviceIds = (String[]) notStartedIds.toArray(new String[0]);
@@ -171,26 +167,26 @@ public class Index extends PageBean
 
   protected int stopServices()
   {
-    logger.debug("stopServices: " + (serviceIds != null ? serviceIds.length : 0));
+    logger.debug("stopServices: " + (null != serviceIds ? serviceIds.length : 0));
 
     int result = RESULT_OK;
 
-    if (serviceIds.length == 0)
+    if (0 == serviceIds.length)
       return warning(SMSCErrors.warning.hosts.noServicesSelected);
 
-    List notStoppedIds = new LinkedList();
+    final List notStoppedIds = new LinkedList();
 
     for (int i = 0; i < serviceIds.length; i++) {
-      final String serviceId = serviceIds[i];
+      final String svcId = serviceIds[i];
       try {
-        if (hostsManager.getServiceInfo(serviceId).getStatus() == ServiceInfo.STATUS_RUNNING)
-          hostsManager.shutdownService(serviceId);
+        if (ServiceInfo.STATUS_RUNNING == hostsManager.getServiceInfo(svcId).getStatus())
+          hostsManager.shutdownService(svcId);
         else
-          logger.debug("stopServices: " + serviceId + " is " + hostsManager.getServiceInfo(serviceId).getStatusStr());
+          logger.debug("stopServices: " + svcId + " is " + hostsManager.getServiceInfo(svcId).getStatusStr());
       } catch (AdminException e) {
-        notStoppedIds.add(serviceId);
-        result = error(SMSCErrors.error.hosts.couldntStopService, serviceId);
-        logger.error("Couldn't stop services \"" + serviceId + '"', e);
+        notStoppedIds.add(svcId);
+        result = error(SMSCErrors.error.hosts.couldntStopService, svcId);
+        logger.error("Couldn't stop services \"" + svcId + '"', e);
       }
     }
     serviceIds = (String[]) notStoppedIds.toArray(new String[0]);
@@ -199,11 +195,11 @@ public class Index extends PageBean
 
   private int disconnectServices()
   {
-    logger.debug("disconnectServices: " + (serviceIds != null ? serviceIds.length : 0));
+    logger.debug("disconnectServices: " + (null != serviceIds ? serviceIds.length : 0));
 
     int result = RESULT_OK;
 
-    if (serviceIds.length == 0)
+    if (0 == serviceIds.length)
       return warning(SMSCErrors.warning.hosts.noServicesSelected);
 
     try {
@@ -217,7 +213,7 @@ public class Index extends PageBean
   }
 
 
-  public String getHost(String sId)
+  public String getHost(final String sId)
   {
     try {
       return hostsManager.getServiceInfo(sId).getHost();
@@ -228,7 +224,7 @@ public class Index extends PageBean
     }
   }
 
-  public byte getServiceStatus(String serviceId)
+  public byte getServiceStatus(final String serviceId)
   {
     if (hostsManager.isService(serviceId)) {
       try {
@@ -242,7 +238,7 @@ public class Index extends PageBean
       return ServiceInfo.STATUS_RUNNING;
   }
 
-  public SmeStatus getSmeStatus(String id)
+  public SmeStatus getSmeStatus(final String id)
   {
     try {
       return appContext.getSmeManager().smeStatus(id);
@@ -253,7 +249,7 @@ public class Index extends PageBean
     }
   }
 
-  public boolean isServiceDisabled(String serviceId)
+  public boolean isServiceDisabled(final String serviceId)
   {
     try {
       return appContext.getSmeManager().get(serviceId).isDisabled();
@@ -263,11 +259,11 @@ public class Index extends PageBean
     }
   }
 
-  public boolean isServiceConnected(String serviceId)
+  public boolean isServiceConnected(final String serviceId)
   {
     try {
       final SmeStatus smeStatus = appContext.getSmeManager().smeStatus(serviceId);
-      if (smeStatus != null)
+      if (null != smeStatus)
         return smeStatus.isConnected();
       else {
         logger.debug("SME ID \"" + serviceId + "\" not found");
@@ -282,7 +278,7 @@ public class Index extends PageBean
   public boolean isSmscAlive()
   {
     try {
-      return hostsManager.getServiceInfo(Constants.SMSC_SME_ID).getStatus() == ServiceInfo.STATUS_RUNNING;
+      return ServiceInfo.STATUS_RUNNING == hostsManager.getServiceInfo(Constants.SMSC_SME_ID).getStatus();
     } catch (AdminException e) {
       error(SMSCErrors.error.services.couldntGetServiceInfo, Constants.SMSC_SME_ID);
       return false;
@@ -299,7 +295,7 @@ public class Index extends PageBean
     return serviceId;
   }
 
-  public void setServiceId(String serviceId)
+  public void setServiceId(final String serviceId)
   {
     this.serviceId = serviceId;
   }
@@ -309,7 +305,7 @@ public class Index extends PageBean
     return hostId;
   }
 
-  public void setHostId(String hostId)
+  public void setHostId(final String hostId)
   {
     this.hostId = hostId;
   }
@@ -319,7 +315,7 @@ public class Index extends PageBean
     return serviceIds;
   }
 
-  public void setServiceIds(String[] serviceIds)
+  public void setServiceIds(final String[] serviceIds)
   {
     this.serviceIds = serviceIds;
   }
@@ -329,7 +325,7 @@ public class Index extends PageBean
     return mbAddService;
   }
 
-  public void setMbAddService(String mbAddService)
+  public void setMbAddService(final String mbAddService)
   {
     this.mbAddService = mbAddService;
   }
@@ -339,7 +335,7 @@ public class Index extends PageBean
     return mbDelete;
   }
 
-  public void setMbDelete(String mbDelete)
+  public void setMbDelete(final String mbDelete)
   {
     this.mbDelete = mbDelete;
   }
@@ -349,7 +345,7 @@ public class Index extends PageBean
     return mbStartService;
   }
 
-  public void setMbStartService(String mbStartService)
+  public void setMbStartService(final String mbStartService)
   {
     this.mbStartService = mbStartService;
   }
@@ -359,7 +355,7 @@ public class Index extends PageBean
     return mbStopService;
   }
 
-  public void setMbStopService(String mbStopService)
+  public void setMbStopService(final String mbStopService)
   {
     this.mbStopService = mbStopService;
   }
@@ -369,7 +365,7 @@ public class Index extends PageBean
     return mbView;
   }
 
-  public void setMbView(String mbView)
+  public void setMbView(final String mbView)
   {
     this.mbView = mbView;
   }
@@ -379,7 +375,7 @@ public class Index extends PageBean
     return mbViewHost;
   }
 
-  public void setMbViewHost(String mbViewHost)
+  public void setMbViewHost(final String mbViewHost)
   {
     this.mbViewHost = mbViewHost;
   }
@@ -389,7 +385,7 @@ public class Index extends PageBean
     return mbEdit;
   }
 
-  public void setMbEdit(String mbEdit)
+  public void setMbEdit(final String mbEdit)
   {
     this.mbEdit = mbEdit;
   }
@@ -399,7 +395,7 @@ public class Index extends PageBean
     return mbDisconnectServices;
   }
 
-  public void setMbDisconnectServices(String mbDisconnectServices)
+  public void setMbDisconnectServices(final String mbDisconnectServices)
   {
     this.mbDisconnectServices = mbDisconnectServices;
   }
