@@ -101,9 +101,9 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   }
   else // make coding scheme
   {
-    if ( sms->hasIntProperty(Tag::MS_DESTADDRSUBUNIT) ){
+    if ( sms->hasIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT) ){
       __trace2__("MAP::mkDeliveryPDU: dest_addr_subunit = 0x%x",
-                 sms->getIntProperty(Tag::MS_DESTADDRSUBUNIT));
+                 sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT));
       // coding scheme 1111xxxx
       datacoding = 0xf0;
       if ( encoding == MAP_UCS2_ENCODING){
@@ -114,7 +114,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
         ;//datacoding |=  nothing
       else // 8bit
         datacoding |= (1<<2);
-      datacoding |= sms->getIntProperty(Tag::MS_DESTADDRSUBUNIT)&0x3;
+      datacoding |= sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)&0x3;
     }
     else
     {
@@ -129,11 +129,11 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
         }
         else
         {
-          if ( !sms->hasIntProperty(Tag::MS_VALIDITY) ){
+          if ( !sms->hasIntProperty(Tag::SMPP_MS_VALIDITY) ){
             __trace2__("MAP::mkDeliveryPDU: Opss, has no ms_validity");
             throw runtime_error("MAP::mkDeliveryPDU: Opss, has no ms_validity");
           }
-          unsigned ms_validity = sms->getIntProperty(Tag::MS_VALIDITY);
+          unsigned ms_validity = sms->getIntProperty(Tag::SMPP_MS_VALIDITY);
           __trace2__("MAP::mkDeliveryPDU: ms_validity = 0x%x",
                      ms_validity);
           if ( (ms_validity & 0x3) == 0x3 ){
@@ -157,8 +157,8 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
           throw runtime_error("MAP::mkDeliveryPDU: Opss, has no ms_validity");
         }*/
         unsigned ms_validity = 0;
-        if ( sms->hasIntProperty(Tag::MS_VALIDITY) )
-          ms_validity = sms->getIntProperty(Tag::MS_VALIDITY);
+        if ( sms->hasIntProperty(Tag::SMPP_MS_VALIDITY) )
+          ms_validity = sms->getIntProperty(Tag::SMPP_MS_VALIDITY);
         __trace2__("MAP::mkDeliveryPDU: ms_validity = 0x%x",
                    ms_validity);
         if ( (ms_validity & 0x3) == 0x3 ){

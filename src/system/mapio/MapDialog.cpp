@@ -9,7 +9,7 @@
 using namespace std;
 using namespace smsc::sms;
 using namespace smsc::smeman;
-  
+
 #define TP_VP_NONE  0
 #define TP_VP_REL   1
 #define TP_VP_ENCH  2
@@ -41,7 +41,7 @@ inline char GetChar(const unsigned char*& ptr,unsigned& shift){
   if ( shift > 1 )
     val |= (*(ptr+1) << (8-shift))&0x7f;
   shift += 7;
-  if ( shift >= 8 ) 
+  if ( shift >= 8 )
   {
     shift&=0x7;
     ++ptr;
@@ -62,7 +62,7 @@ inline void PutChar(unsigned char*& ptr,unsigned& shift,unsigned char val8bit,un
     //val |= (*(ptr+1) << (8-shift))&0x7f;
     *(ptr+1) = *(ptr+1) | (val >> (8-shift));
   shift += 7;
-  if ( shift >= 8 ) 
+  if ( shift >= 8 )
   {
     shift&=0x7;
     ++ptr;
@@ -137,16 +137,16 @@ unsigned ConvertText27bit(
 #define __pchar(x) PutChar(bit7buf,shift,x,bit7buf_end)
 #define __escape(x) __pchar(0x1b); __pchar(x); (*elen) += 2;
     switch(text[i]){
-		case '^': __escape(0x14); break;
-		case '\f':__escape(0x0a); break;
-		case '|': __escape(0x40); break;
-		case '{': __escape(0x28); break;
-		case '}': __escape(0x29); break;
-		case '[': __escape(0x3c); break;
-		case ']': __escape(0x3e); break;
-		case '~': __escape(0x3d); break;
-		case '\\':__escape(0x2f); break;
-		default:
+    case '^': __escape(0x14); break;
+    case '\f':__escape(0x0a); break;
+    case '|': __escape(0x40); break;
+    case '{': __escape(0x28); break;
+    case '}': __escape(0x29); break;
+    case '[': __escape(0x3c); break;
+    case ']': __escape(0x3e); break;
+    case '~': __escape(0x3d); break;
+    case '\\':__escape(0x2f); break;
+    default:
       PutChar(bit7buf,shift,lll_8bit_2_7bit[text[i]],bit7buf_end);
       (*elen) += 1;
     }
@@ -213,7 +213,7 @@ unsigned ConvertSMSC7bit27bit(
 }
 
 bool provErrCodeFatal( ET96MAP_PROV_ERR_T p ) {
-  return 
+  return
   (p == 0x02 || // unsupported service
    p == 0x03 || // mystyped parametor
    p == 0x06 || // unexcpected responnse from peer
@@ -252,21 +252,21 @@ struct SMS_DELIVERY_FORMAT_HEADER{
   }uu;
 };*/
 
-struct SMS_SUMBMIT_FORMAT_HEADER{ 
-  union{                          
-    struct{                       
-      unsigned reply_path:1;      
-      unsigned udhi:1;            
-      unsigned srr:1;             
-      unsigned tp_vp:2;           
-      unsigned reject_dupl:1;     
-      unsigned mg_type_ind:2;     
-    };                            
-    unsigned char _val_01;        
-  };                              
-  unsigned char mr;               
-};                                
-                                  
+struct SMS_SUMBMIT_FORMAT_HEADER{
+  union{
+    struct{
+      unsigned reply_path:1;
+      unsigned udhi:1;
+      unsigned srr:1;
+      unsigned tp_vp:2;
+      unsigned reject_dupl:1;
+      unsigned mg_type_ind:2;
+    };
+    unsigned char _val_01;
+  };
+  unsigned char mr;
+};
+
 struct MAP_SMS_ADDRESS{
   unsigned char len;
   //unsigned char tonpi;
@@ -360,8 +360,8 @@ void mkMapAddress( ET96MAP_ADDRESS_T *addr, char *saddr, unsigned len) {
   for( i = 0; i < len; i++ ) {
     int bi = i/2;
     //int even = i%2;
-    if( i%2 == 1 ) { 
-      //even 
+    if( i%2 == 1 ) {
+      //even
       addr->address[bi] |= ((saddr[i]-'0')<<4); // fill high octet
     } else {
       addr->address[bi] = (saddr[i]-'0')&0x0F; // fill low octet
@@ -369,7 +369,7 @@ void mkMapAddress( ET96MAP_ADDRESS_T *addr, char *saddr, unsigned len) {
   }
   if( len%2 != 0 ) {
     addr->address[sz-1] |= 0xF0;
-  } 
+  }
 }
 
 void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
@@ -401,12 +401,12 @@ void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
   }
 }
 
-USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd( 
-    ET96MAP_LOCAL_SSN_T lssn, 
+USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
+    ET96MAP_LOCAL_SSN_T lssn,
     ET96MAP_DIALOGUE_ID_T dialogId,
-    ET96MAP_INVOKE_ID_T invokeId, 
-    ET96MAP_SM_RP_DA_T* dstAddr, 
-    ET96MAP_SM_RP_OA_T* srcAddr,  
+    ET96MAP_INVOKE_ID_T invokeId,
+    ET96MAP_SM_RP_DA_T* dstAddr,
+    ET96MAP_SM_RP_OA_T* srcAddr,
     ET96MAP_SM_RP_UI_T* ud )
 {
 #if defined USE_MAP
@@ -446,26 +446,26 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
       }
       encoding = user_data_coding&0x0c;
       if ( (user_data_coding & 0xc0) == 0x40 )
-        sms.setIntProperty(Tag::MS_VALIDITY,0x03);
+        sms.setIntProperty(Tag::SMPP_MS_VALIDITY,0x03);
     }
     else if ( (user_data_coding & 0xf0) == 0xc0 ) // 1100xxxx
     {
       encoding = MAP_OCTET7BIT_ENCODING;
-      sms.setIntProperty(Tag::MS_VALIDITY,0x3);
+      sms.setIntProperty(Tag::SMPP_MS_VALIDITY,0x3);
       sms.setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,
                          (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
     }
     else if ( (user_data_coding & 0xf0) == 0xd0 ) // 1101xxxx
     {
       encoding = MAP_OCTET7BIT_ENCODING;
-      sms.setIntProperty(Tag::MS_VALIDITY,0x0);
+      sms.setIntProperty(Tag::SMPP_MS_VALIDITY,0x0);
       sms.setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,
                          (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
     }
     else if ( (user_data_coding & 0xf0) == 0xe0 ) // 1110xxxx
     {
       encoding = MAP_UCS2_ENCODING;
-      sms.setIntProperty(Tag::MS_VALIDITY,0x0);
+      sms.setIntProperty(Tag::SMPP_MS_VALIDITY,0x0);
       sms.setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,
                          (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
     }
@@ -473,7 +473,7 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
     {
       if ( user_data_coding & 0x4 ) encoding = MAP_8BIT_ENCODING;
       else encoding = MAP_OCTET7BIT_ENCODING;
-      sms.setIntProperty(Tag::MS_DESTADDRSUBUNIT,user_data_coding&0x3);
+      sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,user_data_coding&0x3);
     }
     else{
       __trace2__("MAP::DIALOG::ForwardReq: unknown coding scheme 0x%x",user_data_coding);
@@ -554,13 +554,13 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   oa->st.npi = sms->getOriginatingAddress().getNumberingPlan();
   oa->st.reserved_1 = 1;
   oa->len = sms->getOriginatingAddress().getLength();
-  unsigned oa_length = (oa->len+1)/2; 
+  unsigned oa_length = (oa->len+1)/2;
   __trace2__("MAP::mkDeliverPDU: oa_length: 0x%x", oa_length);
   {
     char* sval = sms->getOriginatingAddress().value;
     for ( int i=0; i<oa->len; ++i ){
       int bi = i/2;
-      if( i%2 == 1 ){ 
+      if( i%2 == 1 ){
         oa->val[bi] |= ((sval[i]-'0')<<4); // fill high octet
       }else{
         oa->val[bi] = (sval[i]-'0')&0x0F; // fill low octet
@@ -573,19 +573,19 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   unsigned encoding = sms->getIntProperty(Tag::SMPP_DATA_CODING);
   __trace2__("MAP::mkDeliveryPDU: encoding = 0x%x",encoding);
   unsigned char value;
-  if ( encoding != 0 && 
-       encoding != 0x08 && 
-       encoding != 0x03 && 
-       encoding != 0x04 && 
+  if ( encoding != 0 &&
+       encoding != 0x08 &&
+       encoding != 0x03 &&
+       encoding != 0x04 &&
        encoding != 0xf0) {
     __trace2__("MAP::mkDeliverPDU: unsuppprted encoding 0x%x",encoding);
     throw runtime_error("unsupported encoding");
   }
   else // make coding scheme
   {
-    if ( sms->hasIntProperty(Tag::MS_DESTADDRSUBUNIT) ){
+    if ( sms->hasIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT) ){
       __trace2__("MAP::mkDeliveryPDU: dest_addr_subunit = 0x%x",
-                 sms->getIntProperty(Tag::MS_DESTADDRSUBUNIT));
+                 sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT));
       // coding scheme 1111xxxx
       value = 0xf0;
       if ( encoding == MAP_UCS2_ENCODING){
@@ -596,7 +596,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
         ;//value |=  nothing
       else // 8bit
         value |= (1<<2);
-      value |= sms->getIntProperty(Tag::MS_DESTADDRSUBUNIT)&0x3;
+      value |= sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)&0x3;
     }
     else
     {
@@ -611,11 +611,11 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
         }
         else
         {
-          if ( !sms->hasIntProperty(Tag::MS_VALIDITY) ){
+          if ( !sms->hasIntProperty(Tag::SMPP_MS_VALIDITY) ){
             __trace2__("MAP::mkDeliveryPDU: Opss, has no ms_validity");
             throw runtime_error("MAP::mkDeliveryPDU: Opss, has no ms_validity");
           }
-          unsigned ms_validity = sms->getIntProperty(Tag::MS_VALIDITY);
+          unsigned ms_validity = sms->getIntProperty(Tag::SMPP_MS_VALIDITY);
           __trace2__("MAP::mkDeliveryPDU: ms_validity = 0x%x",
                      ms_validity);
           if ( (ms_validity & 0x3) == 0x3 ){
@@ -639,8 +639,8 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
           throw runtime_error("MAP::mkDeliveryPDU: Opss, has no ms_validity");
         }*/
         unsigned ms_validity = 0;
-        if ( sms->hasIntProperty(Tag::MS_VALIDITY) )
-          ms_validity = sms->getIntProperty(Tag::MS_VALIDITY);
+        if ( sms->hasIntProperty(Tag::SMPP_MS_VALIDITY) )
+          ms_validity = sms->getIntProperty(Tag::SMPP_MS_VALIDITY);
         __trace2__("MAP::mkDeliveryPDU: ms_validity = 0x%x",
                    ms_validity);
         if ( (ms_validity & 0x3) == 0x3 ){
@@ -671,7 +671,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   {
     time_t t;
     time(&t);
-    struct tm* tms = localtime(&t);  
+    struct tm* tms = localtime(&t);
     MAP_TIMESTAMP* pdu_tm = (MAP_TIMESTAMP*)pdu_ptr;
     __trace2__("MAP::mkDeliverPDU:sizeof(pdu_tm) %d",sizeof(*pdu_tm));
     pdu_tm->year.first  =  ((tms->tm_year)%100)/10;
@@ -848,29 +848,29 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
 
       MapDialogContainer::getInstance()->reAssignDialog(dialogid);
       __trace2__("MAP::Et96MapCloseInd state: 0x%x",dialogid);
-      
+
       ET96MAP_APP_CNTX_T appContext;
-    	appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
-    	appContext.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
-  
+      appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
+      appContext.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
+
       USHORT_T result;
-      
+
       result = Et96MapOpenReq(ssn, dialogid, &appContext, &destMscAddr, &scAddr, 0, 0, 0 );
       if ( result != ET96MAP_E_OK ) {
         __trace2__("MAP::MapDialog::Et96MapCloseInd Et96MapOpenReq error 0x%x",result);
         throw runtime_error("MAP::MapDialog::Et96MapCloseInd Et96MapOpenReq error");
       }
-  
-  	  smRpOa.typeOfAddress = ET96MAP_ADDRTYPE_SCADDR;
-  	  smRpOa.addrLen = (m_scAddr.addressLength+1)/2+1;
-  	  smRpOa.addr[0] = m_scAddr.typeOfAddress;
-  	  memcpy( smRpOa.addr+1, m_scAddr.address, (m_scAddr.addressLength+1)/2 );
-  
-      //auto_ptr<ET96MAP_SM_RP_UI_T> ui(mkDeliverPDU(sms.get()));// = mkDeliverPDU( oaddress, message ); 
+
+      smRpOa.typeOfAddress = ET96MAP_ADDRTYPE_SCADDR;
+      smRpOa.addrLen = (m_scAddr.addressLength+1)/2+1;
+      smRpOa.addr[0] = m_scAddr.typeOfAddress;
+      memcpy( smRpOa.addr+1, m_scAddr.address, (m_scAddr.addressLength+1)/2 );
+
+      //auto_ptr<ET96MAP_SM_RP_UI_T> ui(mkDeliverPDU(sms.get()));// = mkDeliverPDU( oaddress, message );
       ET96MAP_SM_RP_UI_T* ui;
       auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(ui=new ET96MAP_SM_RP_UI_T);
       mkDeliverPDU(sms.get(),ui);
-  
+
       if ( ui->signalInfoLen > 98 ) {
         __trace2__("MAP::Et96MapCloseInd:Et96MapDelimiterReq");
         result = Et96MapDelimiterReq( SSN, dialogid, 0, 0 );
@@ -880,12 +880,12 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
         state = MAPST_WAIT_SEGMINTATION;
       }else{
         __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq");
-    	  result = Et96MapV2ForwardSmMTReq( SSN, dialogid, 1, &smRpDa, &smRpOa, auto_ui.get(), FALSE);
-    	  if( result != ET96MAP_E_OK ) {
+        result = Et96MapV2ForwardSmMTReq( SSN, dialogid, 1, &smRpDa, &smRpOa, auto_ui.get(), FALSE);
+        if( result != ET96MAP_E_OK ) {
           __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq error 0x%x",result);
-    	  }
+        }
         __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq OK");
-      	result = Et96MapDelimiterReq( SSN, dialogid, 0, 0 );
+        result = Et96MapDelimiterReq( SSN, dialogid, 0, 0 );
         if( result != ET96MAP_E_OK ) {
           __trace2__("MAP::Et96MapCloseInd:Et96MapDelimiterReq error 0x%x",result);
         }
@@ -971,7 +971,7 @@ void MapDialog::Et96MapV2ForwardSmMTConf (
       cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,MAKE_ERRORCODE(CMD_ERR_TEMP,MAP_NETWORKERROR));
     }
     MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
-    __trace2__("MAP::Et96MapV2ForwardSmMTConf:did 0x%x/0x%x was send %s to SMSC",dialogid,smscDialogId, 
+    __trace2__("MAP::Et96MapV2ForwardSmMTConf:did 0x%x/0x%x was send %s to SMSC",dialogid,smscDialogId,
                fatal?"CMD_ERR_FATAL":"CMD_ERR_TEMP");
   }else if (provErrCode_p){
     __trace2__("MAP::Et96MapV2ForwardSmMTConf:did 0x%x/0x%x *provErrCode_p 0x%x",dialogid,smscDialogId,*provErrCode_p);
@@ -988,13 +988,13 @@ void MapDialog::Et96MapV2ForwardSmMTConf (
 }
 
 USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
-				       ET96MAP_DIALOGUE_ID_T dialogueId,
-				       ET96MAP_INVOKE_ID_T invokeId,
-				       ET96MAP_IMSI_T *imsi_sp,
-				       ET96MAP_ADDRESS_T *mscNumber_sp,
-				       ET96MAP_LMSI_T *lmsi_sp,
-				       ET96MAP_ERROR_ROUTING_INFO_FOR_SM_T *errorSendRoutingInfoForSm_sp,
-				       ET96MAP_PROV_ERR_T *provErrCode_p )
+               ET96MAP_DIALOGUE_ID_T dialogueId,
+               ET96MAP_INVOKE_ID_T invokeId,
+               ET96MAP_IMSI_T *imsi_sp,
+               ET96MAP_ADDRESS_T *mscNumber_sp,
+               ET96MAP_LMSI_T *lmsi_sp,
+               ET96MAP_ERROR_ROUTING_INFO_FOR_SM_T *errorSendRoutingInfoForSm_sp,
+               ET96MAP_PROV_ERR_T *provErrCode_p )
 {
 #if defined USE_MAP
   __trace2__( "Et96MapV2SendRInfoForSmConf received ssn=%d, dialog=%d, invokeId=%d\n", localSsn, dialogueId, invokeId );
@@ -1011,14 +1011,14 @@ USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
   if ( errorSendRoutingInfoForSm_sp != 0 ){
     bool fatal = false;
     switch( errorSendRoutingInfoForSm_sp->errorCode){
-    case 1: 
+    case 1:
     case 11:
     case 13:
     case 21:
       fatal = true;
     case 6:
       fatal = false;
-    default:    
+    default:
       fatal = true;
     }
     SmscCommand cmd;
@@ -1049,17 +1049,17 @@ USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
     __trace2__("MAP::Et96MapV2SendRInfoForSmConf provErrCode_p 0x%hx",*provErrCode_p);
     throw runtime_error("MAP::Et96MapV2SendRInfoForSmConf error");
   }
-  
+
   mkSS7GTAddress( &destMscAddr, mscNumber_sp, 8 );
-	smRpDa.typeOfAddress = ET96MAP_ADDRTYPE_IMSI;
-	smRpDa.addrLen = imsi_sp->imsiLen;
-	memcpy( smRpDa.addr, imsi_sp->imsi, imsi_sp->imsiLen );
-  
+  smRpDa.typeOfAddress = ET96MAP_ADDRTYPE_IMSI;
+  smRpDa.addrLen = imsi_sp->imsiLen;
+  memcpy( smRpDa.addr, imsi_sp->imsi, imsi_sp->imsiLen );
+
   state = MAPST_READY_FOR_SENDSMS;
 
 #endif
   return ET96MAP_E_OK;
-}				       
+}
 
 void  MapDialog::Et96MapOpenConf (
   ET96MAP_LOCAL_SSN_T localSsn,
@@ -1071,7 +1071,7 @@ void  MapDialog::Et96MapOpenConf (
   ET96MAP_USERDATA_T *specificInfo_sp,
   ET96MAP_PROV_ERR_T *provErrCode_p)
 {
-#if defined USE_MAP  
+#if defined USE_MAP
   try{
     USHORT_T result;
     __trace2__("MAP::MapDialog::Et96MapOpenConf: 0x%x", openResult);
@@ -1087,21 +1087,21 @@ void  MapDialog::Et96MapOpenConf (
         const char* reason = "<Unknown-reason>";
         switch ( *refuseReason_p ) {
         case ET96MAP_NO_REASON: reason = "ET96MAP_NO_REASON"; break;
-        case ET96MAP_INV_DEST_REF: 
-          reason = "ET96MAP_INV_DEST_REF"; 
+        case ET96MAP_INV_DEST_REF:
+          reason = "ET96MAP_INV_DEST_REF";
           fatal = true;
           break;
         case ET96MAP_INV_ORIG_REF: reason = "ET96MAP_INV_ORIG_REF"; break;
-        case ET96MAP_APP_CONTEXT_NOT_SUPP: 
-          reason = "ET96MAP_APP_CONTEXT_NOT_SUPP"; 
+        case ET96MAP_APP_CONTEXT_NOT_SUPP:
+          reason = "ET96MAP_APP_CONTEXT_NOT_SUPP";
           fatal = true;
           break;
-        case ET96MAP_NODE_NOT_REACHABLE: 
-          reason = "ET96MAP_NODE_NOT_REACHABLE"; 
+        case ET96MAP_NODE_NOT_REACHABLE:
+          reason = "ET96MAP_NODE_NOT_REACHABLE";
           fatal = true;
           break;
-        case ET96MAP_VERS_INCOMPATIBLE: 
-          reason = "ET96MAP_VERS_INCOMPATIBLE"; 
+        case ET96MAP_VERS_INCOMPATIBLE:
+          reason = "ET96MAP_VERS_INCOMPATIBLE";
           fatal = true;
           break;
         }
@@ -1111,7 +1111,7 @@ void  MapDialog::Et96MapOpenConf (
       }
       if ( fatal )
         cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,MAKE_ERRORCODE(CMD_ERR_FATAL,MAP_NETWORKERROR));
-      else 
+      else
         cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,MAKE_ERRORCODE(CMD_ERR_TEMP,MAP_NETWORKERROR));
       throw runtime_error("MAP::MapDialog::Et96MapOpenConf: Opss, dialog is not opened!");
     }
@@ -1132,7 +1132,7 @@ void  MapDialog::Et96MapOpenConf (
 }
 
 bool MapDialog::ProcessCmd(const SmscCommand& cmd){
-#if defined USE_MAP  
+#if defined USE_MAP
   __trace2__("MAP::MapDialog::ProcessCmd");
   try{
     __trace2__("MAP::MapDialog::ProcessCmd: 0x%x",cmd->get_commandId());
@@ -1141,8 +1141,8 @@ bool MapDialog::ProcessCmd(const SmscCommand& cmd){
       ET96MAP_ERROR_FORW_SM_MO_T err;
       memset(&err,0,sizeof(ET96MAP_ERROR_FORW_SM_MO_T));
       switch ( cmd->get_resp()->get_status() )
-      { 
-      case SmscCommand::Status::OK: break;  
+      {
+      case SmscCommand::Status::OK: break;
       case SmscCommand::Status::SYSERROR:
         err.errorCode = 32;
         break;
@@ -1189,14 +1189,14 @@ bool MapDialog::ProcessCmd(const SmscCommand& cmd){
         }*/
       }
 
-	    mkMapAddress( &m_msAddr, sms->getDestinationAddress().value, sms->getDestinationAddress().length );
-	    mkMapAddress( &m_scAddr, "79029869999", 11 );
-	    mkSS7GTAddress( &scAddr, &m_scAddr, 8 );
-    	mkSS7GTAddress( &mshlrAddr, &m_msAddr, 6 );
-      
+      mkMapAddress( &m_msAddr, sms->getDestinationAddress().value, sms->getDestinationAddress().length );
+      mkMapAddress( &m_scAddr, "79029869999", 11 );
+      mkSS7GTAddress( &scAddr, &m_scAddr, 8 );
+      mkSS7GTAddress( &mshlrAddr, &m_msAddr, 6 );
+
       appContext.acType = ET96MAP_SHORT_MSG_GATEWAY_CONTEXT;
       appContext.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
-      
+
       result = Et96MapOpenReq(ssn, dialogid, &appContext, &mshlrAddr, &scAddr, 0, 0, 0 );
       if ( result != ET96MAP_E_OK ) {
         __trace2__("MAP::MapDialog::ProcessCmdg: Et96MapOpenReq error 0x%x",result);
@@ -1288,7 +1288,7 @@ extern void AbortAndRemoveDialog(ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T 
 
 void MapProxy::putCommand(const SmscCommand& cmd)
 {
-#if defined USE_MAP  
+#if defined USE_MAP
   //MutexGuard g(mutex);
   uint32_t did = cmd->get_dialogId();
   DialogRefGuard dialog;
@@ -1328,7 +1328,7 @@ void MapProxy::putCommand(const SmscCommand& cmd)
   {
     if ( did <= 0xffff )
       CloseAndRemoveDialog(SSN,did);
-    //else 
+    //else
     //  AbortAndRemoveDialog(SSN,did);
     throw;
   }
@@ -1336,4 +1336,3 @@ void MapProxy::putCommand(const SmscCommand& cmd)
   //notifyOutThread();
 #endif
 }
-

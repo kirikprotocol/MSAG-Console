@@ -142,6 +142,9 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
   else
     pdu->message.set_replaceIfPresentFlag(0);
 
+  if( sms->hasIntProperty(Tag::SMPP_MS_VALIDITY) )
+    pdu->optional.set_msValidity(sms->getIntProperty(Tag::SMPP_MS_VALIDITY));
+
   if ( sms->hasIntProperty(Tag::SMPP_MSG_STATE) )
   {
     switch(sms->getIntProperty(Tag::SMPP_MSG_STATE))
@@ -269,6 +272,9 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
     sms->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,
                                pdu->optional.get_messagePayload(),
                                pdu->optional.size_messagePayload());
+
+  if(pdu->optional.has_msValidity())
+    sms->setIntProperty(Tag::SMPP_MS_VALIDITY,pdu->optional.get_msValidity());
   if ( pdu->optional.has_messageState() )
   {
     switch(pdu->optional.get_messageState())
