@@ -100,6 +100,7 @@ struct MapDialog{
   bool hasMwdStatus:1;
   bool wasDelivered:1;
   bool subscriberAbsent:1;
+  bool memoryExceeded:1;
   bool hlrWasNotified:1;
   Mutex mutex;
   MapState state;
@@ -126,6 +127,7 @@ struct MapDialog{
   long long ussdSequence;
   unsigned ussdMrRef;
   ET96MAP_MWD_STATUS_T mwdStatus;
+  unsigned routeErr;
 //  bool isMOreq;
 //  unsigned dialogid_req;
   MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned version=2) : 
@@ -134,7 +136,8 @@ struct MapDialog{
     hasIndAddress(false),
     hasMwdStatus(false),
     wasDelivered(false),
-    subscriberAbsent(true),
+    subscriberAbsent(false),
+    memoryExceeded(false),
     hlrWasNotified(false),
     ref_count(1),
     state(MAPST_START), 

@@ -297,10 +297,17 @@ static void SendRInfo(MapDialog* dialog)
     throw MAPDIALOG_FATAL_ERROR(
       FormatText("MAP::SendRInfo: Et96MapOpenReq error 0x%x",result));
   }
+  bool hiPrior = false;
+  if ( dialog->sms.get() != 0 && dialog->sms->getIntProperty(Tag::SMPP_PRIORITY) > 0 ) 
+    hiPrior = true;
   if ( dialog->version == 2 ) {
-    result = Et96MapV2SendRInfoForSmReq(dialog->ssn, dialog_id, 1, &dialog->m_msAddr, ET96MAP_DO_NOT_ATTEMPT_DELIVERY, &dialog->m_scAddr );
+    result = Et96MapV2SendRInfoForSmReq(dialog->ssn, dialog_id, 1, &dialog->m_msAddr, 
+      hiPrior ? ET96MAP_ATTEMPT_DELIVERY : ET96MAP_DO_NOT_ATTEMPT_DELIVERY, 
+      &dialog->m_scAddr );
   }else if ( dialog->version == 1 ) {
-    result = Et96MapV1SendRInfoForSmReq(dialog->ssn, dialog_id, 1, &dialog->m_msAddr, ET96MAP_DO_NOT_ATTEMPT_DELIVERY, &dialog->m_scAddr, 0, 0);
+    result = Et96MapV1SendRInfoForSmReq(dialog->ssn, dialog_id, 1, &dialog->m_msAddr, 
+      hiPrior ? ET96MAP_ATTEMPT_DELIVERY : ET96MAP_DO_NOT_ATTEMPT_DELIVERY, 
+      &dialog->m_scAddr, 0, 0);
   }else throw runtime_error(
     FormatText("MAP::SendRInfo: incorrect dialog version %d",dialog->version));
   if ( result != ET96MAP_E_OK ) {
@@ -1137,10 +1144,30 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
     }
     dialogid_smsc = dialog->dialogid_smsc;
     __trace2__("MAP::%s:DELIVERY_SM %s",__FUNCTION__,RouteToString(dialog.get()).c_str());
-    DoRInfoErrorProcessor(errorSendRoutingInfoForSm_sp,provErrCode_p);
+    
+    dialog->routeErr = 0;
+    
+    if ( dialog->state == MAPST_WaitRInfoConf )
+    {
+      if ( errorSendRoutingInfoForSm_sp && errorSendRoutingInfoForSm_sp->errorCode == 6 ){
+        dialog->subscriberAbsent = true;
+        dialog->routeErr = MAKE_ERRORCODE(CMD_ERR_TEMP,0);
+      }else{
+        try {
+          DoRInfoErrorProcessor(errorSendRoutingInfoForSm_sp,provErrCode_p);
+        }catch(MAPDIALOG_ERROR& e){
+          dialog->routeErr = e.code;
+        }
+      }
+    }
+    else DoRInfoErrorProcessor(errorSendRoutingInfoForSm_sp,provErrCode_p);
     __trace2__("MAP::%s: 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
     switch( dialog->state ){
     case MAPST_WaitRInfoConf:
+      if ( dialog->noRoute ) {
+        dialog->state = MAPST_WaitRInfoClose;
+        break;
+      }
     case MAPST_ImsiWaitRInfo:
       {
         dialog->s_imsi = ImsiToString(imsi_sp);
@@ -1239,10 +1266,19 @@ USHORT_T Et96MapCloseInd(
     __trace2__("MAP::%s: 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
     switch( dialog->state ){
     case MAPST_WaitRInfoClose:
-      MapDialogContainer::getInstance()->reAssignDialog(dialogueId,localSsn);
-      dialogueId = dialog->dialogid_map;
-      dialog->state = MAPST_WaitMcsVersion;
-      QueryMcsVersion(dialog.get());
+      if ( !dialog->routeErr ) {
+        MapDialogContainer::getInstance()->reAssignDialog(dialogueId,localSsn);
+        dialogueId = dialog->dialogid_map;
+        dialog->state = MAPST_WaitMcsVersion;
+        QueryMcsVersion(dialog.get());
+      }else{
+        __trace2__("MAP::%s: RIfno Return no route, close dialog");
+        dialog->state = MAPST_CLOSED;
+        dialogid_smsc = dialog->dialogid_smsc;
+        //throw MAPDIALOG_ERROR(dialog->routeErr,"lisy error");
+        SendErrToSmsc(dialog.get(),dialog->routeErr);
+        DropMapDialog(dialog.get());
+      }
       break;
     case MAPST_WaitSmsClose:
       // penging processing
@@ -1889,7 +1925,11 @@ USHORT_T Et96MapV2InformSCInd (
 static bool NeedNotifyHLR(MapDialog* dialog)
 {
   return !dialog->hlrWasNotified &&
-    (!dialog->wasDelivered || ( dialog->wasDelivered && dialog->hasMwdStatus ));
+    (!dialog->wasDelivered || 
+      (dialog->wasDelivered && dialog->hasMwdStatus &&
+        ( ((unsigned)dialog->subscriberAbsent != (unsigned)dialog->mwdStatus.mnrf)||
+          ((unsigned)dialog->memoryExceeded != (unsigned)dialog->mwdStatus.mcef ) 
+        )));
 }
 static void NotifyHLR(MapDialog* dialog)
 {
@@ -1911,7 +1951,12 @@ static void NotifyHLR(MapDialog* dialog)
   ET96MAP_DEL_OUTCOME_T deliveryOutcom;
   if ( dialog->wasDelivered ) deliveryOutcom = ET96MAP_TRANSFER_SUCCESSFUL;
   else if ( dialog->subscriberAbsent ) deliveryOutcom = ET96MAP_SUBSCRIBER_ABSENT;
-  else deliveryOutcom = ET96MAP_MEMORY_CAPACITY_OVERRUN;
+  else if ( dialog->memoryExceeded ) deliveryOutcom = ET96MAP_MEMORY_CAPACITY_OVERRUN;
+  else {
+    __trace2__("MAP::%s no way!",__FUNCTION__);
+    //return; // Opps, strange way
+    throw MAPDIALOG_ERROR(0,"no way");
+  }
   if ( dialog->hlrVersion == 2) {
     result = Et96MapV2ReportSmDelStatReq(
       HLR_SSN,dialog->dialogid_map,1,&dialog->m_msAddr,&dialog->m_scAddr,deliveryOutcom);
