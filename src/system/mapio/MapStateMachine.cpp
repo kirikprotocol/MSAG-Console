@@ -1,5 +1,8 @@
 #if defined USE_MAP
 
+#include <stdlib.h>
+#include <stdarg.h>
+
 #include "MapDialog_spcific.cxx"
 
 static string FormatText(const char* format,...)

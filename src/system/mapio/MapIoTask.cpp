@@ -184,13 +184,6 @@ int MapIoTask::Execute(){
   return 0;
 }
 
-void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId)
-{
-  __trace2__("MAP::freeDialogueId: 0x%x",dialogueId);
-  MapDialogContainer::getInstance()->dialogId_pool.push_back(dialogueId);
-}
-
-
 int MapTracker::Execute(){
   Event e;
 #ifdef USE_MAP
