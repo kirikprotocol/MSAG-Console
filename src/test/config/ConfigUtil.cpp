@@ -145,6 +145,20 @@ bool ConfigUtil::checkAlias(const Address& addr)
 	return (addr2 == addr);
 }
 
+bool ConfigUtil::checkRouteArchBill(const Address& srcAddr,
+	const Address& destAlias, bool& archived, bool& billing)
+{
+	const Address destAddr = aliasReg->findAddressByAlias(destAlias);
+	const RouteHolder* routeHolder = routeReg->lookup(srcAddr, destAddr);
+	if (!routeHolder)
+	{
+		return false;
+	}
+	archived = routeHolder->route.archived;
+	billing = routeHolder->route.billing;
+	return true;
+}
+
 }
 }
 }
