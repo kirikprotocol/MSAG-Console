@@ -46,6 +46,7 @@ bool SmppTransmitterTestCases::hasIntermediateNotification(Message& m, Profile& 
 template <class Message>
 void SmppTransmitterTestCases::checkRegisteredDelivery(Message& m)
 {
+    /*
 	//m.get_registredDelivery();
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(maxValidPeriod);
@@ -68,6 +69,7 @@ void SmppTransmitterTestCases::checkRegisteredDelivery(Message& m)
 		m.set_validityPeriod(
 			SmppUtil::time2string(validTime, t, time(NULL), __numTime__));
 	}
+    */
 }
 
 void SmppTransmitterTestCases::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
@@ -95,10 +97,28 @@ void SmppTransmitterTestCases::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	}
 }
 
-void SmppTransmitterTestCases::registerNormalSmeMonitors(PduSubmitSm* pdu,
-	PduData* existentPduData, bool destReachble, time_t waitTime,
-	time_t validTime, PduData* pduData)
+uint8_t SmppTransmitterTestCases::getRegisteredDelivery(PduData* pduData)
 {
+	__require__(pduData && pduData->pdu);
+	PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
+	switch (pduData->reportOptions)
+	{
+		case ProfileReportOptions::ReportNone:
+			return (pdu->get_message().get_registredDelivery() &
+				SMSC_DELIVERY_RECEIPT_BITS);
+		case ProfileReportOptions::ReportFull:
+			return FINAL_SMSC_DELIVERY_RECEIPT;
+		default:
+			__unreachable__("Invalid report options");
+	}
+}
+
+void SmppTransmitterTestCases::registerNormalSmeMonitors(PduSubmitSm* pdu,
+	PduData* existentPduData, time_t waitTime, time_t validTime, PduData* pduData)
+{
+	bool destReachble = fixture->routeChecker->isDestReachable(
+		pdu->get_message().get_source(), pdu->get_message().get_dest(), true);
+	//delivery monitor
 	PduFlag deliveryFlag = destReachble ? PDU_REQUIRED_FLAG : PDU_NOT_EXPECTED_FLAG;
 	DeliveryMonitor* deliveryMonitor =
 		new DeliveryMonitor(nvl(pdu->get_message().get_serviceType()),
@@ -132,87 +152,118 @@ void SmppTransmitterTestCases::registerNormalSmeMonitors(PduSubmitSm* pdu,
 		}
 	}
 	fixture->pduReg->registerMonitor(deliveryMonitor);
-}
-
-uint8_t SmppTransmitterTestCases::getRegisteredDelivery(PduData* pduData)
-{
-	__require__(pduData && pduData->pdu);
-	PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
-	switch (pduData->reportOptions)
+	//delivery report monitors
+	if (destReachble)
 	{
-		case ProfileReportOptions::ReportNone:
-			return (pdu->get_message().get_registredDelivery() &
-				SMSC_DELIVERY_RECEIPT_BITS);
-		case ProfileReportOptions::ReportFull:
-			return FINAL_SMSC_DELIVERY_RECEIPT;
-		default:
-			__unreachable__("Invalid report options");
+		//мониторы на репорты будут созданы в NormalSmsHandler::registerDeliveryReportMonitors()
+		return;
 	}
-}
-
-void SmppTransmitterTestCases::registerExtSmeMonitors(PduSubmitSm* pdu,
-	bool destReachble, time_t waitTime, time_t validTime, PduData* pduData)
-{
-	//предполагаю, что ext sme всегда запущено
-	//т.е. если маршрут есть, то есть sme ack и final delivery receipt (по ситуации)
-	//иначе нет sme ack и нет delivery receipts (придет submit_sm респонс с ESME_RINVDSTADR)
-	
-	//sme ack monitor
-	PduFlag smeAckFlag = destReachble ? PDU_REQUIRED_FLAG : PDU_NOT_EXPECTED_FLAG;
-	SmeAckMonitor* smeAckMonitor = new SmeAckMonitor(waitTime, pduData, smeAckFlag);
-	fixture->pduReg->registerMonitor(smeAckMonitor);
-	//delivery receipt monitor
+	//маршрут существует, но нет sme
+	//должен быть delivery receipt и intermaediate notification
+	__require__(fixture->routeChecker->isDestReachable(
+		pdu->get_message().get_source(), pdu->get_message().get_dest(), false));
 	uint8_t regDelivery = getRegisteredDelivery(pduData);
-	PduFlag rcptFlag = destReachble && regDelivery == FINAL_SMSC_DELIVERY_RECEIPT ?
-		PDU_REQUIRED_FLAG : PDU_NOT_EXPECTED_FLAG;
-	DeliveryReceiptMonitor* rcptMonitor;
-	if (rcptFlag == PDU_REQUIRED_FLAG)
-	{
-		rcptMonitor = new DeliveryReceiptMonitor(waitTime, pduData, rcptFlag);
-		rcptMonitor->deliveryFlag = PDU_RECEIVED_FLAG;
-		rcptMonitor->deliveryStatus = ESME_ROK;
-	}
-	else
-	{
-		__require__(rcptFlag == PDU_NOT_EXPECTED_FLAG);
-		rcptMonitor = new DeliveryReceiptMonitor(validTime, pduData, rcptFlag);
-	}
-	fixture->pduReg->registerMonitor(rcptMonitor);
-}
-
-void SmppTransmitterTestCases::registerNullSmeMonitors(PduSubmitSm* pdu,
-	bool destReachble, time_t waitTime, time_t validTime,
-	uint32_t deliveryStatus, PduData* pduData)
-{
-	//предполагаю, что null sme всегда запущено
-	//sme ack быть не может в любом случае
-	//если маршрут есть, то будет failure delivery receipt (по ситуации)
-	//иначе delivery receipt быть не может (придет submit_sm респонс с ESME_RINVDSTADR)
-	
-	//delivery receipt monitor
-	uint8_t regDelivery = getRegisteredDelivery(pduData);
-	DeliveryReceiptMonitor* rcptMonitor;
+	PduFlag flag;
 	switch (regDelivery)
 	{
 		case FINAL_SMSC_DELIVERY_RECEIPT:
 		case FAILURE_SMSC_DELIVERY_RECEIPT:
-			if (destReachble)
-			{
-				rcptMonitor = new DeliveryReceiptMonitor(waitTime, pduData, PDU_REQUIRED_FLAG);
-				rcptMonitor->deliveryFlag = deliveryStatus == ESME_ROK ?
-					PDU_RECEIVED_FLAG : PDU_ERROR_FLAG;
-				rcptMonitor->deliveryStatus = deliveryStatus;
-				break;
-			}
-			//break;
+			flag = PDU_REQUIRED_FLAG;
+			break;
 		case NO_SMSC_DELIVERY_RECEIPT:
 		case SMSC_DELIVERY_RECEIPT_RESERVED:
-			rcptMonitor = new DeliveryReceiptMonitor(validTime, pduData, PDU_NOT_EXPECTED_FLAG);
+			flag = PDU_NOT_EXPECTED_FLAG;
+			break;
+		default:
+			__unreachable__("Invalid registered delivery flag");
+	}
+	if (flag == PDU_REQUIRED_FLAG)
+	{
+		//intermediate notification
+		IntermediateNotificationMonitor* m1 =
+			new IntermediateNotificationMonitor(waitTime, pduData, PDU_REQUIRED_FLAG);
+		m1->deliveryFlag = PDU_NOT_EXPECTED_FLAG;
+		m1->deliveryStatus = ESME_RINVDSTADR;
+		fixture->pduReg->registerMonitor(m1);
+		//delivery receipt
+		DeliveryReceiptMonitor* m2 =
+			new DeliveryReceiptMonitor(validTime, pduData, PDU_REQUIRED_FLAG);
+		m2->deliveryFlag = PDU_EXPIRED_FLAG;
+		m2->deliveryStatus = ESME_RINVDSTADR;
+		fixture->pduReg->registerMonitor(m2);
+	}
+}
+
+void SmppTransmitterTestCases::registerExtSmeMonitors(PduSubmitSm* pdu,
+	time_t waitTime, time_t validTime, PduData* pduData)
+{
+	//предполагаю, что ext sme всегда запущено и на него есть маршрут
+	//ext sme всегда отправл€ет sme ack и, по ситуации, final delivery receipt
+	__require__(fixture->routeChecker->isDestReachable(
+		pdu->get_message().get_source(), pdu->get_message().get_dest(), true));
+	//sme ack monitor
+	SmeAckMonitor* smeAckMonitor = new SmeAckMonitor(waitTime, pduData, PDU_REQUIRED_FLAG);
+	fixture->pduReg->registerMonitor(smeAckMonitor);
+	//delivery receipt monitor
+	uint8_t regDelivery = getRegisteredDelivery(pduData);
+	PduFlag flag;
+	switch (regDelivery)
+	{
+		case FINAL_SMSC_DELIVERY_RECEIPT:
+			flag = PDU_REQUIRED_FLAG;
+			break;
+		case FAILURE_SMSC_DELIVERY_RECEIPT:
+		case NO_SMSC_DELIVERY_RECEIPT:
+		case SMSC_DELIVERY_RECEIPT_RESERVED:
+			flag = PDU_NOT_EXPECTED_FLAG;
 			break;
 		default:
 			__unreachable__("Invalid regDelivery");
 	}
-	fixture->pduReg->registerMonitor(rcptMonitor);
+	if (flag == PDU_REQUIRED_FLAG)
+	{
+		DeliveryReceiptMonitor* rcptMonitor =
+			new DeliveryReceiptMonitor(waitTime, pduData, flag);
+		rcptMonitor->deliveryFlag = PDU_RECEIVED_FLAG;
+		rcptMonitor->deliveryStatus = ESME_ROK;
+		fixture->pduReg->registerMonitor(rcptMonitor);
+	}
+}
+
+void SmppTransmitterTestCases::registerNullSmeMonitors(PduSubmitSm* pdu,
+	time_t waitTime, time_t validTime, uint32_t deliveryStatus, PduData* pduData)
+{
+	//предполагаю, что null sme всегда запущено и на него есть маршрут
+	//null sme не отправл€ет sme ack, а на deliver_sm сразу отправл€ет респонс
+	__require__(fixture->routeChecker->isDestReachable(
+		pdu->get_message().get_source(), pdu->get_message().get_dest(), true));
+	//delivery receipt monitor
+	uint8_t regDelivery = getRegisteredDelivery(pduData);
+	PduFlag flag;
+	switch (regDelivery)
+	{
+		case FINAL_SMSC_DELIVERY_RECEIPT:
+			flag = PDU_REQUIRED_FLAG;
+			break;
+		case FAILURE_SMSC_DELIVERY_RECEIPT:
+			flag = deliveryStatus == ESME_ROK ? PDU_NOT_EXPECTED_FLAG : PDU_REQUIRED_FLAG;
+			break;
+		case NO_SMSC_DELIVERY_RECEIPT:
+		case SMSC_DELIVERY_RECEIPT_RESERVED:
+			flag = PDU_NOT_EXPECTED_FLAG;
+			break;
+		default:
+			__unreachable__("Invalid regDelivery");
+	}
+	if (flag == PDU_REQUIRED_FLAG)
+	{
+		DeliveryReceiptMonitor* rcptMonitor = 
+			new DeliveryReceiptMonitor(waitTime, pduData, flag);
+		rcptMonitor->deliveryFlag = deliveryStatus == ESME_ROK ?
+			PDU_RECEIVED_FLAG : PDU_ERROR_FLAG;
+		rcptMonitor->deliveryStatus = deliveryStatus;
+		fixture->pduReg->registerMonitor(rcptMonitor);
+	}
 }
 
 //предварительна€ регистраци€ pdu, требуетс€ внешн€€ синхронизаци€
@@ -222,8 +273,6 @@ PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 {
 	__require__(pdu);
 	__require__(fixture->pduReg);
-	bool destReachble = fixture->routeChecker->isDestReachable(
-		pdu->get_message().get_source(), pdu->get_message().get_dest(), true);
 	//waitTime, validTime, msgRef
 	time_t waitTime = max(submitTime, SmppUtil::getWaitTime(
 			pdu->get_message().get_scheduleDeliveryTime(), submitTime));
@@ -241,26 +290,32 @@ PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 	PduData* pduData = new PduData(reinterpret_cast<SmppHeader*>(pdu),
 		submitTime, msgRef, profile.reportoptions, intProps, strProps, objProps);
 	pduData->ref();
+	//если маршрута нет, то нужен только монитор на респонс (commandStatus = ESME_RINVDSTADR)
+	bool routeExists = fixture->routeChecker->isDestReachable(
+		pdu->get_message().get_source(), pdu->get_message().get_dest(), false);
+	if (!routeExists)
+	{
+		return pduData;
+	}
 	switch (pduType)
 	{
 		case PDU_NORMAL:
-			//регистраци€ только DeliveryMonitor.
-			//DeliveryReceiptMonitor и IntermediateNotificationMonitor
-			//регистрируютс€ в NormalSmsHandler::registerDeliveryReportMonitors()
-			registerNormalSmeMonitors(pdu, existentPduData, destReachble,
-				waitTime, validTime, pduData);
+			//регистраци€ DeliveryMonitor и дл€ sme, на которые есть маршрут,
+			//но нет самих sme DeliveryReceiptMonitor и IntermediateNotificationMonitor
+			registerNormalSmeMonitors(pdu, existentPduData, waitTime,
+				validTime, pduData);
 			break;
 		case PDU_EXT_SME:
 			//регистраци€ SmeAckMonitor и DeliveryReceiptMonitor
-			registerExtSmeMonitors(pdu, destReachble, waitTime, validTime, pduData);
+			registerExtSmeMonitors(pdu, waitTime, validTime, pduData);
 			break;
 		case PDU_NULL_OK:
 			//регистраци€ только DeliveryReceiptMonitor
-			registerNullSmeMonitors(pdu, destReachble, waitTime, validTime, ESME_ROK, pduData);
+			registerNullSmeMonitors(pdu, waitTime, validTime, ESME_ROK, pduData);
 			break;
 		case PDU_NULL_ERR:
 			//регистраци€ только DeliveryReceiptMonitor
-			registerNullSmeMonitors(pdu, destReachble, waitTime, validTime, ESME_RX_P_APPN, pduData);
+			registerNullSmeMonitors(pdu, waitTime, validTime, ESME_RX_P_APPN, pduData);
 			break;
 		default:
 			__unreachable__("Invalid pdu type");
@@ -629,6 +684,7 @@ void SmppTransmitterTestCases::processGenericNackSync(time_t submitTime,
 {
 	__decl_tc__;
 	__cfg_int__(timeCheckAccuracy);
+	__tc__("processGenericNack.sync"); __tc_ok__;
 	__tc__("processGenericNack.checkTime");
 	time_t respDelay = respTime - submitTime;
 	if (respDelay < 0)
@@ -659,12 +715,13 @@ void SmppTransmitterTestCases::sendInvalidPdu(SmppHeader* pdu, bool sync)
 	__decl_tc__;
 	try
 	{
+		pdu->set_sequenceNumber(fixture->session->getNextSeq());
 		if (fixture->pduReg)
 		{
 			if (sync)
 			{
 				__tc__("sendInvalidPdu.sync");
-				__dumpPdu__("sendInvalidPduSyncBefore", fixture->smeInfo.systemId, pdu);
+				//__dumpPdu__("sendInvalidPduSyncBefore", fixture->smeInfo.systemId, pdu);
 				time_t submitTime = time(NULL);
 				try
 				{
@@ -682,7 +739,7 @@ void SmppTransmitterTestCases::sendInvalidPdu(SmppHeader* pdu, bool sync)
 			{
 				__tc__("sendInvalidPdu.async");
 				MutexGuard mguard(fixture->pduReg->getMutex());
-				__dumpPdu__("sendInvalidPduAsyncBefore", fixture->smeInfo.systemId, pdu);
+				//__dumpPdu__("sendInvalidPduAsyncBefore", fixture->smeInfo.systemId, pdu);
 				time_t submitTime = time(NULL);
 				SmppHeader* respPdu =
 					fixture->session->getAsyncTransmitter()->sendPdu(pdu);

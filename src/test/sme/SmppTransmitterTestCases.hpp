@@ -75,12 +75,11 @@ protected:
 	template <class Message>
 	void checkRegisteredDelivery(Message& m);
 	void registerNormalSmeMonitors(PduSubmitSm* pdu, PduData* existentPduData,
-		bool destReachble, time_t waitTime, time_t validTime, PduData* pduData);
-	void registerExtSmeMonitors(PduSubmitSm* pdu, bool destReachble,
 		time_t waitTime, time_t validTime, PduData* pduData);
-	void registerNullSmeMonitors(PduSubmitSm* pdu, bool destReachble,
-		time_t waitTime, time_t validTime, uint32_t deliveryStatus,
-		PduData* pduData);
+	void registerExtSmeMonitors(PduSubmitSm* pdu, time_t waitTime,
+		time_t validTime, PduData* pduData);
+	void registerNullSmeMonitors(PduSubmitSm* pdu, time_t waitTime,
+		time_t validTime, uint32_t deliveryStatus, PduData* pduData);
 	PduData* registerSubmitSm(PduSubmitSm* pdu, PduData* existentPduData,
 		time_t submitTime, PduData::IntProps* intProps,
 		PduData::StrProps* strProps, PduData::ObjProps* objProps, PduType pduType);
