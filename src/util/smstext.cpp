@@ -200,7 +200,7 @@ int partitionSms(SMS* sms,int dstdc)
   if(dc==DataCoding::DEFAULT || dstdc==DataCoding::DEFAULT)
   {
     int xlen=len;
-    for(int i=udhilen;i<len;i++)
+    for(int i=0;i<len;i++)
     {
       switch(msg[i])
       {
