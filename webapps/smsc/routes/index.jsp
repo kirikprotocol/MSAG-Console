@@ -54,6 +54,7 @@ if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext()
 page_menu_space(out);
 page_menu_end(out);%>
 <div class=content>
+<input type=hidden name=initialized value=true>
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
 <input type=hidden name=editRouteId>
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
@@ -111,14 +112,31 @@ function clickClickable(headId, bodyId)
 }
 </script>
 
+<table class=page_menu with="100%" >
+<%--<tr>
+<td><input:select name="filterSelect" default="1"
+    attributes="<%= as %>" options="<%= o %>"  /></td></tr> --%>
 
-Filter By:
+<tr><td align="left" with="10%"> Filter By: &nbsp;  </td><td align="left" with="90%">  &nbsp;  </td>
 
+<%
+page_small_menu_begin(out);
+page_menu_button(out, "mbQuickFilter",  "Apply",  "Apply filter","return clickFilterSelect()",true);
+page_menu_button(out, "mbClear", "Clear", "Clear filter", "clickClear()");
+//page_menu_button(out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
+page_menu_space(out);
+page_small_menu_end(out);
+%>
+</tr>
+</table>
+<hr>
 <%
 java.util.HashMap as = new java.util.HashMap();
 // as.put("multiple", null);
 // as.put("onchange", "return setSort('Route ID')");
-java.util.HashMap aq = new java.util.HashMap();
+ as.put("size", "10");
+
+  java.util.HashMap aq = new java.util.HashMap();
 // aq.put("multiple", null);
  aq.put("onenter", "return setSort('Route ID')");
 
@@ -129,24 +147,21 @@ o.put("Dest Subj", "3");
 o.put("Dest Mask", "4");
 o.put("SMEs", "5");
 %>
-<table with="100%">
+<table  with="100%">
 <%--<tr>
 <td><input:select name="filterSelect" default="1"
     attributes="<%= as %>" options="<%= o %>"  /></td></tr> --%>
 
-<tr><td >    name: &nbsp;<input:text name="queryName"  /> </td></tr>
-<tr><td >    subj: &nbsp;<input:text name="querySubj"  /> </td></tr>
-<tr><td >    mask: &nbsp;<input:text name="queryMask"  /> </td></tr>
-<tr><td >    smes: &nbsp;<input:text name="querySMEs"  /> </td></tr>
-<tr><td>  &nbsp;&nbsp;
-<%
-page_small_menu_begin(out);
-page_menu_button(out, "mbQuickFilter",  "Apply",  "Apply filter","return clickFilterSelect()",true);
-page_menu_button(out, "mbClear", "Clear", "Clear filter", "clickClear()");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
-page_menu_space(out);
-page_small_menu_end(out);
-%>
+<tr>
+<td align="left" with="10%">    Name: &nbsp;</td><td with="40%" align="left"><input:text name="queryName"  default="<%=bean.getQueryName()%>"/> </td>
+<td align="left" with="10%">    Subj: &nbsp;</td><td with="40%" align="left"><input:text name="querySubj"  default="<%=bean.getQuerySubj()%>"/> </td>
+</tr>
+<tr>
+<td align="left" with="10%">    SMEs: &nbsp;</td><td with="40%" align="left"><input:text name="querySMEs" default="<%=bean.getQuerySMEs()%>"/>  </td>
+<td align="left" with="10%">    Mask: &nbsp;</td><td with="40%" align="left"><input:text name="queryMask" default="<%=bean.getQueryMask()%>"/>  </td>
+</tr>
+<tr><td colspan="2">  &nbsp;&nbsp;
+
 <%--button(out, "but_filter.gif", "filterSelect", "Apply", "Filter", "return clickFilterSelect()"); --%>
   </td>
   </tr>
