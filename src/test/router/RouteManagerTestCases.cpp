@@ -249,7 +249,7 @@ TCResult* RouteManagerTestCases::addCorrectRouteNotMatch2(RouteInfo* route,
 TCResult* RouteManagerTestCases::addIncorrectRoute(
 	const RouteInfo& existingRoute, int num)
 {
-	TCSelector s(num, 2);
+	TCSelector s(num, 1);
 	TCResult* res = new TCResult(TC_ADD_INCORRECT_ROUTE, s.getChoice());
 	for (; s.check(); s++)
 	{
@@ -262,10 +262,12 @@ TCResult* RouteManagerTestCases::addIncorrectRoute(
 			SmsUtil::setupRandomCorrectAddress(&route.dest);
 			switch(s.value())
 			{
+				/*
 				case 1: //дублирующий routeId
-					//route.routeId = existingRoute.routeId;
-					//break;
-				case 2: //несуществующий smeSystemId
+					route.routeId = existingRoute.routeId;
+					break;
+				*/
+				case 1: //несуществующий smeSystemId
 					{
 						auto_ptr<char> tmp = rand_char(rand1(MAX_SYSTEM_ID_LENGTH));
 						route.smeSystemId = tmp.get();
