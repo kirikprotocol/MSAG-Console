@@ -6,6 +6,7 @@ namespace core {
 
 using namespace std;
 using namespace smsc::sms; //AddressValue, constants
+using namespace smsc::test::sms;
 
 const Profile* ProfileRegistry::ProfileIterator::next()
 {
@@ -22,6 +23,8 @@ ProfileRegistry::~ProfileRegistry()
 
 void ProfileRegistry::putProfile(const Address& addr, const Profile& profile)
 {
+	__trace2__("putProfile(): addr = %s, profile.codepage = %d, profile.reportoptions = %d",
+		str(addr).c_str(), profile.codepage, profile.reportoptions);
 	ProfileMap::iterator it = profileMap.find(addr);
 	if (it != profileMap.end())
 	{
