@@ -317,6 +317,18 @@ Targets:
     <ant dir="${SMSC_DIR}/ext_smes" target="proxysme_distr"/>
   </target>
 
+  <target name="emailsme_build">
+    <ant dir="${SRC_DIR}" target="mod">
+      <property name="MOD" value="emailsme"/>
+    </ant>
+  </target>
+  <target name="emailsme_update" depends="emailsme_build" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="emailsme_update"/>
+  </target>
+  <target name="emailsme_distr" depends="emailsme_build" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="emailsme_distr"/>
+  </target>
+
   <target name="sibinfosme_update">
     <antcall target="infosme_update"/>
     <delete>

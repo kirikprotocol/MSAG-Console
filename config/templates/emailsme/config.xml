@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+<config>
+
+  <section name="smpp">
+      <param name="host" type="string">@connect.host@</param>
+      <param name="port" type="int">@smsc.smpp.port@</param>
+      <param name="timeout" type="int">0</param>
+      <param name="systemId" type="string">emailsme</param>
+      <param name="password" type="string"></param>
+      <param name="sourceAddress" type="string">@emailsme.orig.address@</param>
+      <param name="serviceType" type="string">email</param>
+      <param name="protocolId" type="int">34</param>
+      <param name="retryTime" type="int">5</param>
+  </section>
+
+  <section name="listener">
+    <param name="host" type="string">@listen.host@</param>
+    <param name="port" type="int">@emailsme.mdagent.port@</param>
+  </section>
+
+  <section name="mail">
+    <param name="domain" type="string">@emailsme.mail.domain@</param>
+    <param name="stripper" type="string">bin/mailreaper.pl</param>
+    <param name="format" type="string">#template=emailsmenotify#{from}="$$string import=from$$" {to}="$$string import=to$$" {subj}="$$string import=subj$$" {body}="$$string import=body$$"</param>
+  </section>
+
+  <section name="smtp">
+    <param name="host" type="string">@emailsme.mailserver.host@</param>
+    <param name="port" type="int">@emailsme.mailserver.port@</param>
+  </section>
+
+  <section name="defaults">
+    <param name="dailyLimit" type="int">20</param>
+    <param name="annotationSize" type="int">460</param>
+  </section>
+
+  <section name="StartupLoader">
+    <section name="DataSourceDrivers">
+      <section name="OCIDataSourceDriver">
+        <param name="type" type="string">OCI</param>
+        <param name="loadup" type="string">libdb_oci.so</param>
+      </section>
+    </section>
+  </section>
+  <section name="DataSource">
+    <param name="type" type="string">OCI</param>
+    <param name="connections" type="int">5</param>
+    <param name="dbInstance" type="string">@db.instance@</param>
+    <param name="dbUserName" type="string">@db.user@</param>
+    <param name="dbUserPassword" type="string">@db.password@</param>
+  </section>
+</config>

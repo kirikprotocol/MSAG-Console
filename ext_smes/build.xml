@@ -32,4 +32,16 @@ Modules:
   <target name="infosme_update">
     <ant dir="InfoSme" antfile="build.xml" target="update"/>
   </target>
+  <target name="proxysme_distr">
+    <ant dir="proxysme" antfile="build.xml" target="distr"/>
+  </target>
+  <target name="proxysme_update">
+    <ant dir="proxysme" antfile="build.xml" target="update"/>
+  </target>
+  <target name="emailsme_distr">
+    <ant dir="emailsme" antfile="build.xml" target="distr"/>
+  </target>
+  <target name="emailsme_update">
+    <ant dir="emailsme" antfile="build.xml" target="update"/>
+  </target>
 </project>

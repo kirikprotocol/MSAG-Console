@@ -1,43 +1,38 @@
-#! /bin/bash
-export LC_ALL=ru_RU.ANSI1251            
-export NLS_LANG=RUSSIAN_CIS.CL8MSWIN1251
-
-if [ -d lib ]; then 
-  rm -rf lib
-fi
-
-if [ -d logs ]; then 
-  rm -rf logs
-fi
-
-if [ -d log ]; then 
-  rm -rf log
-fi
-
-if [ ! -L lib ]; then
-  ln -s ../../../../../../lib lib
-fi
-
-if [ ! -L logs ]; then
-  ln -s ../../../../../../logs logs
-fi
-
-chmod +x bin/mailreaper.pl
-chmod +x bin/emailsme
-
-echo $$ >pid
+#!/bin/bash
 if [ -f logs/emailsme.err ]; then
   mv logs/emailsme.err logs/emailsme.err.old
 fi
+if [ -d lib ] ; then 
+  rm -rf lib
+fi
+
+if [ -d logs ] ; then 
+  rm -rf logs
+fi
+
+if [ -d log ] ; then 
+  rm -rf log
+fi
+
+if [ ! -L lib ] ; then
+  ln -s ../../lib lib
+fi
+
+if [ ! -L logs ] ; then
+  ln -s ../../logs logs
+fi
+
+chmod +x bin/emailsme
 while true;
 do
-./bin/emailsme 1>/dev/null 2>>logs/emailsme.err&
+bin/emailsme 1>/dev/null 2>>logs/emailsme.err&
 PID=$!
 export PID
 trap "kill -s SIGTERM $PID;wait $PID; exit" SIGTERM
 wait $PID
 if [ -f core ]; then
   DATE=`perl -e '($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);printf("%04d%02d%02d%02d%02d%02d",$year+1900,$mon+1,$mday,$hour,$min,$sec)'`
+
   mkdir "$DATE"
   mv core "$DATE"
   mv logs/emailsme.err "$DATE"
@@ -45,6 +40,6 @@ if [ -f core ]; then
     mv logs/emailsme.err.old "$DATE"
   fi
   mv logs/emailsme.log* "$DATE"
-  cp -p ./bin/emailsme "$DATE"
+  cp -p bin/emailsme "$DATE"
 fi
 done
