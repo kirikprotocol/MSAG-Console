@@ -1252,7 +1252,7 @@ static void SendSegmentedSms(MapDialog* dialog)
       FormatText("MAP::SendSegmentedSms: Et96MapDelimiterReq error 0x%x",result),MAP_FALURE);
 }
 
-static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
+static void DoUSSRUserResponceError(const SmscCommand* cmd , MapDialog* dialog)
 {
   __map_trace2__("%s: dialogid 0x%x",__FUNCTION__,dialog->dialogid_map);
   ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0;
@@ -1276,7 +1276,7 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
       FormatText("MAP::%s Resp return error 0x%x",__FUNCTION__,result));
   CloseMapDialog(dialog->dialogid_map,dialog->ssn);
   dialog->state = MAPST_END;
-  if( cmd != 0 ) SendOkToSmsc(dialog);
+  if( cmd != null ) SendOkToSmsc(dialog);
   DropMapDialog(dialog);
 }
 
@@ -1747,7 +1747,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           if ( cmd->get_resp()->get_status() != 0 )
           {
             __map_trace2__("%s delivery error", __FUNCTION__);
-            DoUSSRUserResponceError(cmd,dialog.get());
+            DoUSSRUserResponceError(&cmd,dialog.get());
             {
               MutexGuard ussd_map_guard( ussd_map_lock );
               ussd_map.erase(dialog->ussdSequence);
