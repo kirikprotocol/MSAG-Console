@@ -503,8 +503,14 @@ void Smsc::init(const SmscConfigs& cfg)
       const char* host=cfg.cfgman->getString("profiler.notify.host");
       int port=cfg.cfgman->getInt("profiler.notify.port");
       const char* dir=cfg.cfgman->getString("profiler.notify.dir");
-      pnot=new ProfileNotifier(host,port,dir);
-      tp2.startTask(pnot);
+      if(*host && *dir)
+      {
+        pnot=new ProfileNotifier(host,port,dir);
+        tp2.startTask(pnot);
+      }else
+      {
+        __trace__("Profile notifier disabled");
+      }
     }catch(std::exception& e)
     {
       __warning2__("Failed to initialize profileNotifier:%s",e.what());
