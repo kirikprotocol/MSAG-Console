@@ -519,41 +519,66 @@ void DaemonCommandDispatcher::startAllServices()
 
 void DaemonCommandDispatcher::stopAllServices(unsigned int timeoutInSecs)
 {
-  MutexGuard guard(servicesListMutex);
-  char * serviceId = NULL;
-  Service *servicePtr = NULL;
-  services.First();
-  bool allShutdowned = true;
-  while (services.Next(serviceId, servicePtr) != 0)
+   bool allShutdowned = true;
   {
-    if (servicePtr != NULL) {
-      try {
-        allShutdowned = false;
-        servicePtr->shutdown();
-      } catch (...) {
-        smsc_log_error(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Couldn't stop service \"%s\", skipped", serviceId == NULL ? "<unknown>" : serviceId);
+    MutexGuard guard(servicesListMutex);
+    smsc_log_debug(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Stop all services");
+    char * serviceId = NULL;
+    Service *servicePtr = NULL;
+    services.First();
+    while (services.Next(serviceId, servicePtr) != 0)
+    {
+      if ((servicePtr != NULL) && (servicePtr->getStatus() != Service::stopped)) {
+        try {
+          allShutdowned = false;
+          smsc_log_debug(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "send shutdown signal to service \"%s\"", servicePtr->getId());
+          servicePtr->shutdown();
+        } catch (...) {
+          smsc_log_error(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Couldn't stop service \"%s\", skipped", serviceId == NULL ? "<unknown>" : serviceId);
+        }
       }
     }
-  }
-  ::time_t startTime = ::time(NULL);
-  while ((!allShutdowned) && ((::time(NULL) - startTime) > timeoutInSecs)) {
-    ::sleep(timeoutInSecs);
   }
 
-  services.First();
-  while (services.Next(serviceId, servicePtr) != 0)
-  {
-    if ((servicePtr != NULL) && (servicePtr->getStatus() != Service::stopped)) {
-      try {
-        servicePtr->kill();
-      } catch (AdminException &e) {
-        smsc_log_error(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Couldn't kill service \"%s\", skipped, nested:\n%s", serviceId == NULL ? "<unknown>" : serviceId, e.what());
-      } catch (...) {
-        if (serviceId != NULL)
-          smsc_log_error(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Couldn't stop service \"%s\", skipped", serviceId);
+  smsc_log_debug(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Waiting timeout...");
+  ::time_t startTime = ::time(NULL);
+  while ((!allShutdowned) && ((::time(NULL) - startTime) < timeoutInSecs)) {
+    ::sleep(1);
+    {
+      MutexGuard guard(servicesListMutex);
+      allShutdowned = true;
+      char * serviceId = NULL;
+      Service *servicePtr = NULL;
+      services.First();
+      while (services.Next(serviceId, servicePtr) != 0)
+      {
+        if ((servicePtr != NULL) && (servicePtr->getStatus() != Service::stopped)) 
+          allShutdowned = false;
       }
     }
   }
+
+  {
+    MutexGuard guard(servicesListMutex);
+    char * serviceId = NULL;
+    Service *servicePtr = NULL;
+    services.First();
+    while (services.Next(serviceId, servicePtr) != 0)
+    {
+      if ((servicePtr != NULL) && (servicePtr->getStatus() != Service::stopped)) {
+        try {
+          smsc_log_debug(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Kill service \"%s\"", servicePtr->getId());
+          servicePtr->kill();
+        } catch (AdminException &e) {
+          smsc_log_error(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Couldn't kill service \"%s\", skipped, nested:\n%s", serviceId == NULL ? "<unknown>" : serviceId, e.what());
+        } catch (...) {
+          if (serviceId != NULL)
+            smsc_log_error(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Couldn't stop service \"%s\", skipped", serviceId);
+        }
+      }
+    }
+  }
+  smsc_log_debug(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Stop all services finished");
 }
 
 }
