@@ -59,7 +59,7 @@ void SmppProfilerTestCases::updateProfile(Profile& profile,
 
 void SmppProfilerTestCases::sendUpdateProfilePdu(const string& _text,
 	PduData::IntProps* intProps, PduData::StrProps* strProps,
-	PduData::ObjProps* objProps, bool sync, uint8_t dataCoding)
+	PduData::ObjProps* objProps, bool sync, uint8_t dataCoding, uint16_t ussdServiceOp)
 {
 	__decl_tc__;
 	__cfg_addr__(profilerAlias);
@@ -97,19 +97,22 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& _text,
 			}
 			while (dc != dataCoding);
 		}
-		//модификации текста
-		__tc__("updateProfile.cmdTextMixedCase"); __tc_ok__;
-		mixedCase(text);
-		__tc__("updateProfile.cmdTextExtraWhiteSpaces"); __tc_ok__;
-		//static const char whiteSpace[] = {' ', '\n'};
-		//static const int whiteSpaceSize = sizeof(whiteSpace);
-		text.insert(0, string(rand0(2), ' '));
-		int pos = text.find(' '); //первый пробел
-		if (pos != string::npos)
+		//модификации текста (только для не-ussd запросов)
+		if (!ussdServiceOp)
 		{
-			text.replace(pos, 1, string(rand1(2), ' '));
+			__tc__("updateProfile.cmdTextMixedCase"); __tc_ok__;
+			mixedCase(text);
+			__tc__("updateProfile.cmdTextExtraWhiteSpaces"); __tc_ok__;
+			//static const char whiteSpace[] = {' ', '\n'};
+			//static const int whiteSpaceSize = sizeof(whiteSpace);
+			text.insert(0, string(rand0(2), ' '));
+			int pos = text.find(' '); //первый пробел
+			if (pos != string::npos)
+			{
+				text.replace(pos, 1, string(rand1(2), ' '));
+			}
+			text.append(string(rand0(2), ' '));
 		}
-		text.append(string(rand0(2), ' '));
 		//перекодирование
 		int msgLen;
 		auto_ptr<char> msg = encode(text, dataCoding, msgLen, false);
@@ -133,8 +136,12 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& _text,
 			{
 				pdu->get_optional().set_messagePayload(msg.get(), msgLen);
 			}
+			if (ussdServiceOp)
+			{
+				pdu->get_optional().set_ussdServiceOp(ussdServiceOp);
+			}
 			fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync, intProps,
-				strProps, objProps, PDU_EXT_SME);
+				strProps, objProps, ussdServiceOp > 1 ? PDU_NULL_OK : PDU_EXT_SME);
 		}
 		else
 		{
@@ -147,8 +154,12 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& _text,
 			pdu->get_data().set_esmClass(0x0); //иначе профайлер отлупит
 			pdu->get_data().set_dataCoding(dcs);
 			pdu->get_optional().set_messagePayload(msg.get(), msgLen);
+			if (ussdServiceOp)
+			{
+				pdu->get_optional().set_ussdServiceOp(ussdServiceOp);
+			}
 			fixture->transmitter->sendDataSmPdu(pdu, NULL, sync, intProps,
-				strProps, objProps, PDU_EXT_SME);
+				strProps, objProps, ussdServiceOp > 1 ? PDU_NULL_OK : PDU_EXT_SME);
 		}
 		__tc_ok__;
 		//обновить профиль, ответные сообщения от профайлера и
@@ -179,11 +190,12 @@ void SmppProfilerTestCases::updateReportOptionsCorrect(bool sync,
 	{
 		return;
 	}
-	TCSelector s(num, 3);
+	TCSelector s(num, 6);
 	for (; s.check(); s++)
 	{
 		try
 		{
+			int ussdServiceOp = 0;
 			string text;
 			PduData::IntProps intProps;
 			switch (s.value())
@@ -206,10 +218,31 @@ void SmppProfilerTestCases::updateReportOptionsCorrect(bool sync,
 					intProps["profilerTc.reportOptions"] =
 						ProfileReportOptions::ReportFinal;
 					break;
+				case 4: //ussd report none
+					__tc__("updateProfile.reportOptions.reportNoneUssd");
+					ussdServiceOp = 1;
+					text = "*50*0#";
+					intProps["profilerTc.reportOptions"] =
+						ProfileReportOptions::ReportNone;
+					break;
+				case 5: //ussd report full
+					__tc__("updateProfile.reportOptions.reportFullUssd");
+					ussdServiceOp = 1;
+					text = "*50*2#";
+					intProps["profilerTc.reportOptions"] =
+						ProfileReportOptions::ReportFull;
+					break;
+				case 6: //ussd report final
+					__tc__("updateProfile.reportOptions.reportFinalUssd");
+					ussdServiceOp = 1;
+					text = "*50*1#";
+					intProps["profilerTc.reportOptions"] =
+						ProfileReportOptions::ReportFinal;
+					break;
 				default:
 					__unreachable__("Invalid num");
 			}
-			sendUpdateProfilePdu(text, &intProps, NULL, NULL, sync, dataCoding);
+			sendUpdateProfilePdu(text, &intProps, NULL, NULL, sync, dataCoding, ussdServiceOp);
 			__tc_ok__;
 		}
 		catch(...)
@@ -229,11 +262,12 @@ void SmppProfilerTestCases::updateCodePageCorrect(bool sync,
 	{
 		return;
 	}
-	TCSelector s(num, 2);
+	TCSelector s(num, 4);
 	for (; s.check(); s++)
 	{
 		try
 		{
+			int ussdServiceOp = 0;
 			string text;
 			PduData::IntProps intProps;
 			switch (s.value())
@@ -248,10 +282,22 @@ void SmppProfilerTestCases::updateCodePageCorrect(bool sync,
 					text = "default";
 					intProps["profilerTc.codePage"] = ProfileCharsetOptions::Default;
 					break;
+				case 3: //ussd ucs2 codepage
+					__tc__("updateProfile.dataCoding.ucs2Ussd");
+					ussdServiceOp = 1;
+					text = "*50*4#";
+					intProps["profilerTc.codePage"] = ProfileCharsetOptions::Ucs2;
+					break;
+				case 4: //ussd default codepage
+					__tc__("updateProfile.dataCoding.defaultUssd");
+					ussdServiceOp = 1;
+					text = "*50*3#";
+					intProps["profilerTc.codePage"] = ProfileCharsetOptions::Default;
+					break;
 				default:
 					__unreachable__("Invalid num");
 			}
-			sendUpdateProfilePdu(text, &intProps, NULL, NULL, sync, dataCoding);
+			sendUpdateProfilePdu(text, &intProps, NULL, NULL, sync, dataCoding, ussdServiceOp);
 			__tc_ok__;
 		}
 		catch(...)
@@ -271,11 +317,12 @@ void SmppProfilerTestCases::updateLocaleCorrect(bool sync,
 	{
 		return;
 	}
-	TCSelector s(num, 4);
+	TCSelector s(num, 7);
 	for (; s.check(); s++)
 	{
 		try
 		{
+			int ussdServiceOp = 0;
 			string text;
 			PduData::StrProps strProps;
 			switch (s.value())
@@ -300,10 +347,28 @@ void SmppProfilerTestCases::updateLocaleCorrect(bool sync,
 					text = "locale qu_qu";
 					strProps["profilerTc.locale"] = "";
 					break;
+				case 5: //ussd ru_ru
+					__tc__("updateProfile.locale.ruLocaleUssd");
+					ussdServiceOp = 1;
+					text = "*50*20#";
+					strProps["profilerTc.locale"] = "ru_ru";
+					break;
+				case 6: //ussd en_us
+					__tc__("updateProfile.locale.enLocaleUssd");
+					ussdServiceOp = 1;
+					text = "*50*21#";
+					strProps["profilerTc.locale"] = "en_us";
+					break;
+				case 7: //ussd не существующий
+					__tc__("updateProfile.locale.nonExistentLocaleUssd");
+					ussdServiceOp = 1;
+					text = "*50*22#";
+					//strProps["profilerTc.locale"] = "";
+					break;
 				default:
 					__unreachable__("Invalid num");
 			}
-			sendUpdateProfilePdu(text, NULL, &strProps, NULL, sync, dataCoding);
+			sendUpdateProfilePdu(text, NULL, &strProps, NULL, sync, dataCoding, ussdServiceOp);
 			__tc_ok__;
 		}
 		catch(...)
@@ -325,11 +390,12 @@ void SmppProfilerTestCases::updateHideOptionsCorrect(bool sync,
 	}
 	time_t t;
 	Profile profile = fixture->profileReg->getProfile(fixture->smeAddr, t);
-	TCSelector s(num, 2);
+	TCSelector s(num, 4);
 	for (; s.check(); s++)
 	{
 		try
 		{
+			int ussdServiceOp = 0;
 			string text;
 			PduData::IntProps intProps;
 			switch (s.value())
@@ -360,10 +426,38 @@ void SmppProfilerTestCases::updateHideOptionsCorrect(bool sync,
 						intProps["profilerTc.hideDenied"] = 1;
 					}
 					break;
+				case 3: //ussd hide
+					ussdServiceOp = 1;
+					text = "*50*5#";
+					if (profile.hideModifiable)
+					{
+						__tc__("updateProfile.hide.hideUssd");
+						intProps["profilerTc.hide"] = 1;
+					}
+					else
+					{
+						__tc__("updateProfile.hide.hideDenied");
+						intProps["profilerTc.hideDenied"] = 1;
+					}
+					break;
+				case 4: //ussd unhide
+					ussdServiceOp = 1;
+					text = "*50*6#";
+					if (profile.hideModifiable)
+					{
+						__tc__("updateProfile.hide.unhideUssd");
+						intProps["profilerTc.hide"] = 0;
+					}
+					else
+					{
+						__tc__("updateProfile.hide.hideDenied");
+						intProps["profilerTc.hideDenied"] = 1;
+					}
+					break;
 				default:
 					__unreachable__("Invalid num");
 			}
-			sendUpdateProfilePdu(text, &intProps, NULL, NULL, sync, dataCoding);
+			sendUpdateProfilePdu(text, &intProps, NULL, NULL, sync, dataCoding, ussdServiceOp);
 			__tc_ok__;
 		}
 		catch(...)
@@ -386,8 +480,7 @@ void SmppProfilerTestCases::updateProfileIncorrect(bool sync,
 	{
 		return;
 	}
-	__tc__("updateProfile.incorrectCmdText");
-	TCSelector s(num, 5);
+	TCSelector s(num, 7);
 	for (; s.check(); s++)
 	{
 		try
@@ -412,31 +505,54 @@ void SmppProfilerTestCases::updateProfileIncorrect(bool sync,
 				"hid", "unhid"
 				//"hide2", "unhide2"
 			};
+			//код 50 или какой другой не важно
+			//количество '*' не важно
+			static const string invalidUssdCmd[] =
+			{
+				"*50*7#", "*50*100000#", "*50*a0#", "*50*#",
+				"50*0#", "*50#", "**#"
+			};
+			int ussdServiceOp = 0;
 			string text;
 			switch (s.value())
 			{
 				case 1: //случайный текст
 					{
+						__tc__("updateProfile.incorrectCmdText");
 						auto_ptr<char> tmp = rand_char(rand0(5));
 						text = tmp.get();
 					}
 					break;
 				case 2: //report options
+					__tc__("updateProfile.incorrectCmdText");
 					text = invalidReportCmd[rand0(sz(invalidReportCmd) - 1)];
 					break;
 				case 3: //data coding
+					__tc__("updateProfile.incorrectCmdText");
 					text = invalidDcCmd[rand0(sz(invalidDcCmd) - 1)];
 					break;
 				case 4: //locale
+					__tc__("updateProfile.incorrectCmdText");
 					text = invalidLocaleCmd[rand0(sz(invalidLocaleCmd) - 1)];
 					break;
 				case 5: //hide
+					__tc__("updateProfile.incorrectCmdText");
 					text = invalidHideCmd[rand0(sz(invalidHideCmd) - 1)];
+					break;
+				case 6: //ussd
+					__tc__("updateProfile.incorrectUssdCmd");
+					ussdServiceOp = 1;
+					text = invalidUssdCmd[rand0(sz(invalidUssdCmd) - 1)];
+					break;
+				case 7: //invalid ussd service op
+					__tc__("updateProfile.incorrectUssdServiceOp");
+					ussdServiceOp = rand2(2, 255);
+					text = "*50*0#";
 					break;
 				default:
 					__unreachable__("Invalid num");
 			}
-			sendUpdateProfilePdu(text, NULL, NULL, NULL, sync, dataCoding);
+			sendUpdateProfilePdu(text, NULL, NULL, NULL, sync, dataCoding, ussdServiceOp);
 			__tc_ok__;
 		}
 		catch(...)
@@ -518,6 +634,7 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 		return;
 	}
 	SmsPduWrapper pdu(header, 0);
+	SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
 	__require__(pdu.isDeliverSm());
 	const char* msg;
 	int msgLen;
@@ -553,6 +670,11 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	__tc__("updateProfile.ack.checkFields");
 	SmppOptional opt;
 	opt.set_userMessageReference(pdu.getMsgRef());
+	if (origPdu.get_optional().has_ussdServiceOp() &&
+		origPdu.get_optional().get_ussdServiceOp() == 1)
+	{
+		opt.set_ussdServiceOp(17);
+	}
 	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional(), OPT_MSG_PAYLOAD), 0);
 	__tc_ok_cond__;
 

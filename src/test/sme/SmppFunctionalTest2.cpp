@@ -1029,6 +1029,7 @@ int main(int argc, char* argv[])
 		cout << "Usage: TestSmsc [host] [port]" << endl;
 		exit(0);
 	}
+	smsc::util::Logger::getCategory("");
 	string smscHost = "smsc";
 	int smscPort = 15971;
 	if (argc == 3)

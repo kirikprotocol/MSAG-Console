@@ -39,28 +39,52 @@ void profilerTc()
 		"Установить прием уведомлений о доставке (report full)");
 	__reg_tc__("updateProfile.reportOptions.reportFinal",
 		"Установить прием уведомлений о результате доставке (report final)");
+	__reg_tc__("updateProfile.reportOptions.reportNoneUssd",
+		"Отказаться от уведомления о доставке командой ussd (*50*0#)");
+	__reg_tc__("updateProfile.reportOptions.reportFullUssd",
+		"Установить прием уведомлений о доставке командой ussd (*50*2#)");
+	__reg_tc__("updateProfile.reportOptions.reportFinalUssd",
+		"Установить прием уведомлений о результате доставке командой ussd (*50*1#)");
 	__reg_tc__("updateProfile.dataCoding",
 		"Изменение режима приема сообщений");
 	__reg_tc__("updateProfile.dataCoding.ucs2",
 		"Установить режим приема сообщений на русском языке (ucs2)");
 	__reg_tc__("updateProfile.dataCoding.default",
 		"Отказаться от режима приема сообщений на русском языке (default)");
+	__reg_tc__("updateProfile.dataCoding.ucs2Ussd",
+		"Установить режим приема сообщений на русском языке командой ussd (*50*4#)");
+	__reg_tc__("updateProfile.dataCoding.defaultUssd",
+		"Отказаться от режима приема сообщений на русском языке командой ussd (*50*3#)");
 	__reg_tc__("updateProfile.locale",
 		"Изменение настроек локали");
 	__reg_tc__("updateProfile.locale.existentLocale",
-		"Правильно заданная локаль (en_us, en_gb, ru_ru)");
+		"Правильно заданная локаль (locale en_us, locale ru_ru)");
 	__reg_tc__("updateProfile.locale.nonExistentLocale",
 		"Заданная локаль не прописана в списке локалей поддерживаемых SC");
+	__reg_tc__("updateProfile.locale.enLocaleUssd",
+		"Установить локаль en_us командой ussd (*50*21#)");
+	__reg_tc__("updateProfile.locale.ruLocaleUssd",
+		"Установить локаль ru_ru командой ussd (*50*20#)");
+	__reg_tc__("updateProfile.locale.nonExistentLocaleUssd",
+		"Заданная локаль не прописана в списке ussd запросов");
 	__reg_tc__("updateProfile.hide",
 		"Изменение hide опций");
 	__reg_tc__("updateProfile.hide.hide",
 		"Установить опцию hide (команда hide)");
 	__reg_tc__("updateProfile.hide.unhide",
 		"Установить опцию unhide (команда unhide)");
+	__reg_tc__("updateProfile.hide.hideUssd",
+		"Установить опцию hide командой ussd (*50*5#)");
+	__reg_tc__("updateProfile.hide.unhideUssd",
+		"Установить опцию unhide командой ussd (*50*6#)");
 	__reg_tc__("updateProfile.hide.hideDenied",
 		"Попытка изменить опцию hide, если для профиля запрещено изменение hide опции");
 	__reg_tc__("updateProfile.incorrectCmdText",
 		"Неправильный текст команды");
+	__reg_tc__("updateProfile.incorrectUssdCmd",
+		"Неправильный ussd запрос");
+	__reg_tc__("updateProfile.incorrectUssdServiceOp",
+		"Неправильное значение поля ussd_service_op (profiler проигнорирует такой ussd запрос)");
 	//updateProfile.ack
 	__reg_tc__("updateProfile.ack",
 		"Ответные сообщения от менеджера профилей");

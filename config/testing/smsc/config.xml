@@ -19,7 +19,10 @@
 			<param name="uncommited" type="int">10</param>
 			<section name="Cleaner">
 				<param name="enabled" type="bool">true</param>
-				<param name="interval" type="int">30</param>
+				<param name="interval" type="int">30</param> <!-- in seconds -->
+				<param name="awake" type="int">10</param>    <!-- in seconds -->
+				<param name="age" type="int">10</param>      <!-- in days -->
+				<param name="ageInSeconds" type="bool">true</param>
 			</section>
 
 		</section>
@@ -105,6 +108,17 @@
 		<param name="protocol_id" type="int">5</param>
 		<param name="service_type" type="string">pRof</param>
 		<param name="systemId" type="string">profiler</param>
+		<section name="ussdOpsMapping">
+			<param name="REPORT NONE" type="int">0</param>
+			<param name="REPORT FULL" type="int">2</param>
+			<param name="REPORT FINAL" type="int">1</param>
+			<param name="LOCALE RU_RU" type="int">20</param>
+			<param name="LOCALE EN_US" type="int">21</param>
+			<param name="DEFAULT" type="int">3</param>
+			<param name="UCS2" type="int">4</param>
+			<param name="HIDE" type="int">5</param>
+			<param name="UNHIDE" type="int">6</param>
+		</section>
 	</section>
 
 	<section name="smpp">

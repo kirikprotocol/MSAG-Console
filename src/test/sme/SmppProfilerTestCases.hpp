@@ -64,7 +64,7 @@ protected:
 		PduData::StrProps* strProps, PduData::ObjProps* objProps);
 	void sendUpdateProfilePdu(const string& text, PduData::IntProps* intProps,
 		PduData::StrProps* strProps, PduData::ObjProps* objProps, bool sync,
-		uint8_t dataCoding);
+		uint8_t dataCoding, uint16_t ussdServiceOp);
 	AckText* getExpectedResponse(SmeAckMonitor* monitor,
 		SmppHeader* header, time_t recvTime);
 };
