@@ -853,7 +853,7 @@ public:
           auto_ptr<PduXSm> xsm(new PduXSm);
           xsm->header.set_commandId(SmppCommandSet::DELIVERY_SM);
           xsm->header.set_sequenceNumber(c.get_dialogId());
-          fillSmppPduFromSms(xsm.get(),c.get_sms());
+          fillSmppPduFromSms(xsm.get(),c.get_sms(),forceDC);
           xsm->message.set_scheduleDeliveryTime("");
           xsm->message.set_validityPeriod("");
           xsm->message.set_replaceIfPresentFlag(0);
