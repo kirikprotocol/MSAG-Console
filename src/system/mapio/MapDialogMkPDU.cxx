@@ -145,7 +145,8 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
       if ( code == MAP_LATIN1_ENCODING ) code = MAP_OCTET7BIT_ENCODING;
       datacoding = code&0x0c;
       if ( sms->hasIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT) ) {
-        datacoding |= 0xf0;
+        if( code == MAP_UCS2_ENCODING ) datacoding |= 0x10;
+        else datacoding |= 0xf0;
         datacoding |= (sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)-1)&0x3;
       }
     }
