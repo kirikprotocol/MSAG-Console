@@ -442,7 +442,7 @@ public:
         
         if (!accepted)
             smsc_log_info(logger, "SMS #%s seqNum=%d wasn't accepted, errcode=%d",
-                          msgId, seqNum, status);
+                          msgId.c_str(), seqNum, status);
 
         processor.invokeProcessResponce(seqNum, accepted, retry, immediate, msgId);
     }
