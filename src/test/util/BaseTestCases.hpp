@@ -15,6 +15,15 @@ namespace util {
 using namespace std;
 using log4cpp::Category;
 
+struct TCException : public exception
+{
+	const string msg;
+	TCException() {}
+	TCException(const char* str) : msg(str) {}
+	~TCException() throw() {}
+    virtual const char* what() const throw() { return msg.c_str(); }
+};
+
 /**
  * Этот класс является базовым для все тест кейс имплементаций.
  * 
