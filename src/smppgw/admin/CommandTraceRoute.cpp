@@ -58,15 +58,20 @@ CommandTraceRoute::CommandTraceRoute(const xercesc::DOMDocument * doc)
   : Command((Command::Id)CommandIds::traceRoute)
 {
   smsc_log_debug(logger, "TraceRoute command");
+  fprintf(stderr,"---- -10");
 
   try {
     DOMElement *elem = doc->getDocumentElement();
     DOMNodeList *list = elem->getElementsByTagName(XmlStr("param"));
 
+    fprintf(stderr,"---- -9");
+
     for (int i=0; i<list->getLength(); i++) {
       DOMElement *paramElem = (DOMElement*) list->item(i);
       XmlStr name(paramElem->getAttribute(XmlStr("name")));
       std::auto_ptr<char> value(getNodeText(*paramElem));
+
+      fprintf(stderr,"---- -8");
 
       if (::strcmp("srcAddress", name) == 0)
         srcAddr = value.get();
@@ -74,10 +79,13 @@ CommandTraceRoute::CommandTraceRoute(const xercesc::DOMDocument * doc)
         dstAddr = value.get();
       if (::strcmp("srcSysId", name) == 0) 
         srcSysId = value.get();
+      fprintf(stderr,"---- -7");
+
     }
   } catch (...) {
     throw AdminException("Some exception occured");
   }
+  fprintf(stderr,"---- -6");
 
 }
 
@@ -88,13 +96,10 @@ CommandTraceRoute::~CommandTraceRoute()
 
 smsc::admin::service::Variant CommandTraceRoute::GetTraceResult(smsc::smppgw::Smsc * SmscApp)
 {
-
-
   const char* _srcAddr  = srcAddr.data();
   const char* _dstAddr  = dstAddr.data();
   const char* _srcSysId = srcSysId.data();
 
-  
   fprintf(stderr,"---- Command parameters: %s,%s,%s\n",srcAddr.data(),dstAddr.data(),srcSysId.data());
 
 
@@ -112,11 +117,15 @@ smsc::admin::service::Variant CommandTraceRoute::GetTraceResult(smsc::smppgw::Sm
       // 2..: Trace (if any)
 
       smsc::admin::service::Variant result(smsc::admin::service::StringListType);
+      fprintf(stderr,"---- 1");
 
 
       Address dealiased;
       char addrBuf[MAX_ADDRESS_VALUE_LENGTH+5];
       string dealiasText="There are no aliases for this address";
+
+      fprintf(stderr,"---- 2");
+
       if(SmscApp->AliasToAddress(Address(_dstAddr),dealiased))
       {
         dealiasText="Address "+Address(_dstAddr).toString()+" was dealiased to "+dealiased.toString();
@@ -124,6 +133,7 @@ smsc::admin::service::Variant CommandTraceRoute::GetTraceResult(smsc::smppgw::Sm
         _dstAddr=addrBuf;
       }
 
+      fprintf(stderr,"---- 3");
 
       if (_srcSysId)
       {
@@ -140,9 +150,10 @@ smsc::admin::service::Variant CommandTraceRoute::GetTraceResult(smsc::smppgw::Sm
               lookup(Address(_srcAddr), Address(_dstAddr), proxy, 0, &info);
       }
 
+      fprintf(stderr,"---- 4");
+
       vector<std::string> traceBuff;
       SmscApp->getTestRouterInstance()->getTrace(traceBuff);
-
 
       if (!found)
       {
