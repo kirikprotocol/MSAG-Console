@@ -18,7 +18,7 @@ public LoadRoutes(final String applyTarget) throws SibincoException
   {
     super("loadRoutes", "file:///command_gw.dtd");
     this.applyTarget = applyTarget;
-    createStringParam("subj", this.applyTarget);
+   // createStringParam("subj", this.applyTarget);
   }
 
   public String getApplyTarget()
