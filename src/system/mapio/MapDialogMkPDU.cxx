@@ -1,20 +1,16 @@
-#pragma pack(1)
-
 struct SMS_DELIVERY_FORMAT_HEADER{
   union{
     struct{
-      unsigned reply_path:1;
-      unsigned udhi:1;
-      unsigned srri:1;
-      unsigned reserved:2;
-      unsigned mms:1;
-      unsigned mg_type_ind:2;
+      unsigned char reply_path:1;
+      unsigned char udhi:1;
+      unsigned char srri:1;
+      unsigned char reserved:2;
+      unsigned char mms:1;
+      unsigned char mg_type_ind:2;
     }s;
     unsigned char _val_01;
   }uu;
 };
-
-#pragma pack()
 
 void fillPduTime(MAP_TIMESTAMP* pdu_tm,struct tm* tms)
 {

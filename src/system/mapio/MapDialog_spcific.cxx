@@ -217,17 +217,15 @@ inline bool provErrCodeFatal( ET96MAP_PROV_ERR_T p ) {
   (p > 0x0a && p <= 0x10)); // unxpected component end other
 }
 
-#pragma pack(1)
-
 struct SMS_SUMBMIT_FORMAT_HEADER{
   union{
     struct{
-      unsigned reply_path:1;
-      unsigned udhi:1;
-      unsigned srr:1;
-      unsigned tp_vp:2;
-      unsigned reject_dupl:1;
-      unsigned mg_type_ind:2;
+      unsigned char reply_path:1;
+      unsigned char udhi:1;
+      unsigned char srr:1;
+      unsigned char tp_vp:2;
+      unsigned char reject_dupl:1;
+      unsigned char mg_type_ind:2;
     };
     unsigned char _val_01;
   };
@@ -236,12 +234,11 @@ struct SMS_SUMBMIT_FORMAT_HEADER{
 
 struct MAP_SMS_ADDRESS{
   unsigned char len;
-  //unsigned char tonpi;
   union{
     struct{
-      unsigned reserved_1:1;
-      unsigned ton:3;
-      unsigned npi:4;
+      unsigned char reserved_1:1;
+      unsigned char ton:3;
+      unsigned char npi:4;
     }st;
     unsigned char tonpi;
   };
@@ -250,33 +247,31 @@ struct MAP_SMS_ADDRESS{
 
 struct MAP_TIMESTAMP{
   struct{
-    unsigned second:4;
-    unsigned first:4;
+    unsigned char second:4;
+    unsigned char first:4;
   }year;
   struct{
-    unsigned second:4;
-    unsigned first:4;
+    unsigned char second:4;
+    unsigned char first:4;
   }mon;
   struct{
-    unsigned second:4;
-    unsigned first:4;
+    unsigned char second:4;
+    unsigned char first:4;
   }day;
   struct{
-    unsigned second:4;
-    unsigned first:4;
+    unsigned char second:4;
+    unsigned char first:4;
   }hour;
   struct{
-    unsigned second:4;
-    unsigned first:4;
+    unsigned char second:4;
+    unsigned char first:4;
   }min;
   struct{
-    unsigned second:4;
-    unsigned first:4;
+    unsigned char second:4;
+    unsigned char first:4;
   }sec;
   unsigned char tz;
 };
-
-#pragma pack()
 
 inline void mkSS7GTAddress( ET96MAP_SS7_ADDR_T *addr, const ET96MAP_ADDRESS_T *saddr, ET96MAP_LOCAL_SSN_T ssn) {
   addr->ss7AddrLen = 5+(saddr->addressLength+1)/2;
