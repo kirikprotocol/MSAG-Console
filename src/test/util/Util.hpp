@@ -1,4 +1,3 @@
-// $Id$
 #ifndef TEST_UTIL_UTIL
 #define TEST_UTIL_UTIL
 
@@ -41,27 +40,14 @@ std::auto_ptr<uint8_t> rand_uint8_t(int length);
 std::auto_ptr<char> rand_char(int length);
 void rand_char(int length, char* buf);
 
-/**
- * Класс для хранения результатов выполнения тест кейса.
- */
-class TCResult
+template <class T>
+struct Deletor
 {
-private:
-	const char* id;
-	const int choice;
-	std::vector<int> failures;
-
-public:
-	TCResult(const char* id, const int choice = 1);
-	TCResult(const TCResult& tcRes);
-	const char* getId() const;
-	int getChoice() const;
-	void addFailure(int subTC);
-	void addFailure(const vector<int>& subTC, int base = 0);
-	const std::vector<int>& getFailures() const;
-	bool value() const;
-	bool operator== (const TCResult& tcRes) const;
-	friend std::ostream& operator<< (std::ostream& os, const TCResult& res);
+	T* operator()(T* obj)
+	{
+		if (obj) { delete obj; }
+		return NULL;
+	}
 };
 
 /**
@@ -89,53 +75,6 @@ public:
 	int value2(int num1, int num2) const;
 	int value3(int num1, int num2) const;
 };
-
-//TCResult inline member functions definitions
-inline TCResult::TCResult(const char* _id, const int _choice)
-	: id(_id), choice(_choice) {}
-
-inline TCResult::TCResult(const TCResult& tcRes)
-	: id(tcRes.getId()), choice(tcRes.getChoice()), 
-	failures(tcRes.getFailures()) {}
-
-inline const char* TCResult::getId() const
-{
-	return id;
-}
-
-inline int TCResult::getChoice() const
-{
-	return choice;
-}
-
-inline void TCResult::addFailure(int subTC)
-{
-#ifdef ABORT_ON_FAILURE
-	abort();
-#endif
-	failures.push_back(subTC);
-}
-
-inline void TCResult::addFailure(const vector<int>& subTC, int base)
-{
-#ifdef ABORT_ON_FAILURE
-	abort();
-#endif
-	for (int i = 0; i < subTC.size(); i++)
-	{
-		failures.push_back(subTC[i] > 0 ? base + subTC[i] : subTC[i]);
-	}
-}
-
-inline const std::vector<int>& TCResult::getFailures() const
-{
-	return failures;
-}
-
-inline bool TCResult::value() const
-{
-	return failures.empty();
-}
 
 //TCSelector inline member functions definitions
 inline TCSelector::~TCSelector()
