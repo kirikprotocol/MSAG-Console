@@ -5,6 +5,7 @@
 #include <logger/Logger.h>
 #include <util/cstrings.h>
 #include <util/debug.h>
+#include <sms/sms_const.h>
 
 namespace smsc {
 namespace util {
@@ -132,6 +133,32 @@ throw (SubjectNotFoundException)
   }
 }
 
+const uint8_t strToDeliveryMode(const char * const deliveryModeStr)
+{
+	if (::stricmp("store", deliveryModeStr) == 0)
+		return smsc::sms::SMSC_STOREANDFORWARD_MSG_MODE;
+	if (::stricmp("forward", deliveryModeStr) == 0)
+		return smsc::sms::SMSC_TRANSACTION_MSG_MODE;
+	if (::stricmp("datagram", deliveryModeStr) == 0)
+		return smsc::sms::SMSC_DATAGRAM_MSG_MODE;
+	return smsc::sms::SMSC_DEFAULT_MSG_MODE;
+}
+
+const char * const deliveryModeToStr(const uint8_t deliveryMode)
+{
+	switch (deliveryMode)
+	{
+	case smsc::sms::SMSC_STOREANDFORWARD_MSG_MODE:
+		return "store";
+	case smsc::sms::SMSC_TRANSACTION_MSG_MODE:
+		return "forward";
+	case smsc::sms::SMSC_DATAGRAM_MSG_MODE:
+		return "datagram";
+	default:
+		return "default";
+	}
+}
+
 Route * RouteConfig::createRoute(const DOM_Element &elem, const SubjectPHash &subjects)
 throw (SubjectNotFoundException)
 {
@@ -158,7 +185,7 @@ throw (SubjectNotFoundException)
 																	 strcmp("true", active.get()) == 0,
                                    serviceId,
 								   std::string(srcSmeSystemId.get()),
-								   std::string(deliveryModeStr.get()),
+								   strToDeliveryMode(deliveryModeStr.get()),
 								   std::string(forwardToStr.get()))
                          );
 
@@ -269,7 +296,7 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
       << "\" enabling=\""  << (r->isEnabling() ? "true" : "false")
       << "\" priority=\""  << r->getPriority()
       << "\" serviceId=\""  << r->getServiceId()
-      << "\" deliveryMode=\""  << r->getDeliveryMode()
+      << "\" deliveryMode=\""  << deliveryModeToStr(r->getDeliveryMode())
       << "\" forwardTo=\""  << r->getForwardTo()
       << "\">" << std::endl;
 

@@ -4,6 +4,7 @@
 #include <vector>
 #include <util/cstrings.h>
 #include <core/buffers/Hash.hpp>
+#include <sms/sms_const.h>
 
 namespace smsc {
 namespace util {
@@ -113,7 +114,7 @@ private:
 	bool active;
 	int serviceId;
 	std::string srcSmeSystemId;
-	std::string deliveryMode;
+	const uint8_t deliveryMode;
 	std::string forwardTo;
 
 
@@ -121,14 +122,14 @@ private:
 
 public:
 	Route()
-		: id(), priority(0), sources(), destinations(), billing(false), archiving(false), enabling(true),suppressDeliveryReports(false), serviceId(0), srcSmeSystemId(), deliveryMode("default"), forwardTo()
+		: id(), priority(0), sources(), destinations(), billing(false), archiving(false), enabling(true),suppressDeliveryReports(false), serviceId(0), srcSmeSystemId(), deliveryMode(smsc::sms::SMSC_DEFAULT_MSG_MODE), forwardTo()
 	{}
 	Route(const Route &r)
 		: id(r.id), priority(r.priority), sources(r.sources), destinations(r.destinations),
 		billing(r.billing), archiving(r.archiving), enabling(r.enabling),suppressDeliveryReports(r.suppressDeliveryReports), serviceId(r.serviceId),
 		srcSmeSystemId(r.srcSmeSystemId), deliveryMode(r.deliveryMode), forwardTo(r.forwardTo)
 	{}
-	Route(const std::string & rid, const int prior, bool isBilling, bool isArchiving, bool isEnabling, bool isSuppressDR, bool isActive, int _serviceId, const std::string & _srcSmeSystemId, const std::string & _deliveryMode, const std::string & _forwardTo)
+	Route(const std::string & rid, const int prior, bool isBilling, bool isArchiving, bool isEnabling, bool isSuppressDR, bool isActive, int _serviceId, const std::string & _srcSmeSystemId, const uint8_t _deliveryMode, const std::string & _forwardTo)
 		: id(rid), priority(prior), sources(), destinations(),
 		billing(isBilling), archiving(isArchiving), enabling(isEnabling), suppressDeliveryReports(isSuppressDR), active(isActive), serviceId(_serviceId),
 		srcSmeSystemId(_srcSmeSystemId), deliveryMode(_deliveryMode), forwardTo(_forwardTo)
@@ -152,7 +153,7 @@ public:
 	const std::string & getIdString() const {return id;}
 	int getServiceId() const {return serviceId;}
 	const std::string & getSrcSmeSystemId() const { return srcSmeSystemId; }
-	const std::string & getDeliveryMode() const {return this->deliveryMode;}
+	const uint8_t getDeliveryMode() const {return this->deliveryMode;}
 	const std::string & getForwardTo() const {return this->forwardTo;}
 };
 //typedef std::vector<Route> RouteVector;
