@@ -222,7 +222,7 @@ int TestSmeFunc::Execute()
 #ifdef LOAD_TEST
 	seq.push_back(201);
 #else
-	/*
+	///*
 	seq.insert(seq.end(), 20, 1);
 	seq.insert(seq.end(), 20, 2);
 	seq.insert(seq.end(), 15, 3);
@@ -235,7 +235,7 @@ int TestSmeFunc::Execute()
 	seq.insert(seq.end(), 7, 10);
 	seq.insert(seq.end(), 20, 11);
 	seq.insert(seq.end(), 10, 12);
-	*/
+	//*/
 	seq.insert(seq.end(), 20, 13);
 	seq.insert(seq.end(), 10, 14);
 	seq.push_back(51);
@@ -243,12 +243,12 @@ int TestSmeFunc::Execute()
 	seq.push_back(53);
 	seq.push_back(54);
 	seq.push_back(55);
-	/*
+	///*
 	seq.push_back(61);
 	seq.push_back(62);
 	seq.push_back(71);
 	seq.push_back(72);
-	*/
+	//*/
 	//seq.push_back(100);
 #ifdef ASSERT
 	seq.push_back(101);

@@ -65,8 +65,9 @@ public:
 	const string& getSelected() { return selectedId; }
 	void list();
 	void unbind();
-	void submit(const string& src, const string& dest, uint8_t registeredDelivery,
-		int ussdServiceOp, TextType textType, const string& text);
+	void submit(const string& src, const string& dest, uint8_t esmClass,
+		uint8_t registeredDelivery, int ussdServiceOp, TextType textType,
+		const string& text);
 	void setDeliveryResp(uint32_t commandStatus, int delay);
 };
 
@@ -147,7 +148,7 @@ void SimpleSmppTest::unbind()
 	__check_exception__
 }
 
-void SimpleSmppTest::submit(const string& src, const string& dest,
+void SimpleSmppTest::submit(const string& src, const string& dest, uint8_t esmClass,
 	uint8_t registeredDelivery, int ussdServiceOp, TextType textType, const string& text)
 {
 	static uint16_t msgRef = 1;
@@ -171,6 +172,10 @@ void SimpleSmppTest::submit(const string& src, const string& dest,
 		const Address destAddr(dest.c_str());
 		pdu.get_message().set_source(*SmppUtil::convert(srcAddr, &addr));
 		pdu.get_message().set_dest(*SmppUtil::convert(destAddr, &addr));
+		if (esmClass != 0xff)
+		{
+			pdu.get_message().set_esmClass(esmClass);
+		}
 		pdu.get_message().set_registredDelivery(registeredDelivery);
 		//неменденная доставка
 		pdu.get_message().set_scheduleDeliveryTime("");
@@ -353,6 +358,17 @@ bool getParam(const string& cmd, const string& name, string& value)
 	return false;
 }
 
+bool getParam(const string& cmd, const string& name, int& value)
+{
+	string tmp;
+	if (getParam(cmd, name, tmp))
+	{
+		value = atoi(tmp.c_str());
+		return true;
+	}
+	return false;
+}
+
 void executeTest(const string& smscHost, int smscPort)
 {
 	SimpleSmppTest test(smscHost, smscPort);
@@ -368,7 +384,7 @@ void executeTest(const string& smscHost, int smscPort)
 			cout << "select <id=smeId> - select sme" << endl;
 			cout << "list - list sessions" << endl;
 			cout << "unbind - unbind selected sme" << endl;
-			cout << "submit <src=srcAddr> <dest=destAddr> [report=none|full|failure] [ussd=ussdServiceOp] [msg|payload=text] - submit sms" << endl;
+			cout << "submit <src=srcAddr> <dest=destAddr> [esmClass=esmClass] [report=none|full|failure] [ussd=ussdServiceOp] [msg|payload=text] - submit sms" << endl;
 			cout << "set resp [status=0] [delay=0] - set delivery_sm_resp command status and delay" << endl;
 			cout << "quit - quit test" << endl;
 			continue;
@@ -427,12 +443,13 @@ void executeTest(const string& smscHost, int smscPort)
 		}
 		else if (isCmd(cmd, "submit"))
 		{
-			string src, dest, report, ussd, text;
+			string src, dest, report, text;
+			int ussdServiceOp = 0, esmClass = 0xff;
 			getParam(cmd, "src", src);
 			getParam(cmd, "dest", dest);
 			getParam(cmd, "report", report);
-			getParam(cmd, "ussd", ussd);
-			int ussdServiceOp = atoi(ussd.c_str());
+			getParam(cmd, "ussd", ussdServiceOp);
+			getParam(cmd, "esmClass", esmClass);
 			TextType textType = RAND_TEXT;
 			if (getParam(cmd, "msg", text))
 			{
@@ -461,16 +478,14 @@ void executeTest(const string& smscHost, int smscPort)
 				cout << "invalid report option" << endl;
 				continue;
 			}
-			test.submit(src, dest, registeredDelivery, ussdServiceOp, textType, text);
+			test.submit(src, dest, esmClass, registeredDelivery, ussdServiceOp, textType, text);
 			continue;
 		}
 		else if (isCmd(cmd, "set resp"))
 		{
-			string strStatus, strDelay;
-			getParam(cmd, "status", strStatus);
-			getParam(cmd, "delay", strDelay);
-			uint32_t status = atoi(strStatus.c_str());
-			int delay = atoi(strDelay.c_str());
+			int status, delay;
+			getParam(cmd, "status", status);
+			getParam(cmd, "delay", delay);
 			test.setDeliveryResp(status, delay);
 			continue;
 		}

@@ -1,5 +1,4 @@
 #binary name			source name			libraries
--test/Test			Test				-lutil-regexp 
+test/Test			Test				-lutil-regexp -lutil -llog4cpp
 -test/Test3			Test				-ltest-emailsme -ltest-smpp -ltest-core -ltest-conf -ltest-sms -ltest-util -lsms -lutil-recoder-recode_dll -lcore-threads -lcore-buffers -lcore-network -lutil-config -lutil-config-smeman -lutil-xml -ladmin-util -lutil-regexp -lutil -llog4cpp -lxerces-c -lrt -L$(ORACLE_LIB) $(ORACLE_LIB)/libclntsh.so -lthread -lsocket
 -test/test2			test2				-ltest-sms -ltest-util -lsms
-SubmitMultiTest		SubmitMultiTest		-ltest-test -lsme -lsmpp -lutil -lcore-network -lreadline -ltermcap -lrt -lthread -lsocket

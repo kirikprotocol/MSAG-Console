@@ -40,8 +40,8 @@ begin
 			raise_application_error(-20201, 'Trying to delete record in sms_msg with arc = ''Y'' that has no corresponding sms_arc record');
 		end if;
 	end if;
-	if :msg.st = 0 then
-		raise_application_error(-20201, 'Deleting message in ENROTE state');
+	if :msg.st != 0 then
+		raise_application_error(-20201, 'Message must be in ENROTE state');
 	end if;
 end;
 /

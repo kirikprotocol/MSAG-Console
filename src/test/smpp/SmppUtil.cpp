@@ -44,6 +44,14 @@ void pdu2file(const char* pduName, const string& id, SmppHeader* pdu)
 	*/
 }
 
+const string time2string(time_t t)
+{
+	tm tmp;
+	char buf[30];
+	strftime(buf, sizeof(buf), "%b-%d %H:%M:%S\n", localtime_r(&t, &tmp));
+	return buf;
+}
+
 void dumpPdu(const char* tc, const string& id, SmppHeader* pdu)
 {
 	if (pdu)
@@ -59,8 +67,8 @@ void dumpPdu(const char* tc, const string& id, SmppHeader* pdu)
 					SmsPduWrapper p(pdu, time(NULL));
 					ss << ", serviceType = " << nvl(p.getServiceType());
 					ss << ", msgRef = " << (int) p.getMsgRef();
-					ss << ", waitTime = " << p.getWaitTime();
-					ss << ", validTime = " << p.getValidTime();
+					ss << ", waitTime = " << time2string(p.getWaitTime());
+					ss << ", validTime = " << time2string(p.getValidTime());
 					pdu2file("submit_sm", id, pdu);
 				}
 				break;
@@ -69,8 +77,8 @@ void dumpPdu(const char* tc, const string& id, SmppHeader* pdu)
 					SmsPduWrapper p(pdu, time(NULL));
 					ss << ", serviceType = " << nvl(p.getServiceType());
 					ss << ", msgRef = " << (int) p.getMsgRef();
-					ss << ", waitTime = " << p.getWaitTime();
-					ss << ", validTime = " << p.getValidTime();
+					ss << ", waitTime = " << time2string(p.getWaitTime());
+					ss << ", validTime = " << time2string(p.getValidTime());
 					pdu2file("submit_multi", id, pdu);
 				}
 				break;
@@ -79,8 +87,8 @@ void dumpPdu(const char* tc, const string& id, SmppHeader* pdu)
 					SmsPduWrapper p(pdu, time(NULL));
 					ss << ", serviceType = " << nvl(p.getServiceType());
 					ss << ", msgRef = " << (int) p.getMsgRef();
-					ss << ", waitTime = " << p.getWaitTime();
-					ss << ", validTime = " << p.getValidTime();
+					ss << ", waitTime = " << time2string(p.getWaitTime());
+					ss << ", validTime = " << time2string(p.getValidTime());
 					pdu2file("data_sm", id, pdu);
 				}
 				break;
@@ -95,8 +103,8 @@ void dumpPdu(const char* tc, const string& id, SmppHeader* pdu)
 			case REPLACE_SM:
 				{
 					PduReplaceSm* p = reinterpret_cast<PduReplaceSm*>(pdu);
-					ss << ", waitTime = " << SmppUtil::string2time(p->get_scheduleDeliveryTime(), time(NULL));
-					ss << ", validTime = " << SmppUtil::string2time(p->get_validityPeriod(), time(NULL));
+					ss << ", waitTime = " << time2string(SmppUtil::string2time(p->get_scheduleDeliveryTime(), time(NULL)));
+					ss << ", validTime = " << time2string(SmppUtil::string2time(p->get_validityPeriod(), time(NULL)));
 					pdu2file("replace_sm", id, pdu);
 				}
 				break;
@@ -107,11 +115,7 @@ void dumpPdu(const char* tc, const string& id, SmppHeader* pdu)
 				pdu2file("cancel_sm", id, pdu);
 				break;
 		}
-		time_t lt = time(NULL);
-		tm t;
-		char buf[30];
-		ss << ", system time = " << asctime_r(localtime_r(&lt, &t), buf) <<
-			", pdu:" << endl << pdu;
+		ss << ", pdu:" << endl << pdu;
 		__trace2__("%s", ss.str().c_str());
 	}
 	else

@@ -313,10 +313,10 @@ void SmppTransmitterTestCases::registerTransmitterReportMonitors(PduData* pduDat
 		return;
 	}
 	SmsPduWrapper pdu(pduData);
-	uint8_t regDelivery = SMSC_DELIVERY_RECEIPT_BITS &
-		getRegisteredDelivery(pduData, chkList);
-	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT ||
-		regDelivery == FAILURE_SMSC_DELIVERY_RECEIPT)
+	uint8_t regDelivery = getRegisteredDelivery(pduData, chkList);
+	uint8_t notificationFlag = regDelivery & INTERMEDIATE_NOTIFICATION_REQUESTED;
+	uint8_t deliveryReceiptFlag = regDelivery & SMSC_DELIVERY_RECEIPT_BITS;
+	if (notificationFlag)
 	{
 		//intermediate notification
 		__tc__("sms.reports.intermediateNotification.transmitter"); __tc_ok__;
@@ -326,6 +326,10 @@ void SmppTransmitterTestCases::registerTransmitterReportMonitors(PduData* pduDat
 		notifMonitor->state = SMPP_ENROUTE_STATE;
 		notifMonitor->deliveryStatus = ESME_RINVBNDSTS;
 		fixture->pduReg->registerMonitor(notifMonitor);
+	}
+	if (deliveryReceiptFlag == FINAL_SMSC_DELIVERY_RECEIPT ||
+		deliveryReceiptFlag == FAILURE_SMSC_DELIVERY_RECEIPT)
+	{
 		//delivery receipt
 		__tc__("sms.reports.deliveryReceipt.transmitter"); __tc_ok__;
 		DeliveryReceiptMonitor* rcptMonitor =
@@ -346,10 +350,10 @@ void SmppTransmitterTestCases::registerNotBoundReportMonitors(PduData* pduData)
 		return;
 	}
 	SmsPduWrapper pdu(pduData);
-	uint8_t regDelivery = SMSC_DELIVERY_RECEIPT_BITS &
-		getRegisteredDelivery(pduData, chkList);
-	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT ||
-		regDelivery == FAILURE_SMSC_DELIVERY_RECEIPT)
+	uint8_t regDelivery = getRegisteredDelivery(pduData, chkList);
+	uint8_t notificationFlag = regDelivery & INTERMEDIATE_NOTIFICATION_REQUESTED;
+	uint8_t deliveryReceiptFlag = regDelivery & SMSC_DELIVERY_RECEIPT_BITS;
+	if (notificationFlag)
 	{
 		//intermediate notification
 		__tc__("sms.reports.intermediateNotification.notBound"); __tc_ok__;
@@ -359,6 +363,10 @@ void SmppTransmitterTestCases::registerNotBoundReportMonitors(PduData* pduData)
 		notifMonitor->state = SMPP_ENROUTE_STATE;
 		notifMonitor->deliveryStatus = Status::SMENOTCONNECTED;
 		fixture->pduReg->registerMonitor(notifMonitor);
+	}
+	if (deliveryReceiptFlag == FINAL_SMSC_DELIVERY_RECEIPT ||
+		deliveryReceiptFlag == FAILURE_SMSC_DELIVERY_RECEIPT)
+	{
 		//delivery receipt
 		__tc__("sms.reports.deliveryReceipt.notBound"); __tc_ok__;
 		DeliveryReceiptMonitor* rcptMonitor =

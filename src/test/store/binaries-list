@@ -1,6 +1,6 @@
 #binary name				source name			libraries
-test/MessageStoreLoadTest               MessageStoreLoadTest            -ltest-util -ltest-sms -lstore -lcore-threads -lcore-buffers -lsms -lutil-config -lutil-xml -lutil -L$(__LIBS)
--test/MessageStoreIntegrityTestTC	MessageStoreIntegrityTestTC	-ltest-store -ltest-util -ltest-sms -lstore -lcore-threads -lcore-buffers -lsms -lutil-config -lutil-xml -lutil -L$(__LIBS)
--test/MessageStoreBusinessCycleTest	MessageStoreBusinessCycleTest	-ltest-store -ltest-util -ltest-sms -lstore -lcore-threads -lcore-buffers -lsms -lutil-config -lutil-xml -lutil -L$(__LIBS)
--test/MessageStoreBenchmarkTest		MessageStoreBenchmarkTest	-ltest-store -ltest-util -ltest-sms -lstore -lcore-threads -lcore-buffers -lsms -lutil-config -lutil-xml -lutil -L$(__LIBS)
--test/MessageStoreTest			MessageStoreTest		-ltest-store -ltest-util -ltest-sms -lstore -lcore-threads -lcore-buffers -lsms -lutil-config -lutil-xml -lutil -L$(__LIBS)
+-test/MessageStoreLoadTest               MessageStoreLoadTest            -ltest-sms -ltest-util -lstore -lutil-recoder-recode_dll -lcore-threads -lcore-buffers -lsms -lutil-config -lutil-xml -lutil -L$(__LIBS)
+test/MessageStoreIntegrityTestTC	MessageStoreIntegrityTestTC	-ltest-store -ltest-sms -ltest-util -lstore -lutil-recoder-recode_dll -lcore-threads -lcore-buffers -lsms -lutil-config -lutil-xml -lutil -L$(__LIBS)
+-test/MessageStoreBusinessCycleTest	MessageStoreBusinessCycleTest	-ltest-store -ltest-sms -ltest-util -lstore -lutil-recoder-recode_dll -lcore-threads -lcore-buffers -lsms -lutil-config -lutil-xml -lutil -L$(__LIBS)
+-test/MessageStoreBenchmarkTest		MessageStoreBenchmarkTest	-ltest-store -ltest-sms -ltest-util -lstore -lutil-recoder-recode_dll -lcore-threads -lcore-buffers -lsms -lutil-config -lutil-xml -lutil -L$(__LIBS)
+test/MessageStoreTest			MessageStoreTest		-ltest-store -ltest-sms -ltest-util -lstore -lutil-recoder-recode_dll -lcore-threads -lcore-buffers -lsms -lutil-config -lutil-xml -lutil -L$(__LIBS)
