@@ -94,7 +94,7 @@ class SmscCommand
   }
 
 public:
-	SmscCommand() : cmd (0) {}
+  SmscCommand() : cmd (0) {}
   SmscCommand(SmppHeader* pdu) : cmd (0)
   {
                 __require__ ( pdu != NULL );

@@ -45,6 +45,7 @@ public:
   virtual bool hasInput() const = 0;
   virtual void attachMonitor(ProxyMonitor* monitor) = 0; // for detach monitor call with NULL
   virtual bool attached() = 0; // check what proxy has attached monitor (proxy is attached to dispatcher)
+	virtual uint32_t getNextSequenceNumber() = 0;
 };
 
 }; // namespace smeman
