@@ -16,10 +16,12 @@
   <property name="libs_path" location="../webapps/libs"/>
   <property name="smsc_package_path" value="ru/novosoft/smsc"/>
 
-  <classfileset id="common_libs" dir="${libs_path}">
-    <include name="log4j.jar, antlr.jar, nsjsp.jar, classes12.jar"/>
-  </classfileset>
-  <property name="servlet_jar" location="${CATALINA_HOME}/common/lib/servlet.jar"/>
+  <path id="classpath">
+    <pathelement path="${java_src}"/>
+    <pathelement path="${java_out}"/>
+    <fileset dir="${libs_path}" includes="log4j.jar, antlr.jar, nsjsp.jar, classes12.jar"/>
+    <fileset dir="${CATALINA_HOME}/common/lib" includes="servlet.jar"/>
+  </path>
 
   <target name="init">
     <tstamp/>
@@ -32,8 +34,7 @@
 
   <target name="compile" depends="init" description="compile the sources">
     <javac srcdir="${java_src}" destdir="${java_out}" debug="yes">
-      <classpath refid="common_libs"/>
-      <classpath path="${servlet_jar}"/>
+      <classpath refid="classpath"/>
     </javac>
     <native2ascii encoding="Cp1251" src="${java_src}/**/*.properties" dest="${java_out}"/>
   </target>
