@@ -588,8 +588,8 @@ void extractSmsPart(SMS* sms,int partnum)
     unsigned int cilen;
     ConcatInfo *ci=(ConcatInfo *)sms->getBinProperty(Tag::SMSC_CONCATINFO,&cilen);
     __require__(partnum<ci->num);
-    int off=ci->off[partnum];
-    int newlen=ci->num==partnum+1?len-off:ci->off[partnum+1]-off;
+    int off=ci->getOff(partnum);
+    int newlen=ci->num==partnum+1?len-off:ci->getOff(partnum+1)-off;
     __trace2__("extractSmsPart: newlen=%d, part=%d/%d, maxlen=%d, off=%d, partlen=%d",len,partnum,(int)ci->num,maxlen,off,newlen);
     __require__(newlen<=160);
     if(dc==DataCoding::UCS2 && (dstdc&DataCoding::UCS2)!=DataCoding::UCS2)
@@ -648,8 +648,8 @@ void extractSmsPart(SMS* sms,int partnum)
     __trace2__("extractSmsPart: (unmerge) len=%d, dc=%d, dstdc=%d",len,dc,dstdc);
     unsigned int cilen;
     ConcatInfo *ci=(ConcatInfo *)sms->getBinProperty(Tag::SMSC_CONCATINFO,&cilen);
-    int off=ci->off[partnum];
-    int newlen=ci->num==partnum+1?len-off:ci->off[partnum+1]-off;
+    int off=ci->getOff(partnum);
+    int newlen=ci->num==partnum+1?len-off:ci->getOff(partnum+1)-off;
     __trace2__("extractSmsPart: (unmerge) newlen=%d, part=%d/%d, off=%d, partlen=%d",len,partnum,(int)ci->num,off,newlen);
     if(sms->hasStrProperty(Tag::SMSC_FORWARD_MO_TO))
     {

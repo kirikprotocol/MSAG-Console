@@ -174,6 +174,16 @@ enum{
 struct ConcatInfo{
   uint8_t num;
   uint16_t off[1];
+  void setOff(int idx,uint16_t val)
+  {
+    memcpy(off+idx,&val,sizeof(val));
+  }
+  uint16_t getOff(int idx)
+  {
+    uint16_t val;
+    memcpy(&val,off+idx,sizeof(val));
+    return val;
+  }
 };
 #pragma pack()
 

@@ -1081,7 +1081,7 @@ StateType StateMachine::submit(Tuple& t)
 
       ConcatInfo *ci=(ConcatInfo *)new char[1+2*num];
       ci->num=1;
-      ci->off[0]=0;
+      ci->setOff(0,0);
       sms->setBinProperty(Tag::SMSC_CONCATINFO,(char*)ci,1+2*num);
       generateDeliver=false;
       delete [] ((char*)ci);
@@ -1150,7 +1150,7 @@ StateType StateMachine::submit(Tuple& t)
         uint16_t mr0;
         uint8_t idx0,num0;
         bool havemoreudh0;
-        smsc::util::findConcatInfo(newbody+ci->off[i],mr0,idx0,num0,havemoreudh0);
+        smsc::util::findConcatInfo(newbody+ci->getOff(i),mr0,idx0,num0,havemoreudh0);
         if(idx0==idx || num0!=num || mr0!=mr)
         {
           submitResp(t,sms,Status::INVOPTPARAMVAL);
@@ -1186,7 +1186,7 @@ StateType StateMachine::submit(Tuple& t)
       string tmp;
       tmp.assign((const char*)newbody,newlen);
       tmp.append((const char*)body,len);
-      ci->off[ci->num]=newlen;
+      ci->setOff(ci->num,newlen);
       ci->num++;
       bool allParts=ci->num==num;
       if(allParts) // all parts received
@@ -1201,7 +1201,7 @@ StateType StateMachine::submit(Tuple& t)
           uint16_t mr0;
           uint8_t idx0,num0;
           bool havemoreudh0;
-          smsc::util::findConcatInfo((unsigned char*)tmp.c_str()+ci->off[i],mr0,idx0,num0,havemoreudh0);
+          smsc::util::findConcatInfo((unsigned char*)tmp.c_str()+ci->getOff(i),mr0,idx0,num0,havemoreudh0);
           __trace2__("SUBMIT_SM: merge check order %d:%d",i,idx0);
           totalMoreUdh=totalMoreUdh || havemoreudh0;
           order.push_back(idx0);
@@ -1220,9 +1220,9 @@ StateType StateMachine::submit(Tuple& t)
             {
               if(order[j]==i)
               {
-                int partlen=j==num-1?tmp.length()-ci->off[j]:ci->off[j+1]-ci->off[j];
+                int partlen=j==num-1?tmp.length()-ci->getOff(j):ci->getOff(j+1)-ci->getOff(j);
                 newci[i-1]=newtmp.length();
-                newtmp.append(tmp.c_str()+ci->off[j],partlen);
+                newtmp.append(tmp.c_str()+ci->getOff(j),partlen);
               }
             }
           }
@@ -1235,8 +1235,8 @@ StateType StateMachine::submit(Tuple& t)
           string newtmp;
           for(int i=1;i<=ci->num;i++)
           {
-            int partlen=i==num?tmp.length()-ci->off[i-1]:ci->off[i]-ci->off[i-1];
-            const unsigned char * part=(const unsigned char *)tmp.c_str()+ci->off[i-1];
+            int partlen=i==num?tmp.length()-ci->getOff(i-1):ci->getOff(i)-ci->getOff(i-1);
+            const unsigned char * part=(const unsigned char *)tmp.c_str()+ci->getOff(i-1);
             partlen-=*part+1;
             part+=*part+1;
             newtmp.append((const char*)part,partlen);
