@@ -8,6 +8,8 @@
 #include <db/DataSourceLoader.h>
 #include "CommandProcessor.h"
 
+#include <dbsme/jobs/SampleJob.h>
+
 int main(void) 
 {
     using namespace smsc::db;
@@ -18,9 +20,13 @@ int main(void)
     using smsc::util::config::ConfigException;
 
     const char* OCI_DS_FACTORY_IDENTITY = "OCI";
+    const char* SAMPLE_JOB_IDENTITY = "sample1";
     
     DataSourceLoader::loadupDataSourceFactory(
         "../db/oci/libdb_oci.so", OCI_DS_FACTORY_IDENTITY);
+
+    SampleJobFactory _sampleJobFactory;
+    JobFactory::registerFactory(&_sampleJobFactory, SAMPLE_JOB_IDENTITY);
 
     ConfigView* config;
     try 
@@ -34,7 +40,7 @@ int main(void)
         const char* toAddressStr = "1111111";
         Address toAddress(strlen(toAddressStr), 0, 0, toAddressStr);
         command.setToAddress(toAddress);
-        command.setJobName("sample");
+        command.setJobName(SAMPLE_JOB_IDENTITY);
 
         processor.process(command);
     } 

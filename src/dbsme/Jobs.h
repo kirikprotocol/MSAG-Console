@@ -49,7 +49,7 @@ namespace smsc { namespace dbsme
     public:
 
         virtual ~Job();
-        void init(ConfigView* config)
+        virtual void init(ConfigView* config)
             throw(ConfigException);
         
         void process(Command& command, DataSource& ds)

@@ -33,7 +33,7 @@ int main(void)
         {
             ConfigView* config = 
                 new ConfigView(Manager::getInstance(),
-                    "Applications.DBSme.DataProviders.1111111.DataSource");
+                    "Applications.DBSme.DataProviders.SampleDataProvider1.DataSource");
             
             ds->init(config);
             printf("Init Ok !\n");

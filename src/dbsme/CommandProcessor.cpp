@@ -10,6 +10,7 @@ namespace smsc { namespace dbsme
 
 CommandProcessor::CommandProcessor(ConfigView* config)
     throw(ConfigException)
+        : log(Logger::getCategory("smsc.dbsme.CommandProcessor"))
 {
     // create Providers by config
     ConfigView* providersConfig = config->getSubConfig("DataProviders");
@@ -23,20 +24,22 @@ CommandProcessor::CommandProcessor(ConfigView* config)
         const char* address = 0;
         try
         {
-            printf("Loading DataProvider for section '%s'.\n", section);
+            log.info("Loading DataProvider for section '%s'.", section);
             DataProvider* provider = new DataProvider(providerConfig);
             address = providerConfig->getString("address");
             providers.Insert(address, provider);
-            printf("Loaded DataProvider for section '%s'."
-                   " Bind address is: %s\n", section, address);
+            log.info("Loaded DataProvider for section '%s'."
+                     " Bind address is: %s", section, address);
         }
         catch (ConfigException& exc)
         {
+            log.error("Load of CommandProcessor failed !"
+                      " Config exception: %s", exc.what());
             if (set) delete set;
             if (address) delete address;
             delete providersConfig;
             delete providerConfig;
-            throw;
+            throw exc;
         }
         if (address) delete address;
         delete providerConfig;
@@ -59,41 +62,52 @@ CommandProcessor::~CommandProcessor()
 void CommandProcessor::process(Command& command)
     throw(ServiceNotFoundException, CommandProcessException)
 {
-    DataProvider* provider = providers.Get(command.getToAddress().value);
-    if (!provider) throw ServiceNotFoundException();
-    
-    provider->process(command);
+    DataProvider* provider = 0;
+    if (!providers.Exists(command.getToAddress().value))
+        throw ServiceNotFoundException(command.getToAddress().value);
+
+    providers.Get(command.getToAddress().value)->process(command);
 }
 
 /* --------------------- Command Processing (DataProvider) ----------------- */
 
 DataProvider::DataProvider(ConfigView* config)
-    throw(ConfigException) : ds(0) 
+    throw(ConfigException) 
+        : ds(0), log(Logger::getCategory("smsc.dbsme.DataProvider"))
 {
     ConfigView* dsConfig = config->getSubConfig("DataSource");
     char* dsIdentity = 0;
     try
     {
         dsIdentity = dsConfig->getString("type");
-        if (dsIdentity)
+        try 
         {
-            try 
+            ds = DataSourceFactory::getDataSource(dsIdentity);
+            if (ds)
             {
-                ds = DataSourceFactory::getDataSource(dsIdentity);
-                if (ds) ds->init(dsConfig);
-                delete dsIdentity;
+                ds->init(dsConfig);
             }
-            catch (ConfigException& exc)
+            else
             {
-                if (ds) delete ds;
-                throw;
+                char errorMsg[2048];
+                sprintf(errorMsg, 
+                        "DataSource for '%s' identity wasn't registered !",
+                        dsIdentity);
+                throw ConfigException(errorMsg);
             }
         }
+        catch (ConfigException& exc)
+        {
+            if (ds) delete ds;
+            throw exc;
+        }
+        if (dsIdentity) delete dsIdentity;
     }
     catch (ConfigException& exc)
     {
         if (dsIdentity) delete dsIdentity;
-        throw;
+        if (dsConfig) delete dsConfig;
+        throw exc;
     }
     delete dsConfig;
     
@@ -109,7 +123,8 @@ DataProvider::DataProvider(ConfigView* config)
         const char* name = 0;
         try
         {
-            printf("Loading section %s\n", section);
+            log.info("Loading Job for '%s' section.", section);
+            
             name = jobConfig->getString("id");
             Job* job = JobFactory::getJob(name);
             if (job)
@@ -123,16 +138,18 @@ DataProvider::DataProvider(ConfigView* config)
                 sprintf(errorMsg, "Job '%s' wasn't registered !", name);
                 throw ConfigException(errorMsg);
             }
-            printf("Loaded section '%s'."
-                   " Job name is: %s\n", section, name);
+            
+            log.info("Loaded Job for '%s' section. Job name is: '%s'",
+                     section, name);
         }
         catch (ConfigException& exc)
         {
+            log.error(exc.what());
             if (set) delete set;
             if (name) delete name;
             delete jobsConfig;
             delete jobConfig;
-            throw;
+            throw exc;
         }
         if (name) delete name;
         delete jobConfig;
@@ -157,10 +174,10 @@ DataProvider::~DataProvider()
 void DataProvider::process(Command& command)
     throw(ServiceNotFoundException, CommandProcessException)
 {
-    Job* job = jobs.Get(command.getJobName());
-    if (!job) throw ServiceNotFoundException();
-    
-    job->process(command, *ds);
+    if (!jobs.Exists(command.getJobName()))
+        throw ServiceNotFoundException(command.getJobName());
+
+    jobs.Get(command.getJobName())->process(command, *ds);
 }
 
 

@@ -11,8 +11,8 @@ namespace smsc { namespace db
     {
     public:
 
-        ServiceNotFoundException() 
-            : Exception("Exception: Service Not Found !") {};
+        ServiceNotFoundException(const char* name) 
+            : Exception("Service for '%s' key not found !", name) {};
         virtual ~ServiceNotFoundException() throw() {};
     };
     
@@ -21,7 +21,7 @@ namespace smsc { namespace db
     public:
 
         CommandProcessException() 
-            : Exception("Exception: Command processing failed !") {};
+            : Exception("Command processing failed !") {};
         virtual ~CommandProcessException() throw() {};
     };
 

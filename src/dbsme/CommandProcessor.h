@@ -42,8 +42,9 @@ namespace smsc { namespace dbsme
     {
     protected:
 
-        DataSource*     ds;
-        Hash<Job *>     jobs; // by job name
+        log4cpp::Category       &log;
+        DataSource*             ds;
+        Hash<Job *>             jobs; // by job name
     
     public:
         
@@ -59,6 +60,7 @@ namespace smsc { namespace dbsme
     {
     private:
 
+        log4cpp::Category       &log;
         Hash<DataProvider *>    providers;  // by provider address
         
     public:
