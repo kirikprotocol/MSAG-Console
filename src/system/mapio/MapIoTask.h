@@ -8,7 +8,9 @@ $Id$
 #include <stdio.h>
 #include <malloc.h>
 #include <memory.h>
+#include <time.h>
 #include "../../util/debug.h"
+#include "../../util/smstext.h"
 #include "../../sms/sms.h"
 #include "../../smeman/smsccmd.h"
 #include "../../smeman/smeman.h"
@@ -21,6 +23,7 @@ extern log4cpp::Category* _map_cat;
 extern log4cpp::Category* _mapdlg_cat;
 };
 };
+using namespace smsc::util;
 #define __map_trace2__(format,args...) __debug2__(smsc::util::_map_cat,format,##args)
 #define __map_trace__(text) __debug__(smsc::util::_map_cat,text)
 #define __map_warn2__(format,args...) __warn2__(smsc::util::_map_cat,format,##args)
@@ -60,6 +63,7 @@ extern "C" {
 #define SSN 8
 #define USSD_SSN 6
 #define HLR_SSN 6
+#define MAX_MT_LOCK_TIME 600
 
 enum MAPSTATS{
   MAPSTATS_GSMDIALOG_CLOSE,
@@ -180,6 +184,7 @@ struct MapDialog{
   unsigned udhiMsgNum;
   unsigned udhiMsgCount;
   long long maked_at_mks;
+  time_t   lockedAt;
 //  bool isMOreq;
 //  unsigned dialogid_req;
   MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned version=2) :
@@ -199,7 +204,8 @@ struct MapDialog{
     associate(0),
     ssn(lssn),
     ussdSequence(0),
-    ussdMrRef(0)
+    ussdMrRef(0),
+    lockedAt(0)
 //    isMOreq(false),
 //    dialogid_req(0)
   {
@@ -269,6 +275,7 @@ public:
     if ( dialog == d ) return;
     if ( dialog ) dialog->Release();
     dialog = d;
+    dialog->lockedAt = time(NULL);
   }
   bool isnull(){return dialog==0;}
   void forget(){dialog = 0;}
@@ -288,6 +295,9 @@ struct ChainIsVeryLong : public runtime_error {
   ChainIsVeryLong(const char* s) : runtime_error(s) {}
 };
 
+struct NextMMSPartWaiting : public runtime_error {
+  NextMMSPartWaiting(const char* s) : runtime_error(s) {}
+};
 /**
   \class MapDialogContainer
 */
@@ -426,19 +436,35 @@ public:
         throw runtime_error("MAP::createOrAttachSMSCDialog: has no dialog for abonent ");
       }
       if( item->state == MAPST_WaitNextMMS ) {
+        if( item->sms.get()->hasBinProperty(Tag::SMSC_CONCATINFO) ) {
+          // check if it's really next part of concatenated message
+          if( !cmd->get_sms()->hasBinProperty(Tag::SMSC_CONCATINFO) ) 
+            throw NextMMSPartWaiting("Waiting next part of concat message");
+          if( item->sms.get()->getConcatMsgRef() != cmd->get_sms()->getConcatMsgRef() )
+            throw NextMMSPartWaiting("Waiting next part of other concat message");
+        }
         item->state = MAPST_SendNextMMS;
         item->dialogid_smsc = smsc_did;
         item->abonent = abonent;
         item->AddRef();
+        item->lockedAt = time(NULL);
         return item;
-      } else {
-        if ( item->chain.size() > 25 ) {
-          __mapdlg_trace2__("chain is verly long (%d)",item->chain.size());
-          throw ChainIsVeryLong("chain is very long");
+      } 
+      {
+        time_t curtime = time(NULL);
+        if( curtime - item->lockedAt >= MAX_MT_LOCK_TIME ) {
+          // drop locked dialog and all msg in chain, and create dialog as new.
+          __warn2__(smsc::util::_mapdlg_cat,"Dialog locked too long id=%x.",item->dialogid_map);
+          dropDialog( item->dialogid_map, item->ssn );
+        } else {
+          if ( item->chain.size() > 25 ) {
+            __mapdlg_trace2__("chain is vely long (%d)",item->chain.size());
+            throw ChainIsVeryLong("chain is very long");
+          }
+          __mapdlg_trace2__("add command to chain, size %d",item->chain.size());
+          item->chain.push_back(cmd);
+          return 0;
         }
-        __mapdlg_trace2__("add command to chain, size %d",item->chain.size());
-        item->chain.push_back(cmd);
-        return 0;
       }
     }
     ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
@@ -447,6 +473,7 @@ public:
     dlg->dialogid_smsc = smsc_did;
     dlg->abonent = abonent;
     hash_.Insert(MKDID(map_dialog,lssn),dlg);
+    dlg->lockedAt = time(NULL);
     if ( abonent.length() != 0 ) lock_map.Insert(abonent,dlg);
     __mapdlg_trace2__("new dialog 0x%p for dialogid 0x%x/0x%x",dlg,smsc_did,map_dialog);
     dlg->AddRef();
@@ -475,6 +502,7 @@ public:
     hash_.Delete(MKDID(did,oldssn));
     hash_.Insert(MKDID(dialogid_map,ssn),dlg);
     __mapdlg_trace2__("dialog reassigned 0x%x->0x%x",did,dialogid_map);
+    dlg->lockedAt = time(NULL);
     return dialogid_map;
   }
 

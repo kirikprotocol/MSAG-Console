@@ -1328,6 +1328,10 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::MSGQFUL));
             //throw MAPDIALOG_TEMP_ERROR("MAP::PutCommand: can't create dialog");
             return;
+          } catch (NextMMSPartWaiting& e) {
+            __map_trace2__("%s: %s ",__FUNCTION__,e.what());
+            SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,Status::SUBSCRBUSYMT));
+            return;
           } catch (exception& e) {
             __map_trace2__("%s: %s ",__FUNCTION__,e.what());
             SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::THROTTLED));

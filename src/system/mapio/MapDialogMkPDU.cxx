@@ -264,6 +264,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
         case DELIVERED: *pdu_ptr++=0;break; //ok
         case EXPIRED: *pdu_ptr++=0x46;break; //expired
         case UNDELIVERABLE: *pdu_ptr++=0x41;break; //failed
+        case DELETED: *pdu_ptr++=0x48;break; //failed
         default:
         {
           *pdu_ptr++=0x21;//busy
