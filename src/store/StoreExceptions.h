@@ -81,6 +81,10 @@ namespace smsc { namespace store
         DuplicateMessageException() 
             : StoreException("Message was rejected by MessageStore ! "
                              "Storage already contains such message") {};
+        DuplicateMessageException(SMSId id) 
+            : StoreException("Message #%llu was rejected by MessageStore ! "
+                             "Storage already contains such message", id) {};
+        
         virtual ~DuplicateMessageException() throw() {};
     };
 
