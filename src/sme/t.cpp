@@ -31,6 +31,11 @@ bool hexinput=false;
 
 bool vcmode=false;
 
+bool answerMode=false;
+int answerMr;
+Address answerAddress;
+
+int maxHistorySize=100;
 
 Hash<int> mrcache;
 
@@ -559,6 +564,27 @@ void SleepCmd(SmppSession& ss,const string& args)
   nanosleep(&ts,0);
 }
 
+Mutex hstMtx;
+typedef map<int,pair<int,Address> > HistoryMap;
+HistoryMap historyMap;
+int historyCnt=0;
+
+void Answer(SmppSession& ss,const string& args)
+{
+  MutexGuard g(hstMtx);
+  if(historyMap.size()==0)return;
+  int idx=args.length()>0?atoi(args.c_str()):(--historyMap.end())->first;
+  HistoryMap::iterator it=historyMap.find(idx);
+  if(it==historyMap.end())
+  {
+    printf("Message %d not found in history\n",idx);
+    return;
+  }
+  answerMode=true;
+  answerMr=it->second.first;
+  answerAddress=it->second.second;
+}
+
 CmdRec commands[]={
 {"query",QueryCmd},
 {"eq",EnquireLinkCmd},
@@ -572,6 +598,7 @@ CmdRec commands[]={
 {"quit",0},
 {"sleep",SleepCmd},
 {"virtualclients",0},
+{"answer",Answer},
 };
 
 const int commandsCount=sizeof(commands)/sizeof(CmdRec);
@@ -720,7 +747,15 @@ public:
       s.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&msgpllen);
       __trace2__("received msglen=%u/%u",msgsmlen,msgpllen);
       s.getOriginatingAddress().toString(buf,sizeof(buf));
-      printf("\n==========\nFrom:%s\n",buf);
+      int smsNum;
+      {
+        MutexGuard g(hstMtx);
+        while(historyMap.size()>maxHistorySize)historyMap.erase(historyMap.begin());
+        smsNum=historyCnt++;
+        int mr=s.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)?s.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE):-1;
+        historyMap.insert(pair<int,pair<int,Address> > (smsNum,pair<int,Address>(mr,s.getOriginatingAddress())));
+      }
+      printf("\n===== %d =====\nFrom:%s\n",smsNum,buf);
       s.getDestinationAddress().toString(buf,sizeof(buf));
       printf("To:%s\n",buf);
       printf("DCS:%d\n",s.getIntProperty(Tag::SMPP_DATA_CODING));
@@ -855,7 +890,7 @@ public:
         pdu->get_commandStatus(),
         ((PduXSmResp*)pdu)->get_messageId()?((PduXSmResp*)pdu)->get_messageId():"NULL");
     }
-    rl_forced_update_display();
+    if(!cmdfile && !vcmode)rl_forced_update_display();
   }
   void enqueue(SmppHeader* pdu)
   {
@@ -1294,7 +1329,7 @@ int main(int argc,char* argv[])
         if(addr)free(addr);
         addr=NULL;
         history_set_history_state(&cmdHist);
-        addr=readline("Address or cmd>");
+          addr=readline("Address or cmd>");
         if(!addr)break;
         if(!*addr)continue;
         add_history(addr);
@@ -1429,13 +1464,19 @@ int main(int argc,char* argv[])
           break;
         }
       }
-      if(cmdFound)
+      if(cmdFound && !answerMode)
       {
         if(vcmode)vc[vcidx]=defVC;
         continue;
       }
 
       SMS s;
+
+      if(answerMode)
+      {
+        if(answerMr!=-1)
+          s.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,answerMr);
+      }
 
       try{
         srcaddr=Address(sourceAddress.c_str());
@@ -1452,15 +1493,23 @@ int main(int argc,char* argv[])
 
       if(cmd!="/")
       {
-        try{
-          Address dst((char*)addr);
-          lastAddr=addr;
-          s.setDestinationAddress(dst);
-        }catch(...)
+        if(answerMode)
         {
-          if(vcmode)printf("%02d:",vcidx);
-          printf("Invalid address:%s\n",addr);
-          continue;
+          s.setDestinationAddress(answerAddress);
+          lastAddr=answerAddress.toString();
+          answerMode=false;
+        }else
+        {
+          try{
+            Address dst((char*)addr);
+            lastAddr=addr;
+            s.setDestinationAddress(dst);
+          }catch(...)
+          {
+            if(vcmode)printf("%02d:",vcidx);
+            printf("Invalid address:%s\n",addr);
+            continue;
+          }
         }
         if(cmdfile)
         {
@@ -1600,9 +1649,17 @@ int main(int argc,char* argv[])
 
       if(waitRespMode)
       {
-        int mr=getmr(sourceAddress.c_str());
+        int mr;
+        if(!s.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE))
+        {
+          mr=getmr(sourceAddress.c_str());
+          s.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,mr);
+          printf("Set mr to %d\n",mr);
+        }else
+        {
+          mr=s.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+        }
         lastMr=mr;
-        s.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,mr);
         MutexGuard g(mrMtx);
         if(vcmode)
         {
