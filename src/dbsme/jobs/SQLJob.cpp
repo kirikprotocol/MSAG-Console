@@ -5,6 +5,9 @@
 namespace smsc { namespace dbsme 
 {
 
+const int MAX_FULL_ADDRESS_VALUE_LENGTH = 30;
+typedef char FullAddressValue[MAX_FULL_ADDRESS_VALUE_LENGTH];
+
 using namespace smsc::util::templates;
 using namespace smsc::dbsme::io;
 
@@ -88,8 +91,16 @@ void SQLJob::process(Command& command, Statement& stmt)
     throw(CommandProcessException)
 {
     ContextEnvironment ctx;
-    ctx.exportStr(SMSC_DBSME_SQL_JOB_FROM_ADDR, command.getFromAddress().value);
-    ctx.exportStr(SMSC_DBSME_SQL_JOB_TO_ADDR, command.getToAddress().value);
+    FullAddressValue fromAddress, toAddress;
+    FullAddressValue fromAddressUn, toAddressUn;
+    command.getFromAddress().getText(fromAddressUn, sizeof(fromAddress));
+    command.getToAddress().getText(toAddressUn, sizeof(toAddress));
+    command.getFromAddress().toString(fromAddressUn, sizeof(fromAddressUn));
+    command.getToAddress().toString(toAddressUn, sizeof(toAddressUn));
+    ctx.exportStr(SMSC_DBSME_SQL_JOB_FROM_ADDR, fromAddress);
+    ctx.exportStr(SMSC_DBSME_SQL_JOB_TO_ADDR, toAddress);
+    ctx.exportStr(SMSC_DBSME_SQL_JOB_FROM_ADDR_UN, fromAddressUn);
+    ctx.exportStr(SMSC_DBSME_SQL_JOB_TO_ADDR_UN, toAddressUn);
     ctx.exportStr(SMSC_DBSME_SQL_JOB_NAME, getName());
 
     command.setOutData("");
@@ -225,8 +236,16 @@ void PLSQLJob::process(Command& command, Routine& routine)
     throw(CommandProcessException)
 {
     ContextEnvironment ctx;
-    ctx.exportStr(SMSC_DBSME_SQL_JOB_FROM_ADDR, command.getFromAddress().value);
-    ctx.exportStr(SMSC_DBSME_SQL_JOB_TO_ADDR, command.getToAddress().value);
+    FullAddressValue fromAddress, toAddress;
+    FullAddressValue fromAddressUn, toAddressUn;
+    command.getFromAddress().getText(fromAddressUn, sizeof(fromAddress));
+    command.getToAddress().getText(toAddressUn, sizeof(toAddress));
+    command.getFromAddress().toString(fromAddressUn, sizeof(fromAddressUn));
+    command.getToAddress().toString(toAddressUn, sizeof(toAddressUn));
+    ctx.exportStr(SMSC_DBSME_SQL_JOB_FROM_ADDR, fromAddress);
+    ctx.exportStr(SMSC_DBSME_SQL_JOB_TO_ADDR, toAddress);
+    ctx.exportStr(SMSC_DBSME_SQL_JOB_FROM_ADDR_UN, fromAddressUn);
+    ctx.exportStr(SMSC_DBSME_SQL_JOB_TO_ADDR_UN, toAddressUn);
     ctx.exportStr(SMSC_DBSME_SQL_JOB_NAME, getName());
 
     command.setOutData("");

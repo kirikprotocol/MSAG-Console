@@ -24,12 +24,14 @@ namespace smsc { namespace dbsme
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
     
-    static const char* SMSC_DBSME_SQL_JOB_IDENTITY    = "sql-job";
-    static const char* SMSC_DBSME_PLSQL_JOB_IDENTITY  = "pl/sql-job";
+    static const char* SMSC_DBSME_SQL_JOB_IDENTITY      = "sql-job";
+    static const char* SMSC_DBSME_PLSQL_JOB_IDENTITY    = "pl/sql-job";
     
-    static const char* SMSC_DBSME_SQL_JOB_FROM_ADDR = "from-address";
-    static const char* SMSC_DBSME_SQL_JOB_TO_ADDR   = "to-address";
-    static const char* SMSC_DBSME_SQL_JOB_NAME      = "job-name";
+    static const char* SMSC_DBSME_SQL_JOB_FROM_ADDR     = "from-address";
+    static const char* SMSC_DBSME_SQL_JOB_TO_ADDR       = "to-address";
+    static const char* SMSC_DBSME_SQL_JOB_FROM_ADDR_UN  = "from-address-unified";
+    static const char* SMSC_DBSME_SQL_JOB_TO_ADDR_UN    = "to-address-unified";
+    static const char* SMSC_DBSME_SQL_JOB_NAME          = "job-name";
 
     static const char* SQL_JOB_DS_FAILURE         = "DS_FAILURE";
     static const char* SQL_JOB_DS_CONNECTION_LOST = "DS_CONNECTION_LOST";
