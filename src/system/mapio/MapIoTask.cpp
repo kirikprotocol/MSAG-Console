@@ -100,7 +100,7 @@ USHORT_T Et96MapDelimiterInd(
   __trace2__("MAP::Et96MapDelimiterInd lssn 0x%hx, dialogId 0x%hx",lssn,dialogId);
   MapDialogCntItem* mdci = MapDialogContainer::getInstance()->getDialog(dialogId);
   if ( mdci == 0 ){
-    __trace2__("broken response with error 0x%hx",err);
+    __trace2__("cant find dialog 0x%hx",dialogId);
     CloseAndRemoveDialog(lssn,dialogId);
     throw runtime_error("MAPIO::Et96MapDelimiterInd error");
   }
