@@ -88,7 +88,7 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
               makeAddress(rinfo.source,*src_mask_it);
               rinfo.smeSystemId = dest.getSmeIdString();//dest.smeId;
               rinfo.srcSmeSystemId = route->getSrcSmeSystemId();
-              __trace2__("sme sysid: %s",rinfo.smeSystemId.c_str());
+//              __trace2__("sme sysid: %s",rinfo.smeSystemId.c_str());
               rinfo.billing = route->isBilling();
               //rinfo.paid =
               rinfo.archived=route->isArchiving();
@@ -101,15 +101,15 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
               rinfo.forceReplyPath=route->isForceReplyPath();
               rinfo.deliveryMode = route->getDeliveryMode();
               rinfo.forwardTo = route->getForwardTo();
-              __trace2__("dest mask: %s",dest_mask_it->c_str());
-              __trace2__("src mask: %s",src_mask_it->c_str());
-              print(rinfo);
+//              __trace2__("dest mask: %s",dest_mask_it->c_str());
+//              __trace2__("src mask: %s",src_mask_it->c_str());
+//              print(rinfo);
               try{
                 rm->addRoute(rinfo);
               }
               catch(exception& e)
               {
-                __trace2__("[route skiped] : %s",e.what());
+                __warn2__("[route skiped] : %s",e.what());
               }
             }
           }
