@@ -177,11 +177,22 @@ private:
             outgoingTraffic.Inc();
             difference = outgoingTraffic.Get() - incomingTraffic.Get();
         }
-        while (difference >= unrespondedMessagesMax && !isNeedStop() && !isNeedReconnect())
+        
+        if (difference >= unrespondedMessagesMax)
         {
-            trafficControlEvent.Wait(unrespondedMessagesSleep);
-            MutexGuard guard(trafficControlLock);
-            difference = outgoingTraffic.Get() - incomingTraffic.Get();
+            // stop sending while diff >= unrespondedMessagesMax
+            while (!isNeedStop() && !isNeedReconnect())
+            {
+                trafficControlEvent.Wait(unrespondedMessagesSleep);
+                MutexGuard guard(trafficControlLock);
+                difference = outgoingTraffic.Get() - incomingTraffic.Get();
+                if (difference < unrespondedMessagesMax) break;
+            }
+        } 
+        else if (difference >= unrespondedMessagesMax/10) {
+            // slow down after 10% limit reached
+            trafficControlEvent.Wait((unrespondedMessagesMax*difference)
+                                     /(10*unrespondedMessagesSleep));
         }
     }
 
@@ -295,10 +306,10 @@ protected:
     SmppTransmitter*    syncTransmitter;
     SmppTransmitter*    asyncTransmitter;
 
-    void respondMessage()
+    void acceptMessage()
     {
         MutexGuard guard(trafficControlLock);
-        outgoingTraffic.Inc();
+        incomingTraffic.Inc();
         if ((outgoingTraffic.Get()-incomingTraffic.Get()) < unrespondedMessagesMax) {
             trafficControlEvent.Signal();
         }
@@ -385,8 +396,7 @@ public:
     void processResponce(SmppHeader *pdu)
     {
         if (!pdu) return;
-        respondMessage();
-
+        
         int seqNum = pdu->get_sequenceNumber();
         int status = pdu->get_commandStatus();
         bool accepted =  (status == Status::OK);
@@ -407,6 +417,8 @@ public:
         bool immediate = (status == Status::MSGQFUL   ||
                           status == Status::THROTTLED ||
                           status == Status::SUBSCRBUSYMT);
+        
+        if (accepted) acceptMessage();
 
         const char* msgid = ((PduXSmResp*)pdu)->get_messageId();
         std::string msgId = ""; 
