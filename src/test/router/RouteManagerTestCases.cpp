@@ -15,41 +15,10 @@ using namespace smsc::sms; //constants, AddressValue
 using namespace smsc::router; //constants
 using namespace smsc::test::util;
 using namespace smsc::test::smeman; //constants, TestSmeProxy
-using smsc::test::core::CoreTestManager;
+using namespace smsc::test::core; //route utils, CoreTestManager
 using smsc::test::sms::SmsUtil;
 using smsc::util::Logger;
 using smsc::sms::AddressValue;
-
-ostream& operator<< (ostream& os, const RouteInfo& route)
-{
-	int len;
-	AddressValue tmp;
-	os << "routeId = " << route.routeId;
-	os << ", smeSystemId = " << route.smeSystemId << "(" <<
-		route.smeSystemId.length() << ")";
-	len = route.source.getValue(tmp);
-	os << ", source = " << tmp << "(" << len << ")";
-	len = route.dest.getValue(tmp);
-	os << ", dest = " << tmp << "(" << len << ")";
-	os << ", priority = " << route.priority;
-	os << ", billing = " << (route.billing ? "true" : "false");
-	os << ", paid = " << (route.paid ? "true" : "false");
-	os << ", archived = " << (route.archived ? "true" : "false");
-}
-
-ostream& operator<< (ostream& os, const TestRouteData& data)
-{
-	int len;
-	AddressValue tmp;
-	os << "match = " << (data.match ? "true" : "false");
-	len = data.origAddr.getValue(tmp);
-	os << ", origAddr = " << tmp << "(" << len << ")";
-	len = data.destAddr.getValue(tmp);
-	os << ", destAddr = " << tmp << "(" << len << ")";
-	os << ", origAddrMatch = " << data.origAddrMatch;
-	os << ", destAddrMatch = " << data.destAddrMatch;
-	os << ", route = {" << *data.route << "}";
-}
 
 void RouteManagerTestCases::debugRoute(RouteInfo& route)
 {
@@ -416,12 +385,21 @@ TCResult* RouteManagerTestCases::lookupRoute(const Address& origAddr,
 		else
 		{
 			//приоритеты маршрутов: destAddr, origAddr, priority
-			int idx = 0;
+			int idx = -1;
 			for (int i = 0; i < routes.size(); i++)
 			{
+				if (!routes[i]->match)
+				{
+					continue;
+				}
 				if (!SmsUtil::compareAddresses(origAddr, routes[i]->origAddr) ||
 					!SmsUtil::compareAddresses(destAddr, routes[i]->destAddr))
 				{
+					continue;
+				}
+				if (idx < 0)
+				{
+					idx = i;
 					continue;
 				}
 				if (routes[idx]->destAddrMatch < routes[i]->destAddrMatch)
@@ -444,10 +422,17 @@ TCResult* RouteManagerTestCases::lookupRoute(const Address& origAddr,
 					}
 				}
 			}
-			TestSmeProxy* _proxy = (TestSmeProxy*) proxy;
-			if (routes[idx]->route->smeSystemId != _proxy->getSystemId())
+			if (idx < 0)
 			{
 				res->addFailure(103);
+			}
+			else
+			{
+				TestSmeProxy* _proxy = (TestSmeProxy*) proxy;
+				if (routes[idx]->route->smeSystemId != _proxy->getSystemId())
+				{
+					res->addFailure(104);
+				}
 			}
 		}
 	}
