@@ -320,7 +320,7 @@ public:
   virtual ~Hash<T>(){delete [] _buckets;};
 
 
-  int Exists(pchashstr key){ return FindLink(key)!=NULL;}
+  int Exists(pchashstr key)const{ return FindLink(key)!=NULL;}
   void Delete(pchashstr key)
   {
     unsigned index=HashFunc(key) % _bucketsnum;
