@@ -29,36 +29,41 @@ public class AliasSet
   {
   }
 
-  public AliasSet(Element aliasesElem)
+  public AliasSet(final Element aliasesElem)
   {
-    NodeList aliasNodes = aliasesElem.getElementsByTagName("record");
+    final NodeList aliasNodes = aliasesElem.getElementsByTagName("record");
     for (int i = 0; i < aliasNodes.getLength(); i++) {
-      Element aliasElem = (Element) aliasNodes.item(i);
+      final Element aliasElem = (Element) aliasNodes.item(i);
       try {
-        add(new Alias(new Mask(aliasElem.getAttribute("addr")), new Mask(aliasElem.getAttribute("alias")), aliasElem.getAttribute("hide").equalsIgnoreCase("true")));
+        add(new Alias(new Mask(aliasElem.getAttribute("addr")), new Mask(aliasElem.getAttribute("alias")), "true".equalsIgnoreCase(
+            aliasElem.getAttribute("hide"))));
       } catch (AdminException e) {
         logger.error("Couldn't load alias \"" + aliasElem.getAttribute("alias") + "\"-->\"" + aliasElem.getAttribute("addr") + "\", skipped", e);
       }
     }
   }
 
-  public PrintWriter store(PrintWriter out)
+  public PrintWriter store(final PrintWriter out)
   {
     for (Iterator i = iterator(); i.hasNext();) {
-      Alias a = (Alias) i.next();
-      out.println("  <record addr=\"" + StringEncoderDecoder.encode(a.getAddress().getMask()) + "\" alias=\"" + StringEncoderDecoder.encode(a.getAlias().getMask()) + "\" hide=\"" + (a.isHide() ? "true" : "false") + "\"/>");
+      final Alias a = (Alias) i.next();
+      out.println(
+          "  <record addr=\"" + StringEncoderDecoder.encode(a.getAddress().getMask()) + "\" alias=\"" + StringEncoderDecoder.encode(a.getAlias().getMask())
+          + "\" hide=\""
+          + (a.isHide() ? "true" : "false")
+          + "\"/>");
     }
     return out;
   }
 
-  public boolean add(Alias new_alias)
+  public boolean add(final Alias new_alias)
   {
     if (aliases.contains(new_alias))
       return false;
 
     if (new_alias.isHide())
       for (Iterator i = aliases.iterator(); i.hasNext();) {
-        Alias alias = (Alias) i.next();
+        final Alias alias = (Alias) i.next();
         if (alias.isHide() && alias.getAddress().equals(new_alias.getAddress()))
           return false;
       }
@@ -72,16 +77,16 @@ public class AliasSet
     return aliases.iterator();
   }
 
-  public boolean remove(Alias a)
+  public boolean remove(final Alias a)
   {
     dataSource.remove(a);
     return aliases.remove(a);
   }
 
-  public boolean remove(String alias)
+  public boolean remove(final String alias)
   {
     try {
-      Alias a = new Alias(new Mask(alias), new Mask(alias), false);
+      final Alias a = new Alias(new Mask(alias), new Mask(alias), false);
       dataSource.remove(a);
       return aliases.remove(a);
     } catch (AdminException e) {
@@ -90,25 +95,25 @@ public class AliasSet
     }
   }
 
-  public QueryResultSet query(AliasQuery query)
+  public QueryResultSet query(final AliasQuery query)
   {
     dataSource.clear();
     for (Iterator i = aliases.iterator(); i.hasNext();) {
-      Alias alias = (Alias) i.next();
+      final Alias alias = (Alias) i.next();
       dataSource.add(alias);
     }
     return dataSource.query(query);
   }
 
-  public boolean contains(Alias a)
+  public boolean contains(final Alias a)
   {
     return aliases.contains(a);
   }
 
-  public Alias get(String aliasString)
+  public Alias get(final String aliasString)
   {
     for (Iterator i = aliases.iterator(); i.hasNext();) {
-      Alias alias = (Alias) i.next();
+      final Alias alias = (Alias) i.next();
       if (alias.getAlias().getMask().equals(aliasString))
         return alias;
     }
@@ -120,24 +125,24 @@ public class AliasSet
     return aliases.size();
   }
 
-  public boolean isContainsAlias(Mask aliasMask)
+  public boolean isContainsAlias(final Mask aliasMask)
   {
     for (Iterator i = aliases.iterator(); i.hasNext();) {
-      Alias alias = (Alias) i.next();
+      final Alias alias = (Alias) i.next();
       if (alias.getAlias().addressConfirm(aliasMask))
         return true;
     }
     return false;
   }
 
-  public Alias getAliasByAddress(Mask address)
+  public Alias getAliasByAddress(final Mask address)
   {
     Alias result = null;
     for (Iterator i = aliases.iterator(); i.hasNext();) {
-      Alias alias = (Alias) i.next();
+      final Alias alias = (Alias) i.next();
       if (alias.isHide()) {
         if (alias.getAddress().addressConfirm(address)) {
-          if (result == null)
+          if (null == result)
             result = alias;
           else if (alias.getAddress().getQuestionsCount() < result.getAddress().getQuestionsCount())
             result = alias;
@@ -147,13 +152,13 @@ public class AliasSet
     return result;
   }
 
-  public Alias getAddressByAlias(Mask aliasToSearch)
+  public Alias getAddressByAlias(final Mask aliasToSearch)
   {
     Alias result = null;
     for (Iterator i = aliases.iterator(); i.hasNext();) {
-      Alias alias = (Alias) i.next();
+      final Alias alias = (Alias) i.next();
       if (alias.getAlias().addressConfirm(aliasToSearch)) {
-        if (result == null)
+        if (null == result)
           result = alias;
         else if (alias.getAlias().getQuestionsCount() < result.getAlias().getQuestionsCount())
           result = alias;
@@ -162,13 +167,13 @@ public class AliasSet
     return result;
   }
 
-  public Mask dealias(Mask alias) throws AdminException
+  public Mask dealias(final Mask alias) throws AdminException
   {
-    Alias addressCandidat = getAddressByAlias(alias);
-    if (addressCandidat != null) {
-      Mask result = addressCandidat.getAddress();
+    final Alias addressCandidat = getAddressByAlias(alias);
+    if (null != addressCandidat) {
+      final Mask result = addressCandidat.getAddress();
       final int questionsCount = result.getQuestionsCount();
-      if (questionsCount > 0) {
+      if (0 < questionsCount) {
         final String mask = result.getMask();
         final String sourceMask = alias.getMask();
         return new Mask(mask.substring(0, mask.length() - questionsCount) + sourceMask.substring(sourceMask.length() - questionsCount));
