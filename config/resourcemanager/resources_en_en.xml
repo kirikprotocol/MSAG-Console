@@ -10,21 +10,23 @@
   </settings>
   <resources>
     <section name="profiler">
-      <param name="msgDefault" type="string">Now you are a default language user</param>
-      <param name="msgUCS2" type="string">Now you will be able to receive ucs2-encoded messages</param>
-      <param name="msgReportFull" type="string">Now you will receive auxiliary delivery reports</param>
-      <param name="msgReportNone" type="string">Now you will receive only requested delivery reports</param>
-      <param name="msgError" type="string">Unrecognized profile management command</param>
+      <param name="msgDefault">Now you are a default language user</param>
+      <param name="msgUCS2">Now you will be able to receive ucs2-encoded messages</param>
+      <param name="msgReportFull">Now you will receive auxiliary delivery reports</param>
+      <param name="msgReportNone">Now you will receive only requested delivery reports</param>
+      <param name="msgLocaleChanged">Your locale settings changed</param>
+      <param name="msgLocaleUnknown">Unknown locale</param>
+      <param name="msgError">Unrecognized profile management command</param>
     </section>
     <section name="abonentinfo">
       <param name="mobileFormat">Abonent $$string import=abonent$$ is $$string import=status$$. msc $$string import=msc$$</param>
-      <param name="smeFormat">$$string import=abonent$$:$$int32 import=encoding$$,$$int32 import=status$$,$$string import=msc$$</param>
+      <param name="smeFormat">$$string import=abonent$$:$$int32 import=status$$,$$int32 import=encoding$$,$$string import=msc$$</param>
     </section>
     <section name="receipt">
       <section name="default">
-        <param name="deliveredFormat" type="string">Message for $$string import=dest$$ delivered at $$date import=date$$</param>
-        <param name="failedFormat" type="string">Message for $$string import=dest$$ sent at $$date import=date$$ wasn't delivered, reason: $$string import=reason$$</param>
-        <param name="notifyFormat" type="string">Message for $$string import=dest$$ sent at $$date import=date$$ wasn't immediately delivered, reason: $$string import=reason$$</param>
+        <param name="deliveredFormat">Message for $$string import=dest$$ delivered at $$date import=date$$</param>
+        <param name="failedFormat">Message for $$string import=dest$$ sent at $$date import=date$$ wasn't delivered, reason: $$string import=reason$$</param>
+        <param name="notifyFormat">Message for $$string import=dest$$ sent at $$date import=date$$ wasn't immediately delivered, reason: $$string import=reason$$</param>
       </section>
     </section>
     <section name="reason">
