@@ -119,9 +119,10 @@ SMSId StoreManager::doCreateSms(Connection* connection,
         needOverwriteStmt->bindEServiceType((dvoid *) sms.eServiceType, 
                                            (sb4) sizeof(sms.eServiceType));
         
-        connection->check(needOverwriteStmt->execute());
-        if (needOverwriteStmt->needOverwrite()) 
+        sword result = needOverwriteStmt->execute();
+        if (result != OCI_NO_DATA)
         {
+            connection->check(result);
             needOverwriteStmt->getId(id);
             
             OverwriteStatement* overwriteStmt 

@@ -245,11 +245,6 @@ void NeedOverwriteStatement::getId(SMSId& id)
     getSMSId(id);
 }
 
-bool NeedOverwriteStatement::needOverwrite()
-{
-    return ((indId==0) ? true:false);
-}
-
 /* ------------------------- OverwriteStatement ---------------------- */
 const char* OverwriteStatement::sql = (const char*)
 "UPDATE SMS_MSG SET MR=:MR,\
@@ -257,7 +252,7 @@ const char* OverwriteStatement::sql = (const char*)
  DST_MSC=NULL, DST_IMSI=NULL, DST_SME_N=NULL,\
  WAIT_TIME=:WAIT_TIME, VALID_TIME=:VALID_TIME,\
  SUBMIT_TIME=:SUBMIT_TIME, ATTEMPTS=0, LAST_RESULT=0,\
- LAST_TRY_TIME=NULL, NEXT_TRY_TIME=NULL, SVC_TYPE=:SVC\
+ LAST_TRY_TIME=NULL, NEXT_TRY_TIME=NULL, SVC_TYPE=:SVC,\
  DR=:DR, ARC=:ARC, PRI=:PRI, PID=:PID,\
  UDHI=:UDHI, DCS=:DCS, UDL=:UDL, UD=:UD\
  WHERE ID=:ID";
@@ -457,7 +452,7 @@ void RetriveStatement::defineSms(SMS& sms)
     define(7 , SQLT_STR, (dvoid *) (sms.originatingDescriptor.imsi),
            (sb4) sizeof(sms.originatingDescriptor.imsi),
            (dvoid *)&(indSrcImsi));
-    define(8 , SQLT_UIN, (dvoid *)&(sms.originatingDescriptor.sme),
+    define(8 , SQLT_UIN, (dvoid *) &(sms.originatingDescriptor.sme),
            (sb4) sizeof(sms.originatingDescriptor.sme),
            (dvoid *)&(indSrcSme));
     define(9 , SQLT_UIN, (dvoid *) &(sms.destinationAddress.type),
@@ -470,10 +465,10 @@ void RetriveStatement::defineSms(SMS& sms)
     define(12, SQLT_STR, (dvoid *) (sms.destinationDescriptor.msc),
            (sb4) sizeof(sms.destinationDescriptor.msc), 
            (dvoid *)&indDstMsc);
-    define(13 , SQLT_STR, (dvoid *) (sms.destinationDescriptor.imsi),
+    define(13, SQLT_STR, (dvoid *) (sms.destinationDescriptor.imsi),
            (sb4) sizeof(sms.destinationDescriptor.imsi),
            (dvoid *)&(indDstImsi));
-    define(14 , SQLT_UIN, (dvoid *)&(sms.destinationDescriptor.sme),
+    define(14, SQLT_UIN, (dvoid *) &(sms.destinationDescriptor.sme),
            (sb4) sizeof(sms.destinationDescriptor.sme),
            (dvoid *)&(indDstSme));
     define(15, SQLT_ODT, (dvoid *) &(waitTime),
@@ -483,7 +478,7 @@ void RetriveStatement::defineSms(SMS& sms)
            (sb4) sizeof(validTime));
     define(17, SQLT_ODT, (dvoid *) &(submitTime),
            (sb4) sizeof(submitTime));
-    define(18 , SQLT_UIN, (dvoid *)&(sms.attempts),
+    define(18, SQLT_UIN, (dvoid *) &(sms.attempts),
            (sb4) sizeof(sms.attempts));
     define(19, SQLT_UIN, (dvoid *) &(sms.failureCause),
            (sb4) sizeof(sms.failureCause));
@@ -493,21 +488,24 @@ void RetriveStatement::defineSms(SMS& sms)
     define(21, SQLT_ODT, (dvoid *) &(nextTime),
            (sb4) sizeof(nextTime),
            (dvoid *)&(indNextTime));
-    define(22, SQLT_UIN, (dvoid *) &(sms.deliveryReport),
+    define(22, SQLT_STR, (dvoid *) &(sms.eServiceType),
+           (sb4) sizeof(sms.eServiceType),
+           (dvoid *) &(indSvc));
+    define(23, SQLT_UIN, (dvoid *) &(sms.deliveryReport),
            (sb4) sizeof(sms.deliveryReport));
-    define(23, SQLT_AFC, (dvoid *) &(bNeedArchivate), 
+    define(24, SQLT_AFC, (dvoid *) &(bNeedArchivate), 
            (sb4) sizeof(bNeedArchivate));
-    define(24, SQLT_UIN, (dvoid *) &(sms.priority),
+    define(25, SQLT_UIN, (dvoid *) &(sms.priority),
            (sb4) sizeof(sms.priority));
-    define(25, SQLT_UIN, (dvoid *) &(sms.protocolIdentifier),
+    define(26, SQLT_UIN, (dvoid *) &(sms.protocolIdentifier),
            (sb4) sizeof(sms.protocolIdentifier));
-    define(26, SQLT_AFC, (dvoid *) &(bHeaderIndicator),
+    define(27, SQLT_AFC, (dvoid *) &(bHeaderIndicator),
            (sb4) sizeof(bHeaderIndicator));
-    define(27, SQLT_UIN, (dvoid *) &(sms.messageBody.scheme),
+    define(28, SQLT_UIN, (dvoid *) &(sms.messageBody.scheme),
            (sb4) sizeof(sms.messageBody.scheme));
-    define(28, SQLT_UIN, (dvoid *) &(sms.messageBody.lenght),
+    define(29, SQLT_UIN, (dvoid *) &(sms.messageBody.lenght),
            (sb4) sizeof(sms.messageBody.lenght));
-    define(29, SQLT_BIN, (dvoid *) (sms.messageBody.data),
+    define(30, SQLT_BIN, (dvoid *) (sms.messageBody.data),
            (sb4) sizeof(sms.messageBody.data));
 }
 
@@ -516,6 +514,7 @@ void RetriveStatement::getSms(SMS& sms)
     sms.state = (State) uState;
     sms.needArchivate = (bNeedArchivate == 'Y');
     sms.messageBody.header = (bHeaderIndicator == 'Y');
+    
     
     if (indSrcImsi != OCI_IND_NOTNULL) {
         sms.originatingDescriptor.imsiLenght 
@@ -550,7 +549,9 @@ void RetriveStatement::getSms(SMS& sms)
         sms.originatingDescriptor.sme = 0;
     if (indDstSme != OCI_IND_NOTNULL) 
         sms.destinationDescriptor.sme = 0;
-    
+    if (indSvc != OCI_IND_NOTNULL) 
+        sms.eServiceType[0] = '\0';
+
     if (indLastTime != OCI_IND_NOTNULL) sms.lastTime = 0;
     else convertOCIDateToDate(&lastTime, &(sms.lastTime));
     if (indNextTime != OCI_IND_NOTNULL) sms.nextTime = 0;

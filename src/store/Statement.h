@@ -146,10 +146,6 @@ namespace smsc { namespace store
     class NeedOverwriteStatement : public IdStatement
     {
     static const char* sql;
-    protected:
-
-        sb2 indId;
-    
     public:
         
         NeedOverwriteStatement(Connection* connection, bool assign=true)
@@ -165,8 +161,6 @@ namespace smsc { namespace store
         
         void getId(SMSId& id)
             throw(StorageException);
-
-        bool needOverwrite();
     };
     
     class OverwriteStatement : public IdStatement
@@ -216,7 +210,7 @@ namespace smsc { namespace store
 
         sb2     indOA, indSrcMsc, indSrcImsi, indSrcSme;
         sb2     indDA, indDstMsc, indDstImsi, indDstSme;
-        sb2     indWaitTime, indLastTime, indNextTime;
+        sb2     indSvc, indWaitTime, indLastTime, indNextTime;
     
     public:
         
