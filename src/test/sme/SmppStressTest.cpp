@@ -87,7 +87,7 @@ int TestSme::Execute()
 				default:
 					__unreachable__("Invalid scenario num");
 			}
-			__trace__("***Scenario completed***");
+			__trace__("***Scenario completed***\n");
 			sleep(1); //подождать, чтобы освободился systemId
 			count++;
 			if (paused)
