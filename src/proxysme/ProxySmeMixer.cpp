@@ -29,29 +29,75 @@ que_(que),
 log_(Logger::getCategory("smsc.proxysme.mixer")),
 listen_left_(LEFT_TO_RIGHT,que,log_), listen_right_(RIGHT_TO_LEFT,que,log_)
 {
+  left_state_ = right_state_ = SESSION_DISCONNECTED;
   log_.info("Mixer::ctor");
   left_  = auto_ptr<SmppSession>(new SmppSession(config_.left,&listen_left_));
-  listen_left_.SetSession(left_.get());
+  listen_left_.SetSession(left_.get(),this);
   right_ = auto_ptr<SmppSession>(new SmppSession(config_.right,&listen_right_));
-  listen_right_.SetSession(right_.get());
+  listen_right_.SetSession(right_.get(),this);
 }
 
 Mixer::~Mixer()
 {
-  listen_left_.SetSession(0);
-  listen_right_.SetSession(0);
+  listen_left_.SetSession(0,this);
+  listen_right_.SetSession(0,this);
   log_.info("Mixer::dtor");
 }
 
 bool Mixer::Connect()
 {
   log_.info("Mixer::Connect: connecting...");
-  try {
-    left_->connect();
-    right_->connect();
-  }catch( exception& _ ){
-    log_.error("<exception> on connect : %s",_.what());
-    return false;
+  if ( left_state_ == SESSION_BROKEN ) {
+    left_->close();
+    left_state_ = SESSION_DISCONNECTED;
+  }
+  if ( right_state_ == SESSION_BROKEN ) {
+    right_->close();
+    right_state_ = SESSION_DISCONNECTED;
+  }
+// LEFT PROXY CONNECTION  
+  if ( left_state_ != SESSION_OK ) {
+    try {
+      left_->connect();
+      left_state_ = SESSION_OK;
+    }catch(SmppConnectException& e) {
+      log_.error("<exception> on connect : %s",e.what());
+      switch ( e.getReason() ) {
+        case SmppConnectException::Reason::bindFailed:
+        case SmppConnectException::Reason::smppError:
+          left_state_ = SESSION_UNRECOVERABLE;
+          log_.error(" left proxy connection is unrecoverable ");
+          break;
+        default:
+          left_state_ = SESSION_DISCONNECTED;
+      }
+      return false;
+    }catch( exception& _ ){
+      log_.error("<exception> on connect : %s",_.what());
+      return false;
+    }
+  }
+// RIGHT PROXY CONNECTION
+  if ( right_state_ != SESSION_OK ) {
+    try {
+      right_->connect();
+      right_state_ = SESSION_OK;
+    }catch(SmppConnectException& e) {
+      log_.error("<exception> on connect : %s",e.what());
+      switch ( e.getReason() ) {
+        case SmppConnectException::Reason::bindFailed:
+        case SmppConnectException::Reason::smppError:
+          right_state_ = SESSION_UNRECOVERABLE;
+          log_.error(" left proxy connection is unrecoverable ");
+          break;
+        default:
+          right_state_ = SESSION_DISCONNECTED;
+      }
+      return false;
+    }catch( exception& _ ){
+      log_.error("<exception> on connect : %s",_.what());
+      return false;
+    }
   }
   log_.info("Mixer::Connect: sucess");
   return true;
@@ -66,6 +112,7 @@ bool Mixer::Disconnect()
 bool Mixer::Reconnect()
 {
   log_.info("Mixer::Reconnect: ...");
+  Connect();
   return true;
 }
 
@@ -135,6 +182,9 @@ void PduListener::handleEvent(SmppHeader *pdu)
 void PduListener::handleError(int errorCode)
 {
   log_.info("PduListener::handleError: %s",ToString(incom_dirct_).c_str());
+  if ( errorCode == smppErrorNetwork ) {
+    mixer_->BrokenSession_(incom_dirct_);
+  }
 }
 
 

@@ -47,11 +47,21 @@ SMachine::~SMachine()
 }
 
 /// ждет несколько миллисекунд
-static void MicroSleep() 
+void MicroSleep() 
 {
 #if defined _WIN32
   Sleep(10);
 #else
+#endif
+}
+
+/// ждет несколько секунд
+void MacroSleep() 
+{
+#if defined _WIN32
+  Sleep(3000);
+#else
+  sleep(3)
 #endif
 }
 
@@ -60,6 +70,13 @@ void SMachine::ProcessCommands()
 {
   stopIt_ = IS_RUNNING;
   while (stopIt_ == IS_RUNNING) {
+    while ( !mixer_.IsConnected() ) {
+      if ( mixer_.IsUnrecoverable() ) return;
+      if ( !mixer_.Connect() ) {
+        smsc::util::Logger::getCategory("smsc.proxysme").error("can't connect left/right smscs");
+        MacroSleep();
+      }
+    }
     auto_ptr<QCommand> qcmd ( que_.Next() );
     if ( qcmd.get() ) {
       // процессим команду

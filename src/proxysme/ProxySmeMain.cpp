@@ -23,24 +23,24 @@ using namespace smsc::core::synchronization;
 bool LoadConfig(ProxyConfig& pconf)
 {
   static const char* HOST = "smsc";
-  static const int   PORT = 6001;
+  static const int   PORT = 9992;
   pconf.quelimit = 100;
 // LEFT
   pconf.left.host = HOST;
   pconf.left.port = PORT;
 //  pconf.left.sid  = "SME_PROXY";
-  pconf.left.sid  = "test_1";
+  pconf.left.sid  = "SME_PROXY_LEFT";
   pconf.left.password = "";
-  pconf.left.origAddr = "";
+  pconf.left.origAddr = "0.1.999";
   pconf.left.systemType = "";
   pconf.left.timeOut = 100;
 // RIGHT
   pconf.right.host = HOST;
   pconf.right.port = PORT;
 //  pconf.right.sid  = "SME_PROXY";
-  pconf.right.sid  = "test_2";
+  pconf.right.sid  = "SME_PROXY_RIGHT";
   pconf.right.password = "";
-  pconf.right.origAddr = "";
+  pconf.right.origAddr = "0.1.998";
   pconf.right.systemType = "";
   pconf.right.timeOut = 100;
 
@@ -65,12 +65,6 @@ int main()
   Queue     que(pconf);
   Mixer     mixer(que,pconf);
   SMachine  smachine(que,mixer,pconf);
-  
-  if ( !mixer.Connect() ) {
-    smsc::util::Logger::getCategory("smsc.proxysme").error("can't connect to smsc, aborting process");
-    return -1;
-  }
-
   smachine.ProcessCommands();
 
   return 0;

@@ -35,6 +35,9 @@ struct ProxyConfig {
   int quelimit;
 };
 
+extern void MicroSleep();
+extern void MacroSleep();
+
 #endif
 
 
