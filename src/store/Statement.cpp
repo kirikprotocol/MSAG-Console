@@ -1101,7 +1101,7 @@ void ToUndeliverableStatement::bindDestinationDescriptor(Descriptor& dst)
 /* HARDCODE -> 132 : validity period is over ! */
 const char* ToExpiredStatement::sql = (const char*)
 "UPDATE SMS_MSG SET LAST_TRY_TIME=:CT,\
- LAST_RESULT=132, NEXT_TRY_TIME=NULL, ST=:EXPIRED\
+ LAST_RESULT=1026, NEXT_TRY_TIME=NULL, ST=:EXPIRED\
  WHERE ID=:ID AND ST=:ENROUTE";
 ToExpiredStatement::ToExpiredStatement(Connection* connection, bool assign)
         throw(StorageException)
@@ -1131,7 +1131,7 @@ void ToExpiredStatement::bindId(SMSId id)
 /* HARDCODE -> 136 : message has been deleted ! */
 const char* ToDeletedStatement::sql = (const char*)
 "UPDATE SMS_MSG SET LAST_TRY_TIME=:CT,\
- LAST_RESULT=136, NEXT_TRY_TIME=NULL, ST=:DELETED\
+ LAST_RESULT=1030, NEXT_TRY_TIME=NULL, ST=:DELETED\
  WHERE ID=:ID AND ST=:ENROUTE";
 ToDeletedStatement::ToDeletedStatement(Connection* connection, bool assign)
     throw(StorageException)
