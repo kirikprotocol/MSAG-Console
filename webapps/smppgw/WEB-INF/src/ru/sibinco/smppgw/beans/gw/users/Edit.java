@@ -2,9 +2,12 @@ package ru.sibinco.smppgw.beans.gw.users;
 
 import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.smppgw.Constants;
+import ru.sibinco.smppgw.backend.sme.Provider;
 import ru.sibinco.smppgw.beans.*;
 
-import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.*;
 
 
 /**
@@ -16,6 +19,9 @@ public class Edit extends EditBean
   protected String password = null;
   protected String confirmPassword = null;
   protected String[] roles = null;
+  protected long providerId = -1;
+  protected String[] providerIds = new String[0];
+  protected String[] providerNames = new String[0];
   protected String firstName = null;
   protected String lastName = null;
   protected String dept = null;
@@ -28,6 +34,24 @@ public class Edit extends EditBean
   public String getId()
   {
     return login;
+  }
+
+  public void process(final HttpServletRequest request, final HttpServletResponse response) throws SmppgwJspException
+  {
+    super.process(request, response);
+
+    final Collection providers = appContext.getProviderManager().getProviders().values();
+    final List ids = new ArrayList(providers.size());
+    final List names = new ArrayList(providers.size());
+    ids.add("-1");
+    names.add("*");
+    for (Iterator i = providers.iterator(); i.hasNext();) {
+      final Provider provider = (Provider) i.next();
+      ids.add(String.valueOf(provider.getId()));
+      names.add(provider.getName());
+    }
+    providerIds = (String[]) ids.toArray(new String[0]);
+    providerNames = (String[]) names.toArray(new String[0]);
   }
 
   protected void save() throws SmppgwJspException
@@ -57,7 +81,7 @@ public class Edit extends EditBean
           password = user.getPassword();
       }
     }
-    users.put(login, new User(login, password, roles, firstName, lastName, dept, workPhone, homePhone, cellPhone, email));
+    users.put(login, new User(login, password, roles, firstName, lastName, dept, workPhone, homePhone, cellPhone, email, providerId));
     appContext.getStatuses().setUsersChanged(true);
     throw new DoneException();
   }
@@ -73,6 +97,7 @@ public class Edit extends EditBean
     final User user = (User) appContext.getUserManager().getUsers().get(userLogin);
     login = user.getLogin();
     roles = (String[]) user.getRoles().toArray(new String[0]);
+    providerId = user.getProviderId();
     firstName = user.getFirstName();
     lastName = user.getLastName();
     dept = user.getDept();
@@ -191,5 +216,25 @@ public class Edit extends EditBean
   public void setEmail(final String email)
   {
     this.email = email;
+  }
+
+  public String[] getProviderIds()
+  {
+    return providerIds;
+  }
+
+  public String[] getProviderNames()
+  {
+    return providerNames;
+  }
+
+  public long getProviderId()
+  {
+    return providerId;
+  }
+
+  public void setProviderId(final long providerId)
+  {
+    this.providerId = providerId;
   }
 }

@@ -8,8 +8,9 @@
  attribute name="values"      required="true"%><%@
  attribute name="valueTitles" required="true"%><%@
  attribute name="onChange"    required="false"%><%@
- attribute name="readonly"    required="false"%>
-<sm-ep:property title="${title}"
+ attribute name="readonly"    required="false"%><%@
+ attribute name="rowId" required="false"%>
+<sm-ep:property title="${title}" rowId="${rowId}"
   ><c:set var="values" value="${fn:split(values, ',')}"
  /><c:set var="valueTitles" value="${fn:split(valueTitles, ',')}"
  /><c:choose><c:when test="${readonly}"><input class=txt type="text" readonly name="${name}" value="${bean[name]}"></c:when><c:otherwise><div class=select><select name="${name}" <c:if test="${!empty onChange}">onChange="${onChange}"</c:if> >
