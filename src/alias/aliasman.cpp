@@ -19,7 +19,7 @@ using namespace std;
 #define __synchronized__
 
 static inline int compare_patval( const APattern& pattern,
-                                   const AValue& val )
+                                   const AValue& val)
 {
   __trace2__("compare Pat:%s ? Val:%s",
               pattern.value,
@@ -47,8 +47,8 @@ static inline int compare_patval( const APattern& pattern,
              pattern.hasStar?'*':' ',
              pattern.length,
              val.length);
-  result = pattern.hasStar?0:
-      ((int)pattern.length)-((int)val.length)?-1:0;
+  //result = pattern.hasStar?0:
+  //    ((int)pattern.length)-((int)val.length)?-1:0;
 result_:
   __trace2__("= %c == %d",result>0?'>':result<0?'<':'0',result);
   return (int32_t)result;
@@ -273,23 +273,35 @@ __synchronized__
   {
     while ( ok_adr )
     {
-      if ( ok_adr->addr.defLength > defLength )
-      {
-        defLength  = ok_adr->addr.defLength;
-        record = ok_adr;
-      }
-      else if ( ok_adr->addr.defLength == defLength )
-      {
-        __warning__("found equal alias value");
-      }
+      if ( !ok_adr->addr.hasStar?ok_adr->addr.length == val.length:true )
+			{
+				if ( ok_adr->addr.defLength > defLength )
+				{
+					defLength  = ok_adr->addr.defLength;
+					record = ok_adr;
+				}
+				else if ( ok_adr->addr.defLength == defLength )
+				{
+					__warning__("found equal alias value");
+				}
+			}
       ok_adr = ok_adr->ok_next;
     }
-    __require__(record);
+    //__require__(record);
     ok_adr = record;
   }
-  makeAliasFromValueByAddres(*ok_adr,val,alias);
+	if ( ok_adr )
+	{
+		__trace2__("find for Val:%s,length:%d\n\tP%s,Star:%d,length:%d",
+							 val.value,
+							 val.length,
+							 ok_adr->addr.value,
+							 ok_adr->addr.hasStar,
+							 ok_adr->addr.length);
+		makeAliasFromValueByAddres(*ok_adr,val,alias);
+	}
   LEAVE;
-  return true;
+  return ok_adr!=0;
 }
 
 bool AliasManager::AliasToAddress(
@@ -342,23 +354,35 @@ __synchronized__
   {
     while ( ok_ali )
     {
-      if ( ok_ali->alias.defLength > defLength )
-      {
-        defLength  = ok_ali->alias.defLength;
-        record = ok_ali;
-      }
-      else if ( ok_ali->alias.defLength == defLength )
-      {
-        __warning__("found equal alias value");
-      }
+      if ( !ok_ali->alias.hasStar?ok_ali->alias.length==val.length:true )
+			{
+				if ( ok_ali->alias.defLength > defLength )
+				{
+					defLength  = ok_ali->alias.defLength;
+					record = ok_ali;
+				}
+				else if ( ok_ali->alias.defLength == defLength )
+				{
+					__warning__("found equal alias value");
+				}
+			}
       ok_ali = ok_ali->ok_next;
     }
-    __require__(record);
+    //__require__(record);
     ok_ali = record;
   }
-  makeAddressFromValueByAlias(*ok_ali,val,addr);
+	if ( ok_ali  )
+	{
+		__trace2__("find for Val:%s,length:%d\n\tP%s,Star:%d,length:%d",
+							 val.value,
+							 val.length,
+							 ok_ali->alias.value,
+							 ok_ali->alias.hasStar,
+							 ok_ali->alias.length);
+		makeAddressFromValueByAlias(*ok_ali,val,addr);
+	}
   LEAVE;
-  return true;
+  return ok_ali!=0;
 }
 
 void AliasManager::addAlias(const AliasInfo& info)
