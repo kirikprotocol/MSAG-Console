@@ -808,6 +808,11 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
+  if(sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) {
+    // force forward mode
+    sms->setIntProperty(Tag:SMPP_ESM_CLASS, (sms->getIntProperty(Tag:SMPP_ESM_CLASS)&0xFC)|0x01);
+  }
+
   if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD) &&
      sms->hasBinProperty(Tag::SMPP_SHORT_MESSAGE)   &&
      sms->getIntProperty(Tag::SMPP_SM_LENGTH)!=0)
