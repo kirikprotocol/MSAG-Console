@@ -21,7 +21,7 @@ int main(void)
 	{
 		Manager::init("config.xml");
 		Manager& config = Manager::getInstance();
-		StoreManager::startup(config.getDatabase());
+		StoreManager::startup(config.getStoreConfig());
 	} 
 	catch (exception& exc) 
 	{
