@@ -49,14 +49,16 @@ public:
     trace("put command:enter");
     if(!CheckValidIncomingCmd(cmd))
     {
-      putIncomingCommand
+      /*putIncomingCommand
       (
         SmscCommand::makeGenericNack
         (
           cmd->get_dialogId(),
           SmppStatusSet::ESME_RINVBNDSTS
         )
-      );
+      );*/
+      __warning2__("SmppProxy::putCommand: command is invalid for bindstate:%d",cmd->get_commandId());
+      return;
     }
     {
       MutexGuard g(mutexout);
@@ -65,7 +67,7 @@ public:
       {
         throw ProxyQueueLimitException();
       }
-      trace2("put command:%p",*((void**)&cmd));
+      trace2("put command:total %d commands",outqueue.Count());
       outqueue.Push(cmd,cmd->get_priority());
     }
     smppSocket->notifyOutThread();
@@ -81,30 +83,30 @@ public:
 
   void putIncomingCommand(const SmscCommand& cmd)
   {
-    mutexin.Lock();
-    if(!opened)
     {
-      mutex.Unlock();
-      return;
-    }
-    if(inqueue.Count()==SMPP_PROXY_QUEUE_LIMIT)
-    {
-      mutex.Unlock();
-      throw ProxyQueueLimitException();
-    }
-    if(!CheckValidOutgoingCmd(cmd))
-    {
-      putCommand
-      (
-        SmscCommand::makeGenericNack
+      MutexGuard g(mutexin);
+      if(!opened)
+      {
+        return;
+      }
+      if(inqueue.Count()==SMPP_PROXY_QUEUE_LIMIT)
+      {
+        throw ProxyQueueLimitException();
+      }
+      if(!CheckValidOutgoingCmd(cmd))
+      {
+        putCommand
         (
-          cmd->get_dialogId(),
-          SmppStatusSet::ESME_RINVBNDSTS
-        )
-      );
+          SmscCommand::makeGenericNack
+          (
+            cmd->get_dialogId(),
+            SmppStatusSet::ESME_RINVBNDSTS
+          )
+        );
+        return;
+      }
+      inqueue.Push(cmd);
     }
-    inqueue.Push(cmd);
-    mutexin.Unlock();
     managerMonitor->Signal();
   }
   SmscCommand getOutgoingCommand()
@@ -221,6 +223,7 @@ bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
         case REPLACE_RESP:
         case UNBIND:
         case DELIVERY_RESP:
+        case DELIVERY:
           return true;
         default:
           return false;

@@ -57,7 +57,7 @@ static inline void print(RouteRecord* record,const char* ppp= "")
   }
 }
 
-inline 
+inline
 int sort_compare_pat_pat(RouteRecord* pat1, RouteRecord* pat2)
 {
 //__trace2__("compare (strong)(pattern ? pattern)");
@@ -68,7 +68,7 @@ int sort_compare_pat_pat(RouteRecord* pat1, RouteRecord* pat2)
   result = (int32_t)pat1->info.dest.type - (int32_t)pat2->info.dest.type; ifn0goto;
   result = (int32_t)pat1->info.dest.plan - (int32_t)pat2->info.dest.plan; ifn0goto;
   result = (int32_t)pat1->info.dest.length - (int32_t)pat2->info.dest.length; ifn0goto;
-  result = 
+  result =
     strncmp((char*)pat1->info.dest.value,
             (char*)pat2->info.dest.value,
             min(pat1->dest_def,pat2->dest_def));
@@ -78,7 +78,7 @@ int sort_compare_pat_pat(RouteRecord* pat1, RouteRecord* pat2)
   result = (int32_t)pat1->info.source.type - (int32_t)pat2->info.source.type; ifn0goto;
   result = (int32_t)pat1->info.source.plan - (int32_t)pat2->info.source.plan; ifn0goto;
   result = (int32_t)pat1->info.source.length - (int32_t)pat2->info.source.length; ifn0goto;
-  result = 
+  result =
     strncmp((char*)pat1->info.source.value,
             (char*)pat2->info.source.value,
             min(pat1->src_def,pat2->src_def));
@@ -86,12 +86,12 @@ int sort_compare_pat_pat(RouteRecord* pat1, RouteRecord* pat2)
   result = (int32_t)pat1->src_def - (int32_t)pat2->src_def; ifn0goto;
 result_:
 //  __trace2__("(sort)result(P1%cP2)%d",result>0?'>':result<0?'<':'=',
- //     result); 
+ //     result);
   return (int32_t)result;
 #undef if0ngoto
 }
 
-inline 
+inline
 int compare_addr_addr_src(RouteRecord* rr1,
                       RouteRecord* rr2,
                       bool& strong)
@@ -108,7 +108,7 @@ int compare_addr_addr_src(RouteRecord* rr1,
   result = (int32_t)pat1->type - (int32_t)pat2->type; ifn0goto;
   result = (int32_t)pat1->plan - (int32_t)pat2->plan; ifn0goto;
   result = (int32_t)pat1->length - (int32_t)pat2->length; ifn0goto;
-  result = 
+  result =
     strncmp((char*)pat1->value,
             (char*)pat2->value,
             min(pat1_def,pat2_def));
@@ -118,12 +118,12 @@ int compare_addr_addr_src(RouteRecord* rr1,
 result_:
   __trace2__("SRC compare result(P1%cP2)%s%d",result>0?'>':result<0?'<':'=',
      (result==0)?strong?"(strong)":"(weak)":"",
-     result); 
+     result);
   return (int32_t)result;
 #undef if0ngoto
 }
 
-inline 
+inline
 int compare_addr_addr_dest(RouteRecord* rr1,
                       RouteRecord* rr2,
                       bool& strong)
@@ -140,7 +140,7 @@ int compare_addr_addr_dest(RouteRecord* rr1,
   result = (int32_t)pat1->type - (int32_t)pat2->type; ifn0goto;
   result = (int32_t)pat1->plan - (int32_t)pat2->plan; ifn0goto;
   result = (int32_t)pat1->length - (int32_t)pat2->length; ifn0goto;
-  result = 
+  result =
     strncmp((char*)pat1->value,
             (char*)pat2->value,
             min(pat1_def,pat2_def));
@@ -150,7 +150,7 @@ int compare_addr_addr_dest(RouteRecord* rr1,
 result_:
   __trace2__("DEST compare result(P1%cP2)%s%d",result>0?'>':result<0?'<':'=',
      (result==0)?strong?"(strong)":"(weak)":"",
-     result); 
+     result);
   return (int32_t)result;
 #undef if0ngoto
 }
@@ -188,7 +188,7 @@ __synchronized__
   new_first_record = r.release();
 }
 
-static 
+static
 RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& xcmp )
 {
   __trace2__("findInSrcTreeRecurse");
@@ -206,17 +206,17 @@ RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& xcm
       int left = 1;
       int right = node->child.size();
       __trace2__("+childs :%d",right);
-      
+
       //for ( int i=0; i < right; ++i ) print(node->child[i]->record,"+@SRC@");
-      
-      //if ( right > 0 ) 
+
+      //if ( right > 0 )
       for(;right>=left;)
       {
         int ptr = (right+left) >> 1;
         rec = findInSrcTreeRecurse(node->child[ptr-1],r,cmp);
         if ( rec ) return rec;
         __require__( cmp != 0 );
-        //if ( right > left ) 
+        //if ( right > left )
         //{
           if ( cmp < 0 )right = ptr-1;
           else left = ptr+1;
@@ -231,7 +231,7 @@ RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& xcm
   return 0;
 }
 
-static 
+static
 RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& xcmp )
 {
   __trace2__("findInTreeRecurse");
@@ -246,22 +246,22 @@ RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& xcmp )
     if ( !strong )
     {
       __trace2__("weak");
-    find_child:      
-      // find by dest     
+    find_child:
+      // find by dest
       RouteRecord* rec;
       int left = 1;
       int right = node->child.size();
-      
+
       __trace2__("dest child: %d",right);
       //for ( int i=0; i < right; ++i ) print(node->child[i]->record,"@DST@");
-      
-      //if ( right > 0 ) 
+
+      //if ( right > 0 )
       for(;right>=left;)
       {
         int ptr = (right+left) >> 1;
         rec = findInTreeRecurse(node->child[ptr-1],r,cmp);
         if ( rec ) return rec; // found
-        //if ( right > left ) 
+        //if ( right > left )
         //{
           if ( cmp < 0 )right = ptr-1;
           else left = ptr+1;
@@ -276,7 +276,7 @@ RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& xcmp )
     //}
     // else find by source
     //else return 0; // not found
-find_by_source:    
+find_by_source:
     // find by source
     if ( !node->record ) return 0;
 
@@ -293,24 +293,24 @@ find_by_source:
         __require__ ( ptr > 0 );
         rec = findInSrcTreeRecurse(node->sources[ptr-1],r,cmp);
         if ( rec ) return rec;
-        //if ( right > left ) 
+        //if ( right > left )
         //{
           if ( cmp < 0 )right = ptr-1;
           else left = ptr+1;
         //}
         //else return 0; // not found
       }
-      //else 
+      //else
       //{
         //__warning__("very strange, route has no sources");
-        //return 0; // ops, no sources !!!!! 
+        //return 0; // ops, no sources !!!!!
       //}
     }
   }
   return 0;
 }
 
-inline 
+inline
 RouteRecord* findInTree(RouteTreeNode* node,
                         const Address* source,
                         const Address* dest)
@@ -330,7 +330,9 @@ RouteRecord* findInTree(RouteTreeNode* node,
 
 inline void print_step(int step)
 {
+#ifndef DISABLE_TRACING
   for(int st=0; st<step;++st) fprintf(stderr,"  ");
+#endif
 }
 
 static
@@ -362,7 +364,7 @@ void dump(RouteTreeNode* node,int step)
   }
 }
 
-static 
+static
 int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec)
 {
   __trace2__("addRouteIntoSrcTreeRecurse");
@@ -386,7 +388,7 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec)
         int ptr = (right+left) >> 1;
         int cmp = addRouteIntoSrcTreeRecurse(node->child[ptr-1],rec);
         if ( cmp == 0 ) return 0;
-        //if ( right > left ) 
+        //if ( right > left )
         //{
           if ( cmp < 0 )right = ptr-1;
           else left = ptr+1;
@@ -403,7 +405,7 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec)
   return xcmp;
 }
 
-static 
+static
 int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec)
 {
   __require__(node != 0);
@@ -413,7 +415,7 @@ int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec)
   //if ( node->alias ) print(*node->alias,"node->alias");
   //else __trace__("no node->alias");
   //print(rec->alias,"rec->alias");
-  
+
   bool strong = false;
   int xcmp = 0;
   if ( !node->record ) goto find_child;
@@ -424,7 +426,7 @@ int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec)
     {
       int left = 1;
       int right = node->sources.size();
-      //if ( right > 0 ) 
+      //if ( right > 0 )
       __require__(right>0);
       for(;right >= left;)
       {
@@ -432,7 +434,7 @@ int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec)
         __require__(ptr > 0);
         int cmp = addRouteIntoSrcTreeRecurse(node->sources[ptr-1],rec);
         if ( cmp == 0 ) return 0;
-        //if ( right > left ) 
+        //if ( right > left )
         //{
           if ( cmp < 0 )right = ptr-1;
           else left = ptr+1;
@@ -449,7 +451,7 @@ int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec)
       //}
     }
     __trace2__("weak equal:")
-    if (node->record->dest_def > rec->dest_def) 
+    if (node->record->dest_def > rec->dest_def)
     {
       __unreachable__("incorrect tree");
     }
@@ -461,7 +463,7 @@ int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec)
       int ptr = (right+left) >> 1;
       int cmp = addRouteIntoTreeRecurse(node->child[ptr-1],rec);
       if ( cmp == 0 ) return 0;
-      //if ( right > left ) 
+      //if ( right > left )
       //{
         if ( cmp < 0 )right = ptr-1;
         else left = ptr+1;
@@ -489,7 +491,7 @@ int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec)
   return xcmp;
 }
 
-static 
+static
 int addRouteIntoTree(RouteTreeNode* node,RouteRecord* rec)
 {
   return addRouteIntoTreeRecurse(node,rec);
@@ -551,8 +553,8 @@ void RouteManager::cancel()
 bool RouteManager::lookup(const Address& source, const Address& dest, SmeProxy*& proxy, int* idx, RouteInfo* info)
 {
 __synchronized__
-	//if ( info ) *info = 0;
-	if ( idx ) *idx = 0;
+  //if ( info ) *info = 0;
+  if ( idx ) *idx = 0;
   proxy = 0;
   __require__(sme_table);
   // ....
