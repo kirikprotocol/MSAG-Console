@@ -4,8 +4,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
-#include <thread.h>
-#include <synch.h>
+#include <pthread.h>
 #endif
 
 namespace smsc{
@@ -20,7 +19,7 @@ public:
 #ifdef _WIN32
     key=TlsAlloc();
 #else
-    thr_createkey(&key);
+    pthread_createkey(&key);
 #endif
   }
   T* operator->()
@@ -29,7 +28,7 @@ public:
 #ifdef _WIN32
     object=(T*)TlsGetValue(key);
 #else
-    object=(T*)thr_get_specific(key);
+    object=(T*)pthread_getspecific(key);
 #endif
     return object;
   }
@@ -41,7 +40,7 @@ public:
 #ifdef _WIN32
     TlsSetValue(key,instance);
 #else
-    thr_set_specific(key,instance);
+    pthread_setspecific(key,instance);
 #endif
     initlock.Unlock();
   }
@@ -79,7 +78,7 @@ protected:
 #ifdef _WIN32
   DWORD key;
 #else
-  thread_key_t key;
+  pthread_key_t key;
 #endif
 };//ThreadLocal
 

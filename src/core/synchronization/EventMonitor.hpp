@@ -4,8 +4,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
-#include <thread.h>
-#include <synch.h>
+#include <pthread.h>
 #endif
 #include "Mutex.hpp"
 
@@ -47,19 +46,19 @@ protected:
 #else
   EventMonitor()
   {
-    cond_init(&event,USYNC_THREAD,NULL);
+    pthread_cond_init(&event,NULL);
   }
   ~EventMonitor()
   {
-    cond_destroy(&event);
+    pthread_cond_destroy(&event);
   }
   int wait()
   {
-    return cond_wait(&event,&mutex);
+    return pthread_cond_wait(&event,&mutex);
   }
-  int wait(cond_t* cnd)
+  int wait(pthread_cond_t* cnd)
   {
-    return cond_wait(cnd,&mutex);
+    return pthread_cond_wait(cnd,&mutex);
   }
   int wait(int timeout)
   {
@@ -72,22 +71,22 @@ protected:
       tv.tv_sec++;
       tv.tv_nsec-=1000000000L;
     }
-    return cond_timedwait(&event,&mutex,&tv);
+    return pthread_cond_timedwait(&event,&mutex,&tv);
   }
   void notify()
   {
-    cond_signal(&event);
+    pthread_cond_signal(&event);
   }
-  void notify(cond_t* cnd)
+  void notify(pthread_cond_t* cnd)
   {
-    cond_signal(cnd);
+    pthread_cond_signal(cnd);
   }
   void notifyAll()
   {
-    cond_broadcast(&event);
+    pthread_cond_broadcast(&event);
   }
 protected:
-  cond_t event;
+  pthread_cond_t event;
 #endif
 };//EventMonitor
 

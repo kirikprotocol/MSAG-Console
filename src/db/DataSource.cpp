@@ -139,11 +139,11 @@ Connection* ConnectionPool::getConnection()
         if (tail) tail->next = &queue;
         tail = &queue; queue.next = 0L;
         queueLen++;
-        cond_init(&queue.condition,0,0);
+        pthread_cond_init(&queue.condition,NULL);
         if (!head) head = tail;
         queue.connection = 0L;
         monitor.wait(&queue.condition);
-        cond_destroy(&queue.condition);
+        pthread_cond_destroy(&queue.condition);
         return queue.connection;
     }
     

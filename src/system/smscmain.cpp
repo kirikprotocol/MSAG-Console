@@ -179,9 +179,11 @@ int main(int argc,char* argv[])
       smsc::system::Smsc *app=new smsc::system::Smsc;
 
       smsc::system::registerSmscSignalHandlers(app);
-      SmscRunner runner(app);
-      runner.Start();
-      runner.WaitFor();
+      app->init(cfgs);
+      app->run();
+//      SmscRunner runner(app);
+//      runner.Start();
+//      runner.WaitFor();
 
       fprintf(stderr,"quiting smsc\n");
       delete app;
@@ -194,13 +196,14 @@ int main(int argc,char* argv[])
       SmscComponent smsc_component(cfgs);
       ComponentManager::registerComponent(&smsc_component);
 
-      // start
-      smsc_component.runSmsc();
       smsc::admin::service::ServiceSocketListener listener;
       listener.init(admin_host, servicePort);
       listener.Start();
-
       smsc::system::registerSmscSignalHandlers(&smsc_component, &listener);
+      
+      // start
+      smsc_component.runSmsc();
+
 
       fprintf(stderr,"smsc started\n");
       //running
@@ -208,8 +211,8 @@ int main(int argc,char* argv[])
 
       fprintf(stderr,"smsc stopped, finishing\n");
       // stopped
-    if (smsc_component.isSmscRunning() && !smsc_component.isSmscStopping())
-    smsc_component.stopSmsc();
+      if (smsc_component.isSmscRunning() && !smsc_component.isSmscStopping())
+      smsc_component.stopSmsc();
 
       Manager::deinit();
 

@@ -208,7 +208,7 @@ namespace smsc { namespace store
      */
     struct ConnectionQueue
     {
-        cond_t              condition;
+        pthread_cond_t      condition;
         Connection*         connection;
         ConnectionQueue*    next;
     };

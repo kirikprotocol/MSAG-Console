@@ -690,7 +690,6 @@ void Smsc::init(const SmscConfigs& cfg)
   }
 
   log.info( "SMSC init complete" );
-
   }catch(exception& e)
   {
     __trace2__("Smsc::init exception:%s",e.what());
@@ -704,6 +703,7 @@ void Smsc::init(const SmscConfigs& cfg)
   }
   __trace__("Smsc::init completed");
 }
+
 
 void Smsc::run()
 {
@@ -723,13 +723,13 @@ void Smsc::run()
         &accstarted
       );
     tp.startTask(acc);
+    accstarted.Wait();
+    __trace__("SMPPIO started");
     Event mapiostarted;
     MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr,ussdCenterAddr,ussdSSN);
     tp.startTask(mapio);
-    __trace2__("wait for SMPP acceptor to start:%p",&accstarted);
-    accstarted.Wait();
-    __trace2__("wait for MAPIO to start:%p",&mapiostarted);
     mapiostarted.Wait();
+    __trace__("MAPIO started");
     if(!acc->isStarted()||!mapio->isStarted())
     {
       throw Exception("Failed to start SMPP or MAP acceptor");

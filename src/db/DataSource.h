@@ -443,7 +443,7 @@ namespace smsc { namespace db
         
         struct ConnectionQueue
         {
-            cond_t              condition;
+            pthread_cond_t      condition;
             Connection*         connection;
             ConnectionQueue*    next;
         };

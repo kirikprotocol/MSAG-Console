@@ -4,8 +4,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
-#include <thread.h>
-#include <synch.h>
+#include <pthread.h>
 #endif
 
 namespace smsc{
@@ -22,7 +21,7 @@ public:
 #ifdef _WIN32
     mutex=CreateMutex(NULL,FALSE,NULL);
 #else
-    mutex_init(&mutex,USYNC_THREAD,NULL);
+    pthread_mutex_init(&mutex,NULL);
 #endif
   }
   ~Mutex()
@@ -30,7 +29,7 @@ public:
 #ifdef _WIN32
     CloseHandle(mutex);
 #else
-    mutex_destroy(&mutex);
+    pthread_mutex_destroy(&mutex);
 #endif
   }
   void Lock()
@@ -38,7 +37,7 @@ public:
 #ifdef _WIN32
     WaitForSingleObject(mutex,INFINITE);
 #else
-    mutex_lock(&mutex);
+    pthread_mutex_lock(&mutex);
 #endif
   }
   void Unlock()
@@ -46,7 +45,7 @@ public:
 #ifdef _WIN32
     ReleaseMutex(mutex);
 #else
-    mutex_unlock(&mutex);
+    pthread_mutex_unlock(&mutex);
 #endif
   }
   bool TryLock()
@@ -54,14 +53,14 @@ public:
 #ifdef _WIN32
     return WaitForSingleObject(mutex,1)!=WAIT_TIMEOUT;
 #else
-    return mutex_trylock(&mutex)==0;
+    return pthread_mutex_trylock(&mutex)==0;
 #endif
   }
 protected:
 #ifdef _WIN32
   HANDLE mutex;
 #else
-  mutex_t mutex;
+  pthread_mutex_t mutex;
   friend class Event;
 #endif
   Mutex(const Mutex&);

@@ -4,8 +4,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
-#include <thread.h>
-#include <synch.h>
+#include <pthread.h>
 #endif
 #include "Mutex.hpp"
 
@@ -20,7 +19,7 @@ public:
 #ifdef _WIN32
     event=CreateEvent(NULL,FALSE,FALSE,NULL);
 #else
-    cond_init(&event,USYNC_THREAD,NULL);
+    pthread_cond_init(&event,NULL);
     signaled=0;
 #endif
   }
@@ -29,7 +28,7 @@ public:
 #ifdef _WIN32
     CloseHandle(event);
 #else
-    cond_destroy(&event);
+    pthread_cond_destroy(&event);
 #endif
   }
   int Wait()
@@ -44,7 +43,7 @@ public:
       mutex.Unlock();
       return 0;
     }
-    int retval=cond_wait(&event,&mutex.mutex);
+    int retval=pthread_cond_wait(&event,&mutex.mutex);
     signaled=0;
     mutex.Unlock();
     return retval;
@@ -71,7 +70,7 @@ public:
       tv.tv_sec++;
       tv.tv_nsec-=1000000000L;
     }
-    int retval=cond_timedwait(&event,&mutex.mutex,&tv);
+    int retval=pthread_cond_timedwait(&event,&mutex.mutex,&tv);
     signaled=0;
     mutex.Unlock();
     return retval;
@@ -84,7 +83,7 @@ public:
 #else
     mutex.Lock();
     signaled=1;
-    cond_signal(&event);
+    pthread_cond_signal(&event);
     mutex.Unlock();
 #endif
   }
@@ -102,7 +101,7 @@ public:
   {
     mutex.Lock();
     signaled=1;
-    cond_broadcast(&event);
+    pthread_cond_broadcast(&event);
     mutex.Unlock();
   }
 #endif
@@ -110,7 +109,7 @@ protected:
 #ifdef _WIN32
   HANDLE event;
 #else
-  cond_t event;
+  pthread_cond_t event;
   Mutex mutex;
   int signaled;
 #endif

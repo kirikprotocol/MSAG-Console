@@ -1,4 +1,5 @@
-snmp    "SNMP agent"
+logger
+snmp    "SNMP agent implementation"
 smpp	"SMPP protocol implementation"
 core 	"SMSC core implementation"
 util	"Utility classes"
@@ -19,7 +20,8 @@ resourcemanager
 distrlist
 mscman
 stat
-logger
-emailsme
+wsme
 proxysme
+emailsme
+infosme
 license

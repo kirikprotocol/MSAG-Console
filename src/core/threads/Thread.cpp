@@ -30,7 +30,7 @@ void Thread::Start()
 #ifdef _WIN32
   thread=(HANDLE)_beginthread(ThreadRunner,0,(void*)this);
 #else
-  if(thr_create(NULL,0,ThreadRunner,this,0,&thread)!=0)
+  if(pthread_create(&thread,NULL,ThreadRunner,this)!=0)
   {
     thread=0;
   };
@@ -42,7 +42,7 @@ void Thread::Start(int stacksize)
 #ifdef _WIN32
   thread=(HANDLE)_beginthread(ThreadRunner,stacksize,(void*)this);
 #else
-  if(thr_create(NULL,stacksize,ThreadRunner,this,0,&thread)!=0)
+  if(pthread_create(&thread,NULL,ThreadRunner,this)!=0)
   {
     thread=0;
   };
@@ -65,7 +65,7 @@ int Thread::WaitFor()
 #ifdef _WIN32
   return WaitForSingleObject(thread,INFINITE);
 #else
-  return thr_join(thread,NULL,NULL);
+  return pthread_join(thread,NULL);
 #endif
 }
 

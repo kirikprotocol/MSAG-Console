@@ -4,7 +4,8 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
-#include <thread.h>
+#include <pthread.h>
+#include <signal.h>
 #endif
 
 namespace smsc{
@@ -24,7 +25,7 @@ public:
 #ifndef _WIN32
   int Kill(int sig)
   {
-    return thr_kill(thread,sig);
+    return pthread_kill(thread,sig);
   }
 #endif
   int getRetCode(){return retcode;}
@@ -35,7 +36,7 @@ protected:
 #ifdef _WIN32
   HANDLE thread;
 #else
-  thread_t thread;
+  pthread_t thread;
 #endif
 };//Thread
 
