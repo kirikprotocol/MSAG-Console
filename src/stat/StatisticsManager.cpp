@@ -98,7 +98,7 @@ int StatisticsManager::Execute()
 
 void StatisticsManager::stop()
 {
-    __trace__("StatisticsManager::stop() called, started=%d", isStarted);
+    __trace2__("StatisticsManager::stop() called, started=%d", isStarted);
     ThreadedTask::stop();
     if (isStarted)
     {
