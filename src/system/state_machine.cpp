@@ -1084,7 +1084,7 @@ StateType StateMachine::submit(Tuple& t)
                           dst,
                           dest_proxy_index,dest_proxy,&ri,src_proxy->getSmeIndex());
 
-  __trace2__("hide=%s, forceRP=%s",ri.hide?"true":"false",ri.forceReplyPath?"true":"false");
+  __trace2__("hide=%s, forceRP=%d",ri.hide?"true":"false",ri.replyPath);
 
   sms->setRouteId(ri.routeId.c_str());
   if(ri.suppressDeliveryReports)sms->setIntProperty(Tag::SMSC_SUPPRESS_REPORTS,1);
@@ -2257,9 +2257,12 @@ StateType StateMachine::submit(Tuple& t)
       sms->setIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND,1);
     }
 
-    if(ri.forceReplyPath)
+    if(ri.replyPath==smsc::router::ReplyPathForce)
     {
       sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x80);
+    }else if(ri.replyPath==smsc::router::ReplyPathSuppress)
+    {
+      sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)&(~0x80));
     }
 
     SmscCommand delivery = SmscCommand::makeDeliverySm(*sms,dialogId2);
@@ -2772,9 +2775,12 @@ StateType StateMachine::forward(Tuple& t)
         sms.setIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND,1);
       }
     }
-    if(ri.forceReplyPath)
+    if(ri.replyPath==smsc::router::ReplyPathForce)
     {
       sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)|0x80);
+    }else if(ri.replyPath==smsc::router::ReplyPathSuppress)
+    {
+      sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)&(~0x80));
     }
     SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
     dest_proxy->putCommand(delivery);
@@ -3354,9 +3360,12 @@ StateType StateMachine::deliveryResp(Tuple& t)
             sms.getMessageBody().dropIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND);
           }
         }
-        if(ri.forceReplyPath)
+        if(ri.replyPath==smsc::router::ReplyPathForce)
         {
           sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)|0x80);
+        }else if(ri.replyPath==smsc::router::ReplyPathSuppress)
+        {
+          sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)&(~0x80));
         }
 
         SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
