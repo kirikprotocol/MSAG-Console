@@ -8,14 +8,18 @@
 
 #include <string>
 
+#include "Statistics.h"
+
 namespace smsc { namespace mcisme
 {
     struct MCISmeAdmin
     {
         virtual void flushStatistics() = 0;
-        
-        virtual int getInQueueSize() = 0;
-        virtual int getOutQueueSize() = 0;
+        virtual EventsStat getStatistics() = 0;
+        virtual long getActiveTasksCount() = 0;
+
+        virtual long getInQueueSize() = 0;
+        virtual long getOutQueueSize() = 0;
         
         MCISmeAdmin() {};
 

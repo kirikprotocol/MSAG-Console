@@ -29,7 +29,7 @@
 #include <util/timeslotcounter.hpp>
 
 #include "TaskProcessor.h"
-//#include "MCISmeComponent.h"
+#include "MCISmeComponent.h"
 
 using namespace smsc::sme;
 using namespace smsc::smpp;
@@ -580,11 +580,9 @@ int main(void)
         TaskProcessor processor(&tpConfig);
         taskProcessor = &processor;
         
-        /*
         MCISmeComponent admin(processor);                   
         ComponentManager::registerComponent(&admin); 
         adminListener->Start();
-        */
         
         ConfigView smscConfig(manager, "MCISme.SMSC");
         MCISmeConfig cfg(&smscConfig);

@@ -30,7 +30,7 @@
 #include "Tasks.h"
 #include "MCIModule.h"
 #include "MCISmeAdmin.h"
-//TODO: #include "StatisticsManager.h"
+#include "StatisticsManager.h"
 
 namespace smsc { namespace mcisme
 {
@@ -264,9 +264,9 @@ namespace smsc { namespace mcisme
         Mutex               messageSenderLock;
         MessageSender*      messageSender;
         
-        DataSource*     ds;
-        Connection*     dsStatConnection;
-        // StatisticsManager*  statistics;
+        DataSource*         ds;
+        Connection*         dsStatConnection;
+        StatisticsManager*  statistics;
         
         EventMonitor    tasksMonitor;
         Hash<Task *>    tasks, lockedTasks; // Hash for tasks by abonent
@@ -360,13 +360,21 @@ namespace smsc { namespace mcisme
         /* ------------------------ Admin interface ------------------------ */
 
         virtual void flushStatistics() {
-            //if (statistics) statistics->flushStatistics();
+            if (statistics) statistics->flushStatistics();
         }
-        virtual int getInQueueSize() {
+        virtual EventsStat getStatistics() {
+            return (statistics) ? statistics->getStatistics():EventsStat(0,0,0,0);
+        }
+        virtual long getActiveTasksCount() {
+            MutexGuard guard(tasksMonitor);
+            return tasks.GetCount();
+        }
+
+        virtual long getInQueueSize() {
             MutexGuard guard(inQueueMonitor);
             return inQueue.Count();
         }
-        virtual int getOutQueueSize() {
+        virtual long getOutQueueSize() {
             MutexGuard guard(outQueueMonitor);
             return outQueue.Count();
         }

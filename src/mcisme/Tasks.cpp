@@ -6,6 +6,8 @@ namespace smsc { namespace mcisme
 
 Logger*     Task::logger = 0;
 DataSource* Task::ds     = 0;
+Statistics* Task::statistics = 0;
+
 uint64_t    Task::currentId  = 0;
 uint64_t    Task::sequenceId = 0;
 bool        Task::bInformAll = true;
@@ -85,12 +87,14 @@ const char* OBTAIN_RESULTSET_ERROR_MESSAGE  = "Failed to obtain result set for %
 
 /* ----------------------- Static part ----------------------- */
 
-void Task::init(DataSource* _ds, int eventsPerMessage, bool inform, bool notify)
+void Task::init(DataSource* _ds, Statistics* _statistics,
+                int eventsPerMessage, bool inform, bool notify)
 {
     Task::logger = Logger::getInstance("smsc.mcisme.Task");
-    Task::ds = _ds; Task::currentId  = 0; Task::sequenceId = 0;
-    Task::bInformAll = inform; Task::bNotifyAll = notify;
+    Task::ds = _ds; Task::statistics = _statistics;
+    Task::currentId  = 0; Task::sequenceId = 0;
     Message::maxEventsPerMessage = eventsPerMessage;
+    Task::bInformAll = inform; Task::bNotifyAll = notify;
 }
 uint64_t Task::getNextId(Connection* connection/*=0*/)
 {
@@ -461,7 +465,6 @@ static const char*  constShortEngMonthesNames[12] = {
     "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
-static int maxEventsPerMessage = 5; // TODO: do it configurable
 
 int Message::countEvents(const std::string& message)
 {
@@ -472,7 +475,7 @@ int Message::countEvents(const std::string& message)
 }
 bool Message::isFull()
 {
-    return (eventCount >= maxEventsPerMessage);
+    return (eventCount >= Message::maxEventsPerMessage);
 }
 bool Message::addEvent(const MissedCallEvent& event, bool force/*=false*/)
 {
@@ -525,6 +528,8 @@ void Task::addEvent(const MissedCallEvent& event)
         if (connection) ds->freeConnection(connection);
         throw;
     }
+    
+    if (statistics) statistics->incMissed();
 }
 
 bool Task::formatMessage(Message& message)
@@ -801,6 +806,11 @@ Array<std::string> Task::finalizeMessage(const char* smsc_id,
 
         connection->commit();
         ds->freeConnection(connection);
+
+        if (statistics) {
+            if (delivered) statistics->incDelivered();
+            else statistics->incFailed();
+        }
     } 
     catch (Exception& exc)
     {

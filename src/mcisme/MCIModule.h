@@ -131,7 +131,7 @@ namespace smsc { namespace mcisme
                     MutexGuard guard(attachLock);
                     if (bAttached && listener) listener->missed(event);
                 }
-                sleepEvent.Wait(30);
+                sleepEvent.Wait(300); //30
             }
         }
         #endif

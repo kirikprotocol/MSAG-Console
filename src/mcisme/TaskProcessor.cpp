@@ -99,8 +99,8 @@ void TaskProcessor::initDataSource(ConfigView* config)
 TaskProcessor::TaskProcessor(ConfigView* config)
     : Thread(), MissedCallListener(), MCISmeAdmin(), 
         logger(Logger::getInstance("smsc.mcisme.TaskProcessor")), 
-        protocolId(0), svcType(0), address(0), messageSender(0), 
-        ds(0), dsStatConnection(0), maxInQueueSize(10000), maxOutQueueSize(10000),
+        protocolId(0), svcType(0), address(0), messageSender(0), ds(0),
+        dsStatConnection(0), statistics(0), maxInQueueSize(10000), maxOutQueueSize(10000),
         bStarted(false), bInQueueOpen(false), bOutQueueOpen(false)
 {
     smsc_log_info(logger, "Loading ...");
@@ -122,15 +122,6 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     std::auto_ptr<ConfigView> eventsThreadPoolCfgGuard(config->getSubConfig("SMPPThreadPool"));
     eventManager.init(eventsThreadPoolCfgGuard.get()); // loads up thread pool for events
     
-    std::auto_ptr<ConfigView> dsIntCfgGuard(config->getSubConfig("DataSource"));
-    initDataSource(dsIntCfgGuard.get());
-    dsStatConnection = ds->getConnection();
-    
-    /* TODO: init StatisticsManager
-    statistics = new StatisticsManager(dsStatConnection);
-    if (statistics) statistics->Start();
-    */
-    
     bool inform = false;
     try { inform = config->getBool("forceInform"); } catch (...) { inform = false;
         smsc_log_warn(logger, "Parameter <MCISme.forceInform> missed. Force inform for all abonents is off");
@@ -143,7 +134,15 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     try { eventsPerMessage = config->getInt("maxEventsPerMessage"); } catch (...) { eventsPerMessage = 5;
         smsc_log_warn(logger, "Parameter <MCISme.maxEventsPerMessage> is invalid. Using default %d", eventsPerMessage);
     }
-    Task::init(ds, eventsPerMessage, inform, notify); // + statistics
+    
+    std::auto_ptr<ConfigView> dsIntCfgGuard(config->getSubConfig("DataSource"));
+    initDataSource(dsIntCfgGuard.get());
+    
+    dsStatConnection = ds->getConnection();
+    statistics = new StatisticsManager(dsStatConnection);
+    if (statistics) statistics->Start();
+    
+    Task::init(ds, statistics, eventsPerMessage, inform, notify);
 
     smsc_log_info(logger, "Load success.");
 }
@@ -152,7 +151,7 @@ TaskProcessor::~TaskProcessor()
     eventManager.Stop();
     this->Stop();
     
-    // if (statistics) delete statistics;
+    if (statistics) delete statistics;
     if (dsStatConnection) ds->freeConnection(dsStatConnection);
     if (ds) delete ds;
 }
@@ -417,8 +416,8 @@ void TaskProcessor::processEvent(const MissedCallEvent& event)
 
 void TaskProcessor::processMessage(const Message& message)
 {
-    /*smsc_log_debug(logger, "Sending message #%lld to '%s': %s", 
-                   message.id, message.abonent.c_str(), message.message.c_str());*/
+    smsc_log_debug(logger, "Sending message #%lld to '%s': %s", 
+                   message.id, message.abonent.c_str(), message.message.c_str());
 
     MutexGuard msGuard(messageSenderLock);
     if (!messageSender) {
@@ -438,7 +437,7 @@ void TaskProcessor::processMessage(const Message& message)
         return;
     }
     
-    //smsc_log_debug(logger, "Sent message #%lld to '%s'.", message.id, message.abonent.c_str());
+    smsc_log_debug(logger, "Sent message #%lld to '%s'.", message.id, message.abonent.c_str());
 }
 
 /* ------------------------ Main processing ------------------------ */ 
@@ -464,7 +463,9 @@ void TaskProcessor::processNotificationResponce(Message& message,
             smsc_log_error(logger, "Failed to send notification message to abonent: %s", message.abonent.c_str());
         }
     }
-    else { // accepted
+    else // accepted
+    { 
+        if(statistics) statistics->incNotified();
         smsc_log_debug(logger, "Succeeded to send notification message to abonent: %s", message.abonent.c_str());
     }
 }

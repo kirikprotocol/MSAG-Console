@@ -19,6 +19,7 @@
 
 #include <db/DataSource.h>
 
+#include "Statistics.h"
 #include "misscall/callproc.hpp"
 
 namespace smsc { namespace mcisme
@@ -41,8 +42,8 @@ namespace smsc { namespace mcisme
         int         eventCount;
         bool        replace, notification;
         
-        Message(uint64_t id=0, std::string abonent="",
-                std::string _message="", std::string smsc_id="", bool replace=false, bool notification=false) 
+        Message(uint64_t id=0, const std::string& abonent="", const std::string& _message="",
+                const std::string& smsc_id="", bool replace=false, bool notification=false) 
             : id(id), attempts(0), abonent(abonent), message(_message), smsc_id(smsc_id),
               eventCount(Message::countEvents(_message)), replace(replace), notification(notification) {};
         Message(const Message& msg) 
@@ -100,6 +101,7 @@ namespace smsc { namespace mcisme
     private:
         
         static DataSource*  ds;
+        static Statistics*  statistics;
         static Logger*      logger;
         static uint64_t     currentId, sequenceId;
         static bool         bInformAll, bNotifyAll;
@@ -115,7 +117,8 @@ namespace smsc { namespace mcisme
 
     public:
 
-        static void         init(DataSource* _ds, int eventsPerMessage, bool inform=false, bool notify=false);
+        static void         init(DataSource* _ds, Statistics* _statistics,
+                                 int eventsPerMessage, bool inform=false, bool notify=false);
         static uint64_t     getNextId(Connection* connection=0);
         
         static bool         getMessage(const char* smsc_id, Message& message, Connection* connection=0);
