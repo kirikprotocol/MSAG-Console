@@ -280,19 +280,17 @@ namespace smsc { namespace infosme
         /**
          * Переводит сообщение в состояние NEW по получению deliveryReport Failed
          * или submitResponce Failed с временной ошибкой,
-         * если в задаче стоит retryOnFail и установленно retryTime 
-         * (сообщение должно быть в состоянии ENROUTE или WAIT).
-         * Если установлено время завершения задачи и следующая попытка
-         * должна произойти позже, то сообщение переводиться в состояние FAILED.
+         * если в задаче стоит retryOnFail и установленно retryTime.
          * 
-         * @param connection    основной connection TaskProcessor'а
-         *                      из внутреннего источника данных. (оптимизация)
          * @param msgId         идентификатор сообщения в таблице задачи.
+         * @param nextTime      время следующей попытки доставки.
          * @return true         если сообщение найдено и изменено 
          */
-        bool doRetry(Connection* connection, uint64_t msgId);
+        bool doRetry(uint64_t msgId, time_t nextTime);
 
         /**
+         * ?????
+         *
          * Переводит сообщение в состояние ENROUTE по получению submitResponce Ok
          * Сообщение должно быть в состоянии WAIT.
          * Выполняется из TaskProcessor'а
@@ -305,17 +303,15 @@ namespace smsc { namespace infosme
         bool doEnroute(Connection* connection, uint64_t msgId);
         
         /**
-         * Переводит сообщение в состояние FAILED по получению submitResponce Failed
-         * или deliveryReport Failed.
-         * Сообщение должно быть в состоянии WAIT или ENROUTE.
+         * Удаляет сообщение.
          * Выполняется из TaskProcessor'а
          * 
          * @param connection    основной connection TaskProcessor'а
          *                      из внутреннего источника данных. (оптимизация)
          * @param msgId         идентификатор сообщения в таблице задачи.
-         * @return true         если сообщение найдено и изменено 
+         * @return true         если сообщение найдено и удалено. 
          */
-        bool doFailed(Connection* connection, uint64_t msgId);
+        //bool doDelete(Connection* connection, uint64_t msgId);
         
         /**
          * Переводит сообщение в состояние DELIVERED по получению submitResponce Ok
@@ -367,19 +363,6 @@ namespace smsc { namespace infosme
         inline Task* get() {
             return task;
         }
-    };
-    
-    struct TaskInvokeAdapter
-    {
-        virtual void invokeEndProcess(Task* task) = 0;
-        virtual void invokeBeginProcess(Task* task) = 0;
-        virtual void invokeDropAllMessages(Task* task) = 0;
-        
-        virtual ~TaskInvokeAdapter() {};
-
-    protected:
-
-        TaskInvokeAdapter() {};
     };
     
 }}

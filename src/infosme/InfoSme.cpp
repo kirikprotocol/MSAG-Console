@@ -313,7 +313,7 @@ public:
                              msgid, delivered ? "delivered":"failed", 
                              retry ? "need retry":"no retry");*/
                 
-                //processor.processReceipt(msgid, delivered, retry);
+                processor.invokeProcessReceipt(msgid, delivered, retry);
             }
         } 
     }
@@ -334,7 +334,7 @@ public:
                          status == SmppStatusSet::ESME_RMSGQFUL  ||
                          status == SmppStatusSet::ESME_RTHROTTLED);
 
-        //processor.processResponce(seqNum, accepted, retry, msgid);
+        processor.invokeProcessResponce(seqNum, accepted, retry, msgid);
     }
 
     void handleEvent(SmppHeader *pdu)
@@ -342,11 +342,11 @@ public:
         switch (pdu->get_commandId())
         {
         case SmppCommandSet::DELIVERY_SM:
-            //logger.debug("Received DELIVERY_SM Pdu.");
+            logger.debug("Received DELIVERY_SM Pdu.");
             processReceipt(pdu);
             break;
         case SmppCommandSet::SUBMIT_SM_RESP:
-            //logger.debug("Received SUBMIT_SM_RESP Pdu.");
+            logger.debug("Received SUBMIT_SM_RESP Pdu.");
             processResponce(pdu);
             break;
         default:
@@ -446,7 +446,7 @@ int main(void)
             
             Event aaa;
             while (!bInfoSmeIsStopped && bInfoSmeIsConnected) {
-                aaa.Wait(1000);
+                aaa.Wait(2000);
                 //sleep(1);
                 TaskStat stat;
                 if (processor.getStatistics("Task1", stat)) {

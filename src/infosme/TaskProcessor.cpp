@@ -32,9 +32,12 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     try { svcType = config->getString("SvcType"); }
     catch(ConfigException& exc) { svcType = 0; };
     
-    std::auto_ptr<ConfigView> threadPoolCfgGuard(config->getSubConfig("TasksThreadPool"));
-    ConfigView* threadPoolCfg = threadPoolCfgGuard.get();
-    manager.init(threadPoolCfg); // loads up thread pool for tasks
+    std::auto_ptr<ConfigView> tasksThreadPoolCfgGuard(config->getSubConfig("TasksThreadPool"));
+    ConfigView* tasksThreadPoolCfg = tasksThreadPoolCfgGuard.get();
+    taskManager.init(tasksThreadPoolCfg); // loads up thread pool for tasks
+    std::auto_ptr<ConfigView> eventsThreadPoolCfgGuard(config->getSubConfig("EventsThreadPool"));
+    ConfigView* eventsThreadPoolCfg = eventsThreadPoolCfgGuard.get();
+    taskManager.init(eventsThreadPoolCfg); // loads up thread pool for events
     
     std::auto_ptr<ConfigView> providerCfgGuard(config->getSubConfig("DataProvider"));
     ConfigView* providerCfg = providerCfgGuard.get();
@@ -45,15 +48,12 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     dsInternal = provider.getDataSource(dsInternalName);
     if (!dsInternal)
         throw ConfigException("Failed to obtail internal DataSource driver '%s'", dsInternalName);
+    logger.info("Internal DataSource driver '%s' obtained.", dsInternalName);
+
     dsIntConnection = dsInternal->getConnection();
     dsStatConnection = dsInternal->getConnection();
     if (!dsIntConnection || !dsStatConnection)
         throw ConfigException("Failed to obtain connection to internal data source.");
-    
-    statistics = new StatisticsManager(dsStatConnection);
-    manager.setStatisticsManager(statistics);
-
-    logger.info("Internal DataSource driver '%s' obtained.", dsInternalName);
     
     logger.info("Loading tasks ...");
     std::auto_ptr<ConfigView> tasksCfgGuard(config->getSubConfig("Tasks"));
@@ -105,6 +105,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     
     logger.info("Load success.");
     
+    statistics = new StatisticsManager(dsStatConnection);
     if (statistics) statistics->Start();
     scheduler.Start();
 }
@@ -112,7 +113,8 @@ TaskProcessor::~TaskProcessor()
 {
     scheduler.Stop();
     this->Stop();
-    manager.Stop();
+    taskManager.Stop();
+    eventManager.Stop();
     
     {
         MutexGuard guard(tasksLock);
@@ -374,6 +376,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, std::
     }
     TaskInfo info = task->getInfo();
 
+    /*
     MutexGuard icGuard(dsIntConnectionLock);
     if (!accepted)
     {
@@ -415,6 +418,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, std::
     }
     
     dsInternalCommit();
+    */
 }
 
 const char* GET_ID_MAPPING_STATEMENT_ID = "GET_ID_MAPPING_STATEMENT_ID";
@@ -427,7 +431,7 @@ const char* DEL_ID_MAPPING_STATEMENT_SQL = (const char*)
 
 void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool retry)
 {
-    __require__(dsIntConnection);
+    /*__require__(dsIntConnection);
 
     logger.debug("Processing recpt: smscId=%s, delivered=%d, retry=%d",
                  smscId.c_str(), delivered, retry);
@@ -483,6 +487,7 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
     }
     
     dsInternalCommit();
+    */
 }
 
 }}

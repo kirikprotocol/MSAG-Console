@@ -451,21 +451,24 @@ void Task::resetWaiting(Connection* connection)
 
 const char* DO_RETRY_MESSAGE_STATEMENT_ID = "%s_DO_RETRY_MESSAGE_STATEMENT_ID";
 const char* DO_RETRY_MESSAGE_STATEMENT_SQL = 
-"UPDATE %s SET STATE=:NEW_OR_FAILED, SEND_DATE=:SEND_DATE "
-"WHERE ID=:ID AND (STATE=:ENROUTE OR STATE=:WAIT)";
+"UPDATE %s SET STATE=:NEW, SEND_DATE=:SEND_DATE WHERE ID=:ID";
 
-bool Task::doRetry(Connection* connection, uint64_t msgId)
+bool Task::doRetry(uint64_t msgId, time_t nextTime)
 {
     logger.debug("doRetry(): called for id=%lld", msgId);
 
-    if (!info.retryOnFail || info.retryTime <= 0) return false;
+    if (!info.retryOnFail || info.retryTime <= 0) return false; // TODO : analyse it !
 
-    __require__(connection);
-
+    Connection* connection = 0;
     int wdTimerId = -1;
     bool result = false;
+   
     try
     {
+        connection = dsInt->getConnection();
+        if (!connection) 
+            throw Exception("doRetry(): Failed to obtain connection");
+
         std::auto_ptr<char> retryMessageId(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_ID));
         std::auto_ptr<char> retryMessageSql(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_SQL));
         Statement* retryMessage = connection->getStatement(retryMessageId.get(), 
@@ -473,28 +476,41 @@ bool Task::doRetry(Connection* connection, uint64_t msgId)
         if (!retryMessage)
             throw Exception("doRetry(): Failed to create statement for messages access.");
         
-        time_t ct = time(NULL);
-        time_t nt = ct+info.retryTime;
-
-        retryMessage->setUint8   (1, (info.endDate>0 && nt>=ct) ? 
-                                     MESSAGE_FAILED_STATE:MESSAGE_NEW_STATE);
-        retryMessage->setDateTime(2, nt); 
-        retryMessage->setUint64  (3, msgId);
-        retryMessage->setUint8   (4, MESSAGE_ENROUTE_STATE);
-        retryMessage->setUint8   (5, MESSAGE_WAIT_STATE);
-        
         wdTimerId = dsInt->startTimer(connection, info.dsIntTimeout);
+
+        retryMessage->setUint8   (1, MESSAGE_NEW_STATE);
+        retryMessage->setDateTime(2, nextTime); 
+        retryMessage->setUint64  (3, msgId);
+        
         result = (retryMessage->executeUpdate() > 0);
+        if (result) connection->commit();
     }
     catch (Exception& exc) {
+        try { if (connection) connection->rollback(); }
+        catch (Exception& exc) {
+            logger.error("Failed to roolback transaction on internal data source. "
+                         "Details: %s", exc.what());
+        } catch (...) {
+            logger.error("Failed to roolback transaction on internal data source.");
+        }
         logger.error("Task '%s'. doRetry(): Messages access failure. "
                      "Details: %s", info.id.c_str(), exc.what());
     }
     catch (...) {
+        try { if (connection) connection->rollback(); }
+        catch (Exception& exc) {
+            logger.error("Failed to roolback transaction on internal data source. "
+                         "Details: %s", exc.what());
+        } catch (...) {
+            logger.error("Failed to roolback transaction on internal data source.");
+        }
         logger.error("Task '%s'. doRetry(): Messages access failure.", 
                      info.id.c_str());
     }
+    
     dsInt->stopTimer(wdTimerId);
+    if (connection) dsInt->freeConnection(connection);
+    
     return result;
 }
 
@@ -538,6 +554,7 @@ bool Task::doEnroute(Connection* connection, uint64_t msgId)
     return result;
 }
 
+/*
 const char* DO_FAILED_MESSAGE_STATEMENT_ID = "%s_DO_FAILED_MESSAGE_STATEMENT_ID";
 const char* DO_FAILED_MESSAGE_STATEMENT_SQL = 
 "UPDATE %s SET STATE=:FAILED WHERE ID=:ID AND (STATE=:ENROUTE OR STATE=:WAIT)";
@@ -577,7 +594,7 @@ bool Task::doFailed(Connection* connection, uint64_t msgId)
     }
     dsInt->stopTimer(wdTimerId);
     return result;
-}
+}*/
         
 const char* DO_DELIVERED_MESSAGE_STATEMENT_ID = "%s_DO_DELIVERED_MESSAGE_STATEMENT_ID";
 const char* DO_DELIVERED_MESSAGE_STATEMENT_SQL = 

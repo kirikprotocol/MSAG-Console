@@ -121,7 +121,7 @@ int TaskScheduler::Execute()
                     }
                     
                     if (task->isEnabled() && !task->isInProcess())
-                        processor->getTaskInvokeAdapter().invokeBeginProcess(task);
+                        processor->invokeBeginProcess(task);
                 }
         } 
         catch (std::exception& exc) 

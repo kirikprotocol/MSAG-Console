@@ -30,7 +30,9 @@ namespace smsc { namespace infosme
     
     struct TaskProcessorAdapter
     {
-        virtual TaskInvokeAdapter& getTaskInvokeAdapter() = 0;
+        virtual void invokeEndProcess(Task* task)  = 0;
+        virtual void invokeBeginProcess(Task* task) = 0;
+        virtual void invokeDropAllMessages(Task* task) = 0;
         
         virtual bool addTask(Task* task) = 0;
         virtual bool removeTask(std::string taskId) = 0;
@@ -41,7 +43,11 @@ namespace smsc { namespace infosme
 
      protected:
 
-        TaskProcessorAdapter() {};
+         friend class EventRunner;
+         virtual void processResponce(int seqNum, bool accepted, bool retry, std::string smscId="") = 0;
+         virtual void processReceipt (std::string smscId, bool delivered, bool retry) = 0;
+
+         TaskProcessorAdapter() {};
     };
     
     class TaskScheduler : public Thread

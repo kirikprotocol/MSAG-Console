@@ -39,10 +39,8 @@ namespace smsc { namespace infosme
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
-    typedef enum {
-      beginProcessMethod, endProcessMethod, dropAllMessagesMethod
-    } TaskMethod;
-
+    typedef enum { beginProcessMethod, endProcessMethod, dropAllMessagesMethod } TaskMethod;
+    
     class TaskRunner : public TaskGuard, public ThreadedTask // for task method execution 
     {
     private:
@@ -54,13 +52,11 @@ namespace smsc { namespace infosme
         
         TaskRunner(Task* task, TaskMethod method, Statistics* statistics = 0)
             : TaskGuard(task), ThreadedTask(), method(method), statistics(statistics) {};
-
         virtual ~TaskRunner() {};
         
         virtual int Execute()
         {
             __require__(task);
-            
             switch (method)
             {
             case endProcessMethod:
@@ -83,72 +79,53 @@ namespace smsc { namespace infosme
         };
     };
 
-    class TaskManager : public TaskInvokeAdapter // for tasks execution on thread pool
+    typedef enum { processResponceMethod, processReceiptMethod } EventMethod;
+
+    class EventRunner : public ThreadedTask
     {
     private:
-    
-        log4cpp::Category  &logger;
-        ThreadPool          pool;
-        
-        Mutex               stopLock;
-        bool                bStopping;
-        
-        StatisticsManager*  statistics;
-        
+
+        EventMethod            method;
+        TaskProcessorAdapter&  processor;
+
+        int             seqNum;
+        bool            delivered, retry;
+        std::string     smscId;
+
     public:
-    
-        TaskManager() 
-            : TaskInvokeAdapter(), logger(Logger::getCategory("smsc.infosme.TaskManager")), 
-                statistics(0), bStopping(false) {};
-        virtual ~TaskManager() {
-            this->Stop();
-            pool.shutdown();
-        };
-    
-        void Stop() {
-            MutexGuard guard(stopLock);
-            bStopping = true;
-        }
-    
-        void setStatisticsManager(StatisticsManager* manager) {
-            statistics = manager;
-        };
-        
-        void init(ConfigView* config) // throw(ConfigException)
+
+        EventRunner(EventMethod method, TaskProcessorAdapter& processor, 
+                    int seqNum, bool accepted, bool retry, std::string smscId="")
+            : method(method), processor(processor), seqNum(seqNum), 
+                delivered(accepted), retry(retry), smscId(smscId) {};
+        EventRunner(EventMethod method, TaskProcessorAdapter& processor, 
+                    std::string smscId, bool delivered, bool retry)
+            : method(method), processor(processor), seqNum(0), 
+                delivered(delivered), retry(retry), smscId(smscId) {};
+
+        virtual ~EventRunner() {};
+
+        virtual int Execute()
         {
-            try 
+            switch (method)
             {
-                int maxThreads = config->getInt("max");
-                pool.setMaxThreads(maxThreads);
-            } 
-            catch (ConfigException& exc) {
-                logger.warn("Maximum thread pool size wasn't specified !");
+            case processResponceMethod:
+                processor.processResponce(seqNum, delivered, retry, smscId);
+                break;
+            case processReceiptMethod:
+                processor.processReceipt (smscId, delivered, retry);
+                break;
+            default:
+                __trace2__("Invalid method '%d' invoked by event.", method);
+                return -1;
             }
-            
-            try
-            {
-                int initThreads = config->getInt("init");
-                pool.preCreateThreads(initThreads);
-            }
-            catch (ConfigException& exc) {
-                logger.warn("Precreated threads count in pool wasn't specified !");
-            }
+            return 0;
         };
-        
-        virtual void invokeEndProcess(Task* task) {
-            MutexGuard guard(stopLock);
-            if (!bStopping) pool.startTask(new TaskRunner(task, endProcessMethod));
-        };
-        virtual void invokeBeginProcess(Task* task) {
-            MutexGuard guard(stopLock);
-            if (!bStopping) pool.startTask(new TaskRunner(task, beginProcessMethod, statistics));
-        };
-        virtual void invokeDropAllMessages(Task* task) {
-            MutexGuard guard(stopLock);
-            if (!bStopping) pool.startTask(new TaskRunner(task, dropAllMessagesMethod));
+        virtual const char* taskName() {
+            return "InfoSmeEvent";
         };
     };
-    
+
     struct MessageSender
     {
         virtual bool send(std::string abonent, std::string message, 
@@ -176,15 +153,63 @@ namespace smsc { namespace infosme
         }
     };
 
+    class ThreadManager : public ThreadPool
+    {
+    protected:
+
+        log4cpp::Category  &logger;
+        ThreadPool          pool;
+        
+        Mutex               stopLock;
+        bool                bStopping;
+
+    public:
+
+        ThreadManager() : ThreadPool(), 
+            logger(Logger::getCategory("smsc.infosme.ThreadManager")), 
+                bStopping(false) {};
+        virtual ~ThreadManager() {
+            this->Stop();
+            shutdown();
+        };
+        
+        void Stop() {
+            MutexGuard guard(stopLock);
+            bStopping = true;
+        }
+        
+        void startThread(ThreadedTask* task) {
+            MutexGuard guard(stopLock);
+            if (!bStopping && task) startTask(task);
+            else if (task) delete task;
+        }
+        
+        void init(ConfigView* config) // throw(ConfigException)
+        {
+            try {
+                setMaxThreads(config->getInt("max"));
+            } catch (ConfigException& exc) {
+                logger.warn("Maximum thread pool size wasn't specified !");
+            }
+            try {
+                preCreateThreads(config->getInt("init"));
+            } catch (ConfigException& exc) {
+                logger.warn("Precreated threads count in pool wasn't specified !");
+            }
+        };
+    };
+
     class TaskProcessor : public TaskProcessorAdapter, public InfoSmeAdmin, public Thread
     {
     private:
 
         log4cpp::Category  &logger;
 
-        TaskManager   manager;      // for tasks methods execution on thread pool
         DataProvider  provider;     // to obtain registered data source by key
         TaskScheduler scheduler;    // for scheduled messages generation
+
+        ThreadManager taskManager;
+        ThreadManager eventManager;
         
         Hash<Task *>  tasks;
         Mutex         tasksLock;
@@ -218,7 +243,11 @@ namespace smsc { namespace infosme
 
         void resetWaitingTasks();
         void dsInternalCommit(bool force=false);
-
+        
+        friend class EventRunner;
+        virtual void processResponce(int seqNum, bool accepted, bool retry, std::string smscId="");
+        virtual void processReceipt (std::string smscId, bool delivered, bool retry);
+    
     public:
 
         TaskProcessor(ConfigView* config);
@@ -241,9 +270,6 @@ namespace smsc { namespace infosme
             MutexGuard guard(messageSenderLock);
             messageSender = sender;
         }
-        virtual TaskInvokeAdapter& getTaskInvokeAdapter() {
-            return manager;
-        }
 
         virtual bool putTask(Task* task);
         virtual bool addTask(Task* task);
@@ -251,9 +277,27 @@ namespace smsc { namespace infosme
         virtual bool hasTask(std::string taskId);
         virtual TaskGuard getTask(std::string taskId);
         
-        void processResponce(int seqNum, bool accepted, bool retry, std::string smscId="");
-        void processReceipt (std::string smscId, bool delivered, bool retry);
+        virtual void invokeEndProcess(Task* task) {
+            taskManager.startThread(new TaskRunner(task, endProcessMethod));
+        };
+        virtual void invokeBeginProcess(Task* task) {
+            taskManager.startThread(new TaskRunner(task, beginProcessMethod, statistics));
+        };
+        virtual void invokeDropAllMessages(Task* task) {
+            taskManager.startThread(new TaskRunner(task, dropAllMessagesMethod));
+        };
 
+        virtual void invokeProcessResponce(int seqNum, bool accepted, bool retry, std::string smscId="")
+        {
+            eventManager.startThread(new EventRunner(processResponceMethod, *this, 
+                                                     seqNum, accepted, retry, smscId));
+        };
+        virtual void invokeProcessReceipt (std::string smscId, bool delivered, bool retry)
+        {
+            eventManager.startThread(new EventRunner(processReceiptMethod, *this, 
+                                                     smscId, delivered, retry));
+        };
+        
         bool getStatistics(std::string taskId, TaskStat& stat) {
             return (statistics) ? statistics->getStatistics(taskId, stat):false;
         };
