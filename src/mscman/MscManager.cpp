@@ -338,12 +338,12 @@ void MscManagerImpl::report(const char* msc, bool status)
     if (!info)
     {
         info = new MscInfo(msc);
+        if (automaticRegistration == false) info->manualLock = true;
         mscs.Insert(msc, info);
         needInsert = true;
     }
     
-    if (automaticRegistration == false) info->manualLock = true;
-    else if (status) info->automaticLock = false;
+    if (status) info->automaticLock = false;
     else info->automaticLock = (++(info->failureCount) >= failureLimit);
 
     MscInfoChange change((needInsert) ? INSERT:UPDATE, *info);
