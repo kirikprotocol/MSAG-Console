@@ -29,6 +29,8 @@ bool connected=false;
 
 bool hexinput=false;
 
+bool silent=false;
+
 bool vcmode=false;
 
 bool answerMode=false;
@@ -219,6 +221,7 @@ Option options[]={
 {"autoanswer",'b',&autoAnswer},
 {"hexinput",'b',&hexinput},
 {"respstatus",'i',&respStatus},
+{"silent",'b',&silent}
 };
 
 const int optionsCount=sizeof(options)/sizeof(Option);
@@ -532,6 +535,27 @@ void SetSar(SmppSession& ss,const string& args)
 
 void ShowHelp(SmppSession& ss,const string& args);
 
+#ifdef _WIN32
+static void gettimeofday(timeval* tv,void* ptr)
+{
+  __int64 ft;
+  GetSystemTimeAsFileTime((PFILETIME)&ft);
+  tv->tv_sec=ft/10000000;
+  tv->tv_usec=ft/10;
+}
+
+extern "C" int strncasecmp(const char* str,const char* str2,int n)
+{
+  return _strnicmp(str,str2,n);
+}
+
+#undef strcasecmp
+extern "C" int strcasecmp(const char* str,const char* str2)
+{
+  return _stricmp(str,str2);
+}
+#endif
+
 void SleepCmd(SmppSession& ss,const string& args)
 {
   int sec=1,msec=0;
@@ -543,8 +567,10 @@ void SleepCmd(SmppSession& ss,const string& args)
       sec=0;
     };
   }
+#ifndef _WIN32
   sec+=msec/1000;
   msec=msec%1000;
+#endif
   if(vcmode)
   {
     timeval tv;
@@ -558,10 +584,15 @@ void SleepCmd(SmppSession& ss,const string& args)
     }
     return;
   }
+#ifndef _WIN32
   timespec ts;
   ts.tv_sec=sec;
   ts.tv_nsec=msec*1000000;
   nanosleep(&ts,0);
+#else
+  Sleep(msec);
+#endif
+
 }
 
 Mutex hstMtx;
@@ -739,6 +770,29 @@ public:
         return;
       }
 
+      if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
+      {
+        PduDeliverySmResp resp;
+        resp.get_header().set_commandStatus(respStatus);
+        resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+        resp.set_messageId("");
+        resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+        atrans->sendDeliverySmResp(resp);
+      }else
+      {
+        PduDataSmResp resp;
+        resp.get_header().set_commandStatus(respStatus);
+        resp.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
+        resp.set_messageId("");
+        resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+        atrans->sendDataSmResp(resp);
+      }
+
+      if(silent)
+      {
+        return;
+      }
+
       //dump_pdu(pdu);
 
 
@@ -851,10 +905,14 @@ public:
       {
         double r=rand()/RAND_MAX;
         int delay=respDelayMin+(respDelayMax-respDelayMin)*r;
+#ifndef _WIN32
         int sec=delay/1000;
         int msec=delay%1000;
         timestruc_t tv={sec,msec*1000000};
         nanosleep(&tv,0);
+#else
+        Sleep(delay);
+#endif
       }
 
       if(autoAnswer)
@@ -869,24 +927,6 @@ public:
         atrans->submit(sm);
       }
 
-
-      if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
-      {
-        PduDeliverySmResp resp;
-        resp.get_header().set_commandStatus(respStatus);
-        resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
-        resp.set_messageId("");
-        resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-        atrans->sendDeliverySmResp(resp);
-      }else
-      {
-        PduDataSmResp resp;
-        resp.get_header().set_commandStatus(respStatus);
-        resp.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
-        resp.set_messageId("");
-        resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-        atrans->sendDataSmResp(resp);
-      }
     }else
     if(pdu->get_commandId()==SmppCommandSet::SUBMIT_SM_RESP)
     {
@@ -1192,8 +1232,12 @@ int main(int argc,char* argv[])
         }
         if(acnt==0)
         {
+#ifndef _WIN32
           timestruc_t tv={0,10*1000000};
           nanosleep(&tv,0);
+#else
+          Sleep(0);
+#endif
         }
         vcidx++;
         if(vcidx>=vccnt)vcidx=0;
@@ -1251,10 +1295,14 @@ int main(int argc,char* argv[])
           time_t waitstart=time(NULL);
           while(waitResp && time(NULL)-waitstart<waitRespTimeout)
           {
+#ifndef _WIN32
             timespec ts;
             ts.tv_sec=0;
             ts.tv_nsec=10000000;
             nanosleep(&ts,0);
+#else
+            Sleep(10);
+#endif
           }
           if(waitResp)
           {
@@ -1723,7 +1771,11 @@ int main(int argc,char* argv[])
 
     if(receiveOnly)
     {
+#ifndef _WIN32
       while(!stopped){sleep(5);}
+#else
+      while(!stopped){Sleep(5000);}
+#endif
     }
   }
   catch(std::exception& e)
