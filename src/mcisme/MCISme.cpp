@@ -287,16 +287,21 @@ public:
         }
         else
         {
+            const char* out  = message.message.c_str();
             int outLen = message.message.length();
-            int msgLen = outLen*2;
-            std::auto_ptr<char> msgBufGuard(new char[msgLen+2]);
-            char* msgBuf = msgBufGuard.get();
-            ConvertMultibyteToUCS2(message.message.c_str(), outLen, 
-                                   (short *)msgBuf, msgLen, CONV_ENCODING_CP1251);
-            /*smsc_log_debug(logger, "1251 >> UCS2. Message %p Len:%d/%d",
-                           message.message.c_str(), outLen, msgLen);*/
-            short* msgBufConv = (short *)msgBuf;
-            for (int p=0; p<outLen; p++) msgBufConv[p] = htons(msgBufConv[p]);
+            
+            char* msgBuf = 0;
+            int msgDataCoding = DataCoding::LATIN1;
+            if(hasHighBit(out,outLen))
+            {
+                int msgLen = outLen*2;
+                msgBuf = new char[msgLen];
+                ConvertMultibyteToUCS2(out, outLen, (short *)msgBuf, msgLen, CONV_ENCODING_CP1251);
+                short* msgBufConv = (short *)msgBuf;
+                for (int p=0; p<outLen; p++) msgBufConv[p] = htons(msgBufConv[p]);
+                msgDataCoding = DataCoding::UCS2;
+                out = msgBuf; outLen = msgLen;
+            }
 
             time_t smsValidityDate = time(NULL) + processor.getDaysValid()*3600*24;
             
@@ -325,24 +330,26 @@ public:
             sm.get_message().set_replaceIfPresentFlag(0);
 
             sm.get_message().set_smDefaultMsgId(0);
-            sm.get_message().set_dataCoding(DataCoding::UCS2);
+            sm.get_message().set_dataCoding(msgDataCoding);
             
-            if (msgLen > MAX_ALLOWED_MESSAGE_LENGTH)
+            if (outLen > MAX_ALLOWED_MESSAGE_LENGTH)
             {
-                if (msgLen > MAX_ALLOWED_PAYLOAD_LENGTH) {
-                    smsc_log_error(logger, "Message #%lld is too large to send (%d bytes)", message.id, msgLen);
+                if (outLen > MAX_ALLOWED_PAYLOAD_LENGTH) {
+                    smsc_log_error(logger, "Message #%lld is too large to send (%d bytes)", 
+                                   message.id, outLen);
                     return false;
                 }
                 sm.get_optional().set_payloadType(0);
-                sm.get_optional().set_messagePayload(msgBuf, msgLen);
+                sm.get_optional().set_messagePayload(out, outLen);
             } 
-            else sm.get_message().set_shortMessage(msgBuf, msgLen);
+            else sm.get_message().set_shortMessage(out, outLen);
             
             sm.get_header().set_commandLength(sm.size(false));
             sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
             sm.get_header().set_commandStatus(0);
             sm.get_header().set_sequenceNumber(seqNumber);
-            
+
+            if (msgBuf) delete msgBuf;
             asyncTransmitter->sendPdu(&(sm.get_header()));
             TrafficControl::incOutgoing();
         }
