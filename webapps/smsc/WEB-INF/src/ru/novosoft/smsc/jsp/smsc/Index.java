@@ -30,6 +30,7 @@ public class Index extends SmscBean
 	protected String mbServicesReset = null;
 	protected String mbUsersApply = null;
 	protected String mbUsersReset = null;
+	protected String mbSmscApply = null;
 
 	protected int init(List errors)
 	{
@@ -61,8 +62,25 @@ public class Index extends SmscBean
 			return applyServices();
 		else if (mbUsersApply != null)
 			return applyUsers();
+		else if (mbSmscApply != null)
+			return applySmsc();
 		else
 			return RESULT_OK;
+	}
+
+	private int applySmsc()
+	{
+		try
+		{
+			appContext.getSmsc().applyConfig();
+			statuses.setSmscChanged(false);
+			return RESULT_OK;
+		}
+		catch (AdminException e)
+		{
+			logger.error("Couldn't apply new SMSC config", e);
+			return error(SMSCErrors.error.smsc.couldntSave);
+		}
 	}
 
 	private int applyRoutes()
@@ -196,6 +214,11 @@ public class Index extends SmscBean
 	public boolean isUsersChanged()
 	{
 		return statuses.isUsersChanged();
+	}
+
+	public boolean isSmscChanged()
+	{
+		return statuses.isSmscChanged();
 	}
 
 	public String getMbRoutesApply()
@@ -336,5 +359,15 @@ public class Index extends SmscBean
 	public void setMbUsersReset(String mbUsersReset)
 	{
 		this.mbUsersReset = mbUsersReset;
+	}
+
+	public String getMbSmscApply()
+	{
+		return mbSmscApply;
+	}
+
+	public void setMbSmscApply(String mbSmscApply)
+	{
+		this.mbSmscApply = mbSmscApply;
 	}
 }

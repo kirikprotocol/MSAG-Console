@@ -404,7 +404,7 @@ public class Smsc extends Service
 		}
 	}
 
-	private void saveSmscConfig(Config config) throws AdminException
+	public synchronized void saveSmscConfig(Config config) throws AdminException
 	{
 		try
 		{
@@ -431,12 +431,10 @@ public class Smsc extends Service
 		}
 	}
 
-	public synchronized void applyConfig(Config config)
+	public synchronized void applyConfig()
 			throws AdminException
 	{
 		checkComponents();
-		saveSmscConfig(config);
-		if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
-			call(smsc_component, apply_smsc_config_method, Type.Types[Type.StringType], new HashMap());
+		call(smsc_component, apply_smsc_config_method, Type.Types[Type.StringType], new HashMap());
 	}
 }

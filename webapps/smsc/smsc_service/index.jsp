@@ -45,7 +45,7 @@ function showhide(elem)
 </script>
 <dl>
 <dt class=secTitle onclick='showhide(this)'>Logger</dt>
-<dd>
+<dd style="display:none">
 <%int row = 0;%>
 <table class=secRep cellspacing=1 width="100%">
 <col width=180px>
@@ -56,7 +56,7 @@ function showhide(elem)
 </table>
 </dd>
 <dt class=secTitle onclick='showhide(this)'>Administartion</dt>
-<dd>
+<dd style="display:none">
 <%row=0;%>
 <table class=secRep cellspacing=1 width="100%">
 <col width=180px>
@@ -71,7 +71,7 @@ function showhide(elem)
 </table>
 </dd>
 <dt class=secTitle onclick='showhide(this)'>Message store</dt>
-<dd>
+<dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
 <col width=180px>
@@ -82,7 +82,7 @@ function showhide(elem)
 </table>
 <dl>
 <dt class=secTitle onclick='showhide(this)'>Storage</dt>
-<dd>
+<dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
 <col width=180px>
@@ -101,7 +101,7 @@ function showhide(elem)
 </table>
 </dd>
 <dt class=secTitle onclick='showhide(this)'>Archive</dt>
-<dd>
+<dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
 <col width=180px>
@@ -124,7 +124,7 @@ function showhide(elem)
 </table>
 <dl>
 <dt class=secTitle onclick='showhide(this)'>Cleaner</dt>
-<dd>
+<dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
 <col width=180px>
@@ -141,7 +141,7 @@ function showhide(elem)
 </dl>
 </dd>
 <dt class=secTitle onclick='showhide(this)'>Billing</dt>
-<dd>
+<dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
 <col width=180px>
@@ -160,7 +160,7 @@ function showhide(elem)
 </table>
 </dd>
 <dt class=secTitle onclick='showhide(this)'>Cache</dt>
-<dd>
+<dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
 <col width=180px>
@@ -175,7 +175,7 @@ function showhide(elem)
 </table>
 </dd>
 <dt class=secTitle onclick='showhide(this)'>Connections</dt>
-<dd>
+<dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
 <col width=180px>
@@ -192,7 +192,7 @@ function showhide(elem)
 </dl>
 </dd>
 <dt class=secTitle onclick='showhide(this)'>map</dt>
-<dd>
+<dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
 <col width=180px>
@@ -207,7 +207,7 @@ function showhide(elem)
 </table>
 </dd>
 <dt class=secTitle onclick='showhide(this)'>smpp</dt>
-<dd>
+<dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
 <col width=180px>
@@ -230,7 +230,7 @@ function showhide(elem)
 </table>
 </dd>
 <dt class=secTitle onclick='showhide(this)'>core</dt>
-<dd>
+<dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
 <col width=180px>
@@ -273,7 +273,7 @@ function showhide(elem)
 </table>
 <dl>
 <dt class=secTitle onclick='showhide(this)'>performance</dt>
-<dd>
+<dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
 <col width=180px>
@@ -290,7 +290,7 @@ function showhide(elem)
 </dl>
 </dd>
 <dt class=secTitle onclick='showhide(this)'>Abonent Info</dt>
-<dd>
+<dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
 <col width=180px>
@@ -317,7 +317,7 @@ function showhide(elem)
 </table>
 </dd>
 <dt class=secTitle onclick='showhide(this)'>profiler</dt>
-<dd>
+<dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
 <col width=180px>
@@ -364,7 +364,7 @@ function showhide(elem)
 </table>
 </dd>
 <dt class=secTitle onclick='showhide(this)'>sms</dt>
-<dd>
+<dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
 <col width=180px>
@@ -375,10 +375,10 @@ function showhide(elem)
 </table>
 </dd>
 <dt class=secTitle onclick='showhide(this)'>StartupLoader</dt>
-<dd>
+<dd style="display:none">
 	<dl>
 	<dt class=secTitle onclick='showhide(this)'>DataSourceDrivers</dt>
-	<dd>
+	<dd style="display:none">
 	<%
 		for (Iterator i = bean.getDatasourceDrivers().iterator(); i.hasNext();)
 		{
@@ -386,7 +386,7 @@ function showhide(elem)
 			%>
 		<dl>
 		<dt class=secTitle onclick='showhide(this)'><%=name%></dt>
-		<dd>
+		<dd style="display:none">
 			<table class=secRep cellspacing=1 width="100%">
 			<%row=0;%>
 			<col width=180px>
@@ -406,7 +406,7 @@ function showhide(elem)
 	</dl>
 </dd>
 <dt class=secTitle onclick='showhide(this)'>DataSource</dt>
-<dd>
+<dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
 <col width=180px>
@@ -441,7 +441,7 @@ if (bean.getStatus() != ServiceInfo.STATUS_RUNNING)
 }
 else
 {
-%><input class=btn type=submit name=mbSave value="Apply" title="Apply new config"><%
+%><input class=btn type=submit name=mbSave value="Save" title="Save new config"><%
 }%>
 <input class=btn type=submit name=mbReset value="Reset" title="Reset" onclick='clickCancel()'>
 </div>

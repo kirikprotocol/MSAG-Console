@@ -148,6 +148,7 @@ namespace smsc {
           __trace2__("processCancelMessage: %llx[%s][%s]\n", id, src_, dst_);
           #endif
           smsc_app_runner->getApp()->cancelSms(id, src, dst);
+          logger.info("message %s[%s][%s] canceled", sid.c_str(), ssrc.c_str(), sdst.c_str());
         }
         catch (...)
         {

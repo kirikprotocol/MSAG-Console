@@ -34,4 +34,8 @@ public interface Statuses
 	boolean isUsersChanged();
 
 	void setUsersChanged(boolean usersChanged);
+
+	boolean isSmscChanged();
+
+	void setSmscChanged(boolean smscChanged);
 }

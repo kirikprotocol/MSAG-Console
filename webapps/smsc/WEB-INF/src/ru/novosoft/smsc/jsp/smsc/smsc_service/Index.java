@@ -77,12 +77,13 @@ public class Index extends SmscBean
 		}
 		try
 		{
-			appContext.getSmsc().applyConfig(config);
+			appContext.getSmsc().saveSmscConfig(config);
+			appContext.getStatuses().setSmscChanged(true);
 		}
 		catch (AdminException e)
 		{
-			logger.error("Couldn't apply new SMSC config", e);
-			return error(SMSCErrors.error.smsc.couldntApply);
+			logger.error("Couldn't save new SMSC config", e);
+			return error(SMSCErrors.error.smsc.couldntSave);
 		}
 		return RESULT_OK;
 	}

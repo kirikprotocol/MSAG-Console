@@ -93,6 +93,14 @@ if (request.isUserInRole("users"))
 	<td><%=bean.isUsersChanged() ? "<span class=Cf00>changed</span>" : "clear"%></td>
 	<td><input class=btn type=submit name=mbUsersApply value="Apply" <%=!bean.isUsersChanged() ? "disabled" : ""%>></td>
 </tr>
+<%}
+if (request.isUserInRole("smsc_service"))
+{%>
+<tr class=row<%=(rowN++)&1%>>
+	<th>SMS Center</th>
+	<td><%=bean.isSmscChanged() ? "<span class=Cf00>changed</span>" : "clear"%></td>
+	<td><input class=btn type=submit name=mbSmscApply value="Apply" <%=!bean.isSmscChanged() ? "disabled" : ""%>></td>
+</tr>
 <%}%>
 </tbody>
 </table>

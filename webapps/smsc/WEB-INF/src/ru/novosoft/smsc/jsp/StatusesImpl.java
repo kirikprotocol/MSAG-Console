@@ -14,6 +14,7 @@ public class StatusesImpl implements Statuses
 	private boolean hostsChanged = false;
 	private boolean servicesChanged = false;
 	private boolean usersChanged = false;
+	private boolean smscChanged = false;
 
 	public boolean isRoutesChanged()
 	{
@@ -83,5 +84,15 @@ public class StatusesImpl implements Statuses
 	public void setUsersChanged(boolean usersChanged)
 	{
 		this.usersChanged = usersChanged;
+	}
+
+	public boolean isSmscChanged()
+	{
+		return smscChanged;
+	}
+
+	public void setSmscChanged(boolean smscChanged)
+	{
+		this.smscChanged = smscChanged;
 	}
 }

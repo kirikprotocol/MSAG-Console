@@ -18,7 +18,7 @@ function openPerfMon()
 <tr><td class=tmenu><%
 	%><a ID=MENU0_HOME href="<%=CPATH%>">Home</a><%
 	%><a ID=MENU0_SMSC href="<%=CPATH%>/smsc_service/index.jsp">SMSC</a><%
-	%><a ID=MENU0_SMSVIEW href="<%=CPATH%>/perfmon/index.jsp" target="SMSC Perfomance monitor" onclick="return openPerfMon();">Monitor</a><%
+	%><a ID=MENU0_PERFMON href="<%=CPATH%>/perfmon/index.jsp" target="SMSC Perfomance monitor" onclick="return openPerfMon();">Monitor</a><%
 	%><a ID=MENU0_SMSVIEW href="<%=CPATH%>/smsview/index.jsp">SMS view</a><%
 	%><a ID=MENU0_SMSSTAT href="<%=CPATH%>/smsstat/index.jsp">Statistics</a><%
 	%><a ID=MENU0_USERS href="<%=CPATH%>/users/index.jsp">Users</a><%
