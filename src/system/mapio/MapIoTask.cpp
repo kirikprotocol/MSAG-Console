@@ -90,7 +90,7 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
 USHORT_T Et96MapDelimiterInd(
   ET96MAP_LOCAL_SSN_T lssn,
   ET96MAP_DIALOGUE_ID_T dialogId,
-  UCHAR_T priorityOrder prior)
+  UCHAR_T priorityOrder)
 {
   __trace2__("MAP::Et96MapDelimiterInd lssn 0x%hx, dialogId 0x%hx",lssn,dialogId);
 }
