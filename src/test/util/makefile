@@ -1,4 +1,4 @@
-PACKAGE := test.store
+PACKAGE := test.util
 
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)
