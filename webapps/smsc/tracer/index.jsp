@@ -4,7 +4,9 @@
                  ru.novosoft.smsc.util.StringEncoderDecoder,
                  java.util.List,
                  java.util.Hashtable,
-                 java.util.Enumeration"%>
+                 java.util.Enumeration,
+                 ru.novosoft.smsc.jsp.SMSCJspException,
+                 ru.novosoft.smsc.jsp.SMSCErrors"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.tracer.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -33,15 +35,15 @@
 <div class=content>
 <div class=page_subtitle>Tracing parameters</div>
 <table class=properties_list cell>
-  <tr class=row0>
-    <th width="30%">Destination Address:</th>
-    <td width="70%" nowrap><input class=txt type="text" name="dstAddress"
-        value="<%=StringEncoderDecoder.encode(bean.getDstAddress())%>" validation="mask" size=25 maxlength=25></td>
-  </tr>
   <tr class=row1>
     <th width="30%">Source Address:</th>
     <td width="70%" nowrap><input class=txt type="text" name="srcAddress"
         value="<%=StringEncoderDecoder.encode(bean.getSrcAddress())%>" validation="mask" size=25 maxlength=25></td>
+  </tr>
+  <tr class=row0>
+    <th width="30%">Destination Address:</th>
+    <td width="70%" nowrap><input class=txt type="text" name="dstAddress"
+        value="<%=StringEncoderDecoder.encode(bean.getDstAddress())%>" validation="mask" size=25 maxlength=25></td>
   </tr>
   <tr class=row0>
     <th width="30%">Source System Id:</th>

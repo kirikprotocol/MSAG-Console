@@ -54,7 +54,7 @@ if (isServiceStatusNeeded || (ServiceIDForShowStatus != null && ServiceIDForShow
 		<table cellspacing=0 cellpadding=0>
 		<tr>
 			<td width=236><IMG SRC="img/smsc_04.jpg" WIDTH=236 HEIGHT=45 ALT=""></td>
-			<td bgcolor="#161E49"><span style="color: #6F77A3; font: bold 11px; vertical-align: -10px;">Preliminary&nbsp;Beta&nbsp;Version</span></td>
+			<td bgcolor="#161E49"><span style="color: #6F77A3; font: bold 11px; vertical-align: -10px;">Version&nbsp;1.0</span></td>
 			<td width=12 background="img/smsc_06.jpg"></td>
 		</tr>
 		</table>

@@ -52,7 +52,7 @@ public class HostsManager
 	 * @throws AdminException
 	 */
 	public synchronized Daemon addHost(String host, int port) throws AdminException
-	{ //? add smes
+	{
 		final Daemon daemon = daemonManager.add(host, port, smeManager);
 		for (Iterator i = daemon.getServiceIds(smeManager).iterator(); i.hasNext();)
 		{
