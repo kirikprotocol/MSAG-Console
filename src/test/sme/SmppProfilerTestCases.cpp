@@ -81,7 +81,11 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& _text,
 		//static const char whiteSpace[] = {' ', '\n'};
 		//static const int whiteSpaceSize = sizeof(whiteSpace);
 		text.insert(0, string(rand0(2), ' '));
-		text.replace(text.find(' '), 1, string(rand1(2), ' ')); //первый пробел
+		int pos = text.find(' '); //первый пробел
+		if (pos != string::npos)
+		{
+			text.replace(pos, 1, string(rand1(2), ' '));
+		}
 		text.append(string(rand0(2), ' '));
 		//перекодирование
 		int msgLen;
@@ -408,8 +412,19 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	}
 	SmsPduWrapper pdu(header, 0);
 	__require__(pdu.isDeliverSm());
-	const string text = decode(pdu.get_message().get_shortMessage(),
-		pdu.get_message().size_shortMessage(), pdu.getDataCoding(), false);
+	const char* msg;
+	int msgLen;
+	if (pdu.get_optional().has_messagePayload())
+	{
+		msg = pdu.get_optional().get_messagePayload();
+		msgLen = pdu.get_optional().size_messagePayload();
+	}
+	else
+	{
+		msg = pdu.get_message().get_shortMessage();
+		msgLen = pdu.get_message().size_shortMessage();
+	}
+	const string text = decode(msg, msgLen, pdu.getDataCoding(), false);
 	if (!monitor->pduData->objProps.count("profilerTc.output"))
 	{
 		AckText* ack = getExpectedResponse(monitor, header, recvTime);
@@ -431,7 +446,7 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	__tc__("updateProfile.ack.checkFields");
 	SmppOptional opt;
 	opt.set_userMessageReference(pdu.getMsgRef());
-	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 0);
+	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional(), OPT_MSG_PAYLOAD), 0);
 	__tc_ok_cond__;
 
 	__trace2__("profiler ack text: output:\n%s\nexpected:\n%s\n",

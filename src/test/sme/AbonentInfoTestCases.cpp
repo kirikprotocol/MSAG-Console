@@ -340,8 +340,19 @@ void AbonentInfoTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	SmsPduWrapper pdu(header, 0);
 	__require__(pdu.isDeliverSm());
 	//декодировать
-	const string text = decode(pdu.get_message().get_shortMessage(),
-		pdu.get_message().size_shortMessage(), pdu.getDataCoding(), false);
+	const char* msg;
+	int msgLen;
+	if (pdu.get_optional().has_messagePayload())
+	{
+		msg = pdu.get_optional().get_messagePayload();
+		msgLen = pdu.get_optional().size_messagePayload();
+	}
+	else
+	{
+		msg = pdu.get_message().get_shortMessage();
+		msgLen = pdu.get_message().size_shortMessage();
+	}
+	const string text = decode(msg, msgLen, pdu.getDataCoding(), false);
 	if (!monitor->pduData->objProps.count("abonentInfoTc.output"))
 	{
 		AckText* ack = getExpectedResponse(monitor, text, recvTime);
