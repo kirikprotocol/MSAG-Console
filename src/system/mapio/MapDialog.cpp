@@ -1153,7 +1153,7 @@ void MapProxy::putCommand(const SmscCommand& cmd)
     ET96MAP_DIALOGUE_ID_T dialogid = (ET96MAP_DIALOGUE_ID_T)did;
     if ( did > 0xffff ) {
       __trace2__("MAP::QueueProcessing: SMSC request");
-      dialog = MapDialogContainer::getInstance()->createSMSCDialog(did,SSN,sms->getDestinationAddress().value);
+      dialog = MapDialogContainer::getInstance()->createSMSCDialog(did,SSN,cmd->get_sms()->getDestinationAddress().value);
       if ( dialog == 0 ) {
         __trace2__("MAP::QueryProcessing: can't create SMSC->MS dialog, locked!");
         SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",did,MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,0));

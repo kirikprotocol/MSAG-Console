@@ -255,7 +255,7 @@ public:
     MapDialog* item = 0;
     if ( hash.Get(dialogueid,item) ){
       __trace2__("MAP:: drop dialog 0x%p for dialogid 0x%x",item,dialogueid);
-      lock_map.Remove(item->getAbonent());
+      lock_map.Delete(item->getAbonent());
       hash.Delete(dialogueid);
       delete item;
     }
