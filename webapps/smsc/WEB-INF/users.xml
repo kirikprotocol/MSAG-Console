@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="windows-1251"?>
+<?xml version="1.0" encoding="Cp1252"?>
 <!DOCTYPE users SYSTEM "file://users.dtd">
 
 <users>
-	<user login="a" password="qwe" firstName="Игорь" lastName="Каляткин" dept="Siberon" workPhone="none" homePhone="none" cellPhone="910698" email="igork@novosoft.ru">
+	<user login="a" password="qwe" firstName="?????" lastName="????????" dept="Siberon" workPhone="none" homePhone="none" cellPhone="910698" email="igork@novosoft.ru">
 		<role name="aliases"/>
 		<role name="apply"/>
 		<role name="dl"/>

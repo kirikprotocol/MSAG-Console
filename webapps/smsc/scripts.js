@@ -235,3 +235,65 @@ function noValidationSubmit(buttonElem)
   opForm.submit();
   return false;
 }
+
+function findPosX(o)
+{
+	var x=0;
+	if(o.offsetParent)
+	{
+		while(o.offsetParent)
+		{
+			x+=o.offsetLeft;
+			o=o.offsetParent;
+		}
+	}
+	else if(o.x)
+		x+=o.x;
+	return x;
+}
+function findPosY(o)
+{
+	var y=0;
+	if(o.offsetParent)
+	{
+		while(o.offsetParent)
+		{
+			y+=o.offsetTop;
+			o=o.offsetParent;
+		}
+	}
+	else if(o.y)
+		y+=o.y;
+	return y;
+}
+function findPosWidth(o)
+{
+	var x=0;
+	if(o.offsetParent)
+	{
+		while(o.offsetParent)
+		{
+			x+=o.offsetWidth;
+			o=o.offsetParent;
+		}
+	}
+	else if(o.width)
+		x+=o.width;
+	return x;
+}
+function findPosHeight(o)
+{
+	var x=0;
+	if(o.offsetParent)
+	{
+		while(o.offsetParent)
+		{
+			x+=o.offsetHeight;
+			o=o.offsetParent;
+		}
+	}
+	else if(o.height)
+		x+=o.height;
+	return x;
+}
+

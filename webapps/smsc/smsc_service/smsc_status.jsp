@@ -6,19 +6,19 @@ out.println();
 switch (bean.getServiceStatus(Constants.SMSC_SME_ID))
 {
 	case ServiceInfo.STATUS_RUNNING:
-		%><span class=C080>running</span><%
+		%><span >running</span><%
 		break;
 	case ServiceInfo.STATUS_STOPPING:
-		%><span class=C008>stopping</span><%
+		%><span >stopping</span><%
 		break;
 	case ServiceInfo.STATUS_STOPPED:
-		%><span class=C800>stopped</span><%
+		%><span >stopped</span><%
 		break;
 	case ServiceInfo.STATUS_STARTING:
-		%><span class=C0F0>starting</span><%
+		%><span >starting</span><%
 		break;
 	default:
-		%><span class=C000>undefined</span><%
+		%><span >undefined</span><%
 		break;
 }
 %>

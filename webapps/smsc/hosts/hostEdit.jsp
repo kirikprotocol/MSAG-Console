@@ -35,8 +35,8 @@ MENU0_SELECTION = "MENU0_HOSTS";
 	<td><input class=txt name=port value="<%=bean.getPort()%>" validation="port" onkeyup="resetValidation(this)"></td>
 </tr>
 </table><div class=secButtons>
-<input type="submit" name="mbSave"   value="Save"   class="btn64" title="Save information">
-<input type="submit" name="mbCancel" value="Cancel" class="btn64" title="Return to host view" onClick="clickCancel()">
+<input type="submit" name="mbSave"   value="Save"   class="btn" title="Save information">
+<input type="submit" name="mbCancel" value="Cancel" class="btn" title="Return to host view" onClick="clickCancel()">
 </div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

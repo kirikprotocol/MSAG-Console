@@ -27,12 +27,22 @@ switch(bean.process(appContext, errorMessages, request, loginedUserPrincipal))
 		STATUS.append("<span class=CF00>Error</span>");
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction));
 }
-%><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-SMSC is <%=smscStatus(bean.getStatus(), "SMSC_STATUS_ELEM_ID")%>
-<div class=secButtons>
-<input class=btn type=submit id=mbStart name=mbStart value="Start" title="Start SMSC" <%=bean.getStatus() != ServiceInfo.STATUS_STOPPED ? "disabled" : ""%>>
-<input class=btn type=submit id=mbStop name=mbStop value="Stop" title="Stop  SMSC" <%=bean.getStatus() != ServiceInfo.STATUS_RUNNING ? "disabled" : ""%>>
-<script>
+%><%@ include file="/WEB-INF/inc/html_3_header.jsp"%><%@ include file="/WEB-INF/inc/page_menu.jsp"%>
+<table cellpadding=0 cellspacing=0 height=30px class=smsc_status>
+<tr>
+	<th width=166px background="<%=CPATH%>/img/smsc_17.jpg">SMSC</th>
+	<td >SMSC&nbsp;is&nbsp;<%=smscStatus(bean.getStatus(), "SMSC_STATUS_ELEM_ID")%></td>
+	<td width=12px background="<%=CPATH%>/img/smsc_19.jpg"></td>
+</tr>
+</table><%
+page_menu_begin(out);
+page_menu_button(out, "mbSave",  "Save",  "Save config");
+page_menu_button(out, "mbReset", "Reset", "Reset", "clickCancel()");
+page_menu_space(out);
+page_menu_button(out, "mbStart", "Start", "Start SMSC", bean.getStatus() == ServiceInfo.STATUS_STOPPED);
+page_menu_button(out, "mbStop",  "Stop",  "Stop SMSC", bean.getStatus() == ServiceInfo.STATUS_RUNNING);
+page_menu_end(out);
+%><script>
 function refreshStartStopButtonsStatus()
 {
 	document.all.mbStart.disabled = (document.all.SMSC_STATUS_ELEM_ID.innerText != "stopped");
@@ -41,9 +51,9 @@ function refreshStartStopButtonsStatus()
 }
 refreshStartStopButtonsStatus();
 </script>
-</div>
 <%-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ SMSC Config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<br><h1>SMSC Configuration</h1>
+<div class=content>
+<div class=secSmsc>SMSC Configuration</div>
 <script>
 function showhide(sectionId)
 {
@@ -69,8 +79,8 @@ function showhide(sectionId)
 		out.print(sectionName);
 		out.print("</div>");
 
-		out.print("<table border=0 cellspacing=0 cellpadding=0 width=100% id=\"" + sectionId + "_value\" " + (opened ? "" : "style=\"display:none\"") + ">");
-		out.print("<col width='20px'/>");
+		out.print("<table cellspacing=0 cellpadding=0 id=\"" + sectionId + "_value\" " + (opened ? "" : "style=\"display:none\"") + ">");
+		out.print("<col width='56px'/>");
 
 		out.print("<tr><th/><td>");
 	}
@@ -86,14 +96,14 @@ function showhide(sectionId)
 	void startParams(JspWriter out) throws IOException
 	{
 		row = 0;
-		out.print("<table class=secRep cellspacing=1 width='100%'>");
-		out.print("<col width=180px>");
+		out.print("<table cellspacing=1 width='100%'>");
+		out.print("<col width=150px>");
 	}
 	void param(JspWriter out, String label, String id, String value) throws IOException
 	{
 		out.print("<tr class=row" + ((row++) & 1) + ">");
       out.print("<th class=label nowrap>" + label + ":</th>");
-		out.print("<td><input class=txtW name=\"" + id + "\" value=\"" + StringEncoderDecoder.encode(value) + "\"></td>");
+		out.print("<td><input class=txt name=\"" + id + "\" value=\"" + StringEncoderDecoder.encode(value) + "\"></td>");
 		out.print("</tr>");
 	}
 	void param(JspWriter out, String label, String id, int value) throws IOException
@@ -275,15 +285,12 @@ function showhide(sectionId)
 			param(out, "failure limit",          "MscManager.failureLimit",          bean.getIntParam( "MscManager.failureLimit"));
 		finishParams(out);
 	finishSection(out);
-%><div class=secButtons><%
-if (bean.getStatus() != ServiceInfo.STATUS_RUNNING)
-{
-	%><input class=btn type=submit name=mbSave value="Save" title="Save config"><%
-}
-else
-{
-	%><input class=btn type=submit name=mbSave value="Save" title="Save new config"><%
-}
-%><input class=btn type=submit name=mbReset value="Reset" title="Reset" onclick='clickCancel()'></div><%@
+%></div><%
+page_menu_begin(out);
+page_menu_button(out, "mbSave",  "Save",  "Save config");
+page_menu_button(out, "mbReset", "Reset", "Reset", "clickCancel()");
+page_menu_space(out);
+page_menu_end(out);
+%><%@
  include file="/WEB-INF/inc/html_3_footer.jsp"%><%@
  include file="/WEB-INF/inc/code_footer.jsp"%>
