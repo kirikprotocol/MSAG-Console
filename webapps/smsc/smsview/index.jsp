@@ -140,6 +140,7 @@ if (lastIndex >= bean.getTotalSize() || bean.getPageSize() < 0)
 
 {int rowN=0; for (int cnt=firstIndex; cnt<=lastIndex; cnt++, rowN++) {
   SmsRow row = bean.getRow(cnt-1);
+  if (row == null) { rowN--; continue; }
 %><tr class=row<%=rowN&1%>0>
       <td nowrap valign=top style="text-align: right">
         <%= row.getIdLong()%><br>

@@ -109,22 +109,21 @@ public class SmsViewFormBean extends IndexBean
 
 	public int processQuery()
 	{
-    rows = null;
-    try {
-      rows = view.getSmsSet(query);
-      startPosition = 0;
-      totalSize = rows.getRowsCount();
-      processResortAndNavigate(true);
-      return RESULT_OK;
-    } catch (AdminException ex) {
-      ex.printStackTrace();
-      return RESULT_ERROR;
-    }
+        rows = null; startPosition = 0; totalSize = 0;
+        try {
+          rows = view.getSmsSet(query);
+          startPosition = 0;
+          totalSize = rows.getRowsCount();
+          processResortAndNavigate(true);
+          return RESULT_OK;
+        } catch (AdminException ex) {
+          ex.printStackTrace();
+          return RESULT_ERROR;
+        }
 	}
     public int clearQuery()
     {
-        rows = null; startPosition = 0;
-        totalSize = 0;
+        rows = null; startPosition = 0; totalSize = 0;
         query = new SmsQuery();
         processResortAndNavigate(true);
         return RESULT_OK;
