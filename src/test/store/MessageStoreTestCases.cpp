@@ -33,17 +33,31 @@ Category& MessageStoreTestCases::getLog()
 	return log;
 }
 
-#define __set_str__(setter, len) \
-	auto_ptr<char> tmp_##setter = rand_char(len); \
-	sms.setter(tmp_##setter.get());
+#define __set_str__(field, len) \
+	auto_ptr<char> tmp_##field = rand_char(len); \
+	sms.set##field(tmp_##field.get()); \
+	char res_##field[len + 1]; \
+	sms.get##field(res_##field); \
+	if (strcmp(res_##field, tmp_##field.get())) { \
+		__trace2__("%s: set = %s, get = %s", #field, tmp_##field.get(), res_##field); \
+	}
 
 #define __set_int_body_tag__(tagName, value) \
-	sms.getMessageBody().setIntProperty(Tag::tagName, value);
+	uint32_t tmp_##tagName = value; \
+	__trace__("set_int_body_tag: " #tagName); \
+	sms.getMessageBody().setIntProperty(Tag::tagName, tmp_##tagName); \
+	if (sms.getMessageBody().getIntProperty(Tag::tagName) != tmp_##tagName) { \
+		__trace2__("set_int_body_tag: tag = " #tagName ", set = %d, get = %d", tmp_##tagName, sms.getMessageBody().getIntProperty(Tag::tagName)); \
+	}
 
 #define __set_str_body_tag__(tagName, len) \
 	auto_ptr<char> tmp_##tagName = rand_char(len); \
-	sms.getMessageBody().setStrProperty(Tag::tagName, tmp_##tagName.get());
-	
+	__trace__("set_str_body_tag: " #tagName); \
+	sms.getMessageBody().setStrProperty(Tag::tagName, tmp_##tagName.get()); \
+	if (strcmp(sms.getMessageBody().getStrProperty(Tag::tagName).c_str(), tmp_##tagName.get())) { \
+		__trace2__("set_str_body_tag: tag = " #tagName ", set = %s, get = %s", tmp_##tagName.get(), sms.getMessageBody().getStrProperty(Tag::tagName).c_str()); \
+	}
+
 TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 {
 	TCSelector s(num, 15);
@@ -462,7 +476,7 @@ TCResult* MessageStoreTestCases::storeAssertSms(int num)
 					break;
 				case 13: //serviceType больше максимальной длины
 					{
-						__set_str__(setEServiceType, MAX_SERVICE_TYPE_LENGTH + 1);
+						__set_str__(EServiceType, MAX_SERVICE_TYPE_LENGTH + 1);
 					}
 					break;
 				case 14: //receipted_message_id больше максимальной длины

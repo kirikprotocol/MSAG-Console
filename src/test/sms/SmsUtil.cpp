@@ -2,6 +2,7 @@
 #include "test/util/Util.hpp"
 #include <cstring>
 #include <map>
+#include <sstream>
 
 namespace smsc {
 namespace test {
@@ -10,6 +11,7 @@ namespace sms {
 using namespace std;
 using namespace smsc::sms;
 using namespace smsc::test::util;
+using smsc::test::sms::operator<<;
 
 bool SmsUtil::compareAddresses(const Address& a1, const Address& a2)
 {
@@ -95,10 +97,22 @@ vector<int> SmsUtil::compareMessageBodies(const Body& b1, const Body& b2)
 }
 
 #define __compare__(getter, errCode) \
-	if (_sms1->getter() != _sms2->getter()) { res.push_back(errCode); }
+	if (_sms1->getter() != _sms2->getter()) { \
+		ostringstream s1, s2; \
+		s1 << _sms1->getter(); \
+		s2 << _sms2->getter(); \
+		__trace2__("%s: %s != %s", #getter, s1.str().c_str(), s2.str().c_str()); \
+		res.push_back(errCode); \
+	}
 
 #define __compare_addr__(getter, errCode) \
-	if (!compareAddresses(_sms1->getter(), _sms2->getter())) { res.push_back(errCode); }
+	if (!compareAddresses(_sms1->getter(), _sms2->getter())) { \
+		ostringstream s1, s2; \
+		s1 << _sms1->getter(); \
+		s2 << _sms2->getter(); \
+		__trace2__("%s: %s != %s", #getter, s1.str().c_str(), s2.str().c_str()); \
+		res.push_back(errCode); \
+	}
 	
 #define __compare_desc__(getter, errCode) \
 	if (!compareDescriptors(_sms1->getter(), _sms2->getter())) { res.push_back(errCode); }

@@ -23,10 +23,9 @@ using log4cpp::Category;
 using smsc::util::Logger;
 using smsc::test::sms::SmsUtil;
 
-void executeTest()
+void executeTest(MessageStoreTestCases& tc)
 {
 	Category& log = Logger::getCategory("smsc.test.store.Test");
-	MessageStoreTestCases tc;
 
 	SMSId id, id2, id3, id4, id5;
 	SMS sms, sms2, sms3, sms4, sms5;
@@ -35,9 +34,7 @@ void executeTest()
 storeCorrectSms(13)->
 replaceIncorrectSms(3){3}
 */
-	cout << *tc.storeCorrectSms(&id, &sms, 11) << endl;
-	cout << *tc.changeExistentSmsStateEnrouteToFinal(id, &sms, 6) << endl;
-	cout << *tc.deleteExistentSms(id) << endl;
+	cout << *tc.storeCorrectSms(&id, &sms, 12) << endl;
 /*
 	cout << *tc.storeCorrectSms(&id, &sms, 1) << endl;
 	cout << *tc.storeCorrectSms(&id2, &sms2, id, sms, 1) << endl;
@@ -65,7 +62,8 @@ int main(int argc, char* argv[])
 	{
 		Manager::init("config.xml");
 		StoreManager::startup(Manager::getInstance());
-		executeTest();
+		MessageStoreTestCases tc(StoreManager::getMessageStore()); //throws exception
+		executeTest(tc);
 		StoreManager::shutdown();
 		exit(0);
 	}
