@@ -1581,6 +1581,10 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
         dialog->memoryExceeded = true;
         throw MAPDIALOG_TEMP_ERROR("MAP::memory exceeded");
       }
+      if ( errorForwardSMmt_sp->errorCode == 34 ) /*System failure*/
+      {
+        throw MAPDIALOG_TEMP_ERROR(FormatText("errorForwardSMmt_sp->errorCode == 0x%x",errorForwardSMmt_sp->errorCode));
+      }
       throw MAPDIALOG_FATAL_ERROR(FormatText("errorForwardSMmt_sp->errorCode == 0x%x",errorForwardSMmt_sp->errorCode));
     }
     __trace2__("MAP::%s: 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
