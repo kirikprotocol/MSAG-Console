@@ -371,6 +371,10 @@ log4cpp::Category* MAPSTATS_GetLoggerHour() {
   static log4cpp::Category* logger = &smsc::util::Logger::getCategory("map.stat.hour");
   return logger;
 }
+log4cpp::Category* MAPSTATS_GetLoggerDlg() {
+  static log4cpp::Category* logger = &smsc::util::Logger::getCategory("map.stat.hour");
+  return logger;
+}
 
 static time_t MAPSTATS_last_time_sec = 0;
 static time_t MAPSTATS_last_time_min = 0;
@@ -389,6 +393,19 @@ enum {
   MAPSTATS__MIN,
   MAPSTATS__HOUR,
 };
+
+void MAPSTATS_DumpDialogLC(MapDialog* dialog)
+{
+  struct timeval tv;
+  gettimeofday( &tv, 0 );
+  long long maked_mks = dialog->maked_at_mks;
+  long long mks = ((long long)tv.tv_sec)*1000*1000 + (long long)tv.tv_usec;
+  long long cl = mks-maked_mks;
+  MAPSTATS_GetLoggerDlg()->info("id=%ld sec=%ld usec=%ld src=%s dst=%s",
+    dialog,long(cl/(1000*1000)),long(cl%(1000*1000)),
+    dialog->sms.get()?dialog->sms->getOriginatingAddress().value:"???",
+    dialog->sms.get()?dialog->sms->getDestinationAddress().value:"???");
+}
 
 void MAPSTATS_Flush(unsigned x,bool dump)
 {
