@@ -92,6 +92,7 @@ public class PerfServerRunner extends Thread {
 
     protected void readSnap(InputStream is, PerfSnap snap)
             throws IOException {
+        int numOfCounters = is.read()&0xFF;
         snap.last[PerfSnap.IDX_SUBMIT] = (long) readNetworkInt(is);
         snap.avg[PerfSnap.IDX_SUBMIT] = (long) readNetworkInt(is);
         snap.total[PerfSnap.IDX_SUBMIT] = readNetworkLong(is);
@@ -103,6 +104,10 @@ public class PerfServerRunner extends Thread {
         snap.last[PerfSnap.IDX_DELIVER] = (long) readNetworkInt(is);
         snap.avg[PerfSnap.IDX_DELIVER] = (long) readNetworkInt(is);
         snap.total[PerfSnap.IDX_DELIVER] = readNetworkLong(is);
+
+        snap.last[PerfSnap.IDX_TEMPERR] = (long) readNetworkInt(is);
+        snap.avg[PerfSnap.IDX_TEMPERR] = (long) readNetworkInt(is);
+        snap.total[PerfSnap.IDX_TEMPERR] = readNetworkLong(is);
 
         snap.last[PerfSnap.IDX_DELIVERERR] = (long) readNetworkInt(is);
         snap.avg[PerfSnap.IDX_DELIVERERR] = (long) readNetworkInt(is);

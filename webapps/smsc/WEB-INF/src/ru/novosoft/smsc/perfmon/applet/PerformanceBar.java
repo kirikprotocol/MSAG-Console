@@ -59,9 +59,10 @@ public class PerformanceBar extends Canvas {
   Color colorGridLight = new Color(0, 128, 0);
   Color colorShadowBar = new Color(0, 96, 0);
   Color colorBarDeliver = Color.green;
+  Color colorBarTempErr = Color.orange;
   Color colorBarDeliverErr = Color.red;
   Color colorBarSubmit = Color.blue;
-  Color colorBarSubmitErr = Color.orange;
+  Color colorBarSubmitErr = Color.white;
   Color colorBarRetry = Color.cyan;
 
   public synchronized void paint(Graphics gg) {
@@ -117,6 +118,12 @@ public class PerformanceBar extends Canvas {
       g.fillRect(barposx + halfBarWidth + midBarWidth, size.height - bottomSpace - spent - barheight, halfBarWidth, barheight);
       spent += barheight;
 
+      // last temp err bar
+      g.setColor(colorBarTempErr);
+      barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_TEMPERR])/PerfMon.scale);
+      g.fillRect(barposx + halfBarWidth + midBarWidth, size.height - bottomSpace - spent - barheight, halfBarWidth, barheight);
+      spent += barheight;
+
       // last deliver ok bar
       g.setColor(colorBarDeliver);
       barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_DELIVER])/PerfMon.scale);
@@ -163,6 +170,16 @@ public class PerformanceBar extends Canvas {
       // last deliver err bar
       g.setColor(colorBarDeliverErr);
       barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_DELIVERERR])/PerfMon.scale);
+      g.fillRect(barposx, size.height - bottomSpace - barheight, smallBarWidth, barheight);
+      barposx += smallBarWidth;
+      // separator bar background
+      g.setColor(colorBackground);
+      g.fillRect(barposx, size.height - maxheight - bottomSpace, sepBarWidth, maxheight);
+      barposx += sepBarWidth;
+
+      // last temp err bar
+      g.setColor(colorBarTempErr);
+      barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_TEMPERR])/PerfMon.scale);
       g.fillRect(barposx, size.height - bottomSpace - barheight, smallBarWidth, barheight);
       barposx += smallBarWidth;
       // separator bar background

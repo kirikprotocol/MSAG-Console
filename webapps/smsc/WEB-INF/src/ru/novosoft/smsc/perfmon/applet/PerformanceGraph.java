@@ -17,9 +17,10 @@ public class PerformanceGraph extends Canvas {
   private static final Color colorGridMin = new Color(0, 224, 0);
   private static final Color colorGraphDeliver = Color.green;
   private static final Color colorGraphDeliverErr = Color.red;
+  private static final Color colorGraphTempErr = Color.orange;
   private static final Color colorGraphRetry = Color.cyan;
   private static final Color colorGraphSubmit = Color.blue;
-  private static final Color colorGraphSubmitErr = Color.orange;
+  private static final Color colorGraphSubmitErr = Color.white;
   private static final Color colorGraphTotal = Color.white;
 
   Image offscreen;
@@ -183,11 +184,17 @@ public class PerformanceGraph extends Canvas {
                   (int) snap.last[PerfSnap.IDX_DELIVERERR], (int) prevSnap.last[PerfSnap.IDX_DELIVERERR],
                   0, 0,
                   maxheight, colorGraphDeliverErr);
+          if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewTempErrEnabled))
+          drawGraphLine(g, posy, posx,
+                  (int) snap.last[PerfSnap.IDX_TEMPERR], (int) prevSnap.last[PerfSnap.IDX_TEMPERR],
+                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) snap.last[PerfSnap.IDX_DELIVERERR]:0,
+                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) prevSnap.last[PerfSnap.IDX_DELIVERERR]:0,
+                  maxheight, colorGraphTempErr);
           if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewDeliverEnabled))
           drawGraphLine(g, posy, posx,
                   (int) snap.last[PerfSnap.IDX_DELIVER], (int) prevSnap.last[PerfSnap.IDX_DELIVER],
-                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) snap.last[PerfSnap.IDX_DELIVERERR]:0,
-                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) prevSnap.last[PerfSnap.IDX_DELIVERERR]:0,
+                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) snap.last[PerfSnap.IDX_TEMPERR]:0,
+                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) prevSnap.last[PerfSnap.IDX_TEMPERR]:0,
                   maxheight, colorGraphDeliver);
         }
       }

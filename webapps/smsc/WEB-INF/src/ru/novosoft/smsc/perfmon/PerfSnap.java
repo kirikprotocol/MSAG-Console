@@ -7,9 +7,9 @@ import java.text.*;
 import java.io.*;
 
 public class PerfSnap {
-    public long last[] = {0, 0, 0, 0, 0};
-    public long avg[] = {0, 0, 0, 0, 0};
-    public long total[] = {0, 0, 0, 0, 0};
+    public long last[] = {0, 0, 0, 0, 0, 0};
+    public long avg[] = {0, 0, 0, 0, 0, 0};
+    public long total[] = {0, 0, 0, 0, 0, 0};
 
     public int uptime;
     public int sctime;
@@ -23,6 +23,7 @@ public class PerfSnap {
     public final static int IDX_RETRY = 2;
     public final static int IDX_DELIVER = 3;
     public final static int IDX_DELIVERERR = 4;
+    public final static int IDX_TEMPERR = 5;
 
 
     public PerfSnap() {
@@ -101,16 +102,19 @@ public class PerfSnap {
         out.writeInt(queueSize);
         out.writeLong(last[IDX_DELIVER]);
         out.writeLong(last[IDX_DELIVERERR]);
+        out.writeLong(last[IDX_TEMPERR]);
         out.writeLong(last[IDX_SUBMIT]);
         out.writeLong(last[IDX_SUBMITERR]);
         out.writeLong(last[IDX_RETRY]);
         out.writeLong(avg[IDX_DELIVER]);
         out.writeLong(avg[IDX_DELIVERERR]);
+        out.writeLong(avg[IDX_TEMPERR]);
         out.writeLong(avg[IDX_SUBMIT]);
         out.writeLong(avg[IDX_SUBMITERR]);
         out.writeLong(avg[IDX_RETRY]);
         out.writeLong(total[IDX_DELIVER]);
         out.writeLong(total[IDX_DELIVERERR]);
+        out.writeLong(total[IDX_TEMPERR]);
         out.writeLong(total[IDX_SUBMIT]);
         out.writeLong(total[IDX_SUBMITERR]);
         out.writeLong(total[IDX_RETRY]);
@@ -123,16 +127,19 @@ public class PerfSnap {
         queueSize= in.readInt();
         last[IDX_DELIVER] = in.readLong();
         last[IDX_DELIVERERR] = in.readLong();
+        last[IDX_TEMPERR] = in.readLong();
         last[IDX_SUBMIT] = in.readLong();
         last[IDX_SUBMITERR] = in.readLong();
         last[IDX_RETRY] = in.readLong();
         avg[IDX_DELIVER] = in.readLong();
         avg[IDX_DELIVERERR] = in.readLong();
+        avg[IDX_TEMPERR] = in.readLong();
         avg[IDX_SUBMIT] = in.readLong();
         avg[IDX_SUBMITERR] = in.readLong();
         avg[IDX_RETRY] = in.readLong();
         total[IDX_DELIVER] = in.readLong();
         total[IDX_DELIVERERR] = in.readLong();
+        total[IDX_TEMPERR] = in.readLong();
         total[IDX_SUBMIT] = in.readLong();
         total[IDX_SUBMITERR] = in.readLong();
         total[IDX_RETRY] = in.readLong();

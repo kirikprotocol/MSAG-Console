@@ -31,6 +31,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
   CheckboxMenuItem menuSubmitErr;
   CheckboxMenuItem menuSubmit;
   CheckboxMenuItem menuRetry;
+  CheckboxMenuItem menuTempErr;
   CheckboxMenuItem menuDeliverErr;
   CheckboxMenuItem menuDeliver;
   Menu     menuIncrease;
@@ -60,6 +61,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
   public static boolean viewRetryEnabled = true;
   public static boolean viewDeliverEnabled = true;
   public static boolean viewDeliverErrEnabled = true;
+  public static boolean viewTempErrEnabled = true;
 
   public void init() {
     System.out.println("Initing...");
@@ -125,6 +127,8 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     menuDeliver.addItemListener(this);
     menuDeliverErr = new CheckboxMenuItem(localeText.getString("popup.delivererr"), viewDeliverErrEnabled);
     menuDeliverErr.addItemListener(this);
+    menuTempErr = new CheckboxMenuItem(localeText.getString("popup.temperr"), viewTempErrEnabled);
+    menuTempErr.addItemListener(this);
 
     menuIncrease = new Menu(localeText.getString("popup.increase"));
     menuDecrease = new Menu(localeText.getString("popup.decrease"));
@@ -163,6 +167,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
       popupMenu.add(menuRetry );
       popupMenu.add(menuDeliver );
       popupMenu.add(menuDeliverErr );
+      popupMenu.add(menuTempErr );
     }
     add( popupMenu );
     perfbar = new PerformanceBar(snap);
@@ -349,6 +354,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         popupMenu.add(menuRetry );
         popupMenu.add(menuDeliver );
         popupMenu.add(menuDeliverErr );
+        popupMenu.add(menuTempErr );
       } else {
         viewMode = VIEWMODE_IO;
         popupMenu.remove(menuSubmit );
@@ -356,6 +362,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         popupMenu.remove(menuRetry );
         popupMenu.remove(menuDeliver );
         popupMenu.remove(menuDeliverErr );
+        popupMenu.remove(menuTempErr );
         popupMenu.add(menuInput);
         popupMenu.add(menuOutput);
       }
@@ -401,6 +408,8 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
       viewDeliverEnabled = menuDeliver.getState();
     } else if(e.getSource() == menuDeliverErr) {
       viewDeliverErrEnabled = menuDeliverErr.getState();
+    } else if(e.getSource() == menuTempErr) {
+      viewTempErrEnabled = menuTempErr.getState();
     }
   }
 
