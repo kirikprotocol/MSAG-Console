@@ -582,6 +582,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p)
   if(newlen>255)
   {
     sms.getMessageBody().dropProperty(Tag::SMPP_SHORT_MESSAGE);
+    sms.getMessageBody().dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
     sms.setIntProperty(Tag::SMPP_SM_LENGTH,0);
     sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,newBody,newlen);
   }else
