@@ -60,7 +60,7 @@ public:
 	Mask(T val) : mask(val) {}
 	bool operator[](int index) const
 	{
-		__require__(index < sizeof(T));
+		__require__(index < sizeof(T) * 8);
 		return ((mask >> index) & 0x1);
 	}
 	const char* str() const
