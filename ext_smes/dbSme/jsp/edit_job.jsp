@@ -55,6 +55,14 @@ if (UC.isCreating())
 		}%>
 	</td>
 </tr>
+<tr id="row_<%=UC.PARAM_Address%>">
+	<th>Address</th>
+	<td><input class="edit" type="Text" name="<%=UC.PARAM_Address%>" value="<%=StringEncoderDecoder.encode(UC.getAddress())%>"></td>
+</tr>
+<tr id="row_<%=UC.PARAM_Alias%>">
+	<th>Alias</th>
+	<td><input class="edit" type="Text" name="<%=UC.PARAM_Alias%>" value="<%=StringEncoderDecoder.encode(UC.getAlias())%>"></td>
+</tr>
 </table>
 <table class=V1 width="100%" cellpadding=1 cellspacing=1 border="0" id=PARAMS_ROWS_TABLE_SQL_JOB>
 <col nowrap align=center width="15%">
@@ -63,14 +71,6 @@ if (UC.isCreating())
 <tr id="row_<%=UC.PARAM_Query%>" name="row_<%=UC.PARAM_Query%>">
 	<th><label for="<%=UC.PARAM_Query%>">Query</label></th>
 	<td><input class="edit" type="Checkbox" id="<%=UC.PARAM_Query%>" name="<%=UC.PARAM_Query%>" value="true"<%=UC.isQuery() ? " checked" : ""%>></td>
-</tr>
-<tr id="row_<%=UC.PARAM_Address%>">
-	<th>Address</th>
-	<td><input class="edit" type="Text" name="<%=UC.PARAM_Address%>" value="<%=StringEncoderDecoder.encode(UC.getAddress())%>"></td>
-</tr>
-<tr id="row_<%=UC.PARAM_Alias%>">
-	<th>Alias</th>
-	<td><input class="edit" type="Text" name="<%=UC.PARAM_Alias%>" value="<%=StringEncoderDecoder.encode(UC.getAlias())%>"></td>
 </tr>
 </table>
 <table class=V1 width="100%" cellpadding=1 cellspacing=1 border="0" id=PARAMS_ROWS_TABLE_PL_SQL_JOB>
