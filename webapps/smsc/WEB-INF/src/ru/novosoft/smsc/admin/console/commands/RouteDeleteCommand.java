@@ -10,6 +10,7 @@ package ru.novosoft.smsc.admin.console.commands;
 
 import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.route.Route;
 
 public class RouteDeleteCommand implements Command
 {
@@ -19,8 +20,25 @@ public class RouteDeleteCommand implements Command
         this.route = route;
     }
 
-    public void process(CommandContext ctx) {
-        ctx.setMessage("Not implemented yet");
+    public void process(CommandContext ctx)
+    {
+        String out = "Route '"+route+"' ";
+        try {
+            Route oldRoute = ctx.getSmsc().getRoutes().remove(route);
+            if (oldRoute == null) {
+                ctx.setMessage(out+"not exists");
+                ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+                return;
+            }
+        }
+        catch (Exception e) {
+            ctx.setMessage("Failed to delete "+out+". Cause: "+e.getMessage());
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+            return;
+        }
+
+        ctx.setMessage(out+"deleted");
+        ctx.setStatus(CommandContext.CMD_OK);
     }
 }
 

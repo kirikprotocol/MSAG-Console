@@ -17,20 +17,28 @@ public class AliasListCommand implements Command
 {
     public void process(CommandContext ctx)
     {
-        Iterator i = ctx.getSmsc().getAliases().iterator();
-        if (!i.hasNext()) {
-            ctx.setMessage("No aliases defined");
-            ctx.setStatus(CommandContext.CMD_OK);
-        }
-        else {
-            while (i.hasNext()) {
-                Alias alias = (Alias)i.next();
-                if (alias != null) {
-                    ctx.addResult(alias.getAlias().getMask());
-                }
+        try
+        {
+            Iterator i = ctx.getSmsc().getAliases().iterator();
+            if (!i.hasNext()) {
+                ctx.setMessage("No aliases defined");
+                ctx.setStatus(CommandContext.CMD_OK);
             }
-            ctx.setMessage("Alias list");
-            ctx.setStatus(CommandContext.CMD_LIST);
+            else {
+                while (i.hasNext()) {
+                    Alias alias = (Alias)i.next();
+                    if (alias != null) {
+                        ctx.addResult(alias.getAlias().getMask());
+                    }
+                }
+                ctx.setMessage("Alias list");
+                ctx.setStatus(CommandContext.CMD_LIST);
+            }
+        }
+        catch (Exception e) {
+            ctx.setMessage("Failed to list aliases. Cause: "+e.getMessage());
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+            return;
         }
     }
 }

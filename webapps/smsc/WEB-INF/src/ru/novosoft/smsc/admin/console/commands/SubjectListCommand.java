@@ -17,20 +17,28 @@ public class SubjectListCommand implements Command
 {
     public void process(CommandContext ctx)
     {
-        Iterator i = ctx.getSmsc().getSubjects().iterator();
-        if (!i.hasNext()) {
-            ctx.setMessage("No subjects defined");
-            ctx.setStatus(CommandContext.CMD_OK);
-        }
-        else {
-            while (i.hasNext()) {
-                Subject subj = (Subject)i.next();
-                if (subj != null) {
-                    ctx.addResult(subj.getName());
-                }
+        try
+        {
+            Iterator i = ctx.getSmsc().getSubjects().iterator();
+            if (!i.hasNext()) {
+                ctx.setMessage("No subjects defined");
+                ctx.setStatus(CommandContext.CMD_OK);
             }
-            ctx.setMessage("Subjects list");
-            ctx.setStatus(CommandContext.CMD_LIST);
+            else {
+                while (i.hasNext()) {
+                    Subject subj = (Subject)i.next();
+                    if (subj != null) {
+                        ctx.addResult(subj.getName());
+                    }
+                }
+                ctx.setMessage("Subjects list");
+                ctx.setStatus(CommandContext.CMD_LIST);
+            }
+        }
+        catch (Exception e) {
+            ctx.setMessage("Failed to list subjects. Cause: "+e.getMessage());
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+            return;
         }
     }
 }

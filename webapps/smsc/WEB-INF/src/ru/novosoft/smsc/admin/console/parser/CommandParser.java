@@ -358,6 +358,8 @@ public CommandParser(ParserSharedInputState state) {
 		
 		Token  qname = null;
 		Token  name = null;
+		Token  num = null;
+		Token  pri = null;
 		
 		{
 		switch ( LA(1)) {
@@ -385,8 +387,22 @@ public CommandParser(ParserSharedInputState state) {
 				    cmd.setRoute(out);
 				
 		addroute_flags(cmd);
-		route_serviceid(cmd);
-		route_priority(cmd);
+		{
+		match(OPT_SVCID);
+		num = LT(1);
+		match(NUMBER);
+		
+				    cmd.setServiceId(Integer.parseInt(num.getText()));
+				
+		}
+		{
+		match(OPT_PRI);
+		pri = LT(1);
+		match(NUMBER);
+		
+				    cmd.setPriority(Integer.parseInt(pri.getText()));
+				
+		}
 		route_src(cmd);
 		route_dst(cmd);
 		
@@ -663,6 +679,8 @@ public CommandParser(ParserSharedInputState state) {
 		
 		Token  qname = null;
 		Token  name = null;
+		Token  num = null;
+		Token  pri = null;
 		
 		{
 		switch ( LA(1)) {
@@ -694,7 +712,12 @@ public CommandParser(ParserSharedInputState state) {
 		switch ( LA(1)) {
 		case OPT_SVCID:
 		{
-			route_serviceid(cmd);
+			match(OPT_SVCID);
+			num = LT(1);
+			match(NUMBER);
+			
+					    cmd.setServiceId(Integer.parseInt(num.getText()));
+					
 			break;
 		}
 		case ACT_ADD:
@@ -713,7 +736,12 @@ public CommandParser(ParserSharedInputState state) {
 		switch ( LA(1)) {
 		case OPT_PRI:
 		{
-			route_priority(cmd);
+			match(OPT_PRI);
+			pri = LT(1);
+			match(NUMBER);
+			
+					    cmd.setPriority(Integer.parseInt(pri.getText()));
+					
 			break;
 		}
 		case ACT_ADD:
@@ -732,11 +760,13 @@ public CommandParser(ParserSharedInputState state) {
 		case ACT_ADD:
 		{
 			match(ACT_ADD);
+			cmd.setAction(RouteAlterCommand.ACTION_ADD);
 			break;
 		}
 		case ACT_DELETE:
 		{
 			match(ACT_DELETE);
+			cmd.setAction(RouteAlterCommand.ACTION_DEL);
 			break;
 		}
 		default:
@@ -750,11 +780,13 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_SRC:
 		{
 			route_src(cmd);
+			cmd.setTarget(RouteAlterCommand.TARGET_SRC);
 			break;
 		}
 		case OPT_DST:
 		{
 			route_dst(cmd);
+			cmd.setTarget(RouteAlterCommand.TARGET_DST);
 			break;
 		}
 		default:
@@ -1180,16 +1212,21 @@ public CommandParser(ParserSharedInputState state) {
 		
 		Token  val = null;
 		
+		
+				    RouteSrcDef def = new RouteSrcDef();
+				
 		{
 		switch ( LA(1)) {
 		case OPT_SUBJ:
 		{
 			match(OPT_SUBJ);
+			def.setType(RouteSrcDef.TYPE_SUBJECT);
 			break;
 		}
 		case OPT_MASK:
 		{
 			match(OPT_MASK);
+			def.setType(RouteSrcDef.TYPE_MASK);
 			break;
 		}
 		default:
@@ -1200,6 +1237,10 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		val = LT(1);
 		match(ADDRESS);
+		
+				    def.setSrc(val.getText());
+				    cmd.addSrcDef(def);
+				
 	}
 	
 	public final void dstdef(
@@ -1209,16 +1250,21 @@ public CommandParser(ParserSharedInputState state) {
 		Token  val = null;
 		Token  sysid = null;
 		
+		
+				    RouteDstDef def = new RouteDstDef();
+				
 		{
 		switch ( LA(1)) {
 		case OPT_SUBJ:
 		{
 			match(OPT_SUBJ);
+			def.setType(RouteDstDef.TYPE_SUBJECT);
 			break;
 		}
 		case OPT_MASK:
 		{
 			match(OPT_MASK);
+			def.setType(RouteDstDef.TYPE_MASK);
 			break;
 		}
 		default:
@@ -1230,7 +1276,12 @@ public CommandParser(ParserSharedInputState state) {
 		val = LT(1);
 		match(ADDRESS);
 		sysid = LT(1);
-		match(NUMBER);
+		match(ID);
+		
+				    def.setDst(val.getText());
+				    def.setSmeId(sysid.getText());
+				    cmd.addDstDef(def);
+				
 	}
 	
 	public final void route_src(
@@ -1275,34 +1326,6 @@ public CommandParser(ParserSharedInputState state) {
 			_cnt16++;
 		} while (true);
 		}
-	}
-	
-	public final void route_serviceid(
-		RouteGenCommand cmd
-	) throws RecognitionException, TokenStreamException {
-		
-		Token  num = null;
-		
-		match(OPT_SVCID);
-		num = LT(1);
-		match(NUMBER);
-		
-				    System.out.println("Service id="+num.getText());
-				
-	}
-	
-	public final void route_priority(
-		RouteGenCommand cmd
-	) throws RecognitionException, TokenStreamException {
-		
-		Token  pri = null;
-		
-		match(OPT_PRI);
-		pri = LT(1);
-		match(NUMBER);
-		
-				    System.out.println("priority="+pri.getText());
-				
 	}
 	
 	public final void addroute_flags(

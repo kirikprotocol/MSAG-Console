@@ -16,8 +16,9 @@ public class CommandContext
 {
     public final static int CMD_OK   = 100;
     public final static int CMD_LIST = 200;
-    public final static int CMD_PARSE_ERROR = 500;
-    public final static int CMD_PROCESS_ERROR = 600;
+    public final static int CMD_AUTH_ERROR = 500;
+    public final static int CMD_PARSE_ERROR = 600;
+    public final static int CMD_PROCESS_ERROR = 700;
 
     protected Smsc smsc;
     protected int status = CMD_OK;

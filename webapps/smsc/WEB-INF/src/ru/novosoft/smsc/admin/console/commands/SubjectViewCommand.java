@@ -10,14 +10,23 @@ package ru.novosoft.smsc.admin.console.commands;
 
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.route.Subject;
+import ru.novosoft.smsc.admin.route.Mask;
+
+import java.util.Iterator;
 
 public class SubjectViewCommand extends SubjectGenCommand
 {
     private String showSubject(Subject subj)
     {
-        // todo Show masks here ?
-        return "Subject '"+subj.getName()+"'"+
-               " Default SME id:"+subj.getDefaultSme().getId();
+        String out = "Subject '"+subj.getName()+"'"+
+               " DefSME:"+subj.getDefaultSme().getId();
+        Iterator i = subj.getMasks().iterator();
+        if (i.hasNext()) out += " Masks: ";
+        while (i.hasNext()) {
+            out += ((Mask)i.next()).getMask();
+            if (i.hasNext()) out += ", ";
+        }
+        return out;
     }
     public void process(CommandContext ctx)
     {

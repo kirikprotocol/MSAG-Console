@@ -9,10 +9,37 @@ package ru.novosoft.smsc.admin.console.commands;
 
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.console.Command;
+import ru.novosoft.smsc.admin.route.Route;
+
+import java.util.Iterator;
 
 public class RouteListCommand implements Command
 {
-    public void process(CommandContext ctx) {
-        ctx.setMessage("Not implemented yet");
+    public void process(CommandContext ctx)
+    {
+        try
+        {
+            Iterator i = ctx.getSmsc().getRoutes().iterator();
+            if (!i.hasNext()) {
+                ctx.setMessage("No routes defined");
+                ctx.setStatus(CommandContext.CMD_OK);
+            }
+            else {
+                while (i.hasNext()) {
+                    Route route = (Route)i.next();
+                    if (route != null) {
+                        ctx.addResult(route.getName());
+                    }
+                }
+                ctx.setMessage("Routes list");
+                ctx.setStatus(CommandContext.CMD_LIST);
+            }
+        }
+        catch (Exception e) {
+            ctx.setMessage("Failed to list routes. Cause: "+e.getMessage());
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+            return;
+        }
     }
+
 }

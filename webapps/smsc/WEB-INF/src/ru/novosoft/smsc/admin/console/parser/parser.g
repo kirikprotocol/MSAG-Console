@@ -124,10 +124,30 @@ view[CommandContext ctx]
 	
 /* ----------------------- Common routes parsers ----------------------- */
 srcdef[RouteGenCommand cmd] // Special command required !!!
-	:	(OPT_SUBJ | OPT_MASK) val:ADDRESS
+	:	{
+		    RouteSrcDef def = new RouteSrcDef();
+		}
+		( OPT_SUBJ { def.setType(RouteSrcDef.TYPE_SUBJECT); } 
+		| OPT_MASK { def.setType(RouteSrcDef.TYPE_MASK); }) 
+		val:ADDRESS
+		{
+		    def.setSrc(val.getText());
+		    cmd.addSrcDef(def);
+		}
 	;
 dstdef[RouteGenCommand cmd] // Special command required !!!
-	:	(OPT_SUBJ | OPT_MASK) val:ADDRESS sysid:NUMBER
+	:	{
+		    RouteDstDef def = new RouteDstDef();
+		}
+		( OPT_SUBJ { def.setType(RouteDstDef.TYPE_SUBJECT); } 
+		| OPT_MASK { def.setType(RouteDstDef.TYPE_MASK); }) 
+		val:ADDRESS
+		sysid:ID
+		{
+		    def.setDst(val.getText());
+		    def.setSmeId(sysid.getText());
+		    cmd.addDstDef(def);
+		}
 	;
 
 /* ----------------------- Route command parsers ----------------------- */
@@ -138,18 +158,6 @@ route_src[RouteGenCommand cmd]
 route_dst[RouteGenCommand cmd]
 	:	OPT_DST (dstdef[cmd])+
 	;
-route_serviceid[RouteGenCommand cmd]
-	:	OPT_SVCID num:NUMBER
-		{
-		    System.out.println("Service id="+num.getText());
-		}
-	;
-route_priority[RouteGenCommand cmd]
-	:	OPT_PRI pri:NUMBER 
-		{
-		    System.out.println("priority="+pri.getText());
-		}
-	;
 
 addroute[CommandContext ctx, RouteAddCommand cmd]
 	:	(qname:STRING | name:ID) 
@@ -159,8 +167,12 @@ addroute[CommandContext ctx, RouteAddCommand cmd]
 		    cmd.setRoute(out);
 		}
 		addroute_flags[cmd]
-		route_serviceid[cmd]
-		route_priority[cmd]
+		(OPT_SVCID num:NUMBER {
+		    cmd.setServiceId(Integer.parseInt(num.getText()));
+		})
+		(OPT_PRI pri:NUMBER {
+		    cmd.setPriority(Integer.parseInt(pri.getText()));
+		})
 		route_src[cmd]
 		route_dst[cmd]
 		{
@@ -194,10 +206,16 @@ altroute[CommandContext ctx, RouteAlterCommand cmd]
 		    cmd.setRoute(out);
 		}
 		altroute_flags[cmd]
-		(route_serviceid[cmd])?
-		(route_priority[cmd])?
-		(ACT_ADD | ACT_DELETE)
-		(route_src[cmd] | route_dst[cmd])
+		(OPT_SVCID num:NUMBER {
+		    cmd.setServiceId(Integer.parseInt(num.getText()));
+		}) ?
+		(OPT_PRI pri:NUMBER {
+		    cmd.setPriority(Integer.parseInt(pri.getText()));
+		}) ?
+		( ACT_ADD    { cmd.setAction(RouteAlterCommand.ACTION_ADD); }
+		| ACT_DELETE { cmd.setAction(RouteAlterCommand.ACTION_DEL); })
+		( route_src[cmd] { cmd.setTarget(RouteAlterCommand.TARGET_SRC); }
+		| route_dst[cmd] { cmd.setTarget(RouteAlterCommand.TARGET_DST); })
 		{
 		    cmd.process(ctx);
 		}

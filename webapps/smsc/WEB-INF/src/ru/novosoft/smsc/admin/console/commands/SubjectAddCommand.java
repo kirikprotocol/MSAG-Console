@@ -20,7 +20,8 @@ public class SubjectAddCommand extends SubjectGenCommand
         try {
             SME sme = ctx.getSmsc().getSmes().get(defaultSmeId);
             if (sme != null) {
-                ctx.getSmsc().getSubjects().add(new Subject(subject, ((String[])(masks.toArray())), sme));
+                Subject smscSubject = new Subject(subject, masks, sme);
+                ctx.getSmsc().getSubjects().add(smscSubject);
                 ctx.setMessage(out+" added");
                 ctx.setStatus(CommandContext.CMD_OK);
             } else {

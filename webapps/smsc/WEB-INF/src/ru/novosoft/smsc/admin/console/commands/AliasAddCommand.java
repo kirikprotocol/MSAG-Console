@@ -45,7 +45,6 @@ public class AliasAddCommand implements Command
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             }
         } catch (Exception e) {
-            e.printStackTrace();
             ctx.setMessage("Failed to add "+out+". Cause: "+e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         }
