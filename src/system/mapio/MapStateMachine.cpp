@@ -725,6 +725,7 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
             dialog->version = version;
             dialog->state = MAPST_ImsiWaitOpenConf;
             SendRInfo(dialog.get());
+            break;
           default:
             throw MAPDIALOG_BAD_STATE(
               FormatText("MAP::%s bad state %d, did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
