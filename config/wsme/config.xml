@@ -36,7 +36,7 @@
             <param name="timeout" type="int">10</param>
             <param name="password" type="string">3</param>
         </section>  
-	
+
         <section name="Admin">
             <param name="host" type="string">smsc</param>
             <param name="port" type="int">9669</param>
