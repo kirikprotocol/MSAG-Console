@@ -17,7 +17,7 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
   __trace2__("MapDialog::Et96MapV2ForwardSmMOInd");
   SMS sms;
   MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
-  SmscCommand cmd = SmscCommand::makeSumbmitSm(sms,((uint32_t)dialogId)0xffff);
+  SmscCommand cmd = SmscCommand::makeSumbmitSm(sms,((uint32_t)dialogId)&0xffff);
   proxy->putIncomingCommand(cmd);
   dialog_state = MAPST_WAIT_SUBMIT_RESPONSE;
   return ET96MAP_E_OK;
