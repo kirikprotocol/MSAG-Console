@@ -210,9 +210,9 @@ extern void loadRoutes(RouteManager* rm,smsc::util::config::route::RouteConfig& 
 
 void Smsc::init(const SmscConfigs& cfg)
 {
+  log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.init");
   try{
   tp.preCreateThreads(15);
-  log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.init");
 
   //smsc::util::config::Manager::init("config.xml");
   //cfgman=&cfgman->getInstance();
@@ -527,10 +527,12 @@ void Smsc::init(const SmscConfigs& cfg)
   }catch(exception& e)
   {
     __trace2__("Smsc::init exception:%s",e.what());
+    log.warn("Smsc::init exception:%s",e.what());
     throw;
   }catch(...)
   {
     __trace2__("Smsc::init exception:unknown");
+    log.warn("Smsc::init exception:unknown");
     throw;
   }
   __trace__("Smsc::init completed");
@@ -538,6 +540,7 @@ void Smsc::init(const SmscConfigs& cfg)
 
 void Smsc::run()
 {
+  log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.run");
   __trace__("Smsc::run");
   try{
   if(startTime==0)startTime=time(NULL);
@@ -587,10 +590,12 @@ void Smsc::run()
   }catch(exception& e)
   {
     __trace2__("Smsc::run exception:%s",e.what());
+    log.warn("Smsc::run exception:%s",e.what());
     throw;
   }catch(...)
   {
     __trace2__("Smsc::run exception:unknown");
+    log.warn("Smsc::run exception:unknown");
     throw;
   }
   __trace__("Smsc::run completed");
