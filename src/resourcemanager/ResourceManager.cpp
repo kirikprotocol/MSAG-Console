@@ -87,7 +87,7 @@ void ResourceManager::init(const _stringlist & localeNames, const std::string & 
     logger.error("Default locale \"%s\" not found in locales.", defaultLocaleName.c_str());
   }
   instance.get()->validLocales=localeNames;
-  __trace2__("ResMgr: set valid locales %p/%d <- %p/%d", &(instance.get()->validLocales), instance.get()->validLocales.size(), &localeNames, localeNames.size() );
+  __trace2__("ResMgr: this = %p set valid locales %p/%d <- %p/%d", this, &(instance.get()->validLocales), instance.get()->validLocales.size(), &localeNames, localeNames.size() );
 }
 
 void ResourceManager::reload() throw ()
@@ -244,7 +244,7 @@ OutputFormatter* ResourceManager::getFormatter(const std::string& key) const thr
 bool ResourceManager::isValidLocale(const std::string& localeName)const
 {
   MutexGuard g(mtx);
-  __trace2__("ResMgr: is valid locale? %p/%d", &(validLocales), validLocales.size() );
+  __trace2__("ResMgr: this %p is valid locale? %p/%d", this, &(validLocales), validLocales.size() );
   for(_stringlist::const_iterator i=validLocales.begin();i!=validLocales.end();i++)
   {
     __trace2__("ResMgr: testing %s = %s", localeName.c_str(), i->c_str() );
