@@ -46,7 +46,7 @@ namespace smsc { namespace store
     using smsc::util::Logger;
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigException;
-    
+
     class RemoteStore : public MessageStore
     {
     private:
@@ -55,16 +55,16 @@ namespace smsc { namespace store
         static IntHash<SMS*>    fakeStore;
         static Mutex            fakeMutex;
     #endif
-        
+
         static log4cpp::Category    &log;
-    
+
     protected:
 
         void loadMaxTriesCount(Manager& config);
         unsigned                maxTriesCount;
-        
+
         StorageConnectionPool*  pool;
-        
+
         class ReadyIdIterator : public IdIterator
         {
         private:
@@ -72,7 +72,7 @@ namespace smsc { namespace store
             Connection*                 connection;
             ReadyByNextTimeStatement*   readyStmt;
             StorageConnectionPool*      pool;
-            
+
         public:
 
             ReadyIdIterator(StorageConnectionPool* _pool, time_t retryTime)
@@ -90,10 +90,10 @@ namespace smsc { namespace store
             Connection*                 connection;
             CancelIdsStatement*         cancelStmt;
             StorageConnectionPool*      pool;
-            
+
         public:
-            
-            CancelIdIterator(StorageConnectionPool* _pool, 
+
+            CancelIdIterator(StorageConnectionPool* _pool,
                 const Address& oa, const Address& da, const char* svc=0)
                     throw(StorageException);
             virtual ~CancelIdIterator();
@@ -101,7 +101,7 @@ namespace smsc { namespace store
             virtual bool getNextId(SMSId &id)
                 throw(StorageException);
         };
-        
+
         class DeliveryIdIterator : public IdIterator
         {
         private:
@@ -109,10 +109,10 @@ namespace smsc { namespace store
             Connection*                 connection;
             DeliveryIdsStatement*       deliveryStmt;
             StorageConnectionPool*      pool;
-            
+
         public:
-            
-            DeliveryIdIterator(StorageConnectionPool* _pool, 
+
+            DeliveryIdIterator(StorageConnectionPool* _pool,
                 const Address& da)
                     throw(StorageException);
             virtual ~DeliveryIdIterator();
@@ -151,13 +151,13 @@ namespace smsc { namespace store
         void doChangeSmsStateToDeleted(StorageConnection* connection,
             SMSId id)
                 throw(StorageException, NoSuchMessageException);
-    
+
     public:
 
         RemoteStore(Manager& config)
             throw(ConfigException, StorageException);
         virtual ~RemoteStore();
-        
+
         void setPoolSize(unsigned size) {
             __require__(pool);
             pool->setSize(size);
@@ -186,7 +186,7 @@ namespace smsc { namespace store
             __require__(pool);
             return pool->getPendingQueueLength();
         }
-        
+
         /**
          * Реализация метода MessageStore для внешней генерация ключа.
          *
@@ -261,14 +261,14 @@ namespace smsc { namespace store
          * @see MessageStore
          */
         virtual IdIterator* getReadyForDelivery(const Address& da)
-                throw(StorageException); 
+                throw(StorageException);
         /**
          * Реализация метода MessageStore
          * @see MessageStore
          */
-        virtual IdIterator* getReadyForCancel(const Address& oa, 
+        virtual IdIterator* getReadyForCancel(const Address& oa,
             const Address& da, const char* svcType = 0)
-                throw(StorageException); 
+                throw(StorageException);
         /**
          * Реализация метода MessageStore
          * @see MessageStore
@@ -284,7 +284,7 @@ namespace smsc { namespace store
                 throw(StorageException);
 
     };
-    
+
     /**
      * Сервисный класс используемый для генерации следующего
      * идентификационного номера для сообщения.
@@ -345,7 +345,7 @@ namespace smsc { namespace store
         static IDGenerator              *generator;
         static Archiver                 *archiver;
         static RemoteStore              *instance;
-        
+
         static log4cpp::Category        &log;
 
         static bool needCache(Manager& config);
@@ -469,7 +469,7 @@ namespace smsc { namespace store
          * @see Archiver
          */
         static void startArchiver()
-            throw (StorageException) 
+            throw (StorageException)
         {
             __require__(archiver);
             return archiver->Start();
@@ -512,9 +512,9 @@ namespace smsc { namespace store
             __require__(archiver);
             archiver->decrementFinalizedCount();
         }
-    
+
     };
-    
+
     struct UpdateRecord
     {
         SMSId       id;
@@ -523,7 +523,7 @@ namespace smsc { namespace store
         uint32_t    fcs;
         time_t      nt;
 
-        UpdateRecord(SMSId _id, State _state) 
+        UpdateRecord(SMSId _id, State _state)
             : id(_id), state(_state), fcs(0), nt(0) {};
         UpdateRecord(SMSId _id, State _state, const Descriptor& _dst,
                      uint32_t _fcs = 0, time_t _nt = 0)
@@ -535,7 +535,7 @@ namespace smsc { namespace store
     class SmsCache
     {
     private:
-    
+
         struct SMSIdIdx
         {
             static inline unsigned int CalcHash(const SMSId& id) {
@@ -549,7 +549,7 @@ namespace smsc { namespace store
 
     public:
 
-        SmsCache(unsigned capacity=SMSC_MAX_SMS_CACHE_CAPACITY, 
+        SmsCache(unsigned capacity=SMSC_MAX_SMS_CACHE_CAPACITY,
                  unsigned initsize=SMSC_MAX_SMS_CACHE_CAPACITY);
         virtual ~SmsCache();
 
@@ -565,15 +565,15 @@ namespace smsc { namespace store
 
         Mutex       cacheMutex;
         SmsCache*   cache;
-        
+
         int         maxCacheCapacity;
         void loadMaxCacheCapacity(Manager& config);
 
         static log4cpp::Category    &log;
-    
+
     public:
 
-        CachedStore(Manager& config) 
+        CachedStore(Manager& config)
             throw(ConfigException, StorageException);
         virtual ~CachedStore();
 
