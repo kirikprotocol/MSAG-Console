@@ -203,7 +203,8 @@ StoreStatement::StoreStatement(Connection* connection)
         : MessageStatement(connection, StoreStatement::sql)
 {
     bind(1 , SQLT_BIN, (dvoid *) &smsId, (sb4) sizeof(smsId));
-    bind(2 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
+    bind(2 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE), 
+         (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
     bind(3 , SQLT_UIN, (dvoid *) &(sms.messageReference), 
          (sb4) sizeof(sms.messageReference));
     bind(4 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.lenght), 
@@ -253,8 +254,7 @@ StoreStatement::StoreStatement(Connection* connection)
 /* ----------------------- IsRejectedStatement ---------------------- */
     
 const char* IsRejectedStatement::sql = (const char*)
-"SELECT NVL(COUNT(*), 0) FROM SMS_MSG\
- WHERE ST=:1 AND MR=:2\
+"SELECT NVL(COUNT(*), 0) FROM SMS_MSG WHERE ST=:ENROUTE AND MR=:2\
  AND OA_LEN=:3 AND OA_TON=:4 AND OA_NPI=:5 AND OA_VAL=:6\
  AND DA_LEN=:7 AND DA_TON=:8 AND DA_NPI=:9 AND DA_VAL=:10";
     
@@ -262,7 +262,8 @@ IsRejectedStatement::IsRejectedStatement(Connection* connection)
     throw(StorageException)
         : MessageStatement(connection, IsRejectedStatement::sql)
 {
-    bind(1 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
+    bind(1 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
+         (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
     bind(2 , SQLT_UIN, (dvoid *) &(sms.messageReference),
          (sb4) sizeof(sms.messageReference));
     bind(3 , SQLT_UIN, (dvoid *)&(sms.originatingAddress.lenght),
@@ -292,15 +293,15 @@ bool IsRejectedStatement::isRejected()
 
 /* ------------------------ IsTimeCorrectStatement -------------------- */
 const char* IsTimeCorrectStatement::sql = (const char*)
-"SELECT NVL(COUNT(*), 0) FROM SMS_MSG\
- WHERE ST=:1 AND OA_LEN=:2 AND OA_TON=:3 AND OA_NPI=:4 AND OA_VAL=:5\
- AND SUBMIT_TIME=:6";
+"SELECT NVL(COUNT(*), 0) FROM SMS_MSG WHERE ST=:ENROUTE AND\
+ OA_LEN=:2 AND OA_TON=:3 AND OA_NPI=:4 AND OA_VAL=:5 AND SUBMIT_TIME=:6";
 
 IsTimeCorrectStatement::IsTimeCorrectStatement(Connection* connection)
     throw(StorageException)
         : MessageStatement(connection, IsTimeCorrectStatement::sql)
 {
-    bind(1 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
+    bind(1 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
+         (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
     bind(2 , SQLT_UIN, (dvoid *)&(sms.originatingAddress.lenght),
          (sb4) sizeof(sms.originatingAddress.lenght));
     bind(3 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.type),
@@ -382,7 +383,7 @@ RetriveStatement::RetriveStatement(Connection* connection)
 /* --------------------------- ReplaceStatement ----------------------- */        
 const char* ReplaceStatement::sql = (const char*)
 "UPDATE SMS_MSG SET MR=:MR,\
- DCS=:DCS, UDHI=:UDHI, UDL=:UDL, UD=:UD WHERE ID=:ID AND ST=:ST AND\
+ DCS=:DCS, UDHI=:UDHI, UDL=:UDL, UD=:UD WHERE ID=:ID AND ST=:ENROUTE AND\
  OA_LEN=:OA_LEN AND OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL";
 
 ReplaceStatement::ReplaceStatement(Connection* connection)
@@ -401,7 +402,8 @@ ReplaceStatement::ReplaceStatement(Connection* connection)
          (sb4) sizeof(sms.messageBody.data));
     bind(6 , SQLT_BIN, (dvoid *) &(smsId), 
          (sb4) sizeof(smsId));
-    bind(7 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
+    bind(7 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE), 
+         (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
     bind(8 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.lenght), 
          (sb4) sizeof(sms.originatingAddress.lenght));
     bind(9 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.type), 
@@ -414,7 +416,7 @@ ReplaceStatement::ReplaceStatement(Connection* connection)
 
 const char* ReplaceVTStatement::sql = (const char*)
 "UPDATE SMS_MSG SET MR=:MR, VALID_TIME=:VT,\
- DCS=:DCS, UDHI=:UDHI, UDL=:UDL, UD=:UD WHERE ID=:ID AND ST=:ST AND\
+ DCS=:DCS, UDHI=:UDHI, UDL=:UDL, UD=:UD WHERE ID=:ID AND ST=:ENROUTE AND\
  OA_LEN=:OA_LEN AND OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL";
 
 ReplaceVTStatement::ReplaceVTStatement(Connection* connection)
@@ -435,7 +437,8 @@ ReplaceVTStatement::ReplaceVTStatement(Connection* connection)
          (sb4) sizeof(sms.messageBody.data));
     bind(7 , SQLT_BIN, (dvoid *) &(smsId), 
          (sb4) sizeof(smsId));
-    bind(8 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
+    bind(8 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE), 
+         (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
     bind(9 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.lenght), 
          (sb4) sizeof(sms.originatingAddress.lenght));
     bind(10, SQLT_UIN, (dvoid *) &(sms.originatingAddress.type), 
@@ -448,7 +451,7 @@ ReplaceVTStatement::ReplaceVTStatement(Connection* connection)
 
 const char* ReplaceWTStatement::sql = (const char*)
 "UPDATE SMS_MSG SET MR=:MR, WAIT_TIME=:WT,\
- DCS=:DCS, UDHI=:UDHI, UDL=:UDL, UD=:UD WHERE ID=:ID AND ST=:ST AND\
+ DCS=:DCS, UDHI=:UDHI, UDL=:UDL, UD=:UD WHERE ID=:ID AND ST=:ENROUTE AND\
  OA_LEN=:OA_LEN AND OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL";
 
 ReplaceWTStatement::ReplaceWTStatement(Connection* connection)
@@ -469,7 +472,8 @@ ReplaceWTStatement::ReplaceWTStatement(Connection* connection)
          (sb4) sizeof(sms.messageBody.data));
     bind(7 , SQLT_BIN, (dvoid *) &(smsId), 
          (sb4) sizeof(smsId));
-    bind(8 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
+    bind(8 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
+         (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
     bind(9 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.lenght), 
          (sb4) sizeof(sms.originatingAddress.lenght));
     bind(10, SQLT_UIN, (dvoid *) &(sms.originatingAddress.type), 
@@ -482,7 +486,7 @@ ReplaceWTStatement::ReplaceWTStatement(Connection* connection)
 
 const char* ReplaceVWTStatement::sql = (const char*)
 "UPDATE SMS_MSG SET MR=:MR, VALID_TIME=:VT, WAIT_TIME=:WT,\
- DCS=:DCS, UDHI=:UDHI, UDL=:UDL, UD=:UD WHERE ID=:ID AND ST=:ST AND\
+ DCS=:DCS, UDHI=:UDHI, UDL=:UDL, UD=:UD WHERE ID=:ID AND ST=:ENROUTE AND\
  OA_LEN=:OA_LEN AND OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL";
 
 ReplaceVWTStatement::ReplaceVWTStatement(Connection* connection)
@@ -505,7 +509,8 @@ ReplaceVWTStatement::ReplaceVWTStatement(Connection* connection)
          (sb4) sizeof(sms.messageBody.data));
     bind(8 , SQLT_BIN, (dvoid *) &(smsId), 
          (sb4) sizeof(smsId));
-    bind(9 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
+    bind(9 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE), 
+         (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
     bind(10, SQLT_UIN, (dvoid *) &(sms.originatingAddress.lenght), 
          (sb4) sizeof(sms.originatingAddress.lenght));
     bind(11, SQLT_UIN, (dvoid *) &(sms.originatingAddress.type), 
@@ -518,18 +523,20 @@ ReplaceVWTStatement::ReplaceVWTStatement(Connection* connection)
 
 /* --------------------------- RemoveStatement ----------------------- */
 const char* RemoveStatement::sql = (const char*)
-"DELETE FROM SMS_MSG WHERE ID=:ID";
+"DELETE FROM SMS_MSG WHERE ID=:ID AND ST=:ENROUTE";
 
 RemoveStatement::RemoveStatement(Connection* connection)
     throw(StorageException)
         : IdStatement(connection, RemoveStatement::sql)
 {
     bind(1, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
+    bind(2 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE), 
+         (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
 }
 
 /* --------------------------- UpdateStatements ----------------------- */
 const char* StateUpdateStatement::sql = (const char*)
-"UPDATE SMS_MSG SET ST=:ST WHERE ID=:ID";
+"UPDATE SMS_MSG SET ST=:ST WHERE ID=:ID AND ST=:ENROUTE";
 
 StateUpdateStatement::StateUpdateStatement(Connection* connection)
     throw(StorageException)
@@ -537,10 +544,12 @@ StateUpdateStatement::StateUpdateStatement(Connection* connection)
 {
     bind(1 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
     bind(2 , SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
+    bind(3 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
+         (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
 }
 
 const char* StateDateUpdateStatement::sql = (const char*)
-"UPDATE SMS_MSG SET ST=:ST, DELIVERY_TIME=:DT WHERE ID=:ID";
+"UPDATE SMS_MSG SET ST=:ST, DELIVERY_TIME=:DT WHERE ID=:ID AND ST=:ENROUTE";
 
 StateDateUpdateStatement::StateDateUpdateStatement(Connection* connection)
         throw(StorageException)
@@ -549,10 +558,12 @@ StateDateUpdateStatement::StateDateUpdateStatement(Connection* connection)
     bind(1 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
     bind(2 , SQLT_ODT, (dvoid *) &(operationDate), (sb4) sizeof(operationDate));
     bind(3 , SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
+    bind(4 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
+         (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
 }
 
 const char* StateDateFcsUpdateStatement::sql = (const char*)
-"UPDATE SMS_MSG SET ST=:ST, DELIVERY_TIME=:DT, FCS=:FC WHERE ID=:ID";
+"UPDATE SMS_MSG SET ST=:ST, DELIVERY_TIME=:DT, FCS=:FC WHERE ID=:ID AND ST=:ENROUTE";
 
 StateDateFcsUpdateStatement::StateDateFcsUpdateStatement(Connection* connection)
         throw(StorageException)
@@ -562,6 +573,8 @@ StateDateFcsUpdateStatement::StateDateFcsUpdateStatement(Connection* connection)
     bind(2 , SQLT_ODT, (dvoid *) &(operationDate), (sb4) sizeof(operationDate));
     bind(3 , SQLT_UIN, (dvoid *) &(fcs), (sb4) sizeof(fcs));
     bind(4 , SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
+    bind(5 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
+         (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
 }
 
 }}

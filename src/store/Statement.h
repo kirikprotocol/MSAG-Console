@@ -9,6 +9,10 @@
 
 namespace smsc { namespace store 
 {
+    using namespace smsc::sms;
+    
+    const uint8_t SMSC_BYTE_ENROUTE_STATE = (uint8_t)ENROUTE;
+
     class Connection;
     class Statement
     {
@@ -123,11 +127,6 @@ namespace smsc { namespace store
         StoreStatement(Connection* connection)
             throw(StorageException);
         virtual ~StoreStatement() {};
-        
-        void setSMS(const SMS &sms) {
-            MessageStatement::setSMS(sms);
-            uState = (uint8_t)ENROUTE;
-        };
     };
     
     class IsRejectedStatement : public MessageStatement
@@ -143,11 +142,6 @@ namespace smsc { namespace store
             throw(StorageException);
         virtual ~IsRejectedStatement() {};
         
-        void setSMS(const SMS &sms) {
-            MessageStatement::setSMS(sms);
-            uState = (uint8_t)ENROUTE;
-        };
-
         bool isRejected();
     };
     
@@ -164,11 +158,6 @@ namespace smsc { namespace store
             throw(StorageException);
         virtual ~IsTimeCorrectStatement() {};
         
-        void setSMS(const SMS &sms) {
-            MessageStatement::setSMS(sms);
-            uState = (uint8_t)ENROUTE;
-        };
-
         bool isTimeIncorrect();
     };
     
@@ -196,11 +185,6 @@ namespace smsc { namespace store
         ReplaceStatement(Connection* connection)
             throw(StorageException);
         virtual ~ReplaceStatement() {};
-
-        void setSMS(const SMS &sms) {
-            MessageStatement::setSMS(sms);
-            uState = (uint8_t)ENROUTE;
-        };
 
         inline bool wasReplaced() {
             return (getRowsAffectedCount() ? true:false); 

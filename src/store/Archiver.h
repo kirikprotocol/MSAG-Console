@@ -32,7 +32,7 @@ namespace smsc { namespace store
         unsigned    maxUncommitedCount;
         unsigned    awakeInterval;
         
-        bool        bStarted, bArchivation;
+        bool        bStarted;
         Mutex       processLock, startLock;
         
         static const char*  storageCountSql;
@@ -148,7 +148,7 @@ namespace smsc { namespace store
             return bStarted;
         }
         inline bool isInProgress() {
-            return bArchivation;
+            return job.isSignaled();
         }
     };
 
