@@ -35,10 +35,12 @@ static void sighandler( int signal ) {
 
 void Dump(UCHAR_T* buf,int len)
 {
+  fprintf(stderr,"Packet:");
   for(int i=0;i<len;i++)
   {
     fprintf(stderr," %02X",buf[i]);
   }
+  fprintf(stderr,"\n");
 }
 
 USHORT_T EINSS7_I97TBeginInd(   UCHAR_T ssn,
@@ -56,10 +58,12 @@ USHORT_T EINSS7_I97TBeginInd(   UCHAR_T ssn,
                                 USHORT_T userInfoLength,
                                 UCHAR_T *userInfo_p)
 {
+  fprintf("BeginInd: ssn=%d, userId=%d, dId=%d\n",
+    ssn,userId,dialogueId);
   fprintf(stderr,"BeginInd: ac_length=%d\n",appContextLength);
-  fprintf(stderr,"Packet:");
   Dump(appContext_p,appContextLength);
-  fprintf(stderr,"\n");
+  fprintf(stderr,"BeginInd: ui_length=%d\n",userInfoLength);
+  Dump(userInfo_p,userInfoLength);
   return RETURN_VALUE;
 }
 
@@ -77,10 +81,13 @@ USHORT_T EINSS7_I97TInvokeInd(  UCHAR_T ssn,
                                 USHORT_T paramLength,
                                 UCHAR_T *parameters_p)
 {
+  fprintf("InvokeInd: ssn=%d, userId=%d, dId=%d, invokeId=%d\n",
+    ssn,userId,dialogueId,invokeId);
+
   fprintf(stderr,"InvokeInd: op_length=%d\n",operationLength);
-  fprintf(stderr,"Packet:");
   Dump(operationCode_p,operationLength);
-  fprintf(stderr,"\n");
+  fprintf(stderr,"InvokeInd: param_length=%d\n",paramLength);
+  Dump(parameters_p,paramLength);
   return RETURN_VALUE;
 }
 
