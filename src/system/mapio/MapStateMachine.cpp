@@ -2617,8 +2617,10 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
       MicroString ms;
       unsigned chars = ussdString_s.ussdStrLen*8/7;
       Convert7BitToSMSC7Bit(ussdString_s.ussdStr,chars/*ussdString_s.ussdStrLen*/,&ms,0);
+      __map_trace2__("ussd str len=%d/%d: %s", ms.len, strlen(ms.bytes), ms.bytes );
       subsystem = GetUSSDSubsystem(ms.bytes,ms.len);
       string ussdStr = GetUSSDRequestString(ms.bytes, ms.len);
+      __map_trace2__("truncated str: %s", ussdStr.c_str() );
       sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,ussdStr.c_str(),ussdStr.length());
       sms.setIntProperty(Tag::SMPP_SM_LENGTH,ussdStr.length());
       sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)MAP_SMSC7BIT_ENCODING);
