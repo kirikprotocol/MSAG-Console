@@ -14,7 +14,7 @@ using std::runtime_error;
 using std::auto_ptr;
 
 #define is_a(pattern,address) ( compare_pataddr(pattern,address) == 0 )
-static inline int compare_pataddr( const RoutePattern& pattern, 
+static inline int compare_pataddr( const RoutePattern& pattern,
                                    const RouteAddress& addr )
 {
       __trace2__("compare R(%s->%s) / A(%s->%s)",
@@ -23,12 +23,12 @@ static inline int compare_pataddr( const RoutePattern& pattern,
                                        addr.src_address,
                                        addr.dest_address
                                                );
-//      __trace2__("compare R(%lx->%lx) / A(%lx->%lx)",
-//                                               pattern.src_addressPattern_32[0],
-//                                               pattern.dest_addressPattern_32[0],
-//                                               addr.src_address_32[0],
-//                                               addr.dest_address_32[0]
-//                                               );
+      __trace2__("compare R(%lx->%lx) / A(%lx->%lx)",
+                                               pattern.src_addressPattern_32[0],
+                                               pattern.dest_addressPattern_32[0],
+                                               addr.src_address_32[0],
+                                               addr.dest_address_32[0]
+                                               );
 //      __trace2__("--route mask: %llx->%llx",
 //                                               *(uint64_t*)(pattern.src_addressMask),
 //                                               *(uint64_t*)(pattern.dest_addressMask));
@@ -57,14 +57,14 @@ static inline int compare_pataddr( const RoutePattern& pattern,
   result = compare_dest(3); ifn0goto;
   result = compare_dest(4); ifn0goto;
 result_:
-//  __trace2__("=== %d",result);
+  __trace2__("=== %d",result);
         return (int32_t)result;
 #undef if0ngoto
 #undef compare_src
 #undef compare_dest
 }
 
-static inline int compare_patpat( const RoutePattern& pat1, 
+static inline int compare_patpat( const RoutePattern& pat1,
                                   const RoutePattern& pat2 )
 {
   /*__trace2__("compare R1(%s->%s) ? R2(%s->%s)",
@@ -122,27 +122,27 @@ __synchronized__
         return 0;
 }
 
-// RouteAdministrator implementaion 
+// RouteAdministrator implementaion
 void RouteManager::addRoute(const RouteInfo& routeInfo)
 {
 __synchronized__
   auto_ptr<RouteRecord> record(new RouteRecord);
   __require__(table_size>=table_ptr);
   __require__(smeTable);
-  
-  record->proxyIdx = smeTable->lookup(routeInfo.smeSystemId); 
+
+  record->proxyIdx = smeTable->lookup(routeInfo.smeSystemId);
       // throws SmeErr if not found
-  
+
   record->pattern.src_typeOfNumber = routeInfo.source.getTypeOfNumber();
   record->pattern.dest_typeOfNumber = routeInfo.dest.getTypeOfNumber();
-  record->pattern.src_numberingPlan = routeInfo.source.getNumberingPlan(); 
-  record->pattern.dest_numberingPlan = routeInfo.dest.getNumberingPlan(); 
+  record->pattern.src_numberingPlan = routeInfo.source.getNumberingPlan();
+  record->pattern.dest_numberingPlan = routeInfo.dest.getNumberingPlan();
 
   uint8_t length;
   int undefVal;
   char addrVal[21];
   char addrPattern[21];
-  
+
         memset(addrVal,0,sizeof(addrVal));
   undefVal = 20;
   length = routeInfo.source.getValue(addrVal);
@@ -203,7 +203,7 @@ __synchronized__
   memcpy(record->pattern.dest_addressMask,addrPattern,21);
   memcpy(record->pattern.dest_addressPattern,addrVal,21);
   record->dest_pattern_undef = undefVal;
-  
+
   if ( table_size == table_ptr )
   {
     RouteRecord** tmp = new RouteRecord*[table_size+1024];
@@ -211,7 +211,7 @@ __synchronized__
     delete table;
     table = tmp;
   }
-  
+
   table[table_ptr++] = record.release();
         //__trace2__("+%p",table[table_ptr-1]);
         //if ( table_ptr > 1 )
@@ -221,9 +221,9 @@ __synchronized__
         //__trace2__("add route mask: %llx->%llx",
         //                                       *(uint64_t*)(table[table_ptr-1]->pattern.src_addressMask),
         //                                       *(uint64_t*)(table[table_ptr-1]->pattern.dest_addressMask));
-	__trace2__("add route: %s->%s",
-	           (table[table_ptr-1]->pattern.src_addressPattern),
-	           (table[table_ptr-1]->pattern.dest_addressPattern));
+  __trace2__("add route: %s->%s",
+             (table[table_ptr-1]->pattern.src_addressPattern),
+             (table[table_ptr-1]->pattern.dest_addressPattern));
   sorted = false;
 }
 
@@ -233,8 +233,8 @@ static inline void makeAddress( RouteAddress* addr, const Address* source, const
         memset(addr,0,sizeof(RouteAddress));
   addr->src_typeOfNumber = source->getTypeOfNumber();
   addr->dest_typeOfNumber = dest->getTypeOfNumber();
-        addr->src_numberingPlan = source->getNumberingPlan(); 
-  addr->dest_numberingPlan = dest->getNumberingPlan(); 
+        addr->src_numberingPlan = source->getNumberingPlan();
+  addr->dest_numberingPlan = dest->getNumberingPlan();
         length = source->getValue((char*)addr->src_address);
         __require__( length < 21 );
         length = dest->getValue((char*)addr->dest_address);
@@ -255,7 +255,7 @@ __synchronized__
   RouteAddress address;
   proxy = 0;
   makeAddress(&address,&source,&dest);
-	__trace2__("lookup route %s->%s",address.src_address,address.dest_address);
+  __trace2__("lookup route %s->%s",address.src_address,address.dest_address);
   //RouteRecord* record = bsearch_record(&address,table,table_ptr);
   RouteRecord** recordX = (RouteRecord**)bsearch(
                         &address,table,table_ptr,sizeof(RouteRecord*),route_compare);
@@ -350,4 +350,3 @@ SmeProxy* RouteManager::getSmeProxy(int idx)
 
 }; // namespace router
 }; // namespace smsc
-
