@@ -455,7 +455,9 @@ void ResponseMO(MapDialog* dialog,unsigned status)
       lockerX.imsi = dialog->s_imsi;
       lockerX.ref = INVALID;
       lockerX.parts = INVALID;
-      x_momap[dialog->s_imsi] = lockerX;
+      locker = &x_momap[dialog->s_imsi];
+      *locker = lockerX;
+      //locker = x_momap[dialog->s_imsi];
     }
     else locker = &it->second;
     if ( locker->ref == dialog->udhiRef )
