@@ -11,6 +11,7 @@
 #include "util/config/route/RouteConfig.h"
 #include "system/mapio/MapIoTask.h"
 #include "system/abonentinfo/AbonentInfo.hpp"
+#include "util/Logger.h"
 
 namespace smsc{
 namespace system{
@@ -89,6 +90,8 @@ extern void loadRoutes(RouteManager* rm,smsc::util::config::route::RouteConfig& 
 void Smsc::init(const SmscConfigs& cfg)
 {
   tp.preCreateThreads(15);
+  log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.init");
+
   //smsc::util::config::Manager::init("config.xml");
   //cfgman=&cfgman->getInstance();
 
@@ -217,15 +220,23 @@ void Smsc::init(const SmscConfigs& cfg)
     while((*str=toupper(*str)))str++;
     str=dc;
     while((*str=toupper(*str)))str++;
-    smsc::profiler::Profile defProfile;
+    smsc::profiler::Profile defProfile={0,0};
     if(!strcmp(dc,"DEFAULT"))
       defProfile.codepage=profiler::ProfileCharsetOptions::Default;
-    else if(!strcmp(dc,"UCS2"));
+    else if(!strcmp(dc,"UCS2"))
       defProfile.codepage=profiler::ProfileCharsetOptions::Ucs2;
+    else
+    {
+      log.warn("Profiler:Unrecognized default data coding");
+    }
     if(!strcmp(rep,"NONE"))
       defProfile.reportoptions=profiler::ProfileReportOptions::ReportNone;
     else if(!strcmp(rep,"FULL"))
       defProfile.reportoptions=profiler::ProfileReportOptions::ReportFull;
+    else
+    {
+      log.warn("Profiler:Unrecognized default report options");
+    }
 
     profiler=new smsc::profiler::Profiler(defProfile,
                &smeman,
@@ -247,6 +258,7 @@ void Smsc::init(const SmscConfigs& cfg)
     smeman.registerSmeProxy(cfg.cfgman->getString("profiler.systemId"),profiler);
   }catch(...)
   {
+    log.warn("Failed to register profiler");
     __warning__("Failed to register profiler Sme");
   }
 
@@ -258,6 +270,7 @@ void Smsc::init(const SmscConfigs& cfg)
       smeman.registerSmeProxy("abonentinfo",ai);
     }catch(exception& e)
     {
+      log.warn("Failed to register abonentinfo");
       __trace2__("Failed to register abonentinfo Sme:%s",e.what());
       __warning__("Failed to register abonentinfo Sme");
     }
