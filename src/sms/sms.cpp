@@ -3,9 +3,12 @@
 
 #include "sms.h"
 #include "util/smstext.h"
+#include "core/buffers/TmpBuf.hpp"
 
 namespace smsc {
 namespace sms{
+
+using smsc::core::buffers::TmpBuf;
 
 int Body::getRequiredBufferSize() const
 {
@@ -168,7 +171,7 @@ void Body::setBinProperty(int tag,const char* value, unsigned len)
         if ( encoding != 0x8 ) goto trivial;
         if(prop.properties[unType(Tag::SMSC_MERGE_CONCAT)].isSet)
         {
-          auto_ptr<char> buffer(new char[len]);
+          TmpBuf<char,256> buffer(len);
           char *bufptr=buffer.get();
           uint8_t *dcl=0;
           if(prop.properties[unType(Tag::SMSC_DC_LIST)].isSet)
@@ -199,7 +202,7 @@ void Body::setBinProperty(int tag,const char* value, unsigned len)
           prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].setBin(buffer.get(),len);
         }else
         {
-          auto_ptr<char> buffer(new char[len]);
+          TmpBuf<char,256> buffer(len);
           UCS_htons(buffer.get(),value,len,prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt());
           prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].setBin(buffer.get(),len);
         }
@@ -219,9 +222,9 @@ void Body::setBinProperty(int tag,const char* value, unsigned len)
         unsigned encoding = prop.properties[unType(Tag::SMPP_DATA_CODING)].getInt();
         if ( encoding != 0x8 ) goto trivial;
 
-        if(prop.properties[unType(Tag::SMSC_MERGE_CONCAT)].isSet)
+        if(prop.properties[unType(Tag::SMSC_MERGE_CONCAT)].isSet && prop.properties[unType(Tag::SMSC_CONCATINFO)].isSet)
         {
-          auto_ptr<char> buffer(new char[len]);
+          TmpBuf<char,256> buffer(len);
           char *bufptr=buffer.get();
           uint8_t *dcl=0;
           if(prop.properties[unType(Tag::SMSC_DC_LIST)].isSet)
@@ -252,7 +255,7 @@ void Body::setBinProperty(int tag,const char* value, unsigned len)
           prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].setBin(buffer.get(),len);
         }else
         {
-          auto_ptr<char> buffer(new char[len]);
+          TmpBuf<char,256> buffer(len);
           UCS_htons(buffer.get(),value,len,prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt());
           prop.properties[unType(Tag::SMSC_RAW_PAYLOAD)].setBin(buffer.get(),len);
         }
@@ -352,7 +355,7 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
         const char* orig = prop.properties[unType(Tag::SMSC_RAW_PAYLOAD)].getBin(&len);
         if ( len > 0 ){
           buffer = auto_ptr<char>(new char[len]);
-          if(prop.properties[unType(Tag::SMSC_MERGE_CONCAT)].isSet)
+          if(prop.properties[unType(Tag::SMSC_MERGE_CONCAT)].isSet && prop.properties[unType(Tag::SMSC_CONCATINFO)].isSet)
           {
             char *bufptr=buffer.get();
             uint8_t *dcl=0;
@@ -381,7 +384,7 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
               bufptr+=partlen;
             }
 
-            prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].setBin(buffer.get(),len);
+            prop.properties[unType(Tag::SMSC_RAW_PAYLOAD)].setBin(buffer.get(),len);
           }else
           {
             UCS_ntohs(buffer.get(),orig,len,prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt());
