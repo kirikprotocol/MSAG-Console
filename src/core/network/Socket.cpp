@@ -88,6 +88,15 @@ void Socket::Close()
   connected=0;
 }
 
+void Socket::Abort()
+{
+  linger l;
+  l.l_onoff=1;
+  l.l_linger=0;
+  setsockopt(sock,SOL_SOCKET,SO_LINGER,(char*)&l,sizeof(l));
+  Close();
+}
+
 int Socket::canRead()
 {
   if(!connected)return -1;

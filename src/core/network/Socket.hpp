@@ -64,6 +64,7 @@ public:
   int Init(const char *host,int port,int timeout);
   int Connect();
   void Close();
+  void Abort();
   int canRead();
   int canWrite();
   int Read(char *buf,int bufsize);
