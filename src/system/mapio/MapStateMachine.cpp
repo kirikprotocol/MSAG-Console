@@ -89,7 +89,8 @@ static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
 static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 );
 
 static void DropMapDialog_(unsigned dialogid){
-  DialogRefGuard dialog(dialog->AddRef());
+  if ( dialogid == 0 ) return;
+  DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog());
   if ( !dialog.isnull() ){
     unsigned __dialogid_map = dialog->dialogid_map;
     unsigned __dialogid_smsc = 0;
