@@ -382,6 +382,7 @@ int TestSmeErr::Execute()
 	seq.insert(seq.end(), 3, 6);
 	seq.push_back(7);
 	seq.push_back(8);
+	seq.push_back(9);
 	random_shuffle(seq.begin(), seq.end());
 	//тест
 	SmppProtocolErrorTestCases tc(config, fixture->smeAddr, fixture->chkList);
@@ -413,6 +414,9 @@ int TestSmeErr::Execute()
 				break;
 			case 8:
 				tc.enquireLinkScenario(RAND_TC);
+				break;
+			case 9:
+				tc.smeInactivityScenario(RAND_TC);
 				break;
 			default:
 				__unreachable__("Invalid scenario num");

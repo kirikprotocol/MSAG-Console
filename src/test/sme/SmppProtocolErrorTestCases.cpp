@@ -1332,7 +1332,6 @@ void SmppProtocolErrorTestCases::invalidBindStatusScenario(int num)
 
 class EnquireLinkScenario : public SmppProtocolErrorScenario
 {
-public:
 	int num;
 	uint32_t cmdId;
 public:
@@ -1439,6 +1438,103 @@ public:
 void SmppProtocolErrorTestCases::enquireLinkScenario(int num)
 {
 	EnquireLinkScenario scenario(cfg, smeAddr, chkList, num);
+	scenario.execute();
+}
+
+class SmeInactivityScenario : public SmppProtocolErrorScenario
+{
+	int num;
+public:
+	SmeInactivityScenario(const SmeConfig& conf, const Address& addr,
+		CheckList* chkList, int _num)
+	: SmppProtocolErrorScenario(conf, addr, chkList), num(_num)
+	{
+		__trace2__("SmeInactivityScenario(): scenario = %p", this);
+	}
+	~SmeInactivityScenario()
+	{
+		__trace2__("~SmeInactivityScenario(): scenario = %p", this);
+		sess.close(); //иначе может быть pure virtual method called
+	}
+	virtual void execute()
+	{
+		__decl_tc__;
+		__cfg_int__(smeInactivityTime);
+		__cfg_int__(timeCheckAccuracy);
+		connect();
+		//bind
+		TCSelector s(num, 3);
+		switch (s.value())
+		{
+			case 1:
+				bindType = BindType::Receiver;
+				break;
+			case 2:
+				bindType = BindType::Transmitter;
+				break;
+			case 3:
+				bindType = BindType::Transceiver;
+				break;
+			default:
+				__unreachable__("Invalid num");
+		}
+		PduBindTRX bindPdu;
+		sendPdu(setupBindPdu(bindPdu, bindType));
+		for (int i = 0; i < 2; i++)
+		{
+			//дождаться первого enquire_link
+			__tc__("protocolError.smeInactivity.checkTime");
+			time_t t1 = time(NULL);
+			__check__(1, checkComplete(smeInactivityTime + timeCheckAccuracy));
+			__check__(2, abs(time(NULL) - t1 - smeInactivityTime) < timeCheckAccuracy);
+			setComplete(false);
+			//последующие enquire_link
+			time_t t2 = time(NULL);
+			for (int j = 0; j < 10; j++)
+			{
+				__check__(1, checkComplete(timeCheckAccuracy));
+				setComplete(false);
+			}
+			__check__(2, abs(time(NULL) - t2 - 10 * 1) < timeCheckAccuracy);
+			__tc_ok_cond__;
+			//отправить респонс (sequenceNumber по фигу)
+			SmppHeader* respPdu = createPdu(ENQUIRE_LINK_RESP);
+			sendPdu(respPdu);
+			disposePdu(respPdu);
+		}
+	}
+	virtual void handleEvent(SmppHeader* pdu)
+	{
+		__trace2__("handleEvent(): scenario = %p, pdu:\n%s", this, str(pdu).c_str());
+		__decl_tc__;
+		__tc__("protocolError.smeInactivity.checkEnquireLinkRequest");
+		switch (pdu->get_commandId())
+		{
+			case BIND_RECIEVER_RESP:
+			case BIND_TRANSMITTER_RESP:
+			case BIND_TRANCIEVER_RESP:
+				checkBindResp(pdu);
+				break;
+			case ENQUIRE_LINK:
+				__check__(1, pdu->get_commandLength() == 16);
+				__check__(2, pdu->get_commandStatus() == ESME_ROK);
+				__tc_ok_cond__;
+				setComplete(true);
+				break;
+			default:
+				__warning2__("handleEvent(): unexpected pdu with commandId = %x", pdu->get_commandId());
+				__tc_fail__(3);
+		}
+	}
+	virtual void handleError(int errorCode)
+	{
+		__warning2__("handleError(): scenario = %p, errorCode = %d", this, errorCode);
+	}
+};
+
+void SmppProtocolErrorTestCases::smeInactivityScenario(int num)
+{
+	SmeInactivityScenario scenario(cfg, smeAddr, chkList, num);
 	scenario.execute();
 }
 

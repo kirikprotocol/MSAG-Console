@@ -119,6 +119,12 @@ public:
 	 */
 	void enquireLinkScenario(int num);
 
+	/**
+	 * Если sme не отправляет pdu в течение inactivityTime, то SC
+	 * начинает отправлять enquire_link реквесты пока не дождется ответа.
+	 */
+	void smeInactivityScenario(int num);
+
 protected:
 	const SmeConfig cfg;
 	const Address smeAddr;

@@ -69,6 +69,7 @@ int TestSme::Execute()
 	seq.insert(seq.end(), 3, 6);
 	seq.push_back(7);
 	seq.push_back(8);
+	seq.push_back(9);
 	random_shuffle(seq.begin(), seq.end());
 	//конфиг
 	SmeConfig conf;
@@ -83,7 +84,7 @@ int TestSme::Execute()
 		try
 		{
 			int idx = ++tcCount % seq.size();
-			switch (seq[idx])
+			switch (9 /*seq[idx]*/)
 			{
 				case 1:
 					tc.invalidBindScenario(RAND_TC);
@@ -108,6 +109,9 @@ int TestSme::Execute()
 					break;
 				case 8:
 					tc.enquireLinkScenario(RAND_TC);
+					break;
+				case 9:
+					tc.smeInactivityScenario(RAND_TC);
 					break;
 				default:
 					__unreachable__("Invalid scenario num");

@@ -766,6 +766,13 @@ void protocolError()
 		"Неправильная pdu с command_id несоответствующим спецификации");
 	__reg_tc__("protocolError.submitAfterUnbind.cmdId.generickNack",
 		"При получении pdu с command_id отличным от bind SC отправляет generic_nack с command_status = ESME_RINVBNDSTS");
+	//protocolError.smeInactivity
+	__reg_tc__("protocolError.smeInactivity",
+		"Если sme длительное время не проявляет активности, SC начинает отправлять на sme enquire_link реквесты");
+	__reg_tc__("protocolError.smeInactivity.checkTime",
+		"Первый enquire_link SC отправляет через период времени inactivityTime задаваемый в конфигурации, все последующие через 1 секунду");
+	__reg_tc__("protocolError.smeInactivity.checkEnquireLinkRequest",
+		"Реквест enquire_link отправляемый SC является корректным");
 	//other
 	__reg_tc__("protocolError.equalSeqNum",
 		"Отправка нескольких submit_sm с одинаковым sequence_number не влияет на логику обработки pdu");
