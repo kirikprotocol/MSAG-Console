@@ -153,7 +153,10 @@ public class DBSMEConfig
 		SaveableConfigTree tree = new SaveableConfigTree(config);
 		File tmpFile = File.createTempFile("dbsme_config_", ".xml.tmp");
 		OutputStream out = new FileOutputStream(tmpFile);
-		out.write("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n".getBytes());
+	        String encoding = null; //System.getProperty("file.encoding");
+	        if( encoding == null ) encoding = "ISO-8859-1";
+	
+		out.write(("<?xml version=\"1.0\" encoding=\""+encoding+"\"?>\n").getBytes());
 		out.write("<!DOCTYPE config SYSTEM \"file://configuration.dtd\">\n\n".getBytes());
 		out.write("<config>\n".getBytes());
 		tree.write(out, "  ");
