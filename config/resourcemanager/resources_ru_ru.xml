@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE locale_resources SYSTEM "file://locale_resources.dtd">
+
+<locale_resources>
+<settings>
+    <section name="delimiter">
+	<param name="decimal">.</param>
+	<param name="list">,</param>
+    </section>
+</settings>
+<resources>
+    <section name="ïðîôèëåð">
+	<param name="msgÎøèáê">Êàêîé-òî îøèïê</param>
+    </section>
+    <section name="receipt">
+	<param name="äîñòàâëåíî">Ìåññàãà äëÿ $$string import=dest$$ äîñòàâëåíà $$date import=date$$</param>
+    </section>
+</resources>
+</locale_resources>

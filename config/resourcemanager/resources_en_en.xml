@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE locale_resources SYSTEM "file://locale_resources.dtd">
+
+<locale_resources>
+<settings>
+    <section name="delimiter">
+	<param name="decimal">.</param>
+	<param name="list">,</param>
+    </section>
+</settings>
+<resources>
+    <section name="profiler">
+	<param name="msgError">Unrecognized profile management command</param>
+    </section>
+    <section name="receipt">
+	<param name="delivered">Message for $$string import=dest$$ delivered at $$date import=date$$</param>
+    </section>
+</resources>
+</locale_resources>
