@@ -1101,29 +1101,39 @@ public:
       if(pdu->commandId==SmppCommandSet::DELIVERY_SM_RESP || pdu->commandId==SmppCommandSet::DATA_SM_RESP)
       {
         int status=((SmsResp*)_cmd->dta)->get_status()&0xffff;
+        if(status==SmppStatusSet::ESME_ROK)
+        {
+          ((SmsResp*)_cmd->dta)->set_status(
+            MAKE_COMMAND_STATUS(CMD_OK,status)
+            );
+        }else
+        if(smsc::system::Status::isErrorPermanent(status))
+        {
+          ((SmsResp*)_cmd->dta)->set_status(
+            MAKE_COMMAND_STATUS(CMD_ERR_PERM,status)
+            );
+        }else
+        {
+          ((SmsResp*)_cmd->dta)->set_status(
+            MAKE_COMMAND_STATUS(CMD_ERR_TEMP,status)
+            );
+        }
+        /*
         switch(xsm->header.get_commandStatus())
         {
-          case SmppStatusSet::ESME_ROK:
+          case :
           {
-            ((SmsResp*)_cmd->dta)->set_status(
-              MAKE_COMMAND_STATUS(CMD_OK,status)
-              );
           }break;
           case SmppStatusSet::ESME_RX_T_APPN:
           case SmppStatusSet::ESME_RMSGQFUL:
           case SmppStatusSet::ESME_RTHROTTLED:
           {
-            ((SmsResp*)_cmd->dta)->set_status(
-              MAKE_COMMAND_STATUS(CMD_ERR_TEMP,status)
-              );
           }break;
           default:
           {
-            ((SmsResp*)_cmd->dta)->set_status(
-              MAKE_COMMAND_STATUS(CMD_ERR_PERM,status)
-              );
           }
         }
+        */
       }
       if(pdu->commandId==SmppCommandSet::DATA_SM_RESP)
       {
