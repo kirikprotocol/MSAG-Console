@@ -272,7 +272,7 @@ vector<int> compare(bool udhi1, uint8_t dc1, const char* str1, int len1,
 		//udh проходит без изменений
 		if (udhLen)
 		{
-			if (udhLen < len2)
+			if (udhLen > len2)
 			{
 				res.push_back(8);
 			}
@@ -298,7 +298,7 @@ vector<int> compare(bool udhi1, uint8_t dc1, const char* str1, int len1,
 			{
 				ucs2Buf[i] = ntohs(*(_str1 + i));
 			}
-			mbLen = ConvertUCS2ToMultibyte(ucs2Buf, ucs2Len,
+			mbLen = ConvertUCS2ToMultibyte(ucs2Buf, sizeof(ucs2Buf),
 				mbBuf, sizeof(mbBuf), CONV_ENCODING_CP1251);
 		}
 		char transBuf[(int) (len1 * 1.5) + 1]; //щ -> sch
