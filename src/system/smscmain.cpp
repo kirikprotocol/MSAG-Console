@@ -10,6 +10,7 @@
 #include <admin/service/ServiceSocketListener.h>
 #include <admin/smsc_service/SmscComponent.h>
 #include <admin/smsc_service/SmscShutdownHandler.h>
+#include <util/signal.hpp>
 
 bool file_exist(const char * const filename)
 {
@@ -38,8 +39,14 @@ throw (smsc::admin::AdminException)
   throw smsc::admin::AdminException(message);
 }
 
+void alarmHandler(int signo)
+{
+  abort();
+}
+
 int main(int argc,char* argv[])
 {
+  smsc::util::setSignalHandler(SIGALRM, alarmHandler);
   try{
     smsc::system::SmscConfigs cfgs;
     smsc::util::config::Manager::init(get_filename("config.xml"));

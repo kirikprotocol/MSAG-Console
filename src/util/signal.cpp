@@ -1,4 +1,5 @@
 #include "signal.h"
+#include "stdio.h"
 
 namespace smsc {
 namespace util {
@@ -6,6 +7,9 @@ namespace util {
 bool setSignalHandler(int signo,
 											void (*handler)(int))
 {
+	if (signo == SIGALRM)
+		fprintf(stderr, "SIGALRM  handler setted\n");
+
 	struct sigaction act, oact;
 	
 	act.sa_handler = handler;
@@ -20,6 +24,9 @@ bool setSignalHandler(int signo,
 bool setExtendedSignalHandler(int signo,
 															void (*handler)(int, siginfo_t*, void*))
 {
+	if (signo == SIGALRM)
+		fprintf(stderr, "SIGALRM extended handler setted\n");
+
 	struct sigaction act, oact;
 
 	sigemptyset(&act.sa_mask);
