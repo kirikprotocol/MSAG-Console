@@ -507,8 +507,10 @@ static void initDataCoding(ConfigView* config)
         else throw Exception("DataCoding %s is undefined.", dcStr);
 
     } catch (std::exception& exc) {
+        uDBSmeDataCoding = DataCoding::LATIN1;
         smsc_log_warn(logger, "DataCoding is not defined properly using default LATIN1. Details: %s", exc.what());        
     } catch (...) {
+        uDBSmeDataCoding = DataCoding::LATIN1;
         smsc_log_warn(logger, "DataCoding is not defined properly using default LATIN1.");        
     }
 }
@@ -527,12 +529,9 @@ int main(void)
     logger = Logger::getInstance("smsc.dbsme.DBSme");
     adminListener.reset(new smsc::admin::service::ServiceSocketListener());
 
-    SQLJobFactory _sqlJobFactory;
-    JobFactory::registerFactory(&_sqlJobFactory,
-                                SMSC_DBSME_SQL_JOB_IDENTITY);
-    PLSQLJobFactory _plsqlJobFactory;
-    JobFactory::registerFactory(&_plsqlJobFactory,
-                                SMSC_DBSME_PLSQL_JOB_IDENTITY);
+    SQLJobFactory _sqlJobFactory; PLSQLJobFactory _plsqlJobFactory;
+    JobFactory::registerFactory(&_sqlJobFactory, SMSC_DBSME_SQL_JOB_IDENTITY);
+    JobFactory::registerFactory(&_plsqlJobFactory, SMSC_DBSME_PLSQL_JOB_IDENTITY);
 
     try
     {
