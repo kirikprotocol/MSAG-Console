@@ -43,6 +43,10 @@ Targets:
     <ant dir="${SRC_DIR}" target="deps"/>
   </target>
 
+  <target name="makemod">
+    <ant dir="${SRC_DIR}" target="mod"/>
+  </target>
+
   <target name="makesmsc">
     <ant dir="${SRC_DIR}" target="system"/>
     <ant dir="${SRC_DIR}" target="admin"/>
