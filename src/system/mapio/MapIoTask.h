@@ -148,12 +148,21 @@ public:
   \class MapDialogContainer
 */
 class MapDialogContainer{
+  struct StringHashFunc{
+    static inline int CalcHash(const string& key){
+      const unsigned char* curr = (const unsigned char*)key.c_str();
+      unsigned count = *curr;
+      while(*curr){count += 37 * count + *curr;curr++;}
+      count=(unsigned)(( ( count * (unsigned)19L ) + (unsigned)12451L ) % (unsigned)8882693L);
+      return count;
+    }
+  };
   static MapDialogContainer* container;
   static Mutex sync_object;
   Mutex sync;
   MapProxy proxy;
   XHash<ET96MAP_DIALOGUE_ID_T,MapDialog*,hash_func_ET96MAP_DID> hash;
-  Hash<unsigned> lock_map;
+  XHash<const string,unsigned,StringHashFunc> lock_map;
   list<unsigned> dialogId_pool;
   void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
   //ET96MAP_DIALOGUE_ID_T allocateDialogueId();
@@ -195,9 +204,9 @@ public:
   
   MapDialog* createSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent){
     if ( abonent.length() == 0 )
-      throw runtime_exception("can't create MT dialog without abonent");
+      throw runtime_error("can't create MT dialog without abonent");
     MutexGuard g(sync);
-    __trace2__("MAP::createSMSCDialog: try create SMSC dialog on abonent %s",abonent);
+    __trace2__("MAP::createSMSCDialog: try create SMSC dialog on abonent %s",abonent.c_str());
     if ( lock_map.Exists(abonent) ) {
       __trace2__("MAP::createSMSCDialog: locked");
       return 0;
