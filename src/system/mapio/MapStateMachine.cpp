@@ -680,7 +680,9 @@ static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
   if ( result != ET96MAP_E_OK )
     throw runtime_error(
       FormatText("MAP::%s Resp return error 0x%x",__FUNCTION__,result));
-  TryDestroyDialog(dialog->dialogid_map);
+  CloseDialog(dialog->ssn,dialog->dialogid_map);
+  dialog->state = MAPST_END;
+  DropMapDialog(dialog);
 }
 
 void MAPIO_PutCommand(const SmscCommand& cmd ){ MAPIO_PutCommand(cmd, 0 ); }
