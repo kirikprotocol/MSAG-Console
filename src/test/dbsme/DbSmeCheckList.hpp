@@ -129,6 +129,14 @@ void processDbSmeRes()
 		"ƒата правильно преобразуетс€ из одного input формата в другой output формат");
 	__reg_tc__("processDbSmeRes.output.fromAddress",
 		"«начение параметра адреса отправител€ from-address вычисл€етс€ правильно");
+	__reg_tc__("processDbSmeRes.output.string",
+		"‘орматирование строковых полей выполн€етс€ правильно");
+	__reg_tc__("processDbSmeRes.output.string.left",
+		"¬ыравнивание по левому краю");
+	__reg_tc__("processDbSmeRes.output.string.right",
+		"¬ыравнивание по правому краю");
+	__reg_tc__("processDbSmeRes.output.string.center",
+		"¬ыравнивание по центру");
 	//processDbSmeRes.select
 	__reg_tc__("processDbSmeRes.select",
 		"«апросы на выборку данных");
