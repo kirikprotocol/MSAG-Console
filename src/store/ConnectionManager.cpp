@@ -65,7 +65,7 @@ void ConnectionPool::loadInitSize(Manager& config)
         {
             count = SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE;
             log.warn("Init ConnectionPool size is incorrect "
-                     "(should be between 0 and %u) ! "
+                     "(should be between 1 and %u) ! "
                      "Config parameter: <MessageStore.Connections.init> "
                      "Using default: %u",
                      SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE_LIMIT, 
