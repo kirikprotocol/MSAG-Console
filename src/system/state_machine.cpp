@@ -238,6 +238,7 @@ bool checkSourceAddress(const std::string& pattern,const Address& src)
 }
 
 
+
 StateType StateMachine::submit(Tuple& t)
 {
   __require__(t.state==UNKNOWN_STATE);
@@ -611,35 +612,7 @@ StateType StateMachine::submit(Tuple& t)
     if(profile.codepage==smsc::profiler::ProfileCharsetOptions::Default &&
        sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
     {
-      auto_ptr<char> buf;
-      auto_ptr<char> buf8;
-
-      unsigned len;
-      const short*msg=(const short*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
-      bool pl=false;
-      if(len==0)
-      {
-        if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
-        {
-          msg=(const short*)sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
-          pl=true;
-        }
-      }
-      buf=auto_ptr<char>(new char[len*2]);
-      len=ConvertUCS2ToMultibyte(msg,len,buf.get(),len*2,CONV_ENCODING_CP1251);
-      buf8=auto_ptr<char>(new char[len*3+1]);
-      int newlen=Transliterate(buf.get(),len,CONV_ENCODING_CP1251,buf8.get(),len*3);
-      sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
-      __trace2__("SUBMIT: converting ucs2->text(%d->%d)",len,newlen);
-      if(pl)
-      {
-        sms->setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,buf8.get(),newlen);
-      }
-      else
-      {
-        sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf8.get(),newlen);
-        sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,newlen);
-      }
+      transLiterateSms(sms);
     }
     SmscCommand delivery = SmscCommand::makeDeliverySm(*sms,dialogId2);
     unsigned bodyLen=0;
@@ -826,35 +799,7 @@ StateType StateMachine::forward(Tuple& t)
     if(p.codepage==smsc::profiler::ProfileCharsetOptions::Default &&
        sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
     {
-      auto_ptr<char> buf;
-      auto_ptr<char> buf8;
-
-      unsigned len;
-      const short*msg=(const short*)sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
-      bool pl=false;
-      if(len==0)
-      {
-        if(sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
-        {
-          msg=(const short*)sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
-          pl=true;
-        }
-      }
-      buf=auto_ptr<char>(new char[len*2]);
-      len=ConvertUCS2ToMultibyte(msg,len,buf.get(),len*2,CONV_ENCODING_CP1251);
-      buf8=auto_ptr<char>(new char[len*3+1]);
-      int newlen=Transliterate(buf.get(),len,CONV_ENCODING_CP1251,buf8.get(),len*3);
-      sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
-      __trace2__("SUBMIT: converting ucs2->text(%d->%d)",len,newlen);
-      if(pl)
-      {
-        sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,buf8.get(),newlen);
-      }
-      else
-      {
-        sms.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf8.get(),newlen);
-        sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,newlen);
-      }
+      transLiterateSms(&sms);
     }
     if(t.command->is_reschedulingForward())
     {

@@ -6,6 +6,7 @@ namespace smsc{
 namespace util{
 
 using namespace std;
+using std::auto_ptr;
 
 static inline bool isEscapedChar(char c)
 {
@@ -113,6 +114,58 @@ int trimSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int d
   sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,datalen);
   return datalen;
 }
+
+void transLiterateSms(SMS* sms)
+{
+  char udhiData[256];
+  int udhiDataLen=0;
+  bool udhi=sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40;
+
+  auto_ptr<char> buf;
+  auto_ptr<char> buf8;
+
+  unsigned len;
+  const short*msg=(const short*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+  bool pl=false;
+  if(len==0)
+  {
+    if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+    {
+      msg=(const short*)sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+      pl=true;
+    }
+  }
+  if(udhi)
+  {
+    unsigned char* data=(unsigned char*)msg;
+    udhiDataLen=*data;
+    memcpy(udhiData,data,udhiDataLen);
+    msg=(short*)data+udhiDataLen;
+    len-=udhiDataLen;
+  }
+
+  buf=auto_ptr<char>(new char[len*2]);
+  len=ConvertUCS2ToMultibyte(msg,len,buf.get(),len*2,CONV_ENCODING_CP1251);
+  buf8=auto_ptr<char>(new char[udhiDataLen+len*3+1]);
+  int newlen=Transliterate(buf.get(),len,CONV_ENCODING_CP1251,buf8.get()+udhiDataLen,len*3);
+  sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
+  __trace2__("SUBMIT: converting ucs2->text(%d->%d)",len,newlen);
+  if(udhi)
+  {
+    memcpy(buf8.get(),udhiData,udhiDataLen);
+    newlen+=udhiDataLen;
+  }
+  if(pl)
+  {
+    sms->setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,buf8.get(),newlen);
+  }
+  else
+  {
+    sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf8.get(),newlen);
+    sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,newlen);
+  }
+}
+
 
 };//util
 };//smsc

@@ -21,6 +21,12 @@ static inline int getSmsText(SMS* sms,char* buf,unsigned bufsize)
   //int len = sms->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
   unsigned len;
   const char *data=sms->getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,&len);
+  if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)==0x40)
+  {
+    int l=(unsigned char)*data;
+    data+=l;
+    len-=l;
+  }
   __trace2__("getSmsText: dc=%d, len=%d",coding,len);
   if(coding==DataCoding::UCS2)
   {
@@ -78,6 +84,8 @@ int splitSms(SMS* tmplSms,const char *text,int length,ConvEncodingEnum encoding,
              Array<SMS*>& dest);
 
 int trimSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int datacoding);
+
+void transLiterateSms(SMS* sms);
 
 };
 };
