@@ -26,6 +26,7 @@
       <section name="default">
         <param name="deliveredFormat">Message for $$string import=dest$$ delivered at $$date import=date$$</param>
         <param name="failedFormat">Message for $$string import=dest$$ sent at $$date import=date$$ wasn't delivered, reason: $$string import=reason$$</param>
+        <param name="deletedFormat">Message for $$string import=dest$$ sent at $$date import=date$$ wasn't delivered, reason: admin deleted message</param>
         <param name="notifyFormat">Message for $$string import=dest$$ sent at $$date import=date$$ wasn't immediately delivered, reason: $$string import=reason$$</param>
       </section>
     </section>
