@@ -1,17 +1,22 @@
+package ru.novosoft.smsc.admin.service;
+
 /*
  * Created by igork
  * Date: Feb 28, 2002
  * Time: 12:35:08 PM
  */
-package ru.novosoft.smsc.admin.service;
 
 import org.w3c.dom.Element;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.protocol.*;
+import ru.novosoft.smsc.admin.protocol.CommandCall;
+import ru.novosoft.smsc.admin.protocol.CommandListComponents;
+import ru.novosoft.smsc.admin.protocol.Response;
 import ru.novosoft.smsc.admin.utli.Proxy;
 import ru.novosoft.smsc.util.xml.Utils;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 
 public class Service extends Proxy
@@ -72,7 +77,8 @@ public class Service extends Proxy
         default:
           throw new AdminException("Unknown result type");
       }
-    } else {
+    }
+    else {
       logger.error("Incorrect method \"" + (null == method ? "<null>" : method.getName()) + "\" signature");
 
       // for debug purposes
@@ -84,7 +90,7 @@ public class Service extends Proxy
         if (null != component && null != component.getMethods().get(method.getName())) {
           final Method foundMethod = (Method) component.getMethods().get(method.getName());
           logger.debug("Found method:" + "\n  name: " + foundMethod.getName() + "\n  type: " + foundMethod.getType().getName() + "\n  params: "
-                       + foundMethod.getParams());
+                  + foundMethod.getParams());
         }
       } catch (Throwable e) {
       }
@@ -136,8 +142,8 @@ public class Service extends Proxy
     logger.debug("Set info. Status: " + info.getStatusStr() + " [" + info.getStatus() + ']');
 
     if (ServiceInfo.STATUS_RUNNING == info.status
-        && (null == info.components || 0 == info.components.size())
-        && null != this.info.components && 0 < this.info.components.size()) {
+            && (null == info.components || 0 == info.components.size())
+            && null != this.info.components && 0 < this.info.components.size()) {
       info.components = this.info.components;
     }
     this.info = info;

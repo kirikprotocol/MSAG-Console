@@ -1,6 +1,8 @@
 package ru.novosoft.smsc.admin.smsview.archive;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Created by IntelliJ IDEA.
@@ -13,21 +15,30 @@ public class TotalMessage extends Message
 {
   private long count = 0;
 
-  public TotalMessage() {
+  public TotalMessage()
+  {
     super(Message.SMSC_BYTE_TOTAL_TYPE);
   }
-  public TotalMessage(byte type, long count) {
-    super(type); this.count = count;
+
+  public TotalMessage(byte type, long count)
+  {
+    super(type);
+    this.count = count;
   }
 
-  public long getCount() {
+  public long getCount()
+  {
     return count;
   }
-  public void send(OutputStream os) throws IOException {
+
+  public void send(OutputStream os) throws IOException
+  {
     super.send(os);
     Message.writeInt64(os, count);
   }
-  public void receive(InputStream is) throws IOException {
+
+  public void receive(InputStream is) throws IOException
+  {
     count = Message.readInt64(is);
   }
 }

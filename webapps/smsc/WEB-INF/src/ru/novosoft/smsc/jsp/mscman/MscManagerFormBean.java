@@ -1,3 +1,5 @@
+package ru.novosoft.smsc.jsp.mscman;
+
 /**
  * Created by IntelliJ IDEA.
  * User: makarov
@@ -5,7 +7,6 @@
  * Time: 4:04:15 PM
  * To change this template use Options | File Templates.
  */
-package ru.novosoft.smsc.jsp.mscman;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.journal.Actions;
@@ -19,7 +20,7 @@ import ru.novosoft.smsc.jsp.util.tables.impl.mscman.MscFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.mscman.MscQuery;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.List;
 
 public class MscManagerFormBean extends IndexBean
 {
@@ -77,13 +78,16 @@ public class MscManagerFormBean extends IndexBean
       if (mbBlock != null) {
         manager.block(mscKey);
         journalAppend(SubjectTypes.TYPE_msc, mscKey, Actions.ACTION_LOCK);
-      } else if (mbClear != null) {
+      }
+      else if (mbClear != null) {
         manager.clear(mscKey);
         journalAppend(SubjectTypes.TYPE_msc, mscKey, Actions.ACTION_UNLOCK);
-      } else if (mbUnregister != null) {
+      }
+      else if (mbUnregister != null) {
         manager.unregister(mscKey);
         journalAppend(SubjectTypes.TYPE_msc, mscKey, Actions.ACTION_DEL);
-      } else if (mbRegister != null) {
+      }
+      else if (mbRegister != null) {
         manager.register(mscNum);
         journalAppend(SubjectTypes.TYPE_msc, mscKey, Actions.ACTION_ADD);
       }

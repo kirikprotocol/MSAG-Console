@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.jsp.smsc.aliases;
+
 /*
  * Created by igork
  * Date: 05.11.2002
  * Time: 23:38:40
  */
-package ru.novosoft.smsc.jsp.smsc.aliases;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.MaskList;
@@ -13,7 +14,7 @@ import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasFilter;
 import ru.novosoft.smsc.util.Functions;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.List;
 
 public class AliasesFilter extends SmscBean
 {
@@ -81,7 +82,8 @@ public class AliasesFilter extends SmscBean
       }
       filter.setHide(hide);
       return RESULT_DONE;
-    } else if (mbClear != null) {
+    }
+    else if (mbClear != null) {
       aliases = addresses = new String[0];
       hide = AliasFilter.HIDE_UNKNOWN;
       return RESULT_OK;
@@ -91,7 +93,9 @@ public class AliasesFilter extends SmscBean
   }
 
 
-  /***************************** properties **********************************/
+  /**
+   * ************************** properties *********************************
+   */
   public String[] getAliases()
   {
     return aliases;

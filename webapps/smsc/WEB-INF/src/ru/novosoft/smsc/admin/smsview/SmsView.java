@@ -9,13 +9,13 @@ package ru.novosoft.smsc.admin.smsview;
  * @version 1.0
  */
 
-import java.util.Vector;
-
-import ru.novosoft.smsc.admin.smsc_service.Smsc;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.smsc_service.CancelMessageData;
-import ru.novosoft.smsc.admin.*;
+import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.smsview.archive.SmsArchiveSource;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+
+import java.util.Vector;
 
 public class SmsView
 {
@@ -23,7 +23,8 @@ public class SmsView
   private SmsOperativeSource operative = new SmsOperativeSource();
   private SmsArchiveSource archive = new SmsArchiveSource();
 
-  public void init(SMSCAppContext appContext) throws AdminException {
+  public void init(SMSCAppContext appContext) throws AdminException
+  {
     if (smsc == null) {
       this.smsc = appContext.getSmsc();
       operative.setDataSource(appContext.getConnectionPool());
@@ -39,8 +40,9 @@ public class SmsView
     else if (storage == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE)
       return archive.getSmsSet(query);
 
-    throw new AdminException("Unsupported storage type: "+storage);
+    throw new AdminException("Unsupported storage type: " + storage);
   }
+
   public int getSmsCount(SmsQuery query) throws AdminException
   {
     int storage = query.getStorageType();
@@ -49,7 +51,7 @@ public class SmsView
     else if (storage == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE)
       return archive.getSmsCount(query);
 
-    throw new AdminException("Unsupported storage type: "+storage);
+    throw new AdminException("Unsupported storage type: " + storage);
   }
 
   public int delOperativeSmsSet(SmsSet set) throws AdminException
@@ -61,16 +63,16 @@ public class SmsView
     for (int i = 0; i < set.getRowsCount(); i++) {
       SmsRow row = set.getRow(i);
       if (row != null) {
-        output.addElement(new CancelMessageData(
-            row.getIdString(), row.getOriginatingAddress(), row.getDestinationAddress()));
+        output.addElement(new CancelMessageData(row.getIdString(), row.getOriginatingAddress(), row.getDestinationAddress()));
         deleted++;
       }
     }
 
-    try { smsc.processCancelMessages(output); }
-    catch (Exception exc) {
+    try {
+      smsc.processCancelMessages(output);
+    } catch (Exception exc) {
       exc.printStackTrace();
-      throw new AdminException("Failed to cancel messages on SMSC. Details: "+exc.getMessage());
+      throw new AdminException("Failed to cancel messages on SMSC. Details: " + exc.getMessage());
     }
     return deleted;
   }

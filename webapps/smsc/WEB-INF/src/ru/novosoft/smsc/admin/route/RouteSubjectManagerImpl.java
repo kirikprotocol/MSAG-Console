@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.admin.route;
+
 /*
  * Author: igork
  * Date: 14.05.2002
  * Time: 15:49:22
  */
-package ru.novosoft.smsc.admin.route;
 
 import org.apache.log4j.Category;
 import org.w3c.dom.Document;
@@ -133,9 +134,11 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager
       if (lastModified != 0) {
         System.out.println("lastModified = " + lastModified);
         return new Date(lastModified);
-      } else
+      }
+      else
         System.out.println("tempConfFile.lastModified() == 0");
-    } else
+    }
+    else
       System.out.println("!tempConfFile.exists(), \"" + tempConfFile.getAbsolutePath() + '"');
     return null;
   }

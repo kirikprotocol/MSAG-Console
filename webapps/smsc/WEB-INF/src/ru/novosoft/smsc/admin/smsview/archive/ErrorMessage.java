@@ -1,6 +1,8 @@
 package ru.novosoft.smsc.admin.smsview.archive;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Created by IntelliJ IDEA.
@@ -13,21 +15,30 @@ public class ErrorMessage extends Message
 {
   private String error = null;
 
-  public ErrorMessage() {
+  public ErrorMessage()
+  {
     super(Message.SMSC_BYTE_ERROR_TYPE);
   }
-  public ErrorMessage(String error) {
+
+  public ErrorMessage(String error)
+  {
     super(Message.SMSC_BYTE_ERROR_TYPE);
     this.error = error;
   }
-  public String getError() {
+
+  public String getError()
+  {
     return error;
   }
-  public void send(OutputStream os) throws IOException {
+
+  public void send(OutputStream os) throws IOException
+  {
     super.send(os);
     Message.writeString32(os, error);
   }
-  public void receive(InputStream is) throws IOException {
+
+  public void receive(InputStream is) throws IOException
+  {
     error = Message.readString32(is);
   }
 

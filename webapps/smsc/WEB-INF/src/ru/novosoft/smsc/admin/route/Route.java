@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.admin.route;
+
 /*
  * Author: igork
  * Date: 14.05.2002
  * Time: 13:43:03
  */
-package ru.novosoft.smsc.admin.route;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -45,10 +46,11 @@ public class Route
   private boolean allowBlocked;
   private long providerId;
   private long categoryId;
+
   public Route(final String routeName, final int priority, final boolean isEnabling, final boolean isBilling, final boolean isArchiving,
                final boolean isSuppressDeliveryReports, final boolean active, final int serviceId, final SourceList sources,
                final DestinationList destinations, final String srcSmeId, final String deliveryMode, final String forwardTo, final boolean hide,
-               final byte replayPath, final String notes, final boolean forceDelivery, final long aclId, final boolean allowBlocked,final long providerId,final long categoryId)
+               final byte replayPath, final String notes, final boolean forceDelivery, final long aclId, final boolean allowBlocked, final long providerId, final long categoryId)
   {
     if (routeName == null)
       throw new NullPointerException("Route name is null");
@@ -108,9 +110,10 @@ public class Route
     forceDelivery = false;
     aclId = -1;
     allowBlocked = false;
-    providerId=-1;
-    categoryId=-1;
+    providerId = -1;
+    categoryId = -1;
   }
+
 
   public Route(final Element routeElem, final SubjectList subjects, final SmeManager smeManager) throws AdminException
   {
@@ -243,7 +246,7 @@ public class Route
   }
 
   public void updateDestinations(final Set destinationsStrings, final String masksString, final SubjectList allSubjects, final SME defaultSme)
-      throws AdminException
+          throws AdminException
   {
     final DestinationList list = new DestinationList();
     for (Iterator i = destinationsStrings.iterator(); i.hasNext();) {
@@ -295,23 +298,23 @@ public class Route
   public PrintWriter store(final PrintWriter out)
   {
     out.println("  <route id=\"" + StringEncoderDecoder.encode(getName())
-                + "\" billing=\"" + isBilling()
-                + "\" archiving=\"" + isArchiving()
-                + "\" enabling=\"" + isEnabling()
-                + "\" priority=\"" + getPriority()
-                + "\" serviceId=\"" + getServiceId()
-                + "\" suppressDeliveryReports=\"" + isSuppressDeliveryReports()
-                + "\" active=\"" + isActive()
-                + "\" srcSmeId=\"" + StringEncoderDecoder.encode(getSrcSmeId())
-                + "\" deliveryMode=\"" + StringEncoderDecoder.encode(getDeliveryMode())
-                + "\" hide=\"" + isHide()
-                + "\" replayPath=\"" + getReplayPathValue(getReplayPath())
-                + ("MAP_PROXY".equals(getSrcSmeId()) ? "\" forwardTo=\"" + StringEncoderDecoder.encode(getForwardTo()) : "")
-                + "\" aclId=\"" + getAclId()
-                + "\" allowBlocked=\"" + isAllowBlocked()
-                + "\" providerId=\"" + getProviderId()
-                + "\" categoryId=\"" + getCategoryId()
-                + "\">");
+            + "\" billing=\"" + isBilling()
+            + "\" archiving=\"" + isArchiving()
+            + "\" enabling=\"" + isEnabling()
+            + "\" priority=\"" + getPriority()
+            + "\" serviceId=\"" + getServiceId()
+            + "\" suppressDeliveryReports=\"" + isSuppressDeliveryReports()
+            + "\" active=\"" + isActive()
+            + "\" srcSmeId=\"" + StringEncoderDecoder.encode(getSrcSmeId())
+            + "\" deliveryMode=\"" + StringEncoderDecoder.encode(getDeliveryMode())
+            + "\" hide=\"" + isHide()
+            + "\" replayPath=\"" + getReplayPathValue(getReplayPath())
+            + ("MAP_PROXY".equals(getSrcSmeId()) ? "\" forwardTo=\"" + StringEncoderDecoder.encode(getForwardTo()) : "")
+            + "\" aclId=\"" + getAclId()
+            + "\" allowBlocked=\"" + isAllowBlocked()
+            + "\" providerId=\"" + getProviderId()
+            + "\" categoryId=\"" + getCategoryId()
+            + "\">");
     if (notes != null)
       out.println("    <notes>" + StringEncoderDecoder.encode(notes) + "</notes>");
     getSources().store(out);
@@ -450,19 +453,23 @@ public class Route
     this.allowBlocked = allowBlocked;
   }
 
-  public long getProviderId() {
+  public long getProviderId()
+  {
     return providerId;
   }
 
-  public void setProviderId(final long providerId) {
+  public void setProviderId(final long providerId)
+  {
     this.providerId = providerId;
   }
 
-  public long getCategoryId() {
+  public long getCategoryId()
+  {
     return categoryId;
   }
 
-  public void setCategoryId(final long categoryId) {
+  public void setCategoryId(final long categoryId)
+  {
     this.categoryId = categoryId;
   }
 

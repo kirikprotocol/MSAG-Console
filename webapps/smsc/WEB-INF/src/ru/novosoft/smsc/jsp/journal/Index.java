@@ -1,8 +1,8 @@
 package ru.novosoft.smsc.jsp.journal;
 
-import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.admin.journal.Action;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.jsp.smsc.IndexBean;
 
 import java.util.*;
 
@@ -22,7 +22,9 @@ public class Index extends IndexBean
   private static final byte SORT_timestamp = 6;
 
   private static final Set nonAppliableSubjectTypes = new HashSet();
-  static {
+
+  static
+  {
     nonAppliableSubjectTypes.add(new Byte(SubjectTypes.TYPE_dl));
     nonAppliableSubjectTypes.add(new Byte(SubjectTypes.TYPE_locale));
     nonAppliableSubjectTypes.add(new Byte(SubjectTypes.TYPE_profile));

@@ -12,7 +12,7 @@ import java.util.*;
 
 
 /**
- * Created by igork Date: 22.03.2004 Time: 19:45:12
+ * Created by andrey Date: 07.02.2005 Time: 12:45:18
  */
 public class ProviderManager extends AbstractDataSourceImpl implements DataSource
 {
@@ -29,7 +29,7 @@ public class ProviderManager extends AbstractDataSourceImpl implements DataSourc
     super(COLUMN_NAMES);
     this.webappConfig = gwConfig;
     if (!gwConfig.containsSection(SECTION_NAME_providers)) {
-     gwConfig.setInt(SECTION_NAME_providers+ '.' + PARAM_NAME_last_used_id,0);
+      gwConfig.setInt(SECTION_NAME_providers + '.' + PARAM_NAME_last_used_id, 0);
     }
     lastUsedId = gwConfig.getInt(SECTION_NAME_providers + '.' + PARAM_NAME_last_used_id);
     final Collection providerIds = gwConfig.getSectionChildShortParamsNames(SECTION_NAME_providers);
@@ -130,7 +130,6 @@ public class ProviderManager extends AbstractDataSourceImpl implements DataSourc
     }
     return providerFounded;
   }
-
 
 
   public synchronized boolean addProvider(Provider provider)

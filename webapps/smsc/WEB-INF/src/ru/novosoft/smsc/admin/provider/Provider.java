@@ -1,13 +1,12 @@
 package ru.novosoft.smsc.admin.provider;
 
-
 /**
- * Created by igork Date: 22.03.2004 Time: 19:45:18
+ * Created by andrey Date: 07.02.2005 Time: 12:45:18
  */
 public class Provider
 {
   public static final String[] columnNames = {
-		"id", "name",
+    "id", "name",
   };
   private long id;
   private String name;
@@ -18,7 +17,7 @@ public class Provider
     this.name = name;
   }
 
-   public Provider( final String name)
+  public Provider(final String name)
   {
     this.name = name;
   }
@@ -41,8 +40,8 @@ public class Provider
   public String toString()
   {
     return "Provider{" +
-           "id=" + id +
-           ", name='" + name + "'" +
-           "}";
+            "id=" + id +
+            ", name='" + name + "'" +
+            "}";
   }
 }

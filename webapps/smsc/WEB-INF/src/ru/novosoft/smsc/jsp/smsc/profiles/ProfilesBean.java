@@ -122,7 +122,7 @@ public class ProfilesBean extends SmscBean
   {
     return Profile.getAliasHideString(aliasHide);
   }
-  
+
   public void setAliasHide(final String aliasHide)
   {
     if ("true".equalsIgnoreCase(aliasHide) || "hide".equalsIgnoreCase(aliasHide))

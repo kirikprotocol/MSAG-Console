@@ -1,6 +1,8 @@
 package ru.novosoft.smsc.admin.smsview.archive;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Created by IntelliJ IDEA.
@@ -14,15 +16,21 @@ public class DaemonCommunicator
   private InputStream is = null;
   private OutputStream os = null;
 
-  public DaemonCommunicator(InputStream is, OutputStream os) {
-    this.is = is; this.os = os;
+  public DaemonCommunicator(InputStream is, OutputStream os)
+  {
+    this.is = is;
+    this.os = os;
   }
-  public void send(Message message) throws IOException {
+
+  public void send(Message message) throws IOException
+  {
     if (message == null) return;
     message.send(os);
   }
-  public Message receive() throws IOException {
-    byte type = (byte)Message.readUInt8(is);
+
+  public Message receive() throws IOException
+  {
+    byte type = (byte) Message.readUInt8(is);
     Message message = Message.create(type);
     if (message != null) message.receive(is);
     return message;

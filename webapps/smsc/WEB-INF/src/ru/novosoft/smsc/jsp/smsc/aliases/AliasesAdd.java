@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.jsp.smsc.aliases;
+
 /*
  * Created by igork
  * Date: 04.11.2002
  * Time: 20:02:01
  */
-package ru.novosoft.smsc.jsp.smsc.aliases;
 
 import ru.novosoft.smsc.admin.alias.Alias;
 import ru.novosoft.smsc.admin.journal.Action;
@@ -79,8 +80,8 @@ public class AliasesAdd extends SmscBean
         return error(SMSCErrors.error.aliases.alreadyExistsAlias, alias);
 
       return smsc.getAliases().add(newAlias, new Action(loginedPrincipal.getName(), sessionId))
-             ? RESULT_DONE
-             : error(SMSCErrors.error.aliases.alreadyExistsAddress, alias);
+              ? RESULT_DONE
+              : error(SMSCErrors.error.aliases.alreadyExistsAddress, alias);
     } catch (Throwable t) {
       logger.error("Couldn't add alias \"" + address + "\"-->\"" + alias + "\"", t);
       return error(SMSCErrors.error.aliases.cantAdd, alias);

@@ -12,7 +12,8 @@ import java.util.Map;
  * Date: Jan 21, 2003
  * Time: 6:49:26 PM
  */
-public interface ServiceManager {
+public interface ServiceManager
+{
   void addAllInfos(Map services) throws AdminException;
 
   boolean contains(String id);
@@ -24,7 +25,6 @@ public interface ServiceManager {
   ServiceInfo getInfo(String serviceId) throws AdminException;
 
   /**
-   *
    * @return Service IDs
    */
   List getServiceIds();

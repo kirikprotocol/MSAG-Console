@@ -1,15 +1,21 @@
+package ru.novosoft.smsc.admin.service;
+
 /*
  * Created by igork
  * Date: Feb 28, 2002
  * Time: 12:33:36 PM
  */
-package ru.novosoft.smsc.admin.service;
 
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.util.*;
+import ru.novosoft.smsc.util.Functions;
+import ru.novosoft.smsc.util.SortedList;
+import ru.novosoft.smsc.util.WebAppFolders;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.*;
 
 
@@ -68,13 +74,13 @@ public class ServiceManagerImpl implements ServiceManager
   }
 
   public Service remove(String serviceId)
-      throws AdminException
+          throws AdminException
   {
     require(serviceId);
     Service s = get(serviceId);
     services.remove(serviceId);
     if (!Functions.recursiveDeleteFolder(s.getInfo().getServiceFolder())
-        || !Functions.recursiveDeleteFolder(WebAppFolders.getServiceJspsFolder(serviceId)))
+            || !Functions.recursiveDeleteFolder(WebAppFolders.getServiceJspsFolder(serviceId)))
       throw new AdminException("Service removed, but services files not deleted");
     return s;
   }
@@ -85,7 +91,7 @@ public class ServiceManagerImpl implements ServiceManager
    */
 
   public ServiceInfo getInfo(String servoceId)
-      throws AdminException
+          throws AdminException
   {
     Service s = get(servoceId);
     return s.getInfo();
@@ -110,7 +116,7 @@ public class ServiceManagerImpl implements ServiceManager
   }
 
   public void deployAdministrableService(File incomingZip, ServiceInfo serviceInfo, File serviceFolder)
-      throws AdminException
+          throws AdminException
   {
     String hostName = serviceInfo.getHost();
     String serviceId = serviceInfo.getId();
@@ -124,7 +130,7 @@ public class ServiceManagerImpl implements ServiceManager
         throw new AdminException("Jps pages for new services already exists");
 
       Functions.unZipArchive(serviceFolder,
-                             new BufferedInputStream(new FileInputStream(incomingZip)));
+              new BufferedInputStream(new FileInputStream(incomingZip)));
 
       File incomingJsps = new File(serviceFolder, "jsp");
       if (!incomingJsps.renameTo(jspsFolder))
@@ -197,7 +203,8 @@ public class ServiceManagerImpl implements ServiceManager
           logger.error("updateServices: Couldn't create service \"" + id + "\"", e);
           continue;
         }
-      } else
+      }
+      else
         service.setInfo(serviceInfo);
     }
     services.keySet().retainAll(serviceInfos.keySet());
@@ -208,7 +215,8 @@ public class ServiceManagerImpl implements ServiceManager
     if (isService(serviceId)) {
       final File jspsFolder = WebAppFolders.getServiceJspsFolder(serviceId);
       return jspsFolder.exists() && jspsFolder.isDirectory();
-    } else
+    }
+    else
       return false;
   }
 }

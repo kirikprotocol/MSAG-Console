@@ -1,16 +1,15 @@
-/**
- * Created by igork
- * Date: Nov 29, 2002
- * Time: 8:31:50 PM
- */
 package ru.novosoft.smsc.jsp.smsc.providers;
+
+/**
+ Created by andrey Date: 07.02.2005 Time: 12:45:18
+ */
 
 import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.provider.Provider;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
-import java.util.*;
+import java.util.List;
 
 public class ProvidersEdit extends ProvidersEditBean
 {
@@ -20,17 +19,19 @@ public class ProvidersEdit extends ProvidersEditBean
     if (result != RESULT_OK)
       return result;
 
-      if (name == null || name.trim().length() == 0) {
+    if (name == null || name.trim().length() == 0) {
       //  setRoles(new String[0]);
-        name =  "";
-        return error(SMSCErrors.error.providers.nameNotDefined);
-      } else {
+      name = "";
+      return error(SMSCErrors.error.providers.nameNotDefined);
+    }
+    else {
 /*        Provider provider = providerManager.getProviderByName(name);
         id=String.valueOf(provider.getId());
         if ((provider == null) && (mbSave == null)) {
           return error(SMSCErrors.error.providers.providerNotFound, name);
         }
-*/      }
+*/
+    }
 
     return RESULT_OK;
   }
@@ -42,8 +43,9 @@ public class ProvidersEdit extends ProvidersEditBean
     Long idl = Long.getLong(id);
     Provider provider = providerManager.getProvider(idl);
     if (provider == null) { // add new provider
-     return error(SMSCErrors.error.providers.providerNotFound, name);
-    } else {
+      return error(SMSCErrors.error.providers.providerNotFound, name);
+    }
+    else {
 
       provider.setName(name);
       journalAppend(SubjectTypes.TYPE_provider, name, Actions.ACTION_MODIFY);

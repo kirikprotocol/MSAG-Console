@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.jsp.smsc.hosts;
+
 /*
  * Created by igork
  * Date: 24.10.2002
  * Time: 13:54:16
  */
-package ru.novosoft.smsc.jsp.smsc.hosts;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.SMSCErrors;
@@ -74,7 +75,8 @@ public class HostEdit extends SmscBean
         return error(SMSCErrors.error.hosts.daemonNotFound, hostName);
       }
       return RESULT_DONE;
-    } else
+    }
+    else
       return RESULT_OK;
   }
 

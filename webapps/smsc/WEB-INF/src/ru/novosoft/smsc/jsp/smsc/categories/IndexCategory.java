@@ -1,18 +1,22 @@
-/**
- * Created by igork Date: 22.03.2004 Time: 20:04:20
- */
 package ru.novosoft.smsc.jsp.smsc.categories;
+
+/**
+ Created by andrey Date: 07.02.2005 Time: 12:45:18
+ */
+
+import ru.novosoft.smsc.admin.category.CategoryManager;
+import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.category.CategoryQuery;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
-import ru.novosoft.smsc.admin.journal.Actions;
-import ru.novosoft.smsc.admin.category.Category;
-import ru.novosoft.smsc.admin.category.CategoryManager;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class IndexCategory extends IndexBean
 {
@@ -20,12 +24,11 @@ public class IndexCategory extends IndexBean
   public static final int RESULT_EDIT = IndexBean.PRIVATE_RESULT + 1;
   public static final int PRIVATE_RESULT = IndexBean.PRIVATE_RESULT + 2;
   private long id = -1;
-  private String name= null;
+  private String name = null;
   protected String editName = null;
   protected String editId = null;
-    //private boolean add = false;
+  //private boolean add = false;
   protected QueryResultSet categories = null;
-  protected Category category = null;
   protected CategoryManager categoryManager = null;
   protected String mbAdd = null;
   protected String mbDelete = null;
@@ -33,20 +36,19 @@ public class IndexCategory extends IndexBean
   protected String[] checkedCategoryNames = new String[0];
   protected Set checkedCategoryNamesSet = new HashSet();
 
-   protected int init(List errors)
+  protected int init(List errors)
   {
     int result = super.init(errors);
     if (result != RESULT_OK)
-          return result;
-     pageSize = preferences.getCategoriesPageSize();
-        if (sort != null)
-          preferences.setCategoriesSortOrder(sort);
-        else
-          sort =  preferences.getCategoriesSortOrder();
+      return result;
+    pageSize = preferences.getCategoriesPageSize();
+    if (sort != null)
+      preferences.setCategoriesSortOrder(sort);
+    else
+      sort = preferences.getCategoriesSortOrder();
 
-     category = appContext.getCategory();
-     categoryManager = appContext.getCategoryManager();
- return RESULT_OK;
+    categoryManager = appContext.getCategoryManager();
+    return RESULT_OK;
   }
 
   public int process(final HttpServletRequest request)
@@ -71,7 +73,7 @@ public class IndexCategory extends IndexBean
     }
 
     logger.debug("Providers.Index - process with sorting [" + preferences.getCategoriesSortOrder() + "]");
-    CategoryQuery query=new CategoryQuery(pageSize, preferences.getCategoryFilter(), preferences.getCategoriesSortOrder(), startPosition);
+    CategoryQuery query = new CategoryQuery(pageSize, preferences.getCategoryFilter(), preferences.getCategoriesSortOrder(), startPosition);
     categories = appContext.getCategoryManager().query(query);
     totalSize = categories.getTotalSize();
 
@@ -80,7 +82,7 @@ public class IndexCategory extends IndexBean
     return RESULT_OK;
   }
 
-   private int deleteCategories()
+  private int deleteCategories()
   {
     for (int i = 0; i < checkedCategoryNames.length; i++) {
       String checkedCategoryName = checkedCategoryNames[i];
@@ -92,17 +94,16 @@ public class IndexCategory extends IndexBean
     return RESULT_OK;
   }
 
-  /******************************** properties **************************************/
-  public Category getCategory()
-  {
-    return category;
-  }
+  /**
+   * ***************************** properties *************************************
+   */
+
   public boolean isCategoryChecked(String name)
   {
     return checkedCategoryNamesSet.contains(name);
   }
 
- public String[] getCheckedCategoryNames()
+  public String[] getCheckedCategoryNames()
   {
     return checkedCategoryNames;
   }
@@ -122,11 +123,13 @@ public class IndexCategory extends IndexBean
     this.editName = editName;
   }
 
-  public String getEditId() {
+  public String getEditId()
+  {
     return editId;
   }
 
-  public void setEditId(String editId) {
+  public void setEditId(String editId)
+  {
     this.editId = editId;
   }
 
@@ -151,10 +154,10 @@ public class IndexCategory extends IndexBean
   }
 
 
-  public QueryResultSet getCategories() {
+  public QueryResultSet getCategories()
+  {
     return categories;
   }
-
 
 
   public String getMbAdd()
@@ -186,27 +189,29 @@ public class IndexCategory extends IndexBean
   {
     this.mbEdit = mbEdit;
   }
-  public void setCategory(Category category) {
-    this.category = category;
-  }
 
-  public CategoryManager getCategoryManager() {
+  public CategoryManager getCategoryManager()
+  {
     return categoryManager;
   }
 
-  public void setCategoryManager(CategoryManager categoryManager) {
+  public void setCategoryManager(CategoryManager categoryManager)
+  {
     this.categoryManager = categoryManager;
   }
 
-  public Set getCheckedCategoryNamesSet() {
+  public Set getCheckedCategoryNamesSet()
+  {
     return checkedCategoryNamesSet;
   }
 
-  public void setCheckedCategoryNamesSet(Set checkedCategoryNamesSet) {
+  public void setCheckedCategoryNamesSet(Set checkedCategoryNamesSet)
+  {
     this.checkedCategoryNamesSet = checkedCategoryNamesSet;
   }
 
-  public void setCategories(QueryResultSet categories) {
+  public void setCategories(QueryResultSet categories)
+  {
     this.categories = categories;
   }
 /*  protected void load(final String loadId) throws SMSCJspException

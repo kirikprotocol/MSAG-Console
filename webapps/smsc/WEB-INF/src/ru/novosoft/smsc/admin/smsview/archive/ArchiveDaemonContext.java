@@ -41,7 +41,7 @@ public class ArchiveDaemonContext
     try {
       if (load) {
         config = new Config(new File(appContext.getHostsManager().getServiceInfo(Constants.ARCHIVE_DAEMON_SVC_ID).getServiceFolder(),
-                                     "conf" + File.separatorChar + "daemon.xml"));
+                "conf" + File.separatorChar + "daemon.xml"));
       }
       host = config.getString("ArchiveDaemon.View.host");
       port = (short) config.getInt("ArchiveDaemon.View.port");

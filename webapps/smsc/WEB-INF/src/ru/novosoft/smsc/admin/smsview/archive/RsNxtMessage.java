@@ -1,7 +1,7 @@
 package ru.novosoft.smsc.admin.smsview.archive;
 
-import java.io.OutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * Created by IntelliJ IDEA.
@@ -14,15 +14,19 @@ public class RsNxtMessage extends Message
 {
   private int next = 1;
 
-  public RsNxtMessage() {
+  public RsNxtMessage()
+  {
     super(Message.SMSC_BYTE_RSNXT_TYPE);
   }
-  public RsNxtMessage(int next) {
+
+  public RsNxtMessage(int next)
+  {
     super(Message.SMSC_BYTE_RSNXT_TYPE);
     this.next = next;
   }
 
-  public void send(OutputStream os) throws IOException {
+  public void send(OutputStream os) throws IOException
+  {
     super.send(os);
     Message.writeUInt32(os, next);
   }

@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.jsp.smsc.aliases;
+
 /*
  * Created by igork
  * Date: 04.11.2002
  * Time: 18:49:34
  */
-package ru.novosoft.smsc.jsp.smsc.aliases;
 
 import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
@@ -13,7 +14,10 @@ import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasQuery;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class Index extends IndexBean
 {
@@ -83,7 +87,7 @@ public class Index extends IndexBean
     for (int i = 0; i < checkedAliases.length; i++) {
       String alias = checkedAliases[i];
       smsc.getAliases().remove(alias);
-      journalAppend( SubjectTypes.TYPE_alias, alias, Actions.ACTION_DEL);
+      journalAppend(SubjectTypes.TYPE_alias, alias, Actions.ACTION_DEL);
       appContext.getStatuses().setAliasesChanged(true);
     }
     checkedAliases = new String[0];
@@ -96,7 +100,9 @@ public class Index extends IndexBean
     return checkedAliasesSet.contains(alias);
   }
 
-  /******************** properties *************************/
+  /**
+   * ***************** properties ************************
+   */
 
   public String getMbAdd()
   {

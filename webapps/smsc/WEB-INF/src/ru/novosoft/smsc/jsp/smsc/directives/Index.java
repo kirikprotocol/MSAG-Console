@@ -1,8 +1,8 @@
 package ru.novosoft.smsc.jsp.smsc.directives;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.StringEncoderDecoder;

@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.jsp.smsc.profiles;
+
 /*
  * Created by igork
  * Date: 04.11.2002
  * Time: 20:41:31
  */
-package ru.novosoft.smsc.jsp.smsc.profiles;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.journal.Actions;

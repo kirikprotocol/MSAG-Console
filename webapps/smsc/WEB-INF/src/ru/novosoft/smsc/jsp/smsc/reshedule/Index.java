@@ -118,7 +118,8 @@ public class Index extends PageBean
             } catch (NumberFormatException e) {
               return 0;
             }
-          } else
+          }
+          else
             return 0;
         }
       });

@@ -12,7 +12,9 @@ import ru.novosoft.smsc.util.config.Config;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -214,7 +216,7 @@ public class HostsManager
                                  final byte mode, final int proclimit, final int schedlimit) throws AdminException
   {
     return smeManager.add(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, smeN, wantAlias, forceDC,
-                          timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit);
+            timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit);
   }
 
   public synchronized void removeSme(final String smeId) throws AdminException

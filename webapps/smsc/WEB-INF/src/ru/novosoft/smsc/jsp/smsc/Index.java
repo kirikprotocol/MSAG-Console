@@ -1,19 +1,22 @@
+package ru.novosoft.smsc.jsp.smsc;
+
 /*
  * Created by igork
  * Date: 13.11.2002
  * Time: 16:34:24
  */
-package ru.novosoft.smsc.jsp.smsc;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Journal;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.Statuses;
 import ru.novosoft.smsc.util.config.Config;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class Index extends SmscBean
 {
@@ -28,7 +31,7 @@ public class Index extends SmscBean
 
 
   Statuses statuses = null;
-   private Config webappConfig = null;
+  private Config webappConfig = null;
   private String mbApply = null;
   private String[] checks = null;
   private Journal journal;
@@ -41,7 +44,7 @@ public class Index extends SmscBean
 
     statuses = appContext.getStatuses();
     journal = appContext.getJournal();
-    webappConfig=appContext.getConfig();
+    webappConfig = appContext.getConfig();
     if (checks == null)
       checks = new String[0];
 
@@ -222,6 +225,7 @@ public class Index extends SmscBean
       return error(SMSCErrors.error.providers.couldntApply, e);
     }
   }
+
   private int applyCategories()
   {
     try {
@@ -230,12 +234,13 @@ public class Index extends SmscBean
         statuses.setCategoriesChanged(false);
         journal.clear(SubjectTypes.TYPE_category);
       }
-       return RESULT_OK;
+      return RESULT_OK;
     } catch (Exception e) {
       logger.error("Couldn't apply categories", e);
       return error(SMSCErrors.error.categories.couldntApply, e);
     }
   }
+
   public boolean isRoutesChanged()
   {
     return statuses.isRoutesChanged();
@@ -273,14 +278,16 @@ public class Index extends SmscBean
     return statuses.isUsersChanged();
   }
 
-   public boolean isProvidersChanged()
+  public boolean isProvidersChanged()
   {
     return statuses.isProvidersChanged();
   }
-   public boolean isCategoriesChanged()
+
+  public boolean isCategoriesChanged()
   {
     return statuses.isCategoriesChanged();
   }
+
   public boolean isSmscChanged()
   {
     return statuses.isSmscChanged();
@@ -328,17 +335,20 @@ public class Index extends SmscBean
 
 
   public List getJournalUsers()
-   {
-     return journal.getActions(SubjectTypes.TYPE_user);
-   }
-     public List getJournalProviders()
-   {
-     return journal.getActions(SubjectTypes.TYPE_provider);
-   }
-   public List getJournalCategories()
-   {
-     return journal.getActions(SubjectTypes.TYPE_category);
-   }
+  {
+    return journal.getActions(SubjectTypes.TYPE_user);
+  }
+
+  public List getJournalProviders()
+  {
+    return journal.getActions(SubjectTypes.TYPE_provider);
+  }
+
+  public List getJournalCategories()
+  {
+    return journal.getActions(SubjectTypes.TYPE_category);
+  }
+
   public List getJournalSmsc()
   {
     return journal.getActions(smscSubjectTypes);

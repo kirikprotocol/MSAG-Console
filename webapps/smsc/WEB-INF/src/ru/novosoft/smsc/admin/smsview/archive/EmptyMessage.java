@@ -1,5 +1,6 @@
 package ru.novosoft.smsc.admin.smsview.archive;
 
+
 /**
  * Created by IntelliJ IDEA.
  * User: makar
@@ -9,7 +10,8 @@ package ru.novosoft.smsc.admin.smsview.archive;
  */
 public class EmptyMessage extends Message
 {
-  public EmptyMessage() {
+  public EmptyMessage()
+  {
     super(Message.SMSC_BYTE_EMPTY_TYPE);
   }
 }

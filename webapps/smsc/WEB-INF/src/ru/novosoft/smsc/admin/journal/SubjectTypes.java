@@ -103,7 +103,7 @@ public abstract class SubjectTypes
       return TYPE_securityConstraint;
     if ("provider".equals(subjectType))
       return TYPE_provider;
-     if ("category".equals(subjectType))
+    if ("category".equals(subjectType))
       return TYPE_category;
     return TYPE_UNKNOWN;
   }

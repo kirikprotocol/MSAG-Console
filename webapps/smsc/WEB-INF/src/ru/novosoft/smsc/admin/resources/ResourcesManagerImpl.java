@@ -5,7 +5,7 @@ import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.WebAppFolders;
 
 import java.io.*;
-import java.util.*;
+import java.util.List;
 
 /**
  * Created by igork

@@ -1,3 +1,5 @@
+package ru.novosoft.smsc.admin.smsstat;
+
 /**
  * Created by IntelliJ IDEA.
  * User: makarov
@@ -5,56 +7,72 @@
  * Time: 2:32:02 PM
  * To change this template use Options | File Templates.
  */
-package ru.novosoft.smsc.admin.smsstat;
 
-import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 
 public class Statistics
 {
   private ExtendedCountersSet total = new ExtendedCountersSet();
-  private ArrayList byDates    = new ArrayList(100); // contains DateCountersSet
-  private ArrayList bySmeId    = new ArrayList(100); // contains SmeIdCountersSet
-  private ArrayList byRouteId  = new ArrayList(100); // contains RouteIdCountersSet
+  private ArrayList byDates = new ArrayList(100); // contains DateCountersSet
+  private ArrayList bySmeId = new ArrayList(100); // contains SmeIdCountersSet
+  private ArrayList byRouteId = new ArrayList(100); // contains RouteIdCountersSet
 
-  public CountersSet getTotal() {
+  public CountersSet getTotal()
+  {
     return total;
   }
 
-  public void addDateStat(DateCountersSet set) {
+  public void addDateStat(DateCountersSet set)
+  {
     byDates.add(set);
     total.increment(set);
   }
-  public Collection getDateStat() {
+
+  public Collection getDateStat()
+  {
     return byDates;
   }
 
-  public void addErrorStat(ErrorCounterSet set) {
+  public void addErrorStat(ErrorCounterSet set)
+  {
     total.addError(set);
   }
-  public Collection getErrorStat() {
+
+  public Collection getErrorStat()
+  {
     return total.getErrors();
   }
 
-  public void addSmeIdStat(SmeIdCountersSet set) {
+  public void addSmeIdStat(SmeIdCountersSet set)
+  {
     bySmeId.add(set);
   }
-  public void addSmeIdCollection(Collection col) {
+
+  public void addSmeIdCollection(Collection col)
+  {
     bySmeId.addAll(col);
   }
-  public Collection getSmeIdStat() {
+
+  public Collection getSmeIdStat()
+  {
     Collections.sort(bySmeId);
     return bySmeId;
   }
 
-  public void addRouteIdStat(RouteIdCountersSet set) {
+  public void addRouteIdStat(RouteIdCountersSet set)
+  {
     byRouteId.add(set);
   }
-  public void addRouteIdCollection(Collection col) {
+
+  public void addRouteIdCollection(Collection col)
+  {
     byRouteId.addAll(col);
   }
-  public Collection getRouteIdStat() {
+
+  public Collection getRouteIdStat()
+  {
     Collections.sort(byRouteId);
     return byRouteId;
   }

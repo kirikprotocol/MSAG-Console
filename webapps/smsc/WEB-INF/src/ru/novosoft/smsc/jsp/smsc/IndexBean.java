@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.jsp.smsc;
+
 /*
  * Created by igork
  * Date: 15.11.2002
  * Time: 13:51:58
  */
-package ru.novosoft.smsc.jsp.smsc;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -23,7 +24,7 @@ public abstract class IndexBean extends SmscBean
   public int process(HttpServletRequest request)
   {
     int result = super.process(request);
-    
+
     if (result != RESULT_OK)
       return result;
 
@@ -34,7 +35,9 @@ public abstract class IndexBean extends SmscBean
   }
 
 
-  /***************************************** properties **************************************************************/
+  /**
+   * ************************************** properties *************************************************************
+   */
 
   public String getStartPosition()
   {

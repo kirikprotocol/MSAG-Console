@@ -83,7 +83,8 @@ public class Edit extends PageBean
         logger.error("Couldn't create acl " + id, e);
         return error(SMSCErrors.error.acl.COULDNT_CREATE_ACL, String.valueOf(id), e);
       }
-    } else {
+    }
+    else {
       try {
         aclManager.updateAclInfo(id, name, description, cache_type);
         return RESULT_DONE;

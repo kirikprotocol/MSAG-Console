@@ -10,7 +10,7 @@ import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.

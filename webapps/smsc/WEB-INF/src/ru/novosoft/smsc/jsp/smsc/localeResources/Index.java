@@ -1,8 +1,8 @@
 package ru.novosoft.smsc.jsp.smsc.localeResources;
 
-import ru.novosoft.smsc.jsp.smsc.IndexBean;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.util.SortedList;
 
 import javax.servlet.http.HttpServletRequest;

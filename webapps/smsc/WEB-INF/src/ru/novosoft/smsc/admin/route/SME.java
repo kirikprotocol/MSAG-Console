@@ -1,13 +1,14 @@
+package ru.novosoft.smsc.admin.route;
+
 /*
  * Author: igork
  * Date: 14.05.2002
  * Time: 13:50:54
  */
-package ru.novosoft.smsc.admin.route;
 
+import org.apache.log4j.Category;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import org.apache.log4j.Category;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import java.io.PrintWriter;
@@ -42,37 +43,39 @@ public class SME
   private int schedlimit = 0;
 
   private Category logger = Category.getInstance(this.getClass());
+
   /**
    * Constructor
-   * @param id уникальный идентификатор SME
-   * @param priority приоритет этого SME
-   * @param type тип SME. может быть SME.SMPP или SME.SS7
-   * @param typeOfNumber тип номера SME? возможные значения: <dl compact>
-   * <dt>0</dt><dd>Unknown</dd>
-   * <dt>1</dt><dd>International</dd>
-   * <dt>2</dt><dd>National</dd>
-   * <dt>3</dt><dd>Network Specific</dd>
-   * <dt>4</dt><dd>Subscriber Number</dd>
-   * <dt>5</dt><dd>Alphanumeric</dd>
-   * <dt>6</dt><dd>Abbreviated</dd>
-   * </dl>
-   * @param numberingPlan возможные значения: <dl compact>
-   * <dt>0</dt><dd>Unknown</dd>
-   * <dt>1</dt><dd>ISDN (E163/E164)</dd>
-   * <dt>3</dt><dd>Data (X.121)</dd>
-   * <dt>4</dt><dd>Telex (F.69)</dd>
-   * <dt>6</dt><dd>Land Mobile (E.212)</dd>
-   * <dt>8</dt><dd>National</dd>
-   * <dt>9</dt><dd>Private</dd>
-   * <dt>10</dt><dd>ERMES</dd>
-   * <dt>14</dt><dd>Internet (IP)</dd>
-   * <dt>18</dt><dd>WAP Client Id (to be defined by WAP Forum)</dd>
-   * </dl>
-   * @param interfaceVersion Возможные значения: 0x34 (v3.4)
-   * @param systemType <font color=red>???</font>
-   * @param password пароль для доступа SME к SMSC
-   * @param addrRange <font color=red>???</font>
-   * @param smeN <font color=red>???</font>
+   *
+   * @param id                уникальный идентификатор SME
+   * @param priority          приоритет этого SME
+   * @param type              тип SME. может быть SME.SMPP или SME.SS7
+   * @param typeOfNumber      тип номера SME? возможные значения: <dl compact>
+   *                          <dt>0</dt><dd>Unknown</dd>
+   *                          <dt>1</dt><dd>International</dd>
+   *                          <dt>2</dt><dd>National</dd>
+   *                          <dt>3</dt><dd>Network Specific</dd>
+   *                          <dt>4</dt><dd>Subscriber Number</dd>
+   *                          <dt>5</dt><dd>Alphanumeric</dd>
+   *                          <dt>6</dt><dd>Abbreviated</dd>
+   *                          </dl>
+   * @param numberingPlan     возможные значения: <dl compact>
+   *                          <dt>0</dt><dd>Unknown</dd>
+   *                          <dt>1</dt><dd>ISDN (E163/E164)</dd>
+   *                          <dt>3</dt><dd>Data (X.121)</dd>
+   *                          <dt>4</dt><dd>Telex (F.69)</dd>
+   *                          <dt>6</dt><dd>Land Mobile (E.212)</dd>
+   *                          <dt>8</dt><dd>National</dd>
+   *                          <dt>9</dt><dd>Private</dd>
+   *                          <dt>10</dt><dd>ERMES</dd>
+   *                          <dt>14</dt><dd>Internet (IP)</dd>
+   *                          <dt>18</dt><dd>WAP Client Id (to be defined by WAP Forum)</dd>
+   *                          </dl>
+   * @param interfaceVersion  Возможные значения: 0x34 (v3.4)
+   * @param systemType        <font color=red>???</font>
+   * @param password          пароль для доступа SME к SMSC
+   * @param addrRange         <font color=red>???</font>
+   * @param smeN              <font color=red>???</font>
    * @param wantAlias
    * @param forceDC
    * @param timeout
@@ -121,35 +124,50 @@ public class SME
       try {
         if (name.equals("typeOfNumber")) {
           typeOfNumber = Integer.decode(value).intValue();
-        } else if (name.equals("priority")) {
+        }
+        else if (name.equals("priority")) {
           priority = Integer.decode(value).intValue();
-        } else if (name.equals("numberingPlan")) {
+        }
+        else if (name.equals("numberingPlan")) {
           numberingPlan = Integer.decode(value).intValue();
-        } else if (name.equals("interfaceVersion")) {
+        }
+        else if (name.equals("interfaceVersion")) {
           interfaceVersion = Integer.decode(value).intValue();
-        } else if (name.equals("systemType")) {
+        }
+        else if (name.equals("systemType")) {
           systemType = value;
-        } else if (name.equals("password")) {
+        }
+        else if (name.equals("password")) {
           password = value;
-        } else if (name.equals("addrRange")) {
+        }
+        else if (name.equals("addrRange")) {
           addrRange = value;
-        } else if (name.equals("smeN")) {
+        }
+        else if (name.equals("smeN")) {
           smeN = Integer.decode(value).intValue();
-        } else if (name.equals("wantAlias")) {
+        }
+        else if (name.equals("wantAlias")) {
           wantAlias = value.equalsIgnoreCase("yes") || value.equalsIgnoreCase("true");
-        } else if (name.equals("forceDC")) {
+        }
+        else if (name.equals("forceDC")) {
           forceDC = Boolean.valueOf(value).booleanValue();
-        } else if (name.equals("timeout")) {
+        }
+        else if (name.equals("timeout")) {
           timeout = Integer.decode(value).intValue();
-        } else if (name.equals("receiptSchemeName")) {
+        }
+        else if (name.equals("receiptSchemeName")) {
           receiptSchemeName = value;
-        } else if (name.equals("disabled")) {
+        }
+        else if (name.equals("disabled")) {
           disabled = Boolean.valueOf(value).booleanValue();
-        } else if (name.equals("mode")) {
+        }
+        else if (name.equals("mode")) {
           mode = convertModeStr(value);
-        } else if (name.equals("proclimit")) {
+        }
+        else if (name.equals("proclimit")) {
           proclimit = Integer.decode(value).intValue();
-        } else if (name.equals("schedlimit")) {
+        }
+        else if (name.equals("schedlimit")) {
           schedlimit = Integer.decode(value).intValue();
         }
       } catch (NumberFormatException e) {

@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.jsp.smsc.hosts;
+
 /*
  * Created by igork
  * Date: 23.10.2002
  * Time: 22:50:27
  */
-package ru.novosoft.smsc.jsp.smsc.hosts;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
@@ -67,21 +68,29 @@ public class HostView extends SmscBean
 
     if (null != mbAddService) {
       return RESULT_ADD_SERVICE;
-    } else if (null != mbCancel) {
+    }
+    else if (null != mbCancel) {
       return RESULT_DONE;
-    } else if (null != mbEdit) {
+    }
+    else if (null != mbEdit) {
       return RESULT_EDIT;
-    } else if (null != mbDelete) {
+    }
+    else if (null != mbDelete) {
       return deleteServices();
-    } else if (null != mbStartService) {
+    }
+    else if (null != mbStartService) {
       return startServices();
-    } else if (null != mbStopService) {
+    }
+    else if (null != mbStopService) {
       return stopServices();
-    } else if (null != mbEditService) {
+    }
+    else if (null != mbEditService) {
       return RESULT_EDIT_SERVICE;
-    } else if (null != mbView) {
+    }
+    else if (null != mbView) {
       return RESULT_VIEW;
-    } else
+    }
+    else
       return RESULT_OK;
   }
 
@@ -111,7 +120,8 @@ public class HostView extends SmscBean
             error(SMSCErrors.error.services.couldntSaveWebXml, e);
             logger.error("Could not save WEB-INF/web.xml", e);
           }
-        } else
+        }
+        else
           hostsManager.removeSme(id);
         //appContext.getStatuses().setServicesChanged(true);
       } catch (Throwable e) {

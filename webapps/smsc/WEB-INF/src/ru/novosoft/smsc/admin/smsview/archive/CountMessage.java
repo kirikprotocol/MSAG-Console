@@ -14,11 +14,13 @@ import java.io.OutputStream;
  */
 public class CountMessage extends QueryMessage
 {
-  public CountMessage(SmsQuery query) {
+  public CountMessage(SmsQuery query)
+  {
     super(Message.SMSC_BYTE_COUNT_TYPE, query);
   }
 
-  public void send(OutputStream os) throws IOException {
+  public void send(OutputStream os) throws IOException
+  {
     super.send(os);
   };
 

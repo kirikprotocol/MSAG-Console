@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.admin.route;
+
 /*
  * Author: igork
  * Date: 15.05.2002
  * Time: 15:52:01
  */
-package ru.novosoft.smsc.admin.route;
 
 import org.apache.log4j.Category;
 import org.w3c.dom.Element;
@@ -17,7 +18,10 @@ import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.xml.Utils;
 
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 
 public class SubjectList
@@ -30,31 +34,31 @@ public class SubjectList
           throws AdminException
   {
     try {
-    NodeList subjList = listElement.getElementsByTagName("subject_def");
-    for (int i = 0; i < subjList.getLength(); i++) {
-      Element subjElem = (Element) subjList.item(i);
-      String name = subjElem.getAttribute("id");
-      NodeList masksList = subjElem.getElementsByTagName("mask");
-      String[] masks = new String[masksList.getLength()];
-      for (int j = 0; j < masksList.getLength(); j++) {
-        Element maskElem = (Element) masksList.item(j);
-        masks[j] = maskElem.getAttribute("value").trim();
-      }
-      SME defSme = smeManager.get(subjElem.getAttribute("defSme"));
-      if (defSme == null)
-        throw new AdminException("Unknown SME \"" + subjElem.getAttribute("defSme") + '"');
+      NodeList subjList = listElement.getElementsByTagName("subject_def");
+      for (int i = 0; i < subjList.getLength(); i++) {
+        Element subjElem = (Element) subjList.item(i);
+        String name = subjElem.getAttribute("id");
+        NodeList masksList = subjElem.getElementsByTagName("mask");
+        String[] masks = new String[masksList.getLength()];
+        for (int j = 0; j < masksList.getLength(); j++) {
+          Element maskElem = (Element) masksList.item(j);
+          masks[j] = maskElem.getAttribute("value").trim();
+        }
+        SME defSme = smeManager.get(subjElem.getAttribute("defSme"));
+        if (defSme == null)
+          throw new AdminException("Unknown SME \"" + subjElem.getAttribute("defSme") + '"');
 
-      String notes = "";
-      NodeList notesList = subjElem.getElementsByTagName("notes");
-      for (int j=0; j < notesList.getLength(); j++)
-        notes += Utils.getNodeText(notesList.item(j));
+        String notes = "";
+        NodeList notesList = subjElem.getElementsByTagName("notes");
+        for (int j = 0; j < notesList.getLength(); j++)
+          notes += Utils.getNodeText(notesList.item(j));
 
-      try {
-        add(new Subject(name, masks, defSme, notes));
-      } catch (AdminException e) {
-        logger.warn("source skipped", e);
+        try {
+          add(new Subject(name, masks, defSme, notes));
+        } catch (AdminException e) {
+          logger.warn("source skipped", e);
+        }
       }
-    }
     } catch (Throwable ex) {
       logger.error("Couldn't parse subjects", ex);
       throw new AdminException("Couldn't parse subjects");

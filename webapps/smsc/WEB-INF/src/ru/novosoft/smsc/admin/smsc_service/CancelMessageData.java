@@ -7,29 +7,29 @@ package ru.novosoft.smsc.admin.smsc_service;
  */
 public class CancelMessageData
 {
-	private String messageId = null;
-	private String sourceAddress = null;
-	private String destinationAddress = null;
+  private String messageId = null;
+  private String sourceAddress = null;
+  private String destinationAddress = null;
 
-	public CancelMessageData(String messageId, String sourceAddress, String destinationAddress)
-	{
-		this.messageId = messageId;
-		this.sourceAddress = sourceAddress;
-		this.destinationAddress = destinationAddress;
-	}
+  public CancelMessageData(String messageId, String sourceAddress, String destinationAddress)
+  {
+    this.messageId = messageId;
+    this.sourceAddress = sourceAddress;
+    this.destinationAddress = destinationAddress;
+  }
 
-	public String getMessageId()
-	{
-		return messageId;
-	}
+  public String getMessageId()
+  {
+    return messageId;
+  }
 
-	public String getSourceAddress()
-	{
-		return sourceAddress;
-	}
+  public String getSourceAddress()
+  {
+    return sourceAddress;
+  }
 
-	public String getDestinationAddress()
-	{
-		return destinationAddress;
-	}
+  public String getDestinationAddress()
+  {
+    return destinationAddress;
+  }
 }

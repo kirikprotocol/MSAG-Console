@@ -9,9 +9,9 @@ package ru.novosoft.smsc.admin.smsview;
  * @version 1.0
  */
 
-import java.util.*;
-
-import ru.novosoft.smsc.admin.smsview.SmsRow;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Vector;
 
 public class SmsSet
 {
@@ -20,34 +20,52 @@ public class SmsSet
   private Vector rows = new Vector();
   private boolean hasMore = false;
 
-  public int getRowsCount() {
+  public int getRowsCount()
+  {
     return rows.size();
   }
-  public Enumeration getRows() {
+
+  public Enumeration getRows()
+  {
     return rows.elements();
   }
-  public List getRowsList() {
+
+  public List getRowsList()
+  {
     return rows;
   }
-  public void addRow(SmsRow row) {
+
+  public void addRow(SmsRow row)
+  {
     rows.addElement(row);
   }
-  public void clean() {
-    rows.removeAllElements(); hasMore = false;
+
+  public void clean()
+  {
+    rows.removeAllElements();
+    hasMore = false;
   }
-  public SmsRow getRow(int index) {
-    return ((SmsRow)rows.elementAt(index));
+
+  public SmsRow getRow(int index)
+  {
+    return ((SmsRow) rows.elementAt(index));
   }
-  public SmsRow getRow(String id) {
+
+  public SmsRow getRow(String id)
+  {
     SmsRow pattern = new SmsRow();
     pattern.setId(Long.parseLong(id));
     int index = rows.indexOf(pattern);
     return (index >= 0) ? getRow(index) : null;
   }
-  public boolean isHasMore() {
-    return (rows.size() > 0) ? hasMore:false;
+
+  public boolean isHasMore()
+  {
+    return (rows.size() > 0) ? hasMore : false;
   }
-  public void setHasMore(boolean hasMore) {
+
+  public void setHasMore(boolean hasMore)
+  {
     this.hasMore = hasMore;
   }
 }

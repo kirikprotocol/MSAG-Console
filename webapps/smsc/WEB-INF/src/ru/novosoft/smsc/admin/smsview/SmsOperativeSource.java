@@ -4,12 +4,12 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.Mask;
 
 import javax.sql.DataSource;
-import java.sql.*;
-import java.io.InputStream;
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
-import java.util.ArrayList;
 
 /**
  * Created by IntelliJ IDEA.
@@ -22,18 +22,20 @@ public class SmsOperativeSource extends SmsSource
 {
   private org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(Class.class);
 
-  private final static int    MAX_SMS_BODY_LENGTH = 1500;
+  private final static int MAX_SMS_BODY_LENGTH = 1500;
   private final static String SELECT_LARGE_BODY =
-      "SELECT BODY FROM SMS_ATCH WHERE ID=?";
+          "SELECT BODY FROM SMS_ATCH WHERE ID=?";
   private final static String BASE_SQL_QUERY =
-      "SELECT ID, ST, SUBMIT_TIME, VALID_TIME, ATTEMPTS, LAST_RESULT, " +
-      "LAST_TRY_TIME, NEXT_TRY_TIME, OA, DA, DDA, MR, SVC_TYPE, " +
-      "DR, BR, SRC_MSC, SRC_IMSI, SRC_SME_N, DST_MSC, DST_IMSI, DST_SME_N, " +
-      "ROUTE_ID, SVC_ID, PRTY, SRC_SME_ID, DST_SME_ID, " +
-      "BODY_LEN, BODY FROM SMS_MSG";
+          "SELECT ID, ST, SUBMIT_TIME, VALID_TIME, ATTEMPTS, LAST_RESULT, " +
+          "LAST_TRY_TIME, NEXT_TRY_TIME, OA, DA, DDA, MR, SVC_TYPE, " +
+          "DR, BR, SRC_MSC, SRC_IMSI, SRC_SME_N, DST_MSC, DST_IMSI, DST_SME_N, " +
+          "ROUTE_ID, SVC_ID, PRTY, SRC_SME_ID, DST_SME_ID, " +
+          "BODY_LEN, BODY FROM SMS_MSG";
 
   private DataSource ds = null;
-  public void setDataSource(DataSource ds) {
+
+  public void setDataSource(DataSource ds)
+  {
     this.ds = ds;
   }
 
@@ -52,12 +54,18 @@ public class SmsOperativeSource extends SmsSource
       fetchRows(stmt, set, query.getRowsMaximum());
     } catch (Exception exc) {
       exc.printStackTrace();
-      throw new AdminException("Failed to get sms set. Details: "+exc.getMessage());
+      throw new AdminException("Failed to get sms set. Details: " + exc.getMessage());
     } finally {
-      try { if (stmt != null) stmt.close(); }
-      catch (Exception cexc) { cexc.printStackTrace(); }
-      try {  if (connection != null) connection.close(); }
-      catch (Exception cexc) { cexc.printStackTrace(); }
+      try {
+        if (stmt != null) stmt.close();
+      } catch (Exception cexc) {
+        cexc.printStackTrace();
+      }
+      try {
+        if (connection != null) connection.close();
+      } catch (Exception cexc) {
+        cexc.printStackTrace();
+      }
     }
     return set;
   }
@@ -80,32 +88,46 @@ public class SmsOperativeSource extends SmsSource
       count = rs.getInt(1);
     } catch (Exception exc) {
       exc.printStackTrace();
-      throw new AdminException("Select count failed. Details: "+exc.getMessage());
+      throw new AdminException("Select count failed. Details: " + exc.getMessage());
     } finally {
-      try { if (rs != null) rs.close(); }
-      catch (Exception cexc) { cexc.printStackTrace(); }
-      try { if (stmt != null) stmt.close(); }
-      catch (Exception cexc) { cexc.printStackTrace(); }
-      try {  if (connection != null) connection.close(); }
-      catch (Exception cexc) { cexc.printStackTrace(); }
+      try {
+        if (rs != null) rs.close();
+      } catch (Exception cexc) {
+        cexc.printStackTrace();
+      }
+      try {
+        if (stmt != null) stmt.close();
+      } catch (Exception cexc) {
+        cexc.printStackTrace();
+      }
+      try {
+        if (connection != null) connection.close();
+      } catch (Exception cexc) {
+        cexc.printStackTrace();
+      }
     }
     return count;
   }
 
   /* ------------------ Private implementation ------------------ */
 
-  private boolean needExpression(String str) {
+  private boolean needExpression(String str)
+  {
     return (str != null && str.length() != 0 && !str.trim().equalsIgnoreCase("*"));
   }
-  private boolean needLikeExpression(String str) {
+
+  private boolean needLikeExpression(String str)
+  {
     return (str.indexOf('*') >= 0 || str.indexOf('?') >= 0);
   }
-  private String getLikeExpression(String str) {
+
+  private String getLikeExpression(String str)
+  {
     return (needLikeExpression(str)) ? str.trim().replace('*', '%').replace('?', '_') : str.trim();
   }
 
   private void bindInput(PreparedStatement stmt, SmsQuery query)
-      throws SQLException, AdminException
+          throws SQLException, AdminException
   {
     int pos = 1;
     if (needExpression(query.getSmsId())) {
@@ -117,9 +139,10 @@ public class SmsOperativeSource extends SmsSource
     }
     if (needExpression(query.getAbonentAddress())) {
       String abonentPart = getLikeExpression((new Mask(query.getAbonentAddress())).getNormalizedMask());
-      stmt.setString(pos++, abonentPart); stmt.setString(pos++, abonentPart);
+      stmt.setString(pos++, abonentPart);
+      stmt.setString(pos++, abonentPart);
     }
-    else  {
+    else {
       if (needExpression(query.getFromAddress()))
         stmt.setString(pos++, getLikeExpression((new Mask(query.getFromAddress())).getNormalizedMask()));
       if (needExpression(query.getToAddress()))
@@ -131,7 +154,8 @@ public class SmsOperativeSource extends SmsSource
 
     if (needExpression(query.getSmeId())) {
       String smePart = getLikeExpression(query.getSmeId());
-      stmt.setString(pos++, smePart); stmt.setString(pos++, smePart);
+      stmt.setString(pos++, smePart);
+      stmt.setString(pos++, smePart);
     }
     else {
       if (needExpression(query.getSrcSmeId()))
@@ -181,28 +205,29 @@ public class SmsOperativeSource extends SmsSource
 
     if (needExpression(query.getAbonentAddress())) {
       String abonentCheck = (needLikeExpression(query.getAbonentAddress())) ? " LIKE ?" : "=?";
-      list.add(("( OA"+abonentCheck+" OR DDA"+abonentCheck+" )"));
+      list.add(("( OA" + abonentCheck + " OR DDA" + abonentCheck + " )"));
     }
     else {
-      addWherePart  (list, "OA", query.getFromAddress());
-      addWherePart  (list, "DDA", query.getToAddress());
+      addWherePart(list, "OA", query.getFromAddress());
+      addWherePart(list, "DDA", query.getToAddress());
     }
 
-    addWherePart  (list, "ROUTE_ID", query.getRouteId());
+    addWherePart(list, "ROUTE_ID", query.getRouteId());
 
     if (needExpression(query.getSmeId())) {
       String smeCheck = (needLikeExpression(query.getSmeId())) ? " LIKE ?" : "=?";
-      list.add(("( SRC_SME_ID"+smeCheck+" OR DST_SME_ID"+smeCheck+" )"));
-    } else {
-      addWherePart  (list, "SRC_SME_ID", query.getSrcSmeId());
-      addWherePart  (list, "DST_SME_ID", query.getDstSmeId());
+      list.add(("( SRC_SME_ID" + smeCheck + " OR DST_SME_ID" + smeCheck + " )"));
+    }
+    else {
+      addWherePart(list, "SRC_SME_ID", query.getSrcSmeId());
+      addWherePart(list, "DST_SME_ID", query.getDstSmeId());
     }
 
     if (query.getFromDateEnabled()) list.add("SUBMIT_TIME >=?");
     if (query.getTillDateEnabled()) list.add("SUBMIT_TIME <=?");
 
-    if (query.getStatus() != SmsQuery.SMS_UNDEFINED_VALUE) list.add("ST="+query.getStatus());
-    if (query.getLastResult() != SmsQuery.SMS_UNDEFINED_VALUE) list.add("LAST_RESULT="+query.getLastResult());
+    if (query.getStatus() != SmsQuery.SMS_UNDEFINED_VALUE) list.add("ST=" + query.getStatus());
+    if (query.getLastResult() != SmsQuery.SMS_UNDEFINED_VALUE) list.add("LAST_RESULT=" + query.getLastResult());
 
     String where = (list.size() > 0) ? " WHERE " : " WHERE ID>0";
     for (int i = 0; i < list.size(); i++) {
@@ -213,7 +238,7 @@ public class SmsOperativeSource extends SmsSource
   }
 
   private InputStream fetchRowFeilds(ResultSet rs, SmsRow row)
-      throws SQLException, AdminException
+          throws SQLException, AdminException
   {
     int pos = 1;
     long id = rs.getLong(pos++);
@@ -233,17 +258,13 @@ public class SmsOperativeSource extends SmsSource
     row.setServiceType(rs.getString(pos++));
     row.setDeliveryReport(rs.getShort(pos++));
     row.setBillingRecord(rs.getShort(pos++));
-    SmsDescriptor origDescr = new SmsDescriptor(
-        rs.getString(pos++),
-        rs.getString(pos++),
-        rs.getInt(pos++)
-    );
+    SmsDescriptor origDescr = new SmsDescriptor(rs.getString(pos++),
+            rs.getString(pos++),
+            rs.getInt(pos++));
     row.setOriginatingDescriptor(origDescr);
-    SmsDescriptor destDescr = new SmsDescriptor(
-        rs.getString(pos++),
-        rs.getString(pos++),
-        rs.getInt(pos++)
-    );
+    SmsDescriptor destDescr = new SmsDescriptor(rs.getString(pos++),
+            rs.getString(pos++),
+            rs.getInt(pos++));
     row.setDestinationDescriptor(destDescr);
     row.setRouteId(rs.getString(pos++));
     row.setServiceId(rs.getInt(pos++));
@@ -257,13 +278,15 @@ public class SmsOperativeSource extends SmsSource
     int bodyLen = rs.getInt(pos++);
     if (bodyLen <= 0) {
       row.setText("<< No message >>");
-    } else if (bodyLen <= MAX_SMS_BODY_LENGTH) {
+    }
+    else if (bodyLen <= MAX_SMS_BODY_LENGTH) {
       body = rs.getBytes(pos);
       if (body == null || body.length == 0)
         row.setText("<< No message (body null) >>");
       else
         is = new ByteArrayInputStream(body, 0, bodyLen);
-    } else {
+    }
+    else {
       ResultSet lbrs = null;
       PreparedStatement lbstmt = null;
       try {
@@ -275,15 +298,22 @@ public class SmsOperativeSource extends SmsSource
           body = blob.getBytes(1, bodyLen); // 1 or 0 ???
           is = new ByteArrayInputStream(body, 0, bodyLen);
         }
-        else row.setText("<< No message (Access to BLOB failed) >>");
+        else
+          row.setText("<< No message (Access to BLOB failed) >>");
       } catch (Exception exc) {
         exc.printStackTrace();
-        throw new SQLException("Retrive Blob from operative storage failed. Details: "+exc.getMessage());
+        throw new SQLException("Retrive Blob from operative storage failed. Details: " + exc.getMessage());
       } finally {
-        try { if (lbrs != null) lbrs.close(); }
-        catch (Exception cexc) { cexc.printStackTrace(); }
-        try { if (lbstmt != null) lbstmt.close(); }
-        catch (Exception cexc) { cexc.printStackTrace(); }
+        try {
+          if (lbrs != null) lbrs.close();
+        } catch (Exception cexc) {
+          cexc.printStackTrace();
+        }
+        try {
+          if (lbstmt != null) lbstmt.close();
+        } catch (Exception cexc) {
+          cexc.printStackTrace();
+        }
       }
     }
 
@@ -291,7 +321,7 @@ public class SmsOperativeSource extends SmsSource
   }
 
   private void fetchRows(PreparedStatement stmt, SmsSet set, int rowsMaximum)
-      throws SQLException
+          throws SQLException
   {
     ResultSet rs = stmt.executeQuery();
 
@@ -306,10 +336,13 @@ public class SmsOperativeSource extends SmsSource
       if (rs.next()) set.setHasMore(true);
     } catch (Exception exc) {
       exc.printStackTrace();
-      throw new SQLException("Operation with operative storage failed. Details: "+exc.getMessage());
+      throw new SQLException("Operation with operative storage failed. Details: " + exc.getMessage());
     } finally {
-      try { if (rs != null) rs.close(); }
-      catch (Exception cexc) { cexc.printStackTrace(); }
+      try {
+        if (rs != null) rs.close();
+      } catch (Exception cexc) {
+        cexc.printStackTrace();
+      }
     }
   }
 

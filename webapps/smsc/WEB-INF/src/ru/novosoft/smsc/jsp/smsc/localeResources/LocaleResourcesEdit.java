@@ -74,7 +74,8 @@ public class LocaleResourcesEdit extends PageBean
           String subSectionName = childElement.getAttribute("name");
           Section subSection = section.findSection(subSectionName);
           parseSection(subSection, childElement);
-        } else if ("param".equalsIgnoreCase(childElement.getTagName())) {
+        }
+        else if ("param".equalsIgnoreCase(childElement.getTagName())) {
           String paramName = childElement.getAttribute("name");
           String paramValue = Utils.getNodeText(childElement);
           section.setParam(paramName, paramValue);
@@ -165,7 +166,8 @@ public class LocaleResourcesEdit extends PageBean
         final String[] paramValues = (String[]) param;
         for (int j = 0; j < paramValues.length; j++)
           processDataParam(paramName, paramValues[j]);
-      } else {
+      }
+      else {
         //skip this strange param
         //logger.debug("processDataParams: skip param: \"" + paramName + "\"=\"" + param + "\"");
       }
@@ -186,7 +188,8 @@ public class LocaleResourcesEdit extends PageBean
         //logger.debug("processDataParam: skip param: \"" + fullName + "\"=\"" + paramValue + "\"");
         //skip strange values
       }
-    } else {
+    }
+    else {
       //logger.debug("processDataParam: skip misformatted param: \"" + fullName + "\"=\"" + paramValue + "\"");
       //skip strange values
     }
@@ -200,7 +203,8 @@ public class LocaleResourcesEdit extends PageBean
     if (dotPos >= 0) {
       section = rootSection.findSection(fullParamName.substring(0, dotPos));
       paramName = fullParamName.substring(dotPos + 1);
-    } else {
+    }
+    else {
       section = rootSection;
       paramName = fullParamName;
     }

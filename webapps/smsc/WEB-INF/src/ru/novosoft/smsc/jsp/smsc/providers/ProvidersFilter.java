@@ -4,12 +4,10 @@ import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.jsp.util.tables.impl.provider.ProviderFilter;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.List;
 
 /**
- * Created by igork
- * Date: Feb 10, 2003
- * Time: 6:37:10 PM
+ * Created by andrey Date: 07.02.2005 Time: 12:45:18
  */
 public class ProvidersFilter extends SmscBean
 {
@@ -33,7 +31,7 @@ public class ProvidersFilter extends SmscBean
 
     if (initialized == null) {
       nameFilter = filter.getNameFilter();
-       }
+    }
     if (nameFilter == null)
       nameFilter = "";
 
@@ -49,10 +47,12 @@ public class ProvidersFilter extends SmscBean
     if (mbApply != null) {
       filter.setNameFilter(nameFilter);
       return RESULT_DONE;
-    } else if (mbClear != null) {
+    }
+    else if (mbClear != null) {
       nameFilter = "";
       return RESULT_OK;
-    } else if (mbCancel != null)
+    }
+    else if (mbCancel != null)
       return RESULT_DONE;
 
     return RESULT_OK;
@@ -63,14 +63,18 @@ public class ProvidersFilter extends SmscBean
     return filter;
   }
 
-  public void setFilter(ProviderFilter filter) {
+  public void setFilter(ProviderFilter filter)
+  {
     this.filter = filter;
   }
-  public String getNameFilter() {
+
+  public String getNameFilter()
+  {
     return nameFilter;
   }
 
-  public void setNameFilter(String nameFilter) {
+  public void setNameFilter(String nameFilter)
+  {
     this.nameFilter = nameFilter;
   }
 

@@ -1,16 +1,17 @@
+package ru.novosoft.smsc.jsp.smsc.profiles;
+
 /*
  * Created by igork
  * Date: 04.11.2002
  * Time: 18:49:34
  */
-package ru.novosoft.smsc.jsp.smsc.profiles;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.alias.Alias;
 import ru.novosoft.smsc.admin.alias.AliasSet;
-import ru.novosoft.smsc.admin.profiler.ProfileEx;
 import ru.novosoft.smsc.admin.profiler.Profile;
+import ru.novosoft.smsc.admin.profiler.ProfileEx;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.PageBean;
@@ -106,7 +107,8 @@ public class Lookup extends PageBean
         reportOptions = codepage = "unknown";
         return error(SMSCErrors.error.profiles.couldntLookup, profile, e);
       }
-    } else {
+    }
+    else {
       reportOptions = codepage = "unknown";
     }
     return RESULT_OK;

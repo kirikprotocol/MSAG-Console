@@ -1,12 +1,12 @@
-/**
- * Created by igork
- * Date: Dec 2, 2002
- * Time: 4:59:33 PM
- */
 package ru.novosoft.smsc.jsp.smsc.categories;
+
+/**
+ Created by andrey Date: 07.02.2005 Time: 12:45:18
+ */
 
 import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
+
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
@@ -60,7 +60,9 @@ public abstract class CategoriesEditBean extends SmscBean
     return appContext.getWebXmlConfig().getServiceIdFromRole(roleName);
   }
 
-  /****************************************** properties ****************************************************/
+  /**
+   * *************************************** properties ***************************************************
+   */
   public String getName()
   {
     return name;
@@ -71,11 +73,13 @@ public abstract class CategoriesEditBean extends SmscBean
     this.name = name;
   }
 
-  public String getId() {
+  public String getId()
+  {
     return id;
   }
 
-  public void setId(String id) {
+  public void setId(String id)
+  {
     this.id = id;
   }
 
@@ -93,7 +97,7 @@ public abstract class CategoriesEditBean extends SmscBean
     rolesSet.addAll(Arrays.asList(roles));
   }
 
- public String getMbCancel()
+  public String getMbCancel()
   {
     return mbCancel;
   }

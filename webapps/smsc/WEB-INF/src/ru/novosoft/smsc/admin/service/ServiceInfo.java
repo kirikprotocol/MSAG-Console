@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.admin.service;
+
 /*
  * Created by igork
  * Date: Mar 20, 2002
  * Time: 5:20:22 PM
  */
-package ru.novosoft.smsc.admin.service;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -36,7 +37,7 @@ public class ServiceInfo
 
 
   public ServiceInfo(final Element serviceElement, final String serviceHost, final SmeManager smeManager, final String daemonServicesFolder)
-      throws AdminException
+          throws AdminException
   {
     host = serviceHost;
     id = serviceElement.getAttribute("id");
@@ -50,11 +51,13 @@ public class ServiceInfo
       if (smeManager.contains(id))
         throw new AdminException("Couldn't add new SMSC - already presented");
       sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX, 0, 0);
-    } else if (id.equals(Constants.ARCHIVE_DAEMON_SVC_ID)) {
+    }
+    else if (id.equals(Constants.ARCHIVE_DAEMON_SVC_ID)) {
       if (smeManager.contains(id))
         throw new AdminException("Couldn't add new ArchiveDaemon - already presented");
       sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX, 0, 0);
-    } else {
+    }
+    else {
       sme = smeManager.get(id);
     }
 
@@ -120,13 +123,17 @@ public class ServiceInfo
   {
     if ("running".equalsIgnoreCase(statusStr)) {
       this.status = STATUS_RUNNING;
-    } else if ("starting".equalsIgnoreCase(statusStr)) {
+    }
+    else if ("starting".equalsIgnoreCase(statusStr)) {
       this.status = STATUS_STARTING;
-    } else if ("stopping".equalsIgnoreCase(statusStr)) {
+    }
+    else if ("stopping".equalsIgnoreCase(statusStr)) {
       this.status = STATUS_STOPPING;
-    } else if ("stopped".equalsIgnoreCase(statusStr)) {
+    }
+    else if ("stopped".equalsIgnoreCase(statusStr)) {
       this.status = STATUS_STOPPED;
-    } else
+    }
+    else
       this.status = STATUS_UNKNOWN;
   }
 

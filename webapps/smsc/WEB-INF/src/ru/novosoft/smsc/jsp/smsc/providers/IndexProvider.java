@@ -1,18 +1,22 @@
-/**
- * Created by igork Date: 22.03.2004 Time: 20:04:20
- */
 package ru.novosoft.smsc.jsp.smsc.providers;
+
+/**
+ Created by andrey Date: 07.02.2005 Time: 12:45:18
+ */
+
+import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.provider.ProviderQuery;
-import ru.novosoft.smsc.admin.provider.Provider;
-import ru.novosoft.smsc.admin.provider.ProviderManager;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
-import ru.novosoft.smsc.admin.journal.Actions;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class IndexProvider extends IndexBean
 {
@@ -20,12 +24,11 @@ public class IndexProvider extends IndexBean
   public static final int RESULT_EDIT = IndexBean.PRIVATE_RESULT + 1;
   public static final int PRIVATE_RESULT = IndexBean.PRIVATE_RESULT + 2;
   private long id = -1;
-  private String name= null;
+  private String name = null;
   protected String editName = null;
   protected String editId = null;
-    //private boolean add = false;
+  //private boolean add = false;
   protected QueryResultSet providers = null;
-  protected Provider provider = null;
   protected ProviderManager providerManager = null;
   protected String mbAdd = null;
   protected String mbDelete = null;
@@ -33,20 +36,19 @@ public class IndexProvider extends IndexBean
   protected String[] checkedProviderNames = new String[0];
   protected Set checkedProviderNamesSet = new HashSet();
 
-   protected int init(List errors)
+  protected int init(List errors)
   {
     int result = super.init(errors);
     if (result != RESULT_OK)
-          return result;
-     pageSize = preferences.getProvidersPageSize();
-        if (sort != null)
-          preferences.setProvidersSortOrder(sort);
-        else
-          sort =  preferences.getProvidersSortOrder();
+      return result;
+    pageSize = preferences.getProvidersPageSize();
+    if (sort != null)
+      preferences.setProvidersSortOrder(sort);
+    else
+      sort = preferences.getProvidersSortOrder();
 
-     provider = appContext.getProvider();
-     providerManager = appContext.getProviderManager();
- return RESULT_OK;
+    providerManager = appContext.getProviderManager();
+    return RESULT_OK;
   }
 
   public int process(final HttpServletRequest request)
@@ -71,7 +73,7 @@ public class IndexProvider extends IndexBean
     }
 
     logger.debug("Providers.Index - process with sorting [" + preferences.getProvidersSortOrder() + "]");
-    ProviderQuery query=new ProviderQuery(pageSize, preferences.getProviderFilter(), preferences.getProvidersSortOrder(), startPosition);
+    ProviderQuery query = new ProviderQuery(pageSize, preferences.getProviderFilter(), preferences.getProvidersSortOrder(), startPosition);
     providers = appContext.getProviderManager().query(query);
     totalSize = providers.getTotalSize();
 
@@ -80,7 +82,7 @@ public class IndexProvider extends IndexBean
     return RESULT_OK;
   }
 
-   private int deleteProviders()
+  private int deleteProviders()
   {
     for (int i = 0; i < checkedProviderNames.length; i++) {
       String checkedProviderName = checkedProviderNames[i];
@@ -92,17 +94,16 @@ public class IndexProvider extends IndexBean
     return RESULT_OK;
   }
 
-  /******************************** properties **************************************/
-  public Provider getProvider()
-  {
-    return provider;
-  }
+  /**
+   * ***************************** properties *************************************
+   */
+
   public boolean isProviderChecked(String name)
   {
     return checkedProviderNamesSet.contains(name);
   }
 
- public String[] getCheckedProviderNames()
+  public String[] getCheckedProviderNames()
   {
     return checkedProviderNames;
   }
@@ -122,11 +123,13 @@ public class IndexProvider extends IndexBean
     this.editName = editName;
   }
 
-  public String getEditId() {
+  public String getEditId()
+  {
     return editId;
   }
 
-  public void setEditId(String editId) {
+  public void setEditId(String editId)
+  {
     this.editId = editId;
   }
 
@@ -151,10 +154,10 @@ public class IndexProvider extends IndexBean
   }
 
 
-  public QueryResultSet getProviders() {
+  public QueryResultSet getProviders()
+  {
     return providers;
   }
-
 
 
   public String getMbAdd()
@@ -186,27 +189,29 @@ public class IndexProvider extends IndexBean
   {
     this.mbEdit = mbEdit;
   }
-  public void setProvider(Provider provider) {
-    this.provider = provider;
-  }
 
-  public ProviderManager getProviderManager() {
+  public ProviderManager getProviderManager()
+  {
     return providerManager;
   }
 
-  public void setProviderManager(ProviderManager providerManager) {
+  public void setProviderManager(ProviderManager providerManager)
+  {
     this.providerManager = providerManager;
   }
 
-  public Set getCheckedProviderNamesSet() {
+  public Set getCheckedProviderNamesSet()
+  {
     return checkedProviderNamesSet;
   }
 
-  public void setCheckedProviderNamesSet(Set checkedProviderNamesSet) {
+  public void setCheckedProviderNamesSet(Set checkedProviderNamesSet)
+  {
     this.checkedProviderNamesSet = checkedProviderNamesSet;
   }
 
-  public void setProviders(QueryResultSet providers) {
+  public void setProviders(QueryResultSet providers)
+  {
     this.providers = providers;
   }
 /*  protected void load(final String loadId) throws SMSCJspException

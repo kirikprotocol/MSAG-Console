@@ -1,15 +1,15 @@
 package ru.novosoft.smsc.jsp.smsc.localeResources;
 
-import ru.novosoft.smsc.admin.resources.ResourcesManager;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.resources.ResourcesManager;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.util.jsp.MultipartDataSource;
 import ru.novosoft.util.jsp.MultipartServletRequest;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.List;
 
 /**
  * Created by igork
@@ -38,7 +38,7 @@ public class LocaleResourcesAdd extends PageBean
     if (mbCancel != null)
       return RESULT_DONE;
 
-    MultipartServletRequest multi = (MultipartServletRequest)request.getAttribute("multipart.request");
+    MultipartServletRequest multi = (MultipartServletRequest) request.getAttribute("multipart.request");
     if (multi != null) {
       MultipartDataSource dataFile = null;
       try {
@@ -65,7 +65,8 @@ public class LocaleResourcesAdd extends PageBean
           dataFile = null;
           journalAppend(SubjectTypes.TYPE_locale, localeName, Actions.ACTION_ADD);
           return RESULT_DONE;
-        } else
+        }
+        else
           return error(SMSCErrors.error.localeResources.wrongFileType);
       } catch (Throwable t) {
         logger.debug("Couldn't receive file", t);
@@ -76,7 +77,8 @@ public class LocaleResourcesAdd extends PageBean
           dataFile = null;
         }
       }
-    } else
+    }
+    else
       return RESULT_OK;
   }
 

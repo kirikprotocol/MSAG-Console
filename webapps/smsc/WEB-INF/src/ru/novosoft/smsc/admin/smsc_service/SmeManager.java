@@ -14,26 +14,26 @@ import java.util.List;
  */
 public interface SmeManager
 {
-	SME add(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName, boolean disabled, byte mode, int proclimit, int schedlimit) throws AdminException;
+  SME add(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName, boolean disabled, byte mode, int proclimit, int schedlimit) throws AdminException;
 
-	SME add(SME newSme) throws AdminException;
+  SME add(SME newSme) throws AdminException;
 
-	SME get(String id) throws AdminException;
+  SME get(String id) throws AdminException;
 
-	SME remove(String id) throws AdminException;
+  SME remove(String id) throws AdminException;
 
-	SME update(SME newSme) throws AdminException;
+  SME update(SME newSme) throws AdminException;
 
-	boolean contains(String id);
+  boolean contains(String id);
 
-	void removeAllIfSme(Collection serviceIds) throws AdminException;
+  void removeAllIfSme(Collection serviceIds) throws AdminException;
 
-	List getSmeNames();
+  List getSmeNames();
 //	SMEList getSmes();
 
-	void save() throws AdminException;
+  void save() throws AdminException;
 
-	SmeStatus smeStatus(String id) throws AdminException;
+  SmeStatus smeStatus(String id) throws AdminException;
 
-	void disconnectSmes(List list) throws AdminException;
+  void disconnectSmes(List list) throws AdminException;
 }

@@ -1,13 +1,12 @@
 package ru.novosoft.smsc.admin.category;
 
-
 /**
- * Created by igork Date: 22.03.2004 Time: 19:45:18
+ * Created by andrey Date: 07.02.2005 Time: 12:45:18
  */
 public class Category
 {
-   public static final String[] columnNames = {
-		"id", "name",
+  public static final String[] columnNames = {
+    "id", "name",
   };
   private long id;
   private String name;
@@ -36,8 +35,8 @@ public class Category
   public String toString()
   {
     return "Category{" +
-           "id=" + id +
-           ", name='" + name + "'" +
-           "}";
+            "id=" + id +
+            ", name='" + name + "'" +
+            "}";
   }
 }

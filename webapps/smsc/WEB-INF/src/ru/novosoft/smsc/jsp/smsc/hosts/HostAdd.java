@@ -1,13 +1,14 @@
+package ru.novosoft.smsc.jsp.smsc.hosts;
+
 /*
  * Created by igork
  * Date: 30.10.2002
  * Time: 2:32:11
  */
-package ru.novosoft.smsc.jsp.smsc.hosts;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 

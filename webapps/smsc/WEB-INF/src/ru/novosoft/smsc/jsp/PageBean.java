@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.jsp;
+
 /*
  * Created by igork
  * Date: 23.10.2002
  * Time: 21:14:48
  */
-package ru.novosoft.smsc.jsp;
 
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.Constants;
@@ -12,8 +13,10 @@ import ru.novosoft.smsc.admin.service.HostsManager;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import java.util.*;
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public abstract class PageBean
 {

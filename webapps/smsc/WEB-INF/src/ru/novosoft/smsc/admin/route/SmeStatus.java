@@ -45,21 +45,26 @@ public class SmeStatus
         connected = true;
         bindMode = SME.MODE_TRX;
         inAddress = outAddress = "";
-      } else {
+      }
+      else {
         internal = false;
         if (connectStr.equalsIgnoreCase("tx")) {
           connected = true;
           bindMode = SME.MODE_TX;
-        } else if (connectStr.equalsIgnoreCase("rx")) {
+        }
+        else if (connectStr.equalsIgnoreCase("rx")) {
           connected = true;
           bindMode = SME.MODE_RX;
-        } else if (connectStr.equalsIgnoreCase("trx")) {
+        }
+        else if (connectStr.equalsIgnoreCase("trx")) {
           connected = true;
           bindMode = SME.MODE_TRX;
-        } else if (connectStr.equalsIgnoreCase("disconnected")) {
+        }
+        else if (connectStr.equalsIgnoreCase("disconnected")) {
           connected = false;
           bindMode = SME.MODE_UNKNOWN;
-        } else {
+        }
+        else {
           connected = true;
           bindMode = SME.MODE_UNKNOWN;
         }
@@ -77,7 +82,8 @@ public class SmeStatus
             logger.debug("outAddress unknown", e);
             outAddress = "unknown";
           }
-        } else {
+        }
+        else {
           inAddress = outAddress = "";
         }
       }

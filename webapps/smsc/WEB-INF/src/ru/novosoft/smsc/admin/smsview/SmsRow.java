@@ -9,64 +9,76 @@ package ru.novosoft.smsc.admin.smsview;
  * @version 1.0
  */
 
-import ru.novosoft.smsc.admin.route.*;
-import ru.novosoft.smsc.admin.*;
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.Mask;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Hashtable;
-import java.text.SimpleDateFormat;
 
 public class SmsRow
 {
   private static int numStates = 5;
-  private static String states[] = { "ENROUTE", "DELIVERED", "EXPIRED", "UNDELIVERABLE", "DELETED" };
+  private static String states[] = {"ENROUTE", "DELIVERED", "EXPIRED", "UNDELIVERABLE", "DELETED"};
 
-  private long    id;
-  private Date    submitTime = new Date();
-  private Date    validTime;
-  private int     attempts;
-  private int     lastResult = 0;
-  private Date    lastTryTime;
-  private Date    nextTryTime;
-  private String  originatingAddress = "originatingAddress";
-  private String  destinationAddress   = "destinationAddress";
-  private String  dealiasedDestinationAddress   = "dealiasedDestinationAddress";
-  private int     messageReference;
-  private String  serviceType;
+  private long id;
+  private Date submitTime = new Date();
+  private Date validTime;
+  private int attempts;
+  private int lastResult = 0;
+  private Date lastTryTime;
+  private Date nextTryTime;
+  private String originatingAddress = "originatingAddress";
+  private String destinationAddress = "destinationAddress";
+  private String dealiasedDestinationAddress = "dealiasedDestinationAddress";
+  private int messageReference;
+  private String serviceType;
   private boolean needArchivate;
-  private short   deliveryReport;
-  private short   billingRecord;
+  private short deliveryReport;
+  private short billingRecord;
   private SmsDescriptor originatingDescriptor;
   private SmsDescriptor destinationDescriptor;
-  private String  routeId;
-  private int     serviceId;
-  private int     priority;
-  private String  srcSmeId;
-  private String  dstSmeId;
-  private short   concatMsgRef;
-  private short   concatSeqNum;
+  private String routeId;
+  private int serviceId;
+  private int priority;
+  private String srcSmeId;
+  private String dstSmeId;
+  private short concatMsgRef;
+  private short concatSeqNum;
 
-  private Mask  originatingAddressMask;
-  private Mask  destinationAddressMask;
-  private Mask  dealiasedDestinationAddressMask;
+  private Mask originatingAddressMask;
+  private Mask destinationAddressMask;
+  private Mask dealiasedDestinationAddressMask;
 
-  private int     status  = 0;
-  private String  text = "";
+  private int status = 0;
+  private String text = "";
   private boolean textEncoded = false;
 
   private boolean marked = false;
 
   private Hashtable parameters = new Hashtable();
 
-  public void setId(long id) { this.id = id; };
-  public long getId() { return id; };
+  public void setId(long id)
+  {
+    this.id = id;
+  };
+  public long getId()
+  {
+    return id;
+  };
 
-  public String getIdString() {
+  public String getIdString()
+  {
     return Long.toHexString(id).toUpperCase();
   };
 
-  public String getOriginatingAddress() { return originatingAddress; }
-  public void setOriginatingAddress(String address) throws AdminException {
+  public String getOriginatingAddress()
+  {
+    return originatingAddress;
+  }
+
+  public void setOriginatingAddress(String address) throws AdminException
+  {
     originatingAddress = address;
     try {
       originatingAddressMask = new Mask(address);
@@ -74,17 +86,27 @@ public class SmsRow
       originatingAddressMask = new Mask(".5.0.invalid_addr");
     }
   }
-  public String getDestinationAddress(){ return destinationAddress; };
-  public void setDestinationAddress(String address) throws AdminException {
+
+  public String getDestinationAddress()
+  {
+    return destinationAddress;
+  };
+  public void setDestinationAddress(String address) throws AdminException
+  {
     destinationAddress = address;
     try {
-	destinationAddressMask = new Mask(address);
+      destinationAddressMask = new Mask(address);
     } catch (Exception ex) {
       destinationAddressMask = new Mask(".5.0.invalid_addr");
     }
   }
-  public String getDealiasedDestinationAddress(){ return dealiasedDestinationAddress; };
-  public void setDealiasedDestinationAddress(String address) throws AdminException {
+
+  public String getDealiasedDestinationAddress()
+  {
+    return dealiasedDestinationAddress;
+  };
+  public void setDealiasedDestinationAddress(String address) throws AdminException
+  {
     dealiasedDestinationAddress = address;
     try {
       dealiasedDestinationAddressMask = new Mask(address);
@@ -92,177 +114,309 @@ public class SmsRow
       dealiasedDestinationAddressMask = new Mask(".5.0.invalid_addr");
     }
   }
-  public String getToString() {
-      return ((dealiasedDestinationAddress == null || dealiasedDestinationAddress.length() == 0 ||
-               destinationAddress.equalsIgnoreCase(dealiasedDestinationAddress)) ? destinationAddress:(destinationAddress+" ("+dealiasedDestinationAddress+")"));
+
+  public String getToString()
+  {
+    return ((dealiasedDestinationAddress == null || dealiasedDestinationAddress.length() == 0 ||
+            destinationAddress.equalsIgnoreCase(dealiasedDestinationAddress)) ? destinationAddress : (destinationAddress + " (" + dealiasedDestinationAddress + ")"));
   }
+
   public String getDateString()
   {
-      SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-      return formatter.format(submitTime);
+    SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+    return formatter.format(submitTime);
   }
-	public Date getSubmitTime()
-	{
-		return submitTime;
-	}
-  public void setSubmitTime(Date submitTime){ this.submitTime = submitTime; }
-  public static String getStatusString(int status) {
-    return (status >= 0 && status < numStates) ? states[status]:"UNKNOUN";
+
+  public Date getSubmitTime()
+  {
+    return submitTime;
   }
-  public String getStatus() {
+
+  public void setSubmitTime(Date submitTime)
+  {
+    this.submitTime = submitTime;
+  }
+
+  public static String getStatusString(int status)
+  {
+    return (status >= 0 && status < numStates) ? states[status] : "UNKNOUN";
+  }
+
+  public String getStatus()
+  {
     return getStatusString(status);
   }
-  public void setStatus(int status){ this.status = status; }
-  public int getLastResult() { return lastResult; }
-  public void setLastResult(int lastResult) { this.lastResult = lastResult; }
 
-  public String getText(){ return text; }
-  public void setText(String text){ this.text = text; }
+  public void setStatus(int status)
+  {
+    this.status = status;
+  }
 
-  public boolean isMarked() { return marked; }
-  public void mark() { marked = true; }
-  public void unmark() { marked = false; }
+  public int getLastResult()
+  {
+    return lastResult;
+  }
 
-  public int getAttempts() {
+  public void setLastResult(int lastResult)
+  {
+    this.lastResult = lastResult;
+  }
+
+  public String getText()
+  {
+    return text;
+  }
+
+  public void setText(String text)
+  {
+    this.text = text;
+  }
+
+  public boolean isMarked()
+  {
+    return marked;
+  }
+
+  public void mark()
+  {
+    marked = true;
+  }
+
+  public void unmark()
+  {
+    marked = false;
+  }
+
+  public int getAttempts()
+  {
     return attempts;
   }
-  public short getBillingRecord() {
+
+  public short getBillingRecord()
+  {
     return billingRecord;
   }
-  public short getConcatMsgRef() {
+
+  public short getConcatMsgRef()
+  {
     return concatMsgRef;
   }
-  public short getConcatSeqNum() {
+
+  public short getConcatSeqNum()
+  {
     return concatSeqNum;
   }
-  public short getDeliveryReport() {
+
+  public short getDeliveryReport()
+  {
     return deliveryReport;
   }
-  public SmsDescriptor getDestinationDescriptor() {
+
+  public SmsDescriptor getDestinationDescriptor()
+  {
     return destinationDescriptor;
   }
-  public String getDstSmeId() {
+
+  public String getDstSmeId()
+  {
     return dstSmeId;
   }
-  public Date getLastTryTime() {
+
+  public Date getLastTryTime()
+  {
     return lastTryTime;
   }
-  public int getMessageReference() {
+
+  public int getMessageReference()
+  {
     return messageReference;
   }
-  public boolean isNeedArchivate() {
+
+  public boolean isNeedArchivate()
+  {
     return needArchivate;
   }
-  public Date getNextTryTime() {
+
+  public Date getNextTryTime()
+  {
     return nextTryTime;
   }
-  public SmsDescriptor getOriginatingDescriptor() {
+
+  public SmsDescriptor getOriginatingDescriptor()
+  {
     return originatingDescriptor;
   }
-  public int getPriority() {
+
+  public int getPriority()
+  {
     return priority;
   }
-  public String getRouteId() {
+
+  public String getRouteId()
+  {
     return routeId;
   }
-  public int getServiceId() {
+
+  public int getServiceId()
+  {
     return serviceId;
   }
-  public String getServiceType() {
+
+  public String getServiceType()
+  {
     return serviceType;
   }
-  public String getSrcSmeId() {
+
+  public String getSrcSmeId()
+  {
     return srcSmeId;
   }
-  public Date getValidTime() {
+
+  public Date getValidTime()
+  {
     return validTime;
   }
+
   public String getValidString()
   {
-      SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-      return formatter.format(validTime);
+    SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+    return formatter.format(validTime);
   }
-  public void setAttempts(int attempts) {
+
+  public void setAttempts(int attempts)
+  {
     this.attempts = attempts;
   }
-  public void setBillingRecord(short billingRecord) {
+
+  public void setBillingRecord(short billingRecord)
+  {
     this.billingRecord = billingRecord;
   }
-  public void setConcatMsgRef(short concatMsgRef) {
+
+  public void setConcatMsgRef(short concatMsgRef)
+  {
     this.concatMsgRef = concatMsgRef;
   }
-  public void setConcatSeqNum(short concatSeqNum) {
+
+  public void setConcatSeqNum(short concatSeqNum)
+  {
     this.concatSeqNum = concatSeqNum;
   }
-  public void setDeliveryReport(short deliveryReport) {
+
+  public void setDeliveryReport(short deliveryReport)
+  {
     this.deliveryReport = deliveryReport;
   }
-  public void setDestinationDescriptor(SmsDescriptor destinationDescriptor) {
+
+  public void setDestinationDescriptor(SmsDescriptor destinationDescriptor)
+  {
     this.destinationDescriptor = destinationDescriptor;
   }
-  public void setDstSmeId(String dstSmeId) {
+
+  public void setDstSmeId(String dstSmeId)
+  {
     this.dstSmeId = dstSmeId;
   }
-  public void setLastTryTime(Date lastTryTime) {
+
+  public void setLastTryTime(Date lastTryTime)
+  {
     this.lastTryTime = lastTryTime;
   }
-  public void setMessageReference(int messageReference) {
+
+  public void setMessageReference(int messageReference)
+  {
     this.messageReference = messageReference;
   }
-  public void setNeedArchivate(boolean needArchivate) {
+
+  public void setNeedArchivate(boolean needArchivate)
+  {
     this.needArchivate = needArchivate;
   }
-  public void setNextTryTime(Date nextTryTime) {
+
+  public void setNextTryTime(Date nextTryTime)
+  {
     this.nextTryTime = nextTryTime;
   }
-  public void setOriginatingDescriptor(SmsDescriptor originatingDescriptor) {
+
+  public void setOriginatingDescriptor(SmsDescriptor originatingDescriptor)
+  {
     this.originatingDescriptor = originatingDescriptor;
   }
-  public void setPriority(int priority) {
+
+  public void setPriority(int priority)
+  {
     this.priority = priority;
   }
-  public void setRouteId(String routeId) {
+
+  public void setRouteId(String routeId)
+  {
     this.routeId = routeId;
   }
-  public void setServiceId(int serviceId) {
+
+  public void setServiceId(int serviceId)
+  {
     this.serviceId = serviceId;
   }
-  public void setServiceType(String serviceType) {
+
+  public void setServiceType(String serviceType)
+  {
     this.serviceType = serviceType;
   }
-  public void setSrcSmeId(String srcSmeId) {
+
+  public void setSrcSmeId(String srcSmeId)
+  {
     this.srcSmeId = srcSmeId;
   }
-  public void setValidTime(Date validTime) {
+
+  public void setValidTime(Date validTime)
+  {
     this.validTime = validTime;
   }
-  public Mask getDealiasedDestinationAddressMask() {
+
+  public Mask getDealiasedDestinationAddressMask()
+  {
     return dealiasedDestinationAddressMask;
   }
-  public Mask getDestinationAddressMask() {
+
+  public Mask getDestinationAddressMask()
+  {
     return destinationAddressMask;
   }
-  public Mask getOriginatingAddressMask() {
+
+  public Mask getOriginatingAddressMask()
+  {
     return originatingAddressMask;
   }
-  public boolean isTextEncoded() {
+
+  public boolean isTextEncoded()
+  {
     return textEncoded;
   }
-  public void setTextEncoded(boolean textEncoded) {
+
+  public void setTextEncoded(boolean textEncoded)
+  {
     this.textEncoded = textEncoded;
   }
 
-  public void addBodyParameter(short tag, Object value) {
-    parameters.put(String.valueOf( tag ), value);
+  public void addBodyParameter(short tag, Object value)
+  {
+    parameters.put(String.valueOf(tag), value);
   }
-  public Hashtable getBodyParameters() {
+
+  public Hashtable getBodyParameters()
+  {
     return parameters;
   }
 
-  public boolean equals(Object obj) {
+  public boolean equals(Object obj)
+  {
     if (obj instanceof SmsRow) {
-      return (((SmsRow)obj).getId() == id);
-    } else return super.equals(obj);
+      return (((SmsRow) obj).getId() == id);
+    }
+    else
+      return super.equals(obj);
   }
 
-};
+}
+
+;

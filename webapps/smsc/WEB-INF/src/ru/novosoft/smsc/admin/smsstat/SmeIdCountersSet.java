@@ -1,3 +1,5 @@
+package ru.novosoft.smsc.admin.smsstat;
+
 /**
  * Created by IntelliJ IDEA.
  * User: makarov
@@ -5,7 +7,7 @@
  * Time: 4:38:40 PM
  * To change this template use Options | File Templates.
  */
-package ru.novosoft.smsc.admin.smsstat;
+
 
 public class SmeIdCountersSet extends ExtendedCountersSet implements Comparable
 {
@@ -23,8 +25,9 @@ public class SmeIdCountersSet extends ExtendedCountersSet implements Comparable
     this.smeid = smeid;
   }
 
-  public int compareTo(Object o) {
+  public int compareTo(Object o)
+  {
     if (o == null || smeid == null || !(o instanceof SmeIdCountersSet)) return -1;
-    return smeid.compareTo(((SmeIdCountersSet)o).smeid);
+    return smeid.compareTo(((SmeIdCountersSet) o).smeid);
   }
 }

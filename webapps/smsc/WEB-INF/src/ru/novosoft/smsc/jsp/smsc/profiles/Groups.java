@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.jsp.smsc.profiles;
+
 /*
  * Created by igork
  * Date: 04.11.2002
  * Time: 18:49:34
  */
-package ru.novosoft.smsc.jsp.smsc.profiles;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
@@ -18,7 +19,10 @@ import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileQuery;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class Groups extends IndexBean
 {
@@ -103,7 +107,9 @@ public class Groups extends IndexBean
     return profiles;
   }
 
-  /******************** properties *************************/
+  /**
+   * ***************** properties ************************
+   */
 
   public String getMbAdd()
   {

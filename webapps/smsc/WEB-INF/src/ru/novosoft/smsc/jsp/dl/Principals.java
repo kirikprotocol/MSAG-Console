@@ -11,7 +11,10 @@ import javax.servlet.http.HttpServletRequest;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by IntelliJ IDEA.
@@ -50,7 +53,8 @@ public class Principals extends IndexBean
         filter.setFilterAddress(filterAddress = "*");
       else
         filterAddress = filter.getFilterAddress();
-    } else
+    }
+    else
       filter.setFilterAddress(filterAddress);
     if (filter.isEmpty())
       filterAddress = "*";

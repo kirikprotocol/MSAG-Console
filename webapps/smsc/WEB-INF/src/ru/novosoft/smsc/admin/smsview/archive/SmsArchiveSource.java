@@ -1,13 +1,14 @@
 package ru.novosoft.smsc.admin.smsview.archive;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.smsview.SmsSource;
-import ru.novosoft.smsc.admin.smsview.SmsSet;
 import ru.novosoft.smsc.admin.smsview.SmsQuery;
+import ru.novosoft.smsc.admin.smsview.SmsSet;
+import ru.novosoft.smsc.admin.smsview.SmsSource;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
-import java.io.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -22,7 +23,8 @@ public class SmsArchiveSource extends SmsSource
 
   ArchiveDaemonContext context = null;
 
-  public void init(SMSCAppContext appContext) throws AdminException {
+  public void init(SMSCAppContext appContext) throws AdminException
+  {
     context = ArchiveDaemonContext.getInstance(appContext);
   }
 
@@ -32,7 +34,8 @@ public class SmsArchiveSource extends SmsSource
     InputStream input = null;
     OutputStream output = null;
 
-    SmsSet set = new SmsSet(); set.setHasMore(false);
+    SmsSet set = new SmsSet();
+    set.setHasMore(false);
     int rowsMaximum = query.getRowsMaximum();
     if (rowsMaximum == 0) return set;
 
@@ -40,44 +43,44 @@ public class SmsArchiveSource extends SmsSource
       QueryMessage request = new QueryMessage(query);
 
       socket = new Socket(context.getHost(), context.getPort());
-      input = socket.getInputStream(); output = socket.getOutputStream();
+      input = socket.getInputStream();
+      output = socket.getOutputStream();
 
       DaemonCommunicator communicator = new DaemonCommunicator(input, output);
       communicator.send(request);
-      int toReceive = (rowsMaximum < MAX_SMS_FETCH_SIZE) ? rowsMaximum:MAX_SMS_FETCH_SIZE;
+      int toReceive = (rowsMaximum < MAX_SMS_FETCH_SIZE) ? rowsMaximum : MAX_SMS_FETCH_SIZE;
       communicator.send(new RsNxtMessage(toReceive));
 
       Message responce = null;
       boolean allSelected = false;
-      while(!allSelected)
-      {
+      while (!allSelected) {
         responce = communicator.receive();
         if (responce == null) throw new AdminException("Message from archive daemon is NULL");
 
-        switch(responce.getType())
-        {
-        case Message.SMSC_BYTE_EMPTY_TYPE:
+        switch (responce.getType()) {
+          case Message.SMSC_BYTE_EMPTY_TYPE:
             allSelected = true;
             break;
-        case Message.SMSC_BYTE_RSSMS_TYPE:
-            set.addRow(((RsSmsMessage)responce).getSms());
+          case Message.SMSC_BYTE_RSSMS_TYPE:
+            set.addRow(((RsSmsMessage) responce).getSms());
             if (--toReceive <= 0) {
-              toReceive = rowsMaximum-set.getRowsCount();
+              toReceive = rowsMaximum - set.getRowsCount();
               if (toReceive <= 0) {
                 set.setHasMore(true);
                 communicator.send(new EmptyMessage());
-              } else {
-                toReceive = (toReceive < MAX_SMS_FETCH_SIZE) ? toReceive:MAX_SMS_FETCH_SIZE;
+              }
+              else {
+                toReceive = (toReceive < MAX_SMS_FETCH_SIZE) ? toReceive : MAX_SMS_FETCH_SIZE;
                 communicator.send(new RsNxtMessage(toReceive));
               }
             }
             break;
-        case Message.SMSC_BYTE_ERROR_TYPE:
-            throw new AdminException("Archive daemon communication error: "+
-                                     ((ErrorMessage)responce).getError());
-        default:
-            throw new AdminException("Unsupported message received from archive daemon, type: "+
-                                     responce.getType());
+          case Message.SMSC_BYTE_ERROR_TYPE:
+            throw new AdminException("Archive daemon communication error: " +
+                    ((ErrorMessage) responce).getError());
+          default:
+            throw new AdminException("Unsupported message received from archive daemon, type: " +
+                    responce.getType());
         }
       }
 
@@ -85,9 +88,24 @@ public class SmsArchiveSource extends SmsSource
       exc.printStackTrace();
       throw new AdminException(exc.getMessage());
     } finally {
-      try { if (input  != null) input.close();  input=null;  } catch (Exception exc) {};
-      try { if (output != null) output.close(); output=null; } catch (Exception exc) {};
-      try { if (socket != null) socket.close(); socket=null; } catch (Exception exc) {};
+      try {
+        if (input != null) input.close();
+        input = null;
+      } catch (Exception exc) {
+      }
+      ;
+      try {
+        if (output != null) output.close();
+        output = null;
+      } catch (Exception exc) {
+      }
+      ;
+      try {
+        if (socket != null) socket.close();
+        socket = null;
+      } catch (Exception exc) {
+      }
+      ;
     }
 
     return set;
@@ -104,7 +122,8 @@ public class SmsArchiveSource extends SmsSource
       CountMessage request = new CountMessage(query);
 
       socket = new Socket(context.getHost(), context.getPort());
-      input = socket.getInputStream(); output = socket.getOutputStream();
+      input = socket.getInputStream();
+      output = socket.getOutputStream();
 
       DaemonCommunicator communicator = new DaemonCommunicator(input, output);
       communicator.send(request);
@@ -113,27 +132,41 @@ public class SmsArchiveSource extends SmsSource
       if (responce == null)
         throw new AdminException("Message from archive daemon is NULL");
 
-      switch(responce.getType())
-      {
-      case Message.SMSC_BYTE_EMPTY_TYPE:
+      switch (responce.getType()) {
+        case Message.SMSC_BYTE_EMPTY_TYPE:
           break;
-      case Message.SMSC_BYTE_TOTAL_TYPE:
-          smsCount = (int)((TotalMessage)responce).getCount();
+        case Message.SMSC_BYTE_TOTAL_TYPE:
+          smsCount = (int) ((TotalMessage) responce).getCount();
           break;
-      case Message.SMSC_BYTE_ERROR_TYPE:
-          throw new AdminException("Archive daemon communication error: "+
-                                   ((ErrorMessage)responce).getError());
-      default:
-          throw new AdminException("Unsupported message received from archive daemon, type: "+
-                                   responce.getType());
+        case Message.SMSC_BYTE_ERROR_TYPE:
+          throw new AdminException("Archive daemon communication error: " +
+                  ((ErrorMessage) responce).getError());
+        default:
+          throw new AdminException("Unsupported message received from archive daemon, type: " +
+                  responce.getType());
       }
     } catch (Exception exc) {
       exc.printStackTrace();
       throw new AdminException(exc.getMessage());
     } finally {
-      try { if (input  != null) input.close();  input=null;  } catch (Exception exc) {};
-      try { if (output != null) output.close(); output=null; } catch (Exception exc) {};
-      try { if (socket != null) socket.close(); socket=null; } catch (Exception exc) {};
+      try {
+        if (input != null) input.close();
+        input = null;
+      } catch (Exception exc) {
+      }
+      ;
+      try {
+        if (output != null) output.close();
+        output = null;
+      } catch (Exception exc) {
+      }
+      ;
+      try {
+        if (socket != null) socket.close();
+        socket = null;
+      } catch (Exception exc) {
+      }
+      ;
     }
     return smsCount;
   }
