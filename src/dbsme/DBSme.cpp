@@ -91,7 +91,7 @@ public:
         {
             {
                 MutexGuard guard(countersLock);
-                if (requestsProcessingCount) requestsProcessingCount--;
+                //if (requestsProcessingCount) requestsProcessingCount--;
                 failuresNoticedCount++;
             }
             //command.setOutData("Error processing SMS !");
@@ -341,6 +341,7 @@ int main(void)
         while (!bDBSmeIsStopped) 
         {
             sleep(2);
+            MutexGuard guard(countersLock);
             printf("\nRequests: %llu processing, %llu processed.\n"
                    "Failures noticed: %llu\n"
                    "SMPP transport errors handled: %llu\n",
