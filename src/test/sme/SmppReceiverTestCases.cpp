@@ -1,6 +1,7 @@
 #include "SmppReceiverTestCases.hpp"
 #include "test/TestConfig.hpp"
 #include "test/smpp/SmppUtil.hpp"
+#include "test/util/TextUtil.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "util/debug.h"
 
@@ -43,6 +44,17 @@
 #define __checkForNull__(failureCode, field) \
 	if (pdu.field) { __tc_fail__(failureCode); }
 
+#define __compare_optional__(failureCode, field, expr) \
+	if ((p1.has_##field() && !p2.has_##field()) || \
+		(!p1.has_##field() && p2.has_##field()) || \
+		(p1.has_##field() && p2.has_##field() && (expr))) \
+		{ __tc_fail__(failureCode); }
+
+#define __compare_optional_ostr__(failureCode, field) \
+	__compare_optional__(failureCode, field, \
+		p1.size_##field() != p2.size_##field() || \
+		strncmp(p1.get_##field(), p2.get_##field(), p1.size_##field()))
+
 //#define __compareTime__(field) \
 
 namespace smsc {
@@ -53,23 +65,26 @@ using smsc::util::Logger;
 using smsc::core::synchronization::MutexGuard;
 using smsc::sme::SmppTransmitter;
 using namespace smsc::test;
+using namespace smsc::test::util;
 using namespace smsc::test::smpp; //constants, SmppUtil
 using namespace smsc::smpp::SmppCommandSet; //constants
 using namespace smsc::smpp::SmppStatusSet; //constants
+using namespace smsc::profiler;
 
 SmppReceiverTestCases::SmppReceiverTestCases(const SmeSystemId& _systemId,
 	const Address& addr, SmppResponseSender* _respSender,
 	const SmeRegistry* _smeReg, const AliasRegistry* _aliasReg,
-	const RouteRegistry* _routeReg, RouteChecker* _routeChecker,
-	SmppPduChecker* _pduChecker, CheckList* _chkList)
+	const RouteRegistry* _routeReg, const ProfileRegistry* _profileReg,
+	RouteChecker* _routeChecker, SmppPduChecker* _pduChecker, CheckList* _chkList)
 	: systemId(_systemId), smeAddr(addr), respSender(_respSender), smeReg(_smeReg),
-	aliasReg(_aliasReg), routeReg(_routeReg), routeChecker(_routeChecker),
-	pduChecker(_pduChecker), chkList(_chkList)
+	aliasReg(_aliasReg), routeReg(_routeReg), profileReg(_profileReg),
+	routeChecker(_routeChecker), pduChecker(_pduChecker), chkList(_chkList)
 {
 	__require__(respSender);
 	__require__(smeReg);
 	//__require__(aliasReg);
 	//__require__(routeReg);
+	//__require__(profileReg);
 	//__require__(routeChecker);
 	//__require__(pduChecker);
 	//__require__(chkList);
@@ -222,6 +237,72 @@ bool SmppReceiverTestCases::isAccepted(uint32_t status)
 			return true;
 	}
 }
+
+void SmppReceiverTestCases::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu)
+{
+	__require__(profileReg);
+	__decl_tc__;
+	Address destAddr;
+	SmppUtil::convert(pdu.get_message().get_dest(), &destAddr);
+	//pdu
+	uint8_t dc = pdu.get_message().get_dataCoding();
+	const char* sm = pdu.get_message().get_shortMessage();
+	uint8_t smLen = pdu.get_message().get_smLength();
+	const char* mp = pdu.get_optional().has_messagePayload() ?
+		pdu.get_optional().get_messagePayload() : NULL;
+	int mpLen = pdu.get_optional().has_messagePayload() ?
+		pdu.get_optional().size_messagePayload() : 0;
+	//origPdu
+	uint8_t origDc = origPdu.get_message().get_dataCoding();
+	const char* origSm = origPdu.get_message().get_shortMessage();
+	uint8_t origSmLen = origPdu.get_message().get_smLength();
+	const char* origMp = origPdu.get_optional().has_messagePayload() ?
+		origPdu.get_optional().get_messagePayload() : NULL;
+	int origMpLen = origPdu.get_optional().has_messagePayload() ?
+		origPdu.get_optional().size_messagePayload() : 0;
+	//игнорирую опциональный language_indicator
+	switch(profileReg->getProfile(destAddr).codepage)
+	{
+		case ProfileCharsetOptions::Default:
+			__tc__("processDeliverySm.normalSms.checkDataCoding");
+			if (dc != DATA_CODING_SMSC_DEFAULT)
+			{
+				__tc_fail__(1);
+			}
+			__tc_ok_cond__;
+			if (dc == DATA_CODING_SMSC_DEFAULT)
+			{
+				if (origDc == DATA_CODING_SMSC_DEFAULT)
+				{
+					__tc__("processDeliverySm.normalSms.checkTextEqualDataCoding");
+				}
+				else
+				{
+					__tc__("processDeliverySm.normalSms.checkTextDiffDataCoding");
+				}
+				__tc_fail2__(compare(origDc, origSm, origSmLen, dc, sm, smLen), 0);
+				__tc_fail2__(compare(origDc, origMp, origMpLen, dc, mp, mpLen), 10);
+				__tc_ok_cond__;
+			}
+			break;
+		case ProfileCharsetOptions::Ucs2:
+			if (dc == origDc)
+			{
+				__tc__("processDeliverySm.normalSms.checkTextEqualDataCoding");
+			}
+			else
+			{
+				__tc__("processDeliverySm.normalSms.checkTextDiffDataCoding");
+			}
+			__tc_fail2__(compare(origDc, origSm, origSmLen, dc, sm, smLen), 0);
+			__tc_fail2__(compare(origDc, origMp, origMpLen, dc, mp, mpLen), 10);
+			__tc_ok_cond__;
+			break;
+		default:
+			__unreachable__("Invalid profile");
+	}
+}
+
 void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime)
 {
 	__trace__("processNormalSms()");
@@ -315,15 +396,17 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 					//вли€ет на пор€док доставки сообщений
 					__compare__(5, get_message().get_priorityFlag());
 					__compare__(6, get_message().get_registredDelivery());
-					__compare__(7, get_message().get_dataCoding());
-					__compare__(8, get_message().get_smLength());
-					__compareOStr__(9, get_message().get_shortMessage(),
-						get_message().size_shortMessage());
 					__tc_ok_cond__;
+					//сравнить текст
+					if (profileReg)
+					{
+						compareMsgText(*origPdu, pdu);
+					}
 					//optional
 					__tc__("processDeliverySm.normalSms.checkOptionalFields");
+					//отключить message_payload, который провер€етс€ в compareMsgText()
 					__tc_fail2__(SmppUtil::compareOptional(
-						pdu.get_optional(), origPdu->get_optional()), 0);
+						pdu.get_optional(), origPdu->get_optional(), 0x80000000), 0);
 					__tc_ok_cond__;
 					//проверка механизма повторной доставки
 					__tc__("processDeliverySm.normalSms.scheduleChecks");
@@ -436,13 +519,17 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu,
 				//optional
 				//__tc_fail2__(SmppUtil::compareOptional(
 				//	pdu.get_optional(), origPdu->get_optional()), 10);
-				switch (origPdu->get_message().get_registredDelivery() &
-					SMSC_DELIVERY_RECEIPT_BITS)
+				__tc_ok_cond__;
+				__tc__("processDeliverySm.deliveryReceipt.checkProfile");
+				//switch (origPdu->get_message().get_registredDelivery() &
+				//	SMSC_DELIVERY_RECEIPT_BITS)
+				switch (pduData->reportOptions)
 				{
 					//delivery receipt получено, но не запрашивалс€
-					case NO_SMSC_DELIVERY_RECEIPT:
-						__tc_fail__(10);
+					case ProfileReportOptions::ReportNone:
+						__tc_fail__(1);
 						break;
+					/*
 					case FAILURE_SMSC_DELIVERY_RECEIPT:
 						//ƒолжна быть причина ошибки
 						if (!pdu.get_optional().has_networkErrorCode())
@@ -468,14 +555,15 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu,
 								__unreachable__("Invalid state");
 						}
 						break;
-					case FINAL_SMSC_DELIVERY_RECEIPT:
+					*/
+					case ProfileReportOptions::ReportFull:
 						//—татус должен быть финальным
 						switch (pdu.get_optional().get_messageState())
 						{
 							case SMPP_ENROUTE_STATE:
 							case SMPP_ACCEPTED_STATE:
 							case SMPP_UNKNOWN_STATE:
-								__tc_fail__(13);
+								__tc_fail__(2);
 								break;
 							case SMPP_DELIVERED_STATE:
 							case SMPP_EXPIRED_STATE:
@@ -490,7 +578,7 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu,
 						break;
 					default:
 						//Ќекорректное значение
-						__tc_fail__(14);
+						__tc_fail__(3);
 				}
 				__tc_ok_cond__;
 				//проверить информацию о доставленной pdu (код ошибки и статус)
@@ -631,10 +719,13 @@ void SmppReceiverTestCases::processIntermediateNotification(
 				//__tc_fail2__(SmppUtil::compareOptional(
 				//	pdu.get_optional(), origPdu->get_optional()), 10);
 				//intermediate notification получено, но не запрашивалс€
-				if (!(origPdu->get_message().get_registredDelivery() &
-					INTERMEDIATE_NOTIFICATION_REQUESTED))
+				//(origPdu->get_message().get_registredDelivery() &
+				//	INTERMEDIATE_NOTIFICATION_REQUESTED)
+				__tc_ok_cond__;
+				__tc__("processDeliverySm.intermediateNotification.checkProfile");
+				if (pduData->reportOptions == ProfileReportOptions::ReportNone)
 				{
-					__tc_fail__(4);
+					__tc_fail__(1);
 				}
 				__tc_ok_cond__;
 				//__tc__("processDeliverySm.intermediateNotification.checkStatus");
