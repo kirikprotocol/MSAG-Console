@@ -88,16 +88,30 @@ public:
 
   T& Get(int key)const
   {
-    if(!size || !count)throw;
+    if(!size || !count)throw 0;
     int idx;
     int attempt=0;
     do{
       unsigned idx=Index(key,attempt);
-      if(refcounts[idx]==0)throw;
+      if(refcounts[idx]==0)throw 0;
       attempt++;
     }while(keys[idx]!=key);
     return values[idx];
   }
+
+  T* GetPtr(int key)const
+  {
+    if(!size || !count)return 0;
+    int idx;
+    int attempt=0;
+    do{
+      unsigned idx=Index(key,attempt);
+      if(refcounts[idx]==0)return 0;
+      attempt++;
+    }while(keys[idx]!=key);
+    return &values[idx];
+  }
+
 
   int Get(int key,T& value)const
   {

@@ -265,30 +265,50 @@ int SmppInputThread::Execute()
               resppdu.set_systemId("smsc");
               bool err=false;
 
-              try{
-                trace("try to register sme");
-                smeManager->registerSmeProxy(
-                  bindpdu->get_systemId()?bindpdu->get_systemId():"",
-                  bindpdu->get_password()?bindpdu->get_password():"",
-                  proxy);
-                proxy->setId(bindpdu->get_systemId());
-                resppdu.get_header().
-                  set_commandStatus(SmppStatusSet::ESME_ROK);
-              }catch(SmeRegisterException& e)
+              if(bindpdu->get_password() && strlen(bindpdu->get_password())>8)
               {
                 resppdu.get_header().
-                  set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
-                trace2("registration failed:%s",e.what());
-                //delete proxy;
+                  set_commandStatus(SmppStatusSet::ESME_RINVPASWD);
+                __warning__("bind failed: password too long");
                 err=true;
               }
-              catch(...)
+
+              if(bindpdu->get_systemId()?bindpdu->get_systemId() &&
+                 strlen(bindpdu->get_systemId()?bindpdu->get_systemId())>15)
               {
                 resppdu.get_header().
-                  set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
-                trace2("registration failed: unknown reason");
-                //delete proxy;
+                  set_commandStatus(SmppStatusSet::ESME_RINVSYSID);
+                __warning__("bind failed: systemId too long");
                 err=true;
+              }
+
+              if(!err)
+              {
+                try{
+                  trace("try to register sme");
+                  smeManager->registerSmeProxy(
+                    bindpdu->get_systemId()?bindpdu->get_systemId():"",
+                    bindpdu->get_password()?bindpdu->get_password():"",
+                    proxy);
+                  proxy->setId(bindpdu->get_systemId());
+                  resppdu.get_header().
+                    set_commandStatus(SmppStatusSet::ESME_ROK);
+                }catch(SmeRegisterException& e)
+                {
+                  resppdu.get_header().
+                    set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                  trace2("registration failed:%s",e.what());
+                  //delete proxy;
+                  err=true;
+                }
+                catch(...)
+                {
+                  resppdu.get_header().
+                    set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                  trace2("registration failed: unknown reason");
+                  //delete proxy;
+                  err=true;
+                }
               }
               resppdu.set_scInterfaceVersion(0x34);
               char buf[64];
