@@ -63,7 +63,8 @@ namespace smsc { namespace mcisme
 
     public:
 
-        MCIModule(const Circuits& circuits, const ReleaseSettings& releaseSettings, const char* rx) 
+        MCIModule(const Circuits& circuits, const ReleaseSettings& releaseSettings, 
+                  const char* callingMask, const char* calledMask) 
             : Thread(), logger(Logger::getInstance("smsc.mcisme.MCIModule")), 
                 listener(0), bAttached(false), bNeedExit(false)
         {
@@ -74,7 +75,10 @@ namespace smsc { namespace mcisme
             if (!module) throw Exception("Failed to instantiate MCI Module processor.");
             module->setReleaseSettings(releaseSettings);
             module->setCircuits(circuits);
-            if (!setCallingMask(rx)) throw Exception("Failed to compile calling mask '%s'.", rx ? rx:"");
+            if (!setCallingMask(callingMask))
+                throw Exception("Failed to compile calling mask '%s'.", callingMask ? callingMask:"");
+            if (!setCalledMask(calledMask)) 
+                throw Exception("Failed to compile calling mask '%s'.", calledMask ? calledMask:"");
         #endif
             Thread::Start();
 
