@@ -7,9 +7,9 @@ import java.text.*;
 import java.io.*;
 
 public class PerfSnap {
-  public long last[] = {0,0,0,0};
-  public long avg[] = {0,0,0,0};
-  public long total[] = {0,0,0,0};
+  public long last[] = {0,0,0,0,0};
+  public long avg[] = {0,0,0,0,0};
+  public long total[] = {0,0,0,0,0};
 
   public int uptime;
   public int sctime;
@@ -17,9 +17,11 @@ public class PerfSnap {
   public String strUptime;
   public String strSctime;
 
+  public final static int IDX_TOTAL = 0;
   public final static int IDX_SUCCESS = 1;
   public final static int IDX_ERROR = 2;
   public final static int IDX_RETRY = 3;
+  public final static int IDX_RECEIVED = 4;
 
 
   public PerfSnap() {
@@ -50,9 +52,9 @@ public class PerfSnap {
   }
 
   public void calc() {
-    last[0] = last[1]+last[2]+last[3];
-    avg[0] = avg[1]+avg[2]+avg[3];
-    total[0] = total[1]+total[2]+total[3];
+    last[IDX_TOTAL] = last[IDX_SUCCESS]+last[IDX_ERROR]+last[IDX_RETRY]+last[IDX_RECEIVED];
+    avg[IDX_TOTAL] = avg[IDX_SUCCESS]+avg[IDX_ERROR]+avg[IDX_RETRY]+avg[IDX_RECEIVED];
+    total[IDX_TOTAL] = total[IDX_SUCCESS]+total[IDX_ERROR]+total[IDX_RETRY]+total[IDX_RECEIVED];
 
     {
       StringBuffer sb = new StringBuffer( 128 );
@@ -102,12 +104,15 @@ public class PerfSnap {
     out.writeLong( last[IDX_SUCCESS] );
     out.writeLong( last[IDX_ERROR] );
     out.writeLong( last[IDX_RETRY] );
+    out.writeLong( last[IDX_RECEIVED] );
     out.writeLong( avg[IDX_SUCCESS] );
     out.writeLong( avg[IDX_ERROR] );
     out.writeLong( avg[IDX_RETRY] );
+    out.writeLong( avg[IDX_RECEIVED] );
     out.writeLong( total[IDX_SUCCESS] );
     out.writeLong( total[IDX_ERROR] );
     out.writeLong( total[IDX_RETRY] );
+    out.writeLong( total[IDX_RECEIVED] );
   }
 
   public void read(java.io.DataInputStream in)
@@ -118,12 +123,15 @@ public class PerfSnap {
     last[IDX_SUCCESS] = in.readLong();
     last[IDX_ERROR] = in.readLong();
     last[IDX_RETRY] = in.readLong();
+    last[IDX_RECEIVED] = in.readLong();
     avg[IDX_SUCCESS] = in.readLong();
     avg[IDX_ERROR] = in.readLong();
     avg[IDX_RETRY] = in.readLong();
+    avg[IDX_RECEIVED] = in.readLong();
     total[IDX_SUCCESS] = in.readLong();
     total[IDX_ERROR] = in.readLong();
     total[IDX_RETRY] = in.readLong();
+    total[IDX_RECEIVED] = in.readLong();
   }
   
 }

@@ -10,6 +10,7 @@ public class PerformanceBar extends Canvas {
   String scaleString;
   String bottomString;
   Image offscreen;
+  int pixInGrid = 5;
   int numGrids = 1;
   int gridsInBlock = 1;
   int pad = 2;
@@ -56,13 +57,15 @@ public class PerformanceBar extends Canvas {
     super.invalidate();
   }
 
-  Color background = Color.black;
-  Color grid = new Color( 0, 64, 0 );
-  Color gridlight = new Color( 0, 128, 0 );
-  Color shadowBar = new Color( 0, 96, 0 );
-  Color green = Color.green;
-  Color yellow = Color.yellow;
-  Color red = Color.red;
+  Color colorText = Color.green;
+  Color colorBackground = Color.black;
+  Color colorGrid = new Color( 0, 64, 0 );
+  Color colorGridLight = new Color( 0, 128, 0 );
+  Color colorShadowBar = new Color( 0, 96, 0 );
+  Color colorBarSucc = Color.green;
+  Color colorBarResch = Color.yellow;
+  Color colorBarErr = Color.red;
+  Color colorBarRecv = Color.red;
 
   public synchronized void paint(Graphics gg) {
     Dimension size = getSize();
@@ -74,61 +77,68 @@ public class PerformanceBar extends Canvas {
     Font font = getFont();
     FontMetrics fm = getFontMetrics(font);
 
-    g.setColor( background );
+    g.setColor( colorBackground );
     g.fillRect( 0, 0, size.width, size.height );
     
     int gmax = (counter)*gridsInBlock;
     int barposx = pad+textwidth+(graphWidth-barWidth)/2;
 
-    // bar background 
-    g.setColor( shadowBar );
-    g.fillRect( barposx, size.height-(gmax*5)-bottomSpace, barWidth, gmax*5 );
+    int maxheight = gmax*pixInGrid;
+
+    // bar background
+    g.setColor( colorShadowBar );
+    g.fillRect( barposx, size.height-maxheight-bottomSpace, barWidth, maxheight );
     
-    int maxheight = gmax*5;
     int spent = 0;
 
-    // last error bar
-    g.setColor( red );
-    int barheight = (int)((maxheight*snap.last[2])/scale);
+    // last received bar
+    g.setColor( colorBarRecv );
+    int barheight = (int)((maxheight*snap.last[PerfSnap.IDX_RECEIVED])/scale);
     g.fillRect( barposx, size.height-bottomSpace-spent-barheight, barWidth, barheight );
     spent += barheight;
 
     // last rescheduled bar
-    g.setColor( yellow );
-    barheight = (int)((maxheight*snap.last[3])/scale);
+    g.setColor( colorBarResch );
+    barheight = (int)((maxheight*snap.last[PerfSnap.IDX_RETRY])/scale);
+    g.fillRect( barposx, size.height-bottomSpace-spent-barheight, barWidth, barheight );
+    spent += barheight;
+
+    // last error bar
+    g.setColor( colorBarErr );
+    barheight = (int)((maxheight*snap.last[PerfSnap.IDX_ERROR])/scale);
     g.fillRect( barposx, size.height-bottomSpace-spent-barheight, barWidth, barheight );
     spent += barheight;
 
     // last success bar
-    g.setColor( green );
-    barheight = (int)((maxheight*snap.last[1])/scale);
+    g.setColor( colorBarSucc );
+    barheight = (int)((maxheight*snap.last[PerfSnap.IDX_SUCCESS])/scale);
     g.fillRect( barposx, size.height-bottomSpace-spent-barheight, barWidth, barheight );
     spent += barheight;
     
     // middle bar background 
-    g.setColor( background );
+    g.setColor( colorBackground );
     barposx = pad+textwidth+(graphWidth-midBarWidth)/2;
-    g.fillRect( barposx, size.height-(gmax*5)-bottomSpace, midBarWidth, gmax*5 );
+    g.fillRect( barposx, size.height-maxheight-bottomSpace, midBarWidth, maxheight );
     
     int labcnt = 0;
 
     for( int i = 0; i <= gmax; i++ ) {
-      int yy = size.height-bottomSpace-i*5;
+      int yy = size.height-bottomSpace-i*pixInGrid;
       if( (i % gridsInBlock) == 0 ) {
-        g.setColor( green );
+        g.setColor( colorText );
         String s = String.valueOf( labcnt );
         g.drawChars( s.toCharArray(), 0, s.length(), 
                      size.width-graphWidth-3*pad-fm.charsWidth(s.toCharArray(), 0, s.length()),
                      yy+fm.getDescent() );
         labcnt += scale/counter;
-        g.setColor( gridlight );
+        g.setColor( colorGridLight );
       } else {
-        g.setColor( grid );
+        g.setColor( colorGrid );
       }
       g.drawLine( size.width-graphWidth-pad, yy, size.width-pad, yy );
     }
 
-    g.setColor( green );
+    g.setColor( colorText );
     g.drawChars( bottomString.toCharArray(), 0, bottomString.length(),
                  (size.width-fm.charsWidth( bottomString.toCharArray(), 0, bottomString.length()))/2,
                  size.height-pad-fm.getDescent() );

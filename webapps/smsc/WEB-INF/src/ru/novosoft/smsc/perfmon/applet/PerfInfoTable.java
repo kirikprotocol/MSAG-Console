@@ -25,11 +25,13 @@ public class PerfInfoTable extends Canvas {
     heads[1] =  PerfMon.localeText.getString( "ptabh.avg" );
     heads[2] =  PerfMon.localeText.getString( "ptabh.total" );
 
-    rows = new String[4];
+    rows = new String[5];
     rows[0] = PerfMon.localeText.getString( "ptabr.total" );
     rows[1] = PerfMon.localeText.getString( "ptabr.succ" );
     rows[2] = PerfMon.localeText.getString( "ptabr.err" );
     rows[3] = PerfMon.localeText.getString( "ptabr.resch" );
+    rows[4] = PerfMon.localeText.getString( "ptabr.recv" );
+
 
     invalidate();
   }
@@ -43,7 +45,7 @@ public class PerfInfoTable extends Canvas {
     Font font = getFont();
     if( font != null ) {
       FontMetrics fm = getFontMetrics(font);
-      prefSize.height = (fm.getHeight()+pad)*5+grid*4;
+      prefSize.height = (fm.getHeight()+pad)*(rows.length+1)+grid*rows.length;
       Dimension sz = getSize();
       setSize( sz.width, prefSize.height );
     }
@@ -64,10 +66,13 @@ public class PerfInfoTable extends Canvas {
   Color shadowColor = SystemColor.controlShadow;
   Color lightShadowColor = SystemColor.controlLtHighlight;
   Color textColor = SystemColor.textText;
-  Color totalBgColor = new Color( bgColor.getRed()+16, bgColor.getGreen()+16, bgColor.getBlue()+16 );
-  Color successBgColor = new Color( bgColor.getRed(), bgColor.getGreen()+32, bgColor.getBlue() );
-  Color errorBgColor = new Color( bgColor.getRed()+32, bgColor.getGreen(), bgColor.getBlue() );
-  Color rescheduledBgColor = new Color( bgColor.getRed()+32, bgColor.getGreen()+32, bgColor.getBlue() );
+  Color rowsColor[] = {
+                        new Color( bgColor.getRed()+16, bgColor.getGreen()+16, bgColor.getBlue()+16 ),
+                        new Color( bgColor.getRed(), bgColor.getGreen()+32, bgColor.getBlue() ),
+                        new Color( bgColor.getRed()+32, bgColor.getGreen(), bgColor.getBlue() ),
+                        new Color( bgColor.getRed(), bgColor.getGreen(), bgColor.getBlue()+32 ),
+                        new Color( bgColor.getRed()+32, bgColor.getGreen()+32, bgColor.getBlue() )
+                      };
 
 
   public synchronized void paint(Graphics gg) {
@@ -86,18 +91,10 @@ public class PerfInfoTable extends Canvas {
 
     {
       int y = fm.getHeight()+pad+grid;
-
-      g.setColor( totalBgColor );
-      g.fillRect( 0, 1*y, sz.width, fm.getHeight() );
-
-      g.setColor( successBgColor );
-      g.fillRect( 0, 2*y, sz.width, fm.getHeight() );
-
-      g.setColor( errorBgColor );
-      g.fillRect( 0, 3*y, sz.width, fm.getHeight() );
-
-      g.setColor( rescheduledBgColor );
-      g.fillRect( 0, 4*y, sz.width, fm.getHeight() );
+      for( int i = 0; i< rowsColor.length; i++) {
+        g.setColor( rowsColor[i]);
+        g.fillRect( 0, (i+1)*y, sz.width, fm.getHeight() );
+      }
     }
 
     {
@@ -115,7 +112,7 @@ public class PerfInfoTable extends Canvas {
       g.setColor( textColor );
       int y = fm.getHeight()+pad+grid;
       int x = sz.width/4;
-      for( int i = 1; i <= 4; i++ ) {
+      for( int i = 1; i <= rows.length; i++ ) {
         g.drawChars( rows[i-1].toCharArray(), 0, rows[i-1].length(), 
                      x-fm.charsWidth(rows[i-1].toCharArray(), 0, rows[i-1].length())-pad, 
                      i*y+fm.getAscent()+pad );
@@ -133,7 +130,7 @@ public class PerfInfoTable extends Canvas {
       int x = sz.width/4;
 
       g.setColor( lightShadowColor );
-      for( int i = 1; i<=4; i++ ) {
+      for( int i = 1; i<=rows.length; i++ ) {
         g.drawLine( 0, i*y, sz.width, i*y );
       }
       for( int i = 1; i<=3; i++ ) {
@@ -141,7 +138,7 @@ public class PerfInfoTable extends Canvas {
       }
 
       g.setColor( shadowColor );
-      for( int i = 1; i<=4; i++ ) {
+      for( int i = 1; i<=rows.length; i++ ) {
         g.drawLine( 0, i*y-1, sz.width, i*y-1 );
       }
       for( int i = 1; i<=3; i++ ) {
@@ -157,11 +154,11 @@ public class PerfInfoTable extends Canvas {
     g.setColor( textColor );
     int y = fm.getHeight()+pad+grid;
     int x = sz.width/4;
-    for( int i = 1; i <= 4; i++ ) {
-      String counter = String.valueOf( counters[i-1] );
+    for( int i = 0; i < rows.length; i++ ) {
+      String counter = String.valueOf( counters[i] );
       g.drawChars( counter.toCharArray(), 0, counter.length(), 
                    col*x+(x-fm.charsWidth(counter.toCharArray(), 0, counter.length())-pad), 
-                   i*y+fm.getAscent()+pad );
+                   (i+1)*y+fm.getAscent()+pad );
     }
   }
 

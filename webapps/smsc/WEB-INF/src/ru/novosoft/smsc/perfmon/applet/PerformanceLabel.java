@@ -14,6 +14,7 @@ public class PerformanceLabel extends Canvas {
 
   int align = LEFT;
   String text = null;
+  int pad  = 1;
 
   Dimension prefSize = new Dimension(0,0);
 
@@ -41,8 +42,11 @@ public class PerformanceLabel extends Canvas {
         FontMetrics fm = getFontMetrics(font);
         int textwidth = fm.charsWidth( text.toCharArray(), 0, text.length() );
         int textheight = fm.getHeight();
-        prefSize.width = 4+textwidth;
-        prefSize.height = 4+textheight;
+        prefSize.width = 2*pad+textwidth;
+        prefSize.height = 2*pad+textheight;
+        Dimension sz = getSize();
+        if( sz.height < prefSize.height )
+          setSize( sz.width, prefSize.height );
       }
     }
     offscreen = null;
@@ -69,11 +73,11 @@ public class PerformanceLabel extends Canvas {
     g.setFont( font );
     g.setColor( getForeground() );
     if( align == LEFT ) {
-      g.drawChars( text.toCharArray(), 0, text.length(), 2, 2+fm.getAscent() );
+      g.drawChars( text.toCharArray(), 0, text.length(), pad, pad+fm.getAscent() );
     } else if( align == CENTER ) {
-      g.drawChars( text.toCharArray(), 0, text.length(), 2+fm.charsWidth(text.toCharArray(), 0, text.length())/2, 2+fm.getAscent() );
+      g.drawChars( text.toCharArray(), 0, text.length(), pad+fm.charsWidth(text.toCharArray(), 0, text.length())/2, pad+fm.getAscent() );
     } else {
-      g.drawChars( text.toCharArray(), 0, text.length(), size.width-2-fm.charsWidth(text.toCharArray(), 0, text.length()), 2+fm.getAscent() );
+      g.drawChars( text.toCharArray(), 0, text.length(), size.width-pad-fm.charsWidth(text.toCharArray(), 0, text.length()), pad+fm.getAscent() );
     }
 
     gg.drawImage(offscreen, 0, 0, null);
