@@ -375,8 +375,16 @@ Appender* Logger::findAppenderByCat(const char * const name)
 
 ////////////////////// constructors
 Logger::Logger(const char * const logCategoryName, const LogLevel logLevel, Appender * const appender)
-	:logLevel(logLevel), name(logCategoryName), appender(appender)
+	:logLevel(logLevel), name(cStringCopy(logCategoryName)), appender(appender)
 {
+}
+
+Logger::~Logger()
+{
+  MutexGuard guard(mutex);
+  delete name;
+  appender=0;
+  logLevel=LEVEL_NOTSET;
 }
 
 Logger::Logger(const Logger& copy)

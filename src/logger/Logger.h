@@ -223,6 +223,7 @@ private:
 
 	// disable copying
 	Logger(const Logger & copy);
+  ~Logger();
 	Logger & operator=(const Logger & other);
 	inline void setLogLevel(const LogLevel level) throw() 
 	{ 
