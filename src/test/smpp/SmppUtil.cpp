@@ -564,7 +564,7 @@ void SmppUtil::setupRandomCorrectOptionalParams(SmppOptional& opt,
 	__skip__; //__set_optional_int__(uint8_t, sarSegmentSegnum, rand1(255));
 	__skip__; //__set_optional_int__(uint8_t, scInterfaceVersion, rand0(255));
 	__skip__; //__set_optional_int__(uint8_t, displayTime, rand0(255));
-	__skip__; //__set_optional_int__(uint8_t, msValidity, rand0(255));
+	__set_optional_int__(uint8_t, msValidity, rand0(255));
 	__skip__; //__set_optional_int__(uint8_t, dpfResult, rand0(255));
 	__skip__; //__set_optional_int__(uint8_t, setDpf, rand0(255));
 	__skip__; //__set_optional_int__(uint8_t, msAvailableStatus, rand0(255));
@@ -573,7 +573,7 @@ void SmppUtil::setupRandomCorrectOptionalParams(SmppOptional& opt,
 	__set_optional_bin__(messagePayload, rand0(65535), dataCoding);
 	__skip__; //__set_optional_int__(uint8_t, deliveryFailureReason, rand0(255));
 	__skip__; //__set_optional_int__(uint8_t, moreMessagesToSend, rand0(255));
-	__skip__; //__set_optional_int__(uint8_t, messageState, rand0(255));
+	__set_optional_int__(uint8_t, messageState, rand0(255));
 	__skip__; //__set_optional_ostr__(callbackNum, rand2(4, 19));
 	__skip__; //__set_optional_int__(uint8_t, callbackNumPresInd, rand0(255));
 	__skip__; //__set_optional_ostr__(callbackNumAtag, rand0(65));
@@ -612,7 +612,7 @@ void SmppUtil::setupRandomCorrectOptionalParams(SmppOptional& opt,
 	//__check_optional_int__(sarSegmentSegnum);
 	//__check_optional_int__(scInterfaceVersion);
 	//__check_optional_int__(displayTime);
-	//__check_optional_int__(msValidity);
+	__check_optional_int__(msValidity);
 	//__check_optional_int__(dpfResult);
 	//__check_optional_int__(setDpf);
 	//__check_optional_int__(msAvailableStatus);
@@ -620,7 +620,7 @@ void SmppUtil::setupRandomCorrectOptionalParams(SmppOptional& opt,
 	__check_optional_ostr__(messagePayload);
 	//__check_optional_int__(deliveryFailureReason);
 	//__check_optional_int__(moreMessagesToSend);
-	//__check_optional_int__(messageState);
+	__check_optional_int__(messageState);
 	//__check_optional_ostr__(callbackNum);
 	//__check_optional_int__(callbackNumPresInd);
 	//__check_optional_ostr__(callbackNumAtag);
