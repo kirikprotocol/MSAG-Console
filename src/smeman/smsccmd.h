@@ -376,6 +376,7 @@ struct _SmscCommand
       break;
     case QUERY_RESP:
       delete ((QuerySmResp*)dta);
+      break;
     case CANCEL:
       delete ( (CancelSm*)dta);
       break;
