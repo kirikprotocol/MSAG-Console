@@ -264,7 +264,7 @@ void MAPIO_QueryMscVersionInternal()
 
 static void CheckLockedByMO(MapDialog* dialog)
 {
-  MutexGuard guard(x_momap_lock);
+//  MutexGuard guard(x_momap_lock);
   XMOMAP::iterator it = x_momap.find(dialog->m_msAddr);
   if ( it != x_momap.end() )
   {
@@ -626,7 +626,7 @@ void ResponseMO(MapDialog* dialog,unsigned status)
   unsigned INVALID = (unsigned)-1;
   if ( dialog->udhiRef != INVALID )
   {
-    MutexGuard guard(x_momap_lock);
+//    MutexGuard guard(x_momap_lock);
     XMOMAPLocker* locker;
     __map_trace2__("UDHI:%s: find locker with ref %x",__func__,dialog->udhiRef);
     XMOMAP::iterator it = x_momap.find(dialog->m_msAddr);
@@ -1047,7 +1047,7 @@ static void SendSubmitCommand(MapDialog* dialog)
   if ( dialog->isUSSD ) {
     istringstream(dialog->sms->getOriginatingAddress().value)>>dialog->ussdSequence;
     {
-      MutexGuard ussd_map_guard( ussd_map_lock );
+  //    MutexGuard ussd_map_guard( ussd_map_lock );
       ussd_map[dialog->ussdSequence] = dialog->dialogid_map;
     }
   }
@@ -1334,7 +1334,7 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
       FormatText("%s Resp return error 0x%x",__func__,result));
   CloseMapDialog(dialog->dialogid_map,dialog->ssn);
   {
-    MutexGuard ussd_map_guard( ussd_map_lock );
+//    MutexGuard ussd_map_guard( ussd_map_lock );
     __map_trace2__("erase ussd lock for %lld", dialog->ussdSequence);
     ussd_map.erase(dialog->ussdSequence);
   }
@@ -1401,7 +1401,7 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     bool dlg_found = false;
     istringstream(string(dialog->sms->getDestinationAddress().value))>>dialog->ussdSequence;
     {
-      MutexGuard ussd_map_guard( ussd_map_lock );
+//      MutexGuard ussd_map_guard( ussd_map_lock );
       USSD_MAP::iterator it = ussd_map.find(dialog->ussdSequence);
       if ( it != ussd_map.end() ) {
         // USSD dialog already exists on this abonent
@@ -1517,7 +1517,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           {
             bool dlg_found = false;
             {
-              MutexGuard ussd_map_guard( ussd_map_lock );
+//              MutexGuard ussd_map_guard( ussd_map_lock );
               USSD_MAP::iterator it = ussd_map.find(sequence);
               if ( it != ussd_map.end() ) {
                 dialogid_map = it->second;
@@ -1659,7 +1659,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           }
           catch(...)
           {
-            MutexGuard ussd_map_guard( ussd_map_lock );
+//            MutexGuard ussd_map_guard( ussd_map_lock );
             __map_trace2__("erase ussd lock for %lld", sequence);
             ussd_map.erase(sequence);
             throw;
@@ -1782,7 +1782,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
         if ( cmd->get_resp()->get_status() != 0 )
         {
           {
-            MutexGuard ussd_map_guard( ussd_map_lock );
+//            MutexGuard ussd_map_guard( ussd_map_lock );
             __map_trace2__("erase ussd lock for %lld", dialog->ussdSequence);
             ussd_map.erase(dialog->ussdSequence);
           }
@@ -1800,7 +1800,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
         }
       }else if(dialog->state == MAPST_WaitSubmitUSSDRequestCloseConf) {
         {
-          MutexGuard ussd_map_guard( ussd_map_lock );
+//          MutexGuard ussd_map_guard( ussd_map_lock );
           __map_trace2__("erase ussd lock for %lld", dialog->ussdSequence);
           ussd_map.erase(dialog->ussdSequence);
         }
@@ -1809,7 +1809,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
         if ( cmd->get_resp()->get_status() != 0 )
         {
           {
-            MutexGuard ussd_map_guard( ussd_map_lock );
+//            MutexGuard ussd_map_guard( ussd_map_lock );
             __map_trace2__("erase ussd lock for %lld", dialog->ussdSequence);
             ussd_map.erase(dialog->ussdSequence);
           }
@@ -1827,7 +1827,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
         }
       }else if(dialog->state == MAPST_WaitSubmitUSSDNotifyCloseConf) {
         {
-          MutexGuard ussd_map_guard( ussd_map_lock );
+//          MutexGuard ussd_map_guard( ussd_map_lock );
           __map_trace2__("erase ussd lock for %lld", dialog->ussdSequence);
           ussd_map.erase(dialog->ussdSequence);
         }
@@ -1893,7 +1893,7 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
     string s_key(text);
     __map_trace2__("%s: is exists %s? version %d",__func__,s_key.c_str(),version);
     typedef multimap<string,unsigned>::iterator I;
-    MutexGuard guard(x_map_lock);
+//    MutexGuard guard(x_map_lock);
     pair<I,I> range = x_map.equal_range(s_key);
     if ( range.first == range.second ) return ET96MAP_E_OK;
       //throw runtime_error("MAP::Et96MapGetACVersionConf has no address for AC resolving");
@@ -2396,7 +2396,7 @@ USHORT_T Et96MapPAbortInd(
       dialogid_smsc = dialog->dialogid_smsc;
       dialog->id_opened = false;
       if( dialog->isUSSD ) {
-        MutexGuard ussd_map_guard( ussd_map_lock );
+//        MutexGuard ussd_map_guard( ussd_map_lock );
         __map_trace2__("erase ussd lock for %lld", dialog->ussdSequence);
         ussd_map.erase(dialog->ussdSequence);
       }
@@ -2785,7 +2785,7 @@ USHORT_T Et96MapDelimiterInd(
     case MAPST_WaitUSSDReqClose:
       CloseMapDialog(dialog->dialogid_map,dialog->ssn);
       {
-        MutexGuard ussd_map_guard( ussd_map_lock );
+//        MutexGuard ussd_map_guard( ussd_map_lock );
         __map_trace2__("erase ussd lock for %lld", dialog->ussdSequence);
         ussd_map.erase(dialog->ussdSequence);
       }
@@ -2796,7 +2796,7 @@ USHORT_T Et96MapDelimiterInd(
       SendSubmitCommand(dialog.get());
       CloseMapDialog(dialog->dialogid_map,dialog->ssn);
       {
-        MutexGuard ussd_map_guard( ussd_map_lock );
+//        MutexGuard ussd_map_guard( ussd_map_lock );
         __map_trace2__("erase ussd lock for %lld", dialog->ussdSequence);
         ussd_map.erase(dialog->ussdSequence);
       }
