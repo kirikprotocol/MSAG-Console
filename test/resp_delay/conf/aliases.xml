@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE aliases SYSTEM "AliasRecords.dtd">
+<aliases>
+	<record addr="0" alias="+0" hide="true"/>
+	<record addr="1" alias="+1" hide="true"/>
+	<record addr="2" alias="+2" hide="true"/>
+	<record addr="3" alias="+3" hide="true"/>
+</aliases>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE routes SYSTEM "routes.dtd">
+<routes>
+<route id="route_0" billing="true" archiving="true" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false">
+	<source>
+		<mask value="0"/>
+	</source>
+	<source>
+		<mask value="1"/>
+	</source>
+	<source>
+		<mask value="2"/>
+	</source>
+	<source>
+		<mask value="3"/>
+	</source>
+	<source>
+		<mask value="+11111111111"/>
+	</source>
+	<destination sme="sme0">
+		<mask value="0"/>
+	</destination>
+</route>
+<route id="route_1" billing="true" archiving="true" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false">
+	<source>
+		<mask value="1"/>
+	</source>
+	<source>
+		<mask value="+11111111111"/>
+	</source>
+	<destination sme="sme1">
+		<mask value="1"/>
+	</destination>
+</route>
+<route id="route_2" billing="true" archiving="true" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false">
+	<source>
+		<mask value="2"/>
+	</source>
+	<source>
+		<mask value="+11111111111"/>
+	</source>
+	<destination sme="sme2">
+		<mask value="2"/>
+	</destination>
+</route>
+<route id="route_3" billing="true" archiving="true" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false">
+	<source>
+		<mask value="3"/>
+	</source>
+	<source>
+		<mask value="+11111111111"/>
+	</source>
+	<destination sme="sme3">
+		<mask value="3"/>
+	</destination>
+</route>
+</routes>
