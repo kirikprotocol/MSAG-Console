@@ -1865,7 +1865,7 @@ USHORT_T Et96MapOpenInd (
   ET96MAP_USERDATA_T *specificInfo_sp)
 {
   try{
-    __map_trace2__("%s: dialog 0x%x dstref=%p orgref=%p",__FUNCTION__,dialogueId);
+    __map_trace2__("%s: dialog 0x%x ctx=%d dstref=%p orgref=%p",__FUNCTION__,dialogueId,appContext_sp->acType,destRef_sp,origRef_sp );
     DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialog(dialogueId,localSsn/*,0*/));
     __require__(dialog->ssn==localSsn);
     dialog->hasIndAddress = false;
@@ -2273,7 +2273,8 @@ static void PauseOnImsiReq(MapDialog* map)
     {
       if (!map->hasIndAddress )
         throw runtime_error("MAP::%s MAP.did:{0x%x} has no originating address");
-      if( smsc::util::_map_cat->isDebugEnabled() )
+      dialog->m_msAddr = map->m_msAddr;
+/*      if( smsc::util::_map_cat->isDebugEnabled() )
       {
         auto_ptr<char> b(new char[sizeof(ET96MAP_ADDRESS_T)*3+1]);
         memset(b.get(),0,sizeof(ET96MAP_ADDRESS_T)*3+1);
@@ -2283,7 +2284,7 @@ static void PauseOnImsiReq(MapDialog* map)
         }
         __map_trace2__("%s ARRDDRESS: %s",__FUNCTION__,b.get());
       }
-      dialog->m_msAddr = map->m_msAddr;
+*/
     }
     mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
     mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
