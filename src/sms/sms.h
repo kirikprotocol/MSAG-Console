@@ -573,6 +573,8 @@ namespace smsc { namespace sms
     struct SMS 
     {
         State       state;
+        uint16_t    messageReference;
+        
         Address     originatingAddress;
         Address     destinationAddress;
         Descriptor  originatingDescriptor;
@@ -585,7 +587,6 @@ namespace smsc { namespace sms
         time_t      nextTime;       // ¬рем€/ƒата слудующей попытки доставки
         
         uint8_t     priority;
-        uint8_t     messageReference;
         uint8_t     protocolIdentifier;
         
         uint8_t     deliveryReport;
@@ -597,11 +598,14 @@ namespace smsc { namespace sms
         Body        messageBody;    // «акодированное & сжатое тело сообщени€
         EService    eServiceType;   
 
+        SMSId       recieptSmsId;   // id сообщени€ на который идЄт ответ-репорт
+        uint8_t     esmClass;       // тип сообщени€: нормальное, ответ ...
+
         /**
          * Default конструктор, просто инициализирует поле state как ENROUTE
          */
         SMS() : state(ENROUTE), lastTime(0), nextTime(0),
-                failureCause(0), attempts(0)
+                failureCause(0), attempts(0), recieptSmsId(0), esmClass(0)
         {
             eServiceType[0]='\0';
         }; 
@@ -614,6 +618,7 @@ namespace smsc { namespace sms
          */
         SMS(const SMS& sms) :
             state(sms.state), 
+            messageReference(sms.messageReference),
             originatingAddress(sms.originatingAddress),
             destinationAddress(sms.destinationAddress), 
             originatingDescriptor(sms.originatingDescriptor),
@@ -621,13 +626,14 @@ namespace smsc { namespace sms
             waitTime(sms.waitTime), validTime(sms.validTime), 
             submitTime(sms.submitTime), lastTime(sms.lastTime),
             nextTime(sms.nextTime), priority(sms.priority),
-            messageReference(sms.messageReference),
             protocolIdentifier(sms.protocolIdentifier),
             deliveryReport(sms.deliveryReport),
             needArchivate(sms.needArchivate),
             failureCause(sms.failureCause),
             attempts(sms.attempts),
-            messageBody(sms.messageBody) 
+            messageBody(sms.messageBody),
+            recieptSmsId(sms.recieptSmsId),
+            esmClass(sms.esmClass)
         {
             strncpy(eServiceType, sms.eServiceType, sizeof(EService));
         };
@@ -656,6 +662,8 @@ namespace smsc { namespace sms
             failureCause = sms.failureCause;
             attempts = sms.attempts; 
             messageBody = sms.messageBody;
+            recieptSmsId = sms.recieptSmsId;
+            esmClass = sms.esmClass;
             
             strncpy(eServiceType, sms.eServiceType, sizeof(EService));
             return (*this);
@@ -974,7 +982,7 @@ namespace smsc { namespace sms
          * 
          * @param mr     идентификационный номер сообщени€ (MR)
          */
-        inline void setMessageReference(uint8_t mr) 
+        inline void setMessageReference(uint16_t mr) 
         {
             messageReference = mr;
         };
@@ -985,7 +993,7 @@ namespace smsc { namespace sms
          * 
          * @return идентификационный номер сообщени€ (MR)
          */
-        inline uint8_t getMessageReference() const 
+        inline uint16_t getMessageReference() const 
         {
             return messageReference;
         };
@@ -1221,6 +1229,49 @@ namespace smsc { namespace sms
                 _name[0]='\0';
             }
         };
+        
+        /**
+         * ”станавливает id сообщени€, на которое идЄт ответ-репорт.
+         * »спользуетс€ в случае если esmClass это ответ-репорт.
+         * 
+         * @param id     идентификационный номер сообщени€
+         */
+        inline void setRecieptSmsId(SMSId id) 
+        {
+            recieptSmsId = id;
+        };
+        
+        /**
+         * ¬озвращает id сообщени€, на которое идЄт ответ-репорт.
+         * »спользуетс€ в случае если esmClass это ответ-репорт.
+         * 
+         * @return идентификационный номер сообщени€ (MR)
+         */
+        inline SMSId getRecieptSmsId() const 
+        {
+            return recieptSmsId;
+        };
+        
+        /**
+         * ”станавливает тип-сообщени€.
+         * 
+         * @param type      тип-сообщени€    
+         */
+        inline void setEsmClass(uint8_t type) 
+        {
+            esmClass = type;
+        };
+        
+        /**
+         * ¬озвращает тип-сообщени€.
+         * 
+         * @return тип-сообщени€
+         */
+        inline uint8_t getEsmClass() const 
+        {
+            return esmClass;
+        };
+    
     };
 
 }}
