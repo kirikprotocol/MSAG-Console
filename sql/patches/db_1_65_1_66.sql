@@ -1,0 +1,8 @@
+alter table  SMS_PROFILE add 
+(
+  DIVERT   VARCHAR2(30),
+  DIVERT_ACT CHAR,
+  DIVERT_MOD CHAR
+);
+
+update SMS_PROFILE set DIVERT_MOD='N', DIVERT_ACT='N';
