@@ -21,7 +21,6 @@
 #ifdef _WIN32
 # include <winsock2.h>
 #else
-# include <sys/types.h>
 # include <netinet/in.h>
 # include <inttypes.h>
 #endif
@@ -330,8 +329,8 @@ public:
   }
   void WriteNetInt64(uint64_t t)
   {
-    uint32_t h=htonl((t>>32)&0xFFFFFFFFUL);
-    uint32_t l=htonl(t&0xFFFFFFFFUL);
+    uint32_t h=htonl((uint32_t)((t>>32)&0xFFFFFFFFUL));
+    uint32_t l=htonl((uint32_t)(t&0xFFFFFFFFUL));
     XWrite(h);
     XWrite(l);
   }

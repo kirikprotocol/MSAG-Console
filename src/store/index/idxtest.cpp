@@ -21,29 +21,26 @@ int main(int argc,char* argv[])
     if(argc==1)
     {
       SMS s;
-      s.setDestinationSmeId("world");
 
       timeval st,ed;
-      for(int i=0;i<30000;i++)
+      for(int i=0;i<100;i++)
       {
-        if((i%1000)==0)
-        {
-          printf("%d\n",i);
-        }
-        if(i==10000)gettimeofday(&st,0);
         if((i%3)==0)
         {
           s.setSourceSmeId("hello");
+          s.setDestinationSmeId("qqq");
           s.setRouteId("route");
         }
         else if((i%3)==1)
         {
-          s.setSourceSmeId("hello1");
+          s.setSourceSmeId("qqq");
+          s.setDestinationSmeId("hello");
           s.setRouteId("route1");
         }
         else if((i%3)==2)
         {
           s.setSourceSmeId("hello2");
+          s.setDestinationSmeId("world");
           s.setRouteId("route2");
         }
         char buf[64];
@@ -54,10 +51,6 @@ int main(int argc,char* argv[])
         s.lastTime=time(NULL);
         idx.IndexateSms(".",100+i,100000+i,s);
       }
-      gettimeofday(&ed,0);
-      int diff=(ed.tv_sec-st.tv_sec)*1000;
-      diff+=(ed.tv_usec-st.tv_usec)/1000;
-      printf("insertion time:%d\n",diff);
     }else
     {
       ParamArray p;
@@ -65,8 +58,8 @@ int main(int argc,char* argv[])
       //p1.type=Param::tDstAddress;
       //p1.sValue=".1.1.79029025800";
       p.Push(p1);
-      p1.type=Param::tRouteId;
-      p1.sValue="InfoSme -> T2";
+      p1.type=Param::tSmeId;
+      p1.sValue="qqq";
       p.Push(p1);
       ResultArray res;
       int c=idx.QuerySms(".",p,res);

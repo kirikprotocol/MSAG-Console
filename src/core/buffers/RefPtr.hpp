@@ -5,17 +5,30 @@ namespace smsc{
 namespace core{
 namespace buffers{
 
-template <class T>
+class EmptyMutex{
+public:
+  void Lock(){}
+  void Unlock(){}
+};
+
+template <class T,class S=EmptyMutex>
 class RefPtr{
 protected:
   struct RefPtrData{
+    S lock;
     RefPtrData():refCount(0),ptr(0)
     {
     }
     int refCount;
     T  *ptr;
-    void Lock(){}
-    void Unlock(){}
+    void Lock()
+    {
+      lock.Lock();
+    }
+    void Unlock()
+    {
+      lock.Unlock();
+    }
   };
 public:
   explicit RefPtr(T* ptr=NULL)

@@ -32,6 +32,8 @@ static const uint8_t T_DST_ADDRESS = 50;
 static const uint8_t T_SRC_SME_ID  = 60;
 static const uint8_t T_DST_SME_ID  = 70;
 static const uint8_t T_ROUTE_ID    = 80;
+static const uint8_t T_ABN_ADDRESS = 90;
+static const uint8_t T_SME_ID      =100;
 
 struct Param{
   enum ParamType{
@@ -39,7 +41,8 @@ struct Param{
     tFromDate   = T_FROM_DATE,   tTillDate   = T_TILL_DATE,
     tSrcAddress = T_SRC_ADDRESS, tDstAddress = T_DST_ADDRESS,
     tSrcSmeId   = T_SRC_SME_ID,  tDstSmeId   = T_DST_SME_ID,
-    tRouteId    = T_ROUTE_ID
+    tRouteId    = T_ROUTE_ID,    tAbnAddress = T_ABN_ADDRESS,
+    tSmeId      = T_SME_ID
   };
   ParamType type;
   std::string sValue;

@@ -145,4 +145,8 @@ struct IdLttKey{
   {
     return key==cmp.key && ltt==cmp.ltt;
   }
+  bool operator<(const IdLttKey& cmp)const
+  {
+    return key<cmp.key?true:ltt<cmp.ltt;
+  }
 };

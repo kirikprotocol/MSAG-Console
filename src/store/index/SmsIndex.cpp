@@ -3,6 +3,7 @@
 #include <utility>
 #include <algorithm>
 #include <vector>
+#include <set>
 
 namespace smsc{
 namespace store{
@@ -248,10 +249,66 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
 
 typedef vector<pair<uint32_t,uint64_t> > ResVector;
 
-void ReadToVector(IntLttChunkFile::ChunkHandle& h,ResVector& v,uint32_t from,uint32_t till)
+class IReader{
+public:
+  virtual bool Read(IdLttKey&)=0;
+  virtual ~IReader(){}
+};
+
+class ChunkHandleReader:public IReader{
+public:
+  ChunkHandleReader(IntLttChunkFile::ChunkHandle* h):handle(h)
+  {
+  }
+  bool Read(IdLttKey& key)
+  {
+    return handle->Read(key);
+  }
+protected:
+  RefPtr<IntLttChunkFile::ChunkHandle> handle;
+};
+
+class UnionChunkHandleReader:public IReader{
+public:
+  UnionChunkHandleReader(IntLttChunkFile::ChunkHandle* h1,IntLttChunkFile::ChunkHandle* h2):
+    handle1(h1),handle2(h2),readFirst(true)
+  {
+  }
+  bool Read(IdLttKey& key)
+  {
+    if(readFirst)
+    {
+      bool rv=handle1->Read(key);
+      if(rv)
+      {
+        uset.insert(key);
+        return true;
+      }
+      readFirst=false;
+    }
+    for(;;)
+    {
+      bool rv=handle2->Read(key);
+      if(!rv)return false;
+      if(uset.find(key)!=uset.end())
+      {
+        continue;
+      }
+      uset.insert(key);
+      return true;
+    }
+  }
+protected:
+  bool readFirst;
+  std::set<IdLttKey> uset;
+  RefPtr<IntLttChunkFile::ChunkHandle> handle1;
+  RefPtr<IntLttChunkFile::ChunkHandle> handle2;
+};
+
+void ReadToVector(IReader* h,ResVector& v,uint32_t from,uint32_t till)
 {
   IdLttKey k;
-  while(h.Read(k))
+  while(h->Read(k))
   {
     if(k.ltt<from || k.ltt>till)continue;
     v.push_back(make_pair(k.ltt,k.key));
@@ -275,7 +332,7 @@ int SmsIndex::QuerySms(const char* dir,const ParamArray& params,ResultArray& res
   path+='/';
 
   typedef vector<RefPtr<IntLttChunkFile> > ChunkFiles;
-  typedef vector<RefPtr<IntLttChunkFile::ChunkHandle> > SrcVector;
+  typedef vector<RefPtr<IReader> > SrcVector;
   SrcVector sources;
   ChunkFiles srcfiles;
 
@@ -323,7 +380,11 @@ int SmsIndex::QuerySms(const char* dir,const ParamArray& params,ResultArray& res
           RefPtr<IntLttChunkFile> f(new IntLttChunkFile); \
           srcfiles.push_back(f); \
           f->Open((path+name ".dat").c_str()); \
-          sources.push_back(RefPtr<IntLttChunkFile::ChunkHandle>(f->OpenChunk(v.key))); \
+          sources.push_back(\
+            RefPtr<IReader>( \
+              new ChunkHandleReader(f->OpenChunk(v.key)) \
+            )\
+          ); \
         }else \
         { \
           return 0; \
@@ -343,29 +404,123 @@ int SmsIndex::QuerySms(const char* dir,const ParamArray& params,ResultArray& res
       case Param::tRouteId:{
         SRC(RouteIdDiskHash,"routeid");
       }break;
+      case Param::tAbnAddress:{
+        IntLttChunkFile::ChunkHandle* h1;
+        IntLttChunkFile::ChunkHandle* h2;
+        {
+          AddrDiskHash h;
+          h.Open((path+"srcaddr" ".idx").c_str());
+          Int64Key v;
+          if(h.LookUp(p.sValue.c_str(),v))
+          {
+            RefPtr<IntLttChunkFile> f(new IntLttChunkFile);
+            srcfiles.push_back(f);
+            f->Open((path+"srcaddr" ".dat").c_str());
+            h1=f->OpenChunk(v.key);
+          }
+        }
+        {
+          AddrDiskHash h;
+          h.Open((path+"dstaddr" ".idx").c_str());
+          Int64Key v;
+          if(h.LookUp(p.sValue.c_str(),v))
+          {
+            RefPtr<IntLttChunkFile> f(new IntLttChunkFile);
+            srcfiles.push_back(f);
+            f->Open((path+"dstaddr" ".dat").c_str());
+            h2=f->OpenChunk(v.key);
+          }
+        }
+        if(h1==0 && h2==0)return 0;
+        if(h1!=0 && h2==0)
+        {
+          sources.push_back
+          (
+            RefPtr<IReader>(new ChunkHandleReader(h1))
+          );
+        }else if(h1==0 && h2!=0)
+        {
+          sources.push_back
+          (
+            RefPtr<IReader>(new ChunkHandleReader(h2))
+          );
+        }else
+        {
+          sources.push_back
+          (
+            RefPtr<IReader>(new UnionChunkHandleReader(h1,h2))
+          );
+        }
+      }break;
+      case Param::tSmeId:{
+        IntLttChunkFile::ChunkHandle* h1;
+        IntLttChunkFile::ChunkHandle* h2;
+        {
+          SmeIdDiskHash h;
+          h.Open((path+"srcsmeid" ".idx").c_str());
+          Int64Key v;
+          if(h.LookUp(p.sValue.c_str(),v))
+          {
+            RefPtr<IntLttChunkFile> f(new IntLttChunkFile);
+            srcfiles.push_back(f);
+            f->Open((path+"srcsmeid" ".dat").c_str());
+            h1=f->OpenChunk(v.key);
+          }
+        }
+        {
+          SmeIdDiskHash h;
+          h.Open((path+"dstsmeid" ".idx").c_str());
+          Int64Key v;
+          if(h.LookUp(p.sValue.c_str(),v))
+          {
+            RefPtr<IntLttChunkFile> f(new IntLttChunkFile);
+            srcfiles.push_back(f);
+            f->Open((path+"dstsmeid" ".dat").c_str());
+            h2=f->OpenChunk(v.key);
+          }
+        }
+        if(h1==0 && h2==0)return 0;
+        if(h1!=0 && h2==0)
+        {
+          sources.push_back
+          (
+            RefPtr<IReader>(new ChunkHandleReader(h1))
+          );
+        }else if(h1==0 && h2!=0)
+        {
+          sources.push_back
+          (
+            RefPtr<IReader>(new ChunkHandleReader(h2))
+          );
+        }else
+        {
+          sources.push_back
+          (
+            RefPtr<IReader>(new UnionChunkHandleReader(h1,h2))
+          );
+        }
+      }break;
     }
   }
   if(sources.size()==1)
   {
-    IntLttChunkFile::ChunkHandle& h=*sources[0];
-    IdLttKey r;
-    int cnt=0;
-    while(h.Read(r))
+    ReadToVector(sources.front().Get(),rv,fromDate,tillDate);
+    sort(rv.begin(),rv.end());
+    for(ResVector::iterator i=rv.begin();i!=rv.end();i++)
     {
       QueryResult qr;
-      qr.offset=r.key;
-      qr.lastTryTime=r.ltt;
+      qr.offset=i->second;
+      qr.lastTryTime=i->first;
       res.Push(qr);
-      cnt++;
     }
-    return cnt;
+    return rv.size();
   }
-  ReadToVector(*sources.front(),rv,fromDate,tillDate);
+  ReadToVector(sources.front().Get(),rv,fromDate,tillDate);
   sort(rv.begin(),rv.end());
   sources.erase(sources.begin());
   while(sources.size()>0)
   {
-    ReadToVector(*sources.front(),tmp1,fromDate,tillDate);
+    ReadToVector(sources.front().Get(),tmp1,fromDate,tillDate);
     sort(tmp1.begin(),tmp1.end());
     tmp2.resize(0);
     set_intersection(rv.begin(),rv.end(),tmp1.begin(),tmp1.end(),back_inserter(tmp2));
