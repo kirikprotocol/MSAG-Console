@@ -606,6 +606,31 @@ const char* getStringParameter(const Arguments &args, const char* param)
     return (value && value[0] == '\0') ? 0:value;
 }
 
+inline const size_t getEncodedStringSize(const char* const src)
+{
+    size_t count = 0;
+    for (const char *p = src; *p != 0; p++)
+        count += (*p == '#' || *p == ':' || *p == ';') ? 2:1;
+    return count;
+}
+inline char* getEncodedString(const char* const src)
+{
+    char* result = new char[getEncodedStringSize(src)+1];
+    char* d = result;
+    for (const char *s = src; *s != 0; s++)
+    {
+        switch(*s)
+        {
+            case '#': *d++='#'; *d++='#'; break;
+            case ':': *d++='#'; *d++='c'; break;
+            case ';': *d++='#'; *d++='s'; break;
+            default : *d++=*s;
+        }
+    }
+    *d='\0';
+    return result;
+}
+
 Variant SmscComponent::traceRoute(const Arguments &args)
     throw (AdminException)
 {
@@ -654,16 +679,23 @@ Variant SmscComponent::traceRoute(const Arguments &args)
             info.source.getText(srcAddressText, sizeof(srcAddressText));
             info.dest  .getText(dstAddressText, sizeof(dstAddressText));
             
+            std::auto_ptr<char> encRouteId(getEncodedString(info.routeId.c_str()));
+            std::auto_ptr<char> encSrcAddressText(getEncodedString(srcAddressText));
+            std::auto_ptr<char> encDstAddressText(getEncodedString(dstAddressText));
+            std::auto_ptr<char> encSmeSystemId(getEncodedString(info.smeSystemId.c_str()));
+            std::auto_ptr<char> encSrcSmeSystemId(getEncodedString(info.srcSmeSystemId.c_str()));
+
             //todo encode/decode ';' & ':' simbols
             sprintf(routeText, "route id:%s;source address:%s;destination address:%s;"
                                "sme system id:%s;source sme system id:%s;"
                                "priority:%u;service id:%d;" 
                                "billing:%s;archiving:%s;enabling:%s;suppress delivery reports:%s", 
-                    info.routeId.c_str(), srcAddressText, dstAddressText, 
-                    info.smeSystemId.c_str(), info.srcSmeSystemId.c_str(), 
+                    encRouteId.get(), encSrcAddressText.get(), encDstAddressText.get(), 
+                    encSmeSystemId.get(), encSrcSmeSystemId.get(), 
                     info.priority, info.serviceId,
                     (info.billing) ? "yes":"no" , (info.archived) ? "yes":"no",
                     (info.enabling) ? "yes":"no", (info.suppressDeliveryReports) ? "yes":"no");
+            
             result.appendValueToStringList(routeText);
         }
         else {

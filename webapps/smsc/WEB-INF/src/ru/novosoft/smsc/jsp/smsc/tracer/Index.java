@@ -75,6 +75,21 @@ public class Index extends IndexBean
     return RESULT_OK;
   }
 
+  private String decodeString(String str)
+  {
+    int strLen = (str == null) ? 0:str.length();
+    if (strLen <= 0) return str;
+    StringBuffer sb = new StringBuffer(strLen);
+    char strBuff[] = str.toCharArray();
+    for (int i=0; i<strLen; i++) {
+      if (strBuff[i] != '#') sb.append(strBuff[i]);
+      else if ((i+1 < strLen) && strBuff[i+1] == '#') { sb.append('#'); i++; }
+      else if ((i+1 < strLen) && strBuff[i+1] == 'c') { sb.append(':'); i++; }
+      else if ((i+1 < strLen) && strBuff[i+1] == 's') { sb.append(';'); i++; }
+      else sb.append(strBuff[i]);
+    }
+    return sb.toString();
+  }
   private List parseRouteInfo(String str)
   {
     if (str == null || str.length() <= 0) return null;
@@ -84,8 +99,8 @@ public class Index extends IndexBean
     while (st.hasMoreTokens()) {
       String pair = st.nextToken();
       int idx = pair.indexOf(":");
-      list.add(pair.substring(0, idx));
-      list.add(pair.substring(idx+1));
+      list.add(decodeString(pair.substring(0, idx)));
+      list.add(decodeString(pair.substring(idx+1)));
     }
     return list;
   }
