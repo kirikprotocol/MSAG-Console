@@ -214,6 +214,6 @@ void MapIoTask::init()
 }
 #endif
 
-MapIoTask::MapDialogContainer* container = 0;
-MapIoTask::Mutex sync_object;
+MapDialogContainer* MapDialogContainer::container = 0;
+Mutex MapDialogContainer::sync_object;
 
