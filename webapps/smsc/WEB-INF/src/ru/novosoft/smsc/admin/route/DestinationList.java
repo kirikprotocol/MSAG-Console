@@ -89,7 +89,7 @@ public class DestinationList
     for (Iterator i = destinations.values().iterator(); i.hasNext();) {
       Destination d = (Destination) i.next();
       if (!d.isSubject())
-        result.add(d.getMask());
+        result.addAll(d.getMasks().getNames());
     }
 
     return result;

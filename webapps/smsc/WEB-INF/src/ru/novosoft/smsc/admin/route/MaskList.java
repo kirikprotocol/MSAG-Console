@@ -5,10 +5,7 @@
  */
 package ru.novosoft.smsc.admin.route;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.StringTokenizer;
+import java.util.*;
 
 
 public class MaskList
@@ -24,6 +21,11 @@ public class MaskList
     for (StringTokenizer tokenizer = new StringTokenizer(masks); tokenizer.hasMoreTokens();) {
       add(new Mask(tokenizer.nextToken()));
     }
+  }
+
+  public MaskList(Mask mask)
+  {
+    add(mask);
   }
 
   public Mask add(Mask newMask)
@@ -56,5 +58,10 @@ public class MaskList
       result += (String) i.next() + "<br>";
     }
     return result;
+  }
+
+  public Set getNames()
+  {
+    return masks.keySet();
   }
 }

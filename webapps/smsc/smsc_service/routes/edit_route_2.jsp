@@ -1,5 +1,6 @@
 <%@ include file="/common/header.jsp"%>
 <%@ include file="menu.jsp" %>
+<%@ include file="utils.jsp"%>
 <%! 
 String showSources(Route route)
 {
@@ -20,14 +21,8 @@ String showDestinations(Route route, Set smes)
   {
     Destination d = (Destination) i.next();
     result += (d.isSubject() ? "<font size=\"-2\">subj</font> " : "<font size=\"-2\">mask</font> ") + d.getName()
-           +  "<select name=\""+StringEncoderDecoder.encode(d.getName())+"\">";
-    for (Iterator j = smes.iterator(); j.hasNext(); )
-    {
-      result += "<option>" + StringEncoderDecoder.encode((String) j.next()) + "</option>";
-    }
-    result += "</select><br>";
+           +  show_set_combo(d.getName(), smes)+"<br>";
   }
-  
   return result;
 }
 %><%

@@ -35,7 +35,7 @@
                   + "</thead>"
                   + "<tbody>"
                   +   "<tr>"
-                  +     "<td><select name=\"" + availableName + "\" multiple size=10 style=\"width: 100%\">";
+                  +     "<td><select name=\"" + availableName + "\" id=\"" + availableName + "\" multiple size=10 style=\"width: 100%\">";
   
   for (Iterator i=available.iterator(); i.hasNext(); )
     result += "<option>" + ((String) i.next()) + "</option>";

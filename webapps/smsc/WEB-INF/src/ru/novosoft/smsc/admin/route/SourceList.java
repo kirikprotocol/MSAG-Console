@@ -89,7 +89,7 @@ public class SourceList
     for (Iterator i = sources.values().iterator(); i.hasNext();) {
       Source s = (Source) i.next();
       if (!s.isSubject())
-        result.add(s.getMask());
+        result.addAll(s.getMasks().getNames());
     }
 
     return result;

@@ -7,6 +7,7 @@ package ru.novosoft.smsc.admin.route;
 
 import java.util.Iterator;
 import java.util.StringTokenizer;
+import java.util.Random;
 
 
 public class Route
@@ -14,6 +15,8 @@ public class Route
   private String name = null;
   private SourceList src = null;
   private DestinationList dst = null;
+  Random random = new Random(System.currentTimeMillis());
+  private boolean enabling = true;
 
   public Route(String routeName, SourceList sources, DestinationList destinations)
   {
@@ -27,6 +30,7 @@ public class Route
     name = routeName;
     src = sources;
     dst = destinations;
+    enabling = random.nextBoolean();
   }
 
   public Route(String routeName)
@@ -37,6 +41,7 @@ public class Route
     name = routeName;
     src = new SourceList();
     dst = new DestinationList();
+    enabling = random.nextBoolean();
   }
 
   public String getName()
@@ -123,5 +128,10 @@ public class Route
     dst.retainAll(list);
     list.removeAll(dst);
     dst.addAll(list);
+  }
+
+  public boolean isEnabling()
+  {
+    return enabling;
   }
 }

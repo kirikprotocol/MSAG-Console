@@ -31,10 +31,11 @@ available_dst.removeAll(selected_dst.getNames());
   			<td class="list" width="50%"><input name="name" style="WIDTH: 100%" value = "<%=StringEncoderDecoder.encode(old_name)%>"></td>
   		</tr>
   		<tr class="list">
-  			<th class="list" nowrap width="50%">Sources</th>
+  			<th class="list" nowrap width="50%">Sources <a href="#" onclick="var newWin = window.open('create_subject.jsp',
+'create_subject','toolbar=no,width=640,height=240,status=no'); newWin.opener = window;return false">create subject</a></th>
   			<th class="list" nowrap width="50%">Destinations</th>
   		</tr>
-    </thead>
+    </thead><a href="create_subject.jsp"></a>
     <tbody>
   		<tr class="list">
   			<td class="list" width="50%"><%=createSelector("available_src", available_src, "selected_src", selected_src.getSubjectNames(), "source_selected")%></td>

@@ -52,12 +52,12 @@ public class Destination
       return mask.getMask();
   }
 
-  public String getMask()
+  public MaskList getMasks()
   {
     if (isSubject())
-      return subj.getMask();
+      return subj.getMasks();
     else
-      return mask.getMask();
+      return new MaskList(mask);
   }
 
   public SME getSme()
