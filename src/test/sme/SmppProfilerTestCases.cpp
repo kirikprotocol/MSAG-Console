@@ -28,19 +28,24 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(PduSubmitSm* pdu,
 	__decl_tc__;
 	try
 	{
+		ShortMessage msg;
+		int msgLen;
 		switch (dataCoding)
 		{
 			case DATA_CODING_SMSC_DEFAULT:
 				__tc__("updateProfileCorrect.cmdTextDefault");
+				msgLen = ConvertTextTo7Bit(text.c_str(), text.length(),
+					msg, sizeof(msg), CONV_ENCODING_CP1251);
 				break;
 			case DATA_CODING_UCS2:
 				__tc__("updateProfileCorrect.cmdTextUcs2");
+				msgLen = ConvertMultibyteToUCS2(text.c_str(), text.length(),
+					(short*) msg, sizeof(msg) / sizeof(short), CONV_ENCODING_CP1251);
 				break;
 			default:
 				__unreachable__("Invalid data coding");
 		}
-		string encText = encode(text.c_str(), dataCoding);
-		pdu->get_message().set_shortMessage(encText.c_str(), encText.length());
+		pdu->get_message().set_shortMessage(msg, msgLen);
 		pdu->get_message().set_dataCoding(dataCoding);
 		//отправить и зарегистрировать pdu
 		transmitter->sendSubmitSmPdu(pdu, NULL, sync, &intProps, NULL, false);
@@ -173,13 +178,14 @@ void SmppProfilerTestCases::updateProfileIncorrect(bool sync, uint8_t dataCoding
 	}
 }
 
-void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
-	PduDeliverySm &pdu)
+bool SmppProfilerTestCases::checkPdu(PduDeliverySm &pdu)
 {
-	__require__(monitor);
 	__decl_tc__;
-	__tc__("processUpdateProfile");
 	__cfg_addr__(profilerAlias);
+	__cfg_str__(profilerServiceType);
+	__cfg_int__(profilerProtocolId);
+
+	__tc__("processUpdateProfile.checkFields");
 	Address srcAlias;
 	SmppUtil::convert(pdu.get_message().get_source(), &srcAlias);
 	if (srcAlias != profilerAlias)
@@ -189,6 +195,28 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	if (pdu.get_message().get_dataCoding() != DATA_CODING_SMSC_DEFAULT)
 	{
 		__tc_fail__(2);
+		return false;
+	}
+	if (profilerServiceType != pdu.get_message().get_serviceType())
+	{
+		__tc_fail__(3);
+	}
+	if (pdu.get_message().get_protocolId() != profilerProtocolId)
+	{
+		__tc_fail__(4);
+	}
+	__tc_ok_cond__;
+	return true;
+}
+
+void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
+	PduDeliverySm &pdu)
+{
+	__require__(monitor);
+	__decl_tc__;
+	if (!checkPdu(pdu))
+	{
+		return;
 	}
 	//проверить и обновить профиль
 	Address addr;
