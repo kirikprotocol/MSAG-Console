@@ -83,7 +83,7 @@ $(SMSC_BUILDDIR_LIST):
 $(MODULES) $(foreach x,$(MODULES),$(x).%): __.empty.__ $(SMSC_BUILDDIR_LIST)
 override _modules = $(subst ., ,$@)
 override _module = $(firstword $(_modules))
-override _subtarget = $(if $(word 2, $(_modules)), $(patsubst $(_module).%,%,$@), build )
+override _subtarget = $(if $(word 2, $(_modules)), $(patsubst $(_module).%,%,$@), rbuild )
 	@if [ -d $(_module) ]; then \
 	    cd $(_module); make -s $(_subtarget); \
 	else \

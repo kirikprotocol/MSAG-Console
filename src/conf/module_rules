@@ -16,7 +16,7 @@ SOURCES := $(subst $(SMSC_SRCDIR)/$(PACKAGEDIR)/,,$(wildcard $(SMSC_SRCDIR)/$(PA
 MAIN_SOURCES := $(shell cat binaries-list 2>>/dev/null | awk '/^[^\#-]/{ print $$2".cpp" }' )
 EXCLUDE_SOURCES := $(MAIN_SOURCES) $(shell cat binaries-list 2>>/dev/null | awk '/^-/{ print $$2".cpp" }' )
 EXCLUDE_SOURCES := $(EXCLUDE_SOURCES) $(shell cat exclude-list 2>>/dev/null | awk '/^[^\#]/{print $$1}' ) 
-BINARIES := $(shell cat binaries-list 2>>/dev/null | awk '/^[^\#-]/{ print "$(SMSC_BUILDDIR)/bin/"$$1 }' )
+BINARIES := $(shell cat binaries-list 2>>/dev/null | awk '/^[^\#-]./{ print "$(SMSC_BUILDDIR)/bin/"$$1 }' )
 #$(warning $(BINARIES))
 #$(warning $(MAIN_SOURCES))
 SOURCES := $(filter-out $(EXCLUDE_SOURCES), $(SOURCES))
