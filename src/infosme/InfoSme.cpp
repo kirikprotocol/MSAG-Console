@@ -321,8 +321,8 @@ public:
     
     void handleError(int errorCode)
     {
-        bInfoSmeIsConnected = false;
         logger.error("Transport error handled! Code is: %d", errorCode);
+        bInfoSmeIsConnected = false;
     }
 };
 
@@ -365,7 +365,7 @@ int main(void)
         ConfigView tpConfig(manager, "InfoSme");
         TaskProcessor processor(&tpConfig);
         
-        ConfigView smscConfig(manager, "WSme.SMSC");
+        ConfigView smscConfig(manager, "InfoSme.SMSC");
         InfoSmeConfig cfg(&smscConfig);
         
         while (!bInfoSmeIsStopped)
