@@ -94,7 +94,7 @@ static void DropMapDialog_(unsigned dialogid){
   DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid));
   if ( !dialog.isnull() ){
     {
-      MutexGuard(dialog.mutex);
+      MutexGuard(dialog->mutex);
       __trace2__("MAP::%s: 0x%x  (state CLOSED/ABORTED) /%d/",__FUNCTION__,dialog->dialogid_map,dialog->chain.size());
       unsigned __dialogid_map = dialog->dialogid_map;
       unsigned __dialogid_smsc = 0;
@@ -434,7 +434,7 @@ static void TryDestroyDialog(unsigned dialogid)
     }
   }
   //MapDialogContainer::getInstance()->dropDialog(dialogid);
-  DropMapDialog(dialogid);
+  DropMapDialog_(dialogid);
 }
 
 static string RouteToString(MapDialog* dialog)
