@@ -123,7 +123,8 @@ refreshStartStopButtonsStatus();
 	startSection(out, "core", "core", false);
 		startParams(out);
 			param(out, "state machines count",   "core.state_machines_count",   bean.getIntParam(   "core.state_machines_count"));
-			param(out, "reschedule limit",       "core.reschedule_limit",       bean.getIntParam("core.reschedule_limit"));
+			param(out, "Event queue limit",       "core.eventQueueLimit",       bean.getIntParam("core.eventQueueLimit"));
+
 
 			param(out, "reschedule table",       "core.reschedule_table",       bean.getStringParam("core.reschedule_table"));
 			param(out, "service center address", "core.service_center_address", bean.getStringParam("core.service_center_address"));
@@ -217,7 +218,7 @@ refreshStartStopButtonsStatus();
 			param(out, "failure limit",          "MscManager.failureLimit",          bean.getIntParam( "MscManager.failureLimit"));
 		finishParams(out);
 	finishSection(out);
-%></div><%
+	//################################## traffic control #############################	startSection(out, "trafficControl", "Traffic Control", false);		startParams(out);			param(out, "Max SMS per second", "trafficControl.maxSmsPerSecond", bean.getIntParam("trafficControl.maxSmsPerSecond"));			param(out, "Shape time frame (seconds)", "trafficControl.shapeTimeFrame", bean.getIntParam("trafficControl.shapeTimeFrame"));			param(out, "Protect time frame (seconds)", "trafficControl.protectTimeFrame", bean.getIntParam("trafficControl.protectTimeFrame"));			param(out, "Max unresponded delivers by SME", "trafficControl.protectThreshold", bean.getIntParam("trafficControl.protectThreshold"));			param(out, "Delivery speed sensor min limit", "trafficControl.allowedDeliveryFailures", bean.getIntParam("trafficControl.allowedDeliveryFailures"));			param(out, "Speed sensor scheduler look ahead (seconds)", "trafficControl.lookAheadTime", bean.getIntParam("trafficControl.lookAheadTime"));		finishParams(out);	finishSection(out);%></div><%
 page_menu_begin(out);
 page_menu_button(out, "mbSave",  "Save",  "Save config");
 page_menu_button(out, "mbReset", "Reset", "Reset", "clickCancel()");
