@@ -709,11 +709,8 @@ USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
   using smsc::util::regexp::SMatch;
   std::vector<SMatch> m(maskRx.GetBracketsCount());
 
-  vector<char> addr(calling->noOfAddrSign +  1);
-  unpack_addr(&addr[0], calling->addrSign_p, calling->noOfAddrSign);
-
   int n=m.size();
-  if(!maskRx.Match(&addr[0],&m[0],n))
+  if(!maskRx.Match(formatCallingNumber(calling).c_str(),&m[0],n))
   {
     inform=0;
   }

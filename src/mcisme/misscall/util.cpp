@@ -56,6 +56,18 @@ std::string getCallingNumberDescription(EINSS7_I97_CALLINGNUMB_T* calling)
   addr.insert(addr.begin(),str,end);
   return &addr[0];
 }
+
+std::string formatCallingNumber(EINSS7_I97_CALLINGNUMB_T* calling)
+{
+  if (!calling) return "";
+  /*max length of .ton.npi.digits = 1+3+1+1+1+20 = 27*/
+  char addr[28];
+  int pos;
+  pos = snprintf(addr,27,".%d.%d.",calling->natureOfAddr,calling->numberPlan);
+  unpack_addr(&addr[pos-1], calling->addrSign_p, calling->noOfAddrSign);
+  return &addr[0];
+}
+
 std::string getRedirectingNumberDescription(EINSS7_I97_REDIRECTINGNUMB_T* redirNumb)
 {
   if (!redirNumb) return "";
