@@ -66,7 +66,7 @@ public class Index extends SmscBean
 		hostIds = (String[]) notRemovedIds.toArray(new String[0]);
 
 		if (errors.size() == 0)
-			return RESULT_OK;
+			return RESULT_DONE;
 		else
 			return RESULT_ERROR;
 	}

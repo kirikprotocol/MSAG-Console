@@ -68,6 +68,8 @@ public class Index extends IndexBean
 			int dresult = deleteAliases();
 			if (dresult != RESULT_OK)
 				return result;
+			else
+				return RESULT_DONE;
 		}
 
 		logger.debug("Aliases.Index - process with sorting [" + (String) preferences.getAliasesSortOrder().get(0) + "]");

@@ -72,7 +72,7 @@ public class Index extends IndexBean
 
 	protected int deleteSubject()
 	{
-		int result = RESULT_OK;
+		int result = RESULT_DONE;
 		for (int i = 0; i < checkedSubjects.length; i++)
 		{
 			String subject = checkedSubjects[i];

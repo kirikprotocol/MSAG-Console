@@ -68,6 +68,8 @@ public class Index extends IndexBean
 			int dresult = deleteUsers();
 			if (dresult != RESULT_OK)
 				return result;
+			else
+				return RESULT_DONE;
 		}
 
 		logger.debug("Users.Index - process with sorting [" + (String) preferences.getUsersSortOrder().get(0) + "]");

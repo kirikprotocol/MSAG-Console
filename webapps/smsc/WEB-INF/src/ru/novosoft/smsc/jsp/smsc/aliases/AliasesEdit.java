@@ -145,7 +145,7 @@ public class AliasesEdit extends SmscBean
 		{
 			AliasSet byAddr = getAliasesByAddressAndHide(smsc.getAliases(), al.getAddress(), true);
 			if (!addressChanged)
-				byAddr.remove(al);
+				byAddr.remove(oldAl);
 			if (byAddr.size() > 0)
 				return error(SMSCErrors.error.aliases.alreadyExistsAddress, al.getAddress().getMask());
 		}

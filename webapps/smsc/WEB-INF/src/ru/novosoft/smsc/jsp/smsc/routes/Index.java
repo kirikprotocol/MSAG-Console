@@ -65,6 +65,8 @@ public class Index extends IndexBean
 			int dresult = deleteRoutes();
 			if (dresult != RESULT_OK)
 				return result;
+			else
+				return RESULT_DONE;
 		}
 
 		logger.debug("Routes.Index - process with sorting [" + (String) preferences.getRoutesSortOrder().get(0) + "]");

@@ -118,7 +118,7 @@ public class Index extends PageBean
 			}
 		}
 		serviceIds = (String[]) notRemoved.toArray(new String[0]);
-		return errors.size() == 0 ? RESULT_OK : RESULT_ERROR;
+		return errors.size() == 0 ? RESULT_DONE : RESULT_ERROR;
 	}
 
 	protected int startServices()
