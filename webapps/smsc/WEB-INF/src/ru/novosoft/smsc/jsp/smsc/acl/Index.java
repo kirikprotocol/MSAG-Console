@@ -6,6 +6,7 @@ import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
+import ru.novosoft.smsc.util.Functions;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -93,10 +94,14 @@ public class Index extends SmscBean
   {
     try {
       aclManager.updateAclInfo(lookupedAcl, name, description, cache_type);
-      if (deleted_address != null && deleted_address.length > 0)
-        aclManager.removeAddresses(lookupedAcl, Arrays.asList(deleted_address));
-      if (new_address != null && new_address.length > 0)
-        aclManager.addAddresses(lookupedAcl, Arrays.asList(new_address));
+      deleted_address = Functions.trimStrings(deleted_address);
+      final List d_addrs = Functions.trimStrings(Arrays.asList(deleted_address));
+      final List n_addrs = Functions.trimStrings(Arrays.asList(new_address));
+      if (d_addrs.size() > 0) {
+        aclManager.removeAddresses(lookupedAcl, d_addrs);
+      }
+      if (n_addrs.size() > 0)
+        aclManager.addAddresses(lookupedAcl, n_addrs);
     } catch (AdminException e) {
       logger.debug("Couldn't remove or add acl addresses [id=" + lookupedAcl + "]", e);
       return error(SMSCErrors.error.acl.COULDNT_REMOVE_ADD_ADDRESSES, String.valueOf(lookupedAcl), e);

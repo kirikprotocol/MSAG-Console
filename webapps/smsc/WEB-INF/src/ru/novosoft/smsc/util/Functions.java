@@ -223,6 +223,19 @@ public class Functions
     return result;
   }
 
+  public static List trimStrings(Collection strings)
+  {
+    List result = new LinkedList();
+    if (strings != null) {
+      for (Iterator i = strings.iterator(); i.hasNext();) {
+        String str = (String) i.next();
+        if (str != null && str.trim().length() > 0)
+          result.add(str.trim());
+      }
+    }
+    return result;
+  }
+
   public static String getLocaleEncoding()
   {
     return System.getProperty("file.encoding", "WINDOWS-1251");

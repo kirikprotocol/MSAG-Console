@@ -10,7 +10,10 @@ TITLE = "Access Control Lists";
 switch(bean.process(request))
 {
 	case Index.RESULT_DONE:
-		response.sendRedirect("index.jsp");
+    if (bean.getLookupedAcl() == -1)
+      response.sendRedirect("index.jsp");
+    else
+      response.sendRedirect("index.jsp?lookupedAcl="+bean.getLookupedAcl());
 		return;
 	case Index.RESULT_OK:
 		break;
