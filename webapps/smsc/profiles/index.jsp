@@ -33,12 +33,12 @@ switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("a
 MENU0_SELECTION = "MENU0_PROFILES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
-<%@ include file="/WEB-INF/inc/messages.jsp"%>
+
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
 <input type=hidden name=profileMask>
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=sort>
-<input type=hidden ID=jbutton value="jbutton">
+
 <script>
 function editProfile(profileMask)
 {
@@ -84,7 +84,6 @@ DataItem item = (DataItem) i.next();
 </tbody>
 </table>
 <%@ include file="/WEB-INF/inc/navbar.jsp"%>
-
 <div class=secButtons>
 <input class=btn type=submit name=mbAdd value="Add profile" title="Add profile"><br>
 </div>

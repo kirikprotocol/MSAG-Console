@@ -39,7 +39,7 @@ MENU0_SELECTION = "MENU0_HOSTS";
 <%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
 <input type=hidden name=hostName value="<%=bean.getHostName()%>">
 <input type=hidden name=serviceId>
-<input type=hidden ID=jbutton value="jbutton">
+
 <script>
 function viewService(serviceId)
 {
@@ -49,7 +49,7 @@ function viewService(serviceId)
 	return false;
 }
 </script>
-<%@ include file="/WEB-INF/inc/messages.jsp"%>
+
 <div class=secInfo>Host infromation</div>
 <table class=secRep cellspacing=1 width="100%">
 <col width="15%" align=right>

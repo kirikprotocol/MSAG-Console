@@ -10,7 +10,8 @@ for (Iterator i = c.iterator(); i.hasNext(); )
 out.println();
 for (Iterator i = c.iterator(); i.hasNext(); )
 {
-	switch (bean.getServiceStatus((String) i.next()))
+	String sId = (String) i.next();
+	switch (bean.getServiceStatus(sId))
 	{
 		case ServiceInfo.STATUS_RUNNING:
 			%><span class=C080>running</span><%

@@ -20,7 +20,7 @@ switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("a
 MENU0_SELECTION = "MENU0_SERVICES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
-<%@ include file="/WEB-INF/inc/messages.jsp"%>
+
 <div class=secInfo>Select service type:</div>
 <table class=secRep cellspacing=1 width="100%">
 <col width="15%" align=right>
@@ -31,7 +31,7 @@ MENU0_SELECTION = "MENU0_SERVICES";
 </tr>
 <tr class=row1>
 	<th class=label>priority:</th>
-	<td><input class=txt type="text" name=priority maxlength=5 value="<%=bean.getPriority()%>"></td>
+	<td><input class=txt type="text" name=priority maxlength=5 value="<%=bean.getPriority()%>" validation="priority" onkeyup="resetValidation(this)"></td>
 </tr>
 <tr class=row0>
 	<th class=label>system type:</th>
@@ -87,7 +87,7 @@ MENU0_SELECTION = "MENU0_SERVICES";
 }%>
 <div class=secButtons>
 <input class=btn type=submit name=mbNext value="Finish" title="Add service">
-<input class=btn type=submit name=mbCancel value="Cancel">
+<input class=btn type=submit name=mbCancel value="Cancel" onClick="clickCancel()">
 </div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

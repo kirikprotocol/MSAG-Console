@@ -19,57 +19,58 @@ switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("a
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_ALIASES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
-<h1>Aliases filter</h1>
-<%@ include file="/WEB-INF/inc/messages.jsp"%>
-<table class=frm0 cellspacing=0 width="100%">
-<col width="10%" align=right>
+<table class=secRep cellspacing=0 cellspadding=1 width="100%">
+<col width="15%" align=right>
 <col width="85%">
-<col width="10%">
+<%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Aliases ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
+<tr><td colspan=2 class=secInner><div class=secList>Aliases</div></td></tr>
 <%
 int rowN = 0;
 for (int i=0; i<bean.getAliases().length; i++)
 {
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<th>alias:</th>
-	<td><input class=txtW name=aliases value="<%=bean.getAliases()[i]%>"></td>
-	<td>&nbsp;</td>
+	<th class=label></th>
+	<td><input class=txtW name=aliases value="<%=bean.getAliases()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
-	<th>alias:</th>
-	<td><input class=txtW name=aliases></td>
-	<td><input class=btn type=submit name=mbAdd value="Add" title="Add new alias to filter"></td>
+	<th class=label><input class=btn type=submit name=mbAdd value="Add" title="Add new alias to filter"></th>
+	<td><input class=txtW name=aliases validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
+
+<%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Addresses ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
+<tr><td colspan=2 class=secInner><div class=secList>Addresses</div></td></tr>
 <%
+rowN = 0;
 for (int i=0; i<bean.getAddresses().length; i++)
 {
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<th>address:</th>
-	<td><input class=txtW name=addresses value="<%=bean.getAddresses()[i]%>"></td>
-	<td>&nbsp;</td>
+	<th class=label>address:</th>
+	<td><input class=txtW name=addresses value="<%=bean.getAddresses()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
-	<th>address:</th>
-	<td><input class=txtW name=addresses></td>
-	<td><input class=btn type=submit name=mbAdd value="Add" title="Add new address to filter"></td>
+	<th class=label><input class=btn type=submit name=mbAdd value="Add" title="Add new address to filter"></th>
+	<td><input class=txtW name=addresses validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
+
+<%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
+<tr><td colspan=2 class=secInner><div class=secView>Options</div></td></tr>
+<%rowN = 0;%>
 <tr class=row<%=(rowN++)&1%>>
-	<th>hide option:</th>
-	<td><select class=txt name=hide>
+	<th class=label>hide option:</th>
+	<td><div class=select><select class=txt name=hide>
 			<option value="<%=AliasFilter.HIDE_NOFILTER%>" <%=AliasFilter.HIDE_NOFILTER == bean.getHide() ? "selected" : ""%>>all</option>
 			<option value="<%=AliasFilter.HIDE_SHOW_HIDE%>" <%=AliasFilter.HIDE_SHOW_HIDE == bean.getHide() ? "selected" : ""%>>show hided only</option>
 			<option value="<%=AliasFilter.HIDE_SHOW_NOHIDE%>" <%=AliasFilter.HIDE_SHOW_NOHIDE == bean.getHide() ? "selected" : ""%>>show not hided only</option>
-		</select></td>
-	<td>&nbsp;</td>
+		</select></div></td>
 </tr>
 </table>
-<div class=but0>
+<div class=secButtons>
 <input class=btn type=submit name=mbApply value="Apply" title="Apply filter">
-<input class=btn type=submit name=mbCancel value="Cancel">
+<input class=btn type=submit name=mbCancel value="Cancel" onClick="clickCancel()">
 </div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

@@ -31,7 +31,7 @@ MENU0_SELECTION = "MENU0_HOSTS";
 
 <%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
 <input type=hidden name=hostName>
-<input type=hidden ID=jbutton value="jbutton">
+
 <script>
 function viewHost(hostName)
 {
@@ -41,7 +41,7 @@ function viewHost(hostName)
 	return false;
 }
 </script>
-<span class=CF00><%@ include file="/WEB-INF/inc/messages.jsp"%></span>
+<span class=CF00></span>
 <table class=secRep cellspacing=1 width="100%">
 <col width="1%">
 <col width="79%" align=left>

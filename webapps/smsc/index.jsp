@@ -1,27 +1,30 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%><%
-STATUS.append("no changes");
 %><%@ page import="ru.novosoft.smsc.jsp.smsc.Index,"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
+if (request.isUserInRole("super-admin"))
+{
+TITLE = "Configuration status";
+}
+
 switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
 {
 	case Index.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
 	case Index.RESULT_OK:
-		STATUS.append("Ok");
+		//STATUS.append("Ok");
 		break;
 	case Index.RESULT_ERROR:
 		STATUS.append("<span class=CF00>Error</span>");
 		break;
 }
+MENU0_SELECTION = "MENU0_HOME";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-
-<%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
-<h1>Configuration status</h1>
-<%@ include file="/WEB-INF/inc/messages.jsp"%>
-<table class=rep0 cellspacing=1 width="50%">
+<% if (request.isUserInRole("super-admin"))
+{%>
+<table class=secRep cellspacing=1 cellpadding=0 width="100%">
 <col width="70%">
 <col width="30%" align=center>
 <col width="1%">
@@ -60,42 +63,13 @@ switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("a
 	<td><%=bean.isHostsChanged() ? "<span class=Cf00>changed</span>" : "clear"%></td>
 	<td><input class=btn type=submit name=mbHostsApply value="Apply" <%=!bean.isHostsChanged() ? "disabled" : ""%>></td>
 </tr>
-<tr class=rowLast>
+<tr class=row<%=(rowN++)&1%>>
 	<th>Services</th>
 	<td><%=bean.isServicesChanged() ? "<span class=Cf00>changed</span>" : "clear"%></td>
 	<td><input class=btn type=submit name=mbServicesApply value="Apply" <%=!bean.isServicesChanged() ? "disabled" : ""%>></td>
 </tr>
 </tbody>
-</table><%--
-<h1>Status summary</h1>
-<table class=rep0 cellspacing=1 width="50%">
-<col width="30%">
-<col width="70%">
-<thead>
-<tr>
-	<th>Category</th>
-	<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr class=row0>
-	<th class=Cf00>errors</th>
-	<td class=C080>no</th>
-</tr>
-<tr class=row1>
-	<th class=C800>warngins</th>
-	<td class=C080>12 warnings</th>
-</tr>
-<tr class=row0>
-	<th>services</th>
-	<td class=C080>ok</th>
-</tr>
-</tbody>
 </table>
---%>
+<%}%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>
-
-<%--@include file="/common/header.jsp"%>
-	<h1 align="center">SMSC administration</h1>
-<%@include file="/common/footer.jsp"--%>

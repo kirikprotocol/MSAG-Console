@@ -10,7 +10,7 @@
 <tr><td width="100%" class=title>SMS Service Center (Preliminary Beta Version)</td></tr>
 <tr><td class=tmenu><%
 	%><a ID=MENU0_HOME href="<%=CPATH%>">Home</a><%
-	%><a ID=MENU0_STATUS href="<%=CPATH%>/status/index.jsp">Status</a><%
+	%><%--a ID=MENU0_STATUS href="<%=CPATH%>/status/index.jsp">Status</a--%><%
 	%><a ID=MENU0_SMS href="<%=CPATH%>/smsc_service/sms/smsview.jsp">SMEs</a><%
 	%><a ID=MENU0_ROUTES href="<%=CPATH%>/routes/index.jsp">Routes</a><%
 	%><a ID=MENU0_SUBJECTS href="<%=CPATH%>/subjects/index.jsp">Subjects</a><%

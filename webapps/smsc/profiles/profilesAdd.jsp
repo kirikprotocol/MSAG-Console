@@ -16,37 +16,14 @@ switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("a
 		STATUS.append("<span class=CF00>Error</span>");
 		break;
 }
+boolean isEdit = false;
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_PROFILES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
-<h1>Add profile</h1>
-<%@ include file="/WEB-INF/inc/messages.jsp"%>
-<table class=frm0 cellspacing=0 width="100%">
-<col width="15%" align=right>
-<col width="85%">
-<tr class=row0>
-	<th>mask:</th>
-	<td><input class=txtW name=mask value="<%=bean.getMask()%>"></td>
-</tr>
-<tr class=row0>
-	<th>codePage:</th>
-	<td><select class=txt name=codepage>
-			<option value="<%=Profile.CODEPAGE_Default%>" <%=bean.getCodepage() == Profile.CODEPAGE_Default ? "SELECTED" : ""%>>Default</option>
-			<option value="<%=Profile.CODEPAGE_UCS2   %>" <%=bean.getCodepage() == Profile.CODEPAGE_UCS2    ? "SELECTED" : ""%>>UCS2</option>
-		</select></td>
-</tr>
-<tr class=rowLast>
-	<th>report&nbsp;mode:</th>
-	<td><select class=txt name=report>
-					<option value="<%=Profile.REPORT_OPTION_None%>" <%=bean.getReport() == Profile.REPORT_OPTION_None ? "SELECTED" : ""%>>none</option>
-					<option value="<%=Profile.REPORT_OPTION_Full%>" <%=bean.getReport() == Profile.REPORT_OPTION_Full ? "SELECTED" : ""%>>full</option>
-				</select></td>
-</tr>
-</table>
-<div class=but0>
+<%@ include file="profileBody.jsp"%>
+<div class=secButtons>
 <input class=btn type=submit name=mbSave value="Add profile" title="Add profile">
-<input class=btn type=submit name=mbCancel value="Cancel">
+<input class=btn type=submit name=mbCancel value="Cancel" onClick="clickCancel()">
 </div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

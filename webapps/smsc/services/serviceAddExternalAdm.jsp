@@ -35,9 +35,8 @@ TITLE = "Services List / Add service: step " + (bean.getStage() == 0 ? 2 : bean.
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_SERVICES";
 %><%@ 
-include file="/WEB-INF/inc/html_3_header.jsp"%><%@ 
-include file="/WEB-INF/inc/html_3_middle.jsp"%>
-<%@ include file="/WEB-INF/inc/messages.jsp"%><%
+include file="/WEB-INF/inc/html_3_header.jsp"%>
+<%
 if (bean.getHostName() != null && bean.getStage() != 2)
 {
 %><input type=hidden name=hostName value="<%=bean.getHostName()%>"><%
@@ -64,7 +63,7 @@ switch (bean.getStage())
 	case 2:
 	{%>
 	<h3>hosting parameters:</h3>
-	<table class=frm0 cellspacing=0 width="100%">
+	<table class=secRep cellspacing=0 cellspadding=1 width="100%">
 	<col width="15%" align=right>
 	<col width="85%">
 	<tr class=row0>
@@ -95,7 +94,7 @@ switch (bean.getStage())
 	{%>
 
 
-<table class=frm0 cellspacing=0 width="100%">
+<table class=secRep cellspacing=0 cellspadding=1 width="100%">
 <tr class=row0>
 	<th>System Id</th>
 	<td><input type="text" name="serviceId" readonly value="<%=StringEncoderDecoder.encode(bean.getServiceId())%>"></td>
@@ -103,6 +102,10 @@ switch (bean.getStage())
 <tr class=row0>
 	<th>System Type</th>
 	<td><input type="text" name="systemType" value="<%=bean.getSystemType() != null ? StringEncoderDecoder.encode(bean.getSystemType()) : ""%>" maxlength="13"></td>
+</tr>
+<tr class=row1>
+	<th class=label>priority:</th>
+	<td><input class=txt type="text" name=priority maxlength=5 value="<%=bean.getPriority()%>" validation="priority" onkeyup="resetValidation(this)"></td>
 </tr>
 <tr class=row0>
 	<th>Type of number</th>
@@ -157,7 +160,7 @@ switch (bean.getStage())
 
 <div class=secButtons>
 <input class=btn type=submit name=mbNext value="Next" title="Next page">
-<input class=btn type=submit name=mbCancel value="Cancel">
+<input class=btn type=submit name=mbCancel value="Cancel" onClick="clickCancel()">
 </div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

@@ -4,6 +4,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.subjects.SubjectsFilter"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
+TITLE = "Filter subjects";
 switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
 {
 	case SubjectsFilter.RESULT_DONE:
@@ -19,64 +20,56 @@ switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("a
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_SUBJECTS";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
-<h1>Subjects filter</h1>
-<%@ include file="/WEB-INF/inc/messages.jsp"%>
-<table class=frm0 cellspacing=0 width="100%">
-<col width="10%" align=right>
-<col width="85%">
-<col width="10%">
 <%int rowN = 0;%>
-<tr class=row<%=(rowN++)&1%>>
-	<th colspan="3">subjects</th>
-</tr>
+<table class=secRep cellspacing=0 cellspadding=1 width="100%">
+<col width="15%" align=right>
+<col width="85%">
+<%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Default SMEs ~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
+<tr><td colspan=2 class=secInner><div class=secList>Default SMEs</div></td></tr>
 <%
-for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();)
-{
-String name = (String) i.next();
-String encName = StringEncoderDecoder.encode(name);
-%>
-<tr class=row<%=(rowN++)&1%>>
-	<td><input class=check id="subj_chk_<%=encName%>" type=checkbox name=checkedSubjects value="<%=encName%>" <%=bean.isSubjChecked(name) ? "checked" : ""%>></td>
-	<td><label for="subj_chk_<%=encName%>"><%=encName%></label></td>
-	<td>&nbsp;</td>
-</tr>
-<%}%>
-<tr class=row<%=(rowN++)&1%>>
-	<th colspan="3">default SMEs:</th>
-</tr>
-<%
+rowN = 0;
 for (Iterator i = bean.getAllSmes().iterator(); i.hasNext();)
 {
 String name = (String) i.next();
 String encName = StringEncoderDecoder.encode(name);
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<td><input class=check id="subj_sme_<%=encName%>" type=checkbox name=checkedSmes value="<%=encName%>" <%=bean.isSmeChecked(name) ? "checked" : ""%>></td>
-	<td><label for="subj_sme_<%=encName%>"><%=encName%></label></td>
-	<td>&nbsp;</td>
+	<th class=label>&nbsp;</th>
+	<td wrap><input class=check id="subj_sme_<%=encName%>" type=checkbox name=checkedSmes value="<%=encName%>" <%=bean.isSmeChecked(name) ? "checked" : ""%>>&nbsp;<label for="subj_sme_<%=encName%>"><%=encName%></label></td>
 </tr>
 <%}%>
-<tr class=row<%=(rowN++)&1%>>
-	<th colspan="3">masks:</th>
-</tr>
+<%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Subjects ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
+<tr><td colspan=2 class=secInner><div class=secList>Subjects</div></td></tr>
 <%
+rowN = 0;
+for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();)
+{
+String name = (String) i.next();
+String encName = StringEncoderDecoder.encode(name);
+%>
+<tr class=row<%=(rowN++)&1%>>
+	<th class=label>&nbsp;</th>
+	<td nowrap><input class=check id="subj_chk_<%=encName%>" type=checkbox name=checkedSubjects value="<%=encName%>" <%=bean.isSubjChecked(name) ? "checked" : ""%>>&nbsp;<label for="subj_chk_<%=encName%>"><%=encName%></label></td>
+</tr>
+<%}%>
+<%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Masks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
+<tr><td colspan=2 class=secInner><div class=secList>Masks</div></td></tr>
+<%
+rowN = 0;
 for (int i=0; i<bean.getMasks().length; i++)
 {
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<th>&nbsp;</th>
+	<th class=label>&nbsp;</th>
 	<td><input class=txtW name=masks value="<%=bean.getMasks()[i]%>"></td>
-	<td>&nbsp;</td>
 </tr>
 <%}%>
 <tr class=rowLast>
-	<th>&nbsp;</th>
+	<th class=label><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to subject"></th>
 	<td><input class=txtW name=masks></td>
-	<td><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to subject"></td>
 </tr>
 </table>
-<div class=but0>
+<div class=secButtons>
 <input class=btn type=submit name=mbApply value="Apply" title="Apply filter">
 <input class=btn type=submit name=mbCancel value="Cancel">
 </div>

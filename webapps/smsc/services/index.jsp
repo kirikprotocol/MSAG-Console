@@ -33,9 +33,6 @@ switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("a
 MENU0_SELECTION = "MENU0_SERVICES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 
-<%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
-
-<input type=hidden ID=jbutton value="jbutton">
 <input type=hidden name=serviceId>
 <input type=hidden name=hostId>
 <input type=hidden name=serviceType>
@@ -55,7 +52,7 @@ function viewService(serviceId)
 	return false;
 }
 </script>
-<%@ include file="/WEB-INF/inc/messages.jsp"%>
+
 <table class=secRep cellspacing=1 width="100%">
 <col width="1%">
 <col width="60%" align=left>

@@ -18,7 +18,7 @@ if (request.getParameter("mbCancel") != null)
 		response.sendRedirect("serviceAddExternal.jsp" + (hostName != null ? ("?hostName="+hostName) : ""));
 		return;
 	} else if ("external_adm".equals(request.getParameter("serviceType"))) {
-		response.sendRedirect("serviceAddExternalAdm.jsp?stage=0" + (hostName != null ? ("&hostName="+hostName) : ""));
+		response.sendRedirect("serviceAddExternalAdm.jsp?stage=1" + (hostName != null ? ("&hostName="+hostName) : ""));
 		return;
 	}
 }
@@ -26,7 +26,7 @@ if (request.getParameter("mbCancel") != null)
 MENU0_SELECTION = "MENU0_SERVICES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
-<%@ include file="/WEB-INF/inc/messages.jsp"%>
+
 
 <%if (hostName != null)
 {
@@ -36,13 +36,13 @@ MENU0_SELECTION = "MENU0_SERVICES";
 <table class=secRep cellspacing=1 width="100%">
 <tbody>
 <tr class=row0>
-	<td class=name><input type=radio name=serviceType id=internal value=internal><label for=internal>Internal</label></td>
+	<td class=name><input type=radio name=serviceType id=internal value=internal>&nbsp;<label for=internal>Internal</label></td>
 </tr>
 <%--tr class=row1>
 	<td class=name><input type=radio name=serviceType id=external value="external" checked><label for=external>External</label></td>
 </tr--%>
 <tr class=row1>
-	<td class=name><input type=radio name=serviceType id=external_adm value="external_adm" checked><label for=external_adm>External Administrable</label></td>
+	<td class=name><input type=radio name=serviceType id=external_adm value="external_adm" checked>&nbsp;<label for=external_adm>External&nbsp;Administrable</label></td>
 </tr>
 </table><div class=secButtons>
 <input class=btn type=submit name=mbNext value="Next" title="Next page">

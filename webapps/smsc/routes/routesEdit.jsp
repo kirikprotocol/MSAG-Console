@@ -3,6 +3,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.routes.RoutesEdit"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
+TITLE = "Edit route";
 switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages, request.getParameterMap()))
 {
 	case RoutesEdit.RESULT_DONE:
@@ -16,146 +17,15 @@ switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("a
 		break;
 }
 
-int rowN = 0;
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_ROUTES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
-<h1>Edit route</h1>
-<%@ include file="/WEB-INF/inc/messages.jsp"%>
+
 <input type=hidden name=oldRouteId value="<%=bean.getOldRouteId()%>">
-<table class=frm0 cellspacing=0 width="100%">
-<col width="15%" align=right>
-<col width="85%">
-<tr class=row<%=(rowN++)&1%>>
-	<th>name:</th>
-	<td><input class=txtW name=routeId value="<%=bean.getRouteId()%>"></td>
-	<td>&nbsp;</td>
-</tr>
-<tr class=row<%=(rowN++)&1%>>
-	<th><label title="integer from 0 to 32767">priority:</label></th>
-	<td><input name=priority value="<%=bean.getPriority()%>" maxlength=5 class=txtW></td>
-	<td>&nbsp;</td>
-</tr>
-<tr class=row<%=(rowN++)&1%>>
-	<th>is premissible:</th>
-	<td><input class=txtW type=checkbox name=permissible <%=bean.isPermissible() ? "checked" : ""%>></td>
-	<td>&nbsp;</td>
-</tr>
-<tr class=row<%=(rowN++)&1%>>
-	<th>billing:</th>
-	<td><input class=txtW type=checkbox name=billing <%=bean.isBilling() ? "checked" : ""%>></td>
-	<td>&nbsp;</td>
-</tr>
-<tr class=row<%=(rowN++)&1%>>
-	<th>archiving:</th>
-	<td><input class=txtW type=checkbox name=archiving <%=bean.isArchiving() ? "checked" : ""%>></td>
-	<td>&nbsp;</td>
-</tr>
-
-<%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ sources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr class=row<%=(rowN++)&1%>>
-	<th colspan=3>&nbsp;</th>
-</tr>
-<%
-boolean isFirstSrc = true;
-for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();)
-{
-String name = (String) i.next();
-String encName = StringEncoderDecoder.encode(name);
-%>
-<tr class=row<%=(rowN++)&1%>>
-	<%if (isFirstSrc) {
-		%><th rowspan=<%=bean.getAllSubjects().size() + bean.getSrcMasks().length +1%>>source:</th><%
-		isFirstSrc = false;
-	}%>
-	<td><input class=check id="subj_src_<%=encName%>" type=checkbox name=checkedSources value="<%=encName%>" <%=bean.isSrcChecked(name) ? "checked" : ""%>><label for="subj_src_<%=encName%>"><%=encName%></label></td>
-	<td>&nbsp;</td>
-</tr>
-<%}
-for (int i=0; i<bean.getSrcMasks().length; i++)
-{
-%>
-<tr class=row<%=(rowN++)&1%>>
-	<%if (isFirstSrc) {%><th rowspan=<%=bean.getAllSubjects().size() + bean.getSrcMasks().length +1%>>source:</th><%isFirstSrc = false;}%>
-	<td><input class=txtW name=srcMasks value="<%=bean.getSrcMasks()[i]%>"></td>
-	<td>&nbsp;</td>
-</tr>
-<%}%>
-<tr class=row<%=(rowN++)&1%>>
-	<%if (isFirstSrc) {%><th rowspan=<%=bean.getAllSubjects().size() + bean.getSrcMasks().length +1%>>source:</th><%isFirstSrc = false;}%>
-	<td><input class=txtW name=srcMasks></td>
-	<td><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to sources"></td>
-</tr>
-
-<%--~~~~~~~~~~~~~~~~~~~~~~~~~~~ destinations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr class=row<%=(rowN++)&1%>>
-	<th colspan=3>&nbsp;</th>
-</tr>
-<%
-boolean isFirstDst = true;
-for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();)
-{
-String name = (String) i.next();
-String encName = StringEncoderDecoder.encode(name);
-%>
-<tr class=row<%=(rowN++)&1%>>
-	<%if (isFirstDst) {%><th rowspan=<%=bean.getAllSubjects().size() + bean.getDstMasks().length +1%>>destination:</th><%isFirstDst = false;}%>
-	<td>
-		<input class=check id="subj_dst_<%=encName%>" type=checkbox name=checkedDestinations value="<%=encName%>" <%=bean.isDstChecked(name) ? "checked" : ""%>><label for="subj_dst_<%=encName%>"><%=encName%></label>
-		<select name=dst_sme_<%=encName%> <%=!bean.isDstChecked(name) ? "disabled" : ""%>>
-		<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
-		{
-			String smeId = (String) j.next();
-			String encSmeId = StringEncoderDecoder.encode(smeId);
-			%><option value="<%=encSmeId%>" <%=bean.isSmeSelected(name, smeId) ? "selected" : ""%>><%=encSmeId%></option><%
-		}
-		%>
-		</select>
-	</td>
-	<td>&nbsp;</td>
-</tr>
-<%}
-for (int i=0; i<bean.getDstMasks().length; i++)
-{
-String dstMask = bean.getDstMasks()[i];
-String encMask = StringEncoderDecoder.encode(dstMask);
-%>
-<tr class=row<%=(rowN++)&1%>>
-	<%if (isFirstDst) {%><th rowspan=<%=bean.getAllSubjects().size() + bean.getDstMasks().length +1%>>destination:</th><%isFirstDst = false;}%>
-	<td><input class=txtW name=dstMasks value="<%=encMask%>">
-	</td>
-	<td><select name=dst_mask_sme_<%=encMask%>>
-		<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
-		{
-			String smeId = (String) j.next();
-			String encSmeId = StringEncoderDecoder.encode(smeId);
-			%><option value="<%=encSmeId%>" <%=bean.isMaskSmeSelected(dstMask, smeId) ? "selected" : ""%>><%=encSmeId%></option><%
-		}
-		%>
-		</select>
-	</td>
-</tr>
-<%}%>
-<tr class=rowLast>
-	<%if (isFirstDst) {%><th rowspan=<%=bean.getAllSubjects().size() + bean.getDstMasks().length +1%>>destination:</th><%isFirstDst = false;}%>
-	<td><input class=txtW name=dstMasks>
-		<select name=dst_mask_sme_>
-		<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
-		{
-			String smeId = (String) j.next();
-			String encSmeId = StringEncoderDecoder.encode(smeId);
-			%><option value="<%=encSmeId%>" <%=smeId.equals(bean.getDst_mask_sme_()) ? "selected" : ""%>><%=encSmeId%></option><%
-		}
-		%>
-		</select>
-	</td>
-	<td><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to destinations"></td>
-</tr>
-</table>
-<div class=but0>
+<%@ include file="routeBody.jsp"%>
+<div class=secButtons>
 <input class=btn type=submit name=mbSave value="Save" title="Save changes">
-<input class=btn type=submit name=mbCancel value="Cancel">
+<input class=btn type=submit name=mbCancel value="Cancel" onClick="return clickCancel()">
 </div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

@@ -13,21 +13,30 @@ const char PROFILE_PARAMS_DELIMITER = ',';
 Variant SmscComponent::call(const Method & method, const Arguments & args)
 	throw (AdminException)
 {
+  logger.debug("call \"%s\"", method.getName());
   switch (method.getId())
   {
   case applyRoutesMethod:
+    logger.debug("applying routes...");
     applyRoutes();
+    logger.debug("routes applied");
     return Variant("");
   case applyAliasesMethod:
+    logger.debug("applying aliases...");
     applyAliases();
+    logger.debug("aliases applied");
     return Variant("");
   case lookupProfileMethod:
+    logger.debug("lookup profile...");
     return Variant(lookupProfile(args).c_str());
   case updateProfileMethod:
+    logger.debug("update profile...");
     return Variant((long)updateProfile(args));
   default:
+    logger.debug("unknown method \"%s\" [%u]", method.getName(), method.getId());
     throw AdminException("Unknown method \"%s\"", method.getName());
   }
+  logger.error("call \"%s\"[%u] done. Unreacheable code reached.", method.getName(), method.getId());
   return Variant("");
 }
 

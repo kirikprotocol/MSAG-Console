@@ -20,8 +20,8 @@ switch (bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("
 MENU0_SELECTION = "MENU0_HOSTS";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
-<input type=hidden ID=jbutton value="jbutton">
-<span class=CF00><%@ include file="/WEB-INF/inc/messages.jsp"%></span>
+
+<span class=CF00></span>
 <div class=secInfo>Host infromation</div>
 <table class=secRep cellspacing=1 width="100%">
 <col width="15%" align=right>
@@ -32,12 +32,12 @@ MENU0_SELECTION = "MENU0_HOSTS";
 	<td><input class=txtW name=hostName value="<%=bean.getHostName()%>"></td>
 </tr>
 <tr class=rowLast>
-	<th>host port:</th>
-	<td><input class=txt name=port size=10 value="<%=bean.getPort()%>"></td>
+	<th class=label>host port:</th>
+	<td><input class=txt name=port size=10 value="<%=bean.getPort()%>" validation="port" onkeyup="resetValidation(this)"></td>
 </tr>
 </table><div class=secButtons>
 <input type="submit" name="mbSave"   value="Save"   class="btn64" title="Save information">
-<input type="submit" name="mbCancel" value="Cancel" class="btn64" title="Return to host view">
+<input type="submit" name="mbCancel" value="Cancel" class="btn64" title="Return to host view" onClick="clickCancel()">
 </div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>
