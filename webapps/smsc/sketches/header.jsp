@@ -3,7 +3,7 @@
 <%! final static String urlPrefix = "/smsc/sketches/";%><html>
 <head>
 	<title>SMSC Admin. <%=request.getParameter("page.title")!=null?request.getParameter("page.title"):""%></title>
-	<link rel="stylesheet" type="text/css" href="<%=urlPrefix%>smsc.css">
+	<link rel="stylesheet" type="text/css" href="/smsc/common/smsc.css">
 </head>
 
 <body>
