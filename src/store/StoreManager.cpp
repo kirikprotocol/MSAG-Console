@@ -1205,10 +1205,8 @@ time_t RemoteStore::getNextRetryTime()
 
 /* ------------------------------- SMS Cache -------------------------------- */
 
-const int SMSC_MAX_SMS_CACHE_CAPACITY = 10000;
-
-SmsCache::SmsCache(int capacity=0) 
-    : idCache(capacity)
+SmsCache::SmsCache(unsigned capacity, unsigned initsize) 
+    : idCache(initsize), cacheCapacity(capacity), lastId(0)
 {
 }
 SmsCache::~SmsCache()
@@ -1218,33 +1216,43 @@ SmsCache::~SmsCache()
 
 void SmsCache::clean()
 {
-    idCache.First();
-    SMSId id; SMS* sms = 0;
-    while (idCache.Next(id, sms)) {
+    idCache.First(); SMSId id; SMS* sms = 0;
+    while (idCache.Next(id, sms)) 
         if (sms) delete sms;
-    }
-        
     idCache.Clean();
 }
 void SmsCache::putSms(SMSId id, SMS* sm)
 {
     __require__(sm);
+
+    if (idCache.Count() == 0) lastId = id;
+    if (idCache.Count() >= cacheCapacity)
+    {
+        int toDelete = cacheCapacity/10;
+        SMSId curId=lastId;
+        
+        while (curId<id && toDelete>0)
+            if (delSms(curId++)) toDelete--;
+        
+        lastId = curId;
+    }
     idCache.Insert(id, sm);
 }
 bool SmsCache::delSms(SMSId id)
 {
-    SMS* sm=0;
-    if (!idCache.Exists(id)) return false;
-    idCache.Get(id, sm); idCache.Delete(id);
-    if (!sm) return false;
-    delete sm;
-    return true;
+    SMS** psm = idCache.GetPtr(id);
+    if (psm)
+    {
+        if (*psm) delete (*psm);
+        idCache.Delete(id);
+        return true;
+    }   
+    return false;
 }
 SMS* SmsCache::getSms(SMSId id)
 {
-    SMS* sm = 0;
-    if (idCache.Exists(id)) idCache.Get(id, sm);
-    return sm;
+    SMS** psm = idCache.GetPtr(id);
+    return ((psm) ? *psm:0);
 }
 
 /* ------------------------------- SMS Cache -------------------------------- */
@@ -1267,15 +1275,17 @@ void CachedStore::loadMaxCacheCapacity(Manager& config)
 
 CachedStore::CachedStore(Manager& config) 
     throw(ConfigException, StorageException) 
-        : RemoteStore(config), cache(SMSC_MAX_SMS_CACHE_CAPACITY), 
+        : RemoteStore(config), cache(0),
             maxCacheCapacity(SMSC_MAX_SMS_CACHE_CAPACITY)
 {
     loadMaxCacheCapacity(config);
+    cache = new SmsCache(maxCacheCapacity);
+    __require__(cache);
 }
 CachedStore::~CachedStore() 
 {
     MutexGuard  guard(cacheMutex);
-    cache.clean();
+    if (cache) delete cache;
 }
 
 SMSId CachedStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
@@ -1289,8 +1299,8 @@ SMSId CachedStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
     
     SMS* sm = new SMS(sms);
     MutexGuard cacheGuard(cacheMutex);
-    if (retId != id) cache.delSms(retId);
-    cache.putSms(id, sm);
+    if (retId != id) cache->delSms(retId);
+    cache->putSms(id, sm);
 }
 
 void CachedStore::retriveSms(SMSId id, SMS &sms)
@@ -1299,7 +1309,7 @@ void CachedStore::retriveSms(SMSId id, SMS &sms)
     SMS* sm = 0;
     {
         MutexGuard cacheGuard(cacheMutex);
-        sm = cache.getSms(id);
+        sm = cache->getSms(id);
         if (sm) { 
             sms = *sm;
             __trace2__("smsId = %lld found in cache.", id);
@@ -1315,7 +1325,7 @@ void CachedStore::retriveSms(SMSId id, SMS &sms)
     {
         sm = new SMS(sms);
         MutexGuard cacheGuard(cacheMutex);
-        cache.putSms(id, sm);
+        cache->putSms(id, sm);
     }
 }
 
@@ -1329,14 +1339,14 @@ void CachedStore::replaceSms(SMSId id, const Address& oa,
     RemoteStore::replaceSms(id, oa, newMsg, newMsgLen, deliveryReport,
                             validTime, waitTime);
     MutexGuard cacheGuard(cacheMutex);
-    cache.delSms(id);
+    cache->delSms(id);
 }
 void CachedStore::destroySms(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
     RemoteStore::destroySms(id);
     MutexGuard cacheGuard(cacheMutex);
-    cache.delSms(id);
+    cache->delSms(id);
 }
 
 void CachedStore::changeSmsStateToEnroute(SMSId id, const Descriptor& dst, 
@@ -1351,7 +1361,7 @@ void CachedStore::changeSmsStateToEnroute(SMSId id, const Descriptor& dst,
     SMS* sm = 0;
     {
         MutexGuard cacheGuard(cacheMutex);
-        sm = cache.getSms(id);
+        sm = cache->getSms(id);
         if (sm)
         {
             sm->state = ENROUTE;
@@ -1369,7 +1379,7 @@ void CachedStore::changeSmsStateToEnroute(SMSId id, const Descriptor& dst,
     {
         sm = new SMS(sms);
         MutexGuard cacheGuard(cacheMutex);
-        cache.putSms(id, sm);
+        cache->putSms(id, sm);
     }
 }
 void CachedStore::changeSmsStateToDelivered(SMSId id,
@@ -1379,7 +1389,7 @@ void CachedStore::changeSmsStateToDelivered(SMSId id,
     __trace2__("Changing to DELIVERED for smsId = %lld.", id);
     RemoteStore::changeSmsStateToDelivered(id, dst);
     MutexGuard cacheGuard(cacheMutex);
-    cache.delSms(id);
+    cache->delSms(id);
 }
 void CachedStore::changeSmsStateToUndeliverable(SMSId id,
                                                 const Descriptor& dst, 
@@ -1389,7 +1399,7 @@ void CachedStore::changeSmsStateToUndeliverable(SMSId id,
     __trace2__("Changing to UNDELIVERABLE for smsId = %lld.", id);
     RemoteStore::changeSmsStateToUndeliverable(id, dst, failureCause);
     MutexGuard cacheGuard(cacheMutex);
-    cache.delSms(id);
+    cache->delSms(id);
 }
 void CachedStore::changeSmsStateToExpired(SMSId id)
     throw(StorageException, NoSuchMessageException)
@@ -1397,7 +1407,7 @@ void CachedStore::changeSmsStateToExpired(SMSId id)
     __trace2__("Changing to EXPIRED for smsId = %lld.", id);
     RemoteStore::changeSmsStateToExpired(id);
     MutexGuard cacheGuard(cacheMutex);
-    cache.delSms(id);
+    cache->delSms(id);
 }
 void CachedStore::changeSmsStateToDeleted(SMSId id)
     throw(StorageException, NoSuchMessageException)
@@ -1405,7 +1415,7 @@ void CachedStore::changeSmsStateToDeleted(SMSId id)
     __trace2__("Changing to DELETED for smsId = %lld.", id);
     RemoteStore::changeSmsStateToDeleted(id);
     MutexGuard cacheGuard(cacheMutex);
-    cache.delSms(id);
+    cache->delSms(id);
 }
 
 /* ------------------------------ Cached Store ------------------------------ */

@@ -480,6 +480,8 @@ namespace smsc { namespace store
             : id(_id), state(_state), dst(_dst), fcs(_fcs), nt(_nt) {};
     };
 
+    const int SMSC_MAX_SMS_CACHE_CAPACITY = 10000;
+
     class SmsCache
     {
     private:
@@ -491,11 +493,14 @@ namespace smsc { namespace store
             };
         };
 
+        SMSId                        lastId;
         XHash<SMSId, SMS*, SMSIdIdx> idCache;
+        unsigned                     cacheCapacity;
 
     public:
 
-        SmsCache(int capacity=0);
+        SmsCache(unsigned capacity=SMSC_MAX_SMS_CACHE_CAPACITY, 
+                 unsigned initsize=SMSC_MAX_SMS_CACHE_CAPACITY);
         virtual ~SmsCache();
 
         void clean();
@@ -508,9 +513,9 @@ namespace smsc { namespace store
     {
     protected:
 
-        SmsCache    cache;
         Mutex       cacheMutex;
-
+        SmsCache*   cache;
+        
         int         maxCacheCapacity;
         void loadMaxCacheCapacity(Manager& config);
 
