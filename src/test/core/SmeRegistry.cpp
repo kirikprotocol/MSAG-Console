@@ -33,6 +33,7 @@ void SmeRegistry::registerSme(const Address& smeAddr)
 void SmeRegistry::registerAddressWithNoSme(const Address& addr)
 {
 	addrMap[addr] = NULL;
+	addrList.push_back(new Address(addr));
 }
 	
 PduRegistry* SmeRegistry::getPduRegistry(const Address& smeAddr) const
