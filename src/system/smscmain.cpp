@@ -135,7 +135,7 @@ int main(int argc,char* argv[])
     }
 
     cfgs.licconfig=&lic;
-    logger.info( "Starting up SMSC" );
+    logger.info( "Starting up %s", getStrVersion());
     smsc::resourcemanager::ResourceManager::init(cfgs.cfgman->getString("core.locales"), cfgs.cfgman->getString("core.default_locale"));
     logger.info( "Locale resources loaded" );
     smsc::util::config::smeman::SmeManConfig smemancfg;
@@ -201,7 +201,7 @@ int main(int argc,char* argv[])
 
       smsc::system::registerSmscSignalHandlers(&smsc_component, &listener);
       listener.Start();
-      
+
       // start
       smsc_component.runSmsc();
 
