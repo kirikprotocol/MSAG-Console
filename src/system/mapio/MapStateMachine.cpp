@@ -1517,6 +1517,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                 }
               }
               if( dlg_found ) {
+                dialog->id_opened = true;
                 dialog->dialogid_smsc = dialogid_smsc;
                 __map_trace2__("%s: dialogid 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
                 if ( !dialog->isUSSD )
