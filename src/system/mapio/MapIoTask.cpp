@@ -95,6 +95,7 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
         __trace2__("MAP::Et96MapV2ForwardSmMOInd error when send response on froward_sm");
         throw 0;
       }
+      CloseAndRemoveDialog(SSN,dialogId);
   	}catch(...){
   		__trace__("MAP::Et96MapV2ForwardSmMOInd catch exception");
       CloseAndRemoveDialog(SSN,dialogId);
