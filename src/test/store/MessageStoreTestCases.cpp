@@ -557,6 +557,7 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 		try
 		{
 			Descriptor dst;
+			SmsUtil::setupRandomCorrectDescriptor(&dst);
 			dst.setSmeNumber(rand0(65535));
 			uint8_t failureCause = rand1(255);
 			switch(s.value())
@@ -606,12 +607,6 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 					SET_UNDELIVERABLE_SMS
 					break;
 				case 7: //UNDELIVERABLE, failureCause не задан
-					{
-						auto_ptr<char> mscAddr = rand_char(MAX_ADDRESS_LENGTH);
-						auto_ptr<char> imsiAddr = rand_char(MAX_ADDRESS_LENGTH);
-						dst.setMsc(MAX_ADDRESS_LENGTH, mscAddr.get());
-						dst.setImsi(MAX_ADDRESS_LENGTH, imsiAddr.get());
-					}
 					failureCause = 0;
 					msgStore->changeSmsStateToUndeliverable(id, dst, failureCause);
 					SET_UNDELIVERABLE_SMS
@@ -620,6 +615,7 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 					msgStore->changeSmsStateToExpired(id);
 					//hack, все сеттеры запрещены
 					sms->state = EXPIRED;
+					//sms->lastTime = time(NULL);
 					sms->nextTime = 0;
 					break;
 				case 9: //DELETED
