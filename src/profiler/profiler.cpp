@@ -616,6 +616,9 @@ int Profiler::Execute()
     if(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==1)
     {
       ans.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,17);
+      // clear 0,1 bits and set them to datagram mode
+      ans.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS,
+          (ans.getIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS)&~0x03)|0x01); 
     }
 
     Profile pr=lookup(addr);

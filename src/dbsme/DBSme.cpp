@@ -176,8 +176,12 @@ public:
         body.setIntProperty(Tag::SMPP_PRIORITY, 0);
         body.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
                             userMessageReference);
-        if (isRequestUSSD) 
+        if (isRequestUSSD) {
             body.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, USSD_PSSR_RESP);
+            // clear 0,1 bits and set them to datagram mode
+            body.setIntProperty(Tag::SMPP_ESM_CLASS,
+                (body.getIntProperty(Tag::SMPP_ESM_CLASS)&~0x03)|0x01); 
+        }
         
         char* out = (char *)command.getOutData();
         int outLen = (out) ? strlen(out) : 0;

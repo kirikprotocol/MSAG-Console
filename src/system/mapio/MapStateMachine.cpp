@@ -2409,7 +2409,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     Address dest_addr = Address(subsystem.c_str());
     dest_addr.type = 0;
     dest_addr.plan = 1;
-    unsigned esm_class = 0;
+    unsigned esm_class = 2; // Transaction mode
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
     sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,0);
     sms.setMessageReference(0);
