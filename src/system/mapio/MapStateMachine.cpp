@@ -671,7 +671,7 @@ static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
   ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0x0f;
   ET96MAP_USSD_STRING_T ussdString = {0,};
   unsigned text_len;
-  const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
+  const unsigned char* text = (const unsigned char*)cmd->get_sms()->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
   if ( text_len > 160 ) throw runtime_error(
     FormatText("MAP::%s MAP.did:{0x%x} very long string %d",__FUNCTION__,dialog->dialogid_map,text_len));
   unsigned bytes = 0;
