@@ -37,11 +37,11 @@
   <target name="compile" depends="init" description="compile the sources">
     <javac srcdir="${java_src}" destdir="${java_out}" classpathref="classpath" debug="yes"/>
     <javac srcdir="${java_src}" destdir="${java_out}" classpathref="classpath" debug="yes" target="1.1" verbose="yes" >
-      <include name="${perfmon_path}/applet/**/*.java"/>
+      <include name="${perfmon_path}/applet/*.java"/>
       <include name="${perfmon_path}/PerfSnap.java"/>
-      <include name="${smsc_package_path}/util/applet/**/*.java"/>
+      <include name="${smsc_package_path}/util/applet/*.java"/>
       <include name="${smsc_package_path}/util/SnapBufferReader.java"/>
-      <include name="${topmon_path}/applet/**/*.java"/>
+      <include name="${topmon_path}/applet/*.java"/>
       <include name="${topmon_path}/TopSnap.java"/>
       <include name="${topmon_path}/ErrorSnap.java"/>
       <include name="${topmon_path}/SmeSnap.java"/>
