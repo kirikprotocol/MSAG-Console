@@ -289,7 +289,7 @@ namespace smsc { namespace store
             throw(StorageException);
         void defineSms(SMS& sms)
             throw(StorageException);
-        void getSms(SMS& sms);
+        bool getSms(SMS& sms);
     };
     
     class DestroyStatement : public IdStatement

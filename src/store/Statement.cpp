@@ -547,7 +547,7 @@ void RetrieveStatement::defineSms(SMS& sms)
            (sb4) sizeof(bodyBufferLen));
 }
 
-void RetrieveStatement::getSms(SMS& sms)
+bool RetrieveStatement::getSms(SMS& sms)
 {
     sms.state = (State) uState;
     sms.needArchivate = (bNeedArchivate == 'Y');
@@ -600,14 +600,18 @@ void RetrieveStatement::getSms(SMS& sms)
     convertOCIDateToDate(&submitTime, &(sms.submitTime));
     convertOCIDateToDate(&validTime, &(sms.validTime));
 
-    sms.attach = (bodyBufferLen > MAX_BODY_LENGTH);
-    if (indBody != OCI_IND_NOTNULL) sms.messageBody.setBuffer(0,0);
+    bool result = (bodyBufferLen <= MAX_BODY_LENGTH);
+    if (indBody != OCI_IND_NOTNULL || bodyBufferLen == 0)
+    {
+        sms.messageBody.setBuffer(0,0);
+    }
     else 
     {
         uint8_t* setBuff = new uint8_t[bodyBufferLen];
         memcpy(setBuff, bodyBuffer, bodyBufferLen);
         sms.messageBody.setBuffer(setBuff, bodyBufferLen);
     }
+    return result;
 }
 
 /* --------------------------- DestroyStatement ----------------------- */
@@ -671,7 +675,7 @@ bool RetrieveBodyStatement::getBody(Body& body)
     if (indBody != OCI_IND_NOTNULL) 
     { 
         body.setBuffer(0,0);
-        return false;
+        return (bodyBufferLen == 0);
     }
     else 
     {
@@ -1075,26 +1079,24 @@ void SetBodyStatement::setBody(Body& body)
     check(OCILobOpen(svchp, errhp, locator, OCI_LOB_READWRITE));
     check(OCILobIsOpen(svchp, errhp, locator, &isOpen));
     
-    if (isOpen)
+    if (!isOpen) throw StorageException("Can't open SMS_ATCH::LOB for writing.");
+    
+    uint8_t* buff = body.getBuffer();
+
+    if (amount && buff)
     {
-        uint8_t* buff = body.getBuffer();
-        
-        if (amount && buff)
-        {
-            ub4 size = amount;
+        ub4 size = amount;
 
-            check(OCILobWrite(svchp, errhp, locator, &amount, offset, 
-                              (dvoid *)buff, amount, OCI_ONE_PIECE, (dvoid *)0, 
-                              (sb4 (*)(dvoid *, dvoid *, ub4 *, ub1 *)) 0,
-                              (ub2) 0, (ub1) 0));
+        check(OCILobWrite(svchp, errhp, locator, &amount, offset, 
+                          (dvoid *)buff, amount, OCI_ONE_PIECE, (dvoid *)0, 
+                          (sb4 (*)(dvoid *, dvoid *, ub4 *, ub1 *)) 0,
+                          (ub2) 0, (ub1) 0));
 
-            if (size != amount)
-                throw StorageException("Can't write %d bytes to SMS_ATCH::LOB. "
-                                       "Only %d bytes written.", size, amount);
-        }
-        check(OCILobClose(svchp, errhp, locator));
+        if (size != amount)
+            throw StorageException("Can't write %d bytes to SMS_ATCH::LOB. "
+                                   "Only %d bytes written.", size, amount);
     }
-    else throw StorageException("Can't open SMS_ATCH::LOB for writing.");
+    check(OCILobClose(svchp, errhp, locator));
 }
 
 const char* GetBodyStatement::sql = (const char*)
@@ -1129,36 +1131,33 @@ bool GetBodyStatement::getBody(Body& body)
     check(OCILobOpen(svchp, errhp, locator, OCI_LOB_READONLY));
     check(OCILobIsOpen(svchp, errhp, locator, &isOpen));
     
-    if (isOpen)
+    if (!isOpen) throw StorageException("Can't open SMS_ATCH::LOB for reading.");
+
+    check(OCILobGetLength (svchp, errhp, locator, &amount));
+    if (amount)
     {
-        check(OCILobGetLength (svchp, errhp, locator, &amount));
-        if (amount)
-        {
-            ub4 size = amount;
-            uint8_t* buff = new uint8_t[amount];
+        ub4 size = amount;
+        uint8_t* buff = new uint8_t[amount];
 
-            check(OCILobRead(svchp, errhp, locator, &amount, offset,
-                             (dvoid *)buff, size, (dvoid *)0,
-                             (sb4 (*)(dvoid *, dvoid *, ub4, ub1)) 0,
-                             (ub2) 0, (ub1) 0));
-            
-            if (size != amount)
-                throw StorageException("Can't read %d bytes from SMS_ATCH::LOB. "
-                                       "Only %d bytes read.", size, amount);
+        check(OCILobRead(svchp, errhp, locator, &amount, offset,
+                         (dvoid *)buff, size, (dvoid *)0,
+                         (sb4 (*)(dvoid *, dvoid *, ub4, ub1)) 0,
+                         (ub2) 0, (ub1) 0));
 
-            body.setBuffer(buff, size);
-            ret = true;
-        }
-        else 
-        {
-            body.setBuffer(0, 0);
-            ret = false;
-        }
-        check(OCILobClose(svchp, errhp, locator));
+        if (size != amount)
+            throw StorageException("Can't read %d bytes from SMS_ATCH::LOB. "
+                                   "Only %d bytes read.", size, amount);
+
+        body.setBuffer(buff, size);
+        ret = true;
     }
-    else
-        throw StorageException("Can't open SMS_ATCH::LOB for reading.");
+    else 
+    {
+        body.setBuffer(0, 0);
+        ret = false;
+    }
     
+    check(OCILobClose(svchp, errhp, locator));
     return ret;
 }
 

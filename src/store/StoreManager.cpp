@@ -271,16 +271,14 @@ void StoreManager::doRetrieveSms(StorageConnection* connection,
     retriveStmt->bindId(id);
     retriveStmt->defineSms(sms);
     sword status = retriveStmt->execute(OCI_DEFAULT);
-    if ((status) == OCI_NO_DATA)
+    if (status == OCI_NO_DATA)
     {
         throw NoSuchMessageException(id);
     }
     else 
     {
         retriveStmt->check(status);
-        retriveStmt->getSms(sms);
-
-        if (sms.attach)
+        if (!retriveStmt->getSms(sms)) // Need to load up attachment
         {
             GetBodyStatement* getBodyStmt
                 = connection->getGetBodyStatement();
@@ -338,22 +336,18 @@ void StoreManager::doDestroySms(StorageConnection* connection, SMSId id)
     
     try 
     {
-        destroyBodyStmt->setSMSId(id);
-        destroyBodyStmt->destroyBody();
         destroyStmt->bindId(id);
         connection->check(destroyStmt->execute());
+        if (!destroyStmt->wasDestroyed()) throw NoSuchMessageException(id);
+        destroyBodyStmt->setSMSId(id);
+        destroyBodyStmt->destroyBody();
     }
     catch (StorageException& exc) 
     {
         connection->rollback();
-        throw exc;
+        throw;
     }
     
-    if (!destroyStmt->wasDestroyed()) 
-    {
-        connection->rollback();
-        throw NoSuchMessageException(id);
-    }
     connection->commit();
 }
 void StoreManager::destroySms(SMSId id) 
@@ -431,7 +425,7 @@ void StoreManager::doReplaceSms(StorageConnection* connection,
     catch (StorageException& exc) 
     {
         connection->rollback();
-        throw exc;
+        throw;
     }
     
     // Set Body fields here !!!
