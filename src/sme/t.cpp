@@ -87,7 +87,7 @@ int main(int argc,char* argv[])
   MyListener lst;
   SmppSession ss(cfg,&lst);
   try{
-    ss.connect();//BindType::Transmitter);
+    ss.connect(BindType::Receiver);
     PduSubmitSm sm;
     SMS s;
 //    const char *dst="2";
@@ -158,7 +158,15 @@ int main(int argc,char* argv[])
       for(int x=0;x<smsarr.Count();x++)
       {
         fillSmppPduFromSms(&sm,smsarr[x]);
-        PduSubmitSmResp *resp=tr->submit(sm);
+        PduSubmitSmResp *resp;
+        try{
+          resp=tr->submit(sm);
+        }catch(SmppInvalidBindState& e)
+        {
+          resp=NULL;
+          printf("Pdu sent  in invalid bind state\n");
+        }
+
   //      atr->submit(sm);
         if(resp && resp->get_header().get_commandStatus()==0)
         {

@@ -58,6 +58,11 @@ public:
   virtual const char* what()const throw(){return getTextReason();}
 };
 
+class SmppInvalidBindState:public exception{
+public:
+  virtual const char* what()const throw(){return "Sent pdu in invalid bind state";}
+};
+
 
 struct Buffer{
   char* buffer;
@@ -359,8 +364,12 @@ protected:
     virtual ~InnerSyncTransmitter()
     {
     }
-    SmppHeader* sendPdu(SmppHeader* pdu)
+    SmppHeader* sendPdu(SmppHeader* pdu)throw(SmppInvalidBindState)
     {
+      if(!session.checkOutgoingValidity(pdu))
+      {
+        throw SmppInvalidBindState();
+      }
       Event event;
       int seq=pdu->get_sequenceNumber();
       session.registerPdu(seq,&event);
@@ -369,55 +378,55 @@ protected:
       return session.getPduResponse(seq);
     };
 
-    void sendGenericNack(PduGenericNack& pdu)
+    void sendGenericNack(PduGenericNack& pdu)throw(SmppInvalidBindState)
     {
       pdu.get_header().set_commandId(SmppCommandSet::GENERIC_NACK);
       //pdu.get_header().set_sequenceNumber(session.getNextSeq());
       session.writer.enqueue((SmppHeader*)&pdu);
     };
-    void sendDeliverySmResp(PduDeliverySmResp& pdu)
+    void sendDeliverySmResp(PduDeliverySmResp& pdu)throw(SmppInvalidBindState)
     {
       pdu.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
       //pdu.get_header().set_sequenceNumber(session.getNextSeq());
       session.writer.enqueue((SmppHeader*)&pdu);
     };
-    void sendDataSmResp(PduDataSmResp& pdu)
+    void sendDataSmResp(PduDataSmResp& pdu)throw(SmppInvalidBindState)
     {
       pdu.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
       //pdu.get_header().set_sequenceNumber(session.getNextSeq());
       session.writer.enqueue((SmppHeader*)&pdu);
     };
-    PduSubmitSmResp* submit(PduSubmitSm& pdu)
+    PduSubmitSmResp* submit(PduSubmitSm& pdu)throw(SmppInvalidBindState)
     {
       pdu.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
       pdu.get_header().set_sequenceNumber(session.getNextSeq());
       return (PduSubmitSmResp*)sendPdu((SmppHeader*)&pdu);
     };
-    PduMultiSmResp* submitm(PduMultiSm& pdu)
+    PduMultiSmResp* submitm(PduMultiSm& pdu)throw(SmppInvalidBindState)
     {
       pdu.get_header().set_commandId(SmppCommandSet::SUBMIT_MULTI);
       pdu.get_header().set_sequenceNumber(session.getNextSeq());
       return (PduMultiSmResp*)sendPdu((SmppHeader*)&pdu);
     };
-    PduDataSmResp* data(PduDataSm& pdu)
+    PduDataSmResp* data(PduDataSm& pdu)throw(SmppInvalidBindState)
     {
       pdu.get_header().set_commandId(SmppCommandSet::DATA_SM);
       pdu.get_header().set_sequenceNumber(session.getNextSeq());
       return (PduDataSmResp*)sendPdu((SmppHeader*)&pdu);
     };
-    PduQuerySmResp* query(PduQuerySm& pdu)
+    PduQuerySmResp* query(PduQuerySm& pdu)throw(SmppInvalidBindState)
     {
       pdu.get_header().set_commandId(SmppCommandSet::QUERY_SM);
       pdu.get_header().set_sequenceNumber(session.getNextSeq());
       return (PduQuerySmResp*)sendPdu((SmppHeader*)&pdu);
     };
-    PduCancelSmResp* cancel(PduCancelSm& pdu)
+    PduCancelSmResp* cancel(PduCancelSm& pdu)throw(SmppInvalidBindState)
     {
       pdu.get_header().set_commandId(SmppCommandSet::CANCEL_SM);
       pdu.get_header().set_sequenceNumber(session.getNextSeq());
       return (PduCancelSmResp*)sendPdu((SmppHeader*)&pdu);
     };
-    PduReplaceSmResp* replace(PduReplaceSm& pdu)
+    PduReplaceSmResp* replace(PduReplaceSm& pdu)throw(SmppInvalidBindState)
     {
       pdu.get_header().set_commandId(SmppCommandSet::REPLACE_SM);
       pdu.get_header().set_sequenceNumber(session.getNextSeq());
@@ -435,8 +444,12 @@ protected:
     {
     }
 
-    SmppHeader* sendPdu(SmppHeader* pdu)
+    SmppHeader* sendPdu(SmppHeader* pdu)throw(SmppInvalidBindState)
     {
+      if(!session.checkOutgoingValidity(pdu))
+      {
+        throw SmppInvalidBindState();
+      }
       int seq=pdu->get_sequenceNumber();
       session.registerPdu(seq,NULL);
       session.writer.enqueue(pdu);
@@ -467,7 +480,7 @@ public:
   {
     close();
   }
-  void connect(int bindtype=BindType::Transceiver)
+  void connect(int bindtype=BindType::Transceiver)throw(SmppConnectException)
   {
     if(!closed)return;
     if(socket.Init(cfg.host.c_str(),cfg.port,cfg.timeOut)==-1)
@@ -607,7 +620,7 @@ protected:
     lock.Delete(seq);
     return retval;
   }
-  bool checkIncomingValidity(SmppHeader* pdu)
+  /*bool checkIncomingValidity(SmppHeader* pdu)
   {
     using namespace SmppCommandSet;
     switch(pdu->get_commandId())
@@ -650,7 +663,118 @@ protected:
       case BindType::Transceiver:return true;
     }
     return false;
+  }*/
+  bool checkIncomingValidity(SmppHeader* pdu)
+  {
+    using namespace SmppCommandSet;
+    switch(pdu->get_commandId())
+    {
+      case BIND_TRANSMITTER_RESP:
+      case BIND_RECIEVER_RESP:
+      case BIND_TRANCIEVER_RESP:
+        return true;
+    }
+    switch(bindType)
+    {
+      case BindType::Receiver:
+        switch(pdu->get_commandId())
+        {
+          case DELIVERY_SM:
+          case GENERIC_NACK:
+          case UNBIND_RESP:
+            return true;
+          default:
+            return false;
+        }
+      case BindType::Transmitter:
+        switch(pdu->get_commandId())
+        {
+          case GENERIC_NACK:
+          case SUBMIT_SM_RESP:
+          case UNBIND_RESP:
+          case CANCEL_SM_RESP:
+          case QUERY_SM_RESP:
+          case REPLACE_SM_RESP:
+          case UNBIND:
+            return true;
+          default:
+            return false;
+        }
+      case BindType::Transceiver:
+        switch(pdu->get_commandId())
+        {
+          case GENERIC_NACK:
+          case SUBMIT_SM_RESP:
+          case UNBIND_RESP:
+          case CANCEL_SM_RESP:
+          case QUERY_SM_RESP:
+          case REPLACE_SM_RESP:
+          case UNBIND:
+          case DELIVERY_SM:
+            return true;
+          default:
+            return false;
+        }
+    }
+    return false;
   }
+
+  bool checkOutgoingValidity(SmppHeader* pdu)
+  {
+    using namespace SmppCommandSet;
+    switch(pdu->get_commandId())
+    {
+      case BIND_TRANSMITTER:
+      case BIND_RECIEVER:
+      case BIND_TRANCIEVER:
+        return true;
+    }
+    switch(bindType)
+    {
+      case BindType::Receiver:
+        switch(pdu->get_commandId())
+        {
+          case UNBIND:
+          case UNBIND_RESP:
+          case DELIVERY_SM_RESP:
+          case GENERIC_NACK:
+            return true;
+          default:
+            return false;
+        }
+      case BindType::Transmitter:
+        switch(pdu->get_commandId())
+        {
+          case SUBMIT_SM:
+          case GENERIC_NACK:
+          case CANCEL_SM:
+          case REPLACE_SM:
+          case QUERY_SM:
+          case UNBIND:
+          case UNBIND_RESP:
+            return true;
+          default:
+            return false;
+        }
+      case BindType::Transceiver:
+        switch(pdu->get_commandId())
+        {
+          case SUBMIT_SM:
+          case GENERIC_NACK:
+          case CANCEL_SM:
+          case REPLACE_SM:
+          case QUERY_SM:
+          case UNBIND:
+          case UNBIND_RESP:
+          case DELIVERY_SM_RESP:
+            return true;
+          default:
+            return false;
+        }
+    }
+    return false;
+  }
+
 
   void processIncoming(SmppHeader* pdu)
   {

@@ -86,6 +86,7 @@ public:
   {
     if(!CheckValidOutgoingCmd(cmd))
     {
+      __trace2__("SmppProxy::putIncomingCommand: command for invalid bind state: %d",cmd->get_commandId());
       SmscCommand errresp;
       switch(cmd->get_commandId())
       {
@@ -112,14 +113,10 @@ public:
       }
       //cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS
       //putCommand(errresp);
+      __trace2__("SmppProxy::putIncomingCommand: error answer cmdid=%d",errresp->get_commandId());
       {
         MutexGuard g(mutexout);
         if(!opened)return;
-        if(outqueue.Count()==SMPP_PROXY_QUEUE_LIMIT)
-        {
-          throw ProxyQueueLimitException();
-        }
-        trace2("put command:total %d commands",outqueue.Count());
         outqueue.Push(errresp,errresp->get_priority());
       }
       smppSocket->notifyOutThread();
@@ -252,7 +249,6 @@ bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
         case QUERY_RESP:
         case REPLACE_RESP:
         case UNBIND:
-        case DELIVERY_RESP:
         case DELIVERY:
           return true;
         default:
@@ -291,9 +287,23 @@ bool SmppProxy::CheckValidOutgoingCmd(const SmscCommand& cmd)
         default:
           return false;
       }
-    case proxyTransceiver:return true;
+    case proxyTransceiver:
+      switch(cmd->get_commandId())
+      {
+        case SUBMIT:
+        case GENERIC_NACK:
+        case CANCEL:
+        case REPLACE:
+        case QUERY:
+        case UNBIND:
+        case UNBIND_RESP:
+        case DELIVERY_RESP:
+          return true;
+        default:
+          return false;
+      }
   }
-  return true;
+  return false;
 }
 
 

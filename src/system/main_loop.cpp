@@ -169,7 +169,7 @@ void Smsc::mainLoop()
       cmd->sourceId=src_proxy->getSystemId();
     }catch(...)
     {
-      __trace2__("Source proxy died after selection\n");
+      __trace2__("Source proxy died after selection");
       continue;
     }
     switch(cmd->get_commandId())
@@ -215,6 +215,11 @@ void Smsc::mainLoop()
           continue;
         }
         break;
+      }
+      case __CMD__(HLRALERT):
+      {
+        //alertAgent->putCommand(cmd);
+        continue;
       }
     }
     eventqueue.enqueue(id,cmd);

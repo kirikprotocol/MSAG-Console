@@ -231,6 +231,7 @@ int SmppInputThread::Execute()
             }
             continue;
           }
+          __trace2__("SmppInputThread: received commandId=%d",pdu->get_commandId());
           switch(pdu->get_commandId())
           {
             case SmppCommandSet::BIND_RECIEVER:
@@ -341,7 +342,7 @@ int SmppInputThread::Execute()
                 wr=ss->getSocket()->Write(buf+wroff,size-wroff);
                 if(wr<=0)break;
                 wroff+=wr;
-                trace2("sending:%d/%d\n",wroff,size);
+                trace2("sending:%d/%d",wroff,size);
               }
               ss->assignProxy(proxy);
               if(err)
@@ -387,6 +388,10 @@ int SmppInputThread::Execute()
               {
               }
               //ss->getSocket()->setData(SOCKET_SLOT_KILL,1);
+            }break;
+            case SmppCommandSet::GENERIC_NACK:
+            {
+              __trace__("SmppInputThread: received gnack");
             }break;
             case SmppCommandSet::SUBMIT_SM:
             //case SmppCommandSet::SUBMIT_SM_RESP:
@@ -553,8 +558,11 @@ int SmppOutputThread::Execute()
       }
       if(!ss->hasData() && ss->getProxy() && ss->getProxy()->hasOutput())
       {
-        SmppHeader *pdu=ss->getProxy()->getOutgoingCommand().makePdu();
-        trace2("SEND: seq number:%d",pdu->get_sequenceNumber());
+        SmscCommand cmd=ss->getProxy()->getOutgoingCommand();
+
+        SmppHeader *pdu=cmd.makePdu();
+        trace2("SmppOutThread: commandId=%d, seq number:%d",
+          pdu->get_commandId(),pdu->get_sequenceNumber());
         int size=calcSmppPacketLength(pdu);
         char* buf=ss->getBuffer(size);
         SmppStream st;

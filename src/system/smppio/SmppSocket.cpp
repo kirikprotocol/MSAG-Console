@@ -31,13 +31,11 @@ int SmppSocket::send()
 {
   int towrite=dataLength-bufferOffset;
   if(towrite==0)return 1;
-  __trace2__("send:(%d,%d,%d,%d)%d(%d)",
-    (int)buffer[0],(int)buffer[1],(int)buffer[2],(int)buffer[3],towrite,dataLength);
+  __trace2__("send:%d/%d",towrite,dataLength);
   int sent=socket->Write(buffer+bufferOffset,towrite);
   if(sent==-1)return -1;
   bufferOffset+=sent;
-  __trace2__("sent:%d,%d/%d,(%d,%d,%d,%d)",sent,bufferOffset,dataLength,
-    (int)buffer[0],(int)buffer[1],(int)buffer[2],(int)buffer[3]);
+  __trace2__("sent:%d,%d/%d",sent,bufferOffset,dataLength);
   if(bufferOffset==dataLength)return 1;
   return 0;
 }
@@ -71,7 +69,7 @@ int SmppSocket::receive()
   {
     n=4;
   }
-  trace2("packetsize:%d, bufferoffset:%d, toread:%d\n",packetsize,bufferOffset,n);
+  trace2("packetsize:%d, bufferoffset:%d, toread:%d",packetsize,bufferOffset,n);
   int rd=socket->Read(buffer+bufferOffset,n);
   if(rd<=0)
   {
@@ -89,7 +87,7 @@ smsc::smpp::SmppHeader* SmppSocket::decode()
   smsc::smpp::SmppStream s;
   //for(int i=0;i<bufferOffset;i++)printf("%02x ",buffer[i]);
   //printf("\n");fflush(stdout);
-  trace2("decode: %p, %d\n",buffer,bufferOffset);
+  trace2("decode: %p, %d",buffer,bufferOffset);
   smsc::smpp::assignStreamWith(&s,buffer,bufferOffset,true);
   smsc::smpp::SmppHeader* pdu=smsc::smpp::fetchSmppPdu(&s);
   if(!pdu)
@@ -98,7 +96,7 @@ smsc::smpp::SmppHeader* SmppSocket::decode()
 #ifndef DISABLE_TRACING
     for(int i=0;i<bufferOffset;i++)
     {
-      fprintf(stderr,"%02X ",(int)buffer[i]);
+      fprintf(stderr,"%02X ",(int)(unsigned char)buffer[i]);
     }
     fprintf(stderr,"\n");
 #endif
