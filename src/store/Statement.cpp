@@ -1089,7 +1089,7 @@ void ToDeletedStatement::bindId(SMSId id)
 }
     
 const char* UpdateSeqNumStatement::sql = (const char*)
-"UPDATE SMS_MSG SET SEQ_NUM=SEG_NUM+:INC,\
+"UPDATE SMS_MSG SET SEQ_NUM=SEG_NUM+:INC\
  WHERE ID=:ID AND ST=:ENROUTE AND MSG_REF IS NOT NULL";
 UpdateSeqNumStatement::UpdateSeqNumStatement(Connection* connection, bool assign)
     throw(StorageException)
