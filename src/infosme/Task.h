@@ -84,7 +84,7 @@ namespace smsc { namespace infosme
         time_t  activePeriodStart;  // only HH:mm:ss in seconds
         time_t  activePeriodEnd;    // only HH:mm:ss in seconds
         
-        WeekDaysSet activeWeekDays; // Mon, Thu ...
+        WeekDaysSet activeWeekDays; // Mon, Tue ...
 
         std::string dsId;
         std::string tablePrefix;

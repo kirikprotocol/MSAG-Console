@@ -185,7 +185,7 @@ void MonthlySchedule::init(ConfigView* config)
     {
         if (!initWeekDay(config->getString("weekDay")))
             throw ConfigException("Invalid weekDay parameter, should be one of "
-                                  "week days (Mon, Thu, ...).");
+                                  "week days (Mon, Tue, ...).");
         if (!initWeekDayN(config->getString("weekDayN")))
             throw ConfigException("Invalid weekDayN parameter, should be one of: "
                                   "first, second, third, fourth, last.");
