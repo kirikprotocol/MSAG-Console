@@ -6,6 +6,27 @@ namespace system{
 
 using namespace smsc::util;
 
+static int strprintf(string& s,const char* fmt,...)
+{
+  va_list arglist;
+  int sz=1024;
+  auto_ptr<char> buf(new char[sz]);
+  va_start(arglist,fmt);
+  int size=vsnprintf( buf.get(), sz,fmt,arglist);
+  va_end(arglist);
+  if(size<0)
+  {
+    sz+=-size+16;
+    buf=auto_ptr<char>(new char[sz]);
+    va_end(arglist);
+    va_start(arglist,fmt);
+    vsnprintf( buf.get(), sz,fmt,arglist);
+  }
+  va_end(arglist);
+  s=buf.get();
+  return size;
+}
+
 int StatusSme::Execute()
 {
   SmscCommand cmd,resp;
@@ -48,6 +69,14 @@ int StatusSme::Execute()
     string request=body;
     string answer;
 
+    string arg;
+    string::size_type pos=request.find(' ');
+    if(pos!=string::npos)
+    {
+      arg=request.substr(pos+1);
+      request.erase(pos);
+    }
+
     if(request=="scheduler" || request=="sc")
     {
       char buf[32];
@@ -67,10 +96,9 @@ int StatusSme::Execute()
       char buf[64];
       sprintf(buf,"%d tasks in task container",smsc->tasks.tasksCount);
       answer=buf;
-    }else if (request=="tc" || request.substr(0,3)=="tc ")
+    }else if (request=="tc")
     {
-      int pos=request.find(" ");
-      if(pos==string::npos)
+      if(arg.length()==0)
       {
         int cnt;
         {
@@ -82,8 +110,7 @@ int StatusSme::Execute()
         answer=buf;
       }else
       {
-        string sme=request.substr(pos+1);
-        SmeIndex idx=smsc->getSmeIndex(sme);
+        SmeIndex idx=smsc->getSmeIndex(arg);
         if(idx==INVALID_SME_INDEX)
         {
           answer="unknown sme";
@@ -99,6 +126,25 @@ int StatusSme::Execute()
           int ptf=smsc->tcontrol->cfg.protectTimeFrame;
           sprintf(buf,"deliverCnt=%lf, receivedCnt=%lf",(double)dcnt/ptf,(double)rcnt/ptf);
           answer=buf;
+        }
+      }
+    }else if(request=="getsched")
+    {
+      if(arg.length()==0)
+      {
+        answer="usage: getsched msgId";
+      }else
+      {
+        SMSId id;
+        sscanf(arg.c_str(),"%lld",&id);
+        __trace2__("getsched:id=%lld",id);
+        time_t sc=smsc->scheduler->getScheduleById(id);
+        if(sc==0)
+        {
+          answer="sms not scheduled or in delivery";
+        }else
+        {
+          strprintf(answer,"sms scheduled to %u",sc);
         }
       }
     }

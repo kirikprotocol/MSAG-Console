@@ -2695,8 +2695,8 @@ StateType StateMachine::alert(Tuple& t)
   sms.getDestinationAddress().toString(bufdst,sizeof(bufdst));
   smsLog->warn("ALERT: delivery timed out(%s->%s)",bufsrc,bufdst);
   sms.setLastResult(Status::DELIVERYTIMEDOUT);
-  if(sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3==1 ||
-     sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3==2)
+  if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1 ||
+     (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)
   {
     sms.state=EXPIRED;
     try{

@@ -109,6 +109,18 @@ public:
     return "scheduler";
   }
 
+  time_t getScheduleById(SMSId id)
+  {
+    MutexGuard g(mon);
+    __trace2__("Scheduler: %d ids in scheduler",timeLine.size());
+    for(TimeLineMap::iterator it=timeLine.begin();it!=timeLine.end();it++)
+    {
+      __trace2__("Scheduler: check %lld",it->second.id);
+      if(it->second.id==id)return it->first;
+    }
+    return 0;
+  }
+
 protected:
   EventQueue &queue;
   mutable EventMonitor mon;
