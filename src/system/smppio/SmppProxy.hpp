@@ -9,6 +9,7 @@
 #include "system/smppio/SmppSocket.hpp"
 #include "smeman/smsccmd.h"
 #include <string>
+#include "util/Exception.hpp"
 
 namespace smsc{
 namespace system{
@@ -22,6 +23,7 @@ const int proxyTransceiver=3;
 
 using namespace smsc::smeman;
 using namespace smsc::core::synchronization;
+using smsc::util::Exception;
 
 class SmppSocket;
 
@@ -78,6 +80,7 @@ public:
   virtual SmscCommand getCommand()
   {
     MutexGuard g(mutexin);
+    if(inqueue.Count()==0)throw Exception("SmppProxy::getCommand: no commands in input queue");
     SmscCommand cmd;
     inqueue.Shift(cmd);
     trace2("get command:%p",*((void**)&cmd));

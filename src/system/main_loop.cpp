@@ -165,6 +165,10 @@ void Smsc::mainLoop()
       if(prio>=32)prio=31;
       cmd->set_priority(prio);
       cmd->sourceId=src_proxy->getSystemId();
+    }catch(exception& e)
+    {
+      __trace2__("Source proxy died after selection: %s",e.what());
+      continue;
     }catch(...)
     {
       __trace2__("Source proxy died after selection");
