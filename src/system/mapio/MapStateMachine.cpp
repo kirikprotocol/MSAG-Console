@@ -118,7 +118,7 @@ static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
   dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
   __trace2__("MAP::%s:DELIVERY_SM %s",__FUNCTION__,RouteToString(dialog).c_str());
   mkMapAddress( &dialog->m_msAddr, dialog->sms->getDestinationAddress().value, dialog->sms->getDestinationAddress().length );
-  mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDERSS().c_str(), 11 );
+  mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
   mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
   mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
   __trace2__("MAP::%s: Query HLR AC version",__FUNCTION__);
