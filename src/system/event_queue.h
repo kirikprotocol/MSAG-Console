@@ -87,7 +87,7 @@ class EventQueue
     {
       CmdRecord** cmd = &cmds;
       unsigned long t = time(0);
-      __trace2__("try to select command for %p(%lld)",this,msgId);
+      //!__trace2__("try to select command for %p(%lld)",this,msgId);
       while(*cmd)
       {
         if ( StateChecker::commandHasTimeout((*cmd)->command) )
@@ -95,14 +95,14 @@ class EventQueue
           if ( t > ((*cmd)->timeout) )
           {
             // remove command
-            __trace2__("delete command:%lld (%lu/%lu)",msgId,t,(*cmd)->timeout);
+            //!__trace2__("delete command:%lld (%lu/%lu)",msgId,t,(*cmd)->timeout);
             CmdRecord* tmp = *cmd;
             *cmd = (*cmd)->next;
             delete tmp;
             continue;
           }
         }
-        __trace2__("getnextcommand(%lld): %d,%d",msgId,state,(*cmd)->command->get_commandId());
+        //!__trace2__("getnextcommand(%lld): %d,%d",msgId,state,(*cmd)->command->get_commandId());
         if ( StateChecker::commandIsValid(state,(*cmd)->command) )
         {
           c = (*cmd)->command;
@@ -298,7 +298,7 @@ public:
         for (Locker* iter = first_unlocked;
              iter != 0; ) //iter = iter->next_unlocked
         {
-          __trace2__("iterate unlocked lockers:%lld",iter->msgId);
+          //!__trace2__("iterate unlocked lockers:%lld",iter->msgId);
           bool success = iter->getNextCommand(result.command);
           if ( success || !iter->cmds || StateChecker::stateIsSuperFinal(iter->state))
           {
