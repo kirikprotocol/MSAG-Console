@@ -124,6 +124,7 @@ int main(int argc,char* argv[])
     //s.setSubmitTime(0);
     //s.setPriority(0);
     //s.setProtocolIdentifier(0);
+    s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
     s.setDeliveryReport(0);
     s.setArchivationRequested(false);
     s.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,3);

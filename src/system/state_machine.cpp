@@ -511,7 +511,7 @@ StateType StateMachine::submit(Tuple& t)
 
       sendNotifyReport(*sms,t.msgId,"destination unavailable");
 
-      store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(*sms));
+      store->changeSmsStateToEnroute(t.msgId,d,Status::SMENOTCONNECTED,rescheduleSms(*sms));
       smsc->notifyScheduler();
     }catch(...)
     {
@@ -529,7 +529,7 @@ StateType StateMachine::submit(Tuple& t)
       //time_t now=time(NULL);
       Descriptor d;
       __trace__("SUBMIT_SM: change state to enroute");
-      store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(*sms));
+      store->changeSmsStateToEnroute(t.msgId,d,Status::SMENOTCONNECTED,rescheduleSms(*sms));
       smsc->notifyScheduler();
     }catch(...)
     {
@@ -549,7 +549,7 @@ StateType StateMachine::submit(Tuple& t)
       //time_t now=time(NULL);
       Descriptor d;
       __trace__("SUBMIT_SM: change state to enroute");
-      store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(*sms));
+      store->changeSmsStateToEnroute(t.msgId,d,Status::SYSERR,rescheduleSms(*sms));
       smsc->notifyScheduler();
     }catch(...)
     {
@@ -609,7 +609,7 @@ StateType StateMachine::submit(Tuple& t)
       __trace__("SUBMIT: Attempt to putCommand for sme in invalid bind state");
       try{
         Descriptor d;
-        store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(*sms));
+        store->changeSmsStateToEnroute(t.msgId,d,Status::THROTTLED,rescheduleSms(*sms));
         smsc->notifyScheduler();
       }catch(...)
       {
@@ -625,7 +625,7 @@ StateType StateMachine::submit(Tuple& t)
     sendNotifyReport(*sms,t.msgId,"system failure");
     try{
       Descriptor d;
-      store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(*sms));
+      store->changeSmsStateToEnroute(t.msgId,d,Status::THROTTLED,rescheduleSms(*sms));
       smsc->notifyScheduler();
     }catch(...)
     {
@@ -708,7 +708,7 @@ StateType StateMachine::forward(Tuple& t)
       //time_t now=time(NULL);
       Descriptor d;
       __trace__("FORWARD: change state to enroute");
-      store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(sms));
+      store->changeSmsStateToEnroute(t.msgId,d,Status::NOROUTE,rescheduleSms(sms));
       smsc->notifyScheduler();
     }catch(...)
     {
@@ -729,7 +729,7 @@ StateType StateMachine::forward(Tuple& t)
       //time_t now=time(NULL);
       Descriptor d;
       __trace__("FORWARD: change state to enroute");
-      store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(sms));
+      store->changeSmsStateToEnroute(t.msgId,d,Status::SMENOTCONNECTED,rescheduleSms(sms));
       smsc->notifyScheduler();
     }catch(...)
     {
@@ -790,7 +790,7 @@ StateType StateMachine::forward(Tuple& t)
     {
       try{
         Descriptor d;
-        store->changeSmsStateToEnroute(t.msgId,d,0,time(NULL));
+        store->changeSmsStateToEnroute(t.msgId,d,sms.getLastTime(),time(NULL));
       }catch(...)
       {
         __trace__("FORWARD: failed to reschedule sms to now");
@@ -809,7 +809,7 @@ StateType StateMachine::forward(Tuple& t)
       //time_t now=time(NULL);
       Descriptor d;
       __trace__("FORWARD: change state to enroute");
-      store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(sms));
+      store->changeSmsStateToEnroute(t.msgId,d,Status::THROTTLED,rescheduleSms(sms));
       smsc->notifyScheduler();
     }catch(...)
     {
@@ -847,7 +847,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         try{
           Descriptor d;
           __trace__("DELIVERYRESP: change state to enroute");
-          store->changeSmsStateToEnroute(t.msgId,d,0,time(NULL)+2);
+          store->changeSmsStateToEnroute(t.msgId,d,GET_STATUS_CODE(t.command->get_resp()->get_status()),time(NULL)+2);
         }catch(...)
         {
           __trace__("DELIVERYRESP: failed to change state to enroute");
@@ -860,7 +860,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         try{
           Descriptor d;
           __trace__("DELIVERYRESP: change state to enroute");
-          store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(sms));
+          store->changeSmsStateToEnroute(t.msgId,d,GET_STATUS_CODE(t.command->get_resp()->get_status()),rescheduleSms(sms));
         }catch(...)
         {
           __trace__("DELIVERYRESP: failed to change state to enroute");
@@ -876,7 +876,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         try{
           Descriptor d;
           __trace__("DELIVERYRESP: change state to undeliverable");
-          store->changeSmsStateToUndeliverable(t.msgId,d,0);
+          store->changeSmsStateToUndeliverable(t.msgId,d,GET_STATUS_CODE(t.command->get_resp()->get_status()));
         }catch(...)
         {
           __trace__("DELIVERYRESP: failed to change state to undeliverable");
@@ -971,7 +971,7 @@ StateType StateMachine::alert(Tuple& t)
     return UNKNOWN_STATE;
   }
   try{
-    store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(sms));
+    store->changeSmsStateToEnroute(t.msgId,d,Status::DELIVERYTIMEDOUT,rescheduleSms(sms));
   }catch(std::exception& e)
   {
     __trace2__("ALERT: failed to change state to enroute:%s",e.what());
