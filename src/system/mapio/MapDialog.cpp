@@ -465,10 +465,10 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
     else
     {
       unsigned char value = 0;
-      if ( sms->hasIntProperty(MS_FACILITIES) ){
+      if ( sms->hasIntProperty(SMPP_MS_MSG_WAIT_FACILITIES) ){
         if ( encoding == MA_UCS2_ENCODING ){
           value = 0xe0;
-          unsigned _val = sms->getIntProperty(MS_FACILITIES);
+          unsigned _val = sms->getIntProperty(SMPP_MS_MSG_WAIT_FACILITIES);
           value |= _val&0x3;
           if ( _val&0x80 )value |= 0x8;
         }
@@ -488,7 +488,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
                        ms_validity);
             throw runtime_error("bad ms_validity value");
           }
-          unsigned _val = sms->getIntProperty(MS_FACILITIES);
+          unsigned _val = sms->getIntProperty(SMPP_MS_MSG_WAIT_FACILITIES);
           value |= _val&0x3;
           if ( _val&0x80 )value |= 0x8;
         }
