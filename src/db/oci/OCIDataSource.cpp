@@ -32,7 +32,7 @@ Mutex OCIConnection::doConnectLock;
 const int FUNCTION_MAX_ARGUMENTS_COUNT  = 100;
 const char* FUNCTION_RETURN_ATTR_NAME   = "RETURN";
 const int FUNCTION_RETURN_ATTR_LEN      = strlen(FUNCTION_RETURN_ATTR_NAME);
-const int MAX_DB_CHAR_STR_LENGTH        = 2000;
+const int MAX_DB_CHAR_STR_LENGTH        = 4000;
 
 OCIConnection::OCIConnection(const char* instance,
                              const char* user, const char* password)
@@ -256,7 +256,7 @@ OCIDataDescriptor::OCIDataDescriptor(ub2 _type, sb4 _size)
         type = SQLT_ODT;
         break;
     case SQLT_CHR: case SQLT_STR: case SQLT_VST: case SQLT_AFC: case SQLT_AVC:
-        if (_size == 0) _size = MAX_DB_CHAR_STR_LENGTH;
+        if (_size == 0 || _size > MAX_DB_CHAR_STR_LENGTH) _size = MAX_DB_CHAR_STR_LENGTH;
         data = (dvoid *)(new uint8_t[size = _size+1]);
         ((char *)data)[0] = '\0';
         type = SQLT_STR;
@@ -697,7 +697,7 @@ OCIResultSet::OCIResultSet(OCIStatement* statement)
     current position, starting at 1 */
     while (status==OCI_SUCCESS)
     {
-        ub2 type = 0; ub4 size = 0;
+        ub2 type = 0; ub2 size = 0;
 
         /* Retrieve the data type attribute */
         owner->check(OCIAttrGet((dvoid *) param, (ub4) OCI_DTYPE_PARAM,
@@ -989,7 +989,7 @@ OCIRoutine::OCIRoutine(OCIConnection* connection,
 
             try
             {
-                ub2 type = 0; ub4 size = 0;
+                ub2 type = 0; ub2 size = 0;
                 if (i != 0)
                 {
                     check(OCIAttrGet(arg, OCI_DTYPE_PARAM, &atr, &atrlen,
