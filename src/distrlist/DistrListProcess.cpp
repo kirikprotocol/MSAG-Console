@@ -3,6 +3,8 @@
 #include "DistrListProcess.h"
 #include "../system/status.h"
 #include "util/smstext.h"
+#include <string>
+#include <ctype.h>
 #define DLP_TIMEOUT 1000
 #define WAIT_SUBMISSION (8)
 
@@ -86,6 +88,12 @@ uint32_t DistrListProcess::getNextSequenceNumber()
   return ++seq;
 }
 
+
+static void lowercase(string& str)
+{
+  for(int i=0;i<str.length();i++)str[i]=tolower(str[i]);
+}
+
 //uint32_t DistrListProcess::getUniqueId() const {__unreachable__("must be implemented in proxy or wrapper");return 0;}
 //uint32_t DistrListProcess::getIndex() const {__unreachable__("must be implemented in proxy or wrapper");return 0;}
 //unsigned long DistrListProcess::getPreferredTimeout() { return 8; }
@@ -154,14 +162,22 @@ int DistrListProcess::Execute()
       {
         cmd=s;
       }
+
+      lowercase(cmd);
+      lowercase(arg);
+
       string answer;
-      string tmpl;
+      string tmpl="dl.unknowncommand";
       string reason;
       char addr[32];
       sms.getOriginatingAddress().getValue(addr);
       string fullarg=addr;
       fullarg+='/';
       fullarg+=arg;
+      if(arg.length()>0 && arg[0]=='/')
+      {
+        fullarg=arg.substr(1);
+      }
       try{
         if(cmd!="send" && arg.find('/')!=string::npos)
         {
