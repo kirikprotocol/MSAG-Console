@@ -255,6 +255,24 @@ int getMaxChars(uint8_t dataCoding)
 	}
 }
 
+int findPos(const string& text, const string& expected, int segmentSize)
+{
+	static int tolerance = 3; //допуск
+	int segments = 1 + (expected.length() - 1) / segmentSize;
+	for (int seg = 0; seg < segments; seg++)
+	{
+		for (int shift = 0; shift <= tolerance * seg; shift++)
+		{
+			int pos = seg * segmentSize - shift;
+			if (!expected.compare(pos, text.length(), text))
+			{
+				return pos;
+			}
+		}
+	}
+	return string::npos;
+}
+
 }
 }
 }

@@ -34,6 +34,7 @@ vector<int> compare(uint8_t dc1, const char* str1, int len1,
 
 uint8_t getDataCoding(int num);
 int getMaxChars(uint8_t dataCoding);
+int findPos(const string& text, const string& expected, int segmentSize);
 
 }
 }
