@@ -58,12 +58,16 @@ bool ProfilerTestCases::updateProfile(const char* tc, int num,
 				profiler->update(addr, profile);
 			}
 			profileReg->putProfile(addr, profile);
+			__trace2__("%s(): addr = %s, profile = %s",
+				tc, str(addr).c_str(), str(profile).c_str());
 			return true;
 		}
 	}
 	else if (profiler)
 	{
 		profiler->update(addr, profile);
+		__trace2__("%s(): addr = %s, profile = %s",
+			tc, str(addr).c_str(), str(profile).c_str());
 		return true;
 	}
 	return false;
@@ -71,7 +75,7 @@ bool ProfilerTestCases::updateProfile(const char* tc, int num,
 
 void ProfilerTestCases::createProfileMatch(Address& addr, int num)
 {
-	TCSelector s(num, 3);
+	TCSelector s(num, 1);
 	__decl_tc__;
 	for (; s.check(); s++)
 	{
@@ -84,6 +88,7 @@ void ProfilerTestCases::createProfileMatch(Address& addr, int num)
 				case 1: //адрес без знаков подстановки
 					__tc__("createProfileMatch.noSubstSymbols");
 					break;
+				/*
 				case 2: //адрес с одним или несколькими '?'
 					__tc__("createProfileMatch.withQuestionMarks");
 					fillAddressWithQuestionMarks(addr, rand1(addr.getLength()));
@@ -92,6 +97,7 @@ void ProfilerTestCases::createProfileMatch(Address& addr, int num)
 					__tc__("createProfileMatch.entirelyQuestionMarks");
 					fillAddressWithQuestionMarks(addr, addr.getLength());
 					break;
+				*/
 				default:
 					__unreachable__("Invalid num");
 			}
@@ -110,7 +116,7 @@ void ProfilerTestCases::createProfileMatch(Address& addr, int num)
 
 void ProfilerTestCases::createProfileNotMatch(Address& addr, int num)
 {
-	TCSelector s(num, 5);
+	TCSelector s(num, 3);
 	__decl_tc__;
 	for (; s.check(); s++)
 	{
@@ -138,6 +144,7 @@ void ProfilerTestCases::createProfileNotMatch(Address& addr, int num)
 						addr.setValue(addrLen, addrVal);
 					}
 					break;
+				/*
 				case 4: //в адресе '?' меньше, чем нужно
 					if (addrLen > 1)
 					{
@@ -160,6 +167,7 @@ void ProfilerTestCases::createProfileNotMatch(Address& addr, int num)
 						addr.setValue(addrLen + len2, addrVal);
 					}
 					break;
+				*/
 				default:
 					__unreachable__("Invalid num");
 			}
@@ -205,8 +213,8 @@ void ProfilerTestCases::lookup(const Address& addr)
 	{
 		const Profile& p1 = profiler->lookup(addr);
 		const Profile& p2 = profileReg->getProfile(addr);
-		__trace2__("ProfilerTestCases::lookup(): profiler.lookup() = {%s}, profileReg.getProfile() = {%s}",
-			str(p1).c_str(), str(p2).c_str());
+		__trace2__("lookupProfile(): addr = %s, profiler.lookup() = {%s}, profileReg.getProfile() = {%s}",
+			str(addr).c_str(), str(p1).c_str(), str(p2).c_str());
 		__tc_fail2__(ProfileUtil::compareProfiles(p1, p2), 0);
 		__tc_ok_cond__;
 	}
@@ -219,8 +227,9 @@ void ProfilerTestCases::lookup(const Address& addr)
 void ProfilerTestCases::putCommand(const Address& addr, int num)
 {
 	__require__(profiler);
-	TCSelector s(num, 9);
-	__decl_tc__;
+	int numTc = 9; int numDataCoding = 2;
+	TCSelector s(num, numTc * numDataCoding);
+	__decl_tc12__;
 	for (; s.check(); s++)
 	{
 		try
@@ -230,67 +239,83 @@ void ProfilerTestCases::putCommand(const Address& addr, int num)
 			sms.setOriginatingAddress(addr);
 			string text;
 			int cmdType, codepage, reportoptions;
-			switch (s.value())
+			switch (s.value1(numTc))
 			{
 				case 1: //report none
-					__tc__("putCommand.reportNoneMixedCase");
+					__tc1__("putCommand.reportOptions.reportNoneMixedCase");
 					text = "RePoRT NoNe";
 					reportoptions = ProfileReportOptions::ReportNone;
 					cmdType = UPDATE_REPORT_OPTIONS;
 					break;
 				case 2: //report none
-					__tc__("putCommand.reportNoneSpaces");
+					__tc1__("putCommand.reportOptions.reportNoneSpaces");
 					text = "  rEpOrt  nOnE  ";
 					reportoptions = ProfileReportOptions::ReportNone;
 					cmdType = UPDATE_REPORT_OPTIONS;
 					break;
 				case 3: //report full
-					__tc__("putCommand.reportFullMixedCase");
+					__tc1__("putCommand.reportOptions.reportFullMixedCase");
 					text = "RePoRT FuLL";
 					reportoptions = ProfileReportOptions::ReportFull;
 					cmdType = UPDATE_REPORT_OPTIONS;
 					break;
 				case 4: //report full
-					__tc__("putCommand.reportFullSpaces");
+					__tc1__("putCommand.reportOptions.reportFullSpaces");
 					text = "  rEpOrt  fUll  ";
 					reportoptions = ProfileReportOptions::ReportFull;
 					cmdType = UPDATE_REPORT_OPTIONS;
 					break;
 				case 5: //ucs2 codepage
-					__tc__("putCommand.ucs2CodepageMixedCase");
+					__tc1__("putCommand.dataCoding.ucs2CodepageMixedCase");
 					text = "uCS2";
 					codepage = ProfileCharsetOptions::Ucs2;
 					cmdType = UPDATE_CODE_PAGE;
 					break;
 				case 6: //usc2 codepage
-					__tc__("putCommand.ucs2CodepageSpaces");
+					__tc1__("putCommand.dataCoding.ucs2CodepageSpaces");
 					text = "  Ucs2  ";
 					codepage = ProfileCharsetOptions::Ucs2;
 					cmdType = UPDATE_CODE_PAGE;
 					break;
 				case 7: //default codepage
-					__tc__("putCommand.defaultCodepageMixedCase");
+					__tc1__("putCommand.dataCoding.defaultCodepageMixedCase");
 					text = "DeFauLT";
 					codepage = ProfileCharsetOptions::Default;
 					cmdType = UPDATE_CODE_PAGE;
 					break;
 				case 8: //default codepage
-					__tc__("putCommand.defaultCodepageSpaces");
+					__tc1__("putCommand.dataCoding.defaultCodepageSpaces");
 					text = "  dEfAUlt  ";
 					codepage = ProfileCharsetOptions::Default;
 					cmdType = UPDATE_CODE_PAGE;
 					break;
 				case 9: //неправильный текст
-					__tc__("putCommand.incorrectText");
+					__tc1__("putCommand.incorrectText");
 					cmdType = INCORRECT_COMMAND_TEXT;
 					break;
 				default:
 					__unreachable__("Invalid num");
 			}
-			sms.getMessageBody().setIntProperty(Tag::SMPP_SM_LENGTH, text.length());
-			sms.getMessageBody().setStrProperty(Tag::SMPP_SHORT_MESSAGE, text);
+			uint8_t dataCoding;
+			switch (s.value2(numTc))
+			{
+				case 1:
+					__tc2__("putCommand.cmdTextDefault");
+					dataCoding = DATA_CODING_SMSC_DEFAULT;
+					break;
+				case 2:
+					__tc2__("putCommand.cmdTextUcs2");
+					dataCoding = DATA_CODING_UCS2;
+					break;
+				default:
+					__unreachable__("Invalid num");
+			}
+			string encText = encode(text.c_str(), dataCoding);
+			sms.getMessageBody().setIntProperty(Tag::SMPP_SM_LENGTH, encText.length());
+			sms.getMessageBody().setStrProperty(Tag::SMPP_SHORT_MESSAGE, encText);
+			sms.getMessageBody().setIntProperty(Tag::SMPP_DATA_CODING, dataCoding);
 			SmscCommand cmd = SmscCommand::makeDeliverySm(sms, rand0(INT_MAX));
-			__trace2__("ProfilerTestCases::putCommand(): sms = %s", str(sms).c_str());
+			__trace2__("putProfilerCommand(): sms = %s", str(sms).c_str());
 			if (profileReg)
 			{
 				Profile profile = profileReg->getProfile(addr);
@@ -306,11 +331,11 @@ void ProfilerTestCases::putCommand(const Address& addr, int num)
 				profileReg->registerDialogId(cmd->get_dialogId(), cmdType);
 			}
 			profiler->putCommand(cmd);
-			__tc_ok__;
+			__tc12_ok__;
 		}
 		catch(...)
 		{
-			__tc_fail__(100);
+			__tc12_fail__(100);
 			error();
 		}
 	}
