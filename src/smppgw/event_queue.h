@@ -83,7 +83,7 @@ public:
           return;
         }
       }
-      event.Wait();
+      event.Wait(2000);
       if(*quitting)return;
     }
   }
