@@ -56,6 +56,10 @@
   <td><input class=txt name=outputQueueSize value="<%=StringEncoderDecoder.encode(bean.getOutputQueueSize())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
+  <th>Max events per message</th>
+  <td><input class=txt name=maxEventsPerMessage value="<%=StringEncoderDecoder.encode(bean.getMaxEventsPerMessage())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
   <th><label for=inform>Force inform</label></th>
   <td><input class=check type=checkbox name=forceInform id=inform value=true <%=bean.isForceInform() ? "checked" : ""%>></td>
 </tr>
