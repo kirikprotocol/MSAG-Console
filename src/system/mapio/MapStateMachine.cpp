@@ -48,13 +48,13 @@ struct ET96MAP_ADDRESS_LESS:public binary_function<bool,ET96MAP_ADDRESS_T,ET96MA
 
 typedef std::map<ET96MAP_ADDRESS_T,XMOMAPLocker,ET96MAP_ADDRESS_LESS> XMOMAP;
 
-static Mutex x_map_lock;
+//static Mutex x_map_lock;
 typedef multimap<string,unsigned> X_MAP;
 static X_MAP x_map;
-static Mutex ussd_map_lock;
+//static Mutex ussd_map_lock;
 typedef std::map<long long,unsigned> USSD_MAP;
 static USSD_MAP ussd_map;
-static Mutex x_momap_lock;
+//static Mutex x_momap_lock;
 static XMOMAP x_momap;
 
 static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc, const unsigned routeErr);
@@ -345,7 +345,6 @@ static void DropMapDialog_(unsigned dialogid,unsigned ssn){
         else if ( NeedNotifyHLR(dialog.get()) )
         {
           try{
-            dialog->Clean();
             NotifyHLR(dialog.get());
             return; // do not drop dialog!
           }catch(exception& e){
@@ -1485,23 +1484,13 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
 }
 
 void MAPIO_PutCommand(const SmscCommand& cmd ){
-/*  if( MapDialogContainer::getInstance()->getNumberOfDialogs() > MAP_DIALOGS_LIMIT &&
-      ( ( cmd->get_commandId() == DELIVERY && 
-          !cmd->get_sms()->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP ) &&
-          !MapDialogContainer::getInstance()->isWaitingNextMMS(cmd)
-         ) || 
-         cmd->get_commandId() == QUERYABONENTSTATUS
-       )
-     ) 
-  {
-    SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_TEMP,Status::THROTTLED));
-  } else { */
     MAPIO_PutCommand(cmd, 0 );
-/*  } */
 }
 
 static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
 {
+  MutexGuard mapMutexGuard(mapMutex);
+
   unsigned dialogid_smsc = cmd->get_dialogId();
   unsigned dialogid_map = 0;
   unsigned dialog_ssn = 0;

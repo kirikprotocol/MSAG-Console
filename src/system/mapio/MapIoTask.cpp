@@ -13,6 +13,7 @@ using namespace std;
 
 //#define SMSC_FORWARD_RESPONSE 0x001
 
+Mutex mapMutex;
 static unsigned __global_bind_counter = 0;
 static unsigned __pingPongWaitCounter = 0;
 static bool MAP_dispatching = false;
@@ -66,7 +67,10 @@ void MapIoTask::deinit( bool connected )
   USHORT_T result;
   __map_trace__("deinitialize");
   __global_bind_counter = 0;
-  MapDialogContainer::destroyInstance();
+  {
+    MutexGuard mapMutexGuard(mapMutex);
+    MapDialogContainer::destroyInstance();
+  }
   if( connected ) {
       result = Et96MapUnbindReq(SSN);
       if ( result != ET96MAP_E_OK) {
@@ -147,8 +151,6 @@ void MapIoTask::dispatcher()
       }
     }
 
-    MapDialogContainer::getInstance()->mapPacketReceived();
-
     __map_trace2__("MsgRecv receive msg with receiver 0x%hx sender 0x%hx prim 0x%hx size %d",message.receiver,message.sender,message.primitive,message.size);
     if ( message.primitive == 0x8b && message.msg_p[6] >= 0x04 ) {
       __map_trace__("MsgRecv hatching msg to reset priority order " );
@@ -158,6 +160,8 @@ void MapIoTask::dispatcher()
       message.msg_p[4] = 0;
     }
   try {
+    MutexGuard mapMutexGuard(mapMutex);
+    MapDialogContainer::getInstance()->mapPacketReceived();
     if( message.primitive == 0x88 ) {
       // MapOpenInd
       const int destAddrPos = 6;
@@ -252,7 +256,10 @@ void MapIoTask::init(unsigned timeout)
     __map_trace2__("USSD Bind error 0x%hx",bind_res);
     throw runtime_error("bind error");
   }
-  MapDialogContainer::getInstance()->restartStatistics();
+  {
+    MutexGuard mapMutexGuard(mapMutex);
+    MapDialogContainer::getInstance()->restartStatistics();
+  }
   __map_trace__("Ok");
 }
 
@@ -361,6 +368,7 @@ void MapDialogContainer::unregisterSelf(SmeManager* smeman)
 
 void setMapProxyLimits(int timeout, int limit)
 {
+  MutexGuard mapMutexGuard(mapMutex);
   MapDialogContainer::getInstance()->setPerformanceLimits( timeout, limit );
 }
 
