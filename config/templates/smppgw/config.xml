@@ -21,7 +21,7 @@
   </section>
 
   <section name="admin">
-    <param name="host" type="string">@listen.port@</param>
+    <param name="host" type="string">@listen.host@</param>
     <param name="port" type="int">@gateway.admin.port@</param>
   </section>
 
@@ -31,7 +31,7 @@
     <param name="state_machines_count" type="int">10</param>
 
     <section name="performance">
-      <param name="host" type="string">@listen.port@</param>
+      <param name="host" type="string">@listen.host@</param>
       <param name="port" type="int">@perfmon.smppgw.port@</param>
     </section>
   </section>
@@ -41,7 +41,7 @@
   </section>
 
   <section name="smpp">
-    <param name="host" type="string">@listen.port@</param>
+    <param name="host" type="string">@listen.host@</param>
     <param name="inactivityTime" type="int">30</param>
     <param name="inactivityTimeOut" type="int">30</param>
     <param name="port" type="int">@gateway.smpp.port@</param>
