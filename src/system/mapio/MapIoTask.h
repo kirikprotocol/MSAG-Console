@@ -89,6 +89,7 @@ public:
   }
   USHORT_T getDialogId() { return dialogid; }
   void setSMSCDialogId(unsigned did) {smscDialogId=did;}
+  unsigned getSMSCDialogId() { return smscDialogId; }
   virtual USHORT_T  Et96MapV2SendRInfoForSmConf ( 
     ET96MAP_LOCAL_SSN_T localSsn,
 		ET96MAP_DIALOGUE_ID_T dialogueId,

@@ -347,12 +347,12 @@ bool MapDialog::ProcessCmd(const SmscCommand& cmd){
       }
     case DELIVERY: {
       USHORT_T result;
-      sms = auto_ptr<SMS>(cmd->get_sms_and_forget(););
+      sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
 
-	    mkMapAddress( &m_msaddr, sms->getDestinationAddress().value, sms->getDestinationAddress().length );
-	    mkMapAddress( &m_scaddr, "79029869999", 11 );
+	    mkMapAddress( &m_msAddr, sms->getDestinationAddress().value, sms->getDestinationAddress().length );
+	    mkMapAddress( &m_scAddr, "79029869999", 11 );
 	    mkSS7GTAddress( &scAddr, &m_scAddr, 8 );
-    	mkSS7GTAddress( &mshlrAddr, &m_msaddr, 6 );
+    	mkSS7GTAddress( &mshlrAddr, &m_msAddr, 6 );
       
       appContext.acType = ET96MAP_SHORT_MSG_GATEWAY_CONTEXT;
       appContext.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
@@ -363,7 +363,7 @@ bool MapDialog::ProcessCmd(const SmscCommand& cmd){
         throw 0;
       }
       __trace2__("MAP::MapDialog::ProcessCmdg: Et96MapOpenReq OK");
-     	result = Et96MapV2SendRInfoForSmReq(ssn, dialogid, 1, &m_msaddr, ET96MAP_DO_NOT_ATTEMPT_DELIVERY, &m_scaddr );
+     	result = Et96MapV2SendRInfoForSmReq(ssn, dialogid, 1, &m_msAddr, ET96MAP_DO_NOT_ATTEMPT_DELIVERY, &m_scAddr );
       if ( result != ET96MAP_E_OK ) {
         __trace2__("MAP::MapDialog::ProcessCmdg: Et96MapV2SendRInfoForSmReq error 0x%x",result);
         throw 0;
