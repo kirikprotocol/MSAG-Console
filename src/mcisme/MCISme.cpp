@@ -246,8 +246,12 @@ public:
             return false;
         }
         
-        smsc_log_debug(logger, "Sender: %s%s message #%lld seqNum=%ld for %s", (message.cancel) ? "Canceling ":"Sending",
-                       (message.cancel) ? message.smsc_id.c_str():"", message.id, seqNumber, message.abonent.c_str());
+        if (message.notification) smsc_log_debug(logger, "Sender: sending notification message seqNum=%d for %s",
+                                                 seqNumber, message.abonent.c_str());
+        else smsc_log_debug(logger, "Sender: %s%s message #%lld seqNum=%d for %s", 
+                            (message.cancel) ? "canceling ":"sending", (message.cancel) ? message.smsc_id.c_str():"",
+                            message.id, seqNumber, message.abonent.c_str());
+
 
         Address oa, da;
         const char* oaStr = processor.getAddress(); // TODO: caller address for notifications

@@ -196,7 +196,10 @@ Hash<Task *> Task::loadupAll()
             if (!tasks.Exists(abonent)) {
                 Task* task = new Task(abonent);
                 task->loadup(rs->getUint64(2), connection);
-                if (task->getEventsCount()) tasks.Insert(abonent, task);
+                MessageState state = task->getCurrentState();
+                int eventsCount = task->getEventsCount();
+                int newEventsCount = task->getNewEventsCount();
+                if (eventsCount > 0 && (state != WAIT_RCPT || newEventsCount > 0)) tasks.Insert(abonent, task);
                 else delete task;
             }
             else smsc_log_error(logger, "Task: duplicate current message found for abonent %s");
