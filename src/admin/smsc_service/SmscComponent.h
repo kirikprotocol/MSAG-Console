@@ -6,24 +6,15 @@
 #include <admin/service/Type.h>
 #include <core/synchronization/Mutex.hpp>
 #include <logger/Logger.h>
-#ifdef SMPPGW
-#include <smppgw/smsc.hpp>
-#else
 #include <system/smsc.hpp>
-#endif
 #include "smeman/smeadmin.h"
 
 namespace smsc {
 namespace admin {
 namespace smsc_service {
 
-#ifdef SMPPGW
-using smsc::smppgw::SmscConfigs;
-using smsc::smppgw::Smsc;
-#else
 using smsc::system::SmscConfigs;
 using smsc::system::Smsc;
-#endif
 
 using namespace smsc::admin::service;
 using smsc::core::threads::Thread;
@@ -96,7 +87,7 @@ protected:
 
   Variant loadRoutes(void) throw (AdminException);
   Variant traceRoute(const Arguments &args) throw (AdminException);
-  
+
   Variant aclListNames(const Arguments & args) throw (AdminException);
   Variant aclGet(const Arguments & args) throw (AdminException);
   Variant aclRemove(const Arguments & args) throw (AdminException);
@@ -105,7 +96,7 @@ protected:
   Variant aclLookupAddresses(const Arguments & args) throw (AdminException);
   Variant aclRemoveAddresses(const Arguments & args) throw (AdminException);
   Variant aclAddAddresses(const Arguments & args) throw (AdminException);
-  
+
 
   SmscConfigs &configs;
   Methods methods;
@@ -120,7 +111,7 @@ protected:
     logGetCategoriesMethod, logSetCategoriesMethod,
     traceRouteMethod, loadRoutesMethod,
     aclListNamesMethod, aclGetMethod, aclRemoveMethod, aclCreateMethod, aclUpdateInfoMethod,
-      aclLookupAddressesMethod, aclRemoveAddressesMethod, aclAddAddressesMethod    
+      aclLookupAddressesMethod, aclRemoveAddressesMethod, aclAddAddressesMethod
   };
 
   smsc::core::synchronization::Mutex mutex;

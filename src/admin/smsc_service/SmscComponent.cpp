@@ -1,11 +1,7 @@
 #include "SmscComponent.h"
 #include "profiler/profiler.hpp"
 
-#ifdef SMPPGW
-#include <smppgw/smsc.hpp>
-#else
 #include <system/smsc.hpp>
-#endif
 
 #include "router/route_types.h"
 
@@ -73,7 +69,7 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
   sme_ids_params["ids"] = Parameter("ids", StringListType);
   Parameters log_cats;
   log_cats["categories"] = Parameter("categories", StringListType);
-  
+
   Parameters acl_id_params;
   acl_id_params["id"] = Parameter("id", LongType);
   Parameters acl_create_params;
@@ -279,7 +275,7 @@ throw (AdminException)
         return loadRoutes();
       case traceRouteMethod:
         return traceRoute(args);
-      
+
       case aclListNamesMethod:
         return aclListNames(args);
       case aclGetMethod:
@@ -555,7 +551,11 @@ throw (AdminException)
     try
     {
       smsc_app_runner->stop();
-      smsc_app_runner->WaitFor();
+      int rv=smsc_app_runner->WaitFor();
+      if(rv!=0)
+      {
+        smsc_log_error(logger, "thr_join returned: %d", rv);
+      }
       smsc_app_runner.reset(0);
       isStopping = false;
     }
@@ -905,9 +905,6 @@ const char * const getProfileMatchTypeStr(int matchType)
 
 Variant SmscComponent::profileLookupEx(const Arguments &args) throw (AdminException)
 {
-#ifdef SMPPGW
-  throw AdminException("Not supported by smppgw");
-#else
   try
   {
     Smsc * app;
@@ -950,14 +947,10 @@ Variant SmscComponent::profileLookupEx(const Arguments &args) throw (AdminExcept
   } catch (...) {
     throw AdminException("Unknown exception");
   }
-#endif
 }
 Variant SmscComponent::profileLookup(const Arguments &args)
 throw (AdminException)
 {
-#ifdef SMPPGW
-  throw AdminException("Not supported by smppgw");
-#else
   try
   {
     const char * const addressString = args.Get("address").getStringValue();
@@ -1001,7 +994,6 @@ throw (AdminException)
   {
     throw AdminException("Address not defined");
   }
-#endif
 }
 
 void setProfileFromString(Profile &profile, const StringList& profileStrings)
@@ -1078,7 +1070,7 @@ throw (AdminException)
   profile.divertModifiable = (strcmp("true", divertModifiable) == 0) ? 1:0;
   if (strcmp("true", ussd7bit) == 0)
     profile.codepage |= 0x80;
-  
+
   profile.udhconcat = (strcmp("true", udhConcat) == 0) ? 1:0;
 }
 
@@ -1094,9 +1086,6 @@ bool isMask(const Address & address)
 
 int SmscComponent::profileUpdate(const Arguments & args)
 {
-#ifdef SMPPGW
-  throw AdminException("Not supported by smppgw");
-#else
   try
   {
     const char * const addressString = args.Get("address").getStringValue();
@@ -1126,14 +1115,10 @@ int SmscComponent::profileUpdate(const Arguments & args)
   {
     throw AdminException("Address or profile params not defined");
   }
-#endif
 }
 
 int SmscComponent::profileDelete(const Arguments & args)
 {
-#ifdef SMPPGW
-  throw AdminException("Not supported by smppgw");
-#else
   try
   {
     Smsc * app;
@@ -1152,7 +1137,6 @@ int SmscComponent::profileDelete(const Arguments & args)
   {
     throw AdminException("Address or profile params not defined");
   }
-#endif
 }
 
 void fillSmeInfo(SmeInfo & smeInfo, const Arguments & args)
@@ -1341,11 +1325,9 @@ void SmscComponent::logSetCategories(const Arguments & args)
 
   Logger::setLogLevels(levels);
 
-#ifndef SMPPGW
   if( smsc_app_runner->getApp()->getMapProxy() != 0 ) {
     dynamic_cast<MapProxy*>(smsc_app_runner->getApp()->getMapProxy())->checkLogging();
   }
-#endif
 }
 
 Variant SmscComponent::applyLocaleResource()
@@ -1383,7 +1365,7 @@ Variant SmscComponent::aclListNames(const Arguments & args) throw (AdminExceptio
     snprintf(buffer.get(), len, "%lu,%s", ident.first, ident.second.c_str());
     result.appendValueToStringList(buffer.get());
   }
-  
+
   return result;
 }
 
@@ -1392,9 +1374,9 @@ Variant SmscComponent::aclGet(const Arguments & args) throw (AdminException)
   try {
     AclIdent aclId = args.Get("id").getLongValue();
     AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
-    
+
     AclInfo aclInfo = aclmgr->getInfo(aclId);
-    
+
     Variant result(service::StringListType);
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "%lu", aclInfo.ident);
@@ -1430,7 +1412,7 @@ Variant SmscComponent::aclRemove(const Arguments & args) throw (AdminException)
     } catch (...) {
       throw AdminException("Could not remove ACL, nested: Unknown exception");
     }
-    
+
     Variant result("removed");
     return result;
   } catch (HashInvalidKeyException &e) {
@@ -1445,7 +1427,7 @@ Variant SmscComponent::aclCreate(const Arguments & args) throw (AdminException)
     const char * const description = args.Get("description").getStringValue();
     const char * const cache_type_str = args.Get("cache_type").getStringValue();
     const bool cache_type_present = (cache_type_str != NULL) && (cache_type_str[0] != 0);
-    
+
     const StringList & addresses(args.Get("addresses").getStringListValue());
     std::vector<AclPhoneNumber> phones;
     for (StringList::const_iterator i = addresses.begin(); i != addresses.end(); i++)
@@ -1457,7 +1439,7 @@ Variant SmscComponent::aclCreate(const Arguments & args) throw (AdminException)
         phones.push_back(address);
       }
     }
-    
+
     try {
       AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
       if (cache_type_present)
@@ -1484,7 +1466,7 @@ Variant SmscComponent::aclUpdateInfo(const Arguments & args) throw (AdminExcepti
     const char * const description = args.Get("description").getStringValue();
     const char * const cache_type_str = args.Get("cache_type").getStringValue();
     const bool cache_type_present = (cache_type_str != NULL) && (cache_type_str[0] != 0);
-    
+
     try {
       AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
       if (cache_type_present)
@@ -1498,7 +1480,7 @@ Variant SmscComponent::aclUpdateInfo(const Arguments & args) throw (AdminExcepti
     } catch (...) {
       throw AdminException("Could not update ACL info, nested: Unknown exception");
     }
-    
+
     Variant result("updated");
     return result;
   } catch (HashInvalidKeyException &e) {
@@ -1511,10 +1493,10 @@ Variant SmscComponent::aclLookupAddresses(const Arguments & args) throw (AdminEx
   try {
     AclIdent aclId = args.Get("id").getLongValue();
     const char * const prefix = args.Get("prefix").getStringValue();
-    
+
     typedef std::vector<AclPhoneNumber> Phones;
     Phones resultPhones;
-    
+
     try {
       AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
       aclmgr->lookupByPrefix(aclId, prefix, resultPhones);
@@ -1525,7 +1507,7 @@ Variant SmscComponent::aclLookupAddresses(const Arguments & args) throw (AdminEx
     } catch (...) {
       throw AdminException("Could not lookup addresses, nested: Unknown exception");
     }
-    
+
     Variant result(service::StringListType);
     for (Phones::const_iterator i = resultPhones.begin(); i != resultPhones.end(); i++) {
       result.appendValueToStringList(*i);
@@ -1555,7 +1537,7 @@ Variant SmscComponent::aclRemoveAddresses(const Arguments & args) throw (AdminEx
     } catch (...) {
       throw AdminException("Could not remove addresses, nested: Unknown exception");
     }
-    
+
     Variant result("removed addresses");
     return result;
   } catch (HashInvalidKeyException &e) {
@@ -1582,7 +1564,7 @@ Variant SmscComponent::aclAddAddresses(const Arguments & args) throw (AdminExcep
     } catch (...) {
       throw AdminException("Could not add addresses, nested: Unknown exception");
     }
-    
+
     Variant result("added addresses");
     return result;
   } catch (HashInvalidKeyException &e) {
