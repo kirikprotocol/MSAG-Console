@@ -70,14 +70,17 @@ public:
 
   virtual SmeProxy* getSmeProxy() const
   {
-    return (*ptr).proxy;
+    if ( ptr == end ) throw runtime_error("out of data");
+		return (*ptr).proxy;
   }
   virtual SmeInfo  getSmeInfo() const
   {
+    if ( ptr == end ) throw runtime_error("out of data");
     return (*ptr).info;
   }
   virtual SmeIndex getSmeIndex() const
   {
+    if ( ptr == end ) throw runtime_error("out of data");
     return (*ptr).idx;
   }
 };
