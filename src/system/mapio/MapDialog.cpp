@@ -461,6 +461,7 @@ void MapDialog::Et96MapDelimiterInd(
   }
   else if ( state == MAPST_WAIT_SEGMINTATION )
   {
+    USHORT_T result;
     state = MAPST_READY_FOR_CLOSE;
     __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq");
     result = Et96MapV2ForwardSmMTReq( SSN, dialogid, 1, &smRpDa, &smRpOa, auto_ui.get(), FALSE);
