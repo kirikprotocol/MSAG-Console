@@ -858,6 +858,8 @@ void RemoteStore::doReplaceSms(StorageConnection* connection, SMSId id, SMS& sms
 void RemoteStore::replaceSms(SMSId id, SMS& sms)
     throw(StorageException, NoSuchMessageException)
 {
+    sms.attempts = 0;
+
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
     __require__(pool);
@@ -1791,6 +1793,7 @@ void CachedStore::replaceSms(SMSId id, SMS& sms)
     RemoteStore::replaceSms(id, sms);
     MutexGuard cacheGuard(cacheMutex);
     cache->delSms(id);
+    sms.attempts = 0;
     SMS* sm = new SMS(sms);
     cache->putSms(id, sm);
 }

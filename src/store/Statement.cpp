@@ -781,7 +781,7 @@ bool RetrieveBodyStatement::getBody(Body& body)
 
 /* --------------------------- ReplaceStatement ----------------------- */
 const char* ReplaceStatement::sql = (const char*)
-"UPDATE SMS_MSG SET\
+"UPDATE SMS_MSG SET ATTEMPTS=0,\
  DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN, TXT_LENGTH=:TXT_LENGTH\
  WHERE ID=:ID AND OA=:OA";
 ReplaceStatement::ReplaceStatement(Connection* connection, bool assign)
@@ -852,7 +852,7 @@ void ReplaceStatement::bindWaitTime(time_t waitTime)
 }
 
 const char* ReplaceVTStatement::sql = (const char*)
-"UPDATE SMS_MSG SET\
+"UPDATE SMS_MSG SET ATTEMPTS=0,\
  DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN, TXT_LENGTH=:TXT_LENGTH,\
  VALID_TIME=:VT WHERE ID=:ID AND OA=:OA";
 ReplaceVTStatement::ReplaceVTStatement(Connection* connection, bool assign)
@@ -860,7 +860,7 @@ ReplaceVTStatement::ReplaceVTStatement(Connection* connection, bool assign)
         : ReplaceStatement(connection, ReplaceVTStatement::sql, assign) {}
 
 const char* ReplaceWTStatement::sql = (const char*)
-"UPDATE SMS_MSG SET\
+"UPDATE SMS_MSG SET ATTEMPTS=0,\
  DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN, TXT_LENGTH=:TXT_LENGTH,\
  NEXT_TRY_TIME=:WT WHERE ID=:ID AND OA=:OA";
 ReplaceWTStatement::ReplaceWTStatement(Connection* connection, bool assign)
@@ -868,7 +868,7 @@ ReplaceWTStatement::ReplaceWTStatement(Connection* connection, bool assign)
         : ReplaceStatement(connection, ReplaceWTStatement::sql, assign) {}
 
 const char* ReplaceVWTStatement::sql = (const char*)
-"UPDATE SMS_MSG SET\
+"UPDATE SMS_MSG SET ATTEMPTS=0,\
  DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN, TXT_LENGTH=:TXT_LENGTH,\
  VALID_TIME=:VT, NEXT_TRY_TIME=:WT WHERE ID=:ID AND OA=:OA";
 ReplaceVWTStatement::ReplaceVWTStatement(Connection* connection, bool assign)
@@ -876,7 +876,7 @@ ReplaceVWTStatement::ReplaceVWTStatement(Connection* connection, bool assign)
         : ReplaceStatement(connection, ReplaceVWTStatement::sql, assign) {}
 
 const char* ReplaceAllStatement::sql = (const char*)
-"UPDATE SMS_MSG SET\
+"UPDATE SMS_MSG SET ATTEMPTS=0,\
  DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN, TXT_LENGTH=:TXT_LENGTH,\
  VALID_TIME=:VT, NEXT_TRY_TIME=:WT, MSG_REF=:MSG_REF, SEQ_NUM=:SEQ_NUM\
  WHERE ID=:ID AND OA=:OA";
