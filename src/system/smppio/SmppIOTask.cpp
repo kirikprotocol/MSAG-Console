@@ -473,6 +473,7 @@ int SmppInputThread::Execute()
                       bindpdu->get_systemId()?bindpdu->get_systemId():"",
                       bindpdu->get_password()?bindpdu->get_password():"",
                       proxy);
+
                     smsc_log_debug(snmpLog,"register sme:%s successful",sid.c_str());
                     proxy->setId(sid,proxyIndex);
                     proxy->putIncomingCommand(SmscCommand::makeSMEAlert(proxyIndex));
@@ -541,11 +542,14 @@ int SmppInputThread::Execute()
               }else
               {
                 ss->assignProxy(proxy);
+                ss->setSystemId(si.systemId.c_str());
                 __trace2__("assign proxy: %p/%p",ss,proxy);
                 __trace2__("assign proxy: %p/%p",((SmppSocket*)(ss->getSocket()->getData(SOCKET_SLOT_OUTPUTSMPPSOCKET))),proxy);
                 ((SmppSocket*)(ss->getSocket()->
                   getData(SOCKET_SLOT_OUTPUTSMPPSOCKET)))->
                   assignProxy(proxy);
+                ((SmppSocket*)(ss->getSocket()->
+                  getData(SOCKET_SLOT_OUTPUTSMPPSOCKET)))->setSystemId(si.systemId.c_str());
               }
             }break;
             case SmppCommandSet::UNBIND:

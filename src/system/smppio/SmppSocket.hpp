@@ -4,6 +4,8 @@
 #include "core/network/Socket.hpp"
 #include "smpp/smpp.h"
 #include "system/smppio/SmppIOTask.hpp"
+#include "logger/Logger.h"
+#include <string>
 //#include "system/smppio/SmppProxy.hpp"
 
 namespace smsc{
@@ -53,6 +55,14 @@ public:
       dataLength=0;
       bufferOffset=0;
     }
+    log=0;
+  }
+
+  void setSystemId(const char* smeid)
+  {
+    std::string s="sd.";
+    s+=smeid;
+    log=smsc::logger::Logger::getInstance(s.c_str());
   }
   virtual ~SmppSocket()
   {
@@ -119,6 +129,7 @@ protected:
   SmppIOTask *inThread,*outThread;
   SmppProxy *proxy;
   int channelType;
+  smsc::logger::Logger* log;
 };//smppioSocket
 
 }//smppio

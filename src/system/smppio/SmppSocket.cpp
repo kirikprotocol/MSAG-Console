@@ -24,6 +24,18 @@ char* SmppSocket::getBuffer(int length)
 
 void SmppSocket::send(int length)
 {
+  if(log && log->isDebugEnabled())
+  {
+    std::string s="out:";
+    char buf[16];
+    for(int i=0;i<bufferOffset;i++)
+    {
+      sprintf(buf," %02X",(unsigned int)(unsigned char)buffer[i]);
+      s+=buf;
+    }
+    log->log(smsc::logger::Logger::LEVEL_DEBUG,"%s",s.c_str());
+  }
+
   dataLength=length;
   bufferOffset=0;
 }
@@ -79,7 +91,10 @@ int SmppSocket::receive()
   }
   bufferOffset+=rd;
   lastUpdate=time(NULL);
-  if(bufferOffset==packetsize)return 1;
+  if(bufferOffset==packetsize)
+  {
+    return 1;
+  }
   return 0;
 }
 
@@ -89,19 +104,21 @@ smsc::smpp::SmppHeader* SmppSocket::decode()
   //for(int i=0;i<bufferOffset;i++)printf("%02x ",buffer[i]);
   //printf("\n");fflush(stdout);
   trace2("decode: %p, %d",buffer,bufferOffset);
-  smsc::smpp::assignStreamWith(&s,buffer,bufferOffset,true);
-  smsc::smpp::SmppHeader* pdu=smsc::smpp::fetchSmppPdu(&s);
-  if(!pdu)
+
+  if(log && log->isDebugEnabled())
   {
-    trace2("failed to decode buffer: %p",buffer);
-#ifndef DISABLE_TRACING
+    std::string s="in :";
+    char buf[16];
     for(int i=0;i<bufferOffset;i++)
     {
-      fprintf(stderr,"%02X ",(int)(unsigned char)buffer[i]);
+      sprintf(buf," %02X",(unsigned int)(unsigned char)buffer[i]);
+      s+=buf;
     }
-    fprintf(stderr,"\n");
-#endif
+    log->log(smsc::logger::Logger::LEVEL_DEBUG,"%s",s.c_str());
   }
+
+  smsc::smpp::assignStreamWith(&s,buffer,bufferOffset,true);
+  smsc::smpp::SmppHeader* pdu=smsc::smpp::fetchSmppPdu(&s);
   bufferOffset=0;
   return pdu;
 }
