@@ -114,7 +114,7 @@ function addDirectiveAlias()
     final String directive = (String) entry.getValue();
     final String aliasHex = StringEncoderDecoder.encodeHEX(alias);
     %><tr id="row_<%=aliasHex%>">
-      <td><input class=txt name="alias"         value="<%=alias%>"></td>
+      <td><input class=txt name="alias" value="<%=alias%>" validation="id" onkeyup="resetValidation(this)"></td>
       <td><select name="directive_<%=aliasHex%>">
         <option value="def"      <%="def"     .equals(directive) ? "selected" : ""%>>def</option>
         <option value="template" <%="template".equals(directive) ? "selected" : ""%>>template</option>
@@ -129,7 +129,7 @@ function addDirectiveAlias()
   }
 %>
 <tr>
-  <td><input class=txt id=newAlias name=newAlias></td>
+  <td><input class=txt id=newAlias name=newAlias validation="id" onkeyup="resetValidation(this)"></td>
   <td><select id=newDirective name=newDirective>
         <option value="def"      >def</option>
         <option value="template" >template</option>
@@ -139,7 +139,7 @@ function addDirectiveAlias()
         <option value="unhide"   >unhide</option>
         <option value="flash"    >flash</option>
       </select></td>
-  <td><img src="/images/but_add.gif" onclick="addDirectiveAlias()" style="cursor:hand;"></td>
+  <td><img src="/images/but_add.gif" onclick="return validateField(opForm.all.newAlias) && addDirectiveAlias();" style="cursor:hand;"></td>
 </tr>
 </table>
 </div>
