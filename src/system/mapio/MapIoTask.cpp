@@ -79,6 +79,7 @@ void Et96MapIndicationError(USHORT_T error,UCHAR_T* errString)
 void MapIoTask::deinit()
 {
   USHORT_T result;
+  __trace2__("MAP::deinitialize");
   result = Et96MapUnbindReq(SSN);
   if ( result != ET96MAP_E_OK){
     __trace2__("MAP::error at Et96MapUnbindReq SSN=%d errcode 0x%hx",SSN,result);
