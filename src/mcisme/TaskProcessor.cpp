@@ -545,6 +545,8 @@ void TaskProcessor::processEvent(const MissedCallEvent& event)
         if (!task->checkCallersCount()) {
             smsc_log_debug(logger, "Event: for abonent %s skipped "
                            "(distinct callers count constraint)", abonent);
+            // task is new (was loaded for event) => kill task
+            if (isNewTask) taskAccessor.delTask(abonent); 
             return; // skip event if callers count check failed
         }
         task->addEvent(event); // add new event to task chain (inassigned to message in DB)

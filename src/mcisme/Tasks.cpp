@@ -490,6 +490,7 @@ void Task::loadCallersCount(Connection* connection)
         if (!countCallersStmt)
             throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "count callers (loadup)");
         
+        countCallersStmt->setString(1, abonent.c_str());
         std::auto_ptr<ResultSet> countRsGuard(countCallersStmt->executeQuery());
         ResultSet* countRs = countRsGuard.get();
         if (!countRs)
