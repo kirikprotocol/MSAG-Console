@@ -40,6 +40,15 @@ public class SmsStat
     public void setDataSource(DataSource ds) { this.ds = ds; }
     public void setSmsc(Smsc smsc) { this.smsc = smsc; }
 
+    private void bindPeriodPart(PreparedStatement stmt, StatQuery query)
+        throws SQLException
+    {
+        int pos=1;
+        if (query.isFromDateEnabled())
+          stmt.setInt(pos++, calculatePeriod(query.getFromDate()));
+        if (query.isTillDateEnabled())
+          stmt.setInt(pos++, calculatePeriod(query.getTillDate()));
+    }
     private String preparePeriodPart(StatQuery query) {
         String str = (query.isFromDateEnabled() ||
                       query.isTillDateEnabled()) ? " WHERE ":"";
@@ -62,18 +71,20 @@ public class SmsStat
     private String prepareRouteQuery(StatQuery query) {
         return ROUTE_QUERY+preparePeriodPart(query)+"GROUP BY routeid";
     }
-    private void bindPeriodPart(PreparedStatement stmt, StatQuery query)
-        throws SQLException
-    {
-        int pos=1;
-        if (query.isFromDateEnabled())
-          stmt.setInt(pos++, calculatePeriod(query.getFromDate()));
-        if (query.isTillDateEnabled())
-          stmt.setInt(pos++, calculatePeriod(query.getTillDate()));
-    }
 
+    private void flushStatistics(StatQuery query) {
+        if (query.isTillDateEnabled()) {
+            long till = query.getTillDate().getTime();
+            long curr = (new Date()).getTime();
+            if (till >= curr-3600) {
+                //smsc.flushStatistics();
+            }
+        }
+    }
     public Statistics getStatistics(StatQuery query)
     {
+        flushStatistics(query);
+
         Connection connection = null;
         stat = new Statistics();
         try
