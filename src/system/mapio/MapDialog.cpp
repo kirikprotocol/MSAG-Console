@@ -86,7 +86,7 @@ void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
     {
       char b[256] = {0,};
       int k = 0;
-      for ( int i=0; i<ma->len; ++i){
+      for ( int i=0; i<(ma->addrLen-1)*2; ++i){
         k+=sprintf(b+k,"%02x ",*((unsigned char*)sa_val+i));          
       }
       __trace2__("MAP::ConvAddrMap2Smc::adr value %s",b);
