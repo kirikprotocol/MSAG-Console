@@ -71,6 +71,7 @@ public:
       tv.tv_nsec-=1000000000L;
     }
     int retval=cond_timedwait(&event,&mutex.mutex,&tv);
+    signaled=0;
     mutex.Unlock();
     return retval;
 #endif
