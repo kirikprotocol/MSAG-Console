@@ -171,6 +171,9 @@ for (int i=0; i<bean.getDstMasks().length; i++)
 </tr>
 </table>
 
+<table  with="100%">
+  <tr>
+   <td with="45%">
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SMEs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <div class=page_subtitle>SMEs</div>
 <%
@@ -231,6 +234,13 @@ String encName = StringEncoderDecoder.encode(name);
     attributes="<%= asme %>"  options="<%= osme %>" />
 </td></tr>
 </table>
+
+ </td>
+   <td width=10%>
+   &nbsp;
+   </td>
+      <td with="45%">
+
 <%--
 <table class=properties_list cellspacing=0 cellspadding=0>
 <%
@@ -260,6 +270,10 @@ String encName = StringEncoderDecoder.encode(name);
 	<td nowrap><input id=options_show_dst class=check type="checkbox" name=showDst <%=bean.isShowDst() ? "checked" : ""%>>&nbsp;<label for=options_show_dst>Show destinations list</label></td>
 </tr>
 </table>
+</td>
+</tr>
+</table>
+
 </div>
 <%
 page_menu_begin(out);
