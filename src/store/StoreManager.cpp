@@ -109,6 +109,11 @@ SMSId StoreManager::doCreateSms(Connection* connection,
     
     SMSId id;
     
+    Descriptor  dsc;
+    sms.state = ENROUTE;
+    sms.destinationDescriptor = dsc;
+    sms.lastTime = 0; sms.nextTime = 0; sms.failureCause = 0; sms.attempts = 0;
+    
     if (flag == SMPP_OVERWRITE_IF_PRESENT)
     {
         NeedOverwriteStatement* needOverwriteStmt;
