@@ -80,7 +80,6 @@ public abstract class Session extends Thread
     protected String readTelnetLine(boolean echo)
         throws IOException
     {
-        os.flush();
         int b = -1;
         StringBuffer sb = new StringBuffer();
         boolean escape = false;
@@ -125,11 +124,12 @@ public abstract class Session extends Thread
                 continue;
             }
             if (b == ESC_ESC) {
-                b = is.read(); // skip 91
+                if ((b = is.read()) == -1 ) break; // skip 91
                 //System.out.println("Got CHR="+(char)b+" code "+b);
-                b = is.read(); // skip opcode
+                if ((b = is.read()) == -1 ) break; // skip opcode
                 //System.out.println("Got CHR="+(char)b+" code "+b);
-                if ( b >=49 && b<= 54) is.read(); // for Ins, Del, Home, End, PgUp, PgDn
+                if (b >=49 && b<= 54) // for Ins, Del, Home, End, PgUp, PgDn
+                    if ((b = is.read()) == -1 ) break;
                 continue;
             }
             if ( b == ESC_BS ) {
@@ -155,6 +155,7 @@ public abstract class Session extends Thread
             byte bytes[] = {(byte)b};
             sb.append( new String(bytes,System.getProperty("file.encoding")));
         }
+        if (b == -1) throw new SocketException("End of stream reached");
         return sb.toString();
     }
 
@@ -228,6 +229,7 @@ public abstract class Session extends Thread
             try {
                 if (is != null) is.close();
                 if (os != null) os.close();
+                if (socket != null) socket.close();
                 closeSemaphore.wait();
             }
             catch (InterruptedException e) {}
@@ -236,10 +238,15 @@ public abstract class Session extends Thread
     }
 
     protected void sendBytes(byte data[]) throws IOException {
-        os.write( data ); os.flush();
+        os.write(data); os.flush();
     }
     protected void printString(String str) throws IOException {
-        sendBytes(str.getBytes());
+        byte data[] = str.getBytes();
+        for (int i=0; i<data.length; i++) {
+            if (data[i] == ESC_IAC) os.write(ESC_IAC);
+            os.write(data[i]);
+        }
+        os.flush();
     }
     protected void printlnString(String str) throws IOException {
         printString(str+"\r\n");
