@@ -9,7 +9,6 @@ package ru.novosoft.smsc.admin.smsview;
  * @version 1.0
  */
 
-import java.util.Vector;
 import java.util.Date;
 
 public class SmsQuery
