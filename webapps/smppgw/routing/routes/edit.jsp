@@ -185,7 +185,7 @@
 					newCell = document.createElement("td");
 					newCell.innerHTML = smesSelectText;
 					newSelect = newCell.all.newSmesSelect;
-					newSelect.name = "dst_sme_" + encodeHEX(subjValue);
+					newSelect.name = "dst_sme_" + subjValue;
 					newSelect.all["option_" + sme].selected = true;
 					newRow.appendChild(newCell);
 
@@ -325,10 +325,10 @@
           </tr>
           <tr>
             <td>Mask</td>
-            <td><input id=newDstMask class=txt name=dstMasks validation="routeMask" onkeyup="resetValidation(this)"></td>
-            <td><select name=dst_mask_sme_ id=newDstMaskSme>
+            <td><input id=newDstMask class=txt name=new_dstMask validation="routeMask" onkeyup="resetValidation(this)"></td>
+            <td><select name=new_dst_mask_sme_ id=newDstMaskSme>
               <c:forEach items="${bean.allSmes}" var="i">
-                <option value="${fn:escapeXml(i)}" <c:if test="${i == bean.dst_mask_sme_}">selected</c:if>>${fn:escapeXml(i)}</option>
+                <option value="${fn:escapeXml(i)}" <c:if test="${i == bean.new_dst_mask_sme_}">selected</c:if>>${fn:escapeXml(i)}</option>
               </c:forEach>
               </select>
             </td>

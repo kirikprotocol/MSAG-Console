@@ -48,7 +48,8 @@ public class Edit extends EditBean
   private Set dstMasksSet = new HashSet();
   private Set dstSubjectsSet = new HashSet();
 
-  private String dst_mask_sme_;
+  private String new_dstMask;
+  private String new_dst_mask_sme_;
   private Map destinations;
   private static final String DST_SME_PREFIX = "dst_sme_";
   private static final String DST_MASK_PREFIX = "dst_mask_sme_";
@@ -131,13 +132,35 @@ public class Edit extends EditBean
         }
       }
     }
+    if (null != new_dstMask && null != new_dst_mask_sme_ && 0 < new_dstMask.length() && 0 < new_dst_mask_sme_.length()) {
+      final Mask mask;
+      try {
+        mask = new Mask(new_dstMask);
+      } catch (SibincoException e) {
+        logger.debug("Could not create destination mask", e);
+        throw new SmppgwJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION_MASK, new_dstMask, e);
+      }
+      final Sme sme = (Sme) appContext.getGwSmeManager().getSmes().get(new_dst_mask_sme_);
+      if (null == sme)
+        throw new SmppgwJspException(Constants.errors.routing.routes.SME_NOT_FOUND, new_dst_mask_sme_);
+      try {
+        final Destination destination = new Destination(mask, sme);
+        destinations.put(destination.getName(), destination);
+        if (0 < appContext.getGwSmeManager().getSmes().size())
+          new_dst_mask_sme_ = (String) appContext.getGwSmeManager().getSmes().keySet().iterator().next();
+        new_dstMask = "";
+      } catch (SibincoException e) {
+        logger.debug("Could not create destination", e);
+        throw new SmppgwJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION, e);
+      }
+    }
     super.process(request, response);
   }
 
   protected void load(final String loadId) throws SmppgwJspException
   {
-    if (null == dst_mask_sme_ && 0 < appContext.getGwSmeManager().getSmes().size())
-      dst_mask_sme_ = (String) appContext.getGwSmeManager().getSmes().keySet().iterator().next();
+    if (null == new_dst_mask_sme_ && 0 < appContext.getGwSmeManager().getSmes().size())
+      new_dst_mask_sme_ = (String) appContext.getGwSmeManager().getSmes().keySet().iterator().next();
 
     final GwRoute route = (GwRoute) appContext.getGwRoutingManager().getRoutes().get(loadId);
     if (null != route) {
@@ -541,14 +564,24 @@ public class Edit extends EditBean
     return null;
   }
 
-  public String getDst_mask_sme_()
+  public String getNew_dstMask()
   {
-    return dst_mask_sme_;
+    return new_dstMask;
   }
 
-  public void setDst_mask_sme_(final String dst_mask_sme_)
+  public void setNew_dstMask(String new_dstMask)
   {
-    this.dst_mask_sme_ = dst_mask_sme_;
+    this.new_dstMask = new_dstMask;
+  }
+
+  public String getNew_dst_mask_sme_()
+  {
+    return new_dst_mask_sme_;
+  }
+
+  public void setNew_dst_mask_sme_(String new_dst_mask_sme_)
+  {
+    this.new_dst_mask_sme_ = new_dst_mask_sme_;
   }
 
   public boolean isTrafficRules_allowReceive()
