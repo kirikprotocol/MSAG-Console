@@ -83,7 +83,7 @@ class MapDialog{
   ET96MAP_SM_RP_OA_T smRpOa;
 public:
   MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,
-    ET96MAP_LOCAL_SSN_T lssn) : state(MAPST_START), dialogid(dialogid),ssn(lssn), smscDialogId(0) 
+    ET96MAP_LOCAL_SSN_T lssn) : state(MAPST_START), dialogid(dialogid),smscDialogId(0),ssn(lssn) 
     {}
   virtual ~MapDialog(){
     if ( smscDialogId != 0 ){
@@ -175,7 +175,7 @@ public:
     for (unsigned n=1;n<8*200+1;++n){
       container->dialogId_pool.push_back(n);
     }
-    __trace2__("MAP::access to container 0x%x",container);
+    __trace2__("MAP::access to container 0x%p",container);
     return container;
   }
   
@@ -186,9 +186,9 @@ public:
   MapDialog* getDialog(ET96MAP_DIALOGUE_ID_T dialogueid){
     MutexGuard g(sync);
     MapDialog* dlg = 0;
-    __trace2__("MAP:: find for dialogid 0x%x, result addr 0x%x",dialogueid,&dlg);
+    __trace2__("MAP:: find for dialogid 0x%x, result addr 0x%p",dialogueid,&dlg);
     if ( hash.Get(dialogueid,dlg) ) {
-      __trace2__("MAP:: find dialog 0x%x for dialogid 0x%x",dlg,dialogueid);
+      __trace2__("MAP:: find dialog 0x%p for dialogid 0x%x",dlg,dialogueid);
       return dlg;
     }
     else return 0;
@@ -198,7 +198,7 @@ public:
     MutexGuard g(sync);
     MapDialog* dlg = new MapDialog(dialogueid,lssn);
     hash.Insert(dialogueid,dlg);
-    __trace2__("MAP:: new dialog 0x%x for dialogid 0x%x",dlg,dialogueid);
+    __trace2__("MAP:: new dialog 0x%p for dialogid 0x%x",dlg,dialogueid);
     return dlg;
   }
   
@@ -208,7 +208,7 @@ public:
     MapDialog* dlg = new MapDialog(map_dialog,lssn);
     dlg->setSMSCDialogId (smsc_did);
     hash.Insert(map_dialog,dlg);
-    __trace2__("MAP:: new dialog 0x%x for dialogid 0x%x->0x%x",dlg,smsc_did,map_dialog);
+    __trace2__("MAP:: new dialog 0x%p for dialogid 0x%x->0x%x",dlg,smsc_did,map_dialog);
     dialogId_pool.pop_front();
     return dlg;
   }
@@ -236,7 +236,7 @@ public:
     MutexGuard g(sync);
     MapDialog* item = 0;
     if ( hash.Get(dialogueid,item) ){
-      __trace2__("MAP:: drop dialog 0x%x for dialogid 0x%x",item,dialogueid);
+      __trace2__("MAP:: drop dialog 0x%p for dialogid 0x%x",item,dialogueid);
       hash.Delete(dialogueid);
       delete item;
     }

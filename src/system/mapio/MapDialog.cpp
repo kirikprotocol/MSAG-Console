@@ -337,8 +337,8 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
       __trace2__("unsupported encoding 0x%x",user_data_coding);
     }*/
     unsigned encoding = 0;
-    if ( user_data_coding & 0xc0 == 0 ||  // 00xxxxxx
-         user_data_coding & 0xc0 == 0x40 )  // 01xxxxxx
+    if ( (user_data_coding & 0xc0) == 0 ||  // 00xxxxxx
+         (user_data_coding & 0xc0) == 0x40 )  // 01xxxxxx
     {
       if ( user_data_coding&(1<<5) ){
         __trace2__("MAP::DIALOG::ForwardReq: required compression");
@@ -346,30 +346,30 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
       }
       encoding = user_data_coding&0x0c;
       sms.setIntProperty(Tag::MS_VALIDITY,
-                         (user_data_coding & 0xc0 == 0)?0:0x03);
+                         ((user_data_coding & 0xc0) == 0)?0:0x03);
     }
-    else if ( user_data_coding & 0xf0 == 0xc0 ) // 1100xxxx
+    else if ( (user_data_coding & 0xf0) == 0xc0 ) // 1100xxxx
     {
       encoding = MAP_OCTET7BIT_ENCODING;
       sms.setIntProperty(Tag::MS_VALIDITY,0x3);
       sms.setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,
                          (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
     }
-    else if ( user_data_coding & 0xf0 == 0xd0 ) // 1101xxxx
+    else if ( (user_data_coding & 0xf0) == 0xd0 ) // 1101xxxx
     {
       encoding = MAP_OCTET7BIT_ENCODING;
       sms.setIntProperty(Tag::MS_VALIDITY,0x0);
       sms.setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,
                          (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
     }
-    else if ( user_data_coding & 0xf0 == 0xe0 ) // 1110xxxx
+    else if ( (user_data_coding & 0xf0) == 0xe0 ) // 1110xxxx
     {
       encoding = MAP_UCS2_ENCODING;
       sms.setIntProperty(Tag::MS_VALIDITY,0x0);
       sms.setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,
                          (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
     }
-    else if ( user_data_coding & 0xf0 == 0xf0 ) // 1111xxxx
+    else if ( (user_data_coding & 0xf0) == 0xf0 ) // 1111xxxx
     {
       if ( user_data_coding & 0x4 ) encoding = MAP_8BIT_ENCODING;
       else encoding = MAP_OCTET7BIT_ENCODING;
@@ -480,9 +480,9 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
             throw runtime_error("MAP::mkDeliveryPDU: Opss, has no ms_validity");
           }
           unsigned ms_validity = sms->getIntProperty(Tag::MS_VALIDITY);
-          if ( ms_validity & 0x3 == 0x3 ){
+          if ( (ms_validity & 0x3) == 0x3 ){
             value = 0xc0;
-          }else if ( ms_validity & 0x3 == 0 ){
+          }else if ( (ms_validity & 0x3) == 0 ){
             value = 0xd0;
           }else{
             __trace2__("MAP::mkDeliveryPDU: Opss, ms_validity = 0x%x but must be 0x0 or 0x3",
