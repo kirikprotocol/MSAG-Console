@@ -1078,6 +1078,29 @@ StateType StateMachine::submit(Tuple& t)
       sms->setBinProperty(Tag::SMSC_CONCATINFO,(char*)ci,1+2*num);
       generateDeliver=false;
       delete [] ((char*)ci);
+
+      char buf[64];
+      sprintf(buf,"%lld",t.msgId);
+      SmscCommand resp = SmscCommand::makeSubmitSmResp
+                           (
+                             buf,
+                             dialogId,
+                             Status::OK,
+                             sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                           );
+      try{
+        src_proxy->putCommand(resp);
+      }catch(...)
+      {
+        smsLog->warn("SBM: failed to put response command SUBMIT_OK Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+          t.msgId,dialogId,
+          sms->getOriginatingAddress().toString().c_str(),
+          sms->getDestinationAddress().toString().c_str(),
+          src_proxy->getSystemId(),
+          ri.smeSystemId.c_str()
+        );
+      }
+
     }else
     {
       smsLog->info("merging sms Id=%lld, next part arrived(%u/%u)",t.msgId,idx,num);
