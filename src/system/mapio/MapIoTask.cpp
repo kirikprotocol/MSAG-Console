@@ -353,7 +353,7 @@ void MapIoTask::dispatcher()
       warning_if(MsgRel(MY_USER_ID,ETSIMAP_ID)!=MSG_OK);
       result = MsgConn(USER01_ID,ETSIMAP_ID);
       if ( result != MSG_OK ) { 
-        __trace2__("MAP: Error at MsgConn, code 0x%hx",err); 
+        __trace2__("MAP: Error at MsgConn, code 0x%hx",result); 
         throw runtime_error("MAP::MapIoTask: MsgConn error"); 
       }
       continue;
