@@ -341,6 +341,7 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms,bool forceDC=false)
         encoding = user_data_coding&0x0c;
         if ( (user_data_coding & 0xc0) == 0x40 )
           sms->setIntProperty(Tag::SMPP_MS_VALIDITY,0x03);
+        sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,(user_data_coding&0x03)+1);
       }
       else if ( (user_data_coding & 0xf0) == 0xc0 ) // 1100xxxx
       {
@@ -373,6 +374,7 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms,bool forceDC=false)
         __trace2__("SmppToSms: unknown coding scheme 0x%x",user_data_coding);
         return false;
       }
+      sms->setIntProperty(Tag::SMPP_DATA_CODING,encoding);
     }else
     {
       /*
