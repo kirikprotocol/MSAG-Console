@@ -53,6 +53,7 @@ static const int MISSINGOPTPARAM=195; //Expected Optional Parameter missing
 static const int INVOPTPARAMVAL=196; //Invalid Optional Parameter Value
 static const int DELIVERYFAILURE=254; //Delivery Failure (used for data_sm_resp)
 static const int UNKNOWNERR=255; //Unknown Error
+static const int INVDCS=260; //Invalid Data Coding Scheme Specified DCS is invalid or MC does not support it.
 static const int NOROUTE=1025; //No route defined for given source and destination addresses
 static const int EXPIRED=1026; //Message expired
 static const int DELIVERYTIMEDOUT=1027; //Delivery attempt timed out
