@@ -195,14 +195,15 @@ protected:
     }
     //g.MemoryFlush();
     //g.Close();
+    size=h.size;
     if(isCached)
     {
       f.SwapBuffers(g);
       g.Close();
+      remove(tmp.c_str());
     }else
     {
       f.Close();
-      size=h.size;
       remove(name.c_str());
       g.Rename(name.c_str());
       f.Swap(g);
