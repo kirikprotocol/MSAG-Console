@@ -233,7 +233,7 @@ void MapIoTask::dispatcher()
       __map_trace2__("orgRefPos = %d", orgRefPos);
       const int specificInfoLenPos = message.msg_p[orgRefPos]+1;
       __map_trace2__("specificInfoLenPos = %d", specificInfoLenPos);
-      const ET96MAP_USERDATA_T specificInfo;
+      ET96MAP_USERDATA_T specificInfo;
       specificInfo.specificInfoLen = ((USHORT_T)message.msg_p[specificInfoLenPos])|(((USHORT_T)message.msg_p[specificInfoLenPos+1])<<8);
       __map_trace2__("specificInfo.specificInfoLen = %d", specificInfo.specificInfoLen);
       if( specificInfo.specificInfoLen > 0 ) {
