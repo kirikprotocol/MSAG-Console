@@ -146,7 +146,7 @@ if (isServiceStatusNeeded || (ServiceIDForShowStatus != null && ServiceIDForShow
 			<td >&nbsp;<%if (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0){
 				%><%=StringEncoderDecoder.encode(ServiceIDForShowStatus)%>&nbsp;is&nbsp;<%=serviceStatus(ServiceIDForShowStatus)%><%
 			}%></td>
-			<td width=12px background="img/smsc_19.jpg"></td>
+			<td width=12px background="img/smsc_19.jpg" style="padding-right:0px;"></td>
 		</tr>
 		</table>
 		<span id="MENU0_NONE"></span>

@@ -186,6 +186,8 @@ public class SMSCErrors
 			public static final String couldntGetSubmitters = B + "couldntGetSubmitters";
 			public static final String couldntGetMembers = B + "couldntGetMembers";
 			public static final String invalidAddress = B + "invalidAddress";
+			public static final String noSubmittersEntered = B + "noSubmittersEntered";
+			public static final String noMembersEntered = B + "noMembersEntered";
 		}
 
 		public static class smsview

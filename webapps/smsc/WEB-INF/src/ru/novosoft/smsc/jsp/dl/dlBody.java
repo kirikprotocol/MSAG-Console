@@ -82,6 +82,11 @@ public class dlBody extends IndexBean
 			return error(SMSCErrors.error.dl.invalidAddress, e);
 		}
 
+		if (fullSubmittersList.size() == 0)
+			return error(SMSCErrors.error.dl.noSubmittersEntered);
+		if (fullMembersList.size() == 0)
+			return error(SMSCErrors.error.dl.noMembersEntered);
+
 		return RESULT_OK;
 	}
 

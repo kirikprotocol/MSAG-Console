@@ -304,3 +304,10 @@ function clickFilter()
 	opForm.submit();
 	return false;
 }
+function noValidationSubmit(buttonElem)
+{
+  document.all.jbutton.value = buttonElem.jbuttonValue;
+  document.all.jbutton.name  = buttonElem.jbuttonName;
+  opForm.submit();
+  return false;
+}
