@@ -169,7 +169,7 @@ const string DbSmeInsertJobTestCases::processJobFirstOutput(const string& text,
 	__require__(dbSmeReg);
 	__decl_tc__;
 	static const DateFormatter dateFmt("dd-MM-yyyy HH:mm:ss");
-	static const FloatFormatter fltFmt(6);
+	static const FloatFormatter fltFmt;
 	static const DoubleFormatter dblFmt(6, false);
 	static const DoubleFormatter ldblFmt(6, false);
 	if (dbSmeReg->getRecord(rec->getId()))

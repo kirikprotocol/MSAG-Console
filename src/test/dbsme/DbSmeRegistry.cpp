@@ -7,6 +7,22 @@ namespace dbsme {
 
 using smsc::core::synchronization::MutexGuard;
 
+#define __set__(name) \
+	__##name(rec.__##name)
+
+DbSmeTestRecord::DbSmeTestRecord(const DbSmeTestRecord& rec)
+: mask(rec.mask), defInput(NULL), __set__(Job), __set__(Id), __set__(Int8),
+	__set__(Int16), __set__(Int32), __set__(Int64), __set__(Float),
+	__set__(Double), __set__(LongDouble), __set__(DateType), __set__(Date),
+	__set__(String), __set__(QuotedString), __set__(FromAddr), __set__(ToAddr)
+{
+	if (rec.defInput)
+	{
+		rec.defInput->ref();
+		defInput = rec.defInput;
+	}
+}
+
 void DbSmeTestRecord::setDefInput(DbSmeTestRecord* rec)
 {
 	__require__(rec);

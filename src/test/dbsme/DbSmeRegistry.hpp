@@ -37,7 +37,6 @@ class DbSmeTestRecord : public PduDataObject
 	vector<bool> mask;
 	DbSmeTestRecord* defInput;
 
-	DbSmeTestRecord(const DbSmeTestRecord&) {}
 	DbSmeTestRecord& operator=(const DbSmeTestRecord& rec) {}
 public:
 	__field__(0, string, Job)
@@ -60,6 +59,7 @@ public:
 	bool checkDefInput() const { return defInput; }
 
 	DbSmeTestRecord() : mask(15, false), defInput(NULL) {}
+	DbSmeTestRecord(const DbSmeTestRecord&);
 	virtual ~DbSmeTestRecord();
 	//Обновляет все поля, кроме Job, Id и DateType
 	void update(const DbSmeTestRecord& rec);
