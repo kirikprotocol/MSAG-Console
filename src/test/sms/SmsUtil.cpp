@@ -65,84 +65,84 @@ bool SmsUtil::compareMessageBodies(const Body& b1, const Body& b2)
 	return res;
 }
 
-auto_ptr< vector<int> > SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2)
+vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2)
 {
-	vector<int>* res = new vector<int>;
+	vector<int> res;
 	if (sms1.getState() != sms2.getState())
 	{
-		res->push_back(1);
+		res.push_back(1);
 	}
 	if (!compareAddresses(sms1.getOriginatingAddress(),
 		sms2.getOriginatingAddress()))
 	{
-		res->push_back(2);
+		res.push_back(2);
 	}
 	if (!compareAddresses(sms1.getDestinationAddress(),
 		sms2.getDestinationAddress()))
 	{
-		res->push_back(3);
+		res.push_back(3);
 	}
 	if (!compareDescriptors(sms1.getOriginatingDescriptor(),
 		sms2.getOriginatingDescriptor()))
 	{
-		res->push_back(4);
+		res.push_back(4);
 	}
 	if (!compareDescriptors(sms1.getDestinationDescriptor(),
 		sms2.getDestinationDescriptor()))
 	{
-		res->push_back(5);
+		res.push_back(5);
 	}
 	if (sms1.getWaitTime() != sms2.getWaitTime())
 	{
-		res->push_back(6);
+		res.push_back(6);
 	}
 	if (sms1.getValidTime() != sms2.getValidTime())
 	{
-		res->push_back(7);
+		res.push_back(7);
 	}
 	if (sms1.getSubmitTime() != sms2.getSubmitTime())
 	{
-		res->push_back(8);
+		res.push_back(8);
 	}
 	if (sms1.getLastTime() != sms2.getLastTime())
 	{
-		res->push_back(9);
+		res.push_back(9);
 	}
 	if (sms1.getNextTime() != sms2.getNextTime())
 	{
-		res->push_back(10);
+		res.push_back(10);
 	}
 	if (sms1.getPriority() != sms2.getPriority())
 	{
-		res->push_back(11);
+		res.push_back(11);
 	}
 	if (sms1.getMessageReference() != sms2.getMessageReference())
 	{
-		res->push_back(12);
+		res.push_back(12);
 	}
 	if (sms1.getProtocolIdentifier() != sms2.getProtocolIdentifier())
 	{
-		res->push_back(13);
+		res.push_back(13);
 	}
 	if (sms1.getDeliveryReport() != sms2.getDeliveryReport())
 	{
-		res->push_back(14);
+		res.push_back(14);
 	}
 	if (sms1.isArchivationRequested() != sms2.isArchivationRequested())
 	{
-		res->push_back(15);
+		res.push_back(15);
 	}
 	if (sms1.getFailureCause() != sms2.getFailureCause())
 	{
-		res->push_back(16);
+		res.push_back(16);
 	}
 	if (sms1.getAttemptsCount() != sms2.getAttemptsCount())
 	{
-		res->push_back(17);
+		res.push_back(17);
 	}
 	if (!compareMessageBodies(sms1.getMessageBody(), sms2.getMessageBody()))
 	{
-		res->push_back(18);
+		res.push_back(18);
 	}
 	char type1[MAX_ESERVICE_TYPE_LENGTH + 1];
 	char type2[MAX_ESERVICE_TYPE_LENGTH + 1];
@@ -150,9 +150,9 @@ auto_ptr< vector<int> > SmsUtil::compareMessages(const SMS& sms1, const SMS& sms
 	sms2.getEServiceType(type2);
 	if (strcmp(type1, type2))
 	{
-		res->push_back(19);
+		res.push_back(19);
 	}
-	return auto_ptr< vector<int> >(res);
+	return res;
 }
 
 void SmsUtil::setupRandomCorrectAddress(Address* addr)
@@ -160,9 +160,10 @@ void SmsUtil::setupRandomCorrectAddress(Address* addr)
 	if (addr)
 	{
 		int len = rand1(MAX_ADDRESS_VALUE_LENGTH);
+		auto_ptr<char> val = rand_char(len);
 		addr->setTypeOfNumber((uint8_t) rand0(255));
 		addr->setNumberingPlan((uint8_t) rand0(255));
-		addr->setValue(len, rand_char(len).get());
+		addr->setValue(len, val.get());
 	}
 }
 	
@@ -171,8 +172,10 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc)
 	if (desc)
 	{
 		int len = rand1(MAX_ADDRESS_VALUE_LENGTH);
-		desc->setMsc(len, rand_char(len).get());
-		desc->setImsi(len, rand_char(len).get());
+		auto_ptr<char> mscAddr = rand_char(len);
+		auto_ptr<char> imsiAddr = rand_char(len);
+		desc->setMsc(len, mscAddr.get());
+		desc->setImsi(len, imsiAddr.get());
 		desc->setSmeNumber((uint32_t) rand0(65535));
 	}
 }
@@ -182,7 +185,8 @@ void SmsUtil::setupRandomCorrectBody(Body* body)
 	if (body)
 	{
 		int len = rand1(MAX_SHORT_MESSAGE_LENGTH);
-		body->setData(len, rand_uint8_t(len).get());
+		auto_ptr<uint8_t> data = rand_uint8_t(len);
+		body->setData(len, data.get());
 		body->setCodingScheme((uint8_t) rand0(255));
 		body->setHeaderIndicator((bool) rand0(1));
 	}
@@ -214,7 +218,8 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms)
 	//sms->setFailureCause();
 	//sms->setAttemptsCount();
 	setupRandomCorrectBody(&sms->getMessageBody());
-	sms->setEServiceType(rand_char(rand0(MAX_ESERVICE_TYPE_LENGTH)).get());
+	auto_ptr<char> tmp = rand_char(rand1(MAX_ESERVICE_TYPE_LENGTH));
+	sms->setEServiceType(tmp.get());
 }
 
 void SmsUtil::clearSms(SMS* sms)

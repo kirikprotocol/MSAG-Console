@@ -25,7 +25,7 @@ public:
 
 	static bool compareMessageBodies(const Body& b1, const Body& b2);
 
-	static auto_ptr< vector<int> > compareMessages(const SMS& sms1, const SMS& sms2);
+	static vector<int> compareMessages(const SMS& sms1, const SMS& sms2);
 
 	static void setupRandomCorrectAddress(Address* addr);
 	
