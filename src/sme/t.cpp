@@ -28,6 +28,8 @@ int permErrProb=0;
 
 int respDelay=0;
 
+bool connected=false;
+
 int mode=0;
 
 bool unicode=false;
@@ -292,6 +294,8 @@ void SetSar(SmppSession& ss,const string& args)
     sar_mr=0;
     sar_num=0;
     sar_seq=0;
+    printf("Sar off\n");
+    return;
   }
   if(!splitString(mr,num))
   {
@@ -572,8 +576,9 @@ public:
   }
   void handleError(int errorCode)
   {
-    printf("\n\n\nerror!\n\n\n");
-    stopped=1;
+    printf("Network error!\n");
+    fflush(stdout);
+    connected=false;
   }
 
   void setTrans(SmppTransmitter *t,SmppTransmitter *at)
@@ -586,6 +591,13 @@ protected:
   SmppTransmitter* atrans;
 };
 
+
+void trimend(char* buf)
+{
+  int l=strlen(buf)-1;
+  while(l>=0 && isspace(buf[l]))l--;
+  buf[l+1]=0;
+}
 
 int main(int argc,char* argv[])
 {
@@ -755,7 +767,13 @@ int main(int argc,char* argv[])
   }
   try{
 
-    ss.connect(bindType);
+    try{
+      ss.connect(bindType);
+      connected=true;
+    }catch(SmppConnectException& e)
+    {
+      printf("Connect error:%s\n",e.getTextReason());
+    }
 
     char *addr=NULL;
     string lastAddr;
@@ -770,18 +788,35 @@ int main(int argc,char* argv[])
     cmdHist=*history_get_history_state();
     msgHist=*history_get_history_state();
 
+    FILE *cmdfile=0;
+    char fileBuf[65536];
 
     if(!receiveOnly)
     while(!stopped)
     {
-      if(addr)free(addr);
-      addr=NULL;
-      history_set_history_state(&cmdHist);
-      addr=readline("Address or cmd>");
-      if(!addr)break;
-      if(!*addr)continue;
-      add_history(addr);
-      cmdHist=*history_get_history_state();
+      if(cmdfile)
+      {
+        if(!fgets(fileBuf,sizeof(fileBuf),cmdfile))
+        {
+          fclose(cmdfile);
+          addr=0;
+          message=0;
+          cmdfile=0;
+          continue;
+        }
+        trimend(fileBuf);
+        addr=fileBuf;
+      }else
+      {
+        if(addr)free(addr);
+        addr=NULL;
+        history_set_history_state(&cmdHist);
+        addr=readline("Address or cmd>");
+        if(!addr)break;
+        if(!*addr)continue;
+        add_history(addr);
+        cmdHist=*history_get_history_state();
+      }
       string cmd=addr;
       string arg;
       splitString(cmd,arg);
@@ -789,6 +824,56 @@ int main(int argc,char* argv[])
       {
         break;
       }
+
+      if(cmd=="connect")
+      {
+        if(connected)
+        {
+          printf("Sme already connected, type disconenct first\n");
+          continue;
+        }
+        try{
+          ss.connect(bindType);
+        }catch(SmppConnectException& e)
+        {
+          printf("Connect error:%s\n",e.getTextReason());
+          continue;
+        }
+        connected=true;
+        printf("Connect ok\n");
+        continue;
+      }
+
+      if(cmd=="disconnect")
+      {
+        if(!connected)
+        {
+          printf("Sme already disconenct, connect it first\n");
+          continue;
+        }
+        ss.close();
+        printf("Disconnected\n");
+        connected=false;
+        continue;
+      }
+
+      if(cmd[0]=='@')
+      {
+        string fn=cmd.substr(1);
+        cmdfile=fopen(fn.c_str(),"rt");
+        if(!cmdfile)
+        {
+          printf("Failed to open file:%s(%s)\n",fn.c_str(),strerror(errno));
+        }else
+        {
+          if(addr)free(addr);
+          if(message)free(message);
+          addr=0;
+          message=0;
+        }
+        continue;
+      }
+
       bool cmdFound=false;
       for(int i=0;i<commandsCount;i++)
       {
@@ -818,19 +903,34 @@ int main(int argc,char* argv[])
           printf("Invalid address\n");
           continue;
         }
-        if(message)free(message);
-        message=NULL;
-        history_set_history_state(&msgHist);
-        message=readline("Enter message:");
-        if(!message)break;
-        add_history(message);
-        msgHist=*history_get_history_state();
-        rl_reset_line_state();
+        if(cmdfile)
+        {
+          fgets(fileBuf,sizeof(fileBuf),cmdfile);
+          trimend(fileBuf);
+          message=fileBuf;
+        }else
+        {
+          if(message)free(message);
+          message=NULL;
+          history_set_history_state(&msgHist);
+          message=readline("Enter message:");
+          if(!message)break;
+          add_history(message);
+          msgHist=*history_get_history_state();
+          rl_reset_line_state();
+        }
       }else
       {
         s.setDestinationAddress(lastAddr.c_str());
       }
       if(!message)continue;
+
+      if(!connected)
+      {
+        printf("Sme not connected, type connect first\n");
+        continue;
+      }
+
       int len=strlen(message);
 
       PduSubmitSm sm;
@@ -951,11 +1051,6 @@ int main(int argc,char* argv[])
     {
       while(!stopped){sleep(5);}
     }
-  }
-  catch(SmppConnectException& e)
-  {
-    printf("Bind error:%s\n",e.getTextReason());
-    return -1;
   }
   catch(std::exception& e)
   {
