@@ -399,14 +399,14 @@ bool Task::formatMessage(Message& message)
         MessageFormatter formatter(templateFormatter); 
         for (int i=0; i<events.Count() && formatter.canAdd(events[i]); i++) 
         {
-            bool bWasNew = (events[i].msg_id <= 0) ;
+            bool bWasNew = (events[i].msg_id <= 0);
             events[i].msg_id = currentMessageId;
 
             assignEvtStmt->setUint64(1, events[i].msg_id);
             assignEvtStmt->setUint64(2, events[i].id);
             if (assignEvtStmt->executeUpdate() <= 0) {
-                smsc_log_debug(logger, "Task: failed to assign event #%lld to message #%lld. "
-                               "Possible event was receipted", events[i].id, events[i].msg_id);
+                smsc_log_warn(logger, "Task for abonent %s: failed to assign event #%lld to message #%lld. "
+                              "Possible event was receipted", abonent.c_str(), events[i].id, events[i].msg_id);
                 if (bWasNew && oldNewEventsCount) oldNewEventsCount--;
                 events.Delete(i); 
             }
@@ -644,18 +644,17 @@ void Task::waitReceipt(int eventCount, const char* smsc_id)
     }
 }
 
+// Delete message (by msg_id if defined, else getMessage(smsc_id)) & all assigned events
+// Return set of deleted events (for notification(s) processing) by caller
 Array<std::string> Task::finalizeMessage(const char* smsc_id, 
                                          bool delivered, bool retry, uint64_t msg_id/*=0*/)
 {
     smsc_log_debug(logger, "Task: finalizing message #%lld smscId=%s delivered=%d",
                    msg_id, (smsc_id) ? smsc_id:"-", (int)delivered);
-
-    Array<std::string> callers;
-    
-    // Delete message (by msg_id if defined, else getMessage(smsc_id)) & all assigned events
-    // Return set of deleted events (for notification(s) processing) by caller
     
     __require__(ds);
+
+    Array<std::string> callers;
     Connection* connection = 0;
     uint64_t oldCurrentMessageId = currentMessageId;
     try
@@ -667,7 +666,8 @@ Array<std::string> Task::finalizeMessage(const char* smsc_id,
         if (!msg_id) {
             Message message; MessageState state;
             if (!Task::getMessage(smsc_id, message, state, connection)) // load msg_id by smsc_id
-                throw Exception("Message for smscId=%s not found", (smsc_id) ? smsc_id:"-");
+                throw Exception("Task for abonent %s: Message for smscId=%s not found",
+                                abonent.c_str(), (smsc_id) ? smsc_id:"-");
             msg_id = message.id;
         }
 
@@ -680,7 +680,8 @@ Array<std::string> Task::finalizeMessage(const char* smsc_id,
             throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "finalize message");
         delMsgStmt->setUint64(1, msg_id);
         if (delMsgStmt->executeUpdate() <= 0)
-            throw Exception("Task: failed to delete message #%lld. Message not found", msg_id);
+            smsc_log_warn(logger, "Task for abonent %s: failed to delete message #%lld. Message not found",
+                          abonent.c_str(), msg_id);
 
         /* SELECT DISTINCT(CALLER) FROM MCISME_EVT_SET WHERE MSG_ID=:MSG_ID */
         Statement* getEvtStmt = connection->getStatement(GET_EVT_CALLER_ID, GET_EVT_CALLER_SQL);
