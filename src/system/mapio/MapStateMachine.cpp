@@ -1125,10 +1125,10 @@ static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
     memcpy( ussdString.ussdStr, text, text_len );
     ussdEncoding = 0x48;
   } else if( encoding == MAP_OCTET7BIT_ENCODING || encoding == MAP_LATIN1_ENCODING || encoding == MAP_SMSC7BIT_ENCODING ) {
-    unsigned elen = sizeof(ussdString.ussdStr);
     if (encoding == MAP_SMSC7BIT_ENCODING ) {
-      bytes = ConvertSMSC7bit27bit(text,text_len,ussdString.ussdStr,elen);
+      bytes = ConvertSMSC7bit27bit(text,text_len,ussdString.ussdStr,0);
     } else {
+      unsigned elen = 0;
       bytes = ConvertText27bit(text,text_len,ussdString.ussdStr,&elen);
     }
     // if buffer have trailing 7 unfilled bits place <cr> there
