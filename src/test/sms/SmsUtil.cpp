@@ -226,10 +226,10 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms)
 	setupRandomCorrectDescriptor(&sms->getOriginatingDescriptor());
 	//sms->setDestinationDescriptor();
 	sms->setWaitTime(time(NULL));
-	sms->setValidTime(time(NULL) + 24 * 3600);
-	sms->setSubmitTime(time(NULL) - 1);
+	sms->setValidTime(time(NULL) + rand0(24 * 3600));
+	sms->setSubmitTime(time(NULL) + rand2(-3600, 0));
 	//sms->setLastTime();
-	//sms->setNextTime();
+	sms->setNextTime(time(NULL) + rand0(24 * 3600));
 	sms->setMessageReference((uint8_t) rand0(255));
 	sms->setPriority((uint8_t) rand0(255));
 	sms->setProtocolIdentifier((uint8_t) rand0(255));
