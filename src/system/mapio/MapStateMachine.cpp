@@ -629,6 +629,40 @@ static void ForwardMO(MapDialog* dialog) {
   memcpy(ui.signalInfo, mo_pdu, length );
   ui.signalInfoLen = (UCHAR_T)length;
 
+  if( smsc::util::_map_cat->isDebugEnabled() ) {
+   {
+    char *text = new char[256*4+1];
+    char *buf = (char *)&smRpDa;
+    int buflen = smRpDa.addrLen+2;
+    int k = 0;
+    for ( int i=0; i<buflen; i++){
+      k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
+    }
+    text[k]=0;
+    __log2__(smsc::util::_map_cat,log4cpp::Priority::WARN, "rpda: %s",text);
+
+    buf = (char *)&smRpOa;
+    int buflen = smRpOa.addrLen+2;
+    k = 0;
+    for ( int i=0; i<buflen; i++){
+      k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
+    }
+    text[k]=0;
+    __log2__(smsc::util::_map_cat,log4cpp::Priority::WARN, "rpoa: %s",text);
+    
+    buf = (char *)&ui;
+    int buflen = ui.signalInfoLen+1;
+    k = 0;
+    for ( int i=0; i<buflen; i++){
+      k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
+    }
+    text[k]=0;
+    __log2__(smsc::util::_map_cat,log4cpp::Priority::WARN, "ui: %s",text);
+    delete text;
+   }
+  }
+
+
   __map_trace2__("MAP:: ForwardMO: forwarding msg %s->%s to sc: %s", sms->getOriginatingAddress().toString().c_str(), sms->getDestinationAddress().toString().c_str(), addr.toString().c_str() );
 
   USHORT_T result = Et96MapOpenReq( SSN, dialog->dialogid_map, &appContext, &destAddr, &dialog->scAddr, 0, 0, 0 );
