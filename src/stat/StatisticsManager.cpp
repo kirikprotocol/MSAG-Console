@@ -31,6 +31,16 @@ void StatisticsManager::updateAccepted(const char* srcSmeId)
         else stat->sent++;
     }
 }
+void StatisticsManager::updateRejected(int errcode) 
+{
+    MutexGuard  incomingGuard(outgoingLock);
+    MutexGuard  switchGuard(switchLock);
+    
+    int* counter = finalizedByError[currentIndex].GetPtr(errcode);
+    if (!counter) finalizedByError[currentIndex].Insert(errcode, 1);
+    else (*counter)++;
+}
+
 void StatisticsManager::updateChanged(const char* dstSmeId, 
     const char* routeId, int errcode = 0) 
 {
@@ -75,6 +85,8 @@ int StatisticsManager::Execute()
         __trace2__("StatisticsManager::Execute() >> Start wait %d", toSleep);
         awakeEvent.Wait(toSleep); // Wait for next hour begins ...
         __trace__("StatisticsManager::Execute() >> End wait");
+        
+        MutexGuard flushGuard(flushLock);
         flushCounters(switchCounters());
         __trace__("StatisticsManager::Execute() >> Flushed");
     }
@@ -96,6 +108,7 @@ void StatisticsManager::stop()
 
 void StatisticsManager::flushStatistics() 
 {
+    MutexGuard flushGuard(flushLock);
     awakeEvent.Signal();
 }
 
@@ -143,8 +156,6 @@ const char* insertStatRouteSql = (const char*)
 
 void StatisticsManager::flushCounters(short index)
 {
-    MutexGuard  flushGuard(flushLock);
-
     uint32_t period = calculatePeriod();
 
     Connection* connection = 0;
