@@ -270,7 +270,7 @@ int main(int argc, char* argv[])
 			test.executeTest(numAddr);
 			test.printRoutes();
 		}
-		chkList.save();
+		chkList.saveHtml();
 	}
 	catch (...)
 	{

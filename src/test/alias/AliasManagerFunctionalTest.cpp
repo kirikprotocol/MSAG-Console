@@ -200,7 +200,7 @@ int main(int argc, char* argv[])
 			AliasManagerFunctionalTest test(&chkList);
 			test.executeTest(numAddr);
 		}
-		chkList.save();
+		chkList.saveHtml();
 	}
 	catch (...)
 	{
