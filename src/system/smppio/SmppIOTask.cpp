@@ -145,7 +145,7 @@ int SmppInputThread::Execute()
         if(s->getData(SOCKET_SLOT_KILL) || (to=ss->isConnectionTimedOut()))
         {
           s->Close();
-          if(to)outTask->removeSocket(error[i]);
+          if(to)outTask->removeSocket(s);
           killSocket(i);
           i--;
           continue;
