@@ -54,10 +54,12 @@
     <page id="profile_mgr" question="0">
       <!-- if (!MAIN attr && !"0") change profile & remove MAIN attribute -->
       <pagePreProcessor class="ru.sibinco.mci.profile.ProfileManagerPreprocessor">
+        <bundle name="system"/>
         <bundle name="profile"/>
       </pagePreProcessor>
       <!-- Query & show profile info in change dialog -->
       <pageExecutor class="ru.sibinco.mci.profile.ProfileManagerExecutor">
+        <bundle name="system"/>
         <bundle name="profile"/>
       </pageExecutor>
       <command name="1" target="profile_mgr"/>   <!-- sms абоненту (да/нет)  -->
@@ -69,10 +71,12 @@
     <page id="profile_set" question="0">
       <!-- Set inform or notify reason attribute -->
       <pagePreProcessor class="ru.sibinco.mci.profile.ProfileSetPreprocessor">
+        <bundle name="system"/>
         <bundle name="profile"/>
       </pagePreProcessor>
       <!-- Show message format alternatives for inform/notify type -->
       <pageExecutor class="ru.sibinco.mci.profile.ProfileSetExecutor">
+        <bundle name="system"/>
         <bundle name="profile"/>
       </pageExecutor>
       <command name="(**)" target="profile_mgr"/>
