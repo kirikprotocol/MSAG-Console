@@ -196,7 +196,8 @@ void SmppProfilerTestCases::updateProfileIncorrect(bool sync, uint8_t dataCoding
 	{
 		PduData::IntProps intProps;
 		intProps["incorrectCmdText"] = 1;
-		sendUpdateProfilePdu("Cmd Text", &intProps, NULL, NULL, sync, dataCoding);
+		auto_ptr<char> tmp = rand_char(rand0(5));
+		sendUpdateProfilePdu(tmp.get(), &intProps, NULL, NULL, sync, dataCoding);
 		__tc_ok__;
 
 	}
@@ -232,7 +233,7 @@ AckText* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	//проверка profiler reportOptions
 	if (monitor->pduData->intProps.count("reportOptions"))
 	{
-		__tc__("processUpdateProfile.reportOptions.dataCoding"); __tc_ok__;
+		__tc__("updateProfile.ack.reportOptions.dataCoding"); __tc_ok__;
 		__cfg_str__(profilerRespReportNone);
 		__cfg_str__(profilerRespReportFull);
 		switch (monitor->pduData->intProps.find("reportOptions")->second)
@@ -250,7 +251,7 @@ AckText* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	//проверка profiler codePage
 	else if (monitor->pduData->intProps.count("codePage"))
 	{
-		__tc__("processUpdateProfile.codePage.dataCoding"); __tc_ok__;
+		__tc__("updateProfile.ack.codePage.dataCoding"); __tc_ok__;
 		__cfg_str__(profilerRespDataCodingDefault);
 		__cfg_str__(profilerRespDataCodingUcs2);
 		switch (monitor->pduData->intProps.find("codePage")->second)
@@ -270,7 +271,7 @@ AckText* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	//неправильный текст команды
 	else if (monitor->pduData->intProps.count("incorrectCmdText"))
 	{
-		__tc__("processUpdateProfile.incorrectCmdText.dataCoding"); __tc_ok__;
+		__tc__("updateProfile.ack.incorrectCmdText.dataCoding"); __tc_ok__;
 		__cfg_str__(profilerRespInvalidCmdText);
 		__get_resp__(profilerRespInvalidCmdText, profile.codepage, valid);
 		//return ...;
@@ -309,12 +310,12 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 		return;
 	}
 	//проверить и обновить профиль
-	__tc__("processUpdateProfile.checkFields");
+	__tc__("updateProfile.ack.checkFields");
     SmppOptional opt;
 	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());
 	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 0);
 	__tc_ok_cond__;
-	__tc__("processUpdateProfile.checkText");
+	__tc__("updateProfile.ack.checkText");
 	__check__(1, dataCoding, ack->dataCoding);
 	if (text.length() > getMaxChars(ack->dataCoding))
 	{
@@ -338,7 +339,7 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 		}
 		else
 		{
-			__tc__("processUpdateProfile.multipleMessages");
+			__tc__("updateProfile.ack.multipleMessages");
 			if (text.length() != getMaxChars(ack->dataCoding) &&
 				ack->text.length() % getMaxChars(ack->dataCoding) != 0)
 			{
