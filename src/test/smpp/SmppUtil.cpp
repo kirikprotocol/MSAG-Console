@@ -29,6 +29,7 @@ static const int MAX_OSTR_PRINT_SIZE = 1000;
 
 void pdu2file(const char* pduName, const string& id, SmppHeader* pdu)
 {
+	/*
 	//get bytes
 	int sz = calcSmppPacketLength(pdu);
 	char buf[sz];
@@ -40,6 +41,7 @@ void pdu2file(const char* pduName, const string& id, SmppHeader* pdu)
 	sprintf(fileName, "pdu/%s_%u_%s", pduName, pdu->get_sequenceNumber(), id.c_str());
 	ofstream fs(fileName);
 	fs.write(buf, sz);
+	*/
 }
 
 void dumpPdu(const char* tc, const string& id, SmppHeader* pdu)
@@ -416,13 +418,14 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	uint8_t dataCoding;
 	if (forceDc)
 	{
+		bool simMsg;
 		do
 		{
 			__set_int__(uint8_t, dataCoding, rand0(255));
 			__trace2__("setupRandomCorrectSubmitSmPdu(): forceDc = true, dataCoding = %d",
 				(int) p.get_dataCoding());
 		}
-		while (!extractDataCoding(p.get_dataCoding(), dataCoding));
+		while (!extractDataCoding(p.get_dataCoding(), dataCoding, simMsg));
 	}
 	else
 	{
@@ -707,14 +710,16 @@ void SmppUtil::setupRandomCorrectSubmitMultiPdu(PduMultiSm* pdu)
 }
 */
 
-bool SmppUtil::extractDataCoding(uint8_t dcs, uint8_t& dc)
+bool SmppUtil::extractDataCoding(uint8_t dcs, uint8_t& dc, bool& simMsg)
 {
 	bitset<8> b(dcs);
+	simMsg = false;
 	//00xxxxxx и 01xxxxxx
 	if (!b[7])
 	{
-		if (b[4] && b[1] && !b[0]) //message class is set & dest_addr_subunit = (U)SIM specific message
+		if (/*b[4] &&*/ b[1] && !b[0]) //message class set игнорирую, dest_addr_subunit = (U)SIM specific message
 		{
+			simMsg = true;
 			dc = BINARY; //транслитерацию не производить, игнорируя значение пофиля абонента
 			return true;
 		}
@@ -748,8 +753,11 @@ bool SmppUtil::extractDataCoding(uint8_t dcs, uint8_t& dc)
 		//1111xxxx
 		if (b[5] && b[4])
 		{
+			if (b[1] && !b[0]) //(U)SIM-specific
+			{
+				simMsg = true;
+			}
 			dc = b[2] ? BINARY : SMSC7BIT;
-			//(U)SIM-specific message игнорирую, т.к. транслитерация в этом случае невозможна
 			return true;
 		}
 		else

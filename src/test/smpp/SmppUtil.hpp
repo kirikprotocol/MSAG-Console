@@ -148,7 +148,7 @@ public:
 	static void setupRandomCorrectOptionalParams(SmppOptional& opt,
 		uint8_t dataCoding, bool udhi, uint64_t mask = OPT_ALL, bool check = true);
 
-	static bool extractDataCoding(uint8_t dcs, uint8_t& dc);
+	static bool extractDataCoding(uint8_t dcs, uint8_t& dc, bool& simMsg);
 	static SmppHeader* copyPdu(SmppHeader* pdu);
 };
 
