@@ -99,7 +99,7 @@ switch (bean.getStage())
 	{
 		int rowN = 0;%>
 		<table class=secRep cellspacing=0 cellspadding=1 width="100%">
-		<tr class=row<%=(rowN++)&1;%>>
+		<tr class=row<%=(rowN++)&1%>>
 			<th>System Id</th>
 			<td><input type="text" name="serviceId" readonly value="<%=StringEncoderDecoder.encode(bean.getServiceId())%>"></td>
 		</tr>
