@@ -2043,7 +2043,7 @@ static void NotifyHLR(MapDialog* dialog)
   ET96MAP_DEL_OUTCOME_T deliveryOutcom;
   if ( dialog->wasDelivered ) {
     deliveryOutcom = ET96MAP_TRANSFER_SUCCESSFUL;
-    __trace2__("MAP::%s OK_DELIVERED");
+    __trace2__("MAP::%s OK_DELIVERED",__FUNCTION__);
   }
   else if ( dialog->subscriberAbsent ) {
     deliveryOutcom = ET96MAP_SUBSCRIBER_ABSENT;
