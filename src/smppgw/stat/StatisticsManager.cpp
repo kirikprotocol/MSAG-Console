@@ -284,6 +284,7 @@ void GWStatisticsManager::flushCounters(int index)
         while (commonStatByRoute[index].Next(routeId, routeStat))
         {
             if (!routeStat || !routeId || routeId[0] == '\0') continue;
+            __trace2__("routeid=%s",routeId);
             insertStatRouteStmt->setString(2 , routeId);
             insertStatRouteStmt->setInt32 (3 , routeStat->providerId);
             insertStatRouteStmt->setInt32 (4 , routeStat->accepted);

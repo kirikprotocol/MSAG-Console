@@ -55,7 +55,7 @@ namespace stat {
       {
         strncpy(smeId,proxy->getSystemId(),sizeof(smeId));
         smeProviderId=proxy->getProviderId();
-        strncpy(routeId,ri.routeId.c_str(),sizeof(smeId));
+        strncpy(routeId,ri.routeId.c_str(),sizeof(routeId));
         routeProviderId=ri.providerId;
       }
       StatInfo(const StatInfo& src)
