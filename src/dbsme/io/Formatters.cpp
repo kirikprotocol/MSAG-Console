@@ -187,7 +187,7 @@ void LongDoubleFormatter::format(
     std::string& output, FormatEntity& entity, GetAdapter& adapter)
         throw(FormattingException, AdapterException)
 {
-    char    buff[128] = "";
+    char    buff[256] = "";
     if (!adapter.isNull(entity.position))
     {
         sprintf(buff, "%Le", adapter.getLongDouble(entity.position));
@@ -198,13 +198,162 @@ void DateTimeFormatter::format(
     std::string& output, FormatEntity& entity, GetAdapter& adapter)
         throw(FormattingException, AdapterException)
 {
-    char    buff[256] = "";
+    static const char*  fullMonthesNames[12] = {
+        "January", "February", "March", "April", 
+        "May", "June", "July", "August", "September",
+        "October", "November", "December"
+    };
+    static const char*  shortMonthesNames[12] = {
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    };
+    static const char*  fullWeekDays[7] = {
+        "Sunday", "Monday", "Tuesday", "Wednesday",
+        "Thursday", "Friday", "Saturday"
+    };
+    static const char*  shortWeekDays[7] = {
+        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+    };
+    static const char*  dayTimeParts[2] = {
+        "a.m.", "p.m."
+    };
+
     if (!adapter.isNull(entity.position))
     {
+        char    buff[256] = "";
         time_t date = adapter.getDateTime(entity.position);
-        //sprintf(buff, "%", );
+        const char* pattern = entity.getOption("pattern");
+        if (pattern)
+        {
+            tm tmdt;
+            bool needAMPM = false;
+            int curPos = 0;
+            localtime_r(&date, &tmdt);
+
+            while (pattern[curPos])
+            {
+                switch(pattern[curPos])
+                {
+                case 'w':
+                {
+                    curPos++;
+                    output += shortWeekDays[tmdt.tm_wday];
+                    continue;
+                }
+                case 'W':
+                {
+                    curPos++;
+                    output += fullWeekDays[tmdt.tm_wday];
+                    continue;
+                }
+                case 'h':
+                {
+                    int val = tmdt.tm_hour%12;
+                    if (pattern[++curPos] == 'h') {
+                        curPos++;
+                        sprintf(buff, ((val<10) ? "0%d":"%d"), val);
+                    } else 
+                        sprintf(buff, "%d", val);
+                    output += buff;
+                    continue;
+                }
+                case 'H':
+                {
+                    int val = tmdt.tm_hour;
+                    if (pattern[++curPos] == 'H') {
+                        curPos++;
+                        sprintf(buff, ((val<10) ? "0%d":"%d"), val);
+                    } else
+                        sprintf(buff, "%d", val);
+                    output += buff;
+                    continue;
+                }
+                case 'y':
+                {
+                    if (pattern[curPos+1] == 'y')
+                    {
+                        curPos += 2;
+                        if (pattern[curPos] == 'y' && 
+                            pattern[curPos+1] == 'y') 
+                        {
+                            curPos += 2;
+                            sprintf(buff, "%d", tmdt.tm_year+1900);
+                        }
+                        else
+                            sprintf(buff, "%d", (tmdt.tm_year >= 100) ?
+                                    tmdt.tm_year-100:tmdt.tm_year);
+                        output += buff;
+                        continue;
+                    }
+                    break;
+                }
+                case 'm':
+                {
+                    int val = tmdt.tm_min;
+                    if (pattern[++curPos] == 'm') {
+                        curPos++;
+                        sprintf(buff, ((val<10) ? "0%d":"%d"), val);
+                    } else
+                        sprintf(buff, "%d", val);
+                    output += buff;
+                    continue;
+                }
+                case 's':
+                {
+                    int val = tmdt.tm_sec;
+                    if (pattern[++curPos] == 's') {
+                        curPos++;
+                        sprintf(buff, ((val<10) ? "0%d":"%d"), val);
+                    } else
+                        sprintf(buff, "%d", val);
+                    output += buff;
+                    continue;
+                }
+                case 'M':
+                {
+                    int val = tmdt.tm_mon;
+                    if (pattern[++curPos] == 'M')
+                    {
+                        if (pattern[++curPos] == 'M')
+                        {
+                            if (pattern[++curPos] == 'M')
+                            {
+                                curPos++;
+                                output += fullMonthesNames[val];
+                            }
+                            else
+                                output += shortMonthesNames[val];
+                        }
+                        else
+                            sprintf(buff, ((val<9) ? "0%d":"%d"), val+1);
+                    }
+                    else 
+                        sprintf(buff, "%d", val+1);
+                    output += buff;
+                    continue;
+                }
+                case 'd':
+                {
+                    int val = tmdt.tm_mday;
+                    if (pattern[++curPos] == 'd') {
+                        curPos++;
+                        sprintf(buff, ((val<10) ? "0%d":"%d"), val);
+                    } else
+                        sprintf(buff, "%d", val);
+                    output += buff;
+                    continue;
+                }
+                default:
+                    output += pattern[curPos++];
+                    break;
+                }
+            }
+        }
+        else {
+            ctime_r(&date, buff);   
+            output += buff;
+        }
     }
-    output += buff;
 }
 
 }}}

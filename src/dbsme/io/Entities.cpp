@@ -154,10 +154,15 @@ FormatEntityRenderer::FormatEntityRenderer(const char* format, bool text)
         switch(format[curPos])
         {
         case SMSC_DBSME_IO_FORMAT_ENTITY_ESCAPER:
-            if (!string && !escape && format[curPos+1] != '\0')
+            if (!escape && format[curPos+1] != '\0')
             {
-                escape = true; curPos++;
-                continue;
+                if (!string &&
+                    format[curPos+1] != SMSC_DBSME_IO_FORMAT_STRING_DELIMETER)
+                {
+                    escape = true; curPos++;
+                    continue;
+                }
+                str += format[curPos++];
             }
             break;
         case SMSC_DBSME_IO_FORMAT_STRING_DELIMETER:
