@@ -334,7 +334,7 @@ int SmppInputThread::Execute()
                   );
                 }else
                 {
-                  SendGNack(ss,SmppStatusSet::ESME_RINVBNDSTS,pdu->get_sequenceNumber());
+                  SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVBNDSTS);
                 }
               }catch(...)
               {
@@ -354,7 +354,7 @@ int SmppInputThread::Execute()
                     ss->getProxy()->putIncomingCommand(cmd);
                   }else
                   {
-                    SendGNack(ss,SmppStatusSet::ESME_RINVBNDSTS,pdu->get_sequenceNumber());
+                    SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVBNDSTS);
                   }
                 }catch(...)
                 {
@@ -369,7 +369,7 @@ int SmppInputThread::Execute()
             }
             default:
             {
-              SendGNack(ss,SmppStatusSet::ESME_RINVBNDSTS,pdu->get_sequenceNumber());
+              SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVBNDSTS);
               /*SmscCommand cmd=
                 SmscCommand::makeGenericNack
                 (
