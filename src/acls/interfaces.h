@@ -8,13 +8,16 @@ namespace smsc {
 namespace acls {
 
 typedef std::string    AclPhoneNumber;
-const string& AclPhoneAsString(const AclPhoneNumber& a) { return a; }
+inline const string& AclPhoneAsString(const AclPhoneNumber& a) { return a; }
 
 typedef std::string    AclName;
 typedef std::string    AclDescription;
 typedef unsigned long  AclIdent;
 typedef const char*    AclPChar;
+
 typedef std::pair<AclIdent,AclName> AclNamedIdent; 
+inline AclNamedIdent MakeAclNamedIdent(AclIdent ident,const AclName& name) 
+{ return AclNamedIdent(ident,name); }
 
 enum AclCacheType { 
   ACT_UNKNOWN   = '0',
@@ -29,6 +32,12 @@ struct AclInfo
   AclDescription  desctiption;
   AclCacheType    cache;
 };
+inline AclInfo MakeAclInfo(AclIdent ident,AclName name,AclDescription desctiption,AclCacheType cache)
+{
+  AclInfo aclifo = { ident,name,description,cach };
+  return aclinfo;
+}
+
 
 struct AclEditor
 {

@@ -86,16 +86,42 @@ public:
 
 void AclManager::enumerate(vector<AclNamedIdent>& result)
 {
+  static const char* sql = "SELECT ID,NAME FROM SMS_ACLINFO";
+
+  return.resize(0);
+  ConnectionGuard connection(datasource_);
+  if(!connection.get())throw Exception(ACLMGRPREFIX"Failed to get connection");
+  auto_ptr<Statement> statement(connection->createStatement(sql);
+  if(!statement.get())throw Exception(ACLMGRPREFIX"Failed to create statement");
+  auto_ptr<ResultSet> rs(statement->executeQuery());
+  if(!rs.get())throw Exception(ACLMGRPREFIX"Failed to make a query to DB");
+  while ( rs->fetchNext() )
+    result.push_back(MakeAclNamedIdent(rs->getInt32(1),rs->getString(2)));
 }
 
-AclInfo AclManager::getInfo(AclIdent)
+AclInfo AclManager::getInfo(AclIdent aclident)
 {
-  return AclInfo();
+  static const char* sql = "SELECT ID,NAME,DESCRIPTION,CACHE_TYPE FROM SMS_ACLINFO WHERE ID=%d";
+  vector<char> query(256);
+  snprintf(&query[0],query.size(),sql,aclident);
+  ConnectionGuard connection(datasource_);
+  if(!connection.get())throw Exception(ACLMGRPREFIX"Failed to get connection");
+  auto_ptr<Statement> statement(connection->createStatement(&query[0]));
+  if(!statement.get())throw Exception(ACLMGRPREFIX"Failed to create statement");
+  auto_ptr<ResultSet> rs(statement->executeQuery());
+  if(!rs.get())throw Exception(ACLMGRPREFIX"Failed to make a query to DB");
+  if ( rs->fetchNext() ) 
+    return MakeAclInfo(
+            rs->getInt32(1),
+            rs->getString(2),
+            rs->getString(3),
+            rs->getString(4)[0]);
+  else throw Exception(ACLMGRPREFIX"Has no requested records");
 }
 
 void AclManager::remove(AclIdent aclident)
 {
-  const char* sql = "DELETE FROM SMS_ACLINFO WHERE ID = %d"
+  static const char* sql = "DELETE FROM SMS_ACLINFO WHERE ID = %d"
   ConnectionGuard connection(datasource_);
   if(!connection.get())throw Exception(ACLMGRPREFIX"Failed to get connection");
   try 
@@ -117,10 +143,10 @@ void AclManager::remove(AclIdent aclident)
 
 void AclManager::create(AclIdent aclident,const char* aclname,const char* acldescr,const vector<AclPhoneNumber>& phones,AclCacheType act)
 {
-  const char* sql0 = "INSERT INTO SMS_ACLINFO (ID,NAME,DESCRIPTION,CACHE_TYPE) "
-                     " VALUES (:1, :2, :3, :4)";
-  const char* sql1 = "INSERT INTO SMS_ACL (ID, ADDRESS) "
-                      " VALUES (:1, :2)";
+  static const char* sql0 = "INSERT INTO SMS_ACLINFO (ID,NAME,DESCRIPTION,CACHE_TYPE) "
+                            " VALUES (:1, :2, :3, :4)";
+  static const char* sql1 = "INSERT INTO SMS_ACL (ID, ADDRESS) "
+                            " VALUES (:1, :2)";
   
   ConnectionGuard connection(datasource_);
   if(!connection.get())throw Exception(ACLMGRPREFIX"Failed to get connection");
@@ -158,14 +184,33 @@ void AclManager::create(AclIdent aclident,const char* aclname,const char* acldes
   }
 }
 
-bool AclManager::lookupByPrefix(AclIdent,const char* prefix,vector<AclPhoneNumber>&)
+void AclManager::lookupByPrefix(AclIdent aclident,const char* prefix,vector<AclPhoneNumber>& result)
 {
-  return false;
+  static const char* sql = "SELECT ADDRESS FROM SMS_ACL WHERE ID=%d";
+  
+  
+  vector<char> query(1024);
+  snprintf(&query[0],query.size(),sql,aclid);
+  ConnectionGuard connection(datasource_);
+
+  if(!connection.get())throw Exception(ACLMGRPREFIX"Failed to get connection");
+  auto_ptr<Statement> statement(connection->createStatement(&query[0]));
+  if(!statement.get())throw Exception(ACLMGRPREFIX"Failed to create statement");
+  auto_ptr<ResultSet> rs(statement->executeQuery());
+  if(!rs.get())throw Exception(ACLMGRPREFIX"Failed to make a query to DB");
+
+  unsigned plen = prefix?strlen(prefix):0;
+  while( rs->fetchNext() )
+  {
+    string s = rs->getString(1);
+    if ( s.length() >= plen && ( !prefix || memcmp(s.c_str(),prefix,plen) == 0 ) )
+      result.push_back(MakeAclPhoneNumber(s));
+  }
 }
 
 void AclManager::removePhone(AclIdent aclidnt,const AclPhoneNumber& phone)
 {
-  const char* sql = "DELETE FROM SMS_ACL WHERE ID=%d AND ADRESS='%s'";
+  static const char* sql = "DELETE FROM SMS_ACL WHERE ID=%d AND ADRESS='%s'";
 
   ConnectionGuard connection(datasource_);
   if(!connection.get())throw Exception(ACLMGRPREFIX"Failed to get connection");
@@ -209,7 +254,7 @@ void AclManager::addPhone(AclIdent aclident,const AclPhoneNumber& phone)
 
 void AclManager::updateAclInfo(AclIdent aclident,const char* aclname,const char* acldesc,AclCacheType act)
 {
-  const char* sql = "UPDATE SMS_ACLINFO SET NAME=:1,DESCRIPTION=:2,CACHE_TYPE=:3) where ident=:4";
+  static const char* sql = "UPDATE SMS_ACLINFO SET NAME=:1,DESCRIPTION=:2,CACHE_TYPE=:3) where ident=:4";
   
   ConnectionGuard connection(datasource_);
   if(!connection.get())throw Exception(ACLMGRPREFIX"Failed to get connection");
@@ -234,7 +279,7 @@ void AclManager::updateAclInfo(AclIdent aclident,const char* aclname,const char*
 
 bool AclManager::isGranted(AclIdent aclid,const AclPhoneNumber& phone)
 {
-  const char* sql = "SELECT ADDRESS FROM SMS_ACL WHERE ID=%d AND ADDRESS='%s'";
+  static const char* sql = "SELECT ADDRESS FROM SMS_ACL WHERE ID=%d AND ADDRESS='%s'";
   vector<char> query(1024);
   snprintf(&query[0],query.size(),sql,aclid,AclPhoneAsString(phone).c_str());
   ConnectionGuard connection(datasource_);
