@@ -891,8 +891,8 @@ USHORT_T Et96MapDelimiterInd(
   USHORT_T result;
   ET96MAP_REFUSE_REASON_T reason;
   try{
-    __trace2__("MAP::%s dialog 0x%x",__PRETTY_FUNCTION__,dialogid_map);
-    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
+    __trace2__("MAP::%s dialog 0x%x",__PRETTY_FUNCTION__,dialogueId);
+    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId));
     if ( dialog.isnull() ) {
       throw MAPDIALOG_ERROR(
         FormatText("MAP::%s dialog 0x%x is not present",__PRETTY_FUNCTION__,dialogueId));
@@ -910,7 +910,7 @@ USHORT_T Et96MapDelimiterInd(
       result = Et96MapDelimiterReq(SSN,dialogueId,0,0);
       if ( result != ET96MAP_E_OK )
         throw runtime_error(
-          FormatText("MAP::Et96MapOpenInd Et96MapDelimiterReq return error 0x%x",result)); */
+          FormatText("MAP::Et96MapOpenInd Et96MapDelimiterReq return error 0x%x",result));
       open_confirmed = true;
       break;
     case MAPST_WaitSmsMODelimiter2:
@@ -924,10 +924,8 @@ USHORT_T Et96MapDelimiterInd(
       break;
     default:
       throw MAPDIALOG_BAD_STATE(
-        FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__PRETTY_FUNCTION__,dialog->state,dialogid_map,dialogid_smsc));
+        FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__PRETTY_FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
     }
-    dialog->invokeId = invokeId;
-    AttachSmsToDialog(dialog,smRpUi_sp);
   }
   catch(exception& e)
   {
