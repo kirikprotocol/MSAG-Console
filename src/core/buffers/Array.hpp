@@ -314,6 +314,18 @@ public:
     _empty=0;
   }
 
+  void Empty()
+  {
+    if(_count)
+    {
+      DestroyRange(0,_count);
+      _count=0;
+      _data-=_empty*SZ();
+      _size+=_empty;
+      _empty=0;
+    }
+  }
+
   int SetSize(int count)
   {
     int oldsize=_size;
