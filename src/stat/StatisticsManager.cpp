@@ -413,8 +413,8 @@ void StatisticsManager::flushCounters(short index)
     }
     catch (Exception& exc)
     {
-        if (connection) connection->rollback();
         smsc_log_error(logger, exc.what());
+        try { if (connection) connection->rollback(); } catch (...) {}
     }
 
     if (insertStatSmeStmt)   delete insertStatSmeStmt;
