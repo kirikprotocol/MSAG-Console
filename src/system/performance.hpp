@@ -20,7 +20,13 @@ using smsc::core::network::Socket;
 struct PerformanceCounter{
   int lastSecond;
   int average;
-  uint64_t total;
+  union{
+    uint64_t total;
+    struct{
+      uint32_t high;
+      uint32_t low;
+    };
+  };
 };
 
 struct PerformanceData{
@@ -41,6 +47,24 @@ public:
   void reportPerformance(PerformanceData* data)
   {
     MutexGuard g(mtx);
+    PerformanceData ld=*data;
+    ld.success.lastSecond=htonl(ld.success.lastSecond);
+    ld.success.average=htonl(ld.success.average);
+    ld.success.high=htonl(ld.success.high);
+    ld.success.low=htonl(ld.success.low);
+
+    ld.error.lastSecond=htonl(ld.error.lastSecond);
+    ld.error.average=htonl(ld.error.average);
+    ld.error.high=htonl(ld.error.high);
+    ld.error.low=htonl(ld.error.low);
+
+    ld.rescheduled.lastSecond=htonl(ld.rescheduled.lastSecond);
+    ld.rescheduled.average=htonl(ld.rescheduled.average);
+    ld.rescheduled.high=htonl(ld.rescheduled.high);
+    ld.rescheduled.low=htonl(ld.rescheduled.low);
+    ld.uptime=htonl(ld.uptime);
+    ld.now=htonl(ld.now);
+
     for(int i=0;i<sockets.Count();i++)
     {
       int wr=sockets[i]->WriteAll((char*)data,sizeof(*data));
@@ -56,6 +80,7 @@ public:
   void addSocket(Socket* s)
   {
     MutexGuard g(mtx);
+    s->setNonBlocking(1);
     sockets.Push(s);
   }
 protected:
