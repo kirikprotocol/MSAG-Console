@@ -56,6 +56,7 @@ public class Mask
 		// 	[x]	==> .0.1.[x]
 		// где x - numeric string длиной от 1 до 21
 
-		return maskStr.matches(pattern1) && maskStr.matches(pattern2);
+		return maskStr != null && maskStr.trim().length() > 0
+				&& maskStr.matches(pattern1) && maskStr.matches(pattern2);
 	}
 }

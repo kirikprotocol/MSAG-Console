@@ -64,12 +64,25 @@ public class AliasesEdit extends SmscBean
 		return RESULT_OK;
 	}
 
+	private int countQuestions(String str)
+	{
+		final int start = str.indexOf('?');
+		if (start >= 0)
+			return str.lastIndexOf('?') - start + 1;
+		else
+			return 0;
+	}
+
 	protected int save()
 	{
 		if (!Mask.isMaskValid(address))
 			return error(SMSCErrors.error.aliases.invalidAddress, address);
 		if (!Mask.isMaskValid(alias))
 			return error(SMSCErrors.error.aliases.invalidAlias, alias);
+		if (isHide() && (address.indexOf('?') >= 0 || alias.indexOf('?') >= 0))
+			return error(SMSCErrors.error.aliases.HideWithQuestion);
+		if (countQuestions(address) != countQuestions(alias))
+			return error(SMSCErrors.error.aliases.QuestionCountsNotMathes);
 
 		try
 		{

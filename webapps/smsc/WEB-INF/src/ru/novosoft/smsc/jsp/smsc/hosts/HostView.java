@@ -204,7 +204,7 @@ public class HostView extends SmscBean
 			try
 			{
 				return serviceManager.getCountRunningServices(hostName)
-						- ((daemon.isContainsSmsc() && smsc.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) ? 1 : 0);
+						- ((daemon.isContainsSmsc() && serviceManager.getServiceInfo(Constants.SMSC_SME_ID).getStatus() == ServiceInfo.STATUS_RUNNING) ? 1 : 0);
 			}
 			catch (AdminException e)
 			{

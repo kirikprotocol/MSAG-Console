@@ -1,8 +1,9 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@page import="ru.novosoft.smsc.jsp.smsc.hosts.HostEdit"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.hosts.HostAdd"/>
-<jsp:setProperty name="bean" property="*"/>
+<%try {%><jsp:setProperty name="bean" property="*"/><%} catch (Throwable t){}%>
 <%
+TITLE = "Add new host";
 switch (bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
 {
 	case HostEdit.RESULT_ERROR:

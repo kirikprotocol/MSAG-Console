@@ -5,7 +5,7 @@
 <tr><td colspan=2 class=secInner><div class=secView>Profile information</div></td></tr>
 <tr class=row0>
 	<th class=label>mask:</th>
-	<td><input class=txtW name="mask" value="<%=bean.getMask()%>" <%=isEdit ? "readonly" : ""%> validation="mask" onkeyup="resetValidation(this)"></td>
+	<td><input class=txtW name="mask" value="<%=bean.getMask() == null || bean.getMask().trim().length() == 0 ? ".0.0.0" : bean.getMask()%>" <%=isEdit ? "readonly" : ""%> validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <tr class=row0>
 	<th class=label>codepage:</th>

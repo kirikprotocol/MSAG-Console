@@ -6,15 +6,13 @@
 package ru.novosoft.smsc.jsp.smsc.hosts;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.daemon.Daemon;
+import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 public class Index extends SmscBean
 {
@@ -103,7 +101,7 @@ public class Index extends SmscBean
 		try
 		{
 			return serviceManager.getCountRunningServices(hostName)
-					- ((hostName.equals(smsc.getInfo().getHost()) && smsc.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) ? 1 : 0);
+					- ((hostName.equals(smsc.getInfo().getHost()) && serviceManager.getServiceInfo(Constants.SMSC_SME_ID).getStatus() == ServiceInfo.STATUS_RUNNING) ? 1 : 0);
 		}
 		catch (AdminException e)
 		{

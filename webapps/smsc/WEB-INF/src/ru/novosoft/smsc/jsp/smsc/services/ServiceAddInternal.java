@@ -59,8 +59,12 @@ public class ServiceAddInternal extends PageBean
 
 	protected int addService()
 	{
+		if (serviceId == null || serviceId.length() == 0)
+			return error(SMSCErrors.error.services.ServiceIdNotDefined);
 		if (serviceManager.getSmeIds().contains(serviceId))
 			return error(SMSCErrors.error.services.alreadyExists, serviceId);
+		if (serviceId.length() > 15)
+			return error(SMSCErrors.error.services.ServiceIdTooLong);
 		if (priority < 0 || priority > MAX_PRIORITY)
 			return error(SMSCErrors.error.services.invalidPriority, String.valueOf(priority));
 
@@ -84,7 +88,7 @@ public class ServiceAddInternal extends PageBean
 
 	public void setServiceId(String serviceId)
 	{
-		this.serviceId = serviceId;
+		this.serviceId = (serviceId == null ? null : serviceId.trim());
 	}
 
 	public String getSystemType()

@@ -4,6 +4,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.aliases.AliasesFilter"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
+TITLE = "Edit Alias Filter";
 switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
 {
 	case AliasesFilter.RESULT_DONE:

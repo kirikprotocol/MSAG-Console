@@ -6,6 +6,7 @@
 package ru.novosoft.smsc.jsp.smsc.profiles;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
@@ -110,6 +111,15 @@ public class Index extends IndexBean
 	}
 	public boolean isEditAllowed()
 	{
-		return smsc.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING;
+		try
+		{
+			serviceManager.refreshService(Constants.SMSC_SME_ID);
+			return serviceManager.getServiceInfo(Constants.SMSC_SME_ID).getStatus() == ServiceInfo.STATUS_RUNNING;
+		}
+		catch (AdminException e)
+		{
+			logger.debug("Couldn't refresh SMSC service", e);
+		}
+		return false;
 	}
 }

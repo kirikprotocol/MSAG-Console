@@ -30,7 +30,7 @@ switch (bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction));
 }
 
-TITLE = "host \""+bean.getHostName()+":"+bean.getPort()+"\" view";
+TITLE = "Host \""+bean.getHostName()+":"+bean.getPort()+"\" view";
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_HOSTS";
 

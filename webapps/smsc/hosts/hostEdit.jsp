@@ -15,6 +15,7 @@ switch (bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("
 	default:
 }
 
+TITLE = "Editing host \""+bean.getHostName()+":"+bean.getPort()+"\"";
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_HOSTS";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>

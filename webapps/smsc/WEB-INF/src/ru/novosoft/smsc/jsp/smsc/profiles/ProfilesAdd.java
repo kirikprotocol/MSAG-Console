@@ -19,7 +19,7 @@ public class ProfilesAdd extends SmscBean
 	protected String mbSave = null;
 	protected String mbCancel = null;
 
-	protected String mask = ".0.0.0";
+	protected String mask = "";
 	protected byte report = Profile.REPORT_OPTION_None;
 	protected byte codepage = Profile.CODEPAGE_Default;
 
@@ -39,6 +39,7 @@ public class ProfilesAdd extends SmscBean
 
 	protected int save()
 	{
+		logger.debug("Add new profile: " + mask);
 		if (!Mask.isMaskValid(mask))
 			return error(SMSCErrors.error.profiles.invalidMask, mask);
 

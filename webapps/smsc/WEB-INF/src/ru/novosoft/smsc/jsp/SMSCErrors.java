@@ -32,6 +32,8 @@ public class SMSCErrors
 			public static final String invalidPriority = B + "invalidPriority";
 			public static final String alreadyExists = B + "alreadyExists";
 			public static final String NotAllParametersDefined = B + "NotAllParametersDefined";
+			public static final String ServiceIdNotDefined = B + "ServiceIdNotDefined";
+			public static final String ServiceIdTooLong = B + "ServiceIdTooLong";
 		}
 
 		public static class hosts
@@ -69,6 +71,8 @@ public class SMSCErrors
 			public static final String cantEdit = B + "cantEdit";
 			public static final String invalidAlias = B + "invalidAlias";
 			public static final String invalidAddress = B + "invalidAddress";
+			public static final String HideWithQuestion = B + "invalidAliasHideWithQuestion";
+			public static final String QuestionCountsNotMathes = B + "QuestionCountsNotMathes";
 		}
 
 		public static class subjects

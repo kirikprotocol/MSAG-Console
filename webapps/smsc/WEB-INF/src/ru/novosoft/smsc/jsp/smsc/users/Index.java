@@ -81,6 +81,12 @@ public class Index extends IndexBean
 
 	private int deleteUsers()
 	{
+		for (int i = 0; i < checkedUserLogins.length; i++)
+		{
+			String checkedUserLogin = checkedUserLogins[i];
+			userManager.removeUser(checkedUserLogin);
+		}
+		setCheckedUserLogins(new String[0]);
 		return RESULT_OK;
 	}
 

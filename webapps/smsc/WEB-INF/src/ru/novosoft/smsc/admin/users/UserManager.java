@@ -150,4 +150,9 @@ public class UserManager implements DataSource
 		store();
 		XmlAuthenticator.init(configFile);
 	}
+
+	public User removeUser(String userLogin)
+	{
+		return (User) users.remove(userLogin);
+	}
 }

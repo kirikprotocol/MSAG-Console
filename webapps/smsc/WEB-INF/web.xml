@@ -25,6 +25,11 @@
 	    <location>/error403.jsp</location>
 	</error-page>
 	
+	<error-page>
+	    <error-code>500</error-code>
+	    <location>/error500.jsp</location>
+	</error-page>
+	
 	<security-constraint>
 		<web-resource-collection>
 			<web-resource-name></web-resource-name>
