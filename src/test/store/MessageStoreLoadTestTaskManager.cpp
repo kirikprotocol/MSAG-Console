@@ -25,26 +25,12 @@ int MessageStoreLoadTestTask::Execute()
 	{
 		SMSId id;
 		SMS sms;
-		delete tc.storeCorrectSM(&id, &sms, RAND_TC);
-		//tc.setCorrectSMStatus();
 		ops++;
 
 		for (int maxOps = 200 + ops / 200; ops < maxOps; ops++)
 		{
-			if (ops % 100 == 0)
-			{
-				delete tc.storeIncorrectSM(sms, RAND_TC);
-			}
-			else if (ops % 50 == 0)
-			{
-				delete tc.storeCorrectSM(&id, &sms, RAND_TC);
-				//tc.setIncorrectSMStatus();
-			}
-			else
-			{
-				delete tc.storeCorrectSM(&id, &sms, RAND_TC);
-				//tc.setCorrectSMStatus();
-			}
+			delete tc.storeCorrectSM(&id, &sms, RAND_TC);
+			//tc.setCorrectSMStatus();
 			//tc.createBillingRecord();
 		}
 		//tc.updateCorrectExistentSM(); ops++;
