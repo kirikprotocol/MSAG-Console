@@ -13,44 +13,42 @@ using std::ostream;
 using smsc::sms::Address;
 using smsc::alias::AliasInfo;
 
-struct TestAliasData
+class AliasHolder
 {
-	float addrMatch;
-	bool addrToAliasException;
-	const Address origAddr;
-	Address destAlias;
+	AliasInfo* aliasInfo;
+	char ch;
+	int addrPos;
+	int aliasPos;
 
-	float aliasMatch;
-	bool aliasToAddrException;
-	const Address origAlias;
-	Address destAddr;
+public:
+	AliasHolder(const AliasInfo& alias);
 
-	AliasInfo* alias;
+	AliasHolder(const AliasHolder& holder)
+		: aliasInfo(new AliasInfo(*holder.aliasInfo)), ch(holder.ch),
+		addrPos(holder.addrPos), aliasPos(holder.aliasPos) {}
 
-	TestAliasData(const Address alias, const Address addr)
-		: addrMatch(0.0), addrToAliasException(false), origAddr(addr),
-		aliasMatch(0.0), aliasToAddrException(false), origAlias(alias), alias(NULL) {}
-
-	TestAliasData(const TestAliasData& data)
-		: addrMatch(data.addrMatch),
-		addrToAliasException(data.addrToAliasException),
-		origAddr(data.origAddr), destAlias(data.destAlias),
-		aliasMatch(data.aliasMatch),
-		aliasToAddrException(data.aliasToAddrException),
-        origAlias(data.origAlias), destAddr(data.destAddr),
-		alias(new AliasInfo(*data.alias)) {}
-
-	~TestAliasData()
+	~AliasHolder()
 	{
-		if (alias)
-		{
-			delete alias;
-		}
+		delete aliasInfo;
 	}
+	
+	AliasInfo* operator->() const
+	{
+		return aliasInfo;
+	}
+	
+	AliasInfo& operator*() const
+	{
+		return *aliasInfo;
+	}
+
+	bool aliasToAddress(const Address& alias, Address& addr) const;
+	bool addressToAlias(const Address& addr, Address& alias) const;
+
 };
 
 ostream& operator<< (ostream& os, const AliasInfo& alias);
-ostream& operator<< (ostream& os, const TestAliasData& data);
+ostream& operator<< (ostream& os, const AliasHolder& holder);
 
 }
 }

@@ -19,13 +19,13 @@ using smsc::test::sms::ltAddress;
 class AliasRegistry
 {
 public:
-	typedef vector<const TestAliasData*> AliasList;
+	typedef vector<const AliasHolder*> AliasList;
 
 	AliasRegistry(){}
 
 	virtual ~AliasRegistry();
 
-	void putAlias(const TestAliasData& data);
+	void putAlias(const AliasInfo& alias);
 
 	void clear();
 	
