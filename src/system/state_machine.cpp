@@ -990,6 +990,8 @@ StateType StateMachine::submit(Tuple& t)
   __trace2__("SUBMIT_SM: lookup %s, result: %d,%d",sms->getOriginatingAddress().toString().c_str(),
     profile.reportoptions,profile.codepage);
 
+  smsc::profiler::Profile orgprofile=profile;
+
   __trace2__("SUBMIT_SM: profile options=%d",profile.reportoptions);
   if((sms->getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x03)==0x01 ||
      (sms->getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x03)==0x02 ||
@@ -1105,6 +1107,14 @@ StateType StateMachine::submit(Tuple& t)
       src_proxy->getSystemId()
     );
     return ERROR_STATE;
+  }
+
+  if(smsc->getSmeInfo(dest_proxy_index).interfaceVersion==99)
+  {
+    sms->setStrProperty(Tag::SMSC_SUPPORTED_LOCALE,orgprofile.locale.c_str());
+    sms->setIntProperty(Tag::SMSC_SUPPORTED_CODESET,orgprofile.codepage);
+    sms->setStrProperty(Tag::SMSC_IMSI_ADDRESS,sms->getOriginatingDescriptor().imsi);
+    sms->setStrProperty(Tag::SMSC_MSC_ADDRESS,sms->getOriginatingDescriptor().msc);
   }
 
   //__trace2__("SUBMIT_SM: route found, routeId=%s, smeSystemId=%s",ri.routeId.c_str(),ri.smeSystemId.c_str());
@@ -3614,7 +3624,7 @@ StateType StateMachine::alert(Tuple& t)
   char bufsrc[64],bufdst[64];
   sms.getOriginatingAddress().toString(bufsrc,sizeof(bufsrc));
   sms.getDestinationAddress().toString(bufdst,sizeof(bufdst));
-  smsc_log_warn(smsLog, "ALERT: delivery timed out(%s->%s)",bufsrc,bufdst);
+  smsc_log_info(smsLog, "ALERT: delivery timed out(%s->%s), msgId=%lld",bufsrc,bufdst,t.msgId);
   sms.setLastResult(Status::DELIVERYTIMEDOUT);
   smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
   if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1 ||
@@ -3721,13 +3731,9 @@ StateType StateMachine::replace(Tuple& t)
       throw Exception("replace failed");
     }
   }
-  catch(smsc::store::NoSuchMessageException& e)
-  {
-    __REPLACE__RESPONSE(REPLACEFAIL);
-  }
   catch(...)
   {
-    __REPLACE__RESPONSE(SYSERR);
+    __REPLACE__RESPONSE(REPLACEFAIL);
   }
 
 
