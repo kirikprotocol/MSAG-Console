@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE routes SYSTEM "routes.dtd">
 <routes>
-	<subject_def id="MTS_numbers" mask="+7902912????"/>
+	<subject_def id="MTS_numbers"><mask value="+7902912????"/></subject_def>
 	<route name="Mobile to Mobile" billing="true" archiving="false">
 		<source>
 			<subject id="MTS_numbers"/>

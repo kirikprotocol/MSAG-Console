@@ -12,10 +12,9 @@
 <!ATTLIST subject
 	id IDREF #IMPLIED
 >
-<!ELEMENT subject_def EMPTY>
+<!ELEMENT subject_def (mask+)>
 <!ATTLIST subject_def
 	id ID #REQUIRED
-	mask CDATA #REQUIRED
 >
 <!ELEMENT mask EMPTY>
 <!ATTLIST mask
