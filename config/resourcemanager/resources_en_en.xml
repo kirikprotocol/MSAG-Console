@@ -22,9 +22,9 @@
     </section>
     <section name="receipt">
     	<section name="default">
-	    <param name="deliveredFormat">Message for $$string import=dest$$ delivered at $$date import=date$$</param>
-	    <param name="failedFormat"></param>
-	    <param name="notifyFormat"></param>
+	    <param name="delivered">Message for $$string import=dest$$ delivered at $$date import=date$$</param>
+	    <param name="failed"></param>
+	    <param name="notify"></param>
     	</section>
     </section>
     <section name="reason">
