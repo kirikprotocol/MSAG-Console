@@ -581,9 +581,9 @@ void extractSmsPart(SMS* sms,int partnum)
   int dc=sms->getIntProperty(Tag::SMPP_DATA_CODING);
   if(sms->hasBinProperty(Tag::SMSC_DC_LIST))
   {
-    unsigned len;
-    unsigned char* dcList=(unsigned char*)sms->getBinProperty(Tag::SMSC_DC_LIST,&len);
-    if(partnum<len)
+    unsigned dcLen;
+    unsigned char* dcList=(unsigned char*)sms->getBinProperty(Tag::SMSC_DC_LIST,&dcLen);
+    if(partnum<dcLen)
     {
       dc=dcList[partnum];
     }
