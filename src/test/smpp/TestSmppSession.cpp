@@ -72,7 +72,9 @@ void TestSmppSession::sendBytes(PduBuffer& pb)
 void TestSmppSession::sendPdu(SmppHeader* pdu)
 {
 	__require__(!closed);
+	__require__(pdu);
 	PduBuffer pb = getBytes(pdu);
+	pdu->set_commandLength(pb.size);
 	sendBytes(pb);
 }
 
