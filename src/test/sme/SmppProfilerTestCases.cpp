@@ -34,6 +34,7 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& text,
 		fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, profilerAlias,
 			OPT_ALL & ~OPT_MSG_PAYLOAD); //отключить messagePayload
 		//установить немедленную доставку
+		pdu->get_message().set_esmClass(0x0); //иначе профайлер отлупит
 		pdu->get_message().set_scheduleDeliveryTime("");
 		//текст сообщения
 		switch (dataCoding)
