@@ -164,6 +164,11 @@ TCResult* RouteManagerTestCases::addCorrectRouteNotMatch(
 						s.value1(numNotMatch, numMatch));
 					data->destAddrMatch = setupRandomAddressMatch(route->dest,
 						s.value2(numNotMatch, numMatch));
+					getLog().debugStream() << "[" << thr_self() <<
+						"]\taddCorrectRouteNotMatch(" <<
+						s.value1(numNotMatch, numMatch) << "," <<
+						s.value2(numNotMatch, numMatch) << "," <<
+						s.value3(numMatch, numNotMatch) << "): " << *data;
 					break;
 				case 2: //отличается destAddr
 					data->origAddrMatch = setupRandomAddressMatch(route->source,
@@ -171,15 +176,15 @@ TCResult* RouteManagerTestCases::addCorrectRouteNotMatch(
 					data->destAddrMatch = 0;
 					setupRandomAddressNotMatch(route->dest,
 						s.value2(numMatch, numNotMatch));
+					getLog().debugStream() << "[" << thr_self() <<
+						"]\taddCorrectRouteNotMatch(" <<
+						s.value1(numMatch, numNotMatch) << "," <<
+						s.value2(numMatch, numNotMatch) << "," <<
+						s.value3(numMatch, numNotMatch) << "): " << *data;
 					break;
 				default:
 					throw s;
 			}
-			getLog().debugStream() << "[" << thr_self() <<
-				"]\taddCorrectRouteNotMatch(" <<
-				s.value1(numMatch, numNotMatch) << "," <<
-				s.value2(numMatch, numNotMatch) << "," <<
-				s.value3(numMatch, numNotMatch) << "): " << *data;
 			routeMan->addRoute(*route);
 		}
 		catch(...)
