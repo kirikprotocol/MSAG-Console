@@ -610,7 +610,7 @@ static void ForwardMO(MapDialog* dialog) {
   smsc::sms::SMS *sms = dialog->sms.get();
   smsc::sms::Address addr(sms->getStrProperty(Tag::SMSC_FORWARD_MO_TO).c_str());
   if( !sms->hasBinProperty(Tag::SMSC_MO_PDU) )
-    throw MAPDIALOG_FATAL_ERROR("MAP::ForwardMO: SMS has SMSC_FORWARD_MO_TO but has no SMSC_MO_PDU"),smsc::system::Status::DATAMISSING);
+    throw MAPDIALOG_FATAL_ERROR("MAP::ForwardMO: SMS has SMSC_FORWARD_MO_TO but has no SMSC_MO_PDU",smsc::system::Status::DATAMISSING);
 
   dialog->state = MAPST_WaitFwdMOConf;
   dialog->version = 2;
@@ -630,7 +630,7 @@ static void ForwardMO(MapDialog* dialog) {
   memcpy(ui.signalInfo, mo_pdu, length );
   ui.signalInfoLen = (UCHAR_T)length;
 
-  USHORT_T result = Et96MapOpenReq( SSN, dialog->dialogid_map, &appContext, &destAddr, dialog->scAddr, 0, 0, 0 );
+  USHORT_T result = Et96MapOpenReq( SSN, dialog->dialogid_map, &appContext, &destAddr, &dialog->scAddr, 0, 0, 0 );
   if ( result != ET96MAP_E_OK )
     throw MAPDIALOG_FATAL_ERROR(FormatText("MAP::ForwardMO: Et96MapOpenReq error 0x%x",result),MAP_FALURE);
 
