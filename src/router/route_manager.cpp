@@ -324,11 +324,11 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec)
   int cmp = compare_addr_addr_src(rec,node->record,strong);
   if ( cmp == 0 )
   {
-    if ( !strong )
+    if ( strong )
     {
       __warning__("duplicate route, is not added");
     }
-    else
+    else //  weak
     {
       int left = 1;
       int right = node->child.size();
