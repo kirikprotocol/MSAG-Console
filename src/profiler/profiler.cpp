@@ -545,7 +545,7 @@ int Profiler::Execute()
       sms->getIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE));
     if(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP))
     {
-      ans.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,1);
+      ans.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,17);
     }
 
     Profile pr=lookup(addr);
