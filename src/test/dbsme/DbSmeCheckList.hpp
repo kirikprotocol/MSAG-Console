@@ -264,6 +264,8 @@ public:
 			"Текст команды в дефолтной кодировке SC");
 		__reg_tc__("submitDbSmeCmd.cmdTextUcs2",
 			"Текст команды в кодировке UCS2");
+		__reg_tc__("submitDbSmeCmd.jobNameMixedCase",
+			"Имя задачи в смешанном регистре (заглавные и прописные буквы)");
 		__reg_tc__("submitDbSmeCmd.correct", "Отправка правильной команды db sme");
 		correctJobTc();
 		correctInputTc();
