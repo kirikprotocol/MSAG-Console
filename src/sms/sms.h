@@ -1049,6 +1049,12 @@ namespace smsc {
           //delete buffer;
         }
 
+        unsigned getShortMessageLength()
+        {
+            // Need to implement this functionality.
+            return getIntProperty(Tag::SMPP_SM_LENGTH);
+        }
+
         void encode(uint8_t* buffer,int& length) const
         {
           __require__( buffer != 0 );
