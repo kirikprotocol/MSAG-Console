@@ -3,7 +3,7 @@
 #include "DistrListProcess.h"
 #include "../system/status.h"
 #define DLP_TIMEOUT 1000
-#define WAIT_SUBMISSION (1000*8)
+#define WAIT_SUBMISSION (8)
 
 namespace smsc{
 namespace distrlist{
@@ -220,24 +220,31 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
     }
   }
   task->submited_count = 0;
-  for ( unsigned i=0; i<task->count; ++i )
-  {
-    task->list[i].dialogId = GetNextDialogId();
-    SMS& msg = multi->msg;
-    msg.setDestinationAddress(task->list[i].addr);
-    TPAIR p(task.get(),i);
-    task_map.insert( pair<unsigned,TPAIR>(task->list[i].dialogId,p) );
-    __trace2__(":DPL:DEST %d.%d.%s",task->list[i].addr.type,task->list[i].addr.plan,task->list[i].addr.value);
-    putIncomingCommand(SmscCommand::makeSumbmitSm(msg,task->list[i].dialogId));
-    __trace2__(":DPL: task %d of (0x%x:%d) has been scheduled for submit",
-      task->list[i].dialogId,
-      task.get(),
-      task->count);
+  if ( task->count != 0 ) {
+    for ( unsigned i=0; i<task->count; ++i )
+    {
+      task->list[i].dialogId = GetNextDialogId();
+      SMS& msg = multi->msg;
+      msg.setDestinationAddress(task->list[i].addr);
+      TPAIR p(task.get(),i);
+      task_map.insert( pair<unsigned,TPAIR>(task->list[i].dialogId,p) );
+      __trace2__(":DPL:DEST %d.%d.%s",task->list[i].addr.type,task->list[i].addr.plan,task->list[i].addr.value);
+      putIncomingCommand(SmscCommand::makeSumbmitSm(msg,task->list[i].dialogId));
+      __trace2__(":DPL: task %d of (0x%x:%d) has been scheduled for submit",
+        task->list[i].dialogId,
+        task.get(),
+        task->count);
+    }
+    task->startTime = time(0);
+    task_sheduler.push_back(task.get());
+    __trace2__(":DPL: task list 0x%x has been scheduled",task.get());
+    task.release();
+  }else{
+    SmscCommand cmd2 = SmscCommand::makeSubmitMultiResp("",task->cmd->get_dialogId(),0);
+    cmd2->get_MultiResp()->set_unsuccessCount(0);
+    SmeProxy* srcproxy =  task->cmd.getProxy();
+    srcproxy->putCommand(cmd2);
   }
-  task->startTime = time(0);
-  task_sheduler.push_back(task.get());
-  __trace2__(":DPL: task list 0x%x has been scheduled",task.get());
-  task.release();
 }
 
 void DistrListProcess::SubmitResp(SmscCommand& cmd)
