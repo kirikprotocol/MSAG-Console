@@ -367,7 +367,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p)
       break;
   }
   if(!hasDirectives)return;
-  char *escchars="[]{}^~\\|";
+  static const char *escchars="[]{}^~\\|";
   auto_ptr<char> bufptr(new char[len+1]);
   char *buf=bufptr.get();
 
