@@ -37,12 +37,12 @@ Category& SmeManagerTestCases::getLog()
 	return log;
 }
 
-void SmeManagerTestCases::debugSme(const char* tc, SmeInfo& sme)
+void SmeManagerTestCases::debugSme(const char* tc, const SmeInfo& sme)
 {
 	ostringstream os;
 	os << sme << endl;
 	getLog().debug("[%d]\t%s(): %s", thr_self(), tc, os.str().c_str());
-	__trace2__("%s(): %s", tc, os.str().c_str());
+	//__trace2__("%s(): %s", tc, os.str().c_str());
 }
 
 void SmeManagerTestCases::setupRandomCorrectSmeInfo(SmeInfo* sme)
@@ -121,17 +121,46 @@ vector<int> SmeManagerTestCases::compareSmeInfo(const SmeInfo& sme1,
 	return res;
 }
 
-TCResult* SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int num)
+void SmeManagerTestCases::addSme(const char* tc, int num,
+	const Address* smeAlias, const SmeInfo* sme)
 {
-	TCSelector s(num, 11);
+	if (smeReg->registerSme(*smeAlias, *sme))
+	{
+		debugSme(tc, *sme);
+		if (smeMan)
+		{
+			smeMan->addSme(*sme);
+		}
+	}
+}
+
+TCResult* SmeManagerTestCases::addCorrectSme(Address* smeAlias, SmeInfo* sme, int num)
+{
+	int numAddr = 3; int numSme = 11;
+	TCSelector s(num, numAddr * numSme);
 	TCResult* res = new TCResult(TC_ADD_CORRECT_SME, s.getChoice());
 	for (; s.check(); s++)
 	{
 		try
 		{
-			SmsUtil::setupRandomCorrectAddress(smeAddr);
+			SmsUtil::setupRandomCorrectAddress(smeAlias);
+			switch (s.value1(numAddr))
+			{
+				case 1: //по умолчанию случайные ton и npi
+					break;
+				case 2: //ton = 1 и npi = 1 соответствует +7902986...
+					smeAlias->setTypeOfNumber(1);
+					smeAlias->setNumberingPlan(1);
+					break;
+				case 3: //ton = 2 и npi = 1 соответствует 8902986...
+					smeAlias->setTypeOfNumber(2);
+					smeAlias->setNumberingPlan(1);
+					break;
+				default:
+					throw s;
+			}
 			setupRandomCorrectSmeInfo(sme);
-			switch(s.value())
+			switch(s.value2(numAddr))
 			{
 				case 1: //ничего особенного
 					break;
@@ -184,12 +213,7 @@ TCResult* SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int
 				default:
 					throw s;
 			}
-			smeReg->registerSme(*smeAddr, *sme);
-			debugSme("addCorrectSme", *sme);
-			if (smeMan)
-			{
-				smeMan->addSme(*sme);
-			}
+			addSme("addCorrectSme", s.value(), smeAlias, sme);
 		}
 		catch(...)
 		{
@@ -201,21 +225,16 @@ TCResult* SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int
 	return res;
 }
 
-TCResult* SmeManagerTestCases::addCorrectSmeWithEmptySystemId(Address* smeAddr,
+TCResult* SmeManagerTestCases::addCorrectSmeWithEmptySystemId(Address* smeAlias,
 	SmeInfo* sme)
 {
 	TCResult* res = new TCResult(TC_ADD_CORRECT_SME, 1001);
 	try
 	{
-		SmsUtil::setupRandomCorrectAddress(smeAddr);
+		SmsUtil::setupRandomCorrectAddress(smeAlias);
 		setupRandomCorrectSmeInfo(sme);
 		sme->systemId = "";
-		smeReg->registerSme(*smeAddr, *sme);
-		debugSme("addCorrectSmeWithEmptySystemId", *sme);
-		if (smeMan)
-		{
-			smeMan->addSme(*sme);
-		}
+		addSme("addCorrectSmeWithEmptySystemId", 1, smeAlias, sme);
 	}
 	catch(...)
 	{
@@ -236,8 +255,11 @@ TCResult* SmeManagerTestCases::addIncorrectSme(const SmeInfo& existentSme)
 		setupRandomCorrectSmeInfo(&info);
 		info.systemId = existentSme.systemId;
 		//проверка на правильность прочих параметров не производится
-		smeMan->addSme(info);
-		res->addFailure(101);
+		if (smeMan)
+		{
+			smeMan->addSme(info);
+			res->addFailure(101);
+		}
 	}
 	catch(...)
 	{
@@ -585,8 +607,10 @@ TCResult* SmeManagerTestCases::registerCorrectSmeProxy(const SmeSystemId& system
 		*proxy = smeMan->getSmeProxy(index);
 		getLog().debug("[%d]\tregisterCorrectSmeProxy(): systemId = %s, proxyId = %u",
 			thr_self(), systemId.c_str(), (*proxy)->getUniqueId());
+		/*
 		__trace2__("registerCorrectSmeProxy(): systemId = %s, proxyId = %u",
 			systemId.c_str(), (*proxy)->getUniqueId());
+		*/
 	}
 	catch(...)
 	{
