@@ -185,6 +185,21 @@ function validateField_address_prefix(elem)
 		: true;
 }
 
+function validateField_id(elem)
+{
+	if (elem.value == null || elem.value.length == 0)
+	{
+		return true;
+	}
+	//var r1 = RegExp("^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?\\d{1,20}$");
+	//var r2 = RegExp("^\\.5\\.0\\.[ _\\-0-9A-Za-z]{1,20}$");
+	var r = /^[a-zA-Z_0-9]+$/
+
+	return elem.value == null || elem.value.match(r) == null
+		? validationError(elem, "Invalid id")
+		: true;
+}
+
 function validateField(elem)
 {
 	switch(elem.validation)
@@ -201,6 +216,7 @@ function validateField(elem)
 		case "int_range": return validateField_int_range(elem);
 		case "address": return validateField_address(elem);
 		case "address_prefix": return validateField_address_prefix(elem);
+		case "id" : return validateField_id(elem);
 		case "unsigned": return validateField_unsigned(elem);
 	}
 	alert("unknown validation type:"+elem.validation);

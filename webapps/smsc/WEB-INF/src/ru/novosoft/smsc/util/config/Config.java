@@ -15,7 +15,7 @@ import java.io.*;
 import java.util.*;
 
 
-public class Config
+public class Config implements Cloneable
 {
   File configFile = null;
   protected Map params = new HashMap();
@@ -52,6 +52,14 @@ public class Config
   public Config(Reader configReader) throws IOException, SAXException, ParserConfigurationException
   {
     parseNode("", Utils.parse(configReader).getDocumentElement());
+  }
+
+  public Object clone() throws CloneNotSupportedException
+  {
+    Config newConfig = (Config) super.clone();
+    newConfig.configFile = new File(configFile.getAbsolutePath());
+    newConfig.params = new HashMap(params);
+    return newConfig;
   }
 
   public synchronized int getInt(String paramName) throws ParamNotFoundException, WrongParamTypeException
