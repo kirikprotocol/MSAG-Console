@@ -67,7 +67,9 @@ if (stat != null) {
   function showErr(obj) {
     if( obj.style.display != 'none' )
       obj.style.display='none';
-    else obj.style.display='block';
+    else
+      obj.style.display='block';
+    return false;
   }
 </script>
 <table class=list cellspacing=0>
@@ -141,7 +143,7 @@ while (i.hasNext()) {
             SmeIdCountersSet sme = (SmeIdCountersSet)i.next();
         %>
         <tr class=row1>
-            <td width="22%" align=right><a href="#" onClick="showErrTable(document.all.disNo<%=disNo%>)"><%= StringEncoderDecoder.encode(sme.smeid)%></a></td>
+            <td width="22%" align=right><a href="#" onClick="return showErrTable(document.all.disNo<%=disNo%>)"><%= StringEncoderDecoder.encode(sme.smeid)%></a></td>
             <td width="13%" align=right><%= sme.accepted%></td>
             <td width="13%" align=right><%= sme.rejected%></td>
             <td width="13%" align=right><%= sme.delivered%></td>
@@ -149,7 +151,7 @@ while (i.hasNext()) {
             <td width="13%" align=right><%= sme.rescheduled%></td>
             <td width="13%" align=right><%= sme.temporal%></td>
         </tr>
-        <tr class=row0 id="disNo<%=disNo++%>">
+        <tr class=row0 style="display:none" id="disNo<%=disNo++%>">
             <td colspan=7>
                 <table class=list cellspacing=0>
                   <td width="22%"><div align=right>Error</div></td>
