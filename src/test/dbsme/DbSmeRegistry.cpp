@@ -7,20 +7,17 @@ namespace dbsme {
 
 using smsc::core::synchronization::MutexGuard;
 
-#define __sync__ \
-	MutexGuard mguard(mutex)
-
 DbSmeRegistry::~DbSmeRegistry()
 {
 	clear();
 }
 
-void DbSmeRegistry::putRecord(const DbSmeTestRecord& rec)
+void DbSmeRegistry::putRecord(DbSmeTestRecord* rec)
 {
-	__sync__;
-	RecordMap::iterator it = recordMap.find(rec.id);
+	__require__(rec);
+	RecordMap::iterator it = recordMap.find(rec->getId());
 	__require__(it == recordMap.end());
-	recordMap[rec.id] = new DbSmeTestRecord(rec);
+	recordMap[rec->getId()] = rec;
 }
 	
 DbSmeTestRecord* DbSmeRegistry::getRecord(int id)
@@ -29,27 +26,41 @@ DbSmeTestRecord* DbSmeRegistry::getRecord(int id)
 	return (it != recordMap.end() ? it->second : NULL);
 }
 
+DbSmeRegistry::DbSmeTestRecordIterator* DbSmeRegistry::getRecords() const
+{
+	return new DbSmeTestRecordIterator(recordMap.begin(), recordMap.end());
+}
+
 bool DbSmeRegistry::removeRecord(int id)
 {
-	__sync__;
-	return recordMap.erase(id);
+	RecordMap::iterator it = recordMap.find(id);
+	if (it != recordMap.end())
+	{
+		delete it->second;
+		return true;
+	}
+	return false;
 }
 
 int DbSmeRegistry::nextId()
 {
-	__sync__;
+	MutexGuard mguard(mutex);
 	return lastId++;
+}
+
+int DbSmeRegistry::getExistentId()
+{
+	return (recordMap.begin() == recordMap.end() ?
+		0 : recordMap.begin()->second->getId());
 }
 
 int DbSmeRegistry::size()
 {
-	__sync__;
 	return recordMap.size();
 }
 
 void DbSmeRegistry::clear()
 {
-	__sync__;
 	for (RecordMap::iterator it = recordMap.begin(); it != recordMap.end(); it++)
 	{
 		__require__(it->second);
