@@ -117,18 +117,19 @@ public:
         __trace2__("Output Data '%s'", (out) ? out:"");
 
         int   outLen = (out) ? strlen(out) : 0;
-        char  buff[MAX_ALLOWED_MESSAGE_LENGTH+1];
+        //char  buff[MAX_ALLOWED_MESSAGE_LENGTH+1];
         PduSubmitSmResp* dlResp = 0;
         while (outLen > 0)
         {
             int strLen = (outLen <= MAX_ALLOWED_MESSAGE_LENGTH) ?
                           outLen : MAX_ALLOWED_MESSAGE_LENGTH;
             
-            int convLen = ConvertTextTo7Bit(out, strLen, buff, sizeof(buff), 
+            /*int convLen = ConvertTextTo7Bit(out, strLen, buff, sizeof(buff), 
                                             CONV_ENCODING_CP1251);
-
             body.setBinProperty(Tag::SMPP_SHORT_MESSAGE, buff, convLen);
-            body.setIntProperty(Tag::SMPP_SM_LENGTH, convLen);
+            body.setIntProperty(Tag::SMPP_SM_LENGTH, convLen);*/
+            body.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, strLen);
+            body.setIntProperty(Tag::SMPP_SM_LENGTH, strLen);
             
             PduSubmitSm sm;
             sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
