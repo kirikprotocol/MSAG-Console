@@ -93,6 +93,7 @@ USHORT_T Et96MapDelimiterInd(
   UCHAR_T priorityOrder)
 {
   __trace2__("MAP::Et96MapDelimiterInd lssn 0x%hx, dialogId 0x%hx",lssn,dialogId);
+  return ET96MAP_E_OK;
 }
 
 USHORT_T Et96MapStateInd (
@@ -134,7 +135,7 @@ void MapIoTask::dispatcher()
     //if (EINSS7CpMsgRecv_r(&message,MSG_INFTIM)!=MSG_OK) return;
     if ( isStopping ) return;
     result = Et96MapHandleIndication(&message);
-    if ( result != MSG_OK ) {
+    if ( result != ET96MAP_E_OK ) {
       __trace2__("MAP: error at Et96MapHandleIndication with code x%hx",result);
       return;
     }
