@@ -137,6 +137,7 @@
         <param name="svcType" type="string">TASK_1</param>
         <param name="template" type="string">Balance for '$$string arg=1$$' is $$float arg=2$$</param>
         <param name="transactionMode" type="bool">false</param>
+	<param name="trackIntegrity" type="bool">false</param>
         <param name="uncommitedInGeneration" type="int">50</param>
         <param name="uncommitedInProcess" type="int">50</param>
         <param name="validityDate" type="string"></param>

@@ -82,9 +82,12 @@ TaskProcessor::TaskProcessor(ConfigView* config)
                 throw ConfigException("Failed to obtail DataSource driver '%s' for task '%s'", 
                                       dsId, taskId);
             
-            if (!putTask(new Task(taskConfig, taskId, taskTablesPrefix, taskDs, dsInternal)))
+            Task* task = new Task(taskConfig, taskId, taskTablesPrefix, taskDs, dsInternal);
+            if (task && !putTask(task)) {
+                task->finalize();
                 throw ConfigException("Failed to add task. Task with id '%s' already registered.",
                                       taskId);
+            }
         }
         catch (ConfigException& exc)
         {

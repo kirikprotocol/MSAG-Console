@@ -49,24 +49,24 @@ int parseTime(const char* str)
 Task::Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt) 
     : logger(Logger::getCategory("smsc.infosme.Task")), formatter(0),
         usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt), 
-            bInProcess(false), bInGeneration(false), 
+            bInProcess(false), bInGeneration(false), bGenerationSuccess(true),
                 lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
 {
     __require__(dsOwn && dsInt);
     this->info = info; this->dsOwn = dsOwn; this->dsInt = dsInt;
     formatter = new OutputFormatter(info.msgTemplate.c_str());
-    //createTable();
+    trackIntegrity(true, true); // delete flag & generated messages
 }
 Task::Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
      DataSource* dsOwn, DataSource* dsInt)
     : logger(Logger::getCategory("smsc.infosme.Task")), formatter(0),
         usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt), 
-            bInProcess(false), bInGeneration(false), 
+            bInProcess(false), bInGeneration(false), bGenerationSuccess(true),
                 lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
 {
     init(config, taskId, tablePrefix);
     formatter = new OutputFormatter(info.msgTemplate.c_str());
-    //createTable();
+    trackIntegrity(true, true); // delete flag & generated messages
 }
 Task::~Task()
 {
@@ -90,6 +90,7 @@ void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
     info.retryOnFail = config->getBool("retryOnFail");
     info.replaceIfPresent = config->getBool("replaceMessage");
     info.transactionMode = config->getBool("transactionMode");
+    info.trackIntegrity = config->getBool("trackIntegrity");
     info.endDate = parseDateTime(config->getString("endDate"));
     info.retryTime = parseTime(config->getString("retryTime"));
     if (info.retryOnFail && info.retryTime <= 0)
@@ -150,6 +151,82 @@ char* Task::prepareDoubleSqlCall(const char* sql)
     char* sqlCall = new char[strlen(sql)+tableName.length()*2+1];
     sprintf(sqlCall, sql, tableName.c_str(), tableName.c_str());
     return sqlCall;
+}
+
+const char* DELETE_GENERATING_STATEMENT_ID  = "DELETE_GENERATING_STATEMENT_ID";
+const char* DELETE_GENERATING_STATEMENT_SQL = 
+"DELETE FROM INFOSME_GENERATING_TASKS WHERE TASK_ID=:TASK_ID";
+const char* INSERT_GENERATING_STATEMENT_ID  = "INSERT_GENERATING_STATEMENT_ID"; 
+const char* INSERT_GENERATING_STATEMENT_SQL = 
+"INSERT INTO INFOSME_GENERATING_TASKS TASK_ID VALUES(:TASK_ID)";
+const char* DELETE_NEW_MESSAGES_STATEMENT_ID  = "%s_DELETE_NEW_MESSAGES_STATEMENT_ID";
+const char* DELETE_NEW_MESSAGES_STATEMENT_SQL =
+"DELETE FROM %s WHERE STATE=:NEW";
+
+void Task::trackIntegrity(bool clear, bool del, Connection* connection)
+{
+    if (!info.trackIntegrity) return;
+
+    bool connectionInternal = false;
+    try
+    {
+        if (!connection) {
+            connection = dsInt->getConnection();
+            connectionInternal = true;
+        }
+        if (!connection)
+            throw Exception("Failed to obtain connection to internal data source.");
+
+        if (clear)
+        {
+            Statement* delGenerating = connection->getStatement(DELETE_GENERATING_STATEMENT_ID,
+                                                                DELETE_GENERATING_STATEMENT_SQL);
+            if (!delGenerating) 
+                throw Exception("Failed to obtain statement for track integrity.");
+            
+            delGenerating->setString(1, info.id.c_str());
+            if (delGenerating->executeUpdate() > 0 && del)
+            {
+                std::auto_ptr<char> delGeneratedId(prepareSqlCall(DELETE_NEW_MESSAGES_STATEMENT_ID));
+                std::auto_ptr<char> delGeneratedSql(prepareSqlCall(DELETE_NEW_MESSAGES_STATEMENT_SQL));
+                Statement* delGenerated = connection->getStatement(delGeneratedId.get(),
+                                                                   delGeneratedSql.get());
+                if (!delGenerated) 
+                    throw Exception("Failed to obtain statement for track integrity.");
+                delGenerated->setUint8(1, MESSAGE_NEW_STATE);
+                delGenerated->executeUpdate();
+            }
+        }
+        else
+        {
+            Statement* insGenerating = connection->getStatement(INSERT_GENERATING_STATEMENT_ID,
+                                                                INSERT_GENERATING_STATEMENT_SQL);
+            if (!insGenerating) 
+                throw Exception("Failed to obtain statement for track integrity.");
+            
+            insGenerating->setString(1, info.id.c_str());
+            insGenerating->executeUpdate();
+        }
+        connection->commit();
+    } 
+    catch (Exception& exc)
+    {
+        try { if (connection) connection->rollback(); }
+        catch (...) {
+            logger.error("Failed to roolback transaction on internal data source.");
+        }
+        logger.error("Task '%s'. Failed to track task integrity. "
+                     "Details: %s", info.id.c_str(), exc.what());
+    }
+    catch (...) {
+        try { if (connection) connection->rollback(); }
+        catch (...) {
+            logger.error("Failed to roolback transaction on internal data source.");
+        }
+        logger.error("Task '%s'. Failed to track task integrity.",
+                     info.id.c_str());
+    }
+    if (connection && connectionInternal) dsInt->freeConnection(connection);
 }
 
 const char* NEW_TABLE_STATEMENT_SQL = 
@@ -231,6 +308,8 @@ bool Task::dropTable()
         if (!connection)
             throw Exception("Failed to obtain connection to internal data source.");
 
+        trackIntegrity(true, false, connection); // delete flag only
+
         std::auto_ptr<char> dropTableSql(prepareSqlCall(DROP_TABLE_STATEMENT_SQL));
         statement = connection->createStatement(dropTableSql.get());
         if (!statement) 
@@ -269,12 +348,16 @@ const char* NEW_MESSAGE_STATEMENT_SQL = (const char*)
 "INSERT INTO %s (ID, STATE, ABONENT, SEND_DATE, MESSAGE) "
 "VALUES (INFOSME_MESSAGES_SEQ.NEXTVAL, :STATE, :ABONENT, :SEND_DATE, :MESSAGE)";
 
+const char* CLEAR_MESSAGES_STATEMENT_ID = "%s_CLEAR_MESSAGES_STATEMENT_ID";
+const char* CLEAR_MESSAGES_STATEMENT_SQL = (const char*)
+"DELETE FROM %s WHERE STATE=:NEW AND ABONENT=:ABONENT";
+
 void Task::beginGeneration(Statistics* statistics)
 {
     {
         MutexGuard guard(inGenerationLock);
-        if (bInGeneration) return;
-        else bInGeneration = true;
+        if (bInGeneration || (info.trackIntegrity && bInProcess)) return;
+        bInGeneration = true; bGenerationSuccess = false;
     }
 
     Connection* ownConnection = 0;
@@ -290,6 +373,8 @@ void Task::beginGeneration(Statistics* statistics)
         if (!ownConnection)
             throw Exception("Failed to obtain connection to own data source.");
         
+        trackIntegrity(false, false, intConnection); // insert flag
+
         std::auto_ptr<char> userQueryId(prepareSqlCall(USER_QUERY_STATEMENT_ID));
         Statement* userQuery = ownConnection->getStatement(userQueryId.get(),
                                                            info.querySql.c_str());
@@ -303,6 +388,16 @@ void Task::beginGeneration(Statistics* statistics)
         if (!newMessage)
             throw Exception("Failed to create statement for message generation.");
             
+        Statement* clearMessages = 0;
+        if (info.replaceIfPresent) {
+            std::auto_ptr<char> clearMessagesId(prepareSqlCall(CLEAR_MESSAGES_STATEMENT_ID));
+            std::auto_ptr<char> clearMessagesSql(prepareSqlCall(CLEAR_MESSAGES_STATEMENT_SQL));
+            clearMessages = intConnection->getStatement(clearMessagesId.get(),
+                                                        clearMessagesSql.get());
+            if (!clearMessages)
+                throw Exception("Failed to create statement for message(s) replace.");
+        }
+        
         std::auto_ptr<ResultSet> rsGuard(userQuery->executeQuery());
         ResultSet* rs = rsGuard.get();
         if (!rs)
@@ -312,37 +407,50 @@ void Task::beginGeneration(Statistics* statistics)
         ContextEnvironment  context;
 
         int uncommited = 0;
-        while (bInGeneration && rs->fetchNext())
+        while (isInGeneration() && rs->fetchNext())
         {
             const char* abonentAddress = rs->getString(1);
             if (!abonentAddress || abonentAddress[0] == '\0' || !isMSISDNAddress(abonentAddress)) {
                 logger.warn("Invalid abonent number '%s' selected.", 
                             abonentAddress ? abonentAddress:"-");
-                continue;
             }
-            
-            std::string message = "";
-            formatter->format(message, getAdapter, context);
-            if (message.length() > 0)
+            else
             {
-                wdTimerId = dsInt->startTimer(intConnection, info.dsTimeout);
-                newMessage->setUint8(1, MESSAGE_NEW_STATE);
-                newMessage->setString(2, abonentAddress);
-                newMessage->setDateTime(3, time(NULL));
-                newMessage->setString(4, message.c_str());
-                newMessage->executeUpdate();
-                if (wdTimerId >= 0) dsInt->stopTimer(wdTimerId);
+                std::string message = "";
+                formatter->format(message, getAdapter, context);
+                if (message.length() > 0)
+                {
+                    wdTimerId = dsInt->startTimer(intConnection, info.dsTimeout);
+                    if (clearMessages) {
+                        clearMessages->setUint8(1, MESSAGE_NEW_STATE);
+                        clearMessages->setString(2, abonentAddress);
+                        clearMessages->executeUpdate();
+                    }
+                    newMessage->setUint8(1, MESSAGE_NEW_STATE);
+                    newMessage->setString(2, abonentAddress);
+                    newMessage->setDateTime(3, time(NULL));
+                    newMessage->setString(4, message.c_str());
+                    newMessage->executeUpdate();
+                    if (wdTimerId >= 0) dsInt->stopTimer(wdTimerId);
 
-                //logger.info("Message '%s' for '%s' generated.", message.c_str(), abonentAddress);
-                if (statistics) statistics->incGenerated(info.id, 1);
+                    if (statistics) statistics->incGenerated(info.id, 1);
 
-                if (info.dsUncommitedInGeneration <= 0 || ++uncommited >= info.dsUncommitedInGeneration) {
-                    intConnection->commit();
-                    uncommited = 0;
+                    if (info.dsUncommitedInGeneration <= 0 || ++uncommited >= info.dsUncommitedInGeneration) {
+                        intConnection->commit();
+                        uncommited = 0;
+                    }
                 }
             }
         }
         if (uncommited > 0) intConnection->commit();
+        
+        {
+            MutexGuard guard(inGenerationLock);
+            if (!isInGeneration() && info.trackIntegrity) bGenerationSuccess = false;
+            else bGenerationSuccess = true;
+        }
+
+        trackIntegrity(true, false, intConnection); // delete flag only
     }
     catch (Exception& exc)
     {
@@ -355,6 +463,10 @@ void Task::beginGeneration(Statistics* statistics)
         }
         logger.error("Task '%s'. Messages generation process failure. "
                      "Details: %s", info.id.c_str(), exc.what());
+        
+        trackIntegrity(true, true, intConnection); // delete flag & generated messages
+        MutexGuard guard(inGenerationLock);
+        bGenerationSuccess = false;
     }
     catch (...)
     {
@@ -367,6 +479,10 @@ void Task::beginGeneration(Statistics* statistics)
         }
         logger.error("Task '%s'. Messages generation process failure.",
                      info.id.c_str());
+
+        trackIntegrity(true, true, intConnection); // delete flag & generated messages
+        MutexGuard guard(inGenerationLock);
+        bGenerationSuccess = false;
     }
     
     if (wdTimerId >= 0) dsInt->stopTimer(wdTimerId);
@@ -377,7 +493,6 @@ void Task::beginGeneration(Statistics* statistics)
         MutexGuard guard(inGenerationLock);
         bInGeneration = false;
     }
-    
     generationEndEvent.Signal();
 }
 void Task::endGeneration()
@@ -712,11 +827,13 @@ bool Task::getNextMessage(Connection* connection, Message& message)
         }
     }
 
+    if (info.trackIntegrity && !isGenerationSucceeded())
+        return setInProcess(false);
+
     time_t currentTime = time(NULL);
     if (currentTime-lastMessagesCacheEmpty > info.messagesCacheSleep)
         lastMessagesCacheEmpty = currentTime;
     else if (!isInGeneration()) return setInProcess(false);
-    
     
     int wdTimerId = -1;
     try

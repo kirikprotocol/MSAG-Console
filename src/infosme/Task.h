@@ -74,6 +74,7 @@ namespace smsc { namespace infosme
 
         bool    retryOnFail;
         bool    replaceIfPresent;
+        bool    trackIntegrity;
         bool    transactionMode;
         
         time_t  endDate;            // full date/time
@@ -94,7 +95,8 @@ namespace smsc { namespace infosme
         
         TaskInfo()
             : id(""), name(""), enabled(true), priority(0),
-              retryOnFail(false), replaceIfPresent(false), transactionMode(false), 
+              retryOnFail(false), replaceIfPresent(false), 
+              trackIntegrity(false), transactionMode(false), 
               endDate(-1), retryTime(-1), validityPeriod(-1), validityDate(-1),
               activePeriodStart(-1), activePeriodEnd(-1),
               dsId(""), tablePrefix(""), querySql(""), msgTemplate(""), svcType(""),
@@ -103,7 +105,7 @@ namespace smsc { namespace infosme
         TaskInfo(const TaskInfo& info) 
             : id(info.id), name(info.name), enabled(info.enabled), priority(info.priority),
               retryOnFail(info.retryOnFail), replaceIfPresent(info.replaceIfPresent),
-              transactionMode(info.transactionMode), 
+              trackIntegrity(info.trackIntegrity), transactionMode(info.transactionMode), 
               endDate(info.endDate), retryTime(info.retryTime), 
               validityPeriod(info.validityPeriod), validityDate(info.validityDate),
               activePeriodStart(info.activePeriodStart), activePeriodEnd(info.activePeriodEnd),
@@ -120,7 +122,7 @@ namespace smsc { namespace infosme
         {
             id = info.id; name = info.name; enabled = info.enabled; priority = info.priority;
             retryOnFail = info.retryOnFail; replaceIfPresent = info.replaceIfPresent;
-            transactionMode = info.transactionMode; 
+            trackIntegrity = info.trackIntegrity; transactionMode = info.transactionMode; 
             endDate = info.endDate; retryTime = info.retryTime;
             validityPeriod = info.validityPeriod; validityDate = info.validityDate;
             activePeriodStart = info.activePeriodStart; 
@@ -162,7 +164,7 @@ namespace smsc { namespace infosme
         Mutex       createTableLock, enableLock;
         Event       generationEndEvent;
         Mutex       inGenerationLock, inProcessLock;
-        bool        bInProcess, bInGeneration;
+        bool        bInProcess, bInGeneration, bGenerationSuccess;
 
         Mutex           messagesCacheLock;
         Array<Message>  messagesCache;
@@ -170,6 +172,7 @@ namespace smsc { namespace infosme
         
         char* prepareSqlCall(const char* sql);
         char* prepareDoubleSqlCall(const char* sql);
+        void  trackIntegrity(bool clear=true, bool del=true, Connection* connection=0);
 
         virtual void init(ConfigView* config, std::string taskId, std::string tablePrefix);
         virtual ~Task();
@@ -227,6 +230,10 @@ namespace smsc { namespace infosme
         inline bool isInGeneration() {
             MutexGuard guard(inGenerationLock);
             return bInGeneration;
+        }
+        inline bool isGenerationSucceeded() {
+            MutexGuard guard(inGenerationLock);
+            return (!bInGeneration && bGenerationSuccess);
         }
 
         inline std::string getId() {
