@@ -96,7 +96,12 @@ unsigned ConvertText27bit(
      PutChar(bit7buf,shift,text[i]);
   }
 #if !defined DISABLE_TRACING
-  __trace2__("MAP::latin1->7bit: %s",text);
+  {
+    char b[chars+1];
+    memcpy(b,text,chars);
+    b[chars] = 0;
+    __trace2__("MAP::latin1->7bit: %s",b);
+  }
   {
     char b[255*4];
     unsigned k;
