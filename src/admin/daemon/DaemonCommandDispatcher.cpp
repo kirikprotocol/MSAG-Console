@@ -457,6 +457,23 @@ void DaemonCommandDispatcher::activateChildSignalHandler()
 {
 	setExtendedSignalHandler(SIGCHLD, childSignalListener);
 }
+void DaemonCommandDispatcher::startAllServices()
+{
+	char * serviceId = NULL;
+	Service *servicePtr = NULL;
+	services.First();
+	while (services.Next(serviceId, servicePtr) != 0)
+	{
+		if (servicePtr != NULL) {
+			try {
+				servicePtr->start();
+			} catch (...) {
+				if (serviceId != NULL)
+					Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher").error("Couldn't start service \"%s\", skipped", serviceId);
+			}
+		}
+	}
+}
 
 void DaemonCommandDispatcher::addServicesFromConfig()
 	throw ()

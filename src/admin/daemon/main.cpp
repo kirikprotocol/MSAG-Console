@@ -105,9 +105,10 @@ int main(int argc, char **argv)
 		DaemonSocketListener listener("smsc.admin.daemon.DaemonSocketListener");
 		listener.init(manager.getString(CONFIG_HOST_PARAMETER),
 									manager.getInt(CONFIG_PORT_PARAMETER));
+		DaemonCommandDispatcher::activateChildSignalHandler();
+		DaemonCommandDispatcher::startAllServices();
 		listener.Start();
 
-		DaemonCommandDispatcher::activateChildSignalHandler();
 		logger.info("Started");
 
 		main_listener = &listener;

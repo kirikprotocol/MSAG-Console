@@ -60,7 +60,7 @@ function clickAddDriver()
 	newCell.innerHTML = "<input class=txtW name=\"<%=bean.prefix%>." + typeElem.value + ".loadup\" value=\"" + loadupElem.value + "\">";
 	newRow.appendChild(newCell);
 	newCell = document.createElement("td");
-	newCell.innerHTML = "<img src=\"<%=CPATH%>/img/but_add.gif\" class=button jbuttonName=\"mbRemove\" jbuttonValue=\"Remove\" title=\"Remove this datasource driver\" jbuttonOnclick=\"return clickRemoveDriver('" + newRow.id + "');\">";
+	newCell.innerHTML = "<img src=\"<%=CPATH%>/img/but_del.gif\" class=button jbuttonName=\"mbRemove\" jbuttonValue=\"Remove\" title=\"Remove this datasource driver\" jbuttonOnclick=\"return clickRemoveDriver('" + newRow.id + "');\">";
 	newRow.appendChild(newCell);
 
 	typeElem.value = "";

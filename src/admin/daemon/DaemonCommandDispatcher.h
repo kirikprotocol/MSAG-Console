@@ -37,6 +37,7 @@ namespace smsc {
       {
       public:
         static void activateChildSignalHandler();
+		static void startAllServices();
 
         inline static void init(config::Manager * confManager) throw ()
         {

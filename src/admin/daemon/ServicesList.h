@@ -38,8 +38,18 @@ public:
 
 	const char * const markServiceAsStopped(pid_t old_pid);
 
+	void First() {
+		services.First();
+	}
+
+	int Next(char *& serviceId, Service *& servicePtr)
+	{
+		return services.Next(serviceId, servicePtr);
+	}
+
 protected:
 	typedef Hash<Service*> _ServiceList;
+
 	_ServiceList services;
 };
 
