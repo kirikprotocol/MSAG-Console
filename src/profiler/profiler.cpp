@@ -423,7 +423,7 @@ int Profiler::Execute()
       putIncomingCommand(answer);
       delete smsarr[i];
     }*/
-    trimSms(&ans,msgstr,strlen(msgstr),CONV_ENCODING_CP1251,pr.codepage);
+    fillSms(&ans,msgstr,strlen(msgstr),CONV_ENCODING_CP1251,pr.codepage);
     SmscCommand answer=SmscCommand::makeSumbmitSm(ans,getNextSequenceNumber());
     putIncomingCommand(answer);
   }

@@ -92,6 +92,7 @@ int splitSms(SMS* tmplSms,const char *text,int length,ConvEncodingEnum encoding,
              Array<SMS*>& dest);
 
 int trimSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int datacoding);
+int fillSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int datacoding);
 
 void transLiterateSms(SMS* sms);
 

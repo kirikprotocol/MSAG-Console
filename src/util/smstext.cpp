@@ -68,6 +68,37 @@ int splitSms(SMS* tmplSms,const char *text,int length,ConvEncodingEnum encoding,
   return dest.Count();
 }
 
+int fillSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int datacoding)
+{
+  int buflen=length*2+4;
+  auto_ptr<char> buf(new char[buflen]);
+  bool hb=hasHighBit(text,length);
+  int dc;
+  int datalen;
+  if(hb && datacoding==DataCoding::UCS2)
+  {
+    ConvertMultibyteToUCS2(text,length,(short*)buf.get(),buflen,encoding);
+    dc=DataCoding::UCS2;
+    datalen=length*2;
+  }else
+  {
+    do{
+      datalen=Transliterate(text,length,encoding,buf.get(),buflen);
+      if(datalen==-1)
+      {
+        buflen*=2;
+        buf=auto_ptr<char>(new char[buflen]);
+      }
+    }while(datalen==-1);
+    dc=DataCoding::DEFAULT;
+  }
+  sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,dc);
+  sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf.get(),datalen);
+  sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,datalen);
+  return datalen;
+}
+
+
 int trimSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int datacoding)
 {
   int buflen=length*2+4;
@@ -84,7 +115,7 @@ int trimSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int d
       datalen=length*2;
     }else
     {
-      datalen=70;
+      datalen=140;
       short d[1];
       ConvertMultibyteToUCS2(".",1,d,1,CONV_ENCODING_ANSI);
       short *b=(short*)buf.get();
