@@ -7,9 +7,6 @@
  */
 package ru.novosoft.smsc.admin.console;
 
-import ru.novosoft.smsc.admin.console.commands.exceptions.CommandProcessException;
-
 public interface Command {
-    public String process(String cmd)
-        throws CommandProcessException;
+    public void process(CommandContext ctx);
 }

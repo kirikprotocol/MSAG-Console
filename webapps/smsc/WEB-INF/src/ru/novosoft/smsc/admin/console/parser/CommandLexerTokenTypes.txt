@@ -1,0 +1,35 @@
+// $ANTLR 2.7.1: lexer.g -> CommandLexerTokenTypes.txt$
+CommandLexer    // output token vocab name
+ACT_ADD="add"=4
+ACT_ALTER="alter"=5
+ACT_DELETE="delete"=6
+ACT_LIST="list"=7
+ACT_VIEW="view"=8
+ACT_APPLY="apply"=9
+TGT_ALIAS="alias"=10
+TGT_ROUTE="route"=11
+TGT_PROFILE="profile"=12
+TGT_SUBJECT="subject"=13
+OPT_BILL="bill"=14
+OPT_NOBILL="nobill"=15
+OPT_ARCH="arc"=16
+OPT_NOARCH="noarc"=17
+OPT_ALLOW="allow"=18
+OPT_DENY="deny"=19
+OPT_SRC="src"=20
+OPT_DST="dst"=21
+OPT_MASK="mask"=22
+OPT_SUBJ="subj"=23
+OPT_SVCID="serviceid"=24
+OPT_PRI="priority"=25
+OPT_DEFSME="defaultsme"=26
+OPT_REPORT="report"=27
+OPT_ENCODE="encoding"=28
+WS=29
+STRING=30
+ID=31
+NUMBER=32
+ADDRESS=33
+COMMA=34
+ESC=35
+DIGIT=36

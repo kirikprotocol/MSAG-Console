@@ -8,41 +8,31 @@
 package ru.novosoft.smsc.admin.console.commands;
 
 
-import ru.novosoft.smsc.admin.console.SmscCommand;
-import ru.novosoft.smsc.admin.console.commands.exceptions.CommandProcessException;
-import ru.novosoft.smsc.admin.console.commands.exceptions.CommandParseException;
-import ru.novosoft.smsc.admin.smsc_service.Smsc;
+import ru.novosoft.smsc.admin.console.Command;
+import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.alias.Alias;
 
-import java.util.Hashtable;
 import java.util.Iterator;
 
-public class AliasViewCommand extends SmscCommand
+public class AliasViewCommand implements Command
 {
-    private final static String OPTION_ALIAS = "alias";
+    private String alias;
 
-    public AliasViewCommand(Smsc smsc) {
-        super(smsc);
+    public void setAlias(String alias) {
+        this.alias = alias;
     }
 
     private String showAlias(Alias alias)
     {
         return "Alias '"+alias.getAlias().getMask()+"'"+
                " = Address '"+alias.getAddress().getMask()+"'"+
-               " ("+((alias.isHide()) ? "hiden":"public")+")";
+               " ("+((alias.isHide()) ? "hidden":"public")+")";
     }
-    public String process(String cmd)
-        throws CommandProcessException
+    public void process(CommandContext ctx)
     {
-        Hashtable params;
-        try { params = parse(cmd); }
-        catch (CommandParseException e) {
-            throw new CommandProcessException(e.getMessage());
-        }
-        String alias = (String)params.get(OPTION_ALIAS);
         String out;
         if (alias == null || alias.length() == 0) {
-            Iterator i = smsc.getAliases().iterator();
+            Iterator i = ctx.getSmsc().getAliases().iterator();
             out = (i.hasNext()) ? "Aliases:" : "No aliases defined";
             while (i.hasNext()) {
                 Alias smscAlias = (Alias)i.next();
@@ -52,12 +42,12 @@ public class AliasViewCommand extends SmscCommand
             }
         }
         else {
-            Alias smscAlias = smsc.getAliases().get(alias);
+            Alias smscAlias = ctx.getSmsc().getAliases().get(alias);
             out = (smscAlias != null) ?
                     showAlias(smscAlias) : "Alias '"+alias+"' not found";
         }
 
-        return out;
+        ctx.setMessage(out);
     }
 
 }

@@ -8,20 +8,31 @@
 package ru.novosoft.smsc.admin.console.commands;
 
 
-import ru.novosoft.smsc.admin.console.SmscCommand;
-import ru.novosoft.smsc.admin.console.commands.exceptions.CommandProcessException;
-import ru.novosoft.smsc.admin.smsc_service.Smsc;
+import ru.novosoft.smsc.admin.console.Command;
+import ru.novosoft.smsc.admin.console.CommandContext;
 
-public class ProfileDeleteCommand extends SmscCommand
+import ru.novosoft.smsc.admin.route.Mask;
+
+public class ProfileDeleteCommand implements Command
 {
-    private final static String OPTION_MASK = "mask";
+    private String mask;
 
-    public ProfileDeleteCommand(Smsc smsc) {
-        super(smsc);
+    public void setMask(String mask) {
+        this.mask = mask;
     }
 
-    public String process(String cmd) throws CommandProcessException {
-        return "ProfileDeleteCommand";
+    public void process(CommandContext ctx)
+    {
+        String out = "Profile for mask '"+mask+"'";
+        try {
+            ctx.getSmsc().updateProfile(new Mask(mask), null);
+            ctx.setMessage(out+" deleted");
+            ctx.setResult(0);
+        } catch (Exception e) {
+            e.printStackTrace(); // ???
+            ctx.setMessage(out+" not deleted. Cause: "+e.getMessage());
+            ctx.setResult(-1);
+        }
     }
 }
 

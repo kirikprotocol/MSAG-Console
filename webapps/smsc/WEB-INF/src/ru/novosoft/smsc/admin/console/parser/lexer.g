@@ -37,6 +37,8 @@ tokens {
   OPT_SVCID	= "serviceid"	;
   OPT_PRI	= "priority"	;
   OPT_DEFSME 	= "defaultsme"	;
+  OPT_REPORT	= "report"	;
+  OPT_ENCODE	= "encoding"	;
 }
 
 WS    : ( ' '

@@ -7,19 +7,16 @@
  */
 package ru.novosoft.smsc.admin.console;
 
-import ru.novosoft.smsc.admin.console.commands.exceptions.CommandProcessException;
+import ru.novosoft.smsc.admin.console.parser.CommandLexer;
+import ru.novosoft.smsc.admin.console.parser.CommandParser;
 
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 
-public class Session extends Thread
+public abstract class Session extends Thread
 {
     private org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(this.getClass());
-
-    private final static String CONSOLE_GREATING = "Welcome to SMSC Remote Console.";
-    private final static String CONSOLE_FAREWELL = "Exited from SMSC Remote Console.";
-    private final static String CONSOLE_SIGN = "> ";
 
     private final static String COMMAND_QUIT = "quit";
 
@@ -34,31 +31,37 @@ public class Session extends Thread
         this.socket = socket;
     }
 
-    private void processInput()
+    protected void greeting(PrintWriter writer) {};
+    protected void farewell(PrintWriter writer) {};
+    protected void prompt(PrintWriter writer) {};
+
+    protected abstract void display(PrintWriter writer, CommandContext ctx);
+
+    private void process()
         throws Exception
     {
-        LineNumberReader reader = new LineNumberReader(new InputStreamReader(is));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         PrintWriter writer = new PrintWriter(os);
 
-        writer.println(CONSOLE_GREATING+'\r');
+        greeting(writer);
         while (!isStopping) {
-            writer.print(CONSOLE_SIGN); writer.flush();
+            prompt(writer);
             String input = reader.readLine();
-            if (input != null) {
-                if (input.equalsIgnoreCase(COMMAND_QUIT)) {
-                    writer.println(CONSOLE_FAREWELL+'\r');
-                    writer.flush(); sleep(1000);
-                    break;
-                }
-                String output;
-                try {
-                    output = owner.processCommand(input.trim());
-                } catch (CommandProcessException e) {
-                    output = "Failed. "+e.getMessage();
-                }
-                writer.println(output+'\r');
-                writer.flush();
+            if (input == null) continue;
+            if (input.equalsIgnoreCase(COMMAND_QUIT)) {
+                farewell(writer); break;
             }
+            CommandContext ctx = new CommandContext(owner.getSmsc());
+            try {
+                CommandLexer lexer = new CommandLexer(new DataInputStream(System.in));
+                CommandParser parser = new CommandParser(lexer);
+                parser.parse(ctx);
+            }
+            catch (Exception e) {
+                String error = "Exc: "+e.getMessage();
+                logger.error(error, e);
+            }
+            display(writer, ctx);
         }
     }
 
@@ -70,7 +73,7 @@ public class Session extends Thread
         try {
             is = socket.getInputStream();
             os = socket.getOutputStream();
-            processInput();
+            process();
         }
         catch (SocketException e) {
             logger.debug("Client "+socket.getInetAddress().getHostAddress()+" disconnected");
@@ -83,6 +86,7 @@ public class Session extends Thread
             if( os != null ) try { os.close();} catch (Exception ee){};
             if( socket != null ) try { socket.close();} catch (Exception ee){};
         }
+
         owner.removeSession(this);
         synchronized(closeSemaphore) {
             closeSemaphore.notifyAll();

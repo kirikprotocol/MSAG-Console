@@ -8,20 +8,19 @@
 package ru.novosoft.smsc.admin.console.commands;
 
 
-import ru.novosoft.smsc.admin.console.SmscCommand;
-import ru.novosoft.smsc.admin.console.commands.exceptions.CommandProcessException;
-import ru.novosoft.smsc.admin.smsc_service.Smsc;
+import ru.novosoft.smsc.admin.console.Command;
+import ru.novosoft.smsc.admin.console.CommandContext;
 
-public class RouteDeleteCommand extends SmscCommand
+public class RouteDeleteCommand implements Command
 {
-    private final static String OPTION_ROUTE = "route";
+    private String route;
 
-    public RouteDeleteCommand(Smsc smsc) {
-        super(smsc);
+    public void setRoute(String route) {
+        this.route = route;
     }
 
-    public String process(String cmd) throws CommandProcessException {
-        return "RouteDeleteCommand";
+    public void process(CommandContext ctx) {
+        ctx.setMessage("Not implemented yet");
     }
 }
 

@@ -7,30 +7,24 @@
  */
 package ru.novosoft.smsc.admin.console.commands;
 
-import ru.novosoft.smsc.admin.smsc_service.Smsc;
-import ru.novosoft.smsc.admin.console.SmscCommand;
-import ru.novosoft.smsc.admin.console.commands.exceptions.CommandProcessException;
+import ru.novosoft.smsc.admin.console.Command;
+import ru.novosoft.smsc.admin.console.CommandContext;
 
-public class ApplyCommand extends SmscCommand
+public class ApplyCommand implements Command
 {
-    public ApplyCommand(Smsc smsc) {
-        super(smsc);
-    }
-
-    public String process(String cmd) throws CommandProcessException
+    public void process(CommandContext ctx)
     {
-        String output = "";
         try {
-            //smsc.applyProfiles();
-            smsc.applyAliases();
-            smsc.applyRoutes();
-            output = "Changes applied succesfully";
+            //ctx.getSmsc().applyProfiles();
+            ctx.getSmsc().applyAliases();
+            ctx.getSmsc().applyRoutes();
+            ctx.setMessage("Changes applied succesfully");
+            ctx.setResult(0);
         } catch (Exception e) {
-            output = "Failed to apply changes";
-            //logger.error(output, e);
+            ctx.setMessage("Failed to apply changes");
+            ctx.setResult(-1);
             e.printStackTrace();
         }
-        return output;
     }
 }
 

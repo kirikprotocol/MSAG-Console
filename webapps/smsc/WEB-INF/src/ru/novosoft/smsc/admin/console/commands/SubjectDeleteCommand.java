@@ -8,21 +8,12 @@
 package ru.novosoft.smsc.admin.console.commands;
 
 
-import ru.novosoft.smsc.admin.console.Command;
-import ru.novosoft.smsc.admin.console.SmscCommand;
-import ru.novosoft.smsc.admin.console.commands.exceptions.CommandProcessException;
-import ru.novosoft.smsc.admin.smsc_service.Smsc;
+import ru.novosoft.smsc.admin.console.CommandContext;
 
-public class SubjectDeleteCommand extends SmscCommand
+public class SubjectDeleteCommand extends SubjectGenCommand
 {
-    private final static String OPTION_SUBJECT = "subject";
-
-    public SubjectDeleteCommand(Smsc smsc) {
-        super(smsc);
-    }
-
-    public String process(String cmd) throws CommandProcessException {
-        return "SubjectDeleteCommand";
+    public void process(CommandContext ctx) {
+        ctx.setMessage("Not implemented yet");
     }
 }
 
