@@ -556,7 +556,7 @@ void cancelSmTc()
 		"Если код ошибки ESME_RINVBNDSTS в поле command_status, то действительно sme зарегистрированна как receiver");
 	__reg_tc__("cancelSm.resp.checkCmdStatusInvalidMsgId",
 		"Если код ошибки ESME_RINVMSGID в поле command_status, то действительно message_id задан неправильно");
-	__reg_tc__("cancelSm.resp.checkCmdStatusCancelFiled",
+	__reg_tc__("cancelSm.resp.checkCmdStatusCancelFailed",
 		"Если код ошибки ESME_RCANCELFAIL в поле command_status, то действительно сообщение находится в финальном состоянии");
 	__reg_tc__("cancelSm.resp.checkCmdStatusOther",
 		"Прочие коды ошибок соответствуют спецификации");

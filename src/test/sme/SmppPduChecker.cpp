@@ -461,6 +461,8 @@ void SmppPduChecker::processQuerySmResp(ResponseMonitor* monitor,
 	__check__(3, respPdu.get_header().get_sequenceNumber() ==
 		monitor->pduData->pdu->get_sequenceNumber());
 	__tc_ok_cond__;
+	__tc__("querySm.resp.checkFields");
+	__tc_fail__(100);
 	//set<uint32_t> checkRes = checkQuerySm(...);
 	const set<uint32_t>& checkRes = monitor->pduData->checkRes;
 	switch (respPdu.get_header().get_commandStatus())
@@ -554,7 +556,7 @@ void SmppPduChecker::processCancelSmResp(ResponseMonitor* monitor,
 			__check__(1, checkRes.count(ESME_RINVMSGID));
 			break;
 		case ESME_RCANCELFAIL:
-			__tc__("cancelSm.resp.checkCmdStatusCancelFiled");
+			__tc__("cancelSm.resp.checkCmdStatusCancelFailed");
 			__check__(1, checkRes.count(ESME_RCANCELFAIL));
 			break;
 		default:
