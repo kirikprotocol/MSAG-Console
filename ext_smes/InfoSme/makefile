@@ -33,7 +33,7 @@ compile:
 	@cp -f service $(SME_BUILDDIR)/bin
 	@cp -f log4cpp.properties $(SME_BUILDDIR)/log4cpp.infosme
 	@cp -f $(SMSC_BUILDDIR)/jars/infosme.jar  $(SME_BUILDDIR)/lib/infosme.jar
-	@cp -f ../../config/infosme/config.xml $(SME_BUILDDIR)/conf/config.xml
+	@cp -f ../../src/infosme/config.xml $(SME_BUILDDIR)/conf/config.xml
 	@cp -f ../../config/configuration.dtd $(SME_BUILDDIR)/conf/configuration.dtd
 	@cp -f ../../config/command.dtd $(SME_BUILDDIR)/conf/command.dtd
 	@cp -f ../../config/response.dtd $(SME_BUILDDIR)/conf/response.dtd
