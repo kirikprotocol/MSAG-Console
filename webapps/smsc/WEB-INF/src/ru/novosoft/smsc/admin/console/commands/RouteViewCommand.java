@@ -36,17 +36,18 @@ public class RouteViewCommand implements Command
     ctx.setMessage("Route info");
     ctx.setStatus(CommandContext.CMD_LIST);
 
+    long aclId = smscRoute.getAclId();
     ctx.addResult("name  : " + smscRoute.getName());
     ctx.addResult("prio  : " + smscRoute.getPriority());
     ctx.addResult("svcid : " + smscRoute.getServiceId());
     ctx.addResult("srcsme: " + smscRoute.getSrcSmeId());
     ctx.addResult("dm    : " + smscRoute.getDeliveryMode());
     ctx.addResult("fwd   : " + smscRoute.getForwardTo());
+    ctx.addResult("acl   : " + ((aclId <= -1) ? "-":""+aclId));
     ctx.addResult("notes : " + smscRoute.getNotes());
     ctx.addResult("flags : " +
                   (smscRoute.isActive() ? "active, " : "inactive, ") +
                   (smscRoute.isHide() ? "hide, " : "nohide, ") +
-        //todo: change replayPath<boolean> to replayPath<byte>
                   "replayPath " + Route.getReplayPathValue(smscRoute.getReplayPath()) +
                   "forceDelivery " + (smscRoute.isForceDelivery() ? "on, " : "off, ") +
                   (smscRoute.isBilling() ? "billing, " : "no billing, ") +

@@ -66,23 +66,26 @@ OPT_UDHCONCAT="udhconcat"=66
 OPT_ON="on"=67
 OPT_OFF="off"=68
 OPT_NOTES="notes"=69
-OPT_FRP="forceReplayPath"=70
+OPT_RP="replayPath"=70
 OPT_FD="forceDelivery"=71
 OPT_CACHE="cache"=72
-VAL_FULL="full"=73
-VAL_NONE="none"=74
-VAL_DEF="default"=75
-VAL_UCS2="ucs2"=76
-VAL_LATIN1="latin1"=77
-VAL_UCS2LATIN1="ucs2-latin1"=78
-VAL_STORE="store"=79
-VAL_FORWARD="forward"=80
-VAL_DATAGRAM="datagram"=81
-WS=82
-STR("more input")=83
-QSTR("quoted string")=84
-STR_WS=85
-STR_CHR=86
-COMMA("comma character ','")=87
-ESC=88
-DIGIT=89
+VAL_FORCE="force"=73
+VAL_SUPPRESS="suppress"=74
+VAL_PASS="pass"=75
+VAL_FULL="full"=76
+VAL_NONE="none"=77
+VAL_DEF="default"=78
+VAL_UCS2="ucs2"=79
+VAL_LATIN1="latin1"=80
+VAL_UCS2LATIN1="ucs2-latin1"=81
+VAL_STORE="store"=82
+VAL_FORWARD="forward"=83
+VAL_DATAGRAM="datagram"=84
+WS=85
+STR("more input")=86
+QSTR("quoted string")=87
+STR_WS=88
+STR_CHR=89
+COMMA("comma character ','")=90
+ESC=91
+DIGIT=92

@@ -66,7 +66,6 @@ public class RouteAlterCommand extends RouteGenCommand
         return;
       }
 
-      //todo: add aclId
       Route newRoute = new Route(route,
                                  oldRoute.getPriority(), oldRoute.isEnabling(), oldRoute.isBilling(),
                                  oldRoute.isArchiving(), oldRoute.isSuppressDeliveryReports(),
@@ -74,7 +73,7 @@ public class RouteAlterCommand extends RouteGenCommand
                                  oldRoute.getSources(), oldRoute.getDestinations(),
                                  oldRoute.getSrcSmeId(), oldRoute.getDeliveryMode(), oldRoute.getForwardTo(),
                                  oldRoute.isHide(), oldRoute.getReplayPath(), oldRoute.getNotes(),
-                                 oldRoute.isForceDelivery(), -1);
+                                 oldRoute.isForceDelivery(), oldRoute.getAclId());
 
       if (target == TARGET_SRC) {
         for (int i = 0; i < srcs.size(); i++) {
@@ -212,9 +211,9 @@ public class RouteAlterCommand extends RouteGenCommand
       if (isSrcSmeId) newRoute.setSrcSmeId(srcSmeId);
       if (isHide) newRoute.setHide(hide);
       if (isNotes) newRoute.setNotes(notes);
-      //todo: change replayPath<boolean> to replayPath<byte>
-      if (isForceReplayPath) newRoute.setReplayPath(Route.REPLAY_PATH_FORCE);
+      if (isReplayPath) newRoute.setReplayPath(replayPath);
       if (isForceDelivery) newRoute.setForceDelivery(forceDelivery);
+      if (isAclId) newRoute.setAclId(aclId);
 
       list.remove(oldRoute.getName());
       list.put(newRoute);

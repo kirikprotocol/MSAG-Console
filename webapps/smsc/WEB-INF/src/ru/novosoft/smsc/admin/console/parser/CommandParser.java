@@ -535,7 +535,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_NOBILL:
 		case OPT_ACTIVE:
 		case OPT_INACTIVE:
-		case OPT_FRP:
+		case OPT_RP:
 		case OPT_FD:
 		{
 			break;
@@ -577,6 +577,27 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(OPT_DM);
 			route_dm(cmd);
+			break;
+		}
+		case TGT_ACL:
+		case OPT_SRC:
+		case OPT_FWD:
+		case OPT_SRCSME:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case TGT_ACL:
+		{
+			match(TGT_ACL);
+			cmd.setAclId(getlongid("acl id"));
 			break;
 		}
 		case OPT_SRC:
@@ -1287,6 +1308,7 @@ public CommandParser(ParserSharedInputState state) {
 		case EOF:
 		case ACT_ADD:
 		case ACT_DELETE:
+		case TGT_ACL:
 		case OPT_HIDE:
 		case OPT_NOHIDE:
 		case OPT_BILL:
@@ -1304,7 +1326,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_DM:
 		case OPT_FWD:
 		case OPT_SRCSME:
-		case OPT_FRP:
+		case OPT_RP:
 		case OPT_FD:
 		{
 			break;
@@ -1335,6 +1357,7 @@ public CommandParser(ParserSharedInputState state) {
 		case EOF:
 		case ACT_ADD:
 		case ACT_DELETE:
+		case TGT_ACL:
 		case OPT_PRI:
 		case OPT_DM:
 		case OPT_FWD:
@@ -1367,6 +1390,7 @@ public CommandParser(ParserSharedInputState state) {
 		case EOF:
 		case ACT_ADD:
 		case ACT_DELETE:
+		case TGT_ACL:
 		case OPT_DM:
 		case OPT_FWD:
 		case OPT_SRCSME:
@@ -1385,6 +1409,29 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(OPT_DM);
 			route_dm(cmd);
+			break;
+		}
+		case EOF:
+		case ACT_ADD:
+		case ACT_DELETE:
+		case TGT_ACL:
+		case OPT_FWD:
+		case OPT_SRCSME:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case TGT_ACL:
+		{
+			match(TGT_ACL);
+			cmd.setAclId(getlongid("acl id"));
 			break;
 		}
 		case EOF:
@@ -2589,7 +2636,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_NOHIDE:
 			case OPT_BILL:
 			case OPT_NOBILL:
-			case OPT_FRP:
+			case OPT_RP:
 			case OPT_FD:
 			{
 				break;
@@ -2616,7 +2663,7 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			case OPT_BILL:
 			case OPT_NOBILL:
-			case OPT_FRP:
+			case OPT_RP:
 			case OPT_FD:
 			{
 				break;
@@ -2629,10 +2676,35 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			{
 			switch ( LA(1)) {
-			case OPT_FRP:
+			case OPT_RP:
 			{
-				match(OPT_FRP);
-				cmd.setForceReplayPath(true);
+				match(OPT_RP);
+				{
+				switch ( LA(1)) {
+				case VAL_FORCE:
+				{
+					match(VAL_FORCE);
+					cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_FORCE);
+					break;
+				}
+				case VAL_SUPPRESS:
+				{
+					match(VAL_SUPPRESS);
+					cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_SUPPRESS);
+					break;
+				}
+				case VAL_PASS:
+				{
+					match(VAL_PASS);
+					cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_PASS);
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
 				break;
 			}
 			case OPT_BILL:
@@ -2779,6 +2851,7 @@ public CommandParser(ParserSharedInputState state) {
 			case EOF:
 			case ACT_ADD:
 			case ACT_DELETE:
+			case TGT_ACL:
 			case OPT_HIDE:
 			case OPT_NOHIDE:
 			case OPT_BILL:
@@ -2794,7 +2867,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_DM:
 			case OPT_FWD:
 			case OPT_SRCSME:
-			case OPT_FRP:
+			case OPT_RP:
 			case OPT_FD:
 			{
 				break;
@@ -2822,6 +2895,7 @@ public CommandParser(ParserSharedInputState state) {
 			case EOF:
 			case ACT_ADD:
 			case ACT_DELETE:
+			case TGT_ACL:
 			case OPT_BILL:
 			case OPT_NOBILL:
 			case OPT_ARCH:
@@ -2835,7 +2909,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_DM:
 			case OPT_FWD:
 			case OPT_SRCSME:
-			case OPT_FRP:
+			case OPT_RP:
 			case OPT_FD:
 			{
 				break;
@@ -2848,21 +2922,27 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			{
 			switch ( LA(1)) {
-			case OPT_FRP:
+			case OPT_RP:
 			{
-				match(OPT_FRP);
+				match(OPT_RP);
 				{
 				switch ( LA(1)) {
-				case OPT_ON:
+				case VAL_FORCE:
 				{
-					match(OPT_ON);
-					cmd.setForceReplayPath(true);
+					match(VAL_FORCE);
+					cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_FORCE);
 					break;
 				}
-				case OPT_OFF:
+				case VAL_SUPPRESS:
 				{
-					match(OPT_OFF);
-					cmd.setForceReplayPath(false);
+					match(VAL_SUPPRESS);
+					cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_SUPPRESS);
+					break;
+				}
+				case VAL_PASS:
+				{
+					match(VAL_PASS);
+					cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_PASS);
 					break;
 				}
 				default:
@@ -2876,6 +2956,7 @@ public CommandParser(ParserSharedInputState state) {
 			case EOF:
 			case ACT_ADD:
 			case ACT_DELETE:
+			case TGT_ACL:
 			case OPT_BILL:
 			case OPT_NOBILL:
 			case OPT_ARCH:
@@ -2929,6 +3010,7 @@ public CommandParser(ParserSharedInputState state) {
 			case EOF:
 			case ACT_ADD:
 			case ACT_DELETE:
+			case TGT_ACL:
 			case OPT_BILL:
 			case OPT_NOBILL:
 			case OPT_ARCH:
@@ -2968,6 +3050,7 @@ public CommandParser(ParserSharedInputState state) {
 			case EOF:
 			case ACT_ADD:
 			case ACT_DELETE:
+			case TGT_ACL:
 			case OPT_ARCH:
 			case OPT_NOARCH:
 			case OPT_ALLOW:
@@ -3005,6 +3088,7 @@ public CommandParser(ParserSharedInputState state) {
 			case EOF:
 			case ACT_ADD:
 			case ACT_DELETE:
+			case TGT_ACL:
 			case OPT_ALLOW:
 			case OPT_DENY:
 			case OPT_RCPT:
@@ -3040,6 +3124,7 @@ public CommandParser(ParserSharedInputState state) {
 			case EOF:
 			case ACT_ADD:
 			case ACT_DELETE:
+			case TGT_ACL:
 			case OPT_RCPT:
 			case OPT_NORCPT:
 			case OPT_SVCID:
@@ -3073,6 +3158,7 @@ public CommandParser(ParserSharedInputState state) {
 			case EOF:
 			case ACT_ADD:
 			case ACT_DELETE:
+			case TGT_ACL:
 			case OPT_SVCID:
 			case OPT_PRI:
 			case OPT_DM:
@@ -3118,14 +3204,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop99:
+			_loop102:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop99;
+					break _loop102;
 				}
 				
 			} while (true);
@@ -3557,9 +3643,12 @@ public CommandParser(ParserSharedInputState state) {
 		"\"on\"",
 		"\"off\"",
 		"\"notes\"",
-		"\"forceReplayPath\"",
+		"\"replayPath\"",
 		"\"forceDelivery\"",
 		"\"cache\"",
+		"\"force\"",
+		"\"suppress\"",
+		"\"pass\"",
 		"\"full\"",
 		"\"none\"",
 		"\"default\"",

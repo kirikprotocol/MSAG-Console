@@ -83,10 +83,13 @@ tokens {
   OPT_ON	      = "on";
   OPT_OFF	      = "off";
   OPT_NOTES	    = "notes";
-  OPT_FRP	      = "forceReplayPath";
+  OPT_RP	      = "replayPath";
   OPT_FD	      = "forceDelivery";
   OPT_CACHE     = "cache";
-  
+
+  VAL_FORCE     = "force";
+  VAL_SUPPRESS  = "suppress";
+  VAL_PASS      = "pass";
   VAL_FULL	    = "full";
   VAL_NONE	    = "none";
   VAL_DEF	      = "default";
