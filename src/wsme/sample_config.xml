@@ -38,7 +38,7 @@
         </section>  
 	
 	<section name="LangManager">
-	    <param name="defaultLang" type="string">EN</param>
+	    <param name="defaultLang" type="string">EN/EN</param>
 	</section>
 	
 	<section name="AdManager">
