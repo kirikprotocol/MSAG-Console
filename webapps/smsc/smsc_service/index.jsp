@@ -179,14 +179,15 @@ refreshStartStopButtonsStatus();
   profilerCodepages.add(Profile.getCodepageString(Profile.CODEPAGE_UCS2AndLatin1));
   startSection(out, "profiler", "Profiler", false);
     startParams(out);
-      param(out, "system ID",                           "profiler.systemId",                bean.getStringParam("profiler.systemId"));
-      param(out, "service type",                        "profiler.service_type",            bean.getStringParam("profiler.service_type"));
-      param(out, "protocol ID",                         "profiler.protocol_id",             bean.getIntParam(   "profiler.protocol_id"));
-      paramSelect(out,"default data coding",            "profiler.defaultDataCoding",       profilerCodepages,      bean.getStringParam("profiler.defaultDataCoding"));
-      paramSelect(out,"default report",                 "profiler.defaultReport",           profilerReportOptions,  bean.getStringParam("profiler.defaultReport"));
-      param(out, "default hide",                        "profiler.defaultHide",             bean.getBoolParam(  "profiler.defaultHide"));
-      param(out, "default&nbsp;hide&nbsp;modifiable",   "profiler.defaultHideModifiable",   bean.getBoolParam(  "profiler.defaultHideModifiable"));
-      param(out, "default&nbsp;divert&nbsp;modifiable", "profiler.defaultDivertModifiable", bean.getBoolParam(  "profiler.defaultDivertModifiable"));
+      param(out, "system ID",                                 "profiler.systemId",                bean.getStringParam("profiler.systemId"));
+      param(out, "service type",                              "profiler.service_type",            bean.getStringParam("profiler.service_type"));
+      param(out, "protocol ID",                               "profiler.protocol_id",             bean.getIntParam(   "profiler.protocol_id"));
+      paramSelect(out,"default data coding",                  "profiler.defaultDataCoding",       profilerCodepages,      bean.getStringParam("profiler.defaultDataCoding"));
+      paramSelect(out,"default report",                       "profiler.defaultReport",           profilerReportOptions,  bean.getStringParam("profiler.defaultReport"));
+      param(out, "default hide",                              "profiler.defaultHide",             bean.getBoolParam(  "profiler.defaultHide"));
+      param(out, "default&nbsp;hide&nbsp;modifiable",         "profiler.defaultHideModifiable",   bean.getBoolParam(  "profiler.defaultHideModifiable"));
+      param(out, "default&nbsp;divert&nbsp;modifiable",       "profiler.defaultDivertModifiable", bean.getBoolParam(  "profiler.defaultDivertModifiable"));
+      param(out, "default&nbsp;USSD&nbsp;in&nbsp;7&nbsp;bit", "profiler.defaultUssdIn7Bit",       bean.getBoolParam(  "profiler.defaultUssdIn7Bit"));
 
     finishParams(out);
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~ profiler.ussdOpsMapping ~~~~~~~~~~~~~~~~~~~~~~~~~
