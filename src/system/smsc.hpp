@@ -151,11 +151,6 @@ public:
     eventqueue.enqueue(id,SmscCommand::makeCancel(id,oa,da));
   }
 
-  int getSchedulesSmsCount()
-  {
-    return scheduler->getSmsCount();
-  }
-
   void notifyScheduler()
   {
     scheduler->notify();
@@ -409,6 +404,8 @@ protected:
   time_t startTime;
 
   smsc::core::threads::ThreadPool tp,tp2;
+
+  friend class StatusSme;
 
 };
 

@@ -27,16 +27,18 @@ public:
       SMS s;
       fetchSmsFromSmppPdu((PduXSm*)pdu,&s);
       s.getOriginatingAddress().toString(buf,sizeof(buf));
-      printf("\nFrom:%s\n",buf);
+      printf("\n==========\nFrom:%s\n",buf);
       s.getDestinationAddress().toString(buf,sizeof(buf));
       printf("To:%s\n",buf);
+      printf("DCS:%d\n",s.getIntProperty(Tag::SMPP_DATA_CODING));
+      printf("UMR:%d\n",s.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
       if(getPduText((PduXSm*)pdu,buf,sizeof(buf))==-1)
       {
         int sz=((PduXSm*)pdu)->optional.size_messagePayload();
         char *data=new char[sz+1];
         if(getPduText((PduXSm*)pdu,buf,sizeof(buf))==-1)
         {
-          printf("Received payload:%s\n",data);
+          printf("Message(payload):%s\n",data);
         }else
         {
           printf("Error: faield to retrieve message");
@@ -44,8 +46,9 @@ public:
         delete [] data;
       }else
       {
-        printf("Received:%s\n",buf);
+        printf("Message:%s\n",buf);
       }
+      printf("==========\n");
       fflush(stdout);
       if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
       {
@@ -219,6 +222,8 @@ int main(int argc,char* argv[])
     s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
     s.setDeliveryReport(0);
     s.setArchivationRequested(false);
+
+    s.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,1234);
 
     SmppTransmitter *tr=ss.getSyncTransmitter();
 

@@ -63,6 +63,7 @@ protected:
   IntTimeSlotCounter totalCounter;
   Mutex mtx;
   log4cpp::Category* log;
+  friend class StatusSme;
 };
 
 };//system

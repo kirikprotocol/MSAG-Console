@@ -1259,7 +1259,7 @@ StateType StateMachine::submit(Tuple& t)
       smsc->notifyScheduler();
     }catch(...)
     {
-      __trace__("SUBMIT_SM: failed to change state to enroute");
+      __warning__("SUBMIT_SM: failed to change state to enroute");
     }
     __warning__("SUBMIT_SM: can't create task");
 
@@ -1270,7 +1270,17 @@ StateType StateMachine::submit(Tuple& t)
   }
   }catch(...)
   {
-    __trace__("SUBMIT: failed to create task");
+    try{
+      //time_t now=time(NULL);
+      Descriptor d;
+      __trace__("SUBMIT_SM: change state to enroute");
+      changeSmsStateToEnroute(*sms,t.msgId,d,Status::SYSERR,rescheduleSms(*sms));
+      smsc->notifyScheduler();
+    }catch(...)
+    {
+      __warning__("SUBMIT_SM: failed to change state to enroute");
+    }
+    __warning__("SUBMIT: failed to create task");
     sms->lastResult=Status::SYSERR;
     sendNotifyReport(*sms,t.msgId,"system failure");
     return ENROUTE_STATE;
@@ -1398,7 +1408,7 @@ StateType StateMachine::forward(Tuple& t)
     store->retriveSms((SMSId)t.msgId,sms);
   }catch(...)
   {
-    __trace__("FORWARD: failed to retriveSms");
+    __warning2__("FORWARD: failed to retriveSms %d",t.msgId);
     return UNKNOWN_STATE;
   }
   if(sms.getState()==EXPIRED_STATE)
@@ -1414,7 +1424,7 @@ StateType StateMachine::forward(Tuple& t)
       store->changeSmsStateToExpired(t.msgId);
     }catch(...)
     {
-      __trace__("FORWARD: failed to change state to expired");
+      __warning__("FORWARD: failed to change state to expired");
     }
     __trace2__("FORWARD: %lld expired (valid:%u - now:%u)",t.msgId,sms.getValidTime(),now);
 
@@ -1566,7 +1576,7 @@ StateType StateMachine::forward(Tuple& t)
       smsc->notifyScheduler();
     }catch(...)
     {
-      __trace__("FORWARD: failed to change state to enroute");
+      __warning__("FORWARD: failed to change state to enroute");
     }
     return ENROUTE_STATE;
   }
@@ -1587,12 +1597,30 @@ StateType StateMachine::forward(Tuple& t)
         sendNotifyReport(sms,t.msgId,"destination unavailable");
       }catch(...)
       {
-        __trace__("FORWARD: failed to send intermediate notification");
+        __warning__("FORWARD: failed to send intermediate notification");
+      }
+      try{
+        Descriptor d;
+        __trace__("FORWARD: change state to enroute");
+        changeSmsStateToEnroute(sms,t.msgId,d,Status::SMENOTCONNECTED,rescheduleSms(sms));
+        smsc->notifyScheduler();
+      }catch(...)
+      {
+        __warning__("FORWARD: failed to change state to enroute");
       }
       return ENROUTE_STATE;
     }
   }catch(...)
   {
+    try{
+      Descriptor d;
+      __trace__("FORWARD: change state to enroute");
+      changeSmsStateToEnroute(sms,t.msgId,d,Status::SMENOTCONNECTED,rescheduleSms(sms));
+      smsc->notifyScheduler();
+    }catch(...)
+    {
+      __warning__("FORWARD: failed to change state to enroute");
+    }
     return ENROUTE_STATE;
   }
   Address srcOriginal=sms.getOriginatingAddress();
@@ -1663,16 +1691,6 @@ StateType StateMachine::forward(Tuple& t)
       }
 
     }
-    if(t.command->is_reschedulingForward())
-    {
-      try{
-        Descriptor d;
-        changeSmsStateToEnroute(sms,t.msgId,d,sms.lastResult,time(NULL));
-      }catch(...)
-      {
-        __trace__("FORWARD: failed to reschedule sms to now");
-      }
-    }
     SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
     dest_proxy->putCommand(delivery);
   }
@@ -1702,7 +1720,7 @@ StateType StateMachine::forward(Tuple& t)
       smsc->notifyScheduler();
     }catch(...)
     {
-      __trace__("FORWARD: failed to change state to enroute");
+      __warning__("FORWARD: failed to change state to enroute");
     }
     return ENROUTE_STATE;
   }
@@ -1737,7 +1755,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
     store->retriveSms((SMSId)t.msgId,sms);
   }catch(exception& e)
   {
-    __trace2__("DELIVERYRESP: failed to retrieve sms:%s",e.what());
+    __warning2__("DELIVERYRESP: failed to retrieve sms:%s",e.what());
     return UNKNOWN_STATE;
   }
   sms.destinationDescriptor=t.command->get_resp()->getDescriptor();
@@ -1747,6 +1765,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
     {
       case CMD_ERR_RESCHEDULENOW:
       {
+        sms.lastResult=GET_STATUS_CODE(t.command->get_resp()->get_status());
         try{
           time_t rt=time(NULL)+2;
           if(t.command->get_resp()->get_delay()!=-1)
@@ -1763,12 +1782,11 @@ StateType StateMachine::deliveryResp(Tuple& t)
             rt,
             true
           );
-        }catch(...)
+        }catch(std::exception& e)
         {
-          __trace__("DELIVERYRESP: failed to change state to enroute");
+          __warning2__("DELIVERYRESP: failed to change state to enroute:%s",e.what());
         }
         smsc->notifyScheduler();
-        sms.lastResult=GET_STATUS_CODE(t.command->get_resp()->get_status());
         smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
         return UNKNOWN_STATE;
       }break;
@@ -1792,9 +1810,9 @@ StateType StateMachine::deliveryResp(Tuple& t)
             GET_STATUS_CODE(t.command->get_resp()->get_status()),
             rt
           );
-        }catch(...)
+        }catch(std::exception& e)
         {
-          __trace__("DELIVERYRESP: failed to change state to enroute");
+          __warning2__("DELIVERYRESP: failed to change state to enroute:%s",e.what());
         }
         smsc->notifyScheduler();
         sms.lastResult=GET_STATUS_CODE(t.command->get_resp()->get_status());
@@ -1812,9 +1830,9 @@ StateType StateMachine::deliveryResp(Tuple& t)
             sms.getDestinationDescriptor(),
             GET_STATUS_CODE(t.command->get_resp()->get_status())
           );
-        }catch(...)
+        }catch(std::exception& e)
         {
-          __trace__("DELIVERYRESP: failed to change state to undeliverable");
+          __warning2__("DELIVERYRESP: failed to change state to enroute:%s",e.what());
         }
 
         sms.lastResult=GET_STATUS_CODE(t.command->get_resp()->get_status());
@@ -1964,9 +1982,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
     __trace__("change state to delivered: ok");
   }catch(std::exception& e)
   {
-    __trace2__("change state to delivered exception:%s",e.what());
-    log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.system.StateMachine");
-    log.error("Failed to change state to delivered for sms %lld",t.msgId);
+    __warning2__("change state to delivered exception:%s",e.what());
     return UNKNOWN_STATE;
   }
   __trace__("DELIVERYRESP: registerStatisticalEvent");
@@ -2545,6 +2561,7 @@ void StateMachine::changeSmsStateToEnroute(SMS& sms,SMSId id,const Descriptor& d
                                            bool skipAttempt)
 {
   store->changeSmsStateToEnroute(id,d,failureCause,nextTryTime,skipAttempt);
+  sms.setNextTime(nextTryTime);
   SmeIndex idx=smsc->getSmeIndex(sms.dstSmeId);
   smsc->ChangeSmsSchedule(id,sms.getNextTime(),idx);
 }

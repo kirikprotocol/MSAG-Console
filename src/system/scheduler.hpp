@@ -21,7 +21,8 @@ using smsc::core::synchronization::Event;
 
 class Smsc;
 
-class Scheduler:public smsc::core::threads::ThreadedTask{//,public SchedTimer{
+class Scheduler:public smsc::core::threads::ThreadedTask//, public SmeProxy
+{
 public:
   Scheduler(EventQueue& eq):
     queue(eq),rescheduleLimit(10){}

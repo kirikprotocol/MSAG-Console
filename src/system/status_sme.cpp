@@ -48,13 +48,56 @@ int StatusSme::Execute()
     string request=body;
     string answer;
 
-    if(request=="scheduler")
+    if(request=="scheduler" || request=="sc")
     {
       char buf[32];
-      sprintf(buf,"%d",smsc->getSchedulesSmsCount());
+      sprintf(buf,"%d",smsc->scheduler->getSmsCount());
       answer=buf;
       answer+=" sms in scheduler";
-    }else
+    }else if (request=="eventqueue" || request=="eq")
+    {
+      int cnt=smsc->eventqueue.getCounter();
+      int eqhash,equnl;
+      smsc->eventqueue.getStats(eqhash,equnl);
+      char buf[128];
+      sprintf(buf,"cnt=%d, locked=%d, unlocked=%d",cnt,eqhash,equnl);
+      answer=buf;
+    }else if (request=="tc" || request.substr(0,3)=="tc ")
+    {
+      int pos=request.find(" ");
+      if(pos==string::npos)
+      {
+        int cnt;
+        {
+          MutexGuard g(smsc->tcontrol->mtx);
+          cnt=smsc->tcontrol->totalCounter.Get();
+        }
+        char buf[64];
+        sprintf(buf,"Current load:%lf",(double)cnt/smsc->tcontrol->cfg.shapeTimeFrame);
+        answer=buf;
+      }else
+      {
+        string sme=request.substr(pos+1);
+        SmeIndex idx=smsc->getSmeIndex(sme);
+        if(idx==INVALID_SME_INDEX)
+        {
+          answer="unknown sme";
+        }else
+        {
+          int dcnt,rcnt;
+          {
+            MutexGuard g(smsc->tcontrol->mtx);
+            dcnt=smsc->tcontrol->getTSC(smsc->tcontrol->deliverCnt,idx)->Get();
+            rcnt=smsc->tcontrol->getTSC(smsc->tcontrol->responseCnt,idx)->Get();
+          }
+          char buf[64];
+          int ptf=smsc->tcontrol->cfg.protectTimeFrame;
+          sprintf(buf,"deliverCnt=%lf, receivedCnt=%lf",(double)dcnt/ptf,(double)rcnt/ptf);
+          answer=buf;
+        }
+      }
+    }
+    else
     {
       answer="unknown command";
     }

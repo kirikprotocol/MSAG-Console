@@ -128,10 +128,11 @@ void Scheduler::UpdateSmsSchedule(time_t old,SMSId id,time_t newtime,SmeIndex id
         }
         mon.notify();
         __trace2__("Scheduler: updatesmsschedule: %lld: %d->%d",id,old,newtime);
-        break;
+        return;
       }
     };
   }
+  timeLine.insert(TimeIdPair(newtime,Data(id,idx)));
 }
 
 int Scheduler::getSmeCount(SmeIndex idx,time_t time)

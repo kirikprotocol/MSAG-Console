@@ -82,15 +82,18 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
           return false;
         }
 
-        int scount=cfg.smsc->GetSmeScheduleCount(dstIdx,lookAhead);
-
-        double speed=(double)responseCount*cfg.lookAheadTime/cfg.protectTimeFrame;
-
-        if(deliveryCount-responseCount<=cfg.allowedDeliveryFailures &&
-           speed<scount)
+        if(cmd->get_commandId()==SUBMIT)
         {
-          __info2__(log,"TC: deny - protect schedule limit for %s: %lf - %d",dest_proxy->getSystemId(),speed,scount);
-          return false;
+          int scount=cfg.smsc->GetSmeScheduleCount(dstIdx,lookAhead);
+
+          double speed=(double)responseCount*cfg.lookAheadTime/cfg.protectTimeFrame;
+
+          if(deliveryCount-responseCount<=cfg.allowedDeliveryFailures &&
+             speed<scount)
+          {
+            __info2__(log,"TC: deny - protect schedule limit for %s: %lf - %d",dest_proxy->getSystemId(),speed,scount);
+            return false;
+          }
         }
 
         if(cmd->get_commandId()==SUBMIT && !sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
