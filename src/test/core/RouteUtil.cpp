@@ -93,6 +93,7 @@ ostream& operator<< (ostream& os, const TestRouteData& data)
 	os << ", destAddr = " << tmp << "(" << len << ")";
 	os << ", origAddrMatch = " << data.origAddrMatch;
 	os << ", destAddrMatch = " << data.destAddrMatch;
+	os << ", proxyId = " << data.proxyId;
 	os << ", route = {" << *data.route << "}";
 	return os;
 }

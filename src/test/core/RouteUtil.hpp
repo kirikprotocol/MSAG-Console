@@ -24,11 +24,18 @@ struct TestRouteData
 	float destAddrMatch;
 	const Address origAddr;
 	const Address destAddr;
+	uint32_t proxyId;
 	RouteInfo* route;
 
 	TestRouteData(const Address& _origAddr, const Address& _destAddr)
 		: match(true), origAddrMatch(0.0), destAddrMatch(0.0),
-		origAddr(_origAddr), destAddr(_destAddr), route(NULL) {}
+		origAddr(_origAddr), destAddr(_destAddr), proxyId(0), route (NULL) {}
+
+	TestRouteData(const TestRouteData& data)
+		: match(data.match), origAddrMatch(data.origAddrMatch),
+		destAddrMatch(data.destAddrMatch), origAddr(data.origAddr),
+		destAddr(data.destAddr), proxyId(data.proxyId),
+		route(new RouteInfo(*data.route)) {}
 
 	~TestRouteData()
 	{
