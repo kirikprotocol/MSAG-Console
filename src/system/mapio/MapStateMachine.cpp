@@ -642,7 +642,7 @@ static void ForwardMO(MapDialog* dialog) {
     __log2__(smsc::util::_map_cat,log4cpp::Priority::WARN, "rpda: %s",text);
 
     buf = (char *)&smRpOa;
-    int buflen = smRpOa.addrLen+2;
+    buflen = smRpOa.addrLen+2;
     k = 0;
     for ( int i=0; i<buflen; i++){
       k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
@@ -651,7 +651,7 @@ static void ForwardMO(MapDialog* dialog) {
     __log2__(smsc::util::_map_cat,log4cpp::Priority::WARN, "rpoa: %s",text);
     
     buf = (char *)&ui;
-    int buflen = ui.signalInfoLen+1;
+    buflen = ui.signalInfoLen+1;
     k = 0;
     for ( int i=0; i<buflen; i++){
       k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
