@@ -635,9 +635,12 @@ __synchronized__
   __require__(sme_table);
   // ....
   
+  SmeInfo src_smeinfo;
+  if ( srcidx ) src_smeinfo = sme_table->getSmeInfo(srcidx);
+
   if ( trace_enabled_ )
     trace_.push_back(string("lookup for: ")+AddrToString(source)+"("+
-      (srcidx?sme_table->getSmeInfo(srcidx).systemId:string("default"))
+      (srcidx?src_smeinfo.systemId:string("default"))
       +") -> "+AddrToString(dest));
 
   RouteRecord* rec =  findInTree(&root,&source,&dest,trace_enabled_?&trace_:0);
@@ -651,8 +654,7 @@ __synchronized__
   if ( trace_enabled_ ) {
     string s("lookup for alternative route with src proxy: '");
     if ( srcidx ) {
-      s += sme_table->getSmeInfo(srcidx).systemId;
-      trace_.push_back(sme_table->getSmeInfo(srcidx).systemId);
+      s += src_smeinfo.systemId;
     }else{
       s += "default";
     }
