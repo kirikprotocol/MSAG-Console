@@ -432,6 +432,7 @@ public:
     ret->lastPageOffset=it.lastPage;
     ret->current=ret->first;
     ret->chunkReadOffset=it.firstPage+ret->first.Size();
+    ret->pageChunks=ret->last.size;
 
     return ret.release();
   }
