@@ -1079,6 +1079,13 @@ StateType StateMachine::submit(Tuple& t)
       generateDeliver=false;
       delete [] ((char*)ci);
 
+      if(sms->getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
+      {
+        vector<unsigned char> umrlist(num);
+        umrlist[0]=sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+        sms->setBinProperty(Tag::SMSC_UMR_LIST,(const char*)&umrlist[0],num);
+      }
+
       char buf[64];
       sprintf(buf,"%lld",t.msgId);
       SmscCommand resp = SmscCommand::makeSubmitSmResp
@@ -1156,6 +1163,17 @@ StateType StateMachine::submit(Tuple& t)
         submitResp(t,sms,Status::INVOPTPARAMVAL);
         if(smsptr)delete smsptr;
         return ERROR_STATE;
+      }
+
+      if(newsms.hasIntProperty(Tag::SMSC_UMR_LIST))
+      {
+        unsigned len;
+        unsigned char* umrList=(unsigned char*)newsms.getBinProperty(Tag::SMSC_UMR_LIST,&len);
+        if(idx<len)
+        {
+          umrList[idx]=sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+          newsms.setBinProperty(Tag::SMSC_UMR_LIST,(const char*)umrList,len);
+        }
       }
 
       string tmp;
@@ -2646,6 +2664,10 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
   bool skipFinalizing=false;
 
+  vector<unsigned char> umrList; //umrs of parts of merged message
+  int umrIndex=-1;//index of current umr
+  bool umrLast=true;//need to generate receipts for the rest of umrs
+
   if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
   {
     smsLog->debug("DLVRSP: sms has concatinfo, csn=%d;msgId=%lld",sms.getConcatSeqNum(),t.msgId);
@@ -2886,8 +2908,21 @@ StateType StateMachine::deliveryResp(Tuple& t)
       {
         skipFinalizing=true;
       }
+      umrLast=false;
     }
   }
+
+  if(sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
+  {
+    if(sms.hasIntProperty(Tag::SMSC_UMR_LIST))
+    {
+      unsigned len;
+      unsigned char* lst=(unsigned char*)sms.getBinProperty(Tag::SMSC_UMR_LIST,&len);
+      umrList.insert(umrList.end(),lst,lst+len);
+      umrIndex=sms.hasBinProperty(Tag::SMSC_CONCATINFO)?sms.getConcatSeqNum()-1:0;
+    }
+  }
+
 
   if(!skipFinalizing)
   {
@@ -2999,8 +3034,14 @@ StateType StateMachine::deliveryResp(Tuple& t)
         (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&3)==1?4:0);
       rpt.setDestinationAddress(sms.getOriginatingAddress());
       rpt.setMessageReference(sms.getMessageReference());
-      rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
-        sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+      if(umrIndex==-1 || umrIndex>=umrList.size())
+      {
+        rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
+          sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+      }else
+      {
+        rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,umrList[umrIndex]);
+      }
       rpt.setIntProperty(Tag::SMPP_MSG_STATE,DELIVERED_STATE);
       char addr[64];
       sms.getDestinationAddress().getText(addr,sizeof(addr));
@@ -3040,6 +3081,17 @@ StateType StateMachine::deliveryResp(Tuple& t)
       //smsc->submitSms(prpt);
 
       submitReceipt(rpt);
+
+      if(umrLast && umrIndex!=-1)
+      {
+        umrIndex++;
+        while(umrIndex<umrList.size())
+        {
+          rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,umrList[umrIndex]);
+          submitReceipt(rpt);
+          umrIndex++;
+        }
+      }
 
 
       /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
