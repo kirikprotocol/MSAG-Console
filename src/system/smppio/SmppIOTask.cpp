@@ -404,7 +404,7 @@ int SmppInputThread::Execute()
                     )
                   );
                   ss->getProxy()->close();
-                  //ss->assignProxy(0);
+                  ss->assignProxy(0);
                 }else
                 {
                   SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVBNDSTS);
@@ -630,6 +630,7 @@ int SmppOutputThread::Execute()
         SmscCommand cmd=ss->getProxy()->getOutgoingCommand();
 
         SmppHeader *pdu=cmd.makePdu();
+        int cmdid=pdu->get_commandId();
         trace2("SmppOutThread: commandId=%x, seq number:%d",
           pdu->get_commandId(),pdu->get_sequenceNumber());
         int size=calcSmppPacketLength(pdu);
@@ -640,6 +641,16 @@ int SmppOutputThread::Execute()
         disposePdu(pdu);
         ss->send(size);
         s->setData(SOCKET_SLOT_OUTPUTMULTI,(void*)1);
+        if(cmdid==SmppCommandSet::UNBIND_RESP)
+        {
+          try{
+            smeManager->unregisterSmeProxy(ss->getProxy()->getSystemId());
+          }catch(...)
+          {
+          }
+          delete ss->getProxy();
+          ss->assignProxy(0);
+        }
       }
       if(ss->hasData())
       {
