@@ -90,7 +90,7 @@ public:
       cmd.setProxy(prx);
     }
     mx=cnt;
-    return true;
+    return inqueue.Count();
   }
 
 
