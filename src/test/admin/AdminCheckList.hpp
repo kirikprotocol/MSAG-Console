@@ -170,6 +170,98 @@ void profileTc()
 		"Просмотр списка всех профилей (команда list profile)");
 }
 
+void subjectTc()
+{
+	__reg_tc__("adminConsole.subject",
+		"Работа с субъектами через human admin console и script admin console");
+	//adminConsole.subject.add
+	__reg_tc__("adminConsole.subject.add",
+		"Добавление субъекта (команда add subject)");
+	__reg_tc__("adminConsole.subject.add.correct",
+		"Правильно введенные данные (имя субъекта с пробелами, русскими символами, одна/несколько масок)");
+
+	//adminConsole.subject.add.incorrect
+	__reg_tc__("adminConsole.subject.add.incorrect",
+		"Для неправильно введенных данных выдаются соответствующие сообщения об ошибках");
+	__reg_tc__("adminConsole.subject.add.incorrect.missingRequiredParam",
+		"Не заданы обязательные параметры (алиас, адрес)");
+	__reg_tc__("adminConsole.subject.add.incorrect.invalidAliasFormat",
+		"Неправильный формат алиаса");
+	__reg_tc__("adminConsole.subject.add.incorrect.invalidAddrFormat",
+		"Неправильный формат адреса");
+	__reg_tc__("adminConsole.subject.add.incorrect.duplicateAlias",
+		"Нарушается однозначное преобразование subject->address (уже существует такой subject)");
+	__reg_tc__("adminConsole.subject.add.incorrect.duplicateAddr",
+		"Нарушается однозначное преобразование address->subject (hide = true и уже существует такой address тоже с hide = true)");
+	__reg_tc__("adminConsole.subject.add.incorrect.questionMarksNotMatch",
+		"Поля subject и address содержат различное количество знаков \"?\"");
+	__reg_tc__("adminConsole.subject.add.incorrect.hideWithQuestionMarks",
+		"Выставлен признак сокрытия hide и поля address и subject содержат знаки \"?\"");
+	
+	//adminConsole.subject.delete
+	__reg_tc__("adminConsole.subject.delete",
+		"Удаление субъекта (команда delete subject)");
+	__reg_tc__("adminConsole.subject.delete.existent",
+		"Удаление существующего субъекта");
+
+
+	__reg_tc__("adminConsole.subject.delete.missingRequiredParam",
+		"Не задан алиас");
+	__reg_tc__("adminConsole.subject.delete.nonExistent",
+		"Удаление несуществующего алиаса");
+	__reg_tc__("adminConsole.subject.delete.invalidAliasFormat",
+		"Неправильный формат алиаса");
+	
+	//adminConsole.subject.view
+	__reg_tc__("adminConsole.subject.view",
+		"Просмотр субъекта (команда view subject)");
+	__reg_tc__("adminConsole.subject.view.existent",
+		"Просмотр существующего субъекта");
+
+
+	__reg_tc__("adminConsole.subject.view.missingRequiredParam",
+		"Не задан алиас");
+	__reg_tc__("adminConsole.subject.view.nonExistent",
+		"Просмотр несуществующего алиаса");
+	__reg_tc__("adminConsole.subject.view.invalidAliasFormat",
+		"Неправильный формат алиаса");
+	
+	
+	//adminConsole.subject.alter
+	__reg_tc__("adminConsole.subject.alter",
+		"Изменение субъекта (команда alter subject)");
+	__reg_tc__("adminConsole.subject.alter.correct",
+		"Правильно введенные данные (существующий субъект, имя с пробелами/русскими символами, одна/несколько масок))");
+	__reg_tc__("adminConsole.subject.alter.correct.addMask",
+		"Добавление маски");
+	__reg_tc__("adminConsole.subject.alter.correct.deleteMask",
+		"Удаление маски");
+	__reg_tc__("adminConsole.subject.alter.correct.changeDefSme",
+		"Добавление маски");
+
+
+	//adminConsole.subject.alter.incorrect
+	__reg_tc__("adminConsole.subject.alter.incorrect",
+		"Для неправильно введенных данных выдаются соответствующие сообщения об ошибках");
+	__reg_tc__("adminConsole.subject.alter.incorrect.missingRequiredParam",
+		"Не заданы обязательные параметры (алиас, адрес)");
+	__reg_tc__("adminConsole.subject.alter.incorrect.nonExistent",
+		"Изменение несуществующего алиаса");
+	__reg_tc__("adminConsole.subject.alter.incorrect.invalidAliasFormat",
+		"Неправильный формат алиаса");
+	__reg_tc__("adminConsole.subject.alter.incorrect.invalidAddrFormat",
+		"Неправильный формат адреса");
+	__reg_tc__("adminConsole.subject.alter.incorrect.duplicateAddr",
+		"Нарушается однозначное преобразование address->subject (hide = true и уже существует такой address тоже с hide = true)");
+	__reg_tc__("adminConsole.subject.alter.incorrect.questionMarksNotMatch",
+		"Поля subject и address содержат различное количество знаков \"?\"");
+	__reg_tc__("adminConsole.subject.alter.incorrect.hideWithQuestionMarks",
+		"Выставлен признак сокрытия hide и поля address и subject содержат знаки \"?\"");
+	//adminConsole.subject.list
+	__reg_tc__("adminConsole.subject.list",
+		"Просмотр списка всех алиасов (команда list subject)");
+}
+
 AdminCheckList()
 	: CheckList("Результаты функционального тестирования Admin Console", "admin.chk")
 {
