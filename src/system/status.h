@@ -56,16 +56,16 @@ static const int UNKNOWNERR=255; //Unknown Error
 static const int INVDCS=260; //Invalid Data Coding Scheme Specified DCS is invalid or MC does not support it.
 
 static const int SMSC_ERR_BASE=1024;
-static const int NOROUTE=1025; //No route defined for given source and destination addresses
-static const int EXPIRED=1026; //Message expired
+static const int NOROUTE=1025; //No route defined for given source and destination addresses !
+static const int EXPIRED=1026; //Message expired !
 static const int DELIVERYTIMEDOUT=1027; //Delivery attempt timed out
 static const int SMENOTCONNECTED=1028; //Sme is not connected
-static const int BLOCKEDMSC=1029; //Msc is blocked
-static const int DELETED=1030; //Message deleted
-static const int USSDDLGNFOUND=1031; // USSD dialog not found for response (PSSR_RESP)
-static const int USSDMSGTOOLONG=1032; // USSD msg can't be concatenated or truncated
-static const int INCOMPLETECONCATMSG=1033; //not all parts of concatenated message received
-static const int DUPLICATECONCATPART=1034; //duplicate part of concatenated message
+static const int BLOCKEDMSC=1029; //Msc is blocked !
+static const int DELETED=1030; //Message deleted !
+static const int USSDDLGNFOUND=1031; // USSD dialog not found for response (PSSR_RESP) !
+static const int USSDMSGTOOLONG=1032; // USSD msg can't be concatenated or truncated !
+static const int INCOMPLETECONCATMSG=1033; //not all parts of concatenated message received !
+static const int DUPLICATECONCATPART=1034; //duplicate part of concatenated message !
 
 static const int MAP_PROVIDER_REASON_BASE=1120;
 static const int MAP_ABNORMAL_DIALOGUE = 1120;
@@ -77,12 +77,12 @@ static const int MAP_VERSION_INCOMPATIBILITY = 1125;
 static const int MAP_DIALOGUE_TIMEOUT = 1126;
 
 static const int MAP_REFUSE_REASON_BASE=1128;
-static const int MAP_REFUSE_REASON_NO_REASON=1128;
-static const int MAP_REFUSE_REASON_INV_DEST_REF=1129;
-static const int MAP_REFUSE_REASON_INV_ORIG_REF=1130;
-static const int MAP_REFUSE_REASON_APP_CONTEXT_NOT_SUPP=1131;
-static const int MAP_REFUSE_REASON_NODE_NOT_REACHABLE=1132;
-static const int MAP_REFUSE_REASON_VERS_INCOMPATIBLE=1133;
+static const int MAP_REFUSE_REASON_NO_REASON=1128; // !
+static const int MAP_REFUSE_REASON_INV_DEST_REF=1129; // !
+static const int MAP_REFUSE_REASON_INV_ORIG_REF=1130; // !
+static const int MAP_REFUSE_REASON_APP_CONTEXT_NOT_SUPP=1131; // !
+static const int MAP_REFUSE_REASON_NODE_NOT_REACHABLE=1132; // !
+static const int MAP_REFUSE_REASON_VERS_INCOMPATIBLE=1133; // !
 
 static const int RESCHEDULEDNOW=1134; // not error, message was rescheduled for immediate delivery
 
@@ -124,7 +124,1294 @@ static const int USSDBUSY=1224; // 72 - USSD busy
 static const int INVPRBRESLIM=1258; // 106 - Invoke problem. Resource limitation
 static const int INVPRBINITREL=1259; // 107 - Invoke problem. Initiating release
 
+static const bool errorStatus[1280] = {
+0, //No Error
+1, //Message Length is invalid
+1, //Command Length is invalid
+1, //Invalid Command ID
+1, //Incorrect BIND Status for given command
+1, //ESME Already in Bound State
+1, //Invalid Priority Flag
+1, //Invalid Registered Delivery Flag
+0, //System Error
+1, //reserved
+1, //Invalid Source Address
+1, //Invalid Dest Addr
+1, //Message ID is invalid
+1, //Bind Failed
+1, //Invalid Password
+1, //Invalid System ID
+1, //reserved
+1, //Cancel SM Failed
+1, //reserved
+1, //Replace SM Failed
+0, //Message Queue Full
+1, //Invalid Service Type
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //Invalid number of destinations
+1, //Invalid Distribution List name
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //Destination flag is invalid (submit_multi)
+1, //reserved
+1, //Invalid 'submit with replace' request (i.e.      submit_sm with replace_if_present_flag set)
+1, //Invalid esm_class field data
+1, //Cannot Submit to Distribution List
+1, //submit_sm or submit_multi failed
+1, //reserved
+1, //reserved
+1, //Invalid Source address TON
+1, //Invalid Source address NPI
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //Invalid Destination address TON
+1, //Invalid Destination address NPI
+1, //reserved
+1, //Invalid system_type field
+1, //Invalid replace_if_present flag
+1, //Invalid number of messages
+1, //reserved
+1, //reserved
+0, //Throttling error (ESME has exceeded allowed message limits)
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //Invalid Scheduled Delivery Time
+1, //Invalid message validity period (Expiry time)
+1, //Predefined Message Invalid or Not Found
+0, //ESME Receiver Temporary App Error Code
+1, //ESME Receiver Permanent App Error Code
+1, //ESME Receiver Reject Message Error Code
+1, //query_sm request failed
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //Error in the optional part of the PDU Body
+1, //Optional Parameter not allowed
+1, //Invalid Parameter Length
+1, //Expected Optional Parameter missing
+1, //Invalid Optional Parameter Value
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //Delivery Failure (used for data_sm_resp)
+1, //Unknown Error
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //Invalid Data Coding Scheme Specified DCS is invalid or MC does not support it.
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, //reserved
+1, // 272 - 1023 reserved
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 16
+1, // SMSC vendor codes 1024-1279, SMSC_ERR_BASE
+1, // NOROUTE=1025; No route defined for given source and destination addresses !
+1, // EXPIRED=1026; //Message expired !
+0, // DELIVERYTIMEDOUT=1027; //Delivery attempt timed out
+0, // SMENOTCONNECTED=1028; //Sme is not connected
+1, // BLOCKEDMSC=1029; //Msc is blocked !
+1, // DELETED=1030; //Message deleted !
+1, // USSDDLGNFOUND=1031; // USSD dialog not found for response (PSSR_RESP) !
+1, // USSDMSGTOOLONG=1032; // USSD msg can't be concatenated or truncated !
+1, // INCOMPLETECONCATMSG=1033; //not all parts of concatenated message received !
+1, // DUPLICATECONCATPART=1034; //duplicate part of concatenated message !
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 32
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1, // reserved 21
+0, // MAP_PROVIDER_REASON_BASE, MAP_ABNORMAL_DIALOGUE = 1120
+0, // MAP_PROVIDER_MALFUNCTION = 1121
+0, // MAP_TRANSACTION_RELEASED = 1122
+0, // MAP_RESOURCE_LIM_T = 1123
+0, // MAP_MAINTENANCE_ACTIVITY = 1124
+0, // MAP_VERSION_INCOMPATIBILITY = 1125
+0, // MAP_DIALOGUE_TIMEOUT = 1126
+1, // reserved
+1, // MAP_REFUSE_REASON_BASE, MAP_REFUSE_REASON_NO_REASON=1128
+1, // MAP_REFUSE_REASON_INV_DEST_REF=1129
+1, // MAP_REFUSE_REASON_INV_ORIG_REF=1130
+1, // MAP_REFUSE_REASON_APP_CONTEXT_NOT_SUPP=1131
+1, // MAP_REFUSE_REASON_NODE_NOT_REACHABLE=1132
+1, // MAP_REFUSE_REASON_VERS_INCOMPATIBLE=1133
+0, // RESCHEDULEDNOW=1134 not error, message was rescheduled for immediate delivery
+0, // MAP_PROVIDER_ERR_BASE=1135
+0, // MAP_DUPLICATED_INVOKE_ID=1136
+1, // MAP_NOT_SUPPORTED_SERVICE=1137
+1, // MAP_MISTYPED_PARAMETER=1138
+0, // MAP_RESOURCE_LIMITATION=1139
+0, // MAP_INITIATING_RELEASE=1140;
+1, // MAP_UNEXPECTED_RESPONSE_FROM_PEER=1141
+0, // MAP_SERVICE_COMPLETION_FAILURE=1142
+0, // MAP_NO_RESPONSE_FROM_PEER=1143
+1, // MAP_INVALID_RESPONSE_RECEIVED=1144
+0, // MAP_UNEXPECTED_TRANSACTION_ID=1145
+1, // MAP_UNRECOGNIZED_COMPONENT=1146
+1, // MAP_MISTYPED_COMPONENT=1147
+1, // MAP_BADSTRUCTURED_COMPONENT=1148
+1, // MAP_UNRECOGNIZED_LINKED_ID=1149
+1, // MAP_LINKED_RESPONSE_UNEXPECTED=1150
+1, // MAP_UNEXPECTED_LINKED_OPERATION=1151
+0, // MAP_ERR_BASE=1152
+1, // UNKSUBSCRIBER=1153 1 - Unknown subscriber
+1, // reserved
+1, // reserved
+1, // reserved
+0, // UNDEFSUBSCRIBER=1157 2 - Unidentified subscriber
+0, // ABSENTSUBSCRIBERSM=1158 6 - Absent subscriber SM
+1, // reserved
+1, // reserved
+1, // ILLEGALSUBSCRIBER=1161 9 - Illegal subscriber
+1, // reserved
+1, // reserved
+1, // INVEQUIPMENT=1164 12 - Illegal Equipment !
+0, // CALLBARRED=1165 13 - Call Barred
+1, // reserved
+0, // CUGREJECT=1167 15 - CUG reject
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // FACILITYNOTSUPP=1173 21 - Facility Not Supported !
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+0, // ABSENTSUBSCR=1179 27 - Absent Subscriber
+1, // reserved
+1, // reserved
+1, // reserved
+0, // SUBSCRBUSYMT=1183 Subscriber Busy for MT SMS.
+0, // SMDELIFERYFAILURE=1184; //SM Delivery Failure
+1, // reserved
+0, // SYSFAILURE=1186 34 - System Failure
+1, // DATAMISSING=1187 35 - Data Missing !
+1, // UNEXPDATA=1188 36 - Unexpected Data value !
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // UNKALPHABET=1223 71 - Unknown alphabet
+0, // USSDBUSY=1224 72 - USSD busy
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+0, // INVPRBRESLIM=1258 106 - Invoke problem. Resource limitation
+0, // INVPRBINITREL=1259 107 - Invoke problem. Initiating release
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1, // reserved
+1 // reserved
+};
 
+/* function return 0 if error is temp, and 1 if perm
+inline bool isErrorPermanent( int err ) {
+  if( err > 0x4ff ) return 1;
+  return errorStatus[err];
+}
 
 }//Status
 }//system
