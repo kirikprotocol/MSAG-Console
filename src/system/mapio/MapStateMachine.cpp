@@ -1006,6 +1006,7 @@ static bool SendSms(MapDialog* dialog){
   ET96MAP_APP_CNTX_T appContext;
   appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
   SetVersion(appContext,dialog->version);
+  __map_trace2__("%s: set version: %d.%d", __FUNCTION__, appContext.acType, appContext.version );
   USHORT_T result;
   bool segmentation = false;
 
@@ -1027,7 +1028,7 @@ static bool SendSms(MapDialog* dialog){
   ET96MAP_SM_RP_UI_T* ui;
   dialog->auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(ui=new ET96MAP_SM_RP_UI_T);
   mkDeliverPDU(dialog->sms.get(),ui,mms);
-  if ( ui->signalInfoLen > 98 || (mms && !dialog->mms) ) {
+  if ( dialog->version > 1 && (ui->signalInfoLen > 98 || (mms && !dialog->mms)) ) {
     result = Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 );
     if( result != ET96MAP_E_OK )
       throw MAPDIALOG_FATAL_ERROR(
