@@ -1750,6 +1750,8 @@ void CachedStore::replaceSms(SMSId id, SMS& sms)
     RemoteStore::replaceSms(id, sms);
     MutexGuard cacheGuard(cacheMutex);
     cache->delSms(id);
+    SMS* sm = new SMS(sms);
+    cache->putSms(id, sm);
 }
 void CachedStore::destroySms(SMSId id)
     throw(StorageException, NoSuchMessageException)
