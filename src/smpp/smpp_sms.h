@@ -175,14 +175,14 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
     { // fill address
       PduAddress& source = message.source;
       PduAddress& dest  = message.dest;
-      Address originatingAddr(strlen(source.value.cstr()),
+      Address originatingAddr(source.value.cstr()?strlen(source.value.cstr()):1,
                             source.typeOfNumber,
                             source.numberingPlan,
-                            source.value.cstr());
-      Address destinationAddr(strlen(dest.value.cstr()),
+                            source.value.cstr()?source.value.cstr():"0");
+      Address destinationAddr(dest.value.cstr()?strlen(dest.value.cstr()):1,
                             dest.typeOfNumber,
                             dest.numberingPlan,
-                            dest.value.cstr());/**/
+                            dest.value.cstr()?dest.value.cstr():"0");/**/
   /*    Address originatingAddr((int)strlen(source.value.cstr()),
                             (unsigned char)source.typeOfNumber,
                             (unsigned char)source.numberingPlan,

@@ -107,11 +107,17 @@ static inline void fillField(auto_ptr<char>& field,const char* text,int length=-
 static inline void fillSmppAddr(auto_ptr<char>& field,PduAddress& addr)
 {
   char buf[64];
-  int len=sprintf(buf,".%d.%d.%.20s",
-    (int)addr.get_typeOfNumber(),
-    (int)addr.get_numberingPlan(),
-    addr.get_value());
-  fillField(field,buf,len);
+  if(!addr.get_value() || !addr.get_value()[0])
+  {
+    fillField(field,NULL);
+  }else
+  {
+    int len=sprintf(buf,".%d.%d.%.20s",
+      (int)addr.get_typeOfNumber(),
+      (int)addr.get_numberingPlan(),
+      addr.get_value());
+    fillField(field,buf,len);
+  }
 }
 
 struct ReplaceSm{

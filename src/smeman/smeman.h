@@ -50,6 +50,7 @@ public:
       case SmeRegisterFailReasons::rfInvalidPassword:return "Invalid passowrd";
       case SmeRegisterFailReasons::rfInternalError:return "Internal error";
     }
+    return "Unknown error";
   }
 protected:
   int reason;
