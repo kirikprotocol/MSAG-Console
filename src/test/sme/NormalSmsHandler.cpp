@@ -812,7 +812,13 @@ void NormalSmsHandler::processPdu(SmppHeader* header, const Address& origAddr,
 		//правильность адресов провер€етс€ в fixture->routeChecker->checkRouteForNormalSms()
 		//__compareAddr__(get_message().get_source());
 		//__compareAddr__(get_message().get_dest());
-		__compare__(2, getEsmClass() & 0xfc); //без 2-ух младших битов
+		uint8_t esmClassMask = 0xfc; //без 2-ух младших битов
+		//при наличии темплейта udhi не провер€ю
+		if (monitor->pduData->strProps.count("directive.template"))
+		{
+			esmClassMask &= ~0x40;
+		}
+		__compare__(2, getEsmClass() & esmClassMask);
 		if ((pdu.getEsmClass() & ESM_CLASS_MESSAGE_TYPE_BITS) !=
 			ESM_CLASS_NORMAL_MESSAGE)
 		{

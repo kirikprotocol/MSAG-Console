@@ -321,14 +321,14 @@ AckText* AbonentInfoTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	if (recipientData->destAddr == abonentInfoAddrSme)
 	{
 		const pair<string, uint8_t> p = AbonentInfoSmeMessage::format(
-			profile, abonentData->input, abonentData->status, "");
+			profile, abonentData->input, abonentProfile, abonentData->status, "");
 		__trace2__("getExpectedResponse(): input = %s, output = %s", abonentData->input.c_str(), p.first.c_str());
 		return new AckText(p.first, p.second, valid);
 	}
 	if (recipientData->destAddr == abonentInfoAddrMobile)
 	{
 		const pair<string, uint8_t> p = AbonentInfoMobileMessage::format(
-				profile, abonentData->input, abonentData->status, "");
+				profile, abonentData->input, abonentProfile, abonentData->status, "");
 		__trace2__("getExpectedResponse(): input = %s, output = %s", abonentData->input.c_str(), p.first.c_str());
 		return new AckText(p.first, p.second, valid);
 	}

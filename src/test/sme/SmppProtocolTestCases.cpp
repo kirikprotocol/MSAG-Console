@@ -1363,7 +1363,7 @@ bool SmppProtocolTestCases::correctTemplateDirectives(SmppHeader* header,
 		case 1: //нет директивы
 			break;
 		case 2: //t0, без параметров
-			dir = "#template=templates.t0#";
+			dir = "#template=t0#";
 			if (setDirective(header, mixedCase(dir), offset))
 			{
 				__tc__("directive.correct.template"); __tc_ok__;
@@ -1375,7 +1375,7 @@ bool SmppProtocolTestCases::correctTemplateDirectives(SmppHeader* header,
 			{
 				string name = pdu.getDataCoding() == UCS2 ? "Мир" : "World";
 				ostringstream s;
-				dir = "#template=templates.t1# {name}=";
+				dir = "#template=t1# {name}=";
 				s << mixedCase(dir) << name << " ";
 				if (setDirective(header, s.str(), offset))
 				{
@@ -1390,7 +1390,7 @@ bool SmppProtocolTestCases::correctTemplateDirectives(SmppHeader* header,
 			{
 				string name = pdu.getDataCoding() == UCS2 ? "Мега мир" : "Super world";
 				ostringstream s;
-				dir = "#template=templates.t1# {name}=";
+				dir = "#template=t1# {name}=";
 				s << mixedCase(dir) << "\"" << name << "\" ";
 				if (setDirective(header, s.str(), offset))
 				{
@@ -1405,7 +1405,7 @@ bool SmppProtocolTestCases::correctTemplateDirectives(SmppHeader* header,
 			{
 				string name = "~!@#$%^&*()-_=+\\|{[}];:',<.>/?";
 				ostringstream s;
-				dir = "#template=templates.t1# {name}=";
+				dir = "#template=t1# {name}=";
 				s << mixedCase(dir) << "\"" << name << "\" ";
 				if (setDirective(header, s.str(), offset))
 				{
@@ -1417,7 +1417,7 @@ bool SmppProtocolTestCases::correctTemplateDirectives(SmppHeader* header,
 			}
 			break;
 		case 6: //t1, параметр по умолчанию
-			dir = "#template=templates.t1# {_name_}=111 ";
+			dir = "#template=t1# {_name_}=111 ";
 			if (setDirective(header, mixedCase(dir), offset))
 			{
 				__tc__("directive.correct.template"); __tc_ok__;
@@ -1430,7 +1430,7 @@ bool SmppProtocolTestCases::correctTemplateDirectives(SmppHeader* header,
 				string name1 = pdu.getDataCoding() == UCS2 ? "Мир" : "World";
 				string name2 = pdu.getDataCoding() == UCS2 ? "Мир 2" : "World 2";
 				ostringstream s;
-				dir = "#template=templates.t2# {name1}=";
+				dir = "#template=t2# {name1}=";
 				s << mixedCase(dir) << name1;
 				dir = " {name2}=";
 				s << mixedCase(dir) << "\"" << name2 << "\" ";
@@ -1448,7 +1448,7 @@ bool SmppProtocolTestCases::correctTemplateDirectives(SmppHeader* header,
 			{
 				string name2 = pdu.getDataCoding() == UCS2 ? "Мир" : "World";
 				ostringstream s;
-				dir = "#template=templates.t2# {name2}=";
+				dir = "#template=t2# {name2}=";
 				s << mixedCase(dir) << name2 << " ";
 				if (setDirective(header, s.str(), offset))
 				{
@@ -1462,7 +1462,7 @@ bool SmppProtocolTestCases::correctTemplateDirectives(SmppHeader* header,
 		case 9: //t2, параметры не заданы
 			{
 				ostringstream s;
-				dir = "#template=templates.t2#";
+				dir = "#template=t2#";
 				s << mixedCase(dir);
 				if (setDirective(header, s.str(), offset))
 				{
@@ -1553,21 +1553,20 @@ void SmppProtocolTestCases::incorrectDirectives(SmppHeader* header, int num)
 	__decl_tc__;
 	const string invalidDir[] =
 	{
-		"##", "###", "#aaa#",
+		"##", "###", "####", "#aaa#",
 		"#ac#", "#ack2#", "# ack#", "#ack #", "#ack=#",
 		"#noac#", "#noack2#", "# noack#", "#noack #", "#noack=#",
 		"#def#", "#de 999#", "#def2 999#",
-		"#templat=templates.t0#", "#template2=templates.t0#",
-		"#template#"
+		"#templat=t0#", "#template2=t0#", "#template#"
 	};
 	const string invalidDefDir[] =
 	{
-		"#def #", "#def abc#"
+		"#def #", "#def abc#", "#def -1#"
 	};
 	const string invalidTemplateDir[] =
 	{
-		"#template=#", "#template=templates.t0#{}=aaa",
-		"#template=templates.t0#{name1}={name2}="
+		"#template=#", "#template=t#", "#template=t00#",
+		"#template=t#{}=aaa", "#template=t#{name1}={name2}="
 	};
 	TCSelector s(num, 3);
 	int offset = 0;
