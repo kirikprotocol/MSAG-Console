@@ -21,8 +21,7 @@ public class AclAddCommand extends AclGenCommand
     try
     {
       List addresses = new ArrayList();
-      // TODO: aclId = ctx.getSmsc().aclCreate(name, description, addresses, cache);
-      ctx.getSmsc().aclCreate(name, description, addresses, cache);
+      aclId = ctx.getSmsc().aclCreate(name, description, addresses, cache);
       ctx.setMessage(out+" added. New ACL id="+aclId);
       ctx.setStatus(CommandContext.CMD_OK);
     } catch (AdminException e) {
