@@ -120,8 +120,10 @@ public abstract class Session extends Thread
                 if (sb.length() > 0) {
                     sb.deleteCharAt(sb.length()-1);
                     if (echo) {
-                        os.write(ESC_BS); os.write(' ');
-                        os.write(ESC_BS); os.flush();
+                        byte bs[] = {(byte)ESC_BS};
+                        byte sp[] = {' '};
+                        os.write(bs); os.write(sp);
+                        os.write(bs); os.flush();
                     }
                 }
                 continue;
