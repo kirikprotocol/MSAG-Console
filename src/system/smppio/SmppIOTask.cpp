@@ -287,7 +287,12 @@ int SmppInputThread::Execute()
                 resp->set_commandStatus(SmppStatusSet::ESME_RALYBND);
                 ((PduBindTRXResp*)resp)->set_scInterfaceVersion(0x34);
                 SmscCommand cmd=SmscCommand::makeSmppPduCommand(resp);
-                ss->getProxy()->putIncomingCommand(cmd);
+                try{
+                  ss->getProxy()->putCommand(cmd);
+                }catch(...)
+                {
+                  __trace2__("SmppInputThread: failed to put outgoing command");
+                }
                 break;
               }
               PduBindTRX *bindpdu=
@@ -435,7 +440,6 @@ int SmppInputThread::Execute()
                 wroff+=wr;
                 trace2("sending:%d/%d",wroff,size);
               }
-              ss->assignProxy(proxy);
               if(err)
               {
                 for(int i=0;i<sockets.Count();i++)
@@ -447,8 +451,10 @@ int SmppInputThread::Execute()
                     break;
                   }
                 }
+                delete proxy;
               }else
               {
+                ss->assignProxy(proxy);
                 ((SmppSocket*)(ss->getSocket()->
                   getData(SOCKET_SLOT_OUTPUTSMPPSOCKET)))->
                   assignProxy(proxy);
