@@ -1014,27 +1014,40 @@ StateType StateMachine::submit(Tuple& t)
   if(divertFlags && profile.divert.length()!=0 && !sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
   {
     smsc_log_info(smsLog, "divert for %s found",dst.toString().c_str());
-    sms->setStrProperty(Tag::SMSC_DIVERTED_TO,profile.divert.c_str());
+    Address divDst;
+    try{
+      divDst=Address(profile.divert.c_str());
+    }catch(...)
+    {
+      smsc_log_warn(smsLog, "INVALID DIVERT FOR %s - ADDRESS:%s",dst.toString().c_str(),profile.divert.c_str());
+      goto divert_failed;
+    }
+    Address tmp;
+    if(smsc->AliasToAddress(divDst,tmp))
+    {
+      smsc_log_info(smsLog, "Divert address dealiased:%s->%s",divDst.toString().c_str(),tmp.toString().c_str());
+      divDst=tmp;
+    }
+    smsc::router::RouteInfo ri2;
+    SmeProxy* prx;
+    int idx;
+    if(smsc->routeSms(sms->getOriginatingAddress(),divDst,idx,prx,&ri2,src_proxy->getSmeIndex()))
+    {
+      if(prx && strcmp(prx->getSystemId(),"MAP_PROXY")!=0)
+      {
+        smsc_log_warn(smsLog,"attempt to divert to non-map address:%s->%s",
+          sms->getOriginatingAddress().toString().c_str(),divDst.toString().c_str());
+        goto divert_failed;
+      }
+    }
+    sms->setStrProperty(Tag::SMSC_DIVERTED_TO,divDst.toString().c_str());
     if(divertFlags&DF_UNCOND)
     {
       diverted=true;
-      try{
-        dst=Address(profile.divert.c_str());
-      }catch(...)
-      {
-        smsc_log_warn(smsLog, "INVALID DIVERT FOR %s - ADDRESS:%s",dst.toString().c_str(),profile.divert.c_str());
-        submitResp(t,sms,Status::INVDSTADR);
-        return ERROR_STATE;
-      }
-      Address tmp;
-      if(smsc->AliasToAddress(dst,tmp))
-      {
-        smsc_log_info(smsLog, "Divert address dealiased:%s->%s",dst.toString().c_str(),tmp.toString().c_str());
-        dst=tmp;
-      }
+      dst=divDst;
     }
 
-    Profile p=smsc->getProfiler()->lookup(dst);
+    Profile p=smsc->getProfiler()->lookup(divDst);
 
     divertFlags|=p.udhconcat?DF_UDHCONCAT:0;
     int ddc=p.codepage;
@@ -1047,6 +1060,8 @@ StateType StateMachine::submit(Tuple& t)
     if(divertFlags&DF_UNCOND)profile=p;
 
     sms->setIntProperty(Tag::SMSC_DIVERTFLAGS,divertFlags);
+
+    divert_failed:;
   }
 
 
@@ -2389,7 +2404,7 @@ StateType StateMachine::forward(Tuple& t)
       dst=sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str();
       Address newdst;
       if(smsc->AliasToAddress(dst,newdst))dst=newdst;
-      smsc_log_info(smsLog,"FWD: cond divert from %s to %s",
+      smsc_log_debug(smsLog,"FWD: cond divert from %s to %s",
         sms.getDealiasedDestinationAddress().toString().c_str(),dst.toString().c_str());
       diverted=true;
       int df=sms.getIntProperty(Tag::SMSC_DIVERTFLAGS);
@@ -2400,6 +2415,8 @@ StateType StateMachine::forward(Tuple& t)
       if(olddc!=newdc && sms.hasBinProperty(Tag::SMSC_CONCATINFO))
       {
         doRepartition=true;
+        sms.getMessageBody().dropProperty(Tag::SMSC_CONCATINFO);
+        smsc_log_debug(smsLog,"FWD: sms repartition %lld",t.msgId);
       }
     }catch(...)
     {
@@ -2484,13 +2501,13 @@ StateType StateMachine::forward(Tuple& t)
 
   if(doRepartition && ri.smeSystemId=="MAP_PROXY" && !sms.hasIntProperty(Tag::SMSC_MERGE_CONCAT))
   {
-    sms.getMessageBody().dropProperty(Tag::SMSC_CONCATINFO);
     int pres=partitionSms(&sms,sms.getIntProperty(Tag::SMSC_DSTCODEPAGE));
     if(pres!=psSingle && pres!=psMultiple)
     {
       smsc_log_debug(smsLog,"FWD: divert failed - cannot concat, msgId=%lld",t.msgId);
       return UNKNOWN_STATE;
     }
+    smsc_log_debug(smsLog,"%lld after repartition: %s",t.msgId,pres==psSingle?"single":"multiple");
   }
 
   uint32_t dialogId2;
