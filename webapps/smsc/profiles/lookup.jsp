@@ -73,7 +73,7 @@ abonent number <input class=txt name=profile value="<%=bean.getProfile() != null
 		<td><%=bean.getCodepage()%></td>
 	</tr>
 	<tr class=row<%=(rowN++)&1%>>
-    <th nowrap>UCS 7 bit</th>
+    <th nowrap>USSD 7 bit</th>
     <td><img src="/images/ic_<%=bean.isUssd7bit() ? "" : "not_"%>checked.gif"></td>
 	</tr>
 	<tr class=row<%=(rowN++)&1%>>
