@@ -109,6 +109,23 @@ namespace smsc { namespace store
         static unsigned             maxTriesCount;
         static void loadMaxTriesCount(Manager& config);
 
+        class ReadyIdIterator : public IdIterator
+        {
+        private:
+            
+            Connection*                 connection;
+            ReadyByNextTimeStatement*   readyStmt;
+        
+        public:
+            
+            ReadyIdIterator(time_t retryTime)
+                throw(StorageException);
+            virtual ~ReadyIdIterator();
+
+            virtual bool getNextId(SMSId &id) 
+                throw(StorageException);
+        };
+
     protected:
         
         StoreManager() : MessageStore() {};
@@ -354,6 +371,12 @@ namespace smsc { namespace store
         virtual void changeSmsStateToDeleted(SMSId id) 
                 throw(StorageException, NoSuchMessageException); 
        
+        virtual IdIterator* getReadyForRetry(time_t retryTime) 
+                throw(StorageException);
+        
+        virtual time_t getNextRetryTime() 
+                throw(StorageException);
+    
     };
 
 }}

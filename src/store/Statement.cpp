@@ -897,7 +897,48 @@ void ToDeletedStatement::bindId(SMSId id)
     bind((CONST text *)"ID", (sb4) 2*sizeof(char), 
          SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
 }
+    
+/* --------------------- Sheduler's statements -------------------- */
 
+const char* ReadyByNextTimeStatement::sql = (const char*)
+"SELECT ID FROM SMS_MSG WHERE ST=:ENROUTE\
+ AND NEXT_TRY_TIME<=:RT ORDER BY NEXT_TRY_TIME ASC"; 
+ReadyByNextTimeStatement::ReadyByNextTimeStatement(Connection* connection,
+    bool assign) throw(StorageException)
+        : IdStatement(connection, ReadyByNextTimeStatement::sql, assign)
+{
+    bind((CONST text *)"ENROUTE", (sb4) 7*sizeof(char),
+         SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
+         (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
+}
+void ReadyByNextTimeStatement::bindRetryTime(time_t retryTime)
+    throw(StorageException)
+{
+    convertDateToOCIDate(&(retryTime), &rTime);
+    bind((CONST text *)"RT", (sb4) 2*sizeof(char), 
+         SQLT_ODT, (dvoid *) &(rTime), (sb4) sizeof(rTime));
+}
+
+const char* MinNextTimeStatement::sql = (const char*)
+"SELECT MIN(NEXT_TRY_TIME) FROM SMS_MSG WHERE ST=:ENROUTE"; 
+MinNextTimeStatement::MinNextTimeStatement(Connection* connection,
+    bool assign) throw(StorageException)
+        : Statement(connection, MinNextTimeStatement::sql, assign)
+{
+    bind((CONST text *)"ENROUTE", (sb4) 7*sizeof(char),
+         SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
+         (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
+    define(1, SQLT_ODT, (dvoid *) &(minNextTime),
+           (sb4) sizeof(minNextTime));
+}
+
+time_t MinNextTimeStatement::getMinNextTime()
+    throw(StorageException)
+{
+    time_t minTime;
+    convertOCIDateToDate(&minNextTime, &(minTime));
+    return minTime;
+}
 
 }}
 

@@ -48,7 +48,7 @@ namespace smsc { namespace store
             throw(StorageException);
 
         sword execute(ub4 mode=OCI_DEFAULT,
-                     ub4 iters=1, ub4 rowoff=0);
+                      ub4 iters=1, ub4 rowoff=0);
         sword fetch();
 
         ub4 getRowsAffectedCount();
@@ -65,7 +65,7 @@ namespace smsc { namespace store
         IdStatement(Connection* connection, const char* sql, 
                     bool assign=false) 
             throw(StorageException)
-                : Statement(connection, sql) {};
+                : Statement(connection, sql, assign) {};
     public:
         
         virtual ~IdStatement() {};
@@ -228,6 +228,11 @@ namespace smsc { namespace store
         sb2     indOA, indSrcMsc, indSrcImsi, indSrcSme;
         sb2     indDA, indDstMsc, indDstImsi, indDstSme;
         sb2     indSvc, indWaitTime, indLastTime, indNextTime;
+    
+        RetriveStatement(Connection* connection, const char* sql,
+                         bool assign=true) 
+            throw(StorageException) 
+                : IdStatement(connection, sql, assign) {};
     
     public:
         
@@ -436,7 +441,40 @@ namespace smsc { namespace store
         };
     };
     
-   
+    class ReadyByNextTimeStatement : public IdStatement
+    {
+    static const char* sql;
+    private:
+        
+        OCIDate rTime;
+
+    public:
+
+        ReadyByNextTimeStatement(Connection* connection, bool assign=false)
+            throw(StorageException);
+        virtual ~ReadyByNextTimeStatement() {};
+        
+        void bindRetryTime(time_t retryTime)
+            throw(StorageException);
+    };
+    
+    class MinNextTimeStatement : public Statement
+    {
+    static const char* sql;
+    private:
+        
+        OCIDate minNextTime;
+
+    public:
+
+        MinNextTimeStatement(Connection* connection, bool assign=false)
+            throw(StorageException);
+        virtual ~MinNextTimeStatement() {};
+        
+        time_t getMinNextTime()
+            throw(StorageException);
+    };
+
 }}
 
 #endif

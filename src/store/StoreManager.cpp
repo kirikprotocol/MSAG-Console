@@ -759,5 +759,62 @@ void StoreManager::changeSmsStateToDeleted(SMSId id)
     }
 }
 
+/* --------------------- Sheduler's classes & methods -------------------- */
+
+StoreManager::ReadyIdIterator::ReadyIdIterator(time_t retryTime)
+    throw(StorageException) : IdIterator()
+{
+    connection = StoreManager::pool->getConnection();
+    if (readyStmt = new ReadyByNextTimeStatement(connection, false))
+    {
+        readyStmt->bindRetryTime(retryTime);
+        connection->check(readyStmt->execute(OCI_DEFAULT, 0, 0));
+    }
+}
+StoreManager::ReadyIdIterator::~ReadyIdIterator()
+{
+    StoreManager::pool->freeConnection(connection);
+    if (readyStmt) delete readyStmt;
+}
+bool StoreManager::ReadyIdIterator::getNextId(SMSId &id) 
+    throw(StorageException) 
+{
+    if (readyStmt)
+    {
+        sword status = readyStmt->fetch();
+        if (status != OCI_NO_DATA)
+        {
+            connection->check(status);
+            readyStmt->getSMSId(id);
+            return true;
+        }
+    }
+    return false;
+}
+
+IdIterator* StoreManager::getReadyForRetry(time_t retryTime) 
+    throw(StorageException) 
+{
+    return (new ReadyIdIterator(retryTime));
+}
+
+time_t StoreManager::getNextRetryTime() 
+    throw(StorageException)
+{
+    Connection* connection = StoreManager::pool->getConnection();
+    if (connection)
+    {
+        MinNextTimeStatement minTimeStmt(connection, false);
+        sword status = minTimeStmt.execute();
+        if (status != OCI_NO_DATA)
+        {
+            connection->check(status);
+            return minTimeStmt.getMinNextTime();
+        }
+        StoreManager::pool->freeConnection(connection);
+    }
+    return 0;
+}
+
 }}
 
