@@ -37,8 +37,8 @@ public class HumanSession extends Session
     protected void greeting() throws IOException {
         printlnString("\r\n\r\n"+CONSOLE_GREATING);
     }
-    protected void farewell() throws IOException {
-        printlnString("\r\n"+CONSOLE_FAREWELL);
+    protected void farewell(String cause) throws IOException {
+        printlnString("\r\n"+CONSOLE_FAREWELL+((cause != null) ? cause:""));
     }
     protected void prompt() throws IOException {
         printString("\r\n"+CONSOLE_PROMPT);

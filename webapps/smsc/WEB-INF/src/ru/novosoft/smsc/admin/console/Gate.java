@@ -73,9 +73,6 @@ public abstract class Gate extends Thread
                closeSemaphore.wait();
             } catch (InterruptedException e) { }
         }
-        /*while(sessions.size() > 0) {
-            ((Session)sessions.get(0)).close();
-        }*/
     }
 
 }
