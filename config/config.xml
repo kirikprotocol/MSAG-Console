@@ -76,6 +76,10 @@
       <param name="host" type="string">smsc</param>
       <param name="port" type="int">9003</param>
     </section>
+    <section name="smeperformance">
+      <param name="host" type="string">smsc</param>
+      <param name="port" type="int">9004</param>
+    </section>
 
     <section name="reshedule table">
       <param name="30s,1m,5m" type="string">8</param>

@@ -18,6 +18,12 @@ compile:
 	@javac -sourcepath src -classpath $(CLASSPATH) -d classes `find src -name *.java`
 	@javac -sourcepath src -target 1.1 -classpath $(CLASSPATH) -d classes `find src/ru/novosoft/smsc/perfmon/applet -name *.java`
 	@javac -sourcepath src -target 1.1 -classpath $(CLASSPATH) -d classes src/ru/novosoft/smsc/perfmon/PerfSnap.java
+	@javac -sourcepath src -target 1.1 -classpath $(CLASSPATH) -d classes `find src/ru/novosoft/smsc/topmon/applet -name *.java`
+	@javac -sourcepath src -target 1.1 -classpath $(CLASSPATH) -d classes src/ru/novosoft/smsc/topmon/TopSnap.java
+	@javac -sourcepath src -target 1.1 -classpath $(CLASSPATH) -d classes src/ru/novosoft/smsc/topmon/SmeSnap.java
+	@javac -sourcepath src -target 1.1 -classpath $(CLASSPATH) -d classes src/ru/novosoft/smsc/topmon/ErrorSnap.java
+	@javac -sourcepath src -target 1.1 -classpath $(CLASSPATH) -d classes src/ru/novosoft/smsc/util/SnapBufferReader.java
+	@javac -sourcepath src -target 1.1 -classpath $(CLASSPATH) -d classes src/ru/novosoft/smsc/util/applet/*.java
 	@native2ascii -encoding windows-1251 <src/locales/messages_en.properties > classes/locales/messages_en.properties
 	@native2ascii -encoding windows-1251 <src/locales/messages_ru.properties > classes/locales/messages_ru.properties
 	@native2ascii -encoding windows-1251 <src/ru/novosoft/smsc/admin/console/commands/roles_en_US.properties > classes/ru/novosoft/smsc/admin/console/commands/roles_en_US.properties

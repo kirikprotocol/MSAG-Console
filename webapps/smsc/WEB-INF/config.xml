@@ -32,6 +32,11 @@
     <param name="smscport" type="int">6002</param>
   </section>
 
+  <section name="topmon">
+    <param name="appletport" type="int">6087</param>
+    <param name="smscport" type="int">6008</param>
+  </section>
+
   <section name="profiler">
 
     <section name="jdbc">
