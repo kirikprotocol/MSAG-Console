@@ -336,7 +336,7 @@ public class DistributionListManager implements DistributionListAdmin
 
     private final static String GET_PRINCIPALS_SQL =
         "SELECT ADDRESS, MAX_LST, MAX_EL FROM DL_PRINCIPALS WHERE ADDRESS IN " +
-            "SELECT ADDRESS FROM DL_SUBMITTERS WHERE LIST=?";
+            "(SELECT ADDRESS FROM DL_SUBMITTERS WHERE LIST=?)";
     public List submitters(String dlname)
         throws AdminException, ListNotExistsException
     {
