@@ -184,17 +184,17 @@ const string DbSmeJobTestCases::getOutputString(const DbSmeTestRecord* rec,
 			__tc__("processDbSmeRes.input.string"); __tc_ok__;
 			return rec->getQuotedString();
 		}
-		if (rec->defInput)
+		if (rec->getDefInput())
 		{
-			if (rec->defInput->checkString())
+			if (rec->getDefInput()->checkString())
 			{
 				__tc__("processDbSmeRes.defaultInput.string"); __tc_ok__;
-				return rec->defInput->getString();
+				return rec->getDefInput()->getString();
 			}
-			if (rec->defInput->checkQuotedString())
+			if (rec->getDefInput()->checkQuotedString())
 			{
 				__tc__("processDbSmeRes.defaultInput.string"); __tc_ok__;
-				return rec->defInput->getQuotedString();
+				return rec->getDefInput()->getQuotedString();
 			}
 		}
 	}
@@ -258,10 +258,10 @@ const string DbSmeJobTestCases::getOutputDate(const DbSmeTestRecord* rec,
 			__tc__("processDbSmeRes.input.date"); __tc_ok__;
 			return df.format(rec->getDate());
 		}
-		if (rec->defInput && rec->defInput->checkDate())
+		if (rec->getDefInput() && rec->getDefInput()->checkDate())
 		{
-			__require__(rec->defInput->checkDateType());
-			switch (rec->defInput->getDateType())
+			__require__(rec->getDefInput()->checkDateType());
+			switch (rec->getDefInput()->getDateType())
 			{
 				case DT_NOW:
 					__tc__("processDbSmeRes.defaultInput.now"); __tc_ok__;
@@ -278,7 +278,7 @@ const string DbSmeJobTestCases::getOutputDate(const DbSmeTestRecord* rec,
 				default:
 					__unreachable__("Invalid dtType");
 			}
-			return df.format(rec->defInput->getDate());
+			return df.format(rec->getDefInput()->getDate());
 		}
 	}
 	if (defOutput && defOutput->checkDate())
@@ -320,10 +320,10 @@ int DbSmeJobTestCases::getOutputInt16(const DbSmeTestRecord* rec,
 			__tc__("processDbSmeRes.input.int"); __tc_ok__;
 			return rec->getInt16();
 		}
-		if (rec->defInput && rec->defInput->checkInt16())
+		if (rec->getDefInput() && rec->getDefInput()->checkInt16())
 		{
 			__tc__("processDbSmeRes.defaultInput.int"); __tc_ok__;
-			return rec->defInput->getInt16();
+			return rec->getDefInput()->getInt16();
 		}
 	}
 	if (defOutput && defOutput->checkInt16())
@@ -347,10 +347,10 @@ int DbSmeJobTestCases::getOutputInt32(const DbSmeTestRecord* rec,
 			__tc__("processDbSmeRes.input.int"); __tc_ok__;
 			return rec->getInt32();
 		}
-		if (rec->defInput && rec->defInput->checkInt32())
+		if (rec->getDefInput() && rec->getDefInput()->checkInt32())
 		{
 			__tc__("processDbSmeRes.defaultInput.int"); __tc_ok__;
-			return rec->defInput->getInt32();
+			return rec->getDefInput()->getInt32();
 		}
 	}
 	if (defOutput && defOutput->checkInt32())
@@ -374,10 +374,10 @@ float DbSmeJobTestCases::getOutputFloat(const DbSmeTestRecord* rec,
 			__tc__("processDbSmeRes.input.float"); __tc_ok__;
 			return rec->getFloat();
 		}
-		if (rec->defInput && rec->defInput->checkFloat())
+		if (rec->getDefInput() && rec->getDefInput()->checkFloat())
 		{
 			__tc__("processDbSmeRes.defaultInput.float"); __tc_ok__;
-			return rec->defInput->getFloat();
+			return rec->getDefInput()->getFloat();
 		}
 	}
 	if (defOutput && defOutput->checkFloat())
@@ -401,10 +401,10 @@ double DbSmeJobTestCases::getOutputDouble(const DbSmeTestRecord* rec,
 			__tc__("processDbSmeRes.input.float"); __tc_ok__;
 			return rec->getDouble();
 		}
-		if (rec->defInput && rec->defInput->checkDouble())
+		if (rec->getDefInput() && rec->getDefInput()->checkDouble())
 		{
 			__tc__("processDbSmeRes.defaultInput.float"); __tc_ok__;
-			return rec->defInput->getDouble();
+			return rec->getDefInput()->getDouble();
 		}
 	}
 	if (defOutput && defOutput->checkDouble())

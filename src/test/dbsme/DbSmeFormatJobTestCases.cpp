@@ -17,31 +17,31 @@ DbSmeTestRecord* DbSmeDateFormatJobTestCases::createJobInput(
 	static const DateFormatter df4("dd MMMM yyyy HH.mm.ss");
 	
 	DbSmeTestRecord* rec = new DbSmeTestRecord();
-	rec->defInput = new DbSmeTestRecord();
+	rec->setDefInput(new DbSmeTestRecord());
 	switch (jobNum)
 	{
 		case 1:
 			rec->setJob("DateFormatJob1");
-			rec->defInput->setDateType(DT_NOW);
-			rec->defInput->setDate(time(NULL));
+			rec->getDefInput()->setDateType(DT_NOW);
+			rec->getDefInput()->setDate(time(NULL));
 			*df = &df1;
 			break;
 		case 2:
 			rec->setJob("DateFormatJob2");
-			rec->defInput->setDateType(DT_TODAY);
-			rec->defInput->setDate(getDate(DT_TODAY));
+			rec->getDefInput()->setDateType(DT_TODAY);
+			rec->getDefInput()->setDate(getDate(DT_TODAY));
 			*df = &df2;
 			break;
 		case 3:
 			rec->setJob("DateFormatJob3");
-			rec->defInput->setDateType(DT_YESTERDAY);
-			rec->defInput->setDate(getDate(DT_YESTERDAY));
+			rec->getDefInput()->setDateType(DT_YESTERDAY);
+			rec->getDefInput()->setDate(getDate(DT_YESTERDAY));
 			*df = &df3;
 			break;
 		case 4:
 			rec->setJob("DateFormatJob4");
-			rec->defInput->setDateType(DT_TOMORROW);
-			rec->defInput->setDate(getDate(DT_TOMORROW));
+			rec->getDefInput()->setDateType(DT_TOMORROW);
+			rec->getDefInput()->setDate(getDate(DT_TOMORROW));
 			*df = &df4;
 			break;
 		default:
@@ -77,8 +77,8 @@ const string DbSmeDateFormatJobTestCases::processJobFirstOutput(const string& te
 	bool res = true;
 	if (jobNum == 1 && !rec->checkDate())
 	{
-		__require__(rec->defInput && rec->defInput->checkDate());
-		while (rec->defInput->getDate() <= time(NULL))
+		__require__(rec->getDefInput() && rec->getDefInput()->checkDate());
+		while (rec->getDefInput()->getDate() <= time(NULL))
 		{
 			expected = prefix + getOutputDate(rec, NULL, df, res) + "\n";
 			__require__(res);
@@ -86,7 +86,7 @@ const string DbSmeDateFormatJobTestCases::processJobFirstOutput(const string& te
 			{
 				return expected;
 			}
-			rec->defInput->setDate(rec->defInput->getDate() + 1);
+			rec->getDefInput()->setDate(rec->getDefInput()->getDate() + 1);
 		}
 	}
 	else
@@ -114,12 +114,12 @@ DbSmeTestRecord* DbSmeOtherFormatJobTestCases::createJobInput(
 	__decl_tc__;
 	DbSmeTestRecord* rec = new DbSmeTestRecord();
 	rec->setJob("OtherFormatJob");
-	rec->defInput = new DbSmeTestRecord();
-	rec->defInput->setInt16(16);
-	rec->defInput->setInt32(32);
-	rec->defInput->setFloat(16.16);
-	rec->defInput->setDouble(32.32);
-	rec->defInput->setString("xxx");
+	rec->setDefInput(new DbSmeTestRecord());
+	rec->getDefInput()->setInt16(16);
+	rec->getDefInput()->setInt32(32);
+	rec->getDefInput()->setFloat(16.16);
+	rec->getDefInput()->setDouble(32.32);
+	rec->getDefInput()->setString("xxx");
 	__tc__("submitDbSmeCmd.correct.job.select"); __tc_ok__;
 	if (params)
 	{
