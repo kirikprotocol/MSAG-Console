@@ -29,9 +29,9 @@ class SmppTestCases : BaseTestCases
 {
 public:
 	SmppTestCases(const SmeConfig& config, const SmeSystemId& systemId,
-		const Address& smeAlias, const SmeRegistry* smeReg,
+		const Address& smeAddr, const SmeRegistry* smeReg,
 		const AliasRegistry* aliasReg, const RouteRegistry* routeReg,
-		ResultHandler* handler); //throws Exception
+		ResultHandler* resultHandler, StatHandler* statHandler); //throws Exception
 	
 	virtual ~SmppTestCases();
 
@@ -71,13 +71,12 @@ protected:
 private:
 	const SmeConfig config;
 	const SmeSystemId systemId;
-	const Address smeAlias;
+	const Address smeAddr;
 	//external
 	const SmeRegistry* smeReg;
 	PduRegistry* pduReg;
 	const AliasRegistry* aliasReg;
 	const RouteRegistry* routeReg;
-	ResultHandler* resultHandler;
 	//internal
 	SmppSession* session;
 	RouteChecker* routeChecker;

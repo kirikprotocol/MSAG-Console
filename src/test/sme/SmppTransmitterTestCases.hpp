@@ -22,11 +22,19 @@ const char* const TC_SUBMIT_SM_SYNC = "submitSmSync";
 const char* const TC_SUBMIT_SM_ASYNC = "submitSmAsync";
 const char* const TC_SUBMIT_SM_ASSERT = "submitSmAssert";
 
+/**
+ * Абстрактный класс для сбора статистики по billing и archived pdu.
+ */
+struct StatHandler
+{
+	virtual void updateStat(bool billing, bool archived) = NULL;
+};
+
 class SmppTransmitterTestCases : BaseTestCases
 {
 public:
 	SmppTransmitterTestCases(SmppSession* session, const SmeSystemId& systemId,
-		const Address& smeAlias, const SmeRegistry* smeReg,
+		const Address& smeAddr, const SmeRegistry* smeReg, StatHandler* statHandler,
 		RouteChecker* routeChecker, SmppPduChecker* pduChecker);
 	
 	virtual ~SmppTransmitterTestCases() {}
@@ -46,8 +54,23 @@ public:
 	 */
 	TCResult* submitSmAssert(int num);
 
+	/**
+	 * Синхронное замещение ранее отправленной submit_sm pdu.
+	 */
+	TCResult* replaceSmSync(int num);
+
+	/**
+	 * Асинхронное замещение ранее отправленнй submit_sm pdu.
+	 */
+	TCResult* replaceSmAsync(int num);
+
+	/**
+	 * Заполнение и отправка replace_sm pdu с недопустимыми значениями полей.
+	 */
+	TCResult* replaceSmAssert(int num);
+	
 	/*
-	virtual PduSubmitSmResp* submit(PduSubmitSm& pdu)=0;
+		virtual PduSubmitSmResp* submit(PduSubmitSm& pdu)=0;
 	virtual SmppHeader* sendPdu(SmppHeader& pdu)=0;
 	virtual void sendGenericNack(PduGenericNack& pdu)=0;
 	virtual void sendDeliverySmResp(PduDeliverySmResp& pdu)=0;
@@ -56,7 +79,7 @@ public:
 	virtual PduDataSmResp* data(PduDataSm& pdu)=0;
 	virtual PduQuerySmResp* query(PduQuerySm& pdu)=0;
 	virtual PduCancelSmResp* cancel(PduCancelSm& pdu)=0;
-	virtual PduReplaceSmResp* replace(PduReplaceSm& pdu)=0;
+		virtual PduReplaceSmResp* replace(PduReplaceSm& pdu)=0;
 	*/
 	
 protected:
@@ -65,9 +88,10 @@ protected:
 private:
 	SmppSession* session;
 	const SmeSystemId systemId;
-	const Address smeAlias;
+	const Address smeAddr;
 	const SmeRegistry* smeReg;
 	PduRegistry* pduReg;
+	StatHandler* statHandler;
 	RouteChecker* routeChecker;
 	SmppPduChecker* pduChecker;
 
