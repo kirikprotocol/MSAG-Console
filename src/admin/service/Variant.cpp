@@ -17,7 +17,7 @@ Variant::Variant(const Type variant_type)
   switch (type)
   {
   case service::StringType:
-    strValue = "";
+    strValue = cStringCopy("");
     break;
   case service::LongType:
     longValue = 0;
