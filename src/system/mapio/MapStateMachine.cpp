@@ -11,6 +11,8 @@ using namespace std;
 
 #include "MapDialog_spcific.cxx"
 #include "MapDialogMkPDU.cxx"
+#include "../status.h"
+using namespace smsc::system;
 
 static const bool SMS_SEGMENTATION = true;
 
