@@ -13,6 +13,7 @@
 #include <inttypes.h>
 #include <time.h>
 #include <string.h>
+#include <orl.h>
 
 #include <util/debug.h>
 
@@ -23,8 +24,8 @@ namespace smsc { namespace sms
     
     typedef char        AddressValue[MAX_ADDRESS_VALUE_LENGTH+1];
     typedef uint8_t     SMSData[MAX_SHORT_MESSAGE_LENGTH];
-    typedef uint32_t    SMSId;
-    
+    typedef uint64_t    SMSId;
+
     /**
      * Структура Address предназначена для хранения 
      * адресов в SMS сообщении.
