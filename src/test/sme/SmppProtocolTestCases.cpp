@@ -750,18 +750,32 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 					break;
 				case 11: //недопустимый dataCoding
 					__tc__("submitSm.incorrect.dataCoding");
-					for (int dc = rand1(255); true; dc = rand1(255))
+					if (fixture->smeInfo.forceDC)
 					{
-						switch (dc)
+						uint8_t dcs, dc;
+						do
 						{
-							case DEFAULT:
-							case BINARY:
-							case UCS2:
-							case SMSC7BIT:
-								continue;
+							dcs = rand0(255);
 						}
-						pdu->get_message().set_dataCoding(dc);
-						break;
+						while (SmppUtil::extractDataCoding(dcs, dc));
+						pdu->get_message().set_dataCoding(dcs);
+					}
+					else
+					{
+						while (true)
+						{
+							uint8_t dc = rand1(255);
+							switch (dc)
+							{
+								case DEFAULT:
+								case BINARY:
+								case UCS2:
+								case SMSC7BIT:
+									continue;
+							}
+							pdu->get_message().set_dataCoding(dc);
+							break;
+						}
 					}
 					break;
 				case 12: //заданы оба short_message И message_payload
@@ -866,6 +880,28 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 	}
 }
 
+void SmppProtocolTestCases::replaceSmIncorrect(PduReplaceSm* pdu, bool sync)
+{
+	__require__(pdu);
+	__decl_tc__;
+	try
+	{
+		__tc__("replaceSm.incorrect.messageId");
+		SmppUtil::setupRandomCorrectReplaceSmPdu(pdu, DEFAULT, false);
+		PduAddress srcAddr;
+		SmppUtil::convert(fixture->smeAddr, &srcAddr);
+		pdu->set_source(srcAddr);
+		//отправить и зарегистрировать pdu
+		fixture->transmitter->sendReplaceSmPdu(pdu, NULL, sync);
+		__tc_ok__;
+	}
+	catch(...)
+	{
+		__tc_fail__(100);
+		error();
+	}
+}
+
 void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 {
 	__require__(fixture->pduReg);
@@ -889,14 +925,7 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 			}
 			if (!replacePduData)
 			{
-				__tc__("replaceSm.incorrect.messageId");
-				SmppUtil::setupRandomCorrectReplaceSmPdu(pdu, DEFAULT, false);
-				PduAddress srcAddr;
-				SmppUtil::convert(fixture->smeAddr, &srcAddr);
-				pdu->set_source(srcAddr);
-				//отправить и зарегистрировать pdu
-				fixture->transmitter->sendReplaceSmPdu(pdu, NULL, sync);
-				__tc_ok__;
+				replaceSmIncorrect(pdu, sync);
 				return;
 			}
 			fixture->transmitter->setupRandomCorrectReplaceSmPdu(pdu, replacePduData);
@@ -995,6 +1024,11 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 					__unreachable__("Invalid num");
 			}
 			//отправить и зарегистрировать pdu
+			if (!replacePduData)
+			{
+				replaceSmIncorrect(pdu, sync);
+				return;
+			}
 			fixture->transmitter->sendReplaceSmPdu(pdu, replacePduData, sync);
 			__tc_ok__;
 		}
@@ -1028,14 +1062,7 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 			}
 			if (!replacePduData)
 			{
-				__tc__("replaceSm.incorrect.messageId");
-				SmppUtil::setupRandomCorrectReplaceSmPdu(pdu, DEFAULT, false);
-				PduAddress srcAddr;
-				SmppUtil::convert(fixture->smeAddr, &srcAddr);
-				pdu->set_source(srcAddr);
-				//отправить и зарегистрировать pdu
-				fixture->transmitter->sendReplaceSmPdu(pdu, NULL, sync);
-				__tc_ok__;
+				replaceSmIncorrect(pdu, sync);
 				return;
 			}
 			fixture->transmitter->setupRandomCorrectReplaceSmPdu(pdu, replacePduData);
@@ -1064,7 +1091,7 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 				case 3: //неправильный message_id
 					{
 						__tc__("replaceSm.incorrect.messageId");
-						pdu->set_messageId("36893488147419103232"); //2**65
+						pdu->set_messageId("368934881474191032320"); //2**65 * 10
 					}
 					break;
 				case 4: //неправильный адрес отправителя
@@ -1164,6 +1191,16 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 					}
 					break;
 				/*
+				case 13: //некорректная длина udh
+					if (replacePdu->get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR)
+					{
+						__tc__("replaceSm.incorrect.udhiLength");
+						int len = rand1(5);
+						char buf[len];
+						*buf = (unsigned char) (len + rand1(10));
+						pdu->get_message().set_shortMessage(buf, len);
+					}
+					break;
 				case 14: //длина message_id больше допустимой
 					{
 						__tc__("replaceSm.incorrect.messageIdLength");
@@ -1199,6 +1236,7 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 					__unreachable__("Invalid num");
 			}
 			//отправить и зарегистрировать pdu
+			__require__(replacePduData);
 			fixture->transmitter->sendReplaceSmPdu(pdu, replacePduData, sync);
 			__tc_ok__;
 		}

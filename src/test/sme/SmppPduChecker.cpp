@@ -45,20 +45,23 @@ SmppPduChecker::MapMsgError SmppPduChecker::checkMapMsg(SmsMsg* msg)
 		{
 			int udhLen = 1 + *(unsigned char*) msg->msg;
 			int textLen = msg->len - udhLen;
-			for (int i = udhLen; i < msg->len; i++)
+			if (msg->dataCoding == DEFAULT)
 			{
-				switch (msg->msg[i])
+				for (int i = udhLen; i < msg->len; i++)
 				{
-					case '|':
-					case '^':
-					case '{':
-					case '}':
-					case '[':
-					case ']':
-					case '~':
-					case '\\':
-						textLen++;
-						break;
+					switch (msg->msg[i])
+					{
+						case '|':
+						case '^':
+						case '{':
+						case '}':
+						case '[':
+						case ']':
+						case '~':
+						case '\\':
+							textLen++;
+							break;
+					}
 				}
 			}
 			msgLen = udhLen + (textLen * 7 + 7) / 8;
@@ -159,13 +162,22 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 	{
 		res.insert(ESME_RINVSCHED);
 	}
-	switch (pdu->get_message().get_dataCoding())
+	if (!pduData->intProps.count("dataCoding"))
 	{
-		case DEFAULT:
-		case UCS2:
-			break;
-		default:
-			res.insert(ESME_RINVDCS);
+		res.insert(ESME_RINVDCS);
+	}
+	else
+	{
+		switch (pduData->intProps["dataCoding"])
+		{
+			case DEFAULT:
+			case SMSC7BIT:
+			case UCS2:
+			case BINARY:
+				break;
+			default:
+				res.insert(ESME_RINVDCS);
+		}
 	}
 	if (strlen(nvl(pdu->get_message().get_serviceType())) > MAX_SERVICE_TYPE_LENGTH)
 	{
@@ -255,6 +267,10 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 				res.insert(ESME_RINVMSGID);
 				break;
 			}
+		}
+		if (smsId.length() > 20)
+		{
+			res.insert(ESME_RINVMSGID);
 		}
 		__require__(replacePduData->strProps.count("smsId"));
 		if (smsId != replacePduData->strProps["smsId"])
@@ -630,7 +646,7 @@ void SmppPduChecker::processReplaceSmResp(ResponseMonitor* monitor,
 			__check__(1, checkRes.count(ESME_RINVMSGID));
 			break;
 		case ESME_RREPLACEFAIL:
-			__tc__("replaceSm.resp.checkCmdStatusReplaceFiled");
+			__tc__("replaceSm.resp.checkCmdStatusReplaceFailed");
 			__check__(1, checkRes.count(ESME_RREPLACEFAIL));
 			break;
 		default:

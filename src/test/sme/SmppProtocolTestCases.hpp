@@ -121,6 +121,7 @@ protected:
 	PduData* getNonReplaceRescheduledEnrotePdu(bool deliveryReports);
 	PduData* getFinalPdu(bool deliveryReports);
 	PduData* getPduByState(SmppState state);
+	void replaceSmIncorrect(PduReplaceSm* pdu, bool sync);
 	PduData* getCancelSmGroupParams(bool checkServType, Address& srcAddr,
 		Address& destAddr, string& servType);
 	int getRandomRespDelay();

@@ -476,7 +476,7 @@ void SmppTransmitterTestCases::registerNullSmeMonitors(PduSubmitSm* pdu,
 	}
 }
 
-SmsMsg* SmppTransmitterTestCases::getSmsMsg(PduSubmitSm* pdu)
+SmsMsg* SmppTransmitterTestCases::getSmsMsg(PduSubmitSm* pdu, uint8_t dc)
 {
 	__cfg_int__(timeCheckAccuracy);
 	Address addr;
@@ -486,17 +486,6 @@ SmsMsg* SmppTransmitterTestCases::getSmsMsg(PduSubmitSm* pdu)
 	const Profile& profile = fixture->profileReg->getProfile(addr, t);
 	bool valid = t + timeCheckAccuracy <= time(NULL);
 	bool udhi = pdu->get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
-	uint8_t dc;
-	if (fixture->smeInfo.forceDC)
-	{
-		bool res = SmppUtil::extractDataCoding(
-			pdu->get_message().get_dataCoding(), dc);
-		__require__(res);
-	}
-	else
-	{
-		dc = pdu->get_message().get_dataCoding();
-	}
 	char* msg = NULL;
 	int len = 0;
 	uint8_t dataCoding;
@@ -555,12 +544,26 @@ PduData* SmppTransmitterTestCases::prepareSubmitSm(PduSubmitSm* pdu,
 	{
 		pduData->intProps["ussdServiceOp"] = pdu->get_optional().get_ussdServiceOp();
 	}
+	//dataCoding
+	if (fixture->smeInfo.forceDC)
+	{
+		pduData->intProps["forceDC"] = 1;
+		uint8_t dc;
+		if (SmppUtil::extractDataCoding(pdu->get_message().get_dataCoding(), dc))
+		{
+			pduData->intProps["dataCoding"] = dc;
+		}
+	}
+	else
+	{
+		pduData->intProps["dataCoding"] = pdu->get_message().get_dataCoding();
+	}
 	//дополнительные фишки для map proxy
 	const RouteInfo* routeInfo = fixture->routeChecker->getRouteInfoForNormalSms(
 		pdu->get_message().get_source(), pdu->get_message().get_dest());
-	if (routeInfo)
+	if (routeInfo && pduData->intProps.count("dataCoding"))
 	{
-		SmsMsg* msg = getSmsMsg(pdu);
+		SmsMsg* msg = getSmsMsg(pdu, pduData->intProps["dataCoding"]);
 		__trace2__("sms msg registered: this = %p, udhi = %s, len = %d, dc = %d, orig dc = %d, valid = %s",
 			msg, msg->udhi ? "true" : "false", msg->len, (int) msg->dataCoding, (int) pdu->get_message().get_dataCoding(), msg->valid ? "true" : "false");
 		msg->ref();
@@ -750,7 +753,8 @@ void SmppTransmitterTestCases::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 {
 	__require__(replacePduData && replacePduData->pdu->get_commandId() == SUBMIT_SM);
 	PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(replacePduData->pdu);
-	uint8_t dataCoding = origPdu->get_message().get_dataCoding();
+	__require__(replacePduData->intProps.count("dataCoding"));
+	uint8_t dataCoding = replacePduData->intProps["dataCoding"];
 	bool udhi = origPdu->get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
 	SmppUtil::setupRandomCorrectReplaceSmPdu(pdu, dataCoding, udhi);
 	//source
@@ -873,6 +877,8 @@ PduData* SmppTransmitterTestCases::prepareReplaceSm(PduReplaceSm* pdu,
 	else
 	{
 		resPdu = new PduSubmitSm();
+		resPdu->get_header().set_commandId(SUBMIT_SM);
+		resPdu->get_optional().set_userMessageReference(0);
 		resPdu->get_message().set_scheduleDeliveryTime(
 			pdu->get_scheduleDeliveryTime() ? pdu->get_scheduleDeliveryTime() : "");
 		resPdu->get_message().set_validityPeriod(
@@ -882,6 +888,8 @@ PduData* SmppTransmitterTestCases::prepareReplaceSm(PduReplaceSm* pdu,
 	resPdu->get_message().set_registredDelivery(pdu->get_registredDelivery());
 	resPdu->get_message().set_smDefaultMsgId(pdu->get_smDefaultMsgId());
 	resPdu->get_message().set_shortMessage(pdu->get_shortMessage(), pdu->size_shortMessage());
+	__dumpPdu__("prepareReplaceSm", fixture->smeInfo.systemId,
+		reinterpret_cast<SmppHeader*>(resPdu));
 	//report options
 	Address srcAddr;
 	SmppUtil::convert(pdu->get_source(), &srcAddr);
@@ -898,14 +906,20 @@ PduData* SmppTransmitterTestCases::prepareReplaceSm(PduReplaceSm* pdu,
 		pduData->intProps["ussdServiceOp"] = resPdu->get_optional().get_ussdServiceOp();
 	}
 	pduData->strProps["smsId"] = nvl(pdu->get_messageId());
-	//дополнительные фишки для map proxy
-	if (replacePduData)
+	if (fixture->smeInfo.forceDC)
 	{
+		pduData->intProps["forceDC"] = 1;
+	}
+	if (replacePduData && replacePduData->intProps.count("dataCoding"))
+	{
+		uint8_t dc = replacePduData->intProps["dataCoding"];
+		pduData->intProps["dataCoding"] = dc;
+		//дополнительные фишки для map proxy
 		const RouteInfo* routeInfo = fixture->routeChecker->getRouteInfoForNormalSms(
 			resPdu->get_message().get_source(), resPdu->get_message().get_dest());
 		if (routeInfo)
 		{
-			SmsMsg* msg = getSmsMsg(resPdu);
+			SmsMsg* msg = getSmsMsg(resPdu, dc);
 			__trace2__("sms msg registered: this = %p, udhi = %s, len = %d, dc = %d, orig dc = %d, valid = %s",
 				msg, msg->udhi ? "true" : "false", msg->len, (int) msg->dataCoding, (int) resPdu->get_message().get_dataCoding(), msg->valid ? "true" : "false");
 			msg->ref();
