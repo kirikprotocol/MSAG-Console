@@ -339,6 +339,14 @@ public:
 
     void handleEvent(SmppHeader *pdu)
     {
+        Event aaa;
+        while (!bInfoSmeIsConnected) {
+            static int counter = 0;
+            aaa.Wait(1000);    
+            if (++counter < 10) continue;
+            disposePdu(pdu);
+        }
+
         switch (pdu->get_commandId())
         {
         case SmppCommandSet::DELIVERY_SM:
