@@ -30,8 +30,14 @@ Manager::Manager()
 	DOM_Document document = parse(parser, config_filename.get());
 	if (!document.isNull())
 	{
+    __trace2__("reading config...\n");
 		DOM_Element elem = document.getDocumentElement();
+    __trace2__("config readed\n");
 		config.parse(elem);
+    __trace2__("parsed %u ints, %u booleans, %u strings\n", 
+               config.intParams.GetCount(), 
+               config.boolParams.GetCount(),
+               config.strParams.GetCount());
 	} else {
     throw ConfigException("Parse result is null");
 	}

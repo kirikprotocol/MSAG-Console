@@ -282,7 +282,10 @@ namespace smsc {
       throw (AdminException)
       {
         configs.smemanconfig->reload();
+        __trace2__("reinit smsc config\n");
         configs.cfgman->reinit();
+        configs.cfgman = & smsc::util::config::Manager::getInstance();
+        __trace2__("config reinitialized\n");
         configs.aliasconfig->reload();
         configs.routesconfig->reload();
       }
