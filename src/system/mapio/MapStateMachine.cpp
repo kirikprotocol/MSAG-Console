@@ -2934,6 +2934,13 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     __require__(dialog->ssn==localSsn);
     dialog->isUSSD = true;
     __dialogid_map = dialogueId;
+    if( msisdn_sp != 0 ) {
+      dialog->m_msAddr.addressLength = msisdn_sp->addressLength;
+      dialog->m_msAddr.typeOfAddress = msisdn_sp->typeOfAddress;
+      memcpy(dialog->m_msAddr.address, msisdn_sp->address,ET96MAP_ADDRESS_LEN);
+      dialog->hasIndAddress = true;
+      __map_trace2__("MAP::%s has msisdn %d.%d", __FUNCTION__,dialog->m_msAddr.addressLength, dialog->m_msAddr.typeOfAddress );
+    }
     string subsystem;
     auto_ptr<SMS> _sms ( new SMS() );
     SMS& sms = *_sms.get();
