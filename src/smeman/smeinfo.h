@@ -28,6 +28,7 @@ struct SmeInfo
   bool  disabled;
   bool wantAlias;
   bool forceDC;
+  std::string receiptSchemeName;
   uint32_t timeout;
   ~SmeInfo(){}
   SmeInfo(){}

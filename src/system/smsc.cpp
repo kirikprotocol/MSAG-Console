@@ -256,6 +256,7 @@ void Smsc::init(const SmscConfigs& cfg)
         si.timeout = rec->recdata.smppSme.timeout;
         si.wantAlias = rec->recdata.smppSme.wantAlias;
         si.forceDC = rec->recdata.smppSme.forceDC;
+        si.receiptSchemeName= rec->recdata.smppSme.receiptSchemeName;
         if(si.rangeOfAddress.length() && !re.Compile(si.rangeOfAddress.c_str(),OP_OPTIMIZE|OP_STRICT))
         {
           log.error("Failed to compile rangeOfAddress for sme %s",si.systemId.c_str());
