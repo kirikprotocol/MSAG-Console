@@ -198,7 +198,7 @@ static void DropMapDialog_(unsigned dialogid){
   
   if ( !dialog.isnull() ){
     {
-      MutexGuard(dialog->mutex);
+      //MutexGuard(dialog->mutex);
       __trace2__("MAP::%s: 0x%x  (state CLOSED/ABORTED) /%d/",__FUNCTION__,dialog->dialogid_map,dialog->chain.size());
       unsigned __dialogid_map = dialog->dialogid_map;
       unsigned __dialogid_smsc = 0;
@@ -221,13 +221,18 @@ static void DropMapDialog_(unsigned dialogid){
             __trace2__("MAP::%s <exception> %s",__FUNCTION__,e.what());
           }
         }
-        MapDialogContainer::getInstance()->dropDialog(dialog->dialogid_map);
-        __trace2__("MAP::%s: 0x%x - closed and droped - ",__FUNCTION__,dialog->dialogid_map);
-        return;
+        //MapDialogContainer::getInstance()->dropDialog(dialog->dialogid_map);
+        //__trace2__("MAP::%s: 0x%x - closed and droped - ",__FUNCTION__,dialog->dialogid_map);
+        //if ( dialog
+        //return;
+        goto dropDialogLabel;
       }
     }
     __trace2__("MAP::%s: - restart on next in chain - ",__FUNCTION__);
     if ( dialog->dropChain ) {
+      //MutexGuard(dialog->mutex);
+dropDialogLabel:
+      MapDialogContainer::getInstance()->dropDialog(dialog->dialogid_map);
       for (;!dialog->chain.empty();dialog->chain.pop_front())
       {
         try{
@@ -238,7 +243,6 @@ static void DropMapDialog_(unsigned dialogid){
         }catch(...){
         }
       }
-      MapDialogContainer::getInstance()->dropDialog(dialog->dialogid_map);
       __trace2__("MAP::%s: 0x%x - closed and droped - ",__FUNCTION__,dialogid);
     }else{
       SmscCommand cmd = dialog->chain.front();
