@@ -48,12 +48,33 @@ select (select count(*) from smsc.sms_arc) arc, (select count(*) from cboss.sms_
 
 
 --Записи не теряются при переносе в sms_arc
-select (select max(id) from smsc.sms_msg) max_msg, (select max(id) from smsc.sms_arc) max_arc, ((select count(*) from smsc.sms_msg) + (select count(*) from smsc.sms_arc)) total from dual
+select (select result from smsc.test_result where table_name = 'sms_msg') expected, ((select count(*) from smsc.sms_msg) + (select count(*) from smsc.sms_arc)) real from dual
 
 --Записи из sms_msg выгребаются в sms_arc упорядоченно по времени перевода в финальное состояние
 
+/* Триггер для подсчета insert в sms_msg */
+create table smsc.test_result
+(
+	table_name varchar2(10),
+	result integer
+);
+insert into smsc.test_result(table_name, result) values('sms_msg', 0);
+
+create or replace trigger smsc.smsc_msg_insert after insert on smsc.sms_msg for each row
+update test_result set result = result + 1 where table_name = 'sms_msg'
+/
+
 
 /* Триггеры для ломания транзакций в архиваторе */
+select cboss.tx_test_seq.nextval from dual;
+delete from cboss.tx_test;
+insert into cboss.tx_test(table_name, seq_number) values ('sms_br', 2300);
+
+select smsc.tx_test_seq.nextval from dual;
+delete from smsc.tx_test;
+insert into smsc.tx_test(table_name, seq_number) values ('sms_msg', 1);
+insert into smsc.tx_test(table_name, seq_number) values ('sms_arc', 1);
+
 /* smsc */
 drop trigger smsc.smsc_msg_delete;
 drop trigger smsc.smsc_arc_insert;
@@ -64,37 +85,29 @@ drop table smsc.tx_test;
 create table smsc.tx_test
 (
 	table_name varchar2(10),
-	counter integer,
 	seq_number integer
 );
-insert into smsc.tx_test(table_name, counter) values('sms_msg', 0);
-insert into smsc.tx_test(table_name, counter) values('sms_arc', 0);
 
 create sequence smsc.tx_test_seq increment by 1 start with 1 nomaxvalue order;
 
 create or replace procedure smsc.tx_check(tbl_name varchar2) is
-	cnt number;
-	old_seq_num number;
-    new_seq_num number;
+	seq_num number;
 begin
-	select counter, seq_number into cnt, old_seq_num from tx_test where table_name = tbl_name;
-	if cnt > 0 then
-		select tx_test_seq.nextval into new_seq_num from dual;
-		cnt := cnt - 1;
-		update tx_test set counter = cnt, seq_number = new_seq_num where table_name = tbl_name;
-		if cnt = 0 and (new_seq_num - old_seq_num) = 1 then
+	select tx_test_seq.nextval into seq_num from dual;
+	for rec in (select seq_number from tx_test where table_name = tbl_name) loop
+		if rec.seq_number = seq_num then
 			raise VALUE_ERROR;
 		end if;
-	end if;
-exception when NO_DATA_FOUND then
-	return;
+	end loop;
 end;
 /
 
-create or replace trigger smsc.smsc_msg_delete before delete on smsc.sms_msg call tx_check('sms_msg')
+create or replace trigger smsc.smsc_msg_delete before delete on smsc.sms_msg for each row
+call tx_check('sms_msg')
 /
 
-create or replace trigger smsc.smsc_arc_insert before insert on smsc.sms_arc call tx_check('sms_arc')
+create or replace trigger smsc.smsc_arc_insert before insert on smsc.sms_arc for each row
+call tx_check('sms_arc')
 /
 
 /* cboss */
@@ -105,29 +118,20 @@ drop table cboss.tx_test;
 create table cboss.tx_test
 (
 	table_name varchar2(10),
-	counter integer,
 	seq_number integer
 );
-insert into cboss.tx_test(table_name, counter) values('sms_br', 0);
 
 create sequence cboss.tx_test_seq increment by 1 start with 1 nomaxvalue order;
 
 create or replace procedure cboss.tx_check(tbl_name varchar2) is
-	cnt number;
-	old_seq_num number;
-    new_seq_num number;
+	seq_num number;
 begin
-	select counter, seq_number into cnt, old_seq_num from tx_test where table_name = tbl_name;
-	if cnt > 0 then
-		select tx_test_seq.nextval into new_seq_num from dual;
-		cnt := cnt - 1;
-		update tx_test set counter = cnt, seq_number = new_seq_num where table_name = tbl_name;
-		if cnt = 0 and (new_seq_num - old_seq_num) = 1 then
+	select tx_test_seq.nextval into seq_num from dual;
+	for rec in (select seq_number from tx_test where table_name = tbl_name) loop
+		if rec.seq_number = seq_num then
 			raise VALUE_ERROR;
 		end if;
-	end if;
-exception when NO_DATA_FOUND then
-	return;
+	end loop;
 end;
 /
 
