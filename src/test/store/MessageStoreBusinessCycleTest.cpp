@@ -167,7 +167,7 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 			case 4:
 				for (int i = 0; !duplicatesOk && i < id.size(); i++)
 				{
-					process(tc.storeReplaceCorrectSms(*id[i], sms[i]));
+					process(tc.storeReplaceCorrectSms(id[i], sms[i]));
 				}
 				break;
 			case 5:
@@ -222,8 +222,7 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 				break;
 			case 2: //только одно sms создаем в цикле
 				PREPARE_FOR_NEW_SMS
-				process(tc.storeReplaceSmsInFinalState(id.back(), sms.back(),
-					*id[0], *sms[0]));
+				process(tc.storeReplaceSmsInFinalState(id.back(), sms.back(), *sms[0]));
 				//обязательно перевести созданное сообщение в финальной состояние
 				process(tc.changeExistentSmsStateEnrouteToFinal(
 					*id.back(), sms.back(), RAND_TC));

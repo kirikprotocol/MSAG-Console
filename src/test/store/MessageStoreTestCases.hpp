@@ -105,14 +105,13 @@ public:
 	/**
 	 * Сохранение корректного sms с замещением уже существующего.
 	 */
-	TCResult* storeReplaceCorrectSms(const SMSId existentId,
-		SMS* existentSms);
+	TCResult* storeReplaceCorrectSms(SMSId* id, SMS* existentSms);
 
 	/**
 	 * Сохранение sms с замещением существующего sms финальном состоянии.
 	 */
 	TCResult* storeReplaceSmsInFinalState(SMSId* id, SMS* sms,
-		const SMSId existentId, const SMS& existentSms);
+		const SMS& existentSms);
 
 	/**
 	 * Сохранение неправильного sms.

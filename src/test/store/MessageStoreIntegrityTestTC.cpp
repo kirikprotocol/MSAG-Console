@@ -84,7 +84,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 			case 4:
 				for (int i = 0; !duplicatesOk && i < id.size(); i++)
 				{
-					TCResult* res = tc.storeReplaceCorrectSms(*id[i], sms[i]);
+					TCResult* res = tc.storeReplaceCorrectSms(id[i], sms[i]);
 					stack[i]->push_back(res);
 				}
 				break;
@@ -168,7 +168,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				{
 					PREPARE_FOR_NEW_SMS
 					TCResult* res1 = tc.storeReplaceSmsInFinalState(id.back(),
-						sms.back(), *id[i], *sms[i]);
+						sms.back(), *sms[i]);
 					stack.back()->push_back(res1);
 					//обязательно перевести созданное сообщение в финальной состояние
 					TCResult* res2 = tc.changeExistentSmsStateEnrouteToFinal(

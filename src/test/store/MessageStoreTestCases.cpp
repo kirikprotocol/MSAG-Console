@@ -131,7 +131,8 @@ TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 				default:
 					throw s;
 			}
-			SMSId smsId = msgStore->createSms(sms, CREATE_NEW);
+			SMSId smsId = msgStore->getNextId();
+			msgStore->createSms(sms, smsId, CREATE_NEW);
 			if (idp != NULL && smsp != NULL)
 			{
 				*idp = smsId;
@@ -178,7 +179,6 @@ TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp,
 		{
 			SMS sms;
 			SmsUtil::setupRandomCorrectSms(&sms);
-			SMSId smsId;
 			CreateMode flag = ETSI_REJECT_IF_PRESENT;
 			uint8_t shift = rand1(254);
 			switch(s.value())
@@ -227,7 +227,8 @@ TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp,
 				default:
 					throw s;
 			}
-			smsId = msgStore->createSms(sms, flag);
+			SMSId smsId = msgStore->getNextId();
+			msgStore->createSms(sms, smsId, flag);
 			if (smsId == existentId)
 			{
 				res->addFailure(1101);
@@ -258,7 +259,8 @@ TCResult* MessageStoreTestCases::storeDuplicateSms(SMSId* idp, SMS* smsp,
 	try
 	{
 		SMS sms(existentSms);
-		SMSId id = msgStore->createSms(sms, CREATE_NEW);
+		SMSId id = msgStore->getNextId();
+		msgStore->createSms(sms, id, CREATE_NEW);
 		if (id == existentId)
 		{
 			res->addFailure(101);
@@ -292,7 +294,8 @@ TCResult* MessageStoreTestCases::storeRejectDuplicateSms(const SMS& existentSms)
 		sms.setMessageReference(existentSms.getMessageReference());
 		sms.setOriginatingAddress(existentSms.getOriginatingAddress());
 		sms.setDestinationAddress(existentSms.getDestinationAddress());
-		SMSId smsId = msgStore->createSms(sms, ETSI_REJECT_IF_PRESENT);
+		SMSId smsId = msgStore->getNextId();
+		msgStore->createSms(sms, smsId, ETSI_REJECT_IF_PRESENT);
 		res->addFailure(101);
 	}
 	catch(DuplicateMessageException&)
@@ -308,8 +311,7 @@ TCResult* MessageStoreTestCases::storeRejectDuplicateSms(const SMS& existentSms)
 	return res;
 }
 
-TCResult* MessageStoreTestCases::storeReplaceCorrectSms(const SMSId existentId,
-	SMS* existentSms)
+TCResult* MessageStoreTestCases::storeReplaceCorrectSms(SMSId* idp, SMS* existentSms)
 {
 	TCResult* res = new TCResult(TC_STORE_REPLACE_CORRECT_SMS);
 	try
@@ -325,12 +327,9 @@ TCResult* MessageStoreTestCases::storeReplaceCorrectSms(const SMSId existentId,
 		EService serviceType;
 		existentSms->getEServiceType(serviceType);
 		sms.setEServiceType(serviceType);
-		SMSId smsId = msgStore->createSms(sms, SMPP_OVERWRITE_IF_PRESENT);
+		SMSId smsId = msgStore->getNextId();
+		msgStore->createSms(sms, smsId, SMPP_OVERWRITE_IF_PRESENT);
 		*existentSms = sms;
-		if (smsId != existentId)
-		{
-			res->addFailure(101);
-		}
 	}
 	catch(...)
 	{
@@ -342,7 +341,7 @@ TCResult* MessageStoreTestCases::storeReplaceCorrectSms(const SMSId existentId,
 }
 
 TCResult* MessageStoreTestCases::storeReplaceSmsInFinalState(SMSId* idp, SMS* smsp,
-	const SMSId existentId, const SMS& existentSms)
+	const SMS& existentSms)
 {
 	TCResult* res = new TCResult(TC_STORE_REPLACE_SMS_IN_FINAL_STATE);
 	try
@@ -352,11 +351,8 @@ TCResult* MessageStoreTestCases::storeReplaceSmsInFinalState(SMSId* idp, SMS* sm
 		//destination address and service_type и сообщение должно быть в 
 		//ENROTE state. В противном случае создается новое сообщение.
 		SMS sms(existentSms);
-		SMSId smsId = msgStore->createSms(sms, SMPP_OVERWRITE_IF_PRESENT);
-		if (smsId == existentId)
-		{
-			res->addFailure(101);
-		}
+		SMSId smsId = msgStore->getNextId();
+		msgStore->createSms(sms, smsId, SMPP_OVERWRITE_IF_PRESENT);
 		if (idp != NULL && smsp != NULL)
 		{
 			*idp = smsId;
