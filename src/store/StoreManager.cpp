@@ -15,6 +15,44 @@ ConnectionPool*	StoreManager::pool = 0L;
 IDGenerator* StoreManager::generator = 0L;
 StoreManager* StoreManager::instance = 0L;
 
+void StoreManager::startup(StoreConfig* config)
+	throw(ConnectionFailedException)
+{
+	MutexGuard guard(mutex);
+
+	if (!instance)
+	{
+		pool = new ConnectionPool(config);
+		Connection* connection = pool->getConnection();
+		try
+		{
+			generator = new IDGenerator(connection->getMessagesCount());
+		}
+		catch (StorageException& exc) 
+		{
+			pool->freeConnection(connection);
+			throw ConnectionFailedException(exc);
+		}
+		pool->freeConnection(connection);
+		instance = new StoreManager();
+	}
+}
+		
+void StoreManager::shutdown() 
+{
+	MutexGuard guard(mutex);
+
+	if (pool) {
+		delete pool; pool = 0L;
+	}
+	if (instance) {
+		delete instance; instance = 0L;
+	}
+	if (generator) {
+		delete generator; generator = 0L;
+	}
+}
+
 const int MAX_TRIES_TO_PROCESS = 3;
 
 SMSId StoreManager::store(SMS& sms) 
@@ -25,19 +63,22 @@ SMSId StoreManager::store(SMS& sms)
 	int iteration=1;
     while(true)
 	{
+		Connection* connection = 0L;
 		try 
 		{
-			Connection* conn = pool->getConnection();
+			connection = pool->getConnection();
 			SMSId id = generator->getNextId();
-			conn->store(sms, id);
-            pool->freeConnection(conn);
+			connection->store(sms, id);
+            pool->freeConnection(connection);
 			return id;
 		} 
 		catch (ConnectionFailedException& exc) {
+            if (connection) pool->freeConnection(connection);
 			throw;
 		}
 		catch (StorageException& exc) 
 		{
+			if (connection) pool->freeConnection(connection);
 			// Write log here
 			printf("Storage Exception : %s\n", exc.what());
 			if (iteration < MAX_TRIES_TO_PROCESS) 
@@ -59,21 +100,25 @@ SMS& StoreManager::retrive(SMSId id)
 	int iteration=1;
     while (true)
 	{
+		Connection* connection = 0L;
 		try 
 		{
-			Connection* conn = pool->getConnection();
-			SMS& sms = conn->retrive(id);
-            pool->freeConnection(conn);
+			connection = pool->getConnection();
+			SMS& sms = connection->retrive(id);
+            pool->freeConnection(connection);
 			return sms;
 		}
 		catch (ConnectionFailedException& exc) {
+			if (connection) pool->freeConnection(connection);
 			throw;
 		}
 		catch (NoSuchMessageException& exc) {
+			if (connection) pool->freeConnection(connection);
 			throw;
 		}
 		catch (StorageException& exc) 
 		{
+			if (connection) pool->freeConnection(connection);
 			// Write log here
             printf("Storage Exception : %s\n", exc.what());
 			if (iteration < MAX_TRIES_TO_PROCESS) 

@@ -50,35 +50,10 @@ namespace smsc { namespace store
     public:    
 		
 		static void startup(StoreConfig* config) 
-			throw(ConnectionFailedException)
-		{
-			MutexGuard guard(mutex);
-
-			if (!instance)
-			{
-                pool = new ConnectionPool(config);
-				Connection* connection = pool->getConnection();
-                generator = new IDGenerator(connection->getMessagesCount());
-				pool->freeConnection(connection);
-				instance = new StoreManager();
-            }
-		};
+			throw(ConnectionFailedException);
 		
-		static void shutdown() 
-		{
-			MutexGuard guard(mutex);
-
-			if (pool) {
-				delete pool; pool = 0L;
-			}
-            if (instance) {
-				delete instance; instance = 0L;
-			}
-			if (generator) {
-				delete generator; generator = 0L;
-			}
-        };
-
+		static void shutdown(); 
+        
         static MessageStore* getMessageStore() {
 			return ((MessageStore *)instance);
 		};

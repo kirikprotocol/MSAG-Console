@@ -23,6 +23,7 @@ ConnectionPool::ConnectionPool(StoreConfig* _config)
 	maxConnectionsCount = config->getMaxConnectionsCount();
 	curConnectionsCount = config->getInitConnectionsCount();
 	
+	__require__(curConnectionsCount > 0);
 	__require__(curConnectionsCount <= maxConnectionsCount);
 
     for (int i=0; i<curConnectionsCount; i++)
@@ -113,11 +114,11 @@ void ConnectionPool::checkErr(sword status, Connection* connection)
 		if (tmp == connection) { // set Connection dead
 			busy.Delete(i); 
             (void) dead.Push(connection);
+			curConnectionsCount--;
             break;
 		}
 	}
-	curConnectionsCount--;
-	connectionsLock.Unlock();
+    connectionsLock.Unlock();
 
     throw StorageException((const char *)errbuf, (int)status);
 }
@@ -129,52 +130,78 @@ Connection* ConnectionPool::getConnection()
 	connectionsLock.Lock();
 	
 	Connection*	connection=0L;
-    if (idle.Count()) 
+	
+	if (!idle.Count())
 	{
-		(void) idle.Pop(connection);
-		(void) busy.Push(connection);
-		idleLock.Unlock();
-	} 
-	else if (curConnectionsCount < maxConnectionsCount) 
-	{
-		if (dead.Count())
+		__require__(curConnectionsCount < maxConnectionsCount);
+
+        try 
 		{
-			(void) dead.Pop(connection);
-			if (connection) delete connection;
-		}
-		try {
 			connection = new Connection(this);
 		}
-		catch (ConnectionFailedException& exc) {
+		catch (ConnectionFailedException& exc) 
+		{
+			idleLock.Unlock();
 			connectionsLock.Unlock();
 			throw;
 		}
 		(void) busy.Push(connection);
-		curConnectionsCount++;
-        idleLock.Unlock();
-	}
-    
+        if (++curConnectionsCount < maxConnectionsCount)
+		{
+			idleLock.Unlock();
+		}
+    } 
+	else 
+	{
+		(void) idle.Pop(connection);
+		(void) busy.Push(connection);
+		if (idle.Count() || curConnectionsCount < maxConnectionsCount)
+		{
+			idleLock.Unlock();
+		}
+    }
+
     connectionsLock.Unlock();
 	return connection;
 }
 
+// from busy --> idle
 void ConnectionPool::freeConnection(Connection* connection)
 {
     connectionsLock.Lock();
 	
+	__require__(connection);
+
 	Connection*	tmp=0L;
-    for (int i=0; i<busy.Count(); i++)
+	if (dead.Count())
 	{
-        tmp = busy[i];
-		if (tmp == connection) {
-			busy.Delete(i);
-			if (idle.Count() == 0) idleLock.Unlock();
-			(void) idle.Push(connection);
-            break;
+		for (int i=0; i<dead.Count(); i++)
+		{
+			tmp = dead[i];
+			if (tmp == connection) 
+			{
+				dead.Delete(i);
+				delete connection;
+                break;
+			}
 		}
 	}
-    
-	connectionsLock.Unlock();
+	else 
+	{
+		for (int i=0; i<busy.Count(); i++)
+		{
+			tmp = busy[i];
+			if (tmp == connection) 
+			{
+				busy.Delete(i);
+				(void) idle.Push(connection);
+				if (idle.Count() == 1) idleLock.Unlock();
+				break;
+			}
+		}
+    }
+	
+    connectionsLock.Unlock();
 }
 /* ----------------------------- ConnectionPool ------------------------ */
 
