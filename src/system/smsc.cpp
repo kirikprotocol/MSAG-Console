@@ -81,7 +81,7 @@ void Smsc::init()
     auto_ptr<SmeIterator> it2(smeman.iterator());
     while ( it2->next() )
     {
-      SmeInfo info2 = it->getSmeInfo();
+      SmeInfo info2 = it2->getSmeInfo();
       Address dest_addr(info2.rangeOfAddress.length(),
                        info2.typeOfNumber,
                        info2.numberingPlan,
