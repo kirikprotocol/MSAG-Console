@@ -109,7 +109,7 @@ public:
     Chain* c=GetProcessingChain(id);
     if(!c)
     {
-      warn2(log,"DeliverOk - chain not found for %lld",id);
+      info2(log,"DeliverOk - chain not found for %lld",id);
       return;
     }
     debug2(log,"DeliverOk: id=%lld, c=%p",id,c);

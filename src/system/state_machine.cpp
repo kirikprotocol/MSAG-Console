@@ -3745,7 +3745,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
         store->changeSmsStateToDelivered(t.msgId,t.command->get_resp()->getDescriptor());
 
-        if(sms.getAttemptsCount()!=0)smsc->getScheduler()->DeliveryOk(t.msgId);
+        smsc->getScheduler()->DeliveryOk(t.msgId);
 
         __trace__("change state to delivered: ok");
       }catch(std::exception& e)
@@ -4474,6 +4474,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   sms.getDestinationAddress().getText(addr,sizeof(addr));
   rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
   rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,time(NULL));
+  rpt.setIntProperty(Tag::SMPP_ESM_CLASS,0);
 
   char msgid[60];
   sprintf(msgid,"%lld",msgId);
@@ -4575,6 +4576,8 @@ void StateMachine::submitReceipt(SMS& sms,int type)
 
   sms.setNextTime(now);
   sms.setValidTime(now+maxValidTime);
+
+  sms.setIntProperty(Tag::SMPP_ESM_CLASS,0);
 
   try{
     int dest_proxy_index;
