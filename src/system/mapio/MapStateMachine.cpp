@@ -610,7 +610,7 @@ static void ForwardMO(MapDialog* dialog) {
   smsc::sms::SMS *sms = dialog->sms.get();
   smsc::sms::Address addr(sms->getStrProperty(Tag::SMSC_FORWARD_MO_TO).c_str());
   if( !sms->hasBinProperty(Tag::SMSC_MO_PDU) )
-    throw MAPDIALOG_FATAL_ERROR(FormatText("MAP::ForwardMO: SMS has SMSC_FORWARD_MO_TO but has no SMSC_MO_PDU 0x%x",result),smsc::system::Status::DATAMISSING);
+    throw MAPDIALOG_FATAL_ERROR("MAP::ForwardMO: SMS has SMSC_FORWARD_MO_TO but has no SMSC_MO_PDU"),smsc::system::Status::DATAMISSING);
 
   dialog->state = MAPST_WaitFwdMOConf;
   dialog->version = 2;
@@ -618,11 +618,13 @@ static void ForwardMO(MapDialog* dialog) {
   appContext.acType = ET96MAP_SHORT_MSG_MO_RELAY;
   SetVersion(appContext,dialog->version);
 
-  mkMapAddress( &fwdAddr, addr.getValue(), addr.getLength() );
+  char addrVal[64];
+  int adrlen
+  mkMapAddress( &fwdAddr, addr.value, addr.length );
   mkSS7GTAddress( &destAddr, &fwdAddr, 8 );
 
-  mkRP_DA_Address( &smRpDa, addr.getValue(), addr.getLength(), ET96MAP_ADDRTYPE_SCADDR );
-  mkRP_OA_Address( &smRpOa, dialog->sms->getOriginatingAddress().getValue(), dialog->sms->getOriginatingAddress().getLength(), ET96MAP_ADDRTYPE_MSISDN );
+  mkRP_DA_Address( &smRpDa, addr.value, addr.length, ET96MAP_ADDRTYPE_SCADDR );
+  mkRP_OA_Address( &smRpOa, sms->getOriginatingAddress().value, sms->getOriginatingAddress().length, ET96MAP_ADDRTYPE_MSISDN );
   unsigned length;
   const char* mo_pdu = sms->getBinProperty(Tag::SMSC_MO_PDU, &length);
   memcpy(ui.signalInfo, mo_pdu, length );
