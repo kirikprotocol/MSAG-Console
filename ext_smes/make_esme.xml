@@ -32,12 +32,17 @@
     <mkdir dir="${exploded}/jsp"/>
   </target>
 
+  <target name="compile_resources">
+    <native2ascii encoding="Cp1251" src="*.properties" dest="${java_out}"/>
+  </target>
 
   <target name="compile" depends="init" description="compile the sources">
     <javac srcdir="${java_src}" destdir="${java_out}" debug="yes">
       <classpath refid="classpath"/>
     </javac>
-    <native2ascii encoding="Cp1251" src="${java_src}/**/*.properties" dest="${java_out}"/>
+    <subant genericantfile="${SMSC_DIR}/ext_smes/make_esme.xml" target="compile_resources">
+      <fileset dir="${java_src}" includes="**/*.properties"/>
+    </subant>
   </target>
 
   <target name="build" depends="clean,compile" description="generate the distribution">
