@@ -84,7 +84,6 @@ void SQLJob::process(Command& command, DataSource& ds)
         }
         process(command, *stmt);             // throws CommandProcessException
         if (!isQuery) connection->commit();  // throws SQLException
-        delete stmt;
     }
     catch(CommandProcessException& exc)
     {
