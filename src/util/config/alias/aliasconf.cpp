@@ -99,6 +99,7 @@ AliasConfig::status AliasConfig::load(const char * const filename)
             if ( !scaned )
             {
               logger.warn("incorrect format of 'addr = \"%20s\"'",  dta);
+              continue;
             }
             else
             {
@@ -132,6 +133,7 @@ AliasConfig::status AliasConfig::load(const char * const filename)
             if ( !scaned )
             {
               logger.warn("incorrect format of 'addr = \"%20s\"'",  dta);
+              continue;
             }
             else
             {
@@ -144,9 +146,11 @@ AliasConfig::status AliasConfig::load(const char * const filename)
         //continue;
       }
       DOM_NodeList childs = node.getChildNodes();
+      logger.info("record added");
       records.push_back(record.release());
     }
   } catch (DOMTreeReader::ParseException &e) {
+    logger.warn("DomException:%s",e.what());
     return fail;
   }
   return success;
@@ -165,15 +169,15 @@ AliasConfig::status AliasConfig::store(const char * const filename) const
       out << "addr=\"";
       if ( (*i)->addrNpi != 1 || ((*i)->addrTni !=1 && (*i)->addrTni !=2))
       {
-          out << "." << (*i)->addrTni << 
-          "." << (*i)->addrNpi << "."; 
+          out << "." << (*i)->addrTni <<
+          "." << (*i)->addrNpi << ".";
       }
       out << (*i)->addrValue << "\" ";
       out << "alias=\"";
       if ( (*i)->aliasNpi != 1 || ((*i)->aliasTni !=1 && (*i)->aliasTni !=2))
       {
-          out << "." << (*i)->aliasTni << 
-          "." << (*i)->aliasNpi << "."; 
+          out << "." << (*i)->aliasTni <<
+          "." << (*i)->aliasNpi << ".";
       }
       out << (*i)->aliasValue << "\" />";
     }
@@ -194,4 +198,3 @@ AliasConfig::RecordIterator AliasConfig::getRecordIterator() const
 }
 }
 }
-
