@@ -96,8 +96,11 @@ protected:
             SMS request;
             fetchSmsFromSmppPdu((PduXSm*)pdu, &request);
             bool isReceipt = (request.hasIntProperty(Tag::SMPP_ESM_CLASS)) ? 
-                (request.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3C == 0x4) : false;
+                ((request.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3C) == 0x4) : false;
 
+            __trace2__("SMPP_ESM_CLASS=%d", 
+                       request.getIntProperty(Tag::SMPP_ESM_CLASS));
+            
             if (isReceipt)
             {
                 __trace__("Got receipt");
