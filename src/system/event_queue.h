@@ -209,6 +209,37 @@ public:
     }
   }
 
+  typedef std::vector<std::pair<MsgIdType,CommandType> > EnqueueVector;
+  void enqueueEx(EnqueueVector& in)
+  {
+    __synchronized__
+    for(EnqueueVector::iterator it=in.begin();it!=in.end();it++)
+    {
+      MsgIdType msgId=it->first;
+      CommandType& command=it->second;
+
+      __trace2__("enqueue:cmd=%d, msgId=%lld, prio=%d",command->get_commandId(),msgId,command->get_priority());
+      Locker* locker = hash.get(msgId);
+
+      if ( !locker )
+      {
+        locker = new Locker;
+        locker->state = StateTypeValue::UNKNOWN_STATE;
+        locker->msgId = msgId;
+
+        hash.put(msgId,locker);
+      }
+      locker->push_back(command);
+      if(!locker->locked && !locker->enqueued &&
+         StateChecker::commandIsValid(locker->state,command))
+      {
+        locker->enqueued=true;
+        queue.Push(locker,command->get_priority());
+        event.Signal();
+      }
+    }
+  }
+
 
   // просматривет список активных записей
   // записи в одном из финальных состояний при отсутствии команд удаляуются

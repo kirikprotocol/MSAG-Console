@@ -425,7 +425,7 @@ public:
 
 protected:
 
-  void processCommand(SmscCommand& cmd);
+  void processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTaskVector& ftv);
 
   void generateAlert(SMSId id,SMS* sms);
 

@@ -5,8 +5,11 @@
 #if !defined __Cxx_Header__task_container_h__
 #define __Cxx_Header__task_container_h__
 
+#include <vector>
+#include <utility>
 #include "sms/sms.h"
 #include "core/synchronization/Mutex.hpp"
+#include "smeman/smsccmd.h"
 
 namespace smsc{
 namespace system{
@@ -41,10 +44,24 @@ struct Task
 
 static inline int calcHashCode(uint32_t proxy,uint32_t sequence)
 {
-  int code = proxy^sequence;
+  unsigned int code = proxy^sequence;
   code = (code&0xffff) ^ (code>>16);
   return code%TASK_CONTAINER_MAX_PROCESSED;
 }
+
+struct FindTaskData{
+  smsc::sms::SMSId id;
+  uint32_t proxy_idx;
+  uint32_t sequenceNumber;
+  smsc::smeman::SmscCommand cmd;
+  bool found;
+  FindTaskData(uint32_t argProxyIdx,uint32_t argSeqNum,const smsc::smeman::SmscCommand& argCmd):
+    id(0),proxy_idx(argProxyIdx),sequenceNumber(argSeqNum),cmd(argCmd),found(false)
+  {
+  }
+};
+
+typedef std::vector<FindTaskData> FindTaskVector;
 
 class TaskContainer
 {
@@ -150,6 +167,49 @@ public:
     //}
   }*/
 
+  void findAndRemoveTaskEx(FindTaskVector& in)
+  {
+    MutexGuard guard(mutex);
+
+    for(FindTaskVector::iterator it=in.begin();it!=in.end();it++)
+    {
+      uint32_t proxy_idx=it->proxy_idx;
+      uint32_t sequenceNumber=it->sequenceNumber;
+
+      int hashcode = calcHashCode(proxy_idx,sequenceNumber);
+      Task* _res = hash[hashcode];
+      Task* prev = 0;
+      while ( _res )
+      {
+        if ( _res->proxy_id == proxy_idx && _res->sequenceNumber == sequenceNumber )
+        {
+
+          int idx;
+          for(idx=0;idx<toCount;idx++)
+          {
+            __trace2__("toList.timeout=%d, _res->timeout=%d",toList[idx].timeout,_res->timeout);
+            if(toList[idx].timeout==_res->timeout)break;
+          }
+          __require__(idx<toCount);
+
+          remove(idx,_res,prev,hash+hashcode);
+          //*res = *_res;
+          //return true;
+          //out.push(*_res);
+          it->cmd->get_resp()->set_sms(_res->sms);
+          it->cmd->get_resp()->set_diverted(_res->diverted);
+          it->cmd->set_priority(31);
+          it->id=_res->messageId;
+          it->found=true;
+          break;
+        }
+        prev = _res;
+        _res = prev->next;
+      }
+    }
+  }
+
+
   bool findAndRemoveTask(uint32_t proxy_idx,uint32_t sequenceNumber,Task *res)
   {
     MutexGuard guard(mutex);
@@ -162,6 +222,7 @@ public:
     {
       if ( _res->proxy_id == proxy_idx && _res->sequenceNumber == sequenceNumber )
       {
+
         int idx;
         for(idx=0;idx<toCount;idx++)
         {
@@ -169,6 +230,7 @@ public:
           if(toList[idx].timeout==_res->timeout)break;
         }
         __require__(idx<toCount);
+
         remove(idx,_res,prev,hash+hashcode);
         *res = *_res;
         return true;

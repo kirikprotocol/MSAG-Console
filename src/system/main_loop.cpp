@@ -13,6 +13,7 @@
 
 #include "util/udh.hpp"
 
+
 namespace smsc{
 namespace system{
 
@@ -53,8 +54,21 @@ void Smsc::mainLoop()
 #endif
   time_t last_tm = time(NULL);
   time_t now = 0;
+
+  EventQueue::EnqueueVector enqueueVector;
+  FindTaskVector findTaskVector;
+
   for(;;)
   {
+    if(enqueueVector.size())
+    {
+      hrtime_t eqStart=gethrtime();
+      eventqueue.enqueueEx(enqueueVector);
+      int sz=enqueueVector.size();
+      enqueueVector.clear();
+      hrtime_t eqEnd=gethrtime();
+      info2(log,"eventQueue.enqueue time=%lld, size=%d",eqEnd-eqStart,sz);
+    }
     do
     {
       smeman.getFrame(frame,WAIT_DATA_TIMEOUT);
@@ -63,6 +77,7 @@ void Smsc::mainLoop()
       Task task;
       if( now > last_tm )
       {
+        hrtime_t expStart=gethrtime();
         while ( tasks.getExpired(&task) )
         {
           SMSId id = task.messageId;
@@ -85,6 +100,8 @@ void Smsc::mainLoop()
           mergeCacheTimeouts.Pop();
         }
         last_tm = now;
+        hrtime_t expEnd=gethrtime();
+        info2(log,"expiration processing time:%lld",expEnd-expStart);
       }
     }while(!frame.size());
 
@@ -142,12 +159,33 @@ void Smsc::mainLoop()
       }else
       {
         try{
-          processCommand((*i));
+          hrtime_t cmdStart=gethrtime();
+          processCommand((*i),enqueueVector,findTaskVector);
+          hrtime_t cmdEnd=gethrtime();
+          info2(log,"command %d processing time:%lld",(*i)->get_commandId(),cmdEnd-cmdStart);
         }catch(...)
         {
           __warning2__("command processing failed:%d",(*i)->get_commandId());
         }
       }
+    }
+
+    if(findTaskVector.size())
+    {
+      int sz=findTaskVector.size();
+      hrtime_t frStart=gethrtime();
+      tasks.findAndRemoveTaskEx(findTaskVector);
+      SMSId id;
+      for(FindTaskVector::iterator it=findTaskVector.begin();it!=findTaskVector.end();it++)
+      {
+        if(it->found)
+        {
+          enqueueVector.push_back(EventQueue::EnqueueVector::value_type(it->id,it->cmd));
+        }
+      }
+      findTaskVector.clear();
+      hrtime_t frEnd=gethrtime();
+      info2(log,"findAndRemoveTaskTime time:%lld, size=%d",frEnd-frStart,sz);
     }
 
     if(submitCount==0)
@@ -190,7 +228,10 @@ void Smsc::mainLoop()
         if(cmd->get_commandId()==SUBMIT || cmd->get_commandId()==FORWARD)
         {
           try{
-            processCommand(cmd);
+            hrtime_t cmdStart=gethrtime();
+            processCommand(cmd,enqueueVector,findTaskVector);
+            hrtime_t cmdEnd=gethrtime();
+            info2(log,"command %d processing time:%lld",cmd->get_commandId(),cmdEnd-cmdStart);
             tcontrol->incTotalCount(1);
           }catch(...)
           {
@@ -224,10 +265,11 @@ void Smsc::generateAlert(SMSId id,SMS* sms)
 }
 
 
-void Smsc::processCommand(SmscCommand& cmd)
+void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTaskVector& ftv)
 {
   SMSId id=0;
   static smsc::logger::Logger *log = smsc::logger::Logger::getInstance("sms.trace");
+  static smsc::logger::Logger *logML = smsc::logger::Logger::getInstance("smsc.mainLoop");
   switch(cmd->get_commandId())
   {
     case __CMD__(SUBMIT):
@@ -324,20 +366,26 @@ void Smsc::processCommand(SmscCommand& cmd)
     }
     case __CMD__(DELIVERY_RESP):
     {
-      Task task;
+      //Task task;
       uint32_t dialogId = cmd->get_dialogId();
 
+      /*
+      hrtime_t tcStart=gethrtime();
       if (!tasks.findAndRemoveTask(cmd.getProxy()->getUniqueId(),dialogId,&task))
       {
         __warning2__("task not found for delivery response. Sid=%s, did=%d",cmd.getProxy()->getSystemId(),dialogId);
         return; //jump to begin of for
       }
+      hrtime_t tcEnd=gethrtime();
+      info2(logML,"findAndRemove time=%lld",tcEnd-tcStart);
       __trace2__("delivery response received. seqnum=%d,msgId=%lld,sms=%p",dialogId,task.messageId,task.sms);
       cmd->get_resp()->set_sms(task.sms);
       cmd->get_resp()->set_diverted(task.diverted);
       cmd->set_priority(31);
       id=task.messageId;
-      break;
+      */
+      ftv.push_back(FindTaskVector::value_type(cmd.getProxy()->getUniqueId(),dialogId,cmd));
+      return;
     }
     case __CMD__(REPLACE):
     {
@@ -477,7 +525,11 @@ void Smsc::processCommand(SmscCommand& cmd)
       __warning2__("mainLoop: unprocessed command id:%d",cmd->get_commandId());
     };
   }
-  eventqueue.enqueue(id,cmd);
+  //hrtime_t eqStart=gethrtime();
+  //eventqueue.enqueue(id,cmd);
+  //hrtime_t eqEnd=gethrtime();
+  //info2(logML,"eventQueue.enqueue time=%lld",eqEnd-eqStart);
+  ev.push_back(EventQueue::EnqueueVector::value_type(id,cmd));
 }
 
 

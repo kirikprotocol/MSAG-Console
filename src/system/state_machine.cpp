@@ -2226,7 +2226,7 @@ StateType StateMachine::submit(Tuple& t)
             prx->putCommand(resp);
           }catch(...)
           {
-            __trace__("SUBMIT: failed to put response command");
+            __warning__("SUBMIT: failed to put response command");
           }
         }
       }
@@ -3532,11 +3532,11 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
       TaskGuard tg;
       tg.smsc=smsc;
-      tg.dialogId=dialogId2;
       tg.uniqueId=uniqueId;
 
       try{
         dialogId2 = dest_proxy->getNextSequenceNumber();
+        tg.dialogId=dialogId2;
         __trace2__("CONCAT: seq number:%d",dialogId2);
         //Task task((uint32_t)dest_proxy_index,dialogId2);
 
