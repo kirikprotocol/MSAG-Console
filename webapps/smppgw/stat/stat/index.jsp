@@ -40,59 +40,61 @@
 
     <c:set var="statistics" value="${bean.statistics}"/>
     <c:if test="${!(empty statistics)}">
-      <c:set var="total" value="${statistics.total}"/>
-      <c:set var="byDates" value="${statistics.dateStat}"/>
       <table class=properties_list cellspacing=0 cellspadding=0>
-        <tr class=row0>
-            <td colspan=6><div class=page_subtitle>General statistics</div></td>
-        </tr>
-        <tr class=row1>
-            <th width="25%"><div align=right>&nbsp;</div></th>
-            <th width="15%"><div align=right>Accepted</div></th>
-            <th width="15%"><div align=right>Rejected</div></th>
-            <th width="15%"><div align=right>Delivered</div></th>
-            <th width="15%"><div align=right>Temporal</div></th>
-            <th width="15%"><div align=right>Permanent</div></th>
-        </tr>
-        <tr class=row0>
-            <th width="25%"><div align=right>Total SMS processed:</div></th>
-            <th width="15%"><div align=right>${total.accepted}</div></th>
-            <th width="15%"><div align=right>${total.rejected}</div></th>
-            <th width="15%"><div align=right>${total.delivered}</div></th>
-            <th width="15%"><div align=right>${total.tempError}</div></th>
-            <th width="15%"><div align=right>${total.permError}</div></th>
-        </tr>
         <c:set var="disNo" value="${1}"/>
-        <c:forEach var="dayStat" items="${byDates}" varStatus="i">
+        <c:if test="${bean.administrator}">
+          <c:set var="total" value="${statistics.total}"/>
+          <c:set var="byDates" value="${statistics.dateStat}"/>
           <tr class=row0>
-            <td width="25%" align=right style="cursor:hand"
-                onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">
-              <div id="p${disNo}" class='collapsing_list_${((i.last) ? "opened":"closed")}'>
-                <fmt:formatDate value="${dayStat.date}" pattern="dd MMMM, yyyy"/>
-              <div>
-            </td>
-            <td width="15%"><div align=right>${dayStat.accepted}</div></td>
-            <td width="15%"><div align=right>${dayStat.rejected}</div></td>
-            <td width="15%"><div align=right>${dayStat.delivered}</div></td>
-            <td width="15%"><div align=right>${dayStat.tempError}</div></td>
-            <td width="15%"><div align=right>${dayStat.permError}</div></td>
+              <td colspan=6><div class=page_subtitle>General statistics</div></td>
           </tr>
-          <tr id="c${disNo}" style='display:${((i.last) ? "block":"none")}'>
-            <td colspan=6><table class=list cellspacing=0 cellpadding=0 border=0>
-              <c:forEach var="hourStat" items="${dayStat.hourStat}">
-                <tr class=row1>
-                  <td width="25%" align=right>&nbsp;&nbsp;&nbsp;${((hourStat.hour < 10) ? ("0"+hourStat.hour):(""+hourStat.hour))}</td>
-                  <td width="15%"><div align=right>${hourStat.accepted}</div></td>
-                  <td width="15%"><div align=right>${hourStat.rejected}</div></td>
-                  <td width="15%"><div align=right>${hourStat.delivered}</div></td>
-                  <td width="15%"><div align=right>${hourStat.tempError}</div></td>
-                  <td width="15%"><div align=right>${hourStat.permError}</div></td>
-                </tr>
-              </c:forEach>
-            </table></td>
+          <tr class=row1>
+              <th width="25%"><div align=right>&nbsp;</div></th>
+              <th width="15%"><div align=right>Accepted</div></th>
+              <th width="15%"><div align=right>Rejected</div></th>
+              <th width="15%"><div align=right>Delivered</div></th>
+              <th width="15%"><div align=right>Temporal</div></th>
+              <th width="15%"><div align=right>Permanent</div></th>
           </tr>
-          <c:set var="disNo" value="${disNo+1}"/>
-        </c:forEach>
+          <tr class=row0>
+              <th width="25%"><div align=right>Total SMS processed:</div></th>
+              <th width="15%"><div align=right>${total.accepted}</div></th>
+              <th width="15%"><div align=right>${total.rejected}</div></th>
+              <th width="15%"><div align=right>${total.delivered}</div></th>
+              <th width="15%"><div align=right>${total.tempError}</div></th>
+              <th width="15%"><div align=right>${total.permError}</div></th>
+          </tr>
+          <c:forEach var="dayStat" items="${byDates}" varStatus="i">
+            <tr class=row0>
+              <td width="25%" align=right style="cursor:hand"
+                  onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">
+                <div id="p${disNo}" class='collapsing_list_${((i.last) ? "opened":"closed")}'>
+                  <fmt:formatDate value="${dayStat.date}" pattern="dd MMMM, yyyy"/>
+                <div>
+              </td>
+              <td width="15%"><div align=right>${dayStat.accepted}</div></td>
+              <td width="15%"><div align=right>${dayStat.rejected}</div></td>
+              <td width="15%"><div align=right>${dayStat.delivered}</div></td>
+              <td width="15%"><div align=right>${dayStat.tempError}</div></td>
+              <td width="15%"><div align=right>${dayStat.permError}</div></td>
+            </tr>
+            <tr id="c${disNo}" style='display:${((i.last) ? "block":"none")}'>
+              <td colspan=6><table class=list cellspacing=0 cellpadding=0 border=0>
+                <c:forEach var="hourStat" items="${dayStat.hourStat}">
+                  <tr class=row1>
+                    <td width="25%" align=right>&nbsp;&nbsp;&nbsp;${((hourStat.hour < 10) ? ("0"+hourStat.hour):(""+hourStat.hour))}</td>
+                    <td width="15%"><div align=right>${hourStat.accepted}</div></td>
+                    <td width="15%"><div align=right>${hourStat.rejected}</div></td>
+                    <td width="15%"><div align=right>${hourStat.delivered}</div></td>
+                    <td width="15%"><div align=right>${hourStat.tempError}</div></td>
+                    <td width="15%"><div align=right>${hourStat.permError}</div></td>
+                  </tr>
+                </c:forEach>
+              </table></td>
+            </tr>
+            <c:set var="disNo" value="${disNo+1}"/>
+          </c:forEach>
+        </c:if>
 
         <c:set var="bySme" value="${statistics.smeIdStat}"/>
         <tr>
@@ -141,16 +143,45 @@
                 <th width="15%">&nbsp;</th><th width="15%">&nbsp;</th><th width="15%">&nbsp;</th>
               </tr>
               <tr class=row1>
-                <td><div align=right>TrOk</div></td>
-                <td><div align=right>45895</div></td>
-                <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+                <td><div align=right>SmsTrOk</div></td>
+                <td><div align=right>${smeStat.SmsTrOk}</div></td>
+                <td collspan=4>&nbsp;</td>
               </tr>
               <tr class=row1>
-                <td><div align=right>TrFailed</div></td>
-                <td><div align=right>495</div></td>
-                <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+                <td><div align=right>SmsTrFailed</div></td>
+                <td><div align=right>${smeStat.SmsTrFailed}</div></td>
+                <td collspan=4>&nbsp;</td>
               </tr>
-              <!-- TODO: Add transaction counters -->
+              <tr class=row1>
+                <td><div align=right>UssdTrFromScOk</div></td>
+                <td><div align=right>${smeStat.UssdTrFromScOk}</div></td>
+                <td collspan=4>&nbsp;</td>
+              </tr>
+              <tr class=row1>
+                <td><div align=right>UssdTrFromScFailed</div></td>
+                <td><div align=right>${smeStat.UssdTrFromScFailed}</div></td>
+                <td collspan=4>&nbsp;</td>
+              </tr>
+              <tr class=row1>
+                <td><div align=right>UssdTrFromScBilled</div></td>
+                <td><div align=right>${smeStat.UssdTrFromScBilled}</div></td>
+                <td collspan=4>&nbsp;</td>
+              </tr>
+              <tr class=row1>
+                <td><div align=right>UssdTrFromSmeOk</div></td>
+                <td><div align=right>${smeStat.UssdTrFromSmeOk}</div></td>
+                <td collspan=4>&nbsp;</td>
+              </tr>
+              <tr class=row1>
+                <td><div align=right>UssdTrFromSmeFailed</div></td>
+                <td><div align=right>${smeStat.UssdTrFromSmeFailed}</div></td>
+                <td collspan=4>&nbsp;</td>
+              </tr>
+              <tr class=row1>
+                <td><div align=right>UssdTrFromSmeBilled</div></td>
+                <td><div align=right>${smeStat.UssdTrFromSmeBilled}</div></td>
+                <td collspan=4>&nbsp;</td>
+              </tr>
             </table></td>
           </tr>
           <c:set var="disNo" value="${disNo+1}"/>
@@ -201,6 +232,10 @@
           </tr>
           <c:set var="disNo" value="${disNo+1}"/>
         </c:forEach>
+
+        <c:if test="${bean.administrator}">
+          <!-- TODO: add errors statisctics-->
+        </c:if>
 
       </table>
     </c:if>
