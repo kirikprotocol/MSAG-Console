@@ -39,7 +39,7 @@ public class MaskList
 		}
 	}
 
-	public MaskList(String[] masks)
+	public MaskList(String[] masks) throws AdminException
 	{
 		for (int i = 0; i < masks.length; i++)
 		{
@@ -51,6 +51,7 @@ public class MaskList
 			catch (AdminException e)
 			{
 				logger.error("Couldn't load mask \"" + mask + "\", skipped", e);
+				throw e;
 			}
 		}
 	}

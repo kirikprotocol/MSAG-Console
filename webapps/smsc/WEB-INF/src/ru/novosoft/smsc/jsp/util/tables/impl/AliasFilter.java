@@ -5,13 +5,13 @@
  */
 package ru.novosoft.smsc.jsp.util.tables.impl;
 
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
 
 import java.util.Iterator;
-import java.util.Set;
 
 
 public class AliasFilter implements Filter
@@ -33,7 +33,7 @@ public class AliasFilter implements Filter
 		hide = HIDE_NOFILTER;
 	}
 
-	public AliasFilter(String[] alias_masks, String[] address_masks, byte hide_option)
+	public AliasFilter(String[] alias_masks, String[] address_masks, byte hide_option) throws AdminException
 	{
 		setAliases(alias_masks);
 		setAddresses(address_masks);
@@ -63,34 +63,30 @@ public class AliasFilter implements Filter
 		if (isEmpty())
 			return true;
 
-		return isMaskAllowed(addresses, (String) item.getValue("Address"))
-				  && isMaskAllowed(aliases, (String) item.getValue("Alias"))
-				  && (hide == HIDE_NOFILTER
-				  || (hide == HIDE_SHOW_HIDE && ((Boolean) item.getValue("Hide")).booleanValue())
-				  || (hide == HIDE_SHOW_NOHIDE && !((Boolean) item.getValue("Hide")).booleanValue())
-				  );
+		return isMaskAllowed(addresses, (String) item.getValue("Address")) && isMaskAllowed(aliases, (String) item.getValue("Alias")) && (hide == HIDE_NOFILTER || (hide == HIDE_SHOW_HIDE && ((Boolean) item.getValue("Hide")).booleanValue()) || (hide == HIDE_SHOW_NOHIDE && !((Boolean) item.getValue("Hide")).booleanValue()));
 	}
 
 	public String[] getAliases()
 	{
-		return (String[])aliases.getNames().toArray(new String[0]);
+		return (String[]) aliases.getNames().toArray(new String[0]);
 	}
 
 	public String[] getAddresses()
 	{
-		return (String[])addresses.getNames().toArray(new String[0]);
+		return (String[]) addresses.getNames().toArray(new String[0]);
 	}
 
 	public byte getHide()
 	{
 		return hide;
 	}
-	public void setAliases(String[] newAliasStrings)
+
+	public void setAliases(String[] newAliasStrings) throws AdminException
 	{
 		aliases = new MaskList(newAliasStrings);
 	}
 
-	public void setAddresses(String[] newAddressStrings)
+	public void setAddresses(String[] newAddressStrings) throws AdminException
 	{
 		addresses = new MaskList(newAddressStrings);
 	}

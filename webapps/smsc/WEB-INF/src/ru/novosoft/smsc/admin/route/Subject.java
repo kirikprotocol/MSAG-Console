@@ -6,6 +6,7 @@
 package ru.novosoft.smsc.admin.route;
 
 import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.admin.AdminException;
 
 import java.io.PrintWriter;
 import java.util.Collection;
@@ -17,7 +18,7 @@ public class Subject
 	private SME defaultSme = null;
 	private MaskList masks = null;
 
-	public Subject(String name, String[] masksStrings, SME defaultSME)
+	public Subject(String name, String[] masksStrings, SME defaultSME) throws AdminException
 	{
 		if (name == null)
 			throw new NullPointerException("Name is null");
@@ -29,7 +30,7 @@ public class Subject
 		this.name = name;
 		masks = new MaskList(masksStrings);
 		if (masks.size() == 0)
-			throw new NullPointerException("Masks is empty");
+			throw new AdminException("Masks is empty");
 		this.defaultSme = defaultSME;
 	}
 

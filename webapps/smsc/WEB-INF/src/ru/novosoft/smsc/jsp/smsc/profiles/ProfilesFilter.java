@@ -6,7 +6,9 @@
 package ru.novosoft.smsc.jsp.smsc.profiles;
 
 import ru.novosoft.smsc.admin.route.MaskList;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.jsp.util.tables.impl.ProfileFilter;
 
@@ -41,8 +43,17 @@ public class ProfilesFilter extends SmscBean
 		}
 		if (masks == null)
 			masks = new String[0];
+		masks = trimStrings(masks);
 
-		maskList = new MaskList(masks);
+		try
+		{
+			maskList = new MaskList(masks);
+		}
+		catch (AdminException e)
+		{
+			maskList = new MaskList();
+			return error(SMSCErrors.error.profiles.invalidMask, e);
+		}
 		masks = (String[]) maskList.getNames().toArray(new String[0]);
 
 		return RESULT_OK;

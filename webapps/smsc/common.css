@@ -265,7 +265,6 @@ div.p
 .secView,
 .secQuestion
 {
-	font-weight: bold;
 	background-color: #D8E8F5;
 	color:#336699;
 	vertical-align:middle;
@@ -274,6 +273,7 @@ div.p
 	padding-left:20px;
 	text-align: left;
 	border-bottom: 1px solid #888888;
+	font-weight: bold;
 }
 .secList {	background-image: url(img/ico16_list_bg.gif); }
 .secInfo,
@@ -291,12 +291,13 @@ div.p
 .secTitleOpened {
 	background-image: url(img/list_opened.gif);
 	background-position: left;
+	border-top: 1px solid #888888;
 	border-bottom: none;
 }
 .secTitleClosed {
 	background-image: url(img/list_closed.gif);
 	background-position: left;
-	margin-bottom: 1px;
+	border-top: 1px solid #888888;
 	border-bottom: none;
 }
 /******************************************************************************/

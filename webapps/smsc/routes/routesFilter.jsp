@@ -43,12 +43,12 @@ for (int i=0; i<bean.getSrcMasks().length; i++)
 %>
 <tr class=row<%=(rowN++)&1%>>
 	<th class=label>&nbsp;</th>
-	<td><input class=txtW name=srcMasks value="<%=bean.getSrcMasks()[i]%>"></td>
+	<td><input class=txtW name=srcMasks value="<%=bean.getSrcMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
 	<th><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to sources filter"></th>
-	<td><input class=txtW name=srcMasks></td>
+	<td><input class=txtW name=srcMasks validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~ destinations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
@@ -70,12 +70,12 @@ for (int i=0; i<bean.getDstMasks().length; i++)
 %>
 <tr class=row<%=(rowN++)&1%>>
 	<th class=label>&nbsp;</th>
-	<td><input class=txtW name=dstMasks value="<%=bean.getDstMasks()[i]%>"></td>
+	<td><input class=txtW name=dstMasks value="<%=bean.getDstMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
 	<th class=label><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to destinations filter"></th>
-	<td><input class=txtW name=dstMasks></td>
+	<td><input class=txtW name=dstMasks validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SMEs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
@@ -112,7 +112,7 @@ String encName = StringEncoderDecoder.encode(name);
 <div class=secButtons>
 <input class=btn type=submit name=mbApply value="Apply" title="Apply filter">
 <input class=btn type=submit name=mbClear value="Clear" title="Clear filter">
-<input class=btn type=submit name=mbCancel value="Cancel">
+<input class=btn type=submit name=mbCancel value="Cancel" onClick="clickCancel()">
 </div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

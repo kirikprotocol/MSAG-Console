@@ -6,6 +6,7 @@
 package ru.novosoft.smsc.jsp.util.tables.impl;
 
 import ru.novosoft.smsc.admin.route.*;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
 
@@ -232,7 +233,7 @@ public class RouteFilter implements Filter
 		this.src_subjects = new HashSet(Arrays.asList(srcSubjs));
 	}
 
-	public void setSourceMaskStrings(String[] srcMasks)
+	public void setSourceMaskStrings(String[] srcMasks) throws AdminException
 	{
 		this.src_masks = new MaskList(srcMasks);
 	}
@@ -242,7 +243,7 @@ public class RouteFilter implements Filter
 		this.dst_subjects = new HashSet(Arrays.asList(dstSubjs));
 	}
 
-	public void setDestinationMaskStrings(String[] dstMasks)
+	public void setDestinationMaskStrings(String[] dstMasks) throws AdminException
 	{
 		this.dst_masks = new MaskList(dstMasks);
 	}

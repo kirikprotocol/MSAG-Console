@@ -6,8 +6,10 @@
 package ru.novosoft.smsc.jsp.smsc.aliases;
 
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.jsp.util.tables.impl.AliasFilter;
+import ru.novosoft.smsc.admin.AdminException;
 
 import java.util.List;
 
@@ -56,8 +58,22 @@ public class AliasesFilter extends SmscBean
 
 		if (mbApply != null)
 		{
-			filter.setAddresses(addresses);
-			filter.setAliases(aliases);
+			try
+			{
+				filter.setAddresses(addresses);
+			}
+			catch (AdminException e)
+			{
+				return error(SMSCErrors.error.aliases.invalidAddress, e);
+			}
+			try
+			{
+				filter.setAliases(aliases);
+			}
+			catch (AdminException e)
+			{
+				return error(SMSCErrors.error.aliases.invalidAlias, e);
+			}
 			filter.setHide(hide);
 			return RESULT_DONE;
 		}

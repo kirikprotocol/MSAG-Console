@@ -31,12 +31,12 @@ for (int i=0; i<bean.getMasks().length; i++)
 %>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>&nbsp;</th>
-	<td><input class=txtW name=masks value="<%=bean.getMasks()[i]%>"></td>
+	<td><input class=txtW name=masks value="<%=bean.getMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%}%>
 <tr class=row<%=(row++)&1%>>
 	<th class=label><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to filter"></th>
-	<td><input class=txtW name=masks></td>
+	<td><input class=txtW name=masks validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <tr><td colspan=2 class=secInner><div class=secView>Options</div></td></tr>
@@ -61,7 +61,7 @@ for (int i=0; i<bean.getMasks().length; i++)
 <div class=secButtons>
 <input class=btn type=submit name=mbApply value="Apply" title="Apply filter">
 <input class=btn type=submit name=mbClear value="Clear" title="Clear filter">
-<input class=btn type=submit name=mbCancel value="Cancel">
+<input class=btn type=submit name=mbCancel value="Cancel" onClick="clickCancel()">
 </div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

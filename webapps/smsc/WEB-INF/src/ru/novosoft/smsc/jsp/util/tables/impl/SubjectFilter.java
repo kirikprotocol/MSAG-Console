@@ -6,6 +6,7 @@
 package ru.novosoft.smsc.jsp.util.tables.impl;
 
 import ru.novosoft.smsc.admin.route.MaskList;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
 
@@ -82,7 +83,7 @@ public class SubjectFilter implements Filter
 		return smes;
 	}
 
-	public void setMasks(String[] newMasks)
+	public void setMasks(String[] newMasks) throws AdminException
 	{
 		this.masks = new MaskList(newMasks);
 	}

@@ -87,6 +87,7 @@ public class SMSCErrors
 			public static final String cantEdit = B + "cantEdit";
 			public static final String subjNotSpecified = B + "subjNotSpecified";
 			public static final String masksNotDefined = B + "masksNotDefined";
+			public static final String incorrectMask = B + "incorrectMask";
 		}
 
 		public static class routes
@@ -99,6 +100,8 @@ public class SMSCErrors
 			public static final String invalidPriority = B + "invalidPriority";
 			public static final String sourcesIsEmpty = B + "sourcesIsEmpty";
 			public static final String destinationsIsEmpty = B + "destinationsIsEmpty";
+			public static final String invalidDestinationMask = B + "invalidDestinationMask";
+			public static final String invalidSourceMask = B + "invalidSourceMask";
 		}
 
 		public static class users
@@ -126,11 +129,12 @@ public class SMSCErrors
 			public static final String invalidIntParameter = B + "invalidIntParameter";
 			public static final String invalidBoolParameter = B + "invalidBoolParameter";
 		}
-        public static class commutators
-        {
-            private static final String B = error.B + "smsc.";
-            public static final String smscServerError = B + "smscServerError";
-        }
+
+		public static class commutators
+		{
+			private static final String B = error.B + "smsc.";
+			public static final String smscServerError = B + "smscServerError";
+		}
 	}
 
 	public static class warning

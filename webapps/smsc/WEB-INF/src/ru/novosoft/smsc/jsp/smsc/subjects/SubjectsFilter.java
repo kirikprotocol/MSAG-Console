@@ -6,8 +6,10 @@
 package ru.novosoft.smsc.jsp.smsc.subjects;
 
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.jsp.util.tables.impl.SubjectFilter;
+import ru.novosoft.smsc.admin.AdminException;
 
 import java.util.*;
 
@@ -66,7 +68,14 @@ public class SubjectsFilter extends SmscBean
 
 		if (mbApply != null)
 		{
-			filter.setMasks(masks);
+			try
+			{
+				filter.setMasks(masks);
+			}
+			catch (AdminException e)
+			{
+				return error(SMSCErrors.error.subjects.masksNotDefined, e);
+			}
 			filter.setNames(checkedSubjects);
 			filter.setSmes(checkedSmes);
 			return RESULT_DONE;

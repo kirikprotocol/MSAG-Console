@@ -6,8 +6,10 @@
 package ru.novosoft.smsc.jsp.smsc.routes;
 
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.jsp.util.tables.impl.RouteFilter;
+import ru.novosoft.smsc.admin.AdminException;
 
 import java.util.*;
 
@@ -79,15 +81,29 @@ public class RoutesFilter extends SmscBean
 
 		if (mbApply != null)
 		{
+			try
+			{
+				filter.setSourceMaskStrings(srcMasks);
+			}
+			catch (AdminException e)
+			{
+				return error(SMSCErrors.error.routes.invalidSourceMask, e);
+			}
+			try
+			{
+				filter.setDestinationMaskStrings(dstMasks);
+			}
+			catch (AdminException e)
+			{
+				return error(SMSCErrors.error.routes.invalidDestinationMask, e);
+			}
 			filter.setSourceSubjectNames(srcChks);
-			filter.setSourceMaskStrings(srcMasks);
-			filter.setDestinationSubjectNames(dstChks);
-			filter.setDestinationMaskStrings(dstMasks);
-			filter.setSmeIds(smeChks);
-			filter.setIntersection(strict);
-			appContext.getUserPreferences().setRouteShowSrc(showSrc);
-			appContext.getUserPreferences().setRouteShowDst(showDst);
-			return RESULT_DONE;
+				filter.setDestinationSubjectNames(dstChks);
+				filter.setSmeIds(smeChks);
+				filter.setIntersection(strict);
+				appContext.getUserPreferences().setRouteShowSrc(showSrc);
+				appContext.getUserPreferences().setRouteShowDst(showDst);
+				return RESULT_DONE;
 		}
 		else if (mbClear != null)
 		{
