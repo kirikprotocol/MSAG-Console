@@ -234,6 +234,7 @@ __synchronized__
     smeProxy->setPriority(records[index]->info.priority);
     records[index]->proxy = smeProxy;
     records[index]->uniqueId = nextProxyUniqueId();
+    __trace2__("registerSme: smeId=%s, uniqueId=%d",systemId.c_str(),records[index]->uniqueId);
   }
   dispatcher.attachSmeProxy(smeProxy,index);
 }
