@@ -5,6 +5,7 @@
 #include "util/smstext.h"
 #include "core/buffers/Array.hpp"
 #include "core/synchronization/EventMonitor.hpp"
+#include "util/timeslotcounter.hpp"
 
 using namespace smsc::sms;
 using namespace smsc::sme;
@@ -22,6 +23,8 @@ int stopped=0;
 int sokcnt=0;
 int serrcnt=0;
 int reccnt=0;
+
+TimeSlotCounter<> sok_time_cnt(30,100);
 
 class MyListener:public SmppPduEventListener{
 public:
@@ -44,6 +47,7 @@ public:
       if(pdu->get_commandStatus()==SmppStatusSet::ESME_ROK)
       {
         sokcnt++;
+        sok_time_cnt.Inc();
       }else
       {
         serrcnt++;
@@ -169,7 +173,11 @@ int main(int argc,char* argv[])
       time_t now=time(NULL);
       if((cnt%500)==0 || now-lasttime>5)
       {
-        printf("uptime:%d submit:%d submitok:%d submiterr:%d received:%d\n",now-starttime,cnt,sokcnt,serrcnt,reccnt);
+        printf("ut:%d sbm:%d sok:%d serr:%d recv:%d avgsp: %lf lstsp:%lf\n",
+          now-starttime,cnt,sokcnt,serrcnt,reccnt,
+          (double)sokcnt/(now-starttime),
+          (double)sok_time_cnt.Get()/30.0
+          );
         fflush(stdout);
         lasttime=time(NULL);
       }

@@ -35,12 +35,14 @@ public:
     time_t protectTimeFrame;
     time_t shapeTimeFrame;
     time_t lookAheadTime;
+    time_t smoothTimeFrame;
     Smsc *smsc;
     smsc::store::MessageStore *store;
   };
   TrafficControl(const TrafficControlConfig& cfg):
     cfg(cfg),
-    totalCounter(cfg.shapeTimeFrame,10)
+    totalCounter(cfg.shapeTimeFrame,10),
+    totalCounterLong(cfg.smoothTimeFrame,10)
   {
     log=&smsc::util::Logger::getCategory("smsc.tc");
   }
@@ -57,10 +59,37 @@ public:
     return ptr;
   }
 
+  int getTotalCount()
+  {
+    MutexGuard g(mtx);
+    return totalCounter.Get();
+  }
+
+  int getTotalCountLong()
+  {
+    MutexGuard g(mtx);
+    return totalCounterLong.Get();
+  }
+
+  void incTotalCount(int v)
+  {
+    MutexGuard g(mtx);
+    totalCounter.Inc(v);
+    totalCounterLong.IncDistr(v*1000,1000*cfg.maxSmsPerSecond/100);
+  }
+
+
+
+  TrafficControlConfig& getConfig()
+  {
+    return cfg;
+  }
+
 protected:
   TrafficControlConfig cfg;
   IntHash<IntTimeSlotCounter*> deliverCnt,responseCnt;
   IntTimeSlotCounter totalCounter;
+  IntTimeSlotCounter totalCounterLong;
   Mutex mtx;
   log4cpp::Category* log;
   friend class StatusSme;

@@ -37,7 +37,7 @@ void Scheduler::Init(MessageStore* st,Smsc* psmsc)
 
 int Scheduler::Execute()
 {
-  time_t t,r;
+/*  time_t t,r;
   Event e;
   Array<Data> ids;
   while(!isStopping)
@@ -92,6 +92,25 @@ int Scheduler::Execute()
       else
         if(r>t)mon.wait((r-t)*1000);
     }
+  }
+  return 0;
+  */
+  time_t r,t;
+  while(!isStopping)
+  {
+    t=time(NULL);
+    r=0;
+    MutexGuard guard(mon);
+    TimeLineMap::iterator it=timeLine.upper_bound(lastCheck);
+    if(it!=timeLine.end())
+    {
+      r=it->first;
+      lastCheck=r+1;
+    }
+    if(r==0)
+      mon.wait();
+    else
+      if(r>t)mon.wait((r-t)*1000);
   }
   return 0;
 }

@@ -333,10 +333,16 @@ void Smsc::init(const SmscConfigs& cfg)
   // create scheduler here, and start later in run
   scheduler=new Scheduler(eventqueue);
 
+
   smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance(),0);
   store=smsc::store::StoreManager::getMessageStore();
   log.info( "Initializing scheduler" );
   scheduler->Init(store,this);
+
+  smeman.registerInternallSmeProxy("scheduler",scheduler);
+
+  //tp.startTask(scheduler);
+
   log.info( "Scheduler initialized" );
   log.info( "Initializing MR cache" );
   mrCache.assignStore(store);
@@ -573,6 +579,8 @@ void Smsc::init(const SmscConfigs& cfg)
     tccfg.allowedDeliveryFailures=cfg.cfgman->getInt("trafficControl.allowedDeliveryFailures");
     tccfg.lookAheadTime=cfg.cfgman->getInt("trafficControl.lookAheadTime");
 
+    tccfg.smoothTimeFrame=5;
+
     tcontrol=new TrafficControl(tccfg);
   }
 
@@ -687,6 +695,7 @@ void Smsc::shutdown()
   __trace__("shutting down");
 
   smeman.unregisterSmeProxy("DSTRLST");
+  smeman.unregisterSmeProxy("scheduler");
 
   tp.shutdown();
   tp2.shutdown();

@@ -312,8 +312,6 @@ int SmppInputThread::Execute()
                 err=true;
               }
 
-              if(!proxy)proxy=new SmppProxy(ss);
-
               SmeIndex proxyIndex;
               PduBindTRXResp resppdu;
 
@@ -329,6 +327,10 @@ int SmppInputThread::Execute()
               if(!err)
               {
                 si=smeManager->getSmeInfo(proxyIndex);
+                int prio=si.priority/1024;
+                if(prio<0)prio=0;
+                if(prio>=32)prio=31;
+                if(!proxy)proxy=new SmppProxy(ss,totalLimit,prio);
                 switch(pdu->get_commandId())
                 {
                   case SmppCommandSet::BIND_RECIEVER:
@@ -523,7 +525,7 @@ int SmppInputThread::Execute()
                     break;
                   }
                 }
-                if(!rebindproxy)delete proxy;
+                if(!rebindproxy && proxy)delete proxy;
               }else
               {
                 ss->assignProxy(proxy);
@@ -594,7 +596,7 @@ int SmppInputThread::Execute()
                 }
               }catch(...)
               {
-                __trace__("SmppInput: exception in putIncomingCommand, proxy limit or proxy died");
+                __trace__("SmppInput: exception in putCommand, proxy limit or proxy died");
               }
             }break;
             case SmppCommandSet::SUBMIT_SM:
@@ -624,9 +626,71 @@ int SmppInputThread::Execute()
                     {
                       SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVBNDSTS);
                     }
+                  }catch(ProxyQueueLimitException& e)
+                  {
+                    __warning__("SmppInput: exception in putIncomingCommand, proxy limit or proxy died");
+                    SmscCommand answer;
+                    bool haveAnswer=true;
+                    switch(cmd->get_commandId())
+                    {
+                      case SUBMIT:
+                      {
+                        answer=SmscCommand::makeSubmitSmResp
+                               (
+                                 "",
+                                 cmd->get_dialogId(),
+                                 Status::MSGQFUL,
+                                 cmd->get_sms()->getIntProperty(Tag::SMPP_DATA_SM)
+                               );
+                      }break;
+                      case QUERY:
+                      {
+                        answer=SmscCommand::makeQuerySmResp
+                               (
+                                 cmd->get_dialogId(),
+                                 Status::MSGQFUL,
+                                 0,0,0,0
+                               );
+                      }break;
+                      case REPLACE:
+                      {
+                        answer=SmscCommand::makeReplaceSmResp
+                               (
+                                 cmd->get_dialogId(),
+                                 Status::MSGQFUL
+                               );
+                      }break;
+                      case CANCEL:
+                      {
+                        answer=SmscCommand::makeCancelSmResp
+                               (
+                                 cmd->get_dialogId(),
+                                 Status::MSGQFUL
+                               );
+                      }break;
+                      case SUBMIT_MULTI_SM:
+                      {
+                        answer=SmscCommand::makeSubmitMultiResp
+                               (
+                                 "",
+                                 cmd->get_dialogId(),
+                                 Status::MSGQFUL
+                               );
+                      }break;
+                      default:haveAnswer=false;break;
+                    }
+                    if(haveAnswer)
+                    {
+                      try{
+                        ss->getProxy()->putCommand(answer);
+                      }catch(...)
+                      {
+                        __warning__("SmppInput: failed to put error answer into proxy");
+                      }
+                    }
                   }catch(...)
                   {
-                    __trace__("SmppInput: exception in putIncomingCommand, proxy limit or proxy died");
+                    __warning__("SmppInput: exception in putIncomingCommand, proxy died?");
                   }
                   break;
                 }catch(...)

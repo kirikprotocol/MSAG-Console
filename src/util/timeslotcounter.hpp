@@ -1,7 +1,9 @@
 #ifndef __SMSC_UTIL_TIMESLOTCOUNTER_HPP__
 #define __SMSC_UTIL_TIMESLOTCOUNTER_HPP__
 
+#include <stdlib.h>
 #include <sys/time.h>
+#include <algorithm>
 
 namespace smsc{
 namespace util{
@@ -40,8 +42,8 @@ public:
     {
       first=0;
       last=0;
-      slot[0]=inc_v;
-      count=inc_v;
+      slot[0]=inc;
+      count=inc;
     }else
     {
       while(diff--)
@@ -56,41 +58,36 @@ public:
         }
         slot[last]=init_v;
       }
-      count+=inc_v;
-      slot[last]+=inc_v;
+      count+=inc;
+      slot[last]+=inc;
     }
+  }
+
+  void IncDistr(T inc,T maxperslot)
+  {
+    Inc(0);
+    int l=last;
+    count+=inc;
+    while(inc>0)
+    {
+      using namespace std;
+      T v=min(maxperslot-slot[l],inc);
+      if(v>0)
+      {
+        slot[l]+=v;
+        inc-=v;
+      }
+      l--;
+      if(l<0)l=slotSize-1;
+      if(l==first)break;
+    }
+    //count-=inc;
+    slot[last]+=inc;
   }
 
   T Get()
   {
-    hrtime_t now=gethrtime();
-    int diff=(now-lastTime)/1000000/slotRes;
-    if(diff==0)
-    {
-      return count;
-    }
-    lastTime=now;
-    if(diff>slotSize)
-    {
-      first=0;
-      last=0;
-      slot[0]=init_v;
-      count=init_v;
-    }else
-    {
-      while(diff--)
-      {
-        last++;
-        if(last>=slotSize)last=0;
-        if(first==last)
-        {
-          count-=slot[first];
-          first++;
-          if(first>=slotSize)first=0;
-        }
-        slot[last]=init_v;
-      }
-    }
+    Inc(0);
     return count;
   }
 
@@ -101,6 +98,8 @@ protected:
   int slotRes; // slot resolution
   hrtime_t lastTime;
 
+  TimeSlotCounter();
+  TimeSlotCounter(const TimeSlotCounter&);
 };
 
 };//util

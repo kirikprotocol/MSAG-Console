@@ -298,16 +298,19 @@ SmeProxy* SmeManager::selectSmeProxy(unsigned long timeout,int* idx)
 // SmeDispatcher implementation
 void SmeManager::getFrame(vector<SmscCommand>& frames, unsigned long timeout)
 {
-  frames.clear();
-  for ( Records::const_iterator p = records.begin(); p != records.end(); ++p ) {
-    if ( (*p) ) {
-      if ( (*p)->deleted ) continue;
-      if ( (*p)->hasInput() ) {
-        try {
-          frames.push_back((*p)->getCommand());
-          frames.back().setProxy((*p));
-        }catch(exception& e) {
-          __warning2__("exception %s when getting command",e.what());
+  {
+    __synchronized__
+    frames.clear();
+    for ( Records::const_iterator p = records.begin(); p != records.end(); ++p ) {
+      if ( (*p) ) {
+        if ( (*p)->deleted || (*p)->proxy==NULL) continue;
+        if ( (*p)->proxy->hasInput() ) {
+          try {
+            frames.push_back((*p)->proxy->getCommand());
+            frames.back().setProxy((*p));
+          }catch(exception& e) {
+            __warning2__("exception %s when getting command",e.what());
+          }
         }
       }
     }

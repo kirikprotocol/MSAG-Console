@@ -7,6 +7,7 @@
 #include "core/threads/ThreadPool.hpp"
 #include "smeman/smeman.h"
 #include "core/network/Multiplexer.hpp"
+#include "util/config/Manager.h"
 
 namespace smsc{
 namespace system{
@@ -53,7 +54,10 @@ protected:
 class SmppInputThread:public SmppIOTask{
 public:
   SmppInputThread(smsc::smeman::SmeManager* manager):
-    smeManager(manager){}
+    smeManager(manager)
+  {
+    totalLimit=smsc::util::config::Manager::getInstance().getInt("trafficControl.maxSmsPerSecond");
+  }
   virtual ~SmppInputThread();
   virtual void addSocket(Socket* sock,int to);
   virtual void removeSocket(Socket *sock);
@@ -65,6 +69,7 @@ protected:
   smsc::smeman::SmeManager* smeManager;
   EventMonitor *outthreadmon;
   SmppIOTask *outTask;
+  int totalLimit;
 };
 
 class SmppOutputThread:public SmppIOTask{

@@ -4,6 +4,7 @@
 
 #include "smsc.hpp"
 #include <memory>
+#include <vector>
 
 #include <exception>
 
@@ -138,17 +139,17 @@ void Smsc::mainLoop()
 
 void Smsc::mainLoop()
 {
-  SmeProxy* src_proxy;
-  int src_proxy_index;
-
+  typedef std::vector<SmscCommand> CmdVector;
+  CmdVector frame;
+  SmeIndex smscSmeIdx=smeman.lookup("smscsme");
+  Event e;
+  log4cpp::Category* log=log=&smsc::util::Logger::getCategory("smsc.mainLoop");
+  thr_setprio(thr_self(),127);
   for(;;)
   {
-
-    try{
     do
     {
-      // !!!TODO: taskcontainer expiration checks
-      src_proxy = smeman.selectSmeProxy(WAIT_DATA_TIMEOUT,&src_proxy_index);
+      smeman.getFrame(frame,WAIT_DATA_TIMEOUT);
       if ( stopFlag ) return;
       Task task;
       while ( tasks.getExpired(&task) )
@@ -156,183 +157,281 @@ void Smsc::mainLoop()
         SMSId id = task.messageId;
         __trace2__("enqueue timeout Alert: dialogId=%d, proxyUniqueId=%d",
           task.sequenceNumber,task.proxy_id);
-
         eventqueue.enqueue(id,SmscCommand::makeAlert());
       }
-    }
-    while(!src_proxy);
-    }catch(...)
-    {
-      __trace__("shit happened");
-      abort();
-    }
+    }while(!frame.size());
 
-    try{
 
-    SmscCommand cmd;
+    ////
+    //
+    // here will be event queue limit check!
+    //
 
-    SMSId id=0;
-    try{
-      cmd = src_proxy->getCommand();
-      cmd.setProxy(src_proxy);
-      //__trace2__("mainLoop: prio=%d",src_proxy->getPriority());
-      //__require__(src_proxy->getPriority()>0);
-      int prio=src_proxy->getPriority()/1024;
-      if(prio<0)prio=0;
-      if(prio>=32)prio=31;
-      cmd->set_priority(prio);
-      cmd->sourceId=src_proxy->getSystemId();
-    }catch(exception& e)
+    //
+    //
+    //
+    //////
+
+
+    int submitCount=0;
+    for(CmdVector::iterator i=frame.begin();i!=frame.end();i++)
     {
-      __trace2__("Source proxy died after selection: %s",e.what());
-      continue;
-    }catch(...)
-    {
-      __trace2__("Source proxy died after selection");
-      continue;
-    }
-    switch(cmd->get_commandId())
-    {
-      case __CMD__(SUBMIT):
+      try{
+        int prio=i->getProxy()->getPriority()/1024;
+        if(prio<0)prio=0;
+        if(prio>=32)prio=31;
+        (*i)->set_priority(prio);
+        (*i)->sourceId=i->getProxy()->getSystemId();
+      }catch(exception& e)
       {
-        id=store->getNextId();
-        __trace2__("main loop submit: seq=%d, id=%lld",cmd->get_dialogId(),id);
-        break;
+        __trace2__("Source proxy died after selection: %s",e.what());
+        CmdVector::difference_type pos=std::distance(frame.begin(),i);
+        frame.erase(i);
+        i=frame.begin()+pos;
+        i--;
+        continue;
+      }catch(...)
+      {
+        __trace2__("Source proxy died after selection");
+        CmdVector::difference_type pos=std::distance(frame.begin(),i);
+        frame.erase(i);
+        i=frame.begin()+pos;
+        i--;
+        continue;
       }
-      case __CMD__(DELIVERY_RESP):
+      if((*i)->get_commandId()==SUBMIT || (*i)->get_commandId()==FORWARD)
       {
-        Task task;
-        uint32_t dialogId = cmd->get_dialogId();
-        __trace2__("delivery response received. id=%d",dialogId);
-
-        if (!tasks.findAndRemoveTask(src_proxy->getUniqueId(),dialogId,&task))
+        if(i->getProxy()->getSmeIndex()==smscSmeIdx)
         {
-          __warning2__("task not found for delivery response. Sid=%s, did=%d",src_proxy->getSystemId(),dialogId);
-          continue; //jump to begin of for
+          try{
+            processCommand((*i));
+          }catch(...)
+          {
+            __warning2__("command processing failed:%d",(*i)->get_commandId());
+          }
+        }else
+        {
+          submitCount++;
         }
-        id=task.messageId;
-        break;
-      }
-      case __CMD__(REPLACE):
+      }else
       {
-        int pos;
-        if(sscanf(cmd->get_replaceSm().messageId.get(),"%lld%n",&id,&pos)!=1 ||
-           cmd->get_replaceSm().messageId.get()[pos]!=0)
+        try{
+          processCommand((*i));
+        }catch(...)
         {
-          src_proxy->putCommand
+          __warning2__("command processing failed:%d",(*i)->get_commandId());
+        }
+      }
+    }
+
+    if(submitCount==0)
+    {
+      continue; //start cycle from start
+    }
+
+    int stf=tcontrol->getConfig().shapeTimeFrame;
+    int smt=tcontrol->getConfig().smoothTimeFrame;
+    int maxsms=tcontrol->getConfig().maxSmsPerSecond;
+
+    // main "delay" cycle
+
+    while(frame.size())
+    {
+      int cntInstant=tcontrol->getTotalCount();
+      int cntSmooth=tcontrol->getTotalCountLong();
+      if(cntInstant+1>maxsms && cntSmooth+1000<=maxsms*smt*1000)
+      {
+        __info2__(log,"cnt=%d, smooth_cnt=%d, submitCnt=%d",cntInstant,cntSmooth,submitCount);
+      }
+      if(cntInstant+1<=maxsms*stf || cntSmooth+1000<=maxsms*smt*1000)
+      {
+        SmscCommand cmd=frame.back();
+        frame.pop_back();
+        if(cmd->get_commandId()==SUBMIT || cmd->get_commandId()==FORWARD)
+        {
+          if(cmd.getProxy()->getSmeIndex()!=smscSmeIdx)
+          {
+            try{
+              processCommand(cmd);
+              tcontrol->incTotalCount(1);
+            }catch(...)
+            {
+              __warning2__("command processing failed:%d",cmd->get_commandId());
+            }
+          }
+        }
+        continue;
+      }
+      __warning2__("count=%d, smooth_cnt=%d",cntInstant,cntSmooth);
+      timestruc_t tv={0,1000000};
+      nanosleep(&tv,0);
+    }
+
+
+    /*
+    for(CmdVector::iterator i=frame.begin();i!=frame.end();i++)
+    {
+      if((*i)->get_commandId()==SUBMIT || (*i)->get_commandId()==FORWARD)
+      {
+        if(i->getProxy()->getSmeIndex()!=smscSmeIdx)
+        {
+          try{
+            processCommand((*i));
+          }catch(...)
+          {
+            __warning2__("command processing failed:%d",(*i)->get_commandId());
+          }
+        }
+      }
+    }
+    */
+  } // end of main loop
+}
+
+void Smsc::processCommand(SmscCommand& cmd)
+{
+  SMSId id=0;
+  switch(cmd->get_commandId())
+  {
+    case __CMD__(SUBMIT):
+    {
+      id=store->getNextId();
+      __trace2__("main loop submit: seq=%d, id=%lld",cmd->get_dialogId(),id);
+      break;
+    }
+    case __CMD__(DELIVERY_RESP):
+    {
+      Task task;
+      uint32_t dialogId = cmd->get_dialogId();
+      __trace2__("delivery response received. id=%d",dialogId);
+
+      if (!tasks.findAndRemoveTask(cmd.getProxy()->getUniqueId(),dialogId,&task))
+      {
+        __warning2__("task not found for delivery response. Sid=%s, did=%d",cmd.getProxy()->getSystemId(),dialogId);
+        return; //jump to begin of for
+      }
+      id=task.messageId;
+      break;
+    }
+    case __CMD__(REPLACE):
+    {
+      int pos;
+      if(sscanf(cmd->get_replaceSm().messageId.get(),"%lld%n",&id,&pos)!=1 ||
+         cmd->get_replaceSm().messageId.get()[pos]!=0)
+      {
+        cmd.getProxy()->putCommand
+        (
+          SmscCommand::makeReplaceSmResp
           (
-            SmscCommand::makeReplaceSmResp
+            cmd->get_dialogId(),
+            Status::INVMSGID
+          )
+        );
+        return;
+      };
+      break;
+    }
+    case __CMD__(QUERY):
+    {
+      int pos;
+      if(sscanf(cmd->get_querySm().messageId.get(),"%lld%n",&id,&pos)!=1 ||
+         cmd->get_querySm().messageId.get()[pos]!=0)
+      {
+        cmd.getProxy()->putCommand
+        (
+          SmscCommand::makeQuerySmResp
+          (
+            cmd->get_dialogId(),
+            Status::INVMSGID,
+            0,0,0,0
+          )
+        );
+        return;
+      };
+      break;
+    }
+    case __CMD__(CANCEL):
+    {
+      if((cmd->get_cancelSm().messageId.get() && cmd->get_cancelSm().serviceType.get()))
+      {
+          cmd.getProxy()->putCommand
+          (
+            SmscCommand::makeCancelSmResp
+            (
+              cmd->get_dialogId(),
+              Status::CANCELFAIL
+            )
+          );
+          return;
+      }
+
+      if(cmd->get_cancelSm().messageId.get())
+      {
+        int pos=0;
+        if(sscanf(cmd->get_cancelSm().messageId.get(),"%lld%n",&id,&pos)!=1 ||
+           cmd->get_cancelSm().messageId.get()[pos]!=0)
+        {
+          cmd.getProxy()->putCommand
+          (
+            SmscCommand::makeCancelSmResp
             (
               cmd->get_dialogId(),
               Status::INVMSGID
             )
           );
-          continue;
+          return;
         };
-        break;
-      }
-      case __CMD__(QUERY):
+      }else
       {
-        int pos;
-        if(sscanf(cmd->get_querySm().messageId.get(),"%lld%n",&id,&pos)!=1 ||
-           cmd->get_querySm().messageId.get()[pos]!=0)
+        if(!cmd->get_cancelSm().sourceAddr.get() || !cmd->get_cancelSm().sourceAddr.get()[0] ||
+           !cmd->get_cancelSm().destAddr.get() || !cmd->get_cancelSm().destAddr.get()[0])
         {
-          src_proxy->putCommand
+          cmd.getProxy()->putCommand
           (
-            SmscCommand::makeQuerySmResp
+            SmscCommand::makeCancelSmResp
             (
               cmd->get_dialogId(),
-              Status::INVMSGID,
-              0,0,0,0
+              Status::CANCELFAIL
             )
           );
-          continue;
-        };
-        break;
-      }
-      case __CMD__(CANCEL):
-      {
-        if((cmd->get_cancelSm().messageId.get() && cmd->get_cancelSm().serviceType.get()))
-        {
-            src_proxy->putCommand
-            (
-              SmscCommand::makeCancelSmResp
-              (
-                cmd->get_dialogId(),
-                Status::CANCELFAIL
-              )
-            );
-            continue;
+          return;
         }
-
-        if(cmd->get_cancelSm().messageId.get())
-        {
-          int pos=0;
-          if(sscanf(cmd->get_cancelSm().messageId.get(),"%lld%n",&id,&pos)!=1 ||
-             cmd->get_cancelSm().messageId.get()[pos]!=0)
-          {
-            src_proxy->putCommand
-            (
-              SmscCommand::makeCancelSmResp
-              (
-                cmd->get_dialogId(),
-                Status::INVMSGID
-              )
-            );
-            continue;
-          };
-        }else
-        {
-          if(!cmd->get_cancelSm().sourceAddr.get() || !cmd->get_cancelSm().sourceAddr.get()[0] ||
-             !cmd->get_cancelSm().destAddr.get() || !cmd->get_cancelSm().destAddr.get()[0])
-          {
-            src_proxy->putCommand
-            (
-              SmscCommand::makeCancelSmResp
-              (
-                cmd->get_dialogId(),
-                Status::CANCELFAIL
-              )
-            );
-            continue;
-          }
-          cancelAgent->putCommand(cmd);
-          continue;
-        }
-        break;
+        cancelAgent->putCommand(cmd);
+        return;
       }
-      case __CMD__(HLRALERT):
-      {
-        alertAgent->putCommand(cmd);
-        continue;
-      }
-      case __CMD__(QUERYABONENTSTATUS):
-      {
-        cmd->set_dialogId(mapProxy->getNextSequenceNumber());
-        mapProxy->putCommand(cmd);
-        continue;
-      }
-      case __CMD__(QUERYABONENTSTATUS_RESP):
-      {
-        abonentInfoProxy->putCommand(cmd);
-        continue;
-      }
-      case __CMD__(SUBMIT_MULTI_SM):
-      {
-        distlstsme->putCommand(cmd);
-        continue;
-      }
-      default:;
+      break;
     }
-    __require__(cmd.getProxy()==src_proxy);
-    eventqueue.enqueue(id,cmd);
-    }catch(...)
+    case __CMD__(HLRALERT):
     {
-      __trace__("another shit happened");
-      abort();
+      alertAgent->putCommand(cmd);
+      return;
     }
+    case __CMD__(QUERYABONENTSTATUS):
+    {
+      cmd->set_dialogId(mapProxy->getNextSequenceNumber());
+      mapProxy->putCommand(cmd);
+      return;
+    }
+    case __CMD__(QUERYABONENTSTATUS_RESP):
+    {
+      abonentInfoProxy->putCommand(cmd);
+      return;
+    }
+    case __CMD__(SUBMIT_MULTI_SM):
+    {
+      distlstsme->putCommand(cmd);
+      return;
+    }
+    case __CMD__(FORWARD):
+    {
+      id=cmd->get_forwardMsgId();
+      break;
+    }
+    default:;
   }
+  eventqueue.enqueue(id,cmd);
 }
+
 
 };
 };

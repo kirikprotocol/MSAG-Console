@@ -359,6 +359,7 @@ public:
     return tcontrol->processCommand(cmd);
   }
 
+  void processCommand(SmscCommand& cmd);
 
 protected:
   smsc::system::smppio::SmppSocketsManager ssockman;

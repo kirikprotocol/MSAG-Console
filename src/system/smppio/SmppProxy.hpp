@@ -15,8 +15,6 @@ namespace smsc{
 namespace system{
 namespace smppio{
 
-#define SMPP_PROXY_QUEUE_LIMIT 4096
-
 using namespace smsc::smeman;
 using namespace smsc::core::synchronization;
 using smsc::util::Exception;
@@ -28,7 +26,7 @@ const int proxyTransceiver=smeTRX;
 
 class SmppProxy:public SmeProxy{
 public:
-  SmppProxy(SmppSocket* sock):smppReceiverSocket(sock),smppTransmitterSocket(sock)
+  SmppProxy(SmppSocket* sock,int limit,int prio):smppReceiverSocket(sock),smppTransmitterSocket(sock)
   {
     smppReceiverSocket->assignProxy(this);
     seq=1;
@@ -36,6 +34,9 @@ public:
     managerMonitor=NULL;
     proxyType=proxyTransceiver;
     opened=true;
+    totalLimit=limit;
+    submitLimit=limit*(5+20*(prio-1)/31)/100;
+    submitCount=0;
   }
   virtual ~SmppProxy(){}
   virtual void close()
@@ -72,7 +73,7 @@ public:
     {
       MutexGuard g(mutexout);
       if(!opened)return;
-      if(cmd->get_commandId()!=SUBMIT_RESP && outqueue.Count()>=SMPP_PROXY_QUEUE_LIMIT)
+      if(cmd->get_commandId()!=SUBMIT_RESP && outqueue.Count()>=totalLimit)
       {
         throw ProxyQueueLimitException();
       }
@@ -89,6 +90,7 @@ public:
     SmscCommand cmd;
     inqueue.Shift(cmd);
     trace2("get command:%p",*((void**)&cmd));
+    if(cmd->get_commandId()==SUBMIT)submitCount--;
     return cmd;
   }
 
@@ -165,7 +167,16 @@ public:
       {
         return;
       }
-      if(inqueue.Count()>=SMPP_PROXY_QUEUE_LIMIT)
+      if(cmd->get_commandId()==SUBMIT)
+      {
+        if(submitCount>submitLimit)
+        {
+          throw ProxyQueueLimitException();
+        }
+        submitCount++;
+      }
+      else
+      if(inqueue.Count()>=totalLimit)
       {
         throw ProxyQueueLimitException();
       }
@@ -345,6 +356,9 @@ protected:
   SmppSocket *smppReceiverSocket;
   SmppSocket *smppTransmitterSocket;
   int refcnt;
+  int totalLimit;
+  int submitLimit;
+  int submitCount;
 };
 
 bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)

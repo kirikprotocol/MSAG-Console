@@ -12,6 +12,7 @@ using namespace smsc::profiler;
 bool TrafficControl::processCommand(SmscCommand& cmd)
 {
   MutexGuard g(mtx);
+  bool rv=false;
   switch(cmd->get_commandId())
   {
     case SUBMIT:
@@ -20,6 +21,7 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
       bool isReceipt=cmd->get_commandId()!=FORWARD &&
                      cmd->get_sms()->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID);
 
+      /*
       if(!isReceipt)
       {
         double tcnt=totalCounter.Get()+1;
@@ -30,6 +32,7 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
           return false;
         }
       }
+      */
 
       Address dst;
       SMS *sms;
@@ -45,7 +48,7 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
         }catch(...)
         {
           __warn2__(log,"TC: failed to retrieve sms with id=%lld",cmd->get_forwardMsgId());
-          return false;
+          break;
         }
         sms=&_sms;
       }
@@ -79,7 +82,7 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
         if(deliveryCount-responseCount>cfg.protectThreshold)
         {
           __info2__(log,"TC: deny - protect threshold limit for %s: %d-%d",dest_proxy->getSystemId(),deliveryCount,responseCount);
-          return false;
+          break;
         }
 
         if(cmd->get_commandId()==SUBMIT)
@@ -92,7 +95,7 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
              speed<scount)
           {
             __info2__(log,"TC: deny - protect schedule limit for %s: %lf - %d",dest_proxy->getSystemId(),speed,scount);
-            return false;
+            break;
           }
         }
 
@@ -116,7 +119,7 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
             {
               __info2__(log,"TC: deny - receipt protect threshold limit for %s: %d-%d",
                 src_proxy->getSystemId(),deliveryCount,responseCount);
-              return false;
+              break;
             }
 
             int scount=cfg.smsc->GetSmeScheduleCount(idx,lookAhead);
@@ -126,7 +129,7 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
                speed<scount)
             {
               __info2__(log,"TC: deny - protect schedule limit for %s: %lf - %d",src_proxy->getSystemId(),speed,scount);
-              return false;
+              break;
             }
 
             dsrccnt->Inc();
@@ -141,10 +144,10 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
         }
       }
 
-      totalCounter.Inc();
-      __debug2__(log,"TC: inc total count(%d)",totalCounter.Get());
+      //totalCounter.Inc();
+      //__debug2__(log,"TC: inc total count(%d)",totalCounter.Get());
 
-      return true;
+      rv=true;
 
     }break;
     case DELIVERY_RESP:
@@ -154,11 +157,15 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
       {
         __debug2__(log,"TC: delresp for %s",cmd.getProxy()->getSystemId());
         getTSC(responseCnt,cmd.getProxy()->getSmeIndex())->Inc();
-      }
+      } // there is no break. там и задумано
     default:
       return true;
   }
-  return false;
+  if(!rv)
+  {
+    totalCounter.Inc(-1);
+  }
+  return rv;
 }
 
 

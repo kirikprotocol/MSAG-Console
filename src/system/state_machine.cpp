@@ -1352,14 +1352,14 @@ StateType StateMachine::submit(Tuple& t)
       sms->setDestinationAddress(dstOriginal);
       sms->lastResult=Status::INVBNDSTS;
       sendNotifyReport(*sms,t.msgId,"service rejected");
-      __trace__("SUBMIT: Attempt to putCommand for sme in invalid bind state");
+      __warning__("SUBMIT: Attempt to putCommand for sme in invalid bind state");
       try{
         Descriptor d;
         changeSmsStateToEnroute(*sms,t.msgId,d,Status::INVBNDSTS,rescheduleSms(*sms));
         smsc->notifyScheduler();
       }catch(...)
       {
-        __trace__("SUBMIT: failed to change state to enroute");
+        __warning__("SUBMIT: failed to change state to enroute");
       }
       return DELIVERING_STATE;
     }
@@ -1376,12 +1376,12 @@ StateType StateMachine::submit(Tuple& t)
       smsc->notifyScheduler();
     }catch(...)
     {
-      __trace__("SUBMIT: failed to change state to enroute");
+      __warning__("SUBMIT: failed to change state to enroute");
     }
     return DELIVERING_STATE;
   }catch(...)
   {
-    __trace__("SUBMIT: failed to put delivery command");
+    __warning__("SUBMIT: failed to put delivery command");
     sms->setOriginatingAddress(srcOriginal);
     sms->setDestinationAddress(dstOriginal);
     sms->lastResult=Status::THROTTLED;
@@ -1392,7 +1392,7 @@ StateType StateMachine::submit(Tuple& t)
       smsc->notifyScheduler();
     }catch(...)
     {
-      __trace__("SUBMIT: failed to change state to enroute");
+      __warning__("SUBMIT: failed to change state to enroute");
     }
     return DELIVERING_STATE;
   }

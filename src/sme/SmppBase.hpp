@@ -232,6 +232,7 @@ public:
   }
   void Stop()
   {
+    MutexGuard lock(mon);
     stopped=true;
     mon.notify();
   }

@@ -129,11 +129,7 @@ static inline void warning2(const char* fmt,...)
 #define warning_if(expr) __warning2__(#expr)
 //  {if (expr) smsc::util::warningImpl("Warning !!! "#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__);}
 
-#if defined ENABLE_FILE_NAME
 #define __warning2__(text,arg...) if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN)) smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,text,##arg)
-#else
-#define __warning2__(text,arg...) if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN)) smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,text,##arg)
-#endif
 
 #define __log2__(category,priority,text,arg...) if(category->isPriorityEnabled(priority)) category->_log(priority,text,##arg)
 
@@ -525,14 +521,7 @@ namespace util{
   inline void warningImpl(const char* e, const char* file, const char* func, int line)
   {
       if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
-         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
-         "*WARNING* [%d %d]: %s\n\t%s(%s):%d\n",thr_self(),time(NULL),e,
-            #if defined ENABLE_FILE_NAME
-              file,
-            #else
-              "",
-            #endif
-            func,line);
+         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,"*WARNING*: %s",e);
   }
 
   inline bool watchdogImpl(bool expr, const char* info, const char* e,
