@@ -37,7 +37,7 @@ void Smsc::mainLoop()
     {
     case __CMD__(SUBMIT):
       {
-				__trace__("mainLoop:SUBMIT");
+        __trace__("mainLoop:SUBMIT");
         SMS* sms = cmd->get_sms();
         uint32_t dialogId =  cmd->get_dialogId();
         // route sms
@@ -50,6 +50,7 @@ void Smsc::mainLoop()
           if ( proxy != src_proxy )
           {
             dest_proxy = proxy;
+						dest_proxy_index = it->getSmeIndex();
             break;
           }
         }
@@ -70,7 +71,7 @@ void Smsc::mainLoop()
         {
           SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::ERROR);
           src_proxy->putCommand(resp);
-          __warning__("SUBMIT_SM: no route");
+          __warning__("SUBMIT_SM: can't create task");
           break;
         }
         // send delivery
@@ -79,12 +80,12 @@ void Smsc::mainLoop()
         // send responce
         SmscCommand resp2 = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::OK);
         src_proxy->putCommand(resp2);
-				__trace__("mainLoop:SUBMIT:OK");
+        __trace__("mainLoop:SUBMIT:OK");
         break;
       }
     case __CMD__(DELIVERY_RESP):
       {
-				__trace__("mainLoop:DELIVERY_RESP");
+        __trace__("mainLoop:DELIVERY_RESP");
         uint32_t status = cmd->get_resp()->get_status();
         uint32_t dialogId = cmd->get_dialogId();
         const char* messageId = cmd->get_resp()->get_messageId();
@@ -97,7 +98,7 @@ void Smsc::mainLoop()
         }
         // update sms state
         //......
-				__trace__("mainLoop:DELIVERY_RESP:OK");
+        __trace__("mainLoop:DELIVERY_RESP:OK");
         break;
       }
     default:

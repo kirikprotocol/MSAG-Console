@@ -69,6 +69,7 @@ public:
     task->next = hash[hashcode];
     hash[hashcode] = task;
     task->timeout = time(NULL)+8;
+		return true;
   }
   
   void checkTimeout()
