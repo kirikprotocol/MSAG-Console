@@ -182,13 +182,10 @@ void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 		switch (pdu.get_message().get_esmClass() & ESM_CLASS_MESSAGE_TYPE_BITS)
 		{
 			case ESM_CLASS_NORMAL_MESSAGE:
-				processNormalSms(pdu, recvTime);
+				processNormalSms(pdu, recvTime); //включает в себя processSmeAcknowledgement()
 				break;
 			case ESM_CLASS_DELIVERY_RECEIPT:
 				processDeliveryReceipt(pdu, recvTime);
-				break;
-			case ESM_CLASS_SME_ACKNOWLEDGEMENT:
-				processSmeAcknowledgement(pdu, recvTime);
 				break;
 			case ESM_CLASS_INTERMEDIATE_NOTIFICATION:
 				processIntermediateNotification(pdu, recvTime);
@@ -382,6 +379,12 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 		Address origAlias;
 		SmppUtil::convert(pdu.get_message().get_source(), &origAlias);
 		Address origAddr = fixture->aliasReg->findAddressByAlias(origAlias);
+		//проверить тип sme
+		if (fixture->smeReg->isExternalSme(origAddr))
+		{
+			processSmeAcknowledgement(pdu, recvTime);
+			return;
+		}
 		//сначала поиск pdu по деалиасенному адресу отправителя, потом алиасенному
 		//из-за специфики теста, т.к. addr -> alias неоднозначное преобразование
 		for (;;)
@@ -572,7 +575,7 @@ void SmppReceiverTestCases::processSmeAcknowledgement(PduDeliverySm &pdu,
 				//передать дальнейшую проверку тест кейсам конкретных sme
 				if (fixture->ackHandler)
 				{
-					fixture->ackHandler->processSmeAcknowledgement(monitor->pduData, pdu);
+					fixture->ackHandler->processSmeAcknowledgement(monitor, pdu);
 				}
 				//правильность тела сообщения и опциональных полей
 				//проверяется отдельно для конкретных типов acknoledgement
@@ -609,10 +612,10 @@ void SmppReceiverTestCases::processSmeAcknowledgement(PduDeliverySm &pdu,
 						pduReg->registerMonitor(monitor);
 						break;
 					case PDU_RECEIVED_FLAG:
-						//может придти несколько ответных pdu
+						__tc_fail__(1);
 						break;
 					case PDU_NOT_EXPECTED_FLAG:
-						__tc_fail__(1);
+						__tc_fail__(2);
 						break;
 					default:
 						__unreachable__("Unknown flag");
