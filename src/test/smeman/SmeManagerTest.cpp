@@ -11,9 +11,10 @@ int main(int argc, char* argv[])
 	{
 		//Manager::init("config.xml");
 		SmeManager smeMan;
-		SmeManagerTestCases tc(&smeMan);
+		SmeRegistry smeReg;
+		SmeManagerTestCases tc(&smeMan, &smeReg);
+		Address addr, addr2;
 		SmeInfo sme, sme2;
-		vector<SmeInfo*> v;
 /*
 addCorrectSme(4)->
 enableExistentSme(1)->
@@ -23,10 +24,9 @@ registerCorrectSmeProxy(1)->
 deleteExistentSme(1){100}
 */
 
-		cout << *tc.addCorrectSme(&sme, 4) << endl;
+		cout << *tc.addCorrectSme(&addr, &sme, 4) << endl;
 		SmeProxy* proxy;
 		cout << *tc.registerCorrectSmeProxy(sme.systemId, &proxy) << endl;
-		v.push_back(&sme);
 		//cout << *tc.selectSme(v, 1) << endl;
 
 /*

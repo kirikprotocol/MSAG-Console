@@ -21,8 +21,9 @@ inline void prepareForNewSme(vector<SmeInfo*>& sme, vector<TCResultStack*>& stac
 
 void executeFunctionalTest(TCResultFilter* filter, int listSize)
 {
-	SmeManagerTestCases tc(new SmeManager());
-	vector<SmeInfo*> sme;
+	SmeManager smeMan;
+	SmeRegistry smeReg;
+	SmeManagerTestCases tc(&smeMan, &smeReg);
 	vector<TCResultStack*> stack;
 
 	log.debug("*** start ***");
@@ -30,8 +31,10 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 	//–егистраци€ sme с корректными параметрами
 	for (int i = 0; i < listSize; i++)
 	{
-		prepareForNewSme(sme, stack);
-		TCResult* res = tc.addCorrectSme(sme.back(), RAND_TC);
+		Address smeAddr;
+		SmeInfo sme;
+		TCResult* res = tc.addCorrectSme(&smeAddr, &sme, RAND_TC);
+		stack.push_back(new TCResultStack());
 		stack.back()->push_back(res);
 	}
 
@@ -47,10 +50,15 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 		{
 			case 1:
 			case 2:
-				for (int i = 0; i < listSize; i++)
 				{
-					TCResult* res = tc.addIncorrectSme(*sme[i]);
-					stack.back()->push_back(res);
+					int i = 0;
+					SmeRegistry::SmeIterator* it = smeReg.iterator();
+					while (const SmeInfo* sme = it->next())
+					{
+						TCResult* res = tc.addIncorrectSme(*sme);
+						stack[i++]->push_back(res);
+					}
+					delete it;
 				}
 				break;
 			case 3:
@@ -58,8 +66,10 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 				if (!emptySystemId)
 				{
 					emptySystemId = true;
-					prepareForNewSme(sme, stack);
-					TCResult* res = tc.addCorrectSmeWithEmptySystemId(sme.back());
+					Address smeAddr;
+					SmeInfo sme;
+					TCResult* res = tc.addCorrectSmeWithEmptySystemId(&smeAddr, &sme);
+					stack.push_back(new TCResultStack());
 					stack.back()->push_back(res);
 				}
 				break;
@@ -80,38 +90,56 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 				break;
 			*/
 			default: //case = 5..6
-				for (int i = 0; i < sme.size(); i++)
 				{
-					SmeProxy* proxy;
-					TCResult* res = tc.getExistentSme(*sme[i], proxy);
-					stack[i]->push_back(res);
+					int i = 0;
+					SmeRegistry::SmeIterator* it = smeReg.iterator();
+					while (const SmeInfo* sme = it->next())
+					{
+						SmeProxy* proxy;
+						TCResult* res = tc.getExistentSme(*sme, proxy);
+						stack[i++]->push_back(res);
+					}
+					delete it;
 				}
 		}
 	}
 
 	//¬ыборка sme происходит равномерно
-	for (int i = 0; i < sme.size(); i++)
 	{
-		SmeProxy* proxy;
-		TCResult* res = tc.registerCorrectSmeProxy(sme[i]->systemId, &proxy);
-		stack[i]->push_back(res);
+		int i = 0;
+		SmeRegistry::SmeIterator* it = smeReg.iterator();
+		while (const SmeInfo* sme = it->next())
+		{
+			SmeProxy* proxy;
+			TCResult* res = tc.registerCorrectSmeProxy(sme->systemId, &proxy);
+			stack[i++]->push_back(res);
+		}
+		delete it;
 	}
+	
 	//filter->addResult(tc.selectSme(sme, RAND_TC));
 
 	//»терирование по списку зарегистрированных sme
-	filter->addResult(tc.iterateSme(sme));
+	filter->addResult(tc.iterateSme());
 
 	//”даление зарегистрированного sme
-	for (int i = 0; i < sme.size(); i++)
+	vector<string> smeId;
 	{
-		TCResult* res = tc.deleteExistentSme(sme[i]->systemId);
-		stack[i]->push_back(res);
+		int i = 0;
+		SmeRegistry::SmeIterator* it = smeReg.iterator();
+		while (const SmeInfo* sme = it->next())
+		{
+			smeId.push_back(sme->systemId);
+			TCResult* res = tc.deleteExistentSme(sme->systemId);
+			stack[i++]->push_back(res);
+		}
+		delete it;
 	}
 
 	//ѕолучение незарегистрированного/несуществующего sme
-	for (int i = 0; i < sme.size(); i++)
+	for (int i = 0; i < smeId.size(); i++)
 	{
-		TCResult* res = tc.getNonExistentSme(sme[i]->systemId, RAND_TC);
+		TCResult* res = tc.getNonExistentSme(smeId[i], RAND_TC);
 		stack[i]->push_back(res);
 	}
 
@@ -123,7 +151,7 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 	//stack[0]->push_back(tc.enableNonExistentSme());
 
 	//»терирование по списку зарегистрированных sme
-	filter->addResult(tc.iterateSme(vector<SmeInfo*>()));
+	filter->addResult(tc.iterateSme());
 
 	//обработка результатов
 	for (int i = 0; i < stack.size(); i++)
@@ -132,9 +160,8 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 	}
 
 	//очистка пам€ти
-	for (int i = 0; i < sme.size(); i++)
+	for (int i = 0; i < stack.size(); i++)
 	{
-		delete sme[i];
 		delete stack[i];
 	}
 }
