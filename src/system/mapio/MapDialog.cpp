@@ -253,7 +253,7 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
     ET96MAP_APP_CNTX_T appContext;
   	appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
   	appContext.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
-    ET96MAP_SM_RP_DA_T smRpOa;
+    ET96MAP_SM_RP_OA_T smRpOa;
 	  smRpOa.typeOfAddress = ET96MAP_ADDRTYPE_SCADDR;
 	  smRpOa.addrLen = (m_scaddr.addressLength+1)/2+1;
 	  smRpOa.addr[0] = m_scaddr.typeOfAddress;
