@@ -122,7 +122,7 @@ inline void __fill_x__ (SmppStream* stream, T& data)
                       BadStreamException);
   //*((T*)stream->buffer) = data;
   __require__(sizeof(T)>0);
-	memcpy(stream->buffer+stream->dataOffset,&data,sizeof(T));
+  memcpy(stream->buffer+stream->dataOffset,&data,sizeof(T));
   stream->dataOffset+=sizeof(T);
 //  int writen = write(stream->chanel,&data,sizeof(T));
 //  __throw_if_fail__(writen==sizeof(T),BadStreamException);
@@ -175,6 +175,7 @@ inline void assignStreamWith(SmppStream* stream,void* buffer,int bufferSize,bool
   __require__ ( buffer != NULL );
   stream->buffer = (unsigned char*)buffer;
   stream->bufferSize = bufferSize;
+	stream->readable = readable;
 //#else
 //  __require__( chanel > 0 );
 //  stream->chanel = chanel;
@@ -191,7 +192,7 @@ inline void assignStreamWith(SmppStream* stream,void* buffer,int bufferSize,bool
   }
   else
     stream->dataLength = 0;
-  stream->readable = readable;
+  //stream->readable = readable;
 }
 
 inline void fetchSmppHeader(SmppStream* stream,SmppHeader& header)
