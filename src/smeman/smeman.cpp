@@ -291,7 +291,10 @@ void SmeManager::unregisterSmeProxy(const SmeSystemId& systemId)
       dispatcher.detachSmeProxy(records[index]->proxy);
     else
       __warning2__("unregister null proxy(%s)",systemId.c_str());
-    records[index]->proxy = 0;
+    {
+      __synchronized__    
+      records[index]->proxy = 0;
+    }
   }
 }
 
