@@ -13,6 +13,8 @@ import java.sql.*;
 import javax.sql.*;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -22,6 +24,11 @@ public class SmsView
   private static int   MAX_SMS_BODY_LENGTH    = 1650;
   private static short SMPP_SHORT_MESSAGE_TAG = 7;
   private static short SMPP_DATA_CODING_TAG   = 3;
+
+  private static short DATA_CODING_DEFAULT    = 0;    // 0
+  private static short DATA_CODING_BINARY     = 4;    // BIT(2)
+  private static short DATA_CODING_UCS2       = 8;    // BIT(3)
+  private static short DATA_CODING_SMSC7BIT   = 0xf0; // 0xf0;
 
   private DataSource ds = null;
 
@@ -34,9 +41,10 @@ public class SmsView
     System.out.println("From date: "+query.getFromDate().toString()+
                        " Till date: "+query.getTillDate().toString());
     SmsSet set = new SmsSet();
+    Connection connection = null;
     try
     {
-      Connection connection = ds.getConnection();
+      connection = ds.getConnection();
       String sql = prepareQueryString(query);
       System.out.println("SQL: "+sql);
       PreparedStatement stmt = connection.prepareStatement(sql);
@@ -44,7 +52,10 @@ public class SmsView
       fetchRows(stmt, set);
       connection.close();
     }
-    catch (Exception exc) {
+    catch (Exception exc)
+    {
+      try { if (connection != null) connection.close(); }
+      catch (Exception cexc) { cexc.printStackTrace(); }
       System.out.println("Operation with DB failed !");
       exc.printStackTrace();
     }
@@ -68,9 +79,11 @@ public class SmsView
     stmt.setString(pos++, getLikeExpression(query.getFromAddress()));
     stmt.setString(pos++, getLikeExpression(query.getToAddress()));
     if (query.getFromDateEnabled())
-      stmt.setDate(pos++, new java.sql.Date(query .getFromDate().getTime()));
+      stmt.setTimestamp(pos++,
+        new java.sql.Timestamp(query .getFromDate().getTime()));
     if (query.getTillDateEnabled())
-      stmt.setDate(pos++, new java.sql.Date(query .getTillDate().getTime()));
+      stmt.setTimestamp(pos++,
+        new java.sql.Timestamp(query .getTillDate().getTime()));
   }
   private void fetchRows(PreparedStatement stmt, SmsSet set)
     throws SQLException
@@ -88,7 +101,7 @@ public class SmsView
       for (int i=0; i<id.length; i++) {
         System.out.print(id[i]);
       } System.out.println();*/
-      row.setDate(rs.getDate(pos++));
+      row.setDate(rs.getTimestamp(pos++));
       row.setFrom(rs.getString(pos++));
       row.setTo(rs.getString(pos++));
       row.setStatus(rs.getInt(pos++));
@@ -148,11 +161,13 @@ public class SmsView
   }
   private String convertBody(InputStream source, int length)
   {
-    int     textEncoding = 0;
+    String  message = "";
+    int     textEncoding = DATA_CODING_DEFAULT;
     boolean textFound = false;
     int     textLen = 0;
     byte    text[] = new byte[MAX_SMS_BODY_LENGTH];
 
+    System.out.println("Converting SMS body ...");
     try
     {
       DataInputStream stream = new DataInputStream(source);
@@ -173,10 +188,37 @@ public class SmsView
         else stream.skip(len);
       }
       stream.close();
-    } catch (IOException exc) {
+      message = decodeMessage(text, textLen, textEncoding);
+    }
+    catch (IOException exc)
+    {
         System.out.println("SMS Body conversion failed !");
         exc.printStackTrace();
     }
-    return ((textFound) ? new String(text, 0, textLen) : "");
+    System.out.println("SMS body converted.");
+    return message;
+  }
+  private String decodeMessage(byte text[], int len, int encoding)
+    throws UnsupportedEncodingException
+  {
+    String message = "";
+    if (encoding == DATA_CODING_DEFAULT) {          // ISO-LATIN-1
+      message = new String(text, 0, len, "ISO-8859-1");
+    } else if (encoding == DATA_CODING_SMSC7BIT) {  // US-ASCII
+      message = new String(text, 0, len, "US-ASCII");
+    } else if (encoding == DATA_CODING_UCS2) {      // UTF-16
+      StringBuffer sb = new StringBuffer();
+      for ( int i=0; i<len/2; ++i)
+      {
+        int x = ((((int)text[i*2])&0x0ff)) | ((((int)text[i*2+1])&0x0ff)<<8);
+        sb.append("&#").append(x).append(';');
+      }
+      message = sb.toString();
+    } else if (encoding == DATA_CODING_BINARY) { // DATA_CODING_BINARY
+      message = "<< Binary data >>";
+    } else {
+      message = "<< Unsupported encoding ("+encoding+") !!! >>";
+    }
+    return message;
   }
 };

@@ -30,7 +30,7 @@ public class SmsRow
   public String getTo(){ return to; };
   public void setTo(String address) { to = address; }
   public String getDate() {
-    SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy hh:mm:ss a");
+    SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
     return formatter.format(date);
   }
   public void setDate(Date date){ this.date = date; }
