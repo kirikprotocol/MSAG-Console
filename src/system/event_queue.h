@@ -2,6 +2,7 @@
   $Id$
 */
 
+
 #if !defined (__Cxx_Header__EventQueue_h__)
 #define __Cxx_Header__EventQueue_h__
 
@@ -13,6 +14,8 @@
 #include <inttypes.h>
 //#include <stdint.h>
 #include <string.h>
+
+#define DISABLE_LIST_DUMP
 
 namespace smsc {
 namespace system {
@@ -249,7 +252,7 @@ public:
       __synchronized__
         trace("selanddeq: got mutex");
         Locker* prev = 0;
-#if !defined ( DISABLE_ANY_CHECKS )
+#if !defined ( DISABLE_ANY_CHECKS ) || defined(DISABLE_LIST_DUMP)
         {
           Locker *iter1,*iter2;
           int i;
@@ -306,7 +309,7 @@ public:
             if ( success ) // получена доступная команда
             {
               // удаляем из списка активных
-#if !defined (DISABLE_ANY_CHECKS)              
+#if !defined (DISABLE_ANY_CHECKS) || defined(DISABLE_LIST_DUMP)              
               {
               __trace__("dump list before");
               Locker *iter2=first_unlocked;
@@ -328,7 +331,7 @@ public:
                 first_unlocked = locker->next_unlocked;
               }
 
-#if !defined (DISABLE_ANY_CHECKS)              
+#if !defined (DISABLE_ANY_CHECKS) || defined(DISABLE_LIST_DUMP)              
               {
               __trace__("dump list after");
               Locker *iter2=first_unlocked;
@@ -406,11 +409,11 @@ public:
     // разблокируем запись и добавляем в список активных
     locker->locked = false;
 
-		if ( StateChecker::stateIsFinal(state) )
-			++counter;
+    if ( StateChecker::stateIsFinal(state) )
+      ++counter;
 
 
-#if !defined (DISABLE_ANY_CHECKS)              
+#if !defined (DISABLE_ANY_CHECKS) || defined(DISABLE_LIST_DUMP)              
     {Locker *iter2=first_unlocked;
     __trace__("change state: list before");
     while(iter2)
@@ -432,7 +435,7 @@ public:
       first_unlocked = last_unlocked = locker;
     }
 
-#if !defined (DISABLE_ANY_CHECKS)              
+#if !defined (DISABLE_ANY_CHECKS) || defined(DISABLE_LIST_DUMP)              
     {Locker *iter2=first_unlocked;
     __trace__("change state: list after");
     while(iter2)
@@ -449,6 +452,7 @@ public:
 #undef __synchronized__
 };
 
+#undef DISABLE_LIST_DUMP
 
 
 }; // namespace system
@@ -456,3 +460,5 @@ public:
 
 
 #endif
+
+
