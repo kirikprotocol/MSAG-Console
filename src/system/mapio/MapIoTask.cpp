@@ -17,16 +17,19 @@ struct SMSC_FORWARD_RESPONSE_T {
 
 static void CloseDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId)
 {
-  Et96MapCloseReq (SSN,dialogId,ET96MAP_NORMAL_RELEASE,0,0,0);
+  USHORT_T res = Et96MapCloseReq (SSN,dialogId,ET96MAP_NORMAL_RELEASE,0,0,0);
+  if ( res != ET96MAP_E_OK ){
+    __trace2__("MAP::close error, code 0x%hx",res);
+  }else{
+    __trace2__("MAP::dialog closed");
+  }
 }
 
 static void CloseAndRemoveDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId)
 {
-  USHORT_T res = Et96MapCloseReq (SSN,dialogId,ET96MAP_NORMAL_RELEASE,0,0,0);
-  if ( res != ET96MAP_E_OK ){
-    __trace2__("close error, code 0x%hx",res);
-  }
+  CloseDialog(lssn,dialogId);
   MapDialogContainer::getInstance()->dropDialog(dialogId);
+  __trace2__("MAP::dialog 0x%hx destroed",dialogId);
 }
 
 void ForwardResponse(ET96MAP_DIALOGUE_ID_T dialogId){
@@ -40,9 +43,10 @@ void ForwardResponse(ET96MAP_DIALOGUE_ID_T dialogId){
   }
   USHORT_T result = Et96MapV2ForwardSmMOResp(SSN,dialogId,mdci->invokeId,0);
   if ( result != ET96MAP_E_OK ){
-    __trace2__("MAP::Et96MapV2ForwardSmMOInd error when send response on forward_sm");
-    throw runtime_error("MAP::Et96MapV2ForwardSmMOInd error when send response on forward_sm");
+    __trace2__("MAP::ForwardResponse error when send response on forward_sm");
+    throw runtime_error("MAP::ForwardResponce error when send response on forward_sm");
   }
+  __trace2__("MAP::ForwardResponse OK");
   CloseAndRemoveDialog(SSN,dialogId);
 }
 
@@ -53,7 +57,7 @@ USHORT_T Et96MapBindConf(ET96MAP_LOCAL_SSN_T lssn, ET96MAP_BIND_STAT_T status)
   __trace2__("MAP::Et96MapBindConf confirmation received ssn=%x status=%x\n",lssn,status);
   if (status == 0) return ET96MAP_E_OK;
   else if ( status == 1 ){
-    __trace__("MAP: Unbind");
+    __trace__("MAP::Et96MapBindConf Unbind");
     Et96MapUnbindReq(SSN);
     //__trace__("MAP: Bind ");
     //if ( Et96MapBindReq(USER01_ID, SSN)!=ET96MAP_E_OK ){
@@ -107,7 +111,7 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
 	__trace2__("MAP::Et96MapV2ForwardSmMOInd ssn 0x%x, dalogid 0x%x",lssn,dialogId);
   MapDialogCntItem* mdci = MapDialogContainer::getInstance()->getDialog(dialogId);
   if ( !mdci ) {
-    __trace2__("dialog is not present")
+    __trace2__("MAP::dialog is not present")
   }else{
   	try{
       mdci->invokeId = invokeId;
@@ -181,6 +185,10 @@ void MapIoTask::dispatcher()
     }
     //if (EINSS7CpMsgRecv_r(&message,MSG_INFTIM)!=MSG_OK) return;
     if ( isStopping ) return;
+    
+    __trace2__("MAP: MsgRecv receive msg with "
+               "recver 0x%hx,sender 0x%hx,prim 0x%hx",message.receiver,message.sender,message.primitive);
+    
     if ( message.sender == message.receiver &&
          message.sender == USER01_ID )
     {
