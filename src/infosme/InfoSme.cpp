@@ -406,23 +406,10 @@ public:
         
         int seqNum = pdu->get_sequenceNumber();
         int status = pdu->get_commandStatus();
-        bool accepted =  (status == Status::OK);
-
-        bool retry    =  (status == Status::SYSERR                      ||  // 8     08h
-                          status == Status::MSGQFUL                     ||  // 20    14h
-                          status == Status::SUBMITFAIL                  ||  // 69    45h
-                          status == Status::THROTTLED                   ||  // 88    58h
-                          status == Status::RX_T_APPN                   ||  // 100   64h  
-                          status == Status::UNKNOWNERR                  ||  // 255   FFh  
-                          status == Status::DELIVERYTIMEDOUT            ||  // 1027  403h
-                          status == Status::SMENOTCONNECTED             ||  // 1028  404h
-                          status == Status::MAP_RESOURCE_LIMITATION     ||  // 1139  473h
-                          status == Status::MAP_NO_RESPONSE_FROM_PEER   ||  // 1143  477h
-                          status == Status::ABSENTSUBSCR                ||  // 1179  49bh
-                          status == Status::SUBSCRBUSYMT                ||  // 1183  49fh
-                          status == Status::SMDELIFERYFAILURE           ||  // 1184  4a0h
-                          status == Status::SYSFAILURE);                    // 1186  4a2h
         
+        bool accepted  = (status == Status::OK);
+        bool retry     = (!Status::isErrorPermanent(status));
+
         bool immediate = (status == Status::MSGQFUL   ||
                           status == Status::THROTTLED ||
                           status == Status::SUBSCRBUSYMT);
