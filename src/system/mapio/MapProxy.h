@@ -54,7 +54,7 @@ public:
   {
     __trace2__("MAPPROXY::putIncomingCommand");
     {
-      MutexGuard(mutex);
+      MutexGuard g(mutex);
       __trace2__("MAPPROXY::putIncomingCommand: locked");
       if(inqueue.Count()==MAP_PROXY_QUEUE_LIMIT)
       {
