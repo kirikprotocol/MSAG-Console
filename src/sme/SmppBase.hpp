@@ -27,6 +27,35 @@ using std::exception;
 using namespace smsc::core::synchronization;
 using namespace smsc::core::buffers;
 
+class SmppConnectException{
+int reason;
+public:
+  struct Reason{
+    enum{
+      networkResolve,
+      networkConnect,
+      invalidSystemId,
+      smppError,
+      timeout,
+      unknown,
+    };
+  };
+  explicit SmppConnectException(int reason):reason(reason){}
+  int getReason(){return reason;}
+  const char* getTextReason()
+  {
+    switch(reason)
+    {
+      case Reason::networkResolve:return "Unable to resolve service center host name";
+      case Reason::networkConnect:return "Unable to connect to service center";
+      case Reason::invalidSystemId:return "Invalid system id";
+      case Reason::smppError:return "Generic smpp error";
+      case Reason::timeout:return "Bind attempt timed out";
+      case Reason::unknown:return "Unknown error";
+    }
+  }
+};
+
 
 struct Buffer{
   char* buffer;
@@ -428,9 +457,9 @@ public:
   {
     if(!closed)return;
     if(socket.Init(cfg.host.c_str(),cfg.port,cfg.timeOut)==-1)
-      throw Exception("Failed to resolve smsc host");
+      throw SmppConnectException(SmppConnectException::Reason::networkResolve);
     if(socket.Connect()==-1)
-      throw Exception("Failed to connect to smsc host");
+      throw SmppConnectException(SmppConnectException::Reason::networkConnect);
     reader.Start();
     writer.Start();
     PduBindTRX pdu;
@@ -447,13 +476,20 @@ public:
        resp->get_header().get_sequenceNumber()!=pdu.get_header().get_sequenceNumber() ||
        resp->get_header().get_commandStatus()!=SmppStatusSet::ESME_ROK)
     {
+      int reason=!resp?SmppConnectException::Reason::timeout :
+               resp->get_header().get_commandId()!=SmppCommandSet::BIND_TRANCIEVER_RESP ||
+               resp->get_header().get_sequenceNumber()!=pdu.get_header().get_sequenceNumber() ?
+               SmppConnectException::Reason::smppError:
+               resp->get_header().get_commandStatus()==SmppStatusSet::ESME_RINVSYSID ?
+               SmppConnectException::Reason::invalidSystemId:
+               SmppConnectException::Reason::unknown;
       if(resp)disposePdu((SmppHeader*)resp);
       reader.Stop();
       writer.Stop();
       socket.Close();
       reader.WaitFor();
       writer.WaitFor();
-      throw Exception("Unable to bind sme");
+      throw SmppConnectException(reason);
     }
     disposePdu((SmppHeader*)resp);
     closed=false;

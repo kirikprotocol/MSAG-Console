@@ -129,10 +129,6 @@ int main(int argc,char* argv[])
       char message[512];
       printf("Enter destination:");fflush(stdout);
       fgets((char*)message,sizeof(message),stdin);
-      if(!strcmp((char*)message,"quit\n"))
-      {
-        break;
-      }
       int i=0;
       while(message[i])
       {
@@ -143,8 +139,18 @@ int main(int argc,char* argv[])
         }
         i++;
       }
-      Address dst((char*)message);
-      s.setDestinationAddress(dst);
+      if(!strcmp((char*)message,"quit"))
+      {
+        break;
+      }
+      try{
+        Address dst((char*)message);
+        s.setDestinationAddress(dst);
+      }catch(...)
+      {
+        printf("Invalid address\n");
+        continue;
+      }
       printf("Enter message:");fflush(stdout);
       fgets((char*)message,sizeof(message),stdin);
       for(int i=0;message[i];i++)
@@ -176,6 +182,10 @@ int main(int argc,char* argv[])
         if(resp)disposePdu((SmppHeader*)resp);
       }
     }
+  }
+  catch(SmppConnectException& e)
+  {
+    printf("Bind error:%s\n",e.getTextReason());
   }
   catch(std::exception& e)
   {
