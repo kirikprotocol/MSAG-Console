@@ -4,6 +4,8 @@
 #include "test/smeman/SmeManagerTestCases.hpp"
 #include "test/alias/AliasManagerTestCases.hpp"
 #include "test/router/RouteManagerTestCases.hpp"
+#include "test/profiler/ProfilerTestCases.hpp"
+#include "test/core/ProfileUtil.hpp"
 #include "test/config/SmeConfigGen.hpp"
 #include "test/config/AliasConfigGen.hpp"
 #include "test/config/RouteConfigGen.hpp"
@@ -26,6 +28,8 @@ using smsc::test::sms::operator<<;
 using smsc::test::smeman::SmeManagerTestCases;
 using smsc::test::alias::AliasManagerTestCases;
 using smsc::test::router::RouteManagerTestCases;
+using smsc::test::profiler::ProfilerTestCases;
+using smsc::test::core::ProfileUtil;
 using namespace std;
 using namespace smsc::sms;
 using namespace smsc::core::synchronization;
@@ -34,11 +38,13 @@ using namespace smsc::test::sme;
 using namespace smsc::test::config;
 using namespace smsc::test::util;
 
-SmeRegistry* smeReg = new SmeRegistry();
-AliasRegistry* aliasReg = new AliasRegistry();
+SmeRegistry* smeReg;
+AliasRegistry* aliasReg;
 RouteRegistry* routeReg = new RouteRegistry();
-CheckList* smppChkList = new SmppCheckList();
-CheckList* configChkList = new ConfigGenCheckList();
+Profile defProfile;
+ProfileRegistry* profileReg;
+CheckList* smppChkList;
+CheckList* configChkList;
 
 /**
  * Тестовая sme.
@@ -113,7 +119,7 @@ TestSme::TestSme(int _smeNum, const SmeConfig& config, const SmeSystemId& system
 	const Address& smeAddr, const SmeRegistry* smeReg,
 	const AliasRegistry* aliasReg, const RouteRegistry* routeReg, CheckList* smppChkList)
 	: TestTask("TestSme", _smeNum), smeNum(_smeNum), nextCheckTime(0),
-	tc(config, systemId, smeAddr, this, smeReg, aliasReg, routeReg, smppChkList),
+	tc(config, systemId, smeAddr, this, smeReg, aliasReg, routeReg, profileReg, smppChkList),
 	boundOk(false) {}
 
 void TestSme::executeCycle()
@@ -146,7 +152,7 @@ void TestSme::executeCycle()
 		if (!boundOk)
 		{
 			cout << "Bound failed" << endl;
-			abort();
+			exit(-1);
 		}
 		for (int i = 0; i < 3; i++)
 		{
@@ -299,7 +305,7 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	{
 		addr.push_back(new Address());
 		smeInfo.push_back(new SmeInfo());
-		tcSme.addCorrectSme(addr[i], smeInfo[i], 1/*RAND_TC*/);
+		tcSme.addCorrectSme(addr[i], smeInfo[i], RAND_TC);
 		ostringstream os;
 		os << *addr[i];
 		__trace2__("genConfig(): addr = %s, systemId = %s", os.str().c_str(), smeInfo[i]->systemId.c_str());
@@ -428,7 +434,7 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	if (!numBound)
 	{
 		cout << "Invalid routes generated" << endl;
-		//abort();
+		//exit(-1);
 	}
 	cout << "Valid routes: " << numRoutes << endl;
 	cout << "Valid routes with sme: " << numBound << endl;
@@ -582,6 +588,13 @@ int main(int argc, char* argv[])
 		smscHost = argv[1];
 		smscPort = atoi(argv[2]);
 	}
+	smeReg = new SmeRegistry();
+	aliasReg = new AliasRegistry();
+	routeReg = new RouteRegistry();
+	ProfileUtil::setupRandomCorrectProfile(defProfile);
+	profileReg = new ProfileRegistry(defProfile);
+	smppChkList = new SmppCheckList();
+	configChkList = new ConfigGenCheckList();
 	try
 	{
 		executeFunctionalTest(smscHost, smscPort);
@@ -597,6 +610,7 @@ int main(int argc, char* argv[])
 	delete smeReg;
 	delete aliasReg;
 	delete routeReg;
+	delete profileReg;
 	delete smppChkList;
 	delete configChkList;
 	return 0;
