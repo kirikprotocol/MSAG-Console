@@ -417,6 +417,10 @@ void StateMachine::processDirectives(SMS& sms,Profile& p)
       __trace__("DIRECT: hide");
       if(p.hideModifiable)
         sms.setIntProperty(Tag::SMSC_HIDE,1);
+      else
+      {
+        __trace__("DIRECT: error, hide is not modifiable");
+      }
       Directive d(i,6);
       offsets.Push(d);
       i+=6;
@@ -426,6 +430,10 @@ void StateMachine::processDirectives(SMS& sms,Profile& p)
       __trace__("DIRECT: unhide");
       if(p.hideModifiable)
         sms.setIntProperty(Tag::SMSC_HIDE,0);
+      else
+      {
+        __trace__("DIRECT: error, hide is not modifiable");
+      }
       Directive d(i,8);
       offsets.Push(d);
       i+=8;
@@ -1813,7 +1821,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
          sms.getDeliveryReport()!=REPORT_ACK
        ) ||
        (
-         sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)==REPORT_NOACK
+         sms.getDeliveryReport()==REPORT_NOACK
        )
       )
     {
