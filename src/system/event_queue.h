@@ -40,7 +40,7 @@ class EventQueue
 {
   uint64_t counter;
 
-	// запись списка команд
+  // запись списка команд
   struct CmdRecord
   {
     CommandType command;
@@ -190,17 +190,17 @@ class EventQueue
 public:
 #define __synchronized__ MutexGuard mguard(mutex);
 
-	EventQueue() : counter(0)
-	{
-	}
+  EventQueue() : counter(0)
+  {
+  }
 
-	~EventQueue() {}
+  ~EventQueue() {}
 
-	uint64_t getCounter()
-	{
-	__synchronized__
-		return counter;
-	}
+  uint64_t getCounter()
+  {
+  __synchronized__
+    return counter;
+  }
 
   // добавляет в запись команду (создает новую запись приее отсутствии)
   // если для записи допустима выборка команд , то нотифицирует исполнителей
@@ -353,8 +353,7 @@ public:
             {
               if ( StateChecker::stateIsFinal(locker->state) )
               {
-                ++counter;
-								// удаляем из списка активных
+                // удаляем из списка активных
                 if ( locker == last_unlocked ) last_unlocked = prev;
                 if ( prev )
                    prev->next_unlocked = locker->next_unlocked;
@@ -406,6 +405,10 @@ public:
 
     // разблокируем запись и добавляем в список активных
     locker->locked = false;
+
+		if ( StateChecker::stateIsFinal(state) )
+			++counter;
+
 
 #if !defined (DISABLE_ANY_CHECKS)              
     {Locker *iter2=first_unlocked;
