@@ -210,8 +210,9 @@ struct MapDialog{
     __mapdlg_trace2__("~MapDialog 0x%x(0x%x)",dialogid_map,dialogid_smsc);
     require ( ref_count == 0 );
     require ( chain.size() == 0 );
-    if ( dialogid_smsc != 0 && dialogid_map != 0){
-      require(dialogid_map < MAX_DIALOGID_POOLED); 
+//    if ( dialogid_smsc != 0 && dialogid_map != 0){
+//      require(dialogid_map < MAX_DIALOGID_POOLED); 
+    if ( dialogid_map < MAX_DIALOGID_POOLED )
       freeDialogueId(dialogid_map);
     }
     if ( associate ) associate->Release();
