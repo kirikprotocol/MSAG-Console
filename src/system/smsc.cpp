@@ -328,7 +328,10 @@ void Smsc::init(const SmscConfigs& cfg)
   ResetRouteManager(router.release());
   */
 
-  smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance());
+  // create scheduler here, and start later in run
+  scheduler=new Scheduler(eventqueue,store);
+
+  smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance(),scheduler);
   store=smsc::store::StoreManager::getMessageStore();
 
   mrCache.assignStore(store);
@@ -554,8 +557,6 @@ void Smsc::init(const SmscConfigs& cfg)
   addr.getValue( addrval );
   scAddr = addrval;
 
-  // create scheduler here, and start later in run
-  scheduler=new Scheduler(eventqueue,store);
   try{
     scheduler->setRescheduleLimit(cfg.cfgman->getInt("core.reschedule_limit"));
   }catch(...)
