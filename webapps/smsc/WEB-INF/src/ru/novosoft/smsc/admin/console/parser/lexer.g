@@ -48,36 +48,41 @@ tokens {
   VAL_UCS2	= "ucs2"	;
 }
 
-WS    : ( ' '
-		|	'\t'
-		|	'\f'
+WS    	: 	( ' '
+		| '\t'
+		| '\f'
 		// handle newlines
-		|	(	"\r\n"  // Evil DOS
-			|	'\r'    // Macintosh
-			|	'\n'    // Unix (the right way)
-			)
-			{ newline(); }
+		| (	"\r\n"  // Evil DOS
+		    |	'\r'    // Macintosh
+		    |	'\n'    // Unix (the right way)
+		  )
+		  { newline(); }
 		)
 		{ _ttype = Token.SKIP; }
 	;
 
-STRING
+STR
+options {
+  paraphrase = "more input";
+}
+	:	('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'$'
+		|'.'|'?'|'!'|'#'|'+'|'-'|'/'|'*'|'%')+
+	;
+	
+QSTR
+options {
+  paraphrase = "quoted string";
+}
 	:	'"'! (ESC|~'"')* '"'!
 	;
 
-ID
-	:	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*
+COMMA
+options {
+  paraphrase = "comma character ','";
+}
+	:	','
 	;
 
-NUMBER	:	(DIGIT)+
-	;
-
-ADDRESS	:	'\''! ('+'|('.' (DIGIT)+ '.' (DIGIT)+ '.'))? (DIGIT)* ('?')* '\''!
-	;
-
-COMMA	:	','
-	;
-	
 protected
 ESC	:	'\\'
 		(	'n'
@@ -112,7 +117,6 @@ ESC	:	'\\'
 	;
 
 protected
-DIGIT
-	:	'0'..'9'
+DIGIT	:	'0'..'9'
 	;
 

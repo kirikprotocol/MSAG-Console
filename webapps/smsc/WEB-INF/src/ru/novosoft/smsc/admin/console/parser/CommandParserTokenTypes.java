@@ -47,11 +47,9 @@ public interface CommandParserTokenTypes {
 	int VAL_GSM7 = 33;
 	int VAL_UCS2 = 34;
 	int WS = 35;
-	int STRING = 36;
-	int ID = 37;
-	int NUMBER = 38;
-	int ADDRESS = 39;
-	int COMMA = 40;
-	int ESC = 41;
-	int DIGIT = 42;
+	int STR = 36;
+	int QSTR = 37;
+	int COMMA = 38;
+	int ESC = 39;
+	int DIGIT = 40;
 }

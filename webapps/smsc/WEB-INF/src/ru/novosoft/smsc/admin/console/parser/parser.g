@@ -48,7 +48,7 @@ parse returns [Command cmd] {
 	| 	ACT_DELETE 	cmd = del
 	| 	ACT_ALTER 	cmd = alt
 	| 	ACT_LIST 	cmd = lst 
-	| 	ACT_VIEW 	cmd = view
+	| 	ACT_VIEW	cmd = view
 	|	ACT_APPLY     { cmd = new ApplyCommand(); }
 	;
 	
@@ -97,41 +97,51 @@ view returns [Command cmd] {
 	|	TGT_PROFILE	cmd = viewprofile
 	;
 	
+	
+/* ----------------------- Common names parser ------------------------- */
+getnameid[String msg] returns [String out] {
+    out = null; 
+}	:	(qname:QSTR | name:STR) {
+		    out = (qname == null) ? name.getText():qname.getText();
+		}
+	;
+	exception
+	catch [RecognitionException ex] {
+           throw new RecognitionException(msg+" expected");
+	}
+
 /* ----------------------- Common routes parsers ----------------------- */
 srcdef[RouteGenCommand cmd] { // Special command required !!!
     RouteSrcDef def = new RouteSrcDef();
 }
-	:	( (OPT_SUBJ (qname:STRING | name:ID) { 
-		    String out = (qname == null) ? name.getText():qname.getText();
+	:	( (OPT_SUBJ { 
 		    def.setType(RouteSrcDef.TYPE_SUBJECT);
-		    def.setSrc(out);
+		    def.setSrc(getnameid("Subject name"));
 		  }) 
-		| (OPT_MASK addr:ADDRESS {
+		| (OPT_MASK addr:STR {
 		    def.setType(RouteSrcDef.TYPE_MASK); 
 		    def.setSrc(addr.getText());
 		  })
-		)
-		{
-		    cmd.addSrcDef(def);
+		) 
+		{ 
+		    cmd.addSrcDef(def);	
 		}
 	;
+	       	
 dstdef[RouteGenCommand cmd] { // Special command required !!!
     RouteDstDef def = new RouteDstDef();
 }
-	:	( (OPT_SUBJ (qname:STRING | name:ID) { 
-		    String out = (qname == null) ? name.getText():qname.getText();
+	:	( (OPT_SUBJ { 
 		    def.setType(RouteDstDef.TYPE_SUBJECT);
-		    def.setDst(out);
+		    def.setDst(getnameid("Subject name"));
 		  }) 
-		| (OPT_MASK addr:ADDRESS { 
+		| (OPT_MASK addr:STR { 
 		    def.setType(RouteDstDef.TYPE_MASK); 
 		    def.setDst(addr.getText());
 		  })
 		)
-		(qsys:STRING | isys:ID)
 		{
-		    String sysid = (qsys == null) ? qsys.getText():isys.getText();
-		    def.setSmeId(sysid);
+		    def.setSmeId(getnameid("SME System id"));
 		    cmd.addDstDef(def);
 		}
 	;
@@ -141,23 +151,39 @@ dstdef[RouteGenCommand cmd] { // Special command required !!!
 route_src[RouteGenCommand cmd]
 	:	OPT_SRC (srcdef[cmd])+
 	;
+	exception
+	catch [RecognitionException ex] {
+           throw new RecognitionException("Route srcdef missed or invalid. Syntax: src ((subj <subject_name>)|(mask <mask>))+");
+	}
+
 route_dst[RouteGenCommand cmd]
 	:	OPT_DST (dstdef[cmd])+
 	;
+	exception
+	catch [RecognitionException ex] {
+           throw new RecognitionException("Route dstdef missed or invalid. Syntax: dst ((subj <subject_name>)|(mask <mask>) <systemid>)+");
+	}
 
 addroute returns [RouteAddCommand cmd] {
     cmd = new RouteAddCommand();
 }
-	:	(qname:STRING | name:ID) {
-		    String out = (qname == null) ? name.getText():qname.getText();
-		    cmd.setRoute(out);
+	:	{
+		    cmd.setRoute(getnameid("Route name"));
 		}
 		addroute_flags[cmd]
-		(OPT_SVCID num:NUMBER {
-		    cmd.setServiceId(Integer.parseInt(num.getText()));
+		(OPT_SVCID num:STR {
+		    try {
+			cmd.setServiceId(Integer.parseInt(num.getText()));
+		    } catch (NumberFormatException ex) {
+			throw new NumberFormatException("Expecting integer value for <serviceid>");
+		    }
 		})
-		(OPT_PRI pri:NUMBER {
-		    cmd.setPriority(Integer.parseInt(pri.getText()));
+		(OPT_PRI pri:STR {
+		    try {
+			cmd.setPriority(Integer.parseInt(pri.getText()));		    
+		    } catch (NumberFormatException ex) {
+			throw new NumberFormatException("Expecting integer value for <priority>");
+		    }
 		})
 		route_src[cmd]
 		route_dst[cmd]
@@ -170,30 +196,39 @@ addroute_flags[RouteAddCommand cmd]
 	        ( OPT_ALLOW  { cmd.setAllow(true);  }
 		| OPT_DENY   { cmd.setAllow(false); })
 	;
+	exception
+	catch [RecognitionException ex] {
+           throw new RecognitionException("Route flags expected. Syntax: (bill|nobill) (arc|noarc) (allow|deny)");
+	}
 
 delroute returns [RouteDeleteCommand cmd] {
     cmd = new RouteDeleteCommand();
 }
-	:	(qname:STRING | name:ID) 
-		{
-		    String out = (qname == null) ? name.getText():qname.getText();
-		    cmd.setRoute(out);
+	:	{
+		    cmd.setRoute(getnameid("Route name"));
 		}
 	;
 
 altroute returns [RouteAlterCommand cmd] {
     cmd = new RouteAlterCommand();
 }
-	:	(qname:STRING | name:ID) {
-		    String out = (qname == null) ? name.getText():qname.getText();
-		    cmd.setRoute(out);
+	:	{
+		    cmd.setRoute(getnameid("Route name"));
 		}
 		altroute_flags[cmd]
-		(OPT_SVCID num:NUMBER {
-		    cmd.setServiceId(Integer.parseInt(num.getText()));
+		(OPT_SVCID num:STR {
+		    try {
+			cmd.setServiceId(Integer.parseInt(num.getText()));
+		    } catch (NumberFormatException ex) {
+			throw new NumberFormatException("Expecting integer value for <serviceid>");
+		    }
 		}) ?
-		(OPT_PRI pri:NUMBER {
-		    cmd.setPriority(Integer.parseInt(pri.getText()));
+		(OPT_PRI pri:STR {
+		    try {
+			cmd.setPriority(Integer.parseInt(pri.getText()));		    
+		    } catch (NumberFormatException ex) {
+			throw new NumberFormatException("Expecting integer value for <priority>");
+		    }
 		}) ?
 		( ACT_ADD    { cmd.setAction(RouteAlterCommand.ACTION_ADD); }
 		| ACT_DELETE { cmd.setAction(RouteAlterCommand.ACTION_DEL); })
@@ -208,14 +243,16 @@ altroute_flags[RouteAlterCommand cmd]
 	        ( OPT_ALLOW  { cmd.setAllow(true);  }
 		| OPT_DENY   { cmd.setAllow(false); })?
 	;
+	exception
+	catch [RecognitionException ex] {
+           throw new RecognitionException("Route flags expected. Syntax: [bill|nobill] [arc|noarc] [allow|deny]");
+	}
 
 viewroute returns [RouteViewCommand cmd] {
     cmd = new RouteViewCommand();
 }
-	:	(qname:STRING | name:ID) 
-		{
-		    String out = (qname == null) ? name.getText():qname.getText();
-		    cmd.setRoute(out);
+	:	{
+		    cmd.setRoute(getnameid("Route name"));
 		}
 	;
 
@@ -224,83 +261,105 @@ viewroute returns [RouteViewCommand cmd] {
 addalias returns [AliasAddCommand cmd] {
     cmd = new AliasAddCommand();
 }
-	:	(mask:ADDRESS { cmd.setAlias(mask.getText());   })
-		(addr:ADDRESS { cmd.setAddress(addr.getText());	})
+	:	(mask:STR     { cmd.setAlias(mask.getText());   })
+		(addr:STR     { cmd.setAddress(addr.getText());	})
 		( OPT_HIDE    { cmd.setHide(true);  }
 		| OPT_NOHIDE  { cmd.setHide(false); })?
 	;
+	exception[mask]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Alias mask expected");
+	}
+	exception[addr]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Alias address expected");
+	}
 delalias returns [AliasDeleteCommand cmd] {
     cmd = new AliasDeleteCommand();
 }
-	:	(addr:ADDRESS { cmd.setAlias(addr.getText()); })
+	:	(mask:STR     { cmd.setAlias(mask.getText()); })
 	;
+	exception[mask]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Alias mask expected");
+	}
 altalias returns [AliasAlterCommand cmd] {
     cmd = new AliasAlterCommand();
 }
-	:	(mask:ADDRESS { cmd.setAlias(mask.getText());  })
-		(addr:ADDRESS { cmd.setAddress(addr.getText()); })
+	:	(mask:STR     { cmd.setAlias(mask.getText());   })
+		(addr:STR     { cmd.setAddress(addr.getText()); })
 		( OPT_HIDE    { cmd.setHide(true);  }
 		| OPT_NOHIDE  { cmd.setHide(false); })?
 	;
+	exception[mask]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Alias mask expected");
+	}
+	exception[addr]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Alias address expected");
+	}
 viewalias returns [AliasViewCommand cmd] {
     cmd = new AliasViewCommand();
 }
-	:	(mask:ADDRESS { cmd.setAlias(mask.getText()); })
+	:	(mask:STR     { cmd.setAlias(mask.getText()); })
 	;
+	exception[mask]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Alias mask expected");
+	}
 
 /* ----------------------- Subject command parsers --------------------- */
 
 addsubj_mask[SubjectGenCommand cmd]
-	:	(mask:ADDRESS { cmd.addMask(mask.getText()); })
+	:	(mask:STR     { cmd.addMask(mask.getText()); })
 	;
 addsubj_masks[SubjectGenCommand cmd]
 	:	(addsubj_mask[cmd] (COMMA addsubj_mask[cmd])*)
 	;
+	exception
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Subject mask list missed or invalid. Syntax: <subject_mask>(,<subject_mask>)*");
+	}
 
 addsubject returns [SubjectAddCommand cmd] {
     cmd = new SubjectAddCommand();
 }
-	:	(qname:STRING | name:ID) {
-		    String out = (qname == null) ? name.getText():qname.getText();
-		    cmd.setSubject(out);
+	:	{
+		    cmd.setSubject(getnameid("Subject name"));
 		}
-		(qsys:STRING | isys:ID)	 {
-		    String smeid = (qsys == null) ? qsys.getText():isys.getText();
-		    cmd.setDefaultSmeId(smeid);
+		{
+		    cmd.setDefaultSmeId(getnameid("SME id"));
 		}
 		addsubj_masks[cmd]
 	;
 altsubject returns [SubjectAlterCommand cmd] {
     cmd = new SubjectAlterCommand();
 }
-	:	(qname:STRING | name:ID) {
-		    String out = (qname == null) ? name.getText():qname.getText();
-		    cmd.setSubject(out);
+	:	{
+		    cmd.setSubject(getnameid("Subject name"));
 		}
 		((ACT_ADD {
 		    cmd.setActionAdd();
 		} | ACT_DELETE {
 		    cmd.setActionDelete();
 		}) addsubj_masks[cmd]) | 
-		(OPT_DEFSME (qsys:STRING | isys:ID) {
-		    String smeid = (qsys == null) ? qsys.getText():isys.getText();
-		    cmd.setDefaultSmeId(smeid);
+		(OPT_DEFSME {
+		    cmd.setDefaultSmeId(getnameid("SME id"));
 		})
 	;
 delsubject returns [SubjectDeleteCommand cmd] {
     cmd = new SubjectDeleteCommand();
 }
-	:	(qname:STRING | name:ID) {
-		    String out = (qname == null) ? name.getText():qname.getText();
-		    cmd.setSubject(out);
+	:	{
+		    cmd.setSubject(getnameid("Subject name"));
 		}
 	;
 viewsubject returns [SubjectViewCommand cmd] {
     cmd = new SubjectViewCommand();
 }
-	:	(qname:STRING | name:ID) {
-		    String out = (qname == null) ? name.getText():qname.getText();
-		    cmd.setSubject(out);
+	:	{
+		    cmd.setSubject(getnameid("Subject name"));
 		}
 	;
 
@@ -309,28 +368,45 @@ viewsubject returns [SubjectViewCommand cmd] {
 addprofile returns [ProfileAddCommand cmd] {
     cmd = new ProfileAddCommand();
 }
-	:	(mask:ADDRESS { cmd.setMask(mask.getText()); })
+	:	(mask:STR  { cmd.setMask(mask.getText());    })
 		(OPT_REPORT (VAL_FULL { cmd.setFullReport(); }
 			   | VAL_NONE { cmd.setNoneReport(); } ))
 		(OPT_ENCODE (VAL_GSM7 { cmd.setGsm7Encoding(); }
 			   | VAL_UCS2 { cmd.setUcs2Encoding(); } ))?
 	;
+	exception[mask]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Profile mask expected");
+	}
 altprofile returns [ProfileAlterCommand cmd] {
     cmd = new ProfileAlterCommand();
 }
-	:	(addr:ADDRESS { cmd.setAddress(addr.getText()); })
+	:	(addr:STR  { cmd.setAddress(addr.getText()); })
 		(OPT_REPORT (VAL_FULL { cmd.setFullReport(); }
 			   | VAL_NONE { cmd.setNoneReport(); } ))
 		(OPT_ENCODE (VAL_GSM7 { cmd.setGsm7Encoding();  }
 			   | VAL_UCS2 { cmd.setUcs2Encoding();  } ))?
 	;
+	exception[addr]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Profile address expected");
+	}
 delprofile returns [ProfileDeleteCommand cmd] {
     cmd = new ProfileDeleteCommand();
 }
-	:	(mask:ADDRESS { cmd.setMask(mask.getText()); })
+	:	(mask:STR  { cmd.setMask(mask.getText()); })
 	;
+	exception[mask]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Profile mask expected");
+	}
 viewprofile returns [ProfileViewCommand cmd] {
     cmd = new ProfileViewCommand();
 }
-	:	(addr:ADDRESS { cmd.setAddress(addr.getText()); })
+	:	(addr:STR  { cmd.setAddress(addr.getText()); })
 	;
+	exception[addr]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Profile address expected");
+	}
+	

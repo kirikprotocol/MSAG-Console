@@ -299,53 +299,38 @@ public CommandParser(ParserSharedInputState state) {
 	public final RouteAddCommand  addroute() throws RecognitionException, TokenStreamException {
 		RouteAddCommand cmd;
 		
-		Token  qname = null;
-		Token  name = null;
 		Token  num = null;
 		Token  pri = null;
 		
 		cmd = new RouteAddCommand();
 		
 		
-		{
-		switch ( LA(1)) {
-		case STRING:
-		{
-			qname = LT(1);
-			match(STRING);
-			break;
-		}
-		case ID:
-		{
-			name = LT(1);
-			match(ID);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
 		
-				    String out = (qname == null) ? name.getText():qname.getText();
-				    cmd.setRoute(out);
+				    cmd.setRoute(getnameid("Route name"));
 				
 		addroute_flags(cmd);
 		{
 		match(OPT_SVCID);
 		num = LT(1);
-		match(NUMBER);
+		match(STR);
 		
-				    cmd.setServiceId(Integer.parseInt(num.getText()));
+				    try {
+					cmd.setServiceId(Integer.parseInt(num.getText()));
+				    } catch (NumberFormatException ex) {
+					throw new NumberFormatException("Expecting integer value for <serviceid>");
+				    }
 				
 		}
 		{
 		match(OPT_PRI);
 		pri = LT(1);
-		match(NUMBER);
+		match(STR);
 		
-				    cmd.setPriority(Integer.parseInt(pri.getText()));
+				    try {
+					cmd.setPriority(Integer.parseInt(pri.getText()));		    
+				    } catch (NumberFormatException ex) {
+					throw new NumberFormatException("Expecting integer value for <priority>");
+				    }
 				
 		}
 		route_src(cmd);
@@ -363,13 +348,27 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
-		mask = LT(1);
-		match(ADDRESS);
+		try { // for error handling
+			mask = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Alias mask expected");
+				
+		}
 		cmd.setAlias(mask.getText());
 		}
 		{
-		addr = LT(1);
-		match(ADDRESS);
+		try { // for error handling
+			addr = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Alias address expected");
+				
+		}
 		cmd.setAddress(addr.getText());	
 		}
 		{
@@ -402,61 +401,15 @@ public CommandParser(ParserSharedInputState state) {
 	public final SubjectAddCommand  addsubject() throws RecognitionException, TokenStreamException {
 		SubjectAddCommand cmd;
 		
-		Token  qname = null;
-		Token  name = null;
-		Token  qsys = null;
-		Token  isys = null;
 		
 		cmd = new SubjectAddCommand();
 		
 		
-		{
-		switch ( LA(1)) {
-		case STRING:
-		{
-			qname = LT(1);
-			match(STRING);
-			break;
-		}
-		case ID:
-		{
-			name = LT(1);
-			match(ID);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
 		
-				    String out = (qname == null) ? name.getText():qname.getText();
-				    cmd.setSubject(out);
+				    cmd.setSubject(getnameid("Subject name"));
 				
-		{
-		switch ( LA(1)) {
-		case STRING:
-		{
-			qsys = LT(1);
-			match(STRING);
-			break;
-		}
-		case ID:
-		{
-			isys = LT(1);
-			match(ID);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
 		
-				    String smeid = (qsys == null) ? qsys.getText():isys.getText();
-				    cmd.setDefaultSmeId(smeid);
+				    cmd.setDefaultSmeId(getnameid("SME id"));
 				
 		addsubj_masks(cmd);
 		return cmd;
@@ -471,8 +424,15 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
-		mask = LT(1);
-		match(ADDRESS);
+		try { // for error handling
+			mask = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Profile mask expected");
+				
+		}
 		cmd.setMask(mask.getText());
 		}
 		{
@@ -541,35 +501,12 @@ public CommandParser(ParserSharedInputState state) {
 	public final RouteDeleteCommand  delroute() throws RecognitionException, TokenStreamException {
 		RouteDeleteCommand cmd;
 		
-		Token  qname = null;
-		Token  name = null;
 		
 		cmd = new RouteDeleteCommand();
 		
 		
-		{
-		switch ( LA(1)) {
-		case STRING:
-		{
-			qname = LT(1);
-			match(STRING);
-			break;
-		}
-		case ID:
-		{
-			name = LT(1);
-			match(ID);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
 		
-				    String out = (qname == null) ? name.getText():qname.getText();
-				    cmd.setRoute(out);
+				    cmd.setRoute(getnameid("Route name"));
 				
 		return cmd;
 	}
@@ -577,15 +514,22 @@ public CommandParser(ParserSharedInputState state) {
 	public final AliasDeleteCommand  delalias() throws RecognitionException, TokenStreamException {
 		AliasDeleteCommand cmd;
 		
-		Token  addr = null;
+		Token  mask = null;
 		
 		cmd = new AliasDeleteCommand();
 		
 		
 		{
-		addr = LT(1);
-		match(ADDRESS);
-		cmd.setAlias(addr.getText());
+		try { // for error handling
+			mask = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Alias mask expected");
+				
+		}
+		cmd.setAlias(mask.getText());
 		}
 		return cmd;
 	}
@@ -593,35 +537,12 @@ public CommandParser(ParserSharedInputState state) {
 	public final SubjectDeleteCommand  delsubject() throws RecognitionException, TokenStreamException {
 		SubjectDeleteCommand cmd;
 		
-		Token  qname = null;
-		Token  name = null;
 		
 		cmd = new SubjectDeleteCommand();
 		
 		
-		{
-		switch ( LA(1)) {
-		case STRING:
-		{
-			qname = LT(1);
-			match(STRING);
-			break;
-		}
-		case ID:
-		{
-			name = LT(1);
-			match(ID);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
 		
-				    String out = (qname == null) ? name.getText():qname.getText();
-				    cmd.setSubject(out);
+				    cmd.setSubject(getnameid("Subject name"));
 				
 		return cmd;
 	}
@@ -629,37 +550,14 @@ public CommandParser(ParserSharedInputState state) {
 	public final RouteAlterCommand  altroute() throws RecognitionException, TokenStreamException {
 		RouteAlterCommand cmd;
 		
-		Token  qname = null;
-		Token  name = null;
 		Token  num = null;
 		Token  pri = null;
 		
 		cmd = new RouteAlterCommand();
 		
 		
-		{
-		switch ( LA(1)) {
-		case STRING:
-		{
-			qname = LT(1);
-			match(STRING);
-			break;
-		}
-		case ID:
-		{
-			name = LT(1);
-			match(ID);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
 		
-				    String out = (qname == null) ? name.getText():qname.getText();
-				    cmd.setRoute(out);
+				    cmd.setRoute(getnameid("Route name"));
 				
 		altroute_flags(cmd);
 		{
@@ -668,9 +566,13 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(OPT_SVCID);
 			num = LT(1);
-			match(NUMBER);
+			match(STR);
 			
-					    cmd.setServiceId(Integer.parseInt(num.getText()));
+					    try {
+						cmd.setServiceId(Integer.parseInt(num.getText()));
+					    } catch (NumberFormatException ex) {
+						throw new NumberFormatException("Expecting integer value for <serviceid>");
+					    }
 					
 			break;
 		}
@@ -692,9 +594,13 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(OPT_PRI);
 			pri = LT(1);
-			match(NUMBER);
+			match(STR);
 			
-					    cmd.setPriority(Integer.parseInt(pri.getText()));
+					    try {
+						cmd.setPriority(Integer.parseInt(pri.getText()));		    
+					    } catch (NumberFormatException ex) {
+						throw new NumberFormatException("Expecting integer value for <priority>");
+					    }
 					
 			break;
 		}
@@ -762,13 +668,27 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
-		mask = LT(1);
-		match(ADDRESS);
+		try { // for error handling
+			mask = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Alias mask expected");
+				
+		}
 		cmd.setAlias(mask.getText());
 		}
 		{
-		addr = LT(1);
-		match(ADDRESS);
+		try { // for error handling
+			addr = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Alias address expected");
+				
+		}
 		cmd.setAddress(addr.getText());
 		}
 		{
@@ -801,41 +721,16 @@ public CommandParser(ParserSharedInputState state) {
 	public final SubjectAlterCommand  altsubject() throws RecognitionException, TokenStreamException {
 		SubjectAlterCommand cmd;
 		
-		Token  qname = null;
-		Token  name = null;
-		Token  qsys = null;
-		Token  isys = null;
 		
 		cmd = new SubjectAlterCommand();
 		
 		
 		switch ( LA(1)) {
-		case STRING:
-		case ID:
+		case ACT_ADD:
+		case ACT_DELETE:
 		{
-			{
-			switch ( LA(1)) {
-			case STRING:
-			{
-				qname = LT(1);
-				match(STRING);
-				break;
-			}
-			case ID:
-			{
-				name = LT(1);
-				match(ID);
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
-			}
 			
-					    String out = (qname == null) ? name.getText():qname.getText();
-					    cmd.setSubject(out);
+					    cmd.setSubject(getnameid("Subject name"));
 					
 			{
 			{
@@ -870,29 +765,8 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			{
 			match(OPT_DEFSME);
-			{
-			switch ( LA(1)) {
-			case STRING:
-			{
-				qsys = LT(1);
-				match(STRING);
-				break;
-			}
-			case ID:
-			{
-				isys = LT(1);
-				match(ID);
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
-			}
 			
-					    String smeid = (qsys == null) ? qsys.getText():isys.getText();
-					    cmd.setDefaultSmeId(smeid);
+					    cmd.setDefaultSmeId(getnameid("SME id"));
 					
 			}
 			break;
@@ -914,8 +788,15 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
-		addr = LT(1);
-		match(ADDRESS);
+		try { // for error handling
+			addr = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Profile address expected");
+				
+		}
 		cmd.setAddress(addr.getText());
 		}
 		{
@@ -984,35 +865,12 @@ public CommandParser(ParserSharedInputState state) {
 	public final RouteViewCommand  viewroute() throws RecognitionException, TokenStreamException {
 		RouteViewCommand cmd;
 		
-		Token  qname = null;
-		Token  name = null;
 		
 		cmd = new RouteViewCommand();
 		
 		
-		{
-		switch ( LA(1)) {
-		case STRING:
-		{
-			qname = LT(1);
-			match(STRING);
-			break;
-		}
-		case ID:
-		{
-			name = LT(1);
-			match(ID);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
 		
-				    String out = (qname == null) ? name.getText():qname.getText();
-				    cmd.setRoute(out);
+				    cmd.setRoute(getnameid("Route name"));
 				
 		return cmd;
 	}
@@ -1026,8 +884,15 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
-		mask = LT(1);
-		match(ADDRESS);
+		try { // for error handling
+			mask = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Alias mask expected");
+				
+		}
 		cmd.setAlias(mask.getText());
 		}
 		return cmd;
@@ -1036,35 +901,12 @@ public CommandParser(ParserSharedInputState state) {
 	public final SubjectViewCommand  viewsubject() throws RecognitionException, TokenStreamException {
 		SubjectViewCommand cmd;
 		
-		Token  qname = null;
-		Token  name = null;
 		
 		cmd = new SubjectViewCommand();
 		
 		
-		{
-		switch ( LA(1)) {
-		case STRING:
-		{
-			qname = LT(1);
-			match(STRING);
-			break;
-		}
-		case ID:
-		{
-			name = LT(1);
-			match(ID);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
 		
-				    String out = (qname == null) ? name.getText():qname.getText();
-				    cmd.setSubject(out);
+				    cmd.setSubject(getnameid("Subject name"));
 				
 		return cmd;
 	}
@@ -1078,19 +920,68 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
-		addr = LT(1);
-		match(ADDRESS);
+		try { // for error handling
+			addr = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Profile address expected");
+				
+		}
 		cmd.setAddress(addr.getText());
 		}
 		return cmd;
+	}
+	
+	public final String  getnameid(
+		String msg
+	) throws RecognitionException, TokenStreamException {
+		String out;
+		
+		Token  qname = null;
+		Token  name = null;
+		
+		out = null; 
+		
+		
+		try {      // for error handling
+			{
+			switch ( LA(1)) {
+			case QSTR:
+			{
+				qname = LT(1);
+				match(QSTR);
+				break;
+			}
+			case STR:
+			{
+				name = LT(1);
+				match(STR);
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			
+					    out = (qname == null) ? name.getText():qname.getText();
+					
+		}
+		catch (RecognitionException ex) {
+			
+			throw new RecognitionException(msg+" expected");
+				
+		}
+		return out;
 	}
 	
 	public final void srcdef(
 		RouteGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
 		
-		Token  qname = null;
-		Token  name = null;
 		Token  addr = null;
 		// Special command required !!!
 		RouteSrcDef def = new RouteSrcDef();
@@ -1102,30 +993,9 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			{
 			match(OPT_SUBJ);
-			{
-			switch ( LA(1)) {
-			case STRING:
-			{
-				qname = LT(1);
-				match(STRING);
-				break;
-			}
-			case ID:
-			{
-				name = LT(1);
-				match(ID);
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
-			}
 			
-					    String out = (qname == null) ? name.getText():qname.getText();
 					    def.setType(RouteSrcDef.TYPE_SUBJECT);
-					    def.setSrc(out);
+					    def.setSrc(getnameid("Subject name"));
 					
 			}
 			break;
@@ -1135,7 +1005,7 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_MASK);
 			addr = LT(1);
-			match(ADDRESS);
+			match(STR);
 			
 					    def.setType(RouteSrcDef.TYPE_MASK); 
 					    def.setSrc(addr.getText());
@@ -1150,7 +1020,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		}
 		
-				    cmd.addSrcDef(def);
+				    cmd.addSrcDef(def);	
 				
 	}
 	
@@ -1158,11 +1028,7 @@ public CommandParser(ParserSharedInputState state) {
 		RouteGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
 		
-		Token  qname = null;
-		Token  name = null;
 		Token  addr = null;
-		Token  qsys = null;
-		Token  isys = null;
 		// Special command required !!!
 		RouteDstDef def = new RouteDstDef();
 		
@@ -1173,30 +1039,9 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			{
 			match(OPT_SUBJ);
-			{
-			switch ( LA(1)) {
-			case STRING:
-			{
-				qname = LT(1);
-				match(STRING);
-				break;
-			}
-			case ID:
-			{
-				name = LT(1);
-				match(ID);
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
-			}
 			
-					    String out = (qname == null) ? name.getText():qname.getText();
 					    def.setType(RouteDstDef.TYPE_SUBJECT);
-					    def.setDst(out);
+					    def.setDst(getnameid("Subject name"));
 					
 			}
 			break;
@@ -1206,7 +1051,7 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_MASK);
 			addr = LT(1);
-			match(ADDRESS);
+			match(STR);
 			
 					    def.setType(RouteDstDef.TYPE_MASK); 
 					    def.setDst(addr.getText());
@@ -1220,29 +1065,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		}
 		}
-		{
-		switch ( LA(1)) {
-		case STRING:
-		{
-			qsys = LT(1);
-			match(STRING);
-			break;
-		}
-		case ID:
-		{
-			isys = LT(1);
-			match(ID);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
 		
-				    String sysid = (qsys == null) ? qsys.getText():isys.getText();
-				    def.setSmeId(sysid);
+				    def.setSmeId(getnameid("SME System id"));
 				    cmd.addDstDef(def);
 				
 	}
@@ -1252,20 +1076,27 @@ public CommandParser(ParserSharedInputState state) {
 	) throws RecognitionException, TokenStreamException {
 		
 		
-		match(OPT_SRC);
-		{
-		int _cnt20=0;
-		_loop20:
-		do {
-			if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
-				srcdef(cmd);
+		try {      // for error handling
+			match(OPT_SRC);
+			{
+			int _cnt19=0;
+			_loop19:
+			do {
+				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
+					srcdef(cmd);
+				}
+				else {
+					if ( _cnt19>=1 ) { break _loop19; } else {throw new NoViableAltException(LT(1), getFilename());}
+				}
+				
+				_cnt19++;
+			} while (true);
 			}
-			else {
-				if ( _cnt20>=1 ) { break _loop20; } else {throw new NoViableAltException(LT(1), getFilename());}
-			}
+		}
+		catch (RecognitionException ex) {
 			
-			_cnt20++;
-		} while (true);
+			throw new RecognitionException("Route srcdef missed or invalid. Syntax: src ((subj <subject_name>)|(mask <mask>))+");
+				
 		}
 	}
 	
@@ -1274,20 +1105,27 @@ public CommandParser(ParserSharedInputState state) {
 	) throws RecognitionException, TokenStreamException {
 		
 		
-		match(OPT_DST);
-		{
-		int _cnt23=0;
-		_loop23:
-		do {
-			if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
-				dstdef(cmd);
+		try {      // for error handling
+			match(OPT_DST);
+			{
+			int _cnt22=0;
+			_loop22:
+			do {
+				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
+					dstdef(cmd);
+				}
+				else {
+					if ( _cnt22>=1 ) { break _loop22; } else {throw new NoViableAltException(LT(1), getFilename());}
+				}
+				
+				_cnt22++;
+			} while (true);
 			}
-			else {
-				if ( _cnt23>=1 ) { break _loop23; } else {throw new NoViableAltException(LT(1), getFilename());}
-			}
+		}
+		catch (RecognitionException ex) {
 			
-			_cnt23++;
-		} while (true);
+			throw new RecognitionException("Route dstdef missed or invalid. Syntax: dst ((subj <subject_name>)|(mask <mask>) <systemid>)+");
+				
 		}
 	}
 	
@@ -1296,65 +1134,72 @@ public CommandParser(ParserSharedInputState state) {
 	) throws RecognitionException, TokenStreamException {
 		
 		
-		{
-		switch ( LA(1)) {
-		case OPT_BILL:
-		{
-			match(OPT_BILL);
-			cmd.setBill(true);
-			break;
+		try {      // for error handling
+			{
+			switch ( LA(1)) {
+			case OPT_BILL:
+			{
+				match(OPT_BILL);
+				cmd.setBill(true);
+				break;
+			}
+			case OPT_NOBILL:
+			{
+				match(OPT_NOBILL);
+				cmd.setBill(false);
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_ARCH:
+			{
+				match(OPT_ARCH);
+				cmd.setArc(true);
+				break;
+			}
+			case OPT_NOARCH:
+			{
+				match(OPT_NOARCH);
+				cmd.setArc(false);
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_ALLOW:
+			{
+				match(OPT_ALLOW);
+				cmd.setAllow(true);
+				break;
+			}
+			case OPT_DENY:
+			{
+				match(OPT_DENY);
+				cmd.setAllow(false);
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
 		}
-		case OPT_NOBILL:
-		{
-			match(OPT_NOBILL);
-			cmd.setBill(false);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		{
-		switch ( LA(1)) {
-		case OPT_ARCH:
-		{
-			match(OPT_ARCH);
-			cmd.setArc(true);
-			break;
-		}
-		case OPT_NOARCH:
-		{
-			match(OPT_NOARCH);
-			cmd.setArc(false);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		{
-		switch ( LA(1)) {
-		case OPT_ALLOW:
-		{
-			match(OPT_ALLOW);
-			cmd.setAllow(true);
-			break;
-		}
-		case OPT_DENY:
-		{
-			match(OPT_DENY);
-			cmd.setAllow(false);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
+		catch (RecognitionException ex) {
+			
+			throw new RecognitionException("Route flags expected. Syntax: (bill|nobill) (arc|noarc) (allow|deny)");
+				
 		}
 	}
 	
@@ -1363,92 +1208,99 @@ public CommandParser(ParserSharedInputState state) {
 	) throws RecognitionException, TokenStreamException {
 		
 		
-		{
-		switch ( LA(1)) {
-		case OPT_BILL:
-		{
-			match(OPT_BILL);
-			cmd.setBill(true);
-			break;
+		try {      // for error handling
+			{
+			switch ( LA(1)) {
+			case OPT_BILL:
+			{
+				match(OPT_BILL);
+				cmd.setBill(true);
+				break;
+			}
+			case OPT_NOBILL:
+			{
+				match(OPT_NOBILL);
+				cmd.setBill(false);
+				break;
+			}
+			case ACT_ADD:
+			case ACT_DELETE:
+			case OPT_ARCH:
+			case OPT_NOARCH:
+			case OPT_ALLOW:
+			case OPT_DENY:
+			case OPT_SVCID:
+			case OPT_PRI:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_ARCH:
+			{
+				match(OPT_ARCH);
+				cmd.setArc(true);
+				break;
+			}
+			case OPT_NOARCH:
+			{
+				match(OPT_NOARCH);
+				cmd.setArc(false);
+				break;
+			}
+			case ACT_ADD:
+			case ACT_DELETE:
+			case OPT_ALLOW:
+			case OPT_DENY:
+			case OPT_SVCID:
+			case OPT_PRI:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_ALLOW:
+			{
+				match(OPT_ALLOW);
+				cmd.setAllow(true);
+				break;
+			}
+			case OPT_DENY:
+			{
+				match(OPT_DENY);
+				cmd.setAllow(false);
+				break;
+			}
+			case ACT_ADD:
+			case ACT_DELETE:
+			case OPT_SVCID:
+			case OPT_PRI:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
 		}
-		case OPT_NOBILL:
-		{
-			match(OPT_NOBILL);
-			cmd.setBill(false);
-			break;
-		}
-		case ACT_ADD:
-		case ACT_DELETE:
-		case OPT_ARCH:
-		case OPT_NOARCH:
-		case OPT_ALLOW:
-		case OPT_DENY:
-		case OPT_SVCID:
-		case OPT_PRI:
-		{
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		{
-		switch ( LA(1)) {
-		case OPT_ARCH:
-		{
-			match(OPT_ARCH);
-			cmd.setArc(true);
-			break;
-		}
-		case OPT_NOARCH:
-		{
-			match(OPT_NOARCH);
-			cmd.setArc(false);
-			break;
-		}
-		case ACT_ADD:
-		case ACT_DELETE:
-		case OPT_ALLOW:
-		case OPT_DENY:
-		case OPT_SVCID:
-		case OPT_PRI:
-		{
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		{
-		switch ( LA(1)) {
-		case OPT_ALLOW:
-		{
-			match(OPT_ALLOW);
-			cmd.setAllow(true);
-			break;
-		}
-		case OPT_DENY:
-		{
-			match(OPT_DENY);
-			cmd.setAllow(false);
-			break;
-		}
-		case ACT_ADD:
-		case ACT_DELETE:
-		case OPT_SVCID:
-		case OPT_PRI:
-		{
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
+		catch (RecognitionException ex) {
+			
+			throw new RecognitionException("Route flags expected. Syntax: [bill|nobill] [arc|noarc] [allow|deny]");
+				
 		}
 	}
 	
@@ -1460,7 +1312,7 @@ public CommandParser(ParserSharedInputState state) {
 		
 		{
 		mask = LT(1);
-		match(ADDRESS);
+		match(STR);
 		cmd.addMask(mask.getText());
 		}
 	}
@@ -1470,21 +1322,28 @@ public CommandParser(ParserSharedInputState state) {
 	) throws RecognitionException, TokenStreamException {
 		
 		
-		{
-		addsubj_mask(cmd);
-		{
-		_loop63:
-		do {
-			if ((LA(1)==COMMA)) {
-				match(COMMA);
-				addsubj_mask(cmd);
+		try {      // for error handling
+			{
+			addsubj_mask(cmd);
+			{
+			_loop58:
+			do {
+				if ((LA(1)==COMMA)) {
+					match(COMMA);
+					addsubj_mask(cmd);
+				}
+				else {
+					break _loop58;
+				}
+				
+			} while (true);
 			}
-			else {
-				break _loop63;
 			}
-			
-		} while (true);
 		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Subject mask list missed or invalid. Syntax: <subject_mask>(,<subject_mask>)*");
+				
 		}
 	}
 	
@@ -1497,8 +1356,15 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
-		mask = LT(1);
-		match(ADDRESS);
+		try { // for error handling
+			mask = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Profile mask expected");
+				
+		}
 		cmd.setMask(mask.getText());
 		}
 		return cmd;
@@ -1542,11 +1408,9 @@ public CommandParser(ParserSharedInputState state) {
 		"\"gsm7\"",
 		"\"ucs2\"",
 		"WS",
-		"STRING",
-		"ID",
-		"NUMBER",
-		"ADDRESS",
-		"COMMA",
+		"more input",
+		"quoted string",
+		"comma character ','",
 		"ESC",
 		"DIGIT"
 	};

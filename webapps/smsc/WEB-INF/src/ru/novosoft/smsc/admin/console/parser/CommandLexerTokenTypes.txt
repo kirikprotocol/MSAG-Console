@@ -32,10 +32,8 @@ OPT_ENCODE="encoding"=32
 VAL_GSM7="gsm7"=33
 VAL_UCS2="ucs2"=34
 WS=35
-STRING=36
-ID=37
-NUMBER=38
-ADDRESS=39
-COMMA=40
-ESC=41
-DIGIT=42
+STR("more input")=36
+QSTR("quoted string")=37
+COMMA("comma character ','")=38
+ESC=39
+DIGIT=40
