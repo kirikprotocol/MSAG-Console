@@ -64,13 +64,21 @@ function setSort(sorting)
 <table class=secRep cellspacing=1 width="100%">
 <col width="1%">
 <col width="60%" align=left>
-<col width="20%" align=left>
+<col width="20%" align=center>
+<col width="20%" align=center>
+<col width="20%" align=center>
+<col width="20%" align=center>
 <col width="20%" align=center>
 <thead>
 <tr>
 	<th class=ico><img src="<%=CPATH%>/img/ico16_checked_sa.gif" class=ico16 alt=""></th>
-	<th><a href="#" <%=bean.getSort().endsWith("Route ID")       ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by name" onclick='return setSort("Route ID")'>name</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("active")         ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by active status" onclick='return setSort("active")'>active</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("Route ID")                ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by name" onclick='return setSort("Route ID")'                        >name</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("active")                  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by active status" onclick='return setSort("active")'                 >active</a></th>
+
+	<th><a href="#" <%=bean.getSort().endsWith("isEnabling")              ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by active status" onclick='return setSort("isEnabling")'             >allow</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("isBilling")               ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by active status" onclick='return setSort("isBilling")'              >billing</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("isArchiving")             ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by active status" onclick='return setSort("isArchiving")'            >archiving</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("suppressDeliveryReports") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by active status" onclick='return setSort("suppressDeliveryReports")'>reports</a></th>
 </tr>
 </thead>
 <tbody>
@@ -82,17 +90,22 @@ DataItem item = (DataItem) i.next();
 String routeId = (String) item.getValue("Route ID");
 SourceList sources = (SourceList) item.getValue("sources");
 DestinationList destinations = (DestinationList) item.getValue("destinations");
-boolean isEnabling  = ((Boolean)item.getValue("isEnabling" )).booleanValue();
-boolean isBilling   = ((Boolean)item.getValue("isBilling"  )).booleanValue();
-boolean isArchiving = ((Boolean)item.getValue("isArchiving")).booleanValue();
-boolean isActive    = ((Boolean)item.getValue("active"     )).booleanValue();
+boolean isActive                  = ((Boolean)item.getValue("active"                 )).booleanValue();
+boolean isEnabling                = ((Boolean)item.getValue("isEnabling"             )).booleanValue();
+boolean isBilling                 = ((Boolean)item.getValue("isBilling"              )).booleanValue();
+boolean isArchiving               = ((Boolean)item.getValue("isArchiving"            )).booleanValue();
+boolean isSuppressDeliveryReports = ((Boolean)item.getValue("suppressDeliveryReports")).booleanValue();
 
 String encRouteId = StringEncoderDecoder.encode(routeId);
 %>
 <tr class=row<%=row&1%>>
 	<td class=check><input class=check type=checkbox name=checkedRouteIds value="<%=encRouteId%>" <%=bean.isRouteChecked(routeId) ? "checked" : ""%>></td>
 	<td class=name><a href="#" title="Edit route" onClick='return edit("<%=encRouteId%>")'><%=encRouteId%></a></td>
-	<td class=check><input class=check type=checkbox disabled <%=isActive ? "checked" : ""%>></td>
+	<td class=check><input class=check type=checkbox disabled <%=isActive                  ? "checked" : ""%>></td>
+	<td class=check><input class=check type=checkbox disabled <%=isEnabling                ? "checked" : ""%>></td>
+	<td class=check><input class=check type=checkbox disabled <%=isBilling                 ? "checked" : ""%>></td>
+	<td class=check><input class=check type=checkbox disabled <%=isArchiving               ? "checked" : ""%>></td>
+	<td class=check><input class=check type=checkbox disabled <%=isSuppressDeliveryReports ? "checked" : ""%>></td>
 </tr>
 <%}}%>
 </tbody>
