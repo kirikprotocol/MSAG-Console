@@ -134,7 +134,7 @@ void DatabaseMaster::genSms()
 		ostringstream os;
 		uint8_t dataCoding;
 		uint8_t esmClass;
-		switch (i % 9)
+		switch (i % 7)
 		{
 			case 0: //default (latin1)
 				dataCoding = DataCoding::DEFAULT;
@@ -149,34 +149,24 @@ void DatabaseMaster::genSms()
 			case 2: //ucs2
 				dataCoding = DataCoding::UCS2;
 				esmClass = 0x0;
-				os << str(i) << " (ucs2):" << rusChars << digitChars;
+				os << str(i) << " (ucs2):" << rusChars << latinChars << digitChars << symbolChars;
 				break;
 			case 3: //ucs2 & udhi
 				dataCoding = DataCoding::UCS2;
 				esmClass = ESM_CLASS_UDHI_INDICATOR;
-				os << str(i) << " (ucs2&udhi):" << rusChars << digitChars;
+				os << str(i) << " (ucs2&udhi):" << rusChars << latinChars << digitChars << symbolChars;
 				break;
-			case 4: //ucs2 (другие символы)
-				dataCoding = DataCoding::UCS2;
-				esmClass = 0x0;
-				os << str(i) << " (ucs2):" << latinChars << symbolChars;
-				break;
-			case 5: //ucs2 & udhi (другие символы)
-				dataCoding = DataCoding::UCS2;
-				esmClass = ESM_CLASS_UDHI_INDICATOR;
-				os << str(i) << " (ucs2&udhi):" << latinChars << symbolChars;
-				break;
-			case 6: //smsc7bit
+			case 4: //smsc7bit
 				dataCoding = DataCoding::SMSC7BIT;
 				esmClass = 0x0;
 				os << str(i) << " (smsc7bit):" << latinChars << digitChars << symbolChars;
 				break;
-			case 7: //smsc7bit & udhi
+			case 5: //smsc7bit & udhi
 				dataCoding = DataCoding::SMSC7BIT;
 				esmClass = ESM_CLASS_UDHI_INDICATOR;
 				os << str(i) << " (smsc7bit&udhi):" << latinChars << digitChars << symbolChars;
 				break;
-			case 8: //binary
+			case 6: //binary
 				dataCoding = DataCoding::BINARY;
 				esmClass = rand0(1) ? 0x0 : ESM_CLASS_UDHI_INDICATOR;
 				os << str(i) << " (binary):" << latinChars << digitChars;
@@ -192,18 +182,31 @@ void DatabaseMaster::genSms()
 			int udhiLen = rand0(5);
 			auto_ptr<uint8_t> udhi = rand_uint8_t(udhiLen);
 			int bufLen = msgLen + udhiLen + 1;
-			__require__(bufLen <= MAX_SMPP_SM_LENGTH);
 			char buf[bufLen];
 			*buf = (unsigned char) udhiLen;
 			memcpy(buf + 1, udhi.get(), udhiLen);
 			memcpy(buf + udhiLen + 1, msg.get(), msgLen);
-			sms.setIntProperty(Tag::SMPP_SM_LENGTH, bufLen);
-			sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, buf, bufLen);
+			if (bufLen > MAX_SMPP_SM_LENGTH)
+			{
+				sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, buf, bufLen);
+			}
+			else
+			{
+				sms.setIntProperty(Tag::SMPP_SM_LENGTH, bufLen);
+				sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, buf, bufLen);
+			}
 		}
 		else
 		{
-			sms.setIntProperty(Tag::SMPP_SM_LENGTH, msgLen);
-			sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, msg.get(), msgLen);
+			if (msgLen > MAX_SMPP_SM_LENGTH)
+			{
+				sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, msg.get(), msgLen);
+			}
+			else
+			{
+				sms.setIntProperty(Tag::SMPP_SM_LENGTH, msgLen);
+				sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, msg.get(), msgLen);
+			}
 		}
 		//sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE, msg.get(), msgLen);
 		//sms_msg
