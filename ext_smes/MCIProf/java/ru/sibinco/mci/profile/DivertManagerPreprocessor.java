@@ -8,6 +8,8 @@ import ru.sibinco.smpp.appgw.util.Transliterator;
 
 import java.util.Properties;
 
+import org.apache.log4j.Category;
+
 /**
  * Created by IntelliJ IDEA.
  * User: makar
@@ -17,12 +19,16 @@ import java.util.Properties;
  */
 public class DivertManagerPreprocessor extends DivertManagerState implements ScenarioStateProcessor
 {
-  public void init(Properties properties) throws ScenarioInitializationException {
+  private static Category logger = Category.getInstance(DivertManagerPreprocessor.class);
+
+  public void init(Properties properties) throws ScenarioInitializationException
+  {
     super.init(properties);
   }
 
   public void process(ScenarioState state) throws ProcessingException
   {
+    logger.info("Started");
     if (state.getAttribute(Constants.ATTR_MAIN) == null)
     {
       String msg = state.getMessageString();
@@ -48,5 +54,6 @@ public class DivertManagerPreprocessor extends DivertManagerState implements Sce
       }
     }
     state.removeAttribute(Constants.ATTR_MAIN);
+    logger.info("Ended");
   }
 }

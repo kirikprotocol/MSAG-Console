@@ -7,6 +7,8 @@ import ru.sibinco.smpp.appgw.scenario.ProcessingException;
 
 import java.util.Properties;
 
+import org.apache.log4j.Category;
+
 /**
  * Created by IntelliJ IDEA.
  * User: makar
@@ -16,6 +18,8 @@ import java.util.Properties;
  */
 public class DivertSetPreprocessor extends DivertManagerState implements ScenarioStateProcessor
 {
+  private static Category logger = Category.getInstance(DivertSetPreprocessor.class);
+
   public void init(Properties properties) throws ScenarioInitializationException
   {
     super.init(properties);
@@ -24,6 +28,7 @@ public class DivertSetPreprocessor extends DivertManagerState implements Scenari
   public void process(ScenarioState state) throws ProcessingException
   {
     String msg = state.getMessageString();
+    logger.info("Started with msg="+msg);
     if (msg == null)
       throw new ProcessingException("Diver option is undefined", -1);
     msg = msg.trim();
@@ -33,6 +38,7 @@ public class DivertSetPreprocessor extends DivertManagerState implements Scenari
     else if (msg.equals("4")) state.setAttribute(Constants.ATTR_REASON, DivertInfo.UNCOND);
     else
       throw new ProcessingException("Diver option '"+msg+"' is unknown", -2);
+    logger.info("Ended with msg="+msg);
   }
 
 }
