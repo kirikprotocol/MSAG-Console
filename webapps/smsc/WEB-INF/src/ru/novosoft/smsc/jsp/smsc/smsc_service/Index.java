@@ -110,9 +110,9 @@ public class Index extends SmscBean
       if (s.indexOf('.') > 0) {
         isRequestHaveParams = true;
         Object oldValue = params.get(s);
+        final String parameter = request.getParameter(s);
         if (oldValue != null) {
           if (oldValue instanceof Integer) {
-            String parameter = request.getParameter(s);
             try {
               if (parameter != null && parameter.trim().length() > 0)
                 params.put(s, Integer.decode(parameter.trim()));
@@ -123,11 +123,21 @@ public class Index extends SmscBean
               result = error(SMSCErrors.error.smsc.invalidIntParameter, s);
             }
           } else if (oldValue instanceof Boolean)
-            params.put(s, Boolean.valueOf(request.getParameter(s)));
+            params.put(s, Boolean.valueOf(parameter));
           else
-            params.put(s, request.getParameter(s));
-        } else
-          params.put(s, request.getParameter(s));
+            params.put(s, parameter);
+        } else {
+          try {
+            params.put(s, Integer.decode(parameter));
+          } catch (NumberFormatException e) {
+            if (parameter.equalsIgnoreCase("true"))
+              params.put(s, Boolean.TRUE);
+            else if (parameter.equalsIgnoreCase("false"))
+              params.put(s, Boolean.FALSE);
+            else
+              params.put(s, parameter);
+          }
+        }
       }
     }
 
@@ -205,7 +215,7 @@ public class Index extends SmscBean
   {
     Object param = params.get(paramName);
     if (param == null)
-      return "not found " + params.size();
+      return "<not specified>";
     if (param instanceof String)
       return (String) param;
     else
