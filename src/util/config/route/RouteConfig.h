@@ -34,6 +34,8 @@ public:
 
 	status load(const char * const filename);
 
+  status reload();
+
 	status store(const char * const filename) const;
 
 	RouteIterator getRouteIterator() const;
@@ -43,6 +45,7 @@ protected:
 	log4cpp::Category &logger;
 	RoutePVector routes;
 	SubjectPHash subjects;
+  std::auto_ptr<char> config_filename;
 
 	class SubjectNotFoundException {};
 

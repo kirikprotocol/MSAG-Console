@@ -5,7 +5,8 @@
 <%
 String address = request.getParameter("Address");
 String alias = request.getParameter("Alias");
-if (smsc.getAliases().remove(new Alias(new Mask(address), new Mask(alias))))
+boolean hide = request.getParameter("Hide") != null && request.getParameter("Hide").equalsIgnoreCase("true");
+if (smsc.getAliases().remove(new Alias(new Mask(address), new Mask(alias), hide)))
 {
   %>Alias "<%=alias%>&nbsp;-&gt;&nbsp;<%=address%>" deleted sucessfully.<%
 } else {

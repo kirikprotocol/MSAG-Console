@@ -147,11 +147,13 @@ public class AddAdmServiceWizard
 		catch (AdminException e)
 		{
 			rollbackDeploy(daemonsFolder, webappFolder, webinfLibFolder);
+			logger.error("Couldnt deploy new service", e);
 			throw e;
 		}
 		catch (IOException e)
 		{
 			rollbackDeploy(daemonsFolder, webappFolder, webinfLibFolder);
+			logger.error("Couldnt deploy new service", e);
 			throw new AdminException("Couldnt deploy new service, nested: " + e.getMessage());
 		}
 	}
@@ -161,7 +163,7 @@ public class AddAdmServiceWizard
 	{
 		checkStage2();
 		checkStage3();
-		return new SME(systemId, SME.SMPP, typeOfNumber, numberingPlan, interfaceVersion, systemType, "", rangeOfAddress, -1);
+		return new SME(systemId, SME.SMPP, typeOfNumber, numberingPlan, interfaceVersion, systemType, "", rangeOfAddress, -1, false, 8);
 	}
 
 	protected void checkServiceContent(File incomingZip)
@@ -322,7 +324,8 @@ public class AddAdmServiceWizard
 		ZipInputStream zin = new ZipInputStream(in);
 		for (ZipEntry e = zin.getNextEntry(); e != null; e = zin.getNextEntry())
 		{
-			unZipFileFromArchive(folderUnpackTo, e.getName(), zin);
+			if (!e.isDirectory())
+				unZipFileFromArchive(folderUnpackTo, e.getName(), zin);
 		}
 		zin.close();
 		in.close();

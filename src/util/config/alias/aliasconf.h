@@ -61,6 +61,7 @@ public:
   status putRecord(AliasRecord *record);
 
   status load(const char * const filename);
+  status reload();
 
   status store(const char * const filename) const;
 
@@ -69,6 +70,7 @@ protected:
   DOMTreeReader reader;
   log4cpp::Category &logger;
   SRVector records;
+  std::auto_ptr<char> config_filename;
 private:
 };
 

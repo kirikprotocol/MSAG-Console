@@ -7,6 +7,7 @@
 #include <fstream>
 #include <xercesc/dom/DOM_NamedNodeMap.hpp>
 #include <util/Logger.h>
+#include <util/cstrings.h>
 #include <memory>
 #include "util/debug.h"
 
@@ -66,6 +67,7 @@ AliasConfig::status AliasConfig::putRecord(AliasRecord *record)
 
 AliasConfig::status AliasConfig::load(const char * const filename)
 {
+  config_filename.reset(cStringCopy(filename));
   try
   {
     DOM_Document document = reader.read(filename);
@@ -161,6 +163,13 @@ AliasConfig::status AliasConfig::load(const char * const filename)
   }
   return success;
 }
+
+AliasConfig::status AliasConfig::reload()
+{
+  clear();
+  load(config_filename.get());
+}
+
 
 AliasConfig::status AliasConfig::store(const char * const filename) const
 {

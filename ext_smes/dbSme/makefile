@@ -8,7 +8,7 @@ export SMSC_BUILDDIR
 endif
 
 DB_OCI_LIB:=$(SMSC_BUILDDIR)/bin/db/oci/libdb_oci.so
-SME_BUILDDIR:=$(SMSC_BUILDDIR)/ext_smes/tmp
+SME_BUILDDIR:=$(SMSC_BUILDDIR)/ext_smes/dbSmeTmp
 
 
 default: compile pack

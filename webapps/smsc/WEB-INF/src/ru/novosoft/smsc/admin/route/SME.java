@@ -23,6 +23,8 @@ public class SME
 	private String password = null;
 	private String addrRange = null;
 	private int smeN = 0;
+	private boolean wantAlias = false;
+	private int timeout = 0;
 
 	/**
 	 * Constructor
@@ -57,7 +59,7 @@ public class SME
 	 * @throws NullPointerException if id, systemType, password, or addrRange is null
 	 */
 	public SME(String id, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType,
-				  String password, String addrRange, int smeN)
+				  String password, String addrRange, int smeN, boolean wantAlias, int timeout)
 			  throws NullPointerException
 	{
 		if (id == null || systemType == null || password == null || addrRange == null)
@@ -72,6 +74,8 @@ public class SME
 		this.password = password;
 		this.addrRange = addrRange;
 		this.smeN = smeN;
+		this.wantAlias = wantAlias;
+		this.timeout = timeout;
 	}
 
 	public SME(Element smeElement)
@@ -113,19 +117,27 @@ public class SME
 			{
 				smeN = Integer.decode(value).intValue();
 			}
+			else if (name.equals("wantAlias"))
+			{
+				wantAlias = value.equalsIgnoreCase("yes") || value.equalsIgnoreCase("true");
+			}
+			else if (name.equals("timeout"))
+			{
+				timeout = Integer.decode(value).intValue();
+			}
 		}
 
 		if (id == null || systemType == null || password == null || addrRange == null)
 			throw new NullPointerException("SME System ID is null");
 	}
 
-	private void init(String id, byte type, int typeOfNumber, int numberingPlan,
+/*	private void init(String id, byte type, int typeOfNumber, int numberingPlan,
 							int interfaceVersion, String systemType, String password,
 							String addrRange, int smeN)
 			  throws NullPointerException
 	{
 	}
-
+*/
 	public boolean equals(Object obj)
 	{
 		if (obj instanceof SME)
@@ -177,5 +189,15 @@ public class SME
 	public int getTypeOfNumber()
 	{
 		return typeOfNumber;
+	}
+
+	public int getTimeout()
+	{
+		return timeout;
+	}
+
+	public boolean isWantAlias()
+	{
+		return wantAlias;
 	}
 }

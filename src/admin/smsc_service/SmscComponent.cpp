@@ -78,6 +78,8 @@ void SmscComponent::reReadConfigs()
 {
 	configs.smemanconfig->reload();
 	configs.cfgman->reinit();
+  configs.aliasconfig->reload();
+  configs.routesconfig->reload();
 }
 
 std::string SmscComponent::lookupProfile(const Arguments &args)

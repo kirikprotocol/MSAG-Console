@@ -148,6 +148,7 @@ Route * RouteConfig::createRoute(const DOM_Element &elem, const SubjectPHash &su
 
 RouteConfig::status RouteConfig::load(const char * const filename)
 {
+  config_filename.reset(cStringCopy(filename));
 	try
 	{
 		DOM_Document document = reader.read(filename);
@@ -179,6 +180,12 @@ RouteConfig::status RouteConfig::load(const char * const filename)
 		return fail;
 	}
 	return success;
+}
+
+RouteConfig::status RouteConfig::reload()
+{
+  clear();
+  load(config_filename.get());
 }
 
 RouteConfig::status RouteConfig::store(const char * const filename) const
