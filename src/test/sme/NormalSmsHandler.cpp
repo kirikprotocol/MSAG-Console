@@ -128,8 +128,8 @@ void NormalSmsHandler::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu,
 				{
 					__tc__("deliverySm.normalSms.checkTextDiffDataCoding");
 				}
-				__tc_fail2__(compare(origDc, origSm, origSmLen, dc, sm, smLen), 0);
-				__tc_fail2__(compare(origDc, origMp, origMpLen, dc, mp, mpLen), 10);
+				__tc_fail2__(compare(origDc, origSm, origSmLen, dc, sm, smLen, false), 0);
+				__tc_fail2__(compare(origDc, origMp, origMpLen, dc, mp, mpLen, false), 10);
 				__tc_ok_cond__;
 			}
 			break;
@@ -142,8 +142,8 @@ void NormalSmsHandler::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu,
 			{
 				__tc__("deliverySm.normalSms.checkTextDiffDataCoding");
 			}
-			__tc_fail2__(compare(origDc, origSm, origSmLen, dc, sm, smLen), 0);
-			__tc_fail2__(compare(origDc, origMp, origMpLen, dc, mp, mpLen), 10);
+			__tc_fail2__(compare(origDc, origSm, origSmLen, dc, sm, smLen, false), 0);
+			__tc_fail2__(compare(origDc, origMp, origMpLen, dc, mp, mpLen, false), 10);
 			__tc_ok_cond__;
 			break;
 		default:
@@ -186,6 +186,12 @@ void NormalSmsHandler::registerIntermediateNotificationMonitor(
 			break;
 		default:
 			__unreachable__("Invalid regDelivery");
+	}
+	if (monitor->pduData->intProps.count("ussdServiceOp"))
+	{
+		__tc__("deliverySm.reports.intermediateNotification.ussdServiceOp");
+		__tc_ok__;
+		return;
 	}
 	//startTime
 	time_t startTime;
@@ -271,6 +277,12 @@ void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* mon
 			break;
 		default:
 			__unreachable__("Invalid regDelivery");
+	}
+	if (monitor->pduData->intProps.count("ussdServiceOp"))
+	{
+		__tc__("deliverySm.reports.deliveryReceipt.ussdServiceOp");
+		__tc_ok__;
+		return;
 	}
 	//startTime & state
 	time_t startTime;
@@ -402,8 +414,8 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 		//optional
 		__tc__("deliverySm.normalSms.checkOptionalFields");
 		//отключить message_payload, который проверяется в compareMsgText()
-		__tc_fail2__(SmppUtil::compareOptional(
-			pdu.get_optional(), origPdu->get_optional(), OPT_MSG_PAYLOAD), 0);
+		__tc_fail2__(SmppUtil::compareOptional(pdu.get_optional(),
+			origPdu->get_optional(), OPT_MSG_PAYLOAD + OPT_RCPT_MSG_ID), 0);
 		__tc_ok_cond__;
 		//проверка механизма повторной доставки
 		__tc__("deliverySm.normalSms.scheduleChecks");
@@ -444,6 +456,13 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 				__unreachable__("Invalid respFlag");
 		}
 		monitor->deliveryStatus = deliveryResp.first;
+		//для ussd единственная попытка доставки
+		if (monitor->pduData->intProps.count("ussdServiceOp"))
+		{
+			__tc__("deliverySm.normalSms.ussdServiceOp");
+			__tc_ok__;
+			monitor->setNotExpected();
+		}
 		pduReg->registerMonitor(monitor); //тест кейсы на финализированные pdu
 		__tc_ok_cond__;
 		//зарегистрировать delivery report мониторы
