@@ -89,6 +89,7 @@ private:
 	RouteManager* routeMan;
 	RouteRegistry* routeReg;
 	void debugRoute(const char* tc, const RouteInfo* route);
+	void addRoute(const char* tc, int num, const RouteInfo* route, SmeProxy* proxy);
 	void setupRandomAddressMatch(Address& addr, int num);
 	void setupRandomAddressNotMatch(Address& addr, int num);
 	void printLookupResult(const Address& origAddr, const Address& destAddr,

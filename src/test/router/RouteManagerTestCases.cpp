@@ -29,8 +29,8 @@ RouteManagerTestCases::RouteManagerTestCases(RouteManager* _routeMan,
 	RouteRegistry* _routeReg)
 	: routeMan(_routeMan), routeReg(_routeReg)
 {
-	__require__(routeMan);
-	__require__(routeReg);
+	//__require__(routeMan);
+	//__require__(routeReg);
 }
 
 Category& RouteManagerTestCases::getLog()
@@ -129,6 +129,27 @@ void RouteManagerTestCases::setupRandomAddressNotMatch(Address& addr, int num)
 	}
 }
 
+void RouteManagerTestCases::addRoute(const char* tc, int num,
+	const RouteInfo* route, SmeProxy* proxy)
+{
+	if (routeReg)
+	{
+		if (routeReg->putRoute(*route, proxy))
+		{
+			debugRoute(tc, route);
+			if (routeMan)
+			{
+				routeMan->addRoute(*route);
+			}
+		}
+	}
+	else if (routeMan)
+	{
+		debugRoute(tc, route);
+		routeMan->addRoute(*route);
+	}
+}
+
 TCResult* RouteManagerTestCases::addCorrectRouteMatch(RouteInfo* route,
 	SmeProxy* proxy, int num)
 {
@@ -142,14 +163,10 @@ TCResult* RouteManagerTestCases::addCorrectRouteMatch(RouteInfo* route,
 			RouteUtil::setupRandomCorrectRouteInfo(route);
 			setupRandomAddressMatch(route->source, s.value1(numMatch1));
 			setupRandomAddressMatch(route->dest, s.value2(numMatch1));
-			if (routeReg->putRoute(*route, proxy))
-			{
-				char tc[64];
-				sprintf(tc, "addCorrectRouteMatch(%d,%d)",
-					s.value1(numMatch1), s.value2(numMatch1));
-				debugRoute(tc, route);
-				routeMan->addRoute(*route);
-			}
+			char tc[64];
+			sprintf(tc, "addCorrectRouteMatch(%d,%d)",
+				s.value1(numMatch1), s.value2(numMatch1));
+			addRoute(tc, s.value(), route, proxy);
 		}
 		catch(...)
 		{
@@ -198,11 +215,7 @@ TCResult* RouteManagerTestCases::addCorrectRouteNotMatch(RouteInfo* route,
 				default:
 					throw s;
 			}
-			if (routeReg->putRoute(*route, proxy))
-			{
-				debugRoute(tc, route);
-				routeMan->addRoute(*route);
-			}
+			addRoute(tc, s.value(), route, proxy);
 		}
 		catch(...)
 		{
@@ -243,13 +256,9 @@ TCResult* RouteManagerTestCases::addCorrectRouteNotMatch2(RouteInfo* route,
 				default:
 					throw s;
 			}
-			if (routeReg->putRoute(*route, proxy))
-			{
-				char tc[64];
-				sprintf(tc, "addCorrectRouteNotMatch2(%d)", s.value());
-				debugRoute(tc, route);
-				routeMan->addRoute(*route);
-			}
+			char tc[64];
+			sprintf(tc, "addCorrectRouteNotMatch2(%d)", s.value());
+			addRoute(tc, s.value(), route, proxy);
 		}
 		catch(...)
 		{
@@ -294,8 +303,11 @@ TCResult* RouteManagerTestCases::addIncorrectRoute(
 			char tc[64];
 			sprintf(tc, "addIncorrectRoute(%d)", s.value());
 			debugRoute(tc, &route);
-			routeMan->addRoute(route);
-			res->addFailure(101);
+			if (routeMan)
+			{
+				routeMan->addRoute(route);
+				res->addFailure(101);
+			}
 		}
 		catch(...)
 		{
@@ -346,6 +358,7 @@ void RouteManagerTestCases::printLookupResult(const Address& origAddr,
 TCResult* RouteManagerTestCases::lookupRoute(const Address& origAddr,
 	const Address& destAddr)
 {
+	__require__(routeReg && routeMan);
 	TCResult* res = new TCResult(TC_LOOKUP_ROUTE);
 	try
 	{
