@@ -225,7 +225,7 @@ Connection* ConnectionPool::getConnection()
         queue.connection = 0L;
         monitor.wait(&queue.condition);
         cond_destroy(&queue.condition);
-        __trace2__("got connection %p",connection);
+        __trace2__("got connection %p",queue.connection);
         return queue.connection;
     }
     
