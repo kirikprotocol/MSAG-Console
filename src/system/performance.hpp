@@ -53,7 +53,14 @@ public:
 class PerformanceDataDispatcher:public PerformanceListener{
 public:
   PerformanceDataDispatcher(){}
-  ~PerformanceDataDispatcher(){}
+  ~PerformanceDataDispatcher()
+  {
+    for(int i=0;i<sockets.Count();i++)
+    {
+      sockets[i]->Abort();
+      delete sockets[i];
+    }
+  }
   void reportPerformance(PerformanceData* data)
   {
     MutexGuard g(mtx);
