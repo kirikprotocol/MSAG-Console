@@ -22,6 +22,7 @@
 #include <admin/service/Component.h>
 #include <admin/service/ComponentManager.h>
 #include <admin/service/ServiceSocketListener.h>
+#include <system/status.h>
 
 #include "TaskProcessor.h"
 #include "InfoSmeComponent.h"
