@@ -29,6 +29,17 @@ using namespace smsc::test::sms; //constants
 		__trace2__("%s(): pdu = NULL", tc); \
 	}
 
+#define __dumpReplaceSmPdu__(tc, id, pdu) \
+	if (pdu) { \
+		__trace2__("%s(): systemId = %s, sequenceNumber = %u, scheduleDeliveryTime = %ld, validityPeriod = %ld", \
+			tc, id.c_str(), (pdu)->get_header().get_sequenceNumber(), \
+			SmppUtil::string2time((pdu)->get_scheduleDeliveryTime(), time(NULL)), \
+			SmppUtil::string2time((pdu)->get_validityPeriod(), time(NULL))); \
+		(pdu)->dump(TRACE_LOG_STREAM); \
+	} else { \
+		__trace2__("%s(): pdu = NULL", tc); \
+	}
+
 #define __dumpPdu__(tc, id, pdu) \
 	if (pdu) { \
 		__trace2__("%s(): systemId = %s, sequenceNumber = %u", \
@@ -126,10 +137,12 @@ public:
 	static vector<int> compareOptional(SmppOptional& opt1, SmppOptional& opt2);
 
 	static void setupRandomCorrectAddress(PduAddress* addr);
-	static void setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu);
-	static void setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu);
+	static void setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
+		uint64_t mask = 0xffffffffffffffff, bool check = true);
+	static void setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
+		uint64_t mask = 0xffffffffffffffff, bool check = true);
 	static void setupRandomCorrectOptionalParams(SmppOptional& opt,
-		uint64_t mask = 0xffffffffffffffff);
+		uint64_t mask = 0xffffffffffffffff, bool check = true);
 
 };
 
