@@ -13,7 +13,7 @@ using namespace std;
 
 static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc);
 static void PauseOnImsiReq(MapDialog* map);
-static const string& SC_ADDERSS() { static string s("79029869999"); return s;}
+static const string& SC_ADDRESS() { static string s("79029869999"); return s;}
 
 string ImsiToString(const ET96MAP_IMSI_T* imsi)
 {
