@@ -29,7 +29,7 @@ void correctJobTc()
 	__reg_tc__("submitDbSmeCmd.correct.job.delete",
 		"Выполнение delete записей из таблицы");
 	__reg_tc__("submitDbSmeCmd.correct.job.select",
-		"Выполнение выборки записей из таблицы");
+		"Выполнение select записей из таблицы");
 }
 
 void correctInputTc()
@@ -62,6 +62,8 @@ void correctInputTc()
 		"Отправка команд с отсутствующими значениями для параметров допускающих значения по умолчанию");
 	__reg_tc__("submitDbSmeCmd.correct.defaultInput.int",
 		"Значения по умолчанию для целочисленных параметров типа int8, int16, int32 или int64");
+	__reg_tc__("submitDbSmeCmd.correct.defaultInput.uint",
+		"Значения по умолчанию для целочисленных параметров типа uint8, uint16, uint32 или uint64");
 	__reg_tc__("submitDbSmeCmd.correct.defaultInput.float",
 		"Значения по умолчанию для параметров типа float, double или long double");
 	__reg_tc__("submitDbSmeCmd.correct.defaultInput.string",
@@ -72,27 +74,28 @@ void correctInputTc()
 
 void incorrectInputTc()
 {
-	__reg_tc__("submitDbSmeCmd.incorrect.input",
-		"Отправка команд с неправильными параметрами");
-	__reg_tc__("submitDbSmeCmd.incorrect.input.missingParams",
+	__reg_tc__("submitDbSmeCmd.incorrect", "Отправка неправильной команды db sme");
+	__reg_tc__("submitDbSmeCmd.incorrect.missingParams",
 		"Отсутствуют обязательные параметры");
-	__reg_tc__("submitDbSmeCmd.incorrect.input.extraParams",
+	__reg_tc__("submitDbSmeCmd.incorrect.extraParams",
 		"Присутствуют лишние параметры");
+	__reg_tc__("submitDbSmeCmd.incorrect.invalidJob",
+		"Неправильное имя задачи");
 	//dateFormat
 	__reg_tc__("submitDbSmeCmd.incorrect.dateFormat",
 		"Формат даты не соответствует ожидаемому");
 	__reg_tc__("submitDbSmeCmd.incorrect.dateFormat.invalidDay",
 		"Неправильное задано число (равно 0, больше 31 и т.п.)");
 	__reg_tc__("submitDbSmeCmd.incorrect.dateFormat.invalidMonth",
-		"Неправильно задан месяца (равен 0, больше 13, ожидается Jan, получено 01 и т.п.)");
+		"Неправильно задан месяц (равен 0, больше 13, ожидается Jan, получено 01 и т.п.)");
 	__reg_tc__("submitDbSmeCmd.incorrect.dateFormat.invalidYear",
 		"Неправильно задан год (по формату ожидается 2002, получено 02 и наоборот)");
 	__reg_tc__("submitDbSmeCmd.incorrect.dateFormat.invalidHour",
-		"Неправильно задан час (0 am, 0 pm, 13am, 13 pm, 24 часа)");
+		"Неправильно задан час (0 am, 0 pm, 13am, 13 pm, 24 и больше)");
 	__reg_tc__("submitDbSmeCmd.incorrect.dateFormat.invalidMinute",
-		"Неправильно задана минута (60 минут)");
+		"Неправильно задана минута (60 и больше)");
 	__reg_tc__("submitDbSmeCmd.incorrect.dateFormat.invalidSecond",
-		"Неправильно задана секунда (60 секунд)");
+		"Неправильно задана секунда (60 и больше)");
 	__reg_tc__("submitDbSmeCmd.incorrect.dateFormat.invalidIndicator",
 		"Неправильно задан индикатор am/pm");
 	//invalidNumber
@@ -114,24 +117,32 @@ void processDbSmeRes()
 	__reg_tc__("processDbSmeRes", "Ответные сообщения от db sme");
 	__reg_tc__("processDbSmeRes.dataCoding",
 		"Ответные сообщения приходят в дефолтной кодировке SC");
+	__reg_tc__("processDbSmeRes.longOutput",
+		"В случае большого размера ответного сообщения db sme правильно распределяет ответ по нескольким sms");
+	__reg_tc__("processDbSmeRes.longOutputLimit",
+		"В случае большого размера ответного сообщения db sme правильно ограничивает количество sms");
 	//processDbSmeRes.input
 	__reg_tc__("processDbSmeRes.input",
 		"Значения параметров правильно зачитываются из input");
 	__reg_tc__("processDbSmeRes.input.int",
-		"Параметры типа int8, int16, int32 и int64");
+		"Параметры типа int8, int16, int32, int64, uint8, uint16, uint32 и uint64");
 	__reg_tc__("processDbSmeRes.input.float",
-		"Параметры типа float, double и long double правильно зачитываются из input с учетом формата");
+		"Параметры типа float, double и long double с учетом формата");
 	__reg_tc__("processDbSmeRes.input.string",
 		"Строковые параметры");
 	__reg_tc__("processDbSmeRes.input.date",
-		"Дата и время правильно зачитываются из input с учетом формата");
+		"Дата и время с учетом формата");
+	__reg_tc__("processDbSmeRes.input.jobName",
+		"Значение параметра имени задачи job-name вычисляется правильно");
+	__reg_tc__("processDbSmeRes.input.toAddress",
+		"Значение параметра адреса получателя to-address вычисляется правильно");
 	__reg_tc__("processDbSmeRes.input.fromAddress",
 		"Значение параметра адреса отправителя from-address вычисляется правильно");
 	//processDbSmeRes.defaultInput
 	__reg_tc__("processDbSmeRes.defaultInput",
 		"Для отсутствующих input параметров берутся значения по умолчанию");
 	__reg_tc__("processDbSmeRes.defaultInput.int",
-		"Константа по умолчанию для целочисленных параметров типа int8, int16, int32 и int64");
+		"Константа по умолчанию для целочисленных параметров типа int8, int16, int32, int64, uint8, uint16, uint32 и uint64");
 	__reg_tc__("processDbSmeRes.defaultInput.float",
 		"Константа по умолчанию для параметров типа float, double и long double");
 	__reg_tc__("processDbSmeRes.defaultInput.string",
@@ -146,13 +157,9 @@ void processDbSmeRes()
 		"Значение по умолчанию tomorrow для даты вычисляется правильно");
 	//processDbSmeRes.output
 	__reg_tc__("processDbSmeRes.output",
-		"Текст сообщений соответствует шаблону (значения из БД, выравнивание полей, формат даты, escape символы");
-	__reg_tc__("processDbSmeRes.longOutput",
-		"В случае большого размера ответного сообщения db sme правильно распределяет ответ по нескольким sms");
-	__reg_tc__("processDbSmeRes.longOutputLimit",
-		"В случае большого размера ответного сообщения db sme правильно ограничивает количество sms");
+		"Текст сообщений соответствует шаблону (значения из БД, выравнивание полей, формат даты, escape символы)");
 	__reg_tc__("processDbSmeRes.output.dateFormat",
-		"Дата правильно преобразуется из одного input формата в другой output формат");
+		"Дата выводится в соответствии с output форматом");
 	__reg_tc__("processDbSmeRes.output.jobName",
 		"Значение параметра имени задачи job-name вычисляется правильно");
 	__reg_tc__("processDbSmeRes.output.toAddress",
@@ -171,9 +178,9 @@ void processDbSmeRes()
 	__reg_tc__("processDbSmeRes.select",
 		"Запросы на выборку данных");
 	__reg_tc__("processDbSmeRes.select.defaultOutput",
-		"При отсутствии записей удовлетворяющих условиям запроса или нулевых (NULL) значениях полей для output параметров берутся значения по умолчанию");
+		"При отсутствии записей удовлетворяющих условиям запроса или нулевых (NULL) значениях полей берутся output значения по умолчанию");
 	__reg_tc__("processDbSmeRes.select.defaultOutput.int",
-		"Константа по умолчанию для целочисленных параметров типа int8, int16, int32 и int64");
+		"Константа по умолчанию для целочисленных параметров типа int8, int16, int32, int64, uint8, uint16, uint32 и uint64");
 	__reg_tc__("processDbSmeRes.select.defaultOutput.float",
 		"Константа по умолчанию для параметров типа float, double и long double");
 	__reg_tc__("processDbSmeRes.select.defaultOutput.string",
@@ -222,12 +229,6 @@ void processDbSmeRes()
 	//processDbSmeRes.errors
 	__reg_tc__("processDbSmeRes.errors",
 		"Для неправильных команд db sme отправляет соответствующие сообщения об ошибках");
-	__reg_tc__("processDbSmeRes.errors.invalidJob",
-		"Неправильное имя задачи");
-	__reg_tc__("processDbSmeRes.errors.missingParameter",
-		"Не задан обязательный параметр");
-	__reg_tc__("processDbSmeRes.errors.invalidInput",
-		"Неправильно заданные параметры");
 	__reg_tc__("processDbSmeRes.errors.invalidConfig",
 		"Неправильная конфигурация задачи (sql, input, output)");
 }
@@ -258,8 +259,6 @@ public:
 		__reg_tc__("submitDbSmeCmd.correct", "Отправка правильной команды db sme");
 		correctJobTc();
 		correctInputTc();
-		//submitDbSmeCmd.incorrect
-		__reg_tc__("submitDbSmeCmd.incorrect", "Отправка неправильной команды db sme");
 		incorrectInputTc();
 		//result
 		processDbSmeRes();
