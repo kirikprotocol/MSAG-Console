@@ -53,18 +53,30 @@ bool SmsUtil::compareDescriptors(const Descriptor& d1, const Descriptor& d2)
 */
 
 #define __compare_int_body_tag__(tagName, errCode) \
-	if ((_b1->hasIntProperty(Tag::tagName) && !_b2->hasIntProperty(Tag::tagName)) || \
-		(!_b1->hasIntProperty(Tag::tagName) && _b2->hasIntProperty(Tag::tagName)) || \
-		(_b1->hasIntProperty(Tag::tagName) && _b2->hasIntProperty(Tag::tagName) && \
-		_b1->getIntProperty(Tag::tagName) != _b2->getIntProperty(Tag::tagName))) \
-	{ res.push_back(errCode); }
+	if (_b1->hasIntProperty(Tag::tagName) && !_b2->hasIntProperty(Tag::tagName)) { \
+		__trace2__("%s: %d != NULL", #tagName, _b1->getIntProperty(Tag::tagName)); \
+		res.push_back(errCode); \
+	} else if (!_b1->hasIntProperty(Tag::tagName) && _b2->hasIntProperty(Tag::tagName)) { \
+		__trace2__("%s: NULL != %d", #tagName, _b2->getIntProperty(Tag::tagName)); \
+		res.push_back(errCode); \
+	} else if (_b1->hasIntProperty(Tag::tagName) && _b2->hasIntProperty(Tag::tagName) && \
+		_b1->getIntProperty(Tag::tagName) != _b2->getIntProperty(Tag::tagName)) { \
+	   __trace2__("%s: %d != %d", #tagName, _b1->getIntProperty(Tag::tagName), _b2->getIntProperty(Tag::tagName)); \
+	   res.push_back(errCode); \
+	}
 
 #define __compare_str_body_tag__(tagName, errCode) \
-	if ((_b1->hasStrProperty(Tag::tagName) && !_b2->hasStrProperty(Tag::tagName)) || \
-		(!_b1->hasStrProperty(Tag::tagName) && _b2->hasStrProperty(Tag::tagName)) || \
-		(_b1->hasStrProperty(Tag::tagName) && _b2->hasStrProperty(Tag::tagName) && \
-		_b1->getStrProperty(Tag::tagName) != _b2->getStrProperty(Tag::tagName))) \
-	{ res.push_back(errCode); }
+	if (_b1->hasStrProperty(Tag::tagName) && !_b2->hasStrProperty(Tag::tagName)) { \
+	   __trace2__("%s: %s != NULL", #tagName, _b1->getStrProperty(Tag::tagName).c_str()); \
+	   res.push_back(errCode); \
+	} else if (!_b1->hasStrProperty(Tag::tagName) && _b2->hasStrProperty(Tag::tagName)) { \
+	   __trace2__("%s: NULL != %s", #tagName, _b2->getStrProperty(Tag::tagName).c_str()); \
+	   res.push_back(errCode); \
+	} else if (_b1->hasStrProperty(Tag::tagName) && _b2->hasStrProperty(Tag::tagName) && \
+		_b1->getStrProperty(Tag::tagName) != _b2->getStrProperty(Tag::tagName)) { \
+	   __trace2__("%s: %s != %s", #tagName, _b1->getStrProperty(Tag::tagName).c_str(), _b2->getStrProperty(Tag::tagName).c_str()); \
+	   res.push_back(errCode); \
+	}
 
 vector<int> SmsUtil::compareMessageBodies(const Body& b1, const Body& b2)
 {
@@ -107,6 +119,15 @@ vector<int> SmsUtil::compareMessageBodies(const Body& b1, const Body& b2)
 		res.push_back(errCode); \
 	}
 
+#define __compare_int__(getter, errCode, accuracy) \
+	if (abs(_sms1->getter() - _sms2->getter()) > accuracy) { \
+		ostringstream s1, s2; \
+		s1 << _sms1->getter(); \
+		s2 << _sms2->getter(); \
+		__trace2__("%s: %s != %s", #getter, s1.str().c_str(), s2.str().c_str()); \
+		res.push_back(errCode); \
+	}
+
 vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, SmsCompareFlag flag)
 {
 	SMS* _sms1 = const_cast<SMS*>(&sms1);
@@ -118,7 +139,7 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, SmsCompar
 	__compare__(getValidTime, 3);
 	__compare__(getAttemptsCount, 4);
 	__compare__(getLastResult, 5);
-	__compare__(getLastTime, 6);
+	__compare_int__(getLastTime, 6, 1); //точность сравнения = 1 секунда
 	__compare__(getNextTime, 7);
 	__compare__(getOriginatingAddress, 8);
 	__compare__(getDestinationAddress, 9);
@@ -153,42 +174,54 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, SmsCompar
 #define __set_int__(type, field, value) \
 	type tmp##field = value; \
 	p->set##field(tmp##field); \
-	__require__(p->get##field() == tmp##field);
+	if (check) { \
+		__require__(p->get##field() == tmp##field); \
+	}
 
 #define __set_bool__(field, value) \
 	bool tmp##field = value; \
 	p->set##field(tmp##field); \
-	__require__(p->is##field() == tmp##field);
+	if (check) { \
+		__require__(p->is##field() == tmp##field); \
+	}
 
 #define __set_str__(field, length) \
 	int len##field = length; \
 	auto_ptr<char> str##field = rand_char(len##field); \
 	p->set##field(len##field, str##field.get()); \
-	char tmp##field[len##field + 10]; \
-	p->get##field(tmp##field); \
-	__require__(!strcmp(tmp##field, str##field.get()));
+	if (check) { \
+		char tmp##field[len##field + 10]; \
+		p->get##field(tmp##field); \
+		__require__(!strcmp(tmp##field, str##field.get())); \
+	}
 
 #define __set_str2__(field, length) \
 	int len##field = length; \
 	auto_ptr<char> str##field = rand_char(len##field); \
 	p->set##field(str##field.get()); \
-	char tmp##field[len##field + 10]; \
-	p->get##field(tmp##field); \
-	__require__(!strcmp(tmp##field, str##field.get()));
+	if (check) { \
+		char tmp##field[len##field + 10]; \
+		p->get##field(tmp##field); \
+		__require__(!strcmp(tmp##field, str##field.get())); \
+	}
 
 #define __set_addr__(field) \
 	Address tmp##field; \
-	setupRandomCorrectAddress(&tmp##field); \
+	setupRandomCorrectAddress(&tmp##field, check); \
 	p->set##field(tmp##field); \
-	__require__(p->get##field()== tmp##field);
+	if (check) { \
+		__require__(p->get##field()== tmp##field); \
+	}
 
 #define __set_desc__(field) \
 	Descriptor tmp##field; \
-	setupRandomCorrectDescriptor(&tmp##field); \
+	setupRandomCorrectDescriptor(&tmp##field, check); \
 	p->set##field(tmp##field); \
-	__require__(p->get##field() == tmp##field);
+	if (check) { \
+		__require__(p->get##field() == tmp##field); \
+	}
 
-void SmsUtil::setupRandomCorrectAddress(Address* addr, int minLen, int maxLen)
+void SmsUtil::setupRandomCorrectAddress(Address* addr, int minLen, int maxLen, bool check)
 {
 	__require__(addr);
 	__require__(minLen > 0 && maxLen <= MAX_ADDRESS_VALUE_LENGTH);
@@ -199,12 +232,12 @@ void SmsUtil::setupRandomCorrectAddress(Address* addr, int minLen, int maxLen)
 	__set_str__(Value, rand2(minLen, maxLen));
 }
 	
-void SmsUtil::setupRandomCorrectAddress(Address* addr)
+void SmsUtil::setupRandomCorrectAddress(Address* addr, bool check)
 {
-	setupRandomCorrectAddress(addr, 1, MAX_ADDRESS_VALUE_LENGTH);
+	setupRandomCorrectAddress(addr, 1, MAX_ADDRESS_VALUE_LENGTH, check);
 }
 
-void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc)
+void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc, bool check)
 {
 	__require__(desc);
 	Descriptor* p = desc;
@@ -218,16 +251,20 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc)
 	if (mask & (pos <<= 1)) { \
 		__trace2__("set_int_body_tag: " #tagName ", pos = 0x%llx", pos); \
 		uint32_t tmp = value; \
-		intMap[Tag::tagName] = tmp; \
 		body->setIntProperty(Tag::tagName, tmp); \
+		if (check) { \
+			intMap[Tag::tagName] = tmp; \
+		} \
 	}
 
 #define __set_str_body_tag__(tagName, length) \
 	if (mask & (pos <<= 1)) { \
 		__trace2__("set_str_body_tag: " #tagName ", pos = 0x%llx", pos); \
 		auto_ptr<char> str = rand_char(length); \
-		strMap.insert(StrMap::value_type(Tag::tagName, str.get())); \
 		body->setStrProperty(Tag::tagName, str.get()); \
+		if (check) { \
+			strMap.insert(StrMap::value_type(Tag::tagName, str.get())); \
+		} \
 	}
 
 #define __check_int_body_tag__(tagName) \
@@ -340,7 +377,7 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t mask, bool check)
 	__set_int__(uint8_t, DeliveryReport, rand0(255));
 	__set_int__(uint8_t, BillingRecord, rand0(3));
 	__set_desc__(OriginatingDescriptor);
-	//setupRandomCorrectDescriptor(sms->getDestinationDescriptor());
+	//setupRandomCorrectDescriptor(sms->getDestinationDescriptor(), check);
 	setupRandomCorrectBody(&sms->getMessageBody(), mask, check);
 	//bool attach;
 }
