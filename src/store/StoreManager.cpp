@@ -1616,7 +1616,7 @@ void CachedStore::loadMaxCacheCapacity(Manager& config)
     catch (ConfigException& exc)
     {
         maxCacheCapacity = SMSC_MAX_SMS_CACHE_CAPACITY;
-        __warn2__(&log,"Config parameter: <MessageStore.Cache.capacity> missed. "
+        __warn2__((&log),"Config parameter: <MessageStore.Cache.capacity> missed. "
                  "Using default: %d.", maxCacheCapacity);
     }
 }
@@ -1633,9 +1633,9 @@ CachedStore::CachedStore(Manager& config, SchedTimer* sched)
 CachedStore::~CachedStore()
 {
     MutexGuard  guard(cacheMutex);
-    __info__(&log, "CachedStore: cleaning cache..." );
+    __info__((&log), "CachedStore: cleaning cache..." );
     if (cache) delete cache;
-    __info__(&log, "CachedStore: cache cleaned." );
+    __info__((&log), "CachedStore: cache cleaned." );
 }
 
 SMSId CachedStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
@@ -1643,9 +1643,9 @@ SMSId CachedStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
 {
     SMSId retId;
 
-    __debug2__(&log,"Creating sms, smsId = %lld, flag = %d", id, flag);
+    __debug2__((&log),"Creating sms, smsId = %lld, flag = %d", id, flag);
     retId = RemoteStore::createSms(sms, id, flag);
-    __debug2__(&log,"Created sms, smsId = %lld, retId = %lld", id, retId);
+    __debug2__((&log),"Created sms, smsId = %lld, retId = %lld", id, retId);
 
     SMS* sm = new SMS(sms);
     MutexGuard cacheGuard(cacheMutex);
@@ -1659,21 +1659,21 @@ void CachedStore::retriveSms(SMSId id, SMS &sms)
     throw(StorageException, NoSuchMessageException)
 {
     if( sms.hasBinProperty(Tag::SMSC_CONCATINFO) ) 
-      __warn2__(&log,"smsId = %lld 'empty sms' already have concatinfo", id);
+      __warn2__((&log),"smsId = %lld 'empty sms' already have concatinfo", id);
     SMS* sm = 0;
     {
         MutexGuard cacheGuard(cacheMutex);
         sm = cache->getSms(id);
         if (sm) {
             sms = *sm;
-            __debug2__(&log,"smsId = %lld found in cache.", id);
+            __debug2__((&log),"smsId = %lld found in cache.", id);
             return;
         }
     }
 
-    __debug2__(&log, "smsId = %lld retriving from DB ...", id);
+    __debug2__((&log), "smsId = %lld retriving from DB ...", id);
     RemoteStore::retriveSms(id, sms);
-    __debug2__(&log,"smsId = %lld retrived DB. concat=%d", id, sms.hasBinProperty(Tag::SMSC_CONCATINFO));
+    __debug2__((&log),"smsId = %lld retrived DB. concat=%d", id, sms.hasBinProperty(Tag::SMSC_CONCATINFO));
 
     if (sms.state == ENROUTE)
     {
@@ -1682,14 +1682,14 @@ void CachedStore::retriveSms(SMSId id, SMS &sms)
         cache->putSms(id, sm);
 
         SMS* sm1 = cache->getSms(id);
-        __debug2__(&log,"smsId = %lld concat check=%d", id, sm1.hasBinProperty(Tag::SMSC_CONCATINFO));
+        __debug2__((&log),"smsId = %lld concat check=%d", id, sm1.hasBinProperty(Tag::SMSC_CONCATINFO));
     }
 }
 
 void CachedStore::changeSmsConcatSequenceNumber(SMSId id, int8_t inc)
     throw(StorageException, NoSuchMessageException)
 {
-    __debug2__(&log, "Changing seqNum for smsId = %lld.", id);
+    __debug2__((&log), "Changing seqNum for smsId = %lld.", id);
     RemoteStore::changeSmsConcatSequenceNumber(id, inc);
 
     SMS* sm = 0;
@@ -1745,7 +1745,7 @@ void CachedStore::changeSmsStateToEnroute(SMSId id, const Descriptor& dst,
                                           time_t nextTryTime, uint32_t attempts)
     throw(StorageException, NoSuchMessageException)
 {
-    __debug2__(&log, "Changing to ENROUTE for smsId = %lld.", id);
+    __debug2__((&log), "Changing to ENROUTE for smsId = %lld.", id);
     time_t lastTryTime = time(0);
     RemoteStore::changeSmsStateToEnroute(id, dst, failureCause, nextTryTime, attempts);
 
@@ -1777,7 +1777,7 @@ void CachedStore::changeSmsStateToDelivered(SMSId id,
                                             const Descriptor& dst)
     throw(StorageException, NoSuchMessageException)
 {
-    __debug2__(&log, "Changing to DELIVERED for smsId = %lld.", id);
+    __debug2__((&log), "Changing to DELIVERED for smsId = %lld.", id);
     RemoteStore::changeSmsStateToDelivered(id, dst);
     MutexGuard cacheGuard(cacheMutex);
     cache->delSms(id);
@@ -1787,7 +1787,7 @@ void CachedStore::changeSmsStateToUndeliverable(SMSId id,
                                                 uint32_t failureCause)
     throw(StorageException, NoSuchMessageException)
 {
-    __debug2__(&log, "Changing to UNDELIVERABLE for smsId = %lld.", id);
+    __debug2__((&log), "Changing to UNDELIVERABLE for smsId = %lld.", id);
     RemoteStore::changeSmsStateToUndeliverable(id, dst, failureCause);
     MutexGuard cacheGuard(cacheMutex);
     cache->delSms(id);
@@ -1795,7 +1795,7 @@ void CachedStore::changeSmsStateToUndeliverable(SMSId id,
 void CachedStore::changeSmsStateToExpired(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
-    __debug2__(&log, "Changing to EXPIRED for smsId = %lld.", id);
+    __debug2__((&log), "Changing to EXPIRED for smsId = %lld.", id);
     RemoteStore::changeSmsStateToExpired(id);
     MutexGuard cacheGuard(cacheMutex);
     cache->delSms(id);
@@ -1803,7 +1803,7 @@ void CachedStore::changeSmsStateToExpired(SMSId id)
 void CachedStore::changeSmsStateToDeleted(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
-    __debug2__(&log, "Changing to DELETED for smsId = %lld.", id);
+    __debug2__((&log), "Changing to DELETED for smsId = %lld.", id);
     RemoteStore::changeSmsStateToDeleted(id);
     MutexGuard cacheGuard(cacheMutex);
     cache->delSms(id);
