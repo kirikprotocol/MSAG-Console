@@ -734,6 +734,19 @@ void reportsTc()
 		"Проверка правильности маршрута (определение sme по адресу отправителя и адресу SC)");
 	__reg_tc__("sms.reports.checkFields",
 		"Общая проверка правильности полей");
+	//sms.reports.priorityCheck
+	__reg_tc__("sms.reports.priorityCheck",
+		"Приоритеты проверки необходимости отправки отчеты о доставке");
+	__reg_tc__("sms.reports.priorityCheck.ussdServiceOp",
+		"Если установлено опциональное поле ussd_service_op, то SC не отправляет отчеты о доставке (независимо от наличия директивы #ack#)");
+	__reg_tc__("sms.reports.priorityCheck.directiveAck",
+		"Если задана директива #ack#, то SC отправляет отчеты о доставке (независимо от наличия на маршруте флага suppressDeliveryReports)");
+	__reg_tc__("sms.reports.priorityCheck.directiveNoAck",
+		"Если задана директива #noack#, то SC не отправляет отчеты о доставке (независимо от значения поля registered_delivery в pdu)");
+	__reg_tc__("sms.reports.priorityCheck.suppressDeliveryReports",
+		"Если на маршруте установлен флаг suppressDeliveryReports, то SC не отправляет отчеты о доставке (независимо от значения поля registered_delivery в pdu)");
+	__reg_tc__("sms.reports.priorityCheck.profileReportFull",
+		"Если в профиле отправителя на момент отправки sms установлен режим отчетов REPORT_FULL, то SC отправляет отчеты о доставке (независимо от значения поля registered_delivery в pdu)");
 	//sms.reports.deliveryReceipt
 	__reg_tc__("sms.reports.deliveryReceipt",
 		"Подтверждения доставки");
@@ -745,10 +758,6 @@ void reportsTc()
 		"Подтверждение доставки на ошибку не доставляется в случае успешной доставки оригинального сообщения");
 	__reg_tc__("sms.reports.deliveryReceipt.expiredDeliveryReceipt",
 		"Подтверждение доставки при истечении срока валидности доставляется в момент времени validity_period, даже если последняя попытка доставки прошла раньше validity_period");
-	__reg_tc__("sms.reports.deliveryReceipt.ussdServiceOp",
-		"Если установлено опциональное поле ussd_service_op, то SC не отправляет подтверждения доставки");
-	__reg_tc__("sms.reports.deliveryReceipt.suppressDeliveryReports",
-		"Если на маршруте установлен флаг suppressDeliveryReports, то SC не отправляет подтверждения доставки");
 	__reg_tc__("sms.reports.deliveryReceipt.checkAllowed",
 		"Проверка правомерности получения подтверждений доставки (в зависимости от настроек профиля и поля pdu registered_delivery, единственный раз по окончании доставки оригинальной pdu)");
 	__reg_tc__("sms.reports.deliveryReceipt.recvTimeChecks",
@@ -764,10 +773,6 @@ void reportsTc()
 		"SC отправляет промежуточную нотификацию в момент времени schedule_delivery_time, если sme-получатель зарегистрирован как transmitter");
 	__reg_tc__("sms.reports.intermediateNotification.notBound",
 		"SC отправляет промежуточную нотификацию в момент времени schedule_delivery_time, если нет соединения с sme-получателем");
-	__reg_tc__("sms.reports.intermediateNotification.ussdServiceOp",
-		"Если установлено опциональное поле ussd_service_op, то SC не отправляет промежуточную нотификацию");
-	__reg_tc__("sms.reports.intermediateNotification.suppressDeliveryReports",
-		"Если на маршруте установлен флаг suppressDeliveryReports, то SC не отправляет промежуточную нотификацию");
 	__reg_tc__("sms.reports.intermediateNotification.checkAllowed",
 		"Проверка правомерности получения промежуточных нотификаций (в зависимости от настроек профиля и поля pdu registered_delivery, единственный раз после первой зарешедуленой попытки доставки)");
 	__reg_tc__("sms.reports.intermediateNotification.noRescheduling",
