@@ -179,6 +179,7 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
     cmd2->get_MultiResp()->set_unsuccessCount(0);
     SmeProxy* srcproxy =  cmd.getProxy();
     srcproxy->putCommand(cmd2);
+    return;
   }
   auto_ptr<ListTask> task(new ListTask());
   task->count = 0;
