@@ -9,7 +9,6 @@ package ru.novosoft.smsc.wsme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.Mask;
-import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.wsme.WSmeErrors;
 import ru.novosoft.smsc.wsme.WSmePreferences;
 import ru.novosoft.smsc.wsme.LangRow;
@@ -136,12 +135,6 @@ public class WSmeLangsFormBean extends WSmeBaseFormBean
   }
   public List getLangs() {
     return langs;
-  }
-
-  public void setSort(String sort) {
-    super.setSort(sort);
-    if (wsmePreferences != null)
-      wsmePreferences.setLangsSortOrder(sort);
   }
 
   public String getNewLang() {

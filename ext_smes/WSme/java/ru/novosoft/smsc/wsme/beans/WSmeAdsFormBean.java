@@ -149,12 +149,6 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
     return ads;
   }
 
-  public void setSort(String sort) {
-    super.setSort(sort);
-    if (wsmePreferences != null)
-      wsmePreferences.setAdsSortOrder(sort);
-  }
-
   public String getNewId() {
     return (newId == null) ? "":newId;
   }
