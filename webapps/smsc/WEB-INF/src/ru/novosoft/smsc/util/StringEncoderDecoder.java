@@ -22,25 +22,25 @@ public class StringEncoderDecoder
 
   public static String encode(String str)
   {
-    String result = "";
+    StringBuffer result = new StringBuffer(str);
     for (int i = 0; i < str.length(); i++)
     {
       switch (str.charAt(i))
       {
         case '<': // &lt;
-          result += "&lt;";
+          result.append( "&lt;" );
           break;
         case '>': //&gt;
-          result += "&gt;";
+          result.append( "&gt;" );
           break;
         case '&': //&amp;
-          result += "&amp;";
+          result.append( "&amp;" );
           break;
         case '"': //&quot;
-          result += "&quot;";
+          result.append( "&quot;" );
           break;
         default:
-          result += str.charAt(i);
+          result.append( str.charAt(i) );
       }
     }
     return result;
