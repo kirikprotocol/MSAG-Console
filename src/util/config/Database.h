@@ -20,24 +20,26 @@ class Database
 {
 public:
 	Database(DOM_Element & config_node);
-	const char * const getUrl() const {return url;};
+	const char * const getInstance() const {return instance;};
 	const char * const getUserName() const {return user;};
 	const char * const getPassword() const {return password;};
-	void setUrl(const char * const newUrl) throw (DOM_DOMException);
+	const int getConnectionsMax() const {return max;};
+	const int getConnectionsInit() const {return init;};
+	void setInstance(const char * const newInstance) throw (DOM_DOMException);
 	void setUserName(const char * const newUserName) throw (DOM_DOMException);
 	void setPassword(const char * const newPassword) throw (DOM_DOMException);
+	void setConnectionsMax(int newMax) throw (DOM_DOMException);
+	void setConnectionsInit(int newInit) throw (DOM_DOMException);
 
 private:
-	char *url;
-	char* user;
-	char* password;
+	char *instance;
+	char *user;
+	char *password;
+	int max;
+	int init;
 	DOM_Element node;
 
 	log4cpp::Category &logger;
-
-	static const DOMString url_name;
-	static const DOMString user_name;
-	static const DOMString password_name;
 };
 
 }

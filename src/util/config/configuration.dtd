@@ -1,9 +1,14 @@
 <?xml encoding="ISO-8859-1"?>
 
 <!ELEMENT configuration (db, log, map)>
-<!ELEMENT db (#PCDATA)>
-	<!ATTLIST db url CDATA #REQUIRED>
-	<!ATTLIST db user CDATA #IMPLIED>
+<!ELEMENT db (connections)>
+	<!ATTLIST db instance CDATA #REQUIRED>    <!-- const char * const-->
+	<!ATTLIST db userName CDATA #IMPLIED>     <!-- const char * const-->
+	<!ATTLIST db userPassword CDATA #IMPLIED> <!-- const char * const-->
+	<!ELEMENT connections (#CDATA)>
+	    <!ATTLIST connections max CDATA #IMPLIED>  <!-- int -->
+	    <!ATTLIST connections init CDATA #IMPLIED> <!-- int -->
+	
 <!ELEMENT log (#PCDATA)>
 	<!ATTLIST log location CDATA #REQUIRED>
 <!ELEMENT map (#PCDATA)>

@@ -1,29 +1,46 @@
 #include "Database.h"
 #include "XmlUtils.h"
+#include <xercesc/dom/DOM_NodeList.hpp>
 #include <util/Logger.h>
 
 namespace smsc   {
 namespace util   {
 namespace config {
 
-const DOMString Database::url_name(createDOMString("url"));
-const DOMString Database::user_name(createDOMString("user"));
-const DOMString Database::password_name(createDOMString("password"));
+const DOMString instance_name(createDOMString("instance"));
+const DOMString user_name(createDOMString("userName"));
+const DOMString password_name(createDOMString("userPassword"));
+const DOMString connections_name(createDOMString("connections"));
+const DOMString connections_max_name(createDOMString("max"));
+const DOMString connections_init_name(createDOMString("init"));
 
 Database::Database(DOM_Element & config_node)
 	: logger(smsc::util::Logger::getCategory("smsc.util.config.Database"))
 {
 	node = config_node;
-	url = node.getAttribute(url_name).transcode();
+	instance = node.getAttribute(instance_name).transcode();
 	user = node.getAttribute(user_name).transcode();
 	password = node.getAttribute(password_name).transcode();
+	DOM_NodeList list = node.getElementsByTagName(connections_name);
+	if (list.getLength() > 0)
+	{
+		DOM_Node n = list.item(0);
+		DOM_Element *e = (DOM_Element *)&n;
+		char * str = e->getAttribute(connections_max_name).transcode();
+		max = atoi(str);
+		delete[] str;
+
+		str = e->getAttribute(connections_init_name).transcode();
+		init = atoi(str);
+		delete[] str;
+	}
 }
 
-void Database::setUrl(const char * const newUrl)
+void Database::setInstance(const char * const newInstance)
 	throw (DOM_DOMException)
 {
-	node.setAttribute(url_name, newUrl);
-	replaceString(url, newUrl);
+	node.setAttribute(instance_name, newInstance);
+	replaceString(instance, newInstance);
 }
 
 void Database::setUserName(const char * const newUserName)
@@ -38,6 +55,22 @@ void Database::setPassword(const char * const newPassword)
 {
 	node.setAttribute(password_name, newPassword);
 	replaceString(password, newPassword);
+}
+
+void Database::setConnectionsMax(int newMax)
+	throw (DOM_DOMException)
+{
+	char str[32];
+	sprintf(str, "%.8i", newMax);
+	node.setAttribute(connections_max_name, str);
+}
+
+void Database::setConnectionsInit(int newInit)
+	throw (DOM_DOMException)
+{
+	char str[32];
+	sprintf(str, "%.8i", newInit);
+	node.setAttribute(connections_init_name, str);
 }
 
 }

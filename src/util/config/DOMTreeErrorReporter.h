@@ -13,20 +13,22 @@ namespace config {
 class DOMTreeErrorReporter : public ErrorHandler
 {
 public:
-    DOMTreeErrorReporter() :
-       fSawErrors(false), logger(smsc::util::Logger::getCategory("smsc.util.config.DomTreeErrorReporter"))
-    {
-    }
+	DOMTreeErrorReporter()
+		: fSawErrors(false),
+		  logger(smsc::util::
+			       Logger::getCategory("smsc.util.config.DomTreeErrorReporter"))
+	{
+	}
 
-    void warning(const SAXParseException& toCatch);
-    void error(const SAXParseException& toCatch);
-    void fatalError(const SAXParseException& toCatch);
-    void resetErrors();
+	void warning(const SAXParseException& toCatch);
+	void error(const SAXParseException& toCatch);
+	void fatalError(const SAXParseException& toCatch);
+	void resetErrors();
 
-    bool getSawErrors() const {return fSawErrors;};
+	bool getSawErrors() const {return fSawErrors;};
 
 private:
-    bool    fSawErrors;
+	bool fSawErrors;
 	log4cpp::Category& logger;
 };
 
