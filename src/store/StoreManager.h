@@ -59,7 +59,38 @@ namespace smsc { namespace store
         
         StoreManager() : MessageStore() {};
         virtual ~StoreManager() {};
-
+        
+        void doCreateSms(Connection* connection,
+            SMS& sms, SMSId id, const CreateMode flag)
+                throw(StorageException, DuplicateMessageException);
+        void doRetriveSms(Connection* connection, 
+            SMSId id, SMS& sms)
+                throw(StorageException, NoSuchMessageException);
+        void doReplaceSms(Connection* connection, 
+            SMSId id, const Address& oa, 
+            const Body& newBody, uint8_t deliveryReport,
+            time_t validTime = 0, time_t waitTime = 0)
+                throw(StorageException, NoSuchMessageException);
+        void doDestroySms(Connection* connection, SMSId id) 
+                throw(StorageException, NoSuchMessageException);
+        
+        void doChangeSmsStateToEnroute(Connection* connection,
+            SMSId id, const Descriptor& dst,
+            uint8_t failureCause, time_t nextTryTime)
+                throw(StorageException, NoSuchMessageException);
+        void doChangeSmsStateToDelivered(Connection* connection, 
+            SMSId id, const Descriptor& dst)
+                throw(StorageException, NoSuchMessageException);
+        void doChangeSmsStateToUndeliverable(Connection* connection, 
+            SMSId id, const Descriptor& dst, uint8_t failureCause)
+                throw(StorageException, NoSuchMessageException);
+        void doChangeSmsStateToExpired(Connection* connection, 
+            SMSId id, uint8_t failureCause)
+                throw(StorageException, NoSuchMessageException);
+        void doChangeSmsStateToDeleted(Connection* connection,
+            SMSId id) 
+                throw(StorageException, NoSuchMessageException);
+    
     public:    
         
         static void startup(Manager& config)
@@ -120,17 +151,33 @@ namespace smsc { namespace store
             return archiver->isInProgress();
         }
 
-        virtual SMSId store(const SMS &sms)  
-            throw(StorageException, DuplicateMessageException);
-        virtual void retrive(SMSId id, SMS &sms)
-            throw(StorageException, NoSuchMessageException);
-        virtual void remove(SMSId id) 
-            throw(StorageException, NoSuchMessageException);
-        virtual void replace(SMSId id, const SMS &sms) 
-            throw(StorageException, NoSuchMessageException); 
-        virtual void update(SMSId id, const State state, 
-                            time_t operationTime=0, uint8_t fcs=0) 
-            throw(StorageException, NoSuchMessageException); 
+        virtual SMSId createSms(SMS& sms, const CreateMode flag = CREATE_NEW)
+                throw(StorageException, DuplicateMessageException);
+        virtual void retriveSms(SMSId id, SMS &sms)
+                throw(StorageException, NoSuchMessageException);
+        virtual void replaceSms(SMSId id, const Address& oa,
+            const Body& newBody, uint8_t deliveryReport,
+            time_t validTime = 0, time_t waitTime = 0)
+                throw(StorageException, NoSuchMessageException); 
+        /* Needed for test needs. Will be removed.*/
+        virtual void destroySms(SMSId id) 
+                throw(StorageException, NoSuchMessageException);
+        
+        virtual void changeSmsStateToEnroute(SMSId id,
+            const Descriptor& dst, uint8_t failureCause, time_t nextTryTime) 
+                throw(StorageException, NoSuchMessageException); 
+        virtual void changeSmsStateToDelivered(SMSId id, 
+            const Descriptor& dst) 
+                throw(StorageException, NoSuchMessageException); 
+        virtual void changeSmsStateToUndeliverable(SMSId id,
+            const Descriptor& dst, uint8_t failureCause) 
+                throw(StorageException, NoSuchMessageException); 
+        virtual void changeSmsStateToExpired(SMSId id, 
+            uint8_t failureCause) 
+                throw(StorageException, NoSuchMessageException); 
+        virtual void changeSmsStateToDeleted(SMSId id) 
+                throw(StorageException, NoSuchMessageException); 
+       
     };
 
 }}

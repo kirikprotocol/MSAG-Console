@@ -2,7 +2,8 @@
 #include <stdlib.h>
 
 #include <util/config/Manager.h>
-#include <StoreManager.h>
+
+#include "StoreManager.h"
 
 int main(void) 
 {
@@ -31,26 +32,25 @@ int main(void)
 
     static char* oa = "123.456.7.890.123.456";
     static char* da = "098.7.654.321";
-    static char* body = "";
-    //static char* body = "Test message's body !";
+    //static char* body = "";
+    static char* body = "Test message's body !";
 
     memset((void *)&sms, 0, sizeof(sms));
 
-    sms.setState(ENROUTE);
+    Descriptor dsc(4, "MSC1", 5, "IMSI1", 511);
+
     sms.setOriginatingAddress(strlen(oa), 1, 2, oa);
+    sms.setOriginatingDescriptor(dsc);
     sms.setDestinationAddress(strlen(da), 2, 1, da);
     sms.setWaitTime((time_t)1000L);
     sms.setValidTime((time_t)360000L);
     sms.setSubmitTime((time_t)100L);
-    sms.setDeliveryTime((time_t)100L);
     sms.setMessageReference(5);
-    sms.setMessageIdentifier(7);
     sms.setPriority(1);
     sms.setProtocolIdentifier(1);
-    sms.setStatusReportRequested(true);
-    sms.setRejectDuplicates(true);
+    sms.setDeliveryReport(24);
     sms.setArchivationRequested(true);
-    sms.setFailureCause(5);
+    sms.setEServiceType("GSM");
     sms.setMessageBody(strlen(body), 1, true, (uint8_t *)body);
     
     const int NUM_OF_TEST_MESSAGES = 10000;
@@ -59,14 +59,9 @@ int main(void)
     {
         store = StoreManager::getMessageStore();
 
-        sms.setRejectDuplicates(true);
+        SMSId id = store->createSms(sms);
+        printf("Message was stored, id = %u !\n", id);
 
-        SMSId id = store->store(sms);
-        printf("Message was stored !\n");
-
-        id = store->store(sms);
-        printf("Message was stored !\n");
-        
         /*time_t begTime, endTime;
         printf("\nStoring %d messages, please wait ... \n", 
                 NUM_OF_TEST_MESSAGES);

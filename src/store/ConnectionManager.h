@@ -24,14 +24,18 @@ namespace smsc { namespace store
     using namespace smsc::core::synchronization;
     using namespace smsc::sms;
     
+    class ConnectionPool;
     class Connection
     {
-    friend class Statement;
+        friend class Statement;
+        friend class ConnectionPool;
+
     private:
 
         Connection* next;
 
-        static Mutex connectLock;
+        static Mutex    connectLock;
+        Mutex           mutex;
 
         bool    isConnected, isDead;
         log4cpp::Category      &log;
@@ -39,6 +43,14 @@ namespace smsc { namespace store
         const char* dbInstance;
         const char* dbUserName;
         const char* dbUserPassword;
+        
+        inline void setNextConnection(Connection* connection) {
+            next = connection;
+        };
+        
+        inline Connection* getNextConnection(void) {
+            return next;
+        };
     
     protected:
         
@@ -50,59 +62,82 @@ namespace smsc { namespace store
         
         Array<Statement *>      statements;
 
-        StoreStatement*         StoreStmt;
-        RemoveStatement*        RemoveStmt;
-        RetriveStatement*       RetriveStmt;
-        IsRejectedStatement*    IsRejectStmt;
-        IsTimeCorrectStatement* IsTimedStmt;
-
-        Mutex           mutex;
+        NeedOverwriteStatement* needOverwriteStmt;
+        NeedRejectStatement*    needRejectStmt;
+        OverwriteStatement*     overwriteStmt;
+        StoreStatement*         storeStmt;
+        RetriveStatement*       retriveStmt;
+        DestroyStatement*       destroyStmt;
         
-        void checkErr(sword status) 
-            throw(StorageException);
-    
+        ReplaceStatement*       replaceStmt;
+        ReplaceVTStatement*     replaceVTStmt;
+        ReplaceWTStatement*     replaceWTStmt;
+        ReplaceVWTStatement*    replaceVWTStmt;
+        
+        ToEnrouteStatement*         toEnrouteStmt;
+        ToDeliveredStatement*       toDeliveredStmt;
+        ToUndeliverableStatement*   toUndeliverableStmt;
+        ToExpiredStatement*         toExpiredStmt;
+        ToDeletedStatement*         toDeletedStmt;
+        
     public:
-
-        void connect()
-            throw(ConnectionFailedException);
-        void disconnect();
 
         Connection(const char* instance, 
                    const char* user, const char* password);
         virtual ~Connection();
 
-        inline void assign(Statement* statement) {
-            statements.Push(statement);
-        };
+        void check(sword status) 
+            throw(StorageException);
+    
+        void connect()
+            throw(ConnectionFailedException);
+        void disconnect();
         
-        inline void setNextConnection(Connection* connection) {
-            next = connection;
-        };
-        
-        inline Connection* getNextConnection(void) {
-            return next;
-        };
-
-        inline bool isAvailable() {
-            return (isConnected && !isDead);
-        };
-
-        void store(const SMS &sms, SMSId id) 
-            throw(StorageException, DuplicateMessageException);
-        void retrive(SMSId id, SMS &sms) 
-            throw(StorageException, NoSuchMessageException);
-        void remove(SMSId id) 
-            throw(StorageException, NoSuchMessageException);
-        void replace(SMSId id, const SMS &sms) 
-            throw(StorageException, NoSuchMessageException);
-        void update(SMSId id, const State state, 
-                    time_t operationTime=0, uint8_t fcs=0) 
-            throw(StorageException, NoSuchMessageException);
-
         void commit()
             throw(StorageException);
         void rollback()
             throw(StorageException);
+
+        inline void assign(Statement* statement) {
+            statements.Push(statement);
+        };
+        
+        inline bool isAvailable() {
+            return (isConnected && !isDead);
+        };
+
+        NeedOverwriteStatement* getNeedOverwriteStatement() 
+            throw(ConnectionFailedException);
+        NeedRejectStatement*    getNeedRejectStatement() 
+            throw(ConnectionFailedException); 
+        OverwriteStatement*     getOverwriteStatement() 
+            throw(ConnectionFailedException);
+        StoreStatement*         getStoreStatement() 
+            throw(ConnectionFailedException); 
+        DestroyStatement*       getDestroyStatement() 
+            throw(ConnectionFailedException);
+        RetriveStatement*       getRetriveStatement() 
+            throw(ConnectionFailedException); 
+        
+        ReplaceStatement*       getReplaceStatement() 
+            throw(ConnectionFailedException); 
+        ReplaceVTStatement*     getReplaceVTStatement() 
+            throw(ConnectionFailedException); 
+        ReplaceWTStatement*     getReplaceWTStatement() 
+            throw(ConnectionFailedException); 
+        ReplaceVWTStatement*    getReplaceVWTStatement() 
+            throw(ConnectionFailedException); 
+        
+        ToEnrouteStatement*         getToEnrouteStatement()
+            throw(ConnectionFailedException); 
+        ToDeliveredStatement*       getToDeliveredStatement()
+            throw(ConnectionFailedException); 
+        ToUndeliverableStatement*   getToUndeliverableStatement()
+            throw(ConnectionFailedException); 
+        ToExpiredStatement*         getToExpiredStatement()
+            throw(ConnectionFailedException); 
+        ToDeletedStatement*         getToDeletedStatement()
+            throw(ConnectionFailedException); 
     };
     
     struct ConnectionQueue

@@ -332,8 +332,8 @@ Connection::Connection(const char* instance,
                        const char* user, const char* password) 
     : isConnected(false), isDead(false), next(0L),
         dbInstance(instance), dbUserName(user), dbUserPassword(password), 
-            StoreStmt(0L), RemoveStmt(0L), RetriveStmt(0L), 
-                IsRejectStmt(0L), IsTimedStmt(0L), 
+            storeStmt(0L), /*removeStmt(0L),*/ retriveStmt(0L), 
+                needRejectStmt(0L), needOverwriteStmt(0L), overwriteStmt(0L), 
                     envhp(0L), errhp(0L), svchp(0L), srvhp(0L), sesshp(0L), 
                         log(Logger::getCategory("smsc.store.Connection"))
 {
@@ -345,7 +345,7 @@ Connection::~Connection()
     MutexGuard  guard(mutex);
     disconnect();
 };
-
+        
 void Connection::connect() 
     throw(ConnectionFailedException) 
 {
@@ -358,39 +358,44 @@ void Connection::connect()
         if (!isConnected)
         {
             // open connection to DB and begin user session 
-            checkErr(OCIEnvCreate(&envhp, OCI_OBJECT|OCI_ENV_NO_MUTEX,
-                                  (dvoid *)0, 0, 0, 0, (size_t) 0, (dvoid **)0));
-            checkErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&errhp,
-                                    OCI_HTYPE_ERROR, (size_t) 0, (dvoid **)0));
-            checkErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&srvhp,
-                                    OCI_HTYPE_SERVER, (size_t) 0, (dvoid **) 0)); 
-            checkErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&svchp,
-                                    OCI_HTYPE_SVCCTX, (size_t) 0, (dvoid **) 0));
-            checkErr(OCIServerAttach(srvhp, errhp, (text *)dbInstance,
-                                     strlen(dbInstance), OCI_DEFAULT));
-            checkErr(OCIAttrSet((dvoid *)svchp, OCI_HTYPE_SVCCTX,
-                                (dvoid *)srvhp, (ub4) 0, OCI_ATTR_SERVER, errhp));
-            checkErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&sesshp,
-                                    OCI_HTYPE_SESSION, (size_t) 0, (dvoid **) 0));   
-            checkErr(OCIAttrSet((dvoid *)sesshp, (ub4) OCI_HTYPE_SESSION,
-                                (dvoid *)dbUserName, (ub4)strlen(dbUserName),
-                                (ub4) OCI_ATTR_USERNAME, errhp));
-            checkErr(OCIAttrSet((dvoid *)sesshp, (ub4) OCI_HTYPE_SESSION,
-                                (dvoid *)dbUserPassword, 
-                                (ub4) strlen(dbUserPassword),
-                                (ub4) OCI_ATTR_PASSWORD, errhp));
-            checkErr(OCISessionBegin(svchp, errhp, sesshp, OCI_CRED_RDBMS,
-                                     (ub4) OCI_DEFAULT));
-            checkErr(OCIAttrSet((dvoid *)svchp, (ub4) OCI_HTYPE_SVCCTX,
-                                (dvoid *)sesshp, (ub4) 0,
-                                (ub4) OCI_ATTR_SESSION, errhp));
+            check(OCIEnvCreate(&envhp, OCI_OBJECT|OCI_ENV_NO_MUTEX,
+                               (dvoid *)0, 0, 0, 0, (size_t) 0, (dvoid **)0));
+            check(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&errhp,
+                                 OCI_HTYPE_ERROR, (size_t) 0, (dvoid **)0));
+            check(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&srvhp,
+                                 OCI_HTYPE_SERVER, (size_t) 0, (dvoid **) 0)); 
+            check(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&svchp,
+                                 OCI_HTYPE_SVCCTX, (size_t) 0, (dvoid **) 0));
+            check(OCIServerAttach(srvhp, errhp, (text *)dbInstance,
+                                  strlen(dbInstance), OCI_DEFAULT));
+            check(OCIAttrSet((dvoid *)svchp, OCI_HTYPE_SVCCTX,
+                             (dvoid *)srvhp, (ub4) 0, OCI_ATTR_SERVER, errhp));
+            check(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&sesshp,
+                                 OCI_HTYPE_SESSION, (size_t) 0, (dvoid **) 0));   
+            check(OCIAttrSet((dvoid *)sesshp, (ub4) OCI_HTYPE_SESSION,
+                             (dvoid *)dbUserName, (ub4)strlen(dbUserName),
+                             (ub4) OCI_ATTR_USERNAME, errhp));
+            check(OCIAttrSet((dvoid *)sesshp, (ub4) OCI_HTYPE_SESSION,
+                             (dvoid *)dbUserPassword, 
+                             (ub4) strlen(dbUserPassword),
+                             (ub4) OCI_ATTR_PASSWORD, errhp));
+            check(OCISessionBegin(svchp, errhp, sesshp, OCI_CRED_RDBMS,
+                                  (ub4) OCI_DEFAULT));
+            check(OCIAttrSet((dvoid *)svchp, (ub4) OCI_HTYPE_SVCCTX,
+                             (dvoid *)sesshp, (ub4) 0,
+                             (ub4) OCI_ATTR_SESSION, errhp));
             
-            StoreStmt = new StoreStatement(this); assign(StoreStmt);
-            RemoveStmt = new RemoveStatement(this); assign(RemoveStmt);
-            RetriveStmt = new RetriveStatement(this); assign(RetriveStmt);
-            IsRejectStmt = new IsRejectedStatement(this); assign(IsRejectStmt);
-            IsTimedStmt = new IsTimeCorrectStatement(this); assign(IsTimedStmt);
+            storeStmt = new StoreStatement(this); 
+            destroyStmt = new DestroyStatement(this); 
+            retriveStmt = new RetriveStatement(this); 
+            needRejectStmt = new NeedRejectStatement(this); 
+            needOverwriteStmt = new NeedOverwriteStatement(this); 
             
+            replaceStmt = new ReplaceStatement(this); 
+            replaceVTStmt = new ReplaceVTStatement(this); 
+            replaceWTStmt = new ReplaceWTStatement(this); 
+            replaceVWTStmt = new ReplaceVWTStatement(this); 
+
             isConnected = true; isDead = false;
         }
     }
@@ -427,161 +432,19 @@ void Connection::disconnect()
     }
 }
 
-inline void Connection::commit()
+void Connection::commit()
     throw(StorageException)
 {
-    checkErr(OCITransCommit(svchp, errhp, OCI_DEFAULT));
+    check(OCITransCommit(svchp, errhp, OCI_DEFAULT));
 }
 
-inline void Connection::rollback()
+void Connection::rollback()
     throw(StorageException)
 {
-    checkErr(OCITransRollback(svchp, errhp, OCI_DEFAULT));
+    check(OCITransRollback(svchp, errhp, OCI_DEFAULT));
 }
 
-void Connection::store(const SMS &sms, SMSId id) 
-    throw(StorageException, DuplicateMessageException)
-{
-    MutexGuard  guard(mutex);
-
-    connect();
-    
-    try
-    {
-        IsTimedStmt->setSMS(sms);
-        checkErr(IsTimedStmt->execute(OCI_DEFAULT));
-        if (sms.isStatusReportRequested()) 
-        {
-            IsRejectStmt->setSMS(sms);
-            checkErr(IsRejectStmt->execute(OCI_DEFAULT));
-        }
-    }
-    catch (StorageException& exc) 
-    {
-        throw exc;
-    }
-    
-    if (IsTimedStmt->isTimeIncorrect() || IsRejectStmt->isRejected())
-    {
-        DuplicateMessageException   exc;
-        //log.debug(exc.what());
-        throw exc;
-    }
-
-    StoreStmt->setSMS(sms);
-    StoreStmt->setSMSId(id);
-    try 
-    {
-        checkErr(StoreStmt->execute(OCI_DEFAULT/*OCI_COMMIT_ON_SUCCESS*/));
-        commit();
-    } 
-    catch (StorageException& exc) 
-    {
-        rollback();
-        throw exc;
-    }
-}
-
-void Connection::retrive(SMSId id, SMS &sms) 
-    throw(StorageException, NoSuchMessageException)
-{
-    MutexGuard  guard(mutex);
-
-    connect();
-
-    RetriveStmt->setSMSId(id);
-    sword status = RetriveStmt->execute(OCI_DEFAULT);
-    if ((status) == OCI_NO_DATA)
-    {
-        NoSuchMessageException exc(id);
-        //log.debug(exc.what());
-        throw exc;
-    }
-    else 
-    {
-        checkErr(status);
-        RetriveStmt->getSMS(sms);
-    }
-}
-
-void Connection::remove(SMSId id) 
-    throw(StorageException, NoSuchMessageException)
-{
-    MutexGuard  guard(mutex);
-
-    connect();
-    
-    RemoveStmt->setSMSId(id);
-    try 
-    {
-        checkErr(RemoveStmt->execute(OCI_DEFAULT/*OCI_COMMIT_ON_SUCCESS*/));
-    }
-    catch (StorageException& exc) 
-    {
-        rollback();
-        throw exc;
-    }
-    
-    if (!RemoveStmt->wasRemoved()) 
-    {
-        rollback();
-        NoSuchMessageException exc(id);
-        //log.debug(exc.what());
-        throw exc;
-    }
-    commit();
-}
-
-void Connection::replace(SMSId id, const SMS &sms) 
-    throw(StorageException, NoSuchMessageException)
-{
-    MutexGuard  guard(mutex);
-    
-    connect();
-    
-    ReplaceStatement* ReplaceStmt;
-    if (sms.getWaitTime() == 0 && sms.getValidTime() == 0) 
-    {
-        ReplaceStmt = new ReplaceStatement(this);
-    }
-    else if (sms.getWaitTime() == 0)
-    {
-        ReplaceStmt = new ReplaceVTStatement(this);
-    }
-    else if (sms.getValidTime() == 0)
-    {
-        ReplaceStmt = new ReplaceWTStatement(this);
-    }
-    else
-    {
-        ReplaceStmt = new ReplaceVWTStatement(this);
-    }
-    
-    ReplaceStmt->setSMS(sms);
-    ReplaceStmt->setSMSId(id);
-    try 
-    {
-        checkErr(ReplaceStmt->execute(OCI_DEFAULT/*OCI_COMMIT_ON_SUCCESS*/));
-    }
-    catch (StorageException& exc) 
-    {
-        delete ReplaceStmt;
-        rollback();
-        throw exc;
-    }
-
-    if (!ReplaceStmt->wasReplaced())
-    {
-        delete ReplaceStmt;
-        rollback();
-        NoSuchMessageException exc(id);
-        //log.debug(exc.what());
-        throw exc;
-    }
-    delete ReplaceStmt;
-    commit();
-}
-
+/*
 void Connection::update(SMSId id, const State state, 
                         time_t operationTime, uint8_t fcs)
     throw(StorageException, NoSuchMessageException)
@@ -619,7 +482,7 @@ void Connection::update(SMSId id, const State state,
     UpdateStmt->setSMSId(id);
     try 
     {
-        checkErr(UpdateStmt->execute(OCI_DEFAULT/*OCI_COMMIT_ON_SUCCESS*/));
+        checkErr(UpdateStmt->execute(OCI_DEFAULT));
     }
     catch (StorageException& exc) 
     {
@@ -638,9 +501,100 @@ void Connection::update(SMSId id, const State state,
     }
     delete UpdateStmt;
     commit();
+}*/
+
+NeedOverwriteStatement* Connection::getNeedOverwriteStatement() 
+    throw(ConnectionFailedException) 
+{
+    connect();
+    return needOverwriteStmt;
+}
+NeedRejectStatement* Connection::getNeedRejectStatement()
+    throw(ConnectionFailedException) 
+{
+    connect();
+    return needRejectStmt;
+}
+OverwriteStatement* Connection::getOverwriteStatement() 
+    throw(ConnectionFailedException)
+{
+    connect();
+    return overwriteStmt;
+}
+StoreStatement* Connection::getStoreStatement() 
+    throw(ConnectionFailedException) 
+{
+    connect();
+    return storeStmt;
+}
+RetriveStatement* Connection::getRetriveStatement() 
+    throw(ConnectionFailedException) 
+{
+    connect();
+    return retriveStmt;
+}
+DestroyStatement* Connection::getDestroyStatement() 
+    throw(ConnectionFailedException) 
+{
+    connect();
+    return destroyStmt;
+}
+ReplaceStatement* Connection::getReplaceStatement() 
+    throw(ConnectionFailedException)
+{
+    connect();
+    return replaceStmt;
+}
+ReplaceVTStatement* Connection::getReplaceVTStatement() 
+    throw(ConnectionFailedException)
+{
+    connect();
+    return replaceVTStmt;
+}
+ReplaceWTStatement* Connection::getReplaceWTStatement() 
+    throw(ConnectionFailedException)
+{
+    connect();
+    return replaceWTStmt;
+}
+ReplaceVWTStatement* Connection::getReplaceVWTStatement()
+    throw(ConnectionFailedException)
+{
+    connect();
+    return replaceVWTStmt;
+}
+ToEnrouteStatement* Connection::getToEnrouteStatement()
+    throw(ConnectionFailedException)
+{
+    connect();
+    return toEnrouteStmt;
+}
+ToDeliveredStatement* Connection::getToDeliveredStatement()
+    throw(ConnectionFailedException)
+{
+    connect();
+    return toDeliveredStmt;
+}
+ToUndeliverableStatement* Connection::getToUndeliverableStatement()
+    throw(ConnectionFailedException)
+{
+    connect();
+    return toUndeliverableStmt;
+}
+ToExpiredStatement* Connection::getToExpiredStatement()
+    throw(ConnectionFailedException)
+{
+    connect();
+    return toExpiredStmt;
+}
+ToDeletedStatement* Connection::getToDeletedStatement()
+    throw(ConnectionFailedException)
+{
+    connect();
+    return toDeletedStmt;
 }
 
-void Connection::checkErr(sword status) 
+void Connection::check(sword status) 
     throw(StorageException)
 {
     text        errbuf[1024];

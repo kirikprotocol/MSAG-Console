@@ -71,28 +71,18 @@ namespace smsc { namespace store
         ub4             idCounter; // for lookIdStmt
 
         SMSId           id;
-        uint8_t         uState;
-        uint8_t         msgReference;
+        SMS             sms;
         
-        uint8_t         oaLenght, oaType, oaPlan;
-        uint8_t         daLenght, daType, daPlan;
-        AddressValue    oaValue, daValue;
-
         OCIDate         waitTime;
         OCIDate         validTime;
         OCIDate         submitTime;
-        OCIDate         deliveryTime;
+        OCIDate         lastTime;
+        OCIDate         nextTime;
         
-        uint8_t         priority;
-        uint8_t         protocolIdentifier;
-        uint8_t         failureCause;
-        
-        char            bNeedArchivate;
+        uint8_t         uState;
+        char            bStatusReport;
         char            bHeaderIndicator;
-        
-        uint8_t         dataScheme;
-        uint8_t         dataLenght;
-        SMSData         data;
+        char            bNeedArchivate;
         
         const char* loadDBInstance(Manager& config, const char* cat)
             throw(ConfigException);

@@ -11,8 +11,6 @@ namespace smsc { namespace store
 {
     using namespace smsc::sms;
     
-    const uint8_t SMSC_BYTE_ENROUTE_STATE = (uint8_t)ENROUTE;
-
     class Connection;
     class Statement
     {
@@ -30,22 +28,23 @@ namespace smsc { namespace store
 
     public:
         
-        Statement(Connection* connection, const char* sql) 
+        Statement(Connection* connection, const char* sql, 
+                  bool assign=false) 
             throw(StorageException);
         virtual ~Statement();
 
-        void checkErr(sword status) 
+        void check(sword status) 
             throw(StorageException);
-        
+    
         void bind(ub4 pos, ub2 type, 
-                  dvoid* placeholder, sb4 size) 
+                  dvoid* placeholder, sb4 size, dvoid* indp = 0) 
             throw(StorageException);
         void bind(CONST text* name, sb4 name_len, ub2 type,
-                  dvoid* placeholder, sb4 size)
+                  dvoid* placeholder, sb4 size, dvoid* indp = 0)
             throw(StorageException);
         
         void define(ub4 pos, ub2 type, 
-                    dvoid* placeholder, sb4 size)
+                    dvoid* placeholder, sb4 size, dvoid* indp = 0)
             throw(StorageException);
 
         sword execute(ub4 mode=OCI_DEFAULT,
@@ -63,7 +62,8 @@ namespace smsc { namespace store
 
         SMSId   smsId;
         
-        IdStatement(Connection* connection, const char* sql) 
+        IdStatement(Connection* connection, const char* sql, 
+                    bool assign=false) 
             throw(StorageException)
                 : Statement(connection, sql) {};
     public:
@@ -78,7 +78,8 @@ namespace smsc { namespace store
     {
     public:
 
-        GetIdStatement(Connection* connection, const char* sql) 
+        GetIdStatement(Connection* connection, const char* sql, 
+                       bool assign=false)
             throw(StorageException);
         virtual ~GetIdStatement() {};
     };
@@ -87,49 +88,37 @@ namespace smsc { namespace store
     {
     public:
 
-        SetIdStatement(Connection* connection, const char* sql) 
+        SetIdStatement(Connection* connection, const char* sql, 
+                       bool assign=false)
             throw(StorageException);
         virtual ~SetIdStatement() {};
     };
 
-    class MessageStatement : public IdStatement
+    class StoreStatement : public IdStatement
     {
+    static const char* sql;
     protected:
-
-        SMS     sms;
         
         OCIDate waitTime;
         OCIDate validTime;
         OCIDate submitTime;
-        OCIDate deliveryTime;
-        
-        uint8_t         uState;
-        char            bStatusReport;
-        char            bHeaderIndicator;
-        char            bNeedArchivate;
-        
-        MessageStatement(Connection* connection, const char* sql) 
-            throw(StorageException)
-                : IdStatement(connection, sql) {};
+
+        char    bHeaderIndicator;
+        char    bNeedArchivate;
+
     public:
         
-        virtual ~MessageStatement() {};
-
-        void setSMS(const SMS &sms);
-        void getSMS(SMS &sms);
-    };
-
-    class StoreStatement : public MessageStatement
-    {
-    static const char* sql;
-    public:
-        
-        StoreStatement(Connection* connection)
+        StoreStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~StoreStatement() {};
+
+        void bindId(SMSId id)
+            throw(StorageException);
+        void bindSms(SMS& sms)
+            throw(StorageException);
     };
     
-    class IsRejectedStatement : public MessageStatement
+    class NeedRejectStatement : public Statement
     {
     static const char* sql;
     protected:
@@ -138,14 +127,21 @@ namespace smsc { namespace store
     
     public:
         
-        IsRejectedStatement(Connection* connection)
+        NeedRejectStatement(Connection* connection, bool assign=true)
             throw(StorageException);
-        virtual ~IsRejectedStatement() {};
+        virtual ~NeedRejectStatement() {};
+
+        void bindMr(dvoid* mr, sb4 size)
+            throw(StorageException);
+        void bindOriginatingAddress(Address& oa)
+            throw(StorageException);
+        void bindDestinationAddress(Address& da)
+            throw(StorageException);
         
-        bool isRejected();
+        bool needReject();
     };
     
-    class IsTimeCorrectStatement : public MessageStatement
+    class NeedOverwriteStatement : public Statement
     {
     static const char* sql;
     protected:
@@ -154,38 +150,106 @@ namespace smsc { namespace store
     
     public:
         
-        IsTimeCorrectStatement(Connection* connection)
+        NeedOverwriteStatement(Connection* connection, bool assign=true)
             throw(StorageException);
-        virtual ~IsTimeCorrectStatement() {};
+        virtual ~NeedOverwriteStatement() {};
+
+        void bindEServiceType(dvoid* type, sb4 size)
+            throw(StorageException);
+        void bindOriginatingAddress(Address& oa)
+            throw(StorageException);
+        void bindDestinationAddress(Address& da)
+            throw(StorageException);
         
-        bool isTimeIncorrect();
+        bool needOverwrite();
     };
     
-    class RetriveStatement : public MessageStatement
+    class OverwriteStatement : public Statement
+    {
+        OverwriteStatement(Connection* connection, bool assign=true) 
+            : Statement(connection, 0) {};
+    };
+
+    class RetriveStatement : public IdStatement
     {
     static const char* sql;
+    protected:
+
+        OCIDate waitTime;
+        OCIDate validTime;
+        OCIDate submitTime;
+        OCIDate lastTime;
+        OCIDate nextTime;
+        
+        uint8_t uState;
+        char    bHeaderIndicator;
+        char    bNeedArchivate;
+
+        sb2     indOA, indSrcMsc, indSrcImsi, indSrcSme;
+        sb2     indDA, indDstMsc, indDstImsi, indDstSme;
+        sb2     indWaitTime, indLastTime, indNextTime;
+    
     public:
         
-        RetriveStatement(Connection* connection)
+        RetriveStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~RetriveStatement() {};
+
+        void bindId(SMSId id)
+            throw(StorageException);
+        void defineSms(SMS& sms)
+            throw(StorageException);
+        void getSms(SMS& sms);
     };
     
-    class ReplaceStatement : public MessageStatement
+    class DestroyStatement : public IdStatement
+    {
+    static const char* sql;
+    public:
+        
+        DestroyStatement(Connection* connection, bool assign=true)
+            throw(StorageException);
+        virtual ~DestroyStatement() {};
+
+        void bindId(SMSId id)
+            throw(StorageException);
+        
+        inline bool wasDestroyed() {
+            return (getRowsAffectedCount() ? true:false);
+        };
+    };
+    
+    class ReplaceStatement : public IdStatement
     {
     static const char* sql;
     protected:
+        
+        OCIDate wTime;
+        OCIDate vTime;
 
-        ReplaceStatement(Connection* connection, const char* sql)
+        ReplaceStatement(Connection* connection, const char* sql,
+                         bool assign=true)
             throw(StorageException) 
-                : MessageStatement(connection, sql) {};
-
+                : IdStatement(connection, sql, assign) {};
     public:
         
-        ReplaceStatement(Connection* connection)
+        ReplaceStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~ReplaceStatement() {};
-
+        
+        void bindId(SMSId id)
+            throw(StorageException);
+        void bindOriginatingAddress(Address& oa)
+            throw(StorageException);
+        void bindBody(Body& body)
+            throw(StorageException);
+        void bindDeliveryReport(dvoid* dr, sb4 size)
+            throw(StorageException);
+        void bindValidTime(time_t validTime)
+            throw(StorageException);
+        void bindWaitTime(time_t waitTime)
+            throw(StorageException);
+        
         inline bool wasReplaced() {
             return (getRowsAffectedCount() ? true:false); 
         };
@@ -196,7 +260,7 @@ namespace smsc { namespace store
     static const char* sql;
     public:
         
-        ReplaceVTStatement(Connection* connection)
+        ReplaceVTStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~ReplaceVTStatement() {};
     };
@@ -206,7 +270,7 @@ namespace smsc { namespace store
     static const char* sql;
     public:
         
-        ReplaceWTStatement(Connection* connection)
+        ReplaceWTStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~ReplaceWTStatement() {};
     };
@@ -216,89 +280,115 @@ namespace smsc { namespace store
     static const char* sql;
     public:
         
-        ReplaceVWTStatement(Connection* connection)
+        ReplaceVWTStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~ReplaceVWTStatement() {};
     };
     
-    class RemoveStatement : public IdStatement
-    {
-    static const char* sql;
-    public:
-        
-        RemoveStatement(Connection* connection)
-            throw(StorageException);
-        virtual ~RemoveStatement() {};
-
-        inline bool wasRemoved() {
-            return (getRowsAffectedCount() ? true:false);
-        };
-    };
-    
-    class StateUpdateStatement : public IdStatement
+    class ToEnrouteStatement : public IdStatement
     {
     static const char* sql;
     protected:
         
-        uint8_t uState;
-
-        StateUpdateStatement(Connection* connection, const char* sql)
-            throw(StorageException) 
-                : IdStatement(connection, sql) {};
+        OCIDate nextTime;
     
     public:
 
-        StateUpdateStatement(Connection* connection)
+        ToEnrouteStatement(Connection* connection, bool assign=true)
             throw(StorageException);
-        virtual ~StateUpdateStatement() {};
+        virtual ~ToEnrouteStatement() {};
+
+        void bindId(SMSId id)
+            throw(StorageException);
+        void bindNextTime(time_t nextTryTime)
+            throw(StorageException);
+        void bindFailureCause(dvoid* cause, sb4 size)
+            throw(StorageException);
+        void bindDestinationDescriptor(Descriptor& dst)
+            throw(StorageException);
 
         inline bool wasUpdated() {
             return (getRowsAffectedCount() ? true:false);
         };
-        inline void setState(State state) {
-            uState = (uint8_t)state;
-        };
     };
     
-    class StateDateUpdateStatement : public StateUpdateStatement
+    class ToDeliveredStatement : public IdStatement
     {
     static const char* sql;
-    protected:
-
-        OCIDate     operationDate;
-    
-        StateDateUpdateStatement(Connection* connection, const char* sql)
-            throw(StorageException) 
-                : StateUpdateStatement(connection, sql) {};
     public:
 
-        StateDateUpdateStatement(Connection* connection)
+        ToDeliveredStatement(Connection* connection, bool assign=true)
             throw(StorageException);
-        virtual ~StateDateUpdateStatement() {};
+        virtual ~ToDeliveredStatement() {};
 
-        inline void setOpTime(time_t time) {
-            convertDateToOCIDate(&(time), &operationDate);
+        void bindId(SMSId id)
+            throw(StorageException);
+        void bindDestinationDescriptor(Descriptor& dst)
+            throw(StorageException);
+
+        inline bool wasUpdated() {
+            return (getRowsAffectedCount() ? true:false);
         };
     };
     
-    class StateDateFcsUpdateStatement : public StateDateUpdateStatement
+    class ToUndeliverableStatement : public IdStatement
     {
     static const char* sql;
-    protected:
-
-        uint8_t     fcs;
-
     public:
 
-        StateDateFcsUpdateStatement(Connection* connection)
+        ToUndeliverableStatement(Connection* connection, bool assign=true)
             throw(StorageException);
-        virtual ~StateDateFcsUpdateStatement() {};
+        virtual ~ToUndeliverableStatement() {};
 
-        inline void setFcs(uint8_t fcs) {
-            this->fcs = fcs;
+        void bindId(SMSId id)
+            throw(StorageException);
+        void bindFailureCause(dvoid* cause, sb4 size)
+            throw(StorageException);
+        void bindDestinationDescriptor(Descriptor& dst)
+            throw(StorageException);
+
+        inline bool wasUpdated() {
+            return (getRowsAffectedCount() ? true:false);
         };
     };
+    
+    class ToExpiredStatement : public IdStatement
+    {
+    static const char* sql;
+    public:
 
+        ToExpiredStatement(Connection* connection, bool assign=true)
+            throw(StorageException);
+        virtual ~ToExpiredStatement() {};
+
+        void bindFailureCause(dvoid* cause, sb4 size)
+            throw(StorageException);
+        void bindId(SMSId id)
+            throw(StorageException);
+
+        inline bool wasUpdated() {
+            return (getRowsAffectedCount() ? true:false);
+        };
+    };
+    
+    class ToDeletedStatement : public IdStatement
+    {
+    static const char* sql;
+    public:
+
+        ToDeletedStatement(Connection* connection, bool assign=true)
+            throw(StorageException);
+        virtual ~ToDeletedStatement() {};
+
+        void bindId(SMSId id)
+            throw(StorageException);
+
+        inline bool wasUpdated() {
+            return (getRowsAffectedCount() ? true:false);
+        };
+    };
+    
+   
 }}
 
 #endif
