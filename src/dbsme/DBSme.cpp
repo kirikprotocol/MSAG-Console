@@ -18,6 +18,7 @@
 
 #include <sme/SmppBase.hpp>
 #include <sms/sms.h>
+#include <util/xml/init.h>
 
 #include "CommandProcessor.h"
 
@@ -337,6 +338,16 @@ static void appSignalHandler(int sig)
     }
 }
 
+
+// added by igork
+void atExitHandler(void)
+{
+	sigsend(P_PID, getppid(), SIGCHLD);
+	smsc::util::xml::TerminateXerces();
+}
+
+
+
 int main(void) 
 {
     using smsc::db::DataSourceLoader;
@@ -346,6 +357,10 @@ int main(void)
 
     sigset(SIGTERM, appSignalHandler);
     sigset(SIGINT , appSignalHandler);
+
+    //added by igork
+    atexit(atExitHandler);
+
     
     /*while (!bDBSmeIsStopped) sleep(1);
     printf("Stopped.\n");
