@@ -98,7 +98,7 @@ public:
   const char* getAbonent() { 
     return abonent.get();
   }
-  void setAbonent(char* a) { 
+  void setAbonent(const char* a) { 
     abonent = auto_ptr<char>(new char[32]);
     memset(abonent.get(),0,32); 
     strncpy(abonent.get(),a,31); 
