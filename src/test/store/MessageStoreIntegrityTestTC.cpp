@@ -358,7 +358,7 @@ int main(int argc, char* argv[])
 {
 	if (argc != 3)
 	{
-		cout << "Usage: MessageStoreLoadTest <numCycles> <numSms>" << endl;
+		cout << "Usage: MessageStoreIntegrityTestTC <numCycles> <numSms>" << endl;
 		exit(0);
 	}
 

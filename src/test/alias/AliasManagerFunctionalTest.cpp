@@ -237,12 +237,12 @@ int main(int argc, char* argv[])
 {
 	if (argc != 3)
 	{
-		cout << "Usage: AliasManagerFunctionalTest <numCycles> <numAlias>" << endl;
+		cout << "Usage: AliasManagerFunctionalTest <numCycles> <numAddr>" << endl;
 		exit(0);
 	}
 
 	const int numCycles = atoi(argv[1]);
-	const int numAlias = atoi(argv[2]);
+	const int numAddr = atoi(argv[2]);
 	try
 	{
 		//Manager::init("config.xml");
@@ -250,7 +250,7 @@ int main(int argc, char* argv[])
 		for (int i = 0; i < numCycles; i++)
 		{
 			AliasManagerFunctionalTest test;
-			test.executeTest(filter, numAlias);
+			test.executeTest(filter, numAddr);
 			test.printAliases();
 		}
 		saveCheckList(filter);
