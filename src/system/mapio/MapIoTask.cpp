@@ -364,15 +364,15 @@ void MapIoTask::dispatcher()
 {
   MSG_T message;
   USHORT_T result;
-  message.receiver = MY_USER_ID;
   unsigned timecounter = 0;
+  message.receiver = MY_USER_ID;
   for(;;){
     MAP_isAlive = true;
     if ( isStopping ) return;
     MAP_dispatching = true;
-    result = EINSS7CpMsgRecv_r(&message,1000);
+    result = EINSS7CpMsgRecv_r(&message,100);
     MAP_dispatching = false;
-    if ( ++timecounter == 60 ) {
+    if ( ++timecounter % 300 ) {
       __trace2__("MAP: EINSS7CpMsgRecv_r TICK-TACK");
       if ( __global_bind_counter != CORRECT_BIND_COUNTER ){
         result = MSG_BROKEN_CONNECTION;
@@ -541,7 +541,12 @@ int MapTracker::Execute(){
 #ifdef USE_MAP
   for(;;){
     time_t t = time(0);
-    while(time(0)<(t+15)&&!isStopping)e.Wait(1000*(time(0)-(t+15)));
+    while(time(0)<(t+15)&&!isStopping){
+      time_t xx = tome(0);
+      if ( xx > t+15 ) break;
+      e.Wait(1000*(t-xx+15));
+    }
+    __trace2__("MAP tracker:: alive %d dispatching %d",MAP_isAlive,MAP_dispatching);
     if ( isStopping ) return 0;
     if ( MAP_dispatching && !MAP_isAlive ) {
       __trace2__("\n\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
