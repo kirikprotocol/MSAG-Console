@@ -1,12 +1,16 @@
 #include "ProfilerTestCases.hpp"
 #include "util/Logger.h"
+#include "util/config/Manager.h"
 #include "test/sms/SmsUtil.hpp"
 #include "ProfilerCheckList.hpp"
+#include "core/threads/ThreadPool.hpp"
 #include <sstream>
 
 using log4cpp::Category;
 using smsc::util::Logger;
 using smsc::profiler::Profile;
+using smsc::smeman::SmscCommand;
+using smsc::core::threads::ThreadPool;
 using smsc::test::sms::SmsUtil;
 using smsc::test::core::ProfileRegistry;
 using namespace smsc::test::profiler; //ProfilerTestCases, ProfilerCheckList
@@ -19,6 +23,7 @@ class ProfilerFunctionalTest
 {
 	Profile defProfile;
 	Profiler* profiler;
+	ThreadPool threadPool;
 	ProfileRegistry* profileReg;
 	CheckList* chkList;
 	ProfilerTestCases* tc;
@@ -45,7 +50,7 @@ ProfilerFunctionalTest::ProfilerFunctionalTest(CheckList* _chkList)
 
 ProfilerFunctionalTest::~ProfilerFunctionalTest()
 {
-	delete profiler;
+	//delete profiler;
 	delete profileReg;
 	delete tc;
 }
@@ -90,10 +95,13 @@ void ProfilerFunctionalTest::reinit()
 	//читается из БД. Мой profileReg оставить тот же самый
 	if (profiler)
 	{
-		delete profiler;
+		profiler->stop();
+		//profiler->putCommand(SmscCommand()); //чтобы отработал stop()
+		//delete profiler;
 	}
 	profiler = new Profiler(defProfile);
 	profiler->loadFromDB();
+	threadPool.startTask(profiler);
 	if (tc)
 	{
 		delete tc;
@@ -152,6 +160,7 @@ int main(int argc, char* argv[])
 
 	const int numCycles = atoi(argv[1]);
 	const int numAddr = atoi(argv[2]);
+	smsc::util::config::Manager::init("config.xml");
 	try
 	{
 		//Manager::init("config.xml");
@@ -162,9 +171,9 @@ int main(int argc, char* argv[])
 			test.executeTest(numAddr);
 		}
 		__trace__("Before save checklist");
-		chkList.save();
+		chkList.saveHtml();
 	}
-	catch (...)
+	catch (const char*)
 	{
 		cout << "Failed to execute test. See the logs" << endl;
 	}
