@@ -209,7 +209,6 @@ int MapTracker::Execute(){
   return 0;
 }
 
-
 void MapDialogContainer::registerSelf(SmeManager* smeman)
 {
   proxy.init();
