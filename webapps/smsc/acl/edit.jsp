@@ -30,6 +30,7 @@ MENU0_SELECTION = "MENU0_ACL";
 %>
 <input type="hidden" name="initialized" value="true">
 <input type="hidden" name="add" value="<%=add%>">
+<input type="hidden" name="id" value="<%=bean.getId()%>">   
 <script>
 var global_counter = 0;
 function addAclAddress()
@@ -59,10 +60,6 @@ function addAclAddress()
   <table class=properties_list cellspacing=0 cellspadding=0>
   <col width="15%">
   <col width="85%">
-  <tr class=row0>
-  	<td>id</td>
-  	<td><input class=txt name=id value="<%=bean.getId()%>" validation="positive" onkeyup="resetValidation(this)" <%=add ? "" : "readonly"%>></td>
-  </tr>
   <tr class=row1>
   	<td>name</td>
   	<td><input class=txt name="name" value="<%=bean.getName()%>" validation="nonEmpty" onkeyup="resetValidation(this)"></td>

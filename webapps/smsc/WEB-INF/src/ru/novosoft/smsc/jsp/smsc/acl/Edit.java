@@ -76,7 +76,7 @@ public class Edit extends PageBean
   {
     if (add) {
       try {
-        aclManager.createAcl(id, name, description, Arrays.asList(addresses));
+        aclManager.createAcl(name, description, Arrays.asList(addresses));
         return RESULT_DONE;
       } catch (AdminException e) {
         logger.error("Couldn't create acl " + id, e);

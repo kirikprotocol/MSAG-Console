@@ -35,9 +35,9 @@ public class AclManager
     appContext.getSmsc().aclRemove(aclId);
   }
 
-  public void createAcl(long aclId, String name, String description, List addresses) throws AdminException
+  public void createAcl(String name, String description, List addresses) throws AdminException
   {
-    appContext.getSmsc().aclCreate(aclId, name, description, addresses);
+    appContext.getSmsc().aclCreate(name, description, addresses);
   }
 
   public void updateAclInfo(long aclId, String name, String description) throws AdminException

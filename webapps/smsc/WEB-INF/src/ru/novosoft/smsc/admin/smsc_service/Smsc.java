@@ -538,10 +538,9 @@ public class Smsc extends Service
     call(SMSC_COMPONENT_ID, ACL_REMOVE, Type.Types[Type.BooleanType], params);
   }
 
-  public void aclCreate(long aclId, String name, String description, List addresses) throws AdminException
+  public void aclCreate(String name, String description, List addresses) throws AdminException
   {
     Map params = new HashMap();
-    params.put("id", new Long(aclId));
     params.put("name", name);
     params.put("description", description);
     params.put("addresses", addresses);
