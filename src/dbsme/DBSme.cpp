@@ -39,7 +39,7 @@ uint64_t    failuresNoticedCount = 0;
 
 Mutex       countersLock;
 
-static log4cpp::Category& log = Logger::getCategory("smsc.dbsme.DBSme");
+static log4cpp::Category& logger = Logger::getCategory("smsc.dbsme.DBSme");
 
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
 const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
@@ -146,7 +146,7 @@ public:
                 failuresNoticedCount++;
             }
             command.setOutData(exc.what()); // Error processing SMS !;
-            log.error( "std::exception caught while processing command: %s", exc.what() );
+            logger.error( "std::exception caught while processing command: %s", exc.what() );
         }
         catch (...)
         {
@@ -155,7 +155,7 @@ public:
                 failuresNoticedCount++;
             }
             command.setOutData("Unknown error"); // Error processing SMS !;
-            log.error( "... caught while processing command" );
+            logger.error( "... caught while processing command" );
         }
 
         SMS response;
@@ -292,7 +292,7 @@ public:
         }
         catch (ConfigException& exc) 
         {
-            log.warn("Maximum thread pool size wasn't specified !");
+            logger.warn("Maximum thread pool size wasn't specified !");
         }
         try
         {
@@ -302,7 +302,7 @@ public:
         }
         catch (ConfigException& exc) 
         {
-            log.warn("Precreated threads count in pool wasn't specified !");
+            logger.warn("Precreated threads count in pool wasn't specified !");
         }
     };
     
@@ -335,7 +335,7 @@ public:
     {
         bDBSmeIsConnected = false;
         __trace2__("Transport error !!!\n");
-        log.error("Oops, Error handled! Code is: %d\n", errorCode);
+        logger.error("Oops, Error handled! Code is: %d\n", errorCode);
     }
     
     void setTrans(SmppTransmitter *t)
@@ -466,7 +466,7 @@ int main(void)
 //            sigset(SIGTERM, appSignalHandler);
             sigset(SIGINT , appSignalHandler);
 
-            log.info("Connecting to SMSC ... ");
+            logger.info("Connecting to SMSC ... ");
             try
             {
                 listener.setTrans(session.getSyncTransmitter());
@@ -476,7 +476,7 @@ int main(void)
             catch (SmppConnectException& exc)
             {
                 const char* msg = exc.what(); 
-                log.error("Connect failed.\nCause: %s\n", (msg) ? msg:"unknown");
+                logger.error("Connect failed.\nCause: %s\n", (msg) ? msg:"unknown");
                 bDBSmeIsConnected = false;
                 if (exc.getReason() == 
                     SmppConnectException::Reason::bindFailed) throw;
@@ -485,7 +485,7 @@ int main(void)
                 runner.shutdown();
                 continue;
             }
-            log.info("Connected.\n");
+            logger.info("Connected.\n");
             
             while (!bDBSmeIsStopped && bDBSmeIsConnected) 
             {
@@ -496,19 +496,19 @@ int main(void)
                            requestsProcessingCount, requestsProcessedCount,
                            failuresNoticedCount);*/
             };
-            log.info("Disconnecting from SMSC ...\n");
+            logger.info("Disconnecting from SMSC ...\n");
             session.close();
             runner.shutdown();
         };
     }
     catch (ConfigException& exc) 
     {
-        log.error("Configuration invalid. Details: %s\n", exc.what());
+        logger.error("Configuration invalid. Details: %s\n", exc.what());
         return -2;
     }
     catch (exception& exc) 
     {
-        log.error("Top level exception: %s\n", exc.what());
+        logger.error("Top level exception: %s\n", exc.what());
         return -1;
     }
     return 0;
