@@ -96,6 +96,7 @@ inline unsigned ConvertText27bit(
   const unsigned char* text, unsigned chars, unsigned char* bit7buf,unsigned* elen,
   unsigned offset=0)
 {
+  __trace2__("MAP::ConvertText27bit: text %s",text);
   if ( chars > 160 ){
     __trace2__("MAP::ConvertText27bit: text length(%d) > 160",chars);
     throw runtime_error("text length > 160");
