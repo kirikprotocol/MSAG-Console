@@ -389,6 +389,50 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
+<%-- ############################### profiler USSD mapping ############################# --%>
+<dt class=secTitleClosed onclick='showhide(this)'>ussdOpsMapping</dt>
+<dd style="display:none">
+<table class=secRep cellspacing=1 width="100%">
+<%row=0;%>
+<col width=180px>
+<tr class=row<%=(row++)&1%>>
+	<th class=label>REPORT NONE:</th>
+	<td><input class=txtW name="profiler.ussdOpsMapping.REPORT NONE" value="<%=bean.getIntParam("profiler.ussdOpsMapping.REPORT NONE")%>"></td>
+</tr>
+<tr class=row<%=(row++)&1%>>
+	<th class=label>REPORT FULL:</th>
+	<td><input class=txtW name="profiler.ussdOpsMapping.REPORT FULL" value="<%=bean.getIntParam("profiler.ussdOpsMapping.REPORT FULL")%>"></td>
+</tr>
+<tr class=row<%=(row++)&1%>>
+	<th class=label>REPORT FINAL:</th>
+	<td><input class=txtW name="profiler.ussdOpsMapping.REPORT FINAL" value="<%=bean.getIntParam("profiler.ussdOpsMapping.REPORT FINAL")%>"></td>
+</tr>
+<tr class=row<%=(row++)&1%>>
+	<th class=label>LOCALE RU_RU:</th>
+	<td><input class=txtW name="profiler.ussdOpsMapping.LOCALE RU_RU" value="<%=bean.getIntParam("profiler.ussdOpsMapping.LOCALE RU_RU")%>"></td>
+</tr>
+<tr class=row<%=(row++)&1%>>
+	<th class=label>LOCALE EN_EN:</th>
+	<td><input class=txtW name="profiler.ussdOpsMapping.LOCALE EN_EN" value="<%=bean.getIntParam("profiler.ussdOpsMapping.LOCALE EN_EN")%>"></td>
+</tr>
+<tr class=row<%=(row++)&1%>>
+	<th class=label>DEFAULT:</th>
+	<td><input class=txtW name="profiler.ussdOpsMapping.DEFAULT" value="<%=bean.getIntParam("profiler.ussdOpsMapping.DEFAULT")%>"></td>
+</tr>
+<tr class=row<%=(row++)&1%>>
+	<th class=label>UCS2:</th>
+	<td><input class=txtW name="profiler.ussdOpsMapping.UCS2" value="<%=bean.getIntParam("profiler.ussdOpsMapping.UCS2")%>"></td>
+</tr>
+<tr class=row<%=(row++)&1%>>
+	<th class=label>HIDE:</th>
+	<td><input class=txtW name="profiler.ussdOpsMapping.HIDE" value="<%=bean.getIntParam("profiler.ussdOpsMapping.HIDE")%>"></td>
+</tr>
+<tr class=row<%=(row++)&1%>>
+	<th class=label>UNHIDE:</th>
+	<td><input class=txtW name="profiler.ussdOpsMapping.UNHIDE" value="<%=bean.getIntParam("profiler.ussdOpsMapping.UNHIDE")%>"></td>
+</tr>
+</table>
+</dd>
 <%-- ################################# sms ################################ --%>
 <dt class=secTitleClosed onclick='showhide(this)'>sms</dt>
 <dd style="display:none">
