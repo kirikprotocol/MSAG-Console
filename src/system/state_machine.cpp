@@ -1467,6 +1467,8 @@ StateType StateMachine::replace(Tuple& t)
     t.command->get_replaceSm().validityPeriod:sms.getValidTime();
   time_t newsched=t.command->get_replaceSm().scheduleDeliveryTime?
     t.command->get_replaceSm().scheduleDeliveryTime:sms.getNextTime();
+  time_t now=time(NULL);
+  if(newsched<now)newsched=now;
 
   if(newsched>newvalid)
   {
