@@ -24,14 +24,9 @@ namespace smsc { namespace distrlist
     
     class DistrListManager : public DistrListAdmin
     {
-    private:
-
-        static const char* selectMembersSql;
-        static const char* checkSubmitterSql;
-
     protected:
         
-        static log4cpp::Category&   log;
+        static log4cpp::Category&   logger;
         
         DataSource&     ds;
         
@@ -41,9 +36,19 @@ namespace smsc { namespace distrlist
             throw(ConfigException);
         virtual ~DistrListManager();
 
-        virtual Array<Address> members(
-            string dlName, const Address& submitter)
-                throw(SQLException, IllegalSubmitterException);
+        virtual Array<Address> members(string dlName, const Address& submitter)
+            throw(SQLException, IllegalSubmitterException);
+
+        virtual void addPrincipal(const Principal& prc)
+            throw(SQLException, PrincipalAlreadyExistsException);
+        
+        virtual void addMember(string dlName, const Address& member) 
+            throw(SQLException, ListNotExistsException, MemberAlreadyExistsException);
+        virtual void deleteMember(string dlName, const Address& member) 
+            throw(SQLException, ListNotExistsException, MemberNotExistsException);
+        virtual void deleteMembers(string dlName) 
+            throw(SQLException, ListNotExistsException);
+
     };
 
 }}

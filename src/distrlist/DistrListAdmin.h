@@ -18,6 +18,35 @@ namespace smsc { namespace distrlist
     using namespace smsc::db;
     using namespace smsc::sms;
     
+    struct Principal
+    {
+        string  address;
+        int     maxLst, maxEl;
+
+        Principal(string address="", int maxLst=0, int maxEl=0)
+            : address(address), maxLst(maxLst), maxEl(maxEl) {};
+        Principal(const Principal& prc)
+            : address(prc.address), maxLst(prc.maxLst), maxEl(prc.maxEl) {};
+        virtual ~Principal() {};
+        
+        Principal& operator=(const Principal& prc) {
+            address = prc.address;
+            maxLst = prc.maxLst; maxEl = prc.maxEl;
+            return (*this);
+        }
+    };
+    
+    /*struct Member
+    {
+    };*/
+
+
+    /*
+    struct DistrList
+    {
+    };*/
+
+    
     class DistrListAdmin
     {
     protected:
@@ -28,17 +57,21 @@ namespace smsc { namespace distrlist
 
         virtual ~DistrListAdmin() {};
 
-        virtual Array<Address> members(
-            string dlName, const Address& submitter)
-                throw(SQLException, IllegalSubmitterException) = 0;
+        virtual Array<Address> members(string dlName, const Address& submitter)
+            throw(SQLException, IllegalSubmitterException) = 0;
         
-        /*virtual void addPrincipal(const Principal& prc) = 0;
-
-        virtual void addMember(string dlName, const Member& member) = 0;
-        virtual void deleteMember(string dlName, const Member& member) = 0;
-        virtual void deleteMembers(string dlName) = 0;
+        virtual void addPrincipal(const Principal& prc) 
+            throw(SQLException, PrincipalAlreadyExistsException) = 0;
         
+        virtual void addMember(string dlName, const Address& member) 
+            throw(SQLException, ListNotExistsException, MemberAlreadyExistsException) = 0;
+        virtual void deleteMember(string dlName, const Address& member) 
+            throw(SQLException, ListNotExistsException, MemberNotExistsException) = 0;
+        virtual void deleteMembers(string dlName) 
+            throw(SQLException, ListNotExistsException) = 0;
 
+        
+        /*
         virtual void grantPosting(string dlName) = 0;
         virtual void revokePosting(string dlName) = 0;
 
@@ -53,18 +86,6 @@ namespace smsc { namespace distrlist
         virtual bool checkPermission(string dlName, string address) = 0;*/
     };
     
-    /*struct Member
-    {
-    };
-
-    struct Principal
-    {
-    };
-
-    struct DistrList
-    {
-    };*/
-
 }}
 
 #endif //SMSC_DISTRIBUTION_LIST_ADMIN
