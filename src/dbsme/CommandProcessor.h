@@ -176,7 +176,6 @@ namespace smsc { namespace dbsme
         
         void setEnabled(bool enabled)
         {
-            MutexGuard guard(setEnabledLock);
             {
                 MutexGuard guard(enabledLock);
                 if (bEnabled == enabled) return;
