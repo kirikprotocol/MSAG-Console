@@ -610,7 +610,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           rpt.setArchivationRequested(false);
           rpt.setIntProperty(Tag::SMPP_ESM_CLASS,4);
           rpt.setDestinationAddress(sms.getOriginatingAddress());
-          rpt.setMessageReference(rpt.getMessageReference());
+          rpt.setMessageReference(sms.getMessageReference());
           rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
             sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
           rpt.setIntProperty(Tag::SMPP_MSG_STATE,sms.getState());
@@ -662,7 +662,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       rpt.setArchivationRequested(false);
       rpt.setIntProperty(Tag::SMPP_ESM_CLASS,4);
       rpt.setDestinationAddress(sms.getOriginatingAddress());
-      rpt.setMessageReference(rpt.getMessageReference());
+      rpt.setMessageReference(sms.getMessageReference());
       rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
         sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
       rpt.setIntProperty(Tag::SMPP_MSG_STATE,sms.getState());
