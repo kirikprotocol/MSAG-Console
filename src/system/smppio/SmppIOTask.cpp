@@ -282,6 +282,24 @@ int SmppInputThread::Execute()
                 err=true;
               }
 
+              if(bindpdu->get_systemType() &&
+                 strlen(bindpdu->get_systemType())>12)
+              {
+                resppdu.get_header().
+                  set_commandStatus(SmppStatusSet::ESME_RINVSYSTYP);
+                __warning__("bind failed: systemType too long");
+                err=true;
+              }
+
+              if(bindpdu->get_addressRange()->get_value() &&
+                 strlen(bindpdu->get_addressRange()->get_value())>41)
+              {
+                resppdu.get_header().
+                  set_commandStatus(SmppStatusSet::ESME_RINVPARLEN);
+                __warning__("bind failed: systemType too long");
+                err=true;
+              }
+
               if(!err)
               {
                 try{
