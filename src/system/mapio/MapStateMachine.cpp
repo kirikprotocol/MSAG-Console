@@ -1318,7 +1318,7 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
   }
   unsigned text_len = strlen(text);
   ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 
-    fillUSSDString(encoding,(unsigned char*)text,text_len, &ussdString);
+    fillUSSDString(MAP_LATIN1_ENCODING,(unsigned char*)text,text_len, &ussdString);
   UCHAR_T result;
   if ( dialog->version == 2 )
   {
