@@ -30,6 +30,13 @@ public class QueryResultSetImpl implements QueryResultSet
 		this.sortOrder = sortOrder;
 	}
 
+	public QueryResultSetImpl(String[] columns, String sortOrder)
+	{
+		this.columns = columns;
+		this.sortOrder = new Vector();
+		this.sortOrder.add(sortOrder);
+	}
+
 	public Iterator iterator()
 	{
 		return results.iterator();

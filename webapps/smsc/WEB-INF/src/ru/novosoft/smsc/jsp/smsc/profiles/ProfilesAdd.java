@@ -13,8 +13,7 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 
 import java.util.List;
 
-public class ProfilesAdd extends ProfilesBean
-{
+public class ProfilesAdd extends ProfilesBean {
 	protected String mbSave = null;
 	protected String mbCancel = null;
 
@@ -47,12 +46,10 @@ public class ProfilesAdd extends ProfilesBean
 		if (!appContext.getSmsc().isLocaleRegistered(locale))
 			return error(SMSCErrors.error.profiles.invalidLocale, locale);
 
-		try
-		{
+		try {
 			final Mask address = new Mask(mask);
-			Profile profile = new Profile(address, codepage, report, locale);
-			switch (smsc.profileUpdate(address, profile))
-			{
+			Profile profile = new Profile(address, codepage, report, locale, aliasHide, aliasModifiable);
+			switch (smsc.profileUpdate(address, profile)) {
 				case 1: //pusUpdated
 				case 2: //pusInserted
 					appContext.getStatuses().setProfilesChanged(true);
@@ -64,9 +61,7 @@ public class ProfilesAdd extends ProfilesBean
 				default:
 					return error(SMSCErrors.error.unknown);
 			}
-		}
-		catch (AdminException e)
-		{
+		} catch (AdminException e) {
 			logger.error("Couldn't add profile [\"" + mask + "\", " + codepage + ", " + report + ", " + locale + "]", e);
 			return error(SMSCErrors.error.profiles.couldntAdd, e);
 		}

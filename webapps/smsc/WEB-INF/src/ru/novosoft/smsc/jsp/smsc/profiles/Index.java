@@ -25,15 +25,18 @@ import java.util.Set;
 public class Index extends IndexBean {
 	public static final int RESULT_ADD = IndexBean.PRIVATE_RESULT;
 	public static final int RESULT_EDIT = IndexBean.PRIVATE_RESULT + 1;
-	protected static final int PRIVATE_RESULT = IndexBean.PRIVATE_RESULT + 2;
+	public static final int RESULT_REFRESH = IndexBean.PRIVATE_RESULT + 2;
+	protected static final int PRIVATE_RESULT = IndexBean.PRIVATE_RESULT + 3;
 
 	private QueryResultSet profiles = null;
+	private boolean queried = false;
 
 	private String profileMask = null;
-	private String[] masks = new String[0];
+	private String filterMask = null;
 	private boolean initialized = false;
 	private String[] checked = new String[0];
 	private Set checkedSet = new HashSet();
+	private boolean refreshed = false;
 
 	private String mbAdd = null;
 	private String mbEdit = null;
@@ -48,29 +51,50 @@ public class Index extends IndexBean {
 
 		pageSize = preferences.getProfilesPageSize();
 
-		if (masks == null)
-			masks = new String[0];
-		masks = trimStrings(masks);
 		if (sort == null)
-			sort = (String) preferences.getProfilesSortOrder().get(0);
+			sort = preferences.getProfilesSortOrder();
 		else
-			preferences.getProfilesSortOrder().set(0, sort);
+			preferences.setProfilesSortOrder(sort);
 
 		if (!initialized) {
-			masks = (String[]) preferences.getProfilesFilter().getMasks().getNames().toArray(new String[0]);
-		} else {
-			try {
-				preferences.getProfilesFilter().setMasks(new MaskList(masks));
-			} catch (AdminException e) {
-				logger.debug("Couldn't create mask list: ", e);
-			}
+			filterMask = preferences.getProfilesFilter();
+			if (filterMask == null || filterMask.length() == 0)
+				filterMask = "*";
 		}
+		else
+			preferences.setProfilesFilter(filterMask);
 
 		if (checked == null)
 			checked = new String[0];
 		checkedSet.addAll(Arrays.asList(checked));
 
 		return RESULT_OK;
+	}
+
+	private static String normalizeAddresPrefix(String prefix) throws AdminException
+	{
+		if (prefix == null || prefix.length() == 0)
+			return "";
+		if (prefix.equals("*"))
+			return prefix;
+
+		if (prefix.startsWith("."))
+		{
+			int dp = prefix.indexOf('.', 1);
+			int dp2 = prefix.indexOf('.', dp + 1);
+			if (dp < 0 || dp2 < 0)
+				throw new AdminException("Mask \"" + prefix + "\" is not valid");
+
+			return prefix;
+		}
+		else if (prefix.startsWith("+"))
+		{
+			return ".1.1." + prefix.substring(1);
+		}
+		else
+		{
+			return ".0.1." + prefix;
+		}
 	}
 
 	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
@@ -90,12 +114,14 @@ public class Index extends IndexBean {
 			return delete();
 		else if (mbAddMask != null)
 			return RESULT_DONE;
+		else if (!refreshed)
+			return RESULT_REFRESH;
 
-		if (masks != null && masks.length > 0) {
+		if (initialized && preferences.getProfilesFilter() != null && preferences.getProfilesFilter().length() > 0) {
 			try {
-				logger.debug("Profiles.Index - process with sorting [" + (String) preferences.getProfilesSortOrder().get(0) + "]");
-				profiles = smsc.profilesQuery(new ProfileQuery(pageSize, preferences.getProfilesFilter(), preferences.getProfilesSortOrder(), startPosition, ProfileQuery.SHOW_ADDRESSES));
+				profiles = smsc.profilesQuery(new ProfileQuery(pageSize, normalizeAddresPrefix(preferences.getProfilesFilter()), preferences.getProfilesSortOrder(), startPosition, ProfileQuery.SHOW_ADDRESSES));
 				totalSize = profiles.getTotalSize();
+				queried = true;
 			} catch (AdminException e) {
 				logger.error("Couldn't query profiles", e);
 				return error(SMSCErrors.error.profiles.queryError, e);
@@ -157,16 +183,6 @@ public class Index extends IndexBean {
 		return false;
 	}
 
-	public String[] getMasks()
-	{
-		return masks;
-	}
-
-	public void setMasks(String[] masks)
-	{
-		this.masks = masks;
-	}
-
 	public boolean isInitialized()
 	{
 		return initialized;
@@ -220,5 +236,30 @@ public class Index extends IndexBean {
 	public void setMbAddMask(String mbAddMask)
 	{
 		this.mbAddMask = mbAddMask;
+	}
+
+	public boolean isQueried()
+	{
+		return queried;
+	}
+
+	public String getFilterMask()
+	{
+		return filterMask == null ? "" : filterMask;
+	}
+
+	public void setFilterMask(String filterMask)
+	{
+		this.filterMask = filterMask;
+	}
+
+	public boolean isRefreshed()
+	{
+		return refreshed;
+	}
+
+	public void setRefreshed(boolean refreshed)
+	{
+		this.refreshed = refreshed;
 	}
 }

@@ -5,7 +5,9 @@
 				 ru.novosoft.smsc.admin.Constants,
 					  java.io.IOException,
 					  ru.novosoft.smsc.util.StringEncoderDecoder,
-					  java.util.Iterator"
+					  java.util.Iterator,
+				  ru.novosoft.smsc.jsp.SMSCJspException,
+				  ru.novosoft.smsc.jsp.SMSCErrors"
 %><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.smsc_service.Index"
 /><jsp:setProperty name="bean" property="*"/><%
 ServiceIDForShowStatus = Constants.SMSC_SME_ID;
@@ -121,7 +123,9 @@ refreshStartStopButtonsStatus();
 	startSection(out, "core", "core", false);
 		startParams(out);
 			param(out, "state machines count",   "core.state_machines_count",   bean.getIntParam(   "core.state_machines_count"));
-			param(out, "reschedule limit",       "core.reschedule_limit",       bean.getIntParam("core.reschedule_limit"));			param(out, "reschedule table",       "core.reschedule_table",       bean.getStringParam("core.reschedule_table"));
+			param(out, "reschedule limit",       "core.reschedule_limit",       bean.getIntParam("core.reschedule_limit"));
+
+			param(out, "reschedule table",       "core.reschedule_table",       bean.getStringParam("core.reschedule_table"));
 			param(out, "service center address", "core.service_center_address", bean.getStringParam("core.service_center_address"));
 			param(out, "system ID",              "core.systemId",               bean.getStringParam("core.systemId"));
 			param(out, "service type",           "core.service_type",           bean.getStringParam("core.service_type"));

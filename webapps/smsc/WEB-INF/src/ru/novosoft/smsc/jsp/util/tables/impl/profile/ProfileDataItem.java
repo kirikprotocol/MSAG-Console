@@ -17,5 +17,7 @@ public class ProfileDataItem extends AbstractDataItem
 		values.put("Codepage", profile.getCodepageString());
 		values.put("Report info", profile.getReportOptionsString());
 		values.put("locale", profile.getLocale());
+		values.put("hidden", new Boolean(profile.isAliasHide()));
+		values.put("hidden_mod", new Boolean(profile.isAliasModifiable()));
 	}
 }

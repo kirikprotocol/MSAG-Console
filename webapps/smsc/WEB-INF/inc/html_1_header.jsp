@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<%@ page import="ru.novosoft.smsc.util.StringEncoderDecoder"%><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
 <title><%=(BROWSER_TITLE==null) ? TITLE : BROWSER_TITLE%></title><%--
 ContextPath:<%=request.getContextPath()%>
@@ -117,8 +117,8 @@ if (isServiceStatusNeeded || (ServiceIDForShowStatus != null && ServiceIDForShow
 			main_menu_end_item(out);
 
 			main_menu_begin_item(out, "MENU0_Profiles_menu", "MENU0_Profiles_submenu", "Profiles");
-			main_menu_submenu_item(out, "/profiles",            "MENU0_PROFILES",        "Profiles");
-			main_menu_submenu_i_fu(out, "/profiles/groups.jsp", "MENU0_PROFILES_GROUPS", "Profile groups");
+			main_menu_submenu_item(out, "/profiles",            "MENU0_PROFILES",        "List");
+			main_menu_submenu_i_fu(out, "/profiles/groups.jsp", "MENU0_PROFILES_GROUPS", "Groups");
 			main_menu_submenu_i_fu(out, "/profiles/lookup.jsp", "MENU0_PROFILES_LOOKUP", "Lookup profile");
 			main_menu_end_item(out);
 

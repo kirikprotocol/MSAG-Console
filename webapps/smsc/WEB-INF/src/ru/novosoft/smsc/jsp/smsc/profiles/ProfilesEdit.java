@@ -13,8 +13,7 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 
 import java.util.List;
 
-public class ProfilesEdit extends ProfilesBean
-{
+public class ProfilesEdit extends ProfilesBean {
 	protected String mbSave = null;
 	protected String mbCancel = null;
 
@@ -36,19 +35,15 @@ public class ProfilesEdit extends ProfilesBean
 		if (mask == null)
 			return error(SMSCErrors.error.profiles.profileNotSpecified);
 
-		if (report == -1 && codepage == -1)
-		{
-			try
-			{
+		if (report == -1 && codepage == -1) {
+			try {
 				Profile p = smsc.profileLookup(new Mask(mask));
 				report = p.getReportOptions();
 				codepage = p.getCodepage();
 				locale = p.getLocale();
-        aliasHide = p.isAliasHide();
-        aliasModifiable = p.isAliasModifiable();
-			}
-			catch (AdminException e)
-			{
+				aliasHide = p.isAliasHide();
+				aliasModifiable = p.isAliasModifiable();
+			} catch (AdminException e) {
 				logger.error("Couldn't lookup profile \"" + mask + '"', e);
 				return error(SMSCErrors.error.profiles.couldntLookup, mask, e);
 			}
@@ -65,14 +60,10 @@ public class ProfilesEdit extends ProfilesBean
 		if (!Mask.isMaskValid(mask))
 			return error(SMSCErrors.error.profiles.invalidMask, mask);
 
-		try
-		{
+		try {
 			final Mask address = new Mask(mask);
-			Profile profile = new Profile(address, codepage, report, locale);
-      profile.setAliasHide(aliasHide);
-      profile.setAliasModifiable(aliasModifiable);
-			switch (smsc.profileUpdate(address, profile))
-			{
+			Profile profile = new Profile(address, codepage, report, locale, aliasHide, aliasModifiable);
+			switch (smsc.profileUpdate(address, profile)) {
 				case 1: //pusUpdated
 				case 2: //pusInserted
 				case 3: //pusUnchanged
@@ -82,9 +73,7 @@ public class ProfilesEdit extends ProfilesBean
 				default:
 					return error(SMSCErrors.error.unknown);
 			}
-		}
-		catch (AdminException e)
-		{
+		} catch (AdminException e) {
 			logger.error("Couldn't update profile [\"" + mask + "\", " + codepage + ", " + report + "]", e);
 			return error(SMSCErrors.error.profiles.couldntAdd, e);
 		}

@@ -15,7 +15,6 @@ import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.NullResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileQuery;
-import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileFilter;
 
 import java.util.List;
 import java.util.Set;
@@ -46,9 +45,9 @@ public class Groups extends IndexBean
 
 		pageSize = preferences.getProfilesPageSize();
 		if (sort != null)
-			preferences.getProfilesSortOrder().set(0, sort);
+			preferences.setProfilesSortOrder(sort);
 		else
-			sort = (String) preferences.getProfilesSortOrder().get(0);
+			sort = preferences.getProfilesSortOrder();
 
 		if (checked == null)
 			checked = new String[0];
@@ -74,8 +73,7 @@ public class Groups extends IndexBean
 
 		try
 		{
-			logger.debug("Profiles.Index - process with sorting [" + (String) preferences.getProfilesSortOrder().get(0) + "]");
-			profiles = smsc.profilesQuery(new ProfileQuery(pageSize, new ProfileFilter(), preferences.getProfilesSortOrder(), startPosition, ProfileQuery.SHOW_MASKS));
+			profiles = smsc.profilesQuery(new ProfileQuery(pageSize, preferences.getProfilesFilter(), preferences.getProfilesSortOrder(), startPosition, ProfileQuery.SHOW_MASKS));
 			totalSize = profiles.getTotalSize();
 		}
 		catch (AdminException e)

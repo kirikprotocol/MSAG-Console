@@ -41,7 +41,7 @@ public class Mask
 			int dp = mask.indexOf('.', 1);
 			int dp2 = mask.indexOf('.', dp + 1);
 			if (dp < 0 || dp2 < 0)
-				throw new AdminException("Mask \"" + this.mask + "\" is not valid");
+				throw new AdminException("Mask \"" + mask + "\" is not valid");
 
 			String toneStr = mask.substring(1, dp);
 			String npiStr = mask.substring(dp + 1, dp2);
@@ -53,7 +53,7 @@ public class Mask
 			}
 			catch (NumberFormatException e)
 			{
-				throw new AdminException("Mask \"" + this.mask + "\" is not valid, nested: " + e.getMessage());
+				throw new AdminException("Mask \"" + mask + "\" is not valid, nested: " + e.getMessage());
 			}
 		}
 		else if (mask.startsWith("+"))

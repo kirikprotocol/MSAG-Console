@@ -41,40 +41,19 @@ switch(beanResult)
 MENU0_SELECTION = "MENU0_PROFILES_LOOKUP";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <div class=content>
-<table class=properties_list cellspacing=0>
-<col width="10%">
-<%
-	int rowN = 0;
+abonent number <input class=txt name=profile value="<%=bean.getProfile() != null ? bean.getProfile() : ""%>" validation="mask" onkeyup="resetValidation(this)">
+</div>
+	<%
+	page_menu_begin(out);
+	page_menu_button(out, "mbLookup",  "Lookup",  "Lookup profile");
+	page_menu_space(out);
+	page_menu_end(out);
+
 	if (bean.getProfile() != null && beanResult == Lookup.RESULT_OK)
 	{
-	%>
-	<tr class=row<%=(rowN++)&1%>>
-		<th>abonent number:</th>
-		<td><input class=txt name=profile value="<%=bean.getProfile()%>"></td>
-	</tr>
-	<tr class=row<%=(rowN++)&1%>>
-		<th>code page:</th>
-		<td><%=bean.getCodepage()%></td>
-	</tr>
-	<tr class=row<%=(rowN++)&1%>>
-		<th>report options:</th>
-		<td><%=bean.getReportOptions()%></td>
-	</tr>
-	<tr class=row<%=(rowN++)&1%>>
-		<th>locale:</th>
-		<td><%=bean.getLocale()%>&nbsp;</td>
-	</tr>
-	<tr class=row<%=(rowN++)&1%>>
-		<th>alias hide:</th>
-		<td><img src="<%=CPATH%>/img/ic_<%=bean.isAliasHide() ? "" : "not_"%>checked.gif"></td>
-	</tr>
-	<tr class=row<%=(rowN++)&1%>>
-		<th>alias modifiable:</th>
-		<td><img src="<%=CPATH%>/img/ic_<%=bean.isAliasModifiable() ? "" : "not_"%>checked.gif"></td>
-	</tr>
-	<tr class=row<%=(rowN++)&1%>>
-		<th>match type:</th>
-		<td><%
+	int rowN = 0;%>
+	<div class=content>
+	<div class=query_result><%
 		switch (bean.getMatchType()) {
 			case ProfileEx.MATCH_DEFAULT:
 				out.print("default profile matched");
@@ -83,31 +62,39 @@ MENU0_SELECTION = "MENU0_PROFILES_LOOKUP";
 				out.print("profile matched exactly");
 				break;
 			case ProfileEx.MATCH_MASK:
-				out.print("mask matched");
+				out.print("mask &quot;" + bean.getMatchAddress().getNormalizedMask() + "&quot; matched");
 				break;
 			default:
 				out.print("unknown");
 		}
-		%></td>
-	</tr>
-	<%if (bean.getMatchType() == ProfileEx.MATCH_MASK) {%>
+		%></div>
+	<br>
+	<table class=properties_list cellspacing=0>
+	<col width="15%">
 	<tr class=row<%=(rowN++)&1%>>
-		<th>match address:</th>
-		<td><%=bean.getMatchAddress().getNormalizedMask()%></td>
+		<th nowrap>code page</th>
+		<td><%=bean.getCodepage()%></td>
 	</tr>
-	<%}
-	} else {
-	%><tr class=row<%=(rowN++)&1%>>
-		<th>profile:</th>
-		<td><input class=txt name=profile></td>
-	</tr><%
-	}
-%>
-</table>
-</div>
-<%
+	<tr class=row<%=(rowN++)&1%>>
+		<th nowrap>report options</th>
+		<td><%=bean.getReportOptions()%></td>
+	</tr>
+	<tr class=row<%=(rowN++)&1%>>
+		<th nowrap>locale</th>
+		<td><%=bean.getLocale()%>&nbsp;</td>
+	</tr>
+	<tr class=row<%=(rowN++)&1%>>
+		<th nowrap>alias hide</th>
+		<td><img src="<%=CPATH%>/img/ic_<%=bean.isAliasHide() ? "" : "not_"%>checked.gif"></td>
+	</tr>
+	<tr class=row<%=(rowN++)&1%>>
+		<th nowrap>alias modifiable</th>
+		<td><img src="<%=CPATH%>/img/ic_<%=bean.isAliasModifiable() ? "" : "not_"%>checked.gif"></td>
+	</tr>
+	</table>
+	</div>
+	<%
 	page_menu_begin(out);
-	page_menu_button(out, "mbReQuery",  "Requery",  "Requery");
 	switch (bean.getMatchType())
 	{
 		case ProfileEx.MATCH_MASK:
@@ -125,6 +112,7 @@ MENU0_SELECTION = "MENU0_PROFILES_LOOKUP";
 	}
 	page_menu_space(out);
 	page_menu_end(out);
+	}
 %>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

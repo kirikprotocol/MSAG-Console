@@ -119,3 +119,10 @@ table.smsc_status th
 	font : bold 18px Verdana, Geneva, Arial, Helvetica, sans-serif;
 	white-space: nowrap;
 }
+
+/*************************************************************************/
+div.query_result
+{
+	color: #161E49;
+	font-weight: bold;
+}

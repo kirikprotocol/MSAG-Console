@@ -72,20 +72,24 @@ public class Profile {
 			throw new AdminException("profile string returned by SMSC misformatted: " + profileString);
 	}
 
-	public Profile(Mask mask, byte codepage, byte reportOptions, String locale)
+	public Profile(Mask mask, byte codepage, byte reportOptions, String locale, boolean aliasHide, boolean aliasModifiable)
 	{
 		this.mask = mask;
 		setCodepage(codepage);
 		setReportOptions(reportOptions);
 		setLocale(locale);
+		this.aliasHide = aliasHide;
+		this.aliasModifiable = aliasModifiable;
 	}
 
-	public Profile(Mask mask, String codepage, String reportOptions, String locale) throws AdminException
+	public Profile(Mask mask, String codepage, String reportOptions, String locale, boolean aliasHide, boolean aliasModifiable) throws AdminException
 	{
 		this.mask = mask;
 		setCodepage(codepage);
 		setReportOptions(reportOptions);
 		setLocale(locale);
+		this.aliasHide = aliasHide;
+		this.aliasModifiable = aliasModifiable;
 	}
 
 	public byte getCodepage()

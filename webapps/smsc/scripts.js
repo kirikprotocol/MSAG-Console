@@ -7,11 +7,11 @@ function resetValidation(elem)
 		elem = elem.parentElement;
 	}
 	elem.runtimeStyle.borderColor = elem.style.borderColor;
-	var errPointer = elem.nextSibling;
+/*	var errPointer = elem.nextSibling;
 	if(errPointer != null)
 	{
 		errPointer.style.display = "none";
-	}
+	}*/
 }
 function validateShowErrors(elem)
 {
@@ -157,7 +157,21 @@ function validateField_address(elem)
 		: true;
 }
 
+function validateField_address_prefix(elem)
+{
+	if (elem.value == null || elem.value.length == 0)
+	{
+		return true;
+	}
+	//var r1 = RegExp("^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?\\d{1,20}$");
+	//var r2 = RegExp("^\\.5\\.0\\.[ _\\-0-9A-Za-z]{1,20}$");
+	var r1 = /^((\.[0-6\*]\.(0|1|3|4|6|8|9|10|14|18|\*)\.)|(\+))?(\d|\*){1,20}$/
+	var r2 = /^\.5\.0\.[ _\-0-9A-Za-z\*]{1,20}$/;
 
+	return elem.value == null || (elem.value.match(r1) == null && elem.value.match(r2) == null)
+		? validationError(elem, "Invalid address prefix")
+		: true;
+}
 
 function validateField(elem)
 {
@@ -173,6 +187,7 @@ function validateField(elem)
 		case "email": return validateField_email(elem);
 		case "positive": return validateField_positive(elem);
 		case "address": return validateField_address(elem);
+		case "address_prefix": return validateField_address_prefix(elem);
 		case "unsigned": return validateField_unsigned(elem);
 	}
 	alert("unknown validation type:"+elem.validation);

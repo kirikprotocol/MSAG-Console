@@ -5,22 +5,19 @@
  */
 package ru.novosoft.smsc.admin.preferences;
 
-import ru.novosoft.smsc.jsp.util.tables.impl.*;
-import ru.novosoft.smsc.jsp.util.tables.impl.dl.DlFilter;
-import ru.novosoft.smsc.jsp.util.tables.impl.user.UserFilter;
-import ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter;
-import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteFilter;
-import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasFilter;
+import ru.novosoft.smsc.jsp.util.tables.impl.dl.DlFilter;
+import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteFilter;
+import ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter;
+import ru.novosoft.smsc.jsp.util.tables.impl.user.UserFilter;
 
-import java.util.Vector;
 import java.util.Locale;
+import java.util.Vector;
 
-public class UserPreferences
-{
+public class UserPreferences {
 	private int profilesPageSize = 20;
-	private Vector profilesSortOrder = new Vector();
-	private ProfileFilter profilesFilter = new ProfileFilter();
+	private String profilesSortOrder = null;
+	private String profilesFilter = null;
 
 	private int aliasesPageSize = 20;
 	private AliasFilter aliasesFilter = new AliasFilter();
@@ -55,7 +52,7 @@ public class UserPreferences
 
 	public UserPreferences()
 	{
-		this.profilesSortOrder.add("mask");
+		this.profilesSortOrder = "mask";
 		this.aliasesSortOrder.add("Alias");
 		this.subjectsSortOrder.add("Name");
 		this.routesSortOrder.add("Route ID");
@@ -67,14 +64,24 @@ public class UserPreferences
 		return profilesPageSize;
 	}
 
-	public Vector getProfilesSortOrder()
+	public String getProfilesSortOrder()
 	{
 		return profilesSortOrder;
 	}
 
-	public ProfileFilter getProfilesFilter()
+	public void setProfilesSortOrder(String profilesSortOrder)
+	{
+		this.profilesSortOrder = profilesSortOrder;
+	}
+
+	public String getProfilesFilter()
 	{
 		return profilesFilter;
+	}
+
+	public void setProfilesFilter(String profilesFilter)
+	{
+		this.profilesFilter = profilesFilter;
 	}
 
 	public int getAliasesPageSize()

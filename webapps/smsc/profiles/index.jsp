@@ -9,7 +9,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.profiles.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Profiles";
+TITLE = "Profiles list";
 switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 {
 	case Index.RESULT_DONE:
@@ -18,6 +18,9 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 	case Index.RESULT_OK:
 		STATUS.append("Ok");
 		break;
+	case Index.RESULT_REFRESH:
+		response.sendRedirect("index.jsp?refreshed=true&initialized=" + bean.isInitialized() + "&filterMask=" + URLEncoder.encode(bean.getFilterMask()));
+		return;
 	case Index.RESULT_ERROR:
 		STATUS.append("<span class=CF00>Error</span>");
 		break;
@@ -63,32 +66,26 @@ function setSort(sorting)
 	return false;
 }
 </script>
-<div class=page_subtitle>Filter</div>
-<table class=properties_list cellspacing=0>
-<col width="10%">
-<col width="90%">
+Profile prefix <input class=txt name=filterMask value="<%=bean.getFilterMask()%>" validation="address_prefix" onkeyup="resetValidation(this)">
+</div>
 <%
-	int row = 0;
-	for (int i=0; i<bean.getMasks().length; i++)
+	page_menu_begin(out);
+	page_menu_button(out, "mbQuery",  "Query",  "Query");
+	page_menu_space(out);
+	page_menu_end(out);
+	if (bean.isQueried())
 	{
 %>
-<tr class=row<%=(row++)&1%>>
-	<td><input class=txt name=masks value="<%=bean.getMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
-	<td>&nbsp</td>
-</tr>
-<%}%>
-<tr class=row<%=(row++)&1%>>
-	<td><input class=txt name=masks validation="mask" onkeyup="resetValidation(this)"></td>
-	<td><%addButton(out, "mbAddMask", "Add", "Add new mask to filter");%></td>
-</tr>
-</table>
-<div class=page_subtitle>Query result</div>
+<div class=content>
+<!--div class=page_subtitle>Query result</div-->
 <table class=list cellspacing=0>
 <col width="1%">
-<col width="40%" align=left>
-<col width="20%" align=left>
-<col width="20%" align=left>
-<col width="20%" align=left>
+<col width="94%" align=left>
+<col width="1%" align=left>
+<col width="1%" align=left>
+<col width="1%" align=left>
+<col width="1%" align=left>
+<col width="1%" align=left>
 <thead>
 <tr>
 	<th><img src="<%=CPATH%>/img/ico16_checked_sa.gif" class=ico16 alt=""></th>
@@ -96,46 +93,70 @@ function setSort(sorting)
 	<th><a href="#" <%=bean.getSort().endsWith("codeset")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by codepage"    onclick='return setSort("codeset")'   >codepage</a></th>
 	<th><a href="#" <%=bean.getSort().endsWith("reportinfo") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by report info" onclick='return setSort("reportinfo")'>report&nbsp;info</a></th>
 	<th><a href="#" <%=bean.getSort().endsWith("locale")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by locale"      onclick='return setSort("locale")'    >locale</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("hidden")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by locale"      onclick='return setSort("hidden")'    >hidden</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("hidden_mod") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by locale"      onclick='return setSort("hidden_mod")'>modifiable</a></th>
 </tr>
 </thead>
 <tbody>
-<%{
-row = 0;
-for(Iterator i = bean.getProfiles().iterator(); i.hasNext(); row++)
-{
-DataItem item = (DataItem) i.next();
-final String profileMask = (String)item.getValue("Mask");
-final String encProfileMask = StringEncoderDecoder.encode(profileMask);
-%>
-<tr class=row<%=row&1%>>
-	<td><input class=check type=checkbox name=checked value="<%=encProfileMask%>" <%=bean.isProfileCheked(profileMask) ? "checked" : ""%>></td>
-	<td class=name><%
-	if (bean.isEditAllowed())
+<%
 		{
-			%><a href="#" title="Edit profile" onClick='return editProfile("<%=profileMask%>")'><%=encProfileMask%></a><%
-		}
-		else
-		{
-			%><%=encProfileMask%><%
-		}%></td>
-	<td><%=StringEncoderDecoder.encode((String)item.getValue("Codepage"))%></td>
-	<td><%=StringEncoderDecoder.encode((String)item.getValue("Report info"))%></td>
-	<td><%=StringEncoderDecoder.encode((String)item.getValue("locale"))%></td>
-</tr>
-<%}}%>
+			int row = 0;
+			for(Iterator i = bean.getProfiles().iterator(); i.hasNext(); row++)
+			{
+				DataItem item = (DataItem) i.next();
+				final String profileMask = (String)item.getValue("Mask");
+				final String encProfileMask = StringEncoderDecoder.encode(profileMask);%>
+				<tr class=row<%=row&1%>>
+					<td><input class=check type=checkbox name=checked value="<%=encProfileMask%>" <%=bean.isProfileCheked(profileMask) ? "checked" : ""%> onclick="checkCheckboxes();"></td>
+					<td class=name><%
+					if (bean.isEditAllowed())
+						{
+							%><a href="#" title="Edit profile" onClick='return editProfile("<%=profileMask%>")'><%=encProfileMask%></a><%
+						}
+						else
+						{
+							%><%=encProfileMask%><%
+						}%></td>
+					<td><%=StringEncoderDecoder.encode((String)item.getValue("Codepage"))%></td>
+					<td><%=StringEncoderDecoder.encode((String)item.getValue("Report info"))%></td>
+					<td><%=StringEncoderDecoder.encode((String)item.getValue("locale"))%></td>
+					<td align=center><%if (((Boolean)item.getValue("hidden"    )).booleanValue()){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+					<td align=center><%if (((Boolean)item.getValue("hidden_mod")).booleanValue()){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+				</tr><%
+			}
+		}%>
 </tbody>
 </table>
 <%@ include file="/WEB-INF/inc/navbar_nofilter.jsp"%>
 </div>
 <%
-if (bean.isEditAllowed())
+		if (bean.isEditAllowed())
+		{
+			page_menu_begin(out);
+			page_menu_button(out, "mbAdd",  "Add profile",  "Add new profile");
+			page_menu_button(out, "mbDelete", "Delete", "Delete checked profiles", "return confirm('Are you sure to delete all checked profiles?');", false);
+			page_menu_space(out);
+			page_menu_end(out);
+		}
+	}%>
+<script>
+function checkCheckboxes()
 {
-	page_menu_begin(out);
-	page_menu_button(out, "mbReQuery",  "Requery",  "Requery");
-	page_menu_button(out, "mbAdd",  "Add profile",  "Add new profile");
-	page_menu_button(out, "mbDelete", "Delete", "Delete checked profiles", "return confirm('Are you sure to delete all checked profiles?');");
-	page_menu_space(out);
-	page_menu_end(out);
-}%>
+	<%
+		if (bean.isQueried() && bean.isEditAllowed())
+		{%>
+			var inputs = opForm.getElementsByTagName("input");
+			var disabledDelete = true;
+			for (i = 0; i < inputs.length; i++)
+			{
+				var inp = inputs[i];
+				if (inp.type == "checkbox")
+					disabledDelete &= !inp.checked;
+			}
+			mbDelete.disabled = disabledDelete;<%
+		}%>
+}
+checkCheckboxes();
+</script>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>
