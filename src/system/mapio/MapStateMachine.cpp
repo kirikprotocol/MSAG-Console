@@ -634,7 +634,7 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
     Et96MapV2ProcessUnstructuredSSRequestResp(
       dialog->ssn,dialog->dialogid_map,dialog->invokeId,
       &ussdEncoding,
-      ussdString,
+      &ussdString,
       &error);
   }
   else throw runtime_error(
@@ -652,7 +652,7 @@ static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
     Et96MapV2ProcessUnstructuredSSRequestResp(
       dialog->ssn,dialog->dialogid_map,dialog->invokeId,
       &ussdEncoding,
-      ussdString,
+      &ussdString,
       0);
   }
   else throw runtime_error(
