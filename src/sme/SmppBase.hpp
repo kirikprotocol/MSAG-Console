@@ -100,6 +100,7 @@ public:
       }catch(...)//exception& e)
       {
         //__trace2__("ex:%s",e.what());
+        __trace2__("Reader: About to call handleError, stopped=%d",stopped);
         if(!stopped)listener->handleError(smppErrorNetwork);
         break;
       }
