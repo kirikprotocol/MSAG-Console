@@ -243,6 +243,7 @@ bool ResourceManager::isValidLocale(const std::string& localeName)const
   MutexGuard g(mtx);
   for(_stringlist::const_iterator i=validLocales.begin();i!=validLocales.end();i++)
   {
+    __trace2__("ResMgr: testing %s = %s", localeName.c_str(), i->c_str() );
     if(localeName==*i)return true;
   }
   return false;
