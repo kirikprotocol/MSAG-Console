@@ -1,4 +1,5 @@
-<%@ page import="ru.novosoft.smsc.util.StringEncoderDecoder"%><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<%@ page import="ru.novosoft.smsc.util.StringEncoderDecoder,
+                 ru.novosoft.smsc.jsp.SMSCAppContext"%><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
 <title><%=(BROWSER_TITLE==null) ? TITLE : BROWSER_TITLE%></title><%--
 ContextPath:<%=request.getContextPath()%>
@@ -104,7 +105,7 @@ if (isServiceStatusNeeded || (ServiceIDForShowStatus != null && ServiceIDForShow
 			main_menu_submenu_i_fu(out, "/smsc_service/logging.jsp",   "MENU0_SMSC_LOGGING",     "Logging");
 			main_menu_submenu_item(out, "/users",                      "MENU0_USERS",            "Users");
 			main_menu_submenu_item(out, "/locale_resources",           "MENU0_LOCALE_RESOURCES", "Resources");
-      //main_menu_submenu_item(out, "/journal",                    "MENU0_JOURNAL",          "Journal");
+      main_menu_submenu_item(out, "/journal",                    "MENU0_JOURNAL",          "Journal");
 			main_menu_end_item(out);
 
 			main_menu_begin_item(out, "MENU0_Statistics_menu", "MENU0_Statistics_submenu", "Statistics");
@@ -154,15 +155,12 @@ if (isServiceStatusNeeded || (ServiceIDForShowStatus != null && ServiceIDForShow
 		<tr>
 			<th background="/images/smsc_17.jpg" nowrap><%=TITLE%></th>
 			<td >&nbsp;<%if (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0){
-				%><%=StringEncoderDecoder.encode(ServiceIDForShowStatus)%>&nbsp;is&nbsp;<%=serviceStatus(ServiceIDForShowStatus)%><%
+				%><%=StringEncoderDecoder.encode(ServiceIDForShowStatus)%>&nbsp;is&nbsp;<%=serviceStatus((SMSCAppContext) request.getAttribute("appContext"),  ServiceIDForShowStatus)%><%
 			}%></td>
 			<td width=12px background="/images/smsc_19.jpg" style="padding-right:0px;"></td>
 		</tr>
 		</table>
 		<span id="MENU0_NONE"></span>
 		<script> document.all.<%=MENU0_SELECTION%>.className = 'submenu_sel'; </script>
-<%--Status Line -->
-<tr><td class=status><%=STATUS%>&nbsp;</td></tr>
-<!-- Status Line END -->
-<tr><td width="100%" class=contentTitle><%=TITLE%>&nbsp;</td></tr--%>
+<%--tr><td width="100%" class=contentTitle><%=TITLE%>&nbsp;</td></tr--%>
 <%@ include file="/WEB-INF/inc/messages.jsp"%>

@@ -156,9 +156,11 @@ public class Functions
 
     // rename old config file to bakup file
     String oldFilename = oldFileRenameTo.getAbsolutePath();
-    final File backFile = Functions.createTempFilename(oldFileRenameTo.getName(), suffix, oldFileRenameTo.getParentFile());
-    if (!new File(oldFilename).renameTo(backFile))
-      throw new IOException("Couldn't rename old file \"" + oldFilename + "\" to backup file \"" + backFile.getAbsolutePath() + '"');
+    if (oldFileRenameTo.exists()) {
+      final File backFile = Functions.createTempFilename(oldFileRenameTo.getName(), suffix, oldFileRenameTo.getParentFile());
+      if (!new File(oldFilename).renameTo(backFile))
+        throw new IOException("Couldn't rename old file \"" + oldFilename + "\" to backup file \"" + backFile.getAbsolutePath() + '"');
+    }
 
     //rename temp new file to desired file
     final String newFilename = newCreatedFile.getAbsolutePath();
@@ -190,5 +192,21 @@ public class Functions
       throw new AdminException("Call getServiceId(String servletPath) with incorrect parameter \"" + servletPath + "\"");
     }
     return servletPath.substring(prefix.length(), secondSlashIndex);
+  }
+
+  public static String[] trimStrings(String[] masks)
+  {
+    Set newMasks = new HashSet(masks.length);
+    for (int i = 0; i < masks.length; i++) {
+      String mask = masks[i];
+      if (mask != null) {
+        final String m = mask.trim();
+        if (m.length() > 0)
+          newMasks.add(m);
+      }
+    }
+    String result[] = (String[]) newMasks.toArray(new String[0]);
+    Arrays.sort(result);
+    return result;
   }
 }

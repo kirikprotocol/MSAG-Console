@@ -209,6 +209,7 @@ public class HostsManager
 			serviceManager.rollbackDeploy(serviceInfo.getHost(), id, serviceFolder);
 			if (smeManager.contains(id))
 				smeManager.remove(id);
+      throw e;
 		}
 	}
 

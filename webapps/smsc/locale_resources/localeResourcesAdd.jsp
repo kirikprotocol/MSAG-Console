@@ -1,6 +1,8 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"
 %><%@ page import="ru.novosoft.smsc.jsp.smsc.localeResources.LocaleResourcesAdd,
-                   ru.novosoft.util.jsp.MultipartServletRequest"
+                   ru.novosoft.util.jsp.MultipartServletRequest,
+                   ru.novosoft.smsc.jsp.SMSCJspException,
+                   ru.novosoft.smsc.jsp.SMSCErrors"
 %><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.localeResources.LocaleResourcesAdd"
 /><%
 TITLE = "Add Resource";
@@ -12,19 +14,16 @@ MultipartServletRequest multi = (MultipartServletRequest)request.getAttribute("m
 if (multi != null)
 	request = multi;
 %><jsp:setProperty name="bean" property="*"/><%
-switch(bean.process(multi, appContext, errorMessages, loginedUserPrincipal))
+switch(bean.process(multi))
 {
 	case LocaleResourcesAdd.RESULT_DONE:
 		response.sendRedirect(CPATH+"/locale_resources/index.jsp");
 		return;
 	case LocaleResourcesAdd.RESULT_OK:
-		STATUS.append("Ok");
 		break;
 	case LocaleResourcesAdd.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
 		break;
 	default:
-		STATUS.append("<span class=CF00>Error</span>");
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%

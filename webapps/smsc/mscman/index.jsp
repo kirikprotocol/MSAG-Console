@@ -1,6 +1,5 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="java.util.*,
-                 ru.novosoft.smsc.jsp.SMSCAppContext,
                  ru.novosoft.smsc.util.StringEncoderDecoder,
                  ru.novosoft.smsc.jsp.SMSCErrors,
                  ru.novosoft.smsc.jsp.SMSCJspException,
@@ -21,20 +20,17 @@
 
     bean.setPrefix(request.getParameter("prefix"));
     int beanResult = mscManagerFormBean.RESULT_OK;
-    switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal))
+    switch(beanResult = bean.process(request))
     {
         case MscManagerFormBean.RESULT_DONE:
             response.sendRedirect("index.jsp?refreshed=true&prefix=" + URLEncoder.encode(bean.getPrefix(), "UTF-8"));
             return;
         case MscManagerFormBean.RESULT_FILTER:
         case MscManagerFormBean.RESULT_OK:
-            STATUS.append("Ok");
             break;
         case MscManagerFormBean.RESULT_ERROR:
-            STATUS.append("<span class=CF00>Error</span>");
             break;
         default:
-            STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
             errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
     }
 %>

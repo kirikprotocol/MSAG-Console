@@ -26,7 +26,7 @@ public class Action
     this.user = user == null ? "" : user;
     this.sessionId = sessionId == null ? "" : sessionId;
     this.subjectType = subjectType;
-    this.subjectId = subjectId == null ? "" : subjectId;
+    this.subjectId = subjectId == null ? "<unknown>" : subjectId;
     this.action = action;
     this.timestamp = timestamp == null ? new Date() : timestamp;
     this.additional = additional == null ? new HashMap() : additional;

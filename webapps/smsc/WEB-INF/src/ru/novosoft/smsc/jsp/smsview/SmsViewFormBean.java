@@ -1,11 +1,15 @@
 package ru.novosoft.smsc.jsp.smsview;
 
-import ru.novosoft.smsc.admin.smsview.*;
-import ru.novosoft.smsc.admin.*;
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.smsview.SmsQuery;
+import ru.novosoft.smsc.admin.smsview.SmsRow;
+import ru.novosoft.smsc.admin.smsview.SmsSet;
+import ru.novosoft.smsc.admin.smsview.SmsView;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
-import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.jsp.smsc.IndexBean;
 
+import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -48,21 +52,24 @@ public class SmsViewFormBean extends IndexBean
     return RESULT_OK;
   }
 
-  public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
+  public int process(HttpServletRequest request)
   {
-    if (this.appContext == null && appContext instanceof SMSCAppContext) {
+    int result = super.process(request);
+    if (result != RESULT_OK)
+      return result;
+
+    if (view.getSmsc() == null) {
       view.setDataSource(appContext.getConnectionPool());
       view.setSmsc(appContext.getSmsc());
     }
 
-    int result = super.process(appContext, errors, loginedPrincipal);
-    if (result != RESULT_OK)
-      return result;
-
     if (mbRemove != null)
       result = processDeleteSelected();
-    else if (mbDelete != null) {      if( rows != null ) {
-        result = processDeleteSet(rows);      } else {        result = processQuery();
+    else if (mbDelete != null) {
+      if (rows != null) {
+        result = processDeleteSet(rows);
+      } else {
+        result = processQuery();
       }
     } else if (mbQuery != null)
       result = processQuery();
@@ -190,66 +197,93 @@ public class SmsViewFormBean extends IndexBean
 
   /********************************* query delegeates *********************************/
 
-  public void setSort(String by) {
+  public void setSort(String by)
+  {
     sort = by;
   }
-  public String getSort() {
+
+  public String getSort()
+  {
     return sort;
   }
 
-  public int getStorageType() {
+  public int getStorageType()
+  {
     return query.getStorageType();
   }
-  public void setStorageType(int type) {
+
+  public void setStorageType(int type)
+  {
     query.setStorageType(type);
   }
 
-  public int getRowsMaximum() {
+  public int getRowsMaximum()
+  {
     return query.getRowsMaximum();
   }
-  public void setRowsMaximum(int max) {
+
+  public void setRowsMaximum(int max)
+  {
     query.setRowsMaximum(max);
   }
 
-  public String getFromAddress() {
+  public String getFromAddress()
+  {
     return query.getFromAddress();
   }
-  public void setFromAddress(String address) {
+
+  public void setFromAddress(String address)
+  {
     query.setFromAddress(address);
   }
 
-  public String getToAddress() {
+  public String getToAddress()
+  {
     return query.getToAddress();
   }
-  public void setToAddress(String address) {
+
+  public void setToAddress(String address)
+  {
     query.setToAddress(address);
   }
 
-  public String getSrcSmeId() {
+  public String getSrcSmeId()
+  {
     return query.getSrcSmeId();
   }
-  public void setSrcSmeId(String id) {
+
+  public void setSrcSmeId(String id)
+  {
     query.setSrcSmeId(id);
   }
 
-  public String getDstSmeId() {
+  public String getDstSmeId()
+  {
     return query.getDstSmeId();
   }
-  public void setDstSmeId(String id) {
+
+  public void setDstSmeId(String id)
+  {
     query.setDstSmeId(id);
   }
 
-  public String getRouteId() {
+  public String getRouteId()
+  {
     return query.getRouteId();
   }
-  public void setRouteId(String id) {
+
+  public void setRouteId(String id)
+  {
     query.setRouteId(id);
   }
 
-  public String getSmsId() {
+  public String getSmsId()
+  {
     return query.getSmsId();
   }
-  public void setSmsId(String id) {
+
+  public void setSmsId(String id)
+  {
     query.setSmsId(id);
   }
 
@@ -261,6 +295,7 @@ public class SmsViewFormBean extends IndexBean
     } else
       return "";
   }
+
   public void setFromDate(String dateString)
   {
     final boolean dateEnabled = dateString != null && dateString.trim().length() > 0;
@@ -284,6 +319,7 @@ public class SmsViewFormBean extends IndexBean
     } else
       return "";
   }
+
   public void setTillDate(String dateString)
   {
     final boolean dateEnabled = dateString != null && dateString.trim().length() > 0;
@@ -299,52 +335,72 @@ public class SmsViewFormBean extends IndexBean
     }
   }
 
-  public int getTotalRowsCount() {
+  public int getTotalRowsCount()
+  {
     return totalRowsCount;
   }
-  public int getDeletedRowsCount() {
+
+  public int getDeletedRowsCount()
+  {
     return deletedRowsCount;
   }
 
-  public String getMbDelete() {
+  public String getMbDelete()
+  {
     return mbDelete;
   }
-  public void setMbDelete(String mbDelete) {
+
+  public void setMbDelete(String mbDelete)
+  {
     this.mbDelete = mbDelete;
   }
 
-  public String getMbRemove() {
+  public String getMbRemove()
+  {
     return mbRemove;
   }
-  public void setMbRemove(String mbRemove) {
+
+  public void setMbRemove(String mbRemove)
+  {
     this.mbRemove = mbRemove;
   }
 
-  public String getMbQuery() {
+  public String getMbQuery()
+  {
     return mbQuery;
   }
-  public void setMbQuery(String mbQuery) {
+
+  public void setMbQuery(String mbQuery)
+  {
     this.mbQuery = mbQuery;
   }
 
-  public String getMbClear() {
+  public String getMbClear()
+  {
     return mbClear;
   }
-  public void setMbClear(String mbClear) {
+
+  public void setMbClear(String mbClear)
+  {
     this.mbClear = mbClear;
   }
 
-  public String[] getCheckedRows() {
+  public String[] getCheckedRows()
+  {
     return (checkedRows == null) ?
-        null : (String[]) checkedRows.toArray();
+            null : (String[]) checkedRows.toArray();
   }
-  public void setCheckedRows(String[] checkedRows) {
+
+  public void setCheckedRows(String[] checkedRows)
+  {
     for (int i = 0; i < checkedRows.length; i++)
       this.checkedRows.addElement(checkedRows[i]);
   }
-  public boolean isRowChecked(long id) {
+
+  public boolean isRowChecked(long id)
+  {
     return (checkedRows == null) ?
-        false : checkedRows.contains(Long.toString(id));
+            false : checkedRows.contains(Long.toString(id));
   }
 
 }

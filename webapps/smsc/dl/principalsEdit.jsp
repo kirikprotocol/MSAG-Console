@@ -8,17 +8,11 @@
   TITLE = "Edit principal";
   MENU0_SELECTION = "MENU0_DL_PRINCIPALS";
 
-  switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
+  switch (bean.process(request))
   {
     case dlEdit.RESULT_DONE:
       response.sendRedirect("principals.jsp?initialized=true");
       return;
-    case dlEdit.RESULT_OK:
-      STATUS.append("Ok");
-      break;
-    case dlEdit.RESULT_ERROR:
-      STATUS.append("<span class=CF00>Error</span>");
-      break;
   }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>

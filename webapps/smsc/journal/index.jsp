@@ -8,7 +8,8 @@
                  ru.novosoft.smsc.admin.journal.Actions,
                  java.text.DateFormat,
                  ru.novosoft.smsc.util.SortedList,
-                 ru.novosoft.smsc.admin.journal.SubjectTypes"%>
+                 ru.novosoft.smsc.admin.journal.SubjectTypes,
+                 ru.novosoft.smsc.jsp.PageBean"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.jsp.journal.Index" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -16,7 +17,7 @@
   MENU0_SELECTION = "MENU0_JOURNAL";
 
   int beanResult = bean.RESULT_OK;
-  switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal))
+  switch(beanResult = bean.process(request))
   {
     case Index.RESULT_DONE:
       response.sendRedirect("index.jsp");
@@ -25,13 +26,10 @@
       response.sendRedirect("filter.jsp");
       return;
     case Index.RESULT_OK:
-      STATUS.append("Ok");
       break;
     case Index.RESULT_ERROR:
-      STATUS.append("<span class=CF00>Error</span>");
       break;
     default:
-      STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
       errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
   }
 %>
@@ -58,19 +56,19 @@ function setSort(sorting)
 </script>
 
 <table class=list cellspacing=0>
-<col width="12%">
-<col width="12%">
-<col width="12%">
-<col width="12%">
-<col width="12%">
-<col width="12%">
-<col width="14%">
-<col width="14%">
+<col width="10%">
+<col width="10%">
+<%--col width="12%"--%>
+<col width="10%">
+<col width="25%">
+<col width="10%">
+<col width="10%">
+<col width="25%">
 <thead>
 <tr>
 	<th><a href="#" <%=bean.getSort().endsWith("timestamp")  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by time"  onclick='return setSort("timestamp") '>time</a></th>
 	<th><a href="#" <%=bean.getSort().endsWith("user") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by user" onclick='return setSort("user")'>user</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("sessionId") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by session" onclick='return setSort("sessionId")'>session ID</a></th>
+	<%--th><a href="#" <%=bean.getSort().endsWith("sessionId") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by session" onclick='return setSort("sessionId")'>session ID</a></th--%>
 	<th><a href="#" <%=bean.getSort().endsWith("subjectType") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by subject type" onclick='return setSort("subjectType")'>subject type</a></th>
 	<th><a href="#" <%=bean.getSort().endsWith("subjectId") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by subject ID" onclick='return setSort("subjectId")'>subject ID</a></th>
 	<th><a href="#" <%=bean.getSort().endsWith("action") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by action" onclick='return setSort("action")'>action</a></th>
@@ -80,15 +78,15 @@ function setSort(sorting)
 <tbody>
 <%
   int row = 0;
-  DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, request.getLocale());
+  DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM, request.getLocale());
   for (Iterator i = bean.getActions().iterator(); i.hasNext(); )
   {
     Action action = (Action) i.next();
     final String rowspan = action.getAdditionalKeys().size() > 0 ? " rowspan=" + action.getAdditionalKeys().size() : "";
 %><tr class=row<%=(row++)&1%>>
-	  <td<%=rowspan%>><%=StringEncoderDecoder.encode(dateFormat.format(action.getTimestamp()))%></td>
+	  <td<%=rowspan%> nowrap><%=StringEncoderDecoder.encode(dateFormat.format(action.getTimestamp()))%></td>
     <td<%=rowspan%>><%=StringEncoderDecoder.encode(action.getUser())%></td>
-    <td<%=rowspan%>><%=StringEncoderDecoder.encode(action.getSessionId())%></td>
+    <%--td<%=rowspan%>><%=StringEncoderDecoder.encode(action.getSessionId())%></td--%>
     <td<%=rowspan%>><%=StringEncoderDecoder.encode(SubjectTypes.typeToString(action.getSubjectType()))%></td>
     <td<%=rowspan%>><%=StringEncoderDecoder.encode(action.getSubjectId())%></td>
     <td<%=rowspan%>><%=StringEncoderDecoder.encode(Actions.actionToString(action.getAction()))%></td>
@@ -113,6 +111,7 @@ function setSort(sorting)
 </div>
 <%
 page_menu_begin(out);
+page_menu_button(out, "mbClearNonappliable",  "Clear non-appliable",  "Clear all non-appliable entries", "return confirm('Are you sure to clear all non-appliable entries?');");
 page_menu_space(out);
 page_menu_end(out);
 %>

@@ -6,7 +6,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Add profile";
-switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch(bean.process(request))
 {
 	case ProfilesAdd.RESULT_DONE:
 		if ("lookup".equals(bean.getReturnPath()))
@@ -19,10 +19,8 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 			response.sendRedirect("index.jsp");
 		return;
 	case ProfilesAdd.RESULT_OK:
-		STATUS.append("Ok");
 		break;
 	case ProfilesAdd.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
 		break;
 }
 boolean isEdit = false;

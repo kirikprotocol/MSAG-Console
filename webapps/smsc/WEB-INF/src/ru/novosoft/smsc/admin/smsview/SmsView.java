@@ -67,6 +67,11 @@ public class SmsView
     this.smsc = smsc;
   }
 
+  public Smsc getSmsc()
+  {
+    return smsc;
+  }
+
   public SmsDetailedRow getSms(String id, int storage) throws AdminException
   {
     SmsDetailedRow row = new SmsDetailedRow();

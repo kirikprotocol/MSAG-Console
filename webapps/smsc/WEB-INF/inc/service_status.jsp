@@ -1,8 +1,9 @@
 <%@ page import="ru.novosoft.smsc.admin.service.ServiceInfo,
 					  ru.novosoft.smsc.util.StringEncoderDecoder,
 					  ru.novosoft.smsc.admin.route.SmeStatus,
-					  ru.novosoft.smsc.admin.AdminException"%><%@ include file = "/WEB-INF/inc/show_sme_status.jsp"%><%!
-String smeStatus(String serviceId)
+					  ru.novosoft.smsc.admin.AdminException,
+                 ru.novosoft.smsc.jsp.SMSCAppContext"%><%@ include file = "/WEB-INF/inc/show_sme_status.jsp"%><%!
+String smeStatus(SMSCAppContext appContext, String serviceId)
 {
 	SmeStatus status = null;
 	try {
@@ -13,12 +14,12 @@ String smeStatus(String serviceId)
 	String elem_id = "CONNECTION_STATUSERVICE_" + StringEncoderDecoder.encode(serviceId);
 	return "<span id=\"" + elem_id + "\" datasrc=#tdcConnStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(serviceId) + "\" "+ showSmeStatus(status);
 }
-String serviceStatus(String serviceId)
+String serviceStatus(SMSCAppContext appContext, String serviceId)
 {
   String elem_id = "RUNNING_STATUSERVICE_" + StringEncoderDecoder.encode(serviceId);
-  return serviceStatus(serviceId, elem_id);
+  return serviceStatus(appContext, serviceId, elem_id);
 }
-String serviceStatus(String serviceId, String elem_id)
+String serviceStatus(SMSCAppContext appContext, String serviceId, String elem_id)
 {
 	byte status = ServiceInfo.STATUS_UNKNOWN;
 	try {

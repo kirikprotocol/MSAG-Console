@@ -5,13 +5,15 @@
  */
 package ru.novosoft.smsc.jsp.smsc.routes;
 
-import ru.novosoft.smsc.admin.route.*;
+import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 public class RoutesEdit extends RouteBody
@@ -76,10 +78,10 @@ public class RoutesEdit extends RouteBody
     if (srcMasks == null) srcMasks = new String[0];
     if (dstMasks == null) dstMasks = new String[0];
 
-    checkedSources = trimStrings(checkedSources);
-    checkedDestinations = trimStrings(checkedDestinations);
-    srcMasks = trimStrings(srcMasks);
-    dstMasks = trimStrings(dstMasks);
+    checkedSources = Functions.trimStrings(checkedSources);
+    checkedDestinations = Functions.trimStrings(checkedDestinations);
+    srcMasks = Functions.trimStrings(srcMasks);
+    dstMasks = Functions.trimStrings(dstMasks);
 
     checkedSourcesSet = new HashSet(Arrays.asList(checkedSources));
     checkedDestinationsSet = new HashSet(Arrays.asList(checkedDestinations));
@@ -87,14 +89,15 @@ public class RoutesEdit extends RouteBody
     return result;
   }
 
-  public int process(SMSCAppContext appContext, List errors, Map requestParameters, java.security.Principal loginedPrincipal, String sessionId)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 
     final String subjprefix = "dst_sme_";
     final String maskprefix = "dst_mask_sme_";
+    final Map requestParameters = request.getParameterMap();
     for (Iterator i = requestParameters.keySet().iterator(); i.hasNext();) {
       String paramName = (String) i.next();
       if (paramName.startsWith(subjprefix)) {
@@ -129,7 +132,7 @@ public class RoutesEdit extends RouteBody
   {
     if (routeId == null || routeId.length() <= 0 || oldRouteId == null || oldRouteId.length() <= 0)
       return error(SMSCErrors.error.routes.nameNotSpecified);
-    if (priority < 0 || priority > MAX_PRIORITY)
+    if (priority < 0 || priority > Constants.MAX_PRIORITY)
       return error(SMSCErrors.error.routes.invalidPriority, String.valueOf(priority));
 
     if (!routeId.equals(oldRouteId) && routeSubjectManager.getRoutes().contains(routeId))
@@ -170,9 +173,9 @@ public class RoutesEdit extends RouteBody
       routeSubjectManager.getRoutes().remove(oldRouteId);
       routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId, deliveryMode, forwardTo));
       if (oldRouteId.equals(routeId))
-        appContext.getJournal().append(loginedPrincipal.getName(), sessionId, SubjectTypes.TYPE_route, routeId, Actions.ACTION_MODIFY, new Date());
+        journalAppend(SubjectTypes.TYPE_route, routeId, Actions.ACTION_MODIFY);
       else
-        appContext.getJournal().append(loginedPrincipal.getName(), sessionId, SubjectTypes.TYPE_route, routeId, Actions.ACTION_MODIFY, new Date(), "old route ID", oldRouteId);
+        journalAppend(SubjectTypes.TYPE_route, routeId, Actions.ACTION_MODIFY, new Date(), "old route ID", oldRouteId);
       appContext.getStatuses().setRoutesChanged(true);
       return RESULT_DONE;
     } catch (Throwable e) {

@@ -5,19 +5,20 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.jsp.PageBean;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.xml.Utils;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.security.Principal;
 import java.util.*;
 
 /**
@@ -83,13 +84,13 @@ public class LocaleResourcesEdit extends PageBean
     }
   }
 
-  public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal, Map params)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 
-    processDataParams(params);
+    processDataParams(request.getParameterMap());
     if (mbCancel != null)
       return RESULT_DONE;
     else if (mbSave != null)
@@ -126,6 +127,7 @@ public class LocaleResourcesEdit extends PageBean
     if (result == RESULT_DONE)
       try {
         appContext.getSmsc().applyLocaleResources();
+        journalAppend(SubjectTypes.TYPE_locale, locale, Actions.ACTION_MODIFY);
         return RESULT_DONE;
       } catch (AdminException e) {
         logger.debug("Couldn't apply locale resources: " + e.getMessage(), e);

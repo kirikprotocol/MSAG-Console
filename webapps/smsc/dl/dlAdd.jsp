@@ -8,17 +8,11 @@ TITLE = "Create distribution list";
 MENU0_SELECTION = "MENU0_DL";
 final boolean isEditing = false;
 
-switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch (bean.process(request))
 {
 	case dlAdd.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
-	case dlAdd.RESULT_OK:
-		STATUS.append("Ok");
-		break;
-	case dlAdd.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
-		break;
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>

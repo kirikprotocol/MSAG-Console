@@ -10,16 +10,16 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Subjects";
-switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch(bean.process(request))
 {
 	case Index.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
 	case Index.RESULT_OK:
-		STATUS.append("Ok");
+
 		break;
 	case Index.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
+
 		break;
 	case Index.RESULT_FILTER:
 		response.sendRedirect("subjectsFilter.jsp");
@@ -31,7 +31,7 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 		response.sendRedirect("subjectsEdit.jsp?name="+URLEncoder.encode(bean.getEditName()));
 		return;
 	default:
-		STATUS.append("<span class=CF00>Error</span>");
+
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
@@ -213,12 +213,12 @@ String hexName = StringEncoderDecoder.encodeHEX(name);
 page_menu_begin(out);
 page_menu_button(out, "mbAdd",  "Add subject",  "Add new subject");
 page_menu_button(out, "mbDelete", "Delete subject(s)", "Delete selected subject(s)");
-if (appContext.getStatuses().isRoutesChanged() || appContext.getStatuses().isSubjectsChanged())
-  if (!appContext.getStatuses().isRoutesRestored())
+if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
+  if (!bean.getAppContext().getStatuses().isRoutesRestored())
     page_menu_button(out, "mbSave", "Save current", "Save current routing configuration");
-if (appContext.getStatuses().isRoutesSaved() && !appContext.getStatuses().isRoutesRestored())
+if (bean.getAppContext().getStatuses().isRoutesSaved() && !bean.getAppContext().getStatuses().isRoutesRestored())
     page_menu_button(out, "mbRestore", "Load saved", "Load saved routing configuration");
-if (appContext.getStatuses().isRoutesChanged() || appContext.getStatuses().isSubjectsChanged())
+if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
     page_menu_button(out, "mbLoad", "Restore applied", "Restore applied routing configuration");
 page_menu_space(out);
 page_menu_end(out);%>

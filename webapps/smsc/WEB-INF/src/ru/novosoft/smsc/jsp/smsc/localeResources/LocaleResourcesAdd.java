@@ -1,11 +1,14 @@
 package ru.novosoft.smsc.jsp.smsc.localeResources;
 
 import ru.novosoft.smsc.admin.resources.ResourcesManager;
-import ru.novosoft.smsc.jsp.*;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.jsp.PageBean;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.util.jsp.MultipartDataSource;
 import ru.novosoft.util.jsp.MultipartServletRequest;
 
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by igork
@@ -14,82 +17,74 @@ import java.util.List;
  */
 public class LocaleResourcesAdd extends PageBean
 {
-	private String mbCancel = null;;
+  private String mbCancel = null;;
 
-	protected int init(List errors)
-	{
-		int result = super.init(errors);
-		if (result != RESULT_OK)
-			return result;
+  protected int init(List errors)
+  {
+    int result = super.init(errors);
+    if (result != RESULT_OK)
+      return result;
 
-		return RESULT_OK;
-	}
+    return RESULT_OK;
+  }
 
-	public int process(MultipartServletRequest multi, SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
-	{
-		int result = super.process(appContext, errors, loginedPrincipal);
-		if (result != RESULT_OK)
-			return result;
+  public int process(MultipartServletRequest multi)
+  {
+    int result = super.process(multi);
+    if (result != RESULT_OK)
+      return result;
 
-		if (mbCancel != null)
-			return RESULT_DONE;
+    if (mbCancel != null)
+      return RESULT_DONE;
 
-		if (multi != null)
-		{
-			MultipartDataSource dataFile = null;
-			try
-			{
-				dataFile = multi.getMultipartDataSource("resourceFile");
-				if (dataFile == null)
-					return error(SMSCErrors.error.localeResources.fileNotAttached);
+    if (multi != null) {
+      MultipartDataSource dataFile = null;
+      try {
+        dataFile = multi.getMultipartDataSource("resourceFile");
+        if (dataFile == null)
+          return error(SMSCErrors.error.localeResources.fileNotAttached);
 
-				if (dataFile.getContentType().equals("text/xml"))
-				{
-					String name = dataFile.getName();
-					int pos = name.lastIndexOf('/');
-					if (pos >= 0)
-						name = name.substring(pos + 1);
-					pos = name.lastIndexOf('\\');
-					if (pos >= 0)
-						name = name.substring(pos + 1);
+        if (dataFile.getContentType().equals("text/xml")) {
+          String name = dataFile.getName();
+          int pos = name.lastIndexOf('/');
+          if (pos >= 0)
+            name = name.substring(pos + 1);
+          pos = name.lastIndexOf('\\');
+          if (pos >= 0)
+            name = name.substring(pos + 1);
 
-					if (!name.matches(ResourcesManager.RESOURCE_FILENAME_PATTERN))
-						return error(SMSCErrors.error.localeResources.wrongFileName);
+          if (!name.matches(ResourcesManager.RESOURCE_FILENAME_PATTERN))
+            return error(SMSCErrors.error.localeResources.wrongFileName);
 
-					appContext.getResourcesManager().add(name.substring(ResourcesManager.RESOURCE_FILENAME_PREFIX_LENGTH, ResourcesManager.RESOURCE_FILENAME_PREFIX_LENGTH + ResourcesManager.RESOURCE_FILENAME_BODY_LENGTH), dataFile.getInputStream());
+          final String localeName = name.substring(ResourcesManager.RESOURCE_FILENAME_PREFIX_LENGTH, ResourcesManager.RESOURCE_FILENAME_PREFIX_LENGTH + ResourcesManager.RESOURCE_FILENAME_BODY_LENGTH);
+          appContext.getResourcesManager().add(localeName, dataFile.getInputStream());
 
-					dataFile.close();
-					dataFile = null;
-					return RESULT_DONE;
-				}
-				else
-					return error(SMSCErrors.error.localeResources.wrongFileType);
-			}
-			catch (Throwable t)
-			{
-				logger.debug("Couldn't receive file", t);
-				return error(SMSCErrors.error.localeResources.couldntReceiveFile, t);
-			}
-			finally
-			{
-				if (dataFile != null)
-				{
-					dataFile.close();
-					dataFile = null;
-				}
-			}
-		}
-		else
-			return RESULT_OK;
-	}
+          dataFile.close();
+          dataFile = null;
+          journalAppend(SubjectTypes.TYPE_locale, localeName, Actions.ACTION_ADD);
+          return RESULT_DONE;
+        } else
+          return error(SMSCErrors.error.localeResources.wrongFileType);
+      } catch (Throwable t) {
+        logger.debug("Couldn't receive file", t);
+        return error(SMSCErrors.error.localeResources.couldntReceiveFile, t);
+      } finally {
+        if (dataFile != null) {
+          dataFile.close();
+          dataFile = null;
+        }
+      }
+    } else
+      return RESULT_OK;
+  }
 
-	public String getMbCancel()
-	{
-		return mbCancel;
-	}
+  public String getMbCancel()
+  {
+    return mbCancel;
+  }
 
-	public void setMbCancel(String mbCancel)
-	{
-		this.mbCancel = mbCancel;
-	}
+  public void setMbCancel(String mbCancel)
+  {
+    this.mbCancel = mbCancel;
+  }
 }

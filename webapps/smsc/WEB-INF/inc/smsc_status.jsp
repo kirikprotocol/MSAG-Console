@@ -1,8 +1,9 @@
 <%@ page import="ru.novosoft.smsc.admin.service.ServiceInfo,
 					  ru.novosoft.smsc.util.StringEncoderDecoder,
 					  ru.novosoft.smsc.admin.Constants,
-					  ru.novosoft.smsc.admin.AdminException"%><%!
-String smscStatus(String elem_id)
+					  ru.novosoft.smsc.admin.AdminException,
+                 ru.novosoft.smsc.jsp.SMSCAppContext"%><%!
+String smscStatus(SMSCAppContext appContext, String elem_id)
 {
 	byte status = ServiceInfo.STATUS_UNKNOWN;
 	try {

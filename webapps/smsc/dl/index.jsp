@@ -5,38 +5,34 @@
                  ru.novosoft.smsc.jsp.SMSCErrors,
                  java.util.*,
                  ru.novosoft.smsc.util.StringEncoderDecoder,
-                 ru.novosoft.smsc.admin.dl.DistributionList"%>
+                 ru.novosoft.smsc.admin.dl.DistributionList,
+                 ru.novosoft.smsc.jsp.PageBean"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.jsp.dl.DistributionListAdminFormBean" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-    TITLE="Distribution lists";
-    MENU0_SELECTION = "MENU0_DL";
+  TITLE="Distribution lists";
+  MENU0_SELECTION = "MENU0_DL";
 
-    int beanResult = bean.RESULT_OK;
-    switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal))
-    {
-        case DistributionListAdminFormBean.RESULT_DONE:
-            response.sendRedirect("index.jsp");
-            return;
-		case DistributionListAdminFormBean.RESULT_EDIT:
-			response.sendRedirect("dlEdit.jsp?name=" + URLEncoder.encode(bean.getEditDl()));
-			return;
-		case DistributionListAdminFormBean.RESULT_ADD:
-			response.sendRedirect("dlAdd.jsp");
-			return;
-        case DistributionListAdminFormBean.RESULT_FILTER:
-			response.sendRedirect("dlFilter.jsp");
-			return;
-        case DistributionListAdminFormBean.RESULT_OK:
-            STATUS.append("Ok");
-            break;
-        case DistributionListAdminFormBean.RESULT_ERROR:
-            STATUS.append("<span class=CF00>Error</span>");
-            break;
-        default:
-            STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
-            errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
-    }
+  int beanResult = bean.RESULT_OK;
+  switch(beanResult = bean.process(request))  {
+    case PageBean.RESULT_OK:
+    case PageBean.RESULT_ERROR:
+      break;
+    case DistributionListAdminFormBean.RESULT_DONE:
+      response.sendRedirect("index.jsp");
+      return;
+    case DistributionListAdminFormBean.RESULT_EDIT:
+      response.sendRedirect("dlEdit.jsp?name=" + URLEncoder.encode(bean.getEditDl()));
+      return;
+    case DistributionListAdminFormBean.RESULT_ADD:
+      response.sendRedirect("dlAdd.jsp");
+      return;
+    case DistributionListAdminFormBean.RESULT_FILTER:
+      response.sendRedirect("dlFilter.jsp");
+      return;
+    default:
+      errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
+  }
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%

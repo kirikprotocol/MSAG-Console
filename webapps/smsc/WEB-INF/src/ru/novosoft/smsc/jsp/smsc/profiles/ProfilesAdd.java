@@ -6,12 +6,13 @@
 package ru.novosoft.smsc.jsp.smsc.profiles;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.route.Mask;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
-import java.util.List;
+import javax.servlet.http.HttpServletRequest;
 
 public class ProfilesAdd extends ProfilesBean
 {
@@ -24,12 +25,12 @@ public class ProfilesAdd extends ProfilesBean
     codepage = Profile.CODEPAGE_Default;
   }
 
-  public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
+  public int process(HttpServletRequest request)
   {
     if (mbCancel != null)
       return RESULT_DONE;
 
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 
@@ -52,7 +53,11 @@ public class ProfilesAdd extends ProfilesBean
       Profile profile = new Profile(address, codepage, report, locale, aliasHide, aliasModifiable, divert, divertActive, divertModifiable);
       switch (smsc.profileUpdate(address, profile)) {
         case 1: //pusUpdated
+          journalAppend(SubjectTypes.TYPE_profile, address.getMask(), Actions.ACTION_MODIFY);
+          appContext.getStatuses().setProfilesChanged(true);
+          return RESULT_DONE;
         case 2: //pusInserted
+          journalAppend(SubjectTypes.TYPE_profile, address.getMask(), Actions.ACTION_ADD);
           appContext.getStatuses().setProfilesChanged(true);
           return RESULT_DONE;
         case 3: //pusUnchanged

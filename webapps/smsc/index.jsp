@@ -8,16 +8,14 @@ if (request.isUserInRole("super-admin"))
 TITLE = "Configuration status";
 }
 
-switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch(bean.process(request))
 {
 	case Index.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
 	case Index.RESULT_OK:
-		//STATUS.append("Ok");
 		break;
 	case Index.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
 		break;
 }
 MENU0_SELECTION = "MENU0_NONE";

@@ -18,19 +18,19 @@ ServiceIDForShowStatus = Constants.SMSC_SME_ID;
 FORM_METHOD = "POST";
 TITLE = "SMSC";
 MENU0_SELECTION = "MENU0_SMSC";
-switch(bean.process(appContext, errorMessages, request, loginedUserPrincipal))
+switch(bean.process(request))
 {
 	case Index.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
 	case Index.RESULT_OK:
-		STATUS.append("Ok");
+
 		break;
 	case Index.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
+
 		break;
 	default:
-		STATUS.append("<span class=CF00>Error</span>");
+
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 }
 %><%@ 

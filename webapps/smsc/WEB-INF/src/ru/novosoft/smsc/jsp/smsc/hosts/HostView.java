@@ -8,356 +8,311 @@ package ru.novosoft.smsc.jsp.smsc.hosts;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 public class HostView extends SmscBean
 {
-	public static final int RESULT_VIEW = PRIVATE_RESULT;
-	public static final int RESULT_EDIT = PRIVATE_RESULT + 1;
-	public static final int RESULT_ADD_SERVICE = PRIVATE_RESULT + 2;
-	public static final int RESULT_EDIT_SERVICE = PRIVATE_RESULT + 3;
+  public static final int RESULT_VIEW = PRIVATE_RESULT;
+  public static final int RESULT_EDIT = PRIVATE_RESULT + 1;
+  public static final int RESULT_ADD_SERVICE = PRIVATE_RESULT + 2;
+  public static final int RESULT_EDIT_SERVICE = PRIVATE_RESULT + 3;
 
-	protected String hostName = null;
-	protected String serviceIds[] = new String[0];
-	protected String serviceId = null;
+  protected String hostName = null;
+  protected String serviceIds[] = new String[0];
+  protected String serviceId = null;
 
-	protected Map services = null;
+  protected Map services = null;
 
-	protected String mbView = null;
-	protected String mbEdit = null;
-	protected String mbCancel = null;
-	protected String mbAddService = null;
-	protected String mbDelete = null;
-	protected String mbStartService = null;
-	protected String mbStopService = null;
-	protected String mbEditService = null;;
+  protected String mbView = null;
+  protected String mbEdit = null;
+  protected String mbCancel = null;
+  protected String mbAddService = null;
+  protected String mbDelete = null;
+  protected String mbStartService = null;
+  protected String mbStopService = null;
+  protected String mbEditService = null;;
 
-	protected int init(List errors)
-	{
-		int result = super.init(errors);
-		if (result != RESULT_OK)
-			return result;
+  protected int init(List errors)
+  {
+    int result = super.init(errors);
+    if (result != RESULT_OK)
+      return result;
 
-		try
-		{
-			services = hostsManager.getServices(hostName);
-			services.remove(Constants.SMSC_SME_ID);
-		}
-		catch (AdminException e)
-		{
-			services = new HashMap();
-			return warning(SMSCErrors.warning.hosts.listFailed, hostName);
-		}
+    try {
+      services = hostsManager.getServices(hostName);
+      services.remove(Constants.SMSC_SME_ID);
+    } catch (AdminException e) {
+      services = new HashMap();
+      return warning(SMSCErrors.warning.hosts.listFailed, hostName);
+    }
 
-		return RESULT_OK;
-	}
+    return RESULT_OK;
+  }
 
-	public int process(SMSCAppContext appContext, List errorMessages, java.security.Principal loginedPrincipal)
-	{
-		int result = super.process(appContext, errorMessages, loginedPrincipal);
-		if (result != RESULT_OK)
-			return result;
+  public int process(HttpServletRequest request)
+  {
+    int result = super.process(request);
+    if (result != RESULT_OK)
+      return result;
 
-		if (serviceIds == null)
-			serviceIds = new String[0];
+    if (serviceIds == null)
+      serviceIds = new String[0];
 
-		if (mbAddService != null)
-		{
-			return RESULT_ADD_SERVICE;
-		}
-		else if (mbCancel != null)
-		{
-			return RESULT_DONE;
-		}
-		else if (mbEdit != null)
-		{
-			return RESULT_EDIT;
-		}
-		else if (mbDelete != null)
-		{
-			return deleteServices();
-		}
-		else if (mbStartService != null)
-		{
-			return startServices();
-		}
-		else if (mbStopService != null)
-		{
-			return stopServices();
-		}
-		else if (mbEditService != null)
-		{
-			return RESULT_EDIT_SERVICE;
-		}
-		else if (mbView != null)
-		{
-			return RESULT_VIEW;
-		}
-		else
-			return RESULT_OK;
-	}
+    if (mbAddService != null) {
+      return RESULT_ADD_SERVICE;
+    } else if (mbCancel != null) {
+      return RESULT_DONE;
+    } else if (mbEdit != null) {
+      return RESULT_EDIT;
+    } else if (mbDelete != null) {
+      return deleteServices();
+    } else if (mbStartService != null) {
+      return startServices();
+    } else if (mbStopService != null) {
+      return stopServices();
+    } else if (mbEditService != null) {
+      return RESULT_EDIT_SERVICE;
+    } else if (mbView != null) {
+      return RESULT_VIEW;
+    } else
+      return RESULT_OK;
+  }
 
-	private int deleteServices()
-	{
-		if (serviceIds.length == 0)
-			return RESULT_OK;
+  private int deleteServices()
+  {
+    if (serviceIds.length == 0)
+      return RESULT_OK;
 
-		List notRemoved = new LinkedList();
-		for (int i = 0; i < serviceIds.length; i++)
-		{
-			String id = serviceIds[i];
-			try
-			{
-				if (hostsManager.isService(id))
-					hostsManager.removeService(id);
-				else
-					hostsManager.removeSme(id);
-				//appContext.getStatuses().setServicesChanged(true);
-			}
-			catch (Throwable e)
-			{
-				error(SMSCErrors.error.services.coudntDeleteService, id);
-				logger.error("Couldn't delete service \"" + id + '"', e);
-				notRemoved.add(id);
-			}
-		}
-		serviceIds = (String[]) notRemoved.toArray(new String[0]);
-		return errors.size() == 0 ? RESULT_DONE : RESULT_ERROR;
-	}
+    List notRemoved = new LinkedList();
+    for (int i = 0; i < serviceIds.length; i++) {
+      String id = serviceIds[i];
+      try {
+        if (hostsManager.isService(id))
+          hostsManager.removeService(id);
+        else
+          hostsManager.removeSme(id);
+        //appContext.getStatuses().setServicesChanged(true);
+      } catch (Throwable e) {
+        error(SMSCErrors.error.services.coudntDeleteService, id);
+        logger.error("Couldn't delete service \"" + id + '"', e);
+        notRemoved.add(id);
+      }
+    }
+    serviceIds = (String[]) notRemoved.toArray(new String[0]);
+    return errors.size() == 0 ? RESULT_DONE : RESULT_ERROR;
+  }
 
-	protected int startServices()
-	{
-		int result = RESULT_OK;
-		if (serviceIds.length == 0)
-			return warning(SMSCErrors.warning.hosts.noServicesSelected);
+  protected int startServices()
+  {
+    int result = RESULT_OK;
+    if (serviceIds.length == 0)
+      return warning(SMSCErrors.warning.hosts.noServicesSelected);
 
-		List notStartedIds = new LinkedList();
+    List notStartedIds = new LinkedList();
 
-		for (int i = 0; i < serviceIds.length; i++)
-		{
-			ServiceInfo s = (ServiceInfo) services.get(serviceIds[i]);
-			if (s == null)
-				result = error(SMSCErrors.error.hosts.serviceNotFound, serviceIds[i]);
-			else if (s.getStatus() == ServiceInfo.STATUS_STOPPED)
-			{
-				long pid = -1;
-				try
-				{
-					pid = hostsManager.startService(serviceIds[i]);
-				}
-				catch (AdminException e)
-				{
-					notStartedIds.add(serviceIds[i]);
-					result = error(SMSCErrors.error.hosts.couldntStartService, serviceIds[i], e);
-					logger.error("Couldn't start services \"" + serviceIds[i] + '"', e);
-					continue;
-				}
-				if (pid <= 0)
-				{
-					notStartedIds.add(serviceIds[i]);
-					result = error(SMSCErrors.error.hosts.couldntStartService, serviceIds[i]);
-					logger.error("Couldn't start services \"" + serviceIds[i] + '"');
-				}
-			}
-		}
-		serviceIds = (String[]) notStartedIds.toArray(new String[0]);
-		return result;
-	}
+    for (int i = 0; i < serviceIds.length; i++) {
+      ServiceInfo s = (ServiceInfo) services.get(serviceIds[i]);
+      if (s == null)
+        result = error(SMSCErrors.error.hosts.serviceNotFound, serviceIds[i]);
+      else if (s.getStatus() == ServiceInfo.STATUS_STOPPED) {
+        long pid = -1;
+        try {
+          pid = hostsManager.startService(serviceIds[i]);
+        } catch (AdminException e) {
+          notStartedIds.add(serviceIds[i]);
+          result = error(SMSCErrors.error.hosts.couldntStartService, serviceIds[i], e);
+          logger.error("Couldn't start services \"" + serviceIds[i] + '"', e);
+          continue;
+        }
+        if (pid <= 0) {
+          notStartedIds.add(serviceIds[i]);
+          result = error(SMSCErrors.error.hosts.couldntStartService, serviceIds[i]);
+          logger.error("Couldn't start services \"" + serviceIds[i] + '"');
+        }
+      }
+    }
+    serviceIds = (String[]) notStartedIds.toArray(new String[0]);
+    return result;
+  }
 
-	protected int stopServices()
-	{
-		int result = RESULT_OK;
+  protected int stopServices()
+  {
+    int result = RESULT_OK;
 
-		if (serviceIds.length == 0)
-			return warning(SMSCErrors.warning.hosts.noServicesSelected);
+    if (serviceIds.length == 0)
+      return warning(SMSCErrors.warning.hosts.noServicesSelected);
 
-		List notStoppedIds = new LinkedList();
+    List notStoppedIds = new LinkedList();
 
-		for (int i = 0; i < serviceIds.length; i++)
-		{
-			ServiceInfo s = (ServiceInfo) services.get(serviceIds[i]);
-			if (s == null)
-				result = error(SMSCErrors.error.hosts.serviceNotFound, serviceIds[i]);
-			else if (s.getStatus() == ServiceInfo.STATUS_RUNNING)
-			{
-				try
-				{
-					hostsManager.shutdownService(serviceIds[i]);
-				}
-				catch (AdminException e)
-				{
-					notStoppedIds.add(serviceIds[i]);
-					result = error(SMSCErrors.error.hosts.couldntStopService, serviceIds[i]);
-					logger.error("Couldn't stop services \"" + serviceIds[i] + '"', e);
-				}
-			}
-		}
-		serviceIds = (String[]) notStoppedIds.toArray(new String[0]);
-		return result;
-	}
+    for (int i = 0; i < serviceIds.length; i++) {
+      ServiceInfo s = (ServiceInfo) services.get(serviceIds[i]);
+      if (s == null)
+        result = error(SMSCErrors.error.hosts.serviceNotFound, serviceIds[i]);
+      else if (s.getStatus() == ServiceInfo.STATUS_RUNNING) {
+        try {
+          hostsManager.shutdownService(serviceIds[i]);
+        } catch (AdminException e) {
+          notStoppedIds.add(serviceIds[i]);
+          result = error(SMSCErrors.error.hosts.couldntStopService, serviceIds[i]);
+          logger.error("Couldn't stop services \"" + serviceIds[i] + '"', e);
+        }
+      }
+    }
+    serviceIds = (String[]) notStoppedIds.toArray(new String[0]);
+    return result;
+  }
 
-	public int getServicesTotal()
-	{
-		if (hostName != null && hostName.length() > 0)
-		{
-			try
-			{
-				return hostsManager.getCountServices(hostName);
-			}
-			catch (AdminException e)
-			{
-				logger.warn("host \"" + hostName + "\" not found", e);
-			}
-		}
-		return 0;
-	}
+  public int getServicesTotal()
+  {
+    if (hostName != null && hostName.length() > 0) {
+      try {
+        return hostsManager.getCountServices(hostName);
+      } catch (AdminException e) {
+        logger.warn("host \"" + hostName + "\" not found", e);
+      }
+    }
+    return 0;
+  }
 
-	public int getServicesRunning()
-	{
-		if (hostName != null && hostName.length() > 0)
-		{
-			try
-			{
-				return hostsManager.getCountRunningServices(hostName);
-			}
-			catch (AdminException e)
-			{
-				logger.warn("host \"" + hostName + "\" not found", e);
-			}
-		}
-		return 0;
-	}
+  public int getServicesRunning()
+  {
+    if (hostName != null && hostName.length() > 0) {
+      try {
+        return hostsManager.getCountRunningServices(hostName);
+      } catch (AdminException e) {
+        logger.warn("host \"" + hostName + "\" not found", e);
+      }
+    }
+    return 0;
+  }
 
 
-	public Collection getServices()
-	{
-		return services.values();
-	}
+  public Collection getServices()
+  {
+    return services.values();
+  }
 
-	public int getPort()
-	{
-		try
-		{
-			return hostsManager.getHostPort(hostName);
-		}
-		catch (AdminException e)
-		{
-			logger.error("Couldn't get port for host \"" + hostName + "\"", e);
-			return -1;
-		}
-	}
+  public int getPort()
+  {
+    try {
+      return hostsManager.getHostPort(hostName);
+    } catch (AdminException e) {
+      logger.error("Couldn't get port for host \"" + hostName + "\"", e);
+      return -1;
+    }
+  }
 
-	public String getHostName()
-	{
-		return hostName;
-	}
+  public String getHostName()
+  {
+    return hostName;
+  }
 
-	public void setHostName(String hostName)
-	{
-		this.hostName = hostName;
-	}
+  public void setHostName(String hostName)
+  {
+    this.hostName = hostName;
+  }
 
-	public String[] getServiceIds()
-	{
-		return serviceIds;
-	}
+  public String[] getServiceIds()
+  {
+    return serviceIds;
+  }
 
-	public void setServiceIds(String[] serviceIds)
-	{
-		this.serviceIds = serviceIds;
-	}
+  public void setServiceIds(String[] serviceIds)
+  {
+    this.serviceIds = serviceIds;
+  }
 
-	public String getMbView()
-	{
-		return mbView;
-	}
+  public String getMbView()
+  {
+    return mbView;
+  }
 
-	public void setMbView(String mbView)
-	{
-		this.mbView = mbView;
-	}
+  public void setMbView(String mbView)
+  {
+    this.mbView = mbView;
+  }
 
-	public String getMbEdit()
-	{
-		return mbEdit;
-	}
+  public String getMbEdit()
+  {
+    return mbEdit;
+  }
 
-	public void setMbEdit(String mbEdit)
-	{
-		this.mbEdit = mbEdit;
-	}
+  public void setMbEdit(String mbEdit)
+  {
+    this.mbEdit = mbEdit;
+  }
 
-	public String getMbCancel()
-	{
-		return mbCancel;
-	}
+  public String getMbCancel()
+  {
+    return mbCancel;
+  }
 
-	public void setMbCancel(String mbCancel)
-	{
-		this.mbCancel = mbCancel;
-	}
+  public void setMbCancel(String mbCancel)
+  {
+    this.mbCancel = mbCancel;
+  }
 
-	public String getMbAddService()
-	{
-		return mbAddService;
-	}
+  public String getMbAddService()
+  {
+    return mbAddService;
+  }
 
-	public void setMbAddService(String mbAddService)
-	{
-		this.mbAddService = mbAddService;
-	}
+  public void setMbAddService(String mbAddService)
+  {
+    this.mbAddService = mbAddService;
+  }
 
-	public String getMbDelete()
-	{
-		return mbDelete;
-	}
+  public String getMbDelete()
+  {
+    return mbDelete;
+  }
 
-	public void setMbDelete(String mbDelete)
-	{
-		this.mbDelete = mbDelete;
-	}
+  public void setMbDelete(String mbDelete)
+  {
+    this.mbDelete = mbDelete;
+  }
 
-	public String getMbStartService()
-	{
-		return mbStartService;
-	}
+  public String getMbStartService()
+  {
+    return mbStartService;
+  }
 
-	public void setMbStartService(String mbStartService)
-	{
-		this.mbStartService = mbStartService;
-	}
+  public void setMbStartService(String mbStartService)
+  {
+    this.mbStartService = mbStartService;
+  }
 
-	public String getMbStopService()
-	{
-		return mbStopService;
-	}
+  public String getMbStopService()
+  {
+    return mbStopService;
+  }
 
-	public void setMbStopService(String mbStopService)
-	{
-		this.mbStopService = mbStopService;
-	}
+  public void setMbStopService(String mbStopService)
+  {
+    this.mbStopService = mbStopService;
+  }
 
-	public String getServiceId()
-	{
-		return serviceId;
-	}
+  public String getServiceId()
+  {
+    return serviceId;
+  }
 
-	public void setServiceId(String serviceId)
-	{
-		this.serviceId = serviceId;
-	}
+  public void setServiceId(String serviceId)
+  {
+    this.serviceId = serviceId;
+  }
 
-	public String getMbEditService()
-	{
-		return mbEditService;
-	}
+  public String getMbEditService()
+  {
+    return mbEditService;
+  }
 
-	public void setMbEditService(String mbEditService)
-	{
-		this.mbEditService = mbEditService;
-	}
+  public void setMbEditService(String mbEditService)
+  {
+    this.mbEditService = mbEditService;
+  }
 }

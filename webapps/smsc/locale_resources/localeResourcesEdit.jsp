@@ -18,19 +18,16 @@ name="bean" property="*"
 	MENU0_SELECTION = "MENU0_LOCALE_RESOURCES";
 	FORM_METHOD = "POST";
 	TITLE = "Resource edit";
-	switch (bean.process(appContext, errorMessages, loginedUserPrincipal, request.getParameterMap()))
+	switch (bean.process(request))
 	{
 		case LocaleResourcesEdit.RESULT_DONE:
 			response.sendRedirect("index.jsp");
 			return;
 		case LocaleResourcesEdit.RESULT_OK:
-			STATUS.append("Ok");
 			break;
 		case LocaleResourcesEdit.RESULT_ERROR:
-			STATUS.append("<span class=CF00>Error</span>");
 			break;
 		default:
-			STATUS.append("<span class=CF00>Error</span>");
 			errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 	}
 %><%@

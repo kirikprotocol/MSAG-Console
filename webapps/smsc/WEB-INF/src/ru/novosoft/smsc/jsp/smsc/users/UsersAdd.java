@@ -6,6 +6,8 @@
 package ru.novosoft.smsc.jsp.smsc.users;
 
 import ru.novosoft.smsc.admin.users.User;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
 import java.util.List;
@@ -50,6 +52,7 @@ public class UsersAdd
 				return error(SMSCErrors.error.users.passwordNotConfirmed);
 			if (userManager.addUser(new User(login, password.trim(), roles, firstName, lastName, dept, workPhone, homePhone, cellPhone, email)))
 			{
+        journalAppend(SubjectTypes.TYPE_user, login, Actions.ACTION_ADD);
 				appContext.getStatuses().setUsersChanged(true);
 				return RESULT_DONE;
 			}

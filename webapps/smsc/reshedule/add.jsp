@@ -10,19 +10,16 @@
 FORM_METHOD = "POST";
 TITLE = "SMSC Rescheduling";
 MENU0_SELECTION = "MENU0_SMSC_Reshedule";
-switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch(bean.process(request))
 {
 	case Add.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
 	case Add.RESULT_OK:
-		STATUS.append("Ok");
 		break;
 	case Add.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
 		break;
 	default:
-		STATUS.append("<span class=CF00>Error</span>");
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 }
 %><%@

@@ -2,11 +2,12 @@ package ru.novosoft.smsc.jsp.dl;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.MaskList;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
+import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.SortedList;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
@@ -30,7 +31,7 @@ public abstract class dlBody extends IndexBean
 
   private void processAddresses(List fullList, Set oldSet, String[] newList) throws AdminException
   {
-    MaskList tmp = new MaskList(trimStrings(newList));
+    MaskList tmp = new MaskList(Functions.trimStrings(newList));
     HashSet newSet = new HashSet(tmp.getNames());
     Set intersection = new HashSet(newSet);
     intersection.retainAll(oldSet);
@@ -63,9 +64,9 @@ public abstract class dlBody extends IndexBean
     return RESULT_OK;
   }
 
-  public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 

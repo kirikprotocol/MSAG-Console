@@ -3,7 +3,6 @@ package ru.novosoft.smsc.jsp.smsc.reshedule;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCErrors;
-import ru.novosoft.smsc.util.SortedList;
 
 import java.util.*;
 
@@ -12,7 +11,8 @@ import java.util.*;
  * Date: Aug 22, 2003
  * Time: 6:20:24 PM
  */
-public class Body extends PageBean {
+public class Body extends PageBean
+{
   private String reshedule = null;
   private String[] checkedErrs = null;
   protected Set checkedErrsSet = new HashSet();
@@ -73,7 +73,7 @@ public class Body extends PageBean {
 
   public void setReshedule(String reshedule)
   {
-    logger.debug("Set reshedule: "+ reshedule);
+    logger.debug("Set reshedule: " + reshedule);
     defaultReshedule = Reshedules.DEFAULT_RESHEDULE_NAME.equals(reshedule);
     this.reshedule = defaultReshedule ? reshedules.getDefaultReshedule() : reshedule;
   }

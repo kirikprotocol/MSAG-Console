@@ -4,16 +4,14 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Add route";
-switch(bean.process(appContext, errorMessages, request.getParameterMap(), loginedUserPrincipal))
+switch(bean.process(request))
 {
 	case RoutesAdd.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
 	case RoutesAdd.RESULT_OK:
-		STATUS.append("Ok");
 		break;
 	case RoutesAdd.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
 		break;
 }
 

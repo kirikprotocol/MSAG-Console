@@ -9,17 +9,15 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Lookup profile";
-int beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal);
+int beanResult = bean.process(request);
 switch(beanResult)
 {
 	case Lookup.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
 	case Lookup.RESULT_OK:
-		STATUS.append("Ok");
 		break;
 	case Lookup.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
 		break;
 	case Lookup.RESULT_ADD:
 		response.sendRedirect("profilesAdd.jsp?returnPath=lookup&mask=" + URLEncoder.encode(bean.getProfile()));
@@ -34,7 +32,6 @@ switch(beanResult)
 		response.sendRedirect("profilesEdit.jsp?returnPath=lookup&mask=" + URLEncoder.encode(bean.getMatchAddress().getMask()));
 		return;
 	default:
-		STATUS.append("<span class=CF00>Error</span>");
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%

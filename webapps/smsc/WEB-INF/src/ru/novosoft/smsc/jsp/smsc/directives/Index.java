@@ -1,13 +1,14 @@
 package ru.novosoft.smsc.jsp.smsc.directives;
 
-import ru.novosoft.smsc.jsp.PageBean;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
-import ru.novosoft.smsc.jsp.SMSCErrors;
-import ru.novosoft.smsc.util.config.Config;
-import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.jsp.PageBean;
+import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.util.config.Config;
 
-import java.security.Principal;
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
@@ -50,14 +51,14 @@ public class Index extends PageBean
     return result;
   }
 
-  public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal, Map params)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 
     if (mbDone != null)
-      return done(params);
+      return done(request.getParameterMap());
     if (mbCancel != null)
       return cancel();
 
@@ -93,6 +94,8 @@ public class Index extends PageBean
 
     try {
       appContext.getSmsc().saveSmscConfig(config);
+      //todo journal
+      journalAppend(SubjectTypes.TYPE_directive, null, Actions.ACTION_MODIFY);
       appContext.getStatuses().setSmscChanged(true);
     } catch (AdminException e) {
       logger.error("Couldn't save new SMSC config", e);

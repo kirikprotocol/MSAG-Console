@@ -51,11 +51,7 @@ public class Journal
   public synchronized void append(String userName, String sessionId, byte subjectType, String subjectId, byte action,
                                   Date timestamp, Map additional)
   {
-    Action a = new Action(userName, sessionId, subjectType, subjectId, action, timestamp, additional);
-    actions.add(a);
-    final String actionStr = a.toString();
-    journalLogger.info(actionStr);
-    logger.debug("APPEND " + actionStr);
+    append(new Action(userName, sessionId, subjectType, subjectId, action, timestamp, additional));
   }
 
   public synchronized void clear(byte subjectType)
@@ -70,6 +66,20 @@ public class Journal
       }
     }
     logger.debug("CLEAR(subjectType) FINISHED");
+  }
+
+  public synchronized void clear(Collection subjectTypes)
+  {
+    logger.debug("CLEAR(subjectTypes)");
+    for (Iterator i = new LinkedList(actions).iterator(); i.hasNext();) {
+      Action action = (Action) i.next();
+      if (subjectTypes.contains(new Byte(action.getSubjectType()))) {
+        actions.remove(action);
+        if (logger.isDebugEnabled())
+          logger.debug("removed: " + action.toString());
+      }
+    }
+    logger.debug("CLEAR(subjectTypes) FINISHED");
   }
 
   public synchronized void clear(byte subjectType, String subjectId)
@@ -97,6 +107,17 @@ public class Journal
     for (Iterator i = actions.iterator(); i.hasNext();) {
       Action action = (Action) i.next();
       if (action.getSubjectType() == subjectType)
+        result.add(action);
+    }
+    return result;
+  }
+
+  public synchronized List getActions(Collection subjectTypes)
+  {
+    List result = new LinkedList();
+    for (Iterator i = actions.iterator(); i.hasNext();) {
+      Action action = (Action) i.next();
+      if (subjectTypes.contains(new Byte(action.getSubjectType())))
         result.add(action);
     }
     return result;

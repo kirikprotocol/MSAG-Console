@@ -9,7 +9,7 @@ String CPATH = "/smsc";
 /*try
 {*/
 CPATH = request.getContextPath() + "/smsc";
-bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), new LinkedList(), request.getUserPrincipal());
+bean.process(request);
 List c = bean.getServiceIds();
 for (Iterator i = c.iterator(); i.hasNext(); )
 {

@@ -14,16 +14,16 @@ if (bean.getStage() == 2 && request.getParameter("jsp") != null)
 bean.setWantAlias(request.getParameter("wantAlias") != null);
 bean.setForceDC(request.getParameter("forceDC") != null);
 
-switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch(bean.process(request))
 {
 	case ServiceAddExternalAdm.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
 	case ServiceAddExternalAdm.RESULT_OK:
-		STATUS.append("Ok");
+
 		break;
 	case ServiceAddExternalAdm.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
+
 		break;
 }
 

@@ -4,16 +4,16 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Edit service \"" + bean.getServiceId() +"\" parameters";
-switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch(bean.process(request))
 {
 	case ServiceEditSme.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
 	case ServiceEditSme.RESULT_OK:
-		STATUS.append("Ok");
+
 		break;
 	case ServiceEditSme.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
+
 		break;
 }
 MENU0_SELECTION = "MENU0_SERVICES";

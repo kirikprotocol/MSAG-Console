@@ -10,19 +10,17 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Profiles list";
-switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch(bean.process(request))
 {
 	case Index.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
 	case Index.RESULT_OK:
-		STATUS.append("Ok");
 		break;
 	case Index.RESULT_REFRESH:
 		response.sendRedirect("index.jsp?refreshed=true&initialized=" + bean.isInitialized() + "&startPosition=" + bean.getStartPositionInt() + "&filterMask=" + URLEncoder.encode(bean.getFilterMask()));
 		return;
 	case Index.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
 		break;
 	case Index.RESULT_FILTER:
 		response.sendRedirect("profilesFilter.jsp");
@@ -34,7 +32,6 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 		response.sendRedirect("profilesEdit.jsp?returnPath=profiles&mask="+URLEncoder.encode(bean.getProfileMask()));
 		return;
 	default:
-		STATUS.append("<span class=CF00>Error</span>");
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%

@@ -1,18 +1,20 @@
 package ru.novosoft.smsc.jsp.smsc.reshedule;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
-import java.security.Principal;
-import java.util.List;
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
 
 /**
  * Created by igork
  * Date: Aug 22, 2003
  * Time: 6:20:08 PM
  */
-public class Add extends Body {
+public class Add extends Body
+{
   private String mbSave = null;
   private String mbCancel = null;
 
@@ -28,9 +30,9 @@ public class Add extends Body {
     return result;
   }
 
-  public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 
@@ -49,6 +51,7 @@ public class Add extends Body {
 
     try {
       putSheduleToConfig();
+      journalAppend(SubjectTypes.TYPE_schedule, getReshedule(), Actions.ACTION_ADD);
     } catch (AdminException e) {
       return error(SMSCErrors.error.smsc.reshedule.couldntSaveConfig, e);
     }

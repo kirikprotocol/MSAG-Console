@@ -3,22 +3,20 @@
                  ru.novosoft.smsc.jsp.util.tables.DataItem,
                  java.net.URLEncoder,
                  ru.novosoft.smsc.jsp.SMSCJspException,
-                 ru.novosoft.smsc.jsp.SMSCErrors"%>
+                 ru.novosoft.smsc.jsp.SMSCErrors,
+                 ru.novosoft.smsc.jsp.PageBean"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.aliases.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Aliases";
-switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch(bean.process(request))
 {
+  case PageBean.RESULT_OK:
+  case PageBean.RESULT_ERROR:
+    break;
 	case Index.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
-	case Index.RESULT_OK:
-		STATUS.append("Ok");
-		break;
-	case Index.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
-		break;
 	case Index.RESULT_FILTER:
 		response.sendRedirect("aliasesFilter.jsp");
 		return;
@@ -31,7 +29,6 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 		                                     +"&hide="+bean.isEditHide());
 		return;
 	default:
-		STATUS.append("<span class=CF00>Error</span>");
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%

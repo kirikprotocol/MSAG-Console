@@ -7,15 +7,15 @@
  */
 package ru.novosoft.smsc.jsp.smsview;
 
-import ru.novosoft.smsc.admin.smsview.SmsView;
-import ru.novosoft.smsc.admin.smsview.SmsQuery;
-import ru.novosoft.smsc.admin.smsview.SmsDetailedRow;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.jsp.smsc.IndexBean;
-import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.admin.smsview.SmsDetailedRow;
+import ru.novosoft.smsc.admin.smsview.SmsQuery;
+import ru.novosoft.smsc.admin.smsview.SmsView;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.jsp.smsc.IndexBean;
 
-import java.util.List;
+import javax.servlet.http.HttpServletRequest;
 
 public class SmsViewDetailsFormBean extends IndexBean
 {
@@ -26,15 +26,14 @@ public class SmsViewDetailsFormBean extends IndexBean
   private String mbView = null;
   private int storageType = SmsQuery.SMS_ARCHIVE_STORAGE_TYPE;
 
-  public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
+  public int process(HttpServletRequest request)
   {
-    if (this.appContext == null && appContext instanceof SMSCAppContext)
-    {
+    if (this.appContext == null && appContext instanceof SMSCAppContext) {
       view.setDataSource(appContext.getConnectionPool());
       view.setSmsc(appContext.getSmsc());
     }
 
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 
@@ -55,28 +54,38 @@ public class SmsViewDetailsFormBean extends IndexBean
     }
   }
 
-  public String getSmsId() {
+  public String getSmsId()
+  {
     return smsId;
   }
-  public void setSmsId(String smsId) {
+
+  public void setSmsId(String smsId)
+  {
     this.smsId = smsId;
   }
 
-  public int getStorageType() {
+  public int getStorageType()
+  {
     return storageType;
   }
-  public void setStorageType(int storageType) {
+
+  public void setStorageType(int storageType)
+  {
     this.storageType = storageType;
   }
 
-  public String getMbView() {
+  public String getMbView()
+  {
     return mbView;
   }
-  public void setMbView(String mbView) {
+
+  public void setMbView(String mbView)
+  {
     this.mbView = mbView;
   }
 
-  public SmsDetailedRow getDetailedRow() {
+  public SmsDetailedRow getDetailedRow()
+  {
     return detailedRow;
   }
 }

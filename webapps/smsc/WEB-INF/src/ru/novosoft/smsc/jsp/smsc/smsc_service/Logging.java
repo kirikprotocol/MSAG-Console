@@ -1,19 +1,24 @@
 package ru.novosoft.smsc.jsp.smsc.smsc_service;
 
-import ru.novosoft.smsc.jsp.*;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.jsp.PageBean;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.SortedList;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
-import java.security.Principal;
 
 /**
  * Created by igork
  * Date: 22.05.2003
  * Time: 19:10:03
  */
-public class Logging extends PageBean {
-  public class LoggerCategoryInfo implements Comparable {
+public class Logging extends PageBean
+{
+  public class LoggerCategoryInfo implements Comparable
+  {
     private String name;
     private String fullName;
     private String priority;
@@ -128,7 +133,7 @@ public class Logging extends PageBean {
       Collection keys = new SortedList(logCategories.keySet());
       for (Iterator i = keys.iterator(); i.hasNext();) {
         String key = (String) i.next();
-        String value = (String)logCategories.get(key);
+        String value = (String) logCategories.get(key);
         rootCategory.addChild(key, value);
       }
     } catch (AdminException e) {
@@ -138,14 +143,14 @@ public class Logging extends PageBean {
     return result;
   }
 
-  public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal, Map parameters)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 
     if (mbSave != null)
-      return save(parameters);
+      return save(request.getParameterMap());
     else if (mbCancel != null)
       return RESULT_DONE;
 
@@ -167,6 +172,7 @@ public class Logging extends PageBean {
     }
     try {
       appContext.getSmsc().setLogCategories(cats);
+      journalAppend(SubjectTypes.TYPE_logger, null, Actions.ACTION_MODIFY);
       return RESULT_DONE;
     } catch (AdminException e) {
       return error(SMSCErrors.error.smsc.couldntSetLogCats, e);

@@ -6,7 +6,8 @@
                  java.util.*,
                  ru.novosoft.smsc.util.StringEncoderDecoder,
                  ru.novosoft.smsc.admin.dl.Principal,
-                 ru.novosoft.smsc.admin.route.Mask"%>
+                 ru.novosoft.smsc.admin.route.Mask,
+                 ru.novosoft.smsc.jsp.PageBean"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.jsp.dl.Principals" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -14,8 +15,11 @@
   MENU0_SELECTION = "MENU0_DL_PRINCIPALS";
 
   int beanResult = bean.RESULT_OK;
-  switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal))
+  switch(beanResult = bean.process(request))
   {
+    case PageBean.RESULT_OK:
+    case PageBean.RESULT_ERROR:
+      break;
     case Principals.RESULT_DONE:
       response.sendRedirect("principals.jsp");
       return;
@@ -28,14 +32,7 @@
     case Principals.RESULT_FILTER:
       response.sendRedirect("principalsFilter.jsp");
       return;
-    case Principals.RESULT_OK:
-      STATUS.append("Ok");
-      break;
-    case Principals.RESULT_ERROR:
-      STATUS.append("<span class=CF00>Error</span>");
-      break;
     default:
-      STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
       errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
   }
 %>

@@ -7,18 +7,17 @@
  */
 package ru.novosoft.smsc.jsp.smsstat;
 
-import java.util.Date;
-import java.util.List;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
-
-import ru.novosoft.smsc.admin.smsstat.StatQuery;
 import ru.novosoft.smsc.admin.smsstat.SmsStat;
+import ru.novosoft.smsc.admin.smsstat.StatQuery;
 import ru.novosoft.smsc.admin.smsstat.Statistics;
-
-import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.util.Functions;
+
+import javax.servlet.http.HttpServletRequest;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class SmsStatFormBean extends IndexBean
 {
@@ -37,9 +36,13 @@ public class SmsStatFormBean extends IndexBean
     return RESULT_OK;
   }
 
-  public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
+  public int process(HttpServletRequest request)
   {
-    if (this.appContext == null && appContext instanceof SMSCAppContext) {
+    int result = super.process(request);
+    if (result != RESULT_OK)
+      return result;
+
+    if (stat.getSmsc() == null) {
       stat.setDataSource(appContext.getConnectionPool());
       stat.setSmsc(appContext.getSmsc());
     }
@@ -55,54 +58,68 @@ public class SmsStatFormBean extends IndexBean
     return RESULT_OK;
   }
 
-  public Statistics getStatistics() {
+  public Statistics getStatistics()
+  {
     return statistics;
   }
-  public String getMbQuery() {
+
+  public String getMbQuery()
+  {
     return mbQuery;
   }
-  public void setMbQuery(String mbQuery) {
+
+  public void setMbQuery(String mbQuery)
+  {
     this.mbQuery = mbQuery;
   }
 
-  private Date convertStringToDate(String date) {
+  private Date convertStringToDate(String date)
+  {
     Date converted = new Date();
     try {
       SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
       converted = formatter.parse(date);
-    }
-    catch (ParseException e) {
+    } catch (ParseException e) {
       e.printStackTrace();
     }
     return converted;
   }
-  private String convertDateToString(Date date) {
+
+  private String convertDateToString(Date date)
+  {
     SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
     return formatter.format(date);
   }
 
   /* -------------------------- StatQuery delegates -------------------------- */
-  public void setFromDate(String fromDate) {
-    if (fromDate != null && fromDate.trim().length() >0) {
+  public void setFromDate(String fromDate)
+  {
+    if (fromDate != null && fromDate.trim().length() > 0) {
       query.setFromDate(convertStringToDate(fromDate));
       query.setFromDateEnabled(true);
     } else {
       query.setFromDateEnabled(false);
     }
   }
-  public String getFromDate() {
+
+  public String getFromDate()
+  {
     return (query.isFromDateEnabled()) ?
             convertDateToString(query.getFromDate()) : "";
   }
-  public void setTillDate(String tillDate) {
-    if (tillDate != null && tillDate.trim().length() >0) {
+
+  public void setTillDate(String tillDate)
+  {
+    if (tillDate != null && tillDate.trim().length() > 0) {
       query.setTillDate(convertStringToDate(tillDate));
       query.setTillDateEnabled(true);
     } else {
       query.setTillDateEnabled(false);
     }
   }
-  public String getTillDate() {
+
+  public String getTillDate()
+  {
     return (query.isTillDateEnabled()) ?
             convertDateToString(query.getTillDate()) : "";
   }

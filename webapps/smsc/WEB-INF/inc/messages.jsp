@@ -1,7 +1,9 @@
 <%@page import="java.util.*,
-                ru.novosoft.smsc.jsp.SMSCJspException"%><%
+                ru.novosoft.smsc.jsp.SMSCJspException,
+                ru.novosoft.smsc.jsp.SMSCAppContext"%><%
 if (errorMessages.size() > 0)
 {
+  SMSCAppContext appContext = (SMSCAppContext) request.getAttribute("appContext");
 	%><div class=content><%
 	for(Iterator it = errorMessages.iterator(); it.hasNext();)
 	{
@@ -9,7 +11,7 @@ if (errorMessages.size() > 0)
 		String code = exc.getMessage();
     String nested = exc.getCause() == null ? "" : "<br>Nested: \"" + exc.getCause().getMessage() + "\" (" + exc.getCause().getClass().getName() + ")";
     String param = exc.getParam() == null ? "" : ": " + exc.getParam();
-		String msg = appContext.getLocaleString(appContext.getUserPreferences(loginedUserPrincipal).getLocale(), code);
+		String msg = appContext.getLocaleString(appContext.getUserPreferences(request.getUserPrincipal()).getLocale(), code);
     if (msg == null) msg = code;
 
     String text = msg + param + nested;

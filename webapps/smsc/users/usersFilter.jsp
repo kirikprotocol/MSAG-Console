@@ -4,16 +4,16 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Filter users";
-switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch(bean.process(request))
 {
 	case UsersFilter.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
 	case UsersFilter.RESULT_OK:
-		STATUS.append("Ok");
+
 		break;
 	case UsersFilter.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
+
 		break;
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%

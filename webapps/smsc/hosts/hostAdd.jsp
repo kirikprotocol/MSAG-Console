@@ -4,16 +4,13 @@
 <%try {%><jsp:setProperty name="bean" property="*"/><%} catch (Throwable t){}%>
 <%
 TITLE = "Add new host";
-switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch (bean.process(request))
 {
 	case HostEdit.RESULT_ERROR:
 		break;
 	case HostEdit.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
-	case HostEdit.RESULT_OK:
-		STATUS.append("Ok");
-		break;
 	default:
 }
 

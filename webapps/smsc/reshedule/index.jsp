@@ -9,7 +9,6 @@
               ru.novosoft.smsc.jsp.SMSCErrors,
               ru.novosoft.smsc.jsp.smsc.reshedule.Index,
               java.util.Collection,
-              ru.novosoft.smsc.jsp.SMSCAppContext,
               java.util.Locale,
               java.net.URLEncoder"
 %><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.reshedule.Index"
@@ -18,13 +17,12 @@
 FORM_METHOD = "POST";
 TITLE = "SMSC Rescheduling";
 MENU0_SELECTION = "MENU0_SMSC_Reshedule";
-switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch(bean.process(request))
 {
 	case Index.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
 	case Index.RESULT_OK:
-		STATUS.append("Ok");
 		break;
   case Index.RESULT_ADD:
     response.sendRedirect("add.jsp");
@@ -33,10 +31,8 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
     response.sendRedirect("edit.jsp?editKey=" + URLEncoder.encode(bean.getEditKey(), "UTF-8"));
     return;
 	case Index.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
 		break;
 	default:
-		STATUS.append("<span class=CF00>Error</span>");
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 }
 %><%@

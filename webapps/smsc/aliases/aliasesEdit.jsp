@@ -4,17 +4,11 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Edit alias";
-switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch (bean.process(request))
 {
 	case AliasesEdit.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
-	case AliasesEdit.RESULT_OK:
-		STATUS.append("Ok");
-		break;
-	case AliasesEdit.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
-		break;
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_ALIASES";

@@ -4,7 +4,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Host \""+bean.getHostName()+":"+bean.getPort()+"\" edit";
-switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch (bean.process(request))
 {
 	case HostEdit.RESULT_ERROR:
 		break;

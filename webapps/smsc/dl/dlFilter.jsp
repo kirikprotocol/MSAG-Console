@@ -1,27 +1,25 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.jsp.dl.*"%>
+<%@ page import="ru.novosoft.smsc.jsp.dl.*,
+                 ru.novosoft.smsc.jsp.SMSCJspException,
+                 ru.novosoft.smsc.jsp.SMSCErrors,
+                 ru.novosoft.smsc.jsp.PageBean"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.jsp.dl.dlFilter"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-    TITLE="Distribution lists filter";
-    MENU0_SELECTION = "MENU0_DL";
+  TITLE="Distribution lists filter";
+  MENU0_SELECTION = "MENU0_DL";
 
-    int beanResult = bean.RESULT_OK;
-    switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal))
-    {
-        case dlFilter.RESULT_DONE:
-            response.sendRedirect("index.jsp");
-            return;
-        case dlFilter.RESULT_OK:
-            STATUS.append("Ok");
-            break;
-        case dlFilter.RESULT_ERROR:
-            STATUS.append("<span class=CF00>Error</span>");
-            break;
-        default:
-            STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
-            errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
-    }
+  int beanResult = bean.RESULT_OK;
+  switch(beanResult = bean.process(request)) {
+    case PageBean.RESULT_OK:
+    case PageBean.RESULT_ERROR:
+      break;
+    case dlFilter.RESULT_DONE:
+      response.sendRedirect("index.jsp");
+      return;
+    default:
+      errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
+  }
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <div class=content>

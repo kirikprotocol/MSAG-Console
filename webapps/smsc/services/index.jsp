@@ -1,21 +1,24 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.jsp.smsc.services.Index"%>
+<%@ page import="ru.novosoft.smsc.jsp.smsc.services.Index,
+                 java.net.URLEncoder,
+                 ru.novosoft.smsc.jsp.SMSCJspException,
+                 ru.novosoft.smsc.jsp.SMSCErrors"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Services";
 isServiceStatusNeeded = true;
 isServiceStatusColored = true;
-switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch(bean.process(request))
 {
 	case Index.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
 	case Index.RESULT_OK:
-		STATUS.append("Ok");
+
 		break;
 	case Index.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
+
 		break;
 	case Index.RESULT_VIEW:
 		response.sendRedirect(CPATH+"/esme_"+URLEncoder.encode(bean.getServiceId())+"/index.jsp");
@@ -30,7 +33,7 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 		response.sendRedirect(CPATH+"/services/serviceEditSme.jsp?serviceId="+URLEncoder.encode(bean.getServiceId()));
 		return;
 	default:
-		STATUS.append("<span class=CF00>Error</span>");
+
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
@@ -128,11 +131,11 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 		}
 	%></td>
 	<td class=name><%=bean.isServiceDisabled(serviceId) ? "<img src=\"/images/ic_disable.gif\" width=10 height=10 title='disabled'>" : "<img src=\"/images/ic_enable.gif\" width=10 height=10 title='enabled'>"%></td>
-	<td class=name><%=smeStatus(serviceId)%></td>
+	<td class=name><%=smeStatus(bean.getAppContext(), serviceId)%></td>
 	<td class=name><%
 		if (bean.isService(serviceId))
 		{
-			%><%=serviceStatus(serviceId)%><%
+			%><%=serviceStatus(bean.getAppContext(), serviceId)%><%
 		} else
 		{
 			%>&nbsp;<%

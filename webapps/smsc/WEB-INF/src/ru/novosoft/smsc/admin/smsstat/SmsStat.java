@@ -51,6 +51,7 @@ public class SmsStat
 
   public void setDataSource(DataSource ds) { this.ds = ds; }
   public void setSmsc(Smsc smsc) { this.smsc = smsc; }
+  public Smsc getSmsc()  { return smsc; }
 
   private void bindPeriodPart(PreparedStatement stmt, StatQuery query)
       throws SQLException

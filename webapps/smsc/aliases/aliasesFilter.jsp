@@ -5,17 +5,11 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Alias Filter";
-switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch(bean.process(request))
 {
 	case AliasesFilter.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
-	case AliasesFilter.RESULT_OK:
-		STATUS.append("Ok");
-		break;
-	case AliasesFilter.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
-		break;
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_ALIASES";

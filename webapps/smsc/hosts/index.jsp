@@ -1,14 +1,17 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.hosts.Index"/>
 <jsp:setProperty name="bean" property="*"/>
-<%@page import="ru.novosoft.smsc.jsp.smsc.hosts.Index"%>
+<%@page import="ru.novosoft.smsc.jsp.smsc.hosts.Index,
+                java.net.URLEncoder,
+                ru.novosoft.smsc.jsp.SMSCJspException,
+                ru.novosoft.smsc.jsp.SMSCErrors,
+                ru.novosoft.smsc.jsp.PageBean"%>
 <%
 TITLE = "Hosts";
-switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch (bean.process(request))
 {
-	case Index.RESULT_OK:
-		STATUS.append("hosts:").append(bean.getHostNames().size());
-		break;
+  case PageBean.RESULT_OK:
+    break;
 	case Index.RESULT_DONE:
 		response.sendRedirect(CPATH+"/hosts/index.jsp");
 		return;
@@ -20,7 +23,6 @@ switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
 		return;
 	case Index.RESULT_ERROR:
 		// do nothing there, show errors below
-		STATUS.append("<span class=CF00>Error</span>");
 		break;
 	default:
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));

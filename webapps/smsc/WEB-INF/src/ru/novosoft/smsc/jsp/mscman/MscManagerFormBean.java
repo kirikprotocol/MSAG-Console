@@ -8,8 +8,9 @@
 package ru.novosoft.smsc.jsp.mscman;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.mscman.MscManager;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
@@ -17,9 +18,11 @@ import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.mscman.MscFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.mscman.MscQuery;
 
-import java.util.List;
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
 
-public class MscManagerFormBean extends IndexBean {
+public class MscManagerFormBean extends IndexBean
+{
   private MscManager manager = new MscManager();
   private QueryResultSet mscs = new EmptyResultSet();
 
@@ -57,27 +60,33 @@ public class MscManagerFormBean extends IndexBean {
     mscKey = "";
   }
 
-  public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
+  public int process(HttpServletRequest request)
   {
-    if (this.appContext == null && appContext instanceof SMSCAppContext) {
-      manager.setSmsc(appContext.getSmsc());
-    }
-
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK) {
       clearBeenProperties();
       return result;
     }
 
+    if (manager.getSmsc() == null) {
+      manager.setSmsc(appContext.getSmsc());
+    }
+
+
     try {
-      if (mbBlock != null)
+      if (mbBlock != null) {
         manager.block(mscKey);
-      else if (mbClear != null)
+        journalAppend(SubjectTypes.TYPE_msc, mscKey, Actions.ACTION_LOCK);
+      } else if (mbClear != null) {
         manager.clear(mscKey);
-      else if (mbUnregister != null)
+        journalAppend(SubjectTypes.TYPE_msc, mscKey, Actions.ACTION_UNLOCK);
+      } else if (mbUnregister != null) {
         manager.unregister(mscKey);
-      else if (mbRegister != null)
+        journalAppend(SubjectTypes.TYPE_msc, mscKey, Actions.ACTION_DEL);
+      } else if (mbRegister != null) {
         manager.register(mscNum);
+        journalAppend(SubjectTypes.TYPE_msc, mscKey, Actions.ACTION_ADD);
+      }
 
       mscs = manager.query(new MscQuery(pageSize, new MscFilter(prefix), sort, startPosition));
       totalSize = mscs.getTotalSize();

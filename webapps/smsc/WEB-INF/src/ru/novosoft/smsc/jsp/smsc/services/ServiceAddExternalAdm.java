@@ -7,9 +7,11 @@ package ru.novosoft.smsc.jsp.smsc.services;
 
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.WebAppFolders;
@@ -17,6 +19,7 @@ import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.util.jsp.MultipartDataSource;
 import ru.novosoft.util.jsp.MultipartServletRequest;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
@@ -38,9 +41,9 @@ public class ServiceAddExternalAdm extends SmeBean
   private File incomingZip = null;
 
 
-  public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 
@@ -146,7 +149,7 @@ public class ServiceAddExternalAdm extends SmeBean
   {
     if (hostsManager.getSmeIds().contains(serviceId))
       return error(SMSCErrors.error.services.alreadyExists, serviceId);
-    if (priority < 0 || priority > MAX_PRIORITY)
+    if (priority < 0 || priority > Constants.MAX_PRIORITY)
       return error(SMSCErrors.error.services.invalidPriority, String.valueOf(priority));
 
 
@@ -163,6 +166,7 @@ public class ServiceAddExternalAdm extends SmeBean
 
     try {
       hostsManager.deployAdministrableService(incomingZip, serviceInfo);
+      journalAppend(SubjectTypes.TYPE_service, serviceInfo.getId(), Actions.ACTION_ADD);
       //appContext.getStatuses().setServicesChanged(true);
     } catch (AdminException e) {
       logger.error("Adding service \"" + serviceInfo.getId() + "\" to host \"" + serviceInfo.getHost() + "\" failed", e);

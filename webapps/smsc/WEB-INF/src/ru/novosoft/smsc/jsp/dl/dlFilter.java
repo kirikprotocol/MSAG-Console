@@ -1,9 +1,10 @@
 package ru.novosoft.smsc.jsp.dl;
 
 import ru.novosoft.smsc.jsp.PageBean;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.util.Functions;
 
-import java.util.List;
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
 import java.util.regex.*;
 
 /**
@@ -13,52 +14,52 @@ import java.util.regex.*;
  */
 public class dlFilter extends PageBean
 {
-	private String[] names = null;
+  private String[] names = null;
   private String[] owners = null;
 
-	private String mbCancel = null;
-	private String mbApply = null;
-	private String mbClear = null;
+  private String mbCancel = null;
+  private String mbApply = null;
+  private String mbClear = null;
 
-	protected int init(List errors)
-	{
-		int result = super.init(errors);
-		if (result != RESULT_OK)
-			return result;
+  protected int init(List errors)
+  {
+    int result = super.init(errors);
+    if (result != RESULT_OK)
+      return result;
 
-		if (names == null) {
-			names = preferences.getDlFilter().getNames();
+    if (names == null) {
+      names = preferences.getDlFilter().getNames();
       owners = preferences.getDlFilter().getOwners();
     }
 
-		names = trimStrings(names);
-    owners = trimStrings(owners);
+    names = Functions.trimStrings(names);
+    owners = Functions.trimStrings(owners);
 
-		return result;
-	}
+    return result;
+  }
 
-	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
-	{
-		int result = super.process(appContext, errors, loginedPrincipal);
-		if (result != RESULT_OK)
-			return result;
+  public int process(HttpServletRequest request)
+  {
+    int result = super.process(request);
+    if (result != RESULT_OK)
+      return result;
 
-		if (mbCancel != null)
-			return RESULT_DONE;
-		if (mbApply != null)
-			return apply();
-		if (mbClear != null)
-			return clear();
+    if (mbCancel != null)
+      return RESULT_DONE;
+    if (mbApply != null)
+      return apply();
+    if (mbClear != null)
+      return clear();
 
-		return result;
-	}
+    return result;
+  }
 
-	private int clear()
-	{
-		names = new String[0];
+  private int clear()
+  {
+    names = new String[0];
     owners = new String[0];
-		return RESULT_OK;
-	}
+    return RESULT_OK;
+  }
 
   private boolean isStringsAllowed(String cat, String[] strings)
   {
@@ -69,15 +70,15 @@ public class dlFilter extends PageBean
         Pattern pattern = Pattern.compile(string);
       } catch (PatternSyntaxException e) {
         logger.error(cat + " pattern \"" + string + "\" is invalid", e);
-        error(cat  + " pattern is invalid", string, e);
+        error(cat + " pattern is invalid", string, e);
         result = false;
       }
     }
     return result;
   }
 
-	private int apply()
-	{
+  private int apply()
+  {
     boolean r1 = isStringsAllowed("Name", names);
     boolean r2 = isStringsAllowed("Owner", owners);
     if (r1 && r2) {
@@ -86,47 +87,47 @@ public class dlFilter extends PageBean
       return RESULT_DONE;
     } else
       return RESULT_ERROR;
-	}
+  }
 
-	public String getMbCancel()
-	{
-		return mbCancel;
-	}
+  public String getMbCancel()
+  {
+    return mbCancel;
+  }
 
-	public void setMbCancel(String mbCancel)
-	{
-		this.mbCancel = mbCancel;
-	}
+  public void setMbCancel(String mbCancel)
+  {
+    this.mbCancel = mbCancel;
+  }
 
-	public String getMbApply()
-	{
-		return mbApply;
-	}
+  public String getMbApply()
+  {
+    return mbApply;
+  }
 
-	public void setMbApply(String mbApply)
-	{
-		this.mbApply = mbApply;
-	}
+  public void setMbApply(String mbApply)
+  {
+    this.mbApply = mbApply;
+  }
 
-	public String getMbClear()
-	{
-		return mbClear;
-	}
+  public String getMbClear()
+  {
+    return mbClear;
+  }
 
-	public void setMbClear(String mbClear)
-	{
-		this.mbClear = mbClear;
-	}
+  public void setMbClear(String mbClear)
+  {
+    this.mbClear = mbClear;
+  }
 
-	public String[] getNames()
-	{
-		return names;
-	}
+  public String[] getNames()
+  {
+    return names;
+  }
 
-	public void setNames(String[] names)
-	{
-		this.names = names;
-	}
+  public void setNames(String[] names)
+  {
+    this.names = names;
+  }
 
   public String[] getOwners()
   {

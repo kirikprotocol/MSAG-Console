@@ -1,6 +1,8 @@
 package ru.novosoft.smsc.jsp.dl;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.dl.DistributionList;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.Principal;
@@ -8,9 +10,9 @@ import ru.novosoft.smsc.admin.dl.exceptions.ListAlreadyExistsException;
 import ru.novosoft.smsc.admin.dl.exceptions.PrincipalAlreadyExistsException;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.route.MaskList;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
@@ -41,12 +43,12 @@ public class dlAdd extends dlBody
     return RESULT_OK;
   }
 
-  public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
+  public int process(HttpServletRequest request)
   {
     if (mbCancel != null)
       return cancel();
 
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 
@@ -82,6 +84,7 @@ public class dlAdd extends dlBody
     admin.grantPosting(name, mask.getNormalizedMask());
     return RESULT_DONE;
   }
+
   private int save()
   {
     int result = RESULT_DONE;
@@ -97,8 +100,7 @@ public class dlAdd extends dlBody
           return result;
         ownerAdded |= !dl.isSys() && mask.getNormalizedMask().equals(dl.getNormalizedOwner());
       }
-      if (!dl.isSys() && !ownerAdded)
-      {
+      if (!dl.isSys() && !ownerAdded) {
         if ((result = addSubmitter(admin, new Mask(dl.getNormalizedOwner()))) != RESULT_DONE)
           return result;
       }
@@ -109,6 +111,7 @@ public class dlAdd extends dlBody
         if (mask.getQuestionsCount() > 0)
           return error(SMSCErrors.error.dl.wildcardsNotAllowedInAddress);
         admin.addMember(name, mask.getNormalizedMask());
+        journalAppend(SubjectTypes.TYPE_dl, name, Actions.ACTION_ADD);
       }
       clear();
       return RESULT_DONE;

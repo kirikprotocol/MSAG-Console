@@ -1,13 +1,19 @@
 package ru.novosoft.smsc.jsp.dl;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.dl.*;
-import ru.novosoft.smsc.admin.dl.exceptions.*;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.dl.DistributionList;
+import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
+import ru.novosoft.smsc.admin.dl.Principal;
+import ru.novosoft.smsc.admin.dl.exceptions.ListNotExistsException;
+import ru.novosoft.smsc.admin.dl.exceptions.PrincipalAlreadyExistsException;
+import ru.novosoft.smsc.admin.dl.exceptions.PrincipalNotExistsException;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.route.MaskList;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
@@ -42,6 +48,9 @@ public class dlEdit extends dlBody
     int result = super.init(errors);
     if (result != RESULT_OK)
       return result;
+
+    if (admin == null)
+      admin = appContext.getSmsc().getDistributionListAdmin();
 
     if (name == null || name.length() == 0)
       return error(SMSCErrors.error.dl.dlNotDefined);
@@ -81,15 +90,12 @@ public class dlEdit extends dlBody
     return RESULT_OK;
   }
 
-  public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
+  public int process(HttpServletRequest request)
   {
     if (mbCancel != null)
       return cancel();
 
-    if (admin == null)
-      admin = appContext.getSmsc().getDistributionListAdmin();
-
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 
@@ -124,6 +130,7 @@ public class dlEdit extends dlBody
         return result;
       if ((result = applyMembers()) != RESULT_DONE)
         return result;
+      journalAppend(SubjectTypes.TYPE_dl, name, Actions.ACTION_MODIFY);
     } catch (AdminException e) {
       logger.error("Couldn't save edited distribution list", e);
       return error(SMSCErrors.error.dl.couldntSave, e);

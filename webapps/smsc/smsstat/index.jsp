@@ -1,8 +1,8 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="java.util.*, java.text.SimpleDateFormat,
-                 ru.novosoft.smsc.jsp.SMSCAppContext,
                  ru.novosoft.smsc.util.StringEncoderDecoder,
-                 ru.novosoft.smsc.jsp.SMSCJspException"%>
+                 ru.novosoft.smsc.jsp.SMSCJspException,
+                 ru.novosoft.smsc.jsp.SMSCErrors"%>
 <%@ page import="ru.novosoft.smsc.admin.smsstat.*"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsstat.*"%>
 <jsp:useBean id="smsStatFormBean" scope="session" class="ru.novosoft.smsc.jsp.smsstat.SmsStatFormBean" />
@@ -17,20 +17,17 @@
     MENU0_SELECTION = "MENU0_SMSSTAT";
 
     int beanResult = SmsStatFormBean.RESULT_OK;
-    switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal))
+    switch(beanResult = bean.process(request))
     {
         case SmsStatFormBean.RESULT_DONE:
             response.sendRedirect("index.jsp");
             return;
         case SmsStatFormBean.RESULT_FILTER:
         case SmsStatFormBean.RESULT_OK:
-            STATUS.append("Ok");
             break;
         case SmsStatFormBean.RESULT_ERROR:
-            STATUS.append("<span class=CF00>Error</span>");
             break;
         default:
-            STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
             errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
     }
 %>
@@ -173,8 +170,8 @@ while (i.hasNext()) {
           %>
           <tr class=row1>
               <td width="23%" align=right nowrap>
-          <%  String errMessage = appContext.getLocaleString(request.getLocale(), "smsc.errcode."+errid.errcode);
-              if (errMessage == null) errMessage = appContext.getLocaleString(request.getLocale(), "smsc.errcode.unknown"); %>
+          <%  String errMessage = bean.getAppContext().getLocaleString(request.getLocale(), "smsc.errcode."+errid.errcode);
+              if (errMessage == null) errMessage = bean.getAppContext().getLocaleString(request.getLocale(), "smsc.errcode.unknown"); %>
           <%= StringEncoderDecoder.encode(errMessage == null ? "" : errMessage)%>
           (<%=errid.errcode%>)
               </td>
@@ -234,8 +231,8 @@ while (i.hasNext()) {
           %>
           <tr class=row1>
               <td width="23%" align=right nowrap>
-          <%  String errMessage = appContext.getLocaleString(request.getLocale(), "smsc.errcode."+errid.errcode);
-              if (errMessage == null) errMessage = appContext.getLocaleString(request.getLocale(), "smsc.errcode.unknown"); %>
+          <%  String errMessage = bean.getAppContext().getLocaleString(request.getLocale(), "smsc.errcode."+errid.errcode);
+              if (errMessage == null) errMessage = bean.getAppContext().getLocaleString(request.getLocale(), "smsc.errcode.unknown"); %>
           <%= StringEncoderDecoder.encode(errMessage == null ? "" : errMessage)%>
           (<%=errid.errcode%>)
               </td>
@@ -277,8 +274,8 @@ while (i.hasNext()) {
         <tr class=row1>
             <td width="23%" align=right nowrap>
         <%
-          String errMessage = appContext.getLocaleString(request.getLocale(), "smsc.errcode."+errid.errcode);
-          if (errMessage == null) errMessage = appContext.getLocaleString(request.getLocale(), "smsc.errcode.unknown"); %>
+          String errMessage = bean.getAppContext().getLocaleString(request.getLocale(), "smsc.errcode."+errid.errcode);
+          if (errMessage == null) errMessage = bean.getAppContext().getLocaleString(request.getLocale(), "smsc.errcode.unknown"); %>
         <%= StringEncoderDecoder.encode(errMessage == null ? "" : errMessage)%>
         (<%=errid.errcode%>)
             </td>

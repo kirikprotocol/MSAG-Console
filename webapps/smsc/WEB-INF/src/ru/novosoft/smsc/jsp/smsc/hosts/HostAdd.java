@@ -6,110 +6,109 @@
 package ru.novosoft.smsc.jsp.smsc.hosts;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
-import java.util.List;
+import javax.servlet.http.HttpServletRequest;
 
 public class HostAdd extends SmscBean
 {
-	private String hostName = null;
-	private int port = -1;
+  private String hostName = null;
+  private int port = -1;
   private String hostServicesFolder = null;
-	private String mbSave = null;
-	private String mbCancel = null;
+  private String mbSave = null;
+  private String mbCancel = null;
 
-	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
-	{
-		if (mbCancel != null)
-			return RESULT_DONE;
+  public int process(HttpServletRequest request)
+  {
+    if (mbCancel != null)
+      return RESULT_DONE;
 
-		int result = super.process(appContext, errors, loginedPrincipal);
-		if (result != RESULT_OK)
-			return result;
+    int result = super.process(request);
+    if (result != RESULT_OK)
+      return result;
 
-		if (mbSave != null)
-		{
-			if (hostName == null || hostName.length() == 0)
-				return error(SMSCErrors.error.hosts.hostNotSpecified);
+    if (mbSave != null)
+      return save();
 
-			if (hostsManager.getHostNames().contains(hostName))
-				return error(SMSCErrors.error.hosts.hostAlreadyExist, hostName);
+    if (hostName == null)
+      hostName = "";
+    if (port <= 0)
+      port = 6680;
 
-			if (port <= 0)
-				return error(SMSCErrors.error.hosts.portNotSpecifiedOrIncorrect);
+    return RESULT_OK;
+  }
 
-      if (hostServicesFolder == null || hostServicesFolder.length() == 0)
-        return error(SMSCErrors.error.hosts.servicesFolderNotSpecified);
+  private int save()
+  {
+    if (hostName == null || hostName.length() == 0)
+      return error(SMSCErrors.error.hosts.hostNotSpecified);
 
-			try
-			{
-				hostsManager.addHost(hostName, port, hostServicesFolder);
-			}
-			catch (AdminException e)
-			{
-				logger.error("Couldn't add host", e);
-				return error(SMSCErrors.error.hosts.couldntAddHost, hostName, e);
-			}
-			appContext.getStatuses().setHostsChanged(true);
-			return RESULT_DONE;
-		}
+    if (hostsManager.getHostNames().contains(hostName))
+      return error(SMSCErrors.error.hosts.hostAlreadyExist, hostName);
 
-		if (hostName == null)
-			hostName = "";
-		if (port <= 0)
-			port = 6680;
+    if (port <= 0)
+      return error(SMSCErrors.error.hosts.portNotSpecifiedOrIncorrect);
 
-		return RESULT_OK;
-	}
+    if (hostServicesFolder == null || hostServicesFolder.length() == 0)
+      return error(SMSCErrors.error.hosts.servicesFolderNotSpecified);
 
-	public String getHostName()
-	{
-		return hostName;
-	}
+    try {
+      hostsManager.addHost(hostName, port, hostServicesFolder);
+      journalAppend(SubjectTypes.TYPE_host, hostName, Actions.ACTION_ADD);
+      appContext.getStatuses().setHostsChanged(true);
+    } catch (AdminException e) {
+      logger.error("Couldn't add host", e);
+      return error(SMSCErrors.error.hosts.couldntAddHost, hostName, e);
+    }
+    return RESULT_DONE;
+  }
 
-	public void setHostName(String hostName)
-	{
-		this.hostName = hostName;
-	}
+  public String getHostName()
+  {
+    return hostName;
+  }
 
-	public String getPort()
-	{
-		return Integer.toString(port);
-	}
+  public void setHostName(String hostName)
+  {
+    this.hostName = hostName;
+  }
 
-	public void setPort(String port)
-	{
-		try
-		{
-			this.port = Integer.decode(port).intValue();
-		}
-		catch (NumberFormatException e)
-		{
-			this.port = 0;
-		}
-	}
+  public String getPort()
+  {
+    return Integer.toString(port);
+  }
 
-	public String getMbSave()
-	{
-		return mbSave;
-	}
+  public void setPort(String port)
+  {
+    try {
+      this.port = Integer.decode(port).intValue();
+    } catch (NumberFormatException e) {
+      this.port = 0;
+    }
+  }
 
-	public void setMbSave(String mbSave)
-	{
-		this.mbSave = mbSave;
-	}
+  public String getMbSave()
+  {
+    return mbSave;
+  }
 
-	public String getMbCancel()
-	{
-		return mbCancel;
-	}
+  public void setMbSave(String mbSave)
+  {
+    this.mbSave = mbSave;
+  }
 
-	public void setMbCancel(String mbCancel)
-	{
-		this.mbCancel = mbCancel;
-	}
+  public String getMbCancel()
+  {
+    return mbCancel;
+  }
+
+  public void setMbCancel(String mbCancel)
+  {
+    this.mbCancel = mbCancel;
+  }
 
   public String getHostServicesFolder()
   {

@@ -11,26 +11,26 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
   TITLE = "Routes Tracing";
-  switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
+  switch(bean.process(request))
   {
     case Index.RESULT_DONE:
       response.sendRedirect("index.jsp");
       return;
     case Index.RESULT_OK:
-      STATUS.append("Ok");
+
       break;
     case Index.RESULT_ERROR:
-      STATUS.append("<span class=CF00>Error</span>");
+
       break;
     default:
-      STATUS.append("<span class=CF00>Error</span>");
+
       errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
   }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
   MENU0_SELECTION = "MENU0_TRACER";
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<%if (appContext.getStatuses().isRoutesLoaded()) {
+<%if (bean.getAppContext().getStatuses().isRoutesLoaded()) {
 %>
 <div class=content>
 <div class=page_subtitle>Tracing parameters</div>

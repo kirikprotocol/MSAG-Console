@@ -5,128 +5,117 @@
  */
 package ru.novosoft.smsc.jsp.smsc;
 
-import ru.novosoft.smsc.jsp.SMSCAppContext;
-
-import java.util.List;
+import javax.servlet.http.HttpServletRequest;
 
 public abstract class IndexBean extends SmscBean
 {
-	public static final int RESULT_FILTER = SmscBean.PRIVATE_RESULT;
-	protected static final int PRIVATE_RESULT = SmscBean.PRIVATE_RESULT + 1;
+  public static final int RESULT_FILTER = SmscBean.PRIVATE_RESULT;
+  protected static final int PRIVATE_RESULT = SmscBean.PRIVATE_RESULT + 1;
 
-	protected int startPosition = 0;
-	protected int totalSize = 0;
-	protected int pageSize = 0;
+  protected int startPosition = 0;
+  protected int totalSize = 0;
+  protected int pageSize = 0;
 
-	protected String sort = null;
+  protected String sort = null;
 
-	protected String mbFilter = null;
+  protected String mbFilter = null;
 
-	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
-	{
-		int result = super.process(appContext, errors, loginedPrincipal);
-		if (result != RESULT_OK)
-			return result;
+  public int process(HttpServletRequest request)
+  {
+    int result = super.process(request);
+    if (result != RESULT_OK)
+      return result;
 
-		if (mbFilter != null)
-			return RESULT_FILTER;
+    if (mbFilter != null)
+      return RESULT_FILTER;
 
-		return RESULT_OK;
-	}
+    return RESULT_OK;
+  }
 
 
-	/***************************************** properties **************************************************************/
+  /***************************************** properties **************************************************************/
 
-	public String getStartPosition()
-	{
-		return String.valueOf(startPosition);
-	}
+  public String getStartPosition()
+  {
+    return String.valueOf(startPosition);
+  }
 
-	public int getStartPositionInt()
-	{
-		return startPosition;
-	}
+  public int getStartPositionInt()
+  {
+    return startPosition;
+  }
 
-	public void setStartPosition(String startPosition)
-	{
-		try
-		{
-			this.startPosition = Integer.decode(startPosition).intValue();
-		}
-		catch (NumberFormatException e)
-		{
-			this.startPosition = 0;
-		}
-	}
+  public void setStartPosition(String startPosition)
+  {
+    try {
+      this.startPosition = Integer.decode(startPosition).intValue();
+    } catch (NumberFormatException e) {
+      this.startPosition = 0;
+    }
+  }
 
-	public String getTotalSize()
-	{
-		return String.valueOf(totalSize);
-	}
+  public String getTotalSize()
+  {
+    return String.valueOf(totalSize);
+  }
 
-	public int getTotalSizeInt()
-	{
-		return totalSize;
-	}
+  public int getTotalSizeInt()
+  {
+    return totalSize;
+  }
 
-	public void setTotalSize(String totalSize)
-	{
-		try
-		{
-			this.totalSize = Integer.decode(totalSize).intValue();
-		}
-		catch (NumberFormatException e)
-		{
-			this.totalSize = 0;
-		}
-	}
+  public void setTotalSize(String totalSize)
+  {
+    try {
+      this.totalSize = Integer.decode(totalSize).intValue();
+    } catch (NumberFormatException e) {
+      this.totalSize = 0;
+    }
+  }
 
-	public void setPageSize(String pageSize)
-	{
-		try
-		{
-			this.pageSize = Integer.decode(pageSize).intValue();
-		}
-		catch (NumberFormatException e)
-		{
-			this.pageSize = 0;
-		}
-	}
+  public void setPageSize(String pageSize)
+  {
+    try {
+      this.pageSize = Integer.decode(pageSize).intValue();
+    } catch (NumberFormatException e) {
+      this.pageSize = 0;
+    }
+  }
 
-	public String getSort()
-	{
-		return sort;
-	}
+  public String getSort()
+  {
+    return sort;
+  }
 
-	public void setSort(String sort)
-	{
-		this.sort = sort;
-	}
+  public void setSort(String sort)
+  {
+    this.sort = sort;
+  }
 
-	public String getMbFilter()
-	{
-		return mbFilter;
-	}
+  public String getMbFilter()
+  {
+    return mbFilter;
+  }
 
-	public void setMbFilter(String mbFilter)
-	{
-		this.mbFilter = mbFilter;
-	}
+  public void setMbFilter(String mbFilter)
+  {
+    this.mbFilter = mbFilter;
+  }
 
-	public String getPageSize()
-	{
-		return String.valueOf(pageSize);
-	}
+  public String getPageSize()
+  {
+    return String.valueOf(pageSize);
+  }
 
-	public int getPageSizeInt()
-	{
-		return pageSize;
-	}
+  public int getPageSizeInt()
+  {
+    return pageSize;
+  }
 
-	protected void clear()
-	{
-		startPosition = totalSize = pageSize = 0;
-		sort = null;
-		mbFilter = null;
-	}
+  protected void clear()
+  {
+    startPosition = totalSize = pageSize = 0;
+    sort = null;
+    mbFilter = null;
+  }
 }

@@ -8,12 +8,15 @@
 package ru.novosoft.smsc.jsp.dl;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.dl.*;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.dl.DistributionList;
+import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.exceptions.ListNotExistsException;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 public class DistributionListAdminFormBean extends IndexBean
@@ -52,9 +55,9 @@ public class DistributionListAdminFormBean extends IndexBean
     return RESULT_OK;
   }
 
-  public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 
@@ -113,6 +116,7 @@ public class DistributionListAdminFormBean extends IndexBean
         admin.deleteDistributionList(checkedDl);
         checkedDlsSet.remove(checkedDl);
         //dls.remove(checkedDl);
+        journalAppend(SubjectTypes.TYPE_dl, checkedDl, Actions.ACTION_DEL);
         logger.debug("Distribution list \"" + checkedDl + "\" deleted");
       } catch (ListNotExistsException e) {
         logger.error("Couldn't delete distribution list \"" + checkedDl + "\": unknown DL");

@@ -4,16 +4,16 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Add service: step 2";
-switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch(bean.process(request))
 {
 	case ServiceAddInternal.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
 	case ServiceAddInternal.RESULT_OK:
-		STATUS.append("Ok");
+
 		break;
 	case ServiceAddInternal.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
+
 		break;
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%

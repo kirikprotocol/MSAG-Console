@@ -1,11 +1,12 @@
 package ru.novosoft.smsc.jsp.smsc.reshedule;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.jsp.PageBean;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
-import java.security.Principal;
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
@@ -13,7 +14,8 @@ import java.util.*;
  * Date: Aug 22, 2003
  * Time: 2:31:17 PM
  */
-public class Index extends PageBean {
+public class Index extends PageBean
+{
   public static final int RESULT_ADD = PageBean.PRIVATE_RESULT + 0;
   public static final int RESULT_EDIT = PageBean.PRIVATE_RESULT + 1;
   protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 2;
@@ -49,9 +51,9 @@ public class Index extends PageBean {
     return result;
   }
 
-  public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 
@@ -73,6 +75,7 @@ public class Index extends PageBean {
   {
     for (int i = 0; i < checkedShedules.length; i++) {
       reshedules.removeShedule(checkedShedules[i]);
+      journalAppend(SubjectTypes.TYPE_schedule, checkedShedules[i], Actions.ACTION_DEL);
     }
     return RESULT_DONE;
   }
@@ -103,7 +106,8 @@ public class Index extends PageBean {
   {
     try {
       List errs = reshedules.getErrCodes(reshedule);
-      Collections.sort(errs, new Comparator() {
+      Collections.sort(errs, new Comparator()
+      {
         public int compare(Object o1, Object o2)
         {
           if (o1 instanceof String && o2 instanceof String) {

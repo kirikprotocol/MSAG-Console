@@ -3,21 +3,24 @@
                  ru.novosoft.smsc.jsp.util.tables.DataItem,
 				 ru.novosoft.smsc.admin.route.SourceList,
 				 ru.novosoft.smsc.admin.route.DestinationList
-"%>
+                 ,
+                 java.net.URLEncoder,
+                 ru.novosoft.smsc.jsp.SMSCJspException,
+                 ru.novosoft.smsc.jsp.SMSCErrors"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.users.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Users";
-switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch(bean.process(request))
 {
 	case Index.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
 	case Index.RESULT_OK:
-		STATUS.append("Ok");
+
 		break;
 	case Index.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
+
 		break;
 	case Index.RESULT_FILTER:
 		response.sendRedirect("usersFilter.jsp");
@@ -29,7 +32,7 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 		response.sendRedirect("usersEdit.jsp?login="+URLEncoder.encode(bean.getEditUserLogin()));
 		return;
 	default:
-		STATUS.append("<span class=CF00>Error</span>");
+
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%

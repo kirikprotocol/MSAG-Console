@@ -2,9 +2,9 @@ package ru.novosoft.smsc.jsp.smsc.users;
 
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.jsp.util.tables.impl.user.UserFilter;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 
-import java.util.List;
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
 
 /**
  * Created by igork
@@ -13,161 +13,156 @@ import java.util.List;
  */
 public class UsersFilter extends SmscBean
 {
-	private UserFilter filter = null;
+  private UserFilter filter = null;
 
-	private String loginFilter = null;
-	private String firstNameFilter = null;
-	private String lastNameFilter = null;
-	private String departmentFilter = null;
-	private String initialized = null;
+  private String loginFilter = null;
+  private String firstNameFilter = null;
+  private String lastNameFilter = null;
+  private String departmentFilter = null;
+  private String initialized = null;
 
-	private String mbApply = null;
-	private String mbClear = null;
-	private String mbCancel = null;
+  private String mbApply = null;
+  private String mbClear = null;
+  private String mbCancel = null;
 
 
-	protected int init(List errors)
-	{
-		int result = super.init(errors);
-		if (result != RESULT_OK)
-			return result;
+  protected int init(List errors)
+  {
+    int result = super.init(errors);
+    if (result != RESULT_OK)
+      return result;
 
-		filter = preferences.getUserFilter();
+    filter = preferences.getUserFilter();
 
-		if (initialized == null)
-		{
-			loginFilter = filter.getLoginFilter();
-			firstNameFilter = filter.getFirstNameFilter();
-			lastNameFilter = filter.getLastNameFilter();
-			departmentFilter = filter.getDepartmentFilter();
-		}
-		if (loginFilter == null)
-			loginFilter = "";
-		if (firstNameFilter == null)
-			firstNameFilter = "";
-		if (lastNameFilter == null)
-			lastNameFilter = "";
-		if (departmentFilter == null)
-			departmentFilter = "";
+    if (initialized == null) {
+      loginFilter = filter.getLoginFilter();
+      firstNameFilter = filter.getFirstNameFilter();
+      lastNameFilter = filter.getLastNameFilter();
+      departmentFilter = filter.getDepartmentFilter();
+    }
+    if (loginFilter == null)
+      loginFilter = "";
+    if (firstNameFilter == null)
+      firstNameFilter = "";
+    if (lastNameFilter == null)
+      lastNameFilter = "";
+    if (departmentFilter == null)
+      departmentFilter = "";
 
-		return RESULT_OK;
-	}
+    return RESULT_OK;
+  }
 
-	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
-	{
-		int result = super.process(appContext, errors, loginedPrincipal);
-		if (result != RESULT_OK)
-			return result;
+  public int process(HttpServletRequest request)
+  {
+    int result = super.process(request);
+    if (result != RESULT_OK)
+      return result;
 
-		if (mbApply != null)
-		{
-			filter.setLoginFilter(loginFilter);
-			filter.setFirstNameFilter(firstNameFilter);
-			filter.setLastNameFilter(lastNameFilter);
-			filter.setDepartmentFilter(departmentFilter);
-			return RESULT_DONE;
-		}
-		else if (mbClear != null)
-		{
-			loginFilter = "";
-			firstNameFilter = "";
-			lastNameFilter = "";
-			departmentFilter = "";
-			return RESULT_OK;
-		}
-		else if (mbCancel != null)
-			return RESULT_DONE;
+    if (mbApply != null) {
+      filter.setLoginFilter(loginFilter);
+      filter.setFirstNameFilter(firstNameFilter);
+      filter.setLastNameFilter(lastNameFilter);
+      filter.setDepartmentFilter(departmentFilter);
+      return RESULT_DONE;
+    } else if (mbClear != null) {
+      loginFilter = "";
+      firstNameFilter = "";
+      lastNameFilter = "";
+      departmentFilter = "";
+      return RESULT_OK;
+    } else if (mbCancel != null)
+      return RESULT_DONE;
 
-		return RESULT_OK;
-	}
+    return RESULT_OK;
+  }
 
-	public UserFilter getFilter()
-	{
-		return filter;
-	}
+  public UserFilter getFilter()
+  {
+    return filter;
+  }
 
-	public void setFilter(UserFilter filter)
-	{
-		this.filter = filter;
-	}
+  public void setFilter(UserFilter filter)
+  {
+    this.filter = filter;
+  }
 
-	public String getLoginFilter()
-	{
-		return loginFilter;
-	}
+  public String getLoginFilter()
+  {
+    return loginFilter;
+  }
 
-	public void setLoginFilter(String loginFilter)
-	{
-		this.loginFilter = loginFilter;
-	}
+  public void setLoginFilter(String loginFilter)
+  {
+    this.loginFilter = loginFilter;
+  }
 
-	public String getFirstNameFilter()
-	{
-		return firstNameFilter;
-	}
+  public String getFirstNameFilter()
+  {
+    return firstNameFilter;
+  }
 
-	public void setFirstNameFilter(String firstNameFilter)
-	{
-		this.firstNameFilter = firstNameFilter;
-	}
+  public void setFirstNameFilter(String firstNameFilter)
+  {
+    this.firstNameFilter = firstNameFilter;
+  }
 
-	public String getLastNameFilter()
-	{
-		return lastNameFilter;
-	}
+  public String getLastNameFilter()
+  {
+    return lastNameFilter;
+  }
 
-	public void setLastNameFilter(String lastNameFilter)
-	{
-		this.lastNameFilter = lastNameFilter;
-	}
+  public void setLastNameFilter(String lastNameFilter)
+  {
+    this.lastNameFilter = lastNameFilter;
+  }
 
-	public String getDepartmentFilter()
-	{
-		return departmentFilter;
-	}
+  public String getDepartmentFilter()
+  {
+    return departmentFilter;
+  }
 
-	public void setDepartmentFilter(String departmentFilter)
-	{
-		this.departmentFilter = departmentFilter;
-	}
+  public void setDepartmentFilter(String departmentFilter)
+  {
+    this.departmentFilter = departmentFilter;
+  }
 
-	public String getMbApply()
-	{
-		return mbApply;
-	}
+  public String getMbApply()
+  {
+    return mbApply;
+  }
 
-	public void setMbApply(String mbApply)
-	{
-		this.mbApply = mbApply;
-	}
+  public void setMbApply(String mbApply)
+  {
+    this.mbApply = mbApply;
+  }
 
-	public String getMbCancel()
-	{
-		return mbCancel;
-	}
+  public String getMbCancel()
+  {
+    return mbCancel;
+  }
 
-	public void setMbCancel(String mbCancel)
-	{
-		this.mbCancel = mbCancel;
-	}
+  public void setMbCancel(String mbCancel)
+  {
+    this.mbCancel = mbCancel;
+  }
 
-	public String getInitialized()
-	{
-		return initialized;
-	}
+  public String getInitialized()
+  {
+    return initialized;
+  }
 
-	public void setInitialized(String initialized)
-	{
-		this.initialized = initialized;
-	}
+  public void setInitialized(String initialized)
+  {
+    this.initialized = initialized;
+  }
 
-	public String getMbClear()
-	{
-		return mbClear;
-	}
+  public String getMbClear()
+  {
+    return mbClear;
+  }
 
-	public void setMbClear(String mbClear)
-	{
-		this.mbClear = mbClear;
-	}
+  public void setMbClear(String mbClear)
+  {
+    this.mbClear = mbClear;
+  }
 }

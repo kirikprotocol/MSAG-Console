@@ -1,19 +1,20 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.jsp.smsc.localeResources.Index"%>
+<%@ page import="ru.novosoft.smsc.jsp.smsc.localeResources.Index,
+                 ru.novosoft.smsc.jsp.SMSCErrors,
+                 ru.novosoft.smsc.jsp.SMSCJspException,
+                 java.net.URLEncoder"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.localeResources.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Resources";
-switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch(bean.process(request))
 {
 	case Index.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
 	case Index.RESULT_OK:
-		STATUS.append("Ok");
 		break;
 	case Index.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
 		break;
 	case Index.RESULT_FILTER:
 		response.sendRedirect("localeResourcesFilter.jsp");
@@ -25,7 +26,6 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 		response.sendRedirect("localeResourcesView.jsp?locale="+URLEncoder.encode(bean.getViewLocaleResource()));
 		return;
 	default:
-		STATUS.append("<span class=CF00>Error</span>");
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%

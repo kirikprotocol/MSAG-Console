@@ -28,6 +28,11 @@ public class MscManager {
     this.smsc = smsc;
   }
 
+  public Smsc getSmsc()
+  {
+    return smsc;
+  }
+
   public QueryResultSet query(MscQuery query) throws AdminException
   {
     mscs.clear();

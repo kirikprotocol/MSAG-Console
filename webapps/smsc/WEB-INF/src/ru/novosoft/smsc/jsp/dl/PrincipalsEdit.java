@@ -7,9 +7,9 @@ import ru.novosoft.smsc.admin.dl.exceptions.MembersCountExceededForOwnerExceptio
 import ru.novosoft.smsc.admin.dl.exceptions.PrincipalAlreadyExistsException;
 import ru.novosoft.smsc.admin.dl.exceptions.PrincipalNotExistsException;
 import ru.novosoft.smsc.admin.route.Mask;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
@@ -57,9 +57,9 @@ public class PrincipalsEdit extends SmscBean
     return result;
   }
 
-  public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 

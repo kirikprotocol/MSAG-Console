@@ -84,6 +84,11 @@ input.radio
 	border: none;
 }
 
+.clickable
+{
+  cursor: hand;
+}
+
 
 /*************************************************************************/
 div.content

@@ -10,16 +10,14 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Profile groups";
-switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch(bean.process(request))
 {
 	case Groups.RESULT_DONE:
 		response.sendRedirect("groups.jsp");
 		return;
 	case Groups.RESULT_OK:
-		STATUS.append("Ok");
 		break;
 	case Groups.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
 		break;
 	case Groups.RESULT_FILTER:
 		response.sendRedirect("profilesFilter.jsp");
@@ -31,7 +29,6 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 		response.sendRedirect("profilesEdit.jsp?returnPath=groups&mask="+URLEncoder.encode(bean.getProfileMask()));
 		return;
 	default:
-		STATUS.append("<span class=CF00>Error</span>");
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%

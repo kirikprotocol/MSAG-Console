@@ -4,17 +4,17 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Edit subject";
-int beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal);
+int beanResult = bean.process(request);
 switch(beanResult)
 {
 	case SubjectsEdit.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
 	case SubjectsEdit.RESULT_OK:
-		STATUS.append("Ok");
+
 		break;
 	case SubjectsEdit.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
+
 		break;
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%

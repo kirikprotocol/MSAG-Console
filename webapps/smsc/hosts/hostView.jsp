@@ -1,21 +1,25 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.hosts.HostView"/>
 <jsp:setProperty name="bean" property="*"/>
-<%@page import="ru.novosoft.smsc.jsp.smsc.hosts.HostView, ru.novosoft.smsc.admin.service.ServiceInfo"%>
+<%@page import="ru.novosoft.smsc.jsp.smsc.hosts.HostView, ru.novosoft.smsc.admin.service.ServiceInfo,
+                ru.novosoft.smsc.util.StringEncoderDecoder,
+                java.util.*,
+                java.net.URLEncoder,
+                ru.novosoft.smsc.jsp.SMSCJspException,
+                ru.novosoft.smsc.jsp.SMSCErrors,
+                ru.novosoft.smsc.jsp.PageBean"%>
 <%
 isServiceStatusNeeded = true;
 isServiceStatusColored = true;
-switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
+switch (bean.process(request))
 {
-	case HostView.RESULT_OK:
-		STATUS.append("Services: " + bean.getServicesRunning() + " of " + bean.getServicesTotal() + " is running");
-		break;
+  case PageBean.RESULT_OK:
+    break;
 	case HostView.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
 	case HostView.RESULT_ERROR:
 		// do nothing there, show errors below
-		STATUS.append("Error");
 		break;
 	case HostView.RESULT_EDIT:
 		response.sendRedirect("hostEdit.jsp?hostName="+bean.getHostName());
@@ -30,7 +34,6 @@ switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
 		response.sendRedirect(CPATH+"/services/serviceEditSme.jsp?serviceId="+URLEncoder.encode(bean.getServiceId()));
 		return;
 	default:
-		STATUS.append("Error");
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 }
 TITLE = "Host \""+bean.getHostName()+":"+bean.getPort()+"\" view";
@@ -116,7 +119,7 @@ String serviceControl = (row == 0) ? "start" : "stop";
 	<td><input class=check type=checkbox name=serviceIds value="<%=encodedServiceId%>" <%=checkedServices.contains(serviceId) ? "checked" : ""%>></td>
 	<td><a  href="#" title="Edit service parameters" onClick="return editService('<%=encodedServiceId%>');">edit</a></td>
 	<td><a href="#" title="View service info" onClick="return viewService('<%=encodedServiceId%>');"><%=encodedServiceId%></a></td>
-	<td><%=serviceStatus(serviceId)%></td>
+	<td><%=serviceStatus(bean.getAppContext(), serviceId)%></td>
 </tr>
 <%}}%>
 </tbody>

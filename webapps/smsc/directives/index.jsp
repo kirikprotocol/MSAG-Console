@@ -4,25 +4,21 @@
                  ru.novosoft.smsc.jsp.SMSCJspException,
                  ru.novosoft.smsc.jsp.SMSCErrors,
                  java.util.*,
-                 ru.novosoft.smsc.util.StringEncoderDecoder"%>
+                 ru.novosoft.smsc.util.StringEncoderDecoder,
+                 ru.novosoft.smsc.jsp.PageBean"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.directives.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Directives";
-//FORM_METHOD = "GET";
-switch(bean.process(appContext, errorMessages, loginedUserPrincipal, request.getParameterMap()))
+switch(bean.process(request))
 {
+  case PageBean.RESULT_OK:
+  case PageBean.RESULT_ERROR:
+    break;
 	case Index.RESULT_DONE:
 		response.sendRedirect(CPATH + "/smsc_service/status.jsp");
 		return;
-	case Index.RESULT_OK:
-		STATUS.append("Ok");
-		break;
-	case Index.RESULT_ERROR:
-		STATUS.append("<span class=CF00>Error</span>");
-		break;
 	default:
-		STATUS.append("<span class=CF00>Error</span>");
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
