@@ -125,7 +125,7 @@ bool Task::getMessage(const char* smsc_id, Message& message,
                       MessageState& state, Connection* connection/*=0*/)
 {
     state = UNKNOWNST;
-    smsc_log_info(logger, "Get message by smscId=%s", smsc_id ? smsc_id:"-");
+    smsc_log_info(logger, "Task: get message by smscId=%s", smsc_id ? smsc_id:"-");
     if (!smsc_id || !smsc_id[0]) return false;
 
     bool messageExists = false;
@@ -199,7 +199,7 @@ Hash<Task *> Task::loadupAll()
                 if (task->getEventsCount()) tasks.Insert(abonent, task);
                 else delete task;
             }
-            else smsc_log_error(logger, "Duplicate current message found for abonent %s");
+            else smsc_log_error(logger, "Task: duplicate current message found for abonent %s");
         }
         
         if (connection) ds->freeConnection(connection);
@@ -372,7 +372,7 @@ void Task::addEvent(const MissedCallEvent& event)
 
 bool Task::formatMessage(Message& message)
 {
-    smsc_log_info(logger, "Formatting message for abonent %s", abonent.c_str());
+    smsc_log_info(logger, "Task: formatting message for abonent %s", abonent.c_str());
 
     __require__(ds && templateFormatter);
     
@@ -405,7 +405,7 @@ bool Task::formatMessage(Message& message)
             assignEvtStmt->setUint64(1, events[i].msg_id);
             assignEvtStmt->setUint64(2, events[i].id);
             if (assignEvtStmt->executeUpdate() <= 0) {
-                smsc_log_debug(logger, "Failed to assign event #%lld to message #%lld. "
+                smsc_log_debug(logger, "Task: failed to assign event #%lld to message #%lld. "
                                "Possible event was receipted", events[i].id, events[i].msg_id);
                 if (bWasNew && oldNewEventsCount) oldNewEventsCount--;
                 events.Delete(i); 
@@ -497,7 +497,7 @@ void Task::clearCurrent(Connection* connection)
             throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "remove current message");
         delCurMsgStmt->setString(1, abonent.c_str());
         if (delCurMsgStmt->executeUpdate() <= 0)
-            smsc_log_debug(logger, "Failed to remove current message #%lld for abonent %s",
+            smsc_log_debug(logger, "Task: failed to remove current message #%lld for abonent %s",
                            currentMessageId, abonent.c_str());
         currentMessageId = 0;
     }
@@ -508,7 +508,7 @@ void Task::doWait(Connection* connection, const char* smsc_id, const MessageStat
     __require__(connection);
     
     if (!currentMessageId) {
-        smsc_log_warn(logger, "Current message is undefined for abonent %s (do wait %s). "
+        smsc_log_warn(logger, "Task: current message is undefined for abonent %s (do wait %s). "
                       "Possible was already receipted", abonent.c_str(),
                       ((state == WAIT_RESP) ? "responce":(state == WAIT_RCPT ? "receipt":"cancel")));
         return;
@@ -524,7 +524,7 @@ void Task::doWait(Connection* connection, const char* smsc_id, const MessageStat
     updateMsgStmt->setUint64(3, currentMessageId);
 
     if (updateMsgStmt->executeUpdate() <= 0) {
-        smsc_log_warn(logger, "Message #%lld not found for abonent %s (%s). Possible was receipted",
+        smsc_log_warn(logger, "Task: message #%lld not found for abonent %s (%s). Possible was receipted",
                       currentMessageId, abonent.c_str(), 
                       ((state == WAIT_RESP) ? "responce":(state == WAIT_RCPT ? "receipt":"cancel")));
     }
@@ -532,7 +532,7 @@ void Task::doWait(Connection* connection, const char* smsc_id, const MessageStat
 }
 void Task::waitCancel  (const char* smsc_id)
 {
-    smsc_log_info(logger, "Wait cancel on smscId=%s for abonent %s", 
+    smsc_log_info(logger, "Task: wait cancel on smscId=%s for abonent %s", 
                   smsc_id ? smsc_id:"-", abonent.c_str());
 
     __require__(ds);
@@ -559,7 +559,7 @@ void Task::waitCancel  (const char* smsc_id)
 }
 void Task::waitResponce()
 {
-    smsc_log_info(logger, "Wait responce for abonent %s", abonent.c_str());
+    smsc_log_info(logger, "Task: wait responce for abonent %s", abonent.c_str());
 
     __require__(ds);
     Connection* connection = 0;
@@ -585,7 +585,7 @@ void Task::waitResponce()
 }
 void Task::waitReceipt(const char* smsc_id)
 {
-    smsc_log_info(logger, "Wait receipt on smscId=%s for abonent %s",
+    smsc_log_info(logger, "Task: wait receipt on smscId=%s for abonent %s",
                   smsc_id ? smsc_id:"-", abonent.c_str());
     
     __require__(ds);
@@ -613,7 +613,7 @@ void Task::waitReceipt(const char* smsc_id)
 }
 void Task::waitReceipt(int eventCount, const char* smsc_id)
 {
-    smsc_log_info(logger, "Wait receipt & roll(%ld) on smscId=%s for abonent %s", 
+    smsc_log_info(logger, "Task: wait receipt & roll(%ld) on smscId=%s for abonent %s", 
                   eventCount, smsc_id ? smsc_id:"-", abonent.c_str());
 
     __require__(ds);
@@ -647,7 +647,7 @@ void Task::waitReceipt(int eventCount, const char* smsc_id)
 Array<std::string> Task::finalizeMessage(const char* smsc_id, 
                                          bool delivered, bool retry, uint64_t msg_id/*=0*/)
 {
-    smsc_log_debug(logger, "Finalizing message #%lld smscId=%s delivered=%d",
+    smsc_log_debug(logger, "Task: finalizing message #%lld smscId=%s delivered=%d",
                    msg_id, (smsc_id) ? smsc_id:"-", (int)delivered);
 
     Array<std::string> callers;

@@ -498,12 +498,12 @@ void TaskProcessor::processEvent(const MissedCallEvent& event)
                 return; // process event only if task not exists or task is awaiting receipt
             } 
 
+            message.reset(abonent);
             message.smsc_id = task->getCurrentSmscId();
             const char* smsc_id = (message.smsc_id.length() > 0) ? message.smsc_id.c_str():0;
 
             if (state == WAIT_RCPT && smsc_id && smsc_id[0])
             {
-                message.reset(abonent);
                 message.id = task->getCurrentMessageId(); 
                 if (message.id > 0) { // task is waiting receipt for incomplete message
                     smsc_log_debug(logger, "Event: message for abonent %s cancelling (extending)", abonent);
@@ -749,11 +749,11 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
             else // usual (submit) message was accepted by SMSC
             {
                 if (!smsc_id) {
-                    smsc_log_error(logger, "Got invalid submit ok responce (smscId=-) on message #%lld",
+                    smsc_log_error(logger, "Responce: got invalid submit ok responce (smscId=-) on message #%lld",
                                    message.id);
                     return;
                 }
-                smsc_log_debug(logger, "Message #%lld (smscId=%s) submit ok for abonent %s",
+                smsc_log_debug(logger, "Responce: message #%lld (smscId=%s) submit ok for abonent %s",
                                message.id, smsc_id, message.abonent.c_str());
                 
                 if (message.eventsCount < task->getEventsCount()) // extra events were added to task
@@ -765,7 +765,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                         // try send more events via submit new message
                         isMessageToSend = formatMessage(task, messageToSend);
                         if (!isMessageToSend) {
-                            smsc_log_debug(logger, "No events to send after submit ok responce (smscId=%s) for abonent %s",
+                            smsc_log_debug(logger, "Responce: no events to send after submit ok (smscId=%s) for abonent %s",
                                            smsc_id, message.abonent.c_str());
                             needKillTask = true; // if no more events to send => kill task
                         }
@@ -788,13 +788,13 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
             }
 
             if (bWasReceipted && smsc_id) { //  process receipt waiting for responce on this smsc_id
-                smsc_log_debug(logger, "Processing waiting receipt for smscId=%s", smsc_id);
+                smsc_log_debug(logger, "Responce: processing waiting receipt for smscId=%s", smsc_id);
                 processReceipt(task, receipt.delivered, receipt.expired, smsc_id);
             }
         }
         else
         {
-            smsc_log_error(logger, "Task for abonent %s is in invalid state=%d for %s responce",
+            smsc_log_error(logger, "Responce: task for abonent %s is in invalid state=%d for %s responce",
                            message.abonent.c_str(), (int)state, cancel ? "cancel":"submit");
             return;
         }
