@@ -35,6 +35,7 @@ CommandReader::CommandReader(Socket * admSocket)
 
 CommandReader::~CommandReader()
 {
+	delete parser->getErrorHandler();
 	delete parser;
 	sock = 0;
 	parser = 0;
@@ -45,11 +46,11 @@ Command *CommandReader::read()
 {
 	uint32_t len = readMessageLength();
 
-	XMLByte *buf = new XMLByte [len+1];
-	readMessageBody(buf, len);
+	std::auto_ptr<XMLByte> buf(new XMLByte [len+1]);
+	readMessageBody(buf.get(), len);
 
 	// parse message
-	MemBufInputSource is(buf, len, "received_command.xml");
+	MemBufInputSource is(buf.get(), len, "received_command.xml");
 	return parseCommand(is);
 }
 

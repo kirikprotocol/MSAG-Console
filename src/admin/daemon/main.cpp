@@ -86,6 +86,7 @@ int main(int argc, char **argv)
 	
 		logger.info("Starting...");
 		
+		DaemonCommandDispatcher::init(&manager);
 		DaemonSocketListener listener("smsc.admin.daemon.DaemonSocketListener");
 		listener.init(manager.getString("admin.daemon.host"),
 									manager.getInt("admin.daemon.port"));

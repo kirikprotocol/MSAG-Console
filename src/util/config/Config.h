@@ -8,6 +8,7 @@
 #include <log4cpp/Category.hh>
 #include <core/buffers/Hash.hpp>
 #include <util/Logger.h>
+#include <util/cstrings.h>
 #include <util/config/ConfigException.h>
 
 namespace smsc {
@@ -17,8 +18,11 @@ namespace config {
 using smsc::core::buffers::Hash;
 using smsc::core::buffers::HashInvalidKeyException;
 using smsc::util::Logger;
+using smsc::util::cStringCopy;
 
 class smsc::util::config::Manager;
+
+typedef std::set<char *> CStrSet;
 
 class Config {
 public:
@@ -82,9 +86,9 @@ public:
 		intParams[paramName] = value;
 	}
 
-	void setString(const char * const paramName, char * value)
+	void setString(const char * const paramName, const char * const value)
 	{
-		strParams[paramName] = value;
+		strParams[paramName] = cStringCopy(value);
 	}
 	
 	void setBool(const char * const paramName, bool value)
@@ -92,11 +96,11 @@ public:
 		boolParams[paramName] = value;
 	}
 
-	void save(std::ostream *out) const
+	void save(std::ostream &out) const
 	{
 		std::auto_ptr<ConfigTree> tree(createTree());
-		tree->write(*out, "  ");
-		out->flush();
+		tree->write(out, "  ");
+		out.flush();
 	}
 
 	char * getTextRepresentation() const
@@ -105,10 +109,17 @@ public:
 		return tree->getText("  ");
 	}
 
+	void removeSection(const char * const sectionName);
+
+	CStrSet *getChildSectionNames(const char * const sectionName);
+
 protected:
-	Hash<int32_t> intParams;
-	Hash<char *> strParams;
-	Hash<bool> boolParams;
+	typedef Hash<int32_t> intParamsType;
+	typedef Hash<char *> strParamsType;
+	typedef Hash<bool> boolParamsType;
+	intParamsType intParams;
+	strParamsType strParams;
+	boolParamsType boolParams;
 
 	class ConfigParam
 	{

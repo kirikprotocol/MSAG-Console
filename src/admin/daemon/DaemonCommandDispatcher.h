@@ -16,6 +16,7 @@
 #include <admin/util/Shutdownable.h>
 #include <core/synchronization/Mutex.hpp>
 #include <util/Logger.h>
+#include <util/config/Manager.h>
 
 namespace smsc {
 namespace admin {
@@ -36,11 +37,19 @@ using smsc::core::network::Socket;
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
 using smsc::util::Logger;
+using smsc::util::config;
 
 class DaemonCommandDispatcher : public CommandDispatcher
 {
 public:
 	static void activateChildSignalHandler();
+
+	inline static void init(config::Manager * confManager) throw ()
+	{
+		MutexGuard lock(configManagerMutex);
+		configManager = confManager;
+		addServicesFromConfig();
+	}
 
 	virtual void shutdown();
 	DaemonCommandDispatcher(Socket * admSocket)
@@ -52,10 +61,17 @@ public:
 	virtual Response * handle(const Command * const command) throw (AdminException);
 
 protected:
+	static void addServicesFromConfig();
 	log4cpp::Category &logger;
 	static ServicesList services;
 	static Mutex servicesListMutex;
+	static config::Manager *configManager;
+	static Mutex configManagerMutex;
 
+	static void childSignalListener(int signo,
+																	siginfo_t * info,
+																	void *some_pointer) throw ();
+	
 	Response * start_service    (const CommandStartService  * const command) throw (AdminException &);
 	Response * kill_service     (const CommandKillService   * const command) throw (AdminException &);
 	Response * shutdown_service (const CommandShutdown      * const command) throw (AdminException &);
@@ -63,9 +79,12 @@ protected:
 	Response * remove_service   (const CommandRemoveService * const command) throw (AdminException &);
 	Response * list_services    (const CommandListServices  * const command) throw (AdminException &);
 
-	static void childSignalListener(int signo,
-																	siginfo_t * info,
-																	void *some_pointer) throw ();
+	void putServiceToConfig(const char * const serviceName,
+													const in_port_t servicePort,
+													const char * const serviceCmdLine,
+													const char * const serviceConfigFileName,
+													const ServiceArguments & serviceArgs);
+	void removeServiceFromConfig(const char * const serviceName);
 };
 
 }

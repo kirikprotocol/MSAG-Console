@@ -1,21 +1,21 @@
-<%@ page import = "ru.novosoft.smsc.admin.*"%>
-<%@ page import = "ru.novosoft.smsc.admin.service.*"%>
 <%@include file="header.jsp"%>
 	<h1>Hosts:</h1>
 	
 	<table class="list" cellspacing="0">
 		<tr class="list">
 			<th class="list">name</th>
-			<th  class="list" colspan=4>actions</th>
+			<th  class="list" colspan=2>actions</th>
 		</tr>
 		<%
 		try {
 			Set names = serviceManager.getHosts();
 			for (Iterator i = names.iterator(); i.hasNext(); ) {
 				String name = (String)i.next();
-				%><tr class="list">
+				%>
+				<tr class="list">
 					<td class="list"><%=action(name, "viewHost.jsp", "host", name)%></td>
 					<td class="list"><%=action("view", "viewHost.jsp", "host", name)%></td>
+					<td class="list"><%=action("remove(disconnect)", "removeHost.jsp", "host", name)%></td>
 				</tr><%
 			}
 		} catch (Throwable t) {

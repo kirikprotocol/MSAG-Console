@@ -9,40 +9,57 @@ import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.FactoryConfigurationError;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.FileInputStream;
-import java.io.IOException;
+import javax.xml.parsers.*;
+import java.io.*;
+import java.util.*;
+
 
 public class ConfigManager
 {
   static protected boolean isInitialized = false;
   static protected String configurationFileName = "config.xml";
+  static protected String configurationFileDir = "";
   static protected ConfigManager monitor = null;
 
   protected Config config = null;
 
-  static public class IsNotInitialized extends Exception
+
+  static public class IsNotInitializedException extends Exception
   {
-    IsNotInitialized(String s)
+    IsNotInitializedException(String s)
     {
       super(s);
     }
   }
 
+
+  static public class WrongParamTypeException extends Exception
+  {
+    WrongParamTypeException(String s)
+    {
+      super(s);
+    }
+  }
+
+
   static public void Init(String configFileName)
   {
     configurationFileName = configFileName;
+
+    int slashpos = configurationFileName.lastIndexOf(File.separatorChar);
+    if (slashpos < 0)
+      configurationFileDir = "";
+    else
+      configurationFileDir = configurationFileName.substring(0, slashpos);
+
     isInitialized = true;
   }
 
   static public ConfigManager getInstance()
-          throws IsNotInitialized, FactoryConfigurationError, ParserConfigurationException, IOException, SAXException
+          throws IsNotInitializedException, FactoryConfigurationError, ParserConfigurationException, IOException, SAXException
   {
     if (!isInitialized)
-      throw new IsNotInitialized("Configuration Manager is not initialized. Make ConfigManager.Init(...) call before ConfigManager.getInstance()");
+      throw new IsNotInitializedException("Configuration Manager is not initialized. Make ConfigManager.Init(...) call before ConfigManager.getInstance()");
 
     if (monitor == null)
       monitor = new ConfigManager(configurationFileName);
@@ -55,6 +72,7 @@ public class ConfigManager
   {
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     DocumentBuilder builder = factory.newDocumentBuilder();
+    builder.setEntityResolver(new ConfigEntityResolver());
     FileInputStream inputStream = new FileInputStream(configFileName);
     InputSource source = new InputSource(inputStream);
     Document doc = builder.parse(source);
@@ -64,5 +82,120 @@ public class ConfigManager
   public Config getConfig()
   {
     return config;
+  }
+
+
+  protected class SaveableConfigTree
+  {
+    private Map sections = new HashMap();
+    private Map params = new HashMap();
+
+    public SaveableConfigTree()
+    {
+    }
+
+    public void putParameter(String name, Object value)
+    {
+      int dotpos = name.indexOf('.');
+      if (dotpos < 0)
+      {
+        params.put(name, value);
+      }
+      else if (dotpos == 0)
+      {
+        putParameter(name.substring(1), value);
+      }
+      else
+      {
+        SaveableConfigTree sec = (SaveableConfigTree) sections.get(name.substring(0, dotpos));
+        if (sec == null)
+        {
+          sec = new SaveableConfigTree();
+          sections.put(name.substring(0, dotpos), sec);
+        }
+        sec.putParameter(name.substring(dotpos + 1), value);
+      }
+    }
+
+    public void write(OutputStream out, String prefix)
+            throws WrongParamTypeException, IOException
+    {
+      writeParams(out, prefix, params);
+      writeSections(out, prefix, sections);
+    }
+
+    private void writeParams(OutputStream out, String prefix, Map parameters)
+            throws WrongParamTypeException, IOException
+    {
+      for (Iterator i = parameters.keySet().iterator(); i.hasNext();)
+      {
+        String paramName = (String) i.next();
+        Object paramValue = parameters.get(paramName);
+        out.write((prefix + "<param name=\"" + paramName + "\" type=\"").getBytes());
+        if (paramValue instanceof String)
+        {
+          out.write(("string\">" + ((String) paramValue) + "</param>\n").getBytes());
+        }
+        else if (paramValue instanceof Integer)
+        {
+          out.write(("int\">" + String.valueOf(((Integer) paramValue).longValue()) + "</param>\n").getBytes());
+        }
+        else if (paramValue instanceof Long)
+        {
+          out.write(("int\">" + String.valueOf(((Long) paramValue).longValue()) + "</param>\n").getBytes());
+        }
+        else if (paramValue instanceof Boolean)
+        {
+          out.write(("bool\">" + String.valueOf(((Boolean) paramValue).booleanValue()) + "</param>\n").getBytes());
+        }
+        else
+        {
+          throw new WrongParamTypeException("unknown type of parameter " + paramName);
+        }
+      }
+    }
+
+    private void writeSections(OutputStream out, String prefix, Map secs)
+            throws IOException, WrongParamTypeException
+    {
+      for (Iterator i = secs.keySet().iterator(); i.hasNext();)
+      {
+        String secName = (String) i.next();
+        SaveableConfigTree childs = (SaveableConfigTree) secs.get(secName);
+        out.write((prefix + "<section name=\"" + secName + "\">\n").getBytes());
+        childs.write(out, prefix + "  ");
+        out.write((prefix + "</section>\n").getBytes());
+      }
+    }
+  };
+
+  public void save()
+          throws IOException, WrongParamTypeException
+  {
+    org.apache.log4j.Category.getInstance(this.getClass()).debug("SAVE");
+    for (Iterator iii=config.params.keySet().iterator(); iii.hasNext(); )
+    {
+      String name = (String) iii.next();
+      org.apache.log4j.Category.getInstance(this.getClass()).debug(name);
+    }
+
+    SaveableConfigTree tree = new SaveableConfigTree();
+    File tmpFile = File.createTempFile("smsc_config_", ".xml.tmp", new File(configurationFileDir));
+    OutputStream out = new FileOutputStream(tmpFile);
+    for (Iterator i = config.params.keySet().iterator(); i.hasNext();)
+    {
+      String name = (String) i.next();
+      tree.putParameter(name, config.params.get(name));
+    }
+    out.write("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n".getBytes());
+    out.write("<!DOCTYPE config SYSTEM \"file://configuration.dtd\">\n\n".getBytes());
+
+    out.write("<config>\n".getBytes());
+    tree.write(out, "  ");
+    out.write("</config>\n".getBytes());
+    out.flush();
+    out.close();
+
+    tmpFile.renameTo(new File(configurationFileName));
   }
 }

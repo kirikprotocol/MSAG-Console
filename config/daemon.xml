@@ -1,15 +1,22 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE config SYSTEM "configuration.dtd">
 <config>
-    <section name="admin">
-	<section name="daemon">
-	    <param name="host" type="string">smsc</param>
-	    <param name="port" type="int">6680</param>
-	    <param name="home" type="string">/export/home/igork/smsc_bin_daemon</param>
-	    <param name="stderr" type="string">logs/lh.err</param>
-	    <section name="logger">
-		<param name="configFile" type="string">daemon.logger.init</param>
-	    </section>
-	</section>
+  <section name="services">
+    <section name="dumb">
+      <param name="cmd_line" type="string">/export/home/igork/build/bin/admin/service/smsc_dumb_service</param>
+      <param name="config" type="string">/export/home/igork/smsc_bin_daemon/dumbServiceConfig.xml</param>
+      <param name="port" type="int">6671</param>
     </section>
+  </section>
+  <section name="admin">
+    <section name="daemon">
+      <section name="logger">
+        <param name="configFile" type="string">daemon.logger.init</param>
+      </section>
+      <param name="stderr" type="string">logs/daemon.err</param>
+      <param name="home" type="string">/export/home/igork/smsc_bin_daemon</param>
+      <param name="host" type="string">smsc</param>
+      <param name="port" type="int">6681</param>
+    </section>
+  </section>
 </config>

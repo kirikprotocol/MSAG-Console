@@ -7,13 +7,13 @@ namespace util   {
 namespace config {
 
 
-DOMString & createDOMString(const char * const str)
+/*DOMString & createDOMString(const char * const str)
 {
 	smsc::util::xml::initXerces();
 	DOMString * result = new DOMString(str);
 	return *result;
 }
-
+*/
 }
 }
 }

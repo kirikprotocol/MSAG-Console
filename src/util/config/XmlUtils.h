@@ -9,13 +9,13 @@ namespace smsc   {
 namespace util   {
 namespace config {
 
-DOMString & createDOMString(const char * const str);
+//DOMString & createDOMString(const char * const str);
 
-#define replaceString(destination, source) {\
+/*#define replaceString(destination, source) {\
 	delete[] destination;\
 	destination = new char[strlen(source)+1];\
 	strcpy(destination, source);\
-}
+}*/
 
 }
 }

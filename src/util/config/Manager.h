@@ -36,6 +36,8 @@ public:
 	static void init(const char * const configurationFileName)
 		throw (ConfigException &)
 	{
+		if (manager != 0)
+			throw ConfigException("Configuration manager already initialized");
 		config_filename = new char[strlen(configurationFileName)+1];
 		strcpy(config_filename, configurationFileName);
 		manager = new Manager();
@@ -111,7 +113,7 @@ public:
 	 * @see getInt()
 	 * @see getString()
 	 */
-	bool getBool(const char * const paramName)
+	bool getBool(const char * const paramName) const
 		throw (ConfigException &)
 	{
 		try {
@@ -126,10 +128,35 @@ public:
 		}
 	}
 
+	void setInt(const char * const paramName, int32_t value)
+	{
+		config.setInt(paramName, value);
+	}
+
+	void setString(const char * const paramName, const char * const value)
+	{
+		config.setString(paramName, value);
+	}
+	
+	void setBool(const char * const paramName, bool value)
+	{
+		config.setBool(paramName, value);
+	}
+
 	/**
 	 * Запись конфигурации
 	 */
 	void save();
+
+	void removeSection(const char * const sectionName)
+	{
+		config.removeSection(sectionName);
+	}
+
+	CStrSet *getChildSectionNames(const char * const sectionName)
+	{
+		config.getChildSectionNames(sectionName);
+	}
 
 protected:
 	/**

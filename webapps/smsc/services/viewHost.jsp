@@ -1,5 +1,3 @@
-<%@ page import = "ru.novosoft.smsc.admin.*"%>
-<%@ page import = "ru.novosoft.smsc.admin.service.*"%>
 <%@include file="header.jsp"%>
 <%
 	String host = request.getParameter("host");
@@ -11,7 +9,8 @@
 		<tr class="list">
 			<th class="list">name</th>
 			<th class="list">port</th>
-			<th class="list">command line</th>
+			<th class="list" width="15%">command line</th>
+			<th class="list" width="15%">config file</th>
 			<th class="list">arguments</th>
 			<th class="list">PID</th>
 			<th  class="list" colspan=4>actions</th>
@@ -24,7 +23,8 @@
 				%><tr class="list">
 					<td class="list"><%=s.getName()%></td>
 					<td class="list"><%=s.getPort()%></td>
-					<td class="list"><%=s.getCmdLine()%></td>
+					<td class="list" width="15%"><%=s.getCmdLine()%></td>
+					<td class="list" width="15%"><%=s.getConfigFileName()%></td>
 					<td class="list"><%=s.getArgs().toString()%></td>
 					<% if (s.getPid() == 0) { %>
 					<td class="list">stopped</td>

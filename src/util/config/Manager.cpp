@@ -5,6 +5,7 @@
 #include <util/Logger.h>
 #include <util/config/XmlUtils.h>
 #include <util/xml/DOMErrorLogger.h>
+#include <util/xml/init.h>
 #include <fstream>
 
 namespace smsc   {
@@ -13,16 +14,15 @@ namespace config {
 
 using std::auto_ptr;
 using smsc::util::xml::DOMErrorLogger;
+using smsc::util::xml::initXerces;
 
-const DOMString db_name(createDOMString("db"));
-const DOMString map_name(createDOMString("map"));
-const DOMString log_name(createDOMString("log"));
 char * Manager::config_filename = 0;
 Manager * Manager::manager = 0;
 
 Manager::Manager()
 	throw(ConfigException &)
 {
+	initXerces();
 	DOMParser *parser = createParser();
 
 	DOM_Document document = parse(parser, config_filename);
@@ -34,8 +34,8 @@ Manager::Manager()
     throw ConfigException("Parse result is null");
 	}
 
-//	delete parser->getErrorHandler();
-//	delete parser;
+	delete parser->getErrorHandler();
+	delete parser;
 }
 
 /**
@@ -122,7 +122,7 @@ void Manager::save()
 {
 	std::ostream *out = new std::ofstream(config_filename);
 	writeHeader(*out);
-	config.save(out);
+	config.save(*out);
 	writeFooter(*out);
 	out->flush();
 	delete out;

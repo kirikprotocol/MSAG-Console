@@ -11,7 +11,7 @@ import ru.novosoft.smsc.util.config.ConfigManager;
 
 public class AppContextImpl implements AppContext
 {
-  ConfigManager configMonitor = null;
+  ConfigManager configManager = null;
   ServiceManager serviceManager = null;
 
   public AppContextImpl(String configFileName)
@@ -20,7 +20,8 @@ public class AppContextImpl implements AppContext
       org.apache.log4j.BasicConfigurator.configure();
 
       ConfigManager.Init(configFileName);
-      configMonitor = ConfigManager.getInstance();
+      configManager = ConfigManager.getInstance();
+      serviceManager.init(configManager);
       serviceManager = ServiceManager.getInstance();
     } catch (Exception e) {
       System.out.println("Exception in initialization:");
@@ -35,7 +36,7 @@ public class AppContextImpl implements AppContext
 
   public Config getConfig()
   {
-    return configMonitor.getConfig();
+    return configManager.getConfig();
   }
 
   public ServiceManager getServiceManager()

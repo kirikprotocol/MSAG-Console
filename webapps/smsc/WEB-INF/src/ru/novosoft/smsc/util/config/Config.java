@@ -5,17 +5,17 @@
 */
 package ru.novosoft.smsc.util.config;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.*;
 
 import java.util.*;
 
 import ru.novosoft.smsc.util.xml.Utils;
 
+
 public class Config
 {
   protected Map params = new HashMap();
+
 
   public class ParamNotFoundException extends Exception
   {
@@ -25,6 +25,7 @@ public class Config
     }
   }
 
+
   public class WrongParamTypeException extends Exception
   {
     public WrongParamTypeException(String s)
@@ -33,45 +34,13 @@ public class Config
     }
   }
 
+
   public Config(Document doc)
   {
     parseNode("", doc.getDocumentElement());
   }
 
-  protected void parseNode(final String prefix, final Element elem)
-  {
-    String fullName = prefix == null || prefix.equals("")
-            ? elem.getAttribute("name")
-            : prefix + "." + elem.getAttribute("name");
-
-    NodeList list = elem.getElementsByTagName("section");
-    for (int i = 0; i < list.getLength(); i++) {
-      parseNode(fullName, (Element) list.item(i));
-    }
-
-    list = elem.getElementsByTagName("param");
-    for (int i = 0; i < list.getLength(); i++) {
-      parseParamNode(fullName, (Element) list.item(i));
-    }
-  }
-
-  protected void parseParamNode(final String prefix, final Element elem)
-  {
-    String fullName = prefix == null || prefix.equals("")
-            ? elem.getAttribute("name")
-            : prefix + "." + elem.getAttribute("name");
-    String type = elem.getAttribute("type");
-    String value = Utils.getNodeText(elem);
-    if (type.equalsIgnoreCase("int")) {
-      params.put(fullName, new Integer(value));
-    } else if (type.equalsIgnoreCase("boolean")) {
-      params.put(fullName, new Boolean(value));
-    } else {
-      params.put(fullName, value);
-    }
-  }
-
-  public int getInt(String paramName)
+  public synchronized int getInt(String paramName)
           throws ParamNotFoundException, WrongParamTypeException
   {
     Object value = params.get(paramName);
@@ -83,7 +52,7 @@ public class Config
       throw new WrongParamTypeException("Parameter \"" + paramName + "\" is not integer");
   }
 
-  public String getString(String paramName)
+  public synchronized String getString(String paramName)
           throws ParamNotFoundException, WrongParamTypeException
   {
     Object value = params.get(paramName);
@@ -95,7 +64,7 @@ public class Config
       throw new WrongParamTypeException("Parameter \"" + paramName + "\" is not string");
   }
 
-  public boolean getBool(String paramName)
+  public synchronized boolean getBool(String paramName)
           throws ParamNotFoundException, WrongParamTypeException
   {
     Object value = params.get(paramName);
@@ -107,28 +76,96 @@ public class Config
       throw new WrongParamTypeException("Parameter \"" + paramName + "\" is not boolean");
   }
 
-  public Object getParameter(String paramName)
+  private synchronized Object getParameter(String paramName)
   {
     return params.get(paramName);
   }
 
-  public Set getParameterNames()
+  private synchronized Set getParameterNames()
   {
     return params.keySet();
   }
 
-  public void setInt(String paramName, int value)
+  public synchronized void setInt(String paramName, int value)
   {
     params.put(paramName, new Integer(value));
   }
 
-  public void setString(String paramName, String value)
+  public synchronized void setString(String paramName, String value)
   {
     params.put(paramName, value);
   }
 
-  public void setBool(String paramName, boolean value)
+  public synchronized void setBool(String paramName, boolean value)
   {
     params.put(paramName, new Boolean(value));
+  }
+
+  public synchronized void removeParam(String paramName)
+  {
+    params.remove(paramName);
+  }
+
+  /**
+   * »щет имена секций (только секций)
+   * @return section names that is immediate descedants of given section.
+   */
+  public synchronized Set getSectionChildSectionNames(String sectionName)
+  {
+    int dotpos = sectionName.length();
+    Set result = new HashSet();
+    for (Iterator i = params.keySet().iterator(); i.hasNext(); )
+    {
+      String name = (String) i.next();
+      if (name.length() > (dotpos+1)
+              && name.startsWith(sectionName)
+              && name.lastIndexOf('.') > dotpos)
+      {
+        result.add(name.substring(0, name.indexOf('.', dotpos +1)));
+      }
+    }
+    return result;
+  }
+
+  protected void parseNode(final String prefix, final Element elem)
+  {
+    String fullName = prefix == null || prefix.equals("")
+            ? elem.getAttribute("name")
+            : prefix + "." + elem.getAttribute("name");
+
+    NodeList list = elem.getChildNodes();
+    for (int i = 0; i < list.getLength(); i++)
+    {
+      Node node = (Node) list.item(i);
+      if (node.getNodeType() == Node.ELEMENT_NODE)
+      {
+        Element element = (Element) node;
+        if (element.getNodeName().equals("section"))
+          parseNode(fullName, element);
+        else
+          parseParamNode(fullName, element);
+      }
+    }
+  }
+
+  protected void parseParamNode(final String prefix, final Element elem)
+  {
+    String fullName = prefix == null || prefix.equals("")
+            ? elem.getAttribute("name")
+            : prefix + "." + elem.getAttribute("name");
+    String type = elem.getAttribute("type");
+    String value = Utils.getNodeText(elem);
+    if (type.equalsIgnoreCase("int"))
+    {
+      params.put(fullName, new Integer(value));
+    }
+    else if (type.equalsIgnoreCase("boolean"))
+    {
+      params.put(fullName, new Boolean(value));
+    }
+    else
+    {
+      params.put(fullName, value);
+    }
   }
 }

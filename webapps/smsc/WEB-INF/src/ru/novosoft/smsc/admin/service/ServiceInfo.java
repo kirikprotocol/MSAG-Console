@@ -22,7 +22,7 @@ public class ServiceInfo
     name = serviceElement.getAttribute("name");
     pid = Long.decode(serviceElement.getAttribute("pid")).longValue();
     cmdLine = serviceElement.getAttribute("command_line");
-    configFileName = serviceElement.getAttribute("config_file");
+    configFileName = serviceElement.getAttribute("config");
     port = Integer.decode(serviceElement.getAttribute("port")).intValue();
 
     NodeList childs = serviceElement.getElementsByTagName("arg");

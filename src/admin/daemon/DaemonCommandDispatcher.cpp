@@ -21,9 +21,13 @@ using smsc::admin::protocol::CommandRemoveService;
 using smsc::admin::protocol::CommandListServices;
 using smsc::core::synchronization::MutexGuard;
 using smsc::util::setExtendedSignalHandler;
+using smsc::util::encode;
+using smsc::util::decode;
 
 ServicesList DaemonCommandDispatcher::services;
 Mutex DaemonCommandDispatcher::servicesListMutex;
+config::Manager *DaemonCommandDispatcher::configManager = 0;
+Mutex DaemonCommandDispatcher::configManagerMutex;
 
 Response * DaemonCommandDispatcher::handle(const Command * const command)
 	throw (AdminException)
@@ -151,11 +155,11 @@ Response * DaemonCommandDispatcher::shutdown_service(const CommandShutdown * con
 Response * DaemonCommandDispatcher::add_service(const CommandAddService * const command)
 	throw (AdminException &)
 {
-	logger.debug("add service \"%s\" (%s) %u %s",
+/*	logger.debug("add service \"%s\" (%s) %u %s",
 							 command->getServiceName(),
 							 command->getCmdLine(),
 							 command->getPort(),
-							 command->getConfigFileName());
+							 command->getConfigFileName());*/
 	if (command != 0)
 	{
 		if (command->getServiceName() != 0 && command->getCmdLine() != 0
@@ -165,6 +169,7 @@ Response * DaemonCommandDispatcher::add_service(const CommandAddService * const 
 				MutexGuard guard(servicesListMutex);
 				services.add(new Service(command->getServiceName(), command->getCmdLine(), command->getConfigFileName(), command->getPort(), command->getArgs()));
 			}
+			putServiceToConfig(command->getServiceName(), command->getPort(), command->getCmdLine(), command->getConfigFileName(), command->getArgs());
 			return new Response(Response::Ok, 0);
 		}
 		else
@@ -178,6 +183,41 @@ Response * DaemonCommandDispatcher::add_service(const CommandAddService * const 
 		logger.warn("null command received");
 		throw AdminException("null command received");
 	}
+}
+
+void DaemonCommandDispatcher::putServiceToConfig(const char * const serviceName,
+																								 const in_port_t servicePort,
+																								 const char * const serviceCmdLine,
+																								 const char * const serviceConfigFileName,
+																								 const ServiceArguments & serviceArgs)
+{
+	MutexGuard lock(configManagerMutex);
+	std::string serviceSectionName = "services.";
+	serviceSectionName += encode(serviceName);
+
+	std::string tmpName = serviceSectionName;
+	tmpName += ".port";
+	configManager->setInt(tmpName.c_str(), servicePort);
+
+	tmpName = serviceSectionName;
+	tmpName += ".cmd_line";
+	configManager->setString(tmpName.c_str(), serviceCmdLine);
+
+	tmpName = serviceSectionName;
+	tmpName += ".config";
+	configManager->setString(tmpName.c_str(), serviceConfigFileName);
+
+	tmpName = serviceSectionName;
+	tmpName += ".args.";
+	for (ServiceArguments::size_type i=0; i<serviceArgs.size(); i++)
+	{
+		char numStr[sizeof(ServiceArguments::size_type)*3+1] = {0};
+		snprintf(numStr, sizeof(numStr), "%ul", i);
+		std::string tmpNum = tmpName;
+		tmpNum += numStr;
+		configManager->setString(tmpNum.c_str(), encode(serviceArgs[i]).c_str());
+	}
+	configManager->save();
 }
 
 Response * DaemonCommandDispatcher::remove_service(const CommandRemoveService * const command)
@@ -197,6 +237,7 @@ Response * DaemonCommandDispatcher::remove_service(const CommandRemoveService * 
 				}
 				services.remove(s->getName());
 			}
+			removeServiceFromConfig(command->getServiceName());
 			return new Response(Response::Ok, 0);
 		}
 		else
@@ -210,6 +251,16 @@ Response * DaemonCommandDispatcher::remove_service(const CommandRemoveService * 
 		logger.warn("null command received");
 		throw AdminException("null command received");
 	}
+}
+
+void DaemonCommandDispatcher::removeServiceFromConfig(const char * const serviceName)
+{
+	MutexGuard lock(configManagerMutex);
+	std::string serviceSectionName = "services.";
+
+	serviceSectionName += encode(serviceName);
+	configManager->removeSection(serviceSectionName.c_str());
+	configManager->save();
 }
 
 Response * DaemonCommandDispatcher::list_services(const CommandListServices * const command)
@@ -293,6 +344,48 @@ void DaemonCommandDispatcher::childSignalListener(int signo,
 void DaemonCommandDispatcher::activateChildSignalHandler()
 {
 	setExtendedSignalHandler(SIGCHLD, childSignalListener);
+}
+
+void DaemonCommandDispatcher::addServicesFromConfig()
+{
+	std::set<char*> *childs = configManager->getChildSectionNames("services");
+	for (std::set<char*>::iterator i = childs->begin(); i != childs->end(); i++)
+	{
+		char * fullServiceName = *i;
+		char * dotpos = strrchr(fullServiceName, '.');
+		const size_t serviceNameBufLen = strlen(dotpos+1) +1;
+		std::string serviceName = decode(dotpos+1);
+
+		std::string prefix(fullServiceName);
+		prefix += '.';
+
+		std::string tmp = prefix;
+		tmp += "cmd_line";
+		const char * const serviceCmdLine = configManager->getString(tmp.c_str());
+
+		tmp = prefix;
+		tmp += "config";
+		const char * const serviceConfigFileName = configManager->getString(tmp.c_str());
+
+		tmp = prefix;
+		tmp += "port";
+		in_port_t servicePort = configManager->getInt(tmp.c_str());
+
+		tmp = prefix;
+		tmp += "args";
+		std::set<char*> *argNames = configManager->getChildSectionNames(tmp.c_str());
+		ServiceArguments serviceArgs(argNames->size(), "");
+		for (std::set<char*>::iterator j = argNames->begin(); j != argNames->end(); j++)
+		{
+			char * argName = *j;
+			char * dp = strrchr(argName, '.');
+			serviceArgs[atoi(dp+1)] = configManager->getString(argName);
+		}
+
+		services.add(new Service(serviceName.c_str(), serviceCmdLine, serviceConfigFileName, servicePort, serviceArgs));
+		delete argNames;
+	}
+	delete childs;
 }
 
 }

@@ -1,6 +1,3 @@
-<%@ page import = "ru.novosoft.smsc.*"%>
-<%@ page import = "ru.novosoft.smsc.admin.*"%>
-<%@ page import = "ru.novosoft.smsc.admin.service.*"%>
 <%@include file="header.jsp"%>
 <% 
 	String host = request.getParameter("host");

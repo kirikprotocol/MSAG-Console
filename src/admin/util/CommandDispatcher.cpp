@@ -38,6 +38,8 @@ CommandDispatcher::CommandDispatcher(Socket* admSocket,
 CommandDispatcher::~CommandDispatcher()
 {
 	logger.debug("Command dispatcher \"%s\" destroyed.", task_name);
+	if (sock != 0)
+		delete sock;
 	sock = 0;
 }
 
