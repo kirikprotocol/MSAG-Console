@@ -37,6 +37,8 @@ namespace smsc { namespace dbsme
     using namespace smsc::db;
     
     using smsc::sms::Address;
+    using smsc::sms::AddressValue;
+
     using smsc::util::Logger;
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;

@@ -38,15 +38,18 @@ void CommandProcessor::init(ConfigView* config)
             log.info("Loading DataProvider for section '%s'.", section);
             DataProvider* provider = new DataProvider(providerConfig);
             address = providerConfig->getString("address");
-            Address addr(address);
-            providers.Insert(addr.value, provider);
+            Address addr(address); AddressValue addr_val; addr.getValue(addr_val);
+            if (providers.Exists(addr_val)) 
+                throw ConfigException("Failed to bind DataProvider to address "
+                                      "Address already in use !");
+            providers.Insert(addr_val, provider);
             log.info("Loaded DataProvider for section '%s'."
-                     " Bind address is: %s (%s)", section, addr.value, address);
+                     " Bind address is: %s (%s)", section, addr_val, address);
         }
         catch (ConfigException& exc)
         {
-            log.error("Load of CommandProcessor failed !"
-                      " Config exception: %s", exc.what());
+            log.error("Load of CommandProcessor failed ! "
+                      "Config exception: %s", exc.what());
             if (set) delete set;
             if (address) delete address;
             delete providersConfig;
