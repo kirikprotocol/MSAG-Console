@@ -490,6 +490,7 @@ protected:
   int    busyMTDelay;
   int    lockedByMODelay;
   int    MOLockTimeout;
+  bool   allowCallBarred;
   time_t startTime;
 
   performance::SmePerformanceMonitor smePerfMonitor;

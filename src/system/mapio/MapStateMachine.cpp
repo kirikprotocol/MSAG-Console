@@ -339,7 +339,7 @@ static void DropMapDialog_(unsigned dialogid,unsigned ssn){
         {
           //Et96MapPAbortInd(SSN,dialog->associate->dialogid_map,0,0,0);
           dialog->associate->hlrVersion = dialog->hlrVersion;
-          ContinueImsiReq(dialog->associate,"","");
+          ContinueImsiReq(dialog->associate,"","",dialog->routeErr);
           dialog->state = MAPST_END;
         }
         else if ( NeedNotifyHLR(dialog.get()) && !dialog->isUSSD )
@@ -2144,8 +2144,11 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
         }
         dialog->routeErr = MAKE_ERRORCODE(CMD_ERR_TEMP,MAP_ERRORS_BASE+27);
       } else {
-        if(errorSendRoutingInfoForSm_sp->errorCode == 13 && (imsi_sp != 0 && mscNumber_sp != 0)) {
+        if(errorSendRoutingInfoForSm_sp->errorCode == 13 && 
+           MapDialogContainer::getAllowCallBarred() && 
+           MAPST_ImsiWaitRInfo) {
           // normal situation no error
+          // smsc will accept message from abonent
         } else {
           try {
             DoMAPErrorProcessor(errorSendRoutingInfoForSm_sp->errorCode,0);
@@ -2180,17 +2183,29 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
         else {
           // extract msc number
           if( version == 1 ) {
-            dialog->s_msc = LocationInfoToString(locationInfo_sp);
-            __map_trace2__( "LocationInfo addr type: %s address: %s", locationInfo_sp->typeOfNumber==0x01?"roaming":"msc", dialog->s_msc.c_str() );
-            mkSS7GTAddress( &dialog->destMscAddr, locationInfo_sp, 8 );
+            if( locationInfo_sp != 0 ) {
+              dialog->s_msc = LocationInfoToString(locationInfo_sp);
+              __map_trace2__( "LocationInfo addr type: %s address: %s", locationInfo_sp->typeOfNumber==0x01?"roaming":"msc", dialog->s_msc.c_str() );
+              mkSS7GTAddress( &dialog->destMscAddr, locationInfo_sp, 8 );
+            } else {
+              dialog->s_msc = "";
+            }
           } else {
-            dialog->s_msc = MscToString(mscNumber_sp);
-            mkSS7GTAddress( &dialog->destMscAddr, mscNumber_sp, 8 );
+            if( mscNumber_sp != 0 ) {
+              dialog->s_msc = MscToString(mscNumber_sp);
+              mkSS7GTAddress( &dialog->destMscAddr, mscNumber_sp, 8 );
+            } else {
+              dialog->s_msc = "";
+            }
           }
-          dialog->s_imsi = ImsiToString(imsi_sp);
-          dialog->smRpDa.typeOfAddress = ET96MAP_ADDRTYPE_IMSI;
-          dialog->smRpDa.addrLen = imsi_sp->imsiLen;
-          memcpy( dialog->smRpDa.addr, imsi_sp->imsi, imsi_sp->imsiLen );
+          if( imsi_sp != 0 ) {
+            dialog->s_imsi = ImsiToString(imsi_sp);
+            dialog->smRpDa.typeOfAddress = ET96MAP_ADDRTYPE_IMSI;
+            dialog->smRpDa.addrLen = imsi_sp->imsiLen;
+            memcpy( dialog->smRpDa.addr, imsi_sp->imsi, imsi_sp->imsiLen );
+          } else {
+            dialog->s_imsi = "";
+          }
   //#if !defined DISABLE_TRACING
           if( smsc::logger::_map_cat->isDebugEnabled() ) {
             {
@@ -2356,7 +2371,7 @@ USHORT_T Et96MapCloseInd(
       break;
     case MAPST_ImsiWaitCloseInd:
       dialog->associate->hlrVersion = dialog->hlrVersion;
-      ContinueImsiReq(dialog->associate,dialog->s_imsi,dialog->s_msc);
+      ContinueImsiReq(dialog->associate,dialog->s_imsi,dialog->s_msc,dialog->routeErr);
       dialog->state = MAPST_END;
       DropMapDialog(dialog.get());
       break;
@@ -2901,13 +2916,13 @@ unsigned char  lll_8bit_2_7bit[256] = {
 0x54,0x7d,0x08,0x54,0x54,0x54,0x7c,0x54,
 0x0c,0x06,0x54,0x54,0x7e,0x54,0x54,0x54};
 
-static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc)
+static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc, const unsigned routeErr )
 {
-  __map_trace2__("%s: ismsi %s, msc: %s, state %d",__func__,s_imsi.c_str(),s_msc.c_str(), dialog->state);
+  __map_trace2__("%s: ismsi %s, msc: %s, state: %d, code: %d",__func__,s_imsi.c_str(),s_msc.c_str(), dialog->state, routeErr);
   if ( dialog->state == MAPST_END ){// already closed
     return;
   }
-  if ( s_imsi.length() == 0 || s_msc.length() == 0 )
+  if ( routeErr != 0 )
   {
     if( dialog->state == MAPST_WaitUssdImsiReq) {
       DoUSSRUserResponceError(0, dialog); // send system failure

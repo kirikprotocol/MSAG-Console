@@ -336,6 +336,7 @@ class MapDialogContainer{
   static int busyMTDelay;
   static int lockedByMoDelay;
   static int MOLockTimeout;
+  static bool allowCallBarred;
 
   int    processTimeout;
   int    processLimit;
@@ -395,6 +396,8 @@ public:
   static int  getLockedByMoDelay(){return lockedByMoDelay;}
   static void setMOLockTimeout(int val){MOLockTimeout=val;}
   static int  getMOLockTimeout(){return MOLockTimeout;}
+  static void setAllowCallBarred(bool val){allowCallBarred=val;}
+  static int  getAllowCallBarred(){return allowCallBarred;}
 
   static void dropInstance()
   {
@@ -666,7 +669,7 @@ public:
   virtual const char* taskName() { return "MapIoTask";}
   bool isStarted() {return is_started;}
   MapProxy proxy;
-  MapIoTask(Event* startevent,const string& scAddr, const string& ussdCenterAddr, int ussdSSN, int busyMTDelay, int lockedByMODelay, int MOLockTimeout) : startevent(startevent),is_started(false)
+  MapIoTask(Event* startevent,const string& scAddr, const string& ussdCenterAddr, int ussdSSN, int busyMTDelay, int lockedByMODelay, int MOLockTimeout, bool allowCallBarred) : startevent(startevent),is_started(false)
   {
     MapDialogContainer::SetSCAdress(scAddr);
     MapDialogContainer::SetUSSDAdress(ussdCenterAddr);
@@ -675,6 +678,7 @@ public:
     MapDialogContainer::setBusyMTDelay(busyMTDelay);
     MapDialogContainer::setLockedByMoDelay(lockedByMODelay);
     MapDialogContainer::setMOLockTimeout(MOLockTimeout);
+    MapDialogContainer::setAllowCallBarred(allowCallBarred);
   }
   ~MapIoTask() {
     __mapdlg_trace__("Destroying MapIoTask");

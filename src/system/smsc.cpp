@@ -659,7 +659,7 @@ void Smsc::init(const SmscConfigs& cfg)
 
   ussdSSN=cfg.cfgman->getInt("core.ussd_ssn");
   try{
-    busyMTDelay=cfg.cfgman->getInt("map.busyMTDelay");;
+    busyMTDelay=cfg.cfgman->getInt("map.busyMTDelay");
   } catch (...) {
     __warning__("map.busyMTDelay not found, using default(20)");
     busyMTDelay = 20;
@@ -671,10 +671,16 @@ void Smsc::init(const SmscConfigs& cfg)
     lockedByMODelay = 20;
   }
   try{
-    MOLockTimeout=cfg.cfgman->getInt("map.MOLockTimeout");;
+    MOLockTimeout=cfg.cfgman->getInt("map.MOLockTimeout");
   } catch (...) {
     __warning__("map.MOLockTimeout not found, using default(45)");
     MOLockTimeout = 45;
+  }
+  try{
+    allowCallBarred=cfg.cfgman->getInt("map.allowCallBarred");
+  } catch (...) {
+    __warning__("map.allowCallBarred not found, disabled");
+    allowCallBarred = false;
   }
 
   {
