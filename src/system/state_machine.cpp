@@ -3001,6 +3001,9 @@ StateType StateMachine::deliveryResp(Tuple& t)
           if(sms.getConcatSeqNum()<ci->num-1)
           {
             sms.setIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND,1);
+          }else
+          {
+            sms.getMessageBody().dropIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND);
           }
         }
         if(ri.forceReplyPath)
