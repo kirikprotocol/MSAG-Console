@@ -174,6 +174,7 @@ public class DivertManager
   private final static String[] USER_CODE     = {"USER", "CODE"};
   private final static String[] USER_PASSWORD = {"PASSWORD"};
   private final static String[] USER_DOMAIN   = {"DOMAIN"};
+  private final static String[] AUTH_FAILED   = {"FAILED", "ERROR"};
 
   private boolean checkQuery(String[] sequence, String qwery)
   {
@@ -202,6 +203,8 @@ public class DivertManager
         writeTelnetLine(mscUserPassword); needUserPassword = false;
       } else if (checkQuery(USER_DOMAIN, str)) {
         writeTelnetLine("");
+      } else if (checkQuery(AUTH_FAILED, str)) {
+        throw new IOException("Autentification failed");
       }
     }
     readTelnetString(ESC_PROMPT);
