@@ -122,7 +122,7 @@ int Scheduler::Execute()
       mon.wait();
     else
       if(r>t)mon.wait((r-t)*1000);
-    prxmon->Signal();
+    if(prxmon)prxmon->Signal();
   }
   return 0;
 }
@@ -187,9 +187,15 @@ int Scheduler::getSmeCount(SmeIndex idx,time_t time)
     CacheItem ci;
     ci.lastUpdate=0;
     ci.count=0;
+    ci.totalCount=0;
     smeCountCache.Insert(idx,ci);
   }
   CacheItem *pci=smeCountCache.GetPtr(idx);
+  if(time==0)
+  {
+    return pci->totalCount;
+  }
+
   TimeLineMap::iterator from=timeLine.lower_bound(pci->lastUpdate);
   if(from==timeLine.end())from=timeLine.begin();
   TimeLineMap::iterator till=timeLine.upper_bound(time);

@@ -456,7 +456,7 @@ void Smsc::init(const SmscConfigs& cfg)
     while((*str=toupper(*str)))str++;
     str=dc;
     while((*str=toupper(*str)))str++;
-    smsc::profiler::Profile defProfile={0,0,"",0,false};
+    smsc::profiler::Profile defProfile={0,0,cfg.cfgman->getString("core.default_locale"),0,false};
 
     defProfile.hide=cfg.cfgman->getBool("profiler.defaultHide");
     defProfile.hideModifiable=cfg.cfgman->getBool("profiler.defaultHideModifiable");
@@ -723,11 +723,14 @@ void Smsc::shutdown()
 {
   __trace__("shutting down");
 
+  smeman.unregisterSmeProxy("DSTRLST");
+
   tp.shutdown();
+
+  smeman.unregisterSmeProxy("scheduler");
+
   tp2.shutdown();
 
-  smeman.unregisterSmeProxy("DSTRLST");
-  smeman.unregisterSmeProxy("scheduler");
 
   if(mapProxy)
   {

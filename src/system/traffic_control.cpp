@@ -66,6 +66,18 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
                                       dst,dstIdx,dest_proxy,&ri);
       if(!has_route)return true;
 
+      if(!isReceipt && cmd->get_commandId()==SUBMIT)
+      {
+        SmeInfo si=cfg.smsc->getSmeInfo(dstIdx);
+
+        __trace2__("smeschedcount for %s = %d",si.systemId.c_str(),cfg.smsc->GetSmeScheduleCount(dstIdx,0));
+        if(si.schedlimit!=0 && cfg.smsc->GetSmeScheduleCount(dstIdx,0)>=si.schedlimit)
+        {
+          break;
+        }
+      }
+
+
       if(!dest_proxy)return true;
 
 
@@ -111,6 +123,11 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
           if(regdel || profile.reportoptions!=ProfileReportOptions::ReportNone)
           {
             SmeIndex idx=src_proxy->getSmeIndex();
+            SmeInfo si=cfg.smsc->getSmeInfo(idx);
+            if(si.schedlimit!=0 && cfg.smsc->GetSmeScheduleCount(idx,0)>=si.schedlimit)
+            {
+              break;
+            }
             IntTimeSlotCounter *dsrccnt=getTSC(deliverCnt,idx);
             IntTimeSlotCounter *rsrccnt=getTSC(responseCnt,idx);
             int deliveryCount=dsrccnt->Get();
