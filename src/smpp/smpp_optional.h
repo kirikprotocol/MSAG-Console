@@ -26,7 +26,9 @@ inline void fillSmppOptional(SmppStream* stream,SmppOptional* opt)
     __require__ (sizeof(opt->field)==SmppOptionalLength::field); \
     fillX(stream,SmppOptionalTags::field); \
     fillX(stream,SmppOptionalLength::field); \
+		int fpos = stream->dataOffset; \
     fillX(stream,opt->field);\
+		__require__(stream->dataOffset-SmppOptionalLength::field==fpos); \
   }
 
 #define macroFillOctetStr(field,maxlen) \
@@ -136,9 +138,11 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
       uint16_t tag;
       uint16_t length;
       uint32_t nextDataOffset;
-      fetchX(stream,tag);
+      uint32_t __pos = stream->dataOffset;
+			fetchX(stream,tag);
       fetchX(stream,length);
-      
+      __trace2__("T:%hx,L:%hd STR->OFFS:%d,STR->LEN:%d",
+								 tag,length,__pos,stream->dataLength);
       //__require__ ( length >= 0 ); // not need because length is unsigned
       nextDataOffset = stream->dataOffset+length;
     
