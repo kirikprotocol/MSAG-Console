@@ -250,7 +250,7 @@ int TaskProcessor::Execute()
             MutexGuard guard(tasksLock);
             char* key = 0; Task* task = 0; tasks.First();
             while (!bNeedExit && tasks.Next(key, task))
-                if (task && task->isReady(currentTime)) {
+                if (task && task->isReady(currentTime, true)) {
                     taskGuards.Push(new TaskGuard(task));
                     task->currentPriorityFrameCounter = 0;
                 }

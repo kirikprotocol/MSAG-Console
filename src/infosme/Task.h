@@ -257,7 +257,7 @@ namespace smsc { namespace infosme
             return info;
         }
         
-        bool isReady(time_t time);
+        bool isReady(time_t time, bool checkActivePeriod = true);
         
 
         /**

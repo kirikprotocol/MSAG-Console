@@ -916,12 +916,12 @@ bool Task::getNextMessage(Connection* connection, Message& message)
     return setInProcess(false);
 }
 
-bool Task::isReady(time_t time)
+bool Task::isReady(time_t time, bool checkActivePeriod)
 {
     if (!isEnabled() || isFinalizing() || 
         (info.endDate>0 && time>=info.endDate)) return false;
 
-    if (info.activePeriodStart > 0 && info.activePeriodEnd > 0)
+    if (checkActivePeriod && info.activePeriodStart > 0 && info.activePeriodEnd > 0)
     {
         if (info.activePeriodStart > info.activePeriodEnd) return false;
         

@@ -109,6 +109,7 @@ int TaskScheduler::Execute()
         
         try 
         {
+            time_t currentTime = time(NULL);
             char* task_id = 0; bool task_key = false; tasks.First();
             while (tasks.Next(task_id, task_key))
                 if (task_id && task_id[0] != '\0')
@@ -120,7 +121,7 @@ int TaskScheduler::Execute()
                         continue;
                     }
                     
-                    if (task->isEnabled() && !task->isInGeneration())
+                    if (task->isReady(currentTime, false) && !task->isInGeneration())
                         processor->invokeBeginGeneration(task);
                 }
         } 
