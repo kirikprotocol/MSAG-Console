@@ -27,13 +27,13 @@ int PooledThread::Execute()
     __warning__("failed to set thread signal mask!");
   };
 
-  trace2("Pooled thread %p ready for tasks\n",this);
+  trace2("Pooled thread %p ready for tasks",this);
   if(!task)owner->releaseThread(this);
   for(;;)
   {
-    trace2("Thread %p waiting for task\n",this);
+    trace2("Thread %p waiting for task",this);
     taskEvent.Wait();
-    trace2("Thread %p got a task\n",this);
+    trace2("Thread %p got a task",this);
     if(task==NULL)return 0;
     task->getMemoryInfo(rawheapsize,blocksheapquantum);
     if(rawheapsize!=0 || blocksheapquantum!=0)
@@ -51,11 +51,11 @@ int PooledThread::Execute()
     }
     catch(exception& e)
     {
-      trace2("Exception in task %s:%s\n",task->taskName(),e.what());
+      trace2("Exception in task %s:%s",task->taskName(),e.what());
     }
     catch(...)
     {
-      trace2("Unknown exception in task:%s\n",task->taskName());
+      trace2("Unknown exception in task:%s",task->taskName());
     }
     trace2("Execution of task %s finished",task->taskName());
     task->releaseHeap();
@@ -136,16 +136,16 @@ MemoryHeap* ThreadPool::getMemoryHeap(const char* taskname,int rawheapsize,int b
 
 void ThreadPool::preCreateThreads(int count)
 {
-  trace2("COUNT:%d\n",count);
+  trace2("COUNT:%d",count);
   int n=count-usedThreads.Count()-freeThreads.Count();
-  trace2("Attempting to create %d threads(%d/%d)\n",n,freeThreads.Count(),usedThreads.Count());
+  trace2("Attempting to create %d threads(%d/%d)",n,freeThreads.Count(),usedThreads.Count());
   mm.preallocateHeaps(count);
   Lock();
   usedThreads.SetSize(count);
   int i;
   for(i=0;i<n;i++)
   {
-    trace2("Creating thread:%d\n",i);
+    trace2("Creating thread:%d",i);
     usedThreads.Push(new PooledThread(this));
     usedThreads[-1]->Start(defaultStackSize);
   }
