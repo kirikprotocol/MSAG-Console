@@ -738,6 +738,10 @@ public:
       {
         return;
       }
+
+      //dump_pdu(pdu);
+
+
       char buf[65535];
       SMS s;
       fetchSmsFromSmppPdu((PduXSm*)pdu,&s);

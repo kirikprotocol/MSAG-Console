@@ -123,8 +123,8 @@ static inline void warning2(const char* fmt,...)
 #define __PRETTY_FUNCTION__ __func__
 
 // very hard checks and can't be disabled
-#define __abort_if_fail__(expr) \
-  smsc::util::abortIfFail(expr,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
+
+
 #define __warning__(text) \
   smsc::util::warningImpl(text,__FILE__,__PRETTY_FUNCTION__,__LINE__)
 
@@ -509,15 +509,15 @@ namespace util{
   inline void watchtextImpl(const char* e, int len, const char* expr,
                             const char* file, const char* func, int line)
   {
-	  smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_WARN, "*watch*: %s = '",expr);
-	  fwrite(e,len,1,WATCH_LOG_STREAM);
-	  fprintf(WATCH_LOG_STREAM,"'\t%s(%s):%d\n",
+    smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_WARN, "*watch*: %s = '",expr);
+    fwrite(e,len,1,WATCH_LOG_STREAM);
+    fprintf(WATCH_LOG_STREAM,"'\t%s(%s):%d\n",
 #if defined ENABLE_FILE_NAME
-		  file,
+      file,
 #else
-		  "",
+      "",
 #endif
-		  func,line);
+      func,line);
   }
 
   inline void warningImpl(const char* e, const char* file, const char* func, int line)
