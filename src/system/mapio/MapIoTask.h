@@ -117,7 +117,9 @@ enum MapState{
   MAPST_WaitDelRepConf = 27,
   MAPST_MTFINAL = 28,
   MAPST_WaitDelClose = 29,
-  MAPST_WaitAlertDelimiter = 30
+  MAPST_WaitAlertDelimiter = 30,
+  MAPST_WaitNextMMS = 31,
+  MAPST_SendNextMMS = 32
 };
 
 class hash_func_ET96MAP_DID{
@@ -395,6 +397,17 @@ public:
     return dlg;
   }
 
+  bool isWaitingNextMMS(const SmscCommand& cmd) {
+    MutexGuard g(sync);
+    string abonent(cmd->get_sms()->getDestinationAddress().value);
+    if ( ( abonent.length() != 0 ) && lock_map.Exists(abonent) ) {
+      MapDialog* item = lock_map[abonent];
+      if ( item == 0 ) return FALSE;
+      if( item->state = MAPST_WaitNextMMS ) return TRUE;
+    }
+    else return FALSE;
+  }
+
   MapDialog* createOrAttachSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent, const SmscCommand& cmd){
     if( !isMapBound() ) throw runtime_error("MAP is not bound yet");
     //if ( abonent.length() == 0 )
@@ -411,13 +424,22 @@ public:
       if ( item == 0 ) {
         __mapdlg_trace2__("dialog for abonent %s is not present!",abonent.c_str());
         throw runtime_error("MAP::createOrAttachSMSCDialog: has no dialog for abonent ");
-      }else if ( item->chain.size() > 25 ) {
-        __mapdlg_trace2__("chain is verly long (%d)",item->chain.size());
-        throw ChainIsVeryLong("chain is very long");
       }
-      __mapdlg_trace2__("add command to chain, size %d",item->chain.size());
-      item->chain.push_back(cmd);
-      return 0;
+      if( item->state == MAPST_WaitNextMMS ) {
+        item->state = MAPST_SendNextMMS;
+        item->dialogid_smsc = smsc_did;
+        item->abonent = abonent;
+        item->AddRef();
+        return item;
+      } else {
+        if ( item->chain.size() > 25 ) {
+          __mapdlg_trace2__("chain is verly long (%d)",item->chain.size());
+          throw ChainIsVeryLong("chain is very long");
+        }
+        __mapdlg_trace2__("add command to chain, size %d",item->chain.size());
+        item->chain.push_back(cmd);
+        return 0;
+      }
     }
     ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
     MapDialog* dlg = new MapDialog(map_dialog,lssn);

@@ -1,4 +1,4 @@
- //$Id$
+//$Id$
 
 #if defined USE_MAP
 #define MAP_DIALOGS_LIMIT 360
@@ -1006,13 +1006,9 @@ static bool SendSms(MapDialog* dialog){
   if( dialog->version > 1 ) {
     if( dialog->chain.size() != 0 ) {
       mms = TRUE;
-    }/* else if( dialog->sms.get()->hasBinProperty(Tag::SMSC_CONCATINFO) ) {
-      unsigned int ciLen;
-      ConcatInfo *ci=(ConcatInfo*)dialog->sms.get()->getBinProperty(Tag::SMSC_CONCATINFO,&ciLen);
-      if( dialog->sms.get()->getConcatSeqNum() < ci->num-1 ) {
-        mms = TRUE;
-      }
-    }*/
+    } else if( dialog->sms.get()->hasIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND) ) {
+      mms = TRUE;
+    }
   }
   if ( dialog->version < 2 ) mms = false;
 //  mms = false;
@@ -1026,7 +1022,9 @@ static bool SendSms(MapDialog* dialog){
 //  if ( mms )  { __map_trace2__("MAP::%s: MMS flag is set",__FUNCTION__); }
   __map_trace2__("%s: chain size is %d mms=%d",__FUNCTION__,dialog->chain.size(),mms);
 
+  dialog->state = MAPST_WaitSmsConf;
   if ( !dialog->mms ) {
+    dialog->state = MAPST_WaitOpenConf;
     result = Et96MapOpenReq(SSN,dialog->dialogid_map,&appContext,&dialog->destMscAddr,&dialog->scAddr,0,0,0);
     if ( result != ET96MAP_E_OK )
       throw MAPDIALOG_FATAL_ERROR(FormatText("MAP::SendSms: Et96MapOpenReq error 0x%x",result),MAP_FALURE);
@@ -1047,6 +1045,7 @@ static bool SendSms(MapDialog* dialog){
       throw MAPDIALOG_FATAL_ERROR(
         FormatText("MAP::SendSMSCToMT: Et96MapDelimiterReq error 0x%x",result),MAP_FALURE);
     segmentation = true;
+    dialog->state = MAPST_WaitSpecOpenConf;
   }else{
     if ( dialog->version == 2 ) {
       result = Et96MapV2ForwardSmMTReq( dialog->ssn, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), mms?TRUE:FALSE);
@@ -1062,12 +1061,6 @@ static bool SendSms(MapDialog* dialog){
       throw MAPDIALOG_FATAL_ERROR(
         FormatText("MAP::SendSMSCToMT: Et96MapDelimiterReq error 0x%x",result),MAP_FALURE);
   }
-  if ( segmentation == SMS_SEGMENTATION )
-    dialog->state = MAPST_WaitSpecOpenConf;
-  else if ( !dialog->mms )
-    dialog->state = MAPST_WaitOpenConf;
-  else // mms continue
-    dialog->state = MAPST_WaitSmsConf;
   dialog->mms = mms;
   return segmentation;
 }
@@ -1075,8 +1068,19 @@ static bool SendSms(MapDialog* dialog){
 static void SendNextMMS(MapDialog* dialog)
 {
   __map_trace2__("%s: dialogid 0x%x  (state %d/NEXTMMS)",__FUNCTION__,dialog->dialogid_map,dialog->state);
-  if ( dialog->chain.size() == 0 )
-    throw runtime_error("MAP::SendNextMMS: has no messages to send");
+  if ( dialog->chain.size() == 0 ) {
+    if( dialog->sms.get()->hasIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND) ) {
+      if( !dialog->wasDelivered ) {
+        __map_trace__("SendNextMMS: messages was not delivered. Aborting long message sending");
+        AbortMapDialog( dialog->dialogid_map, dialog->ssn );
+        DropMapDialog(dialog);
+        return;
+      } else {
+        __map_trace__("SendNextMMS: no messages in chain. Waiting long message next part");
+        dialog->state = MAPST_WaitNextMMS;
+      }
+    } else throw runtime_error("MAP::SendNextMMS: has no messages to send");
+  }
   SmscCommand cmd = dialog->chain.front();
   dialog->chain.pop_front();
   dialog->dialogid_smsc = cmd->get_dialogId();
@@ -1205,9 +1209,19 @@ static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
 }
 
 void MAPIO_PutCommand(const SmscCommand& cmd ){
-  if ( ((cmd->get_commandId() == DELIVERY && !cmd->get_sms()->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP ) ) || cmd->get_commandId() == QUERYABONENTSTATUS) && MapDialogContainer::getInstance()->getNumberOfDialogs() > MAP_DIALOGS_LIMIT )
+  if( MapDialogContainer::getInstance()->getNumberOfDialogs() > MAP_DIALOGS_LIMIT &&
+      ( ( cmd->get_commandId() == DELIVERY && 
+          !cmd->get_sms()->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP ) &&
+          !MapDialogContainer::getInstance()->isWaitingNextMMS(cmd)
+         ) || 
+         cmd->get_commandId() == QUERYABONENTSTATUS
+       )
+     ) 
+  {
     SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_TEMP,Status::THROTTLED));
-  else MAPIO_PutCommand(cmd, 0 );
+  } else {
+    MAPIO_PutCommand(cmd, 0 );
+  }
 }
 
 static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
@@ -1355,10 +1369,14 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
         dialog->dropChain = false;
         dialog->wasDelivered = false;
         dialog->hlrWasNotified = false;
-        dialog->state = MAPST_START;
-        __map_trace2__("%s: dialogid 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
         dialogid_map = dialog->dialogid_map;
-        StartDialogProcessing(dialog.get(),cmd);
+        if( dialog->state != MAPST_SendNextMMS ) {
+          dialog->state = MAPST_START;
+          __map_trace2__("%s: dialogid 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
+          StartDialogProcessing(dialog.get(),cmd);
+        } else {
+          SendSms(dialog);
+        }
       }
     }else{ // MAP dialog
       dialogid_map = dialogid_smsc&0x0ffff;
