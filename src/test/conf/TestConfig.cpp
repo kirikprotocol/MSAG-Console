@@ -25,12 +25,16 @@ TestConfig::TestConfig()
 	addrMap["profilerAddr"] = "+38435435";
 	addrMap["profilerAlias"] = ".3.3.profilerAlias123";
 	strMap["profilerSystemId"] = "profiler";
+	strMap["profilerServiceType"] = "pRof";
+	intMap["profilerProtocolId"] = 5;
 	//db sme
 	addrMap["dbSmeAddr"] = "+1597534682";
 	addrMap["dbSmeAlias"] = ".5.5.dbSmeAlias123";
 	strMap["dbSmeSystemId"] = "dbSme";
 	strMap["dbSmeServiceType"] = "dBsmE";
 	intMap["dbSmeProtocolId"] = 23;
+	//map proxy
+	strMap["mapProxySystemId"] = "MAP_PROXY";
 	//ресурсы
 	strMap["cmdRespReportNone"] = 
 		"Now you will receive only requested delivery reports";
