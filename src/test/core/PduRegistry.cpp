@@ -44,6 +44,7 @@ void PduRegistry::registerMonitor(time_t t, PduMonitor* monitor)
 void PduRegistry::registerMonitor(PduMonitor* monitor)
 {
 	__require__(monitor);
+	__require__(!monitor->isRegistered());
 	/*
 	if (!monitor->getCheckTime())
 	{
@@ -65,6 +66,7 @@ void PduRegistry::registerMonitor(PduMonitor* monitor)
 				GenericNackMonitor* m = dynamic_cast<GenericNackMonitor*>(monitor);
 				registerMonitor(m->sequenceNumber, monitor);
 			}
+			break;
 		case DELIVERY_MONITOR:
 		case DELIVERY_RECEIPT_MONITOR:
 		case INTERMEDIATE_NOTIFICATION_MONITOR:
@@ -75,6 +77,7 @@ void PduRegistry::registerMonitor(PduMonitor* monitor)
 			__unreachable__("Invalid monitor type");
 	}
 	registerMonitor(monitor->getCheckTime(), monitor);
+	monitor->setRegistered(true);
 	__trace2__("monitor registered: pduReg = %p, monitor = %s",
 		this, monitor->str().c_str());
 }
@@ -84,7 +87,9 @@ void PduRegistry::clear()
 	__trace2__("PduRegistry::clear(): pduReg = %x", this);
 	for (TimeMap::iterator it = checkTimeMap.begin(); it != checkTimeMap.end(); it++)
 	{
-		delete it->second;
+		PduMonitor* monitor = it->second;
+		monitor->setRegistered(false);
+		delete monitor;
 	}
 	seqNumMap.clear();
 	msgRefMap.clear();
@@ -114,6 +119,7 @@ PduMonitor* PduRegistry::getMonitor(uint32_t seqNum, MonitorType type) const
 void PduRegistry::removeMonitor(PduMonitor* monitor)
 {
 	__require__(monitor);
+	__require__(monitor->isRegistered());
 	switch (monitor->getType())
 	{
 		case RESPONSE_MONITOR:
@@ -146,6 +152,7 @@ void PduRegistry::removeMonitor(PduMonitor* monitor)
 	}
 	int res = checkTimeMap.erase(TimeKey(monitor->getCheckTime(), monitor->getId()));
 	__require__(res);
+	monitor->setRegistered(false);
 	//delete monitor;
 	__trace2__("monitor unregistered: pduReg = %p, monitor = %s",
 		this, monitor->str().c_str());
