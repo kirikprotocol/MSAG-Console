@@ -608,19 +608,22 @@ StateType StateMachine::deliveryResp(Tuple& t)
           rpt.setValidTime(0);
           rpt.setDeliveryReport(0);
           rpt.setArchivationRequested(false);
-          rpt.setEServiceType("SMSC");
           rpt.setIntProperty(Tag::SMPP_ESM_CLASS,4);
           rpt.setDestinationAddress(sms.getOriginatingAddress());
           rpt.setMessageReference(rpt.getMessageReference());
           rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
             sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
           rpt.setIntProperty(Tag::SMPP_MSG_STATE,sms.getState());
+          char addr[64];
+          sms.getDestinationAddress().getText(addr,sizeof(addr));
+          rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
+          rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,time(NULL));
+
           char msgid[60];
           sprintf(msgid,"%lld",t.msgId);
           rpt.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,msgid);
           Array<SMS*> arr;
           string out;
-          char addr[32];
           sms.getDestinationAddress().getText(addr,sizeof(addr));
           formatFailed(addr,"failed",out);
           smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
@@ -657,19 +660,21 @@ StateType StateMachine::deliveryResp(Tuple& t)
       rpt.setValidTime(0);
       rpt.setDeliveryReport(0);
       rpt.setArchivationRequested(false);
-      rpt.setEServiceType("SMSC");
       rpt.setIntProperty(Tag::SMPP_ESM_CLASS,4);
       rpt.setDestinationAddress(sms.getOriginatingAddress());
       rpt.setMessageReference(rpt.getMessageReference());
       rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
         sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
       rpt.setIntProperty(Tag::SMPP_MSG_STATE,sms.getState());
+      char addr[64];
+      sms.getDestinationAddress().getText(addr,sizeof(addr));
+      rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
+      rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,time(NULL));
       char msgid[60];
       sprintf(msgid,"%lld",t.msgId);
       rpt.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,msgid);
       Array<SMS*> arr;
       string out;
-      char addr[32];
       sms.getDestinationAddress().getText(addr,sizeof(addr));
       formatDeliver(addr,time(NULL),out);
       __trace2__("RECEIPT: addr %s",addr);
