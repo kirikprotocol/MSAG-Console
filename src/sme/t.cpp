@@ -109,6 +109,8 @@ struct VClientData{
 
   string sourceAddress;
 
+  string eservicetype;
+
   FILE *cmdfile;
 
   bool waitRespMode;
@@ -159,6 +161,7 @@ struct VClientData{
     respStatus=0;
     validTime=0;
     replaceIfPresent=false;
+    eservicetype="TEST";
   }
 
 }defVC;
@@ -192,6 +195,7 @@ bool& replaceIfPresent=defVC.replaceIfPresent;
 int& respStatus=defVC.respStatus;
 
 string& sourceAddress=defVC.sourceAddress;
+string& eservicetype=defVC.eservicetype;
 
 FILE*& cmdfile=defVC.cmdfile;
 
@@ -233,7 +237,8 @@ Option options[]={
 {"respstatus",'i',&respStatus},
 {"silent",'b',&silent},
 {"validTime",'i',&validTime},
-{"replaceIfPresent",'b',&replaceIfPresent}
+{"replaceIfPresent",'b',&replaceIfPresent},
+{"eservicetype",'s',&eservicetype}
 };
 
 const int optionsCount=sizeof(options)/sizeof(Option);
@@ -342,17 +347,39 @@ void CancelCmd(SmppSession& ss,const string& args)
 {
   if(args.length()==0)
   {
-    printf("Usage: cancel msgId\n");
+    printf("Usage:\ncancel msgId\nor\ncancel orgaddr dstaddr svctype\n");
     return;
   }
   PduCancelSm q;
-  q.set_messageId(args.c_str());
+  if(args.find(' ')!=string::npos)
+  {
+    string org,dst,svc;
+    org=args;
+    splitString(org,dst);
+    if(!splitString(dst,svc))
+    {
+      printf("Invalid arguments count\n");
+      return;
+    }
+    Address addr(org.c_str());
+    q.get_source().set_typeOfNumber(addr.type);
+    q.get_source().set_numberingPlan(addr.plan);
+    q.get_source().set_value(addr.value);
+    addr=Address(dst.c_str());
+    q.get_dest().set_typeOfNumber(addr.type);
+    q.get_dest().set_numberingPlan(addr.plan);
+    q.get_dest().set_value(addr.value);
+    q.set_serviceType(svc.c_str());
+  }else
+  {
+    q.set_messageId(args.c_str());
+    Address addr(sourceAddress.c_str());
+    q.get_source().set_typeOfNumber(addr.type);
+    q.get_source().set_numberingPlan(addr.plan);
+    q.get_source().set_value(addr.value);
+  }
 
 
-  Address addr(sourceAddress.c_str());
-  q.get_source().set_typeOfNumber(addr.type);
-  q.get_source().set_numberingPlan(addr.plan);
-  q.get_source().set_value(addr.value);
 
   /*
   q.set_serviceType("XXX");
@@ -1624,7 +1651,7 @@ int main(int argc,char* argv[])
       s.setIntProperty(Tag::SMPP_ESM_CLASS,(esmclass&(~0x3))|mode);
       s.setDeliveryReport(0);
       s.setArchivationRequested(false);
-      s.setEServiceType("TEST");
+      s.setEServiceType(eservicetype.c_str());
 
       if(replaceIfPresent)s.setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,1);
 
@@ -1686,7 +1713,14 @@ int main(int argc,char* argv[])
           ptr+=n;
         }
         s.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
-        s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),tmp.length());
+        if(tmp.length()>140)
+        {
+          s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),tmp.length());
+        }else
+        {
+          s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,tmp.c_str(),tmp.length());
+          s.setIntProperty(Tag::SMPP_SM_LENGTH,tmp.length());
+        }
         len=tmp.length();
       }else
       if(dataCoding==DataCoding::UCS2)//UCS2
@@ -1695,17 +1729,38 @@ int main(int argc,char* argv[])
         ConvertMultibyteToUCS2(message,len,msg.get(),len*2,ansi1251?CONV_ENCODING_CP1251:CONV_ENCODING_KOI8R);
         s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::UCS2);
         len*=2;
-        s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,(char*)msg.get(),len);
+        if(len>140)
+        {
+          s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,(char*)msg.get(),len);
+        }else
+        {
+          s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)msg.get(),len);
+          s.setIntProperty(Tag::SMPP_SM_LENGTH,len);
+        }
       }else if(dataCoding==DataCoding::SMSC7BIT)
       {
         auto_ptr<char> msg(new char[len*3+1]);
         len=ConvertLatin1ToSMSC7Bit(message,len,msg.get());
         s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::SMSC7BIT);
-        s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,msg.get(),len);
+        if(len>140)
+        {
+          s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,(char*)msg.get(),len);
+        }else
+        {
+          s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)msg.get(),len);
+          s.setIntProperty(Tag::SMPP_SM_LENGTH,len);
+        }
       }else //latin1
       {
         s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
-        s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,message,len);
+        if(len>140)
+        {
+          s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,message,len);
+        }else
+        {
+          s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,message,len);
+          s.setIntProperty(Tag::SMPP_SM_LENGTH,len);
+        }
       }
 
       /*
