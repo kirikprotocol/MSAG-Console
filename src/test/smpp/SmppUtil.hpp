@@ -98,8 +98,11 @@ typedef char ShortMessage[MAX_SMPP_SM_LENGTH];
 typedef char MessageId[MAX_MSG_ID_LENGTH + 1];
 
 const uint64_t OPT_ALL = 0xffffffffffffffff;
+const uint64_t OPT_DEST_ADDR_SUBUNIT = 0x1;
 const uint64_t OPT_RCPT_MSG_ID = 0x1 << 11;
+const uint64_t OPT_MS_MSG_WAIT_FACILITIES  = 0x1 << 12;
 const uint64_t OPT_USER_MSG_REF = 0x1 << 16;
+const uint64_t OPT_MS_VALIDITY = 0x1 << 26;
 const uint64_t OPT_MSG_PAYLOAD = ((uint64_t) 0x1) << 31;
 const uint64_t OPT_USSD_SERVICE_OP = ((uint64_t) 0x1) << 43;
 
@@ -138,12 +141,14 @@ public:
 		uint64_t excludeMask = 0x0);
 
 	static void setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
-		bool useShortMessage, uint64_t mask = OPT_ALL, bool check = true);
+		bool useShortMessage, bool forceDc, uint64_t mask = OPT_ALL,
+		bool check = true);
 	static void setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 		uint8_t dataCoding, bool udhi, uint64_t mask = OPT_ALL, bool check = true);
 	static void setupRandomCorrectOptionalParams(SmppOptional& opt,
 		uint8_t dataCoding, bool udhi, uint64_t mask = OPT_ALL, bool check = true);
 
+	static bool extractDataCoding(uint8_t dcs, uint8_t& dc);
 	static SmppHeader* copyPdu(SmppHeader* pdu);
 };
 

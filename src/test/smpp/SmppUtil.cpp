@@ -6,6 +6,7 @@
 #include "util/Exception.hpp"
 #include "util/debug.h"
 #include <algorithm>
+#include <bitset>
 #include <ctime>
 #include <map>
 #include <fstream>
@@ -21,6 +22,7 @@ using namespace std;
 using namespace smsc::sms; //constants
 using namespace smsc::test::util;
 using namespace smsc::smpp::SmppCommandSet;
+using namespace smsc::smpp::DataCoding;
 //using smsc::test::sms::SmsUtil;
 
 static const int MAX_OSTR_PRINT_SIZE = 1000;
@@ -385,7 +387,7 @@ vector<int> SmppUtil::compareOptional(SmppOptional& p1, SmppOptional& p2,
 	if (check) { __require__(p.get_##field() == addr_##field); }
 
 void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
-	bool useShortMessage, uint64_t mask, bool check)
+	bool useShortMessage, bool forceDc, uint64_t mask, bool check)
 {
 	__require__(pdu);
 	__cfg_int__(maxWaitTime);
@@ -411,8 +413,20 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	__set_cstr2__(validityPeriod, time2string(validTime, t, time(NULL), __numTime__));
 	__set_int__(uint8_t, registredDelivery, rand0(255));
 	__set_int__(uint8_t, replaceIfPresentFlag, !rand0(10));
-	uint8_t dataCoding = getDataCoding(RAND_TC);
-	__set_int__(uint8_t, dataCoding, dataCoding);
+	uint8_t dataCoding;
+	if (forceDc)
+	{
+		do
+		{
+			__set_int__(uint8_t, dataCoding, rand0(255));
+		}
+		while (!extractDataCoding(p.get_dataCoding(), dataCoding));
+	}
+	else
+	{
+		dataCoding = getDataCoding(RAND_TC);
+		__set_int__(uint8_t, dataCoding, dataCoding);
+	}
 	__set_int__(uint8_t, smDefaultMsgId, rand0(255)); //хбз что это такое
 	bool udhi = pdu->get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
 	if (useShortMessage)
@@ -690,6 +704,61 @@ void SmppUtil::setupRandomCorrectSubmitMultiPdu(PduMultiSm* pdu)
 	//SmppOptional
 }
 */
+
+bool SmppUtil::extractDataCoding(uint8_t dcs, uint8_t& dc)
+{
+	bitset<8> b(dcs);
+	//00xxxxxx и 01xxxxxx
+	if (!b[7])
+	{
+		if (!b[3] && !b[2])
+		{
+			dc = SMSC7BIT;
+			return true;
+		}
+		else if (!b[3] && b[2])
+		{
+			dc = BINARY;
+			return true;
+		}
+		else if (b[3] && !b[2])
+		{
+			dc = UCS2;
+			return true;
+		}
+	}
+	else if (b[7] && b[6])
+	{
+		//1111xxxx
+		if (b[5] && b[4])
+		{
+			dc = b[2] ? BINARY : SMSC7BIT;
+			return true;
+		}
+		else
+		{
+			//1100xxxx
+			if (!b[5] && !b[4])
+			{
+				dc = SMSC7BIT;
+				return true;
+			}
+			//1101xxxx
+			else if (!b[5] && b[4])
+			{
+				dc = SMSC7BIT;
+				return true;
+			}
+			//1110xxxx
+			else if (b[5] && !b[4])
+			{
+				dc = UCS2;
+				return true;
+			}
+		}
+	}
+	return false;
+}
 
 SmppHeader* SmppUtil::copyPdu(SmppHeader* pdu)
 {
