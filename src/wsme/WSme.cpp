@@ -179,7 +179,7 @@ protected:
                     responce.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::UCS2);
                     out = msgBuf; outLen = msgLen;
                 } else {
-                    responce.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::DEFAULT);
+                    responce.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
                 }
 
                 try {

@@ -198,7 +198,7 @@ public:
             out = msgBuf; outLen = msgLen;
         } 
         else {
-            body.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::DEFAULT);
+            body.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
         }
         
         try 
