@@ -66,6 +66,7 @@ namespace smsc { namespace dbsme
             throw(ConfigException);
         virtual ~CommandProcessor();
 
+        void clean();
         void init(ConfigView* config)
             throw(ConfigException);
         void process(Command& command)

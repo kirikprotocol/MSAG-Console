@@ -83,13 +83,19 @@ void CommandProcessor::init(ConfigView* config)
 
 CommandProcessor::~CommandProcessor()
 {
-    if (svcType) delete svcType;
+    clean();
+}
+
+void CommandProcessor::clean()
+{
+    if (svcType) delete svcType; svcType=0;
     for (int i=0; i<allProviders.Count(); i++) 
     {
         DataProvider* provider = allProviders[i];
         if (provider) delete provider;
         __trace__("Provider destructed.");
     }
+    allProviders.Clean();
 }
 
 bool CommandProcessor::addProvider(const Address& address,

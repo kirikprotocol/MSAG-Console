@@ -21,6 +21,11 @@
 #include <sms/sms.h>
 #include <util/xml/init.h>
 
+#include <admin/service/Component.h>
+#include <admin/service/ComponentManager.h>
+#include <admin/service/ServiceSocketListener.h>
+
+#include "DBSmeComponent.h"
 #include "CommandProcessor.h"
 
 using namespace smsc::sme;
@@ -30,21 +35,64 @@ using namespace smsc::core::threads;
 using namespace smsc::core::buffers;
 using namespace smsc::system;
 
+using namespace smsc::admin;
+using namespace smsc::admin::service;
+
 using namespace smsc::dbsme;
-
-static bool bDBSmeIsStopped   = false;
-static bool bDBSmeIsConnected = false;
-
-uint64_t    requestsProcessingCount = 0;
-uint64_t    requestsProcessedCount = 0;
-uint64_t    failuresNoticedCount = 0;
-
-Mutex       countersLock;
 
 static log4cpp::Category& logger = Logger::getCategory("smsc.dbsme.DBSme");
 
+static smsc::admin::service::ServiceSocketListener adminListener; 
+static bool bAdminListenerInited = false;
+
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
 const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
+
+Mutex        countersLock;
+uint64_t     requestsProcessingCount = 0;
+uint64_t     requestsProcessedCount = 0;
+uint64_t     failuresNoticedCount = 0;
+
+static Event bDBSmeWaitEvent;
+
+static Mutex needStopLock;
+static Mutex needReinitLock;
+static Mutex needReconnectLock;
+
+static bool  bDBSmeIsStopped   = false;
+static bool  bDBSmeIsConnected = false;
+static bool  bDBSmeNeedReinit  = false;
+
+static void setNeedReinit(bool reinit=true) {
+    MutexGuard gauard(needReinitLock);
+    bDBSmeNeedReinit = reinit;
+    if (reinit) bDBSmeWaitEvent.Signal();
+}
+static bool isNeedReinit() {
+    MutexGuard gauard(needReinitLock);
+    return bDBSmeNeedReinit;
+}
+
+static void setNeedStop(bool stop=true) {
+    MutexGuard gauard(needStopLock);
+    bDBSmeIsStopped = stop;
+    if (stop) bDBSmeWaitEvent.Signal();
+}
+static bool isNeedStop() {
+    MutexGuard gauard(needStopLock);
+    return bDBSmeIsStopped;
+}
+
+static void setNeedReconnect(bool reconnect=true) {
+    MutexGuard gauard(needReconnectLock);
+    bDBSmeIsConnected = !reconnect;
+    if (reconnect) bDBSmeWaitEvent.Signal();
+}
+static bool isNeedReconnect() {
+    MutexGuard gauard(needReconnectLock);
+    return !bDBSmeIsConnected;
+}
+
 
 class DBSmeTask : public ThreadedTask
 {
@@ -88,7 +136,7 @@ public:
                 (requestBody.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)
                   == USSD_PSSR_IND) : false;
 
-        Command command;
+        smsc::dbsme::Command command;
         command.setFromAddress(request.getOriginatingAddress());
         command.setToAddress(request.getDestinationAddress());
         command.setJobName(0);
@@ -225,20 +273,20 @@ public:
     virtual int Execute()
     {
         __require__(pdu);
-        __trace2__("DBSME: Processing PDU.\n");
+        __trace2__("DBSME: Processing PDU.");
         switch (pdu->get_commandId())
         {
         case SmppCommandSet::DELIVERY_SM:
             
             //((PduXSm*)pdu)->dump(TRACE_LOG_STREAM);
-            __trace2__("\nReceived DELIVERY_SM Pdu.\n");
+            __trace2__("Received DELIVERY_SM Pdu.");
             process();
             break;
         case SmppCommandSet::SUBMIT_SM_RESP:
-            __trace2__("\nReceived SUBMIT_SM_RESP Pdu.\n");
+            __trace2__("Received SUBMIT_SM_RESP Pdu.");
             break;
         default:
-            __trace2__("\nReceived unsupported Pdu !\n");
+            __trace2__("Received unsupported Pdu !");
             break;
         }
         
@@ -263,7 +311,7 @@ public:
     };
     virtual ~DBSmeTaskManager() 
     {
-        __trace2__("DBSME: deinit DBSmeTaskManager\n");
+        __trace2__("DBSME: deinit DBSmeTaskManager");
         shutdown();
     };
 
@@ -274,24 +322,18 @@ public:
     void init(ConfigView* config)
         throw(ConfigException)
     {
-        try
-        {
+        try {
             int maxThreads = config->getInt("max");
             pool.setMaxThreads(maxThreads);
-            __trace2__("Max threads count: %d\n", maxThreads);
-        }
-        catch (ConfigException& exc) 
-        {
+        } 
+        catch (ConfigException& exc) {
             logger.warn("Maximum thread pool size wasn't specified !");
         }
-        try
-        {
+        try {
             int initThreads = config->getInt("init");
             pool.preCreateThreads(initThreads);
-            __trace2__("Precreated threads count: %d\n", initThreads);
-        }
-        catch (ConfigException& exc) 
-        {
+        } 
+        catch (ConfigException& exc) {
             logger.warn("Precreated threads count in pool wasn't specified !");
         }
     };
@@ -317,15 +359,14 @@ public:
 
     void handleEvent(SmppHeader *pdu)
     {
-        __trace2__("DBSME: pdu received. Starting task...\n");
+        __trace2__("DBSME: pdu received. Starting task...");
         manager.startTask(new DBSmeTask(pdu, processor, *trans));
     }
     
     void handleError(int errorCode)
     {
-        bDBSmeIsConnected = false;
-        __trace2__("Transport error !!!\n");
-        logger.error("Oops, Error handled! Code is: %d\n", errorCode);
+        logger.error("Transport error handled! Code is: %d", errorCode);
+        setNeedReconnect(true);
     }
     
     void setTrans(SmppTransmitter *t)
@@ -393,13 +434,22 @@ public:
     };
 };
 
+struct DBSmeAdminHandler : public DBSmeAdmin
+{
+    virtual void applyChanges()
+    {
+        logger.error("Administrator has requested restart");
+        setNeedReinit(true);
+    }
+};
+
 static void appSignalHandler(int sig)
 {
-    __trace2__("Signal %d handled !\n", sig);
+    logger.debug("Signal %d handled !", sig);
     if (sig==SIGTERM || sig==SIGINT)
     {
-        printf("Stopping ... \n");
-        bDBSmeIsStopped = true;
+        logger.info("Stopping ...");
+        setNeedStop(true);
     }
 }
 
@@ -417,6 +467,8 @@ int main(void)
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
+
+    int resultCode = 0;
 
     //added by igork
     atexit(atExitHandler);
@@ -438,14 +490,37 @@ int main(void)
 
         ConfigView cpConfig(manager, "DBSme");
         CommandProcessor processor(&cpConfig);
-
-        ConfigView mnConfig(manager, "DBSme.ThreadPool");
-        ConfigView ssConfig(manager, "DBSme.SMSC");
-        DBSmeConfig cfg(&ssConfig);
         
-
-        while (!bDBSmeIsStopped)
+        DBSmeAdminHandler adminHandler;
+        ConfigView adminConfig(manager, "DBSme.Admin");
+        DBSmeComponent admin(adminHandler);                   
+        ComponentManager::registerComponent(&admin); 
+        adminListener.init(adminConfig.getString("host"), adminConfig.getInt("port"));               
+        bAdminListenerInited = true;
+        adminListener.Start();
+        
+        while (!isNeedStop())
         {
+            if (isNeedReinit())
+            {
+                Manager::reinit();
+                manager = Manager::getInstance();
+
+                DataSourceLoader::unload();
+                ConfigView dsConfig(manager, "StartupLoader");
+                DataSourceLoader::loadup(&dsConfig);
+                
+                ConfigView cpConfig(manager, "DBSme");
+                processor.clean();
+                processor.init(&cpConfig);
+                
+                setNeedReinit(false);
+            }
+            
+            ConfigView mnConfig(manager, "DBSme.ThreadPool");
+            ConfigView ssConfig(manager, "DBSme.SMSC");
+            DBSmeConfig cfg(&ssConfig);
+            
             DBSmeTaskManager runner(&mnConfig);
             DBSmePduListener listener(processor, runner);
             SmppSession      session(cfg, &listener);
@@ -460,62 +535,62 @@ int main(void)
             {
                 listener.setTrans(session.getSyncTransmitter());
                 session.connect();
-                bDBSmeIsConnected = true;
+                setNeedReconnect(false);
             }
             catch (SmppConnectException& exc)
             {
                 const char* msg = exc.what(); 
-                logger.error("Connect to SMSC failed. Cause: %s\n", (msg) ? msg:"unknown");
-                bDBSmeIsConnected = false;
-                if (exc.getReason() == 
-                    SmppConnectException::Reason::bindFailed) throw;
+                logger.error("Connect to SMSC failed. Cause: %s", (msg) ? msg:"unknown");
+                setNeedReconnect(true);
+                if (exc.getReason() == SmppConnectException::Reason::bindFailed) throw;
                 sleep(cfg.timeOut);
                 session.close();
                 runner.shutdown();
                 continue;
             }
-            logger.info("Connected.\n");
+            logger.info("Connected.");
             
-            while (!bDBSmeIsStopped && bDBSmeIsConnected) 
+            bDBSmeWaitEvent.Wait(0);
+            while (!isNeedStop() && !isNeedReconnect() && !isNeedReinit()) 
             {
-                sleep(2);
+                bDBSmeWaitEvent.Wait();
                 /*MutexGuard guard(countersLock);
                 __trace2__("\nRequests: %llu processing, %llu processed.\n"
                            "Failures noticed: %llu\n",
                            requestsProcessingCount, requestsProcessedCount,
                            failuresNoticedCount);*/
             };
-            logger.info("Disconnecting from SMSC ...\n");
+            logger.info("Disconnecting from SMSC ...");
             session.close();
             runner.shutdown();
         };
     }
-    catch (SmppConnectException& exc)
-    {
+    catch (SmppConnectException& exc) {
         if (exc.getReason() == SmppConnectException::Reason::bindFailed)
-            logger.error("Failed to bind DBSme. Exiting.\n");
-        return -1;
+            logger.error("Failed to bind DBSme. Exiting.");
+        resultCode = -1;
     }
-    catch (ConfigException& exc) 
-    {
-        logger.error("Configuration invalid. Details: %s Exiting.\n", exc.what());
-        return -2;
+    catch (ConfigException& exc) {
+        logger.error("Configuration invalid. Details: %s Exiting.", exc.what());
+        resultCode = -2;
     }
-    catch (Exception& exc) 
-    {
-        logger.error("Top level Exception: %s Exiting.\n", exc.what());
-        return -3;
+    catch (Exception& exc) {
+        logger.error("Top level Exception: %s Exiting.", exc.what());
+        resultCode = -3;
     }
-    catch (exception& exc) 
-    {
-        logger.error("Top level exception: %s Exiting.\n", exc.what());
-        return -4;
+    catch (exception& exc) {
+        logger.error("Top level exception: %s Exiting.", exc.what());
+        resultCode = -4;
     }
-    catch (...) 
-    {
-        logger.error("Unknown exception: '...' caught. Exiting.\n");
-        return -5;
+    catch (...) {
+        logger.error("Unknown exception: '...' caught. Exiting.");
+        resultCode = -5;
     }
     
-    return 0;
+    if (bAdminListenerInited) {
+        adminListener.shutdown();
+        adminListener.WaitFor();
+    }
+
+    return resultCode;
 }
