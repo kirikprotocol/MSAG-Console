@@ -57,7 +57,7 @@ void Smsc::mainLoop()
     do
     {
 
-      smeman.getFrame(frame,WAIT_DATA_TIMEOUT);
+      smeman.getFrame(frame,WAIT_DATA_TIMEOUT,false);
       if ( stopFlag ) return;
 
       time_t now=time(NULL);
