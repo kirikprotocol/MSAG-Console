@@ -34,7 +34,6 @@ public class SubjectList
     for (int i = 0; i < subjList.getLength(); i++) {
       Element subjElem = (Element) subjList.item(i);
       String name = subjElem.getAttribute("id");
-      logger.debug( "Parsing: "+name);
       NodeList masksList = subjElem.getElementsByTagName("mask");
       String[] masks = new String[masksList.getLength()];
       for (int j = 0; j < masksList.getLength(); j++) {
@@ -47,13 +46,11 @@ public class SubjectList
 
       String notes = "";
       NodeList notesList = subjElem.getElementsByTagName("notes");
-      for (int j=0; i < notesList.getLength(); i++)
+      for (int j=0; j < notesList.getLength(); j++)
         notes += Utils.getNodeText(notesList.item(j));
 
       try {
-        logger.debug( "Add subject: "+name);
         add(new Subject(name, masks, defSme, notes));
-        logger.debug( "Added subject: "+name);
       } catch (AdminException e) {
         logger.warn("source skipped", e);
       }
