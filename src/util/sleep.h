@@ -12,6 +12,7 @@ namespace util{
 
 inline void millisleep(unsigned msec)
 {
+  if(msec>0x80000000)return;
 #ifdef _WIN32
   Sleep(msec);
 #else
