@@ -26,14 +26,14 @@ CREATE TABLE SMS_MSG
    DST_MSC        VARCHAR2(21) NULL,
    DST_IMSI       VARCHAR2(21) NULL,
    DST_SME_N      NUMBER(22)   NULL,
-   ROUTE_ID       VARCHAR2(20) NULL,
+   ROUTE_ID       VARCHAR2(32) NULL,
    SVC_ID         NUMBER(22)   NULL,
    PRTY           NUMBER(22)   NULL,
    SRC_SME_ID     VARCHAR2(15) NULL,
    DST_SME_ID     VARCHAR2(15) NULL,
    TXT_LENGTH     NUMBER(10)   NULL,
    BODY_LEN       NUMBER(10)   NOT NULL,
-   BODY           RAW(1550)    NULL
+   BODY           RAW(1500)    NULL
 ) TABLESPACE SMSC_DATA;
 
 CREATE UNIQUE INDEX SMS_MSG_IDX ON SMS_MSG (ID)
@@ -107,14 +107,14 @@ CREATE TABLE SMS_ARC
    DST_MSC        VARCHAR2(21) NULL,
    DST_IMSI       VARCHAR2(21) NULL,
    DST_SME_N      NUMBER(22)   NULL,
-   ROUTE_ID       VARCHAR2(20) NULL,
+   ROUTE_ID       VARCHAR2(32) NULL,
    SVC_ID         NUMBER(22)   NULL,
    PRTY           NUMBER(22)   NULL, 
    SRC_SME_ID     VARCHAR2(15) NULL,
    DST_SME_ID     VARCHAR2(15) NULL,
    TXT_LENGTH     NUMBER(10)   NULL,
    BODY_LEN       NUMBER(10)   NOT NULL,
-   BODY           RAW(1550)    NULL
+   BODY           RAW(1500)    NULL
 )TABLESPACE SMSC_DATA;
 
 CREATE UNIQUE INDEX SMS_ARC_IDX ON SMS_ARC (ID)
@@ -142,7 +142,7 @@ CREATE TABLE SMS_BILL
    OTHER_TON      NUMBER         NULL,       -- filled by stored procedure (by OA/DDA)
    OTHER_NPI      NUMBER         NULL,       -- filled by stored procedure (by OA/DDA)
    OTHER_MSC      VARCHAR2(21)   NULL,       -- filled by stored procedure (by SRC/DST MSC)
-   ROUTE_ID       VARCHAR2(21)   NULL,       -- ROUTE_ID from SMS_MSG
+   ROUTE_ID       VARCHAR2(32)   NULL,       -- ROUTE_ID from SMS_MSG
    SERVICE_CODE   NUMBER         NULL,       -- SERVICE_ID from SMS_MSG
    TXT_LENGTH     NUMBER         NULL,       -- add it to SMS_MSG
    UPLOAD_ID      NUMBER         NULL        -- skip it (used externally)
@@ -242,7 +242,7 @@ DROP TABLE SMS_STAT_ROUTE;
 CREATE TABLE SMS_STAT_ROUTE
 (
   period       NUMBER(22)     NOT NULL,
-  routeid      VARCHAR2(20)   NOT NULL,
+  routeid      VARCHAR2(32)   NOT NULL,
   processed    NUMBER(22)     NOT NULL
 ) TABLESPACE SMSC_DATA;
 
