@@ -632,28 +632,10 @@ public CommandParser(ParserSharedInputState state) {
 		{
 		switch ( LA(1)) {
 		case ACT_ADD:
-		case ACT_DELETE:
 		{
 			{
-			switch ( LA(1)) {
-			case ACT_ADD:
-			{
-				match(ACT_ADD);
-				cmd.setAction(RouteAlterCommand.ACTION_ADD);
-				break;
-			}
-			case ACT_DELETE:
-			{
-				match(ACT_DELETE);
-				cmd.setAction(RouteAlterCommand.ACTION_DEL);
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
-			}
+			match(ACT_ADD);
+			cmd.setAction(RouteAlterCommand.ACTION_ADD);
 			{
 			switch ( LA(1)) {
 			case OPT_SRC:
@@ -671,6 +653,35 @@ public CommandParser(ParserSharedInputState state) {
 			default:
 			{
 				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			}
+			break;
+		}
+		case ACT_DELETE:
+		{
+			{
+			match(ACT_DELETE);
+			cmd.setAction(RouteAlterCommand.ACTION_DEL);
+			{
+			switch ( LA(1)) {
+			case OPT_SRC:
+			{
+				route_src(cmd);
+				cmd.setTarget(RouteAlterCommand.TARGET_SRC);
+				break;
+			}
+			case OPT_DST:
+			{
+				route_dst_x(cmd);
+				cmd.setTarget(RouteAlterCommand.TARGET_DST);
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
 			}
 			}
 			}
@@ -1065,9 +1076,11 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		}
 		}
+		{
 		
 				    cmd.addSrcDef(def);	
 				
+		}
 	}
 	
 	public final void dstdef(
@@ -1119,6 +1132,54 @@ public CommandParser(ParserSharedInputState state) {
 		}
 	}
 	
+	public final void dstdef_x(
+		RouteGenCommand cmd
+	) throws RecognitionException, TokenStreamException {
+		
+		Token  addr = null;
+		// Special command required !!!
+		RouteDstDef def = new RouteDstDef();
+		
+		
+		{
+		switch ( LA(1)) {
+		case OPT_SUBJ:
+		{
+			{
+			match(OPT_SUBJ);
+			
+					    def.setType(RouteDstDef.TYPE_SUBJECT);
+					    def.setDst(getnameid("Subject name"));
+					
+			}
+			break;
+		}
+		case OPT_MASK:
+		{
+			{
+			match(OPT_MASK);
+			addr = LT(1);
+			match(STR);
+			
+					    def.setType(RouteDstDef.TYPE_MASK); 
+					    def.setDst(addr.getText());
+					
+			}
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		
+				    cmd.addDstDef(def);
+				
+		}
+	}
+	
 	public final void route_src(
 		RouteGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
@@ -1128,24 +1189,24 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_SRC);
 			{
-			int _cnt22=0;
-			_loop22:
+			int _cnt28=0;
+			_loop28:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					srcdef(cmd);
 				}
 				else {
-					if ( _cnt22>=1 ) { break _loop22; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt28>=1 ) { break _loop28; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt22++;
+				_cnt28++;
 			} while (true);
 			}
 			}
 		}
 		catch (RecognitionException ex) {
 			
-			throw new RecognitionException("Route srcdef missed or invalid. Syntax: src ((subj <subject_name>)|(mask <mask>))+");
+			throw new RecognitionException("Route srcdef missed or invalid. Syntax: src (subj <subject_name>|mask <mask>)+");
 				
 		}
 	}
@@ -1159,24 +1220,55 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_DST);
 			{
-			int _cnt26=0;
-			_loop26:
+			int _cnt32=0;
+			_loop32:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					dstdef(cmd);
 				}
 				else {
-					if ( _cnt26>=1 ) { break _loop26; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt32>=1 ) { break _loop32; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt26++;
+				_cnt32++;
 			} while (true);
 			}
 			}
 		}
 		catch (RecognitionException ex) {
 			
-			throw new RecognitionException("Route dstdef missed or invalid. Syntax: dst ((subj <subject_name>)|(mask <mask>) <systemid>)+");
+			throw new RecognitionException("Route dstdef missed or invalid. Syntax: dst (subj <subject_name>|mask <mask> <systemid>)+");
+				
+		}
+	}
+	
+	public final void route_dst_x(
+		RouteGenCommand cmd
+	) throws RecognitionException, TokenStreamException {
+		
+		
+		try {      // for error handling
+			{
+			match(OPT_DST);
+			{
+			int _cnt36=0;
+			_loop36:
+			do {
+				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
+					dstdef_x(cmd);
+				}
+				else {
+					if ( _cnt36>=1 ) { break _loop36; } else {throw new NoViableAltException(LT(1), getFilename());}
+				}
+				
+				_cnt36++;
+			} while (true);
+			}
+			}
+		}
+		catch (RecognitionException ex) {
+			
+			throw new RecognitionException("Route dstdef missed or invalid. Syntax: dst (subj <subject_name>|mask <mask>)+");
 				
 		}
 	}
@@ -1381,14 +1473,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop67:
+			_loop79:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop67;
+					break _loop79;
 				}
 				
 			} while (true);

@@ -128,9 +128,9 @@ srcdef[RouteGenCommand cmd] { // Special command required !!!
 		    def.setSrc(addr.getText());
 		  })
 		) 
-		{ 
+		({ 
 		    cmd.addSrcDef(def);	
-		}
+		})
 	;
 	       	
 dstdef[RouteGenCommand cmd] { // Special command required !!!
@@ -151,6 +151,23 @@ dstdef[RouteGenCommand cmd] { // Special command required !!!
 		})
 	;
 
+dstdef_x[RouteGenCommand cmd] { // Special command required !!!
+    RouteDstDef def = new RouteDstDef();
+}
+	:	( (OPT_SUBJ { 
+		    def.setType(RouteDstDef.TYPE_SUBJECT);
+		    def.setDst(getnameid("Subject name"));
+		  }) 
+		| (OPT_MASK addr:STR { 
+		    def.setType(RouteDstDef.TYPE_MASK); 
+		    def.setDst(addr.getText());
+		  })
+		)
+		({
+		    cmd.addDstDef(def);
+		})
+	;
+
 /* ----------------------- Route command parsers ----------------------- */
 
 route_src[RouteGenCommand cmd]
@@ -158,7 +175,7 @@ route_src[RouteGenCommand cmd]
 	;
 	exception
 	catch [RecognitionException ex] {
-           throw new RecognitionException("Route srcdef missed or invalid. Syntax: src ((subj <subject_name>)|(mask <mask>))+");
+           throw new RecognitionException("Route srcdef missed or invalid. Syntax: src (subj <subject_name>|mask <mask>)+");
 	}
 
 route_dst[RouteGenCommand cmd]
@@ -166,7 +183,15 @@ route_dst[RouteGenCommand cmd]
 	;
 	exception
 	catch [RecognitionException ex] {
-           throw new RecognitionException("Route dstdef missed or invalid. Syntax: dst ((subj <subject_name>)|(mask <mask>) <systemid>)+");
+           throw new RecognitionException("Route dstdef missed or invalid. Syntax: dst (subj <subject_name>|mask <mask> <systemid>)+");
+	}
+
+route_dst_x[RouteGenCommand cmd]
+	:	(OPT_DST (dstdef_x[cmd])+)
+	;
+	exception
+	catch [RecognitionException ex] {
+           throw new RecognitionException("Route dstdef missed or invalid. Syntax: dst (subj <subject_name>|mask <mask>)+");
 	}
 
 addroute returns [RouteAddCommand cmd] {
@@ -235,10 +260,15 @@ altroute returns [RouteAlterCommand cmd] {
 			throw new NumberFormatException("Expecting integer value for <priority>");
 		    }
 		}) ?
-		(( ACT_ADD   { cmd.setAction(RouteAlterCommand.ACTION_ADD); }
-		| ACT_DELETE { cmd.setAction(RouteAlterCommand.ACTION_DEL); })
-		( route_src[cmd] { cmd.setTarget(RouteAlterCommand.TARGET_SRC); }
-		| route_dst[cmd] { cmd.setTarget(RouteAlterCommand.TARGET_DST); }))?
+		((ACT_ADD    { cmd.setAction(RouteAlterCommand.ACTION_ADD); }
+		  ( route_src[cmd] { cmd.setTarget(RouteAlterCommand.TARGET_SRC); }
+		  | route_dst[cmd] { cmd.setTarget(RouteAlterCommand.TARGET_DST); })
+		 )
+		|(ACT_DELETE { cmd.setAction(RouteAlterCommand.ACTION_DEL); }
+		 ( route_src[cmd]   { cmd.setTarget(RouteAlterCommand.TARGET_SRC); }
+		 | route_dst_x[cmd] { cmd.setTarget(RouteAlterCommand.TARGET_DST); })
+		 )
+		)?
 	;
 altroute_flags[RouteAlterCommand cmd]
 	:	( OPT_BILL   { cmd.setBill(true);   } 
