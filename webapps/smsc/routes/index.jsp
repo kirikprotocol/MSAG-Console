@@ -117,7 +117,7 @@ Filter By:
 <%
 java.util.HashMap as = new java.util.HashMap();
 // as.put("multiple", null);
- as.put("onchange", "return setSort('Route ID')");
+// as.put("onchange", "return setSort('Route ID')");
 java.util.HashMap aq = new java.util.HashMap();
 // aq.put("multiple", null);
  aq.put("onenter", "return setSort('Route ID')");
@@ -133,8 +133,17 @@ o.put("SMEs", "5");
 <tr>
 <td><input:select name="filterSelect" default="1"
     attributes="<%= as %>" options="<%= o %>"  />
-    &nbsp; Query: &nbsp;<input:text name="query"  /> </td>
-<td>  &nbsp;&nbsp;<%button(out, "but_filter.gif", "filterSelect", "Apply", "Filter", "return clickFilterSelect()");%>
+    &nbsp; Query: &nbsp;<input:text name="query"  /> </td></tr>
+<tr><td>  &nbsp;&nbsp;
+<%
+page_small_menu_begin(out);
+page_menu_button(out, "mbApply",  "Apply",  "Apply filter");
+page_menu_button(out, "mbClear", "Clear", "Clear filter", "clickClear()");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
+page_menu_space(out);
+page_small_menu_end(out);
+%>
+<%--button(out, "but_filter.gif", "filterSelect", "Apply", "Filter", "return clickFilterSelect()"); --%>
   </td>
   </tr>
  </table>
