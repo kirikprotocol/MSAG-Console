@@ -157,8 +157,9 @@ Response * SmppGwCommandDispatcher::handle(const Command * const command) throw 
     SmppGwCommand * smppgwcommand;
     smppgwcommand = (SmppGwCommand *)command;
 
-    smppgwcommand->CreateResponse(runner->getApp());
+    Response * result = smppgwcommand->CreateResponse(runner->getApp());
     DoActions(smppgwcommand->GetActions());
+    return result;
   } catch (AdminException &e) {
     return new Response(Response::Error, e.what());
   } catch (const char * const e) {
