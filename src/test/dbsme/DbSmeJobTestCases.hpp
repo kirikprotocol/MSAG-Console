@@ -89,8 +89,6 @@ class DbSmeJobTestCases
 public:
 	DbSmeJobTestCases(DbSmeRegistry* dbSmeReg, CheckList* chkList);
 	//DbSmeTestRecord* createJobInput();
-	void processJobOutput(const string& text, DbSmeTestRecord* rec,
-		SmeAckMonitor* monitor);
 	virtual const string processJobFirstOutput(const string& text,
 		DbSmeTestRecord* rec) = NULL;
 

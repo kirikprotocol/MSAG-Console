@@ -11,55 +11,6 @@ DbSmeJobTestCases::DbSmeJobTestCases(DbSmeRegistry* _dbSmeReg, CheckList* _chkLi
 	//__require__(chkList);
 }
 
-void DbSmeJobTestCases::processJobOutput(const string& text, DbSmeTestRecord* rec,
-	SmeAckMonitor* monitor)
-{
-	__require__(monitor);
-	__require__(dbSmeReg);
-	__decl_tc__;
-	if (!monitor->pduData->strProps.count("output"))
-	{
-		__require__(rec);
-		monitor->pduData->strProps["output"] =
-			processJobFirstOutput(text, rec);
-	}
-	string& expected = monitor->pduData->strProps["output"];
-	//ошибки при обработке
-	if (!expected.length())
-	{
-		monitor->setReceived();
-		return;
-	}
-	__tc__("processDbSmeRes.output");
-	int pos = expected.find(text);
-	__trace2__("db sme cmd: pos = %d, input: %s\noutput:\n%s\nexpected:\n%s\n",
-		pos, monitor->pduData->strProps["input"].c_str(), text.c_str(), expected.c_str());
-	if (pos == string::npos)
-	{
-		__tc_fail__(1);
-		monitor->setReceived();
-		//delete rec;
-	}
-	else
-	{
-		__tc_ok__;
-		__tc__("processDbSmeRes.longOutput");
-		//pdu порезана на куски по 200 байт
-		if (pos + text.length() < expected.length() && text.length() != 200)
-		{
-			__trace2__("pos = %d, text len = %d, expected len = %d", pos, text.length(), expected.length());
-			__tc_fail__(1);
-		}
-		expected.erase(pos, text.length());
-		if (!expected.length())
-		{
-			monitor->setReceived();
-			//delete rec;
-		}
-	}
-	__tc_ok_cond__;
-}
-
 void DbSmeJobTestCases::setInputString(DbSmeTestRecord* rec, const string& val)
 {
 	__decl_tc__;
