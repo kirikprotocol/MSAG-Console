@@ -21,35 +21,54 @@ Category& SmppProfilerTestCases::getLog()
 	return log;
 }
 
-void SmppProfilerTestCases::sendUpdateProfilePdu(PduSubmitSm* pdu,
-	const string& text, bool sync, uint8_t dataCoding, PduData::IntProps& intProps)
+void SmppProfilerTestCases::sendUpdateProfilePdu(const string& text,
+	PduData::IntProps* intProps, PduData::StrProps* strProps,
+	PduData::ObjProps* objProps, bool sync, uint8_t dataCoding)
 {
-	__require__(pdu);
 	__decl_tc__;
 	try
 	{
-		ShortMessage msg;
-		int msgLen;
+		//создать pdu
+		PduSubmitSm* pdu = new PduSubmitSm();
+		__cfg_addr__(profilerAlias);
+		transmitter->setupRandomCorrectSubmitSmPdu(pdu, profilerAlias,
+			OPT_ALL & ~OPT_MSG_PAYLOAD); //отключить messagePayload
+		//установить немедленную доставку
+		pdu->get_message().set_scheduleDeliveryTime("");
+		//текст сообщения
 		switch (dataCoding)
 		{
 			case DATA_CODING_SMSC_DEFAULT:
-				__tc__("updateProfileCorrect.cmdTextDefault");
-				msgLen = ConvertTextTo7Bit(text.c_str(), text.length(),
-					msg, sizeof(msg), CONV_ENCODING_CP1251);
+				__tc__("updateProfile.cmdTextDefault");
 				break;
 			case DATA_CODING_UCS2:
-				__tc__("updateProfileCorrect.cmdTextUcs2");
-				msgLen = ConvertMultibyteToUCS2(text.c_str(), text.length(),
-					(short*) msg, sizeof(msg) / sizeof(short), CONV_ENCODING_CP1251);
+				__tc__("updateProfile.cmdTextUcs2");
 				break;
 			default:
 				__unreachable__("Invalid data coding");
 		}
-		pdu->get_message().set_shortMessage(msg, msgLen);
+		int msgLen;
+		auto_ptr<char> msg = encode(text, dataCoding, msgLen);
+		pdu->get_message().set_shortMessage(msg.get(), msgLen);
 		pdu->get_message().set_dataCoding(dataCoding);
-		//отправить и зарегистрировать pdu
-		transmitter->sendSubmitSmPdu(pdu, NULL, sync, &intProps, NULL, false);
+		//отправить pdu
+		transmitter->sendSubmitSmPdu(pdu, NULL, sync, intProps, NULL, NULL, false);
 		__tc_ok__;
+		//зарегистрировать pdu
+		if (fixture->profileReg && intProps)
+		{
+			time_t t;
+			Profile profile = fixture->profileReg->getProfile(fixture->smeAddr, t);
+			if (intProps->count("reportOptions"))
+			{
+				profile.reportoptions = intProps->find("reportOptions")->second;
+			}
+			if (intProps->count("codePage"))
+			{
+				profile.codepage = intProps->find("codePage")->second;
+			}
+			fixture->profileReg->putProfile(fixture->smeAddr, profile);
+		}
 	}
 	catch(...)
 	{
@@ -59,20 +78,17 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(PduSubmitSm* pdu,
 	}
 }
 
-void SmppProfilerTestCases::updateProfileCorrect(bool sync,
+void SmppProfilerTestCases::updateReportOptionsCorrect(bool sync,
 	uint8_t dataCoding, int num)
 {
 	__decl_tc__;
-	TCSelector s(num, 8);
+	TCSelector s(num, 4);
 	for (; s.check(); s++)
 	{
 		try
 		{
-			PduSubmitSm* pdu = new PduSubmitSm();
-			__cfg_addr__(profilerAlias);
-			transmitter->setupRandomCorrectSubmitSmPdu(pdu, profilerAlias);
 			string text;
-			int cmdType;
+			int cmdType = UPDATE_REPORT_OPTIONS;
 			PduData::IntProps intProps;
 			switch (s.value())
 			{
@@ -80,71 +96,74 @@ void SmppProfilerTestCases::updateProfileCorrect(bool sync,
 					__tc__("updateProfile.reportOptions.reportNoneMixedCase");
 					text = "RePoRT NoNe";
 					intProps["reportOptions"] = ProfileReportOptions::ReportNone;
-					cmdType = UPDATE_REPORT_OPTIONS;
 					break;
 				case 2: //report none
 					__tc__("updateProfile.reportOptions.reportNoneSpaces");
 					text = "  rEpOrt  nOnE  ";
 					intProps["reportOptions"] = ProfileReportOptions::ReportNone;
-					cmdType = UPDATE_REPORT_OPTIONS;
 					break;
 				case 3: //report full
 					__tc__("updateProfile.reportOptions.reportFullMixedCase");
 					text = "RePoRT FuLL";
 					intProps["reportOptions"] = ProfileReportOptions::ReportFull;
-					cmdType = UPDATE_REPORT_OPTIONS;
 					break;
 				case 4: //report full
 					__tc__("updateProfile.reportOptions.reportFullSpaces");
 					text = "  rEpOrt  fUll  ";
 					intProps["reportOptions"] = ProfileReportOptions::ReportFull;
-					cmdType = UPDATE_REPORT_OPTIONS;
-					break;
-				case 5: //ucs2 codepage
-					__tc__("updateProfile.dataCoding.ucs2CodepageMixedCase");
-					text = "uCS2";
-					intProps["codePage"] = ProfileCharsetOptions::Ucs2;
-					cmdType = UPDATE_CODE_PAGE;
-					break;
-				case 6: //usc2 codepage
-					__tc__("updateProfile.dataCoding.ucs2CodepageSpaces");
-					text = "  Ucs2  ";
-					intProps["codePage"] = ProfileCharsetOptions::Ucs2;
-					cmdType = UPDATE_CODE_PAGE;
-					break;
-				case 7: //default codepage
-					__tc__("updateProfile.dataCoding.defaultCodepageMixedCase");
-					text = "DeFauLT";
-					intProps["codePage"] = ProfileCharsetOptions::Default;
-					cmdType = UPDATE_CODE_PAGE;
-					break;
-				case 8: //default codepage
-					__tc__("updateProfile.dataCoding.defaultCodepageSpaces");
-					text = "  dEfAUlt  ";
-					intProps["codePage"] = ProfileCharsetOptions::Default;
-					cmdType = UPDATE_CODE_PAGE;
 					break;
 				default:
 					__unreachable__("Invalid num");
 			}
-			//задать кодировку, отправить и зарегистрировать pdu
-			if (fixture->profileReg)
+			sendUpdateProfilePdu(text, &intProps, NULL, NULL, sync, dataCoding);
+			__tc_ok__;
+		}
+		catch(...)
+		{
+			__tc_fail__(100);
+			error();
+		}
+	}
+}
+
+void SmppProfilerTestCases::updateCodePageCorrect(bool sync,
+	uint8_t dataCoding, int num)
+{
+	__decl_tc__;
+	TCSelector s(num, 4);
+	for (; s.check(); s++)
+	{
+		try
+		{
+			string text;
+			int cmdType = UPDATE_CODE_PAGE;
+			PduData::IntProps intProps;
+			switch (s.value())
 			{
-				time_t t;
-				Profile profile = fixture->profileReg->getProfile(fixture->smeAddr, t);
-				if (intProps.count("reportOptions"))
-				{
-					profile.reportoptions = intProps.find("reportOptions")->second;
-				}
-				if (intProps.count("codePage"))
-				{
-					profile.codepage = intProps.find("codePage")->second;
-				}
-				//установить немедленную доставку и обновить profileReg
-				pdu->get_message().set_scheduleDeliveryTime("");
-				fixture->profileReg->putProfile(fixture->smeAddr, profile);
+				case 1: //ucs2 codepage
+					__tc__("updateProfile.dataCoding.ucs2CodepageMixedCase");
+					text = "uCS2";
+					intProps["codePage"] = ProfileCharsetOptions::Ucs2;
+					break;
+				case 2: //usc2 codepage
+					__tc__("updateProfile.dataCoding.ucs2CodepageSpaces");
+					text = "  Ucs2  ";
+					intProps["codePage"] = ProfileCharsetOptions::Ucs2;
+					break;
+				case 3: //default codepage
+					__tc__("updateProfile.dataCoding.defaultCodepageMixedCase");
+					text = "DeFauLT";
+					intProps["codePage"] = ProfileCharsetOptions::Default;
+					break;
+				case 4: //default codepage
+					__tc__("updateProfile.dataCoding.defaultCodepageSpaces");
+					text = "  dEfAUlt  ";
+					intProps["codePage"] = ProfileCharsetOptions::Default;
+					break;
+				default:
+					__unreachable__("Invalid num");
 			}
-			sendUpdateProfilePdu(pdu, text, sync, dataCoding, intProps);
+			sendUpdateProfilePdu(text, &intProps, NULL, NULL, sync, dataCoding);
 			__tc_ok__;
 		}
 		catch(...)
@@ -161,13 +180,9 @@ void SmppProfilerTestCases::updateProfileIncorrect(bool sync, uint8_t dataCoding
 	__tc__("updateProfile.incorrectCmdText");
 	try
 	{
-		PduSubmitSm* pdu = new PduSubmitSm();
-		__cfg_addr__(profilerAlias);
-		transmitter->setupRandomCorrectSubmitSmPdu(pdu, profilerAlias);
 		PduData::IntProps intProps;
 		intProps["incorrectCmdText"] = 1;
-		//задать кодировку, отправить и зарегистрировать pdu
-		sendUpdateProfilePdu(pdu, "Cmd Text", sync, dataCoding, intProps);
+		sendUpdateProfilePdu("Cmd Text", &intProps, NULL, NULL, sync, dataCoding);
 		__tc_ok__;
 
 	}
@@ -178,64 +193,40 @@ void SmppProfilerTestCases::updateProfileIncorrect(bool sync, uint8_t dataCoding
 	}
 }
 
-bool SmppProfilerTestCases::checkPdu(PduDeliverySm &pdu)
-{
-	__decl_tc__;
-	__cfg_addr__(profilerAlias);
-	__cfg_str__(profilerServiceType);
-	__cfg_int__(profilerProtocolId);
+#define __get_resp__(param, codepage) \
+	switch (codepage) { \
+		case ProfileCharsetOptions::Default: { \
+			static const pair<string, uint8_t> p = convert(param, codepage); \
+			return new ProfilerAck(p.first, p.second); \
+		} case ProfileCharsetOptions::Ucs2: { \
+			static const pair<string, uint8_t> p = convert(param, codepage); \
+			return new ProfilerAck(p.first, p.second); \
+		} default: \
+			__unreachable__("Invalid codepage"); \
+	}
 
-	__tc__("processUpdateProfile.checkFields");
-	Address srcAlias;
-	SmppUtil::convert(pdu.get_message().get_source(), &srcAlias);
-	if (srcAlias != profilerAlias)
-	{
-		__tc_fail__(1);
-	}
-	if (pdu.get_message().get_dataCoding() != DATA_CODING_SMSC_DEFAULT)
-	{
-		__tc_fail__(2);
-		return false;
-	}
-	if (profilerServiceType != pdu.get_message().get_serviceType())
-	{
-		__tc_fail__(3);
-	}
-	if (pdu.get_message().get_protocolId() != profilerProtocolId)
-	{
-		__tc_fail__(4);
-	}
-	__tc_ok_cond__;
-	return true;
-}
-
-void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
+ProfilerAck* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	PduDeliverySm &pdu)
 {
-	__require__(monitor);
 	__decl_tc__;
-	if (!checkPdu(pdu))
-	{
-		return;
-	}
-	//проверить и обновить профиль
 	Address addr;
 	SmppUtil::convert(pdu.get_message().get_dest(), &addr);
-	string text;
+	time_t t;
+	const Profile& profile = fixture->profileReg->getProfile(addr, t);
 	//проверка profiler reportOptions
 	if (monitor->pduData->intProps.count("reportOptions"))
 	{
-		__tc__("processUpdateProfile.reportOptions");
+		__tc__("processUpdateProfile.reportOptions.dataCoding"); __tc_ok__;
 		__cfg_str__(cmdRespReportNone);
 		__cfg_str__(cmdRespReportFull);
 		switch (monitor->pduData->intProps.find("reportOptions")->second)
 		{
 			case ProfileReportOptions::ReportNone:
-				text = cmdRespReportNone;
-				break;
+				__get_resp__(cmdRespReportNone, profile.codepage);
+				//break;
 			case ProfileReportOptions::ReportFull:
-				text = cmdRespReportFull;
-				break;
+				__get_resp__(cmdRespReportFull, profile.codepage);
+				//break;
 			default:
 				__unreachable__("Invalid reportoptions");
 		}
@@ -243,17 +234,17 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	//проверка profiler codePage
 	else if (monitor->pduData->intProps.count("codePage"))
 	{
-		__tc__("processUpdateProfile.codePage");
+		__tc__("processUpdateProfile.codePage.dataCoding"); __tc_ok__;
 		__cfg_str__(cmdRespDataCodingDefault);
 		__cfg_str__(cmdRespDataCodingUcs2);
 		switch (monitor->pduData->intProps.find("codePage")->second)
 		{
 			case ProfileCharsetOptions::Default:
-				text = cmdRespDataCodingDefault;
-				break;
+				__get_resp__(cmdRespDataCodingDefault, ProfileCharsetOptions::Default);
+				//break;
 			case ProfileCharsetOptions::Ucs2:
-				text = cmdRespDataCodingUcs2;
-				break;
+				__get_resp__(cmdRespDataCodingUcs2, ProfileCharsetOptions::Ucs2);
+				//break;
 			default:
 				__unreachable__("Invalid codepage");
 		}
@@ -261,25 +252,88 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	//неправильный текст команды
 	else if (monitor->pduData->intProps.count("incorrectCmdText"))
 	{
-		__tc__("processUpdateProfile.incorrectCmdText");
+		__tc__("processUpdateProfile.incorrectCmdText.dataCoding"); __tc_ok__;
 		__cfg_str__(cmdRespInvalidCmdText);
-		text = cmdRespInvalidCmdText;
+		__get_resp__(cmdRespInvalidCmdText, profile.codepage);
+		//return ...;
 	}
 	else
 	{
 		__tc_fail__(2);
 	}
-	//обновить профиль
-	if (text.length())
+	return NULL;
+}
+
+#define __check__(errCode, field, value) \
+	if (value != pdu.get_message().get_##field()) { \
+		__tc_fail__(errCode); \
+	}
+
+void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
+	PduDeliverySm &pdu)
+{
+	__require__(monitor);
+	__decl_tc__;
+	__cfg_addr__(profilerAlias);
+	__cfg_str__(profilerServiceType);
+	__cfg_int__(profilerProtocolId);
+
+	string text = decode(pdu.get_message().get_shortMessage(),
+		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding());
+	if (!monitor->pduData->objProps.count("output"))
 	{
-		string pduText = decode(pdu.get_message().get_shortMessage(),
-			pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding());
-		if (text != pduText)
+		ProfilerAck* ack = getExpectedResponse(monitor, pdu);
+		ack->ref();
+		monitor->pduData->objProps["output"] = ack;
+	}
+	ProfilerAck* ack =
+		dynamic_cast<ProfilerAck*>(monitor->pduData->objProps["output"]);
+	__require__(ack);
+	//проверить и обновить профиль
+	__tc__("processUpdateProfile.checkFields");
+	__check__(1, serviceType, profilerServiceType);
+	Address srcAlias;
+	SmppUtil::convert(pdu.get_message().get_source(), &srcAlias);
+	if (srcAlias != profilerAlias)
+	{
+		__tc_fail__(2);
+	}
+	__check__(3, dataCoding, ack->dataCoding);
+	__check__(4, protocolId, profilerProtocolId);
+	__check__(5, priorityFlag, 0);
+	__check__(6, registredDelivery, 0);
+	__check__(7, replaceIfPresentFlag, 0);
+    SmppOptional opt;
+	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());
+	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 10);
+	__tc_ok_cond__;
+	__tc__("processUpdateProfile.checkText");
+	int pos = ack->text.find(text);
+	__trace2__("profiler ack: pos = %d, received:\n%s\nexpected:\n%s\n",
+		pos, text.c_str(), ack->text.c_str());
+	if (pos == string::npos)
+	{
+		__tc_fail__(1);
+		monitor->setReceived();
+	}
+	else
+	{
+		__tc_ok__;
+		ack->text.erase(pos, text.length());
+		if (!ack->text.length())
 		{
-			__tc_fail__(1);
+			monitor->setReceived();
+		}
+		else
+		{
+			__tc__("processUpdateProfile.multipleMessages");
+			if (text.length() != getMaxChars(ack->dataCoding))
+			{
+				__tc_fail__(1);
+			}
+			__tc_ok_cond__;
 		}
 	}
-	__tc_ok_cond__;
 }
 
 }
