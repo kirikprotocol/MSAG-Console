@@ -20,6 +20,10 @@ import java.util.Set;
 
 public class Route
 {
+  public static final byte REPLAY_PATH_PASS = 0;
+  public static final byte REPLAY_PATH_FORCE = 1;
+  public static final byte REPLAY_PATH_SUPPRESS = 2;
+
   private String name = null;
   private SourceList src = null;
   private DestinationList dst = null;
@@ -34,12 +38,12 @@ public class Route
   private String deliveryMode = null;
   private String forwardTo = null;
   private boolean hide = false;
-  private boolean forceReplayPath = false;
+  private byte replayPath = REPLAY_PATH_PASS;
   private String notes = "";
   private boolean forceDelivery = false;
   private long aclId;
 
-  public Route(String routeName, int priority, boolean isEnabling, boolean isBilling, boolean isArchiving, boolean isSuppressDeliveryReports, boolean active, int serviceId, SourceList sources, DestinationList destinations, String srcSmeId, String deliveryMode, String forwardTo, boolean hide, boolean forceReplayPath, String notes, boolean forceDelivery, long aclId)
+  public Route(String routeName, int priority, boolean isEnabling, boolean isBilling, boolean isArchiving, boolean isSuppressDeliveryReports, boolean active, int serviceId, SourceList sources, DestinationList destinations, String srcSmeId, String deliveryMode, String forwardTo, boolean hide, byte replayPath, String notes, boolean forceDelivery, long aclId)
   {
     this.aclId = aclId;
     if (routeName == null)
@@ -65,7 +69,7 @@ public class Route
     this.deliveryMode = deliveryMode;
     this.forwardTo = forwardTo;
     this.hide = hide;
-    this.forceReplayPath = forceReplayPath;
+    this.replayPath = replayPath;
     this.notes = notes;
     this.forceDelivery = forceDelivery;
   }
@@ -91,7 +95,7 @@ public class Route
     deliveryMode = "default";
     forwardTo = "";
     hide = true;
-    forceReplayPath = false;
+    replayPath = REPLAY_PATH_PASS;
     notes = "";
     forceDelivery = false;
     aclId = -1;
@@ -116,7 +120,7 @@ public class Route
     deliveryMode = routeElem.getAttribute("deliveryMode");
     forwardTo = routeElem.getAttribute("forwardTo");
     hide = routeElem.getAttribute("hide").length() > 0 ? routeElem.getAttribute("hide").equalsIgnoreCase("true") : true;
-    forceReplayPath = routeElem.getAttribute("forceReplayPath").equalsIgnoreCase("true");
+    replayPath = getReplayPathValue(routeElem.getAttribute("replayPath"));
     notes = "";
     NodeList notesList = routeElem.getElementsByTagName("notes");
     for (int i = 0; i < notesList.getLength(); i++)
@@ -124,6 +128,34 @@ public class Route
     forceDelivery = Boolean.valueOf(routeElem.getAttribute("forceDelivery")).booleanValue();
     final String aclIdStr = routeElem.getAttribute("aclId");
     aclId = aclIdStr != null && aclIdStr.trim().length() > 0 ? Long.decode(aclIdStr).longValue() : -1;
+  }
+
+  public static byte getReplayPathValue(String replayPathStr)
+  {
+    if (replayPathStr == null || replayPathStr.length() == 0)
+      return REPLAY_PATH_PASS;
+    if (replayPathStr.equalsIgnoreCase("force"))
+      return REPLAY_PATH_FORCE;
+    if (replayPathStr.equalsIgnoreCase("suppress"))
+      return REPLAY_PATH_SUPPRESS;
+    if (replayPathStr.equalsIgnoreCase("pass"))
+      return REPLAY_PATH_PASS;
+
+    return REPLAY_PATH_PASS;
+  }
+
+  public static String getReplayPathValue(byte replayPath)
+  {
+    switch (replayPath) {
+      case REPLAY_PATH_FORCE:
+        return "force";
+      case REPLAY_PATH_SUPPRESS:
+        return "suppress";
+      case REPLAY_PATH_PASS:
+        return "pass";
+      default:
+        return "pass";
+    }
   }
 
   public String getName()
@@ -250,7 +282,7 @@ public class Route
                 + "\" active=\"" + isActive() + "\" srcSmeId=\"" + StringEncoderDecoder.encode(getSrcSmeId())
                 + "\" deliveryMode=\"" + StringEncoderDecoder.encode(getDeliveryMode())
                 + "\" hide=\"" + (isHide() ? "true" : "false")
-                + "\" forceReplayPath=\"" + (isForceReplayPath() ? "true" : "false")
+                + "\" replayPath=\"" + getReplayPathValue(getReplayPath())
                 + ("MAP_PROXY".equals(getSrcSmeId()) ? "\" forwardTo=\"" + StringEncoderDecoder.encode(getForwardTo()) : "")
                 + "\" aclId=\"" + getAclId()
                 + "\">");
@@ -342,14 +374,14 @@ public class Route
     this.hide = hide;
   }
 
-  public boolean isForceReplayPath()
+  public byte getReplayPath()
   {
-    return forceReplayPath;
+    return replayPath;
   }
 
-  public void setForceReplayPath(boolean forceReplayPath)
+  public void setReplayPath(byte replayPath)
   {
-    this.forceReplayPath = forceReplayPath;
+    this.replayPath = replayPath;
   }
 
   public String getNotes()

@@ -101,10 +101,11 @@ public class RouteAddCommand extends RouteGenCommand
         }
       }
 
+      //todo: change replayPath<boolean> to replayPath<byte>
       //todo: add aclId
       smscRoute = new Route(route, priority, allow, bill, arc, !receipt,
                             active, serviceid, srcList, dstList, srcSmeId, deliveryMode, forwardTo,
-                            hide, forceReplayPath, notes, forceDelivery, -1);
+                            hide, Route.REPLAY_PATH_PASS, notes, forceDelivery, -1);
 
       if (priority < 0 || priority > 32000)
         throw new Exception("Priority value should be between 0 and 32000");

@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.jsp.smsc.routes;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.Route;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.util.SortedList;
 
@@ -37,7 +38,7 @@ public class RouteBody extends SmscBean
   protected String deliveryMode = null;
   protected String forwardTo = null;
   protected boolean hide = false;
-  protected boolean forceReplayPath = false;
+  protected byte replayPath = Route.REPLAY_PATH_PASS;
   protected String notes = "";
   protected boolean forceDelivery = false;
   protected long aclId = -1;
@@ -294,14 +295,14 @@ public class RouteBody extends SmscBean
     this.hide = hide;
   }
 
-  public boolean isForceReplayPath()
+  public byte getReplayPath()
   {
-    return forceReplayPath;
+    return replayPath;
   }
 
-  public void setForceReplayPath(boolean forceReplayPath)
+  public void setReplayPath(byte replayPath)
   {
-    this.forceReplayPath = forceReplayPath;
+    this.replayPath = replayPath;
   }
 
   public String getNotes()

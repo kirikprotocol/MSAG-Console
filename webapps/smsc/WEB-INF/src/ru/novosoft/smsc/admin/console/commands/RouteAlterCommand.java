@@ -73,7 +73,7 @@ public class RouteAlterCommand extends RouteGenCommand
                                  oldRoute.isActive(), oldRoute.getServiceId(),
                                  oldRoute.getSources(), oldRoute.getDestinations(),
                                  oldRoute.getSrcSmeId(), oldRoute.getDeliveryMode(), oldRoute.getForwardTo(),
-                                 oldRoute.isHide(), oldRoute.isForceReplayPath(), oldRoute.getNotes(),
+                                 oldRoute.isHide(), oldRoute.getReplayPath(), oldRoute.getNotes(),
                                  oldRoute.isForceDelivery(), -1);
 
       if (target == TARGET_SRC) {
@@ -212,7 +212,8 @@ public class RouteAlterCommand extends RouteGenCommand
       if (isSrcSmeId) newRoute.setSrcSmeId(srcSmeId);
       if (isHide) newRoute.setHide(hide);
       if (isNotes) newRoute.setNotes(notes);
-      if (isForceReplayPath) newRoute.setForceReplayPath(forceReplayPath);
+      //todo: change replayPath<boolean> to replayPath<byte>
+      if (isForceReplayPath) newRoute.setReplayPath(Route.REPLAY_PATH_FORCE);
       if (isForceDelivery) newRoute.setForceDelivery(forceDelivery);
 
       list.remove(oldRoute.getName());

@@ -61,7 +61,7 @@ public class RoutesEdit extends RouteBody
         deliveryMode = r.getDeliveryMode();
         forwardTo = r.getForwardTo();
         hide = r.isHide();
-        forceReplayPath = r.isForceReplayPath();
+        replayPath = r.getReplayPath();
         notes = r.getNotes();
 
         for (int i = 0; i < checkedDestinations.length; i++) {
@@ -176,7 +176,7 @@ public class RoutesEdit extends RouteBody
         return error(SMSCErrors.error.routes.destinationsIsEmpty);
 
       routeSubjectManager.getRoutes().remove(oldRouteId);
-      routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId, deliveryMode, forwardTo, hide, forceReplayPath, notes, forceDelivery, aclId));
+      routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId, deliveryMode, forwardTo, hide, replayPath, notes, forceDelivery, aclId));
       if (oldRouteId.equals(routeId))
         journalAppend(SubjectTypes.TYPE_route, routeId, Actions.ACTION_MODIFY);
       else

@@ -1,6 +1,7 @@
 <%@ page import="ru.novosoft.smsc.util.*,
                  java.util.*,
-                 ru.novosoft.smsc.admin.acl.AclInfo"%>
+                 ru.novosoft.smsc.admin.acl.AclInfo,
+                 ru.novosoft.smsc.admin.route.Route"%>
 <div class=content>
 <%int rowN = 0;%>
 <script>
@@ -78,6 +79,14 @@ function srcSmeIdChanged()
         </select></div>
       </td>
     </tr>
+		<tr>
+      <th>replay path</th>
+			<td colspan="2"><select name="replayPath">
+        <option value="<%=Route.REPLAY_PATH_PASS%>"     <%=bean.getReplayPath() == Route.REPLAY_PATH_PASS     ? "selected" : ""%>>pass</option>
+        <option value="<%=Route.REPLAY_PATH_FORCE%>"    <%=bean.getReplayPath() == Route.REPLAY_PATH_FORCE    ? "selected" : ""%>>force</option>
+        <option value="<%=Route.REPLAY_PATH_SUPPRESS%>" <%=bean.getReplayPath() == Route.REPLAY_PATH_SUPPRESS ? "selected" : ""%>>suppress</option>
+      </td>
+		</tr>
 		</table>
 	</td>
 	<td>&nbsp;</td>
@@ -109,10 +118,6 @@ function srcSmeIdChanged()
 		<tr>
 			<td><input id=hide class=check type=checkbox name=hide <%=bean.isHide() ? "checked" : ""%>></td>
 			<td><label for=hide style="padding-left:4px;">hide</label></td>
-		</tr>
-		<tr>
-			<td><input id=forceReplayPath class=check type=checkbox name=forceReplayPath <%=bean.isForceReplayPath() ? "checked" : ""%>></td>
-			<td><label for=forceReplayPath style="padding-left:4px;">force replay path</label></td>
 		</tr>
 		<tr>
 			<td><input id=forceDelivery class=check type=checkbox name=forceDelivery <%=bean.isForceDelivery() ? "checked" : ""%>></td>
