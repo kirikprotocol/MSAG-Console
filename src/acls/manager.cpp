@@ -111,13 +111,14 @@ AclInfo AclManager::getInfo(AclIdent aclident)
   if(!statement.get())throw Exception(ACLMGRPREFIX"Failed to create statement");
   auto_ptr<ResultSet> rs(statement->executeQuery());
   if(!rs.get())throw Exception(ACLMGRPREFIX"Failed to make a query to DB");
-  if ( rs->fetchNext() ) 
+  if ( rs->fetchNext() ) {
+    const char* cache_type = rs->getString(4);
     return MakeAclInfo(
             rs->getInt32(1),
             rs->getString(2),
             rs->getString(3),
-            MakeAclCacheType(rs->getString(4)[0]));
-  else throw Exception(ACLMGRPREFIX"Has no requested records");
+            (cache_type?MakeAclCacheType(cache_type[0]):ACT_UNKNOWN));
+  }else throw Exception(ACLMGRPREFIX"Has no requested records");
 }
 
 void AclManager::remove(AclIdent aclident)

@@ -1,3 +1,5 @@
+#ifndef SMSC_ACLS_INTERFACES_H
+#define SMSC_ACLS_INTERFACES_H
 
 #include <string>
 #include <vector>
@@ -37,8 +39,12 @@ struct AclInfo
   AclDescription  desctiption;
   AclCacheType    cache;
 };
-inline AclInfo MakeAclInfo(AclIdent ident,AclName name,AclDescription desc,AclCacheType cache)
+inline AclInfo MakeAclInfo(AclIdent ident,const char * name,const char * desc,AclCacheType cache)
 {
+  if (name != NULL)
+    name = "";
+  if (desc != NULL)
+    desc = "";
   AclInfo aclinfo = { ident,name,desc,cache };
   return aclinfo;
 }
@@ -95,3 +101,5 @@ struct AclAbstractMgr : public AclEditor, public AclLookuper
 
 } // acls namespace
 } // smsc namespace
+
+#endif //#ifndef SMSC_ACLS_INTERFACES_H
