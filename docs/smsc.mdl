@@ -161,6 +161,10 @@
 |- Activity: Find Actors and Use Cases
 |- Guidelines: Actor>>
 				
+				stereotype 	"Actor")
+			    (object Class "MS"
+				quid       	"3C3C759800DE"
+				documentation 	"mobile station"
 				stereotype 	"Actor"))
 			logical_presentations 	(list unit_reference_list))
 		    (object Class_Category "Use Cases"
@@ -310,7 +314,7 @@
 							    location   	(448, 1184)
 							    anchor_loc 	1
 							    nlines     	2
-							    max_width  	331
+							    max_width  	335
 							    justify    	0
 							    label      	"<Actor Name>")
 							icon       	"Actor"
@@ -541,7 +545,7 @@
 				    location   	(528, 1136)
 				    anchor_loc 	1
 				    nlines     	2
-				    max_width  	331
+				    max_width  	335
 				    justify    	0
 				    label      	"<Actor Name>")
 				icon       	"Actor"
@@ -1478,7 +1482,7 @@
 			max_height 	28350
 			max_width  	21600
 			origin_x   	0
-			origin_y   	900
+			origin_y   	0
 			items      	(list diagram_item_list
 			    (object CategoryView "Logical View::Design Model::SC core" @43
 				location   	(1232, 784)
@@ -1896,53 +1900,79 @@
     process_structure 	(object Processes
 	quid       	"34DBB4830144"
 	ProcsNDevs 	(list
-	    (object Processor "<processor name>"
+	    (object Processor "SMSC Server"
 		quid       	"34DBBD4300B4"
-		documentation 	"This node provides <enter a short description here of the functionality and capability of the node>."
+		documentation 	
+|This node provides a capability to store and forward of SMS to MSC and SMPP functions to SME
+|
+		
 		connections 	(list connection_list
 		    (object Connection_Relationship
 			quid       	"34DBBD4B008C"
-			supplier   	"<device name>"
+			supplier   	"SS7 interface"
+			quidu      	"34DBBD47019A"
+			supplier_is_device 	TRUE))
+		characteristics 	""
+		scheduling 	"Executive"
+		processes  	(list processes))
+	    (object Processor "SME"
+		quid       	"3C3C76BA00B3"
+		documentation 	"Short message entity"
+		connections 	(list connection_list
+		    (object Connection_Relationship
+			quid       	"3C3C770701B8"
+			supplier   	"TCP/IP interface"
+			quidu      	"3C3C76080017"
+			supplier_is_device 	TRUE))
+		characteristics 	""
+		scheduling 	"Executive"
+		processes  	(list processes))
+	    (object Processor "MSC"
+		quid       	"3C3C77C9013F"
+		documentation 	"mobile switch center"
+		connections 	(list connection_list
+		    (object Connection_Relationship
+			quid       	"3C3C7A8B0040"
+			supplier   	"SS7 interface"
 			quidu      	"34DBBD47019A"
 			supplier_is_device 	TRUE))
 		characteristics 	""
 		scheduling 	"Preemptive"
-		processes  	(list processes
-		    (object Process "<process name>"
-			quid       	"35DB411001D6"
-			documentation 	"This process corresponds to the process with the same name in the Logical View::Process Model."
-			stereotype 	"process"
-			priority   	"")
-		    (object Process "<thread name>"
-			quid       	"35DB41720348"
-			documentation 	"This process corresponds to the thread with the same name in the Logical View::Process Model."
-			stereotype 	"thread"
-			priority   	"")))
-	    (object Device "<device name>"
+		processes  	(list processes))
+	    (object Device "SS7 interface"
 		quid       	"34DBBD47019A"
-		documentation 	"This device provides <enter a short description of the capability the device provides> for the system."
+		connections 	(list connection_list
+		    (object Connection_Relationship
+			quid       	"3C3C7A920339"
+			supplier   	"SS7 interface"
+			quidu      	"34DBBD47019A"
+			supplier_is_device 	TRUE))
+		characteristics 	"Ericsson ISR-PCI")
+	    (object Device "TCP/IP interface"
+		quid       	"3C3C76080017"
+		connections 	(list connection_list
+		    (object Connection_Relationship
+			quid       	"3C3C76530015"
+			supplier   	"SMSC Server"
+			quidu      	"34DBBD4300B4"
+			supplier_is_device 	FALSE)
+		    (object Connection_Relationship
+			quid       	"3C3C7719038B"
+			supplier   	"TCP/IP interface"
+			quidu      	"3C3C76080017"
+			supplier_is_device 	TRUE))
 		characteristics 	"")
 	    (object Process_Diagram "Deployment View"
 		quid       	"34DBB4830146"
 		title      	"Deployment View"
-		documentation 	
-|The Deployment View in Rational Unified Process
-|
-|Defines the typical physical network configurations, including those typically used by end users, as well as special configurations used for development and test.
-|
-|See Rational Unified Process:
-|Activity: Describe Distribution
-|
-|This diagram will be a part of  the SoDA template-generated Software Architecture Document under the "Deployment  View" .
-		
 		zoom       	100
 		max_height 	28350
 		max_width  	21600
 		origin_x   	0
 		origin_y   	0
 		items      	(list diagram_item_list
-		    (object ProcessorView "<processor name>" @58
-			location   	(512, 1056)
+		    (object ProcessorView "SMSC Server" @58
+			location   	(1056, 496)
 			font       	(object Font
 			    size       	9
 			    face       	"Arial"
@@ -1955,18 +1985,19 @@
 			    default_color 	TRUE)
 			label      	(object ItemLabel
 			    Parent_View 	@58
-			    location   	(276, 900)
+			    location   	(708, 253)
 			    nlines     	2
-			    max_width  	400
+			    max_width  	625
 			    justify    	0
-			    label      	"<processor name>")
+			    label      	"SMSC Server")
 			icon_style 	"Label"
+			line_color 	4210816
 			quidu      	"34DBBD4300B4"
-			width      	475
-			height     	381
+			width      	700
+			height     	556
 			annotation 	3)
-		    (object DeviceView "<device name>" @59
-			location   	(1040, 1056)
+		    (object DeviceView "SS7 interface" @59
+			location   	(1184, 976)
 			font       	(object Font
 			    size       	9
 			    face       	"Arial"
@@ -1979,24 +2010,26 @@
 			    default_color 	TRUE)
 			label      	(object ItemLabel
 			    Parent_View 	@59
-			    location   	(867, 950)
+			    location   	(1061, 911)
 			    nlines     	2
-			    max_width  	275
+			    max_width  	175
 			    justify    	0
-			    label      	"<device name>")
+			    label      	"SS7 interface")
 			icon_style 	"Icon"
+			line_color 	4210816
 			quidu      	"34DBBD47019A"
-			width      	350
-			height     	282
+			width      	250
+			height     	200
 			annotation 	0)
 		    (object ConnectionView "" @60
 			stereotype 	TRUE
+			line_color 	4210816
 			quidu      	"34DBBD4B008C"
 			client     	@58
 			supplier   	@59
 			line_style 	0)
-		    (object NoteView @61
-			location   	(816, 304)
+		    (object DeviceView "TCP/IP interface" @61
+			location   	(848, 992)
 			font       	(object Font
 			    size       	9
 			    face       	"Arial"
@@ -2009,24 +2042,267 @@
 			    default_color 	TRUE)
 			label      	(object ItemLabel
 			    Parent_View 	@61
-			    location   	(38, 29)
-			    fill_color 	13434879
-			    nlines     	11
-			    max_width  	1521
+			    location   	(737, 937)
+			    nlines     	2
+			    max_width  	150
+			    justify    	0
+			    label      	"TCP/IP interface")
+			icon_style 	"Icon"
+			line_color 	4210816
+			quidu      	"3C3C76080017"
+			width      	225
+			height     	180
+			annotation 	0)
+		    (object ConnectionView "" @62
+			stereotype 	TRUE
+			line_color 	4210816
+			quidu      	"3C3C76530015"
+			client     	@61
+			supplier   	@58
+			line_style 	0)
+		    (object ProcessorView "SME" @63
+			location   	(256, 512)
+			font       	(object Font
+			    size       	9
+			    face       	"Arial"
+			    charSet    	204
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			label      	(object ItemLabel
+			    Parent_View 	@63
+			    location   	(145, 457)
+			    nlines     	2
+			    max_width  	150
+			    justify    	0
+			    label      	"SME")
+			icon_style 	"Icon"
+			line_color 	4210816
+			quidu      	"3C3C76BA00B3"
+			width      	225
+			height     	180
+			annotation 	0)
+		    (object DeviceView "TCP/IP interface" @64
+			location   	(256, 992)
+			font       	(object Font
+			    size       	9
+			    face       	"Arial"
+			    charSet    	204
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			label      	(object ItemLabel
+			    Parent_View 	@64
+			    location   	(145, 937)
+			    nlines     	2
+			    max_width  	150
+			    justify    	0
+			    label      	"TCP/IP interface")
+			icon_style 	"Icon"
+			line_color 	4210816
+			quidu      	"3C3C76080017"
+			width      	225
+			height     	180
+			annotation 	0)
+		    (object ConnectionView "" @65
+			stereotype 	TRUE
+			line_color 	4210816
+			quidu      	"3C3C770701B8"
+			client     	@63
+			supplier   	@64
+			line_style 	0)
+		    (object ConnectionView "" @66
+			stereotype 	TRUE
+			line_color 	4210816
+			quidu      	"3C3C7719038B"
+			client     	@64
+			supplier   	@61
+			line_style 	0)
+		    (object NoteView @67
+			location   	(544, 848)
+			font       	(object Font
+			    size       	9
+			    face       	"Arial"
+			    charSet    	204
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			label      	(object ItemLabel
+			    Parent_View 	@67
+			    location   	(406, 788)
+			    nlines     	2
+			    max_width  	240
+			    label      	"SMPP protocol")
+			line_color 	4210816
+			fill_color 	16777215
+			width      	300
+			height     	132)
+		    (object AttachView "" @68
+			stereotype 	TRUE
+			line_color 	4210816
+			client     	@67
+			supplier   	@66
+			line_style 	0)
+		    (object NoteView @69
+			location   	(1184, 1232)
+			font       	(object Font
+			    size       	9
+			    face       	"Arial"
+			    charSet    	204
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			label      	(object ItemLabel
+			    Parent_View 	@69
+			    location   	(1006, 1173)
+			    nlines     	2
+			    max_width  	321
+			    label      	"Ericsson ISR-PCI signalling board")
+			line_color 	4210816
+			fill_color 	16777215
+			width      	381
+			height     	131)
+		    (object AttachView "" @70
+			stereotype 	TRUE
+			line_color 	4210816
+			client     	@69
+			supplier   	@59
+			line_style 	0)
+		    (object ProcessorView "MSC" @71
+			location   	(1920, 528)
+			font       	(object Font
+			    size       	9
+			    face       	"Arial"
+			    charSet    	204
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			label      	(object ItemLabel
+			    Parent_View 	@71
+			    location   	(1809, 473)
+			    nlines     	2
+			    max_width  	150
+			    justify    	0
+			    label      	"MSC")
+			icon_style 	"Icon"
+			line_color 	4210816
+			quidu      	"3C3C77C9013F"
+			width      	225
+			height     	180
+			annotation 	0)
+		    (object DeviceView "SS7 interface" @72
+			location   	(1920, 976)
+			font       	(object Font
+			    size       	9
+			    face       	"Arial"
+			    charSet    	204
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			label      	(object ItemLabel
+			    Parent_View 	@72
+			    location   	(1809, 921)
+			    nlines     	2
+			    max_width  	150
+			    justify    	0
+			    label      	"SS7 interface")
+			icon_style 	"Icon"
+			line_color 	4210816
+			quidu      	"34DBBD47019A"
+			width      	225
+			height     	180
+			annotation 	0)
+		    (object ConnectionView "" @73
+			stereotype 	TRUE
+			line_color 	4210816
+			quidu      	"3C3C7A8B0040"
+			client     	@71
+			supplier   	@72
+			line_style 	0)
+		    (object ConnectionView "" @74
+			stereotype 	TRUE
+			line_color 	4210816
+			quidu      	"3C3C7A920339"
+			client     	@59
+			supplier   	@72
+			line_style 	0)
+		    (object NoteView @75
+			location   	(1552, 864)
+			font       	(object Font
+			    size       	9
+			    face       	"Arial"
+			    charSet    	204
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			label      	(object ItemLabel
+			    Parent_View 	@75
+			    location   	(1414, 804)
+			    nlines     	2
+			    max_width  	240
+			    label      	"MAP protocol")
+			line_color 	4210816
+			fill_color 	16777215
+			width      	300
+			height     	132)
+		    (object AttachView "" @76
+			stereotype 	TRUE
+			line_color 	4210816
+			client     	@75
+			supplier   	@74
+			line_style 	0)
+		    (object NoteView @77
+			location   	(1056, 80)
+			font       	(object Font
+			    size       	9
+			    face       	"Arial"
+			    charSet    	204
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			label      	(object ItemLabel
+			    Parent_View 	@77
+			    location   	(918, 20)
+			    nlines     	2
+			    max_width  	240
 			    label      	
-|This Diagram defines the typical physical network configurations, including those typically used by end users, as well as special configurations used for development and test.
-|
-|· Allocate processes to the various nodes. Allocation takes into account the capacity of the nodes (in terms of
-|both memory and processing), bandwidth of the communication medium (bus, LANs, WANs), and the
-|availability of the hardware and communication links, rerouting, and so on.
-|
-|See, Rational Unified Process:
-|Activity: Describe Distribution
+|Sun SPARC
+|Solaris 2.6
 			    )
-			line_color 	3342489
-			fill_color 	13434879
-			width      	1581
-			height     	563)))))
+			line_color 	4210816
+			fill_color 	16777215
+			width      	300
+			height     	132)
+		    (object AttachView "" @78
+			stereotype 	TRUE
+			line_color 	4210816
+			client     	@77
+			supplier   	@58
+			line_style 	0)))))
     properties 	(object Properties
 	attributes 	(list Attribute_Set
 	    (object Attribute
