@@ -2,6 +2,7 @@
 #define __SMSC_STORE_INDEX_SMSINDEX_HPP__
 
 #include <string>
+#include <list>
 #include "util/int.h"
 #include "core/buffers/DiskHash.hpp"
 #include "core/buffers/ChunkFile.hpp"
@@ -84,9 +85,42 @@ public:
   void Init(ConfigView*);
   void IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms);
   int QuerySms(const char* dir,const ParamArray& params,ResultArray& res);
-  void BeginTransaction(){}
-  void EndTransaction(){}
-  void RollBack(){}
+  void BeginTransaction()
+  {
+    //
+  }
+  void EndTransaction()
+  {
+    cache.First();
+    char* k;
+    CacheItem*  v;
+    std::list<std::string> toKill;
+    time_t now=time(NULL);
+    while(cache.Next(k,v))
+    {
+      v->ds.Flush();
+      if(now-v->lastUsage>8*60*60)
+      {
+        toKill.push_back(k);
+      }
+    }
+
+    for(std::list<std::string>::iterator i=toKill.begin();i!=toKill.end();i++)
+    {
+      delete cache.Get(i->c_str());
+      cache.Delete(i->c_str());
+    }
+  }
+  void RollBack()
+  {
+    char* k;
+    CacheItem*  v;
+    while(cache.Next(k,v))
+    {
+      v->ds.Discard();
+    }
+  }
+
 protected:
   std::string loc;
 
@@ -105,22 +139,101 @@ protected:
     Hash<int> smeAddrChunkSize;
   }config;
 
-  std::string cacheDir;
-  Hash<AutoChunkHandle> srcIdCache,dstIdCache,routeIdCache;
-  Hash<uint64_t> srcAddrCache,dstAddrCache;
+  struct DataSet{
 
-  RefPtr<SmsIdDiskHash> idHashCache;
-  RefPtr<SmeIdDiskHash> srcIdHashCache;
-  RefPtr<SmeIdDiskHash> dstIdHashCache;
-  RefPtr<RouteIdDiskHash> routeIdHashCache;
-  RefPtr<AddrDiskHash> srcAddrHashCache;
-  RefPtr<AddrDiskHash> dstAddrHashCache;
+    void CreateNew()
+    {
+      idHash=new SmsIdDiskHash;
+      srcIdHash=new SmeIdDiskHash;
+      dstIdHash=new SmeIdDiskHash;
+      routeIdHash=new RouteIdDiskHash;
+      srcAddrHash=new AddrDiskHash;
+      dstAddrHash=new AddrDiskHash;
 
-  RefPtr<IntLttChunkFile> srcIdDataCache;
-  RefPtr<IntLttChunkFile> dstIdDataCache;
-  RefPtr<IntLttChunkFile> srcAddrDataCache;
-  RefPtr<IntLttChunkFile> dstAddrDataCache;
-  RefPtr<IntLttChunkFile> routeIdDataCache;
+      srcIdData=new IntLttChunkFile;
+      dstIdData=new IntLttChunkFile;
+      srcAddrData=new IntLttChunkFile;
+      dstAddrData=new IntLttChunkFile;
+      routeIdData=new IntLttChunkFile;
+    }
+
+    File::offset_type Size()
+    {
+      return
+        idHash->Size()+
+        srcIdHash->Size()+
+        dstIdHash->Size()+
+        routeIdHash->Size()+
+        srcAddrHash->Size()+
+        dstAddrHash->Size()+
+
+        srcIdData->Size()+
+        dstIdData->Size()+
+        srcAddrData->Size()+
+        dstAddrData->Size()+
+        routeIdData->Size();
+    }
+
+    void Flush()
+    {
+      idHash->Flush();
+      srcIdHash->Flush();
+      dstIdHash->Flush();
+      routeIdHash->Flush();
+      srcAddrHash->Flush();
+      dstAddrHash->Flush();
+
+      srcIdData->Flush();
+      dstIdData->Flush();
+      srcAddrData->Flush();
+      dstAddrData->Flush();
+      routeIdData->Flush();
+    }
+
+    void Discard()
+    {
+      idHash->DiscardCache();
+      srcIdHash->DiscardCache();
+      dstIdHash->DiscardCache();
+      routeIdHash->DiscardCache();
+      srcAddrHash->DiscardCache();
+      dstAddrHash->DiscardCache();
+
+      srcIdData->DiscardCache();
+      dstIdData->DiscardCache();
+      srcAddrData->DiscardCache();
+      dstAddrData->DiscardCache();
+      routeIdData->DiscardCache();
+    }
+
+
+    RefPtr<SmsIdDiskHash> idHash;
+    RefPtr<SmeIdDiskHash> srcIdHash;
+    RefPtr<SmeIdDiskHash> dstIdHash;
+    RefPtr<RouteIdDiskHash> routeIdHash;
+    RefPtr<AddrDiskHash> srcAddrHash;
+    RefPtr<AddrDiskHash> dstAddrHash;
+
+    RefPtr<IntLttChunkFile> srcIdData;
+    RefPtr<IntLttChunkFile> dstIdData;
+    RefPtr<IntLttChunkFile> srcAddrData;
+    RefPtr<IntLttChunkFile> dstAddrData;
+    RefPtr<IntLttChunkFile> routeIdData;
+  };
+
+  struct CacheItem;
+  friend struct smsc::store::index::SmsIndex::CacheItem;
+
+  struct CacheItem{
+    time_t lastUsage;
+    DataSet ds;
+  };
+
+  Hash<CacheItem*> cache;
+  //std::string cacheDir;
+  //Hash<AutoChunkHandle> srcIdCache,dstIdCache,routeIdCache;
+  //Hash<uint64_t> srcAddrCache,dstAddrCache;
+
 };
 
 }//namespace index

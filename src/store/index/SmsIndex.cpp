@@ -47,188 +47,81 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
   path+=dir;
   path+='/';
 
-  RefPtr<SmsIdDiskHash> idHash;
-  RefPtr<SmeIdDiskHash> srcIdHash;
-  RefPtr<SmeIdDiskHash> dstIdHash;
-  RefPtr<RouteIdDiskHash> routeIdHash;
-  RefPtr<AddrDiskHash> srcAddrHash;
-  RefPtr<AddrDiskHash> dstAddrHash;
+  DataSet ds;
 
-  RefPtr<IntLttChunkFile> srcIdData;
-  RefPtr<IntLttChunkFile> dstIdData;
-  RefPtr<IntLttChunkFile> srcAddrData;
-  RefPtr<IntLttChunkFile> dstAddrData;
-  RefPtr<IntLttChunkFile> routeIdData;
-
-
+  bool cached=true;
 
   if(!File::Exists((path+"smsid.idx").c_str()))
   {
-    srcIdCache.Empty();
-    dstIdCache.Empty();
-    routeIdCache.Empty();
-    srcAddrCache.Empty();
-    dstAddrCache.Empty();
+    ds.CreateNew();
 
-    cacheDir=dir;
+    ds.idHash->Create((path+"smsid.idx").c_str(),config.smsIdHashSize,cached);//!!!!!!!!!!!!!!!!!!!!!
 
-    idHashCache=new SmsIdDiskHash;
-    srcIdHashCache=new SmeIdDiskHash;
-    dstIdHashCache=new SmeIdDiskHash;
-    routeIdHashCache=new RouteIdDiskHash;
-    srcAddrHashCache=new AddrDiskHash;
-    dstAddrHashCache=new AddrDiskHash;
+    ds.srcIdHash->Create((path+"srcsmeid.idx").c_str(),config.smeIdHashSize,cached);
+    ds.srcIdData->Create((path+"srcsmeid.dat").c_str(),config.smeIdRootSize,cached);
 
-    srcIdDataCache=new IntLttChunkFile;
-    dstIdDataCache=new IntLttChunkFile;
-    srcAddrDataCache=new IntLttChunkFile;
-    dstAddrDataCache=new IntLttChunkFile;
-    routeIdDataCache=new IntLttChunkFile;
+    ds.dstIdHash->Create((path+"dstsmeid.idx").c_str(),config.smeIdHashSize,cached);
+    ds.dstIdData->Create((path+"dstsmeid.dat").c_str(),config.smeIdRootSize,cached);
 
-    idHash=idHashCache;
-    srcIdHash=srcIdHashCache;
-    dstIdHash=dstIdHashCache;
-    routeIdHash=routeIdHashCache;
-    srcAddrHash=srcAddrHashCache;
-    dstAddrHash=dstAddrHashCache;
+    ds.routeIdHash->Create((path+"routeid.idx").c_str(),config.routeIdHashSize,cached);
+    ds.routeIdData->Create((path+"routeid.dat").c_str(),config.routeIdRootSize,cached);
 
-    srcIdData=srcIdDataCache;
-    dstIdData=dstIdDataCache;
-    srcAddrData=srcAddrDataCache;
-    dstAddrData=dstAddrDataCache;
-    routeIdData=routeIdDataCache;
+    ds.srcAddrHash->Create((path+"srcaddr.idx").c_str(),config.addrHashSize,cached);
+    ds.srcAddrData->Create((path+"srcaddr.dat").c_str(),config.addrRootSize,cached);
 
+    ds.dstAddrHash->Create((path+"dstaddr.idx").c_str(),config.addrHashSize,cached);
+    ds.dstAddrData->Create((path+"dstaddr.dat").c_str(),config.addrRootSize,cached);
 
-
-    idHash->Create((path+"smsid.idx").c_str(),config.smsIdHashSize);//!!!!!!!!!!!!!!!!!!!!!
-
-    srcIdHash->Create((path+"srcsmeid.idx").c_str(),config.smeIdHashSize);
-    srcIdData->Create((path+"srcsmeid.dat").c_str(),config.smeIdRootSize);
-
-    dstIdHash->Create((path+"dstsmeid.idx").c_str(),config.smeIdHashSize);
-    dstIdData->Create((path+"dstsmeid.dat").c_str(),config.smeIdRootSize);
-
-    routeIdHash->Create((path+"routeid.idx").c_str(),config.routeIdHashSize);
-    routeIdData->Create((path+"routeid.dat").c_str(),config.routeIdRootSize);
-
-    srcAddrHash->Create((path+"srcaddr.idx").c_str(),config.addrHashSize);
-    srcAddrData->Create((path+"srcaddr.dat").c_str(),config.addrRootSize);
-
-    dstAddrHash->Create((path+"dstaddr.idx").c_str(),config.addrHashSize);
-    dstAddrData->Create((path+"dstaddr.dat").c_str(),config.addrRootSize);
+    CacheItem *ci=new CacheItem;
+    ci->ds=ds;
+    ci->lastUsage=time(NULL);
+    cache.Insert(dir,ci);
   }else
   {
-    if(cacheDir==dir)
+    if(cache.Exists(dir))
     {
-      //__trace__("IDX: use cached values");
-      idHash=idHashCache;
-      srcIdHash=srcIdHashCache;
-      dstIdHash=dstIdHashCache;
-      routeIdHash=routeIdHashCache;
-      srcAddrHash=srcAddrHashCache;
-      dstAddrHash=dstAddrHashCache;
-
-      srcIdData=srcIdDataCache;
-      dstIdData=dstIdDataCache;
-      srcAddrData=srcAddrDataCache;
-      dstAddrData=dstAddrDataCache;
-      routeIdData=routeIdDataCache;
+      ds=cache.Get(dir)->ds;
+      cache.Get(dir)->lastUsage=time(NULL);
     }else
     {
-      //__warning__("IDX: reopen files");
-      idHash=new SmsIdDiskHash;
-      srcIdHash=new SmeIdDiskHash;
-      dstIdHash=new SmeIdDiskHash;
-      routeIdHash=new RouteIdDiskHash;
-      srcAddrHash=new AddrDiskHash;
-      dstAddrHash=new AddrDiskHash;
+      ds.CreateNew();
 
-      srcIdData=new IntLttChunkFile;
-      dstIdData=new IntLttChunkFile;
-      srcAddrData=new IntLttChunkFile;
-      dstAddrData=new IntLttChunkFile;
-      routeIdData=new IntLttChunkFile;
+      ds.idHash->Open((path+"smsid.idx").c_str(),false,cached);
 
-      idHash->Open((path+"smsid.idx").c_str(),false);
+      ds.srcIdHash->Open((path+"srcsmeid.idx").c_str(),false,cached);
+      ds.srcIdData->Open((path+"srcsmeid.dat").c_str(),false,cached);
 
-      srcIdHash->Open((path+"srcsmeid.idx").c_str(),false);
-      srcIdData->Open((path+"srcsmeid.dat").c_str(),false);
+      ds.dstIdHash->Open((path+"dstsmeid.idx").c_str(),false,cached);
+      ds.dstIdData->Open((path+"dstsmeid.dat").c_str(),false,cached);
 
-      dstIdHash->Open((path+"dstsmeid.idx").c_str(),false);
-      dstIdData->Open((path+"dstsmeid.dat").c_str(),false);
+      ds.routeIdHash->Open((path+"routeid.idx").c_str(),false,cached);
+      ds.routeIdData->Open((path+"routeid.dat").c_str(),false,cached);
 
-      routeIdHash->Open((path+"routeid.idx").c_str(),false);
-      routeIdData->Open((path+"routeid.dat").c_str(),false);
+      ds.srcAddrHash->Open((path+"srcaddr.idx").c_str(),false,cached);
+      ds.srcAddrData->Open((path+"srcaddr.dat").c_str(),false,cached);
 
-      srcAddrHash->Open((path+"srcaddr.idx").c_str(),false);
-      srcAddrData->Open((path+"srcaddr.dat").c_str(),false);
+      ds.dstAddrHash->Open((path+"dstaddr.idx").c_str(),false,cached);
+      ds.dstAddrData->Open((path+"dstaddr.dat").c_str(),false,cached);
 
-      dstAddrHash->Open((path+"dstaddr.idx").c_str(),false);
-      dstAddrData->Open((path+"dstaddr.dat").c_str(),false);
+      CacheItem *ci=new CacheItem;
+      ci->ds=ds;
+      ci->lastUsage=time(NULL);
+      cache.Insert(dir,ci);
     }
   }
-  idHash->Insert(id,IdLttKey(offset,sms.lastTime));
+  ds.idHash->Insert(id,IdLttKey(offset,sms.lastTime));
 
   Int64Key v;
   AutoChunkHandle h;
 
-  if(cacheDir==dir)
-  {
-#define IDX1(field,storage,sz) \
-  if(storage##Cache.Exists(sms.field)) \
-  { \
-    h=storage##Cache.Get(sms.field);\
-  }else \
-  { \
-    h=storage##Data->CreateChunk(sz); \
-    storage##Hash->Insert(sms.field,h->GetId()); \
-    storage##Cache.Insert(sms.field,h); \
-  } \
-  h->Write(IdLttKey(offset,sms.lastTime));
-
-#define IDX2(field,storage,sz) \
-  if(storage##Cache.Exists(sms.field)) \
-  { \
-    ChunkId ci=storage##Cache.Get(sms.field);\
-    h=storage##Data->OpenChunk(ci);\
-  }else \
-  { \
-    h=storage##Data->CreateChunk(sz); \
-    storage##Hash->Insert(sms.field,h->GetId()); \
-    storage##Cache.Insert(sms.field,h->GetId()); \
-  } \
-  h->Write(IdLttKey(offset,sms.lastTime));
-
-
-  IDX1(srcSmeId,srcId,config.smeIdChunkSize);
-  IDX1(dstSmeId,dstId,config.smeIdChunkSize);
-  IDX1(routeId,routeId,config.routeIdChunkSize);
-  IDX2
-  (
-    originatingAddress.toString().c_str(),srcAddr,
-    config.smeAddrChunkSize.Exists(sms.srcSmeId)?
-      config.smeAddrChunkSize.Get(sms.srcSmeId):config.defAddrChunkSize
-  );
-  IDX2
-  (
-    dealiasedDestinationAddress.toString().c_str(),dstAddr,
-    config.smeAddrChunkSize.Exists(sms.dstSmeId)?
-      config.smeAddrChunkSize.Get(sms.dstSmeId):config.defAddrChunkSize
-  );
-
-#undef IDX
-
-  }else
-  {
-
 #define IDX(field,storage,sz) \
-  if(storage##Hash->LookUp(sms.field,v)) \
+  if(ds.storage##Hash->LookUp(sms.field,v)) \
   { \
-    h=AutoChunkHandle(storage##Data->OpenChunk(v.key)); \
+    h=AutoChunkHandle(ds.storage##Data->OpenChunk(v.key)); \
   }else \
   { \
-    h=AutoChunkHandle(storage##Data->CreateChunk(sz)); \
-    storage##Hash->Insert(sms.field,h->GetId()); \
+    h=AutoChunkHandle(ds.storage##Data->CreateChunk(sz)); \
+    ds.storage##Hash->Insert(sms.field,h->GetId()); \
   } \
   h->Write(IdLttKey(offset,sms.lastTime));
 
@@ -248,7 +141,6 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
       config.smeAddrChunkSize.Get(sms.dstSmeId):config.defAddrChunkSize
   );
 #undef IDX
-  }
   //idxtime=gethrtime()-idxtime;
   //__warning2__("indexed in %lld mcsec",idxtime/1000);
 }

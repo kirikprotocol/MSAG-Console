@@ -10,9 +10,12 @@
 #  endif
 #endif
 #include <stdio.h>
+#include <stdlib.h>
 #include <exception>
+#include <algorithm>
 #include <stdexcept>
 #include <string>
+#include <string.h>
 #include <errno.h>
 #include "util/int.h"
 #include <sys/types.h>
@@ -30,14 +33,14 @@ namespace smsc{
 namespace core{
 namespace buffers{
 
-using namespace std;
+//using namespace std;
 
 #define _TO_STR2_(x) #x
 #define _TO_STR_(x) _TO_STR2_(x)
 
 #define RTERROR(txt) runtime_error(txt " at " __FILE__ ":" _TO_STR_(__LINE__))
 
-class FileException:public exception{
+class FileException:public std::exception{
 public:
   enum{errOpenFailed,errReadFailed,errEndOfFile,errWriteFailed,errSeekFailed,errFileNotOpened};
   FileException(int err):errCode(err)
@@ -105,8 +108,8 @@ protected:
   FileException();
   int errCode;
   int error;
-  string fileName;
-  mutable string errbuf;
+  std::string fileName;
+  mutable std::string errbuf;
 };
 
 class File{
@@ -116,11 +119,55 @@ public:
 #else
   typedef long long offset_type;
 #endif
-  File():f(0){}
+  File():f(0),inMemoryFile(false),autoFlush(false){}
   ~File()
   {
     Close();
   }
+
+  void Swap(File& swp)
+  {
+    std::swap(f,swp.f);
+    std::swap(inMemoryFile,swp.inMemoryFile);
+    std::swap(buffer,swp.buffer);
+    std::swap(bufferSize,swp.bufferSize);
+    std::swap(fileSize,swp.fileSize);
+    std::swap(bufferPosition,swp.bufferPosition);
+    std::swap(filename,swp.filename);
+  }
+
+  void OpenInMemory(int sz)
+  {
+    if(inMemoryFile)return;
+    if(f)
+    {
+      sz=(int)Size();
+      fileSize=sz;
+      bufferPosition=(int)Pos();
+    }else
+    {
+      bufferPosition=0;
+      fileSize=0;
+    }
+
+    inMemoryFile=true;
+    buffer=new char[sz];
+    bufferSize=sz;
+
+    if(f)
+    {
+      fseek(f,0,SEEK_SET);
+      fread(buffer,sz,1,f);
+    }
+  }
+
+  void MemoryFlush()
+  {
+    if(!inMemoryFile || !f)throw FileException(FileException::errFileNotOpened,filename.c_str());
+    fseek(f,0,SEEK_SET);
+    if(fwrite(buffer,bufferSize,1,f)!=1)throw FileException(FileException::errWriteFailed,filename.c_str());
+  }
+
   void ROpen(const char* fn)
   {
     Close();
@@ -158,14 +205,31 @@ public:
   }
   void SetUnbuffered()
   {
-    setbuf(f,0);
+    autoFlush=true;
   }
   void Close()
   {
-    if(f)fclose(f);
+    if(f)
+    {
+      fclose(f);
+      f=0;
+    }
+    if(inMemoryFile)
+    {
+      delete [] buffer;
+      inMemoryFile=false;
+    }
   }
   int Read(void* buf,size_t sz)
   {
+    if(inMemoryFile)
+    {
+      if(bufferPosition+sz>fileSize)
+        throw FileException(FileException::errEndOfFile,filename.c_str());
+      memcpy(buf,buffer+bufferPosition,sz);
+      bufferPosition+=sz;
+      return sz;
+    }
     Check();
     size_t rv=fread(buf,1,sz,f);
     if(rv!=sz)
@@ -187,8 +251,20 @@ public:
   }
   void Write(const void* buf,size_t sz)
   {
+    if(inMemoryFile)
+    {
+      if(bufferPosition+sz>bufferSize)
+      {
+        ResizeBuffer(bufferPosition+sz);
+      }
+      memcpy(buffer+bufferPosition,buf,sz);
+      bufferPosition+=sz;
+      if(bufferPosition>fileSize)fileSize=bufferPosition;
+      return;
+    }
     Check();
     if(fwrite(buf,sz,1,f)!=1)throw FileException(FileException::errWriteFailed,filename.c_str());
+    if(autoFlush)fflush(f);
   }
   template <class T>
   void XWrite(const T& t)
@@ -198,6 +274,17 @@ public:
 
   void ZeroFill(int sz)
   {
+    if(inMemoryFile)
+    {
+      if(bufferPosition+sz>bufferSize)
+      {
+        ResizeBuffer(bufferPosition+sz);
+      }
+      memset(buffer+bufferPosition,0,sz);
+      bufferPosition+=sz;
+      if(bufferPosition>fileSize)fileSize=bufferPosition;
+      return;
+    }
     char buf[8192]={0,};
     int blksz;
     while(sz>0)
@@ -213,24 +300,47 @@ public:
     Check();
     if(whence==SEEK_SET)
     {
-      fpos_t p(off);
-      if(fsetpos(f,&p)!=0)throw FileException(FileException::errSeekFailed,filename.c_str());
+      if(inMemoryFile)
+      {
+        bufferPosition=(int)off;
+      }else
+      {
+        fpos_t p(off);
+        if(fsetpos(f,&p)!=0)throw FileException(FileException::errSeekFailed,filename.c_str());
+      }
     }else if(whence==SEEK_END)
     {
-      fseek(f,0,SEEK_END);
-      fpos_t p;
-      fgetpos(f,&p);
-      p+=off;
-      if(fsetpos(f,&p)!=0)throw FileException(FileException::errSeekFailed,filename.c_str());
+      if(inMemoryFile)
+      {
+        bufferPosition=fileSize+(int)off;
+      }else
+      {
+        fseek(f,0,SEEK_END);
+        fpos_t p;
+        fgetpos(f,&p);
+        p+=off;
+        if(fsetpos(f,&p)!=0)throw FileException(FileException::errSeekFailed,filename.c_str());
+      }
     }else if(whence==SEEK_CUR)
     {
-      fpos_t p;
-      fgetpos(f,&p);
-      p+=off;
-      if(fsetpos(f,&p)!=0)throw FileException(FileException::errSeekFailed,filename.c_str());
+      if(inMemoryFile)
+      {
+        bufferPosition+=(int)off;
+      }else
+      {
+        fpos_t p;
+        fgetpos(f,&p);
+        p+=off;
+        if(fsetpos(f,&p)!=0)throw FileException(FileException::errSeekFailed,filename.c_str());
+      }
     }else
     {
-      throw runtime_error("invalid whence parameter");
+      throw std::runtime_error("invalid whence parameter");
+    }
+    if(inMemoryFile)
+    {
+      if(bufferPosition<0)bufferPosition=0;
+      if(bufferPosition>bufferSize)ResizeBuffer(bufferPosition);
     }
   }
 
@@ -246,6 +356,7 @@ public:
 
   offset_type Size()
   {
+    if(inMemoryFile)return bufferSize;
     Check();
     fpos_t p;
     fgetpos(f,&p);
@@ -258,6 +369,7 @@ public:
 
   offset_type Pos()
   {
+    if(inMemoryFile)return bufferPosition;
     Check();
     fpos_t p;
     fgetpos(f,&p);
@@ -351,10 +463,26 @@ public:
 
 protected:
   FILE *f;
-  string filename;
+  bool  inMemoryFile;
+  char *buffer;
+  int   bufferSize,fileSize;
+  int   bufferPosition;
+  std::string filename;
+  bool  autoFlush;
   void Check()
   {
+    if(inMemoryFile)return;
     if(!f)throw FileException(FileException::errFileNotOpened,filename.c_str());
+  }
+
+  void ResizeBuffer(int newsz)
+  {
+    newsz+=newsz/4;
+    char* newbuf=new char[newsz];
+    memcpy(newbuf,buffer,bufferSize);
+    delete [] buffer;
+    buffer=newbuf;
+    bufferSize=newsz;
   }
 };
 

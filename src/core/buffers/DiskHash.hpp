@@ -112,12 +112,14 @@ protected:
   File f;
   //File fk;
   //File fv;
-  string name;
+  std::string name;
 
   int recsize;
   bool inplacekey;
   bool inplaceval;
-  bool fileopen;
+  bool isFileOpen;
+  bool isCached;
+  bool isReadOnly;
 
   int count;
   int size;
@@ -139,10 +141,13 @@ protected:
     File g;
     g.RWCreate((name+".tmp").c_str());
     DiskHashHeader h;
+    h.size=size*reallocPercent/100;
+
+    g.OpenInMemory(DiskHashHeader::Size()+recsize*h.size);
+
     h.magic=_dh_magic;
     h.ver=_dh_ver;
     h.count=count;
-    h.size=size*reallocPercent/100;
     h.flags=0;
     h.flags|=inplacekey?flagInplaceKey:0;
     h.flags|=inplaceval?flagInplaceValue:0;
@@ -187,12 +192,17 @@ protected:
       k.Write(g);
       v.Write(g);
     }
-    g.Close();
+    //g.MemoryFlush();
+    //g.Close();
     f.Close();
     size=h.size;
     remove(name.c_str());
     rename((name+".tmp").c_str(),name.c_str());
+    /*
     f.RWOpen(name.c_str());
+    f.OpenInMemory(0);
+    */
+    f.Swap(g);
     __warning__("rehashing finished");
   }
 
@@ -200,11 +210,16 @@ public:
   DiskHash()
   {
     CalcRecSize();
-    fileopen=false;
+    isFileOpen=false;
     reallocPercent=200;
   }
 
-  void Open(const char* file,bool readonly=false)
+  ~DiskHash()
+  {
+    Close();
+  }
+
+  void Open(const char* file,bool readonly=false,bool cached=false)
   {
     name=file;
     if(readonly)
@@ -212,7 +227,10 @@ public:
     else
       f.RWOpen(file);
     name=file;
+    isCached=cached;
+    isReadOnly=readonly;
     f.SetUnbuffered();
+    if(cached)f.OpenInMemory(0);
     DiskHashHeader h;
     h.Read(f);
     if(h.magic!=_dh_magic)throw RTERROR("invalid file magic");
@@ -223,13 +241,16 @@ public:
     count=h.count;
   }
 
-  void Create(const char* file,int prealloc)
+  void Create(const char* file,int prealloc,bool cached)
   {
     if(File::Exists(file))RTERROR("disk hash already exists");
     name=file;
     f.RWCreate(file);
     f.SetUnbuffered();
+    isReadOnly=false;
+    isCached=cached;
     DiskHashHeader h;
+    if(cached)f.OpenInMemory(recsize*prealloc+h.Size());
     h.magic=_dh_magic;
     h.ver=_dh_ver;
     h.count=0;
@@ -247,21 +268,48 @@ public:
     //}
     size=h.size;
     count=0;
-    fileopen=true;
+    isFileOpen=true;
   }
+
+  File::offset_type Size()
+  {
+    return f.Size();
+  }
+
+  void Flush()
+  {
+    f.MemoryFlush();
+  }
+
   void Close()
   {
-    if(!fileopen)RTERROR("Attempt to close not opened file");
-    h.flags|=flagClosedOk;
-    h.count=count;
-    f.Seek(0);
-    h.Write(f);
+    if(!isFileOpen)return;
+    if(!isReadOnly)
+    {
+      DiskHashHeader h;
+      f.Seek(0);
+      h.Read(f);
+      h.flags|=flagClosedOk;
+      h.count=count;
+      f.Seek(0);
+      h.Write(f);
+      if(isCached)f.MemoryFlush();
+    }
     f.Close();
+  }
+
+  void DiscardCache()
+  {
+    if(isFileOpen)
+    {
+      f.Close();
+      isFileOpen=false;
+    }
   }
 
   void Insert(const K& key,const V& value)
   {
-    if(!fileopen)RTERROR("Attempt to insert into not opened hash file");
+    if(!isFileOpen)RTERROR("Attempt to insert into not opened hash file");
     if(!inplacekey || !inplaceval)RTERROR("Non inplace kv not implemented yet");
     int attempt=0;
 
@@ -301,7 +349,7 @@ public:
   }
   bool LookUp(const K& key,V& value)
   {
-    if(!fileopen)RTERROR("Attempt to insert into not opened hash file");
+    if(!isFileOpen)RTERROR("Attempt to insert into not opened hash file");
     int attempt=0;
     for(;;attempt++)
     {

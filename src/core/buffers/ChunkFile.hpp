@@ -122,9 +122,9 @@ protected:
       f.WriteNetInt64(firstPage);
       f.WriteNetInt64(lastPage);
     }
-    uint32_t Size()
+    static uint32_t Size()
     {
-      return sizeof(*this);
+      return sizeof(File::offset_type)+sizeof(File::offset_type);
     }
   };
 
@@ -166,6 +166,8 @@ protected:
   File f;
   bool opened;
   bool readOnly;
+  bool isCached;
+
   File::offset_type fileSize;
   File::offset_type lastRootOffset;
   RootRecord lastRoot;
@@ -185,13 +187,15 @@ public:
   {
     Close();
   }
-  void Open(const char* file,bool readonly=true)
+  void Open(const char* file,bool readonly=true,bool cached=false)
   {
     if(readonly)
       f.ROpen(file);
     else
       f.RWOpen(file);
     f.SetUnbuffered();
+    isCached=cached;
+    if(cached)f.OpenInMemory(0);
     FileHeader h;
     h.Read(f);
     if(h.magic!=_cf_magic)RTERROR("invalid file magic");
@@ -206,12 +210,14 @@ public:
     opened=true;
     readOnly=readonly;
   }
-  void Create(const char* file,int rsz=1024)
+  void Create(const char* file,int rsz=1024,bool cached=false)
   {
     if(File::Exists(file))RTERROR("chunk file already exists");
     rootSize=rsz;
     f.RWCreate(file);
     f.SetUnbuffered();
+    isCached=cached;
+    if(cached)f.OpenInMemory(ChunkStartItem::Size()*rootSize);
     FileHeader h;
     h.magic=_cf_magic;
     h.version=_cf_version;
@@ -239,6 +245,15 @@ public:
     readOnly=false;
   }
 
+  void DiscardCache()
+  {
+    if(isCached)
+    {
+      f.Close();
+      opened=false;
+    }
+  }
+
   void Close()
   {
     if(!opened)return;
@@ -250,9 +265,20 @@ public:
       h.lastRootOffset=lastRootOffset;
       f.Seek(0);
       h.Write(f);
+      if(isCached)f.MemoryFlush();
     }
     f.Close();
     opened=false;
+  }
+
+  void Flush()
+  {
+    if(isCached)f.MemoryFlush();
+  }
+
+  File::offset_type Size()
+  {
+    return f.Size();
   }
 
 
@@ -450,7 +476,7 @@ public:
 
   ChunkHandle* OpenChunk(ChunkId id)
   {
-    auto_ptr<ChunkHandle> ret(new ChunkHandle(*this,id));
+    std::auto_ptr<ChunkHandle> ret(new ChunkHandle(*this,id));
     f.Seek(id);
     ChunkStartItem it;
     it.Read(f);

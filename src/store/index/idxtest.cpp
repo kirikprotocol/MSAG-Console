@@ -23,8 +23,10 @@ int main(int argc,char* argv[])
       SMS s;
 
       timeval st,ed;
-      for(int i=0;i<10000;i++)
+      for(int i=0;i<100000;i++)
       {
+        if((i%1000)==0)
+        printf("%d\n",i);
         char buf[64];
         sprintf(buf,".0.1.%d",1+(i+1)%10);
         s.setOriginatingAddress(buf);
@@ -55,6 +57,7 @@ int main(int argc,char* argv[])
         }
         idx.IndexateSms(".",100+i,100000+i,s);
       }
+      idx.EndTransaction();
     }else
     {
       ParamArray p;
