@@ -283,6 +283,7 @@ namespace smsc { namespace db
         bool registerStatement(const char* id, Statement* statement);
         bool unregisterStatement(const char* id);
         Statement* getStatement(const char* id);
+        Statement* getStatement(const char* id, const char* sql);
         
         virtual void connect() 
             throw(SQLException) = 0;

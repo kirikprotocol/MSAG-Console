@@ -33,6 +33,18 @@ Statement* Connection::getStatement(const char* id)
     Statement** statementPtr = statementsRegistry.GetPtr(id);
     return ((statementPtr) ? *statementPtr:0);
 }
+Statement* Connection::getStatement(const char* id, const char* sql)
+{
+    Statement* statement = getStatement(id);
+    if (!statement)
+    {
+        if (!sql) return 0;
+        statement = createStatement(sql);
+        registerStatement(id, statement);
+    }
+    return statement;
+}
+
 void Connection::disconnect()
 {
     MutexGuard guard(statementsRegistryLock);
@@ -78,7 +90,7 @@ void ConnectionPool::loadPoolSize(ConfigView* config)
 
 ConnectionPool::ConnectionPool(DataSource& _ds, ConfigView* config)
     throw(ConfigException) : ds(_ds), count(0),
-        log(Logger::getCategory("smsc.dbsme.ConnectionPool")),
+        log(Logger::getCategory("smsc.db.ConnectionPool")),
             idleHead(0L), idleTail(0L), idleCount(0),
                 head(0L), tail(0L), queueLen(0)
 {
