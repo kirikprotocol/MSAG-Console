@@ -1,6 +1,5 @@
 package ru.sibinco.smppgw.backend.routing;
 
-import org.apache.log4j.Logger;
 import org.w3c.dom.Element;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.route.*;
@@ -19,26 +18,34 @@ import java.util.Map;
  */
 public class GwRoute extends Route
 {
-  private final Logger logger = Logger.getLogger(this.getClass());
+  private static final String BILLING_ID_ATTRIBUTE = "billingId";
+  private static final String PROVIDER_ID_ATTRIBUTE = "providerId";
   private Provider provider;
   private TrafficRules trafficRules;
-  private static final String PROVIDER_ID_ATTRIBUTE = "providerId";
+  private String billingRuleId;
 
-  public GwRoute(final Element routeElem, final Map subjects, final SmeManager smeManager, final ProviderManager providerManager)
+  public GwRoute(final Element routeElem, final Map subjects, final SmeManager smeManager, final ProviderManager providerManager,
+                 final BillingManager billingManager)
       throws SibincoException
   {
     super(routeElem, subjects, smeManager);
+    this.billingRuleId = "";
     if (routeElem.hasAttribute(PROVIDER_ID_ATTRIBUTE)) {
       final Long providerId = Long.decode(routeElem.getAttribute(PROVIDER_ID_ATTRIBUTE));
       this.provider = (Provider) providerManager.getProviders().get(providerId);
     }
     this.trafficRules = new TrafficRules(routeElem.getAttribute("trafficRules"));
+    if (routeElem.hasAttribute(BILLING_ID_ATTRIBUTE)) {
+      this.billingRuleId = routeElem.getAttribute(BILLING_ID_ATTRIBUTE);
+    }
   }
 
   public GwRoute(final String routeName, final int priority, final boolean isEnabling, final boolean active, final int serviceId, final Map sources,
-                 final Map destinations, final String srcSmeId, final String notes, final Provider provider, final TrafficRules trafficRules)
+                 final Map destinations, final String srcSmeId, final String notes, final Provider provider, final TrafficRules trafficRules,
+                 final String billingRuleId)
   {
     super(routeName, priority, isEnabling, false, false, false, active, serviceId, sources, destinations, srcSmeId, "default", "", false, false, notes);
+    this.billingRuleId = billingRuleId;
     this.provider = provider;
     this.trafficRules = trafficRules;
   }
@@ -83,6 +90,7 @@ public class GwRoute extends Route
                 + ("MAP_PROXY".equals(getSrcSmeId()) ? "\" forwardTo=\"" + StringEncoderDecoder.encode(getForwardTo()) : "")
                 + (null != provider ? "\" providerId=\"" + provider.getId() : "")
                 + (null != trafficRules ? "\" trafficRules=\"" + trafficRules.getText() : "")
+                + (null != billingRuleId && 0 != billingRuleId.length() ? "\" billingId=\"" + billingRuleId : "")
                 + "\">");
     if (null != getNotes())
       out.println("    <notes>" + getNotes() + "</notes>");
@@ -97,5 +105,15 @@ public class GwRoute extends Route
     }
     out.println("  </route>");
     return out;
+  }
+
+  public String getBillingRuleId()
+  {
+    return billingRuleId;
+  }
+
+  public void setBillingRuleId(String billingRuleId)
+  {
+    this.billingRuleId = billingRuleId;
   }
 }

@@ -3,6 +3,7 @@ package ru.sibinco.smppgw.beans.routing.routes;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.route.*;
 import ru.sibinco.lib.backend.sme.Sme;
+import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.smppgw.Constants;
 import ru.sibinco.smppgw.backend.SmppGWAppContext;
@@ -56,6 +57,9 @@ public class Edit extends EditBean
   private boolean trafficRules_allowUssdDialogInit = false;
   private String trafficRules_ussdSiDialogLimit = "";
 
+  private String billingId = "";
+  private Set billingIds = new TreeSet();
+
   public String getId()
   {
     return name;
@@ -64,6 +68,10 @@ public class Edit extends EditBean
   public void process(final HttpServletRequest request, final HttpServletResponse response) throws SmppgwJspException
   {
     appContext = (SmppGWAppContext) request.getAttribute("appContext");
+
+    billingIds.clear();
+    billingIds.add(" ");
+    billingIds.addAll(appContext.getBillingManager().getRules().keySet());
 
     destinations = new HashMap();
     for (Iterator i = request.getParameterMap().entrySet().iterator(); i.hasNext();) {
@@ -197,11 +205,12 @@ public class Edit extends EditBean
       srcSmeId = route.getSrcSmeId();
       notes = route.getNotes();
 
-      logger.debug("Load route: Provider: " + route.getProvider());
       if (null != route.getProvider()) {
         provider = route.getProvider().getName();
         providerId = route.getProvider().getId();
       }
+      billingId = route.getBillingRuleId();
+      if (null == billingId) billingId = "";
 
       final TrafficRules trafficRules = route.getTrafficRules();
       if (null != trafficRules) {
@@ -219,6 +228,8 @@ public class Edit extends EditBean
 
   protected void save() throws SmppgwJspException
   {
+    billingId = null == billingId ? "" : billingId.trim();
+
     final Map routes = appContext.getGwRoutingManager().getRoutes();
 
     try {
@@ -232,13 +243,13 @@ public class Edit extends EditBean
         if (routes.containsKey(name))
           throw new SmppgwJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, name);
         routes.put(name,
-                   new GwRoute(name, priority, enabling, active, serviceId, sources, destinations, srcSmeId, notes, providerObj, trafficRules));
+                   new GwRoute(name, priority, enabling, active, serviceId, sources, destinations, srcSmeId, notes, providerObj, trafficRules, billingId));
       } else {
         if (!getEditId().equals(name) && routes.containsKey(name))
           throw new SmppgwJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, name);
         routes.remove(getEditId());
         routes.put(name,
-                   new GwRoute(name, priority, enabling, active, serviceId, sources, destinations, srcSmeId, notes, providerObj, trafficRules));
+                   new GwRoute(name, priority, enabling, active, serviceId, sources, destinations, srcSmeId, notes, providerObj, trafficRules, billingId));
       }
     } catch (SibincoException e) {
       logger.error("Could not create new subject", e);
@@ -575,5 +586,20 @@ public class Edit extends EditBean
   public void setTrafficRules_ussdSiDialogLimit(final String trafficRules_ussdSiDialogLimit)
   {
     this.trafficRules_ussdSiDialogLimit = trafficRules_ussdSiDialogLimit;
+  }
+
+  public String getBillingId()
+  {
+    return billingId;
+  }
+
+  public void setBillingId(String billingId)
+  {
+    this.billingId = billingId;
+  }
+
+  public String getBillingIds()
+  {
+    return Functions.collectionToString(billingIds, ",");
   }
 }

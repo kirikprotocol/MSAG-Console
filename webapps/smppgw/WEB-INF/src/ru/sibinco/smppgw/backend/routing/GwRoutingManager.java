@@ -1,6 +1,5 @@
 package ru.sibinco.smppgw.backend.routing;
 
-import org.apache.log4j.Logger;
 import org.w3c.dom.Element;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.route.*;
@@ -16,14 +15,14 @@ import java.util.Map;
  */
 public class GwRoutingManager extends RouteSubjectManager
 {
-  private final Logger logger = Logger.getLogger(this.getClass());
   private final ProviderManager providerManager;
+  private final BillingManager billingManager;
 
-  public GwRoutingManager(final File smscConfFolder, final SmeManager smeManager, final ProviderManager providerManager)
-      throws SibincoException
+  public GwRoutingManager(final File smscConfFolder, final SmeManager smeManager, final ProviderManager providerManager, final BillingManager billingManager)
   {
     super(smscConfFolder, smeManager);
     this.providerManager = providerManager;
+    this.billingManager = billingManager;
   }
 
   public void init() throws SibincoException
@@ -38,6 +37,6 @@ public class GwRoutingManager extends RouteSubjectManager
 
   protected Route createRoute(final Element routeElem, final Map subjects, final SmeManager smeManager) throws SibincoException
   {
-    return new GwRoute(routeElem, subjects, smeManager, providerManager);
+    return new GwRoute(routeElem, subjects, smeManager, providerManager, billingManager);
   }
 }

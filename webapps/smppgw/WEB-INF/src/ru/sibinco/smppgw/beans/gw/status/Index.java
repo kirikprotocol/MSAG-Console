@@ -149,10 +149,17 @@ public class Index extends SmppgwBean
       final Config gwConfig = appContext.getGwConfig();
       appContext.getProviderManager().store(gwConfig);
       appContext.getGwConfig().save();
-      appContext.getGateway().apply("providers");
+      try {
+        appContext.getGateway().apply("providers");
+      } catch (SibincoException e) {
+        if (Proxy.StatusConnected == appContext.getGateway().getStatus()) {
+          logger.debug("Couldn't apply providers", e);
+          throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_PROVIDERS, e);
+        }
+      }
       appContext.getStatuses().setProvidersChanged(false);
     } catch (Throwable e) {
-      logger.debug("Couldn't apply Service centers", e);
+      logger.debug("Couldn't apply providers", e);
       throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_PROVIDERS, e);
     }
   }
@@ -173,8 +180,14 @@ public class Index extends SmppgwBean
     try {
       appContext.getGwRoutingManager().apply();
       appContext.getGwSmeManager().store();
-      if (Proxy.StatusConnected == appContext.getGateway().getStatus())
+      try {
         appContext.getGateway().apply("routes");
+      } catch (SibincoException e) {
+        if (Proxy.StatusConnected == appContext.getGateway().getStatus()) {
+          logger.debug("Couldn't apply routes", e);
+          throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_ROUTES, e);
+        }
+      }
       appContext.getStatuses().setRoutesChanged(false);
     } catch (SibincoException e) {
       logger.debug("Couldn't apply routes", e);
@@ -189,8 +202,15 @@ public class Index extends SmppgwBean
       appContext.getProviderManager().store(appContext.getGwConfig());
       appContext.getGwSmeManager().store();
       appContext.getGwConfig().save();
-      if (Proxy.StatusConnected == appContext.getGateway().getStatus())
+
+      try {
         appContext.getGateway().apply("config");
+      } catch (SibincoException e) {
+        if (Proxy.StatusConnected == appContext.getGateway().getStatus()) {
+          logger.debug("Couldn't apply config", e);
+          throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_CONFIG, e);
+        }
+      }
       appContext.getStatuses().setConfigChanged(false);
     } catch (SibincoException e) {
       logger.debug("Couldn't apply config", e);

@@ -216,6 +216,7 @@
             <sm-ep:txt title="service ID" name="serviceId"/>
             <sm-ep:list title="source SME ID" name="srcSmeId" values="${smes}" valueTitles="${smes}" onChange="srcSmeIdChanged();"/>
             <sm-ep:list title="provider" name="providerId" values="${providerIds}" valueTitles="${providers}"/>
+            <sm-ep:list title="billing"  name="billingId"  values="${bean.billingIds}"  valueTitles="${bean.billingIds}"/>
           </sm-ep:properties>
         </td>
         <td valign="top">

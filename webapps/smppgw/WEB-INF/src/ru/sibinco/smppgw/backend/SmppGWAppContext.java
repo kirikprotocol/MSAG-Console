@@ -61,9 +61,9 @@ public class SmppGWAppContext
       gwSmeManager = new GwSmeManager(config.getString("sme_file"), gwConfig, providerManager);
       gwSmeManager.init();
       smscsManager = new SmscsManager(gwConfig);
-      gwRoutingManager = new GwRoutingManager(new File(config.getString("gw_config_folder")), gwSmeManager, providerManager);
-      gwRoutingManager.init();
       billingManager = new BillingManager(new File(config.getString("gw_config_folder"), "billing-rules.xml"));
+      gwRoutingManager = new GwRoutingManager(new File(config.getString("gw_config_folder")), gwSmeManager, providerManager, billingManager);
+      gwRoutingManager.init();
       resourceManager = new ResourceManager(new File(config.getString("gw_config_folder")));
       gwDaemon = new Daemon(config.getString("gw daemon.host"), (int) config.getInt("gw daemon.port"), gwSmeManager, config.getString("gw daemon.folder"));
       final ServiceInfo gwServiceInfo = (ServiceInfo) gwDaemon.getServices().get(config.getString("gw name"));
