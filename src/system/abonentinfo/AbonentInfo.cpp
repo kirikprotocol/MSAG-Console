@@ -23,7 +23,8 @@ int AbonentInfoSme::Execute()
   s.setValidTime(t);
   s.setDeliveryReport(0);
   s.setArchivationRequested(false);
-  s.setEServiceType("");
+  s.setEServiceType(servType.c_str());
+  s.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,protId);
   log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.system.AbonentInfoSme");
 
   while(!isStopping)
@@ -62,6 +63,7 @@ int AbonentInfoSme::Execute()
     s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,answ,len);
     s.setIntProperty(Tag::SMPP_SM_LENGTH,len);
     s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
+
 
     resp=SmscCommand::makeSumbmitSm(s,getNextSequenceNumber());
     putIncomingCommand(resp);

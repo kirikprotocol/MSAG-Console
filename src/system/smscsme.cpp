@@ -22,6 +22,8 @@ int SmscSme::Execute()
     SMS *s;
     while((s=getSms()))
     {
+      s->setEServiceType(servType.c_str());
+      s->setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,protId);
       resp=SmscCommand::makeSumbmitSm(*s,getNextSequenceNumber());
       delete s;
       putIncomingCommand(resp);

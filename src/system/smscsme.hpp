@@ -144,6 +144,10 @@ public:
     MutexGuard g(mon);
     return seq++;
   }
+
+  string servType;
+  int protId;
+
 protected:
   mutable EventMonitor mon;
   smsc::core::buffers::Array<SmscCommand> outQueue;
