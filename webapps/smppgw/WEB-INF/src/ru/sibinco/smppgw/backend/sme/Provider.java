@@ -2,16 +2,14 @@ package ru.sibinco.smppgw.backend.sme;
 
 
 /**
- * Created by igork
- * Date: 22.03.2004
- * Time: 19:45:18
+ * Created by igork Date: 22.03.2004 Time: 19:45:18
  */
 public class Provider
 {
   private long id;
   private String name;
 
-  public Provider(long id, String name)
+  public Provider(final long id, final String name)
   {
     this.id = id;
     this.name = name;
@@ -27,8 +25,16 @@ public class Provider
     return name;
   }
 
-  public void setName(String name)
+  public void setName(final String name)
   {
     this.name = name;
+  }
+
+  public String toString()
+  {
+    return "Provider{" +
+           "id=" + id +
+           ", name='" + name + "'" +
+           "}";
   }
 }

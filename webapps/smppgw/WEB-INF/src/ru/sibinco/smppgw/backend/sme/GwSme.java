@@ -2,34 +2,42 @@ package ru.sibinco.smppgw.backend.sme;
 
 import ru.sibinco.lib.backend.sme.Sme;
 
+import java.io.PrintWriter;
+
 
 /**
- * Created by igork
- * Date: 22.03.2004
- * Time: 19:00:30
+ * Created by igork Date: 22.03.2004 Time: 19:00:30
  */
 public class GwSme extends Sme
 {
   private Provider provider;
   private SmscInfo smscInfo;
 
-  public GwSme(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName, boolean disabled, byte mode, int proclimit, int schedlimit, Provider provider)
+  public GwSme(final String id, final int priority, final byte type, final int typeOfNumber, final int numberingPlan, final int interfaceVersion,
+               final String systemType, final String password, final String addrRange, final int smeN, final boolean wantAlias, final boolean forceDC,
+               final int timeout, final String receiptSchemeName, final boolean disabled, final byte mode, final int proclimit, final int schedlimit,
+               final Provider provider)
       throws NullPointerException
   {
-    super(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, smeN, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit);
+    super(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, smeN, wantAlias, forceDC, timeout,
+          receiptSchemeName, disabled, mode, proclimit, schedlimit);
     this.provider = provider;
     this.smscInfo = null;
   }
 
-  public GwSme(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName, boolean disabled, byte mode, int proclimit, int schedlimit, SmscInfo smscInfo)
+  public GwSme(final String id, final int priority, final byte type, final int typeOfNumber, final int numberingPlan, final int interfaceVersion,
+               final String systemType, final String password, final String addrRange, final int smeN, final boolean wantAlias, final boolean forceDC,
+               final int timeout, final String receiptSchemeName, final boolean disabled, final byte mode, final int proclimit, final int schedlimit,
+               final SmscInfo smscInfo)
       throws NullPointerException
   {
-    super(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, smeN, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit);
+    super(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, smeN, wantAlias, forceDC, timeout,
+          receiptSchemeName, disabled, mode, proclimit, schedlimit);
     this.provider = null;
     this.smscInfo = smscInfo;
   }
 
-  public GwSme(Sme sme, SmscInfo smscInfo)
+  public GwSme(final Sme sme, final SmscInfo smscInfo)
       throws NullPointerException
   {
     super(sme);
@@ -37,7 +45,7 @@ public class GwSme extends Sme
     this.smscInfo = smscInfo;
   }
 
-  public GwSme(Sme sme, Provider provider)
+  public GwSme(final Sme sme, final Provider provider)
       throws NullPointerException
   {
     super(sme);
@@ -47,7 +55,14 @@ public class GwSme extends Sme
 
   public boolean isSmsc()
   {
-    return smscInfo != null;
+    return null != smscInfo;
+  }
+
+  protected PrintWriter storeBody(final PrintWriter out)
+  {
+    super.storeBody(out);
+    out.println("    <param name=\"providerId\"          value=\"" + provider.getId() + "\"/>");
+    return out;
   }
 
   public Provider getProvider()
@@ -55,7 +70,7 @@ public class GwSme extends Sme
     return provider;
   }
 
-  public void setProvider(Provider provider)
+  public void setProvider(final Provider provider)
   {
     this.provider = provider;
     this.smscInfo = null;
@@ -66,7 +81,7 @@ public class GwSme extends Sme
     return smscInfo;
   }
 
-  public void setSmscInfo(SmscInfo smscInfo)
+  public void setSmscInfo(final SmscInfo smscInfo)
   {
     this.smscInfo = smscInfo;
     this.provider = null;
@@ -74,7 +89,7 @@ public class GwSme extends Sme
 
   public long getProviderId()
   {
-    if (provider != null)
+    if (null != provider)
       return provider.getId();
     else
       return -1;
@@ -82,99 +97,99 @@ public class GwSme extends Sme
 
   public String getProviderName()
   {
-    if (provider != null)
+    if (null != provider)
       return provider.getName();
     else
       return null;
   }
 
-  public void setProviderName(String name)
+  public void setProviderName(final String name)
   {
-    if (provider != null)
+    if (null != provider)
       provider.setName(name);
   }
 
   public String getSmscHost()
   {
-    if (smscInfo != null)
+    if (null != smscInfo)
       return smscInfo.getHost();
     else
       return null;
   }
 
-  public void setSmscHost(String host)
+  public void setSmscHost(final String host)
   {
-    if (smscInfo != null)
+    if (null != smscInfo)
       smscInfo.setHost(host);
   }
 
   public int getSmscPort()
   {
-    if (smscInfo != null)
+    if (null != smscInfo)
       return smscInfo.getPort();
     else
       return -1;
   }
 
-  public void setSmscPort(int port)
+  public void setSmscPort(final int port)
   {
-    if (smscInfo != null)
+    if (null != smscInfo)
       smscInfo.setPort(port);
   }
 
   public String getSmscSystemId()
   {
-    if (smscInfo != null)
+    if (null != smscInfo)
       return smscInfo.getSystemId();
     else
       return null;
   }
 
-  public void setSmscSystemId(String systemId)
+  public void setSmscSystemId(final String systemId)
   {
-    if (smscInfo != null)
+    if (null != smscInfo)
       smscInfo.setSystemId(systemId);
   }
 
   public String getSmscPassword()
   {
-    if (smscInfo != null)
+    if (null != smscInfo)
       return smscInfo.getPassword();
     else
       return null;
   }
 
-  public void setSmscPassword(String password)
+  public void setSmscPassword(final String password)
   {
-    if (smscInfo != null)
+    if (null != smscInfo)
       smscInfo.setPassword(password);
   }
 
   public int getSmscResponseTimeout()
   {
-    if (smscInfo != null)
+    if (null != smscInfo)
       return smscInfo.getResponseTimeout();
     else
       return -1;
   }
 
-  public void setSmscResponseTimeout(int responseTimeout)
+  public void setSmscResponseTimeout(final int responseTimeout)
   {
-    if (smscInfo != null)
+    if (null != smscInfo)
       smscInfo.setResponseTimeout(responseTimeout);
   }
 
   public int getSmscUniqueMsgIdPrefix()
   {
-    if (smscInfo != null)
+    if (null != smscInfo)
       return smscInfo.getUniqueMsgIdPrefix();
     else
       return -1;
   }
 
-  public void setSmscUniqueMsgIdPrefix(int uniqueMsgIdPrefix)
+  public void setSmscUniqueMsgIdPrefix(final int uniqueMsgIdPrefix)
   {
-    if (smscInfo != null)
+    if (null != smscInfo)
       smscInfo.setUniqueMsgIdPrefix(uniqueMsgIdPrefix);
   }
 }

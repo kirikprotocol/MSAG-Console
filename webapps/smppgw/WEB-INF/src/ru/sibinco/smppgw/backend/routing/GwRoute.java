@@ -1,35 +1,47 @@
 package ru.sibinco.smppgw.backend.routing;
 
+import org.apache.log4j.Logger;
 import org.w3c.dom.Element;
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.lib.backend.route.Route;
+import ru.sibinco.lib.backend.route.*;
 import ru.sibinco.lib.backend.sme.SmeManager;
+import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 import ru.sibinco.smppgw.backend.sme.Provider;
+import ru.sibinco.smppgw.backend.sme.ProviderManager;
 
+import java.io.PrintWriter;
+import java.util.Iterator;
 import java.util.Map;
 
 
 /**
- * Created by igork
- * Date: 19.04.2004
- * Time: 19:05:23
+ * Created by igork Date: 19.04.2004 Time: 19:05:23
  */
 public class GwRoute extends Route
 {
+  private final Logger logger = Logger.getLogger(this.getClass());
   private Provider provider;
   private TrafficRules trafficRules;
+  private static final String PROVIDER_ID_ATTRIBUTE = "providerId";
 
-  public GwRoute(Element routeElem, Map subjects, SmeManager smeManager, Provider provider)
+  public GwRoute(final Element routeElem, final Map subjects, final SmeManager smeManager, final ProviderManager providerManager)
       throws SibincoException
   {
     super(routeElem, subjects, smeManager);
-    this.provider = provider;
+    if (routeElem.hasAttribute(PROVIDER_ID_ATTRIBUTE)) {
+      final Long providerId = Long.decode(routeElem.getAttribute(PROVIDER_ID_ATTRIBUTE));
+      this.provider = (Provider) providerManager.getProviders().get(providerId);
+    }
     this.trafficRules = new TrafficRules(routeElem.getAttribute("trafficRules"));
   }
 
-  public GwRoute(String routeName, int priority, boolean isEnabling, boolean isBilling, boolean isArchiving, boolean isSuppressDeliveryReports, boolean active, int serviceId, Map sources, Map destinations, String srcSmeId, String deliveryMode, String forwardTo, boolean hide, boolean forceReplayPath, String notes, Provider provider, TrafficRules trafficRules)
+  public GwRoute(final String routeName, final int priority, final boolean isEnabling, final boolean isBilling, final boolean isArchiving,
+                 final boolean isSuppressDeliveryReports, final boolean active, final int serviceId, final Map sources, final Map destinations,
+                 final String srcSmeId, final String deliveryMode, final String forwardTo, final boolean hide, final boolean forceReplayPath,
+                 final String notes, final Provider provider, final TrafficRules trafficRules)
   {
-    super(routeName, priority, isEnabling, isBilling, isArchiving, isSuppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId, deliveryMode, forwardTo, hide, forceReplayPath, notes);
+    super(routeName, priority, isEnabling, isBilling, isArchiving, isSuppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId, deliveryMode,
+          forwardTo, hide, forceReplayPath, notes);
     this.provider = provider;
     this.trafficRules = trafficRules;
   }
@@ -39,14 +51,14 @@ public class GwRoute extends Route
     return provider;
   }
 
-  public void setProvider(Provider provider)
+  public void setProvider(final Provider provider)
   {
     this.provider = provider;
   }
 
   public String getProviderName()
   {
-    if (provider != null)
+    if (null != provider)
       return provider.getName();
     else
       return null;
@@ -57,8 +69,35 @@ public class GwRoute extends Route
     return trafficRules;
   }
 
-  public void setTrafficRules(TrafficRules trafficRules)
+  public void setTrafficRules(final TrafficRules trafficRules)
   {
     this.trafficRules = trafficRules;
+  }
+
+  public PrintWriter store(final PrintWriter out)
+  {
+    out.println("  <route id=\"" + StringEncoderDecoder.encode(getName()) + "\" billing=\"" + isBilling()
+                + "\" archiving=\"" + isArchiving() + "\" enabling=\"" + isEnabling() + "\" priority=\"" + getPriority()
+                + "\" serviceId=\"" + getServiceId() + "\" suppressDeliveryReports=\"" + isSuppressDeliveryReports()
+                + "\" active=\"" + isActive() + "\" srcSmeId=\"" + StringEncoderDecoder.encode(getSrcSmeId())
+                + "\" deliveryMode=\"" + StringEncoderDecoder.encode(getDeliveryMode())
+                + "\" hide=\"" + (isHide() ? "true" : "false")
+                + "\" forceReplayPath=\"" + (isForceReplayPath() ? "true" : "false")
+                + ("MAP_PROXY".equals(getSrcSmeId()) ? "\" forwardTo=\"" + StringEncoderDecoder.encode(getForwardTo()) : "")
+                + (null != provider ? "\" providerId=\"" + provider.getId() : "")
+                + "\">");
+    if (null != getNotes())
+      out.println("    <notes>" + getNotes() + "</notes>");
+
+    for (Iterator i = getSources().values().iterator(); i.hasNext();) {
+      final Source source = (Source) i.next();
+      source.store(out);
+    }
+    for (Iterator i = getDestinations().values().iterator(); i.hasNext();) {
+      final Destination destination = (Destination) i.next();
+      destination.store(out);
+    }
+    out.println("  </route>");
+    return out;
   }
 }

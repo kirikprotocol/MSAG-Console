@@ -27,14 +27,19 @@ public abstract class RouteSubjectManager
   private final File smscConfFolder;
   private final SmeManager smeManager;
 
-  private final static String SMSC_ROUTES_PRIMARY_CONFIG = "routes.xml";
-  private final static String SMSC_ROUTES_TEMPORAL_CONFIG = "routes_.xml";
-  private final static String SMSC_ROUTES_TRACEABLE_CONFIG = "routes__.xml";
+  private static final String SMSC_ROUTES_PRIMARY_CONFIG = "routes.xml";
+  private static final String SMSC_ROUTES_TEMPORAL_CONFIG = "routes_.xml";
+  private static final String SMSC_ROUTES_TRACEABLE_CONFIG = "routes__.xml";
 
-  public RouteSubjectManager(File smscConfFolder, SmeManager smeManager) throws SibincoException
+  public RouteSubjectManager(final File smscConfFolder, final SmeManager smeManager)
   {
     this.smscConfFolder = smscConfFolder;
     this.smeManager = smeManager;
+  }
+
+  public void init()
+      throws SibincoException
+  {
     load();
     trace();
   }
@@ -49,12 +54,12 @@ public abstract class RouteSubjectManager
     return subjects;
   }
 
-  public boolean isSmeUsed(String smeId)
+  public boolean isSmeUsed(final String smeId)
   {
     for (Iterator i = routes.values().iterator(); i.hasNext();) {
-      Route route = (Route) i.next();
+      final Route route = (Route) i.next();
       for (Iterator j = route.getDestinations().values().iterator(); j.hasNext();) {
-        Destination destination = (Destination) j.next();
+        final Destination destination = (Destination) j.next();
         if (destination.getSme().getId().equals(smeId))
           return true;
       }
@@ -68,13 +73,13 @@ public abstract class RouteSubjectManager
     return new File(smscConfFolder, SMSC_ROUTES_TEMPORAL_CONFIG).exists();
   }
 
-  public synchronized void loadFromFile(String fileName) throws SibincoException
+  public synchronized void loadFromFile(final String fileName) throws SibincoException
   {
     try {
       logger.debug("enter " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")");
-      File config = new File(smscConfFolder, fileName);
+      final File config = new File(smscConfFolder, fileName);
 
-      Document routesDoc = Utils.parse(config.getAbsolutePath());
+      final Document routesDoc = Utils.parse(config.getAbsolutePath());
       loadSubjects(routesDoc.getDocumentElement().getElementsByTagName("subject_def"), smeManager);
       loadRoutes(routesDoc.getDocumentElement().getElementsByTagName("route"));
       logger.debug("exit " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")");
@@ -96,20 +101,20 @@ public abstract class RouteSubjectManager
     }
   }
 
-  private void loadSubjects(NodeList subjList, SmeManager smeManager) throws SibincoException
+  private void loadSubjects(final NodeList subjList, final SmeManager smeManager) throws SibincoException
   {
     for (int i = 0; i < subjList.getLength(); i++) {
-      Element subjElem = (Element) subjList.item(i);
+      final Element subjElem = (Element) subjList.item(i);
       subjects.put(subjElem.getAttribute("id"), createSubject(subjElem, smeManager));
     }
   }
 
   protected abstract Subject createSubject(Element subjElem, SmeManager smeManager) throws SibincoException;
 
-  private void loadRoutes(NodeList routeList) throws SibincoException
+  private void loadRoutes(final NodeList routeList) throws SibincoException
   {
     for (int i = 0; i < routeList.getLength(); i++) {
-      Element routeElem = (Element) routeList.item(i);
+      final Element routeElem = (Element) routeList.item(i);
       routes.put(routeElem.getAttribute("id"), createRoute(routeElem, subjects, smeManager));
     }
   }
@@ -117,19 +122,19 @@ public abstract class RouteSubjectManager
   protected abstract Route createRoute(Element routeElem, Map subjects, SmeManager smeManager) throws SibincoException;
 
 
-  private void saveToFile(String filename) throws SibincoException
+  private void saveToFile(final String filename) throws SibincoException
   {
     try {
       final File file = new File(smscConfFolder, filename);
       final File newFile = Functions.createNewFilenameForSave(file);
-      PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()));
+      final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()));
       Functions.storeConfigHeader(out, "routes", "routes.dtd", Functions.getLocaleEncoding());
       for (Iterator i = subjects.values().iterator(); i.hasNext();) {
-        Subject subject = (Subject) i.next();
+        final Subject subject = (Subject) i.next();
         subject.store(out);
       }
       for (Iterator i = routes.values().iterator(); i.hasNext();) {
-        Route route = (Route) i.next();
+        final Route route = (Route) i.next();
         route.store(out);
       }
       Functions.storeConfigFooter(out, "routes");
@@ -144,27 +149,27 @@ public abstract class RouteSubjectManager
     }
   }
 
-  synchronized public void save() throws SibincoException
+  public synchronized void save() throws SibincoException
   {
     saveToFile(SMSC_ROUTES_TEMPORAL_CONFIG);
   }
 
-  synchronized public void restore() throws SibincoException
+  public synchronized void restore() throws SibincoException
   {
     loadFromFile(SMSC_ROUTES_TEMPORAL_CONFIG);
   }
 
-  synchronized public void apply() throws SibincoException
+  public synchronized void apply() throws SibincoException
   {
     saveToFile(SMSC_ROUTES_PRIMARY_CONFIG);
   }
 
-  synchronized public void load() throws SibincoException
+  public synchronized void load() throws SibincoException
   {
     loadFromFile(SMSC_ROUTES_PRIMARY_CONFIG);
   }
 
-  synchronized public void trace() throws SibincoException
+  public synchronized void trace() throws SibincoException
   {
     saveToFile(SMSC_ROUTES_TRACEABLE_CONFIG);
   }

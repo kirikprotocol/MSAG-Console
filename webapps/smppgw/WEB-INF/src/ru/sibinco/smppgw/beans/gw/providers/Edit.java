@@ -11,28 +11,26 @@ import java.util.Map;
 
 
 /**
- * Created by igork
- * Date: 22.03.2004
- * Time: 20:04:20
+ * Created by igork Date: 22.03.2004 Time: 20:04:20
  */
 public class Edit extends EditBean
 {
   private long id = -1;
   private String name;
 
-  public void process(HttpServletRequest request, HttpServletResponse response) throws SmppgwJspException
+  public void process(final HttpServletRequest request, final HttpServletResponse response) throws SmppgwJspException
   {
     super.process(request, response);
   }
 
-  protected void load(String loadId) throws SmppgwJspException
+  protected void load(final String loadId) throws SmppgwJspException
   {
     final Map providers = appContext.getProviderManager().getProviders();
     final Long longLoadId = Long.decode(loadId);
     if (!providers.containsKey(longLoadId))
       throw new SmppgwJspException(Constants.errors.providers.PROVIDER_NOT_FOUND, loadId);
 
-    Provider info = (Provider) providers.get(longLoadId);
+    final Provider info = (Provider) providers.get(longLoadId);
     this.id = info.getId();
     this.name = info.getName();
   }
@@ -41,21 +39,19 @@ public class Edit extends EditBean
   {
     final ProviderManager providerManager = appContext.getProviderManager();
     if (isAdd()) {
-      final Provider provider = new Provider(providerManager.createId(), name);
-      providerManager.getProviders().put(new Long(provider.getId()), provider);
+      providerManager.createProvider(name);
     } else {
-      Provider provider = (Provider) providerManager.getProviders().get(new Long(id));
-      provider.setName(name);
+      providerManager.setProviderName(id, name);
     }
     throw new DoneException();
   }
 
   public String getId()
   {
-    return id == -1 ? null : String.valueOf(id);
+    return -1 == id ? null : String.valueOf(id);
   }
 
-  public void setId(String id)
+  public void setId(final String id)
   {
     this.id = Long.decode(id).longValue();
   }
@@ -65,7 +61,7 @@ public class Edit extends EditBean
     return name;
   }
 
-  public void setName(String name)
+  public void setName(final String name)
   {
     this.name = name;
   }

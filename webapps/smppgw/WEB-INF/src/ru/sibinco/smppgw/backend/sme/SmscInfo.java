@@ -4,9 +4,7 @@ import ru.sibinco.lib.backend.util.config.Config;
 
 
 /**
- * Created by igork
- * Date: 24.03.2004
- * Time: 17:58:57
+ * Created by igork Date: 24.03.2004 Time: 17:58:57
  */
 public class SmscInfo
 {
@@ -33,11 +31,11 @@ public class SmscInfo
   {
     this.id = smscSection.substring(smscSection.lastIndexOf('.') + 1);
     this.host = gwConfig.getString(smscSection + ".host");
-    this.port = gwConfig.getInt(smscSection + ".port");
+    this.port = (int) gwConfig.getInt(smscSection + ".port");
     this.systemId = gwConfig.getString(smscSection + ".systemId");
     this.password = gwConfig.getString(smscSection + ".password");
-    this.responseTimeout = gwConfig.getInt(smscSection + ".responseTimeout");
-    this.uniqueMsgIdPrefix = gwConfig.getInt(smscSection + ".uniqueMsgIdPrefix");
+    this.responseTimeout = (int) gwConfig.getInt(smscSection + ".responseTimeout");
+    this.uniqueMsgIdPrefix = (int) gwConfig.getInt(smscSection + ".uniqueMsgIdPrefix");
   }
 
   public String getId()

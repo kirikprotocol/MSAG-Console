@@ -9,9 +9,7 @@ import java.util.*;
 
 
 /**
- * Created by igork
- * Date: 18.03.2004
- * Time: 16:42:01
+ * Created by igork Date: 18.03.2004 Time: 16:42:01
  */
 public class Edit extends EditBean
 {
@@ -42,9 +40,9 @@ public class Edit extends EditBean
     return id;
   }
 
-  protected void load(String loadId) throws SmppgwJspException
+  protected void load(final String loadId) throws SmppgwJspException
   {
-    GwSme sme = (GwSme) appContext.getGwSmeManager().getSmes().get(loadId);
+    final GwSme sme = (GwSme) appContext.getGwSmeManager().getSmes().get(loadId);
     if (sme == null)
       throw new SmppgwJspException(Constants.errors.sme.SME_NOT_FOUND, loadId);
 
@@ -77,14 +75,14 @@ public class Edit extends EditBean
 
   protected void save() throws SmppgwJspException
   {
-    if (id == null || id.length() == 0 || getEditId() == null || getEditId().length() == 0)
+    if (id == null || id.length() == 0 || (!isAdd() && (getEditId() == null || getEditId().length() == 0)))
       throw new SmppgwJspException(Constants.errors.sme.SME_ID_NOT_SPECIFIED);
 
     if (password == null)
       password = "";
 
     final Map smes = appContext.getGwSmeManager().getSmes();
-    if (!getEditId().equals(id) && smes.containsKey(id))
+    if (smes.containsKey(id) && (isAdd() || !id.equals(getEditId())))
       throw new SmppgwJspException(Constants.errors.sme.SME_ALREADY_EXISTS, id);
     smes.remove(getEditId());
     if (this.smsc) {
@@ -102,7 +100,7 @@ public class Edit extends EditBean
   }
 
 
-  public void setId(String id)
+  public void setId(final String id)
   {
     this.id = id;
   }
@@ -112,7 +110,7 @@ public class Edit extends EditBean
     return priority;
   }
 
-  public void setPriority(int priority)
+  public void setPriority(final int priority)
   {
     this.priority = priority;
   }
@@ -122,7 +120,7 @@ public class Edit extends EditBean
     return type;
   }
 
-  public void setType(byte type)
+  public void setType(final byte type)
   {
     this.type = type;
   }
@@ -132,7 +130,7 @@ public class Edit extends EditBean
     return typeOfNumber;
   }
 
-  public void setTypeOfNumber(int typeOfNumber)
+  public void setTypeOfNumber(final int typeOfNumber)
   {
     this.typeOfNumber = typeOfNumber;
   }
@@ -142,7 +140,7 @@ public class Edit extends EditBean
     return numberingPlan;
   }
 
-  public void setNumberingPlan(int numberingPlan)
+  public void setNumberingPlan(final int numberingPlan)
   {
     this.numberingPlan = numberingPlan;
   }
@@ -152,7 +150,7 @@ public class Edit extends EditBean
     return interfaceVersion;
   }
 
-  protected void setInterfaceVersion(int interfaceVersion)
+  protected void setInterfaceVersion(final int interfaceVersion)
   {
     this.interfaceVersion = interfaceVersion;
   }
@@ -162,7 +160,7 @@ public class Edit extends EditBean
     return systemType;
   }
 
-  public void setSystemType(String systemType)
+  public void setSystemType(final String systemType)
   {
     this.systemType = systemType;
   }
@@ -172,7 +170,7 @@ public class Edit extends EditBean
     return password;
   }
 
-  public void setPassword(String password)
+  public void setPassword(final String password)
   {
     this.password = password;
   }
@@ -182,7 +180,7 @@ public class Edit extends EditBean
     return addrRange;
   }
 
-  public void setAddrRange(String addrRange)
+  public void setAddrRange(final String addrRange)
   {
     this.addrRange = addrRange;
   }
@@ -192,7 +190,7 @@ public class Edit extends EditBean
     return smeN;
   }
 
-  public void setSmeN(int smeN)
+  public void setSmeN(final int smeN)
   {
     this.smeN = smeN;
   }
@@ -202,7 +200,7 @@ public class Edit extends EditBean
     return wantAlias;
   }
 
-  public void setWantAlias(boolean wantAlias)
+  public void setWantAlias(final boolean wantAlias)
   {
     this.wantAlias = wantAlias;
   }
@@ -212,7 +210,7 @@ public class Edit extends EditBean
     return timeout;
   }
 
-  public void setTimeout(int timeout)
+  public void setTimeout(final int timeout)
   {
     this.timeout = timeout;
   }
@@ -222,7 +220,7 @@ public class Edit extends EditBean
     return forceDC;
   }
 
-  public void setForceDC(boolean forceDC)
+  public void setForceDC(final boolean forceDC)
   {
     this.forceDC = forceDC;
   }
@@ -232,7 +230,7 @@ public class Edit extends EditBean
     return receiptSchemeName;
   }
 
-  public void setReceiptSchemeName(String receiptSchemeName)
+  public void setReceiptSchemeName(final String receiptSchemeName)
   {
     this.receiptSchemeName = receiptSchemeName;
   }
@@ -242,7 +240,7 @@ public class Edit extends EditBean
     return disabled;
   }
 
-  public void setDisabled(boolean disabled)
+  public void setDisabled(final boolean disabled)
   {
     this.disabled = disabled;
   }
@@ -252,7 +250,7 @@ public class Edit extends EditBean
     return mode;
   }
 
-  public void setMode(byte mode)
+  public void setMode(final byte mode)
   {
     this.mode = mode;
   }
@@ -262,7 +260,7 @@ public class Edit extends EditBean
     return proclimit;
   }
 
-  public void setProclimit(int proclimit)
+  public void setProclimit(final int proclimit)
   {
     this.proclimit = proclimit;
   }
@@ -272,7 +270,7 @@ public class Edit extends EditBean
     return schedlimit;
   }
 
-  public void setSchedlimit(int schedlimit)
+  public void setSchedlimit(final int schedlimit)
   {
     this.schedlimit = schedlimit;
   }
@@ -282,7 +280,7 @@ public class Edit extends EditBean
     return smsc;
   }
 
-  public void setSmsc(boolean smsc)
+  public void setSmsc(final boolean smsc)
   {
     this.smsc = smsc;
   }
@@ -292,15 +290,15 @@ public class Edit extends EditBean
     return providerId;
   }
 
-  public void setProviderId(long providerId)
+  public void setProviderId(final long providerId)
   {
     this.providerId = providerId;
   }
 
   public String[] getProviderIds()
   {
-    Map providers = new TreeMap(appContext.getProviderManager().getProviders());
-    ArrayList result = new ArrayList(providers.size());
+    final Map providers = new TreeMap(appContext.getProviderManager().getProviders());
+    final ArrayList result = new ArrayList(providers.size());
     for (Iterator i = providers.keySet().iterator(); i.hasNext();) {
       result.add(String.valueOf(((Long) i.next()).longValue()));
     }
@@ -309,8 +307,8 @@ public class Edit extends EditBean
 
   public String[] getProviderTitles()
   {
-    Map providers = new TreeMap(appContext.getProviderManager().getProviders());
-    ArrayList result = new ArrayList(providers.size());
+    final Map providers = new TreeMap(appContext.getProviderManager().getProviders());
+    final ArrayList result = new ArrayList(providers.size());
     for (Iterator i = providers.values().iterator(); i.hasNext();) {
       result.add(((Provider) i.next()).getName());
     }

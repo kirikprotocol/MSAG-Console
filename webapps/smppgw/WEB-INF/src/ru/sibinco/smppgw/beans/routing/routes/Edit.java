@@ -22,10 +22,10 @@ import java.util.*;
 public class Edit extends EditBean
 {
   private String name;
-  private String[] srcMasks;
-  private String[] srcSubjs;
-  private String[] dstMasks;
-  private String[] dstSubjs;
+  private String[] srcMasks = new String[0];
+  private String[] srcSubjs = new String[0];
+  private String[] dstMasks = new String[0];
+  private String[] dstSubjs = new String[0];
   private int priority;
   private boolean enabling;
   private boolean archiving;
@@ -81,15 +81,15 @@ public class Edit extends EditBean
         final StringBuffer smeName = new StringBuffer();
         for (int j = 0; j < smeNameStrings.length; j++) {
           final String smeNameString = smeNameStrings[j];
-          if (smeNameString != null)
+          if (null != smeNameString)
             smeName.append(smeNameString.trim());
         }
         final Subject subj = (Subject) appContext.getGwRoutingManager().getSubjects().get(subjName);
-        if (subj == null)
+        if (null == subj)
           throw new SmppgwJspException(Constants.errors.routing.routes.DEST_SUBJ_NOT_FOUND, subjName);
         final String smeId = smeName.toString();
         final Sme sme = (Sme) appContext.getGwSmeManager().getSmes().get(smeId);
-        if (sme == null)
+        if (null == sme)
           throw new SmppgwJspException(Constants.errors.routing.routes.SME_NOT_FOUND, smeId);
 
         try {
@@ -101,12 +101,12 @@ public class Edit extends EditBean
         }
       } else if (s.startsWith(DST_MASK_PREFIX)) {
         final String maskName = s.substring(DST_MASK_PREFIX.length());
-        if (maskName != null && maskName.trim().length() > 0) {
+        if (null != maskName && 0 < maskName.trim().length()) {
           final String[] smeNameStrings = (String[]) entry.getValue();
           final StringBuffer smeName = new StringBuffer();
           for (int j = 0; j < smeNameStrings.length; j++) {
             final String smeNameString = smeNameStrings[j];
-            if (smeNameString != null)
+            if (null != smeNameString)
               smeName.append(smeNameString.trim());
           }
           final Mask mask;
@@ -118,7 +118,7 @@ public class Edit extends EditBean
           }
           final String smeId = smeName.toString();
           final Sme sme = (Sme) appContext.getGwSmeManager().getSmes().get(smeId);
-          if (sme == null)
+          if (null == sme)
             throw new SmppgwJspException(Constants.errors.routing.routes.SME_NOT_FOUND, smeId);
 
           try {
@@ -136,11 +136,11 @@ public class Edit extends EditBean
 
   protected void load(final String loadId) throws SmppgwJspException
   {
-    if (dst_mask_sme_ == null && appContext.getGwSmeManager().getSmes().size() > 0)
+    if (null == dst_mask_sme_ && 0 < appContext.getGwSmeManager().getSmes().size())
       dst_mask_sme_ = (String) appContext.getGwSmeManager().getSmes().keySet().iterator().next();
 
     final GwRoute route = (GwRoute) appContext.getGwRoutingManager().getRoutes().get(loadId);
-    if (route != null) {
+    if (null != route) {
       name = route.getName();
 
       final List subjList = new ArrayList();
@@ -182,20 +182,20 @@ public class Edit extends EditBean
       suppressDeliveryReports = route.isSuppressDeliveryReports();
       active = route.isActive();
       srcSmeId = route.getSrcSmeId();
-      System.out.println("srcSmeId = " + srcSmeId);
       deliveryMode = route.getDeliveryMode();
       forwardTo = route.getForwardTo();
       hide = route.isHide();
       forceReplayPath = route.isForceReplayPath();
       notes = route.getNotes();
 
-      if (route.getProvider() != null) {
+      logger.debug("Load route: Provider: " + route.getProvider());
+      if (null != route.getProvider()) {
         provider = route.getProvider().getName();
         providerId = route.getProvider().getId();
       }
 
       final TrafficRules trafficRules = route.getTrafficRules();
-      if (trafficRules != null) {
+      if (null != trafficRules) {
         trafficRules_allowReceive = trafficRules.isAllowReceive();
         trafficRules_allowAnswer = trafficRules.isAllowAnswer();
         trafficRules_sendLimit = trafficRules.getSendLimitStr();
@@ -248,14 +248,14 @@ public class Edit extends EditBean
     for (int i = 0; i < srcSubjs.length; i++) {
       final String srcSubj = srcSubjs[i];
       final Subject subject = (Subject) appContext.getGwRoutingManager().getSubjects().get(srcSubj);
-      if (subject != null) {
+      if (null != subject) {
         final Source source = new Source(subject);
         result.put(source.getName(), source);
       }
     }
     for (int i = 0; i < srcMasks.length; i++) {
       final String srcMask = srcMasks[i];
-      if (srcMask != null && srcMask.trim().length() > 0) {
+      if (null != srcMask && 0 < srcMask.trim().length()) {
         final Mask mask = new Mask(srcMask);
         final Source source = new Source(mask);
         result.put(source.getName(), source);
@@ -272,7 +272,7 @@ public class Edit extends EditBean
   public String[] getProviderIds()
   {
     final Map providers = new TreeMap(appContext.getProviderManager().getProviders());
-    final ArrayList result = new ArrayList(providers.size());
+    final List result = new ArrayList(providers.size());
     for (Iterator i = providers.keySet().iterator(); i.hasNext();) {
       result.add(String.valueOf(((Long) i.next()).longValue()));
     }
@@ -282,7 +282,7 @@ public class Edit extends EditBean
   public String[] getProviders()
   {
     final Map providers = new TreeMap(appContext.getProviderManager().getProviders());
-    final ArrayList result = new ArrayList(providers.size());
+    final List result = new ArrayList(providers.size());
     for (Iterator i = providers.values().iterator(); i.hasNext();) {
       result.add(((Provider) i.next()).getName());
     }
@@ -514,7 +514,7 @@ public class Edit extends EditBean
   public Map getDstSubjPairs()
   {
     final GwRoute route = (GwRoute) appContext.getGwRoutingManager().getRoutes().get(getEditId());
-    if (route != null) {
+    if (null != route) {
       final Map result = new TreeMap();
       for (Iterator i = route.getDestinations().values().iterator(); i.hasNext();) {
         final Destination destination = (Destination) i.next();
@@ -529,7 +529,7 @@ public class Edit extends EditBean
   public Map getDstMaskPairs()
   {
     final GwRoute route = (GwRoute) appContext.getGwRoutingManager().getRoutes().get(getEditId());
-    if (route != null) {
+    if (null != route) {
       final Map result = new TreeMap();
       for (Iterator i = route.getDestinations().values().iterator(); i.hasNext();) {
         final Destination destination = (Destination) i.next();

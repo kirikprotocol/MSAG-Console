@@ -11,41 +11,38 @@ import java.util.*;
 
 
 /**
- * Created by IntelliJ IDEA.
- * User: igork
- * Date: 25.02.2004
- * Time: 20:23:43
+ * Created by IntelliJ IDEA. User: igork Date: 25.02.2004 Time: 20:23:43
  */
 public class SmeManager
 {
   private final Map smes;
 //  private final String configFilename;
 
-  public SmeManager(String configFilename) throws IOException, ParserConfigurationException, SAXException
+  public SmeManager(final String configFilename) throws IOException, ParserConfigurationException, SAXException
   {
 //    this.configFilename = configFilename;
     smes = load(configFilename);
   }
 
-  private Map load(String configFilename) throws IOException, ParserConfigurationException, SAXException, NullPointerException
+  private Map load(final String configFilename) throws IOException, ParserConfigurationException, SAXException, NullPointerException
   {
-    Map result = new HashMap();
-    Document document = Utils.parse(configFilename);
-    NodeList records = document.getDocumentElement().getElementsByTagName("smerecord");
+    final Map result = new HashMap();
+    final Document document = Utils.parse(configFilename);
+    final NodeList records = document.getDocumentElement().getElementsByTagName("smerecord");
     for (int i = 0; i < records.getLength(); i++) {
-      Element smeRecord = (Element) records.item(i);
-      Sme sme = new Sme(smeRecord);
+      final Element smeRecord = (Element) records.item(i);
+      final Sme sme = new Sme(smeRecord);
       result.put(sme.getId(), sme);
     }
     return Collections.synchronizedMap(result);
   }
 
-  public PrintWriter store(PrintWriter out)
+  public PrintWriter store(final PrintWriter out)
   {
-    List values = new LinkedList(smes.values());
+    final List values = new LinkedList(smes.values());
     Collections.sort(values, new Comparator()
     {
-      public int compare(Object o1, Object o2)
+      public int compare(final Object o1, final Object o2)
       {
         final Sme s1 = (Sme) o1;
         final Sme s2 = (Sme) o2;

@@ -9,9 +9,7 @@ import java.io.PrintWriter;
 
 
 /**
- * Created by igork
- * Date: 17.03.2004
- * Time: 17:19:54
+ * Created by igork Date: 17.03.2004 Time: 17:19:54
  */
 public class Sme
 {
@@ -45,47 +43,12 @@ public class Sme
 
   private Category logger = Category.getInstance(this.getClass());
 
-  /**
-   * Constructor
-   *
-   * @param id                уникальный идентификатор SME
-   * @param priority          приоритет этого SME
-   * @param type              тип SME. может быть SME.SMPP или SME.SS7
-   * @param typeOfNumber      тип номера SME? возможные значени€: <dl compact>
-   *                          <dt>0</dt><dd>Unknown</dd>
-   *                          <dt>1</dt><dd>International</dd>
-   *                          <dt>2</dt><dd>National</dd>
-   *                          <dt>3</dt><dd>Network Specific</dd>
-   *                          <dt>4</dt><dd>Subscriber Number</dd>
-   *                          <dt>5</dt><dd>Alphanumeric</dd>
-   *                          <dt>6</dt><dd>Abbreviated</dd>
-   *                          </dl>
-   * @param numberingPlan     возможные значени€: <dl compact>
-   *                          <dt>0</dt><dd>Unknown</dd>
-   *                          <dt>1</dt><dd>ISDN (E163/E164)</dd>
-   *                          <dt>3</dt><dd>Data (X.121)</dd>
-   *                          <dt>4</dt><dd>Telex (F.69)</dd>
-   *                          <dt>6</dt><dd>Land Mobile (E.212)</dd>
-   *                          <dt>8</dt><dd>National</dd>
-   *                          <dt>9</dt><dd>Private</dd>
-   *                          <dt>10</dt><dd>ERMES</dd>
-   *                          <dt>14</dt><dd>Internet (IP)</dd>
-   *                          <dt>18</dt><dd>WAP Client Id (to be defined by WAP Forum)</dd>
-   *                          </dl>
-   * @param interfaceVersion  ¬озможные значени€: 0x34 (v3.4)
-   * @param systemType        <font color=red>???</font>
-   * @param password          пароль дл€ доступа SME к SMSC
-   * @param addrRange         <font color=red>???</font>
-   * @param smeN              <font color=red>???</font>
-   * @param wantAlias
-   * @param forceDC
-   * @param timeout
-   * @param receiptSchemeName ASCIIZ[32] с именем схемы отчетов о доставке
-   * @throws NullPointerException if id, systemType, password, or addrRange is null
-   */
-  public Sme(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName, boolean disabled, byte mode, int proclimit, int schedlimit) throws NullPointerException
+  public Sme(final String id, final int priority, final byte type, final int typeOfNumber, final int numberingPlan, final int interfaceVersion,
+             final String systemType, final String password, final String addrRange, final int smeN, final boolean wantAlias, final boolean forceDC,
+             final int timeout, final String receiptSchemeName, final boolean disabled, final byte mode, final int proclimit, final int schedlimit)
+      throws NullPointerException
   {
-    if (id == null || systemType == null || password == null || addrRange == null)
+    if (null == id || null == systemType || null == password || null == addrRange)
       throw new NullPointerException("SME ID or system type or password or address range is null");
 
     this.id = id.trim();
@@ -104,7 +67,7 @@ public class Sme
     this.receiptSchemeName = receiptSchemeName;
     this.disabled = disabled;
     this.mode = mode;
-    if (this.receiptSchemeName == null)
+    if (null == this.receiptSchemeName)
       this.receiptSchemeName = "default";
     else
       this.receiptSchemeName = this.receiptSchemeName.trim();
@@ -112,48 +75,48 @@ public class Sme
     this.schedlimit = schedlimit;
   }
 
-  public Sme(Element smeElement) throws NullPointerException
+  public Sme(final Element smeElement) throws NullPointerException
   {
     this.receiptSchemeName = "default";
     this.id = smeElement.getAttribute("uid").trim();
-    this.type = smeElement.getAttribute("type").equals("smpp") ? SMPP : SS7;
-    NodeList list = smeElement.getElementsByTagName("param");
+    this.type = "smpp".equals(smeElement.getAttribute("type")) ? SMPP : SS7;
+    final NodeList list = smeElement.getElementsByTagName("param");
     for (int i = 0; i < list.getLength(); i++) {
-      Element paramElem = (Element) list.item(i);
-      String name = paramElem.getAttribute("name");
-      String value = paramElem.getAttribute("value");
+      final Element paramElem = (Element) list.item(i);
+      final String name = paramElem.getAttribute("name");
+      final String value = paramElem.getAttribute("value");
       try {
-        if (name.equals("typeOfNumber")) {
+        if ("typeOfNumber".equals(name)) {
           typeOfNumber = Integer.decode(value).intValue();
-        } else if (name.equals("priority")) {
+        } else if ("priority".equals(name)) {
           priority = Integer.decode(value).intValue();
-        } else if (name.equals("numberingPlan")) {
+        } else if ("numberingPlan".equals(name)) {
           numberingPlan = Integer.decode(value).intValue();
-        } else if (name.equals("interfaceVersion")) {
+        } else if ("interfaceVersion".equals(name)) {
           interfaceVersion = Integer.decode(value).intValue();
-        } else if (name.equals("systemType")) {
+        } else if ("systemType".equals(name)) {
           systemType = value;
-        } else if (name.equals("password")) {
+        } else if ("password".equals(name)) {
           password = value;
-        } else if (name.equals("addrRange")) {
+        } else if ("addrRange".equals(name)) {
           addrRange = value;
-        } else if (name.equals("smeN")) {
+        } else if ("smeN".equals(name)) {
           smeN = Integer.decode(value).intValue();
-        } else if (name.equals("wantAlias")) {
-          wantAlias = value.equalsIgnoreCase("yes") || value.equalsIgnoreCase("true");
-        } else if (name.equals("forceDC")) {
+        } else if ("wantAlias".equals(name)) {
+          wantAlias = "yes".equalsIgnoreCase(value) || "true".equalsIgnoreCase(value);
+        } else if ("forceDC".equals(name)) {
           forceDC = Boolean.valueOf(value).booleanValue();
-        } else if (name.equals("timeout")) {
+        } else if ("timeout".equals(name)) {
           timeout = Integer.decode(value).intValue();
-        } else if (name.equals("receiptSchemeName")) {
+        } else if ("receiptSchemeName".equals(name)) {
           receiptSchemeName = value;
-        } else if (name.equals("disabled")) {
+        } else if ("disabled".equals(name)) {
           disabled = Boolean.valueOf(value).booleanValue();
-        } else if (name.equals("mode")) {
+        } else if ("mode".equals(name)) {
           mode = getMode(value);
-        } else if (name.equals("proclimit")) {
+        } else if ("proclimit".equals(name)) {
           proclimit = Integer.decode(value).intValue();
-        } else if (name.equals("schedlimit")) {
+        } else if ("schedlimit".equals(name)) {
           schedlimit = Integer.decode(value).intValue();
         }
       } catch (NumberFormatException e) {
@@ -161,11 +124,11 @@ public class Sme
       }
     }
 
-    if (id == null || systemType == null || password == null || addrRange == null)
+    if (null == id || null == systemType || null == password || null == addrRange)
       throw new NullPointerException("SME System ID is null");
   }
 
-  public Sme(Sme sme)
+  public Sme(final Sme sme)
   {
     this.id = sme.getId();
     this.priority = sme.getPriority();
@@ -188,10 +151,20 @@ public class Sme
     this.schedlimit = sme.getSchedlimit();
   }
 
-  public PrintWriter store(PrintWriter out)
+  protected PrintWriter storeHeader(final PrintWriter out)
   {
     out.println("  <smerecord type=\"" + getTypeStr() + "\" uid=\"" + id + "\">");
+    return out;
+  }
 
+  protected PrintWriter storeFooter(final PrintWriter out)
+  {
+    out.println("  </smerecord>");
+    return out;
+  }
+
+  protected PrintWriter storeBody(final PrintWriter out)
+  {
     out.println("    <param name=\"priority\"          value=\"" + priority + "\"/>");
     out.println("    <param name=\"typeOfNumber\"      value=\"" + typeOfNumber + "\"/>");
     out.println("    <param name=\"numberingPlan\"     value=\"" + numberingPlan + "\"/>");
@@ -206,14 +179,16 @@ public class Sme
     out.println("    <param name=\"receiptSchemeName\" value=\"" + StringEncoderDecoder.encode(receiptSchemeName) + "\"/>");
     out.println("    <param name=\"disabled\"          value=\"" + disabled + "\"/>");
     out.println("    <param name=\"mode\"              value=\"" + getModeStr() + "\"/>");
-    if (proclimit > 0)
+    if (0 < proclimit)
       out.println("    <param name=\"proclimit\"         value=\"" + proclimit + "\"/>");
-    if (schedlimit > 0)
+    if (0 < schedlimit)
       out.println("    <param name=\"schedlimit\"        value=\"" + schedlimit + "\"/>");
-
-
-    out.println("  </smerecord>");
     return out;
+  }
+
+  public PrintWriter store(final PrintWriter out)
+  {
+    return storeFooter(storeBody(storeHeader(out)));
   }
 
   private String getTypeStr()
@@ -228,7 +203,7 @@ public class Sme
     }
   }
 
-  public boolean equals(Object obj)
+  public boolean equals(final Object obj)
   {
     if (obj instanceof Sme)
       return ((Sme) obj).id.equals(id);
@@ -255,7 +230,7 @@ public class Sme
     }
   }
 
-  private static byte getMode(String modeStr)
+  private static byte getMode(final String modeStr)
   {
     if ("tx".equalsIgnoreCase(modeStr))
       return MODE_TX;
@@ -266,7 +241,7 @@ public class Sme
     return 0;
   }
 
-  public void update(Sme newSme)
+  public void update(final Sme newSme)
   {
     id = newSme.getId();
     priority = newSme.getPriority();
@@ -293,7 +268,7 @@ public class Sme
     return id;
   }
 
-  public void setId(String id)
+  public void setId(final String id)
   {
     this.id = id;
   }
@@ -303,7 +278,7 @@ public class Sme
     return priority;
   }
 
-  public void setPriority(int priority)
+  public void setPriority(final int priority)
   {
     this.priority = priority;
   }
@@ -313,7 +288,7 @@ public class Sme
     return type;
   }
 
-  public void setType(byte type)
+  public void setType(final byte type)
   {
     this.type = type;
   }
@@ -323,7 +298,7 @@ public class Sme
     return typeOfNumber;
   }
 
-  public void setTypeOfNumber(int typeOfNumber)
+  public void setTypeOfNumber(final int typeOfNumber)
   {
     this.typeOfNumber = typeOfNumber;
   }
@@ -333,7 +308,7 @@ public class Sme
     return numberingPlan;
   }
 
-  public void setNumberingPlan(int numberingPlan)
+  public void setNumberingPlan(final int numberingPlan)
   {
     this.numberingPlan = numberingPlan;
   }
@@ -343,7 +318,7 @@ public class Sme
     return interfaceVersion;
   }
 
-  public void setInterfaceVersion(int interfaceVersion)
+  public void setInterfaceVersion(final int interfaceVersion)
   {
     this.interfaceVersion = interfaceVersion;
   }
@@ -353,7 +328,7 @@ public class Sme
     return systemType;
   }
 
-  public void setSystemType(String systemType)
+  public void setSystemType(final String systemType)
   {
     this.systemType = systemType;
   }
@@ -363,7 +338,7 @@ public class Sme
     return password;
   }
 
-  public void setPassword(String password)
+  public void setPassword(final String password)
   {
     this.password = password;
   }
@@ -373,7 +348,7 @@ public class Sme
     return addrRange;
   }
 
-  public void setAddrRange(String addrRange)
+  public void setAddrRange(final String addrRange)
   {
     this.addrRange = addrRange;
   }
@@ -383,7 +358,7 @@ public class Sme
     return smeN;
   }
 
-  public void setSmeN(int smeN)
+  public void setSmeN(final int smeN)
   {
     this.smeN = smeN;
   }
@@ -393,7 +368,7 @@ public class Sme
     return wantAlias;
   }
 
-  public void setWantAlias(boolean wantAlias)
+  public void setWantAlias(final boolean wantAlias)
   {
     this.wantAlias = wantAlias;
   }
@@ -403,7 +378,7 @@ public class Sme
     return timeout;
   }
 
-  public void setTimeout(int timeout)
+  public void setTimeout(final int timeout)
   {
     this.timeout = timeout;
   }
@@ -413,7 +388,7 @@ public class Sme
     return forceDC;
   }
 
-  public void setForceDC(boolean forceDC)
+  public void setForceDC(final boolean forceDC)
   {
     this.forceDC = forceDC;
   }
@@ -423,7 +398,7 @@ public class Sme
     return receiptSchemeName;
   }
 
-  public void setReceiptSchemeName(String receiptSchemeName)
+  public void setReceiptSchemeName(final String receiptSchemeName)
   {
     this.receiptSchemeName = receiptSchemeName;
   }
@@ -433,7 +408,7 @@ public class Sme
     return disabled;
   }
 
-  public void setDisabled(boolean disabled)
+  public void setDisabled(final boolean disabled)
   {
     this.disabled = disabled;
   }
@@ -443,7 +418,7 @@ public class Sme
     return mode;
   }
 
-  public void setMode(byte mode)
+  public void setMode(final byte mode)
   {
     this.mode = mode;
   }
@@ -453,7 +428,7 @@ public class Sme
     return proclimit;
   }
 
-  public void setProclimit(int proclimit)
+  public void setProclimit(final int proclimit)
   {
     this.proclimit = proclimit;
   }
@@ -463,7 +438,7 @@ public class Sme
     return schedlimit;
   }
 
-  public void setSchedlimit(int schedlimit)
+  public void setSchedlimit(final int schedlimit)
   {
     this.schedlimit = schedlimit;
   }
@@ -473,7 +448,7 @@ public class Sme
     return status;
   }
 
-  public void setStatus(SmeStatus status)
+  public void setStatus(final SmeStatus status)
   {
     this.status = status;
   }

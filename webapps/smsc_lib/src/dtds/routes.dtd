@@ -16,6 +16,11 @@ forwardTo CDATA #IMPLIED
 hide CDATA #IMPLIED
 forceReplayPath CDATA #IMPLIED
 trafficRules CDATA #IMPLIED
+providerId CDATA "-1" 
+replayPath (pass|force|suppress) "pass"
+forceDelivery (true|false) "false"
+aclId CDATA "-1"
+allowBlocked (true|false) "false"
 >
 <!ELEMENT notes (#PCDATA)>
 <!ELEMENT source (subject | mask)>
