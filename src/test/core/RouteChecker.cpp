@@ -38,8 +38,8 @@ bool RouteChecker::isDestReachable(PduAddress& src, PduAddress& dest,
 	if (checkSme && routeHolder)
 	{
 		bool bound = smeReg->isSmeBound(routeHolder->route.smeSystemId);
-		__trace2__("isDestReachable(): destAddr = %s, route = %s",
-			str(destAddr).c_str(), str(*routeHolder).c_str());
+		__trace2__("isDestReachable(): destAddr = %s, route = %s, bound = %s",
+			str(destAddr).c_str(), str(*routeHolder).c_str(), bound ? "true" : "false");
 		return bound;
 	}
 	else
