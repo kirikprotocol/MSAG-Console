@@ -82,6 +82,7 @@ public class GwRoute extends Route
                 + "\" forceReplayPath=\"" + (isForceReplayPath() ? "true" : "false")
                 + ("MAP_PROXY".equals(getSrcSmeId()) ? "\" forwardTo=\"" + StringEncoderDecoder.encode(getForwardTo()) : "")
                 + (null != provider ? "\" providerId=\"" + provider.getId() : "")
+                + (null != trafficRules ? "\" trafficRules=\"" + trafficRules.getText() : "")
                 + "\">");
     if (null != getNotes())
       out.println("    <notes>" + getNotes() + "</notes>");
