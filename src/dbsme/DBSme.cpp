@@ -107,7 +107,7 @@ public:
         sms.setDeliveryReport(0);
         
         body.setIntProperty(Tag::SMPP_PROTOCOL_ID, processor.getProtocolId());
-        body.setIntProperty(Tag::SMPP_ESM_CLASS, 0xC3 /*11000011*/);
+        body.setIntProperty(Tag::SMPP_ESM_CLASS, 0 /*xx0000xx*/);
         body.setIntProperty(Tag::SMPP_DATA_CODING, 0);
         body.setIntProperty(Tag::SMPP_PRIORITY, 0);
         
