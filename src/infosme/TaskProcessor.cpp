@@ -17,7 +17,7 @@ TaskContainer::~TaskContainer()
     while (tasks.Next(key, task))
         if (task) task->finalize();
 }
-bool TaskContainer::addTask(Task* task)
+bool TaskContainer::putTask(Task* task)
 {
     __require__(task);
     MutexGuard guard(tasksLock);
@@ -27,6 +27,13 @@ bool TaskContainer::addTask(Task* task)
     tasks.Insert(task_id, task);
     prioritySum += task->getPriority();
     return true;
+}
+bool TaskContainer::addTask(Task* task)
+{
+    __require__(task);
+    bool result = putTask(task);
+    if (result) task->createTable();
+    return result;
 }
 bool TaskContainer::removeTask(std::string taskId)
 {
@@ -155,7 +162,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
                 throw ConfigException("Failed to obtail DataSource driver '%s' for task '%s'", 
                                       dsId, taskId);
             
-            if (!container.addTask(new Task(taskConfig, taskId, taskTablesPrefix, taskDs, dsInternal)))
+            if (!container.putTask(new Task(taskConfig, taskId, taskTablesPrefix, taskDs, dsInternal)))
                 throw ConfigException("Failed to add task. Task with id '%s' already registered.",
                                       taskId);
         }

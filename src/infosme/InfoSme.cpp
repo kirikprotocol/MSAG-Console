@@ -81,7 +81,7 @@ public:
         // Mandatory fields
         strHost = config->getString("host", "SMSC host wasn't defined !");
         host = strHost;
-        strSid = config->getString("sid", "WSme id wasn't defined !");
+        strSid = config->getString("sid", "InfoSme id wasn't defined !");
         sid = strSid;
         
         port = config->getInt("port", "SMSC port wasn't defined !");
@@ -91,21 +91,21 @@ public:
         try
         {
             strPassword = config->getString("password",
-                                            "WSme password wasn't defined !");
+                                            "InfoSme password wasn't defined !");
             password = strPassword;
         }
         catch (ConfigException& exc) { password = ""; strPassword = 0; }
         try
         {
             strSysType = config->getString("systemType", 
-                                           "WSme system type wasn't defined !");
+                                           "InfoSme system type wasn't defined !");
             systemType = strSysType;
         }
         catch (ConfigException& exc) { systemType = ""; strSysType = 0; }
         try
         {
             strOrigAddr = config->getString("origAddress", 
-                                            "WSme originating address wasn't defined !");
+                                            "InfoSme originating address wasn't defined !");
             origAddr = strOrigAddr;
         }
         catch (ConfigException& exc) { origAddr = ""; strOrigAddr = 0; }
@@ -351,6 +351,8 @@ int main(void)
     sigemptyset(&set);
     sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
     sigset(smsc::system::SHUTDOWN_SIGNAL, appSignalHandler);
+    sigaddset(&set, SIGINT);
+    sigset(SIGINT, appSignalHandler);
 
     atexit(atExitHandler);
 

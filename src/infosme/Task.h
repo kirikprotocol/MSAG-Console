@@ -156,7 +156,6 @@ namespace smsc { namespace infosme
         Mutex       createTableLock;
         bool        bInProcess, bTableCreated;
         
-        void createTable();
         char* prepareSqlCall(const char* sql);
 
         virtual void init(ConfigView* config, std::string taskId, std::string tablePrefix);
@@ -170,7 +169,8 @@ namespace smsc { namespace infosme
         
         static Statement* getStatement(Connection* connection, 
                                        const char* id, const char* sql);
-        
+        void createTable();
+
         void finalize()
         {
             {
@@ -346,6 +346,7 @@ namespace smsc { namespace infosme
     };
     struct TaskContainerAdapter
     {
+        virtual bool putTask(Task* task) = 0;
         virtual bool addTask(Task* task) = 0;
         virtual bool removeTask(std::string taskId) = 0;
         virtual bool hasTask(std::string taskId) = 0;

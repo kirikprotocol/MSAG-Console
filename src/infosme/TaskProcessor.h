@@ -146,6 +146,7 @@ namespace smsc { namespace infosme
         TaskContainer() : TaskContainerAdapter(), prioritySum(0) {};
         virtual ~TaskContainer();
 
+        virtual bool putTask(Task* task);
         virtual bool addTask(Task* task);
         virtual bool removeTask(std::string taskId);
         virtual bool hasTask(std::string taskId);
