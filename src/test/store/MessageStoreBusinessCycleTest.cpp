@@ -92,7 +92,6 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 	doStat(tc.storeCorrectSM(&id, &sms, RAND_TC));
 	
 	//сохранение правильного SM с параметрами похожими на уже существующий SM
-	//сохранение дублированного SM с замещением
 	//сохранение дублированного SM с отказом
 	//сохранение неправильного SM
 	//установка правильного статуса
@@ -113,25 +112,25 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 				}
 				break;
 			case 2:
-				doStat(tc.storeReplaceSM(id, &sms));
-				break;
-			case 3:
 				doStat(tc.storeRejectDuplicateSM(sms));
 				break;
-			case 4:
+			case 3:
 				doStat(tc.storeIncorrectSM(RAND_TC));
 				break;
-			case 5:
+			case 4:
 				doStat(tc.setCorrectSMStatus(id, &sms, RAND_TC));
 				break;
-			case 6:
+			case 5:
 				doStat(tc.setIncorrectSMStatus(id));
 				break;
-			case 7:
+			case 6:
 				doStat(tc.replaceCorrectSM(id, &sms, RAND_TC));
 				break;
-			case 8:
+			case 7:
 				doStat(tc.replaceIncorrectSM(id, sms, RAND_TC));
+				break;
+			case 8:
+				doStat(tc.replaceIncorrectSM2(id, sms, RAND_TC));
 				break;
 			default: //9..15
 				doStat(tc.loadExistentSM(id, sms));

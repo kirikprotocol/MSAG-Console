@@ -21,7 +21,6 @@ const int MAX_MSG_BODY_LENGTH = 200;
 
 //implemented
 const char* const TC_STORE_CORRECT_SM = "storeCorrectSM";
-const char* const TC_STORE_REPLACE_SM = "storeReplaceSM";
 const char* const TC_STORE_REJECT_DUPLICATE_SM = "storeRejectDuplicateSM";
 const char* const TC_STORE_INCORRECT_SM = "storeIncorrectSM";
 const char* const TC_STORE_ASSERT_SM = "storeAssertSM";
@@ -59,7 +58,7 @@ const char* const TC_GET_NON_EXISTENT_SM_DELIVERY_FAILURE_STATISTICS =
 const char* const TC_CREATE_BILLING_RECORD = "createBillingRecord";
 
 /**
- * Этот класс содержит все тест кейсы необходимые для тестирования подсистемы
+ * Этот класс содержит все test cases необходимые для тестирования подсистемы
  * Message Store.
  * 
  * @author bryz
@@ -90,11 +89,6 @@ public:
 	 */
 	TCResult* storeCorrectSM(SMSId* idp, SMS* smsp,
 		const SMSId existentId, const SMS& existentSMS, int num);
-
-	/**
-	 * Сохранение дублированного SM с замещением.
-	 */
-	TCResult* storeReplaceSM(SMSId smsId, SMS* sms);
 
 	/**
 	 * Сохранение дублированного SM с отказом.
@@ -141,7 +135,13 @@ public:
 	 */
 	TCResult* replaceIncorrectSM(SMSId id,
 		const SMS& sms, int num);
-	
+
+	/**
+	 * Обновление существующего SM некорректными данными.
+	 * Диагностика ошибки должна выводиться в лог.
+	 */
+	TCResult* replaceIncorrectSM2(SMSId id, const SMS& sms, int num);
+
 	/**
 	 * Обновление несуществующего SM.
 	 * Диагностика ошибки должна выводиться в лог.

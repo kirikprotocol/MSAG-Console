@@ -53,13 +53,6 @@ void executeBenchmarkTest(const int size)
 	}
 	printResult("storeCorrectSM", 2 * size, getTime());
 	
-	//сохранение дублированного SM с замещением
-	for (int i = 0; i < size; i++)
-	{
-		delete tc.storeReplaceSM(id[i], &sms[i]);
-	}
-	printResult("storeReplaceSM", size, getTime());
-
 	//сохранение дублированного SM с отказом
 	for (int i = 0; i < size; i++)
 	{
@@ -99,8 +92,9 @@ void executeBenchmarkTest(const int size)
 	for (int i = 0; i < size; i++)
 	{
 		delete tc.replaceIncorrectSM(id[i], sms[i], RAND_TC);
+		delete tc.replaceIncorrectSM2(id[i], sms[i], RAND_TC);
 	}
-	printResult("replaceIncorrectSM", size, getTime());
+	printResult("replaceIncorrectSM", 2 * size, getTime());
 
 	//чтение SM
 	for (int i = 0; i < size; i++)

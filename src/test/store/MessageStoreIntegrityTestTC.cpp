@@ -29,18 +29,16 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 		TCResult* res = tc.storeCorrectSM(&id[i], &sms[i], RAND_TC);
 		filter->addResult(res);
 		stack[i].push_back(res);
-		//delete res;
 	}
 	
 	//сохранение правильного SM с параметрами похожими на уже существующий SM, 1/15
-	//сохранение дублированного SM с замещением, 1/15
 	//сохранение дублированного SM с отказом, 1/15
 	//сохранение неправильного SM, 1/15
 	//установка правильного статуса, 1/15
 	//некорректное изменение статуса SM, 1/15
 	//замещение SM, 1/15
 	//некорректное замещение SM, 1/15
-	//чтение SM, 7/15
+	//чтение SM, 8/15
 	//cout << "Издевательство над существующими SM" << endl;
 	for (TCSelector s(RAND_SET_TC, 15); s.check(); s++)
 	{
@@ -56,79 +54,69 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 						id[i], sms[i], RAND_TC);
 					filter->addResult(res1);
 					stack[i].push_back(res1);
-					//delete res1;
 					//прочитать
 					TCResult* res2 = tc.loadExistentSM(id[i], sms[i]);
 					filter->addResult(res2);
 					stack[i].push_back(res2);
-					//delete res2;
 					//удалить
 					TCResult* res3 = tc.deleteExistentSM(newId);
 					filter->addResult(res3);
 					stack[i].push_back(res3);
-					//delete res3;
 				}
 				break;
 			case 2:
 				for (int i = 0; i < listSize; i++)
 				{
-					TCResult* res = tc.storeReplaceSM(id[i], &sms[i]);
-					filter->addResult(res);
-					stack[i].push_back(res);
-					//delete res;
-				}
-				break;
-			case 3:
-				for (int i = 0; i < listSize; i++)
-				{
 					TCResult* res = tc.storeRejectDuplicateSM(sms[i]);
 					filter->addResult(res);
 					stack[i].push_back(res);
-					//delete res;
 				}
 				break;
-			case 4:
+			case 3:
 				{
 					TCResult* res = tc.storeIncorrectSM(RAND_TC);
 					filter->addResult(res);
 					//stack[i].push_back(res);
-					//delete res;
 				}
 				break;
-			case 5:
+			case 4:
 				for (int i = 0; i < listSize; i++)
 				{
 					TCResult* res = tc.setCorrectSMStatus(id[i], &sms[i], RAND_TC);
 					filter->addResult(res);
 					stack[i].push_back(res);
-					//delete res;
 				}
 				break;
-			case 6:
+			case 5:
 				for (int i = 0; i < listSize; i++)
 				{
 					TCResult* res = tc.setIncorrectSMStatus(id[i]);
 					filter->addResult(res);
 					stack[i].push_back(res);
-					//delete res;
 				}
 				break;
-			case 7:
+			case 6:
 				for (int i = 0; i < listSize; i++)
 				{
 					TCResult* res = tc.replaceCorrectSM(id[i], &sms[i], RAND_TC);
 					filter->addResult(res);
 					stack[i].push_back(res);
-					//delete res;
 				}
 				break;
-			case 8:
+			case 7:
 				for (int i = 0; i < listSize; i++)
 				{
 					TCResult* res = tc.replaceIncorrectSM(id[i], sms[i], RAND_TC);
 					filter->addResult(res);
 					stack[i].push_back(res);
-					//delete res;
+				}
+				break;
+			case 8:
+				for (int i = 0; i < listSize; i++)
+				{
+					TCResult* res = tc.replaceIncorrectSM2(id[i], sms[i], RAND_TC);
+					filter->addResult(res);
+					stack[i].push_back(res);
 				}
 				break;
 			default: //case = 9..15
@@ -137,7 +125,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 					TCResult* res = tc.loadExistentSM(id[i], sms[i]);
 					filter->addResult(res);
 					stack[i].push_back(res);
-					//delete res;
 				}
 		}
 	}
@@ -149,7 +136,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 		TCResult* res = tc.deleteExistentSM(id[i]);
 		filter->addResult(res);
 		stack[i].push_back(res);
-		//delete res;
 	}
 
 	//изменение статуса несуществующих SM
@@ -167,7 +153,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 					TCResult* res = tc.setNonExistentSMStatus(id[i], RAND_TC);
 					filter->addResult(res);
 					stack[i].push_back(res);
-					//delete res;
 				}
 				break;
 			case 2:
@@ -176,7 +161,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 					TCResult* res = tc.replaceNonExistentSM(id[i], RAND_TC);
 					filter->addResult(res);
 					stack[i].push_back(res);
-					//delete res;
 				}
 				break;
 			case 3:
@@ -185,7 +169,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 					TCResult* res = tc.loadNonExistentSM(id[i], RAND_TC);
 					filter->addResult(res);
 					stack[i].push_back(res);
-					//delete res;
 				}
 				break;
 			case 4:
@@ -194,7 +177,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 					TCResult* res = tc.deleteNonExistentSM(id[i], RAND_TC);
 					filter->addResult(res);
 					stack[i].push_back(res);
-					//delete res;
 				}
 				break;
 		}
@@ -222,8 +204,6 @@ void saveCheckList(TCResultFilter* filter)
 	//заимплементированные тест кейсы
 	cl.writeResult("Сохранение правильного SM",
 		filter->getResults(TC_STORE_CORRECT_SM));
-	cl.writeResult("Сохранение SM с замещением уже существующего",
-		filter->getResults(TC_STORE_REPLACE_SM));
 	cl.writeResult("Сохранение дублированного SM",
 		filter->getResults(TC_STORE_REJECT_DUPLICATE_SM));
 	cl.writeResult("Сохранение неправильного SM",
@@ -287,11 +267,11 @@ int main(int argc, char* argv[])
 		Manager::init("config.xml");
 		StoreManager::startup(Manager::getInstance());
 		TCResultFilter* filter = new TCResultFilter();
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < 50; i++)
 		{
 			executeIntegrityTest(filter, 1);
 		}
-		for (int i = 0; i < 20; i++)
+		for (int i = 0; i < 50; i++)
 		{
 			executeIntegrityTest(filter, 5);
 		}
