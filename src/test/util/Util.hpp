@@ -52,6 +52,7 @@ class TCSelector
 {
 private:
 	int i;
+	bool first;
 	const int val;
 	const int maxVal;
 
@@ -104,12 +105,13 @@ inline int TCSelector::value()
 
 inline bool TCSelector::check()
 {
-	return (val == 0 ? i <= maxVal : i == 1);
+	return (val == 0 ? i <= maxVal : first);
 }
 	
 inline TCSelector& TCSelector::operator++ (int)
 {
 	i++;
+	first = false;
 	return *this;
 }
 

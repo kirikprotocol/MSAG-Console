@@ -54,7 +54,7 @@ void TCResult::print(ostream& os)
 }
 
 TCSelector::TCSelector(int _val, int _maxVal)
-	: val(_val), maxVal(_maxVal)
+	: val(_val), maxVal(_maxVal), first(true)
 {
 	if (val < 0)
 	{
