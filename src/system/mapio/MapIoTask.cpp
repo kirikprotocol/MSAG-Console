@@ -206,7 +206,7 @@ restart:
         k+=sprintf(text+k,"%02x ",(unsigned)message.msg_p[i]);
       }
       text[k]=0;
-      __trace2__("MAP: WARN: error at Et96MapHandleIndication with code x%hx msg: %s",map_result,text);
+      __warning2__("MAP: WARN: error at Et96MapHandleIndication with code x%hx msg: %s",map_result,text);
       delete text;
      }
     }
