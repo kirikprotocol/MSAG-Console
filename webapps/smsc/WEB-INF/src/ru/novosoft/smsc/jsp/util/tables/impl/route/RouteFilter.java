@@ -227,7 +227,7 @@ public class RouteFilter implements Filter
 
     for (Iterator j = names.iterator(); j.hasNext();) {
       String subject =  (String) j.next();
-      if (name.indexOf(subject) != -1)
+      if (name.toLowerCase().indexOf(subject.toLowerCase()) != -1)
         return ALLOWED;
     }
     return NOT_ALLOWED;
