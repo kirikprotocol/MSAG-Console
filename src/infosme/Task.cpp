@@ -356,7 +356,7 @@ void Task::beginGeneration(Statistics* statistics)
 {
     {
         MutexGuard guard(inGenerationLock);
-        if (bInGeneration || (info.trackIntegrity && bInProcess)) return;
+        if (bInGeneration || (info.trackIntegrity && isInProcess())) return;
         bInGeneration = true; bGenerationSuccess = false;
     }
 
@@ -446,7 +446,7 @@ void Task::beginGeneration(Statistics* statistics)
         
         {
             MutexGuard guard(inGenerationLock);
-            if (bInGeneration && info.trackIntegrity) bGenerationSuccess = false;
+            if (info.trackIntegrity && !bInGeneration) bGenerationSuccess = false;
             else bGenerationSuccess = true;
         }
 
