@@ -20,7 +20,8 @@ class CommandApply : public smsc::admin::protocol::Command
 public:
   enum subjects {
     unknown,
-    config
+    config,
+    routes
   };
   
   CommandApply(const xercesc::DOMDocument * document);

@@ -15,7 +15,7 @@ namespace admin {
 
 using namespace smsc::util::xml;
 
-CommandApply::CommandApply(const xercesc::DOMDocument * doc)
+CommandApply::CommandApply(const xercesc::DOMDocument * doc)  
   : Command((Command::Id)CommandIds::apply)
 {
   smsc_log_debug(logger, "Apply command");
@@ -28,10 +28,14 @@ CommandApply::CommandApply(const xercesc::DOMDocument * doc)
       XmlStr name(paramElem->getAttribute(XmlStr("name")));
       if (::strcmp("subj", name) == 0) {
         std::auto_ptr<char> value(getNodeText(*paramElem));
-        if (strcmp("config", value.get()) == 0) 
+        
+        if (strcmp("config", value.get()) == 0)
           subj = CommandApply::config;
+        else if (strcmp("routes", value.get()) == 0)
+          subj = CommandApply::routes;
         else
           subj = CommandApply::unknown;
+          
       }
     }
   }
@@ -43,6 +47,7 @@ CommandApply::CommandApply(const xercesc::DOMDocument * doc)
 CommandApply::~CommandApply()
 {
   id = undefined;
+  subj = CommandApply::unknown;
 }
 
 CommandApply::subjects CommandApply::getSubject()

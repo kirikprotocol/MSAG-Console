@@ -22,7 +22,7 @@ class GwRunner : public smsc::core::threads::Thread
 {
   public:
     GwRunner(const SmscConfigs& cfgs)
-    : _app(new smsc::smppgw::Smsc), running(false), smscConfigs(cfgs)
+    : _app(new smsc::smppgw::Smsc), running(false), configs(cfgs)
     {}
     
     virtual ~GwRunner() {
@@ -38,7 +38,7 @@ class GwRunner : public smsc::core::threads::Thread
             MutexGuard guard(mutex);
             running = true;
           }
-          _app->init(smscConfigs);
+          _app->init(configs);
           _app->run();
         }
         else
@@ -80,24 +80,30 @@ class GwRunner : public smsc::core::threads::Thread
       MutexGuard guard(mutex);
       return running;
     }
+
+    smsc::smppgw::Smsc* const getApp()
+    {
+      MutexGuard guard(mutex);
+      return _app;
+    }
       
 protected:
   smsc::smppgw::Smsc* _app;
   Mutex mutex;
   bool running;
-  const SmscConfigs& smscConfigs;
+  const SmscConfigs& configs;
 };
 
 
 GwRunner * runner = 0;
 Mutex runnerMutex;
-const SmscConfigs* SmppGwCommandDispatcher::smscConfigs = 0;
+const SmscConfigs* SmppGwCommandDispatcher::configs = 0;
 
 void SmppGwCommandDispatcher::startGw()
 {
   MutexGuard guard(runnerMutex);
   if (runner == 0) {
-    runner = new GwRunner(*smscConfigs);
+    runner = new GwRunner(*configs);
     runner->Start();
   }
 }
@@ -170,12 +176,52 @@ void SmppGwCommandDispatcher::shutdown()
   stopGw();
 }
 
-Response * SmppGwCommandDispatcher::apply(CommandApply*)
+Response * SmppGwCommandDispatcher::apply(CommandApply* command)
+{
+  try
+  {
+    switch (command->getSubject())
+    {
+      case CommandApply::config:
+        return applyConfig();
+      case CommandApply::routes:
+        return applyRoutes();
+    }
+    stopGw();
+    startGw();
+    return new Response(Response::Ok, "none");
+  } catch (AdminException &e) {
+    return new Response(Response::Error, e.what());
+  } catch (const char * const e) {
+    return new Response(Response::Error, e);
+  } catch (...) {
+    return new Response(Response::Error, "Unknown exception");
+  }
+}
+
+Response * SmppGwCommandDispatcher::applyConfig()
 {
   try
   {
     stopGw();
     startGw();
+    return new Response(Response::Ok, "none");
+  } catch (AdminException &e) {
+    return new Response(Response::Error, e.what());
+  } catch (const char * const e) {
+    return new Response(Response::Error, e);
+  } catch (...) {
+    return new Response(Response::Error, "Unknown exception");
+  }
+}
+
+Response * SmppGwCommandDispatcher::applyRoutes()
+{
+  try
+  {
+    configs->routesconfig->reload();
+    configs->smemanconfig->reload();
+    runner->getApp()->reloadRoutes(*configs);
     return new Response(Response::Ok, "none");
   } catch (AdminException &e) {
     return new Response(Response::Error, e.what());

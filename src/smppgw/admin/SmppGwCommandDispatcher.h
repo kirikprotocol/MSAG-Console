@@ -36,7 +36,7 @@ public:
 	virtual Response *handle(const Command * const command) throw (AdminException);
 	static void shutdown();
   
-  static void setGwConfigs(const SmscConfigs& cfg) { smscConfigs = &cfg; }
+  static void setGwConfigs(const SmscConfigs& cfg) { configs = &cfg; }
   
   static void startGw();
   static void stopGw();
@@ -45,9 +45,11 @@ public:
 
 protected:
   Response * apply(CommandApply*);
+  Response * applyConfig();
+  Response * applyRoutes();
   
 private:
-  static const SmscConfigs* smscConfigs;
+  static const SmscConfigs* configs;
 };
 
 }
