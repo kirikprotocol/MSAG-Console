@@ -284,7 +284,7 @@ public:
       if(fl)
       {
         f.ReadNetInt32();
-        Key k;
+        K k;
         k.Read(f);
         if(k==key)throw DiskHashDuplicateKeyException();
         continue;
