@@ -553,6 +553,15 @@ void extractSmsPart(SMS* sms,int partnum)
   if(!sms->hasBinProperty(Tag::SMSC_CONCATINFO))return;
   int dstdc=sms->getIntProperty(Tag::SMSC_DSTCODEPAGE);
   int dc=sms->getIntProperty(Tag::SMPP_DATA_CODING);
+  if(sms->hasBinProperty(Tag::SMSC_DC_LIST))
+  {
+    unsigned len;
+    unsigned char* dcList=(unsigned char*)sms->getBinProperty(Tag::SMSC_DC_LIST,&len);
+    if(partnum<len)
+    {
+      dc=dcList[partnum];
+    }
+  }
   unsigned int len;
   const char* msg=sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
   if(len==0 && sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
@@ -667,7 +676,7 @@ void extractSmsPart(SMS* sms,int partnum)
         ConvertUCS2ToMultibyte((short*)(msg+udhlen),len-udhlen,buf8.get(),len,CONV_ENCODING_CP1251);
         len=(len-udhlen)/2;
         bufTr=auto_ptr<char>(new char[udhlen+len*3+1]);
-        len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get()+udhlen,len*3);
+        len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get()+udhlen,len*3+1);
         memcpy(bufTr.get(),msg,udhlen);
         len+=udhlen;
         msg=bufTr.get();
@@ -682,10 +691,8 @@ void extractSmsPart(SMS* sms,int partnum)
           msg=bufTr.get();
           if(len>udhlen+(len-udhlen)*8/7)len=udhlen+(len-udhlen)*8/7;
           dc=DataCoding::SMSC7BIT;
-        }else
-        {
-          if(len>140)len=140;
         }
+        if(len>140)len=140;
         if(sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
         {
           int dc=sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
@@ -701,8 +708,8 @@ void extractSmsPart(SMS* sms,int partnum)
           sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
           __trace2__("extractSmsPart: transliterate olddc(%x)->dc(%x)",olddc,dc);
         }
-        sms->setIntProperty(Tag::SMPP_DATA_CODING,dc);
       }
+      sms->setIntProperty(Tag::SMPP_DATA_CODING,dc);
       sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x40);
       sms->setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)msg,len);
       sms->setIntProperty(Tag::SMPP_SM_LENGTH,len);

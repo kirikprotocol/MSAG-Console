@@ -1083,7 +1083,7 @@ StateType StateMachine::submit(Tuple& t)
 
     if(firstPiece) //first piece
     {
-      smsc_log_info(smsLog, "merging sms Id=%lld, first part arrived(%u/%u),mr=%d",t.msgId,idx,num,sms->getMessageReference());
+      smsc_log_info(smsLog, "merging sms Id=%lld, first part arrived(%u/%u),mr=%d,dc=%d",t.msgId,idx,num,(int)mr,dc);
       sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)&~0x40);
       string tmp;
       if(!isForwardTo)
@@ -1101,12 +1101,20 @@ StateType StateMachine::submit(Tuple& t)
       sms->getMessageBody().dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
       sms->setIntProperty(Tag::SMPP_SM_LENGTH,0);
 
-      ConcatInfo *ci=(ConcatInfo *)new char[1+2*num];
+      char cibuf[256*2+1];
+      ConcatInfo *ci=(ConcatInfo *)cibuf;
       ci->num=1;
       ci->setOff(0,0);
       sms->setBinProperty(Tag::SMSC_CONCATINFO,(char*)ci,1+2*num);
       generateDeliver=false;
-      delete [] ((char*)ci);
+
+      char dc_list[256];
+      memset(dc_list,0,num);
+      __trace2__("dc_list[%d]=%d",idx-1,dc);
+      dc_list[idx-1]=dc;
+
+      sms->setBinProperty(Tag::SMSC_DC_LIST,dc_list,num);
+
 
       if(sms->getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
       {
@@ -1139,7 +1147,7 @@ StateType StateMachine::submit(Tuple& t)
       needToSendResp=false;
     }else
     {
-      smsc_log_info(smsLog, "merging sms Id=%lld, next part arrived(%u/%u), mr=%d",t.msgId,idx,num,sms->getMessageReference());
+      smsc_log_info(smsLog, "merging sms Id=%lld, next part arrived(%u/%u), mr=%d,dc=%d",t.msgId,idx,num,(int)mr,dc);
       SMS* smsptr=smsc->getTempStore().Extract(t.msgId);
       SMS _sms;
       SMS& newsms=smsptr?*smsptr:_sms;
@@ -1201,10 +1209,13 @@ StateType StateMachine::submit(Tuple& t)
           return ENROUTE_STATE;
         }
       }
+
+
       if(isForwardTo)
       {
         body=(unsigned char*)sms->getBinProperty(Tag::SMSC_MO_PDU,&len);
       }
+      /*
       if(!isForwardTo && sms->getIntProperty(Tag::SMPP_DATA_CODING)!=newsms.getIntProperty(Tag::SMPP_DATA_CODING))
       {
         smsc_log_error(smsLog, "different data coding of parts of concatenated message (%d!=%d) id=%lld",
@@ -1213,6 +1224,7 @@ StateType StateMachine::submit(Tuple& t)
         if(smsptr)delete smsptr;
         return ERROR_STATE;
       }
+      */
 
       if(newsms.hasBinProperty(Tag::SMSC_UMR_LIST))
       {
@@ -1222,6 +1234,18 @@ StateType StateMachine::submit(Tuple& t)
         {
           umrList[idx-1]=sms->getMessageReference();
           newsms.setBinProperty(Tag::SMSC_UMR_LIST,(const char*)umrList,len);
+        }
+      }
+
+      if(newsms.hasBinProperty(Tag::SMSC_DC_LIST))
+      {
+        unsigned len;
+        unsigned char* dcList=(unsigned char*)newsms.getBinProperty(Tag::SMSC_DC_LIST,&len);
+        if(idx<=len)
+        {
+          __trace2__("dc_list[%d]=%d",idx-1,dc);
+          dcList[idx-1]=dc;
+          newsms.setBinProperty(Tag::SMSC_DC_LIST,(const char*)dcList,len);
         }
       }
 
@@ -1238,6 +1262,17 @@ StateType StateMachine::submit(Tuple& t)
         vector<int> order;
         bool rightOrder=true;
         bool totalMoreUdh=false;
+        bool differentDc=false;
+        bool haveBinDc=sms->getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::BINARY;
+
+        unsigned char* dcList=0;
+        unsigned dcListLen=0;
+
+        if(newsms.hasBinProperty(Tag::SMSC_DC_LIST))
+        {
+          dcList=(unsigned char*)newsms.getBinProperty(Tag::SMSC_DC_LIST,&dcListLen);
+        }
+
         for(int i=0;i<ci->num;i++)
         {
           uint16_t mr0;
@@ -1248,6 +1283,15 @@ StateType StateMachine::submit(Tuple& t)
           totalMoreUdh=totalMoreUdh || havemoreudh0;
           order.push_back(idx0);
           rightOrder=rightOrder && idx0==i+1;
+
+          if(dcList)
+          {
+            if(i>0)
+            {
+              differentDc=differentDc || dcList[i-1]!=dcList[i];
+            }
+            haveBinDc=haveBinDc || dcList[i]==DataCoding::BINARY;
+          }
         }
         if(!rightOrder)
         {
@@ -1256,6 +1300,7 @@ StateType StateMachine::submit(Tuple& t)
           //maximum is 255.  65025 comparisons. not very good, but not so bad too.
           string newtmp;
           uint16_t newci[256];
+
           for(unsigned i=1;i<=num;i++)
           {
             for(unsigned j=0;j<num;j++)
@@ -1265,6 +1310,7 @@ StateType StateMachine::submit(Tuple& t)
                 int partlen=j==num-1?tmp.length()-ci->getOff(j):ci->getOff(j+1)-ci->getOff(j);
                 newci[i-1]=newtmp.length();
                 newtmp.append(tmp.c_str()+ci->getOff(j),partlen);
+
               }
             }
           }
@@ -1272,7 +1318,7 @@ StateType StateMachine::submit(Tuple& t)
           tmp=newtmp;
         }
         newsms.setIntProperty(Tag::SMSC_MERGE_CONCAT,3); // final state
-        if(!totalMoreUdh && sms->getIntProperty(Tag::SMPP_DATA_CODING)!=DataCoding::BINARY)//make single text message
+        if(!totalMoreUdh && !differentDc && !haveBinDc)//make single text message
         {
           string newtmp;
           for(int i=1;i<=ci->num;i++)
