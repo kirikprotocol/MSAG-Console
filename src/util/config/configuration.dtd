@@ -1,0 +1,12 @@
+<?xml encoding="ISO-8859-1"?>
+
+<!ELEMENT configuration (db, log, map)>
+<!ELEMENT db (#PCDATA)>
+	<!ATTLIST db url CDATA #REQUIRED>
+	<!ATTLIST db user CDATA #IMPLIED>
+<!ELEMENT log (#PCDATA)>
+	<!ATTLIST log location CDATA #REQUIRED>
+<!ELEMENT map (#PCDATA)>
+	<!ATTLIST map hlr_address CDATA #REQUIRED>
+	<!ATTLIST map vlr_address CDATA #REQUIRED>
+
