@@ -15,7 +15,10 @@ public interface RouteSubjectManager
 
 	SubjectList getSubjects();
 
-	void save() throws AdminException;
+	void load() throws AdminException;
+  void save() throws AdminException;
+
+  void apply() throws AdminException;
 
 	boolean isSmeUsed(String smeId);
 }

@@ -39,6 +39,12 @@ MENU0_SELECTION = "MENU0_ROUTES";
 page_menu_begin(out);
 page_menu_button(out, "mbAdd",  "Add route",  "Add new route");
 page_menu_button(out, "mbDelete", "Delete route(s)", "Delete selected route(s)");
+if (appContext.getStatuses().isRoutesChanged() || appContext.getStatuses().isSubjectsChanged()) {
+  if (!appContext.getStatuses().isRoutesSaved()) {
+    page_menu_button(out, "mbSave", "Save", "Save routing configuration");
+  }
+  page_menu_button(out, "mbRestore", "Restore", "Restore routing configuration");
+}
 page_menu_space(out);
 page_menu_end(out);
 %>
@@ -120,6 +126,12 @@ String encRouteId = StringEncoderDecoder.encode(routeId);
 page_menu_begin(out);
 page_menu_button(out, "mbAdd",  "Add route",  "Add new route");
 page_menu_button(out, "mbDelete", "Delete route(s)", "Delete selected route(s)");
+if (appContext.getStatuses().isRoutesChanged() || appContext.getStatuses().isSubjectsChanged()) {
+  if (!appContext.getStatuses().isRoutesSaved()) {
+    page_menu_button(out, "mbSave", "Save", "Save routing configuration");
+  }
+  page_menu_button(out, "mbRestore", "Restore", "Restore routing configuration");
+}
 page_menu_space(out);
 page_menu_end(out);
 %>

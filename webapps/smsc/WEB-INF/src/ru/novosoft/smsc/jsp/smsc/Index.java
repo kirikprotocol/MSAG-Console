@@ -79,7 +79,8 @@ public class Index extends SmscBean {
 		try {
 			smsc.applyRoutes(routeSubjectManager);
 			statuses.setRoutesChanged(false);
-			statuses.setSubjectsChanged(false);
+			statuses.setRoutesSaved(true);
+      statuses.setSubjectsChanged(false);
 			//statuses.setServicesChanged(false);
 
 			return RESULT_OK;
@@ -94,6 +95,7 @@ public class Index extends SmscBean {
 		try {
 			smsc.applyRoutes(routeSubjectManager);
 			statuses.setRoutesChanged(false);
+      statuses.setRoutesSaved(true);
 			statuses.setSubjectsChanged(false);
 			//statuses.setServicesChanged(false);
 

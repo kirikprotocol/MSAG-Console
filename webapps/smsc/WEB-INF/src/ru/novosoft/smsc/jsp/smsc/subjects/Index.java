@@ -11,6 +11,7 @@ import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.NullResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectQuery;
+import ru.novosoft.smsc.admin.AdminException;
 
 import java.util.*;
 
@@ -30,6 +31,8 @@ public class Index extends IndexBean
 	protected String mbAdd = null;
 	protected String mbDelete = null;
 	protected String mbEdit = null;
+  protected String mbSave = null;
+  protected String mbRestore = null;
 
 	protected int init(List errors)
 	{
@@ -58,8 +61,18 @@ public class Index extends IndexBean
 			return RESULT_ADD;
 		else if (mbEdit != null)
 			return RESULT_EDIT;
-		else if (mbDelete != null)
-			result = deleteSubject();
+		else if (mbDelete != null) {
+			int dresult = deleteSubject();
+      return (dresult != RESULT_OK) ? dresult:RESULT_DONE;
+    }
+    else if (mbSave != null) {
+      int dresult = saveRoutes();
+      return (dresult != RESULT_OK) ? dresult:RESULT_DONE;
+    }
+    else if (mbRestore != null) {
+      int dresult = restoreRoutes();
+      return (dresult != RESULT_OK) ? dresult:RESULT_DONE;
+    }
 
 		logger.debug("Subjects.Index - process with sorting [" + (String) preferences.getSubjectsSortOrder().get(0) + "]");
 		subjects = routeSubjectManager.getSubjects().query(new SubjectQuery(pageSize, preferences.getSubjectsFilter(), preferences.getSubjectsSortOrder(), startPosition));
@@ -89,71 +102,94 @@ public class Index extends IndexBean
 		return result;
 	}
 
-	public boolean isSubjectChecked(String alias)
+  protected int saveRoutes()
+  {
+    try
+    {
+      routeSubjectManager.save();
+    }
+    catch (AdminException exc) {
+      return error(SMSCErrors.error.routes.cantSave, exc.getMessage());
+    }
+    appContext.getStatuses().setRoutesSaved(true);
+    return RESULT_OK;
+  }
+
+  protected int restoreRoutes()
+  {
+    try
+    {
+      routeSubjectManager.load();
+    }
+    catch (AdminException exc) {
+      return error(SMSCErrors.error.routes.cantRestore, exc.getMessage());
+    }
+    appContext.getStatuses().setSubjectsChanged(false);
+    appContext.getStatuses().setRoutesChanged(false);
+    appContext.getStatuses().setRoutesSaved(true);
+    return RESULT_OK;
+  }
+
+  public boolean isSubjectChecked(String alias)
 	{
 		return checkedSubjectsSet.contains(alias);
 	}
 
-
 	/******************** properties *************************/
 
-	public String getEditName()
-	{
+	public String getEditName()	{
 		return editName;
 	}
-
-	public void setEditName(String editName)
-	{
+	public void setEditName(String editName){
 		this.editName = editName;
 	}
 
-	public String[] getCheckedSubjects()
-	{
+	public String[] getCheckedSubjects() {
 		return checkedSubjects;
 	}
-
-	public void setCheckedSubjects(String[] checkedSubjects)
-	{
+	public void setCheckedSubjects(String[] checkedSubjects) {
 		this.checkedSubjects = checkedSubjects;
 	}
 
-	public String getMbAdd()
-	{
+	public String getMbAdd() {
 		return mbAdd;
 	}
-
-	public void setMbAdd(String mbAdd)
-	{
+	public void setMbAdd(String mbAdd) {
 		this.mbAdd = mbAdd;
 	}
 
-	public String getMbDelete()
-	{
+	public String getMbDelete() {
 		return mbDelete;
 	}
-
-	public void setMbDelete(String mbDelete)
-	{
+	public void setMbDelete(String mbDelete) {
 		this.mbDelete = mbDelete;
 	}
 
-	public String getMbEdit()
-	{
+	public String getMbEdit() {
 		return mbEdit;
 	}
-
-	public void setMbEdit(String mbEdit)
-	{
+	public void setMbEdit(String mbEdit) {
 		this.mbEdit = mbEdit;
 	}
 
-	public QueryResultSet getSubjects()
-	{
+  public String getMbSave() {
+    return mbSave;
+  }
+  public void setMbSave(String mbSave) {
+    this.mbSave = mbSave;
+  }
+
+  public String getMbRestore() {
+    return mbRestore;
+  }
+  public void setMbRestore(String mbRestore) {
+    this.mbRestore = mbRestore;
+  }
+
+	public QueryResultSet getSubjects() {
 		return subjects;
 	}
-
-	public void setSubjects(QueryResultSet subjects)
-	{
+	public void setSubjects(QueryResultSet subjects) {
 		this.subjects = subjects;
 	}
 }

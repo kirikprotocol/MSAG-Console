@@ -116,9 +116,11 @@ public class Smsc extends Service
 		return out;
 	}
 
-	public synchronized void applyRoutes(RouteSubjectManager routeSubjectManager) throws AdminException
+	// todo add testRoutes() method
+
+  public synchronized void applyRoutes(RouteSubjectManager routeSubjectManager) throws AdminException
 	{
-		routeSubjectManager.save();
+		routeSubjectManager.apply();
 		if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
 		{
 			refreshComponents();

@@ -6,10 +6,12 @@
 package ru.novosoft.smsc.jsp.smsc.routes;
 
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.NullResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteQuery;
+import ru.novosoft.smsc.admin.AdminException;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -18,9 +20,9 @@ import java.util.Set;
 
 public class Index extends IndexBean
 {
-	public static final int RESULT_ADD = IndexBean.PRIVATE_RESULT;
-	public static final int RESULT_EDIT = IndexBean.PRIVATE_RESULT + 1;
-	public static final int PRIVATE_RESULT = IndexBean.PRIVATE_RESULT + 2;
+	public static final int RESULT_ADD      = IndexBean.PRIVATE_RESULT;
+	public static final int RESULT_EDIT     = IndexBean.PRIVATE_RESULT + 1;
+	public static final int PRIVATE_RESULT  = IndexBean.PRIVATE_RESULT + 2;
 
 	protected QueryResultSet routes = null;
 
@@ -32,6 +34,8 @@ public class Index extends IndexBean
 	protected String mbAdd = null;
 	protected String mbDelete = null;
 	protected String mbEdit = null;
+  protected String mbSave = null;
+  protected String mbRestore = null;
 
 	protected int init(List errors)
 	{
@@ -63,11 +67,16 @@ public class Index extends IndexBean
 		else if (mbDelete != null)
 		{
 			int dresult = deleteRoutes();
-			if (dresult != RESULT_OK)
-				return result;
-			else
-				return RESULT_DONE;
+			return (dresult != RESULT_OK) ? dresult:RESULT_DONE;
 		}
+    else if (mbSave != null) {
+      int dresult = saveRoutes();
+      return (dresult != RESULT_OK) ? dresult:RESULT_DONE;
+    }
+    else if (mbRestore != null) {
+      int dresult = restoreRoutes();
+      return (dresult != RESULT_OK) ? dresult:RESULT_DONE;
+    }
 
 		logger.debug("Routes.Index - process with sorting [" + (String) preferences.getRoutesSortOrder().get(0) + "]");
 		routes = routeSubjectManager.getRoutes().query(new RouteQuery(pageSize, preferences.getRoutesFilter(), preferences.getRoutesSortOrder(), startPosition));
@@ -91,11 +100,42 @@ public class Index extends IndexBean
 		return RESULT_OK;
 	}
 
+  protected int saveRoutes()
+  {
+    try
+    {
+      routeSubjectManager.save();
+    }
+    catch (AdminException exc) {
+      return error(SMSCErrors.error.routes.cantSave, exc.getMessage());
+    }
+    appContext.getStatuses().setRoutesSaved(true);
+    return RESULT_OK;
+  }
+
+  protected int restoreRoutes()
+  {
+    try
+    {
+      routeSubjectManager.load();
+    }
+    catch (AdminException exc) {
+      return error(SMSCErrors.error.routes.cantRestore, exc.getMessage());
+    }
+    appContext.getStatuses().setSubjectsChanged(false);
+    appContext.getStatuses().setRoutesChanged(false);
+    appContext.getStatuses().setRoutesSaved(true);
+    return RESULT_OK;
+  }
+
+  public boolean isRoutesChanged()
+  {
+    return appContext.getStatuses().isRoutesChanged();
+  }
 	public boolean isRouteChecked(String alias)
 	{
 		return checkedRouteIdsSet.contains(alias);
 	}
-
 
 	public QueryResultSet getRoutes()
 	{
@@ -103,11 +143,11 @@ public class Index extends IndexBean
 	}
 
 	/******************** properties *************************/
+
 	public String getEditRouteId()
 	{
 		return editRouteId;
 	}
-
 	public void setEditRouteId(String editRouteId)
 	{
 		this.editRouteId = editRouteId;
@@ -117,39 +157,43 @@ public class Index extends IndexBean
 	{
 		return checkedRouteIds;
 	}
-
 	public void setCheckedRouteIds(String[] checkedRouteIds)
 	{
 		this.checkedRouteIds = checkedRouteIds;
 	}
 
-	public String getMbAdd()
-	{
+	public String getMbAdd() {
 		return mbAdd;
 	}
-
-	public void setMbAdd(String mbAdd)
-	{
+	public void setMbAdd(String mbAdd) {
 		this.mbAdd = mbAdd;
 	}
 
-	public String getMbDelete()
-	{
+	public String getMbDelete() {
 		return mbDelete;
 	}
-
-	public void setMbDelete(String mbDelete)
-	{
+	public void setMbDelete(String mbDelete) {
 		this.mbDelete = mbDelete;
 	}
 
-	public String getMbEdit()
-	{
+	public String getMbEdit() {
 		return mbEdit;
 	}
-
-	public void setMbEdit(String mbEdit)
-	{
+	public void setMbEdit(String mbEdit) {
 		this.mbEdit = mbEdit;
 	}
+
+  public String getMbSave() {
+    return mbSave;
+  }
+  public void setMbSave(String mbSave) {
+    this.mbSave = mbSave;
+  }
+
+  public String getMbRestore() {
+    return mbRestore;
+  }
+  public void setMbRestore(String mbRestore) {
+    this.mbRestore = mbRestore;
+  }
 }

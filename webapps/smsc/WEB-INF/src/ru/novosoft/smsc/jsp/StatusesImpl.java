@@ -8,6 +8,7 @@ package ru.novosoft.smsc.jsp;
 public class StatusesImpl implements Statuses
 {
 	private boolean routesChanged = false;
+  private boolean routesSaved = false;
 	private boolean subjectsChanged = false;
 	private boolean aliasesChanged = false;
 	private boolean profilesChanged = false;
@@ -20,27 +21,35 @@ public class StatusesImpl implements Statuses
 	{
 		return routesChanged;
 	}
-
 	public void setRoutesChanged(boolean routesChanged)
 	{
 		this.routesChanged = routesChanged;
+    if (routesChanged) routesSaved = false;
 	}
 
-	public boolean isSubjectsChanged()
-	{
-		return subjectsChanged;
-	}
+  public boolean isSubjectsChanged()
+  {
+    return subjectsChanged;
+  }
+  public void setSubjectsChanged(boolean subjectsChanged)
+  {
+    this.subjectsChanged = subjectsChanged;
+    if (subjectsChanged) routesSaved = false;
+  }
 
-	public void setSubjectsChanged(boolean subjectsChanged)
-	{
-		this.subjectsChanged = subjectsChanged;
-	}
+  public boolean isRoutesSaved()
+  {
+    return routesSaved;
+  }
+  public void setRoutesSaved(boolean routesSaved)
+  {
+    this.routesSaved = routesSaved;
+  }
 
 	public boolean isAliasesChanged()
 	{
 		return aliasesChanged;
 	}
-
 	public void setAliasesChanged(boolean aliasesChanged)
 	{
 		this.aliasesChanged = aliasesChanged;
@@ -50,7 +59,6 @@ public class StatusesImpl implements Statuses
 	{
 		return profilesChanged;
 	}
-
 	public void setProfilesChanged(boolean profilesChanged)
 	{
 		this.profilesChanged = profilesChanged;
@@ -60,7 +68,6 @@ public class StatusesImpl implements Statuses
 	{
 		return hostsChanged;
 	}
-
 	public void setHostsChanged(boolean hostsChanged)
 	{
 		this.hostsChanged = hostsChanged;
@@ -82,7 +89,6 @@ public class StatusesImpl implements Statuses
 	{
 		return usersChanged;
 	}
-
 	public void setUsersChanged(boolean usersChanged)
 	{
 		this.usersChanged = usersChanged;
@@ -92,7 +98,6 @@ public class StatusesImpl implements Statuses
 	{
 		return smscChanged;
 	}
-
 	public void setSmscChanged(boolean smscChanged)
 	{
 		this.smscChanged = smscChanged;

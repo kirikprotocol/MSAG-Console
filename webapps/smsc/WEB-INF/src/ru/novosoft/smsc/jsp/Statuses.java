@@ -8,34 +8,30 @@ package ru.novosoft.smsc.jsp;
 public interface Statuses
 {
 	boolean isRoutesChanged();
-
 	void setRoutesChanged(boolean routesChanged);
 
-	boolean isSubjectsChanged();
+  boolean isRoutesSaved();
+  void setRoutesSaved(boolean routesSaved);
 
+	boolean isSubjectsChanged();
 	void setSubjectsChanged(boolean subjectsChanged);
 
 	boolean isAliasesChanged();
-
 	void setAliasesChanged(boolean aliasesChanged);
 
 	boolean isProfilesChanged();
-
 	void setProfilesChanged(boolean profilesChanged);
 
 	boolean isHostsChanged();
-
 	void setHostsChanged(boolean hostsChanged);
 
-/*	boolean isServicesChanged();
-
+/*
+  boolean isServicesChanged();
 	void setServicesChanged(boolean servicesChanged);
 */
 	boolean isUsersChanged();
-
 	void setUsersChanged(boolean usersChanged);
 
 	boolean isSmscChanged();
-
 	void setSmscChanged(boolean smscChanged);
 }
