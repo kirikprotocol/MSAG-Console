@@ -1697,7 +1697,7 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
               __map_trace2__("IMSI: %s",b.get());
             }
             {
-              if( mscnumber ) {
+              if( mscNumber_sp ) {
                 auto_ptr<char> b(new char[mscNumber_sp->addressLength*4+1]);
                 memset(b.get(),0,mscNumber_sp->addressLength*4+1);
                 for ( int i=0,k=0; i < (mscNumber_sp->addressLength+1)/2; ++i ) {
