@@ -54,7 +54,7 @@ struct PduData
 
 	~PduData()
 	{
-		//delete pdu;
+		//disposePdu(pdu);
 	}
 
 	bool complete()
@@ -158,6 +158,10 @@ public:
 	PduDataIterator* getPduByWaitTime(time_t t1, time_t t2);
 
 	PduDataIterator* getPduByValidTime(time_t t1, time_t t2);
+
+	int size();
+
+	void dump(FILE* log);
 };
 
 }
