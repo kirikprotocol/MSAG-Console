@@ -612,15 +612,28 @@ void extractSmsPart(SMS* sms,int partnum)
       }
     }
     uint8_t buf[256];
-    buf[0]=6;
-    buf[1]=8;
-    buf[2]=4;
-    buf[3]=sms->getConcatMsgRef()>>8;
-    buf[4]=sms->getConcatMsgRef()&0xff;
-    buf[5]=ci->num;
-    buf[6]=partnum+1;
-    memcpy(buf+7,msg+off,newlen);
-    newlen+=7;
+    if(sms->getConcatMsgRef()<256)
+    {
+      buf[0]=5;
+      buf[1]=0;
+      buf[2]=3;
+      buf[3]=sms->getConcatMsgRef();
+      buf[4]=ci->num;
+      buf[5]=partnum+1;
+      memcpy(buf+6,msg+off,newlen);
+      newlen+=6;
+    }else
+    {
+      buf[0]=6;
+      buf[1]=8;
+      buf[2]=4;
+      buf[3]=sms->getConcatMsgRef()>>8;
+      buf[4]=sms->getConcatMsgRef()&0xff;
+      buf[5]=ci->num;
+      buf[6]=partnum+1;
+      memcpy(buf+7,msg+off,newlen);
+      newlen+=7;
+    }
 
     sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x40);
     sms->setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)buf,newlen);

@@ -1376,7 +1376,10 @@ StateType StateMachine::submit(Tuple& t)
   if(!isDatagram && !isTransaction) // Store&Forward mode
   {
 
-    smsc->registerStatisticalEvent(StatEvents::etSubmitOk,sms);
+    if(!sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT) || sms->getIntProperty(Tag::SMSC_MERGE_CONCAT)==3)
+    {
+      smsc->registerStatisticalEvent(StatEvents::etSubmitOk,sms);
+    }
 
     // sms сохранена в базе, с выставленным Next Time, таким образом
     // даже если дальше что-то обломится, потом будет еще попытка послать её
@@ -2620,7 +2623,9 @@ StateType StateMachine::deliveryResp(Tuple& t)
   }
   smsLog->debug("DLVRSP: DELIVERED, msgId=%lld",t.msgId);
   __trace__("DELIVERYRESP: registerStatisticalEvent");
+
   smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms);
+
   try{
     //smsc::profiler::Profile p=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
     __trace2__("DELIVERYRESP: suppdelrep=%d, delrep=%d, regdel=%d, srr=%d",
