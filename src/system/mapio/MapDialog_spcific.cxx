@@ -347,25 +347,25 @@ inline void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
 
 inline void ConvAddrMSISDN2Smc(const ET96MAP_ADDRESS_T* ma,Address* sa)
 {
-  sa->setTypeOfNumber((ma->addr[0]>>4)&0x7);
-  sa->setNumberingPlan(ma->addr[0]&0xf);
-  if ( ma->addrLen != 0 ){
+  sa->setTypeOfNumber((ma->typeOfAddress>>4)&0x7);
+  sa->setNumberingPlan(ma->typeOfAddress&0xf);
+  if ( ma->addressLength != 0 ){
     char sa_val[21] = {0,};
     int i = 0;
-    for ( i=0; i<(ma->addrLen-1)*2;){
-      if ( (ma->addr[(i>>1)+1]&0x0f) == 0xf ) break;
-      sa_val[i]=(ma->addr[(i>>1)+1]&0x0f)+0x30;
+    for ( i=0; i<(ma->addressLength-1)*2;){
+      if ( (ma->address[(i>>1)+1]&0x0f) == 0xf ) break;
+      sa_val[i]=(ma->address[(i>>1)+1]&0x0f)+0x30;
       ++i;
-      if ( i<(ma->addrLen-1)*2 ){
-        if ( (ma->addr[(i>>1)+1]>>4) == 0xf ) break;
-        sa_val[i] = (ma->addr[(i>>1)+1]>>4)+0x30;
+      if ( i<(ma->addressLength-1)*2 ){
+        if ( (ma->address[(i>>1)+1]>>4) == 0xf ) break;
+        sa_val[i] = (ma->address[(i>>1)+1]>>4)+0x30;
         ++i;
       }else break;
     }
     {
       char b[256] = {0,};
       memcpy(b,sa_val,i);
-      __trace2__("MAP::ConvAddrMSISDN2Smc::adr value(%d) %s",(ma->addrLen-1)*2,b);
+      __trace2__("MAP::ConvAddrMSISDN2Smc::adr value(%d) %s",ma->addressLength,b);
     }
     sa->setValue(i,sa_val);
   }else{
