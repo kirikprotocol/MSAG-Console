@@ -6,6 +6,7 @@
 package ru.novosoft.smsc.admin.alias;
 
 import ru.novosoft.smsc.admin.route.Mask;
+import ru.novosoft.smsc.admin.AdminException;
 
 
 public class Alias
@@ -15,7 +16,10 @@ public class Alias
 	private boolean hide = false;
 
 	public Alias(Mask address, Mask alias, boolean hide)
+			throws AdminException
 	{
+		if (address.getQuestionsCount() != alias.getQuestionsCount())
+			throw new AdminException("incorrect alias - question signs count not matches in alias and address");
 		this.address = address;
 		this.alias = alias;
 		this.hide = hide;

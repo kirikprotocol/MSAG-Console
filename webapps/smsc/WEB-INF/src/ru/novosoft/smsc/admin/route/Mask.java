@@ -59,4 +59,13 @@ public class Mask
 		return maskStr != null && maskStr.trim().length() > 0
 				&& maskStr.matches(pattern1) && maskStr.matches(pattern2);
 	}
+
+	public int getQuestionsCount()
+	{
+		int pos = mask.indexOf('?');
+		if (pos >= 0)
+			return mask.length() - pos;
+		else
+			return 0;
+	}
 }
