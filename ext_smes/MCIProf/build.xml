@@ -2,7 +2,7 @@
   <property name="esme_name" value="MCIProf"/>
   <property name="esme_bin_path" value="MCIProf"/>
   <property name="esme_bin_name" value="MCIProf"/>
-
+  <ant antfile="../make_esme.xml" target="preinit" inheritall="yes" />
   <property name="java_src" value="defined in caller"/>
   <property name="java_out" value="defined in caller"/>
   <property name="libs_path" value="defined in caller"/>
