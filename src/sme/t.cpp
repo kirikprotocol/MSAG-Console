@@ -27,20 +27,22 @@ public:
       }
       printf("\n");
       int coding=((PduXSm*)pdu)->get_message().get_dataCoding();
+      printf("datacoding=%d\n",coding);
       if(coding==DataCoding::DEFAULT)
       {
-        Convert7BitToText(msg,msglen,buf,sizeof(buf));
+        msglen=Convert7BitToText(msg,msglen,buf,sizeof(buf));
       }else if(coding==DataCoding::UCS2)
       {
         char bufx[256];
         //len=msglen/2;
         int l7=ConvertUCS2To7Bit((const short*)msg,msglen,bufx,sizeof(bufx));
-        Convert7BitToText(bufx,l7,buf,sizeof(bufx));
+        msglen=Convert7BitToText(bufx,l7,buf,sizeof(bufx));
       }
+      bug[msglen]=0;
       printf("after:");
-      for(i=0;i<msglen/2;i++)
+      for(i=0;i<msglen;i++)
       {
-        printf("%x ",(int)buf[i]);
+        printf("%x ",(int)(unsigned char)buf[i]);
       }
       printf("\n");
       printf("\nReceived:%s\n",buf);
