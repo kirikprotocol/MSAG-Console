@@ -77,7 +77,7 @@ namespace smsc { namespace mcisme
         AbonentProfile           abonentProfile;
         InformTemplateFormatter* templateFormatter;
 
-        void loadup(uint64_t currId, Connection* connection=0); // used from loadup() & loadupAll()
+        bool loadup(uint64_t currId, Connection* connection=0); // used from loadup() & loadupAll()
         void doWait(Connection* connection, const char* smsc_id, const MessageState& state);
         void doNewCurrent(Connection* connection);
         void clearCurrent(Connection* connection);

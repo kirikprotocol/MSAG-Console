@@ -195,7 +195,12 @@ Hash<Task *> Task::loadupAll()
             const char* abonent = rs->getString(1);
             if (abonent && !tasks.Exists(abonent)) {
                 Task* task = new Task(abonent);
-                task->loadup(rs->getUint64(2), connection);
+                uint64_t nextId = rs->getUint64(2);
+                if (!task->loadup(nextId, connection)) {
+		            smsc_log_warn(logger, "Task: missed message for id=%lld for abonent %s",
+                                  nextId, abonent);
+                    continue;
+		        }
                 MessageState state = task->getCurrentState();
                 int eventsCount = task->getEventsCount();
                 int newEventsCount = task->getNewEventsCount();
@@ -221,7 +226,7 @@ Hash<Task *> Task::loadupAll()
 
 /* ----------------------- Main logic implementation ----------------------- */
 
-void Task::loadup(uint64_t currId, Connection* connection/*=0*/) // private
+bool Task::loadup(uint64_t currId, Connection* connection/*=0*/) // private
 {
     __require__(ds);
 
@@ -248,10 +253,12 @@ void Task::loadup(uint64_t currId, Connection* connection/*=0*/) // private
         
         std::auto_ptr<ResultSet> curRsGuard(curMsgStmt->executeQuery());
         ResultSet* curRs = curRsGuard.get();
-        if (!curRs)
+        if (!curRs) 
             throw Exception(OBTAIN_RESULTSET_ERROR_MESSAGE, "current task message loadup");
-        if (!curRs->fetchNext()) 
-            throw Exception("Current task message is null for abonent %s", abonent.c_str());
+        if (!curRs->fetchNext()) {
+            //throw Exception("Current task message is null for abonent %s", abonent.c_str());
+            return false;
+        }
         
         uint8_t msgState = curRs->getUint8(1);
         if (msgState != MESSAGE_WAIT_RESP && msgState != MESSAGE_WAIT_CNCL && 
@@ -294,6 +301,8 @@ void Task::loadup(uint64_t currId, Connection* connection/*=0*/) // private
         if (connection && isConnectionGet) ds->freeConnection(connection);
         throw;
     }
+    
+    return true;
 }   
 
 void Task::loadup()
