@@ -69,7 +69,7 @@ void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
 		PduData::StrProps strProps;
 		strProps["abonentInfoInput"] = input;
 		//при неправильно заданном адресе abonent info не пришлет ответ
-		PduType pduType = correctAddr ? PDU_EXT_SME : PDU_NULL;
+		PduType pduType = correctAddr ? PDU_EXT_SME : PDU_NULL_OK;
 		fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync,
 			NULL, &strProps, NULL, pduType);
 		__tc_ok__;

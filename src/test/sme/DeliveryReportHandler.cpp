@@ -131,7 +131,7 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		//в редких случаях delivery report приходит раньше submit_sm_resp
 		if (!monitor->pduData->valid)
 		{
-			__tc_fail__(3);
+			__tc_fail__(-1);
 			//throw TCException();
 		}
 		__tc_ok_cond__;
@@ -259,12 +259,12 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		__cfg_int__(timeCheckAccuracy);
 		if (recvTime < monitor->getCheckTime())
 		{
-			__trace2__("expected time = %ld", monitor->getStartTime());
+			__trace2__("expected time = %ld", monitor->getCheckTime());
 			__tc_fail__(1);
 		}
 		else if (recvTime > monitor->getCheckTime() + timeCheckAccuracy)
 		{
-			__trace2__("expected time = %ld", monitor->getStartTime());
+			__trace2__("expected time = %ld", monitor->getCheckTime());
 			__tc_fail__(2);
 		}
 		__tc_ok_cond__;
