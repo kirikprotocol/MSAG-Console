@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 #include "sms/sms.h"
+#include <vector>
 
 namespace smsc{
 namespace alias{
@@ -15,6 +16,8 @@ struct AliasInfo
   Address addr;
   Address alias;
 };
+
+struct AliasRecord;
 
 struct APattern
 {
@@ -39,7 +42,8 @@ struct APattern
   };
   int length;
   int defLength;
-	bool hasStar;
+  bool hasStar;
+  AliasRecord* greatUncertainty;
 };
 
 struct AValue
@@ -65,7 +69,28 @@ struct AliasRecord
 {
   APattern alias;
   APattern addr;
-  AliasRecord* ok_next;
+  AliasRecord* next;
+  //AliasRecord* ok_next;
+  //AliasInfo info;
+  AliasRecord() : next(0) {}
+  ~AliasRecord() { /*if (next) delete next;*/}
+};
+
+struct TreeNode
+{
+  APattern* alias;
+  APattern* addr;
+  std::vector<TreeNode*> child;
+  TreeNode() : alias(0), addr(0), child(0) {};
+  ~TreeNode() 
+  { for ( int i=0; i < child.size(); ++i) if (child[i]) delete child[i];}
+  void clean()
+  { 
+    for ( int i=0; i < child.size(); ++i) if (child[i]) delete child[i]; 
+    child = std::vector<TreeNode*>(0);
+    alias = 0;
+    addr = 0;
+  }
 };
 
 class AliasIterator
@@ -95,14 +120,21 @@ class AliasManager :
   public AliasTable,
   public AliasAdmin
 {
-  AliasRecord** ali_table;
-  AliasRecord** adr_table;
+  TreeNode aliasRootNode;
+  TreeNode addrRootNode;
+  //AliasRecord** ali_table;
+  //AliasRecord** adr_table;
 
-  int table_size;
-  int table_ptr;
-  bool sorted;
+  AliasRecord* first_alias;
+	AliasRecord* new_aliases;
+	int new_aliases_count;
+  //int table_size;
+  //int table_ptr;
+  //bool sorted;
+  //void normalizeUncertainty();
 public:
-  AliasManager(): ali_table(0),adr_table(0), table_size(1024), table_ptr(0)
+  /*AliasManager(): ali_table(0),adr_table(0),first_alias(0),
+    table_size(1024), table_ptr(0)
   {
     ali_table = new AliasRecord*[table_size];
     adr_table = new AliasRecord*[table_size];
@@ -116,12 +148,25 @@ public:
     }
     delete ali_table;
     delete adr_table;
-  }
+  }*/
   
+  AliasManager() : first_alias(0), new_aliases(0), new_aliases_count(0) {}
+  ~AliasManager()
+  { 
+    /*while ( first_alias ) 
+    {
+      AliasRecord* r = first_alias; 
+      first_alias = first_alias->next;
+      delete r;
+    }*/
+		clean();
+  }
+
   virtual bool AliasToAddress(const Address& alias, Address&  addr);
   virtual bool AddressToAlias(const Address& addr, Address& alias);
   
   virtual void addAlias(const AliasInfo& info);
+	virtual void commit();
   virtual void clean();
   virtual AliasIterator* iterator();
 };
