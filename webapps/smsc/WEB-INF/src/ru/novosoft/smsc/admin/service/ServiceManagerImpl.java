@@ -24,7 +24,7 @@ public class ServiceManagerImpl implements ServiceManager
 	{
 	}
 
-	public void addAll(Map newServices) throws AdminException
+	public void addAllInfos(Map newServices) throws AdminException
 	{
 		for (Iterator i = newServices.keySet().iterator(); i.hasNext();)
 		{
@@ -33,7 +33,7 @@ public class ServiceManagerImpl implements ServiceManager
 				throw new AdminException("Service \"" + serviceId + "\" already presented in system");
 		}
 		for (Iterator i = newServices.values().iterator(); i.hasNext();)
-			add((Service) i.next());
+			add(new Service((ServiceInfo) i.next()));
 	}
 
 	public Service add(Service newService) throws AdminException

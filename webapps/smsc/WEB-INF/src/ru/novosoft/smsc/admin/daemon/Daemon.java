@@ -182,7 +182,7 @@ public class Daemon extends Proxy
 
 	public int getCountServices()
 	{
-		Set serviceIds = services.keySet();
+		Set serviceIds = new HashSet(services.keySet());
 		serviceIds.remove(Constants.SMSC_SME_ID);
 		return serviceIds.size();
 	}
@@ -190,5 +190,15 @@ public class Daemon extends Proxy
 	public Map getServices()
 	{
 		return services;
+	}
+
+	public void removeAllServices() throws AdminException
+	{
+		Set serviceIds = new HashSet(services.keySet());
+		for (Iterator i = serviceIds.iterator(); i.hasNext();)
+		{
+			String serviceId = (String) i.next();
+			removeService(serviceId);
+		}
 	}
 }

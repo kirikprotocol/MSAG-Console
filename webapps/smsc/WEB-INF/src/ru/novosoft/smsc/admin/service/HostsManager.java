@@ -58,7 +58,7 @@ public class HostsManager
 		}
 		try
 		{
-			serviceManager.addAll(daemon.getServices());
+			serviceManager.addAllInfos(daemon.getServices());
 		}
 		catch (AdminException e)
 		{
@@ -71,17 +71,26 @@ public class HostsManager
 	}
 
 	public synchronized Daemon removeHost(String host) throws AdminException
-	{ //? remove smes
+	{
+		logger.debug("Remove host \"" + host + "\"");
 		final Daemon daemon = daemonManager.get(host);
+		if (daemon.isContainsSmsc())
+			throw new AdminException("Couldn't remove host \"" + host + "\": host contains SMSC");
 		final List serviceIds = daemon.getServiceIds(smeManager.getSmes());
+		for (Iterator i = serviceIds.iterator(); i.hasNext();)
+		{
+			String serviceId = (String) i.next();
+			logger.debug("  " + serviceId);
+		}
 		for (Iterator i = serviceIds.iterator(); i.hasNext();)
 		{
 			String serviceId = (String) i.next();
 			if (routeSubjectManager.isSmeUsed(serviceId))
 				throw new AdminException("SME \"" + serviceId + "\" is used");
 		}
+		daemonManager.removeAllServicesFromHost(daemon.getHost());
 		serviceManager.removeAll(serviceIds);
-		//smeManager.removeAllIfSme(serviceIds);
+		smeManager.removeAllIfSme(serviceIds);
 		return daemonManager.remove(daemon.getHost());
 	}
 

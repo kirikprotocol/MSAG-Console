@@ -27,7 +27,7 @@ public class DaemonList
 			throws AdminException
 	{
 		requireDaemon(hostName);
-		return (Daemon) daemons.get(hostName);
+		return (Daemon) daemons.remove(hostName);
 	}
 
 	private void requireDaemon(String hostName)

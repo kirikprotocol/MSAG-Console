@@ -59,7 +59,7 @@ function editService(serviceId)
 }
 </script>
 
-<div class=secInfo>Host infromation</div>
+<div class=secInfo>Host information</div>
 <table class=secRep cellspacing=1 width="100%">
 <col width="15%" align=right>
 <col width="85%">

@@ -73,7 +73,7 @@ function showhide(elem)
 </table>
 </dd>
 <%-- ################################## admin ############################# --%>
-<dt class=secTitleClosed onclick='showhide(this)'>Administartion</dt>
+<dt class=secTitleClosed onclick='showhide(this)'>Administration</dt>
 <dd style="display:none">
 <%row=0;%>
 <table class=secRep cellspacing=1 width="100%">

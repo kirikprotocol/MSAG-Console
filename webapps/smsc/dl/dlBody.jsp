@@ -84,7 +84,7 @@ for (int i = 0; i<bean.getMembers().length; i++)
 <col width="85%">
 </thead>
 <tr class=row0>
-	<th class=label><input class=btn type=submit name=mbAdd value="Add" title="Add new submitter"></th>
+	<th class=label><input class=btn type=submit name=mbAdd value="Add" title="Add new member"></th>
 	<td><input class=txtW name=members validation="address" onkeyup="resetValidation(this)"></td>
 </tr>
 </table>

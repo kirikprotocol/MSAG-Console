@@ -72,7 +72,12 @@ public class DaemonManager
 	public Daemon remove(String host)
 			throws AdminException
 	{
-		final Daemon daemon = daemons.remove(host);
+		final Daemon daemon = daemons.get(host);
+		if (daemon.isContainsSmsc())
+		{
+			throw new AdminException("Couldn't remove host \"" + host + "\" becouse it is contains SMSC");
+		}
+		daemons.remove(host);
 		findSmscDaemon();
 		return daemon;
 	}
@@ -94,6 +99,7 @@ public class DaemonManager
 	private void findSmscDaemon()
 			throws AdminException
 	{
+		smscDaemon = null;
 		for (Iterator i = daemons.iterator(); i.hasNext();)
 		{
 			Daemon daemon = (Daemon) i.next();
@@ -146,7 +152,11 @@ public class DaemonManager
 
 	public void addService(ServiceInfo serviceInfo) throws AdminException
 	{
-		Daemon daemon = get(serviceInfo.getHost());
-		daemon.addService(serviceInfo);
+		get(serviceInfo.getHost()).addService(serviceInfo);
+	}
+
+	public void removeAllServicesFromHost(String host) throws AdminException
+	{
+		get(host).removeAllServices();
 	}
 }

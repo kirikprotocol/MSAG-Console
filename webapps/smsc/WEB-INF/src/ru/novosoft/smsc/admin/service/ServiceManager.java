@@ -12,7 +12,7 @@ import java.util.*;
  */
 public interface ServiceManager
 {
-	void addAll(Map services) throws AdminException;
+	void addAllInfos(Map services) throws AdminException;
 
 	boolean contains(String id);
 
