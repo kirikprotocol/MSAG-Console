@@ -656,8 +656,10 @@ void Archiver::prepareArchiveInsertStmt() throw(StorageException)
     archiveInsertStmt->bind(i++, SQLT_UIN, (dvoid *) &(sms.billingRecord), 
                             (sb4) sizeof(sms.billingRecord));
 
+    sb4 bodyLen = (bodyBufferLen <0 || bodyBufferLen > MAX_BODY_LENGTH ||
+                   indBody != OCI_IND_NOTNULL) ? 0:bodyBufferLen;
     archiveInsertStmt->bind(i++, SQLT_BIN, (dvoid *) bodyBuffer,
-                            (sb4) bodyBufferLen, &indBody);
+                            (sb4) bodyLen, &indBody);
     archiveInsertStmt->bind(i++, SQLT_UIN, (dvoid *)&(bodyBufferLen),
                             (sb4) sizeof(bodyBufferLen));
     
