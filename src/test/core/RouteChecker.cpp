@@ -25,12 +25,9 @@ RouteChecker::RouteChecker(const SmeRegistry* _smeReg,
 	__require__(routeReg);
 }
 
-SmeType RouteChecker::isDestReachable(PduAddress& src, PduAddress& dest) const
+SmeType RouteChecker::isDestReachable(const Address& srcAddr,
+	const Address& destAlias) const
 {
-	//dest является алиасом
-	Address srcAddr, destAlias;
-	SmppUtil::convert(src, &srcAddr);
-	SmppUtil::convert(dest, &destAlias);
 	const Address destAddr = aliasReg->findAddressByAlias(destAlias);
 	//проверка маршрута
 	const RouteHolder* routeHolder = routeReg->lookup(srcAddr, destAddr);
@@ -51,16 +48,23 @@ SmeType RouteChecker::isDestReachable(PduAddress& src, PduAddress& dest) const
 	return smeType;
 }
 
-const RouteInfo* RouteChecker::getRouteInfoForNormalSms(PduAddress& src,
-	PduAddress& dest) const
+SmeType RouteChecker::isDestReachable(PduAddress& srcAddr,
+	PduAddress& destAlias) const
 {
-	Address origAddr, destAlias;
-	SmppUtil::convert(src, &origAddr);
-	SmppUtil::convert(dest, &destAlias);
+	//dest является алиасом
+	Address src, dest;
+	SmppUtil::convert(srcAddr, &src);
+	SmppUtil::convert(destAlias, &dest);
+	return isDestReachable(src, dest);
+}
+
+const RouteInfo* RouteChecker::getRouteInfoForNormalSms(const Address& srcAddr,
+	const Address& destAlias) const
+{
 	//правильность destAddr
 	const Address destAddr = aliasReg->findAddressByAlias(destAlias);
 	//правильность маршрута
-	const RouteHolder* routeHolder = routeReg->lookup(origAddr, destAddr);
+	const RouteHolder* routeHolder = routeReg->lookup(srcAddr, destAddr);
 	if (!routeHolder)
 	{
 		return NULL;
@@ -68,10 +72,18 @@ const RouteInfo* RouteChecker::getRouteInfoForNormalSms(PduAddress& src,
 	return &routeHolder->route;
 }
 
-const RouteInfo* RouteChecker::getRouteInfoForNotification(PduAddress& dest) const
+const RouteInfo* RouteChecker::getRouteInfoForNormalSms(PduAddress& srcAddr,
+	PduAddress& destAlias) const
 {
-	Address destAddr;
-	SmppUtil::convert(dest, &destAddr);
+	Address src, dest;
+	SmppUtil::convert(srcAddr, &src);
+	SmppUtil::convert(destAlias, &dest);
+	return getRouteInfoForNormalSms(src, dest);
+}
+
+const RouteInfo* RouteChecker::getRouteInfoForNotification(
+	const Address& destAddr) const
+{
 	//параметры маршрута
 	__cfg_addr__(smscAddr);
 	const RouteHolder* routeHolder = routeReg->lookup(smscAddr, destAddr);
@@ -80,6 +92,13 @@ const RouteInfo* RouteChecker::getRouteInfoForNotification(PduAddress& dest) con
 		return NULL;
 	}
 	return &routeHolder->route;
+}
+
+const RouteInfo* RouteChecker::getRouteInfoForNotification(PduAddress& destAddr) const
+{
+	Address dest;
+	SmppUtil::convert(destAddr, &dest);
+	return getRouteInfoForNotification(dest);
 }
 
 }
