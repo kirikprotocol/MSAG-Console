@@ -33,7 +33,9 @@
     </page>
     <page id="divert_set" question="0">
       <!-- Set divert reason attribute (занят/отсутств./не доступен/безусл.) -->
-      <pagePreProcessor class="ru.sibinco.mci.profile.DivertSetPreprocessor"/>
+      <pagePreProcessor class="ru.sibinco.mci.profile.DivertSetPreprocessor">
+        <bundle name="divert"/>
+      </pagePreProcessor>
       <!-- Show alternatives for select divert value -->
       <pageExecutor class="ru.sibinco.mci.profile.DivertSetExecutor">
         <bundle name="divert"/>
