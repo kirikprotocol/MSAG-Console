@@ -242,6 +242,12 @@ SMSId RemoteStore::doCreateSms(StorageConnection* connection,
                 }
                 throw exc;
             }
+            catch (...) {
+                try { connection->rollback(); } catch (...) {
+                    log.error("Failed to rollback");
+                }
+                throw StorageException("unknown exception");
+            }
             return retId;
         }
     }
@@ -289,6 +295,12 @@ SMSId RemoteStore::doCreateSms(StorageConnection* connection,
             log.error("Failed to rollback");
         }
         throw exc;
+    }
+    catch (...) {
+        try { connection->rollback(); } catch (...) {
+            log.error("Failed to rollback");
+        }
+        throw StorageException("unknown exception");
     }
 
     return id;
