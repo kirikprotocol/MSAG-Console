@@ -595,6 +595,18 @@ IntermediateNotificationMonitor::~IntermediateNotificationMonitor()
 	//__trace2__("monitor deleted: %s", str().c_str());
 }
 
+SmsCancelledNotificationMonitor::SmsCancelledNotificationMonitor(uint16_t msgRef,
+	time_t checkTime, PduData* pduData, PduFlag flag)
+: DeliveryReportMonitor(msgRef, checkTime, pduData, flag)
+{
+	//__trace2__("monitor created: %s", str().c_str());
+}
+
+SmsCancelledNotificationMonitor::~SmsCancelledNotificationMonitor()
+{
+	//__trace2__("monitor deleted: %s", str().c_str());
+}
+
 SmeAckMonitor::SmeAckMonitor(uint16_t _msgRef, time_t checkTime,
 	PduData* pduData, PduFlag flag)
 : PduMonitor(checkTime, 0, pduData, flag), msgRef(_msgRef)

@@ -78,6 +78,9 @@ void PduRegistry::registerMonitor(PduMonitor* monitor)
 		case INTERMEDIATE_NOTIFICATION_MONITOR:
 			__register_monitor_by_msg_ref__(IntermediateNotificationMonitor);
 			break;
+		case SMS_CANCELLED_NOTIFICATION_MONITOR:
+			__register_monitor_by_msg_ref__(SmsCancelledNotificationMonitor);
+			break;
 		case SME_ACK_MONITOR:
 			__register_monitor_by_msg_ref__(SmeAckMonitor);
 			break;
@@ -155,6 +158,9 @@ void PduRegistry::removeMonitor(PduMonitor* monitor)
 			break;
 		case INTERMEDIATE_NOTIFICATION_MONITOR:
 			__remove_monitor_by_msg_ref__(IntermediateNotificationMonitor);
+			break;
+		case SMS_CANCELLED_NOTIFICATION_MONITOR:
+			__remove_monitor_by_msg_ref__(SmsCancelledNotificationMonitor);
 			break;
 		case SME_ACK_MONITOR:
 			__remove_monitor_by_msg_ref__(SmeAckMonitor);

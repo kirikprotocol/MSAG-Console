@@ -77,6 +77,7 @@ void DeliveryReportHandler::processPdu(SmppHeader* header, time_t recvTime)
 	static const char UNKNOWN = ' ';
 	static const char DELIVERY_RECEIPT = '*';
 	static const char INTERMEDIATE_NOTIFICATION = '$';
+	static const char SMS_CANCELLED_NOTIFICATION = '#';
 	try
 	{
 		SmsPduWrapper pdu(header, 0);
@@ -88,7 +89,7 @@ void DeliveryReportHandler::processPdu(SmppHeader* header, time_t recvTime)
 		SmppUtil::convert(pdu.getDest(), &destAddr);
 		PduRegistry* pduReg = fixture->smeReg->getPduRegistry(destAddr);
 		__require__(pduReg);
-		//тип pdu (delivery receipt '*' или intermediate notification '$')
+		//тип pdu
 		char pduType = UNKNOWN;
 		switch (pdu.getDataCoding())
 		{
@@ -110,6 +111,22 @@ void DeliveryReportHandler::processPdu(SmppHeader* header, time_t recvTime)
 			default:
 				__unreachable__("Invalid delivery report dataCoding");
 		}
+		switch (pduType)
+		{
+			case DELIVERY_RECEIPT:
+				__tc__("sms.reports.deliveryReceipt.checkAllowed");
+				break;
+			case INTERMEDIATE_NOTIFICATION:
+				__tc__("sms.reports.intermediateNotification.checkAllowed");
+				break;
+			case SMS_CANCELLED_NOTIFICATION:
+				//sms deleted не тестирую
+				__tc__("sms.reports.smsCancelledNotification");
+				__tc_fail__(-1);
+				return;
+			default:
+				__unreachable__("Invalid pdu type");
+		}
 		//получить оригинальную pdu
 		MutexGuard mguard(pduReg->getMutex());
 		DeliveryReportMonitor* monitor = NULL;
@@ -128,20 +145,10 @@ void DeliveryReportHandler::processPdu(SmppHeader* header, time_t recvTime)
 		//нет соответствующего оригинального pdu
 		if (!monitor)
 		{
-			__tc_fail__(2);
+			__tc_fail__(1);
 			__trace2__("getDeliveryReportMonitor(): pduReg = %p, userMessageReference = %d, pduType = %c, monitor = NULL",
 				pduReg, pdu.getMsgRef(), pduType);
 			throw TCException();
-		}
-		__tc_ok_cond__;
-		if (pduType == DELIVERY_RECEIPT)
-		{
-			__tc__("sms.reports.deliveryReceipt.checkAllowed");
-		}
-		else
-		{
-			__require__(pduType == INTERMEDIATE_NOTIFICATION);
-			__tc__("sms.reports.intermediateNotification.checkAllowed");
 		}
 		switch (monitor->getFlag())
 		{
@@ -151,7 +158,7 @@ void DeliveryReportHandler::processPdu(SmppHeader* header, time_t recvTime)
 				//ok
 				break;
 			case PDU_NOT_EXPECTED_FLAG:
-				__tc_fail__(1);
+				__tc_fail__(2);
 				throw TCException();
 			default:
 				__unreachable__("Unknown flag");

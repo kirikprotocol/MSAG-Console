@@ -65,8 +65,9 @@ typedef enum
 	DELIVERY_MONITOR = 0x2,
 	DELIVERY_RECEIPT_MONITOR = 0x3,
 	INTERMEDIATE_NOTIFICATION_MONITOR = 0x4,
-	SME_ACK_MONITOR = 0x5,
-	GENERIC_NACK_MONITOR = 0x6
+	SMS_CANCELLED_NOTIFICATION_MONITOR = 0x5,
+	SME_ACK_MONITOR = 0x6,
+	GENERIC_NACK_MONITOR = 0x7
 } MonitorType;
 
 typedef enum
@@ -301,6 +302,14 @@ struct IntermediateNotificationMonitor : public DeliveryReportMonitor
 		PduData* pduData, PduFlag flag);
 	virtual ~IntermediateNotificationMonitor();
 	virtual MonitorType getType() const { return INTERMEDIATE_NOTIFICATION_MONITOR; }
+};
+
+struct SmsCancelledNotificationMonitor : public DeliveryReportMonitor
+{
+	SmsCancelledNotificationMonitor(uint16_t msgRef, time_t checkTime,
+		PduData* pduData, PduFlag flag);
+	virtual ~SmsCancelledNotificationMonitor();
+	virtual MonitorType getType() const { return SMS_CANCELLED_NOTIFICATION_MONITOR; }
 };
 
 struct SmeAckMonitor : public PduMonitor

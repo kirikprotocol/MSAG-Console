@@ -131,6 +131,7 @@ public:
 	__get_monitor_by_msg_reg__(DeliveryMonitor, DELIVERY_MONITOR)
 	__get_monitor_by_msg_reg__(DeliveryReceiptMonitor, DELIVERY_RECEIPT_MONITOR)
 	__get_monitor_by_msg_reg__(IntermediateNotificationMonitor, INTERMEDIATE_NOTIFICATION_MONITOR)
+	__get_monitor_by_msg_reg__(SmsCancelledNotificationMonitor, SMS_CANCELLED_NOTIFICATION_MONITOR)
 	__get_monitor_by_msg_reg__(SmeAckMonitor, SME_ACK_MONITOR)
 
 	void removeMonitor(PduMonitor* monitor);

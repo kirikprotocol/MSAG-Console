@@ -748,6 +748,9 @@ void reportsTc()
 		"Информации о статусе pdu (состояние, код ошибки) является корректной");
 	__reg_tc__("sms.reports.intermediateNotification.checkText",
 		"Текст сообщения соответствует настройкам SC");
+	//sms.reports.smsCancelledNotification
+	__reg_tc__("sms.reports.smsCancelledNotification",
+		"Нотификации на удаляемые sms");
 }
 
 void smeAckTc()
