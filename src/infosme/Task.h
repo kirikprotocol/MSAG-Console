@@ -267,7 +267,8 @@ namespace smsc { namespace infosme
     {
         virtual bool addTask(Task* task) = 0;
         virtual bool removeTask(std::string taskName) = 0;
-        
+        virtual bool hasTask(std::string taskName) = 0;
+
         virtual TaskGuard getTask(std::string taskName) = 0;
         virtual TaskGuard getNextTask() = 0;
         

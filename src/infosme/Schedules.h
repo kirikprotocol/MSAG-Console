@@ -9,16 +9,24 @@
 
 #include <core/synchronization/Mutex.hpp>
 
+#include <util/config/Config.h>
+#include <util/config/Manager.h>
+#include <util/config/ConfigView.h>
+#include <util/config/ConfigException.h>
+
 #include "Task.h"
 
 namespace smsc { namespace infosme 
 {
     using smsc::core::synchronization::Mutex;
     
-    const uint8_t BYTE_ONCE_TYPE       = (uint8_t)0;
-    const uint8_t BYTE_DAILY_TYPE      = (uint8_t)1;
-    const uint8_t BYTE_WEEKLY_TYPE     = (uint8_t)2;
-    const uint8_t BYTE_MONTHLY_TYPE    = (uint8_t)3;
+    using smsc::util::config::ConfigView;
+    using smsc::util::config::ConfigException;
+    
+    const uint8_t BYTE_ONCE_TYPE        = (uint8_t)0;
+    const uint8_t BYTE_DAILY_TYPE       = (uint8_t)1;
+    const uint8_t BYTE_WEEKLY_TYPE      = (uint8_t)2;
+    const uint8_t BYTE_MONTHLY_TYPE     = (uint8_t)3;
     
     typedef enum {
         ONCE    = BYTE_ONCE_TYPE, 
@@ -26,6 +34,11 @@ namespace smsc { namespace infosme
         WEEKLY  = BYTE_WEEKLY_TYPE, 
         MONTHLY = BYTE_MONTHLY_TYPE
     } ScheduleType;
+
+    static const char* SCHEDULE_TYPE_ONCE      = "once";
+    static const char* SCHEDULE_TYPE_DAILY     = "daily";
+    static const char* SCHEDULE_TYPE_WEEKLY    = "weekly";
+    static const char* SCHEDULE_TYPE_MONTHLY   = "monthly";
 
     struct Advanced
     {
@@ -53,8 +66,7 @@ namespace smsc { namespace infosme
         virtual ~Schedule() {};
         
         virtual time_t calulateNextTime() = 0;
-
-        void assignId(std::string id) { this->id = id; };
+        
         void assignAdvanced(const Advanced& advanced) { this->advanced = advanced; };
         
         virtual bool addTask(std::string taskName)
@@ -79,9 +91,13 @@ namespace smsc { namespace infosme
         };
 
         Hash<bool>& getTasks() {
+            MutexGuard guard(taskNamesLock);
             return taskNames;
         }
     
+        static Schedule* create(ConfigView* config, std::string id);
+        virtual void init(ConfigView* config) = 0;
+
     protected:
         
         Schedule(std::string id, ScheduleType type) 
@@ -95,10 +111,15 @@ namespace smsc { namespace infosme
         
         // Has no startTime & endDate in advanced
         
+        OnceSchedule(std::string id)
+            : Schedule(id, ONCE), 
+              startTime(-1), startDate(-1) {};
+
         OnceSchedule(std::string id, time_t startTime, time_t startDate)
             : Schedule(id, ONCE), 
               startTime(startTime), startDate(startDate) {};
-
+        
+        virtual void init(ConfigView* config);
         virtual time_t calulateNextTime();
     };
     
@@ -107,10 +128,15 @@ namespace smsc { namespace infosme
         time_t  startTime;  // only HH:mm:ss
         int     everyNDays;
 
+        DailySchedule(std::string id)
+            : Schedule(id, DAILY), 
+              startTime(-1), everyNDays(0) {};
+        
         DailySchedule(std::string id, time_t startTime, int everyNDays)
             : Schedule(id, DAILY), 
               startTime(startTime), everyNDays(everyNDays) {};
-
+        
+        virtual void init(ConfigView* config);
         virtual time_t calulateNextTime();
     };
     
@@ -120,27 +146,38 @@ namespace smsc { namespace infosme
         int         everyNWeeks;
         std::string weekDays;   // ',' separated list Mon, Thu, ...
 
+        WeeklySchedule(std::string id)
+            : Schedule(id, WEEKLY), 
+              startTime(-1), everyNWeeks(0), weekDays("") {};
+        
         WeeklySchedule(std::string id, time_t startTime, int everyNWeeks, std::string weekDays)
             : Schedule(id, WEEKLY), 
               startTime(startTime), everyNWeeks(everyNWeeks), weekDays(weekDays) {};
         
+        virtual void init(ConfigView* config);
         virtual time_t calulateNextTime();
     };
     
     struct MonthlySchedule : public Schedule
     {
         time_t      startTime;   // only HH:mm:ss
-        int         dayOfMonth; // if -1 using weeks
+        int         dayOfMonth;  // if -1 using weeks
         std::string weekN;       // ',' separated list first, second, third, fourth, last.
         std::string weekDays;    // ',' separated list Mon, Thu, ...  
         std::string monthDays;   // ',' separated list Jan, Feb, ...
+
+        MonthlySchedule(std::string id)
+            : Schedule(id, MONTHLY), 
+              startTime(-1), dayOfMonth(1),
+              weekN(""), weekDays(""), monthDays("") {};
 
         MonthlySchedule(std::string id, time_t startTime, int dayOfMonth, 
                         std::string weekN, std::string weekDays, std::string monthDays)
             : Schedule(id, MONTHLY), 
               startTime(startTime), dayOfMonth(dayOfMonth),
               weekN(weekN), weekDays(weekDays), monthDays(monthDays) {};
-
+        
+        virtual void init(ConfigView* config);
         virtual time_t calulateNextTime();
     };
 

@@ -13,6 +13,38 @@ namespace smsc { namespace infosme
     
     */
 
+Schedule* Schedule::create(ConfigView* config, std::string id)
+{
+    Schedule* schedule = 0;
+
+    const char* scheduleType = config->getString("scheduleType");
+    if (!scheduleType || scheduleType[0] == '\0')
+        throw ConfigException("Schedule '%s' type empty or wasn't specified", 
+                              id.c_str());
+
+    if (strcmp(scheduleType, SCHEDULE_TYPE_ONCE) == 0) {
+        schedule = new OnceSchedule(id);
+    }
+    else if (strcmp(scheduleType, SCHEDULE_TYPE_DAILY) == 0) {
+        schedule = new DailySchedule(id);
+    }
+    else if (strcmp(scheduleType, SCHEDULE_TYPE_WEEKLY) == 0) {
+        schedule = new WeeklySchedule(id);
+    }
+    else if (strcmp(scheduleType, SCHEDULE_TYPE_MONTHLY) == 0) {
+        schedule = new MonthlySchedule(id);
+    }
+    else throw ConfigException("Type '%s' for schedule '%s' is unknown", 
+                               scheduleType, id.c_str());
+
+    if (schedule) schedule->init(config);
+    
+    return schedule;
+}
+
+void OnceSchedule::init(ConfigView* config)
+{
+}
 time_t OnceSchedule::calulateNextTime()
 {
     // time_t  startTime;  // only HH:mm:ss
@@ -32,6 +64,10 @@ time_t OnceSchedule::calulateNextTime()
     
     while (st < ct && (ets ? (st < et):true)) st += advanced.everyNSec;
     return (ets ? (st < et):true) ? st:-1;
+}
+
+void DailySchedule::init(ConfigView* config)
+{
 }
 time_t DailySchedule::calulateNextTime()
 {
@@ -57,9 +93,17 @@ time_t DailySchedule::calulateNextTime()
     }
     return -1;
 }
+
+void WeeklySchedule::init(ConfigView* config)
+{
+}
 time_t WeeklySchedule::calulateNextTime()
 {
     return -1;
+}
+
+void MonthlySchedule::init(ConfigView* config)
+{
 }
 time_t MonthlySchedule::calulateNextTime()
 {

@@ -124,6 +124,63 @@ void TaskScheduler::init(TaskProcessorAdapter* processor, ConfigView* config)
     this->processor = processor;
 
     // TODO: load up task scheduling plan from config
+    std::auto_ptr< std::set<std::string> > setGuard(config->getShortSectionNames());
+    std::set<std::string>* set = setGuard.get();
+    for (std::set<std::string>::iterator i=set->begin();i!=set->end();i++)
+    {
+        try
+        {
+            const char* scheduleId = (const char *)i->c_str();
+            if (!scheduleId || scheduleId[0] == '\0')
+                throw ConfigException("Schedule id empty or wasn't specified.");
+            
+            logger.info("Loading schedule '%s' ...", scheduleId);
+            
+            std::auto_ptr<ConfigView> scheduleConfigGuard(config->getSubConfig(scheduleId));
+            ConfigView* scheduleConfig = scheduleConfigGuard.get();
+            
+            Schedule* schedule = Schedule::create(scheduleConfig, scheduleId);
+
+            const char* tasksStr = scheduleConfig->getString("tasks");
+            if (!tasksStr)
+                throw ConfigException("Schedule tasks set empty or wasn't specified.");
+            
+            const char* tasksCur = tasksStr;
+            std::string taskName = "";
+            while (*tasksCur)
+            {
+                if (*tasksCur == ',') {
+                    const char* task_name = taskName.c_str();
+                    if (!task_name || task_name[0] == '\0') {
+                        delete schedule;
+                        throw ConfigException("Task name is invalid.");
+                    }
+                    if (!processor->getTaskContainerAdapter().hasTask(taskName)) {
+                        delete schedule;
+                        throw ConfigException("Task '%s' wasn't defined.", task_name);
+                    }
+                    if (!schedule->addTask(taskName)) {
+                        delete schedule;
+                        throw ConfigException("Task '%s' was already assigned to schedule.",task_name);
+                    }
+                    taskName = "";
+                } 
+                else taskName += *tasksCur;
+                tasksCur++;
+            }
+            
+            if (!addSchedule(schedule)) {
+                delete schedule;
+                throw ConfigException("Schedule for id '%s' already defined.");
+            }
+                
+        }
+        catch (ConfigException& exc)
+        {
+            logger.error("Load of schedules failed! Config exception: %s", exc.what());
+            throw;
+        }
+    }
 }
 
 Schedule* TaskScheduler::getNextSchedule(time_t& scheduleTime)
@@ -147,16 +204,16 @@ Schedule* TaskScheduler::getNextSchedule(time_t& scheduleTime)
     return nextSchedule;
 }
 
-void TaskScheduler::addSchedule(Schedule* schedule)
+bool TaskScheduler::addSchedule(Schedule* schedule)
 {
     __require__(schedule);
     MutexGuard guard(schedulesLock);
     
     const char* scheduleId = schedule->id.c_str();
-    if (scheduleId && scheduleId[0] != '\0') {
-        if (schedules.Exists(scheduleId)) schedules.Delete(scheduleId);
-        schedules.Insert(scheduleId, schedule);
-    }
+    if (!scheduleId || scheduleId[0] == '\0' || 
+        schedules.Exists(scheduleId)) return false;
+    schedules.Insert(scheduleId, schedule);
+    return true;
 }
 bool TaskScheduler::changeSchedule(std::string id, Schedule* schedule)
 {                   

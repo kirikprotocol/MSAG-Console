@@ -39,12 +39,20 @@ bool TaskContainer::removeTask(std::string taskName)
     task->finalize();
     return true;
 }
+bool TaskContainer::hasTask(std::string taskName)
+{
+    MutexGuard guard(tasksLock);
+
+    const char* task_name = taskName.c_str();
+    if (!task_name || task_name[0] == '\0' || !tasks.Exists(task_name)) return false;
+    return true;
+}
 TaskGuard TaskContainer::getTask(std::string taskName)
 {
     MutexGuard guard(tasksLock);
     
     const char* task_name = taskName.c_str();
-    if (!task_name || task_name[0] == '\0' || !tasks.Exists(task_name)) return 0;
+    if (!task_name || task_name[0] == '\0' || !tasks.Exists(task_name)) return TaskGuard(0);
     Task* task = tasks.Get(task_name);
     return TaskGuard((task && !task->isFinalizing()) ? task:0);
 }
@@ -52,7 +60,7 @@ TaskGuard TaskContainer::getNextTask()
 {
     MutexGuard guard(tasksLock);
     
-    if (prioritySum <= 0) return 0;
+    if (prioritySum <= 0) return TaskGuard(0);
     
     int count = 0;
     int random = (rand()%prioritySum)+1;
@@ -123,7 +131,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
                                       dsId, taskName);
             
             if (!container.addTask(new Task(taskConfig, taskName, taskDs, dsInternal)))
-                throw ConfigException("Failed to add task. Task '%s' already registered.",
+                throw ConfigException("Failed to add task. Task with name '%s' already registered.",
                                       taskName);
         }
         catch (ConfigException& exc)
@@ -134,11 +142,11 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     }
     logger.info("Tasks loaded.");
 
-    logger.info("Loading task schedule ...");
-    std::auto_ptr<ConfigView> schedulerCfgGuard(config->getSubConfig("Scheduler"));
+    logger.info("Loading task schedules ...");
+    std::auto_ptr<ConfigView> schedulerCfgGuard(config->getSubConfig("Schedules"));
     ConfigView* schedulerCfg = schedulerCfgGuard.get();
     scheduler.init(this, schedulerCfg);
-    logger.info("Task schedule loaded.");
+    logger.info("Task schedules loaded.");
 
     logger.info("Load success.");
 }
@@ -146,7 +154,6 @@ TaskProcessor::~TaskProcessor()
 {
     this->Stop();
 
-    // TODO: implement task set stop & cleanup
     if (dsInternalName) delete dsInternalName;
 }
 void TaskProcessor::Start()

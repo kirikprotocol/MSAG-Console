@@ -81,8 +81,9 @@ namespace smsc { namespace infosme
          * Adds schedule into scheduling plan and reactivates scheduler.
          *
          * @param schedule      shedule for task(s)
+         * @return false if schedule already defined, else returns true.
          */
-        void addSchedule(Schedule* schedule);
+        bool addSchedule(Schedule* schedule);
 
         /**
          * Changes task(s) schedule in scheduling plan and reactivates scheduler.
