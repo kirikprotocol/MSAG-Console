@@ -5,6 +5,7 @@
 namespace smsc { namespace dbsme 
 {
 
+using namespace smsc::util::templates;
 using namespace smsc::dbsme::io;
 
 SQLJob::~SQLJob()

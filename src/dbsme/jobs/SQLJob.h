@@ -9,13 +9,13 @@
  */
 
 #include <dbsme/Jobs.h>
-#include <dbsme/io/Parsers.h>
-#include <dbsme/io/Formatters.h>
+#include <util/templates/Parsers.h>
+#include <util/templates/Formatters.h>
 
 namespace smsc { namespace dbsme 
 {
+    using namespace smsc::util::templates;
     using namespace smsc::core::buffers;
-    using namespace smsc::dbsme::io;
     using namespace smsc::db;
     
     using smsc::util::Logger;
