@@ -594,7 +594,7 @@ public:
       {
         hash.Empty();
 				if ( !buffer || !length ) return;
-        for(int pos = 0; pos+4 < length; ++pos )
+        for(int pos = 0; pos+4 < length;)
         {
           uint16_t tag = ntohs(*(uint16_t*)(buffer+pos));
           uint16_t len = ntohs(*(uint16_t*)(buffer+pos+2));
@@ -606,8 +606,8 @@ public:
 					{
             __require__(*(buffer+pos+len-1) == 0);
             hash[key->c_str()] = string((char*)buffer+pos);
-						pos+=len;
           }
+					pos+=len;
         }
       }
     };
@@ -675,7 +675,7 @@ public:
       {
         hash.Empty();
 				if ( !buffer || !length ) return;
-        for(int pos = 0; pos+4 < length; ++pos )
+        for(int pos = 0; pos+4 < length;)
         {
           uint16_t tag = ntohs(*(uint16_t*)(buffer+pos));
           uint16_t len = ntohs(*(uint16_t*)(buffer+pos+2));
