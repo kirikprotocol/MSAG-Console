@@ -8,7 +8,7 @@
   MENU0_SELECTION = "MENU0_SERVICES";
 
   int rowN = 0;
-  int beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal);
+  int beanResult = bean.process(request);
   switch (beanResult)
   {
     case Edit.RESULT_DONE:

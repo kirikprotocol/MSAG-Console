@@ -40,9 +40,9 @@ public class WSmeFormBean extends IndexBean
 
   private int menuSelection = RESULT_OK;
 
-  public int process(HttpServletRequest request, List errors, Principal loginedUserPrincipal)
+  public int process(HttpServletRequest request)
   {
-    int result = this.process(errors, loginedUserPrincipal);
+    int result = this.processInternal(request);
     if (result == RESULT_OK || result == RESULT_DONE)
     {
       result = processParams(request);
@@ -59,16 +59,15 @@ public class WSmeFormBean extends IndexBean
     return result;
   }
 
-  protected int process(List errors, Principal loginedUserPrincipal)
+  protected int processInternal(HttpServletRequest request)
   {
     WSmeContext wSmeContext = WSmeContext.getInstance();
     if (wsme == null)
       wsme = wSmeContext.getWsme();
     if (wsmePreferences == null)
-      wsmePreferences = wSmeContext.getWSmePreferences(loginedUserPrincipal);
+      wsmePreferences = wSmeContext.getWSmePreferences(request.getUserPrincipal());
 
-    int result = super.process(wSmeContext.getAppContext(),
-                               errors, loginedUserPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 

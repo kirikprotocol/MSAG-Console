@@ -13,6 +13,7 @@ import ru.novosoft.smsc.wsme.WSmeErrors;
 import ru.novosoft.smsc.wsme.WSmePreferences;
 import ru.novosoft.smsc.wsme.LangRow;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,9 +27,9 @@ public class WSmeLangsFormBean extends WSmeBaseFormBean
 
   private List langs = new ArrayList();
 
-  public int process(List errors, Principal loginedUserPrincipal)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(errors, loginedUserPrincipal);
+    int result = super.process(request);
 
     pageSize = (wsmePreferences != null) ?
         wsmePreferences.getLangsPageSize():WSmePreferences.DEFAULT_langsPageSize;

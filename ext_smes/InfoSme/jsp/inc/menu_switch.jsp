@@ -1,9 +1,13 @@
 <%@ page import="ru.novosoft.smsc.infosme.beans.InfoSmeBean,
                  ru.novosoft.smsc.jsp.SMSCJspException,
-                 ru.novosoft.smsc.jsp.SMSCErrors"%>
+                 ru.novosoft.smsc.jsp.SMSCErrors,
+                 ru.novosoft.smsc.jsp.PageBean"%>
 <%
   switch(beanResult)
   {
+    case PageBean.RESULT_OK:
+    case PageBean.RESULT_ERROR:
+      break;
     case InfoSmeBean.RESULT_APPLY:
       response.sendRedirect("index.jsp");
       return;
@@ -31,14 +35,7 @@
     case InfoSmeBean.RESULT_DONE:
       response.sendRedirect("index.jsp");
       return;
-    case InfoSmeBean.RESULT_OK:
-      STATUS.append("Ok");
-      break;
-    case InfoSmeBean.RESULT_ERROR:
-      STATUS.append("<span class=CF00>Error</span>");
-      break;
     default:
-      STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
       errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
   }
 %>

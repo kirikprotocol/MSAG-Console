@@ -10,10 +10,9 @@
 <%
   TITLE="Email SME Administration";
   MENU0_SELECTION = "MENU0_SERVICES";
-  //FORM_METHOD= "GET";
 
   int rowN = 0;
-  int beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal);
+  int beanResult = bean.process(request);
   switch (beanResult)
   {
     case Profiles.RESULT_EDIT:

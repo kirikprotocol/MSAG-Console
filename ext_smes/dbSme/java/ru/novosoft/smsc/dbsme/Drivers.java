@@ -1,10 +1,8 @@
 package ru.novosoft.smsc.dbsme;
 
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import javax.servlet.http.HttpServletRequest;
-import java.security.Principal;
 import java.util.*;
 
 /**
@@ -20,9 +18,9 @@ public class Drivers extends DbsmeBean
   private String dsdriver_new_loadup = null;
   public static final String prefix = "StartupLoader.DataSourceDrivers";
 
-  public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal, HttpServletRequest request)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 

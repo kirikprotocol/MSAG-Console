@@ -3,15 +3,14 @@ package ru.novosoft.smsc.emailsme.beans;
 import ru.novosoft.smsc.emailsme.backend.ProfilesDataSource;
 import ru.novosoft.smsc.emailsme.backend.ProfilesFilter;
 import ru.novosoft.smsc.emailsme.backend.ProfilesQuery;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.util.conpool.NSConnectionPool;
 
-import java.security.Principal;
-import java.sql.SQLException;
+import javax.servlet.http.HttpServletRequest;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.*;
 
 /**
@@ -69,9 +68,9 @@ public class Profiles extends SmeBean
     return result;
   }
 
-  public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 

@@ -7,55 +7,66 @@
  */
 package ru.novosoft.smsc.wsme.beans;
 
-import java.util.List;
-import java.security.Principal;
+import javax.servlet.http.HttpServletRequest;
 
 public class WSmeAdsFilterFormBean extends WSmeBaseFilterFormBean
 {
   private String langs[] = null;
 
-  public int process(List errors, Principal loginedUserPrincipal)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(errors, loginedUserPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK) {
-      mbApply = null; mbCancel = null; mbClear = null;
+      mbApply = null;
+      mbCancel = null;
+      mbClear = null;
       return result;
     }
 
     if (langs == null) { // init langs
       langs = (wsmePreferences != null) ?
-          wsmePreferences.getAdsFilter().getLangs() : new String[0];
+              wsmePreferences.getAdsFilter().getLangs() : new String[0];
     }
 
-    if (mbApply != null)        result = processApply();
-    else if (mbCancel != null)  result = processCancel();
-    else if (mbClear != null)   result = processClear();
+    if (mbApply != null)
+      result = processApply();
+    else if (mbCancel != null)
+      result = processCancel();
+    else if (mbClear != null) result = processClear();
 
-    mbApply = null; mbCancel = null; mbClear = null;
+    mbApply = null;
+    mbCancel = null;
+    mbClear = null;
     return result;
   }
+
   private int processApply()
   {
     if (wsmePreferences != null)
       wsmePreferences.getAdsFilter().setLangs(langs);
     return RESULT_DONE;
   }
+
   private int processCancel()
   {
     langs = (wsmePreferences != null) ?
-        wsmePreferences.getAdsFilter().getLangs() : new String[0];
+            wsmePreferences.getAdsFilter().getLangs() : new String[0];
     return RESULT_DONE;
   }
+
   private int processClear()
   {
     langs = new String[0];
     return RESULT_OK;
   }
 
-  public String[] getLangs() {
+  public String[] getLangs()
+  {
     return langs;
   }
-  public void setLangs(String[] langs) {
+
+  public void setLangs(String[] langs)
+  {
     this.langs = prepareFilterList(langs, false);
   }
 

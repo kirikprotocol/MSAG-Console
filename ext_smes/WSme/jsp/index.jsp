@@ -17,7 +17,7 @@
   //MENU1_SELECTION = "WSME_INDEX";
 
   int beanResult = bean.RESULT_OK;
-  switch(beanResult = bean.process(request, errorMessages, loginedUserPrincipal))
+  switch(beanResult = bean.process(request))
   {
     case WSmeFormBean.RESULT_VISITORS:
       response.sendRedirect("visitors.jsp");
@@ -32,13 +32,10 @@
       response.sendRedirect("ads.jsp");
       return;
     case WSmeFormBean.RESULT_OK:
-      STATUS.append("Ok");
       break;
     case WSmeFormBean.RESULT_ERROR:
-      STATUS.append("<span class=CF00>Error</span>");
       break;
     default:
-      STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
       errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
   }
   int row = 0;

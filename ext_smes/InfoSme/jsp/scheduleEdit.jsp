@@ -11,9 +11,8 @@
 	TITLE="Informer SME Administration";
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
-  //FORM_METHOD = "GET";
 
-	int beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal);
+	int beanResult = bean.process(request);
 	switch(beanResult)
 	{
 		case ScheduleEdit.RESULT_DONE:

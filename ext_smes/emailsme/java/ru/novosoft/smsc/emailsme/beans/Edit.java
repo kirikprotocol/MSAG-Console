@@ -1,9 +1,8 @@
 package ru.novosoft.smsc.emailsme.beans;
 
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.util.conpool.NSConnectionPool;
 
-import java.security.Principal;
+import javax.servlet.http.HttpServletRequest;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -75,9 +74,9 @@ public class Edit extends SmeBean
     return result;
   }
 
-  public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 

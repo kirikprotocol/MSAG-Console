@@ -7,6 +7,7 @@ import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.Functions;
 
+import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
@@ -51,14 +52,14 @@ public class Index extends PageBean {
 
   private String proxySmeId = "";
 
-	public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal, String servletPath)
+	public int process(HttpServletRequest request)
 	{
-		int result = super.process(appContext, errors, loginedPrincipal);
+		int result = super.process(request);
 		if (result != RESULT_OK)
 			return result;
 
     try {
-      proxySmeId = Functions.getServiceId(servletPath);
+      proxySmeId = Functions.getServiceId(request.getServletPath());
     } catch (AdminException e) {
       logger.error("Internal error", e);
       return error("Internal error", e);

@@ -1,6 +1,5 @@
 package ru.novosoft.smsc.dbsme;
 
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
@@ -9,7 +8,7 @@ import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractQueryImpl;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
-import java.security.Principal;
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
@@ -108,9 +107,9 @@ public class Providers extends DbsmeBean
     return result;
   }
 
-  public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 

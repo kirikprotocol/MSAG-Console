@@ -1,5 +1,6 @@
-<%
-WSmeContext.init(appContext);
+<%@ page import="ru.novosoft.smsc.wsme.WSmeContext,
+                 ru.novosoft.smsc.jsp.SMSCAppContext"%><%
+WSmeContext.init((SMSCAppContext) request.getAttribute("appContext"));
 %>
 <script language="JScript">
 function noValidationSubmit(buttonElem)

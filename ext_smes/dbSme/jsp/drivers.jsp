@@ -7,7 +7,8 @@
 					  java.util.Iterator,
 					  ru.novosoft.smsc.dbsme.Drivers,
 					  ru.novosoft.smsc.jsp.smsc.localeResources.Section,
-					  ru.novosoft.smsc.util.StringEncoderDecoder"%>
+					  ru.novosoft.smsc.util.StringEncoderDecoder,
+                 ru.novosoft.smsc.jsp.PageBean"%>
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.dbsme.Drivers" />
 <jsp:setProperty name="bean" property="*"/>
@@ -18,11 +19,11 @@
 	//MENU1_SELECTION = "WSME_INDEX";
 
 	int beanResult = bean.RESULT_OK;
-	switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal, request))
+	switch(beanResult = bean.process(request))
 	{
-		case Drivers.RESULT_OK:
-			STATUS.append("Ok");
-			break;
+    case PageBean.RESULT_OK:
+    case PageBean.RESULT_ERROR:
+      break;
 		case Drivers.RESULT_DONE:
 		case Drivers.RESULT_OVERVIEW:
 			response.sendRedirect("index.jsp");
@@ -33,11 +34,7 @@
 		case Drivers.RESULT_PROVIDER:
 			response.sendRedirect(bean.getMenuSelection() + ".jsp");
 			return;
-		case Drivers.RESULT_ERROR:
-			STATUS.append("<span class=CF00>Error</span>");
-			break;
 		default:
-			STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
 			errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 	}
 %>

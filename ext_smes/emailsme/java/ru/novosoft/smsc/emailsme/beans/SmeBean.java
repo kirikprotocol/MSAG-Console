@@ -1,13 +1,11 @@
 package ru.novosoft.smsc.emailsme.beans;
 
-import ru.novosoft.smsc.emailsme.backend.SmeContext;
-import ru.novosoft.smsc.jsp.PageBean;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
-import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
+import ru.novosoft.smsc.emailsme.backend.SmeContext;
+import ru.novosoft.smsc.jsp.PageBean;
+import ru.novosoft.smsc.util.config.Config;
 
-import java.security.Principal;
 import java.util.*;
 
 /**

@@ -11,7 +11,7 @@
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
 
-	int beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal);
+	int beanResult = bean.process(request);
 	switch(beanResult)
 	{
 		case ProviderEdit.RESULT_DONE:

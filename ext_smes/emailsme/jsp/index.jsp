@@ -9,7 +9,7 @@
   TITLE="Email SME Administration";
   MENU0_SELECTION = "MENU0_SERVICES";
 
-  int beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal);
+  int beanResult = bean.process(request);
 %><%@ include file="switch_menu.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="menu.jsp"%>

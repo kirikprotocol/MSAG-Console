@@ -16,7 +16,7 @@
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
 
-	int beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal);
+	int beanResult = bean.process(request);
 	switch(beanResult)
 	{
     case Tasks.RESULT_EDIT:
@@ -123,13 +123,13 @@ function setSort(sorting)
         <td><%if (bean.isSmeRunning()) {%><input class=check type=checkbox name=checked value="<%=idEnc%>" <%=bean.isTaskChecked(id) ? "checked" : ""%> onclick="checkCheckboxesForMbDeleteButton();"><%}else{%>&nbsp;<%}%></td>
         <td><a href="#" title="Edit task" onClick='return editSomething("<%=idEnc%>");'><%=nameEnc%></a></td>
         <td nowrap><%=providerEnc%></td>
-        <td><%if (enabled       ){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-        <td><span datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="gen<%=idHex%>"><%if (generating    ){%><img src="<%=CPATH%>/img/ic_running.gif"><%}else{%><img src="<%=CPATH%>/img/ic_stopped.gif"><%}%></span></td>
-        <td><span datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="prc<%=idHex%>"><%if (processing    ){%><img src="<%=CPATH%>/img/ic_running.gif"><%}else{%><img src="<%=CPATH%>/img/ic_stopped.gif"><%}%></span></td>
+        <td><%if (enabled       ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+        <td><span datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="gen<%=idHex%>"><%if (generating    ){%><img src="/images/ic_running.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></span></td>
+        <td><span datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="prc<%=idHex%>"><%if (processing    ){%><img src="/images/ic_running.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></span></td>
         <td><%=priority%></td>
-        <td><%if (retryOnFail   ){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-        <td><%if (replaceMessage){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-        <td><%if (trackIntegrity){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+        <td><%if (retryOnFail   ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+        <td><%if (replaceMessage){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+        <td><%if (trackIntegrity){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
         <td nowrap><%=svcTypeEnc%></td>
       </tr><%
     }

@@ -19,11 +19,11 @@
 	//MENU1_SELECTION = "WSME_INDEX";
 
 	int beanResult = bean.RESULT_OK;
-	switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal))
+	switch(beanResult = bean.process(request))
 	{
-		case Provider.RESULT_OK:
-			STATUS.append("Ok");
-			break;
+    case PageBean.RESULT_OK:
+    case PageBean.RESULT_ERROR:
+      break;
 		case Provider.RESULT_EDIT:
 			response.sendRedirect("job.jsp?providerName=" + URLEncoder.encode(bean.getProviderName())
 										 + "&jobId=" + URLEncoder.encode(bean.getEdit()));
@@ -46,11 +46,7 @@
 		case Provider.RESULT_PROVIDER:
 			response.sendRedirect(bean.getMenuSelection() + ".jsp");
 			return;
-		case Provider.RESULT_ERROR:
-			STATUS.append("<span class=CF00>Error</span>");
-			break;
 		default:
-			STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
 			errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 	}
 %>

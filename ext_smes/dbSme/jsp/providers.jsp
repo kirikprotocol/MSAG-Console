@@ -7,7 +7,8 @@
 					  ru.novosoft.smsc.util.StringEncoderDecoder,
 					  ru.novosoft.smsc.jsp.util.tables.DataItem,
 					  ru.novosoft.smsc.dbsme.Providers,
-					  java.net.URLEncoder"%>
+					  java.net.URLEncoder,
+                 ru.novosoft.smsc.jsp.PageBean"%>
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.dbsme.Providers" />
 <jsp:setProperty name="bean" property="*"/>
@@ -18,11 +19,11 @@
 	//MENU1_SELECTION = "WSME_INDEX";
 
 	int beanResult = bean.RESULT_OK;
-	switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal))
+	switch(beanResult = bean.process(request))
 	{
-		case Providers.RESULT_OK:
-			STATUS.append("Ok");
-			break;
+    case PageBean.RESULT_OK:
+    case PageBean.RESULT_ERROR:
+      break;
 		case Providers.RESULT_DONE:
 			response.sendRedirect("providers.jsp");
 			return;
@@ -41,11 +42,7 @@
 		case Providers.RESULT_EDIT:
 			response.sendRedirect("provider.jsp?providerName=" + URLEncoder.encode(bean.getProviderName()));
 			return;
-		case Providers.RESULT_ERROR:
-			STATUS.append("<span class=CF00>Error</span>");
-			break;
 		default:
-			STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
 			errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 	}
 %>

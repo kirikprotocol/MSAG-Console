@@ -1,6 +1,6 @@
 <%@page import="java.util.*, ru.novosoft.smsc.admin.service.ServiceInfo,
 					 ru.novosoft.smsc.admin.Constants"%><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.Statuses"/><%
-bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), new LinkedList(), request.getUserPrincipal());
+bean.process(request);
 out.print('"' + Constants.WSME_SME_ID + '"');
 out.println();
 switch (bean.getServiceStatus(Constants.WSME_SME_ID))

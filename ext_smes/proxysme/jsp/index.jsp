@@ -2,30 +2,28 @@
 <%@ page import="ru.novosoft.smsc.admin.Constants,
 					  ru.novosoft.smsc.proxysme.Index,
 					  ru.novosoft.smsc.jsp.SMSCJspException,
-					  ru.novosoft.smsc.jsp.SMSCErrors"%>
+					  ru.novosoft.smsc.jsp.SMSCErrors,
+                 ru.novosoft.smsc.jsp.PageBean"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.proxysme.Index" />
 <jsp:setProperty name="bean" property="*"/>
 <%
 	TITLE="Proxy SME Administration";
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
-	//FORM_METHOD = "GET";
 
 	int beanResult = bean.RESULT_OK;
-	switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal, request.getServletPath()))
+	switch(beanResult = bean.process(request))
 	{
+    case PageBean.RESULT_OK:
+    case PageBean.RESULT_ERROR:
+      break;
 /*		case Index.RESULT_DONE:
 			response.sendRedirect("index.jsp");
 			return;
-*/		case Index.RESULT_DONE:
-		case Index.RESULT_OK:
-			STATUS.append("Ok");
-			break;
-		case Index.RESULT_ERROR:
-			STATUS.append("<span class=CF00>Error</span>");
+*/
+    case Index.RESULT_DONE:
 			break;
 		default:
-			STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
 			errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 	}
 %>

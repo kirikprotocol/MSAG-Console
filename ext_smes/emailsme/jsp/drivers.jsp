@@ -9,9 +9,8 @@
 	TITLE="Email SME Administration";
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
-	FORM_METHOD = "GET";
 
-  int beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal, request.getParameterMap());
+  int beanResult = bean.process(request);
 %><%@ include file="switch_menu.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="menu.jsp"%>
@@ -31,7 +30,7 @@ function clickAddDriver()
 	newCell.innerHTML = "<input class=txtW name=\"<%=Drivers.DRIVERS_SECTION_NAME%>." + typeElem.value + ".loadup\" value=\"" + loadupElem.value + "\">";
 	newRow.appendChild(newCell);
 	newCell = document.createElement("td");
-	newCell.innerHTML = "<img src=\"<%=CPATH%>/img/but_del.gif\" class=button jbuttonName=\"mbRemove\" jbuttonValue=\"Remove\" title=\"Remove this datasource driver\" jbuttonOnclick=\"return clickRemoveDriver('" + newRow.id + "');\">";
+	newCell.innerHTML = "<img src=\"/images/but_del.gif\" class=button jbuttonName=\"mbRemove\" jbuttonValue=\"Remove\" title=\"Remove this datasource driver\" jbuttonOnclick=\"return clickRemoveDriver('" + newRow.id + "');\">";
 	newRow.appendChild(newCell);
 
 	typeElem.value = "";

@@ -10,7 +10,8 @@
 					  java.net.URLEncoder,
 					  ru.novosoft.smsc.dbsme.Provider,
 					  java.util.List,
-					  java.util.LinkedList"%>
+					  java.util.LinkedList,
+                 ru.novosoft.smsc.jsp.PageBean"%>
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.dbsme.Job" />
 <jsp:setProperty name="bean" property="*"/>
@@ -21,16 +22,17 @@
 	//MENU1_SELECTION = "WSME_INDEX";
 
 	int beanResult = bean.RESULT_OK;
-	switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal))
+	switch(beanResult = bean.process(request))
 	{
-		case Job.RESULT_OK:
-			STATUS.append("Ok");
-			break;
+    case PageBean.RESULT_OK:
+    case PageBean.RESULT_ERROR:
+      break;
 /*		case Job.RESULT_EDIT:
 			response.sendRedirect("job.jsp?providerName=" + URLEncoder.encode(bean.getProviderName())
 										 + "&jobName=" + URLEncoder.encode(bean.getJobName()));
 			return;
-*/		case Job.RESULT_DONE:
+*/
+    case Job.RESULT_DONE:
 			response.sendRedirect("provider.jsp?providerName=" + bean.getProviderName());
 			return;
 		case Job.RESULT_OVERVIEW:
@@ -42,11 +44,7 @@
 		case Job.RESULT_PROVIDER:
 			response.sendRedirect(bean.getMenuSelection() + ".jsp");
 			return;
-		case Job.RESULT_ERROR:
-			STATUS.append("<span class=CF00>Error</span>");
-			break;
 		default:
-			STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
 			errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 	}
 %>

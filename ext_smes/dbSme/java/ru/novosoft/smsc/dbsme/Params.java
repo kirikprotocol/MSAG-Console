@@ -1,9 +1,6 @@
 package ru.novosoft.smsc.dbsme;
 
-import ru.novosoft.smsc.jsp.SMSCAppContext;
-
 import javax.servlet.http.HttpServletRequest;
-import java.security.Principal;
 import java.util.*;
 
 /**
@@ -77,9 +74,9 @@ public class Params extends DbsmeBean
     return result;
   }
 
-  public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal, HttpServletRequest request)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 

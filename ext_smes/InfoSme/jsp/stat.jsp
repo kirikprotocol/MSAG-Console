@@ -16,7 +16,7 @@
 	//MENU1_SELECTION = "WSME_INDEX";
 
   int rowN = 0;
-	int beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal);
+	int beanResult = bean.process(request);
 %><%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>

@@ -3,7 +3,6 @@ package ru.novosoft.smsc.emailsme.backend;
 import org.apache.log4j.Category;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.util.conpool.NSConnectionPool;

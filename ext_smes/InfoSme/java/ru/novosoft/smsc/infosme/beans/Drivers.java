@@ -1,10 +1,9 @@
 package ru.novosoft.smsc.infosme.beans;
 
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.config.Config;
 
-import java.security.Principal;
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
@@ -22,16 +21,16 @@ public class Drivers extends InfoSmeBean
   private String mbDone = null;
   private String mbCancel = null;
 
-  public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal, Map requestParams)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 
     if (mbCancel != null)
       return RESULT_DONE;
     else if (mbDone != null)
-      return done(requestParams);
+      return done(request.getParameterMap());
 
     return result;
   }

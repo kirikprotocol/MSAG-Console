@@ -1,11 +1,9 @@
 package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
-import java.security.Principal;
-import java.util.*;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Created by igork
@@ -21,9 +19,9 @@ public class Tasks extends TasksListBean
   private String mbEdit = null;
   private String mbDelete = null;
 
-  public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 

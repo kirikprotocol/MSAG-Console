@@ -1,10 +1,9 @@
 package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.infosme.backend.Task;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.SortedList;
 
-import java.security.Principal;
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
@@ -54,9 +53,9 @@ public class TaskEdit extends InfoSmeBean
     return result;
   }
 
-  public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 
@@ -80,7 +79,7 @@ public class TaskEdit extends InfoSmeBean
       }
     } else {
       if (task.isContainsInConfig(getConfig()))
-          return error("Task already exists", getId());
+        return error("Task already exists", getId());
     }
     task.storeToConfig(getConfig());
     getInfoSmeContext().setChangedTasks(true);

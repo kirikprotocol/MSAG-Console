@@ -7,6 +7,7 @@
  */
 package ru.novosoft.smsc.wsme.beans;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.security.Principal;
 
@@ -14,9 +15,9 @@ public class WSmeVisitorsFilterFormBean extends WSmeBaseFilterFormBean
 {
   private String masks[] = null;
 
-  public int process(List errors, Principal loginedUserPrincipal)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(errors, loginedUserPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK) {
       mbApply = null; mbCancel = null; mbClear = null;
       return result;

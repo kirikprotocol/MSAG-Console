@@ -7,14 +7,13 @@
  */
 package ru.novosoft.smsc.wsme.beans;
 
+import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.wsme.WSmeContext;
 import ru.novosoft.smsc.wsme.WSmePreferences;
-import ru.novosoft.smsc.admin.route.Mask;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.security.Principal;
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
 
 public class WSmeBaseFilterFormBean extends PageBean
 {
@@ -29,53 +28,65 @@ public class WSmeBaseFilterFormBean extends PageBean
     if (list == null) return null;
 
     List result = new ArrayList();
-    for (int i=0; i<list.length; i++) {
+    for (int i = 0; i < list.length; i++) {
       String value = (list[i] != null) ? list[i].trim() : null;
       if (value != null && value.length() > 0) {
         try {
-          if (mask) result.add((new Mask(value)).getMask());
-          else      result.add(value);
+          if (mask)
+            result.add((new Mask(value)).getMask());
+          else
+            result.add(value);
         } catch (Exception e) {
-          System.out.println("WSmeBaseFilter: "+e.getMessage());
+          System.out.println("WSmeBaseFilter: " + e.getMessage());
         }
       }
     }
     String cleaned[] = new String[result.size()];
-    for (int i=0; i<result.size(); i++)
-      cleaned[i] = (String)result.get(i);
+    for (int i = 0; i < result.size(); i++)
+      cleaned[i] = (String) result.get(i);
     return cleaned;
   }
 
-  public int process(List errors, Principal loginedUserPrincipal)
+  public int process(HttpServletRequest request)
   {
     WSmeContext wSmeContext = WSmeContext.getInstance();
-    int result = super.process(wSmeContext.getAppContext(),
-                               errors, loginedUserPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 
     if (wsmePreferences == null)
-      wsmePreferences = wSmeContext.getWSmePreferences(loginedUserPrincipal);
+      wsmePreferences = wSmeContext.getWSmePreferences(request.getUserPrincipal());
 
     return RESULT_OK;
   }
 
-  public String getMbApply() {
+  public String getMbApply()
+  {
     return mbApply;
   }
-  public void setMbApply(String mbApply) {
+
+  public void setMbApply(String mbApply)
+  {
     this.mbApply = mbApply;
   }
-  public String getMbCancel() {
+
+  public String getMbCancel()
+  {
     return mbCancel;
   }
-  public void setMbCancel(String mbCancel) {
+
+  public void setMbCancel(String mbCancel)
+  {
     this.mbCancel = mbCancel;
   }
-  public String getMbClear() {
+
+  public String getMbClear()
+  {
     return mbClear;
   }
-  public void setMbClear(String mbClear) {
+
+  public void setMbClear(String mbClear)
+  {
     this.mbClear = mbClear;
   }
 

@@ -8,15 +8,12 @@
 package ru.novosoft.smsc.wsme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.wsme.AdRow;
 import ru.novosoft.smsc.wsme.WSmeErrors;
 import ru.novosoft.smsc.wsme.WSmePreferences;
-import ru.novosoft.smsc.wsme.AdRow;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.security.Principal;
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
 
 public class WSmeAdsFormBean extends WSmeBaseFormBean
 {
@@ -28,17 +25,17 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
 
   public final static char ID_LANG_SEPARATOR = '-';
 
-  public int process(List errors, Principal loginedUserPrincipal)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(errors, loginedUserPrincipal);
+    int result = super.process(request);
 
     pageSize = (wsmePreferences != null) ?
-        wsmePreferences.getAdsPageSize():WSmePreferences.DEFAULT_adsPageSize;
+            wsmePreferences.getAdsPageSize() : WSmePreferences.DEFAULT_adsPageSize;
     if (sort == null)
       sort = (wsmePreferences != null) ?
-        wsmePreferences.getAdsSortOrder():WSmePreferences.DEFAULT_adsSortOrder;
+              wsmePreferences.getAdsSortOrder() : WSmePreferences.DEFAULT_adsSortOrder;
     else if (wsmePreferences != null)
-        wsmePreferences.setAdsSortOrder(sort);
+      wsmePreferences.setAdsSortOrder(sort);
 
     if (result != RESULT_OK && result != RESULT_ADS) return result;
     result = RESULT_OK;
@@ -46,17 +43,20 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
     if (btnAdd != null && newId != null && newLang != null && newAd != null) {
       result = addNewAd();
       if (result == RESULT_OK) return RESULT_ADS; //redirect for refresh
-    }
-    else if (btnDel != null && selectedRows != null) {
+    } else if (btnDel != null && selectedRows != null) {
       result = delAds();
       if (result == RESULT_OK) return RESULT_ADS; //redirect for refresh
     }
 
     int loadResult = loadAds();
-    result = (result == RESULT_OK) ? loadResult:result;
+    result = (result == RESULT_OK) ? loadResult : result;
 
-    selectedRows = null; btnAdd = null; btnDel = null;
-    newId = null; newLang = null; newAd = null;
+    selectedRows = null;
+    btnAdd = null;
+    btnDel = null;
+    newId = null;
+    newLang = null;
+    newAd = null;
     return result;
   }
 
@@ -66,12 +66,10 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
     int result = RESULT_OK;
     try {
       wsme.addAd(Integer.parseInt(newId.trim()), newLang, newAd);
-    }
-    catch (NumberFormatException exc) {
+    } catch (NumberFormatException exc) {
       result = error(WSmeErrors.error.admin.ParseError, exc.getMessage());
-    }
-    catch (Exception exc) {
-       result = error(WSmeErrors.error.remote.failure, exc.getMessage());
+    } catch (Exception exc) {
+      result = error(WSmeErrors.error.remote.failure, exc.getMessage());
     }
     return result;
   }
@@ -81,18 +79,16 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
     System.out.println("WSmeAds::delAds() called");
     int result = RESULT_OK;
     try {
-      for (int i=0; i<selectedRows.length; i++) {
+      for (int i = 0; i < selectedRows.length; i++) {
         String row = selectedRows[i];
-        int separator = (row == null) ? -1:row.indexOf(ID_LANG_SEPARATOR);
+        int separator = (row == null) ? -1 : row.indexOf(ID_LANG_SEPARATOR);
         if (separator <= 0) continue;
         int id = Integer.parseInt(row.substring(0, separator));
-        wsme.removeAd(id, row.substring(separator+1));
+        wsme.removeAd(id, row.substring(separator + 1));
       }
-    }
-    catch (NumberFormatException exc) {
+    } catch (NumberFormatException exc) {
       result = error(WSmeErrors.error.admin.ParseError, exc.getMessage());
-    }
-    catch (AdminException exc) {
+    } catch (AdminException exc) {
       result = error(WSmeErrors.error.remote.failure, exc.getMessage());
     }
     return result;
@@ -100,13 +96,11 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
 
   private int processSort()
   {
-    if (sort != null && sort.length() > 0)
-    {
+    if (sort != null && sort.length() > 0) {
       final boolean isNegativeSort = sort.startsWith("-");
       final String sortField = isNegativeSort ? sort.substring(1) : sort;
 
-      if (ads != null)
-      {
+      if (ads != null) {
         Collections.sort(ads, new Comparator()
         {
           public int compare(Object o1, Object o2)
@@ -138,39 +132,50 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
       result = processSort();
       ads = getLangFilteredList(ads, wsmePreferences.getAdsFilter().getLangList());
       ads = getPaginatedList(ads);
-    }
-    catch (AdminException exc) {
-       clearPaginatedList(ads);
-       result = error(WSmeErrors.error.datasource.failure, exc.getMessage());
+    } catch (AdminException exc) {
+      clearPaginatedList(ads);
+      result = error(WSmeErrors.error.datasource.failure, exc.getMessage());
     }
     return result;
   }
-  public List getAds() {
+
+  public List getAds()
+  {
     return ads;
   }
 
-  public String getNewId() {
-    return (newId == null) ? "":newId;
+  public String getNewId()
+  {
+    return (newId == null) ? "" : newId;
   }
-  public void setNewId(String newId) {
+
+  public void setNewId(String newId)
+  {
     this.newId = newId;
   }
 
-  public String getNewLang() {
-    return (newLang == null) ? "":newLang;
+  public String getNewLang()
+  {
+    return (newLang == null) ? "" : newLang;
   }
-  public void setNewLang(String newLang) {
+
+  public void setNewLang(String newLang)
+  {
     this.newLang = newLang;
   }
 
-  public String getNewAd() {
-    return (newAd == null) ? "":newAd;
+  public String getNewAd()
+  {
+    return (newAd == null) ? "" : newAd;
   }
-  public void setNewAd(String newAd) {
+
+  public void setNewAd(String newAd)
+  {
     this.newAd = newAd;
   }
 
-  public int getMenuId() {
+  public int getMenuId()
+  {
     return RESULT_ADS;
   }
 }

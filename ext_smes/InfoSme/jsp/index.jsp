@@ -14,7 +14,7 @@
 	TITLE="Informer SME Administration";
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
-	int beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal);
+	int beanResult = bean.process(request);
 %><%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
@@ -108,7 +108,7 @@ page_menu_end(out);
 <tr class=row0>
   <td style="padding-right:3px"><input class=check type=checkbox id=toStartSme name=toStart value=sme onClick="checkStartStop();"></td>
   <th><label for=toStartSme>Info SME</label></th>
-  <td><%=serviceStatus(Constants.INFO_SME_ID, "InfoSme_RUNNING_STATUSERVICE_InfoSme")%></td>
+  <td><%=serviceStatus(bean.getAppContext(), Constants.INFO_SME_ID, "InfoSme_RUNNING_STATUSERVICE_InfoSme")%></td>
 </tr>
 <tr class=row1 id=procRow>
   <td style="padding-right:3px"><input class=check type=checkbox id=toStartProcessor name=toStart value=processor onClick="checkStartStop();"></td>
@@ -228,13 +228,13 @@ function setSort(sorting)
         <td><input class=check type=checkbox name=checked id=checked<%=idHex%> value="<%=idEnc%>" <%=bean.isTaskChecked(id) ? "checked" : ""%> onclick="checkTasks();"></td>
         <td><label for=checked<%=idHex%>><%=nameEnc%></label></td>
         <td nowrap><%=providerEnc%></td>
-        <td><%if (enabled       ){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-        <td><span datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="gen<%=idHex%>"><%if (generating    ){%><img src="<%=CPATH%>/img/ic_running.gif"><%}else{%><img src="<%=CPATH%>/img/ic_stopped.gif"><%}%></span></td>
-        <td><span datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="prc<%=idHex%>"><%if (processing    ){%><img src="<%=CPATH%>/img/ic_running.gif"><%}else{%><img src="<%=CPATH%>/img/ic_stopped.gif"><%}%></span></td>
+        <td><%if (enabled       ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+        <td><span datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="gen<%=idHex%>"><%if (generating    ){%><img src="/images/ic_running.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></span></td>
+        <td><span datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="prc<%=idHex%>"><%if (processing    ){%><img src="/images/ic_running.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></span></td>
         <td><%=priority%></td>
-        <td><%if (retryOnFail   ){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-        <td><%if (replaceMessage){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-        <td><%if (trackIntegrity){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+        <td><%if (retryOnFail   ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+        <td><%if (replaceMessage){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+        <td><%if (trackIntegrity){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
         <td nowrap><%=svcTypeEnc%></td>
       </tr><%
     }

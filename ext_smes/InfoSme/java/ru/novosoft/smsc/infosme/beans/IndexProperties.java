@@ -3,9 +3,8 @@ package ru.novosoft.smsc.infosme.beans;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.infosme.backend.InfoSme;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 
-import java.security.Principal;
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
@@ -34,9 +33,9 @@ public abstract class IndexProperties extends TasksListBean
   private String[] toStart = new String[0];
   private Set toStartSet = new HashSet();
 
-  public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 

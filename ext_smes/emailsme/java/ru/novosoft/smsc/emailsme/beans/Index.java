@@ -1,18 +1,11 @@
 package ru.novosoft.smsc.emailsme.beans;
 
-import ru.novosoft.smsc.jsp.SMSCAppContext;
-import ru.novosoft.smsc.emailsme.backend.SmeContext;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
+import ru.novosoft.smsc.emailsme.backend.SmeContext;
 import ru.novosoft.smsc.util.config.Config;
 
-import java.security.Principal;
-import java.util.*;
-import java.io.IOException;
-
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.ParserConfigurationException;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Created by IntelliJ IDEA.
@@ -28,9 +21,9 @@ public class Index extends SmeBean
   private String mbStart = null;
   private String mbStop = null;
 
-  public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(appContext, errors, loginedPrincipal);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 
