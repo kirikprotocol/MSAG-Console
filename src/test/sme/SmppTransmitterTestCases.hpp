@@ -29,7 +29,7 @@ public:
 
 	void sendSubmitSmPdu(PduSubmitSm* pdu, PduData* existentPduData, bool sync,
 		PduData::IntProps* intProps = NULL, PduData::StrProps* strProps = NULL,
-		bool normalSms = true);
+		PduData::ObjProps* objProps = NULL, bool normalSms = true);
 
 	void setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu, PduData* replacePduData);
 
@@ -63,7 +63,7 @@ protected:
 	void checkRegisteredDelivery(Message& m);
 	PduData* registerSubmitSm(PduSubmitSm* pdu, PduData* existentPduData,
 		time_t submitTime, PduData::IntProps* intProps,
-		PduData::StrProps* strProps, bool normalSms);
+		PduData::StrProps* strProps, PduData::ObjProps* objProps, bool normalSms);
 	void processSubmitSmSync(PduData* pduData, PduSubmitSmResp* respPdu,
 		time_t respTime);
 	void processSubmitSmAsync(PduData* pduData);
