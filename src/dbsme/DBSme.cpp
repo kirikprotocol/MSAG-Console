@@ -477,7 +477,7 @@ int main(void)
             catch (SmppConnectException& exc)
             {
                 const char* msg = exc.what(); 
-                logger.error("Connect failed.\nCause: %s\n", (msg) ? msg:"unknown");
+                logger.error("Connect to SMSC failed. Cause: %s\n", (msg) ? msg:"unknown");
                 bDBSmeIsConnected = false;
                 if (exc.getReason() == 
                     SmppConnectException::Reason::bindFailed) throw;
@@ -502,15 +502,32 @@ int main(void)
             runner.shutdown();
         };
     }
+    catch (SmppConnectException& exc)
+    {
+        if (exc.getReason() == SmppConnectException::Reason::bindFailed)
+            logger.error("Failed to bind WSme. Exiting.\n");
+        return -1;
+    }
     catch (ConfigException& exc) 
     {
-        logger.error("Configuration invalid. Details: %s\n", exc.what());
+        logger.error("Configuration invalid. Details: %s Exiting.\n", exc.what());
         return -2;
+    }
+    catch (Exception& exc) 
+    {
+        logger.error("Top level Exception: %s Exiting.\n", exc.what());
+        return -3;
     }
     catch (exception& exc) 
     {
-        logger.error("Top level exception: %s\n", exc.what());
-        return -1;
+        logger.error("Top level exception: %s Exiting.\n", exc.what());
+        return -4;
     }
+    catch (...) 
+    {
+        logger.error("Unknown exception: '...' caught. Exiting.\n");
+        return -5;
+    }
+    
     return 0;
 }
