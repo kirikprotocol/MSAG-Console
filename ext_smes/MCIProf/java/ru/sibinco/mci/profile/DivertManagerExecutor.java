@@ -40,7 +40,6 @@ public class DivertManagerExecutor extends DivertManagerState implements Executo
       logger.error("", e);
       throw new ScenarioInitializationException(e.getMessage());
     }
-
   }
 
   protected String getValue(String option)

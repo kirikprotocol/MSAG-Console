@@ -12,13 +12,13 @@ import org.apache.log4j.Category;
 /**
  * Created by IntelliJ IDEA.
  * User: makar
- * Date: 10.09.2004
- * Time: 16:03:37
+ * Date: 13.09.2004
+ * Time: 14:16:53
  * To change this template use File | Settings | File Templates.
  */
-public class DivertSetPreprocessor extends DivertManagerState implements ScenarioStateProcessor
+public class ProfileSetPreprocessor extends ProfileManagerState implements ScenarioStateProcessor
 {
-  private static Category logger = Category.getInstance(DivertSetPreprocessor.class);
+  private static Category logger = Category.getInstance(ProfileSetPreprocessor.class);
 
   public void init(Properties properties) throws ScenarioInitializationException
   {
@@ -29,13 +29,14 @@ public class DivertSetPreprocessor extends DivertManagerState implements Scenari
   {
     String msg = state.getMessageString();
     if (msg == null)
-      throw new ProcessingException("Divert option is undefined", -1);
+      throw new ProcessingException("Profile option is undefined", -1);
     msg = msg.trim();
-    if      (msg.equals("1")) state.setAttribute(Constants.ATTR_REASON, DivertInfo.BUSY);
-    else if (msg.equals("2")) state.setAttribute(Constants.ATTR_REASON, DivertInfo.ABSENT);
-    else if (msg.equals("3")) state.setAttribute(Constants.ATTR_REASON, DivertInfo.NOTAVAIL);
-    else if (msg.equals("4")) state.setAttribute(Constants.ATTR_REASON, DivertInfo.UNCOND);
+    if      (msg.equals("2")) state.setAttribute(Constants.ATTR_REASON, Constants.INFORM);
+    else if (msg.equals("4")) state.setAttribute(Constants.ATTR_REASON, Constants.NOTIFY);
     else
-      throw new ProcessingException("Divert option '"+msg+"' is unknown", -2);
+      throw new ProcessingException("Profile option '"+msg+"' is unknown", -2);
+
+    state.removeAttribute(Constants.ATTR_FORMATS);
   }
+
 }

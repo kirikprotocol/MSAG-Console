@@ -11,12 +11,12 @@ public class ProfileInfo
 {
   protected boolean inform = false;
   protected boolean notify = false;
-  protected String  informFormat = null;
-  protected String  notifyFormat = null;
+  protected FormatType informFormat = null;
+  protected FormatType notifyFormat = null;
 
   public ProfileInfo() {
   }
-  public ProfileInfo(String informFormat, String notifyFormat, boolean inform, boolean notify) {
+  public ProfileInfo(FormatType informFormat, FormatType notifyFormat, boolean inform, boolean notify) {
     this.inform = inform;  this.notify = notify;
     this.informFormat = informFormat; this.notifyFormat = notifyFormat;
   }
@@ -27,10 +27,10 @@ public class ProfileInfo
   public boolean isNotify() {
     return notify;
   }
-  public String getInformFormat() {
+  public FormatType getInformFormat() {
     return informFormat;
   }
-  public String getNotifyFormat() {
+  public FormatType getNotifyFormat() {
     return notifyFormat;
   }
 }

@@ -15,13 +15,11 @@
     </page>
 
     <page id="divert_mgr" question="0">
-      <!-- 1) if (!MAIN attr && !"0") set divert value for option (выкл/сервис/голос.почта/тел.номер)
-           2) remove MAIN attribute -->
+      <!-- if (!MAIN attr && !"0") set divert & remove MAIN attribute -->
       <pagePreProcessor class="ru.sibinco.mci.profile.DivertManagerPreprocessor">
         <bundle name="divert"/>
       </pagePreProcessor>
-      <!-- 1) Query divert info
-           2) Show divert info & resons dialog -->
+      <!-- Query & show divert info in resons dialog -->
       <pageExecutor class="ru.sibinco.mci.profile.DivertManagerExecutor">
         <bundle name="divert"/>
       </pageExecutor>
@@ -40,33 +38,42 @@
       <pageExecutor class="ru.sibinco.mci.profile.DivertSetExecutor">
         <bundle name="divert"/>
       </pageExecutor>
-      <command name="0" target="divert_mgr"/>    <!-- назад       -->
-      <command name="1" target="divert_mgr"/>    <!-- выкл        -->
-      <command name="2" target="divert_mgr"/>    <!-- сервис      -->
-      <command name="3" target="divert_mgr"/>    <!-- голос.почта -->
-      <command name="(**)" target="divert_mgr"/> <!-- тел.номер -->
+      <command name="(**)" target="divert_mgr"/>
     </page>
 
     <page id="profile_mgr" question="0">
-      <segment>
-        <data>
-Profile:
-Not implemented yet
-        </data>
-      </segment>
+      <!-- if (!MAIN attr && !"0") change profile & remove MAIN attribute -->
+      <pagePreProcessor class="ru.sibinco.mci.profile.ProfileManagerPreprocessor">
+        <bundle name="profile"/>
+      </pagePreProcessor>
+      <!-- Query & show profile info in change dialog -->
+      <pageExecutor class="ru.sibinco.mci.profile.ProfileManagerExecutor">
+        <bundle name="profile"/>
+      </pageExecutor>
+      <command name="1" target="profile_mgr"/>   <!-- sms абоненту (да/нет)  -->
+      <command name="2" target="profile_set"/>   <!-- тип сообщения (...)    -->
+      <command name="3" target="profile_mgr"/>   <!-- sms звонившим (да/нет) -->
+      <command name="4" target="profile_set"/>   <!-- тип нотификации (...)  -->
       <command name="(**)" target="MAIN_PAGE"/>
+    </page>
+    <page id="profile_set" question="0">
+      <!-- Set inform or notify reason attribute -->
+      <pagePreProcessor class="ru.sibinco.mci.profile.ProfileSetPreprocessor">
+        <bundle name="profile"/>
+      </pagePreProcessor>
+      <!-- Show message format alternatives for inform/notify type -->
+      <pageExecutor class="ru.sibinco.mci.profile.ProfileSetExecutor">
+        <bundle name="profile"/>
+      </pageExecutor>
+      <command name="(**)" target="profile_mgr"/>
     </page>
 
     <page id="smshelp_mgr" question="0">
-      <segment>
-        <data>
-SMS-Help:
-Not implemented yet
-        </data>
-      </segment>
+      <pageExecutor class="ru.sibinco.mci.profile.HelpExecutor">
+        <bundle name="help"/>
+      </pageExecutor>
       <command name="(**)" target="MAIN_PAGE"/>
     </page>
-
 
   </scenario>
 </scenarios>

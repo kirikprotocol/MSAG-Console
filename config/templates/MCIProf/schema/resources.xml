@@ -13,14 +13,14 @@
   </bundle>
 
   <bundle name="divert">
-    <str name="value_off"         value="выкл"/>
+    <str name="value_off"         value="выключено"/>
     <str name="value_service"     value="сервис"/>
     <str name="value_voicemail"   value="голос.почта"/>
 
     <str name="page_info">
 Переадресация:
 0>назад
-1>занят {0}
+1>занято {0}
 2>отсутствует {1}
 3>не доступен {2}
 4>безусловно {3}
@@ -35,6 +35,35 @@
   </bundle>
 
   <bundle name="profile">
+    <str name="value_yes"    value="да"/>
+    <str name="value_no"     value="нет"/>
+    <str name="value_inform" value="сообщения"/>
+    <str name="value_notify" value="нотификации"/>
+
+    <str name="page_info">
+Уст-ки сервиса:
+0>назад
+1>sms абоненту {0}
+2>тип {1}
+3>sms звонившим {2}
+4>тип {3}
+    </str>
+    <str name="page_set">
+Тип {0}:
+0>назад
+{1}
+    </str>
+  </bundle>
+
+  <bundle name="help">
+    <str name="page_info">
+Помощь:
+Вам отправлено SMS-руководство по управлению звонками
+0>назад
+    </str>
+    <str name="page_man">
+Руководство пользователя в стадии разработки...
+    </str>
   </bundle>
 
 </resources>

@@ -32,17 +32,13 @@ public class DivertManagerState
   {
     DivertInfo info = (DivertInfo)state.getAttribute(Constants.ATTR_DIVERT);
     if (info == null) {
-      logger.debug("getDivertInfo: DivertInfo NULL");
       info = divertManager.getDivertInfo(state.getAbonent());
       if (info != null) state.setAttribute(Constants.ATTR_DIVERT, info);
-    } else {
-      logger.debug("getDivertInfo: DivertInfo !NULL");
     }
     return info;
   }
   protected void setDivertInfo(ScenarioState state, DivertInfo info)
   {
-    logger.debug("setDivertInfo:"+info);
     divertManager.setDivertInfo(state.getAbonent(), info);
     state.setAttribute(Constants.ATTR_DIVERT, info);
   }

@@ -31,11 +31,9 @@ public class DivertManagerPreprocessor extends DivertManagerState implements Sce
     if (state.getAttribute(Constants.ATTR_MAIN) == null)
     {
       String msg = state.getMessageString();
-      logger.debug("Started !MAIN. Msg="+msg);
       if (msg != null) {
         msg = msg.trim();
         String reason = (String)state.getAttribute(Constants.ATTR_REASON);
-        logger.debug("Reason="+reason);
         if (reason != null && !msg.equals(Constants.OPTION_EXIT))
         {
           String value = null;
@@ -43,7 +41,6 @@ public class DivertManagerPreprocessor extends DivertManagerState implements Sce
           else if (msg.equals("2")) value = Constants.SERVICE;
           else if (msg.equals("3")) value = Constants.VOICEMAIL;
           else value = Transliterator.translit(msg.trim());
-          logger.debug("Value="+value);
 
           DivertInfo info = getDivertInfo(state);
           if (reason.equals(DivertInfo.BUSY))          info.busy     = value;
@@ -54,10 +51,7 @@ public class DivertManagerPreprocessor extends DivertManagerState implements Sce
           // TODO: catch possible exception on get & set divert
         }
       }
-    } else {
-      logger.debug("Started MAIN.");
     }
     state.removeAttribute(Constants.ATTR_MAIN);
-    logger.debug("Ended");
   }
 }

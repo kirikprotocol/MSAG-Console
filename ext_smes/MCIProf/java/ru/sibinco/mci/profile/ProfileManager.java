@@ -1,7 +1,7 @@
 package ru.sibinco.mci.profile;
 
 import java.util.Collection;
-import java.util.ArrayList;
+import java.util.Vector;
 
 /**
  * Created by IntelliJ IDEA.
@@ -22,6 +22,17 @@ public class ProfileManager
     }
   }
 
+  private static Vector informFormats = new Vector();
+  private static Vector notifyFormats = new Vector();
+  static {
+    informFormats.add(new FormatType(-1, "DEFAULT"));
+    informFormats.add(new FormatType( 0, "EASY"));
+    informFormats.add(new FormatType( 1, "COMPLEX"));
+    notifyFormats.add(new FormatType(-1, "DEFAULT"));
+    notifyFormats.add(new FormatType( 0, "EASY"));
+    notifyFormats.add(new FormatType( 1, "FULL"));
+  }
+
   protected ProfileManager()
   {
     // TODO: init connection settings & estabilish connection to MCISme DB
@@ -30,7 +41,7 @@ public class ProfileManager
   public ProfileInfo getProfileInfo(String abonent)
   {
     // TODO: implement query to MCISme DB
-    return new ProfileInfo("EASY", "DEFAULT", true, false);
+    return new ProfileInfo(new FormatType( 0, "EASY"), new FormatType(-1, "DEFAULT"), true, false);
   }
   public void setProfileInfo(String abonent, ProfileInfo info)
   {
@@ -39,15 +50,6 @@ public class ProfileManager
   public Collection getFormatAlts(boolean inform)
   {
     // TODO: implement inform or notify message formats
-    ArrayList list = new ArrayList();
-    if (inform) {
-      list.add(new ServiceMessageType(0, "EASY"));
-      list.add(new ServiceMessageType(1, "COMPLEX"));
-      list.add(new ServiceMessageType(2, "OWN"));
-    } else {
-      list.add(new ServiceMessageType(0, "FULL"));
-      list.add(new ServiceMessageType(1, "OWN"));
-    }
-    return list;
+    return (inform) ? informFormats : notifyFormats;
   }
 }
