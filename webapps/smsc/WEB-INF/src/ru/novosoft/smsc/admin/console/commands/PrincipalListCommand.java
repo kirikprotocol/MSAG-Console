@@ -9,13 +9,27 @@ package ru.novosoft.smsc.admin.console.commands;
 
 import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
+import ru.novosoft.smsc.admin.dl.Principal;
+
+import java.util.Iterator;
 
 public class PrincipalListCommand implements Command
 {
     public void process(CommandContext ctx)
     {
-        ctx.setMessage("Not implemented yet");
-        ctx.setStatus(ctx.CMD_PROCESS_ERROR);
+        try {
+            DistributionListAdmin admin = ctx.getSmsc().getDistributionListAdmin();
+            Iterator i = admin.principals().iterator();
+            while (i.hasNext()) {
+                Principal prc = (Principal)i.next();
+                ctx.addResult(prc.getAddress());
+            }
+            ctx.setStatus(ctx.CMD_LIST);
+        } catch (Exception e) {
+            ctx.setMessage("Couldn't list principals. Cause: "+e.getMessage());
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+        }
     }
 
     public String getId() {

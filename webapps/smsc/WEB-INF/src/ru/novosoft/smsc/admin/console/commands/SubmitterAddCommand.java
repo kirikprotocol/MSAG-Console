@@ -9,6 +9,10 @@ package ru.novosoft.smsc.admin.console.commands;
 
 import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
+import ru.novosoft.smsc.admin.dl.exceptions.ListNotExistsException;
+import ru.novosoft.smsc.admin.dl.exceptions.PrincipalNotExistsException;
+import ru.novosoft.smsc.admin.dl.exceptions.SubmitterAlreadyExistsException;
 
 public class SubmitterAddCommand implements Command
 {
@@ -24,8 +28,28 @@ public class SubmitterAddCommand implements Command
 
     public void process(CommandContext ctx)
     {
-        ctx.setMessage("Not implemented yet");
-        ctx.setStatus(ctx.CMD_PROCESS_ERROR);
+        String pout = "Principal for address '"+submitter+"'";
+        String sout = "Submitter '"+submitter+"'";
+        String dlout = "Distribution list '"+name+"'";
+        try {
+            DistributionListAdmin admin = ctx.getSmsc().getDistributionListAdmin();
+            admin.grantPosting(name, submitter);
+            ctx.setMessage(sout+" "+" added to "+dlout);
+            ctx.setStatus(ctx.CMD_OK);
+        } catch (ListNotExistsException e) {
+            ctx.setMessage(dlout+" not exists");
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+        } catch (PrincipalNotExistsException e) {
+            ctx.setMessage(pout+" not exists");
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+        } catch (SubmitterAlreadyExistsException e) {
+            ctx.setMessage(sout+" already registered in "+dlout);
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+        } catch (Exception e) {
+            ctx.setMessage("Couldn't add "+sout+" to "+dlout+
+                           ". Cause: "+e.getMessage());
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+        }
     }
 
     public String getId() {

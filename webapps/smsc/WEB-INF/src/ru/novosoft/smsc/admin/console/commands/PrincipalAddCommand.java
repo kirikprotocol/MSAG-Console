@@ -9,6 +9,9 @@ package ru.novosoft.smsc.admin.console.commands;
 
 import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
+import ru.novosoft.smsc.admin.dl.Principal;
+import ru.novosoft.smsc.admin.dl.exceptions.PrincipalAlreadyExistsException;
 
 public class PrincipalAddCommand implements Command
 {
@@ -28,8 +31,19 @@ public class PrincipalAddCommand implements Command
 
     public void process(CommandContext ctx)
     {
-        ctx.setMessage("Not implemented yet");
-        ctx.setStatus(ctx.CMD_PROCESS_ERROR);
+        String out = "Principal for '"+address+"'";
+        try {
+            DistributionListAdmin admin = ctx.getSmsc().getDistributionListAdmin();
+            admin.addPrincipal(new Principal(address, maxLists, maxElements));
+            ctx.setMessage(out+" added");
+            ctx.setStatus(ctx.CMD_OK);
+        } catch (PrincipalAlreadyExistsException e) {
+            ctx.setMessage(out+" already exists");
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+        } catch (Exception e) {
+            ctx.setMessage("Couldn't add "+out+". Cause: "+e.getMessage());
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+        }
     }
 
     public String getId() {

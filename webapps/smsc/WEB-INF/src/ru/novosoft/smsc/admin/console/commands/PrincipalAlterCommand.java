@@ -9,6 +9,7 @@ package ru.novosoft.smsc.admin.console.commands;
 
 import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 
 public class PrincipalAlterCommand implements Command
 {
@@ -31,6 +32,8 @@ public class PrincipalAlterCommand implements Command
 
     public void process(CommandContext ctx)
     {
+        // todo implement alter principal in DistributionListAdmin
+        DistributionListAdmin admin = ctx.getSmsc().getDistributionListAdmin();
         ctx.setMessage("Not implemented yet");
         ctx.setStatus(ctx.CMD_PROCESS_ERROR);
     }

@@ -9,6 +9,9 @@ package ru.novosoft.smsc.admin.console.commands;
 
 import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
+import ru.novosoft.smsc.admin.dl.DistributionList;
+import ru.novosoft.smsc.admin.dl.exceptions.ListAlreadyExistsException;
 
 public class DistributionListAddCommand implements Command
 {
@@ -28,8 +31,19 @@ public class DistributionListAddCommand implements Command
 
     public void process(CommandContext ctx)
     {
-        ctx.setMessage("Not implemented yet");
-        ctx.setStatus(ctx.CMD_PROCESS_ERROR);
+        String out = "Distribution list '"+name+"'";
+        try {
+            DistributionListAdmin admin = ctx.getSmsc().getDistributionListAdmin();
+            admin.addDistributionList(new DistributionList(name, owner, maxElements));
+            ctx.setMessage(out+" added");
+            ctx.setStatus(ctx.CMD_OK);
+        } catch (ListAlreadyExistsException e) {
+            ctx.setMessage(out+" already exists");
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+        } catch (Exception e) {
+            ctx.setMessage("Couldn't add "+out+". Cause: "+e.getMessage());
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+        }
     }
 
     public String getId() {
