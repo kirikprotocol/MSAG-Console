@@ -18,6 +18,7 @@ void RouteUtil::setupRandomCorrectRouteInfo(RouteInfo* route)
 	route->billing = rand0(10);
 	route->paid = rand0(10);
 	route->archived = rand0(10);
+	route->enabling = rand0(2);
 	route->routeId = (RouteId) rand1(INT_MAX);
 	//route->smeSystemId = ...
 	//route->source = ...
