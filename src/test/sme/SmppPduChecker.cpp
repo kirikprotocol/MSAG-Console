@@ -18,19 +18,24 @@ SmppPduChecker::SmppPduChecker(PduRegistry* _pduReg,
 	const RouteChecker* _routeChecker)
 	: pduReg(_pduReg), routeChecker(_routeChecker) {}
 	
-set<int> SmppPduChecker::checkSubmitSm(PduSubmitSm* pdu)
+set<int> SmppPduChecker::checkSubmitSm(PduData* pduData)
 {
+	__require__(pduData && pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
+	PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
+	time_t waitTime = SmppUtil::string2time(
+		pdu->get_message().get_scheduleDeliveryTime(), pduData->submitTime);
+	time_t validTime = SmppUtil::string2time(
+		pdu->get_message().get_validityPeriod(), pduData->submitTime);
+	__require__(pduData->validTime == validTime);
+	//__require__(pduData->waitTime == waitTime);
 	set<int> res;
-	time_t validTime =
-		SmppUtil::string2time(pdu->get_message().get_validityPeriod());
-	time_t waitTime =
-		SmppUtil::string2time(pdu->get_message().get_scheduleDeliveryTime());
 	//без проверки на bound sme
 	if (!routeChecker->isDestReachable(pdu->get_message().get_dest(), false))
 	{
 		res.insert(NO_ROUTE);
 	}
-	if (validTime < time(NULL) && validTime > __maxValidPeriod__)
+	if (validTime < pduData->submitTime ||
+		validTime > pduData->submitTime + __maxValidPeriod__)
 	{
 		res.insert(BAD_VALID_TIME);
 	}
@@ -44,7 +49,6 @@ set<int> SmppPduChecker::checkSubmitSm(PduSubmitSm* pdu)
 vector<int> SmppPduChecker::checkSubmitSmResp(
 	PduData* pduData, PduSubmitSmResp& respPdu)
 {
-	__require__(pduData && pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
 	vector<int> res;
 	//respPdu
 	if (respPdu.get_header().get_commandLength() < 17 ||
@@ -132,8 +136,7 @@ vector<int> SmppPduChecker::checkSubmitSmResp(
 		}
 	}
 	//commandStatus
-	PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
-	set<int> pduRes = checkSubmitSm(pdu);
+	set<int> pduRes = checkSubmitSm(pduData);
 	switch (respPdu.get_header().get_commandStatus())
 	{
 		case ESME_ROK: //No Error
