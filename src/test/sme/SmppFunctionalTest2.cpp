@@ -86,7 +86,7 @@ public:
 	PduHandler* getProfilerAckHandler() { return &profilerTc; }
 
 private:
-	virtual uint32_t sendDeliverySmResp(PduDeliverySm& pdu);
+	virtual pair<uint32_t, time_t> sendDeliverySmResp(PduDeliverySm& pdu);
 	virtual void updateStat();
 };
 
@@ -268,7 +268,7 @@ void TestSme::onStopped()
 	cout << "TestSme::onStopped(): sme = " << smeNum << endl;
 }
 
-uint32_t TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
+pair<uint32_t, time_t> TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
 {
 	//на delivery receipt и сообщение от профайлера ответить ok
 	Address addr;
@@ -530,7 +530,7 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 		//config.password;
 		//config.systemType;
 		//config.origAddr;
-		SmppFixture* fixture = new SmppFixture(smeInfo[i]->systemId, *addr[i],
+		SmppFixture* fixture = new SmppFixture(*smeInfo[i], *addr[i],
 			NULL, smeReg, aliasReg, routeReg, profileReg, smppChkList);
 		sme.push_back(new TestSme(i, config, fixture)); //throws Exception
 		fixture->pduHandler[smscAddr] = sme.back()->getDeliveryReceiptHandler();

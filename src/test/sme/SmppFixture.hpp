@@ -19,8 +19,9 @@ namespace test {
 namespace sme {
 
 using std::map;
+using std::pair;
 using smsc::sme::SmppSession;
-using smsc::smeman::SmeSystemId;
+using smsc::smeman::SmeInfo;
 using smsc::sms::Address;
 using smsc::profiler::Profile;
 using smsc::test::core::AliasRegistry;
@@ -37,7 +38,7 @@ using smsc::test::util::CheckList;
 
 struct SmppResponseSender
 {
-	virtual uint32_t sendDeliverySmResp(PduDeliverySm& pdu) = NULL;
+	virtual pair<uint32_t, time_t> sendDeliverySmResp(PduDeliverySm& pdu) = NULL;
 };
 
 struct PduHandler
@@ -64,7 +65,7 @@ typedef map<const Address, PduHandler*, ltAddress> PduHandlerMap;
 struct SmppFixture
 {
 	SmppSession* session;
-	const SmeSystemId systemId;
+	const SmeInfo smeInfo;
 	const Address smeAddr;
 	SmppResponseSender* respSender;
 	PduHandlerMap pduHandler;
@@ -81,7 +82,7 @@ struct SmppFixture
 	SmppReceiverTestCases* receiver;
 	SmppPduSender* pduSender;
 
-	SmppFixture(const SmeSystemId& systemId, const Address& smeAddr,
+	SmppFixture(const SmeInfo& smeInfo, const Address& smeAddr,
 		SmppResponseSender* respSender, const SmeRegistry* smeReg,
 		const AliasRegistry* aliasReg, const RouteRegistry* routeReg,
 		ProfileRegistry* profileReg, CheckList* chkList);

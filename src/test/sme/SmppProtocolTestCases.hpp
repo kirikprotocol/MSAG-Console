@@ -52,30 +52,32 @@ public:
 	/**
 	 * Отправка синхронного или асинхронного deliver_sm_resp со статусом ok.
 	 */
-	uint32_t sendDeliverySmRespOk(PduDeliverySm& pdu, bool sync);
+	pair<uint32_t, time_t> sendDeliverySmRespOk(PduDeliverySm& pdu, bool sync);
 
 	/**
 	 * Отправка синхронного или асинхронного deliver_sm_resp с кодом ошибки
 	 * и последующей повторной доставкой.
 	 */
-	uint32_t sendDeliverySmRespRetry(PduDeliverySm& pdu, bool sync, int num);
+	pair<uint32_t, time_t> sendDeliverySmRespRetry(PduDeliverySm& pdu,
+		bool sync, int num);
 
 	/**
 	 * Отправка синхронного или асинхронного deliver_sm_resp с кодом ошибки
 	 * и последующем прекращением доставки.
 	 */
-	uint32_t sendDeliverySmRespError(PduDeliverySm& pdu, bool sync, int num);
+	pair<uint32_t, time_t> sendDeliverySmRespError(PduDeliverySm& pdu,
+		bool sync, int num);
 
 protected:
 	SmppFixture* fixture;
 	CheckList* chkList;
-	const SmeInfo* sme;
 
 	virtual Category& getLog();
 	PduData* getNonReplaceEnrotePdu();
 	PduData* getReplaceEnrotePdu();
 	PduData* getNonReplaceRescheduledEnrotePdu();
 	PduData* getFinalPdu();
+	int getRandomRespDelay();
 };
 
 }

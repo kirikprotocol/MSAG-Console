@@ -18,11 +18,7 @@ using namespace smsc::test::core; //constants
 using namespace smsc::test::util;
 
 SmppProtocolTestCases::SmppProtocolTestCases(SmppFixture* _fixture)
-: fixture(_fixture), chkList(_fixture->chkList)
-{
-	sme = fixture->smeReg->getSme(fixture->systemId);
-	__require__(sme);
-}
+: fixture(_fixture), chkList(_fixture->chkList) {}
 
 Category& SmppProtocolTestCases::getLog()
 {
@@ -82,7 +78,7 @@ void SmppProtocolTestCases::submitSmAssert(int num)
 				default:
 					__unreachable__("Invalid num");
 			}
-			__dumpSubmitSmPdu__("SmppProtocolTestCases::submitSmAssert", fixture->systemId, &pdu);
+			__dumpSubmitSmPdu__("SmppProtocolTestCases::submitSmAssert", fixture->smeInfo.systemId, &pdu);
 			__tc_fail__(s.value());
 		}
 		catch (...)
@@ -736,30 +732,40 @@ void SmppProtocolTestCases::replaceSm(bool sync, int num)
 	}
 }
 
-uint32_t SmppProtocolTestCases::sendDeliverySmRespOk(PduDeliverySm& pdu, bool sync)
+int SmppProtocolTestCases::getRandomRespDelay()
 {
-	__trace__("sendDeliverySmRespOk()");
+	__cfg_int__(timeCheckAccuracy);
+	return 1000 * rand0(max(0, (int) fixture->smeInfo.timeout - timeCheckAccuracy));
+}
+
+pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespOk(
+	PduDeliverySm& pdu, bool sync)
+{
 	__decl_tc__;
+	int delay = 0; //getRandomRespDelay();
+	time_t sendTime = time(NULL) + delay / 1000;
+	//__tc__("sendDeliverySmResp.delay"); __tc_ok__;
+	__trace2__("sendDeliverySmRespOk(): delay = %d", delay);
 	try
 	{
 		__tc__("sendDeliverySmResp.sendOk");
 		PduDeliverySmResp respPdu;
 		respPdu.get_header().set_sequenceNumber(pdu.get_header().get_sequenceNumber());
 		respPdu.get_header().set_commandStatus(ESME_ROK); //No Error
-		fixture->transmitter->sendDeliverySmResp(respPdu, sync);
+		fixture->transmitter->sendDeliverySmResp(respPdu, sync, delay);
 		__tc_ok__;
-		return ESME_ROK;
+		return make_pair(ESME_ROK, sendTime);
 	}
 	catch(...)
 	{
 		__tc_fail__(100);
 		error();
 	}
-	return 0xffffffff;
+	return make_pair(0xffffffff, time(NULL));
 }
 
-uint32_t SmppProtocolTestCases::sendDeliverySmRespRetry(PduDeliverySm& pdu,
-	bool sync, int num)
+pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
+	PduDeliverySm& pdu, bool sync, int num)
 {
 	__trace__("sendDeliverySmRespRetry()");
 	TCSelector s(num, 5);
@@ -801,9 +807,9 @@ uint32_t SmppProtocolTestCases::sendDeliverySmRespRetry(PduDeliverySm& pdu,
 					commandStatus = 0xffffffff;
 					respPdu.get_header().set_commandStatus(ESME_ROK);
 					__cfg_int__(sequentialPduInterval);
-					int timeout = 1000 * (sme->timeout + rand2(1, sequentialPduInterval));
+					int timeout = 1000 * (fixture->smeInfo.timeout + rand2(1, sequentialPduInterval));
 					__trace2__("sendAfterSmeTimeout(): sme timeout = %d, timeout = %d",
-						sme->timeout, timeout);
+						fixture->smeInfo.timeout, timeout);
 					fixture->transmitter->sendDeliverySmResp(respPdu, sync, timeout);
 				}
 				break;
@@ -811,22 +817,25 @@ uint32_t SmppProtocolTestCases::sendDeliverySmRespRetry(PduDeliverySm& pdu,
 				__unreachable__("Invalid num");
 		}
 		__tc_ok__;
-		return commandStatus;
+		return make_pair(commandStatus, time(NULL));
 	}
 	catch(...)
 	{
 		__tc_fail__(s.value());
 		error();
 	}
-	return 0xffffffff;
+	return make_pair(0xffffffff, time(NULL));
 }
 
-uint32_t SmppProtocolTestCases::sendDeliverySmRespError(PduDeliverySm& pdu,
-	bool sync, int num)
+pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespError(
+	PduDeliverySm& pdu, bool sync, int num)
 {
-	__trace__("sendDeliverySmRespError()");
-	TCSelector s(num, 3);
 	__decl_tc__;
+	int delay = 0; //getRandomRespDelay();
+	time_t sendTime = time(NULL) + delay / 1000;
+	//__tc__("sendDeliverySmResp.delay"); __tc_ok__;
+	__trace2__("sendDeliverySmRespError(): delay = %d", delay);
+	TCSelector s(num, 3);
 	try
 	{
 		PduDeliverySmResp respPdu;
@@ -861,16 +870,16 @@ uint32_t SmppProtocolTestCases::sendDeliverySmRespError(PduDeliverySm& pdu,
 		{
 			return sendDeliverySmRespError(pdu, sync, num);
 		}
-		fixture->transmitter->sendDeliverySmResp(respPdu, sync);
+		fixture->transmitter->sendDeliverySmResp(respPdu, sync, delay);
 		__tc_ok__;
-		return respPdu.get_header().get_commandStatus();
+		return make_pair(respPdu.get_header().get_commandStatus(), sendTime);
 	}
 	catch(...)
 	{
 		__tc_fail__(s.value());
 		error();
 	}
-	return 0xffffffff;
+	return make_pair(0xffffffff, time(NULL));
 }
 
 }
