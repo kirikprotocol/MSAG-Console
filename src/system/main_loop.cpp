@@ -285,6 +285,7 @@ void Smsc::mainLoop()
       }
       case __CMD__(QUERYABONENTSTATUS):
       {
+        cmd->set_dialogId(mapProxy->getNextSequenceNumber());
         mapProxy->putCommand(cmd);
         continue;
       }
