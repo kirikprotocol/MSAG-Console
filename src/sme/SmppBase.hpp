@@ -57,6 +57,7 @@ struct Buffer{
 enum SmppError{
   smppErrorNetwork=0x1000,
   smppErrorInvalidPdu,
+  smppExiting,
 };
 
 class SmppPduEventListener{
@@ -108,6 +109,10 @@ public:
       {
         listener->handleEvent(pdu);
         pdu=NULL;
+      }else
+      {
+        listener->handleError(smppExiting);
+        break;
       }
     }
     __trace__("smpp reader exited");
