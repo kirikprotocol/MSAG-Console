@@ -15,6 +15,17 @@ namespace leaktracing{
 
 static const int MAXTRACESIZE=20;
 
+static const int PRE_ALLOC=32;
+static const int POST_ALLOC=32;
+static const int USER_DATA=sizeof(size_t)*2+sizeof(void*);
+static const int CHECK_SIZE=(PRE_ALLOC+POST_ALLOC+USER_DATA);
+
+static const int PRE_FILL_PATTERN=0xaa;
+static const int FILL_PATTERN=0xcc;
+static const int POST_FILL_PATTERN=0xbb;
+static const int DELETE_PATTERN=0xdd;
+
+
 #if defined(sparc) || defined(__sparc)
 #define FRAME_PTR_REGISTER REG_SP
 #endif
@@ -240,7 +251,7 @@ void LeakHunter::RegisterAlloc(void* ptr,int size)
 {
   smsc::core::synchronization::MutexGuard guard(m);
   if(!init)Init();
-  int idx=(((int)ptr)>>5)&0x3ff;
+  int idx=(((int)ptr)>>5)%LH_HASHSIZE;
   if(memcounts[idx]==memsizes[idx])
   {
     BlockInfo *tmp=(BlockInfo *)malloc(sizeof(BlockInfo)*memsizes[idx]*2);
@@ -261,6 +272,10 @@ void LeakHunter::RegisterAlloc(void* ptr,int size)
   {
     maxmem=alloc;
   }
+  unsigned char* mem=(unsigned char*)ptr;
+  mem-=PRE_ALLOC+USER_DATA;
+  mem+=sizeof(size_t)*2;//size+magic
+  *((void**)mem)=bi;
   if(makecp)CheckPoint();
 }
 
@@ -279,7 +294,7 @@ int LeakHunter::RegisterDealloc(void* ptr)
 {
   smsc::core::synchronization::MutexGuard guard(m);
   if(!init)Init();
-  int idx=(((int)ptr)>>5)&0x3ff;
+  int idx=(((int)ptr)>>5)%LH_HASHSIZE;
   int i;
   for(i=memcounts[idx]-1;i>=0;i--)
   {
@@ -328,44 +343,41 @@ static void initlh()
 }//util
 }//smsc;
 
-#define PRE_ALLOC 32
-#define POST_ALLOC 32
-#define CHECK_SIZE (PRE_ALLOC+POST_ALLOC+sizeof(size_t)*2)
-#define PRE_FILL_PATTERN 0xaa
-#define FILL_PATTERN 0xcc
-#define POST_FILL_PATTERN 0xbb
-
 static void* xmalloc(size_t size)
 {
+  using namespace smsc::util::leaktracing;
+  int i;
   void *rv=malloc(size+CHECK_SIZE);
   unsigned char *mem=(unsigned char*)rv;
-  int i;
-  for(i=0;i<PRE_ALLOC;i++)mem[i]=PRE_FILL_PATTERN;
+  size_t *ptr=(size_t*)mem;
+  ptr[0]=size;
+  ptr[1]=size^0xAAAABBBB^((size_t)mem);
+  ptr[2]=0;
+  mem+=USER_DATA;
+  memset(mem,PRE_FILL_PATTERN,PRE_ALLOC);
   mem+=PRE_ALLOC;
-  ((size_t*)mem)[0]=size;
-  ((size_t*)mem)[1]=size^0xAAAABBBB;
-  mem+=sizeof(size_t)*2;
   rv=mem;
-  for(i=0;i<size;i++)mem[i]=FILL_PATTERN;
+  memset(mem,FILL_PATTERN,size);
   mem+=size;
-  for(i=0;i<POST_ALLOC;i++)mem[i]=POST_FILL_PATTERN;
+  memset(mem,POST_FILL_PATTERN,POST_ALLOC);
   return rv;
 }
 
 static void xfree(void* ptr)
 {
+  using namespace smsc::util::leaktracing;
   unsigned char* mem=(unsigned char*)ptr;
-  size_t size=((size_t*)mem)[-2];
-  size_t magic=((size_t*)mem)[-1];
-  if((size^0xAAAABBBB)!=magic)
+  size_t *iptr=(size_t*)(mem-PRE_ALLOC-USER_DATA);
+  size_t size=iptr[0];
+  size_t magic=iptr[1];
+  if((size^0xAAAABBBB^((size_t)iptr))!=magic)
   {
-    fprintf(stderr,"ERROR: Memory underrun (header) for block %p size %d at\n",ptr,size);
+    fprintf(stderr,"ERROR: attempt to free invalid block %p size %d at\n",ptr,size);
     smsc::util::leaktracing::PrintTrace();
     return;
   }
-  mem-=sizeof(size_t)*2;
   mem-=PRE_ALLOC;
-  void *orgmem=mem;
+  void *orgmem=mem-USER_DATA;
   int i;
   for(i=0;i<PRE_ALLOC;i++)
   {
@@ -380,8 +392,7 @@ static void xfree(void* ptr)
       break;
     }
   }
-  mem=(unsigned char*)ptr;
-  for(i=0;i<size;i++)mem[i]=FILL_PATTERN;
+  mem+=PRE_ALLOC;
   mem+=size;
   for(i=0;i<POST_ALLOC;i++)
   {
@@ -396,6 +407,8 @@ static void xfree(void* ptr)
       break;
     }
   }
+  mem=(unsigned char*)ptr;
+  memset(mem-PRE_ALLOC,DELETE_PATTERN,PRE_ALLOC+size+POST_ALLOC);
   free(orgmem);
 }
 
