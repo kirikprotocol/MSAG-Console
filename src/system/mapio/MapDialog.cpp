@@ -1068,7 +1068,7 @@ bool MapDialog::ProcessCmd(const SmscCommand& cmd){
         break;
       case SmscCommand::Status::INVSRC:
       case SmscCommand::Status::INVDST:
-      case SmscCommand::Status::NOROTE:
+      case SmscCommand::Status::NOROUTE:
         err.errorCode = 9;
         break;
       case SmscCommand::Status::DBERROR:
