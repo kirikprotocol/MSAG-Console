@@ -1,12 +1,8 @@
 #include "AdminSocketManager.h"
 
-#include <admin/util/ShutdownableList.h>
-
 namespace smsc {
 namespace admin {
 namespace service {
-
-using smsc::admin::util::ShutdownableList;
 
 ServiceSocketListener * AdminSocketManager::listener = 0;
 
@@ -26,17 +22,11 @@ void AdminSocketManager::start(const char * const host,
 void AdminSocketManager::stop()
 	throw ()
 {
-	try
-	{
-		ShutdownableList::shutdown();
-	}
-	catch (...)
-	{
-		// ignoring all exceptions
-	}
 	if (listener != 0)
 	{
+    listener->shutdown();
 		delete listener;
+    listener = 0;
 	}
 }
 

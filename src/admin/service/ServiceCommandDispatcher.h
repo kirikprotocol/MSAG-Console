@@ -10,7 +10,6 @@
 #include <admin/protocol/Response.h>
 #include <admin/service/Component.h>
 #include <admin/util/CommandDispatcher.h>
-#include <admin/util/Shutdownable.h>
 #include <admin/AdminException.h>
 #include <core/network/Socket.hpp>
 #include <core/synchronization/Mutex.hpp>
@@ -24,7 +23,6 @@ using smsc::admin::protocol::Command;
 using smsc::admin::protocol::CommandCall;
 using smsc::admin::protocol::CommandListComponents;
 using smsc::admin::protocol::Response;
-using smsc::admin::util::Shutdownable;
 using smsc::core::network::Socket;
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
@@ -38,8 +36,6 @@ public:
 												"smsc.admin.service.ServiceCommandDispatcher")
 	{
 	}
-
-	virtual void shutdown();
 
 	virtual Response * handle(const Command * const command) throw (AdminException);
 protected:

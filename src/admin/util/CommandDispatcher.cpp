@@ -28,7 +28,6 @@ CommandDispatcher::CommandDispatcher(Socket* admSocket,
 	  reader(admSocket),
 	  writer(admSocket)
 {
-	isShutdownSignaled = false;
 	sock = admSocket;
 	//memcpy(cl_addr, client_addr, 15);
 	//cl_addr[15] = 0;
@@ -38,9 +37,11 @@ CommandDispatcher::CommandDispatcher(Socket* admSocket,
 CommandDispatcher::~CommandDispatcher()
 {
 	logger.debug("Command dispatcher \"%s\" destroyed.", task_name);
-	if (sock != 0)
+	if (sock != 0) {
+    sock->Abort();
 		delete sock;
-	sock = 0;
+    sock = 0;
+  }
 }
 
 void CommandDispatcher::init()
@@ -57,7 +58,7 @@ int CommandDispatcher::Execute()
 {
 	init();
 
-	ShutdownableList::addListener(this);
+	//ShutdownableList::addListener(this);
 	
 	logger.info("Command dispather started");
 	
@@ -68,10 +69,10 @@ int CommandDispatcher::Execute()
 		try {
 			while (!reader.canRead())
 			{
-				if (isShutdownSignaled)
+				if (isStopping)
 					break;
 			}
-			if (!isShutdownSignaled)
+			if (!isStopping)
 			{
 				command.reset(reader.read());
 				response.reset(handle(command.get()));
@@ -93,7 +94,7 @@ int CommandDispatcher::Execute()
 			logger.warn("Command dispatching failed with unknown exception");
 		}
 	
-		if (!isShutdownSignaled)
+		if (!isStopping)
 		{
 			// writing response
 			try {
@@ -119,13 +120,15 @@ int CommandDispatcher::Execute()
 				break;
 			}
 		}
-	} while (!isShutdownSignaled && command.get() != 0
+	} while (!isStopping && command.get() != 0
 					 && (command->getId() != Command::undefined)
 					 && (command->getId() != Command::shutdown_service));
 	
-	ShutdownableList::removeListener(this);
+	//ShutdownableList::removeListener(this);
 
-	sock->Close();
+	sock->Abort();
+  delete sock;
+  sock = 0;
 	logger.info("Command dispather stopped");
 	log4cpp::NDC::pop();
 	return 0;

@@ -1,6 +1,6 @@
 #ifndef SMSC_ADMIN_UTIL_SHUTDOWNABLE
 #define SMSC_ADMIN_UTIL_SHUTDOWNABLE
-
+/*
 #include <signal.h>
 
 namespace smsc {
@@ -15,5 +15,5 @@ public:
 
 }
 }
-}
+}*/
 #endif // ifndef SMSC_ADMIN_UTIL_SHUTDOWNABLE

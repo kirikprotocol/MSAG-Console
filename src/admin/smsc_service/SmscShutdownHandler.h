@@ -23,8 +23,8 @@ public:
 
 	virtual void handleSignal() throw ()
 	{
+    smsc_component.stopSmsc();
 		AdminSocketManager::stop();
-		//smsc_component.stop();
 	}
 
 private:

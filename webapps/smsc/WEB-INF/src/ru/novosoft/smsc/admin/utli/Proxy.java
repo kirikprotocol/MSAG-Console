@@ -83,7 +83,7 @@ public class Proxy
       }
       catch (IOException e1)
       {
-        status = StatusDisconnected;
+        disconnect();
         throw new AdminException(e1.getMessage());
       }
     }

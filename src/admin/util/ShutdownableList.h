@@ -1,6 +1,6 @@
 #ifndef SMSC_ADMIN_UTIL_SHUTDOWN_SIGNAL_LISTENER
 #define SMSC_ADMIN_UTIL_SHUTDOWN_SIGNAL_LISTENER
-
+/*
 #include <list>
 #include <core/synchronization/Mutex.hpp>
 #include <admin/util/Shutdownable.h>
@@ -27,5 +27,5 @@ public:
 
 }
 }
-}
+}*/
 #endif // ifndef SMSC_ADMIN_UTIL_SHUTDOWN_SIGNAL_LISTENER

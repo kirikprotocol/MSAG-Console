@@ -1,5 +1,5 @@
 #include "ShutdownableList.h"
-
+/*
 #include <core/synchronization/Mutex.hpp>
 
 namespace smsc {
@@ -36,4 +36,4 @@ void ShutdownableList::shutdown()
 
 }
 }
-}
+}*/

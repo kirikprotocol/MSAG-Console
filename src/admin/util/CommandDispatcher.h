@@ -7,7 +7,6 @@
 #include <admin/protocol/ResponseWriter.h>
 #include <admin/protocol/Command.h>
 #include <admin/protocol/Response.h>
-#include <admin/util/Shutdownable.h>
 #include <core/network/Socket.hpp>
 #include <core/threads/ThreadedTask.hpp>
 
@@ -23,7 +22,7 @@ using smsc::admin::protocol::Response;
 using smsc::core::network::Socket;
 using smsc::core::threads::ThreadedTask;
 
-class CommandDispatcher : public Shutdownable, public ThreadedTask
+class CommandDispatcher : public ThreadedTask
 {
 public:
 	CommandDispatcher(Socket * admSocket,
@@ -32,11 +31,6 @@ public:
 	virtual ~CommandDispatcher();
 	virtual Response *handle(const Command * const command)
 		throw (AdminException) = 0;
-	virtual void shutdown()
-	{
-		isShutdownSignaled = true;
-		logger.debug("shutdown");
-	}
 
 	virtual int Execute();
 	virtual const char* taskName(){return task_name;}
@@ -48,7 +42,6 @@ protected:
 	char cl_addr[16];
 	CommandReader reader;
 	ResponseWriter writer;
-	bool isShutdownSignaled;
 
 	void init();
 };

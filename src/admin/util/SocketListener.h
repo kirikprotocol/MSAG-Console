@@ -6,8 +6,6 @@
 #include <arpa/inet.h>
 #include <log4cpp/Category.hh>
 #include <admin/AdminException.h>
-#include <admin/util/Shutdownable.h>
-#include <admin/util/ShutdownableList.h>
 #include <core/network/Socket.hpp>
 #include <core/threads/ThreadPool.hpp>
 #include <core/threads/Thread.hpp>
@@ -19,14 +17,13 @@ namespace util {
 
 using log4cpp::Category;
 using smsc::admin::AdminException;
-using smsc::admin::util::ShutdownableList;
 using smsc::core::network::Socket;
 using smsc::core::threads::ThreadPool;
 using smsc::core::threads::Thread;
 using smsc::util::Logger;
 
 template<class _T_CommandDispatcher>
-class SocketListener : public Shutdownable, public Thread
+class SocketListener : public Thread
 {
 public:
 
@@ -50,7 +47,7 @@ public:
 
 	virtual int Execute()
 	{
-		ShutdownableList::addListener(this);
+		//ShutdownableList::addListener(this);
 		sock.StartServer();
 		
 		logger.info("socket listener started");
@@ -68,34 +65,24 @@ public:
 			}
 		}
 		
-		ShutdownableList::removeListener(this);
-		
+    sock.Abort();
 		logger.info("ServiceSocketListener stopped");
 		return 0;
 	}
 
 	void shutdown()
 	{
+		pool.shutdown();
+    sock.Close();
+    logger.debug("ServiceSocketListener: server socket closed");
 		isShutdownSignaled = true;
-		sock.Close();
 	}
 
 protected:
-	//in_port_t port;
 	Socket sock;
 	bool isShutdownSignaled;
 	ThreadPool pool;
 	Category &logger;
-
-/*	SocketListener(const char * const hostName,
-								 in_port_t portToListen,
-								 const char * const debugCategory = "smsc.admin.util.SocketListener")
-		throw (AdminException)
-		: logger(Logger::getCategory(debugCategory))
-	{
-		init(hostName, portToListen);
-	}
-*/
 };
 
 }

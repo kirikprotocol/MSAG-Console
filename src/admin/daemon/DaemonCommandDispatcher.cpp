@@ -310,11 +310,11 @@ Response * DaemonCommandDispatcher::list_services(const CommandListServices * co
 	return new Response(Response::Ok, text.get());
 }
 
-void DaemonCommandDispatcher::shutdown()
+/*void DaemonCommandDispatcher::shutdown()
 {
 	smsc::admin::util::CommandDispatcher::shutdown();
 	logger.debug("shutdown");
-}
+}*/
 
 void DaemonCommandDispatcher::childSignalListener(int signo,
 																									siginfo_t * info,

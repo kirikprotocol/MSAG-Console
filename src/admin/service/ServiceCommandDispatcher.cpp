@@ -131,12 +131,6 @@ Response * ServiceCommandDispatcher::listComponents(const CommandListComponents 
 	return new Response(Response::Ok, componentsList.c_str());
 }
 
-void ServiceCommandDispatcher::shutdown()
-{
-	smsc::admin::util::CommandDispatcher::shutdown();
-	logger.debug("shutdown");
-}
-
 }
 }
 }

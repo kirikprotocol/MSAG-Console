@@ -5,6 +5,7 @@
 #include <admin/smsc_service/SmscShutdownHandler.h>
 #include <util/Logger.h>
 #include <util/config/alias/aliasconf.h>
+#include <admin/AdminException.h>
 
 using smsc::system::SmscConfigs;
 using smsc::util::Logger;
@@ -14,7 +15,6 @@ using smsc::admin::smsc_service::SmscComponent;
 using smsc::admin::smsc_service::SmscShutdownHandler;
 using smsc::admin::service::ComponentManager;
 using smsc::admin::service::AdminSocketManager;
-using smsc::admin::AdminException;
 using smsc::util::config::alias::AliasConfig;
 
 int main(int argc,char* argv[])
@@ -70,7 +70,7 @@ int main(int argc,char* argv[])
 		Manager::deinit();
 		fprintf(stderr,"All stopped");
 	}
-	catch (AdminException &e)
+	catch (smsc::admin::AdminException &e)
 	{
 		fprintf(stderr, "Admin exception occured:%s\n", e.what());
 	}

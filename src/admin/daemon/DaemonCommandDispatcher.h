@@ -34,7 +34,6 @@ using smsc::admin::protocol::CommandListServices;
 using smsc::admin::protocol::CommandSetServiceStartupParameters;
 using smsc::admin::protocol::Response;
 using smsc::admin::util::CommandDispatcher;
-using smsc::admin::util::Shutdownable;
 using smsc::core::network::Socket;
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
@@ -52,8 +51,6 @@ public:
 		configManager = confManager;
 		addServicesFromConfig();
 	}
-
-	virtual void shutdown();
 
 	DaemonCommandDispatcher(Socket * admSocket)
 		: CommandDispatcher(admSocket, "smsc.admin.daemon.CommandDispatcher"),
