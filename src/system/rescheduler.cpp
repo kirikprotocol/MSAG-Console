@@ -42,6 +42,12 @@ void RescheduleCalculator::Init(const char* timestring)throw(Exception)
 
 time_t RescheduleCalculator::calcNextTryTime(time_t lasttry,int attempt)
 {
+  if(RescheduleTable.Count()==0)
+  {
+    __warning__("Rescheduling table is empty!");
+    return 60*60;
+  }
+  if(attempt<0)attempt=0;
   if(attempt>=RescheduleTable.Count())attempt=RescheduleTable.Count()-1;
   return lasttry+RescheduleTable[attempt];
 }
