@@ -34,6 +34,18 @@ using smsc::core::synchronization::Mutex;
 static const int REPORT_ACK=2;
 static const int REPORT_NOACK=255;
 
+//divert flags
+static const int DF_UNCOND=1;
+static const int DF_ABSENT=2;
+static const int DF_BLOCK =4;
+static const int DF_BARED =8;
+static const int DF_CAPAC =16;
+static const int DF_COND  =DF_ABSENT|DF_BLOCK|DF_BARED|DF_CAPAC;
+
+static const int DF_UDHCONCAT=128;
+
+static const int DF_DCSHIFT=8;
+
 Hash<std::list<std::string> > StateMachine::directiveAliases;
 
 struct TaskGuard{
@@ -994,26 +1006,42 @@ StateType StateMachine::submit(Tuple& t)
 
   bool diverted=false;
 
-  if(profile.divertActive && profile.divert.length()!=0 && !sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+  int divertFlags=(profile.divertActive        ?DF_UNCOND:0)|
+                  (profile.divertActiveAbsent  ?DF_ABSENT:0)|
+                  (profile.divertActiveBlocked ?DF_BLOCK:0) |
+                  (profile.divertActiveBared   ?DF_BARED:0) |
+                  (profile.divertActiveCapacity?DF_CAPAC:0);
+  if(divertFlags && profile.divert.length()!=0 && !sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
   {
     smsc_log_info(smsLog, "divert for %s found",dst.toString().c_str());
     sms->setStrProperty(Tag::SMSC_DIVERTED_TO,profile.divert.c_str());
-    diverted=true;
-    try{
-      dst=Address(profile.divert.c_str());
-    }catch(...)
+    if(divertFlags&DF_UNCOND)
     {
-      smsc_log_warn(smsLog, "INVALID DIVERT FOR %s - ADDRESS:%s",dst.toString().c_str(),profile.divert.c_str());
-      submitResp(t,sms,Status::INVDSTADR);
-      return ERROR_STATE;
+      diverted=true;
+      try{
+        dst=Address(profile.divert.c_str());
+      }catch(...)
+      {
+        smsc_log_warn(smsLog, "INVALID DIVERT FOR %s - ADDRESS:%s",dst.toString().c_str(),profile.divert.c_str());
+        submitResp(t,sms,Status::INVDSTADR);
+        return ERROR_STATE;
+      }
+      Address tmp;
+      if(smsc->AliasToAddress(dst,tmp))
+      {
+        smsc_log_info(smsLog, "Divert address dealiased:%s->%s",dst.toString().c_str(),tmp.toString().c_str());
+        dst=tmp;
+      }
     }
-    Address tmp;
-    if(smsc->AliasToAddress(dst,tmp))
-    {
-      smsc_log_info(smsLog, "Divert address dealiased:%s->%s",dst.toString().c_str(),tmp.toString().c_str());
-      dst=tmp;
-    }
-    profile=smsc->getProfiler()->lookup(dst);
+
+    Profile p=smsc->getProfiler()->lookup(dst);
+
+    divertFlags|=profile.udhconcat?DF_UDHCONCAT:0;
+    divertFlags|=(profile.codepage)<<DF_DCSHIFT;
+
+    if(divertFlags&DF_UNCOND)profile=p;
+
+    sms->setIntProperty(Tag::SMSC_DIVERTFLAGS,divertFlags);
   }
 
 
@@ -1080,6 +1108,9 @@ StateType StateMachine::submit(Tuple& t)
     sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage&(~smsc::profiler::ProfileCharsetOptions::UssdIn7Bit));
   }
 
+  sms->setIntProperty(Tag::SMSC_UDH_CONCAT,profile.udhconcat);
+
+
   int pres=psSingle;
 
   bool isForwardTo = false;
@@ -1104,6 +1135,7 @@ StateType StateMachine::submit(Tuple& t)
 
   smsc::util::extractPortsFromUdh(*sms);
   convertSarToUdh(*sms);
+
 
   ////
   //
@@ -2345,23 +2377,29 @@ StateType StateMachine::forward(Tuple& t)
   Address dst=sms.getDealiasedDestinationAddress();
 
   bool diverted=false;
-  if(t.command->get_forwardAllowDivert())
+  if(t.command->get_forwardAllowDivert() && sms.getIntProperty(Tag::SMSC_DIVERTFLAGS))
   {
-    Profile p=smsc->getProfiler()->lookup(dst);
     try{
-      dst=p.divert.c_str();
+      dst=sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str();
+      Address newdst;
+      if(smsc->AliasToAddress(dst,newdst))dst=newdst;
       smsc_log_info(smsLog,"FWD: cond divert from %s to %s",
         sms.getDealiasedDestinationAddress().toString().c_str(),dst.toString().c_str());
       diverted=true;
+      int df=sms.getIntProperty(Tag::SMSC_DIVERTFLAGS);
+      sms.setIntProperty(Tag::SMSC_UDH_CONCAT,df&DF_UDHCONCAT);
+      sms.setIntProperty(Tag::SMSC_DSTCODEPAGE,(df<<DF_DCSHIFT)&0xFF);
     }catch(...)
     {
-      smsc_log_warn(smsLog,"FWD: failed to construct address for cond divert %s",p.divert.c_str());
+      smsc_log_warn(smsLog,"FWD: failed to construct address for cond divert %s",sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
     }
   }
 
-  if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))
+  if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO) && (sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&DF_UNCOND))
   {
     dst=sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str();
+    Address newdst;
+    if(smsc->AliasToAddress(dst,newdst))dst=newdst;
   }
 
   smsc::router::RouteInfo ri;
@@ -2620,14 +2658,15 @@ StateType StateMachine::forward(Tuple& t)
 StateType StateMachine::DivertProcessing(Tuple& t,SMS& sms)
 {
   if(t.command->get_resp()->get_diverted())return UNKNOWN_STATE;
-  if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))return UNKNOWN_STATE;
-  Profile p=smsc->getProfiler()->lookup(sms.getDealiasedDestinationAddress());
-  if(p.divert.length()==0)return UNKNOWN_STATE;
+  if(sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&DF_UNCOND)return UNKNOWN_STATE;
+  if(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).length()==0)return UNKNOWN_STATE;
   int status=GET_STATUS_CODE(t.command->get_resp()->get_status());
+
+  int divertFlags=sms.getIntProperty(Tag::SMSC_DIVERTFLAGS);
 
   bool doDivert=
      (
-       p.divertActiveAbsent &&
+       (divertFlags&DF_ABSENT) &&
        (
          status==Status::UNDEFSUBSCRIBER ||
          status==Status::ABSENTSUBSCRIBERSM ||
@@ -2636,7 +2675,7 @@ StateType StateMachine::DivertProcessing(Tuple& t,SMS& sms)
      )
      ||
      (
-       p.divertActiveBlocked &&
+       (divertFlags&DF_BLOCK) &&
        (
          status==Status::TELSVCNOTPROVIS ||
          status==Status::FACILITYNOTSUPP
@@ -2644,14 +2683,14 @@ StateType StateMachine::DivertProcessing(Tuple& t,SMS& sms)
      )
      ||
      (
-       p.divertActiveBared &&
+       (divertFlags&DF_BARED) &&
        (
          status==Status::CALLBARRED
        )
      )
      ||
      (
-       p.divertActiveCapacity &&
+       (divertFlags&DF_CAPAC) &&
        (
          status==Status::SMDELIFERYFAILURE
        )
@@ -2874,6 +2913,31 @@ StateType StateMachine::deliveryResp(Tuple& t)
         }
         return UNDELIVERABLE_STATE;
       }
+    }
+  }
+
+  // concatenated message with conditional divert.
+  // first part delivered ok.
+  // other parts MUST be delivered to the same address.
+  if(sms.hasBinProperty(Tag::SMSC_CONCATINFO) && (sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&DF_COND))
+  {
+    // first part was delivered to diverted address!
+    if(t.command->get_resp()->get_diverted())
+    {
+      // switch to unconditional divert.
+      sms.setIntProperty(Tag::SMSC_DIVERTFLAGS,sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)|DF_UNCOND);
+    }else // first part was delivered to original address
+    {
+      // turn off divert
+      sms.getMessageBody().dropIntProperty(Tag::SMSC_DIVERTFLAGS);
+    }
+    try{
+      //patch sms in store
+      store->replaceSms(t.msgId,sms);
+    }catch(...)
+    {
+       //shit happens
+       __warning2__("failed to replace sms in store (divert fix) msgId=%lld",t.msgId);
     }
   }
 
