@@ -369,7 +369,8 @@ int SmppInputThread::Execute()
             default:
             {
               __trace__("Generating generic nack!");
-              SmscCommand cmd=
+              SendGNack(ss,SmppStatusSet::ESME_RINVBNDSTS,pdu->get_sequenceNumber());
+              /*SmscCommand cmd=
                 SmscCommand::makeGenericNack
                 (
                   pdu->get_sequenceNumber(),
@@ -383,6 +384,7 @@ int SmppInputThread::Execute()
               }catch(...)
               {
               }
+              */
             }
           }
           disposePdu(pdu);
