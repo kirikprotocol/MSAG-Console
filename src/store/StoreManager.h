@@ -32,7 +32,7 @@ namespace smsc { namespace store
         IDGenerator(SMSId _id) : id(_id) {};
         ~IDGenerator() {};
         
-        inline SMSId& getNextId() 
+        inline SMSId getNextId() 
         {
             MutexGuard guard(mutex);
             return ++id;
