@@ -27,6 +27,8 @@ void DataSourceLoader::loadupDataSourceFactory(
 {
     MutexGuard guard(loadupLock);
 
+    if (!logger)
+      logger = Logger::getInstance("smsc.db.DataSourceLoader");
     smsc_log_info(logger, "Loading '%s' library, identity is '%s' ...", dlpath, identity);
     void* dlhandle = dlopen(dlpath, RTLD_LAZY);
     if (dlhandle)
@@ -68,8 +70,8 @@ void DataSourceLoader::loadup(ConfigView* config)
     throw(ConfigException, LoadupException)
 {
     __require__(config); // load up libraries by config
-	if (!logger)
-		logger = Logger::getInstance("smsc.db.DataSourceLoader");
+    if (!logger)
+      logger = Logger::getInstance("smsc.db.DataSourceLoader");
 
     std::auto_ptr<ConfigView> driversConfigGuard(config->getSubConfig("DataSourceDrivers"));
     ConfigView* driversConfig = driversConfigGuard.get();
