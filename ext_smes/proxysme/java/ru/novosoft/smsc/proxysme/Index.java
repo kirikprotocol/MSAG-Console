@@ -113,6 +113,7 @@ public class Index extends PageBean {
 		config.setString("left.origAddr", left_origAddr);
 		config.setString("left.systemType", left_systemType);
 		config.setInt("left.timeOut", left_timeOut);
+		config.setInt("left.defaultDCS", left_defaultDCS);
 
 		config.setString("right.host", right_host);
 		config.setInt("right.port", right_port);
@@ -121,6 +122,7 @@ public class Index extends PageBean {
 		config.setString("right.origAddr", right_origAddr);
 		config.setString("right.systemType", right_systemType);
 		config.setInt("right.timeOut", right_timeOut);
+		config.setInt("right.defaultDCS", right_defaultDCS);
 
 		config.setInt("queueLength", queueLength);
 		config.setString("adminHost", adminHost);
@@ -174,6 +176,7 @@ public class Index extends PageBean {
 			left_origAddr = config.getString("left.origAddr");
 			left_systemType = config.getString("left.systemType");
 			left_timeOut = config.getInt("left.timeOut");
+			left_defaultDCS = config.getInt("left.defaultDCS");
 
 			right_host = config.getString("right.host");
 			right_port = config.getInt("right.port");
@@ -182,6 +185,7 @@ public class Index extends PageBean {
 			right_origAddr = config.getString("right.origAddr");
 			right_systemType = config.getString("right.systemType");
 			right_timeOut = config.getInt("right.timeOut");
+			left_rightDCS = config.getInt("left.rightDCS");
 
 			queueLength = config.getInt("queueLength");
 			adminHost = config.getString("adminHost");
@@ -197,6 +201,7 @@ public class Index extends PageBean {
 			left_origAddr = "";
 			left_systemType = "";
 			left_timeOut = 0;
+			left_defaultDCS = 0;
 
 			right_host = "";
 			right_port = 0;
@@ -205,6 +210,7 @@ public class Index extends PageBean {
 			right_origAddr = "";
 			right_systemType = "";
 			right_timeOut = 0;
+			right_defaultDCS = 0;
 
 			queueLength = 0;
 			adminHost = "";

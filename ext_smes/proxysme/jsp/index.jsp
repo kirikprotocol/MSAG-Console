@@ -86,7 +86,7 @@
 	<td>
 	  <select class=txt name="left_defaultDCS">
 	    <option value="0" <%=bean.getLeft_defaultDCS()==0?"SELECTED":""%>>GSM default alphabet</option>
-	    <option value="0" <%=bean.getLeft_defaultDCS()==3?"SELECTED":""%>>Latin1 (ISO8859-1)</option>
+	    <option value="3" <%=bean.getLeft_defaultDCS()==3?"SELECTED":""%>>Latin1 (ISO8859-1)</option>
 	  </select>
 	</td>
 </tr>
@@ -128,7 +128,7 @@
 	<td>
 	  <select class=txt name="right_defaultDCS">
 	    <option value="0" <%=bean.getRight_defaultDCS()==0?"SELECTED":""%>>GSM default alphabet</option>
-	    <option value="0" <%=bean.getRight_defaultDCS()==3?"SELECTED":""%>>Latin1 (ISO8859-1)</option>
+	    <option value="3" <%=bean.getRight_defaultDCS()==3?"SELECTED":""%>>Latin1 (ISO8859-1)</option>
 	  </select>
 	</td>
 </tr>
