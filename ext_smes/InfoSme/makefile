@@ -16,6 +16,8 @@ endif
 
 SME_BUILDDIR:=$(SMSC_BUILDDIR)/ext_smes/InfoSmeTmp
 DB_OCI_LIB:=$(SMSC_BUILDDIR)/bin/db/oci/libdb_oci.so
+DB_OCI_EXC:=$(SMSC_BUILDDIR)/bin/db/exceptions/libdb_exc.so
+LOGGER_LIB:=$(SMSC_BUILDDIR)/bin/liblogger.so
 
 
 default: compile pack
@@ -37,6 +39,8 @@ compile:
 	@cp -f log4cpp.properties $(SME_BUILDDIR)/log4cpp.infosme
 	@cp -f $(SMSC_BUILDDIR)/jars/infosme.jar  $(SME_BUILDDIR)/lib/infosme.jar
 	@cp -f $(DB_OCI_LIB) $(SME_BUILDDIR)/lib/libdb_oci.so
+	@cp -f $(DB_OCI_EXC) $(SME_BUILDDIR)/lib/libdb_exc.so
+	@cp -f $(LOGGER_LIB) $(SME_BUILDDIR)/liblogger.so
 	@cp -f ../../src/infosme/config.xml $(SME_BUILDDIR)/conf/config.xml
 	@cp -f ../../config/configuration.dtd $(SME_BUILDDIR)/conf/configuration.dtd
 	@cp -f ../../config/command.dtd $(SME_BUILDDIR)/conf/command.dtd
