@@ -9,11 +9,11 @@ import ru.novosoft.smsc.jsp.dbSme.bl.DataProviderInfo;
 import ru.novosoft.smsc.jsp.dbSme.bl.JobInfo;
 import ru.novosoft.smsc.jsp.dbSme.bl.MessageSet;
 import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.util.config.SaveableConfigTree;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class CCEditMessages extends CC
 {
@@ -32,7 +32,7 @@ public class CCEditMessages extends CC
 	protected String jobName = null;
 
 	public int process(HttpServletRequest request, HttpServletResponse response)
-			  throws Exception
+			throws Exception
 	{
 		int result = super.process(request, response);
 		if (result == RESULT_Ok)
@@ -46,18 +46,18 @@ public class CCEditMessages extends CC
 	}
 
 	public int processSave()
-			  throws Exception
+			throws Exception
 	{
-		for (int i = 0; i < MessageSet.MESSAGES_TYPES.length; i++)
-		{
-			String name = MessageSet.MESSAGES_TYPES[i];
-			String value = (String) newMessages.get(name);
-			if (value == null || value.length() == 0)
-				messageSet.removeMessage(name);
-			else
-				messageSet.setMessage(name, value);
-		}
-		config.save();
+			for (int i = 0; i < MessageSet.MESSAGES_TYPES.length; i++)
+			{
+				String name = MessageSet.MESSAGES_TYPES[i];
+				String value = (String) newMessages.get(name);
+				if (value == null || value.length() == 0)
+					messageSet.removeMessage(name);
+				else
+					messageSet.setMessage(name, value);
+			}
+			config.save();
 		return RESULT_Done;
 	}
 
@@ -77,7 +77,7 @@ public class CCEditMessages extends CC
 
 			if (providerName != null && providerName.length() > 0)
 				provider = config.getProvider(providerName);
-			if (provider!= null && jobName != null && jobName.length() > 0)
+			if (provider != null && jobName != null && jobName.length() > 0)
 				job = provider.getJob(jobName);
 
 			if (job != null)
@@ -89,10 +89,12 @@ public class CCEditMessages extends CC
 		}
 		catch (Config.ParamNotFoundException e)
 		{
+			e.printStackTrace();
 			return RESULT_Error;
 		}
 		catch (Config.WrongParamTypeException e)
 		{
+			e.printStackTrace();
 			return RESULT_Error;
 		}
 		newMessages.clear();
@@ -104,7 +106,7 @@ public class CCEditMessages extends CC
 	}
 
 	public Map getMessages()
-			  throws Config.ParamNotFoundException, Config.WrongParamTypeException
+			throws Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
 		return messageSet.getMessages();
 	}
@@ -126,7 +128,7 @@ public class CCEditMessages extends CC
 
 	public int getPossibleStartIndex()
 	{
-		if (jobName != null && jobName.length()>0)
+		if (jobName != null && jobName.length() > 0)
 			return 2;
 		else if (providerName != null && providerName.length() > 0)
 			return 1;

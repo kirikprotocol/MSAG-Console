@@ -146,19 +146,21 @@ public class DBSMEConfig
 	{
 		SaveableConfigTree tree = new SaveableConfigTree(config);
 		File tmpFile = File.createTempFile("dbsme_config_", ".xml.tmp");
-		OutputStream out = new FileOutputStream(tmpFile);
+		PrintWriter out = new PrintWriter(new FileWriter(tmpFile));
 	        String encoding = null; //System.getProperty("file.encoding");
 	        if( encoding == null ) encoding = "ISO-8859-1";
 
-		out.write(("<?xml version=\"1.0\" encoding=\""+encoding+"\"?>\n").getBytes());
-		out.write("<!DOCTYPE config SYSTEM \"file://configuration.dtd\">\n\n".getBytes());
-		out.write("<config>\n".getBytes());
+		out.println("<?xml version=\"1.0\" encoding=\""+encoding+"\"?>");
+		out.println("<!DOCTYPE config SYSTEM \"file://configuration.dtd\">");
+		out.println();
+		out.println("<config>");
 		tree.write(out, "  ");
-		out.write("</config>\n".getBytes());
+		out.println("</config>");
 		out.flush();
 		out.close();
 
 		tmpFile.renameTo(configurationFileName);
+
 	}
 
 	public void renameProvider(String providerName, String newName)
