@@ -8,7 +8,7 @@ namespace smsc { namespace util { namespace templates
 
 static const char* DEFAULT_VALUE_ERR = "Default value missed (type: %s).";
 
-Hash<Formatter *>  FormatterRegistry::formatters;
+FormatterRegistry::FakeHash FormatterRegistry::formatters;
 
 OutputFormatter::OutputFormatter(const char* format)
     throw(FormatRenderingException)

@@ -42,8 +42,31 @@ namespace smsc { namespace util { namespace templates
     {
     private:
         
-        static Hash<Formatter *>    formatters;
-    
+        class FakeHash
+        {
+            Hash<Formatter *>& GetInstance() {
+                static Hash<Formatter *>  formatters;
+                return formatters;
+            }
+
+        public:
+
+            operator Hash<Formatter *> () { 
+                return GetInstance(); 
+            }
+            int Exists(const char* key) { 
+                return GetInstance().Exists(key); 
+            }
+            int Insert(const char* key, Formatter* &value) {
+                return GetInstance().Insert(key, value);
+            }
+            Formatter*& Get(const char* key) {
+                return GetInstance().Get(key);
+            }
+        };
+
+        static FakeHash formatters;
+
     public:
 
         static void registerFormatter(const char* key, Formatter* formatter)
