@@ -495,6 +495,8 @@ struct OptionalProperty{
   }
   OptionalProperty& operator=(const OptionalProperty& src)
   {
+    this->~OptionalProperty();
+    new(this)OptionalProperty();
     isSet=src.isSet;
     type=src.type;
     if(isSet)
