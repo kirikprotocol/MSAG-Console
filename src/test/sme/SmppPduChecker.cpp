@@ -165,6 +165,7 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 		res.insert(Status::NOROUTE);
 	}
 	__cfg_int__(maxValidPeriod);
+	//времена
 	time_t validTime = pdu.getValidTime();
 	time_t waitTime = pdu.getWaitTime(); //с учетом def директивы
 	if (!validTime || validTime < pduData->sendTime ||
@@ -176,6 +177,12 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 	{
 		res.insert(ESME_RINVSCHED);
 	}
+	//директивы
+	if (pduData->intProps.count("directive.invalidTemplateDir"))
+	{
+		res.insert(ESME_RSUBMITFAIL);
+	}
+	//кодировка
 	if (!pduData->intProps.count("dataCoding"))
 	{
 		res.insert(ESME_RINVDCS);
@@ -252,12 +259,19 @@ set<uint32_t> SmppPduChecker::checkDataSm(PduData* pduData)
 	{
 		res.insert(Status::NOROUTE);
 	}
+	//времена
 	time_t validTime = pdu.getValidTime();
 	time_t waitTime = pdu.getWaitTime(); //с учетом def директивы
 	if (waitTime > validTime)
 	{
 		res.insert(ESME_RINVSCHED);
 	}
+	//директивы
+	if (pduData->intProps.count("directive.invalidTemplateDir"))
+	{
+		res.insert(ESME_RSUBMITFAIL);
+	}
+	//кодировка
 	if (!pduData->intProps.count("dataCoding"))
 	{
 		res.insert(ESME_RINVDCS);
@@ -776,6 +790,10 @@ void SmppPduChecker::processDataSmResp(ResponseMonitor* monitor,
 		case ESME_RINVDSTADR:
 			__tc__("dataSm.resp.checkCmdStatusInvalidDestAddr");
 			__check__(1, checkRes.count(ESME_RINVDSTADR));
+			break;
+		case ESME_RINVSCHED:
+			__tc__("dataSm.resp.checkCmdStatusInvalidWaitTime");
+			__check__(1, checkRes.count(ESME_RINVSCHED));
 			break;
 		case ESME_RINVDCS:
 			__tc__("dataSm.resp.checkCmdStatusInvalidDataCoding");

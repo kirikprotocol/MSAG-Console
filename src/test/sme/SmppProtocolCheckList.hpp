@@ -240,9 +240,9 @@ void submitSmTc()
 	__reg_tc__("submitSm.resp.checkCmdStatusInvalidDestAddr",
 		"Если код ошибки ESME_RINVDSTADR в поле command_status, то маршрута действительно не существует");
 	__reg_tc__("submitSm.resp.checkCmdStatusInvalidWaitTime",
-		"Если код ошибки ESME_RINVSCHED в поле command_status, то время schedule_delivery_time действительно задано неправильно");
+		"Если код ошибки ESME_RINVSCHED в поле command_status, то значение поля schedule_delivery_time или директивы def действительно задано неправильно");
 	__reg_tc__("submitSm.resp.checkCmdStatusInvalidValidTime",
-		"Если код ошибки ESME_RINVEXPIRY в поле command_status, то время validity_period действительно задано неправильно");
+		"Если код ошибки ESME_RINVEXPIRY в поле command_status, то значение поля validity_period действительно задано неправильно");
 	__reg_tc__("submitSm.resp.checkCmdStatusInvalidDataCoding",
 		"Если код ошибки ESME_RINVDCS в поле command_status, то кодировка сообщения действительно задана неправильно");
 	__reg_tc__("submitSm.resp.checkCmdStatusInvalidServiceType",
@@ -342,6 +342,8 @@ void dataSmTc()
 		"При отсутствии кода ошибки в поле command_status, выполняются все условия для нормальной доставки сообщения (поля реквеста заданы корректно, существует маршрут и т.п.)");
 	__reg_tc__("dataSm.resp.checkCmdStatusInvalidDestAddr",
 		"Если код ошибки ESME_RINVDSTADR в поле command_status, то маршрута действительно не существует");
+	__reg_tc__("dataSm.resp.checkCmdStatusInvalidWaitTime",
+		"Если код ошибки ESME_RINVSCHED в поле command_status, то значение директивы def действительно задано неправильно");
 	__reg_tc__("dataSm.resp.checkCmdStatusInvalidDataCoding",
 		"Если код ошибки ESME_RINVDCS в поле command_status, то кодировка сообщения действительно задана неправильно");
 	__reg_tc__("dataSm.resp.checkCmdStatusInvalidServiceType",
