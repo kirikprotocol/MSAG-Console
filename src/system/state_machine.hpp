@@ -44,6 +44,7 @@ public:
     const char* scheme;
     const char* locale;
     const char* addr;
+    const char* ddest;
     time_t date;
     const char* msgId;
     const char* err;
