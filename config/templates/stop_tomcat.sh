@@ -8,6 +8,6 @@ echo "Waiting tomcat to stop"
 while [ -e "tomcat.pid" ] ; 
 do
   echo -n "." ;
-  usleep 1 ;
+  sleep 1 ;
 done
 

@@ -1,5 +1,0 @@
-root=@logger.default.category@, default
-
-appender.default.file.name=@logs.dir@/dbsme.log
-appender.default.file.maxsize=20Mb
-appender.default.file.maxindex=4
