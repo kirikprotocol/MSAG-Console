@@ -1297,7 +1297,7 @@ static ET96MAP_USSD_DATA_CODING_SCHEME_T fillUSSDString(unsigned encoding, const
   return ussdEncoding;
 }
 
-static void DoUSSRUserResponceError(const SmscCommand* cmd , MapDialog* dialog)
+static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
 {
   __map_trace2__("%s: dialogid 0x%x",__func__,dialog->dialogid_map);
   ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0;
@@ -1307,7 +1307,7 @@ static void DoUSSRUserResponceError(const SmscCommand* cmd , MapDialog* dialog)
   error.u.systemFailureNetworkResource_s.networkResourcePresent = 0;
   ET96MAP_USSD_STRING_T ussdString = {0,};
   unsigned char text[256];
-  if( cmd ) {
+  if( cmd.isOk() ) {
     if( cmd->get_commandId() == SUBMIT_RESP ) {
       sprintf( text, "Rejected %d", cmd->get_resp()->get_status() );
     } else {
@@ -1342,7 +1342,7 @@ static void DoUSSRUserResponceError(const SmscCommand* cmd , MapDialog* dialog)
   }
   dialog->dropChain = true;
   dialog->state = MAPST_END;
-  if( cmd != 0 && cmd->get_commandId() != SUBMIT_RESP) SendOkToSmsc(dialog);
+  if( cmd.isOk() && cmd->get_commandId() != SUBMIT_RESP) SendOkToSmsc(dialog);
   DropMapDialog(dialog);
 }
 
@@ -1774,7 +1774,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           dialog->state = MAPST_USSDWaitResponce;
           if ( cmd->get_resp()->get_status() != 0 )
           {
-            DoUSSRUserResponceError(&cmd,dialog.get());
+            DoUSSRUserResponceError(cmd,dialog.get());
           } else {
             if( dialog->chain.size() > 0 ) {
               SmscCommand cmd_c = dialog->chain.front();
@@ -2942,7 +2942,7 @@ static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string&
   if ( routeErr != 0 )
   {
     if( dialog->state == MAPST_WaitUssdImsiReq) {
-      DoUSSRUserResponceError(0, dialog); // send system failure
+      DoUSSRUserResponceError(SmscCommand(), dialog); // send system failure
     } else {
       ResponseMO(dialog,9);
       dialog->state = MAPST_WaitSubmitCmdConf;
