@@ -353,10 +353,8 @@ PduData* SmppTransmitterTestCases::prepareSubmitSm(PduSubmitSm* pdu,
 	__require__(pdu->get_optional().has_userMessageReference());
 	uint16_t msgRef = pdu->get_optional().get_userMessageReference();
 	//report options
-	Address srcAddr;
-	SmppUtil::convert(pdu->get_message().get_source(), &srcAddr);
 	time_t t; //профиль нужно брать именно тот, что в profileReg, игнорируя profileUpdateTime
-	Profile profile = fixture->profileReg->getProfile(srcAddr, t);
+	Profile profile = fixture->profileReg->getProfile(fixture->smeAddr, t);
 	__require__(t <= submitTime); //с точностью до секунды
 	//pdu data
 	pdu->get_header().set_commandId(SUBMIT_SM); //проставляется в момент отправки submit_sm
