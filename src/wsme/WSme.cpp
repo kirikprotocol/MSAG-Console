@@ -47,6 +47,9 @@ static int messageLifePeriod;
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
 const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
 
+static smsc::admin::service::ServiceSocketListener adminListener; 
+static bool bAdminListenerInited = false;
+
 static bool convertMSISDNStringToAddress(const char* string, Address& address)
 {
     try {
@@ -401,6 +404,7 @@ static void appSignalHandler(int sig)
     if (sig==SIGTERM || sig==SIGINT)
     {
         __trace__("Stopping ...");
+        if (bAdminListenerInited) adminListener.shutdown();
         bWSmeIsStopped = true;
     }
 }
@@ -425,8 +429,6 @@ int main(void)
     //added by igork
     atexit(atExitHandler);
     
-    smsc::admin::service::ServiceSocketListener adminListener; 
-
     try 
     {
         Manager::init("config.xml");
@@ -444,8 +446,9 @@ int main(void)
         ComponentManager::registerComponent(&wsmeAdmin); 
         adminListener.init(adminConfig.getString("host"), 
                            adminConfig.getInt("port"));               
+        bAdminListenerInited = true;
         adminListener.Start();                                     
-
+        
         ConfigView mnConfig(manager, "WSme.ThreadPool");
         ConfigView ssConfig(manager, "WSme.SMSC");
         WSmeConfig cfg(&ssConfig);
@@ -499,7 +502,7 @@ int main(void)
         resultCode = -1;
     }
     
-    adminListener.WaitFor();
+    if (bAdminListenerInited) adminListener.WaitFor();
     return resultCode;
 }
 
