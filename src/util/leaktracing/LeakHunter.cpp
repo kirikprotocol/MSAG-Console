@@ -452,7 +452,7 @@ void operator delete[](void* mem)
     }
   }else
   {
-    fprintf(stderr,"FATAL ERROR: delete [] NULL\n");
-    smsc::util::leaktracing::PrintTrace();
+    //fprintf(stderr,"FATAL ERROR: delete [] NULL\n");
+    //smsc::util::leaktracing::PrintTrace();
   }
 }
