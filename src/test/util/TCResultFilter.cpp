@@ -5,6 +5,9 @@ namespace test {
 namespace util {
 
 using namespace std;
+using core::synchronization::MutexGuard;
+
+#define __synchronized__ MutexGuard mguard(lock);
 
 TCResultStack::~TCResultStack()
 {
@@ -101,6 +104,7 @@ void TCResultFilter::addResult(const TCResult* result)
 
 	//зарегистрировать результат
 	const char* tcId = result->getId();
+	__synchronized__
 	if (!resmap[tcId])
 	{
 		resmap[tcId] = new TCResultStackList();
@@ -134,6 +138,7 @@ void TCResultFilter::addResultStack(const TCResultStack& stack)
 	//зарегистрировать результаты и проверить есть ли в переданном стеке
 	//тест кейс с отрицательным результатом
 	int failedTC = -1;
+	__synchronized__
 	for (int i = 0; i < stack.size(); i++)
 	{
 		const TCResult* res = stack[i];

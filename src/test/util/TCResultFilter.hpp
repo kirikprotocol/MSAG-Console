@@ -2,6 +2,7 @@
 #define TEST_UTIL_TC_RESULT_FILTER
 
 #include "Util.hpp"
+#include "core/synchronization/Mutex.hpp"
 #include <string>
 #include <vector>
 #include <map>
@@ -9,6 +10,8 @@
 namespace smsc {
 namespace test {
 namespace util {
+
+using smsc::core::synchronization::Mutex;
 
 /**
  * Стек для результатов выполнения тест кейса
@@ -61,6 +64,7 @@ public:
 private:
 	typedef std::map<const std::string, TCResultStackList*> TCMap;
 	TCMap resmap;
+	Mutex lock;
 };
 
 }
