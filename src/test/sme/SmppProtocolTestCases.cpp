@@ -696,6 +696,8 @@ void SmppProtocolTestCases::replaceSm(bool sync, int num)
 						if (replacePduData)
 						{
 							__tc__("replaceSm.replaceReplacedEnrote");
+							transmitter->setupRandomCorrectReplaceSmPdu(pdu,
+								replacePduData);
 							pdu->set_messageId(replacePduData->smsId.c_str());
 						}
 					}
@@ -722,6 +724,8 @@ void SmppProtocolTestCases::replaceSm(bool sync, int num)
 						if (replacePduData)
 						{
 							__tc__("replaceSm.replaceRepeatedDeliveryEnrote");
+							transmitter->setupRandomCorrectReplaceSmPdu(pdu,
+								replacePduData);
 							pdu->set_messageId(replacePduData->smsId.c_str());
 						}
 					}

@@ -317,7 +317,14 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 void SmppTransmitterTestCases::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	PduData* replacePduData)
 {
-	SmppUtil::setupRandomCorrectReplaceSmPdu(pdu);
+	uint8_t dataCoding = DATA_CODING_SMSC_DEFAULT;
+	if (replacePduData)
+	{
+		PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(replacePduData->pdu);
+		__require__(origPdu);
+		dataCoding = origPdu->get_message().get_dataCoding();
+	}
+	SmppUtil::setupRandomCorrectReplaceSmPdu(pdu, dataCoding);
 	//если ожидаются подтверждения доставки или промежуточные нотификации,
 	//установить отложенную доставку
 	checkRegisteredDelivery(*pdu);
