@@ -62,7 +62,7 @@
 </tr>
 <tr class=row<%=(rowN++)&1%>>
 	<th>password:</th>
-	<td><input class=txt maxlength="41" type="text" name="password" value="<%=StringEncoderDecoder.encode(bean.getPassword())%>"></td>
+	<td><input class=txt maxlength="8" type="text" name="password" value="<%=StringEncoderDecoder.encode(bean.getPassword())%>"></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
 	<th>receipt scheme name:</th>

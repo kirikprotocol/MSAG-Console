@@ -36,6 +36,13 @@ public class SMSCErrors
 			public static final String ServiceIdNotDefined = B + "ServiceIdNotDefined";
 			public static final String ServiceIdTooLong = B + "ServiceIdTooLong";
 			public static final String ServiceNotFound = B + "ServiceNotFound";
+			public static final String fileNotAttached = B + "fileNotAttached";
+			public static final String serviceDistributiveNotAttached = B + "serviceDistributiveNotAttached";
+			public static final String serviceAlreadyExists = B + "serviceAlreadyExists";
+			public static final String distributiveFileMustBeZipCompressed = B + "distributiveFileMustBeZipCompressed";
+			public static final String couldntReceiveFile = B + "couldntReceiveFile";
+			public static final String hostNotSelected = B + "hostNotSelected";
+			public static final String incorrectPortValue = B + "incorrectPortValue";
 		}
 
 		public static class hosts

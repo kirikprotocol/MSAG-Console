@@ -7,13 +7,13 @@ String showSmeStatus(SmeStatus status)
 	{
 		if (status.isInternal())
 		{
-			result += "<img src=\"" + CPATH + "/img/ic_internal.gif\" title='internal'>";
+			result += "><img src=\"" + CPATH + "/img/ic_internal.gif\" title='internal'></span>";
 		}
 		else
 		{
 			if (!status.isConnected())
 			{
-				result += "<img src=\"" + CPATH + "/img/ic_disconnct.gif\" title='disconnected'>";
+				result += "><img src=\"" + CPATH + "/img/ic_disconnct.gif\" title='disconnected'></span>";
 			}
 			else
 			{
@@ -29,14 +29,14 @@ String showSmeStatus(SmeStatus status)
 						result += " class=C080>TRX&nbsp;" + status.getInAddress() + "</span>";
 						break;
 					default:
-						result += "<span class=C080>unknown&nbsp;" + status.getInAddress() + '/' + status.getOutAddress() + "</span>";
+						result += " class=C080>unknown&nbsp;" + status.getInAddress() + '/' + status.getOutAddress() + "</span>";
 				}
 			}
 		}
 	}
 	else
 	{
-		result += "<span class=C000>unknown</span>";
+		result += " class=C000>unknown</span>";
 	}
 	return result;
 }

@@ -8,8 +8,10 @@ import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.smsc_service.RouteSubjectManager;
 import ru.novosoft.smsc.admin.smsc_service.SmeManager;
+import ru.novosoft.smsc.util.config.Config;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -263,6 +265,11 @@ public class HostsManager
   {
     return serviceManager.get(smeId);
   }
+
+	public synchronized void applyHosts() throws IOException, AdminException, Config.WrongParamTypeException
+	{
+      daemonManager.saveHosts();
+	}
 
 /*
 	public synchronized Daemon getSmscDaemon()

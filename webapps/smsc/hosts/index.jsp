@@ -10,7 +10,7 @@ switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
 		STATUS.append("hosts:").append(bean.getHostNames().size());
 		break;
 	case Index.RESULT_DONE:
-		response.sendRedirect(CPATH+"/index.jsp");
+		response.sendRedirect(CPATH+"/hosts/index.jsp");
 		return;
 	case Index.RESULT_VIEW:
 		response.sendRedirect("hostView.jsp?hostName=" + URLEncoder.encode(bean.getHostName()));

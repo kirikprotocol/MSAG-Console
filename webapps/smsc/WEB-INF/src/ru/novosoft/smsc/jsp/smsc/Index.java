@@ -5,10 +5,10 @@
  */
 package ru.novosoft.smsc.jsp.smsc;
 
-import ru.novosoft.smsc.jsp.SMSCAppContext;
-import ru.novosoft.smsc.jsp.Statuses;
-import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.jsp.Statuses;
 
 import java.util.List;
 
@@ -126,6 +126,12 @@ public class Index extends SmscBean {
 
 	private int applyHosts()
 	{
+		try {
+			hostsManager.applyHosts();
+		} catch (Throwable e) {
+			logger.debug("Apply hosts: Exception occured: " + e.getMessage(), e);
+			return error(SMSCErrors.error.couldntApplyChanges, "Couldn't apply hosts", e);
+		}
 		statuses.setHostsChanged(false);
 		return RESULT_OK;
 	}

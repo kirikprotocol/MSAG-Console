@@ -91,7 +91,7 @@ public class DistributionListAdminFormBean extends IndexBean
 
 	private int delete()
 	{
-		int result = RESULT_OK;
+		int result = RESULT_DONE;
 		for (int i = 0; i < checkedDls.length; i++)
 		{
 			String checkedDl = checkedDls[i];

@@ -13,6 +13,7 @@ import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.config.Config;
 
 import java.util.*;
+import java.io.IOException;
 
 
 public class DaemonManager
@@ -20,9 +21,11 @@ public class DaemonManager
 	private DaemonList daemons = new DaemonList();
 	private Daemon smscDaemon = null;
 	private Category logger = Category.getInstance(this.getClass());
+	private Config config = null;
 
 	public DaemonManager(SmeManager smeManager, Config config)
 	{
+		this.config = config;
 		Set daemonNames = config.getSectionChildSectionNames("daemons");
 		logger.debug("Initializing daemon manager");
 		for (Iterator i = daemonNames.iterator(); i.hasNext();)
@@ -154,5 +157,15 @@ public class DaemonManager
 	public void removeAllServicesFromHost(String host) throws AdminException
 	{
 		get(host).removeAllServices();
+	}
+
+	public void saveHosts() throws AdminException, IOException, Config.WrongParamTypeException
+	{
+		config.removeSection("daemons");
+		for (Iterator i = daemons.getHostNames().iterator(); i.hasNext();) {
+			String hostName = (String) i.next();
+			config.setInt("daemons." + StringEncoderDecoder.encodeDot(hostName) + ".port", daemons.get(hostName).getPort());
+		}
+		config.save();
 	}
 }

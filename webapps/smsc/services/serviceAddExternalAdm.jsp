@@ -98,7 +98,7 @@ switch (bean.getStage())
 		</tr>
 		<tr class=row0>
 			<th>host port:</th>
-			<td><input class=txt name=port maxlength="5" value="<%=bean.getPortInt() != -1 ? bean.getPort() : ""%>"></td>
+			<td><input class=txt name=port maxlength="5" value="<%=bean.getPortInt() != -1 ? bean.getPort() : ""%>" validation="port"></td>
 		</tr>
 		<tr class=rowLast>
 			<th>Startup&nbsp;Arguments:</th>

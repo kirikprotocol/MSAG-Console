@@ -86,13 +86,13 @@ public class ServiceAddExternalAdm extends SmeBean {
 	public int receiveFile(MultipartServletRequest multi)
 	{
 		if (multi == null)
-			return error("File not attached");
+			return error(SMSCErrors.error.services.fileNotAttached);
 
 		MultipartDataSource dataFile = null;
 		try {
 			dataFile = multi.getMultipartDataSource("distribute");
 			if (dataFile == null)
-				return error("Service distributive not attached");
+				return error(SMSCErrors.error.services.serviceDistributiveNotAttached);
 			if (dataFile.getContentType().equals("application/x-zip-compressed")) {
 				incomingZip = Functions.saveFileToTemp(dataFile.getInputStream(), "SMSC_SME_distrib_", ".zip.tmp");
 				dataFile.close();
@@ -103,12 +103,12 @@ public class ServiceAddExternalAdm extends SmeBean {
 				if (hostsManager.getSmeIds().contains(serviceId)) {
 					incomingZip.delete();
 					incomingZip = null;
-					return error("Service \"" + serviceId + "\" already exists");
+					return error(SMSCErrors.error.services.serviceAlreadyExists, serviceId);
 				}
 			} else
-				return error("Distributive file must be zip compressed");
+				return error(SMSCErrors.error.services.distributiveFileMustBeZipCompressed);
 		} catch (Throwable t) {
-			return error("Couldn't receive file", t);
+			return error(SMSCErrors.error.services.couldntReceiveFile, t);
 		} finally {
 			if (dataFile != null) {
 				dataFile.close();
@@ -126,9 +126,9 @@ public class ServiceAddExternalAdm extends SmeBean {
 	private int processStage2()
 	{
 		if (hostName == null || hostName.length() < 1)
-			error("Host not selected");
+			error(SMSCErrors.error.services.hostNotSelected);
 		if (port < 0 || port > 0xFFFF)
-			error("Incorrect port value");
+			error(SMSCErrors.error.services.incorrectPortValue);
 		if (startupArgs == null)
 			startupArgs = "";
 
@@ -161,7 +161,7 @@ public class ServiceAddExternalAdm extends SmeBean {
 			//appContext.getStatuses().setServicesChanged(true);
 		} catch (AdminException e) {
 			logger.error("Adding service \"" + serviceInfo.getId() + "\" to host \"" + serviceInfo.getHost() + "\" failed", e);
-			return error("Adding service \"" + serviceInfo.getId() + "\" to host \"" + serviceInfo.getHost() + "\" failed: " + e.getMessage());
+			return error(SMSCErrors.error.services.coudntAddService, serviceInfo.getId(), e);
 		}
 		logger.info("New service \"" + serviceInfo.getId() + "\" added to host \"" + serviceInfo.getHost() + '"');
 		stage = 0;

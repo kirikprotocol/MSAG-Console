@@ -23,7 +23,7 @@ for (Iterator i = c.iterator(); i.hasNext(); )
 {
 	String sId = (String) i.next();
 	SmeStatus status = bean.getSmeStatus(sId);
-	out.print(showSmeStatus(status));
+	out.print("<span " + showSmeStatus(status));
 	if (i.hasNext())
 		out.print(", ");
 }
