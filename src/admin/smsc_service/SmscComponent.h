@@ -118,7 +118,7 @@ private:
 			{
 				fprintf(stderr,"top level exception: %s\n",e.what());
         runner_logger.error("SMSC execution exception: \"%s\", SMSC stopped.", e.what());
-        //_app->shutdown();
+        _app->shutdown();
         sigsend(P_PID, getpid(), smsc::admin::util::SignalHandler::SHUTDOWN_SIGNAL);
 				return (-1);
 			}
@@ -126,7 +126,7 @@ private:
 			{
 				fprintf(stderr,"FATAL EXCEPTION!\n");
         runner_logger.error("SMSC execution unknown exception.");
-        //_app->shutdown();
+        _app->shutdown();
         sigsend(P_PID, getpid(), smsc::admin::util::SignalHandler::SHUTDOWN_SIGNAL);
 				return (-0);
 			}
