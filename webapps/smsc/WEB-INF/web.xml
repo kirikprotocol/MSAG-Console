@@ -29,11 +29,11 @@
     <error-code>500</error-code>
     <location>/error500.jsp</location>
   </error-page>
-    <!-- Using Jacarta Tag libs -->
-        <taglib>
-          <taglib-uri>http://jakarta.apache.org/taglibs/input-1.0</taglib-uri>
-          <taglib-location>/WEB-INF/taglibs-input.tld</taglib-location>
-        </taglib>
+  <!-- Using Jacarta Tag libs -->
+  <taglib>
+    <taglib-uri>http://jakarta.apache.org/taglibs/input-1.0</taglib-uri>
+    <taglib-location>/WEB-INF/taglibs-input.tld</taglib-location>
+  </taglib>
    
   <!-- security constraints -->
 
@@ -144,6 +144,33 @@
       <transport-guarantee>NONE</transport-guarantee>
     </user-data-constraint>
   </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/providers/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>providers</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/categories/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>categories</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
 
   <security-constraint>
     <web-resource-collection>
