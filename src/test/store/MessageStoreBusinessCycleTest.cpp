@@ -125,6 +125,7 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 	process(tc.storeCorrectSms(id.back(), sms.back(), RAND_TC));
 	
 	//Сохранение правильного sms с параметрами похожими на уже существующий sms
+	//Сохранение дублированного sms
 	//Сохранение дублированного sms с отказом
 	//Сохранение корректного sms с замещением уже существующего
 	//Сохранение неправильного sms
@@ -132,6 +133,7 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 	//Корректное обновление существующего sms
 	//Некорректное обновление существующего sms
 	//Чтение существующего sms
+	bool duplicatesOk = rand0(1); //взаимоисключающие тест кейсы
 	for (TCSelector s(RAND_SET_TC, 15); s.check(); s++)
 	{
 		switch (s.value())
@@ -142,40 +144,48 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 					*id[0], *sms[0], RAND_TC));
 				break;
 			case 2:
-				for (int i = 0; i < id.size(); i++)
+				if (duplicatesOk)
 				{
-					process(tc.storeRejectDuplicateSms(*sms[i]));
+					PREPARE_FOR_NEW_SMS
+					process(tc.storeDuplicateSms(id.back(), sms.back(),
+						*id[0], *sms[0]));
 				}
 				break;
 			case 3:
 				for (int i = 0; i < id.size(); i++)
 				{
-					process(tc.storeReplaceCorrectSms(*id[i], sms[i]));
+					process(tc.storeRejectDuplicateSms(*sms[i]));
 				}
 				break;
 			case 4:
-				process(tc.storeIncorrectSms(RAND_TC));
+				for (int i = 0; !duplicatesOk && i < id.size(); i++)
+				{
+					process(tc.storeReplaceCorrectSms(*id[i], sms[i]));
+				}
 				break;
 			case 5:
+				process(tc.storeIncorrectSms(RAND_TC));
+				break;
+			case 6:
 				for (int i = 0; i < id.size(); i++)
 				{
 					process(tc.changeExistentSmsStateEnrouteToEnroute(*id[i],
 						sms[i], RAND_TC));
 				}
 				break;
-			case 6:
+			case 7:
 				for (int i = 0; i < id.size(); i++)
 				{
 					process(tc.replaceCorrectSms(*id[i], sms[i], RAND_TC));
 				}
 				break;
-			case 7:
+			case 8:
 				for (int i = 0; i < id.size(); i++)
 				{
 					process(tc.replaceIncorrectSms(*id[i], *sms[i], RAND_TC));
 				}
 				break;
-			default: //8..15
+			default: //9..15
 				for (int i = 0; i < id.size(); i++)
 				{
 					process(tc.loadExistentSms(*id[i], *sms[i]));
