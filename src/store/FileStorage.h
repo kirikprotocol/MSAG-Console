@@ -80,6 +80,7 @@ namespace smsc { namespace store
 
         void save(SMSId id, SMS& sms, fpos_t* pos=0);
         bool load(SMSId& id, SMS& sms, const fpos_t* pos=0);
+        void bill(SMSId id, SMS& sms, std::string& out);
         
         FileStorage() : 
             log(Logger::getInstance("smsc.store.FileStorage")), storageFile(0) {};

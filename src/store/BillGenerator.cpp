@@ -97,46 +97,8 @@ public:
 
     void createRecord(SMSId id, SMS& sms)
     {
-        std::string out; out.reserve(1024);
-        bool isDiverted = sms.hasStrProperty(Tag::SMSC_DIVERTED_TO);
-        bool isBinary   = sms.hasIntProperty(Tag::SMPP_DATA_CODING) ?
-                         (sms.getIntProperty(Tag::SMPP_DATA_CODING) == DataCoding::BINARY) : false;
-    
-        CSVFileEncoder::addUint64(out, id);
-        CSVFileEncoder::addUint8 (out, isDiverted ? 1:0);
-        CSVFileEncoder::addUint8 (out, isBinary   ? 1:0);
-        CSVFileEncoder::addUint8 (out, sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ? 1:0);
-        CSVFileEncoder::addDateTime(out, sms.submitTime);
-        CSVFileEncoder::addDateTime(out, sms.lastTime);
-        CSVFileEncoder::addUint32(out, sms.lastResult);
-    
-        std::string oa = sms.originatingAddress.toString();
-        CSVFileEncoder::addString(out, oa.c_str());
-        CSVFileEncoder::addString(out, sms.originatingDescriptor.imsi);
-        CSVFileEncoder::addString(out, sms.originatingDescriptor.msc);
-        //CSVFileEncoder.addUint32(out, sms.originatingDescriptor.sme);
-        CSVFileEncoder::addString(out, sms.srcSmeId);
-    
-        std::string dda = sms.dealiasedDestinationAddress.toString();
-        CSVFileEncoder::addString(out, dda.c_str());
-        CSVFileEncoder::addString(out, sms.destinationDescriptor.imsi);
-        CSVFileEncoder::addString(out, sms.destinationDescriptor.msc);
-        //CSVFileEncoder.addUint32(out, sms.destinationDescriptor.sme);
-        CSVFileEncoder::addString(out, sms.dstSmeId);
-    
-        if (isDiverted) {
-            std::string divertedTo = sms.getStrProperty(Tag::SMSC_DIVERTED_TO);
-            CSVFileEncoder::addString(out, divertedTo.c_str());
-        }
-        else CSVFileEncoder::addString(out, 0);
-        CSVFileEncoder::addString(out, sms.routeId);
-        CSVFileEncoder::addInt32 (out, sms.serviceId);
-        if (sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE))
-            CSVFileEncoder::addUint32(out, sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
-        else
-            CSVFileEncoder::addSeparator(out);
-        CSVFileEncoder::addUint32(out, sms.messageBody.getShortMessageLength(), true);
-    
+        std::string out; out.reserve(512);
+        FileStorage::bill(id, sms, out);
         {
             MutexGuard guard(storageFileLock);
             this->create(sms.lastTime);

@@ -324,6 +324,18 @@ void RollingStorage::roll(bool bill)
     }
 }
 
+void BillingStorage::createRecord(SMSId id, SMS& sms)
+{
+    std::string out; out.reserve(512);
+    FileStorage::bill(id, sms, out);
+    {
+        MutexGuard guard(storageFileLock);
+        this->create();
+        FileStorage::write(out.c_str(), out.length());
+        FileStorage::flush();
+    }
+}
+
 /*
 MSG_ID                    -- msg id
 RECORD_TYPE               -- 0 SMS, 1 Diverted SMS
@@ -346,14 +358,12 @@ SERVICE_ID                -- SERVICE_ID from SMS_MSG
 USER_MSG_REF
 DATA_LENGTH               -- text or binary length (add it to SMS_MSG insteed of TXT_LENGTH)
 */
-void BillingStorage::createRecord(SMSId id, SMS& sms)
+void FileStorage::bill(SMSId id, SMS& sms, std::string& out)
 {
-    std::string out;
-    out.reserve(512);
     bool isDiverted = sms.hasStrProperty(Tag::SMSC_DIVERTED_TO);
     bool isBinary   = sms.hasIntProperty(Tag::SMPP_DATA_CODING) ?
                      (sms.getIntProperty(Tag::SMPP_DATA_CODING) == DataCoding::BINARY) : false;
-
+    out = "";
     CSVFileEncoder::addUint64(out, id);
     CSVFileEncoder::addUint8 (out, isDiverted ? 1:0);
     CSVFileEncoder::addUint8 (out, isBinary   ? 1:0);
@@ -388,16 +398,7 @@ void BillingStorage::createRecord(SMSId id, SMS& sms)
     else
         CSVFileEncoder::addSeparator(out);
     CSVFileEncoder::addUint32(out, sms.messageBody.getShortMessageLength(), true);
-
-    {
-        MutexGuard guard(storageFileLock);
-
-        this->create();
-        FileStorage::write(out.c_str(), out.length());
-        FileStorage::flush();
-    }
 }
-
 /*
 ID             NUMBER(22)
 ST             NUMBER(3)
