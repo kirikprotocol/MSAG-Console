@@ -5,6 +5,7 @@
 #include <util/Logger.h>
 #include <util/config/XmlUtils.h>
 #include <util/xml/DOMErrorLogger.h>
+#include <util/xml/DtdResolver.h>
 #include <util/xml/init.h>
 #include <fstream>
 #include <sys/stat.h>
@@ -14,8 +15,7 @@ namespace util   {
 namespace config {
 
 using std::auto_ptr;
-using smsc::util::xml::DOMErrorLogger;
-using smsc::util::xml::initXerces;
+using namespace smsc::util::xml;
 
 std::auto_ptr<char> Manager::config_filename;
 std::auto_ptr<Manager> Manager::manager;
@@ -59,6 +59,7 @@ DOMParser * Manager::createParser() {
 	parser->setErrorHandler(errReporter);
 	parser->setCreateEntityReferenceNodes(false);
 	parser->setToCreateXMLDeclTypeNode(false);
+  parser->setEntityResolver(new DtdResolver());
 	//logger.debug("Leaving createParser()");
 
 	return parser;

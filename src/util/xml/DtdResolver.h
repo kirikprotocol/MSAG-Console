@@ -8,10 +8,13 @@
 #include <framework/LocalFileInputSource.hpp>
 #include <util/XMLString.hpp>
 #include <util/debug.h>
+#include <log4cpp/Category.hh>
 
 namespace smsc {
 namespace util {
 namespace xml {
+
+using log4cpp::Category;
 
 class DtdResolver : public EntityResolver {
 public:
