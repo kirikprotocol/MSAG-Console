@@ -113,8 +113,7 @@ int TaskScheduler::Execute()
             while (tasks.Next(task_id, task_key))
                 if (task_id && task_id[0] != '\0')
                 {
-                    TaskGuard taskGuard = 
-                        processor->getTaskContainerAdapter().getTask(task_id);
+                    TaskGuard taskGuard = processor->getTask(task_id);
                     Task* task = taskGuard.get();
                     if (!task) { 
                         logger.warn("Task '%s' not found.", task_id);
@@ -173,7 +172,7 @@ void TaskScheduler::init(TaskProcessorAdapter* processor, ConfigView* config)
                         delete schedule;
                         throw ConfigException("Task id is invalid.");
                     }
-                    if (!processor->getTaskContainerAdapter().hasTask(taskId)) {
+                    if (!processor->hasTask(taskId)) {
                         delete schedule;
                         throw ConfigException("Task '%s' wasn't defined.", task_id);
                     }

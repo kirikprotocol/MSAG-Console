@@ -31,7 +31,11 @@ namespace smsc { namespace infosme
     struct TaskProcessorAdapter
     {
         virtual TaskInvokeAdapter& getTaskInvokeAdapter() = 0;
-        virtual TaskContainerAdapter& getTaskContainerAdapter() = 0;
+        
+        virtual bool addTask(Task* task) = 0;
+        virtual bool removeTask(std::string taskId) = 0;
+        virtual bool hasTask(std::string taskId) = 0;
+        virtual TaskGuard getTask(std::string taskId) = 0;
     
         virtual ~TaskProcessorAdapter() {};
 

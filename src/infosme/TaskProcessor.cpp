@@ -7,92 +7,6 @@ extern bool isMSISDNAddress(const char* string);
 namespace smsc { namespace infosme 
 {
 
-/* ---------------------------- PriorityContainer ---------------------------- */
-
-TaskContainer::~TaskContainer()
-{
-    MutexGuard guard(tasksLock);
-    
-    char* key = 0; Task* task = 0; tasks.First();
-    while (tasks.Next(key, task))
-        if (task) task->finalize();
-}
-bool TaskContainer::putTask(Task* task)
-{
-    __require__(task);
-    MutexGuard guard(tasksLock);
-
-    const char* task_id = task->getId().c_str();
-    if (!task_id || task_id[0] == '\0' || tasks.Exists(task_id)) return false;
-    tasks.Insert(task_id, task);
-    prioritySum += task->getPriority();
-    return true;
-}
-bool TaskContainer::addTask(Task* task)
-{
-    __require__(task);
-    bool result = putTask(task);
-    if (result) task->createTable();
-    return result;
-}
-bool TaskContainer::removeTask(std::string taskId)
-{
-    MutexGuard guard(tasksLock);
-    
-    const char* task_id = taskId.c_str();
-    if (!task_id || task_id[0] == '\0' || !tasks.Exists(task_id)) return false;
-    Task* task = tasks.Get(task_id);
-    if (!task) return false;
-    tasks.Delete(task_id);
-    prioritySum -= task->getPriority();
-    task->finalize();
-    return true;
-}
-bool TaskContainer::hasTask(std::string taskId)
-{
-    MutexGuard guard(tasksLock);
-
-    const char* task_id = taskId.c_str();
-    if (!task_id || task_id[0] == '\0' || !tasks.Exists(task_id)) return false;
-    return true;
-}
-TaskGuard TaskContainer::getTask(std::string taskId)
-{
-    MutexGuard guard(tasksLock);
-    
-    const char* task_id = taskId.c_str();
-    if (!task_id || task_id[0] == '\0' || !tasks.Exists(task_id)) return TaskGuard(0);
-    Task* task = tasks.Get(task_id);
-    return TaskGuard((task && !task->isFinalizing()) ? task:0);
-}
-TaskGuard TaskContainer::getNextTask()
-{
-    MutexGuard guard(tasksLock);
-    
-    if (prioritySum <= 0) return TaskGuard(0);
-    
-    int count = 0;
-    int random = ((rand()&0x7fffffff)%prioritySum)+1;
-    
-    char* key = 0; Task* task = 0; tasks.First();
-    while (tasks.Next(key, task))
-        if (task) 
-        { 
-            count += task->getPriority();
-            if (random <= count && !task->isFinalizing()) return TaskGuard(task);    
-        }
-    
-    return TaskGuard(0);
-}
-void TaskContainer::resetWaitingTasks(Connection* connection)
-{
-    MutexGuard guard(tasksLock);
-    
-    char* key = 0; Task* task = 0; tasks.First();
-    while (tasks.Next(key, task))
-        if (task) task->resetWaiting(connection);
-}
-
 /* ---------------------------- TaskProcessor ---------------------------- */
 
 TaskProcessor::TaskProcessor(ConfigView* config)
@@ -166,7 +80,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
                 throw ConfigException("Failed to obtail DataSource driver '%s' for task '%s'", 
                                       dsId, taskId);
             
-            if (!container.putTask(new Task(taskConfig, taskId, taskTablesPrefix, taskDs, dsInternal)))
+            if (!putTask(new Task(taskConfig, taskId, taskTablesPrefix, taskDs, dsInternal)))
                 throw ConfigException("Failed to add task. Task with id '%s' already registered.",
                                       taskId);
         }
@@ -193,10 +107,66 @@ TaskProcessor::~TaskProcessor()
     scheduler.Stop();
     this->Stop();
 
+    {
+        MutexGuard guard(tasksLock);
+        char* key = 0; Task* task = 0; tasks.First();
+        while (tasks.Next(key, task))
+            if (task) task->finalize();
+    }
+    
     if (dsIntConnection) dsInternal->freeConnection(dsIntConnection);
     if (dsInternalName) delete dsInternalName;
     if (taskTablesPrefix) delete taskTablesPrefix;
 }
+
+bool TaskProcessor::putTask(Task* task)
+{
+    __require__(task);
+    MutexGuard guard(tasksLock);
+
+    const char* task_id = task->getId().c_str();
+    if (!task_id || task_id[0] == '\0' || tasks.Exists(task_id)) return false;
+    tasks.Insert(task_id, task);
+    awake.Signal();
+    return true;
+}
+bool TaskProcessor::addTask(Task* task)
+{
+    __require__(task);
+    bool result = putTask(task);
+    if (result) task->createTable();
+    return result;
+}
+bool TaskProcessor::removeTask(std::string taskId)
+{
+    MutexGuard guard(tasksLock);
+    
+    const char* task_id = taskId.c_str();
+    if (!task_id || task_id[0] == '\0' || !tasks.Exists(task_id)) return false;
+    Task* task = tasks.Get(task_id);
+    if (!task) return false;
+    tasks.Delete(task_id);
+    task->finalize();
+    awake.Signal();
+    return true;
+}
+bool TaskProcessor::hasTask(std::string taskId)
+{
+    MutexGuard guard(tasksLock);
+
+    const char* task_id = taskId.c_str();
+    return (task_id && task_id[0] != '\0' && tasks.Exists(task_id));
+}
+TaskGuard TaskProcessor::getTask(std::string taskId)
+{
+    MutexGuard guard(tasksLock);
+    
+    const char* task_id = taskId.c_str();
+    if (!task_id || task_id[0] == '\0' || !tasks.Exists(task_id)) return TaskGuard(0);
+    Task* task = tasks.Get(task_id);
+    return TaskGuard((task && !task->isFinalizing()) ? task:0);
+}
+
 void TaskProcessor::dsInternalCommit(bool force)
 {
     time_t currentTime = time(NULL);
@@ -219,6 +189,17 @@ void TaskProcessor::dsInternalCommit(bool force)
     }
 }
 
+void TaskProcessor::resetWaitingTasks()
+{
+    MutexGuard guard(tasksLock);
+    MutexGuard icGuard(dsIntConnectionLock);
+    
+    char* key = 0; Task* task = 0; tasks.First();
+    while (tasks.Next(key, task))
+        if (task) task->resetWaiting(dsIntConnection);
+
+    dsInternalCommit(true);
+}
 void TaskProcessor::Start()
 {
     MutexGuard guard(startLock);
@@ -226,11 +207,7 @@ void TaskProcessor::Start()
     if (!bStarted)
     {
         logger.info("Starting ...");
-        {
-            MutexGuard icGuard(dsIntConnectionLock);
-            container.resetWaitingTasks(dsIntConnection);
-            dsInternalCommit(true);
-        }
+        resetWaitingTasks();
         bNeedExit = false;
         awake.Wait(0);
         Thread::Start();
@@ -259,70 +236,70 @@ void TaskProcessor::Stop()
 }
 int TaskProcessor::Execute()
 {
-    bool first = true;
+    Array<TaskGuard *> taskGuards;
+
     while (!bNeedExit)
     {
-        awake.Wait((first) ? 100:switchTimeout);
-        if (bNeedExit) break;
-        try 
+        time_t currentTime = time(NULL);
+
         {
-            MainLoop(); first = false;
-        } 
-        catch (std::exception& exc) 
-        {
-            awake.Wait(0); first = true;
-            logger.error("Exception occurred during tasks execution : %s", exc.what());
+            MutexGuard guard(tasksLock);
+            char* key = 0; Task* task = 0; tasks.First();
+            while (!bNeedExit && tasks.Next(key, task))
+                if (task && task->isReady(currentTime)) {
+                    taskGuards.Push(new TaskGuard(task));
+                    task->currentPriorityFrameCounter = 0;
+                }
         }
+
+        //logger.debug("%d tasks selected.", taskGuards.Count());
+
+        int processed = 0;
+        while (taskGuards.Count()>0)
+        {
+            TaskGuard* taskGuard = 0;
+            taskGuards.Shift(taskGuard);
+            if (!taskGuard) continue;
+
+            if (!bNeedExit)
+            {
+                Task* task = taskGuard->get();
+                if (task && !task->isFinalizing() &&
+                    task->currentPriorityFrameCounter < task->getPriority())
+                {
+                    task->currentPriorityFrameCounter++;
+                    if (!processTask(task))
+                        task->currentPriorityFrameCounter = task->getPriority();
+                    else processed++;
+                }
+            }
+            delete taskGuard;
+        }
+        
+        //logger.debug("%d tasks processed.", processed);
+
+        if (!bNeedExit && processed <= 0) awake.Wait(switchTimeout);
     }
     exited.Signal();
     return 0;
 }
 
-void TaskProcessor::MainLoop()
+bool TaskProcessor::processTask(Task* task)
 {
-    __require__(dsIntConnection);
-
-    TaskGuard taskGuard = container.getNextTask(); 
-    Task* task = taskGuard.get();
-    if (!task || !task->isEnabled()) return;
-    
+    __require__(task && dsIntConnection);
+     
     TaskInfo info = task->getInfo();
-    time_t ct = time(NULL);
-    if (info.endDate > 0 && ct >=  info.endDate) return;
-
-    if (info.activePeriodStart > 0 && info.activePeriodEnd > 0)
-    {
-        if (info.activePeriodStart > info.activePeriodEnd) return;
-        
-        tm dt; localtime_r(&ct, &dt);
-        
-        dt.tm_isdst = -1;
-        dt.tm_hour = info.activePeriodStart/3600;
-        dt.tm_min  = (info.activePeriodStart%3600)/60;
-        dt.tm_sec  = (info.activePeriodStart%3600)%60;
-        time_t apst = mktime(&dt);
-
-        dt.tm_isdst = -1;
-        dt.tm_hour = info.activePeriodEnd/3600;
-        dt.tm_min  = (info.activePeriodEnd%3600)/60;
-        dt.tm_sec  = (info.activePeriodEnd%3600)%60;
-        time_t apet = mktime(&dt);
-
-        if (ct < apst || ct > apet) return;
-    }
-    
     Message message;
     {
         MutexGuard icGuard(dsIntConnectionLock);
         if (!task->getNextMessage(dsIntConnection, message)) {
             //logger.debug("No messages found for task '%s'", info.id.c_str());
-            return;
+            return false;
         }
-        dsInternalCommit();
     }
 
-    logger.debug("Sending message #%lld for '%s': %s", 
-                 message.id, message.abonent.c_str(), message.message.c_str());
+    //logger.debug("Sending message #%lld for '%s': %s", 
+    //             message.id, message.abonent.c_str(), message.message.c_str());
 
     MutexGuard msGuard(messageSenderLock);
     if (messageSender)
@@ -331,9 +308,11 @@ void TaskProcessor::MainLoop()
         if (!messageSender->send(message.abonent, message.message, info, seqNum)) {
             logger.error("Failed to send message #%lld for '%s'", 
                          message.id, message.abonent.c_str());
-            return;
+            return false;
         }
         
+        //logger.debug("Sent message #%lld for '%s'", message.id, message.abonent.c_str());
+
         MutexGuard snGuard(taskIdsBySeqNumLock);
         if (taskIdsBySeqNum.Exist(seqNum))
         {
@@ -342,6 +321,13 @@ void TaskProcessor::MainLoop()
         }
         taskIdsBySeqNum.Insert(seqNum, TaskMsgId(info.id, message.id));
     }
+    else
+    {
+        logger.error("No messageSender defined !!!");
+        return false;
+    }
+
+    return true;
 }
 
 const char* CREATE_ID_MAPPING_STATEMENT_ID = "CREATE_ID_MAPPING_STATEMENT_ID";
@@ -369,7 +355,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, std::
         //             tmIds.taskId.c_str(), tmIds.msgId, seqNum);
     }
     
-    TaskGuard taskGuard = container.getTask(tmIds.taskId); 
+    TaskGuard taskGuard = getTask(tmIds.taskId); 
     Task* task = taskGuard.get();
     if (!task) {
         logger.warn("Unable to locate task '%s' for sequence number=%d", 
@@ -462,7 +448,7 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
         delMapping->setString(1, smscId.c_str());
         delMapping->executeUpdate();
         
-        TaskGuard taskGuard = container.getTask(taskId); 
+        TaskGuard taskGuard = getTask(taskId); 
         Task* task = taskGuard.get();
         if (!task)
             throw Exception("processReceipt(): Unable to locate task '%s' for smscId=%s",

@@ -62,6 +62,10 @@ namespace smsc { namespace infosme
         uint64_t    id;
         std::string abonent;
         std::string message;
+
+        Message(uint64_t id=0, std::string abonent="", std::string message="")
+            : id(id), abonent(abonent), message(message) {};
+        virtual ~Message() {};
     };
 
     struct TaskInfo
@@ -155,14 +159,21 @@ namespace smsc { namespace infosme
         Mutex       inProcessLock;
         Mutex       createTableLock;
         bool        bInProcess, bTableCreated;
+
+        Mutex           messagesCacheLock;
+        Array<Message>  messagesCache;
+        time_t          lastMessagesCacheEmpty;
         
         char* prepareSqlCall(const char* sql);
+        char* prepareDoubleSqlCall(const char* sql);
 
         virtual void init(ConfigView* config, std::string taskId, std::string tablePrefix);
         virtual ~Task();
 
     public:
         
+        int         currentPriorityFrameCounter;
+
         Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt);
         Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
              DataSource* dsOwn, DataSource* dsInt);
@@ -170,6 +181,7 @@ namespace smsc { namespace infosme
         static Statement* getStatement(Connection* connection, 
                                        const char* id, const char* sql);
         void createTable();
+        void dropTable() {}; // TODO: implement it !!!
 
         void finalize()
         {
@@ -210,6 +222,7 @@ namespace smsc { namespace infosme
             return info;
         }
         
+        bool isReady(time_t time);
         bool isInProcess();
 
         /**
@@ -310,26 +323,37 @@ namespace smsc { namespace infosme
     
     class TaskGuard
     {
+    private:
+        
+        TaskGuard& operator=(const TaskGuard& tg) {
+            changeTaskCounter(false);
+            task = tg.task;
+            changeTaskCounter(true);
+            return *this;
+        };
+
+
     protected:
         
         Task* task;
-
+        
+        inline void changeTaskCounter(bool increment) {
+           if (!task) return;
+           MutexGuard guard(task->usersCountLock);
+           if (increment) task->usersCount++;
+           else task->usersCount--;
+           task->usersCountEvent.Signal();
+        }
+        
     public:
         
-        TaskGuard(Task* task) : task(task) {
-            if (!task) return;
-            MutexGuard guard(task->usersCountLock);
-            task->usersCount++;
-            task->usersCountEvent.Signal();
+        TaskGuard(Task* task=0) : task(task) {
+            changeTaskCounter(true);
         }
         virtual ~TaskGuard() {
-            if (!task) return;
-            MutexGuard guard(task->usersCountLock);
-            if (task->usersCount > 0) { 
-                task->usersCount--;
-                task->usersCountEvent.Signal();
-            }
+            changeTaskCounter(false);
         }
+    
         inline Task* get() {
             return task;
         }
@@ -346,22 +370,6 @@ namespace smsc { namespace infosme
     protected:
 
         TaskInvokeAdapter() {};
-    };
-    struct TaskContainerAdapter
-    {
-        virtual bool putTask(Task* task) = 0;
-        virtual bool addTask(Task* task) = 0;
-        virtual bool removeTask(std::string taskId) = 0;
-        virtual bool hasTask(std::string taskId) = 0;
-
-        virtual TaskGuard getTask(std::string taskId) = 0;
-        virtual TaskGuard getNextTask() = 0;
-        
-        virtual ~TaskContainerAdapter() {};
-
-    protected:
-        
-        TaskContainerAdapter() {};
     };
     
 }}

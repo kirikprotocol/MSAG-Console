@@ -49,20 +49,24 @@ int parseTime(const char* str)
 Task::Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt) 
     : logger(Logger::getCategory("smsc.infosme.Task")), formatter(0),
         usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt), 
-            bInProcess(false), bTableCreated(false)
+            bInProcess(false), bTableCreated(false), 
+                lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
 {
     __require__(dsOwn && dsInt);
     this->info = info; this->dsOwn = dsOwn; this->dsInt = dsInt;
     formatter = new OutputFormatter(info.msgTemplate.c_str());
+    createTable();
 }
 Task::Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
      DataSource* dsOwn, DataSource* dsInt)
     : logger(Logger::getCategory("smsc.infosme.Task")), formatter(0),
         usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt), 
-            bInProcess(false), bTableCreated(false)
+            bInProcess(false), bTableCreated(false),
+                lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
 {
     init(config, taskId, tablePrefix);
     formatter = new OutputFormatter(info.msgTemplate.c_str());
+    createTable();
 }
 Task::~Task()
 {
@@ -137,6 +141,14 @@ char* Task::prepareSqlCall(const char* sql)
     sprintf(sqlCall, sql, tableName.c_str());
     return sqlCall;
 }
+char* Task::prepareDoubleSqlCall(const char* sql)
+{
+    if (!sql || sql[0] == '\0') return 0;
+    std::string tableName = info.tablePrefix+info.id;
+    char* sqlCall = new char[strlen(sql)+tableName.length()*2+1];
+    sprintf(sqlCall, sql, tableName.c_str(), tableName.c_str());
+    return sqlCall;
+}
 
 Statement* Task::getStatement(Connection* connection, const char* id, const char* sql)
 {
@@ -161,10 +173,11 @@ const char* NEW_TABLE_STATEMENT_SQL =
 "STATE          NUMBER(3)       NOT NULL,\n"
 "ABONENT        VARCHAR2(30)    NOT NULL,\n"
 "SEND_DATE      DATE            NOT NULL,\n"
-"MESSAGE        VARCHAR2(2000)  NULL     \n"
+"MESSAGE        VARCHAR2(2000)  NULL,    \n"
+"PRIMARY KEY    (ID)                     \n"
 ")";
-const char* NEW_INDEX_STATEMENT_SQL = 
-"CREATE INDEX %s_ID_IDX ON %s (ID)";
+const char* NEW_SD_INDEX_STATEMENT_SQL = 
+"CREATE INDEX %s_SD_IDX ON %s (STATE, SEND_DATE)";
 
 void Task::createTable()
 {
@@ -183,16 +196,14 @@ void Task::createTable()
             std::auto_ptr<char> createTableSql(prepareSqlCall(NEW_TABLE_STATEMENT_SQL));
             statement = connection->createStatement(createTableSql.get());
             if (!statement) 
-                throw Exception("Failed to create statement.");
+                throw Exception("Failed to create table statement.");
             statement->execute();
             delete statement;
 
-            char indexSql[2048];
-            const char* tableName = (info.tablePrefix+info.id).c_str();
-            sprintf(indexSql, NEW_INDEX_STATEMENT_SQL, tableName, tableName);
-            statement = connection->createStatement(createTableSql.get());
+            std::auto_ptr<char> createIndexSql(prepareDoubleSqlCall(NEW_SD_INDEX_STATEMENT_SQL));
+            statement = connection->createStatement(createIndexSql.get());
             if (!statement) 
-                throw Exception("Failed to create statement.");
+                throw Exception("Failed to create index statement.");
             statement->execute();
             
             connection->commit();
@@ -304,7 +315,6 @@ void Task::beginProcess()
                     uncommitted = 0;
                 }
             }
-            inProcessEvent.Wait(10);
         }
         if (uncommitted > 0) intConnection->commit();
     }
@@ -617,7 +627,7 @@ bool Task::doDelivered(Connection* connection, uint64_t msgId)
 const char* SELECT_MESSAGES_STATEMENT_ID = "%s_SELECT_MESSAGES_STATEMENT_ID";
 const char* SELECT_MESSAGES_STATEMENT_SQL = (const char*)
 "SELECT ID, ABONENT, MESSAGE FROM %s WHERE "
-"STATE=:STATE AND SEND_DATE<=:SEND_DATE ORDER BY SEND_DATE ASC FOR UPDATE";
+"STATE=:STATE AND SEND_DATE<=:SEND_DATE ORDER BY ID ASC FOR UPDATE";
 
 const char* DO_WAIT_MESSAGE_STATEMENT_ID = "%s_DO_WAIT_MESSAGE_STATEMENT_ID";
 const char* DO_WAIT_MESSAGE_STATEMENT_SQL = (const char*)
@@ -626,8 +636,23 @@ const char* DO_WAIT_MESSAGE_STATEMENT_SQL = (const char*)
 bool Task::getNextMessage(Connection* connection, Message& message)
 {
     __require__(connection);
+    
+    {
+        MutexGuard guard(messagesCacheLock);
+        if (messagesCache.Count() > 0) {
+            messagesCache.Shift(message);
+            return true;
+        }
+    }
 
-    bool result = false;
+    const int sleepOnEmptyInterval = 1;
+    const int fetchSize = 1000;
+
+    time_t currentTime = time(NULL);
+    if (currentTime-lastMessagesCacheEmpty > sleepOnEmptyInterval)
+        lastMessagesCacheEmpty = currentTime;
+    //else return false;
+    
     int wdTimerId = -1;
     try
     {
@@ -638,8 +663,8 @@ bool Task::getNextMessage(Connection* connection, Message& message)
         if (!selectMessage)
             throw Exception("Failed to create statement for messages access.");
 
-        selectMessage->setUint8(1, MESSAGE_NEW_STATE);
-        selectMessage->setDateTime(2, time(NULL));
+        selectMessage->setUint8   (1, MESSAGE_NEW_STATE);
+        selectMessage->setDateTime(2, currentTime);
 
         wdTimerId = dsInt->startTimer(connection, info.dsIntTimeout);
 
@@ -648,13 +673,11 @@ bool Task::getNextMessage(Connection* connection, Message& message)
         if (!rs)
             throw Exception("Failed to obtain result set for message access.");
         
-        if (rs->fetchNext())
+        int fetched = 0;
+        while (rs->fetchNext() && ++fetched <= fetchSize)
         {
+            Message fetchedMessage(rs->getUint64(1), rs->getString(2), rs->getString(3));
             dsInt->stopTimer(wdTimerId);
-            
-            message.id      = rs->getUint64(1);
-            message.abonent = rs->getString(2);
-            message.message = rs->getString(3);
             
             std::auto_ptr<char> waitMessageId(prepareSqlCall(DO_WAIT_MESSAGE_STATEMENT_ID));
             std::auto_ptr<char> waitMessageSql(prepareSqlCall(DO_WAIT_MESSAGE_STATEMENT_SQL));
@@ -665,23 +688,73 @@ bool Task::getNextMessage(Connection* connection, Message& message)
             
             wdTimerId = dsInt->startTimer(connection, info.dsIntTimeout);
             waitMessage->setUint8 (1, MESSAGE_WAIT_STATE);
-            waitMessage->setUint64(2, message.id);
-            result = (waitMessage->executeUpdate() > 0);
+            waitMessage->setUint64(2, fetchedMessage.id);
+            if (waitMessage->executeUpdate() <= 0)
+                logger.warn("Failed to update message in getNextMessage() !!!");
+                // TODO: analyse it !
+            
+            MutexGuard guard(messagesCacheLock);
+            messagesCache.Push(fetchedMessage);
         }
+        connection->commit();
     }
     catch (Exception& exc)
     {
+        try { if (connection) connection->rollback(); }
+        catch (...) {
+            logger.error("Failed to roolback transaction on internal data source.");
+        }
         logger.error("Task '%s'. Messages access failure. "
                      "Details: %s", info.id.c_str(), exc.what());
     }
     catch (...)
     {
+        try { if (connection) connection->rollback(); }
+        catch (...) {
+            logger.error("Failed to roolback transaction on internal data source.");
+        }
         logger.error("Task '%s'. Messages access failure.", 
                      info.id.c_str());
     }
     
     dsInt->stopTimer(wdTimerId);
-    return result;
+    
+    MutexGuard guard(messagesCacheLock);
+    if (messagesCache.Count() > 0) {
+        messagesCache.Shift(message);
+        return true;
+    } 
+    else lastMessagesCacheEmpty = time(NULL);
+    return false;
+}
+
+bool Task::isReady(time_t time)
+{
+    if (!isEnabled() || isFinalizing() || 
+        (info.endDate>0 && time>=info.endDate)) return false;
+
+    if (info.activePeriodStart > 0 && info.activePeriodEnd > 0)
+    {
+        if (info.activePeriodStart > info.activePeriodEnd) return false;
+        
+        tm dt; localtime_r(&time, &dt);
+        
+        dt.tm_isdst = -1;
+        dt.tm_hour = info.activePeriodStart/3600;
+        dt.tm_min  = (info.activePeriodStart%3600)/60;
+        dt.tm_sec  = (info.activePeriodStart%3600)%60;
+        time_t apst = mktime(&dt);
+
+        dt.tm_isdst = -1;
+        dt.tm_hour = info.activePeriodEnd/3600;
+        dt.tm_min  = (info.activePeriodEnd%3600)/60;
+        dt.tm_sec  = (info.activePeriodEnd%3600)%60;
+        time_t apet = mktime(&dt);
+
+        if (time < apst || time > apet) return false;
+    }
+
+    return true;
 }
 
 }}

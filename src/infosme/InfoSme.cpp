@@ -179,7 +179,8 @@ public:
                               info.svcType.c_str():processor.getSvcType() );
         
         sms.setIntProperty(Tag::SMPP_PROTOCOL_ID, processor.getProtocolId());
-        sms.setIntProperty(Tag::SMPP_ESM_CLASS, 0 /*xx0000xx*/);
+//        sms.setIntProperty(Tag::SMPP_ESM_CLASS, 0 /*xx0000xx*/);
+        sms.setIntProperty(Tag::SMPP_ESM_CLASS, 2 /*xx0000xx*/); //test with transaction
         sms.setIntProperty(Tag::SMPP_PRIORITY, 0);
         sms.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY, 1);
 
@@ -309,11 +310,11 @@ public:
                 int smsTextBuffLen = getSmsText(&sms, 
                     (char *)&smsTextBuff, sizeof(smsTextBuff));*/
                 
-                logger.debug("Got receipt, message=%s is %s (%s)", 
+                /*logger.debug("Got receipt, message=%s is %s (%s)", 
                              msgid, delivered ? "delivered":"failed", 
-                             retry ? "need retry":"no retry");
+                             retry ? "need retry":"no retry");*/
                 
-                processor.processReceipt(msgid, delivered, retry);
+                //processor.processReceipt(msgid, delivered, retry);
             }
         } 
     }
@@ -325,7 +326,7 @@ public:
         int seqNum = pdu->get_sequenceNumber();
         const char* msgid = ((PduXSmResp*)pdu)->get_messageId();
         if (msgid && msgid[0] != '\0') {
-            logger.debug("Got responce: seqNum=%d, msgid=%s", seqNum, msgid);
+            //logger.debug("Got responce: seqNum=%d, msgid=%s", seqNum, msgid);
         }
 
         int status = pdu->get_commandStatus();
@@ -334,7 +335,7 @@ public:
                          status == SmppStatusSet::ESME_RMSGQFUL  ||
                          status == SmppStatusSet::ESME_RTHROTTLED);
 
-        processor.processResponce(seqNum, accepted, retry, msgid);
+        //processor.processResponce(seqNum, accepted, retry, msgid);
     }
 
     void handleEvent(SmppHeader *pdu)

@@ -135,30 +135,6 @@ namespace smsc { namespace infosme
         };
     };
     
-    class TaskContainer : public TaskContainerAdapter
-    {
-    private:
-        
-        Hash<Task *>    tasks;
-        Mutex           tasksLock;
-        int             prioritySum;
-
-    public:
-        
-        TaskContainer() : TaskContainerAdapter(), prioritySum(0) {};
-        virtual ~TaskContainer();
-
-        virtual bool putTask(Task* task);
-        virtual bool addTask(Task* task);
-        virtual bool removeTask(std::string taskId);
-        virtual bool hasTask(std::string taskId);
-        
-        virtual TaskGuard getTask(std::string taskId);
-        virtual TaskGuard getNextTask();
-
-        void resetWaitingTasks(Connection* connection);
-    };
-
     struct MessageSender
     {
         virtual bool send(std::string abonent, std::string message, 
@@ -194,8 +170,10 @@ namespace smsc { namespace infosme
 
         TaskManager   manager;      // for tasks methods execution on thread pool
         DataProvider  provider;     // to obtain registered data source by key
-        TaskContainer container;    // contains tasks by id & priority
         TaskScheduler scheduler;    // for scheduled messages generation
+        
+        Hash<Task *>  tasks;
+        Mutex         tasksLock;
         
         Event       awake, exited;
         bool        bStarted, bNeedExit;
@@ -214,13 +192,14 @@ namespace smsc { namespace infosme
 
         IntHash<TaskMsgId> taskIdsBySeqNum;
         Mutex              taskIdsBySeqNumLock;
-
+        
         int     protocolId;
         char*   svcType;
         char*   address;
         
-        void MainLoop();
+        bool processTask(Task* task);
 
+        void resetWaitingTasks();
         void dsInternalCommit(bool force=false);
 
     public:
@@ -241,18 +220,20 @@ namespace smsc { namespace infosme
             return bStarted;
         };
         
-        virtual TaskInvokeAdapter& getTaskInvokeAdapter() {
-            return manager;
-        }
-        virtual TaskContainerAdapter& getTaskContainerAdapter() {
-            return container;
-        }
-
         void assignMessageSender(MessageSender* sender) {
             MutexGuard guard(messageSenderLock);
             messageSender = sender;
         }
+        virtual TaskInvokeAdapter& getTaskInvokeAdapter() {
+            return manager;
+        }
 
+        virtual bool putTask(Task* task);
+        virtual bool addTask(Task* task);
+        virtual bool removeTask(std::string taskId);
+        virtual bool hasTask(std::string taskId);
+        virtual TaskGuard getTask(std::string taskId);
+        
         void processResponce(int seqNum, bool accepted, bool retry, std::string smscId="");
         void processReceipt (std::string smscId, bool delivered, bool retry);
 
