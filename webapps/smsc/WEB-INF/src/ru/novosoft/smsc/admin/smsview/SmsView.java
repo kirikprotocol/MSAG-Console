@@ -527,7 +527,7 @@ public class SmsView
             System.arraycopy(text,  headerLen+1, msgText, 0, textLen);
             text = msgText;
           } else {
-            text = "";
+            text = null;
           }
           messagePrefix += "<< UDH "+headerLen+" bytes >> ";
         }
