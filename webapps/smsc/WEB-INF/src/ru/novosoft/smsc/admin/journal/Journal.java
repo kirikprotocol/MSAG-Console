@@ -25,7 +25,7 @@ public class Journal
   {
     actions.add(action);
     final String actionStr = action.toString();
-    journalLogger.info(actionStr);
+    journalLogger.info(action.toJournalString());
     logger.debug("APPEND " + actionStr);
   }
 

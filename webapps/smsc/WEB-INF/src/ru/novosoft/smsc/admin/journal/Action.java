@@ -57,6 +57,29 @@ public class Action
     return sb.toString();
   }
 
+  public String toJournalString()
+  {
+    StringBuffer sb = new StringBuffer();
+    sb
+            .append(" user:").append(user)
+            .append(" ").append(Actions.actionToString(action))
+            .append(" ").append(SubjectTypes.typeToString(subjectType))
+            .append(" ").append(subjectId);
+    if (additional.size() > 0) {
+      sb.append(" additional:[");
+      for (Iterator i = additional.entrySet().iterator(); i.hasNext();) {
+        Map.Entry entry = (Map.Entry) i.next();
+        sb.append((String)entry.getKey());
+        sb.append("=");
+        sb.append((String)entry.getValue());
+        if (i.hasNext())
+          sb.append(", ");
+      }
+      sb.append(']');
+    }
+    return sb.toString();
+  }
+
   public void setAdditionalValue(String key, String value)
   {
     additional.put(key, value);
