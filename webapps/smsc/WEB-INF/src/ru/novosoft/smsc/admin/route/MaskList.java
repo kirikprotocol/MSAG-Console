@@ -6,6 +6,7 @@
 package ru.novosoft.smsc.admin.route;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.util.SortedList;
 
 import java.io.PrintWriter;
 import java.util.*;
@@ -108,9 +109,9 @@ public class MaskList
 		return result;
 	}
 
-	public Set getNames()
+	public SortedList getNames()
 	{
-		return masks.keySet();
+		return new SortedList(masks.keySet());
 	}
 
 	public PrintWriter store(PrintWriter out)

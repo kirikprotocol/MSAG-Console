@@ -23,7 +23,7 @@ switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("a
 		response.sendRedirect("profilesAdd.jsp");
 		return;
 	case Index.RESULT_EDIT:
-		response.sendRedirect("profilesEdit.jsp?mask="+bean.getProfileMask());
+		response.sendRedirect("profilesEdit.jsp?mask="+URLEncoder.encode(bean.getProfileMask()));
 		return;
 	default:
 		STATUS.append("<span class=CF00>Error</span>");

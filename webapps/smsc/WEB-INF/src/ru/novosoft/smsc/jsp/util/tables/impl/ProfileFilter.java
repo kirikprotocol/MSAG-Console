@@ -5,18 +5,19 @@
  */
 package ru.novosoft.smsc.jsp.util.tables.impl;
 
+import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
 
 public class ProfileFilter implements Filter
 {
-	private String[] masks = new String[0];
+	private MaskList masks = new MaskList();
 	private byte codepage = -1;
 	private byte reportinfo = -1;
 
 	public boolean isEmpty()
 	{
-		return masks.length == 0 && codepage < 0 && reportinfo < 0;
+		return masks.isEmpty() && codepage < 0 && reportinfo < 0;
 	}
 
 	public boolean isItemAllowed(DataItem item)
@@ -24,12 +25,12 @@ public class ProfileFilter implements Filter
 		return true;
 	}
 
-	public String[] getMasks()
+	public MaskList getMasks()
 	{
 		return masks;
 	}
 
-	public void setMasks(String[] masks)
+	public void setMasks(MaskList masks)
 	{
 		this.masks = masks;
 	}

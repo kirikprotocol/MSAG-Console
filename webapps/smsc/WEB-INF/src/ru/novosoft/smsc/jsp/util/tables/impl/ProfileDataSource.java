@@ -8,15 +8,11 @@ package ru.novosoft.smsc.jsp.util.tables.impl;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.route.Mask;
-import ru.novosoft.smsc.jsp.util.tables.DataSource;
-import ru.novosoft.smsc.jsp.util.tables.Query;
-import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.*;
 import ru.novosoft.util.conpool.NSConnectionPool;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.util.Iterator;
 
 public class ProfileDataSource implements DataSource
 {
@@ -24,14 +20,12 @@ public class ProfileDataSource implements DataSource
 
 	NSConnectionPool connectionPool = null;
 
-	public ProfileDataSource(NSConnectionPool connectionPool)
-			  throws AdminException
+	public ProfileDataSource(NSConnectionPool connectionPool) throws AdminException
 	{
 		this.connectionPool = connectionPool;
 	}
 
-	public QueryResultSet query(ProfileQuery query_to_run)
-			  throws AdminException
+	public QueryResultSet query(ProfileQuery query_to_run) throws AdminException
 	{
 		String sort = (String) query_to_run.getSortOrder().get(0);
 		boolean isNegativeSort = false;
@@ -125,8 +119,7 @@ public class ProfileDataSource implements DataSource
 			throw new AdminException("Couldn't retrieve data from profiles database");
 	}
 
-	public QueryResultSet query(Query query_to_run)
-			  throws AdminException
+	public QueryResultSet query(Query query_to_run) throws AdminException
 	{
 		return query((ProfileQuery) query_to_run);
 	}
@@ -138,13 +131,13 @@ public class ProfileDataSource implements DataSource
 		else
 		{
 			String result = "";
-			if (filter.getMasks().length > 0)
+			if (!filter.getMasks().isEmpty())
 			{
 				result += '(';
-				for (int i = 0; i < filter.getMasks().length; i++)
+				for (Iterator i = filter.getMasks().iterator(); i.hasNext();)
 				{
-					String mask = filter.getMasks()[i];
-					result += (i == 0 ? "" : " or ") + "mask like '" + mask + "%'";
+					Mask mask = (Mask) i.next();
+					result += "mask like '" + mask.getFullMask() + "%'" + (i.hasNext() ? " or " : "");
 				}
 				result += ')';
 			}

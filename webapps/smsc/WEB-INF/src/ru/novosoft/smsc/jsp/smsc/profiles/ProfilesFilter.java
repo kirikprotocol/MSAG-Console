@@ -5,11 +5,11 @@
  */
 package ru.novosoft.smsc.jsp.smsc.profiles;
 
+import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.jsp.util.tables.impl.ProfileFilter;
 
-import java.util.LinkedList;
 import java.util.List;
 
 public class ProfilesFilter extends SmscBean
@@ -17,6 +17,7 @@ public class ProfilesFilter extends SmscBean
 	protected ProfileFilter filter = null;
 
 	protected String[] masks = null;
+	protected MaskList maskList = null;
 	protected byte codepage = -2;
 	protected byte reportinfo = -2;
 
@@ -33,25 +34,15 @@ public class ProfilesFilter extends SmscBean
 
 		if (codepage == -2 && reportinfo == -2)
 		{
-			masks = filter.getMasks();
+			masks = (String[]) filter.getMasks().getNames().toArray(new String[0]);
 			codepage = filter.getCodepage();
 			reportinfo = filter.getReportinfo();
 		}
 		if (masks == null)
 			masks = new String[0];
 
-		List newMasks = new LinkedList();
-		for (int i = 0; i < masks.length; i++)
-		{
-			String mask = masks[i];
-			if (mask != null)
-			{
-				final String m = mask.trim();
-				if (m.length() > 0 && !newMasks.contains(m))
-					newMasks.add(m);
-			}
-		}
-		masks = (String[]) newMasks.toArray(new String[0]);
+		maskList = new MaskList(masks);
+		masks = (String[]) maskList.getNames().toArray(new String[0]);
 
 		return RESULT_OK;
 	}
@@ -64,7 +55,7 @@ public class ProfilesFilter extends SmscBean
 
 		if (mbApply != null)
 		{
-			filter.setMasks(masks);
+			filter.setMasks(maskList);
 			filter.setCodepage(codepage);
 			filter.setReportinfo(reportinfo);
 			return RESULT_DONE;

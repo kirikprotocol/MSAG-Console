@@ -21,8 +21,7 @@ public class Mask
 	private byte npi = 0;
 	private String mask = null;
 
-	public Mask(String mask)
-			throws AdminException
+	public Mask(String mask) throws AdminException
 	{
 		if (mask == null)
 			throw new NullPointerException("Mask string is null");
@@ -31,8 +30,7 @@ public class Mask
 		parseMask(mask);
 	}
 
-	private void parseMask(String mask)
-			throws AdminException
+	private void parseMask(String mask) throws AdminException
 	{
 		if (mask.startsWith("."))
 		{
@@ -75,7 +73,12 @@ public class Mask
 		else if (tone == 0 && npi == 1)
 			return (mask);
 		else
-			return "." + tone + "." + npi + "." + mask;
+			return getFullMask();
+	}
+
+	public String getFullMask()
+	{
+		return "." + tone + "." + npi + "." + mask;
 	}
 
 	public boolean equals(Object obj)
@@ -103,8 +106,7 @@ public class Mask
 		// 	[x]	==> .0.1.[x]
 		// где x - numeric string длиной от 1 до 21
 
-		return maskStr != null && maskStr.trim().length() > 0
-				&& maskStr.matches(pattern1) && maskStr.matches(pattern2);
+		return maskStr != null && maskStr.trim().length() > 0 && maskStr.matches(pattern1) && maskStr.matches(pattern2);
 	}
 
 	public int getQuestionsCount()

@@ -67,7 +67,7 @@ public class SubjectFilter implements Filter
 				  && (masks.isEmpty() || isAnyMaskAllowed(item_masks));
 	}
 
-	public Set getMaskStrings()
+	public List getMaskStrings()
 	{
 		return masks.getNames();
 	}
