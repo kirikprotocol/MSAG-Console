@@ -10,7 +10,7 @@
 %>
 <jsp:setProperty name="smsStatFormBean" property="*"/>
 <%
-    TITLE="SMSC Statistics utilite";
+    TITLE="SMS Statistics";
     MENU0_SELECTION = "MENU0_SMSSTAT";
 
     int beanResult = SmsStatFormBean.RESULT_OK;

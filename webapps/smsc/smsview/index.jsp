@@ -9,7 +9,7 @@
 %>
 <jsp:setProperty name="smsViewBean" property="*"/>
 <%
-TITLE="SMSC SmsView utilite";
+TITLE="SMS View";
 MENU0_SELECTION = "MENU0_SMSVIEW";
 
 int beanResult = SmsViewFormBean.RESULT_OK;
@@ -119,10 +119,10 @@ function setSort(sorting)
 <table class=secRep cellspacing=1 width="100%">
 <thead>
 <tr class=row0>
-  <th><a href="#" <%=bean.getSort().endsWith("name")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by SMS Id" onclick='return setSort("name")'>SMS id</a></th>
+  <th><a href="#" <%=bean.getSort().endsWith("name")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by SMS Id" onclick='return setSort("name")'>SMS Id</a></th>
   <th><a href="#" <%=bean.getSort().endsWith("date")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Date" onclick='return setSort("date")'>Date</a></th>
-  <th><a href="#" <%=bean.getSort().endsWith("from")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by From address" onclick='return setSort("from")'>From</a></th>
-  <th><a href="#" <%=bean.getSort().endsWith("to")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by To address" onclick='return setSort("to")'>To</a></th>
+  <th><a href="#" <%=bean.getSort().endsWith("from")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Source address" onclick='return setSort("from")'>Source</a></th>
+  <th><a href="#" <%=bean.getSort().endsWith("to")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Destination address" onclick='return setSort("to")'>Destination</a></th>
   <th><a href="#" <%=bean.getSort().endsWith("status") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by delivery status" onclick='return setSort("status")'>Status</a></th>
 </tr></thead>
 <tbody><%
