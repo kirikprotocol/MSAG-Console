@@ -180,7 +180,8 @@ namespace smsc { namespace store
          * @see SMS
          */
         virtual void changeSmsStateToEnroute(SMSId id,
-            const Descriptor& dst, uint32_t failureCause, time_t nextTryTime) 
+            const Descriptor& dst, uint32_t failureCause, time_t nextTryTime,
+                bool skipAttempt=false) 
                 throw(StorageException, NoSuchMessageException) = 0; 
         
         /**

@@ -405,6 +405,7 @@ namespace smsc { namespace store
         OCIDate nextTime, currTime;
         
         sb2     indDstMsc, indDstImsi;
+        uint8_t attemptsIncrement;
 
     public:
 
@@ -413,6 +414,8 @@ namespace smsc { namespace store
         virtual ~ToEnrouteStatement() {};
 
         void bindId(SMSId id)
+            throw(StorageException);
+        void bindAttemptsIncrement(uint8_t inc)
             throw(StorageException);
         void bindNextTime(time_t nextTryTime)
             throw(StorageException);

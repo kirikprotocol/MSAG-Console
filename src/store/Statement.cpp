@@ -854,7 +854,7 @@ ReplaceVWTStatement::ReplaceVWTStatement(Connection* connection, bool assign)
 
 /* ------------------------ ChangeStateStatements ----------------------- */
 const char* ToEnrouteStatement::sql = (const char*)
-"UPDATE SMS_MSG SET ATTEMPTS=ATTEMPTS+1, LAST_TRY_TIME=:CT,\
+"UPDATE SMS_MSG SET ATTEMPTS=ATTEMPTS+:ATT, LAST_TRY_TIME=:CT,\
  NEXT_TRY_TIME=:NT, LAST_RESULT=:FCS,\
  DST_MSC=:MSC, DST_IMSI=:IMSI, DST_SME_N=:SME_N\
  WHERE ID=:ID AND ST=:ENROUTE";
@@ -875,19 +875,26 @@ void ToEnrouteStatement::bindId(SMSId id)
     bind((CONST text *)"ID", (sb4) 2*sizeof(char), 
          SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
 }
+void ToEnrouteStatement::bindAttemptsIncrement(uint8_t inc)
+    throw(StorageException)
+{
+    attemptsIncrement = inc;
+    bind(1 , SQLT_UIN, (dvoid *)&(attemptsIncrement),
+         (sb4) sizeof(attemptsIncrement));
+}
 void ToEnrouteStatement::bindNextTime(time_t nextTryTime)
     throw(StorageException)
 {
     time_t cTime = time(NULL);
     convertDateToOCIDate(&(cTime), &currTime);
-    bind(1, SQLT_ODT, (dvoid *) &(currTime), (sb4) sizeof(currTime));
+    bind(2, SQLT_ODT, (dvoid *) &(currTime), (sb4) sizeof(currTime));
     convertDateToOCIDate(&(nextTryTime), &nextTime);
-    bind(2, SQLT_ODT, (dvoid *) &(nextTime), (sb4) sizeof(nextTime));
+    bind(3, SQLT_ODT, (dvoid *) &(nextTime), (sb4) sizeof(nextTime));
 }
 void ToEnrouteStatement::bindFailureCause(dvoid* cause, sb4 size)
     throw(StorageException)
 {
-    bind(3, SQLT_UIN, cause, size);
+    bind(4, SQLT_UIN, cause, size);
 }
 void ToEnrouteStatement::bindDestinationDescriptor(Descriptor& dst)
     throw(StorageException)
@@ -897,11 +904,11 @@ void ToEnrouteStatement::bindDestinationDescriptor(Descriptor& dst)
     indDstImsi = (!dst.imsiLength || !strlen(dst.imsi)) ? 
                 OCI_IND_NULL : OCI_IND_NOTNULL;
 
-    bind(4 , SQLT_STR, (dvoid *) (dst.msc), 
+    bind(5 , SQLT_STR, (dvoid *) (dst.msc), 
          (sb4) sizeof(dst.msc), &indDstMsc);
-    bind(5 , SQLT_STR, (dvoid *) (dst.imsi),
+    bind(6 , SQLT_STR, (dvoid *) (dst.imsi),
          (sb4) sizeof(dst.imsi), &indDstImsi);
-    bind(6 , SQLT_UIN, (dvoid *)&(dst.sme),
+    bind(7 , SQLT_UIN, (dvoid *)&(dst.sme),
          (sb4) sizeof(dst.sme));
 }
 
