@@ -27,7 +27,7 @@ protected:
 
 class TimeThis{
 public:
-  TimeThis(const char* argMsg):msg(argMsg)
+  TimeThis(const char* argMsg,int argCount):msg(argMsg),count(argCount)
   {
     t.Start();
   }
@@ -35,12 +35,14 @@ public:
   ~TimeThis()
   {
     t.Finish();
-    printf("%s:%lldms\n",msg,t.Get());
+    long long ms=t.Get();
+    printf("%s:count=%d,time=%lldms,speed=%.2f/sec\n",msg,count,ms,(double)(count*1000.0L/ms));
   }
 protected:
   const char* msg;
+  int count;
   Timer t;
 };
 
-#define TIMETHIS(msg,n) if(TimeThis tt=TimeThis(msg));else for(int i=0;i<n;i++)
+#define TIMETHIS(msg,n) if(TimeThis tt=TimeThis(msg,n));else for(int i=0;i<n;i++)
 #endif
