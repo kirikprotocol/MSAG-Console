@@ -4,6 +4,8 @@
 #include "alias/aliasman.h"
 #include "test/util/Util.hpp"
 #include "test/util/BaseTestCases.hpp"
+#include "test/core/AliasUtil.hpp"
+#include "test/core/AliasRegistry.hpp"
 #include <vector>
 
 namespace smsc {
@@ -14,22 +16,23 @@ using std::vector;
 using log4cpp::Category;
 using smsc::test::util::TCResult;
 using smsc::test::util::BaseTestCases;
+using smsc::test::core::TestAliasData;
+using smsc::test::core::AliasRegistry;
 using smsc::sms::Address;
 using smsc::alias::AliasInfo;
 using smsc::alias::AliasManager;
 
 //implemented
-const char* const TC_ADD_CORRECT_ALIAS = "addCorrectAlias";
+const char* const TC_ADD_CORRECT_ALIAS_MATCH = "addCorrectAliasMatch";
+const char* const TC_ADD_CORRECT_ALIAS_NOT_MATCH_ADDRESS =
+	"addCorrectAliasNotMatchAddress";
+const char* const TC_ADD_CORRECT_ALIAS_NOT_MATCH_ALIAS =
+	"addCorrectAliasNotMatchAlias";
+const char* const TC_ADD_CORRECT_ALIAS_EXCEPTION = "addCorrectAliasException";
 const char* const TC_ADD_INCORRECT_ALIAS = "addIncorrectAlias";
 const char* const TC_DELETE_ALIASES = "deleteAliases";
-const char* const TC_FIND_EXISTENT_ALIAS_BY_ADDRESS =
-	"findExistentAliasByAddress";
-const char* const TC_FIND_EXISTENT_ADDRESS_BY_ALIAS =
-	"findExistentAddressByAlias";
-const char* const TC_FIND_NON_EXISTENT_ALIAS_BY_ADDRESS =
-	"findNonExistentAliasByAddress";
-const char* const TC_FIND_NON_EXISTENT_ADDRESS_BY_ALIAS =
-	"findNonExistentAddressByAlias";
+const char* const TC_FIND_ALIAS_BY_ADDRESS = "findAliasByAddress";
+const char* const TC_FIND_ADDRESS_BY_ALIAS = "findAddressByAlias";
 const char* const TC_ITERATE_ALIASES = "iterateAliases";
 
 /**
@@ -45,21 +48,29 @@ public:
 	virtual ~AliasManagerTestCases() {}
 
 	/**
-	 * –егистраци€ алиаса с корректными параметрами.
+	 * –егистраци€ алиаса с преобразованием addr -> alias и alias -> addr.
 	 */
-	TCResult* addCorrectAlias(AliasInfo* alias);
+	TCResult* addCorrectAliasMatch(TestAliasData* data, int num);
 
 	/**
-	 * –егистраци€ алиаса с корректными параметрами, но очень похожими на
-	 * уже зарегистрированный алиас.
+	 * –егистраци€ алиаса с преобразованием только alias -> addr.
 	 */
-	TCResult* addCorrectAlias(AliasInfo* alias,
-		const AliasInfo& existentAlias, int num);
+	TCResult* addCorrectAliasNotMatchAddress(TestAliasData* data, int num);
+
+	/**
+	 * –егистраци€ алиаса с преобразованием только addr -> alias.
+	 */
+	TCResult* addCorrectAliasNotMatchAlias(TestAliasData* data, int num);
+
+	/**
+	 * –егистраци€ алиаса с переполнением адреса при alias -> addr или алиаса при addr -> alias.
+	 */
+	TCResult* addCorrectAliasException(TestAliasData* data, int num);
 
 	/**
 	 * –егистраци€ алиаса с некорректными параметрами.
 	 */
-	TCResult* addIncorrectAlias(const AliasInfo& existentAlias, int num);
+	TCResult* addIncorrectAlias();
 
 	/**
 	 * ќбнуление таблицы алиасов.
@@ -67,35 +78,31 @@ public:
 	TCResult* deleteAliases();
 
 	/**
-	 * ѕоиск существующего алиаса по адресу.
+	 * ѕоиск алиаса по адресу.
 	 */
-	TCResult* findExistentAliasByAddress(const AliasInfo& existentAlias);
+	TCResult* findAliasByAddress(const AliasRegistry& aliasReg,
+		const Address& addr);
 
 	/**
-	 * ѕоиск существующего адреса по алиасу.
+	 * ѕоиск адреса по алиасу.
 	 */
-	TCResult* findExistentAddressByAlias(const AliasInfo& existentAlias);
-
-	/**
-	 * ѕоиск несуществующего алиаса по адресу.
-	 */
-	TCResult* findNonExistentAliasByAddress(const Address& addr);
-
-	/**
-	 * ѕоиск несуществующего адреса по алиасу.
-	 */
-	TCResult* findNonExistentAddressByAlias(const Address& alias);
+	TCResult* findAddressByAlias(const AliasRegistry& aliasReg,
+		const Address& alias);
 
 	/**
 	 * »терирование по списку зарегистрированных алиасов.
 	 */
-	TCResult* iterateAliases(const vector<AliasInfo*> sme);
+	TCResult* iterateAliases(const AliasRegistry& aliasReg);
 
 protected:
 	virtual Category& getLog();
 
 private:
 	AliasManager* aliasMan;
+	
+	AliasInfo* newAliasInfo(TestAliasData* data);
+	void setupRandomAliasMatchWithQuestionMarks(TestAliasData* data, int len);
+	void setupRandomAliasMatchWithAsterisk(TestAliasData* data, int adLen, int alLen);
 };
 
 }
