@@ -284,6 +284,8 @@ TCResult* MessageStoreTestCases::storeReplaceSmsInFinalState(SMSId* idp, SMS* sm
 	}
 	catch(...)
 	{
+		*idp = 0;
+		SmsUtil::clearSms(smsp);
 		res->addFailure(100);
 	}
 	return res;
