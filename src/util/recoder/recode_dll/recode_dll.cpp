@@ -10,6 +10,7 @@
 #include "translit.hxx"
 #include "7_8_bits.hxx"
 #include <stdexcept>
+#include <ctype.h>
 using namespace std;
 
 unsigned char* GetW2CRussionTable(ConvEncodingEnum encoding)
@@ -85,6 +86,15 @@ unsigned short ConvertC2W(unsigned char val, ConvEncodingEnum encoding )
 #define CONV_PREVIOUS_IS_CAPITAL  1
 #define CONV_NEXT_IS_CAPITAL 2
 
+bool isxalpha(unsigned char chr)
+{
+  return isalpha(chr) || chr>=192 || chr==168 || chr==168+16;
+}
+bool isxupper(unsigned char chr)
+{
+  return (chr>=192 && chr<224) || chr==168;
+}
+
 const unsigned char* Translit(unsigned char ch, ConvEncodingEnum encoding, unsigned flags, bool* is_capital) {
   if ( encoding == CONV_ENCODING_ANSI || encoding == CONV_ENCODING_LATIN1 ){
     static unsigned char chh[]="\0";
@@ -97,7 +107,7 @@ const unsigned char* Translit(unsigned char ch, ConvEncodingEnum encoding, unsig
   const unsigned char* res = c2t_Cp1251_table[ch];
   if ( *res == '*' ){
     ++res;
-    if ( flags&(CONV_PREVIOUS_IS_CAPITAL|CONV_NEXT_IS_CAPITAL) ){
+    if ( flags&CONV_NEXT_IS_CAPITAL){
       return res;
     }else{
       return res+strlen((const char*)res)+1;
@@ -109,7 +119,7 @@ int Transliterate(const char* buf,int len,ConvEncodingEnum encoding,char *dest,i
 {
   int j=0;
   const unsigned char* res;
-  bool prev_is_capital;
+  bool prev_is_capital,next_is_capital;
   if(len>1)
   {
     if((unsigned char)buf[1]>127)Translit((unsigned char)buf[1],encoding,0,&prev_is_capital);
@@ -121,9 +131,17 @@ int Transliterate(const char* buf,int len,ConvEncodingEnum encoding,char *dest,i
   for(int i=0;i<len;i++)
   {
     unsigned char ch=(unsigned char)buf[i];
+    if(i<len-1)
+    {
+      next_is_capital=!isxalpha(buf[i+1]) || isxupper(buf[i+1]);
+    }
+    else next_is_capital=false;
     if(ch>127)
     {
-      res=Translit(ch,encoding,prev_is_capital?CONV_PREVIOUS_IS_CAPITAL:0,&prev_is_capital);
+      res=Translit(ch,encoding,
+        (prev_is_capital?CONV_PREVIOUS_IS_CAPITAL:0) |
+        (next_is_capital?CONV_NEXT_IS_CAPITAL:0)
+        ,&prev_is_capital);
       for(;*res;res++)
       {
         dest[j]=*res;
