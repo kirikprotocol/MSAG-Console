@@ -15,7 +15,6 @@ namespace synchronization{
 
 class Event;
 
-
 class Mutex{
 public:
   Mutex()
@@ -59,6 +58,20 @@ protected:
   friend class Event;
 #endif
 };//Mutex
+
+class MutexGuard{
+public:
+  MutexGuard(Mutex& lock):lock(lock)
+  {
+    lock.Lock();
+  }
+  ~MutexGuard()
+  {
+    lock.Unlock();
+  }
+protected:
+  Mutex& lock;
+};
 
 };//synchronization
 };//core
