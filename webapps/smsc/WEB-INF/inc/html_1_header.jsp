@@ -38,6 +38,7 @@ function openPerfMon()
 if (isServiceStatusNeeded || (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0))
 {%><%@ include file="/WEB-INF/inc/service_status.jsp"%><%}
 %>
+<%@ include file="/WEB-INF/inc/calendar.jsp"%>
 <table height=100% cellspacing=0 cellpadding=0 class=main_table>
 <tr>
 	<td width=50 background="img/smsc_02.jpg" rowspan=3></td>
@@ -99,6 +100,7 @@ if (isServiceStatusNeeded || (ServiceIDForShowStatus != null && ServiceIDForShow
 			main_menu_begin_item(out, "MENU0_SMSC_menu", "MENU0_SMSC_submenu", "SMSC");
 			main_menu_submenu_item(out, "/smsc_service",               "MENU0_SMSC",             "Configuration");
       main_menu_submenu_item(out, "/reshedule",                  "MENU0_SMSC_Reshedule",   "Reschedule");
+      //main_menu_submenu_item(out, "/directives",                 "MENU0_SMSC_Directives",  "Directives");
 			main_menu_submenu_i_fu(out, "/smsc_service/status.jsp",    "MENU0_SMSC_Status",      "Status");
 			main_menu_submenu_i_fu(out, "/smsc_service/logging.jsp",   "MENU0_SMSC_LOGGING",     "Logging");
 			main_menu_submenu_item(out, "/users",                      "MENU0_USERS",            "Users");

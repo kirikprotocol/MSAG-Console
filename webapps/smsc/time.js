@@ -102,8 +102,8 @@ function showTime(timeInputText, us){
 	timePanel.runtimeStyle.display="block";
 	document.all.timeIFrame.runtimeStyle.posLeft=PageX;
 	document.all.timeIFrame.runtimeStyle.posTop=PageY+timeInputText.offsetHeight;
-	document.all.timeIFrame.runtimeStyle.width=timePanel.runtimeStyle.width;
-	document.all.timeIFrame.runtimeStyle.height=timePanel.runtimeStyle.height;
+	document.all.timeIFrame.runtimeStyle.width=timePanel.offsetWidth;
+	document.all.timeIFrame.runtimeStyle.height=timePanel.offsetHeight;
 	document.all.timeIFrame.runtimeStyle.display="block";
 	timePanel.setCapture();
  	return false;

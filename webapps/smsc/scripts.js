@@ -395,3 +395,19 @@ function checkCheckboxesForMbDeleteButton()
 {
   return checkCheckboxes(opForm.all.mbDelete);
 }
+
+function byteToHexStr(bth)
+{
+	if (bth < 10)
+		return String.fromCharCode(0x30 + bth);
+	else
+		return String.fromCharCode(0x41 + bth - 10);
+}
+function encodeHEX( str ) {
+	var c = 0;
+	var result = "";
+	for (i = 0; i < str.length; i++) {
+		result += byteToHexStr((str.charCodeAt(i)>>4)&0xF) + byteToHexStr((str.charCodeAt(i))&0xF);
+	}
+	return result;
+}

@@ -193,7 +193,7 @@ function showCalendar(calendarInputText, us, showTime){
 //-------------------------------------------------
 	var PageX=0;var PageY=0;var E=calendarInputText;
 	while(E!=null){
-	  if (E.offsetParent != null && E.offsetParent.offsetParent != null) //hack for current design
+	  if (E.offsetParent != null)
 	    PageX+=E.offsetLeft;
 
 	  PageY+=E.offsetTop;
@@ -212,14 +212,15 @@ function showCalendar(calendarInputText, us, showTime){
 	calendarPanel.runtimeStyle.display="block";
 	document.all.calendarIFrame.runtimeStyle.posLeft=PageX;
 	document.all.calendarIFrame.runtimeStyle.posTop=PageY+calendarInputText.offsetHeight;
-	document.all.calendarIFrame.runtimeStyle.width=calendarPanel.runtimeStyle.width;
-	document.all.calendarIFrame.runtimeStyle.height=calendarPanel.runtimeStyle.height;
+	document.all.calendarIFrame.runtimeStyle.width=calendarPanel.offsetWidth;
+	document.all.calendarIFrame.runtimeStyle.height=calendarPanel.offsetHeight;
 	document.all.calendarIFrame.runtimeStyle.display="block";
 	calendarPanel.setCapture();
  	return false;
 }
 function isCalendarOwner(o){
 	while (o!=null){
+    //alert("o:" + o + " tag:" + o.tagName + " id:" + o.id);
 		if (o==calendarPanel) return true;
 		o=o.parentElement;
 	}
@@ -228,6 +229,7 @@ function isCalendarOwner(o){
 function calendarMD(){
 	calendarPanel.setCapture();
 	var a = window.event.srcElement;
+	//alert("owner:" + isCalendarOwner(a) + " pt:" + calendarPressedTime);
 	if (!isCalendarOwner(a)&&!calendarPressedTime) return calendarClose();
 	var b = window.event.button;
 	if (a!=null&&a.name!=null&&b==1){
