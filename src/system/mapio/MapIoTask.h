@@ -124,7 +124,7 @@ public:
   MapDialog* createDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn){
     MapDialog* dlg = new MapDialog(dialogueid,lssn);
     hash.Insert(dialogueid,dlg);
-    __trace2__("MAP:: new dialog 0x%x for dialogid",dlg,dialogueid);
+    __trace2__("MAP:: new dialog 0x%x for dialogid 0x%x",dlg,dialogueid);
     return dlg;
   }
   
