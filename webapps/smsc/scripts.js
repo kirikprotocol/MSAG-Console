@@ -16,6 +16,8 @@ function resetValidation(elem)
 function validateShowErrors(elem)
 {
 	if(elem.errorMessage == null) return;
+	elem.title = elem.errorMessage;
+	/*
 	var errPointer = elem.nextSibling;
 	if((errPointer == null) || (errPointer.className != "errPointer"))
 	{
@@ -25,7 +27,7 @@ function validateShowErrors(elem)
 	}
 	errPointer.style.display = "block";
 	errPointer.runtimeStyle.right = elem.runtimeStyle.posRight;
-	errPointer.runtimeStyle.top = elem.runtimeStyle.posTop;
+	errPointer.runtimeStyle.top = elem.runtimeStyle.posTop;*/
 }
 
 function validationError(elem, txt)
@@ -54,6 +56,10 @@ function validateField_port(elem)
 
 function validateField_mask(elem)
 {
+	if (elem.value == null || elem.value.length == 0)
+	{
+		return true;
+	}
 	var r = RegExp("^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+)|\\d)\\d{0,20}\\?{0,21}$");
 	return elem.value == null || elem.value.match(r) == null
 		? validationError(elem, "Invalid mask")
@@ -62,11 +68,11 @@ function validateField_mask(elem)
 
 function validateField_routeMask(elem)
 {
-	var r = RegExp("^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+)|\\d)\\d{0,21}\\?{0,21}$");
 	if (elem.value == null || elem.value.length == 0)
 	{
 		return true;
 	}
+	var r = RegExp("^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+)|\\d)\\d{0,21}\\?{0,21}$");
 	else
 	{
 		return elem.value.match(r) == null

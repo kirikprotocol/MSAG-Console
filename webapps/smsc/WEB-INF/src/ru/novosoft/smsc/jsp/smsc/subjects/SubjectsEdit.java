@@ -62,6 +62,10 @@ public class SubjectsEdit extends SmscBean
 	{
 		try
 		{
+			if (masks == null || masks.length <= 0)
+			{
+				return error(SMSCErrors.error.subjects.masksNotDefined);
+			}
 			Subject s = smsc.getSubjects().get(name);
 			s.setDefaultSme(smsc.getSmes().get(defSme));
 			s.setMasks(new MaskList(masks));

@@ -62,6 +62,10 @@ public class SubjectsAdd extends SmscBean
 			return error(SMSCErrors.error.subjects.alreadyExists, name);
 		else
 		{
+			if (masks == null || masks.length <= 0)
+			{
+				return error(SMSCErrors.error.subjects.masksNotDefined);
+			}
 			try
 			{
 				smsc.getSubjects().add(new Subject(name, masks, smsc.getSmes().get(defSme)));
