@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE config SYSTEM "configuration.dtd">
 <config>
-	<section name="db">
-	    <param name="instance" type="string">ORJP</param>
-	    <param name="user" type="string">smsc</param>
-	    <param name="password" type="string">smsc</param>
-	    <section name="connections">
+	<section name="MessageStore">
+	    <param name="dbInstance" type="string">ORCL</param>
+	    <param name="dbUserName" type="string">smsc</param>
+	    <param name="dbUserPassword" type="string">smsc</param>
+	    <param name="maxTriesCount" type="int">2</param>
+	    <section name="Connections">
 		<param name="max" type="int">10</param>
 		<param name="init" type="int">5</param>
 	    </section>
