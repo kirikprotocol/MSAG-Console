@@ -372,7 +372,6 @@ void Archiver::archivate(bool first)
             {
                 archiveInsertStmt->check(archiveInsertStmt->execute());
             } 
-            else log.debug("Message wasn't archived (needArchivate != 'Y')!");
             
             storageDeleteStmt->check(storageDeleteStmt->execute());
 
