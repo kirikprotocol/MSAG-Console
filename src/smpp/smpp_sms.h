@@ -553,6 +553,13 @@ inline bool fillDataSmFromSms(PduDataSm* pdu,SMS* sms,bool forceDC=false)
     dest.set_typeOfNumber(addr.getTypeOfNumber());
     dest.set_numberingPlan(addr.getNumberingPlan());
   }
+  {
+    char buff[7];
+    memset(buff,0,sizeof(buff));
+    sms->getEServiceType(buff);
+    pdu->data.set_serviceType(buff);
+  }
+
   fillOptional(pdu->optional,sms);
   if(forceDC && sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
   {
