@@ -13,6 +13,7 @@ using namespace smsc::sms;
 using namespace smsc::test::util;
 using smsc::test::sms::operator<<;
 
+/*
 bool SmsUtil::compareAddresses(const Address& a1, const Address& a2)
 {
 	bool res = a1.getLenght() == a2.getLenght() &&
@@ -49,6 +50,7 @@ bool SmsUtil::compareDescriptors(const Descriptor& d1, const Descriptor& d2)
 	}
 	return res;
 }
+*/
 
 #define __compare_int_body_tag__(tagName, errCode) \
 	if ((_b1->hasIntProperty(Tag::tagName) && !_b2->hasIntProperty(Tag::tagName)) || \
@@ -105,18 +107,6 @@ vector<int> SmsUtil::compareMessageBodies(const Body& b1, const Body& b2)
 		res.push_back(errCode); \
 	}
 
-#define __compare_addr__(getter, errCode) \
-	if (!compareAddresses(_sms1->getter(), _sms2->getter())) { \
-		ostringstream s1, s2; \
-		s1 << _sms1->getter(); \
-		s2 << _sms2->getter(); \
-		__trace2__("%s: %s != %s", #getter, s1.str().c_str(), s2.str().c_str()); \
-		res.push_back(errCode); \
-	}
-	
-#define __compare_desc__(getter, errCode) \
-	if (!compareDescriptors(_sms1->getter(), _sms2->getter())) { res.push_back(errCode); }
-
 vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, SmsCompareFlag flag)
 {
 	SMS* _sms1 = const_cast<SMS*>(&sms1);
@@ -130,9 +120,9 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, SmsCompar
 	__compare__(getLastResult, 5);
 	__compare__(getLastTime, 6);
 	__compare__(getNextTime, 7);
-	__compare_addr__(getOriginatingAddress, 8);
-	__compare_addr__(getDestinationAddress, 9);
-	__compare_addr__(getDealiasedDestinationAddress, 10);
+	__compare__(getOriginatingAddress, 8);
+	__compare__(getDestinationAddress, 9);
+	__compare__(getDealiasedDestinationAddress, 10);
 	__compare__(getMessageReference, 11);
 
 	EService serviceType1, serviceType2;
@@ -146,8 +136,8 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, SmsCompar
 	__compare__(isArchivationRequested, 13);
 	__compare__(getDeliveryReport, 14);
 	__compare__(getBillingRecord, 15);
-	__compare_desc__(getOriginatingDescriptor, 16);
-	__compare_desc__(getDestinationDescriptor, 17);
+	__compare__(getOriginatingDescriptor, 16);
+	__compare__(getDestinationDescriptor, 17);
 
 	vector<int> tmp = compareMessageBodies(sms1.getMessageBody(),
 		sms2.getMessageBody());
@@ -160,35 +150,68 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, SmsCompar
 	return res;
 }
 
+#define __set_int__(type, field, value) \
+	type tmp##field = value; \
+	p->set##field(tmp##field); \
+	__require__(p->get##field() == tmp##field);
+
+#define __set_bool__(field, value) \
+	bool tmp##field = value; \
+	p->set##field(tmp##field); \
+	__require__(p->is##field() == tmp##field);
+
+#define __set_str__(field, length) \
+	int len##field = length; \
+	auto_ptr<char> str##field = rand_char(len##field); \
+	p->set##field(len##field, str##field.get()); \
+	char tmp##field[len##field + 10]; \
+	p->get##field(tmp##field); \
+	__require__(!strcmp(tmp##field, str##field.get()));
+
+#define __set_str2__(field, length) \
+	int len##field = length; \
+	auto_ptr<char> str##field = rand_char(len##field); \
+	p->set##field(str##field.get()); \
+	char tmp##field[len##field + 10]; \
+	p->get##field(tmp##field); \
+	__require__(!strcmp(tmp##field, str##field.get()));
+
+#define __set_addr__(field) \
+	Address tmp##field; \
+	setupRandomCorrectAddress(&tmp##field); \
+	p->set##field(tmp##field); \
+	__require__(p->get##field()== tmp##field);
+
+#define __set_desc__(field) \
+	Descriptor tmp##field; \
+	setupRandomCorrectDescriptor(&tmp##field); \
+	p->set##field(tmp##field); \
+	__require__(p->get##field() == tmp##field);
+
+void SmsUtil::setupRandomCorrectAddress(Address* addr, int minLen, int maxLen)
+{
+	__require__(addr);
+	__require__(minLen > 0 && maxLen <= MAX_ADDRESS_VALUE_LENGTH);
+	Address* p = addr;
+	//set & check fields
+	__set_int__(uint8_t, TypeOfNumber, rand0(255));
+	__set_int__(uint8_t, NumberingPlan, rand0(255));
+	__set_str__(Value, rand2(minLen, maxLen));
+}
+	
 void SmsUtil::setupRandomCorrectAddress(Address* addr)
 {
 	setupRandomCorrectAddress(addr, 1, MAX_ADDRESS_VALUE_LENGTH);
 }
 
-void SmsUtil::setupRandomCorrectAddress(Address* addr, int minLen, int maxLen)
-{
-	if (addr)
-	{
-		__require__(minLen > 0 && maxLen <= MAX_ADDRESS_VALUE_LENGTH);
-		int len = rand2(minLen, maxLen);
-		auto_ptr<char> val = rand_char(len);
-		addr->setTypeOfNumber((uint8_t) rand0(255));
-		addr->setNumberingPlan((uint8_t) rand0(255));
-		addr->setValue(len, val.get());
-	}
-}
-	
 void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc)
 {
-	if (desc)
-	{
-		int len = rand1(MAX_ADDRESS_VALUE_LENGTH);
-		auto_ptr<char> mscAddr = rand_char(len);
-		auto_ptr<char> imsiAddr = rand_char(len);
-		desc->setMsc(len, mscAddr.get());
-		desc->setImsi(len, imsiAddr.get());
-		desc->setSmeNumber((uint32_t) rand0(INT_MAX));
-	}
+	__require__(desc);
+	Descriptor* p = desc;
+	//set & check fields
+	__set_str__(Msc, rand1(MAX_ADDRESS_VALUE_LENGTH));
+	__set_str__(Imsi, rand1(MAX_ADDRESS_VALUE_LENGTH));
+	__set_int__(uint32_t, SmeNumber, rand0(INT_MAX));
 }
 
 #define __set_int_body_tag__(tagName, value) \
@@ -199,10 +222,10 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc)
 		body->setIntProperty(Tag::tagName, tmp); \
 	}
 
-#define __set_str_body_tag__(tagName, len) \
+#define __set_str_body_tag__(tagName, length) \
 	if ((mask >>= 1) & 0x1) { \
 		__trace__("set_str_body_tag: " #tagName); \
-		auto_ptr<char> str = rand_char(len); \
+		auto_ptr<char> str = rand_char(length); \
 		strMap.insert(StrMap::value_type(Tag::tagName, str.get())); \
 		body->setStrProperty(Tag::tagName, str.get()); \
 	}
@@ -227,6 +250,7 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc)
 	
 void SmsUtil::setupRandomCorrectBody(Body* body)
 {
+	__require__(body);
 	//поля сохраняются в body случайным образом
 	//даже обязательные для sms поля могут не сохраняться в БД
 	auto_ptr<uint8_t> tmp = rand_uint8_t(8);
@@ -237,6 +261,7 @@ void SmsUtil::setupRandomCorrectBody(Body* body)
 	StrMap strMap;
 	IntMap intMap;
 
+	//set fields
 	int msgLen = rand1(MAX_SM_LENGTH);
 	__set_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME, time(NULL) + rand0(24 * 3600));
 	__set_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG, rand0(2));
@@ -259,8 +284,7 @@ void SmsUtil::setupRandomCorrectBody(Body* body)
 	__set_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS, rand0(255));
 	__set_int_body_tag__(SMPP_NUMBER_OF_MESSAGES, rand0(255));
 	__set_str_body_tag__(SMPP_MESSAGE_PAYLOAD, rand1(MAX_PAYLOAD_LENGTH));
-
-	//checks
+	//check fileds
 	__check_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME);
 	__check_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG);
 	__check_int_body_tag__(SMPP_ESM_CLASS);
@@ -284,55 +308,33 @@ void SmsUtil::setupRandomCorrectBody(Body* body)
 	__check_str_body_tag__(SMPP_MESSAGE_PAYLOAD);
 }
 
-#define __set_sms__(type, field, value) \
-	type tmp##field = value; \
-	sms->set##field(tmp##field); \
-	__require__(sms->get##field() == tmp##field);
-
-#define __set_addr_sms__(field) \
-	Address tmp##field; \
-	setupRandomCorrectAddress(&tmp##field); \
-	sms->set##field(tmp##field); \
-	__require__(compareAddresses(sms->get##field(), tmp##field));
-
-#define __set_desc_sms__(field) \
-	Descriptor tmp##field; \
-	setupRandomCorrectDescriptor(&tmp##field); \
-	sms->set##field(tmp##field); \
-	__require__(compareDescriptors(sms->get##field(), tmp##field));
-	
 void SmsUtil::setupRandomCorrectSms(SMS* sms)
 {
+	__require__(sms);
+	SMS* p = sms;
+	//set & check fields
 	//sms->setState(...);
-	__set_sms__(time_t, SubmitTime, time(NULL) + rand2(-3600, 0));
-	__set_sms__(time_t, ValidTime, time(NULL) + rand0(24 * 3600));
+	__set_int__(time_t, SubmitTime, time(NULL) + rand2(-3600, 0));
+	__set_int__(time_t, ValidTime, time(NULL) + rand0(24 * 3600));
 	//sms->setAttemptsCount(...);
 	//sms->setLastResult(...);
 	//sms->setLastTime(...);
-	__set_sms__(time_t, NextTime, time(NULL) + rand0(24 * 3600));
-	__set_addr_sms__(OriginatingAddress);
-	__set_addr_sms__(DestinationAddress);
-	__set_addr_sms__(DealiasedDestinationAddress);
-	__set_sms__(uint16_t, MessageReference, rand0(65535));
-	//eServiceType
-	auto_ptr<char> serviceType = rand_char(MAX_ESERVICE_TYPE_LENGTH);
-	sms->setEServiceType(serviceType.get());
-	EService _serviceType;
-	sms->getEServiceType(_serviceType);
-	__require__(!strcmp(_serviceType, serviceType.get()));
-	//needArchivate
-	bool arc = rand0(3);
-	sms->setArchivationRequested(arc);
-	__require__(sms->isArchivationRequested() == arc);
+	__set_int__(time_t, NextTime, time(NULL) + rand0(24 * 3600));
+	__set_addr__(OriginatingAddress);
+	__set_addr__(DestinationAddress);
+	__set_addr__(DealiasedDestinationAddress);
+	__set_int__(uint16_t, MessageReference, rand0(65535));
+	__set_str2__(EServiceType, MAX_ESERVICE_TYPE_LENGTH);
+	__set_bool__(ArchivationRequested, rand0(3));
 	//SMPP v3.4, пункт 5.2.17
 	//xxxxxx00 - No SMSC Delivery Receipt requested (default)
 	//xxxxxx01 - SMSC Delivery Receipt requested where final delivery
 	//			outcome is delivery success or failure
 	//xxxxxx10 - SMSC Delivery Receipt requested where the final
 	//			delivery outcome is delivery failure
-	__set_sms__(uint8_t, DeliveryReport, rand0(255));
-	__set_sms__(uint8_t, BillingRecord, rand0(3));
-	__set_desc_sms__(OriginatingDescriptor);
+	__set_int__(uint8_t, DeliveryReport, rand0(255));
+	__set_int__(uint8_t, BillingRecord, rand0(3));
+	__set_desc__(OriginatingDescriptor);
 	//setupRandomCorrectDescriptor(sms->getDestinationDescriptor());
 	setupRandomCorrectBody(&sms->getMessageBody());
 	//bool attach;
@@ -382,6 +384,7 @@ auto_ptr<char> SmsUtil::configString(const Address& addr)
 	return auto_ptr<char>(tmp);
 }
 
+/*
 bool ltAddress::operator() (const Address& a1, const Address& a2) const
 {
 	if (a1.getTypeOfNumber() != a2.getTypeOfNumber())
@@ -401,6 +404,7 @@ bool ltAddress::operator() (const Address& a1, const Address& a2) const
 	a2.getValue(val2);
 	return memcmp(val1, val2, a1.getLenght()) < 0;
 }
+*/
 
 ostream& operator<< (ostream& os, const Address& a)
 {
@@ -411,6 +415,81 @@ ostream& operator<< (ostream& os, const Address& a)
 	os << "{ton=" << ton << ", npi=" << npi <<
 		", val=" << addrVal << "(" << addrLen << ")}";
 	return os;
+}
+
+bool operator== (const Address& a1, const Address& a2)
+{
+	bool res = a1.getLenght() == a2.getLenght() &&
+		a1.getTypeOfNumber() == a2.getTypeOfNumber() &&
+		a1.getNumberingPlan() == a2.getNumberingPlan();
+	if (res)
+	{
+		AddressValue val1, val2;
+		a1.getValue(val1);
+		a2.getValue(val2);
+		res &= memcmp(val1, val2, a1.getLenght()) == 0;
+	}
+	return res;
+}
+
+bool operator!= (const Address& a1, const Address& a2)
+{
+	return !operator==(a1, a2);
+}
+
+bool operator< (const Address& a1, const Address& a2)
+{
+	if (a1.getTypeOfNumber() != a2.getTypeOfNumber())
+	{
+		return a1.getTypeOfNumber() < a2.getTypeOfNumber();
+	}
+	if (a1.getNumberingPlan() != a2.getNumberingPlan())
+	{
+		return a1.getNumberingPlan() < a2.getNumberingPlan();
+	}
+	if (a1.getLenght() != a2.getLenght())
+	{
+		return a1.getLenght() < a2.getLenght();
+	}
+	AddressValue val1, val2;
+	a1.getValue(val1);
+	a2.getValue(val2);
+	return memcmp(val1, val2, a1.getLenght()) < 0;
+}
+
+ostream& operator<< (ostream& os, const Descriptor& d)
+{
+	os << "{msc=" << d.msc << "(" << d.mscLength <<
+		"), imsi=" << d.imsi << "(" << d.imsiLength <<
+		"), sme=" << d.sme << "}";
+	return os;
+}
+
+bool operator==(const Descriptor& d1, const Descriptor& d2)
+{
+	bool res = d1.getMscLenght() == d2.getMscLenght() &&
+		d1.getImsiLenght() == d2.getImsiLenght() &&
+		d1.getSmeNumber() == d2.getSmeNumber();
+	if (res)
+	{
+		AddressValue val1, val2;
+		d1.getMsc(val1);
+		d2.getMsc(val2);
+		res &= memcmp(val1, val2, d1.getMscLenght()) == 0;
+	}
+	if (res)
+	{
+		AddressValue val1, val2;
+		d1.getImsi(val1);
+		d2.getImsi(val2);
+		res &= memcmp(val1, val2, d1.getImsiLenght()) == 0;
+	}
+	return res;
+}
+
+bool operator!=(const Descriptor& d1, const Descriptor& d2)
+{
+	return !operator==(d1, d2);
 }
 
 }
