@@ -391,9 +391,10 @@ namespace smsc { namespace sms
         /**
          * Default конструктор, просто инициализирует некоторые поля нулями
          */
-        Body() : header(false), lenght(0), scheme(0) 
+        Body() : header(false), scheme(0), lenght(0)
         {
             //memset((void *)data, 0, sizeof(data));
+            data[0]='\0';
         };
         
         /**
@@ -406,7 +407,7 @@ namespace smsc { namespace sms
          * @param _data   закодированное тело сообщения
          */
         Body(uint8_t _len, uint8_t _scheme, bool _header, const uint8_t* _data)
-            : header(_header), lenght(_len), scheme(_scheme) 
+            : header(_header), scheme(_scheme), lenght(_len)
         { 
             setData(_len, _data);
         };
@@ -417,7 +418,7 @@ namespace smsc { namespace sms
          * @param body   образец тела.
          */
         Body(const Body& body) 
-            : header(body.header), lenght(body.lenght), scheme(body.scheme)
+            : header(body.header), scheme(body.scheme), lenght(body.lenght)
         {
             setData(body.lenght, body.data);   
         };
@@ -600,7 +601,7 @@ namespace smsc { namespace sms
          * Default конструктор, просто инициализирует поле state как ENROUTE
          */
         SMS() : state(ENROUTE), lastTime(0), nextTime(0),
-                attempts(0), failureCause(0)
+                failureCause(0), attempts(0)
         {
             eServiceType[0]='\0';
         }; 
