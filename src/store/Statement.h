@@ -48,6 +48,8 @@ namespace smsc { namespace store
         sword execute(ub4 mode=OCI_DEFAULT,
                      ub4 iters=1, ub4 rowoff=0);
         sword fetch();
+
+        ub4 getRowsAffectedCount();
     };
     
     using namespace smsc::sms;
@@ -142,7 +144,9 @@ namespace smsc { namespace store
             throw(StorageException);
         virtual ~ReplaceStatement() {};
 
-        bool wasReplaced();
+        inline bool wasReplaced() {
+            return (getRowsAffectedCount() ? true:false); 
+        };
     };
     
     class RemoveStatement : public IdStatement
@@ -154,7 +158,9 @@ namespace smsc { namespace store
             throw(StorageException);
         virtual ~RemoveStatement() {};
 
-        bool wasRemoved();
+        inline bool wasRemoved() {
+            return (getRowsAffectedCount() ? true:false);
+        };
     };
     
     class GetMaxIdStatement : public IdStatement
@@ -183,7 +189,9 @@ namespace smsc { namespace store
             throw(StorageException);
         virtual ~SimpleUpdateStatement() {};
 
-        bool wasUpdated();
+        inline bool wasUpdated() {
+            return (getRowsAffectedCount() ? true:false);
+        };
         inline void setState(State state) {
             this->state = state;
         };

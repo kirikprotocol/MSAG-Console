@@ -90,6 +90,17 @@ sword Statement::fetch()
     return OCI_SUCCESS; // Need to implement it later !
 }
 
+ub4 Statement::getRowsAffectedCount()
+{
+    ub4 res = 0; 
+    if (OCIAttrGet((CONST dvoid *)stmt, OCI_HTYPE_STMT, 
+                   &res, NULL, OCI_ATTR_ROW_COUNT, errhp) != OCI_SUCCESS)
+    {
+        return 0;
+    }
+    return res;
+}
+
 void Statement::checkErr(sword status) 
     throw(StorageException)
 {
@@ -395,17 +406,6 @@ ReplaceStatement::ReplaceStatement(Connection* connection)
          (sb4) sizeof(smsId));
 }
 
-bool ReplaceStatement::wasReplaced() 
-{
-    ub4 res = 0; 
-    if (OCIAttrGet((CONST dvoid *)stmt, OCI_HTYPE_STMT, 
-                   &res, NULL, OCI_ATTR_ROW_COUNT, errhp) != OCI_SUCCESS)
-    {
-        return false;
-    }
-    return ((res) ? true:false); 
-}
-
 /* --------------------------- RemoveStatement ----------------------- */
 const char* RemoveStatement::sql = (const char*)
 "DELETE FROM SMS_MSG WHERE ID=:ID";
@@ -415,17 +415,6 @@ RemoveStatement::RemoveStatement(Connection* connection)
         : IdStatement(connection, RemoveStatement::sql)
 {
     bind(1, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
-}
-
-bool RemoveStatement::wasRemoved() 
-{
-    ub4 res = 0; 
-    if (OCIAttrGet((CONST dvoid *)stmt, OCI_HTYPE_STMT, 
-                   &res, NULL, OCI_ATTR_ROW_COUNT, errhp) != OCI_SUCCESS)
-    {
-        return false;
-    }
-    return ((res) ? true:false); 
 }
 
 /* --------------------------- GetMaxIdStatement ----------------------- */
@@ -458,17 +447,6 @@ SimpleUpdateStatement::SimpleUpdateStatement(Connection* connection)
          SQLT_UIN, (dvoid *) &(state), (sb4) sizeof(state));
     bind((CONST text*) "ID", (sb4)strlen("ID"),
          SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
-}
-
-bool SimpleUpdateStatement::wasUpdated() 
-{
-    ub4 res = 0; 
-    if (OCIAttrGet((CONST dvoid *)stmt, OCI_HTYPE_STMT, 
-                   &res, NULL, OCI_ATTR_ROW_COUNT, errhp) != OCI_SUCCESS)
-    {
-        return false;
-    }
-    return ((res) ? true:false); 
 }
 
 const char* ComplexUpdateStatement::sql = (const char*)
