@@ -194,7 +194,9 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   if(!connection.get())throw Exception("Profiler: Failed to get connection");
   auto_ptr<Statement> statement(connection->createStatement(sql));
   char addrbuf[30];
-  sprintf(addrbuf,".%d.%d.%s",addr.type,addr.plan,addr.value);
+  AddressValue val;
+  addr.getValue(val);
+  sprintf(addrbuf,".%d.%d.%s",addr.type,addr.plan,val);
   __trace2__("profiler: insert %s",addrbuf);
   statement->setString(1, addrbuf);
   statement->setInt8(2, profile.reportoptions);
