@@ -1312,14 +1312,14 @@ static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string&
   if ( s_imsi.length() != 0 && s_msc.length() != 0 )
   {
     dialog->state = MAPST_WaitSubmitCmdConf;
-    ResponseMO(dialog.get(),9);
+    ResponseMO(dialog,9);
     CloseMapDialog(dialog->dialogid_map);
-    DropMapDialog(dialog.get());
+    DropMapDialog(dialog);
   }
   else
   {
     dialog->state = MAPST_WaitSubmitCmdConf;
-    SendSubmitCommand(dialog.get());
+    SendSubmitCommand(dialog);
   }
 }
 
@@ -1331,7 +1331,7 @@ void PauseOnImsiReq(MapDialog* map)
     DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialogImsiReq(SSN,map));
     if (dialog.isnull()) throw runtime_error(
       FormatText("MAP::%s can't create dialog",__FUNCTION__));
-    QueryHlrVersion(dialog.get());
+    QueryHlrVersion(dialog);
     success = true;
   }MAP_CATCH(dialogid_map,0);
   if ( !success )
