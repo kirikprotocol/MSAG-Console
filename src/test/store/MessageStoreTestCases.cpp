@@ -51,9 +51,7 @@ const char* str(SMSId id)
 	auto_ptr<char> tmp_##field = rand_char(len); \
 	p.set##field(tmp_##field.get()); \
 	if (check) { \
-		char res_##field[len + 1]; \
-		p.get##field(res_##field); \
-		__require__(!strcmp(res_##field, tmp_##field.get())); \
+		__require__(!strcmp(p.get##field(), tmp_##field.get())); \
 	}
 
 #define __set_int_body_tag__(tagName, value) \
@@ -97,7 +95,7 @@ const char* str(SMSId id)
 
 void MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 {
-	TCSelector s(num, 17);
+	TCSelector s(num, 21);
 	__decl_tc__;
 	for (; s.check(); s++)
 	{
@@ -210,7 +208,29 @@ void MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 					{
 						__tc__("storeCorrectSms.routeIdMarginal");
 						auto_ptr<char> routeId = rand_char(MAX_ROUTE_ID_LENGTH);
-						sms.setEServiceType(routeId.get());
+						sms.setRouteId(routeId.get());
+					}
+					break;
+				case 18: //пустой sourceSmeId
+					__tc__("storeCorrectSms.sourceSmeIdMarginal");
+					sms.setSourceSmeId("");
+					break;
+				case 19: //sourceSmeId максимальной длины
+					{
+						__tc__("storeCorrectSms.sourceSmeIdMarginal");
+						auto_ptr<char> sourceSmeId = rand_char(MAX_SME_SYSTEM_ID_LENGTH);
+						sms.setSourceSmeId(sourceSmeId.get());
+					}
+					break;
+				case 20: //пустой destinationSmeId
+					__tc__("storeCorrectSms.destinationSmeIdMarginal");
+					sms.setDestinationSmeId("");
+					break;
+				case 21: //destinationSmeId максимальной длины
+					{
+						__tc__("storeCorrectSms.destinationSmeIdMarginal");
+						auto_ptr<char> destinationSmeId = rand_char(MAX_SME_SYSTEM_ID_LENGTH);
+						sms.setDestinationSmeId(destinationSmeId.get());
 					}
 					break;
 				default:
@@ -489,7 +509,7 @@ void MessageStoreTestCases::storeIncorrectSms(int num)
 
 void MessageStoreTestCases::storeAssertSms(int num)
 {
-	TCSelector s(num, 12);
+	TCSelector s(num, 14);
 	__decl_tc__;
 	for (; s.check(); s++)
 	{
@@ -570,9 +590,22 @@ void MessageStoreTestCases::storeAssertSms(int num)
 				case 12: //routeId больше максимальной длины
 					{
 						__tc__("storeAssertSms.routeIdGreaterMaxLength");
-						__set_str__(EServiceType, MAX_ROUTE_ID_LENGTH + 1);
+						__set_str__(RouteId, MAX_ROUTE_ID_LENGTH + 1);
 					}
 					break;
+				case 13: //sourceSmeId больше максимальной длины
+					{
+						__tc__("storeAssertSms.sourceSmeIdGreaterMaxLength");
+						__set_str__(SourceSmeId, MAX_SME_SYSTEM_ID_LENGTH + 1);
+					}
+					break;
+				case 14: //destinationSmeId больше максимальной длины
+					{
+						__tc__("storeAssertSms.destinationSmeIdGreaterMaxLength");
+						__set_str__(DestinationSmeId, MAX_SME_SYSTEM_ID_LENGTH + 1);
+					}
+					break;
+
 				/*
 				case 11: //short_message больше максимальной длины
 					{

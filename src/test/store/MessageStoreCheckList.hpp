@@ -39,6 +39,10 @@ public:
 			"Поле receipted_message_id максимальной длины");
 		__reg_tc__("storeCorrectSms.routeIdMarginal",
 			"Предельные значения длины routeId");
+		__reg_tc__("storeCorrectSms.sourceSmeIdMarginal",
+			"Предельные значения длины sourceSmeId");
+		__reg_tc__("storeCorrectSms.destinationSmeIdMarginal",
+			"Предельные значения длины destinationSmeId");
 		//storeSimilarSms
 		__reg_tc__("storeSimilarSms",
 			"Сохранение sms с ключевыми параметрами похожими на уже существующий sms");
@@ -92,6 +96,10 @@ public:
 			"Длина поля service_type больше максимальной");
 		__reg_tc__("storeAssertSms.routeIdGreaterMaxLength",
 			"Длина поля routeId больше максимальной");
+		__reg_tc__("storeAssertSms.sourceSmeIdGreaterMaxLength",
+			"Длина поля sourceSmeId больше максимальной");
+		__reg_tc__("storeAssertSms.destinationSmeIdGreaterMaxLength",
+			"Длина поля destinationSmeId больше максимальной");
 		/*
 		__reg_tc__("storeAssertSms.smGreaterMaxLength",
 			"Длина поля short_message больше максимальной");
