@@ -13,6 +13,7 @@ namespace smeman {
 using smsc::util::Logger;
 using smsc::test::sms::SmsUtil;
 using smsc::test::sms::operator<<;
+using smsc::test::conf::TestConfig;
 using namespace std;
 using namespace smsc::test::util;
 
@@ -73,7 +74,9 @@ void SmeManagerTestCases::setupRandomCorrectSmeInfo(SmeInfo* sme)
 	sme->SME_N = rand0(INT_MAX); //реально не используется
 	sme->disabled = !rand0(3); //реально не используется
 	//sme->wantAlias = rand0(1);
-	sme->timeout = rand2(8, 16);
+	__cfg_int__(minSmeTimeOut);
+	__cfg_int__(maxSmeTimeOut);
+	sme->timeout = rand2(minSmeTimeOut, maxSmeTimeOut);
 }
 
 #define __compare__(field, errCode) \

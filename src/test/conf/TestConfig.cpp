@@ -19,6 +19,10 @@ TestConfig::TestConfig()
 	intMap["maxValidPeriod"] = 150; //150 сек
 	intMap["maxWaitTime"] = 60; //max(waitTime)
 	intMap["maxDeliveryPeriod"] = 120; //max(validTime - waitTime)
+	intMap["minSmeTimeOut"] = intMap["timeCheckAccuracy"];
+	intMap["maxSmeTimeOut"] = //не провер€ю когда sme timeout > reschedule time
+		*min_element(rescheduleTimes.begin(), rescheduleTimes.end()) -
+		intMap["timeCheckAccuracy"];
 	//smsc sme
 	addrMap["smscAddr"] = "+111111111111";
 	addrMap["smscAlias"] = ".3.3.smscSmeAlias123";
