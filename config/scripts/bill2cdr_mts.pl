@@ -37,53 +37,58 @@ if($basedir=~/^(.*)[\\\/][^\\\/]+$/)
   $basedir='.';
 }
 
-my $addrrx;
-my $mscrx;
-my $imsirx;
+my $mscarr=[];
 
 {
   open(my $f,"$basedir/filters.ini") or die "Failed to open $basedir/filters.ini:$!";
   my $h={};
+  my $cursect;
   while(<$f>)
   {
     s/[\x0d\x0a]//;
     next if length($_)==0 || /^#/;
-    if(/(\w+)=(.*)/)
+    if(/\[(.*)\]/)
     {
-      $h->{$1}=$2;
-    }else
-    {
-      print "Warning: Unrecognized line in filters.ini: $_\n";
+      $cursect=$1;
+      next;
     }
+    unless(defined($cursect))
+    {
+      die "Line out of section found in filters.ini";
+    }
+    $h->{$cursect}=[] unless exists $h->{$cursect};
+    push @{$h->{$cursect}},$_;
   }
-  my $varmap=[
-    {
-      var=>\$addrrx,
-      name=>'addr'
-    },
-    {
-      var=>\$mscrx,
-      name=>'msc'
-    },
-    {
-      var=>\$imsirx,
-      name=>'imsi'
-    }
-  ];
 
-  for my $v(@$varmap)
-  {
-    if(not exists($h->{$v->{name}}))
+  sub compilerx{
+    my ($name,$arr)=@_;
+
+    unless(@$arr)
     {
-      die "Parameter '".$v->{name}."' not found in filters.ini";
+      die "Regexp $name is empty!";
     }
+    my $str=join'|',map{"(?:$_)"}@$arr;
+    #print "Compile $name:$str\n";
+    my $rv;
     eval{
-      ${$v->{var}}=qr($h->{$v->{name}});
+      $rv=qr($str);
     };
     if($@)
     {
-      die "Regexp compilation failed:$v->{name}=$h->{$v->{name}}, error=$@";
+      die "Compilation of regexp $name failed:$@";
     }
+    return $rv;
+  }
+  for my $k(keys(%$h))
+  {
+    next unless $k=~/^(\w+).msc$/;
+    my $rgn=$1;
+    push @$mscarr,
+    {
+      mscrx=>compilerx("$rgn.msc",$h->{"$rgn.msc"}),
+      addrrx=>compilerx("$rgn.addr",$h->{"$rgn.addr"}),
+      imsirx=>compilerx("$rgn.imsi",$h->{"$rgn.imsi"})
+    };
   }
 }
 
@@ -251,9 +256,29 @@ for(@dir)
 sub outrow{
   my ($out,$fields)=@_;
 
-  return unless $fields->{PAYER_ADDR}=~/$addrrx/;
-  return unless $fields->{PAYER_MSC}=~/$mscrx/ || ($svcrx && $fields->{OTHER_ADDR}=~/$svcrx/);
-  return unless $fields->{PAYER_IMSI}=~/$imsirx/;
+  #return unless $fields->{PAYER_ADDR}=~/$addrrx/;
+  #return unless $fields->{PAYER_MSC}=~/$mscrx/ || ($svcrx && $fields->{OTHER_ADDR}=~/$svcrx/);
+
+  unless($svcrx && $fields->{OTHER_ADDR}=~/$svcrx/)
+  {
+    my $ok=0;
+    for my $msc(@$mscarr)
+    {
+      #print "Match: msc: ".$fields->{PAYER_MSC}." =~ ".($msc->{mscrx})."\n";
+      #print "Match: addr: ".$fields->{PAYER_ADDR}." =~ ".($msc->{addrrx})."\n";
+      if
+      (
+        $fields->{PAYER_MSC}=~$msc->{mscrx} &&
+        $fields->{PAYER_ADDR}=~$msc->{addrrx} &&
+        $fields->{PAYER_IMSI}=~$msc->{imsirx}
+      )
+      {
+        $ok=1;
+        last;
+      }
+    }
+    return unless $ok;
+  }
 
   my $outf;
   my $outpack;
