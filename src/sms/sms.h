@@ -18,8 +18,8 @@
 
 namespace smsc { namespace sms
 {
-    const int MAX_ESERVICE_TYPE_LENGTH = 6;
-    const int MAX_ADDRESS_VALUE_LENGTH = 21;
+    const int MAX_ESERVICE_TYPE_LENGTH = 5;
+    const int MAX_ADDRESS_VALUE_LENGTH = 20;
     const int MAX_SHORT_MESSAGE_LENGTH = 200;
     
     //const char* DEFAULT_ETSI_GSM_SEVICE_NAME = "GSM-SM";
