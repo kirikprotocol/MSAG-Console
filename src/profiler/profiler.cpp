@@ -353,8 +353,8 @@ int Profiler::Execute()
     }else
     if(!strncmp(body+i,"LOCALE",6))
     {
-      i+=7;
-      while(isspace(body[i]))i++;
+      i+=6;
+      while(body[i] && isspace(body[i]))i++;
       int j=i;
       while(body[i] && !isspace(body[i]))i++;
       if(i==j)
