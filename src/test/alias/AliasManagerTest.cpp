@@ -16,7 +16,9 @@ static Category& log = Logger::getCategory("AliasManagerTest");
 void executeTest()
 {
 /*
-addCorrectAliasException(4)->
+addCorrectAliasNotMatchAddress(4)->
+addCorrectAliasNotMatchAddress(2)->
+addCorrectAliasNotMatchAddress(1)->
 findAliasByAddress(1){100}
 */
 	AliasManager aliasMan;
@@ -28,15 +30,17 @@ findAliasByAddress(1){100}
 	SmsUtil::setupRandomCorrectAddress(&addr);
 
 	TestAliasData data(alias, addr);
-	cout << *tc.addCorrectAliasException(&data, 4) << endl;
+	cout << *tc.addCorrectAliasNotMatchAddress(&data, 4) << endl;
 	aliasReg.putAlias(data);
 
-	/*
 	TestAliasData data2(alias, addr);
-	cout << *tc.addCorrectAliasException(&data, 1) << endl;
+	cout << *tc.addCorrectAliasNotMatchAddress(&data2, 2) << endl;
 	aliasReg.putAlias(data2);
-	*/
 
+	TestAliasData data3(alias, addr);
+	cout << *tc.addCorrectAliasNotMatchAddress(&data3, 1) << endl;
+	aliasReg.putAlias(data3);
+	
 	cout << *tc.findAliasByAddress(aliasReg, addr) << endl;
 /*
 	cout << *tc.addCorrectAliasMatch(&data, 1) << endl;
