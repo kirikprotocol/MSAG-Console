@@ -49,6 +49,10 @@ public class SmsStatFormBean extends IndexBean
 
         if (mbQuery != null)
             statistics = stat.getStatistics(query);
+        else if (!query.isFromDateEnabled()) {
+            query.setFromDate(new Date());
+            query.setFromDateEnabled(true);
+        }
 
         mbQuery = null;
         return RESULT_OK;
