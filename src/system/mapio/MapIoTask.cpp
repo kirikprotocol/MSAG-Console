@@ -161,6 +161,7 @@ void MapIoTask::dispatcher()
     if ( result != MSG_OK ) {
       __map_warn2__("Error at MsgRecv with code %d",result);
       if ( !(MAP_aborting || isStopping) ) {
+        MAP_aborting = true;
         abort();
       } else {
         return;
