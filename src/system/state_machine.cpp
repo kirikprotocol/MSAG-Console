@@ -2181,6 +2181,7 @@ StateType StateMachine::submit(Tuple& t)
       if(!extractSmsPart(sms,0))
       {
         smsc_log_error(smsLog,"msgId=%lld:failed to extract sms part, aborting.",t.msgId);
+        err=Status::SYSERR;
         throw ExtractPartFailedException();
       };
       sms->setIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND,1);
@@ -3030,7 +3031,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
   // concatenated message with conditional divert.
   // first part delivered ok.
   // other parts MUST be delivered to the same address.
-  if(sms.hasBinProperty(Tag::SMSC_CONCATINFO) && (sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&(DF_COND|DF_UNCOND)))
+  if(sms.hasBinProperty(Tag::SMSC_CONCATINFO) && sms.getConcatSeqNum()==0 &&
+     (sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&(DF_COND|DF_UNCOND)))
   {
     smsc_log_debug(smsLog,"DLVRESP: msgId=%lld - delivered first part of multipart sms with conditional divert.",t.msgId);
     // first part was delivered to diverted address!
