@@ -198,7 +198,9 @@ CREATE TABLE SMS_STAT_SMS
   delivered    NUMBER(22)     NOT NULL,
   failed       NUMBER(22)     NOT NULL,
   rescheduled  NUMBER(22)     NOT NULL,
-  temporal     NUMBER(22)     NOT NULL	
+  temporal     NUMBER(22)     NOT NULL,
+  peak_i       NUMBER(22)     NOT NULL,
+  peak_o       NUMBER(22)     NOT NULL
 ) TABLESPACE SMSC_DATA;
 
 CREATE INDEX SMS_STAT_SMS_IDX ON SMS_STAT_SMS (period)
@@ -227,7 +229,9 @@ CREATE TABLE SMS_STAT_SME
   delivered    NUMBER(22)     NOT NULL,
   failed       NUMBER(22)     NOT NULL,
   rescheduled  NUMBER(22)     NOT NULL,
-  temporal     NUMBER(22)     NOT NULL	
+  temporal     NUMBER(22)     NOT NULL,	
+  peak_i       NUMBER(22)     NOT NULL,
+  peak_o       NUMBER(22)     NOT NULL
 ) TABLESPACE SMSC_DATA;
 
 CREATE INDEX SMS_STAT_SME_IDX ON SMS_STAT_SME (period)
@@ -261,7 +265,9 @@ CREATE TABLE SMS_STAT_ROUTE
   delivered    NUMBER(22)     NOT NULL,
   failed       NUMBER(22)     NOT NULL,
   rescheduled  NUMBER(22)     NOT NULL,
-  temporal     NUMBER(22)     NOT NULL	
+  temporal     NUMBER(22)     NOT NULL,
+  peak_i       NUMBER(22)     NOT NULL,
+  peak_o       NUMBER(22)     NOT NULL
 ) TABLESPACE SMSC_DATA;
 
 CREATE INDEX SMS_STAT_ROUTE_IDX ON SMS_STAT_ROUTE (period)
