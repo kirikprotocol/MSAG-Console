@@ -416,7 +416,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   }else{ // UCS2
     unsigned text_len;
     const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
-    unsigned size_x = (pdu_ptr-(unsigned char*)(pdu->signalInfoLen));
+    unsigned size_x = pdu_ptr-(unsigned char*)pdu->signalInfo;
     if ( text_len > size_x ){
       __trace2_("MAP::mkDeliverPDU:  UCS2 text length(%d) > pdu_ptr-pdu->signalInfoLen(%d)",
                 text_len,
