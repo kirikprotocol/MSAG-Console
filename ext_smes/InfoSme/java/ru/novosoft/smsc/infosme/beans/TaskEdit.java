@@ -210,6 +210,35 @@ public class TaskEdit extends InfoSmeBean
     this.task.setActivePeriodEnd(activePeriodEnd);
   }
 
+  public String[] getActiveWeekDays() {
+    return (String[])(this.task.getActiveWeekDays().toArray());
+  }
+  public void setActiveWeekDays(String[] activeWeekDays) {
+    Collection awd = new ArrayList();
+    for(int i=0; i<activeWeekDays.length; i++) awd.add(activeWeekDays[i]);
+    this.task.setActiveWeekDays(awd);
+  }
+  public boolean isWeekDayActive(String weekday) {
+    return this.task.isWeekDayActive(weekday);
+  }
+  public String getActiveWeekDaysString()
+  {
+    String str = "";
+    Collection awd = this.task.getActiveWeekDays();
+    int total = (awd == null) ? 0:awd.size();
+    if (total > 0) {
+      int added=0;
+      if (task.isWeekDayActive("Mon")) { str += "Monday";    if (++added < total) str += ", "; }
+      if (task.isWeekDayActive("Tue")) { str += "Tuesday";   if (++added < total) str += ", "; }
+      if (task.isWeekDayActive("Wed")) { str += "Wednesday"; if (++added < total) str += ", "; }
+      if (task.isWeekDayActive("Thu")) { str += "Thursday";  if (++added < total) str += ", "; }
+      if (task.isWeekDayActive("Fri")) { str += "Friday";    if (++added < total) str += ", "; }
+      if (task.isWeekDayActive("Sat")) { str += "Saturday";  if (++added < total) str += ", "; }
+      if (task.isWeekDayActive("Sun"))   str += "Sunday";
+    }
+    return str;
+  }
+
   public String getQuery() {
     return task.getQuery();
   }

@@ -2,7 +2,12 @@ package ru.novosoft.smsc.infosme.backend;
 
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.config.Config;
+
+import java.util.Collection;
+import java.util.ArrayList;
+import java.util.HashSet;
 
 /**
  * Created by IntelliJ IDEA.
@@ -12,6 +17,8 @@ import ru.novosoft.smsc.util.config.Config;
  */
 public class Task
 {
+  private final static String DEFAULT_ACTIVE_WEEK_DAYS = "Mon,Tue,Wed,Thu,Fri";
+
   private String id = "";
   private String name = "";
   private String provider = "";
@@ -26,6 +33,8 @@ public class Task
   private String validityDate = "";
   private String activePeriodStart = "";
   private String activePeriodEnd = "";
+  private Collection activeWeekDays = new ArrayList();
+  private Collection activeWeekDaysSet = new HashSet();
   private String query = "";
   private String template = "";
   private int dsTimeout = 0;
@@ -39,9 +48,15 @@ public class Task
 
   public Task()
   {
+    activeWeekDays = new ArrayList();
+    Functions.addValuesToCollection(this.activeWeekDays, DEFAULT_ACTIVE_WEEK_DAYS, ",", true);
+    activeWeekDaysSet = new HashSet(activeWeekDays);
   }
 
-  public Task(String id, String name, String provider, boolean enabled, int priority, boolean retryOnFail, boolean replaceMessage, String svcType, String endDate, String retryTime, String validityPeriod, String validityDate, String activePeriodStart, String activePeriodEnd, String query, String template, int dsTimeout,
+  public Task(String id, String name, String provider, boolean enabled, int priority, boolean retryOnFail, boolean replaceMessage,
+              String svcType, String endDate, String retryTime, String validityPeriod, String validityDate,
+              String activePeriodStart, String activePeriodEnd, Collection activeWeekDays,
+              String query, String template, int dsTimeout,
               int messagesCacheSize, int messagesCacheSleep, boolean transactionMode,
               int uncommitedInGeneration, int uncommitedInProcess, boolean trackIntegrity, boolean keepHistory)
   {
@@ -70,6 +85,8 @@ public class Task
     this.uncommitedInProcess = uncommitedInProcess;
     this.trackIntegrity = trackIntegrity;
     this.keepHistory = keepHistory;
+    this.activeWeekDays = activeWeekDays;
+    this.activeWeekDaysSet = new HashSet(activeWeekDays);
   }
 
   public Task(Config config, String id) throws Config.WrongParamTypeException, Config.ParamNotFoundException
@@ -100,6 +117,12 @@ public class Task
     uncommitedInProcess = config.getInt(prefix + ".uncommitedInProcess");
     trackIntegrity = config.getBool(prefix + ".trackIntegrity");
     keepHistory = config.getBool(prefix + ".keepHistory");
+    String activeWeekDaysStr = null;
+    try {  activeWeekDaysStr = config.getString(prefix + ".activeWeekDays"); }
+    catch (Throwable th) { activeWeekDaysStr = DEFAULT_ACTIVE_WEEK_DAYS; }
+    activeWeekDays = new ArrayList();
+    Functions.addValuesToCollection(this.activeWeekDays, activeWeekDaysStr, ",", true);
+    activeWeekDaysSet = new HashSet(this.activeWeekDays);
   }
 
   public void storeToConfig(Config config)
@@ -128,6 +151,7 @@ public class Task
     config.setInt(prefix + ".uncommitedInProcess", uncommitedInProcess);
     config.setBool(prefix + ".trackIntegrity", trackIntegrity);
     config.setBool(prefix + ".keepHistory", keepHistory);
+    config.setString(prefix + ".activeWeekDays", Functions.collectionToString(activeWeekDays, ","));
   }
 
   public boolean isContainsInConfig(Config config)
@@ -172,7 +196,8 @@ public class Task
               && this.uncommitedInGeneration == task.uncommitedInGeneration
               && this.uncommitedInProcess == task.uncommitedInProcess
               && this.trackIntegrity == task.trackIntegrity
-              && this.keepHistory == task.keepHistory;
+              && this.keepHistory == task.keepHistory
+              && this.activeWeekDays.equals(task.activeWeekDays);
     } else
       return false;
   }
@@ -344,4 +369,16 @@ public class Task
   public void setKeepHistory(boolean keepHistory) {
     this.keepHistory = keepHistory;
   }
+
+  public Collection getActiveWeekDays() {
+    return activeWeekDays;
+  }
+  public void setActiveWeekDays(Collection activeWeekDays) {
+    this.activeWeekDays = activeWeekDays;
+    activeWeekDaysSet = new HashSet(activeWeekDays);
+  }
+  public boolean isWeekDayActive(String weekday) {
+    return activeWeekDaysSet.contains(weekday);
+  }
+
 }

@@ -32,6 +32,9 @@
     case InfoSmeBean.RESULT_SHEDULES:
       response.sendRedirect("shedules.jsp");
       return;
+    case InfoSmeBean.RESULT_MESSAGES:
+      response.sendRedirect("messages.jsp");
+      return;
     case InfoSmeBean.RESULT_DONE:
       response.sendRedirect("index.jsp");
       return;

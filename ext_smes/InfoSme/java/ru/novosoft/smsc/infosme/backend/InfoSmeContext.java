@@ -33,7 +33,6 @@ public class InfoSmeContext
     return instance;
   }
 
-
   private final SMSCAppContext appContext;
   private Config config = null;
   private InfoSme infoSme = null;
@@ -43,6 +42,8 @@ public class InfoSmeContext
   private int tasksPageSize = 20;
   private String schedulesSort = "name";
   private int schedulesPageSize = 20;
+  private String messagesSort = Message.SORT_BY_DATE;
+  private int messagesPageSize = 20;
 
   private boolean changedOptions = false;
   private boolean changedDrivers = false;
@@ -66,49 +67,47 @@ public class InfoSmeContext
                                "conf" + File.separatorChar + "config.xml"));
   }
 
-  public Config getConfig()
-  {
+  public Config getConfig() {
     return config;
   }
 
-  public String getProvidersSort()
-  {
+  public String getProvidersSort() {
     return providersSort;
   }
-
-  public void setProvidersSort(String providersSort)
-  {
+  public void setProvidersSort(String providersSort) {
     this.providersSort = providersSort;
   }
-
-  public int getProvidersPageSize()
-  {
+  public int getProvidersPageSize() {
     return providersPageSize;
   }
-
-  public void setProvidersPageSize(int providersPageSize)
-  {
+  public void setProvidersPageSize(int providersPageSize) {
     this.providersPageSize = providersPageSize;
   }
 
-  public String getTasksSort()
-  {
+  public String getTasksSort() {
     return tasksSort;
   }
-
-  public void setTasksSort(String tasksSort)
-  {
+  public void setTasksSort(String tasksSort) {
     this.tasksSort = tasksSort;
   }
-
-  public int getTasksPageSize()
-  {
+  public int getTasksPageSize() {
     return tasksPageSize;
   }
-
-  public void setTasksPageSize(int tasksPageSize)
-  {
+  public void setTasksPageSize(int tasksPageSize) {
     this.tasksPageSize = tasksPageSize;
+  }
+
+  public String getMessagesSort() {
+    return messagesSort;
+  }
+  public void setMessagesSort(String messagesSort) {
+    this.messagesSort = messagesSort;
+  }
+  public int getMessagesPageSize() {
+    return messagesPageSize;
+  }
+  public void setMessagesPageSize(int messagesPageSize) {
+    this.messagesPageSize = messagesPageSize;
   }
 
   public void resetConfig() throws AdminException, SAXException, ParserConfigurationException, IOException
@@ -141,83 +140,59 @@ public class InfoSmeContext
   }
 
 
-  public String getSchedulesSort()
-  {
+  public String getSchedulesSort() {
     return schedulesSort;
   }
-
-  public void setSchedulesSort(String schedulesSort)
-  {
+  public void setSchedulesSort(String schedulesSort) {
     this.schedulesSort = schedulesSort;
   }
-
-  public int getSchedulesPageSize()
-  {
+  public int getSchedulesPageSize() {
     return schedulesPageSize;
   }
-
-  public void setSchedulesPageSize(int schedulesPageSize)
-  {
+  public void setSchedulesPageSize(int schedulesPageSize) {
     this.schedulesPageSize = schedulesPageSize;
   }
 
-  public InfoSme getInfoSme()
-  {
+  public InfoSme getInfoSme() {
     return infoSme;
   }
 
-  public boolean isChangedOptions()
-  {
+  public boolean isChangedOptions() {
     return changedOptions;
   }
-
-  public void setChangedOptions(boolean changedOptions)
-  {
+  public void setChangedOptions(boolean changedOptions) {
     this.changedOptions = changedOptions;
   }
 
-  public boolean isChangedDrivers()
-  {
+  public boolean isChangedDrivers() {
     return changedDrivers;
   }
-
-  public void setChangedDrivers(boolean changedDrivers)
-  {
+  public void setChangedDrivers(boolean changedDrivers) {
     this.changedDrivers = changedDrivers;
   }
 
-  public boolean isChangedProviders()
-  {
+  public boolean isChangedProviders() {
     return changedProviders;
   }
-
-  public void setChangedProviders(boolean changedProviders)
-  {
+  public void setChangedProviders(boolean changedProviders) {
     this.changedProviders = changedProviders;
   }
 
-  public boolean isChangedTasks()
-  {
+  public boolean isChangedTasks() {
     return changedTasks;
   }
-
-  public void setChangedTasks(boolean changedTasks)
-  {
+  public void setChangedTasks(boolean changedTasks) {
     this.changedTasks = changedTasks;
   }
 
-  public boolean isChangedSchedules()
-  {
+  public boolean isChangedSchedules() {
     return changedSchedules;
   }
-
-  public void setChangedSchedules(boolean changedSchedules)
-  {
+  public void setChangedSchedules(boolean changedSchedules) {
     this.changedSchedules = changedSchedules;
   }
 
-  public DataSource getDataSource()
-  {
+  public DataSource getDataSource() {
     return dataSource;
   }
 }

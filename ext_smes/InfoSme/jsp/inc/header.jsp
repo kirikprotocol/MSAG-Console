@@ -8,6 +8,7 @@
   sme_menu_button(out, "mbMenu",  "providers", "Providers", "Providers");
   sme_menu_button(out, "mbMenu",  "drivers",   "Drivers",   "DB drivers");
   sme_menu_space(out);
+  sme_menu_button(out, "mbMenu",  "messages",  "Messages",  "Messages set");
   sme_menu_button(out, "mbMenu",  "stat",      "Statistics","");
 	sme_menu_end(out);
 %>

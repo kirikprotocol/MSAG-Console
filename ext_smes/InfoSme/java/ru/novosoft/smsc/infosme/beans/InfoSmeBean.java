@@ -18,16 +18,16 @@ import java.util.*;
  */
 public class InfoSmeBean extends PageBean
 {
-  public static final int RESULT_APPLY = PageBean.PRIVATE_RESULT + 0;
-  public static final int RESULT_STAT = PageBean.PRIVATE_RESULT + 1;
-  public static final int RESULT_STATUSES = PageBean.PRIVATE_RESULT + 2;
-  public static final int RESULT_OPTIONS = PageBean.PRIVATE_RESULT + 3;
-  public static final int RESULT_DRIVERS = PageBean.PRIVATE_RESULT + 4;
-  public static final int RESULT_PROVIDERS = PageBean.PRIVATE_RESULT + 5;
-  public static final int RESULT_TASKS = PageBean.PRIVATE_RESULT + 6;
-  public static final int RESULT_SHEDULES = PageBean.PRIVATE_RESULT + 7;
-  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 8;
-
+  public static final int RESULT_APPLY      = PageBean.PRIVATE_RESULT + 0;
+  public static final int RESULT_STAT       = PageBean.PRIVATE_RESULT + 1;
+  public static final int RESULT_STATUSES   = PageBean.PRIVATE_RESULT + 2;
+  public static final int RESULT_OPTIONS    = PageBean.PRIVATE_RESULT + 3;
+  public static final int RESULT_DRIVERS    = PageBean.PRIVATE_RESULT + 4;
+  public static final int RESULT_PROVIDERS  = PageBean.PRIVATE_RESULT + 5;
+  public static final int RESULT_TASKS      = PageBean.PRIVATE_RESULT + 6;
+  public static final int RESULT_SHEDULES   = PageBean.PRIVATE_RESULT + 7;
+  public static final int RESULT_MESSAGES   = PageBean.PRIVATE_RESULT + 8;
+  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 9;
 
   private String mbMenu = null;
 
@@ -69,58 +69,42 @@ public class InfoSmeBean extends PageBean
     if (result != RESULT_OK)
       return result;
 
-    if ("apply".equals(mbMenu))
-      return RESULT_APPLY;
-    else if ("stat".equals(mbMenu))
-      return RESULT_STAT;
-    else if ("statuses".equals(mbMenu))
-      return RESULT_STATUSES;
-    else if ("options".equals(mbMenu))
-      return RESULT_OPTIONS;
-    else if ("drivers".equals(mbMenu))
-      return RESULT_DRIVERS;
-    else if ("providers".equals(mbMenu))
-      return RESULT_PROVIDERS;
-    else if ("tasks".equals(mbMenu))
-      return RESULT_TASKS;
-    else if ("shedules".equals(mbMenu))
-      return RESULT_SHEDULES;
-    else
-      return result;
+    if ("apply".equals(mbMenu))          return RESULT_APPLY;
+    else if ("stat".equals(mbMenu))      return RESULT_STAT;
+    else if ("statuses".equals(mbMenu))  return RESULT_STATUSES;
+    else if ("options".equals(mbMenu))   return RESULT_OPTIONS;
+    else if ("drivers".equals(mbMenu))   return RESULT_DRIVERS;
+    else if ("providers".equals(mbMenu)) return RESULT_PROVIDERS;
+    else if ("tasks".equals(mbMenu))     return RESULT_TASKS;
+    else if ("shedules".equals(mbMenu))  return RESULT_SHEDULES;
+    else if ("messages".equals(mbMenu))  return RESULT_MESSAGES;
+    else return result;
   }
 
-  public String getMbMenu()
-  {
+  public String getMbMenu() {
     return mbMenu;
   }
-
-  public void setMbMenu(String mbMenu)
-  {
+  public void setMbMenu(String mbMenu) {
     this.mbMenu = mbMenu;
   }
 
-  protected Config getConfig()
-  {
+  protected Config getConfig() {
     return config;
   }
 
-  public InfoSmeContext getInfoSmeContext()
-  {
+  public InfoSmeContext getInfoSmeContext() {
     return infoSmeContext;
   }
 
-  public InfoSme getInfoSme()
-  {
+  public InfoSme getInfoSme() {
     return infoSme;
   }
 
-  public boolean isSmeRunning()
-  {
+  public boolean isSmeRunning() {
     return smeRunning;
   }
 
-  public String getSmeId()
-  {
+  public String getSmeId() {
     return smeId;
   }
 }

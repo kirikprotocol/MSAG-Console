@@ -111,6 +111,32 @@
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
+  <th>Active weekdays</th>
+  <td><%if (bean.isSmeRunning()) {
+    %><table>
+    <col width="1%"><col width="32%">
+    <col width="1%"><col width="32%">
+    <col width="1%"><col width="32%">
+    <tr>
+      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Mon value=Mon <%=bean.isWeekDayActive("Mon") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Mon>Monday</label></td>
+      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Thu value=Thu <%=bean.isWeekDayActive("Thu") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Thu>Thursday</label></td>
+      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Sat value=Sat <%=bean.isWeekDayActive("Sat") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Sat>Saturday</label></td>
+    <tr>
+    <tr>
+      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Tue value=Tue <%=bean.isWeekDayActive("Tue") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Tue>Tuesday</label></td>
+      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Fri value=Fri <%=bean.isWeekDayActive("Fri") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Fri>Friday</label></td>
+      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Sun value=Sun <%=bean.isWeekDayActive("Sun") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Sun>Sunday</label></td>
+    <tr>
+    <tr>
+      <td style="border:none;"><input class=check type=checkbox name=activeWeekDays id=activeWeekDays_Wed value=Wed <%=bean.isWeekDayActive("Wed") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Wed>Wednesday</label></td>
+    <tr>
+    </table><%
+  } else {
+    %><%=StringEncoderDecoder.encode(bean.getActiveWeekDaysString())%><%
+  }%>
+  </td>
+</tr>
+<tr class=row<%=rowN++&1%>>
   <th>Validity period or date</th>
   <td><%if (bean.isSmeRunning()) {
     %><input class=timeField id=validityPeriod name=validityPeriod value="<%=StringEncoderDecoder.encode(bean.getValidityPeriod())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(validityPeriod, false, true);">...</button>
@@ -141,7 +167,7 @@
   <td><%if (bean.isSmeRunning()) {
     %><textarea name=query><%=StringEncoderDecoder.encode(bean.getQuery())%></textarea><%
   } else {
-    %><pre><%=StringEncoderDecoder.encode(bean.getQuery())%></pre><%
+    %><%=StringEncoderDecoder.encode(bean.getQuery())%><%
   }%>
   </td>
 </tr>
@@ -150,7 +176,7 @@
   <td><%if (bean.isSmeRunning()) {
     %><textarea name=template><%=StringEncoderDecoder.encode(bean.getTemplate())%></textarea><%
   } else {
-    %><pre><%=StringEncoderDecoder.encode(bean.getTemplate())%></pre><%
+    %><%=StringEncoderDecoder.encode(bean.getTemplate())%><%
   }%>
   </td>
 </tr>
