@@ -28,10 +28,11 @@ static map<string,unsigned> x_map;
 
 static void CloseMapDialog(unsigned dialogid){
   USHORT_T res = Et96MapCloseReq (SSN,dialogid,ET96MAP_NORMAL_RELEASE,0,0,0);
-  if ( res != ET96MAP_E_OK )
+  if ( res != ET96MAP_E_OK ){
     __trace2__("MAP::%s dialog 0x%x error, code 0x%hx",__PRETTY_FUNCTION__,dialogid,res);
-  else
+  }else{
     __trace2__("MAP::%s dialog 0x%x closed",__PRETTY_FUNCTION__,dialogid);
+  }
 }
 
 struct MAPDIALOG_ERROR : public runtime_error
