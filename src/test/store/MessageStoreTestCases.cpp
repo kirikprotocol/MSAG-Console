@@ -329,6 +329,7 @@ TCResult* MessageStoreTestCases::storeReplaceCorrectSms(SMSId* idp, SMS* existen
 		sms.setEServiceType(serviceType);
 		SMSId smsId = msgStore->getNextId();
 		msgStore->createSms(sms, smsId, SMPP_OVERWRITE_IF_PRESENT);
+		*idp = smsId;
 		*existentSms = sms;
 	}
 	catch(...)
