@@ -39,8 +39,6 @@ public class SmsView
 
   public SmsSet getSmsSet(SmsQuery query)
   {
-    /*System.out.println("From date: "+query.getFromDate().toString()+
-                       " Till date: "+query.getTillDate().toString());*/
     SmsSet set = new SmsSet();
     Connection connection = null;
     try
@@ -48,7 +46,6 @@ public class SmsView
       connection = ds.getConnection();
       if (connection == null) return set;
       String sql = prepareQueryString(query);
-      //System.out.println("SQL: "+sql);
       PreparedStatement stmt = connection.prepareStatement(sql);
       bindInput(stmt, query);
       fetchRows(stmt, set);
@@ -95,13 +92,14 @@ public class SmsView
   private String getLikeExpression(String str)
   {
     return (needLikeExpression(str)) ?
-            str.replace('*', '%').replace('?', '_').toUpperCase() :
-            str.toUpperCase();
+            str.trim().replace('*', '%').replace('?', '_').toUpperCase() :
+            str.trim().toUpperCase();
   }
   private void bindInput(PreparedStatement stmt, SmsQuery query)
     throws SQLException
   {
     int pos=1;
+    stmt.setString(pos++, getLikeExpression(query.getSmsId()));
     stmt.setString(pos++, getLikeExpression(query.getFromAddress()));
     stmt.setString(pos++, getLikeExpression(query.getToAddress()));
     stmt.setString(pos++, getLikeExpression(query.getRouteId()));
@@ -178,22 +176,20 @@ public class SmsView
   }*/
   private String prepareWhereClause(SmsQuery query)
   {
-    String where = " WHERE UPPER(OA) ";
-    where += (needLikeExpression(query.getFromAddress())) ? "LIKE ?":"= ?";
+    String where = " WHERE UPPER(ID) ";
+    where += (needLikeExpression(query.getSmsId())) ? "LIKE ?":"=?";
+    where += " AND UPPER(OA) ";
+    where += (needLikeExpression(query.getFromAddress())) ? "LIKE ?":"=?";
     where += " AND UPPER(DDA) ";
-    where += (needLikeExpression(query.getToAddress())) ? "LIKE ?":"= ?";
+    where += (needLikeExpression(query.getToAddress())) ? "LIKE ?":"=?";
     where += " AND UPPER(ROUTE_ID) ";
     where += (needLikeExpression(query.getRouteId())) ? "LIKE ?":"= ?";
     where += " AND UPPER(SRC_SME_ID) ";
-    where += (needLikeExpression(query.getSrcSmeId())) ? "LIKE ?":"= ?";
+    where += (needLikeExpression(query.getSrcSmeId())) ? "LIKE ?":"=?";
     where += " AND UPPER(DST_SME_ID) ";
-    where += (needLikeExpression(query.getDstSmeId())) ? "LIKE ?":"= ?";
-    if (query.getFromDateEnabled()) {
-      where += " AND SUBMIT_TIME >= ?";
-    }
-    if (query.getTillDateEnabled()) {
-      where += " AND SUBMIT_TIME <= ?";
-    }
+    where += (needLikeExpression(query.getDstSmeId())) ? "LIKE ?":"=?";
+    if (query.getFromDateEnabled()) where += " AND SUBMIT_TIME >=?";
+    if (query.getTillDateEnabled()) where += " AND SUBMIT_TIME <=?";
     return where;
   }
   private String prepareOrderClause(SmsQuery query)
@@ -204,6 +200,7 @@ public class SmsView
     else if (order.equalsIgnoreCase("Status")) order="ST";
     else if (order.equalsIgnoreCase("From")) order="OA";
     else if (order.equalsIgnoreCase("To")) order="DDA";
+    else if (order.equalsIgnoreCase("Id")) order="ID";
     else return "";
     return " ORDER BY "+order;
   }

@@ -23,6 +23,7 @@ public class SmsQuery
   private String srcSmeId = "*";
   private String dstSmeId = "*";
   private String routeId = "*";
+  private String smsId = "*";
   private Date   fromDate = new Date();
   private Date   tillDate = new Date();
   private String sortBy = "Date";
@@ -43,6 +44,8 @@ public class SmsQuery
   public void setDstSmeId(String id) { dstSmeId = id; }
   public String getRouteId() { return routeId; }
   public void setRouteId(String id) { routeId = id; }
+  public String getSmsId() { return smsId; }
+  public void setSmsId(String id) { smsId = id; }
 
   public void setFromDateEnabled(boolean enabled) { fromDateEnabled = enabled; }
   public boolean getFromDateEnabled() { return fromDateEnabled; }

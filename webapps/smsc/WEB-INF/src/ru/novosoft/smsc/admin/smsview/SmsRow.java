@@ -29,6 +29,16 @@ public class SmsRow
 
   public void setId(byte _id[]) { id = _id; };
   public byte[] getId() { return id; };
+  public String getIdString() {
+    StringBuffer str = new StringBuffer();
+    for (int i=0; i<id.length; i++) {
+      int k = (((int)id[i])>>4)&0xf;
+      str.append( (char)(k<10?k+48:k+55) );
+      k = ((int)id[i])&0xf;
+      str.append( (char)(k<10?k+48:k+55) );
+    }
+    return str.toString();
+  };
 
   public String getFrom() { return from; }
   public void setFrom(String address) { from = address; }
