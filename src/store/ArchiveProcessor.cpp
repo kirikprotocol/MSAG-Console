@@ -193,9 +193,6 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
 {
     Query::ProcessArchiveGuard archiveGuard;
 
-    PersistentStorage*  arcDestination = 0;
-    TextDumpStorage*    txtDestination = 0;
-
     char destinationFileName[64];
     char destinationDirName[64];
     time_t lastProcessedTime = 0;
@@ -205,6 +202,10 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
     {
         std::string file = files[i];
         smsc_log_debug(log, "Processing archive file '%s' ...", file.c_str());
+        
+        PersistentStorage*  arcDestination = 0;
+        TextDumpStorage*    txtDestination = 0;
+        
         try
         {
             hrtime_t prtime=gethrtime();
@@ -214,7 +215,7 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
                 std::string trsFileName = "";
                 
                 PersistentStorage source(location, file);
-                indexator->BeginTransaction(); // start transactional indecies
+                //indexator->BeginTransaction(); // start transactional indecies
 
                 while (true)
                 {
@@ -244,6 +245,7 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
                         txtDestination = new TextDumpStorage(txtLocation, txtFileName);
 
                         lastProcessedTime = sms.lastTime; bNewArcFile = true;
+                        smsc_log_debug(log, "Opened destination file '%s/%s'", destinationDirName, arcFileName.c_str());
                     }
 
                     try
@@ -251,31 +253,42 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
                         fpos_t position = 0;
                         arcDestination->openWrite(&position);
                         //smsc_log_debug(log, "Archive file position=%lld", position);
-
-                        if (bNewArcFile)
+                        
+                        const char* trsFileNameStr = trsFileName.c_str();
+                        fpos_t* trsPosition = 0;
+                        if (bNewArcFile) // destination file was switched
                         {
-                            fpos_t trans_position = 0;
-                            TransactionStorage trsFile(trsFileName);
-                            if (trsFile.getTransactionData(&trans_position))
+                            bNewArcFile = false;
+                            trsPosition = trsFilesPositions.GetPtr(trsFileNameStr);
+                            if (!trsPosition) // check reopened destination file
                             {
-                                if (trans_position < 0 || position < trans_position)
-                                    throw Exception("Invalid transaction position=%lld, file end=%lld",
-                                                    trans_position, position);
-                                position = trans_position;
+                                fpos_t trans_position = 0;
+                                TransactionStorage trsFile(trsFileName);
+                                if (trsFile.getTransactionData(&trans_position))
+                                {
+                                    if (trans_position < 0 || position < trans_position)
+                                        throw Exception("Invalid transaction position=%lld, file end=%lld",
+                                                        trans_position, position);
+                                    position = trans_position;
+                                    arcDestination->setPos(&position);
+                                }
+                                else trsFile.setTransactionData(&position);
+                            }
+                            else {
+                                smsc_log_debug(log, "File '%s' was re-opened, last position=%lld, file end=%lld",
+                                               file.c_str(), *trsPosition, position);
+                                position = *trsPosition;
                                 arcDestination->setPos(&position);
                             }
-                            else trsFile.setTransactionData(&position);
-                            bNewArcFile = false;
                         }
                         
-                        indexator->IndexateSms(destinationDirName, id, (uint64_t)position, sms);
+                        //indexator->IndexateSms(destinationDirName, id, (uint64_t)position, sms);
 
                         txtDestination->writeRecord(id, sms);
                         arcDestination->writeRecord(id, sms);
                         arcDestination->getPos(&position);
                         
-                        const char* trsFileNameStr = trsFileName.c_str();
-                        fpos_t* trsPosition = trsFilesPositions.GetPtr(trsFileNameStr);
+                        trsPosition = trsFilesPositions.GetPtr(trsFileNameStr);
                         if (trsPosition) *trsPosition = position;
                         else trsFilesPositions.Insert(trsFileNameStr, position);
                     }
@@ -285,7 +298,10 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
                     }
                 } // while all records from source file will not be fetched
 
-                indexator->EndTransaction(); // flush transactional indecies
+                //indexator->EndTransaction(); // flush transactional indecies
+                
+                if (arcDestination) { delete arcDestination; arcDestination=0; }
+                if (txtDestination) { delete txtDestination; txtDestination=0; }
                 
                 // write endTransaction positions for all destination files
                 trsFilesPositions.First();
@@ -309,19 +325,20 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
               smsc_log_info(log, "Rolling '%s' to '*.err' ...", file.c_str());
               FileStorage::rollErrorFile(location, file);
           } catch (...) { smsc_log_error(log, "Failed to rool error file '%s'", file.c_str()); }
-          indexator->RollBack();
+          //indexator->RollBack();
+          if (arcDestination) { delete arcDestination; arcDestination=0; }
+          if (txtDestination) { delete txtDestination; txtDestination=0; }
         } catch (...) {
           smsc_log_error(log, "Error processing archive file '%s'. Reason is unknown", file.c_str());
           try {
               smsc_log_info(log, "Rolling '%s' to '*.err' ...", file.c_str());
               FileStorage::rollErrorFile(location, file);
           } catch (...) { smsc_log_error(log, "Failed to rool error file '%s'", file.c_str()); }
-          indexator->RollBack();
+          //indexator->RollBack();
+          if (arcDestination) { delete arcDestination; arcDestination=0; }
+          if (txtDestination) { delete txtDestination; txtDestination=0; }
         }
     }
-
-    if (arcDestination) delete arcDestination;
-    if (txtDestination) delete txtDestination;
 }
 
 /* -------------------------- Query Implementation ------------------------- */
