@@ -210,6 +210,7 @@ public:
     dialog = 0;
   }
   MapDialog* operator->() { return dialog; }
+  MapDialog* get() { return dialog; }
 };
 
 /**

@@ -1308,7 +1308,7 @@ void MapProxy::putCommand(const SmscCommand& cmd)
       __trace2__("MAP::QueueProcessing: MAP request");
       dialog.assign(MapDialogContainer::getInstance()->getDialog(did));
     }
-    __trace2__("MAP:: process to dialog with ptr 0x%p",dialog);
+    __trace2__("MAP:: process to dialog with ptr 0x%p",dialog.get());
     if ( dialog.isnull() ){
       __trace2__("MAP::QueueProcessing: Opss, here is no dialog with id x%x",dialogid);
       CloseDialog(SSN,dialogid);
