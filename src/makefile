@@ -48,7 +48,7 @@ build:	$(SMSC_BUILDDIR)
 	@echo "building SMSC"
 	
 ubuild:	update build
-
+	@echo 
 
 
 $(SMSC_BUILDDIR):
@@ -58,6 +58,6 @@ $(SMSC_BUILDDIR):
 	mkdir -p $(SMSC_BUILDDIR)\etc
 	mkdir -p $(SMSC_BUILDDIR)\doc
 	
-%:
-	echo "?????"	
 	
+%:
+	echo ">>>>"
