@@ -2,6 +2,7 @@
 #define TEST_DBSME_DBSME_TEST_CASES
 
 #include "test/sme/SmppProtocolTestCases.hpp"
+#include "DbSmeRegistry.hpp"
 #include <string>
 
 namespace smsc {
@@ -24,18 +25,25 @@ class DbSmeTestCases : public SmppProtocolTestCases,
 	public SmeAcknowledgementHandler
 {
 public:
-	DbSmeTestCases(const SmeConfig& config, SmppFixture* fixture)
-		: SmppProtocolTestCases(config, fixture)
+	DbSmeTestCases(const SmeConfig& config, SmppFixture* fixture,
+		DbSmeRegistry* _dbSmeReg)
+		: SmppProtocolTestCases(config, fixture), dbSmeReg(_dbSmeReg)
 	{
 		fixture->ackHandler = this;
+		//__require__(dbSmeReg);
 	}
 
 	virtual ~DbSmeTestCases() {}
 
 	/**
-	 * Отправка правильной команды db sme.
+	 * Отправка правильной команды db sme на выборку данных.
 	 */
-	void submitCorrectDbSmeCmd(bool sync, uint8_t dataCoding, int num);
+	void submitCorrectQueryDbSmeCmd(bool sync, uint8_t dataCoding, int num);
+
+	/**
+	 * Отправка правильной команды db sme на изменение данных.
+	 */
+	void submitCorrectModifyDbSmeCmd(bool sync, uint8_t dataCoding, int num);
 
 	/**
 	 * Отправка неправильной команды db sme.
@@ -48,7 +56,21 @@ public:
 	virtual void processSmeAcknowledgement(PduData* pduData, PduDeliverySm &pdu);
 
 protected:
+	DbSmeRegistry* dbSmeReg;
+
 	virtual Category& getLog();
+	void sendDbSmePdu(PduSubmitSm* pdu, const DbSmeTestRecord& rec,
+		bool sync, uint8_t dataCoding, PduData::IntProps& intProps);
+	int16_t getRandomInt16();
+	int32_t getRandomInt32();
+	float getRandomFloat();
+	double getRandomDouble();
+	time_t getRandomTime();
+	string getRandomWord();
+	string getRandomWords();
+	void processDateFormatJobAck(const string& text, const DbSmeTestRecord* rec,
+		time_t submitTime, int dateJobNum);
+	void processOtherFormatJobAck(const string& text, const DbSmeTestRecord* rec);
 };
 
 }
