@@ -126,14 +126,14 @@ void MapIoTask::deinit()
 
 void MapIoTask::dispatcher()
 {
-  int going;
+  //int going;
   MSG_T message;
   USHORT_T result;
 	
-	going = 1;
+	//going = 0;
   message.receiver = USER01_ID;
 
-  while(going) {
+  while(false) {
     if (MsgRecv(&message)!=MSG_OK) return;
     //if (EINSS7CpMsgRecv_r(&message,MSG_INFTIM)!=MSG_OK) return;
     if ( isStopping ) return;
