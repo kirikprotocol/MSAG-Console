@@ -6,14 +6,61 @@
 
 using namespace std;
 
+class TextObject
+{
+	istream* is;
+	int i;
+	static string text[];
+public:
+	TextObject() : is(NULL), i(0) {}
+	TextObject(istream* _is) : is(_is) {}
+	~TextObject();
+	bool getLine(string& s);
+};
+
+string TextObject::text[] =
+{
+	"`1234567890-=\\][poiuytrewq	asdfghjkl;'/.,mnbvcx z",
+	"~!@#$%^&*()_+|}{POIUYTREWQ	ASDFGHJKL:\"?><MNBVCX Z",
+	"¸1234567890-=\\úõçùøãíåêóöé	ôûâàïðîëäæý.þáüòèìñ÷ ÿ",
+	"¨!\"¹;%:?*()_+/ÚÕÇÙØÃÍÅÊÓÖÉ	ÔÛÂÀÏÐÎËÄÆÝ,ÞÁÜÒÈÌÑ× ß"
+};
+
+TextObject::~TextObject()
+{
+	if (is)
+	{
+		delete is;
+	}
+}
+
+bool TextObject::getLine(string& s)
+{
+	if (is)
+	{
+		return getline(*is, s);
+	}
+	else if (i < sizeof(text)/sizeof(*text))
+	{
+		s = text[i++];
+		return true;
+	}
+	return false;
+}
+
 int main(int argc, char* argv[])
 {
-	if (argc <= 1)
+	TextObject* text;
+	cout << "Usage: recoder [cp1251 file]" << endl;
+	if (argc == 2)
 	{
-		cout << "recoder <cp1251 file>" << endl;
-		exit(-1);
+		text = new TextObject(new ifstream(argv[1])); //cp1251
 	}
-	ifstream in(argv[1]); //cp1251
+	else
+	{
+		text = new TextObject();
+	}
+	ofstream original("original.txt");
 	ofstream ucs2test("ucs2test.txt");
 	ofstream ucs2backTest("ucs2backTest.txt");
 	ofstream koi8test("koi8test.txt");
@@ -21,11 +68,13 @@ int main(int argc, char* argv[])
 	ofstream bit7backTest("bit7backTest.txt");
 	string s;
 	s.reserve(1024);
-	while (getline(in, s))
+	while (text->getLine(s))
 	{
 		s += "\n";
 		int textLen;
 		char text[s.length() * 2];
+		//original
+		original.write(s.c_str(), s.length());
 		//ucs2
 		short ucs2Buf[s.length() + 10];
 		int ucs2Len = ConvertMultibyteToUCS2(s.c_str(), s.length(), ucs2Buf,
@@ -53,10 +102,7 @@ int main(int argc, char* argv[])
 		textLen = Convert7BitToText(bit7buf, bit7len, text, sizeof(text));
 		bit7backTest.write(text, textLen);
 	}
-	ucs2test.flush();
-	ucs2backTest.flush();
-	koi8test.flush();
-	koi8backTest.flush();
-	bit7backTest.flush();
+	delete text;
+	cout << "Conversion complete" << endl;
 }
 

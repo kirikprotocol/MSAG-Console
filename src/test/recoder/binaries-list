@@ -1,2 +1,3 @@
 #binary name	source name	libraries
 test/recoder	recoder		-lutil-recoder-recode_dll
+test/translit	translit		-lutil-recoder-recode_dll
