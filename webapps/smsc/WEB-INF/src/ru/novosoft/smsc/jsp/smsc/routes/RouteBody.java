@@ -1,6 +1,8 @@
 package ru.novosoft.smsc.jsp.smsc.routes;
 
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
+import ru.novosoft.smsc.util.SortedList;
+import ru.novosoft.smsc.util.Comparator_CaseInsensitive;
 
 import java.util.*;
 
@@ -44,12 +46,12 @@ public class RouteBody extends SmscBean
 
 	public Collection getAllSubjects()
 	{
-		return routeSubjectManager.getSubjects().getNames();
+		return new SortedList(routeSubjectManager.getSubjects().getNames(), new Comparator_CaseInsensitive());
 	}
 
 	public Collection getAllSmes()
 	{
-		return smeManager.getSmeNames();
+		return new SortedList(smeManager.getSmeNames(), new Comparator_CaseInsensitive());
 	}
 
 	public boolean isSmeSelected(String dstName, String smeId)
@@ -237,4 +239,14 @@ public class RouteBody extends SmscBean
 	{
 		this.srcSmeId = srcSmeId;
 	}
+
+  public String getDefaultSubjectSme(String subjId)
+  {
+    try {
+      return routeSubjectManager.getSubjects().get(subjId).getDefaultSme().getId();
+    } catch (Throwable e) {
+      logger.error("Could not get default SME for subject \"" + subjId + "\"", e);
+      return "";
+    }
+  }
 }

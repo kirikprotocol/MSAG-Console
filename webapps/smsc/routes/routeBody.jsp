@@ -15,9 +15,9 @@ function byteToHexStr(bth)
 		return String.fromCharCode(0x30 + bth);
 	else
 		return String.fromCharCode(0x41 + bth - 10);
-}			
+}
 function encodeHEX( str ) {
-	var c = 0;						
+	var c = 0;
 	var result = "";
 	for (i = 0; i < str.length; i++) {
 		result += byteToHexStr((str.charCodeAt(i)>>4)&0xF) + byteToHexStr((str.charCodeAt(i))&0xF);
@@ -137,14 +137,13 @@ function encodeHEX( str ) {
 		<col width="0%">
 		<tr>
 			<td>Subject</td>
-			<td><select id=dstSubjSelect><%
+			<td><select id=dstSubjSelect onchange="return selectDefaultSme();"><%
 				for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();)
 				{
 					String name = (String) i.next();
 					if (!bean.isDstChecked(name)) {
 						String encName = StringEncoderDecoder.encode(name);
-						String hexName = StringEncoderDecoder.encodeHEX(name);
-						%><option value="<%=encName%>"><%=encName%></option><%
+						%><option value="<%=encName%>" defaultSme="<%=StringEncoderDecoder.encode(bean.getDefaultSubjectSme(name))%>"><%=encName%></option><%
 					}
 				}%></select></td>
 			<td><select id=dstSubjSmeSelect><%
@@ -152,7 +151,7 @@ function encodeHEX( str ) {
 				{
 					String smeId = (String) j.next();
 					String encSmeId = StringEncoderDecoder.encode(smeId);
-					%><option value="<%=encSmeId%>"><%=encSmeId%></option><%
+					%><option id="<%=encSmeId%>" value="<%=encSmeId%>"><%=encSmeId%></option><%
 				}
 				%></select></td>
 			<td><img src="<%=CPATH%>/img/but_add.gif" onclick="addDestSubj()" style="cursor:hand;"></td>
@@ -316,42 +315,61 @@ function encodeHEX( str ) {
 				} else
 					return false;
 			}
+      function selectDefaultSme(){
+        var selectElem = opForm.all.dstSubjSelect;
+        var smeSelectElem = opForm.all.dstSubjSmeSelect;
+        if (selectElem.options.length > 0)
+        {
+          var defaultSme = selectElem.options[selectElem.selectedIndex].defaultSme;
+          if (defaultSme != null) {
+            var optionElem = smeSelectElem.options(defaultSme, 0);
+            if (optionElem != null)
+            optionElem.selected = true;
+          }
+        }
+        return true;
+      }
 			function removeDestSubj(rowId)
 			{
-				var selectElem = opForm.all.dstSubjSelect;	
+				var selectElem = opForm.all.dstSubjSelect;
 				var tbl = opForm.all.destinations_table;
 				var rowElem = tbl.rows(rowId);
 				var subjValue = rowElem.all.subjDst.value;
+        var subjDefaultSme = rowElem.all.subjDst.defaultSme;
 				var oOption = document.createElement("OPTION");
 				selectElem.options.add(oOption);
 				oOption.innerText = subjValue;
 				oOption.value = subjValue;
+        oOption.defaultSme = subjDefaultSme;
 				selectElem.disabled = false;
 				tbl.deleteRow(rowElem.rowIndex);
+        return selectDefaultSme();
 			}
 			function addDestSubj() {
 				var selectElem = opForm.all.dstSubjSelect;
 				if (selectElem.options.length > 0) {
 					var subjValue = selectElem.options[selectElem.selectedIndex].value;
+          var subjDefaultSme = selectElem.options[selectElem.selectedIndex].defaultSme;
 					var tbl = opForm.all.destinations_table;
 					var smeSelect = opForm.all.dstSubjSmeSelect;
 					var sme = smeSelect.options[smeSelect.selectedIndex].value;
 					var newRow = tbl.insertRow(tbl.rows.length);
 					newRow.className = "row" + ((tbl.rows.length+1) & 1);
 					newRow.id = "srcRow_" + (global_counter++);
-					
-					newCell = document.createElement("td");					
+
+					newCell = document.createElement("td");
 					newCell.innerHTML = '<img src="<%=CPATH%>/img/subject.gif">';
 					newRow.appendChild(newCell);
-					
-					newCell = document.createElement("td");					
+
+					newCell = document.createElement("td");
 					newCell.innerHTML = subjValue + '<input id=subjDst type=hidden name=checkedDestinations value="' + subjValue + '">';
+          newCell.all.subjDst.defaultSme = subjDefaultSme;
 					newRow.appendChild(newCell);
-					
+
 					newCell = document.createElement("td");
 					newCell.innerHTML = smesSelectText;
 					newSelect = newCell.all.newSmesSelect;
-					newSelect.name = "dst_sme_" + encodeHEX(subjValue);					
+					newSelect.name = "dst_sme_" + encodeHEX(subjValue);
 					newSelect.all["option_" + encodeHEX(sme)].selected = true;
 					newRow.appendChild(newCell);
 
@@ -362,6 +380,8 @@ function encodeHEX( str ) {
 					selectElem.focus();
 					if (selectElem.options.length == 0)
 						selectElem.disabled = true;
+
+          return selectDefaultSme();
 				}
 			}
 		</script>
@@ -381,7 +401,7 @@ function encodeHEX( str ) {
 				String rowId = "subjRow_" + StringEncoderDecoder.encodeHEX(name);
 				%><tr class=row<%=(rowN++)&1%> id=<%=rowId%>>
 					<td><img src="<%=CPATH%>/img/subject.gif"></td>
-					<td><%=encName%><input id=subjDst type=hidden name=checkedDestinations value="<%=encName%>"></td>
+					<td><%=encName%><input id=subjDst type=hidden name=checkedDestinations value="<%=encName%>" defaultSme="<%=StringEncoderDecoder.encode(bean.getDefaultSubjectSme(name))%>"></td>
 					<td><select name=dst_sme_<%=hexName%>>
 						<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
 						{
@@ -423,5 +443,7 @@ function encodeHEX( str ) {
 	</td>
 </tr>
 </table>
-
+<script>
+selectDefaultSme();
+</script>
 </div>
