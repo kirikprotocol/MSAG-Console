@@ -37,9 +37,9 @@ public:
   {
 //#if defined USE_MAP
     struct timeval utime, curtime;
-    if( time_logger.isDebugEnabled() ) gettimeofday( &utime, 0 );
+    if( time_logger->isDebugEnabled() ) gettimeofday( &utime, 0 );
     ::MAPIO_PutCommand(cmd);
-    if( time_logger.isDebugEnabled() ) {
+    if( time_logger->isDebugEnabled() ) {
       long usecs;
       gettimeofday( &curtime, 0 );
       usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
