@@ -339,14 +339,17 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 				{
 					case 1:
 					case 2:
+					case 3:
 						process(tcAlias->addCorrectAliasMatch(&alias, RAND_TC));
 						break;
-					case 3:
+					case 4:
 						process(tcAlias->addCorrectAliasNotMatchAddress(&alias, RAND_TC));
 						break;
-					case 4:
+					case 5:
 						process(tcAlias->addCorrectAliasNotMatchAlias(&alias, RAND_TC));
 						break;
+					default:
+						__unreachable__("Invalid alias test case");
 				}
 			}
 		}
@@ -357,7 +360,7 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 	{
 		for (int j = 0; j < numAddr; j++)
 		{
-			for (TCSelector s(RAND_SET_TC, 4); s.check(); s++)
+			for (TCSelector s(RAND_SET_TC, 5); s.check(); s++)
 			{
 				RouteInfo route;
 				route.source = *addr[i];
@@ -367,17 +370,20 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 				{
 					case 1:
 					case 2:
+					case 3:
 						process(tcRoute->addCorrectRouteMatch(
 							&route, NULL, RAND_TC));
 						break;
-					case 3:
+					case 4:
 						process(tcRoute->addCorrectRouteNotMatch(
 							&route, NULL, RAND_TC));
 						break;
-					case 4:
+					case 5:
 						process(tcRoute->addCorrectRouteNotMatch2(
 							&route, NULL, RAND_TC));
 						break;
+					default:
+						__unreachable__("Invalid route test case");
 				}
 			}
 		}
