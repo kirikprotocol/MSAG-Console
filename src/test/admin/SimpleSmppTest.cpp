@@ -136,7 +136,8 @@ void SimpleSmppTest::submit(const string& src, const string& dest,
 	try
 	{
 		PduSubmitSm pdu;
-		SmppUtil::setupRandomCorrectSubmitSmPdu(&pdu, true, OPT_ALL & ~OPT_USSD_SERVICE_OP);
+		SmppUtil::setupRandomCorrectSubmitSmPdu(&pdu, true, false,
+			OPT_ALL & ~OPT_USSD_SERVICE_OP);
 		PduAddress addr;
 		const Address srcAddr(src.c_str());
 		const Address destAddr(dest.c_str());
