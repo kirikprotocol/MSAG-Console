@@ -23,6 +23,7 @@
 
 #include <core/buffers/XHash.hpp>
 #include <core/buffers/Array.hpp>
+#include <map>
 
 #include "MessageStore.h"
 #include "ConnectionManager.h"
@@ -463,18 +464,24 @@ namespace smsc { namespace store
     
     struct UpdateRecord
     {
-        SMSId       id;
-        
         State       state;
         Descriptor  dst;
         uint32_t    fcs;
         time_t      nt;
 
-        UpdateRecord(SMSId _id, State _state) 
-            : id(_id), state(_state), fcs(0), nt(0) {};
-        UpdateRecord(SMSId _id, State _state, const Descriptor& _dst,
+        UpdateRecord(State _state) 
+            : state(_state), fcs(0), nt(0) {};
+        UpdateRecord(State _state, const Descriptor& _dst,
                      uint32_t _fcs = 0, time_t _nt = 0)
-            : id(_id), state(_state), dst(_dst), fcs(_fcs), nt(_nt) {};
+            : state(_state), dst(_dst), fcs(_fcs), nt(_nt) {};
+    };
+
+    struct IdxSMS : public SMS
+    {
+        SMSId id;
+
+        IdxSMS(SMSId _id, const SMS& sm) : SMS(sm), id(_id) {};
+        virtual ~IdxSMS() {};
     };
 
     class SmsCache
@@ -544,9 +551,9 @@ namespace smsc { namespace store
             };
         };
 
-        XHash<SMSId, SMS*, SMSIdIdx>                idCache;
-        XHash<ComplexMrIdx, SMS*, ComplexMrIdx>     mrCache;
-        XHash<ComplexStIdx, SMS*, ComplexStIdx>     stCache;
+        XHash<SMSId,        IdxSMS*, SMSIdIdx>      idCache;
+        XHash<ComplexMrIdx, IdxSMS*, ComplexMrIdx>  mrCache;
+        XHash<ComplexStIdx, IdxSMS*, ComplexStIdx>  stCache;
 
     public:
 
@@ -554,7 +561,7 @@ namespace smsc { namespace store
         virtual ~SmsCache();
 
         bool delSms(SMSId id);
-        void putSms(SMSId id, SMS* sm);
+        void putSms(IdxSMS* sm);
         
         SMS* getSms(SMSId id);
         SMS* getSms(const Address& oa, const Address& da, 
@@ -563,7 +570,7 @@ namespace smsc { namespace store
                     uint16_t mr, SMSId& id);
     };
 
-    class CachedStore : public RemoteStore
+    class CachedStore : public RemoteStore, public Thread
     {
     protected:
 
@@ -571,12 +578,37 @@ namespace smsc { namespace store
         Mutex                   cacheMutex;
 
         StorageConnection*      connection;
-    
+
+        std::multimap<SMSId, UpdateRecord*> updates;
+        Mutex                               updateMutex;
+        
+        int                                 maxUncommitedCount;
+        time_t                              maxSleepInterval;
+
+        Event                               processEvent;
+        Event                               exitedEvent;
+        Mutex                               startLock;
+        bool                                bNeedExit;
+        bool                                bStarted;
+        
+        
+        void addUpdate(SMSId id, UpdateRecord* update)
+            throw(StorageException, NoSuchMessageException);
+        bool delUpdate(SMSId id);
+
+        void processUpdates();
+        void processUpdate(SMSId id, UpdateRecord* update)
+            throw(StorageException, NoSuchMessageException);
+
     public:
 
         CachedStore(Manager& config) 
             throw(ConfigException, StorageException);
         virtual ~CachedStore();
+
+        virtual int Execute();
+        void Start();
+        void Stop();
         
         virtual void createSms(SMS& sms, SMSId id,
                                const CreateMode flag = CREATE_NEW)
