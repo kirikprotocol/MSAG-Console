@@ -145,7 +145,11 @@ void submitSmTc()
 	__reg_tc__("submitSm.correct.validTimeDefault",
 		"Установить срок валидности по умолчанию (validity_period = NULL)");
 	__reg_tc__("submitSm.correct.smLengthMarginal",
-		"Предельные значения длины тела сообщения");
+		"Предельные значения длины поля short_message");
+	__reg_tc__("submitSm.correct.messagePayloadLengthMarginal",
+		"Предельные значения длины поля message_payload");
+	__reg_tc__("submitSm.correct.ussdRequest",
+		"Отправка корректного ussd запроса");
 	__reg_tc__("submitSm.correct.checkMap",
 		"Дублированное сообщение согласно MAP (совпадают source_addr, dest_addr и user_message_reference), но согласно SMPP существующее сообщение находящееся в очереди доставки замещено быть не может");
 	__reg_tc__("submitSm.correct.notReplace",
@@ -185,6 +189,8 @@ void submitSmTc()
 		"Значения schedule_delivery_time меньше validity_period, но оба больше максимального validity_period для SC");
 	__reg_tc__("submitSm.incorrect.dataCoding",
 		"Недопустимые значения dataCoding");
+	__reg_tc__("submitSm.incorrect.bothMessageFields",
+		"Заданы оба поля short_message и message_payload");
 	__reg_tc__("submitSm.incorrect.serviceTypeLength",
 		"Длина поля service_type больше допустимой");
 	__reg_tc__("submitSm.incorrect.sourceAddrLength",
@@ -237,6 +243,8 @@ void submitSmTc()
 		"Если код ошибки ESME_RSYSERR в поле command_status, то на стороне SC действительно возникла неустранимая ошибка (transaction rollback при сохранении сообщения)");
 	__reg_tc__("submitSm.resp.checkCmdStatusInvalidBindStatus",
 		"Если код ошибки ESME_RINVBNDSTS в поле command_status, то действительно sme зарегистрированна как receiver");
+	__reg_tc__("submitSm.resp.checkCmdStatusSubmitFailed",
+		"Если код ошибки ESME_RSUBMITFAIL в поле command_status, то pdu действительно некорректная (присутствуют оба поля short_message и message_payload и т.п.)");
 	__reg_tc__("submitSm.resp.checkCmdStatusNoRoute",
 		"Если код ошибки NOROUTE в поле command_status, то маршрута действительно не существует");
 	__reg_tc__("submitSm.resp.checkCmdStatusOther",
