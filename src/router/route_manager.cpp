@@ -225,9 +225,9 @@ RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& xcm
   if (trace_)
   {
     ostringstream ost;
-    ost << (xcmp?(strong?"strong":"weak  "):"none  ")
-      << " matching with " 
-      << AddrToString(node->record->info.source) << " -> "
+    ost << (!xcmp?(strong?"strong":"weak  "):"none  ")
+      << " matching by source address with tuple {" 
+      << AddrToString(node->record->info.source) << "} -> "
       << AddrToString(node->record->info.dest);
     trace_->push_back(ost.str());
   }
@@ -278,10 +278,10 @@ RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& xcmp,vect
   if (trace_)
   {
     ostringstream ost;
-    ost << (xcmp?(strong?"strong":"weak  "):"none  ")
-      << " matching with " 
-      << AddrToString(node->record->info.source) << " -> "
-      << AddrToString(node->record->info.dest);
+    ost << (!xcmp?(strong?"strong":"weak  "):"none  ")
+      << " matching by dest address with tuple " 
+      << AddrToString(node->record->info.source) << " -> {"
+      << AddrToString(node->record->info.dest) << "}";
     trace_->push_back(ost.str());
   }
   if ( xcmp == 0 )
@@ -620,35 +620,35 @@ __synchronized__
 
   RouteRecord* rec =  findInTree(&root,&source,&dest,trace_enabled_?&trace_:0);
   if ( !rec ) {
-    trace_.push_back("adress matching not found");
+    trace_.push_back("route not found");
     return false;
   }
   // изменение от 4 июля 2003, ищем альтернативный маршрут
   RouteRecord* rec0 = 0;
-
+  
   if ( trace_enabled_ ) {
     ostringstream ost;
-    ost << "lookup for src proxy: '" << sme_table->getSmeInfo(srcidx).systemId << "'";
+    ost << "lookup for alternative route with src proxy: '" << sme_table->getSmeInfo(srcidx).systemId << "'";
     trace_.push_back(ost.str());
   }
 
   for ( ; rec != 0 ; rec = rec->alternate_pair ) {
     if ( trace_enabled_ ) {
       ostringstream ost;
-      ost << "alternative route with src proxy: '" << sme_table->getSmeInfo(rec->srcProxyIdx).systemId << "'";
+      ost << "check alternative route with src proxy: '" << sme_table->getSmeInfo(rec->srcProxyIdx).systemId << "'";
       trace_.push_back(ost.str());
     }
     if ( rec->srcProxyIdx == srcidx ) {
       if ( trace_enabled_ ) {
         ostringstream ost;
-        ost << "found strong matching with src proxy: '" << sme_table->getSmeInfo(rec->srcProxyIdx).systemId << "'";
+        ost << "found alternative route with src proxy: '" << sme_table->getSmeInfo(rec->srcProxyIdx).systemId << "'";
         trace_.push_back(ost.str());
       }
       break;
     }
     if ( rec->srcProxyIdx == 0 ) {
       if ( trace_enabled_ )
-        trace_.push_back("found default src proxy (zero)");
+        trace_.push_back("found default src proxy (zero) for route");
       rec0 = rec;
     }
   }
@@ -661,8 +661,14 @@ __synchronized__
   }
 
   proxy = sme_table->getSmeProxy(rec->proxyIdx);
+
   if ( trace_enabled_ ) {
-    trace_.push_back((string("route found, target proxy is '")+=rec->info.smeSystemId)+="'");
+    ostringstream ost;
+    ost << "route found, "
+      << AddrToString(node->record->info.source) << "(" << sme_table->getSmeInfo(rec->srcProxyIdx).systemId << ") -> "
+      << AddrToString(node->record->info.dest) << "(" << rec->info.smeSystemId << ")";
+//    trace_.push_back((string("route found, target proxy is '")+=rec->info.smeSystemId)+="'");
+    trace_.push_back(ost.str());
   }
   if ( info ) *info = rec->info;
   if ( idx && rec->info.enabling ) *idx = rec->proxyIdx;
