@@ -116,7 +116,7 @@ public:
     return dlg;
   }
   void dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid){
-    MapDialogCntItem* item = 0;
+    MapDialog* item = 0;
     if ( hash.Get(dialogueid,item) ){
       hash.Delete(dialogueid);
       delete item;
