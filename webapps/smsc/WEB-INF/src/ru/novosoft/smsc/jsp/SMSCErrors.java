@@ -31,6 +31,7 @@ public class SMSCErrors
 			public static final String coudntAddService = B + "coudntAddService";
 			public static final String invalidPriority = B + "invalidPriority";
 			public static final String alreadyExists = B + "alreadyExists";
+			public static final String NotAllParametersDefined = B + "NotAllParametersDefined";
 		}
 
 		public static class hosts

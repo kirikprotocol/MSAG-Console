@@ -6,6 +6,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.smsc_service.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
+FORM_METHOD = "POST";
 TITLE = "SMSC";
 switch(bean.process(appContext, errorMessages, request))
 {

@@ -60,11 +60,13 @@ public class ServiceAddExternalAdm extends PageBean
 
 		if (mbCancel != null)
 		{
+			mbCancel = null;
 			cleanup();
 			return RESULT_DONE;
 		}
 		else if (mbNext != null)
 		{
+			mbNext = null;
 			switch (stage)
 			{
 				case 0:
@@ -172,23 +174,31 @@ public class ServiceAddExternalAdm extends PageBean
 			return error(SMSCErrors.error.services.invalidPriority, String.valueOf(priority));
 
 
-		ServiceInfo serviceInfo = new ServiceInfo(serviceId,
-																hostName,
-																port,
-																startupArgs,
-																new SME(serviceId,
-																		  priority,
-																		  SME.SMPP,
-																		  typeOfNumber,
-																		  numberingPlan,
-																		  interfaceVersion,
-																		  systemType,
-																		  "",
-																		  rangeOfAddress,
-																		  -1,
-																		  false,
-																		  8),
-																ServiceInfo.STATUS_STOPPED);
+		ServiceInfo serviceInfo = null;
+		try
+		{
+			serviceInfo = new ServiceInfo(serviceId,
+																			hostName,
+																			port,
+																			startupArgs,
+																			new SME(serviceId,
+																					  priority,
+																					  SME.SMPP,
+																					  typeOfNumber,
+																					  numberingPlan,
+																					  interfaceVersion,
+																					  systemType,
+																					  "",
+																					  rangeOfAddress,
+																					  -1,
+																					  false,
+																					  8),
+																			ServiceInfo.STATUS_STOPPED);
+		}
+		catch (NullPointerException e)
+		{
+			return error(SMSCErrors.error.services.NotAllParametersDefined);
+		}
 
 		try
 		{

@@ -3,39 +3,38 @@
 
 <users>
 	<user login="igork" password="asdlkj" firstName="Igor" lastName="????????" dept="??????" workPhone="?? ????" homePhone="? ????" cellPhone="?? ?????" email="a@b">
-		<role name="services"/>
 		<role name="aliases"/>
-		<role name="smsView"/>
 		<role name="apply"/>
 		<role name="hosts"/>
 		<role name="profiles"/>
 		<role name="routes"/>
-		<role name="users"/>
+		<role name="services"/>
+		<role name="smsView"/>
 		<role name="subjects"/>
+		<role name="users"/>
+	</user>
+	<user login="superadmin" password="123" firstName="first" lastName="last" dept="dept" workPhone="work" homePhone="home" cellPhone="cell" email="email@email.com">
+		<role name="aliases"/>
+		<role name="apply"/>
+		<role name="hosts"/>
+		<role name="perfmon"/>
+		<role name="profiles"/>
+		<role name="routes"/>
+		<role name="services"/>
+		<role name="smsView"/>
+		<role name="smsc_service"/>
+		<role name="smsstat"/>
+		<role name="subjects"/>
+		<role name="users"/>
+	</user>
+	<user login="test" password="test" firstName="first" lastName="last" dept="dept" workPhone="work" homePhone="home" cellPhone="cell" email="email@email.com">
 	</user>
 	<user login="user1" password="asd" firstName="user1 first" lastName="user1 l" dept="user1 d" workPhone="user1 w" homePhone="user1 h" cellPhone="user1 c" email="user1@user1.user1">
 		<role name="aliases"/>
-		<role name="smsView"/>
 		<role name="profiles"/>
 		<role name="routes"/>
-		<role name="subjects"/>
-	</user>
-	<user login="superadmin" password="123" firstName="first" lastName="last" dept="dept" workPhone="work" homePhone="home" cellPhone="cell" email="email@email.com">
-		<role name="apply"/>
-		<role name="smsc_service"/>
-		<role name="perfmon"/>
 		<role name="smsView"/>
 		<role name="smsstat"/>
-		<role name="users"/>
-		<role name="routes"/>
 		<role name="subjects"/>
-		<role name="aliases"/>
-		<role name="profiles"/>
-		<role name="hosts"/>
-		<role name="services"/>
-	</user>
-	<user login="test" password="test" firstName="first" lastName="last" dept="dept" workPhone="work" homePhone="home" cellPhone="cell" email="email@email.com">
-		<role name="apply"/>
-		<role name="aliases"/>
 	</user>
 </users>

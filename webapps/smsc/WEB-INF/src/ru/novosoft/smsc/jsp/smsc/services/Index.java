@@ -40,6 +40,15 @@ public class Index extends PageBean
 		if (result != RESULT_OK)
 			return result;
 
+		try
+		{
+			serviceManager.refreshServices();
+		}
+		catch (Throwable t)
+		{
+			logger.warn("Couldn't refresh service statuses", t);
+		}
+
 		if (mbAddService != null)
 		{
 			return RESULT_ADD;
@@ -118,6 +127,8 @@ public class Index extends PageBean
 
 	protected int startServices()
 	{
+		logger.debug("startServices: " + (serviceIds != null ? serviceIds.length : 0));
+
 		int result = RESULT_OK;
 		if (serviceIds.length == 0)
 			return error(SMSCErrors.warning.hosts.noServicesSelected);
@@ -145,6 +156,8 @@ public class Index extends PageBean
 							logger.error("Couldn't start services \"" + serviceIds[i] + '"');
 						}
 					}
+					else
+						logger.debug("startServices: "	+ serviceIds[i] +" is " + s.getStatusStr());
 				}
 				catch (AdminException e)
 				{
@@ -166,6 +179,8 @@ public class Index extends PageBean
 
 	protected int stopServices()
 	{
+		logger.debug("stopServices: " + (serviceIds != null ? serviceIds.length : 0));
+
 		int result = RESULT_OK;
 
 		if (serviceIds.length == 0)
@@ -185,6 +200,8 @@ public class Index extends PageBean
 					Daemon daemon = daemonManager.getDaemon(s.getHost());
 					daemon.shutdownService(serviceIds[i]);
 				}
+				else
+					logger.debug("stopServices: " + serviceIds[i] + " is " + s.getStatusStr());
 			}
 			catch (AdminException e)
 			{

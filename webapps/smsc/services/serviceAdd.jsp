@@ -4,6 +4,7 @@ TITLE = "Services List / Add service: step 1";
 String hostName = request.getParameter("hostName");
 if (request.getParameter("mbCancel") != null)
 {
+	System.err.println("AddService page :Cancel\n");
 	if (hostName != null)
 		response.sendRedirect(CPATH+"/hosts/hostView.jsp?hostName=" + hostName);
 	else
@@ -11,6 +12,7 @@ if (request.getParameter("mbCancel") != null)
 	return;
 } else if (request.getParameter("mbNext") != null)
 {
+	System.err.println("AddService page :next\n");
 	if ("internal".equals(request.getParameter("serviceType"))) {
 		response.sendRedirect("serviceAddInternal.jsp" + (hostName != null ? ("?hostName="+hostName) : ""));
 		return;
