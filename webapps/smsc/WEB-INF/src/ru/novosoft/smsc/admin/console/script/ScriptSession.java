@@ -47,7 +47,7 @@ public class ScriptSession extends Session
             throws Exception
     {
         int tries = 0;
-        while (!isStopping)
+        while (!isStopping && !writer.checkError())
         {
             showMessage(writer, CommandContext.CMD_OK, CONSOLE_CONNECT);
             String login = readTelnetLine(false);

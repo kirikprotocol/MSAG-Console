@@ -90,7 +90,8 @@ public abstract class Session extends Thread
         while( (b=is.read()) != -1 ) {
             //System.out.println("Got CHR="+(char)b+" code "+b);
             if( b == ESC_IAC ) {
-                //System.out.println("Got IAC");
+                System.out.println("Got IAC, esc: "+escape);
+                if ( parameter ) continue;
                 if (!escape) {
                     escape = true;
                     continue;
@@ -100,14 +101,14 @@ public abstract class Session extends Thread
                 }
             }
             if( typeofop ) {
-                //System.out.println("Got TGT="+b);
+                System.out.println("Got TGT="+b);
                 escape = false;
                 typeofop = false;
                 continue;
             }
             if( parameter ) {
                 if( b == ESC_SE ) {
-                    //System.out.println("Got SE");
+                    System.out.println("Got SE");
                     escape = false;
                     parameter = false;
                 }
@@ -115,10 +116,10 @@ public abstract class Session extends Thread
             }
             if( escape ) {
                 if( b == ESC_SB ) {
-                    //System.out.println("Got SB");
+                    System.out.println("Got SB");
                     parameter = true;
                 } else {
-                    //System.out.println("Got CMD="+b);
+                    System.out.println("Got CMD="+b);
                     typeofop = true;
                 }
                 continue;
