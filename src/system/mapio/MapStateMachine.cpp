@@ -497,15 +497,19 @@ static void SendRInfo(MapDialog* dialog)
   SMS *sms = dialog->sms.get();
 
   if ( !dialog->isQueryAbonentStatus ) {
-    if( sms != 0 && 
-        (
-            sms->getIntProperty(Tag::SMPP_PRIORITY) > 0 ||
-            !dialog->hasMwdStatus ||
-            sms->getAttemptsCount()%4 == 0
-        )
-      )
-    {
-      hiPrior = true;
+    if( sms != 0 ) {
+      __map_trace2__("MAP::%s dialogid:0x%x ssn:%d smpp_prio:%d has_mwd:%s ac:%d",__FUNCTION__,dialog_id,dialog->ssn,sms->getIntProperty(Tag::SMPP_PRIORITY), dialog->hasMwdStatus?"true":"false", sms?(int)sms->getAttemptsCount():-1);
+      if( sms->getIntProperty(Tag::SMPP_PRIORITY) > 0 ) {
+        hiPrior = true;
+      } else {
+        if( !dialog->hasMwdStatus ) {
+          hiPrior = true;
+        } else {
+          if( sms->getAttemptsCount()%4 == 0 ) {
+            hiPrior = true;
+          }
+        }
+      }
     }
   }
   __map_trace2__("MAP::%s dialogid:0x%x ssn:%d hiprior:%s ac:%d",__FUNCTION__,dialog_id,dialog->ssn,hiPrior?"true":"false", sms?(int)sms->getAttemptsCount():-1);
