@@ -740,7 +740,10 @@ struct PduPartSm //: public MemoryManagerUnit
   inline const char* get_shortMessage() { return shortMessage.cstr(); }
   inline int size_shortMessage(){ return shortMessage.size(); }
   inline uint8_t get_smLength(){ return (uint8_t)shortMessage.size(); }
-
+  ~PduPartSm()
+  {
+    delete dests;
+  }
   PduPartSm() :
     numberOfDests(0),
     dests(0),

@@ -85,7 +85,8 @@ static inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
       if ( cmdid == SUBMIT_MULTI )
       {
         fillX(stream, sm.numberOfDests);
-        if ( sm.numberOfDests )
+        if ( sm.numberOfDests ) {
+          sm.dests = new PduDestAddress[sm.numberOfDests];
           for ( int i=0; i < sm.numberOfDests; ++i )
           {
             fillX(stream,sm.dests[i].flag);
@@ -104,6 +105,7 @@ static inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
               throw BadDataException();
             }
           }
+        }
       }
       else
       {
