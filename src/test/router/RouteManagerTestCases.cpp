@@ -23,11 +23,6 @@ using smsc::util::Logger;
 using smsc::sms::AddressValue;
 using smsc::test::core::RouteUtil;
 
-void RouteManagerTestCases::debugRoute(const TestRouteData* routeData)
-{
-	getLog().debugStream() << "addRoute(): " << *routeData;
-}
-
 RouteManagerTestCases::RouteManagerTestCases()
 	: routeMan(CoreTestManager::getRouteManager()) {}
 
@@ -132,26 +127,11 @@ void RouteManagerTestCases::setupRandomAddressNotMatch(Address& addr, int num)
 	}
 }
 
-void RouteManagerTestCases::setupRandomPriority(RoutePriority* priority, int num)
-{
-	switch(num)
-	{
-		case 1: //максимальный приоритет
-			*priority = RoutePriorityMax;
-			break;
-		case 2: //минимальный приоритет
-			*priority = RoutePriorityMin;
-			break;
-		default:
-			throw "";
-	}
-}
-
 TCResult* RouteManagerTestCases::addCorrectRouteMatch(
 	const SmeSystemId& smeSystemId, TestRouteData* data, int num)
 {
-	int num1 = 7; int num2 = 7; int num3 = 2;
-	TCSelector s(num, num1 * num2 * num3);
+	int num1 = 7; int num2 = 7;
+	TCSelector s(num, num1 * num2);
 	TCResult* res = new TCResult(TC_ADD_CORRECT_ROUTE_MATCH, s.getChoice());
 	for (; s.check(); s++)
 	{
@@ -164,16 +144,14 @@ TCResult* RouteManagerTestCases::addCorrectRouteMatch(
 			//origAddr
 			route->source = data->origAddr;
 			data->origAddrMatch =
-				setupRandomAddressMatch(route->source, s.value1(num1, num2));
+				setupRandomAddressMatch(route->source, s.value1(num1));
 			//destAddr
 			route->dest = data->destAddr;
 			data->destAddrMatch =
-				setupRandomAddressMatch(route->dest, s.value2(num1, num2));
-			//приоритет
-			setupRandomPriority(&route->priority, s.value3(num1, num2));
-			getLog().debugStream() << "addCorrectRouteMatch(" <<
-				s.value1(num1, num2) << "," << s.value2(num1, num2) << "," <<
-				s.value3(num1, num2) << "): " << *data;
+				setupRandomAddressMatch(route->dest, s.value2(num1));
+			getLog().debugStream() << "[" << thr_self() <<
+				"]\taddCorrectRouteMatch(" << s.value1(num1) << "," <<
+				s.value2(num1) << "): " << *data;
 			routeMan->addRoute(*route);
 		}
 		catch(...)
@@ -224,7 +202,8 @@ TCResult* RouteManagerTestCases::addCorrectRouteNotMatch(
 				default:
 					throw s;
 			}
-			getLog().debugStream() << "addCorrectRouteNotMatch(" <<
+			getLog().debugStream() << "[" << thr_self() <<
+				"]\taddCorrectRouteNotMatch(" <<
 				s.value1(numMatch, numNotMatch) << "," <<
 				s.value2(numMatch, numNotMatch) << "," <<
 				s.value3(numMatch, numNotMatch) << "): " << *data;
@@ -312,7 +291,8 @@ TCResult* RouteManagerTestCases::addCorrectRouteNotMatch2(
 				default:
 					throw s;
 			}
-			getLog().debugStream() << "addCorrectRouteNotMatch2(" <<
+			getLog().debugStream() << "[" << thr_self() <<
+				"]\taddCorrectRouteNotMatch2(" <<
 				s.value() << "): " << *data;
 			routeMan->addRoute(*route);
 		}
@@ -376,31 +356,27 @@ void RouteManagerTestCases::printLookupResult(const Address& origAddr,
 	const Address& destAddr, const vector<const SmeProxy*>& proxyList,
 	const SmeProxy* proxy)
 {
-	stringstream ss;
-	ss << "lookupRoute(): ids = {";
-	/*
-	char buf[20];
+	ostringstream os;
+	os << "lookupRoute(): ids = {";
 	for (int i = 0; i < proxyList.size(); i++)
 	{
 		if (i > 0)
 		{
-			ss  << ',';
+			os  << ',';
 		}
-		ss << proxyList[i]->getUniqueId();
+		os << proxyList[i]->getUniqueId();
 	}
-	*/
-	/*
 	if (proxy)
 	{
-		//ss << "}, res = " << proxy->getUniqueId();
+		os << "}, res = " << proxy->getUniqueId();
 	}
 	else
 	{
-		ss << "}, res = <>";
+		os << "}, res = <>";
 	}
-	*/
-	ss << ", origAddr = " << origAddr;
-	ss << ", destAddr = " << destAddr;
+	os << ", origAddr = " << origAddr;
+	os << ", destAddr = " << destAddr;
+	getLog().debug("[%d]\t%s", thr_self(), os.str().c_str());
 	//getLog().debugStream() << ss.str();
 }
 
@@ -410,7 +386,7 @@ TCResult* RouteManagerTestCases::lookupRoute(const RouteRegistry& routeReg,
 	TCResult* res = new TCResult(TC_LOOKUP_ROUTE);
 	try
 	{
-		SmeProxy* proxy;
+		SmeProxy* proxy = NULL;
 		bool found = routeMan->lookup(origAddr, destAddr, proxy);
 		const vector<const SmeProxy*> proxyList = routeReg.lookup(origAddr, destAddr);
 		printLookupResult(origAddr, destAddr, proxyList, proxy);
@@ -420,10 +396,6 @@ TCResult* RouteManagerTestCases::lookupRoute(const RouteRegistry& routeReg,
 			found = false;
 			for (int i = 0; i < proxyList.size(); i++)
 			{
-const SmeProxy* p = proxyList[i];
-getLog().debug("proxyList[%d] = %lx", i, p);
-uint32_t uid = p->getUniqueId();
-getLog().debug("proxyList[%d]->getUniqueId() = %x", i,uid);
 				if (proxyList[i]->getUniqueId() == id)
 				{
 					found = true;
