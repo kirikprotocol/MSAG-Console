@@ -134,7 +134,8 @@ void MapIoTask::dispatcher()
   message.receiver = USER01_ID;
 
   while(going) {
-    if (MsgRecv(&message)!=MSG_OK) return;
+    //if (MsgRecv(&message)!=MSG_OK) return;
+    if (EINSS7CpMsgRecv_r(&message,MSG_INFTIM)!=MSG_OK) return;
     if ( isStopping ) return;
     if(!Et96MapHandleIndication(&message)) return;
   }
