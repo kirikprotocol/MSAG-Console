@@ -68,7 +68,7 @@ void StoreManager::startup(Manager& config)
             pool = new StorageConnectionPool(config);
             archiver = new Archiver(config);
             generator = new IDGenerator(archiver->getLastUsedId());
-            //archiver->Start();
+            archiver->Start();
         }
         catch (StorageException& exc)
         {
