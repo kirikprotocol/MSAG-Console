@@ -35,33 +35,25 @@ public class WSmeContext
       //service not found
     }
   }
-  public static void init(SMSCAppContext appContext, Principal loginedUserPrincipal)
-  {
+  public static void init(SMSCAppContext appContext, Principal loginedUserPrincipal) {
     if (instance == null) {
       instance = new WSmeContext(appContext, loginedUserPrincipal);
     }
   }
-
-  public static WSmeContext getInstance()
-  {
+  public static WSmeContext getInstance() {
     return instance;
   }
 
-  public Service getWsmeService()
-  {
+  synchronized public Service getWsmeService() {
     return wsmeService;
   }
-  public WSme getWsme()
-  {
+  synchronized public WSme getWsme() {
     return wsme;
   }
-  public Principal getLoginedUserPrincipal()
-  {
+  synchronized public Principal getLoginedUserPrincipal() {
     return loginedUserPrincipal;
   }
-
-  public SMSCAppContext getAppContext()
-  {
+  synchronized public SMSCAppContext getAppContext() {
     return appContext;
   }
 }

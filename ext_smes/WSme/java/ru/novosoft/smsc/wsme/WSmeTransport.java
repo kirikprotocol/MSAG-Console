@@ -36,7 +36,8 @@ public class WSmeTransport extends Service
 
   protected void checkComponents()
   {
-    if (add_visitor_method == null)
+    System.out.println("WSmeTransport::checkComponents() "+wsme_component);
+    if (wsme_component == null)
     {
       wsme_component = (Component)getInfo().getComponents().get(Constants.WSME_SME_ID);
       Map methods = wsme_component.getMethods();
@@ -49,7 +50,7 @@ public class WSmeTransport extends Service
     }
   }
 
-  public void addVisitor(String msisdn)
+  synchronized public void addVisitor(String msisdn)
       throws AdminException
   {
     Map args = new HashMap();
@@ -57,7 +58,7 @@ public class WSmeTransport extends Service
     refreshComponents();
     call(wsme_component, add_visitor_method, Type.Types[Type.StringType], args);
   }
-  public void removeVisitor(String msisdn)
+  synchronized public void removeVisitor(String msisdn)
       throws AdminException
   {
     Map args = new HashMap();
@@ -66,7 +67,7 @@ public class WSmeTransport extends Service
     call(wsme_component, remove_visitor_method, Type.Types[Type.StringType], args);
   }
 
-  public void addLang(String mask, String lang)
+  synchronized public void addLang(String mask, String lang)
       throws AdminException
   {
     Map args = new HashMap();
@@ -75,7 +76,7 @@ public class WSmeTransport extends Service
     refreshComponents();
     call(wsme_component, add_lang_method, Type.Types[Type.StringType], args);
   }
-  public void removeLang(String mask)
+  synchronized public void removeLang(String mask)
       throws AdminException
   {
     Map args = new HashMap();
@@ -84,7 +85,7 @@ public class WSmeTransport extends Service
     call(wsme_component, remove_lang_method, Type.Types[Type.StringType], args);
   }
 
-  public void addAd(int id, String lang, String ad)
+  synchronized public void addAd(int id, String lang, String ad)
       throws AdminException
   {
     Map args = new HashMap();
@@ -94,7 +95,7 @@ public class WSmeTransport extends Service
     refreshComponents();
     call(wsme_component, add_ad_method, Type.Types[Type.StringType], args);
   }
-  public void removeAd(int id, String lang)
+  synchronized public void removeAd(int id, String lang)
       throws AdminException
   {
     Map args = new HashMap();
