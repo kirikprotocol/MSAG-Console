@@ -22,7 +22,7 @@ public:
   }
   void releaseHeap()
   {
-    heap->releaseHeap();
+    if(heap)heap->releaseHeap();
   }
 
   void *getRawMem(int size)
