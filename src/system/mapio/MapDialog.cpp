@@ -524,6 +524,13 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
       auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(ui=new ET96MAP_SM_RP_UI_T);
       mkDeliverPDU(sms.get(),ui);
   
+      if ( ui->signalInfoLen > 140 ) {
+        __trace2__("MAP::Et96MapCloseInd:Et96MapDelimiterReq");
+        result = Et96MapDelimiterReq( SSN, dialogid, 0, 0 );
+        if( result != ET96MAP_E_OK ) {
+          __trace2__("MAP::Et96MapCloseInd:Et96MapDelimiterReq error 0x%x",result);
+        }
+      }
       __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq");
   	  result = Et96MapV2ForwardSmMTReq( SSN, dialogid, 1, &smRpDa, &smRpOa, ui, FALSE);
   	  if( result != ET96MAP_E_OK ) {
@@ -531,6 +538,9 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
   	  }
       __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq OK");
     	result = Et96MapDelimiterReq( SSN, dialogid, 0, 0 );
+      if( result != ET96MAP_E_OK ) {
+        __trace2__("MAP::Et96MapCloseInd:Et96MapDelimiterReq error 0x%x",result);
+      }
       __trace2__("MAP::send response to SMSC");
       //return true;// :) optimization
       return false;
