@@ -53,7 +53,8 @@ int main(void)
                           " 243684.875874387835"
                           " +5753.14e-10"
                           " -45454.5e+7");*/
-        command.setInData("\"Testing string value\" 1");
+        command.setInData("\"Testing string value\" 1 "
+                          "25 January, 2003 15:34:48");
 
         printf("\nInput  : '%s'\n",
                (command.getInData() ? command.getInData():""));
