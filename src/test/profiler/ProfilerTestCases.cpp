@@ -1,6 +1,7 @@
 #include "ProfilerTestCases.hpp"
 #include "test/core/ProfileUtil.hpp"
 #include "test/sms/SmsUtil.hpp"
+#include "test/smpp/SmppUtil.hpp"
 #include "test/util/TextUtil.hpp"
 #include "test/conf/TestConfig.hpp"
 #include "util/debug.h"
@@ -18,6 +19,7 @@ using namespace std;
 using namespace smsc::sms; //constants
 using namespace smsc::profiler; //constants
 using namespace smsc::test::sms;
+using namespace smsc::test::smpp;
 using namespace smsc::test::core; //ProfileUtil, str()
 using namespace smsc::test::util;
 
@@ -225,7 +227,7 @@ void ProfilerTestCases::lookup(const Address& addr)
 	}
 }
 
-void ProfilerTestCases::putCommand(const Address& addr, int num)
+void ProfilerTestCases::putCommand(const Address& addr, uint8_t dataCoding, int num)
 {
 	__require__(profiler);
 	int numTc = 9; int numDataCoding = 2;
@@ -297,24 +299,23 @@ void ProfilerTestCases::putCommand(const Address& addr, int num)
 				default:
 					__unreachable__("Invalid num");
 			}
-			uint8_t dataCoding;
-			switch (s.value2(numTc))
+			//текст сообщения
+			switch (dataCoding)
 			{
-				case 1:
+				case DATA_CODING_SMSC_DEFAULT:
 					__tc2__("putCommand.cmdTextDefault");
-					dataCoding = DATA_CODING_SMSC_DEFAULT;
 					break;
-				case 2:
+				case DATA_CODING_UCS2:
 					__tc2__("putCommand.cmdTextUcs2");
-					dataCoding = DATA_CODING_UCS2;
 					break;
 				default:
-					__unreachable__("Invalid num");
+					__unreachable__("Invalid dataCoding");
 			}
-			string encText = encode(text.c_str(), dataCoding);
-			sms.getMessageBody().setIntProperty(Tag::SMPP_SM_LENGTH, encText.length());
-			sms.getMessageBody().setStrProperty(Tag::SMPP_SHORT_MESSAGE, encText);
-			sms.getMessageBody().setIntProperty(Tag::SMPP_DATA_CODING, dataCoding);
+			int msgLen;
+			auto_ptr<char> msg = encode(text, dataCoding, msgLen);
+			sms.setIntProperty(Tag::SMPP_SM_LENGTH, msgLen);
+			sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, msg.get(), msgLen);
+			sms.setIntProperty(Tag::SMPP_DATA_CODING, dataCoding);
 			SmscCommand cmd = SmscCommand::makeDeliverySm(sms, rand0(INT_MAX));
 			__trace2__("putProfilerCommand(): sms = %s", str(sms).c_str());
 			if (profileReg)
@@ -363,28 +364,25 @@ void ProfilerTestCases::onSubmit(SmscCommand& cmd)
 	__tc_ok_cond__;
 	__tc__("getCommand.submit.checkFields");
 	__cfg_int__(maxValidPeriod);
-	__cfg_addr__(smscAddr);
+	__cfg_addr__(profilerAddr);
+	__cfg_str__(profilerServiceType);
+	__cfg_int__(profilerProtocolId);
 	SMS sms;
+	sms.setOriginatingAddress(profilerAddr);
+	__ignore__(DestinationAddress);
+	__ignore__(DealiasedDestinationAddress);
+	__ignore__(OriginatingDescriptor);
 	sms.setSubmitTime(time(NULL));
 	sms.setValidTime(sms.getSubmitTime() + maxValidPeriod);
 	sms.setNextTime(sms.getSubmitTime());
-	sms.setOriginatingAddress(smscAddr);
-	//игнорирую поля
-	__ignore__(DestinationAddress);
-	__ignore__(DealiasedDestinationAddress);
 	__ignore__(MessageReference);
-	EService serviceType;
-	ackSms->getEServiceType(serviceType);
-	sms.setEServiceType(serviceType);
-	__ignore_bool__(ArchivationRequested);
 	__ignore__(DeliveryReport);
 	__ignore__(BillingRecord);
-	__ignore__(OriginatingDescriptor);
-	//body
-	Body& body = sms.getMessageBody();
-	body.setIntProperty(Tag::SMPP_SCHEDULE_DELIVERY_TIME, sms.getSubmitTime());
-	body.setIntProperty(Tag::SMPP_ESM_CLASS, 0x10); //ESME Acknowledgement
-	body.setIntProperty(Tag::SMPP_DATA_CODING, DATA_CODING_SMSC_DEFAULT);
+	__ignore_bool__(ArchivationRequested);
+	sms.setEServiceType(profilerServiceType.c_str());
+	sms.setIntProperty(Tag::SMPP_SCHEDULE_DELIVERY_TIME, sms.getSubmitTime());
+	sms.setIntProperty(Tag::SMPP_ESM_CLASS, ESM_CLASS_NORMAL_MESSAGE);
+	sms.setIntProperty(Tag::SMPP_DATA_CODING, DATA_CODING_SMSC_DEFAULT);
 	//поиск по алиасенному srcAddr
 	time_t t;
 	Profile profile = profileReg->getProfile(ackSms->getOriginatingAddress(), t);
@@ -426,9 +424,10 @@ void ProfilerTestCases::onSubmit(SmscCommand& cmd)
 		__cfg_str__(cmdRespInvalidCmdText);
 		text = cmdRespInvalidCmdText;
 	}
-	string encText = encode(text.c_str(), DATA_CODING_SMSC_DEFAULT);
-	body.setIntProperty(Tag::SMPP_SM_LENGTH, encText.length());
-	body.setStrProperty(Tag::SMPP_SHORT_MESSAGE, encText);
+	int msgLen;
+	auto_ptr<char> msg = encode(text, DATA_CODING_SMSC_DEFAULT, msgLen);
+	sms.setIntProperty(Tag::SMPP_SM_LENGTH, msgLen);
+	sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, msg.get(), msgLen);
 	__tc_fail2__(SmsUtil::compareMessages(*ackSms, sms), 0);
 	__tc_ok_cond__;
 }
