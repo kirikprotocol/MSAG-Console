@@ -29,6 +29,12 @@
 				<param name="deletedFormat">#Сообщение на $$string import="dest"$$ от $$date pattern="dd-MM-yy HH:mm:ss" import="date"$$ удалено</param>
 				<param name="notifyFormat">$Сообщение на $$string import="dest"$$ от $$date pattern="dd-MM-yy HH:mm:ss" import="date"$$ обломалось: $$string import="reason"$$</param>
 			</section>
+			<section name="special">
+				<param name="deliveredFormat">*=Your message sent to $$string import="dest"$$ was successfully delivered on $$date pattern="dd MMMM yyyy, HH:mm:ss" import="date"$$</param>
+				<param name="failedFormat">*=Message to $$string import="dest"$$ sent on $$date pattern="dd MMMM yyyy, HH:mm:ss" import="date"$$ failed: $$string import="reason"$$. Resend the message to $$string import="dest"$$ once again and maybe you will have luck next time. Sincerely, smsc sme.</param>
+				<param name="deletedFormat">#=Сообщение на $$string import="dest"$$ от $$date pattern="dd-MM-yy HH:mm:ss" import="date"$$ удалено</param>
+				<param name="notifyFormat">$=Сообщение на $$string import="dest"$$ от $$date pattern="dd-MM-yy HH:mm:ss" import="date"$$ обломалось: $$string import="reason"$$</param>
+			</section>
 		</section>
 		<section name="reason">
 			<param name="0">No Error</param>
