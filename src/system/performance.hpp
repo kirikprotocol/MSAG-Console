@@ -111,16 +111,23 @@ protected:
 
 class PerformanceServer:public ThreadedTask{
 public:
-  PerformanceServer(const char* host,int port,PerformanceDataDispatcher* disp):disp(disp)
+  PerformanceServer(const char* h,int p,PerformanceDataDispatcher* disp):
+    disp(disp),host(h),port(p)
   {
-    if(srv.InitServer(host,port,0)==-1)
-      throw Exception("Failed to init PerformanceServer");
-    if(srv.StartServer()==-1)
-      throw Exception("Failed to start PerformanceServer");
   }
   const char* taskName(){return "PerformanceServer";}
   int Execute()
   {
+    while(srv.InitServer(host.c_str(),port,0)==-1)
+    {
+      __warning2__("Failed to init PerformanceServer:%s:%d",host.c_str(),port);
+      sleep(5);
+    }
+    while(srv.StartServer()==-1)
+    {
+      __warning2__("Failed to start PerformanceServer:%s:%d",host.c_str(),port);
+      sleep(5);
+    }
     linger l;
     l.l_onoff=1;
     l.l_linger=0;
@@ -136,6 +143,8 @@ public:
 protected:
   Socket srv;
   PerformanceDataDispatcher* disp;
+  string host;
+  int port;
 };
 
 };//performance
