@@ -326,7 +326,7 @@ void Et96MapIndicationError(USHORT_T error,UCHAR_T* errString)
 
 void MapIoTask::deinit()
 {
-  unsigned USHORT_T result;
+  USHORT_T result;
   warning_if(Et96MapUnbindReq(SSN)!=ET96MAP_E_OK);  
   result = MsgRel(MY_USER_ID,ETSIMAP_ID);
   if ( result != MSG_OK){
