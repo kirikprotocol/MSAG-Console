@@ -46,13 +46,12 @@ namespace smsc { namespace util { namespace config
         CStrSet* getStrParamNames()
             throw (ConfigException);
         
-        char* getString(const char* param, const char* error=0)
+        char* getString(const char* param, const char* error=0, bool check=true)
             throw (ConfigException);
         int32_t getInt(const char* param, const char* error=0)
             throw (ConfigException);
         bool getBool(const char* param, const char* error=0)
             throw (ConfigException);
-        
     };
 
 }}}

@@ -87,14 +87,15 @@ int32_t ConfigView::getInt(const char* param, const char* error)
     catch (ConfigException& exc)
     {
         log.warn("Config parameter missed: <%s>. %s",
-                  section, (error) ? error:"");
+                 section, (error) ? error:"");
         if (section) delete section;
         throw;
+
     }
     if (section) delete section;
     return result;
 }
-char* ConfigView::getString(const char* param, const char* error)
+char* ConfigView::getString(const char* param, const char* error, bool check)
     throw (ConfigException)
 {
     char* section = prepareSubSection(param);
@@ -107,10 +108,12 @@ char* ConfigView::getString(const char* param, const char* error)
     }
     catch (ConfigException& exc)
     {
-        log.warn("Config parameter missed: <%s>. %s",
-                  section, (error) ? error:"");
+        if (check)
+            log.warn("Config parameter missed: <%s>. %s",
+                     section, (error) ? error:"");
         if (section) delete section;
-        throw;
+        if (check) throw;
+        return 0;
     }
     if (section) delete section;
     return result;
