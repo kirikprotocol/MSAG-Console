@@ -60,7 +60,7 @@ Category& SmppReceiverTestCases::getLog()
 
 void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 {
-	__dumpPdu__("SmppReceiverTestCases::processSubmitSmRespBefore", systemId, pdu);
+	__dumpPdu__("SmppReceiverTestCases::processSubmitSmRespBefore", systemId, &pdu);
 	getLog().debug("[%d]\tprocessSubmitSmResp(): sequenceNumber = %u",
 		thr_self(), pdu.get_header().get_sequenceNumber());
 	if (!pduReg)
@@ -91,7 +91,7 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 			//обновить таблицу поиска по SMSId
 			pduData->smsId = SmppUtil::convert(pdu.get_messageId());
 			pduReg->updatePdu(pduData);
-			__dumpPdu__("SmppReceiverTestCases::processSubmitSmRespAfter", systemId, pdu);
+			__dumpPdu__("SmppReceiverTestCases::processSubmitSmRespAfter", systemId, &pdu);
 		}
 	}
 	catch(...)
@@ -105,7 +105,7 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 
 void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 {
-	__dumpPdu__("SmppReceiverTestCases::processDeliverySmBefore", systemId, pdu);
+	__dumpPdu__("SmppReceiverTestCases::processDeliverySmBefore", systemId, &pdu);
 	getLog().debug("[%d]\tprocessDeliverySm(): sequenceNumber = %u",
 		thr_self(), pdu.get_header().get_sequenceNumber());
 	__require__(session);
@@ -187,7 +187,7 @@ void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 		error();
 		res->addFailure(100);
 	}
-	__dumpPdu__("SmppReceiverTestCases::processDeliverySmAfter", systemId, pdu);
+	__dumpPdu__("SmppReceiverTestCases::processDeliverySmAfter", systemId, &pdu);
 	debug(res);
 	resultHandler->process(res);
 }
@@ -566,42 +566,42 @@ TCResult* SmppReceiverTestCases::processIntermediateNotification(
 
 void SmppReceiverTestCases::processGenericNack(PduGenericNack &pdu)
 {
-	__dumpPdu__("SmppReceiverTestCases::processGenericNack", systemId, pdu);
+	__dumpPdu__("SmppReceiverTestCases::processGenericNack", systemId, &pdu);
 }
 
 void SmppReceiverTestCases::processDataSm(PduDataSm &pdu)
 {
-	__dumpPdu__("SmppReceiverTestCases::processDataSm", systemId, pdu);
+	__dumpPdu__("SmppReceiverTestCases::processDataSm", systemId, &pdu);
 }
 
 void SmppReceiverTestCases::processMultiResp(PduMultiSmResp &pdu)
 {
-	__dumpPdu__("SmppReceiverTestCases::processMultiResp", systemId, pdu);
+	__dumpPdu__("SmppReceiverTestCases::processMultiResp", systemId, &pdu);
 }
 
 void SmppReceiverTestCases::processReplaceSmResp(PduReplaceSmResp &pdu)
 {
-	__dumpPdu__("SmppReceiverTestCases::processReplaceSmResp", systemId, pdu);
+	__dumpPdu__("SmppReceiverTestCases::processReplaceSmResp", systemId, &pdu);
 }
 
 void SmppReceiverTestCases::processDataSmResp(PduDataSmResp &pdu)
 {
-	__dumpPdu__("SmppReceiverTestCases::processDataSmResp", systemId, pdu);
+	__dumpPdu__("SmppReceiverTestCases::processDataSmResp", systemId, &pdu);
 }
 
 void SmppReceiverTestCases::processQuerySmResp(PduQuerySmResp &pdu)
 {
-	__dumpPdu__("SmppReceiverTestCases::processQuerySmResp", systemId, pdu);
+	__dumpPdu__("SmppReceiverTestCases::processQuerySmResp", systemId, &pdu);
 }
 
 void SmppReceiverTestCases::processCancelSmResp(PduCancelSmResp &pdu)
 {
-	__dumpPdu__("SmppReceiverTestCases::processCancelSmResp", systemId, pdu);
+	__dumpPdu__("SmppReceiverTestCases::processCancelSmResp", systemId, &pdu);
 }
 
 void SmppReceiverTestCases::processAlertNotification(PduAlertNotification &pdu)
 {
-	__dumpPdu__("SmppReceiverTestCases::processAlertNotification", systemId, pdu);
+	__dumpPdu__("SmppReceiverTestCases::processAlertNotification", systemId, &pdu);
 }
 
 void SmppReceiverTestCases::handleError(int errorCode)

@@ -81,7 +81,7 @@ TCResult* SmppTransmitterTestCases::submitSmAssert(int num)
 				default:
 					throw s;
 			}
-			__dumpPdu__("SmppTransmitterTestCases::submitSmAssert", systemId, pdu);
+			__dumpSubmitSmPdu__("SmppTransmitterTestCases::submitSmAssert", systemId, &pdu);
 			res->addFailure(s.value());
 		}
 		catch (...)
@@ -146,10 +146,10 @@ vector<int> SmppTransmitterTestCases::submitAndRegisterSmSync(PduSubmitSm* pdu,
 		pduReg->registerPdu(pduData);
 	}
 	//отправить pdu
-	__dumpPdu2__("SmppTransmitterTestCases::submitSmSyncBefore", systemId, pdu);
+	__dumpSubmitSmPdu__("SmppTransmitterTestCases::submitSmSyncBefore", systemId, pdu);
 	PduSubmitSmResp* respPdu = session->getSyncTransmitter()->submit(*pdu);
-	__dumpPdu2__("SmppTransmitterTestCases::submitSmSyncAfter", systemId, pdu);
-	__dumpPdu2__("SmppTransmitterTestCases::processSubmitSmRespSync", systemId, respPdu);
+	__dumpSubmitSmPdu__("SmppTransmitterTestCases::submitSmSyncAfter", systemId, pdu);
+	__dumpPdu__("SmppTransmitterTestCases::processSubmitSmRespSync", systemId, respPdu);
 	//финальная регистрация и проверка pdu
 	vector<int> res;
 	{
@@ -177,11 +177,11 @@ vector<int> SmppTransmitterTestCases::submitAndRegisterSmAsync(PduSubmitSm* pdu,
 {
 	__require__(pduReg);
 	//отправить pdu
-	__dumpPdu2__("SmppTransmitterTestCases::submitSmAsyncBefore", systemId, pdu);
+	__dumpSubmitSmPdu__("SmppTransmitterTestCases::submitSmAsyncBefore", systemId, pdu);
 	MutexGuard mguard(pduReg->getMutex());
 	PduSubmitSmResp* respPdu = session->getAsyncTransmitter()->submit(*pdu);
-	__dumpPdu2__("SmppTransmitterTestCases::submitSmAsyncAfter", systemId, pdu);
-	__dumpPdu2__("SmppTransmitterTestCases::processSubmitSmRespAsync", systemId, respPdu);
+	__dumpSubmitSmPdu__("SmppTransmitterTestCases::submitSmAsyncAfter", systemId, pdu);
+	__dumpPdu__("SmppTransmitterTestCases::processSubmitSmRespAsync", systemId, respPdu);
 	//регистрация pdu
 	PduData* pduData = new PduData(pdu->get_optional().get_userMessageReference(),
 		time(NULL),
@@ -254,7 +254,7 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 				case 4: //срок валидности больше максимального
 					{
 						SmppTime t;
-						SmppUtil::time2string(__maxValidPeriod__ + 1, t, __absoluteTime__);
+						SmppUtil::time2string(__maxValidPeriod__ + 1, t, __numTime__);
 						pdu->get_message().set_validityPeriod(t);
 					}
 					break;
