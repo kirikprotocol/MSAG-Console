@@ -3,11 +3,14 @@
 #include <util/Exception.hpp>
 #include <errno.h>
 
+#include "logger/Logger.h"
+
 namespace smsc {
 namespace util {
 namespace xml {
 
 using namespace smsc::util;
+using namespace smsc::logger;
 
 #ifdef SPARC
 const char * const ucs2("UCS-2BE");
@@ -15,25 +18,32 @@ const char * const ucs2("UCS-2BE");
 const char * const ucs2("UCS-2LE");
 #endif
 
+static long instanceCounter = 0;
 ///////////////////////////////////////////////////////////////////////////////
 /// SmscTranscoder
 ///////////////////////////////////////////////////////////////////////////////
 SmscTranscoder::SmscTranscoder(const XMLCh *const encodingName, const unsigned int blockSize, MemoryManager *const manager)
   :XMLTranscoder(encodingName, blockSize, manager)
 {
+  smsc_log_debug(Logger::getInstance("u.x.Trans"), "try to Construct %ld", instanceCounter);
   std::auto_ptr<const char> enc(XMLString::transcode(encodingName));
   iconvHandlerFrom = iconv_open(ucs2, enc.get());
   if (iconvHandlerFrom == (iconv_t)-1)
-    throw Exception("Could not open iconv for transcode from \"%s\" to \"%s\", errno:%d", encodingName, ucs2, errno);
+    throw Exception("Could not open iconv for transcode from \"%s\" to \"%s\", errno:%d", enc.get(), ucs2, (int)errno);
   iconvHandlerTo = iconv_open(enc.get(), ucs2);
-  if (iconvHandlerTo == (iconv_t)-1)
-    throw Exception("Could not open iconv for transcode from \"%s\" to \"%s\", errno:%d", ucs2, encodingName, errno);
+  if (iconvHandlerTo == (iconv_t)-1) {
+    iconv_close(iconvHandlerFrom);
+    throw Exception("Could not open iconv for transcode from \"%s\" to \"%s\", errno:%d", ucs2, enc.get(), (int)errno);
+  }
+  smsc_log_debug(Logger::getInstance("u.x.Trans"), "Constructed %ld", instanceCounter++);
 }
 
 SmscTranscoder::~SmscTranscoder()
 {
+  smsc_log_debug(Logger::getInstance("u.x.Trans"), "try to Destruct %ld", instanceCounter);
   iconv_close(iconvHandlerFrom);
   iconv_close(iconvHandlerTo);
+  smsc_log_debug(Logger::getInstance("u.x.Trans"), "Destructored %ld", instanceCounter--);
 }
 
 unsigned int SmscTranscoder::transcodeFrom(const XMLByte *const srcData,
