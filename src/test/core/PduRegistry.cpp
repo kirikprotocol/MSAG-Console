@@ -5,88 +5,109 @@ namespace smsc {
 namespace test {
 namespace core {
 
+PduRegistry::~PduRegistry()
+{
+	__trace2__("~PduRegistry(): size = %d", seqNumMap.size());
+	for (SeqNumMap::iterator it = seqNumMap.begin(); it != seqNumMap.end(); it++)
+	{
+		delete it->second->pdu;
+		delete it->second;
+	}
+}
+
 void PduRegistry::putPdu(PduData& data)
 {
 	__require__(data.pdu);
 	PduData* pduData = new PduData(data);
-	idMap[pduData->smsId] = pduData;
 	seqNumMap[pduData->pdu->get_sequenceNumber()] = pduData;
-	msgRefMap[pduData->msgRef] = pduData;
-	waitTimeMap.insert(WaitTimeMapPair(pduData->waitTime, pduData));
+	if (pduData->smsId)
+	{
+		idMap[pduData->smsId] = pduData;
+	}
+	if (pduData->msgRef)
+	{
+		msgRefMap[pduData->msgRef] = pduData;
+	}
+	if (pduData->submitTime)
+	{
+		submitTimeMap[TimeKey(pduData->submitTime, pduData->pdu->get_sequenceNumber())] = pduData;
+	}
+	if (pduData->waitTime)
+	{
+		waitTimeMap[TimeKey(pduData->waitTime, pduData->pdu->get_sequenceNumber())] = pduData;
+	}
+	if (pduData->validTime)
+	{
+		validTimeMap[TimeKey(pduData->validTime, pduData->pdu->get_sequenceNumber())] = pduData;
+	}
 }
 
 PduData* PduRegistry::getPdu(uint16_t msgRef)
 {
 	MsgRefMap::const_iterator it = msgRefMap.find(msgRef);
-	if (it != msgRefMap.end())
-	{
-		return it->second;
-	}
-	return NULL;
+	return (it == msgRefMap.end() ? NULL : it->second);
 }
 
 PduData* PduRegistry::getPdu(uint32_t seqNumber)
 {
 	SeqNumMap::const_iterator it = seqNumMap.find(seqNumber);
-	if (it != seqNumMap.end())
-	{
-		return it->second;
-	}
-	return NULL;
+	return (it == seqNumMap.end() ? NULL : it->second);
 }
 
 PduData* PduRegistry::getPdu(const SMSId smsId)
 {
 	SmsIdMap::const_iterator it = idMap.find(smsId);
-	if (it != idMap.end())
-	{
-		return it->second;
-	}
-	return NULL;
+	return (it != idMap.end() ? NULL : it->second);
 }
 
 bool PduRegistry::removePdu(PduData* pduData)
 {
 	__require__(pduData && pduData->pdu);
-	idMap.erase(pduData->smsId);
 	seqNumMap.erase(pduData->pdu->get_sequenceNumber());
-	msgRefMap.erase(pduData->msgRef);
-	pair<WaitTimeMap::iterator, WaitTimeMap::iterator> p =
-		waitTimeMap.equal_range(pduData->waitTime);
-	for (; p.first != p.second; p.first++)
+	if (pduData->smsId)
 	{
-		PduData* data = p.first->second;
-		if (data->pdu->get_sequenceNumber() == 
-			pduData->pdu->get_sequenceNumber() &&
-			data->msgRef == pduData->msgRef)
-		{
-			waitTimeMap.erase(p.first);
-			break;
-		}
+		idMap.erase(pduData->smsId);
+	}
+	if (pduData->msgRef)
+	{
+		msgRefMap.erase(pduData->msgRef);
+	}
+	if (pduData->submitTime)
+	{
+		submitTimeMap.erase(TimeKey(pduData->submitTime, pduData->pdu->get_sequenceNumber()));
+	}
+	if (pduData->waitTime)
+	{
+		waitTimeMap.erase(TimeKey(pduData->waitTime, pduData->pdu->get_sequenceNumber()));
+	}
+	if (pduData->validTime)
+	{
+		validTimeMap.erase(TimeKey(pduData->validTime, pduData->pdu->get_sequenceNumber()));
 	}
 	delete pduData->pdu;
 	delete pduData;
 	return true;
 }
 
-vector<PduData*> PduRegistry::getOverduePdu(time_t waitTime)
+PduRegistry::PduDataIterator* PduRegistry::getPduBySubmitTime(time_t t1, time_t t2)
 {
-	vector<PduData*> res;
-	WaitTimeMap::iterator it = waitTimeMap.lower_bound(waitTime);
-	for (; it != waitTimeMap.end(); it--)
-	{
-		if (it->second->waitTime <= waitTime)
-		{
-			res.push_back(it->second);
-		}
-	}
-	return res;
+	TimeMap::iterator it1 = submitTimeMap.lower_bound(TimeKey(t1, 0));
+	TimeMap::iterator it2 = submitTimeMap.lower_bound(TimeKey(t2, ULONG_MAX));
+	return new PduDataIterator(it1, it2);
 }
 
-PduData* PduRegistry::getFirstPendingSubmitSmPdu(time_t waitTime)
+PduRegistry::PduDataIterator* PduRegistry::getPduByWaitTime(time_t t1, time_t t2)
 {
-    WaitTimeMap::iterator it = waitTimeMap.lower_bound(waitTime);
-	return (it == waitTimeMap.end() ? NULL : it->second);
+	TimeMap::iterator it1 = waitTimeMap.lower_bound(TimeKey(t1, 0));
+	TimeMap::iterator it2 = waitTimeMap.lower_bound(TimeKey(t2, ULONG_MAX));
+	return new PduDataIterator(it1, it2);
+}
+
+PduRegistry::PduDataIterator* PduRegistry::getPduByValidTime(time_t t1, time_t t2)
+{
+	TimeMap::iterator it1 = validTimeMap.lower_bound(TimeKey(t1, 0));
+	TimeMap::iterator it2 = validTimeMap.lower_bound(TimeKey(t2, ULONG_MAX));
+	return new PduDataIterator(it1, it2);
 }
 
 }

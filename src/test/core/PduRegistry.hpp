@@ -27,7 +27,9 @@ struct PduData
 {
 	SMSId smsId;
 	uint16_t msgRef;
+	time_t submitTime;
 	time_t waitTime;
+	time_t validTime;
 	SmppHeader* pdu;
 	bool responseFlag; //флаг получения респонса
 	bool deliveryFlag; //флаг получения сообщения плучателем
@@ -36,12 +38,14 @@ struct PduData
 	PduData* replacePdu; //pdu, которая должна быть заменена текущей pdu
 
 	PduData(SmppHeader* _pdu)
-		: smsId(0), msgRef(0), waitTime(0), pdu(_pdu), responseFlag(false),
-		deliveryFlag(false), deliveryReceiptFlag(false),
-		intermediateNotificationFlag(false), replacePdu(NULL) {};
+		: smsId(0), msgRef(0), submitTime(0), waitTime(0), validTime(0),
+		pdu(_pdu), responseFlag(false), deliveryFlag(false),
+		deliveryReceiptFlag(false), intermediateNotificationFlag(false),
+		replacePdu(NULL) {};
 
 	PduData(const PduData& data)
-		: smsId(data.smsId), msgRef(data.msgRef), waitTime(data.waitTime),
+		: smsId(data.smsId), msgRef(data.msgRef), submitTime(data.submitTime),
+		waitTime(data.waitTime), validTime(data.validTime),
 		pdu(data.pdu), responseFlag(data.responseFlag),
 		deliveryFlag(data.deliveryFlag),
 		deliveryReceiptFlag(data.deliveryReceiptFlag),
@@ -69,16 +73,45 @@ class PduRegistry
 	typedef map<const SMSId, PduData*> SmsIdMap;
 	typedef map<const uint32_t, PduData*> SeqNumMap;
 	typedef map<const uint16_t, PduData*> MsgRefMap;
-	typedef multimap<const time_t, PduData*> WaitTimeMap;
-	typedef pair<const time_t, PduData*> WaitTimeMapPair;
+
+	struct TimeKey
+	{
+		time_t time;
+		uint32_t seqNum;
+		TimeKey(time_t t, uint32_t num) : time(t), seqNum(num) {}
+		bool operator< (const TimeKey& key) const
+		{
+			return (time == key.time ? (seqNum < key.seqNum) : (time < key.time));
+		}
+	};
+	typedef map<const TimeKey, PduData*> TimeMap;
+
 	Mutex mutex;
 	uint16_t msgRef;
+
 	SmsIdMap idMap;
 	SeqNumMap seqNumMap;
 	MsgRefMap msgRefMap;
-	WaitTimeMap waitTimeMap;
+	TimeMap submitTimeMap;
+	TimeMap waitTimeMap;
+	TimeMap validTimeMap;
 
 public:
+	struct PduDataIterator
+	{
+		TimeMap::iterator it1;
+		TimeMap::iterator it2;
+		PduDataIterator(TimeMap::iterator i1, TimeMap::iterator i2)
+			: it1(i1), it2(i2) {}
+		virtual PduData* next()
+		{
+			return (it1 != it2 ? (it1++)->second : NULL);
+		}
+	};
+
+	PduRegistry() {}
+	~PduRegistry();
+
 	Mutex& getMutex()
 	{
 		return mutex;
@@ -120,9 +153,11 @@ public:
 
 	bool removePdu(PduData* pduData);
 
-	vector<PduData*> getOverduePdu(time_t waitTime);
+	PduDataIterator* getPduBySubmitTime(time_t t1, time_t t2);
+	
+	PduDataIterator* getPduByWaitTime(time_t t1, time_t t2);
 
-	PduData* getFirstPendingSubmitSmPdu(time_t waitTime);
+	PduDataIterator* getPduByValidTime(time_t t1, time_t t2);
 };
 
 }
