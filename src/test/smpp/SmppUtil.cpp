@@ -19,7 +19,7 @@ using namespace smsc::sms; //constants
 using namespace smsc::test::util;
 //using smsc::test::sms::SmsUtil;
 
-static const int MAX_OSTR_PRINT_SIZE = 50;
+static const int MAX_OSTR_PRINT_SIZE = 255;
 
 void dumpSubmitSmPdu(const char* tc, const string& id, PduSubmitSm* pdu)
 {
@@ -655,10 +655,22 @@ bool operator!=(PduAddress& a1, PduAddress& a2)
 	os << hex; \
 	const unsigned char* val_##prop = (const unsigned char*) p.get_##prop(); \
 	for (int i = 0; i < p.size_##prop() && i < MAX_OSTR_PRINT_SIZE; i++) { \
-		os << (unsigned int) *(val_##prop + i) << " "; \
+		unsigned int ch = (unsigned int) *(val_##prop + i); \
+		os << (ch < 0x10 ? "0" : "") << ch << " "; \
 	} \
 	os << dec; \
 	os << (p.size_##prop() < MAX_OSTR_PRINT_SIZE ? "" : "...") << endl;
+
+/*
+#define __decoded_ostr_prop__(prop, dataCoding) \
+	const string str_##prop = decode(p.get_##prop(), p.size_##prop(), dataCoding);
+	os << "    " #prop ": length = " << p.size_##prop() << " ("; \
+	if (str_##prop.length() < MAX_OSTR_PRINT_SIZE) { \
+		os << str_##prop << ")" << endl; \
+	} else { \
+		os << string(str_##prop, 0, MAX_OSTR_PRINT_SIZE) << "...)" << endl; \
+	} \
+*/
 
 ostream& operator<< (ostream& os, PduXSm& p)
 {
