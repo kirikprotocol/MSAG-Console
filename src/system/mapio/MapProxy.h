@@ -43,7 +43,7 @@ public:
       long usecs;
       gettimeofday( &curtime, 0 );
       usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
-      time_logger->debug( "cmdid=%d s=%ld us=%ld", cmd.get_commandId(), curtime.tv_sec-utime.tv_sec, usecs );
+      time_logger->debug( "cmdid=%d s=%ld us=%ld", cmd->get_commandId(), curtime.tv_sec-utime.tv_sec, usecs );
     }
 //#endif
   }
