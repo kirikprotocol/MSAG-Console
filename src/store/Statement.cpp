@@ -1147,8 +1147,7 @@ bool GetBodyStatement::getBody(Body& body)
         uint8_t* buff = new uint8_t[amount];
 
         check(OCILobRead(svchp, errhp, locator, &amount, offset,
-                         (dvoid *)buff, size, (dvoid *)0,
-                         (sb4 (*)(dvoid *, dvoid *, ub4, ub1)) 0,
+                         (dvoid *)buff, size, (dvoid *)0, 0,
                          (ub2) 0, (ub1) 0));
 
         if (size != amount)
