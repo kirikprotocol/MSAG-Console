@@ -172,6 +172,7 @@ namespace smsc {
 
       Address(const char* text)
       {
+        if(!text)throw runtime_error("bad address NULL");
         AddressValue addr_value;
         int iplan,itype;
         memset(addr_value,0,sizeof(addr_value));

@@ -68,8 +68,9 @@ public:
     times[0]=start.tv_sec;
     int lastscnt=0;
     memset(perfCnt,0,sizeof(perfCnt));
-    uint64_t lastPerfCnt[4]={0,0,0};
+    uint64_t lastPerfCnt[5]={0};
     now.tv_sec=0;
+    int i;
     for(;;)
     {
       //sleep(1);
@@ -93,18 +94,15 @@ public:
       last=cnt;
       lasttime=now;
       if(isStopping)break;
-      uint64_t perf[4];
+      uint64_t perf[5];
       // success, error, reschedule
-      smsc->getPerfData(perf[0],perf[1],perf[2],perf[3]);
+      smsc->getPerfData(perf);
       performance::PerformanceData d;
-      d.submit.lastSecond=perf[0]-lastPerfCnt[0];
-      d.success.lastSecond=perf[1]-lastPerfCnt[1];
-      d.error.lastSecond=perf[2]-lastPerfCnt[2];
-      d.rescheduled.lastSecond=perf[3]-lastPerfCnt[3];
-      d.submit.total=perf[0];
-      d.success.total=perf[1];
-      d.error.total=perf[2];
-      d.rescheduled.total=perf[3];
+      for(i=0;i<performance::performanceCounters;i++)
+      {
+        d.counters[i].lastSecond=perf[i]-lastPerfCnt[i];
+        d.counters[i].total=perf[i];
+      }
 
 
       int scnt=(now.tv_sec-perfStart)/60;
@@ -118,55 +116,52 @@ public:
         int idx=timeshift-1;
         if(idx<0)idx=59;
         times[idx]=now.tv_sec;
-        perfCnt[0][idx]=0;
-        perfCnt[1][idx]=0;
-        perfCnt[2][idx]=0;
-        perfCnt[3][idx]=0;
+        for(i=0;i<performance::performanceCounters;i++)perfCnt[i][idx]=0;
       }
       if(scnt!=lastscnt)
       {
         times[scnt]=now.tv_sec;
         lastscnt=scnt;
       }
-      d.submit.average=0;
-      d.success.average=0;
-      d.error.average=0;
-      d.rescheduled.average=0;
+      for(int j=0;j<performance::performanceCounters;j++)
+      {
+        d.counters[j].average=0;
+      }
       int idx=timeshift;
-      for(int i=0;i<=scnt;i++,idx++)
+      for(i=0;i<=scnt;i++,idx++)
       {
         if(idx>=60)idx=0;
         if(i==scnt)
         {
-          perfCnt[0][idx]+=d.submit.lastSecond;
-          perfCnt[1][idx]+=d.success.lastSecond;
-          perfCnt[2][idx]+=d.error.lastSecond;
-          perfCnt[3][idx]+=d.rescheduled.lastSecond;
+          for(int j=0;j<performance::performanceCounters;j++)
+          {
+            perfCnt[j][idx]+=d.counters[j].lastSecond;
+          }
         }
-        d.submit.average+=perfCnt[0][idx];
-        d.success.average+=perfCnt[1][idx];
-        d.error.average+=perfCnt[2][idx];
-        d.rescheduled.average+=perfCnt[3][idx];
+        for(int j=0;j<performance::performanceCounters;j++)
+        {
+          d.counters[j].average+=perfCnt[j][idx];
+        }
       }
       int diff=now.tv_sec-times[timeshift];
       if(diff==0)diff=1;
       //__trace2__("ca=%d,ea=%d,ra=%d, time diff=%u",
       //  d.success.average,d.error.average,d.rescheduled.average,diff);
 
-      d.submit.average/=diff;
-      d.success.average/=diff;
-      d.error.average/=diff;
-      d.rescheduled.average/=diff;
+      for(i=0;i<performance::performanceCounters;i++)
+      {
+        d.counters[i].average/=diff;
+      }
 
       d.now=now.tv_sec;
       d.uptime=now.tv_sec-start.tv_sec;
 
       perfListener->reportPerformance(&d);
 
-      lastPerfCnt[0]=perf[0];
-      lastPerfCnt[1]=perf[1];
-      lastPerfCnt[2]=perf[2];
-      lastPerfCnt[3]=perf[3];
+      for(i=0;i<performance::performanceCounters;i++)
+      {
+        lastPerfCnt[i]=perf[i];
+      }
     }
     return 0;
   }
@@ -278,7 +273,7 @@ void Smsc::init(const SmscConfigs& cfg)
   /*auto_ptr<RouteManager> router(new RouteManager());
 
   // initialize router (all->all)
-  router->assign(&smeman);
+  router->assign(&smeman);*/
   /*
   auto_ptr<SmeIterator> it(smeman.iterator());
   while (it->next())

@@ -102,10 +102,11 @@ class Smsc
 public:
   Smsc():ssockman(&tp,&smeman),stopFlag(false),router_(0),aliaser_(0)
   {
-    successCounter=0;
-    errorCounter=0;
+    submitOkCounter=0;
+    submitErrCounter=0;
+    deliverOkCounter=0;
+    deliverErrCounter=0;
     rescheduleCounter=0;
-    submitCounter=0;
   };
   ~Smsc();
   void init(const SmscConfigs& cfg);
@@ -166,27 +167,29 @@ public:
       {
         statMan->updateAccepted(sms->getSourceSmeId());
         MutexGuard g(perfMutex);
-        submitCounter++;
+        submitOkCounter++;
       }break;
       case etSubmitErr:
       {
         MutexGuard g(perfMutex);
-        errorCounter++;
+        submitErrCounter++;
       }break;
       case etDeliveredOk:
       {
         statMan->updateChanged(sms->getDestinationSmeId(),sms->getRouteId(),0);
         MutexGuard g(perfMutex);
-        successCounter++;
+        deliverOkCounter++;
       }break;
       case etDeliverErr:
       {
+        MutexGuard g(perfMutex);
+        deliverErrCounter++;
       }break;
       case etUndeliverable:
       {
         statMan->updateChanged(sms->getDestinationSmeId(),sms->getRouteId(),sms->getLastResult());
         MutexGuard g(perfMutex);
-        errorCounter++;
+        deliverErrCounter++;
       }break;
       case etRescheduled:
       {
@@ -198,13 +201,14 @@ public:
     }
   }
 
-  void getPerfData(uint64_t& submit,uint64_t& succ,uint64_t& err,uint64_t& resch)
+  void getPerfData(uint64_t *cnt)
   {
     MutexGuard g(perfMutex);
-    succ=successCounter;
-    err=errorCounter;
-    resch=rescheduleCounter;
-    submit=submitCounter;
+    cnt[0]=submitOkCounter;
+    cnt[1]=submitErrCounter;
+    cnt[2]=deliverOkCounter;
+    cnt[3]=deliverErrCounter;
+    cnt[4]=rescheduleCounter;
   }
 
   RefferGuard<RouteManager> getRouterInstance()
@@ -266,10 +270,11 @@ protected:
   smsc::stat::StatisticsManager *statMan;
 
   Mutex perfMutex;
-  uint64_t successCounter;
-  uint64_t errorCounter;
+  uint64_t submitOkCounter;
+  uint64_t submitErrCounter;
+  uint64_t deliverOkCounter;
+  uint64_t deliverErrCounter;
   uint64_t rescheduleCounter;
-  uint64_t submitCounter;
 
 };
 

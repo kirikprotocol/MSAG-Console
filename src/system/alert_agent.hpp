@@ -49,7 +49,7 @@ public:
           ids.Push(id);
         }
         delete it;
-        __trace2__("AlertAgent: found %d messages");
+        __trace2__("AlertAgent: found %d messages",ids.Count());
         for(int i=0;i<ids.Count();i++)
         {
           SmscCommand cmd=SmscCommand::makeForward(true);

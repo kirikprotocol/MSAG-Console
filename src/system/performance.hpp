@@ -29,11 +29,18 @@ struct PerformanceCounter{
   };
 };
 
+const int performanceCounters=5;
+
 struct PerformanceData{
-  PerformanceCounter submit;
-  PerformanceCounter success;
-  PerformanceCounter error;
+  /*
+  PerformanceCounter submitOk;
+  PerformanceCounter submitErr;
+  PerformanceCounter deliverOk;
+  PerformanceCounter deliverErr;
   PerformanceCounter rescheduled;
+  */
+  PerformanceCounter counters[performanceCounters];
+  int eventQueueSize;
   time_t uptime;
   time_t now;
 };
@@ -45,44 +52,24 @@ public:
 
 class PerformanceDataDispatcher:public PerformanceListener{
 public:
+  PerformanceDataDispatcher(){}
+  ~PerformanceDataDispatcher(){}
   void reportPerformance(PerformanceData* data)
   {
     MutexGuard g(mtx);
     PerformanceData ld=*data;
     int high,low;
 
-    ld.submit.lastSecond=htonl(ld.submit.lastSecond);
-    ld.submit.average=htonl(ld.submit.average);
+    for(int i=0;i<performanceCounters;i++)
+    {
+      ld.counters[i].lastSecond=htonl(ld.counters[i].lastSecond);
+      ld.counters[i].average=htonl(ld.counters[i].average);
 
-    low=ld.submit.total&0xffffffff;
-    high=ld.submit.total>>32;
-    ld.submit.high=htonl(high);
-    ld.submit.low=htonl(low);
-
-
-    ld.success.lastSecond=htonl(ld.success.lastSecond);
-    ld.success.average=htonl(ld.success.average);
-
-    low=ld.success.total&0xffffffff;
-    high=ld.success.total>>32;
-    ld.success.high=htonl(high);
-    ld.success.low=htonl(low);
-
-    ld.error.lastSecond=htonl(ld.error.lastSecond);
-    ld.error.average=htonl(ld.error.average);
-    low=ld.error.total&0xffffffff;
-    high=ld.error.total>>32;
-    ld.error.high=htonl(high);
-    ld.error.low=htonl(low);
-
-    ld.rescheduled.lastSecond=htonl(ld.rescheduled.lastSecond);
-    ld.rescheduled.average=htonl(ld.rescheduled.average);
-    low=ld.rescheduled.total&0xffffffff;
-    high=ld.rescheduled.total>>32;
-    ld.rescheduled.high=htonl(high);
-    ld.rescheduled.low=htonl(low);
-    ld.uptime=htonl(ld.uptime);
-    ld.now=htonl(ld.now);
+      low=ld.counters[i].total&0xffffffff;
+      high=ld.counters[i].total>>32;
+      ld.counters[i].high=htonl(high);
+      ld.counters[i].low=htonl(low);
+    }
 
     for(int i=0;i<sockets.Count();i++)
     {

@@ -1033,6 +1033,10 @@ StateType StateMachine::query(Tuple& t)
   try{
     Address addr(t.command->get_querySm().sourceAddr.get());
     store->retriveSms(t.msgId,sms);
+    if(!(sms.getOriginatingAddress()==addr))
+    {
+      throw 0;
+    }
   }catch(...)
   {
     t.command.getProxy()->putCommand
