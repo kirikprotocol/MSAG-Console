@@ -589,7 +589,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
       if ( dialog.isnull() )
         throw MAPDIALOG_FATAL_ERROR(
           FormatText("MAP::putCommand: Opss, here is no dialog with id x%x",(ET96MAP_DIALOGUE_ID_T)dialogid_smsc));
-      dialog->state = MAPST_START;
+      //dialog->state = MAPST_START;
       __trace2__("MAP::%s: 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
       dialogid_map = dialogid_smsc;
       if ( dialog->state == MAPST_WaitSubmitCmdConf ){
