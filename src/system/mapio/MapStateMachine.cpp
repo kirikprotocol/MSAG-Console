@@ -196,6 +196,7 @@ static void DropMapDialog_(unsigned dialogid){
   DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid));
   if ( dialog.isnull() ) {
     __trace2__( ":MAP:%s: <ERROR> dialog(0x%x) is null",__FUNCTION__,dialogid);
+    return;
   }
   __trace2__(":MAP:%s chain size %d , dropChain %d",__FUNCTION__,dialog->chain.size(),dialog->dropChain);
   
