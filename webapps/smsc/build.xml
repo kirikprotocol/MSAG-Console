@@ -14,9 +14,14 @@
   <property name="topmon_src" location="${java_src}/${topmon_path}"/>
   <property name="topmon_out" location="${java_out}/${topmon_path}"/>
 
-  <classfileset id="common_libs" dir="${libs_path}">
+  <fileset id="common_libs" dir="${libs_path}">
     <include name="log4j.jar, antlr.jar, nsjsp.jar, classes12.jar"/>
-  </classfileset>
+  </fileset>
+
+  <path id="classpath">
+    <pathelement path="${servlet_jar}"/>
+    <fileset refid="common_libs"/>
+  </path>
   <property name="servlet_jar" location="${CATALINA_HOME}/common/lib/servlet.jar"/>
 
   <target name="init">
@@ -28,10 +33,7 @@
 
 
   <target name="compile" depends="init" description="compile the sources">
-    <javac srcdir="${java_src}" destdir="${java_out}" debug="yes">
-      <classpath refid="common_libs"/>
-      <classpath path="${servlet_jar}"/>
-    </javac>
+    <javac srcdir="${java_src}" destdir="${java_out}" classpathref="classpath" debug="yes"/>
     <native2ascii encoding="Cp1251" src="${java_src}/locales" dest="${java_out}/locales"/>
     <native2ascii encoding="Cp1251" src="${perfmon_src}/applet" dest="${perfmon_out}/applet"/>
     <native2ascii encoding="Cp1251" src="${topmon_src}/applet" dest="${topmon_out}/applet"/>
