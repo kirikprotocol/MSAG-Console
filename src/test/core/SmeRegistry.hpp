@@ -92,6 +92,7 @@ public:
 	SmeIterator* iterator() const;
 
 	bool isSmeBound(const SmeSystemId& smeId) const;
+	bool isSmeBound(const Address& smeAddr) const;
 
 	void dump(FILE* log) const;
 };

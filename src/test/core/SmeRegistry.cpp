@@ -147,6 +147,12 @@ bool SmeRegistry::isSmeBound(const SmeSystemId& smeId) const
 	return (it != smeIdMap.end() && it->second->bound);
 }
 
+bool SmeRegistry::isSmeBound(const Address& smeAddr) const
+{
+	AddressMap::const_iterator it = addrMap.find(smeAddr);
+	return (it != addrMap.end() && it->second->bound);
+}
+
 void SmeRegistry::dump(FILE* log) const
 {
 	for (AddressMap::const_iterator it = addrMap.begin(); it != addrMap.end(); it++)
