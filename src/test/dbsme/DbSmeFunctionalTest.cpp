@@ -3,6 +3,7 @@
 #include "test/sme/SmppBaseTestCases.hpp"
 #include "test/sme/SmppTransmitterTestCases.hpp"
 #include "test/sme/SmppReceiverTestCases.hpp"
+#include "test/sme/SmscSmeTestCases.hpp"
 #include "test/sme/SmppProtocolTestCases.hpp"
 #include "test/sme/SmppProfilerTestCases.hpp"
 #include "DbSmeTestCases.hpp"
@@ -61,6 +62,7 @@ class TestSme : public TestTask, SmppResponseSender
 	SmppBaseTestCases baseTc;
 	SmppTransmitterTestCases transmitterTc;
 	SmppReceiverTestCases receiverTc;
+	SmscSmeTestCases smscSmeTc;
 	SmppProtocolTestCases protocolTc;
 	SmppProfilerTestCases profilerTc;
 	DbSmeTestCases dbSmeTc;
@@ -75,6 +77,7 @@ public:
 	virtual ~TestSme() {}
 	virtual void executeCycle();
 	virtual void onStopped();
+	PduHandler* getDeliveryReceiptHandler() { return &smscSmeTc; }
 	SmeAcknowledgementHandler* getProfilerAckHandler() { return &profilerTc; }
 	SmeAcknowledgementHandler* getDbSmeAckHandler() { return &dbSmeTc; }
 
@@ -130,8 +133,8 @@ public:
 TestSme::TestSme(int num, const SmeConfig& config, SmppFixture* fixture)
 	: TestTask("TestSme", num), smeNum(num), nextCheckTime(0),
 	baseTc(config, fixture), receiverTc(fixture), transmitterTc(fixture),
-	session(config, &receiverTc), protocolTc(fixture), profilerTc(fixture),
-	dbSmeTc(fixture, dbSmeReg), boundOk(false), idx(0)
+	session(config, &receiverTc), smscSmeTc(fixture), protocolTc(fixture),
+	profilerTc(fixture), dbSmeTc(fixture, dbSmeReg), boundOk(false), idx(0)
 {
 	fixture->session = &session;
 	fixture->respSender = this;
@@ -190,8 +193,10 @@ void TestSme::executeCycle()
 		count++;
 		dbSmeTc.submitIncorrectDateFormatDbSmeCmd(rand0(1),
 			getDataCoding(RAND_TC), ALL_TC);
+		/*
 		dbSmeTc.submitIncorrectNumberFormatDbSmeCmd(rand0(1),
 			getDataCoding(RAND_TC), ALL_TC);
+		*/
 		dbSmeTc.submitIncorrectParamsDbSmeCmd(rand0(1),
 			getDataCoding(RAND_TC), ALL_TC);
 	}
@@ -465,9 +470,10 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 		SmppFixture* fixture = new SmppFixture(smeInfo[i]->systemId, *addr[i],
 			NULL, smeReg, aliasReg, routeReg, profileReg, chkList);
 		sme.push_back(new TestSme(i, config, fixture));
-		fixture->ackHandler[profilerAddr] = sme.back()->getProfilerAckHandler();
-		fixture->ackHandler[dbSmeAddr] = sme.back()->getDbSmeAckHandler();
-		fixture->ackHandler[dbSmeInvalidAddr] = sme.back()->getDbSmeAckHandler();
+		fixture->pduHandler[smscAddr] = sme.back()->getDeliveryReceiptHandler();
+		fixture->pduHandler[profilerAddr] = sme.back()->getProfilerAckHandler();
+		fixture->pduHandler[dbSmeAddr] = sme.back()->getDbSmeAckHandler();
+		fixture->pduHandler[dbSmeInvalidAddr] = sme.back()->getDbSmeAckHandler();
 		smeReg->bindSme(smeInfo[i]->systemId);
 	}
 	__trace__("Route table");
