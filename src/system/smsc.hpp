@@ -195,12 +195,13 @@ public:
       }break;
       case etDeliverErr:
       {
+        statMan->updateTemporal(sms->getLastResult());
         MutexGuard g(perfMutex);
         deliverErrCounter++;
       }break;
       case etUndeliverable:
       {
-        statMan->updateChanged(sms->getDestinationSmeId(),sms->getRouteId(),1000);//sms->getLastResult());
+        statMan->updateChanged(sms->getDestinationSmeId(),sms->getRouteId(),sms->getLastResult());
         MutexGuard g(perfMutex);
         deliverErrCounter++;
       }break;

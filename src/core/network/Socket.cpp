@@ -208,12 +208,16 @@ int Socket::Puts(const char* str)
   return Write((char*)str,strlen(str));
 }
 
-int Socket::InitServer(const char *host,int port,int timeout)
+int Socket::InitServer(const char *host,int port,int timeout,int lng)
 {
   if(Init(host,port,timeout)==-1)return -1;
   sock=socket(AF_INET,SOCK_STREAM,0);
   if(sock==INVALID_SOCKET) return -1;
   if(bind(sock,(sockaddr*)&sockAddr,sizeof(sockAddr)))return -1;
+  linger l;
+  l.l_onoff=1;
+  l.l_linger=lng;
+  setsockopt(sock,SOL_SOCKET,SO_LINGER,(char*)&l,sizeof(l));
   return 0;
 }
 
