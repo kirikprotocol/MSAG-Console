@@ -21,7 +21,8 @@ int main(void)
 
     const char* OCI_DS_FACTORY_IDENTITY = "OCI";
     
-    const char* sql1 = "INSERT INTO SMS_TEST (TEMP, STR) VALUES (:TEMP, :STR)";
+    const char* sql1 = "INSERT INTO SMS_TEST (TEMP, STR, DT)"
+                        " VALUES (:TEMP, :STR, :DT)";
     const char* sql2 = "SELECT * FROM SMS_TEST";
     
     DataSourceLoader::loadupDataSourceFactory(
@@ -50,6 +51,7 @@ int main(void)
                     {
                         statement1->setInt32(1, i*10);
                         statement1->setString(2, "Testing string value");
+                        statement1->setDateTime(3, i*100000);
                         int rows = statement1->executeUpdate();
                     }
                     delete statement1;
