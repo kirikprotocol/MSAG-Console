@@ -93,6 +93,7 @@ void executeIntegrityTest(MessageStoreTestCases& tc,
 				{
 					TCResult* res = tc.storeIncorrectSms(RAND_TC);
 					filter->addResult(res);
+					delete res;
 					//stack[i]->push_back(res);
 				}
 				break;
@@ -139,6 +140,7 @@ void executeIntegrityTest(MessageStoreTestCases& tc,
 	{
 		TCResult* res = tc.checkReadyForRetrySms(id, sms, RAND_TC);
 		filter->addResult(res);
+		delete res;
 	}
 
 	//добавить паузу, чтобы SMS::lastTime отличалось от предыдущего
@@ -205,6 +207,7 @@ void executeIntegrityTest(MessageStoreTestCases& tc,
 	{
 		TCResult* res = tc.checkReadyForRetrySms(id, sms, RAND_TC);
 		filter->addResult(res);
+		delete res;
 	}
 
 	//Удаление существующего sms, 1/1
@@ -260,12 +263,14 @@ void executeIntegrityTest(MessageStoreTestCases& tc,
 		TCResult* res = tc.checkReadyForRetrySms(vector<SMSId*>(),
 			vector<SMS*>(), RAND_TC);
 		filter->addResult(res);
+		delete res;
 	}
 
 //Сохранение неправильного sms с проверкой на assert
 #ifdef ASSERT_THROW_IF_FAIL
 	TCResult* res = tc.storeAssertSms(ALL_TC);
 	filter->addResult(res);
+	delete res;
 #endif
 
 	//обработка результатов
