@@ -13,15 +13,15 @@ using namespace smsc::smpp;
 int main(void)
 {
   fprintf(stderr,"begin test\n");
-	fprintf(stderr, "sizeof(SmppOptional) = %d\n", sizeof(SmppOptional));
-/*  try{
+  try
+  {
     {
       int fd = open("/tmp/smpp_pdu_test1",O_RDWR|O_CREAT|O_TRUNC);
       SmppStream stream;
       //assignStreamWith(&stream,fd,false);
-      PduSubmitSm pdu;
+      PduMultiSm pdu;
       SmppHeader& pduHeader = pdu.get_header();
-      pduHeader.set_commandId(SmppCommandSet::SUBMIT_SM);
+      pduHeader.set_commandId(SmppCommandSet::SUBMIT_MULTI);
       PduPartSm& sm = pdu.get_message();
       const char* msg = "short message";
       sm.set_shortMessage(msg,strlen(msg));
@@ -46,7 +46,6 @@ int main(void)
       fillSmppPdu(&stream,reinterpret_cast<SmppHeader*>(&pdu));
       close(fd);
     }
-    fprintf(stderr,"\n----------------------\n\n");
     {
       int fd = open("/tmp/smpp_pdu_test1",O_RDWR);
       SmppStream stream;

@@ -355,6 +355,14 @@ namespace DataCoding{
   type* field;\
   inline void set_##field(type* value) {field = value;} \
   inline type* get_##field() {return field;}
+#define __ptr2_property__(type,field,counter) \
+  type* field;\
+  inline void set_##field(type* value,unsigned count) {\
+    delete field; \
+    field = new type[count]; \
+    for ( unsigned i=0; i<count; ++i ) { field[i] = value[i]; }\
+    counter = count; } \
+  inline type* get_##field() {return field;}
 #define __intarr_property__(type,field,size) \
   type field[size];\
   inline void set_##field(type* value) { __require__(value!=NULL); memcpy(field,value,size*sizeof(type)); } \
@@ -371,7 +379,7 @@ namespace DataCoding{
 
 #define _s_int_property__(type,field) + (uint32_t)sizeof(type)
 #define _s_ref_property__(type,field) + (uint32_t)field.size()
-#define _s_ptr_property__(type,field) + (uint32_t)( field ? field->size() : 0 )
+#define _s_ptr_property__(type,field,count) + (uint32_t)( field ? field->size()*count : 0 )
 #define _s_intarr_property__(type,field,size) + (uint32_t)(sizeof(type)*size)
 #define _s_cstr_property__(field) + (uint32_t)(field.size()+1)
 #define _s_ostr_property__(field) + (uint32_t)(field.size())
@@ -718,7 +726,7 @@ struct PduPartSm //: public MemoryManagerUnit
   __ref_property__(PduAddress,source)
   __ref_property__(PduAddress,dest)
   __int_property__(uint8_t,numberOfDests)
-  __ptr_property__(PduDestAddress,dests)
+  __ptr2_property__(PduDestAddress,dests,numberOfDests)
   __int_property__(uint8_t,esmClass)
   __int_property__(uint8_t,protocolId)
   __int_property__(uint8_t,priorityFlag)
@@ -761,7 +769,7 @@ struct PduPartSm //: public MemoryManagerUnit
                       _s_ref_property__(PduAddress,source)
                       _s_ref_property__(PduAddress,dest)
                       + ( multi ? 0 _s_int_property__(uint8_t,numberOfDests) : 0 )
-                      + ( multi ? 0 _s_ptr_property__(PduDestAddress,dests) : 0 )
+                      + ( multi ? 0 _s_ptr_property__(PduDestAddress,dests,numberOfDests) : 0 )
                       _s_int_property__(uint8_t,esmClass)
                       _s_int_property__(uint8_t,protocolId)
                       _s_int_property__(uint8_t,priorityFlag)
@@ -894,14 +902,14 @@ struct PduMultiSmResp //: public SmppHeader//MemoryManagerUnit
   __ref_property__(SmppHeader,header)
   __cstr_property__(messageId)
   __int_property__(uint8_t,noUnsuccess)
-  __ptr_property__(UnsuccessDeliveries,sme)
+  __ptr2_property__(UnsuccessDeliveries,sme,noUnsuccess)
   inline uint32_t size()
   {
     return (uint32_t)(0
     _s_ref_property__(SmppHeader,header)
     _s_cstr_property__(messageId)
     _s_int_property__(uint8_t,noUnsuccess)
-    _s_ptr_property__(UnsuccessDeliveries,sme));
+    _s_ptr_property__(UnsuccessDeliveries,sme,noUnsuccess));
   }
   inline void dump(__LOG__ log,int align = 0)
   {

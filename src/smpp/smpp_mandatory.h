@@ -86,7 +86,6 @@ static inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
       {
         fillX(stream, sm.numberOfDests);
         if ( sm.numberOfDests ) {
-          sm.dests = new PduDestAddress[sm.numberOfDests];
           for ( int i=0; i < sm.numberOfDests; ++i )
           {
             fillX(stream,sm.dests[i].flag);
@@ -335,7 +334,8 @@ static inline SmppHeader* fetchSmppPdu(SmppStream* stream)
       if ( cmdid == SUBMIT_MULTI )
       {
         fetchX(stream, sm.numberOfDests);
-        if ( sm.numberOfDests )
+        if ( sm.numberOfDests ) {
+          sm.dests = new PduDestAddress[sm.numberOfDests];
           for ( int i=0; i < sm.numberOfDests; ++i )
           {
             fetchX(stream,sm.dests[i].flag);
@@ -353,6 +353,7 @@ static inline SmppHeader* fetchSmppPdu(SmppStream* stream)
               goto trap;
             }
           }
+        }
       }
       else
       {

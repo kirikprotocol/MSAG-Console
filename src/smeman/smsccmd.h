@@ -1075,9 +1075,9 @@ public:
               ud.get()[u].addr.set_value(mr->unsuccess[u].addr.value);
               ud.get()[u].errorStatusCode = mr->unsuccess[u].errcode;
             }
-            xsmR->set_sme(ud.release());
+            xsmR->set_sme(ud.get(),mr->no_unsuccess);
+            xsmR->set_noUnsuccess(mr->no_unsuccess);
           }
-          xsmR->set_noUnsuccess(mr->no_unsuccess);
           return reinterpret_cast<SmppHeader*>(xsmR.release());
         }
       }
