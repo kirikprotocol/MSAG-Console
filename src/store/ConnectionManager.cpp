@@ -393,11 +393,18 @@ void Connection::connect()
             retriveStmt = new RetriveStatement(this); 
             needRejectStmt = new NeedRejectStatement(this); 
             needOverwriteStmt = new NeedOverwriteStatement(this); 
+            overwriteStmt = new OverwriteStatement(this);
             
             replaceStmt = new ReplaceStatement(this); 
             replaceVTStmt = new ReplaceVTStatement(this); 
             replaceWTStmt = new ReplaceWTStatement(this); 
             replaceVWTStmt = new ReplaceVWTStatement(this); 
+            
+            toEnrouteStmt = new ToEnrouteStatement(this);
+            toDeliveredStmt = new ToDeliveredStatement(this);
+            toUndeliverableStmt = new ToUndeliverableStatement(this);
+            toExpiredStmt = new ToExpiredStatement(this);
+            toDeletedStmt = new ToDeletedStatement(this);
 
             isConnected = true; isDead = false;
         }

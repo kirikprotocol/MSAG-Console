@@ -1169,11 +1169,11 @@ namespace smsc { namespace sms
          * 
          * @return тело сообщени€
          * @see Body
-         *
+         */
         inline Body& getMessageBody()
         {
             return messageBody; 
-        };*/
+        };
         
         /**
          * ћетод устанавливает им€-тип сервиса SME.
@@ -1183,9 +1183,16 @@ namespace smsc { namespace sms
          */
         inline void setEServiceType(const char* _name) 
         {
-            __require__(strlen(_name)<sizeof(EService));
+            if (_name)
+            {
+                strncpy(eServiceType, _name, MAX_ESERVICE_TYPE_LENGTH);
+                eServiceType[MAX_ESERVICE_TYPE_LENGTH]='\0';
+            }
+            else
+            {
+                eServiceType[0]='\0';
+            }
             
-            strncpy(eServiceType, _name, sizeof(EService));
         };
         
         /**
@@ -1200,7 +1207,15 @@ namespace smsc { namespace sms
         {
             __require__(_name);
             
-            strncpy(_name, eServiceType, sizeof(EService));
+            if (eServiceType)
+            {
+                strncpy(_name, eServiceType, MAX_ESERVICE_TYPE_LENGTH);
+                _name[MAX_ESERVICE_TYPE_LENGTH]='\0';
+            }
+            else
+            {
+                _name[0]='\0';
+            }
         };
     };
 
