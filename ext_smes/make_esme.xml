@@ -9,7 +9,7 @@
   <property name="SRC_DIR" value="${SMSC_DIR}/src"/>
   <property name="BUILD_BIN" value="${BUILD_DIR}/bin"/>
   <property name="TEMPL_DIR" value="${SMSC_DIR}/config/templates"/>
-  <property name="java_src" location="${esme_name}/java"/>
+  <property name="java_src" location="java"/>
   <property name="java_out" location="${BUILD_DIR}/classes/${esme_name}"/>
   <property name="exploded" location="${BUILD_DIR}/exploded/${esme_name}"/>
   <property name="java_lib" location="${exploded}/lib"/>
@@ -44,7 +44,7 @@
     </jar>
     <mkdir dir="${exploded}/jsp"/>
     <copy todir="${exploded}/jsp" preservelastmodified="yes">
-      <fileset dir="${basedir}/jsp" includes="**/*.jsp **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc"/>
+      <fileset dir="jsp" includes="**/*.jsp **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc"/>
     </copy>
   </target>
 

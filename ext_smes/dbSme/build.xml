@@ -3,7 +3,7 @@
   <property name="esme_bin" value="dbsme/DBSme"/>
 
   <target name="help">
-    Do not build from this file directly
+    <echo message="Do not build from this file directly"/>
   </target>
 
   <target name="init">
