@@ -47,15 +47,21 @@ MissedCallProcessor::MissedCallProcessor()
 }
 void MissedCallProcessor::addMissedCallListener(MissedCallListener* _listener)
 {
+  MutexGuard g(lock);
   listener = _listener;
 }
 void MissedCallProcessor::removeMissedCallListener()
 {
+  MutexGuard g(lock);
   listener = 0;
 }
 void MissedCallProcessor::fireMissedCallEvent(MissedCallEvent& event)
 {
-  if (listener) listener->missed(event);
+  if (listener)
+  {
+    MutexGuard g(lock);
+    if (listener) listener->missed(event);
+  }
 }
 void MissedCallProcessor::stop()
 {
