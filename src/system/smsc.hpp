@@ -245,9 +245,9 @@ public:
       }break;
       case etSubmitErr:
       {
+        statMan->updateRejected(sms->getSourceSmeId(),sms->getRouteId(), sms->getLastResult());
         MutexGuard g(perfMutex);
         submitErrCounter++;
-        statMan->updateRejected(sms->getSourceSmeId(),sms->getRouteId(), sms->getLastResult());
         smePerfMonitor.incRejected(sms->getSourceSmeId(), sms->getLastResult());
       }break;
       case etDeliveredOk:
