@@ -77,6 +77,29 @@ bool ProfileRegistry::checkExists(const Address& addr) const
 	return (it != profileMap.end());
 }
 
+bool ProfileRegistry::registerDialogId(uint32_t dialogId, int cmdType)
+{
+	DialogMap::const_iterator it = dialogMap.find(dialogId);
+	if (it != dialogMap.end())
+	{
+		return false;
+	}
+	dialogMap[dialogId] = cmdType;
+	return true;
+}
+
+bool ProfileRegistry::unregisterDialogId(uint32_t dialogId, int& cmdType)
+{
+	DialogMap::iterator it = dialogMap.find(dialogId);
+	if (it == dialogMap.end())
+	{
+		return false;
+	}
+	cmdType = it->second;
+	dialogMap.erase(it);
+	return true;
+}
+
 }
 }
 }
