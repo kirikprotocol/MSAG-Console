@@ -1,6 +1,6 @@
 <link rel="STYLESHEET" type="text/css" href="/styles/time.css">
 <script src="/scripts/time.js" type="text/javascript"></script>
-<iframe id=timeIFrame class=timeHiddenLayer2></iframe>
+<iframe id=timeIFrame class=timeHiddenLayer2 src="/images/blank.html"></iframe>
 
 <div id=timePanel class=timeHiddenLayer oncontextmenu="return false;" onselectstart="return false;" ondragstart="return false;" onmousedown="return timeMD();" onmouseup="return timeMU();" onmousemove="return timeMM();" onlosecapture="return timeClose();" onfocusout="return timeClose();">
   <table border=1 bgcolor="#dododo" cellpadding=0 cellspacing=2>

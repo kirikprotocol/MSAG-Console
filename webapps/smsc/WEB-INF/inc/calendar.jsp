@@ -1,6 +1,6 @@
 <link rel="STYLESHEET" type="text/css" href="/styles/calendar.css">
 <script src="/scripts/calendar.js" type="text/javascript"></script>
-<iframe id=calendarIFrame class=calendarHiddenLayer2></iframe>
+<iframe id=calendarIFrame class=calendarHiddenLayer2 src="/images/blank.html"></iframe>
 <div id=calendarPanel class=calendarHiddenLayer
   oncontextmenu="return false;"
   onselectstart="return false;"
