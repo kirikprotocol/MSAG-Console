@@ -89,22 +89,24 @@ namespace smsc {
     using smsc::core::buffers::XHash;
     using std::runtime_error;
     using std::auto_ptr;
-
-    const int MAX_ESERVICE_TYPE_LENGTH = 5;
-    const int MAX_ROUTE_ID_TYPE_LENGTH = 20;
-    const int MAX_ADDRESS_VALUE_LENGTH = 20;
-    const int MAX_SHORT_MESSAGE_LENGTH = 255; // Depricated !!!
-    const int MAX_BODY_LENGTH          = 1650;
-
+    
     const int USSD_PSSR = 1;
     const int USSD_USSR = 2;
     const int USSD_USSN = 3;
 
+    const int MAX_ESERVICE_TYPE_LENGTH = 5;
+    const int MAX_SMESYSID_TYPE_LENGTH = 15;
+    const int MAX_ROUTE_ID_TYPE_LENGTH = 20;
+    const int MAX_ADDRESS_VALUE_LENGTH = 20;
+    const int MAX_SHORT_MESSAGE_LENGTH = 255; // Depricated !!!
+    const int MAX_BODY_LENGTH          = 1650;
+    
     typedef uint64_t    SMSId;
     typedef char        AddressValue[MAX_ADDRESS_VALUE_LENGTH+1];
+    typedef char        SmeSystemId[MAX_SMESYSID_TYPE_LENGTH+1];
     typedef char        EService[MAX_ESERVICE_TYPE_LENGTH+1];
     typedef char        RouteId[MAX_ROUTE_ID_TYPE_LENGTH+1];
-
+    
     /**
     * Структура Address предназначена для хранения
     * адресов в SMS сообщении.
@@ -1181,6 +1183,9 @@ namespace smsc {
         int32_t     serviceId;      // Additional fields
         int32_t     priority;       // Additional fields
 
+        SmeSystemId srcSmeId;
+        SmeSystemId dstSmeId;
+
         /**
         * Default конструктор, просто инициализирует поле state как ENROUTE
         * и прочие поля дефолтными значениями
@@ -1192,6 +1197,7 @@ namespace smsc {
           serviceId(0), priority(0)
         {
           eServiceType[0]='\0'; routeId[0]='\0';
+          srcSmeId[0]='\0'; dstSmeId[0]='\0';
         };
 
 
@@ -1225,6 +1231,8 @@ namespace smsc {
         {
           strncpy(eServiceType, sms.eServiceType, sizeof(eServiceType));
           strncpy(routeId, sms.routeId, sizeof(routeId));
+          strncpy(srcSmeId, sms.srcSmeId, sizeof(srcSmeId));
+          strncpy(dstSmeId, sms.dstSmeId, sizeof(dstSmeId));
         };
 
         /**
@@ -1259,6 +1267,9 @@ namespace smsc {
 
           strncpy(eServiceType, sms.eServiceType, sizeof(eServiceType));
           strncpy(routeId, sms.routeId, sizeof(routeId));
+          strncpy(srcSmeId, sms.srcSmeId, sizeof(srcSmeId));
+          strncpy(dstSmeId, sms.dstSmeId, sizeof(dstSmeId));
+          
           return (*this);
         };
 
@@ -1707,6 +1718,18 @@ namespace smsc {
           return messageBody;
         };
 
+        inline void setStringField(char* field, const char* val, int maxLen)
+        {
+            if (val) {
+              strncpy(field, val, maxLen); field[maxLen]='\0';
+            } else field[0]='\0';
+        }
+        inline void getStringField(const char* field, char* val, int maxLen) const 
+        {
+            __require__(val);
+            val[0]='\0'; strncpy(val, field, maxLen); val[maxLen]='\0';
+        }
+        
         /**
         * Метод устанавливает имя-тип сервиса SME.
         *
@@ -1714,12 +1737,7 @@ namespace smsc {
         */
         inline void setEServiceType(const char* type)
         {
-          if (type)
-          {
-            strncpy(eServiceType, type, MAX_ESERVICE_TYPE_LENGTH);
-            eServiceType[MAX_ESERVICE_TYPE_LENGTH]='\0';
-          }
-          else eServiceType[0]='\0';
+            setStringField(eServiceType, type, MAX_ESERVICE_TYPE_LENGTH);
         };
         /**
         * Метод возвращает имя-тип сервиса
@@ -1731,10 +1749,16 @@ namespace smsc {
         */
         inline void getEServiceType(char* type) const
         {
-          __require__(type);
-          type[0]='\0';
-          strncpy(type, eServiceType, MAX_ESERVICE_TYPE_LENGTH);
-          type[MAX_ESERVICE_TYPE_LENGTH]='\0';
+            getStringField(eServiceType, type, MAX_ESERVICE_TYPE_LENGTH);
+        };
+        /**
+        * Метод возвращает имя-тип сервиса
+        *
+        * @return имя-тип сервиса
+        */
+        inline const char* getEServiceType() const
+        {
+            return eServiceType;
         };
 
         /**
@@ -1778,16 +1802,11 @@ namespace smsc {
         /**
         * Метод устанавливает идентификатор маршрута.
         *
-        * @param route имя-тип SME
+        * @param route идентификатор маршрута
         */
         inline void setRouteId(const char* route)
         {
-          if (route)
-          {
-            strncpy(routeId, route, MAX_ROUTE_ID_TYPE_LENGTH);
-            routeId[MAX_ROUTE_ID_TYPE_LENGTH]='\0';
-          }
-          else routeId[0]='\0';
+            setStringField(routeId, route, MAX_ROUTE_ID_TYPE_LENGTH);
         };
         /**
         * Метод возвращает идентификатор маршрута
@@ -1799,10 +1818,79 @@ namespace smsc {
         */
         inline void getRouteId(char* route) const
         {
-          __require__(route);
-          route[0]='\0';
-          strncpy(route, routeId, MAX_ROUTE_ID_TYPE_LENGTH);
-          route[MAX_ROUTE_ID_TYPE_LENGTH]='\0';
+            getStringField(routeId, route, MAX_ROUTE_ID_TYPE_LENGTH);
+        };
+        /**
+        * Метод возвращает идентификатор маршрута
+        *
+        * return идентификатор маршрута
+        */
+        inline const char* getRouteId() const
+        {
+          return routeId;
+        };
+        
+        /**
+        * Метод устанавливает идентификатор sme-источника.
+        *
+        * @param id идентификатор sme-источника
+        */
+        inline void setSourceSmeId(const char* id)
+        {
+            setStringField(srcSmeId, id, MAX_SMESYSID_TYPE_LENGTH);
+        };
+        /**
+        * Метод возвращает идентификатор sme-источника
+        *
+        * @param id     указатель на буфер куда будет скопирован
+        *               идентификатор sme-источника
+        *               буфер должен иметь размер не меньше
+        *               MAX_SMESYSID_TYPE_LENGTH+1
+        */
+        inline void getSourceSmeId(char* id) const
+        {
+            getStringField(srcSmeId, id, MAX_SMESYSID_TYPE_LENGTH);
+        };
+        /**
+        * Метод возвращает идентификатор sme-источника
+        *
+        * return идентификатор sme-источника
+        */
+        inline const char* getSourceSmeId() const
+        {
+          return srcSmeId;
+        };
+        
+        /**
+        * Метод устанавливает идентификатор sme-приёмника.
+        *
+        * @param id идентификатор sme-приёмника
+        */
+        inline void setDestinationSmeId(const char* id)
+        {
+          setStringField(dstSmeId, id, MAX_SMESYSID_TYPE_LENGTH);   
+        };
+        
+        /**
+        * Метод возвращает идентификатор sme-приёмника
+        *
+        * @param id     указатель на буфер куда будет скопирован
+        *               идентификатор sme-приёмника
+        *               буфер должен иметь размер не меньше
+        *               MAX_SMESYSID_TYPE_LENGTH+1
+        */
+        inline void getDestinationSmeId(char* id) const
+        {
+            getStringField(dstSmeId, id, MAX_SMESYSID_TYPE_LENGTH);
+        };
+        /**
+        * Метод возвращает идентификатор sme-приёмника
+        *
+        * return идентификатор sme-приёмника
+        */
+        inline const char* getDestinationSmeId() const
+        {
+          return dstSmeId;
         };
 
 #define ___SMS_DICT messageBody
