@@ -64,15 +64,15 @@ public class Params extends DbsmeBean
       adminHost = getString("DBSme.Admin.host");
       adminPort = getInt("DBSme.Admin.port");
 
-      provider_not_found = getString("DBSme.MessageSet.PROVIDER_NOT_FOUND");
-      job_not_found = getString("DBSme.MessageSet.JOB_NOT_FOUND");
-      ds_failure = getString("DBSme.MessageSet.DS_FAILURE");
-      ds_connection_lost = getString("DBSme.MessageSet.DS_CONNECTION_LOST");
-      ds_statement_fail = getString("DBSme.MessageSet.DS_STATEMENT_FAIL");
-      query_null = getString("DBSme.MessageSet.QUERY_NULL");
-      input_parse = getString("DBSme.MessageSet.INPUT_PARSE");
-      output_format = getString("DBSme.MessageSet.OUTPUT_FORMAT");
-      invalid_config = getString("DBSme.MessageSet.INVALID_CONFIG");
+      provider_not_found = getOptionalString("DBSme.MessageSet.PROVIDER_NOT_FOUND");
+      job_not_found = getOptionalString("DBSme.MessageSet.JOB_NOT_FOUND");
+      ds_failure = getOptionalString("DBSme.MessageSet.DS_FAILURE");
+      ds_connection_lost = getOptionalString("DBSme.MessageSet.DS_CONNECTION_LOST");
+      ds_statement_fail = getOptionalString("DBSme.MessageSet.DS_STATEMENT_FAIL");
+      query_null = getOptionalString("DBSme.MessageSet.QUERY_NULL");
+      input_parse = getOptionalString("DBSme.MessageSet.INPUT_PARSE");
+      output_format = getOptionalString("DBSme.MessageSet.OUTPUT_FORMAT");
+      invalid_config = getOptionalString("DBSme.MessageSet.INVALID_CONFIG");
     }
     return result;
   }

@@ -83,10 +83,10 @@ public class Job extends DbsmeBean
 
         String jobPrefix = createJobPrefix(providerName, jobId);
 
-        jobName = getString(jobPrefix + ".name");
+        jobName = getOptionalString(jobPrefix + ".name");
         type = getString(jobPrefix + ".type");
-        address = getString(jobPrefix + ".address");
-        alias = getString(jobPrefix + ".alias");
+        address = getOptionalString(jobPrefix + ".address");
+        alias = getOptionalString(jobPrefix + ".alias");
         timeout = getInt(jobPrefix + ".timeout");
         sql = getString(jobPrefix + ".sql");
         input = getString(jobPrefix + ".input");
@@ -94,13 +94,13 @@ public class Job extends DbsmeBean
         query = getBool(jobPrefix + ".query");
         commit = getBool(jobPrefix + ".commit");
         function = getBool(jobPrefix + ".function");
-        ds_failure = getString(jobPrefix + ".MessageSet.DS_FAILURE");
-        ds_connection_lost = getString(jobPrefix + ".MessageSet.DS_CONNECTION_LOST");
-        ds_statement_fail = getString(jobPrefix + ".MessageSet.DS_STATEMENT_FAIL");
-        query_null = getString(jobPrefix + ".MessageSet.QUERY_NULL");
-        input_parse = getString(jobPrefix + ".MessageSet.INPUT_PARSE");
-        output_format = getString(jobPrefix + ".MessageSet.OUTPUT_FORMAT");
-        invalid_config = getString(jobPrefix + ".MessageSet.INVALID_CONFIG");
+        ds_failure = getOptionalString(jobPrefix + ".MessageSet.DS_FAILURE");
+        ds_connection_lost = getOptionalString(jobPrefix + ".MessageSet.DS_CONNECTION_LOST");
+        ds_statement_fail = getOptionalString(jobPrefix + ".MessageSet.DS_STATEMENT_FAIL");
+        query_null = getOptionalString(jobPrefix + ".MessageSet.QUERY_NULL");
+        input_parse = getOptionalString(jobPrefix + ".MessageSet.INPUT_PARSE");
+        output_format = getOptionalString(jobPrefix + ".MessageSet.OUTPUT_FORMAT");
+        invalid_config = getOptionalString(jobPrefix + ".MessageSet.INVALID_CONFIG");
       }
     }
     if (type == null) type = "";

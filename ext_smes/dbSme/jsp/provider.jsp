@@ -148,7 +148,7 @@ function setSort(sorting)
 </div><%
 page_menu_begin(out);
 page_menu_button(out, "mbAdd",    "Add job",    "Create new job");
-page_menu_button(out, "mbDelete", "Delete jobs", "Delete all checked jobs", "return confirm('Are you sure to delete all checked jobs?') && confirm('Save provider changes?')");
+page_menu_button(out, "mbDelete", "Delete jobs", "Delete all checked jobs", "return confirm('Are you sure to delete all checked jobs?')");
 page_menu_button(out, "mbDone",  "Done",  "");
 page_menu_button(out, "mbCancel", "Cancel", "Cancel changes", "return noValidationSubmit(this);");
 page_menu_space(out);

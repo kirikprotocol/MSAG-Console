@@ -60,7 +60,7 @@ public class Providers extends DbsmeBean
         String dpName = StringEncoderDecoder.decodeDot(fullProviderName.substring(prefix_length + 1));
         String dpAddress = "";
         try {
-          dpAddress = getString(fullProviderName + ".address");
+          dpAddress = getOptionalString(fullProviderName + ".address");
         } catch (Exception e) {
           logger.debug("Couldn't get provider address, nested: " + e.getMessage(), e);
         }

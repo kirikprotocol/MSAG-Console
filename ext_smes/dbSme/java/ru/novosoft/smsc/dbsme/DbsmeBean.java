@@ -130,12 +130,30 @@ public class DbsmeBean extends IndexBean
     }
   }
 
+  public String getOptionalString(String paramName)
+  {
+    try {
+      return config.getString(paramName);
+    } catch (Exception e) {
+      return "";
+    }
+  }
+
   public boolean getBool(String paramName)
   {
     try {
       return config.getBool(paramName);
     } catch (Exception e) {
       logger.debug("Couldn't get boolean parameter \"" + paramName + "\", nested: " + e.getMessage(), e);
+      return false;
+    }
+  }
+
+  public boolean getOptionalBool(String paramName)
+  {
+    try {
+      return config.getBool(paramName);
+    } catch (Exception e) {
       return false;
     }
   }

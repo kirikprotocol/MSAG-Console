@@ -85,10 +85,10 @@ public class Provider extends DbsmeBean
       for (Iterator i = getSectionChildSectionNames(jobsSection).iterator(); i.hasNext();) {
         String fullJobName = (String) i.next();
         String jobId = fullJobName.substring(jobsSection.length() + 1);
-        String jobName = getString(fullJobName + ".name");
+        String jobName = getOptionalString(fullJobName + ".name");
         String jobType = getString(fullJobName + ".type");
-        String jobAddress = getString(fullJobName + ".address");
-        String jobAlias = getString(fullJobName + ".alias");
+        String jobAddress = getOptionalString(fullJobName + ".address");
+        String jobAlias = getOptionalString(fullJobName + ".alias");
         add(new _DataItem(jobId, jobName, jobType, jobAddress, jobAlias));
       }
       return super.query(query_to_run);
@@ -174,16 +174,16 @@ public class Provider extends DbsmeBean
         dbUserName = getString(prefix + ".DataSource.dbUserName");
         dbUserPassword = getString(prefix + ".DataSource.dbUserPassword");
         type = getString(prefix + ".DataSource.type");
-        watchdog = getBool(prefix + ".DataSource.watchdog");
+        watchdog = getOptionalBool(prefix + ".DataSource.watchdog");
 
-        job_not_found = getString(prefix + ".MessageSet.JOB_NOT_FOUND");
-        ds_failure = getString(prefix + ".MessageSet.DS_FAILURE");
-        ds_connection_lost = getString(prefix + ".MessageSet.DS_CONNECTION_LOST");
-        ds_statement_fail = getString(prefix + ".MessageSet.DS_STATEMENT_FAIL");
-        query_null = getString(prefix + ".MessageSet.QUERY_NULL");
-        input_parse = getString(prefix + ".MessageSet.INPUT_PARSE");
-        output_format = getString(prefix + ".MessageSet.OUTPUT_FORMAT");
-        invalid_config = getString(prefix + ".MessageSet.INVALID_CONFIG");
+        job_not_found = getOptionalString(prefix + ".MessageSet.JOB_NOT_FOUND");
+        ds_failure = getOptionalString(prefix + ".MessageSet.DS_FAILURE");
+        ds_connection_lost = getOptionalString(prefix + ".MessageSet.DS_CONNECTION_LOST");
+        ds_statement_fail = getOptionalString(prefix + ".MessageSet.DS_STATEMENT_FAIL");
+        query_null = getOptionalString(prefix + ".MessageSet.QUERY_NULL");
+        input_parse = getOptionalString(prefix + ".MessageSet.INPUT_PARSE");
+        output_format = getOptionalString(prefix + ".MessageSet.OUTPUT_FORMAT");
+        invalid_config = getOptionalString(prefix + ".MessageSet.INVALID_CONFIG");
       }
     }
     if (oldProviderName == null) oldProviderName = "";
@@ -220,16 +220,16 @@ public class Provider extends DbsmeBean
     if (mbCancel != null)
       return RESULT_DONE;
     if (mbDone != null)
-      return save();
+      return save(false);
     if (mbAdd != null) {
-      result = save();
+      result = save(false);
       if (result != RESULT_DONE)
         return result;
       else
         return RESULT_ADD;
     }
     if (mbEdit != null && mbEdit.length() > 0 && providerName != null && providerName.length() > 0) {
-      result = save();
+      result = save(false);
       if (result != RESULT_DONE)
         return result;
       else
@@ -253,10 +253,13 @@ public class Provider extends DbsmeBean
 
   private int delete()
   {
-    for (int i = 0; i < checked.length; i++)
+    logger.debug("Delete: " + checked.length);
+    for (int i = 0; i < checked.length; i++) {
       config.removeSection(prefix + ".Jobs." + checked[i]);
+      logger.debug("  remove sec: " + prefix + ".Jobs." + checked[i]);
+    }
 
-    int result = save();
+    int result = save(true);
     if (result != RESULT_DONE)
       return result;
 
@@ -280,12 +283,12 @@ public class Provider extends DbsmeBean
     prefix = "DBSme.DataProviders." + StringEncoderDecoder.encodeDot(providerName);
     return providerName.equals(oldProviderName)
             && isOptionalStringEqualsToConfig(prefix + ".address", address)
-            && config.containsParameter(prefix + ".DataSource.connections") && connections == getInt(prefix + ".DataSource.connections")
+            && ((!config.containsParameter(prefix + ".DataSource.connections") && connections == 0) || connections == getInt(prefix + ".DataSource.connections"))
             && isOptionalStringEqualsToConfig(prefix + ".DataSource.dbInstance", dbInstance)
             && isOptionalStringEqualsToConfig(prefix + ".DataSource.dbUserName", dbUserName)
             && isOptionalStringEqualsToConfig(prefix + ".DataSource.dbUserPassword", dbUserPassword)
             && isOptionalStringEqualsToConfig(prefix + ".DataSource.type", type)
-            && config.containsParameter(prefix + ".DataSource.watchdog") && watchdog == getBool(prefix + ".DataSource.watchdog")
+            && ((!config.containsParameter(prefix + ".DataSource.watchdog") && !watchdog) || watchdog == getBool(prefix + ".DataSource.watchdog"))
 
             && isOptionalStringEqualsToConfig(prefix + ".MessageSet.JOB_NOT_FOUND", job_not_found)
             && isOptionalStringEqualsToConfig(prefix + ".MessageSet.DS_FAILURE", ds_failure)
@@ -297,12 +300,12 @@ public class Provider extends DbsmeBean
             && isOptionalStringEqualsToConfig(prefix + ".MessageSet.INVALID_CONFIG", invalid_config);
   }
 
-  private int save()
+  private int save(boolean forceSave)
   {
     String newPrefix = createProviderPrefix(providerName);
     if (!creating) {
       try {
-        if (isProviderEquals())
+        if (!forceSave && isProviderEquals())
           return RESULT_DONE;
       } catch (Throwable e) {
         //skip it
@@ -344,7 +347,11 @@ public class Provider extends DbsmeBean
       return error(DBSmeErrors.error.couldntSaveTempConfig, e);
     }
 
-    getContext().setConfigChanged(true);
+    try {
+      getContext().setConfigChanged(!isProviderEquals());
+    } catch (Throwable e) {
+      //skip it
+    }
 
     return RESULT_DONE;
   }
