@@ -128,9 +128,6 @@ o.put("Sources Mask", "2");
 o.put("Dest Subj", "3");
 o.put("Dest Mask", "4");
 o.put("SMEs", "5");
-o.put("Strict Filter", "6");
-o.put("Show Sources list", "7");
-o.put("Show Dest list", "8");
 %>
 <table>
 <tr>
