@@ -263,16 +263,16 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
 
     USHORT_T result;
     __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq");
-	  result = Et96MapV2ForwardSmMTReq( SSN, dialogId, 1, &smRpDa, &smRpOa, ui, FALSE);
+	  result = Et96MapV2ForwardSmMTReq( SSN, dialogid, 1, &smRpDa, &smRpOa, ui, FALSE);
 	  if( result != ET96MAP_E_OK ) {
       __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq error 0x%x",result);
 	  }
     __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq OK");
-  	result = Et96MapDelimiterReq( SSN, dialogueId, 0, 0 );
+  	result = Et96MapDelimiterReq( SSN, dialogid, 0, 0 );
     __trace2__("MAP::send response to SMSC");
     {
-      SmscCommand cmd = SmscCommand::makeDeliverySmResp(0,smcDialogId,0);
-      proxy->putIncomingCommand(cmd);
+      SmscCommand cmd = SmscCommand::makeDeliverySmResp(0,this->smscDialogId,0);
+      MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
     }
     __trace2__("MAP::send response to SMSC OK");
     //return true;// :) optimization
