@@ -237,6 +237,11 @@ StateType StateMachine::submit(Tuple& t)
     dst=sms->getDestinationAddress();
   }
   sms->setDealiasedDestinationAddress(dst);
+  smsc::profiler::Profile profile=smsc->getProfiler()->lookup(dst);
+  __trace2__("SUBMIT: lookup .%d.%d.%20s, result: %d,%d",dst.type,dst.plan,dst.value,
+    profile.reportoptions,profile.codepage);
+
+  sms->setDeliveryReport(sms->getDeliveryReport()|profile.reportoptions);
 
   bool has_route = smsc->routeSms(sms->getOriginatingAddress(),
                           dst,
@@ -389,11 +394,8 @@ StateType StateMachine::submit(Tuple& t)
       sms->setOriginatingAddress(src);
     }
     sms->setDestinationAddress(dst);
-    smsc::profiler::Profile p=smsc->getProfiler()->lookup(dst);
-    __trace2__("SUBMIT: lookup .%d.%d.%20s, result: %d,%d",dst.type,dst.plan,dst.value,
-      p.reportoptions,p.codepage);
 
-    if(p.codepage==smsc::profiler::ProfileCharsetOptions::Default &&
+    if(profile.codepage==smsc::profiler::ProfileCharsetOptions::Default &&
        sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
     {
       __trace__("SUBMIT: converting ucs2->text");
@@ -581,8 +583,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         {
           __trace__("DELIVERYRESP: failed to change state to undeliverable");
         }
-        smsc::profiler::Profile p=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
-        if(p.reportoptions==smsc::profiler::ProfileReportOptions::ReportFull ||
+        if(//p.reportoptions==smsc::profiler::ProfileReportOptions::ReportFull ||
            (sms.getDeliveryReport()&0x3)!=0)
         {
           SMS rpt;
@@ -607,7 +608,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
           char addr[32];
           sms.getDestinationAddress().getText(addr,sizeof(addr));
           formatFailed(addr,"failed",out);
-          splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,p.codepage,arr);
+          smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
+          splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
           for(int i=0;i<arr.Count();i++)
           {
             smsc->submitSms(arr[i]);
@@ -628,8 +630,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
     return DELIVERED_STATE;
   }
   try{
-    smsc::profiler::Profile p=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
-    if(p.reportoptions==smsc::profiler::ProfileReportOptions::ReportFull ||
+    //smsc::profiler::Profile p=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
+    if(//p.reportoptions==smsc::profiler::ProfileReportOptions::ReportFull ||
        (sms.getDeliveryReport()&1)==1)
     {
       SMS rpt;
@@ -655,7 +657,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
       sms.getDestinationAddress().getText(addr,sizeof(addr));
       formatDeliver(addr,time(NULL),out);
       __trace2__("RECEIPT: addr %s",addr);
-      splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,p.codepage,arr);
+      smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
+      splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
       for(int i=0;i<arr.Count();i++)
       {
         smsc->submitSms(arr[i]);
