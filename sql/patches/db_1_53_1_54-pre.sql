@@ -63,7 +63,7 @@ DROP TABLE SMS_IDS_bak;
 CREATE TABLE SMS_IDS_bak
 (  
    ID        RAW(8) NOT NULL 
-)
+) TABLESPACE SMSC_DATA;
 
 insert into sms_ids_bak
 select id from sms_ids;
