@@ -16,6 +16,7 @@ import ru.novosoft.smsc.util.StringEncoderDecoder;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
+
 public class RoutesEdit extends RouteBody
 {
 
@@ -174,7 +175,7 @@ public class RoutesEdit extends RouteBody
         return error(SMSCErrors.error.routes.destinationsIsEmpty);
 
       routeSubjectManager.getRoutes().remove(oldRouteId);
-      routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId, deliveryMode, forwardTo, hide, forceReplayPath, notes));
+      routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId, deliveryMode, forwardTo, hide, forceReplayPath, notes, forceDelivery));
       if (oldRouteId.equals(routeId))
         journalAppend(SubjectTypes.TYPE_route, routeId, Actions.ACTION_MODIFY);
       else

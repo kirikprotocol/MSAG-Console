@@ -104,6 +104,10 @@ function srcSmeIdChanged()
 			<td><input id=forceReplayPath class=check type=checkbox name=forceReplayPath <%=bean.isForceReplayPath() ? "checked" : ""%>></td>
 			<td><label for=forceReplayPath style="padding-left:4px;">force replay path</label></td>
 		</tr>
+		<tr>
+			<td><input id=forceDelivery class=check type=checkbox name=forceDelivery <%=bean.isForceDelivery() ? "checked" : ""%>></td>
+			<td><label for=forceDelivery style="padding-left:4px;">force delivery</label></td>
+		</tr>
 		</table>
 	</td>
 </tr>

@@ -15,6 +15,7 @@ import ru.novosoft.smsc.util.Functions;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
+
 public class RoutesAdd extends RouteBody
 {
   protected int init(List errors)
@@ -133,7 +134,7 @@ public class RoutesAdd extends RouteBody
       if (destinations.isEmpty())
         return error(SMSCErrors.error.routes.destinationsIsEmpty);
 
-      routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId, deliveryMode, forwardTo, hide, forceReplayPath, notes));
+      routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId, deliveryMode, forwardTo, hide, forceReplayPath, notes, forceDelivery));
       journalAppend(SubjectTypes.TYPE_route, routeId, Actions.ACTION_ADD);
       appContext.getStatuses().setRoutesChanged(true);
       return RESULT_DONE;

@@ -15,6 +15,7 @@
 	forwardTo CDATA #IMPLIED
 	hide CDATA #IMPLIED
 	forceReplayPath CDATA #IMPLIED
+	forceDelivery (true|false) "false"
 >
 <!ELEMENT notes (#PCDATA)>
 <!ELEMENT source (subject | mask)>
