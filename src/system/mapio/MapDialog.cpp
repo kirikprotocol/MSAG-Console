@@ -468,7 +468,6 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
     }
     else
     {
-      unsigned char value = 0;
       if ( sms->hasIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES) ){
         __trace2__("MAP::mkDeliveryPDU: ms_msg_wait_facilities = 0x%x",
                    sms->getIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES));
