@@ -43,7 +43,7 @@ int main(void)
     sms.setOriginatingDescriptor(dsc);
     sms.setDestinationAddress(strlen(da), 222, 111, da);
     sms.setDealiasedDestinationAddress(strlen(da), 2, 1, da);
-    sms.setNextTime((time_t)1000L);
+    sms.setNextTime(time(NULL));
     sms.setValidTime((time_t)360000L);
     sms.setSubmitTime((time_t)100L);
     sms.setMessageReference(5);
@@ -60,9 +60,13 @@ int main(void)
 
         SMSId id = store->getNextId();
         store->createSms(sms, id);
-        printf("Message was stored, id = %llu.\n", id);
-        store->retriveSms(id, sms);
-        printf("Message retrived, id = %llu.\n", id);
+        printf("Message was stored, id = %llu, next time = %lu.\n", id, 
+               sms.getNextTime());
+        SMS _sms;
+        store->retriveSms(id, _sms);
+        printf("Message retrived, id = %llu, next time = %lu.\n", id,
+               _sms.getNextTime());
+        printf("Min next time = %lu\n", store->getNextRetryTime());
 
         /*time_t begTime, endTime;
         printf("\nStoring %d messages, please wait ... \n", 
