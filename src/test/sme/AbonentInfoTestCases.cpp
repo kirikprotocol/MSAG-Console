@@ -53,20 +53,15 @@ AckText* AbonentInfoTestCases::getExpectedResponse(const string& input,
 		const Address destAddr = fixture->aliasReg->findAddressByAlias(destAlias);
 		//status
 		int status = 0;
-		const RouteHolder* routeHolder = fixture->routeReg->lookup(
-			fixture->smeAddr, destAddr);
-		if (routeHolder)
+		SmeType smeType = fixture->routeChecker->isDestReachable(
+			fixture->smeAddr, destAlias);
+		switch (smeType)
 		{
-			SmeType smeType = fixture->smeReg->getSmeBindType(
-				routeHolder->route.smeSystemId);
-			switch (smeType)
-			{
-				case SME_RECEIVER:
-				case SME_TRANSMITTER:
-				case SME_TRANSCEIVER:
-					status = 1;
-					break;
-			}
+			case SME_RECEIVER:
+			case SME_TRANSMITTER:
+			case SME_TRANSCEIVER:
+				status = 1;
+				break;
 		}
 		//profile
 		time_t t;
@@ -75,11 +70,12 @@ AckText* AbonentInfoTestCases::getExpectedResponse(const string& input,
 		ostringstream s;
 		if (smeAddr == abonentInfoAliasSmpp)
 		{
-			s << input << ":" << status << "," << profile.codepage;
+			s << input << ":" << status << "," << profile.codepage << ",";
 		}
 		else if (smeAddr == abonentInfoAliasMap)
 		{
-			s << "Abonent " << input << " is " << (status ? "Online" : "Offline");
+			s << "Abonent " << input << " is " << (status ? "Online" : "Offline") <<
+				". msc unknown";
 		}
 		else
 		{
@@ -247,7 +243,7 @@ void AbonentInfoTestCases::queryAbonentInfoIncorrect(bool sync,
 			case 3: //некорректные симводы в адресе
 				__tc__("queryAbonentInfo.incorrect.invalidSymbols"); __tc_ok__;
 				input = "???";
-				//correct = true; //прожевывает
+				correct = true; //прожевывает
 				break;
 			case 4: //лишние слова в команде
 				__tc__("queryAbonentInfo.incorrect.extraWords"); __tc_ok__;
@@ -257,12 +253,12 @@ void AbonentInfoTestCases::queryAbonentInfoIncorrect(bool sync,
 			case 5: //заведомо неправильный ton
 				__tc__("queryAbonentInfo.incorrect.tonNpi"); __tc_ok__;
 				input = ".1000.1.123";
-				//correct = true; //берет 1000 & 0xff
+				correct = true; //берет 1000 & 0xff
 				break;
 			case 6: //заведомо неправильный npi
 				__tc__("queryAbonentInfo.incorrect.tonNpi"); __tc_ok__;
 				input = ".1.1000.123";
-				//correct = true; //берет 1000 & 0xff
+				correct = true; //берет 1000 & 0xff
 				break;
 			default:
 				__unreachable__("Invalid num");

@@ -66,8 +66,8 @@ void ConfigUtil::setupSystemSme()
 	SmeManagerTestCases::setupRandomCorrectSmeInfo(&abonentInfoSme);
 	abonentInfoSme.systemId = abonentInfoSystemId;
 	vector<const Address*> addrList;
-	addrList.push_back(&abonentInfoAddrSmpp);
-	addrList.push_back(&abonentInfoAddrMap);
+	addrList.push_back(new Address(abonentInfoAddrSmpp));
+	addrList.push_back(new Address(abonentInfoAddrMap));
 	smeReg->registerSme(addrList, abonentInfoSme, false, true);
 	smeReg->bindSme(abonentInfoSme.systemId, SME_TRANSCEIVER);
 	//алиас для abonent info

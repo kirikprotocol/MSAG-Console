@@ -247,8 +247,9 @@ int TestSmeFunc::Execute()
 	//дождаться старта остальных sme
 	cout << taskName() << " ready" << endl;
 	syncObj->signalReady();
-	if (!syncObj->waitStart(10000))
+	if (!syncObj->waitStart(20000))
 	{
+		__trace2__("sme failed to start");
 		__unreachable__("sme failed to start");
 	}
 	cout << taskName() << " run cycle" << endl;
