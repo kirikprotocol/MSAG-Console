@@ -11,7 +11,7 @@ import ru.novosoft.smsc.admin.AdminException;
 
 public class MemberAlreadyExistsException extends AdminException
 {
-    public MemberAlreadyExistsException(String member) {
-        super("Member '"+member+"' already exists");
+    public MemberAlreadyExistsException(String member, String dl) {
+        super("Member '"+member+"' already registered in dl '"+dl+"'");
     }
 }
