@@ -28,6 +28,9 @@ using smsc::util::regexp::RegExp;
 using smsc::util::regexp::SMatch;
 using smsc::core::synchronization::Mutex;
 
+static const int REPORT_ACK=2;
+static const int REPORT_NOACK=255;
+
 
 class ReceiptGetAdapter:public GetAdapter{
 public:
@@ -396,7 +399,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p)
     if(!strncasecmp(buf+i,"#ack#",5))
     {
       __trace__("DIRECT: ack found");
-      sms.setDeliveryReport(2);
+      sms.setDeliveryReport(REPORT_ACK);
       Directive d(i,5);
       offsets.Push(d);
       i+=5;
@@ -404,7 +407,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p)
     if(!strncasecmp(buf+i,"#noack#",7))
     {
       __trace__("DIRECT: noack found");
-      sms.setDeliveryReport(255);
+      sms.setDeliveryReport(REPORT_NOACK);
       Directive d(i,7);
       offsets.Push(d);
       i+=7;
@@ -1789,10 +1792,10 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
     if(
         sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ||
-        sms.getDeliveryReport()==255 ||
+        sms.getDeliveryReport()==REPORT_NOACK ||
         (
           sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS) &&
-          sms.getDeliveryReport()!=2
+          sms.getDeliveryReport()!=REPORT_ACK
         )
       )return DELIVERED_STATE;
     if(
@@ -2186,15 +2189,13 @@ StateType StateMachine::cancel(Tuple& t)
 
 void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const char* reason)
 {
-  if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) || sms.getDeliveryReport()==255)return;
-  if(sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS) && sms.getDeliveryReport()!=2)return;
-  if(!(
-        sms.getDeliveryReport() ||
-        (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==1 ||
-        (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==2 ||
-        sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST)
-      )
-    )return;
+  if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) || sms.getDeliveryReport()==REPORT_NOACK)return;
+  bool regdel=(sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==1 ||
+              (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==2 ||
+              sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST);
+
+  if(sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS) && !regdel &&
+     sms.getDeliveryReport()!=REPORT_ACK)return;
   SMS *prpt=new SMS;
   SMS &rpt=*prpt;
   rpt.setOriginatingAddress(scAddress);
@@ -2252,16 +2253,15 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
 void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
 {
   if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ||
-     sms.getDeliveryReport()==255/*NOACK*/ ||
-     sms.getDeliveryReport()==3/*FINAL*/)return;
-  if(sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS) && sms.getDeliveryReport()!=2/*ACK*/)return;
-  if(!(
-        sms.getDeliveryReport() ||
-        (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==1 ||
-        (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==2 ||
-        sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST)
-      )
-    )return;
+     sms.getDeliveryReport()==REPORT_NOACK ||
+     sms.getDeliveryReport()==ProfileReportOptions::ReportFinal)return;
+  bool regdel=(sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==1 ||
+              (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==2 ||
+              sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST);
+
+  if(sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS) && !regdel &&
+     sms.getDeliveryReport()!=REPORT_ACK)return;
+  if(!(sms.getDeliveryReport() || regdel))return;
   __trace2__("sendNotifyReport: attemptsCount=%d",sms.getAttemptsCount());
   if(sms.getAttemptsCount()!=0)return;
   SMS *prpt=new SMS;
