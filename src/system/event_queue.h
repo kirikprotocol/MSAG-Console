@@ -38,7 +38,9 @@ struct Tuple
 
 class EventQueue
 {
-  // запись списка команд
+  uint64_t counter;
+
+	// запись списка команд
   struct CmdRecord
   {
     CommandType command;
@@ -188,6 +190,18 @@ class EventQueue
 public:
 #define __synchronized__ MutexGuard mguard(mutex);
 
+	EventQueue() : counter(0)
+	{
+	}
+
+	~EventQueue() {}
+
+	uint64_t getCounter()
+	{
+	__synchronized__
+		return counter;
+	}
+
   // добавляет в запись команду (создает новую запись приее отсутствии)
   // если для записи допустима выборка команд , то нотифицирует исполнителей
   void enqueue(MsgIdType msgId, const CommandType& command)
@@ -236,7 +250,7 @@ public:
         trace("selanddeq: got mutex");
         Locker* prev = 0;
 #if !defined ( DISABLE_ANY_CHECKS )
-				{
+        {
           Locker *iter1,*iter2;
           int i;
           for(i=0;i<HashTable::TABLE_SIZE;i++)
@@ -274,7 +288,7 @@ public:
           }
         }
 #endif // LIST TEST        
-				__watch__(first_unlocked);
+        __watch__(first_unlocked);
         __watch__(last_unlocked);
         for (Locker* iter = first_unlocked;
              iter != 0; ) //iter = iter->next_unlocked
@@ -293,7 +307,7 @@ public:
             {
               // удаляем из списка активных
 #if !defined (DISABLE_ANY_CHECKS)              
-							{
+              {
               __trace__("dump list before");
               Locker *iter2=first_unlocked;
               while(iter2)
@@ -339,7 +353,8 @@ public:
             {
               if ( StateChecker::stateIsFinal(locker->state) )
               {
-                // удаляем из списка активных
+                ++counter;
+								// удаляем из списка активных
                 if ( locker == last_unlocked ) last_unlocked = prev;
                 if ( prev )
                    prev->next_unlocked = locker->next_unlocked;
@@ -424,7 +439,7 @@ public:
     }}
 #endif // DUMP LIST    
 
-		__watch__(first_unlocked);
+    __watch__(first_unlocked);
     __watch__(last_unlocked);
     event.Signal();
   }
