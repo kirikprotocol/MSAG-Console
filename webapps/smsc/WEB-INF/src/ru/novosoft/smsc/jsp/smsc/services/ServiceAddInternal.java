@@ -18,9 +18,9 @@ public class ServiceAddInternal extends SmeBean
 	protected String mbNext = null;
 	protected String mbCancel = null;
 
-	public int process(SMSCAppContext appContext, List errors)
+	protected int init(List errors)
 	{
-		int result = super.process(appContext, errors);
+		int result = super.init(errors);
 		if (result != RESULT_OK)
 			return result;
 
@@ -28,7 +28,17 @@ public class ServiceAddInternal extends SmeBean
 		{
 			serviceId = "";
 			wantAlias = true;
+			forceDC = true;
 		}
+
+      return RESULT_OK;
+	}
+
+	public int process(SMSCAppContext appContext, List errors)
+	{
+		int result = super.process(appContext, errors);
+		if (result != RESULT_OK)
+			return result;
 
 		if (mbCancel != null)
 			return RESULT_DONE;

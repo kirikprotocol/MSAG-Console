@@ -9,6 +9,9 @@ if (multi != null)
 if (bean.getStage() == 2 && request.getParameter("jsp") != null)
 	FORM_URI = CPATH + request.getParameter("jsp");
 
+bean.setWantAlias(request.getParameter("wantAlias") != null);
+bean.setForceDC(request.getParameter("forceDC") != null);
+
 switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
 {
 	case ServiceAddExternalAdm.RESULT_DONE:

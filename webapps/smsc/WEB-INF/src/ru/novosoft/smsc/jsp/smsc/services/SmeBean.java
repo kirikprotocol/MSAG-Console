@@ -33,6 +33,22 @@ public class SmeBean extends PageBean
 			return -1;
 	}
 
+	protected void cleanup()
+	{
+		serviceId = null;
+		priority = 0;
+		systemType = "";
+		typeOfNumber = 0;
+		numberingPlan = 0;
+		interfaceVersion = null;
+		rangeOfAddress = "";
+		password = "";
+		timeout = 8;
+		wantAlias = false;
+		forceDC = false;
+		receiptSchemeName = "default";
+	}
+
 	/******************************* properties ****************************************/
 	public String getServiceId()
 	{

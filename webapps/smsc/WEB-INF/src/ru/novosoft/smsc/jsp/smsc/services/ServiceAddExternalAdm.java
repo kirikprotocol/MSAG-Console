@@ -73,10 +73,17 @@ public class ServiceAddExternalAdm extends SmeBean
 			return RESULT_OK;
 	}
 
-	private void cleanup()
+	protected void cleanup()
 	{
 		if (incomingZip != null && incomingZip.isFile() && incomingZip.exists())
 			incomingZip.delete();
+
+		hostName = null;
+		port = -1;
+		startupArgs = null;
+		mbNext = null;
+		mbCancel = null;
+		super.cleanup();
 	}
 
 	/**
@@ -147,6 +154,7 @@ public class ServiceAddExternalAdm extends SmeBean
 		{
 			stage++;
 			wantAlias = true;
+			forceDC = true;
 			return RESULT_OK;
 		}
 		else
@@ -183,6 +191,7 @@ public class ServiceAddExternalAdm extends SmeBean
 		}
 		logger.info("New service \"" + serviceInfo.getId() + "\" added to host \"" + serviceInfo.getHost() + '"');
 		stage = 0;
+		cleanup();
 		return RESULT_DONE;
 	}
 

@@ -349,6 +349,8 @@ public class Smsc extends Service
 	public synchronized boolean isLocaleRegistered(String locale)
 	{
 		Config config = getSmscConfig();
+		if (config == null)
+			return false;
 		String localesString = null;
 		try
 		{
