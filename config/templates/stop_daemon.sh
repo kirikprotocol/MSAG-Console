@@ -7,6 +7,6 @@ echo "Waiting daemon to stop"
 while [ -e "daemon.pid" ] ; 
 do
   echo -n "." ;
-  usleep 1000000 ;
+  sleep 1 ;
 done
 
