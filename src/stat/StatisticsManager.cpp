@@ -42,7 +42,7 @@ void StatisticsManager::updateRejected(int errcode)
 }
 
 void StatisticsManager::updateChanged(const char* dstSmeId,
-    const char* routeId, int errcode = 0)
+    const char* routeId, int errcode)
 {
     MutexGuard  outgoingGuard(outgoingLock);
     MutexGuard  switchGuard(switchLock);
@@ -105,7 +105,7 @@ void StatisticsManager::stop()
     ThreadedTask::stop();
     if (isStarted)
     {
-        bExternalFlush = true; 
+        bExternalFlush = true;
         awakeEvent.Signal();
         __trace__("StatisticsManager::ctop() waiting finish ...");
         exitEvent.Wait();
@@ -118,7 +118,7 @@ void StatisticsManager::flushStatistics()
     MutexGuard flushGuard(flushLock);
 
     if (doneEvent.isSignaled()) doneEvent.Wait(0);
-    bExternalFlush = true; 
+    bExternalFlush = true;
     awakeEvent.Signal();
     doneEvent.Wait();
 }
@@ -169,7 +169,7 @@ const char* insertStatRouteSql = (const char*)
 void StatisticsManager::flushCounters(short index)
 {
     uint32_t period = calculatePeriod();
-    
+
     __trace2__("Flushing statistics for period: %d / %d", period, time(0));
 
     Connection* connection = 0;

@@ -21,106 +21,106 @@ using smsc::admin::AdminException;
 const char * const CommandDispatcher::task_name = "CommandDispatcher";
 
 CommandDispatcher::CommandDispatcher(Socket* admSocket,
-																		 //const char * const client_addr,
-																		 const char * const loggerCategory = "smsc.admin.util.CommandDispatcher")
-	: logger(smsc::util::Logger::getCategory(loggerCategory)),
-	  reader(admSocket),
-	  writer(admSocket)
+                                     //const char * const client_addr,
+                                     const char * const loggerCategory)
+  : logger(smsc::util::Logger::getCategory(loggerCategory)),
+    reader(admSocket),
+    writer(admSocket)
 {
-	sock = admSocket;
-	//memcpy(cl_addr, client_addr, 15);
-	//cl_addr[15] = 0;
-	logger.debug("Command dispatcher created.");
+  sock = admSocket;
+  //memcpy(cl_addr, client_addr, 15);
+  //cl_addr[15] = 0;
+  logger.debug("Command dispatcher created.");
 }
 
 CommandDispatcher::~CommandDispatcher()
 {
-	logger.debug("Command dispatcher \"%s\" destroyed.", task_name);
-	if (sock != 0) {
+  logger.debug("Command dispatcher \"%s\" destroyed.", task_name);
+  if (sock != 0) {
     sock->Abort();
-		delete sock;
+    delete sock;
     sock = 0;
   }
 }
 
 void CommandDispatcher::init()
 {
-	char thr[11];
-	snprintf(thr, sizeof(thr), "[%.8X]", thr_self());
-	std::string ndc;
-	ndc += thr;
-	//ndc += cl_addr;
-	log4cpp::NDC::push(ndc);
+  char thr[11];
+  snprintf(thr, sizeof(thr), "[%.8X]", thr_self());
+  std::string ndc;
+  ndc += thr;
+  //ndc += cl_addr;
+  log4cpp::NDC::push(ndc);
 }
 
 int CommandDispatcher::Execute()
 {
-	init();
+  init();
 
-	logger.info("Command dispather started");
-	
-	std::auto_ptr<Command> command(0);
-	do
-	{
-		std::auto_ptr<Response> response(0);
-		try {
-			while (!reader.canRead())
-			{
-				if (isStopping)
-					break;
-			}
-			if (!isStopping)
-			{
-				command.reset(reader.read());
-				response.reset(handle(command.get()));
-			}
-		}
-		catch (AdminException &e)
-		{
-			response.reset(new Response(Response::Error, e.what()));
-			logger.warn("Command dispatching failed with exception: %s", e.what());
-		}
-		catch (char * e)
-		{
-			response.reset(new Response(Response::Error, e));
-			logger.warn("Command dispatching failed with exception: %s", e);
-		}
-		catch (...)
-		{
-			response.reset(new Response(Response::Error, "Command dispatching failed with unknown exception"));
-			logger.warn("Command dispatching failed with unknown exception");
-		}
-	
-		if (!isStopping)
-		{
-			// writing response
-			try {
-				if (response.get() == 0)
-				{
-					response.reset(new Response(Response::Error, 0));
-				}
-				writer.write(*response);
-			}
-			catch (AdminException &e)
-			{
-				logger.warn("Response writing failed with exception: %s", e.what());
-				break;
-			}
-			catch (char * e)
-			{
-				logger.warn("Response writing failed with exception: %s", e);
-				break;
-			}
-			catch (...)
-			{
-				logger.warn("Response writing failed with unknown exception");
-				break;
-			}
-		}
-	} while (!isStopping && command.get() != 0
-					 && (command->getId() != Command::undefined));
-	
-  if (isStopping) 
+  logger.info("Command dispather started");
+
+  std::auto_ptr<Command> command(0);
+  do
+  {
+    std::auto_ptr<Response> response(0);
+    try {
+      while (!reader.canRead())
+      {
+        if (isStopping)
+          break;
+      }
+      if (!isStopping)
+      {
+        command.reset(reader.read());
+        response.reset(handle(command.get()));
+      }
+    }
+    catch (AdminException &e)
+    {
+      response.reset(new Response(Response::Error, e.what()));
+      logger.warn("Command dispatching failed with exception: %s", e.what());
+    }
+    catch (char * e)
+    {
+      response.reset(new Response(Response::Error, e));
+      logger.warn("Command dispatching failed with exception: %s", e);
+    }
+    catch (...)
+    {
+      response.reset(new Response(Response::Error, "Command dispatching failed with unknown exception"));
+      logger.warn("Command dispatching failed with unknown exception");
+    }
+
+    if (!isStopping)
+    {
+      // writing response
+      try {
+        if (response.get() == 0)
+        {
+          response.reset(new Response(Response::Error, 0));
+        }
+        writer.write(*response);
+      }
+      catch (AdminException &e)
+      {
+        logger.warn("Response writing failed with exception: %s", e.what());
+        break;
+      }
+      catch (char * e)
+      {
+        logger.warn("Response writing failed with exception: %s", e);
+        break;
+      }
+      catch (...)
+      {
+        logger.warn("Response writing failed with unknown exception");
+        break;
+      }
+    }
+  } while (!isStopping && command.get() != 0
+           && (command->getId() != Command::undefined));
+
+  if (isStopping)
   {
     logger.debug("Command dispather stopped by flag");
   }
@@ -129,15 +129,14 @@ int CommandDispatcher::Execute()
     logger.debug("Command dispather stopped by socket");
   }
 
-	sock->Abort();
+  sock->Abort();
   delete sock;
   sock = 0;
-	logger.info("Command dispather stopped");
-	log4cpp::NDC::pop();
-	return 0;
+  logger.info("Command dispather stopped");
+  log4cpp::NDC::pop();
+  return 0;
 }
 
 }
 }
 }
-
