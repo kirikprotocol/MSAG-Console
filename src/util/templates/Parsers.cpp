@@ -506,6 +506,7 @@ bool compareStringsIgnoreCase(const char* str1, const char* str2)
     char* up1 = stringToUpperCase(str1); 
     char* up2 = stringToUpperCase(str2);
     bool result = ((!up1 && !up2) || strcmp(up1, up2) == 0);
+    //__trace2__("compare '%s' with '%s' result = %d", up1, up2, result);
     if (up1) delete up1; if (up2) delete up2;
     return result;
 }
@@ -706,14 +707,18 @@ void DateTimeParser::parse(std::string& input,
                     curPos++;
                     std::string buff = "";
 
-                    while (isalpha(str[strPos])) buff += str[strPos++];
+                    while (str[strPos] && isalpha(str[strPos])) 
+                        buff += str[strPos++];
 
+                    //__trace2__("AM/PM = %s", buff.c_str());
                     if (compareStringsIgnoreCase(buff.c_str(), 
-                                                 ioDayTimeParts[0])) 
+                                                 ioDayTimeParts[0])) {
                         AMPM = false;
+                    }
                     else if (compareStringsIgnoreCase(buff.c_str(), 
-                                                      ioDayTimeParts[1]) == 0)
+                                                      ioDayTimeParts[1])) {
                         AMPM = true;
+                    }
                     else throw ParsingException(error, "AM/PM qualifer expected",
                                                 str, pattern);
                     isAMPM = true;
