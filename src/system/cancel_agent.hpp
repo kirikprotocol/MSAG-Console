@@ -62,7 +62,7 @@ public:
               SmscCommand::makeCancelSmResp
               (
                 cmd->get_dialogId(),
-                SmscCommand::Status::CANCELFAIL
+                Status::CANCELFAIL
               )
             );
           }else
@@ -72,7 +72,7 @@ public:
               SmscCommand::makeCancelSmResp
               (
                 cmd->get_dialogId(),
-                SmscCommand::Status::OK
+                Status::OK
               )
             );
           }
@@ -92,7 +92,7 @@ public:
           SmscCommand::makeCancelSmResp
           (
             cmd->get_dialogId(),
-            SmscCommand::Status::CANCELFAIL
+            Status::CANCELFAIL
           )
         );
       }

@@ -10,6 +10,7 @@
 #include "util/Logger.h"
 #include "util/regexp/RegExp.hpp"
 #include "core/synchronization/Mutex.hpp"
+#include "system/status.h"
 
 namespace smsc{
 namespace system{
@@ -254,11 +255,13 @@ StateType StateMachine::submit(Tuple& t)
 
   if(sms->getNextTime()==-1)
   {
+    sms->lastResult=Status::INVSCHED;
+    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
     SmscCommand resp = SmscCommand::makeSubmitSmResp
                          (
                            /*messageId*/"0",
                            dialogId,
-                           SmscCommand::Status::INVALIDSCHEDULE,
+                           Status::INVSCHED,
                            sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
                          );
     try{
@@ -275,11 +278,13 @@ StateType StateMachine::submit(Tuple& t)
      sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)!=DataCoding::BINARY &&
      sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)!=DataCoding::SMSC7BIT)
   {
+    sms->lastResult=Status::INVDCS;
+    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
     SmscCommand resp = SmscCommand::makeSubmitSmResp
                        (
                          /*messageId*/"0",
                          dialogId,
-                         SmscCommand::Status::INVALIDDATACODING,
+                         Status::INVDCS,
                          sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
                        );
     try{
@@ -292,11 +297,13 @@ StateType StateMachine::submit(Tuple& t)
   }
   if(sms->getValidTime()==-1)
   {
+    sms->lastResult=Status::INVEXPIRY;
+    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
     SmscCommand resp = SmscCommand::makeSubmitSmResp
                          (
                            /*messageId*/"0",
                            dialogId,
-                           SmscCommand::Status::INVALIDVALIDTIME,
+                           Status::INVEXPIRY,
                            sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
                          );
     try{
@@ -311,12 +318,13 @@ StateType StateMachine::submit(Tuple& t)
   if(src_proxy->getSourceAddressRange().length() &&
      !checkSourceAddress(src_proxy->getSourceAddressRange(),sms->getOriginatingAddress()))
   {
+    sms->lastResult=Status::INVSRCADR;
     smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
     SmscCommand resp = SmscCommand::makeSubmitSmResp
                          (
                            /*messageId*/"0",
                            dialogId,
-                           SmscCommand::Status::INVSRC,
+                           Status::INVSRCADR,
                            sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
                          );
     try{
@@ -371,13 +379,14 @@ StateType StateMachine::submit(Tuple& t)
   //smsc->routeSms(sms,dest_proxy_index,dest_proxy);
   if ( !has_route )
   {
+    sms->lastResult=Status::NOROUTE;
     smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
     //send_no_route;
     SmscCommand resp = SmscCommand::makeSubmitSmResp
                          (
                            /*messageId*/"0",
                            dialogId,
-                           SmscCommand::Status::NOROUTE,
+                           Status::NOROUTE,
                            sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
                          );
     try{
@@ -410,12 +419,13 @@ StateType StateMachine::submit(Tuple& t)
 
   if(sms->getNextTime()>now+maxValidTime || sms->getNextTime()>sms->getValidTime())
   {
+    sms->lastResult=Status::INVSCHED;
     smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
     SmscCommand resp = SmscCommand::makeSubmitSmResp
                          (
                            /*messageId*/"0",
                            dialogId,
-                           SmscCommand::Status::INVALIDSCHEDULE,
+                           Status::INVSCHED,
                            sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
                          );
     try{
@@ -442,12 +452,13 @@ StateType StateMachine::submit(Tuple& t)
   }catch(...)
   {
     __trace2__("failed to create sms with id %lld",t.msgId);
+    sms->lastResult=Status::SYSERR;
     smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
     SmscCommand resp = SmscCommand::makeSubmitSmResp
                          (
                            /*messageId*/"0",
                            dialogId,
-                           SmscCommand::Status::DBERROR,
+                           Status::SYSERR,
                            sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
                          );
     try{
@@ -471,7 +482,7 @@ StateType StateMachine::submit(Tuple& t)
                          (
                            buf,
                            dialogId,
-                           SmscCommand::Status::OK,
+                           Status::OK,
                            sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
                          );
     try{
@@ -645,6 +656,7 @@ StateType StateMachine::forward(Tuple& t)
   time_t now=time(NULL);
   if(sms.getValidTime()<=now && sms.getAttemptsCount()!=0)
   {
+    sms.lastResult=Status::EXPIRED;
     smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
     try{
       store->changeSmsStateToExpired(t.msgId);
@@ -855,6 +867,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         }
         smsc->notifyScheduler();
         sendNotifyReport(sms,t.msgId,"subscriber busy");
+        sms.lastResult=GET_STATUS_CODE(t.command->get_resp()->get_status());
         smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
         return UNKNOWN_STATE;
       }break;
@@ -870,6 +883,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         }
 
         sendFailureReport(sms,t.msgId,UNDELIVERABLE_STATE,"permanent error");
+        sms.lastResult=GET_STATUS_CODE(t.command->get_resp()->get_status());
         smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
         return UNDELIVERABLE_STATE;
       }
@@ -967,6 +981,7 @@ StateType StateMachine::alert(Tuple& t)
   }
   smsc->notifyScheduler();
   sendNotifyReport(sms,t.msgId,"delivery attempt timed out");
+  sms.lastResult=Status::DELIVERYTIMEDOUT;
   smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
   return UNKNOWN_STATE;
 }
@@ -986,7 +1001,7 @@ StateType StateMachine::replace(Tuple& t)
         SmscCommand::makeReplaceSmResp
         (
           t.command->get_dialogId(),
-          SmscCommand::Status::REPLACEFAIL
+          Status::REPLACEFAIL
         )
       );
     }catch(...)
@@ -996,6 +1011,7 @@ StateType StateMachine::replace(Tuple& t)
   }
   if(t.command->get_replaceSm().validityPeriod==-1)
   {
+    sms.lastResult=Status::INVEXPIRY;
     smsc->registerStatisticalEvent(StatEvents::etSubmitErr,&sms);
     try{
       t.command.getProxy()->putCommand
@@ -1003,7 +1019,7 @@ StateType StateMachine::replace(Tuple& t)
         SmscCommand::makeReplaceSmResp
         (
           t.command->get_dialogId(),
-          SmscCommand::Status::INVALIDVALIDTIME
+          Status::INVEXPIRY
         )
       );
     }catch(...)
@@ -1012,6 +1028,7 @@ StateType StateMachine::replace(Tuple& t)
   }
   if(t.command->get_replaceSm().scheduleDeliveryTime==-1)
   {
+    sms.lastResult=Status::INVSCHED;
     smsc->registerStatisticalEvent(StatEvents::etSubmitErr,&sms);
     try{
       t.command.getProxy()->putCommand
@@ -1019,7 +1036,7 @@ StateType StateMachine::replace(Tuple& t)
         SmscCommand::makeReplaceSmResp
         (
           t.command->get_dialogId(),
-          SmscCommand::Status::INVALIDSCHEDULE
+          Status::INVSCHED
         )
       );
     }catch(...)
@@ -1045,6 +1062,7 @@ StateType StateMachine::replace(Tuple& t)
   }catch(...)
   {
     //
+    sms.lastResult=Status::SYSERR;
     smsc->registerStatisticalEvent(StatEvents::etSubmitErr,&sms);
     try{
       t.command.getProxy()->putCommand
@@ -1052,7 +1070,7 @@ StateType StateMachine::replace(Tuple& t)
         SmscCommand::makeReplaceSmResp
         (
           t.command->get_dialogId(),
-          SmscCommand::Status::REPLACEFAIL
+          Status::REPLACEFAIL
         )
       );
     }catch(...)
@@ -1066,7 +1084,7 @@ StateType StateMachine::replace(Tuple& t)
       SmscCommand::makeReplaceSmResp
       (
         t.command->get_dialogId(),
-        SmscCommand::Status::OK
+        Status::OK
       )
     );
   }catch(...)
@@ -1094,7 +1112,7 @@ StateType StateMachine::query(Tuple& t)
       SmscCommand::makeQuerySmResp
       (
         t.command->get_dialogId(),
-        SmscCommand::Status::QUERYFAIL,
+        Status::QUERYFAIL,
         t.msgId,
         0,
         0,
@@ -1117,7 +1135,7 @@ StateType StateMachine::query(Tuple& t)
     SmscCommand::makeQuerySmResp
     (
       t.command->get_dialogId(),
-      SmscCommand::Status::OK,
+      Status::OK,
       t.msgId,
       sms.getLastTime(),
       state,
@@ -1155,7 +1173,7 @@ StateType StateMachine::cancel(Tuple& t)
         SmscCommand::makeCancelSmResp
         (
           t.command->get_dialogId(),
-          SmscCommand::Status::CANCELFAIL
+          Status::CANCELFAIL
         )
       );
     }
@@ -1172,7 +1190,7 @@ StateType StateMachine::cancel(Tuple& t)
         SmscCommand::makeCancelSmResp
         (
           t.command->get_dialogId(),
-          SmscCommand::Status::CANCELFAIL
+          Status::CANCELFAIL
         )
       );
     }
@@ -1185,7 +1203,7 @@ StateType StateMachine::cancel(Tuple& t)
       SmscCommand::makeCancelSmResp
       (
         t.command->get_dialogId(),
-        SmscCommand::Status::OK
+        Status::OK
       )
     );
   }

@@ -61,14 +61,14 @@ void Smsc::mainLoop()
           if ( !has_route )
           {
             //send_no_route;
-            SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::ERROR);
+            SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, Status::NOROUTE);
             src_proxy->putCommand(resp);
             __warning__("SUBMIT_SM: no route");
             break;
           }
           else if ( !dest_proxy )
           {
-            SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::ERROR);
+            SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, Status::SYSERR);
             src_proxy->putCommand(resp);
             __warning__("SUBMIT_SM: SME is not connected");
             break;
@@ -80,7 +80,7 @@ void Smsc::mainLoop()
           Task task(dest_proxy->getUniqueId(),dialogId2);
           if ( !tasks.createTask(task) )
           {
-            SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::ERROR);
+            SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, Status::SYSERR);
             src_proxy->putCommand(resp);
             __warning__("SUBMIT_SM: can't create task");
             break;
@@ -89,7 +89,7 @@ void Smsc::mainLoop()
           SmscCommand delivery = SmscCommand::makeDeliverySm(*sms,dialogId2);
           dest_proxy->putCommand(delivery);
           // send responce
-          SmscCommand resp2 = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::OK);
+          SmscCommand resp2 = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, Status::OK);
           src_proxy->putCommand(resp2);
           __trace__("mainLoop:SUBMIT:OK");
           break;
@@ -203,7 +203,7 @@ void Smsc::mainLoop()
             SmscCommand::makeReplaceSmResp
             (
               cmd->get_dialogId(),
-              SmscCommand::Status::INVALIDMSGID
+              Status::INVMSGID
             )
           );
         };
@@ -220,7 +220,7 @@ void Smsc::mainLoop()
             SmscCommand::makeQuerySmResp
             (
               cmd->get_dialogId(),
-              SmscCommand::Status::INVALIDMSGID,
+              Status::INVMSGID,
               0,0,0,0
             )
           );
@@ -236,7 +236,7 @@ void Smsc::mainLoop()
               SmscCommand::makeCancelSmResp
               (
                 cmd->get_dialogId(),
-                SmscCommand::Status::CANCELFAIL
+                Status::CANCELFAIL
               )
             );
             continue;
@@ -253,7 +253,7 @@ void Smsc::mainLoop()
               SmscCommand::makeCancelSmResp
               (
                 cmd->get_dialogId(),
-                SmscCommand::Status::INVALIDMSGID
+                Status::INVMSGID
               )
             );
             continue;
@@ -268,7 +268,7 @@ void Smsc::mainLoop()
               SmscCommand::makeCancelSmResp
               (
                 cmd->get_dialogId(),
-                SmscCommand::Status::CANCELFAIL
+                Status::CANCELFAIL
               )
             );
             continue;

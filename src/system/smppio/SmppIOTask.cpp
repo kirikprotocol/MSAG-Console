@@ -397,7 +397,7 @@ int SmppInputThread::Execute()
                     SmscCommand::makeUnbindResp
                     (
                       pdu->get_sequenceNumber(),
-                      SmscCommand::Status::OK
+                      Status::OK
                     )
                   );
                   ss->getProxy()->close();
@@ -486,7 +486,7 @@ int SmppInputThread::Execute()
                   SmscCommand::makeGenericNack
                   (
                     pdu->get_sequenceNumber(),
-                    SmscCommand::Status::INVALIDCMDID
+                    Status::INVCMDID
                   )
                 );
                 //SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVCMDID);

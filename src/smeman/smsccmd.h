@@ -22,6 +22,7 @@
 #include "smpp/smpp_time.h"
 #include "util/Exception.hpp"
 #include <string>
+#include "system/status.h"
 
 namespace smsc{
 namespace smeman{
@@ -413,6 +414,7 @@ class SmscCommand
 
 public:
 
+  /*
   struct Status
   {
     static const int OK       = 0;
@@ -431,6 +433,7 @@ public:
     static const int INVALIDCMDID      = 13;
     static const int INVALIDMSGID      = 14;
   };
+  */
 
   SmeProxy* getProxy()const{return cmd->proxy;}
   void setProxy(SmeProxy* newproxy){cmd->proxy=newproxy;}
@@ -774,6 +777,8 @@ public:
 
   uint32_t makeSmppStatus(uint32_t status)
   {
+    return status;
+    /*
     switch(status)
     {
     case Status::OK :                return SmppStatusSet::ESME_ROK;
@@ -794,6 +799,7 @@ public:
 
     default : return SmppStatusSet::ESME_RUNKNOWNERR;
     }
+    */
   }
 
   SmppHeader* makePdu()

@@ -91,25 +91,25 @@ public:
       switch(cmd->get_commandId())
       {
         case DELIVERY:
-          errresp=SmscCommand::makeDeliverySmResp("",cmd->get_dialogId(),SmscCommand::Status::INVALIDBINDSTATE);
+          errresp=SmscCommand::makeDeliverySmResp("",cmd->get_dialogId(),Status::INVBNDSTS);
           break;
         case SUBMIT:
-          errresp=SmscCommand::makeSubmitSmResp("",cmd->get_dialogId(),SmscCommand::Status::INVALIDBINDSTATE);
+          errresp=SmscCommand::makeSubmitSmResp("",cmd->get_dialogId(),Status::INVBNDSTS);
           break;
         case QUERY:
-          errresp=SmscCommand::makeQuerySmResp(cmd->get_dialogId(),SmscCommand::Status::INVALIDBINDSTATE,0,0,0,0);
+          errresp=SmscCommand::makeQuerySmResp(cmd->get_dialogId(),Status::INVBNDSTS,0,0,0,0);
           break;
         case UNBIND:
-          errresp=SmscCommand::makeUnbindResp(cmd->get_dialogId(),SmscCommand::Status::INVALIDBINDSTATE);
+          errresp=SmscCommand::makeUnbindResp(cmd->get_dialogId(),Status::INVBNDSTS);
           break;
         case REPLACE:
-          errresp=SmscCommand::makeReplaceSmResp(cmd->get_dialogId(),SmscCommand::Status::INVALIDBINDSTATE);
+          errresp=SmscCommand::makeReplaceSmResp(cmd->get_dialogId(),Status::INVBNDSTS);
           break;
         case CANCEL:
-          errresp=SmscCommand::makeCancelSmResp(cmd->get_dialogId(),SmscCommand::Status::INVALIDBINDSTATE);
+          errresp=SmscCommand::makeCancelSmResp(cmd->get_dialogId(),Status::INVBNDSTS);
           break;
         default:
-          errresp=SmscCommand::makeGenericNack(cmd->get_dialogId(),SmscCommand::Status::INVALIDBINDSTATE);
+          errresp=SmscCommand::makeGenericNack(cmd->get_dialogId(),Status::INVBNDSTS);
       }
       //cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS
       //putCommand(errresp);
@@ -132,7 +132,7 @@ public:
         (
           ENQUIRELINK_RESP,
           cmd->get_dialogId(),
-          SmscCommand::Status::OK
+          Status::OK
         )
         ,
         SmscCommandDefaultPriority
