@@ -416,6 +416,26 @@ tryAgain:
 			match('\u00A8');
 			break;
 		}
+		case '\u0400':  case '\u0401':  case '\u0402':  case '\u0403':
+		case '\u0404':  case '\u0405':  case '\u0406':  case '\u0407':
+		case '\u0408':  case '\u0409':  case '\u040a':  case '\u040b':
+		case '\u040c':  case '\u040d':  case '\u040e':  case '\u040f':
+		case '\u0410':  case '\u0411':  case '\u0412':  case '\u0413':
+		case '\u0414':  case '\u0415':  case '\u0416':  case '\u0417':
+		case '\u0418':  case '\u0419':  case '\u041a':  case '\u041b':
+		case '\u041c':  case '\u041d':  case '\u041e':  case '\u041f':
+		case '\u0420':  case '\u0421':  case '\u0422':  case '\u0423':
+		case '\u0424':  case '\u0425':  case '\u0426':  case '\u0427':
+		case '\u0428':  case '\u0429':  case '\u042a':  case '\u042b':
+		case '\u042c':  case '\u042d':  case '\u042e':  case '\u042f':
+		case '\u0430':  case '\u0431':  case '\u0432':  case '\u0433':
+		case '\u0434':  case '\u0435':  case '\u0436':  case '\u0437':
+		case '\u0438':  case '\u0439':  case '\u043a':  case '\u043b':
+		case '\u043c':  case '\u043d':  case '\u043e':  case '\u043f':
+		{
+			matchRange('\u0400','\u043F');
+			break;
+		}
 		default:
 		{
 			throw new NoViableAltForCharException((char)LA(1), getFilename(), getLine());
@@ -511,13 +531,13 @@ tryAgain:
 		{
 			matchRange('0','3');
 			{
-			if (((LA(1) >= '0' && LA(1) <= '9')) && ((LA(2) >= '\u0000' && LA(2) <= '\u00ff'))) {
+			if (((LA(1) >= '0' && LA(1) <= '9')) && (_tokenSet_2.member(LA(2)))) {
 				mDIGIT(false);
 				{
-				if (((LA(1) >= '0' && LA(1) <= '9')) && ((LA(2) >= '\u0000' && LA(2) <= '\u00ff'))) {
+				if (((LA(1) >= '0' && LA(1) <= '9')) && (_tokenSet_2.member(LA(2)))) {
 					mDIGIT(false);
 				}
-				else if (((LA(1) >= '\u0000' && LA(1) <= '\u00ff')) && (true)) {
+				else if ((_tokenSet_2.member(LA(1))) && (true)) {
 				}
 				else {
 					throw new NoViableAltForCharException((char)LA(1), getFilename(), getLine());
@@ -525,7 +545,7 @@ tryAgain:
 				
 				}
 			}
-			else if (((LA(1) >= '\u0000' && LA(1) <= '\u00ff')) && (true)) {
+			else if ((_tokenSet_2.member(LA(1))) && (true)) {
 			}
 			else {
 				throw new NoViableAltForCharException((char)LA(1), getFilename(), getLine());
@@ -538,10 +558,10 @@ tryAgain:
 		{
 			matchRange('4','7');
 			{
-			if (((LA(1) >= '0' && LA(1) <= '9')) && ((LA(2) >= '\u0000' && LA(2) <= '\u00ff'))) {
+			if (((LA(1) >= '0' && LA(1) <= '9')) && (_tokenSet_2.member(LA(2)))) {
 				mDIGIT(false);
 			}
-			else if (((LA(1) >= '\u0000' && LA(1) <= '\u00ff')) && (true)) {
+			else if ((_tokenSet_2.member(LA(1))) && (true)) {
 			}
 			else {
 				throw new NoViableAltForCharException((char)LA(1), getFilename(), getLine());
@@ -590,9 +610,11 @@ tryAgain:
 	}
 	
 	
-	private static final long _tokenSet_0_data_[] = { -8935163401827516416L, 576460745995190270L, 72058693549555712L, -1L, 0L, 0L, 0L, 0L };
+	private static final long _tokenSet_0_data_[] = { -8935163401827516416L, 576460745995190270L, 72058693549555712L, -1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, -1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L };
 	public static final BitSet _tokenSet_0 = new BitSet(_tokenSet_0_data_);
-	private static final long _tokenSet_1_data_[] = { -17179869185L, -268435457L, -1L, -1L, 0L, 0L, 0L, 0L };
+	private static final long _tokenSet_1_data_[] = { -17179869185L, -268435457L, -1L, -1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, -1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L };
 	public static final BitSet _tokenSet_1 = new BitSet(_tokenSet_1_data_);
+	private static final long _tokenSet_2_data_[] = { -1L, -1L, -1L, -1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, -1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L };
+	public static final BitSet _tokenSet_2 = new BitSet(_tokenSet_2_data_);
 	
 	}
