@@ -85,7 +85,7 @@ extern "C" {
 void MapIoTask::deinit( bool connected )
 {
   USHORT_T result;
-  __map_trace2__("deinitialize");
+  __map_trace__("deinitialize");
   __global_bind_counter = 0;
   MapDialogContainer::destroyInstance();
   if( connected ) {
@@ -172,10 +172,10 @@ void MapIoTask::dispatcher()
 
     __map_trace2__("MsgRecv receive msg with receiver 0x%hx sender 0x%hx prim 0x%hx size %d",message.receiver,message.sender,message.primitive,message.size);
     if ( message.primitive == 0x8b && message.msg_p[6] >= 0x04 ) {
-      __map_trace2__("MsgRecv hatching msg to reset priority order " );
+      __map_trace__("MsgRecv hatching msg to reset priority order " );
       message.msg_p[6] = 0;
     } else if ( message.primitive == 0x8d && message.msg_p[4] >= 0x04 ) {
-      __map_trace2__("MsgRecv hatching msg to reset priority order " );
+      __map_trace__("MsgRecv hatching msg to reset priority order " );
       message.msg_p[4] = 0;
     }
     if( message.primitive == 0x88 ) {
@@ -269,9 +269,9 @@ void MapIoTask::init(unsigned timeout)
   if ( err != MSG_OK ) {
     __map_warn2__("MAP: Error at MsgConn, code 0x%hx",err); throw runtime_error("MsgConn error");
   }
-  __map_trace2__("MAP:: pause self and wait map initialization");
+  __map_trace__("MAP:: pause self and wait map initialization");
   sleep(timeout);
-  __map_trace2__("MAP:: continue self initialization");
+  __map_trace__("MAP:: continue self initialization");
 //  err = MsgConn(USER01_ID,USER01_ID);
 //  if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgConn on self, code 0x%hx",err); throw runtime_error("MsgInit error"); }
   __map_trace__("Bind");
@@ -356,7 +356,7 @@ int MapTracker::Execute(){
     __map_trace2__("MAP tracker:: alive %d dispatching %d",MAP_isAlive,MAP_dispatching);
     if ( isStopping ) return 0;
     if ( MAP_dispatching && !MAP_isAlive ) {
-      __map_warn2__("\n\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
+      __map_warn__("\n\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
                     "MAP is DEAD"
                     "\n\n\n\n");
       abort();

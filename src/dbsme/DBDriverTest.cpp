@@ -48,7 +48,7 @@ int main(void)
                 Statement* statement1 = connection->createStatement(sql1);
                 if (statement1)
                 {
-                    statement1->setInt64(1, 0xffffffffffffffff);
+                    statement1->setInt64(1, 0xffffffffffffffffLL);
                     statement1->setString(2, "Testing string value");
                     statement1->setDateTime(3, 1000000);
                     statement1->executeUpdate();

@@ -1623,7 +1623,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                   throw MAPDIALOG_FATAL_ERROR("MAP::PutCommand: can't create dialog");
                 }
                 if( dialog.isnull() ) {
-                  __map_trace2__("putCommand: can't create SMSC->MS ussd dialog (locked), request has bean attached");
+                  __map_trace__("putCommand: can't create SMSC->MS ussd dialog (locked), request has bean attached");
                   // command has bean attached by dialog container
                 } else {
                   dialog->dropChain = false;
@@ -1703,7 +1703,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
         throw MAPDIALOG_FATAL_ERROR("MAP::PutCommand: can't create dialog");
       }
       if ( dialog.isnull() ) {
-        __map_trace2__("putCommand: can't create SMSC->MS dialog (locked), request has bean attached");
+        __map_trace__("putCommand: can't create SMSC->MS dialog (locked), request has bean attached");
         // command has bean attached by dialog container
       }else{
         dialog->isQueryAbonentStatus = (cmd->get_commandId() == QUERYABONENTSTATUS);
@@ -2266,7 +2266,7 @@ USHORT_T Et96MapCloseInd(
             QueryMcsVersion(dialog.get());
           }
         }else{
-          __map_trace2__("RIfno returned no route, close dialog");
+          __map_trace__("RIfno returned no route, close dialog");
           dialog->state = MAPST_CLOSED;
           dialogid_smsc = dialog->dialogid_smsc;
           //throw MAPDIALOG_ERROR(dialog->routeErr,"lisy error");
