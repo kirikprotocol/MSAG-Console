@@ -10,7 +10,6 @@ package ru.novosoft.smsc.jsp.smsstat;
 import ru.novosoft.smsc.admin.smsstat.SmsStat;
 import ru.novosoft.smsc.admin.smsstat.StatQuery;
 import ru.novosoft.smsc.admin.smsstat.Statistics;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.util.Functions;
 
@@ -47,9 +46,13 @@ public class SmsStatFormBean extends IndexBean
       stat.setSmsc(appContext.getSmsc());
     }
 
-    if (mbQuery != null)
-      statistics = stat.getStatistics(query);
-    else if (!query.isFromDateEnabled()) {
+    if (mbQuery != null) {
+      try { statistics = stat.getStatistics(query); }
+      catch (Exception exc) {
+        statistics = null;
+        return error(exc.getMessage());
+      }
+    } else if (!query.isFromDateEnabled()) {
       query.setFromDate(Functions.truncateTime(new Date()));
       query.setFromDateEnabled(true);
     }
@@ -58,18 +61,14 @@ public class SmsStatFormBean extends IndexBean
     return RESULT_OK;
   }
 
-  public Statistics getStatistics()
-  {
+  public Statistics getStatistics() {
     return statistics;
   }
 
-  public String getMbQuery()
-  {
+  public String getMbQuery() {
     return mbQuery;
   }
-
-  public void setMbQuery(String mbQuery)
-  {
+  public void setMbQuery(String mbQuery) {
     this.mbQuery = mbQuery;
   }
 

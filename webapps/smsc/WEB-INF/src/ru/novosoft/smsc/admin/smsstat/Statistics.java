@@ -39,12 +39,18 @@ public class Statistics
   public void addSmeIdStat(SmeIdCountersSet set) {
     bySmeId.addElement(set);
   }
+  public void addSmeIdCollection(Collection col) {
+    bySmeId.addAll(col);
+  }
   public Collection getSmeIdStat() {
     return bySmeId;
   }
 
   public void addRouteIdStat(RouteIdCountersSet set) {
     byRouteId.addElement(set);
+  }
+  public void addRouteIdCollection(Collection col) {
+    byRouteId.addAll(col);
   }
   public Collection getRouteIdStat() {
     return byRouteId;
