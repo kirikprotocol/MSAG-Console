@@ -1094,7 +1094,7 @@ void MAPIO_PutCommand(const SmscCommand& cmd ){
   else MAPIO_PutCommand(cmd, 0 );
 }
 
-static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
+static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
 {
   //__map_trace2__("MAP::%s MAP.did:{0x%x}",__FUNCTION__,dialog->dialogid_map);
   unsigned dialogid_smsc = cmd->get_dialogId();
