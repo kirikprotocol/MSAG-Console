@@ -12,45 +12,23 @@
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
 
-	int beanResult = bean.RESULT_OK;
-	switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal))
+	int beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal);
+	switch(beanResult)
 	{
-		case TaskEdit.RESULT_APPLY:
-			response.sendRedirect("index.jsp");
-			return;
-		case TaskEdit.RESULT_OPTIONS:
-			response.sendRedirect("options.jsp");
-			return;
-		case TaskEdit.RESULT_DRIVERS:
-			response.sendRedirect("drivers.jsp");
-			return;
-		case TaskEdit.RESULT_PROVIDERS:
-			response.sendRedirect("providers.jsp");
-			return;
-		case TaskEdit.RESULT_TASKS:
-			response.sendRedirect("tasks.jsp");
-			return;
-		case TaskEdit.RESULT_SHEDULES:
-			response.sendRedirect("shedules.jsp");
-			return;
 		case TaskEdit.RESULT_DONE:
 			response.sendRedirect("tasks.jsp");
 			return;
-		case TaskEdit.RESULT_OK:
-			STATUS.append("Ok");
-			break;
-		case TaskEdit.RESULT_ERROR:
-			STATUS.append("<span class=CF00>Error</span>");
-			break;
 		default:
-			STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
-			errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
+      {
+        %><%@ include file="inc/menu_switch.jsp"%><%
+      }
 	}
   int rowN = 0;
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
 <%@ include file="/WEB-INF/inc/calendar.jsp"%>
+<%@ include file="/WEB-INF/inc/time.jsp"%>
 <div class=content>
 <input type=hidden name=initialized value=true>
 <input type=hidden name=create value=<%=bean.isCreate()%>>
@@ -58,7 +36,7 @@
 <table class=properties_list>
 <col width="10%">
 <tr class=row<%=rowN++&1%>>
-  <th>Task section name</th>
+  <th>Task ID</th>
   <td><input class=txt name=sectionName value="<%=StringEncoderDecoder.encode(bean.getSectionName())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
@@ -80,44 +58,32 @@
   <td><input class=check type=checkbox id=enabled name=enabled value=true <%=bean.isEnabled() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
+  <th><label for=transactionMode>transaction mode</label></th>
+  <td><input class=check type=checkbox id=transactionMode name=transactionMode value=true <%=bean.isTransactionMode() ? "checked" : ""%>></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
   <th>Priority</th>
-  <td><input class=txt name=priority value="<%=StringEncoderDecoder.encode(bean.getPriority())%>"></td>
+  <td><input class=txt name=priority value="<%=StringEncoderDecoder.encode(bean.getPriority())%>" validation="int_range" range_min="1" range_max="100" onkeyup="resetValidation(this)"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th><label for=retryOnFail>Retry on fail</label></th>
-  <td><input class=check type=checkbox id=retryOnFail name=retryOnFail value=true <%=bean.isRetryOnFail() ? "checked" : ""%>></td>
+  <th>Active period</th>
+  <td>
+    <input class=timeField id=activePeriodStart name=activePeriodStart value="<%=StringEncoderDecoder.encode(bean.getActivePeriodStart())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodStart, false, true);">...</button>
+    to
+    <input class=timeField id=activePeriodEnd name=activePeriodEnd value="<%=StringEncoderDecoder.encode(bean.getActivePeriodEnd())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodEnd, false, true);">...</button>
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th><label for=replaceMessage>Replace message</label></th>
-  <td><input class=check type=checkbox id=replaceMessage name=replaceMessage value=true <%=bean.isReplaceMessage() ? "checked" : ""%>></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>Service type</th>
-  <td><input class=txt name=svcType value="<%=StringEncoderDecoder.encode(bean.getSvcType())%>"></td>
+  <th>Validity period or date</th>
+  <td>
+    <input class=timeField id=validityPeriod name=validityPeriod value="<%=StringEncoderDecoder.encode(bean.getValidityPeriod())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(validityPeriod, false, true);">...</button>
+    or
+    <input class=calendarField id=validityDate name=validityDate value="<%=StringEncoderDecoder.encode(bean.getValidityDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(validityDate, false, true);">...</button>
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>End date</th>
   <td nowrap><input class=calendarField id=endDate name=endDate value="<%=StringEncoderDecoder.encode(bean.getEndDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(endDate, false, true);">...</button></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>Retry time</th>
-  <td><input class=txt name=retryTime value="<%=StringEncoderDecoder.encode(bean.getRetryTime())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>Validity period</th>
-  <td><input class=txt name=validityPeriod value="<%=StringEncoderDecoder.encode(bean.getValidityPeriod())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>Validity date</th>
-  <td><input class=txt name=validityDate value="<%=StringEncoderDecoder.encode(bean.getValidityDate())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>Active period start</th>
-  <td><input class=txt name=activePeriodStart value="<%=StringEncoderDecoder.encode(bean.getActivePeriodStart())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>Active period end</th>
-  <td><input class=txt name=activePeriodEnd value="<%=StringEncoderDecoder.encode(bean.getActivePeriodEnd())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Query</th>
@@ -128,12 +94,24 @@
   <td><textarea name=template><%=StringEncoderDecoder.encode(bean.getTemplate())%></textarea></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>dsOwnTimeout</th>
-  <td><input class=txt name=dsOwnTimeout value="<%=StringEncoderDecoder.encode(bean.getDsOwnTimeout())%>">secs</td>
+  <th><label for=retryOnFail>Retry on fail (time)</label></th>
+  <td>
+    <input class=check type=checkbox id=retryOnFail name=retryOnFail value=true <%=bean.isRetryOnFail() ? "checked" : ""%> onClick="opForm.all.retryTime.disabled = !this.checked;">
+    <input class=txt name=retryTime id=retryTime value="<%=StringEncoderDecoder.encode(bean.getRetryTime())%>">
+    <script>opForm.all.retryTime.disabled = !opForm.all.retryOnFail.checked;</script>
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>dsIntTimeout</th>
-  <td><input class=txt name=dsIntTimeout value="<%=StringEncoderDecoder.encode(bean.getDsIntTimeout())%>">secs</td>
+  <th><label for=replaceMessage>Replace message (service type)</label></th>
+  <td>
+    <input class=check type=checkbox id=replaceMessage name=replaceMessage value=true <%=bean.isReplaceMessage() ? "checked" : ""%> onClick="opForm.all.svcType.disabled = !this.checked;">
+    <input class=txt id=svcType name=svcType value="<%=StringEncoderDecoder.encode(bean.getSvcType())%>">
+    <script>opForm.all.svcType.disabled = !opForm.all.replaceMessage.checked;</script>
+  </td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>dsTimeout</th>
+  <td><input class=txt name=dsOwnTimeout value="<%=StringEncoderDecoder.encode(bean.getDsTimeout())%>">secs</td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>messages cache size </th>
@@ -141,11 +119,7 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>messages cache sleep</th>
-  <td><input class=txt name=messagesCacheSleep value="<%=StringEncoderDecoder.encode(bean.getMessagesCacheSleep())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th><label for=replaceMessage>transaction mode</label></th>
-  <td><input class=check type=checkbox id=transactionMode name=transactionMode value=true <%=bean.isTransactionMode() ? "checked" : ""%>></td>
+  <td><input class=txt name=messagesCacheSleep value="<%=StringEncoderDecoder.encode(bean.getMessagesCacheSleep())%>">secs</td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>uncommited in generation</th>

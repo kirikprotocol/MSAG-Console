@@ -16,45 +16,19 @@
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
 
-	int beanResult = bean.RESULT_OK;
-	switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal))
+	int beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal);
+	switch(beanResult)
 	{
-		case Shedules.RESULT_APPLY:
-			response.sendRedirect("index.jsp");
-			return;
-		case Shedules.RESULT_OPTIONS:
-			response.sendRedirect("options.jsp");
-			return;
-		case Shedules.RESULT_DRIVERS:
-			response.sendRedirect("drivers.jsp");
-			return;
-		case Shedules.RESULT_PROVIDERS:
-			response.sendRedirect("providers.jsp");
-			return;
-		case Shedules.RESULT_TASKS:
-			response.sendRedirect("tasks.jsp");
-			return;
-		case Shedules.RESULT_SHEDULES:
-			response.sendRedirect("shedules.jsp");
-			return;
-		case Shedules.RESULT_DONE:
-			response.sendRedirect("index.jsp");
-			return;
-		case Shedules.RESULT_OK:
-			STATUS.append("Ok");
-			break;
     case Shedules.RESULT_EDIT:
       response.sendRedirect("scheduleEdit.jsp?name=" + URLEncoder.encode(bean.getEdit(), "UTF-8"));
       return;
     case Shedules.RESULT_ADD:
       response.sendRedirect("scheduleEdit.jsp?create=true");
       return;
-		case Shedules.RESULT_ERROR:
-			STATUS.append("<span class=CF00>Error</span>");
-			break;
 		default:
-			STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
-			errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
+      {
+        %><%@ include file="inc/menu_switch.jsp"%><%
+      }
 	}
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>

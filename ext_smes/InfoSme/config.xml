@@ -2,5 +2,5 @@
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 
 <config>
-  <param name="system id" type="string">proxysme</param>
+  <param name="system id" type="string">InfoSme</param>
 </config>

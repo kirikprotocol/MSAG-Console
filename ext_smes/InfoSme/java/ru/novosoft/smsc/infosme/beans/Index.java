@@ -96,24 +96,14 @@ public class Index extends InfoSmeBean
       Set toChange = new HashSet(oldSchedules);
       toChange.retainAll(newSchedules);
 
-      for (Iterator i = toAdd.iterator(); i.hasNext();) {
+      for (Iterator i = new ArrayList(toChange).iterator(); i.hasNext();) {
         String schedId = (String) i.next();
-        logger.debug("add sched \"" + schedId + '"');
-        getInfoSmeContext().getInfoSme().addSchedule(schedId);
+        if (!scheduleChanged(schedId, oldConfig, newConfig))
+          toChange.remove(schedId);
       }
-      logger.debug("toChange: " + toChange.size());
-      for (Iterator i = toChange.iterator(); i.hasNext();) {
-        String schedId = (String) i.next();
-        if (scheduleChanged(schedId, oldConfig, newConfig)) {
-          logger.debug("change sched \"" + schedId + '"');
-          getInfoSmeContext().getInfoSme().changeSchedule(schedId, schedId);
-        }
-      }
-      for (Iterator i = toDelete.iterator(); i.hasNext();) {
-        String schedId = (String) i.next();
-        logger.debug("del sched \"" + schedId + '"');
-        getInfoSmeContext().getInfoSme().removeSchedule(schedId);
-      }
+      if (toAdd.size() > 0) getInfoSmeContext().getInfoSme().addSchedules(toAdd);
+      if (toDelete.size() > 0) getInfoSmeContext().getInfoSme().removeSchedules(toDelete);
+      if (toChange.size() > 0) getInfoSmeContext().getInfoSme().changeSchedules(toChange);
       getInfoSmeContext().setChangedSchedules(false);
     } catch (Throwable e) {
       logger.error("Could not apply schedules", e);
@@ -179,16 +169,16 @@ public class Index extends InfoSmeBean
       Set toChange = new HashSet(oldTasks);
       toChange.retainAll(newTasks);
 
-      for (Iterator i = toChange.iterator(); i.hasNext();) {
+      for (Iterator i = new ArrayList(toChange).iterator(); i.hasNext();) {
         String taskId = (String) i.next();
-        if (taskChanged(taskId, oldConfig, newConfig)) {
-          toDelete.add(taskId);
-          toAdd.add(taskId);
-        }
+        if (!taskChanged(taskId, oldConfig, newConfig))
+          toChange.remove(taskId);
       }
 
-      getInfoSmeContext().getInfoSme().addTasks(toAdd);
-      getInfoSmeContext().getInfoSme().removeTasks(toDelete);
+      if (toAdd.size() > 0) getInfoSmeContext().getInfoSme().addTasks(toAdd);
+      if (toDelete.size() > 0) getInfoSmeContext().getInfoSme().removeTasks(toDelete);
+      if (toChange.size() > 0) getInfoSmeContext().getInfoSme().changeTasks(toChange);
+
       getInfoSmeContext().setChangedTasks(false);
       applyScheds(oldConfig, newConfig);
     } catch (Throwable e) {

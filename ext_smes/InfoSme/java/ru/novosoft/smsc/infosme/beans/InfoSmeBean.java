@@ -15,12 +15,13 @@ import java.util.List;
  */
 public class InfoSmeBean extends PageBean {
   public static final int RESULT_APPLY = PageBean.PRIVATE_RESULT + 0;
-  public static final int RESULT_OPTIONS = PageBean.PRIVATE_RESULT + 1;
-  public static final int RESULT_DRIVERS = PageBean.PRIVATE_RESULT + 2;
-  public static final int RESULT_PROVIDERS = PageBean.PRIVATE_RESULT + 3;
-  public static final int RESULT_TASKS = PageBean.PRIVATE_RESULT + 4;
-  public static final int RESULT_SHEDULES = PageBean.PRIVATE_RESULT + 5;
-  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 6;
+  public static final int RESULT_STAT = PageBean.PRIVATE_RESULT + 1;
+  public static final int RESULT_OPTIONS = PageBean.PRIVATE_RESULT + 2;
+  public static final int RESULT_DRIVERS = PageBean.PRIVATE_RESULT + 3;
+  public static final int RESULT_PROVIDERS = PageBean.PRIVATE_RESULT + 4;
+  public static final int RESULT_TASKS = PageBean.PRIVATE_RESULT + 5;
+  public static final int RESULT_SHEDULES = PageBean.PRIVATE_RESULT + 6;
+  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 7;
 
 
   private String mbMenu = null;
@@ -53,6 +54,8 @@ public class InfoSmeBean extends PageBean {
 
     if ("apply".equals(mbMenu))
       return RESULT_APPLY;
+    else if ("stat".equals(mbMenu))
+      return RESULT_STAT;
     else if ("options".equals(mbMenu))
       return RESULT_OPTIONS;
     else if ("drivers".equals(mbMenu))

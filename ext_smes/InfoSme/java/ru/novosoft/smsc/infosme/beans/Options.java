@@ -13,14 +13,14 @@ import java.util.*;
  */
 public class Options extends InfoSmeBean
 {
-  private String address = null;
-  private String svcType = null;
+  private String address = "";
+  private String svcType = "";
   private int protocolId = 0;
   private int unrespondedMessagesMax = 0;
   private int unrespondedMessagesSleep = 0;
-  private String responceWaitTime = null;
-  private String receiptWaitTime = null;
-  private String tasksTaskTablesPrefix = null;
+  private String responceWaitTime = "";
+  private String receiptWaitTime = "";
+  private String tasksTaskTablesPrefix = "";
   private int tasksSwitchTimeout = 0;
 
   private int tasksThreadPoolMax = 0;
@@ -29,24 +29,24 @@ public class Options extends InfoSmeBean
   private int eventsThreadPoolMax = 0;
   private int eventsThreadPoolInit = 0;
 
-  private String adminHost = null;
+  private String adminHost = "";
   private int adminPort = 0;
 
-  private String smscHost = null;
+  private String smscHost = "";
   private int smscPort = 0;
-  private String smscSid = null;
+  private String smscSid = "";
   private int smscTimeout = 0;
-  private String smscPassword = null;
+  private String smscPassword = "";
 
 
-  private String systemDataSourceType = null;
+  private String systemDataSourceType = "";
   private int systemDataSourceConnections = 0;
-  private String systemDataSourceDbInstance = null;
-  private String systemDataSourceDbUserName = null;
-  private String systemDataSourceDbUserPassword = null;
+  private String systemDataSourceDbInstance = "";
+  private String systemDataSourceDbUserName = "";
+  private String systemDataSourceDbUserPassword = "";
   private boolean systemDataSourceWatchdog = false;
-  private String systemDataSourceJdbcDriver = null;
-  private String systemDataSourceJdbcSource = null;
+  private String systemDataSourceJdbcDriver = "";
+  private String systemDataSourceJdbcSource = "";
 
 
   private boolean initialized = false;
@@ -96,11 +96,34 @@ public class Options extends InfoSmeBean
         systemDataSourceJdbcDriver = getConfig().getString("InfoSme.systemDataSource.jdbc.driver");
         systemDataSourceJdbcSource = getConfig().getString("InfoSme.systemDataSource.jdbc.source");
       } catch (Exception e) {
+        checkForNulls();
         logger.error(e);
         return error(e.getMessage());
       }
     }
+    checkForNulls();
     return result;
+  }
+
+  private void checkForNulls()
+  {
+/*
+    if (address == null) address = "";
+    if (svcType == null) svcType = "";
+    if (responceWaitTime == null) responceWaitTime = "";
+    if (receiptWaitTime == null) receiptWaitTime = "";
+    if (tasksTaskTablesPrefix == null) tasksTaskTablesPrefix = "";
+    if (adminHost == null) adminHost = "";
+    if (smscHost == null) smscHost = "";
+    if (smscSid == null) smscSid = "";
+    if (smscPassword == null) smscPassword = "";
+    if (systemDataSourceType == null) systemDataSourceType = "";
+    if (systemDataSourceDbInstance == null) systemDataSourceDbInstance = "";
+    if (systemDataSourceDbUserName == null) systemDataSourceDbUserName = "";
+    if (systemDataSourceDbUserPassword == null) systemDataSourceDbUserPassword = "";
+    if (systemDataSourceJdbcDriver == null) systemDataSourceJdbcDriver = "";
+    if (systemDataSourceJdbcSource == null) systemDataSourceJdbcSource = "";
+*/
   }
 
   public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal)

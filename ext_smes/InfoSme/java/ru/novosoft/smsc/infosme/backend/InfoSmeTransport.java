@@ -22,12 +22,14 @@ class InfoSmeTransport extends Service
   Method method_isTaskSchedulerRuning = null;
   Method method_addTasks = null;
   Method method_removeTasks = null;
+  Method method_changeTasks = null;
+  Method method_isTaskEnabled = null;
   Method method_setTaskEnabled = null;
   Method method_startTasks = null;
   Method method_stopTasks = null;
-  Method method_addSchedule = null;
-  Method method_removeSchedule = null;
-  Method method_changeSchedule = null;
+  Method method_addSchedules = null;
+  Method method_removeSchedules = null;
+  Method method_changeSchedules = null;
   Method method_flushStatistics = null;
 
 
@@ -88,7 +90,7 @@ class InfoSmeTransport extends Service
   public synchronized void addTasks(Collection taskIds) throws AdminException
   {
     Map params = new HashMap();
-    params.put("taskIds", taskIds);
+    params.put("ids", taskIds);
     refreshComponents();
     call(infoSmeComponent, method_addTasks, Type.Types[Type.StringType], params);
   }
@@ -101,59 +103,78 @@ class InfoSmeTransport extends Service
   public synchronized void removeTasks(Collection taskIds) throws AdminException
   {
     Map params = new HashMap();
-    params.put("taskIds", taskIds);
+    params.put("ids", taskIds);
     refreshComponents();
     call(infoSmeComponent, method_removeTasks, Type.Types[Type.StringType], params);
+  }
+
+  public synchronized void changeTasks(Collection taskIds) throws AdminException
+  {
+    Map params = new HashMap();
+    params.put("ids", taskIds);
+    refreshComponents();
+    call(infoSmeComponent, method_changeTasks, Type.Types[Type.StringType], params);
+  }
+
+  public synchronized boolean isTaskEnabled(String taskId) throws AdminException
+  {
+    refreshComponents();
+    Map params = new HashMap();
+    params.put("id", taskId);
+    Object result = call(infoSmeComponent, method_isTaskEnabled, Type.Types[Type.BooleanType], params);
+    if (result instanceof Boolean)
+      return ((Boolean) result).booleanValue();
+    else
+      throw new AdminException("isTaskProcessorRuning: Incorrect return type \"" + result.getClass().getName() + "\"");
   }
 
   public synchronized void setTaskEnabled(String taskId, boolean enabled) throws AdminException
   {
     Map params = new HashMap();
-    params.put("taskId", taskId);
+    params.put("id", taskId);
     params.put("enabled", new Boolean(enabled));
     refreshComponents();
     call(infoSmeComponent, method_setTaskEnabled, Type.Types[Type.StringType], params);
   }
 
-  public synchronized void startTasks(List taskIds) throws AdminException
+  public synchronized void startTasks(Collection taskIds) throws AdminException
   {
     Map params = new HashMap();
-    params.put("taskIds", taskIds);
+    params.put("ids", taskIds);
     refreshComponents();
     call(infoSmeComponent, method_startTasks, Type.Types[Type.StringType], params);
   }
 
-  public synchronized void stopTasks(List taskIds) throws AdminException
+  public synchronized void stopTasks(Collection taskIds) throws AdminException
   {
     Map params = new HashMap();
-    params.put("taskIds", taskIds);
+    params.put("ids", taskIds);
     refreshComponents();
     call(infoSmeComponent, method_stopTasks, Type.Types[Type.StringType], params);
   }
 
-  public synchronized void addSchedule(String scheduleId) throws AdminException
+  public synchronized void addSchedules(Collection scheduleIds) throws AdminException
   {
     Map params = new HashMap();
-    params.put("scheduleId", scheduleId);
+    params.put("ids", scheduleIds);
     refreshComponents();
-    call(infoSmeComponent, method_addSchedule, Type.Types[Type.StringType], params);
+    call(infoSmeComponent, method_addSchedules, Type.Types[Type.StringType], params);
   }
 
-  public synchronized void removeSchedule(String scheduleId) throws AdminException
+  public synchronized void removeSchedules(Collection scheduleIds) throws AdminException
   {
     Map params = new HashMap();
-    params.put("scheduleId", scheduleId);
+    params.put("ids", scheduleIds);
     refreshComponents();
-    call(infoSmeComponent, method_removeSchedule, Type.Types[Type.StringType], params);
+    call(infoSmeComponent, method_removeSchedules, Type.Types[Type.StringType], params);
   }
 
-  public synchronized void changeSchedule(String oldScheduleId, String newScheduleId) throws AdminException
+  public synchronized void changeSchedules(Collection scheduleIds) throws AdminException
   {
     Map params = new HashMap();
-    params.put("oldScheduleId", oldScheduleId);
-    params.put("newScheduleId", newScheduleId);
+    params.put("ids", scheduleIds);
     refreshComponents();
-    call(infoSmeComponent, method_changeSchedule, Type.Types[Type.StringType], params);
+    call(infoSmeComponent, method_changeSchedules, Type.Types[Type.StringType], params);
   }
 
   public synchronized void flushStatistics() throws AdminException
@@ -169,8 +190,10 @@ class InfoSmeTransport extends Service
     if (infoSmeComponent == null
             || method_startTaskProcessor == null || method_stopTaskProcessor == null || method_isTaskProcessorRuning == null
             || method_startTaskScheduler == null || method_stopTaskScheduler == null || method_isTaskSchedulerRuning == null
-            || method_addTasks == null || method_removeTasks == null || method_setTaskEnabled == null || method_startTasks == null || method_stopTasks == null
-            || method_addSchedule == null || method_removeSchedule == null || method_changeSchedule == null
+            || method_addTasks == null || method_removeTasks == null || method_changeTasks == null
+            || method_isTaskEnabled == null || method_setTaskEnabled == null
+            || method_startTasks == null || method_stopTasks == null
+            || method_addSchedules == null || method_removeSchedules == null || method_changeSchedules == null
             || method_flushStatistics == null) {
 
       infoSmeComponent = (Component) getInfo().getComponents().get("InfoSme");
@@ -185,13 +208,15 @@ class InfoSmeTransport extends Service
 
       method_addTasks = (Method) infoSmeComponent.getMethods().get("addTasks");
       method_removeTasks = (Method) infoSmeComponent.getMethods().get("removeTasks");
+      method_changeTasks = (Method) infoSmeComponent.getMethods().get("changeTasks");
+      method_isTaskEnabled = (Method) infoSmeComponent.getMethods().get("isTaskEnabled");
       method_setTaskEnabled = (Method) infoSmeComponent.getMethods().get("setTaskEnabled");
       method_startTasks = (Method) infoSmeComponent.getMethods().get("startTasks");
       method_stopTasks = (Method) infoSmeComponent.getMethods().get("stopTasks");
 
-      method_addSchedule = (Method) infoSmeComponent.getMethods().get("addSchedule");
-      method_removeSchedule = (Method) infoSmeComponent.getMethods().get("removeSchedule");
-      method_changeSchedule = (Method) infoSmeComponent.getMethods().get("changeSchedule");
+      method_addSchedules = (Method) infoSmeComponent.getMethods().get("addSchedules");
+      method_removeSchedules = (Method) infoSmeComponent.getMethods().get("removeSchedules");
+      method_changeSchedules = (Method) infoSmeComponent.getMethods().get("changeSchedules");
 
       method_flushStatistics = (Method) infoSmeComponent.getMethods().get("flushStatistics");
     }

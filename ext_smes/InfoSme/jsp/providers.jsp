@@ -17,48 +17,22 @@
 	//MENU1_SELECTION = "WSME_INDEX";
   FORM_METHOD="GET";
 
-	int beanResult = bean.RESULT_OK;
-	switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal))
+	int beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal);
+	switch(beanResult)
 	{
-		case Providers.RESULT_APPLY:
-			response.sendRedirect("index.jsp");
-			return;
-		case Providers.RESULT_OPTIONS:
-			response.sendRedirect("options.jsp");
-			return;
-		case Providers.RESULT_DRIVERS:
-			response.sendRedirect("drivers.jsp");
-			return;
-		case Providers.RESULT_PROVIDERS:
-			response.sendRedirect("providers.jsp");
-			return;
-		case Providers.RESULT_TASKS:
-			response.sendRedirect("tasks.jsp");
-			return;
-		case Providers.RESULT_SHEDULES:
-			response.sendRedirect("shedules.jsp");
-			return;
-		case Providers.RESULT_DONE:
-			response.sendRedirect("index.jsp");
-			return;
     case Providers.RESULT_REFRESH:
       response.sendRedirect("providers.jsp?refreshed=true&sort=" + URLEncoder.encode(bean.getSort(), "UTF-8"));
       return;
-		case Providers.RESULT_OK:
-			STATUS.append("Ok");
-			break;
     case Providers.RESULT_EDIT:
       response.sendRedirect("providerEdit.jsp?provider=" + URLEncoder.encode(bean.getEdit(), "UTF-8"));
       return;
     case Providers.RESULT_ADD:
       response.sendRedirect("providerEdit.jsp?create=true");
       return;
-		case Providers.RESULT_ERROR:
-			STATUS.append("<span class=CF00>Error</span>");
-			break;
 		default:
-			STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
-			errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
+      {
+        %><%@ include file="inc/menu_switch.jsp"%><%
+      }
 	}
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
@@ -94,7 +68,7 @@ function setSort(sorting)
       String providerName = (String) i.next();
       String providerNameEnc = StringEncoderDecoder.encode(providerName);
       %><tr class=row<%=rowN++&1%>>
-        <td><input class=check type=checkbox name=checkedProviders value="<%=providerNameEnc%>" <%=bean.isProviderChecked(providerName) ? "checked" : ""%> onclick="checkCheckboxes();"></td>
+        <td><input class=check type=checkbox name=checkedProviders value="<%=providerNameEnc%>" <%=bean.isProviderChecked(providerName) ? "checked" : ""%> onclick="checkCheckboxesForMbDeleteButton();"></td>
         <td><a href="#" title="Edit provider" onClick='return editSomething("<%=providerNameEnc%>");'><%=providerNameEnc%></a></td>
       </tr>
 <%

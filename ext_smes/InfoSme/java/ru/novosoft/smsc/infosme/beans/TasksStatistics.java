@@ -2,14 +2,16 @@ package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
 import ru.novosoft.smsc.infosme.backend.Statistics;
 import ru.novosoft.smsc.infosme.backend.StatQuery;
 import ru.novosoft.smsc.infosme.backend.TasksStat;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.util.SortedList;
 
 /**
  * Created by IntelliJ IDEA.
@@ -35,6 +37,9 @@ public class TasksStatistics extends InfoSmeBean
     if (result != RESULT_OK)
         return result;
 
+    stat.setDataSource(getInfoSmeContext().getDataSource());
+    stat.setInfoSme(getInfoSmeContext().getInfoSme());
+
     return RESULT_OK;
   }
 
@@ -43,8 +48,6 @@ public class TasksStatistics extends InfoSmeBean
     int result = super.process(appContext, errors, loginedPrincipal);
     if (result != RESULT_OK)
       return result;
-
-    // TODO: init TasksStat with DataSource & InfoSme instances
 
     if (mbQuery != null) {
       try {
@@ -57,7 +60,7 @@ public class TasksStatistics extends InfoSmeBean
       mbQuery = null;
     }
 
-    return RESULT_DONE;
+    return RESULT_OK;
   }
 
   public Statistics getStatistics() {
@@ -119,6 +122,22 @@ public class TasksStatistics extends InfoSmeBean
   }
   public void setTaskId(String taskId) {
     query.setTaskId((taskId == null || taskId.length() <= 0) ? taskId:null);
+  }
+
+  public String getTaskName(String taskId)
+  {
+    try {
+      return getConfig().getString(TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(taskId) + ".name");
+    } catch (Throwable e) {
+      logger.error("Could not get name for task \"" + taskId + "\"", e);
+      error("Could not get name for task \"" + taskId + "\"", e);
+      return "";
+    }
+  }
+
+  public Collection getAllTasks()
+  {
+    return new SortedList(getConfig().getSectionChildShortSectionNames(TaskDataSource.TASKS_PREFIX));
   }
 }
 

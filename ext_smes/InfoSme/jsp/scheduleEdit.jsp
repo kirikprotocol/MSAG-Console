@@ -13,39 +13,16 @@
 	//MENU1_SELECTION = "WSME_INDEX";
   //FORM_METHOD = "GET";
 
-	int beanResult = bean.RESULT_OK;
-	switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal))
+	int beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal);
+	switch(beanResult)
 	{
-		case ScheduleEdit.RESULT_APPLY:
-			response.sendRedirect("index.jsp");
-			return;
-		case ScheduleEdit.RESULT_OPTIONS:
-			response.sendRedirect("options.jsp");
-			return;
-		case ScheduleEdit.RESULT_DRIVERS:
-			response.sendRedirect("drivers.jsp");
-			return;
-		case ScheduleEdit.RESULT_PROVIDERS:
-			response.sendRedirect("providers.jsp");
-			return;
-		case ScheduleEdit.RESULT_TASKS:
-			response.sendRedirect("tasks.jsp");
-			return;
-		case ScheduleEdit.RESULT_SHEDULES:
-			response.sendRedirect("shedules.jsp");
-			return;
 		case ScheduleEdit.RESULT_DONE:
 			response.sendRedirect("shedules.jsp");
 			return;
-		case ScheduleEdit.RESULT_OK:
-			STATUS.append("Ok");
-			break;
-		case ScheduleEdit.RESULT_ERROR:
-			STATUS.append("<span class=CF00>Error</span>");
-			break;
 		default:
-			STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
-			errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
+      {
+        %><%@ include file="inc/menu_switch.jsp"%><%
+      }
 	}
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
@@ -138,10 +115,10 @@ function selectMontlyType()
   <th>tasks</th>
   <td><table><col width="1%"><col width="99%"><%
     for (Iterator i = bean.getAllTasks().iterator(); i.hasNext();) {
-      String taskName = (String) i.next();
-      String taskNameEnc = StringEncoderDecoder.encode(taskName);
-      String taskNameHex = StringEncoderDecoder.encodeHEX(taskName);
-      %><tr><td style="border:none;"><input class=check type=checkbox name=checkedTasks id=checkedTasks_<%=taskNameHex%> value="<%=taskNameEnc%>" <%=bean.isTaskChecked(taskName) ? "checked" : ""%>></td><td style="border:none;"><label for=checkedTasks_<%=taskNameHex%>><%=taskNameEnc%></label></td></tr><%
+      String taskId = (String) i.next();
+      String taskIdEnc = StringEncoderDecoder.encode(taskId);
+      String taskIdHex = StringEncoderDecoder.encodeHEX(taskId);
+      %><tr><td style="border:none;"><input class=check type=checkbox name=checkedTasks id=checkedTasks_<%=taskIdHex%> value="<%=taskIdEnc%>" <%=bean.isTaskChecked(taskId) ? "checked" : ""%>></td><td style="border:none;"><label for=checkedTasks_<%=taskIdHex%>><%=StringEncoderDecoder.encode(bean.getTaskName(taskId))%></label></td></tr><%
     }
   %></table></td>
 </tr>

@@ -26,10 +26,11 @@ public class TaskDataSource extends AbstractDataSourceImpl {
   {
     clear();
     for (Iterator i = config.getSectionChildShortSectionNames(TASKS_PREFIX).iterator(); i.hasNext();) {
-      String taskName = (String) i.next();
-      final String currentTaskPrefix = TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(taskName);
+      String taskId = (String) i.next();
+      final String currentTaskPrefix = TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(taskId);
       try {
-        add(new TaskDataItem(taskName,
+        add(new TaskDataItem(taskId,
+                             config.getString(currentTaskPrefix + ".name"),
                              config.getString(currentTaskPrefix + ".dsId"),
                              config.getBool(currentTaskPrefix + ".enabled"),
                              config.getInt(currentTaskPrefix + ".priority"),
@@ -38,7 +39,7 @@ public class TaskDataSource extends AbstractDataSourceImpl {
                              config.getString(currentTaskPrefix + ".svcType")
         ));
       } catch (Exception e) {
-        logger.error("Couldn't get parameter for task \"" + taskName + "\", task skipped", e);
+        logger.error("Couldn't get parameter for task \"" + taskId + "\", task skipped", e);
       }
     }
     return super.query(query_to_run);

@@ -39,8 +39,7 @@ public class TaskEdit extends InfoSmeBean
   private String activePeriodEnd = null;
   private String query = null;
   private String template = null;
-  private int dsOwnTimeout = 0;
-  private int dsIntTimeout = 0;
+  private int dsTimeout = 0;
   private int messagesCacheSize = 0;
   private int messagesCacheSleep = 0;
   private boolean transactionMode = false;
@@ -76,8 +75,7 @@ public class TaskEdit extends InfoSmeBean
           activePeriodEnd = getConfig().getString(prefix + ".activePeriodEnd");
           query = getConfig().getString(prefix + ".query");
           template = getConfig().getString(prefix + ".template");
-          dsOwnTimeout = getConfig().getInt(prefix + ".dsOwnTimeout");
-          dsIntTimeout = getConfig().getInt(prefix + ".dsIntTimeout");
+          dsTimeout = getConfig().getInt(prefix + ".dsTimeout");
           messagesCacheSize = getConfig().getInt(prefix + ".messagesCacheSize");
           messagesCacheSleep = getConfig().getInt(prefix + ".messagesCacheSleep");
           transactionMode = getConfig().getBool(prefix + ".transactionMode");
@@ -147,8 +145,7 @@ public class TaskEdit extends InfoSmeBean
     getConfig().setString(prefix + ".activePeriodEnd", activePeriodEnd);
     getConfig().setString(prefix + ".query", query);
     getConfig().setString(prefix + ".template", template);
-    getConfig().setInt(prefix + ".dsOwnTimeout", dsOwnTimeout);
-    getConfig().setInt(prefix + ".dsIntTimeout", dsIntTimeout);
+    getConfig().setInt(prefix + ".dsTimeout", dsTimeout);
     getConfig().setInt(prefix + ".messagesCacheSize", messagesCacheSize);
     getConfig().setInt(prefix + ".messagesCacheSleep", messagesCacheSleep);
     getConfig().setBool(prefix + ".transactionMode", transactionMode);
@@ -245,7 +242,6 @@ public class TaskEdit extends InfoSmeBean
       this.priority = Integer.decode(priority).intValue();
     } catch (Throwable e) {
       logger.error("Couldn't set priority to value \"" + priority + "\"", e);
-      this.priority = 0;
     }
   }
 
@@ -389,53 +385,27 @@ public class TaskEdit extends InfoSmeBean
     this.name = name;
   }
 
-  public int getDsOwnTimeoutInt()
+  public int getDsTimeoutInt()
   {
-    return dsOwnTimeout;
+    return dsTimeout;
   }
 
-  public void setDsOwnTimeoutInt(int dsOwnTimeout)
+  public void setDsTimeoutInt(int dsTimeout)
   {
-    this.dsOwnTimeout = dsOwnTimeout;
+    this.dsTimeout = dsTimeout;
   }
 
-  public int getDsIntTimeoutInt()
+  public String getDsTimeout()
   {
-    return dsIntTimeout;
+    return String.valueOf(dsTimeout);
   }
 
-  public void setDsIntTimeoutInt(int dsIntTimeout)
-  {
-    this.dsIntTimeout = dsIntTimeout;
-  }
-
-  public String getDsOwnTimeout()
-  {
-    return String.valueOf(dsOwnTimeout);
-  }
-
-  public void setDsOwnTimeout(String dsOwnTimeout)
+  public void setDsTimeout(String dsTimeout)
   {
     try {
-      this.dsOwnTimeout = Integer.decode(dsOwnTimeout).intValue();
+      this.dsTimeout = Integer.decode(dsTimeout).intValue();
     } catch (Throwable e) {
-      logger.error("Couldn't set dsOwnTimeout to value \"" + dsOwnTimeout + "\"", e);
-      this.dsOwnTimeout = 0;
-    }
-  }
-
-  public String getDsIntTimeout()
-  {
-    return String.valueOf(dsIntTimeout);
-  }
-
-  public void setDsIntTimeout(String dsIntTimeout)
-  {
-    try {
-      this.dsIntTimeout = Integer.decode(dsIntTimeout).intValue();
-    } catch (Throwable e) {
-      logger.error("Couldn't set dsIntTimeout to value \"" + dsIntTimeout + "\"", e);
-      this.dsIntTimeout = 0;
+      logger.error("Couldn't set dsOwnTimeout to value \"" + dsTimeout + "\"", e);
     }
   }
 
@@ -500,7 +470,6 @@ public class TaskEdit extends InfoSmeBean
       this.messagesCacheSize = Integer.decode(messagesCacheSize).intValue();
     } catch (Throwable e) {
       logger.error("Couldn't set messagesCacheSize to value \"" + messagesCacheSize + "\"", e);
-      this.dsIntTimeout = 0;
     }
   }
 
@@ -515,7 +484,6 @@ public class TaskEdit extends InfoSmeBean
       this.messagesCacheSleep = Integer.decode(messagesCacheSleep).intValue();
     } catch (Throwable e) {
       logger.error("Couldn't set messagesCacheSleep to value \"" + messagesCacheSleep + "\"", e);
-      this.dsIntTimeout = 0;
     }
   }
 
@@ -530,7 +498,6 @@ public class TaskEdit extends InfoSmeBean
       this.uncommitedInGeneration = Integer.decode(uncommitedInGeneration).intValue();
     } catch (Throwable e) {
       logger.error("Couldn't set uncommitedInGeneration to value \"" + uncommitedInGeneration + "\"", e);
-      this.dsIntTimeout = 0;
     }
   }
 
@@ -545,7 +512,6 @@ public class TaskEdit extends InfoSmeBean
       this.uncommitedInProcess = Integer.decode(uncommitedInProcess).intValue();
     } catch (Throwable e) {
       logger.error("Couldn't set uncommitedInGeneration to value \"" + uncommitedInGeneration + "\"", e);
-      this.dsIntTimeout = 0;
     }
   }
 }

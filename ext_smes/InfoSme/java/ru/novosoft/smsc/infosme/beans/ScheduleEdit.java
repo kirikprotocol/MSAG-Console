@@ -429,4 +429,15 @@ public class ScheduleEdit extends InfoSmeBean
   {
     return new SortedList(getConfig().getSectionChildShortSectionNames(TaskDataSource.TASKS_PREFIX));
   }
+
+  public String getTaskName(String taskId)
+  {
+    try {
+      return getConfig().getString(TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(taskId) + ".name");
+    } catch (Throwable e) {
+      logger.error("Could not get name for task \"" + taskId + "\"", e);
+      error("Could not get name for task \"" + taskId + "\"", e);
+      return "";
+    }
+  }
 }

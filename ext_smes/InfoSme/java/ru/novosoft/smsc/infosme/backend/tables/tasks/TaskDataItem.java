@@ -8,8 +8,9 @@ import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataItem;
  * Time: 12:58:13 PM
  */
 public class TaskDataItem extends AbstractDataItem {
-  public TaskDataItem(String name, String provider, boolean enabled, int priority, boolean retryOnFail, boolean replaceMessage, String svcType)
+  public TaskDataItem(String id, String name, String provider, boolean enabled, int priority, boolean retryOnFail, boolean replaceMessage, String svcType)
   {
+    values.put("id", id);
     values.put("name", name);
     values.put("provider", provider);
     values.put("enabled", new Boolean(enabled));
@@ -17,6 +18,11 @@ public class TaskDataItem extends AbstractDataItem {
     values.put("retryOnFail", new Boolean(retryOnFail));
     values.put("replaceMessage", new Boolean(replaceMessage));
     values.put("svcType", svcType);
+  }
+
+  public String getId()
+  {
+    return (String) values.get("id");
   }
 
   public String getName()

@@ -6,7 +6,8 @@
 					  java.util.Set,
 					  java.util.Iterator,
 					  ru.novosoft.smsc.util.StringEncoderDecoder,
-					  java.util.Collection"%>
+					  java.util.Collection,
+                 ru.novosoft.smsc.infosme.beans.InfoSmeBean"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.Drivers" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -16,41 +17,8 @@
 	//MENU1_SELECTION = "WSME_INDEX";
 	//FORM_METHOD = "GET";
 
-	int beanResult = bean.RESULT_OK;
-	switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal, request.getParameterMap()))
-	{
-		case Drivers.RESULT_APPLY:
-			response.sendRedirect("index.jsp");
-			return;
-		case Drivers.RESULT_OPTIONS:
-			response.sendRedirect("options.jsp");
-			return;
-		case Drivers.RESULT_DRIVERS:
-			response.sendRedirect("drivers.jsp");
-			return;
-		case Drivers.RESULT_PROVIDERS:
-			response.sendRedirect("providers.jsp");
-			return;
-		case Drivers.RESULT_TASKS:
-			response.sendRedirect("tasks.jsp");
-			return;
-		case Drivers.RESULT_SHEDULES:
-			response.sendRedirect("shedules.jsp");
-			return;
-		case Drivers.RESULT_DONE:
-			response.sendRedirect("index.jsp");
-			return;
-		case Drivers.RESULT_OK:
-			STATUS.append("Ok");
-			break;
-		case Drivers.RESULT_ERROR:
-			STATUS.append("<span class=CF00>Error</span>");
-			break;
-		default:
-			STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
-			errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
-	}
-%>
+	int beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal, request.getParameterMap());
+%><%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp"%>

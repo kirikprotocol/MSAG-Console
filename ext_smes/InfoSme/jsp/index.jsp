@@ -10,42 +10,8 @@
 	TITLE="Informer SME Administration";
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
-
-	int beanResult = bean.RESULT_OK;
-	switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal))
-	{
-		case Index.RESULT_APPLY:
-			response.sendRedirect("index.jsp");
-			return;
-		case Index.RESULT_OPTIONS:
-			response.sendRedirect("options.jsp");
-			return;
-		case Index.RESULT_DRIVERS:
-			response.sendRedirect("drivers.jsp");
-			return;
-		case Index.RESULT_PROVIDERS:
-			response.sendRedirect("providers.jsp");
-			return;
-		case Index.RESULT_TASKS:
-			response.sendRedirect("tasks.jsp");
-			return;
-		case Index.RESULT_SHEDULES:
-			response.sendRedirect("shedules.jsp");
-			return;
-		case Index.RESULT_DONE:
-			response.sendRedirect("index.jsp");
-			return;
-		case Index.RESULT_OK:
-			STATUS.append("Ok");
-			break;
-		case Index.RESULT_ERROR:
-			STATUS.append("<span class=CF00>Error</span>");
-			break;
-		default:
-			STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
-			errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
-	}
-%>
+	int beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal);
+%><%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp"%>

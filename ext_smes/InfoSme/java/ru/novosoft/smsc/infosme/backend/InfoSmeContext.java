@@ -5,10 +5,14 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.util.conpool.NSConnectionPool;
 
 import javax.xml.parsers.ParserConfigurationException;
+import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
+import java.util.*;
+import java.sql.SQLException;
 
 /**
  * Created by igork
@@ -19,7 +23,7 @@ public class InfoSmeContext
 {
   private static InfoSmeContext instance = null;
 
-  public static synchronized InfoSmeContext getInstance(SMSCAppContext appContext) throws AdminException, ParserConfigurationException, IOException, SAXException
+  public static synchronized InfoSmeContext getInstance(SMSCAppContext appContext) throws AdminException, ParserConfigurationException, IOException, SAXException, Config.WrongParamTypeException, Config.ParamNotFoundException, SQLException
   {
     return instance != null ? instance : (instance = new InfoSmeContext(appContext));
   }
@@ -40,8 +44,9 @@ public class InfoSmeContext
   private boolean changedProviders = false;
   private boolean changedTasks = false;
   private boolean changedSchedules = false;
+  private DataSource dataSource = null;
 
-  public InfoSmeContext(SMSCAppContext appContext) throws AdminException, ParserConfigurationException, SAXException, IOException
+  public InfoSmeContext(SMSCAppContext appContext) throws AdminException, ParserConfigurationException, SAXException, IOException, Config.WrongParamTypeException, Config.ParamNotFoundException, SQLException
   {
     this.appContext = appContext;
     this.infoSme = new InfoSme(appContext.getHostsManager().getServiceInfo(Constants.INFO_SME_ID));
@@ -99,9 +104,27 @@ public class InfoSmeContext
     this.tasksPageSize = tasksPageSize;
   }
 
-  public void resetConfig() throws AdminException, SAXException, ParserConfigurationException, IOException
+  public void resetConfig() throws AdminException, SAXException, ParserConfigurationException, IOException, Config.WrongParamTypeException, Config.ParamNotFoundException, SQLException
   {
-    config = loadCurrentConfig();
+    Config newConfig = loadCurrentConfig();
+    final String newSource = newConfig.getString("InfoSme.systemDataSource.jdbc.source");
+    final String newDriver = newConfig.getString("InfoSme.systemDataSource.jdbc.driver");
+    final String newUser = newConfig.getString("InfoSme.systemDataSource.dbUserName");
+    final String newPassword = newConfig.getString("InfoSme.systemDataSource.dbUserPassword");
+    if (config == null
+            || !newSource.equals(config.getString("InfoSme.systemDataSource.jdbc.source"))
+            || !newDriver.equals(config.getString("InfoSme.systemDataSource.jdbc.driver"))
+            || !newUser.equals(config.getString("InfoSme.systemDataSource.dbUserName"))
+            || !newPassword.equals(config.getString("InfoSme.systemDataSource.dbUserPassword"))
+    ) {
+      Properties properties = new Properties();
+      properties.setProperty("jdbc.source", newSource);
+      properties.setProperty("jdbc.driver", newDriver);
+      properties.setProperty("jdbc.user", newUser);
+      properties.setProperty("jdbc.pass", newPassword);
+      dataSource = new NSConnectionPool(properties);
+    }
+    config = newConfig;
   }
 
   public String getSchedulesSort()
@@ -187,5 +210,10 @@ public class InfoSmeContext
   public void setChangedSchedules(boolean changedSchedules)
   {
     this.changedSchedules = changedSchedules;
+  }
+
+  public DataSource getDataSource()
+  {
+    return dataSource;
   }
 }

@@ -11,39 +11,16 @@
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
 
-	int beanResult = bean.RESULT_OK;
-	switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal))
+	int beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal);
+	switch(beanResult)
 	{
-		case ProviderEdit.RESULT_APPLY:
-			response.sendRedirect("index.jsp");
-			return;
-		case ProviderEdit.RESULT_OPTIONS:
-			response.sendRedirect("options.jsp");
-			return;
-		case ProviderEdit.RESULT_DRIVERS:
-			response.sendRedirect("drivers.jsp");
-			return;
-		case ProviderEdit.RESULT_PROVIDERS:
-			response.sendRedirect("providers.jsp");
-			return;
-		case ProviderEdit.RESULT_TASKS:
-			response.sendRedirect("tasks.jsp");
-			return;
-		case ProviderEdit.RESULT_SHEDULES:
-			response.sendRedirect("shedules.jsp");
-			return;
 		case ProviderEdit.RESULT_DONE:
 			response.sendRedirect("providers.jsp");
 			return;
-		case ProviderEdit.RESULT_OK:
-			STATUS.append("Ok");
-			break;
-		case ProviderEdit.RESULT_ERROR:
-			STATUS.append("<span class=CF00>Error</span>");
-			break;
 		default:
-			STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
-			errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
+      {
+        %><%@ include file="inc/menu_switch.jsp"%><%
+      }
 	}
   int rowN = 0;
 %>
