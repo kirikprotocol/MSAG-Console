@@ -1,6 +1,7 @@
 package ru.sibinco.smppgw.beans.services.sme;
 
 import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.backend.protocol.Proxy;
 import ru.sibinco.lib.bean.TabledBean;
 import ru.sibinco.smppgw.Constants;
 import ru.sibinco.smppgw.backend.Gateway;
@@ -30,8 +31,11 @@ public class Index extends TabledBeanImpl implements TabledBean
         gateway.deleteSme(smeId);
         smes.remove(smeId);
       } catch (SibincoException e) {
-        logger.error("Couldn't delete sme \"" + smeId + '"', e);
-        throw new SmppgwJspException(Constants.errors.sme.COULDNT_DELETE, smeId, e);
+        if (Proxy.StatusConnected == gateway.getStatus()) {
+          logger.error("Couldn't delete sme \"" + smeId + '"', e);
+          throw new SmppgwJspException(Constants.errors.sme.COULDNT_DELETE, smeId, e);
+        } else
+          smes.remove(smeId);
       } finally {
         try {
           appContext.getGwSmeManager().store();
