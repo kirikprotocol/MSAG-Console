@@ -17,6 +17,7 @@ namespace system{
 
 using std::auto_ptr;
 using std::string;
+using std::exception;
 using namespace smsc::sms;
 using namespace smsc::smeman;
 using namespace smsc::router;
@@ -253,8 +254,9 @@ void Smsc::init(const SmscConfigs& cfg)
     tp.startTask(ai);
     try{
       smeman.registerSmeProxy("abonentinfo",ai);
-    }catch(...)
+    }catch(exception& e)
     {
+      __trace2__("Failed to register abonentinfo Sme:%s",e.what());
       __warning__("Failed to register abonentinfo Sme");
     }
   }
