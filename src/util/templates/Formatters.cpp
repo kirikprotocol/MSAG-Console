@@ -38,20 +38,18 @@ void OutputFormatter::format(std::string& output,
         FormatEntity* entity = entities[i];
         if (entity)
         {
-            __trace2__("Formatting arg of type: %s", 
-                       ioEntityTypeStrings[entity->type]); 
-            Formatter* formatter = 
-                FormatterRegistry::getFormatter(ioEntityTypeStrings[entity->type]);
-            if (formatter && entity)
-            {
-                formatter->format(output, *entity, adapter, ctx);
-            }
+            const char* entityTypeStr = 
+                (entity->type >= 0 && entity->type < ioEntityTypesNumber) ? 
+                    ioEntityTypeStrings[entity->type] : "";
+            __trace2__("Formatting arg of type %d '%s'", 
+                       entity->type, entityTypeStr); 
+            Formatter* formatter = FormatterRegistry::getFormatter(entityTypeStr);
+            if (formatter) formatter->format(output, *entity, adapter, ctx);
             else throw FormattingException(
-                "Formatter for type <%s> not defined !",
-                ioEntityTypeStrings[entity->type]);
+                "Formatter for type %d '%s' not defined !",
+                entity->type, entityTypeStr);
         }
-        else throw FormattingException("Type <%s> is invalid !",
-                                       ioEntityTypeStrings[entity->type]);
+        else throw FormattingException("Entity type %d is invalid !", i);
     }
 }
 
