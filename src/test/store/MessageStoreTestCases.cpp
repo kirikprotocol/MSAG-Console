@@ -18,12 +18,6 @@ using namespace smsc::sms; //constants, SMSId, SMS, AddressValue, EService, ...
 using smsc::test::sms::SmsUtil;
 using smsc::util::AssertException;
 
-/*
-using namespace smsc::store;
-using namespace smsc::util;
-using namespace smsc::util::config;
-*/
-
 MessageStoreTestCases::MessageStoreTestCases()
 {
 	srand(time(NULL));
@@ -32,7 +26,7 @@ MessageStoreTestCases::MessageStoreTestCases()
 
 TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 {
-	TCSelector s(num, 15);
+	TCSelector s(num, 13);
 	TCResult* res = new TCResult(TC_STORE_CORRECT_SMS, s.getChoice());
 	for (; s.check(); s++)
 	{
@@ -44,52 +38,47 @@ TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 			{
 				case 1: //ничего особенного
 					break;
-				case 2: //пустой originatingAddress
-					sms.setOriginatingAddress(0, 0, 0, NULL);
+				case 2: //originatingAddress минимальной длины
+					//согласно SMPP v3.4 должно быть 0, но мы делаем так
+					sms.setOriginatingAddress(1, 10, 20, rand_char(1).get());
 					break;
-				case 3: //пустой originatingAddress
-					sms.setOriginatingAddress(0, 10, 20, rand_char(1).get());
-					break;
-				case 4: //originatingAddress максимальной длины
+				case 3: //originatingAddress максимальной длины
 					sms.setOriginatingAddress(MAX_ADDRESS_LENGTH, 20, 30, 
 						rand_char(MAX_ADDRESS_LENGTH).get());
 					break;
-				case 5: //destinationAddress минимальной длины
+				case 4: //destinationAddress минимальной длины
 					sms.setDestinationAddress(1, 30, 40, rand_char(1).get());
 					break;
-				case 6: //destinationAddress максимальной длины
+				case 5: //destinationAddress максимальной длины
 					sms.setDestinationAddress(MAX_ADDRESS_LENGTH, 40, 50, 
 						rand_char(MAX_ADDRESS_LENGTH).get());
 					break;
-				case 7: //пустой imsi (см. GSM 09.02 пункт 12.2) и пустой msc (???)
+				case 6: //пустой imsi (см. GSM 09.02 пункт 12.2) и пустой msc (???)
 					sms.setOriginatingDescriptor(0, NULL, 0, NULL, 10);
 					break;
-				case 8: //пустой imsi (см. GSM 09.02 пункт 12.2) и пустой msc (???)
+				case 7: //пустой imsi (см. GSM 09.02 пункт 12.2) и пустой msc (???)
 					sms.setOriginatingDescriptor(0, rand_char(1).get(),
 						0, rand_char(1).get(), 20);
 					break;
-				case 9: //imsi и msc адреса максимальной длины
+				case 8: //imsi и msc адреса максимальной длины
 					sms.setOriginatingDescriptor(
 						MAX_ADDRESS_LENGTH, rand_char(MAX_ADDRESS_LENGTH).get(),
 						MAX_ADDRESS_LENGTH, rand_char(MAX_ADDRESS_LENGTH).get(), 30);
 					break;
-				case 10: //пустое тело сообщения
+				case 9: //пустое тело сообщения
 					sms.setMessageBody(0, 10, false, NULL);
 					break;
-				case 11: //пустое тело сообщения
+				case 10: //пустое тело сообщения
 					sms.setMessageBody(0, 20, false, rand_uint8_t(1).get());
 					break;
-				case 12: //тело сообщения максимальной длины
+				case 11: //тело сообщения максимальной длины
 					sms.setMessageBody(MAX_MSG_BODY_LENGTH, 30, false, 
 						rand_uint8_t(MAX_MSG_BODY_LENGTH).get());
 					break;
-				case 13: //нулевой serviceType
-                   	sms.setEServiceType(NULL);
-					break;
-				case 14: //нулевой serviceType
+				case 12: //нулевой serviceType, NULL недопустимо
                    	sms.setEServiceType("");
 					break;
-				case 15: //serviceType максимальной длины
+				case 13: //serviceType максимальной длины
                     sms.setEServiceType(rand_char(MAX_SERVICE_TYPE_LENGTH).get());
 					break;
 				default:
