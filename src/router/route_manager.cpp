@@ -10,7 +10,7 @@ void RouteManager::assignWithSmeManager(SmeManager* smeman) // for detach call w
 {
 }
 
-RouteInfoIterator* RouteManager::iterator()
+RouteIterator* RouteManager::iterator()
 {
 }
 

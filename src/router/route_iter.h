@@ -11,7 +11,7 @@
 #include "route_types.h"
 
 namespace smsc {
-namespace route {
+namespace router {
 
 using smsc::smeman::SmeProxy;
 

@@ -7,14 +7,15 @@
 #define __Cpp_Header__route_admin_h__
 
 #include "route_types.h"
+
 namespace smsc {
-namespace route {
+namespace router {
 
 // adbstract
 class RouteAdmin
 {
 public :
-	// RouteAdministrator implementaion 
+  // RouteAdministrator implementaion 
   virtual void addRoute(const RouteInfo& routeInfo) = 0;
   virtual void removeRoute(RouteId id) = 0;
   virtual void modifyRoute(RouteId id,const RouteInfo& routeInfo) = 0;

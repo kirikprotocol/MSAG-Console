@@ -20,17 +20,17 @@ using smsc::smeman::SmeManager;
 
 struct RouteRecord 
 {
-	RouteUnfo info;
-	SmeProxy* proxy;
-	int idx;
+        RouteInfo info;
+        SmeProxy* proxy;
+        int idx;
 };
 
-class RouteManager : public RouteAdmin, public RouteManager
+class RouteManager : public RouteAdmin, public RouteTable
 {
         //
 public :
   void assignWithSmeManager(SmeManager* smeman); // for detach call with NULL;
-  RouteInfoIterator* iterator();
+  RouteIterator* iterator();
   // RouteAdministrator implementaion 
   virtual void addRoute(const RouteInfo& routeInfo);
   virtual void removeRoute(RouteId id);

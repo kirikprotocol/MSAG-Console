@@ -38,7 +38,6 @@ typedef std::vector<SmeRecord> Records;
 class SmeManager : 
   public SmeAdministrator,
   public SmeTable,
-  public SmeIterator,
   public SmeRegistrar,
   public Dispatch
 {

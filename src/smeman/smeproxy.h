@@ -27,7 +27,7 @@ typedef smsc::core::synchronization::Event ProxyMonitor;
 class ProxyQueueLimitException : public std::exception
 {
   virtual const char* what() const throw() {return "";}
-}
+};
 
 // abstract
 class SmeProxy
