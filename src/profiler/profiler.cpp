@@ -380,6 +380,11 @@ int Profiler::Execute()
         {
           msg=1;
           internal_update(_update_report,addr,ProfileReportOptions::ReportFull);
+        }else
+        if(!strncmp(body+i,"FINAL",5))
+        {
+          msg=8;
+          internal_update(_update_report,addr,ProfileReportOptions::ReportFinal);
         }
       }
     }else
@@ -469,6 +474,10 @@ int Profiler::Execute()
       case 7:
       {
         msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgUnhide");
+      }break;
+      case 8:
+      {
+        msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgReportFinal");
       }break;
       default:
       {

@@ -632,6 +632,10 @@ StateType StateMachine::submit(Tuple& t)
 
   __trace2__("SUBMIT_SM: msgId=%lld, seq=%d, from=%s",t.msgId,dialogId,src_proxy->getSystemId());
 
+  ////
+  //
+  //  SMS validity checks started
+  //
 
   if(sms->getNextTime()==-1)
   {
@@ -814,9 +818,16 @@ StateType StateMachine::submit(Tuple& t)
   sms->setDeliveryReport(profile.reportoptions);
 
   smsc::router::RouteInfo ri;
+
+  ////
+  //
+  //  Routing here
+  //
+
   bool has_route = smsc->routeSms(sms->getOriginatingAddress(),
                           dst,
                           dest_proxy_index,dest_proxy,&ri);
+
   sms->setRouteId(ri.routeId.c_str());
   if(ri.suppressDeliveryReports)sms->setIntProperty(Tag::SMSC_SUPPRESS_REPORTS,1);
   int prio=sms->getPriority()+ri.priority;
@@ -867,6 +878,12 @@ StateType StateMachine::submit(Tuple& t)
   profile=smsc->getProfiler()->lookup(dst);
   sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
   int pres=psSingle;
+
+
+  ////
+  //
+  //  Directives
+  //
 
   try{
     processDirectives(*sms,profile);
@@ -1014,6 +1031,16 @@ StateType StateMachine::submit(Tuple& t)
 
   time_t stime=sms->getNextTime();
 
+  //
+  // End of checks. Ready to put sms to database
+  //
+  ////
+
+
+  ////
+  //
+  // Store sms to database
+  //
 
   try{
     if(sms->getNextTime()<now)
@@ -1042,6 +1069,11 @@ StateType StateMachine::submit(Tuple& t)
     }
     return ERROR_STATE;
   }
+
+  //
+  // stored
+  //
+  ////
 
   smsc->registerStatisticalEvent(StatEvents::etSubmitOk,sms);
 
@@ -2219,8 +2251,10 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
 
 void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
 {
-  if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) || sms.getDeliveryReport()==255)return;
-  if(sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS) && sms.getDeliveryReport()!=2)return;
+  if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ||
+     sms.getDeliveryReport()==255/*NOACK*/ ||
+     sms.getDeliveryReport()==3/*FINAL*/)return;
+  if(sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS) && sms.getDeliveryReport()!=2/*ACK*/)return;
   if(!(
         sms.getDeliveryReport() ||
         (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==1 ||
