@@ -29,7 +29,7 @@ namespace smsc { namespace infosme
         enum {
             startTaskProcessorMethod, stopTaskProcessorMethod, isTaskProcessorRunningMethod,
             startTaskSchedulerMethod, stopTaskSchedulerMethod, isTaskSchedulerRunningMethod,
-            flushStatisticsMethod, addTasksMethod, removeTasksMethod, 
+            flushStatisticsMethod, addTasksMethod, removeTasksMethod, changeTasksMethod, 
             startTasksMethod, stopTasksMethod, isTaskEnabledMethod, setTaskEnabledMethod,
             addScheduleMethod, removeScheduleMethod, changeScheduleMethod
         };
@@ -39,11 +39,12 @@ namespace smsc { namespace infosme
     protected:
 
         void addTasks(const Arguments& args);
-        void removeTasks(const Arguments& args); 
+        void removeTasks(const Arguments& args);
+        void changeTasks(const Arguments& args);
         void startTasks(const Arguments& args);
         void stopTasks(const Arguments& args); 
-        bool isTaskEnabled(const Arguments& args);
         void setTaskEnabled(const Arguments& args);
+        bool isTaskEnabled(const Arguments& args);
 
         void addSchedule(const Arguments& args);
         void removeSchedule(const Arguments& args);

@@ -36,6 +36,7 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
     tasks_params[ARGUMENT_NAME_TASK_IDS] = Parameter(ARGUMENT_NAME_TASK_IDS, StringListType);
     Method add_tasks((unsigned)addTasksMethod, "addTasks", tasks_params, StringType);
     Method remove_tasks((unsigned)removeTasksMethod, "removeTasks", tasks_params, StringType);
+    Method change_tasks((unsigned)changeTasksMethod, "changeTasks", tasks_params, StringType);
     Method start_tasks((unsigned)startTasksMethod, "startTasks", tasks_params, StringType);
     Method stop_tasks((unsigned)stopTasksMethod, "stopTasks", tasks_params, StringType);
 
@@ -66,6 +67,7 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
     methods[flush_statistics.getName()]             = flush_statistics;
     methods[add_tasks.getName()]                    = add_tasks;
     methods[remove_tasks.getName()]                 = remove_tasks;
+    methods[change_tasks.getName()]                 = change_tasks;
     methods[start_tasks.getName()]                  = start_tasks;
     methods[stop_tasks.getName()]                   = stop_tasks;
     methods[is_task_enabled.getName()]              = is_task_enabled;
@@ -112,6 +114,9 @@ Variant InfoSmeComponent::call(const Method& method, const Arguments& args)
             break;
         case removeTasksMethod:
             removeTasks(args);
+            break;
+        case changeTasksMethod:
+            changeTasks(args);
             break;
         case startTasksMethod:
             startTasks(args);
@@ -191,6 +196,22 @@ void InfoSmeComponent::removeTasks(const Arguments& args)
         if (!taskId || taskId[0] == '\0') continue;
         if (!admin.removeTask(taskId))
             throw AdminException("Failed to remove task '%s'", taskId);
+    }
+}
+void InfoSmeComponent::changeTasks(const Arguments& args)
+{
+    if (!args.Exists(ARGUMENT_NAME_TASK_IDS)) 
+        error("changeTasks", ARGUMENT_NAME_TASK_IDS);
+    Variant arg = args[ARGUMENT_NAME_TASK_IDS];
+    if (arg.getType() != StringListType)
+        error("changeTasks", ARGUMENT_NAME_TASK_IDS);
+    
+    StringList list = arg.getStringListValue();
+    for (StringList::iterator it=list.begin(); it != list.end(); it++) {
+        const char* taskId = *it;
+        if (!taskId || taskId[0] == '\0') continue;
+        if (!admin.changeTask(taskId))
+            throw AdminException("Failed to change task '%s'", taskId);
     }
 }
 void InfoSmeComponent::startTasks(const Arguments& args)

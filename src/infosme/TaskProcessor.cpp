@@ -147,7 +147,22 @@ bool TaskProcessor::addTask(Task* task)
     if (result) result = task->createTable();
     return result;
 }
-bool TaskProcessor::deleteTask(std::string taskId)
+bool TaskProcessor::remTask(std::string taskId)
+{
+    Task* task = 0;
+    {
+        MutexGuard guard(tasksLock);
+        const char* task_id = taskId.c_str();
+        if (!task_id || task_id[0] == '\0' || !tasks.Exists(task_id)) return false;
+        Task* task = tasks.Get(task_id);
+        if (!task) return false;
+        tasks.Delete(task_id);
+    }
+    task->finalize();
+    awake.Signal();
+    return true;
+}
+bool TaskProcessor::delTask(std::string taskId)
 {
     Task* task = 0;
     {
@@ -722,7 +737,41 @@ bool TaskProcessor::addTask(std::string taskId)
 }
 bool TaskProcessor::removeTask(std::string taskId)
 {
-    return deleteTask(taskId);
+    return delTask(taskId);
+}
+bool TaskProcessor::changeTask(std::string taskId)
+{
+    const char* task_id = taskId.c_str();
+    if (!task_id || task_id[0] == '\0') return false;
+    
+    try
+    {
+        Manager::reinit();
+        Manager& config = Manager::getInstance();
+        char taskSection[1024];
+        sprintf(taskSection, "InfoSme.Tasks.%s", task_id);
+        ConfigView taskConfig(config, taskSection);
+        
+        const char* ds_id = taskConfig.getString("dsId");
+        if (!ds_id || ds_id[0] == '\0')
+            throw ConfigException("DataSource id for task '%s' empty or wasn't specified",
+                                  task_id);
+        DataSource* taskDs = provider.getDataSource(ds_id);
+        if (!taskDs)
+            throw ConfigException("Failed to obtail DataSource driver '%s' for task '%s'", 
+                                  ds_id, task_id);
+        if (!remTask(taskId))
+            throw Exception("Failed to change task. Task with id '%s' wasn't registered.",
+                            task_id);
+        if (!putTask(new Task(&taskConfig, taskId, taskTablesPrefix, taskDs, dsInternal)))
+            throw Exception("Failed to change task with id '%s'", task_id);
+        return true;
+    }
+    catch (Exception& exc) {
+        logger.error("Failed to change task '%s'. Details: %s", task_id, exc.what());
+    }
+    catch (...) {}
+    return false;
 }
 bool TaskProcessor::startTask(std::string taskId)
 {
