@@ -1850,10 +1850,6 @@ StateType StateMachine::submit(Tuple& t)
 
     return ENROUTE_STATE;
   }
-  if(isDatagram || isTransaction)
-  {
-    t.command->get_sms_and_forget();
-  }
   }catch(...)
   {
     sms->setLastResult(Status::SYSERR);
@@ -2657,12 +2653,15 @@ StateType StateMachine::deliveryResp(Tuple& t)
       {
         try{
           __trace__("DELIVERYRESP: change state to undeliverable");
-          store->changeSmsStateToUndeliverable
-          (
-            t.msgId,
-            sms.getDestinationDescriptor(),
-            GET_STATUS_CODE(t.command->get_resp()->get_status())
-          );
+          if( !dgortr ) 
+          {
+            store->changeSmsStateToUndeliverable
+            (
+              t.msgId,
+              sms.getDestinationDescriptor(),
+              GET_STATUS_CODE(t.command->get_resp()->get_status())
+            );
+          }
         }catch(std::exception& e)
         {
           __warning2__("DELIVERYRESP: failed to change state to enroute:%s",e.what());
