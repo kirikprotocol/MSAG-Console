@@ -34,7 +34,7 @@ public class localeResourcesResourceFile
 		try
 		{
 			BufferedReader in = new BufferedReader(new InputStreamReader(Thread.currentThread().getContextClassLoader().getResourceAsStream("dtds/locale_resources.dtd")));
-			out.write("<?xml version=\"1.0\"?>\n");
+			out.write("<?xml version=\"1.0\" encoding=\"windows-1251\"?>\n");
 			out.write("<!DOCTYPE locale_resources [\n");
 			for (String line = skipHeader(in); line != null; line = in.readLine())
 				out.write(line);
