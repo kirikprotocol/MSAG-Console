@@ -37,7 +37,7 @@ private:
 	std::vector<int> failures;
 
 public:
-	TCResult(const std::string& id, const int choice);
+	TCResult(const std::string& id, const int choice = 1);
 	TCResult(TCResult& tcRes);
 	const std::string& getId() const;
 	int getChoice() const;
