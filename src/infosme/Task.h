@@ -267,7 +267,7 @@ namespace smsc { namespace infosme
          * ¬ыполн€естс€ на ThreadPool'е по команде от Scheduler'а
          * »спользует два connection'а: один из своего,а другой внутреннего источника данных.
          */
-        void beginGeneration(Statistics* statistics);
+        bool beginGeneration(Statistics* statistics);
         /**
          * ќстанавливает процесс генерации сообщений дл€ отправки в спец.таблицу задачи.
          * ¬ыполн€естс€ на ThreadPool'е по команде от Scheduler'а или TaskProcessor'а.
@@ -280,7 +280,7 @@ namespace smsc { namespace infosme
          * посредством endGeneration(). ”дал€ет все сгенерированные сообщени€.
          * »спользует connection из внутреннего источника данных.
          */
-        void dropAllMessages();
+        void dropAllMessages(Statistics* statistics);
         
         /**
          * »спользуетс€ дл€ восстановлени€ сообщени€ из состо€ни€ WAIT в случае,

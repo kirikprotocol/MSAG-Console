@@ -45,13 +45,15 @@ namespace smsc { namespace infosme
     {
     private:
 
-        TaskMethod    method;
-        Statistics*   statistics;
+        TaskMethod            method;
+        Statistics*           statistics;
+        TaskProcessorAdapter* processor;
 
     public:
 
-        TaskRunner(Task* task, TaskMethod method, Statistics* statistics = 0)
-            : TaskGuard(task), ThreadedTask(), method(method), statistics(statistics) {};
+        TaskRunner(Task* task, TaskMethod method, 
+                   TaskProcessorAdapter* adapter = 0, Statistics* statistics = 0)
+            : TaskGuard(task), ThreadedTask(), method(method), processor(adapter), statistics(statistics) {};
         virtual ~TaskRunner() {};
 
         virtual int Execute()
@@ -63,10 +65,12 @@ namespace smsc { namespace infosme
                 task->endGeneration();
                 break;
             case beginGenerationMethod:
-                task->beginGeneration(statistics);
+                if (task->beginGeneration(statistics)) {
+                    if (processor) processor->awakeSignal();
+                }
                 break;
             case dropAllMessagesMethod:
-                task->dropAllMessages();
+                task->dropAllMessages(statistics); // TODO: update statistics here too !!!
                 break;
             default:
                 __trace2__("Invalid method '%d' invoked on task.", method);
@@ -328,11 +332,11 @@ namespace smsc { namespace infosme
         void assignMessageSender(MessageSender* sender) {
             MutexGuard guard(messageSenderLock);
             messageSender = sender;
-        }
+        };
         bool isMessageSenderAssigned() {
             MutexGuard guard(messageSenderLock);
             return (messageSender != 0);
-        }
+        };
 
         virtual bool putTask(Task* task);
         virtual bool addTask(Task* task);
@@ -342,13 +346,13 @@ namespace smsc { namespace infosme
         virtual TaskGuard getTask(std::string taskId);
 
         virtual bool invokeEndGeneration(Task* task) {
-            return taskManager.startThread(new TaskRunner(task, endGenerationMethod));
+            return taskManager.startThread(new TaskRunner(task, endGenerationMethod,   this));
         };
         virtual bool invokeBeginGeneration(Task* task) {
-            return taskManager.startThread(new TaskRunner(task, beginGenerationMethod, statistics));
+            return taskManager.startThread(new TaskRunner(task, beginGenerationMethod, this, statistics));
         };
         virtual bool invokeDropAllMessages(Task* task) {
-            return taskManager.startThread(new TaskRunner(task, dropAllMessagesMethod));
+            return taskManager.startThread(new TaskRunner(task, dropAllMessagesMethod, this, statistics));
         };
 
         virtual bool invokeProcessResponce(int seqNum, bool accepted,
@@ -361,6 +365,9 @@ namespace smsc { namespace infosme
         {
             return eventManager.startThread(new EventRunner(processReceiptMethod, *this,
                                                             smscId, delivered, retry));
+        };
+        virtual void awakeSignal() {
+            awake.Signal();
         };
 
         bool getStatistics(std::string taskId, TaskStat& stat) {

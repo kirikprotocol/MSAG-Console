@@ -36,6 +36,8 @@ namespace smsc { namespace infosme
         
         virtual bool hasTask(std::string taskId) = 0;
         virtual TaskGuard getTask(std::string taskId) = 0;
+
+        virtual void awakeSignal() = 0;
     
         virtual ~TaskProcessorAdapter() {};
 

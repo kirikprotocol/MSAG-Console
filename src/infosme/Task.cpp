@@ -419,14 +419,16 @@ void Task::dropTable()
     if (connection) dsInt->freeConnection(connection);
 }
 
-void Task::beginGeneration(Statistics* statistics)
+bool Task::beginGeneration(Statistics* statistics)
 {
     smsc_log_debug(logger, "beginGeneration method called on task '%s'",
                  info.id.c_str());
 
+    uint64_t totalGenerated = 0;
+
     {
         MutexGuard guard(inGenerationLock);
-        if (bInGeneration || (info.trackIntegrity && isInProcess())) return;
+        if (bInGeneration || (info.trackIntegrity && isInProcess())) return false;
         bInGeneration = true; bGenerationSuccess = false;
     }
 
@@ -482,7 +484,7 @@ void Task::beginGeneration(Statistics* statistics)
             const char* abonentAddress = rs->getString(1);
             if (!abonentAddress || abonentAddress[0] == '\0' || !isMSISDNAddress(abonentAddress)) {
                 smsc_log_warn(logger, "Task '%s'. Invalid abonent number '%s' selected.", 
-                            info.id.c_str(), abonentAddress ? abonentAddress:"-");
+                              info.id.c_str(), abonentAddress ? abonentAddress:"-");
             }
             else
             {
@@ -509,6 +511,7 @@ void Task::beginGeneration(Statistics* statistics)
                         intConnection->commit();
                         uncommited = 0;
                     }
+                    totalGenerated++;
                 }
             }
         }
@@ -564,6 +567,7 @@ void Task::beginGeneration(Statistics* statistics)
         bInGeneration = false;
     }
     generationEndEvent.Signal();
+    return (bGenerationSuccess && totalGenerated > 0);
 }
 void Task::endGeneration()
 {
@@ -577,10 +581,10 @@ void Task::endGeneration()
     generationEndEvent.Wait();
 }
 
-void Task::dropAllMessages()
+void Task::dropAllMessages(Statistics* statistics)
 {
     smsc_log_debug(logger, "dropAllMessages method called on task '%s'",
-                 info.id.c_str());
+                   info.id.c_str());
 
     endGeneration();
     
@@ -602,8 +606,9 @@ void Task::dropAllMessages()
         deleteMessages->setUint8(1, MESSAGE_NEW_STATE);
         
         wdTimerId = dsInt->startTimer(connection, info.dsTimeout);
-        deleteMessages->executeUpdate();
+        uint32_t deleted = deleteMessages->executeUpdate();
         connection->commit();
+        if (statistics) statistics->incFailed(info.id, deleted);
     }
     catch (Exception& exc)
     {
@@ -878,26 +883,28 @@ bool Task::getNextMessage(Connection* connection, Message& message)
         return setInProcess(false);
 
     {
-        MutexGuard guard(messagesCacheLock);
+        // selecting from cache
+        MutexGuard guard(messagesCacheLock); 
         if (messagesCache.Count() > 0) {
             messagesCache.Shift(message);
             setInProcess(isEnabled());
             return true;
         }
-    }
-    
+    }   // Cache is empty here
+
     if (info.trackIntegrity && !isGenerationSucceeded())
-        return setInProcess(false);
+        return setInProcess(false); // for track integrity check that generation finished ok
 
     time_t currentTime = time(NULL);
     if (currentTime-lastMessagesCacheEmpty > info.messagesCacheSleep)
-        lastMessagesCacheEmpty = currentTime;
+        lastMessagesCacheEmpty = currentTime;   // timeout reached, set new sleep timeout & go to fill cache
     else if (bSelectedAll && !isInGeneration()) 
-        return setInProcess(false);
+        return setInProcess(false);             // if all selected from DB (on last time) & no generation => return
     
     smsc_log_debug(logger, "Selecting messages from DB. getNextMessage method on task '%s'",
                    info.id.c_str());
 
+    // Selecting cache from DB
     int wdTimerId = -1;
     try
     {
