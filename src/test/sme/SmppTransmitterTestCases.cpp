@@ -13,6 +13,7 @@ using smsc::test::conf::TestConfig;
 using namespace smsc::sms; //constants
 using namespace smsc::profiler; //constants, Profile
 using namespace smsc::smpp::SmppCommandSet; //constants
+using namespace smsc::smpp::SmppStatusSet; //constants
 using namespace smsc::test::smpp; //constants, SmppUtil
 using namespace smsc::test::core; //constants
 using namespace smsc::test::sms; //constants
@@ -186,6 +187,11 @@ PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 	DeliveryReceiptMonitor* rcptMonitor = new DeliveryReceiptMonitor(
 		startTime, pduData, rcptFlag);
 	rcptMonitor->regDelivery = regDelivery;
+	if (smeAckFlag == PDU_REQUIRED_FLAG)
+	{
+		rcptMonitor->deliveryFlag = PDU_RECEIVED_FLAG;
+		rcptMonitor->deliveryStatus = ESME_ROK;
+	}
 	fixture->pduReg->registerMonitor(rcptMonitor);
 	//response monitor регистрируется когда станет известен seqNum
 	return pduData;

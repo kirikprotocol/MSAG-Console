@@ -302,10 +302,6 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	__check__(1, serviceType, profilerServiceType);
 	Address srcAlias;
 	SmppUtil::convert(pdu.get_message().get_source(), &srcAlias);
-	Address destAddr;
-	SmppUtil::convert(pdu.get_message().get_dest(), &destAddr);
-	const SmeInfo* sme = fixture->smeReg->getSme(destAddr);
-	__require__(sme);
 	if (sme->wantAlias && srcAlias != profilerAlias)
 	{
 		__tc_fail__(2);

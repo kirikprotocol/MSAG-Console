@@ -108,11 +108,6 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 	PduSubmitSm* origPdu =
 		reinterpret_cast<PduSubmitSm*>(monitor->pduData->pdu);
 	__require__(origPdu);
-	//sme
-	Address destAddr;
-	SmppUtil::convert(pdu.get_message().get_dest(), &destAddr);
-	const SmeInfo* sme = fixture->smeReg->getSme(destAddr);
-	__require__(sme);
 	//декодировать
 	const string text = decode(pdu.get_message().get_shortMessage(),
 		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding());

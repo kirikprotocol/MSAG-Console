@@ -45,7 +45,7 @@ SmppFixture::SmppFixture(const SmeSystemId& _systemId, const Address& _smeAddr,
 	//__require__(chkList);
 	if (pduReg && aliasReg && routeReg)
 	{
-		routeChecker = new RouteChecker(systemId, smeAddr, smeReg, aliasReg, routeReg);
+		routeChecker = new RouteChecker(smeReg, aliasReg, routeReg);
 		pduChecker = new SmppPduChecker(pduReg, routeChecker, chkList);
 	}
 }
