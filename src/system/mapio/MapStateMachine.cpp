@@ -807,6 +807,9 @@ USHORT_T Et96MapOpenConf (
       case MAPST_WaitOpenConf:
         dialog->state = MAPST_WaitSmsConf;
         break;
+      case MAPST_ImsiWaitOpenConf:
+        dialog->state = MAPST_ImsiWaitRInfo;
+        break;
       }
       break;
     default:
@@ -1219,7 +1222,7 @@ USHORT_T Et96MapDelimiterInd(
       __trace2__("MAP::Et96MapDelimiterInd: dialog opened");
       //dialog->state = MAPST_WaitSubmitCmdConf;
       //SendSubmitCommand(dialog.get());
-      dialog->state = MAPST_ImsiWaitACVersion;
+      dialog->state = MAPST_ImsiWaitReq;
       //SendRInfo(dialog.get());
       PauseOnImsiReq(dialog.get());
       break;
@@ -1227,7 +1230,7 @@ USHORT_T Et96MapDelimiterInd(
       open_confirmed = true;
 //      dialog->state = MAPST_WaitSubmitCmdConf;
 //      SendSubmitCommand(dialog.get());
-      dialog->state = MAPST_ImsiWaitACVersion;
+      dialog->state = MAPST_ImsiWaitReq;
       //SendRInfo(dialog.get());
       PauseOnImsiReq(dialog.get());
       break;
