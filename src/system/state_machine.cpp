@@ -1593,7 +1593,7 @@ StateType StateMachine::forward(Tuple& t)
     {
       try{
         Descriptor d;
-        store->changeSmsStateToEnroute(t.msgId,d,sms.getLastTime(),time(NULL));
+        store->changeSmsStateToEnroute(t.msgId,d,sms.lastResult,time(NULL));
       }catch(...)
       {
         __trace__("FORWARD: failed to reschedule sms to now");
