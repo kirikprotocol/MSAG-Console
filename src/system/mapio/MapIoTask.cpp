@@ -372,7 +372,7 @@ log4cpp::Category* MAPSTATS_GetLoggerHour() {
   return logger;
 }
 log4cpp::Category* MAPSTATS_GetLoggerDlg() {
-  static log4cpp::Category* logger = &smsc::util::Logger::getCategory("map.stat.hour");
+  static log4cpp::Category* logger = &smsc::util::Logger::getCategory("map.stat.dlg");
   return logger;
 }
 

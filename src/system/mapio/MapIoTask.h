@@ -64,9 +64,11 @@ enum MAPSTATS{
   MAPSTATS_REMAPDIALOG,
   MAPSTATS_REASSIGNDIALOG,
 };
-
+class MapDialog;
 extern void MAPSTATS_Restart();
 extern void MAPSTATS_Update(MAPSTATS);
+extern void MAPSTATS_DumpDialogLC(MapDialog*);
+
 
 enum MapState{
   MAPST_UNKNOWN = 0,
@@ -161,6 +163,7 @@ struct MapDialog{
   unsigned udhiRef;
   unsigned udhiMsgNum;
   unsigned udhiMsgCount;
+  long long maked_at_mks;
 //  bool isMOreq;
 //  unsigned dialogid_req;
   MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned version=2) :
@@ -185,6 +188,9 @@ struct MapDialog{
 //    dialogid_req(0)
   {
     MAPSTATS_Update(MAPSTATS_NEWDIALOG);
+    struct timeval tv;
+    gettimeofday( &tv, 0 );
+    maked_at_mks = ((long long)tv.tv_sec)*1000*1000 + (long long)tv.tv_usec;
   }
   virtual ~MapDialog(){
     __trace2__("MAP::Dialog::~MapDialog 0x%x(0x%x)",dialogid_map,dialogid_smsc);
@@ -197,6 +203,7 @@ struct MapDialog{
     if ( associate ) associate->Release();
     associate = 0;
     MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG);
+    MAPSTATS_DumpDialogLC(this);
   }
   Mutex& getMutex(){return mutex;}
   void Release(){
