@@ -177,7 +177,7 @@ public:
     MapDialog* dlg = new MapDialog(map_dialog,lssn);
     dlg->setSmscDialogId (smsc_did);
     hash.Insert(map_dialog,dlg);
-    __trace2__("MAP:: new dialog 0x%x for dialogid 0x%x",dlg,dialogueid);
+    __trace2__("MAP:: new dialog 0x%x for dialogid 0x%x->0x%x",dlg,smsc_did,map_dialog);
     dialogId_pool.pop_front();
     return dlg;
   }
