@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <map>
 #include <string>
+#include <sstream>
 
 using namespace std;
 //using namespace smsc::core::synchronization;
@@ -11,6 +12,29 @@ using namespace std;
 
 #include "MapDialog_spcific.cxx"
 #include "MapDialogMkPDU.cxx"
+
+string ImsiToStr(const ET96MAP_IMSI_T* imsi)
+{
+  unsigned n = imsi->imsiLen;
+  ostringstream ost;
+  unsigned i = 0;
+  while ( i < n ) { 
+    unsigned x0 = ((unsigned int)imsi->imsi[i])&0x0f;
+    unsigned x1 = (((unsigned int)imsi->imsi[i])>>4)&0x0f;
+    if ( x0 <= 9 ) ost << x0;
+    else break;
+    if ( x1 <= 9 ) ost << x1;
+    else break;
+  }
+  string result = ost.str();
+  __trace2__("IMSI: %s",result.c_str());
+  return result;
+}
+
+string MscToStr(const ET96MAP_ADDRESS_T* msc)
+{
+  return "xxxxx";
+}
 
 static string FormatText(const char* format,...)
 {
@@ -142,12 +166,10 @@ static void SendOkToSmsc(/*unsigned dialogid*/MapDialog* dialog)
   if ( dialog == 0 || dialog->dialogid_smsc == 0 ) return;
   __trace2__("Send OK to SMSC");
   SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",dialog->dialogid_smsc,0);
-  //Descriptor desc;
-  //string value = ImsiToString(dialog->m_imsi);
-  //desc.setImsi(value.length(),value.c_str());
-  //value = MscToStrring(dialog->m_msc);
-  //desc.setMsc(value.length(),value.c_str());
-  //cmd->setDescriptor(desc);
+  Descriptor desc;
+  desc.setImsi(dialog->s_imsi.length(),dialog->s_imsi.c_str());
+  desc.setMsc(dialog->s_msc.length(),dialog->s_msc.c_str());
+  cmd->setDescriptor(desc);
   MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
   __trace2__("Send OK to SMSC done");
 }
@@ -876,6 +898,8 @@ USHORT_T  Et96MapV2SendRInfoForSmConf (
     switch( dialog->state ){
     case MAPST_WaitRInfoConf:
       {
+        dialog->s_imsi = ImsToString(imsi_sp);
+        dialog->s_msc = MscToString(mscNumber_sp);
         mkSS7GTAddress( &dialog->destMscAddr, mscNumber_sp, 8 );
         dialog->smRpDa.typeOfAddress = ET96MAP_ADDRTYPE_IMSI;
         dialog->smRpDa.addrLen = imsi_sp->imsiLen;
