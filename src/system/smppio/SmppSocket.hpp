@@ -61,7 +61,7 @@ public:
   SmppProxy* getProxy(){return proxy;}
   int receive();
   smsc::smpp::SmppHeader* decode();
-  bool hasData(){return bufferOffset!=bufferSize;}
+  bool hasData(){return bufferOffset!=dataLength;}
 
   int send();
   void send(int length);

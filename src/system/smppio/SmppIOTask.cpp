@@ -246,7 +246,7 @@ int SmppInputThread::Execute()
               ss->getProxy()->putIncomingCommand(pdu);
             }break;
           }
-          delete pdu;
+          disposePdu(pdu);
         }
       }
     }
@@ -340,7 +340,7 @@ int SmppOutputThread::Execute()
         SmppStream st;
         assignStreamWith(&st,buf,size,false);
         fillSmppPdu(&st,pdu);
-        delete pdu;
+        disposePdu(pdu);
         ss->send(size);
         s->setData(SOCKET_SLOT_OUTPUTMULTI,(void*)1);
       }

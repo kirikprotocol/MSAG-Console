@@ -3,8 +3,10 @@
 #include "util/Exception.hpp"
 #include <exception>
 #include "util/debug.h"
+#include "core/threads/Thread.hpp"
 
 using namespace smsc::util;
+using namespace smsc::core::threads;
 using smsc::sms::SMS;
 using namespace smsc::smpp;
 
@@ -14,6 +16,7 @@ public:
   :BaseSme(host,port,sysid){}
   bool processSms(smsc::sms::SMS *sms){return false;}
 };
+
 
 int main(int argc,char* argv[])
 {
@@ -28,25 +31,29 @@ int main(int argc,char* argv[])
     trace("binding\n");
     sme.bindsme();
     trace("bind ok\n");
-    smsc::smpp::SmppHeader *pdu=sme.receiveSmpp(0);
-    trace("smpp received");
-    if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
+    for(;;)
     {
-      SMS sms;
-      if(fetchSmsFromSmppPdu(reinterpret_cast<PduXSm*>(pdu),&sms))
+      smsc::smpp::SmppHeader *pdu=sme.receiveSmpp(0);
+      trace("smpp received");
+      if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
       {
-        trace("Gotcha!\n");
-        unsigned char buf[smsc::sms::MAX_SHORT_MESSAGE_LENGTH];
-        int len=sms.getMessageBody().getData(buf);
-        buf[len]=0;
-        trace2("%d:%s\n",len,buf);
+        SMS sms;
+        if(fetchSmsFromSmppPdu(reinterpret_cast<PduXSm*>(pdu),&sms))
+        {
+          trace("Gotcha!\n");
+          unsigned char buf[smsc::sms::MAX_SHORT_MESSAGE_LENGTH];
+          int len=sms.getMessageBody().getData(buf);
+          buf[len]=0;
+          trace2("%d:%s\n",len,buf);
+        }else
+        {
+          trace("Ooops.\n");
+        }
       }else
       {
-        trace("Ooops.\n");
+        trace2("??? Command id:%d\n",pdu->get_commandId());
       }
-    }else
-    {
-      trace2("??? Command id:%d\n",pdu->get_commandId());
+      disposePdu(pdu);
     }
     //trace2("response status:%d\n",pdu->get_commandId());
   }catch(std::exception& e)

@@ -1,2 +1,2 @@
-sme/testsme testsme -lcore-network -lsms -lsocket -lsme
-sme/testsme2 testsme2 -lcore-network -lsms -lsocket -lsme
+sme/testsme testsme -lcore-network -lsms -lsocket -lsme -lcore-threads -lthread
+sme/testsme2 testsme2 -lcore-network -lsms -lsocket -lsme -lcore-threads -lthread

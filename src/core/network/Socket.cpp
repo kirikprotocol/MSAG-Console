@@ -127,7 +127,7 @@ int Socket::Read(char *buf,int bufsize)
   return recv(sock,buf,bufsize,0);
 }
 
-int inline Socket::readChar()
+int Socket::readChar()
 {
   if(inBuffer<=0 || bufPos==inBuffer)
   {

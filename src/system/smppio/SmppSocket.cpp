@@ -25,12 +25,15 @@ void SmppSocket::send(int length)
 
 int SmppSocket::send()
 {
-  int towrite=SSOCK_PACKET_SIZE;
-  if(bufferOffset+towrite>dataLength)towrite=dataLength-bufferOffset;
+  int towrite=dataLength-bufferOffset;
   if(towrite==0)return 1;
+  __trace2__("send:(%d,%d,%d,%d)%d(%d)",
+    (int)buffer[0],(int)buffer[1],(int)buffer[2],(int)buffer[3],towrite,dataLength);
   int sent=socket->Write(buffer+bufferOffset,towrite);
   if(sent==-1)return -1;
   bufferOffset+=sent;
+  __trace2__("sent:%d,%d/%d,(%d,%d,%d,%d)",sent,bufferOffset,dataLength,
+    (int)buffer[0],(int)buffer[1],(int)buffer[2],(int)buffer[3]);
   if(bufferOffset==dataLength)return 1;
   return 0;
 }
@@ -38,7 +41,7 @@ int SmppSocket::send()
 int SmppSocket::receive()
 {
   int packetsize=-1;
-  if(bufferOffset>4)
+  if(bufferOffset>=4)
   {
     packetsize=ntohl(*((int*)buffer));
     if(packetsize>bufferSize)
@@ -50,9 +53,15 @@ int SmppSocket::receive()
       buffer=newbuf;
     }
   }
-  int n=bufferSize-bufferOffset;
-  n=packetsize>0?(n>packetsize?packetsize:n):4;
-  trace2("packetsize:%d, bufferoffset:%d\n",packetsize,bufferOffset);
+  int n;
+  if(packetsize>0)
+  {
+    n=packetsize-bufferOffset;
+  }else
+  {
+    n=4;
+  }
+  trace2("packetsize:%d, bufferoffset:%d, toread:%d\n",packetsize,bufferOffset,n);
   int rd=socket->Read(buffer+bufferOffset,n);
   if(rd<=0)return -1;
   bufferOffset+=rd;

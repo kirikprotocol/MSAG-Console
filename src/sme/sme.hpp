@@ -62,7 +62,8 @@ protected:
   std::string smeSystemId;
   smsc::core::network::Socket socket;
   int smppCount;
-  Buffer buf;
+  Buffer wrbuf;
+  Buffer rdbuf;
   bool sendBuffer(const char* buffer,int size);
 };
 
