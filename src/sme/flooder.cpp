@@ -174,7 +174,7 @@ typedef vector<string> StrList;
 void LoadFile(const string& filename,StrList& sl)
 {
   FILE *f=fopen(filename.c_str(),"rt");
-  if(!f)throw Exception("Faield to open file %s",filename);
+  if(!f)throw Exception("Faield to open file %s",filename.c_str());
   fseek(f,0,SEEK_END);
   int sz=ftell(f);
   fseek(f,0,SEEK_SET);
@@ -323,13 +323,13 @@ int main(int argc,char* argv[])
         s.setDestinationAddress(dests[dstidx].c_str());
         s.setOriginatingAddress(sources[srcidx].c_str());
 
-        string* message;
+        string* msgptr;
         if(messageMode==0)
         {
-          message=&msgs[msgidx];
+          msgptr=&msgs[msgidx];
         }else
         {
-          message=&wordsTemp;
+          msgptr=&wordsTemp;
           int len=minLength+((double)rand()/RAND_MAX)*(maxLength-minLength);
           wordsTemp=words[rand()%words.size()];
           while(wordsTemp.length()<len)
@@ -339,19 +339,19 @@ int main(int argc,char* argv[])
           }
         }
 
-        if(hasHighBit(message->c_str(),message->length()))
+        if(hasHighBit(msgptr->c_str(),msgptr->length()))
         {
-          std::vector<short> tmp(message->length());
-          ConvertMultibyteToUCS2(message->c_str(), message->length(),
-                                        &tmp[0], message->length()*2,
+          std::vector<short> tmp(msgptr->length());
+          ConvertMultibyteToUCS2(msgptr->c_str(), msgptr->length(),
+                                        &tmp[0], msgptr->length()*2,
                                         CONV_ENCODING_CP1251);
 
           s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::UCS2);
-          s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,(char*)&tmp[0],message->length()*2);
+          s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,(char*)&tmp[0],msgptr->length()*2);
         }else
         {
           s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
-          s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,message->c_str(),message->length());
+          s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,msgptr->c_str(),msgptr->length());
         }
         s.setIntProperty(Tag::SMPP_SM_LENGTH,0);
         fillSmppPduFromSms(&sm,&s);
@@ -367,7 +367,7 @@ int main(int argc,char* argv[])
 
         //slev.Wait(delay);
         hrtime_t msgproc=gethrtime()-msgstart;
-        millisleep(delay-msgproc/1000000);
+        if(delay>msgproc/1000000)millisleep(delay-msgproc/1000000);
 
         time_t now=time(NULL);
         if((cnt%500)==0 || now-lasttime>5)
