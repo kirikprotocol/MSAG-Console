@@ -404,8 +404,8 @@ void Smsc::processCommand(SmscCommand& cmd)
         )
       {
         uint16_t mr=sms.getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM);
-        uint8_t idx=sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS),
-                num=sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+        uint8_t idx=sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM),
+                num=sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
         __trace2__("sms from %s have sar info:mr=%u, %u/%u",
           sms.getOriginatingAddress().toString().c_str(),(unsigned)mr,(unsigned)idx,(unsigned)num);
         MergeCacheItem mci;
