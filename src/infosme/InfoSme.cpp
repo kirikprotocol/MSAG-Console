@@ -50,7 +50,7 @@ const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
 
 static smsc::logger::Logger *logger = 0;
 
-static std::auto_ptr<smsc::admin::service::ServiceSocketListener> adminListener; 
+static ServiceSocketListener* adminListener = 0; 
 static bool bAdminListenerInited = false;
 
 static Event infoSmeWaitEvent;
@@ -501,7 +501,9 @@ int main(void)
 
     Logger::Init();
     logger = Logger::getInstance("smsc.infosme.InfoSme");
-    adminListener.reset(new smsc::admin::service::ServiceSocketListener());
+    
+    std::auto_ptr<ServiceSocketListener> adml(new ServiceSocketListener());
+    adminListener = adml.get();
     
     sigset_t set, old;
     sigemptyset(&set);
