@@ -64,7 +64,7 @@ CAMMON_INCLUDES = -I$(SMSC_SRCDIR) -I/usr/local/include -I$(SSL_DIR)/include -I$
 CFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT -D_REENTRANT -D_FILE_OFFSET_BITS=64
 CXXFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT -D_REENTRANT -D_FILE_OFFSET_BITS=64
 ifeq ($(CXX),CC)
-COMPFLAGS:=-features=extensions -xmemalign=4s -mt -D_POSIX_PTHREAD_SEMANTICS
+COMPFLAGS:=-features=extensions -mt -D_POSIX_PTHREAD_SEMANTICS
 endif
 ifeq ($(CXX),CC)
 LDFLAGS := -L$(SMSC_BUILDDIR)/lib -L/usr/local/lib/CC -L/usr/local/lib -L$(SSL_DIR)/lib
@@ -94,7 +94,7 @@ endif
 
 ifdef WARNINGS
 ifeq ($(CXX),CC)
-COMPFLAGS := $(COMPFLAGS) +w +w2
+COMPFLAGS := $(COMPFLAGS) +w
 else
 COMPFLAGS := $(COMPFLAGS) -Wall
 endif
