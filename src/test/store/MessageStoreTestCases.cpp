@@ -5,7 +5,6 @@
 #include "store/StoreExceptions.h"
 #include <cstdlib>
 #include <ctime>
-#include <string>
 
 namespace smsc  {
 namespace test  {

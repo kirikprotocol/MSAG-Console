@@ -1,4 +1,3 @@
-#include "util/debug.h"
 #include "util/config/Manager.h"
 #include "store/StoreManager.h"
 #include "MessageStoreTestCases.hpp"
