@@ -16,10 +16,10 @@ namespace smsc { namespace store
         virtual SMS& retrive(SMSId id) 
             throw(StorageException, NoSuchMessageException) = 0;
 
-		virtual ~MessageStore() {};
+	protected:
 
-    protected:
 	    MessageStore() {};
+		virtual ~MessageStore() {};
    };
 }}
 

@@ -10,34 +10,17 @@ namespace smsc { namespace store
 /* ----------------------------- StoreManager -------------------------- */
 using namespace smsc::sms;
 
-MessageStore* StoreManager::instance = 0L;
-StoreConfig* StoreManager::config = 0L;
-
-MessageStore* StoreManager::getInstance() 
-	throw(ConnectionFailedException)
-{
-    return ((instance) ? instance : (instance = new StoreManager()));
-}
-
-StoreManager::StoreManager() 
-	throw(ConnectionFailedException)
-{
-    __require__(StoreManager::config);
-
-    pool = new ConnectionPool(StoreManager::config); 
-}
-
-StoreManager::~StoreManager()
-{
-    if (pool) delete pool;
-}
+Mutex StoreManager::mutex;
+ConnectionPool*	StoreManager::pool = 0L;
+IDGenerator* StoreManager::generator = 0L;
+StoreManager* StoreManager::instance = 0L;
 
 const int MAX_TRIES_TO_PROCESS = 3;
 
 SMSId StoreManager::store(SMS& sms) 
 	throw(StorageException)
 {
-	__require__(pool);
+	__require__(pool && generator);
 	
 	int iteration=1;
     while(true)
@@ -45,7 +28,8 @@ SMSId StoreManager::store(SMS& sms)
 		try 
 		{
 			Connection* conn = pool->getConnection();
-			SMSId id = conn->store(sms);
+			SMSId id = generator->getNextId();
+			conn->store(sms, id);
             pool->freeConnection(conn);
 			return id;
 		} 

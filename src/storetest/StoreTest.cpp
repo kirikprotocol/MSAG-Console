@@ -6,7 +6,9 @@
 
 int main(void) 
 {
-    using smsc::util::config::Manager;
+    int result = 0;
+
+	using smsc::util::config::Manager;
 	using smsc::util::config::ConfigException;
 
 	using namespace smsc::store;
@@ -19,9 +21,11 @@ int main(void)
 	{
 		Manager::init("config.xml");
 		Manager& config = Manager::getInstance();
-		StoreManager::init(config.getDatabase());
-	} catch (ConfigException& exc) {
-        printf("Exception : %s\n", exc.getMessage());
+		StoreManager::startup(config.getDatabase());
+	} 
+	catch (exception& exc) 
+	{
+        printf("Exception : %s\n", exc.what());
         return -1;
     }
 
@@ -47,13 +51,14 @@ int main(void)
 	sms.setFailureCause(0);
 	sms.setMessageBody(strlen(body), 1, false, (uint8_t *)body);
     
-    const int NUM_OF_TEST_MESSAGES = 200000;
+    const int NUM_OF_TEST_MESSAGES = 10000;
 
-	try {
-        store = StoreManager::getInstance();
+	try 
+	{
+        store = StoreManager::getMessageStore();
         printf("Connect Ok !\n");
         
-		/*time_t begTime, endTime;
+		time_t begTime, endTime;
         printf("\nStoring %d messages, please wait ... \n", 
 				NUM_OF_TEST_MESSAGES);
 		begTime = time(0L);
@@ -74,20 +79,21 @@ int main(void)
         }
 		endTime = time(0L) - begTime;
         printf("Time spent for retriving: %d (sec)\nPerformance: %d (msg per sec)\n", 
-			   endTime, NUM_OF_TEST_MESSAGES/endTime);*/
+			   endTime, NUM_OF_TEST_MESSAGES/endTime);
 
-        SMSId id = store->store(sms);
+        /*SMSId id = store->store(sms);
 		printf("Message stored, id = %d !\n", id);
 
 		memset((void *)&sms, 0, sizeof(sms));
 
         sms = store->retrive(id);
-		printf("Message retrived !\n", id);
+		printf("Message retrived !\n", id);*/
     } 
     catch (StoreException& exc) {
         printf("Exception : %s\n", exc.what());
-        return -1;
+        result = -1;
     }
     
-    return 0;
+    StoreManager::shutdown();
+	return result;
 }

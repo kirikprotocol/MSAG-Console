@@ -66,8 +66,7 @@ namespace smsc { namespace store
 	
 	protected:
 		
-        static text* 	sqlStoreLock;
-		static text* 	sqlStoreMaxId;
+        static text* 	sqlGetMessagesCount;
         static text* 	sqlStoreInsert;
 		static text* 	sqlRetriveAll;
 	    
@@ -79,28 +78,25 @@ namespace smsc { namespace store
 		OCIError*       errhp;  // OCI error handle
         OCISession*     sesshp; // OCI session handle
         
-		// OCI prepared 'store' statements
-		OCIStmt* 		stmtStoreLock;
-		OCIStmt* 		stmtStoreMaxId;
+		// OCI prepared statements
+		OCIStmt* 		stmtGetMessagesCount;
         OCIStmt* 		stmtStoreInsert;
 		OCIStmt* 		stmtRetriveAll;
 
-		OCIDefine		*defhp;
-		OCIBind			*bndSt, *bndMsgRef, *bndMsgInd;
+        OCIBind			*bndSt, *bndMsgRef, *bndMsgInd;
 		OCIBind			*bndOALen, *bndOATon, *bndOANpi, *bndOAVal;
 		OCIBind			*bndDALen, *bndDATon, *bndDANpi, *bndDAVal;
 		OCIBind			*bndVTime, *bndWTime, *bndSTime, *bndDTime;
 		OCIBind			*bndSrr, *bndRd, *bndMsgPri, *bndMsgPid;
 		OCIBind			*bndFcs, *bndDcs, *bndUdhi, *bndUdl, *bndUd;
 
-		OCIDefine		*defSt, *defMsgRef, *defMsgInd;
+		OCIDefine		*defMaxId, *defSt, *defMsgRef, *defMsgInd;
 		OCIDefine   	*defOALen, *defOATon, *defOANpi, *defOAVal;
 		OCIDefine		*defDALen, *defDATon, *defDANpi, *defDAVal;
 		OCIDefine		*defVTime, *defWTime, *defSTime, *defDTime;
 		OCIDefine		*defSrr, *defRd, *defMsgPri, *defMsgPid;
 		OCIDefine		*defFcs, *defDcs, *defUdhi, *defUdl, *defUd;
-		OCIBind			*bndRetriveId;
-		OCIBind			*bndStoreId;
+		OCIBind			*bndStoreId, *bndRetriveId;
 
         SMS				sms;
 		SMSId			smsId;
@@ -138,13 +134,16 @@ namespace smsc { namespace store
 			throw(ConnectionFailedException);
 		virtual ~Connection();
 
-        virtual SMSId store(SMS& sms) 
+        SMSId getMessagesCount()
+			throw(ConnectionFailedException);
+
+		void store(SMS& sms, SMSId id) 
             throw(StorageException);
 
-        virtual SMS& retrive(SMSId id) 
+        SMS& retrive(SMSId id) 
             throw(StorageException, NoSuchMessageException);
 
-		friend class ConnectionPool;
+		friend class ConnectionPool; // ???
     };
     
 }}
