@@ -590,7 +590,7 @@ public:
   void _dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid,unsigned ssn){
     MapDialog* item = 0;
     if ( hash_.Get(MKDID(dialogueid,ssn),item) ){
-      if ( item->abonent.length() != 0 ) {
+      if ( item->abonent.length() != 0 && !item->isUSSD) {
         lock_map.Delete(item->abonent);
       }
       hash_.Delete(MKDID(dialogueid,ssn));
