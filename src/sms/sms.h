@@ -664,7 +664,7 @@ public:
           *(uint16_t*)(buffer+offs) = htons(tag);
           *(uint32_t*)(buffer+offs+2) = htonl(4);
           offs+=4+2;
-					__trace2__("Ienc: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key:"NULL",len,offs,length);
+					__trace2__("Ienc: tag=%hd key=%s len=%hd pos=%d length=%d val=%d",tag,key?key:"NULL",len,offs,length,*value);
           __require__(offs+len<=length);
           //memcpy(buffer+pos,value->c_str(),len);
 					*(uint32_t*)(buffer+offs) = htonl(*value); 
@@ -684,9 +684,9 @@ public:
           pos+=4+2;
           __require__(pos+len<=length);
           string* key = tag_hash.getStrKeyForInt(tag);
-					__trace2__("Idec: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key->c_str():"NULL",len,pos,length);
           if ( key )
           {
+						__trace2__("Idec: tag=%hd key=%s len=%hd pos=%d length=%d val=%d",tag,key?key->c_str():"NULL",len,pos,length,ntohl(*(uint32_t*)buffer+pos));
             __require__(len == 4);
             hash[key->c_str()] = ntohl(*(uint32_t*)buffer+pos);
           }
