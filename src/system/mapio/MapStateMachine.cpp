@@ -834,7 +834,7 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error,unsigned err_code
     __map_trace2__("TryDestroyDialog: dialog 0x%x , reason error",dialogid);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid));
     if ( dialog.isnull() ) {
-      __map_warn2__("TryDestroyDialog: has no dialog 0x%x",dialogid);
+      __map_trace2__("TryDestroyDialog: has no dialog 0x%x",dialogid);
       return;
     }
     __map_trace2__("TryDestroyDialog: dialogid 0x%x state %d",dialog->dialogid_map,dialog->state);
@@ -1169,21 +1169,24 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             throw;
           }
         }else if ( !dialog2  ) {
-          if ( cmd->get_commandId() == DELIVERY )
-            dialog.assign(MapDialogContainer::getInstance()->
-                      createOrAttachSMSCDialog(
-                        dialogid_smsc,
-                        SSN,
-                        string(cmd->get_sms()->getDestinationAddress().value),
-                        cmd));
-          else // QUERYABONENTSTATUS
-            dialog.assign(MapDialogContainer::getInstance()->
-                      createOrAttachSMSCDialog(
-                        dialogid_smsc,
-                        SSN,
-                        /*string(cmd->get_sms()->getDestinationAddress().value)*/"",
-                        cmd));
-
+          try {
+            if ( cmd->get_commandId() == DELIVERY )
+              dialog.assign(MapDialogContainer::getInstance()->
+                        createOrAttachSMSCDialog(
+                          dialogid_smsc,
+                          SSN,
+                          string(cmd->get_sms()->getDestinationAddress().value),
+                          cmd));
+            else // QUERYABONENTSTATUS
+              dialog.assign(MapDialogContainer::getInstance()->
+                        createOrAttachSMSCDialog(
+                          dialogid_smsc,
+                          SSN,
+                          /*string(cmd->get_sms()->getDestinationAddress().value)*/"",
+                          cmd));
+          } catch (exception& e) {
+            throw MAPDIALOG_TEMP_ERROR("MAP::PutCommand: can't create dialog");
+          }
           if ( dialog.isnull() ) {
             //throw MAPDIALOG_TEMP_ERROR("Can't create or attach dialog");
             //SendRescheduleToSmsc(dialogid_smsc);
@@ -1198,6 +1201,8 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           dialog->dialogid_smsc = dialogid_smsc;
           dialog->dropChain = false;
         }
+      }catch(MAPDIALOG_ERROR& e){
+        throw;
       }catch(exception& e){
         __map_warn2__("PutCommand: exception when create dialog. <exception>:%s",e.what());
         //throw MAPDIALOG_TEMP_ERROR("MAP::PutCommand: can't create dialog");
@@ -1672,7 +1677,8 @@ USHORT_T Et96MapCloseInd(
       unsigned _di = dialogid_map;
       dialogid_map = 0;
       throw MAPDIALOG_HEREISNO_ID(
-        FormatText("MAP::dialog 0x%x is not present",_di));}
+        FormatText("MAP::dialog 0x%x is not present",_di));
+    }
     MAPSTATS_Update(MAPSTATS_GSMDIALOG_CLOSEOUT);
     dialogid_smsc = dialog->dialogid_smsc;
     __map_trace2__("%s: dialogid 0x%x (state %d) DELIVERY_SM %s",__FUNCTION__,dialog->dialogid_map,dialog->state,RouteToString(dialog.get()).c_str());
@@ -1763,6 +1769,7 @@ USHORT_T Et96MapPAbortInd(
 {
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
+  __map_trace2__("%s: dialogid 0x%x provReason 0x%x",__FUNCTION__,dialogueId,provReason);
   MAP_TRY{
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId));
     if ( dialog.isnull() )
@@ -1770,7 +1777,6 @@ USHORT_T Et96MapPAbortInd(
         FormatText("MAP::%s MAP.did:{0x%x} is not present",__FUNCTION__,dialogueId));
     dialogid_smsc = dialog->dialogid_smsc;
     dialog->id_opened = false;
-    __map_trace2__("%s: dialogid 0x%x provReason 0x%x",__FUNCTION__,dialogid_map,provReason);
     throw MAPDIALOG_TEMP_ERROR("PABORT",MAP_ERRORS_BASE+provReason);
   }MAP_CATCH(dialogid_map,dialogid_smsc);
   return ET96MAP_E_OK;
@@ -2449,7 +2455,18 @@ static void NotifyHLR(MapDialog* dialog)
     __map_trace2__("%s: MEMORY_CAPACITY_OVERRUN (flag:%d)",__FUNCTION__,dialog->mwdStatus.mcef);
   }
   else {
-    __map_trace2__("%s: no way!",__FUNCTION__);
+    __map_trace2__("%s: no way! isUSSD=%s hlrWasNotified=%s hlrVersion=%d wasDelivered=%s routeErr=%x subscriberAbsent=%s mwdStatus.mnrf=%x memoryExceeded=%s mwdStatus.mcef=%x",__FUNCTION__,
+  	dialog->isUSSD?"Y":"N",
+  	dialog->hlrWasNotified?"Y":"N", 
+  	dialog->hlrVersion,
+        dialog->wasDelivered?"Y":"N",
+        dialog->routeErr,
+        dialog->subscriberAbsent?"Y":"N",
+        dialog->mwdStatus.mnrf,
+        dialog->memoryExceeded?"Y":"N",
+        dialog->mwdStatus.mcef
+        );
+
     //return; // Opps, strange way
     throw MAPDIALOG_ERROR(0,"no way");
   }
