@@ -644,6 +644,15 @@ void cancelSmTc()
 		"ѕрочие коды ошибок соответствуют спецификации");
 }
 
+void lockTc()
+{
+	__reg_tc__("lockedSm", "ќбработка ситуаций с залоченными sms");
+	__reg_tc__("lockedSm.deliveringState",
+		"≈сли sms находитс€ в DELIVERING состо€нии, то выполнение cancel_sm, replace_sm, query_sm и submit_sm с установленным replace_if_present задерживаетс€ до выхода sms из DELIVERING состо€ни€ или команда протухает по таймауту");
+	__reg_tc__("lockedSm.segmentedMap",
+		"≈сли sms отправленна€ на map proxy доставл€етс€ с разбивкой по сегментам и хот€ бы один сегмент уже доставлен, то выполнение cancel_sm, replace_sm и submit_sm с установленным replace_if_present становитс€ невозможным");
+}
+
 void sendInvalidPduTc()
 {
 	__reg_tc__("sendInvalidPdu",
@@ -821,6 +830,7 @@ void allProtocolTc()
 	deliverySmTc();
 	querySmTc();
 	cancelSmTc();
+	lockTc();
 
 
 	sendInvalidPduTc();
