@@ -332,6 +332,8 @@ StateType StateMachine::submit(Tuple& t)
                           dst,
                           dest_proxy_index,dest_proxy,&ri);
   sms->setRouteId(ri.routeId.c_str());
+  int prio=sms->getPriority()+ri.priority;
+  if(prio>SmeProxyPriorityMax)prio=SmeProxyPriorityMax;
   sms->setPriority(ri.priority);
 
   //smsc->routeSms(sms,dest_proxy_index,dest_proxy);

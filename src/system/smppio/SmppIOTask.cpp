@@ -91,6 +91,28 @@ void SmppInputThread::killSocket(int idx)
 }
 
 
+static void SendGNack(SmppSocket* ss,int seq,int status)
+{
+  PduGenericNack pdu;
+  pdu.get_header().set_commandId(SmppCommandSet::GENERIC_NACK);
+  pdu.get_header().set_sequenceNumber(seq);
+  pdu.get_header().set_commandStatus(status);
+  char buf[64];
+  int size=pdu.size();
+  __require__(size<(int)sizeof(buf));
+  SmppStream s;
+  assignStreamWith(&s,buf,sizeof(buf),false);
+  fillSmppPdu(&s,reinterpret_cast<SmppHeader*>(&pdu));
+  int wroff=0,wr;
+  while(wroff<size)
+  {
+    wr=ss->getSocket()->Write(buf+wroff,size-wroff);
+    if(wr<=0)break;
+    wroff+=wr;
+  }
+}
+
+
 int SmppInputThread::Execute()
 {
   Multiplexer::SockArray ready;
@@ -246,11 +268,19 @@ int SmppInputThread::Execute()
                 proxy->setId(bindpdu->get_systemId());
                 resppdu.get_header().
                   set_commandStatus(SmppStatusSet::ESME_ROK);
-              }catch(exception& e)
+              }catch(SmeRegisterException& e)
               {
                 resppdu.get_header().
-                  set_commandStatus(SmppStatusSet::ESME_RINVSYSID);
+                  set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
                 trace2("registration failed:%s",e.what());
+                //delete proxy;
+                err=true;
+              }
+              catch(...)
+              {
+                resppdu.get_header().
+                  set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                trace2("registration failed: unknown reason");
                 //delete proxy;
                 err=true;
               }
@@ -301,6 +331,9 @@ int SmppInputThread::Execute()
                       SmppStatusSet::ESME_ROK
                     )
                   );
+                }else
+                {
+                  SendGNack(ss,SmppStatusSet::ESME_RINVBNDSTS,pdu->get_sequenceNumber());
                 }
               }catch(...)
               {
@@ -318,6 +351,9 @@ int SmppInputThread::Execute()
                   if(ss->getProxy())
                   {
                     ss->getProxy()->putIncomingCommand(cmd);
+                  }else
+                  {
+                    SendGNack(ss,SmppStatusSet::ESME_RINVBNDSTS,pdu->get_sequenceNumber());
                   }
                 }catch(...)
                 {
@@ -340,7 +376,10 @@ int SmppInputThread::Execute()
                   SmppStatusSet::ESME_RINVCMDID
                 );
               try{
-                ss->getProxy()->putCommand(cmd);
+                if(ss->getProxy())
+                {
+                  ss->getProxy()->putCommand(cmd);
+                }
               }catch(...)
               {
               }

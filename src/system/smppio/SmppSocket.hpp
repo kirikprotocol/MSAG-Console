@@ -58,7 +58,10 @@ public:
     outThread=out;
   }
   void assignProxy(SmppProxy *p){proxy=p;}
-  SmppProxy* getProxy(){return proxy;}
+  SmppProxy* getProxy()
+  {
+    return proxy;
+  }
   int receive();
   smsc::smpp::SmppHeader* decode();
   bool hasData(){return bufferOffset!=dataLength;}

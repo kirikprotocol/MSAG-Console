@@ -34,7 +34,7 @@ public:
     enum{
       networkResolve,
       networkConnect,
-      invalidSystemId,
+      bindFailed,
       smppError,
       timeout,
       unknown,
@@ -48,7 +48,7 @@ public:
     {
       case Reason::networkResolve:return "Unable to resolve service center host name";
       case Reason::networkConnect:return "Unable to connect to service center";
-      case Reason::invalidSystemId:return "Invalid system id";
+      case Reason::bindFailed:return "Failed to bind sme";
       case Reason::smppError:return "Generic smpp error";
       case Reason::timeout:return "Bind attempt timed out";
       case Reason::unknown:return "Unknown error";
@@ -318,6 +318,12 @@ struct SmeConfig{
   std::string origAddr;
 };
 
+namespace BindType{
+  const int Receiver = 1;
+  const int Transmitter = 2;
+  const int Transceiver = 3;
+};
+
 class SmppSession{
 protected:
   struct Lock{
@@ -356,7 +362,7 @@ protected:
     SmppHeader* sendPdu(SmppHeader* pdu)
     {
       Event event;
-      int seq=(const_cast<SmppHeader*>(pdu))->get_sequenceNumber();
+      int seq=pdu->get_sequenceNumber();
       session.registerPdu(seq,&event);
       session.writer.enqueue(pdu);
       event.Wait(10000);
@@ -455,17 +461,34 @@ public:
   {
     close();
   }
-  void connect()throw(SmppConnectException)
+  void connect(int bindtype=BindType::Transceiver)
   {
     if(!closed)return;
     if(socket.Init(cfg.host.c_str(),cfg.port,cfg.timeOut)==-1)
-      throw SmppConnectException(SmppConnectException::Reason::networkResolve);
+      throw Exception("Failed to resolve smsc host");
     if(socket.Connect()==-1)
-      throw SmppConnectException(SmppConnectException::Reason::networkConnect);
+      throw Exception("Failed to connect to smsc host");
     reader.Start();
     writer.Start();
     PduBindTRX pdu;
-    pdu.get_header().set_commandId(SmppCommandSet::BIND_TRANCIEVER);
+    int expectedbindresp;
+    switch(bindtype)
+    {
+      case BindType::Transceiver:
+        pdu.get_header().set_commandId(SmppCommandSet::BIND_TRANCIEVER);
+        expectedbindresp=SmppCommandSet::BIND_TRANCIEVER_RESP;
+        break;
+      case BindType::Transmitter:
+        pdu.get_header().set_commandId(SmppCommandSet::BIND_TRANSMITTER);
+        expectedbindresp=SmppCommandSet::BIND_TRANSMITTER_RESP;
+        break;
+      case BindType::Receiver:
+        pdu.get_header().set_commandId(SmppCommandSet::BIND_RECIEVER);
+        expectedbindresp=SmppCommandSet::BIND_RECIEVER_RESP;
+        break;
+    }
+    bindType=bindtype;
+    //pdu.get_header().set_commandId(SmppCommandSet::BIND_TRANCIEVER);
     pdu.set_systemId(cfg.sid.c_str());
     pdu.set_password(cfg.password.c_str());
     pdu.set_systemType(cfg.systemType.c_str());
@@ -474,16 +497,16 @@ public:
 
     PduBindTRXResp *resp=(PduBindTRXResp*)strans.sendPdu((SmppHeader*)&pdu);
 
-    if(!resp || resp->get_header().get_commandId()!=SmppCommandSet::BIND_TRANCIEVER_RESP ||
+    if(!resp || resp->get_header().get_commandId()!=expectedbindresp ||
        resp->get_header().get_sequenceNumber()!=pdu.get_header().get_sequenceNumber() ||
        resp->get_header().get_commandStatus()!=SmppStatusSet::ESME_ROK)
     {
       int reason=!resp?SmppConnectException::Reason::timeout :
-               resp->get_header().get_commandId()!=SmppCommandSet::BIND_TRANCIEVER_RESP ||
+               resp->get_header().get_commandId()!=expectedbindresp ||
                resp->get_header().get_sequenceNumber()!=pdu.get_header().get_sequenceNumber() ?
                SmppConnectException::Reason::smppError:
-               resp->get_header().get_commandStatus()==SmppStatusSet::ESME_RINVSYSID ?
-               SmppConnectException::Reason::invalidSystemId:
+               resp->get_header().get_commandStatus()==SmppStatusSet::ESME_RBINDFAIL?
+               SmppConnectException::Reason::bindFailed:
                SmppConnectException::Reason::unknown;
       if(resp)disposePdu((SmppHeader*)resp);
       reader.Stop();
@@ -535,6 +558,7 @@ protected:
   InnerAsyncTransmitter atrans;
   Mutex cntMutex,lockMutex;
   bool closed;
+  int bindType;
 
   IntHash<Lock> lock;
 
@@ -577,9 +601,54 @@ protected:
     lock.Delete(seq);
     return retval;
   }
+  bool checkIncomingValidity(SmppHeader* pdu)
+  {
+    using namespace SmppCommandSet;
+    switch(bindType)
+    {
+      case BindType::Receiver:
+        switch(pdu->get_commandId())
+        {
+          case DELIVERY_SM:
+          case GENERIC_NACK:
+          case UNBIND_RESP:
+            return true;
+          case SUBMIT_SM_RESP:
+          case DELIVERY_SM_RESP:
+          case SUBMIT_SM:
+          case QUERY_SM:
+          default:
+            return false;
+        }
+      case BindType::Transmitter:
+        switch(pdu->get_commandId())
+        {
+          case GENERIC_NACK:
+          case SUBMIT_SM_RESP:
+          case UNBIND_RESP:
+            return true;
+          case DELIVERY_SM:
+          case DELIVERY_SM_RESP:
+          case SUBMIT_SM:
+          case QUERY_SM:
+          default:
+            return false;
+        }
+      case BindType::Transceiver:return true;
+    }
+    return false;
+  }
+
   void processIncoming(SmppHeader* pdu)
   {
     using namespace smsc::smpp::SmppCommandSet;
+    if(!checkIncomingValidity(pdu))
+    {
+      PduGenericNack gnack;
+      gnack.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+      strans.sendGenericNack(gnack);
+      return;
+    }
     lockMutex.Lock();
     int seq=pdu->get_sequenceNumber();
     switch(pdu->get_commandId())

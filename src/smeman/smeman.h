@@ -30,6 +30,31 @@ using std::string;
 
 class SmeProxyWrap;
 
+namespace SmeRegisterFailReasons{
+  const int rfUnknownSystemId=0;
+  const int rfAlreadyRegistered=1;
+  const int rfInvalidPassword=2;
+  const int rfInternalError=3;
+};
+
+class SmeRegisterException:public std::exception{
+public:
+  SmeRegisterException(int reason):reason(reason){}
+  int getReason()const{return reason;}
+  const char* what()const throw()
+  {
+    switch(reason)
+    {
+      case SmeRegisterFailReasons::rfUnknownSystemId:return "Unknown systemId";
+      case SmeRegisterFailReasons::rfAlreadyRegistered:return "Already registered";
+      case SmeRegisterFailReasons::rfInvalidPassword:return "Invalid passowrd";
+      case SmeRegisterFailReasons::rfInternalError:return "Internal error";
+    }
+  }
+protected:
+  int reason;
+};
+
 class SmeRecord : public SmeProxy
 {
 public:

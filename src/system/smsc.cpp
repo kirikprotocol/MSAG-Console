@@ -370,7 +370,7 @@ void Smsc::run()
 #ifdef ENABLE_MAP_SYM
   MapSymProxy *msprx=new MapSymProxy();
 
-  smeman.registerSmeProxy("MAPSYM",msprx);
+  smeman.registerInternallSmeProxy("MAPSYM",msprx);
 
   MapSymInputTask *msin=new MapSymInputTask(msprx);
   MapSymOutputTask *msout=new MapSymOutputTask(msprx);

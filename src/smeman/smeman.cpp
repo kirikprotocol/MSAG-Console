@@ -187,18 +187,18 @@ __synchronized__
   {
     SmeProxyPriority p = smeProxy->getPriority();
     if (!( p > SmeProxyPriorityMinBr && p < SmeProxyPriorityMaxBr ))
-      throw runtime_error("proxy has incorrect priority");
+      throw SmeRegisterException(SmeRegisterFailReasons::rfInternalError);
   }
   SmeIndex index = internalLookup(systemId);
   if ( index == INVALID_SME_INDEX )
   {
-    throw runtime_error(string("unknown systm id:")+systemId);
+    throw SmeRegisterException(SmeRegisterFailReasons::rfUnknownSystemId);
   }
   if ( records[index]->proxy )
   {
     __trace2__("Failed to register proxy with sid:%s",systemId.c_str());
     __warning__("Sme proxy with tihs systemId already registered");
-    throw runtime_error(string("proxy with id ")+systemId+" already exists");
+    throw SmeRegisterException(SmeRegisterFailReasons::rfAlreadyRegistered);
   }
   if ( records[index]->info.password!=pwd)
   {
@@ -207,7 +207,7 @@ __synchronized__
       pwd.c_str());
     smsc::util::Logger::getCategory("smeman.register").
       error("Attempt to register sme %s with invalid password",systemId.c_str());
-    throw runtime_error(string("Invalid password for sme:")+systemId);
+    throw SmeRegisterException(SmeRegisterFailReasons::rfInvalidPassword);
   }
   {
     MutexGuard guard(records[index]->mutex);
