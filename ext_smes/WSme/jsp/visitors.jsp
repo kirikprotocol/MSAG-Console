@@ -57,8 +57,9 @@
     String mask = (String)visitors.get(i);
   %><tr class=row<%=rowN&1%>0>
       <td nowrap valign=top>
+        <%if (bean.isWSmeStarted()) {%>
         <input class=check type=checkbox name=selectedRows value="<%= mask%>">&nbsp;
-        <%= StringEncoderDecoder.encode(mask)%>
+        <%}%><%= StringEncoderDecoder.encode(mask)%>
       </td>
     </tr>
   <%

@@ -58,8 +58,9 @@
     LangRow lang = (LangRow)langs.get(i);
   %><tr class=row<%=rowN&1%>0>
       <td nowrap valign=top>
+        <%if (bean.isWSmeStarted()) {%>
         <input class=check type=checkbox name=selectedRows value="<%= lang.mask%>">&nbsp;
-        <%= StringEncoderDecoder.encode(lang.mask)%>
+        <%}%><%= StringEncoderDecoder.encode(lang.mask)%>
       </td>
       <td nowrap valign=top>
         <%= StringEncoderDecoder.encode(lang.lang)%>

@@ -59,8 +59,9 @@
     AdRow ad = (AdRow)ads.get(i);
   %><tr class=row<%=rowN&1%>0>
       <td nowrap valign=top>
+        <%if (bean.isWSmeStarted()) {%>
         <input class=check type=checkbox name=selectedRows value="<%= StringEncoderDecoder.encode(""+ad.id+WSmeAdsFormBean.ID_LANG_SEPARATOR+ad.lang)%>">&nbsp;
-        <%= ad.id%>
+        <%}%><%= ad.id%>
       </td>
       <td nowrap valign=top>
         <%= StringEncoderDecoder.encode(ad.lang)%>
