@@ -93,7 +93,7 @@ void SmppTransmitterTestCases::updateReplacePduMonitors(PduData* pduData,
 		case PDU_NOT_EXPECTED_FLAG: //final pdu
 			__require__(deliveryMonitor->state == DELIVERED);
 			break;
-		default:
+		default: //PDU_COND_REQUIRED_FLAG, PDU_MISSING_ON_TIME_FLAG
 			__unreachable__("Invalid delivery monitor flag");
 	}
 	//delivery receipt monitor
@@ -106,16 +106,20 @@ void SmppTransmitterTestCases::updateReplacePduMonitors(PduData* pduData,
 		switch (rcptMonitor->getFlag())
 		{
 			case PDU_REQUIRED_FLAG: //замещена pdu, для которой прошла последняя доставка и теперь только осталось заекспариться
+			case PDU_COND_REQUIRED_FLAG:
 				fixture->pduReg->removeMonitor(rcptMonitor);
-				if (rcptMonitor->getCheckTime() >= submitTime &&
-					rcptMonitor->getCheckTime() <= submitTime + timeCheckAccuracy)
+				if (abs(rcptMonitor->getCheckTime() - submitTime) <= timeCheckAccuracy)
 				{
 					rcptMonitor->setCondRequired();
 					fixture->pduReg->registerMonitor(rcptMonitor);
 				}
 				else
 				{
-					__require__(rcptMonitor->getCheckTime() > submitTime + timeCheckAccuracy);
+					if (rcptMonitor->getFlag() == PDU_REQUIRED_FLAG)
+					{
+						__require__(rcptMonitor->getCheckTime() >
+							submitTime + timeCheckAccuracy);
+					}
 					rcptMonitor->setNotExpected();
 					//никаких тест кейсов уже не будет
 					//fixture->pduReg->registerMonitor(rcptMonitor);
@@ -123,7 +127,7 @@ void SmppTransmitterTestCases::updateReplacePduMonitors(PduData* pduData,
 				break;
 			case PDU_NOT_EXPECTED_FLAG:
 				break;
-			default:
+			default: //PDU_MISSING_ON_TIME_FLAG
 				__unreachable__("Invalid delivery receipt monitor flag");
 		}
 	}
@@ -135,16 +139,20 @@ void SmppTransmitterTestCases::updateReplacePduMonitors(PduData* pduData,
 		switch (notifMonitor->getFlag())
 		{
 			case PDU_REQUIRED_FLAG: //например, респонс не был отослан и таймаут еще не истек
+			case PDU_COND_REQUIRED_FLAG:
 				fixture->pduReg->removeMonitor(notifMonitor);
-				if (notifMonitor->getCheckTime() >= submitTime &&
-					notifMonitor->getCheckTime() <= submitTime + timeCheckAccuracy)
+				if (abs(notifMonitor->getCheckTime() - submitTime) <= timeCheckAccuracy)
 				{
 					notifMonitor->setCondRequired();
 					fixture->pduReg->registerMonitor(notifMonitor);
 				}
 				else
 				{
-					__require__(notifMonitor->getCheckTime() > submitTime + timeCheckAccuracy);
+					if (notifMonitor->getFlag() == PDU_REQUIRED_FLAG)
+					{
+						__require__(notifMonitor->getCheckTime() >
+							submitTime + timeCheckAccuracy);
+					}
 					notifMonitor->setNotExpected();
 					//никаких тест кейсов уже не будет
 					//fixture->pduReg->registerMonitor(notifMonitor);
@@ -152,7 +160,7 @@ void SmppTransmitterTestCases::updateReplacePduMonitors(PduData* pduData,
 				break;
 			case PDU_NOT_EXPECTED_FLAG:
 				break;
-			default:
+			default: //PDU_MISSING_ON_TIME_FLAG
 				__unreachable__("Invalid intermediate notification monitor flag");
 		}
 	}
@@ -517,49 +525,43 @@ void SmppTransmitterTestCases::registerReplaceMonitors(PduSubmitSm* resPdu,
 	__require__(resPdu->get_optional().has_userMessageReference());
 	uint16_t msgRef = resPdu->get_optional().get_userMessageReference();
 	//мониторы
-	bool deliveryFlag = false;
 	bool errorReportsFlag = false;
 	bool expiredReportsFlag = false;
-	//замещаемое сообщение должно быть в ENROUTE state
-	DeliveryMonitor* monitor = fixture->pduReg->getDeliveryMonitor(msgRef);
-	if (monitor && monitor->getFlag() == PDU_REQUIRED_FLAG)
+	SmeType destType = fixture->routeChecker->isDestReachable(
+		resPdu->get_message().get_source(), resPdu->get_message().get_dest());
+	switch (destType)
 	{
-		fixture->pduReg->removeMonitor(monitor);
-		monitor->setNotExpected();
-		//fixture->pduReg->registerMonitor(monitor);
-		delete monitor;
-		SmeType destType = fixture->routeChecker->isDestReachable(
-			resPdu->get_message().get_source(), resPdu->get_message().get_dest());
-		switch (destType)
-		{
-			case SME_TRANSMITTER: //замещение sms, для которой еще не было попытки доставки
-				errorReportsFlag = true;
-				break;
-			case SME_NOT_BOUND:
-				expiredReportsFlag = true;
-				break;
-			case SME_RECEIVER:
-			case SME_TRANSCEIVER:
-				//мониторы будут созданы в NormalSmsHandler::registerDeliveryReportMonitors()
-				break;
-			default: //SME_NO_ROUTE
-				__unreachable__("Invalid sme type");
-		}
+		case SME_TRANSMITTER: //замещение sms, для которой еще не было попытки доставки
+			errorReportsFlag = true;
+			break;
+		case SME_NOT_BOUND:
+			expiredReportsFlag = true;
+			break;
+		case SME_RECEIVER:
+		case SME_TRANSCEIVER:
+			//мониторы будут созданы в NormalSmsHandler::registerDeliveryReportMonitors()
+			break;
+		default: //SME_NO_ROUTE
+			__unreachable__("Invalid sme type");
 	}
 	//delivery monitor
-	if (deliveryFlag)
-	{
-		replacePduData->ref();
-		pduData->replacePdu = replacePduData;
-		replacePduData->replacedByPdu = pduData;
-		Address srcAddr, destAddr;
-		SmppUtil::convert(resPdu->get_message().get_source(), &srcAddr);
-		SmppUtil::convert(resPdu->get_message().get_dest(), &destAddr);
-		DeliveryMonitor* deliveryMonitor = new DeliveryMonitor(srcAddr, destAddr,
-			nvl(resPdu->get_message().get_serviceType()), msgRef, waitTime,
-			validTime, pduData, PDU_REQUIRED_FLAG);
-		fixture->pduReg->registerMonitor(deliveryMonitor);
-	}
+	//замещаемое сообщение должно быть в ENROUTE state
+	DeliveryMonitor* monitor = fixture->pduReg->getDeliveryMonitor(msgRef);
+	__require__(monitor && monitor->getFlag() == PDU_REQUIRED_FLAG);
+	fixture->pduReg->removeMonitor(monitor);
+	monitor->setNotExpected();
+	//fixture->pduReg->registerMonitor(monitor);
+	delete monitor;
+	Address srcAddr, destAddr;
+	SmppUtil::convert(resPdu->get_message().get_source(), &srcAddr);
+	SmppUtil::convert(resPdu->get_message().get_dest(), &destAddr);
+	replacePduData->ref();
+	pduData->replacePdu = replacePduData;
+	replacePduData->replacedByPdu = pduData;
+	DeliveryMonitor* deliveryMonitor = new DeliveryMonitor(srcAddr, destAddr,
+		nvl(resPdu->get_message().get_serviceType()), msgRef, waitTime,
+		validTime, pduData, PDU_REQUIRED_FLAG);
+	fixture->pduReg->registerMonitor(deliveryMonitor);
 	//репорты
 	uint8_t regDelivery = getRegisteredDelivery(pduData);
 	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT ||
@@ -598,6 +600,7 @@ PduData* SmppTransmitterTestCases::registerReplaceSm(PduReplaceSm* pdu,
 	PduData::StrProps* strProps, PduData::ObjProps* objProps)
 {
 	//создание pdu, которая получиться после замещения
+	PduFlag replacePduFlag = PDU_NOT_EXPECTED_FLAG;
 	PduSubmitSm* resPdu;
 	if (replacePduData)
 	{
@@ -630,6 +633,12 @@ PduData* SmppTransmitterTestCases::registerReplaceSm(PduReplaceSm* pdu,
 			resPdu->get_message().set_validityPeriod(
 				SmppUtil::time2string(validTime, t, submitTime, __absoluteTime__));
 		}
+		DeliveryMonitor* monitor = fixture->pduReg->getDeliveryMonitor(
+			replacePdu->get_optional().get_userMessageReference());
+		if (monitor)
+		{
+			replacePduFlag = monitor->getFlag();
+		}
 	}
 	else
 	{
@@ -656,7 +665,8 @@ PduData* SmppTransmitterTestCases::registerReplaceSm(PduReplaceSm* pdu,
 	pduData->intProps["reportOptions"] = profile.reportoptions;
 	pduData->strProps["smsId"] = nvl(pdu->get_messageId());
 	//проверить наличие ошибок (будет ли респонс с кодом ошибки)
-	pduData->checkRes = fixture->pduChecker->checkReplaceSm(pduData, replacePduData);
+	pduData->checkRes = fixture->pduChecker->checkReplaceSm(pduData,
+		replacePduData, replacePduFlag);
 	pduData->ref();
 	if (pduData->checkRes.size())
 	{
