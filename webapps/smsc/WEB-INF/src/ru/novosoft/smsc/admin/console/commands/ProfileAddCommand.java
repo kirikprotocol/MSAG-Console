@@ -8,9 +8,8 @@
 package ru.novosoft.smsc.admin.console.commands;
 
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.profiler.Profile;
-import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.admin.route.Mask;
 
 public class ProfileAddCommand extends ProfileGenCommand
 {
@@ -27,7 +26,11 @@ public class ProfileAddCommand extends ProfileGenCommand
             Mask profileMask = new Mask(mask);
             if (!ctx.getSmsc().isLocaleRegistered(locale))
                 throw new Exception("Locale '"+locale+"' is not registered");
-            Profile profile = new Profile(profileMask, codepage, report, locale);
+
+			  //todo initialize properly
+			  boolean aliasHide = false;
+			  boolean aliasModifiable = false;
+            Profile profile = new Profile(profileMask, codepage, report, locale, aliasHide, aliasModifiable);
             switch (ctx.getSmsc().profileUpdate(profileMask, profile))
             {
                 case 1:	//pusUpdated
