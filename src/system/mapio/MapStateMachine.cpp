@@ -68,19 +68,22 @@ static void CloseMapDialog(unsigned dialogid){
 static void TryDestroyDialog(unsigned);
 static string RouteToString(MapDialog*);
 
+static void QueryHlrVersion(MapDialog*);
+static void QueryMcsVersion(MapDialog*);
+
 static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
 {
   __trace2__("MAP::%s: ",__FUNCTION__);
   __trace2__("MAP:%s: Preapre SMSC command",__FUNCTION__);
   dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
-  __trace2__("MAP::%s:DELIVERY_SM %s",__FUNCTION__,RouteToString(dialog.get()).c_str());
+  __trace2__("MAP::%s:DELIVERY_SM %s",__FUNCTION__,RouteToString(dialog).c_str());
   mkMapAddress( &dialog->m_msAddr, dialog->sms->getDestinationAddress().value, dialog->sms->getDestinationAddress().length );
   mkMapAddress( &dialog->m_scAddr, "79029869999", 11 );
   mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
   mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
   __trace2__("MAP::%s: Query HLR AC version",__FUNCTION__);
   dialog->state = MAPST_WaitHlrVersion;
-  QueryHlrVersion(dialog.get());
+  QueryHlrVersion(dialog);
 }
 
 static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 );
@@ -532,9 +535,7 @@ static void SendSegmentedSms(MapDialog* dialog)
       FormatText("MAP::SendSegmentedSms: Et96MapDelimiterReq error 0x%x",result));
 }
 
-void MAPIO_PutCommand(const SmscCommand& cmd ){
-  MAPIO_PutCommand(const SmscCommand& cmd, 0 );
-}
+void MAPIO_PutCommand(const SmscCommand& cmd ){ MAPIO_PutCommand(cmd, 0 ); }
 
 static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
 {
