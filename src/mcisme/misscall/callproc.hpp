@@ -41,6 +41,7 @@ struct Circuits {
 
 static const uint8_t PREFIXED_STRATEGY = 0x01; 
 static const uint8_t REDIRECT_STRATEGY = 0x02; // MTS defualt strategy
+static const uint8_t MIXED_STRATEGY    = 0x03;
 
 struct ReleaseSettings {
   int strategy;
@@ -56,7 +57,8 @@ struct ReleaseSettings {
 bool setCallingMask(const char* rx);
 bool setCalledMask(const char* rx);
 
-class MissedCallProcessor{
+class MissedCallProcessor 
+{
   public:
     static MissedCallProcessor* instance();
     int  run();
@@ -66,6 +68,7 @@ class MissedCallProcessor{
     void fireMissedCallEvent(MissedCallEvent& event);
     void setCircuits(Hash<Circuits>& cics);
     void setReleaseSettings(ReleaseSettings params);
+    void setRedirectionAddress(const char* address);
 
   private:
     MissedCallProcessor();
