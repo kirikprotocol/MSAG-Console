@@ -3,7 +3,7 @@
 */
 
 #if !defined DISABLE_TRACING
-//#define DISABLE_TRACING
+#define DISABLE_TRACING
 #endif
 
 #include "route_manager.h"
