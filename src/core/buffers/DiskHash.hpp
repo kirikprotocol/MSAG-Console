@@ -5,11 +5,20 @@
 #include "util/crc32.h"
 #include <string>
 #include "util/debug.h"
+#include <exception>
 
 namespace smsc{
 namespace core{
 namespace buffers{
 
+
+class DiskHashDuplicateKeyException:public std::exception{
+public:
+  const char* what()
+  {
+    return "Duplicate key found during insert operation";
+  }
+};
 
 /*
 Key interface:
@@ -272,7 +281,14 @@ public:
       uint32_t idx=(hc%size)*recsize;
       f.Seek(DiskHashHeader::Size()+idx);
       uint16_t fl=f.ReadNetInt16();
-      if(fl)continue;
+      if(fl)
+      {
+        f.ReadNetInt32();
+        Key k;
+        k.Read(f);
+        if(k==key)throw DiskHashDuplicateKeyException();
+        continue;
+      }
       f.Seek(DiskHashHeader::Size()+idx);
       fl=1;
       f.WriteNetInt16(fl);
