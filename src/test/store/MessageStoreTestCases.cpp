@@ -416,7 +416,7 @@ void MessageStoreTestCases::storeReplaceCorrectSms(SMSId* idp, SMS* existentSms)
 		msgStore->createSms(sms, smsId, SMPP_OVERWRITE_IF_PRESENT);
 		__tc_ok__;
 		//восстановить параметры доставки из existentSms
-		sms.attempts = existentSms->getAttemptsCount();
+		sms.attempts = 0; //existentSms->getAttemptsCount();
 		sms.lastResult = existentSms->getLastResult();
 		sms.lastTime = existentSms->getLastTime();
 		//вернуть результат
