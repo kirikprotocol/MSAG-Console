@@ -123,7 +123,7 @@ inline void TCResult::addFailure(const vector<int>& subTC, int base)
 #endif
 	for (int i = 0; i < subTC.size(); i++)
 	{
-		failures.push_back(base + subTC[i]);
+		failures.push_back(subTC[i] > 0 ? base + subTC[i] : subTC[i]);
 	}
 }
 

@@ -53,12 +53,14 @@ auto_ptr<uint8_t> rand_uint8_t(int length)
 	return auto_ptr<uint8_t>(res);
 }
 
+static string randChars = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
 auto_ptr<char> rand_char(int length)
 {
 	char* res = new char[length + 1];
 	for (int i = 0; i < length; i++)
 	{
-		res[i] = 'A' + rand0(25);
+		res[i] = randChars[rand0(randChars.size() - 1)];
 	}
 	res[length] = 0;
 	return auto_ptr<char>(res);
@@ -68,7 +70,7 @@ void rand_char(int length, char* buf)
 {
 	for (int i = 0; i < length; i++)
 	{
-		buf[i] = 'A' + rand0(25);
+		buf[i] = randChars[rand0(randChars.size() - 1)];
 	}
 	buf[length] = 0;
 }
