@@ -51,8 +51,8 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
     Method remove_schedule((unsigned)removeScheduleMethod, "removeSchedule", schedule_params, StringType);
 
     Parameters e_schedule_params;
-    schedule_params[ARGUMENT_NAME_OLD_SCHEDULE_ID] = Parameter(ARGUMENT_NAME_OLD_SCHEDULE_ID, StringType);
-    schedule_params[ARGUMENT_NAME_NEW_SCHEDULE_ID] = Parameter(ARGUMENT_NAME_NEW_SCHEDULE_ID, StringType);
+    e_schedule_params[ARGUMENT_NAME_OLD_SCHEDULE_ID] = Parameter(ARGUMENT_NAME_OLD_SCHEDULE_ID, StringType);
+    e_schedule_params[ARGUMENT_NAME_NEW_SCHEDULE_ID] = Parameter(ARGUMENT_NAME_NEW_SCHEDULE_ID, StringType);
     Method change_schedule((unsigned)changeScheduleMethod, "changeSchedule", e_schedule_params, StringType);
 
     methods[start_task_processor.getName()]         = start_task_processor;
