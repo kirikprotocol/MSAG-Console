@@ -2572,6 +2572,21 @@ static string GetUSSDSubsystem(
   return string(sBegin,sEnd);
 }
 
+static string GetUSSDRequestString(
+  const char* text,
+  unsigned length)
+{
+  const char* p = text;
+  const char* pEnd = text+length-1;
+  for ( ; p < pEnd; ++p ) if ( (*p != '#') && (*p != '*') ) break;
+  const char* sBegin = p;
+  for ( ; p < pEnd; ++p ) if ( (*p == '#') || (*p == '*') ) break;
+  if( p == pEnd ) return string;
+  else {
+    return string(p+1,pEnd);
+  }
+}
+
 static unsigned MakeMrRef()
 {
   return time(0)%0x0ffff;
@@ -2603,7 +2618,8 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
       unsigned chars = ussdString_s.ussdStrLen*8/7;
       Convert7BitToSMSC7Bit(ussdString_s.ussdStr,chars/*ussdString_s.ussdStrLen*/,&ms,0);
       subsystem = GetUSSDSubsystem(ms.bytes,ms.len);
-      sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,ms.bytes,ms.len);
+      string ussdStr = GetUSSDRequestString(ms.bytes, ms.len);
+      sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,ussdStr.c_str(),ussdStr.length());
       sms.setIntProperty(Tag::SMPP_SM_LENGTH,ms.len);
       sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)MAP_SMSC7BIT_ENCODING);
     }
