@@ -1392,26 +1392,26 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
   unsigned __dialogid_map = 0;
   MAP_TRY{
     __trace2__("MAP::%s MAP.did:{0x%x}",__FUNCTION__,dialogueId);
-    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
+    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId));
     if ( dialog.isnull() )
       throw runtime_error(
         FormatText("MAP::%s MAP.did:{0x%x} is not present",__FUNCTION__,dialogueId));
     dialog->isUSSD = true;
     __dialogid_map = dialogueId;
-    string subsytem;
+    string subsystem;
     auto_ptr<SMS> _sms ( new SMS() );
     SMS& sms = *_sms.get();
-    Address src_addr = Address("911523");
-    Address dest_addr = Address(subsystem);
     {
       MicroString ms;
       Convert7BitToSMSC7Bit(ussdString_s.ussdStr,ussdString_s.ussdStrLen,&ms,0);
-      subsystem = GetSubsystem(ms.bytes,ms.len);
+      subsystem = GetUSSDSubsystem(ms.bytes,ms.len);
       __trace2__("MAP::%s sybsystem: %s",__FUNCTION__,subsystem.c_str());
       sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,ms.bytes,ms.len);
       sms.setIntProperty(Tag::SMPP_SM_LENGTH,ms.len);
       sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)MAP_SMSC7BIT_ENCODING);
     }
+    Address src_addr = Address("911523");
+    Address dest_addr = Address(subsystem.c_str());
     unsigned esm_class = 0;
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
     sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,0);
