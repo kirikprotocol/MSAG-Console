@@ -117,9 +117,9 @@ SmeIndex SmeManager::lookup(const SmeSystemId& systemId) const
 SmeProxy* SmeManager::getSmeProxy(SmeIndex index) const
 {
 __synchronized__
-  SmeRecord& record = records.at(index);
-  if ( record.deleted ) throw SmeError();
-  return (SmeProxy*)&record;
+  const SmeRecord* record = &(records.at(index));
+  if ( record->deleted ) throw SmeError();
+  return const_cast<SmeProxy*>((const SmeProxy*)record);
 }
 
 SmeInfo SmeManager::getSmeInfo(SmeIndex index) const

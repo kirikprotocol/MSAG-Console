@@ -34,39 +34,40 @@ class SmeRecord : public SmeProxy
 {
 public:
   uint32_t uniqueId;
-	SmeInfo info;
+  SmeInfo info;
   SmeProxy* proxy;
   bool deleted;
   SmeIndex idx;
-	Mutex mutex;
-	virtual void putCommand(const SmscCommand& command)
-	{
-		MutexGuard guard(mutex);
-		if ( proxy )
-		{
-			proxy->putCommand(command);
-		}
-		else throw runtime_error("proxy unregistred");
-	}
-	virtual SmscCommand getCommand()
-	{
-		MutexGuard guard(mutex);
-		if ( proxy )
-		{
-			return proxy->getCommand();
-		}
-		else throw runtime_error("proxy unregistred");
-	}
-	virtual uint32_t getNextSequenceNumber()
-	{
-		MutexGuard guard(mutex);
-		if ( proxy )
-		{
-			return proxy->getNextSequenceNumber();
-		}
-		else throw runtime_error("proxy unregistred");
-	}
-	virtual uint32_t getUniqueId() const {return uniqueId;}
+  Mutex mutex;
+	virtual ~SmeRecord(){}
+  virtual void putCommand(const SmscCommand& command)
+  {
+    MutexGuard guard(mutex);
+    if ( proxy )
+    {
+      proxy->putCommand(command);
+    }
+    else throw runtime_error("proxy unregistred");
+  }
+  virtual SmscCommand getCommand()
+  {
+    MutexGuard guard(mutex);
+    if ( proxy )
+    {
+      return proxy->getCommand();
+    }
+    else throw runtime_error("proxy unregistred");
+  }
+  virtual uint32_t getNextSequenceNumber()
+  {
+    MutexGuard guard(mutex);
+    if ( proxy )
+    {
+      return proxy->getNextSequenceNumber();
+    }
+    else throw runtime_error("proxy unregistred");
+  }
+  virtual uint32_t getUniqueId() const {return uniqueId;}
   virtual bool hasInput() const {__unreachable__("");return 0;}
   virtual SmeProxyState getState() const {__unreachable__("");return INVALID;}
   virtual void init(){__unreachable__("");}
