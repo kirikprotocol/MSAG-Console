@@ -94,8 +94,6 @@ int main(int argc, char **argv)
   thread_t threadId;
 
   sigset( SIGINT, sighandler );
-  mmsWaitDelimiter.dialogueId = 0;
-  hlrResult.dialogueId = 0;
 
   //thr_create( NULL, 0, cmdThread, NULL, 0, &threadId );
 
@@ -137,13 +135,13 @@ int main(int argc, char **argv)
   going = 1;
   message.receiver = USER;
 
-  while(going) {
+  while(going)
+  {
 //    result = MsgRecv(&message);
     result = EINSS7CpMsgRecv_r( &message, 1000 );
 
-    if( result == MSG_TIMEOUT ) {
-      continue;
-    }
+    if(result==MSG_TIMEOUT)continue;
+
     printf( "MsgRecv result=%d\n",result);
     if( result != MSG_OK ) going = 0;
     else {
