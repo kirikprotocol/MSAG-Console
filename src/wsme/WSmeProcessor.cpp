@@ -209,21 +209,21 @@ bool VisitorManager::isVisitor(const std::string msisdn)
 { 
     MutexGuard guard(visitorsLock);
 
-    visitors.First();
-    char* mask = 0; bool avail = false;
-    while (visitors.Next(mask, avail))
+    int length = msisdn.length();
+    if (length <= 0) return false;
+    char mask[length+1];
+    const char* srcmask = msisdn.c_str();
+    strcpy(mask, srcmask);
+
+    while(length-- && mask[length] != '.')
     {
-        if (mask && mask[0] != '\0')
-        {
-            __trace2__("Checking visitor '%s' by mask '%s'", 
-                       msisdn.c_str(), mask);
-            if (compareMaskAndAddress(mask, msisdn)) {
-                __trace2__("Visitor '%s' conform with mask '%s'", 
-                           msisdn.c_str(), mask);
-                return avail;
-            }
+        if (visitors.Exists(mask)) {
+            __trace2__("Visitor '%s' conform with mask '%s'", srcmask, mask);
+            return true;
         }
+        mask[length] = '?';
     }
+
     return false;
 }
 
@@ -414,16 +414,32 @@ std::string LangManager::getLangCode(const std::string msisdn)
 {
     MutexGuard  guard(langsLock);
 
-    langs.First();
-    char* mask = 0; std::string langStr;
-    while (langs.Next(mask, langStr))
+    int length = msisdn.length();
+    if (length <= 0) return defaultLang;
+    char mask[length+1];
+    const char* srcmask = msisdn.c_str();
+    strcpy(mask, srcmask);
+
+    while(length-- && mask[length] != '.')
     {
-        if (mask && mask[0] != '\0' && compareMaskAndAddress(mask, msisdn))
+        if (langs.Exists(mask))
         {
-            const char* lang = langStr.c_str();
-            if (lang && lang[0] != '\0') return langStr;
-            else break;
+            std::string lang = langs.Get(mask);
+            const char* langstr = lang.c_str();
+
+            if (langstr && langstr[0] != '\0') {
+                __trace2__("Address '%s' conform with mask '%s'. "
+                           "Lang is '%s'", srcmask, mask, langstr);
+                return lang;
+            }
+            else {
+                __trace2__("Address '%s' conform with mask '%s'. "
+                           "Lang is empty, using default '%s'.",
+                           srcmask, mask, defaultLang.c_str());
+                break;
+            }
         }
+        mask[length] = '?';
     }
     
     return defaultLang;

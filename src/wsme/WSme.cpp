@@ -61,7 +61,7 @@ static bool convertMSISDNStringToAddress(const char* string, Address& address)
     return true;
 };
 
-bool compareMaskAndAddress(const std::string mask, 
+/*bool compareMaskAndAddress(const std::string mask, 
                            const std::string addr)
 {
     try 
@@ -81,7 +81,7 @@ bool compareMaskAndAddress(const std::string mask,
         return false;
     }
     return true;
-}
+}*/
 
 class WSmeTask : public ThreadedTask
 {
