@@ -1,6 +1,8 @@
 package ru.novosoft.smsc.jsp.smsview;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.smsview.SmsQuery;
 import ru.novosoft.smsc.admin.smsview.SmsRow;
 import ru.novosoft.smsc.admin.smsview.SmsSet;
@@ -44,13 +46,16 @@ public class SmsViewFormBean extends IndexBean
   protected int init(List errors)
   {
     int result = super.init(errors);
-    if (result != RESULT_OK)
-      return result;
+    if (result != RESULT_OK) return result;
 
-    if (sort != null)
-      preferences.setSmsviewSortOrder(sort);
-    else
-      sort = preferences.getSmsviewSortOrder();
+    if (sort != null) preferences.setSmsviewSortOrder(sort);
+    else sort = preferences.getSmsviewSortOrder();
+
+    try {
+      view.init(appContext);
+    } catch (Throwable t) {
+      return error("SMS View init failed", t);
+    }
 
     return RESULT_OK;
   }
@@ -58,13 +63,7 @@ public class SmsViewFormBean extends IndexBean
   public int process(HttpServletRequest request)
   {
     int result = super.process(request);
-    if (result != RESULT_OK)
-      return result;
-
-    if (view.getSmsc() == null) {
-      view.setDataSource(appContext.getConnectionPool());
-      view.setSmsc(appContext.getSmsc());
-    }
+    if (result != RESULT_OK) return result;
 
     if (getStorageType() == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE) {
       if (!request.isUserInRole("smsView") && !request.isUserInRole("smsView_archive"))
@@ -147,6 +146,13 @@ public class SmsViewFormBean extends IndexBean
     totalRowsCount = 0;
     checkedRows.removeAllElements();
     try {
+      if (query.getStorageType() == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE &&
+          hostsManager.getServiceInfo(Constants.ARCHIVE_DAEMON_SVC_ID).getStatus()
+          != ServiceInfo.STATUS_RUNNING)
+      {
+        clearQuery();
+        throw new AdminException("Archive Daemon is not running. ");
+      }
       totalRowsCount = view.getSmsCount(query);
       rows = view.getSmsSet(query);
       startPosition = 0;

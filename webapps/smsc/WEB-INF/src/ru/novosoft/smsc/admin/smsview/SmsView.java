@@ -17,6 +17,7 @@ import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.smsc_service.CancelMessageData;
 import ru.novosoft.smsc.admin.*;
 import ru.novosoft.smsc.admin.smsview.archive.SmsArchiveSource;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
 
 public class SmsView
 {
@@ -24,14 +25,12 @@ public class SmsView
   private SmsOperativeSource operative = new SmsOperativeSource();
   private SmsArchiveSource archive = new SmsArchiveSource();
 
-  public void setDataSource(DataSource ds) {
-    operative.setDataSource(ds);
-  }
-  public void setSmsc(Smsc smsc) {
-    this.smsc = smsc;
-  }
-  public Smsc getSmsc() {
-    return smsc;
+  public void init(SMSCAppContext appContext) throws AdminException {
+    if (smsc == null) {
+      this.smsc = appContext.getSmsc();
+      operative.setDataSource(appContext.getConnectionPool());
+      archive.init(appContext);
+    }
   }
 
   public SmsSet getSmsSet(SmsQuery query) throws AdminException

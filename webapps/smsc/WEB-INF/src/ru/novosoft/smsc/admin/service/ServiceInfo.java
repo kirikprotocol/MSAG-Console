@@ -55,6 +55,12 @@ public class ServiceInfo
 				throw new AdminException("Couldn't add new SMSC - already presented");
 			sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX, 0, 0);
 		}
+    else if (id.equals(Constants.ARCHIVE_DAEMON_SVC_ID))
+    {
+      if (smeManager.contains(id))
+        throw new AdminException("Couldn't add new ArchiveDaemon - already presented");
+      sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX, 0, 0);
+    }
 		else
 		{
 			sme = smeManager.get(id);

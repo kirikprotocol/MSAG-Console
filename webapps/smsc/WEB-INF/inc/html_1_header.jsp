@@ -77,9 +77,10 @@
 			main_menu_end_item(out);
 
 			main_menu_begin_item(out, "MENU0_Statistics_menu", "MENU0_Statistics_submenu", "Statistics");
-			main_menu_submenu_item(out, "/perfmon", "MENU0_PERFMON", "Monitor", "SMSC Perfomance monitor", "return openPerfMon();");
-			main_menu_submenu_item(out, "/smsview", "MENU0_SMSVIEW", "SMS view");
-			main_menu_submenu_item(out, "/smsstat", "MENU0_SMSSTAT", "Statistics");
+			main_menu_submenu_item(out, "/perfmon",            "MENU0_PERFMON"  , "Monitor", "SMSC Perfomance monitor", "return openPerfMon();");
+      main_menu_submenu_item(out, "/smsstat",            "MENU0_SMSSTAT",   "Statistics");
+      main_menu_submenu_i_fu(out, "/smsview/daemon.jsp", "MENU0_SMSDAEMON", "SMS Daemon");
+			main_menu_submenu_i_fu(out, "/smsview/index.jsp" , "MENU0_SMSVIEW",   "SMS View");
 			main_menu_end_item(out);
 
 			main_menu_begin_item(out, "MENU0_Routing_menu", "MENU0_Routing_submenu", "Routing");

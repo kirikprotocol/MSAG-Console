@@ -5,7 +5,9 @@ String CPATH = request.getContextPath() + "/smsc";
 bean.process(request);
 List c = new ArrayList(bean.getServiceIds());
 if (!c.contains(ru.novosoft.smsc.admin.Constants.SMSC_SME_ID))
-c.add(ru.novosoft.smsc.admin.Constants.SMSC_SME_ID);
+  c.add(ru.novosoft.smsc.admin.Constants.SMSC_SME_ID);
+if (!c.contains(ru.novosoft.smsc.admin.Constants.ARCHIVE_DAEMON_SVC_ID))
+  c.add(ru.novosoft.smsc.admin.Constants.ARCHIVE_DAEMON_SVC_ID);
 for (Iterator i = c.iterator(); i.hasNext(); )
 {
 	out.print('"' + (String) i.next() + '"');

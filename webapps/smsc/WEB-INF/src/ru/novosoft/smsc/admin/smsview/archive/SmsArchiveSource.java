@@ -5,6 +5,7 @@ import ru.novosoft.smsc.admin.smsview.archive.*;
 import ru.novosoft.smsc.admin.smsview.SmsSource;
 import ru.novosoft.smsc.admin.smsview.SmsSet;
 import ru.novosoft.smsc.admin.smsview.SmsQuery;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
 
 import java.net.Socket;
 import java.io.*;
@@ -20,8 +21,11 @@ public class SmsArchiveSource extends SmsSource
 {
   private final static int MAX_SMS_FETCH_SIZE = 200;
 
-  private final static String host = "smsc";
-  private final static short  port = 6789;
+  ArchiveDaemonContext context = null;
+
+  public void init(SMSCAppContext appContext) throws AdminException {
+    context = ArchiveDaemonContext.getInstance(appContext);
+  }
 
   public SmsSet getSmsSet(SmsQuery query) throws AdminException
   {
@@ -36,7 +40,7 @@ public class SmsArchiveSource extends SmsSource
     try {
       QueryMessage request = new QueryMessage(query);
 
-      socket = new Socket(host, port);
+      socket = new Socket(context.getHost(), context.getPort());
       input = socket.getInputStream(); output = socket.getOutputStream();
 
       DaemonCommunicator communicator = new DaemonCommunicator(input, output);
@@ -99,7 +103,7 @@ public class SmsArchiveSource extends SmsSource
     try {
       CountMessage request = new CountMessage(query);
 
-      socket = new Socket(host, port);
+      socket = new Socket(context.getHost(), context.getPort());
       input = socket.getInputStream(); output = socket.getOutputStream();
 
       DaemonCommunicator communicator = new DaemonCommunicator(input, output);
