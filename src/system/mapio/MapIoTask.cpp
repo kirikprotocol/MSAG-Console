@@ -392,7 +392,8 @@ void MapIoTask::dispatcher()
     Et96MapHandleIndication(&message);
   }
 }
-virtual void  Et96MapOpenConf (
+
+USHORT_T  Et96MapOpenConf (
   ET96MAP_LOCAL_SSN_T ssn,
   ET96MAP_DIALOGUE_ID_T dialogId,
   ET96MAP_OPEN_RESULT_T openResult,
