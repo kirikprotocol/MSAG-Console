@@ -615,7 +615,8 @@ void Smsc::run()
 
 
   // start rescheduler created in init
-  tp.startTask(scheduler);
+  // start on thread pool 2 to shutdown it after state machines
+  tp2.startTask(scheduler);
 
 #ifdef ENABLE_MAP_SYM
   MapSymProxy *msprx=new MapSymProxy();
