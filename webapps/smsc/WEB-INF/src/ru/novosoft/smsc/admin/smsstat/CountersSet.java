@@ -7,9 +7,6 @@
  */
 package ru.novosoft.smsc.admin.smsstat;
 
-import java.util.Vector;
-import java.util.Collection;
-
 public class CountersSet
 {
   public int accepted = 0;

@@ -67,7 +67,7 @@ if (stat != null) {
     <td colspan=7><div class=page_subtitle>General statistics</div></td>
 </tr>
 <tr class=row0>
-    <th width="22%">&nbsp;</th>
+    <th width="22%"><div align=right>&nbsp;</div></th>
     <th width="13%"><div align=right>Accepted</div></th>
     <th width="13%"><div align=right>Rejected</div></th>
     <th width="13%"><div align=right>Delivered</div></th>
@@ -76,7 +76,7 @@ if (stat != null) {
     <th width="13%"><div align=right>Temporal</div></th>
 </tr>
 <tr class=row1>
-    <td width="22%">Total SMS processed:</td>
+    <td width="22%" align=right>Total SMS processed:</td>
     <td width="13%" align=right><%= total.accepted%></td>
     <td width="13%" align=right><%= total.rejected%></td>
     <td width="13%" align=right><%= total.delivered%></td>
@@ -90,7 +90,7 @@ while (i.hasNext()) {
     DateCountersSet date = (DateCountersSet)i.next();
     SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
 %>  <tr class=row0>
-        <td width="22%"><%= formatter.format(date.getDate())%></td>
+        <td width="22%" align=right><%= formatter.format(date.getDate())%></td>
         <td width="13%" align=right><%= date.accepted%></td>
         <td width="13%" align=right><%= date.rejected%></td>
         <td width="13%" align=right><%= date.delivered%></td>
@@ -103,7 +103,7 @@ while (i.hasNext()) {
     while (j.hasNext()) {
         HourCountersSet hour = (HourCountersSet)j.next();
     %>  <tr class=row1>
-            <td width="22%">&nbsp;&nbsp;&nbsp;<%= ((hour.getHour() < 10)? "0"+hour.getHour():""+hour.getHour())%></td>
+            <td width="22%" align=right>&nbsp;&nbsp;&nbsp;<%= ((hour.getHour() < 10)? "0"+hour.getHour():""+hour.getHour())%></td>
             <td width="13%" align=right><%= hour.accepted%></td>
             <td width="13%" align=right><%= hour.rejected%></td>
             <td width="13%" align=right><%= hour.delivered%></td>
@@ -121,7 +121,7 @@ while (i.hasNext()) {
     <td colspan=7><div class=page_subtitle>SME activity</div></td>
 </tr>
 <tr class=row0>
-    <th width="22%">SME Id</th>
+    <th width="22%"><div align=right>SME Id</div></th>
     <th width="13%"><div align=right>Accepted</div></th>
     <th width="13%"><div align=right>Rejected</div></th>
     <th width="13%"><div align=right>Delivered</div></th>
