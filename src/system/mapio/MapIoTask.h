@@ -443,7 +443,7 @@ public:
     if ( ( abonent.length() != 0 ) && lock_map.Exists(abonent) ) {
       MapDialog* item = lock_map[abonent];
       if ( item == 0 ) return FALSE;
-      if( item->state = MAPST_WaitNextMMS ) return TRUE;
+      if( item->state == MAPST_WaitNextMMS ) return TRUE;
     }
     else return FALSE;
   }
