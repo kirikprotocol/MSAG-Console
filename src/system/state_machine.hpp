@@ -39,7 +39,7 @@ public:
     ofFailed=new OutputFormatter(failed);
   }
 
-  void formatDeliver(const char* addr,std::string& out);
+  void formatDeliver(const char* addr,time_t date,std::string& out);
   void formatFailed(const char* addr,const char* err,std::string& out);
 
   const char *taskName(){return "StateMachine";}

@@ -26,7 +26,11 @@ static inline int getSmsText(SMS* sms,char* buf)
   {
     ConvertUCS2ToMultibyte((const short*)data,len,buf,MAX_SHORT_MESSAGE_LENGTH,CONV_ENCODING_ANSI);
     len/=2;
-  }else
+  }else if(coding==DataCoding::SMSC7BIT)
+  {
+    len=ConvertSMSC7BitToLatin1(data,len,buf);
+  }
+  else
   {
     memcpy(buf,data,len);
   }

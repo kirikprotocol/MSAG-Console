@@ -110,12 +110,13 @@ public:
 
 };
 
-void StateMachine::formatDeliver(const char* addr,std::string& out)
+void StateMachine::formatDeliver(const char* addr,time_t date,std::string& out)
 {
   if(!ofDelivered)return;
   ReceiptGetAdapter ga;
   ContextEnvironment ce;
   ce.exportStr("dest",addr);
+  ce.exportDat("date",date);
   try{
     ofDelivered->format(out,ga,ce);
   }catch(exception& e)
@@ -593,6 +594,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           rpt.setDeliveryReport(0);
           rpt.setArchivationRequested(false);
           rpt.setEServiceType("SMSC");
+          rpt.setIntProperty(Tag::SMPP_ESM_CLASS,4);
           rpt.setDestinationAddress(sms.getOriginatingAddress());
           Array<SMS*> arr;
           string out;
@@ -634,12 +636,13 @@ StateType StateMachine::deliveryResp(Tuple& t)
       rpt.setDeliveryReport(0);
       rpt.setArchivationRequested(false);
       rpt.setEServiceType("SMSC");
+      rpt.setIntProperty(Tag::SMPP_ESM_CLASS,4);
       rpt.setDestinationAddress(sms.getOriginatingAddress());
       Array<SMS*> arr;
       string out;
       char addr[32];
       sms.getDestinationAddress().getText(addr,sizeof(addr));
-      formatDeliver(addr,out);
+      formatDeliver(addr,time(NULL),out);
       __trace2__("RECEIPT: addr %s",addr);
       splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,p.codepage,arr);
       for(int i=0;i<arr.Count();i++)
