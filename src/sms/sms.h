@@ -45,10 +45,18 @@ namespace smsc { namespace sms
        
         inline void setValue(uint8_t _len, const char* _value) 
         {
-            __require__(_len && _value && _len<sizeof(AddressValue));
+            __require__( _len<sizeof(AddressValue) );
             
-			memcpy(value, _value, _len*sizeof(uint8_t));
-            value[lenght = _len] = '\0';
+			if (_len && _value)
+			{
+				memcpy(value, _value, _len*sizeof(uint8_t));
+				value[lenght = _len] = '\0';
+			}
+			else 
+			{
+				memset(value, 0, sizeof(AddressValue));
+				lenght = 0;
+			}
         };
         inline uint8_t getValue(char* _value) {
             memcpy(_value, value, lenght*sizeof(uint8_t));
@@ -105,10 +113,22 @@ namespace smsc { namespace sms
 
         inline void setData(uint8_t _len, const uint8_t* _data) 
         {
-            __require__(_len && _data && _len<=sizeof(SMSData));
+            __require__( _len<=sizeof(SMSData) );
             
-			memcpy(data, _data, _len*sizeof(uint8_t));
-            lenght = _len;
+			if (_len && _data)
+			{
+				memcpy(data, _data, _len*sizeof(uint8_t));
+				lenght = _len;
+				if (lenght < sizeof(SMSData)) 
+				{
+					data[lenght] = '\0';
+				}
+            }
+			else
+			{
+				memset(data, 0, sizeof(SMSData));
+				lenght = _len;
+			}
         };
         inline uint8_t getData(uint8_t* _data) {
             memcpy(_data, data, lenght*sizeof(uint8_t));
@@ -223,7 +243,9 @@ namespace smsc { namespace sms
         inline void setDestinationAddress(uint8_t lenght, uint8_t type, 
                                           uint8_t plan, char* buff) 
         { // Copies address value from 'buff' to static structure 
-            destinationAddress.setTypeOfNumber(type);
+            __require__(lenght);
+
+			destinationAddress.setTypeOfNumber(type);
             destinationAddress.setNumberingPlan(plan);
             destinationAddress.setValue(lenght, buff);
         };
