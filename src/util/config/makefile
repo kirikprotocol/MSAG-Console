@@ -1,23 +1,18 @@
-SRC = $(HOME)/cvs/smsc/src/util/config
-OUT = $(HOME)/build/out/util/config
 
-GLOBAL_INC = /usr/local/include
-XERCES_INC = $(GLOBAL_INC)/xercesc
-LOG4CPP_INC= $(GLOBAL_INC)/log4cpp
-SMSC_SRC = $(HOME)/cvs/smsc/src
+#
+# $Id$
+#
+#
 
-INCS = -I$(GLOBAL_INC) -I$(XERCES_INC) -I$(LOG4CPP_INC) -I$(SMSC_SRC)
-LIBS = -llog4cpp -lxercesc
+PACKAGE := util.config
 
-CFLAGS  = -g -march=pentiumpro -pedantic $(INCS)
+ifndef SMSC_SRCDIR
+$(error SMSC_SRCDIR is not defined)
+endif
 
-OBJECTS =\
-	DB.o\
-	MAP.o\
-	Logger.o\
-	Manager.o
+include $(SMSC_SRCDIR)/conf/module_rules
 
-build: $(foreach X,$(OBJECTS),$(OUT)/$(X))
 
-$(OUT)/%.o: $(SRC)/%.cpp
-	$(CXX) $(CFLAGS) -c $< -o $@
+	
+
+

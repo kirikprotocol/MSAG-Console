@@ -5,8 +5,17 @@
 #
 #
 
-SOURCES := $(wildcard *.cpp)
+RANLIB=ranlib
+
+ifndef PACKAGEDIR
+PACKAGEDIR = $(subst .,/,$(PACKAGE))
+endif
+
+SOURCES := $(subst $(SMSC_SRCDIR)/$(PACKAGEDIR)/,,$(wildcard $(SMSC_SRCDIR)/$(PACKAGEDIR)/*.cpp))
 OBJECTS := $(SOURCES:.cpp=.o)
+LIBRARY := $(subst .,-,$(PACKAGE))
+
+$(warning $(OBJECTS))
 
 target:
 	cd $(SMSC_SRCDIR); make $(PACKAGE).build
@@ -16,20 +25,25 @@ include $(SMSC_SRCDIR)/conf/modules_switcher
 __build_message__:
 	@echo build in module $(PACKAGE)
 
-only: __build_message__ $(SMSC_BUILDDIR)/obj/$(PACKAGE) $(SMSC_BUILDDIR)/obj/$(PACKAGE)/$(OBJECTS)
+only: __build_message__ $(SMSC_BUILDDIR)/lib/$(LIBRARY).a
 
+$(SMSC_BUILDDIR)/lib/$(LIBRARY).a : $(SMSC_BUILDDIR)/obj/$(LIBRARY) $(foreach x,$(OBJECTS),$(SMSC_BUILDDIR)/obj/$(LIBRARY)/$(x))
+	$(AR) -r $@ $(SMSC_BUILDDIR)/obj/$(LIBRARY)/*.o
+	$(RANLIB) $@
+	
 build: only $(MODULES)
 
 rclean: clean $(foreach x,$(MODULES),$(x).rclean)
 	
 clean: 
 	@echo "clean in $(PACKAGE)"
-	rm -f $(SMSC_BUILDDIR)/obj/$(PACKAGE)/*.o
+	rm -f $(SMSC_BUILDDIR)/obj/$(LIBRARY)/*.o
+	rm -f $(SMSC_BUILDDIR)/lib/$(LIBRARY).a
 		
-$(SMSC_BUILDDIR)/obj/$(PACKAGE):
+$(SMSC_BUILDDIR)/obj/$(LIBRARY):
 	mkdir -p $@
 
-$(SMSC_BUILDDIR)/obj/$(PACKAGE)/%.o:$(SMSC_SRCDIR)/$(PACKAGE)/%.cpp
+$(SMSC_BUILDDIR)/obj/$(LIBRARY)/%.o:$(SMSC_SRCDIR)/$(PACKAGEDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 	
 
