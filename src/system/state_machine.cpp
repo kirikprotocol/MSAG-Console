@@ -118,13 +118,14 @@ public:
 
 };
 
-void StateMachine::formatDeliver(const char* addr,time_t date,std::string& out)
+void StateMachine::formatDeliver(const FormatData& fd,std::string& out)
 {
   if(!ofDelivered)return;
   ReceiptGetAdapter ga;
   ContextEnvironment ce;
-  ce.exportStr("dest",addr);
-  ce.exportDat("date",date);
+  ce.exportStr("dest",fd.addr);
+  ce.exportDat("date",fd.date);
+  ce.exportStr("msgId",fd.msgId);
   try{
     ofDelivered->format(out,ga,ce);
   }catch(exception& e)
@@ -132,14 +133,15 @@ void StateMachine::formatDeliver(const char* addr,time_t date,std::string& out)
     __trace2__("FORMATTER: %s",e.what());
   }
 }
-void StateMachine::formatFailed(const char* addr,const char* err,time_t date,std::string& out)
+void StateMachine::formatFailed(const FormatData& fd,std::string& out)
 {
   if(!ofFailed)return;
   ReceiptGetAdapter ga;
   ContextEnvironment ce;
-  ce.exportStr("dest",addr);
-  ce.exportStr("error",err);
-  ce.exportDat("date",date);
+  ce.exportStr("dest",fd.addr);
+  ce.exportStr("error",fd.err);
+  ce.exportDat("date",fd.date);
+  ce.exportStr("msgId",fd.msgId);
 
   try{
     ofFailed->format(out,ga,ce);
@@ -149,14 +151,15 @@ void StateMachine::formatFailed(const char* addr,const char* err,time_t date,std
   }
 }
 
-void StateMachine::formatNotify(const char* addr,const char* reason,time_t date,std::string& out)
+void StateMachine::formatNotify(const FormatData& fd,std::string& out)
 {
   if(!ofNotify)return;
   ReceiptGetAdapter ga;
   ContextEnvironment ce;
-  ce.exportStr("dest",addr);
-  ce.exportStr("reason",reason);
-  ce.exportDat("date",date);
+  ce.exportStr("dest",fd.addr);
+  ce.exportStr("reason",fd.err);
+  ce.exportDat("date",fd.date);
+  ce.exportStr("msgId",fd.msgId);
 
   try{
     ofNotify->format(out,ga,ce);
@@ -1293,7 +1296,12 @@ StateType StateMachine::deliveryResp(Tuple& t)
         rpt.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,msgid);
         string out;
         sms.getDestinationAddress().getText(addr,sizeof(addr));
-        formatDeliver(addr,time(NULL),out);
+        FormatData fd;
+        fd.addr=addr;
+        fd.date=time(NULL);
+        fd.msgId=msgid;
+        fd.err="";
+        formatDeliver(fd,out);
         rpt.getDestinationAddress().getText(addr,sizeof(addr));
         __trace2__("RECEIPT: sending receipt to %s:%s",addr,out.c_str());
         smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
@@ -1675,7 +1683,12 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   //Array<SMS*> arr;
   string out;
   sms.getDestinationAddress().getText(addr,sizeof(addr));
-  formatFailed(addr,reason,sms.getSubmitTime(),out);
+  FormatData fd;
+  fd.addr=addr;
+  fd.date=sms.getSubmitTime();
+  fd.msgId=msgid;
+  fd.err=reason;
+  formatFailed(fd,out);
   smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
   trimSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage);
   smsc->submitSms(prpt);
@@ -1730,7 +1743,12 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   //Array<SMS*> arr;
   string out;
   sms.getDestinationAddress().getText(addr,sizeof(addr));
-  formatNotify(addr,reason,sms.getSubmitTime(),out);
+  FormatData fd;
+  fd.date=sms.getSubmitTime();
+  fd.addr=addr;
+  fd.msgId=msgid;
+  fd.err=reason;
+  formatNotify(fd,out);
   smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
   trimSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage);
   smsc->submitSms(prpt);

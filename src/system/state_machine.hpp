@@ -33,6 +33,13 @@ public:
 
   int Execute();
 
+  struct FormatData{
+    const char* addr;
+    time_t date;
+    const char* msgId;
+    const char* err;
+  };
+
   void initFormatters(const char* deliver,const char* failed,const char* notify)
   {
     ofDelivered=new OutputFormatter(deliver);
@@ -40,9 +47,9 @@ public:
     ofNotify=new OutputFormatter(notify);
   }
 
-  void formatDeliver(const char* addr,time_t date,std::string& out);
-  void formatFailed(const char* addr,const char* err,time_t date,std::string& out);
-  void formatNotify(const char* addr,const char* reason,time_t date,std::string& out);
+  void formatDeliver(const FormatData&,std::string& out);
+  void formatFailed(const FormatData&,std::string& out);
+  void formatNotify(const FormatData&,std::string& out);
 
   void sendFailureReport(SMS& sms,MsgIdType msgId,int state,const char* reason);
   void sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason);
@@ -55,6 +62,7 @@ public:
   Address scAddress;
 
 protected:
+
   EventQueue& eq;
   smsc::store::MessageStore* store;
   smsc::system::Smsc *smsc;
