@@ -1347,8 +1347,11 @@ bool RemoteStore::ReadyIdIterator::getDstSmeId(char* buffer)
     throw(StorageException)
 {
     __require__(buffer);
-    return (!isNull && readyStmt && connection && connection->isAvailable()) ?
-           readyStmt->getDstSmeId(buffer) : false;
+    if (!isNull && readyStmt && connection && connection->isAvailable()) {
+        return readyStmt->getDstSmeId(buffer);
+    } 
+    buffer[0] = '\0';
+    return false;
 }
 
 
