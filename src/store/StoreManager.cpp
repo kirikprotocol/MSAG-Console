@@ -176,7 +176,7 @@ RemoteStore::~RemoteStore()
     if (pool) delete pool;
     log.info( "RemoteStore: Connection pool destroyed" );
 #endif
-    
+
     Stop();
 }
 
@@ -978,7 +978,7 @@ void RemoteStore::changeSmsStateToEnroute(SMSId id,
         uint32_t attempts)
             throw(StorageException, NoSuchMessageException)
 {
-    if (scheduleTimer) 
+    if (scheduleTimer)
         scheduleTimer->ChangeSmsSchedule(id, nextTryTime);
 
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
@@ -1042,13 +1042,13 @@ void RemoteStore::changeSmsStateToEnroute(SMSId id,
 static void findFiles(std::string location, const char* ext, Array<std::string>& files)
     throw(StorageException)
 {
-    if (!ext || !ext[0]) return; 
+    if (!ext || !ext[0]) return;
     int extFileLen  = strlen(ext) + 1;
     const char* locationStr = location.c_str();
 
     DIR *locationDir = 0;
     if (!(locationDir = opendir(locationStr))) {
-	    Exception exc("Failed to open directory '%s'. Details: %s",
+      Exception exc("Failed to open directory '%s'. Details: %s",
                       locationStr, strerror(errno));
         throw StorageException(exc.what());
     }
@@ -1056,7 +1056,7 @@ static void findFiles(std::string location, const char* ext, Array<std::string>&
     char entry[sizeof(struct dirent)+pathconf(locationStr, _PC_NAME_MAX)];
     //printf("Max name len=%d\n", pathconf(locationStr, _PC_NAME_MAX));
     struct dirent* pentry = 0;
-    
+
     while (locationDir)
     {
         errno = 0;
@@ -1089,22 +1089,22 @@ static void findFiles(std::string location, const char* ext, Array<std::string>&
                           locationStr, strerror(errno));
             if (locationDir) closedir(locationDir);
             throw StorageException(exc.what());
-        }    
+        }
     }
-    
+
     if (locationDir) closedir(locationDir);
 }
 static void changeFileExtension(std::string location, const char* fileName)
     throw(StorageException)
 {
-    std::string fullOldFile = location; fullOldFile += '/'; fullOldFile += fileName; 
+    std::string fullOldFile = location; fullOldFile += '/'; fullOldFile += fileName;
     std::string fullNewFile = location; fullNewFile += '/'; fullNewFile += fileName;
     fullOldFile += '.'; fullOldFile += SMSC_LAST_BILLING_FILE_EXTENSION;
     fullNewFile += '.'; fullNewFile += SMSC_PREV_BILLING_FILE_EXTENSION;
     if (rename(fullOldFile.c_str(), fullNewFile.c_str()) != 0) {
         Exception exc("Failed to rename file '%s' to '%s'. Details: %s",
                       fullOldFile.c_str(), fullNewFile.c_str(), strerror(errno));
-        throw StorageException(exc.what()); 
+        throw StorageException(exc.what());
     }
 }
 void RemoteStore::initBilling(Manager& config)
@@ -1145,26 +1145,26 @@ void RemoteStore::openBillingFile()
         time_t current = time(NULL);
         tm dt; gmtime_r(&current, &dt);
         const char* billingFileNamePattern = "%04d%02d%02d_%02d%02d%02d";
-        sprintf(billingFileName, billingFileNamePattern, 
+        sprintf(billingFileName, billingFileNamePattern,
                 dt.tm_year+1900, dt.tm_mon+1, dt.tm_mday, dt.tm_hour, dt.tm_min, dt.tm_sec);
 
-        std::string fullFilePath = billingLocation; 
+        std::string fullFilePath = billingLocation;
         fullFilePath += '/'; fullFilePath += (const char*)billingFileName;
         fullFilePath += '.'; fullFilePath += SMSC_LAST_BILLING_FILE_EXTENSION;
         const char* fullFilePathStr = fullFilePath.c_str();
         billingFile = fopen(fullFilePathStr, "r");
-        
+
         bool needFile = true;
         if (billingFile) { // file exists
             fclose(billingFile); billingFile = 0;
             needFile = false;
-        } 
-        
+        }
+
         billingFile = fopen(fullFilePathStr, "a+");
         if (!billingFile) {
-            Exception exc("Failed to create billing file '%s'. Details: %s", 
+            Exception exc("Failed to create billing file '%s'. Details: %s",
                           fullFilePathStr, strerror(errno));
-            throw StorageException(exc.what()); 
+            throw StorageException(exc.what());
         }
 
         if (needFile) {
@@ -1174,7 +1174,7 @@ void RemoteStore::openBillingFile()
         }
     }
 }
-// MUST be executed under billingFileLock 
+// MUST be executed under billingFileLock
 void RemoteStore::writeToBillingFile(std::string out)
     throw(StorageException)
 {
@@ -1184,7 +1184,7 @@ void RemoteStore::writeToBillingFile(std::string out)
         throw StorageException(exc.what());
     }
     if (fflush(billingFile)) {
-        Exception exc("Failed to flush billing file. Details: %s", strerror(errno)); 
+        Exception exc("Failed to flush billing file. Details: %s", strerror(errno));
         fclose(billingFile); billingFile = 0;
         throw StorageException(exc.what());
     }
@@ -1196,19 +1196,19 @@ int RemoteStore::Execute()
     {
         const int SERVICE_SLEEP = 3600;   // in seconds
         uint32_t toSleep = billingInterval;
-        while (toSleep > 0 && !bNeedExit) 
+        while (toSleep > 0 && !bNeedExit)
         {
             if (toSleep > SERVICE_SLEEP) {
                 toSleep -= SERVICE_SLEEP;
                 awake.Wait(SERVICE_SLEEP*1000);
-            } 
+            }
             else {
                 awake.Wait(toSleep*1000);
                 break;
             }
         }
 
-        try 
+        try
         {
             MutexGuard guard(billingFileLock);
             if (billingFile)
@@ -1216,13 +1216,13 @@ int RemoteStore::Execute()
                 fclose(billingFile); billingFile = 0;
                 changeFileExtension(billingLocation, billingFileName);
             }
-        } 
+        }
         catch (StorageException& exc)
         {
             awake.Wait(0); log.error("%s", exc.what());
         }
     }
-    
+
     MutexGuard guard(billingFileLock);
     if (billingFile) {
         fclose(billingFile); billingFile = 0;
@@ -1246,7 +1246,7 @@ void RemoteStore::Start()
 void RemoteStore::Stop()
 {
     MutexGuard  guard(startLock);
-    
+
     if (bStarted)
     {
         bNeedExit = true;
@@ -1267,7 +1267,7 @@ STATUS                    -- LAST_RESULT from SMS_MSG
 SRC_ADDR                  -- OA  (.1.1.7865765 format)
 SRC_IMSI                  -- SRC IMSI
 SRC_MSC                   -- SRC MSC
-SRC_SME_ID                -- 
+SRC_SME_ID                --
 DST_ADDR                  -- DDA (.1.1.7865765 format)
 DST_IMSI                  -- DST IMSI
 DST_MSC                   -- DST MSC
@@ -1282,36 +1282,36 @@ void RemoteStore::createBillingRecord(SMSId id, SMS& sms)
     throw(StorageException)
 {
     MutexGuard guard(billingFileLock);
-    
+
     openBillingFile();
-    
+
     std::string out = "";
     bool isDiverted = sms.hasStrProperty(Tag::SMSC_DIVERTED_TO);
-    bool isBinary   = sms.hasIntProperty(Tag::SMPP_DATA_CODING) ? 
+    bool isBinary   = sms.hasIntProperty(Tag::SMPP_DATA_CODING) ?
                      (sms.getIntProperty(Tag::SMPP_DATA_CODING) == DataCoding::BINARY) : false;
 
     CSVFileEncoder::addUint64(out, id);
     CSVFileEncoder::addUint8 (out, isDiverted ? 1:0);
-    CSVFileEncoder::addUint8 (out, isBinary   ? 1:0); 
+    CSVFileEncoder::addUint8 (out, isBinary   ? 1:0);
     CSVFileEncoder::addUint8 (out, sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ? 1:0);
-    CSVFileEncoder::addDateTime(out, sms.submitTime); 
-    CSVFileEncoder::addDateTime(out, sms.lastTime); 
+    CSVFileEncoder::addDateTime(out, sms.submitTime);
+    CSVFileEncoder::addDateTime(out, sms.lastTime);
     CSVFileEncoder::addUint32(out, sms.lastResult);
-    
+
     std::string oa = sms.originatingAddress.toString();
     CSVFileEncoder::addString(out, oa.c_str());
     CSVFileEncoder::addString(out, sms.originatingDescriptor.imsi);
     CSVFileEncoder::addString(out, sms.originatingDescriptor.msc);
     //CSVFileEncoder.addUint32(out, sms.originatingDescriptor.sme);
     CSVFileEncoder::addString(out, sms.srcSmeId);
-    
+
     std::string dda = sms.dealiasedDestinationAddress.toString();
     CSVFileEncoder::addString(out, dda.c_str());
     CSVFileEncoder::addString(out, sms.destinationDescriptor.imsi);
     CSVFileEncoder::addString(out, sms.destinationDescriptor.msc);
     //CSVFileEncoder.addUint32(out, sms.destinationDescriptor.sme);
     CSVFileEncoder::addString(out, sms.dstSmeId);
-    
+
     if (isDiverted) {
         std::string divertedTo = sms.getStrProperty(Tag::SMSC_DIVERTED_TO);
         CSVFileEncoder::addString(out, divertedTo.c_str());
@@ -1321,10 +1321,10 @@ void RemoteStore::createBillingRecord(SMSId id, SMS& sms)
     CSVFileEncoder::addInt32 (out, sms.serviceId);
     if (sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE))
         CSVFileEncoder::addUint32(out, sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
-    else 
+    else
         CSVFileEncoder::addSeparator(out);
     CSVFileEncoder::addUint32(out, sms.messageBody.getShortMessageLength(), true);
-    
+
     //log.debug("Billing record is:\n%s", out.c_str());
 
     writeToBillingFile(out);
@@ -1339,11 +1339,11 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms, bool needDelete)
     throw(StorageException, NoSuchMessageException)
 {
     log.debug("Finalizing msg#%lld", id);
-    
+
     // TODO: move it after destroySms for valid rollback
     if (sms.billingRecord) createBillingRecord(id, sms);
     if (sms.needArchivate) createArchiveRecord(id, sms);
-    
+
     if (!needDelete && !sms.needArchivate) { // TODO: remove && !sms.needArchivate here
         log.debug("Finalized msg#%lld" , id);
         return;
@@ -1360,7 +1360,7 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms, bool needDelete)
             if (connection)
             {
                 __trace2__( "got connection %p for %s", connection, __FUNCTION__);
-                
+
                 /* TODO: remove it !!! */
                 ToFinalStatement* toFinalStatement
                     = connection->getToFinalStatement();
@@ -1370,9 +1370,9 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms, bool needDelete)
                 connection->commit();
                 /* TODO: remove it !!! */
 
-                /* /* TODO: enable this !!!
+                /* TODO: enable this !!!
                 doDestroySms(connection, id);*/
-                pool->freeConnection(connection); 
+                pool->freeConnection(connection);
                 log.debug("Finalized msg#%lld" , id);
             }
             break;
@@ -1401,7 +1401,7 @@ void RemoteStore::createFinalizedSms(SMSId id, SMS& sms)
     throw(StorageException, DuplicateMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-    
+
     __require__(sms.state != ENROUTE);
 
     sms.lastTime = time(NULL);
@@ -1409,7 +1409,7 @@ void RemoteStore::createFinalizedSms(SMSId id, SMS& sms)
     doFinalizeSms(id, sms, false); // not need to delete sms
 
 #else
-    
+
     MutexGuard guard(fakeMutex);
 
     if (fakeStore.Exist(id))
@@ -1989,7 +1989,7 @@ SMSId CachedStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
 void CachedStore::retriveSms(SMSId id, SMS &sms)
     throw(StorageException, NoSuchMessageException)
 {
-    if( sms.hasBinProperty(Tag::SMSC_CONCATINFO) ) 
+    if( sms.hasBinProperty(Tag::SMSC_CONCATINFO) )
       __warn2__((&log),"smsId = %lld 'empty sms' already have concatinfo", id);
     SMS* sm = 0;
     {

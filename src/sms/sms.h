@@ -854,6 +854,7 @@ struct SMS
   uint8_t     concatSeqNum;   //
 
   int         dialogId;  // used for transaction mode, not stored in DB
+  bool        createdInStore;
 
   /**
   * Default конструктор, просто инициализирует поле state как ENROUTE
@@ -863,7 +864,7 @@ struct SMS
     attempts(0), lastResult(0), oldResult(0),lastTime(0), nextTime(0),
     messageReference(0), needArchivate(true),
     deliveryReport(0), billingRecord(0), attach(false),
-    serviceId(0), priority(0),concatMsgRef(0),concatSeqNum(0),dialogId(-1)
+    serviceId(0), priority(0),concatMsgRef(0),concatSeqNum(0),dialogId(-1),createdInStore(true)
   {
     eServiceType[0]='\0'; routeId[0]='\0';
     srcSmeId[0]='\0'; dstSmeId[0]='\0';
@@ -900,7 +901,8 @@ struct SMS
     priority(sms.priority),
     concatMsgRef(sms.concatMsgRef),
     concatSeqNum(sms.concatSeqNum),
-    dialogId(sms.dialogId)
+    dialogId(sms.dialogId),
+    createdInStore(sms.createdInStore)
   {
     strncpy(eServiceType, sms.eServiceType, sizeof(eServiceType));
     strncpy(routeId, sms.routeId, sizeof(routeId));
@@ -943,6 +945,7 @@ struct SMS
     concatSeqNum=sms.concatSeqNum;
 
     dialogId=sms.dialogId;
+    createdInStore=sms.createdInStore;
 
     strncpy(eServiceType, sms.eServiceType, sizeof(eServiceType));
     strncpy(routeId, sms.routeId, sizeof(routeId));
