@@ -17,15 +17,15 @@ insert into arc_stat (final_rec, last_arc) values (0, sysdate + 1/24);
 
 --проверка условий на активацию архиватора
 create or replace procedure check_arc_stat is
-	final_max integer := 150; --config.xml: MessageStore/Archive/finalized
-    interval_max integer := 20; --config.xml: MessageStore/Archive/interval
+	final_max integer := 300; --config.xml: MessageStore/Archive/finalized
+    interval_max integer := 40; --config.xml: MessageStore/Archive/interval
 	stat arc_stat%rowtype;
 	interval integer;
 begin
 	select * into stat from arc_stat;
 	interval := sysdate - stat.last_arc;
 	--архиватор стартует не реже, чем прописано в конфиге
-	if stat.final_rec > 1.1 * final_max then --10% допуск
+	if stat.final_rec > 1.2 * final_max then --20% допуск (побольше для cancel_sm)
 		raise_application_error(-20201, 'Finalized rec count = ' || stat.final_rec || ' exceeds max allowed');
 	end if;
 	if interval > 1.1 * interval_max then --10% допуск
