@@ -190,7 +190,7 @@ public:
         char* msgBuf = 0;
         if(hasHighBit(out,outLen)) 
         {
-            int msgLen = outLen*2+4;
+            int msgLen = outLen*2;
             msgBuf = new char[msgLen];
             ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf, msgLen, 
                                    CONV_ENCODING_CP1251);
