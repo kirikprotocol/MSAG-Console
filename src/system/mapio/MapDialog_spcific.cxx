@@ -375,7 +375,7 @@ inline void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
   {
     MicroString text;
     Convert7BitToText(ma->val,(ma->len/2)*8/7,&text,0);
-    if ( text.len == 0 ) throw runtime_error("ConvAddrMap2Smc: zero address");
+    if ( text.len == 0 ) throw runtime_error("MAP::ConvAddrMap2Smc: zero address");
     sa->setValue(text.len,text.bytes);
   }
   else
@@ -384,9 +384,11 @@ inline void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
     int i = 0;
     for ( ;i<ma->len;){
       sa_val[i]=(ma->val[(i>>1)]&0x0f)+0x30;
+      if(sa_val[i] > 0x39 ) throw runtime_error("MAP::ConvAddrMap2Smc numeric address contains not digit.");
       ++i;
       if ( i < ma->len ){
         sa_val[i] = (ma->val[(i>>1)]>>4)+0x30;
+        if(sa_val[i] > 0x39 ) throw runtime_error("MAP::ConvAddrMap2Smc numeric address contains not digit.");
         ++i;
       }else break;
     }
