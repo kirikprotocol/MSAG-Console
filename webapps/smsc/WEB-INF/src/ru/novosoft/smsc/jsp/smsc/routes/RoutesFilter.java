@@ -30,6 +30,7 @@ public class RoutesFilter extends SmscBean
 	protected Set smeChksSet = null;
 
 	protected String mbApply = null;
+	protected String mbClear = null;
 	protected String mbCancel = null;
 
 	protected int init(List errors)
@@ -87,6 +88,17 @@ public class RoutesFilter extends SmscBean
 			appContext.getUserPreferences().setRouteShowSrc(showSrc);
 			appContext.getUserPreferences().setRouteShowDst(showDst);
 			return RESULT_DONE;
+		}
+		else if (mbClear != null)
+		{
+			srcChks = srcMasks = dstChks = dstMasks = smeChks = new String[0];
+
+			strict = showSrc = showDst = false;
+
+			srcChksSet.clear();
+			dstChksSet.clear();
+			smeChksSet.clear();
+			return RESULT_OK;
 		}
 		else if (mbCancel != null)
 			return RESULT_DONE;
@@ -230,5 +242,15 @@ public class RoutesFilter extends SmscBean
 	public void setMbCancel(String mbCancel)
 	{
 		this.mbCancel = mbCancel;
+	}
+
+	public String getMbClear()
+	{
+		return mbClear;
+	}
+
+	public void setMbClear(String mbClear)
+	{
+		this.mbClear = mbClear;
 	}
 }

@@ -22,6 +22,7 @@ public class UsersFilter extends SmscBean
 	private String initialized = null;
 
 	private String mbApply = null;
+	private String mbClear = null;
 	private String mbCancel = null;
 
 
@@ -65,6 +66,14 @@ public class UsersFilter extends SmscBean
 			filter.setLastNameFilter(lastNameFilter);
 			filter.setDepartmentFilter(departmentFilter);
 			return RESULT_DONE;
+		}
+		else if (mbClear != null)
+		{
+			loginFilter = "";
+			firstNameFilter = "";
+			lastNameFilter = "";
+			departmentFilter = "";
+			return RESULT_OK;
 		}
 		else if (mbCancel != null)
 			return RESULT_DONE;
@@ -150,5 +159,15 @@ public class UsersFilter extends SmscBean
 	public void setInitialized(String initialized)
 	{
 		this.initialized = initialized;
+	}
+
+	public String getMbClear()
+	{
+		return mbClear;
+	}
+
+	public void setMbClear(String mbClear)
+	{
+		this.mbClear = mbClear;
 	}
 }

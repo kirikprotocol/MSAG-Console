@@ -127,4 +127,9 @@ public class MaskList
 	{
 		return masks.size() == 0;
 	}
+
+	public void clear()
+	{
+		masks.clear();
+	}
 }

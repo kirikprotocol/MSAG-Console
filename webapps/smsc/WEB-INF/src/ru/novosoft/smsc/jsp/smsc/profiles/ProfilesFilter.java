@@ -22,6 +22,7 @@ public class ProfilesFilter extends SmscBean
 	protected byte reportinfo = -2;
 
 	protected String mbApply = null;
+	protected String mbClear = null;
 	protected String mbCancel = null;
 
 	protected int init(List errors)
@@ -59,6 +60,13 @@ public class ProfilesFilter extends SmscBean
 			filter.setCodepage(codepage);
 			filter.setReportinfo(reportinfo);
 			return RESULT_DONE;
+		}
+		else if (mbClear != null)
+		{
+			masks = new String[0];
+			maskList.clear();
+			codepage = reportinfo = -1;
+			return RESULT_OK;
 		}
 		else if (mbCancel != null)
 			return RESULT_DONE;
@@ -116,5 +124,15 @@ public class ProfilesFilter extends SmscBean
 	public void setReportinfo(byte reportinfo)
 	{
 		this.reportinfo = reportinfo;
+	}
+
+	public String getMbClear()
+	{
+		return mbClear;
+	}
+
+	public void setMbClear(String mbClear)
+	{
+		this.mbClear = mbClear;
 	}
 }

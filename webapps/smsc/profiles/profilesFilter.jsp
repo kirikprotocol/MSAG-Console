@@ -60,6 +60,7 @@ for (int i=0; i<bean.getMasks().length; i++)
 </table>
 <div class=secButtons>
 <input class=btn type=submit name=mbApply value="Apply" title="Apply filter">
+<input class=btn type=submit name=mbClear value="Clear" title="Clear filter">
 <input class=btn type=submit name=mbCancel value="Cancel">
 </div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

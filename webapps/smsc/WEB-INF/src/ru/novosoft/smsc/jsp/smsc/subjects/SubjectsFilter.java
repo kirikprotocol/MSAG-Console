@@ -23,6 +23,7 @@ public class SubjectsFilter extends SmscBean
 	protected Set checkedSmesSet = null;
 
 	protected String mbApply = null;
+	protected String mbClear = null;
 	protected String mbCancel = null;
 
 	protected int init(List errors)
@@ -69,6 +70,14 @@ public class SubjectsFilter extends SmscBean
 			filter.setNames(checkedSubjects);
 			filter.setSmes(checkedSmes);
 			return RESULT_DONE;
+		}
+		else if (mbClear != null)
+		{
+			checkedSubjects = checkedSmes = masks = new String[0];
+
+			checkedSubjectsSet.clear();
+			checkedSmesSet.clear();
+			return RESULT_OK;
 		}
 		else if (mbCancel != null)
 			return RESULT_DONE;
@@ -147,5 +156,15 @@ public class SubjectsFilter extends SmscBean
 	public void setMbCancel(String mbCancel)
 	{
 		this.mbCancel = mbCancel;
+	}
+
+	public String getMbClear()
+	{
+		return mbClear;
+	}
+
+	public void setMbClear(String mbClear)
+	{
+		this.mbClear = mbClear;
 	}
 }

@@ -20,6 +20,7 @@ public class AliasesFilter extends SmscBean
 	protected byte hide = AliasFilter.HIDE_UNKNOWN;
 
 	protected String mbApply = null;
+	protected String mbClear = null;
 	protected String mbCancel = null;
 
 	protected int init(List errors)
@@ -59,6 +60,12 @@ public class AliasesFilter extends SmscBean
 			filter.setAliases(aliases);
 			filter.setHide(hide);
 			return RESULT_DONE;
+		}
+		else if (mbClear != null)
+		{
+			aliases = addresses = new String[0];
+			hide = AliasFilter.HIDE_UNKNOWN;
+			return RESULT_OK;
 		}
 		else if (mbCancel != null)
 			return RESULT_DONE;
@@ -116,5 +123,15 @@ public class AliasesFilter extends SmscBean
 	public void setMbCancel(String mbCancel)
 	{
 		this.mbCancel = mbCancel;
+	}
+
+	public String getMbClear()
+	{
+		return mbClear;
+	}
+
+	public void setMbClear(String mbClear)
+	{
+		this.mbClear = mbClear;
 	}
 }
