@@ -130,10 +130,12 @@ static inline void warning2(const char* fmt,...)
 //  {if (expr) smsc::util::warningImpl("Warning !!! "#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__);}
 
 #if defined ENABLE_FILE_NAME
-#define __warning2__(text,arg...) smsc::util::_trace_cat->warn(text,##arg)
+#define __warning2__(text,arg...) if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN)) smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,text,##arg)
 #else
-#define __warning2__(text,arg...) smsc::util::_trace_cat->warn(text,##arg)
+#define __warning2__(text,arg...) if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN)) smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,text,##arg)
 #endif
+
+#define __log2__(category,priority,text,arg...) if(category->isPriorityEnabled(priority)) category->_log(priority,text,##arg)
 
 #if !defined DISABLE_WATCHDOG
   #define __watchdog__(expr) __watchdog2__(expr,"GAW-GAW")
@@ -250,12 +252,16 @@ static inline void warning2(const char* fmt,...)
     smsc::util::watchtImpl(expr,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
   #define watchtext(expr,len) \
     smsc::util::watchtextImpl(expr,len,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
-  #define trace(text) trace2("%s", text)
+  #define trace(text) if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::DEBUG)) smsc::util::_trace_cat->_log(log4cpp::Priority::DEBUG,text)
   #if defined ENABLE_FILE_NAME
-    #define trace2(format,args...) smsc::util::_trace_cat->debug(format,##args)
+    #define trace2(format,args...) if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::DEBUG)) smsc::util::_trace_cat->_log(log4cpp::Priority::DEBUG,format,##args)
   #else
-    #define trace2(format,args...) smsc::util::_trace_cat->debug(format,##args)
+    #define trace2(format,args...) if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::DEBUG)) smsc::util::_trace_cat->_log(log4cpp::Priority::DEBUG,format,##args)
   #endif
+  #define debug1(category,text) if(category->isPriorityEnabled(log4cpp::Priority::DEBUG)) category->_log(log4cpp::Priority::DEBUG,text)
+  #define debug2(category,format,args...) if(category->isPriorityEnabled(log4cpp::Priority::DEBUG)) category->_log(log4cpp::Priority::DEBUG,format,##args)
+  #define warn1(category,text) if(category->isPriorityEnabled(log4cpp::Priority::WARN)) category->_log(log4cpp::Priority::WARN,text)
+  #define warn2(category,format,args...) if(category->isPriorityEnabled(log4cpp::Priority::WARN)) category->_log(log4cpp::Priority::WARN,format,##args)
 #else
   #define watch(expr)
   #define watchx(expr)
@@ -263,12 +269,20 @@ static inline void warning2(const char* fmt,...)
   #define watchtext(expr)
   #define trace(text)
   #define trace2(format,args...)
+  #define debug1(category,text)
+  #define debug2(category,format,args...)
+  #define warn1(category,text)
+  #define warn2(category,format,args...)
 #endif
 #define __watch__(expr)     watch(expr)
 #define __watchx__(expr)    watchx(expr)
 #define __watcht__(expr)    watcht(expr)
 #define __watchtext__(expr) watchtext(expr)
 #define __trace__(text)     trace(text)
+#define __debug__(category,text)     debug1(category,text)
+#define __debug2__(category,format,args...)     debug2(category,format,##args)
+#define __warn__(category,text)     warn1(category,text)
+#define __warn2__(category,format,args...)     warn2(category,format,##args)
 #define __trace2__(format,args...)     trace2(format,##args)
 #define __trace2_if_fail__(expr,format,args...) \
   {if (!expr) trace2(format,##args);}
@@ -282,7 +296,9 @@ namespace util{
   {
     if (!expr)
     {
-      smsc::util::_trace_cat->warn("\n*%s*<%s(%s):%d>\n\tassertin %s failed\n",
+      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::FATAL))
+         smsc::util::_trace_cat->_log(log4cpp::Priority::FATAL,
+         "\n*%s*<%s(%s):%d>\n\tassertin %s failed\n",
               ASSERT_LOG_DOMAIN,
               file,
               func,
@@ -297,7 +313,8 @@ namespace util{
     if (!expr)
     {
       char throw_message[512];
-      smsc::util::_trace_cat->warn("\n*%.100s*[%d]<%.100s(%.100s):%d>\n\tassertin %.100s failed\n\n",
+      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
+         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,"\n*%.100s*[%d]<%.100s(%.100s):%d>\n\tassertin %.100s failed\n\n",
               ASSERT_LOG_DOMAIN,
               thr_self(),
               file,
@@ -313,7 +330,9 @@ namespace util{
                             const char* file, const char* func, int line) throw()
   {
     if ( !expr )
-                        smsc::util::_trace_cat->warn("*%s*<%s(%s):%d>\n\tassertin %s failed\n",
+      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
+         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+         "*%s*<%s(%s):%d>\n\tassertin %s failed\n",
               ASSERT_LOG_DOMAIN,
               file,
               func,
@@ -324,7 +343,9 @@ namespace util{
   inline void abortIfReached(const char* expr_text,
                           const char* file, const char* func, int line) throw()
   {
-      smsc::util::_trace_cat->warn("\n*%s*<%s(%s):%d>\n\t%s\n",
+      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::FATAL))
+         smsc::util::_trace_cat->_log(log4cpp::Priority::FATAL,
+         "\n*%s*<%s(%s):%d>\n\t%s\n",
               UNREACHABLE_LOG_DOMAIN,
               file,
               func,
@@ -335,23 +356,25 @@ namespace util{
   inline void throwIfReached(const char* expr_text,
                           const char* file, const char* func, int line)
   {
-      char throw_message[512];
-      snprintf(throw_message,512,"\n*%.100s*[%d]<%.100s(%.100s):%d>\n\t%.100s\n\n",
+      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
+         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+         "\n*%.100s*[%d]<%.100s(%.100s):%d>\n\t%.100s\n\n",
               UNREACHABLE_LOG_DOMAIN,
               thr_self(),
               file,
               func,
               line,
               expr_text);
-      smsc::util::_trace_cat->warn(throw_message);
       //throw throw_message;
-                        throw AssertException();
+      throw AssertException();
   }
 
-        inline void warningIfReached(const char* expr_text,
+  inline void warningIfReached(const char* expr_text,
                             const char* file, const char* func, int line) throw()
   {
-      smsc::util::_trace_cat->warn("*%s*<%s(%s):%d>\n\%s\n",
+      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
+         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+         "*%s*<%s(%s):%d>\n\%s\n",
               UNREACHABLE_LOG_DOMAIN,
               file,
               func,
@@ -362,7 +385,9 @@ namespace util{
         inline void watchImpl(bool e, const char* expr,
                         const char* file, const char* func, int line)
   {
-    smsc::util::_trace_cat->warn("*watch*: %s = %s     %s(%s):%d\n",
+      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
+         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+    	 "*watch*: %s = %s     %s(%s):%d\n",
             expr,e?"true":"false",
             #if defined ENABLE_FILE_NAME
               file,
@@ -375,7 +400,9 @@ namespace util{
   inline void watchImpl(int e, const char* expr,
                         const char* file, const char* func, int line)
   {
-    smsc::util::_trace_cat->warn("*watch*: %s = %d     %s(%s):%d\n",
+      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
+         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+         "*watch*: %s = %d     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
               file,
@@ -388,7 +415,9 @@ namespace util{
   inline void watchImpl(unsigned int e, const char* expr,
                         const char* file, const char* func, int line)
   {
-    smsc::util::_trace_cat->warn("*watch*: %s = %d     %s(%s):%d\n",
+      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
+         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+         "*watch*: %s = %d     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
               file,
@@ -401,7 +430,9 @@ namespace util{
   inline void watchxImpl(int e, const char* expr,
                          const char* file, const char* func, int line)
   {
-    smsc::util::_trace_cat->warn("*watch*: %s = %x     %s(%s):%d\n",
+      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
+         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+         "*watch*: %s = %x     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
               file,
@@ -414,7 +445,9 @@ namespace util{
   inline void watchxImpl(unsigned int e, const char* expr,
                          const char* file, const char* func, int line)
   {
-    smsc::util::_trace_cat->warn("*watch*: %s = %x     %s(%s):%d\n",
+      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
+         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+         "*watch*: %s = %x     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
               file,
@@ -427,7 +460,9 @@ namespace util{
   inline void watchImpl(char e, const char* expr,
                         const char* file, const char* func, int line)
   {
-    smsc::util::_trace_cat->warn("*watch*: %s = '%c'     %s(%s):%d\n",
+      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
+         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+         "*watch*: %s = '%c'     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
               file,
@@ -440,7 +475,9 @@ namespace util{
   inline void watchImpl(void* e, const char* expr,
                         const char* file, const char* func, int line)
   {
-    smsc::util::_trace_cat->warn("*watch*: %s = %p     %s(%s):%d\n",
+      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
+         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+         "*watch*: %s = %p     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
               file,
@@ -453,7 +490,9 @@ namespace util{
   inline void watchtImpl(const char* e, const char* expr,
                          const char* file, const char* func, int line)
   {
-    smsc::util::_trace_cat->warn("*watch*: %s = %s     %s(%s):%d\n",
+      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
+         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+         "*watch*: %s = %s     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
               file,
@@ -479,7 +518,9 @@ namespace util{
 
   inline void warningImpl(const char* e, const char* file, const char* func, int line)
   {
-    smsc::util::_trace_cat->warn("*WARNING* [%d %d]: %s\n\t%s(%s):%d\n",thr_self(),time(NULL),e,
+      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
+         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+         "*WARNING* [%d %d]: %s\n\t%s(%s):%d\n",thr_self(),time(NULL),e,
             #if defined ENABLE_FILE_NAME
               file,
             #else
@@ -492,7 +533,9 @@ namespace util{
                            const char* file, const char* func, int line)
   {
     if ( !expr )
-      smsc::util::_trace_cat->warn("*%s*[%d]: %s     %s(%s):%d\n",info,thr_self(),e,
+      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
+         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+         "*%s*[%d]: %s     %s(%s):%d\n",info,thr_self(),e,
             #if defined ENABLE_FILE_NAME
               file,
             #else

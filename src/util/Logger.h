@@ -3,6 +3,7 @@
 
 #include <string>
 #include <log4cpp/Category.hh>
+#include <log4cpp/Priority.hh>
 
 namespace smsc {
 namespace util {

@@ -11,6 +11,9 @@ namespace util {
 bool Logger::isInitialized = false;
 
 log4cpp::Category *_trace_cat;
+log4cpp::Category *_map_cat;
+log4cpp::Category *_mapdlg_cat;
+log4cpp::Category *_mapproxy_cat;
 
 /*!
  * retrieves log4cpp::Category instance for given category name
@@ -51,6 +54,9 @@ void Logger::Init(const std::string &configFileName)
   }
   isInitialized = true;
   _trace_cat=&getCategory("trace");
+  _map_cat=&getCategory("map");
+  _mapdlg_cat=&getCategory("map.dialog");
+  _mapproxy_cat=&getCategory("map.proxy");
 }
 
 /*!
