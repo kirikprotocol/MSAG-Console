@@ -50,17 +50,49 @@ const string DbSmeTestCases::getFromAddress()
 
 const string DbSmeTestCases::getToAddress()
 {
-	__cfg_addr__(dbSmeAlias);
+	__cfg_addr__(dbSmeAddr);
 	AddressValue addrVal;
-	dbSmeAlias.getValue(addrVal);
+	dbSmeAddr.getValue(addrVal);
 	return addrVal;
 }
 
+#define __print__(name) \
+	if (rec->check##name()) { s << " " << rec->get##name(); }
 /**
  * Порядок аргументов: id, int16, int32, flt, dbl, str, dt
  */
-void DbSmeTestCases::sendDbSmePdu(DbSmeTestRecord* rec,
-	const DateFormatter* df, bool sync, uint8_t dataCoding)
+const string DbSmeTestCases::getCmdText(DbSmeTestRecord* rec,
+	const DateFormatter* df)
+{
+	__require__(rec && rec->checkJob());
+	ostringstream s;
+	//установить from-address и to-address
+	rec->setFromAddr(getFromAddress());
+	rec->setToAddr(getToAddress());
+	s << rec->getJob();
+	__print__(Id);
+	__print__(Int8);
+	__print__(Int16);
+	__print__(Int32);
+	__print__(Int64);
+	__print__(Float);
+	__print__(Double);
+	__print__(LongDouble);
+	__print__(String)
+	if (rec->checkQuotedString())
+	{
+		s << " \"" << rec->getQuotedString() << "\"";
+	}
+	if (rec->checkDate())
+	{
+		__require__(df);
+		s << " " << df->format(rec->getDate());
+	}
+	return s.str();
+}
+
+void DbSmeTestCases::sendDbSmePdu(const string& text, DbSmeTestRecord* rec,
+	bool sync, uint8_t dataCoding)
 {
 	__decl_tc__;
 	try
@@ -76,45 +108,6 @@ void DbSmeTestCases::sendDbSmePdu(DbSmeTestRecord* rec,
 			default:
 				__unreachable__("Invalid data coding");
 		}
-		//установить from-address и to-address
-		rec->setFromAddr(getFromAddress());
-		rec->setToAddr(getToAddress());
-		ostringstream s;
-		__require__(rec->checkJob());
-		s << rec->getJob();
-		if (rec->checkId())
-		{
-			s << " " << rec->getId();
-		}
-		if (rec->checkInt16())
-		{
-			s << " " << rec->getInt16();
-		}
-		if (rec->checkInt32())
-		{
-			s << " " << rec->getInt32();
-		}
-		if (rec->checkFloat())
-		{
-			s << " " << rec->getFloat();
-		}
-		if (rec->checkDouble())
-		{
-			s << " " << rec->getDouble();
-		}
-		if (rec->checkString())
-		{
-			s << " " << rec->getString();
-		}
-		if (rec->checkQuotedString())
-		{
-			s << " \"" << rec->getQuotedString() << "\"";
-		}
-		if (rec->checkDate())
-		{
-			__require__(df);
-			s << " " << df->format(rec->getDate());
-		}
 		//создать pdu
 		PduSubmitSm* pdu = new PduSubmitSm();
 		__cfg_addr__(dbSmeAlias);
@@ -122,7 +115,6 @@ void DbSmeTestCases::sendDbSmePdu(DbSmeTestRecord* rec,
 		//установить немедленную доставку
 		pdu->get_message().set_scheduleDeliveryTime("");
 		//текст сообщения
-		const string text = s.str();
 		const string encText = encode(text.c_str(), dataCoding);
 		pdu->get_message().set_shortMessage(encText.c_str(), encText.length());
 		pdu->get_message().set_dataCoding(dataCoding);
@@ -130,8 +122,11 @@ void DbSmeTestCases::sendDbSmePdu(DbSmeTestRecord* rec,
 		PduData::StrProps strProps;
 		strProps["input"] = text;
 		PduData::ObjProps objProps;
-		objProps["dbSmeRec"] = rec;
-		rec->ref();
+		if (rec)
+		{
+			objProps["dbSmeRec"] = rec;
+			rec->ref();
+		}
 		transmitter->sendSubmitSmPdu(pdu, NULL, sync, NULL, &strProps, &objProps, false);
 		__tc_ok__;
 	}
@@ -162,15 +157,15 @@ void DbSmeTestCases::submitCorrectFormatDbSmeCmd(bool sync, uint8_t dataCoding, 
 					rec = dateFormatTc.createJobInput(rand1(4), false, &df);
 					break;
 				case 3: //OtherFormatJob с параметрами
-					rec = otherFormatTc.createJobInput(true);
+					rec = otherFormatTc.createValuesJobInput();
 					break;
 				case 4: //OtherFormatJob без параметров
-					rec = otherFormatTc.createJobInput(false);
+					rec = otherFormatTc.createDefaultsJobInput();
 					break;
 				default:
 					__unreachable__("Invalid num");
 			}
-			sendDbSmePdu(rec, df, sync, dataCoding);
+			sendDbSmePdu(getCmdText(rec, df), rec, sync, dataCoding);
 		}
 		catch(...)
 		{
@@ -204,7 +199,7 @@ void DbSmeTestCases::submitCorrectSelectDbSmeCmd(bool sync,
 				default:
 					__unreachable__("Invalid num");
 			}
-			sendDbSmePdu(rec, NULL, sync, dataCoding);
+			sendDbSmePdu(getCmdText(rec, NULL), rec, sync, dataCoding);
 		}
 		catch(...)
 		{
@@ -247,7 +242,7 @@ void DbSmeTestCases::submitCorrectInsertDbSmeCmd(bool sync, uint8_t dataCoding, 
 				default:
 					__unreachable__("Invalid num");
 			}
-			sendDbSmePdu(rec, &df, sync, dataCoding);
+			sendDbSmePdu(getCmdText(rec, &df), rec, sync, dataCoding);
 		}
 		catch(...)
 		{
@@ -279,7 +274,7 @@ void DbSmeTestCases::submitCorrectUpdateDbSmeCmd(bool sync, uint8_t dataCoding, 
 				default:
 					__unreachable__("Invalid num");
 			}
-			sendDbSmePdu(rec, &df, sync, dataCoding);
+			sendDbSmePdu(getCmdText(rec, &df), rec, sync, dataCoding);
 		}
 		catch(...)
 		{
@@ -296,7 +291,7 @@ void DbSmeTestCases::submitCorrectDeleteDbSmeCmd(bool sync, uint8_t dataCoding)
 	try
 	{
 		DbSmeTestRecord* rec = deleteTc.createDeleteAllJobInput();
-		sendDbSmePdu(rec, NULL, sync, dataCoding);
+		sendDbSmePdu(getCmdText(rec, NULL), rec, sync, dataCoding);
 	}
 	catch(...)
 	{
@@ -343,7 +338,7 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	{
 		otherFormatTc.processJobOutput(text, rec, monitor);
 	}
-	else if (rec->getJob() == "InsertJob")
+	else if (rec->getJob().find("InsertJob") != string::npos)
 	{
 		insertTc.processJobOutput(text, rec, monitor);
 	}
