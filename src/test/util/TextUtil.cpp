@@ -27,7 +27,7 @@ const string encode(const char* text, uint8_t dataCoding)
 
 const string decode(const char* text, int len, uint8_t dataCoding)
 {
-	return text;
+	return string(text, len);
 }
 
 vector<int> compare(uint8_t dc1, const char* str1, int len1,
