@@ -2443,7 +2443,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
   {
     smsc->getTempStore().Delete(t.msgId);
     int status=Status::OK;
-    if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK)
+    if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK ||
+       sms.hasBinProperty(Tag::SMSC_CONCATINFO))
     {
       try{
         store->createSms(sms,t.msgId,smsc::store::CREATE_NEW);
