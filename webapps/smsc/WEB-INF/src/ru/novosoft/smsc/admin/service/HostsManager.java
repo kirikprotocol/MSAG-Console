@@ -19,7 +19,7 @@ import java.util.*;
  * Date: Jan 20, 2003
  * Time: 6:23:33 PM
  */
-public class hOstsManager
+public class HostsManager
 {
 	private Category logger = Category.getInstance(this.getClass());
 
