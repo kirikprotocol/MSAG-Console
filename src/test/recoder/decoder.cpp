@@ -4,6 +4,7 @@
 #include <fstream>
 
 using namespace std;
+using namespace smsc::smpp::DataCoding;
 using namespace smsc::test::util;
 
 int main(int argc, char* argv[])
@@ -31,13 +32,40 @@ int main(int argc, char* argv[])
 	//__trace2__("tmp len = %d", tmp.length());
 	const string str = decode(tmp.c_str(), tmp.length(), dataCoding, false);
 	cout << "output = \"" << str << "\"" << endl;
-	if (argc == 4 && dataCoding == 8)
+	for (int i = 3; i < argc; i++)
 	{
-		char buf[(int) (1.5 * str.length())];
-		int len = Transliterate(str.c_str(), str.length(),
-			CONV_ENCODING_CP1251, buf, sizeof(buf));
-		buf[len] = 0;
-		cout << "translit = \"" << buf << "\"" << endl;
+		if (string(argv[i]) == "-t" && dataCoding == 8)
+		{
+			char buf[(int) (1.5 * str.length())];
+			int len = Transliterate(str.c_str(), str.length(),
+				CONV_ENCODING_CP1251, buf, sizeof(buf));
+			buf[len] = 0;
+			cout << "translit = \"" << buf << "\"" << endl;
+		}
+		if (string(argv[i]) == "-c")
+		{
+			if (dataCoding == DEFAULT || dataCoding == SMSC7BIT)
+			{
+				int specialSymb = 0;
+				for (int j = 0; j < str.length(); j++)
+				{
+					switch (str[j])
+					{
+						case '|':
+						case '^':
+						case '{':
+						case '}':
+						case '[':
+						case ']':
+						case '~':
+						case '\\':
+							specialSymb++;
+							break;
+					}
+				}
+				cout << "Number of special symbols = " << specialSymb << endl;
+			}
+		}
 	}
 	return 0;
 }
