@@ -79,13 +79,11 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& text,
 			{
 				__require__(!intProps->count("profilerTc.codePage"));
 				profile.reportoptions = (*intProps)["profilerTc.reportOptions"];
-				__trace2__("update pdofile: new report options = %d", profile.reportoptions);
 			}
 			if (intProps->count("profilerTc.codePage"))
 			{
 				__require__(!intProps->count("profilerTc.reportOptions"));
 				profile.codepage = (*intProps)["profilerTc.codePage"];
-				__trace2__("update pdofile: new code page = %d", profile.codepage);
 			}
 			fixture->profileReg->putProfile(fixture->smeAddr, profile);
 		}

@@ -747,7 +747,7 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 		if (help)
 		{
 			help = false;
-			cout << "conf <transceivers> [transmitters = 1] [receivers = 1] [notConnected = 1] [errSme = 1] - generate config files" << endl;
+			cout << "conf <transceivers> [transmitters] [receivers] [notConnected] [errSme] - generate config files" << endl;
 			cout << "test <start|pause|resume> - pause/resume test execution" << endl;
 			cout << "stat - print statistics" << endl;
 			cout << "chklist - save checklist" << endl;
@@ -764,34 +764,33 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 		if (cmd == "conf")
 		{
 			int transceivers = -1; //required
-			int transmitters = 1, receivers = 1, notConnected = 1, errSme = 1; //optional
 			is >> transceivers;
-			is >> transmitters;
-			is >> receivers;
-			is >> notConnected;
-			is >> errSme;
 			if (transceivers < 0)
 			{
 				cout << "Required param <transceivers> is missing" << endl;
 				continue;
 			}
-			else if (transceivers >= 0 && transmitters >= 0 &&
-					 receivers >= 0 && notConnected >= 0 && errSme >= 0)
-			{
-				sme = genConfig(transceivers, transmitters,
-					receivers, notConnected, errSme, smscHost, smscPort);
-				cout << "Config generated: transceivers = " << transceivers <<
-					", transmitters = " << transmitters <<
-					", receivers = " << receivers <<
-					", notConnected = " << notConnected <<
-					", errSme = " << errSme << endl;
-				continue;
-			}
-			else
+			int transmitters = 1 + transceivers / 7;
+			int receivers = 1 + transceivers / 7;
+			int notConnected = 1 + transceivers / 7;
+			int errSme = 1 + transceivers / 4;
+			is >> transmitters;
+			is >> receivers;
+			is >> notConnected;
+			is >> errSme;
+			if (transmitters < 0 || receivers < 0 || notConnected < 0 && errSme < 0)
 			{
 				cout << "All params must be greater or equal to 0" << endl;
 				continue;
 			}
+			sme = genConfig(transceivers, transmitters,
+				receivers, notConnected, errSme, smscHost, smscPort);
+			cout << "Config generated: transceivers = " << transceivers <<
+				", transmitters = " << transmitters <<
+				", receivers = " << receivers <<
+				", notConnected = " << notConnected <<
+				", errSme = " << errSme << endl;
+			continue;
 		}
 		else if (cmd == "test")
 		{

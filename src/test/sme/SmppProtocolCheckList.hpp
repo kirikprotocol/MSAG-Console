@@ -28,6 +28,8 @@ void bindTc()
 		"Регистрация трансмиттера с помощью bind_transmitter pdu");
 	__reg_tc__("bind.correct.transceiver",
 		"Регистрация трансивера с помощью bind_transceiver pdu");
+	__reg_tc__("bind.correct.afterUnbind",
+		"Отправка bind реквеста после unbind для того же самого tcp/ip соединения");
 	//bind.incorrect
 	__reg_tc__("bind.incorrect",
 		"Установление IP соединения с SC и регистрация с неправильными параметрами");
@@ -83,6 +85,8 @@ void bindTc()
 void unbindTc()
 {
 	__reg_tc__("unbind", "Завершение соединения с SC и unbind тест кейсы");
+	__reg_tc__("unbind.secondUnbind",
+		"Отправка повторного unbind реквеста");
 	__reg_tc__("unbind.resp",
 		"На unbind реквест SC отправляет unbind_resp респонс");
 	__reg_tc__("unbind.resp.checkDuplicates",
