@@ -57,7 +57,7 @@ static USSD_MAP ussd_map;
 static Mutex x_momap_lock;
 static XMOMAP x_momap;
 
-static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc);
+static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc, const unsigned routeErr);
 static void PauseOnImsiReq(MapDialog* map);
 static const string SC_ADDRESS() { return MapDialogContainer::GetSCAdress(); }
 static const string USSD_ADDRESS() { return MapDialogContainer::GetUSSDAdress(); }

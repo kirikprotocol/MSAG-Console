@@ -785,7 +785,7 @@ void Smsc::run()
     accstarted.Wait();
     __trace__("SMPPIO started");
     Event mapiostarted;
-    MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr,ussdCenterAddr,ussdSSN,busyMTDelay,lockedByMODelay,MOLockTimeout);
+    MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr,ussdCenterAddr,ussdSSN,busyMTDelay,lockedByMODelay,MOLockTimeout,allowCallBarred);
     tp.startTask(mapio);
     mapiostarted.Wait();
     __trace__("MAPIO started");
