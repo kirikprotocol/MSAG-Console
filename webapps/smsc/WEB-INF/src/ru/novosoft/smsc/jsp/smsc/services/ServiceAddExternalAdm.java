@@ -12,6 +12,7 @@ import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.Functions;
+import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.util.jsp.MultipartDataSource;
 import ru.novosoft.util.jsp.MultipartServletRequest;
@@ -19,11 +20,11 @@ import ru.novosoft.util.jsp.MultipartServletRequest;
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
-import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.*;
+import java.util.zip.*;
 
-public class ServiceAddExternalAdm extends SmeBean {
+public class ServiceAddExternalAdm extends SmeBean
+{
   private final static String SYSTEM_ID_PARAM_NAME = "system id";
 
   private byte stage = 0;
@@ -93,7 +94,8 @@ public class ServiceAddExternalAdm extends SmeBean {
       if (dataFile == null)
         return error(SMSCErrors.error.services.serviceDistributiveNotAttached);
       if (dataFile.getContentType().equals("application/x-zip-compressed")) {
-        incomingZip = Functions.saveFileToTemp(dataFile.getInputStream(), "SMSC_SME_distrib_", ".zip.tmp");
+        incomingZip = Functions.saveFileToTemp(dataFile.getInputStream(), new File(WebAppFolders.getWorkFolder(), "SMSC_SME_distrib.zip.tmp"));
+        incomingZip.deleteOnExit();
         dataFile.close();
         dataFile = null;
 

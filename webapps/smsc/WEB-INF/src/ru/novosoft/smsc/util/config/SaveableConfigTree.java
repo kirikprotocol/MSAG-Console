@@ -8,12 +8,11 @@ package ru.novosoft.smsc.util.config;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.*;
 
-public class SaveableConfigTree {
+public class SaveableConfigTree
+{
   private Map sections = new HashMap();
   private Map params = new HashMap();
 
@@ -46,11 +45,6 @@ public class SaveableConfigTree {
     }
   }
 
-  public void write(OutputStream out, String prefix) throws Config.WrongParamTypeException, IOException
-  {
-    write(new PrintWriter(new OutputStreamWriter(out)), prefix);
-  }
-
   public void write(PrintWriter out, String prefix) throws Config.WrongParamTypeException, IOException
   {
     writeParams(out, prefix, params);
@@ -62,7 +56,8 @@ public class SaveableConfigTree {
   private void writeParams(PrintWriter out, String prefix, Map parameters) throws Config.WrongParamTypeException
   {
     List paramNames = new ArrayList(parameters.keySet());
-    Collections.sort(paramNames, new Comparator() {
+    Collections.sort(paramNames, new Comparator()
+    {
       public int compare(Object o1, Object o2)
       {
         String s1 = (String) o1;
@@ -91,7 +86,8 @@ public class SaveableConfigTree {
   private void writeSections(PrintWriter out, String prefix, Map secs) throws IOException, Config.WrongParamTypeException
   {
     List secNames = new ArrayList(secs.keySet());
-    Collections.sort(secNames, new Comparator() {
+    Collections.sort(secNames, new Comparator()
+    {
       public int compare(Object o1, Object o2)
       {
         String s1 = (String) o1;

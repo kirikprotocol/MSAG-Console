@@ -97,7 +97,9 @@ public class UserManager implements DataSource
 	protected void store()
 			throws IOException
 	{
-		PrintWriter out = new PrintWriter(new FileOutputStream(configFile));
+    File configNew = Functions.createNewFilenameForSave(configFile);
+
+		PrintWriter out = new PrintWriter(new FileWriter(configNew));
 		Functions.storeConfigHeader(out, "users", "users.dtd", System.getProperty("file.encoding"));
 		for (Iterator i = new SortedList(users.keySet()).iterator(); i.hasNext();)
 		{
@@ -108,6 +110,8 @@ public class UserManager implements DataSource
 		Functions.storeConfigFooter(out, "users");
 		out.flush();
 		out.close();
+
+    Functions.renameNewSavedFileToOriginal(configNew, configFile);
 	}
 
 	protected void load(File file)

@@ -105,6 +105,7 @@ if (isServiceStatusNeeded || (ServiceIDForShowStatus != null && ServiceIDForShow
 			main_menu_submenu_i_fu(out, "/smsc_service/logging.jsp",   "MENU0_SMSC_LOGGING",     "Logging");
 			main_menu_submenu_item(out, "/users",                      "MENU0_USERS",            "Users");
 			main_menu_submenu_item(out, "/locale_resources",           "MENU0_LOCALE_RESOURCES", "Resources");
+      //main_menu_submenu_item(out, "/journal",                    "MENU0_JOURNAL",          "Journal");
 			main_menu_end_item(out);
 
 			main_menu_begin_item(out, "MENU0_Statistics_menu", "MENU0_Statistics_submenu", "Statistics");

@@ -33,7 +33,7 @@ public interface ResourcesManager
 	 * @param resourceFile existing file with resources for this locale
 	 * @return true, if locale file sucessfully added
 	 */
-	boolean add(String localeName, File resourceFile);
+	void add(String localeName, File resourceFile) throws IOException;
 
 	/**
 	 * @return список имён локалей (<code>String</code>), для которых есть ресурсы

@@ -5,7 +5,9 @@
 */
 package ru.novosoft.smsc.util.config;
 
-import org.w3c.dom.*;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.xml.Utils;
@@ -252,16 +254,11 @@ public class Config implements Cloneable
    * @throws IOException
    * @throws WrongParamTypeException
    */
-  public synchronized void save(File configFile) throws IOException, WrongParamTypeException
+  public synchronized void save(final File configFile) throws IOException, WrongParamTypeException
   {
     if (configFile == null)
       throw new NullPointerException("config file not specified");
-    File c = new File(configFile.getAbsolutePath());
-    try {
-      save(configFile, "ISO-8859-1");
-    } finally {
-      configFile = c;
-    }
+    save(configFile, "ISO-8859-1");
   }
 
   /**
@@ -275,17 +272,11 @@ public class Config implements Cloneable
    * Config(Reader configReader), то будьте добры для записи использовать метод save(File configFileToSave, String encoding)
    * @see #save(File configFileToSave, String encoding)
    */
-  public synchronized void save(String encoding) throws IOException, WrongParamTypeException, NullPointerException
+  public synchronized void save(final String encoding) throws IOException, WrongParamTypeException, NullPointerException
   {
     if (configFile == null)
       throw new NullPointerException("config file not specified");
-    String configFileName = configFile.getAbsolutePath();
-    try {
-      save(configFile, encoding);
-    } finally {
-      System.err.println("config filename: " + configFile.getAbsolutePath());
-      configFile = new File(configFileName);
-    }
+    save(configFile, encoding);
   }
 
   /**
@@ -297,25 +288,20 @@ public class Config implements Cloneable
    * @throws IOException
    * @throws WrongParamTypeException
    */
-  public synchronized void save(File configFileToSave, String encoding) throws IOException, WrongParamTypeException
+  public synchronized void save(final File configFileToSave, final String encoding) throws IOException, WrongParamTypeException
   {
+    File configXmlNew = Functions.createNewFilenameForSave(configFileToSave);
+
+    // save new config to temp file
     SaveableConfigTree tree = new SaveableConfigTree(this);
-    File tmpFile = File.createTempFile(configFileToSave.getName() + '_' + System.currentTimeMillis() + '_', ".tmp", configFileToSave.getParentFile());
-    PrintWriter out = new PrintWriter(new FileWriter(tmpFile));
-    Functions.storeConfigHeader(out, "config", "configuration.dtd", encoding);
-    //// C++ code doesn't know about other codings // System.getProperty("file.encoding");
+    PrintWriter out = new PrintWriter(new FileWriter(configXmlNew));
+    Functions.storeConfigHeader(out, "config", "configuration.dtd", encoding); // C++ code doesn't know about other codings // System.getProperty("file.encoding");
     tree.write(out, "  ");
     Functions.storeConfigFooter(out, "config");
     out.flush();
     out.close();
 
-    String configFilename = configFileToSave.getAbsolutePath();
-    final File backFile = Functions.createTempFilename(configFileToSave.getName() + '.', ".bak", configFileToSave.getParentFile());
-    if (!configFileToSave.renameTo(backFile))
-      throw new IOException("Couldn't rename old config file \"" + configFileToSave.getAbsolutePath() + "\" to backup file \"" + backFile.getAbsolutePath() + '"');
-    if (!tmpFile.renameTo(new File(configFilename)))
-      throw new IOException("Couldn't rename new file \"" + tmpFile.getAbsolutePath() + "\" to old config file \"" + configFilename + '"');
-    backFile.delete();
+    Functions.renameNewSavedFileToOriginal(configXmlNew, configFileToSave);
   }
 
   public Collection getSectionChildShortParamsNames(String sectionName)

@@ -4,7 +4,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Edit route";
-switch(bean.process(appContext, errorMessages, request.getParameterMap(), loginedUserPrincipal))
+switch(bean.process(appContext, errorMessages, request.getParameterMap(), loginedUserPrincipal, session != null ? session.getId() : "unknown"))
 {
 	case RoutesEdit.RESULT_DONE:
 		response.sendRedirect("index.jsp");

@@ -9,6 +9,7 @@ import ru.novosoft.smsc.admin.console.Console;
 import ru.novosoft.smsc.admin.route.RouteSubjectManagerImpl;
 import ru.novosoft.smsc.admin.resources.ResourcesManager;
 import ru.novosoft.smsc.admin.resources.ResourcesManagerImpl;
+import ru.novosoft.smsc.admin.journal.Journal;
 import ru.novosoft.smsc.perfmon.PerfServer;
 import ru.novosoft.smsc.util.*;
 import ru.novosoft.smsc.util.config.Config;
@@ -39,6 +40,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 	private Map userPreferences = new HashMap();
 	private Statuses statuses = new StatusesImpl();
 	private LocaleMessages localeMessages = null;
+  private Journal journal = new Journal();
 
 	private Console console = null;
 
@@ -245,11 +247,9 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 		return localeMessages.getString(locale, key);
 	}
 
-/*
-	public LocaleMessages getLocaleMessages()
-	{
-		return localeMessages;
-	}
-*/
+  public Journal getJournal()
+  {
+    return journal;
+  }
 }
 

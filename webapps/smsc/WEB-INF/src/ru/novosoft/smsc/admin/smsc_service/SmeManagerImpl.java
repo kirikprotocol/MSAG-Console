@@ -118,14 +118,18 @@ public class SmeManagerImpl implements SmeManager {
   public synchronized void save() throws AdminException
   {
     try {
-      PrintWriter out = new PrintWriter(new FileOutputStream(smeConfigFile), true);
+      File newFile = Functions.createNewFilenameForSave(smeConfigFile);
+      PrintWriter out = new PrintWriter(new FileWriter(newFile), true);
       Functions.storeConfigHeader(out, "records", "SmeRecords.dtd");
       smes.store(out);
       Functions.storeConfigFooter(out, "records");
       out.flush();
       out.close();
+      Functions.renameNewSavedFileToOriginal(newFile, smeConfigFile);
     } catch (FileNotFoundException e) {
       throw new AdminException("Couldn't save new smes settings: Couldn't write to destination config file: " + e.getMessage());
+    } catch (IOException e) {
+      throw new AdminException("Couldn't save new smes settings: " + e.getMessage());
     }
   }
 

@@ -38,6 +38,10 @@ page_menu_end(out);
 	<th>host port:</th>
 	<td><input class=txt name=port value="<%=bean.getPort()%>" validation="port" onkeyup="resetValidation(this)"></td>
 </tr>
+<tr class=row0>
+	<th>host services folder:</th>
+	<td><input class=txt name=hostServicesFolder value="<%=bean.getHostServicesFolder()%>"></td>
+</tr>
 </table>
 </div>
 <%

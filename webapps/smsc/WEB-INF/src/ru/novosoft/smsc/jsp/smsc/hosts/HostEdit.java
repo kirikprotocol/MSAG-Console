@@ -13,6 +13,7 @@ public class HostEdit extends SmscBean
 {
 	private String hostName = null;
 	private int port = -1;
+  private String hostServicesFolder = null;
 	private String mbSave = null;
 	private String mbCancel = null;
 
@@ -64,6 +65,10 @@ public class HostEdit extends SmscBean
 			{
 				if (hostsManager.getHostPort(hostName) != port)
 					return error(SMSCErrors.error.notYetImplemented);
+        if (hostServicesFolder == null || hostServicesFolder.length() == 0)
+          return error(SMSCErrors.error.hosts.servicesFolderNotSpecified);
+        if (true)
+          return error(SMSCErrors.error.notYetImplemented, "services folder...");
 			}
 			catch (AdminException e)
 			{
@@ -86,4 +91,14 @@ public class HostEdit extends SmscBean
 	{
 		this.mbCancel = mbCancel;
 	}
+
+  public String getHostServicesFolder()
+  {
+    return hostServicesFolder;
+  }
+
+  public void setHostServicesFolder(String hostServicesFolder)
+  {
+    this.hostServicesFolder = hostServicesFolder;
+  }
 }

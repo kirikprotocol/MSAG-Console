@@ -6,6 +6,7 @@
 package ru.novosoft.smsc.jsp.smsc;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.Statuses;
@@ -82,6 +83,7 @@ public class Index extends SmscBean {
 			statuses.setRoutesSaved(true);
       statuses.setSubjectsChanged(false);
 			//statuses.setServicesChanged(false);
+      appContext.getJournal().clear(SubjectTypes.TYPE_route);
 
 			return RESULT_OK;
 		} catch (Throwable t) {

@@ -1,15 +1,15 @@
 package ru.novosoft.smsc.util;
 
-import ru.novosoft.smsc.jsp.SMSCAppContext;
+import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
-
-import org.apache.log4j.Category;
+import java.util.zip.*;
 
 /**
  * Created by igork
@@ -57,13 +57,10 @@ public class Functions
     in.close();
   }
 
-  public static File saveFileToTemp(InputStream in,
-                                    String prefix, //"SMSC_SME_distrib_"
-                                    String sufffix //".zip.tmp"
-                                    )
+  public static File saveFileToTemp(InputStream in, File file)
           throws IOException
   {
-    File tmpFile = File.createTempFile(prefix, sufffix);
+    File tmpFile = Functions.createNewFilenameForSave(file);
     OutputStream out = new BufferedOutputStream(new FileOutputStream(tmpFile));
 
     byte buffer[] = new byte[2048];
@@ -131,10 +128,42 @@ public class Functions
 
   public static synchronized File createTempFilename(String prefix, String suffix, File directory)
   {
-    File file = new File(directory, prefix + (filenameCounter++));
+    File file = new File(directory, prefix + suffix);
     while (file.exists())
-      file = new File(directory, prefix + (filenameCounter++));
+      file = new File(directory, prefix + (filenameCounter++) + suffix);
     return file;
+  }
+
+  private static final DateFormat suffixDateFormat = new SimpleDateFormat(".dd.MM.yyyy.HH.mm.ss.SSS.'bak'");
+
+  public static synchronized File createNewFilenameForSave(final File filenameToSave)
+  {
+    final String suffix = suffixDateFormat.format(new Date());
+    final File directory = filenameToSave.getParentFile();
+    final String filename = filenameToSave.getName() + ".new";
+
+    // create temp file for new config file
+    File newFilename = new File(directory, filename);
+    if (newFilename.exists())
+      newFilename = Functions.createTempFilename(filename, suffix, directory);
+
+    return newFilename;
+  }
+
+  public static final void renameNewSavedFileToOriginal(File newCreatedFile, File oldFileRenameTo) throws IOException
+  {
+    final String suffix = suffixDateFormat.format(new Date());
+
+    // rename old config file to bakup file
+    String oldFilename = oldFileRenameTo.getAbsolutePath();
+    final File backFile = Functions.createTempFilename(oldFileRenameTo.getName(), suffix, oldFileRenameTo.getParentFile());
+    if (!new File(oldFilename).renameTo(backFile))
+      throw new IOException("Couldn't rename old file \"" + oldFilename + "\" to backup file \"" + backFile.getAbsolutePath() + '"');
+
+    //rename temp new file to desired file
+    final String newFilename = newCreatedFile.getAbsolutePath();
+    if (!new File(newFilename).renameTo(oldFileRenameTo))
+      throw new IOException("Couldn't rename new file \"" + newFilename + "\" to old file \"" + oldFilename + '"');
   }
 
   public static Date truncateTime(Date dateTime)

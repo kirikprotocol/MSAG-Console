@@ -6,6 +6,8 @@
 package ru.novosoft.smsc.jsp.smsc.routes;
 
 import ru.novosoft.smsc.admin.route.*;
+import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
@@ -85,7 +87,7 @@ public class RoutesEdit extends RouteBody
     return result;
   }
 
-  public int process(SMSCAppContext appContext, List errors, Map requestParameters, java.security.Principal loginedPrincipal)
+  public int process(SMSCAppContext appContext, List errors, Map requestParameters, java.security.Principal loginedPrincipal, String sessionId)
   {
     int result = super.process(appContext, errors, loginedPrincipal);
     if (result != RESULT_OK)
@@ -118,12 +120,12 @@ public class RoutesEdit extends RouteBody
     if (mbCancel != null)
       return RESULT_DONE;
     else if (mbSave != null)
-      return save();
+      return save(loginedPrincipal, sessionId);
 
     return result;
   }
 
-  protected int save()
+  protected int save(java.security.Principal loginedPrincipal, String sessionId)
   {
     if (routeId == null || routeId.length() <= 0 || oldRouteId == null || oldRouteId.length() <= 0)
       return error(SMSCErrors.error.routes.nameNotSpecified);
@@ -167,6 +169,10 @@ public class RoutesEdit extends RouteBody
 
       routeSubjectManager.getRoutes().remove(oldRouteId);
       routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId, deliveryMode, forwardTo));
+      if (oldRouteId.equals(routeId))
+        appContext.getJournal().append(loginedPrincipal.getName(), sessionId, SubjectTypes.TYPE_route, routeId, Actions.ACTION_MODIFY, new Date());
+      else
+        appContext.getJournal().append(loginedPrincipal.getName(), sessionId, SubjectTypes.TYPE_route, routeId, Actions.ACTION_MODIFY, new Date(), "old route ID", oldRouteId);
       appContext.getStatuses().setRoutesChanged(true);
       return RESULT_DONE;
     } catch (Throwable e) {

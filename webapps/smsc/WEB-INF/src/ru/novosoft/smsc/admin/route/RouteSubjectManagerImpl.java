@@ -116,21 +116,26 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager
     }
   }
 
-  private void saveToFile(String file) throws AdminException
+  private void saveToFile(String filename) throws AdminException
   {
     try
     {
-      PrintWriter out = new PrintWriter(new FileOutputStream(
-          new File(WebAppFolders.getSmscConfFolder(), file)), true);
+      final File file = new File(WebAppFolders.getSmscConfFolder(), filename);
+      final File newFile = Functions.createNewFilenameForSave(file);
+      PrintWriter out = new PrintWriter(new FileWriter(newFile));
       Functions.storeConfigHeader(out, "routes", "routes.dtd");
       subjects.store(out);
       routes.store(out);
       Functions.storeConfigFooter(out, "routes");
+      out.flush();
       out.close();
+      Functions.renameNewSavedFileToOriginal(newFile, file);
     }
     catch (FileNotFoundException e)
     {
-      throw new AdminException("Couldn't save new routes settings: Couldn't write to destination config file: " + e.getMessage());
+      throw new AdminException("Couldn't save new routes settings: Couldn't write to destination config filename: " + e.getMessage());
+    } catch (IOException e) {
+      throw new AdminException("Couldn't save new routes settings: " + e.getMessage());
     }
   }
 
