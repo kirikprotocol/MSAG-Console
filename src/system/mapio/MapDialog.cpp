@@ -682,7 +682,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
         memcpy(pdu_ptr+1,text,udh_len+1);
         unsigned x = (udh_len+1)*8;
         if ( x%7 != 0 ) x+=7-(x%7);
-        unsigned symbols = user_data_len-x/7;
+        unsigned symbols = text_len-udh_len-1;
         __trace2__("MAP::mkDeliverPDU: text symbols 0x%x",symbols);
         __trace2__("MAP::mkDeliverPDU: text bit offset 0x%x",x-(udh_len+1)*8);
         unsigned _7bit_text_len = ConvertSMSC7bit27bit(
