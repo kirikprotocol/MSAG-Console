@@ -77,6 +77,16 @@ function setSort(sorting)
 	opForm.submit();
 	return false;
 }
+function setFilter(filtering)
+{
+	if (filtering == "<%=bean.getFilter()%>")
+		opForm.sort.value = "-<%=bean.getSort()%>";
+	else
+		opForm.sort.value = sorting;
+	opForm.submit();
+	return false;
+}
+
 function clickClickable(headId, bodyId)
 {
   var _head = document.all(headId);
@@ -98,9 +108,12 @@ function clickClickable(headId, bodyId)
 Filter By:
 
 <%
-java.util.HashMap a = new java.util.HashMap();
-// a.put("multiple", null);
- a.put("onchange", "return setSort('Route ID')");
+java.util.HashMap as = new java.util.HashMap();
+// as.put("multiple", null);
+ as.put("onchange", "return setSort('Route ID')");
+java.util.HashMap aq = new java.util.HashMap();
+// aq.put("multiple", null);
+ aq.put("onenter", "return setSort('Route ID')");
 
 java.util.Hashtable o = new java.util.Hashtable();
 o.put("name", "1");
@@ -111,7 +124,7 @@ o.put("billing", "5");
 o.put("archiving", "6");
 %>
 <input:select name="mbFilter" default="1"
-    attributes="<%= a %>" options="<%= o %>"  />
+    attributes="<%= as %>" options="<%= o %>"  />
     &nbsp; Query: &nbsp;<input:text name="mbQuery"  />
 
 <br>
