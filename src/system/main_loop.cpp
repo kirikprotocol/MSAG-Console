@@ -155,8 +155,8 @@ void Smsc::mainLoop()
     {
       case __CMD__(SUBMIT):
       {
-        __trace2__("main loop submit: seq:%d",cmd->get_dialogId());
         id=store->getNextId();
+        __trace2__("main loop submit: seq=%d, id=%lld",cmd->get_dialogId(),id);
         break;
       }
       case __CMD__(DELIVERY_RESP):

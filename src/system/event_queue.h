@@ -82,6 +82,7 @@ class EventQueue
     {
       CmdRecord** cmd = &cmds;
       unsigned long t = time(0);
+      __trace2__("try to select command for %p(%lld)",this,msgId);
       while(*cmd)
       {
         if ( StateChecker::commandHasTimeout((*cmd)->command) )
@@ -89,6 +90,7 @@ class EventQueue
           if ( t > ((*cmd)->timeout) )
           {
             // remove command
+            __trace2__("delete command:%lld (%lu/%lu)",msgId,t,(*cmd)->timeout);
             CmdRecord* tmp = *cmd;
             *cmd = (*cmd)->next;
             delete tmp;
@@ -113,14 +115,30 @@ class EventQueue
 
   class HashTable
   {
+  public:
     static const int TABLE_SIZE = MAX_COMMAND_PROCESSED*LOCK_LIFE_LENGTH;
     Locker* table[TABLE_SIZE];
     int count;
-  public:
     HashTable()
     {
       memset(table,0,sizeof(Locker*)*TABLE_SIZE);
       count=0;
+    }
+    ~HashTable()
+    {
+      int i;
+      Locker *l,*tmp;
+      for(i=0;i<TABLE_SIZE;i++)
+      {
+        l=table[i];
+        while(l)
+        {
+          tmp=l->next_hash;
+          __trace2__("deleting in hash destructor:msgid=%lld",l->msgId);
+          delete l;
+          l=tmp;
+        }
+      }
     }
     void put(MsgIdType key,Locker* value)
     {
@@ -132,7 +150,7 @@ class EventQueue
       else value->next_hash = 0;
       table[idx] = value;
       count++;
-      __trace2__("put locker(%lld) hash count:%d",key,count);
+      __trace2__("put locker %p(key=%lld) hash count:%d",value,key,count);
     }
     Locker* get(MsgIdType key)
     {
@@ -177,30 +195,29 @@ public:
   __synchronized__
     __trace2__("enqueue:%lld",msgId);
     Locker* locker = hash.get(msgId);
+    __trace2__("enq: first=%p, last=%p, lock=%p",
+      first_unlocked,last_unlocked,locker);
     if ( !locker )
     {
       locker = new Locker;
       hash.put(msgId,locker);
       locker->state = StateTypeValue::UNKNOWN_STATE;
-    }
-    locker->msgId = msgId;
-    locker->push_back(new CmdRecord(command));
-		locker->next_unlocked=0;
-    if ( !locker->locked )
-    {
       if ( last_unlocked )
       {
         last_unlocked->next_unlocked = locker;
         last_unlocked=locker;
+        locker->next_unlocked=0;
       }
-			else
+      else
       {
         __require__(first_unlocked == 0);
-				first_unlocked = last_unlocked = locker;
+        first_unlocked = last_unlocked = locker;
       }
-      event.Signal();
     }
+    locker->msgId = msgId;
+    locker->push_back(new CmdRecord(command));
     __trace2__("enqueue: last unlocked=%p",last_unlocked);
+    event.Signal();
   }
 
 
@@ -218,37 +235,72 @@ public:
       __synchronized__
         trace("selanddeq: got mutex");
         Locker* prev = 0;
+        {
+          Locker *iter1,*iter2;
+          int i;
+          for(i=0;i<HashTable::TABLE_SIZE;i++)
+          {
+            iter1=hash.table[i];
+            while(iter1)
+            {
+              if(!iter1->locked)
+              {
+                int ok=0;
+                iter2=first_unlocked;
+                while(iter2)
+                {
+                  if(iter2==iter1)
+                  {
+                    ok=1;
+                    break;
+                  }
+                  iter2=iter2->next_unlocked;
+                }
+                if(!ok)
+                {
+                  __watch__(iter1);
+                  __watch__(iter2);
+                  __require__(ok);
+                }
+              }
+              iter1=iter1->next_hash;
+            }
+          }
+        }
         __watch__(first_unlocked);
         __watch__(last_unlocked);
         for (Locker* iter = first_unlocked;
-             iter != 0; ) //iter = iter->next_unlocked 
+             iter != 0; ) //iter = iter->next_unlocked
         {
           __trace2__("iterate unlocked lockers:%lld",iter->msgId);
           bool success = iter->getNextCommand(result.command);
-					if ( success || !iter->cmds )
+          if ( success || !iter->cmds )
           {
-						Locker* locker = iter;
-						__watch__(locker);
-						iter = iter->next_unlocked;// prev не изменяется
-						__require__(!locker->locked);
-						
-						// удаляем из списка активных
+            Locker* locker = iter;
+            __watch__(locker);
+            iter = iter->next_unlocked;// prev не изменяется
+            __require__(!locker->locked);
+
+            // удаляем из списка активных
             if ( locker == last_unlocked ) last_unlocked = prev;
             if ( prev )
-							 prev->next_unlocked = locker->next_unlocked;
-            else 
-						{
-							__require__( locker == first_unlocked );
-							first_unlocked = locker->next_unlocked;
-						}
-						
-						locker->next_unlocked = 0;
+               prev->next_unlocked = locker->next_unlocked;
+            else
+            {
+              __require__( locker == first_unlocked );
+              __watch__(locker->next_unlocked);
+              first_unlocked = locker->next_unlocked;
+            }
+
+            locker->next_unlocked = 0;
 
             if ( success ) // получена доступная команда
             {
-							locker->locked = true;
+              locker->locked = true;
               result.msgId = locker->msgId;
               result.state = locker->state;
+              __watch__(first_unlocked);
+              __watch__(last_unlocked);
               __trace__("returning from selectAndDequeue");
               return;
             }
@@ -258,18 +310,23 @@ public:
               {
                 hash.remove(locker->msgId);
                 delete locker;
+              }else
+              {
+                locker->locked=true;
               }
             }
           }
           else // есть только ожидающие команды
           {
             // выбераем следующую запись
-						prev = iter;
-						iter = iter->next_unlocked;
+            prev = iter;
+            iter = iter->next_unlocked;
             // none
           }
         }
       }
+      __watch__(first_unlocked);
+      __watch__(last_unlocked);
       __trace__("selanddeq:wait");
       event.Wait();
       __trace__("selanddeq:wait finished");
@@ -286,20 +343,22 @@ public:
     if ( !locker ) throw runtime_error("incorrect msgid");
     if ( !locker->locked ) throw runtime_error("locker is not locked, can't change state");
     locker->state = state;
-    
-		// разблокируем запись и добавляем в список активных
+
+    // разблокируем запись и добавляем в список активных
     locker->locked = false;
-		if ( last_unlocked )
+    if ( last_unlocked )
     {
       last_unlocked->next_unlocked = locker;
       last_unlocked = locker;
       locker->next_unlocked=0;
     }
     else
-		{
-			__require__(first_unlocked == 0);
-			first_unlocked = last_unlocked = locker;
-		}
+    {
+      __require__(first_unlocked == 0);
+      first_unlocked = last_unlocked = locker;
+    }
+    __watch__(first_unlocked);
+    __watch__(last_unlocked);
     event.Signal();
   }
 #undef __synchronized__
