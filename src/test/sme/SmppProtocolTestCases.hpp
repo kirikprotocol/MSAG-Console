@@ -146,10 +146,10 @@ protected:
 	CheckList* chkList;
 
 	virtual Category& getLog();
-	PduData* getNonReplaceEnrotePdu(bool deliveryReports);
-	PduData* getReplaceEnrotePdu(bool deliveryReports);
-	PduData* getNonReplaceRescheduledEnrotePdu(bool deliveryReports);
-	PduData* getFinalPdu(bool deliveryReports);
+	PduData* getNonReplaceEnrotePdu();
+	PduData* getReplaceEnrotePdu();
+	PduData* getNonReplaceRescheduledEnrotePdu();
+	PduData* getFinalPdu();
 	PduData* getPduByState(SmppState state);
 	void replaceSmIncorrect(PduReplaceSm* pdu, bool sync);
 	PduData* getCancelSmGroupParams(bool checkServType, Address& srcAddr,
