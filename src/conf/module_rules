@@ -77,15 +77,16 @@ deps:
 	    done; \
 	fi
 	@rm -f $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.binaries-rules
-	@cat binaries-list 2>>/dev/null | awk '/^[^\#-][a-zA-Z0-9]/{print "$(SMSC_BUILDDIR)/bin/"$$1" : $(SMSC_BUILDDIR)/obj/$(LIBRARY)/"$$2".o\n"\
-	    "\tmkdir -p `dirname $$@`\n"\
-	    "\techo linking $$@\n"\
-	    "\t$$(CXX) $$(CXXFLAGS) -o $$@ $$< $$(LDFLAGS) "$$3" "$$4" "$$5" "$$6" "$$7" "$$8" "$$9" "$$10" "$$11" "$$12" "$$13" "$$14" "$$15" "$$16" \n"}' \
-	    > $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.binaries-rules
+	@perl $(SMSC_SRCDIR)/conf/gendeps.pl $(SMSC_SRCDIR)/$(PACKAGEDIR)
+#	@cat binaries-list 2>>/dev/null | awk '/^[^\#-][a-zA-Z0-9]/{print "$(SMSC_BUILDDIR)/bin/"$$1" : $(SMSC_BUILDDIR)/obj/$(LIBRARY)/"$$2".o\n"\
+#	    "\tmkdir -p `dirname $$@`\n"\
+#	    "\techo linking $$@\n"\
+#	    "\t$$(CXX) $$(CXXFLAGS) -o $$@ $$< $$(LDFLAGS) "$$3" "$$4" "$$5" "$$6" "$$7" "$$8" "$$9" "$$10" "$$11" "$$12" "$$13" "$$14" "$$15" "$$16" \n"}' \
+#	    > $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.binaries-rules
 	@if [ -n "$(MODULES)" ] ; then \
 	    XXXX="$(MODULES)" ;\
 			XWD=`pwd`; \
-	    set -e; for i in $$XXXX ; do  cd $$XWD/$$i ; make deps; done ; \
+	    set -e; for i in $$XXXX ; do  cd $$XWD/$$i ; make -s deps; done ; \
 	fi
 
 -include $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.deps
