@@ -66,7 +66,7 @@ if (request.getMethod().equals("POST"))
       <td colspan=1>
       <b>Source&nbsp;SME&nbsp;id:</b><br>
     	<input type="text" name="srcSmeId"  value="<%=
-        formBean.getSrcSmeId()%>" size=20 maxlength=15>
+        formBean.getSrcSmeId()%>" size=17 maxlength=15>
       </td>
       <td colspan=1 align=right>
       <b>Select&nbsp;from&nbsp;date:</b><br>
@@ -109,7 +109,7 @@ if (request.getMethod().equals("POST"))
       <td colspan=1>
       <b>Destination&nbsp;SME&nbsp;id:</b><br>
     	<input type="text" name="dstSmeId"  value="<%=
-        formBean.getDstSmeId()%>" size=20 maxlength=15>
+        formBean.getDstSmeId()%>" size=17 maxlength=15>
       </td>
       <td colspan=1 align=right>
     	<b>Till&nbsp;date:</b><br>
@@ -195,13 +195,14 @@ if (lastIndex >= formBean.getRowsCount() ||
   <td width="10%"><b>From</b></td>
   <td width="10%"><b>To</b></td>
   <td width="10%"><b>Status</b></td>
-  <td><b>Message</b></td>
+  <td width="45%"><b>Message</b></td>
 </tr><%
 for (int cnt=firstIndex; cnt<=lastIndex; cnt++) {
   SmsRow row = formBean.getRow(cnt-1);
 %><tr>
       <td><%= row.getDate()%></td>
-      <td><%= row.getFrom()%></td><td><%= row.getTo()%></td>
+      <td><%= row.getFrom().trim()%></td>
+      <td><%= row.getTo().trim()%></td>
       <td><%= row.getStatus()%></td>
       <td><%= "#"+cnt+" "+row.getText()%></td>
   </tr><%

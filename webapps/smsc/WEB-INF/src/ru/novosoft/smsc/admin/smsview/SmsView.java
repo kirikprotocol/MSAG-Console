@@ -21,7 +21,7 @@ import java.io.DataInputStream;
 
 public class SmsView
 {
-  private static int   MAX_SMS_BODY_LENGTH    = 1650;
+  private static int   MAX_SMS_BODY_LENGTH    = 1550;
   private static short SMPP_SHORT_MESSAGE_TAG = 7;
   private static short SMPP_DATA_CODING_TAG   = 3;
   private static short SMPP_ESM_CLASS_TAG     = 2;
@@ -39,8 +39,8 @@ public class SmsView
 
   public SmsSet getSmsSet(SmsQuery query)
   {
-    System.out.println("From date: "+query.getFromDate().toString()+
-                       " Till date: "+query.getTillDate().toString());
+    /*System.out.println("From date: "+query.getFromDate().toString()+
+                       " Till date: "+query.getTillDate().toString());*/
     SmsSet set = new SmsSet();
     Connection connection = null;
     try
@@ -63,6 +63,30 @@ public class SmsView
     }
     return set;
   }
+
+  /*public int delSmsSet(SmsQuery query)
+  {
+    Connection connection = null;
+    int deleted = 0;
+    try
+    {
+      connection = ds.getConnection();
+      if (connection == null) return 0;
+      String sql = prepareDeleteString(query);
+      PreparedStatement stmt = connection.prepareStatement(sql);
+      bindInput(stmt, query);
+      deleted = stmt.executeUpdate();
+      connection.close();
+    }
+    catch (Exception exc)
+    {
+      try { if (connection != null) connection.close(); }
+      catch (Exception cexc) { cexc.printStackTrace(); }
+      System.out.println("Operation with DB failed !");
+      exc.printStackTrace(); deleted = 0;
+    }
+    return deleted;
+  }*/
 
   private boolean needLikeExpression(String str)
   {
@@ -103,9 +127,7 @@ public class SmsView
       SmsRow row = new SmsRow();
       int pos=1;
       byte id[] = rs.getBytes(pos++);
-      /*System.out.print("ID-size "+id.length+">> ");
-      for (int i=0; i<id.length; i++) { System.out.print(id[i]); }
-      System.out.println();*/
+      row.setId(id);
       row.setDate(rs.getTimestamp(pos++));
       row.setFrom(rs.getString(pos++));
       row.setTo(rs.getString(pos++));
@@ -116,12 +138,15 @@ public class SmsView
       }
       else if (bodyLen <= MAX_SMS_BODY_LENGTH) {
         byte body[] = rs.getBytes(pos);
-        row.setText(convertBody(new ByteArrayInputStream(body, 0, bodyLen)));
-      } else {
+        if (body == null || body.length == 0) row.setText("");
+        else row.setText(convertBody(new ByteArrayInputStream(body, 0, bodyLen)));
+      }
+      else {
         ResultSet lbrs = null;
         try {
           lbstmt.setBytes(1, id);
           lbrs = lbstmt.executeQuery();
+          lbrs.next();
           Blob blob = lbrs.getBlob(1);
           row.setText("BLOB >> " +convertBody(blob.getBinaryStream()));
         } catch (Exception exc) {
@@ -143,6 +168,14 @@ public class SmsView
     sql += prepareOrderClause(query);
     return sql;
   }
+  /*private String prepareDeleteString(SmsQuery query)
+  {
+    String sql = "DELETE FROM ";
+    sql += (query.getStorageType() == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) ?
+                "SMS_MSG":"SMS_ARC";
+    sql += prepareWhereClause(query);
+    return sql;
+  }*/
   private String prepareWhereClause(SmsQuery query)
   {
     String where = " WHERE UPPER(OA) ";
@@ -182,7 +215,7 @@ public class SmsView
     int     textLen = 0;
     byte    text[] = null;
 
-    System.out.println("Converting SMS body ...");
+    //System.out.println("Converting SMS body ...");
     try
     {
       DataInputStream stream = new DataInputStream(source);
@@ -191,7 +224,6 @@ public class SmsView
         short tag = stream.readShort();
         int   len = stream.readInt();
         //System.out.println("Tag "+tag+" Len "+len);
-
         if (tag == SMPP_SHORT_MESSAGE_TAG) {
           byte msgText[] = new byte[textLen = len];
           stream.read(msgText, 0, textLen);
@@ -211,9 +243,12 @@ public class SmsView
                                 new ByteArrayInputStream(text, 0, textLen));
         int headerLen = (int)input.readByte();          // Byte ???
         textLen -= headerLen+1; input.skip(headerLen);  // +1 ???
-        byte msgText[] = new byte[textLen];
-        stream.read(msgText, 0, textLen);
-        text = msgText;
+        if (textLen > 0) {
+          byte msgText[] = new byte[textLen];
+          stream.read(msgText, 0, textLen);
+          text = msgText;
+        }
+        else text = null;
       }
 
       if (text != null)
@@ -224,7 +259,7 @@ public class SmsView
         System.out.println("SMS Body conversion failed !");
         exc.printStackTrace();
     }
-    System.out.println("SMS body converted.");
+    //System.out.println("SMS body converted.");
     return message;
   }
   private String decodeMessage(byte text[], int len, int encoding)
@@ -246,7 +281,7 @@ public class SmsView
     } else if (encoding == DATA_CODING_BINARY) { // DATA_CODING_BINARY
       message = "<< Binary data >>";
     } else {
-      message = "<< Unsupported encoding ("+encoding+") !!! >>";
+      message = "<< Unsupported encoding ("+encoding+") ! >>";
     }
     return message;
   }

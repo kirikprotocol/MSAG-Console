@@ -19,11 +19,16 @@ public class SmsRow
     "ENROUTE", "DELIVERED", "EXPIRED", "UNDELIVERABLE", "DELETED"
   };
 
+  private byte   id[];
   private Date   date = new Date();
   private String from = "from";
   private String to   = "to";
   private int status  = 0;
   private String text = "Message text ";
+  private boolean marked = false;
+
+  public void setId(byte _id[]) { id = _id; };
+  public byte[] getId() { return id; };
 
   public String getFrom() { return from; }
   public void setFrom(String address) { from = address; }
@@ -40,4 +45,8 @@ public class SmsRow
   public void setStatus(int status){ this.status = status; }
   public String getText(){ return text; }
   public void setText(String text){ this.text = text; }
+
+  public boolean isMarked() { return marked; }
+  public void mark() { marked = true; }
+  public void unmark() { marked = false; }
 };
