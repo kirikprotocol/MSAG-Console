@@ -266,12 +266,12 @@ private:
 
   Link* FindLink(pchashstr key)const
   {
-    if(!_bucketsnum)return NULL;
+    if(!_bucketsnum || !_count)return NULL;
     return _buckets[HashFunc(key) % _bucketsnum].Find(key);
   }
   Link* FindLinkEx(pchashstr key,unsigned &index)
   {
-    if(!_bucketsnum)return NULL;
+    if(!_bucketsnum || !_count)return NULL;
     index=HashFunc(key) % _bucketsnum;
     return _buckets[index].Find(key);
   }
@@ -320,7 +320,11 @@ public:
   virtual ~Hash<T>(){delete [] _buckets;};
 
 
-  int Exists(pchashstr key)const{ return FindLink(key)!=NULL;}
+  int Exists(pchashstr key)const
+  {
+    if(_count==0)return 0;
+    return FindLink(key)!=NULL;
+  }
   void Delete(pchashstr key)
   {
     unsigned index=HashFunc(key) % _bucketsnum;
