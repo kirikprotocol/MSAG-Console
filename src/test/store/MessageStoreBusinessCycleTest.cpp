@@ -86,26 +86,30 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 	SMSId correctId;
 	SMS correctSM;
 	delete tc.storeCorrectSM(&correctId, &correctSM, RAND_TC); holder->ops++;
+	delete tc.storeIncorrectSM(correctSM, ALL_TC); holder->ops++;
 
-	//создаю SM и сразу читаю
+	//создаю SM, сразу читаю и удаляю
 	for (int i = 0; i < 10; i++)
 	{
 		SMSId id;
 		SMS sms;
 		delete tc.storeCorrectSM(&id, &sms, RAND_TC); holder->ops++;
 		delete tc.loadExistentSM(id, sms); holder->ops++;
+		delete tc.deleteExistentSM(id); holder->ops++;
+		delete tc.deleteNonExistentSM(id, RAND_TC); holder->ops++;
+		delete tc.loadNonExistentSM(id, RAND_TC); holder->ops++;
 	}
 
-	//создаю и загружаю кривые SM
+	//создаю и удаляю кривые SM
 	delete tc.storeIncorrectSM(correctSM, ALL_TC); holder->ops++;
-	delete tc.loadExistentSM(correctId, correctSM); holder->ops++;
+	delete tc.deleteExistentSM(correctId); holder->ops++;
 
-	//создаю список не читая, а потом буду читать этот список
+	//сначала создаю список, потом читаю этот список, потом удаляю
 	//список большой специально для того, чтобы было большое количество 
 	//одинаковых последовательных операций и вероятность ошибочного 
 	//использования shared buffers возросла (если в коде есть подобные 
 	//ошибки)
-	const int listSize = 10;
+	const int listSize = 20;
 	for (int j = 0; j < 3; j++)
 	{
 		SMSId id[listSize];
@@ -118,12 +122,18 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 		{
 			delete tc.loadExistentSM(id[i], sms[i]); holder->ops++;
 		}
+		for (int i = 0; i < listSize; i++)
+		{
+			delete tc.deleteExistentSM(id[i]); holder->ops++;
+		}
+		delete tc.loadNonExistentSM(id[0], RAND_TC); holder->ops++;
+		delete tc.deleteNonExistentSM(id[0], RAND_TC); holder->ops++;
+		delete tc.loadNonExistentSM(id[listSize - 1], RAND_TC); holder->ops++;
+		delete tc.deleteNonExistentSM(id[listSize - 1], RAND_TC); holder->ops++;
 	}
-	delete tc.loadNonExistentSM(); holder->ops++;
 	//tc.setCorrectSMStatus(); ops++;
 	//tc.createBillingRecord(); ops++;
 	//tc.updateCorrectExistentSM(); ops++;
-	//tc.deleteExistentSM(); ops++;
 }
 
 inline void MessageStoreBusinessCycleTestTask::onStopped()

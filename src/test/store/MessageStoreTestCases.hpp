@@ -135,13 +135,13 @@ public:
 	 * Сохраняет в базу правильное SMS сообщение, затем удаляет его.
 	 * Только debug информация должна выводиться в лог.
 	 */
-	TCResult* deleteExistentSM();
+	TCResult* deleteExistentSM(smsc::sms::SMSId id);
 	
 	/**
 	 * Удаление несуществующего SM.
 	 * Только debug информация должна выводиться в лог.
 	 */
-	TCResult* deleteNonExistentSM();
+	TCResult* deleteNonExistentSM(smsc::sms::SMSId id, int num);
 
 	/**
 	 * Удаление существующих SM ожидающих доставки на определенный номер.
@@ -166,7 +166,7 @@ public:
 	 * Чтение несуществующего SM.
 	 * Только debug информация должна выводиться в лог.
 	 */
-	TCResult* loadNonExistentSM();
+	TCResult* loadNonExistentSM(smsc::sms::SMSId id, int num);
 
 	/**
 	 * Загрузка непустого списка SM ожидающих доставки на определенный номер.

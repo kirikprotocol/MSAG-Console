@@ -51,7 +51,7 @@ void MessageStoreTestCases::clearSM(SMS& sms)
 {
 	sms.setState(ENROUTE); //DELIVERED, EXPIRED, UNDELIVERABLE, DELETED
 	sms.setOriginatingAddress(0, 0, 0, NULL);
-	sms.setDestinationAddress(0, 0, 0, NULL);
+	sms.setDestinationAddress(1, 0, 0, "*");
 	sms.setWaitTime(0);
 	sms.setValidTime(0);
 	sms.setSubmitTime(0);
@@ -109,7 +109,7 @@ TCResult* MessageStoreTestCases::storeCorrectSM(SMSId* idp, SMS* smsp, int num)
 						rand_uint8_t(MAX_MSG_BODY_LENGTH).get());
 					break;
 				default:
-					__require__(false);
+					throw s;
 			}
 			smsId = msgStore->store(sms);
 			if (idp != NULL && smsp != NULL)
@@ -164,7 +164,7 @@ TCResult* MessageStoreTestCases::storeIncorrectSM(SMS& existentSMS, int num)
 					sms.setRejectDuplicates(true);
 					break;
 				default:
-					__require__(false);
+					throw s;
 			}
 			SMSId smsId = msgStore->store(sms);
 			res->addFailure(s.value());
@@ -214,7 +214,7 @@ TCResult* MessageStoreTestCases::storeAssertSM(int num)
 						rand_uint8_t(msgBodyLength).get());
 					break;
 				default:
-					__require__(false);
+					throw s;
 			}
 			SMSId smsId = msgStore->store(sms);
 			res->addFailure(s.value());
@@ -225,7 +225,7 @@ TCResult* MessageStoreTestCases::storeAssertSM(int num)
 		}
 		catch(...)
 		{
-			res->addFailure(s.value());;
+			res->addFailure(s.value());
 		}
 	}
 	return res;
@@ -233,47 +233,96 @@ TCResult* MessageStoreTestCases::storeAssertSM(int num)
 
 TCResult* MessageStoreTestCases::setCorrectSMStatus()
 {
-	return false;
+	return NULL;
 }
 
 TCResult* MessageStoreTestCases::setIncorrectSMStatus()
 {
-	return false;
+	return NULL;
 }
 
 TCResult* MessageStoreTestCases::setNonExistentSMStatus()
 {
-	return false;
+	return NULL;
 }
 
 TCResult* MessageStoreTestCases::updateCorrectExistentSM()
 {
-	return false;
+	return NULL;
 }
 
 TCResult* MessageStoreTestCases::updateIncorrectExistentSM()
 {
-	return false;
+	return NULL;
 }
 	
 TCResult* MessageStoreTestCases::updateNonExistentSM()
 {
-	return false;
+	return NULL;
 }
 
-TCResult* MessageStoreTestCases::deleteExistentSM()
+TCResult* MessageStoreTestCases::deleteExistentSM(SMSId id)
 {
-	return false;
+	TCResult* res = new TCResult(TC_DELETE_EXISTENT_SM);
+	try
+	{
+		msgStore->remove(id);
+	}
+	catch (NoSuchMessageException&)
+	{
+		res->addFailure(101);
+	}
+	catch (StorageException&)
+	{
+		res->addFailure(102);
+	}
+	catch (...)
+	{
+		res->addFailure(100);
+	}
+	return res;
 }
 	
-TCResult* MessageStoreTestCases::deleteNonExistentSM()
+TCResult* MessageStoreTestCases::deleteNonExistentSM(SMSId id, int num)
 {
-	return false;
+	TCSelector s(num, 2);
+	TCResult* res = new TCResult(TC_DELETE_NON_EXISTENT_SM, s.getChoice());
+	for (; s.check(); s++)
+	{
+		try
+		{
+			switch (s.value())
+			{
+				case 1: //предполагается данного id не существует
+					msgStore->remove(id);
+					break;
+				case 2: //заведомо несуществующий id
+					msgStore->remove(0xFFFFFFFF);
+					break;
+				default:
+					throw s;
+			}
+			res->addFailure(101);
+		}
+		catch (NoSuchMessageException&)
+		{
+			//Ok
+		}
+		catch (StorageException&)
+		{
+			res->addFailure(102);
+		}
+		catch (...)
+		{
+			res->addFailure(100);
+		}
+	}
+	return res;
 }
 	
 TCResult* MessageStoreTestCases::loadExistentSM(SMSId id, SMS& sms)
 {
-	TCResult* res = new TCResult(TC_LOAD_EXISTENT_SM, 1);
+	TCResult* res = new TCResult(TC_LOAD_EXISTENT_SM);
 	try
 	{
 		SMS _sms;
@@ -356,30 +405,47 @@ TCResult* MessageStoreTestCases::loadExistentSM(SMSId id, SMS& sms)
 	return res;
 }
 
-TCResult* MessageStoreTestCases::loadNonExistentSM()
+TCResult* MessageStoreTestCases::loadNonExistentSM(SMSId id, int num)
 {
-	TCResult* res = new TCResult(TC_LOAD_NON_EXISTENT_SM, 1);
-	try
+	TCSelector s(num, 2);
+	TCResult* res = new TCResult(TC_LOAD_NON_EXISTENT_SM, s.getChoice());
+	for (; s.check(); s++)
 	{
-		SMSId id = 0xFFFFFFFF;
 		SMS sms;
-		msgStore->retrive(id, sms);
-		res->addFailure(100);
-	}
-	catch(NoSuchMessageException& e)
-	{
-		//Ok
-	}
-	catch(...)
-	{
-		res->addFailure(101);
+		try
+		{
+			switch (s.value())
+			{
+				case 1:
+					msgStore->retrive(id, sms);
+					break;
+				case 2:
+					msgStore->retrive(0xFFFFFFFF, sms);
+					break;
+				default:
+					throw s;
+			}
+			res->addFailure(101);
+		}
+		catch(NoSuchMessageException&)
+		{
+			//Ok
+		}
+		catch (StorageException&)
+		{
+			res->addFailure(102);
+		}
+		catch(...)
+		{
+			res->addFailure(100);
+		}
 	}
 	return res;
 }
 
 TCResult* MessageStoreTestCases::createBillingRecord()
 {
-	return false;
+	return NULL;
 }
 
 }
