@@ -17,6 +17,8 @@ public class SmsViewFormBean extends SmsQuery
   public static int START_YEAR_COUNTER  = 2002;
   public static int FINISH_YEAR_COUNTER = START_YEAR_COUNTER+30;
 
+  public static short INDEX_PAGES_LIST_SIZE = 5;
+
   private SmsSet  rows = null;
   private SmsView view = new SmsView();
   private SMSCAppContext  context = null;
@@ -47,20 +49,39 @@ public class SmsViewFormBean extends SmsQuery
   {
     getDates();
     rows = view.getSmsSet(this);
-    processQueryIndexing();
+    processFirstIndexing();
     setDates();
   }
-  public void processPrev() {
+  public void moveToPrev() {
     processPrevIndexing();
   }
-  public void processNext() {
+  public void moveToNext() {
     processNextIndexing();
+  }
+  public void moveToFirst() {
+    processFirstIndexing();
+  }
+  public void moveToLast() {
+    processLastIndexing();
+  }
+  public void moveToPage(String page) {
+    try { processPageIndexing(Integer.parseInt(page)); }
+    catch (Exception exc) {};
   }
   public int getRowsCount() {
     return ((rows != null) ? rows.getRowsCount():0);
   }
   public SmsRow getRow(int index){
     return ((rows != null) ? rows.getRow(index):null);
+  }
+  public int getPagesCount() {
+    if (rowsToDisplay < 0) return 0;
+    int rowsCount = getRowsCount();
+    if (rowsCount < rowsToDisplay) return 1;
+    return rowsCount/rowsToDisplay+((rowsCount%rowsToDisplay > 0) ? 1:0);
+  }
+  public int getPageIndex() {
+    return ((rowsToDisplay > 0) ? rowIndex/rowsToDisplay : 0);
   }
 
   public int getRowsToDisplay() { return rowsToDisplay; }
@@ -113,12 +134,22 @@ public class SmsViewFormBean extends SmsQuery
   private int toDateYear, toDateMonth, toDateDay;
   private int toDateHour, toDateMinute, toDateSecond;
 
-  private void processQueryIndexing() {
+  private void processFirstIndexing() {
     rowIndex = 0; prevEnabled = false;
     if (rowsToDisplay == -1) {
       nextEnabled = false;
     } else if (getRowsCount() > rowsToDisplay) {
       nextEnabled = true;
+    }
+  }
+  private void processLastIndexing() {
+    if (rowsToDisplay == -1) {
+      rowIndex = 0; prevEnabled = false; nextEnabled = false;
+    } else {
+      prevEnabled = true; nextEnabled = false;
+      int restRows = getRowsCount()%rowsToDisplay;
+      rowIndex = getRowsCount()-((restRows>0) ? restRows:rowsToDisplay);
+      if (rowIndex<0) rowIndex = 0;
     }
   }
   private void processPrevIndexing() {
@@ -144,6 +175,15 @@ public class SmsViewFormBean extends SmsQuery
         nextEnabled = false;
       }
     }
+  }
+  private void processPageIndexing(int page)
+  {
+    int pagesCount = getPagesCount();
+    if (page<0 || page>pagesCount-1 || rowsToDisplay<0) return;
+    rowIndex = page*rowsToDisplay;
+    prevEnabled=true; nextEnabled=true;
+    if (page == 0) prevEnabled=false;
+    if (page >= pagesCount-1) nextEnabled=false;
   }
 
   private void setDates()

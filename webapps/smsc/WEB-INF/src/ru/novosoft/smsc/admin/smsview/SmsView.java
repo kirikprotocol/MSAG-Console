@@ -21,6 +21,8 @@ import java.io.DataInputStream;
 
 public class SmsView
 {
+  private static int   MAX_SMS_FETCH_COUNT    = 10000;
+
   private static int   MAX_SMS_BODY_LENGTH    = 1650;
   private static short SMPP_SHORT_MESSAGE_TAG = 7;
   private static short SMPP_DATA_CODING_TAG   = 3;
@@ -45,6 +47,7 @@ public class SmsView
     try
     {
       connection = ds.getConnection();
+      if (connection == null) return set;
       String sql = prepareQueryString(query);
       //System.out.println("SQL: "+sql);
       PreparedStatement stmt = connection.prepareStatement(sql);
@@ -92,7 +95,8 @@ public class SmsView
     ResultSet rs = stmt.executeQuery();
     Connection connection = stmt.getConnection();
     PreparedStatement lbstmt = connection.prepareStatement(selectLargeBody);
-    while (rs.next())
+    int fetchedCount = 0;
+    while (rs.next() && MAX_SMS_FETCH_COUNT > fetchedCount++)
     {
       SmsRow row = new SmsRow();
       int pos=1;
