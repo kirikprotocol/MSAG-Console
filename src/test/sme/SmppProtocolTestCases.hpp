@@ -170,7 +170,7 @@ protected:
 		PduData::StrProps& strProps, int num);
 	void correctDirectives(SmppHeader* header, PduData::IntProps& intProps,
 		PduData::StrProps& strProps, const TestCaseId& num);
-	void incorrectDirectives(SmppHeader* header, int num);
+	void incorrectDirectives(SmppHeader* header, PduData::IntProps& intProps, int num);
 
 	void replaceSmIncorrect(PduReplaceSm* pdu, bool sync);
 	PduData* getCancelSmGroupParams(bool checkServType, Address& srcAddr,

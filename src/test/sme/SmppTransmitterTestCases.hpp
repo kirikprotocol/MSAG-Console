@@ -66,7 +66,7 @@ public:
 	virtual void sendGenericNack(PduGenericNack& pdu)=0;
 	virtual PduMultiSmResp* submitm(PduMultiSm& pdu)=0;
 	*/
-	static uint8_t getRegisteredDelivery(PduData* pduData);
+	static uint8_t getRegisteredDelivery(PduData* pduData, CheckList* chkList = NULL);
 	
 protected:
 	SmppFixture* fixture;

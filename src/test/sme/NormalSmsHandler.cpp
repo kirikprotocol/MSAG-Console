@@ -576,7 +576,7 @@ void NormalSmsHandler::registerIntermediateNotificationMonitor(
 	}
 	__decl_tc__;
 	uint8_t regDelivery =
-		SmppTransmitterTestCases::getRegisteredDelivery(monitor->pduData);
+		SmppTransmitterTestCases::getRegisteredDelivery(monitor->pduData, chkList);
 	//flag
 	PduFlag flag;
 	switch (regDelivery)
@@ -591,48 +591,32 @@ void NormalSmsHandler::registerIntermediateNotificationMonitor(
 		default:
 			__unreachable__("Invalid regDelivery");
 	}
-	bool report = true;
-	if (monitor->pduData->intProps.count("ussdServiceOp"))
+	//startTime
+	time_t startTime;
+	RespPduFlag respFlag = isAccepted(deliveryStatus);
+	switch (respFlag)
 	{
-		__tc__("sms.reports.intermediateNotification.ussdServiceOp");
-		__tc_ok__;
-		report = false;
+		case RESP_PDU_OK:
+		case RESP_PDU_ERROR:
+			return; //повторных доставок не будет
+		case RESP_PDU_CONTINUE:
+			return; //продолжается доставка пачки
+		case RESP_PDU_RESCHED:
+			startTime = respTime;
+			break;
+		case RESP_PDU_MISSING:
+			startTime = recvTime + fixture->smeInfo.timeout - 1;
+			break;
+		default:
+			__unreachable__("Invalid respFlag");
 	}
-	if (monitor->pduData->intProps.count("suppressDeliveryReports"))
-	{
-		__tc__("sms.reports.intermediateNotification.suppressDeliveryReports");
-		__tc_ok__;
-		report = false;
-	}
-	if (report)
-	{
-		//startTime
-		time_t startTime;
-		RespPduFlag respFlag = isAccepted(deliveryStatus);
-		switch (respFlag)
-		{
-			case RESP_PDU_OK:
-			case RESP_PDU_ERROR:
-				return; //повторных доставок не будет
-			case RESP_PDU_CONTINUE:
-				return; //продолжается доставка пачки
-			case RESP_PDU_RESCHED:
-				startTime = respTime;
-				break;
-			case RESP_PDU_MISSING:
-				startTime = recvTime + fixture->smeInfo.timeout - 1;
-				break;
-			default:
-				__unreachable__("Invalid respFlag");
-		}
-		//register
-		IntermediateNotificationMonitor* notifMonitor =
-			new IntermediateNotificationMonitor(monitor->msgRef, startTime,
-				monitor->pduData, PDU_REQUIRED_FLAG);
-		notifMonitor->state = SMPP_ENROUTE_STATE;
-		notifMonitor->deliveryStatus = deliveryStatus;
-		pduReg->registerMonitor(notifMonitor);
-	}
+	//register
+	IntermediateNotificationMonitor* notifMonitor =
+		new IntermediateNotificationMonitor(monitor->msgRef, startTime,
+			monitor->pduData, PDU_REQUIRED_FLAG);
+	notifMonitor->state = SMPP_ENROUTE_STATE;
+	notifMonitor->deliveryStatus = deliveryStatus;
+	pduReg->registerMonitor(notifMonitor);
 }
 
 void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* monitor,
@@ -675,7 +659,7 @@ void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* mon
 	}
 	//regDelivery
 	uint8_t regDelivery =
-		SmppTransmitterTestCases::getRegisteredDelivery(monitor->pduData);
+		SmppTransmitterTestCases::getRegisteredDelivery(monitor->pduData, chkList);
 	switch (regDelivery)
 	{
 		case NO_SMSC_DELIVERY_RECEIPT:
@@ -694,58 +678,42 @@ void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* mon
 		default:
 			__unreachable__("Invalid regDelivery");
 	}
-	bool report = true;
-	if (monitor->pduData->intProps.count("ussdServiceOp"))
+	//startTime & state
+	time_t startTime;
+	SmppState state;
+	RespPduFlag respFlag = isAccepted(deliveryStatus);
+	switch (respFlag)
 	{
-		__tc__("sms.reports.deliveryReceipt.ussdServiceOp");
-		__tc_ok__;
-		report = false;
+		case RESP_PDU_OK:
+			startTime = respTime;
+			state = SMPP_DELIVERED_STATE;
+			break;
+		case RESP_PDU_ERROR:
+			startTime = respTime;
+			state = SMPP_UNDELIVERABLE_STATE;
+			break;
+		case RESP_PDU_RESCHED:
+			__tc__("sms.reports.deliveryReceipt.expiredDeliveryReceipt");
+			__tc_ok__;
+			startTime = monitor->getValidTime();
+			state = SMPP_EXPIRED_STATE;
+			break;
+		case RESP_PDU_MISSING:
+			__tc__("sms.reports.deliveryReceipt.expiredDeliveryReceipt");
+			__tc_ok__;
+			startTime = max(recvTime + (time_t) (fixture->smeInfo.timeout - 1),
+				monitor->getValidTime());
+			state = SMPP_EXPIRED_STATE;
+			break;
+		default:
+			__unreachable__("Invalid respFlag");
 	}
-	if (monitor->pduData->intProps.count("suppressDeliveryReports"))
-	{
-		__tc__("sms.reports.deliveryReceipt.suppressDeliveryReports");
-		__tc_ok__;
-		report = false;
-	}
-	if (report)
-	{
-		//startTime & state
-		time_t startTime;
-		SmppState state;
-		RespPduFlag respFlag = isAccepted(deliveryStatus);
-		switch (respFlag)
-		{
-			case RESP_PDU_OK:
-				startTime = respTime;
-				state = SMPP_DELIVERED_STATE;
-				break;
-			case RESP_PDU_ERROR:
-				startTime = respTime;
-				state = SMPP_UNDELIVERABLE_STATE;
-				break;
-			case RESP_PDU_RESCHED:
-				__tc__("sms.reports.deliveryReceipt.expiredDeliveryReceipt");
-				__tc_ok__;
-				startTime = monitor->getValidTime();
-				state = SMPP_EXPIRED_STATE;
-				break;
-			case RESP_PDU_MISSING:
-				__tc__("sms.reports.deliveryReceipt.expiredDeliveryReceipt");
-				__tc_ok__;
-				startTime = max(recvTime + (time_t) (fixture->smeInfo.timeout - 1),
-					monitor->getValidTime());
-				state = SMPP_EXPIRED_STATE;
-				break;
-			default:
-				__unreachable__("Invalid respFlag");
-		}
-		//register
-		DeliveryReceiptMonitor* rcptMonitor = new DeliveryReceiptMonitor(
-			monitor->msgRef, startTime, monitor->pduData,flag);
-		rcptMonitor->state = state;
-		rcptMonitor->deliveryStatus = deliveryStatus;
-		pduReg->registerMonitor(rcptMonitor);
-	}
+	//register
+	DeliveryReceiptMonitor* rcptMonitor = new DeliveryReceiptMonitor(
+		monitor->msgRef, startTime, monitor->pduData,flag);
+	rcptMonitor->state = state;
+	rcptMonitor->deliveryStatus = deliveryStatus;
+	pduReg->registerMonitor(rcptMonitor);
 }
 
 void NormalSmsHandler::registerDeliveryReportMonitors(const DeliveryMonitor* monitor,

@@ -1606,7 +1606,7 @@ void SmppProtocolTestCases::incorrectDirectives(bool sync, const TestCaseId& num
 						pdu, *destAlias, rand0(1));
 					incorrectDirectives(reinterpret_cast<SmppHeader*>(pdu), intProps, num[1]);
 					//отправить и зарегистрировать pdu
-					fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync);
+					fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync, &intProps);
 				}
 				break;
 			case 2: //data_sm
@@ -1616,7 +1616,7 @@ void SmppProtocolTestCases::incorrectDirectives(bool sync, const TestCaseId& num
 					fixture->transmitter->setupRandomCorrectDataSmPdu(pdu, *destAlias);
 					incorrectDirectives(reinterpret_cast<SmppHeader*>(pdu), intProps, num[1]);
 					//отправить и зарегистрировать pdu
-					fixture->transmitter->sendDataSmPdu(pdu, NULL, sync);
+					fixture->transmitter->sendDataSmPdu(pdu, NULL, sync, &intProps);
 				}
 				break;
 			default:

@@ -225,7 +225,7 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 	uint16_t tmp = rand0(65535);
 	memcpy(errCode + 1, &tmp, 2);
 	uint8_t regDelivery =
-		SmppTransmitterTestCases::getRegisteredDelivery(monitor->pduData);
+		SmppTransmitterTestCases::getRegisteredDelivery(monitor->pduData, chkList);
 	switch(monitor->state)
 	{
 		case SMPP_ENROUTE_STATE:
