@@ -1,7 +1,7 @@
 <?xml encoding="ISO-8859-1"?>
 
 <!ELEMENT command (param*)>
-    <!ATTLIST command name (apply|updateSmeInfo|addSme|deleteSme) #REQUIRED>
+    <!ATTLIST command name (apply|updateSmeInfo|addSme|loadRoutes|traceRoute|deleteSme) #REQUIRED>
     <!ATTLIST command returnType (string|int|bool|stringlist) #IMPLIED>
     
 <!ELEMENT service (#PCDATA)>
