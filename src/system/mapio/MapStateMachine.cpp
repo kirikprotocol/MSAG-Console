@@ -1574,7 +1574,8 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     {
       MicroString ms;
       __trace2__("MAP::%s request length %d",__FUNCTION__,ussdString_s.ussdStrLen);
-      Convert7BitToSMSC7Bit(ussdString_s.ussdStr,ussdString_s.ussdStrLen,&ms,0);
+      unsigned chars = ussdString_s.ussdStrLen*8/7;
+      Convert7BitToSMSC7Bit(ussdString_s.ussdStr,chars/*ussdString_s.ussdStrLen*/,&ms,0);
       subsystem = GetUSSDSubsystem(ms.bytes,ms.len);
       __trace2__("MAP::%s subsystem: %s",__FUNCTION__,subsystem.c_str());
       sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,ms.bytes,ms.len);

@@ -79,7 +79,7 @@ inline void Convert7BitToSMSC7Bit(
   text->len = chars;
   text->bytes[chars] = 0;
 #if !defined DISABLE_TRACING
-  __trace2__("MAP::7bit->latin1: %s",text->bytes);
+  __trace2__("MAP::7bit(%d)->SMSC7Bit: %s",chars,text->bytes);
   {
     char b[255*4];
     unsigned k;
