@@ -1254,6 +1254,7 @@ USHORT_T Et96MapCloseInd(
     case MAPST_WaitDelRepConf:
       dialog->state = MAPST_CLOSED;
       DropMapDialog(dialog.get());
+      break;
     case MAPST_ImsiWaitCloseInd:
       dialog->state = MAPST_END;
       ContinueImsiReq(dialog->associate,dialog->s_imsi,dialog->s_msc);
