@@ -9,76 +9,63 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
-import ru.novosoft.smsc.jsp.SmscBean;
+import ru.novosoft.smsc.jsp.smsc.IndexBean;
+import ru.novosoft.smsc.jsp.util.tables.NullResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
-import ru.novosoft.smsc.jsp.util.tables.impl.ProfileFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.ProfileQuery;
-import ru.novosoft.smsc.jsp.util.tables.impl.QueryResultSetImpl;
 
 import java.util.List;
-import java.util.Vector;
 
-public class Index extends SmscBean
+public class Index extends IndexBean
 {
-	public static final int RESULT_FILTER = PRIVATE_RESULT;
-	public static final int RESULT_ADD = PRIVATE_RESULT + 1;
-	public static final int RESULT_EDIT = PRIVATE_RESULT + 2;
+	public static final int RESULT_ADD = IndexBean.PRIVATE_RESULT;
+	public static final int RESULT_EDIT = IndexBean.PRIVATE_RESULT + 1;
+	protected static final int PRIVATE_RESULT = IndexBean.PRIVATE_RESULT + 2;
 
 	protected QueryResultSet profiles = null;
 
-	protected int startPosition = 0;
-	protected int totalSize = 0;
 	protected String profileMask = null;
 
 	protected String mbAdd = null;
 	protected String mbEdit = null;
-	protected String mbFilter = null;
-	protected String mbFirst = null;
-	protected String mbPrev = null;
-	protected String mbNext = null;
-	protected String mbLast = null;
 
-	protected String sort = null;
-
-
-	public int process(SMSCAppContext appContext, List errors)
+	protected int init(List errors)
 	{
-		int result = super.process(appContext, errors);
+		int result = super.init(errors);
 		if (result != RESULT_OK)
 			return result;
 
-		UserPreferences up = appContext.getUserPreferences();
-		int pageSize = up.getProfilesPageSize();
+		pageSize = preferences.getProfilesPageSize();
 		if (sort != null)
-			up.getProfilesSortOrder().set(0, sort);
+			preferences.getProfilesSortOrder().set(0, sort);
 		else
-			sort = (String) up.getProfilesSortOrder().get(0);
+			sort = (String) preferences.getProfilesSortOrder().get(0);
+
+		return RESULT_OK;
+	}
+
+	public int process(SMSCAppContext appContext, List errors)
+	{
+		profiles = new NullResultSet();
+
+		int result = super.process(appContext, errors);
+		if (result != RESULT_OK)
+			return result;
 
 		if (mbAdd != null)
 			return RESULT_ADD;
 		else if (mbEdit != null)
 			return RESULT_EDIT;
-		else if (mbFilter != null)
-			return RESULT_FILTER;
-		else if (mbFirst != null)
-			startPosition = 0;
-		else if (mbPrev != null)
-			startPosition = startPosition > pageSize ? startPosition - pageSize : 0;
-		else if (mbNext != null)
-			startPosition += pageSize;
-		else if (mbLast != null)
-			startPosition = (totalSize / pageSize + (totalSize % pageSize == 0 ? -1 : 0)) * pageSize;
 
 		try
 		{
-			logger.debug("Profiles.Index - process with sorting [" + (String)up.getProfilesSortOrder().get(0) + "]");
-			profiles = smsc.queryProfiles(new ProfileQuery(pageSize, up.getProfilesFilter(), up.getProfilesSortOrder(), startPosition));
+			logger.debug("Profiles.Index - process with sorting [" + (String) preferences.getProfilesSortOrder().get(0) + "]");
+			profiles = smsc.queryProfiles(new ProfileQuery(pageSize, preferences.getProfilesFilter(), preferences.getProfilesSortOrder(), startPosition));
 			totalSize = profiles.getTotalSize();
 		}
 		catch (AdminException e)
 		{
 			logger.error("Couldn't query profiles", e);
-			profiles = new QueryResultSetImpl();
 			return error(SMSCErrors.error.profiles.queryError, e);
 		}
 
@@ -90,27 +77,7 @@ public class Index extends SmscBean
 		return profiles;
 	}
 
-	public boolean isFirst()
-	{
-		return startPosition == 0;
-	}
-
-	public boolean isLast()
-	{
-		return profiles.isLast();
-	}
-
 	/******************** properties *************************/
-
-	public int getStartPosition()
-	{
-		return startPosition;
-	}
-
-	public void setStartPosition(int startPosition)
-	{
-		this.startPosition = startPosition;
-	}
 
 	public String getMbAdd()
 	{
@@ -120,56 +87,6 @@ public class Index extends SmscBean
 	public void setMbAdd(String mbAdd)
 	{
 		this.mbAdd = mbAdd;
-	}
-
-	public String getMbFilter()
-	{
-		return mbFilter;
-	}
-
-	public void setMbFilter(String mbFilter)
-	{
-		this.mbFilter = mbFilter;
-	}
-
-	public String getMbFirst()
-	{
-		return mbFirst;
-	}
-
-	public void setMbFirst(String mbFirst)
-	{
-		this.mbFirst = mbFirst;
-	}
-
-	public String getMbPrev()
-	{
-		return mbPrev;
-	}
-
-	public void setMbPrev(String mbPrev)
-	{
-		this.mbPrev = mbPrev;
-	}
-
-	public String getMbNext()
-	{
-		return mbNext;
-	}
-
-	public void setMbNext(String mbNext)
-	{
-		this.mbNext = mbNext;
-	}
-
-	public String getMbLast()
-	{
-		return mbLast;
-	}
-
-	public void setMbLast(String mbLast)
-	{
-		this.mbLast = mbLast;
 	}
 
 	public String getProfileMask()
@@ -190,30 +107,5 @@ public class Index extends SmscBean
 	public void setMbEdit(String mbEdit)
 	{
 		this.mbEdit = mbEdit;
-	}
-
-	public int getTotalSize()
-	{
-		return totalSize;
-	}
-
-	public void setTotalSize(int totalSize)
-	{
-		this.totalSize = totalSize;
-	}
-
-	public String getSort()
-	{
-		return sort;
-	}
-
-	public void setSort(String sort)
-	{
-		this.sort = sort;
-	}
-
-	public int getPageSize()
-	{
-		return appContext.getUserPreferences().getProfilesPageSize();
 	}
 }

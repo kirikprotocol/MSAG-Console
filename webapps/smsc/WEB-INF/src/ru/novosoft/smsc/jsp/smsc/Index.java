@@ -6,7 +6,6 @@
 package ru.novosoft.smsc.jsp.smsc;
 
 import ru.novosoft.smsc.jsp.SMSCAppContext;
-import ru.novosoft.smsc.jsp.SmscBean;
 import ru.novosoft.smsc.jsp.Statuses;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.admin.AdminException;

@@ -8,10 +8,11 @@ package ru.novosoft.smsc.jsp.smsc.hosts;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 import java.util.List;
 
-public class HostAdd extends HostsBean
+public class HostAdd extends SmscBean
 {
 	private String hostName = null;
 	private int port = -1;

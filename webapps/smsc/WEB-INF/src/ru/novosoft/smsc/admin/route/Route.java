@@ -23,8 +23,9 @@ public class Route
 	private boolean enabling = true;
 	private boolean archiving = true;
 	private boolean billing = false;
+	private int serviceId = 0;
 
-	public Route(String routeName, int priority, boolean isEnabling, boolean isBilling, boolean isArchiving, SourceList sources, DestinationList destinations)
+	public Route(String routeName, int priority, boolean isEnabling, boolean isBilling, boolean isArchiving, int serviceId, SourceList sources, DestinationList destinations)
 	{
 		if (routeName == null)
 			throw new NullPointerException("Route name is null");
@@ -40,6 +41,7 @@ public class Route
 		this.enabling = isEnabling;
 		this.archiving = isArchiving;
 		this.billing = isBilling;
+		this.serviceId = serviceId;
 	}
 
 	public Route(String routeName)
@@ -54,6 +56,7 @@ public class Route
 		enabling = false;
 		archiving = false;
 		billing = false;
+		serviceId = 0;
 	}
 
 	public Route(Element routeElem, SubjectList subjects, SMEList smes)
@@ -66,6 +69,7 @@ public class Route
 		enabling = routeElem.getAttribute("enabling").equalsIgnoreCase("true");
 		archiving = routeElem.getAttribute("archiving").equalsIgnoreCase("true");
 		billing = routeElem.getAttribute("billing").equalsIgnoreCase("true");
+		serviceId = Integer.decode(routeElem.getAttribute("serviceId")).intValue();
 	}
 
 	public String getName()
@@ -205,5 +209,15 @@ public class Route
 	public void setPriority(int priority)
 	{
 		this.priority = priority;
+	}
+
+	public int getServiceId()
+	{
+		return serviceId;
+	}
+
+	public void setServiceId(int serviceId)
+	{
+		this.serviceId = serviceId;
 	}
 }

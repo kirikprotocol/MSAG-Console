@@ -5,22 +5,84 @@
     "http://java.sun.com/dtd/web-app_2_3.dtd">
 
 <web-app>
-    <servlet>
-        <servlet-name>
-            smsc
-        </servlet-name>
-        <servlet-class>
-            ru.novosoft.smsc.jsp.SMSCJspController
-        </servlet-class>
-        <init-param>
-            <param-name>config</param-name>
-            <param-value>/export/home/igork/install/tomcat/webapps/smsc/WEB-INF/config.xml</param-value>
-        </init-param>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
+	<servlet>
+		<servlet-name>smsc</servlet-name>
+		<servlet-class>ru.novosoft.smsc.jsp.SMSCJspController</servlet-class>
+		<init-param>
+			<param-name>config</param-name>
+			<param-value>/export/home/igork/install/tomcat/webapps/smsc/WEB-INF/config.xml</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	
+	<servlet-mapping>
+		<servlet-name>smsc</servlet-name>
+		<url-pattern>/smsc/*</url-pattern>
+	</servlet-mapping>
+	
+	<error-page>
+	    <error-code>403</error-code>
+	    <location>/error403.jsp</location>
+	</error-page>
+	
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name>ordinalResources</web-resource-name>
+			<description>all webapp</description>
+			<url-pattern>/smsc/routes/*</url-pattern>
+			<url-pattern>/smsc/subjects/*</url-pattern>
+			<url-pattern>/smsc/aliases/*</url-pattern>
+			<!--http-method></http-method-->
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>user</role-name>
+		</auth-constraint>
+		<user-data-constraint><transport-guarantee>NONE</transport-guarantee></user-data-constraint>
+	</security-constraint>
 
-    <servlet-mapping>
-	<servlet-name>smsc</servlet-name>
-        <url-pattern>/smsc/*</url-pattern>
-    </servlet-mapping>
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name>profilesResource</web-resource-name>
+			<url-pattern>/smsc/profiles/*</url-pattern>
+			<!--http-method></http-method-->
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>admin</role-name>
+		</auth-constraint>
+		<user-data-constraint><transport-guarantee>NONE</transport-guarantee></user-data-constraint>
+	</security-constraint>
+
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name>HostsAndServices</web-resource-name>
+			<url-pattern>/smsc/status/*</url-pattern>
+			<url-pattern>/smsc/smsc_service/*</url-pattern>
+			<url-pattern>/smsc/hosts/*</url-pattern>
+			<url-pattern>/smsc/services/*</url-pattern>
+			<!--http-method></http-method-->
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>super-admin</role-name>
+		</auth-constraint>
+		<user-data-constraint><transport-guarantee>NONE</transport-guarantee></user-data-constraint>
+	</security-constraint>
+
+	<login-config>
+		<auth-method>FORM</auth-method>
+		<realm-name>SMSC.XmlRealm</realm-name>
+		<form-login-config>
+			<form-login-page>/login.jsp</form-login-page>
+			<form-error-page>/login.jsp?loginError=yes</form-error-page>
+		</form-login-config>
+	</login-config>
+	
+	<security-role>
+		<role-name>user</role-name>
+	</security-role>
+	<security-role>
+		<role-name>admin</role-name>
+	</security-role>
+	<security-role>
+		<role-name>super-admin</role-name>
+	</security-role>
 </web-app>

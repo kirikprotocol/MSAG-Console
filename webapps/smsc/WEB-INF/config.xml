@@ -4,6 +4,7 @@
 <config>
   <section name="system">
     <param name="webapp folder" type="string">/export/home/igork/install/tomcat/webapps/smsc</param>
+    <param name="users" type="string">users.xml</param>
   </section>
   <section name="daemons">
     <section name="smsc">

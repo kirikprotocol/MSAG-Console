@@ -6,8 +6,9 @@
 package ru.novosoft.smsc.jsp.smsc.hosts;
 
 import ru.novosoft.smsc.admin.daemon.Daemon;
+import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
-public class HostEdit extends HostsBean
+public class HostEdit extends SmscBean
 {
 	private String hostName = null;
 	private int port = -1;

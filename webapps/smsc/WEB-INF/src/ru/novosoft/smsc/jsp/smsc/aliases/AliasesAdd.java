@@ -10,7 +10,7 @@ import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
-import ru.novosoft.smsc.jsp.SmscBean;
+import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 import java.util.List;
 
@@ -18,10 +18,6 @@ public class AliasesAdd extends SmscBean
 {
 	protected String mbSave = null;
 	protected String mbCancel = null;
-
-	protected String oldAlias = null;
-	protected String oldAddress = null;
-	protected boolean oldHide = false;
 
 	protected String alias = null;
 	protected String address = null;
@@ -37,13 +33,6 @@ public class AliasesAdd extends SmscBean
 		{
 			alias = address = "";
 			hide = false;
-		}
-
-		if (oldAlias == null || oldAddress == null)
-		{
-			oldAlias = alias;
-			oldAddress = address;
-			oldHide = false;
 		}
 
 		return result;
@@ -107,36 +96,6 @@ public class AliasesAdd extends SmscBean
 	public void setMbCancel(String mbCancel)
 	{
 		this.mbCancel = mbCancel;
-	}
-
-	public String getOldAlias()
-	{
-		return oldAlias;
-	}
-
-	public void setOldAlias(String oldAlias)
-	{
-		this.oldAlias = oldAlias;
-	}
-
-	public String getOldAddress()
-	{
-		return oldAddress;
-	}
-
-	public void setOldAddress(String oldAddress)
-	{
-		this.oldAddress = oldAddress;
-	}
-
-	public boolean isOldHide()
-	{
-		return oldHide;
-	}
-
-	public void setOldHide(boolean oldHide)
-	{
-		this.oldHide = oldHide;
 	}
 
 	public String getAlias()

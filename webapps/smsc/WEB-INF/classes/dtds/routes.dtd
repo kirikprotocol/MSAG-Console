@@ -7,6 +7,7 @@
 	archiving (true | false) #REQUIRED
 	enabling (true | false) "true"
 	priority CDATA #REQUIRED
+	serviceId CDATA #REQUIRED
 >
 <!ELEMENT source (subject | mask)>
 <!ELEMENT destination (subject | mask)>

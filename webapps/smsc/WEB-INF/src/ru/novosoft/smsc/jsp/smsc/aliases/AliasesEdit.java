@@ -11,7 +11,7 @@ import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
-import ru.novosoft.smsc.jsp.SmscBean;
+import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 import java.util.List;
 

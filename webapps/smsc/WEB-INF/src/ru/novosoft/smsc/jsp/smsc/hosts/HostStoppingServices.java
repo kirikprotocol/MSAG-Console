@@ -6,12 +6,16 @@
 package ru.novosoft.smsc.jsp.smsc.hosts;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.daemon.Daemon;
+import ru.novosoft.smsc.admin.service.ServiceInfo;
+import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
-public class HostStoppingServices extends HostsBean
+public class HostStoppingServices extends SmscBean
 {
 	protected String hostName = null;
 	protected String serviceIds[] = new String[0];

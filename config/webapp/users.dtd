@@ -1,0 +1,14 @@
+<!ELEMENT users (user+)>
+
+<!ELEMENT user (role+)>
+<!ATTLIST user
+	name CDATA #REQUIRED
+	password CDATA #REQUIRED
+>
+
+<!ELEMENT role EMPTY>
+<!ATTLIST role
+	name CDATA #REQUIRED
+>
+
+

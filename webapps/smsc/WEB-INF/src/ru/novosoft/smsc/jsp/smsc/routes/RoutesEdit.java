@@ -8,7 +8,7 @@ package ru.novosoft.smsc.jsp.smsc.routes;
 import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
-import ru.novosoft.smsc.jsp.SmscBean;
+import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 import java.util.*;
 
@@ -23,6 +23,7 @@ public class RoutesEdit extends SmscBean
 	protected boolean permissible = false;
 	protected boolean billing = false;
 	protected boolean archiving = false;
+	protected int serviceId = 0;
 	protected String[] checkedSources = null;
 	protected String[] srcMasks = null;
 	protected String[] checkedDestinations = null;
@@ -186,7 +187,7 @@ public class RoutesEdit extends SmscBean
 			}
 
 			smsc.getRoutes().remove(oldRouteId);
-			smsc.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, sources, destinations));
+			smsc.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, serviceId, sources, destinations));
 			appContext.getStatuses().setRoutesChanged(true);
 			return RESULT_DONE;
 		}
@@ -356,5 +357,15 @@ public class RoutesEdit extends SmscBean
 	public void setPriority(int priority)
 	{
 		this.priority = priority;
+	}
+
+	public int getServiceId()
+	{
+		return serviceId;
+	}
+
+	public void setServiceId(int serviceId)
+	{
+		this.serviceId = serviceId;
 	}
 }

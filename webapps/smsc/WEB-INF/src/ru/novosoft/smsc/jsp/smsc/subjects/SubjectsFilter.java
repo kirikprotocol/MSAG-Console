@@ -6,7 +6,7 @@
 package ru.novosoft.smsc.jsp.smsc.subjects;
 
 import ru.novosoft.smsc.jsp.SMSCAppContext;
-import ru.novosoft.smsc.jsp.SmscBean;
+import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.jsp.util.tables.impl.AliasFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.SubjectFilter;
 

@@ -69,6 +69,7 @@ public class ServiceAddExternalAdm extends PageBean
 			{
 				case 0:
 					stage++;
+					return RESULT_OK;
 				case 1:
 					return RESULT_OK;
 				case 2:
@@ -202,7 +203,8 @@ public class ServiceAddExternalAdm extends PageBean
 			return error("Adding service \"" + serviceInfo.getId() + "\" to host \"" + serviceInfo.getHost() + "\" failed: " + e.getMessage());
 		}
 		logger.info("New service \"" + serviceInfo.getId() + "\" added to host \"" + serviceInfo.getHost() + '"');
-		return RESULT_OK;
+		stage = 0;
+		return RESULT_DONE;
 	}
 
 	public Set getHostNames()

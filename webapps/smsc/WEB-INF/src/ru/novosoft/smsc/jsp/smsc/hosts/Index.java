@@ -8,12 +8,13 @@ package ru.novosoft.smsc.jsp.smsc.hosts;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-public class Index extends HostsBean
+public class Index extends SmscBean
 {
 	public static final int RESULT_ADD = PRIVATE_RESULT;
 	public static final int RESULT_VIEW = PRIVATE_RESULT + 1;

@@ -10,10 +10,11 @@ import ru.novosoft.smsc.admin.daemon.Daemon;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 import java.util.*;
 
-public class HostView extends HostsBean
+public class HostView extends SmscBean
 {
 	public static final int RESULT_VIEW = PRIVATE_RESULT;
 	public static final int RESULT_EDIT = PRIVATE_RESULT + 1;

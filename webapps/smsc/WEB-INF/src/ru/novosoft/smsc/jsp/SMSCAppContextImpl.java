@@ -6,11 +6,18 @@ import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.config.ConfigManager;
+import ru.novosoft.smsc.util.auth.XmlAuthenticator;
 import ru.novosoft.util.conpool.NSConnectionPool;
 import ru.novosoft.util.jsp.AppContextImpl;
 
 import javax.sql.DataSource;
+import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.Properties;
+import java.io.File;
+
+import org.apache.catalina.HttpRequest;
 
 
 public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
@@ -30,7 +37,6 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 		try
 		{
 			org.apache.log4j.BasicConfigurator.configure();
-
 			ConfigManager.Init(configFileName);
 			configManager = ConfigManager.getInstance();
 			Properties props = new Properties();
@@ -43,6 +49,8 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 			serviceManager.init(configManager, smsc);
 			serviceManager = ServiceManager.getInstance();
 			daemonManager = serviceManager.getDaemonManager();
+			System.out.println("SMSCAppContextImpl.SMSCAppContextImpl **************************************************");
+			XmlAuthenticator.init(new File(new File(configManager.getConfig().getString("system.webapp folder"), "WEB-INF"), configManager.getConfig().getString("system.users")));
 		}
 		catch (Exception e)
 		{
