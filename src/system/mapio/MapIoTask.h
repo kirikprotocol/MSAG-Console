@@ -76,7 +76,7 @@ public:
   void setInvokeId(ET96MAP_INVOKE_ID_T invokeId) {this->invokeId = invokeId;}
   // возвращает истину если это последнее сообщение в диалоге и далее диалог
   // должн быть закрыт
-  virtual bool ProcessCmd(SmscCommand& cmd);
+  virtual bool ProcessCmd(const SmscCommand& cmd);
 };
 
 /**

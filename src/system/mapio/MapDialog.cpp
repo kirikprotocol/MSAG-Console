@@ -202,7 +202,7 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
   return ET96MAP_E_OK;
 }
 
-bool MapDialog::ProcessCmd(SmscCommand& cmd){
+bool MapDialog::ProcessCmd(const SmscCommand& cmd){
   __trace2__("MAP::MapDialog::ProcessCmd");
   try{
     __trace2__("MAP::MapDialog::ProcessCmd: 0x%x",cmd->get_commandId());
