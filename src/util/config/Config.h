@@ -2,7 +2,7 @@
 #define SMSC_UTIL_CONFIG_CONFIG
 
 #include <inttypes.h>
-#include <iostream.h>
+#include <iostream>
 #include <xercesc/dom/DOM_Element.hpp>
 #include <xercesc/dom/DOM_DOMException.hpp>
 #include <log4cpp/Category.hh>
@@ -60,7 +60,7 @@ public:
             intParams.Delete(name);
             delete name;
         }
-    
+
         bool bval;
         for (boolParamsType::Iterator i = boolParams.getIterator(); i.Next(name, bval);)
         {
@@ -138,7 +138,7 @@ public:
     {
         strParams[paramName] = cStringCopy(value);
     }
-    
+
     void setBool(const char * const paramName, bool value)
     {
         boolParams[paramName] = value;

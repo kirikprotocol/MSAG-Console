@@ -2,14 +2,14 @@
 #define SMSC_UTIL_TEMPLATES_ENTITIES
 
 /**
- * 
+ *
  * @author Victor V. Makarov
  * @version 1.0
- * @see 
+ * @see
  */
 
 #include <time.h>
-#include <iostream.h>
+#include <iostream>
 
 #include <core/buffers/Hash.hpp>
 #include <core/buffers/Array.hpp>
@@ -21,22 +21,22 @@ namespace smsc { namespace util { namespace templates
     using smsc::core::buffers::Array;
 
     using smsc::util::Exception;
-    
+
     class FormatRenderingException : public Exception
     {
     public:
 
         FormatRenderingException(const char* fmt,...)
-            : Exception() 
+            : Exception()
         {
             SMSC_UTIL_EX_FILL(fmt);
         };
-        FormatRenderingException() 
+        FormatRenderingException()
             : Exception("Exception occurred during format rendering !") {};
-        
+
         virtual ~FormatRenderingException() throw() {};
     };
-    
+
     static const char* SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION  = "arg";
     static const char* SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION   = "default";
     static const char* SMSC_DBSME_IO_FORMAT_PATTERN_OPTION   = "pattern";
@@ -45,7 +45,7 @@ namespace smsc { namespace util { namespace templates
     static const char* SMSC_DBSME_IO_FORMAT_DIGITS_OPTION    = "digits";
     static const char* SMSC_DBSME_IO_FORMAT_EXPORT_OPTION    = "export";
     static const char* SMSC_DBSME_IO_FORMAT_IMPORT_OPTION    = "import";
-    
+
     static const char  SMSC_DBSME_IO_FORMAT_ENTITY_DELIMETER = '$';
     static const char  SMSC_DBSME_IO_FORMAT_STRING_DELIMETER = '\"';
     static const char  SMSC_DBSME_IO_FORMAT_ENTITY_ESCAPER   = '\\';
@@ -55,9 +55,9 @@ namespace smsc { namespace util { namespace templates
     static const char*  ioTodayString       = "today";
     static const char*  ioTomorrowString    = "tomorrow";
     static const char*  ioYesterdayString   = "yesterday";
-    
+
     static const char*  ioFullMonthesNames[12] = {
-        "January", "February", "March", "April", 
+        "January", "February", "March", "April",
         "May", "June", "July", "August", "September",
         "October", "November", "December"
     };
@@ -75,7 +75,7 @@ namespace smsc { namespace util { namespace templates
     static const char*  ioDayTimeParts[2] = {
         "AM", "PM"
     };
-    
+
     class ContextEnvironment
     {
     protected:
@@ -86,7 +86,7 @@ namespace smsc { namespace util { namespace templates
         Hash<float>         flts;
         Hash<double>        dbls;
         Hash<long double>   ldls;
-        
+
         static void toUpperCase(const char* str, char* low);
 
     public:
@@ -111,28 +111,28 @@ namespace smsc { namespace util { namespace templates
     };
 
     const int ioEntityTypesNumber = 14;
-    static const char* ioEntityTypeStrings[ioEntityTypesNumber]  = 
-    { 
+    static const char* ioEntityTypeStrings[ioEntityTypesNumber]  =
+    {
         "int8", "int16", "int32", "int64",
         "uint8", "uint16", "uint32", "uint64",
         "float", "double", "long-double", "date",
         "string", "text"
     };
-    
-    typedef enum { 
+
+    typedef enum {
         ET_INT8 = 0, ET_INT16 = 1, ET_INT32 = 2, ET_INT64 = 3,
         ET_UINT8 = 4, ET_UINT16 = 5, ET_UINT32 = 6, ET_UINT64 = 7,
         ET_FLOAT = 8, ET_DOUBLE = 9, ET_LDOUBLE = 10, ET_DATE = 11,
         ET_STRING = 12, ET_TEXT = 13
     } EntityType;
-    
+
     struct FormatEntity
     {
-        
+
         EntityType          type;
         Hash<std::string>   options;
         std::string         str;
-        
+
         FormatEntity(std::string line, bool io, bool type=true)
             throw(FormatRenderingException);
         virtual ~FormatEntity();
@@ -163,5 +163,3 @@ namespace smsc { namespace util { namespace templates
 }}}
 
 #endif
-
-

@@ -98,7 +98,7 @@ deps:
 	@if [ -n "$(SOURCES:.cpp=)" ] ; then \
 	    XXXX="$(SOURCES:.cpp=)"; \
 	    for i in $$XXXX ; do \
-		gcc -MM $(CXXFLAGS) $(SMSC_SRCDIR)/$(PACKAGEDIR)/$$i.cpp -o$(SMSC_BUILDDIR)/obj/$(LIBRARY)/$$i.o >>\
+		gcc -MM $(CXXFLAGS) $(SMSC_SRCDIR)/$(PACKAGEDIR)/$$i.cpp >>\
 		      $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.deps; \
 	    done; \
 	fi
