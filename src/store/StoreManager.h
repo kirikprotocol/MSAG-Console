@@ -49,6 +49,9 @@ namespace smsc { namespace store
         static ConnectionPool       *pool;
         static log4cpp::Category    &log;
         
+        static unsigned             maxTriesCount;
+        static void loadMaxTriesCount(Manager& config);
+
     protected:
         
         StoreManager() : MessageStore() {};
