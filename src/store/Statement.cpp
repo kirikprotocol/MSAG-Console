@@ -1140,7 +1140,7 @@ bool GetBodyStatement::getBody(Body& body)
 
         check(OCILobRead(svchp, errhp, locator, &amount, offset,
                          (dvoid *)buff, size, (dvoid *)0,
-                         (sb4 (*)(dvoid *, dvoid *, ub4, ub1)) 0,
+                         (sb4 (*)(dvoid *, const dvoid *, ub4, ub1)) 0,
                          (ub2) 0, (ub1) 0));
 
         if (size != amount)
