@@ -16,6 +16,7 @@
 			<param name="msgLocaleUnknown">Неправильно задан locale</param>
 			<param name="msgHide">Включена hide опция</param>
 			<param name="msgUnhide">Включена unhide опция</param>
+			<param name="msgModificationDenied">У вас нет прав на изменение профиля</param>
 			<param name="msgError"></param>
 		</section>
 		<section name="abonentinfo">

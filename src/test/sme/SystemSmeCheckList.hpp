@@ -57,6 +57,8 @@ void profilerTc()
 		"Установить опцию hide (команда hide)");
 	__reg_tc__("updateProfile.hide.unhide",
 		"Установить опцию unhide (команда unhide)");
+	__reg_tc__("updateProfile.hide.hideDenied",
+		"Попытка изменить опцию hide, если для профиля запрещено изменение hide опции");
 	__reg_tc__("updateProfile.incorrectCmdText",
 		"Неправильный текст команды");
 	//updateProfile.ack
@@ -81,6 +83,10 @@ void profilerTc()
 	__reg_tc__("updateProfile.ack.hide",
 		"Подтверждения об изменении hide опции");
 	__reg_tc__("updateProfile.ack.hide.dataCoding",
+		"При отсутствии в тексте сообщения русских символов приходит в default кодировке, при наличии русских симовлов приходит либо в default (транслитерация), либо в ucs2 в зависимости от текущих настроек профиля");
+	__reg_tc__("updateProfile.ack.hideDenied",
+		"Сообщение об ошибке при попытке изменения hide опции, если для профиля запрещено изменение hide");
+	__reg_tc__("updateProfile.ack.hideDenied.dataCoding",
 		"При отсутствии в тексте сообщения русских символов приходит в default кодировке, при наличии русских симовлов приходит либо в default (транслитерация), либо в ucs2 в зависимости от текущих настроек профиля");
 	__reg_tc__("updateProfile.ack.incorrectCmdText",
 		"Уведомление о неправильном тексте команды");

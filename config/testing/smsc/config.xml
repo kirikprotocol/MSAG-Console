@@ -101,6 +101,7 @@
 		<param name="defaultDataCoding" type="string">DEFAULT</param>
 		<param name="defaultReport" type="string">NONE</param>
 		<param name="defaultHide" type="bool">true</param>
+		<param name="defaultHideModifiable" type="bool">true</param>
 		<param name="protocol_id" type="int">5</param>
 		<param name="service_type" type="string">pRof</param>
 		<param name="systemId" type="string">profiler</param>

@@ -323,6 +323,8 @@ void SmppProfilerTestCases::updateHideOptionsCorrect(bool sync,
 	{
 		return;
 	}
+	time_t t;
+	Profile profile = fixture->profileReg->getProfile(fixture->smeAddr, t);
 	TCSelector s(num, 2);
 	for (; s.check(); s++)
 	{
@@ -333,14 +335,30 @@ void SmppProfilerTestCases::updateHideOptionsCorrect(bool sync,
 			switch (s.value())
 			{
 				case 1: //hide
-					__tc__("updateProfile.hide.hide");
 					text = "hide";
-					intProps["profilerTc.hide"] = 1;
+					if (profile.hideModifiable)
+					{
+						__tc__("updateProfile.hide.hide");
+						intProps["profilerTc.hide"] = 1;
+					}
+					else
+					{
+						__tc__("updateProfile.hide.hideDenied");
+						intProps["profilerTc.hideDenied"] = 1;
+					}
 					break;
 				case 2: //unhide
-					__tc__("updateProfile.hide.unhide");
 					text = "unhide";
-					intProps["profilerTc.hide"] = 0;
+					if (profile.hideModifiable)
+					{
+						__tc__("updateProfile.hide.unhide");
+						intProps["profilerTc.hide"] = 0;
+					}
+					else
+					{
+						__tc__("updateProfile.hide.hideDenied");
+						intProps["profilerTc.hideDenied"] = 1;
+					}
 					break;
 				default:
 					__unreachable__("Invalid num");
@@ -466,11 +484,19 @@ AckText* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 			monitor->pduData->strProps["profilerTc.locale"]);
 		return new AckText(p.first, p.second, true /*valid*/);
 	}
+	//проверка profiler hide
 	if (monitor->pduData->intProps.count("profilerTc.hide"))
 	{
 		__tc__("updateProfile.ack.hide.dataCoding"); __tc_ok__;
 		const pair<string, uint8_t> p = ProfilerHideMessage::format(profile,
 			monitor->pduData->intProps["profilerTc.hide"]);
+		return new AckText(p.first, p.second, true /*valid*/);
+	}
+	//проверка profiler hide (нет прав доступа)
+	if (monitor->pduData->intProps.count("profilerTc.hideDenied"))
+	{
+		__tc__("updateProfile.ack.hideDenied.dataCoding"); __tc_ok__;
+		const pair<string, uint8_t> p = ModificationDeniedMessage::format(profile);
 		return new AckText(p.first, p.second, true /*valid*/);
 	}
 	//неправильный текст команды

@@ -8,11 +8,33 @@ namespace core {
 
 using namespace std;
 using namespace smsc::test::util;
+using namespace smsc::profiler;
+
+template<typename T, int size>
+inline int sz(T (&)[size]) { return size; }
 
 void ProfileUtil::setupRandomCorrectProfile(Profile& profile)
 {
-	profile.codepage = rand0(1); //Default=0, Ucs2=1
-	profile.reportoptions = rand0(1); //ReportNone=0, ReportFull=1
+	static const int charsetOptions[] =
+	{
+		ProfileCharsetOptions::Default,
+		ProfileCharsetOptions::Ucs2
+	};
+	static const int reportOptions[] =
+	{
+		ProfileReportOptions::ReportNone,
+		ProfileReportOptions::ReportFull,
+		ProfileReportOptions::ReportFinal
+	};
+	static const string locales[] =
+	{
+		"en_us", "en_gb", "ru_ru"
+	};
+	profile.codepage = charsetOptions[rand0(sz(charsetOptions) - 1)];
+	profile.reportoptions = reportOptions[rand0(sz(reportOptions) - 1)];
+	profile.locale = locales[rand0(sz(locales) - 1)];
+	profile.hide = rand0(1);
+	profile.hideModifiable = rand0(1);
 }
 
 #define __compare__(errCode, field) \

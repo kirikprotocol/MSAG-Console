@@ -123,6 +123,22 @@ struct ProfilerHideMessage
 	}
 };
 
+struct ModificationDeniedMessage
+{
+	static const pair<string, uint8_t> format(const Profile& profile)
+	{
+		if (profile.locale == "en_us" || profile.locale == "en_gb")
+		{
+			return convert("You have no priveledges to modify your profile", profile.codepage);
+		}
+		if (profile.locale == "ru_ru")
+		{
+			return convert("У вас нет прав на изменение профиля", profile.codepage);
+		}
+		__unreachable__("Invalid locale options");
+	}
+};
+
 //Пустое сообщение
 struct ProfilerErrorMessage
 {

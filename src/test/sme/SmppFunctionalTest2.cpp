@@ -546,6 +546,21 @@ vector<TestSme*> genConfig(int transceivers, int transmitters, int receivers,
 		__trace2__("register sme: addr = %s, systemId = %s",
 			str(*addr.back()).c_str(), smeInfo.back()->systemId.c_str());
 	}
+	//задание профилей (но только для половины transceiver sme)
+	cout << "Sql to setup profiles:" << endl;
+	for (int i = 0; i < transceivers / 2; i++)
+	{
+		Profile profile;
+		ProfileUtil::setupRandomCorrectProfile(profile);
+		profileReg->putProfile(*addr[i], profile);
+		cout << "insert into sms_profile(mask,reportinfo,codeset,locale,hidden,hidden_mod) values(" <<
+			"'"  << *addr[i] << "'," <<
+			profile.reportoptions << "," <<
+			profile.codepage << "," <<
+			"'" << profile.locale << "'," <<
+			profile.hide << "," <<
+			(profile.hideModifiable ? "'Y'" : "'N'") << ");" << endl;
+	}
 	//регистрация алиасов
 	for (int i = 0; i < numAddr; i++)
 	{
@@ -1034,6 +1049,7 @@ int main(int argc, char* argv[])
 	defProfile.reportoptions = ProfileReportOptions::ReportNone;
 	defProfile.locale = "en_us";
 	defProfile.hide = 1; //true
+	defProfile.hideModifiable = true;
 	profileReg = new ProfileRegistry(defProfile);
 	smppChkList = new SystemSmeCheckList();
 	configChkList = new ConfigGenCheckList();

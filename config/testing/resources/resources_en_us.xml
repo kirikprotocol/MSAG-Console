@@ -13,11 +13,13 @@
 			<param name="msgDefault">Message character encoding is set to default encoding (now you are not able to receive messages with russian characters in the text even if your cell phone supports ucs2 messages)</param>
 			<param name="msgUCS2">Message character encoding is set to ucs2 encoding (now you will be able to receive messages with russian characters in the case your cell phone supports ucs2 messages)</param>
 			<param name="msgReportNone">Delivery reports are disabled</param>
-			<param name="msgReportFull">Отчеты доставки разрешены</param>
+			<param name="msgReportFull">Все отчеты доставки включены</param>
+			<param name="msgReportFinal">Отчеты финальной доставки доставки включены</param>
 			<param name="msgLocaleChanged">Locale is successfully changed</param>
 			<param name="msgLocaleUnknown">Unknown locale</param>
 			<param name="msgHide">Hide option is turned on</param>
 			<param name="msgUnhide">Unhide option is turned on</param>
+			<param name="msgModificationDenied">You have no priveledges to modify your profile</param>
 			<param name="msgError">Неправильная команда (!@#$%^&amp;*( )_+-=|\:;'&lt;,&gt;.?/)</param>
 		</section>
 		<section name="abonentinfo">
