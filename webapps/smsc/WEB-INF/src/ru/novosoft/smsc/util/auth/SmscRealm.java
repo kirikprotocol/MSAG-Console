@@ -30,13 +30,11 @@ public class SmscRealm extends RealmBase
 
 	public Principal authenticate(String login, String password)
 	{
-		System.out.println("SmscRealm.authenticate(\"" + login + "\", \"" + password+"\")");
 		return AuthenticatorProxy.getInstance().authenticate(getName(), login, password);
 	}
 
 	public boolean hasRole(Principal principal, String role)
 	{
-		System.out.println("SmscRealm.hasRole(\"" + principal.getName() + "\", \"" + role + "\")");
 		return AuthenticatorProxy.getInstance().hasRole(getName(), principal, role);
 	}
 }

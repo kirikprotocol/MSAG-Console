@@ -56,7 +56,7 @@ public class Proxy
 		return status;
 	}
 
-	public Response runCommand(Command command)
+	public synchronized Response runCommand(Command command)
 			  throws AdminException
 	{
 		logger.debug("runCommand(@" + command.getClass().getName() + ")");
@@ -125,6 +125,7 @@ public class Proxy
 			try
 			{
 				socket = new Socket(host, port);
+				socket.setSoTimeout(10000);
 				out = socket.getOutputStream();
 				in = socket.getInputStream();
 				writer = new CommandWriter(out);

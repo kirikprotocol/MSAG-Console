@@ -44,7 +44,7 @@ public class HostsManager
 	 * @return new added daemon
 	 * @throws AdminException
 	 */
-	public Daemon addHost(String host, int port) throws AdminException
+	public synchronized Daemon addHost(String host, int port) throws AdminException
 	{ //? add smes
 		final Daemon daemon = daemonManager.add(host, port, smeManager.getSmes());
 		for (Iterator i = daemon.getServiceIds(smeManager.getSmes()).iterator(); i.hasNext();)
@@ -70,7 +70,7 @@ public class HostsManager
 		return daemon;
 	}
 
-	public Daemon removeHost(String host) throws AdminException
+	public synchronized Daemon removeHost(String host) throws AdminException
 	{ //? remove smes
 		final Daemon daemon = daemonManager.get(host);
 		final List serviceIds = daemon.getServiceIds(smeManager.getSmes());
@@ -85,25 +85,25 @@ public class HostsManager
 		return daemonManager.remove(daemon.getHost());
 	}
 
-	public List getHostNames()
+	public synchronized List getHostNames()
 	{
 		return daemonManager.getHostNames();
 	}
 
 	/* **************************************** services ************************************************/
-	public List getServiceIds() throws AdminException
+	public synchronized List getServiceIds() throws AdminException
 	{
 		refreshServices();
 		return serviceManager.getServiceIds();
 	}
 
-	public Map getServices(String hostName) throws AdminException
+	public synchronized Map getServices(String hostName) throws AdminException
 	{
 		refreshServices();
 		return daemonManager.get(hostName).getServices();
 	}
 
-	public Service removeService(String serviceId) throws AdminException
+	public synchronized Service removeService(String serviceId) throws AdminException
 	{
 		if (routeSubjectManager.isSmeUsed(serviceId))
 			throw new AdminException("Service \"" + serviceId + "\" is used by routes");
@@ -118,7 +118,7 @@ public class HostsManager
 		return service;
 	}
 
-	public long startService(String serviceId) throws AdminException
+	public synchronized long startService(String serviceId) throws AdminException
 	{
 		try
 		{
@@ -135,7 +135,7 @@ public class HostsManager
 		}
 	}
 
-	public void killService(String serviceId) throws AdminException
+	public synchronized void killService(String serviceId) throws AdminException
 	{
 		ServiceInfo info = serviceManager.getInfo(serviceId);
 		Daemon d = daemonManager.get(info.getHost());
@@ -144,18 +144,18 @@ public class HostsManager
 		info.setPid(0);
 	}
 
-	public void shutdownService(String serviceId) throws AdminException
+	public synchronized void shutdownService(String serviceId) throws AdminException
 	{
 		daemonManager.get(serviceManager.getInfo(serviceId).getHost()).shutdownService(serviceId);
 	}
 
-	public int getCountRunningServices(String hostName) throws AdminException
+	public synchronized int getCountRunningServices(String hostName) throws AdminException
 	{
 		refreshServices();
 		return daemonManager.get(hostName).getCountRunningServices();
 	}
 
-	public int getCountServices(String hostName) throws AdminException
+	public synchronized int getCountServices(String hostName) throws AdminException
 	{
 		refreshServices();
 		return daemonManager.get(hostName).getCountServices();
@@ -173,7 +173,7 @@ public class HostsManager
 		}
 	}
 
-	public void deployAdministrableService(File incomingZip, ServiceInfo serviceInfo) throws AdminException
+	public synchronized void deployAdministrableService(File incomingZip, ServiceInfo serviceInfo) throws AdminException
 	{
 		final String id = serviceInfo.getId();
 		if (serviceManager.contains(id))
@@ -202,22 +202,17 @@ public class HostsManager
 
 	/* ***************************************** smes **************************************************/
 
-	public List getSmeIds()
+	public synchronized List getSmeIds()
 	{
 		return smeManager.getSmeNames();
 	}
 
-	public SME addSme(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName) throws AdminException
+	public synchronized SME addSme(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName) throws AdminException
 	{
 		return smeManager.add(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, smeN, wantAlias, forceDC, timeout, receiptSchemeName);
 	}
 
-	SME getSme(String id) throws AdminException
-	{
-		return smeManager.get(id);
-	}
-
-	public void removeSme(String smeId) throws AdminException
+	public synchronized void removeSme(String smeId) throws AdminException
 	{
 		if (serviceManager.contains(smeId))
 			throw new AdminException("Couldn't remove sme \"" + smeId + "\" becouse it is service");
@@ -229,34 +224,36 @@ public class HostsManager
 	}
 
 
-	boolean isSmeUsed(String smeId) throws AdminException
+	private boolean isSmeUsed(String smeId) throws AdminException
 	{
 		return routeSubjectManager.isSmeUsed(smeId);
 	}
 
-	public int getHostPort(String hostName) throws AdminException
+	public synchronized int getHostPort(String hostName) throws AdminException
 	{
 		return daemonManager.get(hostName).getPort();
 	}
 
-	public boolean isService(String smeId)
+	public synchronized boolean isService(String smeId)
 	{
 		return serviceManager.contains(smeId);
 	}
 
-	public boolean isServiceAdministarble(String smeId)
+	public synchronized boolean isServiceAdministarble(String smeId)
 	{
 		return serviceManager.isServiceAdministarble(smeId);
 	}
 
-	public ServiceInfo getServiceInfo(String serviceId) throws AdminException
+	public synchronized ServiceInfo getServiceInfo(String serviceId) throws AdminException
 	{
 		refreshServices();
 		return serviceManager.getInfo(serviceId);
 	}
 
-	public Daemon getSmscDaemon()
+/*
+	public synchronized Daemon getSmscDaemon()
 	{
 		return daemonManager.getSmscDaemon();
 	}
+*/
 }

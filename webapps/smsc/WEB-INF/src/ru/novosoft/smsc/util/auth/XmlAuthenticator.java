@@ -84,7 +84,6 @@ public class XmlAuthenticator implements Authenticator
 		SmscPrincipal principal = (SmscPrincipal) users.get(login);
 		if (principal != null && principal.getPassword().equals(password))
 		{
-			System.out.println("XmlAuthenticator.authenticate(\"" + login + "\", \"" + password + "\") Success.");
 			return principal;
 		}
 		else

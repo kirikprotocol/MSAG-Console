@@ -15,9 +15,12 @@ import ru.novosoft.util.conpool.NSConnectionPool;
 import ru.novosoft.util.jsp.AppContextImpl;
 
 import javax.sql.DataSource;
-import java.io.File;
+import java.io.*;
 import java.sql.SQLException;
 import java.util.*;
+
+import org.apache.log4j.PropertyConfigurator;
+import org.apache.log4j.BasicConfigurator;
 
 
 public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
@@ -37,13 +40,74 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 
 	private Console console = null;
 
+	private void initLoggerByProps(InputStream is)
+	{
+		if (is == null)
+			BasicConfigurator.configure();
+		else
+		{
+			Properties props = new Properties();
+			try
+			{
+				props.load(is);
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace(System.err);
+				System.out.println("Couldn't read log4j init file, configure by BasicConfigurator");
+				e.printStackTrace(System.out);
+				BasicConfigurator.configure();
+			}
+			PropertyConfigurator.configure(props);
+		}
+	}
+
+	private void initLogger()
+	{
+		System.out.println("initializing logger");
+		File log4jinit = new File("conf/log4j.properties");
+		if (!log4jinit.exists())
+			log4jinit = new File("../conf/log4j.properties");
+		if (!log4jinit.exists())
+			log4jinit = new File("log4j.properties");
+		if (!log4jinit.exists())
+		{
+			InputStream is = this.getClass().getClassLoader().getResourceAsStream("log4j.properties");
+			if (is == null)
+			{
+				System.out.println("initializing log4j by BasicConfigurator");
+				BasicConfigurator.configure();
+			}
+			else
+			{
+				System.out.println("initializing log4j by resource log4j.properties");
+				initLoggerByProps(is);
+			}
+		}
+		else
+		{
+			try
+			{
+				System.out.println("initializing log4j by external file: " + log4jinit.getAbsolutePath());
+				initLoggerByProps(new FileInputStream(log4jinit));
+			}
+			catch (FileNotFoundException e)
+			{
+				e.printStackTrace(System.err);
+				System.out.println("Couldn't read log4j init file, configure by BasicConfigurator");
+				e.printStackTrace(System.out);
+				BasicConfigurator.configure();
+			}
+		}
+	}
+
 	public SMSCAppContextImpl(String configFileName)
 	{
 		super();
 		try
 		{
 			System.out.println("Starting SMSC Administartion Web Apllication **************************************************");
-			org.apache.log4j.BasicConfigurator.configure();
+			initLogger();
 			ConfigManager.Init(configFileName);
 			configManager = ConfigManager.getInstance();
 			final Config config = configManager.getConfig();
@@ -92,8 +156,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 		localeMessages.put(locale, ResourceBundle.getBundle("locales.messages", locale));
 	}
 
-	private void startConsole()
-			throws Exception
+	private void startConsole() throws Exception
 	{
 		boolean needConsole = false;
 		try

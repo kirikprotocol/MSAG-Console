@@ -26,7 +26,6 @@ public class AuthenticatorProxy
 
 	public void registerAuthenticator(String realmName, Authenticator authenticator)
 	{
-		System.out.println("AuthenticatorProxy.registerAuthenticator(\"" + realmName + "\", \"" + authenticator + "\")");
 		synchronized (authenticators)
 		{
 			authenticators.put(realmName, authenticator);
@@ -40,7 +39,6 @@ public class AuthenticatorProxy
 		{
 			auth = (Authenticator) authenticators.get(realmName);
 		}
-		System.out.println("AuthenticatorProxy.authenticate(\"" + realmName + "\", \"" + login + "\", \"" + password+"\") auth="+auth);
 		if (auth == null)
 			return null;
 		else
@@ -50,7 +48,6 @@ public class AuthenticatorProxy
 	public boolean hasRole(String realmName, Principal principal, String role)
 	{
 		Authenticator auth;
-		System.out.println("AuthenticatorProxy.hasRole(\"" + realmName + "\", \"" + principal.getName() + "\", \"" + role + "\")");
 		synchronized (authenticators)
 		{
 			auth = (Authenticator) authenticators.get(realmName);
