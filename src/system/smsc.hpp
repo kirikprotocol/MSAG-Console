@@ -24,6 +24,7 @@
 #include "db/DataSource.h"
 #include "db/DataSourceLoader.h"
 #include "snmp/SnmpAgent.hpp"
+#include "acls/interfaces.h"
 
 #include "distrlist/DistrListManager.h"
 #include "distrlist/DistrListProcess.h"
@@ -49,6 +50,7 @@ using smsc::router::RouteInfo;
 using smsc::distrlist::DistrListManager;
 using smsc::distrlist::DistrListProcess;
 using smsc::util::config::route::RouteConfig;
+using smsc::acls::AclAbstractMgr;
 //class smsc::store::MessageStore;
 
 template<class T>
@@ -466,6 +468,7 @@ protected:
 
   TemporaryStore tempStore;
 
+	AclAbstractMgr   *aclmgr;	
   DistrListManager *distlstman;
   DistrListProcess *distlstsme;
 

@@ -1,14 +1,14 @@
 logger
 snmp    "SNMP agent implementation"
-smpp	"SMPP protocol implementation"
-core 	"SMSC core implementation"
-util	"Utility classes"
-sms		"SMS declaration"
-store		"Store implementation"
+smpp  "SMPP protocol implementation"
+core  "SMSC core implementation"
+util  "Utility classes"
+sms   "SMS declaration"
+store   "Store implementation"
 db
 dbsme
-#storetest	"Service program to test store module"
-admin		"Administration subsystem"
+#storetest  "Service program to test store module"
+admin   "Administration subsystem"
 smeman
 router
 system
@@ -26,3 +26,4 @@ emailsme
 infosme
 license
 smppgw
+acls

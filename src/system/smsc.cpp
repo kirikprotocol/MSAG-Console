@@ -38,7 +38,7 @@ using namespace smsc::router;
 using namespace smsc::snmp;
 using namespace smsc::core::synchronization;
 using util::Exception;
-
+using smsc::acls::AclAbstractMgr;
 
 Smsc::~Smsc()
 {
@@ -467,6 +467,9 @@ void Smsc::init(const SmscConfigs& cfg)
   tp2.startTask(statMan);
   smsc_log_info(log, "Statistics manager started" );
 
+  aclmgr = AclAbstractMgr::Create();
+  aclmgr->LoadUp(dataSource);
+
   distlstman=new DistrListManager(*dataSource,*cfg.cfgman);
 
   distlstsme=new DistrListProcess(distlstman);
@@ -840,6 +843,7 @@ void Smsc::shutdown()
 
 
   delete distlstman;
+  delete aclmgr;
 
   smsc::mscman::MscManager::shutdown();
 
