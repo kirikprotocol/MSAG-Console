@@ -33,10 +33,11 @@ void initXerces()
 	if (!isXercesInitialized)
 	{
 		XMLPlatformUtils::Initialize();
-    //addEncoding("CP1251");  //TODO implement support of multiple encodings
-    //addEncoding("ANSI-1251");
-    //addEncoding("ISO8859-5");
-    //addEncoding("WINDOWS-1251");
+    addEncoding("CP1251");
+    addEncoding("ANSI-1251");
+    addEncoding("ISO8859-5");
+    addEncoding("WINDOWS-1251");
+    addEncoding("KOI8-R");
     addEncoding(getLocalEncoding());
 	}
 }
