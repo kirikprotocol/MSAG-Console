@@ -109,7 +109,7 @@ public:
 
 int AbonentInfoSme::Execute()
 {
-  SmscCommand cmd,resp,answ;
+  SmscCommand cmd,resp;
   char body[MAX_SHORT_MESSAGE_LENGTH+1];
   SMS *sms;
   Profile p;
@@ -214,7 +214,8 @@ int AbonentInfoSme::Execute()
 
       p=smsc->getProfiler()->lookup(d);
 
-      string answ;
+      std::string answ;
+
       try{
         if(as.isMobileRequest)
         {

@@ -160,29 +160,9 @@ public:
     eventqueue.enqueue(id,SmscCommand::makeCancel(id,oa,da));
   }
 
-  void notifyScheduler()
+  Scheduler* getScheduler()
   {
-    scheduler->notify();
-  }
-
-  void ChangeSmsSchedule(SMSId msgId,time_t t,SmeIndex idx)
-  {
-    scheduler->ChangeSmsSchedule(msgId,t,idx);
-  }
-
-  void UpdateSmsSchedule(time_t old,SMSId msgId,time_t t,SmeIndex idx)
-  {
-    scheduler->UpdateSmsSchedule(old,msgId,t,idx);
-  }
-
-  int GetSmeScheduleCount(SmeIndex idx,time_t time)
-  {
-    return scheduler->getSmeCount(idx,time);
-  }
-
-  int GetSchedulerCount()
-  {
-    return scheduler->getSmsCount();
+    return scheduler;
   }
 
   smsc::profiler::Profiler* getProfiler()
@@ -334,7 +314,9 @@ public:
     eventqueue.getStats(hsize,qsize);
     eqsize=qsize;
     eqlocked=hsize-qsize;
-    schedsize=scheduler->getSmsCount();
+    int tcnt,tll,rs,ipc;
+    scheduler->getSmsCounts(tcnt,tll,rs,ipc);
+    schedsize=tcnt;
   }
 
   RefferGuard<RouteManager> getRouterInstance()

@@ -163,7 +163,9 @@ public:
       d.eventQueueSize=equnl;
       d.inProcessingCount=eqhash-equnl;
 
-      d.inScheduler=smsc->GetSchedulerCount();
+      int tcnt,tll,rs,ipc;
+      smsc->getScheduler()->getSmsCounts(tcnt,tll,rs,ipc);
+      d.inScheduler=tcnt;
 
       perfListener->reportGenPerformance(&d);
 
@@ -250,6 +252,8 @@ void Smsc::init(const SmscConfigs& cfg)
       */
       if(rec->rectype==smsc::util::config::smeman::SMPP_SME)
       {
+        si.priority=rec->priority;
+
         si.typeOfNumber=rec->recdata.smppSme.typeOfNumber;
         si.numberingPlan=rec->recdata.smppSme.numberingPlan;
         si.interfaceVersion=rec->recdata.smppSme.interfaceVersion;
@@ -359,7 +363,7 @@ void Smsc::init(const SmscConfigs& cfg)
   */
 
   // create scheduler here, and start later in run
-  scheduler=new Scheduler(eventqueue);
+  scheduler=new Scheduler();
 
 
   smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance(),0);

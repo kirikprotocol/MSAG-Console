@@ -209,6 +209,7 @@ void Smsc::mainLoop()
     for(CmdVector::iterator i=frame.begin();i!=frame.end();i++)
     {
       try{
+        __trace2__("mainLoop: %s.priority=%d",i->getProxy()->getSystemId(),i->getProxy()->getPriority());
         int prio=i->getProxy()->getPriority()/1024;
         if(prio<0)prio=0;
         if(prio>=32)prio=31;
@@ -561,11 +562,6 @@ void Smsc::processCommand(SmscCommand& cmd)
       }
       break;
     }
-    case __CMD__(HLRALERT):
-    {
-      alertAgent->putCommand(cmd);
-      return;
-    }
     case __CMD__(QUERYABONENTSTATUS):
     {
       cmd->set_dialogId(mapProxy->getNextSequenceNumber());
@@ -587,6 +583,7 @@ void Smsc::processCommand(SmscCommand& cmd)
       id=cmd->get_forwardMsgId();
       break;
     }
+    case __CMD__(HLRALERT):
     case __CMD__(SMEALERT):
     {
       scheduler->putCommand(cmd);

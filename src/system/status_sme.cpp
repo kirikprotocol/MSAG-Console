@@ -80,10 +80,11 @@ int StatusSme::Execute()
 
     if(request=="scheduler" || request=="sc")
     {
-      char buf[32];
-      sprintf(buf,"%d",smsc->scheduler->getSmsCount());
+      int tcnt,tll,rs,ipc;
+      smsc->scheduler->getSmsCounts(tcnt,tll,rs,ipc);
+      char buf[128];
+      sprintf(buf,"tc:%d,tll:%d,rs=%d,ipc:%d",tcnt,tll,rs,ipc);
       answer=buf;
-      answer+=" sms in scheduler";
     }else if (request=="eventqueue" || request=="eq")
     {
       int cnt=smsc->eventqueue.getCounter();
@@ -133,21 +134,21 @@ int StatusSme::Execute()
     {
       if(arg.length()==0)
       {
-        answer="usage: getsched msgId";
+        answer="usage: getsched address";
       }else
       {
-        SMSId id;
-        sscanf(arg.c_str(),"%lld",&id);
-        __trace2__("getsched:id=%lld",id);
-        time_t sc=smsc->scheduler->getScheduleById(id);
+        time_t sc=smsc->scheduler->getScheduleByAddr(arg.c_str());
         if(sc==0)
         {
-          answer="sms not scheduled or in delivery";
+          answer="chain for "+arg+" not found in scheduled";
         }else
         {
-          strprintf(answer,"sms scheduled to %u",sc);
+          strprintf(answer,"chain scheduled to %u",sc);
         }
       }
+    }else if(request=="hlralert")
+    {
+      putIncomingCommand(SmscCommand::makeHLRAlert(arg.c_str()));
     }else if(request=="ver")
     {
       answer=getStrVersion();

@@ -5,180 +5,130 @@
 namespace smsc{
 namespace system{
 
+smsc::logger::Logger* Scheduler::log;
+
 void Scheduler::Init(MessageStore* st,Smsc* psmsc)
 {
   smsc=psmsc;
   smsc::store::TimeIdIterator* it=st->getReadyForRetry(time(NULL)+30*24*60*60);
   if(it)
   {
+    debug1(log,"Scheduler: start init");
     MutexGuard guard(mon);
     SMSId id;
     try{
       StartupItem si;
       while(it->getNextId(id))
       {
-
-        if(it->getDstSmeId(si.smeId))
+        FullAddressValue ddabuf;
+        if(it->getDstSmeId(si.smeId) && it->getDda(ddabuf))
         {
           si.id=id;
           si.schedTime=it->getTime();
+          si.attCount=it->getAttempts();
+          si.addr=ddabuf;
           startupCache.Push(si);
-          /*
-          SmeIndex idx=psmsc->getSmeIndex(dstSmeId);
-          if(idx!=INVALID_SME_INDEX)
-          {
-            timeLine.insert(TimeIdPair(it->getTime(),Data(id,idx)));
-            CacheItem *ci=smeCountCache.GetPtr(idx);
-            if(ci)
-            {
-              ci->totalCount++;
-            }else
-            {
-              CacheItem c;
-              c.totalCount=1;
-              smeCountCache.Insert(idx,c);
-            }
-          }
-          */
+          if(startupCache.Count()%1000==0)debug2(log,"Loading scheduler - %d",startupCache.Count());
         }
       }
-      __trace2__("Scheduler: init ok - %d messages for rescheduling",timeLine.size());
+      info2(log,"Scheduler: init ok - %d messages for rescheduling",startupCache.Count());
     }catch(std::exception& e)
     {
-      __warning2__("Scheduler:failed to init scheduler timeline:%s",e.what());
+      warn2(log,"Scheduler:failed to init scheduler timeline:%s",e.what());
     }catch(...)
     {
-      __warning__("Scheduler:failed to init scheduler timeline:unknown");
+      warn1(log,"Scheduler:failed to init scheduler timeline:unknown");
     }
     delete it;
   }else
   {
-    __trace__("Scheduler: init - No messages found");
+    info1(log,"Scheduler: init - No messages found");
   }
 }
 
 
 int Scheduler::Execute()
 {
-/*  time_t t,r;
-  Event e;
-  Array<Data> ids;
-  while(!isStopping)
-  {
-    t=time(NULL);
-    {
-      MutexGuard guard(mon);
-      if(timeLine.size())
-      {
-        __trace2__("Scheduler: start check - now=%d, first=%d",t,timeLine.begin()->first);
-      }
-      while(timeLine.size() && timeLine.begin()->first<=t && ids.Count()<rescheduleLimit)
-      {
-        ids.Push(timeLine.begin()->second);
-        timeLine.erase(timeLine.begin());
-      }
-    }
-    if(ids.Count())
-    {
-      __trace2__("Scheduler: %d ids for reschedule",ids.Count());
-    }
-    for(int i=0;i<ids.Count();i++)
-    {
-      SmscCommand cmd=SmscCommand::makeForward(ids[i].idx,ids[i].id,false);
-      queue.enqueue(ids[i].id,cmd);
-      CacheItem *ci=smeCountCache.GetPtr(ids[i].idx);
-      if(ci)
-      {
-        if(ci->lastUpdate>t)
-        {
-          ci->count--;
-        }
-      }
-
-      e.Wait(1000/rescheduleLimit);
-      if(isStopping)break;
-    }
-    ids.Clean();
-
-    if(isStopping)break;
-    {
-      MutexGuard guard(mon);
-      if(timeLine.size())
-      {
-        r=timeLine.begin()->first;
-      }else
-      {
-        r=0;
-      }
-      if(r==0)
-        mon.wait();
-      else
-        if(r>t)mon.wait((r-t)*1000);
-    }
-  }
-  return 0;
-  */
-
   mon.Lock();
-  for(int i=0;i<startupCache.Count();i++)
-  {
-    StartupItem& si=startupCache[i];
-    try{
-      SmeIndex idx=smsc->getSmeIndex(si.smeId);
+  try{
+    for(int i=0;i<startupCache.Count();i++)
+    {
+      StartupItem& si=startupCache[i];
+      SmeIndex idx=INVALID_SME_INDEX;
+      try{
+        idx=smsc->getSmeIndex(si.smeId);
+      }catch(...)
+      {
+        warn2(log,"failed to get sme index for %s",si.smeId);
+        continue;
+      }
+
       if(idx!=INVALID_SME_INDEX)
       {
-        timeLine.insert(TimeIdPair(si.schedTime,Data(si.id,idx)));
-        CacheItem *ci=smeCountCache.GetPtr(idx);
-        if(ci)
+        Chain* c=GetChain(si.addr);
+        if(!c)
         {
-          ci->totalCount++;
+          c=CreateChain(si.schedTime,si.addr,idx);
+        }
+        if(si.attCount==0)
+        {
+          ChainAddTimed(c,si.schedTime,SchedulerData(si.id));
         }else
         {
-          CacheItem c;
-          c.totalCount=1;
-          smeCountCache.Insert(idx,c);
+          ChainPush(c,SchedulerData(si.id));
         }
+        timeLine.Add(c,this);
+        //smsCount++;
       }
-    }catch(std::exception& e)
-    {
-      __warning2__("exception during startup item processing id=%lld, smeId=%s:%s",si.id,si.smeId,e.what());
-    }catch(...)
-    {
-      __warning2__("exception during startup item processing id=%lld, smeId=%s:unknown",si.id,si.smeId);
+      mon.Unlock();
+      sched_yield();
+      mon.Lock();;
     }
-    mon.Unlock();
-    sched_yield();
-    mon.Lock();;
+  }catch(std::exception& e)
+  {
+    warn2(log,"error during scheduler initialization: %s",e.what());
   }
   mon.Unlock();
 
-  time_t r,t;
+  time_t t;
   while(!isStopping)
   {
     t=time(NULL);
-    r=0;
     MutexGuard guard(mon);
     while(outQueue.Count())
     {
       SmscCommand cmd;
       outQueue.Shift(cmd);
-      if(cmd->cmdid!=SMEALERT)continue;
-      int idx=cmd->get_smeIndex();
-      TimeLineMap::iterator it=timeLine.begin(),tmpit;
-      while(it!=timeLine.end())
+      if(cmd->cmdid==SMEALERT)
       {
-        if(it->second.idx!=idx || it->first<=t)
+        int idx=cmd->get_smeIndex();
+        debug2(log,"SMEALERT for %d",idx);
+        int cnt=0;
+        time_t sctime=time(NULL);
+        SmeStatMap::iterator it=smeStatMap.find(idx);
+        if(it==smeStatMap.end())continue;
+        SmeStat::ChainSet::iterator cit=it->second.chainSet.begin();
+        for(;cit!=it->second.chainSet.end();cit++)
         {
-          it++;
-          continue;
+          Chain* c=*cit;
+          RescheduleChain(c,sctime);
+          cnt++;
+          if(cnt==5)
+          {
+            sctime++;
+            cnt=0;
+          }
         }
-        timeLine.insert(TimeIdPair(t,Data(it->second.id,idx,true)));
-        tmpit=it;
-        it++;
-        timeLine.erase(tmpit);
+      }else if(cmd->cmdid==HLRALERT)
+      {
+        debug2(log,"HLRALERT for %s",cmd->get_address().toString().c_str());
+        Chain* c=GetChain(cmd->get_address());
+        if(!c)continue;
+        if(c->inProcMap)continue;
+        RescheduleChain(c,time(NULL));
       }
     }
-    if(timeLine.size()>0 && timeLine.begin()->first<t)
+    if(timeLine.size()>0 && timeLine.headTime()<t)
     {
       if(prxmon)prxmon->Signal();
       mon.wait(100);
@@ -187,95 +137,7 @@ int Scheduler::Execute()
       mon.wait(1000);
     }
   }
-  __trace2__("Exiting scheduler, isStopping=%s",isStopping?"true":"false");
   return 0;
-}
-
-void Scheduler::ChangeSmsSchedule(SMSId id,time_t newtime,SmeIndex idx)
-{
-  __require__(id!=0);
-  MutexGuard guard(mon);
-  timeLine.insert(TimeIdPair(newtime,Data(id,idx)));
-  __trace2__("Scheduler: changesmsschedule %lld -> %d",id,newtime);
-  CacheItem *ci=smeCountCache.GetPtr(idx);
-  if(ci)
-  {
-    ci->totalCount++;
-  }else
-  {
-    CacheItem c;
-    c.totalCount++;
-    smeCountCache.Insert(idx,c);
-  }
-  mon.notify();
-  __trace__("Scheduler: notify");
-}
-
-void Scheduler::UpdateSmsSchedule(time_t old,SMSId id,time_t newtime,SmeIndex idx)
-{
-  __require__(id!=0);
-  MutexGuard guard(mon);
-  std::pair<TimeLineMap::iterator,TimeLineMap::iterator> p;
-  p=timeLine.equal_range(old);
-  if(p.first!=timeLine.end())
-  {
-    for(TimeLineMap::iterator i=p.first;i!=p.second;i++)
-    {
-      if(i->second.id==id)
-      {
-        timeLine.erase(i);
-        timeLine.insert(TimeIdPair(newtime,Data(id,idx,true)));
-        CacheItem *ci=smeCountCache.GetPtr(idx);
-        if(ci)
-        {
-          if(ci->lastUpdate>old && ci->lastUpdate<newtime)
-          {
-            ci->count--;
-          }
-        }
-        mon.notify();
-        __trace2__("Scheduler: updatesmsschedule: %lld: %d->%d",id,old,newtime);
-        return;
-      }
-    };
-  }
-  //timeLine.insert(TimeIdPair(newtime,Data(id,idx)));
-  //mon.notify();
-}
-
-int Scheduler::getSmeCount(SmeIndex idx,time_t time)
-{
-  MutexGuard guard(mon);
-  if(!smeCountCache.Exist(idx))
-  {
-    CacheItem ci;
-    ci.lastUpdate=0;
-    ci.count=0;
-    ci.totalCount=0;
-    smeCountCache.Insert(idx,ci);
-  }
-  CacheItem *pci=smeCountCache.GetPtr(idx);
-  if(time==0)
-  {
-    return pci->totalCount;
-  }
-
-  TimeLineMap::iterator from=timeLine.lower_bound(pci->lastUpdate);
-  if(from==timeLine.end())from=timeLine.begin();
-  TimeLineMap::iterator till=timeLine.upper_bound(time);
-  if(till==timeLine.end())
-  {
-    return pci->count;
-  }
-  for(;from!=till;from++)
-  {
-    if(from->second.idx==idx)
-    {
-      pci->count++;
-    }
-  }
-  pci->lastUpdate=time+1;
-  return pci->count;
 }
 
 

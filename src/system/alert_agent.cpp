@@ -15,10 +15,14 @@ int AlertAgent::Execute()
     SmscCommand cmd;
     queue.Pop(cmd);
     mon.Unlock();
+
+    if(cmd->get_commandId()!=HLRALERT)continue;
+
     ////
     // processing here
 
     try{
+      /*
       smsc::store::IdIterator *it=store->getReadyForDelivery(cmd->get_address());
       SMSId id;
       while(it->getNextId(id))
@@ -41,6 +45,10 @@ int AlertAgent::Execute()
         }
       }
       ids.Empty();
+      */
+
+      //psmsc->getScheduler()->ForceSchedule(cmd->get_address());
+
     }catch(...)
     {
       __trace__("AlertAgent: database exception");

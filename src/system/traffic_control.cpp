@@ -11,6 +11,8 @@ using namespace smsc::profiler;
 
 bool TrafficControl::processCommand(SmscCommand& cmd)
 {
+  return true;
+#if 0
   bool rv=false;
   switch(cmd->get_commandId())
   {
@@ -174,6 +176,7 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
     totalCounter.Inc(-1);
   }
   return rv;
+#endif
 }
 
 

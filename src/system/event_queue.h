@@ -188,7 +188,7 @@ public:
   void enqueue(MsgIdType msgId, const CommandType& command)
   {
   __synchronized__
-    __trace2__("enqueue:cmd=%d, msgId=%lld",command->get_commandId(),msgId);
+    __trace2__("enqueue:cmd=%d, msgId=%lld, prio=%d",command->get_commandId(),msgId,command->get_priority());
     Locker* locker = hash.get(msgId);
 
     if ( !locker )
