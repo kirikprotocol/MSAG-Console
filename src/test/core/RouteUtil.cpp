@@ -73,6 +73,7 @@ ostream& operator<< (ostream& os, const RouteInfo& route)
 		route.smeSystemId.length() << ")";
 	os << ", source = " << route.source;
 	os << ", dest = " << route.dest;
+	os << ", enabling = " << route.enabling;
 	os << ", priority = " << route.priority;
 	os << ", billing = " << (route.billing ? "true" : "false");
 	os << ", paid = " << (route.paid ? "true" : "false");
