@@ -90,7 +90,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 );
 
 static void DropMapDialog_(unsigned dialogid){
   if ( dialogid == 0 ) return;
-  DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog());
+  DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid));
   if ( !dialog.isnull() ){
     unsigned __dialogid_map = dialog->dialogid_map;
     unsigned __dialogid_smsc = 0;
