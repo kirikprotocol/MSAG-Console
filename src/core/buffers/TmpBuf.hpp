@@ -14,11 +14,31 @@ public:
     {
       heapBuf=new T[size];
       realBuf=heapBuf;
+      heapSize=size;
     }else
     {
       heapBuf=0;
+      heapSize=0;
       realBuf=stackBuf;
     }
+  }
+
+  T* getSize(int size)
+  {
+    if(size>SZ)
+    {
+      if(size>heapSize)
+      {
+        delete [] heapBuf;
+        heapBuf=new T[size];
+        heapSize=size;
+        realBuf=heapBuf;
+      }
+    }else
+    {
+      realBuf=stackBuf;
+    }
+    return realBuf;
   }
   ~TmpBuf()
   {
@@ -42,6 +62,7 @@ protected:
   T  stackBuf[SZ];
   T* heapBuf;
   T* realBuf;
+  int heapSize;
 };
 
 }//namespace buffers
