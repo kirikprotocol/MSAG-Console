@@ -169,11 +169,13 @@ namespace smsc {
 				{
 					__trace2__("SmppSession: CREATE SESSION %p", this);
 				}
+
 				~SmppSession()
 				{
 					close();
 				}
-				void connect(int bindtype=BindType::Transceiver)throw(SmppConnectException)
+
+				void connect()throw(SmppConnectException)
 				{
 					__trace2__("SmppSession: CONNECT %p",this);
 					if (!closed)return;
@@ -183,54 +185,39 @@ namespace smsc {
 						throw SmppConnectException(SmppConnectException::Reason::networkConnect);
 					reader.Start();
 					writer.Start();
-					PduBindTRX pdu;
-					int expectedbindresp;
-					switch (bindtype) {
-					case BindType::Transceiver:
-						pdu.get_header().set_commandId(SmppCommandSet::BIND_TRANCIEVER);
-						expectedbindresp=SmppCommandSet::BIND_TRANCIEVER_RESP;
-						break;
-					case BindType::Transmitter:
-						pdu.get_header().set_commandId(SmppCommandSet::BIND_TRANSMITTER);
-						expectedbindresp=SmppCommandSet::BIND_TRANSMITTER_RESP;
-						break;
-					case BindType::Receiver:
-						pdu.get_header().set_commandId(SmppCommandSet::BIND_RECIEVER);
-						expectedbindresp=SmppCommandSet::BIND_RECIEVER_RESP;
-						break;
-					}
-					bindType=bindtype;
-					//pdu.get_header().set_commandId(SmppCommandSet::BIND_TRANCIEVER);
-					pdu.set_systemId(cfg.sid.c_str());
-					pdu.set_password(cfg.password.c_str());
-					pdu.set_systemType(cfg.systemType.c_str());
-					int seq=getNextSeq();
-					pdu.get_header().set_sequenceNumber(seq);
-
-					PduBindTRXResp *resp=(PduBindTRXResp*)strans.sendPdu((SmppHeader*)&pdu);
-
-					if (!resp || resp->get_header().get_commandId()!=expectedbindresp ||
-							resp->get_header().get_sequenceNumber()!=pdu.get_header().get_sequenceNumber() ||
-							resp->get_header().get_commandStatus()!=SmppStatusSet::ESME_ROK) {
-						int reason=!resp?SmppConnectException::Reason::timeout :
-											 resp->get_header().get_commandId()!=expectedbindresp ||
-											 resp->get_header().get_sequenceNumber()!=pdu.get_header().get_sequenceNumber() ?
-											 SmppConnectException::Reason::smppError:
-											 resp->get_header().get_commandStatus()==SmppStatusSet::ESME_RBINDFAIL?
-											 SmppConnectException::Reason::bindFailed:
-											 SmppConnectException::Reason::unknown;
-						if (resp)disposePdu((SmppHeader*)resp);
-						reader.Stop();
-						writer.Stop();
-						socket.Close();
-						reader.WaitFor();
-						writer.WaitFor();
-						throw SmppConnectException(reason);
-					}
-					disposePdu((SmppHeader*)resp);
 					__trace2__("SmppSession: CONNECTED %p",this);
 					closed=false;
 				}
+
+				uint32_t bind(int bindtype) {
+					PduBindTRX pdu;
+					switch (bindtype) {
+					case BindType::Transceiver:
+						pdu.get_header().set_commandId(SmppCommandSet::BIND_TRANCIEVER);
+						break;
+					case BindType::Transmitter:
+						pdu.get_header().set_commandId(SmppCommandSet::BIND_TRANSMITTER);
+						break;
+					case BindType::Receiver:
+						pdu.get_header().set_commandId(SmppCommandSet::BIND_RECIEVER);
+						break;
+					}
+					pdu.set_systemId(cfg.sid.c_str());
+					pdu.set_password(cfg.password.c_str());
+					pdu.set_systemType(cfg.systemType.c_str());
+					uint32_t seq=getNextSeq();
+					pdu.get_header().set_sequenceNumber(seq);
+
+					SmppHeader *resp=atrans.sendPdu((SmppHeader*)&pdu);
+
+					if(resp != 0) {
+						log.error("Error when binding, PduBindTRXResp != NULL");
+						disposePdu((SmppHeader*)resp);
+					}
+
+					return seq;
+				}
+
 				void close()
 				{
 					__trace2__("SmppSession: CLOSING %p",this);
@@ -271,7 +258,7 @@ namespace smsc {
 				InnerAsyncTransmitter atrans;
 				Mutex cntMutex,lockMutex;
 				bool closed;
-				int bindType;
+				//int bindType;
 
 				IntHash<Lock> lock;
 
@@ -357,7 +344,8 @@ namespace smsc {
 				}*/
 				bool checkIncomingValidity(SmppHeader* pdu)
 				{
-					using namespace SmppCommandSet;
+					return true;
+					/*using namespace SmppCommandSet;
 					switch (pdu->get_commandId()) {
 					case BIND_TRANSMITTER_RESP:
 					case BIND_RECIEVER_RESP:
@@ -411,12 +399,13 @@ namespace smsc {
 							return false;
 						}
 					}
-					return false;
+					return false;*/
 				}
 
 				bool checkOutgoingValidity(SmppHeader* pdu)
 				{
-					using namespace SmppCommandSet;
+					true;
+					/*using namespace SmppCommandSet;
 					switch (pdu->get_commandId()) {
 					case BIND_TRANSMITTER:
 					case BIND_RECIEVER:
@@ -470,7 +459,7 @@ namespace smsc {
 							return false;
 						}
 					}
-					return false;
+					return false;*/
 				}
 
 
@@ -478,13 +467,13 @@ namespace smsc {
 				{
 					log.debug("processIncoming for %p", this);
 					using namespace smsc::smpp::SmppCommandSet;
-					if (!checkIncomingValidity(pdu)) {
+					/*if (!checkIncomingValidity(pdu)) {
 						__warning2__("processIncoming: received pdu in invalid bind state (%x,%d)",pdu->get_commandId(),bindType);
 						PduGenericNack gnack;
 						gnack.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
 						atrans.sendGenericNack(gnack);
 						return;
-					}
+					}*/
 					lockMutex.Lock();
 					int seq=pdu->get_sequenceNumber();
 					log.debug("SequenceNumber = %i", seq);

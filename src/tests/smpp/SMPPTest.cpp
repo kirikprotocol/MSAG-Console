@@ -34,18 +34,24 @@ namespace smsc {
 				//CPPUNIT_TEST_EXCEPTION( testException,  TestException );
 				CPPUNIT_TEST_SUITE_END();
 				// SME for testing
-				GenericSmeHandler sme;
-				GenericSmeHandler sme1;
+				QueuedSmeHandler sme;
+				QueuedSmeHandler sme1;
 				QueuedSmeHandler transmitter;
 				QueuedSmeHandler receiver;
 				QueuedSmeHandler sender;
+				uint32_t timeout;
+				bool configInited;
 			public:
-				SMPPTest() : log(smsc::test::util::logger.getLog("smsc.test.smpp.SMPPTest")) {}
+				SMPPTest() : log(smsc::test::util::logger.getLog("smsc.test.smpp.SMPPTest"))
+							, timeout(1000), configInited(false) {}
 				void setUp() {
 					log.info("enter: setUp Test Suit");
 					ContextConfiguratorHandler config = ContextConfigurator::instance();
 					try {
-						config->loadContext();
+  						if(!configInited) {
+						  config->loadContext();
+						  configInited = true;
+						}
 					} catch (ConfigurationException ex) {
 						std::cout <<  std::endl << ex.what();
 						CPPUNIT_FAIL("ConfigurationException has occured");
@@ -54,7 +60,6 @@ namespace smsc {
 						ContextHandler root = config->getContext("smsc");
 						log.debug("Getting subcontext sme");
 						smsc::test::util::ContextHandlerList lst = root->findSubcontext("sme");
-						PduListenerHandler listener = new SmppListener();
 						typedef smsc::test::util::ContextHandlerList::iterator CHI;
 						for (CHI itr = lst.begin(); itr != lst.end(); ++itr) {
 							ContextHandler ctx = *itr;
@@ -62,12 +67,12 @@ namespace smsc {
 							string name = ctx->getAttribute("name");
 							if (name == "sme") {
 								log.debug("Creating \"sme\" by using SmeFactory");
-								sme = SmeFactory::createSme(ctx);
-								sme->setListener(listener);
+								GenericSmeHandler gh = SmeFactory::createSme(ctx);
+								sme = gh;
 								log.debug(sme->toString());
 								log.debug("Creating \"sme1\" by using SmeFactory");
-								sme1 = SmeFactory::createSme(ctx);
-								sme1->setListener(listener);
+								gh = SmeFactory::createSme(ctx);
+								sme1 = gh;
 								log.debug(sme1->toString());
 							} else if (name == "transmitter") {
 								log.debug("Creating \"transmitter\" by using SmeFactory");
@@ -101,42 +106,91 @@ namespace smsc {
 				// проверка различных вариантов соединения с SMSC
 				void testBind() {
 					try {
+  						sme->connect();
+						sme1->connect();
 						log.debug("Testing simple binding & unbinding ...");
+
 						// transceiver
-						log.debug("testBind: Connecting as tranceiver");
-						sme->bind(smsc::sme::BindType::Transceiver);
-						sleep(1);	//???
-						log.debug("testBind: unbinding");
-						sme->unbind();
+						log.debug("\n\ntestBind: Connecting as tranceiver");
+						uint32_t sequence = sme->bind(smsc::sme::BindType::Transceiver);
+						if(checkBind(sequence, smsc::sme::BindType::Transceiver, sme)== false) {
+						  sme1->close();
+						  sme->close();
+						  CPPUNIT_FAIL("Test Error: error in response for transceiver bind pdu");
+						}
+						sequence = sme->unbind();
+						if(checkUnbind(sequence, sme)== false) {
+						  sme1->close();
+						  sme->close();
+						  CPPUNIT_FAIL("Test Error: error in response for transceiver unbind pdu");
+						}
+
 						// receiver
-						log.debug("testBind: Connecting as receiver");
-						sme->bind(smsc::sme::BindType::Receiver);
-						sleep(1);	//???
-						log.debug("testBind: unbinding");
-						sme->unbind();
-						// transmitter
-						log.debug("testBind: Connecting as transmitter");
-						sme->bind(smsc::sme::BindType::Transmitter);
-						sleep(1);	//???
-						log.debug("testBind: unbinding");
-						sme->unbind();
+						log.debug("\n\ntestBind: Connecting as receiver");
+						sequence = sme->bind(smsc::sme::BindType::Receiver);
+						if(checkBind(sequence, smsc::sme::BindType::Receiver, sme)== false) {
+						  sme1->close();
+						  sme->close();
+						  CPPUNIT_FAIL("Test Error: error in response for receiver bind pdu");
+						}
+						sequence = sme->unbind();
+						if(checkUnbind(sequence, sme)== false) {
+						  sme1->close();
+						  sme->close();
+						  CPPUNIT_FAIL("Test Error: error in response for receiver unbind pdu");
+						}
+
 						// transmitter & receiver
-						log.debug("testBind: Connecting as transmitter & receiver");
-						log.debug("testBind: Binding \"sme\" as transmitter");
-						sme->bind(smsc::sme::BindType::Transmitter);
-						log.debug("testBind: Binding \"sme1\" as receiver");
-						sme1->bind(smsc::sme::BindType::Receiver);
-						sleep(1);	//???
-						log.debug("testBind: unbinding \"sme\"");
-						sme->unbind();
-						log.debug("testBind: unbinding \"sme1\"");
-						sme1->unbind();
+						log.debug("\n\ntestBind: Connecting as transmitter");
+						sequence = sme->bind(smsc::sme::BindType::Transmitter);
+						if(checkBind(sequence, smsc::sme::BindType::Transmitter, sme)== false) {
+						  sme1->close();
+						  sme->close();
+						  CPPUNIT_FAIL("Test Error: error in response for transmitter bind pdu");
+						}
+						log.debug("\n\ntestBind: Connecting as receiver");
+						sequence = sme1->bind(smsc::sme::BindType::Receiver);
+						if(checkBind(sequence, smsc::sme::BindType::Receiver, sme1)== false) {
+						  sme1->close();
+						  sme->close();
+						  CPPUNIT_FAIL("Test Error: error in response for receiver bind pdu");
+						}
+
+						sequence = sme->unbind();
+						if(checkUnbind(sequence, sme)== false) {
+						  sme1->close();
+						  sme->close();
+						  CPPUNIT_FAIL("Test Error: error in response for transmitter unbind pdu");
+						}
+						sequence = sme1->unbind();
+						if(checkUnbind(sequence, sme1)== false) {
+						  sme1->close();
+						  sme->close();
+						  CPPUNIT_FAIL("Test Error: error in response for receiver unbind pdu");
+						}
+
+						
 						// проверка что не может быть 2-х transceivers
-						checkDuplicateBinding(smsc::sme::BindType::Transceiver);
+						if(checkDuplicateBinding(smsc::sme::BindType::Transceiver) == false) {
+						  sme1->close();
+						  sme->close();
+						  CPPUNIT_FAIL("Test Error: error when checking duplicate transceivers");
+						}
 						// проверка что не может быть 2-х transmitter
-						checkDuplicateBinding(smsc::sme::BindType::Transmitter);
+						if(checkDuplicateBinding(smsc::sme::BindType::Transmitter) == false) {
+						  sme1->close();
+						  sme->close();
+						  CPPUNIT_FAIL("Test Error: error when checking duplicate transmitters");
+						}
 						// проверка что не может быть 2-х receivers
-						checkDuplicateBinding(smsc::sme::BindType::Receiver);
+						if(checkDuplicateBinding(smsc::sme::BindType::Receiver) == false) {
+						  sme1->close();
+						  sme->close();
+						  CPPUNIT_FAIL("Test Error: error when checking duplicate receivers");
+						}
+
+						sme1->close();
+						sme->close();
 					} catch (PduListenerException &ex) {
 						log.error("PduListenerException when simple binding: %s", ex.what());
 						CPPUNIT_FAIL("Test Error: PduListenerException when simple binding");
@@ -146,33 +200,44 @@ namespace smsc {
 				// проверка работы transmitter & receiver с одним sistem id
 				void testTransmitterReceiverEnquireLink() {
 				  try {
-					transmitter->bind(smsc::sme::BindType::Transmitter);
-					receiver->bind(smsc::sme::BindType::Receiver);
+					transmitter->connect();
+					receiver->connect();
+
+					uint32_t sequence = transmitter->bind(smsc::sme::BindType::Transmitter);
+					if(checkBind(sequence, smsc::sme::BindType::Transmitter, transmitter)== false) {
+					  CPPUNIT_FAIL("Test Error: error in response for transmitter bind pdu");
+					}
+
+					sequence = receiver->bind(smsc::sme::BindType::Receiver);
+					if(checkBind(sequence, smsc::sme::BindType::Receiver, receiver)== false) {
+					  CPPUNIT_FAIL("Test Error: error in response for receiver bind pdu");
+					}
 
 					// проверка, что transmitter получает ответ на enquire_link
-					log.debug("Sending EnquireLink");
-					uint32_t sequence = transmitter->sendEquireLink();
-					log.debug("SequenceNumber = %u", sequence);
-					PduHandler pdu = transmitter->receiveWithSequence(sequence, 10000);
-					if(pdu != 0 && pdu->get_commandId() == smsc::smpp::SmppCommandSet::ENQUIRE_LINK_RESP) {
-					  log.debug("Transmitter received EnquireLinkResponse");
-					} else {
-					  log.error("testTransmitterReceiverEnquireLink: Transmitter did not receive EnquireLinkResponse");
-					  //CPPUNIT_FAIL("Test Error: testTransmitterReceiverEnquireLink: Transmitter did not receive EnquireLinkResponse");
+					log.debug("Transmitter sends EnquireLink");
+					sequence = transmitter->sendEquireLink();
+					if(checkEnquireLink(sequence, transmitter)== false) {
+					  CPPUNIT_FAIL("Test Error: error in response for transmitter enquire_link pdu");
 					}
 					// проверка, что receiver получает ответ на enquire_link
+					log.debug("Receiver sends EnquireLink");
 					sequence = receiver->sendEquireLink();
-					pdu = receiver->receiveWithSequence(sequence, 10000);
-					if(pdu != 0 && pdu->get_commandId() == smsc::smpp::SmppCommandSet::ENQUIRE_LINK_RESP) {
-					  log.debug("Receiver received EnquireLinkResponse");
-					} else {
-					  log.error("testTransmitterReceiverEnquireLink: Receiver did not receive EnquireLinkResponse");
-					  //CPPUNIT_FAIL("Test Error: testTransmitterReceiverEnquireLink: Receiver did not receive EnquireLinkResponse");
+					if(checkEnquireLink(sequence, receiver)== false) {
+					  CPPUNIT_FAIL("Test Error: error in response for receiver enquire_link pdu");
 					}
 
 					//unbinding
-					receiver->unbind();
-					transmitter->unbind();
+					sequence = receiver->unbind();
+					if(checkUnbind(sequence, receiver)== false) {
+					  CPPUNIT_FAIL("Test Error: error in response for receiver unbind pdu");
+					}
+					sequence = transmitter->unbind();
+					if(checkUnbind(sequence, transmitter)== false) {
+					  CPPUNIT_FAIL("Test Error: error in response for transmitter unbind pdu");
+					}
+				  
+					transmitter->close();
+					receiver->close();
 				  } catch (PduListenerException &ex) {
 					  log.error("testTransmitterReceiverEnquireLink: PduListenerException : %s", ex.what());
 					  CPPUNIT_FAIL("Test Error: PduListenerException in testTransmitterReceiverEnquireLink()");
@@ -180,10 +245,107 @@ namespace smsc {
 				}
 
 			private:
+  				//проверка ответов на запросы bind
+  				bool checkBind(uint32_t sequence, int bindType, QueuedSmeHandler sme) {
+				  bool res = false;
+				  int expectedCommandId;
+				  std::string bindTypeMsg;
+				  switch (bindType) {
+				  case smsc::sme::BindType::Transceiver:
+					expectedCommandId = smsc::smpp::SmppCommandSet::BIND_TRANCIEVER_RESP;
+  					bindTypeMsg = "Transceiver";
+					break;
+				  case smsc::sme::BindType::Transmitter:
+					expectedCommandId = smsc::smpp::SmppCommandSet::BIND_TRANSMITTER_RESP;
+					bindTypeMsg = "Transmitter";
+					break;
+				  case smsc::sme::BindType::Receiver:
+					expectedCommandId = smsc::smpp::SmppCommandSet::BIND_RECIEVER_RESP;
+					bindTypeMsg = "Receiver";
+					break;
+				  }
+				  PduHandler pdu = sme->receiveWithSequence(sequence, timeout);
+				  if(pdu != 0) {
+					if(log.isDebugEnabled()) {
+					  log.debug("checkBind: Received response for binding for %s", bindTypeMsg.c_str());
+					  log.debug("checkBind: command_id=%x", pdu->get_commandId());
+					  log.debug("checkBind: command_status=%x", pdu->get_commandStatus());
+					  log.debug("checkBind: sequence_number=%u", pdu->get_sequenceNumber());
+					}
+					if(pdu->get_commandId() == expectedCommandId) {
+					  smsc::smpp::PduBindTRXResp *resp=(smsc::smpp::PduBindTRXResp*)pdu.getObjectPtr();
+					  log.debug("checkBind: sms_system_id=%s", resp->get_systemId());
+					  if(pdu->get_commandStatus() == smsc::smpp::SmppStatusSet::ESME_ROK) {
+						res = true;
+					  } else {
+						log.error("checkBind: The bind response with sequence=%u has wrong status=%x", sequence, pdu->get_commandStatus());
+					  }
+					} else {
+					  log.error("checkBind: The response for %s with sequence=%u has wrong commandId", bindTypeMsg.c_str(), sequence);
+					}
+				  } else {
+					log.error("checkBind: There is no response for %s with sequence=%u", bindTypeMsg.c_str(), sequence);
+				  }
+				  return res;
+				}
+
+  				//проверка ответов на запросы unbind
+  				bool checkUnbind(uint32_t sequence, QueuedSmeHandler sme) {
+				  bool res = false;
+				  PduHandler pdu = sme->receiveWithSequence(sequence, timeout);
+				  if(pdu != 0) {
+					if(log.isDebugEnabled()) {
+					  log.debug("checkUnbind: Received response for unbinding");
+					  log.debug("checkUnbind: command_id=%x", pdu->get_commandId());
+					  log.debug("checkUnbind: command_status=%x", pdu->get_commandStatus());
+					  log.debug("checkUnbind: sequence_number=%u", pdu->get_sequenceNumber());
+					}
+					if(pdu->get_commandId() == smsc::smpp::SmppCommandSet::UNBIND_RESP) {
+					  if(pdu->get_commandStatus() == smsc::smpp::SmppStatusSet::ESME_ROK) {
+						res = true;
+					  } else {
+						log.error("checkUnbind: The unbind response with sequence=%u has wrong status=%x", sequence, pdu->get_commandStatus());
+					  }
+					} else {
+					  log.error("checkUnbind: The unbind response with sequence=%u has wrong commandId", sequence);
+					}
+				  } else {
+					log.error("checkUnbind: There is no response for unbind with sequence=%u", sequence);
+				  }
+				  return res;
+				}
+
+  				//проверка ответов на запросы enquire_link
+  				bool checkEnquireLink(uint32_t sequence, QueuedSmeHandler sme) {
+				  bool res = false;
+				  PduHandler pdu = sme->receiveWithSequence(sequence, timeout);
+				  if(pdu != 0) {
+					if(log.isDebugEnabled()) {
+					  log.debug("checkEnquireLink: Received response for enquire_link");
+					  log.debug("checkEnquireLink: command_id=%x", pdu->get_commandId());
+					  log.debug("checkEnquireLink: command_status=%x", pdu->get_commandStatus());
+					  log.debug("checkEnquireLink: sequence_number=%u", pdu->get_sequenceNumber());
+					}
+					if(pdu->get_commandId() == smsc::smpp::SmppCommandSet::ENQUIRE_LINK_RESP) {
+					  if(pdu->get_commandStatus() == smsc::smpp::SmppStatusSet::ESME_ROK) {
+						res = true;
+					  } else {
+						log.error("checkEnquireLink: The enquire_link response with sequence=%u has wrong status=%x", sequence, pdu->get_commandStatus());
+					  }
+					} else {
+					  log.error("checkEnquireLink: The enquire_link response with sequence=%u has wrong commandId", sequence);
+					}
+				  } else {
+					log.error("checkUnbind: There is no response for enquire_link with sequence=%u", sequence);
+				  }
+				  return res;
+				}
 
 				// проверка того, что нельзя забайндить два (transmitter | receiver | transmitter) как 
 				// в одном сокете, так и в разных
-				void checkDuplicateBinding(const int bindType) throw(PduListenerException) {
+				bool checkDuplicateBinding(const int bindType) throw(PduListenerException) {
+				  try {
+  					bool res = true;
 					std::string mode;
 					switch (bindType) {
 					case smsc::sme::BindType::Receiver:
@@ -201,32 +363,66 @@ namespace smsc {
 						throw PduListenerException(sout.str(), bindType);
 					}
 					// два в разных сокетах
-					log.debug("testBind: two " + mode + "s");
+					log.debug("\n\ntestBind: two " + mode + "s");
 					log.debug("testBind: binding \"sme\" as a " + mode);
-					sme->bind(bindType);
-					sleep(1);
-					try {
-						log.debug("testBind: binding \"sme1\" as a " + mode + " in other socket");
-						sme1->bind(bindType);
-						log.debug("checkDuplicateBinding error: the second \"sme1\" has been successfully bound as " + mode);
-						CPPUNIT_FAIL("checkDuplicateBinding error: the second \"sme1\" has been successfully bound as " + mode);
-					} catch (PduListenerException &ex) {
-						// все нормально, нельзя законнектиться вторым XXX
+					uint32_t sequence = sme->bind(bindType);
+					if(checkBind(sequence, bindType, sme)== false) {
+					  log.error("Test Error: error in response for %s bind pdu", mode.c_str());
+					  res = false;
+					  //return false;
 					}
+					log.debug("testBind: binding \"sme1\" as a " + mode + " in other socket");
+					sequence = sme1->bind(bindType);
+					if(checkBind(sequence, bindType, sme1)== false) {
+					  // все нормально, нельзя законнектиться вторым XXX
+					} else {
+					  log.error("checkDuplicateBinding error: the second \"sme1\" has been successfully bound as " + mode);
+					  res = false;
+					  //return false;
+					}
+
 					log.debug("testBind: unbinding \"sme1\"");
-					sme1->unbind();
-					// два в одном сокете
 					try {
-						log.debug("testBind: binding \"sme1\" as a " + mode + " in the same socket");
-						sme->bind(bindType);
-						log.debug("checkDuplicateBinding error: the second " + mode + " has been successfully bound in the same socket");
-						CPPUNIT_FAIL("checkDuplicateBinding error: the second " + mode + " has been successfully bound in the same socket");
-					} catch (PduListenerException &ex) {
-						// все нормально, нельзя законнектиться вторым XXX
-						log.error("Normal PduListenerException for second %s\n%s", mode.c_str(), ex.what());
+					  sequence = sme1->unbind();
+					  if(checkUnbind(sequence, sme1)== false) {
+						// все нормально, прошлый байнд был неудачным
+					  } else {
+						log.error("checkDuplicateBinding error: the second \"sme1\" has been successfully unbound as " + mode);
+						res = false;
+						//return false;
+					  }
+					} catch (PduListenerException ex) {
+					  // все нормально, прошлый байнд должен был быть неудачным
 					}
+
+					// два в одном сокете
+					log.debug("testBind: binding \"sme\" as a " + mode + " in the same socket");
+					try {
+					  sequence = sme->bind(bindType);
+					  if(checkBind(sequence, bindType, sme)== false) {
+						// все нормально, нельзя законнектиться вторым XXX
+					  } else {
+						log.error("checkDuplicateBinding error: the second " + mode + " has been successfully bound in the same socket");
+						res = false;
+						//return false;
+					  }
+					} catch (PduListenerException ex) {
+					  // все нормально, байнд должен был быть неудачным
+					}
+
 					log.debug("testBind: unbinding \"sme\"");
-					sme->unbind();
+					sequence = sme->unbind();
+					if(checkUnbind(sequence, sme)== false) {
+					  log.error("checkDuplicateBinding error: when unbinding the first \"sme\"");
+					  res = false;
+					  //return false;
+					}
+
+					return res;
+				  } catch(...) {
+					log.error("SMPPTest#checkDuplicateBinding: unknown exception has occured");
+				  }
+
 				}
 			};
 

@@ -128,7 +128,7 @@ namespace smsc {
 						cfg.timeOut = atoi(subCtx->getValue().c_str());
 					} catch (smsc::test::util::ObjectNotFoundException ex) {
 						log.warn(ex.what());
-						cfg.timeOut = 1000;
+						cfg.timeOut = 10000;
 					}
 					try {
 						subCtx = ctx->firstSubcontext("system-type");
@@ -159,44 +159,70 @@ namespace smsc {
 				return sout.str();
 			}
 
-			void BasicSme::bind(const int bindType) throw(PduListenerException, IllegalSmeOperation) {
-				if(session == 0) {
-					if(listener != 0) {
-						session = new SmppSession(cfg, listener.getObjectPtr());
-					} else {
-						throw IllegalSmeOperation("IllegalSmeOperation: can't bind new session with null listener");
-					}
+			uint32_t BasicSme::bind(const int bindType) throw(PduListenerException, IllegalSmeOperation) {
+			  this->bindType = bindType;
+			  uint32_t sequence;
+			  if(session == 0) {
+				throw IllegalSmeOperation("IllegalSmeOperation: can't bind null session");
+			  }
+			  try {
+				smsc::smpp::PduBindTRX pdu;
+				switch (bindType) {
+				case BindType::Transceiver:
+					pdu.get_header().set_commandId(SmppCommandSet::BIND_TRANCIEVER);
+					break;
+				case BindType::Transmitter:
+					pdu.get_header().set_commandId(SmppCommandSet::BIND_TRANSMITTER);
+					break;
+				case BindType::Receiver:
+					pdu.get_header().set_commandId(SmppCommandSet::BIND_RECIEVER);
+					break;
 				}
-				try {
-					session->connect(bindType);
-					listener->checkError();
-				} catch (smsc::sme::SmppConnectException ex) {
-					std::ostringstream msg;
-					msg << "PduListenerException: smsc::sme::SmppConnectException occured\n" << ex.getReason();
-					throw PduListenerException(msg.str(), ex.getReason());
+				pdu.set_systemId(cfg.sid.c_str());
+				pdu.set_password(cfg.password.c_str());
+				pdu.set_systemType(cfg.systemType.c_str());
+				sequence = session->getNextSeq();
+				pdu.get_header().set_sequenceNumber(sequence);
+
+				SmppHeader *resp = session->getAsyncTransmitter()->sendPdu((SmppHeader*)&pdu);
+
+				if(resp != 0) {
+					log.error("Error when binding, PduBindTRXResp != NULL");
+					disposePdu((SmppHeader*)resp);
 				}
+				listener->checkError();
+
+			  } catch (smsc::sme::SmppConnectException ex) {
+				  std::ostringstream msg;
+				  msg << "PduListenerException: smsc::sme::SmppConnectException #" << ex.getReason() << ", " << ex.getTextReason();
+				  throw PduListenerException(msg.str(), ex.getReason());
+			  } catch(...) {
+				log.error("BasicSme#bind(): Unknown exception when binding");
+				throw;
+			  }
+			  return sequence;
 			}
 
-			void BasicSme::unbind() throw(PduListenerException, IllegalSmeOperation) {
-				if (session != 0) {
-					try {
-						SmppSessionHandler oldSess = session;
-						session = SmppSessionHandler();
-						oldSess->close();
-						listener->checkError();
-					} catch (smsc::sme::SmppConnectException ex) {
-						std::ostringstream msg;
-						msg << "PduListenerException (non-fatal): smsc::sme::SmppConnectException occured\n" << ex.getReason();
-						throw PduListenerException(msg.str(), ex.getReason());
-					} catch (PduListenerException ex) {
-					  std::ostringstream msg;
-					  msg << "PduListenerException (non-fatal): smsc::sme::SmppConnectException occured\n" << ex.getErrorCode();
-					  log.info(msg.str());
-					  throw;
-					}
-				} else {
-					throw IllegalSmeOperation("IllegalSmeOperation: can't unbind null session");
-				}
+			uint32_t BasicSme::unbind() throw(PduListenerException, IllegalSmeOperation) {
+			  uint32_t sequence;
+			  if(session == 0) {
+				throw IllegalSmeOperation("IllegalSmeOperation: can't unbind null session");
+			  }
+			  smsc::smpp::PduUnbind pdu;
+			  pdu.get_header().set_commandId(SmppCommandSet::UNBIND);
+			  pdu.get_header().set_commandStatus(0);
+			  sequence = session->getNextSeq();
+			  pdu.get_header().set_sequenceNumber(sequence);
+
+			  SmppHeader *resp = session->getAsyncTransmitter()->sendPdu((SmppHeader*)&pdu);
+
+			  if(resp != 0) {
+				  log.error("Error when unbinding, PduUnbindResp != NULL");
+				  disposePdu((SmppHeader*)resp);
+			  }
+			  listener->checkError();
+
+			  return sequence;
 			}
 
 			uint32_t BasicSme::sendEquireLink() throw(PduListenerException, IllegalSmeOperation) {
@@ -212,64 +238,6 @@ namespace smsc {
 			  atrans->sendPdu((smsc::smpp::SmppHeader*)&pdu);
 			  listener->checkError();
 			  return sequence;
-			}
-
-			///////////////////////////////////////////
-			// BindSme
-			//////////////////////////////////////////
-			BindSme::Registrator BindSme::reg;
-
-			void BindSme::bind(const int bindType) throw(PduListenerException) {
-				if(session == 0) {
-				  BasicSme::bind(bindType);
-				} else {//issue Bind PDU
-				  smsc::smpp::PduBindTRX pdu;
-				  int expectedbindresp;
-				  switch (bindType) {
-				  case smsc::sme::BindType::Transceiver:
-					  pdu.get_header().set_commandId(smsc::smpp::SmppCommandSet::BIND_TRANCIEVER);
-					  expectedbindresp=smsc::smpp::SmppCommandSet::BIND_TRANCIEVER_RESP;
-					  break;
-				  case smsc::sme::BindType::Transmitter:
-					  pdu.get_header().set_commandId(smsc::smpp::SmppCommandSet::BIND_TRANSMITTER);
-					  expectedbindresp=smsc::smpp::SmppCommandSet::BIND_TRANSMITTER_RESP;
-					  break;
-				  case smsc::sme::BindType::Receiver:
-					  pdu.get_header().set_commandId(smsc::smpp::SmppCommandSet::BIND_RECIEVER);
-					  expectedbindresp=smsc::smpp::SmppCommandSet::BIND_RECIEVER_RESP;
-					  break;
-				  default:
-  					  std::ostringstream sout;
-					  sout << "BindError: Unknown bind type " << bindType;
-					  throw PduListenerException(sout.str(), 0);
-				  }
-				  pdu.set_systemId(cfg.sid.c_str());
-				  pdu.set_password(cfg.password.c_str());
-				  pdu.set_systemType(cfg.systemType.c_str());
-				  int seq=session->getNextSeq();
-				  pdu.get_header().set_sequenceNumber(seq);
-
-				  smsc::sme::SmppTransmitter *strans = session->getSyncTransmitter();
-
-				  smsc::smpp::PduBindTRXResp *resp=(smsc::smpp::PduBindTRXResp*)strans->sendPdu((smsc::smpp::SmppHeader*)&pdu);
-
-				  if (!resp || resp->get_header().get_commandId()!=expectedbindresp ||
-						  resp->get_header().get_sequenceNumber()!=pdu.get_header().get_sequenceNumber() ||
-						  resp->get_header().get_commandStatus()!=smsc::smpp::SmppStatusSet::ESME_ROK) {
-					  /*int reason=!resp?SmppConnectException::Reason::timeout :
-							   resp->get_header().get_commandId()!=expectedbindresp ||
-							   resp->get_header().get_sequenceNumber()!=pdu.get_header().get_sequenceNumber() ?
-							   SmppConnectException::Reason::smppError:
-							   resp->get_header().get_commandStatus()==smsc::smpp::SmppStatusSet::ESME_RBINDFAIL?
-							   SmppConnectException::Reason::bindFailed:
-							   SmppConnectException::Reason::unknown;*/
-					  int status = resp->get_header().get_commandStatus();
-					  if (resp)disposePdu((smsc::smpp::SmppHeader*)resp);
-					  std::ostringstream sout;
-					  sout << "An error status has been received: " << status;
-					  throw PduListenerException(sout.str(), status);
-				  }
-				}
 			}
 
 			///////////////////////////////////////////

@@ -134,8 +134,10 @@ namespace smsc {
 				virtual SmppSessionHandler getSession() throw() = 0;
 				virtual PduListenerHandler getListener() throw() = 0;
 				virtual void setListener(PduListenerHandler &listener) throw(IllegalSmeOperation) = 0;
-				virtual void bind(const int bindType) throw(PduListenerException, IllegalSmeOperation) = 0;
-				virtual void unbind() throw(PduListenerException, IllegalSmeOperation) = 0;
+				virtual void connect() throw(SmppException, IllegalSmeOperation) = 0;
+				virtual void close() throw() = 0;
+				virtual uint32_t bind(const int bindType) throw(PduListenerException, IllegalSmeOperation) = 0;
+				virtual uint32_t unbind() throw(PduListenerException, IllegalSmeOperation) = 0;
 				virtual uint32_t sendEquireLink() throw(PduListenerException, IllegalSmeOperation) = 0;
 				// виртуальный деструктор для производных классов
 				virtual ~GenericSme() {}
@@ -171,9 +173,13 @@ namespace smsc {
 				PduListenerHandler listener;
 				// SMPP сессия
 				SmppSessionHandler session;
+				// Состояние (тип SME после bind)
+				int bindType;
 				// логгер
 				static log4cpp::Category& log;
 			public:
+  				// деструктор закрывает соединение
+  				virtual ~BasicSme() {close();}
 				// инициализация
 				virtual void init(ContextHandler &ctx) throw(SmeConfigurationException);
 				virtual SmeConfig& getConfig() throw() {
@@ -202,31 +208,30 @@ namespace smsc {
 						throw IllegalSmeOperation("IllegalSmeOperation: can't set new listener when Sme session is not null");
 					}
 				}
-				virtual void bind(const int bindType) throw(PduListenerException, IllegalSmeOperation);
-				virtual void unbind() throw(PduListenerException, IllegalSmeOperation);
-				virtual uint32_t sendEquireLink() throw(PduListenerException, IllegalSmeOperation);
-			};
-
-			class BindSme : public BasicSme {
-				class Registrator {
-				public:
-					Registrator() {
-						if (!SmeFactory::registerSme(new BindSme())) {
-							log.error("SmeError: Can't register smsc::test::smpp::BindSme in SmeFactory !");
+				virtual void connect() throw(SmppException, IllegalSmeOperation) {
+					if(session == 0) {
+						if(listener != 0) {
+							session = new SmppSession(cfg, listener.getObjectPtr());
+							try {
+								session->connect();
+							} catch (smsc::sme::SmppConnectException ex) {
+								std::ostringstream sout;
+								sout << "Smpp connection error #" << ex.getReason() << ", " << ex.getTextReason();
+								throw SmppException(sout.str(), ex.getReason());
+							}
+						} else {
+							throw IllegalSmeOperation("IllegalSmeOperation: can't open new session with null listener");
 						}
 					}
-				};
-				static Registrator reg;
-			public:
-				// методы для SmeFactory
-				virtual std::string getId() throw() {
-					return "smsc::test::smpp::BindSme";
 				}
-				virtual GenericSmeHandler createInstance() {
-					return new BindSme();
+				virtual void close() throw() {
+					if(session != 0) {
+						session->close();
+					}
 				}
-				// позволяет посылать bind request в уже забайнденной сессии
-				virtual void bind(const int bindType) throw(PduListenerException);
+				virtual uint32_t bind(const int bindType) throw(PduListenerException, IllegalSmeOperation);
+				virtual uint32_t unbind() throw(PduListenerException, IllegalSmeOperation);
+				virtual uint32_t sendEquireLink() throw(PduListenerException, IllegalSmeOperation);
 			};
 
 			class QueuedSme;
@@ -268,6 +273,7 @@ namespace smsc {
 						queuedSme->queue.push_back(pduHandler);
 						int sequence = pduHandler->get_sequenceNumber();
 						queuedSme->log.debug("QueuedSmeListener: SequenceNumber = %i", sequence);
+						queuedSme->maxSequence = (queuedSme->maxSequence < sequence)?sequence:queuedSme->maxSequence;
 						if (queuedSme->sequenceLocks.Exist(sequence)) {
 							queuedSme->log.debug("QueuedSmeListener: signaling for sequence waiters");
 							MutexEventHandler event = queuedSme->sequenceLocks.Get(sequence);
