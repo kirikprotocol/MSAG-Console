@@ -384,7 +384,10 @@ static inline SmppHeader* fetchSmppPdu(SmppStream* stream)
     {
       auto_ptr<PduXSmResp> pdu(new PduXSmResp());
       fetchSmppHeader(stream,pdu->header);
-      fetchCOctetStr(stream,pdu->messageId,65);
+      if(!(cmdid==SUBMIT_SM_RESP && pdu->header.commandStatus!=0))
+      {
+        fetchCOctetStr(stream,pdu->messageId,65);
+      }
       return reinterpret_cast<SmppHeader*>(pdu.release());
     }
     case SUBMIT_MULTI_RESP:
