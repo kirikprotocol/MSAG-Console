@@ -312,7 +312,8 @@ const char* OverwriteStatement::sql = (const char*)
  DST_MSC=NULL, DST_IMSI=NULL, DST_SME_N=NULL, ATTEMPTS=0,\
  VALID_TIME=:VALID_TIME, SUBMIT_TIME=:SUBMIT_TIME,\
  NEXT_TRY_TIME=:NEXT_TRY_TIME, SVC_TYPE=:SVC,\
- DR=:DR, BR=:BR, ARC=:ARC, BODY=:BODY, BODY_LEN=:BODY_LEN\
+ DR=:DR, BR=:BR, ARC=:ARC, BODY=:BODY, BODY_LEN=:BODY_LEN,\
+ ROUTE_ID=:ROUTE_ID, SVC_ID=:SVC_ID, PRTY=:PRTY\
  WHERE ID=:OLD_ID";
 OverwriteStatement::OverwriteStatement(Connection* connection, bool assign)
     throw(StorageException)
@@ -384,6 +385,14 @@ void OverwriteStatement::bindSms(SMS& sms)
          (sb4) bodyBufferLen, &indBody);
     bind(i++, SQLT_UIN, (dvoid *)&(bodyBufferLen),
          (sb4) sizeof(bodyBufferLen));
+    
+    indRouteId = strlen(sms.routeId) ? OCI_IND_NOTNULL:OCI_IND_NULL;
+    bind(i++, SQLT_STR, (dvoid *) (sms.routeId),
+         (sb4) sizeof(sms.routeId), &indRouteId);
+    bind(i++, SQLT_INT, (dvoid *)&(sms.serviceId),
+         (sb4) sizeof(sms.serviceId));
+    bind(i++, SQLT_INT, (dvoid *)&(sms.priority),
+         (sb4) sizeof(sms.priority));
 }
 
 /* --------------------------- StoreStatement ----------------------- */
@@ -391,11 +400,13 @@ const char* StoreStatement::sql = (const char*)
 "INSERT INTO SMS_MSG (ID, ST, MR, OA, DA, DDA,\
  SRC_MSC, SRC_IMSI, SRC_SME_N,\
  VALID_TIME, SUBMIT_TIME, ATTEMPTS, LAST_RESULT,\
- LAST_TRY_TIME, NEXT_TRY_TIME, SVC_TYPE, DR, BR, ARC, BODY, BODY_LEN)\
+ LAST_TRY_TIME, NEXT_TRY_TIME, SVC_TYPE, DR, BR, ARC, BODY, BODY_LEN,\
+ ROUTE_ID, SVC_ID, PRTY)\
  VALUES (:ID, :ST, :MR, :OA, :DA, :DDA,\
  :SRC_MSC, :SRC_IMSI, :SRC_SME_N,\
  :VALID_TIME, :SUBMIT_TIME, 0, 0, NULL, :NEXT_TRY_TIME,\
- :SVC, :DR, :BR, :ARC, :BODY, :BODY_LEN)";
+ :SVC, :DR, :BR, :ARC, :BODY, :BODY_LEN,\
+ :ROUTE_ID, :SVC_ID, :PRTY)";
 StoreStatement::StoreStatement(Connection* connection, bool assign)
     throw(StorageException)
         : IdStatement(connection, StoreStatement::sql, assign)
@@ -470,6 +481,15 @@ void StoreStatement::bindSms(SMS& sms)
          (sb4) bodyBufferLen, &indBody);
     bind(i++, SQLT_UIN, (dvoid *)&(bodyBufferLen),
          (sb4) sizeof(bodyBufferLen));
+
+    indRouteId = strlen(sms.routeId) ? 
+                    OCI_IND_NOTNULL:OCI_IND_NULL;
+    bind(i++, SQLT_STR, (dvoid *) (sms.routeId),
+         (sb4) sizeof(sms.routeId), &indRouteId);
+    bind(i++, SQLT_INT, (dvoid *)&(sms.serviceId),
+         (sb4) sizeof(sms.serviceId));
+    bind(i++, SQLT_INT, (dvoid *)&(sms.priority),
+         (sb4) sizeof(sms.priority));
 }
 
 /* --------------------------- RetrieveStatement ----------------------- */
@@ -478,7 +498,7 @@ const char* RetrieveStatement::sql = (const char*)
  SRC_MSC, SRC_IMSI, SRC_SME_N, DST_MSC, DST_IMSI, DST_SME_N,\
  VALID_TIME, SUBMIT_TIME,\
  ATTEMPTS, LAST_RESULT, LAST_TRY_TIME, NEXT_TRY_TIME,\
- SVC_TYPE, DR, BR, ARC, BODY, BODY_LEN\
+ SVC_TYPE, DR, BR, ARC, BODY, BODY_LEN, ROUTE_ID, SVC_ID, PRTY\
  FROM SMS_MSG WHERE ID=:ID";
 RetrieveStatement::RetrieveStatement(Connection* connection, bool assign)
     throw(StorageException)
@@ -552,6 +572,13 @@ void RetrieveStatement::defineSms(SMS& sms)
            (sb4) sizeof(bodyBuffer), &indBody);
     define(i++, SQLT_UIN, (dvoid *) &(bodyBufferLen), 
            (sb4) sizeof(bodyBufferLen));
+    
+    define(i++, SQLT_STR, (dvoid *) (sms.routeId),
+           (sb4) sizeof(sms.routeId), &indRouteId);
+    define(i++, SQLT_INT, (dvoid *)&(sms.serviceId),
+           (sb4) sizeof(sms.serviceId));
+    define(i++, SQLT_INT, (dvoid *)&(sms.priority),
+           (sb4) sizeof(sms.priority));
 }
 
 bool RetrieveStatement::getSms(SMS& sms)
@@ -598,6 +625,8 @@ bool RetrieveStatement::getSms(SMS& sms)
         sms.destinationDescriptor.sme = 0;
     if (indSvc != OCI_IND_NOTNULL) 
         sms.eServiceType[0] = '\0';
+    if (indRouteId != OCI_IND_NOTNULL)
+        sms.routeId[0] = '\0';
 
     if (indLastTime != OCI_IND_NOTNULL) sms.lastTime = 0;
     else convertOCIDateToDate(&lastTime, &(sms.lastTime));

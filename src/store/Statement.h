@@ -121,7 +121,7 @@ namespace smsc { namespace store
         
         char        bNeedArchivate;
         
-        sb2         indBody, indNextTime, indSvcType;
+        sb2         indBody, indNextTime, indSvcType, indRouteId;
 
         FullAddressValue    oa, da, dda;
 
@@ -221,7 +221,7 @@ namespace smsc { namespace store
         
         char        bNeedArchivate;
         
-        sb2         indBody, indNextTime, indSvcType;
+        sb2         indBody, indNextTime, indSvcType, indRouteId;
     
     public:
 
@@ -260,7 +260,7 @@ namespace smsc { namespace store
         
         sb2         indSrcMsc, indSrcImsi, indSrcSme;
         sb2         indDstMsc, indDstImsi, indDstSme;
-        sb2         indSvc, indBody, indLastTime, indNextTime;
+        sb2         indSvc, indBody, indLastTime, indNextTime, indRouteId;
 
         FullAddressValue    oa, da, dda;
     
