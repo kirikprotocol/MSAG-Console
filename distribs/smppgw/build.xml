@@ -23,8 +23,8 @@
   <property name="TEMPL_DIR" value="${SMSC_DIR}/config/templates"/>
   <property name="WEBSRC_DIR" value="${SMSC_DIR}/webapps"/>
   <property name="WEBINF_DIR" value="${DISTR_DIR}/webapps/smsc/WEB-INF"/>
-  <property name="SERVICE2HOME_PATH" value="../../.."/>
-  <property name="DAEMON2HOME_PATH" value="../.."/>
+  <property name="SERVICE2HOME_PATH" value="../.."/>
+  <property name="DAEMON2HOME_PATH" value=".."/>
 
   <target name="help">
     <echo>
@@ -79,20 +79,20 @@ Targets:
 
     <symlink resource="${SERVICE2HOME_PATH}/lib" link="${DISTR_DIR}/services/smppgw"/>
     <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/smppgw"/>
-    <symlink resource="${SERVICE2HOME_PATH}/conf/command.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/conf/configuration.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/conf/response.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/conf/AliasRecords.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/conf/SmeRecords.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/conf/command_gw.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/conf/locale_resources.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/conf/routes.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/command.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/response.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/AliasRecords.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/SmeRecords.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/command_gw.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/locale_resources.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/routes.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
 
     <symlink resource="${DAEMON2HOME_PATH}/lib" link="${DISTR_DIR}/daemon"/>
     <symlink resource="${DAEMON2HOME_PATH}/logs" link="${DISTR_DIR}/daemon"/>
-    <symlink resource="${DAEMON2HOME_PATH}/conf/command.dtd" link="${DISTR_DIR}/daemon/conf"/>
-    <symlink resource="${DAEMON2HOME_PATH}/conf/configuration.dtd" link="${DISTR_DIR}/daemon/conf"/>
-    <symlink resource="${DAEMON2HOME_PATH}/conf/response.dtd" link="${DISTR_DIR}/daemon/conf"/>
+    <symlink resource="${DAEMON2HOME_PATH}/../conf/command.dtd" link="${DISTR_DIR}/daemon/conf"/>
+    <symlink resource="${DAEMON2HOME_PATH}/../conf/configuration.dtd" link="${DISTR_DIR}/daemon/conf"/>
+    <symlink resource="${DAEMON2HOME_PATH}/../conf/response.dtd" link="${DISTR_DIR}/daemon/conf"/>
 
     <symlink resource="../tomcat/shared/classes/log4j.properties" link="${DISTR_DIR}/conf"/>
   </target>
