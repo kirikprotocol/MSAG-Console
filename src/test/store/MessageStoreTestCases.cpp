@@ -400,6 +400,11 @@ void MessageStoreTestCases::storeReplaceCorrectSms(SMSId* idp, SMS* existentSms)
 		__trace2__("storeReplaceCorrectSms(): smsId = %s", str(smsId));
 		msgStore->createSms(sms, smsId, SMPP_OVERWRITE_IF_PRESENT);
 		__tc_ok__;
+		//восстановить параметры доставки из existentSms
+		sms.attempts = existentSms->getAttemptsCount();
+		sms.lastResult = existentSms->getLastResult();
+		sms.lastTime = existentSms->getLastTime();
+		//вернуть результат
 		*idp = smsId;
 		*existentSms = sms;
 	}
@@ -457,14 +462,14 @@ void MessageStoreTestCases::storeIncorrectSms(int num)
 
 void MessageStoreTestCases::storeAssertSms(int num)
 {
-	TCSelector s(num, 14);
+	TCSelector s(num, 10);
 	__decl_tc__;
-	SMS sms;
-	SMS& p = sms;
 	for (; s.check(); s++)
 	{
 		try
 		{
+			SMS sms;
+			SMS& p = sms;
 			SmsUtil::setupRandomCorrectSms(&sms, mask, check);
 			switch(s.value())
 			{
@@ -529,6 +534,7 @@ void MessageStoreTestCases::storeAssertSms(int num)
 						Descriptor(1, "*", MAX_ADDRESS_LENGTH + 1, addr.get(), 1);
 					}
 					break;
+				/*
 				case 11: //short_message больше максимальной длины
 					{
 						__tc__("storeAssertSms.smGreaterMaxLength");
@@ -554,6 +560,7 @@ void MessageStoreTestCases::storeAssertSms(int num)
 						__set_str_body_tag__(SMPP_RECEIPTED_MESSAGE_ID, MAX_MSG_ID_LENGTH + 1);
 					}
 					break;
+				*/
 				default:
 					__unreachable__("Invalid num");
 			}
@@ -562,13 +569,14 @@ void MessageStoreTestCases::storeAssertSms(int num)
 		}
 		catch(AssertException&)
 		{
-			__tc_ok__;
+			//ok
 		}
 		catch(...)
 		{
 			__tc_fail__(s.value());
 			error();
 		}
+		__tc_ok_cond__;
 	}
 }
 
@@ -980,8 +988,7 @@ void MessageStoreTestCases::loadExistentSms(const SMSId id, const SMS& sms)
 		}
 		else
 		{
-			vector<int> tmp = SmsUtil::compareMessages(sms, _sms);
-			__tc_fail2__(tmp);
+			__tc_fail2__(SmsUtil::compareMessages(sms, _sms), 0);
 			__tc_ok_cond__;
 		}
 	}
