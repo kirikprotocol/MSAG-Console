@@ -55,6 +55,7 @@ static const int DELIVERYFAILURE=254; //Delivery Failure (used for data_sm_resp)
 static const int UNKNOWNERR=255; //Unknown Error
 static const int NOROUTE=1025; //No route defined for given source and destination addresses
 static const int EXPIRED=1026; //Message expired
+static const int DELIVERYTIMEDOUT=1027; //Delivery attempt timed out
 static const int UNKSUBSCRIBER=1153; //Unknown subscriber
 static const int UNDEFSUBSCRIBER=1157; //Unidentified subscriber
 static const int ILLEGALSUBSCRIBER=1161; //Illegal subscriber
