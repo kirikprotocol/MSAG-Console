@@ -43,6 +43,7 @@ void ResourceManager::init(const char * const localesString, const char * const 
     char * tmpptr = tmp;
     while ((*tmpptr != ' ') && (*tmpptr != '\t') && (*tmpptr != 0)) tmpptr++;
     (*tmpptr) = 0;
+    __trace2__("ResMgr: add locale %s", tmp );
     locales.push_back(tmp);
     str = ptr+1;
   }
@@ -56,6 +57,7 @@ void ResourceManager::init(const char * const localesString, const char * const 
     char * tmpptr = tmp;
     while ((*tmpptr != ' ') && (*tmpptr != '\t') && (*tmpptr != 0)) tmpptr++;
     (*tmpptr) = 0;
+    __trace2__("ResMgr: add locale %s", tmp );
     locales.push_back(tmp);
   }
 
@@ -85,6 +87,7 @@ void ResourceManager::init(const _stringlist & localeNames, const std::string & 
     logger.error("Default locale \"%s\" not found in locales.", defaultLocaleName.c_str());
   }
   instance.get()->validLocales=localeNames;
+  __trace2__("ResMgr: set valid locales %p", &(instance.get()->validLocales) );
 }
 
 void ResourceManager::reload() throw ()
@@ -241,6 +244,7 @@ OutputFormatter* ResourceManager::getFormatter(const std::string& key) const thr
 bool ResourceManager::isValidLocale(const std::string& localeName)const
 {
   MutexGuard g(mtx);
+  __trace2__("ResMgr: is valid locale? %p/%d", &(validLocales), validLocales.size() );
   for(_stringlist::const_iterator i=validLocales.begin();i!=validLocales.end();i++)
   {
     __trace2__("ResMgr: testing %s = %s", localeName.c_str(), i->c_str() );
