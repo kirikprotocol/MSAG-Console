@@ -618,7 +618,7 @@ int SmppOutputThread::Execute()
       {
         trace("try to remove socket from inTask");
         inTask->removeSocket(s);
-        trace("remove ok. Killing socke");
+        trace("remove ok. Killing socket");
         killSocket(i);
         i--;
         continue;
@@ -651,7 +651,7 @@ int SmppOutputThread::Execute()
     {
       trace("out: wait for data");
       //mon.Unlock();
-      mon.wait();
+      mon.wait(2000);
       mon.Unlock();
       continue;
     }
