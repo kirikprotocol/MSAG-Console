@@ -279,7 +279,7 @@ public:
   void registerSelf(SmeManager* smeman){
     proxy.init();
     __trace2__("MAP::register MAP_PROXY");
-    smeman->registerSmeProxy("MAP_PROXY",&proxy);
+    smeman->registerInternallSmeProxy("MAP_PROXY",&proxy);
     __trace2__("MAP::register MAP_PROXY OK");
   }
 };

@@ -898,7 +898,7 @@ USHORT_T Et96MapV2ForwardSmMOInd (
         FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__PRETTY_FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
     }
     dialog->invokeId = invokeId;
-    AttachSmsToDialog(dialog,smRpUi_sp,smRpOa_sp);
+    AttachSmsToDialog(dialog.get(),smRpUi_sp,smRpOa_sp);
   }
   catch(exception& e)
   {
