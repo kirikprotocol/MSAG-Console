@@ -675,7 +675,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
       try{
         if ( cmd->get_sms()->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP ) )
         {
-          unsigned serviceOp = cmd->get_sms()->getIntProperty(Tag::SMPP_USSD_SERVICE_OP )
+          unsigned serviceOp = cmd->get_sms()->getIntProperty(Tag::SMPP_USSD_SERVICE_OP );
           if ( serviceOp == USSD_PSSR /*_RESPONSE*/ ) 
           {
             string s_seq = cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
