@@ -36,8 +36,8 @@ DEBUG := YES
 endif
 
 ifeq ($(DEBUG),YES)
-CFLAGS := $(CFLAGS) -g -DDEBUG
-CXXFLAGS := $(CXXFLAGS) -g -DDEBUG
+CFLAGS := $(CFLAGS) -g -DSMSC_DEBUG
+CXXFLAGS := $(CXXFLAGS) -g -DSMSC_DEBUG
 export DEBUG
 else
 ifeq ($(COVER),YES)
