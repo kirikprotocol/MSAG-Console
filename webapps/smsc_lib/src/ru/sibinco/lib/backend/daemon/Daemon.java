@@ -1,6 +1,5 @@
 package ru.sibinco.lib.backend.daemon;
 
-import org.apache.log4j.Logger;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import ru.sibinco.lib.Constants;
@@ -20,7 +19,6 @@ public class Daemon extends Proxy
 {
   public static final long REFRESH_TIMEOUT = 1000;
 
-  private Logger logger = Logger.getLogger(this.getClass());
   private Map services = new HashMap();
   private String daemonServicesFolder;
   private long lastRefreshMillis = 0;
@@ -37,9 +35,9 @@ public class Daemon extends Proxy
   public Map refreshServices(final SmeManager smeManager) throws SibincoException
   {
     final long now = System.currentTimeMillis();
-    if (now - lastRefreshMillis > REFRESH_TIMEOUT) {
+    if (REFRESH_TIMEOUT < now - lastRefreshMillis) {
       final Response r = runCommand(new CommandListServices());
-      if (r.getStatus() != Response.StatusOk)
+      if (Response.StatusOk != r.getStatus())
         throw new SibincoException("Couldn't list services, nested:" + r.getDataAsString());
 
       services.clear();
@@ -55,26 +53,14 @@ public class Daemon extends Proxy
     return services;
   }
 
-  /**
-   * @return Process ID (PID) of new services
-   */
-  public long startService(final String serviceId)
+  public void startService(final String serviceId)
       throws SibincoException
   {
     requireService(serviceId);
 
     final Response r = runCommand(new CommandStartService(serviceId));
-    if (r.getStatus() != Response.StatusOk)
+    if (Response.StatusOk != r.getStatus())
       throw new SibincoException("Couldn't start services \"" + serviceId + "\", nested:" + r.getDataAsString());
-
-    final String pidStr = r.getDataAsString().trim();
-    try {
-      final long pid = Long.decode(pidStr).longValue();
-      getServiceInfo(serviceId).setPid(pid);
-      return pid;
-    } catch (NumberFormatException e) {
-      throw new SibincoException("PID of new services misformatted (" + pidStr + "), nested:" + e.getMessage());
-    }
   }
 
   public ServiceInfo getServiceInfo(final String serviceId)
@@ -98,7 +84,7 @@ public class Daemon extends Proxy
     logger.debug("Add services \"" + id + "\" (" + serviceInfo.getHost() + ':' + serviceInfo.getPort() + ")");
 
     final Response r = runCommand(new CommandAddService(serviceInfo));
-    if (r.getStatus() != Response.StatusOk)
+    if (Response.StatusOk != r.getStatus())
       throw new SibincoException("Couldn't add services \"" + id + '/' + id + "\" [" + serviceInfo.getArgs() + "], nested:" + r.getDataAsString());
 
     services.put(id, serviceInfo);
@@ -109,7 +95,7 @@ public class Daemon extends Proxy
   {
     requireService(serviceId);
     final Response r = runCommand(new CommandRemoveService(serviceId));
-    if (r.getStatus() != Response.StatusOk)
+    if (Response.StatusOk != r.getStatus())
       throw new SibincoException("Couldn't remove services \"" + serviceId + "\", nested:" + r.getDataAsString());
 
     services.remove(serviceId);
@@ -120,7 +106,7 @@ public class Daemon extends Proxy
   {
     requireService(serviceId);
     final Response r = runCommand(new CommandShutdownService(serviceId));
-    if (r.getStatus() != Response.StatusOk) {
+    if (Response.StatusOk != r.getStatus()) {
       getServiceInfo(serviceId).setStatus(ServiceInfo.STATUS_UNKNOWN);
       throw new SibincoException("Couldn't shutdown services \"" + serviceId + "\", nested:" + r.getDataAsString());
     }
@@ -132,7 +118,7 @@ public class Daemon extends Proxy
   {
     requireService(serviceId);
     final Response r = runCommand(new CommandKillService(serviceId));
-    if (r.getStatus() != Response.StatusOk) {
+    if (Response.StatusOk != r.getStatus()) {
       getServiceInfo(serviceId).setStatus(ServiceInfo.STATUS_UNKNOWN);
       throw new SibincoException("Couldn't kill services \"" + serviceId + "\", nested:" + r.getDataAsString());
     }
@@ -141,7 +127,7 @@ public class Daemon extends Proxy
 
   public List getServiceIds(final SmeManager smeManager) throws SibincoException
   {
-    if (services.size() == 0)
+    if (0 == services.size())
       refreshServices(smeManager);
     return new SortedList(services.keySet());
   }
@@ -151,7 +137,7 @@ public class Daemon extends Proxy
   {
     requireService(serviceId);
     final Response r = runCommand(new CommandSetServiceStartupParameters(serviceId, port, args));
-    if (r.getStatus() != Response.StatusOk)
+    if (Response.StatusOk != r.getStatus())
       throw new SibincoException("Couldn't set services startup parameters \"" + serviceId + "\", nested:" + r.getDataAsString());
     final ServiceInfo serviceInfo = getServiceInfo(serviceId);
     serviceInfo.setPort(port);
@@ -173,7 +159,7 @@ public class Daemon extends Proxy
     int result = 0;
     for (Iterator i = services.values().iterator(); i.hasNext();) {
       final ServiceInfo info = (ServiceInfo) i.next();
-      if (info.getStatus() == ServiceInfo.STATUS_RUNNING && !info.getId().equals(Constants.SMSC_SME_ID))
+      if (ServiceInfo.STATUS_RUNNING == info.getStatus() && !info.getId().equals(Constants.SMSC_SME_ID))
         result++;
     }
     return result;
