@@ -59,18 +59,18 @@ public:
   ~TaskContainer() {}
 
   bool getExpired(Task* t)
-	{
+  {
     unsigned long _time = time(NULL);
     if ( timeout_link_begin && timeout_link_begin->timeout < _time )
-		{
+    {
       *t = *timeout_link_begin;
 			__findAndRemove(timeout_link_begin);
-			return true;
-		}
-		return false;
-	}
+      return true;
+    }
+    return false;
+  }
 
-	bool createTask(const Task& t)
+  bool createTask(const Task& t)
   {
     //checkTimeout();
     if ( !first_task ) return false;
@@ -161,6 +161,7 @@ public:
     else
     {
       timeout_link_begin = task->timeout_next;
+			timeout_link_begin->timeout_prev = 0;
     }
 
     if ( task->timeout_next )
@@ -170,6 +171,7 @@ public:
     else
     {
       timeout_link_end = task->timeout_prev;
+			timeout_link_begin->timeout_next = 0;
     }
 
     // add into free_list
