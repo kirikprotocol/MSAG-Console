@@ -64,7 +64,7 @@ function srcSmeIdChanged()
 			</select></td>
 		</tr>
     <tr class=row<%=(rowN++)&1%>>
-			<th>Providers&nbsp;</th>
+			<th>Provider&nbsp;</th>
 			<td><select name=providerIdStr id=providerId >
 				<option value="" <%=(bean.getProviderId() == -1 ) ? "selected" : ""%>></option>
 				<%for (Iterator iprov = bean.getProviders().iterator(); iprov.hasNext(); )
@@ -80,7 +80,7 @@ function srcSmeIdChanged()
 			</select></td>
 		</tr>
     <tr class=row<%=(rowN++)&1%>>
-			<th>Categories&nbsp;</th>
+			<th>Category&nbsp;</th>
 			<td><select name=categoryIdStr id=categoryId >
 				<option value="" <%=(bean.getCategoryId() == -1) ? "selected" : ""%>></option>
 				<%for (Iterator jcat = bean.getCategories().iterator(); jcat.hasNext(); )
