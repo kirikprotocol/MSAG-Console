@@ -60,9 +60,10 @@ function showhide(elem)
 }
 </script>
 <dl>
-<dt class=secTitleClosed onclick='showhide(this)'>Logger</dt> 
-<dd style="display:none"> 
-<%int row = 0;%> 
+<%-- ################################# logger ############################# --%>
+<dt class=secTitleClosed onclick='showhide(this)'>Logger</dt>
+<dd style="display:none">
+<%int row = 0;%>
 <table class=secRep cellspacing=1 width="100%">
 <col width=180px>
 <tr class=row<%=(row++)&1%>>
@@ -71,6 +72,7 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
+<%-- ################################## admin ############################# --%>
 <dt class=secTitleClosed onclick='showhide(this)'>Administartion</dt>
 <dd style="display:none">
 <%row=0;%>
@@ -86,6 +88,7 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
+<%-- ################################ MessageStore ######################## --%>
 <dt class=secTitleClosed onclick='showhide(this)'>Message store</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
@@ -97,6 +100,7 @@ function showhide(elem)
 </tr>
 </table>
 <dl>
+<%-- ~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Storage ~~~~~~~~~~~~~~~~~~~~~~~~ --%>
 <dt class=secTitleClosed onclick='showhide(this)'>Storage</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
@@ -116,6 +120,7 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
+<%-- ~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Archive ~~~~~~~~~~~~~~~~~~~~~~~~ --%>
 <dt class=secTitleClosed onclick='showhide(this)'>Archive</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
@@ -139,6 +144,7 @@ function showhide(elem)
 </tr>
 </table>
 <dl>
+<%-- .................... MessageStore.Archive.Cleaner .................... --%>
 <dt class=secTitleClosed onclick='showhide(this)'>Cleaner</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
@@ -156,6 +162,7 @@ function showhide(elem)
 </dd>
 </dl>
 </dd>
+<%-- ~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Billing ~~~~~~~~~~~~~~~~~~~~~~~~ --%>
 <dt class=secTitleClosed onclick='showhide(this)'>Billing</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
@@ -175,6 +182,7 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
+<%-- ~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Cache ~~~~~~~~~~~~~~~~~~~~~~~~~~ --%>
 <dt class=secTitleClosed onclick='showhide(this)'>Cache</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
@@ -190,6 +198,7 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
+<%-- ~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Connections ~~~~~~~~~~~~~~~~~~~~ --%>
 <dt class=secTitleClosed onclick='showhide(this)'>Connections</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
@@ -207,6 +216,7 @@ function showhide(elem)
 </dd>
 </dl>
 </dd>
+<%-- ################################## map ############################### --%>
 <dt class=secTitleClosed onclick='showhide(this)'>map</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
@@ -222,6 +232,7 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
+<%-- ################################## smpp ############################## --%>
 <dt class=secTitleClosed onclick='showhide(this)'>smpp</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
@@ -245,6 +256,7 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
+<%-- ################################## core ############################## --%>
 <dt class=secTitleClosed onclick='showhide(this)'>core</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
@@ -286,8 +298,17 @@ function showhide(elem)
 	<th class=label>protocol_id:</th>
 	<td><input class=txtW name="core.protocol_id" value="<%=bean.getIntParam("core.protocol_id")%>"></td>
 </tr>
+<tr class=row<%=(row++)&1%>>
+	<th class=label>protocol_id:</th>
+	<td><input class=txtW name="core.locales" value="<%=StringEncoderDecoder.encode(bean.getStringParam("core.locales"))%>"></td>
+</tr>
+<tr class=row<%=(row++)&1%>>
+	<th class=label>protocol_id:</th>
+	<td><input class=txtW name="core.default_locale" value="<%=StringEncoderDecoder.encode(bean.getStringParam("core.default_locale"))%>"></td>
+</tr>
 </table>
 <dl>
+<%-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ core.perfomance ~~~~~~~~~~~~~~~~~~~~~~~~~ --%>
 <dt class=secTitleClosed onclick='showhide(this)'>performance</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
@@ -305,6 +326,7 @@ function showhide(elem)
 </dd>
 </dl>
 </dd>
+<%-- ############################## abonentinfo ########################### --%>
 <dt class=secTitleClosed onclick='showhide(this)'>Abonent Info</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
@@ -332,6 +354,7 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
+<%-- ############################### profiler ############################# --%>
 <dt class=secTitleClosed onclick='showhide(this)'>profiler</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
@@ -379,6 +402,7 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
+<%-- ################################# sms ################################ --%>
 <dt class=secTitleClosed onclick='showhide(this)'>sms</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
@@ -390,6 +414,7 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
+<%-- ############################ StartupLoader ########################### --%>
 <dt class=secTitleClosed onclick='showhide(this)'>StartupLoader</dt>
 <dd style="display:none">
 	<dl>
@@ -421,6 +446,7 @@ function showhide(elem)
 	</dd>
 	</dl>
 </dd>
+<%-- ############################# DataSource ############################ --%>
 <dt class=secTitleClosed onclick='showhide(this)'>DataSource</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
