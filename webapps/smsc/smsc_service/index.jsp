@@ -388,7 +388,7 @@ function showhide(elem)
 	<td><input class=check type=checkbox name="profiler.defaultHide" <%=bean.getBoolParam("profiler.defaultHide") ? "checked" : ""%> value=true></td>
 </tr>
 </table>
-</dd>
+<dl>
 <%-- ############################### profiler USSD mapping ############################# --%>
 <dt class=secTitleClosed onclick='showhide(this)'>ussdOpsMapping</dt>
 <dd style="display:none">
@@ -432,6 +432,8 @@ function showhide(elem)
 	<td><input class=txtW name="profiler.ussdOpsMapping.UNHIDE" value="<%=bean.getIntParam("profiler.ussdOpsMapping.UNHIDE")%>"></td>
 </tr>
 </table>
+</dd>
+</dl>
 </dd>
 <%-- ################################# sms ################################ --%>
 <dt class=secTitleClosed onclick='showhide(this)'>sms</dt>
