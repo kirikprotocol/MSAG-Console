@@ -32,11 +32,11 @@ USHORT_T Et96MapBindConf(ET96MAP_LOCAL_SSN_T lssn, ET96MAP_BIND_STAT_T status)
   else if ( status == 1 ){
     __trace__("MAP: Unbind");
     Et96MapUnbindReq(SSN);
-    __trace__("MAP: Bind ");
-    if ( Et96MapBindReq(USER01_ID, SSN)!=ET96MAP_E_OK ){
-      return 0;
-    }
-    return ET96MAP_E_OK;
+    //__trace__("MAP: Bind ");
+    //if ( Et96MapBindReq(USER01_ID, SSN)!=ET96MAP_E_OK ){
+    //  return 0;
+    //}
+    return 1;//ET96MAP_E_OK;
   }else{
     return status;
   }
