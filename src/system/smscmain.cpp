@@ -15,6 +15,8 @@
 #include <system/smscsignalhandlers.h>
 #include <core/threads/Thread.hpp>
 
+#include "system/version.inc"
+
 bool file_exist(const char * const filename)
 {
   struct stat buf;
@@ -190,8 +192,8 @@ int main(int argc,char* argv[])
 
       fprintf(stderr,"smsc stopped, finishing\n");
       // stopped
-	  if (smsc_component.isSmscRunning() && !smsc_component.isSmscStopping())
-		smsc_component.stopSmsc();
+    if (smsc_component.isSmscRunning() && !smsc_component.isSmscStopping())
+    smsc_component.stopSmsc();
 
       Manager::deinit();
 
@@ -202,12 +204,12 @@ int main(int argc,char* argv[])
   catch (AdminException &e)
   {
     fprintf(stderr,"top level exception: %s\n", e.what());
-    exit(-3);
+    exit(-2);
   }
   catch (smsc::util::Exception &e)
   {
     fprintf(stderr,"top level exception: %s\n", e.what());
-    exit(-2);
+    exit(-1);
   }
   catch(std::exception& e)
   {
@@ -217,7 +219,7 @@ int main(int argc,char* argv[])
   catch(...)
   {
     fprintf(stderr,"FATAL EXCEPTION!\n");
-    exit(-0);
+    exit(-1);
   }
   return 0;
 }
