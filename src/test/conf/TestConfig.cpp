@@ -10,8 +10,8 @@ TestConfig::TestConfig()
 {
 	//конфигурационный параметр core/reschedule_table
 	vector<int> rescheduleTimes;
+	rescheduleTimes.push_back(40);
 	rescheduleTimes.push_back(30);
-	rescheduleTimes.push_back(20);
 	intArrMap["rescheduleTimes"] = rescheduleTimes;
 	//различные времена
 	intMap["timeCheckAccuracy"] = 5; //5 сек
