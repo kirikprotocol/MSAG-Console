@@ -489,8 +489,8 @@ const string str(const Address& addr)
 
 ostream& operator<< (ostream& os, const Descriptor& d)
 {
-	os << "{msc=" << d.msc << "(" << d.mscLength <<
-		"), imsi=" << d.imsi << "(" << d.imsiLength <<
+	os << "{msc=" << d.msc << "(" << (int) d.mscLength <<
+		"), imsi=" << d.imsi << "(" << (int) d.imsiLength <<
 		"), sme=" << d.sme << "}";
 	return os;
 }
@@ -520,6 +520,81 @@ bool operator==(const Descriptor& d1, const Descriptor& d2)
 bool operator!=(const Descriptor& d1, const Descriptor& d2)
 {
 	return !operator==(d1, d2);
+}
+
+#define __print__(field) \
+	os << endl << #field << " = " << sms.get##field()
+
+#define __print_int__(field) \
+	os << endl << #field << " = " << (int) sms.get##field()
+
+#define __print_bool__(field) \
+	os << endl << #field << " = " << (sms.is##field() ? "true" : "false")
+
+#define __print_str__(field, len) \
+	char buf##field[len + 1]; \
+	sms.get##field(buf##field); \
+	os << endl << #field << " = \"" << buf##field << "\""
+	
+#define __print_int_body_tag__(tagName) \
+	if (sms.getMessageBody().hasIntProperty(Tag::tagName)) { \
+		os << endl << #tagName << " = " << sms.getMessageBody().getIntProperty(Tag::tagName); \
+	}
+
+#define __print_str_body_tag__(tagName) \
+	if (sms.getMessageBody().hasStrProperty(Tag::tagName)) { \
+		os << endl << #tagName << " = \"" << sms.getMessageBody().getStrProperty(Tag::tagName) << "\""; \
+	}
+
+ostream& operator<< (ostream& os, SMS& sms)
+{
+	__print_int__(State);
+	__print_int__(SubmitTime);
+	__print_int__(ValidTime);
+	__print_int__(AttemptsCount);
+	__print_int__(LastResult);
+	__print_int__(LastTime);
+	__print_int__(NextTime);
+	__print__(OriginatingAddress);
+	__print__(DestinationAddress);
+	__print__(DealiasedDestinationAddress);
+	__print_int__(MessageReference);
+	__print_str__(EServiceType, MAX_ESERVICE_TYPE_LENGTH);
+	__print_bool__(ArchivationRequested);
+	__print_int__(DeliveryReport);
+	__print_int__(BillingRecord);
+	__print__(OriginatingDescriptor);
+	__print__(DestinationDescriptor);
+	//body
+	__print_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME);
+	__print_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG);
+	__print_int_body_tag__(SMPP_ESM_CLASS);
+	__print_int_body_tag__(SMPP_DATA_CODING);
+	__print_int_body_tag__(SMPP_SM_LENGTH);
+	__print_int_body_tag__(SMPP_REGISTRED_DELIVERY);
+	__print_int_body_tag__(SMPP_PROTOCOL_ID);
+	__print_str_body_tag__(SMPP_SHORT_MESSAGE);
+	__print_int_body_tag__(SMPP_PRIORITY);
+	__print_int_body_tag__(SMPP_USER_MESSAGE_REFERENCE);
+	__print_int_body_tag__(SMPP_USSD_SERVICE_OP);
+	__print_int_body_tag__(SMPP_DEST_ADDR_SUBUNIT);
+	__print_int_body_tag__(SMPP_PAYLOAD_TYPE);
+	__print_str_body_tag__(SMPP_RECEIPTED_MESSAGE_ID);
+	__print_int_body_tag__(SMPP_MS_MSG_WAIT_FACILITIES);
+	__print_int_body_tag__(SMPP_USER_RESPONSE_CODE);
+	__print_int_body_tag__(SMPP_SAR_MSG_REF_NUM);
+	__print_int_body_tag__(SMPP_LANGUAGE_INDICATOR);
+	__print_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS);
+	__print_int_body_tag__(SMPP_NUMBER_OF_MESSAGES);
+	__print_str_body_tag__(SMPP_MESSAGE_PAYLOAD);
+	//bool attach;
+}
+
+const string str(SMS& sms)
+{
+	ostringstream os;
+	os << sms;
+	return os.str();
 }
 
 }

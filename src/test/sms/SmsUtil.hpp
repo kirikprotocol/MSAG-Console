@@ -83,6 +83,9 @@ ostream& operator<< (ostream& os, const Descriptor& d);
 bool operator==(const Descriptor& d1, const Descriptor& d2);
 bool operator!=(const Descriptor& d1, const Descriptor& d2);
 
+ostream& operator<< (ostream& os, SMS& sms);
+const string str(SMS& sms);
+
 }
 }
 }
