@@ -109,21 +109,23 @@ private:
   bool billing;
   bool archiving;
   bool enabling;
+  bool suppressDeliveryReports;
   int serviceId;
+
 
   friend class smsc::util::config::route::RouteConfig;
 
 public:
   Route()
-    : id(), priority(0), sources(), destinations(), billing(false), archiving(false), enabling(true), serviceId(0)
+    : id(), priority(0), sources(), destinations(), billing(false), archiving(false), enabling(true),suppressDeliveryReports(false), serviceId(0)
   {}
   Route(const Route &r)
     : id(r.id), priority(r.priority), sources(r.sources), destinations(r.destinations),
-      billing(r.billing), archiving(r.archiving), enabling(r.enabling), serviceId(r.serviceId)
+      billing(r.billing), archiving(r.archiving), enabling(r.enabling),suppressDeliveryReports(r.suppressDeliveryReports), serviceId(r.serviceId)
   {}
-  Route(const std::string & rid, const int prior, bool isBilling, bool isArchiving, bool isEnabling, int _serviceId)
+  Route(const std::string & rid, const int prior, bool isBilling, bool isArchiving, bool isEnabling, bool isSuppressDR,int _serviceId)
     : id(rid), priority(prior), sources(), destinations(),
-      billing(isBilling), archiving(isArchiving), enabling(isEnabling), serviceId(_serviceId)
+      billing(isBilling), archiving(isArchiving), enabling(isEnabling), suppressDeliveryReports(isSuppressDR),serviceId(_serviceId)
   {}
 
   ~Route()
@@ -137,6 +139,7 @@ public:
   const bool isBilling() const {return billing;}
   const bool isArchiving() const {return archiving;}
   const bool isEnabling() const {return enabling;}
+  const bool isSuppressDeliveryReports(){return suppressDeliveryReports;}
   const char * const getId() const {return id.c_str();}
   int getPriority() {return priority;}
   const std::string & getIdString() const {return id;}
@@ -152,4 +155,3 @@ typedef std::vector<Route*> RoutePVector;
 }
 
 #endif //ifndef SMSC_UTIL_CONFIG_ROUTE_ROUTESTRUCTURES
-

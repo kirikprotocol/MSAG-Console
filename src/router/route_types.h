@@ -24,6 +24,7 @@ struct RouteInfo
   bool billing;
   bool archived;
   bool enabling;
+  bool suppressDeliveryReports;
   int serviceId;
   RouteId routeId;
   smsc::smeman::SmeSystemId smeSystemId;

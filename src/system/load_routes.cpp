@@ -79,6 +79,7 @@ void loadRoutes(RouteManager* rm,RouteConfig& rc)
               rinfo.routeId=route->getId();
               rinfo.serviceId=route->getServiceId();
               rinfo.priority=route->getPriority();
+              rinfo.suppressDeliveryReports=route->isSuppressDeliveryReports();
               __trace2__("dest mask: %s",dest_mask_it->c_str());
               __trace2__("src mask: %s",src_mask_it->c_str());
               print(rinfo);
