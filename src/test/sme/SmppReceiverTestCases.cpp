@@ -221,20 +221,23 @@ void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 	//__dumpPdu__("processDeliverySmAfter", systemId, &pdu);
 }
 
-bool SmppReceiverTestCases::isAccepted(uint32_t status)
+RespPduFlag SmppReceiverTestCases::isAccepted(uint32_t status)
 {
 	switch (status)
 	{
 		//повторная доставка
+		case ESME_ROK:
+			return RESP_PDU_OK;
 		case ESME_RX_T_APPN:
 		case ESME_RMSGQFUL:
+			return RESP_PDU_RESCHED;
 		case 0xffffffff: //ошибка отправки deliver_sm_resp
-			return false;
+			return RESP_PDU_MISSING;
 		case ESME_RX_P_APPN:
 			__unreachable__("Not supported");
-		//ESME_ROK, все остальные коды ошибок
+		//все остальные коды ошибок
 		default:
-			return true;
+			return RESP_PDU_ERROR;
 	}
 }
 
@@ -414,10 +417,10 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 					__tc_ok_cond__;
 					//отправить респонс
 					pduData->deliveryStatus = respSender->sendDeliverySmResp(pdu);
-					bool accepted = isAccepted(pduData->deliveryStatus);
+					RespPduFlag respFlag = isAccepted(pduData->deliveryStatus);
 					//обновить статус
 					__tc__("processDeliverySm.normalSms.checkAllowed");
-					__tc_fail2__(pduData->deliveryFlag.update(recvTime, accepted), 0);
+					__tc_fail2__(pduData->deliveryFlag.update(recvTime, respFlag), 0);
 					__tc_ok_cond__;
 					//в случае повторной доставки изменить startTime для delivery receipt
 					__tc__("processDeliverySm.normalSms.checkDeliveryReceipt");
@@ -427,8 +430,23 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 						case PDU_MISSING_ON_TIME_FLAG:
 							{
 								time_t nextTime = pduData->deliveryFlag.getNextTime(recvTime);
-								pduData->deliveryReceiptFlag = PduReceiptFlag(PDU_REQUIRED_FLAG,
-									accepted ? recvTime : nextTime, pduData->validTime);
+								time_t startTime;
+								switch (respFlag)
+								{
+									case RESP_PDU_OK:
+									case RESP_PDU_ERROR:
+										startTime = recvTime;
+										break;
+									case RESP_PDU_RESCHED:
+									case RESP_PDU_MISSING:
+										startTime = nextTime ? nextTime : recvTime;
+										break;
+									default:
+										__unreachable__("Invalid resp flag");
+								}
+								pduData->deliveryReceiptFlag =
+									PduReceiptFlag(PDU_REQUIRED_FLAG,
+									startTime, pduData->validTime);
 							}
 							break;
 						case PDU_RECEIVED_FLAG:
@@ -641,10 +659,10 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu,
 				__tc_ok_cond__;
 				//отправить респонс
 				uint32_t deliveryStatus = respSender->sendDeliverySmResp(pdu);
-				bool accepted = isAccepted(deliveryStatus);
+				RespPduFlag respFlag = isAccepted(deliveryStatus);
 				//обновить статус
 				__tc__("processDeliverySm.deliveryReceipt.checkAllowed");
-				__tc_fail2__(pduData->deliveryReceiptFlag.update(recvTime, accepted), 0);
+				__tc_fail2__(pduData->deliveryReceiptFlag.update(recvTime, respFlag), 0);
 				__tc_ok_cond__;
 			}
 		}
@@ -742,14 +760,14 @@ void SmppReceiverTestCases::processIntermediateNotification(
 				__tc_ok_cond__;
 				//отправить респонс
 				uint32_t deliveryStatus = respSender->sendDeliverySmResp(pdu);
-				bool accepted = isAccepted(deliveryStatus);
+				RespPduFlag respFlag = isAccepted(deliveryStatus);
 				//разрешена ли доставка pdu
 				__tc__("processDeliverySm.intermediateNotification.checkAllowed");
 				switch (pduData->intermediateNotificationFlag)
 				{
 					case PDU_REQUIRED_FLAG:
 					case PDU_MISSING_ON_TIME_FLAG:
-						//игнорирую accepted
+						//игнорирую respFlag
 						pduData->intermediateNotificationFlag = PDU_RECEIVED_FLAG;
 						break;
 					case PDU_RECEIVED_FLAG:

@@ -102,7 +102,7 @@ private:
 	SmppPduChecker* pduChecker;
 	CheckList* chkList;
 
-	bool isAccepted(uint32_t status);
+	RespPduFlag isAccepted(uint32_t status);
 	void compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu);
 };
 
