@@ -121,16 +121,27 @@ public:
     RequestController() {};
     ~RequestController()
     {
+        // set error for all waiting requests
         MutexGuard guard(requestLock);
-        // TODO: set error (what ?) for all waiting requests
+        IntHash<Request*>::Iterator it = requestBySeqNum.First();
+        int seqNum; Request* request;
+        while (it.Next(seqNum, request))
+        {
+            if (!request) {
+                smsc_log_error(logger, "RequestController shutdown: request is null for seqNum=%d", seqNum);    
+                continue;
+            }
+            smsc_log_warn(logger, "RequestController shutdown: request for seqNum=%d skipped", seqNum);    
+            request->setSendResult(Status::SMENOTCONNECTED); // TODO: errorcode ???
+        }
+
     };
 
     bool setRequest(int seqNum, Request* request)
     {
         MutexGuard guard(requestLock);
         if (requestBySeqNum.Exist(seqNum)) {
-            smsc_log_error(logger, "SMPP sequence number %d already exists "
-                           "in RequestController", seqNum);    
+            smsc_log_error(logger, "RequestController: SMPP seqNum=%d already exists", seqNum);    
             return false;
         }
         requestBySeqNum.Insert(seqNum, request);
@@ -139,8 +150,13 @@ public:
     Request* getRequest(int seqNum)
     {
         MutexGuard guard(requestLock);
-        // TODO: implement
-        return 0;
+        Request** request = requestBySeqNum.GetPtr(seqNum);
+        if (!request) {
+            smsc_log_error(logger, "RequestController: Request is undefined for seqNum=%d", seqNum);    
+            return 0;
+        }
+        requestBySeqNum.Delete(seqNum);
+        return *request;
     }
 };
 
@@ -384,9 +400,6 @@ int main(void)
         Manager::init("config.xml");
         Manager& manager = Manager::getInstance();
         
-        ConfigView tpConfig(manager, "MTSMSme");
-        // TODO: init global settings (e.g. address to alias mapping)
-
         ConfigView smscConfig(manager, "MTSMSme.SMSC");
         MTSMSmeConfig cfg(&smscConfig);
 
