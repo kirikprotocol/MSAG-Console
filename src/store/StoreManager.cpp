@@ -47,6 +47,20 @@ bool StoreManager::needCache(Manager& config)
     }
     return cacheIsNeeded;
 }
+bool StoreManager::needArchiver(Manager& config)
+{
+    bool archiverIsNeeded = false;
+    try
+    {
+        archiverIsNeeded = config.getBool("MessageStore.Archive.enabled");
+    }
+    catch (ConfigException& exc)
+    {
+        log.warn("Config parameter: <MessageStore.Archive.enabled> missed. "
+                 "Archiver disabled.");
+    }
+    return archiverIsNeeded;
+}
 void StoreManager::startup(Manager& config)
     throw(ConfigException, ConnectionFailedException)
 {
@@ -65,7 +79,8 @@ void StoreManager::startup(Manager& config)
             
             archiver = new Archiver(config);
             generator = new IDGenerator(archiver->getLastUsedId());
-//            archiver->Start();
+
+            if (needArchiver(config)) archiver->Start();
 #else
             instance = new RemoteStore(config);
             generator = new IDGenerator(0);

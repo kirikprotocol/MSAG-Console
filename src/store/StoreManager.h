@@ -299,6 +299,7 @@ namespace smsc { namespace store
         static log4cpp::Category        &log;
 
         static bool needCache(Manager& config);
+        static bool needArchiver(Manager& config);
 
     public:
 
