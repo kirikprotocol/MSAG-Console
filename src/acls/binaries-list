@@ -2,5 +2,5 @@
 # this file contains binaries definitions
 
 # binary name        source name  libraries
--acls/acls acls 
+#acls/acls acls 
 acls/test0 test0 -lacls -lcore-network -lutil -lsocket -ldb -lcore-threads -lthread -lrt -lutil-recoder-recode_dll -lutil-config -L$(ORACLE_LIB) -lutil-xml $(__LIBRARIES) $(XERCES_LIB) -ldb -lnsl -ldl
