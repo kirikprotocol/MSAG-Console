@@ -1138,8 +1138,7 @@ void UpdateSeqNumStatement::bindInc(int8_t inc)
  WHERE MSG_REF IS NOT NULL GROUP BY DDA";*/
 const char* ConcatDataStatement::sql = (const char*)
 "SELECT DDA, MSG_REF FROM SMS_MSG WHERE ID IN\
-(SELECT MAX(ID) FROM SMS_MSG WHERE MSG_REF IS NOT NULL GROUP BY DDA)"
-
+(SELECT MAX(ID) FROM SMS_MSG WHERE MSG_REF IS NOT NULL GROUP BY DDA)";
 ConcatDataStatement::ConcatDataStatement(Connection* connection, bool assign)
     throw(StorageException)
         : Statement(connection, ConcatDataStatement::sql, assign)
