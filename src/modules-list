@@ -5,3 +5,4 @@ core
 sms		"SMS declaration"
 store		"Store implementation"
 storetest	"Service program to test store module"
+admin		"Administration subsystem"

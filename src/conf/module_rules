@@ -27,7 +27,7 @@ LIBRARY := lib$(subst .,-,$(PACKAGE))
 #$(warning $(OBJECTS))
 
 target:
-	@cd $(SMSC_SRCDIR); make -s $(PACKAGE).build
+	@cd $(SMSC_SRCDIR); make -s $(PACKAGE).rbuild
 
 include $(SMSC_SRCDIR)/conf/modules_switcher
 
@@ -42,13 +42,13 @@ $(SMSC_BUILDDIR)/lib/$(LIBRARY).a : $(SMSC_BUILDDIR)/obj/$(LIBRARY) $(foreach x,
 	@$(RANLIB) $@
 	
 rbuild: only 
-	if [ -n "$(MODULES)" ] ; then \
+	@if [ -n "$(MODULES)" ] ; then \
 		XXXX="$(MODULES)";\
 		set -e; for i in $$XXXX; do make $$i.rbuild ; done ;\
 	fi	
 
 rclean: clean 
-	if [ -n "$(MODULES)" ] ; then \
+	@if [ -n "$(MODULES)" ] ; then \
 		XXXX="$(MODULES)";\
 		set -e; for i in $$XXXX; do make $$i.rclean ; done ;\
 	fi
