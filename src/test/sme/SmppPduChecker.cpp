@@ -1,5 +1,6 @@
 #include "SmppPduChecker.hpp"
 #include "test/smpp/SmppUtil.hpp"
+#include "test/util/TextUtil.hpp"
 #include "test/conf/TestConfig.hpp"
 
 namespace smsc {
@@ -7,17 +8,17 @@ namespace test {
 namespace sme {
 
 using smsc::test::smpp::SmppUtil;
-using smsc::test::util::TestCase;
-using smsc::test::util::SyncTestCase;
 using smsc::test::conf::TestConfig;
 using namespace std;
 using namespace smsc::test::core; //constants
+using namespace smsc::test::util;
 using namespace smsc::smpp::SmppCommandSet; //constants
 using namespace smsc::smpp::SmppStatusSet; //constants
 
 static const int NO_ROUTE = 1;
 static const int BAD_VALID_TIME = 2;
 static const int BAD_WAIT_TIME = 3;
+static const int BAD_DATA_CODING = 4;
 
 SmppPduChecker::SmppPduChecker(PduRegistry* _pduReg,
 	const RouteChecker* _routeChecker, CheckList* _chkList)
@@ -52,6 +53,14 @@ set<int> SmppPduChecker::checkSubmitSm(PduData* pduData)
 	if (!waitTime || (validTime && waitTime > validTime))
 	{
 		res.insert(BAD_WAIT_TIME);
+	}
+	switch (pdu->get_message().get_dataCoding())
+	{
+		case DATA_CODING_SMSC_DEFAULT:
+		case DATA_CODING_UCS2:
+			break;
+		default:
+			res.insert(BAD_DATA_CODING);
 	}
 	return res;
 }
@@ -201,6 +210,14 @@ void SmppPduChecker::processResp(ResponseMonitor* monitor,
 		case ESME_RINVEXPIRY: //Invalid message validity period
 			__tc__("processResp.checkCmdStatusInvalidValidTime");
 			if (!pduRes.count(BAD_VALID_TIME))
+			{
+				__tc_fail__(1);
+			}
+			__tc_ok_cond__;
+			break;
+		case ESME_RINVDCS:
+			__tc__("processResp.checkCmdStatusInvalidDataCoding");
+			if (!pduRes.count(BAD_DATA_CODING))
 			{
 				__tc_fail__(1);
 			}
