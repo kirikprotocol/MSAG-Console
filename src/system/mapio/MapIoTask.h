@@ -435,27 +435,31 @@ public:
         __mapdlg_trace2__("dialog for abonent %s is not present!",abonent.c_str());
         throw runtime_error("MAP::createOrAttachSMSCDialog: has no dialog for abonent ");
       }
-      if( item->state == MAPST_WaitNextMMS ) {
+      // check if dialog is opened too long
+      time_t curtime = time(NULL);
+      if( curtime - item->lockedAt >= MAX_MT_LOCK_TIME ) {
+        // drop locked dialog and all msg in chain, and create dialog as new.
+        __warn2__(smsc::util::_mapdlg_cat,"Dialog locked too long id=%x.",item->dialogid_map);
+        dropDialog( item->dialogid_map, item->ssn );
+      } else {
         if( item->sms.get()->hasBinProperty(Tag::SMSC_CONCATINFO) ) {
           // check if it's really next part of concatenated message
           if( !cmd->get_sms()->hasBinProperty(Tag::SMSC_CONCATINFO) ) 
             throw NextMMSPartWaiting("Waiting next part of concat message");
           if( item->sms.get()->getConcatMsgRef() != cmd->get_sms()->getConcatMsgRef() )
             throw NextMMSPartWaiting("Waiting next part of other concat message");
-        }
-        item->state = MAPST_SendNextMMS;
-        item->dialogid_smsc = smsc_did;
-        item->abonent = abonent;
-        item->AddRef();
-        item->lockedAt = time(NULL);
-        return item;
-      } 
-      {
-        time_t curtime = time(NULL);
-        if( curtime - item->lockedAt >= MAX_MT_LOCK_TIME ) {
-          // drop locked dialog and all msg in chain, and create dialog as new.
-          __warn2__(smsc::util::_mapdlg_cat,"Dialog locked too long id=%x.",item->dialogid_map);
-          dropDialog( item->dialogid_map, item->ssn );
+          if( item->state == MAPST_WaitNextMMS ) {
+            item->state = MAPST_SendNextMMS;
+            item->dialogid_smsc = smsc_did;
+            item->abonent = abonent;
+            item->AddRef();
+            item->lockedAt = time(NULL);
+            return item;
+          } else {
+            __mapdlg_trace2__("add command to chain, size %d",item->chain.size());
+            item->chain.push_back(cmd);
+            return 0;
+          }
         } else {
           if ( item->chain.size() > 25 ) {
             __mapdlg_trace2__("chain is vely long (%d)",item->chain.size());
