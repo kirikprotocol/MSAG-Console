@@ -127,7 +127,7 @@ USHORT_T Et96MapPAbortInd(ET96MAP_LOCAL_SSN_T lssn,
   const char* szReason = "<Reason-Unknown>";
   switch( reason ){
   case ET96MAP_RESOURCE_UNAVAIL:
-    szReasn = "ET96MAP_RESOURCE_UNAVAIL";
+    szReason = "ET96MAP_RESOURCE_UNAVAIL";
     break;
   case ET96MAP_APPL_PROC_CANCEL:
     szReason = "ET96MAP_APPL_PROC_CANCEL";
