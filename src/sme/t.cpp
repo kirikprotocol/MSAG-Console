@@ -519,12 +519,12 @@ void SetSar(SmppSession& ss,const string& args)
   }
   if(!splitString(mr,num))
   {
-    printf("Usage: sar mr num seq\nor sar off\n to reset sar info");
+    printf("Usage: sar mr num seq\nor sar off\n to reset sar info\n");
     return;
   }
   if(!splitString(num,seq))
   {
-    printf("Usage: sar mr num seq\nor sar off\n to reset sar info");
+    printf("Usage: sar mr num seq\nor sar off\n to reset sar info\n");
     return;
   }
   sar_mr=atoi(mr.c_str());

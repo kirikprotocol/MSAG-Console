@@ -449,8 +449,15 @@ public:
     }
     bool operator<(const TransactionKey& cmp)const
     {
-      return oa<cmp.oa || (oa==cmp.oa && da<cmp.da) ||
-             (oa==cmp.oa && da==cmp.da && mr<cmp.mr);
+      if(oa<cmp.oa || (oa==cmp.oa && da<cmp.da))return true;
+      if(oa==cmp.oa && da==cmp.da)
+      {
+        if(mr==-1 || cmp.mr==-1)
+          return true;
+        else
+          return mr<cmp.mr;
+      }
+      return false;
     }
   };
 
@@ -893,9 +900,16 @@ void StateMachine::submit(SmscCommand& cmd)
 
   if(!sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE))
   {
-    int newmr=smsc->getNextMR(sms.getDestinationAddress());
-    debug2(smsLog,"submit: set mr to %d",newmr);
-    sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,newmr);
+    if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) && sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==USSD_USSR_REQ)
+    {
+      sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,-1);
+      debug1(smsLog,"submit: ussr_request found, set mr to magic");
+    }else
+    {
+      int newmr=smsc->getNextMR(sms.getDestinationAddress());
+      debug2(smsLog,"submit: set mr to %d",newmr);
+      sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,newmr);
+    }
   }
 
   sms.setRouteId(ri.routeId.c_str());
@@ -974,6 +988,11 @@ void StateMachine::submit(SmscCommand& cmd)
   cmd->set_dialogId(newdid);
 
   bool ok=false;
+
+  if(sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) && sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)==-1)
+  {
+    sms.getMessageBody().dropIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+  }
 
   try{
     dst_proxy->putCommand(cmd);

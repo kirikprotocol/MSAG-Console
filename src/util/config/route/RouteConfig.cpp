@@ -199,9 +199,15 @@ throw (SubjectNotFoundException)
   XmlStr allowBlocked(elem.getAttribute(XmlStr("allowBlocked")));
   const signed long providerId = atol(XmlStr(elem.getAttribute(XmlStr("providerId"))));
   XmlStr billingRuleId(elem.getAttribute(XmlStr("billingId")));
-  
 
-  std::auto_ptr<Route> r(new Route(std::string(id),
+  std::string routeid(id);
+  if(routeid.length()>32)
+  {
+    __warning2__("\n\n\nROUTE ID TOO LONG=%s\n\n\n",routeid.c_str());
+    routeid.erase(32);
+  }
+
+  std::auto_ptr<Route> r(new Route(routeid,
                                    priority,
                                    strcmp("true", billing) == 0,
                                    strcmp("true", archiving) == 0,
