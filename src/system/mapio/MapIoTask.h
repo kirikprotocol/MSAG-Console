@@ -116,17 +116,7 @@ public:
 */
 class MapIoTask : public ThreadedTask{
 public:
-  virtual int Execute(){
-    try{
-      init();
-      startevent->Signal();
-      is_started = true;
-      dispatcher();
-      //deinit();
-    }catch(std::exception& e){
-      __trace2__("exception in mapio: %s",e.what());
-    }
-  }
+  virtual int Execute();
   virtual const char* taskName() { return "MapIoTask";}
   bool isStarted() {return is_started;}
   MapIoTask(Event* startevent) : startevent(startevent),is_started(false) {}
