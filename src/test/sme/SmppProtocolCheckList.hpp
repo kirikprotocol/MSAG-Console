@@ -142,13 +142,25 @@ void replaceSmTc()
 		"Отправка асинхронного replace_sm pdu");
 }
 
+void sendInvalidPduTc()
+{
+	__reg_tc__("sendInvalidPdu",
+		"Отправка некорректной pdu");
+	__reg_tc__("sendInvalidPdu.request",
+		"Реквест неправильной длины");
+	__reg_tc__("sendInvalidPdu.response",
+		"Респонс неправильной длины");
+	__reg_tc__("sendInvalidPdu.invalidCommandId",
+		"Неправильный command_id");
+}
+
 void processRespTc()
 {
 	//processSubmitSmResp
 	__reg_tc__("processSubmitSmResp",
 		"Получение submit_sm_resp pdu");
 	__reg_tc__("processSubmitSmResp.checkHeader",
-		"Правильные значения полей хедера респонса (command_length, command_id)");
+		"Правильные значения полей хедера респонса (command_length, command_id, sequence_number)");
 	__reg_tc__("processSubmitSmResp.sync",
 		"Получение submit_sm_resp pdu при синхронных submit_sm запросах");
 	__reg_tc__("processSubmitSmResp.async",
@@ -157,7 +169,7 @@ void processRespTc()
 	__reg_tc__("processReplaceSmResp",
 		"Получение replace_sm_resp pdu");
 	__reg_tc__("processReplaceSmResp.checkHeader",
-		"Правильные значения полей хедера респонса (command_length, command_id)");
+		"Правильные значения полей хедера респонса (command_length, command_id, sequence_number)");
 	__reg_tc__("processReplaceSmResp.sync",
 		"Получение replace_sm_resp pdu при синхронных replace_sm запросах");
 	__reg_tc__("processReplaceSmResp.async",
@@ -184,6 +196,25 @@ void processRespTc()
 	__reg_tc__("processResp.checkCmdStatusInvalidServiceType",
 		"Если код ошибки ESME_RINVSERTYP в поле command_status, то длина поля service_type действительно задана неправильно");
 	__reg_tc__("processResp.checkCmdStatusOther",
+		"Прочие коды ошибок соответствуют спецификации");
+}
+
+void processGenericNackTc()
+{
+	__reg_tc__("processGenericNack", "Получение generic_nack pdu");
+	__reg_tc__("processGenericNack.sync",
+		"Получение generic_nack pdu при некорректных синхронных запросах");
+	__reg_tc__("processGenericNack.async",
+		"Получение generic_nack pdu при при некорректных асинхронных запросах");
+	__reg_tc__("processGenericNack.checkHeader",
+		"Правильные значения полей хедера (command_length, command_id, sequence_number)");
+	__reg_tc__("processGenericNack.checkTime");
+		"Правильное время получения pdu");
+	__reg_tc__("processGenericNack.checkStatusInvalidCommandLength",
+		"Если код ошибки ESME_RINVCMDLEN в поле command_status, то тип pdu задан корректно, а длина неправильная");
+	__reg_tc__("processGenericNack.checkStatusInvalidCommandId",
+		"Если код ошибки ESME_RINVCMDID в поле command_status, то тип pdu действительно задан некорректно");
+	__reg_tc__("processGenericNack.checkStatusOther",
 		"Прочие коды ошибок соответствуют спецификации");
 }
 
@@ -331,7 +362,6 @@ void checkMissingPduTc()
 void notImplementedTc()
 {
 	__reg_tc__("notImplemented", "Не имплементированные тест кейсы");
-	__reg_tc__("notImplemented.processGenericNack", "Получение generic_nack pdu");
 	__reg_tc__("notImplemented.submitMulti", "Отправка submit_multi pdu");
 	__reg_tc__("notImplemented.processMultiResp", "Получение submit_multi_resp pdu");
 	__reg_tc__("notImplemented.dataSm", "Отправка data_sm pdu");
@@ -353,12 +383,14 @@ void allProtocolTc()
 	submitSmTc();
 	replaceSmTc();
 	sendDeliverySmRespTc();
+	sendInvalidPduTc();
 	//receiver
 	processRespTc();
 	processDeliverySmTc();
 	processNormalSmsTc();
 	processDeliveryReceiptTc();
 	processSmeAckTc();
+	processGenericNackTc();
 	//processIntermediateNotificationTc();
 	//other
 	checkMissingPduTc();
