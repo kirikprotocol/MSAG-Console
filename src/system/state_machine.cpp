@@ -4631,7 +4631,8 @@ void StateMachine::submitReceipt(SMS& sms,int type)
       }
 
       store->createSms(sms,msgId,smsc::store::CREATE_NEW);
-      smsc->getScheduler()->AddScheduledSms(sms.getNextTime(),msgId,sms.getDealiasedDestinationAddress(),dest_proxy_index);
+      //smsc->getScheduler()->AddScheduledSms(sms.getNextTime(),msgId,sms.getDealiasedDestinationAddress(),dest_proxy_index);
+      smsc->getScheduler()->AddFirstTimeForward(msgId);
     }else
     {
       __warning2__("There is no route for receipt %s->%s",

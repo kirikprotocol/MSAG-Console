@@ -31,7 +31,7 @@ class Scheduler:public smsc::core::threads::ThreadedTask, public SmeProxy
 public:
   //Scheduler(EventQueue& eq):queue(eq)
   static smsc::logger::Logger* log;
-  Scheduler()
+  Scheduler():firstQueue(1000)
   {
     seq=0;
     prxmon=0;
@@ -142,6 +142,12 @@ public:
     RescheduleChain(c,c->headTime);
   }
 
+  void AddFirstTimeForward(SMSId id)
+  {
+    MutexGuard guard(mon);
+    firstQueue.Push(SchedulerData(id));
+  }
+
   time_t RescheduleSms(SMSId id,SMS& sms,int smeIndex)
   {
     MutexGuard guard(mon);
@@ -207,6 +213,15 @@ public:
   virtual bool getCommand(SmscCommand& cmd)
   {
     MutexGuard guard(mon);
+    if(firstQueue.Count())
+    {
+      SchedulerData sd;
+      firstQueue.Pop(sd);
+      cmd=SmscCommand::makeForward(sd.id,sd.resched);
+      debug2(log,"firstForward: id=%lld",sd.id);
+      return true;
+    }
+
     time_t t=time(NULL);
     if(timeLine.size()!=0)
     {
@@ -698,6 +713,7 @@ public:
 
   };
 
+  CyclicQueue<SchedulerData> firstQueue;
   TimeLine timeLine;
 
   void RescheduleChain(Chain* c,time_t sctime)
