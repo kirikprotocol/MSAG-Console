@@ -846,7 +846,7 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool exp
         isMessageToSend = (deleted) ? formatMessage(task, messageToSend):
                           processCancel(task, smsc_id, messageToSend, true, delivered, expired);
         if (!isMessageToSend) {
-            smsc_log_warn(logger, "No events to send after cancel %s receipt (smscId=%s) for abonent %s",
+            smsc_log_warn(logger, "Receipt: no events to send after cancel %s receipt (smscId=%s) for abonent %s",
                           (deleted) ? "ok":"fail", smsc_id, abonent);
             taskAccessor.delTask(abonent); // if no more events to send => kill task
         }

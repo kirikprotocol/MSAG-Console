@@ -680,7 +680,7 @@ Array<std::string> Task::finalizeMessage(const char* smsc_id,
             throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "finalize message");
         delMsgStmt->setUint64(1, msg_id);
         if (delMsgStmt->executeUpdate() <= 0)
-            throw Exception("Failed to delete message #%lld. Message not found", msg_id);
+            throw Exception("Task: failed to delete message #%lld. Message not found", msg_id);
 
         /* SELECT DISTINCT(CALLER) FROM MCISME_EVT_SET WHERE MSG_ID=:MSG_ID */
         Statement* getEvtStmt = connection->getStatement(GET_EVT_CALLER_ID, GET_EVT_CALLER_SQL);
