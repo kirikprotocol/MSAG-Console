@@ -1113,6 +1113,10 @@ StateType StateMachine::submit(Tuple& t)
           tmp=newtmp;
           newsms.messageBody.dropProperty(Tag::SMSC_CONCATINFO);
           newsms.messageBody.dropIntProperty(Tag::SMSC_MERGE_CONCAT);
+          if(ri.smeSystemId=="MAP_PROXY")
+          {
+            pres=partitionSms(sms,profile.codepage);
+          }
         }
       }
 
@@ -1256,7 +1260,10 @@ StateType StateMachine::submit(Tuple& t)
 
     }
 
-    if(ri.smeSystemId=="MAP_PROXY" && !sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT))
+    if(ri.smeSystemId=="MAP_PROXY" &&
+       !sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT)&&
+       !sms->hasBinProperty(Tag::SMSC_CONCATINFO)
+      )
     {
       pres=partitionSms(sms,profile.codepage);
     }
