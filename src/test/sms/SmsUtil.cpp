@@ -495,7 +495,7 @@ const string SmsUtil::configString(const Address& addr)
 	{
 		os << "+" << addrVal;
 	}
-	else if (addr.getTypeOfNumber() == 2 && addr.getNumberingPlan() == 1)
+	else if (addr.getTypeOfNumber() == 0 && addr.getNumberingPlan() == 1)
 	{
 		os << addrVal;
 	}
