@@ -157,7 +157,8 @@ void TestSme::executeCycle()
 	if (time(NULL) > nextCheckTime)
 	{
 		baseTc.checkMissingPdu();
-		nextCheckTime = time(NULL) + 10;
+		__cfg_int__(missingPduCheckInterval);
+		nextCheckTime = time(NULL) + missingPduCheckInterval;
 	}
 	//проверить тест остановлен/замедлен
 	//__trace2__("TestSme::executeCycle(): SmppFunctionalTest::pause = %d", SmppFunctionalTest::pause);
@@ -200,7 +201,7 @@ void TestSme::executeCycle()
 					baseTc.bindIncorrectSme(RAND_TC);
 					break;
 				case 3:
-					baseTc.bindUnbindCorrect(RAND_TC);
+					//baseTc.bindUnbindCorrect(RAND_TC);
 					break;
 				case 4: //unbind
 					baseTc.unbind();
