@@ -240,6 +240,7 @@ static inline void makeAddress( RouteAddress* addr, const Address* source, const
 bool RouteManager::lookup(const Address& source, const Address& dest, SmeProxy*& proxy, int* idx, RouteInfo* info)
 {
 __synchronized__
+  proxy = 0;
   __require__(smeTable);
   if ( !table_ptr ) return false;
   if (!sorted)
@@ -264,7 +265,7 @@ __synchronized__
   __trace2__("found route %s->%s",
              ok_route->pattern.src_addressPattern,
              ok_route->pattern.dest_addressPattern);
-	for (RouteRecord** r = recordX-1; r != table-1; --r )
+  for (RouteRecord** r = recordX-1; r != table-1; --r )
   {
     if ( is_a((*r)->pattern,address) )
     {
@@ -288,15 +289,15 @@ __synchronized__
     while ( ok_route )
     {
       __require__(ok_route != ok_route->ok_next);
-      if ( ok_route->src_pattern_undef < src_undef )
+      if ( ok_route->dest_pattern_undef < dest_undef )
       {
-        src_undef = ok_route->src_pattern_undef;
+        dest_undef = ok_route->dest_pattern_undef;
         record = ok_route;
         ok_route = ok_route->ok_next;
-				record->ok_next = 0;
+        record->ok_next = 0;
       }
       else if ( ok_route->src_pattern_undef == src_undef )
-                        {
+      {
         RouteRecord* tmp = ok_route->ok_next;
         ok_route->ok_next = record;
         record = ok_route;
@@ -310,15 +311,15 @@ __synchronized__
     while ( ok_route )
     {
       __require__(ok_route != ok_route->ok_next);
-			if ( ok_route->dest_pattern_undef < dest_undef )
+      if ( ok_route->src_pattern_undef < src_undef )
       {
-        dest_undef = ok_route->dest_pattern_undef;
+        src_undef = ok_route->src_pattern_undef;
         record = ok_route;
         ok_route = ok_route->ok_next;
-				record->ok_next = 0;
+        record->ok_next = 0;
       }
       else if ( ok_route->src_pattern_undef == src_undef )
-      {
+                        {
         RouteRecord* tmp = ok_route->ok_next;
         ok_route->ok_next = record;
         record = ok_route;
@@ -326,7 +327,7 @@ __synchronized__
       }
       else ok_route = ok_route->ok_next;
     }
-    __require__(record);
+		__require__(record);
     if ( record->ok_next )
     {
       __warning__("more then one route found, use anyone");
