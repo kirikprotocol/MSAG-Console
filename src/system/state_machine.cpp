@@ -1457,9 +1457,9 @@ StateType StateMachine::forward(Tuple& t)
     sms.getOriginatingAddress().toString(bufsrc,sizeof(bufsrc));
     sms.getDestinationAddress().toString(bufdst,sizeof(bufdst));
     __warning2__("FORWARD: sme is not connected(%s->%s(%s))",bufsrc,bufdst,ri.smeSystemId.c_str());
+    sms.lastResult=Status::SMENOTCONNECTED;
     smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
     try{
-      sms.lastResult=Status::SMENOTCONNECTED;
       sendNotifyReport(sms,t.msgId,"destination unavailable");
     }catch(...)
     {

@@ -392,7 +392,7 @@ void Smsc::init(const SmscConfigs& cfg)
     log.info( "Datasource configured" );
   }
   statMan=new smsc::stat::StatisticsManager(*dataSource);
-  tp.startTask(statMan);
+  tp2.startTask(statMan);
   log.info( "Statistics manager started" );
 
   distlstman=new DistrListManager(*dataSource,*cfg.cfgman);
@@ -466,7 +466,7 @@ void Smsc::init(const SmscConfigs& cfg)
   profiler->loadFromDB(dataSource);
   log.info( "Profiler data loaded" );
 
-  tp.startTask(profiler);
+  tp2.startTask(profiler);
   log.info( "Profiler started" );
 
   try{
@@ -506,7 +506,7 @@ void Smsc::init(const SmscConfigs& cfg)
   smscsme=new SmscSme("smscsme",&smeman);
   smscsme->servType=cfg.cfgman->getString("core.service_type");
   smscsme->protId=cfg.cfgman->getInt("core.protocol_id");
-  tp.startTask(smscsme);
+  tp2.startTask(smscsme);
   try{
     smeman.registerInternallSmeProxy(
       cfg.cfgman->getString("core.systemId"),
@@ -544,7 +544,7 @@ void Smsc::init(const SmscConfigs& cfg)
       cfg.cfgman->getInt("core.performance.port"),
       &perfDataDisp
     );
-    tp.startTask(perfSrv);
+    tp2.startTask(perfSrv);
     log.info( "Performance server started" );
   }
 
@@ -638,6 +638,7 @@ void Smsc::shutdown()
   smeman.unregisterSmeProxy("DSTRLST");
 
   tp.shutdown();
+  tp2.shutdown();
 
   if(mapProxy)
   {

@@ -351,7 +351,7 @@ protected:
   string scAddr;
   time_t startTime;
 
-  smsc::core::threads::ThreadPool tp;
+  smsc::core::threads::ThreadPool tp,tp2;
 
 };
 
