@@ -121,6 +121,10 @@ public:
   const char* taskName(){return "PerformanceServer";}
   int Execute()
   {
+    linger l;
+    l.l_onoff=1;
+    l.l_linger=0;
+    setsockopt(srv.getSocket(),SOL_SOCKET,SO_LINGER,(char*)&l,sizeof(l));
     while(!isStopping)
     {
       Socket *clnt=srv.Accept();
