@@ -24,6 +24,14 @@ using smsc::test::sme::SmeAcknowledgementHandler;
 using smsc::test::core::SmeAckMonitor;
 using smsc::test::core::PduData;
 
+struct DbSmeSimpleJobTestCases : public DbSmeJobTestCases
+{
+	DbSmeSimpleJobTestCases(DbSmeRegistry* dbSmeReg, CheckList* chkList)
+		: DbSmeJobTestCases(dbSmeReg, chkList) {}
+	virtual const string processJobFirstOutput(const string& text,
+		DbSmeTestRecord* rec) { __unreachable__("Error"); }
+};
+
 /**
  * Тест кейсы для db sme.
  */
@@ -72,6 +80,11 @@ public:
 	void submitIncorrectNumberFormatDbSmeCmd(bool sync, uint8_t dataCoding, int num);
 
 	/**
+	 * Отправка команды db sme с неправильными параметрами.
+	 */
+	void submitIncorrectParamsDbSmeCmd(bool sync, uint8_t dataCoding, int num);
+
+	/**
 	 * Получение ответных сообщений от db sme.
 	 */
 	virtual void processSmeAcknowledgement(SmeAckMonitor* monitor,
@@ -79,6 +92,7 @@ public:
 
 protected:
 	DbSmeRegistry* dbSmeReg;
+	DbSmeSimpleJobTestCases simpleTc;
 	DbSmeDateFormatJobTestCases dateFormatTc;
 	DbSmeOtherFormatJobTestCases otherFormatTc;
 	DbSmeInsertJobTestCases insertTc;
