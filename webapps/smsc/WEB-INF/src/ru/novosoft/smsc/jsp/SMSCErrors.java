@@ -64,6 +64,7 @@ public class SMSCErrors
 			public static final String invalidMask = B + "invalidMask";
 			public static final String smscNotConnected = B + "smscNotConnected";
 			public static final String invalidLocale = B + "invalidLocale";
+			public static final String couldntGetRegisteredLocales = B + "couldntGetRegisteredLocales";
 		}
 
 		public static class aliases

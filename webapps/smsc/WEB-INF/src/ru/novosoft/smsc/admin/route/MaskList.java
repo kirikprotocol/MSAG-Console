@@ -138,4 +138,10 @@ public class MaskList
 	{
 		return (String[]) new MaskList(masks).getNames().toArray(new String[0]);
 	}
+
+	public boolean contains(Mask mask)
+	{
+		Mask m = get(mask.getMask());
+		return m != null && m.equals(mask);
+	}
 }

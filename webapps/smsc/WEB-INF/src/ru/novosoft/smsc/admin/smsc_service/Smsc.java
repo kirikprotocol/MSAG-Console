@@ -20,8 +20,7 @@ import ru.novosoft.smsc.admin.utli.Proxy;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileDataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileQuery;
-import ru.novosoft.smsc.util.Functions;
-import ru.novosoft.smsc.util.WebAppFolders;
+import ru.novosoft.smsc.util.*;
 import ru.novosoft.smsc.util.config.*;
 import ru.novosoft.smsc.util.xml.Utils;
 import ru.novosoft.util.conpool.NSConnectionPool;
@@ -59,13 +58,9 @@ public class Smsc extends Service
 
 	private Category logger = Category.getInstance(this.getClass());
 
-	public Smsc(ConfigManager configManager, NSConnectionPool connectionPool, SmeManager smeManager, RouteSubjectManager routeSubjectManager)
-			throws AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException
+	public Smsc(ConfigManager configManager, NSConnectionPool connectionPool, SmeManager smeManager, RouteSubjectManager routeSubjectManager) throws AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
-		super(new ServiceInfo(Constants.SMSC_SME_ID,
-									 configManager.getConfig().getString("smsc.host"),
-									 configManager.getConfig().getInt("smsc.port"),
-									 "", null, ServiceInfo.STATUS_STOPPED));
+		super(new ServiceInfo(Constants.SMSC_SME_ID, configManager.getConfig().getString("smsc.host"), configManager.getConfig().getInt("smsc.port"), "", null, ServiceInfo.STATUS_STOPPED));
 
 		this.smeManager = smeManager;
 		this.routeSubjectManager = routeSubjectManager;
@@ -126,8 +121,7 @@ public class Smsc extends Service
 		return out;
 	}
 
-	public synchronized void applyRoutes()
-			throws AdminException
+	public synchronized void applyRoutes() throws AdminException
 	{
 		checkComponents();
 		smeManager.save();
@@ -136,8 +130,7 @@ public class Smsc extends Service
 			call(smsc_component, apply_routes_method, Type.Types[Type.StringType], new HashMap());
 	}
 
-	public synchronized void applyServices()
-			throws AdminException
+	public synchronized void applyServices() throws AdminException
 	{
 		checkComponents();
 		smeManager.save();
@@ -146,8 +139,7 @@ public class Smsc extends Service
 			call(smsc_component, apply_services_method, Type.Types[Type.StringType], new HashMap());
 	}
 
-	public synchronized void applyAliases()
-			throws AdminException
+	public synchronized void applyAliases() throws AdminException
 	{
 		checkComponents();
 		try
@@ -181,8 +173,7 @@ public class Smsc extends Service
 		return aliases;
 	}
 
-	public synchronized Profile lookupProfile(Mask mask)
-			throws AdminException
+	public synchronized Profile lookupProfile(Mask mask) throws AdminException
 	{
 		checkComponents();
 		HashMap args = new HashMap();
@@ -194,8 +185,7 @@ public class Smsc extends Service
 			throw new AdminException("Error in response");
 	}
 
-	public synchronized int updateProfile(Mask mask, Profile newProfile)
-			throws AdminException
+	public synchronized int updateProfile(Mask mask, Profile newProfile) throws AdminException
 	{
 		checkComponents();
 		HashMap args = new HashMap();
@@ -204,8 +194,7 @@ public class Smsc extends Service
 		return ((Long) call(smsc_component, update_profile_method, Type.Types[Type.IntType], args)).intValue();
 	}
 
-	public synchronized QueryResultSet queryProfiles(ProfileQuery query)
-			throws AdminException
+	public synchronized QueryResultSet queryProfiles(ProfileQuery query) throws AdminException
 	{
 		return profileDataSource.query(query);
 	}
@@ -215,8 +204,7 @@ public class Smsc extends Service
 		// nothing to do
 	}
 
-	public synchronized void processCancelMessages(Collection messageIds)
-			throws AdminException
+	public synchronized void processCancelMessages(Collection messageIds) throws AdminException
 	{
 		checkComponents();
 		String ids = "";
@@ -236,8 +224,7 @@ public class Smsc extends Service
 		call(smsc_component, process_cancel_messages_method, Type.Types[Type.StringType], params);
 	}
 
-	public synchronized void flushStatistics()
-			throws AdminException
+	public synchronized void flushStatistics() throws AdminException
 	{
 		checkComponents();
 		call(smsc_component, flush_statistics_method, Type.Types[Type.StringType], new HashMap());
@@ -245,11 +232,7 @@ public class Smsc extends Service
 
 	protected void checkComponents()
 	{
-		if (apply_aliases_method == null || apply_routes_method == null || lookup_profile_method == null
-				|| update_profile_method == null || flush_statistics_method == null
-				|| process_cancel_messages_method == null
-				|| msc_registrate_method == null || msc_unregister_method == null || msc_block_method == null
-				|| msc_clear_method == null || msc_list_method == null)
+		if (apply_aliases_method == null || apply_routes_method == null || lookup_profile_method == null || update_profile_method == null || flush_statistics_method == null || process_cancel_messages_method == null || msc_registrate_method == null || msc_unregister_method == null || msc_block_method == null || msc_clear_method == null || msc_list_method == null)
 		{
 			try
 			{
@@ -315,8 +298,7 @@ public class Smsc extends Service
 		}
 	}
 
-	public synchronized void applyConfig()
-			throws AdminException
+	public synchronized void applyConfig() throws AdminException
 	{
 		checkComponents();
 		call(smsc_component, apply_smsc_config_method, Type.Types[Type.StringType], new HashMap());
@@ -382,7 +364,21 @@ public class Smsc extends Service
 			logger.warn("isLocaleRegistered: Parameter core.locales is not string");
 			return false;
 		}
-		return localesString.matches(".*\\b"+locale+"\\b.*");
+		return localesString.matches(".*\\b" + locale + "\\b.*");
+	}
+
+	public synchronized List getRegisteredLocales() throws Config.ParamNotFoundException, Config.WrongParamTypeException
+	{
+		List result = new SortedList();
+		Config config = getSmscConfig();
+		String localesString = null;
+		localesString = config.getString("core.locales");
+		StringTokenizer tokenizer = new StringTokenizer(localesString, ",");
+		while (tokenizer.hasMoreTokens())
+		{
+			result.add(tokenizer.nextToken().trim());
+		}
+		return result;
 	}
 
 	public DistributionListAdmin getDistributionListAdmin()

@@ -23,6 +23,15 @@
 </tr>
 <tr class=row1>
 	<th class=label>locale:</th>
-	<td><input class=txtW name="locale" value="<%=bean.getLocale() == null || bean.getLocale().trim().length() == 0 ? "en_en" : bean.getLocale()%>"></td>
+	<td><div class=select><select class=txt name="locale">
+		<%for (Iterator i = bean.getRegisteredLocales().iterator(); i.hasNext();)
+		{
+			String registeredLocale = (String) i.next();
+			boolean selected = registeredLocale.equals(bean.getLocale());
+			String encRegisteredLocale = StringEncoderDecoder.encode(registeredLocale);
+			%>
+			<option value="<%=encRegisteredLocale%>" <%=selected ? "SELECTED" : ""%>><%=encRegisteredLocale%></option><%
+		}%>
+		</select></div></td>
 </tr>
 </table>

@@ -4,6 +4,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.profiles.ProfilesFilter"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
+TITLE = "Profiles filter";
 switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
 {
 	case ProfilesFilter.RESULT_DONE:
@@ -57,6 +58,17 @@ for (int i=0; i<bean.getMasks().length; i++)
 			<option value="<%=Profile.REPORT_OPTION_Full%>" <%=Profile.REPORT_OPTION_Full == bean.getReportinfo() ? "selected" : ""%>>full</option>
 		</select></div></td>
 </tr>
+<tr><td colspan=2 class=secInner><div class=secList>Locales</div></td></tr>
+<%for (Iterator i = bean.getRegisteredLocales().iterator(); i.hasNext();)
+{
+	String registeredLocale = (String) i.next();
+	String encRegisteredLocale = StringEncoderDecoder.encode(registeredLocale);
+	%>
+	<tr class=row<%=(row++)&1%>>
+		<th class=label>&nbsp;</th>
+		<td><input class=check id="reg_loc_<%=encRegisteredLocale%>" type=checkbox name=checkedLocales value="<%=encRegisteredLocale%>" <%=bean.isLocaleChecked(registeredLocale) ? "checked" : ""%>>&nbsp;<label for="reg_loc_<%=encRegisteredLocale%>"><%=encRegisteredLocale%></label></td>
+	</tr><%
+}%>
 </table>
 <div class=secButtons>
 <input class=btn type=submit name=mbApply value="Apply" title="Apply filter">

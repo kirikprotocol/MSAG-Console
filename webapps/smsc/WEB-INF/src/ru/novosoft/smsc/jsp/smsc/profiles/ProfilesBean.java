@@ -1,7 +1,12 @@
 package ru.novosoft.smsc.jsp.smsc.profiles;
 
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.admin.profiler.Profile;
+import ru.novosoft.smsc.util.config.Config;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Created by igork
@@ -14,6 +19,25 @@ public class ProfilesBean extends SmscBean
 	protected byte report = Profile.REPORT_OPTION_None;
 	protected byte codepage = Profile.CODEPAGE_Default;
 	protected String locale = "";
+	protected List registeredLocales = new LinkedList();
+
+	protected int init(List errors)
+	{
+		int result = super.init(errors);
+		if (result != RESULT_OK)
+			return result;
+
+		try
+		{
+			registeredLocales = smsc.getRegisteredLocales();
+		}
+		catch (Throwable e)
+		{
+			logger.error("Couldn't get registered profiles", e);
+			return error(SMSCErrors.error.profiles.couldntGetRegisteredLocales, e);
+		}
+		return result;
+	}
 
 	public String getMask()
 	{
@@ -53,5 +77,10 @@ public class ProfilesBean extends SmscBean
 	public void setLocale(String locale)
 	{
 		this.locale = locale;
+	}
+
+	public List getRegisteredLocales()
+	{
+		return registeredLocales;
 	}
 }

@@ -57,11 +57,17 @@ public class Profile
 	public Profile(Mask mask, byte codepage, byte reportOptions, String locale)
 	{
 		this.mask = mask;
-		this.codepage = codepage;
-		this.reportOptions = reportOptions;
-		this.locale = locale;
-		if (this.locale == null)
-			this.locale = "";
+		setCodepage(codepage);
+		setReportOptions(reportOptions);
+		setLocale(locale);
+	}
+
+	public Profile(Mask mask, String codepage, String reportOptions, String locale) throws AdminException
+	{
+		this.mask = mask;
+		setCodepage(codepage);
+		setReportOptions(reportOptions);
+		setLocale(locale);
 	}
 
 	public byte getCodepage()

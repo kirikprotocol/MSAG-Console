@@ -133,6 +133,7 @@ public class ProfileDataSource implements DataSource
 		else
 		{
 			String result = "";
+
 			if (!filter.getMasks().isEmpty())
 			{
 				result += '(';
@@ -143,10 +144,23 @@ public class ProfileDataSource implements DataSource
 				}
 				result += ')';
 			}
+
 			if (filter.getCodepage() >= 0)
 				result += (result.length() > 0 ? " and " : "") + "codeset = " + filter.getCodepage();
+
 			if (filter.getReportinfo() >= 0)
 				result += (result.length() > 0 ? " and " : "") + "reportinfo = " + filter.getReportinfo();
+
+			if (!filter.getLocales().isEmpty())
+			{
+				result += (result.length() > 0 ? " and " : "") + "locale in (";
+				for (Iterator i = filter.getLocales().iterator(); i.hasNext();)
+				{
+					String locale = (String) i.next();
+					result += '\'' + locale + '\'' + (i.hasNext() ? ", " : "");
+				}
+				result += ')';
+			}
 
 			return (result.length() > 0 ? ("where " + result) : "");
 		}

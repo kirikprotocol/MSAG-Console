@@ -5,14 +5,15 @@
  */
 package ru.novosoft.smsc.jsp.smsc.profiles;
 
-import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileFilter;
+import ru.novosoft.smsc.util.SortedList;
 
-import java.util.List;
+import java.util.*;
 
 public class ProfilesFilter extends SmscBean
 {
@@ -22,6 +23,8 @@ public class ProfilesFilter extends SmscBean
 	protected MaskList maskList = null;
 	protected byte codepage = -2;
 	protected byte reportinfo = -2;
+	protected String[] checkedLocales = new String[0];
+	protected Set checkedLocalesSet = null;
 
 	protected String mbApply = null;
 	protected String mbClear = null;
@@ -40,6 +43,7 @@ public class ProfilesFilter extends SmscBean
 			masks = (String[]) filter.getMasks().getNames().toArray(new String[0]);
 			codepage = filter.getCodepage();
 			reportinfo = filter.getReportinfo();
+			checkedLocales = (String[]) new SortedList(filter.getLocales()).toArray(new String[0]);
 		}
 		if (masks == null)
 			masks = new String[0];
@@ -56,6 +60,10 @@ public class ProfilesFilter extends SmscBean
 		}
 		masks = (String[]) maskList.getNames().toArray(new String[0]);
 
+		if (checkedLocales == null)
+			checkedLocales = new String[0];
+		checkedLocalesSet = new HashSet(Arrays.asList(checkedLocales));
+
 		return RESULT_OK;
 	}
 
@@ -70,6 +78,7 @@ public class ProfilesFilter extends SmscBean
 			filter.setMasks(maskList);
 			filter.setCodepage(codepage);
 			filter.setReportinfo(reportinfo);
+			filter.setLocales(checkedLocalesSet);
 			return RESULT_DONE;
 		}
 		else if (mbClear != null)
@@ -77,6 +86,8 @@ public class ProfilesFilter extends SmscBean
 			masks = new String[0];
 			maskList.clear();
 			codepage = reportinfo = -1;
+			checkedLocales = new String[0];
+			checkedLocalesSet.clear();
 			return RESULT_OK;
 		}
 		else if (mbCancel != null)
@@ -85,6 +96,24 @@ public class ProfilesFilter extends SmscBean
 		return RESULT_OK;
 	}
 
+	public boolean isLocaleChecked(String locale)
+	{
+		return checkedLocalesSet.contains(locale);
+	}
+
+	public List getRegisteredLocales()
+	{
+		try
+		{
+			return smsc.getRegisteredLocales();
+		}
+		catch (Throwable e)
+		{
+			logger.error("Couldn't get registered locales", e);
+			error(SMSCErrors.error.profiles.couldntGetRegisteredLocales, e);
+			return new LinkedList();
+		}
+	}
 
 	/***************************** properties **********************************/
 	public String getMbApply()
@@ -145,5 +174,15 @@ public class ProfilesFilter extends SmscBean
 	public void setMbClear(String mbClear)
 	{
 		this.mbClear = mbClear;
+	}
+
+	public String[] getCheckedLocales()
+	{
+		return checkedLocales;
+	}
+
+	public void setCheckedLocales(String[] checkedLocales)
+	{
+		this.checkedLocales = checkedLocales;
 	}
 }
