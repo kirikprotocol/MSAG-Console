@@ -419,7 +419,11 @@ StateType StateMachine::submit(Tuple& t)
     {
       __trace__("SUBMIT: failed to put response command");
     }
-    __warning__("SUBMIT_SM: no route");
+    char buf1[32];
+    char buf2[32];
+    sms->getOriginatingAddress().toString(buf1,sizeof(buf2));
+    dst.toString(buf2,sizeof(buf2));
+    __warning2__("SUBMIT_SM: no route (%s->%s)",buf1,buf2);
     return ERROR_STATE;
   }
 
