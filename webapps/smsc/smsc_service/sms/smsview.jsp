@@ -51,7 +51,7 @@ if (request.getMethod().equals("POST"))
     	<td colspan=1>
       <b>Source&nbsp;address:</b><br>
     	<input type="text" name="fromAddress"
-        value="<jsp:getProperty name="formBean" property="fromAddress" />" size=25>
+        value="<%= formBean.getToAddress()%>" size=25>
       </td>
 
       <td colspan=1>
@@ -64,7 +64,8 @@ if (request.getMethod().equals("POST"))
       <% int fromDateMonth = formBean.getFromDateMonth();%>
       <% for (int fdm=0; fdm<12; fdm++) { %>
         <option value="<%= fdm%>"
-          <%= (fdm == fromDateMonth) ? "selected":""%>><%= formBean.monthesNames[fdm]%>
+          <%= (fdm == fromDateMonth) ? "selected":""%>>
+          <%= SmsViewFormBean.monthesNames[fdm]%>
         </option>
       <% }%>
 	    </select>
@@ -106,7 +107,7 @@ if (request.getMethod().equals("POST"))
       <td colspan=1>
     	<b>Destination&nbsp;address:</b><br>
     	<input type="text" name="toAddress"
-        value="<jsp:getProperty name="formBean" property="toAddress" />" size=25>
+        value="<%= formBean.getToAddress()%>" size=25>
       </td>
 
       <td colspan=1>
@@ -119,7 +120,8 @@ if (request.getMethod().equals("POST"))
       <% int toDateMonth = formBean.getToDateMonth();%>
       <% for (int fdm=0; fdm<12; fdm++) { %>
         <option value="<%= fdm%>"
-          <%= (fdm == toDateMonth) ? "selected":""%>><%= formBean.monthesNames[fdm]%>
+          <%= (fdm == toDateMonth) ? "selected":""%>>
+          <%= SmsViewFormBean.monthesNames[fdm]%>
         </option>
       <% }%>
 	    </select>

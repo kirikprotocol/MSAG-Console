@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.jsp.smsview;
 
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Vector;
 
 import ru.novosoft.util.jsp.AppContext;
@@ -14,31 +15,23 @@ import ru.novosoft.smsc.admin.smsview.SmsRow;
 public class SmsViewFormBean extends SmsQuery
 {
   public static int START_YEAR_COUNTER  = 2002;
-  public static int FINISH_YEAR_COUNTER = 2030;
+  public static int FINISH_YEAR_COUNTER = START_YEAR_COUNTER+30;
 
   private SmsSet  rows = null;
   private SmsView view = new SmsView();
   private SMSCAppContext  context = null;
 
-  private int fromDateDay = 1;
-  private int fromDateMonth = 0;
-  private int fromDateYear = START_YEAR_COUNTER;
-  private int fromDateHour = 0;
-  private int fromDateMinute = 0;
-  private int fromDateSecond = 0;
-
-  private int toDateDay = 1;
-  private int toDateMonth = 0;
-  private int toDateYear = START_YEAR_COUNTER;
-  private int toDateHour = 0;
-  private int toDateMinute = 0;
-  private int toDateSecond = 0;
-
-  public String monthesNames[] = {
+  public static String monthesNames[] = {
     "January", "February", "March", "April",
     "May", "June", "July", "August", "September",
     "October", "November", "December"
   };
+
+  public SmsViewFormBean() {
+    setDates();
+    setFromDateEnabled(false);
+    setTillDateEnabled(true);
+  }
 
   public void setAppContext(Object ctx) {
     if (context == null && ctx instanceof SMSCAppContext) {
@@ -48,6 +41,37 @@ public class SmsViewFormBean extends SmsQuery
   }
   public AppContext getAppContext() {
     return context;
+  }
+
+  public void processQuery()
+  {
+    getDates();
+    rows = view.getSmsSet(this);
+    processQueryIndexing();
+    setDates();
+  }
+  public void processPrev() {
+    processPrevIndexing();
+  }
+  public void processNext() {
+    processNextIndexing();
+  }
+  public int getRowsCount() {
+    return ((rows != null) ? rows.getRowsCount():0);
+  }
+  public SmsRow getRow(int index){
+    return ((rows != null) ? rows.getRow(index):null);
+  }
+
+  public int getRowsToDisplay() { return rowsToDisplay; }
+  public void setRowsToDisplay(int count) { rowsToDisplay = count; }
+  public int getRowIndex() { return rowIndex; }
+
+  public boolean isNextEnabled() {
+    return ((rowsToDisplay == -1) ? false : nextEnabled);
+  }
+  public boolean isPrevEnabled() {
+    return ((rowsToDisplay == -1) ? false : prevEnabled);
   }
 
   public void setFromDateDay(int day) { fromDateDay = day; }
@@ -76,40 +100,6 @@ public class SmsViewFormBean extends SmsQuery
   public void setToDateSecond(int second) { toDateSecond = second; }
   public int getToDateSecond() { return toDateSecond; }
 
-  public void processQuery() {
-    rows = view.getSmsSet(this);
-    processQueryIndexing();
-  }
-  public void processPrev() {
-    processPrevIndexing();
-  }
-  public void processNext() {
-    processNextIndexing();
-  }
-  public int getRowsCount() {
-    return ((rows != null) ? rows.getRowsCount():0);
-  }
-  public SmsRow getRow(int index){
-    return ((rows != null) ? rows.getRow(index):null);
-  }
-
-  public int getRowsToDisplay(){
-    return rowsToDisplay;
-  }
-  public void setRowsToDisplay(int count){
-    rowsToDisplay = count;
-  }
-  public int getRowIndex(){
-    return rowIndex;
-  }
-
-  public boolean isNextEnabled() {
-    return ((rowsToDisplay == -1) ? false : nextEnabled);
-  }
-  public boolean isPrevEnabled() {
-    return ((rowsToDisplay == -1) ? false : prevEnabled);
-  }
-
   /* --------------------------- Private Part ----------------------------- */
 
   private boolean prevEnabled = false;
@@ -117,6 +107,11 @@ public class SmsViewFormBean extends SmsQuery
 
   private int rowsToDisplay = 10;
   private int rowIndex = 0;
+
+  private int fromDateYear, fromDateMonth, fromDateDay;
+  private int fromDateHour, fromDateMinute, fromDateSecond;
+  private int toDateYear, toDateMonth, toDateDay;
+  private int toDateHour, toDateMinute, toDateSecond;
 
   private void processQueryIndexing() {
     rowIndex = 0; prevEnabled = false;
@@ -149,6 +144,35 @@ public class SmsViewFormBean extends SmsQuery
         nextEnabled = false;
       }
     }
+  }
+
+  private void setDates()
+  {
+    GregorianCalendar fdc = new GregorianCalendar();
+    fdc.setTime(getFromDate());
+    fromDateYear = fdc.get(GregorianCalendar.YEAR);
+    fromDateMonth = fdc.get(GregorianCalendar.MONTH);
+    fromDateDay = fdc.get(GregorianCalendar.DAY_OF_MONTH);
+    fromDateHour = fdc.get(GregorianCalendar.HOUR_OF_DAY);
+    fromDateMinute = fdc.get(GregorianCalendar.MINUTE);
+    fromDateSecond = fdc.get(GregorianCalendar.SECOND);
+    GregorianCalendar tdc = new GregorianCalendar();
+    tdc.setTime(getTillDate());
+    toDateYear = tdc.get(GregorianCalendar.YEAR);
+    toDateMonth = tdc.get(GregorianCalendar.MONTH);
+    toDateDay = tdc.get(GregorianCalendar.DAY_OF_MONTH);
+    toDateHour = tdc.get(GregorianCalendar.HOUR_OF_DAY);
+    toDateMinute = tdc.get(GregorianCalendar.MINUTE);
+    toDateSecond = tdc.get(GregorianCalendar.SECOND);
+  }
+  private void getDates()
+  {
+    setFromDate((new GregorianCalendar(
+                      fromDateYear, fromDateMonth, fromDateDay,
+                      fromDateHour, fromDateMinute, fromDateSecond)).getTime());
+    setTillDate((new GregorianCalendar(
+                      toDateYear, toDateMonth, toDateDay,
+                      toDateHour, toDateMinute, toDateSecond)).getTime());
   }
 
 };

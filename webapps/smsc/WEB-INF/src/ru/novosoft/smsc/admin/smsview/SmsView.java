@@ -21,6 +21,8 @@ public class SmsView
   }
 
   public SmsSet getSmsSet(SmsQuery query) {
+    System.out.println("From date: "+query.getFromDate().toString()+
+                       " Till date: "+query.getTillDate().toString());
     try {
       Connection connection = ds.getConnection();
       System.out.println("Got connection !");
