@@ -137,9 +137,9 @@ class TestSmsc : public Smsc
 public:
 	TestSmsc(const string& smscHost, int smscPort);
 	~TestSmsc() {}
-	vector<TestSme*> init(int numAddr, int numSme);
+	vector<TestSme*> init(int numAddr, int numAlias, int numSme);
 private:
-	vector<TestSme*> config(int numAddr, int numSme);
+	vector<TestSme*> config(int numAddr, int numAlias, int numSme);
 	void process(TCResult* res);
 };
 
@@ -348,7 +348,7 @@ void TestSmsc::process(TCResult* res)
 	}
 }
 
-vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
+vector<TestSme*> TestSmsc::config(int numAddr, int numAlias, int numSme)
 {
 	__require__(numSme <= numAddr);
 	SmeManagerTestCases tcSme(&smeman, smeReg);
@@ -370,9 +370,9 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 		__trace2__("TestSmsc::config(): addr = %s, systemId = %s", os.str().c_str(), smeInfo[i]->systemId.c_str());
 	}
 	//регистрация алиасов
-	for (int i = 0; i < numAddr; i++)
+	for (int i = 0; i < numAlias; i++)
 	{
-		for (int j = 0; j < numAddr; j++)
+		for (int j = 0; j < numAlias; j++)
 		{
 			for (TCSelector s(RAND_SET_TC, 5); s.check(); s++)
 			{
@@ -494,13 +494,13 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 }
 
 //TestSmsc
-vector<TestSme*> TestSmsc::init(int numAddr, int numSme)
+vector<TestSme*> TestSmsc::init(int numAddr, int numAlias, int numSme)
 {
 	//конфигурация
 	Manager::init("config.xml");
 	Manager& cfgMan = Manager::getInstance();
 	router.assign(&smeman);
-	vector<TestSme*> sme = config(numAddr, numSme);
+	vector<TestSme*> sme = config(numAddr, numAlias, numSme);
 
 	//инициализация
 	tp.preCreateThreads(15);
@@ -584,13 +584,13 @@ void saveCheckList()
         filter->getResults(TC_HANDLE_ERROR));
 }
 
-void executeFunctionalTest(int numAddr, int numSme,
+void executeFunctionalTest(int numAddr, int numAlias, int numSme,
 	const string& smscHost, int smscPort)
 {
 	SmppFunctionalTest::resize(numSme);
 	//запуск SMSC
 	TestSmsc *app = new TestSmsc(smscHost, smscPort);
-	vector<TestSme*> sme = app->init(numAddr, numSme);
+	vector<TestSme*> sme = app->init(numAddr, numAlias, numSme);
 	ThreadPool pool;
 	pool.startTask(new SmscStarter(app));
 	sleep(5);
@@ -688,23 +688,25 @@ void executeFunctionalTest(int numAddr, int numSme,
 
 int main(int argc, char* argv[])
 {
-	if (argc < 3)
+	if (argc < 4)
 	{
-		cout << "Usage: TestSmsc <numAddr> <numSme> [host] [port]" << endl;
+		cout << "Usage: TestSmsc <numAddr> <numAlias> <numSme> [host] [port]" << endl;
 		exit(0);
 	}
 	const int numAddr = atoi(argv[1]);
-	const int numSme = atoi(argv[2]);
+	const int numAlias = atoi(argv[2]);
+	const int numSme = atoi(argv[3]);
+	__require__(numAddr >= numAlias && numAddr >= numSme);
 	string smscHost = "smsc";
 	int smscPort = 15975;
-	if (argc == 5)
+	if (argc == 6)
 	{
-		smscHost = argv[3];
-		smscPort = atoi(argv[4]);
+		smscHost = argv[4];
+		smscPort = atoi(argv[5]);
 	}
 	try
 	{
-		executeFunctionalTest(numAddr, numSme, smscHost, smscPort);
+		executeFunctionalTest(numAddr, numAlias, numSme, smscHost, smscPort);
 	}
 	catch (exception& e)
 	{
