@@ -8,6 +8,9 @@
 #include "util/regexp/RegExp.hpp"
 
 using namespace std;
+void mts(EINSS7_I97_ISUPHEAD_T *head,EINSS7_I97_CALLINGNUMB_T *calling,EINSS7_I97_CALLEDNUMB_T *called,EINSS7_I97_ORIGINALNUMB_T *original,EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp);
+void taif(EINSS7_I97_ISUPHEAD_T *head,EINSS7_I97_CALLINGNUMB_T *calling,EINSS7_I97_CALLEDNUMB_T *called,EINSS7_I97_ORIGINALNUMB_T *original,EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp);
+
 namespace smsc{
 namespace misscall{
 
@@ -20,6 +23,7 @@ using smsc::misscall::util::getReturnCodeDescription;
 #define USER USER02_ID
 #define MGMT_VER 6
 #define MCIERROR 999
+#define handle(a,b,c,d,e) taif(a,b,c,d,e)
 
 int going;
 
@@ -152,16 +156,28 @@ void MissedCallProcessor::setCircuits(Circuits cics)
 }
 
 static ReleaseSettings relCauses = {
+/* strategy */ REDIRECT_STRATEGY,
 /* busy     */ 0x11 /* called user busy    */, 0x01 /* inform              */,
 /* no reply */ 0x13 /* no answer from user */, 0x01 /* inform              */,
 /* uncond   */ 0x15 /* call rejected       */, 0x00 /* don't inform        */,
 /* absent   */ 0x14 /* subscriber absent   */, 0x01 /* inform              */,
-/* other    */ 0x15 /* call rejected       */, 0x01 /* inform just in case */
+/* detach   */ 0x14 /* subscriber absent   */, 0x01 /* inform              */,
+/* other    */ 0x15 /* call rejected       */, 0x01 /* inform just in case */,
+/* skip uca */ false
 };
 
+                                                     
+static void (*strategy)(EINSS7_I97_ISUPHEAD_T *head,
+                        EINSS7_I97_CALLINGNUMB_T *calling,
+                        EINSS7_I97_CALLEDNUMB_T *called,
+                        EINSS7_I97_ORIGINALNUMB_T *original,
+				                EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp) = mts;
+						     
 void MissedCallProcessor::setReleaseSettings(ReleaseSettings params)
 {
   relCauses = params;
+  if (relCauses.strategy == REDIRECT_STRATEGY) strategy = mts;
+  if (relCauses.strategy == PREFIXED_STRATEGY) strategy = taif;
 }
 
 MissedCallProcessor* MissedCallProcessor::instance()
@@ -502,6 +518,12 @@ using smsc::misscall::conftimer;
 using smsc::misscall::stacktimer;
 using smsc::misscall::waitstacktimer;
 using smsc::misscall::relCauses;
+using smsc::misscall::NONE;
+using smsc::misscall::ABSENT;
+using smsc::misscall::BUSY; 
+using smsc::misscall::NOREPLY; 
+using smsc::misscall::UNCOND; 
+using smsc::misscall::strategy;
 using namespace smsc::misscall::util;
 using smsc::sms::MAX_FULL_ADDRESS_VALUE_LENGTH;
 
@@ -574,7 +596,7 @@ USHORT_T releaseConnection(EINSS7_I97_ISUPHEAD_T *isupHead_sp, UCHAR_T causeValu
   UCHAR_T* addr = new UCHAR_T[(strlen(r)+1)/2];
   pack_addr(addr,r,strlen(r));
   redirectionNumber.addrSign_p = addr;
-  smsc_log_debug(missedCallProcessorLogger,"IsupReleaseReq %s",getHeadDescription(isupHead_sp).c_str());
+  smsc_log_debug(missedCallProcessorLogger,"IsupReleaseReq %s cause=%u",getHeadDescription(isupHead_sp).c_str(),cause.causeValue);
   res = EINSS7_I97IsupReleaseReq(isupHead_sp, /*to do может ли он быть нулевой*/
                                   &cause,
                                   0, /* autoCongestLevel_p  */
@@ -594,9 +616,10 @@ USHORT_T releaseConnection(EINSS7_I97_ISUPHEAD_T *isupHead_sp, UCHAR_T causeValu
   }
   return res;
 }
-void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_ORIGINALNUMB_T *called)
+void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_CALLEDNUMB_T *called, uint8_t eventType)
 {
   MissedCallEvent event;
+  event.cause = eventType;
   time(&event.time);
   if (calling &&
       calling->noOfAddrSign > 0 &&
@@ -628,6 +651,85 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_ORIGINALNUMB_T 
       }
       event.from = cgaddr;
     }
+  }
+  /* skip prohibited or unknown caller */
+  if (relCauses.skipUnknownCaller && event.from.length() == 0)
+  {
+    return;
+  }
+  if (called &&
+      called->noOfAddrSign > 0 &&
+      called->noOfAddrSign <= MAX_FULL_ADDRESS_VALUE_LENGTH)
+  {
+    char cdaddr[32] = {0};
+    int pos = snprintf(cdaddr,sizeof(cdaddr),".%d.%d.",called->natureOfAddr,called->numberPlan);
+    unpack_addr(cdaddr+pos, called->addrSign_p, called->noOfAddrSign);
+
+    using smsc::misscall::calledMaskRx;
+    using smsc::util::regexp::SMatch;
+    std::vector<SMatch> m(calledMaskRx.GetBracketsCount());
+
+    int n=m.size();
+    if(calledMaskRx.Match(cdaddr,&m[0],n))
+    {
+      cdaddr[0] = 0;
+      if (called->natureOfAddr == EINSS7_I97_NATIONAL_NO)
+      {
+        cdaddr[0] = '+';cdaddr[1] = '7'; // valid only for Russia!!!
+        unpack_addr(cdaddr+2, called->addrSign_p, called->noOfAddrSign);
+      }
+      else if (called->natureOfAddr == EINSS7_I97_INTERNATIONAL_NO)
+      {
+        cdaddr[0] = '+';
+        unpack_addr(cdaddr+1, called->addrSign_p, called->noOfAddrSign);
+      }
+      event.to = cdaddr;
+      smsc_log_debug(missedCallProcessorLogger,"send event: %s->%s",event.from.c_str(),event.to.c_str());
+      MissedCallProcessor::instance()->fireMissedCallEvent(event);
+    }
+  }
+}
+
+void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_ORIGINALNUMB_T *called, uint8_t eventType)
+{
+  MissedCallEvent event;
+  event.cause = eventType;
+  time(&event.time);
+  if (calling &&
+      calling->noOfAddrSign > 0 &&
+      calling->noOfAddrSign <= MAX_FULL_ADDRESS_VALUE_LENGTH &&
+      calling->presentationRestr == EINSS7_I97_PRES_ALLOWED)
+  {
+    /*max length of .ton.npi.digits = 1+3+1+1+1+20 = 27*/
+    char cgaddr[32] = {0};
+    int pos = snprintf(cgaddr,sizeof(cgaddr),".%d.%d.",calling->natureOfAddr,calling->numberPlan);
+    unpack_addr(cgaddr+pos, calling->addrSign_p, calling->noOfAddrSign);
+
+    using smsc::misscall::maskRx;
+    using smsc::util::regexp::SMatch;
+    std::vector<SMatch> m(maskRx.GetBracketsCount());
+
+    int n=m.size();
+    if(maskRx.Match(cgaddr,&m[0],n))
+    {
+      cgaddr[0] = 0;
+      if (calling->natureOfAddr == EINSS7_I97_NATIONAL_NO)
+      {
+        cgaddr[0] = '+';cgaddr[1] = '7'; // valid only for Russia!!!
+        unpack_addr(cgaddr+2, calling->addrSign_p, calling->noOfAddrSign);
+      }
+      else if (calling->natureOfAddr == EINSS7_I97_INTERNATIONAL_NO)
+      {
+        cgaddr[0] = '+';
+        unpack_addr(cgaddr+1, calling->addrSign_p, calling->noOfAddrSign);
+      }
+      event.from = cgaddr;
+    }
+  }
+  /* skip prohibited or unknown caller */
+  if (relCauses.skipUnknownCaller && event.from.length() == 0)
+  {
+    return;
   }
   if (called && 
       called->noOfAddrSign > 0 &&
@@ -661,35 +763,77 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_ORIGINALNUMB_T 
     }
   }
 }
-USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
-                                USHORT_T resourceGroup,
-                                EINSS7_I97_NATUREOFCONN_T *natureOfConn_sp,
-                                EINSS7_I97_FORWARD_T *forward_sp,
-                                UCHAR_T *callingPartyCat_p,
-                                UCHAR_T *transmissionReq_p,
-                                EINSS7_I97_CALLEDNUMB_T *called,
-                                EINSS7_I97_CALLINGNUMB_T *calling,
-                                EINSS7_I97_OPTFORWARD_T *optForward_sp,
-                                EINSS7_I97_ACCESS_T *access_sp,
-                                EINSS7_I97_REDIRECTINGNUMB_T *redirecting,
-                                EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp,
-                                EINSS7_I97_ORIGINALNUMB_T *original,
-                                EINSS7_I97_USERINFORMATION_T *userInformation_sp,
-                                EINSS7_I97_USERSERVICE_T *userService_sp,
-                                EINSS7_I97_OPTPARAMS_T *extraOpts_sp)
+void taif(
+          EINSS7_I97_ISUPHEAD_T *head,
+          EINSS7_I97_CALLINGNUMB_T *calling,
+          EINSS7_I97_CALLEDNUMB_T *called,
+          EINSS7_I97_ORIGINALNUMB_T *original,
+          EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp
+         )
 {
-  smsc_log_debug(missedCallProcessorLogger,
-                 "IsupSetupInd %s RG=%d %s %s %s %s %s",
-                 getHeadDescription(isupHead_sp).c_str(),
-                 resourceGroup,
-                 getCalledNumberDescription(called).c_str(),
-                 getCallingNumberDescription(calling).c_str(),
-                 getRedirectionInfoDescription(redirectionInfo_sp).c_str(),
-                 getRedirectingNumberDescription(redirecting).c_str(),
-                 getOriginalNumberDescription(original).c_str()
-                );
+  UCHAR_T causeValue = relCauses.otherCause; /* must be 121 */
+  UCHAR_T inform = 0;        /* need to register event */
+  uint8_t eventType = NONE;
+  if ( called &&
+       called->noOfAddrSign >=2 &&
+       called->addrSign_p !=0 )
+  {
+    char prefix[3] = {0};
+    unpack_addr(prefix, called->addrSign_p, 2);
+
+    /* prefix 21 means detach IMSI */
+    if (strncmp(prefix,"21",2) == 0 )
+    {
+      causeValue = relCauses.detachCause;
+      eventType  = ABSENT;
+      inform     = relCauses.detachInform;
+    }
+    
+    /* prefix 22 means absent subscriber */
+    if (strncmp(prefix,"22",2) == 0 )
+    {
+      causeValue = relCauses.absentCause;
+      eventType  = ABSENT;
+      inform     = relCauses.absentInform;
+    }
+    
+    /* prefix 23 means busy */
+    if (strncmp(prefix,"23",2) == 0 )
+    {
+      causeValue = relCauses.busyCause;
+      eventType  = BUSY;
+      inform     = relCauses.unconditionalInform;
+    }
+  }  
+  releaseConnection(head,causeValue);
+  if (inform)
+  {
+    char cdaddr[32] = {0};
+    UCHAR_T tmpcdaddr[32] = {0};
+    unpack_addr(cdaddr, called->addrSign_p, called->noOfAddrSign);
+    pack_addr(tmpcdaddr, cdaddr + 2, strlen(cdaddr) - 2);
+    
+    EINSS7_I97_CALLEDNUMB_T tmpcalled;
+    tmpcalled.natureOfAddr = called->natureOfAddr;
+    tmpcalled.numberPlan = called->numberPlan;
+    tmpcalled.internalNetwNumb = called->internalNetwNumb;
+    tmpcalled.noOfAddrSign = strlen(cdaddr) - 2 ;
+    tmpcalled.addrSign_p = tmpcdaddr;
+      
+    registerEvent(calling,&tmpcalled,eventType);
+  }
+}
+void mts(
+         EINSS7_I97_ISUPHEAD_T *head,
+         EINSS7_I97_CALLINGNUMB_T *calling,
+         EINSS7_I97_CALLEDNUMB_T *called,
+         EINSS7_I97_ORIGINALNUMB_T *original,
+         EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp
+        )
+{
   UCHAR_T causeValue = relCauses.otherCause;
   UCHAR_T inform = 0;        /* need to register event */
+  uint8_t eventType = NONE;
 
   /*
    * some exchange doesn't provide redirection information
@@ -705,18 +849,22 @@ USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
       {
         case EINSS7_I97_USER_BUSY:
           causeValue = relCauses.busyCause;
+          eventType  = BUSY;
           inform     = relCauses.busyInform;
           break;
         case EINSS7_I97_NO_REPLY:
           causeValue = relCauses.noReplyCause;
+          eventType  = NOREPLY;
           inform     = relCauses.noReplyInform;
           break;
         case EINSS7_I97_UNCOND:
           causeValue = relCauses.unconditionalCause;
+          eventType  = UNCOND;
           inform     = relCauses.unconditionalInform;
           break;
         case EINSS7_I97_MOB_NOT_REACHED:
           causeValue = relCauses.absentCause;
+          eventType  = ABSENT;
           inform     = relCauses.absentInform;
           break;
         default:
@@ -727,14 +875,43 @@ USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
     }
   }
 
-  releaseConnection(isupHead_sp,causeValue);
+  releaseConnection(head,causeValue);
 
 
   if (original && inform)
   {
-    registerEvent(calling,original);
+    registerEvent(calling,original,eventType);
   }
 
+}
+USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
+                                USHORT_T resourceGroup,
+                                EINSS7_I97_NATUREOFCONN_T *natureOfConn_sp,
+                                EINSS7_I97_FORWARD_T *forward_sp,
+                                UCHAR_T *callingPartyCat_p,
+                                UCHAR_T *transmissionReq_p,
+                                EINSS7_I97_CALLEDNUMB_T *called,
+                                EINSS7_I97_CALLINGNUMB_T *calling,
+                                EINSS7_I97_OPTFORWARD_T *optForward_sp,
+                                EINSS7_I97_ACCESS_T *access_sp,
+                                EINSS7_I97_REDIRECTINGNUMB_T *redirecting,
+                                EINSS7_I97_REDIRECTIONINFO_T *redirinfo,
+                                EINSS7_I97_ORIGINALNUMB_T *original,
+                                EINSS7_I97_USERINFORMATION_T *userInformation_sp,
+                                EINSS7_I97_USERSERVICE_T *userService_sp,
+                                EINSS7_I97_OPTPARAMS_T *extraOpts_sp)
+{
+  smsc_log_debug(missedCallProcessorLogger,
+                 "IsupSetupInd %s RG=%d %s %s %s %s %s",
+                 getHeadDescription(isupHead_sp).c_str(),
+                 resourceGroup,
+                 getCalledNumberDescription(called).c_str(),
+                 getCallingNumberDescription(calling).c_str(),
+                 getRedirectionInfoDescription(redirinfo).c_str(),
+                 getRedirectingNumberDescription(redirecting).c_str(),
+                 getOriginalNumberDescription(original).c_str()
+                );
+  strategy(isupHead_sp,calling,called,original,redirinfo);
   return EINSS7_I97_REQUEST_OK;
 }
 USHORT_T EINSS7_I97IsupReleaseConf(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
