@@ -92,6 +92,8 @@ Targets:
     <symlink resource="${DAEMON2HOME_PATH}/conf/command.dtd" link="${DISTR_DIR}/daemon/conf"/>
     <symlink resource="${DAEMON2HOME_PATH}/conf/configuration.dtd" link="${DISTR_DIR}/daemon/conf"/>
     <symlink resource="${DAEMON2HOME_PATH}/conf/response.dtd" link="${DISTR_DIR}/daemon/conf"/>
+
+    <symlink resource="../tomcat/shared/class/log4j.properties" link="${DISTR_DIR}/conf"/>
   </target>
 
   <target name="update" depends="create_distr_tree_update, makegw, makeweb">
@@ -113,7 +115,7 @@ Targets:
       </fileset>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
-    <copy todir="${WEBINF_DIR}/classes" file="${TEMPL_DIR}/log4j.properties">
+    <copy todir="${WEBINF_DIR}/classes" file="${CATALINA_HOME}/shared/classes/log4j.properties">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <copy tofile="${DISTR_DIR}/daemon/logger.properties" file="${TEMPL_DIR}/logger/daemon.logger">
