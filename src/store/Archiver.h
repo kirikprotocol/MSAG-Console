@@ -145,7 +145,7 @@ namespace smsc { namespace store
         
         ub4         idCounter;
 
-        SMSId       id;
+        OCINumber   smsId;
         SMS         sms;
         
         char        svcType[10];

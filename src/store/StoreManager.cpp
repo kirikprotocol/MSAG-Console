@@ -78,7 +78,9 @@ void StoreManager::startup(Manager& config)
                         new CachedStore(config) : new RemoteStore(config);
             
             archiver = new Archiver(config);
-            generator = new IDGenerator(archiver->getLastUsedId());
+            SMSId lid = archiver->getLastUsedId();
+            generator = new IDGenerator(lid);
+            __trace2__("Last used id=%llu", lid);
 
             if (needArchiver(config)) archiver->Start();
 #else
@@ -198,18 +200,18 @@ SMSId RemoteStore::doCreateSms(StorageConnection* connection,
         sword result = needOverwriteStmt->execute();
         if (result != OCI_NO_DATA)
         {
-            SMSId retId;
-
             connection->check(result);
-            needOverwriteStmt->getId(retId);
-
-            OverwriteStatement* overwriteStmt
-                = connection->getOverwriteStatement();
-            DestroyBodyStatement* destroyBodyStmt
-                = connection->getDestroyBodyStatement();
-
+            SMSId retId;
+            
             try
             {
+                needOverwriteStmt->getId(retId);
+
+                OverwriteStatement* overwriteStmt
+                    = connection->getOverwriteStatement();
+                DestroyBodyStatement* destroyBodyStmt
+                    = connection->getDestroyBodyStatement();
+                
                 destroyBodyStmt->setSMSId(retId);
                 destroyBodyStmt->destroyBody();
 

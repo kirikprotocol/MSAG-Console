@@ -448,11 +448,11 @@ void Archiver::archivate(bool first)
 }
 
 const char* Archiver::billingMaxIdSql = (const char*)
-"SELECT NVL(MAX(ID), '0000000000000000') FROM SMS_IDS";
+"SELECT NVL(MAX(ID), 0) FROM SMS_IDS";
 const char* Archiver::storageMaxIdSql = (const char*)
-"SELECT NVL(MAX(ID), '0000000000000000') FROM SMS_MSG";
+"SELECT NVL(MAX(ID), 0) FROM SMS_MSG";
 const char* Archiver::archiveMaxIdSql = (const char*)
-"SELECT NVL(MAX(ID), '0000000000000000') FROM SMS_ARC";
+"SELECT NVL(MAX(ID), 0) FROM SMS_ARC";
 SMSId Archiver::getMaxUsedId(Connection* connection, const char* sql)
     throw(StorageException)
 {
@@ -487,8 +487,8 @@ void Archiver::prepareBillingPutIdStmt()
     billingPutIdStmt = new Statement(billingConnection,
                                      Archiver::billingPutIdSql, true);
     
-    billingPutIdStmt->bind(1 , SQLT_BIN, (dvoid *) &(id),
-                           (sb4) sizeof(id));
+    billingPutIdStmt->bind(1 , SQLT_VNU, (dvoid *) &(smsId),
+                           (sb4) sizeof(smsId));
 }
 
 const char* Archiver::billingLookIdSql = (const char*)
@@ -499,8 +499,8 @@ void Archiver::prepareBillingLookIdStmt()
     billingLookIdStmt = new Statement(billingConnection,
                                      Archiver::billingLookIdSql, true);
     
-    billingLookIdStmt->bind(1 , SQLT_BIN, (dvoid *) &(id),
-                            (sb4) sizeof(id));
+    billingLookIdStmt->bind(1 , SQLT_VNU, (dvoid *) &(smsId),
+                            (sb4) sizeof(smsId));
     billingLookIdStmt->define(1 , SQLT_UIN, (dvoid *) &(idCounter),
                               (sb4) sizeof(idCounter));
 }
@@ -541,8 +541,8 @@ void Archiver::prepareStorageSelectStmt() throw(StorageException)
                                       Archiver::storageSelectSql, true);
     
     ub4 i=1;
-    storageSelectStmt->define(i++, SQLT_BIN, (dvoid *) &(id),
-                              (sb4) sizeof(id));
+    storageSelectStmt->define(i++, SQLT_VNU, (dvoid *) &(smsId),
+                              (sb4) sizeof(smsId));
     storageSelectStmt->define(i++, SQLT_UIN, (dvoid *) &(uState), 
                               (sb4) sizeof(uState));
     storageSelectStmt->define(i++, SQLT_UIN, 
@@ -623,8 +623,8 @@ void Archiver::prepareStorageDeleteStmt() throw(StorageException)
     storageDeleteStmt = new Statement(storageConnection, 
                                       Archiver::storageDeleteSql, true);
     
-    storageDeleteStmt->bind(1, SQLT_BIN, (dvoid *) &(id), 
-                            (sb4) sizeof(id));
+    storageDeleteStmt->bind(1, SQLT_VNU, (dvoid *) &(smsId), 
+                            (sb4) sizeof(smsId));
 }
 
 void Archiver::rebindBody() throw(StorageException)
@@ -655,8 +655,8 @@ void Archiver::prepareArchiveInsertStmt() throw(StorageException)
                                       Archiver::archiveInsertSql, true);
     
     ub4 i=1;
-    archiveInsertStmt->bind(i++, SQLT_BIN, (dvoid *) &(id),
-                            (sb4) sizeof(id));
+    archiveInsertStmt->bind(i++, SQLT_VNU, (dvoid *) &(smsId),
+                            (sb4) sizeof(smsId));
     archiveInsertStmt->bind(i++, SQLT_UIN, (dvoid *) &(uState),
                             (sb4) sizeof(uState));
     archiveInsertStmt->bind(i++, SQLT_UIN, 
@@ -752,8 +752,8 @@ void Archiver::prepareBillingInsertStmt() throw(StorageException)
                                       Archiver::billingInsertSql, true);
 
     ub4 i = 1;
-    billingInsertStmt->bind(i++, SQLT_BIN, (dvoid *) &(id),
-                            (sb4) sizeof(id));
+    billingInsertStmt->bind(i++, SQLT_VNU, (dvoid *) &(smsId),
+                            (sb4) sizeof(smsId));
     
     billingInsertStmt->bind(i++, SQLT_STR, 
                             (dvoid *) (sms.originatingAddress.value), 
@@ -1004,7 +1004,6 @@ void Archiver::Cleaner::cleanup()
                       cleanerDeleteStmt->getRowsAffectedCount(), 
                       oldDelete, toDelete);
         cleanerConnection->commit();
-
     }
 
     disconnect();

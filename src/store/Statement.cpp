@@ -12,25 +12,10 @@ namespace smsc { namespace store
 {
 
 #ifndef SPARC
-#define UINT64_SWAP_LE_BE_CONSTANT(val)      ((uint64_t) (\
-    (((uint64_t) (val) &                              \
-        (uint64_t) (0x00000000000000FFU)) << 56) |    \
-    (((uint64_t) (val) &                              \
-        (uint64_t) (0x000000000000FF00U)) << 40) |    \
-    (((uint64_t) (val) &                              \
-        (uint64_t) (0x0000000000FF0000U)) << 24) |    \
-    (((uint64_t) (val) &                              \
-        (uint64_t) (0x00000000FF000000U)) <<  8) |    \
-    (((uint64_t) (val) &                              \
-        (uint64_t) (0x000000FF00000000U)) >>  8) |    \
-    (((uint64_t) (val) &                              \
-        (uint64_t) (0x0000FF0000000000U)) >> 24) |    \
-    (((uint64_t) (val) &                              \
-        (uint64_t) (0x00FF000000000000U)) >> 40) |    \
-    (((uint64_t) (val) &                              \
-        (uint64_t) (0xFF00000000000000U)) >> 56)))
+#define UINT64_SWAP_LE_BE_CONSTANT(val)   ((uint64_t) (\
+     (((uint64_t) (val) << 32) | ((uint64_t) (val) >> 32))))
 #else
-#define UINT64_SWAP_LE_BE_CONSTANT(val)      ((uint64_t) (val))
+#define UINT64_SWAP_LE_BE_CONSTANT(val)   ((uint64_t) (val))
 #endif
 
 /* ----------------------------- Statetment -------------------------- */
@@ -164,12 +149,20 @@ void Statement::check(sword status)
 /* ----------------------------- IdStatetment ------------------------- */  
 
 void IdStatement::setSMSId(const SMSId _smsId)
+    throw(StorageException)
 {
-    smsId = UINT64_SWAP_LE_BE_CONSTANT(_smsId);
+    SMSId id = UINT64_SWAP_LE_BE_CONSTANT(_smsId);
+    check(OCINumberFromInt(errhp, (CONST dvoid *)&id, 
+                           sizeof(id), OCI_NUMBER_UNSIGNED, &smsId));
 }
 void IdStatement::getSMSId(SMSId &_smsId)
+    throw(StorageException)
 {
-    _smsId = UINT64_SWAP_LE_BE_CONSTANT(smsId);
+    SMSId id = 0;
+    check(OCINumberToInt(errhp, (CONST OCINumber *)&smsId, 
+                         sizeof(id), OCI_NUMBER_UNSIGNED, 
+                         (dvoid *)&id));
+    _smsId = UINT64_SWAP_LE_BE_CONSTANT(id);
 }
 
 /* --------------------------- GetIdStatement ----------------------- */
@@ -178,7 +171,7 @@ GetIdStatement::GetIdStatement(Connection* connection, const char* sql,
     throw(StorageException)
         : IdStatement(connection, sql, assign)
 {
-    define(1, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
+    define(1, SQLT_VNU, (dvoid *) &(smsId), (sb4) sizeof(smsId));
 }
 
 /* --------------------------- SetIdStatement ----------------------- */
@@ -187,7 +180,7 @@ SetIdStatement::SetIdStatement(Connection* connection, const char* sql,
     throw(StorageException)
         : IdStatement(connection, sql, assign)
 {
-    bind((CONST text*)"ID", (sb4) 2*sizeof(char), SQLT_BIN, 
+    bind((CONST text*)"ID", (sb4) 2*sizeof(char), SQLT_VNU, 
          (dvoid *) &(smsId), (sb4) sizeof(smsId));
 }
 
@@ -244,7 +237,7 @@ NeedOverwriteStatement::NeedOverwriteStatement(Connection* connection,
 
     bind(1 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
          (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
-    define(1, SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
+    define(1, SQLT_VNU, (dvoid *)&(smsId), sizeof(smsId));
 }
 NeedOverwriteStatement::NeedOverwriteStatement(Connection* connection,
                                                const char* sql,
@@ -256,7 +249,7 @@ NeedOverwriteStatement::NeedOverwriteStatement(Connection* connection,
 
     bind(1 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
          (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
-    define(1, SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
+    define(1, SQLT_VNU, (dvoid *)&(smsId), sizeof(smsId));
 }
 
 void NeedOverwriteStatement::bindOriginatingAddress(Address& address)
@@ -319,14 +312,16 @@ void OverwriteStatement::bindOldId(SMSId id)
 {
     setSMSId(id);
     bind((CONST text *)"OLD_ID", (sb4) 6*sizeof(char), 
-         SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
+         SQLT_VNU, (dvoid *)&(smsId), sizeof(smsId));
 }
 void OverwriteStatement::bindNewId(SMSId id)
     throw(StorageException)
 {
-    newId = UINT64_SWAP_LE_BE_CONSTANT(id);
+    SMSId iid = UINT64_SWAP_LE_BE_CONSTANT(id);
+    check(OCINumberFromInt(errhp, (CONST dvoid *)&iid, 
+                           sizeof(iid), OCI_NUMBER_UNSIGNED, &newId));
     bind((CONST text *)"NEW_ID", (sb4) 6*sizeof(char), 
-         SQLT_BIN, (dvoid *)&(newId), sizeof(newId));
+         SQLT_VNU, (dvoid *)&(newId), sizeof(newId));
 }
 void OverwriteStatement::bindSms(SMS& sms)
     throw(StorageException)
@@ -439,7 +434,7 @@ void StoreStatement::bindId(SMSId id)
     throw(StorageException)
 {
     setSMSId(id);
-    bind(1 , SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
+    bind(1 , SQLT_VNU, (dvoid *)&(smsId), sizeof(smsId));
 }
 void StoreStatement::bindSms(SMS& sms)
     throw(StorageException)
@@ -556,7 +551,7 @@ void RetrieveStatement::bindId(SMSId id)
     throw(StorageException)
 {
     setSMSId(id);
-    bind(1 , SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
+    bind(1 , SQLT_VNU, (dvoid *)&(smsId), sizeof(smsId));
 }
 
 void RetrieveStatement::defineSms(SMS& sms)
@@ -726,7 +721,7 @@ void DestroyStatement::bindId(SMSId id)
     throw(StorageException)
 {
     setSMSId(id);
-    bind(1 , SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
+    bind(1 , SQLT_VNU, (dvoid *)&(smsId), sizeof(smsId));
 }
 
 /* ----------------------- RetrieveBodyStatement ---------------------- */
@@ -754,7 +749,7 @@ void RetrieveBodyStatement::bindId(SMSId id)
 {
     setSMSId(id);
     bind((CONST text *)"ID", (sb4) 2*sizeof(char), 
-         SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
+         SQLT_VNU, (dvoid *)&(smsId), sizeof(smsId));
 }
 void RetrieveBodyStatement::bindOriginatingAddress(const Address& address)
     throw(StorageException)
@@ -817,7 +812,7 @@ void ReplaceStatement::bindId(SMSId id)
 {
     setSMSId(id);
     bind((CONST text *)"ID", (sb4) 2*sizeof(char), 
-         SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
+         SQLT_VNU, (dvoid *)&(smsId), sizeof(smsId));
 }
 void ReplaceStatement::bindOriginatingAddress(const Address& address)
     throw(StorageException)
@@ -966,7 +961,7 @@ void ToEnrouteStatement::bindId(SMSId id)
 {
     setSMSId(id);
     bind((CONST text *)"ID", (sb4) 2*sizeof(char), 
-         SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
+         SQLT_VNU, (dvoid *)&(smsId), sizeof(smsId));
 }
 void ToEnrouteStatement::bindAttemptsIncrement(uint8_t inc)
     throw(StorageException)
@@ -1028,7 +1023,7 @@ void ToDeliveredStatement::bindId(SMSId id)
 {
     setSMSId(id);
     bind((CONST text *)"ID", (sb4) 2*sizeof(char), 
-         SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
+         SQLT_VNU, (dvoid *)&(smsId), sizeof(smsId));
     
     time_t cTime = time(NULL);
     convertDateToOCIDate(&(cTime), &currTime);
@@ -1074,7 +1069,7 @@ void ToUndeliverableStatement::bindId(SMSId id)
 {
     setSMSId(id);
     bind((CONST text *)"ID", (sb4) 2*sizeof(char), 
-         SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
+         SQLT_VNU, (dvoid *)&(smsId), sizeof(smsId));
     
     time_t cTime = time(NULL);
     convertDateToOCIDate(&(cTime), &currTime);
@@ -1123,7 +1118,7 @@ void ToExpiredStatement::bindId(SMSId id)
 {
     setSMSId(id);
     bind((CONST text *)"ID", (sb4) 2*sizeof(char), 
-         SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
+         SQLT_VNU, (dvoid *)&(smsId), sizeof(smsId));
     
     time_t cTime = time(NULL);
     convertDateToOCIDate(&(cTime), &currTime);
@@ -1153,7 +1148,7 @@ void ToDeletedStatement::bindId(SMSId id)
 {
     setSMSId(id);
     bind((CONST text *)"ID", (sb4) 2*sizeof(char), 
-         SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
+         SQLT_VNU, (dvoid *)&(smsId), sizeof(smsId));
     
     time_t cTime = time(NULL);
     convertDateToOCIDate(&(cTime), &currTime);
@@ -1178,7 +1173,7 @@ void UpdateSeqNumStatement::bindId(SMSId id)
 {
     setSMSId(id);
     bind((CONST text *)"ID", (sb4) 2*sizeof(char), 
-         SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
+         SQLT_VNU, (dvoid *)&(smsId), sizeof(smsId));
 }
 void UpdateSeqNumStatement::bindInc(int8_t inc)
     throw(StorageException)
@@ -1222,7 +1217,7 @@ ReadyByNextTimeStatement::ReadyByNextTimeStatement(Connection* connection,
          SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
          (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
     
-    define(1, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId)); 
+    define(1, SQLT_VNU, (dvoid *) &(smsId), (sb4) sizeof(smsId)); 
 }
 void ReadyByNextTimeStatement::bindRetryTime(time_t retryTime)
     throw(StorageException)
@@ -1285,7 +1280,7 @@ CancelIdsStatement::CancelIdsStatement(Connection* connection,
         bind(i++, SQLT_STR, (dvoid *)svc, (sb4) strlen(svc)+1);
     }
     
-    define(1, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId)); 
+    define(1, SQLT_VNU, (dvoid *) &(smsId), (sb4) sizeof(smsId)); 
 }
 
 const char* DeliveryIdsStatement::sql = (const char*)
@@ -1300,7 +1295,7 @@ DeliveryIdsStatement::DeliveryIdsStatement(Connection* connection,
          (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
     convertAddressToString(_da, da);
     bind(i++, SQLT_STR, (dvoid *) (da), (sb4) sizeof(da));
-    define(1, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId)); 
+    define(1, SQLT_VNU, (dvoid *) &(smsId), (sb4) sizeof(smsId)); 
 }
 
 /* --------------------- Body (BLOB) statements -------------------- */

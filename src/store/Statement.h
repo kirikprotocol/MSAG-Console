@@ -70,8 +70,8 @@ namespace smsc { namespace store
     {
     protected:
 
-        SMSId   smsId;
-        
+        OCINumber   smsId;
+
         IdStatement(Connection* connection, const char* sql, 
                     bool assign=false) 
             throw(StorageException)
@@ -80,8 +80,10 @@ namespace smsc { namespace store
         
         virtual ~IdStatement() {};
 
-        void setSMSId(const SMSId smsId);
-        void getSMSId(SMSId &smsId);
+        void setSMSId(const SMSId smsId)
+            throw(StorageException);
+        void getSMSId(SMSId &smsId)
+            throw(StorageException);
     };
     
     class GetIdStatement : public IdStatement
@@ -205,7 +207,7 @@ namespace smsc { namespace store
     static const char* sql;
     protected:
         
-        SMSId       newId;
+        OCINumber   newId;
 
         OCIDate     nextTime;
         OCIDate     validTime;
