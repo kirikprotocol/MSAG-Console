@@ -430,20 +430,17 @@ int Profiler::Execute()
     int i;
     for(i=0;i<len;i++)body[i]=toupper(body[i]);
     i=0;
-    while(!isalnum(body[i]) && body[i]!='*' && i<len)i++;
+    while(!isalnum(body[i]) && body[i]!='*' && body[i]!='#' && i<len)i++;
     msg=-1;
     try{
       if(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP))
       {
         char *str=body;
-        if(*str=='*')str++;
-        str=strchr(str,'*');
-        if(str)
-        {
-          str++;
 
-          int code=-1;
-          if(isdigit(*str))code=atoi(str);
+        int code=-1;
+        int pos;
+        if(sscanf(str,"%d%n",str,pos)==1 && str[pos]==0)
+        {
           __trace2__("Profiler: ussd op=%s(%d)",str,code);
           if(ussdCmdMap.Exist(code))
           {
