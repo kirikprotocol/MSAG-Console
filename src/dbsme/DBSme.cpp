@@ -76,12 +76,14 @@ public:
 
         SMS request;
         fetchSmsFromSmppPdu((PduXSm*)pdu, &request);
+        uint32_t userMessageReference =
+            request.getMessageBody().getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
 
         Command command;
         command.setFromAddress(request.getOriginatingAddress());
         command.setToAddress(request.getDestinationAddress());
         command.setJobName(0);
-
+        
         char smsTextBuff[MAX_ALLOWED_MESSAGE_LENGTH+1];
         getSmsText(&request, (char *)&smsTextBuff);
         command.setInData((const char*)smsTextBuff);
@@ -115,6 +117,8 @@ public:
         body.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::DEFAULT);
         body.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY, 0);
         body.setIntProperty(Tag::SMPP_PRIORITY, 0);
+        body.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
+                            userMessageReference);
         
         char* out = (char *)command.getOutData();
         __trace2__("Output Data '%s'", (out) ? out:"");
