@@ -25,44 +25,44 @@ MessageStoreTestCases::MessageStoreTestCases()
 
 MessageStoreTestCases::~MessageStoreTestCases() {}
 
-void MessageStoreTestCases::setupRandomCorrectSM(SMS& sms)
+void MessageStoreTestCases::setupRandomCorrectSM(SMS* sms)
 {
-	sms.setState(ENROUTE); //DELIVERED, EXPIRED, UNDELIVERABLE, DELETED
+	sms->setState(ENROUTE); //DELIVERED, EXPIRED, UNDELIVERABLE, DELETED
 	int addrLength = rand1(MAX_ADDRESS_LENGTH); //задаем случайную длину адреса
-	sms.setOriginatingAddress(addrLength, 20, 30, rand_char(addrLength).get());
-	sms.setDestinationAddress(addrLength, 20, 30, rand_char(addrLength).get());
-	sms.setWaitTime(time(NULL));
-	sms.setValidTime(time(NULL) + 24 * 3600);
-	sms.setSubmitTime(time(NULL) - 1);
-	sms.setDeliveryTime(0);
-	sms.setMessageReference(*(rand_uint8_t(1).get()));
-	sms.setMessageIdentifier(*(rand_uint8_t(1).get()));
-	sms.setPriority(100);
-	sms.setProtocolIdentifier(150);
-	sms.setStatusReportRequested(true);
-	sms.setRejectDuplicates(true);
-	sms.setFailureCause(55);
+	sms->setOriginatingAddress(addrLength, 20, 30, rand_char(addrLength).get());
+	sms->setDestinationAddress(addrLength, 20, 30, rand_char(addrLength).get());
+	sms->setWaitTime(time(NULL));
+	sms->setValidTime(time(NULL) + 24 * 3600);
+	sms->setSubmitTime(time(NULL) - 1);
+	sms->setDeliveryTime(0);
+	sms->setMessageReference(*(rand_uint8_t(1).get()));
+	sms->setMessageIdentifier(*(rand_uint8_t(1).get()));
+	sms->setPriority(100);
+	sms->setProtocolIdentifier(150);
+	sms->setStatusReportRequested(true);
+	sms->setRejectDuplicates(true);
+	sms->setFailureCause(55);
     int msgLen = rand1(MAX_MSG_BODY_LENGTH); //задаем случайную длину тела сообщения
-	sms.setMessageBody(msgLen, 20, false, rand_uint8_t(msgLen).get());
+	sms->setMessageBody(msgLen, 20, false, rand_uint8_t(msgLen).get());
 }
 
-void MessageStoreTestCases::clearSM(SMS& sms)
+void MessageStoreTestCases::clearSM(SMS* sms)
 {
-	sms.setState(ENROUTE); //DELIVERED, EXPIRED, UNDELIVERABLE, DELETED
-	sms.setOriginatingAddress(0, 0, 0, NULL);
-	sms.setDestinationAddress(1, 0, 0, "*");
-	sms.setWaitTime(0);
-	sms.setValidTime(0);
-	sms.setSubmitTime(0);
-	sms.setDeliveryTime(0);
-	sms.setMessageReference(0);
-	sms.setMessageIdentifier(0);
-	sms.setPriority(0);
-	sms.setProtocolIdentifier(0);
-	sms.setStatusReportRequested(false);
-	sms.setRejectDuplicates(false);
-	sms.setFailureCause(0);
-	sms.setMessageBody(0, 0, false, NULL);
+	sms->setState(ENROUTE); //DELIVERED, EXPIRED, UNDELIVERABLE, DELETED
+	sms->setOriginatingAddress(0, 0, 0, NULL);
+	sms->setDestinationAddress(1, 0, 0, "*");
+	sms->setWaitTime(0);
+	sms->setValidTime(0);
+	sms->setSubmitTime(0);
+	sms->setDeliveryTime(0);
+	sms->setMessageReference(0);
+	sms->setMessageIdentifier(0);
+	sms->setPriority(0);
+	sms->setProtocolIdentifier(0);
+	sms->setStatusReportRequested(false);
+	sms->setRejectDuplicates(false);
+	sms->setFailureCause(0);
+	sms->setMessageBody(0, 0, false, NULL);
 }
 
 TCResult* MessageStoreTestCases::storeCorrectSM(SMSId* idp, SMS* smsp, int num)
@@ -75,7 +75,7 @@ TCResult* MessageStoreTestCases::storeCorrectSM(SMSId* idp, SMS* smsp, int num)
 	{
 		try
 		{
-			setupRandomCorrectSM(sms);
+			setupRandomCorrectSM(&sms);
 			switch(s.value())
 			{
 				case 1: //ничего особенного
@@ -120,23 +120,60 @@ TCResult* MessageStoreTestCases::storeCorrectSM(SMSId* idp, SMS* smsp, int num)
 		catch(...)
 		{
 			idp = NULL;
-			clearSM(*smsp);
+			clearSM(smsp);
 			res->addFailure(s.value());
 		}
 	}
 	return res;
 }
 
-TCResult* MessageStoreTestCases::storeIncorrectSM(SMS& existentSMS, int num)
+TCResult* MessageStoreTestCases::storeDuplicateSM(const SMS& existentSMS, int num)
 {
-	TCSelector s(num, 7);
+	TCSelector s(num, 2);
+	TCResult* res = new TCResult(TC_STORE_DUPLICATE_SM, s.getChoice());
+	SMS sms;
+	for (; s.check(); s++)
+	{
+		try
+		{
+			setupRandomCorrectSM(&sms);
+			sms.setMessageReference(existentSMS.getMessageReference());
+			switch(s.value())
+			{
+				case 1:
+					sms.setRejectDuplicates(true);
+					break;
+				case 2:
+					sms.setRejectDuplicates(false);
+					break;
+				default:
+					throw s;
+			}
+			SMSId smsId = msgStore->store(sms);
+			res->addFailure(s.value());
+		}
+		catch(DuplicateMessageException&)
+		{
+			continue;
+		}
+		catch(...)
+		{
+			res->addFailure(s.value());;
+		}
+	}
+	return res;
+}
+
+TCResult* MessageStoreTestCases::storeIncorrectSM(int num)
+{
+	TCSelector s(num, 6);
 	TCResult* res = new TCResult(TC_STORE_INCORRECT_SM, s.getChoice());
 	SMS sms;
 	for (; s.check(); s++)
 	{
 		try
 		{
-			setupRandomCorrectSM(sms);
+			setupRandomCorrectSM(&sms);
 			switch(s.value())
 			{
 				case 1: //некорректный статус
@@ -158,23 +195,19 @@ TCResult* MessageStoreTestCases::storeIncorrectSM(SMS& existentSMS, int num)
 					sms.setWaitTime(time(NULL) + 200);
 					sms.setValidTime(time(NULL) + 100);
 					break;
-				case 7: //дублированное сообщение
-					sms.setMessageReference(existentSMS.getMessageReference());
-					sms.setRejectDuplicates(true);
-					break;
 				default:
 					throw s;
 			}
 			SMSId smsId = msgStore->store(sms);
 			res->addFailure(s.value());
 		}
-		catch(StoreException e)
+		catch(StoreException&)
 		{
 			continue;
 		}
 		catch(...)
 		{
-			res->addFailure(s.value());;
+			res->addFailure(s.value());
 		}
 	}
 	return res;
@@ -191,7 +224,7 @@ TCResult* MessageStoreTestCases::storeAssertSM(int num)
 	{
 		try
 		{
-			setupRandomCorrectSM(sms);
+			setupRandomCorrectSM(&sms);
 			switch(s.value())
 			{
 				case 1: //пустой destinationAddress
@@ -218,7 +251,7 @@ TCResult* MessageStoreTestCases::storeAssertSM(int num)
 			SMSId smsId = msgStore->store(sms);
 			res->addFailure(s.value());
 		}
-		catch(AssertException e)
+		catch(AssertException&)
 		{
 			continue;
 		}
@@ -230,22 +263,134 @@ TCResult* MessageStoreTestCases::storeAssertSM(int num)
 	return res;
 }
 
-TCResult* MessageStoreTestCases::setCorrectSMStatus()
+TCResult* MessageStoreTestCases::setCorrectSMStatus(SMSId id, SMS* sms, int num)
 {
-	return NULL;
+	TCSelector s(num, 4);
+	TCResult* res = new TCResult(TC_SET_CORRECT_SM_STATUS, s.getChoice());
+	for (; s.check(); s++)
+	{
+		try
+		{
+			time_t curTime;
+			time(&curTime);
+			switch(s.value())
+			{
+				case 1:
+					sms->setState(DELIVERED);
+					sms->setDeliveryTime(curTime - 100);
+					sms->setFailureCause(1);
+					break;
+				case 2:
+					sms->setState(EXPIRED);
+					sms->setDeliveryTime(curTime + 100);
+					sms->setFailureCause(2);
+					break;
+				case 3:
+					sms->setState(UNDELIVERABLE);
+					sms->setDeliveryTime(curTime - 100);
+					sms->setFailureCause(3);
+					break;
+				case 4:
+					sms->setState(DELETED);
+					sms->setDeliveryTime(curTime + 100);
+					sms->setFailureCause(4);
+					break;
+				default:
+					throw s;
+			}
+			msgStore->update(id, sms->getState(), sms->getDeliveryTime(),
+				sms->getFailureCause());
+		}
+		catch(NoSuchMessageException&)
+		{
+			res->addFailure(101);
+		}
+		catch(StorageException&)
+		{
+			res->addFailure(102);
+		}
+		catch(...)
+		{
+			res->addFailure(s.value());
+		}
+	}
+	return res;
 }
 
-TCResult* MessageStoreTestCases::setIncorrectSMStatus()
+TCResult* MessageStoreTestCases::setIncorrectSMStatus(SMSId id)
 {
-	return NULL;
+	TCResult* res = new TCResult(TC_SET_INCORRECT_SM_STATUS);
+	try
+	{
+		time_t curTime;
+		time(&curTime);
+		msgStore->update(id, ENROUTE, curTime, 0);
+		res->addFailure(100);
+	}
+	catch(NoSuchMessageException&)
+	{
+		res->addFailure(101);
+	}
+	catch(StorageException&)
+	{
+		//ok;
+	}
+	catch(...)
+	{
+		res->addFailure(102);
+	}
+	return res;
 }
 
-TCResult* MessageStoreTestCases::setNonExistentSMStatus()
+TCResult* MessageStoreTestCases::setNonExistentSMStatus(SMSId id, int num)
 {
-	return NULL;
+	TCSelector s(num, 5);
+	TCResult* res = new TCResult(TC_SET_NON_EXISTENT_SM_STATUS, s.getChoice());
+	for (; s.check(); s++)
+	{
+		try
+		{
+			time_t curTime;
+			time(&curTime);
+			switch (s.value())
+			{
+				case 1:
+					msgStore->update(id, DELIVERED, curTime - 100, 1);
+					break;
+				case 2:
+					msgStore->update(id, EXPIRED, curTime + 100, 2);
+					break;
+				case 3:
+					msgStore->update(id, UNDELIVERABLE, curTime - 100, 3);
+					break;
+				case 4:
+					msgStore->update(id, DELETED, curTime + 100, 4);
+					break;
+				case 5: //заведомо несуществующий id
+					msgStore->update(0xFFFFFFFFFFFFFFFF, DELIVERED, curTime - 100, 1);
+					break;
+				default:
+					throw s;
+			}
+			res->addFailure(s.value());
+		}
+		catch (NoSuchMessageException&)
+		{
+			//Ok
+		}
+		catch (StorageException&)
+		{
+			res->addFailure(s.value());
+		}
+		catch (...)
+		{
+			res->addFailure(s.value());
+		}
+	}
+	return res;
 }
 
-TCResult* MessageStoreTestCases::replaceCorrectSM(SMSId id, SMS& sms, int num)
+TCResult* MessageStoreTestCases::replaceCorrectSM(SMSId id, SMS* sms, int num)
 {
 	/*
 	TCSelector s(num, 7);
@@ -316,7 +461,7 @@ TCResult* MessageStoreTestCases::replaceCorrectSM(SMSId id, SMS& sms, int num)
 	return NULL;
 }
 
-TCResult* MessageStoreTestCases::replaceIncorrectSM(SMSId id, SMS& sms, int num)
+TCResult* MessageStoreTestCases::replaceIncorrectSM(SMSId id, const SMS& sms, int num)
 {
 	/*
 	TCSelector s(num, 2);
@@ -372,7 +517,7 @@ TCResult* MessageStoreTestCases::replaceNonExistentSM(SMSId id, int num)
 			switch(s.value())
 			{
 				case 1: //несуществующий id
-					msgStore->replace(0xFFFFFFFF, sms);
+					msgStore->replace(0xFFFFFFFFFFFFFFFF, sms);
 					break;
 				case 2: //неправильный originatingAddress
 					{
@@ -437,7 +582,7 @@ TCResult* MessageStoreTestCases::deleteNonExistentSM(SMSId id, int num)
 					msgStore->remove(id);
 					break;
 				case 2: //заведомо несуществующий id
-					msgStore->remove(0xFFFFFFFF);
+					msgStore->remove(0xFFFFFFFFFFFFFFFF);
 					break;
 				default:
 					throw s;
@@ -460,7 +605,7 @@ TCResult* MessageStoreTestCases::deleteNonExistentSM(SMSId id, int num)
 	return res;
 }
 	
-TCResult* MessageStoreTestCases::loadExistentSM(SMSId id, SMS& sms)
+TCResult* MessageStoreTestCases::loadExistentSM(SMSId id, const SMS& sms)
 {
 	TCResult* res = new TCResult(TC_LOAD_EXISTENT_SM);
 	try
@@ -560,7 +705,7 @@ TCResult* MessageStoreTestCases::loadNonExistentSM(SMSId id, int num)
 					msgStore->retrive(id, sms);
 					break;
 				case 2:
-					msgStore->retrive(0xFFFFFFFF, sms);
+					msgStore->retrive(0xFFFFFFFFFFFFFFFF, sms);
 					break;
 				default:
 					throw s;

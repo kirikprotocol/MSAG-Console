@@ -16,23 +16,26 @@ using namespace smsc::test::util;
 const int MAX_ADDRESS_LENGTH = 21;
 const int MAX_MSG_BODY_LENGTH = 200;
 
+//implemented
 const char* const TC_STORE_CORRECT_SM = "storeCorrectSM";
+const char* const TC_STORE_DUPLICATE_SM = "storeDuplicateSM";
 const char* const TC_STORE_INCORRECT_SM = "storeIncorrectSM";
 const char* const TC_STORE_ASSERT_SM = "storeAssertSM";
-const char* const TC_SET_CORRECT_SM_STATUS = "setCorrectSMStatus";
-const char* const TC_SET_INCORRECT_SM_STATUS = "setIncorrectSMStatus";
-const char* const TC_SET_NON_EXISTENT_SM_STATUS = "setNonExistentSMStatus";
 const char* const TC_REPLACE_CORRECT_SM = "replaceCorrectSM";
 const char* const TC_REPLACE_INCORRECT_SM = "replaceIncorrectSM";
 const char* const TC_REPLACE_NON_EXISTENT_SM = "replaceNonExistentSM";
 const char* const TC_DELETE_EXISTENT_SM = "deleteExistentSM";
 const char* const TC_DELETE_NON_EXISTENT_SM = "deleteNonExistentSM";
+const char* const TC_LOAD_EXISTENT_SM = "loadExistentSM";
+const char* const TC_LOAD_NON_EXISTENT_SM = "loadNonExistentSM";
+const char* const TC_SET_CORRECT_SM_STATUS = "setCorrectSMStatus";
+const char* const TC_SET_INCORRECT_SM_STATUS = "setIncorrectSMStatus";
+const char* const TC_SET_NON_EXISTENT_SM_STATUS = "setNonExistentSMStatus";
+//not implemented yet
 const char* const TC_DELETE_EXISTENT_WAITING_SM_BY_NUMBER = 
 	"deleteExistentWaitingSMByNumber";
 const char* const TC_DELETE_NON_EXISTENT_WAITING_SM_BY_NUMBER = 
 	"deleteNonExistentWaitingSMByNumber";
-const char* const TC_LOAD_EXISTENT_SM = "loadExistentSM";
-const char* const TC_LOAD_NON_EXISTENT_SM = "loadNonExistentSM";
 const char* const TC_LOAD_EXISTENT_WAITING_SM_BY_DESTINATION_NUMBER = 
 	"loadExistentWaitingSMByDestinationNumber";
 const char* const TC_LOAD_NON_EXISTENT_WAITING_SM_BY_DESTINATION_NUMBER = 
@@ -74,18 +77,18 @@ public:
 
 	/**
 	 * Сохранение правильного SM.
-	 * Только debug информация должна выводиться в лог.
-	 * 
-	 * @param smsId возвращает id созданного в БД сообщения
-	 * @param num номер тест-процедуры
 	 */
 	TCResult* storeCorrectSM(smsc::sms::SMSId* id, smsc::sms::SMS* sms, int num);
 
 	/**
-	 * Сохранение неправильного SM.
-	 * Диагностика ошибки должна выводиться в лог.
+	 * Сохранение дублированного SM.
 	 */
-	TCResult* storeIncorrectSM(smsc::sms::SMS& existentSMS, int num);
+	TCResult* storeDuplicateSM(const smsc::sms::SMS& existentSMS, int num);
+
+	/**
+	 * Сохранение неправильного SM.
+	 */
+	TCResult* storeIncorrectSM(int num);
 
 	/**
 	 * Сохранение неправильного SM с проверкой на assert.
@@ -95,34 +98,33 @@ public:
 	/**
 	 * Корректное изменение статуса SM.
 	 * Сохраняет в базу правильное SMS сообщение, затем корректно изменяет статус SM.
-	 * Только debug информация должна выводиться в лог.
 	 */
-	TCResult* setCorrectSMStatus();
+	TCResult* setCorrectSMStatus(smsc::sms::SMSId id, smsc::sms::SMS* sms, int num);
 
 	/**
 	 * Некорректное изменение статуса SM.
 	 * Сохраняет в базу правильное SMS сообщение, затем пытается выставить некорректный статус SM.
-	 * Диагностика ошибки должна выводиться в лог.
 	 */
-	TCResult* setIncorrectSMStatus();
+	TCResult* setIncorrectSMStatus(smsc::sms::SMSId id);
 
 	/**
 	 * Изменение статуса несуществующего SM.
 	 * Диагностика ошибки должна выводиться в лог.
 	 */
-	TCResult* setNonExistentSMStatus();
+	TCResult* setNonExistentSMStatus(smsc::sms::SMSId id, int num);
 
 	/**
 	 * Корректное обновление существующего SM.
 	 * Только debug информация должна выводиться в лог.
 	 */
-	TCResult* replaceCorrectSM(smsc::sms::SMSId id, smsc::sms::SMS& sms, int num);
+	TCResult* replaceCorrectSM(smsc::sms::SMSId id, smsc::sms::SMS* sms, int num);
 
 	/**
 	 * Обновление существующего SM некорректными данными.
 	 * Диагностика ошибки должна выводиться в лог.
 	 */
-	TCResult* replaceIncorrectSM(smsc::sms::SMSId id, smsc::sms::SMS& sms, int num);
+	TCResult* replaceIncorrectSM(smsc::sms::SMSId id,
+		const smsc::sms::SMS& sms, int num);
 	
 	/**
 	 * Обновление несуществующего SM.
@@ -160,7 +162,7 @@ public:
 	 * Сохраняет в базу правильное SMS сообщение, затем загружает его.
 	 * Только debug информация должна выводиться в лог.
 	 */
-	TCResult* loadExistentSM(smsc::sms::SMSId id, smsc::sms::SMS& sms);
+	TCResult* loadExistentSM(smsc::sms::SMSId id, const smsc::sms::SMS& sms);
 
 	/**
 	 * Чтение несуществующего SM.
@@ -225,8 +227,8 @@ private:
 	smsc::store::MessageStore* msgStore;
 	smsc::test::store::SMUtil smUtil;
 
-	void clearSM(smsc::sms::SMS& sms);
-	void setupRandomCorrectSM(smsc::sms::SMS& sms);
+	void setupRandomCorrectSM(smsc::sms::SMS* sms);
+	void clearSM(smsc::sms::SMS* sms);
 };
 
 }
