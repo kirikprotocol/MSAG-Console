@@ -2,6 +2,7 @@
 #include "test/util/Util.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "util/debug.h"
+#include <iostream>
 
 using namespace std;
 using namespace smsc::sme;
@@ -137,11 +138,9 @@ void SubmitMultiTest::submitMulti(PduMultiSm& pdu)
 		pdu.get_message().set_source(sme->addr);
 		pdu.get_optional().set_userMessageReference(msgRef++);
 		dumpPdu("submitMultiBefore", sme->config.sid, reinterpret_cast<SmppHeader*>(&pdu));
-		check(reinterpret_cast<SmppHeader*>(&pdu), sme->config.sid);
-		/*
+		//check(reinterpret_cast<SmppHeader*>(&pdu), sme->config.sid);
 		sme->session->getAsyncTransmitter()->submitm(pdu);
 		dumpPdu("submitMultiAfter", sme->config.sid, reinterpret_cast<SmppHeader*>(&pdu));
-		*/
 	}
 	catch (exception& e)
 	{
@@ -252,5 +251,14 @@ int main(int argc, char* argv[])
 	SubmitMultiTest test(smscHost, smscPort);
 	test.bindAllSme();
 	test.submitMultiSeveralDistLists();
+	while (true)
+	{
+		string cmd;
+		cin >> cmd;
+		if (cmd == "quit")
+		{
+			exit(0);
+		}
+	}
 }
 
