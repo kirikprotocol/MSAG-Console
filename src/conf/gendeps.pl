@@ -69,7 +69,8 @@ while(<IN>)
   }
   my $gccflags=$ENV{GCCFLAGS};
   $gccflags=~s/(?<=\s)\+w2?\s//gsm;
-#  print STDERR "Exec:g++ -MM $gccflags $srcdir/$pdir/$src.cpp\n";
+  $gccflags=~s/-library=stlport4//;
+  #print STDERR "Exec:g++ -MM $gccflags $srcdir/$pdir/$src.cpp\n";
   my $dep=`g++ -MM $gccflags $srcdir/$pdir/$src.cpp`;
   print OUT "$builddir/obj/lib$lib/$dep" if $dep;
   print OUT "\n\n";
