@@ -1,34 +1,27 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<!DOCTYPE config SYSTEM "configuration.dtd">
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
 <config>
-  <section name="logger">
-    <param name="initFile" type="string">log4cpp.init</param>
+  <section name="DataSource">
+    <param name="connections" type="int">5</param>
+    <param name="dbInstance" type="string">DBS_ORCL</param>
+    <param name="dbUserName" type="string">smsc</param>
+    <param name="dbUserPassword" type="string">smsc</param>
+    <param name="type" type="string">OCI</param>
   </section>
-  <!--section name="admin">
-    <param name="host" type="string">smsc</param>
-    <param name="port" type="int">6690</param>
-  </section-->
 
   <section name="MessageStore">
-
     <param name="maxTriesCount" type="int">2</param>
-
-    <section name="Storage">
-      <param name="dbInstance" type="string">DBS_ORCL</param>
-      <param name="dbUserName" type="string">smsc</param>
-      <param name="dbUserPassword" type="string">smsc</param>
-    </section>
-
     <section name="Archive">
       <param name="enabled" type="bool">false</param>
-      <param name="interval" type="int">60000</param>
       <param name="finalized" type="int">1000</param>
+      <param name="interval" type="int">60000</param>
       <param name="uncommited" type="int">50</param>
-
       <section name="Cleaner">
         <param name="enabled" type="bool">true</param>
-  <param name="interval" type="int">30</param>
+        <param name="interval" type="int">30</param>
       </section>
+
     </section>
 
     <section name="Billing">
@@ -38,14 +31,66 @@
     </section>
 
     <section name="Cache">
-      <param name="enabled" type="bool">true</param>
       <param name="capacity" type="int">1000</param>
+      <param name="enabled" type="bool">true</param>
     </section>
 
     <section name="Connections">
-      <param name="max" type="int">10</param>
       <param name="init" type="int">5</param>
+      <param name="max" type="int">10</param>
     </section>
+
+    <section name="Storage">
+      <param name="dbInstance" type="string">DBS_ORCL</param>
+      <param name="dbUserName" type="string">smsc</param>
+      <param name="dbUserPassword" type="string">smsc</param>
+    </section>
+
+  </section>
+
+  <section name="StartupLoader">
+    <section name="DataSourceDrivers">
+      <section name="OCIDataSourceDriver">
+        <param name="loadup" type="string">../db/oci/libdb_oci.so</param>
+        <param name="type" type="string">OCI</param>
+      </section>
+
+    </section>
+
+  </section>
+
+  <section name="abonentinfo">
+    <param name="mobile_access_address" type="string">.0.1.101</param>
+    <param name="protocol_id" type="int">34</param>
+    <param name="service_type" type="string">abnfo</param>
+    <param name="smpp_access_address" type="string">.0.1.100</param>
+    <param name="systemId" type="string">abonentinfo</param>
+  </section>
+
+  <section name="admin">
+    <param name="host" type="string">smsc</param>
+    <param name="port" type="int">6690</param>
+  </section>
+
+  <section name="core">
+    <param name="protocol_id" type="int">34</param>
+    <param name="receipt_delivered" type="string">Message for $$string import=dest$$ delivered at $$date import=date$$</param>
+    <param name="receipt_failed" type="string">Message for $$string import=dest$$ sent at $$date import=date$$ wasn't delivered, reason: $$string import=error$$</param>
+    <param name="receipt_notify" type="string">Message for $$string import=dest$$ sent at $$date import=date$$ wasn't immediately delivered, reason: $$string import=reason$$</param>
+    <param name="reschedule_table" type="string">30s,1m,5m,15m,30m,1h,6h,12h,1d</param>
+    <param name="service_center_address" type="string">123</param>
+    <param name="service_type" type="string">SMSC</param>
+    <param name="state_machines_count" type="int">5</param>
+    <param name="systemId" type="string">smscsme</param>
+    <section name="performance">
+      <param name="host" type="string">smsc</param>
+      <param name="port" type="int">9003</param>
+    </section>
+
+  </section>
+
+  <section name="logger">
+    <param name="initFile" type="string">log4cpp.init</param>
   </section>
 
   <section name="map">
@@ -53,71 +98,28 @@
     <param name="vlr" type="string">vlr:address</param>
   </section>
 
-  <section name="smpp">
-    <param name="port" type="int">9009</param>
-    <param name="host" type="string">smsc</param>
-    <param name="readTimeout" type="int">60</param>
-    <param name="inactivityTime" type="int">600</param>
-  </section>
-
-  <section name="core">
-    <param name="state_machines_count" type="int">5</param>
-    <!-- last time will be repeated until max_valid_time -->
-    <param name="reschedule_table" type="string">30s,1m,5m,15m,30m,1h,6h,12h,1d</param>
-    <param name="receipt_delivered" type="string">Message for $$string import=dest$$ delivered at $$date import=date$$</param>
-    <param name="receipt_failed" type="string">Message for $$string import=dest$$ sent at $$date import=date$$ wasn't delivered, reason: $$string import=error$$</param>
-    <param name="receipt_notify" type="string">Message for $$string import=dest$$ sent at $$date import=date$$ wasn't immediately delivered, reason: $$string import=reason$$</param>
-    <param name="service_center_address" type="string">123</param>
-    <param name="systemId" type="string">smscsme</param>
-    <param name="service_type" type="string">SMSC</param>
-    <param name="protocol_id" type="int">34</param>
-    <section name="performance">
-      <param name="host" type="string">smsc</param>
-      <param name="port" type="int">9003</param>
-    </section>
-  </section>
-
-  <section name="abonentinfo">
-    <param name="systemId" type="string">abonentinfo</param>
-    <param name="service_type" type="string">abnfo</param>
-    <param name="protocol_id" type="int">34</param>
-    <param name="smpp_access_address" type="string">.0.1.100</param>
-    <param name="mobile_access_address" type="string">.0.1.101</param>
-  </section>
-
   <section name="profiler">
-    <param name="systemId" type="string">profiler</param>
-    <param name="service_type" type="string">prflr</param>
-    <param name="protocol_id" type="int">34</param>
-    <param name="defaultReport" type="string">NONE</param>
     <param name="defaultDataCoding" type="string">DEFAULT</param>
-    <param name="msgReportNone" type="string">Now you will receive only requested delivery reports</param>
-    <param name="msgReportFull" type="string">Now you will receive auxiliary delivery reports</param>
+    <param name="defaultReport" type="string">NONE</param>
     <param name="msgDataCodingDefault" type="string">Now you are a default language user</param>
     <param name="msgDataCodingUCS2" type="string">Now you will be able to receive ucs2-encoded messages</param>
     <param name="msgError" type="string">Unrecognized profile management command</param>
+    <param name="msgReportFull" type="string">Now you will receive auxiliary delivery reports</param>
+    <param name="msgReportNone" type="string">Now you will receive only requested delivery reports</param>
+    <param name="protocol_id" type="int">34</param>
+    <param name="service_type" type="string">prflr</param>
+    <param name="systemId" type="string">profiler</param>
   </section>
 
+  <section name="smpp">
+    <param name="host" type="string">smsc</param>
+    <param name="inactivityTime" type="int">600</param>
+    <param name="port" type="int">9009</param>
+    <param name="readTimeout" type="int">60</param>
+  </section>
 
   <section name="sms">
     <param name="max_valid_time" type="int">1209600</param>
-  </section>
-
-  <section name="StartupLoader">
-    <section name="DataSourceDrivers">
-      <section name="OCIDataSourceDriver">
-        <param name="type" type="string">OCI</param>
-        <param name="loadup" type="string">../db/oci/libdb_oci.so</param>
-      </section>
-    </section>
-  </section>
-
-  <section name="DataSource">
-    <param name="type" type="string">OCI</param>
-    <param name="connections" type="int">5</param>
-    <param name="dbInstance" type="string">DBS_ORCL</param>
-    <param name="dbUserName" type="string">smsc</param>
-    <param name="dbUserPassword" type="string">smsc</param>
   </section>
 
 </config>
