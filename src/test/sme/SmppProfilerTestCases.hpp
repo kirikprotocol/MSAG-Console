@@ -42,7 +42,8 @@ public:
 	/**
 	 * ќтветные сообщение от profiler доставл€ютс€ правильно.
 	 */
-	virtual void processSmeAcknowledgement(PduData* pduData, PduDeliverySm &pdu);
+	virtual void processSmeAcknowledgement(SmeAckMonitor* monitor,
+		PduDeliverySm &pdu);
 
 protected:
 	virtual Category& getLog();

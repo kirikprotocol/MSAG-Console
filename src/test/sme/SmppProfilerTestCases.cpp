@@ -173,10 +173,10 @@ void SmppProfilerTestCases::updateProfileIncorrect(bool sync, uint8_t dataCoding
 	}
 }
 
-void SmppProfilerTestCases::processSmeAcknowledgement(PduData* pduData,
+void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	PduDeliverySm &pdu)
 {
-	__require__(pduData);
+	__require__(monitor);
 	__decl_tc__;
 	__tc__("processUpdateProfile");
 	__cfg_addr__(profilerAlias);
@@ -195,12 +195,12 @@ void SmppProfilerTestCases::processSmeAcknowledgement(PduData* pduData,
 	SmppUtil::convert(pdu.get_message().get_dest(), &addr);
 	string text;
 	//проверка profiler reportOptions
-	if (pduData->intProps.count("reportOptions"))
+	if (monitor->pduData->intProps.count("reportOptions"))
 	{
 		__tc__("processUpdateProfile.reportOptions");
 		__cfg_str__(cmdRespReportNone);
 		__cfg_str__(cmdRespReportFull);
-		switch (pduData->intProps.find("reportOptions")->second)
+		switch (monitor->pduData->intProps.find("reportOptions")->second)
 		{
 			case ProfileReportOptions::ReportNone:
 				text = cmdRespReportNone;
@@ -213,12 +213,12 @@ void SmppProfilerTestCases::processSmeAcknowledgement(PduData* pduData,
 		}
 	}
 	//проверка profiler codePage
-	else if (pduData->intProps.count("codePage"))
+	else if (monitor->pduData->intProps.count("codePage"))
 	{
 		__tc__("processUpdateProfile.codePage");
 		__cfg_str__(cmdRespDataCodingDefault);
 		__cfg_str__(cmdRespDataCodingUcs2);
-		switch (pduData->intProps.find("codePage")->second)
+		switch (monitor->pduData->intProps.find("codePage")->second)
 		{
 			case ProfileCharsetOptions::Default:
 				text = cmdRespDataCodingDefault;
@@ -231,7 +231,7 @@ void SmppProfilerTestCases::processSmeAcknowledgement(PduData* pduData,
 		}
 	}
 	//неправильный текст команды
-	else if (pduData->intProps.count("incorrectCmdText"))
+	else if (monitor->pduData->intProps.count("incorrectCmdText"))
 	{
 		__tc__("processUpdateProfile.incorrectCmdText");
 		__cfg_str__(cmdRespInvalidCmdText);
