@@ -61,7 +61,7 @@ extern "C" {
 }
 
 #define SSN 8
-#define USSD_SSN MapDialogContainer::USSD_SSN;
+#define USSD_SSN MapDialogContainer::ussdSSN;
 #define HLR_SSN 6
 #define MAX_MT_LOCK_TIME 600
 
@@ -338,7 +338,7 @@ class MapDialogContainer{
   friend void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
   static string SC_ADRESS_VALUE;
   static string USSD_ADRESS_VALUE;
-  static ET96MAP_LOCAL_SSN_T USSD_SSN;
+  static ET96MAP_LOCAL_SSN_T ussdSSN;
   //ET96MAP_DIALOGUE_ID_T allocateDialogueId();
   void Dump() {
     if ( time(0) < last_dump_time+60 ) return;
@@ -374,8 +374,8 @@ public:
   static void SetSCAdress(const string& scAddr) { SC_ADRESS_VALUE = scAddr; }
   static string GetUSSDAdress() { return USSD_ADRESS_VALUE; }
   static void SetUSSDAdress(const string& scAddr) { USSD_ADRESS_VALUE = scAddr; }
-  static ET96MAP_LOCAL_SSN_T GetUSSDSSN() { return USSD_SSN; }
-  static void SetUSSDSSN(int ssn) { USSD_SSN = (ET96MAP_LOCAL_SSN_T)ssn; }
+  static ET96MAP_LOCAL_SSN_T GetUSSDSSN() { return ussdSSN; }
+  static void SetUSSDSSN(int ssn) { ussdSSN = (ET96MAP_LOCAL_SSN_T)ssn; }
   static void dropInstance()
   {
     MutexGuard g(sync_object);
