@@ -99,10 +99,11 @@ void ThreadPool::shutdown()
   for(int i=0;i<usedThreads.Count();i++)
   {
     usedThreads[i]->stopTask();
-    usedThreads[i]->Kill(16);
   }
   trace("all tasks are notified");
   Unlock();
+  timestruc_t tv={0,1000000};
+  nanosleep(&tv,0);
   time_t sdstart=time(NULL);
   for(;;)
   {
@@ -121,7 +122,7 @@ void ThreadPool::shutdown()
     }
     Unlock();
     if(time(NULL)-sdstart>60)abort();
-    Wait();
+    Wait(2000);
   }
   Lock();
   for(int i=0;i<freeThreads.Count();i++)
