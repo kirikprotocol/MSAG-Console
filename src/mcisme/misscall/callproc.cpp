@@ -580,10 +580,10 @@ USHORT_T releaseConnection(EINSS7_I97_ISUPHEAD_T *isupHead_sp, UCHAR_T causeValu
   smsc_log_debug(missedCallProcessorLogger,"IsupReleaseReq %s",getHeadDescription(isupHead_sp).c_str());
   res = EINSS7_I97IsupReleaseReq(isupHead_sp, /*to do может ли он быть нулевой*/
                                   &cause,
-                                  0, /* autoCongestLevel_p */
-                                  &redirectionNumber,
-                                  &redirectionInfo,
-                                  0  /* extraOpts_sp */
+                                  0, /* autoCongestLevel_p  */
+                                  0, /* &redirectionNumber, */
+                                  0, /* &redirectionInfo,   */
+                                  0  /* extraOpts_sp        */
                                  );
   delete addr;
   if (res != 0)
