@@ -224,14 +224,14 @@ void MapIoTask::dispatcher()
         }
       }
       //
-      const int destAddrPos = 5;
-      const int destRefPos = message.msg_p[destAddrPos]+1;
+      const int destAddrPos = 6;
+      const int destRefPos = destAddrPos+message.msg_p[destAddrPos]+1;
       __map_trace2__("destRefPos = %d", destRefPos);
-      const int orgAddrPos = message.msg_p[destRefPos]+1;
+      const int orgAddrPos = destRefPos+(message.msg_p[destRefPos]+1)/2+1;
       __map_trace2__("orgAddrPos = %d", orgAddrPos);
-      const int orgRefPos = message.msg_p[orgAddrPos]+1;
+      const int orgRefPos = orgAddrPos+message.msg_p[orgAddrPos]+1;
       __map_trace2__("orgRefPos = %d", orgRefPos);
-      const int specificInfoLenPos = message.msg_p[orgRefPos]+1;
+      const int specificInfoLenPos = orgRefPos+(message.msg_p[orgRefPos]+1)/2+1+1;
       __map_trace2__("specificInfoLenPos = %d", specificInfoLenPos);
       ET96MAP_USERDATA_T specificInfo;
       specificInfo.specificInfoLen = ((USHORT_T)message.msg_p[specificInfoLenPos])|(((USHORT_T)message.msg_p[specificInfoLenPos+1])<<8);
@@ -239,10 +239,11 @@ void MapIoTask::dispatcher()
       if( specificInfo.specificInfoLen > 0 ) {
         memcpy(specificInfo.specificData, message.msg_p+specificInfoLenPos+2, specificInfo.specificInfoLen );
       }
+      const int ctx[2] = {(int)message.msg_p[4],(int)message.msg_p[5]};
       map_result = Et96MapOpenInd( 
         (ET96MAP_LOCAL_SSN_T)message.msg_p[1], // SSN
         ((ET96MAP_DIALOGUE_ID_T)message.msg_p[2])|(((ET96MAP_DIALOGUE_ID_T)message.msg_p[3])<<8), // Dialogue ID
-        (ET96MAP_APP_CNTX_T*)(message.msg_p+4), // AC version
+        (ET96MAP_APP_CNTX_T*)ctx, // AC version
         (message.msg_p[destAddrPos]>0)?(ET96MAP_SS7_ADDR_T*)(message.msg_p+destAddrPos):0, // dest ss7 addr
         (message.msg_p[orgAddrPos]>0)?(ET96MAP_SS7_ADDR_T*)(message.msg_p+orgAddrPos):0, // org ss7 addr
         (message.msg_p[destRefPos]>0)?(ET96MAP_IMSI_T*)(message.msg_p+destRefPos):0, // dest ref
