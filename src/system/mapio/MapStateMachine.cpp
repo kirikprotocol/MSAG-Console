@@ -3120,7 +3120,7 @@ USHORT_T Et96MapV2UnstructuredSSRequestConf(
 
     UCHAR_T udhPresent, msgClassMean, msgClass;
     if( ussdDataCodingScheme_p && ussdString_sp ) {
-      sms.setIntProperty(Tag::SMSC_ORIGINAL_DC, *ussdDataCodingScheme );
+      sms.setIntProperty(Tag::SMSC_ORIGINAL_DC, *ussdDataCodingScheme_p );
       unsigned dataCoding = (unsigned)convertCBSDatacoding2SMSC(*ussdDataCodingScheme_p, &udhPresent, &msgClassMean, &msgClass);
       if( dataCoding == smsc::smpp::DataCoding::SMSC7BIT )
       {
