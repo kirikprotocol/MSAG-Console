@@ -203,7 +203,11 @@ Archiver::~Archiver()
     if (storageSelectStmt) delete storageSelectStmt;
     if (storageDeleteStmt) delete storageDeleteStmt;
     if (archiveInsertStmt) delete archiveInsertStmt;
+    
     if (billingInsertStmt) delete billingInsertStmt;
+    if (billingCleanIdsStmt) delete billingCleanIdsStmt;
+    if (billingLookIdStmt) delete billingLookIdStmt;
+    if (billingPutIdStmt) delete billingPutIdStmt;
     
     if (storageConnection) delete storageConnection;
     if (billingConnection) delete billingConnection;
