@@ -108,7 +108,7 @@ public class SmsView
         SmsRow row = set.getRow(i);
         if (row != null) {
           output.addElement(new CancelMessageData(
-                  row.getIdString(), row.getFrom(), row.getTo()));
+                  row.getIdString(), row.getOriginatingAddress(), row.getDestinationAddress()));
           deleted++;
         }
       }
@@ -170,7 +170,13 @@ public class SmsView
 
     private String prepareQueryString(SmsQuery query)
     {
-      String sql = "SELECT ID, SUBMIT_TIME, OA, DA, DDA, ST, LAST_RESULT, BODY_LEN, BODY FROM ";
+      String sql =
+              "SELECT ID, ST, SUBMIT_TIME, VALID_TIME, ATTEMPTS, LAST_RESULT, "+
+              "LAST_TRY_TIME, NEXT_TRY_TIME, OA, DA, DDA, MR, SVC_TYPE, "+
+              "DR, BR, SRC_MSC, SRC_IMSI, SRC_SME_N, DST_MSC, DST_IMSI, DST_SME_N, "+
+              "ROUTE_ID, SVC_ID, PRTY, SRC_SME_ID, DST_SME_ID, "+
+              "BODY_LEN, BODY FROM ";
+
       sql += (query.getStorageType() == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) ?
                   "SMS_MSG":"SMS_ARC";
       sql += prepareWhereClause(query);
@@ -214,31 +220,60 @@ public class SmsView
         int fetchedCount = 0;
         while (rs.next() && rowsMaximum > fetchedCount++)
         {
+          System.out.println("SMSVIEW: got row");
           SmsRow row = new SmsRow();
           int pos=1;
           byte id[] = rs.getBytes(pos++);
           row.setId(id);
-          GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
-          row.setDate(rs.getTimestamp(pos++, cal));
-          row.setFrom(rs.getString(pos++));
-          row.setTo(rs.getString(pos++));
-          row.setToDealiased(rs.getString(pos++));
           row.setStatus(rs.getInt(pos++));
+          //row.setSubmitTime(DateConvertor.convertGMTToLocal(rs.getTimestamp(pos++)));
+          GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
+          row.setSubmitTime(rs.getTimestamp(pos++, cal));
+          row.setValidTime(rs.getTimestamp(pos++, cal));
+          row.setAttempts(rs.getInt(pos++));
           row.setLastResult(rs.getInt(pos++));
+          row.setLastTryTime(rs.getTimestamp(pos++, cal));
+          row.setNextTryTime(rs.getTimestamp(pos++, cal));
+          row.setOriginatingAddress(rs.getString(pos++));
+          row.setDestinationAddress(rs.getString(pos++));
+          row.setDealiasedDestinationAddress(rs.getString(pos++));
+          row.setMessageReference(rs.getInt(pos++));
+          row.setServiceType(rs.getString(pos++));
+          row.setDeliveryReport(rs.getShort(pos++));
+          row.setBillingRecord(rs.getShort(pos++));
+          SmsDescriptor origDescr = new SmsDescriptor(
+                  rs.getString(pos++),
+                  rs.getString(pos++),
+                  rs.getInt(pos++)
+          );
+          row.setOriginatingDescriptor(origDescr);
+          SmsDescriptor destDescr = new SmsDescriptor(
+                  rs.getString(pos++),
+                  rs.getString(pos++),
+                  rs.getInt(pos++)
+          );
+          row.setDestinationDescriptor(destDescr);
+          row.setRouteId(rs.getString(pos++));
+          row.setServiceId(rs.getInt(pos++));
+          row.setPriority(rs.getInt(pos++));
+          row.setSrcSmeId(rs.getString(pos++));
+          row.setDstSmeId(rs.getString(pos++));
           int bodyLen = rs.getInt(pos++);
-
-          if (bodyLen <= 0) { row.setText("<< No message >>"); }
+          if (bodyLen <= 0) {
+            row.setText("<< No message >>");
+          }
           else if (bodyLen <= MAX_SMS_BODY_LENGTH) {
             byte body[] = rs.getBytes(pos);
             if (body == null || body.length == 0) row.setText("<< No message (body null) >>");
             else row.setText(convertBody(new ByteArrayInputStream(body, 0, bodyLen)));
-          } else {
-            PreparedStatement lbstmt = null;
+          }
+          else {
             ResultSet lbrs = null;
+            PreparedStatement lbstmt = null;
             try {
-              lbstmt = stmt.getConnection().prepareStatement(selectLargeBody);
               lbstmt.setBytes(1, id);
-              lbrs = lbstmt.executeQuery(); lbrs.next();
+              lbrs = lbstmt.executeQuery();
+              lbrs.next();
               Blob blob = lbrs.getBlob(1);
               row.setText("BLOB >> " +convertBody(blob.getBinaryStream()));
             } catch (Exception exc) {
@@ -256,8 +291,8 @@ public class SmsView
         exc.printStackTrace();
         throw new SQLException(exc.getMessage());
       } finally {
-          try { if (rs != null) rs.close(); }
-          catch (Exception cexc) { cexc.printStackTrace(); }
+        try { if (rs != null) rs.close(); }
+        catch (Exception cexc) { cexc.printStackTrace(); }
       }
     }
 
