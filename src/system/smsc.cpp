@@ -54,14 +54,24 @@ Smsc::~Smsc()
 
 class SpeedMonitor:public smsc::core::threads::ThreadedTask{
 public:
-  SpeedMonitor(EventQueue& eq,performance::PerformanceListener* pl,Smsc* smsc):
-    queue(eq),perfListener(pl),smsc(smsc)
+  SpeedMonitor(EventQueue& eq,performance::PerformanceListener* pl,Smsc* psmsc):
+    queue(eq),perfListener(pl)
   {
     start.tv_sec=0;
     start.tv_nsec=0;
+    smsc=psmsc;
   }
   int Execute()
   {
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set,17);
+    if(thr_sigsetmask(SIG_UNBLOCK,&set,NULL)!=0)
+    {
+      __warning__("Faield to update signal mask");
+    }
+    sigset(17,sigDispatcher);
+
     uint64_t cnt,last=0;
     timespec now,lasttime;
     double ut,tm,rate,avg;
@@ -187,8 +197,14 @@ protected:
   time_t times[60];
   timespec start;
   performance::PerformanceListener* perfListener;
-  Smsc* smsc;
+  static Smsc* smsc;
+  static void sigDispatcher(int sig)
+  {
+    smsc->abortSmsc();
+  }
 };
+
+Smsc* SpeedMonitor::smsc=NULL;
 
 extern void loadRoutes(RouteManager* rm,smsc::util::config::route::RouteConfig& rc);
 
@@ -365,7 +381,7 @@ void Smsc::init(const SmscConfigs& cfg)
         &deliverErrCounter,
         &rescheduleCounter
       );
-      sm->setStartTime(ut);
+      sm->setStartTime(time(NULL)+ut);
       fclose(f);
       remove("stats.txt");
     }
