@@ -198,7 +198,7 @@ public class SmsView
     sql += (query.getStorageType() == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) ?
                 "SMS_MSG":"SMS_ARC";
     sql += prepareWhereClause(query);
-    sql += prepareOrderClause(query);
+//    sql += prepareOrderClause(query);
     return sql;
   }
   /*private String prepareDeleteString(SmsQuery query)
@@ -227,6 +227,7 @@ public class SmsView
     if (query.getTillDateEnabled()) where += " AND SUBMIT_TIME <=?";
     return where;
   }
+/*
   private String prepareOrderClause(SmsQuery query)
   {
     String order = query.getSortBy();
@@ -239,6 +240,7 @@ public class SmsView
     else return "";
     return " ORDER BY "+order;
   }
+*/
   private String convertBody(InputStream source)
   {
     String  message = "";

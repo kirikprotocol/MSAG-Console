@@ -83,6 +83,21 @@ function validateField_route_serviceId(elem)
 		: true;
 }
 
+function validateField_nonEmpty(elem)
+{
+	return elem.value == null || elem.value.length == 0
+		? validationError(elem, "Must be not empty")
+		: true;
+}
+
+function validateField_email(elem)
+{
+	var r = RegExp("(^).*\@.*\..*$");
+	return elem.value == null || elem.value.match(r) == null
+		? validationError(elem, "Invalid mask")
+		: true;
+}
+
 
 function validateField(elem)
 {
@@ -93,6 +108,8 @@ function validateField(elem)
 		case "select":return validateField_select(elem);
 		case "priority":return validateField_priority(elem);
 		case "route_serviceId": return validateField_route_serviceId(elem);
+		case "nonEmpty": return validateField_nonEmpty(elem);
+		case "email": return validateField_email(elem);
 	}
 	alert("unknown validation type:"+elem.validation);
 	return false;

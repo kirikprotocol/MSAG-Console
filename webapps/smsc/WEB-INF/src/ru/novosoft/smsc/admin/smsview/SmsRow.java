@@ -44,10 +44,14 @@ public class SmsRow
   public void setFrom(String address) { from = address; }
   public String getTo(){ return to; };
   public void setTo(String address) { to = address; }
-  public String getDate() {
+  public String getDateString() {
     SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
     return formatter.format(date);
   }
+	public Date getDate()
+	{
+		return date;
+	}
   public void setDate(Date date){ this.date = date; }
   public String getStatus(){
     return (status >= 0 && status < numStates) ? states[status]:"UNKNOUN";

@@ -407,20 +407,29 @@ div.p
 	padding:0px;
 	text-align:left;
 }
-.secRep tbody tr.row0
+.secRep tbody tr.row0,
+.secRep tbody tr.row00,
+.secRep tbody tr.row01
 {
 	background-color: #FFFFFF;
 }
-.secRep tbody tr.row1
+.secRep tbody tr.row1,
+.secRep tbody tr.row10,
+.secRep tbody tr.row11
 {
 	background-color: #F8F8F8;
 }
 .secRep tbody tr.row0 th,
+.secRep tbody tr.row00 th,
 .secRep tbody tr.row1 th,
+.secRep tbody tr.row10 th,
 .secRep tbody tr.row0 td,
-.secRep tbody tr.row1 td
+.secRep tbody tr.row00 td,
+.secRep tbody tr.row1 td,
+.secRep tbody tr.row10 td
 {
 	border-top:solid 1px #DBD8D1;
+	
 }
 
 .secRep tbody th
@@ -474,7 +483,9 @@ td a.btnA:hover
 	padding:0px;
 	margin:0px;
 }
-.frm0 tbody tr.row0
+.frm0 tbody tr.row0,
+.frm0 tbody tr.row00,
+.frm0 tbody tr.row01
 {
 	background-color: #DBD8D1;
 }
@@ -502,6 +513,7 @@ td a.btnA:hover
 	background-color: #DBD8D1;
 	border-bottom:solid 1px #888888;
 	white-space: nowrap;
+	z-index: 1;
 }
 .secButtons input
 {

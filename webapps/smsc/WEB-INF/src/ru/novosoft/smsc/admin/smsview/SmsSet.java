@@ -9,8 +9,7 @@ package ru.novosoft.smsc.admin.smsview;
  * @version 1.0
  */
 
-import java.util.Vector;
-import java.util.Enumeration;
+import java.util.*;
 
 import ru.novosoft.smsc.admin.smsview.SmsRow;
 
@@ -35,4 +34,9 @@ public class SmsSet
   public void clean() {
     rows.removeAllElements();
   }
+
+	public List getRowsList()
+	{
+		return rows;
+	}
 }

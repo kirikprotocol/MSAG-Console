@@ -8,10 +8,12 @@ package ru.novosoft.smsc.util.auth;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 import ru.novosoft.smsc.util.xml.Utils;
 
-import java.io.File;
-import java.io.FileInputStream;
+import javax.xml.parsers.FactoryConfigurationError;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -47,24 +49,35 @@ public class XmlAuthenticator implements Authenticator
 	private synchronized void initialize(File config)
 			  throws Exception
 	{
-		Document document = Utils.parse(new FileInputStream(config));
-		NodeList usersNodeList = document.getElementsByTagName("user");
-		users = new HashMap();
-		for (int i = 0; i < usersNodeList.getLength(); i++)
+		try
 		{
-			Element userElem = (Element) usersNodeList.item(i);
-			String name = userElem.getAttribute("name");
-			String password = userElem.getAttribute("password");
-			NodeList rolesNodeList = userElem.getElementsByTagName("role");
-			Set roles = new HashSet();
-			for (int j = 0; j < rolesNodeList.getLength(); j++)
+			System.err.println("XmlAuthenticator.initialize. File \"" + config.getAbsolutePath() + '"');
+			Document document = Utils.parse(new FileInputStream(config));
+			NodeList usersNodeList = document.getElementsByTagName("user");
+			users = new HashMap();
+			for (int i = 0; i < usersNodeList.getLength(); i++)
 			{
-				Element roleElem = (Element) rolesNodeList.item(j);
-				roles.add(roleElem.getAttribute("name"));
+				Element userElem = (Element) usersNodeList.item(i);
+				String name = userElem.getAttribute("login");
+				String password = userElem.getAttribute("password");
+				NodeList rolesNodeList = userElem.getElementsByTagName("role");
+				Set roles = new HashSet();
+				for (int j = 0; j < rolesNodeList.getLength(); j++)
+				{
+					Element roleElem = (Element) rolesNodeList.item(j);
+					roles.add(roleElem.getAttribute("name"));
+				}
+				users.put(name, new SmscPrincipal(name, password, roles));
 			}
-			users.put(name, new SmscPrincipal(name, password, roles));
+			AuthenticatorProxy.getInstance().registerAuthenticator("SMSC.SmscRealm", this);
+			System.err.println("XmlAuthenticator.initialize success with " + users.values().size() + " users.");
 		}
-		AuthenticatorProxy.getInstance().registerAuthenticator("SMSC.SmscRealm", this);
+		catch (Exception e)
+		{
+			System.err.println("XmlAuthenticator.initialize FAILED. Nested : " + e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
 	}
 
 	public synchronized Principal authenticate(String login, String password)
@@ -76,9 +89,20 @@ public class XmlAuthenticator implements Authenticator
 		}
 
 		SmscPrincipal principal = (SmscPrincipal) users.get(login);
-		return principal != null && principal.getPassword().equals(password)
-				  ? principal
-				  : null;
+		if (principal != null && principal.getPassword().equals(password))
+		{
+			System.out.println("XmlAuthenticator.authenticate(\"" + login + "\", \"" + password + "\") Success.");
+			return principal;
+		}
+		else
+		{
+			if (principal == null)
+				System.out.println("XmlAuthenticator.authenticate(\"" + login + "\", \"" + password + "\") FAILED - User not found.");
+			else
+				System.out.println("XmlAuthenticator.authenticate(\"" + login + "\", \"" + password + "\") FAILED - Incorrect password.");
+
+			return null;
+		}
 	}
 
 	public synchronized boolean hasRole(Principal principal, String role)

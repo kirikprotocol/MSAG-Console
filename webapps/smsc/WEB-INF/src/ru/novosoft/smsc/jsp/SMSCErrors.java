@@ -87,6 +87,15 @@ public class SMSCErrors
 			public static final String nameNotSpecified = B + "nameNotSpecified";
 			public static final String invalidPriority = B + "invalidPriority";
 		}
+		public static class users
+		{
+			private static final String B = error.B + "users.";
+			public static final String userNotFound = B + "userNotFound";
+			public static final String userAlreadyExists = B + "userAlreadyExists";
+			public static final String couldntApply = B + "couldntApply";
+			public static final String passwordNotDefined = B + "passwordNotDefined";
+			public static final String passwordNotConfirmed = B + "passwordNotConfirmed";
+		}
 	}
 
 	public static class warning

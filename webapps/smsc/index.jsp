@@ -68,6 +68,11 @@ MENU0_SELECTION = "MENU0_HOME";
 	<td><%=bean.isServicesChanged() ? "<span class=Cf00>changed</span>" : "clear"%></td>
 	<td><input class=btn type=submit name=mbServicesApply value="Apply" <%=!bean.isServicesChanged() ? "disabled" : ""%>></td>
 </tr>
+<tr class=row<%=(rowN++)&1%>>
+	<th>Users</th>
+	<td><%=bean.isUsersChanged() ? "<span class=Cf00>changed</span>" : "clear"%></td>
+	<td><input class=btn type=submit name=mbUsersApply value="Apply" <%=!bean.isUsersChanged() ? "disabled" : ""%>></td>
+</tr>
 </tbody>
 </table>
 <%}%>

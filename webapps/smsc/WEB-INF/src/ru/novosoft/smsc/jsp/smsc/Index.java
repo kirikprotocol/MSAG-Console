@@ -28,6 +28,8 @@ public class Index extends SmscBean
 	protected String mbHostsReset = null;
 	protected String mbServicesApply = null;
 	protected String mbServicesReset = null;
+	protected String mbUsersApply = null;
+	protected String mbUsersReset = null;
 
 	protected int init(List errors)
 	{
@@ -57,6 +59,8 @@ public class Index extends SmscBean
 			return applyHosts();
 		else if (mbServicesApply != null)
 			return applyServices();
+		else if (mbUsersApply != null)
+			return applyUsers();
 		else
 			return RESULT_OK;
 	}
@@ -102,6 +106,21 @@ public class Index extends SmscBean
 	private int applyServices()
 	{
 		return routesSubjectsServices();
+	}
+
+	private int applyUsers()
+	{
+		try
+		{
+			appContext.getUserManager().apply();
+			statuses.setUsersChanged(false);
+			return RESULT_OK;
+		}
+		catch (Exception e)
+		{
+			logger.error("Couldn't apply users", e);
+			return error(SMSCErrors.error.users.couldntApply, e);
+		}
 	}
 
 	private int routesSubjectsServices()
@@ -155,6 +174,10 @@ public class Index extends SmscBean
 		return statuses.isServicesChanged();
 	}
 
+	public boolean isUsersChanged()
+	{
+		return statuses.isUsersChanged();
+	}
 
 	public String getMbRoutesApply()
 	{
@@ -274,5 +297,25 @@ public class Index extends SmscBean
 	public void setMbServicesReset(String mbServicesReset)
 	{
 		this.mbServicesReset = mbServicesReset;
+	}
+
+	public String getMbUsersApply()
+	{
+		return mbUsersApply;
+	}
+
+	public void setMbUsersApply(String mbUsersApply)
+	{
+		this.mbUsersApply = mbUsersApply;
+	}
+
+	public String getMbUsersReset()
+	{
+		return mbUsersReset;
+	}
+
+	public void setMbUsersReset(String mbUsersReset)
+	{
+		this.mbUsersReset = mbUsersReset;
 	}
 }

@@ -13,6 +13,7 @@ public class StatusesImpl implements Statuses
 	private boolean profilesChanged = false;
 	private boolean hostsChanged = false;
 	private boolean servicesChanged = false;
+	private boolean usersChanged = false;
 
 	public boolean isRoutesChanged()
 	{
@@ -72,5 +73,15 @@ public class StatusesImpl implements Statuses
 	public void setServicesChanged(boolean servicesChanged)
 	{
 		this.servicesChanged = servicesChanged;
+	}
+
+	public boolean isUsersChanged()
+	{
+		return usersChanged;
+	}
+
+	public void setUsersChanged(boolean usersChanged)
+	{
+		this.usersChanged = usersChanged;
 	}
 }

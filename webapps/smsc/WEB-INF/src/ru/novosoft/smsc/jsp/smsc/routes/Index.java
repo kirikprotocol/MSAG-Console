@@ -67,7 +67,7 @@ public class Index extends IndexBean
 				return result;
 		}
 
-		logger.debug("Aliases.Index - process with sorting [" + (String) preferences.getAliasesSortOrder().get(0) + "]");
+		logger.debug("Routes.Index - process with sorting [" + (String) preferences.getRoutesSortOrder().get(0) + "]");
 		routes = smsc.getRoutes().query(new RouteQuery(pageSize, preferences.getRoutesFilter(), preferences.getRoutesSortOrder(), startPosition));
 		totalSize = routes.getTotalSize();
 

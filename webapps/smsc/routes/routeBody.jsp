@@ -14,7 +14,7 @@
 </tr>
 <tr class=row<%=(rowN++)&1%>>
 	<th class=label><br></th>
-	<td colspan=2><input id=permissible class=check type=checkbox name=permissible <%=bean.isPermissible() ? "checked" : ""%>>&nbsp;<label for=permissible>is premissible</label></td>
+	<td colspan=2><input id=permissible class=check type=checkbox name=permissible <%=bean.isPermissible() ? "checked" : ""%>>&nbsp;<label for=permissible>allowed</label></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
 	<th class=label><br></th>

@@ -4,20 +4,16 @@ import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
+import ru.novosoft.smsc.admin.users.UserManager;
+import ru.novosoft.smsc.util.auth.XmlAuthenticator;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.config.ConfigManager;
-import ru.novosoft.smsc.util.auth.XmlAuthenticator;
 import ru.novosoft.util.conpool.NSConnectionPool;
 import ru.novosoft.util.jsp.AppContextImpl;
 
 import javax.sql.DataSource;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.Properties;
 import java.io.File;
-
-import org.apache.catalina.HttpRequest;
+import java.util.Properties;
 
 
 public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
@@ -25,6 +21,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 	private ConfigManager configManager = null;
 	private ServiceManager serviceManager = null;
 	private DaemonManager daemonManager = null;
+	private UserManager userManager = null;
 
 	private Smsc smsc = null;
 	private NSConnectionPool connectionPool = null;
@@ -50,7 +47,8 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 			serviceManager = ServiceManager.getInstance();
 			daemonManager = serviceManager.getDaemonManager();
 			System.out.println("SMSCAppContextImpl.SMSCAppContextImpl **************************************************");
-			XmlAuthenticator.init(new File(new File(configManager.getConfig().getString("system.webapp folder"), "WEB-INF"), configManager.getConfig().getString("system.users")));
+			File usersConfig = new File(new File(configManager.getConfig().getString("system.webapp folder"), "WEB-INF"), configManager.getConfig().getString("system.users"));
+			userManager = new UserManager(usersConfig);
 		}
 		catch (Exception e)
 		{
@@ -92,6 +90,11 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 	public Statuses getStatuses()
 	{
 		return statuses;
+	}
+
+	public UserManager getUserManager()
+	{
+		return userManager;
 	}
 }
 

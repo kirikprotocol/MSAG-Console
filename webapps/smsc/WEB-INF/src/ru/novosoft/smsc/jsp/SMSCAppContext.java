@@ -9,6 +9,7 @@ import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
+import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.util.jsp.AppContext;
 
@@ -22,6 +23,8 @@ public interface SMSCAppContext extends AppContext
 	public ServiceManager getServiceManager();
 
 	public DaemonManager getDaemonManager();
+
+	public UserManager getUserManager();
 
 	public Smsc getSmsc();
 

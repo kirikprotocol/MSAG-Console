@@ -5,10 +5,7 @@
  */
 package ru.novosoft.smsc.admin.preferences;
 
-import ru.novosoft.smsc.jsp.util.tables.impl.AliasFilter;
-import ru.novosoft.smsc.jsp.util.tables.impl.ProfileFilter;
-import ru.novosoft.smsc.jsp.util.tables.impl.RouteFilter;
-import ru.novosoft.smsc.jsp.util.tables.impl.SubjectFilter;
+import ru.novosoft.smsc.jsp.util.tables.impl.*;
 
 import java.util.Vector;
 
@@ -26,11 +23,19 @@ public class UserPreferences
 	private SubjectFilter subjectsFilter = new SubjectFilter();
 	private Vector subjectsSortOrder = new Vector();
 
+	private int usersPageSize = 20;
+	private UserFilter userFilter = new UserFilter();
+	private Vector usersSortOrder = new Vector();
+
 	private int routesPageSize = 20;
 	private RouteFilter routesFilter = new RouteFilter();
 	private Vector routesSortOrder = new Vector();
 	private boolean routeShowSrc = false;
 	private boolean routeShowDst = false;
+
+	private int smsviewPageSize = 20;
+	private int smsviewMaxResults = 500;
+	private String smsviewSortOrder = "date";
 
 	public UserPreferences()
 	{
@@ -38,6 +43,7 @@ public class UserPreferences
 		this.aliasesSortOrder.add("Alias");
 		this.subjectsSortOrder.add("Name");
 		this.routesSortOrder.add("Route ID");
+		this.usersSortOrder.add("login");
 	}
 
 	public int getProfilesPageSize()
@@ -118,5 +124,50 @@ public class UserPreferences
 	public void setRouteShowDst(boolean routeShowDst)
 	{
 		this.routeShowDst = routeShowDst;
+	}
+
+	public int getUsersPageSize()
+	{
+		return usersPageSize;
+	}
+
+	public UserFilter getUserFilter()
+	{
+		return userFilter;
+	}
+
+	public Vector getUsersSortOrder()
+	{
+		return usersSortOrder;
+	}
+
+	public int getSmsviewPageSize()
+	{
+		return smsviewPageSize;
+	}
+
+	public void setSmsviewPageSize(int smsviewPageSize)
+	{
+		this.smsviewPageSize = smsviewPageSize;
+	}
+
+	public int getSmsviewMaxResults()
+	{
+		return smsviewMaxResults;
+	}
+
+	public void setSmsviewMaxResults(int smsviewMaxResults)
+	{
+		this.smsviewMaxResults = smsviewMaxResults;
+	}
+
+	public String getSmsviewSortOrder()
+	{
+		return smsviewSortOrder;
+	}
+
+	public void setSmsviewSortOrder(String smsviewSortOrder)
+	{
+		this.smsviewSortOrder = smsviewSortOrder;
 	}
 }

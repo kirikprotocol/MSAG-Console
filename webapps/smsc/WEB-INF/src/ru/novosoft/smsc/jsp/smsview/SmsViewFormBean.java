@@ -6,8 +6,7 @@ import ru.novosoft.smsc.jsp.smsc.IndexBean;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class SmsViewFormBean extends IndexBean
 {
@@ -26,6 +25,7 @@ public class SmsViewFormBean extends IndexBean
 	private String mbDelete = null;
 	private String mbQuery = null;
 	private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
+	private String oldSort = null;
 
 	protected int init(List errors)
 	{
@@ -58,7 +58,7 @@ public class SmsViewFormBean extends IndexBean
 		else if (mbQuery != null)
 			result = processQuery();
 		else
-			result = processResortAndNavigate();
+			result = processResortAndNavigate(false);
 
 		mbDelete = null;
 		mbQuery = null;
@@ -66,9 +66,41 @@ public class SmsViewFormBean extends IndexBean
 		return result;
 	}
 
-	private int processResortAndNavigate()
+	private int processResortAndNavigate(boolean force)
 	{
-		return 0;
+		if (force || (sort != null && sort.length() > 0 && !sort.equals(oldSort)))
+		{
+			final boolean isNegativeSort = sort.startsWith("-");
+			final String sortField = isNegativeSort ? sort.substring(1) : sort;
+
+			if (rows != null && rows.getRowsList() != null)
+			{
+				Collections.sort(rows.getRowsList(), new Comparator()
+				{
+					public int compare(Object o1, Object o2)
+					{
+						int result = 0;
+						SmsRow r1 = (SmsRow) o1;
+						SmsRow r2 = (SmsRow) o2;
+						if (sortField.equalsIgnoreCase("name"))
+							result = r1.getIdString().compareTo(r2.getIdString());
+						if (sortField.equalsIgnoreCase("date"))
+							result = r1.getDate().compareTo(r2.getDate());
+						if (sortField.equalsIgnoreCase("from"))
+							result = r1.getFrom().compareTo(r2.getFrom());
+						if (sortField.equalsIgnoreCase("to"))
+							result = r1.getTo().compareTo(r2.getTo());
+						if (sortField.equalsIgnoreCase("status"))
+							result = r1.getStatus().compareTo(r2.getStatus());
+
+						return isNegativeSort ? -result : result;
+					}
+				});
+			}
+			oldSort = sort;
+			startPosition = 0;
+		}
+		return RESULT_OK;
 	}
 
 	public int processQuery()
@@ -76,6 +108,7 @@ public class SmsViewFormBean extends IndexBean
 		rows = view.getSmsSet(query);
 		startPosition = 0;
 		totalSize = rows.getRowsCount();
+		processResortAndNavigate(true);
 		return RESULT_OK;
 	}
 
@@ -97,12 +130,12 @@ public class SmsViewFormBean extends IndexBean
 	/********************************* query delegeates *********************************/
 	public void setSort(String by)
 	{
-		query.setSortBy(by);
+		sort = by;
 	}
 
 	public String getSort()
 	{
-		return query.getSortBy();
+		return sort;
 	}
 
 	public int getStorageType()
@@ -185,63 +218,69 @@ public class SmsViewFormBean extends IndexBean
 		query.setSmsId(id);
 	}
 
-	public void setFromDateEnabled(boolean enabled)
-	{
-		query.setFromDateEnabled(enabled);
-	}
-
-	public boolean getFromDateEnabled()
-	{
-		return query.getFromDateEnabled();
-	}
-
 	public String getFromDate()
 	{
-		SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
-		return formatter.format(query.getFromDate());
+		if (query.getFromDateEnabled())
+		{
+			SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
+			return formatter.format(query.getFromDate());
+		}
+		else
+		{
+			return "";
+		}
 	}
 
 	public void setFromDate(String dateString)
 	{
-		try
+		System.out.println("BLYA!  setFromDate:  dateString = " + dateString);
+		final boolean dateEnabled = dateString != null && dateString.trim().length() > 0;
+		query.setFromDateEnabled(dateEnabled);
+		if (dateEnabled)
 		{
-			SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
-			query.setFromDate(formatter.parse(dateString));
+			try
+			{
+				SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
+				query.setFromDate(formatter.parse(dateString));
+			}
+			catch (ParseException e)
+			{
+				query.setFromDate(new Date());
+				e.printStackTrace();
+			}
 		}
-		catch (ParseException e)
-		{
-			query.setFromDate(new Date());
-			e.printStackTrace();
-		}
-	}
-
-	public void setTillDateEnabled(boolean enabled)
-	{
-		query.setTillDateEnabled(enabled);
-	}
-
-	public boolean getTillDateEnabled()
-	{
-		return query.getTillDateEnabled();
 	}
 
 	public String getTillDate()
 	{
-		SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
-		return formatter.format(query.getTillDate());
+		if (query.getTillDateEnabled())
+		{
+			SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
+			return formatter.format(query.getTillDate());
+		}
+		else
+		{
+			return "";
+		}
 	}
 
 	public void setTillDate(String dateString)
 	{
-		try
+		System.out.println("BLYA!  setTillDate:  dateString = " + dateString);
+		final boolean dateEnabled = dateString != null && dateString.trim().length() > 0;
+		query.setTillDateEnabled(dateEnabled);
+		if (dateEnabled)
 		{
-			SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
-			query.setTillDate(formatter.parse(dateString));
-		}
-		catch (ParseException e)
-		{
-			query.setTillDate(new Date());
-			e.printStackTrace();
+			try
+			{
+				SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
+				query.setTillDate(formatter.parse(dateString));
+			}
+			catch (ParseException e)
+			{
+				query.setTillDate(new Date());
+				e.printStackTrace();
+			}
 		}
 	}
 

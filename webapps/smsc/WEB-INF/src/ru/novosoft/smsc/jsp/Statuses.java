@@ -30,4 +30,8 @@ public interface Statuses
 	boolean isServicesChanged();
 
 	void setServicesChanged(boolean servicesChanged);
+
+	boolean isUsersChanged();
+
+	void setUsersChanged(boolean usersChanged);
 }

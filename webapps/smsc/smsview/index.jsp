@@ -3,8 +3,8 @@
 <%@ page import="ru.novosoft.smsc.jsp.smsview.*"%>
 <jsp:useBean id="bean" scope="session" class="ru.novosoft.smsc.jsp.smsview.SmsViewFormBean" />
 <%
-bean.setTillDateEnabled(false);
-bean.setFromDateEnabled(false);
+bean.setFromDate(null);
+bean.setTillDate(null);
 %>
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -17,6 +17,7 @@ switch(beanResult = bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.ge
 	case SmsViewFormBean.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
+	case SmsViewFormBean.RESULT_FILTER:
 	case SmsViewFormBean.RESULT_OK:
 		STATUS.append("Ok");
 		break;
@@ -29,7 +30,7 @@ switch(beanResult = bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.ge
 }
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<%
+<%@ include file="/WEB-INF/inc/calendar.jsp"%><%
 {%>
 <div class=secQuestion>Search parameters</div>
 <table class=secRep width="100%">
@@ -39,7 +40,7 @@ switch(beanResult = bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.ge
 			SmsQuery.SMS_ARCHIVE_STORAGE_TYPE%>" <%=
 			(bean.getStorageType()==SmsQuery.SMS_ARCHIVE_STORAGE_TYPE) ?
 			"checked":""%>><label for=storageTypeArchive>Archive</label></td>
-	<td nowrap><input 
+	<td nowrap><input
 			class=radio type="radio" name="storageType" id=storageTypeOperative value="<%=
 			SmsQuery.SMS_OPERATIVE_STORAGE_TYPE%>" <%=
 			(bean.getStorageType()==SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) ?
@@ -54,27 +55,23 @@ switch(beanResult = bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.ge
 	<th class=label>Source SME Id:</th>
 	<td><input class=txtW type="text" name="srcSmeId"  value="<%=bean.getSrcSmeId()%>" size=17 maxlength=15></td>
 </tr>
-<tr class=row1>
+<tr class=row0>
 	<th class=label>Destination Address:</th>
 	<td><input class=txtW type="text" name="toAddress" value="<%=bean.getToAddress()%>" size=25 maxlength=25></td>
 	<th class=label>Destination SME Id:</th>
 	<td><input class=txtW type="text" name="dstSmeId"  value="<%=bean.getDstSmeId()%>" size=17 maxlength=15></td>
 </tr>
-<tr class=row0>
+<tr class=row1>
 	<th class=label>SMS Id:</th>
 	<td><input class=txtW type="text" name="smsId"  value="<%=bean.getSmsId()%>" size=16 maxlength=16></td>
 	<th class=label>Route Id:</th>
 	<td><input class=txtW type="text" name="routeId"  value="<%=bean.getRouteId()%>" size=20 maxlength=20></td>
 </tr>
-<tr class=row1>
+<tr class=row0>
 	<th class=label>From Date:</th>
-	<td nowrap><input class=check type="checkbox" name="fromDateEnabled" <%=(bean.getFromDateEnabled()) ? "checked":""%>>
-		<input class=txt type="text" name="fromDate" value="<%=bean.getFromDate()%>">
-	</td>
+	<td nowrap><input type=text id=fromDate name=fromDate class=calendarField value="<%=bean.getFromDate()%>" maxlength=19><button class=calendarButton type=button onclick="return showCalendar(fromDate, false, true);">...</button></td>
 	<th class=label>Till Date:</th>
-	<td nowrap><input class=check type="checkbox" name="tillDateEnabled" <%=(bean.getTillDateEnabled()) ? "checked":""%>>
-		<input class=txt type="text" name="tillDate" value="<%=bean.getTillDate()%>">
-	</td>
+	<td nowrap><input type=text id="tillDate" name="tillDate" class=calendarField value="<%=bean.getTillDate()%>" maxlength=19><button class=calendarButton type=button onclick="return showCalendar(tillDate, false, true);">...</button></td>
 </tr>
 </table>
 <%}%>
@@ -109,41 +106,43 @@ function setSort(sorting)
 		opForm.sort.value = "-<%=bean.getSort()%>";
 	else
 		opForm.sort.value = sorting;
-		
+
 	opForm.submit();
 	return false;
 }
 </script>
 <br>
+<%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ results ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <div class=secView>Search results</div>
+<%@ include file="/WEB-INF/inc/navbar.jsp"%>
 <table class=secRep cellspacing=1 width="100%">
 <thead>
 <tr class=row0>
-  <th><a href="#" title="Sort by SMS Id" onclick='return setSort("Name")'>SMS id</a></th>
-  <th><a href="#" title="Sort by Date" onclick='return setSort("Name")'>Date</a></th>
-  <th><a href="#" title="Sort by From address" onclick='return setSort("Name")'>From</a></th>
-  <th><a href="#" title="Sort by To address" onclick='return setSort("Name")'>To</a></th>
-  <th><a href="#" title="Sort by delivery status" onclick='return setSort("Name")'>Status</a></th>
+  <th><a href="#" <%=bean.getSort().endsWith("name")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by SMS Id" onclick='return setSort("name")'>SMS id</a></th>
+  <th><a href="#" <%=bean.getSort().endsWith("date")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Date" onclick='return setSort("date")'>Date</a></th>
+  <th><a href="#" <%=bean.getSort().endsWith("from")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by From address" onclick='return setSort("from")'>From</a></th>
+  <th><a href="#" <%=bean.getSort().endsWith("to")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by To address" onclick='return setSort("to")'>To</a></th>
+  <th><a href="#" <%=bean.getSort().endsWith("status") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by delivery status" onclick='return setSort("status")'>Status</a></th>
 </tr></thead>
 <tbody><%
 int firstIndex = bean.getStartPosition()+1;
 int lastIndex = bean.getStartPosition()+bean.getPageSize();
-if (lastIndex >= bean.getTotalSize() || bean.getPageSize() < 0) 
+if (lastIndex >= bean.getTotalSize() || bean.getPageSize() < 0)
 	lastIndex = bean.getTotalSize();
 
 {int rowN=0; for (int cnt=firstIndex; cnt<=lastIndex; cnt++, rowN++) {
   SmsRow row = bean.getRow(cnt-1);
 %><tr class=row<%=rowN&1%>0>
-      <td><%= row.getIdString()%></td>
-      <td><%= row.getDate()%></td>
-      <td><%= row.getFrom().trim()%></td>
-      <td><%= row.getTo().trim()%></td>
-      <td><%= row.getStatus()%></td>
+      <td nowrap><%= StringEncoderDecoder.encode(row.getIdString())%></td>
+      <td nowrap><%= StringEncoderDecoder.encode(row.getDateString())%></td>
+      <td nowrap><%= StringEncoderDecoder.encode(row.getFrom().trim())%></td>
+      <td nowrap><%= StringEncoderDecoder.encode(row.getTo().trim())%></td>
+      <td nowrap><%= StringEncoderDecoder.encode(row.getStatus())%></td>
   </tr>
   <tr class=row<%=rowN&1%>1>
-      <td colspan=5><%= "#"+cnt+" "+row.getText()%></td>
+      <td colspan=5><%= StringEncoderDecoder.encode(row.getText())%>&nbsp;</td>
   </tr><%
-}} 
+}}
 %></tbody>
 </table>
 <%@ include file="/WEB-INF/inc/navbar.jsp"%>

@@ -1,23 +1,24 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<!DOCTYPE config SYSTEM "file://users.dtd">
+<!DOCTYPE users SYSTEM "file://users.dtd">
 
 <users>
-	<user name="superadmin" password="123">
+	<user login="user1" password="qwe" firstName="user1 first" lastName="user1 l" dept="user1 d" workPhone="user1 w" homePhone="user1 h" cellPhone="user1 c" email="user1@user1.user1">
+		<role name="smsView"/>
 		<role name="user"/>
 		<role name="admin"/>
 		<role name="super-admin"/>
 	</user>
-	<user name="admin" password="123">
+	<user login="superadmin" password="123" firstName="first" lastName="last" dept="dept" workPhone="work" homePhone="home" cellPhone="cell" email="email@email.com">
+		<role name="smsView"/>
+		<role name="users"/>
+		<role name="routes"/>
+		<role name="subjects"/>
+		<role name="aliases"/>
+		<role name="profiles"/>
+		<role name="hosts"/>
+		<role name="services"/>
 		<role name="user"/>
 		<role name="admin"/>
-	</user>
-	<user name="user1" password="123">
-		<role name="user"/>
-	</user>
-	<user name="user2" password="456">
-		<role name="user"/>
-	</user>
-	<user name="user3" password="789">
-		<role name="user"/>
+		<role name="super-admin"/>
 	</user>
 </users>
