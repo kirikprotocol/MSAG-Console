@@ -396,7 +396,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
     int tz = timezone;
     if ( tms->tm_isdst ) tz+=3600;
     tz = -tz/900;
-    __trace2__("MAP::mkDeliverPDU: timezone %d",tz);
+    __trace2__("MAP::mkDeliverPDU: timezone %d, %d",tz,timezone);
     pdu_tm->tz = tz;
     pdu_ptr+=sizeof(MAP_TIMESTAMP);
   }
