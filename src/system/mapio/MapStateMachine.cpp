@@ -629,7 +629,7 @@ static void ForwardMO(MapDialog* dialog) {
   memcpy(ui.signalInfo, mo_pdu, length );
   ui.signalInfoLen = (UCHAR_T)length;
 
-  __map_trace2__("MAP:: ForwardMO: forwarding msg %s->%s to sc: %s", sms->getOriginatingAddress().toString(), sms->getDestinationAddress().toString(), addr.toString() );
+  __map_trace2__("MAP:: ForwardMO: forwarding msg %s->%s to sc: %s", sms->getOriginatingAddress().toString().c_str(), sms->getDestinationAddress().toString().c_str(), addr.toString().c_str() );
 
   USHORT_T result = Et96MapOpenReq( SSN, dialog->dialogid_map, &appContext, &destAddr, &dialog->scAddr, 0, 0, 0 );
   if ( result != ET96MAP_E_OK )
