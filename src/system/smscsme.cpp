@@ -23,7 +23,7 @@ int SmscSme::Execute()
       {
         putIncomingCommand(
           SmscCommand::makeDeliverySmResp("0",cmd->get_dialogId(),
-            MAKE_COMMAND_STATUS(CMD_ERR_PERM,ESME_RX_P_APPN))
+            MAKE_COMMAND_STATUS(CMD_ERR_PERM,SmppStatusSet::ESME_RX_P_APPN))
         );
       }
     }
