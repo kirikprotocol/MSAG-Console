@@ -218,21 +218,32 @@ struct MapDialog{
     isQueryAbonentStatus(false),
     dropChain(false),
     id_opened(false),
-    ref_count(1),
     state(MAPST_START),
     dialogid_map(dialogid),
     dialogid_smsc(0),
-    version(version),
-    associate(0),
     invokeId(0),
     origInvokeId(0),
+    version(version),
+    hlrVersion(0),
+    associate(0),
     ssn(lssn),
     ussdSequence(0),
     ussdMrRef(0),
-    lockedAt(0)
-//    isMOreq(false),
-//    dialogid_req(0)
+    routeErr(0),
+    udhiRef(0),
+    udhiMsgNum(0),
+    udhiMsgCount(0),
+    lockedAt(0),
+    ref_count(1)
   {
+    memset(m_msAddr, 0, sizeof(ET96MAP_ADDRESS_T));
+    memset(m_scAddr, 0, sizeof(ET96MAP_ADDRESS_T));
+    memset(scAddr, 0, sizeof(ET96MAP_SS7_ADDR_T));
+    memset(destMscAddr, 0, sizeof(ET96MAP_SS7_ADDR_T));
+    memset(mshlrAddr,0,sizeof(ET96MAP_SS7_ADDR_T));
+    memset(smRpDa,0,sizeof(ET96MAP_SM_RP_DA_T));
+    memset(smRpOa,0,sizeof(ET96MAP_SM_RP_OA_T));
+    memset(mwdStatus,0,sizeof(ET96MAP_MWD_STATUS_T));
     MAPSTATS_Update(MAPSTATS_NEWDIALOG);
     struct timeval tv;
     gettimeofday( &tv, 0 );
@@ -317,6 +328,7 @@ class MapDialogContainer{
       return count;
     }
   };
+  static smsc::logger::Logger* loggerStatDlg;
   static MapDialogContainer* container;
   static Mutex sync_object;
   Mutex sync;
@@ -352,6 +364,7 @@ public:
   static MapDialogContainer* getInstance(){
     MutexGuard g(sync_object);
     if ( !container ) {
+      loggerStatDlg = smsc::logger::Logger::getInstance("map.stat.dlg");
       container = new MapDialogContainer();
       container->last_dump_time = 0;
       for (unsigned n=1;n<MAX_DIALOGID_POOLED;++n){

@@ -396,10 +396,6 @@ smsc::logger::Logger* MAPSTATS_GetLoggerHour() {
   static smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("map.stat.hour");
   return logger;
 }
-smsc::logger::Logger* MAPSTATS_GetLoggerDlg() {
-  static smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("map.stat.dlg");
-  return logger;
-}
 
 static time_t MAPSTATS_last_time_sec = 0;
 static time_t MAPSTATS_last_time_min = 0;
@@ -421,16 +417,18 @@ enum {
 
 void MAPSTATS_DumpDialogLC(MapDialog* dialog)
 {
-  struct timeval tv;
-  gettimeofday( &tv, 0 );
-  long long maked_mks = dialog->maked_at_mks;
-  long long mks = ((long long)tv.tv_sec)*1000*1000 + (long long)tv.tv_usec;
-  long long cl = mks-maked_mks;
-  smsc_log_info(MAPSTATS_GetLoggerDlg(), "dlg=%p (%x/%x) sec=%ld usec=%ld src=%s dst=%s",
-                                dialog,dialog->dialogid_map,dialog->dialogid_smsc,
-                                long(cl/(1000*1000)),long(cl%(1000*1000)),
-                                dialog->sms.get()?dialog->sms->getOriginatingAddress().value:"???",
-                                dialog->sms.get()?dialog->sms->getDestinationAddress().value:"???");
+  if( MapDialogContainer::loggerStatDlg->isDebugEnabled() ) {
+    struct timeval tv;
+    gettimeofday( &tv, 0 );
+    long long maked_mks = dialog->maked_at_mks;
+    long long mks = ((long long)tv.tv_sec)*1000*1000 + (long long)tv.tv_usec;
+    long long cl = mks-maked_mks;
+    smsc_log_info(MapDialogContainer::loggerStatDlg, "dlg=%p (%x/%x) sec=%ld usec=%ld src=%s dst=%s",
+                                  dialog,dialog->dialogid_map,dialog->dialogid_smsc,
+                                  long(cl/(1000*1000)),long(cl%(1000*1000)),
+                                  dialog->sms.get()?dialog->sms->getOriginatingAddress().value:"???",
+                                  dialog->sms.get()?dialog->sms->getDestinationAddress().value:"???");
+  }
 }
 
 void MAPSTATS_Flush(unsigned x,bool dump)
