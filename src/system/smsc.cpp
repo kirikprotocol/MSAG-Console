@@ -711,9 +711,11 @@ void Smsc::run()
   //smsc::util::Logger::getCategory("sms.snmp.alarm").debug("sample alarm");
 
   __trace__("Smsc::run");
+		  
   try{
   if(startTime==0)startTime=time(NULL);
   {
+    __trace__("Starting SMPPIO");
     Event accstarted;
     smppio::SmppAcceptor *acc=new
       smppio::SmppAcceptor(
@@ -723,6 +725,7 @@ void Smsc::run()
         &accstarted
       );
     tp.startTask(acc);
+    __trace__("Waiting SMPPIO started");
     accstarted.Wait();
     __trace__("SMPPIO started");
     Event mapiostarted;

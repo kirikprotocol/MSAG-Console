@@ -21,6 +21,7 @@ namespace smsc {
 
     void SnmpAppender::_append(const LoggingEvent& event)
     {
+      fprintf(stderr,"snmp appender\n");
         std::string message(event.message);
       //std::string message(_getLayout().format(event));
 
@@ -28,6 +29,7 @@ namespace smsc {
       {
         agent->trap(message);
       }
+      fprintf(stderr,"snmp appender exit\n");
     }
 
   }

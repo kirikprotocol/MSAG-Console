@@ -67,6 +67,7 @@
         agent = (void*)this;
         smsc = _smsc;
         smscptr = (void*)_smsc;
+        init();
       }
       SnmpAgent::~SnmpAgent()
       {
@@ -91,10 +92,9 @@
 
       int SnmpAgent::Execute()
       {
-         init();
          while(!isStopping)
          {
-           agent_check_and_process(0);
+           agent_check_and_process(1);
          }
          log->debug("try to shutdown snmp agent");
          snmp_shutdown("smscd");// at shutdown time
@@ -106,14 +106,14 @@
         status = newstatus;
         int *statusSave;
         memdup((uchar_t **) &statusSave,(uchar_t *) &status,sizeof(status));
-        struct timeval t;t.tv_sec=0,t.tv_usec=1;
+        struct timeval t;t.tv_sec=0,t.tv_usec=10000;
         snmp_alarm_register_hr(t, 0, sendStatusNotification, (void*)statusSave);
         log->debug("smsc status changed to %d, trap sent, saved = %d(%d)",newstatus,*statusSave,sizeof(status));
       }
 
       void SnmpAgent::trap(std::string &message)
       {
-        struct timeval t;t.tv_sec=0,t.tv_usec=1;
+        struct timeval t;t.tv_sec=0,t.tv_usec=10000;
         snmp_alarm_register_hr(t, 0, sendAlarmNotification, strdup(message.c_str()));
       }
 

@@ -12,7 +12,7 @@ __LIBRARIES := $(ORACLE_LIB)/libclntsh.so -L$(SMSC_BUILDDIR)/bin/db/exceptions/ 
 
 ifneq ("$(NOMAP)","YES")
 ifeq ("$(MACHTYPE)","sparc-sun-solaris")
-__LIBRARIES := $(__LIBRARIES) -L$(SS7_STACK_HOME)/lib -leinss7_r -lsystem-mapio
+__LIBRARIES := $(__LIBRARIES) -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -lsystem-mapio
 CXXFLAGS := $(CXXFLAGS) -DUSE_MAP
 endif
 endif
