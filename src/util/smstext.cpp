@@ -185,7 +185,7 @@ void transLiterateSms(SMS* sms,int datacoding)
   {
     len=ConvertUCS2ToMultibyte(msg,len,buf.get(),len*2,CONV_ENCODING_CP1251);
     buf8=auto_ptr<char>(new char[udhiDataLen+len*4+1]);
-    newlen=Transliterate(buf.get(),len,CONV_ENCODING_CP1251,buf8.get()+udhiDataLen,len*3);
+    newlen=Transliterate(buf.get(),len,CONV_ENCODING_CP1251,buf8.get()+udhiDataLen,len*3+1);
     dc=DataCoding::LATIN1;
     if(datacoding==DataCoding::SMSC7BIT)
     {
@@ -343,7 +343,7 @@ int partitionSms(SMS* sms,int dstdc)
     ConvertUCS2ToMultibyte(data,len,buf8.get(),len,CONV_ENCODING_CP1251);
     len/=2;
     bufTr=auto_ptr<char>(new char[udhilen+len*3+3]);
-    len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get()+udhilen,len*3);
+    len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get()+udhilen,len*3+1);
     if(udhi)memcpy(bufTr.get(),msg,udhilen);
     msg=bufTr.get();
     if(dstdc==DataCoding::SMSC7BIT)
@@ -578,8 +578,8 @@ void extractSmsPart(SMS* sms,int partnum)
       buf8=auto_ptr<char>(new char[len]);
       ConvertUCS2ToMultibyte((short*)msg,len,buf8.get(),len,CONV_ENCODING_CP1251);
       len/=2;
-      bufTr=auto_ptr<char>(new char[len*3]);
-      len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get(),len*3);
+      bufTr=auto_ptr<char>(new char[len*3+1]);
+      len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get(),len*3+1);
       msg=bufTr.get();
       if(dstdc==DataCoding::SMSC7BIT)
       {
