@@ -491,6 +491,24 @@ void LongDoubleParser::parse(std::string& input,
     __trace2__("Arg-Pos: %s, Value: %Le, Less: <%s>", 
                (arg) ? arg:"-", value, input.c_str());
 }
+
+char* stringToUpperCase(const char* str)
+{
+    if (!str) return 0;
+    char* up = new char[strlen(str)+1];
+    int cur = 0;
+    while (*str) up[cur++] = (char)toupper(*str++);
+    up[cur] = '\0';
+    return up;
+}
+bool compareStringsIgnoreCase(const char* str1, const char* str2)
+{
+    char* up1 = stringToUpperCase(str1); 
+    char* up2 = stringToUpperCase(str2);
+    bool result = ((!up1 && !up2) || strcmp(up1, up2) == 0);
+    if (up1) delete up1; if (up2) delete up2;
+    return result;
+}
 void DateTimeParser::parse(std::string& input,
     FormatEntity& entity, SetAdapter& adapter, ContextEnvironment& ctx)
         throw(ParsingException, AdapterException)
@@ -596,10 +614,10 @@ void DateTimeParser::parse(std::string& input,
 
                             curPos++; int i;
                             for (i=0; i<12; i++)
-                                if (strcmp(buff.c_str(),
-                                           (pattern[curPos] == 'M') ?
-                                           ioFullMonthesNames[i] :
-                                           ioShortMonthesNames[i]) == 0)
+                                if (compareStringsIgnoreCase(
+                                    buff.c_str(), (pattern[curPos] == 'M') ?
+                                    ioFullMonthesNames[i] : 
+                                    ioShortMonthesNames[i])) 
                                 {
                                     tmdt.tm_mon = i+1;
                                     break;
@@ -690,13 +708,14 @@ void DateTimeParser::parse(std::string& input,
 
                     while (isalpha(str[strPos])) buff += str[strPos++];
 
-                    if (strcmp(buff.c_str(), ioDayTimeParts[0]) == 0) 
+                    if (compareStringsIgnoreCase(buff.c_str(), 
+                                                 ioDayTimeParts[0])) 
                         AMPM = false;
-                    else if (strcmp(buff.c_str(), ioDayTimeParts[1]) == 0)
+                    else if (compareStringsIgnoreCase(buff.c_str(), 
+                                                      ioDayTimeParts[1]) == 0)
                         AMPM = true;
                     else throw ParsingException(error, "AM/PM qualifer expected",
                                                 str, pattern);
-
                     isAMPM = true;
                     continue;
                 }
