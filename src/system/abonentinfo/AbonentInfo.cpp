@@ -64,13 +64,15 @@ int AbonentInfoSme::Execute()
         SmeProxy *dest_proxy=NULL;
         bool has_route = smsc->routeSms(sms->getOriginatingAddress(),d,dest_proxy_index,dest_proxy,&ri);
 
+        Address oa=sms->getOriginatingAddress();
+        Address da=sms->getDestinationAddress();
+        int umr=sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
         cmd=SmscCommand::makeQueryAbonentStatus(d);
         cmd->get_abonentStatus().originalAddr=body;
-        cmd->get_abonentStatus().sourceAddr=sms->getOriginatingAddress();
-        cmd->get_abonentStatus().destAddr=sms->getDestinationAddress();
-        cmd->get_abonentStatus().userMessageReference=
-          sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
-        cmd->get_abonentStatus().isMobileRequest=sms->getDestinationAddress()==hrSrc;
+        cmd->get_abonentStatus().sourceAddr=oa;
+        cmd->get_abonentStatus().destAddr=da;
+        cmd->get_abonentStatus().userMessageReference=umr;
+        cmd->get_abonentStatus().isMobileRequest=(da==hrSrc);
 
         int status=AbonentStatus::UNKNOWNVALUE;
         if(!has_route || !dest_proxy)
@@ -83,7 +85,7 @@ int AbonentInfoSme::Execute()
         }
 
         char a1[32];
-        sms->getDestinationAddress().toString(a1,sizeof(a1));
+        da.toString(a1,sizeof(a1));
         char a2[32];
         hrSrc.toString(a2,sizeof(a2));
         __trace2__("AbonentInfo: destaddr=%s, hrAddr=%s",a1,a2);
