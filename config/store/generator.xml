@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+<config>
+  <section name="BillGenerator">
+    <section name="Locations">
+      <param name="archive" type="string">arc</param>
+      <param name="billing" type="string">bill</param>
+    </section>
+  </section>
+</config>
