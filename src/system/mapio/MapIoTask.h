@@ -437,7 +437,7 @@ public:
     return dlg;
   }
 
-  bool isWaitingNextMMS(const SmscCommand& cmd) {
+/*  bool isWaitingNextMMS(const SmscCommand& cmd) {
     MutexGuard g(sync);
     string abonent(cmd->get_sms()->getDestinationAddress().value);
     if ( ( abonent.length() != 0 ) && lock_map.Exists(abonent) ) {
@@ -447,6 +447,7 @@ public:
     }
     else return FALSE;
   }
+*/
 
   MapDialog* createOrAttachSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent, const SmscCommand& cmd){
     //if ( abonent.length() == 0 )
