@@ -101,18 +101,7 @@ namespace smsc { namespace infosme
          * Выполняестся на ThreadPool'е по команде от Scheduler'а 
          */
         virtual void endProcess() = 0;
-
         
-        /**
-         * Возвращает следующее сообщение для отправки из спец.таблицы задачи
-         * Выполняется в основном потоке TaskProcessor'а
-         *
-         * @param connection основной connection TaskProcessor'а
-         * @param message
-         * @return 
-         */
-        virtual bool getNextMessage(Connection* connection, Message& message) = 0;
-
         /**
          * Меняет состояние отправленного сообщения из спец.таблицы задачи.
          * Состояния: accepted, delivered, expired, ... ???
@@ -126,8 +115,20 @@ namespace smsc { namespace infosme
         /**
          * Останавливает процесс генерации сообщений для отправки в спец.таблицу задачи.
          * Удаляет все сгенерированные записи.
+         *
+         * @param connection основной connection TaskProcessor'а
          */
-        virtual void dropAllMessages() = 0;
+        virtual void dropAllMessages(Connection* connection) = 0;
+        
+        /**
+         * Возвращает следующее сообщение для отправки из спец.таблицы задачи
+         * Выполняется в основном потоке TaskProcessor'а
+         *
+         * @param connection основной connection TaskProcessor'а
+         * @param message
+         * @return 
+         */
+        virtual bool getNextMessage(Connection* connection, Message& message) = 0;
     };
     
     class TaskFactory

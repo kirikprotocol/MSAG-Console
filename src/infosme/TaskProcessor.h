@@ -39,22 +39,52 @@ namespace smsc { namespace infosme
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
+    typedef enum {
+      beginProcessMethod, endProcessMethod, doNotifyMessageMethod, dropAllMessagesMethod
+    } TaskMethod;
+
     class TaskRunner : public ThreadedTask
     {
     private:
-
-        Task* task;
-        int   method;
-        // add method params here !!!
-
+        
+        Task*         task;
+        TaskMethod    method;
+        Connection*   connection;
+        StateInfo     info;
+        
     public:
         
-        TaskRunner(Task* task, int method)
-            : ThreadedTask(), task(task), method(method) {};
+        TaskRunner(Task* task, TaskMethod method, Connection* connection=0)
+            : ThreadedTask(), task(task), method(method), connection(connection) {};
+        TaskRunner(Task* task, TaskMethod method, const StateInfo& info)
+            : ThreadedTask(), task(task), method(method), connection(0), info(info) {};
+
         virtual ~TaskRunner() {};
         
-        virtual int Execute() {
-            // TODO : implement it ! Call specified method
+        virtual int Execute()
+        {
+            switch (method)
+            {
+            case beginProcessMethod:
+                __require__(task && connection);
+                task->beginProcess(connection);
+                break;
+            case endProcessMethod:
+                __require__(task);
+                task->endProcess();
+                break;
+            case doNotifyMessageMethod:
+                __require__(task);
+                task->doNotifyMessage(info);
+                break;
+            case dropAllMessagesMethod:
+                __require__(task && connection);
+                task->dropAllMessages(connection);
+                break;
+            default:
+                __trace2__("Invalid method '%d' invoked on task.", method);
+                return -1;
+            }
             return 0;
         };
         virtual const char* taskName() {
@@ -101,8 +131,17 @@ namespace smsc { namespace infosme
             }
         };
         
-        void invokeTaskMethod(Task* task, int method) {
-            pool.startTask(new TaskRunner(task, method));
+        void invokeBeginProcess(Task* task, Connection* connection) {
+            pool.startTask(new TaskRunner(task, beginProcessMethod, connection));
+        };
+        void invokeEndProcess(Task* task) {
+            pool.startTask(new TaskRunner(task, endProcessMethod));
+        };
+        void invokeDoNotifyMessage(Task* task, const StateInfo& info) {
+            pool.startTask(new TaskRunner(task, doNotifyMessageMethod, info));
+        };
+        void invokeDropAllMessages(Task* task, Connection* connection) {
+            pool.startTask(new TaskRunner(task, dropAllMessagesMethod, connection));
         };
     };
     
