@@ -1,0 +1,1 @@
+idxtest/idxtest idxtest $(__LIBRARIES) -lsms -lutil -lstore-index -lutil
