@@ -41,6 +41,11 @@ public class SmsSet
     rows.addElement(row);
   }
 
+  public void removeRow(SmsRow row)
+  {
+    rows.removeElement(row);
+  }
+
   public void clean()
   {
     rows.removeAllElements();
