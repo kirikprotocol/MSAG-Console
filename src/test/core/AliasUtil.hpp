@@ -15,33 +15,21 @@ using smsc::alias::AliasInfo;
 
 class AliasHolder
 {
-	AliasInfo* aliasInfo;
 	char ch;
 	int addrPos;
 	int aliasPos;
 
 public:
+	const AliasInfo aliasInfo;
+	
 	AliasHolder(const AliasInfo& alias);
 
 	AliasHolder(const AliasHolder& holder)
-		: aliasInfo(new AliasInfo(*holder.aliasInfo)), ch(holder.ch),
+		: aliasInfo(holder.aliasInfo), ch(holder.ch),
 		addrPos(holder.addrPos), aliasPos(holder.aliasPos) {}
 
-	~AliasHolder()
-	{
-		delete aliasInfo;
-	}
+	~AliasHolder() {}
 	
-	AliasInfo* operator->() const
-	{
-		return aliasInfo;
-	}
-	
-	AliasInfo& operator*() const
-	{
-		return *aliasInfo;
-	}
-
 	bool aliasToAddress(const Address& alias, Address& addr) const;
 	bool addressToAlias(const Address& addr, Address& alias) const;
 
