@@ -43,7 +43,7 @@ class SmeRegistry
 		PduRegistry* pduReg;
 		SmeType smeType;
 		SmeData(const Address& _smeAddr, const SmeInfo& _sme, PduRegistry* _pduReg)
-		: smeAddr(_smeAddr), sme(_sme), pduReg(_pduReg), smeType(SME_NO_ROUTE) {}
+		: smeAddr(_smeAddr), sme(_sme), pduReg(_pduReg), smeType(SME_NOT_BOUND) {}
 		~SmeData()
 		{
 			if (pduReg)
