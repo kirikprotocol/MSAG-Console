@@ -3,7 +3,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.ServiceAddInternal"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Services List / Add service: step 2";
+TITLE = "Add service: step 2";
 switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
 {
 	case ServiceAddInternal.RESULT_DONE:

@@ -61,16 +61,16 @@ if (request.isUserInRole("aliases"))
 	<td><%=bean.isAliasesChanged() ? "<span class=Cf00>changed</span>" : "clear"%></td>
 	<td><input class=btn type=submit name=mbAliasesApply value="Apply" <%=!bean.isAliasesChanged() ? "disabled" : ""%>></td>
 </tr>
-<%}
-if (request.isUserInRole("profiles"))
+<%}%>
+<%--if (request.isUserInRole("profiles"))
 {%>
 <tr class=row<%=(rowN++)&1%>>
 	<th>Profiles</th>
 	<td><%=bean.isProfilesChanged() ? "<span class=Cf00>changed</span>" : "clear"%></td>
 	<td><input class=btn type=submit name=mbProfilesApply value="Apply" <%=!bean.isProfilesChanged() ? "disabled" : ""%>></td>
 </tr>
-<%}
-if (request.isUserInRole("hosts"))
+<%}--%>
+<%if (request.isUserInRole("hosts"))
 {%>
 <tr class=row<%=(rowN++)&1%>>
 	<th>Hosts</th>

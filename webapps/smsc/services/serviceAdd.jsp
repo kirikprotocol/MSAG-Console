@@ -1,6 +1,6 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%
-TITLE = "Services List / Add service: step 1";
+TITLE = "Add service: step 1";
 String hostName = request.getParameter("hostName");
 if (request.getParameter("mbCancel") != null)
 {

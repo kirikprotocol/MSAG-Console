@@ -36,7 +36,7 @@ if (bean.getStage() == 1)
 	FORM_URI = CPATH+"/services/serviceAddExternalAdm.jsp";
 }
 
-TITLE = "Services List / Add service: step " + (bean.getStage() == 0 ? 2 : bean.getStage()+1);
+TITLE = "Add service: step " + (bean.getStage() == 0 ? 2 : bean.getStage()+1);
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_SERVICES";
 %><%@ 
