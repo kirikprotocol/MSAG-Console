@@ -37,15 +37,16 @@ class TaskContainer
   Task *timeout_link_end;
 public:  
   TaskContainer():
-    first_task(pool),
+    //first_task(pool),
     timeout_link_begin(0),
     timeout_link_end(0)
   {
     for ( int i=0; i<TASK_CONTAINER_MAX_PROCESSED; ++i )
     {
-      pool[i].next = pool+i;
+      pool[i].next = pool+i+1;
     }
     pool[TASK_CONTAINER_MAX_PROCESSED-1].next = 0;
+		first_task = pool;
     memset(hash,0,sizeof(hash));
   }
   ~TaskContainer() {}
