@@ -75,6 +75,9 @@ bool AliasRegistry::checkAddr2Alias2AddrTransformation(const AliasInfo& alias1,
 
 bool AliasRegistry::putAlias(const AliasInfo& alias)
 {
+	//запретить знаки подстановки для hide = true
+	__require__(!alias.hide || (!strchr(alias.alias.value, '?') && !strchr(alias.addr.value, '?')));
+
 	//дублированные алиасы не сохраняются
 	AddressMap::const_iterator it = addrMap.find(alias.addr);
 	if (it != addrMap.end())
