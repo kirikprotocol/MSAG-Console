@@ -321,9 +321,11 @@ int SmppInputThread::Execute()
             }break;
             case SmppCommandSet::UNBIND:
             {
+              __trace__("Received UNBIND");
               try{
                 if(ss->getProxy())
                 {
+                  __trace__("UNBINDRESP sent");
                   ss->getProxy()->putIncomingCommand
                   (
                     SmscCommand::makeUnbindResp
@@ -332,7 +334,8 @@ int SmppInputThread::Execute()
                       SmppStatusSet::ESME_ROK
                     )
                   );
-                  ss->assignProxy(0);
+                  ss->getProxy()->close();
+                  //ss->assignProxy(0);
                 }else
                 {
                   SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVBNDSTS);
