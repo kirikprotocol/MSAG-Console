@@ -103,13 +103,12 @@ namespace smsc { namespace store
     struct QueryMessage : public Message
     {
         time_t          fromDate, tillDate;
-        bool            bSrcMask, bDstMask;
-        std::string     srcMask, dstMask;
+        bool            bSrcMask, bDstMask, bAbnMask;
+        std::string     srcMask, dstMask, abnMask;
         Array<Param>    parameters;
         
-        QueryMessage(Message::Type type=QUERY) 
-            : Message(type), fromDate(-1), tillDate(-1), 
-                bSrcMask(false), bDstMask(false), srcMask(""), dstMask("") {};
+        QueryMessage(Message::Type type=QUERY) : Message(type), fromDate(-1), tillDate(-1), 
+                bSrcMask(false), bDstMask(false), bAbnMask(false), srcMask(""), dstMask(""), abnMask("") {};
         virtual ~QueryMessage() {};
 
         virtual void send(Socket* socket);

@@ -185,13 +185,13 @@ void QueryMessage::receive(Socket* socket)
           param.iValue = Uint64Converter::toHostOrder(id);
           break;
       }
-      case T_SRC_ADDRESS: case T_DST_ADDRESS:
-      case T_SRC_SME_ID: case T_DST_SME_ID: case T_ROUTE_ID: {
+      case T_ABN_ADDRESS: case T_SRC_ADDRESS: case T_DST_ADDRESS:
+      case T_SME_ID: case T_SRC_SME_ID: case T_DST_SME_ID: case T_ROUTE_ID: {
           Message::read(socket, param.sValue); 
           break;
       }
       default:
-          throw CommunicationException("Invalid query parameter type %u", type);
+          throw CommunicationException("Invalid query parameter type %u", param_type);
       }
       param.type = (Param::ParamType)param_type;
       parameters.Push(param);

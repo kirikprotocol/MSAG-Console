@@ -360,7 +360,7 @@ bool Query::prepareIndex(QueryMessage* query, Array<Param>& index)
             break;
         case T_FROM_DATE: case T_TILL_DATE:
             break;
-        case T_SRC_ADDRESS: case T_DST_ADDRESS: {
+        case T_SRC_ADDRESS: case T_DST_ADDRESS: case T_ABN_ADDRESS: {
             // Skip masks for search index. All checks will be performed in checkMessage() 
             const char* str = param.sValue.c_str();
             if (!str || str[0] == '\0') break;
@@ -368,10 +368,11 @@ bool Query::prepareIndex(QueryMessage* query, Array<Param>& index)
             else {
                 if (param.type == T_SRC_ADDRESS) { query->bSrcMask = true; query->srcMask = param.sValue; }
                 if (param.type == T_DST_ADDRESS) { query->bDstMask = true; query->dstMask = param.sValue; }
+                if (param.type == T_ABN_ADDRESS) { query->bAbnMask = true; query->abnMask = param.sValue; }
             }
             break;
         }
-        case T_SRC_SME_ID: case T_DST_SME_ID: case T_ROUTE_ID:
+        case T_SME_ID: case T_SRC_SME_ID: case T_DST_SME_ID: case T_ROUTE_ID:
             index.Push(param);
             break;
         default:
@@ -407,8 +408,11 @@ bool Query::checkMessage(QueryMessage* query, SMSId id, SMS& sms)
     if (query->fromDate > 0 && sms.lastTime < query->fromDate) return false;
     if (query->tillDate > 0 && sms.lastTime > query->tillDate) return false;
     
-    if (query->bSrcMask && !eqAdressWithMask(sms.getOriginatingAddress(), query->srcMask)) return false;
+    if (query->bSrcMask && !eqAdressWithMask(sms.getOriginatingAddress(),          query->srcMask)) return false;
     if (query->bDstMask && !eqAdressWithMask(sms.getDealiasedDestinationAddress(), query->dstMask)) return false;
+    if (query->bAbnMask && !eqAdressWithMask(sms.getOriginatingAddress(),          query->abnMask) 
+                        && !eqAdressWithMask(sms.getDestinationAddress(),          query->abnMask)
+                        && !eqAdressWithMask(sms.getDealiasedDestinationAddress(), query->abnMask)) return false;
     
     return true;
 }
