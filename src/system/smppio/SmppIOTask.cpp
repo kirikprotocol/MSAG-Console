@@ -1051,7 +1051,7 @@ int SmppOutputThread::Execute()
         {
           inTask->removeSocket(tokill[j]);
         }
-        tokill.Clean();
+        tokill.Empty();
       } // if ready
     }catch(std::exception& e)
     {
