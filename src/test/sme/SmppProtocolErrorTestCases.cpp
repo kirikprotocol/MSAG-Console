@@ -6,6 +6,7 @@ namespace test {
 namespace sme {
 
 using smsc::util::Logger;
+using namespace smsc::sme;
 using namespace smsc::smpp::SmppCommandSet;
 using namespace smsc::smpp::SmppStatusSet;
 using namespace smsc::test::smpp;
@@ -81,31 +82,47 @@ static const int allowedCmdIdsSize = sizeof(allowedCmdIds) / sizeof(*allowedCmdI
 static const int notAllowedCmdIdsSize = sizeof(notAllowedCmdIds) / sizeof(*notAllowedCmdIds);
 static const int bindCmdIdsSize = sizeof(bindCmdIds) / sizeof(*bindCmdIds);
 
-void SmppProtocolErrorScenario::checkBindResp(PduBindTRXResp* pdu)
+#define __check__(errCode, cond) \
+	if (!(cond)) { __tc_fail__(errCode); }
+	
+void SmppProtocolErrorScenario::checkBindResp(SmppHeader* pdu)
 {
 	__decl_tc__;
-	__tc__("bind.resp.checkCommandStatus");
-	if (pdu->get_header().get_commandStatus() != ESME_ROK)
+	switch (pdu->get_commandId())
 	{
-		__tc_fail__(1);
+		case BIND_RECIEVER_RESP:
+			__tc__("bind.resp.receiver");
+			__check__(1, bindType == BindType::Receiver);
+			break;
+		case BIND_TRANSMITTER_RESP:
+			__tc__("bind.resp.transmitter");
+			__check__(1, bindType == BindType::Transmitter);
+			break;
+		case BIND_TRANCIEVER_RESP:
+			__tc__("bind.resp.transceiver");
+			__check__(1, bindType == BindType::Transceiver);
+			break;
+		default:
+			__unreachable__("Invalid bind response");
 	}
+	__check__(2, !bound);
+	bound = true;
+	__tc_ok_cond__;
+	__tc__("bind.resp.checkCommandStatus");
+	__check__(1, pdu->get_commandStatus() == ESME_ROK);
 	__tc_ok_cond__;
 	__tc__("bind.resp.checkInterfaceVersion");
-	if (pdu->get_scInterfaceVersion() != 0x34)
-	{
-		__tc_fail__(1);
-	}
+	__check__(1, reinterpret_cast<PduBindTRXResp*>(pdu)->get_scInterfaceVersion() == 0x34);
 	__tc_ok_cond__;
 }
 
-void SmppProtocolErrorScenario::checkUnbindResp(PduUnbindResp* pdu)
+void SmppProtocolErrorScenario::checkUnbindResp(SmppHeader* pdu)
 {
 	__decl_tc__;
 	__tc__("unbind.resp.checkCommandStatus");
-	if (pdu->get_header().get_commandStatus() != ESME_ROK)
-	{
-		__tc_fail__(1);
-	}
+	__check__(1, pdu->get_commandStatus() == ESME_ROK);
+	__check__(2, bound);
+	bound = false;
 	__tc_ok_cond__;
 }
 
@@ -237,10 +254,26 @@ SmppHeader* SmppProtocolErrorScenario::createPdu(uint32_t commandId)
 	return pdu;
 }
 
-inline SmppHeader* SmppProtocolErrorScenario::setupBindPdu(PduBindTRX& pdu)
+inline SmppHeader* SmppProtocolErrorScenario::setupBindPdu(PduBindTRX& pdu,
+	int bindType)
 {
 	__trace2__("setupBindPdu(): scenario = %p", this);
-	pdu.get_header().set_commandId(SmppCommandSet::BIND_TRANCIEVER);
+	uint32_t cmdId;
+	switch (bindType)
+	{
+		case BindType::Receiver:
+			cmdId = BIND_RECIEVER;
+			break;
+		case BindType::Transmitter:
+			cmdId = BIND_TRANSMITTER;
+			break;
+		case BindType::Transceiver:
+			cmdId = BIND_TRANCIEVER;
+			break;
+		default:
+			__unreachable__("Invalid bind type");
+	}
+	pdu.get_header().set_commandId(cmdId);
 	pdu.set_systemId(cfg.sid.c_str());
 	pdu.set_password(cfg.password.c_str());
 	pdu.set_systemType(cfg.systemType.c_str());
@@ -303,9 +336,6 @@ Category& SmppProtocolErrorTestCases::getLog()
 	return log;
 }
 
-#define __check__(errCode, cond) \
-	if (!(cond)) { __tc_fail__(errCode); }
-	
 //invalid bind
 class InvalidBindScenario : public SmppProtocolErrorScenario
 {
@@ -451,13 +481,12 @@ void SmppProtocolErrorTestCases::invalidBindScenario(int num)
 class InvalidPduScenario : public SmppProtocolErrorScenario
 {
 	int num;
-	bool bound;
 	bool invalidSize;
 	bool invalidCmdId;
 public:
 	InvalidPduScenario(const SmeConfig& conf, const Address& addr,
 		CheckList* chkList, int _num)
-	: SmppProtocolErrorScenario(conf, addr, chkList), num(_num), bound(false),
+	: SmppProtocolErrorScenario(conf, addr, chkList), num(_num),
 		invalidSize(false), invalidCmdId(false)
 	{
 		__tc__("protocolError.invalidPdu");
@@ -472,7 +501,7 @@ public:
 		//connect & bind
 		connect();
 		PduBindTRX bindPdu;
-		sendPdu(setupBindPdu(bindPdu));
+		sendPdu(setupBindPdu(bindPdu, BindType::Transceiver));
 		//неправильные pdu
 		TCSelector s(num, 7);
 		SmppHeader* pdu = NULL;
@@ -584,9 +613,7 @@ public:
 			case BIND_RECIEVER_RESP:
 			case BIND_TRANSMITTER_RESP:
 			case BIND_TRANCIEVER_RESP:
-				__check__(2, !bound);
-				bound = true;
-				checkBindResp(reinterpret_cast<PduBindTRXResp*>(pdu));
+				checkBindResp(pdu);
 				break;
 			case GENERIC_NACK:
 				__check__(3, invalidCmdId);
@@ -616,12 +643,11 @@ class EqualSequenceNumbersScenario : public SmppProtocolErrorScenario
 	static const int pduCount = 10;
 	int respCount;
 	int deliveryCount;
-	bool bound;
 public:
 	EqualSequenceNumbersScenario(const SmeConfig& conf, const Address& addr,
 		CheckList* chkList)
-	: SmppProtocolErrorScenario(conf, addr, chkList), respCount(0), deliveryCount(0),
-		bound(false)
+	: SmppProtocolErrorScenario(conf, addr, chkList), respCount(0),
+		deliveryCount(0)
 	{
 		__tc__("protocolError.equalSeqNum");
 		__trace2__("EqualSequenceNumbersScenario(): scenario = %p", this);
@@ -635,7 +661,7 @@ public:
 		//connect & bind
 		connect();
 		PduBindTRX bindPdu;
-		sendPdu(setupBindPdu(bindPdu));
+		sendPdu(setupBindPdu(bindPdu, BindType::Transceiver));
 		//несколько pdu с seqNum = 0
 		for (int i = 0; i < pduCount; i++)
 		{
@@ -668,14 +694,10 @@ public:
 			case BIND_RECIEVER_RESP:
 			case BIND_TRANSMITTER_RESP:
 			case BIND_TRANCIEVER_RESP:
-				__check__(3, !bound);
-				bound = true;
-				checkBindResp(reinterpret_cast<PduBindTRXResp*>(pdu));
+				checkBindResp(pdu);
 				break;
 			case UNBIND_RESP:
-				__check__(4, bound);
-				bound = false;
-				checkUnbindResp(reinterpret_cast<PduUnbindResp*>(pdu));
+				checkUnbindResp(pdu);
 				setComplete(true);
 				break;
 			case DELIVERY_SM:
@@ -718,13 +740,12 @@ void SmppProtocolErrorTestCases::equalSequenceNumbersScenario()
 class SubmitAfterUnbindScenario : public SmppProtocolErrorScenario
 {
 	int num;
-	bool bound;
 	bool allowedCmdId;
 	bool notAllowedCmdId;
 public:
 	SubmitAfterUnbindScenario(const SmeConfig& conf, const Address& addr,
 		CheckList* chkList, int _num)
-	: SmppProtocolErrorScenario(conf, addr, chkList), num(_num), bound(false),
+	: SmppProtocolErrorScenario(conf, addr, chkList), num(_num),
 		allowedCmdId(false), notAllowedCmdId(false)
 
 	{
@@ -740,7 +761,7 @@ public:
 		//connect & bind
 		connect();
 		PduBindTRX bindPdu;
-		sendPdu(setupBindPdu(bindPdu));
+		sendPdu(setupBindPdu(bindPdu, BindType::Transceiver));
 		//unbind
 		PduUnbind unbindPdu;
 		sendPdu(setupUnbindPdu(unbindPdu));
@@ -801,14 +822,10 @@ public:
 			case BIND_RECIEVER_RESP:
 			case BIND_TRANSMITTER_RESP:
 			case BIND_TRANCIEVER_RESP:
-				__check__(3, !bound);
-				bound = true;
-				checkBindResp(reinterpret_cast<PduBindTRXResp*>(pdu));
+				checkBindResp(pdu);
 				break;
 			case UNBIND_RESP:
-				__check__(4, bound);
-				bound = false;
-				checkUnbindResp(reinterpret_cast<PduUnbindResp*>(pdu));
+				checkUnbindResp(pdu);
 				setComplete(true);
 				break;
 			case GENERIC_NACK:
@@ -848,11 +865,10 @@ void SmppProtocolErrorTestCases::submitAfterUnbindScenario(int num)
 class NullPduScenario : public SmppProtocolErrorScenario
 {
 	int num;
-	bool bound;
 public:
 	NullPduScenario(const SmeConfig& conf, const Address& addr,
 		CheckList* chkList, int _num)
-	: SmppProtocolErrorScenario(conf, addr, chkList), num(_num), bound(false)
+	: SmppProtocolErrorScenario(conf, addr, chkList), num(_num)
 	{
 		__tc__("protocolError.nullPdu");
 		__trace2__("NullPduScenario(): scenario = %p", this);
@@ -866,7 +882,7 @@ public:
 		//connect & bind
 		connect();
 		PduBindTRX bindPdu;
-		sendPdu(setupBindPdu(bindPdu));
+		sendPdu(setupBindPdu(bindPdu, BindType::Transceiver));
 		//отправка пустых pdu
 		for (int i = 0; i < 5; i++)
 		{
@@ -915,14 +931,10 @@ public:
 			case BIND_RECIEVER_RESP:
 			case BIND_TRANSMITTER_RESP:
 			case BIND_TRANCIEVER_RESP:
-				__check__(2, !bound);
-				bound = true;
-				checkBindResp(reinterpret_cast<PduBindTRXResp*>(pdu));
+				checkBindResp(pdu);
 				break;
 			case UNBIND_RESP:
-				__check__(3, bound);
-				bound = false;
-				checkUnbindResp(reinterpret_cast<PduUnbindResp*>(pdu));
+				checkUnbindResp(pdu);
 				setComplete(true);
 				break;
 			default:
@@ -939,6 +951,82 @@ public:
 void SmppProtocolErrorTestCases::nullPduScenario(int num)
 {
 	NullPduScenario scenario(cfg, smeAddr, chkList, num);
+	scenario.execute();
+}
+
+class BindUnbindScenario : public SmppProtocolErrorScenario
+{
+	int num;
+public:
+	BindUnbindScenario(const SmeConfig& conf, const Address& addr,
+		CheckList* chkList, int _num)
+	: SmppProtocolErrorScenario(conf, addr, chkList), num(_num)
+	{
+		__trace2__("BindUnbindScenario(): scenario = %p", this);
+	}
+	~BindUnbindScenario()
+	{
+		__trace2__("~BindUnbindScenario(): scenario = %p", this);
+	}
+	virtual void execute()
+	{
+		TCSelector s(num, 3);
+		//connect & bind
+		connect();
+		PduBindTRX bindPdu;
+		switch (s.value())
+		{
+			case 1:
+				__tc__("bind.correct.receiver");
+				bindType = BindType::Receiver;
+				break;
+			case 2:
+				__tc__("bind.correct.transmitter");
+				bindType = BindType::Transmitter;
+				break;
+			case 3:
+				__tc__("bind.correct.transceiver");
+				bindType = BindType::Transceiver;
+				break;
+			default:
+				__unreachable__("Invalid num");
+		}
+		sendPdu(setupBindPdu(bindPdu, bindType));
+		__tc_ok__;
+		//unbind
+		__tc__("unbind");
+		PduUnbind unbindPdu;
+		sendPdu(setupUnbindPdu(unbindPdu));
+		__tc_ok__;
+	}
+	virtual void handleEvent(SmppHeader* pdu)
+	{
+		__decl_tc__;
+		switch (pdu->get_commandId())
+		{
+			case BIND_RECIEVER_RESP:
+			case BIND_TRANSMITTER_RESP:
+			case BIND_TRANCIEVER_RESP:
+				checkBindResp(pdu);
+				break;
+			case UNBIND_RESP:
+				checkUnbindResp(pdu);
+				break;
+			default:
+				__unreachable__("not expected");
+		}
+		__tc_ok_cond__;
+	}
+	virtual void handleError(int errorCode)
+	{
+		__trace2__("handleError(): errorCode = %d", errorCode);
+		__unreachable__("not expected");
+	}
+};
+
+void SmppProtocolErrorTestCases::bindUnbindCorrect(int num)
+{
+	BindUnbindScenario scenario(cfg, smeAddr, chkList, num);
 	scenario.execute();
 }
 

@@ -32,6 +32,8 @@ protected:
 	TestSmppSession sess;
 	const SmeConfig cfg;
 	const Address smeAddr;
+	int bindType;
+	bool bound;
 	Event event;
 	bool complete;
 	CheckList* chkList;
@@ -40,7 +42,7 @@ public:
 	SmppProtocolErrorScenario(const SmeConfig& conf, const Address& addr,
 		CheckList* _chkList)
 	: tc(NULL), isOk(true), sess(this), cfg(conf), smeAddr(addr),
-		complete(false), chkList(_chkList) {}
+		bindType(0), bound(false), complete(false), chkList(_chkList) {}
 	virtual ~SmppProtocolErrorScenario() {}
 
 	void connect();
@@ -50,11 +52,11 @@ public:
 	bool checkComplete(int timeout);
 	void setComplete(bool val);
 	
-	void checkBindResp(PduBindTRXResp* pdu);
-	void checkUnbindResp(PduUnbindResp* pdu);
+	void checkBindResp(SmppHeader* pdu);
+	void checkUnbindResp(SmppHeader* pdu);
 
 	SmppHeader* createPdu(uint32_t commandId);
-	SmppHeader* setupBindPdu(PduBindTRX& pdu);
+	SmppHeader* setupBindPdu(PduBindTRX& pdu, int bindType);
 	SmppHeader* setupUnbindPdu(PduUnbind& pdu);
 	SmppHeader* setupSubmitSmPdu(PduSubmitSm& pdu);
 	SmppHeader* setupDeliverySmRespPdu(PduDeliverySmResp& pdu, uint32_t seqNum);
@@ -103,6 +105,11 @@ public:
 	 * Проверка ошибок минимальная, основное назначение - завалить SC.
 	 */
 	void nullPduScenario(int num);
+
+	/**
+	 * Bind sme зарегистрированной в smsc с проверкой внутренностей bind и unbind pdu.
+	 */
+	void bindUnbindCorrect(int num);
 
 protected:
 	const SmeConfig cfg;
