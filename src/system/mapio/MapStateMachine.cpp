@@ -3172,6 +3172,9 @@ USHORT_T Et96MapV2UnstructuredSSRequestConf(
     SMS& sms = *_sms.get();
     SMS* old_sms = dialog->sms.get();
     Address originator = old_sms->getOriginatingAddress();
+    Address src_addr;
+    ConvAddrMap2Smc((const MAP_SMS_ADDRESS*)&dialog->m_msAddr,&src_addr);
+    sms.setOriginatingAddress(src_addr);
 
     UCHAR_T udhPresent, msgClassMean, msgClass;
     if( ussdDataCodingScheme_p && ussdString_sp ) {
@@ -3240,6 +3243,9 @@ USHORT_T Et96MapV2UnstructuredSSNotifyConf(
     SMS& sms = *_sms.get();
     SMS* old_sms = dialog->sms.get();
     Address originator = old_sms->getOriginatingAddress();
+    Address src_addr;
+    ConvAddrMap2Smc((const MAP_SMS_ADDRESS*)&dialog->m_msAddr,&src_addr);
+    sms.setOriginatingAddress(src_addr);
     __map_trace2__("%s: dialogid 0x%x notify confirmation subsystem %s",__func__,dialogueId, originator.toString().c_str());
     unsigned esm_class = 2; // Transaction mode
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
