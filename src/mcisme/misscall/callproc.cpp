@@ -492,7 +492,9 @@ void  fillEvent(EINSS7_I97_CALLINGNUMB_T *calling,
                 MissedCallEvent& event)
 {
   time(&event.time);
-  if (calling && calling->noOfAddrSign <= MAX_FULL_ADDRESS_VALUE_LENGTH)
+  if (calling && 
+      calling->noOfAddrSign <= MAX_FULL_ADDRESS_VALUE_LENGTH &&
+      calling->presentationRestr == EINSS7_I97_PRES_ALLOWED)
   {
     vector<char> addr(calling->noOfAddrSign +  1);
     unpack_addr(&addr[0], calling->addrSign_p, calling->noOfAddrSign);
