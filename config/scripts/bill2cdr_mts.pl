@@ -42,12 +42,12 @@ if($basedir=~/^(.*)[\\\/][^\\\/]+$/)
 my $mscarr=[];
 
 {
-  open(my $f,"$basedir/filters.ini") or die "Failed to open $basedir/filters.ini:$!";
+  open(F,"$basedir/filters.ini") or die "Failed to open $basedir/filters.ini:$!";
   my $h={};
   my $cursect;
-  while(<$f>)
+  while(<F>)
   {
-    s/[\x0d\x0a]//;
+    s/[\x0d\x0a]//g;
     next if length($_)==0 || /^#/;
     if(/\[(.*)\]/)
     {
@@ -61,6 +61,7 @@ my $mscarr=[];
     $h->{$cursect}=[] unless exists $h->{$cursect};
     push @{$h->{$cursect}},$_;
   }
+  close F;
 
   sub compilerx{
     my ($name,$arr)=@_;
