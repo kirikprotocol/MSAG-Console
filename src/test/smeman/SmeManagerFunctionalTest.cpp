@@ -21,7 +21,7 @@ inline void prepareForNewSme(vector<SmeInfo*>& sme, vector<TCResultStack*>& stac
 
 void executeFunctionalTest(TCResultFilter* filter, int listSize)
 {
-	SmeManagerTestCases tc;
+	SmeManagerTestCases tc(new SmeManager());
 	vector<SmeInfo*> sme;
 	vector<TCResultStack*> stack;
 
