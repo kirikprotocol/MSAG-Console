@@ -274,9 +274,12 @@ public:
   MapDialog* get() { return dialog; }
 };
 
-unsigned MKDID(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn)
+inline unsigned 
+MKDID(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn)
 {
-  return ((unsigned(dialogueid)&0xffff)|(unsigned(lssn)<<24)) & 0xff00ffff;
+  return 
+    ((unsigned(dialogueid)&0xffff)|(unsigned(lssn)<<24)) 
+    & 0xff00ffff;
 }
 
 /**
