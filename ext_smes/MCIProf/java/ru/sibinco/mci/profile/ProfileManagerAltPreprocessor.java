@@ -58,7 +58,7 @@ public class ProfileManagerAltPreprocessor extends ProfileManagerState implement
             info.eventMask = switchEventMask(oldEventMask, ProfileInfo.MASK_ABSENT);
           else if ((activeReasons.indexOf('U') != -1) && (switchReason == ++counter))
             info.eventMask = switchEventMask(oldEventMask, ProfileInfo.MASK_UNCOND);
-          logger.debug("Alt pre-processor new mask: "+oldEventMask);
+          logger.debug("Alt pre-processor new mask: "+info.eventMask);
 
           if (info.eventMask != oldEventMask) {
             setProfileInfo(state, info);
