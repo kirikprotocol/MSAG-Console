@@ -88,7 +88,7 @@ static inline void makeAliasFromValueByAddres(
   
 	//if (!p.alias.defLength<=21) 
   //  throw runtime_error("incorrect address->alias translation definition, result length > 21");
-	throw_if_fail(p.alias.defLength<=21 && p.alias.defLength >= 0);
+	throw_if_fail(p.alias.defLength<21 && p.alias.defLength >= 0);
 	if ( p.alias.defLength != 0 )
   memcpy(buf,p.alias.value,p.alias.defLength);
 	ln = p.alias.defLength;
@@ -96,7 +96,7 @@ static inline void makeAliasFromValueByAddres(
 	__require__(val.length-p.addr.defLength >= 0 );
 	//if (!(ln+(val.length-p.addr.defLength)<=21))
   //  throw runtime_error("incorrect address->alias translation definition, result length > 21");
-  throw_if_fail(ln+(val.length-p.addr.defLength)<=21);
+  throw_if_fail(ln+(val.length-p.addr.defLength)<21);
 	if ( val.length-p.addr.defLength != 0 )
 	{
 		memcpy(buf+ln,
@@ -125,7 +125,7 @@ static inline void makeAddressFromValueByAlias(
   int ln;
   //if(!(ln+p.addr.defLength<=21))
   //  throw runtime_error("incorrect address->alias translation definition, result length > 21");
-  throw_if_fail(p.addr.defLength<=21 && p.addr.defLength >= 0);
+  throw_if_fail(p.addr.defLength< 21 && p.addr.defLength >= 0);
 	if ( p.addr.defLength != 0 )
 		memcpy(buf,p.addr.value,p.addr.defLength);
 	ln = p.addr.defLength;
@@ -133,7 +133,7 @@ static inline void makeAddressFromValueByAlias(
 	__require__( val.length-p.alias.defLength >=0 );
 	//if(!( ln+(val.length-p.alias.defLength) <= 21 ))
   //  throw runtime_error("incorrect address->alias translation definition, result length > 21");
-	throw_if_fail(ln+(val.length-p.alias.defLength) <= 21);
+	throw_if_fail(ln+(val.length-p.alias.defLength) < 21);
   if ( (val.length-p.alias.defLength) != 0 )
 	{
 		memcpy(buf+ln,
