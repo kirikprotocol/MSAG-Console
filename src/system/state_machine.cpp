@@ -488,6 +488,8 @@ void StateMachine::processDirectives(SMS& sms,Profile& p)
     {
       __trace2__("DIRECT: exception : unknown");
     }
+    udhi=false;
+    sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)&(~0x40));
   }
 
   auto_ptr<char> newBodyPtr(new char[olen*3+newtext.length()*3]);
@@ -507,6 +509,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p)
   }
   memcpy(ptr,body+offsets[i].end,olen-udhiLen-offsets[i].end);
   int newlen=(ptr-newBody)+olen-udhiLen-offsets[i].end;
+  if(!udhi)udhiLen=0;
   if(newtext.length())
   {
     bool hb=hasHighBit(newtext.c_str(),newtext.length());
