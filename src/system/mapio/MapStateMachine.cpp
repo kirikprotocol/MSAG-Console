@@ -589,11 +589,13 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
       unsigned msgCount = INVALID;
 
       unsigned len = ((unsigned)*user_data)&0x0ff;
+      __trace2__(":MAP:UDHI: udh length %d",len);
       unsigned char* udh = user_data+1;
       unsigned ptr = 0;
       for (; ptr+2 < len; ptr+=2 )
       {
         unsigned elLength = udh[ptr+1];
+        __trace2__(":MAP:UDHI: ptr %d, tag %d, len %d",ptr,udh[ptr],elLength);
         if ( udh[ptr] == 0 || udh[ptr] == 8)
         {
           if ( udh[ptr] == 0 ) {
@@ -601,11 +603,13 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
             msgCount = udh[ptr+3];
             msgNum   = udh[ptr+4];
             __trace2__(":MAP:UDHI: tag 0, len %d",elLength);
+            break;
           }else{
             ref = ntohs(*(unsigned short*)(udh+ptr+2));
             msgCount = udh[ptr+4];
             msgNum   = udh[ptr+5];
             __trace2__(":MAP:UDHI: tag 8, len %d",elLength);
+            break;
           }
         }
         else ptr+=elLength;
