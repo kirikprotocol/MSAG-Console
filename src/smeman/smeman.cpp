@@ -58,6 +58,7 @@ public:
   virtual bool next()
   {
     if (started&&ptr!=end) ++ptr;
+		started = true;
     return ptr != end;
   }
 

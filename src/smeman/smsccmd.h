@@ -15,6 +15,7 @@
 #include "sms/sms.h"
 #include "smpp/smpp_structures.h"
 #include "smpp/smpp_sms.h"
+#include "core/synchronization/Mutex.hpp"
 #include <string.h>
 #include <memory>
 #include <inttypes.h>
@@ -26,6 +27,8 @@ using std::auto_ptr;
 using namespace smsc::smpp;
 using smsc::sms::SMS;
 using smsc::sms::Address;
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
 
 enum CommandId
 {
@@ -61,6 +64,7 @@ struct _SmscCommand
   CommandId cmdid;
   uint32_t dialogId;
   void* dta;
+	Mutex mutex;
   _SmscCommand() : ref_count(0), dta(0){};
   ~_SmscCommand()
   {
@@ -74,7 +78,7 @@ struct _SmscCommand
       delete ( (SmsResp*)dta ); break;
     case UNKNOWN:
       //__unreachable__("incorrect state dat != NULL && cmdid == UNKNOWN");
-                        __warning__("uninitialized command");
+      //__warning__("uninitialized command");
                         break;
     default:
       __unreachable__("unprocessed cmdid");
@@ -91,8 +95,9 @@ class SmscCommand
   _SmscCommand* cmd;
   void unref(_SmscCommand*& cmd)
   {
-    __trace__(__PRETTY_FUNCTION__);
+    //__trace__(__PRETTY_FUNCTION__);
     __require__ ( cmd != 0 );
+		MutexGuard guard(cmd->mutex);
     __require__ ( cmd->ref_count > 0 );
     if ( --(cmd->ref_count) == 0 )
     {
@@ -103,8 +108,9 @@ class SmscCommand
 
   _SmscCommand* ref(_SmscCommand* cmd)
   {
-    __trace__(__PRETTY_FUNCTION__);
+    //__trace__(__PRETTY_FUNCTION__);
     __require__ ( cmd != 0 );
+		MutexGuard guard(cmd->mutex);
     __require__ ( cmd->ref_count >= 0 );
     ++(cmd->ref_count);
     return cmd;
@@ -120,7 +126,7 @@ class SmscCommand
 
   void dispose() // for debuging ;(
     { 
-      __trace__(__PRETTY_FUNCTION__);
+      //__trace__(__PRETTY_FUNCTION__);
       if (cmd) unref(cmd); 
     }
 
@@ -295,19 +301,19 @@ public:
 
   SmscCommand(const SmscCommand& _cmd)
   {
-   // copy(_cmd.cmd);
-   // if ( cmd ) unref(cmd);
-    __trace2__("%s(_cmd)",__PRETTY_FUNCTION__);
-    __watch__((void*)_cmd.cmd);
+    // copy(_cmd.cmd);
+    // if ( cmd ) unref(cmd);
+    //__trace2__("%s(_cmd)",__PRETTY_FUNCTION__);
+    //__watch__((void*)_cmd.cmd);
     cmd = ref(_cmd.cmd);
   }
 
   const SmscCommand& operator = (const SmscCommand& _cmd)
   {
     // copy(_cmd.cmd);
-    __trace2__("%s(_cmd)",__PRETTY_FUNCTION__);
-    __watch__((void*)_cmd.cmd);
-    __watch__((void*)cmd);
+    //__trace2__("%s(_cmd)",__PRETTY_FUNCTION__);
+    //__watch__((void*)_cmd.cmd);
+    //__watch__((void*)cmd);
     if (cmd) unref(cmd);
     cmd = ref(_cmd.cmd);
     return _cmd;
