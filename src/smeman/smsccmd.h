@@ -150,9 +150,10 @@ public:
   {
     static const int OK       = 0;
     static const int SYSERROR = 1;
-    static const int NOALIAS  = 2;
-    static const int NOROUTE  = 3;
-    static const int DBERROR  = 4;
+    static const int INVSRC   = 2;
+    static const int INVDST   = 3;
+    static const int NOROUTE  = 4;
+    static const int DBERROR  = 5;
   };
 
   SmeProxy* getProxy(){return cmd->proxy;}
@@ -305,19 +306,20 @@ public:
     cmd = _cmd.release();
     return;
   }
-	
-	uint32_t makeSmppStatus(uint32_t status)
-	{
-		switch(status)
-		{
-		case Status::OK : return SmppStatusSet::ESME_ROK;
-		case Status::SYSERROR : return SmppStatusSet::ESME_RSYSERR;
-		case Status::NOALIAS : return SmppStatusSet::ESME_RINVDSTADR;
-		case Status::NOROUTE : return SmppStatusSet::ESME_RINVDSTADR;
-		case Status::DBERROR : return SmppStatusSet::ESME_RSYSERR;
-		default : return SmppStatusSet::ESME_RUNKNOWNERR;
-		}
-	}
+
+  uint32_t makeSmppStatus(uint32_t status)
+  {
+    switch(status)
+    {
+    case Status::OK : return SmppStatusSet::ESME_ROK;
+    case Status::SYSERROR : return SmppStatusSet::ESME_RSYSERR;
+    case Status::INVSRC: return SmppStatusSet::ESME_RINVSRCADR;
+    case Status::INVDST: return SmppStatusSet::ESME_RINVDSTADR;
+    case Status::NOROUTE : return SmppStatusSet::ESME_RINVDSTADR;
+    case Status::DBERROR : return SmppStatusSet::ESME_RSYSERR;
+    default : return SmppStatusSet::ESME_RUNKNOWNERR;
+    }
+  }
 
   SmppHeader* makePdu()
   {

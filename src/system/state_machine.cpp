@@ -55,6 +55,19 @@ StateType StateMachine::submit(Tuple& t)
     sms->getDestinationAddress().type,
     sms->getDestinationAddress().plan,
     sms->getDestinationAddress().value);
+  if(smsc->AliasToAddress(sms->getOriginatingAddress(),dst))
+  {
+    sms->setOriginatingAddress(dst);
+  }else
+  {
+    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::INVSRC);
+    try{
+      src_proxy->putCommand(resp);
+    }catch(...)
+    {
+    }
+    return ERROR_STATE;
+  }
   if(smsc->AliasToAddress(sms->getDestinationAddress(),dst))
   {
     __trace2__("ALIAS:%20s->%20s",sms->getDestinationAddress().value,dst.value);
@@ -63,7 +76,7 @@ StateType StateMachine::submit(Tuple& t)
   else
   {
     __warning__("SUBMIT: NOALIAS");
-    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::NOALIAS);
+    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::INVDST);
     try{
       src_proxy->putCommand(resp);
     }catch(...)

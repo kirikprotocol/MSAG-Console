@@ -234,6 +234,7 @@ int Profiler::Execute()
       internal_update(_update_charset,addr,ProfileCharsetOptions::Default);
     }
   }
+  return 0;
 }
 
 void Profiler::loadFromDB()
