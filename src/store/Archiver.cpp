@@ -228,8 +228,6 @@ void Archiver::startup()
     countStmt.define(1 , SQLT_UIN, (dvoid *) &(finalizedCount), 
                      (sb4) sizeof(finalizedCount));
     countStmt.checkErr(countStmt.execute());
-    
-    archivate(true);
 }
 
 void Archiver::connect()
@@ -306,6 +304,7 @@ void Archiver::decrementFinalizedCount(unsigned count)
 int Archiver::Execute()
 {
     __trace__("Archiver started !");
+    bool first=true;
     do 
     {
         job.Wait(awakeInterval);
@@ -313,7 +312,7 @@ int Archiver::Execute()
         try 
         {
             __trace__("Doing archivation job ...");
-            archivate(false);
+            archivate(first); first=false;
             __trace__("Archivation job done !");
         } 
         catch (StorageException& exc) 
