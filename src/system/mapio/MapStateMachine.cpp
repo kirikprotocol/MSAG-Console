@@ -1136,7 +1136,7 @@ static bool SendSms(MapDialog* dialog){
   bool segmentation = false;
 
 //  if ( mms )  { __map_trace2__("MAP::%s: MMS flag is set",__FUNCTION__); }
-  __map_trace2__("%s: chain size is %d mms=%d dlg->mms=",__FUNCTION__,dialog->chain.size(),mms,dialog->mms);
+  __map_trace2__("%s: chain size is %d mms=%d dlg->mms=%s dlg->invoke=%d",__FUNCTION__,dialog->chain.size(),mms,dialog->mms?"true":"false", (int)dialog->invokeId);
 
   dialog->state = MAPST_WaitSmsConf;
   if ( !dialog->mms ) {
