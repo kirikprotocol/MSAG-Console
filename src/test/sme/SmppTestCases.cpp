@@ -183,123 +183,155 @@ TCResult* SmppTestCases::bindIncorrectSme(int num)
 	return res;
 }
 
-TCResult* SmppTestCases::processInvalidSms()
+int SmppTestCases::checkSubmitTime()
 {
-	TCResult* res = new TCResult(TC_PROCESS_INVALID_SMS);
+	int res = 0x0;
+	//проверить неполученные респонсы 
+	PduRegistry::PduDataIterator* it = pduReg->getPduBySubmitTime(0, __checkTime__);
+	int found = 0;
+	int deleted = 0;
+	while (PduData* pduData = it->next())
+	{
+		found++;
+		if (!pduData->responseFlag)
+		{
+			__trace2__("SmppTestCases::checkSubmitTime(): missing response for seqNum = %d",
+				pduData->pdu->get_sequenceNumber());
+			res |= 0x1;
+			pduData->responseFlag = true;
+		}
+		if (pduData->complete())
+		{
+			deleted++;
+			pduReg->removePdu(pduData);
+		}
+	}
+	delete it;
+	__trace2__("SmppTestCases::checkSubmitTime(): found = %d, deleted = %d", found, deleted);
+	return res;
+}
+
+int SmppTestCases::checkWaitTime()
+{
+	int res = 0x0;
+	//проверить неполученные доставки и подтверждения доставки 
+	//на момент waitTime
+	PduRegistry::PduDataIterator* it = pduReg->getPduByWaitTime(0, __checkTime__);
+	int found = 0;
+	int deleted = 0;
+	while (PduData* pduData = it->next())
+	{
+		found++;
+		__require__(pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
+		PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
+		if (routeChecker->checkExistsUnreachableRoute(
+			pdu->get_message().get_dest(), true))
+		{
+			continue;
+		}
+		if (!pduData->deliveryFlag)
+		{
+			__trace2__("SmppTestCases::checkWaitTime(): missing delivery for seqNum = %d",
+				pduData->pdu->get_sequenceNumber());
+			res |= 0x2;
+			pduData->deliveryFlag = true;
+		}
+		if (!pduData->deliveryReceiptFlag)
+		{
+			__trace2__("SmppTestCases::checkWaitTime(): missing delivery receipt for seqNum = %d",
+				pduData->pdu->get_sequenceNumber());
+			res |= 0x4;
+			pduData->deliveryReceiptFlag = true;
+		}
+		if (!pduData->intermediateNotificationFlag)
+		{
+			__trace2__("SmppTestCases::checkWaitTime(): missing intermediate notification for seqNum = %d",
+				pduData->pdu->get_sequenceNumber());
+			res |= 0x8;
+			pduData->intermediateNotificationFlag = true;
+		}
+		if (pduData->complete())
+		{
+			deleted++;
+			pduReg->removePdu(pduData);
+		}
+	}
+	delete it;
+	__trace2__("SmppTestCases::checkWaitTime(): found = %d, deleted = %d", found, deleted);
+	return res;
+}
+
+int SmppTestCases::checkValidTime()
+{
+	int res = 0x0;
+	//проверить неполученные доставки и подтверждения доставки
+	//по окончании validTime
+	PduRegistry::PduDataIterator* it = pduReg->getPduByValidTime(0, __checkTime__);
+	int found = 0;
+	int deleted = 0;
+	while (PduData* pduData = it->next())
+	{
+		found++;
+		__require__(pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
+		PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
+		if (routeChecker->checkExistsUnreachableRoute(
+			pdu->get_message().get_dest(), true))
+		{
+			pduData->deliveryFlag = true;
+		}
+		if (!pduData->deliveryFlag)
+		{
+			__trace2__("SmppTestCases::checkValidTime(): missing delivery for seqNum = %d",
+				pduData->pdu->get_sequenceNumber());
+			res |= 0x2;
+			pduData->deliveryFlag = true;
+		}
+		if (!pduData->deliveryReceiptFlag)
+		{
+			__trace2__("SmppTestCases::checkValidTime(): missing delivery receipt for seqNum = %d",
+				pduData->pdu->get_sequenceNumber());
+			res |= 0x4;
+			pduData->deliveryReceiptFlag = true;
+		}
+		if (!pduData->intermediateNotificationFlag)
+		{
+			__trace2__("SmppTestCases::checkValidTime(): missing intermediate notification for seqNum = %d",
+				pduData->pdu->get_sequenceNumber());
+			res |= 0x8;
+			pduData->intermediateNotificationFlag = true;
+		}
+		pduReg->removePdu(pduData);
+		deleted++;
+	}
+	delete it;
+	__trace2__("SmppTestCases::checkValidTime(): found = %d, deleted = %d", found, deleted);
+	return res;
+}
+
+TCResult* SmppTestCases::checkMissingPdu()
+{
+	TCResult* res = new TCResult(TC_CHECK_MISSING_PDU);
 	if (pduReg)
 	{
 		MutexGuard(pduReg->getMutex());
-		bool missingResp = false;
-		bool missingDelivery = false;
-		bool missingDeliveryReceipt = false;
-		bool missingIntermediateNotification = false;
-		//проверить неполученные респонсы
-		PduRegistry::PduDataIterator* sit = pduReg->getPduBySubmitTime(0, __checkTime__);
-		int sitCount = 0;
-		while (PduData* pduData = sit->next())
+		int chk = checkSubmitTime() | checkWaitTime() | checkValidTime();
+		if (chk & 0x1) //неполученные респонсы
 		{
-			sitCount++;
-			if (!pduData->responseFlag)
-			{
-				__trace2__("SmppTestCases::processInvalidSms(): missing response for seqNum = %d",
-					pduData->pdu->get_sequenceNumber());
-				missingResp = true;
-				pduData->responseFlag = true;
-				if (pduData->complete())
-				{
-					pduReg->removePdu(pduData);
-				}
-			}
+			res->addFailure(1);
 		}
-		delete sit;
-		__trace2__("SmppTestCases::processInvalidSms(): sitCount = %d", sitCount);
-		//проверить неполученные доставки и подтверждения доставки 
-		//на момент waitTime
-		PduRegistry::PduDataIterator* wit = pduReg->getPduByWaitTime(0, __checkTime__);
-		int witCount = 0;
-		while (PduData* pduData = wit->next())
+		if (chk & 0x2) //неполученные доставки
 		{
-			witCount++;
-			if (pduData->deliveryFlag && pduData->deliveryReceiptFlag)
-			{
-				continue;
-			}
-			__require__(pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
-			PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
-			if (routeChecker->checkExistsUnreachableRoute(
-				pdu->get_message().get_dest(), true))
-			{
-				continue;
-			}
-			if (!pduData->deliveryFlag)
-			{
-				__trace2__("SmppTestCases::processInvalidSms(): missing delivery for seqNum = %d",
-					pduData->pdu->get_sequenceNumber());
-				missingDelivery = true;
-				pduData->deliveryFlag = true;
-			}
-			if (!pduData->deliveryReceiptFlag)
-			{
-				__trace2__("SmppTestCases::processInvalidSms(): missing delivery receipt for seqNum = %d",
-					pduData->pdu->get_sequenceNumber());
-				missingDeliveryReceipt = true;
-				pduData->deliveryReceiptFlag = true;
-			}
-			if (pduData->complete())
-			{
-				pduReg->removePdu(pduData);
-			}
+			res->addFailure(2);
 		}
-		delete wit;
-		__trace2__("SmppTestCases::processInvalidSms(): witCount = %d", witCount);
-		//проверить неполученные доставки и подтверждения доставки
-		//по окончании validTime
-		PduRegistry::PduDataIterator* vit = pduReg->getPduByValidTime(0, __checkTime__);
-		int vitCount = 0;
-		while (PduData* pduData = vit->next())
+		if (chk & 0x4) //неполученные подтверждения доставки
 		{
-			vitCount++;
-			if (pduData->responseFlag && pduData->deliveryReceiptFlag)
-			{
-				continue;
-			}
-			__require__(pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
-			PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
-			if (routeChecker->checkExistsUnreachableRoute(
-				pdu->get_message().get_dest(), true))
-			{
-				pduData->deliveryFlag = true;
-				pduData->deliveryReceiptFlag = true;
-			}
-			if (!pduData->deliveryFlag)
-			{
-				__trace2__("SmppTestCases::processInvalidSms(): missing delivery for seqNum = %d",
-					pduData->pdu->get_sequenceNumber());
-				missingDelivery = true;
-				pduData->deliveryFlag = true;
-			}
-			if (!pduData->deliveryReceiptFlag)
-			{
-				__trace2__("SmppTestCases::processInvalidSms(): missing delivery receipt for seqNum = %d",
-					pduData->pdu->get_sequenceNumber());
-				missingDeliveryReceipt = true;
-				pduData->deliveryReceiptFlag = true;
-			}
-			if (!pduData->intermediateNotificationFlag)
-			{
-				__trace2__("SmppTestCases::processInvalidSms(): missing intermediate notification for seqNum = %d",
-					pduData->pdu->get_sequenceNumber());
-				missingIntermediateNotification = true;
-				pduData->intermediateNotificationFlag = true;
-			}
-			pduReg->removePdu(pduData);
+			res->addFailure(3);
 		}
-		delete vit;
-		__trace2__("SmppTestCases::processInvalidSms(): vitCount = %d", vitCount);
-		if (missingResp) { res->addFailure(1); }
-		if (missingDelivery) { res->addFailure(2); }
-		if (missingDeliveryReceipt) { res->addFailure(3); }
-		if (missingIntermediateNotification) { res->addFailure(4); }
+		if (chk & 0x8) //неполученные промежуточные нотификации
+		{
+			res->addFailure(4);
+		}
+		__trace2__("SmppTestCases::checkMissingPdu(): pduReg size = %d", pduReg->size());
 	}
 	debug(res);
 	return res;

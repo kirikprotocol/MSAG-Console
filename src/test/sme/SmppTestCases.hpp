@@ -18,7 +18,7 @@ using namespace smsc::test::core; //SmeRegistry, PduRegistry, ...
 //implemented
 const char* const TC_BIND_CORRECT_SME = "bindCorrectSme";
 const char* const TC_BIND_INCORRECT_SME = "bindIncorrectSme";
-const char* const TC_PROCESS_INVALID_SMS = "processInvalidSms";
+const char* const TC_CHECK_MISSING_PDU = "checkMissingPdu";
 const char* const TC_UNBIND = "unbind";
 
 /**
@@ -58,7 +58,7 @@ public:
 	/**
 	 * ¬се подтверждений доставки, нотификации и sms доставл€ютс€ и не тер€ютс€.
 	 */
-	TCResult* processInvalidSms();
+	TCResult* checkMissingPdu();
 	
 	/**
 	 * Unbind дл€ sme.
@@ -84,6 +84,10 @@ private:
 	SmppResponsePduChecker* responseChecker;
 	SmppReceiverTestCases* receiver;
 	SmppTransmitterTestCases* transmitter;
+
+	int checkSubmitTime();
+	int checkWaitTime();
+	int checkValidTime();
 };
 
 }
