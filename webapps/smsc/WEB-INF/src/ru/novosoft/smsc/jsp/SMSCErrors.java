@@ -23,7 +23,7 @@ public class SMSCErrors
 		public static final String notYetImplemented = B + "notYetImplemented";
 		public static final String CouldntGetSMSCStatus = B + "CouldntGetSMSCStatus";
 
-		public static class services
+    public static class services
 		{
 			private static final String B = SMSCErrors.error.B + "services.";
 			public static final String couldntStartInternalService = B + "couldntStartInternalService";
@@ -151,6 +151,15 @@ public class SMSCErrors
 			public static final String invalidBoolParameter = B + "invalidBoolParameter";
 			public static final String couldntGetLogCats = B + "couldntGetLogCats";
 			public static final String couldntSetLogCats = B + "couldntSetLogCats";
+
+      public static class reshedule
+      {
+        private static final String B = smsc.B + "reshedule.";
+        public static final String couldntGetErrorCodes = B + "couldntGetErrorCodes";
+        public static final String couldntSaveConfig = B + "couldntSaveConfig";
+        public static final String couldntGetReshedules = B + "couldntGetReshedules";
+        public static final String resheduleAlreadyPresent = B + "resheduleAlreadyPresent";
+      }
 		}
 
 		public static class commutators

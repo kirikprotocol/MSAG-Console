@@ -26,7 +26,7 @@ void page_menu_button(JspWriter out, String name, String value, String title, St
 		out.print("<td width=1px>|</td>");
 	out.print("<td width=1px>");
 	//out.print("<input type=submit id=\"" + name + "\" name=\"" + name + "\" value=\"" + value + "\" title=\"" + title + "\"" + (enabled ? "" : " disabled") + ((onclick != null && onclick.length() > 0) ? (" onclick=\"" + onclick + '"') : "" ) +">");
-	out.print("<a id=\"" + name + "\" jbuttonName=\"" + name + "\" jbuttonValue=\"" + value + "\""
+	out.print("<a id=\"" + name + "\" jbuttonName=\"" + name + "\" jbuttonValue=\"" + value + "\"" + (enabled ? "" : " disabled")
 				+ ((title != null && title.length() > 0) ? " title=\"" + title + "\"" : "")
 				+ ((onclick != null && onclick.length() > 0) ? (" jbuttonOnclick=\"" + onclick + '"') : "" ) 
 				+">" + value + "</a>");

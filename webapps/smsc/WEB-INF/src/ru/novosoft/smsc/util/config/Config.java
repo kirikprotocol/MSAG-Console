@@ -325,4 +325,19 @@ public class Config
 			throw new IOException("Couldn't rename new file \"" + tmpFile.getAbsolutePath() + "\" to old config file \"" + c.getAbsolutePath() + '"');
 		backFile.delete();
 	}
+
+  public Collection getSectionChildShortParamsNames(String sectionName)
+  {
+    int dotpos = sectionName.length();
+    Set result = new HashSet();
+    for (Iterator i = params.keySet().iterator(); i.hasNext();)
+    {
+      String name = (String) i.next();
+      if (name.length() > (dotpos + 1) && name.startsWith(sectionName) && name.lastIndexOf('.') == dotpos)
+      {
+        result.add(name.substring(dotpos+1));
+      }
+    }
+    return result;
+  }
 }

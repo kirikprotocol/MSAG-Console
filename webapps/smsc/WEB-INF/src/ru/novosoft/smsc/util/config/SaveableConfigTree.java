@@ -120,7 +120,9 @@ public class SaveableConfigTree
 			SaveableConfigTree childs = (SaveableConfigTree) secs.get(secName);
 			out.println((prefix + "<section name=\"" + StringEncoderDecoder.encode(secName) + "\">"));
 			childs.write(out, prefix + "  ");
-			out.println((prefix + "</section>\n"));
+			out.println((prefix + "</section>"));
+      if (i.hasNext())
+        out.println();
 		}
 	}
 }
