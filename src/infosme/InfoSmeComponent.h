@@ -31,7 +31,8 @@ namespace smsc { namespace infosme
             startTaskSchedulerMethod, stopTaskSchedulerMethod, isTaskSchedulerRunningMethod,
             flushStatisticsMethod, 
             addTasksMethod, removeTasksMethod, changeTasksMethod, 
-            startTasksMethod, stopTasksMethod, getStartedTasksMethod,
+            startTasksMethod, stopTasksMethod, 
+            getGeneratingTasksMethod, getProcessingTasksMethod,
             isTaskEnabledMethod, setTaskEnabledMethod, 
             addSchedulesMethod, removeSchedulesMethod, changeSchedulesMethod
         };
@@ -46,7 +47,8 @@ namespace smsc { namespace infosme
         
         void startTasks(const Arguments& args);
         void stopTasks(const Arguments& args); 
-        Variant getStartedTasks(const Arguments& args);
+        Variant getGeneratingTasks(const Arguments& args);
+        Variant getProcessingTasks(const Arguments& args);
 
         void setTaskEnabled(const Arguments& args);
         bool isTaskEnabled(const Arguments& args);

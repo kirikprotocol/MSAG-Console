@@ -120,8 +120,8 @@ int TaskScheduler::Execute()
                         continue;
                     }
                     
-                    if (task->isEnabled() && !task->isInProcess())
-                        processor->invokeBeginProcess(task);
+                    if (task->isEnabled() && !task->isInGeneration())
+                        processor->invokeBeginGeneration(task);
                 }
         } 
         catch (std::exception& exc) 

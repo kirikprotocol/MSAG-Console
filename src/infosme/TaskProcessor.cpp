@@ -781,27 +781,40 @@ bool TaskProcessor::startTask(std::string taskId)
     TaskGuard taskGuard = getTask(taskId);
     Task* task = taskGuard.get();
     if (!task) return false; 
-    return (task->isInProcess()) ? true:invokeBeginProcess(task);
+    return (task->isInGeneration()) ? true:invokeBeginGeneration(task);
 }
 bool TaskProcessor::stopTask(std::string taskId)
 {
     TaskGuard taskGuard = getTask(taskId);
     Task* task = taskGuard.get();
     if (!task) return false; 
-    return (task->isInProcess()) ? true:invokeEndProcess(task);
+    return (task->isInGeneration()) ? true:invokeEndGeneration(task);
 }
-Array<std::string> TaskProcessor::getStartedTasks()
+Array<std::string> TaskProcessor::getGeneratingTasks()
 {
     MutexGuard guard(tasksLock);
     
-    Array<std::string> startedTasks;
+    Array<std::string> generatingTasks;
+
+    char* key = 0; Task* task = 0; tasks.First();
+    while (tasks.Next(key, task))
+        if (task && task->isInGeneration()) 
+            generatingTasks.Push(task->getId());
+
+    return generatingTasks;
+}
+Array<std::string> TaskProcessor::getProcessingTasks()
+{
+    MutexGuard guard(tasksLock);
+    
+    Array<std::string> processingTasks;
 
     char* key = 0; Task* task = 0; tasks.First();
     while (tasks.Next(key, task))
         if (task && task->isInProcess()) 
-            startedTasks.Push(task->getId());
+            processingTasks.Push(task->getId());
 
-    return startedTasks;
+    return processingTasks;
 }
 bool TaskProcessor::isTaskEnabled(std::string taskId)
 {

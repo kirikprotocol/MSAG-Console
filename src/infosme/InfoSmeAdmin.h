@@ -39,7 +39,8 @@ namespace smsc { namespace infosme
         
         virtual bool startTask(std::string taskId) = 0;
         virtual bool stopTask(std::string taskId) = 0; 
-        virtual Array<std::string> getStartedTasks() = 0;
+        virtual Array<std::string> getGeneratingTasks() = 0;
+        virtual Array<std::string> getProcessingTasks() = 0;
 
         virtual bool isTaskEnabled(std::string taskId) = 0;
         virtual bool setTaskEnabled(std::string taskId, bool enabled) = 0;

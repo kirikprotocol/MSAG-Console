@@ -28,8 +28,10 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
                                      "isTaskSchedulerRunning", empty_params, BooleanType);
     Method flush_statistics((unsigned)flushStatisticsMethod, 
                             "flushStatistics", empty_params, StringType);
-    Method get_started_tasks((unsigned)getStartedTasksMethod, 
-                            "getStartedTasksMethod", empty_params, StringListType);
+    Method get_generating_tasks((unsigned)getGeneratingTasksMethod, 
+                                "getGeneratingTasksMethod", empty_params, StringListType);
+    Method get_processing_tasks((unsigned)getProcessingTasksMethod, 
+                                "getProcessingTasksMethod", empty_params, StringListType);
 
     Parameters ids_params;
     ids_params[ARGUMENT_NAME_IDS] = Parameter(ARGUMENT_NAME_IDS, StringListType);
@@ -62,7 +64,8 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
     methods[change_tasks.getName()]                 = change_tasks;
     methods[start_tasks.getName()]                  = start_tasks;
     methods[stop_tasks.getName()]                   = stop_tasks;
-    methods[get_started_tasks.getName()]            = get_started_tasks;
+    methods[get_generating_tasks.getName()]         = get_generating_tasks;
+    methods[get_processing_tasks.getName()]         = get_processing_tasks;
     methods[is_task_enabled.getName()]              = is_task_enabled;
     methods[set_task_enabled.getName()]             = set_task_enabled;
     methods[add_schedules.getName()]                = add_schedules;
@@ -117,8 +120,10 @@ Variant InfoSmeComponent::call(const Method& method, const Arguments& args)
         case stopTasksMethod:
             stopTasks(args);
             break;
-        case getStartedTasksMethod:
-            return getStartedTasks(args);
+        case getGeneratingTasksMethod:
+            return getGeneratingTasks(args);
+        case getProcessingTasksMethod:
+            return getProcessingTasks(args);
         case isTaskEnabledMethod:
             return Variant(isTaskEnabled(args));
         case setTaskEnabledMethod:
@@ -241,13 +246,20 @@ void InfoSmeComponent::stopTasks(const Arguments& args)
             throw AdminException("Failed to stop task '%s'", taskId);
     }
 }
-Variant InfoSmeComponent::getStartedTasks(const Arguments& args)
+Variant InfoSmeComponent::getGeneratingTasks(const Arguments& args)
 {
-    // args is not used
     Variant result(StringListType);
-    Array<std::string> startedTasks = admin.getStartedTasks();
-    for (int i=0; i<startedTasks.Count(); i++)
-        result.appendValueToStringList(startedTasks[i].c_str());
+    Array<std::string> generatingTasks = admin.getGeneratingTasks();
+    for (int i=0; i<generatingTasks.Count(); i++)
+        result.appendValueToStringList(generatingTasks[i].c_str());
+    return result;
+}
+Variant InfoSmeComponent::getProcessingTasks(const Arguments& args)
+{
+    Variant result(StringListType);
+    Array<std::string> processingTasks = admin.getProcessingTasks();
+    for (int i=0; i<processingTasks.Count(); i++)
+        result.appendValueToStringList(processingTasks[i].c_str());
     return result;
 }
 bool InfoSmeComponent::isTaskEnabled(const Arguments& args)

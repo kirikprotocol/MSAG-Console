@@ -39,7 +39,7 @@ namespace smsc { namespace infosme
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
-    typedef enum { beginProcessMethod, endProcessMethod, dropAllMessagesMethod } TaskMethod;
+    typedef enum { beginGenerationMethod, endGenerationMethod, dropAllMessagesMethod } TaskMethod;
     
     class TaskRunner : public TaskGuard, public ThreadedTask // for task method execution 
     {
@@ -59,11 +59,11 @@ namespace smsc { namespace infosme
             __require__(task);
             switch (method)
             {
-            case endProcessMethod:
-                task->endProcess();
+            case endGenerationMethod:
+                task->endGeneration();
                 break;
-            case beginProcessMethod:
-                task->beginProcess(statistics);
+            case beginGenerationMethod:
+                task->beginGeneration(statistics);
                 break;
             case dropAllMessagesMethod:
                 task->dropAllMessages();
@@ -335,11 +335,11 @@ namespace smsc { namespace infosme
         virtual bool hasTask(std::string taskId);
         virtual TaskGuard getTask(std::string taskId);
         
-        virtual bool invokeEndProcess(Task* task) {
-            return taskManager.startThread(new TaskRunner(task, endProcessMethod));
+        virtual bool invokeEndGeneration(Task* task) {
+            return taskManager.startThread(new TaskRunner(task, endGenerationMethod));
         };
-        virtual bool invokeBeginProcess(Task* task) {
-            return taskManager.startThread(new TaskRunner(task, beginProcessMethod, statistics));
+        virtual bool invokeBeginGeneration(Task* task) {
+            return taskManager.startThread(new TaskRunner(task, beginGenerationMethod, statistics));
         };
         virtual bool invokeDropAllMessages(Task* task) {
             return taskManager.startThread(new TaskRunner(task, dropAllMessagesMethod));
@@ -392,7 +392,8 @@ namespace smsc { namespace infosme
         
         virtual bool startTask(std::string taskId);
         virtual bool stopTask(std::string taskId);
-        virtual Array<std::string> getStartedTasks();
+        virtual Array<std::string> getGeneratingTasks();
+        virtual Array<std::string> getProcessingTasks();
 
         virtual bool isTaskEnabled(std::string taskId);
         virtual bool setTaskEnabled(std::string taskId, bool enabled);

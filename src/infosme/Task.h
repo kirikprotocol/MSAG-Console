@@ -159,11 +159,10 @@ namespace smsc { namespace infosme
         DataSource*     dsOwn;
         DataSource*     dsInt;
         
-        Event       processEndEvent;
-        Event       inProcessEvent;
-        Mutex       inProcessLock;
         Mutex       createTableLock, enableLock;
-        bool        bInProcess;
+        Event       generationEndEvent;
+        Mutex       inGenerationLock, inProcessLock;
+        bool        bInProcess, bInGeneration;
 
         Mutex           messagesCacheLock;
         Array<Message>  messagesCache;
@@ -181,13 +180,19 @@ namespace smsc { namespace infosme
                 MutexGuard guard(finalizingLock);
                 bFinalizing = true;
             }
-            endProcess();
+            endGeneration();
             
             while (true) {
                 usersCountEvent.Wait(10);
                 MutexGuard guard(usersCountLock);
                 if (usersCount <= 0) break;
             }
+        }
+
+        inline bool setInProcess(bool inProcess) {
+            MutexGuard guard(inProcessLock);
+            bInProcess = inProcess;
+            return bInProcess;
         }
     
     public:
@@ -211,9 +216,17 @@ namespace smsc { namespace infosme
             doFinalization();
             delete this;
         }
-        bool isFinalizing() {
+        inline bool isFinalizing() {
             MutexGuard guard(finalizingLock);
             return bFinalizing;
+        }
+        inline bool isInProcess() {
+            MutexGuard guard(inProcessLock);
+            return bInProcess;
+        }
+        inline bool isInGeneration() {
+            MutexGuard guard(inGenerationLock);
+            return bInGeneration;
         }
 
         inline std::string getId() {
@@ -238,24 +251,24 @@ namespace smsc { namespace infosme
         }
         
         bool isReady(time_t time);
-        bool isInProcess();
+        
 
         /**
          * Запускает процесс генерации сообщений для отправки в спец.таблицу задачи.
          * Выполняестся на ThreadPool'е по команде от Scheduler'а
          * Использует два connection'а: один из своего,а другой внутреннего источника данных.
          */
-        void beginProcess(Statistics* statistics);
+        void beginGeneration(Statistics* statistics);
         /**
          * Останавливает процесс генерации сообщений для отправки в спец.таблицу задачи.
          * Выполняестся на ThreadPool'е по команде от Scheduler'а или TaskProcessor'а.
-         * Выставляет Event для завершения beginProcess() и ждёт завершения.
+         * Выставляет Event для завершения beginGeneration() и ждёт завершения.
          */
-        void endProcess();
+        void endGeneration();
         
         /**
          * Останавливает процесс генерации сообщений для отправки в спец.таблицу задачи
-         * посредством endProcess(). Удаляет все сгенерированные сообщения.
+         * посредством endGeneration(). Удаляет все сгенерированные сообщения.
          * Использует connection из внутреннего источника данных.
          */
         void dropAllMessages();

@@ -138,7 +138,6 @@ void StatisticsManager::flushStatistics()
     doneEvent.Wait();
 }
 
-const char* DELETE_TASK_STAT_STATE_ID = "DELETE_TASK_STAT_STATE_ID";
 const char* DELETE_TASK_STAT_STATE_SQL = (const char*)
 "DELETE FROM INFOSME_TASKS_STAT WHERE task_id=:task_id";
 
