@@ -77,6 +77,8 @@
       <param name="port" type="int">9003</param>
     </section>
 
+    <param name="eventQueueLimit" type="int">1000</param>
+
   </section>
 
   <section name="logger">
