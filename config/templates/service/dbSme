@@ -2,6 +2,7 @@
 if [ -f logs/dbsme.err ]; then
   mv logs/dbsme.err logs/dbsme.err.old
 fi
+chmod +x bin/DBSme
 while true;
 do
 bin/DBSme 1>/dev/null 2>>logs/dbsme.err&
