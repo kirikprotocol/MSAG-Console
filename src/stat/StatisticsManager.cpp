@@ -13,7 +13,7 @@ StatisticsManager::StatisticsManager(DataSource& _ds)
 }
 StatisticsManager::~StatisticsManager()
 {
-//    stop();
+    MutexGuard guard(stopLock);
 }
 
 void StatisticsManager::updateAccepted(const char* srcSmeId)
@@ -98,6 +98,8 @@ int StatisticsManager::Execute()
 
 void StatisticsManager::stop()
 {
+    MutexGuard guard(stopLock);
+
     __trace2__("StatisticsManager::stop() called, started=%d", isStarted);
     ThreadedTask::stop();
     if (isStarted)

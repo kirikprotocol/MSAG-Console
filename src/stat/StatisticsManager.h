@@ -57,7 +57,7 @@ namespace smsc { namespace stat
         
         short   currentIndex;
         
-        Mutex   switchLock, flushLock, smeStatLock;
+        Mutex   stopLock, switchLock, flushLock, smeStatLock;
         Mutex   incomingLock, outgoingLock, scheduleLock;
 
         Event   awakeEvent, exitEvent, doneEvent;
