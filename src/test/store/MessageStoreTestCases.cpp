@@ -67,10 +67,10 @@ TCResult* MessageStoreTestCases::storeCorrectSM(SMSId* idp, SMS* smsp, int num)
 				case 1: //ничего особенного
 					break;
 				case 2: //пустой originatingAddress
-					sms.setOriginatingAddress(0, 20, 30, rand_char(1).get());
+					sms.setOriginatingAddress(0, 20, 30, NULL);
 					break;
 				case 3: //пустое тело сообщения
-					sms.setMessageBody(0, 20, false, rand_uint8_t(1).get());
+					sms.setMessageBody(0, 20, false, NULL);
 					break;
 				case 4: //длинное тело сообщения
 					sms.setMessageBody(MAX_MSG_BODY_LENGTH, 20, false, 
