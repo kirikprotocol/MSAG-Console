@@ -482,6 +482,16 @@ bool operator< (const Address& a1, const Address& a2)
 	return memcmp(val1, val2, a1.getLenght()) < 0;
 }
 
+auto_ptr<char> str(const Address& addr)
+{
+	char* tmp = new char[32];
+	AddressValue addrVal;
+	addr.getValue(addrVal);
+	sprintf(tmp, ".%d.%d.%s", (int) addr.getTypeOfNumber(),
+		(int) addr.getNumberingPlan(), addrVal);
+	return auto_ptr<char>(tmp);
+}
+
 ostream& operator<< (ostream& os, const Descriptor& d)
 {
 	os << "{msc=" << d.msc << "(" << d.mscLength <<

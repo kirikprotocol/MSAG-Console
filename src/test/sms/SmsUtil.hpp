@@ -76,6 +76,7 @@ ostream& operator<< (ostream& os, const Address& a);
 bool operator== (const Address& a1, const Address& a2);
 bool operator!= (const Address& a1, const Address& a2);
 bool operator< (const Address& a1, const Address& a2);
+auto_ptr<char> str(const Address& a);
 
 ostream& operator<< (ostream& os, const Descriptor& d);
 bool operator==(const Descriptor& d1, const Descriptor& d2);
