@@ -5,11 +5,14 @@
  */
 package ru.novosoft.smsc.jsp;
 
+import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.util.conpool.NSConnectionPool;
 import ru.novosoft.util.jsp.AppContext;
+
+import javax.sql.DataSource;
 
 
 public interface SMSCAppContext extends AppContext
@@ -18,7 +21,9 @@ public interface SMSCAppContext extends AppContext
 
 	public ServiceManager getServiceManager();
 
+	public DaemonManager getDaemonManager();
+
 	public Smsc getSmsc();
 
-	public NSConnectionPool getConnectionPool();
+	public DataSource getConnectionPool();
 }

@@ -189,7 +189,7 @@ public class ServiceManager
 			wizard.deploy(daemonsFolder, webappFolder, webinfLibFolder);
 
 			ServiceInfo serviceInfo = new ServiceInfo(wizard.getSystemId(), wizard.getHost(), wizard.getPort(),
-																	wizard.getStartupArgs(), wizard.createSme());
+																	wizard.getStartupArgs(), wizard.createSme(), ServiceInfo.STATUS_STOPPED);
 
 			Daemon d = getDaemon(serviceInfo.getHost());
 			d.addService(serviceInfo);
@@ -387,7 +387,7 @@ public class ServiceManager
 		for (Iterator i = serviceIds.iterator(); i.hasNext();)
 		{
 			String serviceId = (String) i.next();
-			if (getServiceInfo(serviceId).isRunning())
+			if (getServiceInfo(serviceId).getStatus() == ServiceInfo.STATUS_RUNNING)
 				result++;
 		}
 		return result;
@@ -406,9 +406,9 @@ public class ServiceManager
 		Service s = getService(serviceId);
 		Daemon d = getDaemon(s.getInfo().getHost());
 		d.setServiceStartupParameters(serviceId, /*serviceName, */port, args);
-		if (!s.getInfo().isRunning())
+		if (s.getInfo().getStatus() == ServiceInfo.STATUS_STOPPED)
 		{
-			replaceService(new Service(new ServiceInfo(serviceId, d.getHost(), port, args, (SME) smsc.getSmes().get(serviceId))));
+			replaceService(new Service(new ServiceInfo(serviceId, d.getHost(), port, args, (SME) smsc.getSmes().get(serviceId), s.getInfo().getStatus())));
 		}
 	}
 
@@ -497,5 +497,10 @@ public class ServiceManager
 	public synchronized boolean isService(String smeId)
 	{
 		return services.keySet().contains(smeId);
+	}
+
+	public DaemonManager getDaemonManager()
+	{
+		return daemonManager;
 	}
 }

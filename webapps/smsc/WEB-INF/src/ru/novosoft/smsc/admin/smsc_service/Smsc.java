@@ -53,7 +53,7 @@ public class Smsc extends Service
 		super(new ServiceInfo("SMSC",
 									 configManager.getConfig().getString("smsc.host"),
 									 configManager.getConfig().getInt("smsc.port"),
-									 "", null));
+									 "", null, ServiceInfo.STATUS_RUNNING));
 
 		this.configManager = configManager;
 

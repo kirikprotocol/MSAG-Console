@@ -17,6 +17,12 @@ import java.util.Map;
 
 public class ServiceInfo
 {
+	public static final byte STATUS_RUNNING = 0;
+	public static final byte STATUS_STARTING = 1;
+	public static final byte STATUS_STOPPING = 2;
+	public static final byte STATUS_STOPPED = 3;
+	public static final byte STATUS_UNKNOWN = 4;
+
 	protected String id = "";
 	protected String host = "";
 	protected int port = 0;
@@ -24,6 +30,7 @@ public class ServiceInfo
 	protected long pid = 0;
 	protected Map components = new HashMap();
 	protected SME sme = null;
+	protected byte status = STATUS_STOPPED;
 
 
 	public ServiceInfo(Element serviceElement, String serviceHost, SMEList smes)
@@ -42,42 +49,30 @@ public class ServiceInfo
 		if (sme == null)
 			throw new AdminException("Unknown SME ID: \"" + id + '"');
 
+		setStatusStr(serviceElement.getAttribute("status"));
 		String pidStr = serviceElement.getAttribute("pid");
 		this.pid = (pidStr != null && pidStr.length() > 0) ? Long.decode(pidStr).longValue() : 0;
 	}
 
-	private ServiceInfo(String id, String host, int port, String args, long pid, SME sme)
+	private ServiceInfo(String id, String host, int port, String args, long pid, SME sme, byte status)
 			  throws AdminException
 	{
-//    this.name = name;
 		this.host = host;
 		this.port = port;
 		this.args = args;
 		this.pid = pid;
 		this.id = id;
 		this.sme = sme;
-/*
-		if (smes != null)
-		{
-		  sme = smes.get(id);
-		  if (sme == null)
-			 throw new AdminException("Unknown SME ID: \"" + id + '"');
-		}
-*/
+		this.status = status;
 	}
 
-	public ServiceInfo(String id, String host, int port, String args, SME sme)
+	public ServiceInfo(String id, String host, int port, String args, SME sme, byte status)
 			  throws AdminException
 	{
-		this(/*name, */id, host, port, args, 0, sme);
+		this(id, host, port, args, 0, sme, status);
 	}
 
 
-/*  public String getName()
-  {
-    return name;
-  }
-*/
 	public String getHost()
 	{
 		return host;
@@ -101,11 +96,6 @@ public class ServiceInfo
 	public long getPid()
 	{
 		return pid;
-	}
-
-	public boolean isRunning()
-	{
-		return pid != 0;
 	}
 
 	public void setPid(long pid)
@@ -133,5 +123,51 @@ public class ServiceInfo
 	public SME getSme()
 	{
 		return sme;
+	}
+
+	public byte getStatus()
+	{
+		return status;
+	}
+
+	protected void setStatusStr(String statusStr)
+	{
+		if ("running".equalsIgnoreCase(statusStr))
+		{
+			this.status = STATUS_RUNNING;
+		}
+		else if ("starting".equalsIgnoreCase(statusStr))
+		{
+			this.status = STATUS_STARTING;
+		}
+		else if ("stopping".equalsIgnoreCase(statusStr))
+		{
+			this.status = STATUS_STOPPING;
+		}
+		else if ("stopped".equalsIgnoreCase(statusStr))
+		{
+			this.status = STATUS_STOPPED;
+		}
+		else
+			this.status = STATUS_UNKNOWN;
+	}
+
+	public String getStatusStr()
+	{
+		switch (status)
+		{
+			case STATUS_RUNNING:
+				return "running";
+			case STATUS_STARTING:
+				return "starting";
+			case STATUS_STOPPING:
+				return "stopping";
+			case STATUS_STOPPED:
+				return "stopped";
+			case STATUS_UNKNOWN:
+				return "unknown";
+			default:
+				return "unknown";
+		}
 	}
 }

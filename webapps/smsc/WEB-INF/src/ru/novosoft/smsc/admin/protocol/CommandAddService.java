@@ -23,7 +23,8 @@ public class CommandAddService extends Command
 		//serviceElem.setAttribute("name", StringEncoderDecoder.encode(serviceInfo.getName()));
 		serviceElem.setAttribute("id", StringEncoderDecoder.encode(serviceInfo.getId()));
 		serviceElem.setAttribute("port", StringEncoderDecoder.encode(String.valueOf(serviceInfo.getPort())));
-		serviceElem.setAttribute("args", StringEncoderDecoder.encode(String.valueOf(serviceInfo.getArgs())));
+		serviceElem.setAttribute("args", StringEncoderDecoder.encode(serviceInfo.getArgs()));
+		serviceElem.setAttribute("status", serviceInfo.getStatusStr());
 		document.getDocumentElement().appendChild(serviceElem);
 		//logger.debug("Command add_service created");
 	}

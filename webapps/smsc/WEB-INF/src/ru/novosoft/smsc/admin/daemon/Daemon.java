@@ -42,7 +42,7 @@ public class Daemon extends Proxy
 	/**
 	 * @return Process ID (PID) of new service
 	 */
-	public long startService(String serviceId)
+	public synchronized long startService(String serviceId)
 			  throws AdminException
 	{
 		Response r = runCommand(new CommandStartService(serviceId));
@@ -60,7 +60,7 @@ public class Daemon extends Proxy
 		}
 	}
 
-	public void addService(ServiceInfo serviceInfo)
+	public synchronized void addService(ServiceInfo serviceInfo)
 			  throws AdminException
 	{
 		logger.debug("Add service \"" + serviceInfo.getId() + "\" (" + serviceInfo.getHost() + ':'
@@ -72,7 +72,7 @@ public class Daemon extends Proxy
 											 + "\" [" + serviceInfo.getArgs() + "], nested:" + r.getDataAsString());
 	}
 
-	public void removeService(String serviceId)
+	public synchronized void removeService(String serviceId)
 			  throws AdminException
 	{
 		Response r = runCommand(new CommandRemoveService(serviceId));
@@ -80,7 +80,7 @@ public class Daemon extends Proxy
 			throw new AdminException("Couldn't remove service \"" + serviceId + "\", nested:" + r.getDataAsString());
 	}
 
-	public void shutdownService(String serviceId)
+	public synchronized void shutdownService(String serviceId)
 			  throws AdminException
 	{
 		Response r = runCommand(new CommandShutdownService(serviceId));
@@ -88,7 +88,7 @@ public class Daemon extends Proxy
 			throw new AdminException("Couldn't shutdown service \"" + serviceId + "\", nested:" + r.getDataAsString());
 	}
 
-	public void killService(String serviceId)
+	public synchronized void killService(String serviceId)
 			  throws AdminException
 	{
 		Response r = runCommand(new CommandKillService(serviceId));
@@ -100,7 +100,7 @@ public class Daemon extends Proxy
 	 * Queries demon for services list
 	 * @return Map: service name -> ServiceInfo
 	 */
-	public Map listServices()
+	public synchronized Map listServices()
 			  throws AdminException
 	{
 		Response r = runCommand(new CommandListServices());
@@ -119,7 +119,7 @@ public class Daemon extends Proxy
 		return result;
 	}
 
-	public void setServiceStartupParameters(String serviceId, /*String serviceName, */int port, String args)
+	public synchronized void setServiceStartupParameters(String serviceId, /*String serviceName, */int port, String args)
 			  throws AdminException
 	{
 		Response r = runCommand(new CommandSetServiceStartupParameters(serviceId, /*serviceName, */port, args));
