@@ -205,4 +205,8 @@ public abstract class Session extends Thread
             } catch (InterruptedException e) {}
         }
     }
+
+    protected void sendBytes( byte data[]) throws IOException {
+        os.write( data ); os.flush();
+    }
 }

@@ -26,15 +26,15 @@ public class HumanSession extends Session
     private final static String CONSOLE_FAREWELL  = "Exited from SMSC Remote Console.";
     private final static String CONSOLE_PROMPT    = "> ";
 
-    private final static char[] WILL_ECHO = {0xff, 0xfb, 0x01};
-    private final static char[] WONT_ECHO = {0xff, 0xfc, 0x01};
-    private final static char[] DO_ECHO   = {0xff, 0xfd, 0x01};
-    private final static char[] DONT_ECHO = {0xff, 0xfe, 0x01};
+    private final static byte[] WILL_ECHO = {(byte)0xff, (byte)0xfb, (byte)0x01};
+    private final static byte[] WONT_ECHO = {(byte)0xff, (byte)0xfc, (byte)0x01};
+    private final static byte[] DO_ECHO   = {(byte)0xff, (byte)0xfd, (byte)0x01};
+    private final static byte[] DONT_ECHO = {(byte)0xff, (byte)0xfe, (byte)0x01};
 
-    private final static char[] DO_TERMINAL_TYPE = {0xff, 0xfd, 0x18};
-    private final static char[] DO_SUPRESS_GA = {0xff, 0xfd, 0x03};
-    private final static char[] DONT_LINEMODE = {0xff, 0xfe, 0x22};
-    private final static char[] DO_LINEMODE = {0xff, 0xfd, 0x22};
+    private final static byte[] DO_TERMINAL_TYPE = {(byte)0xff, (byte)0xfd, (byte)0x18};
+    private final static byte[] DO_SUPRESS_GA =    {(byte)0xff, (byte)0xfd, (byte)0x03};
+    private final static byte[] DONT_LINEMODE =    {(byte)0xff, (byte)0xfe, (byte)0x22};
+    private final static byte[] DO_LINEMODE =      {(byte)0xff, (byte)0xfd, (byte)0x22};
 
     protected void greeting(PrintWriter writer) {
         writer.println("\r\n\r\n"+CONSOLE_GREATING+'\r');
@@ -49,17 +49,19 @@ public class HumanSession extends Session
         writer.flush();
     }
 
+
     protected boolean authorize(BufferedReader reader, PrintWriter writer)
         throws Exception
     {
         int tries = 0;
 
-        writer.print(DO_LINEMODE); writer.flush();
-        writer.print(DONT_LINEMODE); writer.flush();
-        writer.print(DO_TERMINAL_TYPE); writer.flush();
-        writer.print(WILL_ECHO); writer.flush();
-        writer.print(DO_SUPRESS_GA); writer.flush();
-        writer.print(DO_ECHO); writer.flush();
+        writer.flush();
+        sendBytes(DO_LINEMODE);
+        sendBytes(DONT_LINEMODE);
+        sendBytes(DO_TERMINAL_TYPE);
+        sendBytes(WILL_ECHO);
+        sendBytes(DO_SUPRESS_GA);
+        sendBytes(DO_ECHO);
 
         while (!isStopping && !writer.checkError())
         {
