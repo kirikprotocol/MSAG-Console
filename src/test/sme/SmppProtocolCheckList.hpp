@@ -49,6 +49,8 @@ void bindIncorrectSmeTc()
 		"Длина поля password в bind pdu больше максимально допустимой");
 	__reg_tc__("bindIncorrectSme.invalidSystemTypeLength",
 		"Длина поля system_type в bind pdu больше максимально допустимой");
+	__reg_tc__("bindIncorrectSme.invalidAddressRangeLength",
+		"Длина поля address_range в bind pdu больше максимально допустимой");
 }
 
 void unbindTc()
@@ -65,6 +67,8 @@ void submitSmTc()
 	__reg_tc__("submitSm", "Отправка submit_sm pdu");
 	__reg_tc__("submitSm.sync", "Отправка синхронного submit_sm pdu");
 	__reg_tc__("submitSm.async", "Отправка асинхронного submit_sm pdu");
+	__reg_tc__("submitSm.receiver",
+		"Если sme зарегистрирована как receiver, то SmppSession::submit() кидает исключение");
 	//submitSm.correct
 	__reg_tc__("submitSm.correct",
 		"Отправка submit_sm pdu с правильными значениями полей");
