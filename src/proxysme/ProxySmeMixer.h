@@ -32,11 +32,13 @@ class PduListener: public SmppPduEventListener
   log4cpp::Category&      log_;
   DIRECTION               incom_dirct_; /// направление для команд
   Queue&                  que_;         /// очередь команд
+  SmppSession*            trx_;                 
 public:
   PduListener(DIRECTION,Queue&,log4cpp::Category&);
   virtual ~PduListener();
   virtual void handleEvent(SmppHeader *pdu);
   virtual void handleError(int errorCode);
+  void SetSession(SmppSession* s) { trx_ = s; }
 };
 
 /// класс призводящий прием отправку SMPP пакетов
@@ -55,8 +57,8 @@ public:
   bool Connect();
   bool Disconnect();
   bool Reconnect();
-  /// посылает пакет , если успешно то овнершип уходит транспартной системе 
-  bool SendPdu(DIRECTION,SmppHeader** pdu);
+  /// посылает пакет 
+  bool SendPdu(DIRECTION,SmppHeader* pdu);
 private:
   Mixer(const Mixer&);
   Mixer& operator=(const Mixer&);

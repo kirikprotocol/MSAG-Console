@@ -40,6 +40,9 @@ public:
   virtual ~SMachine();
 //  virtual int Execute();
   void ProcessCommands();
+private:
+  void TranslateToSubmitAndSend(DIRECTION direct,SmppHeader*);
+  void TranslateToDeliverRespAndSend(DIRECTION direct,SmppHeader*);
 };
 
 

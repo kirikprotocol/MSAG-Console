@@ -27,13 +27,18 @@ void Queue::SetLimit(int limit)
 }
 
 /// помещает команду в конец очереди (овнершип переходит к очереди)
-bool Queue::PutBack(QCommand** cmd)
+bool Queue::PutBack(QCommand* cmd)
 {
   MutexGuard guard(mutex_);
-  if ( queue_.size() >= unsigned(qlimit_) ) return false;
-  assert( cmd && *cmd ); if ( !cmd || !*cmd ) return false;
-  queue_.push_back(*cmd);
-  *cmd = 0;
+  assert( cmd && cmd->pdu_ ); if ( !cmd || !cmd->pdu_ ) return false;
+  if ( cmd->pdu_->get_commandId() != SmppCommandSet::SUBMIT_SM_RESP 
+    && cmd->pdu_->get_commandId() != SmppCommandSet::DELIVERY_SM )
+    return false;
+  if ( queue_.size() >= unsigned(qlimit_) ) {
+    if ( cmd->pdu_->get_commandId() != SmppCommandSet::SUBMIT_SM_RESP ) 
+    return false;
+  }
+  queue_.push_back(cmd);
   return true;
 }
 

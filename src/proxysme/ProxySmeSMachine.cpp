@@ -10,6 +10,7 @@
 
 #include "ProxySmeSMachine.h"
 #include <memory>
+#include <cassert>
 
 SMSC_SMEPROXY_BEGIN
 
@@ -45,6 +46,7 @@ SMachine::~SMachine()
 {
 }
 
+/// ждет несколько миллисекунд
 static void MicroSleep() 
 {
 #if defined _WIN32
@@ -53,16 +55,47 @@ static void MicroSleep()
 #endif
 }
 
+/// обрабатывает комманды поступающие в очередь из SMPP API
 void SMachine::ProcessCommands()
 {
   stopIt_ = IS_RUNNING;
   while (stopIt_ == IS_RUNNING) {
     auto_ptr<QCommand> qcmd ( que_.Next() );
-    if ( qcmd.get() != 0 ) {
+    if ( qcmd.get() ) {
       // процессим команду
+      switch ( qcmd->pdu_->get_commandId() ) {
+      case SmppCommandSet::DELIVERY_SM:
+        TranslateToSubmitAndSend(qcmd->direction_,qcmd->pdu_);
+        break;
+      case SmppCommandSet::SUBMIT_SM_RESP:
+        TranslateToDeliverRespAndSend(qcmd->direction_,qcmd->pdu_);
+        break;
+      default:
+        ;// упс, скиппед
+      }
     }
     MicroSleep();
   }
+}
+
+/// транслирует пакет DELIVER_SM -> SUBMIT_SM
+/// и отправляет адресату
+void SMachine::TranslateToSubmitAndSend(DIRECTION direct, SmppHeader* pdu)
+{
+  assert(pdu->get_commandId() == SmppCommandSet::DELIVERY_SM);
+  // вспоминаем что DELIVERY_SM и SUBMIT_SM реализованы через одну и тже структуру данных
+  pdu->set_commandId(SmppCommandSet::SUBMIT_SM);
+  mixer_.SendPdu(direct,pdu);
+}
+
+/// транслирует пакет SUBMIT_SM_RESP -> DELIVER_SM_RESP
+/// и отправляет адресату
+void SMachine::TranslateToDeliverRespAndSend(DIRECTION direct,SmppHeader* pdu)
+{
+  assert(pdu->get_commandId() == SmppCommandSet::SUBMIT_SM_RESP);
+  // вспоминаем что DELIVERY_SM_RESP и SUBMIT_SM_RESP реализованы через одну и тже структуру данных
+  pdu->set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+  mixer_.SendPdu(direct,pdu);
 }
 
 SMSC_SMEPROXY_END
