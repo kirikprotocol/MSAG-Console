@@ -205,6 +205,7 @@ void SimpleSmppTest::submit(const string& src, const string& dest,
 		PduSubmitSmResp* respPdu = data->session->getSyncTransmitter()->submit(pdu);
 		dumpPdu("submit", selectedId, reinterpret_cast<SmppHeader*>(&pdu));
 		cout << "submit: sme = " << selectedId <<
+			", time = " << dec << time(NULL) <<
 			", seqNum = " << dec << pdu.get_header().get_sequenceNumber();
 		if (respPdu)
 		{
@@ -247,11 +248,13 @@ void SimpleSmppListener::handleEvent(SmppHeader* pdu)
 	{
 		case GENERIC_NACK:
 			cout << "handle generick_nack: sme = " << systemId <<
+				", time = " << dec << time(NULL) <<
 				", seqNum = " << dec << pdu->get_sequenceNumber() <<
 				", commandStatus = 0x" << hex << pdu->get_commandStatus() << endl;
 			break;
 		case SUBMIT_SM_RESP:
 			cout << "handle submit_sm_resp: sme = " << systemId <<
+				", time = " << dec << time(NULL) <<
 				", seqNum = " << dec << pdu->get_sequenceNumber() <<
 				", commandStatus = 0x" << hex << pdu->get_commandStatus() << endl;
 			break;
@@ -262,6 +265,7 @@ void SimpleSmppListener::handleEvent(SmppHeader* pdu)
 				uint8_t dc = p->get_message().get_dataCoding();
 				uint16_t msgRef = p->get_optional().get_userMessageReference();
 				cout << "handle deliver_sm: sme = " << systemId <<
+					", time = " << dec << time(NULL) <<
 					", msgRef = " << dec << (int) msgRef <<
 					", dc = " << (int) dc;
 				if (forceDc)
@@ -287,12 +291,14 @@ void SimpleSmppListener::handleEvent(SmppHeader* pdu)
 				session->getAsyncTransmitter()->sendDeliverySmResp(respPdu);
 				dumpPdu("send resp", systemId, reinterpret_cast<SmppHeader*>(&respPdu));
 				cout << "deliver resp: sme = " << systemId <<
+					", time = " << dec << time(NULL) <<
 					", seqNum = " << dec << respPdu.get_header().get_sequenceNumber() <<
 					", commandStatus = 0x" << hex << respPdu.get_header().get_commandStatus() << endl;
 			}
 			break;
 		default:
 			cout << "handle pdu: sme = " << systemId <<
+				", time = " << dec << time(NULL) <<
 				", commandId = 0x" << hex << pdu->get_commandId() << endl;
 	}
 }
@@ -300,6 +306,7 @@ void SimpleSmppListener::handleEvent(SmppHeader* pdu)
 void SimpleSmppListener::handleError(int errorCode)
 {
 	cout << "handle error: sme = " << systemId <<
+		", time = " << dec << time(NULL) <<
 		", errorCode = " << dec << errorCode << endl;
 }
 
@@ -324,15 +331,17 @@ bool getParam(const string& cmd, const string& name, string& value)
 	__require__(regExpOk);
 	int matchCount = 5;
 	SMatch match[matchCount];
+	//__trace2__("cmd = %s, regExp = %s", cmd.c_str(), regExpStr);
 	if (regExp.Match(cmd.c_str(), match, matchCount))
 	{
 		__require__(matchCount > 2);
 		for (int i = 2; i < matchCount; i++)
 		{
-			int len = match[i].end - match[i].start;
-			//__trace2__("getParam(): i = %d, len = %d", i, len);
-			if (len > 0)
+			//__trace2__("getParam(): i = %d, start = %d, end = %d", i, match[i].start, match[i].end);
+			if (match[i].start >= 0)
 			{
+				int len = match[i].end - match[i].start;
+				__require__(len >= 0);
 				char tmp[len + 1];
 				memcpy(tmp, cmd.c_str() + match[i].start, len);
 				tmp[len] = 0;
