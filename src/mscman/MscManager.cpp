@@ -224,8 +224,8 @@ const char* MscManagerImpl::deleteSql =
 void MscManagerImpl::init(Manager& config)
     throw(ConfigException, InitException)
 {
-    // TODO: Load up extra params from config if needed
-
+    // Loadup extra params from config if needed
+           
     connection = ds.getConnection();
     if (!connection)
     {
@@ -234,7 +234,7 @@ void MscManagerImpl::init(Manager& config)
         throw exc;
     }
 
-    // TODO: Load up msc info here !!!
+    // Loadup msc info here
     Statement* statement = 0;
     ResultSet* rs = 0;
     try
@@ -249,11 +249,12 @@ void MscManagerImpl::init(Manager& config)
         while (rs->fetchNext())
         {
             const char* mscNum = rs->getString(1);
-            const char* mLockStr = rs->getString(2);
-            const char* aLockStr = rs->getString(3);
-            int fc = rs->getInt32(4);
-            bool mLock = (mLockStr && mLockStr[0]=='Y' && mLockStr[1]=='\0');
-            bool aLock = (aLockStr && aLockStr[0]=='Y' && aLockStr[1]=='\0');
+            if (!mscNum || !mscNum[0]) continue;
+            const char* mLockStr = rs->isNull(2) ? 0:rs->getString(2);
+            const char* aLockStr = rs->isNull(3) ? 0:rs->getString(3);
+            int fc = rs->isNull(4) ? 0:rs->getInt32(4);
+            bool mLock = (mLockStr && mLockStr[0]=='Y');
+            bool aLock = (aLockStr && aLockStr[0]=='Y');
             MscInfo* info = new MscInfo(mscNum, mLock, aLock, fc);
 
             MutexGuard  guard(hashLock);
@@ -302,7 +303,7 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
             statement->setString(1, change.mscNum);
             break;
         default:
-            throw Exception("Operation unknown", change.op);
+            throw Exception("Operation %d is unknown", change.op);
         }
 
         if (statement) {
