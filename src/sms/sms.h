@@ -198,6 +198,14 @@ namespace smsc {
         return (*this);
       };
 
+      inline int operator ==(const Address& addr) 
+      {
+        return (length == addr.length && 
+                plan == addr.plan && type == addr.type && 
+                memcmp(value, addr.value, length) == 0);
+      };
+
+
       /**
       * Метод устанавливает значение адреса и его длинну.
       * Длинна адреса должна быть меньше MAX_ADDRESS_VALUE_LENGTH.
