@@ -1353,7 +1353,7 @@ static void PauseOnImsiReq(MapDialog* map)
     mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
     __trace2__("MAP::%s: Query HLR AC version",__FUNCTION__);
     //dialog->mshlrAddr = map->mshlrAddr;
-    dialog->state = MAPST_WaitHlrVersion;
+    dialog->state = MAPST_ImsiWaitACVersion;
     QueryHlrVersion(dialog.get());
   }MAP_CATCH(dialogid_map,0);
 }

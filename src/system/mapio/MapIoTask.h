@@ -69,7 +69,8 @@ enum MapState{
   MAPST_ImsiWaitACVersion = 21,
   MAPST_ImsiWaitOpenConf = 22,
   MAPST_ImsiWaitRInfo = 23,
-  MAPST_ImsiWaitCloseInd = 24
+  MAPST_ImsiWaitCloseInd = 24,
+  MAPST_WaitImsiReq = 25
 };
 
 class hash_func_ET96MAP_DID{
