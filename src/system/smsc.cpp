@@ -66,7 +66,7 @@ public:
     times[0]=start.tv_sec;
     int lastscnt=0;
     memset(perfCnt,0,sizeof(perfCnt));
-    uint64_t lastPerfCnt[5]={0,0,0,0,0};
+    uint64_t lastPerfCnt[performance::performanceCounters]={0,};
     now.tv_sec=0;
     int i;
     for(;;)
@@ -92,10 +92,11 @@ public:
       last=cnt;
       lasttime=now;
       if(isStopping)break;
-      uint64_t perf[5];
+      uint64_t perf[performance::performanceCounters];
       // success, error, reschedule
       smsc->getPerfData(perf);
       performance::PerformanceData d;
+      d.countersNumber=performance::performanceCounters;
       for(i=0;i<performance::performanceCounters;i++)
       {
         d.counters[i].lastSecond=perf[i]-lastPerfCnt[i];
@@ -174,7 +175,7 @@ public:
   }
 protected:
   EventQueue& queue;
-  int perfCnt[5][60];
+  int perfCnt[performance::performanceCounters][60];
   int timeshift;
   time_t times[60];
   timespec start;
@@ -389,12 +390,13 @@ void Smsc::init(const SmscConfigs& cfg)
     if(f)
     {
       time_t ut;
-      fscanf(f,"%d %lld %lld %lld %lld %lld",
+      fscanf(f,"%d %lld %lld %lld %lld %lld %lld",
         &ut,
         &submitOkCounter,
         &submitErrCounter,
         &deliverOkCounter,
-        &deliverErrCounter,
+        &deliverErrTempCounter,
+        &deliverErrPermCounter,
         &rescheduleCounter
       );
       startTime=time(NULL)-ut;

@@ -30,16 +30,18 @@ struct PerformanceCounter{
   };
 };
 
-const int performanceCounters=5;
+const int performanceCounters=6;
 
 struct PerformanceData{
   /*
   PerformanceCounter submitOk;
   PerformanceCounter submitErr;
   PerformanceCounter deliverOk;
-  PerformanceCounter deliverErr;
+  PerformanceCounter deliverErrTerm;
+  PerformanceCounter deliverErrPerm;
   PerformanceCounter rescheduled;
   */
+  uint8_t countersNumber;
   PerformanceCounter counters[performanceCounters];
   int eventQueueSize;
   time_t uptime;
@@ -102,6 +104,9 @@ public:
   {
     MutexGuard g(mtx);
     s->setNonBlocking(1);
+    char buf[32];
+    s->GetPeer(buf);
+    __trace2__("performance::add connect from %s",buf);
     sockets.Push(s);
   }
 protected:

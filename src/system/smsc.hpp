@@ -125,7 +125,8 @@ public:
     submitOkCounter=0;
     submitErrCounter=0;
     deliverOkCounter=0;
-    deliverErrCounter=0;
+    deliverErrTempCounter=0;
+    deliverErrPermCounter=0;
     rescheduleCounter=0;
     startTime=0;
     tcontrol=0;
@@ -246,13 +247,13 @@ public:
       {
         statMan->updateTemporal(sms->getDestinationSmeId(),sms->getRouteId(),sms->getLastResult());
         MutexGuard g(perfMutex);
-        deliverErrCounter++;
+        deliverErrTempCounter++;
       }break;
       case etUndeliverable:
       {
         statMan->updateChanged(sms->getDestinationSmeId(),sms->getRouteId(),sms->getLastResult());
         MutexGuard g(perfMutex);
-        deliverErrCounter++;
+        deliverErrPermCounter++;
       }break;
       case etRescheduled:
       {
@@ -269,11 +270,12 @@ public:
     FILE *f=fopen("stats.txt","wt");
     if(f)
     {
-      fprintf(f,"%d %lld %lld %lld %lld %lld",time(NULL)-startTime,
+      fprintf(f,"%d %lld %lld %lld %lld %lld %lld",time(NULL)-startTime,
         submitOkCounter,
         submitErrCounter,
         deliverOkCounter,
-        deliverErrCounter,
+        deliverErrTempCounter,
+        deliverErrPermCounter,
         rescheduleCounter
       );
       fclose(f);
@@ -295,8 +297,9 @@ public:
     cnt[0]=submitOkCounter;
     cnt[1]=submitErrCounter;
     cnt[2]=deliverOkCounter;
-    cnt[3]=deliverErrCounter;
-    cnt[4]=rescheduleCounter;
+    cnt[3]=deliverErrTempCounter;
+    cnt[4]=deliverErrPermCounter;
+    cnt[5]=rescheduleCounter;
   }
 
   RefferGuard<RouteManager> getRouterInstance()
@@ -405,7 +408,8 @@ protected:
   uint64_t submitOkCounter;
   uint64_t submitErrCounter;
   uint64_t deliverOkCounter;
-  uint64_t deliverErrCounter;
+  uint64_t deliverErrTempCounter;
+  uint64_t deliverErrPermCounter;
   uint64_t rescheduleCounter;
   string scAddr;
   time_t startTime;
