@@ -15,6 +15,7 @@ using namespace std;
 #include "MapDialog_spcific.cxx"
 #include "MapDialogMkPDU.cxx"
 #include "../status.h"
+#include "../../util/smstext.h"
 
 #include "../../mscman/MscManager.h"
 #include "../../mscman/MscStatus.h"
