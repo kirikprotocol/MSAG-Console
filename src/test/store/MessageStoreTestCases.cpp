@@ -21,6 +21,27 @@ MessageStoreTestCases::MessageStoreTestCases()
 	msgStore = StoreManager::getInstance();
 }
 
+void MessageStoreTestCases::setupRandomCorrectSM(SMS& sms)
+{
+	sms.setState(ENROUTE); //DELIVERED, EXPIRED, UNDELIVERABLE, DELETED
+	sms.setOriginatingAddress(10, 20, 30, rand_uint8_t(10).get());
+	sms.setDestinationAddress(10, 20, 30, rand_uint8_t(10).get());
+	sms.setWaitTime(time(NULL));
+	sms.setValidTime(time(NULL) + 24 * 3600);
+	sms.setSubmitTime(time(NULL) - 1);
+	sms.setDeliveryTime(0);
+	sms.setMessageReference(*(rand_uint8_t(1).get()));
+	sms.setMessageIdentifier(*(rand_uint8_t(1).get()));
+	sms.setPriority(100);
+	sms.setProtocolIdentifier(150);
+	sms.setStatusReportRequested(true);
+	sms.setRejectDuplicates(true);
+	sms.setFailureCause(55);
+	//задаем случайную длину тела сообщения
+	int msgLen = 1 + rand0(160);
+	sms.setMessageBody(msgLen, 20, false, rand_uint8_t(msgLen).get());
+}
+
 TCResult* MessageStoreTestCases::storeCorrectSM(SMSId* idp, SMS* smsp, int num)
 {
 	TCSelector s(num, 4);
@@ -29,22 +50,7 @@ TCResult* MessageStoreTestCases::storeCorrectSM(SMSId* idp, SMS* smsp, int num)
 	SMS sms;
 	for (; s.check(); s++)
 	{
-		sms.setState(ENROUTE); //DELIVERED, EXPIRED, UNDELIVERABLE, DELETED
-		sms.setOriginatingAddress(10, 20, 30, rand_uint8_t(10).get());
-		sms.setDestinationAddress(10, 20, 30, rand_uint8_t(10).get());
-		sms.setWaitTime(time(NULL));
-		sms.setValidTime(time(NULL) + 24 * 3600);
-		sms.setSubmitTime(time(NULL) - 1);
-		sms.setDeliveryTime(0);
-		sms.setMessageReference(*(rand_uint8_t(1).get()));
-		sms.setMessageIdentifier(*(rand_uint8_t(1).get()));
-		sms.setPriority(100);
-		sms.setProtocolIdentifier(150);
-		sms.setStatusReportRequested(true);
-		sms.setRejectDuplicates(true);
-		sms.setFailureCause(55);
-		sms.setMessageBody(10, 20, false, rand_uint8_t(10).get());
-		
+		setupRandomCorrectSM(sms);
 		switch(s.value())
 		{
 			case 1: //пустой originatingAddress
@@ -84,25 +90,10 @@ TCResult* MessageStoreTestCases::storeIncorrectSM(SMS& existentSMS, int num)
 {
 	TCSelector s(num, 10);
 	TCResult* res = new TCResult(TC_STORE_INCORRECT_SM, s.getChoice());
+	SMS sms;
 	for (; s.check(); s++)
 	{
-		SMS sms;
-		sms.setState(ENROUTE); //DELIVERED, EXPIRED, UNDELIVERABLE, DELETED
-		sms.setOriginatingAddress(10, 20, 30, rand_uint8_t(10).get());
-		sms.setDestinationAddress(10, 20, 30, rand_uint8_t(10).get());
-		sms.setWaitTime(time(NULL));
-		sms.setValidTime(time(NULL) + 24 * 3600);
-		sms.setSubmitTime(time(NULL) - 1);
-		sms.setDeliveryTime(0);
-		sms.setMessageReference(*(rand_uint8_t(1).get()));
-		sms.setMessageIdentifier(*(rand_uint8_t(1).get()));
-		sms.setPriority(100);
-		sms.setProtocolIdentifier(150);
-		sms.setStatusReportRequested(true);
-		sms.setRejectDuplicates(true);
-		sms.setFailureCause(55);
-		sms.setMessageBody(10, 20, false, rand_uint8_t(10).get());
-		
+		setupRandomCorrectSM(sms);
 		switch(s.value())
 		{
 			case 1: //некорректный статус
@@ -160,42 +151,42 @@ TCResult* MessageStoreTestCases::storeIncorrectSM(SMS& existentSMS, int num)
 	return res;
 }
 
-bool MessageStoreTestCases::setCorrectSMStatus()
+TCResult* MessageStoreTestCases::setCorrectSMStatus()
 {
 	return false;
 }
 
-bool MessageStoreTestCases::setIncorrectSMStatus()
+TCResult* MessageStoreTestCases::setIncorrectSMStatus()
 {
 	return false;
 }
 
-bool MessageStoreTestCases::setNonExistentSMStatus()
+TCResult* MessageStoreTestCases::setNonExistentSMStatus()
 {
 	return false;
 }
 
-bool MessageStoreTestCases::updateCorrectExistentSM()
+TCResult* MessageStoreTestCases::updateCorrectExistentSM()
 {
 	return false;
 }
 
-bool MessageStoreTestCases::updateIncorrectExistentSM()
+TCResult* MessageStoreTestCases::updateIncorrectExistentSM()
 {
 	return false;
 }
 	
-bool MessageStoreTestCases::updateNonExistentSM()
+TCResult* MessageStoreTestCases::updateNonExistentSM()
 {
 	return false;
 }
 
-bool MessageStoreTestCases::deleteExistentSM()
+TCResult* MessageStoreTestCases::deleteExistentSM()
 {
 	return false;
 }
 	
-bool MessageStoreTestCases::deleteNonExistentSM()
+TCResult* MessageStoreTestCases::deleteNonExistentSM()
 {
 	return false;
 }
@@ -304,7 +295,7 @@ TCResult* MessageStoreTestCases::loadNonExistentSM()
 	return res;
 }
 
-bool MessageStoreTestCases::createBillingRecord()
+TCResult* MessageStoreTestCases::createBillingRecord()
 {
 	return false;
 }
