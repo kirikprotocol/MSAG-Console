@@ -49,6 +49,7 @@ protected:
 	virtual Category& getLog();
 	void sendUpdateProfilePdu(PduSubmitSm* pdu, const string& text,
 		bool sync, uint8_t dataCoding, PduData::IntProps& intProps);
+	bool checkPdu(PduDeliverySm &pdu);
 };
 
 }
