@@ -39,7 +39,13 @@ struct TestRouteData
 		: match(data.match), origAddrMatch(data.origAddrMatch),
 		destAddrMatch(data.destAddrMatch), origAddr(data.origAddr),
 		destAddr(data.destAddr), proxy(data.proxy),
-		route(new RouteInfo(*data.route)) {}
+		route(NULL)
+	{
+		if (data.route)
+		{
+			route = new RouteInfo(*data.route);
+		}
+	}
 
 	~TestRouteData()
 	{
