@@ -1,4 +1,4 @@
-$Id$
+//$Id$
 
 #if defined USE_MAP
 
