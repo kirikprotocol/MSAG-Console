@@ -1144,7 +1144,7 @@ extern void AbortAndRemoveDialog(ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T 
 void MapProxy::putCommand(const SmscCommand& cmd)
 {
 #if defined USE_MAP  
-  MutexGuard g(mutex);
+  //MutexGuard g(mutex);
   uint32_t did = cmd->get_dialogId();
   MapDialog* dialog = 0;
   __trace2__("MAPPROXY::putCommand");
