@@ -21,7 +21,7 @@
 		<section name="Archive">
 			<param name="enabled" type="bool">true</param>
 			<param name="interval" type="int">20000</param>
-			<param name="finalized" type="int">100</param>
+			<param name="finalized" type="int">150</param>
 			<param name="uncommited" type="int">10</param>
 		</section>
 		<section name="Billing">
@@ -65,8 +65,8 @@
 
 	<section name="abonentinfo">
 		<param name="systemId" type="string">abonentinfo</param>
-		<param name="service_type" type="string">abnfo</param>
-		<param name="protocol_id" type="int">34</param>
+		<param name="service_type" type="string">AboN</param>
+		<param name="protocol_id" type="int">9</param>
 	</section>
 
 	<section name="profiler">

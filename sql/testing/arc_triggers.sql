@@ -17,20 +17,18 @@ insert into arc_stat (final_rec, last_arc) values (0, sysdate + 1/24);
 
 --проверка условий на активацию архиватора
 create or replace procedure check_arc_stat is
-	final_max integer := 100; --config.xml: MessageStore/Archive/finalized
+	final_max integer := 150; --config.xml: MessageStore/Archive/finalized
     interval_max integer := 20; --config.xml: MessageStore/Archive/interval
-	final_check_accuracy integer := 5;
-	interval_check_accuracy integer := 1;
 	stat arc_stat%rowtype;
 	interval integer;
 begin
 	select * into stat from arc_stat;
 	interval := sysdate - stat.last_arc;
 	--архиватор стартует не реже, чем прописано в конфиге
-	if stat.final_rec > (final_max + final_check_accuracy) then
+	if stat.final_rec > 1.1 * final_max then --10% допуск
 		raise_application_error(-20201, 'Finalized rec count = ' || stat.final_rec || ' exceeds max allowed');
 	end if;
-	if interval > (interval_max + interval_check_accuracy) then
+	if interval > 1.1 * interval_max then --10% допуск
 		raise_application_error(-20201, 'Archiver idle interval = ' || interval || ' exceeds max allowed');
 	end if;
 	--архиватор стартует не чаще, чем прописано в конфиге
@@ -60,6 +58,9 @@ create or replace trigger smsc_msg_update after update on sms_msg
 	referencing new as msg for each row
 begin
 	if :msg.st != 0 then
+		if :old.st != 0 then
+			raise_application_error(-20201, 'Message prev state != ENROTE');
+		end if;
 		update arc_stat set final_rec = final_rec + 1;
 	end if;
 	check_arc_stat;
@@ -75,8 +76,14 @@ begin
 	if :msg.arc = 'Y' then
 		select count(*) into flag from sms_arc where id = :msg.id;
 		if flag = 0 then
-			raise_application_error(-20101, 'Trying to delete record in sms_msg with arc = ''Y'' that has no corresponding sms_arc record');
+			raise_application_error(-20201, 'Trying to delete record in sms_msg with arc = ''Y'' that has no corresponding sms_arc record');
 		end if;
+	end if;
+	--обновление arc_stat.last_arc делается в smsc_arc_insert
+	if :msg.st = 0 then
+		raise_application_error(-20201, 'Deleting message in ENROTE state');
+	else
+		update arc_stat set final_rec = final_rec - 1;
 	end if;
 end;
 /
@@ -88,18 +95,18 @@ declare
 begin
 	begin
 		check_arc_stat;
-		--state
+		--проверка статуса
 		if :arc.st = 0 then
 			raise_application_error(-20201, 'arc.st = ENROTE');
 		end if;
-		--arc = 'Y'
+		--проверка признака архивации
 		select * into msg from sms_msg where id = :arc.id;
 		if msg.arc != 'Y' then
 			raise_application_error(-20201, 'Trying to archivate sms with arc != ''Y''');
 		end if;
-		--update arc_stat
-		update arc_stat set final_rec =  final_rec - 1, last_arc = sysdate;
-		--data
+		--обновление arc_stat.final_rec делается в sms_msg_delete
+		update arc_stat set last_arc = sysdate;
+		--проверка полей
 		if msg.st != :arc.st then
 			raise_application_error(-20201, 'msg.st != arc.st');
 		end if;
