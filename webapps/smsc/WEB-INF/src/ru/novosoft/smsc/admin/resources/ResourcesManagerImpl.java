@@ -16,7 +16,12 @@ public class ResourcesManagerImpl implements ResourcesManager
 {
   private File createFile(String localeName)
   {
-    return new File(WebAppFolders.getSmscConfFolder(), RESOURCE_FILENAME_PREFIX + localeName + RESOURCE_FILENAME_SUFFIX);
+    return new File(WebAppFolders.getSmscConfFolder(), createFileName(localeName));
+  }
+
+  private String createFileName(String localeName)
+  {
+    return RESOURCE_FILENAME_PREFIX + localeName + RESOURCE_FILENAME_SUFFIX;
   }
 
   private String extractLocaleName(String fileName)
@@ -26,7 +31,7 @@ public class ResourcesManagerImpl implements ResourcesManager
 
   public void add(String localeName, InputStream resourceStream) throws IOException
   {
-    File tmpFile = Functions.saveFileToTemp(resourceStream, new File(WebAppFolders.getSmscConfFolder(), "new_locale.xml.tmp"));
+    File tmpFile = Functions.saveFileToTemp(resourceStream, new File(WebAppFolders.getSmscConfFolder(), createFileName(localeName) + ".new"));
     tmpFile.deleteOnExit();
     Functions.renameNewSavedFileToOriginal(tmpFile, createFile(localeName));
   }

@@ -101,7 +101,7 @@ public class LocaleResourcesEdit extends PageBean
   private int save_resource_file()
   {
     try {
-      File tempFile = Functions.createNewFilenameForSave(new File(WebAppFolders.getSmscConfFolder(), "new_locale.xml.tmp"));
+      File tempFile = Functions.createNewFilenameForSave(new File(WebAppFolders.getSmscConfFolder(), "resources_" + locale + ".xml.new"));
       PrintWriter out = new PrintWriter(new FileWriter(tempFile));
       Functions.storeConfigHeader(out, "locale_resources", "locale_resources.dtd");
       out.println("<settings>");
