@@ -61,7 +61,7 @@ struct AclEditor
                         const char* descr,
                         const std::vector<AclPhoneNumber>& phones = std::vector<AclPhoneNumber>(),
                         AclCacheType act = ACT_DBSDIRECT) = 0;
-  virtual void    create2(
+  virtual AclIdent create2(
                         const char* aclname,
                         const char* descr,
                         const std::vector<AclPhoneNumber>& phones = std::vector<AclPhoneNumber>(),

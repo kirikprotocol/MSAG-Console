@@ -129,7 +129,7 @@ public:
   virtual AclInfo getInfo(AclIdent);  
   virtual void    remove(AclIdent);
   virtual void    create(AclIdent,const char* aclname,const char* descr,const vector<AclPhoneNumber>& phones,AclCacheType act);
-  virtual void    create2(const char* aclname,const char* descr,const vector<AclPhoneNumber>& phones,AclCacheType act);
+  virtual AclIdent create2(const char* aclname,const char* descr,const vector<AclPhoneNumber>& phones,AclCacheType act);
   virtual void    lookupByPrefix(AclIdent,const char* prefix,vector<AclPhoneNumber>&);
   virtual void    removePhone(AclIdent,const AclPhoneNumber&);
   virtual void    addPhone(AclIdent,const AclPhoneNumber&);
@@ -178,10 +178,12 @@ void AclManager2::create(AclIdent aclident,const char* aclname,const char* aclde
   UpdateAcl(aclident);
 }
 
-void AclManager2::create2(const char* aclname,const char* acldescr,const vector<AclPhoneNumber>& phones,AclCacheType act)
+AclIdent AclManager2::create2(const char* aclname,const char* acldescr,const vector<AclPhoneNumber>& phones,AclCacheType act)
 {
   MutexGuard g(modify_locker_);
-  mgr_->create2(aclname,acldescr,phones,act);
+  AclIdent ident = mgr_->create2(aclname,acldescr,phones,act);
+  UpdateAcl(ident);
+  return ident;
 }
 
 void AclManager2::lookupByPrefix(AclIdent aclident,const char* prefix,vector<AclPhoneNumber>& result)

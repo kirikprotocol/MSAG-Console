@@ -63,7 +63,7 @@ public:
   virtual AclInfo getInfo(AclIdent);  
   virtual void    remove(AclIdent);
   virtual void    create(AclIdent,const char* aclname,const char* descr,const vector<AclPhoneNumber>& phones,AclCacheType act);
-  virtual void    create2(const char* aclname,const char* descr,const vector<AclPhoneNumber>& phones,AclCacheType act);
+  virtual AclIdent create2(const char* aclname,const char* descr,const vector<AclPhoneNumber>& phones,AclCacheType act);
   virtual void    lookupByPrefix(AclIdent,const char* prefix,vector<AclPhoneNumber>&);
   virtual void    removePhone(AclIdent,const AclPhoneNumber&);
   virtual void    addPhone(AclIdent,const AclPhoneNumber&);
@@ -174,7 +174,7 @@ void AclManager::create(AclIdent aclident,const char* aclname,const char* acldes
   }
 }
 
-void AclManager::create2(const char* aclname,const char* acldescr,const vector<AclPhoneNumber>& phones,AclCacheType act)
+AclIdent AclManager::create2(const char* aclname,const char* acldescr,const vector<AclPhoneNumber>& phones,AclCacheType act)
 {
   static const char* sql0 = "SELECT SMS_ACLINFO_SEQ.NextVal FROM DUAL";
 
@@ -187,6 +187,7 @@ void AclManager::create2(const char* aclname,const char* acldescr,const vector<A
   if (!rs->fetchNext())throw Exception(ACLMGRPREFIX"Failed on sequence query to DB");
   AclIdent ident = rs->getInt32(1);
   create(ident,aclname,acldescr,phones,act);
+  return ident;
 }
 
 void AclManager::lookupByPrefix(AclIdent aclident,const char* prefix,vector<AclPhoneNumber>& result)
