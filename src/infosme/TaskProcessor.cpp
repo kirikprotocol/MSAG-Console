@@ -772,10 +772,11 @@ bool TaskProcessor::changeTask(std::string taskId)
             throw ConfigException("Failed to obtail DataSource driver '%s' for task '%s'", 
                                   ds_id, task_id);
         if (!remTask(taskId))
-            throw Exception("Failed to change task. Task with id '%s' wasn't registered.",
-                            task_id);
+            logger.warn("Failed to change task. Task with id '%s' wasn't registered.",
+                        task_id);
         if (!putTask(new Task(&taskConfig, taskId, taskTablesPrefix, taskDs, dsInternal)))
             throw Exception("Failed to change task with id '%s'", task_id);
+        
         return true;
     }
     catch (Exception& exc) {

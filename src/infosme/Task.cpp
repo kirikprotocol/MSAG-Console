@@ -167,6 +167,9 @@ const char* DELETE_NEW_MESSAGES_STATEMENT_SQL =
 
 void Task::trackIntegrity(bool clear, bool del, Connection* connection)
 {
+    logger.debug("trackIntegrity method called on task '%s'",
+                 info.id.c_str());
+    
     if (!info.trackIntegrity) return;
 
     bool connectionInternal = false;
@@ -245,6 +248,9 @@ const char* NEW_SD_INDEX_STATEMENT_SQL =
 
 bool Task::createTable()
 {
+    logger.debug("createTable method called on task '%s'",
+                 info.id.c_str());
+    
     MutexGuard guard(createTableLock);
     
     bool result = false;
@@ -299,6 +305,9 @@ const char* DROP_TABLE_STATEMENT_SQL = "DROP TABLE %s";
 
 bool Task::dropTable()
 {
+    logger.debug("dropTable method called on task '%s'",
+                 info.id.c_str());
+    
     MutexGuard guard(createTableLock);
     
     bool result = false;
@@ -356,6 +365,9 @@ const char* CLEAR_MESSAGES_STATEMENT_SQL = (const char*)
 
 void Task::beginGeneration(Statistics* statistics)
 {
+    logger.debug("beginGeneration method called on task '%s'",
+                 info.id.c_str());
+
     {
         MutexGuard guard(inGenerationLock);
         if (bInGeneration || (info.trackIntegrity && isInProcess())) return;
@@ -413,8 +425,8 @@ void Task::beginGeneration(Statistics* statistics)
         {
             const char* abonentAddress = rs->getString(1);
             if (!abonentAddress || abonentAddress[0] == '\0' || !isMSISDNAddress(abonentAddress)) {
-                logger.warn("Invalid abonent number '%s' selected.", 
-                            abonentAddress ? abonentAddress:"-");
+                logger.warn("Task '%s'. Invalid abonent number '%s' selected.", 
+                            info.id.c_str(), abonentAddress ? abonentAddress:"-");
             }
             else
             {
@@ -499,6 +511,8 @@ void Task::beginGeneration(Statistics* statistics)
 }
 void Task::endGeneration()
 {
+    logger.debug("endGeneration method called on task '%s'",
+                 info.id.c_str());
     {
         MutexGuard guard(inGenerationLock);
         if (!bInGeneration) return;
@@ -513,6 +527,9 @@ const char* DELETE_MESSAGES_STATEMENT_SQL =
 
 void Task::dropAllMessages()
 {
+    logger.debug("dropAllMessages method called on task '%s'",
+                 info.id.c_str());
+
     endGeneration();
     
     Connection* connection = 0;
@@ -571,6 +588,9 @@ const char* RESET_MESSAGES_STATEMENT_SQL =
 
 void Task::resetWaiting(Connection* connection)
 {
+    logger.debug("resetWaiting method called on task '%s'",
+                 info.id.c_str());
+    
     bool connectionInternal = false;
     try
     {
@@ -625,7 +645,8 @@ const char* DO_RETRY_MESSAGE_STATEMENT_SQL =
 
 bool Task::retryMessage(uint64_t msgId, time_t nextTime, Connection* connection)
 {
-    //logger.debug("retryMessage(): called for id=%lld", msgId);
+    logger.debug("retryMessage method called on task '%s' for id=%lld",
+                 info.id.c_str(), msgId);
 
     int wdTimerId = -1;
     bool result = false;
@@ -689,7 +710,8 @@ const char* DO_DELETE_MESSAGE_STATEMENT_SQL = "DELETE FROM %s WHERE ID=:ID";
 
 bool Task::deleteMessage(uint64_t msgId, Connection* connection)
 {
-    //logger.debug("deleteMessage(): called for id=%lld", msgId);
+    logger.debug("deleteMessage method called on task '%s' for id=%lld",
+                 info.id.c_str(), msgId);
 
     int wdTimerId = -1;
     bool result = false;
@@ -750,7 +772,8 @@ const char* DO_ENROUTE_MESSAGE_STATEMENT_SQL =
 
 bool Task::enrouteMessage(uint64_t msgId, Connection* connection)
 {
-    //logger.debug("doEnroute(): called for id=%lld", msgId);
+    logger.debug("enrouteMessage method called on task '%s' for id=%lld",
+                 info.id.c_str(), msgId);
 
     int wdTimerId = -1;
     bool result = false;
@@ -819,6 +842,9 @@ const char* DO_WAIT_MESSAGE_STATEMENT_SQL = (const char*)
 
 bool Task::getNextMessage(Connection* connection, Message& message)
 {
+    logger.debug("getNextMessage method called on task '%s'",
+                 info.id.c_str());
+    
     __require__(connection);
     
     {

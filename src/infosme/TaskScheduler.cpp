@@ -214,11 +214,13 @@ bool TaskScheduler::changeSchedule(std::string id, Schedule* schedule)
     
     const char* scheduleId = id.c_str();
     const char* newId = schedule->id.c_str();
-    if (!scheduleId || scheduleId[0] == '\0' || !newId || newId[0] == '\0' || 
-        !schedules.Exists(scheduleId)) return false;
-    Schedule* old = schedules.Get(scheduleId);
-    if (old) delete old;
-    schedules.Delete(scheduleId);
+    if (!scheduleId || scheduleId[0] == '\0' || 
+        !newId || newId[0] == '\0') return false;
+    if (schedules.Exists(scheduleId)) {
+        Schedule* old = schedules.Get(scheduleId);
+        if (old) delete old;
+        schedules.Delete(scheduleId);
+    }
     schedules.Insert(newId, schedule);
     bChanged = true;
     awake.Signal();
