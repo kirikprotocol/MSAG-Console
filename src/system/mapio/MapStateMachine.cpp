@@ -2,6 +2,14 @@
 
 #include <stdlib.h>
 #include <stdarg.h>
+#include <map>
+#include <string>
+
+using namespace std;
+using namespace smsc::smeman;
+using namespace smsc::sms;
+using namespace smsc::core::synchronization;
+using namespace smsc::core::buffers;
 
 #include "MapDialog_spcific.cxx"
 
