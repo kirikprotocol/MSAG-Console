@@ -61,12 +61,12 @@ function checkApplyResetButtons()
   <td><%=status(bean.isChangedAll())%></td>
 </tr>
 <tr class=row1 id=tasksRow>
-  <td><input class=check type=checkbox name=apply value=tasks id=tasksCheck onClick="checkApplyResetButtons();" <%=bean.isChangedTasks() && !bean.isChangedAll() ? "" : "disabled"%>></td>
+  <td><input class=check type=checkbox name=apply value=tasks id=tasksCheck onClick="checkApplyResetButtons();" <%=bean.isInfosmeStarted() && bean.isChangedTasks() && !bean.isChangedAll() ? "" : "disabled"%>></td>
   <th><label for=tasksCheck>Tasks</label></th>
   <td><%=status(bean.isChangedTasks())%></td>
 </tr>
 <tr class=row0 id=schedsRow>
-  <td><input class=check type=checkbox name=apply value=scheds id=schedsCheck onCLick="checkApplyResetButtons();" <%=bean.isChangedShedules() && !bean.isChangedAll() && !bean.isChangedTasks() ? "" : "disabled"%>></td>
+  <td><input class=check type=checkbox name=apply value=scheds id=schedsCheck onCLick="checkApplyResetButtons();" <%=bean.isInfosmeStarted() && bean.isChangedShedules() && !bean.isChangedAll() && !bean.isChangedTasks() ? "" : "disabled"%>></td>
   <th><label for=schedsCheck>Schedules</label></th>
   <td><%=status(bean.isChangedShedules())%></td>
 </tr>
