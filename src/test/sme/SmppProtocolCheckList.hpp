@@ -67,8 +67,6 @@ void submitSmTc()
 	__reg_tc__("submitSm", "Отправка submit_sm pdu");
 	__reg_tc__("submitSm.sync", "Отправка синхронного submit_sm pdu");
 	__reg_tc__("submitSm.async", "Отправка асинхронного submit_sm pdu");
-	__reg_tc__("submitSm.receiver",
-		"Если sme зарегистрирована как receiver, то SmppSession::submit() кидает исключение");
 	//submitSm.correct
 	__reg_tc__("submitSm.correct",
 		"Отправка submit_sm pdu с правильными значениями полей");
