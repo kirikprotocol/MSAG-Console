@@ -22,6 +22,7 @@ public class StringEncoderDecoder
 
   public static String encode(String str)
   {
+    if( str == null ) return "";
     StringBuffer result = new StringBuffer(str.length());
     for (int i = 0; i < str.length(); i++)
     {
@@ -47,6 +48,7 @@ public class StringEncoderDecoder
   }
 
   public static String encodeHEX( String str ) {
+    if( str == null ) return "";
     byte b[] = str.getBytes();
     int c = 0;
     StringBuffer sb = new StringBuffer(b.length*2);
