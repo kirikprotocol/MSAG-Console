@@ -11,7 +11,7 @@ my @OUT_FIELDS;
 {field=>'PAYER_IMSI',maxwidth=>15},                                                        #5
 {field=>'PAYER_ADDR',maxwidth=>15},                                                        #5
 {field=>'OTHER_ADDR',maxwidth=>15,convert=>sub{$_[0]=~/\+?(.*)$/;return $1;}},             #7
-{value=>''},                                                                               #8
+{field=>'FINAL_DATE',maxwidth=>14},                                                        #8
 {value=>''},                                                                               #9
 {value=>''},                                                                               #10
 {field=>'DD_TYPE',maxwidth=>2},                                                            #11
