@@ -1059,7 +1059,13 @@ throw (AdminException)
 
   profile.locale = localeStr;
 
-  profile.hide =       (strcmp("true", hideStr) == 0) ? 1:0;
+  if (strcmp("false", hideStr) == 0)
+    profile.hide = 0;
+  else if(strcmp("true", hideStr) == 0)
+    profile.hide = 1;
+  else if(strcmp("substitute", hideStr) == 0)
+    profile.hide = 2;
+
   profile.hideModifiable = (strcmp("true", hideModifiableStr) == 0) ? true:false;
 
   profile.divert = divert;
