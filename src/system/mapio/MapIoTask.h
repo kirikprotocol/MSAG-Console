@@ -78,6 +78,7 @@ enum MapState{
   MAPST_WaitDelRepConf = 27,
   MAPST_MTFINAL = 28,
   MAPST_WaitDelClose = 29,
+  MAPST_WaitAlertDelimiter = 30
 };
 
 class hash_func_ET96MAP_DID{

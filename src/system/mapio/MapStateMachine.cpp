@@ -1602,6 +1602,12 @@ USHORT_T Et96MapDelimiterInd(
       //dialog->state = MAPST_WaitSmsConf;
       SendNextMMS(dialog.get());
       break;
+    case MAPST_WaitLertDelimiter:
+      SendAlertToSMSC(dialog.get(),msisdnAlert_sp);
+      ResponseAlertSC(dialog.get());
+      CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+      DropMapDialog(dialog.get());
+      break;
     default:
       throw MAPDIALOG_BAD_STATE(
         FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
@@ -1864,10 +1870,7 @@ USHORT_T Et96MapVxAlertSCInd_Impl(
     switch( dialog->state ){
     case MAPST_WaitSms:
       dialog->invokeId = invokeId;
-      SendAlertToSMSC(dialog.get(),msisdnAlert_sp);
-      ResponseAlertSC(dialog.get());
-      CloseMapDialog(dialog->dialogid_map,dialog->ssn);
-      DropMapDialog(dialog.get());
+      dialog->state = MAPST_WaitAlertDelimiter;
       break;
     default:
       throw MAPDIALOG_BAD_STATE(
