@@ -586,7 +586,14 @@ void ResponseMO(MapDialog* dialog,unsigned status)
   };
   __map_trace2__("MAP::%s err.errCode 0x%x (state %d) ",__func__,err.errorCode,dialog->state);
   USHORT_T result;
-  if ( dialog->version == 2 ) {
+  if ( dialog->version == 3 ) {
+    result = Et96MapV3ForwardSmMOResp(
+      dialog->ssn,
+      dialog->dialogid_map,
+      dialog->invokeId,
+      0,
+      (status!=Status::OK)?&err:0);
+  } else if ( dialog->version == 2 ) {
     result = Et96MapV2ForwardSmMOResp(
       dialog->ssn,
       dialog->dialogid_map,
@@ -2519,6 +2526,13 @@ static USHORT_T Et96MapVxForwardSmMOInd_Impl (
     moResp.errorCode = ET96MAP_UE_SYS_FAILURE;
     moResp.u.systemFailureNetworkResource_s.networkResourcePresent = 0;
     if( version == 2 ) {
+        Et96MapV3ForwardSmMOResp(
+        localSsn,
+        dialogueId,
+        invokeId,
+        0,
+        &moResp);
+    } else if( version == 2 ) {
         Et96MapV2ForwardSmMOResp(
         localSsn,
         dialogueId,
@@ -2603,6 +2617,19 @@ USHORT_T Et96MapV2ForwardSmMOInd (
   ET96MAP_SM_RP_UI_T *smRpUi_sp)
 {
   return Et96MapVxForwardSmMOInd_Impl(localSsn,dialogueId,invokeId,smRpDa_sp,smRpOa_sp,smRpUi_sp,2);
+}
+
+extern "C"
+USHORT_T Et96MapV3ForwardSmMOInd (
+  ET96MAP_LOCAL_SSN_T localSsn,
+  ET96MAP_DIALOGUE_ID_T dialogueId,
+  ET96MAP_INVOKE_ID_T invokeId,
+  ET96MAP_SM_RP_DA_T *smRpDa_sp,
+  ET96MAP_SM_RP_OA_T *smRpOa_sp,
+  ET96MAP_SM_RP_UI_T *smRpUi_sp,
+  ET96MAP_IMSI_T     *imsi_sp)
+{
+  return Et96MapVxForwardSmMOInd_Impl(localSsn,dialogueId,invokeId,smRpDa_sp,smRpOa_sp,smRpUi_sp,3);
 }
 
 static USHORT_T Et96MapVxForwardSmMTConf_Impl (
