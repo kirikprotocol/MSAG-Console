@@ -24,6 +24,7 @@ private:
 	long maxFileSize;
 	std::auto_ptr<const char> filename;
 	FILE * file;
+  long currentFilePos;
 
 	void rollover() throw();
 };

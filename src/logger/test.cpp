@@ -23,6 +23,13 @@ void mySleep(int millisecs)
 	nanosleep(&s, NULL);
 }
 
+unsigned long getMillisec()
+{
+	::timeval tp;
+  ::gettimeofday(&tp, 0);
+  return tp.tv_sec*1000 + tp.tv_usec/1000;
+}
+
 void testLoggers(Logger** loggers, const size_t count, const Logger::LogLevel & logLevel)
 {
 	std::cerr << "***" << std::endl;
@@ -199,24 +206,32 @@ int main()
 
 
 	TestLogThread1 threads1[256];
-	TestLogThread2 threads2[4];
+//	TestLogThread2 threads2[4];
 
   counterAll = 0;
   counterLogged = 0;
 
+  unsigned long startTime1 = getMillisec();
+  
 	std::cout << "starting..." << std::endl;
 	for (int i=0; i<sizeof(threads1)/sizeof(threads1[0]); i++)
 	{
 		threads1[i].Start();
 	}
+/*
 	for (int i=0; i<sizeof(threads2)/sizeof(threads2[0]); i++)
 	{
 		threads2[i].Start();
 	}
+*/
+
+  unsigned long startTime2 = getMillisec();
 
 	std::cout << "started, sleeping..." << std::endl;
   const int secsToSleep = 5*60;
 	mySleep(secsToSleep*1000);
+
+  unsigned long stopTime1 = getMillisec();
 
 	std::cout << "stopping..." << std::endl;
 	for (int i=0; i<sizeof(threads1)/sizeof(threads1[0]); i++)
@@ -224,25 +239,38 @@ int main()
 		threads1[i].Stop();
 		std::cout << "thread1 " << i << " Stop() called" << std::endl;
 	}
+/*
 	for (int i=0; i<sizeof(threads2)/sizeof(threads2[0]); i++)
 	{
 		threads2[i].Stop();
 		std::cout << "thread2 " << i << " Stop() called" << std::endl;
 	}
+*/
+
 	std::cout << "stopped, waiting..." << std::endl;
 	for (int i=0; i<sizeof(threads1)/sizeof(threads1[0]); i++)
 	{
 		threads1[i].WaitFor();
 		std::cout << "thread1 " << i << " stopped" << std::endl;
 	}
+/*
 	for (int i=0; i<sizeof(threads2)/sizeof(threads2[0]); i++)
 	{
 		threads2[i].WaitFor();
 		std::cout << "thread2 " << i << " stopped" << std::endl;
 	}
+*/
+
+  unsigned long stopTime2 = getMillisec();
+
+  unsigned long startTime = (startTime1 + startTime2) / 2;
+  unsigned long stopTime = (stopTime1 + stopTime2) / 2;
+  unsigned long runTime = stopTime - startTime;
+
 	std::cout << "threads finished" << std::endl;
+	std::cout << "running time: " << ((double)runTime)/1000 << " secs" << std::endl;
   std::cout << "tryes to log: " << counterAll << ", logged: " << counterLogged << std::endl;
-  std::cout << "tryes to log: " << counterAll/((double)secsToSleep) << " per sec, logged: " << counterLogged/((double)secsToSleep) << " per sec" << std::endl;
+  std::cout << "tryes to log: " << ((double)counterAll)*1000/((double)runTime) << " per sec, logged: " << ((double)counterLogged)*1000/((double)runTime) << " per sec" << std::endl;
 	
 	std::cout << "shutdown" << std::endl;
 	Logger::Shutdown();

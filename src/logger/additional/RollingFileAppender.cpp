@@ -67,50 +67,59 @@ RollingFileAppender::RollingFileAppender(const char * const _name, const Propert
 		filename.reset(cStringCopy("smsc.log"));
 
 	file = fopen(filename.get(), "a");
+  currentFilePos = ftell(file);
 }
 
 void RollingFileAppender::rollover() throw()
 {
-    // If maxBackups <= 0, then there is no file renaming to be done.
-    if(maxBackupIndex > 0) {
-		rolloverFiles(filename.get(), maxBackupIndex);
-
-        // Close the current file
-        fclose(file);
-		file = NULL;
-
-        // Rename fileName to fileName.1
-		const size_t max_filename_length = strlen(filename.get())+16;
-		std::auto_ptr<char> target(new char[max_filename_length+1]);
-		snprintf(target.get(), max_filename_length, "%s.1", filename.get());
-		target.get()[max_filename_length] = 0;
-
-		rename(filename.get(), target.get());
-
-        // Open a new file
-		file = fopen(filename.get(), "w");
-    }
-    else {
-		fclose(file);
-		file = fopen(filename.get(), "w");
-    }
+  // If maxBackups <= 0, then there is no file renaming to be done.
+  if(maxBackupIndex > 0) {
+    rolloverFiles(filename.get(), maxBackupIndex);
+    
+    // Close the current file
+    fclose(file);
+    file = NULL;
+    
+    // Rename fileName to fileName.1
+    const size_t max_filename_length = strlen(filename.get())+16;
+    std::auto_ptr<char> target(new char[max_filename_length+1]);
+    snprintf(target.get(), max_filename_length, "%s.1", filename.get());
+    target.get()[max_filename_length] = 0;
+    
+    rename(filename.get(), target.get());
+    
+    // Open a new file
+    file = fopen(filename.get(), "w");
+  } else {
+    fclose(file);
+    file = fopen(filename.get(), "w");
+  }
+    
+  currentFilePos = 0;
 }
 
 void RollingFileAppender::log(const char logLevelName, const char * const category, const char * const message) throw()
 {
-	smsc::core::synchronization::MutexGuard guard(mutex);
 	//D dd-mm hh:mm:ss,sss TTT CatLast___:message
 	::timeval tp;
-    ::gettimeofday(&tp, 0);
+  ::gettimeofday(&tp, 0);
 	::tm lcltm;
 	::localtime_r(&tp.tv_sec, &lcltm);
 	char timeStr[32];
 	const size_t timeStrLength = ::strftime(timeStr, sizeof(timeStr)/sizeof(timeStr[0]), "%d-%m %H:%M:%S", &lcltm);
 	timeStr[timeStrLength] = 0;
-	fprintf(file != NULL ? file : stderr, "%c %s,%3.3u %3.3u % 10.10s: %s\n", logLevelName, timeStr, tp.tv_usec/1000, ::pthread_self(), category, message);
-  fflush(file);
-	if (file != NULL && ftell(file) > maxFileSize)
-		rollover();
+  char buffer[1024];
+  size_t length = snprintf(buffer, sizeof(buffer)/sizeof(buffer[0]), "%c %s,%3.3u %3.3u % 10.10s: %s\n", logLevelName, timeStr, tp.tv_usec/1000, ::pthread_self(), category, message);
+  buffer[sizeof(buffer)/sizeof(buffer[0])-1] = 0;
+  
+  {
+    smsc::core::synchronization::MutexGuard guard(mutex);
+    fwrite(buffer, length, 1, file != NULL ? file : stderr);
+    ///TODO fflush(file);
+    currentFilePos += length;
+  	if (currentFilePos > maxFileSize)
+     	rollover();
+  }
 }
 
 }
