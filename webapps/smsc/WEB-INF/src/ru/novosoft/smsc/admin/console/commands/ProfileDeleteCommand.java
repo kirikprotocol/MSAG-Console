@@ -28,7 +28,7 @@ public class ProfileDeleteCommand implements Command
 
         /*String out = "Profile for mask '"+mask+"' ";
         try {
-            ctx.getSmsc().updateProfile(new Mask(mask), null);
+            ctx.getSmsc().profileUpdate(new Mask(mask), null);
             ctx.setMessage(out+"deleted");
             ctx.setStatus(CommandContext.CMD_OK);
         } catch (Exception e) {

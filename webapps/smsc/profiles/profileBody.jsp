@@ -1,3 +1,4 @@
+<input type=hidden name=returnPath value="<%=bean.getReturnPath()%>">
 <div class=content>
 <div class=page_subtitle>Profile information</div>
 <table class=properties_list cellspacing=0 cellspadding=0>

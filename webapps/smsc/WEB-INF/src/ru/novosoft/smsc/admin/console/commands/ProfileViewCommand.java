@@ -35,7 +35,7 @@ public class ProfileViewCommand implements Command
     {
         String out = "Profile for address '"+address+"'";
         try {
-            Profile profile = ctx.getSmsc().lookupProfile(new Mask(address));
+            Profile profile = ctx.getSmsc().profileLookup(new Mask(address));
             if (profile != null) {
                 ctx.setMessage(showProfile(profile));
                 ctx.setStatus(CommandContext.CMD_OK);

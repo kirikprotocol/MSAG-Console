@@ -12,16 +12,16 @@ import java.util.List;
  * Date: 11.03.2003
  * Time: 18:38:02
  */
-public class ProfilesBean extends SmscBean
-{
+public class ProfilesBean extends SmscBean {
 	protected String mask = "";
 	protected byte report = Profile.REPORT_OPTION_None;
 	protected byte codepage = Profile.CODEPAGE_Default;
 	protected String locale = "";
 	protected List registeredLocales = new LinkedList();
+	protected String returnPath = null;
 
-  protected boolean aliasHide = false;
-  protected boolean aliasModifiable = false;
+	protected boolean aliasHide = false;
+	protected boolean aliasModifiable = false;
 
 	protected int init(List errors)
 	{
@@ -29,12 +29,9 @@ public class ProfilesBean extends SmscBean
 		if (result != RESULT_OK)
 			return result;
 
-		try
-		{
+		try {
 			registeredLocales = smsc.getRegisteredLocales();
-		}
-		catch (Throwable e)
-		{
+		} catch (Throwable e) {
 			logger.error("Couldn't get registered profiles", e);
 			return error(SMSCErrors.error.profiles.couldntGetRegisteredLocales, e);
 		}
@@ -55,19 +52,17 @@ public class ProfilesBean extends SmscBean
 	{
 		return Byte.toString(report);
 	}
-  public byte getByteReport()
-  {
-    return report;
-  }
+
+	public byte getByteReport()
+	{
+		return report;
+	}
 
 	public void setReport(String report)
 	{
-    try
-		{
+		try {
 			this.report = Byte.decode(report).byteValue();
-		}
-		catch (NumberFormatException e)
-		{
+		} catch (NumberFormatException e) {
 			this.report = Profile.REPORT_OPTION_None;
 		}
 	}
@@ -77,19 +72,17 @@ public class ProfilesBean extends SmscBean
 	{
 		return Byte.toString(codepage);
 	}
-  public byte getByteCodepage()
-  {
-    return codepage;
-  }
+
+	public byte getByteCodepage()
+	{
+		return codepage;
+	}
 
 	public void setCodepage(String codepage)
 	{
-		try
-		{
+		try {
 			this.codepage = Byte.decode(codepage).byteValue();
-		}
-		catch (NumberFormatException e)
-		{
+		} catch (NumberFormatException e) {
 			this.codepage = Profile.CODEPAGE_Default;
 		}
 	}
@@ -109,25 +102,45 @@ public class ProfilesBean extends SmscBean
 		return registeredLocales;
 	}
 
-  public boolean isAliasHide() {
-    return aliasHide;
-  }
-  public void setAliasHide(boolean aliasHide) {
-    this.aliasHide = aliasHide;
-  }
-  public void setAliasHide(String aliasHide) {
-    this.aliasHide = (aliasHide.equalsIgnoreCase("true") ||
-                      aliasHide.equalsIgnoreCase("hide"));
-  }
+	public boolean isAliasHide()
+	{
+		return aliasHide;
+	}
 
-  public boolean isAliasModifiable() {
-    return aliasModifiable;
-  }
-  public void setAliasModifiable(boolean aliasModifiable) {
-    this.aliasModifiable = aliasModifiable;
-  }
-  public void setAliasModifiable(String aliasModifiable) {
-    this.aliasModifiable = (aliasModifiable.equalsIgnoreCase("true") ||
-                            aliasModifiable.equalsIgnoreCase("modifiable"));
-  }
+	public void setAliasHide(boolean aliasHide)
+	{
+		this.aliasHide = aliasHide;
+	}
+
+	public void setAliasHide(String aliasHide)
+	{
+		this.aliasHide = (aliasHide.equalsIgnoreCase("true") ||
+				aliasHide.equalsIgnoreCase("hide"));
+	}
+
+	public boolean isAliasModifiable()
+	{
+		return aliasModifiable;
+	}
+
+	public void setAliasModifiable(boolean aliasModifiable)
+	{
+		this.aliasModifiable = aliasModifiable;
+	}
+
+	public void setAliasModifiable(String aliasModifiable)
+	{
+		this.aliasModifiable = (aliasModifiable.equalsIgnoreCase("true") ||
+				aliasModifiable.equalsIgnoreCase("modifiable"));
+	}
+
+	public String getReturnPath()
+	{
+		return returnPath;
+	}
+
+	public void setReturnPath(String returnPath)
+	{
+		this.returnPath = returnPath;
+	}
 }

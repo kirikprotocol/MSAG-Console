@@ -51,7 +51,7 @@ public class ProfilesAdd extends ProfilesBean
 		{
 			final Mask address = new Mask(mask);
 			Profile profile = new Profile(address, codepage, report, locale);
-			switch (smsc.updateProfile(address, profile))
+			switch (smsc.profileUpdate(address, profile))
 			{
 				case 1: //pusUpdated
 				case 2: //pusInserted

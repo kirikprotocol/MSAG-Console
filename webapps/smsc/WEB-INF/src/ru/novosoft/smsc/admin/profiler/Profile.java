@@ -9,9 +9,9 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.Mask;
 
 import java.util.StringTokenizer;
+import java.util.List;
 
-public class Profile
-{
+public class Profile {
 	public static final byte CODEPAGE_Default = 0;
 	public static final byte CODEPAGE_UCS2 = 8;
 	public static final byte REPORT_OPTION_None = 0;
@@ -24,8 +24,18 @@ public class Profile
 	private byte reportOptions;
 	private String locale;
 
-  private boolean aliasHide = false;
-  private boolean aliasModifiable = true;
+	private boolean aliasHide = false;
+	private boolean aliasModifiable = true;
+
+	public Profile(Mask mask, List profileProperties) throws AdminException
+	{
+		this.mask = mask;
+		setCodepage((String) profileProperties.get(0));
+		setReportOptions((String) profileProperties.get(1));
+		setLocale((String) profileProperties.get(2));
+		setAliasHide((String)profileProperties.get(3));
+		setAliasModifiable((String)profileProperties.get(4));
+	}
 
 	/**
 	 * Constructs <code>Profile</code> from string returned by SMSC.
@@ -38,11 +48,9 @@ public class Profile
 	{
 		this.mask = mask;
 		int i = 0;
-		for (StringTokenizer tokenizer = new StringTokenizer(profileString, ",", false); tokenizer.hasMoreTokens();)
-		{
+		for (StringTokenizer tokenizer = new StringTokenizer(profileString, ",", false); tokenizer.hasMoreTokens();) {
 			String token = tokenizer.nextToken().trim();
-			switch (i++)
-			{
+			switch (i++) {
 				case 0:
 					setCodepage(token);
 					break;
@@ -52,12 +60,12 @@ public class Profile
 				case 2:
 					setLocale(token);
 					break;
-        case 3:
-          setAliasHide(token);
-          break;
-        case 4:
-          setAliasModifiable(token);
-          break;
+				case 3:
+					setAliasHide(token);
+					break;
+				case 4:
+					setAliasModifiable(token);
+					break;
 			}
 		}
 		if (i < 5)
@@ -87,8 +95,7 @@ public class Profile
 
 	public String getCodepageString() throws AdminException
 	{
-		switch (codepage)
-		{
+		switch (codepage) {
 			case CODEPAGE_Default:
 				return "default";
 			case CODEPAGE_UCS2:
@@ -120,8 +127,7 @@ public class Profile
 
 	public String getReportOptionsString() throws AdminException
 	{
-		switch (reportOptions)
-		{
+		switch (reportOptions) {
 			case REPORT_OPTION_Full:
 				return "full";
 			case REPORT_OPTION_Final:
@@ -153,7 +159,7 @@ public class Profile
 	public String getStringRepresentation() throws AdminException
 	{
 		return getCodepageString() + ',' + getReportOptionsString() + ',' + locale +
-           ',' + (aliasHide ? "true":"false") + ',' + (aliasModifiable ? "true":"false");
+				',' + (aliasHide ? "true" : "false") + ',' + (aliasModifiable ? "true" : "false");
 	}
 
 	public Mask getMask()
@@ -173,25 +179,35 @@ public class Profile
 			this.locale = "";
 	}
 
-  public boolean isAliasHide() {
-    return aliasHide;
-  }
-  public void setAliasHide(boolean aliasHide) {
-    this.aliasHide = aliasHide;
-  }
-  public void setAliasHide(String aliasHide) {
-    this.aliasHide = (aliasHide.equalsIgnoreCase("true") ||
-                      aliasHide.equalsIgnoreCase("hide"));
-  }
+	public boolean isAliasHide()
+	{
+		return aliasHide;
+	}
 
-  public boolean isAliasModifiable() {
-    return aliasModifiable;
-  }
-  public void setAliasModifiable(boolean aliasModifiable) {
-    this.aliasModifiable = aliasModifiable;
-  }
-  public void setAliasModifiable(String aliasModifiable) {
-    this.aliasModifiable = (aliasModifiable.equalsIgnoreCase("true") ||
-                            aliasModifiable.equalsIgnoreCase("modifiable"));
-  }
+	public void setAliasHide(boolean aliasHide)
+	{
+		this.aliasHide = aliasHide;
+	}
+
+	public void setAliasHide(String aliasHide)
+	{
+		this.aliasHide = (aliasHide.equalsIgnoreCase("true") ||
+				aliasHide.equalsIgnoreCase("hide"));
+	}
+
+	public boolean isAliasModifiable()
+	{
+		return aliasModifiable;
+	}
+
+	public void setAliasModifiable(boolean aliasModifiable)
+	{
+		this.aliasModifiable = aliasModifiable;
+	}
+
+	public void setAliasModifiable(String aliasModifiable)
+	{
+		this.aliasModifiable = (aliasModifiable.equalsIgnoreCase("true") ||
+				aliasModifiable.equalsIgnoreCase("modifiable"));
+	}
 }

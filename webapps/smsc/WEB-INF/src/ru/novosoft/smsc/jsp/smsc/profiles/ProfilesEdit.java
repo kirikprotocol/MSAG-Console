@@ -40,7 +40,7 @@ public class ProfilesEdit extends ProfilesBean
 		{
 			try
 			{
-				Profile p = smsc.lookupProfile(new Mask(mask));
+				Profile p = smsc.profileLookup(new Mask(mask));
 				report = p.getReportOptions();
 				codepage = p.getCodepage();
 				locale = p.getLocale();
@@ -50,7 +50,7 @@ public class ProfilesEdit extends ProfilesBean
 			catch (AdminException e)
 			{
 				logger.error("Couldn't lookup profile \"" + mask + '"', e);
-				return error(SMSCErrors.error.profiles.couldntLookup, e);
+				return error(SMSCErrors.error.profiles.couldntLookup, mask, e);
 			}
 		}
 
@@ -71,7 +71,7 @@ public class ProfilesEdit extends ProfilesBean
 			Profile profile = new Profile(address, codepage, report, locale);
       profile.setAliasHide(aliasHide);
       profile.setAliasModifiable(aliasModifiable);
-			switch (smsc.updateProfile(address, profile))
+			switch (smsc.profileUpdate(address, profile))
 			{
 				case 1: //pusUpdated
 				case 2: //pusInserted

@@ -14,6 +14,7 @@ import ru.novosoft.smsc.admin.alias.AliasSet;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.DistributionListManager;
 import ru.novosoft.smsc.admin.profiler.Profile;
+import ru.novosoft.smsc.admin.profiler.ProfileEx;
 import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.admin.service.*;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
@@ -30,15 +31,16 @@ import java.io.*;
 import java.util.*;
 
 
-public class Smsc extends Service
-{
+public class Smsc extends Service {
 	private Component smsc_component = null;
 	private Method apply_routes_method = null;
 	private Method apply_aliases_method = null;
-  private Method load_routes_method = null;
-  private Method trace_route_method = null;
-	private Method lookup_profile_method = null;
-	private Method update_profile_method = null;
+	private Method load_routes_method = null;
+	private Method trace_route_method = null;
+	private Method profile_lookup_method = null;
+	private Method profile_lookup_ex_method = null;
+	private Method profile_update_method = null;
+	private Method profile_delete_method = null;
 	private Method flush_statistics_method = null;
 	private Method process_cancel_messages_method = null;
 	private Method apply_smsc_config_method = null;
@@ -74,35 +76,24 @@ public class Smsc extends Service
 	{
 		super(new ServiceInfo(Constants.SMSC_SME_ID, config.getString("smsc.host"), config.getInt("smsc.port"), "", null, ServiceInfo.STATUS_STOPPED));
 
-		try
-		{
+		try {
 			final File smscConfFolder = WebAppFolders.getSmscConfFolder();
 			Document aliasesDoc = Utils.parse(new FileReader(new File(smscConfFolder, "aliases.xml")));
 			aliases = new AliasSet(aliasesDoc.getDocumentElement());
 			profileDataSource = new ProfileDataSource(connectionPool);
-		}
-		catch (FactoryConfigurationError error)
-		{
+		} catch (FactoryConfigurationError error) {
 			logger.error("Couldn't configure xml parser factory", error);
 			throw new AdminException("Couldn't configure xml parser factory: " + error.getMessage());
-		}
-		catch (ParserConfigurationException e)
-		{
+		} catch (ParserConfigurationException e) {
 			logger.error("Couldn't configure xml parser", e);
 			throw new AdminException("Couldn't configure xml parser: " + e.getMessage());
-		}
-		catch (SAXException e)
-		{
+		} catch (SAXException e) {
 			logger.error("Couldn't parse", e);
 			throw new AdminException("Couldn't parse: " + e.getMessage());
-		}
-		catch (IOException e)
-		{
+		} catch (IOException e) {
 			logger.error("Couldn't read", e);
 			throw new AdminException("Couldn't read: " + e.getMessage());
-		}
-		catch (NullPointerException e)
-		{
+		} catch (NullPointerException e) {
 			logger.error("Couldn't parse", e);
 			throw new AdminException("Couldn't parse: " + e.getMessage());
 		}
@@ -118,40 +109,39 @@ public class Smsc extends Service
 		return out;
 	}
 
-  public synchronized List loadRoutes(RouteSubjectManager routeSubjectManager)
-      throws AdminException
+	public synchronized List loadRoutes(RouteSubjectManager routeSubjectManager)
+			throws AdminException
 	{
 		routeSubjectManager.trace();
-    if (getInfo().getStatus() != ServiceInfo.STATUS_RUNNING)
-      throw new AdminException("SMSC is not running.");
+		if (getInfo().getStatus() != ServiceInfo.STATUS_RUNNING)
+			throw new AdminException("SMSC is not running.");
 
-    refreshComponents();
-    Object res = call(smsc_component, load_routes_method, Type.Types[Type.StringListType], new HashMap());
+		refreshComponents();
+		Object res = call(smsc_component, load_routes_method, Type.Types[Type.StringListType], new HashMap());
 
-    return ((res instanceof List) ? (List)res : null);
+		return ((res instanceof List) ? (List) res : null);
 	}
 
-  public synchronized List traceRoute(String dstAddress, String srcAddress, String srcSysId)
-      throws AdminException
+	public synchronized List traceRoute(String dstAddress, String srcAddress, String srcSysId)
+			throws AdminException
 	{
-    if (getInfo().getStatus() != ServiceInfo.STATUS_RUNNING)
-      throw new AdminException("SMSC is not running.");
+		if (getInfo().getStatus() != ServiceInfo.STATUS_RUNNING)
+			throw new AdminException("SMSC is not running.");
 
-    refreshComponents();
-    HashMap args = new HashMap();
-    args.put("dstAddress", dstAddress);
-    args.put("srcAddress", srcAddress);
-    args.put("srcSysId", srcSysId);
-    Object res = call(smsc_component, trace_route_method, Type.Types[Type.StringListType], args);
+		refreshComponents();
+		HashMap args = new HashMap();
+		args.put("dstAddress", dstAddress);
+		args.put("srcAddress", srcAddress);
+		args.put("srcSysId", srcSysId);
+		Object res = call(smsc_component, trace_route_method, Type.Types[Type.StringListType], args);
 
-    return ((res instanceof List) ? (List)res : null);
+		return ((res instanceof List) ? (List) res : null);
 	}
 
-  public synchronized void applyRoutes(RouteSubjectManager routeSubjectManager) throws AdminException
+	public synchronized void applyRoutes(RouteSubjectManager routeSubjectManager) throws AdminException
 	{
 		routeSubjectManager.apply();
-		if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
-		{
+		if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
 			refreshComponents();
 			call(smsc_component, apply_routes_method, Type.Types[Type.StringType], new HashMap());
 		}
@@ -159,31 +149,23 @@ public class Smsc extends Service
 
 	public synchronized void applyAliases() throws AdminException
 	{
-		try
-		{
+		try {
 			final File smscConfFolder = WebAppFolders.getSmscConfFolder();
 
 			final File aliasConfigFile = new File(smscConfFolder, "aliases.xml");
-			try
-			{
+			try {
 				logger.debug("Storing alias config to \"" + aliasConfigFile.getCanonicalPath() + '"');
-			}
-			catch (IOException e)
-			{
+			} catch (IOException e) {
 				logger.debug("Storing alias config to \"" + aliasConfigFile.getName() + "\", and couldn't get canonical path of this file...");
 			}
 			storeAliases(new PrintWriter(new FileOutputStream(aliasConfigFile), true)).close();
 
-			if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
-			{
+			if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
 				refreshComponents();
 				call(smsc_component, apply_aliases_method, Type.Types[Type.StringType], new HashMap());
-			}
-			else
+			} else
 				logger.debug("Couldn't call apply method on SMSC - SMSC is not running. Status is " + getInfo().getStatusStr() + " (" + getInfo().getStatus() + ")");
-		}
-		catch (FileNotFoundException e)
-		{
+		} catch (FileNotFoundException e) {
 			throw new AdminException("Couldn't apply_routes new settings: Couldn't write to destination config file: " + e.getMessage());
 		}
 	}
@@ -193,28 +175,49 @@ public class Smsc extends Service
 		return aliases;
 	}
 
-	public synchronized Profile lookupProfile(Mask mask) throws AdminException
+	public synchronized Profile profileLookup(Mask mask) throws AdminException
 	{
 		refreshComponents();
 		HashMap args = new HashMap();
 		args.put("address", mask.getMask());
-		Object result = call(smsc_component, lookup_profile_method, Type.Types[Type.StringType], args);
-		if (result instanceof String)
-			return new Profile(mask, (String) result);
+		Object result = call(smsc_component, profile_lookup_method, Type.Types[Type.StringListType], args);
+		if (result instanceof List)
+			return new Profile(mask, (List) result);
 		else
 			throw new AdminException("Error in response");
 	}
 
-	public synchronized int updateProfile(Mask mask, Profile newProfile) throws AdminException
+	public synchronized ProfileEx profileLookupEx(Mask mask) throws AdminException
+	{
+		refreshComponents();
+		HashMap args = new HashMap();
+		args.put("address", mask.getMask());
+		Object result = call(smsc_component, profile_lookup_ex_method, Type.Types[Type.StringListType], args);
+		if (result instanceof List)
+			return new ProfileEx(mask, (List) result);
+		else
+			throw new AdminException("Error in response");
+	}
+
+	public synchronized int profileUpdate(Mask mask, Profile newProfile) throws AdminException
 	{
 		refreshComponents();
 		HashMap args = new HashMap();
 		args.put("address", mask.getMask());
 		args.put("profile", newProfile.getStringRepresentation());
-		return ((Long) call(smsc_component, update_profile_method, Type.Types[Type.IntType], args)).intValue();
+		return ((Long) call(smsc_component, profile_update_method, Type.Types[Type.IntType], args)).intValue();
 	}
 
-	public synchronized QueryResultSet queryProfiles(ProfileQuery query) throws AdminException
+	public synchronized void profileDelete(Mask mask) throws AdminException
+	{
+		refreshComponents();
+		HashMap args = new HashMap();
+		args.put("address", mask.getMask());
+		call(smsc_component, profile_delete_method, Type.Types[Type.IntType], args);
+		profileDataSource.delete(mask);
+	}
+
+	public synchronized QueryResultSet profilesQuery(ProfileQuery query) throws AdminException
 	{
 		return profileDataSource.query(query);
 	}
@@ -227,19 +230,18 @@ public class Smsc extends Service
 	public synchronized void processCancelMessages(Collection messageIds) throws AdminException
 	{
 		refreshComponents();
-		StringBuffer ids = new StringBuffer(messageIds.size()*10);
-		StringBuffer  srcs = new StringBuffer(messageIds.size()*10);
-		StringBuffer  dsts = new StringBuffer(messageIds.size()*10);
-		for (Iterator i = messageIds.iterator(); i.hasNext();)
-		{
+		StringBuffer ids = new StringBuffer(messageIds.size() * 10);
+		StringBuffer srcs = new StringBuffer(messageIds.size() * 10);
+		StringBuffer dsts = new StringBuffer(messageIds.size() * 10);
+		for (Iterator i = messageIds.iterator(); i.hasNext();) {
 			CancelMessageData data = (CancelMessageData) i.next();
-			ids.append( data.getMessageId() );
-			srcs.append( data.getSourceAddress() );
-			dsts.append( data.getDestinationAddress() );
-			if( i.hasNext() ) {
-			  ids.append(',');
-			  srcs.append(',');
-			  dsts.append(',');
+			ids.append(data.getMessageId());
+			srcs.append(data.getSourceAddress());
+			dsts.append(data.getDestinationAddress());
+			if (i.hasNext()) {
+				ids.append(',');
+				srcs.append(',');
+				dsts.append(',');
 			}
 		}
 		Map params = new HashMap();
@@ -258,17 +260,19 @@ public class Smsc extends Service
 	protected void checkComponents()
 	{
 		super.checkComponents();
-		if (apply_aliases_method == null || apply_routes_method == null || lookup_profile_method == null || update_profile_method == null || flush_statistics_method == null || process_cancel_messages_method == null || apply_smsc_config_method == null || apply_services_method == null || msc_registrate_method == null || msc_unregister_method == null || msc_block_method == null || msc_clear_method == null || msc_list_method == null || sme_add_method == null || sme_remove_method == null || sme_update_method == null || sme_status == null || sme_disconnect == null || log_get_categories == null || log_set_categories == null)
-		{
+		if (apply_aliases_method == null || apply_routes_method == null || profile_lookup_method == null || profile_update_method == null || flush_statistics_method == null || process_cancel_messages_method == null || apply_smsc_config_method == null || apply_services_method == null || msc_registrate_method == null || msc_unregister_method == null || msc_block_method == null || msc_clear_method == null || msc_list_method == null || sme_add_method == null || sme_remove_method == null || sme_update_method == null || sme_status == null || sme_disconnect == null || log_get_categories == null || log_set_categories == null) {
 			smsc_component = (Component) getInfo().getComponents().get("SMSC");
 			apply_aliases_method = (Method) smsc_component.getMethods().get("apply_aliases");
 
-      apply_routes_method = (Method) smsc_component.getMethods().get("apply_routes");
-      load_routes_method = (Method) smsc_component.getMethods().get("load_routes");
-      trace_route_method = (Method) smsc_component.getMethods().get("trace_route");
+			apply_routes_method = (Method) smsc_component.getMethods().get("apply_routes");
+			load_routes_method = (Method) smsc_component.getMethods().get("load_routes");
+			trace_route_method = (Method) smsc_component.getMethods().get("trace_route");
 
-      lookup_profile_method = (Method) smsc_component.getMethods().get("lookup_profile");
-			update_profile_method = (Method) smsc_component.getMethods().get("update_profile");
+			profile_lookup_method = (Method) smsc_component.getMethods().get("lookup_profile");
+			profile_lookup_ex_method = (Method) smsc_component.getMethods().get("profile_lookup_ex");
+			profile_update_method = (Method) smsc_component.getMethods().get("update_profile");
+			profile_delete_method = (Method) smsc_component.getMethods().get("profile_delete");
+
 			flush_statistics_method = (Method) smsc_component.getMethods().get("flush_statistics");
 			process_cancel_messages_method = (Method) smsc_component.getMethods().get("process_cancel_messages");
 			apply_smsc_config_method = (Method) smsc_component.getMethods().get("apply_smsc_config");
@@ -293,13 +297,10 @@ public class Smsc extends Service
 
 	public synchronized Config getSmscConfig()
 	{
-		try
-		{
+		try {
 			File confFile = new File(WebAppFolders.getSmscConfFolder(), "config.xml");
 			return new Config(confFile);
-		}
-		catch (Throwable t)
-		{
+		} catch (Throwable t) {
 			logger.error("Couldn't get SMSC config", t);
 			return null;
 		}
@@ -307,12 +308,9 @@ public class Smsc extends Service
 
 	public synchronized void saveSmscConfig(Config config) throws AdminException
 	{
-		try
-		{
+		try {
 			config.save("ISO-8859-1");
-		}
-		catch (Throwable t)
-		{
+		} catch (Throwable t) {
 			logger.error("Couldn't store SMSC config", t);
 			throw new AdminException("Couldn't store SMSC config: " + t.getMessage());
 		}
@@ -320,8 +318,7 @@ public class Smsc extends Service
 
 	public synchronized void applyConfig() throws AdminException
 	{
-		if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
-		{
+		if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
 			refreshComponents();
 			call(smsc_component, apply_smsc_config_method, Type.Types[Type.StringType], new HashMap());
 		}
@@ -375,17 +372,12 @@ public class Smsc extends Service
 		if (config == null)
 			return false;
 		String localesString = null;
-		try
-		{
+		try {
 			localesString = config.getString("core.locales");
-		}
-		catch (Config.ParamNotFoundException e)
-		{
+		} catch (Config.ParamNotFoundException e) {
 			logger.warn("isLocaleRegistered: Parameter core.locales not found");
 			return false;
-		}
-		catch (Config.WrongParamTypeException e)
-		{
+		} catch (Config.WrongParamTypeException e) {
 			logger.warn("isLocaleRegistered: Parameter core.locales is not string");
 			return false;
 		}
@@ -399,8 +391,7 @@ public class Smsc extends Service
 		String localesString = null;
 		localesString = config.getString("core.locales");
 		StringTokenizer tokenizer = new StringTokenizer(localesString, ",");
-		while (tokenizer.hasMoreTokens())
-		{
+		while (tokenizer.hasMoreTokens()) {
 			result.add(tokenizer.nextToken().trim());
 		}
 		return result;
@@ -461,8 +452,7 @@ public class Smsc extends Service
 	public synchronized SmeStatus getSmeStatus(String id) throws AdminException
 	{
 		final long currentTime = System.currentTimeMillis();
-		if (currentTime - Constants.ServicesRefreshTimeoutMillis > serviceRefreshTimeStamp)
-		{
+		if (currentTime - Constants.ServicesRefreshTimeoutMillis > serviceRefreshTimeStamp) {
 			refreshComponents();
 			serviceRefreshTimeStamp = currentTime;
 			smeStatuses.clear();
@@ -470,8 +460,7 @@ public class Smsc extends Service
 			if (!(result instanceof List))
 				throw new AdminException("Error in response");
 
-			for (Iterator i = ((List) result).iterator(); i.hasNext();)
-			{
+			for (Iterator i = ((List) result).iterator(); i.hasNext();) {
 				String s = (String) i.next();
 				SmeStatus smeStatus = new SmeStatus(s);
 				smeStatuses.put(smeStatus.getId(), smeStatus);
@@ -495,24 +484,19 @@ public class Smsc extends Service
 		Map return_result = new HashMap();
 		refreshComponents();
 		Object resultO = call(smsc_component, log_get_categories, Type.Types[Type.StringListType], new HashMap());
-		if (resultO instanceof List)
-		{
+		if (resultO instanceof List) {
 			List result = (List) resultO;
-			for (Iterator i = result.iterator(); i.hasNext();)
-			{
+			for (Iterator i = result.iterator(); i.hasNext();) {
 				String cat = (String) i.next();
 				final int delim_pos = cat.lastIndexOf(LOGGER_DELIMITER);
-				if (delim_pos >= 0)
-				{
+				if (delim_pos >= 0) {
 					String name = cat.substring(0, delim_pos);
-					String value = cat.substring(delim_pos+1);
+					String value = cat.substring(delim_pos + 1);
 					return_result.put(name, value);
-				}
-				else
+				} else
 					logger.error("Error in response: string \"" + cat + "\" misformatted.");
 			}
-		}
-		else
+		} else
 			throw new AdminException("Error in response");
 		return return_result;
 	}
@@ -523,8 +507,7 @@ public class Smsc extends Service
 		Map params = new HashMap();
 		LinkedList catsList = new LinkedList();
 		params.put("categories", catsList);
-		for (Iterator i = cats.entrySet().iterator(); i.hasNext();)
-		{
+		for (Iterator i = cats.entrySet().iterator(); i.hasNext();) {
 			Map.Entry entry = (Map.Entry) i.next();
 			final String catName = (String) entry.getKey();
 			final String catPriority = (String) entry.getValue();
@@ -535,8 +518,7 @@ public class Smsc extends Service
 
 	public synchronized void applyLocaleResources() throws AdminException
 	{
-		if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
-		{
+		if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
 			refreshComponents();
 			call(smsc_component, apply_locale_resources_method, Type.Types[Type.StringType], new HashMap());
 		}

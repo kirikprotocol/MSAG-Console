@@ -113,8 +113,13 @@ if (isServiceStatusNeeded || (ServiceIDForShowStatus != null && ServiceIDForShow
 			main_menu_submenu_item(out, "/aliases",  "MENU0_ALIASES",  "Aliases");
 			main_menu_submenu_item(out, "/subjects", "MENU0_SUBJECTS", "Subjects");
 			main_menu_submenu_item(out, "/routes",   "MENU0_ROUTES",   "Routes");
-			main_menu_submenu_item(out, "/profiles", "MENU0_PROFILES", "Profiles");
-      main_menu_submenu_item(out, "/tracer",   "MENU0_TRACER",   "Routes tracing");
+			main_menu_submenu_item(out, "/tracer",   "MENU0_TRACER",   "Routes tracing");
+			main_menu_end_item(out);
+
+			main_menu_begin_item(out, "MENU0_Profiles_menu", "MENU0_Profiles_submenu", "Profiles");
+			main_menu_submenu_item(out, "/profiles",            "MENU0_PROFILES",        "Profiles");
+			main_menu_submenu_i_fu(out, "/profiles/groups.jsp", "MENU0_PROFILES_GROUPS", "Profile groups");
+			main_menu_submenu_i_fu(out, "/profiles/lookup.jsp", "MENU0_PROFILES_LOOKUP", "Lookup profile");
 			main_menu_end_item(out);
 
 			main_menu_begin_item(out, "MENU0_Services_menu", "MENU0_Services_submenu", "Services");

@@ -16,8 +16,7 @@ import ru.novosoft.smsc.jsp.util.tables.Filter;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ProfileFilter implements Filter
-{
+public class ProfileFilter implements Filter {
 	private MaskList masks = new MaskList();
 	private byte codepage = -1;
 	private byte reportinfo = -1;
@@ -30,13 +29,10 @@ public class ProfileFilter implements Filter
 
 	public boolean isItemAllowed(DataItem item)
 	{
-		try
-		{
+		try {
 			Profile p = new Profile(new Mask((String) item.getValue("Mask")), (String) item.getValue("Codepage"), (String) item.getValue("Report info"), (String) item.getValue("locale"));
 			return (masks.isEmpty() || masks.contains(p.getMask())) && (codepage == -1 || codepage == p.getCodepage()) && (reportinfo == -1 || reportinfo == p.getReportOptions()) && (locales.isEmpty() || locales.contains(p.getLocale()));
-		}
-		catch (AdminException e)
-		{
+		} catch (AdminException e) {
 			Category.getInstance(this.getClass()).error("Exception", e);
 			return false;
 		}

@@ -91,25 +91,28 @@ public class Service extends Proxy
 
 	private List translateStringList(String listStr)
 	{
-		String buffer = "";
+		StringBuffer buffer = new StringBuffer(listStr.length());
 		List result = new LinkedList();
 		for (int i = 0; i < listStr.length(); i++)
 		{
 			char c = listStr.charAt(i);
 			if (c == ',')
 			{
-				result.add(buffer);
-				buffer = "";
+				result.add(buffer.toString());
+				buffer.setLength(0);
 				continue;
 			}
 			if (c == '\\' && i < (listStr.length() - 1))
 			{
 				c = listStr.charAt(++i);
 			}
-			buffer += c;
+			buffer.append(c);
 		}
 		if (buffer.length() > 0)
-			result.add(buffer);
+			result.add(buffer.toString());
+      else if (listStr.charAt(listStr.length()-1) == ',')
+			result.add(new String());
+
 		return result;
 	}
 

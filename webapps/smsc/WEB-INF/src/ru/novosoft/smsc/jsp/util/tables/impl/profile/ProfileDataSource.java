@@ -15,8 +15,7 @@ import ru.novosoft.util.conpool.NSConnectionPool;
 import java.sql.*;
 import java.util.Iterator;
 
-public class ProfileDataSource implements DataSource
-{
+public class ProfileDataSource implements DataSource {
 	private static final String[] columnNames = {"Mask", "Codepage", "Report info"};
 
 	NSConnectionPool connectionPool = null;
@@ -30,8 +29,7 @@ public class ProfileDataSource implements DataSource
 	{
 		String sort = (String) query_to_run.getSortOrder().get(0);
 		boolean isNegativeSort = false;
-		if (sort.charAt(0) == '-')
-		{
+		if (sort.charAt(0) == '-') {
 			sort = sort.substring(1);
 			isNegativeSort = true;
 		}
@@ -41,8 +39,7 @@ public class ProfileDataSource implements DataSource
 		ResultSet sqlResultSet = null;
 		QueryResultSetImpl results = null;
 
-		try
-		{
+		try {
 			String sortOrder;
 			if (!sort.equalsIgnoreCase("mask"))
 				sortOrder = sort + (isNegativeSort ? " desc" : " asc") + ", mask asc";
@@ -53,7 +50,7 @@ public class ProfileDataSource implements DataSource
 			connection = connectionPool.getConnection();
 			statement = connection.createStatement();
 
-			sqlResultSet = statement.executeQuery("select mask, reportinfo, codeset, locale from sms_profile " + createWhereStatement((ProfileFilter) query_to_run.getFilter()) + " order by " + sortOrder);
+			sqlResultSet = statement.executeQuery("select mask, reportinfo, codeset, locale from sms_profile " + createWhereStatement((ProfileFilter) query_to_run.getFilter(), query_to_run.getShow()) + " order by " + sortOrder);
 
 			int totalCount = 0;
 			// skip lines to start position
@@ -61,8 +58,7 @@ public class ProfileDataSource implements DataSource
 
 			// retrieve data
 			results = new QueryResultSetImpl(columnNames, query_to_run.getSortOrder());
-			for (int i = 0; i < query_to_run.getExpectedResultsQuantity() && sqlResultSet.next(); i++, totalCount++)
-			{
+			for (int i = 0; i < query_to_run.getExpectedResultsQuantity() && sqlResultSet.next(); i++, totalCount++) {
 				//System.out.println("Query: ");
 				String maskString = sqlResultSet.getString("mask");
 				//System.out.println("maskString = " + maskString);
@@ -75,44 +71,30 @@ public class ProfileDataSource implements DataSource
 			}
 
 			boolean isLast = true;
-			while (sqlResultSet.next())
-			{
+			while (sqlResultSet.next()) {
 				totalCount++;
 				isLast = false;
 			}
 			results.setTotalSize(totalCount);
 			results.setLast(isLast);
-		}
-		catch (SQLException e)
-		{
+		} catch (SQLException e) {
 			throw new AdminException("Couldn't retrieve data from profiles database: " + e.getMessage());
-		}
-		finally
-		{
+		} finally {
 			// close SQL connection
 			if (sqlResultSet != null)
-				try
-				{
+				try {
 					sqlResultSet.close();
-				}
-				catch (SQLException e)
-				{
+				} catch (SQLException e) {
 				}
 			if (statement != null)
-				try
-				{
+				try {
 					statement.close();
-				}
-				catch (SQLException e)
-				{
+				} catch (SQLException e) {
 				}
 			if (connection != null)
-				try
-				{
+				try {
 					connection.close();
-				}
-				catch (SQLException e)
-				{
+				} catch (SQLException e) {
 				}
 		}
 		if (results != null)
@@ -126,19 +108,15 @@ public class ProfileDataSource implements DataSource
 		return query((ProfileQuery) query_to_run);
 	}
 
-	private String createWhereStatement(ProfileFilter filter)
+	private String createWhereStatement(ProfileFilter filter, byte show)
 	{
-		if (filter.isEmpty())
-			return "";
-		else
+		String result = "";
+		if (!filter.isEmpty())
 		{
-			String result = "";
 
-			if (!filter.getMasks().isEmpty())
-			{
+			if (!filter.getMasks().isEmpty()) {
 				result += '(';
-				for (Iterator i = filter.getMasks().iterator(); i.hasNext();)
-				{
+				for (Iterator i = filter.getMasks().iterator(); i.hasNext();) {
 					Mask mask = (Mask) i.next();
 					result += "mask like '" + mask.getNormalizedMask() + "%'" + (i.hasNext() ? " or " : "");
 				}
@@ -151,18 +129,43 @@ public class ProfileDataSource implements DataSource
 			if (filter.getReportinfo() >= 0)
 				result += (result.length() > 0 ? " and " : "") + "reportinfo = " + filter.getReportinfo();
 
-			if (!filter.getLocales().isEmpty())
-			{
+			if (!filter.getLocales().isEmpty()) {
 				result += (result.length() > 0 ? " and " : "") + "locale in (";
-				for (Iterator i = filter.getLocales().iterator(); i.hasNext();)
-				{
+				for (Iterator i = filter.getLocales().iterator(); i.hasNext();) {
 					String locale = (String) i.next();
 					result += '\'' + locale + '\'' + (i.hasNext() ? ", " : "");
 				}
 				result += ')';
 			}
+		}
 
-			return (result.length() > 0 ? ("where " + result) : "");
+		switch (show) {
+			case ProfileQuery.SHOW_ADDRESSES:
+				result += (result.length() > 0 ? " and " : "") + "mask not like '%?'";
+				System.out.println("Profile filtered: addresses only");
+				break;
+			case ProfileQuery.SHOW_MASKS:
+				result += (result.length() > 0 ? " and " : "") + "mask like '%?'";
+				System.out.println("Profile filtered: masks only");
+				break;
+			default:
+				System.out.println("Profile filtered: show all");
+		}
+
+		return (result.length() > 0 ? ("where " + result) : "");
+	}
+
+	public void delete(Mask profileToDelete) throws AdminException
+	{
+		try {
+			Connection connection = connectionPool.getConnection();
+			Statement statement = connection.createStatement();
+
+			statement.executeUpdate("delete from sms_profile where MASK = '" + profileToDelete.getNormalizedMask() + "'");
+			connection.commit();
+			connection.close();
+		} catch (SQLException e) {
+			throw new AdminException("Couldn't delete profile \"" + profileToDelete.getNormalizedMask() + "\", nested: " + e.getMessage());
 		}
 	}
 }

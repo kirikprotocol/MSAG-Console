@@ -32,7 +32,7 @@ public class ProfileAlterCommand extends ProfileGenCommand
         String out = "Profile for address '"+address+"'";
         try {
             Mask profileMask = new Mask(address);
-            Profile profile = ctx.getSmsc().lookupProfile(profileMask);
+            Profile profile = ctx.getSmsc().profileLookup(profileMask);
             if (profile == null) {
                 ctx.setMessage(out+" not found");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
@@ -52,7 +52,7 @@ public class ProfileAlterCommand extends ProfileGenCommand
                         throw new Exception("Locale '"+locale+"' is not registered");
                     profile.setLocale(locale);
                 }
-                switch (ctx.getSmsc().updateProfile(profileMask, profile))
+                switch (ctx.getSmsc().profileUpdate(profileMask, profile))
                 {
                     case 1:	//pusUpdated
                         ctx.setMessage(out+" altered");

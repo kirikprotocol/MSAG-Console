@@ -133,4 +133,9 @@ public class Mask
 	{
 		return npi;
 	}
+
+	public boolean isMask()
+	{
+		return mask != null && mask.endsWith("?");
+	}
 }

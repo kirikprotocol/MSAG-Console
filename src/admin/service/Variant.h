@@ -22,20 +22,20 @@ private:
 		char * strValue;
 		long longValue;
 		bool boolValue;
-    StringList* stringListValue;
+		StringList* stringListValue;
 	};
 public:
 	Variant();
-  Variant(const Type type) throw (AdminException);
+	Variant(const Type type) throw (AdminException);
 	Variant(const char * const value);
 	Variant(const long value);
 	Variant(const bool value);
-  Variant(const StringList & value);
+	Variant(const StringList & value);
 
-  Variant(const char * const value, Type type) throw (AdminException);
+	Variant(const char * const value, Type type) throw (AdminException);
 	Variant(const Variant &copy) throw (AdminException);
 
-  virtual ~Variant();
+	virtual ~Variant();
 
 	Variant & operator = (const Variant & copy) throw (AdminException);
 
@@ -44,7 +44,7 @@ public:
 	const char * const getStringValue() const throw (AdminException);
 	const long getLongValue() const throw (AdminException);
 	const bool getBooleanValue() const throw (AdminException);
-  const StringList& getStringListValue() const throw (AdminException);
+	const StringList& getStringListValue() const throw (AdminException);
 
 	void appendValueToStringList(const char * const value) throw (AdminException);
 

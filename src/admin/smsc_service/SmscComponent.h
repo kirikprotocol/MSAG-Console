@@ -46,8 +46,11 @@ public:
 	void dump();
 
 protected:
-	int updateProfile(const Arguments &args);
-	std::string lookupProfile(const Arguments &args) throw (AdminException);
+	Variant profileLookup(const Arguments &args) throw (AdminException);
+	Variant profileLookupEx(const Arguments &args) throw (AdminException);
+	int profileUpdate(const Arguments &args);
+	int profileDelete(const Arguments &args);	
+
 	std::string flushStatistics(const Arguments &args) throw (AdminException);
 	std::string processCancelMessages(const Arguments &args) throw (AdminException);
 	void processCancelMessage(const std::string &sid, const std::string &ssrc, const std::string &sdst);
@@ -88,12 +91,13 @@ protected:
 	enum
 	{
 		applyRoutesMethod, applyAliasesMethod, applyServicesMethod, applySmscConfigMethod, applyLocaleResourceMethod,
-		lookupProfileMethod, updateProfileMethod, 
+		profileLookupMethod, profileUpdateMethod, profileLookupExMethod, profileDeleteMethod,
 		flushStatisticsMethod, 
 		processCancelMessagesMethod,
 		mscRegistrateMethod, mscUnregisterMethod, mscBlockMethod, mscClearMethod, mscListMethod,
 		smeAddMethod, smeRemoveMethod, smeUpdateMethod, smeStatusMethod, smeDisconnectMethod,
-		logGetCategoriesMethod, logSetCategoriesMethod, traceRouteMethod, loadRoutesMethod
+		logGetCategoriesMethod, logSetCategoriesMethod, 
+		traceRouteMethod, loadRoutesMethod
 	};
 
 	smsc::core::synchronization::Mutex mutex;

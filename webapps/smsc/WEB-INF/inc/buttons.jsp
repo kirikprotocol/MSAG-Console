@@ -1,4 +1,4 @@
-<%!
+<%@ page import="java.io.IOException"%><%!
 void button(JspWriter out, String srcImgUrl, String name, String value, String title) throws IOException
 {
 	button(out, srcImgUrl, name, value, title, null);

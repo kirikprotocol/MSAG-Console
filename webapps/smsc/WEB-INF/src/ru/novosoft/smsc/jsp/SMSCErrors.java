@@ -21,6 +21,7 @@ public class SMSCErrors
 		public static final String daemonManagerNotInitialized = B + "daemonManagerNotInitialized";
 		public static final String couldntApplyChanges = B + "couldntApplyChanges";
 		public static final String notYetImplemented = B + "notYetImplemented";
+		public static final String CouldntGetSMSCStatus = B + "CouldntGetSMSCStatus";
 
 		public static class services
 		{
@@ -72,6 +73,7 @@ public class SMSCErrors
 			public static final String smscNotConnected = B + "smscNotConnected";
 			public static final String invalidLocale = B + "invalidLocale";
 			public static final String couldntGetRegisteredLocales = B + "couldntGetRegisteredLocales";
+			public static final String couldntDelete = B + "couldntDelete";
 		}
 
 		public static class aliases
@@ -201,6 +203,7 @@ public class SMSCErrors
 	public static class warning
 	{
 		private static final String B = SMSCErrors.B + "warning.";
+		public static final String SMSCNotRunning = B + "SMSCNotRunning";
 
 		public static class hosts
 		{

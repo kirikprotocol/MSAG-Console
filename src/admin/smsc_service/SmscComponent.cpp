@@ -27,6 +27,7 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
 : configs(all_configs),isStopping(false),
 		  logger(Logger::getCategory("smsc.admin.smsc_service.SmscComponent"))
 {
+	/*********************** parameters ***************************************/
 	Parameters empty_params;
 	Parameters lookup_params;
 	lookup_params["address"] = Parameter("address", StringType);
@@ -63,6 +64,8 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
 	Parameters log_cats;
 	log_cats["categories"] = Parameter("categories", StringListType);
 
+
+	/**************************** method declarations *************************/
 	Method apply_routes          ((unsigned)applyRoutesMethod,         "apply_routes",          empty_params, StringType);
 	Method apply_aliases         ((unsigned)applyAliasesMethod,        "apply_aliases",         empty_params, StringType);
 	Method apply_smsc_config     ((unsigned)applySmscConfigMethod,     "apply_smsc_config",     empty_params, StringType);
@@ -77,8 +80,10 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
 	Method load_routes           ((unsigned)loadRoutesMethod, "load_routes", empty_params, StringListType);	
     bTemporalRoutesManagerConfigLoaded = false;
 	
-	Method lookup_profile((unsigned)lookupProfileMethod, "lookup_profile", lookup_params, StringType);
-	Method update_profile((unsigned)updateProfileMethod, "update_profile", update_params, LongType);
+	Method profile_lookup   ((unsigned)profileLookupMethod,   "lookup_profile",    lookup_params, StringListType);
+	Method profile_lookup_ex((unsigned)profileLookupExMethod, "profile_lookup_ex", lookup_params, StringListType);
+	Method profile_update   ((unsigned)profileUpdateMethod,   "update_profile",    update_params, LongType);
+	Method profile_delete   ((unsigned)profileDeleteMethod,   "profile_delete",    lookup_params, LongType);
 
 	Method flush_statistics       ((unsigned)flushStatisticsMethod,       "flush_statistics",        empty_params,         StringType);
 	Method process_cancel_messages((unsigned)processCancelMessagesMethod, "process_cancel_messages", cancelMessage_params, StringType);
@@ -98,14 +103,17 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
 	Method log_get_categories((unsigned)logGetCategoriesMethod, "log_get_categories",  empty_params, StringListType);
 	Method log_set_categories((unsigned)logSetCategoriesMethod, "log_set_categories",  log_cats, BooleanType);
 
+	/***************************** method assigns *****************************/
 	methods[apply_routes         .getName()] = apply_routes;
 	methods[apply_aliases        .getName()] = apply_aliases;
 	methods[apply_smsc_config    .getName()] = apply_smsc_config;
 	methods[apply_services       .getName()] = apply_services;
 	methods[apply_locale_resource.getName()] = apply_locale_resource;
 
-	methods[lookup_profile.getName()] = lookup_profile;
-	methods[update_profile.getName()] = update_profile;
+	methods[profile_lookup.getName()] = profile_lookup;
+	methods[profile_update.getName()] = profile_update;
+	methods[profile_lookup_ex.getName()] = profile_lookup_ex;
+	methods[profile_delete.getName()] = profile_delete;
 
 	methods[flush_statistics       .getName()] = flush_statistics;
 	methods[process_cancel_messages.getName()] = process_cancel_messages;
@@ -156,12 +164,17 @@ throw (AdminException)
 				applyAliases();
 				logger.debug("aliases applied");
 				return Variant("");
-			case lookupProfileMethod:
+			case profileLookupMethod:
 				logger.debug("lookup profile...");
-				return Variant(lookupProfile(args).c_str());
-			case updateProfileMethod:
+				return profileLookup(args);
+			case profileLookupExMethod:
+				logger.debug("lookupEx profile...");
+				return profileLookupEx(args);
+			case profileUpdateMethod:
 				logger.debug("update profile...");
-				return Variant((long)updateProfile(args));
+				return Variant((long)profileUpdate(args));
+			case profileDeleteMethod:
+				return Variant((long)profileDelete(args));
 			case flushStatisticsMethod:
 				return Variant(flushStatistics(args).c_str());
 			case processCancelMessagesMethod:
@@ -753,7 +766,72 @@ throw (AdminException)
 	configs.routesconfig->reload();
 }
 
-std::string SmscComponent::lookupProfile(const Arguments &args)
+const char * const getProfileCodepageStr(int codepage)
+{
+	switch (codepage)
+	{
+	case smsc::profiler::ProfileCharsetOptions::Default: return "default";
+	case smsc::profiler::ProfileCharsetOptions::Ucs2:    return "UCS2";
+	default:                                             return "unknown";
+	}
+}
+
+const char * const getProfileReportoptionsStr(int reportoptions)
+{
+	switch (reportoptions)
+	{
+	case smsc::profiler::ProfileReportOptions::ReportFull:  return "full";
+	case smsc::profiler::ProfileReportOptions::ReportFinal: return "final";
+	case smsc::profiler::ProfileReportOptions::ReportNone:  return "none";
+	default:                                                return "unknown";
+	}
+}
+
+const char * const getProfileMatchTypeStr(int matchType)
+{
+	switch (matchType)
+	{
+	case ProfilerMatchType::mtDefault:  return "default";
+	case ProfilerMatchType::mtExact:    return "exact";
+	case ProfilerMatchType::mtMask:     return "mask";
+	default:                            return "unknown";
+	}
+}
+
+Variant SmscComponent::profileLookupEx(const Arguments &args) throw (AdminException)
+{
+	try
+	{
+		Smsc * app;
+		ProfilerInterface * profiler;
+		if (isSmscRunning() && (app = smsc_app_runner->getApp()) && (profiler = app->getProfiler()))
+		{
+			Address address(args.Get("address").getStringValue());
+			int matchType = ProfilerMatchType::mtExact;
+			std::string matchAddress;
+			Profile& profile(profiler->lookupEx(address, matchType, matchAddress));
+			Variant result(StringListType);
+			result.appendValueToStringList(getProfileCodepageStr(profile.codepage));
+			result.appendValueToStringList(getProfileReportoptionsStr(profile.reportoptions));
+			result.appendValueToStringList(profile.locale.c_str());
+			result.appendValueToStringList(profile.hide ? "true":"false");
+			result.appendValueToStringList(profile.hideModifiable ? "true":"false");
+
+			result.appendValueToStringList(getProfileMatchTypeStr(matchType));
+			result.appendValueToStringList(matchAddress.c_str());
+			return result;
+		}
+		else
+			throw	  AdminException("SMSC is not running");
+	} catch (AdminException &e) {
+		throw e;
+	} catch (std::exception &e) {
+		throw AdminException(e.what());
+	} catch (...) {
+		throw AdminException("Unknown exception");
+	}
+}
+Variant SmscComponent::profileLookup(const Arguments &args)
 throw (AdminException)
 {
 	try
@@ -772,39 +850,12 @@ throw (AdminException)
 			address.getValue(addr_str);
 			logger.debug("lookup Profile:\n  %s: Address: \"%s\"[%u], numebring plan:%u, type of number:%u, ", addressString, addr_str, address.getLength(), address.getNumberingPlan(), address.getTypeOfNumber());
 #endif
-			std::string result;
-			switch (profile.codepage)
-			{
-				case smsc::profiler::ProfileCharsetOptions::Default:
-					result += "default";
-					break;
-				case smsc::profiler::ProfileCharsetOptions::Ucs2:
-					result += "UCS2";
-					break;
-				default:
-					result += "unknown";
-			}
-			result += PROFILE_PARAMS_DELIMITER;
-			switch (profile.reportoptions)
-			{
-				case smsc::profiler::ProfileReportOptions::ReportFull:
-					result += "full";
-					break;
-				case smsc::profiler::ProfileReportOptions::ReportFinal:
-					result += "final";
-					break;
-				case smsc::profiler::ProfileReportOptions::ReportNone:
-					result += "none";
-					break;
-				default:
-					result += "unknown";
-			}
-			result += PROFILE_PARAMS_DELIMITER;
-			result += profile.locale;
-			result += PROFILE_PARAMS_DELIMITER;
-			result += (profile.hide) ? "true":"false";
-			result += PROFILE_PARAMS_DELIMITER;
-			result += (profile.hideModifiable) ? "true":"false";
+			Variant result(StringListType);
+			result.appendValueToStringList(getProfileCodepageStr(profile.codepage));
+			result.appendValueToStringList(getProfileReportoptionsStr(profile.reportoptions));
+			result.appendValueToStringList(profile.locale.c_str());
+			result.appendValueToStringList(profile.hide ? "true":"false");
+			result.appendValueToStringList(profile.hideModifiable ? "true":"false");
 			return result;
 		}
 		else
@@ -886,7 +937,7 @@ bool isMask(const Address & address)
 	return false;
 }
 
-int SmscComponent::updateProfile(const Arguments & args) 
+int SmscComponent::profileUpdate(const Arguments & args) 
 {
 	try
 	{
@@ -919,6 +970,27 @@ int SmscComponent::updateProfile(const Arguments & args)
 	}
 }
 
+int SmscComponent::profileDelete(const Arguments & args) 
+{
+	try
+	{
+		Smsc * app;
+		ProfilerInterface * profiler;
+		if (isSmscRunning() && (app = smsc_app_runner->getApp()) && (profiler = app->getProfiler()))
+		{
+			Address address(args.Get("address").getStringValue());
+			profiler->remove(address);
+		}
+		else
+			throw	  AdminException("SMSC is not running");
+
+		return 1;
+	}
+	catch (HashInvalidKeyException &e)
+	{
+		throw AdminException("Address or profile params not defined");
+	}
+}
 
 void fillSmeInfo(SmeInfo & smeInfo, const Arguments & args)
 {
