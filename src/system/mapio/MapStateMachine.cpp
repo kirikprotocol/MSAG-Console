@@ -1292,11 +1292,11 @@ static long long NextSequence()
   return ++sequence;
 }
 
-static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
+static void DoUSSRUserResponce( MapDialog* dialog)
 {
   __map_trace2__("%s: dialogid 0x%x",__func__,dialog->dialogid_map);
   ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0x0f;
-  unsigned encoding = cmd->get_sms()->getIntProperty(Tag::SMPP_DATA_CODING);
+  unsigned encoding = dialog->sms->getIntProperty(Tag::SMPP_DATA_CODING);
   ET96MAP_USSD_STRING_T ussdString = {0,};
   unsigned text_len;
 
@@ -1583,7 +1583,8 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
               }
               dialog->dialogid_smsc = dialogid_smsc;
               dialog->isQueryAbonentStatus = false;
-              DoUSSRUserResponce(cmd,dialog.get());
+              dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
+              DoUSSRUserResponce(dialog.get());
               return;
             } else if(serviceOp == USSD_USSR_REQ || serviceOp == USSD_USSN_REQ) {
               if( dlg_found ) {
