@@ -83,6 +83,8 @@ struct _SmscCommand
     case SUBMIT_RESP:
       delete ( (SmsResp*)dta ); break;
     case UNKNOWN:
+		case FORWARD:
+		case ALERT:
       //__unreachable__("incorrect state dat != NULL && cmdid == UNKNOWN");
       //__warning__("uninitialized command");
                         break;
