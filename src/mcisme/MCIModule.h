@@ -92,6 +92,7 @@ namespace smsc { namespace mcisme
                 if (module) {
                     module->removeMissedCallListener();
                     module->addMissedCallListener(listener);
+                    smsc_log_info(logger, "MCI Module listener attached.");
                 }
         #endif
                 listener = _listener; bAttached = true;
@@ -105,6 +106,7 @@ namespace smsc { namespace mcisme
             {
         #ifndef MCI_MODULE_TEST                
                 module->removeMissedCallListener();
+                smsc_log_info(logger, "MCI Module listener detached.");
         #endif
                 listener = 0; bAttached = false;
             }
