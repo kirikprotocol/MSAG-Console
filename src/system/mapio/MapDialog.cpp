@@ -1,6 +1,6 @@
 #include "MapIoTask.h"
 
-USHORT_T MapDialog::Et96MapV2ForwardSmReq(
+/*USHORT_T MapDialog::Et96MapV2ForwardSmReq(
     ET96MAP_LOCAL_SSN_T localSsn,
     ET96MAP_DIALOGUE_ID_T dialogueId,
     ET96MAP_INVOKE_ID_T invokeId,
@@ -10,8 +10,8 @@ USHORT_T MapDialog::Et96MapV2ForwardSmReq(
     ET96MAP_MMS_T moreMsgsToSend)
 {
   __trace2__("MapDialog::Et96MapV2ForwardSmReq");
-  return MSG_OK;
-}
+  return ET96MAPE_OK;
+}*/
   
 USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd( 
     ET96MAP_LOCAL_SSN_T lssn, 
@@ -22,6 +22,6 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
     ET96MAP_SM_RP_UI_T* ud )
 {
   __trace2__("MapDialog::Et96MapV2ForwardSmMOInd");
-  return MSG_OK;
+  return ET96MAP_E_OK;
 }
 

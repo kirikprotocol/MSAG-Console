@@ -63,7 +63,6 @@ struct MapDialogCntItem{
   ET96MAP_LOCAL_SSN_T localSsn;
   ET96MAP_INVOKE_ID_T invokeId;
   auto_ptr<MapDialog> dialogue;
-  MapDialog* dialogue;
 };
 
 extern ET96MAP_DIALOGUE_ID_T allocateDialogueId();

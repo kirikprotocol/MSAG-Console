@@ -28,7 +28,7 @@ extern "C"{
 USHORT_T Et96MapBindConf(ET96MAP_LOCAL_SSN_T lssn, ET96MAP_BIND_STAT_T status)
 {
   __trace2__("MAP::Et96MapBindConf confirmation received ssn=%x status=%x\n",lssn,status);
-  if (status == 0) return MSG_OK;
+  if (status == 0) return ET96MAP_E_OK;
   else if ( status == 1 ){
     __trace__("MAP: Unbind");
     Et96MapUnbindReq(SSN);
