@@ -54,6 +54,22 @@ public class MaskList
 		}
 	}
 
+	public MaskList(Collection masks)
+	{
+		for (Iterator i = masks.iterator(); i.hasNext();)
+		{
+			String mask = ((String) i.next()).trim();
+			try
+			{
+				add(new Mask(mask));
+			}
+			catch (AdminException e)
+			{
+				logger.error("Couldn't load mask \"" + mask + "\", skipped", e);
+			}
+		}
+	}
+
 	public MaskList(Mask mask)
 	{
 		add(mask);

@@ -8,6 +8,7 @@ package ru.novosoft.smsc.admin.route;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import java.io.PrintWriter;
+import java.util.Collection;
 
 
 public class Subject
@@ -17,6 +18,22 @@ public class Subject
 	private MaskList masks = null;
 
 	public Subject(String name, String[] masksStrings, SME defaultSME)
+	{
+		if (name == null)
+			throw new NullPointerException("Name is null");
+		if (masksStrings == null)
+			throw new NullPointerException("Masks is null");
+		if (defaultSME == null)
+			throw new NullPointerException("DefaultSME is null");
+
+		this.name = name;
+		masks = new MaskList(masksStrings);
+		if (masks.size() == 0)
+			throw new NullPointerException("Masks is empty");
+		this.defaultSme = defaultSME;
+	}
+
+	public Subject(String name, Collection masksStrings, SME defaultSME)
 	{
 		if (name == null)
 			throw new NullPointerException("Name is null");
