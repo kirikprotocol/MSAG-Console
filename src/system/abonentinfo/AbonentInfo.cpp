@@ -94,7 +94,7 @@ int AbonentInfoSme::Execute()
         if(status!=AbonentStatus::UNKNOWNVALUE)
         {
           __trace__("AbonentInfo: request for sme address.");
-          cmd=SmscCommand::makeQueryAbonentStatusResp(cmd->get_abonentStatus(),status);
+          cmd=SmscCommand::makeQueryAbonentStatusResp(cmd->get_abonentStatus(),status,"");
           __trace2__("AbonentInfo: cmdid=%d, QAS_RESP=%d",cmd->cmdid,smsc::smeman::QUERYABONENTSTATUS_RESP);
         }
         else
@@ -124,11 +124,13 @@ int AbonentInfoSme::Execute()
         sprintf
         (
           answ,
-          "Abonent %s is %s",
+          "Abonent %s is %s%s",
             as.originalAddr.c_str(),
             as.status==AbonentStatus::ONLINE? "Online":
             as.status==AbonentStatus::OFFLINE?"Offline":
-                                              "Unknown"
+                                              "Unknown",
+            as.status==AbonentStatus::UNKNOWNVALUE?"":
+            (". msc"+as.msc).c_str()
         );
       }else
       {
