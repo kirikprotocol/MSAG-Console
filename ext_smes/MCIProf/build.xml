@@ -32,7 +32,7 @@
       <fileset refid="project_libs"/>
     </path>
     <javac srcdir="${java_src}" destdir="${java_out}" debug="yes" >
-      <classpath refid="esme_classpath"/>
+      <classpath refid="classpath"/>
     </javac>
   </target>
 

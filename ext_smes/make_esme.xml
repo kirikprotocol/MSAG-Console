@@ -4,13 +4,13 @@
   <property file="${SMSC_DIR}/src/build.properties"/>
   <property environment="env"/>
   <property name="TEMPLATE_PROPS" value="should be defined in calling script"/>
+  <property name="TEMPL_DIR" value="${SMSC_DIR}/config/templates"/>
   <property name="esme_name" value="should be defined in calling script"/>
   <property name="esme_bin_path" value="should be defined in calling script"/>
   <property name="esme_bin_name" value="should be defined in calling script"/>
   <property name="DISTR_DIR" value="${BUILD_DIR}/distr"/>
   <property name="SRC_DIR" value="${SMSC_DIR}/src"/>
   <property name="BUILD_BIN" value="${BUILD_DIR}/bin"/>
-  <property name="TEMPL_DIR" value="${SMSC_DIR}/config/templates"/>
   <property name="java_src" location="java"/>
   <property name="java_out" location="${BUILD_DIR}/classes/${esme_name}"/>
   <property name="exploded" location="${BUILD_DIR}/exploded/${esme_name}"/>
