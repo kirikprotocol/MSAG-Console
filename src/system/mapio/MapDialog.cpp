@@ -68,7 +68,7 @@ void Convert7BitToText(
 {
   __require__(chars<=255);
   unsigned shift = 0;
-  for ( int i=0; i< chars; ++i ){
+  for ( unsigned i=0; i< chars; ++i ){
     text->bytes[i] = GetChar(bit7buf,shift);
   }
   text->len = chars;
@@ -97,7 +97,7 @@ unsigned ConvertText27bit(
   }
   unsigned char* base = bit7buf;
   unsigned shift = 0;
-  for ( int i=0; i< chars; ++i ){
+  for ( unsigned i=0; i< chars; ++i ){
      PutChar(bit7buf,shift,text[i]);
   }
 #if !defined DISABLE_TRACING
@@ -226,7 +226,7 @@ void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
 }
 
 void mkSS7GTAddress( ET96MAP_SS7_ADDR_T *addr, ET96MAP_ADDRESS_T *saddr, ET96MAP_LOCAL_SSN_T ssn) {
-  int i;
+  //int i;
   addr->ss7AddrLen = 5+(saddr->addressLength+1)/2;
   addr->ss7Addr[0] = 0x12; // SSN & GT
   addr->ss7Addr[1] = ssn;
@@ -239,13 +239,13 @@ void mkSS7GTAddress( ET96MAP_SS7_ADDR_T *addr, ET96MAP_ADDRESS_T *saddr, ET96MAP
   }
 }
 void mkMapAddress( ET96MAP_ADDRESS_T *addr, char *saddr, unsigned len) {
-  int i;
+  unsigned i;
   int sz = (len+1)/2;
   addr->addressLength = len;
   addr->typeOfAddress = 0x91; // InterNational, ISDN
   for( i = 0; i < len; i++ ) {
     int bi = i/2;
-    int even = i%2;
+    //int even = i%2;
     if( i%2 == 1 ) { 
       //even 
       addr->address[bi] |= ((saddr[i]-'0')<<4); // fill high octet
@@ -525,7 +525,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
     __trace2__("MAP::mkDeliverPDU:sizeof(pdu_tm) %d",sizeof(*pdu_tm));
     pdu_tm->year.first  =  ((tms->tm_year)%100)/10;
     pdu_tm->year.second  = tms->tm_year%10;
-    __trace2__("MAP::mkDeliverPDU: year: 0x%x, tms_year 0x%x",pdu_tm->year,tms->tm_year);
+    //__trace2__("MAP::mkDeliverPDU: year: 0x%x, tms_year 0x%lx",pdu_tm->year,tms->tm_year);
     pdu_tm->mon.first  =  (tms->tm_mon+1)/10;
     pdu_tm->mon.second  = (tms->tm_mon+1)%10;
     pdu_tm->day.first  =  tms->tm_mday/10;
@@ -539,7 +539,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
     int tz = timezone;
     if ( tms->tm_isdst ) tz-=3600;
     tz = -tz/900;
-    __trace2__("MAP::mkDeliverPDU: timezone %d, %d",tz,timezone);
+    __trace2__("MAP::mkDeliverPDU: timezone %d, %ld",tz,timezone);
     pdu_tm->tz = tz;
     pdu_ptr+=sizeof(MAP_TIMESTAMP);
   }
@@ -788,7 +788,7 @@ USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
   state = MAPST_RINFOIND;
   if ( provErrCode_p != 0 ){
     // error hadling
-    __trace2__("MAP::Et96MapV2SendRInfoForSmConf provErrCode_p 0x%x",provErrCode_p);
+    __trace2__("MAP::Et96MapV2SendRInfoForSmConf provErrCode_p 0x%hx",provErrCode_p);
     throw runtime_error("MAP::Et96MapV2SendRInfoForSmConf error");
   }
   
@@ -953,7 +953,7 @@ void MapProxy::putCommand(const SmscCommand& cmd)
       __trace2__("MAP::QueueProcessing: MAP request");
       dialog = MapDialogContainer::getInstance()->getDialog(did);
     }
-    __trace2__("MAP:: process to dialog with ptr %x",dialog);
+    __trace2__("MAP:: process to dialog with ptr 0x%p",dialog);
     if ( dialog == 0 ){
       __trace2__("MAP::QueueProcessing: Opss, here is no dialog with id x%x",dialogid);
       CloseDialog(SSN,dialogid);
