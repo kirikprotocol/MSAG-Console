@@ -1,4 +1,5 @@
 #include "SmppTransmitterTestCases.hpp"
+#include "SmppPduChecker.hpp"
 #include "test/conf/TestConfig.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include "test/smpp/SmppUtil.hpp"
@@ -123,7 +124,7 @@ PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 	PduFlag deliveryFlag = destReachble && (pduType == PDU_NORMAL) ?
 		PDU_REQUIRED_FLAG : PDU_NOT_EXPECTED_FLAG;
 	DeliveryMonitor* deliveryMonitor =
-		new DeliveryMonitor(pdu->get_message().get_serviceType(),
+		new DeliveryMonitor(nvl(pdu->get_message().get_serviceType()),
 			waitTime, validTime, pduData, deliveryFlag);
 	if (existentPduData)
 	{
@@ -133,8 +134,8 @@ PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 		__require__(existentPduData->pdu->get_commandId() == SUBMIT_SM);
 		PduSubmitSm* existentPdu =
 			reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
-		if (!strcmp(pdu->get_message().get_serviceType(),
-				existentPdu->get_message().get_serviceType()) &&
+		if (!strcmp(nvl(pdu->get_message().get_serviceType()),
+				nvl(existentPdu->get_message().get_serviceType())) &&
 			pdu->get_message().get_source() ==
 				existentPdu->get_message().get_source() &&
 			pdu->get_message().get_dest() ==
@@ -607,7 +608,7 @@ void SmppTransmitterTestCases::processGenericNackAsync(PduData* pduData)
 	pduData->unref();
 }
 
-void SmppTransmitterTestCases::sendInvalidPdu(PduWithOnlyHeader* pdu, bool sync)
+void SmppTransmitterTestCases::sendInvalidPdu(SmppHeader* pdu, bool sync)
 {
 	__decl_tc__;
 	try
@@ -621,12 +622,11 @@ void SmppTransmitterTestCases::sendInvalidPdu(PduWithOnlyHeader* pdu, bool sync)
 				{
 					MutexGuard mguard(fixture->pduReg->getMutex());
 					time_t submitTime = time(NULL);
-					pdu->get_header().set_sequenceNumber(0); //не известен
-					pduData = new PduData(reinterpret_cast<SmppHeader*>(pdu), submitTime, 0);
+					pdu->set_sequenceNumber(0); //не известен
+					pduData = new PduData(pdu, submitTime, 0);
 				}
-				//__dumpPdu__("sendInvalidPduSyncBefore", fixture->smeInfo.systemId, pdu);
-				SmppHeader* respPdu = fixture->session->getSyncTransmitter()->sendPdu(
-					reinterpret_cast<SmppHeader*>(pdu));
+				__dumpPdu__("sendInvalidPduSyncBefore", fixture->smeInfo.systemId, pdu);
+				SmppHeader* respPdu = fixture->session->getSyncTransmitter()->sendPdu(pdu);
 				time_t respTime = time(NULL);
 				__dumpPdu__("sendInvalidPduSyncAfter", fixture->smeInfo.systemId, pdu);
 				{
@@ -640,13 +640,12 @@ void SmppTransmitterTestCases::sendInvalidPdu(PduWithOnlyHeader* pdu, bool sync)
 			{
 				__tc__("sendInvalidPdu.async");
 				MutexGuard mguard(fixture->pduReg->getMutex());
-				//__dumpPdu__("sendInvalidPduAsyncBefore", fixture->smeInfo.systemId, pdu);
+				__dumpPdu__("sendInvalidPduAsyncBefore", fixture->smeInfo.systemId, pdu);
 				time_t submitTime = time(NULL);
 				SmppHeader* respPdu =
-					fixture->session->getAsyncTransmitter()->sendPdu(
-						reinterpret_cast<SmppHeader*>(pdu));
+					fixture->session->getAsyncTransmitter()->sendPdu(pdu);
 				__dumpPdu__("sendInvalidPduAsyncAfter", fixture->smeInfo.systemId, pdu);
-				PduData* pduData = new PduData(reinterpret_cast<SmppHeader*>(pdu), submitTime, 0);
+				PduData* pduData = new PduData(pdu, submitTime, 0);
 				processGenericNackAsync(pduData);
 			}
 			//pdu life time определяется PduRegistry
@@ -658,8 +657,7 @@ void SmppTransmitterTestCases::sendInvalidPdu(PduWithOnlyHeader* pdu, bool sync)
 			{
 				__tc__("sendInvalidPdu.sync");
 				SmppHeader* respPdu =
-					fixture->session->getSyncTransmitter()->sendPdu(
-						reinterpret_cast<SmppHeader*>(pdu));
+					fixture->session->getSyncTransmitter()->sendPdu(pdu);
 				if (respPdu)
 				{
 					delete respPdu; //disposePdu
@@ -668,8 +666,7 @@ void SmppTransmitterTestCases::sendInvalidPdu(PduWithOnlyHeader* pdu, bool sync)
 			else
 			{
 				__tc__("sendInvalidPdu.async");
-				fixture->session->getAsyncTransmitter()->sendPdu(
-					reinterpret_cast<SmppHeader*>(pdu));
+				fixture->session->getAsyncTransmitter()->sendPdu(pdu);
 			}
 			delete pdu; //disposePdu
 		}
