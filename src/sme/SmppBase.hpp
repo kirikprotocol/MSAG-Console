@@ -353,7 +353,7 @@ struct SmeConfig{
   {
     port=-1;
     timeOut=10;
-    smppTimeOut=12;
+    smppTimeOut=120;
     idleTimeout=60;
     disconnectTimeout=300;
   }
@@ -518,8 +518,8 @@ protected:
       {
         throw SmppInvalidBindState();
       }
-      int seq=pdu->get_sequenceNumber();
-      session.registerPdu(seq,NULL);
+      //int seq=pdu->get_sequenceNumber();
+      //session.registerPdu(seq,NULL);
       session.writer.enqueue(pdu);
       return NULL;
     };
@@ -949,9 +949,10 @@ protected:
           }
         }else
         {
-          __trace2__("processIncoming: lock for %d not found!!!",seq);
+          //__trace2__("processIncoming: lock for %d not found!!!",seq);
           lockMutex.Unlock();
-          disposePdu(pdu);
+          //disposePdu(pdu);
+          listener->handleEvent(pdu);
         }
       }break;
       // и отдельно собственно пришедшие smpp-шки.
