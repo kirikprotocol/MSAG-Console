@@ -1,6 +1,7 @@
 alias
 config
 core
+dbsme
 router
 sme
 smeman
@@ -8,5 +9,5 @@ smpp
 sms
 store
 profiler
-test
+#test
 util
