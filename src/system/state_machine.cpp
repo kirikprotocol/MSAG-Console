@@ -854,7 +854,7 @@ StateType StateMachine::submit(Tuple& t)
 
   bool diverted=false;
 
-  if(profile.divertActive && profile.divert.length()!=0)
+  if(profile.divertActive && profile.divert.length()!=0 && !sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
   {
     smsLog->info("divert for %s found",dst.toString().c_str());
     sms->setStrProperty(Tag::SMSC_DIVERTED_TO,profile.divert.c_str());
