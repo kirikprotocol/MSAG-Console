@@ -128,7 +128,13 @@ void StateMachine::formatDeliver(const FormatData& fd,std::string& out)
   ce.exportStr("msgId",fd.msgId);
   ce.exportInt("lastResult",fd.lastResult);
   ce.exportInt("lastResultGsm",fd.lastResultGsm);
-  ce.exportStr("msc",fd.msc);
+  if(!fd.msc)
+  {
+    ce.exportStr("msc"," ");
+  }else
+  {
+    ce.exportStr("msc",fd.msc);
+  }
   try{
     ofDelivered->format(out,ga,ce);
   }catch(exception& e)
@@ -147,7 +153,13 @@ void StateMachine::formatFailed(const FormatData& fd,std::string& out)
   ce.exportStr("msgId",fd.msgId);
   ce.exportInt("lastResult",fd.lastResult);
   ce.exportInt("lastResultGsm",fd.lastResultGsm);
-  ce.exportStr("msc",fd.msc);
+  if(!fd.msc)
+  {
+    ce.exportStr("msc"," ");
+  }else
+  {
+    ce.exportStr("msc",fd.msc);
+  }
 
   try{
     ofFailed->format(out,ga,ce);
@@ -168,7 +180,13 @@ void StateMachine::formatNotify(const FormatData& fd,std::string& out)
   ce.exportStr("msgId",fd.msgId);
   ce.exportInt("lastResult",fd.lastResult);
   ce.exportInt("lastResultGsm",fd.lastResultGsm);
-  ce.exportStr("msc",fd.msc);
+  if(!fd.msc)
+  {
+    ce.exportStr("msc"," ");
+  }else
+  {
+    ce.exportStr("msc",fd.msc);
+  }
 
   try{
     ofNotify->format(out,ga,ce);

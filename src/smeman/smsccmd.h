@@ -685,7 +685,7 @@ public:
         _cmd->cmdid = SUBMIT;
         PduDataSm* dsm = reinterpret_cast<PduDataSm*>(pdu);
         (SMS*)_cmd->dta =  new SMS;
-        if(!fetchSmsFromDataSmPdu(dsm,(SMS*)(_cmd->dta)))throw Exception("Invalid data coding");
+        if(!fetchSmsFromDataSmPdu(dsm,(SMS*)(_cmd->dta),forceDC))throw Exception("Invalid data coding");
         ((SMS*)_cmd->dta)->setIntProperty(Tag::SMPP_DATA_SM,1);
         goto end_construct;
       }
