@@ -90,8 +90,13 @@ public class Circuits extends MCISmeBean
         restore(); return error(err, e);
       }
       getConfig().setInt   (PREFIX + circuits_new_msc + ".spn", intValue);
-      try { Integer.parseInt(circuits_new_tsm, 16); }
-      catch(NumberFormatException e) {
+      try {
+        circuits_new_tsm = circuits_new_tsm.trim();
+        int tsm_length = circuits_new_tsm.length(); 
+        if (tsm_length <= 0 || tsm_length > 8)
+          throw new NumberFormatException("TSM length="+tsm_length+", must be from 1 up to 8 simbols");
+        Long.parseLong(circuits_new_tsm, 16);
+      } catch(Exception e) {
         final String err = "Invalid hex string for TSM '"+circuits_new_tsm+"'";
         restore(); return error(err, e);
       }
