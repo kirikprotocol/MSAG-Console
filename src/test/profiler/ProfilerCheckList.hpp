@@ -67,7 +67,7 @@ public:
 			"ќтказатьс€ от режима приема сообщений на русском €зыке (текст команды в смешанном регистре)");
 		__reg_tc__("putCommand.dataCoding.defaultCodepageSpaces",
 			"ќтказатьс€ от режима приема сообщений на русском €зыке (текст команды с лишними пробелами)");
-		__reg_tc__("putCommand.incorrectText",
+		__reg_tc__("putCommand.incorrectCmdText",
 			"Ќеправильный текст команды");
 		//getCommand
 		__reg_tc__("getCommand", "ѕолучение ответов от менеджера профилей");
