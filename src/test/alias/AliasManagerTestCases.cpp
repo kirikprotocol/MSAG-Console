@@ -114,11 +114,12 @@ TCResult* AliasManagerTestCases::addCorrectAliasMatch(TestAliasData* data, int n
 				setupRandomAliasMatchWithQuestionMarks(data, minLen);
 				break;
 			case 4: //адрес со '*' в конце, алиас со '*' в конце
-				if (addrLen + aliasLen < 2 * MAX_ADDRESS_VALUE_LENGTH)
+				if (addrLen + aliasLen < 2 * MAX_ADDRESS_VALUE_LENGTH && addrLen > 1)
 				{
-					int adLen = rand1(addrLen);
-					int alLen = rand2(adLen - (MAX_ADDRESS_VALUE_LENGTH - aliasLen),
-						adLen + (MAX_ADDRESS_VALUE_LENGTH - addrLen));
+					int adLen = rand1(addrLen - 1);
+					int alLen = rand2(
+						max(adLen - (MAX_ADDRESS_VALUE_LENGTH - aliasLen), 0),
+						min(adLen + (MAX_ADDRESS_VALUE_LENGTH - addrLen), aliasLen - 1));
 					setupRandomAliasMatchWithAsterisk(data, adLen, alLen);
 				}
 				break;
