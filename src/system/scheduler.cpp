@@ -14,19 +14,24 @@ void Scheduler::Init(MessageStore* st,Smsc* psmsc)
     try{
       while(it->getNextId(id))
       {
-        SMS s;
-        st->retriveSms(id,s);
-        SmeIndex idx=psmsc->getSmeIndex(s.dstSmeId);
-        timeLine.insert(TimeIdPair(it->getTime(),Data(id,idx)));
-        CacheItem *ci=smeCountCache.GetPtr(idx);
-        if(ci)
+        char dstSmeId[32];
+        if(it->getDstSmeId(dstSmeId))
         {
-          ci->totalCount++;
-        }else
-        {
-          CacheItem c;
-          c.totalCount=1;
-          smeCountCache.Insert(idx,c);
+          SmeIndex idx=psmsc->getSmeIndex(dstSmeId);
+          if(idx!=INVALID_SME_INDEX)
+          {
+            timeLine.insert(TimeIdPair(it->getTime(),Data(id,idx)));
+            CacheItem *ci=smeCountCache.GetPtr(idx);
+            if(ci)
+            {
+              ci->totalCount++;
+            }else
+            {
+              CacheItem c;
+              c.totalCount=1;
+              smeCountCache.Insert(idx,c);
+            }
+          }
         }
       }
       __trace2__("Scheduler: init ok - %d messages for rescheduling",timeLine.size());
