@@ -12,7 +12,7 @@ using namespace smsc::system;
 
 static uint32_t GetNextDialogId()
 {
-  uint32_t id = 0;
+  static uint32_t id = 0;
   return ++id;
 }
 
@@ -196,6 +196,7 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
       }
       for ( unsigned i = 0; i < count; ++i )
       {
+        __trace2__(":DPL: %d.%d.%s",addresses[i].type,addresses[i].plan,addresses[i].value);
         task->list[task->count].addr = addresses[i];
         task->list[task->count].dialogId = 0;
         task->list[task->count].success = false;
@@ -210,6 +211,7 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
        multi->dests[i].ton,
        multi->dests[i].npi,
        multi->dests[i].value.c_str());
+     __trace2__(":DPL: %d.%d.%s",multi->dests[i].ton,multi->dests[i].npi,multi->dests[i].value.c_str());
      task->list[task->count].dialogId = 0;
      task->list[task->count].success = false;
       ++task->count;
@@ -243,6 +245,7 @@ void DistrListProcess::SubmitResp(SmscCommand& cmd)
   if ( it != task_map.end() ) {
     TPAIR taskpair = it->second;
     if ( taskpair.second >= taskpair.first->count ) {
+      __warning2__(":DPL: out of adresses range");
       // за пределом массива адресов !!!
     }else{
       ListTask* task = taskpair.first;
@@ -254,7 +257,10 @@ void DistrListProcess::SubmitResp(SmscCommand& cmd)
         task,
         task->count,
         task->submited_count);
-      if ( task->submited_count == task->count ) SendSubmitResp(task);
+      if ( task->submited_count == task->count ) {
+        __trace2__(":DPL: send submit responce");
+        SendSubmitResp(task);
+      }
     }
   }else{
     __trace2__(":DPL: has no task with dialogid %d",cmd->get_dialogId());
