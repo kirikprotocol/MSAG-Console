@@ -168,8 +168,8 @@ public:
     _cmd.dialogId = dialogId;
     return cmd;
   }
-  ~SmscComman() { if ( cmd ) delete cmd; }
-	SmscCommand() : cmd (0) {}
+  ~SmscCommand() { if ( cmd ) delete cmd; }
+  SmscCommand() : cmd (0) {}
   SmscCommand(SmppHeader* pdu) : cmd (0)
   {
     __require__ ( pdu != NULL );
