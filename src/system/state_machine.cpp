@@ -1626,14 +1626,6 @@ StateType StateMachine::submit(Tuple& t)
             }
             tmp=newtmp;
           }
-          try{
-            processDirectives(newsms,profile,srcprof);
-          }catch(...)
-          {
-            warn2(smsLog, "Failed to process directives for sms with id=%lld",t.msgId);
-            submitResp(t,&newsms,Status::SUBMITFAIL);
-            return ERROR_STATE;
-          }
         }//isForwardTo
         newsms.setIntProperty(Tag::SMSC_MERGE_CONCAT,3); // final state
         if(!totalMoreUdh && !differentDc && !haveBinDc)//make single text message
@@ -1651,6 +1643,14 @@ StateType StateMachine::submit(Tuple& t)
           newsms.messageBody.dropProperty(Tag::SMSC_CONCATINFO);
           newsms.messageBody.dropIntProperty(Tag::SMSC_MERGE_CONCAT);
           newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(int)tmp.length());
+          try{
+            processDirectives(newsms,profile,srcprof);
+          }catch(...)
+          {
+            warn2(smsLog, "Failed to process directives for sms with id=%lld",t.msgId);
+            submitResp(t,&newsms,Status::SUBMITFAIL);
+            return ERROR_STATE;
+          }
           if(ri.smeSystemId=="MAP_PROXY")
           {
             if(!newsms.hasIntProperty(Tag::SMSC_DSTCODEPAGE))
