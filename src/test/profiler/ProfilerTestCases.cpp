@@ -1,6 +1,7 @@
 #include "ProfilerTestCases.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include "util/debug.h"
+#include <algorithm>
 
 namespace smsc {
 namespace test {
@@ -8,6 +9,7 @@ namespace profiler {
 
 using smsc::util::Logger;
 using smsc::test::sms::SmsUtil;
+using namespace std;
 using namespace smsc::sms; //constants
 using namespace smsc::profiler; //constants
 using namespace smsc::test::util;
@@ -126,10 +128,9 @@ void ProfilerTestCases::createProfileNotMatch(Address& addr, int num)
 					addr.setNumberingPlan(addr.getNumberingPlan() + 1);
 					break;
 				case 3: //отличается addressValue
-					if (addrLen > 1)
+					if (addrLen > 1 && next_permutation(addrVal, addrVal + addrLen))
 					{
 						__tc__("createProfileNotMatch.diffValue");
-						addrVal[rand0(addrLen - 1)] = '@';
 						addr.setValue(addrLen, addrVal);
 					}
 					break;
