@@ -110,6 +110,7 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
 {
 	__trace2__("MAP::Et96MapV2ForwardSmMOInd ssn 0x%x, dalogid 0x%x",lssn,dialogId);
   MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogId);
+  __trace2__("MAP:: create dialog with ptr %x, dialogid 0x%x",mdci,dialogId);
   if ( !mdci ) {
     __trace2__("MAP::dialog is not present")
   }else{
@@ -189,10 +190,12 @@ void MapIoTask::dispatcher()
           __trace2__("MAP::QueueProcessing: response");
           ET96MAP_DIALOGUE_ID_T dialogid = (ET96MAP_DIALOGUE_ID_T)did;
           MapDialog* dialog = MapDialogContainer::getInstance()->getDialog(dialogid);
+          __trace2__("MAP:: process to dialog with ptr %x",dialog);
           if ( dialog == 0 ){
-            __trace2__("MAP::QueueProcessing: Opss, hereis no dialog with id x%x");
+            __trace2__("MAP::QueueProcessing: Opss, hereis no dialog with id x%x",dialogid);
             CloseDialog(SSN,dialogid);
           }else{
+            __trace2__("MAP::QueueProcessing: processing dialog x%x",dialogid);
             bool close_dlg = dialog->ProcessCmd(cmd);
             if ( close_dlg ) CloseAndRemoveDialog(SSN,dialogid);
           }

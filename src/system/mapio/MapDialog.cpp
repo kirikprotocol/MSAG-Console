@@ -14,31 +14,36 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
     ET96MAP_SM_RP_OA_T* srcAddr,  
     ET96MAP_SM_RP_UI_T* ud )
 {
-  __trace2__("MapDialog::Et96MapV2ForwardSmMOInd");
+  __trace2__("MAP::MapDialog::Et96MapV2ForwardSmMOInd");
   SMS sms;
   MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
   SmscCommand cmd = SmscCommand::makeSumbmitSm(sms,((uint32_t)dialogId)&0xffff);
   proxy->putIncomingCommand(cmd);
   state = MAPST_WAIT_SUBMIT_RESPONSE;
-  __trace2__("MapDialog::Et96MapV2ForwardSmMOInd OK");
+  __trace2__("MAP::MapDialog::Et96MapV2ForwardSmMOInd OK");
   return ET96MAP_E_OK;
 }
 
 bool MapDialog::ProcessCmd(SmscCommand& cmd){
-  __trace2__("MapDialog::ProcessCmd: 0x%x",cmd->get_commandId());
-  switch ( cmd->get_commandId() ){
-  case SUBMIT_RESP: {
-      USHORT_T result = Et96MapV2ForwardSmMOResp(ssn,dialogid,invokeId,0);
-      if ( result != ET96MAP_E_OK ) {
-        __trace2__("MapDialog::ProcessCmd: Et96MapV2ForwardSmMOResp return error 0x%hx",result);
-      }else{
-        __trace2__("MapDialog::ProcessCmdg: Et96MapV2ForwardSmMOResp OK");
+  try{
+    __trace2__("MAP::MapDialog::ProcessCmd: 0x%x",cmd->get_commandId());
+    switch ( cmd->get_commandId() ){
+    case SUBMIT_RESP: {
+        USHORT_T result = Et96MapV2ForwardSmMOResp(ssn,dialogid,invokeId,0);
+        if ( result != ET96MAP_E_OK ) {
+          __trace2__("MAP::MapDialog::ProcessCmd: Et96MapV2ForwardSmMOResp return error 0x%hx",result);
+        }else{
+          __trace2__("MAP::MapDialog::ProcessCmdg: Et96MapV2ForwardSmMOResp OK");
+        }
+        return true;
       }
+    default:
+      __trace2__("MAP::MapDialog::ProcessCmdg: here is no command %d",cmd->get_commandId());
       return true;
     }
-  default:
-    __trace2__("MapDialog::ProcessCmdg: here is no command %d",cmd->get_commandId());
-    return true;
+  }catch(exception& e){
+    __trace2__("MAP::exception %s",e.what());
+    throw;
   }
 }
 
