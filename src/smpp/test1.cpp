@@ -2,7 +2,7 @@
 	$Id$
 */
 
-#include "smpp/smpp.h"
+#include "smpp.h"
 
 using namespace smsc::smpp;
 

@@ -47,15 +47,18 @@
     if ( !__watchdog2__(expr,"throw " #excep) ) throw excep(); else;
   #define __ret_if_fail__(expr) \
     if ( !__watchdog2__(expr,"return")) return; else;
-  #define __ret0_if_fail__(expr) \
-    if ( !__watchdog2__(expr,"return 0")) return 0; else;
-  #define __ret_val_if_fail__(expr,val) \
-    if ( !__watchdog2(expr,"return " #val) return val; else;
+  #define __retval_if_fail__(expr,val) \
+    if ( !__watchdog2__(expr,"return " #val) ) return val; else;
+  #define __ret0_if_fail__(expr) __retval_if_fail__(expr,0) /*aka false*/
+  #define __ret1_if_fail__(expr) __retval_if_fail__(expr,1) /*aka true*/
+  #define __retneg_if_fail__(expr) __retval_if_fail__(expr,-1)
 #else
   #define __goto_if_fail__(expr,label)
   #define __ret_if_fail__(expr)
   #define __ret0_if_fail__(expr)
-  #define __ret_val_if_fail__(expr,val)
+  #define __ret1_if_fail__(expr)
+  #define __retneg_if_fail__(expr)
+  #define __retval_if_fail__(expr,val)
 #endif
 
 #if !defined ( LOG_DOMAIN )

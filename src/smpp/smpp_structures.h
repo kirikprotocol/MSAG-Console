@@ -8,7 +8,8 @@
 
 #include <inttypes.h>
 #include "util/debug.h"
-#include "memory.h"
+#include "smpp_memory.h"
+#include "smpp_strings.h"
 
 namespace smsc{
 namespace smpp{
@@ -112,15 +113,15 @@ namespace SmppOptionalFields{
 #define BIT(x) ((uint64_t)1<<(x))
 	static const uint64_t destAddrSubunit  /*dest_addr_subunit(5.3.2.1)*/ = BIT(0);
 	static const uint64_t destNetworkType  /*dest_network_type(5.3.2.3)*/ = BIT(1);
-	static const uint64_t dsetBearerType   /*dest_bearer_type(5.3.2.5)*/ = BIT(2);
+	static const uint64_t destBearerType   /*dest_bearer_type(5.3.2.5)*/ = BIT(2);
 	static const uint64_t destTelematicsId /*dest_telematics_id(5.3.2.7)*/ = BIT(3);
 	static const uint64_t sourceAddrSubunit /*source_addr_subunit(5.3.2.2)*/ = BIT(4);
 	static const uint64_t sourceNetworkType /*source_network_type(5.3.2.4)*/ = BIT(5);
 	static const uint64_t sourceBearerType  /*source_bearer_type(5.3.2.6)*/  = BIT(6);
 	static const uint64_t sourceTelematicsId/*source_telematics_id(5.3.2.8)*/ = BIT(7);
 	static const uint64_t qosTimeToLive     /*qos_time_to_live(5.3.2.9)*/ = BIT(8);
-	static const uint64_t pyloadType        /*payload_type(5.3.2.10)*/ = BIT(9);
-	static const uint64_t additionalStatisInfoText /*additional_status_info_text(5.3.2.11)*/ = BIT(10);
+	static const uint64_t payloadType       /*payload_type(5.3.2.10)*/ = BIT(9);
+	static const uint64_t additionalStatusInfoText /*additional_status_info_text(5.3.2.11)*/ = BIT(10);
 	static const uint64_t receiptedMessageId /*receipted_message_id(5.3.2.12)*/ = BIT(11);
 	static const uint64_t msMsgWaitFacilities/*ms_msg_wait_facilities(5.3.2.13)*/ = BIT(12);
 	static const uint64_t privacyIndicator   /*privacy_indicator(5.3.2.14)*/ = BIT(13);
@@ -135,14 +136,14 @@ namespace SmppOptionalFields{
 	static const uint64_t sarTotalSegments   /*sar_total_segments(5.3.2.23)*/ = BIT(22);
 	static const uint64_t sarSegmentSegnum   /*sar_segment_seqnum(5.3.2.24)*/ = BIT(23);
 	static const uint64_t scInterfaceVersion /*sc_interface_version(5.3.2.25)*/ = BIT(24);
-	static const uint64_t callbackNumPressInd /*callback_num_pres_ind(5.3.2.37)*/ = BIT(25);
+	static const uint64_t callbackNumPresInd /*callback_num_pres_ind(5.3.2.37)*/ = BIT(25);
 	static const uint64_t callbackNumAtag     /*callback_num_atag(5.3.2.38)*/ = BIT(26);
 	static const uint64_t numberOfMessages    /*number_of_messages(5.3.2.39)*/ = BIT(27);
   static const uint64_t callbackNum         /*callback_num(5.3.2.36)*/  = BIT(28);
-	static const uint64_t dpfRequit           /*dpf_result(5.3.2.28)*/  = BIT(29);
+	static const uint64_t dpfResult           /*dpf_result(5.3.2.28)*/  = BIT(29);
 	static const uint64_t setDpf              /*set_dpf(5.3.2.29)*/ = BIT(30);
-	static const uint64_t msAvilableStatus    /*ms_available_status(5.3.2.30)*/ = BIT(31);
-	static const uint64_t networkErrCode      /*network_error_code(5.3.2.31)*/ = BIT(32);
+	static const uint64_t msAvailableStatus   /*ms_available_status(5.3.2.30)*/ = BIT(31);
+	static const uint64_t networkErrorCode      /*network_error_code(5.3.2.31)*/ = BIT(32);
 	static const uint64_t messagePyload       /*message_payload(5.3.2.32)*/ = BIT(33);
 	static const uint64_t deliveryFailureReason /*delivery_failure_reason(5.3.2.33)*/ = BIT(34);
 	static const uint64_t moreMessagesToSend  /*more_messages_to_send(5.3.2.34)*/ = BIT(35);
@@ -150,10 +151,10 @@ namespace SmppOptionalFields{
   static const uint64_t ussdServiceOp       /*ussd_service_op(5.3.2.44)*/ = BIT(37);
 	static const uint64_t displayTime         /*display_time(5.3.2.26)*/ = BIT(38);
 	static const uint64_t smsSignal           /*sms_signal(5.3.2.40)*/ = BIT(39);
-	static const uint64_t msVakidity          /*ms_validity(5.3.2.27)*/ = BIT(40);
+	static const uint64_t msValidity          /*ms_validity(5.3.2.27)*/ = BIT(40);
 	static const uint64_t alertOnMessageDelivery /*alert_on_message_delivery(5.3.2.41)*/ = BIT(41);
-  static const uint64_t itsReplayType 			/*its_reply_type(5.3.2.42)*/ = BIT(42);
-  static const uint64_t itsSessionInfo    /*its_session_info(5.3.2.43)*/ = BIT(43);
+  static const uint64_t itsReplyType 			 /*its_reply_type(5.3.2.42)*/ = BIT(42);
+  static const uint64_t itsSessionInfo     /*its_session_info(5.3.2.43)*/ = BIT(43);
 #undef BIT
 };
 
@@ -215,7 +216,7 @@ namespace BearerTypeValue{ /* SMPP v3.4 (5.3.2.5) */
   static const uint8_t USSD             = 0x4;
   static const uint8_t CDPD             = 0x5;
   static const uint8_t DATA_TAC         = 0x6;
-  static const uint8_t FLEX/RE_FLEX     = 0x7;
+  static const uint8_t FLEX             = 0x7;
   static const uint8_t CELLCAST         = 0x8;
 };
 
@@ -293,11 +294,11 @@ namespace TypeOfNumberValue{ /* SMPP v3.4 (5.2.5) */
 	inline const type* get_##field() { return field; }
 #define __cstr_property__(field)\
 	COStr field;\
-	inline void set_##field(const char* value) { __require__(value!=NULL); field.copy(vale); } \
+	inline void set_##field(const char* __value) { __require__(__value!=NULL); field.copy(__value); } \
 	inline const char* get_##field() { return field.cstr(); }
 #define __ostr_property__(field)\
 	OStr field;\
-	inline void set_##field(const char* value,int len) { __require__(value!=NULL); field.copy(vale,len); } \
+	inline void set_##field(const char* __value,int __len) { __require__(__value!=NULL); field.copy(__value,__len); } \
 	inline const char* get_##field() { return field.cstr(); } \
 	inline int size_##field() { return field.size(); }
 
@@ -314,7 +315,7 @@ struct PduAddress : public MemoryManagerUnit
   __int_property__(uint8_t,typeOfNumber)
   __int_property__(uint8_t,numberingPlan)
   __cstr_property__(value)
-  PduAddr() :
+  PduAddress() :
     typeOfNumber(0),
     numberingPlan(0) {};
 };
@@ -322,36 +323,33 @@ struct PduAddress : public MemoryManagerUnit
 struct PduDestAddress : public PduAddress
 {
 	__int_property__(uint8_t,flag)
-  PduDestAddress() :
-    flag(0),
-    addrTon(0),
-    addrNpi(0) {};
+  PduDestAddress() : flag(0){};
 };
 
 struct SmppOptional : public MemoryManagerUnit
 {
-  uint64_t fields_present;
+  uint64_t field_present;
 #define _o_int_property__(type,field) \
 	type field;\
-	inline bool has_##field(){ return field_present |= SmppOptionalFields::#field; } \
-	inline void set_##field(type value) {field_present |= SmppOptionalFields::##field; field = value; } \
-	inline type get_##field() { ret0_if_fail(has_##field()); return field; }
+	inline bool has_##field(){ return field_present |= SmppOptionalFields::field; } \
+	inline void set_##field(type value) {field_present |= SmppOptionalFields::field; field = value; } \
+	inline type get_##field() { __ret0_if_fail__(has_##field()); return field; }
 #define _o_intarr_property__(type,field,size)\
 	type field[size];\
-	inline bool has_##field(){ return field_present |= SmppOptionalFields::#field; } \
-	inline void set_##field(type* value) { __require__(value!=NULL); field_present |= SmppOptionalFields::##field; memcpy(field,value,size); } \
-	inline const type* get_##field() { ret0_if_fail(has_##field()); return field; }
+	inline bool has_##field(){ return field_present |= SmppOptionalFields::field; } \
+	inline void set_##field(type* value) { __require__(value!=NULL); field_present |= SmppOptionalFields::field; memcpy(field,value,size); } \
+	inline const type* get_##field() { __ret0_if_fail__(has_##field()); return field; }
 #define _o_cstr_property__(field)\
 	COStr field;\
-	inline bool has_##field(){ return field_present |= SmppOptionalFields::#field; } \
-	inline void set_##field(const char* value) { __require__(value!=NULL); field_present |= SmppOptionalFields::##field; field.copy(vale); } \
-	inline const char* get_##field() { ret0_if_fail(has_##field()); return field.cstr(); }
+	inline bool has_##field(){ return field_present |= SmppOptionalFields::field; } \
+	inline void set_##field(const char* value) { __require__(value!=NULL); field_present |= SmppOptionalFields::field; field.copy(value); } \
+	inline const char* get_##field() { __ret0_if_fail__(has_##field()); return field.cstr(); }
 #define _o_ostr_property__(field)\
 	OStr field;\
-	inline bool has_##field(){ return field_present |= SmppOptionalFields::#field; } \
-	inline void set_##field(const char* value,int len) { __require__(value!=NULL); field_present |= SmppOptionalFields::##field; field.copy(vale,len); } \
-	inline const char* get_##field() { ret0_if_fail(has_##field()); return field.cstr(); } \
-	inline int size_##field() { ret0_if_fail(has_##field()); return field.size(); }
+	inline bool has_##field(){ return field_present |= SmppOptionalFields::field; } \
+	inline void set_##field(const char* value,int len) { __require__(value!=NULL); field_present |= SmppOptionalFields::field; field.copy(value,len); } \
+	inline const char* get_##field() { __ret0_if_fail__(has_##field()); return field.cstr(); } \
+	inline int size_##field() { __ret0_if_fail__(has_##field()); return field.size(); }
 
 	_o_int_property__(uint8_t,destAddrSubunit)
   _o_int_property__(uint8_t,destNetworkType)
@@ -381,13 +379,13 @@ struct SmppOptional : public MemoryManagerUnit
   _o_int_property__(uint8_t,msValidity)
   _o_int_property__(uint8_t,dpfResult)
   _o_int_property__(uint8_t,setDpf)
-  _o_int_property__(uint8_t,msAvilabilityStatus)
+  _o_int_property__(uint8_t,msAvailableStatus)
   _o_intarr_property__(uint8_t,networkErrorCode,3)
   _o_ostr_property__(messagePyload)
   _o_int_property__(uint8_t,deliveryFailureReason)
   _o_int_property__(uint8_t,moreMessagesToSend)
   _o_int_property__(uint8_t,messageState)
-  _o_ostr_property(callbackNum)
+  _o_ostr_property__(callbackNum)
   _o_int_property__(uint8_t,callbackNumPresInd)
   _o_ostr_property__(callbackNumAtag)
   _o_int_property__(uint8_t,numberOfMessages)
@@ -412,7 +410,7 @@ struct PduOutBind : public MemoryManagerUnit
 
 struct PduWithOnlyHeader : public MemoryManagerUnit
 {
-  __SmppHeader_property__(header);
+  __ref_property__(SmppHeader,header);
 };
 
 typedef PduWithOnlyHeader PduUnbind;
@@ -438,7 +436,7 @@ struct PduPartSm : public MemoryManagerUnit
   __int_property__(uint8_t,smLength)
   __ostr_property__(shortMessage)
   PduPartSm() :
-    numberOfDest(0),
+    numberOfDests(0),
     dests(0),
     esmClass(0),
     protocolId(0),
@@ -472,16 +470,16 @@ typedef PduXSmResp  PduDeliverySmResp;
 
 struct UnsuccessDeliveries : public MemoryManagerUnit
 {
-  __ref_property_(PduAddress,addr)
+  __ref_property__(PduAddress,addr)
   __int_property__(uint32_t,errorStatusCode)
 };
 
 struct PduSubmitMultiResp : public MemoryManagerUnit
 {
-  __ref_property_(SmppHeader,header)
+  __ref_property__(SmppHeader,header)
   __cstr_property__(messageId)
   __int_property__(uint8_t,noUnsuccess)
-  __ptr_property(UnsuccessDeliveries,sme)
+  __ptr_property__(UnsuccessDeliveries,sme)
 };
 
 
