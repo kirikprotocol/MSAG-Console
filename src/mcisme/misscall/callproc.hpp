@@ -32,6 +32,9 @@ struct ReleaseSettings {
   int absentCause, absentInform;
   int otherCause, otherInform;
 };
+
+bool setCallingMask(const char* rx);
+
 class MissedCallProcessor{
   public:
     static MissedCallProcessor* instance();
@@ -42,6 +45,7 @@ class MissedCallProcessor{
     void fireMissedCallEvent(MissedCallEvent& event);
     void setCircuits(Circuits cics);
     void setReleaseSettings(ReleaseSettings params);
+
   private:
     MissedCallProcessor();
     MissedCallListener* listener;

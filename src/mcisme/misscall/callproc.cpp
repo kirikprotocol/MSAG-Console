@@ -5,6 +5,7 @@
 #include "util.hpp"
 #include "logger/Logger.h"
 #include "sms/sms.h"
+#include "util/regexp/RegExp.hpp"
 
 using namespace std;
 namespace smsc{
@@ -25,6 +26,9 @@ int going;
 Logger* missedCallProcessorLogger = 0;
 Mutex MissedCallProcessor::lock;
 MissedCallProcessor* volatile MissedCallProcessor::processor = 0;
+
+static smsc::util::regexp::RegExp maskRx;
+
 
 enum State{
       INIT,
@@ -96,13 +100,13 @@ static void cancelTimer(Timer *timer)
 }
 static int checkTimer(Timer *timer)
 {
-  if (!(timer->status)) 
+  if (!(timer->status))
   {
     return 0;
   }
   struct timeval now;
   gettimeofday(&now, NULL);
-  return (now.tv_sec > timer->time.tv_sec || 
+  return (now.tv_sec > timer->time.tv_sec ||
           (now.tv_sec == timer->time.tv_sec && now.tv_usec >= timer->time.tv_usec));
 }
 /*
@@ -124,6 +128,11 @@ static UCHAR_T UBL[]={0x00/*HSN*/, 0x00/*SPN*/, 0xFE, 0xFF, 0xFE, 0xFF/*TS MASK*
 USHORT_T unblockCurcuits()
 {
   return EINSS7_MgmtApiSendOrderReq(USER,MGMT_ID,ISUP_ID,0x0B/*UNBLOCK CURCUITS*/,sizeof(UBL),UBL,NO_WAIT);
+}
+
+bool setCallingMask(const char* rx)
+{
+  return maskRx.Compile(rx)!=0;
 }
 
 void MissedCallProcessor::setCircuits(Circuits cics)
@@ -160,7 +169,7 @@ MissedCallProcessor* MissedCallProcessor::instance()
   }
   return processor;
 }
-						    
+
 MissedCallProcessor::MissedCallProcessor()
 {
   missedCallProcessorLogger = Logger::getInstance("smsc.misscall");
@@ -194,7 +203,7 @@ int MissedCallProcessor::run()
 {
   USHORT_T result;
   USHORT_T extresult;
-  
+
   result = EINSS7CpMsgInitNoSig(MAXENTRIES);
   if (result != 0) {
     smsc_log_error(missedCallProcessorLogger,
@@ -516,7 +525,7 @@ void  fillEvent(EINSS7_I97_CALLINGNUMB_T *calling,
                 MissedCallEvent& event)
 {
   time(&event.time);
-  if (calling && 
+  if (calling &&
       calling->noOfAddrSign <= MAX_FULL_ADDRESS_VALUE_LENGTH &&
       calling->presentationRestr == EINSS7_I97_PRES_ALLOWED)
   {
@@ -696,6 +705,19 @@ USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
 
   releaseConnection(isupHead_sp,causeValue);
 
+  using smsc::misscall::maskRx;
+  using smsc::util::regexp::SMatch;
+  std::vector<SMatch> m(maskRx.GetBracketsCount());
+
+  vector<char> addr(calling->noOfAddrSign +  1);
+  unpack_addr(&addr[0], calling->addrSign_p, calling->noOfAddrSign);
+
+  int n=m.size();
+  if(!maskRx.Match(&addr[0],&m[0],n))
+  {
+    inform=0;
+  }
+
   if (original && inform)
   {
     registerEvent(calling,original);
@@ -812,7 +834,7 @@ USHORT_T EINSS7_MgmtApiHandleOrderConf(USHORT_T moduleId,
                  orderId,
                  getResultDescription(orderResult));
   if ( state == UNBLOCKING &&
-       moduleId == ISUP_ID && 
+       moduleId == ISUP_ID &&
        orderId == 0x0B /*UNBLOCK CURCUITS*/)
   {
     cancelTimer(&conftimer);
@@ -859,7 +881,7 @@ USHORT_T EINSS7_I97IsupResourceInd(USHORT_T resourceGroup,
   if ( state == ISUPBOUND && rgstate )
   {
     cancelTimer(&stacktimer);
-    changeState(LINKUP); 
+    changeState(LINKUP);
   }
   return EINSS7_I97_REQUEST_OK;
 }
