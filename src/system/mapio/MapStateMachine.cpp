@@ -538,7 +538,7 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error = false,unsigned 
       try{
         if ( dialog->isQueryAbonentStatus ){
           int status;
-          status = AbonentStatus::OFFLINE;// UNKNOWN;
+          status = AbonentStatus::UNKNOWNVALUE;
           SendAbonentStatusToSmsc(dialog.get(),status);
         }else{
           SendErrToSmsc(dialog->dialogid_smsc,err_code);
