@@ -484,7 +484,7 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToEnroute(
 			Descriptor dst;
 			dst.setSmeNumber(rand0(65535));
 			uint8_t failureCause = rand1(255);
-			time_t nextTryTime = time(NULL);
+			time_t nextTryTime = time(NULL) + rand0(3600);
 			switch(s.value())
 			{
 				case 1: //пустой imsi и msc (например, SME не имееют imsi и msc)
@@ -504,7 +504,7 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToEnroute(
 					}
 					break;
 				case 4: //nextTryTime в прошлом времени
-					nextTryTime -= 100;
+					nextTryTime -= rand0(3600);
 					break;
 				case 5: //failureCause не задан
 					failureCause = 0;
@@ -926,7 +926,126 @@ TCResult* MessageStoreTestCases::deleteNonExistentSms(const SMSId id)
 	debug(res);
 	return res;
 }
-	
+
+TCResult* MessageStoreTestCases::checkReadyForRetrySms(const vector<SMSId*>& ids,
+	const vector<SMS*>& sms, int num)
+{
+	TCSelector s(num, 4);
+	TCResult* res = new TCResult(TC_CHECK_READY_FOR_RETRY_SMS, s.getChoice());
+	//Получить времена
+	bool found = false;
+	time_t minNextTime, middleNextTime, maxNextTime;
+	for (int i = 0; i < sms.size(); i++)
+	{
+		if (sms[i]->getState() != ENROUTE)
+		{
+			continue;
+		}
+		if (!found)
+		{
+			found = true;
+			minNextTime = sms[i]->getNextTime();
+			middleNextTime = sms[i]->getNextTime();
+			maxNextTime = sms[i]->getNextTime();
+			continue;
+		}
+		if (sms[i]->getNextTime() < minNextTime)
+		{
+			middleNextTime = minNextTime;
+			minNextTime = sms[i]->getNextTime();
+			continue;
+		}
+		if (sms[i]->getNextTime() > maxNextTime)
+		{
+			middleNextTime = maxNextTime;
+			maxNextTime = sms[i]->getNextTime();
+			continue;
+		}
+	}
+	//MessageStore::getNextRetryTime()
+	try
+	{
+		time_t nextTime = msgStore->getNextRetryTime();
+		if (nextTime != minNextTime)
+		{
+			res->addFailure(1);
+		}
+	}
+	catch(...)
+	{
+		error();
+		res->addFailure(100);
+	}
+	//сравнить списки MessageStore::getReadyForRetry()
+	for (; s.check(); s++)
+	{
+		try
+		{
+			switch(s.value())
+			{
+				case 1: //меньше minNextTime
+					compareReadyForRetrySmsList(ids, sms, minNextTime - 1, res, 10);
+					break;
+				case 2: //равно middleNextTime
+					compareReadyForRetrySmsList(ids, sms, middleNextTime, res, 20);
+					break;
+				case 3: //равно какому-то среднему времени
+					compareReadyForRetrySmsList(ids, sms,
+						(minNextTime + maxNextTime) / 2, res, 30);
+					break;
+				case 4: //больше maxNextTime
+					compareReadyForRetrySmsList(ids, sms, maxNextTime + 1, res, 40);
+					break;
+				default:
+					throw s;
+			}
+		}
+		catch(...)
+		{
+			error();
+			res->addFailure(200);
+		}
+	}
+	debug(res);
+	return res;
+}
+
+void MessageStoreTestCases::compareReadyForRetrySmsList(const vector<SMSId*>& ids, 
+	const vector<SMS*>& sms, time_t time, TCResult* res, int shift)
+{
+	//выбрать и отсортировать ids
+	vector<SmsIdTimePair> enroteIds;
+	for (int i = 0; i < sms.size(); i++)
+	{
+		if (sms[i]->getState() == ENROUTE && sms[i]->getNextTime() <= time)
+		{
+			enroteIds.push_back(SmsIdTimePair(*ids[i], sms[i]->getNextTime()));
+		}
+	}
+	sort(enroteIds.begin(), enroteIds.end());
+	//сверить списки
+	SMSId id;
+	IdIterator* it = msgStore->getReadyForRetry(time);
+	for (int i = 0; i < enroteIds.size(); i++)
+	{
+		if (!it->getNextId(id))
+		{
+			res->addFailure(shift + 1);
+			break;
+		}
+		if (id != enroteIds[i].smsId)
+		{
+			res->addFailure(shift + 2);
+			break;
+		}
+	}
+	if (it->getNextId(id))
+	{
+		res->addFailure(shift + 3);
+	}
+	delete it;
+}
+
 }
 }
 }

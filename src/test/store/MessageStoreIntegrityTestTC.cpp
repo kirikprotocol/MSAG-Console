@@ -133,6 +133,13 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 		}
 	}
 
+	//ѕолучение списка sms дл€ повторной доставки
+	if (rand0(1))
+	{
+		TCResult* res = tc.checkReadyForRetrySms(id, sms, RAND_TC);
+		filter->addResult(res);
+	}
+
 	//добавить паузу, чтобы SMS::lastTime отличалось от предыдущего
 	if (!rand0(3))
 	{
@@ -192,6 +199,13 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 		}
 	}
 
+	//ѕолучение списка sms дл€ повторной доставки
+	if (rand0(1))
+	{
+		TCResult* res = tc.checkReadyForRetrySms(id, sms, RAND_TC);
+		filter->addResult(res);
+	}
+
 	//”даление существующего sms, 1/1
 	for (int i = 0; i < id.size(); i++)
 	{
@@ -237,6 +251,14 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				}
 				break;
 		}
+	}
+
+	//ѕолучение списка sms дл€ повторной доставки
+	if (rand0(1))
+	{
+		TCResult* res = tc.checkReadyForRetrySms(vector<SMSId*>(),
+			vector<SMS*>(), RAND_TC);
+		filter->addResult(res);
 	}
 
 //—охранение неправильного sms с проверкой на assert
@@ -300,7 +322,9 @@ void saveCheckList(TCResultFilter* filter)
 		filter->getResults(TC_DELETE_EXISTENT_SMS));
 	cl.writeResult("”даление несуществующего sms",
 		filter->getResults(TC_DELETE_NON_EXISTENT_SMS));
-	
+	cl.writeResult("ѕолучение списка sms дл€ повторной доставки",
+		filter->getResults(TC_CHECK_READY_FOR_RETRY_SMS));
+
 	//пока еще незаимплементированные тест кейсы
 	cl.writeResult("”даление существующих SM ожидающих доставки на определенный номер",
 		filter->getResults(TC_DELETE_EXISTENT_WAITING_SM_BY_NUMBER));
@@ -332,19 +356,23 @@ void saveCheckList(TCResultFilter* filter)
  */
 int main(int argc, char* argv[])
 {
+	if (argc != 3)
+	{
+		cout << "Usage: MessageStoreLoadTest <numCycles> <numSms>" << endl;
+		exit(0);
+	}
+
+	const int numCycles = atoi(argv[1]);
+	const int numSms = atoi(argv[2]);
 	try
 	{
 		Manager::init("config.xml");
 		StoreManager::startup(Manager::getInstance());
 		StoreManager::stopArchiver();
 		TCResultFilter* filter = new TCResultFilter();
-		for (int i = 0; i < 1000; i++)
+		for (int i = 0; i < numCycles; i++)
 		{
-			executeIntegrityTest(filter, 1);
-		}
-		for (int i = 0; i < 200; i++)
-		{
-			executeIntegrityTest(filter, 5);
+			executeIntegrityTest(filter, numSms);
 		}
 		saveCheckList(filter);
 		delete filter;

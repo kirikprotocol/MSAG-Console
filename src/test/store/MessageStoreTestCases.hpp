@@ -5,11 +5,13 @@
 #include "store/MessageStore.h"
 #include "test/util/Util.hpp"
 #include <exception>
+#include <vector>
 
 namespace smsc  {
 namespace test  {
 namespace store {
 
+using std::vector;
 using log4cpp::Category;
 using smsc::sms::SMSId;
 using smsc::sms::SMS;
@@ -36,6 +38,7 @@ const char* const TC_LOAD_EXISTENT_SMS = "loadExistentSms";
 const char* const TC_LOAD_NON_EXISTENT_SMS = "loadNonExistentSms";
 const char* const TC_DELETE_EXISTENT_SMS = "deleteExistentSms";
 const char* const TC_DELETE_NON_EXISTENT_SMS = "deleteNonExistentSms";
+const char* const TC_CHECK_READY_FOR_RETRY_SMS = "checkReadyForRetrySms";
 //not implemented yet
 const char* const TC_DELETE_EXISTENT_WAITING_SM_BY_NUMBER = 
 	"deleteExistentWaitingSMByNumber";
@@ -180,6 +183,12 @@ public:
 	TCResult* deleteNonExistentSms(const SMSId id);
 
 	/**
+	 * Получение списка sms для повторной доставки.
+	 */
+	TCResult* checkReadyForRetrySms(const vector<SMSId*>& ids,
+		const vector<SMS*>& sms, int num);
+
+	/**
 	 * Удаление существующих sms ожидающих доставки на определенный номер.
 	 */
 	TCResult* deleteExistentWaitingSMByNumber();
@@ -238,8 +247,21 @@ private:
 	static Category& log;
 	MessageStore* msgStore;
 
+	void compareReadyForRetrySmsList(const vector<SMSId*>& ids, 
+		const vector<SMS*>& sms, time_t time, TCResult* res, int shift);
 	void error();
 	void debug(const TCResult* res);
+};
+
+struct SmsIdTimePair
+{
+	SMSId smsId;
+	time_t time;
+	SmsIdTimePair(SMSId id, time_t t) : smsId(id), time(t) {}
+	bool operator< (const SmsIdTimePair& p) const
+	{
+		return time < p.time;
+	}
 };
 
 }
