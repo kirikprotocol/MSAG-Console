@@ -641,6 +641,12 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
     FormatText("MAP::%s incorrect dialog version %d",__FUNCTION__,dialog->version));
 }
 
+static long long NextSequence()
+{
+  static long long secuence = (((long long)time(0))<<32);
+  return ++sequence;
+}
+
 static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
 {
   __trace2__("MAP::%s MAP.did:{0x%x}",__FUNCTION__,dialog->dialogid_map);
@@ -767,7 +773,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
           dialog->state = MAPST_USSDWaitResponce;
           if ( cmd->get_resp()->get_status() != 0 )
           {
-            DoUSSRUserResponceError(cmd,dialog);
+            DoUSSRUserResponceError(cmd,dialog.get());
             CloseMapDialog(dialog->dialogid_map,dialog->ssn);
             DropMapDialog(dialog.get());
           }
@@ -775,7 +781,8 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
           {
             {
               MutexGuard ussd_map_guard( ussd_map_lock );
-              ussd_map[sequence] = dialog->dialogid_map;
+              dialog->ussdSequence = NextSequence();
+              ussd_map[dialog->ussdSequence] = dialog->dialogid_map;
             }
           }
         }
