@@ -107,4 +107,15 @@ public class AliasSet
 	{
 		return aliases.contains(a);
 	}
+
+	public Alias get(String aliasString)
+	{
+		for (Iterator i = aliases.iterator(); i.hasNext();)
+		{
+			Alias alias = (Alias) i.next();
+			if (alias.getAlias().getMask().equals(aliasString))
+				return alias;
+		}
+		return null;
+	}
 }
