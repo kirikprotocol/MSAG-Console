@@ -10,11 +10,13 @@ namespace smsc {
 namespace test {
 namespace config {
 
+using std::pair;
 using smsc::sms::Address;
 using smsc::smeman::SmeSystemId;
 using smsc::test::core::SmeRegistry;
 using smsc::test::core::AliasRegistry;
 using smsc::test::core::RouteRegistry;
+using smsc::test::core::SmeType;
 
 class ConfigUtil
 {
@@ -38,8 +40,8 @@ public:
 	void setupDuplexRoutes(const Address& addr1, const SmeSystemId smeId1,
 		const Address& addr2, const SmeSystemId smeId2);
 	
-	void checkRoute(const Address& origAddr, const SmeSystemId& origSmeId,
-		const Address& destAlias, int* numRoutes = NULL, int* numBound = NULL);
+	pair<SmeType, SmeSystemId> checkRoute(const Address& origAddr,
+		const SmeSystemId& origSmeId, const Address& destAlias);
 	
 	void checkRoute2(const Address& origAddr, const SmeSystemId& origSmeId,
 		const Address& destAlias);

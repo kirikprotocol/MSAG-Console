@@ -151,40 +151,22 @@ void ConfigUtil::setupDuplexRoutes(const Address& addr1, const SmeSystemId smeId
 	setupRoute(addr2, addr1, smeId1);
 }
 
-void ConfigUtil::checkRoute(const Address& origAddr, const SmeSystemId& origSmeId,
-	const Address& destAlias, int* numRoutes, int* numBound)
+pair<SmeType, SmeSystemId> ConfigUtil::checkRoute(const Address& origAddr,
+	const SmeSystemId& origSmeId, const Address& destAlias)
 {
 	const Address destAddr = aliasReg->findAddressByAlias(destAlias);
 	const RouteHolder* routeHolder = routeReg->lookup(origAddr, destAddr);
 	if (routeHolder)
 	{
-		if (numRoutes)
-		{
-			(*numRoutes)++;
-		}
 		const SmeSystemId& smeId = routeHolder->route.smeSystemId;
 		SmeType smeType = smeReg->getSmeBindType(smeId);
-		switch (smeType)
-		{
-			case SME_RECEIVER:
-			case SME_TRANSMITTER:
-			case SME_TRANSCEIVER:
-				if (numBound)
-				{
-					(*numBound)++;
-				}
-				break;
-			default: //SME_NO_ROUTE, SME_NOT_BOUND
-				;
-		}
 		__trace2__("route: origAddr = %s, origSmeId = %s, destAias = %s, route to = %s, sme type = %d",
 			str(origAddr).c_str(), origSmeId.c_str(), str(destAlias).c_str(), smeId.c_str(), smeType);
+		return make_pair(smeType, smeId);
 	}
-	else
-	{
-		__trace2__("route: origAddr = %s, origSmeId = %s, destAias = %s, no route",
-			str(origAddr).c_str(), origSmeId.c_str(), str(destAlias).c_str());
-	}
+	__trace2__("route: origAddr = %s, origSmeId = %s, destAias = %s, no route",
+		str(origAddr).c_str(), origSmeId.c_str(), str(destAlias).c_str());
+	return make_pair(SME_NO_ROUTE, "");
 }
 
 void ConfigUtil::checkRoute2(const Address& origAddr, const SmeSystemId& origSmeId,
