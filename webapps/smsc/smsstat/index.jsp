@@ -159,7 +159,7 @@ while (i.hasNext()) {
         %>
         <tr class=row1>
             <td align=right>
-          <% String errstr = appContext.getLocaleMessages(request.getLocale()).getProperty("smsc.errcode."+errid.errcode);
+          <% String errstr = appContext.getLocaleMessages(request.getLocale()).getString("smsc.errcode."+errid.errcode);
              if( errstr != null ) {
           %><%=errstr%>
           <%
