@@ -551,12 +551,11 @@ void AliasManagerTestCases::printFindResult(const char* name,
 }
 
 void AliasManagerTestCases::printFindResult(const char* tc,
-	const Address& param, const Address& result, bool found, bool hide)
+	const Address& param, const Address& result, bool found)
 {
 	ostringstream os;
 	os << tc << ": param = " << param;
 	os << ", found = " << (found ? "true" : "false");
-	os << ", hide = " << (hide ? "true" : "false");
 	if (found)
 	{
 		os << ", result = " << result;
@@ -574,22 +573,17 @@ TCResult* AliasManagerTestCases::findAliasByAddress(const Address& addr)
 	try
 	{
 		Address alias;
-		bool hide;
-		bool found = aliasMan->AddressToAlias(addr, alias, &hide);
-		printFindResult("AliasManager::AddressToAlias()", addr, alias, found, hide);
+		bool found = aliasMan->AddressToAlias(addr, alias);
+		printFindResult("AliasManager::AddressToAlias()", addr, alias, found);
 		if (!found && aliasInfo)
 		{
 			res->addFailure(101);
 		}
-		else if (found && !hide && aliasInfo)
-		{
-			res->addFailure(102);
-		}
-		else if (found && hide && !aliasInfo)
+		else if (found && !aliasInfo)
 		{
 			res->addFailure(103);
 		}
-		else if (found && hide && aliasInfo && !SmsUtil::compareAddresses(alias, *alias2))
+		else if (found && aliasInfo && !SmsUtil::compareAddresses(alias, *alias2))
 		{
 			res->addFailure(104);
 		}
@@ -617,7 +611,7 @@ TCResult* AliasManagerTestCases::findAddressByAlias(const Address& alias)
 	{
 		Address addr;
 		bool found = aliasMan->AliasToAddress(alias, addr);
-		printFindResult("AliasManager::AliasToAddress()", alias, addr, found, true);
+		printFindResult("AliasManager::AliasToAddress()", alias, addr, found);
 		if (!found && aliasInfo)
 		{
 			res->addFailure(101);

@@ -115,7 +115,7 @@ private:
 	void printFindResult(const char* name, const Address& param,
 		const Address* result, const AliasInfo* aliasInfo);
 	void printFindResult(const char* tc, const Address& param,
-		const Address& result, bool found, bool hide);
+		const Address& result, bool found);
 };
 
 }
