@@ -8,7 +8,6 @@
 namespace smsc { namespace sms
 {
     const int MAX_ADDRESS_VALUE_LENGTH = 21;
-    const int MAX_SMS_ID_VALUE_LENGTH  = 21;
     const int MAX_SHORT_MESSAGE_LENGTH = 256;
     
     typedef uint8_t  AddressValue[MAX_ADDRESS_VALUE_LENGTH];
@@ -20,7 +19,9 @@ namespace smsc { namespace sms
         uint8_t      lenght, type, plan;
         AddressValue value;
    
-        Address() : lenght(0), type(0), plan(0) {};
+        Address() : lenght(0), type(0), plan(0) {
+			memset((void *)value, 0, sizeof(value));
+		};
         Address(uint8_t _len, uint8_t _type, uint8_t _plan, const uint8_t* _value)
             : lenght(_len), type(_type), plan(_plan) 
         { 
@@ -78,7 +79,9 @@ namespace smsc { namespace sms
         uint8_t     lenght;
         SMSData     data;
 
-        Body() : header(false), lenght(0), scheme(0) {};
+        Body() : header(false), lenght(0), scheme(0) {
+			memset((void *)data, 0, sizeof(data));
+		};
         Body(uint8_t _len, uint8_t _scheme, bool _header, const uint8_t* _data)
             : header(_header), lenght(_len), scheme(_scheme) 
         { 
@@ -127,7 +130,11 @@ namespace smsc { namespace sms
         char* getDecodedText();
     };
    
-    typedef enum { ENROUTE=1, DELIVERED=2, EXPIRED=3, UNDELIVERABLE=4, DELETED=5 } State;
+    typedef enum { 
+		ENROUTE=0, DELIVERED=1, 
+		EXPIRED=2, UNDELIVERABLE=3,
+		DELETED=4 
+	} State;
    
     struct SMS 
     {
