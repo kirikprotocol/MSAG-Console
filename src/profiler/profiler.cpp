@@ -77,6 +77,7 @@ public:
   Profile& find(const Address& address,bool& exact)
   {
     HashKey k(address);
+    exact=false;
     while(!Exists(k))
     {
       if(!k.defLength)
