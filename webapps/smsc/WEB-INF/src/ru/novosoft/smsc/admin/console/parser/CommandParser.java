@@ -809,6 +809,7 @@ public CommandParser(ParserSharedInputState state) {
 		case TGT_ALIAS:
 		case OPT_DIVERT:
 		case OPT_UDHCONCAT:
+		case OPT_TRANSLIT:
 		{
 			break;
 		}
@@ -829,6 +830,7 @@ public CommandParser(ParserSharedInputState state) {
 		case EOF:
 		case OPT_DIVERT:
 		case OPT_UDHCONCAT:
+		case OPT_TRANSLIT:
 		{
 			break;
 		}
@@ -852,6 +854,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		case EOF:
 		case OPT_UDHCONCAT:
+		case OPT_TRANSLIT:
 		{
 			break;
 		}
@@ -862,6 +865,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		}
 		profile_udh_concat_opt(cmd);
+		profile_translit_opt(cmd);
 		return cmd;
 	}
 	
@@ -1747,6 +1751,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_LOCALE:
 		case OPT_DIVERT:
 		case OPT_UDHCONCAT:
+		case OPT_TRANSLIT:
 		{
 			break;
 		}
@@ -1769,6 +1774,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_ENCODE:
 		case OPT_DIVERT:
 		case OPT_UDHCONCAT:
+		case OPT_TRANSLIT:
 		{
 			break;
 		}
@@ -1790,6 +1796,7 @@ public CommandParser(ParserSharedInputState state) {
 		case TGT_ALIAS:
 		case OPT_DIVERT:
 		case OPT_UDHCONCAT:
+		case OPT_TRANSLIT:
 		{
 			break;
 		}
@@ -1810,6 +1817,7 @@ public CommandParser(ParserSharedInputState state) {
 		case EOF:
 		case OPT_DIVERT:
 		case OPT_UDHCONCAT:
+		case OPT_TRANSLIT:
 		{
 			break;
 		}
@@ -1852,6 +1860,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_MODIF:
 			case OPT_NOTMODIF:
 			case OPT_UDHCONCAT:
+			case OPT_TRANSLIT:
 			case OPT_ON:
 			case OPT_OFF:
 			{
@@ -1890,6 +1899,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_MODIF:
 			case OPT_NOTMODIF:
 			case OPT_UDHCONCAT:
+			case OPT_TRANSLIT:
 			{
 				break;
 			}
@@ -1904,6 +1914,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		case EOF:
 		case OPT_UDHCONCAT:
+		case OPT_TRANSLIT:
 		{
 			break;
 		}
@@ -1914,6 +1925,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		}
 		profile_udh_concat_opt(cmd);
+		profile_translit_opt(cmd);
 		return cmd;
 	}
 	
@@ -3346,6 +3358,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_MODIF:
 			case OPT_NOTMODIF:
 			case OPT_UDHCONCAT:
+			case OPT_TRANSLIT:
 			{
 				break;
 			}
@@ -3370,6 +3383,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_MODIF:
 			case OPT_NOTMODIF:
 			case OPT_UDHCONCAT:
+			case OPT_TRANSLIT:
 			{
 				break;
 			}
@@ -3393,6 +3407,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_MODIF:
 			case OPT_NOTMODIF:
 			case OPT_UDHCONCAT:
+			case OPT_TRANSLIT:
 			{
 				break;
 			}
@@ -3415,6 +3430,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_MODIF:
 			case OPT_NOTMODIF:
 			case OPT_UDHCONCAT:
+			case OPT_TRANSLIT:
 			{
 				break;
 			}
@@ -3436,6 +3452,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_MODIF:
 			case OPT_NOTMODIF:
 			case OPT_UDHCONCAT:
+			case OPT_TRANSLIT:
 			{
 				break;
 			}
@@ -3461,6 +3478,7 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			case EOF:
 			case OPT_UDHCONCAT:
+			case OPT_TRANSLIT:
 			{
 				break;
 			}
@@ -3512,6 +3530,7 @@ public CommandParser(ParserSharedInputState state) {
 				break;
 			}
 			case EOF:
+			case OPT_TRANSLIT:
 			{
 				break;
 			}
@@ -3525,6 +3544,57 @@ public CommandParser(ParserSharedInputState state) {
 		catch (RecognitionException ex) {
 			
 			throw new RecognitionException("Profile udh concat option expected. Syntax: udhconcat on|off");
+			
+		}
+	}
+	
+	public final void profile_translit_opt(
+		ProfileGenCommand cmd
+	) throws RecognitionException, TokenStreamException {
+		
+		
+		try {      // for error handling
+			{
+			switch ( LA(1)) {
+			case OPT_TRANSLIT:
+			{
+				match(OPT_TRANSLIT);
+				{
+				switch ( LA(1)) {
+				case OPT_ON:
+				{
+					match(OPT_ON);
+					cmd.setTranslit(true);
+					break;
+				}
+				case OPT_OFF:
+				{
+					match(OPT_OFF);
+					cmd.setTranslit(false);
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				break;
+			}
+			case EOF:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+		}
+		catch (RecognitionException ex) {
+			
+			throw new RecognitionException("Profile translit option expected. Syntax: translit on|off");
 			
 		}
 	}
@@ -3563,6 +3633,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_NOTMODIF:
 			case OPT_DIVERT:
 			case OPT_UDHCONCAT:
+			case OPT_TRANSLIT:
 			{
 				break;
 			}
@@ -3589,6 +3660,7 @@ public CommandParser(ParserSharedInputState state) {
 			case EOF:
 			case OPT_DIVERT:
 			case OPT_UDHCONCAT:
+			case OPT_TRANSLIT:
 			{
 				break;
 			}
@@ -3659,6 +3731,7 @@ public CommandParser(ParserSharedInputState state) {
 			case TGT_ALIAS:
 			case OPT_DIVERT:
 			case OPT_UDHCONCAT:
+			case OPT_TRANSLIT:
 			{
 				break;
 			}
@@ -3746,6 +3819,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"clear\"",
 		"\"ussd7bit\"",
 		"\"udhconcat\"",
+		"\"translit\"",
 		"\"on\"",
 		"\"off\"",
 		"\"notes\"",

@@ -499,6 +499,15 @@ catch [RecognitionException ex] {
     throw new RecognitionException("Profile udh concat option expected. Syntax: udhconcat on|off");
 }
 
+profile_translit_opt[ProfileGenCommand cmd] 
+	: (OPT_TRANSLIT (OPT_ON  { cmd.setTranslit(true);  }
+	  	        |OPT_OFF { cmd.setTranslit(false); }))?
+	;
+exception
+catch [RecognitionException ex] {
+    throw new RecognitionException("Profile translit option expected. Syntax: translit on|off");
+}
+
 profile_alias_opt[ProfileGenCommand cmd] {
     cmd.setAliasOptions(true);
 }
@@ -540,6 +549,7 @@ addprofile returns [ProfileAddCommand cmd] {
 	  	      ({ cmd.setDivert(getnameid("Divert value")); })
 	   profile_divert_opt[cmd] )?
 	  profile_udh_concat_opt[cmd]
+	  profile_translit_opt[cmd]
 	;
 exception[mask]
 catch [RecognitionException ex] {
@@ -563,6 +573,7 @@ altprofile returns [ProfileAlterCommand cmd] {
 	    profile_divert_opt[cmd]
 	  )?
 	  profile_udh_concat_opt[cmd]
+	  profile_translit_opt[cmd]
 	;
 exception[addr]
 catch [RecognitionException ex] {

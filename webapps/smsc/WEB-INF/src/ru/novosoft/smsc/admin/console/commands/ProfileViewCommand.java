@@ -39,6 +39,7 @@ public class ProfileViewCommand implements Command
       " Locale: "+profile.getLocale()+
       " Encoding: "+profile.getCodepageString()+
       " ussd7bit: "+((profile.isUssd7bit()) ? "on":"off")+
+      " translit: "+((profile.isTranslit()) ? "on":"off")+
       " Alias: "+((aliasAlias != null) ? aliasAlias.getMask():"-")+aliasHideStr+
       (profile.isAliasModifiable() ? " modifiable":" notmodifiable")+
       " Divert: "+((divert == null || divert.length() <= 0) ? "-":divert);

@@ -32,6 +32,7 @@ public abstract class ProfileGenCommand implements Command
   protected boolean divertActiveUnconditional = false;
   protected boolean divertModifiable = false;
   protected boolean udhConcat = false;
+  protected boolean translit = true;
 
   protected boolean isAliasOptions = false;
   protected boolean isDivertOptions = false;
@@ -47,6 +48,7 @@ public abstract class ProfileGenCommand implements Command
   protected boolean isDivertActiveUnconditional = false;
   protected boolean isDivertModifiable = false;
   protected boolean isUdhConcat = false;
+  protected boolean isTranslit = false;
 
   protected String locale;
   protected boolean isLocale = false;
@@ -117,5 +119,9 @@ public abstract class ProfileGenCommand implements Command
 
   public void setUdhConcat(boolean udhConcat) {
     this.udhConcat = udhConcat; isUdhConcat = true;
+  }
+
+  public void setTranslit(boolean translit) {
+    this.translit = translit; isTranslit = true;
   }
 }

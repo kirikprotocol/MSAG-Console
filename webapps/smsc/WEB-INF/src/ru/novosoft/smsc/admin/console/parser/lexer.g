@@ -81,6 +81,7 @@ tokens {
   OPT_CLEAR     = "clear";
   OPT_USSD7BIT  = "ussd7bit";
   OPT_UDHCONCAT = "udhconcat";
+  OPT_TRANSLIT	= "translit";
   OPT_ON        = "on";
   OPT_OFF       = "off";
   OPT_NOTES     = "notes";

@@ -64,29 +64,30 @@ OPT_SET="set"=64
 OPT_CLEAR="clear"=65
 OPT_USSD7BIT="ussd7bit"=66
 OPT_UDHCONCAT="udhconcat"=67
-OPT_ON="on"=68
-OPT_OFF="off"=69
-OPT_NOTES="notes"=70
-OPT_RP="replayPath"=71
-OPT_FD="forceDelivery"=72
-OPT_CACHE="cache"=73
-VAL_FORCE="force"=74
-VAL_SUPPRESS="suppress"=75
-VAL_PASS="pass"=76
-VAL_FULL="full"=77
-VAL_NONE="none"=78
-VAL_DEF="default"=79
-VAL_UCS2="ucs2"=80
-VAL_LATIN1="latin1"=81
-VAL_UCS2LATIN1="ucs2-latin1"=82
-VAL_STORE="store"=83
-VAL_FORWARD="forward"=84
-VAL_DATAGRAM="datagram"=85
-WS=86
-STR("more input")=87
-QSTR("quoted string")=88
-STR_WS=89
-STR_CHR=90
-COMMA("comma character ','")=91
-ESC=92
-DIGIT=93
+OPT_TRANSLIT="translit"=68
+OPT_ON="on"=69
+OPT_OFF="off"=70
+OPT_NOTES="notes"=71
+OPT_RP="replayPath"=72
+OPT_FD="forceDelivery"=73
+OPT_CACHE="cache"=74
+VAL_FORCE="force"=75
+VAL_SUPPRESS="suppress"=76
+VAL_PASS="pass"=77
+VAL_FULL="full"=78
+VAL_NONE="none"=79
+VAL_DEF="default"=80
+VAL_UCS2="ucs2"=81
+VAL_LATIN1="latin1"=82
+VAL_UCS2LATIN1="ucs2-latin1"=83
+VAL_STORE="store"=84
+VAL_FORWARD="forward"=85
+VAL_DATAGRAM="datagram"=86
+WS=87
+STR("more input")=88
+QSTR("quoted string")=89
+STR_WS=90
+STR_CHR=91
+COMMA("comma character ','")=92
+ESC=93
+DIGIT=94
