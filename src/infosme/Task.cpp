@@ -46,21 +46,63 @@ int parseTime(const char* str)
     return hour*3600+minute*60+second;
 }
 
-Task::Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt) 
+const char* USER_QUERY_STATEMENT_ID           = "%s_USER_QUERY_STATEMENT_ID";   // Own
+
+const char* DELETE_GENERATING_STATEMENT_ID    = "DELETE_GENERATING_STATEMENT_ID";
+const char* INSERT_GENERATING_STATEMENT_ID    = "INSERT_GENERATING_STATEMENT_ID"; 
+const char* DELETE_NEW_MESSAGES_STATEMENT_ID  = "%s_DELETE_NEW_MESSAGES_STATEMENT_ID";
+const char* SELECT_MESSAGES_STATEMENT_ID      = "%s_SELECT_MESSAGES_STATEMENT_ID";
+const char* DO_WAIT_MESSAGE_STATEMENT_ID      = "%s_DO_WAIT_MESSAGE_STATEMENT_ID";
+const char* NEW_MESSAGE_STATEMENT_ID          = "%s_NEW_MESSAGE_STATEMENT_ID";
+const char* CLEAR_MESSAGES_STATEMENT_ID       = "%s_CLEAR_MESSAGES_STATEMENT_ID";
+const char* DELETE_MESSAGES_STATEMENT_ID      = "%s_DELETE_MESSAGES_STATEMENT_ID";
+const char* RESET_MESSAGES_STATEMENT_ID       = "%s_RESET_MESSAGES_STATEMENT_ID";
+const char* DO_RETRY_MESSAGE_STATEMENT_ID     = "%s_DO_RETRY_MESSAGE_STATEMENT_ID";
+const char* DO_DELETE_MESSAGE_STATEMENT_ID    = "%s_DO_DELETE_MESSAGE_STATEMENT_ID";
+const char* DO_ENROUTE_MESSAGE_STATEMENT_ID   = "%s_DO_ENROUTE_MESSAGE_STATEMENT_ID";
+
+const char* DELETE_GENERATING_STATEMENT_SQL   = "DELETE FROM INFOSME_GENERATING_TASKS WHERE TASK_ID=:TASK_ID";
+const char* INSERT_GENERATING_STATEMENT_SQL   = "INSERT INTO INFOSME_GENERATING_TASKS TASK_ID VALUES(:TASK_ID)";
+const char* DELETE_NEW_MESSAGES_STATEMENT_SQL = "DELETE FROM %s WHERE STATE=:NEW";
+const char* DO_WAIT_MESSAGE_STATEMENT_SQL     = "UPDATE %s SET STATE=:WAIT WHERE ID=:ID";
+const char* CLEAR_MESSAGES_STATEMENT_SQL      = "DELETE FROM %s WHERE STATE=:NEW AND ABONENT=:ABONENT";
+const char* NEW_SD_INDEX_STATEMENT_SQL        = "CREATE INDEX %s_SD_IDX ON %s (STATE, SEND_DATE)";
+const char* DELETE_MESSAGES_STATEMENT_SQL     = "DELETE FROM %s WHERE STATE=:NEW";
+const char* RESET_MESSAGES_STATEMENT_SQL      = "UPDATE %s SET STATE=:NEW WHERE STATE=:WAIT";
+const char* DO_RETRY_MESSAGE_STATEMENT_SQL    = "UPDATE %s SET STATE=:NEW, SEND_DATE=:SEND_DATE WHERE ID=:ID";
+const char* DO_DELETE_MESSAGE_STATEMENT_SQL   = "DELETE FROM %s WHERE ID=:ID";
+const char* DO_ENROUTE_MESSAGE_STATEMENT_SQL  = "UPDATE %s SET STATE=:ENROUTE WHERE ID=:ID AND STATE=:WAIT";
+const char* DROP_TABLE_STATEMENT_SQL          = "DROP TABLE %s";
+const char* NEW_TABLE_STATEMENT_SQL           = "CREATE TABLE %s (\n"
+                                                "ID             NUMBER          NOT NULL,\n"
+                                                "STATE          NUMBER(3)       NOT NULL,\n"
+                                                "ABONENT        VARCHAR2(30)    NOT NULL,\n"
+                                                "SEND_DATE      DATE            NOT NULL,\n"
+                                                "MESSAGE        VARCHAR2(2000)  NULL,    \n"
+                                                "PRIMARY KEY    (ID)                     \n"
+                                                ")";
+const char* NEW_MESSAGE_STATEMENT_SQL         = "INSERT INTO %s (ID, STATE, ABONENT, SEND_DATE, MESSAGE) "
+                                                "VALUES (INFOSME_MESSAGES_SEQ.NEXTVAL, :STATE, :ABONENT, "
+                                                ":SEND_DATE, :MESSAGE)";
+const char* SELECT_MESSAGES_STATEMENT_SQL     = "SELECT ID, ABONENT, MESSAGE FROM %s WHERE "
+                                                "STATE=:STATE AND SEND_DATE<=:SEND_DATE ORDER BY ID ASC";
+
+
+Task::Task(TaskInfo& _info, DataSource* _dsOwn, DataSource* _dsInt) 
     : logger(Logger::getInstance("smsc.infosme.Task")), formatter(0),
         usersCount(0), bFinalizing(false), bSelectedAll(false), dsOwn(dsOwn), dsInt(dsInt), 
             bInProcess(false), bInGeneration(false), bGenerationSuccess(true),
                 lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
 {
-    __require__(dsOwn && dsInt);
-    this->info = info; this->dsOwn = dsOwn; this->dsInt = dsInt;
+    __require__(_dsOwn && _dsInt);
+    this->info = _info; this->dsOwn = _dsOwn; this->dsInt = _dsInt;
     formatter = new OutputFormatter(info.msgTemplate.c_str());
     trackIntegrity(true, true); // delete flag & generated messages
 }
 Task::Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
-     DataSource* dsOwn, DataSource* dsInt)
+           DataSource* _dsOwn, DataSource* _dsInt)
     : logger(Logger::getInstance("smsc.infosme.Task")), formatter(0),
-        usersCount(0), bFinalizing(false), bSelectedAll(false), dsOwn(dsOwn), dsInt(dsInt), 
+        usersCount(0), bFinalizing(false), bSelectedAll(false), dsOwn(_dsOwn), dsInt(_dsInt), 
             bInProcess(false), bInGeneration(false), bGenerationSuccess(true),
                 lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
 {
@@ -71,6 +113,40 @@ Task::Task(ConfigView* config, std::string taskId, std::string tablePrefix,
 Task::~Task()
 {
     if (formatter) delete formatter;
+
+    if (dsInt) 
+    {
+        /* Used externally by other tasks
+        dsInt->closeRegisteredQueries(INSERT_GENERATING_STATEMENT_ID);
+        dsInt->closeRegisteredQueries(DELETE_GENERATING_STATEMENT_ID);
+        */
+        
+        std::auto_ptr<char> delGeneratedId(prepareSqlCall(DELETE_NEW_MESSAGES_STATEMENT_ID));
+        dsInt->closeRegisteredQueries(delGeneratedId.get());
+        std::auto_ptr<char> newMessageId(prepareSqlCall(NEW_MESSAGE_STATEMENT_ID));
+        dsInt->closeRegisteredQueries(newMessageId.get());
+        std::auto_ptr<char> clearMessagesId(prepareSqlCall(CLEAR_MESSAGES_STATEMENT_ID));
+        dsInt->closeRegisteredQueries(clearMessagesId.get());
+        std::auto_ptr<char> deleteMessagesId(prepareSqlCall(DELETE_MESSAGES_STATEMENT_ID));
+        dsInt->closeRegisteredQueries(deleteMessagesId.get());
+        std::auto_ptr<char> resetMessagesId(prepareSqlCall(RESET_MESSAGES_STATEMENT_ID));
+        dsInt->closeRegisteredQueries(resetMessagesId.get());
+        std::auto_ptr<char> retryMessageId(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_ID));
+        dsInt->closeRegisteredQueries(retryMessageId.get());
+        std::auto_ptr<char> deleteMessageId(prepareSqlCall(DO_DELETE_MESSAGE_STATEMENT_ID));
+        dsInt->closeRegisteredQueries(deleteMessageId.get());
+        std::auto_ptr<char> enrouteMessageId(prepareSqlCall(DO_ENROUTE_MESSAGE_STATEMENT_ID));
+        dsInt->closeRegisteredQueries(enrouteMessageId.get());
+        std::auto_ptr<char> selectMessageId(prepareSqlCall(SELECT_MESSAGES_STATEMENT_ID));
+        dsInt->closeRegisteredQueries(selectMessageId.get());
+        std::auto_ptr<char> waitMessageId(prepareSqlCall(DO_WAIT_MESSAGE_STATEMENT_ID));
+        dsInt->closeRegisteredQueries(waitMessageId.get());
+    }
+    if (dsOwn)
+    {
+        std::auto_ptr<char> userQueryId(prepareSqlCall(USER_QUERY_STATEMENT_ID));
+        dsOwn->closeRegisteredQueries(userQueryId.get());
+    }
 }
 
 void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
@@ -155,16 +231,6 @@ char* Task::prepareDoubleSqlCall(const char* sql)
     return sqlCall;
 }
 
-const char* DELETE_GENERATING_STATEMENT_ID  = "DELETE_GENERATING_STATEMENT_ID";
-const char* DELETE_GENERATING_STATEMENT_SQL = 
-"DELETE FROM INFOSME_GENERATING_TASKS WHERE TASK_ID=:TASK_ID";
-const char* INSERT_GENERATING_STATEMENT_ID  = "INSERT_GENERATING_STATEMENT_ID"; 
-const char* INSERT_GENERATING_STATEMENT_SQL = 
-"INSERT INTO INFOSME_GENERATING_TASKS TASK_ID VALUES(:TASK_ID)";
-const char* DELETE_NEW_MESSAGES_STATEMENT_ID  = "%s_DELETE_NEW_MESSAGES_STATEMENT_ID";
-const char* DELETE_NEW_MESSAGES_STATEMENT_SQL =
-"DELETE FROM %s WHERE STATE=:NEW";
-
 void Task::trackIntegrity(bool clear, bool del, Connection* connection)
 {
     smsc_log_debug(logger, "trackIntegrity method called on task '%s'",
@@ -234,18 +300,6 @@ void Task::trackIntegrity(bool clear, bool del, Connection* connection)
     if (connection && connectionInternal) dsInt->freeConnection(connection);
 }
 
-const char* NEW_TABLE_STATEMENT_SQL = 
-"CREATE TABLE %s (\n"
-"ID             NUMBER          NOT NULL,\n"
-"STATE          NUMBER(3)       NOT NULL,\n"
-"ABONENT        VARCHAR2(30)    NOT NULL,\n"
-"SEND_DATE      DATE            NOT NULL,\n"
-"MESSAGE        VARCHAR2(2000)  NULL,    \n"
-"PRIMARY KEY    (ID)                     \n"
-")";
-const char* NEW_SD_INDEX_STATEMENT_SQL = 
-"CREATE INDEX %s_SD_IDX ON %s (STATE, SEND_DATE)";
-
 void Task::createTable()
 {
     smsc_log_debug(logger, "createTable method called on task '%s'", info.id.c_str());
@@ -310,8 +364,6 @@ void Task::createTable()
     if (connection) dsInt->freeConnection(connection);
 }
 
-const char* DROP_TABLE_STATEMENT_SQL = "DROP TABLE %s";
-
 void Task::dropTable()
 {
     smsc_log_debug(logger, "dropTable method called on task '%s'", info.id.c_str());
@@ -366,17 +418,6 @@ void Task::dropTable()
     }
     if (connection) dsInt->freeConnection(connection);
 }
-
-const char* USER_QUERY_STATEMENT_ID = "%s_USER_QUERY_STATEMENT_ID";
-
-const char* NEW_MESSAGE_STATEMENT_ID = "%s_NEW_MESSAGE_STATEMENT_ID";
-const char* NEW_MESSAGE_STATEMENT_SQL = (const char*)
-"INSERT INTO %s (ID, STATE, ABONENT, SEND_DATE, MESSAGE) "
-"VALUES (INFOSME_MESSAGES_SEQ.NEXTVAL, :STATE, :ABONENT, :SEND_DATE, :MESSAGE)";
-
-const char* CLEAR_MESSAGES_STATEMENT_ID = "%s_CLEAR_MESSAGES_STATEMENT_ID";
-const char* CLEAR_MESSAGES_STATEMENT_SQL = (const char*)
-"DELETE FROM %s WHERE STATE=:NEW AND ABONENT=:ABONENT";
 
 void Task::beginGeneration(Statistics* statistics)
 {
@@ -536,10 +577,6 @@ void Task::endGeneration()
     generationEndEvent.Wait();
 }
 
-const char* DELETE_MESSAGES_STATEMENT_ID = "%s_DELETE_MESSAGES_STATEMENT_ID";
-const char* DELETE_MESSAGES_STATEMENT_SQL = 
-"DELETE FROM %s WHERE STATE=:NEW";
-
 void Task::dropAllMessages()
 {
     smsc_log_debug(logger, "dropAllMessages method called on task '%s'",
@@ -597,10 +634,6 @@ void Task::dropAllMessages()
     if (connection) dsInt->freeConnection(connection);
 }
 
-const char* RESET_MESSAGES_STATEMENT_ID = "%s_RESET_MESSAGES_STATEMENT_ID";
-const char* RESET_MESSAGES_STATEMENT_SQL = 
-"UPDATE %s SET STATE=:NEW WHERE STATE=:WAIT";
-
 void Task::resetWaiting(Connection* connection)
 {
     smsc_log_debug(logger, "resetWaiting method called on task '%s'",
@@ -653,10 +686,6 @@ void Task::resetWaiting(Connection* connection)
 
     if (connectionInternal && connection) dsInt->freeConnection(connection);
 }
-
-const char* DO_RETRY_MESSAGE_STATEMENT_ID = "%s_DO_RETRY_MESSAGE_STATEMENT_ID";
-const char* DO_RETRY_MESSAGE_STATEMENT_SQL = 
-"UPDATE %s SET STATE=:NEW, SEND_DATE=:SEND_DATE WHERE ID=:ID";
 
 bool Task::retryMessage(uint64_t msgId, time_t nextTime, Connection* connection)
 {
@@ -720,9 +749,6 @@ bool Task::retryMessage(uint64_t msgId, time_t nextTime, Connection* connection)
     return result;
 }
 
-const char* DO_DELETE_MESSAGE_STATEMENT_ID = "%s_DO_DELETE_MESSAGE_STATEMENT_ID";
-const char* DO_DELETE_MESSAGE_STATEMENT_SQL = "DELETE FROM %s WHERE ID=:ID";
-
 bool Task::deleteMessage(uint64_t msgId, Connection* connection)
 {
     smsc_log_debug(logger, "deleteMessage method called on task '%s' for id=%lld",
@@ -780,10 +806,6 @@ bool Task::deleteMessage(uint64_t msgId, Connection* connection)
     if (connectionInternal && connection) dsInt->freeConnection(connection);
     return result;
 }
-
-const char* DO_ENROUTE_MESSAGE_STATEMENT_ID = "%s_DO_ENROUTE_MESSAGE_STATEMENT_ID";
-const char* DO_ENROUTE_MESSAGE_STATEMENT_SQL = 
-"UPDATE %s SET STATE=:ENROUTE WHERE ID=:ID AND STATE=:WAIT";
 
 bool Task::enrouteMessage(uint64_t msgId, Connection* connection)
 {
@@ -846,19 +868,10 @@ bool Task::enrouteMessage(uint64_t msgId, Connection* connection)
     return result;
 }
 
-const char* SELECT_MESSAGES_STATEMENT_ID = "%s_SELECT_MESSAGES_STATEMENT_ID";
-const char* SELECT_MESSAGES_STATEMENT_SQL = (const char*)
-"SELECT ID, ABONENT, MESSAGE FROM %s WHERE "
-"STATE=:STATE AND SEND_DATE<=:SEND_DATE ORDER BY ID ASC";
-
-const char* DO_WAIT_MESSAGE_STATEMENT_ID = "%s_DO_WAIT_MESSAGE_STATEMENT_ID";
-const char* DO_WAIT_MESSAGE_STATEMENT_SQL = (const char*)
-"UPDATE %s SET STATE=:WAIT WHERE ID=:ID";
-
 bool Task::getNextMessage(Connection* connection, Message& message)
 {
-    smsc_log_debug(logger, "getNextMessage method called on task '%s'",
-                 info.id.c_str());
+    /*smsc_log_debug(logger, "getNextMessage method called on task '%s'",
+                   info.id.c_str());*/
     __require__(connection);
 
     if (!isEnabled())
@@ -882,6 +895,9 @@ bool Task::getNextMessage(Connection* connection, Message& message)
     else if (bSelectedAll && !isInGeneration()) 
         return setInProcess(false);
     
+    smsc_log_debug(logger, "Selecting messages from DB. getNextMessage method on task '%s'",
+                   info.id.c_str());
+
     int wdTimerId = -1;
     try
     {
