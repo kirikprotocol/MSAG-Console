@@ -41,7 +41,7 @@ int StateMachine::Execute()
 StateType StateMachine::submit(Tuple& t)
 {
   __require__(t.state==UNKNOWN_STATE);
-  
+
   SmeProxy *src_proxy,*dest_proxy=0;
 
   src_proxy=t.command.getProxy();
@@ -49,6 +49,29 @@ StateType StateMachine::submit(Tuple& t)
   __trace2__("StateMachine::submit:%lld",t.msgId);
   
   SMS* sms = t.command->get_sms();
+
+  if(sms->getNextTime()==-1)
+  {
+    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::INVALIDSCHEDULE);
+    try{
+      src_proxy->putCommand(resp);
+    }catch(...)
+    {
+    }
+    __warning__("SUBMIT_SM: invalid schedule");
+    return ERROR_STATE;
+  }
+  if(sms->getValidTime()==-1)
+  {
+    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::INVALIDVALIDTIME);
+    try{
+      src_proxy->putCommand(resp);
+    }catch(...)
+    {
+    }
+    __warning__("SUBMIT_SM: invalid valid time");
+    return ERROR_STATE;
+  }
 
   time_t now=time(NULL);
 
