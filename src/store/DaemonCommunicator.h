@@ -105,10 +105,12 @@ namespace smsc { namespace store
         time_t          fromDate, tillDate;
         bool            bSrcMask, bDstMask, bAbnMask;
         std::string     srcMask, dstMask, abnMask;
+        int32_t         status, lastResult;
         Array<Param>    parameters;
         
         QueryMessage(Message::Type type=QUERY) : Message(type), fromDate(-1), tillDate(-1), 
-                bSrcMask(false), bDstMask(false), bAbnMask(false), srcMask(""), dstMask(""), abnMask("") {};
+            bSrcMask(false), bDstMask(false), bAbnMask(false), 
+            srcMask(""), dstMask(""), abnMask(""), status(-1), lastResult(-1) {};
         virtual ~QueryMessage() {};
 
         virtual void send(Socket* socket);

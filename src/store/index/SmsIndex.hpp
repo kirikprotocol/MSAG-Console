@@ -27,16 +27,18 @@ namespace index{
 using namespace smsc::sms;
 using smsc::util::config::ConfigView;
 
-static const uint8_t T_SMS_ID      = 10;
-static const uint8_t T_FROM_DATE   = 20;
-static const uint8_t T_TILL_DATE   = 30;
-static const uint8_t T_SRC_ADDRESS = 40;
-static const uint8_t T_DST_ADDRESS = 50;
-static const uint8_t T_SRC_SME_ID  = 60;
-static const uint8_t T_DST_SME_ID  = 70;
-static const uint8_t T_ROUTE_ID    = 80;
-static const uint8_t T_ABN_ADDRESS = 90;
-static const uint8_t T_SME_ID      =100;
+static const uint8_t T_SMS_ID      =  10;
+static const uint8_t T_FROM_DATE   =  20;
+static const uint8_t T_TILL_DATE   =  30;
+static const uint8_t T_SRC_ADDRESS =  40;
+static const uint8_t T_DST_ADDRESS =  50;
+static const uint8_t T_SRC_SME_ID  =  60;
+static const uint8_t T_DST_SME_ID  =  70;
+static const uint8_t T_ROUTE_ID    =  80;
+static const uint8_t T_ABN_ADDRESS =  90;
+static const uint8_t T_SME_ID      = 100;
+static const uint8_t T_STATUS      = 110; // Used externally (to filter query results only)
+static const uint8_t T_LAST_RESULT = 120; // Used externally (to filter query results only)
 
 struct Param{
   enum ParamType{
@@ -45,7 +47,8 @@ struct Param{
     tSrcAddress = T_SRC_ADDRESS, tDstAddress = T_DST_ADDRESS,
     tSrcSmeId   = T_SRC_SME_ID,  tDstSmeId   = T_DST_SME_ID,
     tRouteId    = T_ROUTE_ID,    tAbnAddress = T_ABN_ADDRESS,
-    tSmeId      = T_SME_ID
+    tSmeId      = T_SME_ID,      tStatus     = T_STATUS,
+    tLastResult = T_LAST_RESULT
   };
   ParamType type;
   std::string sValue;

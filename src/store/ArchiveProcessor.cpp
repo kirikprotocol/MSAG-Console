@@ -609,6 +609,10 @@ bool Query::prepareIndex(QueryMessage* query, Array<Param>& index)
             // Exclusive index by ID, other checks will be performed in checkMessage()
             index.Clean(); index.Push(param); noIdIndex = false;
             break;
+        case T_LAST_RESULT: case T_STATUS:
+            // Do not add to search index (used for filtering)
+            // other checks will be performed in checkMessage()
+            break;
         case T_FROM_DATE: case T_TILL_DATE:
             break;
         case T_SRC_ADDRESS: case T_DST_ADDRESS: case T_ABN_ADDRESS: {
@@ -658,6 +662,9 @@ bool Query::checkMessage(QueryMessage* query, SMSId id, SMS& sms)
 {
     if (query->fromDate > 0 && sms.lastTime < query->fromDate) return false;
     if (query->tillDate > 0 && sms.lastTime > query->tillDate) return false;
+    
+    if (query->status >= 0 && query->status != (int32_t)sms.state) return false;
+    if (query->lastResult >= 0 && query->lastResult != sms.lastResult) return false;
 
     if (query->bSrcMask && !eqAdressWithMask(sms.getOriginatingAddress(),          query->srcMask)) return false;
     if (query->bDstMask && !eqAdressWithMask(sms.getDealiasedDestinationAddress(), query->dstMask)) return false;

@@ -179,6 +179,15 @@ void QueryMessage::receive(Socket* socket)
           tillDate = param.dValue = convertProtocolStrToDate(param.sValue.c_str());
           break;
       }
+      case T_LAST_RESULT: case T_STATUS: {
+          uint32_t value = 0;
+          Message::read(socket, &value, sizeof(value));
+          value = ntohl(value);
+          if (param_type == T_STATUS) status = value;
+          else lastResult = value;
+          param.iValue = (uint64_t)value;
+          break;
+      }
       case T_SMS_ID: {
           uint64_t id = 0;
           Message::read(socket, &id, sizeof(id));
