@@ -611,7 +611,6 @@ StateType StateMachine::deliveryResp(Tuple& t)
           for(int i=0;i<arr.Count();i++)
           {
             smsc->submitSms(arr[i]);
-            delete arr[i];
           };
 
         }
