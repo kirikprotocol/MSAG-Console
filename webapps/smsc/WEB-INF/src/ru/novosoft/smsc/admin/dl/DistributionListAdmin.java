@@ -15,6 +15,14 @@ import java.util.List;
 public interface DistributionListAdmin
 {
     /**
+     * Returns list of defined principals (as Principals)
+     *
+     * @return List of Principals
+     * @throws AdminException
+     */
+    public List principals()
+        throws AdminException;
+    /**
      * Creates new principal
      *
      * @param prc principal to be created
@@ -33,6 +41,17 @@ public interface DistributionListAdmin
      */
     public void deletePrincipal(String address)
         throws AdminException, PrincipalNotExistsException, PrincipalInUseException;
+    /**
+     * Returns principal for specified address
+     *
+     * @param address principal address to be retreived
+     * @return principal for specified address
+     * @throws AdminException
+     * @throws PrincipalNotExistsException if principal with specified address doesn't exist
+     *
+     */
+    public Principal getPrincipal(String address)
+        throws AdminException, PrincipalNotExistsException;
 
     /**
      * Adds new member into specified list
@@ -103,6 +122,14 @@ public interface DistributionListAdmin
         throws AdminException, ListNotExistsException;
 
     /**
+     * Returns list of all registered distribution lists (as DistributionLists)
+     *
+     * @return List of DistributionList
+     * @throws AdminException
+     */
+    public List list()
+        throws AdminException;
+    /**
      * Creates new distribution list
      *
      * @param dl distribution list to be created
@@ -121,12 +148,13 @@ public interface DistributionListAdmin
     public void deleteDistributionList(String dlname)
         throws AdminException, ListNotExistsException;
     /**
-     * Returns list of all registered distribution lists (as DistributionLists)
+     * Retreives distribution list by name (as DistributionList)
      *
-     * @return List of DistributionList
+     * @param dlname distribution list to be retreived
+     * @return distribution list by name
      * @throws AdminException
+     * @throws ListNotExistsException if list with specified name doesn't exist
      */
-    public List list()
-        throws AdminException;
-
+    public DistributionList getDistributionList(String dlname)
+        throws AdminException, ListNotExistsException;
 }

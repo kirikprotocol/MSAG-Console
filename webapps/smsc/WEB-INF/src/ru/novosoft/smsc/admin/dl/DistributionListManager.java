@@ -7,7 +7,6 @@
  */
 package ru.novosoft.smsc.admin.dl;
 
-import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.dl.exceptions.*;
 
@@ -20,11 +19,38 @@ import java.sql.ResultSet;
 
 public class DistributionListManager implements DistributionListAdmin
 {
-    private Smsc smsc;
     private DataSource ds;
 
-    public DistributionListManager(Smsc smsc, DataSource ds) {
-        this.smsc = smsc; this.ds = ds;
+    public DistributionListManager(DataSource ds) {
+        this.ds = ds;
+    }
+
+    private final static String GET_PRINCIPALS_SQL =
+        "SELECT ADDRESS, MAX_LST, MAX_EL FROM DL_PRINCIPALS";
+    public List principals()
+        throws AdminException
+    {
+        List list = new ArrayList();
+        PreparedStatement stmt = null;
+        Connection connection = null;
+        ResultSet rs = null;
+        try {
+            stmt = connection.prepareStatement(GET_PRINCIPALS_SQL);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                list.add(new Principal(rs.getString(1), rs.getInt(2), rs.getInt(3)));
+            }
+        } catch (Exception exc) {
+            exc.printStackTrace();
+            throw new AdminException(exc.getMessage());
+        } finally {
+            try { if (stmt != null) stmt.close(); connection.close(); }
+            catch (Exception cexc) {
+                cexc.printStackTrace();
+                throw new AdminException(cexc.getMessage());
+            }
+        }
+        return list;
     }
 
     private final static String CHECK_PRINCIPAL_SQL =
@@ -108,6 +134,36 @@ public class DistributionListManager implements DistributionListAdmin
                 throw new AdminException(cexc.getMessage());
             }
         }
+    }
+
+    private final static String GET_PRINCIPAL_SQL =
+        "SELECT ADDRESS, MAX_LST, MAX_EL FROM DL_PRINCIPALS WHERE ADDRESS=?";
+    public Principal getPrincipal(String address)
+        throws AdminException, PrincipalNotExistsException
+    {
+        Principal prc = null;
+        PreparedStatement stmt = null;
+        Connection connection = null;
+        ResultSet rs = null;
+        try {
+            stmt = connection.prepareStatement(GET_PRINCIPAL_SQL);
+            stmt.setString(1, address);
+            rs = stmt.executeQuery();
+            if (!rs.next())
+                throw new PrincipalNotExistsException(address);
+            prc = new Principal(rs.getString(1), rs.getInt(2), rs.getInt(3));
+            rs.close(); rs = null;
+        } catch (Exception exc) {
+            exc.printStackTrace();
+            throw new AdminException(exc.getMessage());
+        } finally {
+            try { if (stmt != null) stmt.close(); connection.close(); }
+            catch (Exception cexc) {
+                cexc.printStackTrace();
+                throw new AdminException(cexc.getMessage());
+            }
+        }
+        return prc;
     }
 
     private final static String CHECK_MEMBER_SQL =
@@ -334,7 +390,7 @@ public class DistributionListManager implements DistributionListAdmin
         }
     }
 
-    private final static String GET_PRINCIPALS_SQL =
+    private final static String GET_LIST_PRINCIPALS_SQL =
         "SELECT ADDRESS, MAX_LST, MAX_EL FROM DL_PRINCIPALS WHERE ADDRESS IN " +
             "(SELECT ADDRESS FROM DL_SUBMITTERS WHERE LIST=?)";
     public List submitters(String dlname)
@@ -353,7 +409,7 @@ public class DistributionListManager implements DistributionListAdmin
               throw new ListNotExistsException(dlname);
             rs.close(); rs = null; stmt.close();
 
-            stmt = connection.prepareStatement(GET_PRINCIPALS_SQL);
+            stmt = connection.prepareStatement(GET_LIST_PRINCIPALS_SQL);
             stmt.setString(1, dlname);
             rs = stmt.executeQuery();
             while (rs.next()) {
@@ -456,6 +512,41 @@ public class DistributionListManager implements DistributionListAdmin
                 throw new AdminException(cexc.getMessage());
             }
         }
+    }
+
+    private final static String GET_DL_SQL =
+        "SELECT LIST, OWNER, MAX_EL FROM DL_SET WHERE LIST=?";
+    public DistributionList getDistributionList(String dlname)
+        throws AdminException, ListNotExistsException
+    {
+        DistributionList dl = null;
+        PreparedStatement stmt = null;
+        Connection connection = null;
+        ResultSet rs = null;
+        try {
+            connection = ds.getConnection();
+            stmt = connection.prepareStatement(GET_DL_SQL);
+            stmt.setString(1 , dlname);
+            rs = stmt.executeQuery();
+            if (!rs.next())
+                throw new ListNotExistsException(dlname);
+            String name  = rs.getString(1);
+            String owner = rs.getString(2);
+            if (rs.wasNull()) owner = null;
+            int maxElements = rs.getInt(3);
+            dl = new DistributionList(name, owner, maxElements);
+            rs.close(); rs = null;
+        } catch (Exception exc) {
+            exc.printStackTrace();
+            throw new AdminException(exc.getMessage());
+        } finally {
+            try { if (stmt != null) stmt.close(); connection.close(); }
+            catch (Exception cexc) {
+                cexc.printStackTrace();
+                throw new AdminException(cexc.getMessage());
+            }
+        }
+        return dl;
     }
 
     private final static String LIST_DL_SQL =
