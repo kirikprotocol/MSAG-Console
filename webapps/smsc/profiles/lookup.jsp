@@ -106,14 +106,34 @@ abonent number <input class=txt name=profile value="<%=bean.getProfile() != null
 		<th nowrap>divert</th>
 		<td><%=bean.getDivert()%>&nbsp;</td>
 	</tr>
-	<tr class=row<%=(rowN++)&1%>>
-		<th nowrap>divert active</th>
-		<td><img src="/images/ic_<%=bean.isDivertActive() ? "" : "not_"%>checked.gif"></td>
-	</tr>
-	<tr class=row<%=(rowN++)&1%>>
-		<th nowrap>divert modifiable</th>
-		<td><img src="/images/ic_<%=bean.isDivertModifiable() ? "" : "not_"%>checked.gif"></td>
-	</tr>
+  <tr class=row<%=(rowN++)&1%>>
+    <th nowrap>divert active unconditional</th>
+    <td><img src="/images/ic_<%=bean.isDivertActiveUnconditional() ? "" : "not_"%>checked.gif"></td>
+  </tr>
+  <tr class=row<%=(rowN++)&1%>>
+    <th nowrap>divert active absent</th>
+    <td><img src="/images/ic_<%=bean.isDivertActiveAbsent() ? "" : "not_"%>checked.gif"></td>
+  </tr>
+  <tr class=row<%=(rowN++)&1%>>
+    <th nowrap>divert active blocked</th>
+    <td><img src="/images/ic_<%=bean.isDivertActiveBlocked() ? "" : "not_"%>checked.gif"></td>
+  </tr>
+  <tr class=row<%=(rowN++)&1%>>
+    <th nowrap>divert active barred</th>
+    <td><img src="/images/ic_<%=bean.isDivertActiveBarred() ? "" : "not_"%>checked.gif"></td>
+  </tr>
+  <tr class=row<%=(rowN++)&1%>>
+    <th nowrap>divert active capacity</th>
+    <td><img src="/images/ic_<%=bean.isDivertActiveCapacity() ? "" : "not_"%>checked.gif"></td>
+  </tr>
+  <tr class=row<%=(rowN++)&1%>>
+    <th nowrap>divert modifiable</th>
+    <td><img src="/images/ic_<%=bean.isDivertModifiable() ? "" : "not_"%>checked.gif"></td>
+  </tr>
+  <tr class=row<%=(rowN++)&1%>>
+    <th nowrap>UDH concatenate</th>
+    <td><img src="/images/ic_<%=bean.isUdhConcat() ? "" : "not_"%>checked.gif"></td>
+  </tr>
 	</table>
 	</div>
 	<%

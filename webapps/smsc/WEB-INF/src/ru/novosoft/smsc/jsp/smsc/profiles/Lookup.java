@@ -36,11 +36,16 @@ public class Lookup extends PageBean
   private byte matchType = ProfileEx.MATCH_UNKNOWN;
   private Mask matchAddress = null;
   private String divert = "";
-  private String divertActive = "";
+  private boolean divertActiveUnconditional = false;
+  private boolean divertActiveAbsent = false;
+  private boolean divertActiveBlocked = false;
+  private boolean divertActiveBarred = false;
+  private boolean divertActiveCapacity = false;
   private boolean divertModifiable = false;
 
   private String profileDealiased = null;
   private String profileAliased = null;
+  private boolean udhConcat = false;
 
   private String mbAdd = null;
   private String mbEdit = null;
@@ -84,10 +89,15 @@ public class Lookup extends PageBean
         aliasHide = p.isAliasHide();
         aliasModifiable = p.isAliasModifiable();
         divert = p.getDivert();
-        divertActive = p.getDivertActive();
+        divertActiveUnconditional = p.isDivertActiveUnconditional();
+        divertActiveAbsent = p.isDivertActiveAbsent();
+        divertActiveBlocked = p.isDivertActiveBlocked();
+        divertActiveBarred = p.isDivertActiveBarred();
+        divertActiveCapacity = p.isDivertActiveCapacity();
         divertModifiable = p.isDivertModifiable();
         matchType = p.getMatchType();
         matchAddress = p.getMatchAddress();
+        udhConcat = p.isUdhConcat();
       } catch (Exception e) {
         logger.debug("Couldn't lookup profile \"" + profile + "\", nested: " + e.getMessage(), e);
         reportOptions = codepage = "unknown";
@@ -254,11 +264,6 @@ public class Lookup extends PageBean
     return divert;
   }
 
-  public String getDivertActive()
-  {
-    return divertActive;
-  }
-
   public boolean isDivertModifiable()
   {
     return divertModifiable;
@@ -272,5 +277,35 @@ public class Lookup extends PageBean
   public String getProfileAliased()
   {
     return profileAliased;
+  }
+
+  public boolean isDivertActiveUnconditional()
+  {
+    return divertActiveUnconditional;
+  }
+
+  public boolean isDivertActiveAbsent()
+  {
+    return divertActiveAbsent;
+  }
+
+  public boolean isDivertActiveBlocked()
+  {
+    return divertActiveBlocked;
+  }
+
+  public boolean isDivertActiveBarred()
+  {
+    return divertActiveBarred;
+  }
+
+  public boolean isDivertActiveCapacity()
+  {
+    return divertActiveCapacity;
+  }
+
+  public boolean isUdhConcat()
+  {
+    return udhConcat;
   }
 }
