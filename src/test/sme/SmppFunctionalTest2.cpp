@@ -225,8 +225,8 @@ int TestSmeFunc::Execute()
 	seq.insert(seq.end(), 20, 1);
 	seq.insert(seq.end(), 20, 2);
 	seq.insert(seq.end(), 15, 3);
-	//seq.insert(seq.end(), 5, 4);
-	//seq.insert(seq.end(), 5, 5);
+	seq.insert(seq.end(), 5, 4);
+	seq.insert(seq.end(), 5, 5);
 	seq.insert(seq.end(), 5, 6);
 	seq.insert(seq.end(), 5, 7);
 	seq.insert(seq.end(), 1, 8);
@@ -481,9 +481,11 @@ vector<TestSme*> genConfig(int transceivers, int transmitters, int receivers,
 		addr.push_back(new Address());
 		smeInfo.push_back(new SmeInfo());
 		smeInfo.back()->wantAlias = rand0(1);
+		smeInfo.back()->forceDC = rand0(1);
 		if (i == 0)
 		{
 			smeInfo.back()->systemId = "MAP_PROXY";
+			smeInfo.back()->forceDC = false;
 		}
 		tcSme.addCorrectSme(addr.back(), smeInfo.back(), RAND_TC);
 		__trace2__("register sme: addr = %s, systemId = %s",
@@ -588,6 +590,8 @@ vector<TestSme*> genConfig(int transceivers, int transmitters, int receivers,
 		SmeInfo smeInfo;
 		SmsUtil::setupRandomCorrectAddress(&smeAddr);
 		SmeManagerTestCases::setupRandomCorrectSmeInfo(&smeInfo);
+		smeInfo.wantAlias = rand0(1);
+		smeInfo.forceDC = false;
 		smeReg->registerSme(smeAddr, smeInfo, false, true);
 		//маршрут на самого себя
 		cfgUtil.setupRoute(smeAddr, smeAddr, smeInfo.systemId);
