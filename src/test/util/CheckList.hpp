@@ -40,6 +40,7 @@ struct TestCase
 class CheckList
 {
 	string name;
+	string fileName;
 	typedef map<const string, TestCase*> TcMap;
 	typedef vector<TestCase*> TcList;
 	TcMap tcMap;
@@ -47,7 +48,8 @@ class CheckList
 	mutable Mutex mutex;
 
 public:
-	CheckList(const char* _name) : name(_name) {}
+	CheckList(const char* _name, const char* _fileName)
+		: name(_name), fileName(_fileName) {}
 	virtual ~CheckList();
 
 	/**
@@ -63,7 +65,7 @@ public:
 	 */
 	TestCase* getTc(const char* id) const;
 
-	void save(const char* fileName, bool printErrorCodes = true,
+	void save(bool printErrorCodes = true,
 		bool printExecCount = true, bool printTcIds = true) const;
 };
 

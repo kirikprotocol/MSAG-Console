@@ -42,7 +42,7 @@ TestCase* CheckList::getTc(const char* id) const
 	return it->second;
 }
 
-void CheckList::save(const char* fileName, bool printErrorCodes,
+void CheckList::save(bool printErrorCodes,
 		bool printExecCount, bool printTcIds) const
 {
 	MutexGuard mguard(mutex);
@@ -58,7 +58,7 @@ void CheckList::save(const char* fileName, bool printErrorCodes,
 	stable_sort(tcList.begin(), tcList.end(), TcComparator());
 	*/
 	//записать check list в файл
-	ofstream os(fileName);
+	ofstream os(fileName.c_str());
 	time_t t = time(NULL);
 	os << name << endl;
 	os << "Версия: " << endl;
@@ -66,7 +66,7 @@ void CheckList::save(const char* fileName, bool printErrorCodes,
 	os << "№|Тест кейс|Результат" <<
 		(printExecCount ? "|Счетчики" : "") <<
 		(printErrorCodes ? "|Коды ошибок" : "") <<
-		(printTcIds ? "tcId" : "") << endl;
+		(printTcIds ? "|tcId" : "") << endl;
 	int cnt = 1;
 	for (TcList::const_iterator it = tcList.begin(); it != tcList.end(); it++)
 	{

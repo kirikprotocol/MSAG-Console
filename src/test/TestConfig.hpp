@@ -13,6 +13,7 @@ const int rescheduleTimes[] = {20, 10};
 const int rescheduleSize = sizeof(rescheduleTimes) / sizeof(int);
 
 const int timeCheckAccuracy = 5; //5 сек
+const int sequentialPduInterval = 10; //10 сек
 const int maxValidPeriod = 24 * 3600; //1 сутки
 
 //адрес SC

@@ -1,9 +1,13 @@
 #ifndef TEST_STORE_MESSAGE_STORE_CHECK_LIST
 #define TEST_STORE_MESSAGE_STORE_CHECK_LIST
 
+#include "test/util/CheckList.hpp"
+
 namespace smsc {
 namespace test {
 namespace store {
+
+using smsc::test::util::CheckList;
 
 #define __reg_tc__(id, desc) \
 	registerTc(id, desc)

@@ -10,6 +10,8 @@ namespace config {
 using namespace std;
 using smsc::test::core::RouteHolder;
 using smsc::test::sms::SmsUtil;
+using smsc::test::sms::operator==;
+using smsc::test::sms::operator!=;
 
 ltAddress RouteConfigGen::ltAddr = ltAddress();
 
@@ -27,7 +29,7 @@ bool RouteConfigGen::ltSource(const RouteInfo* r1, const RouteInfo* r2)
 	{
 		return true;
 	}
-	if (!SmsUtil::compareAddresses(r1->source, r2->source))
+	if (r1->source != r2->source)
 	{
 		return false;
 	}
@@ -61,7 +63,7 @@ bool RouteConfigGen::ltDest(const RouteInfo* r1, const RouteInfo* r2)
 	{
 		return true;
 	}
-	if (!SmsUtil::compareAddresses(r1->dest, r2->dest))
+	if (r1->dest != r2->dest)
 	{
 		return false;
 	}
@@ -177,7 +179,7 @@ void RouteConfigGen::printSingleSourceMultipleDests(ofstream& os,
 		{
 			continue;
 		}
-		if (SmsUtil::compareAddresses(routes[idx]->source, routes[i]->source) &&
+		if (routes[idx]->source == routes[i]->source &&
 			routes[idx]->billing == routes[i]->billing &&
 			routes[idx]->archived == routes[i]->archived /* paid */)
 		{
@@ -223,7 +225,7 @@ void RouteConfigGen::printMultipleSourcesSingleDest(ofstream& os,
 		{
 			continue;
 		}
-		if (SmsUtil::compareAddresses(routes[idx]->dest, routes[i]->dest) &&
+		if (routes[idx]->dest == routes[i]->dest &&
 			routes[idx]->billing == routes[i]->billing &&
 			routes[idx]->archived == routes[i]->archived /* paid */)
 		{

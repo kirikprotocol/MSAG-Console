@@ -5,7 +5,6 @@
 #include "store/MessageStore.h"
 #include "test/util/Util.hpp"
 #include "test/util/BaseTestCases.hpp"
-#include "test/util/CheckList.hpp"
 #include <exception>
 #include <vector>
 

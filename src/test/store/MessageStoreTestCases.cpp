@@ -269,10 +269,7 @@ void MessageStoreTestCases::storeSimilarSms(SMSId* idp, SMS* smsp,
 			{
 				__tc_fail__(s.value());
 			}
-			else
-			{
-				__tc_ok__;
-			}
+			__tc_ok_cond__;
 			if (idp != NULL && smsp != NULL)
 			{
 				*idp = smsId;
@@ -303,10 +300,7 @@ void MessageStoreTestCases::storeDuplicateSms(SMSId* idp, SMS* smsp,
 		{
 			__tc_fail__(101);
 		}
-		else
-		{
-			__tc_ok__;
-		}
+		__tc_ok_cond__;
 		if (idp != NULL && smsp != NULL)
 		{
 			*idp = id;
@@ -951,14 +945,8 @@ void MessageStoreTestCases::loadExistentSms(const SMSId id, const SMS& sms)
 		else
 		{
 			vector<int> tmp = SmsUtil::compareMessages(sms, _sms);
-			if (tmp.size())
-			{
-				__tc_fail2__(tmp);
-			}
-			else
-			{
-				__tc_ok__;
-			}
+			__tc_fail2__(tmp);
+			__tc_ok_cond__;
 		}
 	}
 	catch(...)
@@ -1114,10 +1102,7 @@ __trace2__("checkNextRetryTime(): %s", os.str().c_str());
 				nextTime, minNextTime);
 			__tc_fail__(2);
 		}
-		else
-		{
-			__tc_ok__;
-		}
+		__tc_ok_cond__;
 	}
 	catch(...)
 	{
@@ -1188,10 +1173,7 @@ void MessageStoreTestCases::compareReadyForRetrySmsList(const vector<SMSId*>& id
 //log.debug("dbid!!! = %d", id);
 		__tc_fail__(shift + 3);
 	}
-	if (idFound && sortOrderOk && !enroteIds.size())
-	{
-		__tc_ok__;
-	}
+	__tc_ok_cond__;
 }
 
 }
