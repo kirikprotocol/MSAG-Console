@@ -29,6 +29,8 @@ namespace smsc { namespace store
     friend class Statement;
     private:
 
+        Connection* next;
+
         static Mutex connectLock;
 
         bool    isConnected, isDead;
@@ -69,6 +71,13 @@ namespace smsc { namespace store
                    const char* user, const char* password);
         virtual ~Connection();
 
+        inline void setNextConnection(Connection* connection) {
+            next = connection;
+        };
+        inline Connection* getNextConnection(void) {
+            return next;
+        };
+
         SMSId getMessagesCount()
             throw(ConnectionFailedException, StorageException);
         void store(const SMS &sms, SMSId id) 
@@ -96,10 +105,6 @@ namespace smsc { namespace store
     private:
 
         log4cpp::Category    &log;
-
-        unsigned    size;
-        unsigned    count;
-        unsigned    maxQueueSize;
         
         const char* dbInstance;
         const char* dbUserName;
@@ -107,14 +112,21 @@ namespace smsc { namespace store
 
         EventMonitor    monitor;
         ConnectionQueue *head,*tail;
+        unsigned        maxQueueSize;
         unsigned        queueLen;
 
-        Array<Connection *> idle;
-        Array<Connection *> busy;
+        Array<Connection *> connections;
+        unsigned    size;
+        unsigned    count;
         
+        Connection  *idleHead, *idleTail;
+        unsigned     idleCount;
+        
+        void push(Connection* connection);
+        Connection* pop(void);
+
         void loadMaxSize(Manager& config);
         void loadInitSize(Manager& config);
-        void loadMaxQueueSize(Manager& config);
         
         void loadDBInstance(Manager& config)
             throw(ConfigException);
@@ -138,10 +150,10 @@ namespace smsc { namespace store
             return count;
         }
         inline unsigned getBusyConnectionsCount() {
-            return busy.Count();
+            return (size - count);
         }
         inline unsigned getIdleConnectionsCount() {
-            return idle.Count();
+            return idleCount;
         }
         inline unsigned getPendingQueueLength() {
             return queueLen;

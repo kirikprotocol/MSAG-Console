@@ -82,36 +82,6 @@ void ConnectionPool::loadInitSize(Manager& config)
     }
 }
 
-void ConnectionPool::loadMaxQueueSize(Manager& config)
-{
-    try 
-    {
-        maxQueueSize = 
-            (unsigned)config.getInt("MessageStore.Connections.queue");
-        if (!maxQueueSize || 
-            maxQueueSize > SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE_LIMIT)
-        {
-            maxQueueSize = SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE;
-            log.warn("Maximum count of pending requests to ConnectionPool "
-                     "for connections is incorrect "
-                     "(should be between 1 and %u) ! "
-                     "Config parameter: <MessageStore.Connections.queue> "
-                     "Using default: %u",
-                     SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE_LIMIT, 
-                     SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE);
-        }
-    } 
-    catch (ConfigException& exc) 
-    {
-        maxQueueSize = SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE;
-        log.warn("Maximum count of pending requests to ConnectionPool "
-                 "for connections wasn't specified ! "
-                 "Config parameter: <MessageStore.Connections.queue> "
-                 "Using default: %u",
-                 SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE);
-    }
-}
-
 void ConnectionPool::loadDBInstance(Manager& config)
     throw(ConfigException)
 {
@@ -159,11 +129,12 @@ void ConnectionPool::loadDBUserPassword(Manager& config)
 
 ConnectionPool::ConnectionPool(Manager& config)
     throw(ConfigException) 
-        : queueLen(0), log(Logger::getCategory("smsc.store.ConnectionPool"))
+        : queueLen(0), head(0L), tail(0L),
+            idleCount(0), idleHead(0L), idleTail(0L),
+                log(Logger::getCategory("smsc.store.ConnectionPool"))
 {
     loadMaxSize(config);
     loadInitSize(config);
-    loadMaxQueueSize(config);
     loadDBInstance(config);
     loadDBUserName(config);
     loadDBUserPassword(config);
@@ -181,25 +152,46 @@ ConnectionPool::ConnectionPool(Manager& config)
     {
         Connection* connection = 
                     new Connection(dbInstance, dbUserName, dbUserPassword);
-        idle.Push(connection);
+        connections.Push(connection);
+        push(connection);
     }
-    head = tail = 0L; // Reset ConnectionQueue
+}
+
+void ConnectionPool::push(Connection* connection)
+{
+    __require__(connection);
+
+    if (idleTail) 
+    {
+        idleTail->setNextConnection(connection);
+    }
+    idleTail = connection; 
+    connection->setNextConnection(0L);
+    if (!idleHead) idleHead = idleTail;
+    idleCount++;
+}
+
+Connection* ConnectionPool::pop(void)
+{
+    Connection *connection = idleHead;
+    if (idleHead) 
+    {
+        idleHead->setNextConnection(idleHead->getNextConnection());
+    }
+    if (!idleHead) idleTail = 0L;
+
+    if (connection) idleCount--;
+    return connection;
 }
 
 ConnectionPool::~ConnectionPool()
 {
     MutexGuard  guard(monitor);
 
-    for (int i=0; i<idle.Count(); i++)
+    for (int i=0; i<connections.Count(); i++)
     {
         Connection* connection=0L;
-        (void) idle.Pop(connection);
-        if (connection) delete connection;
-    }
-    for (int i=0; i<busy.Count(); i++)
-    {
-        Connection* connection=0L;
-        (void) busy.Pop(connection);
+        (void) connections.Pop(connection);
         if (connection) delete connection;
     }
     
@@ -210,8 +202,7 @@ ConnectionPool::~ConnectionPool()
 
 bool ConnectionPool::hasFreeConnections()
 {
-    MutexGuard  guard(monitor);
-    return (count<size || idle.Count());
+    return (idleCount || count < size);
 }
 
 Connection* ConnectionPool::getConnection()
@@ -220,14 +211,8 @@ Connection* ConnectionPool::getConnection()
     ConnectionQueue queue;
     MutexGuard  guard(monitor);
     
-    if (head || (!idle.Count() && count>=size))
+    if (head || (!idleCount && count >= size))
     {
-        if (queueLen >= maxQueueSize)
-        {
-            TooLargeQueueException exc;
-            log.error(exc.what());
-            throw exc;
-        }
         if (tail) tail->next = &queue;
         tail = &queue; queue.next = 0L;
         queueLen++;
@@ -238,21 +223,12 @@ Connection* ConnectionPool::getConnection()
         return queue.connection;
     }
     
-    Connection* connection=0L;
-    if (idle.Count())
-    {
-        (void) idle.Pop(connection);
-        (void) busy.Push(connection);
-    } 
-    else if (count < size)
-    {
-        connection = new Connection(dbInstance, dbUserName, dbUserPassword);
-        (void) busy.Push(connection);
+    if (count < size) {
         count++;
+        return (new Connection(dbInstance, dbUserName, dbUserPassword)); 
     }
     
-    __require__(connection);
-    return connection;
+    return pop();
 }
 
 void ConnectionPool::freeConnection(Connection* connection)
@@ -271,22 +247,13 @@ void ConnectionPool::freeConnection(Connection* connection)
         return;
     }
     
-    for (int i=0; i<busy.Count(); i++)
+    if (count > size)
     {
-        if (busy[i] == connection) 
-        {
-            busy.Delete(i);
-            if (count <= size)
-            {
-                (void) idle.Push(connection);
-            }
-            else 
-            {
-                delete connection;
-                count--;
-            }
-            return;
-        }
+        count--;
+        delete connection;
+    }
+    else {
+        push(connection);
     }
 }
 
@@ -307,10 +274,9 @@ void ConnectionPool::setSize(unsigned new_size)
     if (new_size < size)
     {
         unsigned counter = size - new_size;
-        while(counter-- && idle.Count())
+        while(idleCount && counter--)
         {
-            Connection* connection = 0L;
-            (void) idle.Pop(connection);
+            Connection* connection = pop();
             delete connection;
             count--;
         }
@@ -322,13 +288,13 @@ void ConnectionPool::setSize(unsigned new_size)
         {
             Connection* connection = 
                     new Connection(dbInstance, dbUserName, dbUserPassword);
+            (void) connections.Push(connection);
             
             // Notify waiting threads & give them new connections
             ConnectionQueue *queue = head;
             head = head->next;
             if (!head) tail = 0L;
             queueLen--; count++;
-            (void) busy.Push(connection);
             queue->connection = connection;
             monitor.notify(&(queue->condition));
         }
@@ -342,7 +308,7 @@ Mutex Connection::connectLock;
 
 Connection::Connection(const char* instance, 
                        const char* user, const char* password) 
-    : isConnected(false), isDead(false),
+    : isConnected(false), isDead(false), next(0L),
         dbInstance(instance), dbUserName(user), dbUserPassword(password), 
             StoreStmt(0L), RemoveStmt(0L), RetriveStmt(0L), ReplaceStmt(0L), 
                 envhp(0L), errhp(0L), svchp(0L), srvhp(0L), sesshp(0L), 
