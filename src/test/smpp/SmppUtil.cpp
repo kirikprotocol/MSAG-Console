@@ -748,21 +748,42 @@ ostream& operator<< (ostream& os, SmppHeader*& p)
 		case GENERIC_NACK:
 			os << *reinterpret_cast<PduGenericNack*>(p);
 			break;
-		case SUBMIT_MULTI_RESP:
-		case ALERT_NOTIFICATION:
-			os << *p;
-			break;
-		//bind & unbind
+		//bind
 		case BIND_RECIEVER:
-		case BIND_RECIEVER_RESP:
 		case BIND_TRANSMITTER:
-		case BIND_TRANSMITTER_RESP:
 		case BIND_TRANCIEVER:
+			os << *reinterpret_cast<PduBindTRX*>(p);
+			break;
+		case BIND_RECIEVER_RESP:
+		case BIND_TRANSMITTER_RESP:
 		case BIND_TRANCIEVER_RESP:
-		case UNBIND:
-		case UNBIND_RESP:
-		case OUTBIND:
+			os << *reinterpret_cast<PduBindTRXResp*>(p);
+			break;
+		//прочее
+		case SUBMIT_MULTI_RESP:
+			os << "PduMultiSmResp {" << endl;
 			os << *p;
+			os << "}";
+			break;
+		case ALERT_NOTIFICATION:
+			os << "PduAlertNotification {" << endl;
+			os << *p;
+			os << "}";
+			break;
+		case UNBIND:
+			os << "PduUnbind {" << endl;
+			os << *p;
+			os << "}";
+			break;
+		case UNBIND_RESP:
+			os << "PduUnbindResp {" << endl;
+			os << *p;
+			os << "}";
+			break;
+		case OUTBIND:
+			os << "PduOutbind {" << endl;
+			os << *p;
+			os << "}";
 			break;
 		default:
 			__unreachable__("Invalid pdu");
@@ -771,7 +792,20 @@ ostream& operator<< (ostream& os, SmppHeader*& p)
 
 ostream& operator<< (ostream& os, PduXSm& p)
 {
-	os << "PduXSm {" << endl;
+	switch (p.get_header().get_commandId())
+	{
+		case SUBMIT_SM:
+			os << "PduSubmitSm {" << endl;
+			break;
+		case DELIVERY_SM:
+			os << "PduDeliverySm {" << endl;
+			break;
+		case SUBMIT_MULTI:
+			os << "PduMultiSm {" << endl;
+			break;
+		default:
+			__unreachable__("Invalid commandId");
+	}
 	os << p.get_header() << endl;
 	os << p.get_message() << endl;
 	os << p.get_optional() << endl;
@@ -826,9 +860,45 @@ ostream& operator<< (ostream& os, PduDataSm& p)
 	return os;
 }
 
+ostream& operator<< (ostream& os, PduBindTRX& p)
+{
+	switch (p.get_header().get_commandId())
+	{
+		case BIND_RECIEVER:
+			os << "PduBindReceiver {" << endl;
+			break;
+		case BIND_TRANSMITTER:
+			os << "PduBindTransmitter {" << endl;
+			break;
+		case BIND_TRANCIEVER:
+			os << "PduBindTransceiver {" << endl;
+			break;
+		default:
+			__unreachable__("Invalid commandId");
+	}
+	os << p.get_header() << endl;
+	__str_prop__(systemId);
+	__str_prop__(password);
+	__str_prop__(systemType);
+	__prop__(interfaceVersion);
+	__prop__(addressRange);
+	os << "}";
+	return os;
+}
+
 ostream& operator<< (ostream& os, PduXSmResp& p)
 {
-	os << "PduXSmResp {" << endl;
+	switch (p.get_header().get_commandId())
+	{
+		case SUBMIT_SM_RESP:
+			os << "PduSubmitSmResp {" << endl;
+			break;
+		case DELIVERY_SM_RESP:
+			os << "PduDeliverySmResp {" << endl;
+			break;
+		default:
+			__unreachable__("Invalid commandId");
+	}
 	os << p.get_header() << endl;
 	__str_prop__(messageId);
 	os << "}";
@@ -886,6 +956,29 @@ ostream& operator<< (ostream& os, PduDataSmResp& p)
 	os << p.get_header() << endl;
 	__str_prop__(messageId);
 	os << p.get_optional() << endl;
+	os << "}";
+	return os;
+}
+
+ostream& operator<< (ostream& os, PduBindTRXResp& p)
+{
+	switch (p.get_header().get_commandId())
+	{
+		case BIND_RECIEVER_RESP:
+			os << "PduBindReceiverResp {" << endl;
+			break;
+		case BIND_TRANSMITTER_RESP:
+			os << "PduBindTransmitterResp {" << endl;
+			break;
+		case BIND_TRANCIEVER_RESP:
+			os << "PduBindTransceiverResp {" << endl;
+			break;
+		default:
+			__unreachable__("Invalid commandId");
+	}
+	os << p.get_header() << endl;
+	__str_prop__(systemId);
+	__prop__(scInterfaceVersion);
 	os << "}";
 	return os;
 }
