@@ -563,7 +563,7 @@ void DateTimeFormatter::format(std::string& output,
             localtime_r(&date, &tmdt);
             tmdt.tm_hour = tmdt.tm_min = tmdt.tm_sec = 0;
             date = mktime(&tmdt);
-            date -= (tmdt.tm_isdst==1) ? 3600:0;
+            //date -= (tmdt.tm_isdst==1) ? 3600:0;
         }
         else if (strcmp(def, ioTomorrowString) == 0)
         {
@@ -571,7 +571,7 @@ void DateTimeFormatter::format(std::string& output,
             localtime_r(&date, &tmdt);
             tmdt.tm_hour = tmdt.tm_min = tmdt.tm_sec = 0;
             date = mktime(&tmdt);
-            date -= (tmdt.tm_isdst==1) ? 3600:0;
+            //date -= (tmdt.tm_isdst==1) ? 3600:0;
         }
         else if (strcmp(def, ioYesterdayString) == 0)
         {
@@ -579,7 +579,7 @@ void DateTimeFormatter::format(std::string& output,
             localtime_r(&date, &tmdt);
             tmdt.tm_hour = tmdt.tm_min = tmdt.tm_sec = 0;
             date = mktime(&tmdt);
-            date -= (tmdt.tm_isdst==1) ? 3600:0;
+            //date -= (tmdt.tm_isdst==1) ? 3600:0;
         }
         else
         {
