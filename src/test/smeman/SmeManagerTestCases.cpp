@@ -368,8 +368,7 @@ void SmeManagerTestCases::getExistentSme(const SmeInfo& sme, SmeProxy* proxy)
 		SmeIndex index = smeMan->lookup(sme.systemId);
 		SmeInfo _sme = smeMan->getSmeInfo(index);
 		proxy = smeMan->getSmeProxy(index);
-		vector<int> tmp = compareSmeInfo(sme, _sme);
-		__tc_fail2__(tmp);
+		__tc_fail2__(compareSmeInfo(sme, _sme), 0);
 		__tc_ok_cond__;
 	}
 	catch(...)
