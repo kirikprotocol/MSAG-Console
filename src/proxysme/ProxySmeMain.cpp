@@ -136,7 +136,7 @@ void SetStopper(SMachine* m){
   sigset_t set;
   sigemptyset(&set);
   sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
-  sigset(smsc::system::SHUTDOWN_SIGNAL, (void(*)(int))Stopper);
+  sigset(smsc::system::SHUTDOWN_SIGNAL, Stopper);
   machine = m;
 }
 #else
