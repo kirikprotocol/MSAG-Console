@@ -689,38 +689,7 @@ public:
 
   static int unType(int tag) { return tag&0x0ff; }
 
-  void setBinProperty(int tag,const char* value, unsigned len)
-  {
-    __require__((tag>>8)==SMS_BIN_TAG);
-    tag&=0xff;
-    __require__(tag<=SMS_LAST_TAG);
-    if ( !HSNS_isEqual() && len != 0 ) {
-      if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) || tag == unType(Tag::SMSC_RAW_SHORTMESSAGE))
-      {
-        __trace2__(":SMS::Body::%s processing SHORT_MESSAGE",__FUNCTION__);
-        dropProperty(Tag::SMPP_SHORT_MESSAGE);
-        if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) ){
-          if ( !prop.properties[unType(Tag::SMPP_DATA_CODING)].isSet )
-            throw runtime_error(":SMS::MessageBody::setBinProperty: encoding scheme must be set");
-          if ( !prop.properties[unType(Tag::SMPP_ESM_CLASS)].isSet )
-            throw runtime_error(":SMS::MessageBody::getBinProperty: ems_class must be set");
-          unsigned encoding = prop.properties[unType(Tag::SMPP_DATA_CODING)].getInt();
-          if ( encoding != 0x8 ) goto trivial;
-          auto_ptr<char> buffer(new char[len]);
-          UCS_htons(buffer.get(),value,len,prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt());
-          prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].setBin(buffer.get(),len);
-        }else{
-          prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].setBin(value,len);
-        }
-      }else
-        prop.properties[tag].setBin(value,len);
-    }else{
-trivial:
-      __trace2__(":SMS::Body::%s set trivial value",__FUNCTION__);
-      if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) ) tag = unType(Tag::SMSC_RAW_SHORTMESSAGE);
-      prop.properties[tag].setBin(value,len);
-    }
-  }
+  void setBinProperty(int tag,const char* value, unsigned len);
 
   void setIntProperty(int tag,const uint32_t value)
   {
@@ -738,41 +707,7 @@ trivial:
     return prop.properties[tag].getStr();
   }
 
-  const char* getBinProperty(int tag,unsigned* len)const
-  {
-    __require__((tag>>8)==SMS_BIN_TAG);
-    tag&=0xff;
-    __require__(tag<=SMS_LAST_TAG);
-    if ( !HSNS_isEqual() ) {
-      if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) ) {
-        __trace2__(":SMS::Body::%s processing SHORT_MESSAGE",__FUNCTION__);
-        if ( !hasBinProperty(Tag::SMPP_SHORT_MESSAGE) )
-        {
-          if ( !prop.properties[unType(Tag::SMPP_DATA_CODING)].isSet )
-            throw runtime_error(":SMS::MessageBody::getBinProperty: encoding scheme must be set");
-          if ( !prop.properties[unType(Tag::SMPP_ESM_CLASS)].isSet )
-            throw runtime_error(":SMS::MessageBody::getBinProperty: ems_class must be set");
-          unsigned encoding = prop.properties[unType(Tag::SMPP_DATA_CODING)].getInt();
-          if ( encoding != 0x8 ) goto trivial;
-          auto_ptr<char> buffer;
-          unsigned len;
-          const char* orig = prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].getBin(&len);
-          if ( len > 0 ){
-            buffer = auto_ptr<char>(new char[len]);
-            UCS_ntohs(buffer.get(),orig,len,prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt());
-            const_cast<Body*>(this)->setBinProperty(Tag::SMPP_SHORT_MESSAGE,buffer.get(),len);
-          }else{
-            const_cast<Body*>(this)->setBinProperty(Tag::SMPP_SHORT_MESSAGE,"",len);
-          }
-        }
-      }
-    }else{
-  trivial:
-      __trace2__(":SMS::Body::%s get trivial value",__FUNCTION__);
-      tag = unType(Tag::SMSC_RAW_SHORTMESSAGE);
-    }
-    return prop.properties[tag].getBin(len);
-  }
+  const char* getBinProperty(int tag,unsigned* len)const;
 
   uint32_t getIntProperty(int tag)const
   {
