@@ -20,7 +20,13 @@ const int UPDATE_CODE_PAGE = 2;
 
 class ProfileRegistry
 {
-	typedef map<const Address, Profile*, ltAddress> ProfileMap;
+	struct ProfileData
+	{
+		Profile profile;
+		time_t putTime;
+		ProfileData(Profile p, time_t t) : profile(p), putTime(t) {}
+	};
+	typedef map<const Address, ProfileData*, ltAddress> ProfileMap;
 	typedef map<const uint32_t, int> DialogMap;
 
 public:
@@ -38,13 +44,24 @@ public:
 
 	virtual ~ProfileRegistry();
 
+	/**
+	 * Регистрация профиля.
+	 */
 	void putProfile(const Address& addr, const Profile& profile);
 
-	ProfileIterator* iterator() const;
+	/**
+	 * Возвращает профиль и время последнего изменения профиля.
+	 * Если профиль не зарегистрирован, возвращается дефолтный и valid = true.
+	 */
+	const Profile& getProfile(const Address& addr, time_t& t) const;
 
-	const Profile& getProfile(const Address& addr) const;
-
+	/**
+	 * Проверка наличия зарегистрированного профиля.
+	 * Призак валидности игнорируется.
+	 */
 	bool checkExists(const Address& addr) const;
+
+	ProfileIterator* iterator() const;
 
 	bool registerDialogId(uint32_t dialogId, int cmdType);
 	bool unregisterDialogId(uint32_t dialogId, int& cmdType);

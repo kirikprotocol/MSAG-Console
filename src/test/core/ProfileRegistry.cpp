@@ -9,7 +9,7 @@ using namespace smsc::sms; //AddressValue, constants
 
 const Profile* ProfileRegistry::ProfileIterator::next()
 {
-	return (it1 != it2 ? (it1++)->second : NULL);
+	return (it1 != it2 ? &(it1++)->second->profile : NULL);
 }
 
 ProfileRegistry::~ProfileRegistry()
@@ -25,11 +25,12 @@ void ProfileRegistry::putProfile(const Address& addr, const Profile& profile)
 	ProfileMap::iterator it = profileMap.find(addr);
 	if (it != profileMap.end())
 	{
-		*it->second = profile;
+		it->second->profile = profile;
+		it->second->putTime = time(NULL);
 	}
 	else
 	{
-		profileMap[addr] = new Profile(profile);
+		profileMap[addr] = new ProfileData(profile, time(NULL));
 	}
 }
 
@@ -38,7 +39,7 @@ ProfileRegistry::ProfileIterator* ProfileRegistry::iterator() const
 	return new ProfileIterator(profileMap.begin(), profileMap.end());
 }
 
-const Profile& ProfileRegistry::getProfile(const Address& addr) const
+const Profile& ProfileRegistry::getProfile(const Address& addr, time_t& t) const
 {
 	Address tmp(addr);
 	AddressValue addrVal;
@@ -53,7 +54,8 @@ const Profile& ProfileRegistry::getProfile(const Address& addr) const
 		ProfileMap::const_iterator it = profileMap.find(tmp);
 		if (it != profileMap.end())
 		{
-			return *it->second;
+			t = it->second->putTime;
+			return it->second->profile;
 		}
 		/*
 		if (addrLen - len < MAX_ADDRESS_VALUE_LENGTH)
