@@ -342,7 +342,6 @@ void Archiver::archivate()
         storageSelectStmt->checkErr(status);
         do
         {
-            if (exit.isSignaled()) break;
             if (bNeedArchivate == 'Y')
             {
                 archiveInsertStmt->checkErr(archiveInsertStmt->execute());
@@ -360,6 +359,7 @@ void Archiver::archivate()
                 decrementFinalizedCount(uncommited);
                 uncommited = 0;
             }
+            if (exit.isSignaled()) break;
         } 
         while ((status = storageSelectStmt->fetch()) == OCI_SUCCESS ||
                status == OCI_SUCCESS_WITH_INFO);
