@@ -220,11 +220,13 @@ void MapIoTask::init()
 {
   USHORT_T err;
   err = MsgInit(MAXENTRIES);
-  if ( err != MSG_OK ) { __trace2__("MAP: Erroat at MsgInit, code 0x%hx",err); throw runtime_error("MsgInit error"); }
+  if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgInit, code 0x%hx",err); throw runtime_error("MsgInit error"); }
 	err = MsgOpen(MY_USER_ID);
-  if ( err != MSG_OK ) { __trace2__("MAP: Erroat at MsgOpen, code 0x%hx",err); throw runtime_error("MsgInit error"); }
+  if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgOpen, code 0x%hx",err); throw runtime_error("MsgInit error"); }
   err = MsgConn(USER01_ID,ETSIMAP_ID);
-  if ( err != MSG_OK ) { __trace2__("MAP: Erroat at MsgConn, code 0x%hx",err); throw runtime_error("MsgInit error"); }
+  if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgConn, code 0x%hx",err); throw runtime_error("MsgInit error"); }
+  err = MsgConn(USER01_ID,USER01_ID);
+  if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgConn on self, code 0x%hx",err); throw runtime_error("MsgInit error"); }
   MsgTraceOn( MY_USER_ID );
   MsgTraceOn( ETSIMAP_ID );
   MsgTraceOn( TCAP_ID );
