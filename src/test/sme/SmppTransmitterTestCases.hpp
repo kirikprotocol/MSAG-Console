@@ -68,17 +68,13 @@ protected:
 	CheckList* chkList;
 
 	virtual Category& getLog();
-	template <class Message>
-	bool hasDeliveryReceipt(Message& m, Profile& profile);
-	template <class Message>
-	bool hasIntermediateNotification(Message& m, Profile& profile);
-	template <class Message>
-	void checkRegisteredDelivery(Message& m);
+	void updateReplacePduMonitors(PduData* pduData, time_t submitTime);
 	void registerNormalSmeMonitors(PduSubmitSm* pdu, PduData* existentPduData,
-		time_t waitTime, time_t validTime, PduData* pduData);
-	void registerExtSmeMonitors(PduSubmitSm* pdu, time_t waitTime,
+		const Profile& profile, uint16_t msgRef, time_t waitTime, time_t validTime,
+		PduData* pduData);
+	void registerExtSmeMonitors(PduSubmitSm* pdu, uint16_t msgRef, time_t waitTime,
 		time_t validTime, PduData* pduData);
-	void registerNullSmeMonitors(PduSubmitSm* pdu, time_t waitTime,
+	void registerNullSmeMonitors(PduSubmitSm* pdu, uint16_t msgRef, time_t waitTime,
 		time_t validTime, uint32_t deliveryStatus, PduData* pduData);
 	PduData* registerSubmitSm(PduSubmitSm* pdu, PduData* existentPduData,
 		time_t submitTime, PduData::IntProps* intProps,

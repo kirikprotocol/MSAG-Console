@@ -41,6 +41,14 @@ void PduRegistry::registerMonitor(time_t t, PduMonitor* monitor)
 	checkTimeMap[timeKey] = monitor;
 }
 
+#define __register_monitor_by_seq_num__(MonitorClass) \
+	{ MonitorClass* m = dynamic_cast<MonitorClass*>(monitor); \
+	registerMonitor(m->sequenceNumber, m); }
+
+#define __register_monitor_by_msg_ref__(MonitorClass) \
+	{ MonitorClass* m = dynamic_cast<MonitorClass*>(monitor); \
+	registerMonitor(m->msgRef, m); }
+
 void PduRegistry::registerMonitor(PduMonitor* monitor)
 {
 	__require__(monitor);
@@ -56,22 +64,22 @@ void PduRegistry::registerMonitor(PduMonitor* monitor)
 	switch (monitor->getType())
 	{
 		case RESPONSE_MONITOR:
-			{
-				ResponseMonitor* m = dynamic_cast<ResponseMonitor*>(monitor);
-				registerMonitor(m->sequenceNumber, monitor);
-			}
+			__register_monitor_by_seq_num__(ResponseMonitor);
 			break;
 		case GENERIC_NACK_MONITOR:
-			{
-				GenericNackMonitor* m = dynamic_cast<GenericNackMonitor*>(monitor);
-				registerMonitor(m->sequenceNumber, monitor);
-			}
+			__register_monitor_by_seq_num__(GenericNackMonitor);
 			break;
 		case DELIVERY_MONITOR:
+			__register_monitor_by_msg_ref__(DeliveryMonitor);
+			break;
 		case DELIVERY_RECEIPT_MONITOR:
+			__register_monitor_by_msg_ref__(DeliveryReceiptMonitor);
+			break;
 		case INTERMEDIATE_NOTIFICATION_MONITOR:
+			__register_monitor_by_msg_ref__(IntermediateNotificationMonitor);
+			break;
 		case SME_ACK_MONITOR:
-			registerMonitor(monitor->pduData->msgRef, monitor);
+			__register_monitor_by_msg_ref__(SmeAckMonitor);
 			break;
 		default:
 			__unreachable__("Invalid monitor type");
@@ -116,6 +124,16 @@ PduMonitor* PduRegistry::getMonitor(uint32_t seqNum, MonitorType type) const
 	return (it == seqNumMap.end() ? NULL : it->second);
 }
 
+#define __remove_monitor_by_seq_num__(MonitorClass) \
+	{ MonitorClass* m = dynamic_cast<MonitorClass*>(monitor); \
+	int res = seqNumMap.erase(SeqNumKey(m->sequenceNumber, m->getType())); \
+	__require__(res); }
+
+#define __remove_monitor_by_msg_ref__(MonitorClass) \
+	{ MonitorClass* m = dynamic_cast<MonitorClass*>(monitor); \
+	int res = msgRefMap.erase(MsgRefKey(m->msgRef, m->getType(), m->getId())); \
+	__require__(res); }
+
 void PduRegistry::removeMonitor(PduMonitor* monitor)
 {
 	__require__(monitor);
@@ -123,28 +141,22 @@ void PduRegistry::removeMonitor(PduMonitor* monitor)
 	switch (monitor->getType())
 	{
 		case RESPONSE_MONITOR:
-			{
-				ResponseMonitor* m = dynamic_cast<ResponseMonitor*>(monitor);
-				int res = seqNumMap.erase(SeqNumKey(m->sequenceNumber, monitor->getType()));
-				__require__(res);
-			}
+			__remove_monitor_by_seq_num__(ResponseMonitor);
 			break;
 		case GENERIC_NACK_MONITOR:
-			{
-				GenericNackMonitor* m = dynamic_cast<GenericNackMonitor*>(monitor);
-				int res = seqNumMap.erase(SeqNumKey(m->sequenceNumber, monitor->getType()));
-				__require__(res);
-			}
+			__remove_monitor_by_seq_num__(GenericNackMonitor);
 			break;
 		case DELIVERY_MONITOR:
+			__remove_monitor_by_msg_ref__(DeliveryMonitor);
+			break;
 		case DELIVERY_RECEIPT_MONITOR:
+			__remove_monitor_by_msg_ref__(DeliveryReceiptMonitor);
+			break;
 		case INTERMEDIATE_NOTIFICATION_MONITOR:
+			__remove_monitor_by_msg_ref__(IntermediateNotificationMonitor);
+			break;
 		case SME_ACK_MONITOR:
-			{
-				int res = msgRefMap.erase(MsgRefKey(monitor->pduData->msgRef,
-					monitor->getType(), monitor->getId()));
-				__require__(res);
-			}
+			__remove_monitor_by_msg_ref__(SmeAckMonitor);
 			break;
 		default:
 			__unreachable__("Invalid monitor type");

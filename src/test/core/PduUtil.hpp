@@ -15,6 +15,8 @@ namespace smsc {
 namespace test {
 namespace core {
 
+using smsc::sms::Address;
+using smsc::sms::State;
 using smsc::smpp::SmppHeader;
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
@@ -25,12 +27,17 @@ using smsc::profiler::ProfileReportOptions::ReportNone;
 
 typedef enum
 {
-	PDU_REQUIRED_FLAG = 0x0, //pdu ожидаетс€, но еще не получена
-	PDU_MISSING_ON_TIME_FLAG = 0x1, //тоже самое, что PDU_REQUIRED_FLAG, только исключаетс€ из проверок на ошибки
-	PDU_RECEIVED_FLAG = 0x2, //pdu получена воврем€
-	PDU_NOT_EXPECTED_FLAG = 0x3, //данной pdu быть не должно
-	PDU_EXPIRED_FLAG = 0x4, //pdu прокисла
-	PDU_ERROR_FLAG = 0x5 //ошибка при доставке pdu
+	//pdu ожидаетс€, но еще не получена
+	PDU_REQUIRED_FLAG = 0x0,
+	//тоже самое, что PDU_REQUIRED_FLAG, только исключаетс€ из проверок на ошибки
+	//удал€ть после validTime + accuracy
+	PDU_MISSING_ON_TIME_FLAG = 0x1,
+	//если pdu получена, то обрабатывать как PDU_REQUIRED_FLAG
+	//иначе как PDU_NOT_EXPECTED_FLAG
+	//удал€ть после checkTime + accuracy
+	PDU_COND_REQUIRED_FLAG = 0x2,
+	//данной pdu быть не должно, не регистрировать в pdu registry
+	PDU_NOT_EXPECTED_FLAG = 0x3,
 } PduFlag;
 
 typedef enum
@@ -87,22 +94,17 @@ public:
 	typedef map<const string, PduDataObject*> ObjProps;
 
 	SmppHeader* const pdu;
-	const time_t submitTime;
-	const uint16_t msgRef;
-	const int reportOptions; //значение из профил€ отправител€ на момент отправки submit_sm
-	string smsId;
-	bool valid;
+	const time_t sendTime;
 	IntProps intProps;
 	StrProps strProps;
 	ObjProps objProps;
 	PduData* replacePdu; //pdu, котора€ должна быть заменена текущей pdu
 	PduData* replacedByPdu; //pdu, котора€ замещает текущую pdu
 	
-	PduData(SmppHeader* pdu, time_t submitTime, uint16_t msgRef,
-		int reportOptions = ReportNone, IntProps* intProps = NULL,
+	PduData(SmppHeader* pdu, time_t sendTime,  IntProps* intProps = NULL,
 		StrProps* strProps = NULL, ObjProps* objProps = NULL);
 	~PduData();
-	
+
 	void ref();
 	void unref();
 	string str() const;
@@ -118,11 +120,11 @@ protected:
 	static uint32_t counter;
 
 	uint32_t id; //внутренний уникальный номер pdu
-	time_t checkTime;
+	time_t checkTime; //врем€ проверки получени€ pdu
 	time_t validTime; //окончание доставки pdu
-	PduFlag flag; //флаг получени€ сообщени€ получателем
+	PduFlag flag; //флаг получени€ pdu получателем
 	int skipChecks;
-	bool registered;
+	bool registered; //дл€ контрол€ в pdu registry
 
 public:
 	PduData* const pduData;
@@ -136,10 +138,8 @@ public:
 	time_t getValidTime() const { return validTime; }
 	
 	void setMissingOnTime();
-	void setReceived();
+	void setCondRequired();
 	void setNotExpected();
-	void setExpired();
-	void setError();
 	
 	int getSkipChecks() { return skipChecks; }
 	void setSkipChecks(int val);
@@ -159,10 +159,9 @@ struct ResponseMonitor : public PduMonitor
 {
 	uint32_t sequenceNumber;
 
-	ResponseMonitor(uint32_t seqNum, PduData* pduData, PduFlag flag);
+	ResponseMonitor(uint32_t seqNum, time_t submitTime, PduData* pduData, PduFlag flag);
 	virtual ~ResponseMonitor();
 
-	void setFlag(PduFlag _flag) { flag = _flag; }
 	virtual MonitorType getType() const { return RESPONSE_MONITOR; }
 	virtual string str() const;
 };
@@ -179,8 +178,9 @@ protected:
 		time_t& calcTime) const;
 
 public:
-	ReschedulePduMonitor(time_t _startTime, time_t validTime, PduData* pduData,
-		PduFlag flag);
+	ReschedulePduMonitor(time_t startTime, time_t validTime,
+		PduData* pduData, PduFlag flag);
+	virtual ~ReschedulePduMonitor() {}
 
 	time_t getStartTime() const { return startTime; }
 	time_t getLastTime() const { return lastTime; }
@@ -208,10 +208,15 @@ public:
 
 struct DeliveryMonitor : public ReschedulePduMonitor
 {
-	//uint32_t submitStatus;
+	const Address srcAddr;
+	const Address destAddr;
 	const string serviceType;
+	const uint16_t msgRef;
+	State state; //статус сообщени€ в Ѕƒ
+	uint32_t deliveryStatus; //command status из delivery респонса
 
-	DeliveryMonitor(const string& _serviceType, time_t waitTime,
+	DeliveryMonitor(const Address& srcAddr, const Address& destAddr,
+		const string& serviceType, uint16_t msgRef, time_t waitTime,
 		time_t validTime, PduData* pduData, PduFlag flag);
 	virtual ~DeliveryMonitor();
 
@@ -221,10 +226,12 @@ struct DeliveryMonitor : public ReschedulePduMonitor
 
 struct DeliveryReportMonitor : public PduMonitor
 {
-	PduFlag deliveryFlag; //флаг доставки сообщени€
-	uint32_t deliveryStatus;
+	const uint16_t msgRef;
+	State state; //статус сообщени€ в Ѕƒ
+	uint32_t deliveryStatus; //command status из delivery респонса
 
-	DeliveryReportMonitor(time_t checkTime, PduData* pduData, PduFlag flag);
+	DeliveryReportMonitor(uint16_t msgRef, time_t checkTime, PduData* pduData,
+		PduFlag flag);
 	virtual ~DeliveryReportMonitor() {}
 
 	void reschedule(time_t checkTime);
@@ -234,22 +241,25 @@ struct DeliveryReportMonitor : public PduMonitor
 
 struct DeliveryReceiptMonitor : public DeliveryReportMonitor
 {
-	DeliveryReceiptMonitor(time_t checkTime, PduData* pduData, PduFlag flag);
+	DeliveryReceiptMonitor(uint16_t msgRef, time_t checkTime, PduData* pduData,
+		PduFlag flag);
 	virtual ~DeliveryReceiptMonitor();
 	virtual MonitorType getType() const { return DELIVERY_RECEIPT_MONITOR; }
 };
 
 struct IntermediateNotificationMonitor : public DeliveryReportMonitor
 {
-	IntermediateNotificationMonitor(time_t checkTime, PduData* pduData, PduFlag flag);
+	IntermediateNotificationMonitor(uint16_t msgRef, time_t checkTime,
+		PduData* pduData, PduFlag flag);
 	virtual ~IntermediateNotificationMonitor();
 	virtual MonitorType getType() const { return INTERMEDIATE_NOTIFICATION_MONITOR; }
 };
 
 struct SmeAckMonitor : public PduMonitor
 {
-	const time_t startTime;
-	SmeAckMonitor(time_t startTime, PduData* pduData, PduFlag flag);
+	const uint16_t msgRef;
+	
+	SmeAckMonitor(uint16_t msgRef, time_t checkTime, PduData* pduData, PduFlag flag);
 	virtual ~SmeAckMonitor();
 
 	virtual MonitorType getType() const { return SME_ACK_MONITOR; }
@@ -259,11 +269,10 @@ struct SmeAckMonitor : public PduMonitor
 struct GenericNackMonitor : public PduMonitor
 {
 	uint32_t sequenceNumber;
-
-	GenericNackMonitor(uint32_t seqNum, PduData* pduData, PduFlag flag);
+	
+	GenericNackMonitor(uint32_t seqNum, time_t checkTime, PduData* pduData, PduFlag flag);
 	virtual ~GenericNackMonitor();
 
-	void setFlag(PduFlag _flag) { flag = _flag; }
 	virtual MonitorType getType() const { return GENERIC_NACK_MONITOR; }
 	virtual string str() const;
 };

@@ -68,9 +68,9 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 	//destAlias
 	Address destAlias;
 	SmppUtil::convert(origPdu->get_message().get_dest(), &destAlias);
-	switch (monitor->deliveryFlag)
+	switch (monitor->state)
 	{
-		case PDU_RECEIVED_FLAG:
+		case DELIVERED:
 			for (time_t t = recvTime; t > recvTime - timeCheckAccuracy; t--)
 			{
 				static const DateFormatter df("dd MMMM yyyy, HH:mm:ss");
@@ -86,21 +86,21 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 				}
 			}
 			break;
-		case PDU_ERROR_FLAG:
-		case PDU_EXPIRED_FLAG:
-			for (time_t t = monitor->pduData->submitTime;
-				  t <= monitor->pduData->submitTime + timeCheckAccuracy; t++)
+		case UNDELIVERABLE:
+		case EXPIRED:
+			for (time_t t = monitor->pduData->sendTime;
+				  t <= monitor->pduData->sendTime + timeCheckAccuracy; t++)
 			{
 				static const DateFormatter df("ddMMyyHHmmss");
 				ostringstream s;
 				s << "*Подтв ";
 				s << SmsUtil::configString(destAlias) << " ";
 				s << df.format(t) << ": ";
-				if (monitor->deliveryFlag == PDU_ERROR_FLAG)
+				if (monitor->state == UNDELIVERABLE)
 				{
 					s << "permanent error"; //захардкожено
 				}
-				else if (monitor->deliveryFlag == PDU_EXPIRED_FLAG)
+				else if (monitor->state == EXPIRED)
 				{
 					s << "expired"; //захардкожено
 				}
@@ -132,18 +132,18 @@ AckText* SmscSmeTestCases::getExpectedResponse(
 	//destAlias
 	Address destAlias;
 	SmppUtil::convert(origPdu->get_message().get_dest(), &destAlias);
-	for (time_t t = monitor->pduData->submitTime;
-		  t <= monitor->pduData->submitTime + timeCheckAccuracy; t++)
+	for (time_t t = monitor->pduData->sendTime;
+		  t <= monitor->pduData->sendTime + timeCheckAccuracy; t++)
 	{
 		static const DateFormatter df("ddMMyyHHmmss");
 		ostringstream s;
 		s << "$Notif ";
 		s << SmsUtil::configString(destAlias) << " ";
 		s << df.format(t) << ": ";
-		switch (monitor->deliveryFlag)
+		switch (monitor->state)
 		{
-			case PDU_REQUIRED_FLAG:
-			case PDU_EXPIRED_FLAG:
+			case ENROUTE:
+			case EXPIRED:
 				switch (isAccepted(monitor->deliveryStatus))
 				{
 					case RESP_PDU_RESCHED:
@@ -161,7 +161,7 @@ AckText* SmscSmeTestCases::getExpectedResponse(
 						__unreachable__("Invalid respFlag");
 				}
 				break;
-			case PDU_NOT_EXPECTED_FLAG:
+			case UNDELIVERABLE:
 				s << "destination unavialable";
 				break;
 		}
@@ -182,6 +182,11 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 	PduDeliverySm& pdu, time_t recvTime)
 {
 	__decl_tc__;
+	//для ext sme не может быть PDU_COND_REQUIRED_FLAG
+	if (monitor->getFlag() == PDU_COND_REQUIRED_FLAG)
+	{
+		return;
+	}
 	//оригинальная pdu
 	__require__(monitor->pduData->pdu->get_commandId() == SUBMIT_SM);
 	PduSubmitSm* origPdu =
@@ -201,26 +206,38 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 	__require__(ack);
 	if (!ack->valid)
 	{
-		//monitor->setSkipChecks(1);
-		monitor->setReceived();
+		monitor->setCondRequired();
 		return;
 	}
 	__tc__("processDeliverySm.deliveryReport.deliveryReceipt.checkStatus");
 	SmppOptional opt;
 	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());
-	opt.set_receiptedMessageId(monitor->pduData->smsId.c_str());
+	//если submit_sm_resp уже получен
+	if (monitor->pduData->strProps.count("smsId"))
+	{
+		opt.set_receiptedMessageId(monitor->pduData->strProps["smsId"].c_str());
+	}
+	//иначе не проверяю receiptedMessageId
+	else if (pdu.get_optional().has_receiptedMessageId())
+	{
+		opt.set_receiptedMessageId(pdu.get_optional().get_receiptedMessageId());
+	}
+	else
+	{
+		opt.set_receiptedMessageId("");
+	}
 	uint8_t errCode[3];
 	*errCode = 3; //GSM
 	*((uint16_t*) (errCode + 1)) = rand0(65535);
 	uint8_t regDelivery =
 		SmppTransmitterTestCases::getRegisteredDelivery(monitor->pduData);
-	switch(monitor->deliveryFlag)
+	switch(monitor->state)
 	{
-		case PDU_REQUIRED_FLAG:
-		case PDU_MISSING_ON_TIME_FLAG:
+		case ENROUTE:
+		case DELETED:
 			__tc_fail__(1);
 			break;
-		case PDU_RECEIVED_FLAG:
+		case DELIVERED:
 			if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT &&
 				monitor->deliveryStatus == ESME_ROK)
 			{
@@ -235,14 +252,11 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 				__tc_fail__(3);
 			}
 			break;
-		case PDU_NOT_EXPECTED_FLAG:
-			__tc_fail__(4);
-			break;
-		case PDU_EXPIRED_FLAG:
+		case EXPIRED:
 			opt.set_messageState(SMPP_EXPIRED_STATE);
 			opt.set_networkErrorCode(errCode);
 			break;
-		case PDU_ERROR_FLAG:
+		case UNDELIVERABLE:
 			opt.set_messageState(SMPP_UNDELIVERABLE_STATE);
 			opt.set_networkErrorCode(errCode);
 			break;
@@ -264,7 +278,7 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 	if (pos == string::npos)
 	{
 		__tc_fail__(3);
-		monitor->setReceived();
+		monitor->setNotExpected();
 	}
 	else
 	{
@@ -272,7 +286,7 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 		ack->text.erase(pos, text.length());
 		if (!ack->text.length())
 		{
-			monitor->setReceived();
+			monitor->setNotExpected();
 		}
 		else
 		{
@@ -291,6 +305,11 @@ void SmscSmeTestCases::processIntermediateNotification(
 	IntermediateNotificationMonitor* monitor, PduDeliverySm& pdu, time_t recvTime)
 {
 	__decl_tc__;
+	//для ext sme не может быть PDU_COND_REQUIRED_FLAG
+	if (monitor->getFlag() == PDU_COND_REQUIRED_FLAG)
+	{
+		return;
+	}
 	//оригинальная pdu
 	__require__(monitor->pduData->pdu->get_commandId() == SUBMIT_SM);
 	PduSubmitSm* origPdu =
@@ -310,34 +329,43 @@ void SmscSmeTestCases::processIntermediateNotification(
 	__require__(ack);
 	if (!ack->valid)
 	{
-		//monitor->setSkipChecks(1);
-		monitor->setReceived();
+		monitor->setCondRequired();
 		return;
 	}
 	//проверить содержимое полученной pdu
 	__tc__("processDeliverySm.deliveryReport.intermediateNotification.checkStatus");
 	SmppOptional opt;
 	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());
-	opt.set_receiptedMessageId(monitor->pduData->smsId.c_str());
+	//если submit_sm_resp уже получен
+	if (monitor->pduData->strProps.count("smsId"))
+	{
+		opt.set_receiptedMessageId(monitor->pduData->strProps["smsId"].c_str());
+	}
+	//иначе не проверяю receiptedMessageId
+	else if (pdu.get_optional().has_receiptedMessageId())
+	{
+		opt.set_receiptedMessageId(pdu.get_optional().get_receiptedMessageId());
+	}
+	else
+	{
+		opt.set_receiptedMessageId("");
+	}
 	uint8_t errCode[3];
 	*errCode = 3; //GSM
 	*((uint16_t*) (errCode + 1)) = rand0(65535);
-	switch(monitor->deliveryFlag)
+	switch(monitor->state)
 	{
-		case PDU_REQUIRED_FLAG: //темпоральная ошибка
-		case PDU_NOT_EXPECTED_FLAG: //есть маршрут, но sme не забиндена
-		case PDU_EXPIRED_FLAG: //pdu еще находится в ENROUTE, но уже не будет доставляться
+		case ENROUTE: //темпоральная ошибка
+		case UNDELIVERABLE: //есть маршрут, но sme не забиндена
+		case EXPIRED: //pdu еще находится в ENROUTE, но уже не будет доставляться
 			opt.set_messageState(SMPP_ENROUTE_STATE);
 			opt.set_networkErrorCode(errCode);
 			break;
-		case PDU_MISSING_ON_TIME_FLAG:
+		case DELIVERED:
 			__tc_fail__(1);
 			break;
-		case PDU_RECEIVED_FLAG:
+		case DELETED:
 			__tc_fail__(2);
-			break;
-		case PDU_ERROR_FLAG:
-			__tc_fail__(3);
 			break;
 		default:
 			__unreachable__("Invalid flag");
@@ -357,7 +385,7 @@ void SmscSmeTestCases::processIntermediateNotification(
 	if (pos == string::npos)
 	{
 		__tc_fail__(3);
-		monitor->setReceived();
+		monitor->setNotExpected();
 	}
 	else
 	{
@@ -365,7 +393,7 @@ void SmscSmeTestCases::processIntermediateNotification(
 		ack->text.erase(pos, text.length());
 		if (!ack->text.length())
 		{
-			monitor->setReceived();
+			monitor->setNotExpected();
 		}
 		else
 		{

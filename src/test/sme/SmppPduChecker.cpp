@@ -30,9 +30,9 @@ set<int> SmppPduChecker::checkSubmitSm(PduData* pduData)
 	__require__(pduData && pduData->pdu->get_commandId() == SUBMIT_SM);
 	PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
 	time_t waitTime = SmppUtil::getWaitTime(
-		pdu->get_message().get_scheduleDeliveryTime(), pduData->submitTime);
+		pdu->get_message().get_scheduleDeliveryTime(), pduData->sendTime);
 	time_t validTime = SmppUtil::getValidTime(
-		pdu->get_message().get_validityPeriod(), pduData->submitTime);
+		pdu->get_message().get_validityPeriod(), pduData->sendTime);
 	Address srcAddr;
 	SmppUtil::convert(pdu->get_message().get_source(), &srcAddr);
 	set<int> res;
@@ -43,8 +43,8 @@ set<int> SmppPduChecker::checkSubmitSm(PduData* pduData)
 		res.insert(NO_ROUTE);
 	}
 	__cfg_int__(maxValidPeriod);
-	if (!validTime || validTime < pduData->submitTime ||
-		validTime > pduData->submitTime + maxValidPeriod)
+	if (!validTime || validTime < pduData->sendTime ||
+		validTime > pduData->sendTime + maxValidPeriod)
 	{
 		res.insert(INVALID_VALID_TIME);
 	}
@@ -95,7 +95,7 @@ void SmppPduChecker::processSubmitSmResp(ResponseMonitor* monitor,
 	//обновить smsId у delivery receipt монитора
 	if (respPdu.get_header().get_commandStatus() == ESME_ROK)
 	{
-		monitor->pduData->smsId = respPdu.get_messageId();
+		monitor->pduData->strProps["smsId"] = respPdu.get_messageId();
 	}
 	//дальнейшая обработка
 	processResp(monitor, respPdu, respTime);
@@ -145,7 +145,7 @@ void SmppPduChecker::processResp(ResponseMonitor* monitor,
 	}
 	__tc_ok_cond__;
 	//проверка флагов получения pdu
-	time_t respDelay = respTime - monitor->pduData->submitTime;
+	time_t respDelay = respTime - monitor->pduData->sendTime;
 	__tc__("processResp.checkDuplicates");
 	switch (monitor->getFlag())
 	{
@@ -161,29 +161,20 @@ void SmppPduChecker::processResp(ResponseMonitor* monitor,
 			{
 				__tc_fail__(2);
 			}
-			monitor->setFlag(PDU_RECEIVED_FLAG);
+			monitor->setNotExpected();
 			break;
-		case PDU_RECEIVED_FLAG: //респонс уже получен ранее
+		case PDU_NOT_EXPECTED_FLAG: //респонс уже получен ранее
 			__tc_fail__(1);
 			break;
+		//case PDU_COND_REQUIRED_FLAG:
 		default: //респонс всегда должен быть
-			__unreachable__("Invalid pduData->responseFlag");
+			__unreachable__("Invalid response flag");
 	}
 	__tc_ok_cond__;
 	if (respPdu.get_header().get_commandStatus() != ESME_ROK)
 	{
-		monitor->pduData->valid = false;
-		if (monitor->pduData->replacedByPdu)
-		{
-			__unreachable__("Pdu without response replaced");
-		}
-		PduData* replaceData = monitor->pduData->replacePdu;
-		if (replaceData)
-		{
-			replaceData->replacedByPdu = NULL;
-			replaceData->valid = true;
-			monitor->pduData->replacePdu = NULL;
-		}
+		__require__(!monitor->pduData->replacedByPdu);
+		__require__(!monitor->pduData->replacePdu);
 	}
 	//commandStatus
 	set<int> pduRes = checkSubmitSm(monitor->pduData);
@@ -195,15 +186,6 @@ void SmppPduChecker::processResp(ResponseMonitor* monitor,
 				vector<int> chkRes(pduRes.begin(), pduRes.end());
 				__tc_fail2__(chkRes, 0);
 				__tc_ok_cond__;
-				//положительный респонс получен, pdu валидная
-				monitor->pduData->valid = true;
-				//если данная pdu замещает другую pdu
-				PduData* replaceData = monitor->pduData->replacePdu;
-				if (replaceData)
-				{
-					replaceData->valid = false;
-					__trace2__("replaceData = {%s}", replaceData->str().c_str());
-				}
 			}
 			break;
 		case ESME_RINVDSTADR: //Invalid Dest Addr
@@ -256,7 +238,7 @@ void SmppPduChecker::processGenericNack(GenericNackMonitor* monitor,
 	}
 	__tc_ok_cond__;
 	__tc__("processGenericNack.checkTime");
-	time_t respDelay = respTime - monitor->pduData->submitTime;
+	time_t respDelay = respTime - monitor->pduData->sendTime;
 	if (respDelay < 0)
 	{
 		__tc_fail__(1);

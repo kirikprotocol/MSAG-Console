@@ -288,6 +288,10 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 {
 	__require__(monitor);
 	__decl_tc__;
+	if (monitor->getFlag() == PDU_COND_REQUIRED_FLAG)
+	{
+		return;
+	}
 	const string text = decode(pdu.get_message().get_shortMessage(),
 		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding());
 	if (!monitor->pduData->objProps.count("profilerOutput"))
@@ -301,7 +305,7 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	__require__(ack);
 	if (!ack->valid)
 	{
-		monitor->setReceived();
+		monitor->setCondRequired();
 		return;
 	}
 	//проверить и обновить профиль
@@ -322,7 +326,7 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	if (pos == string::npos)
 	{
 		__tc_fail__(3);
-		monitor->setReceived();
+		monitor->setNotExpected();
 	}
 	else
 	{
@@ -330,7 +334,7 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 		ack->text.erase(pos, text.length());
 		if (!ack->text.length())
 		{
-			monitor->setReceived();
+			monitor->setNotExpected();
 		}
 		else
 		{

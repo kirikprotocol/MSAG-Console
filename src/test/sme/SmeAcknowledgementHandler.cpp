@@ -119,27 +119,17 @@ void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 				pduReg, pdu.get_optional().get_userMessageReference());
 			throw TCException();
 		}
-		//в редких случаях sme ack приходит раньше submit_sm_resp
-		if (!monitor->pduData->valid)
-		{
-			__tc_fail__(-1);
-			//throw TCException();
-		}
 		__tc_ok_cond__;
 		__tc__("processDeliverySm.smeAck.checkAllowed");
 		switch (monitor->getFlag())
 		{
 			case PDU_REQUIRED_FLAG:
 			case PDU_MISSING_ON_TIME_FLAG:
+			case PDU_COND_REQUIRED_FLAG:
 				//ok
 				break;
-			case PDU_RECEIVED_FLAG:
-				__tc_fail__(1);
-				throw TCException();
 			case PDU_NOT_EXPECTED_FLAG:
-			case PDU_EXPIRED_FLAG:
-			case PDU_ERROR_FLAG:
-				__tc_fail__(2);
+				__tc_fail__(1);
 				throw TCException();
 			default:
 				__unreachable__("Unknown flag");
@@ -195,15 +185,15 @@ void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		__tc_ok_cond__;
 		pduReg->removeMonitor(monitor);
 		processSmeAcknowledgement(monitor, pdu, recvTime);
-		pduReg->registerMonitor(monitor);
+		pduReg->registerMonitor(monitor); //тест кейсы на финализированные pdu
 		//для sme acknoledgement не проверяю повторную доставку
 		__tc__("processDeliverySm.smeAck.recvTimeChecks");
 		__cfg_int__(timeCheckAccuracy);
-		if (recvTime < monitor->startTime)
+		if (recvTime < monitor->getCheckTime())
 		{
 			__tc_fail__(1);
 		}
-		else if (recvTime > monitor->startTime + timeCheckAccuracy)
+		else if (recvTime > monitor->getCheckTime() + timeCheckAccuracy)
 		{
 			__tc_fail__(2);
 		}

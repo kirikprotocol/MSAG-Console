@@ -234,7 +234,7 @@ void AbonentInfoTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	if (!ack->valid)
 	{
 		__trace__("monitor is not valid");
-		monitor->setReceived();
+		monitor->setNotExpected();
 		return;
 	}
 	//проверить содержимое полученной pdu
@@ -253,7 +253,7 @@ void AbonentInfoTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 		__tc_fail__(1);
 	}
 	__tc_ok_cond__;
-	monitor->setReceived();
+	monitor->setNotExpected();
 }
 
 }

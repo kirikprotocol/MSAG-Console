@@ -184,48 +184,21 @@ void SmppBaseTestCases::checkMissingPdu(time_t checkTime)
 				__unreachable__("Invalid monitor type");
 		}
 		fixture->pduReg->removeMonitor(monitor);
-		//респонсы считаются валидными всегда
-		//нотификации могут придти после первой неуспешной попытки,
-		//после чего sms будет замещена
-		if (monitor->pduData->valid || monitor->getType() == RESPONSE_MONITOR ||
-			monitor->getType() == INTERMEDIATE_NOTIFICATION_MONITOR)
+		switch (monitor->getFlag())
 		{
-			switch (monitor->getFlag())
-			{
-				case PDU_REQUIRED_FLAG:
-					__tc_fail__(1);
-					monitor->setMissingOnTime();
-					break;
-				case PDU_MISSING_ON_TIME_FLAG:
-				case PDU_RECEIVED_FLAG:
-				case PDU_NOT_EXPECTED_FLAG:
-				case PDU_EXPIRED_FLAG:
-				case PDU_ERROR_FLAG:
-					__require__(monitor->getCheckTime() == monitor->getValidTime());
-					break;
-				default:
-					__unreachable__("Invalid flag");
-			}
-		}
-		else
-		{
-			switch (monitor->getFlag())
-			{
-				case PDU_REQUIRED_FLAG:
-				case PDU_MISSING_ON_TIME_FLAG:
-					monitor->setNotExpected();
-					break;
-				case PDU_RECEIVED_FLAG:
-					__tc_fail__(2);
-					//break;
-				case PDU_NOT_EXPECTED_FLAG:
-				case PDU_EXPIRED_FLAG:
-				case PDU_ERROR_FLAG:
-					__require__(monitor->getCheckTime() == monitor->getValidTime());
-					break;
-				default:
-					__unreachable__("Invalid flag");
-			}
+			case PDU_REQUIRED_FLAG:
+				__tc_fail__(1);
+				monitor->setMissingOnTime();
+				break;
+			case PDU_COND_REQUIRED_FLAG:
+				//ok
+				break;
+			case PDU_MISSING_ON_TIME_FLAG:
+			case PDU_NOT_EXPECTED_FLAG:
+				__require__(monitor->getCheckTime() == monitor->getValidTime());
+				break;
+			default:
+				__unreachable__("Invalid flag");
 		}
 		__tc_ok_cond__;
 		if (monitor->getValidTime() < checkTime)

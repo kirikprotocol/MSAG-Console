@@ -115,12 +115,6 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 				pduReg, pdu.get_optional().get_userMessageReference(), pduType);
 			throw TCException();
 		}
-		//в редких случаях delivery report приходит раньше submit_sm_resp
-		if (!monitor->pduData->valid)
-		{
-			__tc_fail__(-1);
-			//throw TCException();
-		}
 		__tc_ok_cond__;
 		if (pduType == DELIVERY_RECEIPT)
 		{
@@ -135,17 +129,11 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		{
 			case PDU_REQUIRED_FLAG:
 			case PDU_MISSING_ON_TIME_FLAG:
+			case PDU_COND_REQUIRED_FLAG:
 				//ok
 				break;
-			case PDU_RECEIVED_FLAG:
-				//иногда валится всякий шыт сюда
-				//if (!monitor->getSkipChecks())
-				__tc_fail__(1);
-				throw TCException();
 			case PDU_NOT_EXPECTED_FLAG:
-			case PDU_EXPIRED_FLAG:
-			case PDU_ERROR_FLAG:
-				__tc_fail__(2);
+				__tc_fail__(1);
 				throw TCException();
 			default:
 				__unreachable__("Unknown flag");
@@ -192,6 +180,7 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 			default:
 				__unreachable__("Invalid reg dilivery");
 		}
+		__require__(monitor->pduData->intProps.count("reportOptions"));
 		if (statusReport)
 		{
 			if (pduType == DELIVERY_RECEIPT)
@@ -206,7 +195,7 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 					ESM_CLASS_INTERMEDIATE_NOTIFICATION);
 			}
 		}
-		else if (monitor->pduData->reportOptions == ProfileReportOptions::ReportFull)
+		else if (monitor->pduData->intProps["reportOptions"] == ProfileReportOptions::ReportFull)
 		{
 			__compare__(6, pdu.get_message().get_esmClass(),
 				ESM_CLASS_NORMAL_MESSAGE);
@@ -255,7 +244,7 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 				dynamic_cast<IntermediateNotificationMonitor*>(monitor),
 				pdu, recvTime);
 		}
-		pduReg->registerMonitor(monitor);
+		pduReg->registerMonitor(monitor); //тест кейсы на финализированные pdu
 		//отправить респонс, только ESME_ROK разрешено
 		pair<uint32_t, time_t> deliveryResp =
 			fixture->respSender->sendDeliverySmResp(pdu);
