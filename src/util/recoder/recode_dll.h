@@ -5,7 +5,7 @@ $Id$
 #if !defined HEADER_RECODE_DLL_H
 #define HEADER_RECODE_DLL_H
 
-#ifdef _WIN32 
+#ifdef _WIN32
 
 #ifdef RECODE_DLL_EXPORTS
 #define RECODE_DLL_API __declspec(dllexport)
@@ -48,6 +48,10 @@ RECODE_DLL_API int RECODE_DECL Convert7BitToUCS2(const char* bit7buf, int bit7bu
 
 RECODE_DLL_API int RECODE_DECL ConvertUCS2To7Bit(const short* ucs2, int ucs2buff_size,
                                      char* bit7buf, int bit7buf_size);
+
+RECODE_DLL_API int RECODE_DECL Transliterate(const char* buf,int len,int encoding,
+                                             char *dest,int destlen);
+
 
 }
 

@@ -60,7 +60,7 @@ unsigned char ConvertW2C(unsigned short val, ConvEncodingEnum encoding )
   }
 }
 
-unsigned short ConvertC2W(unsigned char val, ConvEncodingEnum encoding ) 
+unsigned short ConvertC2W(unsigned char val, ConvEncodingEnum encoding )
 {
   unsigned short* c2w_convert = GetC2WTable(encoding);
   if ( !c2w_convert ) return (0x0000|'?');
@@ -90,6 +90,42 @@ const unsigned char* Translit(unsigned char ch, ConvEncodingEnum encoding, unsig
   }else return res;
 }
 
+int Transliterate(const char* buf,int len,int encoding,char *dest,int destlen)
+{
+  int j=0;
+  const unsigned char* res;
+  bool prev_is_capital;
+  if(len>1)
+  {
+    if((unsigned char)buf[1]>127)Translit((unsigned char)buf[1],encoding,0,&prev_is_capital);
+    else if(buf[1]>='A' && buf[1]<='Z')prev_is_capital=true;
+  }else
+  {
+    prev_is_capital=false;
+  }
+  for(int i=0;i<len;i++)
+  {
+    unsigned char ch=(unsigned char)buf[i];
+    if(ch>127)
+    {
+      res=Translit(ch,encoding,prev_is_capital?CONV_PREVIOUS_IS_CAPITAL:0,&prev_is_capital);
+      for(;*res;res++)
+      {
+        dest[j]=*res;
+        j++;
+        if(j==destlen)return -1;
+      }
+    }else
+    {
+      dest[j]=ch;
+      j++;
+      if(j==destlen)return -1;
+    }
+  }
+  dest[j]=0;
+  return j;
+}
+
 int RECODE_DECL ConvertUCS2ToMultibyte(const short* ucs2, int ucs2buff_size,char* text, int textbuff_size, ConvEncodingEnum encoding)
 {
   int i;
@@ -116,7 +152,7 @@ int RECODE_DECL ConvertMultibyteToUCS2(const char* text, int textbuff_size,short
   return i*2;
 }
 
-struct OutBitStream{ 
+struct OutBitStream{
   unsigned char mask;
   unsigned char* start;
   unsigned char* out;
@@ -151,7 +187,7 @@ struct OutBitStream{
   }
 };
 
-struct InBitStream{ 
+struct InBitStream{
   unsigned char mask;
   const unsigned char* start;
   const unsigned char* in;
@@ -219,7 +255,7 @@ int RECODE_DECL ConvertTextTo7Bit(const char* text, int textbuf_size, char* bit7
       for (; *sequence != 0 ;++sequence){
         bstream.Put(*sequence);
       }
-    }else{ 
+    }else{
       bstream.Put(ch);
       if ( ch >= 'A' && ch <= 'Z' ) prev_is_capital = true;
       else prev_is_capital = false;
@@ -261,7 +297,7 @@ int RECODE_DECL ConvertUCS2To7Bit(const short* ucs2, int ucs2buff_size,
       for (; *sequence != 0 ;++sequence){
         bstream.Put(*sequence);
       }
-    }else{ 
+    }else{
       bstream.Put((unsigned char)ch);
       if ( ch >= 'A' && ch <= 'Z' ) prev_is_capital = true;
       else prev_is_capital = false;
@@ -274,14 +310,13 @@ int RECODE_DECL ConvertUCS2To7Bit(const short* ucs2, int ucs2buff_size,
 BOOL APIENTRY DllMain(HANDLE hModule,DWORD  ul_reason_for_call,LPVOID lpReserved)
 {
   /*switch (ul_reason_for_call)
-	{
-		case DLL_PROCESS_ATTACH:
-		case DLL_THREAD_ATTACH:
-		case DLL_THREAD_DETACH:
-		case DLL_PROCESS_DETACH:
-			break;
+  {
+    case DLL_PROCESS_ATTACH:
+    case DLL_THREAD_ATTACH:
+    case DLL_THREAD_DETACH:
+    case DLL_PROCESS_DETACH:
+      break;
   }*/
   return 1;
 }
 #endif
-
