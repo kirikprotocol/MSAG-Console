@@ -129,7 +129,7 @@ USHORT_T Et96MapV2ForwardSmMTConf (
     if ( mdci ){
       mdci->Et96MapV2ForwardSmMTConf(lssn,
                                     dialogid,
-                                    invokeid,
+                                    invokeId,
                                     errorForwardSMmt_sp,
                                     provErrCode_p);
     }
