@@ -8,69 +8,61 @@ package ru.novosoft.smsc.admin.dl;
 
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataItem;
 
-public class DistributionList
+public class DistributionList extends AbstractDataItem
 {
-  private String name;
-  private Mask owner;
-  private int maxElements;
-
   public DistributionList()
   {
-    name = "";
-    owner = null;
-    maxElements = 0;
+    values.put("name", "");
+    values.put("owner", null);
+    values.put("maxElements", new Integer(0));
   }
-/*
-    public DistributionList(String name, int maxElements) {
-        this.name = name; this.owner = null;
-        this.maxElements = maxElements;
-    }
-*/
+
   public DistributionList(String name, String owner, int maxElements) throws AdminException
   {
-    this.name = name;
-    this.maxElements = maxElements;
+    values.put("name", name);
+    values.put("maxElements", new Integer(maxElements));
     setOwner(owner);
   }
 
   public String getName()
   {
-    return name;
+    return (String) values.get("name");
   }
 
   public void setName(String name)
   {
-    this.name = name;
+    values.put("name", name == null ? "" : name);
   }
 
   public String getOwner()
   {
-    return owner != null ? owner.getMask() : null;
+    return values.get("owner") != null ? ((Mask)values.get("owner")).getMask() : null;
   }
 
   public String getNormalizedOwner()
   {
-    return owner != null ? owner.getNormalizedMask() : null;
+    return values.get("owner") != null ? ((Mask)values.get("owner")).getNormalizedMask() : null;
   }
 
   public void setOwner(String owner) throws AdminException
   {
-    this.owner = owner != null && owner.trim().length() > 0 ? new Mask(owner) : null;
+    values.put("owner", owner != null && owner.trim().length() > 0 ? new Mask(owner) : null);
   }
 
   public boolean isSys()
   {
-    return owner == null;
+    return values.get("owner") == null;
   }
 
   public int getMaxElements()
   {
-    return maxElements;
+    return ((Integer)values.get("maxElements")).intValue();
   }
 
   public void setMaxElements(int maxElements)
   {
-    this.maxElements = maxElements;
+    values.put("maxElements", new Integer(maxElements));
   }
 }

@@ -602,7 +602,7 @@ public class DistributionListManager implements DistributionListAdmin
         rs = null;
         stmt.close();
         if (lsts >= maxLst)
-           throw new ListsCountExceededException(dl.getOwner());
+          throw new ListsCountExceededException(dl.getOwner());
       }
 
       stmt = connection.prepareStatement(ADD_DL_SQL);
@@ -714,7 +714,7 @@ public class DistributionListManager implements DistributionListAdmin
     return dl;
   }
 
-  private List internal_list(String sql_statement) throws AdminException
+  private List internal_list(String sql_statement, DlFilter filter) throws AdminException
   {
     List list = new ArrayList();
     PreparedStatement stmt = null;
@@ -729,7 +729,9 @@ public class DistributionListManager implements DistributionListAdmin
         String owner = rs.getString(2);
         if (rs.wasNull()) owner = null;
         int maxElements = rs.getInt(3);
-        list.add(new DistributionList(name, owner, maxElements));
+        final DistributionList dl = new DistributionList(name, owner, maxElements);
+        if (filter == null || filter.isItemAllowed(dl))
+          list.add(dl);
       }
       rs.close();
       rs = null;
@@ -750,7 +752,7 @@ public class DistributionListManager implements DistributionListAdmin
 
   public List list() throws AdminException
   {
-    return internal_list(LIST_DL_SQL);
+    return internal_list(LIST_DL_SQL, null);
   }
 
   public List list(DlFilter filter) throws AdminException
@@ -758,13 +760,21 @@ public class DistributionListManager implements DistributionListAdmin
     if (filter.isEmpty())
       return list();
 
-    String where_clause = " where ";
-    for (int i = 0; i < filter.getNames().length; i++) {
-      String name = filter.getNames()[i];
-      where_clause += (i == 0 ? "" : " or ") + "(list like '" + name + "%')";
+    String where_clause = "";
+    if (!filter.isNamesContainsRegexp() && !filter.isOwnersContainsRegexp()) {
+      for (int i = 0; i < filter.getNames().length; i++) {
+        String name = filter.getNames()[i];
+        where_clause += (i == 0 ? "" : " or ") + "(list like '" + name + "%')";
+      }
+      for (int i = 0; i < filter.getOwners().length; i++) {
+        String owner = filter.getOwners()[i];
+        where_clause += (i == 0 ? "" : " or ") + "(owner like '" + owner + "%')";
+      }
+      if (where_clause.length() > 0)
+        where_clause = " where " + where_clause;
     }
 
-    return internal_list(LIST_DL_SQL + where_clause);
+    return internal_list(LIST_DL_SQL + where_clause, filter);
   }
 
   public void alterDistributionList(String dlname, int maxElements) throws AdminException, ListNotExistsException
