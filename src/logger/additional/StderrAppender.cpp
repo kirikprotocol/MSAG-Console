@@ -7,8 +7,6 @@
 namespace smsc {
 namespace logger {
 
-using namespace smsc::util;
-
 StderrAppender::StderrAppender(const char * const name)
 	:Appender(name)
 {

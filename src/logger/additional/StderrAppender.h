@@ -7,8 +7,6 @@
 namespace smsc {
 namespace logger {
 
-using namespace smsc::util;
-
 class StderrAppender : public Appender
 {
 public:

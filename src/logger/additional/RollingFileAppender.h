@@ -3,8 +3,9 @@
 
 #include <stdio.h>
 
-#include "logger/Appender.h"
+#include <logger/Appender.h>
 #include <core/synchronization/Mutex.hpp>
+#include <util/Properties.h>
 
 namespace smsc {
 namespace logger {

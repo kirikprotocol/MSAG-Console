@@ -35,12 +35,14 @@ void daemonInit()
 		signal(SIGTSTP, SIG_IGN);
 		signal(SIGTTIN, SIG_IGN);
 		signal(SIGTTOU, SIG_IGN);
-		if (fork() != 0)
+/*
+    if (fork() != 0)
 		{
 			exit(0);
 		} else {
 			setsid();
 		}
+*/
 	}
 	struct rlimit flim;
 	getrlimit(RLIMIT_NOFILE, &flim);

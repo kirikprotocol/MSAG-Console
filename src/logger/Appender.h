@@ -1,12 +1,10 @@
 #ifndef SMSC_LOGGER_APPENDER_HEADER
 #define SMSC_LOGGER_APPENDER_HEADER
 
-#include "util/Properties.h"
+#include <memory>
 
 namespace smsc {
 namespace logger {
-
-using namespace smsc::util;
 
 class Appender 
 {
