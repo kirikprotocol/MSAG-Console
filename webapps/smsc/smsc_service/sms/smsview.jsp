@@ -1,31 +1,29 @@
 <%@include file="/common/header.jsp"%>
 
-<jsp:useBean id="formBean" scope="session" class="ru.novosoft.smsc.jsp.smsview.SmsViewFormBean" />
-<body>
+<%@page import="ru.novosoft.smsc.admin.smsview.*"%>
+
+<jsp:useBean id="formBean" scope="session"
+             class="ru.novosoft.smsc.jsp.smsview.SmsViewFormBean" />
 <%
-if (request.getMethod().equals("POST")) {
+if (request.getMethod().equals("POST"))
+{
 %>
   <jsp:setProperty name="formBean" property="*" />
 <%
-  if (request.getParameter("query") != null) {
-    formBean.processQuery();
-%>
-  <h2>Query !</h2>
-<%
-  } else if (request.getParameter("prev") != null) {
+  if (request.getParameter("prev") != null) {
     formBean.processPrev();
-%>
-  <h2>Prev !</h2>
-<%
   } else if (request.getParameter("next") != null) {
     formBean.processNext();
-%>
-  <h2>Next !</h2>
-<%
+  } else {
+    if (formBean.getAppContext() == null) {
+      formBean.setAppContext(request.getAttribute("appContext"));
+    }
+    formBean.processQuery();
   }
 }
 %>
 
+<body>
 <h1 align="center">SMSC SmsView utilite</h1>
 <form action="smsview.jsp" method=POST>
 <center>
@@ -37,14 +35,12 @@ if (request.getMethod().equals("POST")) {
     	<td valign=top>
     	<b>Source&nbsp;&nbsp;storage:&nbsp;&nbsp;</b>
     	  <input type="radio" name="storageType"
-          value="<%= ru.novosoft.smsc.admin.smsview.SmsQuery.SMS_ARCHIVE_STORAGE_TYPE%>"
-          <%= (formBean.getStorageType() ==
-              ru.novosoft.smsc.admin.smsview.SmsQuery.SMS_ARCHIVE_STORAGE_TYPE) ?
+          value="<%= SmsQuery.SMS_ARCHIVE_STORAGE_TYPE%>"
+          <%= (formBean.getStorageType()==SmsQuery.SMS_ARCHIVE_STORAGE_TYPE) ?
               "checked":""%>>Archive&nbsp;&nbsp;
       	<input type="radio" name="storageType"
-	        value="<%= ru.novosoft.smsc.admin.smsview.SmsQuery.SMS_OPERATIVE_STORAGE_TYPE%>"
-          <%= (formBean.getStorageType() ==
-              ru.novosoft.smsc.admin.smsview.SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) ?
+	        value="<%= SmsQuery.SMS_OPERATIVE_STORAGE_TYPE%>"
+          <%= (formBean.getStorageType()==SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) ?
               "checked":""%>>Operative&nbsp;&nbsp;
     	</td>
     	</tr>
@@ -52,11 +48,11 @@ if (request.getMethod().equals("POST")) {
     	<td valign=top>
     	<b>From&nbsp;Address:&nbsp;&nbsp;</b>
     	<input type="text" name="fromAddress"
-        value="<jsp:getProperty name="formBean" property="fromAddress" />" size=20></td>
+        value="<jsp:getProperty name="formBean" property="fromAddress" />" size=25></td>
     	<td valign=top>
     	<b>To&nbsp;Address:&nbsp;&nbsp;</b>
     	<input type="text" name="toAddress"
-        value="<jsp:getProperty name="formBean" property="toAddress" />" size=20></td>
+        value="<jsp:getProperty name="formBean" property="toAddress" />" size=25></td>
     	</tr>
 
     	<tr>
@@ -87,21 +83,25 @@ if (request.getMethod().equals("POST")) {
         <%= (formBean.getSortBy().equalsIgnoreCase("To")) ? "selected":""%>>To</option>
 	</select>
 	</td></tr>
-	<tr><td><b>Show&nbsp;results:</b>&nbsp;</td></tr>
+	<tr><td><b>Rows&nbsp;to&nbsp;display:</b>&nbsp;</td></tr>
 	<tr><td>
-	<select name="rowsCount">
+	<select name="rowsToDisplay">
+      <% int rowsToDisplay = formBean.getRowsToDisplay();%>
+	    <option value="5"
+        <%= (rowsToDisplay < 10) ? "selected":""%>>5</option>
 	    <option value="10"
-        <%= (formBean.getRowsCount() == 10) ? "selected":""%>>10</option>
+        <%= (rowsToDisplay == 10) ? "selected":""%>>10</option>
 	    <option value="20"
-        <%= (formBean.getRowsCount() == 20) ? "selected":""%>>20</option>
+        <%= (rowsToDisplay == 20) ? "selected":""%>>20</option>
 	    <option value="30"
-        <%= (formBean.getRowsCount() == 30) ? "selected":""%>>30</option>
+        <%= (rowsToDisplay == 30) ? "selected":""%>>30</option>
 	    <option value="40"
-        <%= (formBean.getRowsCount() == 40) ? "selected":""%>>40</option>
+        <%= (rowsToDisplay == 40) ? "selected":""%>>40</option>
 	    <option value="50"
-        <%= (formBean.getRowsCount() == 50) ? "selected":""%>>50</option>
+        <%= (rowsToDisplay == 50) ? "selected":""%>>50</option>
 	    <option value="-1"
-        <%= (formBean.getRowsCount() < 0) ? "selected":""%>>All</option>
+        <%= (rowsToDisplay < 0 ||
+             rowsToDisplay > 50) ? "selected":""%>>All</option>
 	</select>
 	</td></tr>
 	</table>
@@ -110,23 +110,35 @@ if (request.getMethod().equals("POST")) {
 <tr>
    	<td align=center colspan=2>
     	<input type="submit" name="query" value="Query !">
-	    <!--input type="reset" name="reset" value="Reset"-->
   	</td>
 </tr>
 
 <%
 if (request.getMethod().equals("POST")) {
+  int firstIndex = formBean.getRowIndex()+1;
+  int lastIndex = formBean.getRowIndex()+formBean.getRowsToDisplay();
+  if (lastIndex >= formBean.getRowsCount() ||
+      formBean.getRowsToDisplay() < 0) lastIndex = formBean.getRowsCount();
 %>
 <tr>
     <td align=left colspan=2>
-    <b>Total sms found </b>
-    <%= formBean.getRowsTotal()%>
-    <b>, displayed </b>
-    <%= formBean.getRowIndex()%>-<%=
-        ((formBean.getRowIndex()+formBean.getRowsCount()) >= formBean.getRowsTotal()
-         || formBean.getRowsCount() < 0) ?
-            formBean.getRowsTotal() :
-              formBean.getRowIndex()+formBean.getRowsCount()%>
+    <b>Total sms found </b><%= formBean.getRowsCount()%>
+    <% if (formBean.getRowsCount()>0) { %>
+        <b>, displayed </b><%= firstIndex%>
+        <% if (firstIndex != lastIndex) {%>... <%= lastIndex%> <%};%>
+    <% } else { %>
+        <b>. Try to process another query. </b>
+    <% } %>
+    </td>
+</tr>
+<tr>
+    <td align=center colspan=2>
+    <% if (formBean.getRowsCount()>0) { %>
+      <input type="submit" name="prev" value="<< Prev"
+       <%= formBean.isPrevEnabled() ? "":"disabled"%>>
+      <input type="submit" name="next" value="Next >>"
+       <%= formBean.isNextEnabled() ? "":"disabled"%>>
+    <% } %>
     </td>
 </tr>
 <tr>
@@ -134,36 +146,37 @@ if (request.getMethod().equals("POST")) {
     <!--table cellpadding=4 cellspacing=2 border=1-->
     <table width="100%" border=1>
       <tr>
+      <td width="30%"><b>Date</b></td>
       <td width="10%"><b>From</b></td>
       <td width="10%"><b>To</b></td>
-      <td width="10%"><b>Date</b></td>
       <td width="10%"><b>Status</b></td>
       <td><b>Message</b></td>
       </tr>
-
+      <% for (int cnt=firstIndex; cnt<=lastIndex; cnt++) {
+          SmsRow row = formBean.getRow(cnt);
+      %>
       <tr>
-      <td>From1</td>
-      <td>To1</td>
-      <td>Date1</td>
-      <td>Status1</td>
-      <td>Text1</td>
+      <td><%= row.getDate()%></td>
+      <td><%= row.getFrom()%></td>
+      <td><%= row.getTo()%></td>
+      <td><%= row.getStatus()%></td>
+      <td><%= row.getText()+cnt%></td>
       </tr>
+      <% } %>
     </table>
     </td>
 </tr>
 <tr>
     <td align=center colspan=2>
-      <%if (formBean.isPrevEnabled()) {%>
-        <input type="submit" name="prev" value="<< Prev">
-      <%}%>
-      <%if (formBean.isNextEnabled()) {%>
-        <input type="submit" name="next" value="Next >>">
-      <%}%>
+    <% if (formBean.getRowsCount()>0) { %>
+      <input type="submit" name="prev" value="<< Prev"
+       <%= formBean.isPrevEnabled() ? "":"disabled"%>>
+      <input type="submit" name="next" value="Next >>"
+       <%= formBean.isNextEnabled() ? "":"disabled"%>>
+    <% } %>
     </td>
 </tr>
-<%
-}
-%>
+<% } %>
 
 </table>
 </center>

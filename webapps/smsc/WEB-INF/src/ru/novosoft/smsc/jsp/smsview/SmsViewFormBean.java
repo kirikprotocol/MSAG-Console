@@ -40,6 +40,9 @@ public class SmsViewFormBean extends SmsQuery
   public int getRowsCount() {
     return ((rows != null) ? rows.getRowsCount():0);
   }
+  public SmsRow getRow(int index){
+    return ((rows != null) ? rows.getRow(index):null);
+  }
 
   public int getRowsToDisplay(){
     return rowsToDisplay;

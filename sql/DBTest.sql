@@ -14,3 +14,15 @@ CREATE TABLE DBSME_TEST
 	CNT		INT		NULL,
 	DT		DATE            NULL
 );
+
+CREATE OR REPLACE PROCEDURE raiseAccount(
+	arg1 IN VARCHAR2, 
+	arg2 IN NUMBER, 
+	arg3 OUT NUMBER
+) IS
+BEGIN
+ update DBSME_TEST set CNT=CNT+arg2 where ADDRESS=arg1;
+ select CNT into arg3 from DBSME_TEST where ADDRESS=arg1;
+END;
+
+

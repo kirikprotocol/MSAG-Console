@@ -30,5 +30,26 @@ public class SmsView
       exc.printStackTrace();
     }
     return new SmsSet();
-  };
+  }
+
+  private String prepareQueryString(SmsQuery query) {
+    String sql = "SELECT SUBMIT_TIME, OA, DDA, ST, BODY_LEN, BODY FROM ";
+    sql += (query.getStorageType() == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) ?
+                "SMS_MSG":"SMS_ARC";
+    sql += prepareWhereClause(query); sql += prepareOrderClause(query);
+    return sql + ";";
+  }
+  private String prepareWhereClause(SmsQuery query) {
+    return " WHERE 1=1 ";
+  }
+  private String prepareOrderClause(SmsQuery query) {
+    String order = query.getSortBy();
+    if (order == null) return "";
+    else if (order.equalsIgnoreCase("Date")) order="SUBMIT_TIME";
+    else if (order.equalsIgnoreCase("Status")) order="ST";
+    else if (order.equalsIgnoreCase("From")) order="OA";
+    else if (order.equalsIgnoreCase("To")) order="DDA";
+    else return "";
+    return " ORDER BY "+order;
+  }
 };

@@ -18,6 +18,10 @@ public class SmsSet
 {
   private Vector rows = new Vector();
 
+  public SmsSet() {
+    addRow(new SmsRow());
+  }
+
   public int getRowsCount() {
     //return rows.size();
     return 101;
@@ -27,7 +31,8 @@ public class SmsSet
     return rows.elements();
   }
   public SmsRow getRow(int index) {
-    return ((SmsRow)rows.elementAt(index));
+    return (SmsRow)rows.elementAt(0);
+    //return ((SmsRow)rows.elementAt(index));
   }
   public void addRow(SmsRow row) {
     rows.addElement(row);
