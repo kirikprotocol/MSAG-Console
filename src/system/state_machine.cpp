@@ -88,10 +88,12 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
-  if(sms->getValidTime()>now+maxValidTime)
+  if(sms->getValidTime()==0 || sms->getValidTime()>now+maxValidTime)
   {
     sms->setValidTime(now+maxValidTime);
   }
+
+  __trace2__("Valid time for sms %lld=%u\n",t.msgId,sms->getValidTime());
 
   if(sms->getNextTime()>now+maxValidTime || sms->getNextTime()>sms->getValidTime())
   {
