@@ -203,7 +203,7 @@ void transLiterateSms(SMS* sms,int datacoding)
   }
 
   sms->setIntProperty(Tag::SMPP_DATA_CODING,dc);
-  __trace2__("SUBMIT: converting ucs2->text(%d->%d)",len,newlen);
+  __trace2__("SUBMIT: converting ucs2->text(%d->%d), dc=%d",len,newlen,dc);
   if(udhi)
   {
     memcpy(buf8.get(),udhiData,udhiDataLen);

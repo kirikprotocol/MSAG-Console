@@ -2602,8 +2602,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
 
 time_t StateMachine::rescheduleSms(SMS& sms)
 {
-  time_t basetime=sms.getLastTime();
-  if(basetime==0 || basetime==-1)basetime=time(NULL);
+  time_t basetime=time(NULL);
   time_t nextTryTime=RescheduleCalculator::calcNextTryTime(basetime,sms.getAttemptsCount());
   if(nextTryTime>sms.getValidTime())nextTryTime=sms.getValidTime();
   return nextTryTime;

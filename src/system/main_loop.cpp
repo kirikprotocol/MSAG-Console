@@ -246,7 +246,15 @@ void Smsc::mainLoop()
 
       int eqsize,equnsize;
       eventqueue.getStats(eqsize,equnsize);
-      if((cntInstant+1<=maxsms*stf || cntSmooth+1000<=maxsms*smt*1000) && eqsize+1<=eventQueueLimit)
+      if(
+          (cntInstant+1<=maxsms*stf ||
+            (
+              cntSmooth+1000<=maxsms*smt*1000 &&
+              cntInstant+1<=maxsms*stf+maxsms*stf*20/100
+            )
+          ) &&
+          eqsize+1<=eventQueueLimit
+        )
       {
         SmscCommand cmd=frame.back();
         frame.pop_back();
@@ -266,6 +274,16 @@ void Smsc::mainLoop()
         continue;
       }
       __warning2__("count=%d, smooth_cnt=%d",cntInstant,cntSmooth);
+      {
+        Task task;
+        while ( tasks.getExpired(&task) )
+        {
+          SMSId id = task.messageId;
+          __trace2__("enqueue timeout Alert: dialogId=%d, proxyUniqueId=%d",
+            task.sequenceNumber,task.proxy_id);
+          eventqueue.enqueue(id,SmscCommand::makeAlert());
+        }
+      }
       timestruc_t tv={0,1000000};
       nanosleep(&tv,0);
     }

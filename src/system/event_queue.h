@@ -78,11 +78,11 @@ class EventQueue
 
     void push_back(const CommandType& c)
     {
-      if(lastCommand==FORWARD && c->cmdid==FORWARD)
+      /*if(lastCommand==FORWARD && c->cmdid==FORWARD)
       {
         __trace__("Skipping forward");
         return;
-      }
+      }*/
       CmdRecord* cmd=new CmdRecord(c);
       CmdRecord** iter = &cmds;
       for ( ; *iter != 0; iter = &(*iter)->next );
