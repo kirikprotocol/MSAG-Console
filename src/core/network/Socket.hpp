@@ -3,6 +3,7 @@
 
 #ifdef _WIN32
 #include <winsock.h>
+#include <stdio.h>
 typedef int socklen_t;
 #else
 #include <stdio.h>
