@@ -71,6 +71,10 @@ public:
 	 */
 	uint32_t sendDeliverySmRespError(PduDeliverySm& pdu, bool sync, int num);
 
+	void updateProfileCorrect(bool sync, uint8_t dataCoding, int num);
+
+	void updateProfileIncorrect(bool sync, uint8_t dataCoding);
+
 	/*
 		virtual PduSubmitSmResp* submit(PduSubmitSm& pdu)=0;
 	virtual SmppHeader* sendPdu(SmppHeader& pdu)=0;
@@ -103,13 +107,16 @@ private:
 	PduData* getNonReplaceRescheduledEnrotePdu();
 	template <class Message>
 	void checkRegisteredDelivery(Message& m);
-	void setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu);
-	PduData* registerSubmitSm(PduSubmitSm* pdu, PduData* replacePduData,
-		time_t submitTime);
+	void setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu, const Address* destAlias);
+	PduData* registerSubmitSm(PduSubmitSm* pdu, PduData* existentPduData,
+		time_t submitTime, PduData::IntProps* intProps,
+		PduData::StrProps* strProps, bool normalSms);
 	void processSubmitSmSync(PduData* pduData, PduSubmitSmResp* respPdu,
 		time_t respTime);
 	void processSubmitSmAsync(PduData* pduData, PduSubmitSmResp* respPdu);
-	void sendSubmitSmPdu(PduSubmitSm* pdu, PduData* existentPduData, bool sync);
+	void sendSubmitSmPdu(PduSubmitSm* pdu, PduData* existentPduData, bool sync,
+		PduData::IntProps* intProps = NULL, PduData::StrProps* strProps = NULL,
+		bool normalSms = true);
 	PduData* setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu);
 	PduData* registerReplaceSm(PduReplaceSm* pdu, PduData* replacePduData,
 		time_t submitTime);
@@ -118,6 +125,8 @@ private:
 	void processReplaceSmAsync(PduData* pduData, PduReplaceSmResp* respPdu);
 	void sendReplaceSmPdu(PduReplaceSm* pdu, PduData* replacePduData, bool sync);
 	void sendDeliverySmResp(PduDeliverySmResp& pdu, bool sync);
+	void sendUpdateProfilePdu(PduSubmitSm* pdu, const string& text,
+		bool sync, uint8_t dataCoding, PduData::IntProps& intProps);
 };
 
 }
