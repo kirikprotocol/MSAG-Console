@@ -1,9 +1,9 @@
 logger
+db
 smpp  "SMPP protocol implementation"
 core  "SMSC core implementation"
 util  "Utility classes"
 sms   "SMS declaration"
-db
 admin   "Administration subsystem"
 smeman
 router
