@@ -62,6 +62,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
   public static boolean viewDeliverErrEnabled = true;
 
   public void init() {
+    System.out.println("Initing...");
     locale = new Locale(getParameter("locale.country").toLowerCase(), getParameter("locale.language").toLowerCase());
     localeText = ResourceBundle.getBundle("ru.novosoft.smsc.perfmon.applet.text", locale);
     dateFormat = new SimpleDateFormat(localeText.getString("sctime"));
@@ -98,8 +99,6 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     connectingLabel = new Label(localeText.getString("connecting"));
     add(connectingLabel, gbc);
 
-    Thread thr = new Thread(this);
-    thr.start();
     validate();
   }
 
