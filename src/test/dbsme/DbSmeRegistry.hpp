@@ -31,9 +31,14 @@ typedef enum
 	void set##name(const type& val) { __##name = val; mask[idx] = true; } \
 	bool check##name() const { return mask[idx]; }
 
-struct DbSmeTestRecord : public PduDataObject
+class DbSmeTestRecord : public PduDataObject
 {
 	vector<bool> mask;
+	DbSmeTestRecord* defInput;
+
+	DbSmeTestRecord(const DbSmeTestRecord&) {}
+	DbSmeTestRecord& operator=(const DbSmeTestRecord& rec) {}
+public:
 	__field__(0, string, Job)
 	__field__(1, int, Id)
 	__field__(2, int, Int16)
@@ -45,10 +50,11 @@ struct DbSmeTestRecord : public PduDataObject
 	__field__(8, string, String)
 	__field__(9, string, QuotedString)
 	__field__(10, string, FromAddr)
-	DbSmeTestRecord* defInput;
+	DbSmeTestRecord* getDefInput() const { return defInput; }
+	void setDefInput(DbSmeTestRecord* defInput);
 
 	DbSmeTestRecord() : mask(11, false), defInput(NULL) {}
-	virtual ~DbSmeTestRecord() { if (defInput) { delete defInput; } }
+	virtual ~DbSmeTestRecord();
 };
 
 class DbSmeRegistry

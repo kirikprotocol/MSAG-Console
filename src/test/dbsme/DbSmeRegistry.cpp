@@ -7,6 +7,25 @@ namespace dbsme {
 
 using smsc::core::synchronization::MutexGuard;
 
+void DbSmeTestRecord::setDefInput(DbSmeTestRecord* rec)
+{
+	__require__(rec);
+	rec->ref();
+	if (defInput)
+	{
+		defInput->unref();
+	}
+	defInput = rec;
+}
+
+DbSmeTestRecord::~DbSmeTestRecord()
+{
+	if (defInput)
+	{
+		defInput->unref();
+	}
+}
+
 DbSmeRegistry::~DbSmeRegistry()
 {
 	clear();
