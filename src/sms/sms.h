@@ -598,7 +598,7 @@ public:
         for(int pos = 0; pos+4 < length;)
         {
           uint16_t tag = ntohs(*(uint16_t*)(buffer+pos));
-          uint32_t len = ntohs(*(uint32_t*)(buffer+pos+2));
+          uint32_t len = ntohl(*(uint32_t*)(buffer+pos+2));
           pos+=4+2;
           __require__(pos+len<=length);
 					string* key = tag_hash.getStrKeyForString(tag);
