@@ -4,8 +4,8 @@
 #include "sme/SmppBase.hpp"
 #include "smpp/smpp.h"
 #include "SmppFixture.hpp"
+#include "NormalSmsHandler.hpp"
 #include "test/util/BaseTestCases.hpp"
-#include "util/debug.h"
 
 namespace smsc {
 namespace test {
@@ -14,9 +14,6 @@ namespace sme {
 using log4cpp::Category;
 using smsc::sme::SmppBaseReceiver;
 using smsc::test::util::BaseTestCases;
-using smsc::test::core::RespPduFlag;
-using smsc::test::core::DeliveryMonitor;
-using smsc::test::core::DeliveryReceiptMonitor;
 using smsc::test::util::CheckList;
 using namespace smsc::smpp; //pdu
 
@@ -27,7 +24,7 @@ class SmppReceiverTestCases : BaseTestCases, public SmppBaseReceiver
 {
 public:
 	SmppReceiverTestCases(SmppFixture* _fixture)
-	: fixture(_fixture), chkList(fixture->chkList)
+	: fixture(_fixture), chkList(_fixture->chkList), defaultHandler(fixture)
 	{ fixture->receiver = this; }
 
 	virtual ~SmppReceiverTestCases() {}
@@ -47,27 +44,6 @@ public:
 	 */
 	virtual void processDeliverySm(PduDeliverySm &pdu);
 	
-	/**
-	 * Сообщения правильно доставляются от одного sme другому.
-	 */
-	void processNormalSms(PduDeliverySm &pdu, time_t recvTime);
-
-	/**
-	 * Ответные сообщение от внутренних sme SC доставляются правильно.
-	 */
-	void processSmeAcknowledgement(PduDeliverySm &pdu, time_t recvTime,
-		SmeAcknowledgementHandler* ackHandler);
-
-	/**
-	 * Подтверждения доставки (delivery receipts) работают правильно.
-	 */
-	void processDeliveryReceipt(PduDeliverySm &pdu, time_t recvTime);
-
-	/**
-	 * Промежуточные нотификации (intermediate notifications) работают правильно.
-	 */
-	void processIntermediateNotification(PduDeliverySm &pdu, time_t recvTime);
-
 	//not implemented
 	virtual void processGenericNack(PduGenericNack &pdu);
 	virtual void processDataSm(PduDataSm &pdu);
@@ -85,18 +61,9 @@ public:
 protected:
 	SmppFixture* fixture;
 	CheckList* chkList;
+	NormalSmsHandler defaultHandler;
 
 	virtual Category& getLog();
-	RespPduFlag isAccepted(uint32_t status);
-	void compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu);
-	void updateDeliveryReceiptMonitor(DeliveryMonitor* monitor,
-		PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime);
-	void updateDeliveryReceiptMonitor(SmeAckMonitor* monitor,
-		PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime);
-	AckText* getExpectedResponse(DeliveryReceiptMonitor* monitor,
-		PduSubmitSm* origPdu, const string& text, time_t recvTime);
-	void processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
-		PduDeliverySm& pdu, PduSubmitSm* origPdu, time_t recvTime);
 };
 
 }
