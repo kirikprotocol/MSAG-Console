@@ -35,6 +35,36 @@ void CloseAndRemoveDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialog
   __trace2__("MAP::dialog 0x%hx destroed",dialogId);
 }
 
+extern "C" {
+
+USHORT_T Et96MapBindConf(ET96MAP_LOCAL_SSN_T lssn, ET96MAP_BIND_STAT_T status)
+{
+  __trace2__("MAP::Et96MapBindConf confirmation received ssn=%x status=%x\n",lssn,status);
+  return ET96MAP_E_OK;
+}
+
+USHORT_T Et96MapStateInd (
+	ET96MAP_LOCAL_SSN_T lssn,
+	UCHAR_T userState,
+	UCHAR_T affectedSSN,
+	ULONG_T affectedSPC,
+	ULONG_T localSPC) 
+{
+  __trace2__("MAP::Et96MapStateInd received ssn=%x user state=%x affected SSN=%d affected SPC=%ld local SPC=%ld\n",lssn,userState,affectedSSN,affectedSPC,localSPC);
+  return ET96MAP_E_OK;
+}
+
+void Et96MapIndicationError(USHORT_T error,UCHAR_T* errString)
+{
+  if ( errString ) {
+    __trace2__("MAP::Et96MapIndicationError: error 0x%hx text %s",error,errString);
+  }else{
+    __trace2__("MAP::Et96MapIndicationError: error 0x%hx",error);
+  }
+}
+
+} // extern "C"
+
 void MapIoTask::deinit()
 {
   USHORT_T result;
