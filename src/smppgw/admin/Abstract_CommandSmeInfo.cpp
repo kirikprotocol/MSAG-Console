@@ -1,4 +1,4 @@
-// 
+//
 // File:   Abstract_CommandSmeInfo.cc
 // Author: igork
 //
@@ -52,7 +52,7 @@ Abstract_CommandSmeInfo::Abstract_CommandSmeInfo(const Command::Id id, const xer
         smeInfo.timeout = atoi(value.get());
       if (::strcmp("receiptSchemeName", name) == 0)
         smeInfo.receiptSchemeName = value.get();
-      if (::strcmp("disabled", name) == 0) 
+      if (::strcmp("disabled", name) == 0)
         smeInfo.disabled = ::strcmp("true", value.get()) == 0;
       if (::strcmp("mode", name) == 0) {
         if (::strcmp("trx", value.get()) == 0)

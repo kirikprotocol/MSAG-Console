@@ -13,7 +13,7 @@
 #include "logger/Logger.h"
 
 #ifndef _WIN32
-#include <thread.h>
+#include <pthread.h>
 #endif
 #include <stdexcept>
 
@@ -320,7 +320,7 @@ namespace util{
       if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
          smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_WARN,"\n*%.100s*[%d]<%.100s(%.100s):%d>\n\tassertin %.100s failed\n\n",
               ASSERT_LOG_DOMAIN,
-              thr_self(),
+              pthread_self(),
               file,
               func,
               line,
@@ -364,7 +364,7 @@ namespace util{
          smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_WARN,
          "\n*%.100s*[%d]<%.100s(%.100s):%d>\n\t%.100s\n\n",
               UNREACHABLE_LOG_DOMAIN,
-              thr_self(),
+              pthread_self(),
               file,
               func,
               line,
@@ -532,7 +532,7 @@ namespace util{
     if ( !expr )
       if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
          smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_WARN,
-         "*%s*[%d]: %s     %s(%s):%d\n",info,thr_self(),e,
+         "*%s*[%d]: %s     %s(%s):%d\n",info,pthread_self(),e,
             #if defined ENABLE_FILE_NAME
               file,
             #else

@@ -1,6 +1,7 @@
 #include "logger/additional/RollingFileAppender.h"
 
 #include <time.h>
+#include <sys/time.h>
 #ifndef _WIN32
 #include <pthread.h>
 #else

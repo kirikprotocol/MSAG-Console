@@ -55,6 +55,14 @@ $(warning set CVSROOT = $(CVSROOT))
 export CVSROOT
 endif
 
+OS=`uname`
+
+ifeq ($(OS),Linux)
+export SOCKETLIB=
+else
+SOCKETLIB=-lsocket
+endif
+
 
 SS7_STACK_HOME := /opt/EABss7009
 export SS7_STACK_HOME

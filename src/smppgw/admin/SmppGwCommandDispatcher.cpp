@@ -1,4 +1,4 @@
-// 
+//
 // File:   SmppGwCommandDispatcher.cc
 // Author: igork
 //
@@ -18,19 +18,19 @@ namespace admin {
 using namespace smsc::core::synchronization;
 using namespace smsc::smppgw;
 
-class GwRunner : public smsc::core::threads::Thread 
+class GwRunner : public smsc::core::threads::Thread
 {
   public:
     GwRunner(const SmscConfigs& cfgs)
     : _app(new smsc::smppgw::Smsc), running(false), configs(cfgs)
     {}
-    
+
     virtual ~GwRunner() {
       if (_app != 0)
         delete _app;
       _app = 0;
     }
-    
+
     virtual int Execute() {
       try {
         if (_app != 0) {
@@ -58,7 +58,7 @@ class GwRunner : public smsc::core::threads::Thread
       fprintf(stderr, "SMSPP GW finished\n");
       return 0;
     }
-    
+
     void Stop()
     {
       if (_app != 0)
@@ -74,7 +74,7 @@ class GwRunner : public smsc::core::threads::Thread
       if (_app != 0)
         _app->dumpSmsc();
     }
-    
+
     bool isRunning()
     {
       MutexGuard guard(mutex);
@@ -86,7 +86,7 @@ class GwRunner : public smsc::core::threads::Thread
       MutexGuard guard(mutex);
       return _app;
     }
-      
+
 protected:
   smsc::smppgw::Smsc* _app;
   Mutex mutex;
@@ -143,7 +143,7 @@ void SmppGwCommandDispatcher::dumpGw()
 
 
 SmppGwCommandDispatcher::SmppGwCommandDispatcher(Socket * admSocket)
-  : CommandDispatcherTempl(admSocket, "gw.aCD")
+  : CommandDispatcherTempl<SmppGwCommandReader, ResponseWriter>(admSocket, "gw.aCD")
 {
 }
 

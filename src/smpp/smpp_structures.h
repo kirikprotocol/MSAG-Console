@@ -375,7 +375,7 @@ namespace DataCoding{
   inline type get_##field() {return field;}
 #define __ref_property__(type,field) \
   type field;\
-  inline void set_##field(type& __value) {field = __value;} \
+  inline void set_##field(const type& __value) {field = __value;} \
   inline type& get_##field() {return field;}
 #define __ptr_property__(type,field) \
   type* field;\

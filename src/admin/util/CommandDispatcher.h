@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include "admin/AdminException.h"
 #include "admin/protocol/CommandReader.h"
@@ -29,8 +30,8 @@ template <class _CommandReader, class _ResponseWriter>
 class CommandDispatcherTempl : public ThreadedTask {
 public:
   CommandDispatcherTempl(Socket * admSocket, const char * const loggerCatname = "smsc.admin.util.CommandDispatcher")
-    : logger(smsc::logger::Logger::getInstance(loggerCatname)), 
-      reader(admSocket), writer(admSocket), 
+    : logger(smsc::logger::Logger::getInstance(loggerCatname)),
+      reader(admSocket), writer(admSocket),
       task_name("CommandDispatcher")
   {
     sock = admSocket;
@@ -137,7 +138,7 @@ protected:
   void init()
   {
     char thr[11];
-    snprintf(thr, sizeof(thr), "[%.8X]", thr_self());
+    snprintf(thr, sizeof(thr), "[%.8X]", pthread_self());
     std::string ndc;
     ndc += thr;
     //ndc += cl_addr;
@@ -146,7 +147,7 @@ protected:
 };
 
 typedef CommandDispatcherTempl<CommandReader, ResponseWriter> CommandDispatcher;
-  
+
 }
 }
 }

@@ -20,6 +20,7 @@
 
 #include "smppgw/version.inc"
 
+
 extern "C" void atExitHandler(void)
 {
     smsc::util::xml::TerminateXerces();
@@ -65,6 +66,7 @@ int main(int argc,char* argv[])
     cfgs.routesconfig=&rc;
     smsc_log_info(logger,  "Route configuration loaded" );
 
+
     in_port_t servicePort = 0;
     if (argc > 1)
     {
@@ -87,6 +89,7 @@ int main(int argc,char* argv[])
     catch (smsc::util::config::ConfigException &c)
     {}
 
+
     if (servicePort == 0 || admin_host == 0) {
       fprintf(stderr,"WARNING: admin port not specified, admin module disabled - smsc is not administrable\n");
 
@@ -102,20 +105,26 @@ int main(int argc,char* argv[])
       fprintf(stderr,"quiting smsc\n");
       delete app;
       fprintf(stderr,"app deleted\n");
-    } else {
-      using namespace smsc::smppgw::admin;
+    }
+    else
+    {
 
-      SmppGwCommandDispatcher::setGwConfigs(cfgs);
-      SmppGwCommandDispatcher::startGw();
+      //using namespace smsc::smppgw::admin;
+
+      smsc::smppgw::admin::SmppGwCommandDispatcher::setGwConfigs(cfgs);
+      smsc::smppgw::admin::SmppGwCommandDispatcher::startGw();
       fprintf(stderr,"SMPP GW started\n");
 
-      SmppGwSocketListener listener;
+
+      smsc::smppgw::admin::SmppGwSocketListener listener;
       listener.init(admin_host, servicePort);
+
 
       smsc::smppgw::registerSmscSignalHandlers(&listener);
       listener.Start();
 
       fprintf(stderr,"SMPP GW admin listener started\n");
+
 
       //running...
       fprintf(stderr,"running...\n");
@@ -123,14 +132,14 @@ int main(int argc,char* argv[])
       listener.WaitFor();
 
       fprintf(stderr,"SMPPGW shutdown...\n");
-      SmppGwCommandDispatcher::stopGw();
+      smsc::smppgw::admin::SmppGwCommandDispatcher::stopGw();
       fprintf(stderr,"SMPPGW stopped\n");
 
       smsc::util::config::Manager::deinit();
 
       fprintf(stderr,"all finished\n");
-    }
 
+    }
   }
   catch (AdminException &e)
   {

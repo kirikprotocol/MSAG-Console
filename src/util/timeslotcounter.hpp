@@ -24,6 +24,17 @@ inline hrtime_t gethrtime()
 }
 #endif
 
+#ifdef linux
+typedef long long hrtime_t;
+
+inline hrtime_t gethrtime()
+{
+  timespec ts={0,0};
+  clock_gettime(CLOCK_REALTIME,&ts);
+  return hrtime_t(ts.tv_sec)*1000000000+ts.tv_nsec;
+}
+#endif
+
 namespace smsc{
 namespace util{
 

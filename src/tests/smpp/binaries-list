@@ -1,2 +1,2 @@
-tests/smpp/BindTest BindTest -ltests-util -ltests-smpp -lcppunit $(XERCES_LIB) -lcore-network -lutil -lsms -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll $(__LIBRARIES)
-tests/smpp/SmsTest SmsTest -ltests-util -ltests-smpp -lcppunit $(XERCES_LIB) -lcore-network -lutil -lsms -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll $(__LIBRARIES)
+tests/smpp/BindTest BindTest -ltests-util -ltests-smpp -lcppunit $(XERCES_LIB) -lcore-network -lutil -lsms $(SOCKETLIB) -lcore-threads -lthread -lrt -lutil-recoder-recode_dll $(__LIBRARIES)
+tests/smpp/SmsTest SmsTest -ltests-util -ltests-smpp -lcppunit $(XERCES_LIB) -lcore-network -lutil -lsms $(SOCKETLIB) -lcore-threads -lthread -lrt -lutil-recoder-recode_dll $(__LIBRARIES)

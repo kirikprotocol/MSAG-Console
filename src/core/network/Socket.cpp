@@ -9,7 +9,7 @@
 #pragma comment(lib,"ws2_32.lib")
 #else
 #include <sys/ioctl.h>
-#ifndef LINUX
+#ifndef linux
 #include <sys/filio.h>
 #endif
 #endif

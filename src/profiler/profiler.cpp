@@ -21,6 +21,7 @@
 #include "resourcemanager/ResourceManager.hpp"
 
 #include <exception>
+#include "util/timeslotcounter.hpp"
 
 namespace smsc{
 namespace profiler{

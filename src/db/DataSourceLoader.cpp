@@ -59,7 +59,7 @@ void DataSourceLoader::loadupDataSourceFactory(
     else
     {
         char buf[256];
-        smsc_log_error(logger, "Load of '%s' at '%s' library. Call to dlopen() failed:%s ! ", dlpath,getcwd(buf,sizeof(buf)),strerror(errno));
+        smsc_log_error(logger, "Load of '%s' at '%s' library. Call to dlopen() failed:%s ! ", dlpath,getcwd(buf,sizeof(buf)),dlerror());
         throw LoadupException();
     }
     (void)handles.Push(dlhandle);

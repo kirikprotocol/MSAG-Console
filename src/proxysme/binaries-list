@@ -2,4 +2,4 @@
 # this file contains binaries definitions
 
 # binary name source name libraries         
-proxysme/proxysme          ProxySmeMain -lproxysme -ldl -ladmin-util -ladmin-protocol -ladmin-service -ladmin-util -ladmin-protocol -ladmin-daemon -ladmin -lcore-network -lutil-templates -lutil-templates -lcore-buffers -lcore-threads -lcore-buffers -lutil-config -lutil-xml -lutil -lutil-recoder-recode_dll -lcore-threads -lthread $(XERCES_LIB) -lsms $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -llogger -lsocket -lnsl
+proxysme/proxysme          ProxySmeMain -lproxysme -ldl -ladmin-util -ladmin-protocol -ladmin-service -ladmin-util -ladmin-protocol -ladmin-daemon -ladmin -lcore-network -lutil-templates -lutil-templates -lcore-buffers -lcore-threads -lcore-buffers -lutil-config -lutil-xml -lutil -lutil-recoder-recode_dll -lcore-threads -lthread $(XERCES_LIB) -lsms $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -llogger $(SOCKETLIB) -lnsl

@@ -62,6 +62,22 @@ protected:
   }
   int wait(int timeout)
   {
+#ifdef linux
+    struct timeval now;
+    struct timespec tv;
+    int retcode;
+
+    gettimeofday(&now,0);
+    tv.tv_sec = now.tv_sec + timeout/1000;
+    tv.tv_nsec = now.tv_usec * 1000+(timeout%1000)*1000000;
+
+    if(tv.tv_nsec>1000000000L)
+    {
+      tv.tv_sec++;
+      tv.tv_nsec-=1000000000L;
+    }
+
+#else
     timestruc_t tv;
     clock_gettime(CLOCK_REALTIME,&tv);
     tv.tv_sec+=timeout/1000;
@@ -71,6 +87,7 @@ protected:
       tv.tv_sec++;
       tv.tv_nsec-=1000000000L;
     }
+#endif
     return pthread_cond_timedwait(&event,&mutex,&tv);
   }
   void notify()

@@ -192,7 +192,7 @@ public:
     }
   }
 
-  void updateCounter(int counter, smsc::smppgw::stat::StatInfo& si,int errorCode=0)
+  void updateCounter(int counter,const smsc::smppgw::stat::StatInfo& si,int errorCode=0)
   {
     statMan->updateCounter(counter, si,errorCode);
   }

@@ -1,1 +1,1 @@
-license/signlicense signlicense $(SSL_LIB) -llicense-check -lsocket -lnsl $(__LIBRARIES)
+license/signlicense signlicense $(SSL_LIB) -llicense-check $(SOCKETLIB) -lnsl $(__LIBRARIES)

@@ -1,5 +1,5 @@
 #binary name            source name     libraries
 -test/ConfigurationMaster   ConfigurationMaster
 test/DatabaseMaster        DatabaseMaster      -L$(SMSC_BUILDDIR)/bin -L$(__LIBS) -ltest-util -lprofiler -lsmeman -lresourcemanager -lstore -ldb -lsms -lutil-config -lutil-recoder-recode_dll -lutil-templates -lcore-threads -lcore-buffers -lutil-xml -lutil -llogger
--test/AdminFunctionalTest AdminFunctionalTest -ltest-admin -ltest-util -lcore-network -lutil-regexp -lutil -lthread -lsocket
-test/SimpleSmppTest     SimpleSmppTest -L$(SMSC_BUILDDIR)/bin -ltest-smpp -ltest-sms -ltest-conf -ltest-core -ltest-util -lsme -lsms -lutil-recoder-recode_dll -lcore-network -lcore-threads -lutil-regexp -lutil -llogger -lreadline -lhistory -ltermcap -lthread -lsocket -lrt
+-test/AdminFunctionalTest AdminFunctionalTest -ltest-admin -ltest-util -lcore-network -lutil-regexp -lutil -lthread $(SOCKETLIB)
+test/SimpleSmppTest     SimpleSmppTest -L$(SMSC_BUILDDIR)/bin -ltest-smpp -ltest-sms -ltest-conf -ltest-core -ltest-util -lsme -lsms -lutil-recoder-recode_dll -lcore-network -lcore-threads -lutil-regexp -lutil -llogger -lreadline -lhistory -ltermcap -lthread $(SOCKETLIB) -lrt

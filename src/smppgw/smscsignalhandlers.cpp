@@ -13,6 +13,10 @@ using namespace smsc::smppgw::admin;
 Smsc * _smsc = 0;
 SmppGwSocketListener* _socketListener = 0;
 
+#ifdef linux
+#define thr_sigsetmask pthread_sigmask
+#endif
+
 void clearThreadSignalMask()
 {
   sigset_t set;

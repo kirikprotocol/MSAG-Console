@@ -45,7 +45,9 @@ void Smsc::mainLoop()
   CmdVector frame;
   Event e;
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.mainLoop");
+#ifndef linux
   thr_setprio(thr_self(),127);
+#endif
   time_t lastKillTrCmd=time(NULL);
   for(;;)
   {
@@ -155,6 +157,9 @@ void Smsc::mainLoop()
         }
         continue;
       }
+#ifdef linux
+      typedef timespec timestruc_t;
+#endif
 
       timestruc_t tv={0,1000000};
       nanosleep(&tv,0);

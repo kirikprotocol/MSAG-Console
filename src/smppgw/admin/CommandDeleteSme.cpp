@@ -1,4 +1,4 @@
-// 
+//
 // File:   CommandDeleteSme.cc
 // Author: igork
 //

@@ -1,6 +1,7 @@
 #include "logger/additional/StderrAppender.h"
 
 #include <stdio.h>
+#include <sys/time.h>
 #include <time.h>
 #ifndef _WIN32
 #include <pthread.h>
