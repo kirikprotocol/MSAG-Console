@@ -552,8 +552,8 @@ int main(void)
             try
             {
                 listener.setTrans(session.getSyncTransmitter());
-                session.connect();
                 setNeedReconnect(false);
+                session.connect();
             }
             catch (SmppConnectException& exc)
             {
