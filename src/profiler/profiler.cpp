@@ -301,7 +301,7 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   auto_ptr<Statement> statement(connection->createStatement(sql));
   if(!statement.get())throw Exception("Profiler: Failed to create statement");
   statement->setInt8(1,profile.reportoptions);
-  statement->setInt8(2,profile.codepage);
+  statement->setUint8(2,profile.codepage);
   char addrbuf[30];
   addr.toString(addrbuf,sizeof(addrbuf));
   __trace2__("Profiler: dbUpdate %s=%d,%d,%s,%d,%c,%s,%c,%c",addrbuf,profile.reportoptions,profile.codepage,profile.locale.c_str(),profile.hide,profile.hideModifiable?'Y':'N',profile.divert.c_str(),profile.divertActive?'Y':'N',profile.divertModifiable?'Y':'N');
@@ -334,7 +334,7 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   __trace2__("Profiler: dbInsert %s=%d,%d,%s,%d,%c,%s,%c,%c",addrbuf,profile.reportoptions,profile.codepage,profile.locale.c_str(),profile.hide,profile.hideModifiable?'Y':'N',profile.divert.c_str(),profile.divertActive?'Y':'N',profile.divertModifiable?'Y':'N');
   statement->setString(1, addrbuf);
   statement->setInt8(2, profile.reportoptions);
-  statement->setInt8(3, profile.codepage);
+  statement->setUint8(3, profile.codepage);
   statement->setString(4,profile.locale.c_str());
   statement->setInt8(5, profile.hide);
   statement->setString(6, profile.hideModifiable?"Y":"N");
@@ -838,7 +838,7 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
     dta = rs->getString(1);
     Address addr(dta);
     p.reportoptions=rs->getInt8(2);
-    p.codepage=rs->getInt8(3);
+    p.codepage=rs->getUint8(3);
     const char * l=rs->getString(4);
     p.locale=l?l:"";
     p.hide=rs->getInt8(5);
