@@ -120,6 +120,23 @@ static unsigned MakeMrRef()
   return time(0)%0x0ffff;
 }
 
+static inline
+void SetVersion(ET96MAP_APP_CNTX_T& ac,unsigned version){
+  if ( version > 3 || version == 0 ) throw runtime_error(
+    FormatText("MAP::%s: Opss, version = %d, why?",__FUNCTION__,version));
+  switch(version){
+  case 3:
+  //  ac.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_3;
+  //  break;
+  case 2:
+    ac.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
+    break;
+  case 1:
+    ac.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_1;
+    break;
+  }
+}
+
 static string FormatText(const char* format,...)
 {
   auto_ptr<char> b(new char[1024]);
@@ -458,22 +475,6 @@ static void QueryMcsVersion(MapDialog* dialog)
   }
 }
 */
-static inline
-void SetVersion(ET96MAP_APP_CNTX_T& ac,unsigned version){
-  if ( version > 3 || version == 0 ) throw runtime_error(
-    FormatText("MAP::%s: Opss, version = %d, why?",__FUNCTION__,version));
-  switch(version){
-  case 3:
-  //  ac.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_3;
-  //  break;
-  case 2:
-    ac.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
-    break;
-  case 1:
-    ac.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_1;
-    break;
-  }
-}
 
 static void SendRInfo(MapDialog* dialog)
 {
