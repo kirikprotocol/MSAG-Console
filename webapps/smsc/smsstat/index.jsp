@@ -76,13 +76,13 @@ if (stat != null) {
     <th width="13%"><div align=right>Temporal</div></th>
 </tr>
 <tr class=row1>
-    <td>Total SMS processed:</td>
-    <td align=right><%= total.accepted%></td>
-    <td align=right><%= total.rejected%></td>
-    <td align=right><%= total.delivered%></td>
-    <td align=right><%= total.failed%></td>
-    <td align=right><%= total.rescheduled%></td>
-    <td align=right><%= total.temporal%></td>
+    <td width="22%">Total SMS processed:</td>
+    <td width="13%" align=right><%= total.accepted%></td>
+    <td width="13%" align=right><%= total.rejected%></td>
+    <td width="13%" align=right><%= total.delivered%></td>
+    <td width="13%" align=right><%= total.failed%></td>
+    <td width="13%" align=right><%= total.rescheduled%></td>
+    <td width="13%" align=right><%= total.temporal%></td>
 </tr>
 <%
 Iterator i = dates.iterator();
@@ -90,26 +90,26 @@ while (i.hasNext()) {
     DateCountersSet date = (DateCountersSet)i.next();
     SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
 %>  <tr class=row0>
-        <td><%= formatter.format(date.getDate())%></td>
-        <td align=right><%= date.accepted%></td>
-        <td align=right><%= date.rejected%></td>
-        <td align=right><%= date.delivered%></td>
-        <td align=right><%= date.failed%></td>
-        <td align=right><%= date.rescheduled%></td>
-        <td align=right><%= date.temporal%></td>
+        <td width="22%"><%= formatter.format(date.getDate())%></td>
+        <td width="13%" align=right><%= date.accepted%></td>
+        <td width="13%" align=right><%= date.rejected%></td>
+        <td width="13%" align=right><%= date.delivered%></td>
+        <td width="13%" align=right><%= date.failed%></td>
+        <td width="13%" align=right><%= date.rescheduled%></td>
+        <td width="13%" align=right><%= date.temporal%></td>
     </tr><%
     Collection hours = date.getHourStat();
     Iterator j = hours.iterator();
     while (j.hasNext()) {
         HourCountersSet hour = (HourCountersSet)j.next();
     %>  <tr class=row1>
-            <td>&nbsp;&nbsp;&nbsp;<%= ((hour.getHour() < 10)? "0"+hour.getHour():""+hour.getHour())%></td>
-            <td align=right><%= hour.accepted%></td>
-            <td align=right><%= hour.rejected%></td>
-            <td align=right><%= hour.delivered%></td>
-            <td align=right><%= hour.failed%></td>
-            <td align=right><%= hour.rescheduled%></td>
-            <td align=right><%= hour.temporal%></td>
+            <td width="22%">&nbsp;&nbsp;&nbsp;<%= ((hour.getHour() < 10)? "0"+hour.getHour():""+hour.getHour())%></td>
+            <td width="13%" align=right><%= hour.accepted%></td>
+            <td width="13%" align=right><%= hour.rejected%></td>
+            <td width="13%" align=right><%= hour.delivered%></td>
+            <td width="13%" align=right><%= hour.failed%></td>
+            <td width="13%" align=right><%= hour.rescheduled%></td>
+            <td width="13%" align=right><%= hour.temporal%></td>
         </tr>
   <%}
 }
@@ -133,13 +133,13 @@ while (i.hasNext()) {
             SmeIdCountersSet sme = (SmeIdCountersSet)i.next();
         %>
         <tr class=row1>
-            <td align=right><%= StringEncoderDecoder.encode(sme.smeid)%></td>
-            <td align=right><%= sme.accepted%></td>
-            <td align=right><%= sme.rejected%></td>
-            <td align=right><%= sme.delivered%></td>
-            <td align=right><%= sme.failed%></td>
-            <td align=right><%= sme.rescheduled%></td>
-            <td align=right><%= sme.temporal%></td>
+            <td width="22%" align=right><%= StringEncoderDecoder.encode(sme.smeid)%></td>
+            <td width="13%" align=right><%= sme.accepted%></td>
+            <td width="13%" align=right><%= sme.rejected%></td>
+            <td width="13%" align=right><%= sme.delivered%></td>
+            <td width="13%" align=right><%= sme.failed%></td>
+            <td width="13%" align=right><%= sme.rescheduled%></td>
+            <td width="13%" align=right><%= sme.temporal%></td>
         </tr><%
           // TODO: add errors display here !!!
         }
@@ -164,13 +164,13 @@ while (i.hasNext()) {
             RouteIdCountersSet route = (RouteIdCountersSet)i.next();
         %>
         <tr class=row1>
-            <td align=right><%= StringEncoderDecoder.encode(route.routeid)%></td>
-            <td align=right><%= route.accepted%></td>
-            <td align=right><%= route.rejected%></td>
-            <td align=right><%= route.delivered%></td>
-            <td align=right><%= route.failed%></td>
-            <td align=right><%= route.rescheduled%></td>
-            <td align=right><%= route.temporal%></td>
+            <td width="22%" align=right><%= StringEncoderDecoder.encode(route.routeid)%></td>
+            <td width="13%" align=right><%= route.accepted%></td>
+            <td width="13%" align=right><%= route.rejected%></td>
+            <td width="13%" align=right><%= route.delivered%></td>
+            <td width="13%" align=right><%= route.failed%></td>
+            <td width="13%" align=right><%= route.rescheduled%></td>
+            <td width="13%" align=right><%= route.temporal%></td>
         </tr><%
           // TODO: add errors display here !!!
         }
@@ -180,28 +180,34 @@ while (i.hasNext()) {
     if (i.hasNext()) {
 %>
 <tr>
-    <td colspan=4><div class=page_subtitle>SMS delivery state</div></td>
+    <td colspan=7><div class=page_subtitle>SMS delivery state</div></td>
 </tr>
 <tr class=row0>
-    <th width="25%"><div align=right>Error Code</div></th>
-    <th width="25%"><div align=right>Count</div></th>
-    <th width="25%">&nbsp;</th>
-    <th width="25%">&nbsp;</th>
+    <th width="22%"><div align=right>Error Code</div></th>
+    <th width="13%"><div align=right>Count</div></th>
+    <th width="13%">&nbsp;</th>
+    <th width="13%">&nbsp;</th>
+    <th width="13%">&nbsp;</th>
+    <th width="13%">&nbsp;</th>
+    <th width="13%">&nbsp;</th>
 </tr>  <%
         while (i.hasNext()) {
             ErrorCounterSet errid = (ErrorCounterSet)i.next();
         %>
         <tr class=row1>
-            <td align=right nowrap>
+            <td width="22%" align=right nowrap>
         <%
           String errMessage = appContext.getLocaleString(request.getLocale(), "smsc.errcode."+errid.errcode);
           if (errMessage == null) errMessage = appContext.getLocaleString(request.getLocale(), "smsc.errcode.unknown"); %>
         <%= StringEncoderDecoder.encode(errMessage == null ? "" : errMessage)%>
         (<%=errid.errcode%>)
             </td>
-            <td align=right><%= errid.counter%></td>
-            <td align=right>&nbsp;</td>
-            <td align=right>&nbsp;</td>
+            <td width="13%" align=right><%= errid.counter%></td>
+            <td width="13%" align=right>&nbsp;</td>
+            <td width="13%" align=right>&nbsp;</td>
+            <td width="13%" align=right>&nbsp;</td>
+            <td width="13%" align=right>&nbsp;</td>
+            <td width="13%" align=right>&nbsp;</td>
         </tr><%
         }
     }
