@@ -42,7 +42,8 @@
   int row = 0;
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<%@ include file="inc/menu.jsp"%>
+<%@ include file="inc/start_stop.jsp"%>
+<br><%@ include file="inc/menu.jsp"%>
 <script>
 function showhide(elem)
 {

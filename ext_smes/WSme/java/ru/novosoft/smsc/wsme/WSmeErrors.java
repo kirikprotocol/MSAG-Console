@@ -36,6 +36,8 @@ public class WSmeErrors
       private static final String B = WSmeErrors.error.B + "remote.";
 
       public static final String failure = B + "Failure";
+      public static final String couldntStart = B + "CouldntStart";
+      public static final String couldntStop = B + "CouldntStop";
     }
     public static class admin
     {

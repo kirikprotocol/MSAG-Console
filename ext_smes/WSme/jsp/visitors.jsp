@@ -40,7 +40,8 @@
   }
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<%@ include file="inc/menu.jsp"%><br>
+<%@ include file="inc/start_stop.jsp"%>
+<br><%@ include file="inc/menu.jsp"%><br>
 <div class=secView>Visitors</div>
 <table class=secRep cellspacing=1 width="100%">
 <thead>

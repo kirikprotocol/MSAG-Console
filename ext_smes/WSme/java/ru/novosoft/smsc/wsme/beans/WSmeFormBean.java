@@ -8,6 +8,7 @@
 package ru.novosoft.smsc.wsme.beans;
 
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.wsme.WSmeContext;
 import ru.novosoft.smsc.wsme.WSme;
 import ru.novosoft.smsc.wsme.WSmeErrors;
@@ -32,6 +33,8 @@ public class WSmeFormBean extends IndexBean
   private Map params = new HashMap();
   private String btnApply  = null;
   private String btnCancel = null;
+  private String btnStart  = null;
+  private String btnStop   = null;
 
   private int menuSelection = RESULT_OK;
 
@@ -67,10 +70,13 @@ public class WSmeFormBean extends IndexBean
     if (wsme == null)
       return error(WSmeErrors.error.admin.InitFailed, "WSme initialized incorrectly");
 
-    if (menuSelection != RESULT_OK)
-      return menuSelection; // redirect
+    if (btnStart != null)
+      result = processStart();
+    else if (btnStop != null)
+      result = processStop();
 
-    return RESULT_OK;
+    btnStart = null; btnStop = null;
+    return menuSelection; // redirect if menuSelection != RESULT_OK;
   }
 
   private int processApply()
@@ -96,13 +102,53 @@ public class WSmeFormBean extends IndexBean
       return error(WSmeErrors.error.admin.ApplyFailed, e.getMessage());
     }
 
-    return RESULT_OK;
+    int result = processStop();
+    if (result != RESULT_OK)
+      return result;
+
+    return processStart();
   }
 
   private int processReset()
   {
     params.clear();
     return loadParams();
+  }
+
+  private int processStart()
+  {
+    int status = getWSmeStatus();
+    if (status != ServiceInfo.STATUS_RUNNING &&
+        status != ServiceInfo.STATUS_STARTING)
+    {
+      try {
+        hostsManager.startService(Constants.WSME_SME_ID);
+        return RESULT_OK;
+      } catch (Throwable e) {
+        logger.error("Couldn't start WSme", e);
+        return error(WSmeErrors.error.remote.couldntStart, e);
+      }
+    }
+    else
+      return RESULT_OK;
+  }
+
+  private int processStop()
+  {
+    int status = getWSmeStatus();
+    if (status != ServiceInfo.STATUS_STOPPED &&
+        status != ServiceInfo.STATUS_STOPPED)
+    {
+      try {
+        hostsManager.shutdownService(Constants.WSME_SME_ID);
+        return RESULT_OK;
+      } catch (Throwable e) {
+        logger.error("Couldn't stop WSme", e);
+        return error(WSmeErrors.error.remote.couldntStop, e);
+      }
+    }
+    else
+      return RESULT_OK;
   }
 
   public byte getWSmeStatus()
@@ -279,6 +325,19 @@ public class WSmeFormBean extends IndexBean
   public void setBtnCancel(String btnCancel) {
     this.btnCancel = btnCancel;
   }
+  public String getBtnStart() {
+    return btnStart;
+  }
+  public void setBtnStart(String btnStart) {
+    this.btnStart = btnStart;
+  }
+  public String getBtnStop() {
+    return btnStop;
+  }
+  public void setBtnStop(String btnStop) {
+    this.btnStop = btnStop;
+  }
+
   public int getMenuId() {
     return RESULT_DONE;
   }
