@@ -29,10 +29,14 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
     if (result != RESULT_OK && result != RESULT_ADS) return result;
     result = RESULT_OK;
 
-    if (btnAdd != null && newId != null && newLang != null && newAd != null)
+    if (btnAdd != null && newId != null && newLang != null && newAd != null) {
       result = addNewAd();
-    else if (btnDel != null && selectedRows != null)
+      if (result == RESULT_OK) return RESULT_ADS; //redirect for refresh
+    }
+    else if (btnDel != null && selectedRows != null) {
       result = delAds();
+      if (result == RESULT_OK) return RESULT_ADS; //redirect for refresh
+    }
 
     int loadResult = loadAds();
     result = (result == RESULT_OK) ? loadResult:result;

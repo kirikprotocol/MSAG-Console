@@ -26,10 +26,14 @@ public class WSmeLangsFormBean extends WSmeBaseFormBean
     if (result != RESULT_OK && result != RESULT_LANGS) return result;
     result = RESULT_OK;
 
-    if (btnAdd != null && newMask != null && newLang != null)
+    if (btnAdd != null && newMask != null && newLang != null) {
       result = addNewLang();
-    else if (btnDel != null && selectedRows != null)
+      if (result == RESULT_OK) return RESULT_LANGS; //redirect for refresh
+    }
+    else if (btnDel != null && selectedRows != null) {
       result = delLangs();
+      if (result == RESULT_OK) return RESULT_LANGS; //redirect for refresh
+    }
 
     int loadResult = loadLangs();
     result = (result == RESULT_OK) ? loadResult:result;

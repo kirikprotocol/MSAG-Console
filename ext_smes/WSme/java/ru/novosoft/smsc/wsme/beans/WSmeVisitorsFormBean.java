@@ -25,10 +25,14 @@ public class WSmeVisitorsFormBean extends WSmeBaseFormBean
     if (result != RESULT_OK && result != RESULT_VISITORS) return result;
     result = RESULT_OK;
 
-    if (btnAdd != null && newVisitor != null)
+    if (btnAdd != null && newVisitor != null) {
       result = addNewVisitor();
-    else if (btnDel != null && selectedRows != null)
+      if (result == RESULT_OK) return RESULT_VISITORS; //redirect for refresh
+    }
+    else if (btnDel != null && selectedRows != null) {
       result = delVisitors();
+      if (result == RESULT_OK) return RESULT_VISITORS; //redirect for refresh
+    }
 
     int loadResult = loadVisitors();
     result = (result == RESULT_OK) ? loadResult:result;

@@ -26,8 +26,8 @@
       response.sendRedirect("index.jsp");
       return;
     case WSmeFormBean.RESULT_VISITORS:
-      STATUS.append("Ok");
-      break;
+      response.sendRedirect("visitors.jsp");
+      return;
     case WSmeFormBean.RESULT_OK:
       STATUS.append("Ok");
       break;

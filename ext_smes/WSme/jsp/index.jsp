@@ -23,12 +23,12 @@
     case WSmeFormBean.RESULT_LANGS:
       response.sendRedirect("langs.jsp");
       return;
+    case WSmeFormBean.RESULT_DONE:
+      response.sendRedirect("index.jsp");
+      return;
     case WSmeFormBean.RESULT_ADS:
       response.sendRedirect("ads.jsp");
       return;
-    case WSmeFormBean.RESULT_DONE:
-      STATUS.append("Ok");
-      break;
     case WSmeFormBean.RESULT_OK:
       STATUS.append("Ok");
       break;

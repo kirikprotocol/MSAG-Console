@@ -26,7 +26,7 @@
       response.sendRedirect("index.jsp");
       return;
     case WSmeFormBean.RESULT_ADS:
-      STATUS.append("Ok");
+      response.sendRedirect("ads.jsp");
       break;
     case WSmeFormBean.RESULT_OK:
       STATUS.append("Ok");

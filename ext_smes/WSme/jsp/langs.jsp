@@ -26,8 +26,8 @@
       response.sendRedirect("index.jsp");
       return;
     case WSmeFormBean.RESULT_LANGS:
-      STATUS.append("Ok");
-      break;
+      response.sendRedirect("langs.jsp");
+      return;
     case WSmeFormBean.RESULT_OK:
       STATUS.append("Ok");
       break;
