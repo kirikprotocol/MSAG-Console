@@ -42,6 +42,7 @@ public:
       minuse=maxuse=idx;
     }
     __require__(minuse>=0 && minuse<=max-min+1 && maxuse>=0 && maxuse<=max-min+1);
+    __trace2__("PQ: push - idx=%d, prio=%d, count=%d, minuse=%d, maxuse=%d",idx,priority,count,minuse,maxuse);
     queue[idx].Push(item);
     count++;
     return *this;
@@ -51,6 +52,7 @@ public:
   {
     if(count==0)return false;
     __require__(minuse>=0 && minuse<=max-min+1 && maxuse>=0 && maxuse<=max-min+1);
+    __trace2__("PQ: enter pop - minuse=%d, maxuse=%d",minuse,maxuse);
     int best=minuse,i;
     double bestval=(double)counts[minuse]/((minuse+min)>0?(minuse+min):1);
 
@@ -67,6 +69,7 @@ public:
         bestval=val;
       }
     }
+    __trace2__("PQ: pop - best=%d");
     counts[best]++;
     //if(counts[best]>=best)counts[best]=0;
     queue[best].Shift(item);
@@ -77,6 +80,7 @@ public:
       while(queue[maxuse].Count()==0)maxuse--;
     }
     __require__(minuse>=0 && minuse<=max-min+1 && maxuse>=0 && maxuse<=max-min+1);
+    __trace2__("PQ: enter pop - count=%d, minuse=%d, maxuse=%d",count, minuse,maxuse);
     processed++;
     if(processed>=(max-min)*100)
     {
