@@ -15,10 +15,18 @@
 
 #if defined DISABLE_ANY_CHECKS
 //  #warning "any chacks will disabled, it is very dungrouse mode"
-  #define DISABLE_HARD_CHECKS
-  #define DISABLE_SOFT_CHECKS
-  #define DISABLE_WATCHDOG
-  #define DISABLE_TRACING
+  #if !defined DISABLE_HARD_CHECKS
+		#define DISABLE_HARD_CHECKS
+	#endif
+  #if !defined DISABLE_SOFT_CHECKS
+		#define DISABLE_SOFT_CHECKS
+	#endif
+  #if !defined DISABLE_WATCHDOG
+		#define DISABLE_WATCHDOG
+	#endif
+	#if !defined DISABLE_TRACING  
+		#define DISABLE_TRACING
+	#endif
 #endif
 
 #define require(expr) ccassert(expr)
@@ -31,9 +39,9 @@
   smsc::util::warningImpl(text,__FILE__,__PRETTY_FUNCTION__,__LINE__)
 
 #if defined ENABLE_FILE_NAME
-#define __warning2__(text,arg...) 	fprintf(TRACE_LOG_STREAM,"*WARNING*: "text"\n\t%s(%s):%d\n",##arg,file,__PRETTY_FUNCTION__,__LINE__)
+#define __warning2__(text,arg...)       fprintf(TRACE_LOG_STREAM,"*WARNING*: "text"\n\t%s(%s):%d\n",##arg,file,__PRETTY_FUNCTION__,__LINE__)
 #else
-#define __warning2__(text,arg...) 	fprintf(TRACE_LOG_STREAM,"*WARNING*: "text"\n\t%s(%s):%d\n",##arg,"",__PRETTY_FUNCTION__,__LINE__)
+#define __warning2__(text,arg...)       fprintf(TRACE_LOG_STREAM,"*WARNING*: "text"\n\t%s(%s):%d\n",##arg,"",__PRETTY_FUNCTION__,__LINE__)
 #endif
 
 #if !defined DISABLE_WATCHDOG
@@ -94,25 +102,25 @@
   #if defined ( ASSERT_ABORT_IF_FAIL )
     #define ccassert(expr) \
       smsc::util::abortIfFail(expr,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
-		#define __unreachable__(text) \
-		  smsc::util::abortIfReached(text,__FILE__,__PRETTY_FUNCTION__,__LINE__)
+                #define __unreachable__(text) \
+                  smsc::util::abortIfReached(text,__FILE__,__PRETTY_FUNCTION__,__LINE__)
   #elif defined ( ASSERT_THROW_IF_FAIL )
     #define ccassert(expr) \
       smsc::util::throwIfFail(expr,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
-		#define __unreachable__(text) \
-		  smsc::util::throwIfReached(text,__FILE__,__PRETTY_FUNCTION__,__LINE__)
+                #define __unreachable__(text) \
+                  smsc::util::throwIfReached(text,__FILE__,__PRETTY_FUNCTION__,__LINE__)
   #elif defined ( ASSERT_ONLY_WARNING )
     #define ccassert(expr) \
       smsc::util::warningIfFail(expr,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
-		#define __unreachable__(text) \
-		  smsc::util::warningIfReached(text,__FILE__,__PRETTY_FUNCTION__,__LINE__)
+                #define __unreachable__(text) \
+                  smsc::util::warningIfReached(text,__FILE__,__PRETTY_FUNCTION__,__LINE__)
   #else
     //#warning "default assertion type set abort_if_fail"
     //#error "type of assertion is unknown"
     #define ccassert(expr) \
       smsc::util::abortIfFail(expr,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
-		#define __unreachable__(text) \
-		  smsc::util::abortIfReached(text,__FILE__,__PRETTY_FUNCTION__,__LINE__)
+                #define __unreachable__(text) \
+                  smsc::util::abortIfReached(text,__FILE__,__PRETTY_FUNCTION__,__LINE__)
   #endif
 #endif
 
@@ -167,7 +175,7 @@
 namespace smsc{
 namespace util{
 
-	class AssertException{};
+        class AssertException{};
 
   inline void abortIfFail(bool expr,const char* expr_text,
                           const char* file, const char* func, int line) throw()
@@ -197,14 +205,14 @@ namespace util{
               expr_text);
       fprintf(ASSERT_LOG_STREAM,throw_message);
       //throw throw_message;
-			throw AssertException();
+                        throw AssertException();
     }
   }
   inline void warningIfFail(bool expr,const char* expr_text,
                             const char* file, const char* func, int line) throw()
   {
     if ( !expr )  
-			fprintf(ASSERT_LOG_STREAM,"*%s*<%s(%s):%d>\n\tassertin %s failed\n",
+                        fprintf(ASSERT_LOG_STREAM,"*%s*<%s(%s):%d>\n\tassertin %s failed\n",
               ASSERT_LOG_DOMAIN,
               file,
               func,
@@ -235,10 +243,10 @@ namespace util{
               expr_text);
       fprintf(ASSERT_LOG_STREAM,throw_message);
       //throw throw_message;
-			throw AssertException();
+                        throw AssertException();
   }
   
-	inline void warningIfReached(const char* expr_text,
+        inline void warningIfReached(const char* expr_text,
                             const char* file, const char* func, int line) throw()
   {
       fprintf(ASSERT_LOG_STREAM,"*%s*<%s(%s):%d>\n\%s\n",
@@ -249,7 +257,7 @@ namespace util{
               expr_text);
   }
   
-	inline void watchImpl(bool e, const char* expr,
+        inline void watchImpl(bool e, const char* expr,
                         const char* file, const char* func, int line)
   {
     fprintf(WATCH_LOG_STREAM,"*watch*: %s = %s     %s(%s):%d\n",
