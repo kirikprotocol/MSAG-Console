@@ -4,19 +4,15 @@
 
 #include "Array.hpp"
 #include "core/synchronization/Mutex.hpp"
+#include "util/debug.h"
 
 namespace smsc{
 namespace core{
 namespace buffers{
 
-//#include "Hash.hpp"
-//#include "List.hpp"
-
-class MemoryManager;
-
 #define MM_MAX_CHECK_POINTS 64
 #define MM_MAX_TASK_NAME_SIZE 64
-#define MM_DEFAULT_PREALLOCATED_HEAPS 32
+#define MM_DEFAULT_PREALLOCATED_HEAPS 2
 #define MM_DEFAULT_RAWHEAP_SIZE 4096
 #define MM_BLOCKS_HEAP_QUANTUM 32
 #define MM_MAX_PREALLOC_BLOCK_SIZE 1024
@@ -25,20 +21,29 @@ class MemoryManager;
 #define MM_BLOCK_HEAP_MAGIC 0x28611adbL
 #define MM_RAW_HEAP_MAGIC 0xd82b3229L
 
+class MemoryManager;
+
 class MemoryHeap{
 public:
-  MemoryHeap(char* taskname,int rawheapsize,int blocksheapquantum,
-             MemoryManager *parentmanager);
+  MemoryHeap(const char* taskname,MemoryManager *parentmanager);
+  MemoryHeap(const char* taskname,MemoryManager *parentmanager,
+             int rawheapsize,int blocksheapquantum);
 
   ~MemoryHeap();
 
-  int initHeap(int rawheapsize,int blocksheapquantum,int maxblocksize,
+  void initHeap(int rawheapsize,int blocksheapquantum,int maxblocksize,
                int blocksperpool);
 
-  int cleanHeap();
+  void cleanHeap();
 
-  int selectHeap(char* taskname,int rawheapsize,int blocksheapquantum,
-                 MemoryManager *parentmanager);
+  int selectHeap(const char* taskname,MemoryManager *parentmanager,
+                 int rawheapsize,int blocksheapquantum);
+
+  template <class T>
+  void getRawMem(int size,T*& mem)
+  {
+    mem=(T*)getRawMem(size);
+  }
 
   void* getRawMem(int size);
   int setCheckPoint();
@@ -46,7 +51,22 @@ public:
   void resetRawHeap();
 
   void* getMem(int size);
-  void freeMem(void* block);
+
+  template <class T>
+  void getMem(int size,T*& mem)
+  {
+    mem=(T*)getMem(size);
+  }
+
+  template <class T>
+  void freeMem(T*& block)
+  {
+    freeMem((void*&)block);
+  }
+
+  void freeMem(void*& block);
+
+  void releaseHeap();
 
 
 private:
@@ -75,16 +95,18 @@ private:
 
   //Blocks heap staff
   int blocksHeapQuantum;
+  int blocksHeapQuantumShift;
+  int blocksHeapQuantumMask;
   int blocksMaxSize;
   int blocksPerPool;
 
   typedef Array<char*> MemArray;
   struct BlocksHeapPooledPage{
-    //char *firstpage;
     MemArray freeBlocks;
     MemArray usedBlocks;
   };
   struct BlocksHeapVarPage{
+    BlocksHeapVarPage(int size):blocksize(size){}
     int blocksize;
     MemArray freeBlocks;
     MemArray usedBlocks;
@@ -93,15 +115,16 @@ private:
   typedef Array<BlocksHeapVarPage*> VarBlocksArray;
   BlocksArray blocksPool;
   VarBlocksArray varBlocks;
-};
+}; // MemoryHeap
 
 class MemoryManager{
 public:
   MemoryManager();
+  ~MemoryManager();
 
   void preallocateHeaps(int count);
 
-  MemoryHeap* acquireHeap(char* taskname,int rawheapsize,int blocksheapquantum);
+  MemoryHeap* acquireHeap(const char* taskname,int rawheapsize,int blocksheapquantum);
   void releaseHeap(MemoryHeap* heap);
 private:
   typedef Array<MemoryHeap*> HeapArray;
@@ -118,7 +141,7 @@ private:
   {
     mutex.Unlock();
   }
-};
+};//MemoryManager
 
 };//buffers
 };//core

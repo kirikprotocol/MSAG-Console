@@ -4,6 +4,8 @@
 #
 #
 
+CXXFLAGS=-I$(SMSC_SRCDIR)
+
 PACKAGE := core.buffers
 
 ifndef SMSC_SRCDIR

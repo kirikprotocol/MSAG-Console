@@ -1,6 +1,7 @@
 #include "MemoryManager.hpp"
 
 #include <string.h>
+#include <stdio.h>
 
 namespace smsc{
 namespace core{
@@ -32,7 +33,7 @@ void MemoryManager::preallocateHeaps(int count)
   freeHeaps.SetSize(count);
   for(i=freeHeaps.Count();i<count;i++)
   {
-    freeHeaps[i]=new MemoryHeap(NULL,MM_DEFAULT_RAWHEAP_SIZE,MM_MAX_PREALLOC_BLOCK_SIZE,this);
+    freeHeaps[i]=new MemoryHeap(NULL,this,MM_DEFAULT_RAWHEAP_SIZE,MM_MAX_PREALLOC_BLOCK_SIZE);
   }
 }
 
@@ -43,14 +44,14 @@ void MemoryManager::preallocateHeaps(int count)
  */
 
 MemoryHeap*
-MemoryManager::acquireHeap(char* taskname,int rawheapsize,int blocksheapquantum)
+MemoryManager::acquireHeap(const char* taskname,int rawheapsize,int blocksheapquantum)
 {
   int i;
   MemoryHeap *retval;
   Lock();
   for(i=0;i<freeHeaps.Count();i++)
   {
-    if(freeHeaps[i]->selectHeap(taskname,rawheapsize,blocksheapquantum,this))
+    if(freeHeaps[i]->selectHeap(taskname,this,rawheapsize,blocksheapquantum))
     {
       retval=freeHeaps[i];
       usedHeaps.Push(freeHeaps[i]);
@@ -59,7 +60,7 @@ MemoryManager::acquireHeap(char* taskname,int rawheapsize,int blocksheapquantum)
       return retval;
     }
   }
-  retval=new MemoryHeap(taskname,rawheapsize,blocksheapquantum,this);
+  retval=new MemoryHeap(taskname,this,rawheapsize,blocksheapquantum);
   usedHeaps.Push(retval);
   Unlock();
   return retval;
@@ -85,6 +86,19 @@ void MemoryManager::releaseHeap(MemoryHeap *heap)
   Unlock();
 }
 
+MemoryManager::~MemoryManager()
+{
+  int i;
+  for(i=0;i<usedHeaps.Count();i++)
+  {
+    delete usedHeaps[i];
+  }
+  for(i=0;i<freeHeaps.Count();i++)
+  {
+    delete freeHeaps[i];
+  }
+}
+
 /****************************************************************************
  *
  * MemoryHeap
@@ -96,14 +110,20 @@ void MemoryManager::releaseHeap(MemoryHeap *heap)
  * страницы линейного хипа.
  */
 
-MemoryHeap::MemoryHeap(char* taskname,
+MemoryHeap::MemoryHeap(const char* taskname,
+                       MemoryManager *parentmanager,
                        int rawheapsize,
-                       int blocksheapquantum,
-                       MemoryManager *parentmanager)
+                       int blocksheapquantum)
 {
   memset(this,0,sizeof(*this));
-  taskName[sizeof(taskName)-1]=0;
-  strncpy(taskName,taskname,sizeof(taskName));
+  if(taskname)
+  {
+    strncpy(taskName,taskname,sizeof(taskName));
+    taskName[sizeof(taskName)-1]=0;
+  }else
+  {
+    taskName[0]=0;
+  }
   parentManager=parentmanager;
   initHeap(rawheapsize,
            blocksheapquantum,
@@ -111,7 +131,26 @@ MemoryHeap::MemoryHeap(char* taskname,
            MM_PER_POOL_BLOCKS);
 }
 
-int MemoryHeap::initHeap(int rawheapsize,
+MemoryHeap::MemoryHeap(const char* taskname,MemoryManager *parentmanager)
+{
+  memset(this,0,sizeof(*this));
+  if(taskname)
+  {
+    strncpy(taskName,taskname,sizeof(taskName));
+    taskName[sizeof(taskName)-1]=0;
+  }else
+  {
+    taskName[0]=0;
+  }
+  parentManager=parentmanager;
+}
+
+MemoryHeap::~MemoryHeap()
+{
+  cleanHeap();
+}
+
+void MemoryHeap::initHeap(int rawheapsize,
                          int blocksheapquantum,
                          int maxblocksize,
                          int blocksperpool)
@@ -132,6 +171,18 @@ int MemoryHeap::initHeap(int rawheapsize,
   int blocksize=blocksHeapQuantum;
   int n=blocksMaxSize/blocksHeapQuantum;
   int i,j;
+
+  blocksHeapQuantumShift=0;
+  blocksHeapQuantumMask=0;
+  j=blocksHeapQuantum;
+  while(!((j&1)==1))
+  {
+    j>>=1;
+    blocksHeapQuantumShift++;
+    blocksHeapQuantumMask<<=1;
+    blocksHeapQuantumMask|=1;
+  }
+
   char *ptr;
   int *iptr;
   blocksPool.SetSize(n);
@@ -151,17 +202,30 @@ int MemoryHeap::initHeap(int rawheapsize,
   }
 }
 
-int MemoryHeap::cleanHeap()
+void MemoryHeap::cleanHeap()
 {
   PRawHeapPage p=firstRawPage,q;
+  trace2("raw heap cleanup:%08x",p)
+  char *mem;
   while(p)
   {
     q=p->next;
-    delete [] p->memPage;
+    mem=p->memPage;
+    if(!mem)
+    {
+      __warning__("empty raw heap page!!!");
+      p=q;
+      continue;
+    }
+    mem-=sizeof(RawHeapPage);
+    trace2("delete:%x",mem);
+    delete [] mem;
     p=q;
   }
+  firstRawPage=0;
   checkPointsCount=0;
   int i,j;
+  trace("blocks pool heap cleanup")
   for(i=0;i<blocksPool.Count();i++)
   {
     for(j=0;j<blocksPool[i]->freeBlocks.Count();j++)
@@ -181,6 +245,7 @@ int MemoryHeap::cleanHeap()
     delete blocksPool[i];
   }
   blocksPool.Clean();
+  trace("var blocks heap cleanup")
   for(i=0;i<varBlocks.Count();i++)
   {
     for(j=0;j<varBlocks[i]->freeBlocks.Count();j++)
@@ -198,12 +263,36 @@ int MemoryHeap::cleanHeap()
   varBlocks.Clean();
 }
 
+int MemoryHeap::selectHeap(const char* taskname,MemoryManager *parentmanager,
+               int rawheapsize,int blocksheapquantum)
+{
+  if( rawheapsize>=rawHeapPageSize &&
+      rawheapsize<rawHeapPageSize+rawHeapPageSize/2 &&
+      blocksheapquantum==blocksHeapQuantum)
+  {
+    if(taskname)
+    {
+      strncpy(taskName,taskname,sizeof(taskName));
+      taskName[sizeof(taskName)-1]=0;
+    }else
+    {
+      taskName[0]=0;
+    }
+    parentManager=parentmanager;
+    return 1;
+  }
+  return 0;
+}
+
 
 void* MemoryHeap::getRawMem(int size)
 {
   void *retval;
   int *iptr;
   int havespace;
+  __require__(firstRawPage!=NULL);
+  __require__(lastRawPage!=NULL);
+  __require__(lastRawPage->memPage!=NULL);
   for(;;)
   {
     havespace=lastRawPage->pageSize-lastRawPage->pageUsage>size+sizeof(int);
@@ -216,9 +305,8 @@ void* MemoryHeap::getRawMem(int size)
   }
   if(havespace)
   {
-    retval=lastRawPage->memPage+sizeof(int);
-    ((int*)lastRawPage->memPage)[0]=MM_RAW_HEAP_MAGIC;
-    lastRawPage->memPage+=size+sizeof(int);
+    retval=lastRawPage->memPage+lastRawPage->pageUsage+sizeof(int);
+    ((int*)retval)[-1]=MM_RAW_HEAP_MAGIC;
     lastRawPage->pageUsage+=size+sizeof(int);
   }else
   {
@@ -239,21 +327,156 @@ void* MemoryHeap::getRawMem(int size)
 
 int MemoryHeap::setCheckPoint()
 {
-  return 0;
+  if(checkPointsCount>MM_MAX_CHECK_POINTS)
+  {
+    return 0;
+  }
+  cpStack[checkPointsCount].page=lastRawPage;
+  cpStack[checkPointsCount].pageUsage=lastRawPage->pageUsage;
+  checkPointsCount++;
+  return 1;
 }
 void MemoryHeap::doRollBack()
 {
+  if(checkPointsCount==0)return;
+  checkPointsCount--;
+  PRawHeapPage p;
+  lastRawPage=cpStack[checkPointsCount].page;
+  lastRawPage->pageUsage=cpStack[checkPointsCount].pageUsage;
+  p=lastRawPage->next;
+  while(p)
+  {
+    p->pageUsage=0;
+    p=p->next;
+  }
 }
 void MemoryHeap::resetRawHeap()
 {
+  checkPointsCount=0;
+  PRawHeapPage p=firstRawPage;
+  while(p)
+  {
+    p->pageUsage=0;
+    p=p->next;
+  }
 }
 
 void* MemoryHeap::getMem(int size)
 {
-  return NULL;
+  char* retval;
+  int n=size>>blocksHeapQuantumShift;
+  if(size&blocksHeapQuantumMask)
+  {
+    n++;
+  }
+  int alignedSize=1<<n;
+
+  if(n<blocksPool.Count())
+  {
+    if(blocksPool[n]->freeBlocks.Count()>0)
+    {
+      blocksPool[n]->freeBlocks.Pop(retval);
+      blocksPool[n]->usedBlocks.Push(retval);
+    }else
+    {
+      retval=new char[alignedSize+sizeof(int)*3]+sizeof(int)*3;
+      blocksPool[n]->usedBlocks.Push(retval);
+    }
+    ((int*)retval)[-1]=MM_BLOCK_HEAP_MAGIC;
+    ((int*)retval)[-2]=blocksPool[n]->usedBlocks.Count()-1;
+    ((int*)retval)[-3]=size;
+  }else
+  {
+    int i;
+    for(i=0;i<varBlocks.Count();i++)
+    {
+      if(varBlocks[i]->blocksize==alignedSize)
+      {
+        if(varBlocks[i]->freeBlocks.Count()>0)
+        {
+          varBlocks[i]->freeBlocks.Pop(retval);
+          varBlocks[i]->usedBlocks.Push(retval);
+        }else
+        {
+          retval=new char[alignedSize+sizeof(int)*3]+sizeof(int)*3;
+          varBlocks[i]->usedBlocks.Push(retval);
+        }
+        ((int*)retval)[-1]=MM_BLOCK_HEAP_MAGIC;
+        ((int*)retval)[-2]=varBlocks[i]->usedBlocks.Count()-1;
+        ((int*)retval)[-3]=size;
+        return retval;
+      }
+    }
+    varBlocks.Push(new BlocksHeapVarPage(alignedSize));
+    retval=new char[alignedSize+sizeof(int)*3]+sizeof(int)*3;
+    varBlocks[-1]->usedBlocks.Push(retval);
+    ((int*)retval)[-1]=MM_BLOCK_HEAP_MAGIC;
+    ((int*)retval)[-2]=varBlocks[-1]->usedBlocks.Count()-1;
+    ((int*)retval)[-3]=size;
+  }
+  return retval;
 }
-void MemoryHeap::freeMem(void* block)
+
+void MemoryHeap::freeMem(void*& block)
 {
+  if(((int*)block)[-1]!=MM_BLOCK_HEAP_MAGIC)
+  {
+    printf("Shit happened!\n");
+    throw 0;
+  }
+  int pos=((int*)block)[-2];
+  int size=((int*)block)[-3];
+  int n=size>>blocksHeapQuantumShift;
+  int i,j;
+  if(size&blocksHeapQuantumMask)
+  {
+    n++;
+  }
+  int alignedSize=1<<n;
+  if(n<blocksPool.Count())
+  {
+    for(i=pos;i>=0;i++)
+    {
+      if(blocksPool[n]->usedBlocks[i]==block)
+      {
+        blocksPool[n]->usedBlocks.Delete(i);
+        blocksPool[n]->freeBlocks.Push((char*)block);
+        block=0;
+        return;
+      }
+    }
+    printf("Shit happened!\n");
+    throw 0;
+  }else
+  {
+    for(i=0;i<varBlocks.Count();i++)
+    {
+      if(varBlocks[i]->blocksize==alignedSize)
+      {
+        for(j=pos;j>=0;j--)
+        {
+          if(varBlocks[i]->usedBlocks[j]==block)
+          {
+            varBlocks[i]->usedBlocks.Delete(j);
+            varBlocks[i]->freeBlocks.Push((char*)block);
+            block=0;
+            return;
+          }
+        }
+        printf("Shit happened!\n");
+        throw 0;
+      }
+    }
+    printf("Shit happened!\n");
+    throw 0;
+  }
+  block=0;
+}
+
+void MemoryHeap::releaseHeap()
+{
+  resetRawHeap();
+  parentManager->releaseHeap(this);
 }
 
 
