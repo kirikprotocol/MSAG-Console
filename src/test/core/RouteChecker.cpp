@@ -38,13 +38,15 @@ SmeType RouteChecker::isDestReachable(PduAddress& src, PduAddress& dest) const
 	if (routeHolder)
 	{
 		smeType = smeReg->getSmeBindType(routeHolder->route.smeSystemId);
-		__trace2__("isDestReachable(): destAddr = %s, route = %s, smeType = %d",
-				str(destAddr).c_str(), str(*routeHolder).c_str(), smeType);
+		__require__(smeType != SME_NO_ROUTE);
+		__trace2__("isDestReachable(): srcAddr = %s, destAlias = %s, destAddr = %s, route = %s, smeType = %d",
+			str(srcAddr).c_str(), str(destAlias).c_str(), str(destAddr).c_str(), str(*routeHolder).c_str(), smeType);
 	}
 	else
 	{
 		smeType = SME_NO_ROUTE;
-		__trace2__("isDestReachable(): destAddr = %s, no route", str(destAddr).c_str());
+		__trace2__("isDestReachable(): srcAddr = %s, destAlias = %s, destAddr = %s, no route",
+			str(srcAddr).c_str(), str(destAlias).c_str(), str(destAddr).c_str());
 	}
 	return smeType;
 }

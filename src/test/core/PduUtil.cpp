@@ -396,7 +396,7 @@ string DeliveryMonitor::str() const
 	s << ReschedulePduMonitor::str() << ", srcAddr = " << srcAddr <<
 		", destAddr = " << destAddr << ", serviceType = " << serviceType <<
 		", msgRef = " << (int) msgRef << ", state = " << state <<
-		", deliveryStatus = " << deliveryStatus;
+		", deliveryStatus = " << hex << deliveryStatus;
 	return s.str();
 }
 
@@ -434,7 +434,7 @@ string DeliveryReportMonitor::str() const
 {
 	ostringstream s;
 	s << PduMonitor::str() << ", msgRef = " << (int) msgRef <<
-		", state = " << state << ", deliveryStatus = " << deliveryStatus;
+		", state = " << state << ", deliveryStatus = " << hex << deliveryStatus;
 	return s.str();
 }
 
