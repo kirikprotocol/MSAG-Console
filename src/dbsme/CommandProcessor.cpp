@@ -1,6 +1,4 @@
 
-#include <util/config/Config.h>
-
 #include "CommandProcessor.h"
 
 namespace smsc { namespace dbsme 

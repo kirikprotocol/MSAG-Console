@@ -18,8 +18,11 @@
 #include <util/Logger.h>
 #include <core/buffers/Array.hpp>
 #include <core/buffers/Hash.hpp>
+
+#include <util/config/Config.h>
 #include <util/config/Manager.h>
 #include <util/config/ConfigView.h>
+#include <util/config/ConfigException.h>
 
 #include <sms/sms.h>
 #include <db/DataSource.h>
