@@ -5,7 +5,6 @@
 #include <sys/stat.h>
 
 #include "logger/Logger.h"
-#include "util/config/XmlUtils.h"
 #include "util/xml/init.h"
 #include "util/xml/utilFunctions.h"
 #include "util/debug.h"
