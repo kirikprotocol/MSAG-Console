@@ -20,6 +20,20 @@ namespace smpp{
 
 using std::auto_ptr;
 
+inline void fetchPduAddress(SmppStream* stream,PduAdderss& addr)
+{
+	fetchX(stream,addr.typeOfNumber);
+	fetchX(stream,addr.numberingPlan);
+	fetchCOctetStr(stream,addr.value,21);
+}
+
+inline void fillPduAddress(SmppStream* stream,PduAdderss& addr)
+{
+	fillX(stream,add.typeOfNumber);
+	fillX(stream,addr.numberingPlan);
+	fillCOctetStr(stream,addr.value);
+}
+
 inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
 {
 	int cmdid = _pdu->commandId;

@@ -232,11 +232,13 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
 			/*ms_validity(5.3.2.27)*/           macroFetchField(msVakidity);
       /*alert_on_message_delivery(5.3.2.41)*/  
 			case SmppOptionalTags::alertOnMessageDelivery :
+        __goto_if_fail__ ( length == 0 , trap );
         opt->set_alertOnMessageDelivery(true);
         break;
       /*its_reply_type(5.3.2.42)*/        macroFetchField(itsReplayType);
 			/*its_session_info(5.3.2.43)*/      
 			case SmppOptionalTags::itsSessionInfo :
+        __goto_if_fail__ ( length == 2 , trap );
         fetchX(stream,opt->itsSessionInfo[0]);
         fetchX(stream,opt->itsSessionInfo[1]);
         opt->fields_present |= SmppOptionalFields::itsSessionInfo;
