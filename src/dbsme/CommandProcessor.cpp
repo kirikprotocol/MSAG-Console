@@ -6,6 +6,8 @@
 namespace smsc { namespace dbsme 
 {
 
+Hash<JobFactory *>*  JobFactory::registry = 0;
+
 /* ---------------------- Abstract Command Processing ---------------------- */
 
 CommandProcessor::CommandProcessor(ConfigView* config)

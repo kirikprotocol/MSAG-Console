@@ -29,19 +29,25 @@ namespace smsc { namespace dbsme
         InputParser*        parser;
         OutputFormatter*    formatter;
 
+        char*   sql;
+        char*   inputFormat;
+        char*   outputFormat;
+        
+        bool    isQuery;
+
+        virtual void process(Command& command, Statement& stmt) 
+            throw(CommandProcessException);
+        
     public:
 
-        SQLJob() : Job(), parser(0), formatter(0) {};
-        virtual ~SQLJob() 
-        {
-            if (parser) delete parser;
-            if (formatter) delete formatter;
-        };
+        SQLJob() : Job(), parser(0), formatter(0),
+            sql(0), inputFormat(0), outputFormat(0) {};
+
+        virtual ~SQLJob();
         
         virtual void init(ConfigView* config)
             throw(ConfigException);
-        
-        virtual void process(Command& command, Statement& stmt) 
+        virtual void process(Command& command, DataSource& ds)
             throw(CommandProcessException);
     };
 

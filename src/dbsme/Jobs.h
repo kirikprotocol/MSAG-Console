@@ -38,23 +38,15 @@ namespace smsc { namespace dbsme
     {
     protected:
 
-        char*   sql;
-        char*   inputFormat;
-        char*   outputFormat;
-        
-        bool    isQuery;
-
-        Job() : sql(0), inputFormat(0), outputFormat(0) {};
+        Job() {};
 
     public:
 
-        virtual ~Job();
-        virtual void init(ConfigView* config)
-            throw(ConfigException);
+        virtual ~Job() {};
         
-        void process(Command& command, DataSource& ds)
-            throw(CommandProcessException);
-        virtual void process(Command& command, Statement& stmt) 
+        virtual void init(ConfigView* config)
+            throw(ConfigException) = 0;
+        virtual void process(Command& command, DataSource& ds)
             throw(CommandProcessException) = 0;
     };
 

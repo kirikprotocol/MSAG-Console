@@ -7,13 +7,30 @@ namespace smsc { namespace dbsme
 
 using namespace smsc::dbsme::io;
 
+SQLJob::~SQLJob()
+{
+    if (sql) delete sql;
+    if (inputFormat) delete inputFormat;
+    if (outputFormat) delete outputFormat;
+    
+    if (parser) delete parser;
+    if (formatter) delete formatter;
+}
+
 void SQLJob::init(ConfigView* config)
     throw(ConfigException)
 {
-    Job::init(config);
+    __require__(config);
     
-    printf("SQLJob loading ... ");
-
+    __trace__("SQLJob loading ... ");
+    
+    sql = config->getString("sql", "SQL request wasn't defined !");
+    inputFormat = config->getString("input", 
+                                    "Input data format wasn't defined !");
+    outputFormat = config->getString("output", 
+                                    "Output data format wasn't defined !");
+    isQuery = config->getBool("query", "Type of SQL request undefined !");
+    
     try 
     {
         parser = new InputParser(inputFormat);
@@ -24,13 +41,46 @@ void SQLJob::init(ConfigView* config)
         throw ConfigException("SQL Job init failed !: %s", exc.what());
     }
     
-    printf("SQLJob loaded !\n");
+    __trace__("SQLJob loaded !\n");
+}
+
+void SQLJob::process(Command& command, DataSource& ds)
+    throw(CommandProcessException)
+{
+    Connection* connection = ds.getConnection();
+    if (connection)
+    {
+        try 
+        {
+            Statement* stmt = connection->createStatement(sql);
+            if (stmt)
+            {
+                process(command, *stmt);
+                delete stmt;
+            }
+            else
+            {
+                ds.freeConnection(connection);
+                throw CommandProcessException();
+            }
+        }
+        catch(SQLException& exc)
+        {
+            ds.freeConnection(connection);
+            throw CommandProcessException();
+        }
+    }
+    else
+    {
+        throw CommandProcessException();
+    }
+    ds.freeConnection(connection);
 }
 
 void SQLJob::process(Command& command, Statement& stmt) 
     throw(CommandProcessException)
 {
-    printf("SQL Job: Process command called !!!\n");
+    __trace__("SQL Job: Process command called !!!\n");
     try
     {
         if (!parser || !formatter)

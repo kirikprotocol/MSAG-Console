@@ -28,8 +28,7 @@ namespace smsc { namespace dbsme
         
         virtual void init(ConfigView* config)
             throw(ConfigException);
-        
-        virtual void process(Command& command, Statement& stmt) 
+        virtual void process(Command& command, DataSource& ds) 
             throw(CommandProcessException);
     };
 
