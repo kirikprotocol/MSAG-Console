@@ -2,14 +2,23 @@
 #include <stdlib.h>
 #include <string.h>
 #include "core/synchronization/Mutex.hpp"
+#include "core/threads/Thread.hpp"
 
 #define TRACESIZE 10
+
+namespace smsc{
+namespace util{
+
+static void* threadstart=NULL;
+
 
 void BackTrace(void** trace)
 {
 #define TRACE_BACK(n) \
   trace[n]=__builtin_return_address(n+2);\
-  if(!trace[n])return;
+  printf("%x\n",trace[n]);fflush(stdout); \
+  if(!trace[n])return;\
+  if(trace[n]==threadstart){trace[n]=0;return;}
   TRACE_BACK(0)
   TRACE_BACK(1)
   TRACE_BACK(2)
@@ -30,6 +39,16 @@ struct BlockInfo{
 };
 
 
+class DummyThread:public smsc::core::threads::Thread{
+public:
+  virtual int Execute()
+  {
+    threadstart=__builtin_return_address(0);
+    printf("THRSTART:%x\n",threadstart);
+  }
+};
+
+
 static class LeakHunter{
 #define LH_HASHSIZE 1024
 #define LH_DEFAULTBUCKETSIZE 16
@@ -41,11 +60,12 @@ static class LeakHunter{
   int alloc;
 
   FILE *f;
+  int init;
 
   smsc::core::synchronization::Mutex m;
 
 public:
-  LeakHunter(){Init();}
+  LeakHunter(){init=0;Init();}
   ~LeakHunter();
 
   void Init();
@@ -59,6 +79,9 @@ public:
 
 void LeakHunter::Init()
 {
+  DummyThread t;
+  t.Start();
+  t.WaitFor();
   int i;
   for(i=0;i<LH_HASHSIZE;i++)
   {
@@ -68,6 +91,7 @@ void LeakHunter::Init()
   }
   maxmem=0;
   alloc=0;
+  init=1;
 }
 
 
@@ -109,12 +133,14 @@ void LeakHunter::DumpTrace(void** trace)
 void LeakHunter::RegisterAlloc(void* ptr,int size)
 {
   smsc::core::synchronization::MutexGuard guard(m);
+  if(!init)Init();
   int idx=(((int)ptr)>>5)&0x3ff;
   if(memcounts[idx]==memsizes[idx])
   {
     BlockInfo *tmp=(BlockInfo *)malloc(sizeof(BlockInfo)*memsizes[idx]*2);
-    memcpy(memblocks[idx],tmp,sizeof(BlockInfo)*memcounts[idx]);
+    memcpy(tmp,memblocks[idx],sizeof(BlockInfo)*memcounts[idx]);
     free(memblocks[idx]);
+    memblocks[idx]=tmp;
     memsizes[idx]*=2;
   }
   BackTrace(memblocks[idx][memcounts[idx]].trace);
@@ -133,6 +159,7 @@ void LeakHunter::RegisterAlloc(void* ptr,int size)
 void LeakHunter::RegisterDealloc(void* ptr)
 {
   smsc::core::synchronization::MutexGuard guard(m);
+  if(!init)Init();
   int idx=(((int)ptr)>>5)&0x3ff;
   int i;
   for(i=memcounts[idx]-1;i>=0;i--)
@@ -140,10 +167,10 @@ void LeakHunter::RegisterDealloc(void* ptr)
     if(memblocks[idx][i].addr==ptr)
     {
       alloc-=memblocks[idx][i].size;
-      if(memblocks[idx][i].trace)free(memblocks[idx][i].trace);
+      //if(memblocks[idx][i].trace)free(memblocks[idx][i].trace);
       if(memcounts[idx]-1-i>0)
       {
-        memcpy(memblocks[idx]+i,memblocks[idx]+i+1,memcounts[idx]-1-i);
+        memcpy(memblocks[idx]+i,memblocks[idx]+i+1,sizeof(BlockInfo)*(memcounts[idx]-1-i));
       }
       memcounts[idx]--;
       return;
@@ -151,29 +178,45 @@ void LeakHunter::RegisterDealloc(void* ptr)
   }
   fprintf(stderr,"Error: Block with address 0x%08X deallocated twice or wasn't allocated!\n",ptr);
 }
+}
+};
 
 void* operator new(unsigned int size)
 {
   void* mem=malloc(size);
-  lh.RegisterAlloc(mem,size);
+  printf("ALLOC:%x(%d)\n",mem,size);
+  if(!mem)
+  {
+    fprintf(stderr,"OUT OF MEMORY!\n");
+    throw "OUT OF MEMORY!\n";
+  }
+  smsc::util::lh.RegisterAlloc(mem,size);
   return mem;
 }
 
 void* operator new[](unsigned int size)
 {
   void* mem=malloc(size);
-  lh.RegisterAlloc(mem,size);
+  printf("ALLOC:%x(%d)\n",mem,size);
+  if(!mem)
+  {
+    fprintf(stderr,"OUT OF MEMORY!\n");
+    throw "OUT OF MEMORY!\n";
+  }
+  smsc::util::lh.RegisterAlloc(mem,size);
   return mem;
 }
 
 void operator delete(void* mem)
 {
-  lh.RegisterDealloc(mem);
-  free(mem);
+  printf("FREE:%x\n",mem);
+  smsc::util::lh.RegisterDealloc(mem);
+  if(mem)free(mem);
 }
 
 void operator delete[](void* mem)
 {
-  lh.RegisterDealloc(mem);
-  free(mem);
+  printf("FREE:%x\n",mem);
+  smsc::util::lh.RegisterDealloc(mem);
+  if(mem)free(mem);
 }
