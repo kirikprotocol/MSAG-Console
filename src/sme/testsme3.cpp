@@ -1,232 +1,112 @@
 #include <stdio.h>
-#include "sme/sme.hpp"
-#include "util/Exception.hpp"
-#include <exception>
-#include "util/debug.h"
-#include "core/threads/Thread.hpp"
-#include "core/synchronization/EventMonitor.hpp"
-#ifndef _WIN32
-#include <signal.h>
-#endif
-#include "core/buffers/IntHash.hpp"
+#include "sme/SmppBase.hpp"
+#include "sms/sms.h"
+#include <unistd.h>
 
-using namespace smsc::core::buffers;
-using namespace smsc::util;
-using namespace smsc::core::threads;
-using namespace smsc::core::synchronization;
-using smsc::sms::SMS;
-using namespace std;
+#include "core/synchronization/Event.hpp"
+
+using namespace smsc::sms;
+using namespace smsc::sme;
 using namespace smsc::smpp;
+using namespace smsc::core::synchronization;
 
-class TestSme:public smsc::sme::BaseSme{
+int stopped=0;
+SmppTransmitter *tr;
+Event e;
+int count=0;
+
+class MyListener:public SmppPduEventListener{
 public:
-  TestSme(const char *host,int port,const char *sysid)
-  :BaseSme(host,port,sysid){}
-  bool processSms(smsc::sms::SMS *sms){return false;}
-};
-
-
-int cnt=0;
-bool quit=false;
-
-class Monitor:public Thread{
-public:
-  int Execute()
+  void handleEvent(SmppHeader *pdu)
   {
-    int last=0;
-    for(;;)
+    if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
     {
-#ifdef _WIN32
-      Sleep(1000);
-#else
-      sleep(1);
-#endif
-      printf("%d\n",cnt-last);
-      last=cnt;
-      if(quit)break;
+      const char *msg=((PduXSm*)pdu)->get_message().get_shortMessage();
+      count=atoi(msg)+1;
+      PduDeliverySmResp resp;
+      resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+      resp.set_messageId("");
+      resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+      trans->sendDeliverySmResp(resp);
+      e.Signal();
     }
-    return 0;
   }
-};
-
-static const int MAXUNRESPONDED=15;
-class Watcher{
-public:
-  void lock()
+  void handleError(int errorCode)
   {
-    m.Lock();
-  }
-  void unlock()
-  {
-    m.Unlock();
+    printf("error!\n");
+    stopped=1;
   }
 
-  void add(int key)
+  void setTrans(SmppTransmitter *t)
   {
-    MutexGuard g(m);
-    if(ih.Count()>=MAXUNRESPONDED)
-    {
-      IntHash<time_t>::Iterator i=ih.First();
-      int key;
-      time_t val,t=time(NULL);
-      while(i.Next(key,val))
-      {
-        if(t-val>8)
-        {
-          ih.Delete(key);
-        }
-      }
-      trace("wait until lowmark");
-      m.wait();
-#ifndef _WIN32
-      trace2("lowmark:%d",ih.Count());
-#endif
-    }
-    ih.Insert(key,time(NULL));
-#ifndef _WIN32
-    trace2("add:%d(%d)\n",key,ih.Count());
-#endif
-  }
-  void remove(int key)
-  {
-    MutexGuard g(m);
-    ih.Delete(key);
-#ifndef _WIN32
-    trace2("remove:%d(%d)\n",key,ih.Count());
-#endif
-    if(ih.Count()<MAXUNRESPONDED)
-    {
-      trace("lowmakr: notify");
-      m.notify();
-    }
+    trans=t;
   }
 protected:
-  EventMonitor m;
-  IntHash<time_t> ih;
-}watcher;
-
-
-class Reader:public Thread{
-public:
-  Reader(TestSme& testsme):sme(testsme)
-  {
-  }
-  int Execute()
-  {
-    try{
-    for(;;)
-    {
-      smsc::smpp::SmppHeader *pdu=sme.receiveSmpp(8000);
-      if(quit)break;
-      __trace2__("SUBMIT resp: seq=%d",pdu->get_sequenceNumber());
-      watcher.remove(pdu->get_sequenceNumber());
-      disposePdu(pdu);
-      cnt++;
-    }
-    }catch(exception& e)
-    {
-#ifndef _WIN32
-      trace2("rd ex:%s\n",e.what());
-#endif
-    }
-    quit=true;
-    return 0;
-  }
-  TestSme& sme;
+  SmppTransmitter* trans;
 };
-
-class Writer:public Thread{
-public:
-  Writer(TestSme& testsme,const char *newsrc,const char* newdst):
-    sme(testsme),src(newsrc),dst(newdst)
-  {
-  }
-  int Execute()
-  {
-    try{
-    for(;;)
-    {
-      SMS s;
-      s.setOriginatingAddress(strlen(src),0,0,src);
-      s.setDestinationAddress(strlen(dst),0,0,dst);
-      char msc[]="123";
-      char imsi[]="123";
-      s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
-      s.setWaitTime(0);
-      time_t t=time(NULL)+60;
-      s.setValidTime(t);
-      //s.setSubmitTime(0);
-      s.setPriority(0);
-      s.setProtocolIdentifier(0);
-      s.setDeliveryReport(0);
-      s.setArchivationRequested(false);
-      unsigned char message[]="SME test message";
-      s.setMessageBody(sizeof(message),1,false,message);
-      s.setEServiceType("XXX");
-      trace("try to send sms");
-      int seq=sme.getNextSeq();
-      watcher.add(seq);
-      if(sme.sendSms(&s,seq))
-      {
-        trace("sms sent ok");
-      }else
-      {
-        watcher.remove(seq);
-      }
-      if(quit)break;
-    }
-    }catch(exception& e)
-    {
-#ifndef _WIN32
-      trace2("wr ex:%s\n",e.what());
-#endif
-    }
-    quit=true;
-    return 0;
-  }
-  TestSme& sme;
-  const char* src;
-  const char* dst;
-};
-
-static void disp(int sig)
-{
-  trace("got user signal");
-}
 
 int main(int argc,char* argv[])
 {
-  if(argc!=5)
+  if(argc<4)
   {
-    printf("Usage\n%s host port sysid/src dst\n",argv[0]);
+    printf("usage: %s host port systemid(source_addres) destination_address [-start]\n",argv[0]);
     return -1;
   }
-#ifndef _WIN32
-  sigset(16,disp);
-#endif
-  TestSme sme(argv[1],atoi(argv[2]),argv[3]);
+  SmeConfig cfg;
+  cfg.host=argv[1];
+  cfg.port=atoi(argv[2]);
+  cfg.sid=argv[3];
+  cfg.timeOut=10;
+  cfg.password="";
+  MyListener lst;
+  SmppSession ss(cfg,&lst);
   try{
-    if(!sme.init())throw Exception("connect failed!");
-    trace("binding\n");
-    sme.bindsme();
-    trace("bind ok\n");
-    Reader r(sme);
-    Writer w(sme,argv[3],argv[4]);
-    Monitor m;
-    m.Start();
-    r.Start();
-    w.Start();
-    m.WaitFor();
-#ifndef _WIN32
-    w.Kill(16);
-    r.Kill(16);
-#endif
-    w.WaitFor();
-    r.WaitFor();
-  }catch(std::exception& e)
-  {
-    fprintf(stderr,"EX:%s\n",e.what());
+    ss.connect();
+    PduSubmitSm sm;
+    SMS s;
+    s.setOriginatingAddress(cfg.sid.length(),1,1,cfg.sid.c_str());
+    char msc[]="123";
+    char imsi[]="123";
+    s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+    time_t t=time(NULL)+60;
+    s.setValidTime(t);
+    s.setDeliveryReport(0);
+    s.setArchivationRequested(false);
+    tr=ss.getSyncTransmitter();
+    lst.setTrans(tr);
+    s.setEServiceType("XXX");
+    sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+    int send=(argc==6)&&!strcmp(argv[5],"-start");
+    char message[64];
+    while(!stopped)
+    {
+      if(send)
+      {
+        s.setDestinationAddress(strlen(argv[4]),1,1,argv[4]);
+        sprintf(message,"%d",count);
+        int len=strlen((char*)message);
+        s.setBinProperty("SMPP_SHORT_MESSAGE",(char*)message,len);
+        s.setIntProperty("SMPP_SM_LENGTH",len);
+
+        fillSmppPduFromSms(&sm,&s);
+        PduSubmitSmResp *resp=tr->submit(sm);
+        if(resp)disposePdu((SmppHeader*)resp);
+
+      }
+      printf("%d\r",count);fflush(stdout);
+      e.Wait();
+      send=1;
+    }
   }
-  fprintf(stderr,"exiting\n");
+  catch(std::exception& e)
+  {
+    printf("Exception: %s\n",e.what());
+  }
+  catch(...)
+  {
+    printf("unknown exception\n");
+  }
+  ss.close();
+  printf("Exiting\n");
   return 0;
 }

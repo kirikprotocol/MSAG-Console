@@ -692,7 +692,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
         if ( cmd->get_sms()->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP ) )
         {
           unsigned serviceOp = cmd->get_sms()->getIntProperty(Tag::SMPP_USSD_SERVICE_OP );
-          string s_seq(cmd->get_sms()->getDestinationAddress().value)// = "";//cmd->get_sms()->getStrProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+          string s_seq(cmd->get_sms()->getDestinationAddress().value);// = "";//cmd->get_sms()->getStrProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
           if (s_seq.length()==0) throw MAPDIALOG_FATAL_ERROR("MAP::PutCommand: empty user_message_reference");
           long long sequence;
           istringstream(s_seq) >> sequence;
