@@ -1138,10 +1138,17 @@ bool GetBodyStatement::getBody(Body& body)
         ub4 size = amount;
         uint8_t* buff = new uint8_t[amount];
 
+        #ifdef SPARC
         check(OCILobRead(svchp, errhp, locator, &amount, offset,
                          (dvoid *)buff, size, (dvoid *)0,
                          (sb4 (*)(dvoid *, const dvoid *, ub4, ub1)) 0,
                          (ub2) 0, (ub1) 0));
+        #else // Linux & etc
+        check(OCILobRead(svchp, errhp, locator, &amount, offset,
+                         (dvoid *)buff, size, (dvoid *)0,
+                         (sb4 (*)(dvoid *, dvoid *, ub4, ub1)) 0,
+                         (ub2) 0, (ub1) 0));
+        #endif
 
         if (size != amount)
             throw StorageException("Can't read %d bytes from SMS_ATCH::LOB. "
