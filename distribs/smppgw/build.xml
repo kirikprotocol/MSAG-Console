@@ -133,6 +133,6 @@
     <delete dir="${gw.exploded}"/>
   </target>
   <target name="clean_build" depends="set_properties">
-    <delete dir="${BUILD_DIR}" includeemptydirs="yes" includes="**/*" />
+    <delete dir="${BUILD_DIR}" includeemptydirs="yes"/>
   </target>
 </project>
