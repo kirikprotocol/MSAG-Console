@@ -36,13 +36,12 @@
 
   <target name="compile" depends="init" description="compile the sources">
     <javac srcdir="${java_src}" destdir="${java_out}" classpathref="classpath" debug="yes"/>
-    <native2ascii encoding="Cp1251" src="${java_src}/locales" dest="${java_out}/locales"/>
-    <native2ascii encoding="Cp1251" src="${perfmon_src}/applet" dest="${perfmon_out}/applet"/>
-    <native2ascii encoding="Cp1251" src="${topmon_src}/applet" dest="${topmon_out}/applet"/>
-    <native2ascii encoding="Cp1251" src="${console_src}/commands/roles_en_US.properties" dest="${console_out}/commands/roles_en_US.properties"/>
-    <native2ascii encoding="Cp1251" src="${console_src}/commands/roles_en_US.properties" dest="${console_out}/commands/roles_en.properties"/>
-    <native2ascii encoding="Cp1251" src="${console_src}/commands/roles_ru_RU.properties" dest="${console_out}/commands/roles_ru_RU.properties"/>
-    <native2ascii encoding="Cp1251" src="${console_src}/commands/roles_ru_RU.properties" dest="${console_out}/commands/roles_ru.properties"/>
+    <native2ascii encoding="Cp1251" src="${java_src}/locales" dest="${java_out}/locales" includes="*.properties"/>
+    <native2ascii encoding="Cp1251" src="${perfmon_src}/applet" dest="${perfmon_out}/applet" includes="*.properties"/>
+    <native2ascii encoding="Cp1251" src="${topmon_src}/applet" dest="${topmon_out}/applet" includes="*.properties"/>
+    <native2ascii encoding="Cp1251" src="${console_src}/commands" dest="${console_out}/commands" includes="*.properties" />
+    <copy file="${console_out}/commands/roles_en_US.properties" tofile="${console_out}/commands/roles_en.properties"/>
+    <copy file="${console_out}/commands/roles_ru_RU.properties" tofile="${console_out}/commands/roles_ru.properties"/>
   </target>
 
   <target name="build" depends="clean,compile" description="generate the distribution">
