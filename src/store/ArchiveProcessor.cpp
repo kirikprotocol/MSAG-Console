@@ -584,7 +584,7 @@ void Query::findFilesByQuery(QueryMessage* query, const std::string& location,
     for (int i=0; i<allFiles.Count(); i++)
     {
         std::string file = allFiles[i];
-        uint8_t hour;
+        uint32_t hour;
         if (sscanf(file.c_str(), "%02d.arc", &hour) != 1) {
             smsc_log_warn(log, "Invalid archive file name format '%s'", file.c_str());
             continue;
@@ -593,7 +593,7 @@ void Query::findFilesByQuery(QueryMessage* query, const std::string& location,
         if (fd > 0 && dd < fd) continue;
         if (td > 0 && dd > td) continue;
 
-        files.Push(hour);
+        files.Push((uint8_t)hour);
     }
 }
 
