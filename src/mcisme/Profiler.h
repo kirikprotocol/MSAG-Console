@@ -22,7 +22,7 @@ namespace smsc { namespace mcisme
         bool    inform, notify;
         int32_t informTemplateId, notifyTemplateId; // if -1 => default
 
-        AbonentProfile() : inform(false), notify(false), informTemplateId(-1), notifyTemplateId(-1) {};
+        AbonentProfile() : inform(true), notify(false), informTemplateId(-1), notifyTemplateId(-1) {};
         AbonentProfile(const AbonentProfile& pro) : inform(pro.inform), notify(pro.notify), 
             informTemplateId(pro.informTemplateId), notifyTemplateId(pro.notifyTemplateId) {};
         AbonentProfile& operator=(const AbonentProfile& pro) {
