@@ -216,7 +216,9 @@ function showhide(elem)
 </dd>
 </dl>
 </dd>
+
 <%-- ################################## map ############################### --%>
+<%--
 <dt class=secTitleClosed onclick='showhide(this)'>map</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
@@ -232,6 +234,7 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
+--%>
 <%-- ################################## smpp ############################## --%>
 <dt class=secTitleClosed onclick='showhide(this)'>smpp</dt>
 <dd style="display:none">
@@ -273,18 +276,6 @@ function showhide(elem)
 <tr class=row<%=(row++)&1%>>
 	<th class=label>reschedule_table:</th>
 	<td><input class=txtW name="core.reschedule_table" value="<%=StringEncoderDecoder.encode(bean.getStringParam("core.reschedule_table"))%>"></td>
-</tr>
-<tr class=row<%=(row++)&1%>>
-	<th class=label>receipt_delivered:</th>
-	<td><input class=txtW name="core.receipt_delivered" value="<%=StringEncoderDecoder.encode(bean.getStringParam("core.receipt_delivered"))%>"></td>
-</tr>
-<tr class=row<%=(row++)&1%>>
-	<th class=label>receipt_failed:</th>
-	<td><input class=txtW name="core.receipt_failed" value="<%=StringEncoderDecoder.encode(bean.getStringParam("core.receipt_failed"))%>"></td>
-</tr>
-<tr class=row<%=(row++)&1%>>
-	<th class=label>receipt_notify:</th>
-	<td><input class=txtW name="core.receipt_notify" value="<%=StringEncoderDecoder.encode(bean.getStringParam("core.receipt_notify"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>service_center_address:</th>
@@ -384,26 +375,6 @@ function showhide(elem)
 	<th class=label>defaultDataCoding:</th>
 	<td><input class=txtW name="profiler.defaultDataCoding" value="<%=StringEncoderDecoder.encode(bean.getStringParam("profiler.defaultDataCoding"))%>"></td>
 </tr>
-<tr class=row<%=(row++)&1%>>
-	<th class=label>msgReportNone:</th>
-	<td><input class=txtW name="profiler.msgReportNone" value="<%=StringEncoderDecoder.encode(bean.getStringParam("profiler.msgReportNone"))%>"></td>
-</tr>
-<tr class=row<%=(row++)&1%>>
-	<th class=label>msgReportFull:</th>
-	<td><input class=txtW name="profiler.msgReportFull" value="<%=StringEncoderDecoder.encode(bean.getStringParam("profiler.msgReportFull"))%>"></td>
-</tr>
-<tr class=row<%=(row++)&1%>>
-	<th class=label>msgDataCodingDefault:</th>
-	<td><input class=txtW name="profiler.msgDataCodingDefault" value="<%=StringEncoderDecoder.encode(bean.getStringParam("profiler.msgDataCodingDefault"))%>"></td>
-</tr>
-<tr class=row<%=(row++)&1%>>
-	<th class=label>msgDataCodingUCS2:</th>
-	<td><input class=txtW name="profiler.msgDataCodingUCS2" value="<%=StringEncoderDecoder.encode(bean.getStringParam("profiler.msgDataCodingUCS2"))%>"></td>
-</tr>
-<tr class=row<%=(row++)&1%>>
-	<th class=label>msgError:</th>
-	<td><input class=txtW name="profiler.msgError" value="<%=StringEncoderDecoder.encode(bean.getStringParam("profiler.msgError"))%>"></td>
-</tr>
 </table>
 </dd>
 <%-- ################################# sms ################################ --%>
@@ -475,6 +446,22 @@ function showhide(elem)
 <tr class=row<%=(row++)&1%>>
 	<th class=label>dbUserPassword:</th>
 	<td><input class=txtW name="DataSource.dbUserPassword" value="<%=StringEncoderDecoder.encode(bean.getStringParam("DataSource.dbUserPassword"))%>"></td>
+</tr>
+</table>
+</dd>
+<%-- ############################# MscManager ############################ --%>
+<dt class=secTitleClosed onclick='showhide(this)'>MscManager</dt>
+<dd style="display:none">
+<table class=secRep cellspacing=1 width="100%">
+<%row=0;%>
+<col width=180px>
+<tr class=row<%=(row++)&1%>>
+	<th class=label>Automatic registration:</th>
+	<td><input class=check type=checkbox name="MscManager.automaticRegistration" <%=bean.getBoolParam("MscManager.automaticRegistration") ? "checked" : ""%> value=true></td>
+</tr>
+<tr class=row<%=(row++)&1%>>
+	<th class=label>Failure limit:</th>
+	<td><input class=txtW name="MscManager.failureLimit" value="<%=bean.getIntParam("MscManager.failureLimit")%>"></td>
 </tr>
 </table>
 </dd>
