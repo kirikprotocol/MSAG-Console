@@ -1,10 +1,11 @@
 
 #include "MapIoTask.h"
 #include <sys/types.h>
+#include <sys/time.h>
 #include <signal.h>
 #include <time.h>
 
-#define MAXENTRIES 10
+#define MAXENTRIES 600
 #define MY_USER_ID USER01_ID
 using namespace std;
 
@@ -17,6 +18,7 @@ static unsigned __global_bind_counter = 0;
 static unsigned __pingPongWaitCounter = 0;
 static bool MAP_dispatching = false;
 static bool MAP_isAlive = false;
+static bool MAP_aborting = false;
 #define CORRECT_BIND_COUNTER 2
 
 //struct SMSC_FORWARD_RESPONSE_T {
@@ -114,45 +116,46 @@ void MapIoTask::dispatcher()
   unsigned timecounter = 0;
   time_t last_msg;
   time_t cur_time;
+  struct timeval utime, curtime;
   APP_EVENT_T *eventlist = NULL;
   INT_T	       eventlist_len = 0;
   
   message.receiver = MY_USER_ID;
+  gettimeofday( &utime, 0 );
   for(;;){
     MAP_isAlive = true;
     if ( isStopping ) return;
     MAP_dispatching = true;
+    gettimeofday( curtime, 0 );
+    printf( "MsgRecv begin: %ld.%ld\n", curtime.tv_sec-utime.tv_sec, curtime.tv_usec-utime.tv_usec );
+    utime=curtime;
     result = EINSS7CpMsgRecv_r(&message,1000);
+    gettimeofday( curtime, 0 );
+    printf( "MsgRecv end: %ld.%ld\n", curtime.tv_sec-utime.tv_sec, curtime.tv_usec-utime.tv_usec );
+    utime=curtime;
 //    result = MsgRecvEvent( &message, eventlist, &eventlist_len, 1000 );
     MAP_dispatching = false;
-    if ( ++timecounter == 60 ) {
+/*    if ( ++timecounter == 60 ) {
       __trace2__("MAP: EINSS7CpMsgRecv_r TICK-TACK");
       time( &cur_time );
       if( cur_time-last_msg > 120 ) {
         result = MSG_BROKEN_CONNECTION;
         kill(getpid(),17);
         __trace2__("MAP:: no messages received in 2 minutes");
-      }
-//      if ( __pingPongWaitCounter > 0 )  {
-//        result = MSG_BROKEN_CONNECTION;
-//        kill(getpid(),17);
-//        __trace2__("MAP:: ping-pong failed");
-//      }
-      else{
+      } else{
         try{
           MAPIO_QueryMscVersionInternal();
         }catch(exception& e){
           result = MSG_BROKEN_CONNECTION;
         }
       }
-//      ++__pingPongWaitCounter;
-
       if ( __global_bind_counter != CORRECT_BIND_COUNTER ){
         result = MSG_BROKEN_CONNECTION;
         __trace2__("MAP:: not all binders dinded");
       }
       timecounter = 0;
     }
+*/
     if ( result == MSG_TIMEOUT ) continue;
     if ( result == MSG_BROKEN_CONNECTION ){
       __trace2__("MAP: Broken connection");
@@ -170,13 +173,6 @@ restart:
           init(30);
           __trace2__("MAP:: waiting binds");
           timecounter = 0;
-          /*if ( __global_bind_counter != CORRECT_BIND_COUNTER ){
-            __trace2__("MAP:: waiting bind confirm");
-            sleep(3);
-            if ( __global_bind_counter != CORRECT_BIND_COUNTER ){
-              throw 0;
-            }
-          }*/
           ok = true;
         }catch(...){
           __trace2__("MAP:: Error reinitialization");
@@ -184,18 +180,12 @@ restart:
         }
       }
       continue;
-      /*result = MsgConn(USER01_ID,ETSIMAP_ID);
-       ( result != MSG_OK ) {
-        __trace2__("MAP: Error at MsgConn, code 0x%hx",result);
-        throw runtime_error("MAP::MapIoTask: MsgConn error");
-      }
-      continue;*/
     }
     if ( result != MSG_OK ) {
       __trace2__("MAP: error at MsgRecv with code x%hx",result);
-      //return;
-//      goto restart;
-      abort();
+      if( !MAP_aborting ) {
+        abort();
+      }
     }
 
     __trace2__("MAP: MsgRecv receive msg with "
@@ -208,7 +198,6 @@ restart:
       __trace2__("MAP: MsgRecv hatching msg to reset priority order " );
       message.msg_p[4] = 0;
     }
-    time( &last_msg );
     map_result = Et96MapHandleIndication(&message);
     if( map_result != ET96MAP_E_OK ) {
      {
@@ -301,7 +290,7 @@ string MapDialogContainer::SC_ADRESS_VALUE = "79029869999";
 
 void MapDialogContainer::abort()
 {
-#ifdef USE_MAP
+#ifdef USE_MAP  MAP_aborting = true;
   EINSS7CpMsgClean();
 #endif
 }
