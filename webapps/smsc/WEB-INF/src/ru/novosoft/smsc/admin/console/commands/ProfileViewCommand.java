@@ -13,6 +13,7 @@ import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.alias.Alias;
 
 public class ProfileViewCommand implements Command
 {
@@ -22,16 +23,18 @@ public class ProfileViewCommand implements Command
       this.address = address;
   }
 
-  private String showProfile(Profile profile)
+  private String showProfile(Profile profile, Alias alias)
       throws AdminException
   {
     String divert = profile.getDivert();
+    Mask aliasAddress = (alias != null) ? alias.getAddress():null;
     return "Profile '"+profile.getMask().getMask()+"'"+
            " Report: "+profile.getReportOptionsString()+
            " Locale: "+profile.getLocale()+
            " Encoding: "+profile.getCodepageString()+
            " ussd7bit: "+((profile.isUssd7bit()) ? "on":"off")+
-           " Alias: "+(profile.isAliasHide() ? "hide":"nohide")+
+           " Alias: "+((aliasAddress != null) ? aliasAddress.getMask():"-")+
+           " "+(profile.isAliasHide() ? "hide":"nohide")+
            ", "+(profile.isAliasModifiable() ? "modifiable":"nomodifiable")+
            " Divert: "+((divert == null || divert.length() <= 0) ? "-":divert)+
            ", "+(profile.isDivertActive() ? "active":"inactive")+
@@ -44,7 +47,8 @@ public class ProfileViewCommand implements Command
     try {
         Profile profile = ctx.getSmsc().profileLookup(new Mask(address));
         if (profile != null) {
-            ctx.setMessage(showProfile(profile));
+            Alias alias = ctx.getSmsc().getAliases().getAliasByAddress(profile.getMask());
+            ctx.setMessage(showProfile(profile, alias));
             ctx.setStatus(CommandContext.CMD_OK);
         } else {
             ctx.setMessage(out+" not found");
