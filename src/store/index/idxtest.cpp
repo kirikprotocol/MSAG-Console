@@ -23,18 +23,26 @@ int main(int argc,char* argv[])
       SMS s;
 
       timeval st,ed;
-      for(int i=0;i<100;i++)
+      for(int i=0;i<10000;i++)
       {
+        char buf[64];
+        sprintf(buf,".0.1.%d",1+(i+1)%10);
+        s.setOriginatingAddress(buf);
+        sprintf(buf,".0.1.100%d",1+(i+6)%10);
+        s.setDestinationAddress(buf);
+        s.setDealiasedDestinationAddress(buf);
+        s.lastTime=time(NULL);
+
         if((i%3)==0)
         {
-          s.setSourceSmeId("hello");
+          s.setSourceSmeId("hello2");
           s.setDestinationSmeId("qqq");
           s.setRouteId("route");
         }
         else if((i%3)==1)
         {
           s.setSourceSmeId("qqq");
-          s.setDestinationSmeId("hello");
+          s.setDestinationSmeId("world");
           s.setRouteId("route1");
         }
         else if((i%3)==2)
@@ -42,24 +50,27 @@ int main(int argc,char* argv[])
           s.setSourceSmeId("hello2");
           s.setDestinationSmeId("world");
           s.setRouteId("route2");
+          s.setDestinationAddress(".0.1.7000");
+          s.setDealiasedDestinationAddress(".0.1.7000");
         }
-        char buf[64];
-        sprintf(buf,".0.1.%d",1+(i+1)%10);
-        s.setOriginatingAddress(buf);
-        sprintf(buf,".0.1.100%d",1+(i+6)%10);
-        s.setDestinationAddress(buf);
-        s.lastTime=time(NULL);
         idx.IndexateSms(".",100+i,100000+i,s);
       }
     }else
     {
       ParamArray p;
       Param p1;
-      p1.type=Param::tAbnAddress;
-      p1.sValue=".0.1.5";
+      p1.type=Param::tSrcSmeId;
+      p1.sValue="hello2";
       p.Push(p1);
-      //p1.type=Param::tSmeId;
-      //p1.sValue="qqq";
+      p1.type=Param::tDstSmeId;
+      p1.sValue="qqq";
+      p.Push(p1);
+      p1.type=Param::tRouteId;
+      p1.sValue="route";
+      p.Push(p1);
+
+      p1.type=Param::tDstAddress;
+      p1.sValue=".0.1.7001";
       //p.Push(p1);
       ResultArray res;
       int c=idx.QuerySms(".",p,res);
