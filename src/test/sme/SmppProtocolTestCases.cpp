@@ -73,7 +73,7 @@ void SmppProtocolTestCases::submitSmAssert(int num)
 				case 4: //message body больше максимальной длины
 					{
 						__tc__("submitSm.assert.msgLengthInvalid");
-						int len = MAX_SM_LENGTH + 1;
+						int len = MAX_SMPP_SM_LENGTH + 1;
 						auto_ptr<char> msg = rand_char(len);
 						pdu.get_message().set_shortMessage(msg.get(), len);
 					}
@@ -315,7 +315,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 					if (!pdu->get_optional().has_messagePayload())
 					{
 						__tc__("submitSm.correct.smLengthMarginal");
-						int len = MAX_SM_LENGTH;
+						int len = MAX_SMPP_SM_LENGTH;
 						bool udhi = pdu->get_message().get_esmClass() &
 							ESM_CLASS_UDHI_INDICATOR;
 						auto_ptr<char> tmp = rand_text2(len,
@@ -337,11 +337,17 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 					}
 					break;
 				case 11: //ussd запрос
-					__tc__("submitSm.correct.ussdRequest");
-					pdu->get_optional().set_ussdServiceOp(rand0(255));
-					//немедленная доставка, ussd не решедулится
-					pdu->get_message().set_scheduleDeliveryTime("");
-					//pdu->get_message().set_validityPeriod("");
+					if ((pdu->get_message().size_shortMessage() > 0 &&
+							pdu->get_message().size_shortMessage() < MAX_MAP_SM_LENGTH) ||
+						(pdu->get_optional().has_messagePayload() &&
+						 pdu->get_optional().size_messagePayload() < MAX_MAP_SM_LENGTH))
+					{
+						__tc__("submitSm.correct.ussdRequest");
+						pdu->get_optional().set_ussdServiceOp(rand0(255));
+						//немедленная доставка, ussd не решедулится
+						pdu->get_message().set_scheduleDeliveryTime("");
+						//pdu->get_message().set_validityPeriod("");
+					}
 					break;
 				default:
 					__unreachable__("Invalid num");
@@ -749,7 +755,7 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 					__tc__("submitSm.incorrect.bothMessageFields");
 					if (!pdu->get_message().size_shortMessage())
 					{
-						int len = rand1(MAX_SM_LENGTH);
+						int len = rand2(3, MAX_SMPP_SM_LENGTH);
 						bool udhi = pdu->get_message().get_esmClass() &
 							ESM_CLASS_UDHI_INDICATOR;
 						auto_ptr<char> tmp = rand_text2(len,
@@ -758,7 +764,7 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 					}
 					if (!pdu->get_optional().has_messagePayload())
 					{
-						int len = rand1(MAX_PAYLOAD_LENGTH);
+						int len = rand2(3, MAX_PAYLOAD_LENGTH);
 						bool udhi = pdu->get_message().get_esmClass() &
 							ESM_CLASS_UDHI_INDICATOR;
 						auto_ptr<char> tmp = rand_text2(len,
@@ -933,8 +939,8 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 				case 7: //тело сообщения максимальной длины
 					{
 						__tc__("replaceSm.correct.smLengthMarginal");
-						auto_ptr<char> msg = rand_char(MAX_SM_LENGTH);
-						pdu->set_shortMessage(msg.get(), MAX_SM_LENGTH);
+						auto_ptr<char> msg = rand_char(MAX_SMPP_SM_LENGTH);
+						pdu->set_shortMessage(msg.get(), MAX_SMPP_SM_LENGTH);
 					}
 					break;
 				case 8: //замещение уже ранее замещенного сообщения
