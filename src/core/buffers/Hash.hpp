@@ -316,6 +316,7 @@ public:
   }
   virtual ~Hash<T>(){delete [] _buckets;};
 
+
   int Exists(pchashstr key){ return FindLink(key)!=NULL;}
   void Delete(pchashstr key)
   {
@@ -389,6 +390,60 @@ public:
     }
   }
   void First(){_iterindex=0;_iterlink=NULL;};
+
+  class Iterator{
+    int _index;
+    Link *_link;
+    const Hash *_owner;
+  public:
+    Iterator(const Hash* owner):_owner(owner)
+    {
+      _index=0;
+      _link=NULL;
+    }
+    void First(){_index=0;_link=NULL;}
+    int Next(phashstr& key,T& value)
+    {
+      if(_index>=_owner->_bucketsnum)return 0;
+      if(!_link)
+      {
+        while((_link=_owner->_buckets[_index].First())==NULL)
+        {
+          _index++;
+          if(_index>=_owner->_bucketsnum)return 0;
+        }
+      }
+      key=_link->_keyval._key;
+      value=_link->_keyval._value;
+      _link=_owner->_buckets[_index].Next(_link);
+      if(!_link)_index++;
+      return 1;
+    }
+    int Next(phashstr& key,T*& value)
+    {
+      if(_index>=_owner->_bucketsnum)return 0;
+      if(!_link)
+      {
+        while((_link=_owner->_buckets[_index].First())==NULL)
+        {
+          _index++;
+          if(_index>=_owner->_bucketsnum)return 0;
+        }
+      }
+      key=_link->_keyval._key;
+      value=&_link->_keyval._value;
+      _link=_owner->_buckets[_index].Next(_link);
+      if(!_link)_index++;
+      return 1;
+    }
+  };
+  friend class Iterator;
+
+  Iterator getIterator()const
+  {
+    return Iterator(this);
+  }
+
   int Next(phashstr& key,T& value)
   {
     if(_iterindex>=_bucketsnum)return 0;
