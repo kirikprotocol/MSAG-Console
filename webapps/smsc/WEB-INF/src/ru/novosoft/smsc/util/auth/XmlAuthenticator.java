@@ -44,7 +44,7 @@ public class XmlAuthenticator implements Authenticator
 	{
 		try
 		{
-			System.err.println("XmlAuthenticator.initialize. File \"" + config.getAbsolutePath() + '"');
+			System.err.println("XmlAuthenticator \""+Constants.TomcatRealmName+"\" initialize. File \"" + config.getAbsolutePath() + '"');
 			Document document = Utils.parse(new FileReader(config));
 			NodeList usersNodeList = document.getElementsByTagName("user");
 			users = new HashMap();

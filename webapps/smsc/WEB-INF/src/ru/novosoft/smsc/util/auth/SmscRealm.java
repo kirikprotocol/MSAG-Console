@@ -5,10 +5,11 @@
  */
 package ru.novosoft.smsc.util.auth;
 
-import org.apache.catalina.realm.RealmBase;
 import ru.novosoft.smsc.admin.Constants;
 
 import java.security.Principal;
+
+import org.apache.catalina.realm.RealmBase;
 
 public class SmscRealm extends RealmBase
 {
