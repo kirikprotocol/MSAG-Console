@@ -53,10 +53,12 @@ void CheckList::save(bool printErrorCodes,
 	*/
 	//записать check list в файл
 	ofstream os(fileName.c_str());
-	time_t t = time(NULL);
+	time_t lt = time(NULL);
+	tm t;
+	char buf[30];
 	os << name << endl;
 	os << "Версия: " << endl;
-	os << "Время: " << asctime(localtime(&t)) << endl;
+	os << "Время: " << asctime_r(localtime_r(&lt, &t), buf) << endl;
 	os << "№|Тест кейс|Результат" <<
 		(printExecCount ? "|Счетчики" : "") <<
 		(printErrorCodes ? "|Коды ошибок" : "") <<
