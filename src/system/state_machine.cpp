@@ -2683,13 +2683,6 @@ StateType StateMachine::forward(Tuple& t)
 
   bool diverted=false;
   bool doRepartition=false;
-  __trace2__("FORWARD: allowDivert=%s, df=%d, condDivert=%s, uncondDivert=%s",
-    t.command->get_forwardAllowDivert()?"true":"false",
-    sms.getIntProperty(Tag::SMSC_DIVERTFLAGS),
-    (sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&DF_COND)?"true":"false",
-    !(sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&DF_UNCOND)?"true":"false");
-
-
   if(t.command->get_forwardAllowDivert() &&
      (sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&DF_COND) &&
      !(sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&DF_UNCOND)
