@@ -70,6 +70,7 @@ public:
 		
 		ShutdownableList::removeListener(this);
 		
+		logger.info("ServiceSocketListener stopped");
 		return 0;
 	}
 

@@ -16,10 +16,10 @@ String args = s.getArgs();
 			<TD class="list"><input name="serviceName" value="<%=name%>" style="width: 100%;" ></TD></TR>
 		<TR class="list">
 			<TH class="list">Service Id</TH>
-			<TD class="list"><input name="serviceId" value="<%=serviceId%>" style="width: 100%;" ></TD></TR>
+			<TD class="list"><input type="text" name="serviceId" value="<%=serviceId%>" readonly style="width: 100%;"></TD></TR>
 		<TR class="list">
 			<TH class="list">Host</TH>
-			<TD class="list"><input name="host" value="<%=host%>" style="width: 100%;" readonly></TD></TR>
+			<TD class="list"><input type="text" name="host" value="<%=host%>" readonly style="width: 100%;"></TD></TR>
 		<TR class="list">
 			<TH class="list">Port</TH>
 			<TD class="list"><input name="port" value="<%=String.valueOf(port)%>" style="width: 100%;"></TD></TR>

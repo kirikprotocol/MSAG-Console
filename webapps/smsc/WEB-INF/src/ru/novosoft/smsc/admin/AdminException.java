@@ -5,6 +5,7 @@
  */
 package ru.novosoft.smsc.admin;
 
+
 public class AdminException extends Exception
 {
   public AdminException(String s)
@@ -12,5 +13,6 @@ public class AdminException extends Exception
     super(s);
   }
 }
+
 
 ;

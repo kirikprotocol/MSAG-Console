@@ -21,10 +21,10 @@
 		Set services = serviceManager.getServiceIds();
 		for (Iterator i = services.iterator(); i.hasNext(); )
 		{
-			String serviceId = (String) i.next();
-			String serviceName = serviceManager.getServiceInfo(serviceId).getName();
-			String encodedServiceId = URLEncoder.encode(serviceId);
-			%><li><a href="<%=urlPrefix%>/esme_<%=URLEncoder.encode(serviceId)%>"><%=serviceName%></a></li><%
+			String _serviceId = (String) i.next();
+			String serviceName = serviceManager.getServiceInfo(_serviceId).getName();
+			String encodedServiceId = URLEncoder.encode(_serviceId);
+			%><li><a href="<%=urlPrefix%>/esme_<%=URLEncoder.encode(_serviceId)%>"><%=serviceName%></a></li><%
 		} %>
 	</ul>
 </ul>

@@ -6,11 +6,12 @@
 package ru.novosoft.smsc.admin.protocol;
 
 import org.w3c.dom.Element;
-
-import java.util.*;
-
 import ru.novosoft.smsc.admin.service.Type;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
+
+import java.util.Iterator;
+import java.util.Map;
+
 
 public class CommandCall extends ServiceCommand
 {

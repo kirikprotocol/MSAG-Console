@@ -1,6 +1,6 @@
 // Decompiled by Jad v1.5.5.3. Copyright 1997-98 Pavel Kouznetsov.
 // Jad home page:      http://web.unicom.com.cy/~kpd/jad.html
-// Decompiler options: packimports(3) printdflt 
+// Decompiler options: packimports(3) printdflt
 // Source File Name:   Response.java
 
 package ru.novosoft.smsc.admin.protocol;

@@ -36,7 +36,7 @@ public:
 		return get(serviceId);
 	}
 
-	void markServiceAsStopped(pid_t old_pid);
+	const char * const markServiceAsStopped(pid_t old_pid);
 
 protected:
 	typedef Hash<Service*> _ServiceList;

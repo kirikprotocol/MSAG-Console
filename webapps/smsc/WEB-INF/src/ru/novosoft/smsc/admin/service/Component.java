@@ -8,9 +8,9 @@ package ru.novosoft.smsc.admin.service;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
-import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 public class Component
 {

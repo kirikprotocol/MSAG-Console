@@ -6,11 +6,11 @@
 package ru.novosoft.smsc.admin.protocol;
 
 import org.apache.log4j.Category;
+import ru.novosoft.smsc.admin.AdminException;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-import ru.novosoft.smsc.admin.AdminException;
 
 public class ResponseReader
 {

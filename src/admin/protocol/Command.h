@@ -35,7 +35,8 @@ public:
 		remove_service,
 		list_services,
 		list_components,
-		call
+		call,
+    set_service_startup_parameters
 	};
 
 	Command(Id newId) throw ()
@@ -69,7 +70,7 @@ protected:
 	Id id;
 	DOM_Document data;
 	log4cpp::Category &logger;
-	static const uint8_t commands_quantity = 9;
+	static const uint8_t commands_quantity = 10;
 	static const _Command names[commands_quantity];
 	
 	void setId(Id newId) throw () {id = newId;}

@@ -21,7 +21,7 @@ const char * const Service::service_exe = "bin/service";
 pid_t Service::start()
 	throw (AdminException)
 {
-	if (getStatus() != stopped)
+	if (isRunning())
 	{
 		throw AdminException("Service already running");
 	}
@@ -48,7 +48,7 @@ pid_t Service::start()
 void Service::kill()
 	throw (AdminException)
 {
-	if (getStatus() != running)
+	if (!isRunning())
 	{
 		throw AdminException("Service is not running");
 	}
@@ -75,7 +75,7 @@ void Service::kill()
 void Service::shutdown()
 	throw (AdminException)
 {
-	if (getStatus() != running)
+	if (!isRunning())
 	{
 		throw AdminException("Service is not running");
 	}
@@ -163,6 +163,7 @@ char ** Service::createArguments()
 	{
 		arguments[i] = args_vector.at(i);
 	}
+	arguments[args_vector.size()] = 0;
 	return arguments;
 }
 

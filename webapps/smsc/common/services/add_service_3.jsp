@@ -43,4 +43,6 @@
   serviceManager.addService(service, host, port, args, systemId, systemType, typeOfNumber,
                             numberingPlan, interfaceVersion, rangeOfAddress, smeNType);
 %>
+<h2>Add service <i><%=service%></i> to host <i><%=host%></i>: </h2>
+Service <i><%=service%></i> added to host <i><%=host%></i> sucessfully.
 <%@ include file="/common/footer.jsp"%>

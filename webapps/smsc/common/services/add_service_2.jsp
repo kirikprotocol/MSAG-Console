@@ -47,10 +47,10 @@ if (port == 0)
 
 <%@ include file="/common/header.jsp"%>
 <form action="<%=urlPrefix+servicesPrefix%>/add_service_3.jsp" method="post">
-	<input type="hidden" name="service" value="<%=URLEncoder.encode(service)%>">
-	<input type="hidden" name="host" value="<%=URLEncoder.encode(host)%>">
+	<input type="hidden" name="service" value="<%=StringEncoderDecoder.encode(service)%>">
+	<input type="hidden" name="host" value="<%=StringEncoderDecoder.encode(host)%>">
 	<input type="hidden" name="port" value="<%=String.valueOf(port)%>">
-  <input type="hidden" name="args" value="<%=URLEncoder.encode(args)%>">
+  <input type="hidden" name="args" value="<%=StringEncoderDecoder.encode(args)%>">
   <h2>Add service:</h2>
   <h3>service parameters:</h3>
   <table class="list">
@@ -122,6 +122,4 @@ if (port == 0)
 		<INPUT type=submit value="Next page">
 	</div>
 </form>
-
-//serviceManager.addService(new ServiceInfo(service, host, port, cmdLine, configFileName, args));
 <%@ include file="/common/footer.jsp"%>

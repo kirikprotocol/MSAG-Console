@@ -13,6 +13,7 @@ import org.xml.sax.SAXException;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+
 public class ResponseEntityResolver implements EntityResolver
 {
   Category logger = Category.getInstance(ResponseEntityResolver.class);

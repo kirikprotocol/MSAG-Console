@@ -27,7 +27,7 @@ void ServicesList::remove(const char * const serviceId) throw (AdminException)
 {
 	if (!services.Exists(serviceId))
 		throw AdminException("Service not found");
-	if (services[serviceId]->getStatus() == Service::running)
+	if (services[serviceId]->isRunning())
 	{
 		services[serviceId]->kill();
 	}
@@ -83,7 +83,7 @@ char * ServicesList::getText() const
 	return cStringCopy(result.c_str());
 }
 
-void ServicesList::markServiceAsStopped(pid_t old_pid)
+const char * const ServicesList::markServiceAsStopped(pid_t old_pid)
 {
 	#ifdef SMSC_DEBUG
 		log4cpp::Category &logger(Logger::getCategory("smsc.admin.daemon.ServicesList"));
@@ -105,8 +105,10 @@ void ServicesList::markServiceAsStopped(pid_t old_pid)
 			#ifdef SMSC_DEBUG
 				logger.debug("SERVICE %lu MARKED AS DEAD", (unsigned long) old_pid);
 			#endif
+			return s->getId();
 		}
 	}
+	return 0;
 }
 
 }

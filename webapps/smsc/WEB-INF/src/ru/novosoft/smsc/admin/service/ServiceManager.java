@@ -36,12 +36,17 @@ public class ServiceManager
   private static boolean isInitialized = false;
   protected static File webappFolder = new File("/export/home/igork/cvs/smsc/src/webapp/smsc");
   protected static File webinfFolder = new File(webappFolder, "WEB-INF");
+  protected static File webinfLibFolder = new File(webinfFolder, "lib");
   protected static File workFolder = new File(webinfFolder, "work");
   protected static File daemonsFolder = new File(webinfFolder, "daemons");
 
   public static ServiceManager getInstance()
           throws IsNotInitializedException
   {
+    try {
+      Category.getInstance(ServiceManager.class.getName()).debug("current folder: " + (new File(".")).getCanonicalPath());
+    } catch (IOException e) {
+    }
     if (!isInitialized)
       throw new IsNotInitializedException("Service Manager is not initialized. Make ServiceManager.Init(...) call before ServiceManager.getInstance()");
     if (serviceManager == null)
@@ -180,6 +185,36 @@ public class ServiceManager
     in.close();
   }
 
+  protected File getServiceFolder(String host, String serviceId)
+  {
+    return new File(new File(daemonsFolder, host), serviceId);
+  }
+
+  protected File getServiceJspsFolder(String serviceId)
+  {
+    return new File(webappFolder, "esme_" + serviceId);
+  }
+
+  protected void moveJars(File serviceFolder, File jarsFolder)
+  {
+    File[] jars = serviceFolder.listFiles();
+    if (jars != null) {
+      for (int i = 0; i < jars.length; i++) {
+        if (jars[i].isFile() && jars[i].getName().endsWith(".jar")) {
+          File newName = new File(jarsFolder, jars[i].getName());
+          try {
+            jars[i].renameTo(newName);
+          } catch (Exception e) {
+            try {
+              logger.warn("couldn't rename \"" + jars[i].getCanonicalPath() + "\" to \"" + newName.getCanonicalPath() + '"');
+            } catch (IOException e1) {
+            }
+          }
+        }
+      }
+    }
+  }
+
   public synchronized void addService(String service,
                                       String host,
                                       int port,
@@ -195,13 +230,16 @@ public class ServiceManager
   {
     logger.debug("Add service \"" + service + '/' + systemId + "\" (" + host + ':' + port + ")");
     try {
-      File serviceFolder = new File(new File(daemonsFolder, host), systemId);
+      File serviceFolder = getServiceFolder(host, systemId);
       unZipArchive(serviceFolder,
                    new BufferedInputStream(new FileInputStream(new File(workFolder, systemId + ".zip"))));
       File jspFolder = new File(serviceFolder, "jsp");
-      File newJspFolder = new File(webappFolder, "esme_" + systemId);
+      File newJspFolder = getServiceJspsFolder(systemId);
       if (!jspFolder.renameTo(newJspFolder))
         throw new AdminException("Couldn't deploy JSP's (\"" + jspFolder.getCanonicalPath() + "\") to \"" + newJspFolder.getCanonicalPath() + "\"");
+      File newLogFolder = new File(serviceFolder, "log");
+      newLogFolder.mkdir();
+      moveJars(new File(serviceFolder, "lib"), webinfLibFolder);
     } catch (IOException e) {
       throw new AdminException("Couldn't unpack service, nested: " + e.getMessage());
     }
@@ -219,49 +257,66 @@ public class ServiceManager
     logger.debug("service added");
   }
 
-  public synchronized void removeService(String serviceName)
-          throws AdminException
+  protected boolean recursiveDeleteFolder(File folder)
   {
-    Service s = getService(serviceName);
-    Daemon d = getDaemon(s.getInfo().getHost());
-    d.removeService(serviceName);
-    services.remove(serviceName);
+    String[] childNames = folder.list();
+    if (childNames != null) {
+      for (int i = 0; i < childNames.length; i++) {
+        File child = new File(folder, childNames[i]);
+        if (child.isDirectory())
+          recursiveDeleteFolder(child);
+        else
+          child.delete();
+      }
+    }
+    return folder.delete();
   }
 
-  public synchronized void startService(String serviceName)
+  public synchronized void removeService(String serviceId)
           throws AdminException
   {
-    Service s = getService(serviceName);
+    Service s = getService(serviceId);
+    String host = s.getInfo().getHost();
+    Daemon d = getDaemon(host);
+    d.removeService(serviceId);
+    services.remove(serviceId);
+    if (!recursiveDeleteFolder(getServiceFolder(host, serviceId))
+            || !recursiveDeleteFolder(getServiceJspsFolder(serviceId)))
+      throw new AdminException("Service removed, but service files not deleted");
+  }
+
+  public synchronized void startService(String serviceId)
+          throws AdminException
+  {
+    Service s = getService(serviceId);
     Daemon d = getDaemon(s.getInfo().getHost());
-    s.getInfo().setPid(d.startService(serviceName));
-    if (s.getInfo().getPid() != 0) {
+    s.getInfo().setPid(d.startService(serviceId));
+    if (s.getInfo().isRunning()) {
       s.refreshComponents();
     }
   }
 
-  public synchronized void killService(String serviceName)
+  public synchronized void killService(String serviceId)
           throws AdminException
   {
-    Service s = getService(serviceName);
+    Service s = getService(serviceId);
     Daemon d = getDaemon(s.getInfo().getHost());
 
-    d.killService(serviceName);
-    s.getInfo().setPid(0);
+    d.killService(serviceId);
+    refreshService(serviceId);
   }
 
-  public synchronized void shutdownService(String name)
+  public synchronized void shutdownService(String serviceId)
           throws AdminException
   {
-    Service s = getService(name);
-    Daemon d = getDaemon(s.getInfo().getHost());
-    d.shutdownService(name);
+    getDaemon(getService(serviceId).getInfo().getHost()).shutdownService(serviceId);
   }
 
-  public Object callServiceMethod(String hostName, String serviceName, String componentName,
+  public Object callServiceMethod(String hostName, String serviceId, String componentName,
                                   String methodName, String returnTypeName, Map args)
           throws AdminException
   {
-    Service s = getService(serviceName);
+    Service s = getService(serviceId);
     if (!s.getInfo().getHost().equals(hostName))
       throw new AdminException("Wrong host name (\"" + hostName + "\")");
     Component c = (Component) s.getInfo().getComponents().get(componentName);
@@ -354,7 +409,7 @@ public class ServiceManager
     int result = 0;
     for (Iterator i = serviceIds.iterator(); i.hasNext();) {
       String serviceId = (String) i.next();
-      if (getServiceInfo(serviceId).getPid() != 0)
+      if (getServiceInfo(serviceId).isRunning())
         result++;
     }
     return result;
@@ -364,6 +419,18 @@ public class ServiceManager
           throws AdminException
   {
     return getServiceIds(hostName).size();
+  }
+
+  public synchronized void setStartupParameters(String serviceId, String host,
+                                                String serviceName, int port, String args)
+          throws AdminException
+  {
+    Service s = getService(serviceId);
+    Daemon d = getDaemon(s.getInfo().getHost());
+    d.setServiceStartupParameters(serviceId, serviceName, port, args);
+    if (!s.getInfo().isRunning()) {
+      replaceService(new Service(new ServiceInfo(serviceName, serviceId, d.getHost(), port, args)));
+    }
   }
 
   /************************************ helpers ******************************/
@@ -410,7 +477,7 @@ public class ServiceManager
           throws AdminException
   {
     services.put(s.getInfo().getId(), s);
-    if (s.getInfo().getPid() != 0) {
+    if (s.getInfo().isRunning()) {
       try {
         s.refreshComponents();
       } catch (AdminException e) {

@@ -6,17 +6,17 @@
 package ru.novosoft.smsc.admin.utli;
 
 import org.apache.log4j.Category;
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.protocol.Command;
+import ru.novosoft.smsc.admin.protocol.CommandWriter;
+import ru.novosoft.smsc.admin.protocol.Response;
+import ru.novosoft.smsc.admin.protocol.ResponseReader;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
-import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.protocol.Command;
-import ru.novosoft.smsc.admin.protocol.CommandWriter;
-import ru.novosoft.smsc.admin.protocol.Response;
-import ru.novosoft.smsc.admin.protocol.ResponseReader;
 
 public class Proxy
 {
@@ -83,10 +83,9 @@ public class Proxy
     }
   }
 
-  protected void reconnect()
-          throws AdminException
+  public void disconnect()
   {
-    logger.debug("reconnect()");
+    logger.debug("disconnect()");
     status = StatusDisconnected;
     if (socket != null) {
       try {
@@ -96,6 +95,13 @@ public class Proxy
         logger.debug("Exception on closeSocket", e);
       }
     }
+  }
+
+  protected void reconnect()
+          throws AdminException
+  {
+    logger.debug("reconnect()");
+    disconnect();
     connect(host, port);
   }
 

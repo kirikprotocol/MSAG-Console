@@ -7,14 +7,14 @@ package ru.novosoft.smsc.admin.protocol;
 
 import org.apache.log4j.Category;
 import org.w3c.dom.*;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.util.xml.Utils;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 
-import ru.novosoft.smsc.util.xml.Utils;
-import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 public class Command
 {

@@ -7,12 +7,11 @@ package ru.novosoft.smsc.admin.service;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-
-import java.util.*;
-
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.util.xml.Utils;
-import ru.novosoft.smsc.util.StringEncoderDecoder;
+
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class ServiceInfo
 {
@@ -84,6 +83,11 @@ public class ServiceInfo
   public long getPid()
   {
     return pid;
+  }
+
+  public boolean isRunning()
+  {
+    return pid != 0;
   }
 
   public void setPid(long pid)

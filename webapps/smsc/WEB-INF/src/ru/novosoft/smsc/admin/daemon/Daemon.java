@@ -8,16 +8,17 @@ package ru.novosoft.smsc.admin.daemon;
 import org.apache.log4j.Category;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.util.*;
-
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.protocol.*;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.utli.Proxy;
+
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class Daemon extends Proxy
 {
@@ -38,15 +39,12 @@ public class Daemon extends Proxy
   /**
    * @return Process ID (PID) of new service
    */
-  public long startService(String serviceName)
+  public long startService(String serviceId)
           throws AdminException
   {
-    if (getStatus() != StatusConnected)
-      connect(host, port);
-
-    Response r = runCommand(new CommandStartService(serviceName));
+    Response r = runCommand(new CommandStartService(serviceId));
     if (r.getStatus() != Response.StatusOk)
-      throw new AdminException("Couldn't start service \"" + serviceName + "\", nested:" + r.getDataAsString());
+      throw new AdminException("Couldn't start service \"" + serviceId + "\", nested:" + r.getDataAsString());
 
     String pidStr = r.getDataAsString().trim();
     try {
@@ -62,48 +60,34 @@ public class Daemon extends Proxy
     logger.debug("Add service \"" + serviceInfo.getId() + "\" (" + serviceInfo.getHost() + ':'
                  + serviceInfo.getPort() + ")");
 
-    if (getStatus() != StatusConnected)
-      connect(host, port);
-
-    logger.debug("checkpoint 1");
     Response r = runCommand(new CommandAddService(serviceInfo));
-    logger.debug("checkpoint 2");
     if (r.getStatus() != Response.StatusOk)
       throw new AdminException("Couldn't add service \"" + serviceInfo.getId() + '/' + serviceInfo.getId()
                                + "\" [" + serviceInfo.getArgs() + "], nested:" + r.getDataAsString());
   }
 
-  public void removeService(String serviceName)
+  public void removeService(String serviceId)
           throws AdminException
   {
-    if (getStatus() != StatusConnected)
-      connect(host, port);
-
-    Response r = runCommand(new CommandRemoveService(serviceName));
+    Response r = runCommand(new CommandRemoveService(serviceId));
     if (r.getStatus() != Response.StatusOk)
-      throw new AdminException("Couldn't remove service \"" + serviceName + "\", nested:" + r.getDataAsString());
+      throw new AdminException("Couldn't remove service \"" + serviceId + "\", nested:" + r.getDataAsString());
   }
 
-  public void shutdownService(String serviceName)
+  public void shutdownService(String serviceId)
           throws AdminException
   {
-    if (getStatus() != StatusConnected)
-      connect(host, port);
-
-    Response r = runCommand(new CommandShutdownService(serviceName));
+    Response r = runCommand(new CommandShutdownService(serviceId));
     if (r.getStatus() != Response.StatusOk)
-      throw new AdminException("Couldn't shutdown service \"" + serviceName + "\", nested:" + r.getDataAsString());
+      throw new AdminException("Couldn't shutdown service \"" + serviceId + "\", nested:" + r.getDataAsString());
   }
 
-  public void killService(String serviceName)
+  public void killService(String serviceId)
           throws AdminException
   {
-    if (getStatus() != StatusConnected)
-      connect(host, port);
-
-    Response r = runCommand(new CommandKillService(serviceName));
+    Response r = runCommand(new CommandKillService(serviceId));
     if (r.getStatus() != Response.StatusOk)
-      throw new AdminException("Couldn't kill service \"" + serviceName + "\", nested:" + r.getDataAsString());
+      throw new AdminException("Couldn't kill service \"" + serviceId + "\", nested:" + r.getDataAsString());
   }
 
   /**
@@ -113,9 +97,6 @@ public class Daemon extends Proxy
   public Map listServices()
           throws AdminException
   {
-    if (getStatus() != StatusConnected)
-      connect(host, port);
-
     Response r = runCommand(new CommandListServices());
     if (r.getStatus() != Response.StatusOk)
       throw new AdminException("Couldn't list services, nested:" + r.getDataAsString());
@@ -129,5 +110,13 @@ public class Daemon extends Proxy
     }
 
     return result;
+  }
+
+  public void setServiceStartupParameters(String serviceId, String serviceName, int port, String args)
+          throws AdminException
+  {
+    Response r = runCommand(new CommandSetServiceStartupParameters(serviceId, serviceName, port, args));
+    if (r.getStatus() != Response.StatusOk)
+      throw new AdminException("Couldn't set service startup parameters \"" + serviceId + "\", nested:" + r.getDataAsString());
   }
 }

@@ -7,7 +7,6 @@ package ru.novosoft.smsc.admin.service;
 
 import org.w3c.dom.Element;
 
-import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 public class Parameter
 {

@@ -14,6 +14,7 @@
 #include <admin/protocol/CommandCall.h>
 #include <admin/protocol/CommandListServices.h>
 #include <admin/protocol/CommandListComponents.h>
+#include <admin/protocol/CommandSetServiceStartupParameters.h>
 #include <core/network/Socket.hpp>
 #include <util/Logger.h>
 #include <util/xml/DOMErrorLogger.h>
@@ -169,6 +170,8 @@ Command * CommandReader::createCommand(Command::Id id, DOM_Document data) {
 		return new CommandCall(data);
 	case Command::list_components:
 		return new CommandListComponents(data);
+	case Command::set_service_startup_parameters:
+		return new CommandSetServiceStartupParameters(data);
 	default:
 		logger.warn("Unknown command id \"%i\"", id);
 		throw AdminException("Unknown command");

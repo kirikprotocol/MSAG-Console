@@ -5,6 +5,7 @@
  */
 package ru.novosoft.smsc.admin.service;
 
+
 public class Type
 {
   public boolean equals(Object obj)

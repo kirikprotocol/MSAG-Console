@@ -20,8 +20,6 @@ using log4cpp::Category;
 class Service
 {
 public:
-	enum Status {stopped, running};
-
 	Service(const char * const services_dir,
 					const char * const serviceId,
 					const char * const serviceName,
@@ -56,7 +54,7 @@ public:
 	const char * const getName() const {return name.get();}
 	const pid_t getPid() const {return pid;}
 	void setPid(const pid_t newPid) {pid = newPid;}
-	const Status getStatus() const {return pid == 0 ? stopped : running;}
+	const bool isRunning() const {return pid != 0;}
 	const char * const getArgs() const {return args.get();}
 	const in_port_t getPort() const {return port;}
 
@@ -65,6 +63,34 @@ public:
 		init(copy.service_dir.get(), copy.id.get(), copy.name.get(), copy.port, copy.args.get(), copy.pid);
 		return *this;
 	}
+
+	void setName(const char * const serviceName) throw (AdminException)
+	{
+		if (isRunning())
+		{
+			throw AdminException("Changing service name not permitted: service is running");
+		}
+		name.reset(cStringCopy(serviceName));
+	}
+
+	void setPort(const in_port_t serviceAdminPort) throw (AdminException)
+	{
+		if (isRunning())
+		{
+			throw AdminException("Changing service port not permitted: service is running");
+		}
+		port = serviceAdminPort;
+	}
+
+	void setArgs(const char * const serviceArgs) throw (AdminException)
+	{
+		if (isRunning())
+		{
+			throw AdminException("Changing service arguments not permitted: service is running");
+		}
+		args.reset(cStringCopy(serviceArgs));
+	}
+
 
 protected:
 	char ** createArguments();

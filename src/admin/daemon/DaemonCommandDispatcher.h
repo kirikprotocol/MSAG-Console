@@ -11,6 +11,7 @@
 #include <admin/protocol/CommandAddService.h>
 #include <admin/protocol/CommandRemoveService.h>
 #include <admin/protocol/CommandListServices.h>
+#include <admin/protocol/CommandSetServiceStartupParameters.h>
 #include <admin/protocol/Response.h>
 #include <admin/util/CommandDispatcher.h>
 #include <admin/util/Shutdownable.h>
@@ -30,6 +31,7 @@ using smsc::admin::protocol::CommandShutdown;
 using smsc::admin::protocol::CommandAddService;
 using smsc::admin::protocol::CommandRemoveService;
 using smsc::admin::protocol::CommandListServices;
+using smsc::admin::protocol::CommandSetServiceStartupParameters;
 using smsc::admin::protocol::Response;
 using smsc::admin::util::CommandDispatcher;
 using smsc::admin::util::Shutdownable;
@@ -52,11 +54,11 @@ public:
 	}
 
 	virtual void shutdown();
+
 	DaemonCommandDispatcher(Socket * admSocket)
 		: CommandDispatcher(admSocket, "smsc.admin.daemon.CommandDispatcher"),
 		  logger(Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher"))
-	{
-	}
+	{}
 
 	virtual Response * handle(const Command * const command) throw (AdminException);
 
@@ -72,18 +74,22 @@ protected:
 																	siginfo_t * info,
 																	void *some_pointer) throw ();
 	
-	Response * start_service    (const CommandStartService  * const command) throw (AdminException);
-	Response * kill_service     (const CommandKillService   * const command) throw (AdminException);
-	Response * shutdown_service (const CommandShutdown      * const command) throw (AdminException);
-	Response * add_service      (const CommandAddService    * const command) throw (AdminException);
-	Response * remove_service   (const CommandRemoveService * const command) throw (AdminException);
-	Response * list_services    (const CommandListServices  * const command) throw (AdminException);
+	Response * start_service                  (const CommandStartService                * const command) throw (AdminException);
+	Response * kill_service                   (const CommandKillService                 * const command) throw (AdminException);
+	Response * shutdown_service               (const CommandShutdown                    * const command) throw (AdminException);
+	Response * add_service                    (const CommandAddService                  * const command) throw (AdminException);
+	Response * remove_service                 (const CommandRemoveService               * const command) throw (AdminException);
+	Response * list_services                  (const CommandListServices                * const command) throw (AdminException);
+	Response * set_service_startup_parameters (const CommandSetServiceStartupParameters * const command) throw (AdminException);
 
 	void putServiceToConfig(const char * const serviceId,
 													const char * const serviceName,
 													const in_port_t servicePort,
 													const char * const serviceArgs);
+
 	void removeServiceFromConfig(const char * const serviceId);
+
+	static void updateServiceFromConfig(Service * service) throw (AdminException);
 };
 
 }

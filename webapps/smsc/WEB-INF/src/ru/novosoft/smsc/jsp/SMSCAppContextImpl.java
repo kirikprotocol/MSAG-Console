@@ -1,14 +1,10 @@
 package ru.novosoft.smsc.jsp;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
-import ru.novosoft.smsc.AppContext;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.config.ConfigManager;
 import ru.novosoft.util.jsp.AppContextImpl;
+
 
 public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 {

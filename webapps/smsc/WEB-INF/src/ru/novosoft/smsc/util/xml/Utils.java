@@ -8,6 +8,7 @@ package ru.novosoft.smsc.util.xml;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+
 public class Utils
 {
   static public String getNodeText(final Node node)

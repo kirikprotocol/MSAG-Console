@@ -1,34 +1,41 @@
+<%
+{
+  Set hostNames = null;
+    boolean isHostColumnNeeded = request.getParameter("host") == null;
+  if (isHostColumnNeeded) {
+  	hostNames = serviceManager.getHostNames();
+  } else {
+  	hostNames = new HashSet(1);
+  	hostNames.add(request.getParameter("host") );
+  }
+%>
 <table class="list" cellspacing="0">
 	<TR class="list">
 		<TH class="list">Service name</TH>
+    <% if (isHostColumnNeeded) { %>
 		<TH class="list">Host name</TH>
+    <% } %>
 		<TH class="list">Status</TH>
 		<TH class="list" colSpan=3>Actions</TH>
 	</TR>
-	<%
-	{
-		Set hostNames = null;
-		if (request.getParameter("host") == null) {
-			hostNames = serviceManager.getHostNames();
-		} else {
-			hostNames = new HashSet(1);
-			hostNames.add(request.getParameter("host") );
-		}
+  <%
 		for (Iterator i = hostNames.iterator(); i.hasNext(); )
 		{
 			String hostName = (String) i.next();
 			Set serviceNames = serviceManager.getServiceIds(hostName);
 			for (Iterator j = serviceNames.iterator(); j.hasNext(); )
 			{
-				String serviceId = (String) j.next();
-				String params = "host=" + URLEncoder.encode(hostName) + "&serviceId=" + URLEncoder.encode(serviceId);
-        ServiceInfo info = serviceManager.getServiceInfo(serviceId);
+				String _serviceId = (String) j.next();
+				String params = "host=" + URLEncoder.encode(hostName) + "&serviceId=" + URLEncoder.encode(_serviceId);
+        ServiceInfo info = serviceManager.getServiceInfo(_serviceId);
 				boolean isRunning = info.getPid() != 0;
         String serviceName = info.getName();
 				%>
 				<TR class="list">
-					<TD class="list"><A href="<%=urlPrefix%>/esme_<%=URLEncoder.encode(serviceId)%>"><%=serviceName%></a></TD>
+					<TD class="list"><A href="<%=urlPrefix%>/esme_<%=URLEncoder.encode(_serviceId)%>"><%=serviceName%></a></TD>
+          <% if (isHostColumnNeeded) { %>
 					<TD class="list"><A href="<%=urlPrefix + hostsPrefix%>/view_host.jsp?<%=params%>"><%=hostName%></a></TD>
+          <% } %>
 					<TD class="list"><%=(isRunning ? "running" : "stopped")%></TD>
 					<% if (isRunning) { %>
 						<TD class="list"><A href="<%=urlPrefix + servicesPrefix%>/shutdown_service.jsp?<%=params%>">shutdown</A></TD>
@@ -43,6 +50,8 @@
 				<%
 			}
 		}
-	}
-	%>
+  %>
 </TABLE>
+<%
+  }
+%>
