@@ -3476,7 +3476,15 @@ StateType StateMachine::deliveryResp(Tuple& t)
       const Descriptor& d=sms.getDestinationDescriptor();
       __trace2__("RECEIPT: msc=%s, imsi=%s",d.msc,d.imsi);
       char ddest[64];
-      sms.getDealiasedDestinationAddress().getText(ddest,sizeof(ddest));
+      Address ddestaddr=sms.getDealiasedDestinationAddress();
+      Address tmp;
+      if(!smsc->AddressToAlias(ddestaddr,tmp))
+      {
+        sms.getDealiasedDestinationAddress().getText(ddest,sizeof(ddest));
+      }else
+      {
+        sms.getDestinationAddress().getText(ddest,sizeof(ddest));
+      }
       FormatData fd;
       fd.ddest=ddest;
       fd.addr=addr;
@@ -3601,6 +3609,29 @@ StateType StateMachine::alert(Tuple& t)
      (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)
   {
     sms.state=EXPIRED;
+    if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)
+    {
+      __trace__("ALERT: Sending submit resp for forward mode sms");
+      smsc->registerStatisticalEvent(StatEvents::etSubmitErr,&sms);
+      SmscCommand resp = SmscCommand::makeSubmitSmResp
+                           (
+                             "0",
+                             sms.dialogId,
+                             Status::DELIVERYTIMEDOUT,
+                             sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
+                           );
+
+      SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
+      if(src_proxy)
+      {
+        try{
+          src_proxy->putCommand(resp);
+        }catch(...)
+        {
+          __warning__("ALERT: failed to put response command");
+        }
+      }
+    }
     try{
       store->createFinalizedSms(t.msgId,sms);
     }catch(...)
@@ -4026,7 +4057,15 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   sms.getDestinationAddress().getText(addr,sizeof(addr));
   FormatData fd;
   char ddest[64];
-  sms.getDealiasedDestinationAddress().getText(ddest,sizeof(ddest));
+  Address ddestaddr=sms.getDealiasedDestinationAddress();
+  Address tmp;
+  if(!smsc->AddressToAlias(ddestaddr,tmp))
+  {
+    sms.getDealiasedDestinationAddress().getText(ddest,sizeof(ddest));
+  }else
+  {
+    sms.getDestinationAddress().getText(ddest,sizeof(ddest));
+  }
   fd.ddest=ddest;
   const Descriptor& d=sms.getDestinationDescriptor();
   fd.msc=d.msc;
@@ -4100,7 +4139,15 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   sms.getDestinationAddress().getText(addr,sizeof(addr));
   FormatData fd;
   char ddest[64];
-  sms.getDealiasedDestinationAddress().getText(ddest,sizeof(ddest));
+  Address ddestaddr=sms.getDealiasedDestinationAddress();
+  Address tmp;
+  if(!smsc->AddressToAlias(ddestaddr,tmp))
+  {
+    sms.getDealiasedDestinationAddress().getText(ddest,sizeof(ddest));
+  }else
+  {
+    sms.getDestinationAddress().getText(ddest,sizeof(ddest));
+  }
   fd.ddest=ddest;
   const Descriptor& d=sms.getDestinationDescriptor();
   fd.msc=d.msc;
