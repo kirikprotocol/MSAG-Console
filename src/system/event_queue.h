@@ -155,7 +155,7 @@ class EventQueue
       else value->next_hash = 0;
       table[idx] = value;
       count++;
-      __trace2__("put locker %p(key=%lld) hash count:%d",value,key,count);
+      //!__trace2__("put locker %p(key=%lld) hash count:%d",value,key,count);
     }
     Locker* get(MsgIdType key)
     {
@@ -175,11 +175,11 @@ class EventQueue
         {
           *l = (*l)->next_hash;
           count--;
-          __trace2__("delete locker(%lld) hash count:%d",key,count);
+          //!__trace2__("delete locker(%lld) hash count:%d",key,count);
           return;
         }
       }
-      __trace2__("deleting non-existent locker:%lld",key);
+      //!__trace2__("deleting non-existent locker:%lld",key);
     }
     int getCount(){return count;}
   } hash;
@@ -214,8 +214,8 @@ public:
   __synchronized__
     __trace2__("enqueue:%lld",msgId);
     Locker* locker = hash.get(msgId);
-    __trace2__("enq: first=%p, last=%p, lock=%p",
-      first_unlocked,last_unlocked,locker);
+    //!__trace2__("enq: first=%p, last=%p, lock=%p",
+    //!  first_unlocked,last_unlocked,locker);
     if ( !locker )
     {
       locker = new Locker;
@@ -235,7 +235,7 @@ public:
     }
     locker->msgId = msgId;
     locker->push_back(new CmdRecord(command));
-    __trace2__("enqueue: last unlocked=%p",last_unlocked);
+    //!__trace2__("enqueue: last unlocked=%p",last_unlocked);
     event.Signal();
   }
 
@@ -246,13 +246,13 @@ public:
   // если нет записей с доступными командами ожидает нотификации
   void selectAndDequeue(Tuple& result,volatile bool* quitting)
   {
-    __trace__("enter selectAndDequeue");
+    //!__trace__("enter selectAndDequeue");
     for(;;)
     {
       {
-        trace("selanddeq: enter synchronized block");
+        //!trace("selanddeq: enter synchronized block");
       __synchronized__
-        trace("selanddeq: got mutex");
+        //!trace("selanddeq: got mutex");
         Locker* prev = 0;
 #if !defined ( DISABLE_ANY_CHECKS ) && !defined(DISABLE_LIST_DUMP)
         {
@@ -278,11 +278,11 @@ public:
                 }
                 if(!ok)
                 {
-                  __watch__(iter1);
+                  //!__watch__(iter1);
                   iter2=first_unlocked;
                   while(iter2)
                   {
-                    __trace2__("ptr:%p, id:%lld",iter2,iter2->msgId);
+                    //!__trace2__("ptr:%p, id:%lld",iter2,iter2->msgId);
                     iter2=iter2->next_unlocked;
                   }
                   __require__(ok);
@@ -293,8 +293,8 @@ public:
           }
         }
 #endif // LIST TEST
-        __watch__(first_unlocked);
-        __watch__(last_unlocked);
+        //!__watch__(first_unlocked);
+        //!__watch__(last_unlocked);
         for (Locker* iter = first_unlocked;
              iter != 0; ) //iter = iter->next_unlocked
         {
@@ -303,7 +303,7 @@ public:
           if ( success || !iter->cmds || StateChecker::stateIsSuperFinal(iter->state))
           {
             Locker* locker = iter;
-            __watch__(locker);
+            //!__watch__(locker);
             iter = iter->next_unlocked;// prev не изменяется
             __require__(!locker->locked);
 
@@ -329,7 +329,7 @@ public:
               else
               {
                 __require__( locker == first_unlocked );
-                __watch__(locker->next_unlocked);
+                //!__watch__(locker->next_unlocked);
                 first_unlocked = locker->next_unlocked;
               }
 
@@ -349,9 +349,9 @@ public:
               locker->locked = true;
               result.msgId = locker->msgId;
               result.state = locker->state;
-              __watch__(first_unlocked);
-              __watch__(last_unlocked);
-              __trace__("returning from selectAndDequeue");
+              //!__watch__(first_unlocked);
+              //!__watch__(last_unlocked);
+              //!__trace__("returning from selectAndDequeue");
               return;
             }
             else if( !locker->cmds || StateChecker::stateIsSuperFinal(locker->state)) //вообще нет команд
@@ -365,7 +365,7 @@ public:
                 else
                 {
                   __require__( locker == first_unlocked );
-                  __watch__(locker->next_unlocked);
+                  //!__watch__(locker->next_unlocked);
                   first_unlocked = locker->next_unlocked;
                 }
 
@@ -389,11 +389,11 @@ public:
           }
         }
       }
-      __watch__(first_unlocked);
-      __watch__(last_unlocked);
-      __trace__("selanddeq:wait");
+      //!__watch__(first_unlocked);
+      //!__watch__(last_unlocked);
+      //!__trace__("selanddeq:wait");
       event.Wait();
-      __trace__("selanddeq:wait finished");
+      //!__trace__("selanddeq:wait finished");
       if(*quitting)return;
     }
   }
@@ -439,16 +439,16 @@ public:
 
 #if !defined (DISABLE_ANY_CHECKS) && !defined(DISABLE_LIST_DUMP)
     {Locker *iter2=first_unlocked;
-    __trace__("change state: list after");
+    //!__trace__("change state: list after");
     while(iter2)
     {
-      __trace2__("ptr:%p, id:%lld",iter2,iter2->msgId);
+      //!__trace2__("ptr:%p, id:%lld",iter2,iter2->msgId);
       iter2=iter2->next_unlocked;
     }}
 #endif // DUMP LIST
 
-    __watch__(first_unlocked);
-    __watch__(last_unlocked);
+    //!__watch__(first_unlocked);
+    //!__watch__(last_unlocked);
     event.Signal();
   }
 #undef __synchronized__
