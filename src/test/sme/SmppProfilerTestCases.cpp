@@ -58,6 +58,22 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& _text,
 			default:
 				__unreachable__("Invalid data coding");
 		}
+		uint8_t dcs = dataCoding;
+		if (fixture->smeInfo.forceDC)
+		{
+			if (dataCoding == DEFAULT)
+			{
+				dataCoding = SMSC7BIT;
+			}
+			uint8_t dc;
+			bool simMsg;
+			do
+			{
+				dcs = rand0(255);
+				SmppUtil::extractDataCoding(dcs, dc, simMsg);
+			}
+			while (dc != dataCoding);
+		}
 		//модификации текста
 		__tc__("updateProfile.cmdTextMixedCase"); __tc_ok__;
 		mixedCase(text);
@@ -81,7 +97,7 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& _text,
 			//установить немедленную доставку
 			pdu->get_message().set_esmClass(0x0); //иначе профайлер отлупит
 			pdu->get_message().set_scheduleDeliveryTime("");
-			pdu->get_message().set_dataCoding(dataCoding);
+			pdu->get_message().set_dataCoding(dcs);
 			if (rand0(1))
 			{
 				pdu->get_message().set_shortMessage(msg.get(), msgLen);
@@ -102,7 +118,7 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& _text,
 				OPT_ALL & ~OPT_MSG_PAYLOAD);
 			//установить немедленную доставку
 			pdu->get_data().set_esmClass(0x0); //иначе профайлер отлупит
-			pdu->get_data().set_dataCoding(dataCoding);
+			pdu->get_data().set_dataCoding(dcs);
 			pdu->get_optional().set_messagePayload(msg.get(), msgLen);
 			fixture->transmitter->sendDataSmPdu(pdu, NULL, sync, intProps,
 				strProps, objProps, PDU_EXT_SME);
