@@ -105,9 +105,9 @@ int compare_addr_addr_src(RouteRecord* rr1,
   int pat2_def = rr2->src_def;
 #define ifn0goto {if (result) goto result_;}
   int32_t result;
-  result = pat1->type - pat2->type; ifn0goto;
-  result = pat1->plan - pat2->plan; ifn0goto;
-  result = pat1->lenght - pat2->lenght; ifn0goto;
+  result = (int32_t)pat1->type - (int32_t)pat2->type; ifn0goto;
+  result = (int32_t)pat1->plan - (int32_t)pat2->plan; ifn0goto;
+  result = (int32_t)pat1->lenght - (int32_t)pat2->lenght; ifn0goto;
   result = 
     strncmp((char*)pat1->value,
             (char*)pat2->value,
@@ -137,9 +137,9 @@ int compare_addr_addr_dest(RouteRecord* rr1,
   int pat2_def = rr2->dest_def;
 #define ifn0goto {if (result) goto result_;}
   int32_t result;
-  result = pat1->type - pat2->type; ifn0goto;
-  result = pat1->plan - pat2->plan; ifn0goto;
-  result = pat1->lenght - pat2->lenght; ifn0goto;
+  result = (int32_t)pat1->type - (int32_t)pat2->type; ifn0goto;
+  result = (int32_t)pat1->plan - (int32_t)pat2->plan; ifn0goto;
+  result = (int32_t)pat1->lenght - (int32_t)pat2->lenght; ifn0goto;
   result = 
     strncmp((char*)pat1->value,
             (char*)pat2->value,
