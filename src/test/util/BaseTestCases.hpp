@@ -57,8 +57,14 @@ inline void BaseTestCases::error()
 		__warning2__("%s", e.what());
 		getLog().error("[%d]\t%s", thr_self(), e.what());
 	}
+	catch(const char* s)
+	{
+		__warning2__("%s", s);
+		getLog().error("[%d]\t%s", thr_self(), s);
+	}
 	catch(...)
 	{
+		__warning__("Unknown exception");
 	}
 }
 
