@@ -28,7 +28,7 @@ using namespace smsc::util::config;
 using namespace smsc::core::threads;
 using namespace smsc::core::buffers;
 using namespace smsc::mtsmsme::processor;
-
+using namespace smsc::system::Status;
 static smsc::logger::Logger *logger = 0;
 
 static Event mtsmSmeWaitEvent, mtsmSmeReady;
@@ -154,7 +154,7 @@ public:
                 continue;
             }
             smsc_log_warn(logger, "RequestController shutdown: request for seqNum=%d skipped", seqNum);    
-            request->setSendResult(Status::SMENOTCONNECTED); // TODO: what errorcode ???
+            request->setSendResult(SMENOTCONNECTED); // TODO: what errorcode ???
         }
 
     };
@@ -230,7 +230,7 @@ public:
         if (!aliaser.getAliasForAddress(sms->destinationAddress, da)) {
             const char* daStr = sms->destinationAddress.toString().c_str();
             smsc_log_error(logger, "Invalid destination address '%s'", daStr ? daStr:"-");
-            request->setSendResult(Status::NOROUTE);
+            request->setSendResult(NOROUTE);
             return false;
         }
         
