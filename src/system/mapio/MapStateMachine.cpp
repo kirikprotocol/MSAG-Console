@@ -473,6 +473,10 @@ static bool SendSms(MapDialog* dialog){
       throw MAPDIALOG_FATAL_ERROR(
         FormatText("MAP::SendSMSCToMT: Et96MapDelimiterReq error 0x%x",result));
   }
+  if ( segmentation == SMS_SEGMENTATION )
+    dialog->state = MAPST_WaitSpecOpenConf;
+  else
+    dialog->state = MAPST_WaitOpenConf;
   return segmentation;
 }
 
@@ -585,15 +589,16 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
       switch( dialog->state ){
       case MAPST_WaitHlrVersion:
         dialog->version = version;
-        SendRInfo(dialog.get());
         dialog->state = MAPST_RInfoFallBack;
+        SendRInfo(dialog.get());
         break;
       case MAPST_WaitMcsVersion:
         dialog->version = version;
-        if ( SendSms(dialog.get()) == SMS_SEGMENTATION )
+        SendSms(dialog.get());
+        /*if ( SendSms(dialog.get()) == SMS_SEGMENTATION )
           dialog->state = MAPST_WaitSpecOpenConf;
         else
-          dialog->state = MAPST_WaitOpenConf;
+          dialog->state = MAPST_WaitOpenConf;*/
         break;
       default:
         throw MAPDIALOG_BAD_STATE(
@@ -639,10 +644,11 @@ USHORT_T Et96MapOpenConf (
               break;
             case MAPST_WaitSpecOpenConf:
             case MAPST_WaitOpenConf:
-              if ( SendSms(dialog.get()) == SMS_SEGMENTATION )
+              SendSms(dialog.get());
+              /*if ( SendSms(dialog.get()) == SMS_SEGMENTATION )
                 dialog->state = MAPST_WaitSpecOpenConf;
               else
-                dialog->state = MAPST_WaitOpenConf;
+                dialog->state = MAPST_WaitOpenConf;*/
               break;
             }
             break;
@@ -1156,6 +1162,8 @@ unsigned char  lll_8bit_2_7bit[256] = {
 0x0c,0x06,0x54,0x54,0x7e,0x54,0x54,0x54};
 
 #else
+
+#include "MapDialog_spcific.cxx"
 void MAPIO_PutCommand(const SmscCommand& cmd ){}
 
 #endif
