@@ -1011,17 +1011,20 @@ USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
     default:    
       fatal = true;
     }
+    SmscCommand cmd;
     if ( fatal ) {
       cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,MAKE_ERRORCODE(CMD_ERR_FATAL,MAP_NETWORKERROR));
     }else{
       cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,MAKE_ERRORCODE(CMD_ERR_TEMP,MAP_NETWORKERROR));
     }
+    MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
     __trace2__("MAP::Et96MapV2SendRInfoForSmConf errorSendRoutingInfoForSm_sp->errorCode 0x%hx",
                errorSendRoutingInfoForSm_sp->errorCode);
     throw runtime_error("MAP::Et96MapV2SendRInfoForSmConf error");
   }
   if ( provErrCode_p != 0 ){
     // error hadling
+    SmscCommand cmd;
     if ( *prevErrCode_p == 0x02 || // unsupported service
          *provErrCode_p == 0x03 || // mystyped parametor
          *provErrCode_p == 0x06 || // unexcpected responnse from peer
@@ -1031,11 +1034,12 @@ USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
     }else{
       cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,MAKE_ERRORCODE(CMD_ERR_TEMP,MAP_NETWORKERROR));
     }
+    MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
     __trace2__("MAP::Et96MapV2SendRInfoForSmConf provErrCode_p 0x%hx",*provErrCode_p);
     throw runtime_error("MAP::Et96MapV2SendRInfoForSmConf error");
   }
   
-  mkSS7GTAddress( &destMscAddr,  mscNumber_sp, 8 );
+  mkSS7GTAddress( &destMscAddr, mscNumber_sp, 8 );
 	smRpDa.typeOfAddress = ET96MAP_ADDRTYPE_IMSI;
 	smRpDa.addrLen = imsi_sp->imsiLen;
 	memcpy( smRpDa.addr, imsi_sp->imsi, imsi_sp->imsiLen );
