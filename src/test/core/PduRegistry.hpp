@@ -30,12 +30,23 @@ class PduRegistry
 {
 	typedef map<const string, PduData*> SmsIdMap;
 	typedef map<const uint32_t, PduData*> SeqNumMap;
-	typedef map<const uint16_t, PduData*> MsgRefMap;
+
+	struct MsgRefKey
+	{
+		const uint16_t msgRef;
+		const uint32_t id;
+		MsgRefKey(uint16_t _msgRef, uint32_t _id) : msgRef(_msgRef), id(_id) {}
+		bool operator< (const MsgRefKey& key) const
+		{
+			return (msgRef == key.msgRef ? (id < key.id) : (msgRef < key.msgRef));
+		}
+	};
+	typedef map<const MsgRefKey, PduData*> MsgRefMap;
 
 	struct TimeKey
 	{
-		time_t time;
-		uint32_t id;
+		const time_t time;
+		const uint32_t id;
 		TimeKey(time_t t, uint32_t _id) : time(t), id(_id) {}
 		bool operator< (const TimeKey& key) const
 		{
@@ -93,12 +104,12 @@ public:
 	/**
 	 * ѕоиск оригинального pdu при получении его на стороне получател€.
 	 */
-	PduData* getPdu(uint16_t msgRef);
+	vector<PduData*> getPdu(uint16_t msgRef) const;
 
 	/**
 	 * ѕоиск оригинального pdu при получении респонса на стороне отправител€.
 	 */
-	PduData* getPdu(uint32_t seqNumber);
+	PduData* getPdu(uint32_t seqNumber) const;
 	
 	/**
 	 * ѕоиск оригинального pdu при получении статус репорта или
@@ -111,11 +122,11 @@ public:
 	 * <li>SME Manual/User Acknowledgement.
 	 * </ul>
 	 */
-	PduData* getPdu(const string& smsId);
+	PduData* getPdu(const string& smsId) const;
 
 	void removePdu(PduData* pduData);
 
-	PduData* getLastRemovedPdu();
+	PduData* getLastRemovedPdu() const;
 
 	PduDataIterator* getPduBySubmitTime(time_t t1, time_t t2);
 	
