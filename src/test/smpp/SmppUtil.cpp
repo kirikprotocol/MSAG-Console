@@ -19,6 +19,7 @@ using smsc::test::util::operator<<;
 using namespace std;
 using namespace smsc::sms; //constants
 using namespace smsc::test::util;
+using namespace smsc::smpp::SmppCommandSet;
 //using smsc::test::sms::SmsUtil;
 
 static const int MAX_OSTR_PRINT_SIZE = 255;
