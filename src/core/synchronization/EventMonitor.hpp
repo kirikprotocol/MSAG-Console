@@ -27,9 +27,17 @@ public:
   {
     return cond_wait(&event,&mutex);
   }
+  int wait(cond_t* cnd)
+  {
+    return cond_wait(cnd,&mutex);
+  }
   void notify()
   {
     cond_signal(&event);
+  }
+  void notify(cond_t* cnd)
+  {
+    cond_signal(cnd);
   }
   void notifyAll()
   {
