@@ -53,8 +53,8 @@ include file="/WEB-INF/inc/collapsing_tree.jsp"%><%!
   page_menu_button(out, "mbSave",  "Save",  "Save config");
   page_menu_button(out, "mbReset", "Reset", "Reset", "clickCancel()");
   page_menu_space(out);
-  page_menu_button(out, "mbStart", "Start", "Start SMSC", bean.getStatus() == ServiceInfo.STATUS_STOPPED);
-  page_menu_button(out, "mbStop",  "Stop",  "Stop SMSC", bean.getStatus() == ServiceInfo.STATUS_RUNNING);
+  page_menu_button(out, "mbStart", "Start", "Start daemon", bean.getStatus() == ServiceInfo.STATUS_STOPPED);
+  page_menu_button(out, "mbStop",  "Stop",  "Stop daemon", bean.getStatus() == ServiceInfo.STATUS_RUNNING);
   page_menu_end(out);
 %>
 <script language="JavaScript">
