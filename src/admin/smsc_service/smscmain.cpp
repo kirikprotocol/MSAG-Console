@@ -36,6 +36,10 @@ int main(int argc,char* argv[])
 		aliasConfig.load("../conf/aliases.xml");
 		cfgs.aliasconfig = &aliasConfig;
 
+    smsc::util::config::route::RouteConfig rc;
+    rc.load("../conf/routes.xml");
+    cfgs.routesconfig=&rc;
+
 		// init Admin part
 		SmscComponent smsc_component(cfgs);
 		ComponentManager::registerComponent(&smsc_component);

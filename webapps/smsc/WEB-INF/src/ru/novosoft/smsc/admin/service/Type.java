@@ -19,8 +19,8 @@ public class Type
   }
 
   static final public byte StringType = 1;
-  static final public byte BooleanType = 2;
-  static final public byte IntType = 3;
+  static final public byte IntType = 2;
+  static final public byte BooleanType = 3;
   static final public byte UnknownType = 0;
 
   static final public Type[] Types = {

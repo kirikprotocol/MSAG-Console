@@ -5,6 +5,7 @@
 		<li><a href="<%=urlPrefix+routesPrefix%>/index.jsp">Routes</a></li>
 		<li><a href="<%=urlPrefix+subjectsPrefix%>/index.jsp">Subjects</a></li>
 		<li><a href="<%=urlPrefix+aliasesPrefix%>/index.jsp">Aliases</a></li>
+		<li><a href="<%=urlPrefix+profilesPrefix%>/index.jsp">Profiles</a></li>
 	</ul>
 	<li><a href="<%=urlPrefix+hostsPrefix%>/index.jsp">Hosts</a></li>
 	<ul compact>

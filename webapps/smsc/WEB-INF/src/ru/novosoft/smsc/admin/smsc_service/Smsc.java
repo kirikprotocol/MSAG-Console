@@ -9,10 +9,12 @@ import org.apache.log4j.Category;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.alias.AliasSet;
 import ru.novosoft.smsc.admin.route.RouteList;
 import ru.novosoft.smsc.admin.route.SMEList;
 import ru.novosoft.smsc.admin.route.SubjectList;
+import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.service.*;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.config.ConfigManager;
@@ -29,6 +31,8 @@ public class Smsc extends Service
   private Component smsc_component = null;
   private Method apply_routes_method = null;
   private Method apply_aliases_method = null;
+  private Method lookup_profile_method = null;
+  private Method update_profile_method = null;
   private ConfigManager configManager = null;
 
   private SMEList smes = null;
@@ -52,6 +56,8 @@ public class Smsc extends Service
     smsc_component = (Component) getInfo().getComponents().get("SMSC");
     apply_routes_method = (Method) smsc_component.getMethods().get("apply_routes");
     apply_aliases_method = (Method) smsc_component.getMethods().get("apply_aliases");
+    lookup_profile_method = (Method) smsc_component.getMethods().get("lookup_profile");
+    update_profile_method = (Method) smsc_component.getMethods().get("update_profile");
 
     try
     {
@@ -204,5 +210,26 @@ public class Smsc extends Service
   public AliasSet getAliases()
   {
     return aliases;
+  }
+
+  public Profile lookupProfile(Mask mask)
+      throws AdminException
+  {
+    HashMap args = new HashMap();
+    args.put("address", mask.getMask());
+    Object result = call(smsc_component, lookup_profile_method, Type.Types[Type.StringType], args);
+    if (result instanceof String)
+      return new Profile((String) result);
+    else
+      throw new AdminException("Error in response");
+  }
+
+  public void updateProfile(Mask mask, Profile newProfile)
+    throws AdminException
+  {
+    HashMap args = new HashMap();
+    args.put("address", mask.getMask());
+    args.put("profile", newProfile.getStringRepresentation());
+    call(smsc_component, update_profile_method, Type.Types[Type.BooleanType], args);
   }
 }

@@ -14,12 +14,7 @@ namespace admin {
 namespace smsc_service {
 
 using smsc::system::SmscConfigs;
-using smsc::admin::service::Method;
-using smsc::admin::service::Methods;
-using smsc::admin::service::Variant;
-using smsc::admin::service::Arguments;
-using smsc::admin::service::Parameters;
-using smsc::admin::service::StringType;
+using namespace smsc::admin::service;
 using smsc::core::threads::Thread;
 using smsc::system::Smsc;
 using smsc::admin::service::Component;
@@ -33,13 +28,25 @@ public:
 		  logger(Logger::getCategory("smsc.admin.smsc_service.SmscComponent"))
 	{
 		Parameters empty_params;
+    Parameters lookup_params;
+    lookup_params["address"] = Parameter("address", StringType);
+    Parameters update_params;
+    update_params["address"] = Parameter("address", StringType);
+    update_params["profile"] = Parameter("profile", StringType);
+
 		Method apply_routes((unsigned)applyRoutesMethod, "apply_routes",
-												empty_params, StringType);
+                        empty_params, StringType);
 		Method apply_aliases((unsigned)applyAliasesMethod, "apply_aliases",
-												empty_params, StringType);
+                         empty_params, StringType);
+    Method lookup_profile((unsigned)lookupProfileMethod, "lookup_profile",
+                          lookup_params, StringType);
+    Method update_profile((unsigned)updateProfileMethod, "update_profile",
+                          update_params, BooleanType);
 
 		methods[apply_routes.getName()] = apply_routes;
 		methods[apply_aliases.getName()] = apply_aliases;
+    methods[lookup_profile.getName()] = lookup_profile;
+    methods[update_profile.getName()] = update_profile;
 
 		smsc_app_runner.reset(0);
 	}
@@ -66,6 +73,8 @@ public:
 	void stopSmsc() throw (AdminException);
 
 protected:
+    void updateProfile(const Arguments &args);
+    std::string lookupProfile(const Arguments &args) throw (AdminException);
 	
 	bool isSmscRunning() throw() {return smsc_app_runner.get() != 0;}
 	void applyRoutes() throw (AdminException);
@@ -74,7 +83,7 @@ protected:
 
 	SmscConfigs &configs;
 	Methods methods;
-	enum {applyRoutesMethod, applyAliasesMethod};
+	enum {applyRoutesMethod, applyAliasesMethod, lookupProfileMethod, updateProfileMethod};
 
 private:
 	class SmscAppRunner : public Thread
@@ -89,6 +98,11 @@ private:
 		{
 			_app.reset(0);
 		}
+
+        Smsc * getApp()
+        {
+            return _app.get();
+        }
 	
 		virtual int Execute()
 		{

@@ -2,16 +2,16 @@
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 
 <config>
+  <section name="system">
+    <param name="webapp folder" type="string">/export/home/igork/cvs/smsc/src/webapp/smsc</param>
+  </section>
   <section name="daemons">
     <section name="smsc">
       <param name="port" type="int">6680</param>
     </section>
   </section>
   <section name="smsc">
-    <param name="host" type="string">smsc</param> 
+    <param name="host" type="string">smsc</param>
     <param name="port" type="int">6690</param>
-  </section>
-  <section name="system">
-    <param name="webapp folder" type="string">/export/home/igork/cvs/smsc/src/webapp/smsc</param>
   </section>
 </config>

@@ -19,6 +19,7 @@
 <%! final static String routesPrefix = "/smsc_service/routes";%>
 <%! final static String subjectsPrefix = "/smsc_service/subjects";%>
 <%! final static String aliasesPrefix = "/smsc_service/aliases";%>
+<%! final static String profilesPrefix = "/smsc_service/profiles";%>
 <%! final static String hostsPrefix = "/common/hosts";%>
 <%! final static String servicesPrefix = "/common/services";%>
 <%

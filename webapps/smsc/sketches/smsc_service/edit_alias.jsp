@@ -1,10 +1,5 @@
 <%@ include file="/sketches/header.jsp"%>
-<TABLE>
-	<TR>
-		<TD><A href="../routes/index.jsp"><h2>Routes</h2></A></TD>
-		<TD><A href="aliases.jsp"><h2>Aliases</h2></A></TD>
-	</TR>
-</TABLE>
+<%@ include file="menu.jsp"%>
 <h2>Aliases</h2>
 <h3>Add alias:</h3>
 <form method="post" action="edit_alias_2.jsp">

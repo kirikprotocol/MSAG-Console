@@ -6,6 +6,7 @@
 package ru.novosoft.smsc.admin.service;
 
 import org.w3c.dom.Element;
+import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.protocol.CommandCall;
 import ru.novosoft.smsc.admin.protocol.CommandListComponents;
@@ -19,6 +20,7 @@ import java.util.Map;
 public class Service extends Proxy
 {
   ServiceInfo info = null;
+  private Category logger = Category.getInstance(this.getClass());
 
   public Service(ServiceInfo info)
           throws AdminException
@@ -61,8 +63,33 @@ public class Service extends Proxy
           throw new AdminException("Unknown result type");
       }
     }
-    else
+    else {
+      logger.error("Incorrect method \"" +(method == null ? "<null>" : method.getName()) + "\" signature");
+
+      // for debug purposes
+      try {
+        if (component != null)
+          logger.debug("Component: " + component.getName());
+        if (method != null)
+          logger.debug("Called method:"
+              + "\n  name: " + method.getName()
+              + "\n  type: " + method.getType().getName()
+              + "\n  params: " + method.getParams()
+          );
+        if (component != null && component.getMethods().get(method.getName()) != null)
+        {
+          Method foundMethod = (Method) component.getMethods().get(method.getName());
+          logger.debug("Found method:"
+              + "\n  name: " + foundMethod.getName()
+              + "\n  type: " + foundMethod.getType().getName()
+              + "\n  params: " + foundMethod.getParams()
+          );
+        }
+      } catch (Throwable e) {
+      }
+
       throw new AdminException("Incorrect method signature");
+    }
   }
 
   public void refreshComponents()

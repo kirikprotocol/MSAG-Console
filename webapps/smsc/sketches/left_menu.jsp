@@ -3,6 +3,7 @@
 	<ul compact>
 		<li><a href="<%=urlPrefix%>routes/index.jsp">Routes</a></li>
 		<li><a href="<%=urlPrefix%>smsc_service/aliases.jsp">Aliases</a></li>
+		<li><a href="<%=urlPrefix%>smsc_service/profiles.jsp">Profiles</a></li>
 	</ul>
 	<li><A href="<%=urlPrefix%>hosts.jsp">Hosts</A></li>
 	<UL compact>
