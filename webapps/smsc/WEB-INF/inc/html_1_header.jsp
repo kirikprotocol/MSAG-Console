@@ -8,7 +8,7 @@
 <script>
 function openPerfMon()
 {
-	open("<%=CPATH%>/perfmon/index.jsp", null, "channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=no,scrollbars=no,status=no,titlebar=no,toolbar=no,height=420,width=480");
+	open("<%=CPATH%>/perfmon/index.jsp", null, "channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=420,width=480");
 	return false;
 }
 </script>

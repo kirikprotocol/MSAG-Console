@@ -1,5 +1,8 @@
 <html>
-<body>
+<head>
+	<link rel="STYLESHEET" type="text/css" href="../common.css">
+</head>
+<body style="margin: 0px 0px 0px 0px;">
 <%
 	ru.novosoft.smsc.jsp.SMSCAppContext appContext = (ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext");
 	int port = 6695;
@@ -12,7 +15,7 @@
 		}
 	}
 %>
-	<applet code="ru.novosoft.smsc.perfmon.applet.PerfMon.class" width=460 height=400 archive="perfmon.jar">
+	<applet code="ru.novosoft.smsc.perfmon.applet.PerfMon.class" width=100% height=100% archive="perfmon.jar">
 		<param name="locale.country" value="ru">
 		<param name="locale.language" value="ru">
 		<param name="pixPerSecond" value="4">

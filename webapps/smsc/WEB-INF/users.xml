@@ -3,32 +3,33 @@
 
 <users>
 	<user login="igork" password="asdlkj" firstName="?????" lastName="????????" dept="??????" workPhone="?? ????" homePhone="? ????" cellPhone="?? ?????" email="a@b">
-		<role name="apply"/>
-		<role name="smsView"/>
-		<role name="users"/>
-		<role name="routes"/>
-		<role name="subjects"/>
-		<role name="aliases"/>
-		<role name="profiles"/>
-		<role name="hosts"/>
 		<role name="services"/>
+		<role name="aliases"/>
+		<role name="smsView"/>
+		<role name="apply"/>
+		<role name="hosts"/>
+		<role name="profiles"/>
+		<role name="routes"/>
+		<role name="users"/>
+		<role name="subjects"/>
 	</user>
 	<user login="user1" password="asd" firstName="user1 first" lastName="user1 l" dept="user1 d" workPhone="user1 w" homePhone="user1 h" cellPhone="user1 c" email="user1@user1.user1">
-		<role name="aliases"/>
 		<role name="smsView"/>
-		<role name="profiles"/>
+		<role name="aliases"/>
 		<role name="routes"/>
+		<role name="profiles"/>
 		<role name="subjects"/>
 	</user>
 	<user login="superadmin" password="123" firstName="first" lastName="last" dept="dept" workPhone="work" homePhone="home" cellPhone="cell" email="email@email.com">
 		<role name="apply"/>
+		<role name="perfmon"/>
 		<role name="smsView"/>
-		<role name="aliases"/>
-		<role name="services"/>
-		<role name="hosts"/>
-		<role name="routes"/>
-		<role name="profiles"/>
 		<role name="users"/>
+		<role name="routes"/>
 		<role name="subjects"/>
+		<role name="aliases"/>
+		<role name="profiles"/>
+		<role name="hosts"/>
+		<role name="services"/>
 	</user>
 </users>
