@@ -41,6 +41,59 @@ namespace smsc { namespace infosme
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
+    struct TaskHolder
+    {
+        Task* task;
+        
+        TaskHolder() : task(0) {};
+        TaskHolder(Task* task) : task(task) {};
+        TaskHolder(const TaskHolder& holder) : task(holder.task) {};
+        virtual ~TaskHolder() {};
+
+        TaskHolder& operator=(const TaskHolder& holder) {
+            task = holder.task;
+            return *this;
+        }
+        bool operator>(const TaskHolder& holder) const {
+            return (task && holder.task) ? 
+                task->getPriority() > holder.task->getPriority() : false;
+        }
+        bool operator<(const TaskHolder& holder) const {
+            return (task && holder.task) ? 
+                task->getPriority() < holder.task->getPriority() : false;
+        }
+        bool operator==(const TaskHolder& holder) const {
+            return (task && holder.task) ? 
+                (task->getPriority() == holder.task->getPriority() && 
+                 task == holder.task) : false;
+        }
+    };
+    
+    typedef std::multiset< TaskHolder, 
+                           std::greater<TaskHolder>, 
+                           std::allocator<TaskHolder> > TaskSet;
+    
+    class TaskContainer : public TaskContainerAdapter
+    {
+    private:
+        
+        Mutex           tasksLock;
+        Hash<Task *>    tasksByName;        // hash by task name;
+        TaskSet         tasksByPriority;    // multiset sorted by descending priority
+        int             prioritySum;
+
+    public:
+        
+        TaskContainer() : TaskContainerAdapter(), prioritySum(0) {};
+        virtual ~TaskContainer();
+
+        virtual bool  addTask(Task* task);
+        virtual bool  removeTask(std::string taskName);
+        virtual Task* getTask(std::string taskName);
+
+        virtual Task* getNextTask();
+    };
+
     typedef enum {
       beginProcessMethod, endProcessMethod, doNotifyMessageMethod, dropAllMessagesMethod
     } TaskMethod;
@@ -94,59 +147,7 @@ namespace smsc { namespace infosme
         };
     };
 
-    struct TaskHolder
-    {
-        Task* task;
-        
-        TaskHolder() : task(0) {};
-        TaskHolder(Task* task) : task(task) {};
-        TaskHolder(const TaskHolder& holder) : task(holder.task) {};
-        virtual ~TaskHolder() {};
-
-        TaskHolder& operator=(const TaskHolder& holder) {
-            task = holder.task;
-            return *this;
-        }
-        bool operator>(const TaskHolder& holder) const {
-            return (task && holder.task) ? 
-                task->getPriority() > holder.task->getPriority() : false;
-        }
-        bool operator<(const TaskHolder& holder) const {
-            return (task && holder.task) ? 
-                task->getPriority() < holder.task->getPriority() : false;
-        }
-        bool operator==(const TaskHolder& holder) const {
-            return (task && holder.task) ? 
-                (task->getPriority() == holder.task->getPriority() && 
-                 task == holder.task) : false;
-        }
-    };
-    
-    typedef std::multiset< TaskHolder, 
-                           std::greater<TaskHolder>, 
-                           std::allocator<TaskHolder> > TaskSet;
-    class TaskContainer
-    {
-    private:
-        
-        Mutex           tasksLock;
-        Hash<Task *>    tasksByName;        // hash by task name;
-        TaskSet         tasksByPriority;    // multiset sorted by descending priority
-        int             prioritySum;
-
-    public:
-        
-        TaskContainer() : prioritySum(0) {};
-        virtual ~TaskContainer();
-
-        bool addTask(Task* task);
-        bool removeTask(std::string taskName);
-        
-        Task* getNextTask();
-        Task* getTask(std::string taskName);
-    };
-
-    class TaskManager // for tasks execution on thread pool
+    class TaskManager : public TaskInvokeAdapter // for tasks execution on thread pool
     {
     private:
     
@@ -155,7 +156,8 @@ namespace smsc { namespace infosme
         
     public:
     
-        TaskManager() : logger(Logger::getCategory("smsc.infosme.TaskManager")) {};
+        TaskManager() : TaskInvokeAdapter(), 
+            logger(Logger::getCategory("smsc.infosme.TaskManager")) {};
         virtual ~TaskManager() {
             shutdown();
         };
@@ -185,16 +187,16 @@ namespace smsc { namespace infosme
             }
         };
         
-        void invokeBeginProcess(Task* task, Connection* connection) {
-            pool.startTask(new TaskRunner(task, beginProcessMethod, connection));
-        };
-        void invokeEndProcess(Task* task) {
+        virtual void invokeEndProcess(Task* task) {
             pool.startTask(new TaskRunner(task, endProcessMethod));
         };
-        void invokeDoNotifyMessage(Task* task, const StateInfo& info) {
+        virtual void invokeBeginProcess(Task* task, Connection* connection) {
+            pool.startTask(new TaskRunner(task, beginProcessMethod, connection));
+        };
+        virtual void invokeDoNotifyMessage(Task* task, const StateInfo& info) {
             pool.startTask(new TaskRunner(task, doNotifyMessageMethod, info));
         };
-        void invokeDropAllMessages(Task* task, Connection* connection) {
+        virtual void invokeDropAllMessages(Task* task, Connection* connection) {
             pool.startTask(new TaskRunner(task, dropAllMessagesMethod, connection));
         };
     };
@@ -205,14 +207,15 @@ namespace smsc { namespace infosme
 
         log4cpp::Category  &logger;
 
-        TaskManager   manager;  
-        DataProvider  provider;
-        TaskContainer container;
-        TaskScheduler scheduler;
+        TaskManager   manager;      // for tasks methods execution on thread pool
+        DataProvider  provider;     // to obtain registered data source by key
+        TaskContainer container;    // contains tasks by name & priority
+        TaskScheduler scheduler;    // for scheduled messages generation
         
         Event       awake, exited;
         bool        bStarted, bNeedExit;
         Mutex       startLock;
+        int         switchTimeout;
 
         const char* dsInternalName;
         DataSource* dsInternal;
@@ -234,10 +237,17 @@ namespace smsc { namespace infosme
         void Start();
         void Stop();
         
-        inline bool isStarted() { return bStarted; };
-
-        bool addTask(const Task* task);
-        bool removeTask(std::string taskName);
+        inline bool isStarted() { 
+            MutexGuard guard(startLock);
+            return bStarted;
+        };
+        
+        inline TaskInvokeAdapter& getTaskInvokeAdapter() {
+            return manager;
+        }
+        inline TaskContainerAdapter& getTaskContainerAdapter() {
+            return container;
+        }
     };
 
 }}

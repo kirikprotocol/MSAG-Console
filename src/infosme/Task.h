@@ -141,6 +141,33 @@ namespace smsc { namespace infosme
         virtual bool getNextMessage(Connection* connection, Message& message) = 0;
     };
     
+    struct TaskInvokeAdapter
+    {
+        virtual void invokeEndProcess(Task* task) = 0;
+        virtual void invokeBeginProcess(Task* task, Connection* connection) = 0;
+        virtual void invokeDoNotifyMessage(Task* task, const StateInfo& info) = 0;
+        virtual void invokeDropAllMessages(Task* task, Connection* connection) = 0;
+    
+        virtual ~TaskInvokeAdapter() {};
+
+    protected:
+
+        TaskInvokeAdapter() {};
+    };
+    
+    struct TaskContainerAdapter
+    {
+        virtual bool  addTask(Task* task) = 0;
+        virtual bool  removeTask(std::string taskName) = 0;
+        virtual Task* getTask(std::string taskName) = 0;
+        
+        virtual ~TaskContainerAdapter() {};
+
+    protected:
+        
+        TaskContainerAdapter() {};
+    };
+
     class TaskFactory
     {
     protected:

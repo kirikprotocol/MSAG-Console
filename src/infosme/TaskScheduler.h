@@ -28,12 +28,13 @@ namespace smsc { namespace infosme
     
     using smsc::util::Logger;
     
-    class TaskProcessor;
     class TaskScheduler : public Thread
     {
     private:
 
-        TaskProcessor* processor;
+        log4cpp::Category  &logger;
+
+        TaskInvokeAdapter* invoker;
 
         Event       awake, exited;
         bool        bStarted, bNeedExit;
@@ -41,6 +42,8 @@ namespace smsc { namespace infosme
 
         IntHash<Schedule*>  schedules;
         Mutex               schedulesLock; 
+
+        Schedule* getNextSchedule(time_t& scheduleTime);
         
     public:
 
@@ -56,7 +59,7 @@ namespace smsc { namespace infosme
          * @param config
          * @exception ConfigException throws when configuration is invalid
          */
-        void init(TaskProcessor* processor, ConfigView* config);
+        void init(TaskInvokeAdapter* invoker, ConfigView* config);
 
         virtual int Execute();
         void Start();

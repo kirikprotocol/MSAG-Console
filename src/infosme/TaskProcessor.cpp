@@ -1,10 +1,13 @@
 
 #include "TaskProcessor.h"
+#include <exception>
 
 namespace smsc { namespace infosme 
 {
 
 Hash<TaskFactory *>*  TaskFactory::registry = 0;
+
+/* ---------------------------- PriorityContainer ---------------------------- */
 
 TaskContainer::~TaskContainer()
 {
@@ -37,7 +40,7 @@ bool TaskContainer::removeTask(std::string taskName)
     TaskHolder  holder(task);
     TaskSet::iterator it = tasksByPriority.find(holder);
     if (it != tasksByPriority.end()) {
-        tasksByPriority.erase(it);
+        tasksByPriority.erase(it); // TODO analise and reimplement it !!!
         prioritySum -= task->getPriority();
     }
     return true;
@@ -56,7 +59,7 @@ Task* TaskContainer::getNextTask()
     
     int count = 0;
     int random = (rand()%prioritySum)+1;
-    for (TaskSet::iterator it = tasksByPriority.begin(); it !=tasksByPriority.end(); it++)
+    for (TaskSet::iterator it = tasksByPriority.begin(); it != tasksByPriority.end(); it++)
     {
         Task* task = it->task;
         if (!task) continue;
@@ -66,11 +69,14 @@ Task* TaskContainer::getNextTask()
     return 0;
 }
 
+/* ---------------------------- TaskProcessor ---------------------------- */
+
 TaskProcessor::TaskProcessor(ConfigView* config)
     : Thread(), logger(Logger::getCategory("smsc.infosme.TaskProcessor")), 
-            bStarted(false), dsInternalName(0), dsInternal(0)
+            bStarted(false), bNeedExit(false), dsInternalName(0), dsInternal(0)
 {
     logger.info("Loading ...");
+
     std::auto_ptr<ConfigView> threadPoolCfgGuard(config->getSubConfig("ThreadPool"));
     ConfigView* threadPoolCfg = threadPoolCfgGuard.get();
     manager.init(threadPoolCfg); // loads up thread pool for tasks
@@ -90,50 +96,92 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     logger.info("Loading tasks ...");
     std::auto_ptr<ConfigView> tasksCfgGuard(config->getSubConfig("Tasks"));
     ConfigView* tasksCfg = tasksCfgGuard.get();
+    switchTimeout = tasksCfg->getInt("switchTimeout");
+    if (switchTimeout <= 0) 
+        throw ConfigException("Task switch timeout should be positive");
+    
     // TODO: Init tasks here !!!
-
+    
     logger.info("Tasks loaded.");
+
     logger.info("Loading task schedule ...");
     std::auto_ptr<ConfigView> schedulerCfgGuard(config->getSubConfig("Scheduler"));
     ConfigView* schedulerCfg = schedulerCfgGuard.get();
-    scheduler.init(this, schedulerCfg);
+    scheduler.init(&manager, schedulerCfg);
     logger.info("Task schedule loaded.");
+
     logger.info("Load success.");
 }
 TaskProcessor::~TaskProcessor()
 {
-    if (dsInternalName) delete dsInternalName;
-    
+    this->Stop();
+
     // TODO: implement task set stop & cleanup
+    if (dsInternalName) delete dsInternalName;
 }
 void TaskProcessor::Start()
 {
-    // TODO: implement it
+    MutexGuard guard(startLock);
+    
+    if (!bStarted)
+    {
+        logger.info("Starting ...");
+        bNeedExit = false;
+        awake.Wait(0);
+        Thread::Start();
+        bStarted = true;
+        logger.info("Started.");
+    }
 }
 void TaskProcessor::Stop()
 {
-    // TODO: implement it
+    MutexGuard  guard(startLock);
+    
+    if (bStarted)
+    {
+        logger.info("Stopping ...");
+        bNeedExit = true;
+        awake.Signal();
+        exited.Wait();
+        bStarted = false;
+        logger.info("Stoped.");
+    }
 }
 int TaskProcessor::Execute()
 {
-    // TODO: implement it
+    bool first = true;
+    while (!bNeedExit)
+    {
+        awake.Wait((first) ? 100:switchTimeout);
+        if (bNeedExit) break;
+        try 
+        {
+            MainLoop(); first = false;
+        } 
+        catch (std::exception& exc) 
+        {
+            awake.Wait(0); first = true;
+            logger.error("Exception occurred during tasks execution : %s", exc.what());
+        }
+    }
+    exited.Signal();
     return 0;
 }
 
 void TaskProcessor::MainLoop()
 {
-    // TODO: implement it
-}
-
-bool TaskProcessor::addTask(const Task* task)
-{
-    // TODO: implement it
-    return false;
-}
-bool TaskProcessor::removeTask(std::string taskName)
-{
-    // TODO: implement it
-    return false;
+    logger.info("Entering MainLoop");
+    Task* task = container.getNextTask();
+    if (!task) return;
+    
+    Message message;
+    Connection* connection = dsInternal->getConnection();
+    if (connection && task->getNextMessage(connection, message))
+    {
+        logger.debug("Sending message ...");
+        // TODO: send sms here !!!
+        logger.debug("Message sent.");
+    }
 }
 
 }}
