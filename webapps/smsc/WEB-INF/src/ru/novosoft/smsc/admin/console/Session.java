@@ -76,7 +76,7 @@ public abstract class Session extends Thread
     private final static int ESC_LF = 10;
     private final static int ESC_NUL = 0;
 
-    protected String readTelnetLine(BufferedReader reader, PrintWriter writer, boolean echo)
+    protected String readTelnetLine(PrintWriter writer, boolean echo)
         throws IOException
     {
         int b = -1;
@@ -84,7 +84,7 @@ public abstract class Session extends Thread
         boolean escape = false;
         boolean parameter = false;
         boolean typeofop = false;
-        while( (b=reader.read()) != -1 ) {
+        while( (b=is.read()) != -1 ) {
             if( typeofop ) {
                 //System.out.println("Got TGT="+b);
                 escape = false;
@@ -142,7 +142,7 @@ public abstract class Session extends Thread
         while (!isStopping && !writer.checkError())
         {
             prompt(writer);
-            String input = readTelnetLine(reader, writer, true);
+            String input = readTelnetLine(writer, true);
             if (input == null || input.length() == 0) continue;
             if (input.equalsIgnoreCase(COMMAND_QUIT)) {
                 farewell(writer); sleep(1000); break;
