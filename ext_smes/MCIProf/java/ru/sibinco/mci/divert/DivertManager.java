@@ -176,7 +176,8 @@ public class DivertManager
   private final static int ESC_SEMI   = ':';
   private final static int ESC_PROMPT = '<';
 
-  private final static String[] AUTH_FAILED   = {"FAILED", "ERROR", "FAILURE", "NOT ACCEPTED", "DENIED"};
+  private final static String[] AUTH_FAILED   = {"FAILED", "ERROR", "FAILURE",
+                                                 "NOT ACCEPTED", "DENIED", "OCCUPIED"};
   private final static String[] NVT_IO_DEVICE = {"NVT", "IO DEVICE", "DEVICE NUMBER", "NVT DEVICE"};
   private final static String[] USER_CODE     = {"USER", "CODE"};
   private final static String[] USER_PASSWORD = {"PASSWORD"};
@@ -195,9 +196,10 @@ public class DivertManager
     boolean needUserCode     = true;
     boolean needUserPassword = true;
 
+    String str = null;
     while (needNvtIoDevice || needUserCode || needUserPassword)
     {
-      String str = readTelnetString(ESC_SEMI);
+      str = readTelnetString(ESC_SEMI);
       if (str == null || str.length() <= 0)
         throw new IOException("Got empty qwery string from MSC");
       logger.debug("Auth got string: "+str);
@@ -214,7 +216,11 @@ public class DivertManager
         writeTelnetLine("");
       }
     }
-    readTelnetString(ESC_PROMPT);
+    str = readTelnetLine();
+    if (str == null || str.length() <= 0)
+      throw new IOException("Got empty responce from MSC");
+    if (checkQuery(AUTH_FAILED, str)) throw new IOException("Autentification failed");
+    else readTelnetString(ESC_PROMPT);
   }
   private void disconnect()
   {
