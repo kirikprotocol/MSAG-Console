@@ -115,6 +115,8 @@ public:
         body.setIntProperty(Tag::SMPP_PRIORITY, 0);
         
         char* out = (char *)command.getOutData();
+        __trace2__("Output Data '%s'", (out) ? out:"");
+
         int   outLen = (out) ? strlen(out) : 0;
         char  buff[MAX_ALLOWED_MESSAGE_LENGTH+1];
         PduSubmitSmResp* dlResp = 0;
