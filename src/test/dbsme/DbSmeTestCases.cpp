@@ -20,8 +20,8 @@ using namespace smsc::test::smpp;
 using namespace smsc::test::util;
 using namespace smsc::smpp::SmppCommandSet;
 
-DbSmeTestCases::DbSmeTestCases(SmppFixture* _fixture, DbSmeRegistry* _dbSmeReg)
-: fixture(_fixture), dbSmeReg(_dbSmeReg), chkList(fixture->chkList),
+DbSmeTestCases::DbSmeTestCases(SmppFixture* fixture, DbSmeRegistry* _dbSmeReg)
+: SmeAcknowledgementHandler(fixture), dbSmeReg(_dbSmeReg),
 	dateFormatTc(dbSmeReg, fixture->chkList),
 	otherFormatTc(dbSmeReg, fixture->chkList),
 	insertTc(dbSmeReg, fixture->chkList),
@@ -67,6 +67,7 @@ const string DbSmeTestCases::getCmdText(DbSmeTestRecord* rec,
 	const DateFormatter* df)
 {
 	__require__(rec && rec->checkJob());
+	__decl_tc__;
 	static const string delim[] = {" ", "  ", "\n", "\n\n"};
 	static const int delimLen = sizeof(delim) / sizeof(*delim);
 	//установить from-address и to-address
@@ -77,7 +78,13 @@ const string DbSmeTestCases::getCmdText(DbSmeTestRecord* rec,
 	{
 		s << __delim__;
 	}
-	s << rec->getJob();
+	__tc__("submitDbSmeCmd.jobNameMixedCase"); __tc_ok__;
+	string job = rec->getJob();
+	for (int i = 0; i < job.length(); i++)
+	{
+		job[i] = rand0(1) ? toupper(job[i]) : tolower(job[i]);
+	}
+	s << job;
 	__print__(Id);
 	__print__(Int8);
 	__print__(Int16);
@@ -149,7 +156,7 @@ void DbSmeTestCases::sendDbSmePdu(const string& input,
 	__require__(rec);
 	__cfg_addr__(dbSmeAlias);
 	PduData::StrProps strProps;
-	strProps["input"] = input;
+	strProps["dbSmeInput"] = input;
 	PduData::ObjProps objProps;
 	objProps["dbSmeRec"] = rec;
 	rec->ref();
@@ -168,7 +175,7 @@ void DbSmeTestCases::sendDbSmePdu(const Address& addr, const string& input,
 {
 	__cfg_int__(timeCheckAccuracy);
 	PduData::StrProps strProps;
-	strProps["input"] = input;
+	strProps["dbSmeInput"] = input;
 	time_t t;
 	const Profile& profile = fixture->profileReg->getProfile(fixture->smeAddr, t);
 	const pair<string, uint8_t> p = convert(output, profile.codepage);
@@ -176,7 +183,7 @@ void DbSmeTestCases::sendDbSmePdu(const Address& addr, const string& input,
 	AckText* ack = new AckText(p.first, p.second, valid);
 	ack->ref();
 	PduData::ObjProps objProps;
-	objProps["output"] = ack;
+	objProps["dbSmeOutput"] = ack;
 	sendDbSmePdu(addr, input, NULL, &strProps, &objProps, sync, dataCoding);
 }
 
@@ -691,7 +698,7 @@ const string DbSmeTestCases::processJobFirstOutput(const string& text,
 }
 
 AckText* DbSmeTestCases::getExpectedResponse(SmeAckMonitor* monitor,
-	PduDeliverySm &pdu, const string& text, time_t recvTime)
+	PduDeliverySm& pdu, const string& text, time_t recvTime)
 {
 	__require__(monitor->pduData->objProps.count("dbSmeRec"));
 	__cfg_int__(timeCheckAccuracy);
@@ -705,6 +712,8 @@ AckText* DbSmeTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	const Profile& profile = fixture->profileReg->getProfile(addr, t);
 	const pair<string, uint8_t> p = convert(expected, profile.codepage);
 	bool valid = t + timeCheckAccuracy <= recvTime;
+	__trace2__("getExpectedResponse(): codepage = %d, valid = %s, text:\n%s",
+		(int) p.second, valid ? "true" : "false", p.first.c_str());
 	return new AckText(p.first, p.second, valid);
 }
 
@@ -734,15 +743,17 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	__require__(monitor);
 	const string text = decode(pdu.get_message().get_shortMessage(),
 		pdu.get_message().size_shortMessage(), pdu.get_message().get_dataCoding());
-	if (!monitor->pduData->objProps.count("output"))
+	__trace__("getExpectedResponse(): before");
+	if (!monitor->pduData->objProps.count("dbSmeOutput"))
 	{
 		AckText* ack = getExpectedResponse(monitor, pdu, text, recvTime);
 		ack->ref();
-		monitor->pduData->objProps["output"] = ack;
+		monitor->pduData->objProps["dbSmeOutput"] = ack;
 	}
 	AckText* ack =
-		dynamic_cast<AckText*>(monitor->pduData->objProps["output"]);
+		dynamic_cast<AckText*>(monitor->pduData->objProps["dbSmeOutput"]);
 	__require__(ack);
+	__trace2__("getExpectedResponse(): after, ack = %p", ack);
 	if (!ack->valid)
 	{
 		monitor->setReceived();
@@ -778,7 +789,7 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	bool check;
 	int pos = findPos(text, ack->text, getMaxChars(ack->dataCoding), check);
 	__trace2__("db sme cmd: pos = %d, input:\n%s\noutput:\n%s\nexpected:\n%s\n",
-		pos, monitor->pduData->strProps["input"].c_str(), text.c_str(), ack->text.c_str());
+		pos, monitor->pduData->strProps["dbSmeInput"].c_str(), text.c_str(), ack->text.c_str());
 	if (pos == string::npos)
 	{
 		__tc_fail__(1);
