@@ -16,7 +16,9 @@ MENU0_SELECTION = "MENU0_SERVICES";
 <%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.Index"/>
 <jsp:setProperty name="bean" property="*"/>
-<%bean.setAppContext((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"));%>
+<%
+bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages);
+%>
 <input type=hidden ID=jbutton value="jbutton">
 <input type=hidden name=serviceId>
 <input type=hidden name=hostId>
