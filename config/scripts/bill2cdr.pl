@@ -5,49 +5,57 @@ use IO::File;
 use strict;
 use File::Copy;
 
-my @OUT_FIELDS=(
-'-1',
-'RECORD_TYPE',
-'CALL_DIRECTION',
-'FINAL_DATE',
-'1',
-'DATA_LENGTH',
-'PAYER_IMSI',
-'PAYER_ADDR',
-'',
-'OTHER_ADDR',
-'',
-'',
-'',
-'',
-'0',
-'0',
-'0',
-'INV_SERVICE_ID',
-'',
-'SERVICE_ID',
-'MSG_ID',
-'0',
-'0',
-'0',
-'0',
-'0',
-'',
-'',
-'0.000000',
-'0',
-'0'
-);
+my @OUT_FIELDS;
 
-my $header="this is header";
-my $footer="this is footer";
+my $header='';
+my $footer='';
+my $crc='0'x32;
 
 my $addrrx=qr'7913\d{7}';
 my $mscrx=qr'79029860000|79139860001|79029869992';
 
+my $eoln="\n";
+
+@OUT_FIELDS=(
+{value=>'-1',width=>6},
+{field=>'RECORD_TYPE',width=>5},
+{field=>'CALL_DIRECTION',width=>5,align=>'R'},
+{field=>'FINAL_DATE',width=>5},
+{value=>'1',width=>10},
+{field=>'DATA_LENGTH',width=>10},
+{field=>'PAYER_IMSI',width=>21},
+{field=>'PAYER_ADDR',width=>21},
+{value=>'',width=>21},
+{field=>'OTHER_ADDR',width=>31},
+{value=>'',width=>31},
+{value=>'',width=>17},
+{value=>'',width=>10},
+{value=>'',width=>10},
+{value=>'0',width=>5},
+{value=>'0',width=>10},
+{value=>'0',width=>5},
+{field=>'INV_SERVICE_ID',width=>10},
+{value=>'',width=>3},
+{value=>'0',width=>10},
+{value=>'0',width=>10},
+#{field=>'SERVICE_ID',width=>10},
+#{field=>'MSG_ID',width=>10},
+{value=>'0',width=>1},
+{value=>'0',width=>1},
+{value=>'0',width=>1},
+{value=>'0',width=>1},
+{value=>'0',width=>1},
+{value=>'',width=>1},
+{value=>'',width=>20},
+{value=>'0.000000',width=>28},
+#{value=>'0',width=>10},
+{field=>'MSG_ID',width=>10},
+{value=>'0',width=>10},
+);
+
 if(@ARGV!=4)
 {
-  print STDERR "usage: bill2cdr indir outdir tmpdir\n";
+  print STDERR "usage: bill2cdr indir outdir tmpdir arcdir\n";
   exit;
 }
 
@@ -75,8 +83,13 @@ for(@dir)
   my $infile=$indir.$_;
   my $ofn=$_;
   $ofn=~s/\.csv$/\.cdr/;
+  $ofn=~s/_//;
+  $ofn=~/(\d+)/;
+  my $timestamp=$1;
   my $tmpfile=$tmpdir.$ofn;
   my $outfile=$outdir.$ofn;
+  $header="90$timestamp".(' 'x81).'0'.(' 'x7).'90'.(' 'x17).'0'.(' 'x385);
+  $footer="90$timestamp".(' 'x81)."0\n$crc";
   process($infile,$tmpfile);
   if(!move($tmpfile,$outfile))
   {
@@ -92,9 +105,27 @@ sub outrow{
   return unless $fields->{PAYER_ADDR}=~/$addrrx/;
   return unless $fields->{PAYER_MSC}=~/$mscrx/;
 
-  my @out=map{exists($fields->{$_})?$fields->{$_}:$_}@OUT_FIELDS;
-  print $out join("\t",@out);
-  print $out "\n";
+  for my $f(@OUT_FIELDS)
+  {
+    my $v;
+    if(exists($f->{field}))
+    {
+      $v=$fields->{$f->{field}};
+    }else
+    {
+      $v=$fields->{$f->{value}};
+    }
+    if($f->{align} eq 'R')
+    {
+      $v=' 'x($f->{width}-length($v)).$v;
+    }else
+    {
+      $v.=' 'x($f->{width}-length($v));
+    }
+    print $out $v;
+  }
+
+  print $out $eoln;
 }
 
 sub conv_addr{
@@ -111,6 +142,17 @@ sub conv_addr{
   }
   return $addr;
 }
+
+sub datetotimestamp{
+  my $date=shift;
+  if($date=~/(\d+).(\d+).(\d+)\s+(\d+):(\d+):(\d+)/)
+  {
+    return "$3$2$1$4$5$6";
+  }else
+  {
+    die "Failed to parse input date:$date";
+  };
+};
 
 sub process{
   my ($inf,$outf)=@_;
@@ -139,7 +181,7 @@ sub process{
     $outfields->{PAYER_IMSI}=$infields->{SRC_IMSI};
     $outfields->{PAYER_MSC}=$infields->{SRC_MSC};
     $outfields->{OTHER_ADDR}=conv_addr($infields->{DST_ADDR});
-    $outfields->{FINAL_DATE}=$infields->{SUBMIT};
+    $outfields->{FINAL_DATE}=datetotimestamp($infields->{SUBMIT});
     outrow($out,$outfields);
     if($infields->{RECORD_TYPE}==1) # diverted sms
     {
@@ -149,7 +191,7 @@ sub process{
       $outfields->{PAYER_IMSI}=$infields->{DST_IMSI};
       $outfields->{PAYER_MSC}=$infields->{DST_MSC};
       $outfields->{OTHER_ADDR}=conv_addr($infields->{SRC_ADDR});
-      $outfields->{FINAL_DATE}=$infields->{FINALIZED};
+      $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
       outrow($out,$outfields);
       $outfields->{RECORD_TYPE}=30;
       outrow($out,$outfields);
@@ -161,7 +203,7 @@ sub process{
       $outfields->{PAYER_IMSI}=$infields->{DST_IMSI};
       $outfields->{PAYER_MSC}=$infields->{DST_MSC};
       $outfields->{OTHER_ADDR}=conv_addr($infields->{SRC_ADDR});
-      $outfields->{FINAL_DATE}=$infields->{FINALIZED};
+      $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
       outrow($out,$outfields);
     }
   }

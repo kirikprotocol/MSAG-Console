@@ -6,15 +6,27 @@ use strict;
 use File::Copy;
 use Time::Local qw(timegm timelocal);
 
+BEGIN{
+  my $self=$0;
+  if($self=~m/[\/\\]/)
+  {
+    $self=~s/[\/\\][^\/\\]+$//;
+    print "path=$self\n";
+    push @INC,$self;
+  }
+}
+
+use FixedWidth;
+use CommaSeparated;
+
 #use re 'debug';
 
-my @OUT_FIELDS;
 
 my $header='';
 my $footer='';
 my $crc='0'x32;
 
-my $eoln="\x0d\x0a";
+our $eoln="\x0d\x0a";
 
 my $addrrx=qr'7913\d{7}|913\d{7}|383213\d{4}|383214\d{4}|383291\d{4}|383292\d{4}|383299\d{4}';
 my $mscrx=qr'79029860000|79139860001|79029869992';
@@ -81,18 +93,18 @@ if(-e $regionsfile)
   {
     for(@l)
     {
-      if(/(\w+):(.*)$/)
+      if(/(\w+):(\w+):(.*)$/)
       {
         my $rx;
         eval{
-          $rx=qr($2);
+          $rx=qr($3);
         };
         if($@)
         {
-          print "Invalid regexp $2 in regions.lst\n";
+          print "Invalid regexp $3 in regions.lst\n";
           exit;
         }
-        push @regions,{prefix=>$1,rx=>$rx};
+        push @regions,{prefix=>$1,rx=>$rx,outpack=>$2};
       }else
       {
         print "Unrecognized line in regions.lst: $_\n";
@@ -113,40 +125,6 @@ if($regions[-1]->{rx} ne qr(.*))
   exit;
 }
 
-
-@OUT_FIELDS=(
-{value=>'-1',width=>6},
-{field=>'RECORD_TYPE',width=>5},    # pos=7
-{field=>'CALL_DIRECTION',width=>5,align=>'R'},  # pos=12
-{field=>'FINAL_DATE',width=>14},    # pos=17
-{value=>'1',width=>10},       # pos=31
-{field=>'DATA_LENGTH',width=>10},   # pos=41
-{field=>'PAYER_IMSI',width=>21},    # pos=51
-{field=>'PAYER_ADDR',width=>21},    # pos=72
-{value=>'',width=>21},        # pos=93
-{field=>'OTHER_ADDR',width=>31},    # pos=114
-{value=>'',width=>31},        # pos=145
-{value=>'',width=>17},        # pos=176
-{value=>'',width=>10},        # pos=193
-{value=>'',width=>10},        # pos=203
-{value=>'0',width=>5},        # pos=213
-{value=>'0',width=>10},       # pos=218
-{field=>'SERVICE_TYPE',width=>5},   # pos=228 service type
-{field=>'INV_SERVICE_ID',width=>10},    # pos=233 service id
-{field=>'ACTION_CODE',width=>3},    # pos=243 action code
-{value=>'0',width=>10},       # pos=246
-{field=>'MSG_ID',width=>10,maxwidth=>10},      # pos=256
-{value=>'0',width=>1},        # pos=266
-{value=>'0',width=>1},        # pos=267
-{value=>'0',width=>1},        # pos=268
-{value=>'0',width=>1},        # pos=269
-{value=>'0',width=>1},        # pos=270
-{value=>'',width=>1},       # pos=271
-{value=>'',width=>20},        # pos=272
-{value=>'0.000000',width=>28},      # pos=292
-{value=>'0',width=>10},       # pos=320
-{value=>'0',width=>10},       # pos=330
-);
 
 if(@ARGV!=4)
 {
@@ -237,6 +215,7 @@ sub outrow{
   return unless $fields->{PAYER_IMSI}=~/$imsirx/;
 
   my $outf;
+  my $outpack;
   for my $r(@regions)
   {
     #print "Check:".$fields->{PAYER_ADDR}." -> '".$r->{rx}."'\n";
@@ -249,6 +228,7 @@ sub outrow{
     {
 #      print "Match\n";
       $outf=$out->{$r->{prefix}};
+      $outpack=$r->{outpack};
       last;
     }
   }
@@ -258,28 +238,12 @@ sub outrow{
     exit;
   }
 
-  for my $f(@OUT_FIELDS)
   {
-    my $v;
-    if(exists($f->{field}))
-    {
-      $v=$fields->{$f->{field}};
-    }else
-    {
-      $v=$f->{value};
-    }
-    $v=substr($v,-$f->{maxwidth}) if length($v)>$f->{maxwidth};
-    if($f->{align} eq 'R')
-    {
-      $v=' 'x($f->{width}-length($v)).$v;
-    }else
-    {
-      $v.=' 'x($f->{width}-length($v));
-    }
-    $outf->print($v);
+    no strict 'refs';
+    "${outpack}::outrow"->($outf,$fields);
   }
+  # TODO!!
 
-  $outf->print($eoln);
 }
 
 sub conv_addr_other{

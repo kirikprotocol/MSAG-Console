@@ -1,0 +1,9 @@
+#
+# format:
+# prefix:OutputPackage:regexp pattern
+#
+#
+# LAST REGION IN IS YOUR DEFAULT REGION AND REGEXP _MUST_ BE '.*' !
+#
+kem:CommaSeparated:91333[01]\d{4}
+nsk:FixedWidth:.*
