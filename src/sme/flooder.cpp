@@ -19,8 +19,9 @@ const int MAX_UNRESPONDED_LOW=2000;
 
 int stopped=0;
 
-int rcnt=0;
-int scnt=0;
+int sokcnt=0;
+int serrcnt=0;
+int reccnt=0;
 
 class MyListener:public SmppPduEventListener{
 public:
@@ -33,13 +34,20 @@ public:
       resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
       resp.set_messageId("");
       resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+      resp.get_header().set_commandStatus(SmppStatusSet::ESME_ROK);
       trans->sendDeliverySmResp(resp);
-      scnt++;
+      reccnt++;
     }else
     if(pdu->get_commandId()==SmppCommandSet::SUBMIT_SM_RESP)
     {
       //printf("\nReceived async submit sm resp:%d\n",pdu->get_commandStatus());
-      rcnt++;
+      if(pdu->get_commandStatus()==SmppStatusSet::ESME_ROK)
+      {
+        sokcnt++;
+      }else
+      {
+        serrcnt++;
+      }
     }
     disposePdu(pdu);
   }
@@ -140,6 +148,7 @@ int main(int argc,char* argv[])
     sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
     int cnt=0;
     time_t lasttime=time(NULL);
+    time_t starttime=lasttime;
     while(!stopped)
     {
       for(int j=0;j<n;j++)
@@ -148,26 +157,19 @@ int main(int argc,char* argv[])
         {
           //Address dst(addrs[i].c_str());
           s.setDestinationAddress(addrs[i].c_str());
-          s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
+          s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
           s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,msg.c_str(),msg.length());
           s.setIntProperty(Tag::SMPP_SM_LENGTH,msg.length());
           fillSmppPduFromSms(&sm,&s);
           atr->submit(sm);
-          //Array<SMS*> smsarr;
-          /*splitSms(&s,msg.c_str(),msg.length(),CONV_ENCODING_KOI8R,DataCoding::DEFAULT,smsarr);
-          for(int x=0;x<smsarr.Count();x++)
-          {
-            fillSmppPduFromSms(&sm,smsarr[x]);
-            atr->submit(sm);
-            delete smsarr[x];
-          }*/
           cnt++;
         }
       }
       slev.Wait(delay);
-      if((cnt%500)==0 || time(NULL)-lasttime>5)
+      time_t now=time(NULL);
+      if((cnt%500)==0 || now-lasttime>5)
       {
-        printf("%d/%d/%d                       \r",rcnt,scnt,cnt);
+        printf("uptime:%d submit:%d submitok:%d submiterr:%d received:%d\n",now-starttime,cnt,sokcnt,serrcnt,reccnt);
         fflush(stdout);
         lasttime=time(NULL);
       }

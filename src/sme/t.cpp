@@ -262,7 +262,7 @@ int main(int argc,char* argv[])
         s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,(char*)msg,len);
       }else
       {
-        s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
+        s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
         s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,message,len);
       }
 
