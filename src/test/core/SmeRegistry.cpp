@@ -13,6 +13,19 @@ using smsc::test::sms::operator==;
 using namespace smsc::test::sms;
 using namespace smsc::test::util;
 
+SmeRegistry::SmeData::~SmeData()
+{
+	for (int i = 0; i < smeAddr.size(); i++)
+	{
+		__require__(smeAddr[i]);
+		delete smeAddr[i];
+	}
+	if (pduReg)
+	{
+		delete pduReg;
+	}
+}
+
 SmeRegistry::~SmeRegistry()
 {
 	clear();
@@ -21,20 +34,50 @@ SmeRegistry::~SmeRegistry()
 bool SmeRegistry::registerSme(const Address& smeAddr, const SmeInfo& sme,
 	bool pduReg, bool externalSme)
 {
-	if (addrMap.find(smeAddr) != addrMap.end() ||
-		smeIdMap.find(sme.systemId) != smeIdMap.end())
+	vector<const Address*> tmp;
+	tmp.push_back(new Address(smeAddr));
+	return registerSme(tmp, sme, pduReg, externalSme);
+}
+
+bool SmeRegistry::registerSme(const vector<const Address*>& smeAddr,
+	const SmeInfo& sme, bool pduReg, bool externalSme)
+{
+	//проверки
+	for (int i = 0; i < smeAddr.size(); i++)
+	{
+		if (addrMap.find(*smeAddr[i]) != addrMap.end())
+		{
+			return false;
+		}
+	}
+	if (smeIdMap.find(sme.systemId) != smeIdMap.end())
 	{
 		return false;
 	}
+	//регистрация
 	SmeData* smeData = new SmeData(smeAddr, sme, pduReg ? new PduRegistry() : NULL);
-	addrMap[smeAddr] = smeData;
-	smeIdMap[sme.systemId] = smeData;
-	if (!externalSme)
+	for (int i = 0; i < smeAddr.size(); i++)
 	{
-		addrList.push_back(new Address(smeAddr));
+		addrMap[*smeAddr[i]] = smeData;
+		if (!externalSme)
+		{
+			addrList.push_back(new Address(*smeAddr[i]));
+		}
 	}
-	__trace2__("SmeRegistry::registerSme(): smeAddr = %s, smeId = %s, pduReg = %p, externalSme = %s",
-		str(smeAddr).c_str(), sme.systemId.c_str(), smeData->pduReg, externalSme ? "true" : "false");
+	smeIdMap[sme.systemId] = smeData;
+#ifndef DISABLE_TRACING
+	ostringstream os;
+	for (int i = 0; i < smeAddr.size(); i++)
+	{
+		if (i)
+		{
+			os << ",";
+		}
+		os << *smeAddr[i];
+	}
+	__trace2__("SmeRegistry::registerSme(): smeId = %s, smeAddr = {%s}, pduReg = %p, externalSme = %s",
+		sme.systemId.c_str(), os.str().c_str(), smeData->pduReg, externalSme ? "true" : "false");
+#endif
 	return true;
 }
 
@@ -59,19 +102,24 @@ void SmeRegistry::deleteSme(const SmeSystemId& smeId)
 	}
 	SmeData* smeData = it->second;
 	smeIdMap.erase(it);
-	bool res = addrMap.erase(smeData->smeAddr);
-	__require__(res);
-	for (AddressList::iterator it2 = addrList.begin(); it2 != addrList.end(); it2++)
+	for (int i = 0; i < smeData->smeAddr.size(); i++)
 	{
-		if (**it2 == smeData->smeAddr)
+		bool res = addrMap.erase(*smeData->smeAddr[i]);
+		__require__(res);
+		bool res2 = false;
+		for (AddressList::iterator it2 = addrList.begin(); it2 != addrList.end(); it2++)
 		{
-			delete *it2;
-			addrList.erase(it2);
-			break;
+			if (**it2 == *smeData->smeAddr[i])
+			{
+				delete *it2;
+				addrList.erase(it2);
+				res2 = true;
+				break;
+			}
 		}
+		__require__(res2);
 	}
 	delete smeData;
-	__unreachable__("Address not found");
 }
 
 void SmeRegistry::bindSme(const SmeSystemId& smeId, SmeType smeType)
@@ -86,13 +134,11 @@ void SmeRegistry::bindSme(const SmeSystemId& smeId, SmeType smeType)
 void SmeRegistry::clear()
 {
 	//__require__(addrMap.size() == smeIdMap.size());
-	for (AddressMap::iterator it = addrMap.begin(); it != addrMap.end(); it++)
+	for (SmeIdMap::iterator it = smeIdMap.begin(); it != smeIdMap.end(); it++)
 	{
 		SmeData* smeData = it->second;
-		if (smeData)
-		{
-			delete smeData;
-		}
+		__require__(smeData);
+		delete smeData;
 	}
 	for (int i = 0; i < addrList.size(); i++)
 	{
@@ -152,19 +198,6 @@ SmeType SmeRegistry::getSmeBindType(const Address& smeAddr) const
 {
 	AddressMap::const_iterator it = addrMap.find(smeAddr);
 	return (it == addrMap.end() ? SME_NOT_BOUND : it->second->smeType);
-}
-
-void SmeRegistry::dump(FILE* log) const
-{
-	for (AddressMap::const_iterator it = addrMap.begin(); it != addrMap.end(); it++)
-	{
-		const SmeData* smeData = it->second;
-		ostringstream os;
-		os << smeData->smeAddr;
-		fprintf(TRACE_LOG_STREAM, "Sme = (systemId = %s, address = %s)\n",
-			smeData->sme.systemId.c_str(), os.str().c_str());
-		smeData->pduReg->dump(TRACE_LOG_STREAM);
-	}
 }
 
 }

@@ -38,19 +38,13 @@ class SmeRegistry
 {
 	struct SmeData
 	{
-		const Address smeAddr;
+		vector<const Address*> smeAddr;
 		const SmeInfo sme;
 		PduRegistry* pduReg;
 		SmeType smeType;
-		SmeData(const Address& _smeAddr, const SmeInfo& _sme, PduRegistry* _pduReg)
+		SmeData(const vector<const Address*>& _smeAddr, const SmeInfo& _sme, PduRegistry* _pduReg)
 		: smeAddr(_smeAddr), sme(_sme), pduReg(_pduReg), smeType(SME_NOT_BOUND) {}
-		~SmeData()
-		{
-			if (pduReg)
-			{
-				delete pduReg;
-			}
-		}
+		~SmeData();
 	};
 	typedef map<const Address, SmeData*, ltAddress> AddressMap;
 	typedef map<const SmeSystemId, SmeData*> SmeIdMap;
@@ -79,6 +73,8 @@ public:
 
 	bool registerSme(const Address& smeAddr, const SmeInfo& sme,
 		bool pduReg = true, bool externalSme = false);
+	bool registerSme(const vector<const Address*>& smeAddr, const SmeInfo& sme,
+		bool pduReg = true, bool externalSme = false);
 
 	bool registerAddress(const Address& addr);
 
@@ -102,8 +98,6 @@ public:
 
 	SmeType getSmeBindType(const SmeSystemId& smeId) const;
 	SmeType getSmeBindType(const Address& smeAddr) const;
-
-	void dump(FILE* log) const;
 };
 
 }
