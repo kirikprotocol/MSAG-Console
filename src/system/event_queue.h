@@ -185,6 +185,16 @@ public:
     qcnt=queue.Count();
   }
 
+  bool enqueueEx(MsgIdType msgId, const CommandType& command,int maxAmount)
+  {
+    {
+      __synchronized__
+      if(queue.Count()>maxAmount)return false;
+    }
+    enqueue(msgId,command);
+    return true;
+  }
+
   // добавляет в запись команду (создает новую запись приее отсутствии)
   // если для записи допустима выборка команд , то нотифицирует исполнителей
   void enqueue(MsgIdType msgId, const CommandType& command)
