@@ -513,12 +513,12 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToEnroute(
 					throw s;
 			}
 			msgStore->changeSmsStateToEnroute(id, dst, failureCause, nextTryTime);
+			sms->setNextTime(nextTryTime);
 			//hack, все сеттеры запрещены
 			sms->destinationDescriptor = dst;
 			sms->failureCause = failureCause;
 			sms->attempts++;
 			sms->lastTime = time(NULL);
-			sms->nextTime = nextTryTime;
 		}
 		catch(...)
 		{
@@ -534,7 +534,7 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToEnroute(
 #define SET_DELIVERED_SMS sms->state = DELIVERED; \
 	sms->destinationDescriptor = dst; \
 	sms->lastTime = time(NULL); \
-	sms->nextTime = 0; \
+	sms->setNextTime(0); \
 	sms->failureCause = 0; \
 	sms->attempts++;
 
@@ -542,7 +542,7 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToEnroute(
 #define SET_UNDELIVERABLE_SMS sms->state = UNDELIVERABLE; \
 	sms->destinationDescriptor = dst; \
 	sms->lastTime = time(NULL); \
-	sms->nextTime = 0; \
+	sms->setNextTime(0); \
 	sms->failureCause = failureCause; \
 	sms->attempts++;
 
@@ -613,17 +613,17 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 					break;
 				case 8: //EXPIRED
 					msgStore->changeSmsStateToExpired(id);
+					sms->setNextTime(0);
 					//hack, все сеттеры запрещены
 					sms->state = EXPIRED;
 					//sms->lastTime = time(NULL);
-					sms->nextTime = 0;
 					break;
 				case 9: //DELETED
 					msgStore->changeSmsStateToDeleted(id);
+					sms->setNextTime(0);
 					//hack, все сеттеры запрещены
 					sms->state = DELETED;
 					//sms->lastTime = time(NULL);
-					sms->nextTime = 0;
 					break;
 				default:
 					throw s;
