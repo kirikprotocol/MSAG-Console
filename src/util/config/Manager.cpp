@@ -11,6 +11,8 @@ namespace smsc   {
 namespace util   {
 namespace config {
 
+using std::auto_ptr;
+
 const DOMString db_name(createDOMString("db"));
 const DOMString map_name(createDOMString("map"));
 const DOMString log_name(createDOMString("log"));
@@ -19,22 +21,36 @@ Manager * Manager::manager = 0;
 
 Manager::Manager()
 	throw(ConfigException &)
-	: cat(smsc::util::Logger::getCategory("smsc.util.config.Manager"))
+	: logger(smsc::util::Logger::getCategory("smsc.util.config.Manager"))
 {
-	document = 0;
-	db = 0;
-	map = 0;
-	log = 0;
-
 	DOMParser *parser = createParser();
 
-	parse(parser, config_filename);
+	DOM_Document document = parse(parser, config_filename);
 	if (!document.isNull())
 	{
 		DOM_Element elem = document.getDocumentElement();
 		processTree(elem);
+
+		char * key;
+		char * value;
+		for (strParams.First(); strParams.Next(key, value);)
+		{
+			std::cout << key << ": " << value << "\n\r";
+		}
+
+		long ivalue;
+		for (strParams.First(); longParams.Next(key, ivalue);)
+		{
+			std::cout << key << ": " << ivalue << "\n\r";
+		}
+
+		bool bvalue;
+		for (strParams.First(); boolParams.Next(key, bvalue);)
+		{
+			std::cout << key << ": " << bvalue << "\n\r";
+		}
 	} else {
-		cat.debug("Parse result is null");
+		logger.debug("Parse result is null");
 	}
 
 //	delete parser->getErrorHandler();
@@ -49,18 +65,18 @@ Manager::Manager()
  * @return created parser
  */
 DOMParser * Manager::createParser() {
-	cat.debug("Entering createParser()");
+	logger.debug("Entering createParser()");
 	DOMParser *parser = new DOMParser;
 	parser->setValidationScheme(DOMParser::Val_Always);
 	parser->setDoNamespaces(false);
 	parser->setDoSchema(false);
 	parser->setValidationSchemaFullChecking(false);
-	cat.debug("  Creating ErrorReporter");
+	logger.debug("  Creating ErrorReporter");
 	DOMTreeErrorReporter *errReporter = new DOMTreeErrorReporter();
 	parser->setErrorHandler(errReporter);
 	parser->setCreateEntityReferenceNodes(false);
 	parser->setToCreateXMLDeclTypeNode(false);
-	cat.debug("Leaving createParser()");
+	logger.debug("Leaving createParser()");
 
 	return parser;
 }
@@ -69,7 +85,7 @@ DOMParser * Manager::createParser() {
  * Parse the XML file, catching any XML exceptions that might propogate
  * out of it.
  */
-void Manager::parse(DOMParser *parser, const char * const filename)
+DOM_Document Manager::parse(DOMParser *parser, const char * const filename)
   throw (ConfigException &)
 {
 	try
@@ -77,7 +93,7 @@ void Manager::parse(DOMParser *parser, const char * const filename)
 		parser->parse(filename);
 		int errorCount = parser->getErrorCount();
 		if (errorCount > 0) {
-			cat.error("An %d errors occured during parsing \"%s\"", errorCount, filename);
+			logger.error("An %d errors occured during parsing \"%s\"", errorCount, filename);
 			throw new ConfigException("An errors occured during parsing");
 		}
 	}
@@ -87,25 +103,47 @@ void Manager::parse(DOMParser *parser, const char * const filename)
 		XMLExcepts::Codes code = e.getCode();
 		const char *srcFile = e.getSrcFile();
 		unsigned int line = e.getSrcLine();
-		cat.error("An error occured during parsing \"%s\" at file \"%s\" on line %d. Nested: %d: %s", filename, srcFile, line, code, message);
+		logger.error("An error occured during parsing \"%s\" at file \"%s\" on line %d. Nested: %d: %s", filename, srcFile, line, code, message);
 		delete[] message;
 		throw new ConfigException("An errors occured during parsing");
 	}
 	catch (const DOM_DOMException& e)
 	{
-		cat.error("A DOM error occured during parsing\"%s\". DOMException code: %i", filename, e.code);
+		logger.error("A DOM error occured during parsing\"%s\". DOMException code: %i", filename, e.code);
 		throw new ConfigException("An errors occured during parsing");
 	}
 	catch (...)
 	{
-		cat.error("An error occured during parsing \"%s\"", filename);
+		logger.error("An error occured during parsing \"%s\"", filename);
 		throw new ConfigException("An errors occured during parsing");
 	}
 
-	document = parser->getDocument();
+	return parser->getDocument();
 }
 
-void Manager::processTree(const DOM_Element &element) {
+void Manager::processTree(const DOM_Element &element)
+	throw (ConfigException &)
+{
+	try {
+		processNode(element,"");	}
+	catch (DOM_DOMException &e)
+	{
+		std::string s("Exception on processing config tree, nested: ");
+		char *msg = e.msg.transcode();
+		s += msg;
+		delete[] msg;
+		throw ConfigException(s.c_str());
+	}
+	catch (...)
+	{
+		throw ConfigException("Exception on processing config tree");
+	}
+}
+
+void Manager::processNode(const DOM_Element &element,
+													const char * const prefix)
+	throw (DOM_DOMException &)
+{
 	if (!element.isNull())
 	{
 		DOM_NodeList list = element.getChildNodes();
@@ -115,17 +153,94 @@ void Manager::processTree(const DOM_Element &element) {
 			if (n.getNodeType() == DOM_Node::ELEMENT_NODE)
 			{
 				DOM_Element &e = *(DOM_Element*)(&n);
-				DOMString name = e.getNodeName();
-				if (name.compareString(db_name) == 0)
-					db = new Database(e);
-				else if (name.compareString(map_name) == 0)
-					map = new MapProtocol(e);
-				else if (name.compareString(log_name) == 0)
-					log = new Log(e);
+				auto_ptr<const char> name(e.getAttribute("name").transcode());
+				auto_ptr<char> fullName(new char[strlen(prefix) +1 +strlen(name.get()) +1]);
+				if (prefix[0] != 0)
+				{
+					strcpy(fullName.get(), prefix);
+					strcat(fullName.get(), ".");
+					strcat(fullName.get(), name.get());
+				} else {
+					strcpy(fullName.get(), name.get());
+				}
+				auto_ptr<const char> nodeName(e.getNodeName().transcode());
+				if (strcmp(nodeName.get(), "section") == 0)
+				{
+					processNode(e, fullName.get());
+				}
+				else if (strcmp(nodeName.get(), "param") == 0)
+				{
+					auto_ptr<const char> type(e.getAttribute("type").transcode());
+					processParamNode(e, fullName.release(), type.get());
+				}
+				else
+				{
+					logger.warn("Unknown node \"%s\" in section \"%s\"", nodeName.get(), prefix);
+				}
 			}
 		}
 	}
 }
+
+void Manager::processParamNode(const DOM_Element &element,
+															 const char * const name,
+															 const char * const type)
+	throw (DOM_DOMException &)
+{
+	//getting value
+	std::string result;
+	if (!element.isNull())
+	{
+		DOM_NodeList list = element.getChildNodes();
+		for (int i=0; i<list.getLength(); i++)
+		{
+			DOM_Node n = list.item(i);
+			if (n.getNodeType() == DOM_Node::TEXT_NODE)
+			{
+				const char * const value = n.getNodeValue().transcode();
+				result += value;
+				delete[] value;
+			}
+		}
+	}
+	
+	const size_t value_len = result.length();
+	auto_ptr<char> value(new char[value_len +1]);
+	strcpy(value.get(), result.c_str());
+	if (strcmp(type, "string") == 0)
+	{
+		strParams[name] = value.release();
+	}
+	else if (strcmp(type, "int") == 0)
+	{
+		char * p = value.get() + value_len;
+		longParams[name] = strtol(value.get(), &p, 0);
+	}
+	else if (strcmp(type, "bool") == 0)
+	{
+		if ((strcmp(value.get(), "true") == 0)
+				|| (strcmp(value.get(), "on") == 0)
+				|| (strcmp(value.get(), "yes") == 0))
+		{
+			boolParams[name] = true;
+		}
+		else if ((strcmp(value.get(), "false") == 0)
+						 || (strcmp(value.get(), "off") == 0)
+						 || (strcmp(value.get(), "no") == 0))
+		{
+			boolParams[name] = false;
+		}
+		else
+		{
+			logger.warn("Unrecognized boolean value \"%s\" for parameter \"%s\"", value.get(), name);
+		}
+	}
+	else
+	{
+		logger.warn("Unrecognized parameter type \"%s\" for parameter \"%s\"", type, name);
+	}
+}
+
 
 std::ostream & operator << (std::ostream & out, const DOMString & string)
 {
@@ -140,21 +255,21 @@ std::ostream & operator << (std::ostream & out, const DOMString & string)
  */
 void Manager::save()
 {
-	if (!document.isNull())
+/*	if (!document.isNull())
 	{
 		std::ostream *out = new std::ofstream(config_filename);
 		writeHeader(*out);
-		DOM_Node main_node = document.getDocumentElement();
-		writeNode(*out, main_node, 0);
+		//writeNode(*out, main_node, 0);
 		out->flush();
 		delete out;
-	}
+	}*/
 }
 
 void Manager::writeHeader(std::ostream &out)
 {
 	out << "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>" << std::endl;
-	out << "<!DOCTYPE configuration SYSTEM \"configuration.dtd\">" << std::endl;
+	out << "<!DOCTYPE config SYSTEM \"configuration.dtd\">" << std::endl;
+	out << "<config>" << std::endl;
 }
 
 bool isNodeHasElementChild(const DOM_Node & node)

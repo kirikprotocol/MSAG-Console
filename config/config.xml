@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!DOCTYPE configuration SYSTEM "configuration.dtd">
-<configuration>
-	<db instance="ORJP" userName="smsc" userPassword="smsc">
-		<connections max="100" init="5"/>
-	</db>
-	<log location="/logger/location"/>
-	<map hlr_address="hlr:address" vlr_address="vlr:address"/>
-</configuration>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+<config>
+	<section name="db">
+	    <param name="instance" type="string">ORJP</param>
+	    <param name="userName" type="string">smsc</param>
+	    <param name="userPassword" type="string">smsc</param>
+	    <param name="maxconn" type="int">100</param>
+	    <param name="init" type="int">5</param>
+	</section>
+	</section name="map">
+	    <param name="hlr" type="string">hlr:address</param>
+	    <param anme="vlr" type="string">vlr:address</param>
+	</section>
+</config>

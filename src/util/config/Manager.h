@@ -4,20 +4,20 @@
 #include <iostream>
 
 #include <xercesc/dom/DOM_Document.hpp>
+#include <xercesc/dom/DOM_Element.hpp>
+#include <xercesc/dom/DOM_DOMException.hpp>
 #include <log4cpp/Category.hh>
 
-#include "Database.h"
-#include "MapProtocol.h"
-#include "Log.h"
-#include "ConfigException.h"
-
 #include <store/StoreConfig.h>
+#include <core/buffers/Hash.hpp>
+#include <util/config/ConfigException.h>
 
 namespace smsc   {
 namespace util   {
 namespace config {
 
 using smsc::store::StoreConfig;
+using smsc::core::buffers::Hash;
 
 /**
  * Класс, отвечающий за чтение и запись конфигурации системы.
@@ -55,24 +55,51 @@ public:
 	 * Запись конфигурации
 	 */
 	void save();
+
 	/**
-	 * Возвращает конфигурацию базы данных.
 	 *
-	 * @return Конфигурация базы данных
+	 * @param paramName имя параметра
+	 * @return значение параметра типа int
+	 * @see getString()
+	 * @see getBool()
 	 */
-	StoreConfig *getStoreConfig() const {return db;};
+	long getInt(const char * const paramName)
+	{
+		if (longParams.Exists(paramName))
+		{
+			return longParams[paramName];
+		}
+		return 0;
+	}
+
 	/**
-	 * Возвращает конфигурацию логгера
 	 *
-	 * @return logger configuration
+	 * @param paramName имя параметра
+	 * @return значение параметра типа String
 	 */
-	Log *getLog() const {return log;};
+	char * getString(const char * const paramName)
+	{
+		if (strParams.Exists(paramName))
+			return strParams[paramName];
+		else
+			return 0;
+	}
+
 	/**
-	 * Возвращает настройки протокола MAP
 	 *
-	 * @return MAP protocol configuration
+	 * @param paramName имя параметра
+	 * @return значение параметра типа Bool
+	 * @see getInt()
+	 * @see getString()
 	 */
-	MapProtocol *getMapProtocol() const {return map;};
+	bool getBool(const char * const paramName)
+	{
+		if (boolParams.Exists(paramName))
+		{
+			return boolParams[paramName];
+		}
+		return 0;
+	}
 
 protected:
 	/**
@@ -88,16 +115,16 @@ private:
 	static char * config_filename;
 	void writeNode(std::ostream &out, DOM_Node & node, unsigned int tabs);
 	void writeHeader(std::ostream &out);
-	DOM_Document document;
-	Database *db;
-	MapProtocol *map;
-	Log *log;
-	log4cpp::Category &cat;
+	Hash<long> longParams;
+	Hash<char *> strParams;
+	Hash<bool> boolParams;
+	log4cpp::Category &logger;
 
 	DOMParser * createParser();
-	void parse(DOMParser *parser, const char * const filename) throw (ConfigException &);
-	void processTree(const DOM_Element &element);
-
+	DOM_Document parse(DOMParser *parser, const char * const filename) throw (ConfigException &);
+	void processTree(const DOM_Element &element) throw (ConfigException &);
+	void Manager::processNode(const DOM_Element &element, const char * const prefix) throw (DOM_DOMException &);
+	void Manager::processParamNode(const DOM_Element &element, const char * const name, const char * const type) throw (DOM_DOMException &);
 };
 
 }
