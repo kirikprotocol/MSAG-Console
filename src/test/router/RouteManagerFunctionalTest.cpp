@@ -4,6 +4,10 @@
 #include "test/util/TCResultFilter.hpp"
 #include "test/util/CheckList.hpp"
 #include "util/Logger.h"
+#include "util/debug.h"
+
+#define ENTER __trace2__("Enter in %s", __PRETTY_FUNCTION__);
+#define LEAVE __trace2__("Leave from %s", __PRETTY_FUNCTION__);
 
 using namespace smsc::test::util;
 using namespace smsc::test::smeman; //constants, SmeManagerTestCases
@@ -15,15 +19,19 @@ using smsc::smeman::SmeInfo;
 using smsc::smeman::SmeProxy;
 using smsc::test::sms::SmsUtil;
 using smsc::test::util::CheckList;
+using smsc::test::core::operator<<;
 
 static Category& log = Logger::getCategory("RouteManagerFunctionalTest");
 
 class RouteManagerFunctionalTest
 {
+	SmeManager* smeMan;
+	RouteManager* routeMan;
 	SmeManagerTestCases tcSme;
 	RouteManagerTestCases tcRoute;
 	vector<Address*> addr;
 	vector<SmeInfo*> sme;
+	vector<SmeProxy*> proxy;
 	vector<TCResultStack*> stack;
 
 public:
@@ -34,15 +42,16 @@ public:
 	void printRoutes();
 
 private:
-	TestRouteData prepareForNewRoute(const Address& origAddr,
+	RouteInfo prepareForNewRoute(const Address& origAddr,
 		const Address& destAddr, bool createProxy);
 	void executeTestCases(const Address& origAddr, const Address& destAddr);
-	void printRoute(const TestRouteData* routeData);
+	void printRoute(const RouteInfo* route);
 };
 
-RouteManagerFunctionalTest::RouteManagerFunctionalTest(SmeManager* smeMan,
-	RouteManager* routeMan, RouteRegistry* routeReg)
-	: tcSme(smeMan), tcRoute(routeMan, routeReg) {}
+RouteManagerFunctionalTest::RouteManagerFunctionalTest(SmeManager* _smeMan,
+	RouteManager* _routeMan, RouteRegistry* _routeReg)
+	: smeMan(_smeMan), routeMan(_routeMan), tcSme(_smeMan),
+	tcRoute(_routeMan, _routeReg) {}
 
 RouteManagerFunctionalTest::~RouteManagerFunctionalTest()
 {
@@ -52,17 +61,30 @@ RouteManagerFunctionalTest::~RouteManagerFunctionalTest()
 	}
 	for (int i = 0; i < sme.size(); i++)
 	{
+		smeMan->unregisterSmeProxy(sme[i]->systemId);
 		delete sme[i];
 	}
+	/*
+	for (int i = 0; i < proxy.size(); i++)
+	{
+		SmeProxy* p = dynamic_cast<smsc::smeman::SmeRecord*>(proxy[i])->proxy;
+		if (p)
+		{
+			delete p;
+		}
+	}
+	*/
 	for (int i = 0; i < stack.size(); i++)
 	{
 		delete stack[i];
 	}
 }
 
-void RouteManagerFunctionalTest::printRoute(const TestRouteData* routeData)
+void RouteManagerFunctionalTest::printRoute(const RouteInfo* route)
 {
-	log.debugStream() << *routeData;
+	ostringstream os;
+	os << *route;
+	log.debug("[%d]\t%s", thr_self(), os.str().c_str());
 }
 
 void RouteManagerFunctionalTest::printRoutes()
@@ -77,18 +99,24 @@ void RouteManagerFunctionalTest::printRoutes()
 	*/
 }
 
-TestRouteData RouteManagerFunctionalTest::prepareForNewRoute(
+RouteInfo RouteManagerFunctionalTest::prepareForNewRoute(
 	const Address& origAddr, const Address& destAddr, bool createProxy)
 {
 	//Для каждого маршрута - отдельная sme (для идентификации)
 	sme.push_back(new SmeInfo());
 	stack.back()->push_back(tcSme.addCorrectSme(sme.back(), RAND_TC));
-	SmeProxy* proxy = NULL;
 	if (createProxy)
 	{
-		stack.back()->push_back(tcSme.registerCorrectSmeProxy(sme.back()->systemId, &proxy));
+		SmeProxy* p;
+		stack.back()->push_back(tcSme.registerCorrectSmeProxy(
+			sme.back()->systemId, &p));
+		proxy.push_back(p);
 	}
-	return TestRouteData(origAddr, destAddr, proxy);
+	RouteInfo route;
+	route.smeSystemId = sme.back()->systemId;
+	route.source = origAddr;
+	route.dest = destAddr;
+	return route;
 }
 
 void RouteManagerFunctionalTest::executeTestCases(
@@ -111,49 +139,45 @@ void RouteManagerFunctionalTest::executeTestCases(
 		{
 			case 1:
 				{
-					TestRouteData routeData = prepareForNewRoute(
-						origAddr, destAddr, true);
+					RouteInfo route = prepareForNewRoute(origAddr, destAddr, true);
 					stack.back()->push_back(tcRoute.addCorrectRouteMatch(
-						sme.back()->systemId, &routeData, RAND_TC));
-					if (!existentRoute && routeData.route)
+						&route, proxy.back(), RAND_TC));
+					if (!existentRoute)
 					{
-						existentRoute = new RouteInfo(*routeData.route);
+						existentRoute = new RouteInfo(route);
 					}
 				}
 				break;
 			case 2:
 				{
-					TestRouteData routeData = prepareForNewRoute(
-						origAddr, destAddr, false);
+					RouteInfo route = prepareForNewRoute(origAddr, destAddr, false);
 					stack.back()->push_back(tcRoute.addCorrectRouteMatch(
-						sme.back()->systemId, &routeData, RAND_TC));
-					if (!existentRoute && routeData.route)
+						&route, NULL, RAND_TC));
+					if (!existentRoute)
 					{
-						existentRoute = new RouteInfo(*routeData.route);
+						existentRoute = new RouteInfo(route);
 					}
 				}
 				break;
 			case 3:
 				{
-					TestRouteData routeData = prepareForNewRoute(
-						origAddr, destAddr, true);
+					RouteInfo route = prepareForNewRoute(origAddr, destAddr, true);
 					stack.back()->push_back(tcRoute.addCorrectRouteNotMatch(
-						sme.back()->systemId, &routeData, RAND_TC));
-					if (!existentRoute && routeData.route)
+						&route, proxy.back(), RAND_TC));
+					if (!existentRoute)
 					{
-						existentRoute = new RouteInfo(*routeData.route);
+						existentRoute = new RouteInfo(route);
 					}
 				}
 				break;
 			case 4:
 				{
-					TestRouteData routeData = prepareForNewRoute(
-						origAddr, destAddr, true);
+					RouteInfo route = prepareForNewRoute(origAddr, destAddr, true);
 					stack.back()->push_back(tcRoute.addCorrectRouteNotMatch2(
-						sme.back()->systemId, &routeData, RAND_TC));
-					if (!existentRoute && routeData.route)
+						&route, proxy.back(), RAND_TC));
+					if (!existentRoute)
 					{
-						existentRoute = new RouteInfo(*routeData.route);
+						existentRoute = new RouteInfo(route);
 					}
 				}
 				break;
@@ -161,7 +185,7 @@ void RouteManagerFunctionalTest::executeTestCases(
 				if (existentRoute)
 				{
 					TCResult* res = tcRoute.addIncorrectRoute(
-						sme.back()->systemId, *existentRoute, RAND_TC);
+						*existentRoute, RAND_TC);
 					stack.back()->push_back(res);
 				}
 				break;
@@ -171,6 +195,10 @@ void RouteManagerFunctionalTest::executeTestCases(
 					stack.back()->push_back(res);
 				}
 		}
+	}
+	if (existentRoute)
+	{
+		delete existentRoute;
 	}
 }
 
@@ -204,11 +232,16 @@ void RouteManagerFunctionalTest::executeTest(
 			Address& destAddr = *addr[j];
 			TCResult* res = tcRoute.lookupRoute(origAddr, destAddr);
 			filter->addResult(res);
+			delete res;
 		}
 	}
 
 	//Итерирование по списку маршрутов
-	filter->addResult(tcRoute.iterateRoutes());
+	{
+		TCResult* res = tcRoute.iterateRoutes();
+		filter->addResult(res);
+		delete res;
+	}
 
 	/*
 	//Удаление зарегистрированных sme
@@ -216,6 +249,7 @@ void RouteManagerFunctionalTest::executeTest(
 	{
 		TCResult* res = tcSme.deleteExistentSme(sme[i]->systemId);
 		filter->addResult(res);
+		delete res;
 	}
 
 	//Поиск маршрута для каждой пары адресов
@@ -227,11 +261,16 @@ void RouteManagerFunctionalTest::executeTest(
 			Address& destAddr = *addr[j];
 			TCResult* res = tcRoute.lookupRoute(routeReg, origAddr, destAddr);
 			filter->addResult(res);
+			delete res;
 		}
 	}
 
 	//Итерирование по списку маршрутов
-	filter->addResult(tcRoute.iterateRoutes(routeReg));
+	{
+		TCResult* res = tcRoute.iterateRoutes();
+		filter->addResult(res);
+		delete res;
+	}
 	*/
 
 	//обработка результатов
@@ -283,10 +322,15 @@ int main(int argc, char* argv[])
 			RouteManager routeMan;
 			routeMan.assign(&smeMan);
 			RouteRegistry routeReg;
-			RouteManagerFunctionalTest test(&smeMan, &routeMan, &routeReg);
-			test.executeTest(filter, numAddr);
-			test.printRoutes();
+			{
+				RouteManagerFunctionalTest test(&smeMan, &routeMan, &routeReg);
+				test.executeTest(filter, numAddr);
+				test.printRoutes();
+				__trace__("before destruction");
+			}
+			__trace__("end iteration");
 		}
+		__trace__("Exit cycle");
 		saveCheckList(filter);
 		delete filter;
 	}
