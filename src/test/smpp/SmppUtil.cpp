@@ -419,6 +419,8 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 		do
 		{
 			__set_int__(uint8_t, dataCoding, rand0(255));
+			__trace2__("setupRandomCorrectSubmitSmPdu(): forceDc = true, dataCoding = %d",
+				(int) p.get_dataCoding());
 		}
 		while (!extractDataCoding(p.get_dataCoding(), dataCoding));
 	}
@@ -711,6 +713,10 @@ bool SmppUtil::extractDataCoding(uint8_t dcs, uint8_t& dc)
 	//00xxxxxx è 01xxxxxx
 	if (!b[7])
 	{
+		if (b[5]) //text is compressed
+		{
+			return false;
+		}
 		if (!b[3] && !b[2])
 		{
 			dc = SMSC7BIT;
