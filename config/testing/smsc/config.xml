@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
+
 <config>
 	<section name="DataSource">
 		<param name="connections" type="int">3</param>
@@ -20,25 +21,31 @@
 				<param name="enabled" type="bool">true</param>
 				<param name="interval" type="int">30</param>
 			</section>
+
 		</section>
+
 		<section name="Billing">
 			<param name="dbInstance" type="string">smscdb</param>
 			<param name="dbUserName" type="string">smsc2</param>
 			<param name="dbUserPassword" type="string">smsc2</param>
 		</section>
+
 		<section name="Cache">
 			<param name="capacity" type="int">1000</param>
 			<param name="enabled" type="bool">true</param>
 		</section>
+
 		<section name="Connections">
 			<param name="init" type="int">0</param>
 			<param name="max" type="int">3</param>
 		</section>
+
 		<section name="Storage">
 			<param name="dbInstance" type="string">smscdb</param>
 			<param name="dbUserName" type="string">smsc2</param>
 			<param name="dbUserPassword" type="string">smsc2</param>
 		</section>
+
 	</section>
 	
 	<section name="StartupLoader">
@@ -47,7 +54,9 @@
 				<param name="loadup" type="string">/export/home/bryz/install/smsc/db/oci/libdb_oci.so</param>
 				<param name="type" type="string">OCI</param>
 			</section>
+
 		</section>
+
 	</section>
 
 	<section name="abonentinfo">
@@ -77,6 +86,7 @@
 			<param name="host" type="string">smsc</param>
 			<param name="port" type="int">15171</param>
 		</section>
+
 	</section>
 
 	<section name="logger">
