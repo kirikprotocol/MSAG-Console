@@ -1025,6 +1025,8 @@ StateType StateMachine::submit(Tuple& t)
   bool generateDeliver=true; // do not generate in case of merge-concat
   bool allowCreateSms=true;
 
+  bool needToSendResp=true;
+
   bool noPartitionSms=false; // do not call partitionSms if true!
 
 
@@ -1113,7 +1115,7 @@ StateType StateMachine::submit(Tuple& t)
           ri.smeSystemId.c_str()
         );
       }
-
+      needToSendResp=false;
     }else
     {
       smsLog->info("merging sms Id=%lld, next part arrived(%u/%u), mr=%d",t.msgId,idx,num,sms->getMessageReference());
@@ -1331,6 +1333,7 @@ StateType StateMachine::submit(Tuple& t)
           ri.smeSystemId.c_str()
         );
       }
+      needToSendResp=false;
 
       if(status!=Status::OK)
       {
@@ -1593,8 +1596,8 @@ StateType StateMachine::submit(Tuple& t)
   );
 
 
-  /*
-  if(!isDatagram && !isTransaction) // Store&Forward mode
+
+  if(!isDatagram && !isTransaction && sms->createdInStore && needToSendResp) // Store&Forward mode
   {
 
     if(!sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT) || sms->getIntProperty(Tag::SMSC_MERGE_CONCAT)==3)
@@ -1627,7 +1630,7 @@ StateType StateMachine::submit(Tuple& t)
       );
     }
   }
-  */
+
 
   if(!generateDeliver)
   {
