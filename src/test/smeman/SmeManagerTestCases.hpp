@@ -120,8 +120,7 @@ public:
 	 */
 	TCResult* selectSme(const vector<SmeInfo*>& sme, int num);
 
-	TCResult* registerCorrectSmeProxy(const SmeSystemId& systemId,
-		uint32_t* proxyId);
+	TCResult* registerCorrectSmeProxy(const SmeSystemId& systemId, SmeProxy** proxy);
 
 protected:
 	virtual Category& getLog();
