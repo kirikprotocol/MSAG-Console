@@ -34,8 +34,8 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
     else if (btnDel != null && selectedRows != null)
       result = delAds();
 
-    if (result == RESULT_OK)
-      result = loadAds();
+    int loadResult = loadAds();
+    result = (result == RESULT_OK) ? loadResult:result;
 
     selectedRows = null; btnAdd = null; btnDel = null;
     newId = null; newLang = null; newAd = null;
@@ -47,8 +47,7 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
     System.out.println("WSmeAds::addNewAd() called");
     int result = RESULT_OK;
     try {
-      int id = Integer.parseInt(newId);
-      wsme.addAd(id, newLang, newAd);
+      wsme.addAd(Integer.parseInt(newId), newLang, newAd);
     }
     catch (NumberFormatException exc) {
       result = error(WSmeErrors.error.admin.ParseError, exc.getMessage());
@@ -118,4 +117,7 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
     this.newAd = newAd;
   }
 
+  public int getMenuId() {
+    return RESULT_ADS;
+  }
 }

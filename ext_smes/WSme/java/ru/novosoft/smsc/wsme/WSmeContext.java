@@ -31,8 +31,8 @@ public class WSmeContext
       wsmeService = this.appContext.getHostsManager().getService(Constants.WSME_SME_ID);
       wsme = new WSme(wsmeService);
     } catch (AdminException e) {
-      //FUCK!!!
-      //service not found
+      System.out.println("Exception in initialization:");
+      e.printStackTrace();
     }
   }
   public static void init(SMSCAppContext appContext, Principal loginedUserPrincipal) {

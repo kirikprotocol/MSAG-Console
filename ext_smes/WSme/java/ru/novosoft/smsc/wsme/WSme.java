@@ -9,7 +9,10 @@ package ru.novosoft.smsc.wsme;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.service.Service;
+import ru.novosoft.smsc.admin.service.ServiceInfo;
+import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.util.conpool.NSConnectionPool;
+import ru.novosoft.smsc.util.config.Config;
 
 import javax.sql.DataSource;
 
@@ -19,23 +22,44 @@ import java.util.Properties;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.io.File;
 
 public class WSme extends WSmeTransport
 {
   private DataSource ds;
+  private File configFile;
+  private Config config;
 
   public WSme(Service wsmeService) throws AdminException
   {
     super(wsmeService.getInfo());
+    try
+    {
+      ServiceInfo info = wsmeService.getInfo();
+      configFile = new File(new File(
+          WebAppFolders.getServiceFolder(info.getHost(), info.getId()), "conf"), "config.xml");
+      System.out.println("Config file '"+configFile.getAbsolutePath()+"'");
+      config = new Config(configFile);
+      load();
+    }
+    catch (Exception e) {
+      AdminException ae = new AdminException("WSme admin init failed, cause: "+e.getMessage());
+      throw ae;
+    }
+  }
 
-    // TODO: init ds somehow
+  private final static String CONFIG_PARAM_BASE = "WSme.Admin.Web.jdbc.";
+  private synchronized void load()
+    throws AdminException
+  {
+    ds = null;
     try
     {
       Properties props = new Properties();
-      props.setProperty("jdbc.source", "jdbc:oracle:thin:@dbs.novosoft.ru:1521:ORCL");
-      props.setProperty("jdbc.driver", "oracle.jdbc.driver.OracleDriver");
-      props.setProperty("jdbc.user", "smsc");
-      props.setProperty("jdbc.pass", "smsc");
+      props.setProperty("jdbc.source", config.getString(CONFIG_PARAM_BASE+"source"));
+      props.setProperty("jdbc.driver", config.getString(CONFIG_PARAM_BASE+"driver"));
+      props.setProperty("jdbc.user", config.getString(CONFIG_PARAM_BASE+"user"));
+      props.setProperty("jdbc.pass", config.getString(CONFIG_PARAM_BASE+"password"));
       ds = new NSConnectionPool(props);
     }
     catch (Exception exc)
@@ -45,7 +69,26 @@ public class WSme extends WSmeTransport
       System.out.println(ae.getMessage());
       throw ae;
     }
-
+  }
+  public synchronized void reload(Config newConfig)
+    throws AdminException
+  {
+    // TODO save config for WSme here (& restart WSme ?)
+    try {
+      config = newConfig;
+      config.save();
+    } catch (Exception e) {
+      throw new AdminException("Save config failed, cause: "+e.getMessage());
+    }
+    load();
+  }
+  public synchronized Config getConfig()
+      throws AdminException
+  {
+    try { return new Config(configFile); }
+    catch (Exception e) {
+      throw new AdminException("Load configuration failed, cause: "+e.getMessage());
+    }
   }
 
   private final static String GET_VISITORS_SQL=

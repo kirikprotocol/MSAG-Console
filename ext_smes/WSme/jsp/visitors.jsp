@@ -6,15 +6,15 @@
                  ru.novosoft.smsc.jsp.SMSCJspException,
                  java.util.List,
                  ru.novosoft.smsc.util.StringEncoderDecoder"%>
-<jsp:useBean id="v_bean" scope="page" class="ru.novosoft.smsc.wsme.beans.WSmeVisitorsFormBean" />
-<jsp:setProperty name="v_bean" property="*"/>
+<jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.wsme.beans.WSmeVisitorsFormBean" />
+<jsp:setProperty name="bean" property="*"/>
 <%
   TITLE="Welcome SME Visitors";
   MENU0_SELECTION = "MENU0_SERVICES";
   //MENU1_SELECTION = "WSME_INDEX";
 
-  int beanResult = v_bean.RESULT_OK;
-  switch(beanResult = v_bean.process(errorMessages))
+  int beanResult = bean.RESULT_OK;
+  switch(beanResult = bean.process(errorMessages))
   {
     case WSmeFormBean.RESULT_LANGS:
       response.sendRedirect("langs.jsp");
@@ -40,28 +40,23 @@
   }
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-
-<%@ include file="inc/menu.jsp"%>
-
+<%@ include file="inc/menu.jsp"%><br>
 <div class=secView>Visitors</div>
 <table class=secRep cellspacing=1 width="100%">
 <thead>
 <tr class=row0>
-  <th>&nbsp;</th>
   <th>Mask</th>
 </tr>
 </thead>
 <tbody>
 <%
   int rowN=0;
-  List visitors = v_bean.getVisitors();
+  List visitors = bean.getVisitors();
   for (int i=0; i<visitors.size(); i++) {
     String mask = (String)visitors.get(i);
   %><tr class=row<%=rowN&1%>0>
       <td nowrap valign=top>
-        <input class=check type=checkbox name=selectedRows value="<%= mask%>">
-      </td>
-      <td nowrap valign=top>
+        <input class=check type=checkbox name=selectedRows value="<%= mask%>">&nbsp;
         <%= StringEncoderDecoder.encode(mask)%>
       </td>
     </tr>
@@ -71,6 +66,7 @@
 </tbody>
 </table>
 
+<%if (bean.isWSmeStarted()) {%>
 <div class=secQuestion>Manage visitors</div>
 <table class=secRep cellspacing=0 cellspadding=1 width="100%">
 <thead>
@@ -79,7 +75,7 @@
 </thead>
 <tr class=row0>
 	<th class=label>Mask:</th>
-	<td><input class=txtW type="text" name=newVisitor  value="<%= v_bean.getNewVisitor()%>" size=25 maxlength=25></td>
+	<td><input class=txtW type="text" name=newVisitor  value="<%= bean.getNewVisitor()%>" size=25 maxlength=25></td>
 </tr>
 </table>
 
@@ -87,6 +83,7 @@
 <input class=btn type=submit name=btnAdd value="Add new visitor" title="Add new visitor mask">
 <input class=btn type=submit name=btnDel value="Delete selected" title="Delete selected">
 </div>
+<%}%>
 
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

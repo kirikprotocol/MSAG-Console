@@ -31,8 +31,8 @@ public class WSmeLangsFormBean extends WSmeBaseFormBean
     else if (btnDel != null && selectedRows != null)
       result = delLangs();
 
-    if (result == RESULT_OK)
-      result = loadLangs();
+    int loadResult = loadLangs();
+    result = (result == RESULT_OK) ? loadResult:result;
 
     selectedRows = null; btnAdd = null; btnDel = null;
     newLang = null; newMask = null;
@@ -93,5 +93,9 @@ public class WSmeLangsFormBean extends WSmeBaseFormBean
   }
   public void setNewMask(String newMask) {
     this.newMask = newMask;
+  }
+
+  public int getMenuId() {
+    return RESULT_LANGS;
   }
 }

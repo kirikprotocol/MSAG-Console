@@ -42,6 +42,14 @@ public class WSmeErrors
       private static final String B = WSmeErrors.error.B + "admin.";
 
       public static final String ParseError = B + "ParseError";
+      public static final String ConfigError = B + "ConfigError";
+      public static final String InitFailed = B + "InitFailed";
+      public static final String ApplyFailed = B + "ApplyFailed";
+
+      public static final String InvalidIntParam = B + "InvalidIntParam";
+      public static final String InvalidBoolParam = B + "InvalidBoolParam";
+      public static final String InvalidStringParam = B + "InvalidStringParam";
+
     }
   }
 

@@ -30,8 +30,8 @@ public class WSmeVisitorsFormBean extends WSmeBaseFormBean
     else if (btnDel != null && selectedRows != null)
       result = delVisitors();
 
-    if (result == RESULT_OK)
-      result = loadVisitors();
+    int loadResult = loadVisitors();
+    result = (result == RESULT_OK) ? loadResult:result;
 
     selectedRows = null; btnAdd = null; btnDel = null;
     newVisitor = null;
@@ -85,5 +85,9 @@ public class WSmeVisitorsFormBean extends WSmeBaseFormBean
   }
   public void setNewVisitor(String newVisitor) {
     this.newVisitor = newVisitor;
+  }
+
+  public int getMenuId() {
+    return RESULT_VISITORS;
   }
 }
