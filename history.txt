@@ -23,3 +23,4 @@ Fix: Длина SubmitResp с ошибочным статусом на 2 больше чем полагается.
 Build 1615
 Fix: Memory leak при ошибочном submit в транзакционном режиме.
 Fix: Ненужная попытка changeStateToUndeliverable в транзакционном режиме.
+Fix: ResultSet leak fixed in admin interface (SmsStat.java)

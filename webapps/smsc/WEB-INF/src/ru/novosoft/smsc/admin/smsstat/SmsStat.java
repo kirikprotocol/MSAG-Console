@@ -220,13 +220,14 @@ public class SmsStat
           set.addError(new ErrorCounterSet(errRs.getInt(1), errRs.getInt(2)));
         }
         stat.addSmeIdStat(set);
-        errRs.close();
+        errRs.close(); errRs = null;
       }
     } catch (SQLException ex) {
       throw ex;
     } finally {
       if (rs != null) rs.close();
       if (stmt != null) stmt.close();
+      if (errRs != null) errRs.close();
       if (errStmt != null) errStmt.close();
     }
   }
@@ -253,13 +254,15 @@ public class SmsStat
           set.addError(new ErrorCounterSet(errRs.getInt(1), errRs.getInt(2)));
         }
         stat.addRouteIdStat(set);
-        errRs.close();
+        errRs.close(); errRs = null;
       }
     } catch (SQLException ex) {
       throw ex;
     } finally {
       if (rs != null) rs.close();
       if (stmt != null) stmt.close();
+      if (errRs != null) errRs.close();
+      if (errStmt != null) errStmt.close();
     }
   }
   private void processStateQuery(Connection connection, StatQuery query)
