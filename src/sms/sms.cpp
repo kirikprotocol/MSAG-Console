@@ -95,6 +95,10 @@ void Body::decode(uint8_t* buffer,int length)
   //__require__( buffer != 0 );
   __require__( length >= 0 );
   int offset=0;
+  for(int i=0;i<=SMS_LAST_TAG;i++)
+  {
+    prop.properties[i]=OptionalProperty();
+  }
   while(offset<length)
   {
     uint16_t tag;

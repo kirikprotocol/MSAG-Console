@@ -800,6 +800,7 @@ struct SMS
 
   uint32_t    attempts;       // Количество неуспешных попыток доставки
   uint32_t    lastResult;     // Результат последней попытки
+  uint32_t    oldResult;      // предыдущее значение lastResult
   time_t      lastTime;       // Время/Дата последней попытки доставки
   time_t      nextTime;       // Время/Дата слудующей попытки доставки
 
@@ -835,7 +836,7 @@ struct SMS
   * и прочие поля дефолтными значениями
   */
   SMS() : state(ENROUTE), submitTime(0), validTime(0),
-    attempts(0), lastResult(0), lastTime(0), nextTime(0),
+    attempts(0), lastResult(0), oldResult(0),lastTime(0), nextTime(0),
     messageReference(0), needArchivate(true),
     deliveryReport(0), billingRecord(0), attach(false),
     serviceId(0), priority(0),concatMsgRef(0),concatSeqNum(0)
@@ -857,6 +858,7 @@ struct SMS
     validTime(sms.validTime),
     attempts(sms.attempts),
     lastResult(sms.lastResult),
+    oldResult(sms.oldResult),
     lastTime(sms.lastTime),
     nextTime(sms.nextTime),
     originatingAddress(sms.originatingAddress),
@@ -895,6 +897,7 @@ struct SMS
     validTime = sms.validTime;
     attempts = sms.attempts;
     lastResult = sms.lastResult;
+    oldResult = sms.oldResult;
     lastTime = sms.lastTime;
     nextTime = sms.nextTime;
     originatingAddress = sms.originatingAddress;
@@ -1326,14 +1329,30 @@ struct SMS
   };
 
   /**
+  * Выставляет причину
+  * отказа/некорректности/недоставки последней попытки доставки сообщения
+  * и созраняет предыдущую
+  *
+  * @param value новое значеие причины отказа
+  *
+  */
+
+  inline void setLastResult(uint32_t value)
+  {
+    oldResult=lastResult;
+    lastResult=value;
+  }
+
+  /**
   * Устанавливает количество неудач при доставке сообщения
   *
   * @param count  количество неудач при доставке сообщения
   *
+  */
   inline void setAttemptsCount(uint32_t count)
   {
   attempts = count;
-  };*/
+  };
 
   /**
   * Возвращает количество неудач при доставке сообщения

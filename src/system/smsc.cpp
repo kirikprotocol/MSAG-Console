@@ -362,7 +362,19 @@ void Smsc::init(const SmscConfigs& cfg)
     log.info( "Statemachines started" );
   }
 
-  RescheduleCalculator::Init(cfg.cfgman->getString("core.reschedule_table"));
+  RescheduleCalculator::InitDefault(cfg.cfgman->getString("core.reschedule_table"));
+  {
+    using smsc::util::config::CStrSet;
+    CStrSet *params=cfg.cfgman->getChildStrParamNames("core.reshedule table");
+    CStrSet::iterator i=params->begin();
+    for(;i!=params->end();i++)
+    {
+      string pn="core.reshedule table.";
+      pn+=*i;
+      RescheduleCalculator::AddToTable(i->c_str(),cfg.cfgman->getString(pn.c_str()));
+    }
+    delete params;
+  }
 
   {
     SpeedMonitor *sm=new SpeedMonitor(eventqueue,&perfDataDisp,this);
