@@ -1008,7 +1008,6 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool exp
             return;
         }
 
-        // TODO: skipped messages processing
         MessageState state = UNKNOWNST;
         if (Task::getMessage(smsc_id, message, state)) // got message by smsc_id
         {
