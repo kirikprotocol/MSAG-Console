@@ -53,7 +53,8 @@ keyToTag[Tag::x]=tag;
   ISMSDEFTAG(24,SMPP_MSG_STATE) \
   ISMSDEFTAG(25,SMSC_DISCHARGE_TIME) \
   SSMSDEFTAG(26,SMSC_RECIPIENTADDRESS) \
-  ISMSDEFTAG(27,SMSC_STATUS_REPORT_REQUEST)
+  ISMSDEFTAG(27,SMSC_STATUS_REPORT_REQUEST) \
+  ISMSDEFTAG(28,SMSC_USSD_OP)
 
 #define SMS_BODY_TAGS_SET_SIZE 100
 
@@ -94,12 +95,16 @@ namespace smsc {
     const int MAX_ADDRESS_VALUE_LENGTH = 20;
     const int MAX_SHORT_MESSAGE_LENGTH = 255; // Depricated !!!
     const int MAX_BODY_LENGTH          = 1650;
-    
+
+    const int USSD_PSSR = 1;
+    const int USSD_USSR = 2;
+    const int USSD_USSN = 3;
+
     typedef uint64_t    SMSId;
     typedef char        AddressValue[MAX_ADDRESS_VALUE_LENGTH+1];
     typedef char        EService[MAX_ESERVICE_TYPE_LENGTH+1];
     typedef char        RouteId[MAX_ROUTE_ID_TYPE_LENGTH+1];
-    
+
     /**
     * Структура Address предназначена для хранения
     * адресов в SMS сообщении.
@@ -1393,7 +1398,7 @@ namespace smsc {
         {
           return dealiasedDestinationAddress;
         };
-        
+
         /**
         * Устанавливает дескриптор отправителя
         * Копирует адрес во внутренние структуры
