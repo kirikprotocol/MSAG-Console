@@ -2125,7 +2125,7 @@ USHORT_T Et96MapV1ReportSmDelStatConf (
 #include "MapDialog_spcific.cxx"
 void MAPIO_PutCommand(const SmscCommand& cmd )
 {
-  if ( cmd->get_commandId() != QUERYABONENTSTATUS )
+  if ( cmd->get_commandId() == QUERYABONENTSTATUS )
   {
     SmscCommand xcmd = SmscCommand::makeQueryAbonentStatusResp(cmd->get_abonentStatus(),AbonentStatus::ONLINE);
     MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(xcmd);
