@@ -26,6 +26,8 @@ public class QueryMessage extends Message
   public final static byte T_SRC_SME_ID  = 60;
   public final static byte T_DST_SME_ID  = 70;
   public final static byte T_ROUTE_ID    = 80;
+  public final static byte T_ABN_ADDRESS = 90;
+  public final static byte T_SME_ID      = 100;
 
   private SmsQuery query = null;
 
@@ -38,7 +40,7 @@ public class QueryMessage extends Message
   }
 
   private class Param
- {
+  {
     public byte   type;
     public long   longValue;
     public String strValue;
@@ -68,26 +70,44 @@ public class QueryMessage extends Message
       list.add(new Param(T_FROM_DATE, Message.convertStringToDate(query.getFromDate())));
     if (query.getTillDateEnabled())
       list.add(new Param(T_TILL_DATE, Message.convertStringToDate(query.getTillDate())));
-    if (isMeaning(query.getFromAddress())) {
+
+    if (isMeaning(query.getAbonentAddress()))
+    {
       try {
-        Mask mask = new Mask(query.getFromAddress().trim());
-        list.add(new Param(T_SRC_ADDRESS, mask.getNormalizedMask()));
+        Mask mask = new Mask(query.getAbonentAddress().trim());
+        list.add(new Param(T_ABN_ADDRESS, mask.getNormalizedMask()));
       } catch (AdminException e) {
-        throw new IOException("Invalid source address mask: "+e.getMessage());
+        throw new IOException("Invalid abonent address mask: "+e.getMessage());
       }
     }
-    if (isMeaning(query.getToAddress())) {
-      try {
-        Mask mask = new Mask(query.getToAddress().trim());
-        list.add(new Param(T_DST_ADDRESS, mask.getNormalizedMask()));
-      } catch (AdminException e) {
-        throw new IOException("Invalid destination address mask: "+e.getMessage());
+    else
+    {
+      if (isMeaning(query.getFromAddress())) {
+        try {
+          Mask mask = new Mask(query.getFromAddress().trim());
+          list.add(new Param(T_SRC_ADDRESS, mask.getNormalizedMask()));
+        } catch (AdminException e) {
+          throw new IOException("Invalid source address mask: "+e.getMessage());
+        }
+      }
+      if (isMeaning(query.getToAddress())) {
+        try {
+          Mask mask = new Mask(query.getToAddress().trim());
+          list.add(new Param(T_DST_ADDRESS, mask.getNormalizedMask()));
+        } catch (AdminException e) {
+          throw new IOException("Invalid destination address mask: "+e.getMessage());
+        }
       }
     }
-    if (isMeaning(query.getSrcSmeId()))
-      list.add(new Param(T_SRC_SME_ID, query.getSrcSmeId().trim()));
-    if (isMeaning(query.getDstSmeId()))
-      list.add(new Param(T_DST_SME_ID, query.getDstSmeId().trim()));
+    if (isMeaning(query.getSmeId())) {
+      list.add(new Param(T_SME_ID, query.getSmeId().trim()));
+    }
+    else {
+      if (isMeaning(query.getSrcSmeId()))
+        list.add(new Param(T_SRC_SME_ID, query.getSrcSmeId().trim()));
+      if (isMeaning(query.getDstSmeId()))
+        list.add(new Param(T_DST_SME_ID, query.getDstSmeId().trim()));
+    }
     if (isMeaning(query.getRouteId()))
       list.add(new Param(T_ROUTE_ID, query.getRouteId().trim()));
 
@@ -105,8 +125,9 @@ public class QueryMessage extends Message
           Message.writeUInt8(os, param.type);
           Message.writeInt64(os, param.longValue);
           break;
-        case T_FROM_DATE: case T_TILL_DATE: case T_SRC_ADDRESS: case T_DST_ADDRESS:
-        case T_SRC_SME_ID: case T_DST_SME_ID: case T_ROUTE_ID:
+        case T_FROM_DATE: case T_TILL_DATE: case T_ROUTE_ID:
+        case T_SME_ID: case T_SRC_SME_ID: case T_DST_SME_ID:
+        case T_SRC_ADDRESS: case T_DST_ADDRESS: case T_ABN_ADDRESS:
           Message.writeUInt8(os, param.type);
           Message.writeString32(os, param.strValue);
           break;

@@ -115,16 +115,30 @@ public class SmsOperativeSource extends SmsSource
         throw new SQLException("Invalid numeric format for sms id");
       }
     }
-    if (needExpression(query.getFromAddress()))
-      stmt.setString(pos++, getLikeExpression((new Mask(query.getFromAddress())).getNormalizedMask()));
-    if (needExpression(query.getToAddress()))
-      stmt.setString(pos++, getLikeExpression((new Mask(query.getToAddress())).getNormalizedMask()));
+    if (needExpression(query.getAbonentAddress())) {
+      String abonentPart = getLikeExpression((new Mask(query.getAbonentAddress())).getNormalizedMask());
+      stmt.setString(pos++, abonentPart); stmt.setString(pos++, abonentPart);
+    }
+    else  {
+      if (needExpression(query.getFromAddress()))
+        stmt.setString(pos++, getLikeExpression((new Mask(query.getFromAddress())).getNormalizedMask()));
+      if (needExpression(query.getToAddress()))
+        stmt.setString(pos++, getLikeExpression((new Mask(query.getToAddress())).getNormalizedMask()));
+    }
+
     if (needExpression(query.getRouteId()))
       stmt.setString(pos++, getLikeExpression(query.getRouteId()));
-    if (needExpression(query.getSrcSmeId()))
-      stmt.setString(pos++, getLikeExpression(query.getSrcSmeId()));
-    if (needExpression(query.getDstSmeId()))
-      stmt.setString(pos++, getLikeExpression(query.getDstSmeId()));
+
+    if (needExpression(query.getSmeId())) {
+      String smePart = getLikeExpression(query.getSmeId());
+      stmt.setString(pos++, smePart); stmt.setString(pos++, smePart);
+    }
+    else {
+      if (needExpression(query.getSrcSmeId()))
+        stmt.setString(pos++, getLikeExpression(query.getSrcSmeId()));
+      if (needExpression(query.getDstSmeId()))
+        stmt.setString(pos++, getLikeExpression(query.getDstSmeId()));
+    }
 
     GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
     if (query.getFromDateEnabled()) {
@@ -164,11 +178,25 @@ public class SmsOperativeSource extends SmsSource
     ArrayList list = new ArrayList();
 
     addWherePartEQ(list, "ID", query.getSmsId());
-    addWherePart  (list, "OA", query.getFromAddress());
-    addWherePart  (list, "DDA", query.getToAddress());
+
+    if (needExpression(query.getAbonentAddress())) {
+      String abonentCheck = (needLikeExpression(query.getAbonentAddress())) ? " LIKE ?" : "=?";
+      list.add(("( OA"+abonentCheck+" OR DDA"+abonentCheck+" )"));
+    }
+    else {
+      addWherePart  (list, "OA", query.getFromAddress());
+      addWherePart  (list, "DDA", query.getToAddress());
+    }
+
     addWherePart  (list, "ROUTE_ID", query.getRouteId());
-    addWherePart  (list, "SRC_SME_ID", query.getSrcSmeId());
-    addWherePart  (list, "DST_SME_ID", query.getDstSmeId());
+
+    if (needExpression(query.getSmeId())) {
+      String smeCheck = (needLikeExpression(query.getSmeId())) ? " LIKE ?" : "=?";
+      list.add(("( SRC_SME_ID"+smeCheck+" OR DST_SME_ID"+smeCheck+" )"));
+    } else {
+      addWherePart  (list, "SRC_SME_ID", query.getSrcSmeId());
+      addWherePart  (list, "DST_SME_ID", query.getDstSmeId());
+    }
 
     if (query.getFromDateEnabled()) list.add("SUBMIT_TIME >=?");
     if (query.getTillDateEnabled()) list.add("SUBMIT_TIME <=?");

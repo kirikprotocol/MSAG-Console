@@ -18,8 +18,10 @@ public class SmsQuery
 
   private int    storageType = SMS_ARCHIVE_STORAGE_TYPE;
   private int    rowsMaximum = 500;
-  private String fromAddress = "*";
-  private String toAddress = "*";
+  private String abonentAddress = "*";
+  private String fromAddress    = "*";
+  private String toAddress      = "*";
+  private String smeId    = "*";
   private String srcSmeId = "*";
   private String dstSmeId = "*";
   private String routeId = "*";
@@ -35,11 +37,15 @@ public class SmsQuery
   public int getRowsMaximum() { return rowsMaximum; }
   public void setRowsMaximum(int max) { rowsMaximum = max; }
 
+  public String getAbonentAddress() { return abonentAddress; }
+  public void setAbonentAddress(String address) { abonentAddress = address; }
   public String getFromAddress() { return fromAddress; }
   public void setFromAddress(String address) { fromAddress = address; }
   public String getToAddress() { return toAddress; }
   public void setToAddress(String address) { toAddress = address; }
 
+  public String getSmeId() { return smeId; }
+  public void setSmeId(String id) { smeId = id; }
   public String getSrcSmeId() { return srcSmeId; }
   public void setSrcSmeId(String id) { srcSmeId = id; }
   public String getDstSmeId() { return dstSmeId; }

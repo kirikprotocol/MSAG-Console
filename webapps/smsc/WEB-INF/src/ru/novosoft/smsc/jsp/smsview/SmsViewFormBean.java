@@ -259,6 +259,12 @@ public class SmsViewFormBean extends IndexBean
   public String getFromAddress() {
     return query.getFromAddress();
   }
+  public void setAbonentAddress(String address) {
+    query.setAbonentAddress(address);
+  }
+  public String getAbonentAddress()  {
+    return query.getAbonentAddress();
+  }
   public void setFromAddress(String address) {
     query.setFromAddress(address);
   }
@@ -267,6 +273,12 @@ public class SmsViewFormBean extends IndexBean
   }
   public void setToAddress(String address) {
     query.setToAddress(address);
+  }
+  public String getSmeId() {
+    return query.getSmeId();
+  }
+  public void setSmeId(String id) {
+    query.setSmeId(id);
   }
   public String getSrcSmeId() {
     return query.getSrcSmeId();
