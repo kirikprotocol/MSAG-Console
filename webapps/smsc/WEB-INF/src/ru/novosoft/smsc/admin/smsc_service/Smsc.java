@@ -22,8 +22,7 @@ import ru.novosoft.smsc.admin.service.*;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.ProfileDataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.ProfileQuery;
-import ru.novosoft.smsc.util.config.Config;
-import ru.novosoft.smsc.util.config.ConfigManager;
+import ru.novosoft.smsc.util.config.*;
 import ru.novosoft.smsc.util.xml.Utils;
 import ru.novosoft.util.conpool.NSConnectionPool;
 
@@ -42,6 +41,7 @@ public class Smsc extends Service
 	private Method update_profile_method = null;
 	private Method flush_statistics_method = null;
 	private Method process_cancel_messages_method = null;
+	private Method apply_smsc_config_method = null;
 	private ConfigManager configManager = null;
 
 	private SMEList smes = null;
@@ -72,21 +72,14 @@ public class Smsc extends Service
 		}
 
 		if (getStatus() == Proxy.StatusConnected)
-		{
-			smsc_component = (Component) getInfo().getComponents().get("SMSC");
-			apply_routes_method = (Method) smsc_component.getMethods().get("apply_routes");
-			apply_aliases_method = (Method) smsc_component.getMethods().get("apply_aliases");
-			lookup_profile_method = (Method) smsc_component.getMethods().get("lookup_profile");
-			update_profile_method = (Method) smsc_component.getMethods().get("update_profile");
-			flush_statistics_method = (Method) smsc_component.getMethods().get("flush_statistics");
-			process_cancel_messages_method = (Method) smsc_component.getMethods().get("process_cancel_messages");
-		}
+			checkComponents();
+
 		try
 		{
 			final File smscConfFolder = getSmscConfFolder();
-			Document smesDoc = Utils.parse(new BufferedReader( new FileReader(new File(smscConfFolder, "sme.xml"))));
-			Document routesDoc = Utils.parse(new BufferedReader( new FileReader(new File(smscConfFolder, "routes.xml"))));
-			Document aliasesDoc = Utils.parse(new BufferedReader( new FileReader(new File(smscConfFolder, "aliases.xml"))));
+			Document smesDoc = Utils.parse(new BufferedReader(new FileReader(new File(smscConfFolder, "sme.xml"))));
+			Document routesDoc = Utils.parse(new BufferedReader(new FileReader(new File(smscConfFolder, "routes.xml"))));
+			Document aliasesDoc = Utils.parse(new BufferedReader(new FileReader(new File(smscConfFolder, "aliases.xml"))));
 			smes = new SMEList(smesDoc.getDocumentElement());
 			subjects = new SubjectList(routesDoc.getDocumentElement(), smes);
 			routes = new RouteList(routesDoc.getDocumentElement(), subjects, smes);
@@ -143,9 +136,9 @@ public class Smsc extends Service
 
 	protected PrintWriter storeSmes(PrintWriter out)
 	{
-    String encoding = null; // C++ code doesn't know about other codings // System.getProperty("file.encoding");
-    if( encoding == null ) encoding = "ISO-8859-1";
-		out.println("<?xml version=\"1.0\" encoding=\""+encoding+"\"?>");
+		String encoding = null; // C++ code doesn't know about other codings // System.getProperty("file.encoding");
+		if (encoding == null) encoding = "ISO-8859-1";
+		out.println("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>");
 		out.println("<!DOCTYPE records SYSTEM \"file://SmeRecords.dtd\">");
 		out.println();
 		out.println("<records>");
@@ -158,9 +151,9 @@ public class Smsc extends Service
 
 	protected PrintWriter storeRoutes(PrintWriter out)
 	{
-    String encoding = null; // C++ code doesn't know about other codings // System.getProperty("file.encoding");
-    if( encoding == null ) encoding = "ISO-8859-1";
-		out.println("<?xml version=\"1.0\" encoding=\""+encoding+"\"?>");
+		String encoding = null; // C++ code doesn't know about other codings // System.getProperty("file.encoding");
+		if (encoding == null) encoding = "ISO-8859-1";
+		out.println("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>");
 		out.println("<!DOCTYPE routes SYSTEM \"file://routes.dtd\">");
 		out.println();
 		out.println("<routes>");
@@ -172,9 +165,9 @@ public class Smsc extends Service
 
 	protected PrintWriter storeAliases(PrintWriter out)
 	{
-    String encoding = null; // C++ code doesn't know about other codings // System.getProperty("file.encoding");
-    if( encoding == null ) encoding = "ISO-8859-1";
-		out.println("<?xml version=\"1.0\" encoding=\""+encoding+"\"?>");
+		String encoding = null; // C++ code doesn't know about other codings // System.getProperty("file.encoding");
+		if (encoding == null) encoding = "ISO-8859-1";
+		out.println("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>");
 		out.println("<!DOCTYPE aliases SYSTEM \"file://AliasRecords.dtd\">");
 		out.println();
 		out.println("<aliases>");
@@ -318,8 +311,8 @@ public class Smsc extends Service
 		String ids = "";
 		for (Iterator i = messageIds.iterator(); i.hasNext();)
 		{
-			String id = (String) i.next();
-			ids += id + (i.hasNext() ? ", " : "");
+			CancelMessageData data = (CancelMessageData) i.next();
+			//ids += id + (i.hasNext() ? ", " : "");
 		}
 		Map params = new HashMap();
 		params.put("cancelMessageIds", ids);
@@ -358,6 +351,7 @@ public class Smsc extends Service
 			update_profile_method = (Method) smsc_component.getMethods().get("update_profile");
 			flush_statistics_method = (Method) smsc_component.getMethods().get("flush_statistics");
 			process_cancel_messages_method = (Method) smsc_component.getMethods().get("process_cancel_messages");
+			apply_smsc_config_method = (Method) smsc_component.getMethods().get("apply_smsc_config");
 		}
 	}
 
@@ -374,5 +368,40 @@ public class Smsc extends Service
 			logger.error("Couldn't get SMSC config", t);
 			return null;
 		}
+	}
+
+	private void saveSmscConfig(Config config) throws AdminException
+	{
+		try
+		{
+			SaveableConfigTree tree = new SaveableConfigTree(config);
+			File tmpFile = File.createTempFile("smsc_config_", ".xml.tmp", getSmscConfFolder());
+			PrintWriter out = new PrintWriter(new FileWriter(tmpFile));
+			String encoding = null; // C++ code doesn't know about other codings // System.getProperty("file.encoding");
+			if (encoding == null) encoding = "ISO-8859-1";
+			out.println("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>");
+			out.println("<!DOCTYPE config SYSTEM \"file://configuration.dtd\">");
+			out.println("");
+			out.println("<config>");
+			tree.write(out, "  ");
+			out.println("</config>");
+			out.flush();
+			out.close();
+
+			tmpFile.renameTo(new File(getSmscConfFolder(), "config.xml"));
+		}
+		catch (Throwable t)
+		{
+			logger.error("Couldn't store SMSC config", t);
+			throw new AdminException("Couldn't store SMSC config: " + t.getMessage());
+		}
+	}
+
+	public void applyConfig(Config config)
+			throws AdminException
+	{
+		saveSmscConfig(config);
+		if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+			call(smsc_component, apply_smsc_config_method, Type.Types[Type.StringType], new HashMap());
 	}
 }
