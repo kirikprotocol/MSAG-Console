@@ -493,6 +493,24 @@ public:
     }
     return 100*cnt/_bucketsnum;
   }
+  void GetStats(int& maxchain,int& usedbuckets,int& totalbuckets)
+  {
+    maxchain=0;
+    usedbuckets=0;
+    totalbuckets=_bucketsnum;
+    for(int i=0;i<_bucketsnum;i++)
+    {
+      Link* l=_buckets[i].First();
+      if(l)
+      {
+        usedbuckets++;
+        int cnt=1;
+        while(l=_buckets[i].Next(l))cnt++;
+        if(cnt>maxchain)maxchain=cnt;
+      }
+    }
+
+  }
   void Clean()
   {
     delete [] _buckets;
