@@ -36,14 +36,17 @@ namespace smsc { namespace store
         Mutex       processLock, startLock;
         
         static const char*  storageCountSql;
-        static const char*  storageCleanSql;
         static const char*  storageMaxIdSql;
+        static const char*  archiveMaxIdSql;
         static const char*  billingMaxIdSql;
         
         static const char*  storageSelectSql;
         static const char*  storageDeleteSql;
         static const char*  archiveInsertSql;
         static const char*  billingInsertSql;
+        static const char*  billingCleanIdsSql;
+        static const char*  billingLookIdSql;
+        static const char*  billingPutIdSql;
         
         const char*     storageDBInstance;
         const char*     storageDBUserName;
@@ -59,11 +62,15 @@ namespace smsc { namespace store
         Statement*      storageSelectStmt;
         Statement*      storageDeleteStmt;
         Statement*      archiveInsertStmt;
+        
+        Statement*      billingCleanIdsStmt;
         Statement*      billingInsertStmt;
+        Statement*      billingLookIdStmt;
+        Statement*      billingPutIdStmt;
         
         ub4             idCounter; // for lookIdStmt
 
-        SMSId           id, lastUsedId;
+        SMSId           id;
         uint8_t         uState;
         uint8_t         msgReference;
         
@@ -102,22 +109,22 @@ namespace smsc { namespace store
         void prepareStorageDeleteStmt() throw(StorageException);
         void prepareArchiveInsertStmt() throw(StorageException);
         void prepareBillingInsertStmt() throw(StorageException);
+        void prepareBillingCleanIdsStmt() throw(StorageException);
+        void prepareBillingLookIdStmt() throw(StorageException);
+        void prepareBillingPutIdStmt() throw(StorageException);
 
         SMSId getMaxUsedId(Connection* connection, const char* sql)
             throw(StorageException);
         
-        void cleanStorage(SMSId beforeId)
+        void count()
             throw(StorageException);
-        void loadStorageFinalizedCount()
-            throw(StorageException);
-
         void connect()
             throw(StorageException); 
         void startup()
             throw(StorageException); 
-        void billing()
+        void billing(bool check)
             throw(StorageException); 
-        void archivate()
+        void archivate(bool first)
             throw(StorageException); 
     
     public:
@@ -134,8 +141,7 @@ namespace smsc { namespace store
 
         virtual int Execute();
         
-        void Start()
-            throw(StorageException);
+        void Start() throw(StorageException);
         void Stop();
     };
 

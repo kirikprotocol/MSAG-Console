@@ -156,11 +156,11 @@ void Archiver::loadMaxUncommitedCount(Manager& config)
 
 Archiver::Archiver(Manager& config) throw(ConfigException, StorageException) 
     : Thread(), finalizedCount(0), bStarted(false), 
-        storageSelectStmt(0L), storageDeleteStmt(0L),
-        archiveInsertStmt(0L), billingInsertStmt(0L),
         storageDBInstance(0L), storageDBUserName(0L), storageDBUserPassword(0L),
         billingDBInstance(0L), billingDBUserName(0L), billingDBUserPassword(0L),
-            log(Logger::getCategory("smsc.store.Archiver"))
+            storageSelectStmt(0L), storageDeleteStmt(0L), archiveInsertStmt(0L),
+            billingInsertStmt(0L), billingCleanIdsStmt(0L), billingLookIdStmt(0L),
+            billingPutIdStmt(0L), log(Logger::getCategory("smsc.store.Archiver"))
 {
     storageDBInstance = 
         loadDBInstance(config, "MessageStore.Storage.dbInstance");
@@ -242,15 +242,10 @@ void Archiver::Stop()
 void Archiver::startup()
     throw(StorageException)
 {
-    MutexGuard  processGuard(processLock);
     MutexGuard  finalizedGuard(finalizedMutex);  
 
     connect();
-    
-    SMSId maxId = getMaxUsedId(billingConnection, 
-                               Archiver::billingMaxIdSql);
-    cleanStorage(maxId);
-    loadStorageFinalizedCount();
+    count();
 }
 
 
@@ -268,7 +263,10 @@ void Archiver::connect()
     if (!billingConnection->isAvailable())
     {
         billingConnection->connect();
+        prepareBillingPutIdStmt();
+        prepareBillingLookIdStmt();
         prepareBillingInsertStmt();
+        prepareBillingCleanIdsStmt();
     }
 }
 
@@ -296,14 +294,15 @@ void Archiver::decrementFinalizedCount(unsigned count)
 int Archiver::Execute()
 {
     __trace__("Archiver started !");
+    bool first = true;
     do 
     {
-        job.Wait(awakeInterval);
+        job.Wait((first) ? 0:awakeInterval);
         if (exit.isSignaled()) break;
         try 
         {
             __trace__("Doing archivation job ...");
-            archivate(); 
+            archivate(first); first = false; 
             __trace__("Archivation job done !");
         } 
         catch (StorageException& exc) 
@@ -319,14 +318,24 @@ int Archiver::Execute()
     return 0;
 }
 
-void Archiver::billing()
+void Archiver::billing(bool check)
     throw(StorageException)
 {
-    // TO DO : Isert more code here ! Actual conversion to SMS_BR
-    billingInsertStmt->checkErr(billingInsertStmt->execute());
+    idCounter = 0;
+    if (check)
+    {
+        billingLookIdStmt->checkErr(billingLookIdStmt->execute());
+    }
+    
+    if (idCounter == 0)
+    {
+        billingPutIdStmt->checkErr(billingPutIdStmt->execute());
+        // TO DO : Isert more code here ! Actual conversion to SMS_BR
+        billingInsertStmt->checkErr(billingInsertStmt->execute());
+    }
 }
 
-void Archiver::archivate()
+void Archiver::archivate(bool first)
     throw(StorageException) 
 {
     MutexGuard  guard(processLock);
@@ -337,21 +346,26 @@ void Archiver::archivate()
     unsigned uncommited = 0;
     try 
     {
+        if (!first)
+        {
+            billingCleanIdsStmt->checkErr(billingCleanIdsStmt->execute());
+            billingConnection->commit();
+        }
         sword status = storageSelectStmt->execute();
         if (status == OCI_NO_DATA) return;
         storageSelectStmt->checkErr(status);
         do
         {
+            billing(first);
+            
             if (bNeedArchivate == 'Y')
             {
                 archiveInsertStmt->checkErr(archiveInsertStmt->execute());
             } 
-            else 
-            {
-                log.debug("Message was't archived !");
-            }
-            billing();
+            else log.debug("Message wasn't archived (needArchivate != 'Y')!");
+            
             storageDeleteStmt->checkErr(storageDeleteStmt->execute());
+
             if (++uncommited >= maxUncommitedCount) 
             {
                 billingConnection->commit();
@@ -383,9 +397,11 @@ void Archiver::archivate()
 }
 
 const char* Archiver::billingMaxIdSql = (const char*)
-"SELECT NVL(MAX(ID), '0000000000000000') FROM SMS_BR";
+"SELECT NVL(MAX(ID), '0000000000000000') FROM SMS_IDS";
 const char* Archiver::storageMaxIdSql = (const char*)
 "SELECT NVL(MAX(ID), '0000000000000000') FROM SMS_MSG";
+const char* Archiver::archiveMaxIdSql = (const char*)
+"SELECT NVL(MAX(ID), '0000000000000000') FROM SMS_ARC";
 SMSId Archiver::getMaxUsedId(Connection* connection, const char* sql)
     throw(StorageException)
 {
@@ -407,28 +423,56 @@ SMSId Archiver::getLastUsedId()
     
     SMSId storageId = getMaxUsedId(storageConnection, 
                                    Archiver::storageMaxIdSql);
+    SMSId archiveId = getMaxUsedId(storageConnection, 
+                                   Archiver::archiveMaxIdSql);
     SMSId billingId = getMaxUsedId(billingConnection, 
                                    Archiver::billingMaxIdSql);
     
+    storageId = (storageId > archiveId) ? storageId : archiveId;
     return ((storageId > billingId) ? storageId : billingId);
 }
 
-const char* Archiver::storageCleanSql = (const char*)
-"DELETE FROM SMS_MSG WHERE ID<=:ID AND NOT ST=:ST";
-void Archiver::cleanStorage(SMSId beforeId)
+const char* Archiver::billingPutIdSql = (const char*)
+"INSERT INTO SMS_IDS VALUES (:ID)";
+void Archiver::prepareBillingPutIdStmt()
     throw(StorageException)
 {
-    SetIdStatement cleanStmt(storageConnection, Archiver::storageCleanSql);
-    
-    cleanStmt.bind((CONST text *)"ST", (sb4) strlen("ST"), SQLT_UIN, 
-                   (dvoid *) &(enrouteState), (sb4) sizeof(enrouteState));
-    cleanStmt.setSMSId(beforeId);
-    cleanStmt.checkErr(cleanStmt.execute());
+    if (billingPutIdStmt) delete billingPutIdStmt;
+    billingPutIdStmt = new Statement(billingConnection,
+                                     Archiver::billingPutIdSql);
+
+    billingPutIdStmt->bind(1 , SQLT_BIN, (dvoid *) &(id),
+                           (sb4) sizeof(id));
+}
+
+const char* Archiver::billingLookIdSql = (const char*)
+"SELECT NVL(COUNT(*), 0) FROM SMS_IDS WHERE ID=:ID";
+void Archiver::prepareBillingLookIdStmt()
+    throw(StorageException)
+{
+    if (billingLookIdStmt) delete billingLookIdStmt;
+    billingLookIdStmt = new Statement(billingConnection,
+                                     Archiver::billingLookIdSql);
+
+    billingLookIdStmt->bind(1 , SQLT_BIN, (dvoid *) &(id),
+                            (sb4) sizeof(id));
+    billingLookIdStmt->define(1 , SQLT_UIN, (dvoid *) &(idCounter),
+                              (sb4) sizeof(idCounter));
+}
+
+const char* Archiver::billingCleanIdsSql = (const char*)
+"DELETE FROM SMS_IDS";
+void Archiver::prepareBillingCleanIdsStmt()
+    throw(StorageException)
+{
+    if (billingCleanIdsStmt) delete billingCleanIdsStmt;
+    billingCleanIdsStmt = new Statement(billingConnection,
+                                        Archiver::billingCleanIdsSql);
 }
 
 const char* Archiver::storageCountSql = (const char*)
 "SELECT NVL(COUNT(*), 0) FROM SMS_MSG WHERE NOT ST=:ST";
-void Archiver::loadStorageFinalizedCount()
+void Archiver::count()
     throw(StorageException)
 {
     Statement countStmt(storageConnection, Archiver::storageCountSql);
@@ -510,7 +554,9 @@ void Archiver::prepareStorageDeleteStmt() throw(StorageException)
     if (storageDeleteStmt) delete storageDeleteStmt;
     storageDeleteStmt = new Statement(storageConnection, 
                                       Archiver::storageDeleteSql);
-    storageDeleteStmt->bind(1, SQLT_BIN, (dvoid *) &(id), (sb4) sizeof(id));
+    
+    storageDeleteStmt->bind(1, SQLT_BIN, (dvoid *) &(id), 
+                            (sb4) sizeof(id));
 }
 
 const char* Archiver::archiveInsertSql = (const char*)
