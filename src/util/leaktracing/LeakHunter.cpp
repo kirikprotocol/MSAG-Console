@@ -286,6 +286,7 @@ static void* xmalloc(size_t size)
   for(i=0;i<size;i++)mem[i]=FILL_PATTERN;
   mem+=size;
   for(i=0;i<POST_ALLOC;i++)mem[i]=POST_FILL_PATTERN;
+  return (unsigned char*)rv+PRE_ALLOC+sizeof(size_t);
 }
 
 static void xfree(void* ptr)
@@ -293,7 +294,7 @@ static void xfree(void* ptr)
   unsigned char* mem=(unsigned char*)ptr;
   size_t size=((size_t*)mem)[-1];
   mem-=sizeof(size_t);
-  mem-=PRE_FILL_PATTERN;
+  mem-=PRE_ALLOC;
   int i;
   for(i=0;i<PRE_ALLOC;i++)
   {
@@ -304,7 +305,7 @@ static void xfree(void* ptr)
       abort();
     }
   }
-  mem+=sizeof(size_t);
+  mem=(unsigned char*)ptr;
   mem+=size;
   for(i=0;i<POST_ALLOC;i++)
   {
