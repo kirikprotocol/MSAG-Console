@@ -89,10 +89,14 @@ std::string SmscComponent::lookupProfile(const Arguments &args)
         ProfilerInterface * profiler;
         if (isSmscRunning() && (app = smsc_app_runner->getApp()) && (profiler = app->getProfiler())) 
         {
-            Address alias(addressString);
-            Address address;
-            app->AliasToAddress(alias, address);
+            Address address(addressString);
+            //app->AliasToAddress(alias, address);
             Profile& profile(profiler->lookup(address));
+            #ifdef SMSC_DEBUG
+              char addr_str[smsc::sms::MAX_ADDRESS_VALUE_LENGTH+1];
+              address.getValue(addr_str);
+              logger.debug("lookup Profile:\n  %s: Address: \"%s\"[%u], numebring plan:%u, type of number:%u, ", addressString, addr_str, address.getLength(), address.getNumberingPlan(), address.getTypeOfNumber());
+            #endif
             std::string result;
             switch (profile.codepage) 
             {
@@ -162,9 +166,12 @@ void SmscComponent::updateProfile(const Arguments & args)
         ProfilerInterface * profiler;
         if (isSmscRunning() && (app = smsc_app_runner->getApp()) && (profiler = app->getProfiler())) 
         {
-            Address alias(addressString);
-            Address address;
-            app->AliasToAddress(alias, address);
+            Address address(addressString);
+            #ifdef SMSC_DEBUG
+              char addr_str[smsc::sms::MAX_ADDRESS_VALUE_LENGTH+1];
+              address.getValue(addr_str);
+              logger.debug("Update Profile:\n  %s: Address: \"%s\"[%u], numebring plan:%u, type of number:%u, ", addressString, addr_str, address.getLength(), address.getNumberingPlan(), address.getTypeOfNumber());
+            #endif
             Profile profile;
             setProfileFromString(profile, profileString);
             profiler->update(address, profile);
