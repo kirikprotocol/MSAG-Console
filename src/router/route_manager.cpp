@@ -322,7 +322,7 @@ RouteRecord* findInTree(RouteTreeNode* node,
   r.info.dest = *dest;
   r.src_def = calcDefLengthAndCheck(&r.info.source);
   r.dest_def = calcDefLengthAndCheck(&r.info.dest);
-	print(&r,"find value");
+  print(&r,"find value");
   RouteRecord* rec = findInTreeRecurse(node,&r,cmp);
   print(rec,"*** find result ***");
   return rec;
@@ -330,36 +330,36 @@ RouteRecord* findInTree(RouteTreeNode* node,
 
 inline void print_step(int step)
 {
-	for(int st=0; st<step;++st) fprintf(stderr,"  ");
+  for(int st=0; st<step;++st) fprintf(stderr,"  ");
 }
 
 static
 void dump(RouteSrcTreeNode* node,int step)
 {
-	print_step(step);
-	print(node->record,"SRC_NODE rec: ");
-	for ( unsigned i=0; i < node->child.size(); ++i )
-	{
-		print_step(step);
-		dump(node->child[i],step+1);
-	}
+  print_step(step);
+  print(node->record,"SRC_NODE rec: ");
+  for ( unsigned i=0; i < node->child.size(); ++i )
+  {
+    print_step(step);
+    dump(node->child[i],step+1);
+  }
 }
 
 static
 void dump(RouteTreeNode* node,int step)
 {
-	print_step(step);
-	print(node->record,"DEST_NODE rec: ");
-	for ( unsigned i=0; i < node->sources.size(); ++i )
-	{
-		print_step(step);
-		dump(node->sources[i],step+1);
-	}
-	for ( unsigned i=0; i < node->child.size(); ++i )
-	{
-		print_step(step);
-		dump(node->child[i],step+1);
-	}
+  print_step(step);
+  print(node->record,"DEST_NODE rec: ");
+  for ( unsigned i=0; i < node->sources.size(); ++i )
+  {
+    print_step(step);
+    dump(node->sources[i],step+1);
+  }
+  for ( unsigned i=0; i < node->child.size(); ++i )
+  {
+    print_step(step);
+    dump(node->child[i],step+1);
+  }
 }
 
 static 
@@ -534,7 +534,7 @@ void RouteManager::commit()
     new_first_record = 0;
   }
   dump(&root,0);
-	//delete table;
+  //delete table;
 }
 
 void RouteManager::cancel()
@@ -551,6 +551,8 @@ void RouteManager::cancel()
 bool RouteManager::lookup(const Address& source, const Address& dest, SmeProxy*& proxy, int* idx, RouteInfo* info)
 {
 __synchronized__
+	if ( info ) *info = 0;
+	if ( idx ) *idx = 0;
   proxy = 0;
   __require__(sme_table);
   // ....
@@ -558,8 +560,9 @@ __synchronized__
   if ( !rec ) return false;
   proxy = sme_table->getSmeProxy(rec->proxyIdx);
   if ( info ) *info = rec->info;
-  if ( idx ) *idx = rec->proxyIdx;
-  return true;
+  if ( idx && rec->info.enabling ) *idx = rec->proxyIdx;
+  if (!rc->info.enabling) return false;
+	return rec->info.enabling;
 }
 
 /*RouteInfo RouteManager::getRouteInfo(int idx)
