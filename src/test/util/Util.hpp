@@ -80,6 +80,9 @@ public:
 	int value() const;
 	int value1(int num1) const;
 	int value2(int num1) const;
+	int value1(int num1, int num2) const;
+	int value2(int num1, int num2) const;
+	int value3(int num1, int num2) const;
 };
 
 //TCResult inline member functions definitions
@@ -153,6 +156,21 @@ inline int TCSelector::value1(int num1) const
 inline int TCSelector::value2(int num1) const
 {
 	return 1 + (val[pos] - 1) / num1;
+}
+
+inline int TCSelector::value1(int num1, int num2) const
+{
+	return 1 + ((val[pos] - 1) % (num1 * num2)) % num1;
+}
+
+inline int TCSelector::value2(int num1, int num2) const
+{
+	return 1 + ((val[pos] - 1) % (num1 * num2)) / num1;
+}
+
+inline int TCSelector::value3(int num1, int num2) const
+{
+	return 1 + (val[pos] - 1) / (num1 * num2);
 }
 
 }
