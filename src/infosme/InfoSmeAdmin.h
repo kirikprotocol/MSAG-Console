@@ -15,8 +15,12 @@
 
 #include <string>
 
+#include <core/buffers/Array.hpp>
+
 namespace smsc { namespace infosme
 {
+    using smsc::core::buffers::Array;
+
     struct InfoSmeAdmin
     {
         virtual void startTaskProcessor() = 0;
@@ -32,8 +36,11 @@ namespace smsc { namespace infosme
         virtual bool addTask(std::string taskId) = 0;
         virtual bool removeTask(std::string taskId) = 0; 
         virtual bool changeTask(std::string taskId) = 0;
+        
         virtual bool startTask(std::string taskId) = 0;
         virtual bool stopTask(std::string taskId) = 0; 
+        virtual Array<std::string> getStartedTasks() = 0;
+
         virtual bool isTaskEnabled(std::string taskId) = 0;
         virtual bool setTaskEnabled(std::string taskId, bool enabled) = 0;
         

@@ -787,6 +787,19 @@ bool TaskProcessor::stopTask(std::string taskId)
     if (!task) return false; 
     return (task->isInProcess()) ? true:invokeEndProcess(task);
 }
+Array<std::string> TaskProcessor::getStartedTasks()
+{
+    MutexGuard guard(tasksLock);
+    
+    Array<std::string> startedTasks;
+
+    char* key = 0; Task* task = 0; tasks.First();
+    while (tasks.Next(key, task))
+        if (task && task->isInProcess()) 
+            startedTasks.Push(task->getId());
+
+    return startedTasks;
+}
 bool TaskProcessor::isTaskEnabled(std::string taskId)
 {
     TaskGuard taskGuard = getTask(taskId);
