@@ -74,6 +74,14 @@ public:
 		//submitSm.incorrect
 		__reg_tc__("submitSm.incorrect",
 			"Отправка submit_sm pdu с неправильными значениями полей");
+		__reg_tc__("submitSm.incorrect.sourceAddr",
+			"Неправильный адрес отправителя");
+		__reg_tc__("submitSm.incorrect.destAddr",
+			"Неправильный адрес получателя");
+		__reg_tc__("submitSm.incorrect.validTimeFormat",
+			"Неправильный формат validity_period");
+		__reg_tc__("submitSm.incorrect.waitTimeFormat",
+			"Неправильный формат schedule_delivery_time");
 		__reg_tc__("submitSm.incorrect.validTimePast",
 			"Время validity_period в прошлом (сообщение никогда не будет доставлено)");
 		__reg_tc__("submitSm.incorrect.waitTimeInvalid1",
@@ -160,20 +168,35 @@ public:
 		__reg_tc__("processResp.checkCmdStatusOther",
 			"Прочие коды ошибок соответствуют спецификации");
 		//sendDeliverySmResp
-		__reg_tc__("sendDeliverySmResp",
-			"Отправка deliver_sm_resp pdu");
-		__reg_tc__("sendDeliverySmResp.notSend",
-			"Не отпралять респонс для форсирования повторной доставки deliver_sm со стороны SC");
-		__reg_tc__("sendDeliverySmResp.sendWithErrCode",
-			"Отправить респонс с кодом ошибки для форсирования повторной доставки deliver_sm со стороны SC");
-		__reg_tc__("sendDeliverySmResp.sendInvalidSequenceNumber",
-			"Отправить респонс с неправильным sequence_number");
-		__reg_tc__("sendDeliverySmResp.sendOk",
-			"Отправить респонс подтверждающий получение правильного deliver_sm");
+		__reg_tc__("sendDeliverySmResp", "Отправка deliver_sm_resp pdu");
 		__reg_tc__("sendDeliverySmResp.sync",
 			"Отправка синхронного deliver_sm_resp pdu");
 		__reg_tc__("sendDeliverySmResp.async",
 			"Отправка асинхронного deliver_sm_resp pdu");
+		__reg_tc__("sendDeliverySmResp.sendOk",
+			"Отправить респонс подтверждающий получение правильного deliver_sm");
+		//sendDeliverySmResp.sendRetry
+		__reg_tc__("sendDeliverySmResp.sendRetry",
+			"Отправить респонс для форсирования повторной доставки deliver_sm");
+		__reg_tc__("sendDeliverySmResp.sendRetry.notSend",
+			"Не отпралять респонс, имитация неполучения deliver_sm");
+		__reg_tc__("sendDeliverySmResp.sendRetry.tempAppError",
+			"Отправить статус ESME_RX_T_APPN (временная ошибка на стороне sme, запрос на повторную доставку)");
+		__reg_tc__("sendDeliverySmResp.sendRetry.msgQueueFull",
+			"Отправить статус ESME_RMSGQFUL (переполнение очереди стороне sme)");
+		__reg_tc__("sendDeliverySmResp.sendRetry.invalidSequenceNumber",
+			"Отправить респонс с неправильным sequence_number");
+		//sendDeliverySmResp.sendError
+		__reg_tc__("sendDeliverySmResp.sendError",
+			"Отправить респонс для прекращения повторной доставки deliver_sm");
+		__reg_tc__("sendDeliverySmResp.sendError.standardError",
+			"Респонс со стандартным кодом ошибки (диапазон 0x1-0x10f)");
+		__reg_tc__("sendDeliverySmResp.sendError.reservedError",
+			"Респонс с зарезирвированным кодом ошибки (диапазоны 0x110-0x3ff и 0x400-0x4ff)");
+		__reg_tc__("sendDeliverySmResp.sendError.outRangeError",
+			"Респонс с кодом ошибки вне диапазона определенного спецификацией SMPP (>0x500)");
+		__reg_tc__("sendDeliverySmResp.sendError.permanentAppError",
+			"Респонс с кодом ошибки ESME_RX_P_APPN (неустранимая ошибка на стороне sme, отказ от всех последующих сообщений)");
 		//processDeliverySm
 		__reg_tc__("processDeliverySm", "Получение deliver_sm pdu");
 		__reg_tc__("processDeliverySm.checkFields",
