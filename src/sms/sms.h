@@ -288,7 +288,7 @@ namespace smsc {
         char vl[32];
         memcpy(vl,value,length);
         vl[length]=0;
-        return snprintf(buf,".%d.%d.%s",type,plan,vl);
+        return snprintf(buflen,buf,".%d.%d.%s",type,plan,vl);
       }
       };
 
