@@ -78,11 +78,6 @@ public class DivertManager extends Thread
       voiceMailAddresses = parseSequence(properties.getProperty("MSC.voicemail"));
       if (voiceMailAddresses == null)
         throw new Exception("Shuold be at least one VoiceMail address specified");
-
-      this.start();
-      java.lang.Runtime.getRuntime().addShutdownHook(new Thread() {
-        public void run() { shutdown(); };
-      });
     }
     catch(Exception e) {
       final String err = "Failed to load commutator properties";
@@ -233,25 +228,19 @@ public class DivertManager extends Thread
       throw new IOException("Autentification failed, responce: "+str);
     else if (!str.equalsIgnoreCase(""+ESC_PROMPT)) readTelnetString(ESC_PROMPT);
   }
-  private void disconnect()
-  {
-    if (mscSocket != null) {
-      logger.info("Disconnecting from MSC "+mscHost+":"+mscPort+"...");
-      if (os != null && mscSocket.isConnected()) {
-        try {
-          if (os != null) { writeTelnetLine("EXIT;");  logger.info("Exit sent to MSC"); }
-          while (is != null && is.available() > 0 && (is.read() != -1)); // skip responce
-        } catch (IOException e) { logger.error("MSC exit error", e); }
-      }
-      try { if (is != null) is.close(); } catch (IOException e) { logger.error("MSC is close error", e); }
-      try { if (os != null) os.close(); } catch (IOException e) { logger.error("MSC os close error", e); }
-      try { mscSocket.close(); } catch (IOException e) { logger.error("MSC socket close error", e); }
-      is = null; os = null; mscSocket = null;
-      logger.info("Disconnected from MSC.");
-    }
-  }
+
+  // NOTE !: connect & disconnect should be executed under synchronized(mscSocketLock)
+  private boolean pingStarted = false;
   private void connect() throws DivertManagerException, IOException
   {
+    if (!pingStarted) // if MSC ping thread wasn't started => start it
+    {
+      pingStarted = true; this.start();
+      java.lang.Runtime.getRuntime().addShutdownHook(new Thread() {
+        public void run() { shutdown(); };
+      });
+    }
+
     if (mscSocket == null || !(mscSocket.isConnected()))
     {
       try {
@@ -276,6 +265,23 @@ public class DivertManager extends Thread
     {
         while (is.available() > 0 && (is.read() != -1)); // Skip TIME OUT string
         writeTelnetLine(""); readTelnetString(ESC_PROMPT);
+    }
+  }
+  private void disconnect()
+  {
+    if (mscSocket != null) {
+      logger.info("Disconnecting from MSC "+mscHost+":"+mscPort+"...");
+      if (os != null && mscSocket.isConnected()) {
+        try {
+          if (os != null) { writeTelnetLine("EXIT;");  logger.info("Exit sent to MSC"); }
+          while (is != null && is.available() > 0 && (is.read() != -1)); // skip responce
+        } catch (IOException e) { logger.error("MSC exit error", e); }
+      }
+      try { if (is != null) is.close(); } catch (IOException e) { logger.error("MSC is close error", e); }
+      try { if (os != null) os.close(); } catch (IOException e) { logger.error("MSC os close error", e); }
+      try { mscSocket.close(); } catch (IOException e) { logger.error("MSC socket close error", e); }
+      is = null; os = null; mscSocket = null;
+      logger.info("Disconnected from MSC.");
     }
   }
 
@@ -491,6 +497,7 @@ public class DivertManager extends Thread
           logger.error("MSC connect or ping error", exc);
         }
       }
+      pingStarted = false;
     }
   }
 
