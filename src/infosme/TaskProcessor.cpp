@@ -364,7 +364,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry,
 
     TaskMsgId tmIds;
     
-    {   // Get taskId & msgId by seqNum
+    {   
         TaskMsgId* tmIdsPtr = 0;
         MutexGuard snGuard(taskIdsBySeqNumLock);
         if (!(tmIdsPtr = taskIdsBySeqNum.GetPtr(seqNum))) {
@@ -373,8 +373,6 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry,
         }
         tmIds = *tmIdsPtr;
         taskIdsBySeqNum.Delete(seqNum);
-        //logger.debug("Task id=%s, msgid=%lld for seqNum=%d", 
-        //             tmIds.taskId.c_str(), tmIds.msgId, seqNum);
     }
     
     TaskGuard taskGuard = getTask(tmIds.taskId); 
@@ -391,7 +389,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry,
         bool needDelete = true;
         if (retry && (immediate || (info.retryOnFail && info.retryTime > 0)))
         {
-            time_t nextTime = time(NULL)+((immediate) ? 1:info.retryTime);
+            time_t nextTime = time(NULL)+((immediate) ? 0:info.retryTime);
             if (info.endDate <= 0 || (info.endDate > 0 && info.endDate >= nextTime))
             {
                 if (!task->retryMessage(tmIds.msgId, nextTime)) {

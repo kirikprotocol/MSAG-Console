@@ -468,6 +468,8 @@ void Task::resetWaiting(Connection* connection)
         }
         logger.error("Task '%s'. Messages access failure.", info.id.c_str());
     }
+
+    if (connectionInternal && connection) dsInt->freeConnection(connection);
 }
 
 const char* DO_RETRY_MESSAGE_STATEMENT_ID = "%s_DO_RETRY_MESSAGE_STATEMENT_ID";
