@@ -14,6 +14,7 @@ import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.alias.Alias;
+import ru.novosoft.smsc.admin.alias.AliasSet;
 
 public class ProfileViewCommand implements Command
 {
@@ -27,13 +28,13 @@ public class ProfileViewCommand implements Command
       throws AdminException
   {
     String divert = profile.getDivert();
-    Mask aliasAddress = (alias != null) ? alias.getAddress():null;
+    Mask aliasAlias = (alias != null) ? alias.getAlias():null;
     return "Profile '"+profile.getMask().getMask()+"'"+
            " Report: "+profile.getReportOptionsString()+
            " Locale: "+profile.getLocale()+
            " Encoding: "+profile.getCodepageString()+
            " ussd7bit: "+((profile.isUssd7bit()) ? "on":"off")+
-           " Alias: "+((aliasAddress != null) ? aliasAddress.getMask():"-")+
+           " Alias: "+((aliasAlias != null) ? aliasAlias.getMask():"-")+
            " "+(profile.isAliasHide() ? "hide":"nohide")+
            ", "+(profile.isAliasModifiable() ? "modifiable":"nomodifiable")+
            " Divert: "+((divert == null || divert.length() <= 0) ? "-":divert)+
@@ -45,9 +46,14 @@ public class ProfileViewCommand implements Command
   {
     String out = "Profile for address '"+address+"'";
     try {
-        Profile profile = ctx.getSmsc().profileLookup(new Mask(address));
+        Mask userAddress = new Mask(address);
+        final AliasSet aliasSet = ctx.getSmsc().getAliases();
+        Mask profileAlias = aliasSet.dealias(userAddress);
+        Mask profileAddress = (profileAlias == null) ? userAddress : profileAlias;
+
+        Profile profile = ctx.getSmsc().profileLookup(profileAddress);
         if (profile != null) {
-            Alias alias = ctx.getSmsc().getAliases().getAliasByAddress(profile.getMask());
+            Alias alias = aliasSet.getAliasByAddress(profile.getMask());
             ctx.setMessage(showProfile(profile, alias));
             ctx.setStatus(CommandContext.CMD_OK);
         } else {
