@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE configuration SYSTEM "configuration.dtd">
+<configuration>
+	<db instance="ORJP" userName="smsc" userPassword="smsc">
+		<connections max="100" init="5"/>
+	</db>
+	<log location="/logger/location"/>
+	<map hlr_address="hlr:address" vlr_address="vlr:address"/>
+</configuration>
