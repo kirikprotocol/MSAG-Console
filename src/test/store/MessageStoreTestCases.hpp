@@ -22,6 +22,7 @@ const int MAX_SERVICE_TYPE_LENGTH = 6;
 
 //implemented
 const char* const TC_STORE_CORRECT_SMS = "storeCorrectSms";
+const char* const TC_STORE_DUPLICATE_SMS = "storeDuplicateSms";
 const char* const TC_STORE_REJECT_DUPLICATE_SMS = "storeRejectDuplicateSms";
 const char* const TC_STORE_REPLACE_CORRECT_SMS = "storeReplaceCorrectSms";
 const char* const TC_STORE_REPLACE_SMS_IN_FINAL_STATE = "storeReplaceSmsInFinalState";
@@ -93,6 +94,12 @@ public:
 	 */
 	TCResult* storeCorrectSms(SMSId* id, SMS* sms,
 		const SMSId existentId, const SMS& existentSms, int num);
+
+	/**
+	 * Сохранение дублированного sms.
+	 */
+	TCResult* storeDuplicateSms(SMSId* idp, SMS* smsp, const SMSId existentId,
+		const SMS& existentSms);
 
 	/**
 	 * Сохранение дублированного sms с отказом.
