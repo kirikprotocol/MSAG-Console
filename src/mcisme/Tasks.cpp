@@ -807,7 +807,7 @@ Array<std::string> Task::finalizeMessage(const char* smsc_id,
         {
             Message message; // load msg_id by smsc_id
             if (!Task::getMessage(smsc_id, message, connection))
-                throw Exception("Message for smsc_id=%s not found", smsc_id);
+                throw Exception("Message for smsc_id=%s not found", (smsc_id) ? smsc_id:"-");
             msg_id = message.id;
         }
         if (currentMessageId && msg_id == currentMessageId)
