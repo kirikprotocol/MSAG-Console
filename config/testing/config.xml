@@ -1,49 +1,62 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE config SYSTEM "configuration.dtd">
 <config>
+	
 	<section name="logger">
 		<param name="initFile" type="string">log4cpp.init</param>
 	</section>
+	
 	<section name="admin">
 		<param name="host" type="string">smsc</param>
 		<param name="port" type="int">15871</param>
 	</section>
+	
 	<section name="MessageStore">
-	    <param name="maxTriesCount" type="int">3</param>
-	    <section name="Storage">
-    		<param name="dbInstance" type="string">DBSHOCK_ORCL</param>
-		<param name="dbUserName" type="string">smsc</param>
-		<param name="dbUserPassword" type="string">smsc</param>
-	    </section>
-	    <section name="Archive">
- 		<param name="interval" type="int">100000</param>
-		<param name="finalized" type="int">1000</param>
-		<param name="uncommited" type="int">10</param>
-	    </section>
-	    <section name="Billing">
-    		<param name="dbInstance" type="string">DBSHOCK_ORCL</param>
-		<param name="dbUserName" type="string">smsc</param>
-		<param name="dbUserPassword" type="string">smsc</param>
-	    </section>
-	    <section name="Connections">
-		<param name="max" type="int">3</param>
-		<param name="init" type="int">0</param>
-	    </section>
+		<param name="maxTriesCount" type="int">3</param>
+		<section name="Storage">
+			<param name="dbInstance" type="string">dbs_orcl</param>
+			<param name="dbUserName" type="string">smsc2</param>
+			<param name="dbUserPassword" type="string">smsc2</param>
+		</section>
+		<section name="Archive">
+			<param name="enabled" type="bool">false</param>
+			<param name="interval" type="int">30000</param>
+			<param name="finalized" type="int">300</param>
+			<param name="uncommited" type="int">10</param>
+		</section>
+		<section name="Billing">
+			<param name="dbInstance" type="string">dbs_orcl</param>
+			<param name="dbUserName" type="string">smsc2</param>
+			<param name="dbUserPassword" type="string">smsc2</param>
+		</section>
+		<section name="Cache">
+			<param name="enabled" type="bool">true</param>
+			<param name="capacity" type="int">1000</param>
+			<param name="sleep" type="int">60000</param>
+		</section>
+		<section name="Connections">
+			<param name="max" type="int">3</param>
+			<param name="init" type="int">0</param>
+		</section>
 	</section>
+	
 	<section name="map">
-	    <param name="hlr" type="string">hlr:address</param>
-	    <param name="vlr" type="string">vlr:address</param>
+		<param name="hlr" type="string">hlr:address</param>
+		<param name="vlr" type="string">vlr:address</param>
 	</section>
+	
 	<section name="smpp">
-	    <param name="port" type="int">15971</param>
-	    <param name="host" type="string">smsc</param>
+		<param name="port" type="int">15971</param>
+		<param name="host" type="string">smsc</param>
 	</section>
+
 	<section name="core">
 		<param name="state_machines_count" type="int">5</param>
 		<!-- last time will be repeated until max_valid_time -->
-		<param name="reschedule_table" type="string">30s,20s</param>
-		<param name="receipt_delivered" type="string">Your message sent to address $$string import="dest"$$ was successfully delivered on $$date pattern="dd MMMM yyyy, HH:mm:ss" import="date"$$</param>
-		<param name="receipt_failed" type="string">($$date pattern="HH:mm:ss" import="date"$$) Âàøå ñîîáùåíèå îòïðàâëåííîå $$string import="dest"$$ $$date pattern="dd-MMMM-yyyy hh:mm:ss t" import="date"$$ íå áûëî äîñòàâëåíî: $$string import="error"$$</param>
+		<param name="reschedule_table" type="string">40s,30s</param>
+		<param name="receipt_delivered" type="string">*Your message sent to $$string import="dest"$$ was successfully delivered on $$date pattern="dd MMMM yyyy, HH:mm:ss" import="date"$$</param>
+		<param name="receipt_failed" type="string">*Ïîäòâ $$string import="dest"$$ $$date pattern="ddMMyyHHmmss" import="date"$$: $$string import="error"$$</param>
+		<param name="receipt_notify" type="string">$Notif $$string import=dest$$ $$date pattern="ddMMyyHHmmss" import="date"$$: $$string import="reason"$$</param>
 		<param name="service_center_address" type="string">+11111111111</param>
 		<param name="systemId" type="string">smscsme</param>
 		<param name="service_type" type="string">SmSc</param>
@@ -81,13 +94,13 @@
 			</section>
 		</section>
 	</section>
-  
+
 	<section name="DataSource">
 		<param name="type" type="string">OCI</param>
 		<param name="connections" type="int">3</param>
-		<param name="dbInstance" type="string">DBSHOCK_ORCL</param>
-		<param name="dbUserName" type="string">smsc</param>
-		<param name="dbUserPassword" type="string">smsc</param>
+		<param name="dbInstance" type="string">dbs_orcl</param>
+		<param name="dbUserName" type="string">smsc2</param>
+		<param name="dbUserPassword" type="string">smsc2</param>
 	</section>
 
 </config>
