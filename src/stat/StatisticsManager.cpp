@@ -86,8 +86,8 @@ int StatisticsManager::Execute()
         awakeEvent.Wait(toSleep); // Wait for next hour begins ...
         __trace__("StatisticsManager::Execute() >> End wait");
         
-        MutexGuard flushGuard(flushLock);
         flushCounters(switchCounters());
+        doneEvent.Signal();
         __trace__("StatisticsManager::Execute() >> Flushed");
     }
     isStarted = false;
@@ -109,7 +109,10 @@ void StatisticsManager::stop()
 void StatisticsManager::flushStatistics() 
 {
     MutexGuard flushGuard(flushLock);
+
+    if (doneEvent.isSignaled()) doneEvent.Wait(0);
     awakeEvent.Signal();
+    doneEvent.Wait();
 }
 
 short StatisticsManager::switchCounters()

@@ -60,7 +60,7 @@ namespace smsc { namespace stat
         Mutex   switchLock, flushLock, smeStatLock;
         Mutex   incomingLock, outgoingLock, scheduleLock;
 
-        Event   awakeEvent, exitEvent;
+        Event   awakeEvent, exitEvent, doneEvent;
         bool    isStarted;
         
         short switchCounters();
