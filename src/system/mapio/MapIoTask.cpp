@@ -367,11 +367,11 @@ void MapIoTask::dispatcher()
   message.receiver = MY_USER_ID;
   unsigned timecounter = 0;
   for(;;){
-    //MAP_isAlive = true;
+    MAP_isAlive = true;
     if ( isStopping ) return;
     MAP_dispatching = true;
     result = EINSS7CpMsgRecv_r(&message,1000);
-    //MAP_dispatching = false;
+    MAP_dispatching = false;
     if ( ++timecounter == 60 ) {
       __trace2__("MAP: EINSS7CpMsgRecv_r TICK-TACK");
       if ( __global_bind_counter != CORRECT_BIND_COUNTER ){
