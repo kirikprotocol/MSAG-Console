@@ -402,7 +402,7 @@ static void SendRInfo(MapDialog* dialog)
   __trace2__("MAP::%s: MAP.did: 0x%x",__FUNCTION__,dialog->dialogid_map);
   ET96MAP_APP_CNTX_T appContext;
   appContext.acType = ET96MAP_SHORT_MSG_GATEWAY_CONTEXT;
-  dialog->mwdStatus = 0;
+  memset(&dialog->mwdStatus,0,sizeof(dialog->mwdStatus));
   dialog->memoryExceeded = false;
   dialog->subscriberAbsent = false;
   SetVersion(appContext,dialog->version);
