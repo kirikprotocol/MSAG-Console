@@ -7,7 +7,11 @@
 					  ru.novosoft.smsc.util.StringEncoderDecoder,
 					  java.util.Iterator,
 				  ru.novosoft.smsc.jsp.SMSCJspException,
-				  ru.novosoft.smsc.jsp.SMSCErrors"
+				  ru.novosoft.smsc.jsp.SMSCErrors,
+              java.util.Collection,
+              java.util.List,
+              java.util.LinkedList,
+              ru.novosoft.smsc.admin.profiler.Profile"
 %><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.smsc_service.Index"
 /><jsp:setProperty name="bean" property="*"/><%
 ServiceIDForShowStatus = Constants.SMSC_SME_ID;
@@ -153,12 +157,17 @@ refreshStartStopButtonsStatus();
 		finishParams(out);
 	finishSection(out);
 	//################################## profiler #############################
+  List profilerReportOptions = new LinkedList();
+  profilerReportOptions.add(Profile.getReportOptionsString(Profile.REPORT_OPTION_None));
+  profilerReportOptions.add(Profile.getReportOptionsString(Profile.REPORT_OPTION_Final));
+  profilerReportOptions.add(Profile.getReportOptionsString(Profile.REPORT_OPTION_Full));
 	startSection(out, "profiler", "Profiler", false);
 		startParams(out);
 			param(out, "system ID",           "profiler.systemId",          bean.getStringParam("profiler.systemId"));
 			param(out, "service type",        "profiler.service_type",      bean.getStringParam("profiler.service_type"));
 			param(out, "protocol ID",         "profiler.protocol_id",       bean.getIntParam(   "profiler.protocol_id"));
-			param(out, "default report",      "profiler.defaultReport",     bean.getStringParam("profiler.defaultReport"));
+      paramSelect(out,"default report", "profiler.defaultReport",     profilerReportOptions, bean.getStringParam("profiler.defaultReport"));
+//			param(out, "default report",      "profiler.defaultReport",     bean.getStringParam("profiler.defaultReport"));
 			param(out, "default data coding", "profiler.defaultDataCoding", bean.getStringParam("profiler.defaultDataCoding"));
 			param(out, "default hide",        "profiler.defaultHide",       bean.getBoolParam(  "profiler.defaultHide"));
 		finishParams(out);
@@ -218,7 +227,24 @@ refreshStartStopButtonsStatus();
 			param(out, "failure limit",          "MscManager.failureLimit",          bean.getIntParam( "MscManager.failureLimit"));
 		finishParams(out);
 	finishSection(out);
-	//################################## traffic control #############################	startSection(out, "trafficControl", "Traffic Control", false);		startParams(out);			param(out, "Max SMS per second", "trafficControl.maxSmsPerSecond", bean.getIntParam("trafficControl.maxSmsPerSecond"));			param(out, "Shape time frame (seconds)", "trafficControl.shapeTimeFrame", bean.getIntParam("trafficControl.shapeTimeFrame"));			param(out, "Protect time frame (seconds)", "trafficControl.protectTimeFrame", bean.getIntParam("trafficControl.protectTimeFrame"));			param(out, "Max unresponded delivers by SME", "trafficControl.protectThreshold", bean.getIntParam("trafficControl.protectThreshold"));			param(out, "Delivery speed sensor min limit", "trafficControl.allowedDeliveryFailures", bean.getIntParam("trafficControl.allowedDeliveryFailures"));			param(out, "Speed sensor scheduler look ahead (seconds)", "trafficControl.lookAheadTime", bean.getIntParam("trafficControl.lookAheadTime"));		finishParams(out);	finishSection(out);%></div><%
+	//################################## traffic control #############################
+
+	startSection(out, "trafficControl", "Traffic Control", false);
+
+		startParams(out);
+
+			param(out, "Max SMS per second", "trafficControl.maxSmsPerSecond", bean.getIntParam("trafficControl.maxSmsPerSecond"));
+			param(out, "Shape time frame (seconds)", "trafficControl.shapeTimeFrame", bean.getIntParam("trafficControl.shapeTimeFrame"));
+			param(out, "Protect time frame (seconds)", "trafficControl.protectTimeFrame", bean.getIntParam("trafficControl.protectTimeFrame"));
+			param(out, "Max unresponded delivers by SME", "trafficControl.protectThreshold", bean.getIntParam("trafficControl.protectThreshold"));
+			param(out, "Delivery speed sensor min limit", "trafficControl.allowedDeliveryFailures", bean.getIntParam("trafficControl.allowedDeliveryFailures"));
+			param(out, "Speed sensor scheduler look ahead (seconds)", "trafficControl.lookAheadTime", bean.getIntParam("trafficControl.lookAheadTime"));
+
+		finishParams(out);
+
+	finishSection(out);
+
+%></div><%
 page_menu_begin(out);
 page_menu_button(out, "mbSave",  "Save",  "Save config");
 page_menu_button(out, "mbReset", "Reset", "Reset", "clickCancel()");

@@ -62,46 +62,40 @@ function clickEdit(value)
   return false;
 }
 </script>
-<%final int WIDTH = 3;%>
+<%final int WIDTH = 1;%>
+<div class=page_subtitle>Rescheduling policies</div><br>
 <table class=list>
 <col width=1px>
-<col width=33%>
 <%
-  for (int i=0; i < WIDTH; i++)
-  {
-    %><col align=right><col align=left><%
-  }
-%>
-<tr>
-  <th>&nbsp;</th>
-  <th>reshedule policy</th>
-  <th colspan=<%=WIDTH*2%>>errors</th>
-</tr>
-<%
-  int rowN = 1;
   for (Iterator i = bean.getReshedules().iterator(); i.hasNext();) {
     String reshedule = (String) i.next();
     Collection resheduleErrors = bean.getResheduleErrors(reshedule);
     int rows = resheduleErrors.size() / WIDTH + (resheduleErrors.size() % WIDTH > 0 ? 1 : 0);
     if (rows == 0)
       rows = 1;
-    %><tr class=row<%=(++rowN)&1%>><td rowspan=<%=rows%>><input class=check type=checkbox name=checkedShedules value="<%=reshedule%>" <%=bean.isSheduleChecked(reshedule) ? "checked" : ""%>></td><td rowspan=<%=rows%>><a href="#" onClick="return clickEdit('<%=reshedule%>');"><%=reshedule%></a></td><%
+    %><tr class=row0>
+    <td><input class=check type=checkbox name=checkedShedules value="<%=reshedule%>" <%=bean.isSheduleChecked(reshedule) ? "checked" : ""%>></td>
+    <td><a href="#" onClick="return clickEdit('<%=reshedule%>');"><%=reshedule%></a></td></tr>
+
+ <%
     int count = 0;
-    for (Iterator j = resheduleErrors.iterator(); j.hasNext();) {
-      String errorCode = (String) j.next();
-      String errorCodeString = bean.getErrorString(request.getLocale(), errorCode);
-      %><td>(<%=errorCode%>)</td><td><%=errorCodeString != null ? errorCodeString : ""%></td><%
-      if (++count % WIDTH == 0)
-      {
-        %></tr><tr class=row<%=rowN&1%>><%
-      }
-    }
-    final int lastColSpan = rows*WIDTH - resheduleErrors.size();
-    if (lastColSpan > 0)
+    if (resheduleErrors.size() <= 0 )
     {
-      %><td colspan=<%=lastColSpan*2%>>&nbsp;</td><%
+ %>
+     <tr class=row1><td>&nbsp;</td><td><i>no selected errors</i></td></tr>
+ <%
     }
-    %></tr><%
+    else {
+      %><tr  class=row1>
+      <td colspan=2><table style="border:none"><col width=80px><%
+      for (Iterator j = resheduleErrors.iterator(); j.hasNext();) {
+        String errorCode = (String) j.next();
+        String errorCodeString = bean.getErrorString(request.getLocale(), errorCode);
+        %><tr style="border:none">
+      <td style="border:none" align=right>(<%=errorCode%>)</td><td style="border:none"><%=errorCodeString != null ? errorCodeString : ""%></td></tr><%
+      }
+      %></table></td></tr><%
+    }
   }
 %>
 </table>

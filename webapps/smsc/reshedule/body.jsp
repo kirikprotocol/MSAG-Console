@@ -10,9 +10,9 @@
     %><tr class=row<%=i&1%>>
     <%
     if (isErrChecked || !bean.isErrorAssigned(errCode)) {%>
-      <td><input class=check type=checkbox name=checkedErrs value=<%=errCode%> <%=isErrChecked ? "checked" : ""%>></td>
-      <td><%=errCode%></td>
-      <td><%=bean.getErrorString(request.getLocale(), errCode)%></td>
+      <td><input id=checkedErrs_id_<%=i%> class=check type=checkbox name=checkedErrs value=<%=errCode%> <%=isErrChecked ? "checked" : ""%>></td>
+      <td><label for=checkedErrs_id_<%=i%>><%=errCode%></label></td>
+      <td><label for=checkedErrs_id_<%=i%>><%=bean.getErrorString(request.getLocale(), errCode)%></label></td>
       </tr>
     <%} else {%>
       <td>&nbsp;</td>
