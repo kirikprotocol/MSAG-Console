@@ -764,7 +764,6 @@ void RemoteStore::doReplaceSms(StorageConnection* connection, SMSId id, SMS& sms
 {
     __require__(connection);
     
-    Body    body;
     ReplaceAllStatement* replaceStmt 
         = connection->getReplaceAllStatement();
     RetrieveBodyStatement* retrieveBodyStmt
@@ -779,17 +778,20 @@ void RemoteStore::doReplaceSms(StorageConnection* connection, SMSId id, SMS& sms
         if (status == OCI_NO_DATA) throw NoSuchMessageException(id);
         else connection->check(status);
 
-        if (!retrieveBodyStmt->getBody(body) ||
-             retrieveBodyStmt->getBodyLength() > MAX_BODY_LENGTH)
         {
-            DestroyBodyStatement* destroyBodyStmt
-                = connection->getDestroyBodyStatement();
+            Body    oldBody;
+            if (!retrieveBodyStmt->getBody(oldBody) ||
+                 retrieveBodyStmt->getBodyLength() > MAX_BODY_LENGTH)
+            {
+                DestroyBodyStatement* destroyBodyStmt
+                    = connection->getDestroyBodyStatement();
 
-            destroyBodyStmt->setSMSId(id);
-            destroyBodyStmt->destroyBody();
+                destroyBodyStmt->setSMSId(id);
+                destroyBodyStmt->destroyBody();
+            }
         }
         
-        body = sms.getMessageBody();
+        Body& body = sms.getMessageBody();
         replaceStmt->bindId(id);
         replaceStmt->bindSms(sms);
         
