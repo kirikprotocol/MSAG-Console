@@ -32,8 +32,8 @@
       <fileset dir="${java_out}" excludes="${perfmon_path}/applet/**" />
     </jar>
     <unjar src="${sibinco_lib}" dest="${exploded}/unjar_tmp"/>
-    <mkdir dir="${exploded}/perfmon"/>
-    <jar jarfile="${exploded}/perfmon/perfmon.jar">
+    <mkdir dir="${exploded}/stat/monitor"/>
+    <jar jarfile="${exploded}/stat/monitor/perfmon.jar">
       <fileset dir="${java_out}">
         <include name="${perfmon_path}/applet/**"/>
         <include name="${perfmon_path}/PerfSnap.class"/>
