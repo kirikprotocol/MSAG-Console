@@ -210,6 +210,13 @@ Targets:
     <ant antfile="${WEBSRC_DIR}/build.xml" dir="${WEBSRC_DIR}" target="install"/>
   </target>
 
+  <target name="notomcat" description="removes tomcat distrib from update. Use before tar">
+    <delete dir="${DISTR_DIR}/tomcat">
+      <exclude name="server/lib/sibinco_tomcat_auth_server.jar"/>
+      <exclude name="common/lib/sibinco_tomcat_auth_common.jar"/>
+    </delete>
+  </target>
+  
   <target name="tar" description="tar distr directory">
     <tar destfile="${DISTR_DIR}/smppgw_update.tar.gz" compression="gzip">
       <tarfileset dir="${DISTR_DIR}" mode="775">
