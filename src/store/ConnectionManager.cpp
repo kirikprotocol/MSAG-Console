@@ -225,6 +225,7 @@ Connection* ConnectionPool::getConnection()
         queue.connection = 0L;
         monitor.wait(&queue.condition);
         cond_destroy(&queue.condition);
+        __trace2__("got connection %p",connection);
         return queue.connection;
     }
     
@@ -239,6 +240,7 @@ Connection* ConnectionPool::getConnection()
         (void) connections.Push(connection);
         count++;
     }
+    __trace2__("got connection %p",connection);
     return connection; 
 }
 
@@ -246,6 +248,8 @@ void ConnectionPool::freeConnection(Connection* connection)
 {
     __require__(connection);
     MutexGuard  guard(monitor);
+
+    __trace2__("free connection %p",connection);
     
     if (head && (count <= size))
     {
