@@ -479,7 +479,7 @@ public:
     }
 };
 
-static void appSignalHandler(int sig)
+extern "C" static void appSignalHandler(int sig)
 {
     smsc_log_debug(logger, "Signal %d handled !", sig);
     if (sig==smsc::system::SHUTDOWN_SIGNAL || sig==SIGINT)
@@ -489,7 +489,7 @@ static void appSignalHandler(int sig)
         setNeedStop(true);
     }
 }
-void atExitHandler(void)
+extern "C" static void atExitHandler(void)
 {
     smsc::util::xml::TerminateXerces();
     smsc::logger::Logger::Shutdown();

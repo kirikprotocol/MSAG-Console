@@ -172,12 +172,12 @@ namespace smsc { namespace infosme
         {
             memset(&monthesNamesSet, 0, sizeof(monthesNamesSet));
         };
-        MonthesNamesParser(std::string weekDay, std::string weekDayN, std::string monthesNames)
+        MonthesNamesParser(std::string _weekDay, std::string _weekDayN, std::string _monthesNames)
             : weekDayN(0), weekDay(0)
         {
-            initWeekDay(weekDay);
-            initWeekDayN(weekDayN);
-            initMonthesNames(monthesNames);
+            initWeekDay(_weekDay);
+            initWeekDayN(_weekDayN);
+            initMonthesNames(_monthesNames);
         };
         virtual ~MonthesNamesParser() {};
 
