@@ -769,40 +769,6 @@ USHORT_T Et96MapCloseInd(
 }
 
 extern "C"
-USHORT_T Et96MapDelimiterInd(
-  ET96MAP_LOCAL_SSN_T localSsn,
-  ET96MAP_DIALOGUE_ID_T dialogueId,
-  UCHAR_T priorityOrder)
-{
-  unsigned dialogid_map = dialogueId;
-  unsigned dialogid_smsc = 0;
-  MAP_TRY{
-    __trace2__("MAP::%s dialog 0x%x",__PRETTY_FUNCTION__,dialogid_map);
-    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
-    if ( dialog.isnull() ) {
-      unsigned _di = dialogid_map;
-      dialogid_map = 0;
-      throw MAPDIALOG_ERROR(
-        FormatText("MAP::%s dialog 0x%x is not present",__PRETTY_FUNCTION__,_di));
-    }
-    dialogid_smsc = dialog->dialogid_smsc;
-    __trace2__("MAP::%s:DELIVERY_SM %s",__PRETTY_FUNCTION__,RouteToString(dialog.get()).c_str());
-    switch( dialog->state ){
-    case MAPST_WaitSpecDelimeter:
-      SendSegmentedSms(dialog.get());
-      dialog->state = MAPST_WaitSmsConf;
-      break;
-    //case MAPST_WaitSmsClose:
-    //  break;
-    default:
-      throw MAPDIALOG_BAD_STATE(
-        FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__PRETTY_FUNCTION__,dialog->state,dialogid_map,dialogid_smsc));
-    }
-  }MAP_CATCH(dialogid_map,dialogid_smsc);
-  return ET96MAP_E_OK;
-}
-
-extern "C"
 USHORT_T Et96MapUAbortInd (
   ET96MAP_LOCAL_SSN_T localSsn,
   ET96MAP_DIALOGUE_ID_T dialogueId,
@@ -977,5 +943,41 @@ USHORT_T Et96MapDelimiterInd(
   }
   return ET96MAP_E_OK;
 }
+
+/*
+extern "C"
+USHORT_T Et96MapDelimiterInd(
+  ET96MAP_LOCAL_SSN_T localSsn,
+  ET96MAP_DIALOGUE_ID_T dialogueId,
+  UCHAR_T priorityOrder)
+{
+  unsigned dialogid_map = dialogueId;
+  unsigned dialogid_smsc = 0;
+  MAP_TRY{
+    __trace2__("MAP::%s dialog 0x%x",__PRETTY_FUNCTION__,dialogid_map);
+    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
+    if ( dialog.isnull() ) {
+      unsigned _di = dialogid_map;
+      dialogid_map = 0;
+      throw MAPDIALOG_ERROR(
+        FormatText("MAP::%s dialog 0x%x is not present",__PRETTY_FUNCTION__,_di));
+    }
+    dialogid_smsc = dialog->dialogid_smsc;
+    __trace2__("MAP::%s:DELIVERY_SM %s",__PRETTY_FUNCTION__,RouteToString(dialog.get()).c_str());
+    switch( dialog->state ){
+    case MAPST_WaitSpecDelimeter:
+      SendSegmentedSms(dialog.get());
+      dialog->state = MAPST_WaitSmsConf;
+      break;
+    //case MAPST_WaitSmsClose:
+    //  break;
+    default:
+      throw MAPDIALOG_BAD_STATE(
+        FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__PRETTY_FUNCTION__,dialog->state,dialogid_map,dialogid_smsc));
+    }
+  }MAP_CATCH(dialogid_map,dialogid_smsc);
+  return ET96MAP_E_OK;
+}
+*/
 
 #endif
