@@ -1,4 +1,4 @@
 #binary name			source name			libraries
-test/AliasManagerFunctionalTest	AliasManagerFunctionalTest	-ltest-alias -ltest-sms -ltest-util -ltest-core -lalias -lutil-config -lutil -llog4cpp -lxerces-c1_5_2 -lrt
-test/AliasManagerTest		AliasManagerTest		-ltest-alias -ltest-sms -ltest-util -ltest-core -lalias -lutil-config -lutil -llog4cpp -lxerces-c1_5_2 -lrt
+-test/AliasManagerFunctionalTest	AliasManagerFunctionalTest	-ltest-alias -ltest-sms -ltest-util -ltest-core -lalias -lutil-config -lutil -llog4cpp -lxerces-c1_5_2 -lrt
+-test/AliasManagerTest		AliasManagerTest		-ltest-alias -ltest-sms -ltest-util -ltest-core -lalias -lutil-config -lutil -llog4cpp -lxerces-c1_5_2 -lrt
 
