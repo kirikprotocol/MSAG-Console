@@ -20,6 +20,7 @@ public class SMSCErrors
 		public static final String serviceManagerNotInitialized = B + "serviceManagerNotInitialized";
 		public static final String daemonManagerNotInitialized = B + "daemonManagerNotInitialized";
 		public static final String couldntApplyChanges = B + "couldntApplyChanges";
+		public static final String notYetImplemented = B + "notYetImplemented";
 
 		public static class services
 		{

@@ -5,11 +5,12 @@
  */
 package ru.novosoft.smsc.jsp.smsc.hosts;
 
-import ru.novosoft.smsc.admin.daemon.Daemon;
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 public class HostEdit extends SmscBean
-{
+{//todo
 	private String hostName = null;
 	private int port = -1;
 	private String mbSave = null;
@@ -37,15 +38,28 @@ public class HostEdit extends SmscBean
 
 	public int process()
 	{
-		Daemon d = daemonManager.getDaemon(hostName);
-		if (d == null)
-			return error("Unknown host \"" + hostName + '"');
 		if (port == -1)
-			port = d.getPort();
+			try
+			{
+				port = hostsManager.getHostPort(hostName);
+			}
+			catch (AdminException e)
+			{
+				logger.error("Couldn't get port for host \"" + hostName + "\"", e);
+				return error(SMSCErrors.error.hosts.daemonNotFound, hostName);
+			}
 		if (mbSave != null)
 		{
-			if (d.getPort() != port)
-				return error("Not yet implemented");
+			try
+			{
+				if (hostsManager.getHostPort(hostName) != port)
+					return error(SMSCErrors.error.notYetImplemented);
+			}
+			catch (AdminException e)
+			{
+				logger.error("Couldn't get port for host \"" + hostName + "\"", e);
+				return error(SMSCErrors.error.hosts.daemonNotFound, hostName);
+			}
 			appContext.getStatuses().setHostsChanged(true);
 			return RESULT_DONE;
 		}

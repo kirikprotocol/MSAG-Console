@@ -30,7 +30,7 @@ public class HostAdd extends SmscBean
 			if (hostName == null || hostName.length() == 0)
 				return error(SMSCErrors.error.hosts.hostNotSpecified);
 
-			if (daemonManager.getHosts().contains(hostName))
+			if (hostsManager.getHostNames().contains(hostName))
 				return error(SMSCErrors.error.hosts.hostAlreadyExist, hostName);
 
 			if (port <= 0)
@@ -38,7 +38,7 @@ public class HostAdd extends SmscBean
 
 			try
 			{
-				serviceManager.addDaemon(hostName, port);
+				hostsManager.addHost(hostName, port);
 			}
 			catch (AdminException e)
 			{

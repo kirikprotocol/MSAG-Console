@@ -8,6 +8,7 @@ package ru.novosoft.smsc.jsp.smsc.services;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.admin.route.SME;
 
 import java.util.List;
 
@@ -64,7 +65,7 @@ public class ServiceAddInternal extends PageBean
 	{
 		if (serviceId == null || serviceId.length() == 0)
 			return error(SMSCErrors.error.services.ServiceIdNotDefined);
-		if (serviceManager.getSmeIds().contains(serviceId))
+		if (hostsManager.getSmeIds().contains(serviceId))
 			return error(SMSCErrors.error.services.alreadyExists, serviceId);
 		if (serviceId.length() > 15)
 			return error(SMSCErrors.error.services.ServiceIdTooLong);
@@ -73,7 +74,9 @@ public class ServiceAddInternal extends PageBean
 
 		try
 		{
-			serviceManager.addNonAdmService(serviceId, priority, systemType, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), rangeOfAddress, password, wantAlias, timeout);
+			hostsManager.addSme(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan,
+									  convertInterfaceVersion(interfaceVersion), systemType, password, rangeOfAddress,
+									  -1, wantAlias, timeout);
 			appContext.getStatuses().setServicesChanged(true);
 		}
 		catch (Throwable t)

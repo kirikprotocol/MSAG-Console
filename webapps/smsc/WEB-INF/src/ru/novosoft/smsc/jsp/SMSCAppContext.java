@@ -5,26 +5,23 @@
  */
 package ru.novosoft.smsc.jsp;
 
-import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
-import ru.novosoft.smsc.admin.service.ServiceManager;
+import ru.novosoft.smsc.admin.service.HostsManager;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.util.jsp.AppContext;
 
 import javax.sql.DataSource;
-import java.util.ResourceBundle;
 import java.util.Locale;
+import java.util.ResourceBundle;
 
 
 public interface SMSCAppContext extends AppContext
 {
 	public Config getConfig();
 
-	public ServiceManager getServiceManager();
-
-	public DaemonManager getDaemonManager();
+	public HostsManager getHostsManager();
 
 	public UserManager getUserManager();
 

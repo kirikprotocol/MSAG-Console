@@ -1,12 +1,13 @@
 package ru.novosoft.smsc.jsp;
 
-import ru.novosoft.smsc.admin.console.Console;
 import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
-import ru.novosoft.smsc.admin.service.ServiceManager;
+import ru.novosoft.smsc.admin.service.*;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.users.UserManager;
+import ru.novosoft.smsc.admin.console.Console;
 import ru.novosoft.smsc.perfmon.PerfServer;
+import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.config.ConfigManager;
 import ru.novosoft.util.conpool.NSConnectionPool;
@@ -14,14 +15,14 @@ import ru.novosoft.util.jsp.AppContextImpl;
 
 import javax.sql.DataSource;
 import java.io.File;
+import java.sql.SQLException;
 import java.util.*;
 
 
 public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 {
 	private ConfigManager configManager = null;
-	private ServiceManager serviceManager = null;
-	private DaemonManager daemonManager = null;
+	private HostsManager hostsManager = null;
 	private UserManager userManager = null;
 	private PerfServer perfServer = null;
 
@@ -38,35 +39,51 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 		super();
 		try
 		{
+			System.out.println("Starting SMSC Administartion Web Apllication **************************************************");
 			org.apache.log4j.BasicConfigurator.configure();
 			ConfigManager.Init(configFileName);
 			configManager = ConfigManager.getInstance();
-      Locale locale = new Locale("ru");
-      localeMessages.put(locale, ResourceBundle.getBundle("locales.messages", locale));
-      locale = new Locale("en");
-      localeMessages.put(locale, ResourceBundle.getBundle("locales.messages", locale));
-			Properties props = new Properties();
-			props.setProperty("jdbc.source", configManager.getConfig().getString("profiler.jdbc.source"));
-			props.setProperty("jdbc.driver", configManager.getConfig().getString("profiler.jdbc.driver"));
-			props.setProperty("jdbc.user", configManager.getConfig().getString("profiler.jdbc.user"));
-			props.setProperty("jdbc.pass", configManager.getConfig().getString("profiler.jdbc.password"));
-			connectionPool = new NSConnectionPool(props);
+			final Config config = configManager.getConfig();
+			WebAppFolders.init(config.getString("system.webapp folder"));
+
+			loadLocaleMessages();
+			createConnectionPool(config);
+
 			smsc = new Smsc(configManager, connectionPool);
-			serviceManager.init(configManager, smsc);
-			serviceManager = ServiceManager.getInstance();
-			daemonManager = serviceManager.getDaemonManager();
-			System.out.println("SMSCAppContextImpl.SMSCAppContextImpl **************************************************");
-			File usersConfig = new File(new File(configManager.getConfig().getString("system.webapp folder"), "WEB-INF"), configManager.getConfig().getString("system.users"));
+			DaemonManager daemonManager = new DaemonManager(smsc.getSmes(), config);
+			ServiceManager serviceManager = new ServiceManagerImpl();
+			hostsManager = new HostsManager(daemonManager, serviceManager, smsc);
+
+			File usersConfig = new File(new File(config.getString("system.webapp folder"), "WEB-INF"), config.getString("system.users"));
 			startConsole();
 			userManager = new UserManager(usersConfig);
-			perfServer = new PerfServer(configManager.getConfig());
+			perfServer = new PerfServer(config);
 			perfServer.start();
+			System.out.println("SMSC Administartion Web Apllication Started  **************************************************");
 		}
 		catch (Exception e)
 		{
 			System.out.println("Exception in initialization:");
 			e.printStackTrace();
 		}
+	}
+
+	private void createConnectionPool(Config config) throws Config.ParamNotFoundException, Config.WrongParamTypeException, SQLException
+	{
+		Properties props = new Properties();
+		props.setProperty("jdbc.source", config.getString("profiler.jdbc.source"));
+		props.setProperty("jdbc.driver", config.getString("profiler.jdbc.driver"));
+		props.setProperty("jdbc.user", config.getString("profiler.jdbc.user"));
+		props.setProperty("jdbc.pass", config.getString("profiler.jdbc.password"));
+		connectionPool = new NSConnectionPool(props);
+	}
+
+	private void loadLocaleMessages()
+	{
+		Locale locale = new Locale("ru");
+		localeMessages.put(locale, ResourceBundle.getBundle("locales.messages", locale));
+		locale = new Locale("en");
+		localeMessages.put(locale, ResourceBundle.getBundle("locales.messages", locale));
 	}
 
 	private void startConsole()
@@ -92,9 +109,9 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 		return configManager.getConfig();
 	}
 
-	public ServiceManager getServiceManager()
+	public HostsManager getHostsManager()
 	{
-		return serviceManager;
+		return hostsManager;
 	}
 
 	public Smsc getSmsc()
@@ -105,11 +122,6 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 	public DataSource getConnectionPool()
 	{
 		return connectionPool;
-	}
-
-	public DaemonManager getDaemonManager()
-	{
-		return daemonManager;
 	}
 
 	public UserPreferences getUserPreferences()

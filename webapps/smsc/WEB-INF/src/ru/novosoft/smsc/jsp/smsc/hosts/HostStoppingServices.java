@@ -15,8 +15,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+//toremove
 public class HostStoppingServices extends SmscBean
 {
+/*
 	protected String hostName = null;
 	protected String serviceIds[] = new String[0];
 	protected boolean waiting = true;
@@ -28,7 +30,7 @@ public class HostStoppingServices extends SmscBean
 	{
 		waiting = !waiting;
 
-		daemon = daemonManager.getDaemon(hostName);
+		daemon = daemonManager.get(hostName);
 		if (daemon == null)
 		{
 			logger.warn("daemon \"" + hostName + "\" not found");
@@ -36,7 +38,7 @@ public class HostStoppingServices extends SmscBean
 		}
 		try
 		{
-			services = daemon.listServices();
+			services = daemon.getServiceIds();
 		}
 		catch (AdminException e)
 		{
@@ -95,4 +97,5 @@ public class HostStoppingServices extends SmscBean
 	{
 		this.waiting = waiting;
 	}
+*/
 }

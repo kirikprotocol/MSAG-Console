@@ -16,7 +16,7 @@ request = (HttpServletRequest)multi;
 <%@ include file="/common/header_begin.jsp"%>
 <%
 
-//ServiceManager serviceManager = ((SMSCAppContext)request.getAttribute("appContext")).getServiceManager();
+//ServiceManagerImpl hostsManager = ((SMSCAppContext)request.getAttribute("appContext")).getServiceManager();
 
 AddAdmServiceWizard wizard = null;
 MultipartDataSource dataFile = null;

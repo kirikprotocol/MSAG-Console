@@ -6,9 +6,8 @@
 package ru.novosoft.smsc.jsp;
 
 import org.apache.log4j.Category;
-import ru.novosoft.smsc.admin.daemon.DaemonManager;
-import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
+import ru.novosoft.smsc.admin.service.HostsManager;
 
 import java.util.*;
 
@@ -23,8 +22,7 @@ public abstract class PageBean
 
 	protected List errors = null;
 	protected SMSCAppContext appContext = null;
-	protected ServiceManager serviceManager = null;
-	protected DaemonManager daemonManager = null;
+	protected HostsManager hostsManager = null;
 	public static final int MAX_PRIORITY = 0x7FFF;
 	protected UserPreferences preferences;
 
@@ -52,15 +50,11 @@ public abstract class PageBean
 
 	protected int init(List errors)
 	{
-		serviceManager = appContext.getServiceManager();
+		hostsManager = appContext.getHostsManager();
 		preferences = appContext.getUserPreferences();
 
-		if (serviceManager == null)
+		if (hostsManager == null)
 			return error(SMSCErrors.error.serviceManagerNotInitialized);
-
-		daemonManager = appContext.getDaemonManager();
-		if (daemonManager == null)
-			return error(SMSCErrors.error.daemonManagerNotInitialized);
 
 		return RESULT_OK;
 	}

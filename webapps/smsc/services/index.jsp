@@ -97,18 +97,17 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 	if (bean.isServiceAdministrable(serviceId))
 	{
 		%><td class=name><a href="#" title="View service info" onClick="return viewService('<%=encodedServiceId%>');"><%=encodedServiceId%></a></td><%
-		if (bean.isService(serviceId))
-		{
-			%><td class=name><a href="#" title="View host info" onClick="return viewHost('<%=bean.getHost(serviceId)%>');"><%=bean.getHost(serviceId)%></a></td><%
-		} else
-		{
-			%><td class=name>&nbsp;</td><%
-		}
 	}
 		else
 	{
-		%><td class=name><%=encodedServiceId%></td>
-		<td class=name>&nbsp;</td><%
+		%><td class=name><%=encodedServiceId%></td><%
+	}
+	if (bean.isService(serviceId))
+	{
+		%><td class=name><a href="#" title="View host info" onClick="return viewHost('<%=bean.getHost(serviceId)%>');"><%=bean.getHost(serviceId)%></a></td><%
+	} else
+	{
+		%><td class=name>&nbsp;</td><%
 	}%>
 	<td><%=serviceStatus(serviceId, bean.getServiceStatus(serviceId))%></td>
 </tr>

@@ -11,7 +11,6 @@ import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.alias.AliasSet;
-import ru.novosoft.smsc.admin.daemon.Daemon;
 import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.admin.service.*;
@@ -19,6 +18,8 @@ import ru.novosoft.smsc.admin.utli.Proxy;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.ProfileDataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.ProfileQuery;
+import ru.novosoft.smsc.util.Functions;
+import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.config.*;
 import ru.novosoft.smsc.util.xml.Utils;
 import ru.novosoft.util.conpool.NSConnectionPool;
@@ -29,7 +30,7 @@ import java.io.*;
 import java.util.*;
 
 
-public class Smsc extends Service
+public class Smsc extends Service implements SmeManager
 {
 	private Component smsc_component = null;
 	private Method apply_routes_method = null;
@@ -111,20 +112,14 @@ public class Smsc extends Service
 		}
 	}
 
-	public boolean isSmeUsed(String smeId)
-	{
-	   for (Iterator i = routes.iterator(); i.hasNext();)
-		{
-			Route route = (Route) i.next();
-			if (route.getDestinations().isSmeUsed(smeId))
-				return true;
-		}
-		return false;
-	}
-
 	public synchronized RouteList getRoutes()
 	{
 		return routes;
+	}
+
+	public synchronized List getSmeNames()
+	{
+		return new SortedList(smes.getNames());
 	}
 
 	public synchronized SMEList getSmes()
@@ -145,43 +140,26 @@ public class Smsc extends Service
 
 	protected PrintWriter storeSmes(PrintWriter out)
 	{
-		String encoding = null; // C++ code doesn't know about other codings // System.getProperty("file.encoding");
-		if (encoding == null) encoding = "ISO-8859-1";
-		out.println("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>");
-		out.println("<!DOCTYPE records SYSTEM \"file://SmeRecords.dtd\">");
-		out.println();
-		out.println("<records>");
-
+		Functions.storeConfigHeader(out, "records", "SmeRecords.dtd");
 		smes.store(out);
-
-		out.println("</records>");
+		Functions.storeConfigFooter(out, "records");
 		return out;
 	}
 
-	protected PrintWriter storeRoutes(PrintWriter out)
+	protected PrintWriter storeRoutesSubjects(PrintWriter out)
 	{
-		String encoding = null; // C++ code doesn't know about other codings // System.getProperty("file.encoding");
-		if (encoding == null) encoding = "ISO-8859-1";
-		out.println("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>");
-		out.println("<!DOCTYPE routes SYSTEM \"file://routes.dtd\">");
-		out.println();
-		out.println("<routes>");
+		Functions.storeConfigHeader(out, "routes", "routes.dtd");
 		subjects.store(out);
 		routes.store(out);
-		out.println("</routes>");
+		Functions.storeConfigFooter(out, "routes");
 		return out;
 	}
 
 	protected PrintWriter storeAliases(PrintWriter out)
 	{
-		String encoding = null; // C++ code doesn't know about other codings // System.getProperty("file.encoding");
-		if (encoding == null) encoding = "ISO-8859-1";
-		out.println("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>");
-		out.println("<!DOCTYPE aliases SYSTEM \"file://AliasRecords.dtd\">");
-		out.println();
-		out.println("<aliases>");
+		Functions.storeConfigHeader(out, "aliases", "AliasRecords.dtd");
 		aliases.store(out);
-		out.println("</aliases>");
+		Functions.storeConfigFooter(out, "aliases");
 		return out;
 	}
 
@@ -308,7 +286,7 @@ public class Smsc extends Service
 		try
 		{
 			final File smscConfFolder = getSmscConfFolder();
-			storeRoutes(new PrintWriter(new FileOutputStream(new File(smscConfFolder, "routes.xml")), true)).close();
+			storeRoutesSubjects(new PrintWriter(new FileOutputStream(new File(smscConfFolder, "routes.xml")), true)).close();
 		}
 		catch (Config.ParamNotFoundException e)
 		{
@@ -350,17 +328,6 @@ public class Smsc extends Service
 	{
 		checkComponents();
 		call(smsc_component, flush_statistics_method, Type.Types[Type.StringType], new HashMap());
-	}
-
-	public void start(Daemon smscDaemon)
-			throws AdminException
-	{
-		smscDaemon.startService(Constants.SMSC_SME_ID);
-	}
-
-	public void stop(Daemon smscDaemon) throws AdminException
-	{
-		smscDaemon.shutdownService(Constants.SMSC_SME_ID);
 	}
 
 	protected void checkComponents()
@@ -411,14 +378,9 @@ public class Smsc extends Service
 			SaveableConfigTree tree = new SaveableConfigTree(config);
 			File tmpFile = File.createTempFile("smsc_config_", ".xml.tmp", getSmscConfFolder());
 			PrintWriter out = new PrintWriter(new FileWriter(tmpFile));
-			String encoding = null; // C++ code doesn't know about other codings // System.getProperty("file.encoding");
-			if (encoding == null) encoding = "ISO-8859-1";
-			out.println("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>");
-			out.println("<!DOCTYPE config SYSTEM \"file://configuration.dtd\">");
-			out.println("");
-			out.println("<config>");
+			Functions.storeConfigHeader(out, "config", "configuration.dtd");
 			tree.write(out, "  ");
-			out.println("</config>");
+			Functions.storeConfigFooter(out, "config");
 			out.flush();
 			out.close();
 
@@ -436,5 +398,60 @@ public class Smsc extends Service
 	{
 		checkComponents();
 		call(smsc_component, apply_smsc_config_method, Type.Types[Type.StringType], new HashMap());
+	}
+
+
+	/* *********************************** SmeManager *********************************/
+	public boolean isUsed(String smeId)
+	{
+		for (Iterator i = routes.iterator(); i.hasNext();)
+		{
+			Route route = (Route) i.next();
+			if (route.getDestinations().isSmeUsed(smeId))
+				return true;
+		}
+		return false;
+	}
+
+	public void removeAllIfSme(Collection serviceIds) throws AdminException
+	{
+		for (Iterator i = serviceIds.iterator(); i.hasNext();)
+		{
+			String serviceId = (String) i.next();
+			if (contains(serviceId))
+			{
+				remove(serviceId);
+			}
+		}
+	}
+
+	public SME remove(String id) throws AdminException
+	{
+		if (isUsed(id))
+			throw new AdminException("Couldn't remove sme \"" + id + "\" becouse it is used by routes");
+
+		return smes.remove(id);
+	}
+
+	public boolean contains(String id)
+	{
+		return smes.contains(id);
+	}
+
+	public SME get(String id) throws AdminException
+	{
+		return smes.get(id);
+	}
+
+	public SME add(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType,
+						String password, String addrRange, int smeN, boolean wantAlias, int timeout)
+			throws AdminException
+	{
+		return add(new SME(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, smeN, wantAlias, timeout));
+	}
+
+	public SME add(SME newSme) throws AdminException
+	{
+		return smes.add(newSme);
 	}
 }

@@ -59,7 +59,9 @@ function viewHost(hostName)
 <%{
 int row=0; 
 List hostIds = Arrays.asList(bean.getHostIds());
-for(Iterator i = bean.getHostNames().iterator(); i.hasNext();row++)
+Collection hostNames = bean.getHostNames();
+%><h1>hostnames has a <%=hostNames.size()%> values</h1><%
+for(Iterator i = hostNames.iterator(); i.hasNext();row++)
 {
 String hostName = (String) i.next();
 %>

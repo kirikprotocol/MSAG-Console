@@ -1,7 +1,7 @@
 package ru.novosoft.smsc.jsp.smsc.services;
 
-import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.jsp.*;
 
 import java.util.List;
@@ -38,7 +38,16 @@ public class ServiceEditSme extends PageBean
 
 		if (interfaceVersion == null)
 		{
-			SME sme = appContext.getSmsc().getSmes().get(serviceId);
+			SME sme = null;
+			try
+			{
+				sme = appContext.getSmsc().getSmes().get(serviceId);
+			}
+			catch (AdminException e)
+			{
+				logger.error("Couldn't get sme \"" + serviceId + "\"");
+				return error(SMSCErrors.error.services.ServiceNotFound, serviceId);
+			}
 			if (sme == null)
 				return error(SMSCErrors.error.services.ServiceNotFound, serviceId);
 
@@ -80,7 +89,7 @@ public class ServiceEditSme extends PageBean
 	{
 		if (serviceId == null || serviceId.length() == 0)
 			return error(SMSCErrors.error.services.ServiceIdNotDefined);
-		if (!serviceManager.getSmeIds().contains(serviceId))
+		if (!hostsManager.getSmeIds().contains(serviceId))
 			return error(SMSCErrors.error.services.ServiceIdNotDefined, serviceId);
 		if (serviceId.length() > 15)
 			return error(SMSCErrors.error.services.ServiceIdTooLong);
@@ -92,8 +101,8 @@ public class ServiceEditSme extends PageBean
 			SME sme = new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan,
 									convertInterfaceVersion(interfaceVersion), systemType, password, rangeOfAddress, -1,
 									wantAlias, timeout);
-			if (serviceManager.isService(serviceId))
-				serviceManager.getServiceInfo(serviceId).setSme(sme);
+			if (hostsManager.isService(serviceId))
+				hostsManager.getServiceInfo(serviceId).setSme(sme);
 			appContext.getSmsc().getSmes().remove(serviceId);
 			appContext.getSmsc().getSmes().add(sme);
 			appContext.getStatuses().setServicesChanged(true);

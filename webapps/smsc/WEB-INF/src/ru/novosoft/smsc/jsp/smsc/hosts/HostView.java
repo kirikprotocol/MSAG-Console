@@ -7,7 +7,6 @@ package ru.novosoft.smsc.jsp.smsc.hosts;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.admin.daemon.Daemon;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
@@ -27,7 +26,6 @@ public class HostView extends SmscBean
 	protected String serviceId = null;
 
 	protected Map services = null;
-	protected Daemon daemon = null;
 
 	protected String mbView = null;
 	protected String mbEdit = null;
@@ -44,15 +42,10 @@ public class HostView extends SmscBean
 		if (result != RESULT_OK)
 			return result;
 
-		daemon = daemonManager.getDaemon(hostName);
-		if (daemon == null)
-			return error(SMSCErrors.error.hosts.daemonNotFound, hostName);
-
 		try
 		{
-			services = daemon.listServices();
-			if (daemon.isContainsSmsc())
-				services.remove(Constants.SMSC_SME_ID);
+			services = hostsManager.getServices(hostName);
+			services.remove(Constants.SMSC_SME_ID);
 		}
 		catch (AdminException e)
 		{
@@ -134,7 +127,7 @@ public class HostView extends SmscBean
 				long pid = -1;
 				try
 				{
-					pid = daemon.startService(serviceIds[i]);
+					pid = hostsManager.startService(serviceIds[i]);
 				}
 				catch (AdminException e)
 				{
@@ -173,7 +166,7 @@ public class HostView extends SmscBean
 			{
 				try
 				{
-					daemon.shutdownService(serviceIds[i]);
+					hostsManager.shutdownService(serviceIds[i]);
 				}
 				catch (AdminException e)
 				{
@@ -193,7 +186,7 @@ public class HostView extends SmscBean
 		{
 			try
 			{
-				return serviceManager.getCountServices(hostName) - (daemon.isContainsSmsc() ? 1 : 0);
+				return hostsManager.getCountServices(hostName);
 			}
 			catch (AdminException e)
 			{
@@ -209,8 +202,7 @@ public class HostView extends SmscBean
 		{
 			try
 			{
-				return serviceManager.getCountRunningServices(hostName)
-						- ((daemon.isContainsSmsc() && serviceManager.getServiceInfo(Constants.SMSC_SME_ID).getStatus() == ServiceInfo.STATUS_RUNNING) ? 1 : 0);
+				return hostsManager.getCountRunningServices(hostName);
 			}
 			catch (AdminException e)
 			{
@@ -228,7 +220,15 @@ public class HostView extends SmscBean
 
 	public int getPort()
 	{
-		return daemon.getPort();
+		try
+		{
+			return hostsManager.getHostPort(hostName);
+		}
+		catch (AdminException e)
+		{
+			logger.error("Couldn't get port for host \"" + hostName + "\"", e);
+			return -1;
+		}
 	}
 
 	public String getHostName()

@@ -18,8 +18,10 @@ import java.io.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+//toremove
 public class AddAdmServiceWizard
 {
+/*rem
 	protected final static String SYSTEM_ID_PARAM_NAME = "system id";
 
 	protected Category logger = Category.getInstance(this.getClass());
@@ -126,7 +128,7 @@ public class AddAdmServiceWizard
 		{
 			File daemonFolder = new File(daemonsFolder, host);
 			File serviceFolder = new File(daemonFolder, systemId);
-			File jspsFolder = ServiceManager.getServiceJspsFolder(webappFolder, systemId);
+			File jspsFolder = ServiceManagerImpl.getServiceJspsFolder(webappFolder, systemId);
 
 			if (serviceFolder.exists())
 				throw new AdminException("Service already exists in filesystem");
@@ -209,7 +211,7 @@ public class AddAdmServiceWizard
 	{
 		File daemonFolder = new File(daemonsFolder, host);
 		File serviceFolder = new File(daemonFolder, systemId);
-		File jspsFolder = ServiceManager.getServiceJspsFolder(webappFolder, systemId);
+		File jspsFolder = ServiceManagerImpl.getServiceJspsFolder(webappFolder, systemId);
 
 		deleteFolder(serviceFolder);
 		deleteFolder(jspsFolder);
@@ -365,4 +367,5 @@ public class AddAdmServiceWizard
 		}
 	}
 
+*/
 }

@@ -78,7 +78,7 @@ public class Config
 			throw new WrongParamTypeException("Parameter \"" + paramName + "\" is not boolean");
 	}
 
-	public synchronized Object getParameter(String paramName)
+	public Object getParameter(String paramName)
 	{
 		return params.get(paramName);
 	}
@@ -209,5 +209,13 @@ public class Config
 		{
 			params.put(fullName, value);
 		}
+	}
+
+	public void removeSection(final String sectionName)
+	{
+		for (Iterator i = getSectionChildSectionNames(sectionName).iterator(); i.hasNext();)
+         removeSection((String) i.next());
+		for (Iterator i = getSectionChildParamsNames(sectionName).iterator(); i.hasNext();)
+			removeParam((String) i.next());
 	}
 }

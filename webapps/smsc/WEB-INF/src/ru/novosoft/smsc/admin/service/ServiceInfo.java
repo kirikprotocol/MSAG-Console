@@ -100,6 +100,10 @@ public class ServiceInfo
 	public void setPid(long pid)
 	{
 		this.pid = pid;
+		if (pid == 0 && (status == STATUS_RUNNING || status == STATUS_STOPPING))
+			status = STATUS_STOPPED;
+		if (pid != 0 && (status == STATUS_STARTING || status == STATUS_STOPPED))
+			status = STATUS_RUNNING;
 	}
 
 	public Map getComponents()
@@ -175,5 +179,20 @@ public class ServiceInfo
 		SME old_sme = this.sme;
 		this.sme = sme;
 		return old_sme;
+	}
+
+	public void setStatus(byte status)
+	{
+		this.status = status;
+	}
+
+	public void setPort(int port)
+	{
+		this.port = port;
+	}
+
+	public void setArgs(String args)
+	{
+		this.args = args;
 	}
 }

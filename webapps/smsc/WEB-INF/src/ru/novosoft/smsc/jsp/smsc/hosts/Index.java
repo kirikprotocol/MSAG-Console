@@ -6,8 +6,6 @@
 package ru.novosoft.smsc.jsp.smsc.hosts;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
@@ -54,7 +52,7 @@ public class Index extends SmscBean
 
 			try
 			{
-				serviceManager.removeDaemon(id);
+				hostsManager.removeHost(id);
 				appContext.getStatuses().setHostsChanged(true);
 			}
 			catch (AdminException e)
@@ -75,20 +73,27 @@ public class Index extends SmscBean
 
 	public Collection getHostNames()
 	{
-		return serviceManager.getHostNames();
+		return hostsManager.getHostNames();
 	}
 
 	public int getHostPort(String hostName)
 	{
-		return daemonManager.getDaemon(hostName).getPort();
+		try
+		{
+			return hostsManager.getHostPort(hostName);
+		}
+		catch (AdminException e)
+		{
+			logger.error("Couldn't get host \"" + hostName + "\" port");
+			return -1;
+		}
 	}
 
 	public int getServicesTotal(String hostName)
 	{
 		try
 		{
-			return serviceManager.getCountServices(hostName)
-					- (hostName.equals(smsc.getInfo().getHost()) ? 1 : 0);
+			return hostsManager.getCountServices(hostName);
 		}
 		catch (AdminException e)
 		{
@@ -101,8 +106,7 @@ public class Index extends SmscBean
 	{
 		try
 		{
-			return serviceManager.getCountRunningServices(hostName)
-					- ((hostName.equals(smsc.getInfo().getHost()) && serviceManager.getServiceInfo(Constants.SMSC_SME_ID).getStatus() == ServiceInfo.STATUS_RUNNING) ? 1 : 0);
+			return hostsManager.getCountRunningServices(hostName);
 		}
 		catch (AdminException e)
 		{

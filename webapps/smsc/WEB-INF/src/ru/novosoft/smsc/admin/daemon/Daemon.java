@@ -11,42 +11,53 @@ import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.protocol.*;
+import ru.novosoft.smsc.admin.route.SMEList;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.utli.Proxy;
+import ru.novosoft.smsc.util.SortedList;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 
 public class Daemon extends Proxy
 {
-	private Socket socket = null;
-	private OutputStream out;
-	private InputStream in;
-	private CommandWriter writer;
-	private ResponseReader reader;
 	private Category logger = Category.getInstance(this.getClass().getName());
-	private Smsc smsc = null;
-	private boolean containsSmsc = false;
+	private Map services = new HashMap();
 
-	public Daemon(String host, int port, Smsc smsc)
+	public Daemon(String host, int port, SMEList smeList)
 			throws AdminException
 	{
 		super(host, port);
-		this.smsc = smsc;
 		connect(host, port);
+		refreshServices(smeList);
+	}
+
+	protected Map refreshServices(SMEList smeList) throws AdminException
+	{
+		Response r = runCommand(new CommandListServices());
+		if (r.getStatus() != Response.StatusOk)
+			throw new AdminException("Couldn't list services, nested:" + r.getDataAsString());
+
+		services.clear();
+
+		NodeList list = r.getData().getElementsByTagName("service");
+		for (int i = 0; i < list.getLength(); i++)
+		{
+			final Element serviceElement = (Element) list.item(i);
+			ServiceInfo newInfo = new ServiceInfo(serviceElement, host, smeList);
+			services.put(newInfo.getId(), newInfo);
+		}
+		return services;
 	}
 
 	/**
 	 * @return Process ID (PID) of new services
 	 */
-	public synchronized long startService(String serviceId)
+	public long startService(String serviceId)
 			throws AdminException
 	{
+		requireService(serviceId);
+
 		Response r = runCommand(new CommandStartService(serviceId));
 		if (r.getStatus() != Response.StatusOk)
 			throw new AdminException("Couldn't start services \"" + serviceId + "\", nested:" + r.getDataAsString());
@@ -54,7 +65,9 @@ public class Daemon extends Proxy
 		String pidStr = r.getDataAsString().trim();
 		try
 		{
-			return Long.decode(pidStr).longValue();
+			final long pid = Long.decode(pidStr).longValue();
+			getServiceInfo(serviceId).setPid(pid);
+			return pid;
 		}
 		catch (NumberFormatException e)
 		{
@@ -62,79 +75,120 @@ public class Daemon extends Proxy
 		}
 	}
 
-	public synchronized void addService(ServiceInfo serviceInfo)
+	private ServiceInfo getServiceInfo(String serviceId)
+	{
+		return (ServiceInfo) services.get(serviceId);
+	}
+
+	private void requireService(String serviceId) throws AdminException
+	{
+		if (!services.containsKey(serviceId))
+			throw new AdminException("Service \"" + serviceId + "\" not found on host \"" + host + "\"");
+	}
+
+	public void addService(ServiceInfo serviceInfo)
 			throws AdminException
 	{
-		logger.debug("Add services \"" + serviceInfo.getId() + "\" (" + serviceInfo.getHost() + ':'
-						 + serviceInfo.getPort() + ")");
+		final String id = serviceInfo.getId();
+		if (services.containsKey(id))
+			throw new AdminException("Couldn't add service \"" + id + "\" to host \"" + host + "\": service already contained in host");
+
+		logger.debug("Add services \"" + id + "\" (" + serviceInfo.getHost() + ':' + serviceInfo.getPort() + ")");
 
 		Response r = runCommand(new CommandAddService(serviceInfo));
 		if (r.getStatus() != Response.StatusOk)
-			throw new AdminException("Couldn't add services \"" + serviceInfo.getId() + '/' + serviceInfo.getId()
-											 + "\" [" + serviceInfo.getArgs() + "], nested:" + r.getDataAsString());
+			throw new AdminException("Couldn't add services \"" + id + '/' + id + "\" [" + serviceInfo.getArgs() + "], nested:" + r.getDataAsString());
+
+		services.put(id, serviceInfo);
 	}
 
-	public synchronized void removeService(String serviceId)
+	public void removeService(String serviceId)
 			throws AdminException
 	{
+		requireService(serviceId);
 		Response r = runCommand(new CommandRemoveService(serviceId));
 		if (r.getStatus() != Response.StatusOk)
 			throw new AdminException("Couldn't remove services \"" + serviceId + "\", nested:" + r.getDataAsString());
+
+		services.remove(serviceId);
 	}
 
-	public synchronized void shutdownService(String serviceId)
+	public void shutdownService(String serviceId)
 			throws AdminException
 	{
+		requireService(serviceId);
 		Response r = runCommand(new CommandShutdownService(serviceId));
 		if (r.getStatus() != Response.StatusOk)
+		{
+			getServiceInfo(serviceId).setStatus(ServiceInfo.STATUS_UNKNOWN);
 			throw new AdminException("Couldn't shutdown services \"" + serviceId + "\", nested:" + r.getDataAsString());
+		}
+		getServiceInfo(serviceId).setStatus(ServiceInfo.STATUS_STOPPING);
 	}
 
-	public synchronized void killService(String serviceId)
+	public void killService(String serviceId)
 			throws AdminException
 	{
+		requireService(serviceId);
 		Response r = runCommand(new CommandKillService(serviceId));
 		if (r.getStatus() != Response.StatusOk)
-			throw new AdminException("Couldn't kill services \"" + serviceId + "\", nested:" + r.getDataAsString());
-	}
-
-	/**
-	 * Queries demon for services list
-	 * @return Map: services name -> ServiceInfo
-	 */
-	public synchronized Map listServices()
-			throws AdminException
-	{
-		Response r = runCommand(new CommandListServices());
-		if (r.getStatus() != Response.StatusOk)
-			throw new AdminException("Couldn't list services, nested:" + r.getDataAsString());
-
-		Map result = new HashMap();
-		containsSmsc = false;
-
-		NodeList list = r.getData().getElementsByTagName("service");
-		for (int i = 0; i < list.getLength(); i++)
 		{
-			final Element serviceElement = (Element) list.item(i);
-			String serviceId = serviceElement.getAttribute("id");
-			containsSmsc |= Constants.SMSC_SME_ID.equals(serviceId);
-			ServiceInfo newInfo = new ServiceInfo(serviceElement, host, smsc.getSmes());
-			result.put(newInfo.getId(), newInfo);
+			getServiceInfo(serviceId).setStatus(ServiceInfo.STATUS_UNKNOWN);
+			throw new AdminException("Couldn't kill services \"" + serviceId + "\", nested:" + r.getDataAsString());
 		}
-
-		return result;
+		getServiceInfo(serviceId).setStatus(ServiceInfo.STATUS_STOPPED);
 	}
 
-	public synchronized void setServiceStartupParameters(String serviceId, /*String serviceName, */int port, String args)
+	public List getServiceIds(SMEList smeList) throws AdminException
+	{
+		if (services.size() == 0)
+			refreshServices(smeList);
+		return new SortedList(services.keySet());
+	}
+
+	public void setServiceStartupParameters(String serviceId, int port, String args)
 			throws AdminException
 	{
-		Response r = runCommand(new CommandSetServiceStartupParameters(serviceId, /*serviceName, */port, args));
+		requireService(serviceId);
+		Response r = runCommand(new CommandSetServiceStartupParameters(serviceId, port, args));
 		if (r.getStatus() != Response.StatusOk)
 			throw new AdminException("Couldn't set services startup parameters \"" + serviceId + "\", nested:" + r.getDataAsString());
+		ServiceInfo serviceInfo = getServiceInfo(serviceId);
+		serviceInfo.setPort(port);
+		serviceInfo.setArgs(args);
 	}
 
 	public boolean isContainsSmsc()
 	{
-		return containsSmsc;
+		return isContainsService(Constants.SMSC_SME_ID);
+	}
+
+	public boolean isContainsService(String serviceId)
+	{
+		return services.keySet().contains(serviceId);
+	}
+
+	public int getCountRunningServices()
+	{
+		int result = 0;
+		for (Iterator i = services.values().iterator(); i.hasNext();)
+		{
+			ServiceInfo info = (ServiceInfo) i.next();
+			if (info.getStatus() == ServiceInfo.STATUS_RUNNING && !info.getId().equals(Constants.SMSC_SME_ID))
+				result++;
+		}
+		return result;
+	}
+
+	public int getCountServices()
+	{
+		Set serviceIds = services.keySet();
+		serviceIds.remove(Constants.SMSC_SME_ID);
+		return serviceIds.size();
+	}
+
+	public Map getServices()
+	{
+		return services;
 	}
 }

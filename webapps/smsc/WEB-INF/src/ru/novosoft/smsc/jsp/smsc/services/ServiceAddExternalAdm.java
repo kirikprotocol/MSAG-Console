@@ -8,12 +8,9 @@ package ru.novosoft.smsc.jsp.smsc.services;
 import org.apache.log4j.Category;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.daemon.Daemon;
 import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.jsp.PageBean;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
-import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.jsp.*;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.xml.Utils;
 import ru.novosoft.util.jsp.MultipartDataSource;
@@ -23,7 +20,6 @@ import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.util.List;
-import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -117,7 +113,7 @@ public class ServiceAddExternalAdm extends PageBean
 
 				checkServiceContent(incomingZip);
 				serviceId = extractSystemId(incomingZip);
-				if (serviceManager.getSmeIds().contains(serviceId))
+				if (hostsManager.getSmeIds().contains(serviceId))
 				{
 					incomingZip.delete();
 					incomingZip = null;
@@ -171,7 +167,7 @@ public class ServiceAddExternalAdm extends PageBean
 
 	protected int processStage3()
 	{
-		if (serviceManager.getSmeIds().contains(serviceId))
+		if (hostsManager.getSmeIds().contains(serviceId))
 			return error(SMSCErrors.error.services.alreadyExists, serviceId);
 		if (priority < 0 || priority > MAX_PRIORITY)
 			return error(SMSCErrors.error.services.invalidPriority, String.valueOf(priority));
@@ -205,9 +201,7 @@ public class ServiceAddExternalAdm extends PageBean
 
 		try
 		{
-			serviceManager.deployAdministrableService(incomingZip, serviceInfo);
-			Daemon d = daemonManager.getDaemon(serviceInfo.getHost());
-			d.addService(serviceInfo);
+			hostsManager.deployAdministrableService(incomingZip, serviceInfo);
 			appContext.getStatuses().setServicesChanged(true);
 		}
 		catch (AdminException e)
@@ -220,9 +214,9 @@ public class ServiceAddExternalAdm extends PageBean
 		return RESULT_DONE;
 	}
 
-	public Set getHostNames()
+	public List getHostNames()
 	{
-		return daemonManager.getHosts();
+		return hostsManager.getHostNames();
 	}
 
 	/************************************** ***********************************/

@@ -7,7 +7,6 @@ package ru.novosoft.smsc.jsp.smsc.smsc_service;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.admin.daemon.Daemon;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
@@ -36,15 +35,6 @@ public class Index extends SmscBean
 			return result;
 
 		processParams(appContext, request);
-
-		try
-		{
-			serviceManager.refreshService(Constants.SMSC_SME_ID);
-		}
-		catch (AdminException e)
-		{
-			return error(SMSCErrors.error.smsc.couldntRefreshStatus);
-		}
 
 		if (mbStart != null)
 			return processStart();
@@ -174,11 +164,7 @@ public class Index extends SmscBean
 		{
 			try
 			{
-				Daemon smscDaemon = daemonManager.getSmscDaemon();
-				if (smscDaemon == null)
-					return error(SMSCErrors.error.smsc.daemonNotFound);
-				smsc.start(smscDaemon);
-				serviceManager.refreshService(Constants.SMSC_SME_ID);
+				hostsManager.startService(Constants.SMSC_SME_ID);
 				return RESULT_OK;
 			}
 			catch (Throwable e)
@@ -197,11 +183,7 @@ public class Index extends SmscBean
 		{
 			try
 			{
-				Daemon smscDaemon = daemonManager.getSmscDaemon();
-				if (smscDaemon == null)
-					return error(SMSCErrors.error.smsc.daemonNotFound);
-				smsc.stop(smscDaemon);
-				serviceManager.refreshService(Constants.SMSC_SME_ID);
+				hostsManager.shutdownService(Constants.SMSC_SME_ID);
 				return RESULT_OK;
 			}
 			catch (Throwable e)
@@ -218,7 +200,7 @@ public class Index extends SmscBean
 	{
 		try
 		{
-			return serviceManager.getServiceInfo(Constants.SMSC_SME_ID).getStatus();
+			return hostsManager.getServiceInfo(Constants.SMSC_SME_ID).getStatus();
 		}
 		catch (AdminException e)
 		{

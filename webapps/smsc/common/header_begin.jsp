@@ -26,7 +26,7 @@
 <%
 HttpSession ses = request.getSession();
 SMSCAppContext appContext = (SMSCAppContext)request.getAttribute("appContext");
-ServiceManager serviceManager = appContext.getServiceManager();
+HostsManager serviceManager = appContext.getHostsManager();
 Smsc smsc = appContext.getSmsc();
 %>
 <%@ include file="/common/utils.jsp"%>

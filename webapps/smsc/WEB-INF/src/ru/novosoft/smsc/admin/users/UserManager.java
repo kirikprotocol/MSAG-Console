@@ -14,6 +14,8 @@ import ru.novosoft.smsc.jsp.util.tables.impl.QueryResultSetImpl;
 import ru.novosoft.smsc.jsp.util.tables.impl.UserDataItem;
 import ru.novosoft.smsc.util.auth.XmlAuthenticator;
 import ru.novosoft.smsc.util.xml.Utils;
+import ru.novosoft.smsc.util.Functions;
+import ru.novosoft.smsc.util.SortedList;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
@@ -95,23 +97,15 @@ public class UserManager implements DataSource
 	protected void store()
 			throws IOException
 	{
-    String encoding = null; // C++ code doesn't know about other codings // System.getProperty("file.encoding");
-    if( encoding == null ) encoding = "ISO-8859-1";
-		String result = "<?xml version=\"1.0\" encoding=\""+encoding+"\"?>\n"
-				+ "<!DOCTYPE users SYSTEM \"file://users.dtd\">\n"
-				+ "\n"
-				+ "<users>\n";
-		List userLogins = new ArrayList(users.keySet());
-		Collections.sort(userLogins);
-		for (Iterator i = userLogins.iterator(); i.hasNext();)
+		PrintWriter out = new PrintWriter(new FileOutputStream(configFile));
+		Functions.storeConfigHeader(out, "users", "users.dtd", System.getProperty("file.encoding"));
+		for (Iterator i = new SortedList(users.keySet()).iterator(); i.hasNext();)
 		{
 			String userLogin = (String) i.next();
 			User user = (User) users.get(userLogin);
-			result += user.getXmlText();
+			out.print(user.getXmlText());
 		}
-		result += "</users>";
-		OutputStream out = new FileOutputStream(configFile);
-		out.write(result.getBytes());
+		Functions.storeConfigFooter(out, "users");
 		out.flush();
 		out.close();
 	}

@@ -109,16 +109,16 @@ public class Index extends IndexBean
 	{
 		this.mbEdit = mbEdit;
 	}
+
 	public boolean isEditAllowed()
 	{
 		try
 		{
-			serviceManager.refreshService(Constants.SMSC_SME_ID);
-			return serviceManager.getServiceInfo(Constants.SMSC_SME_ID).getStatus() == ServiceInfo.STATUS_RUNNING;
+			return hostsManager.getServiceInfo(Constants.SMSC_SME_ID).getStatus() == ServiceInfo.STATUS_RUNNING;
 		}
 		catch (AdminException e)
 		{
-			logger.debug("Couldn't refresh SMSC service", e);
+			logger.debug("Couldn't get SMSC service status", e);
 		}
 		return false;
 	}

@@ -6,15 +6,11 @@
 package ru.novosoft.smsc.jsp.smsc.services;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.daemon.Daemon;
+import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.jsp.PageBean;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
-import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.jsp.*;
 
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 public class Index extends PageBean
 {
@@ -41,15 +37,6 @@ public class Index extends PageBean
 		int result = super.process(appContext, errors);
 		if (result != RESULT_OK)
 			return result;
-
-		try
-		{
-			serviceManager.refreshServices();
-		}
-		catch (Throwable t)
-		{
-			logger.warn("Couldn't refresh service statuses", t);
-		}
 
 		if (mbAddService != null)
 		{
@@ -85,23 +72,26 @@ public class Index extends PageBean
 
 	public Collection getSmeIds()
 	{
-		if (serviceManager == null)
+		if (hostsManager == null)
 		{
 			error("Service Manager is null!!!");
 			return new LinkedList();
 		}
-		else
-			return serviceManager.getSmeIds();
+		else {
+			List smeIds = hostsManager.getSmeIds();
+			smeIds.remove(Constants.SMSC_SME_ID);
+			return smeIds;
+		}
 	}
 
 	public boolean isService(String smeId)
 	{
-		return serviceManager.isService(smeId);
+		return hostsManager.isService(smeId);
 	}
 
 	public boolean isServiceAdministrable(String smeId)
 	{
-		return serviceManager.isServiceAdministarble(smeId);
+		return hostsManager.isServiceAdministarble(smeId);
 	}
 
 	/************************ Command handlers ****************************/
@@ -114,10 +104,10 @@ public class Index extends PageBean
 			String id = serviceIds[i];
 			try
 			{
-				if (serviceManager.isService(id))
-					serviceManager.removeService(id);
+				if (hostsManager.isService(id))
+					hostsManager.removeService(id);
 				else
-					serviceManager.removeSme(id);
+					hostsManager.removeSme(id);
 				appContext.getStatuses().setServicesChanged(true);
 			}
 			catch (Throwable e)
@@ -143,33 +133,28 @@ public class Index extends PageBean
 
 		for (int i = 0; i < serviceIds.length; i++)
 		{
-			if (serviceManager.isService(serviceIds[i]))
+			final String serviceId = serviceIds[i];
+			if (hostsManager.isService(serviceId))
 			{
 				try
 				{
-					ServiceInfo s = serviceManager.getServiceInfo(serviceIds[i]);
-					if (s == null)
-						result = error(SMSCErrors.error.hosts.serviceNotFound, serviceIds[i]);
-					else if (s.getStatus() == ServiceInfo.STATUS_STOPPED)
+					if (hostsManager.getServiceInfo(serviceId).getStatus() == ServiceInfo.STATUS_STOPPED)
 					{
-						long pid = -1;
-						Daemon daemon = daemonManager.getDaemon(s.getHost());
-						pid = daemon.startService(serviceIds[i]);
-						if (pid <= 0)
+						if (hostsManager.startService(serviceId) <= 0)
 						{
-							notStartedIds.add(serviceIds[i]);
-							result = error(SMSCErrors.error.hosts.couldntStartService, serviceIds[i]);
-							logger.error("Couldn't start services \"" + serviceIds[i] + '"');
+							notStartedIds.add(serviceId);
+							result = error(SMSCErrors.error.hosts.couldntStartService, serviceId);
+							logger.error("Couldn't start services \"" + serviceId + '"');
 						}
 					}
 					else
-						logger.debug("startServices: "	+ serviceIds[i] +" is " + s.getStatusStr());
+						logger.debug("startServices: " + serviceId + " is " + hostsManager.getServiceInfo(serviceId).getStatusStr());
 				}
 				catch (AdminException e)
 				{
-					notStartedIds.add(serviceIds[i]);
-					result = error(SMSCErrors.error.hosts.couldntStartService, serviceIds[i], e);
-					logger.error("Couldn't start services \"" + serviceIds[i] + '"', e);
+					notStartedIds.add(serviceId);
+					result = error(SMSCErrors.error.hosts.couldntStartService, serviceId, e);
+					logger.error("Couldn't start services \"" + serviceId + '"', e);
 					continue;
 				}
 			}
@@ -196,24 +181,19 @@ public class Index extends PageBean
 
 		for (int i = 0; i < serviceIds.length; i++)
 		{
+			final String serviceId = serviceIds[i];
 			try
 			{
-				ServiceInfo s = serviceManager.getServiceInfo(serviceIds[i]);
-				if (s == null)
-					result = error(SMSCErrors.error.hosts.serviceNotFound, serviceIds[i]);
-				else if (s.getStatus() == ServiceInfo.STATUS_RUNNING)
-				{
-					Daemon daemon = daemonManager.getDaemon(s.getHost());
-					daemon.shutdownService(serviceIds[i]);
-				}
+				if (hostsManager.getServiceInfo(serviceId).getStatus() == ServiceInfo.STATUS_RUNNING)
+					hostsManager.shutdownService(serviceId);
 				else
-					logger.debug("stopServices: " + serviceIds[i] + " is " + s.getStatusStr());
+					logger.debug("stopServices: " + serviceId + " is " + hostsManager.getServiceInfo(serviceId).getStatusStr());
 			}
 			catch (AdminException e)
 			{
-				notStoppedIds.add(serviceIds[i]);
-				result = error(SMSCErrors.error.hosts.couldntStopService, serviceIds[i]);
-				logger.error("Couldn't stop services \"" + serviceIds[i] + '"', e);
+				notStoppedIds.add(serviceId);
+				result = error(SMSCErrors.error.hosts.couldntStopService, serviceId);
+				logger.error("Couldn't stop services \"" + serviceId + '"', e);
 			}
 		}
 		serviceIds = (String[]) notStoppedIds.toArray(new String[0]);
@@ -224,7 +204,7 @@ public class Index extends PageBean
 	{
 		try
 		{
-			return serviceManager.getServiceInfo(sId).getHost();
+			return hostsManager.getServiceInfo(sId).getHost();
 		}
 		catch (Throwable e)
 		{
@@ -236,11 +216,11 @@ public class Index extends PageBean
 
 	public byte getServiceStatus(String serviceId)
 	{
-		if (serviceManager.isService(serviceId))
+		if (hostsManager.isService(serviceId))
 		{
 			try
 			{
-				return serviceManager.getServiceInfo(serviceId).getStatus();
+				return hostsManager.getServiceInfo(serviceId).getStatus();
 			}
 			catch (Throwable t)
 			{

@@ -11,10 +11,7 @@ import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
 
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 public class SMEList
@@ -39,7 +36,7 @@ public class SMEList
 			}
 			catch (AdminException e)
 			{
-				logger.error("Duplicate SME definition", e);
+				logger.error("Error inc SME config", e);
 			}
 		}
 	}
@@ -59,21 +56,24 @@ public class SMEList
 		return smes.keySet();
 	}
 
-	public void add(SME sme)
-			  throws AdminException
+	public SME add(SME sme)
+			throws AdminException
 	{
 		if (smes.containsKey(sme.getId()))
 			throw new AdminException("Sme \"" + sme.getId() + "\" already contained in list");
 		smes.put(sme.getId(), sme);
+		return sme;
 	}
 
-	public SME get(String smeId)
+	public SME get(String smeId) throws AdminException
 	{
+		require(smeId);
 		return (SME) smes.get(smeId);
 	}
 
-	public SME remove(String smeId)
+	public SME remove(String smeId) throws AdminException
 	{
+		require(smeId);
 		return (SME) smes.remove(smeId);
 	}
 
@@ -92,7 +92,7 @@ public class SMEList
 			out.println("    <param name=\"password\" value=\"" + sme.getPassword() + "\"/>");
 			out.println("    <param name=\"addrRange\" value=\"" + sme.getAddrRange() + "\"/>");
 			out.println("    <param name=\"smeN\" value=\"" + sme.getSmeN() + "\"/>");
-			out.println("    <param name=\"wantAlias\" value=\"" + (sme.isWantAlias()?"yes":"no") + "\"/>");
+			out.println("    <param name=\"wantAlias\" value=\"" + (sme.isWantAlias() ? "yes" : "no") + "\"/>");
 			out.println("    <param name=\"timeout\" value=\"" + sme.getTimeout() + "\"/>");
 
 			out.println("  </smerecord>");
@@ -104,4 +104,11 @@ public class SMEList
 	{
 		return smes.containsKey(smeId);
 	}
+
+	private void require(String smeId) throws AdminException
+	{
+		if (!smes.containsKey(smeId))
+			throw new AdminException("SME \"" + smeId + "\" not found");
+	}
+
 }
