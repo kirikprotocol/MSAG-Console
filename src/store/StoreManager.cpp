@@ -1111,6 +1111,11 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms, bool needDelete)
                 }
                 break;
             }
+            catch (NoSuchMessageException& exc)
+            {
+                if (connection) pool->freeConnection(connection);
+                throw;
+            }
             catch (StorageException& exc)
             {
                 if (connection) pool->freeConnection(connection);
@@ -1127,8 +1132,8 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms, bool needDelete)
         }
     }
    
-    if (sms.billingRecord) billingStorage.createRecord(id, sms);
     if (sms.needArchivate) archiveStorage.createRecord(id, sms);
+    if (sms.billingRecord) billingStorage.createRecord(id, sms);
     
     smsc_log_debug(log, "Finalized msg#%lld" , id);
 }
