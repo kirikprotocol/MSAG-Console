@@ -960,11 +960,11 @@ namespace smsc { namespace sms
          * Устанавливает время следующей попытки доставки сообщения из SMSC
          * 
          * @param time   время следующей попытки доставки сообщения из SMSC
-         *
+         */
         inline void setNextTime(time_t time) 
         {
             nextTime = time;
-        };*/
+        };
         
         /**
          * Возвращает время следующей попытки доставки сообщения из SMSC
