@@ -72,10 +72,6 @@
   <td><input class=check type=checkbox name=forceNotify id=notify value=true <%=bean.isForceNotify() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th><label for=separate>Force separate</label></th>
-  <td><input class=check type=checkbox name=forceSeparate id=separate value=true <%=bean.isForceSeparate() ? "checked" : ""%>></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
   <th>Tasks thread pool max</th>
   <td><input class=txt name=smppThreadPoolMax value="<%=StringEncoderDecoder.encode(bean.getSmppThreadPoolMax())%>"></td>
 </tr>

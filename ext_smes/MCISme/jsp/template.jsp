@@ -31,13 +31,20 @@
   String templatePageSubtitle = ((informTemplate) ? "Inform":"Notify")+
        " template "+((createTemplate) ? "create":"modify");
 %>
+<script>
+function checkMultiAndGroupping(show)
+{
+  var row = opForm.all.templateTable.rows["multiParamRow"];
+  row.runtimeStyle.display = (show) ? "block":"none";
+}
+</script>
 <div class=content>
 <input type=hidden name=initialized     value=true>
 <input type=hidden name=informTemplate  value=<%=bean.isInformTemplate()%>>
 <input type=hidden name=createTemplate  value=<%=bean.isCreateTemplate()%>>
 <input type=hidden name=oldTemplateName value="<%=bean.getOldTemplateName()%>">
 <div class=page_subtitle><%= StringEncoderDecoder.encode(templatePageSubtitle)%></div>
-<table class=properties_list cellspacing=0 cellpadding=4 width="100%">
+<table class=properties_list cellspacing=0 cellpadding=4 width="100%" id="templateTable">
 <col width="1%" align=left>
 <col width="99%" align=left>
 <tr class=row<%=(rowN++)&1%>>
@@ -51,7 +58,8 @@
 <%if (informTemplate) { %>
 <tr class=row<%=(rowN++)&1%>>
   <th>Group callers</th>
-  <td><input class=check type=checkbox name=group value=true <%=bean.isGroup() ? "checked" : ""%>></td>
+  <td><input class=check type=checkbox name=group value=true <%=bean.isGroup() ? "checked" : ""%>
+             onClick="checkMultiAndGroupping(this.checked);"></td>
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
@@ -63,7 +71,7 @@
   <th valign=top>Single row</th>
   <td valign=top><textarea name=singleRow><%=StringEncoderDecoder.encode(bean.getSingleRow())%></textarea></td>
 </tr>
-<tr class=row<%=(rowN++)&1%>>
+<tr class=row<%=(rowN++)&1%> id="multiParamRow">
   <th valign=top>Multi row</th>
   <td valign=top><textarea name=multiRow><%=StringEncoderDecoder.encode(bean.getMultiRow())%></textarea></td>
 </tr>
@@ -75,6 +83,8 @@ page_menu_button(out, "mbDone",   "Done",   "Submit changes");
 page_menu_button(out, "mbCancel", "Cancel", "Discard changes");
 page_menu_space(out);
 page_menu_end(out);
-%>
+if (informTemplate) {%>
+<script>checkMultiAndGroupping(<%= bean.isGroup()%>);</script>
+<%}%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

@@ -28,7 +28,6 @@ public class Options extends MCISmeBean
   private int maxRowsPerMessage=0;
   private boolean forceInform = false;
   private boolean forceNotify = false;
-  private boolean forceSeparate = false;
 
   private int smppThreadPoolMax = 0;
   private int smppThreadPoolInit = 0;
@@ -79,7 +78,6 @@ public class Options extends MCISmeBean
         maxRowsPerMessage = getConfig().getInt("MCISme.maxRowsPerMessage");
         forceInform = getConfig().getBool("MCISme.forceInform");
         forceNotify = getConfig().getBool("MCISme.forceNotify");
-        forceSeparate = getConfig().getBool("MCISme.forceSeparate");
 
         smppThreadPoolMax = getConfig().getInt("MCISme.SMPPThreadPool.max");
         smppThreadPoolInit = getConfig().getInt("MCISme.SMPPThreadPool.init");
@@ -138,7 +136,6 @@ public class Options extends MCISmeBean
     getConfig().setInt("MCISme.maxRowsPerMessage", maxRowsPerMessage);
     getConfig().setBool("MCISme.forceInform", forceInform);
     getConfig().setBool("MCISme.forceNotify", forceNotify);
-    getConfig().setBool("MCISme.forceSeparate", forceSeparate);
 
     getConfig().setInt("MCISme.SMPPThreadPool.max", smppThreadPoolMax);
     getConfig().setInt("MCISme.SMPPThreadPool.init", smppThreadPoolInit);
@@ -402,12 +399,6 @@ public class Options extends MCISmeBean
   }
   public void setForceNotify(boolean forceNotify) {
     this.forceNotify = forceNotify;
-  }
-  public boolean isForceSeparate() {
-    return forceSeparate;
-  }
-  public void setForceSeparate(boolean forceSeparate) {
-    this.forceSeparate = forceSeparate;
   }
 
   public String getResponceWaitTime() {

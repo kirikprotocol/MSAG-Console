@@ -77,7 +77,9 @@ public abstract class IndexProperties extends MCISmeBean
   }
 
   public boolean isConfigChanged() {
-    return getMCISmeContext().isChangedOptions() || getMCISmeContext().isChangedDrivers();
+    return getMCISmeContext().isChangedOptions() ||
+           getMCISmeContext().isChangedDrivers() ||
+           getMCISmeContext().isChangedTemplates();
   }
   public boolean isOptionsChanged() {
     return getMCISmeContext().isChangedOptions();

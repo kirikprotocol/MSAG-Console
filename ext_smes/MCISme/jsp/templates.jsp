@@ -46,6 +46,12 @@ function editMCISmeTemplate(editObjectName, editButtonName)
   opForm.submit();
   return false;
 }
+function checkCheckboxesForInformTemplate() {
+  return checkCheckboxes(opForm.all.mbInformDelete);
+}
+function checkCheckboxesForNotifyTemplate() {
+  return checkCheckboxes(opForm.all.mbNotifyDelete);
+}
 </script>
 <div class=content>
 <input type=hidden name=editTemplate value="<%=bean.getEditTemplate()%>">
@@ -73,7 +79,9 @@ function editMCISmeTemplate(editObjectName, editButtonName)
     Templates.Identity id = (Templates.Identity)i.next();
     String encName = StringEncoderDecoder.encode(id.name);%>
     <tr class=row<%=(rowN++)&1%>>
-      <td>&nbsp;</td> <!-- TODO: checkboxes -->
+      <td><input class=check type=checkbox name=informChecked
+                 value="<%=encName%>" <%=bean.isInformTemplateChecked(id.name) ? "checked":""%>
+                 onClick="checkCheckboxesForInformTemplate();"></td>
       <td><%= id.id%></td>
       <td><a href="#" title="Edit inform template"
              onClick='return editMCISmeTemplate("<%=encName%>", "mbInformEdit");'><%=encName%></a></td>
@@ -85,12 +93,15 @@ function editMCISmeTemplate(editObjectName, editButtonName)
 </div><%
 page_menu_begin(out);
 page_menu_button(out, "mbInformAdd",    "Add template",  "Add new inform template");
-page_menu_button(out, "mbInformDelete", "Delete template(s)", "Delete selected inform template(s)");
+page_menu_button(out, "mbInformDelete", "Delete template(s)", "Delete selected inform template(s)", 
+                      "return confirm('Are you sure to delete all checked inform templates(s)?');");
 page_menu_space(out);
 page_menu_end(out);
 rowN = 1;
 List notifyList = bean.getNotifyTemplates();
-%><div class=content>
+%>
+<script>checkCheckboxesForInformTemplate();</script>
+<div class=content>
 <div class=page_subtitle>Notify callers templates</div>
 <table id="notify_table" cellspacing=5>
 <tr><td>
@@ -115,7 +126,9 @@ List notifyList = bean.getNotifyTemplates();
     Templates.Identity id = (Templates.Identity)i.next();
     String encName = StringEncoderDecoder.encode(id.name);%>
     <tr class=row<%=(rowN++)&1%>>
-      <td>&nbsp;</td> <!-- TODO: checkboxes -->
+      <td><input class=check type=checkbox name=notifyChecked
+                 value="<%=encName%>" <%=bean.isNotifyTemplateChecked(id.name) ? "checked":""%>
+                 onclick="checkCheckboxesForNotifyTemplate();"></td>
       <td><%= id.id%></td>
       <td><a href="#" title="Edit notify template"
              onClick='return editMCISmeTemplate("<%=encName%>", "mbNotifyEdit");'><%=encName%></a></td>
@@ -127,8 +140,10 @@ List notifyList = bean.getNotifyTemplates();
 </div><%
 page_menu_begin(out);
 page_menu_button(out, "mbNotifyAdd",    "Add template",  "Add new notify template");
-page_menu_button(out, "mbNotifyDelete", "Delete template(s)", "Delete selected notify template(s)");
+page_menu_button(out, "mbNotifyDelete", "Delete template(s)", "Delete selected notify template(s)",
+                      "return confirm('Are you sure to delete all checked notify templates(s)?');");
 page_menu_space(out);
 page_menu_end(out);%>
+<script>checkCheckboxesForNotifyTemplate();</script>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

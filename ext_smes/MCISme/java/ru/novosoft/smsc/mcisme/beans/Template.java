@@ -5,6 +5,8 @@ import ru.novosoft.smsc.util.config.Config;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Set;
+import java.util.Iterator;
 
 /**
  * Created by IntelliJ IDEA.
@@ -64,20 +66,41 @@ public class Template extends MCISmeBean
     if (templateName == null || templateName.length() == 0)
       return error("Template name not specified");
 
-    // TODO: check templateId (if duplicate) !!!
+    Config config = getConfig();
+    final String defaultIdParam = getTemplateSectionPrefix() + ".default";
+    int defaultTemplateId = getIdFromConfig(config, defaultIdParam);
 
-    if (!createTemplate) {
-      if (!oldTemplateName.equals(templateName)) {
-        if (containsInConfig(getConfig(), templateName))
-          return error("Template already exists", templateName);
-        removeFromConfig(getConfig(), oldTemplateName);
+    if (createTemplate) // create new template
+    {
+      if (containsInConfig(config, templateName))
+        return error("Template '"+templateName+"' already exists");
+      if (containsInConfig(config, templateId, null))
+        return error("Template with id="+templateId+" already exists");
+      if (defaultTemplateId < 0)
+        config.setInt(defaultIdParam, templateId);
+    }
+    else // edit old template
+    {
+      if ( oldTemplateName != null && oldTemplateName.length() > 0 &&
+          !oldTemplateName.equals(templateName) &&
+          containsInConfig(config, templateName))
+        return error("Template '"+templateName+"' already exists");
+      if (containsInConfig(config, templateId, oldTemplateName))
+        return error("Template with id="+templateId+" already exists");
+
+      if ( oldTemplateName != null && oldTemplateName.length() > 0 )
+      {
+        final String oldTemplateIdParam = getTemplateSectionPrefix()+'.'+
+              StringEncoderDecoder.encodeDot(oldTemplateName)+".id";
+        int oldTemplateId = getIdFromConfig(config, oldTemplateIdParam);
+        if (defaultTemplateId < 0 || defaultTemplateId == oldTemplateId)
+          config.setInt(defaultIdParam, templateId);
+
+        removeFromConfig(config, oldTemplateName);
       }
-    } else {
-      if (containsInConfig(getConfig(), templateName))
-        return error("Template already exists", templateName);
     }
 
-    storeToConfig(getConfig(), templateName);
+    storeToConfig(config, templateName);
     getMCISmeContext().setChangedTemplates(true);
     return RESULT_DONE;
   }
@@ -88,8 +111,25 @@ public class Template extends MCISmeBean
   private boolean containsInConfig(Config config, String name) {
     return config.containsSection(getTemplateSectionPrefix()+'.'+StringEncoderDecoder.encodeDot(name));
   }
+  private boolean containsInConfig(Config config, int id, String exceptName)
+  {
+    Set set = config.getSectionChildSectionNames(getTemplateSectionPrefix());
+    for (Iterator i = set.iterator(); i.hasNext();) {
+      String section = (String)i.next();
+      try {
+        if (exceptName != null && exceptName.length() > 0 && section.endsWith(exceptName)) continue;
+        if (config.getInt(section+".id") == id) return true;
+      } catch (Exception e) { e.printStackTrace(); }
+    }
+    return false;
+  }
   private void removeFromConfig(Config config, String name) {
     config.removeSection(getTemplateSectionPrefix()+'.'+ StringEncoderDecoder.encodeDot(name));
+  }
+  private int getIdFromConfig(Config config, String param) {
+    try { return config.getInt(param); }
+    catch (Exception e) { e.printStackTrace(); }
+    return -1;
   }
   private void storeToConfig(Config config, String name)
   {

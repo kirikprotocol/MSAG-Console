@@ -2,6 +2,7 @@ package ru.novosoft.smsc.mcisme.beans;
 
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.SortedList;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -15,10 +16,15 @@ import java.util.*;
  */
 public class Templates extends MCISmeBean
 {
-  private int defaultInformId = 0;
-  private int defaultNotifyId = 0;
+  private int defaultInformId = -1;
+  private int defaultNotifyId = -1;
 
   private String editTemplate = null;
+
+  private String[]   informChecked    = new String[0];
+  private Collection informCheckedSet = null;
+  private String[]   notifyChecked    = new String[0];
+  private Collection notifyCheckedSet = null;
 
   private String mbInformAdd = null;
   private String mbInformEdit = null;
@@ -50,6 +56,17 @@ public class Templates extends MCISmeBean
   private SortedList informTemplates = new SortedList(new IdentityComparator());
   private SortedList notifyTemplates = new SortedList(new IdentityComparator());
 
+  protected int init(List errors)
+  {
+    int result = super.init(errors);
+    if (result != RESULT_OK)  return result;
+
+    informCheckedSet = new HashSet(Arrays.asList(informChecked));
+    notifyCheckedSet = new HashSet(Arrays.asList(notifyChecked));
+
+    return result;
+  }
+
   public int process(HttpServletRequest request)
   {
     int result = super.process(request);
@@ -58,17 +75,19 @@ public class Templates extends MCISmeBean
     result = setDefaultTemplateIds(getConfig());
     if (result != RESULT_OK) return result;
 
-    if      (mbInformAdd != null)  return RESULT_INFORM_ADD;
-    else if (mbInformEdit != null) return RESULT_INFORM_EDIT;
-    else if (mbNotifyAdd  != null) return RESULT_NOTIFY_ADD;
-    else if (mbNotifyEdit != null) return RESULT_NOTIFY_EDIT;
+    if      (mbInformAdd != null)    return RESULT_INFORM_ADD;
+    else if (mbInformEdit != null)   return RESULT_INFORM_EDIT;
+    else if (mbNotifyAdd  != null)   return RESULT_NOTIFY_ADD;
+    else if (mbNotifyEdit != null)   return RESULT_NOTIFY_EDIT;
+    else if (mbInformDelete != null) result = informDelete();
+    else if (mbNotifyDelete != null) result = notifyDelete();
 
-    //TODO: templates deleting
-    /*else if (mbInformDelete != null)
-    else if (mbNotifyDelete != null)*/
-
-    return loadupFromConfig(getConfig());
+    int loadResult = loadupFromConfig(getConfig());
+    return (result != RESULT_OK) ? result:loadResult;
   }
+
+  private final static String informTemplateIdParam = INFORM_TEMPLATES_SECTION_NAME+".default";
+  private final static String notifyTemplateIdParam = NOTIFY_TEMPLATES_SECTION_NAME+".default";
 
   private int loadupFromConfig(Config config)
   {
@@ -101,14 +120,16 @@ public class Templates extends MCISmeBean
 
   private int setDefaultTemplateIds(Config config)
   {
-    final String informTemplateIdParam = INFORM_TEMPLATES_SECTION_NAME+".default";
-    final String notifyTemplateIdParam = NOTIFY_TEMPLATES_SECTION_NAME+".default";
     try {
-      if (config.getInt(informTemplateIdParam) != defaultInformId) {
+      int informTemplateId = config.getInt(informTemplateIdParam);
+      if (defaultInformId < 0) defaultInformId = informTemplateId;
+      else if (informTemplateId != defaultInformId) {
         config.setInt(informTemplateIdParam, defaultInformId);
         getMCISmeContext().setChangedTemplates(true);
       }
-      if (config.getInt(notifyTemplateIdParam) != defaultNotifyId) {
+      int notifyTemplateId = config.getInt(notifyTemplateIdParam);
+      if (defaultNotifyId < 0) defaultNotifyId = notifyTemplateId;
+      else if (notifyTemplateId != defaultNotifyId) {
         config.setInt(notifyTemplateIdParam, defaultNotifyId);
         getMCISmeContext().setChangedTemplates(true);
       }
@@ -116,6 +137,78 @@ public class Templates extends MCISmeBean
       return error("Failed to check default template id", e);
     }
     return RESULT_OK;
+  }
+
+  private int informDelete()
+  {
+    boolean needWarning = false; String defaultTemplateName = "";
+    try
+    {
+      final String informTemplatePrefix = INFORM_TEMPLATES_SECTION_NAME+'.';
+      for (int i = 0; i < informChecked.length; i++)
+      {
+        String section = informTemplatePrefix+StringEncoderDecoder.encodeDot(informChecked[i]);
+        if (getConfig().getInt(section+".id") == defaultInformId) {
+          needWarning = true; defaultTemplateName = informChecked[i];
+        } else {
+          getConfig().removeSection(section);
+          getMCISmeContext().setChangedTemplates(true);
+        }
+        informCheckedSet.remove(informChecked[i]);
+      }
+    } catch (Exception e) {
+      return error("Failed to delete inform template(s)", e);
+    }
+    return (needWarning) ? warning("Can't delete default inform template '"+
+                                   defaultTemplateName+"'") : RESULT_OK;
+  }
+  private int notifyDelete()
+  {
+    boolean needWarning = false; String defaultTemplateName = "";
+    try
+    {
+      final String notifyTemplatePrefix = NOTIFY_TEMPLATES_SECTION_NAME+'.';
+      for (int i = 0; i < notifyChecked.length; i++) {
+        String section = notifyTemplatePrefix+StringEncoderDecoder.encodeDot(notifyChecked[i]);
+        if (getConfig().getInt(section+".id") == defaultNotifyId) {
+          needWarning = true; defaultTemplateName = notifyChecked[i];
+        } else {
+          getConfig().removeSection(section);
+          getMCISmeContext().setChangedTemplates(true);
+        }
+        notifyCheckedSet.remove(notifyChecked[i]);
+      }
+    } catch (Exception e) {
+      return error("Failed to delete notify template(s)", e);
+    }
+    return (needWarning) ? warning("Can't delete default notify template '"+
+                                   defaultTemplateName+"'") : RESULT_OK;
+  }
+
+  public boolean isInformTemplateChecked(String templateName) {
+    return informCheckedSet.contains(templateName);
+  }
+  public boolean isNotifyTemplateChecked(String templateName) {
+    return notifyCheckedSet.contains(templateName);
+  }
+
+  public String[] getInformChecked() {
+    return informChecked;
+  }
+  public void setInformChecked(String[] informChecked) {
+    this.informChecked = informChecked;
+  }
+  public String[] getNotifyChecked() {
+    return notifyChecked;
+  }
+  public void setNotifyChecked(String[] notifyChecked) {
+    this.notifyChecked = notifyChecked;
+  }
+  public Collection getInformCheckedSet() {
+    return informCheckedSet;
+  }
+  public Collection getNotifyCheckedSet() {
+    return notifyCheckedSet;
   }
 
   public List getInformTemplates() {
