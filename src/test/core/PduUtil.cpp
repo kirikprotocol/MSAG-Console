@@ -17,7 +17,7 @@ void PduReceiptFlag::eval(time_t time, int& attempt, time_t& diff,
 	diff = INT_MAX;
 	for (;; attempt++)
 	{
-		__trace2__("eval(): nextTime = %ld", nextTime);
+		//__trace2__("eval(): nextTime = %ld", nextTime);
 		time_t curDiff = time - nextTime;
 		if (abs(curDiff) > abs(diff))
 		{
@@ -154,8 +154,8 @@ vector<int> PduReceiptFlag::update(time_t recvTime, RespPduFlag respFlag)
 
 bool PduReceiptFlag::isPduMissing(time_t checkTime) const
 {
-	__trace2__("PduReceiptFlag::isPduMissing(): this = %p, statTime = %ld, endTime = %ld, checkTime = %ld",
-		this, startTime, endTime, checkTime);
+	__trace2__("PduReceiptFlag::isPduMissing(): this = %p, startTime = %ld, endTime = %ld, checkTime = %ld, lastTime = %ld, lastAttempt = %d",
+		this, startTime, endTime, checkTime, lastTime, lastAttempt);
 	__cfg_int__(timeCheckAccuracy);
 	if (checkTime < startTime || flag != PDU_REQUIRED_FLAG)
 	{
@@ -165,22 +165,8 @@ bool PduReceiptFlag::isPduMissing(time_t checkTime) const
 	{
 		return true;
 	}
-	int attempt, lastAttempt = -1;
-	time_t diff, lastDiff = 0;
-	time_t nextTime, calcTime, lastNextTime, lastCalcTime;
-	eval(checkTime, attempt, diff, nextTime, calcTime);
-	if (lastTime)
-	{
-		__require__(lastTime >= startTime && lastTime <= endTime + timeCheckAccuracy);
-		eval(lastTime, lastAttempt, lastDiff, lastNextTime, lastCalcTime);
-	}
-	if (attempt - lastAttempt != 1)
-	{
-		__trace2__("PduReceiptFlag::isPduMissing(): this = %p, startTime = %ld, endTime = %ld, checkTime = %ld, attempt = %d, calcTime = %ld, diff = %ld, lastTime = %ld, lastAttempt = %d, lastCalcTime = %ld, lastDiff = %ld",
-			this, startTime, endTime, checkTime, attempt, calcTime, diff, lastTime, lastAttempt, lastCalcTime, lastDiff);
-		return true;
-	}
-	return false;
+	time_t nextTime = lastTime ? getNextTime(lastTime) : startTime;
+	return nextTime < checkTime;
 }
 
 Mutex PduData::mutex = Mutex();
