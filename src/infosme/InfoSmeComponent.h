@@ -27,7 +27,11 @@ namespace smsc { namespace infosme
         Methods            methods;
         
         enum {
-            addTaskMethod, removeTaskMethod
+            startTaskProcessorMethod, stopTaskProcessorMethod, isTaskProcessorRunningMethod,
+            startTaskSchedulerMethod, stopTaskSchedulerMethod, isTaskSchedulerRunningMethod,
+            flushStatisticsMethod, addTasksMethod, removeTasksMethod, 
+            startTasksMethod, stopTasksMethod, setTaskEnabledMethod,
+            addScheduleMethod, removeScheduleMethod, changeScheduleMethod
         };
         
         void error(const char* method, const char* param);

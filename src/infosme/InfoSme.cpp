@@ -457,12 +457,12 @@ int main(void)
         }
         TaskProcessor processor(&tpConfig);
         
-        /*ConfigView adminConfig(manager, "InfoSme.Admin");
+        ConfigView adminConfig(manager, "InfoSme.Admin");
         InfoSmeComponent admin(processor);                   
         ComponentManager::registerComponent(&admin); 
         adminListener.init(adminConfig.getString("host"), adminConfig.getInt("port"));               
         bAdminListenerInited = true;
-        adminListener.Start();*/
+        adminListener.Start();
         
         ConfigView smscConfig(manager, "InfoSme.SMSC");
         InfoSmeConfig cfg(&smscConfig);
