@@ -87,7 +87,7 @@ void loadRoutes(RouteManager* rm,RouteConfig& rc)
               }
               catch(exception& e)
               {
-                __trace2__("[skiped]");
+                __trace2__("[route skiped] : %s",e.what());
               }
             }
           }
