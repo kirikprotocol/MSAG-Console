@@ -100,7 +100,10 @@ for(@dir)
   $timestamp="$year$mon$mday$hour$min$sec";
 
   my $tmpfile=$tmpdir.$ofn;
-  my $outfile=$outdir."SMS2_$mday$curmon${year}_${hour}&${min}&${sec}_".$ofn;
+  my $outfile=$outdir.
+              sprintf("SMS2_%02d%s%d_%02d&%02d&%02d_",$mday,$curmon,$year,$hour,$min,$sec).
+              $ofn;
+  print "$outfile\n";
 
   $header="90$timestamp".(' 'x81).'0'.(' 'x7).'90'.(' 'x17).'0'.(' 'x385);
   $footer="90$timestamp".(' 'x81)."0\n$crc";
@@ -139,10 +142,10 @@ sub outrow{
     {
       $v.=' 'x($f->{width}-length($v));
     }
-    print $out $v;
+    $out->print($v);
   }
 
-  print $out $eoln;
+  $out->print($eoln);
 }
 
 sub conv_addr{
