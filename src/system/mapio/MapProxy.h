@@ -65,8 +65,12 @@ public:
     {
       if(cmd->get_commandId()==DELIVERY)
       {
-        MutexGuard g(mutex);
-        checkProcessLimit(cmd);
+        if( cmd->get_sms() != NULL && cmd->get_sms()->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP) && cmd->get_sms()->getIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP) == 17 ) {
+          // do nothing
+        } else {
+          MutexGuard g(mutex);
+          checkProcessLimit(cmd);
+        }
       }
     }
     struct timeval utime, curtime;
