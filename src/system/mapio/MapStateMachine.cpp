@@ -34,12 +34,19 @@ static void SendRInfo(MapDialog* dialog);
 static bool SendSms(MapDialog* dialog);
 
 struct XMOMAPLocker {
-  string imsi;
+  ET96MAP_ADDRESS_T m_msAddr;
   unsigned long startTime;
   unsigned parts;
   unsigned ref;
 };
-typedef std::map<string,XMOMAPLocker> XMOMAP;
+struct ET96MAP_ADDRESS_LESS:public binary_function<bool,ET96MAP_ADDRESS_T,ET96MAP_ADDRESS_T> {
+  bool operator()(const ET96MAP_ADDRESS_T& a, const ET96MAP_ADDRESS_T& b) const {
+    return a.addressLength<b.addressLength || 
+      (a.addressLength == b.addressLength && memcmp(a.address,b.address,(a.addressLength+1)/2)<0);
+  }
+};
+
+typedef std::map<ET96MAP_ADDRESS_T m_msAddr,XMOMAPLocker,ET96MAP_ADDRESS_LESS> XMOMAP;
 
 static Mutex x_map_lock;
 typedef multimap<string,unsigned> X_MAP;
@@ -276,6 +283,7 @@ static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
       ForwardMO( dialog );
       return;
     } 
+    CheckLockedByMO(dialog);
   }else{
     AbonentStatus& as = dialog->QueryAbonentCommand->get_abonentStatus();
     __map_trace2__("%s:Abonent Status cmd (%d.%d.%s)",__func__,(unsigned)as.addr.type,(unsigned)as.addr.plan,as.addr.value);
@@ -417,7 +425,7 @@ static void SendOkToSmsc(/*unsigned dialogid*/MapDialog* dialog)
 static void CheckLockedByMO(MapDialog* dialog)
 {
   MutexGuard guard(x_momap_lock);
-  XMOMAP::iterator it = x_momap.find(dialog->s_imsi);
+  XMOMAP::iterator it = x_momap.find(dialog->m_msAddr);
   if ( it != x_momap.end() )
   {
     if ( it->second.startTime+GetMOLockTimeout() <= time(0) )
@@ -622,15 +630,15 @@ void ResponseMO(MapDialog* dialog,unsigned status)
     MutexGuard guard(x_momap_lock);
     XMOMAPLocker* locker;
     __map_trace2__("UDHI:%s: find locker with imsi %s, ref %x",__func__,dialog->s_imsi.c_str(),dialog->udhiRef);
-    XMOMAP::iterator it = x_momap.find(dialog->s_imsi);
+    XMOMAP::iterator it = x_momap.find(dialog->m_msAddr);
     if ( it == x_momap.end() )
     {
       __map_trace2__("UDHI:%s: create locker",__func__);
       XMOMAPLocker lockerX;
-      lockerX.imsi = dialog->s_imsi;
+      lockerX.m_msAddr = dialog->m_msAddr;
       lockerX.ref = INVALID;
       lockerX.parts = INVALID;
-      locker = &x_momap[dialog->s_imsi];
+      locker = &x_momap[dialog->m_msAddr];
       *locker = lockerX;
       //locker = x_momap[dialog->s_imsi];
     }
@@ -640,7 +648,7 @@ void ResponseMO(MapDialog* dialog,unsigned status)
       __map_trace2__("UDHI:%s: update locker part %d/%d",__func__,dialog->udhiMsgNum,dialog->udhiMsgCount);
       ++locker->parts;
       if ( locker->parts >= dialog->udhiMsgCount ){
-        x_momap.erase(dialog->s_imsi);
+        x_momap.erase(dialog->m_msAddr);
         __map_trace2__("UDHI:%s: unlock part ",__func__);
       }else
         locker->startTime = time(0);
@@ -1146,7 +1154,6 @@ static string RouteToString(MapDialog* dialog)
 }
 
 static bool SendSms(MapDialog* dialog){
-  CheckLockedByMO(dialog);
   dialog->wasDelivered = false;
 
   if ( !MscManager::getMscStatus().check(dialog->s_msc.c_str()) )
