@@ -878,8 +878,8 @@ USHORT_T Et96MapV2ForwardSmMOInd (
 {
   bool open_confirmed = false;
   try{
-    __trace2__("MAP::%s dialog 0x%x",__PRETTY_FUNCTION__,dialogid_map);
-    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
+    __trace2__("MAP::%s dialog 0x%x",__PRETTY_FUNCTION__,dialogueId);
+    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId));
     if ( dialog.isnull() ) {
       throw MAPDIALOG_ERROR(
         FormatText("MAP::%s dialog 0x%x is not present",__PRETTY_FUNCTION__,dialogueId));
@@ -895,7 +895,7 @@ USHORT_T Et96MapV2ForwardSmMOInd (
       break;
     default:
       throw MAPDIALOG_BAD_STATE(
-        FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__PRETTY_FUNCTION__,dialog->state,dialogid_map,dialogid_smsc));
+        FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__PRETTY_FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
     }
     dialog->invokeId = invokeId;
     AttachSmsToDialog(dialog,smRpUi_sp,smRpOa_sp);
