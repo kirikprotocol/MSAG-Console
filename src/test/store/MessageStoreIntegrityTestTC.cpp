@@ -275,6 +275,7 @@ int main(int argc, char* argv[])
 		cout << endl;
 		StoreManager::shutdown();
 		chkList.save();
+		chkList.saveHtml();
 	}
 	catch (...)
 	{

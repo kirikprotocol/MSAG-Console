@@ -310,10 +310,10 @@ vector<int> SmppUtil::compareOptional(SmppOptional& p1, SmppOptional& p2,
 #define __set_text__(field, length) \
 	__trace_set__("set_text"); \
 	int len_##field = length; \
-	auto_ptr<char> str_##field = rand_text(len_##field, DATA_CODING_SMSC_DEFAULT); \
-	p.set_##field(str_##field.get(), len_##field); \
+	auto_ptr<uint8_t> str_##field = rand_uint8_t(len_##field); \
+	p.set_##field((char*) str_##field.get(), len_##field); \
 	if (check) { __require__(p.size_##field() == len_##field && \
-		!strncmp(p.get_##field(), str_##field.get(), len_##field)); }
+		!memcmp(p.get_##field(), str_##field.get(), len_##field)); }
 
 #define __set_cstr__(field, length) \
 	__trace_set__("set_cstr"); \
@@ -365,7 +365,7 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	__set_cstr2__(validityPeriod, time2string(validTime, tmp, time(NULL), __numTime__));
 	__set_int__(uint8_t, registredDelivery, rand0(255));
 	__set_int__(uint8_t, replaceIfPresentFlag, !rand0(10));
-	__set_int__(uint8_t, dataCoding, rand0(255));
+	__set_int__(uint8_t, dataCoding, getDataCoding(RAND_TC));
 	__set_int__(uint8_t, smDefaultMsgId, rand0(255)); //хбз что это такое
 	__set_text__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH));
 	mask &= 0xfffffffffffff7ff; //исключить userMessageReference
@@ -433,11 +433,11 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	if (mask[pos++]) { \
 		__trace_set_optional__("set_optional_text"); \
 		int len_##field = length; \
-		auto_ptr<char> str_##field = rand_text(len_##field, DATA_CODING_SMSC_DEFAULT); \
-		opt.set_##field(str_##field.get(), len_##field); \
+		auto_ptr<uint8_t> str_##field = rand_uint8_t(len_##field); \
+		opt.set_##field((char*) str_##field.get(), len_##field); \
 		if (check) { \
 			OStr tmp_##field; \
-			tmp_##field.copy(str_##field.get(), len_##field); \
+			tmp_##field.copy((char*) str_##field.get(), len_##field); \
 			ostrMap.insert(OStrMap::value_type(#field, tmp_##field)); \
 		} \
 	}

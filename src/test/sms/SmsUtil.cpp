@@ -279,22 +279,23 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc, bool check)
 	if (mask[pos++]) { \
 		int len = length; \
 		__trace2__("set_str_body_tag: " #tagName ", pos = %d, length = %d", pos, len); \
-		auto_ptr<char> str = rand_char(len); \
-		sms->setStrProperty(Tag::tagName, str.get()); \
+		char* data = new char[len + 1]; \
+		rand_char(len, data); \
+		sms->setStrProperty(Tag::tagName, data); \
 		if (check) { \
-			strMap.insert(StrMap::value_type(Tag::tagName, str.get())); \
-		} \
+			strMap.insert(StrMap::value_type(Tag::tagName, CheckData(len, data))); \
+		} else { delete data; } \
 	}
 
 #define __set_bin_body_tag__(tagName, length) \
 	if (mask[pos++]) { \
 		int len = length; \
 		__trace2__("set_bin_body_tag: " #tagName ", pos = %d, length = %d", pos, len); \
-		char* data = new char[len]; \
+		char* data = new char[len + 1]; \
 		rand_uint8_t(len, (uint8_t*) data); \
 		sms->setBinProperty(Tag::tagName, data, len); \
 		if (check) { \
-			binMap.insert(BinMap::value_type(Tag::tagName, BinData(len, data))); \
+			binMap.insert(BinMap::value_type(Tag::tagName, CheckData(len, data))); \
 		} else { delete data; } \
 	}
 
@@ -312,8 +313,9 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc, bool check)
 	if (it_##tagName == strMap.end()) { \
 		__require__(!sms->hasStrProperty(Tag::tagName)); \
 	} else { \
+		pair<int, char*> res = it_##tagName->second; \
 		__require__(sms->hasStrProperty(Tag::tagName) && \
-			sms->getStrProperty(Tag::tagName) == it_##tagName->second); \
+			sms->getStrProperty(Tag::tagName) == res.second); \
 	}
 	
 #define __check_bin_body_tag__(tagName) \
@@ -366,9 +368,9 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t includeMask, bool check)
 	__trace2__("mask = %s", mask.str());
 
 	typedef map<const string, uint32_t> IntMap;
-	typedef map<const string, const string> StrMap;
-	typedef pair<int, char*> BinData;
-	typedef map<const string, BinData> BinMap;
+	typedef pair<int, char*> CheckData;
+	typedef map<const string, const CheckData> StrMap;
+	typedef map<const string, const CheckData> BinMap;
 	IntMap intMap;
 	StrMap strMap;
 	BinMap binMap;
@@ -422,6 +424,16 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t includeMask, bool check)
 		__check_bin_body_tag__(SMPP_MESSAGE_PAYLOAD);
 	}
 	//bool attach;
+	for (BinMap::iterator it = binMap.begin(); it != binMap.end(); it++)
+	{
+		const CheckData data = it->second;
+		delete data.second;
+	}
+	for (StrMap::iterator it = strMap.begin(); it != strMap.end(); it++)
+	{
+		const CheckData data = it->second;
+		delete data.second;
+	}
 }
 
 void SmsUtil::clearSms(SMS* sms)
