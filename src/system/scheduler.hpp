@@ -56,7 +56,10 @@ public:
       __trace__("scheduler finished, sleeping");
       sleep(1);
       r=store->getNextRetryTime();
-      if(r>t)event.Wait((r-t)*1000);
+      if(r==0)
+        event.Wait();
+      else
+        if(r>t)event.Wait((r-t)*1000);
     }
     return 0;
   }

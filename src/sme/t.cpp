@@ -2,6 +2,7 @@
 #include "sme/SmppBase.hpp"
 #include "sms/sms.h"
 #include <unistd.h>
+#include "util/recoder/recode_dll.h"
 
 using namespace smsc::sms;
 using namespace smsc::sme;
@@ -15,7 +16,34 @@ public:
   {
     if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
     {
-      printf("\nReceived:%s\n",((PduXSm*)pdu)->get_message().get_shortMessage());
+      char buf[256];
+      const char *msg=((PduXSm*)pdu)->get_message().get_shortMessage();
+      int msglen=((PduXSm*)pdu)->get_message().get_smLength();
+      int i;
+      printf("before:");
+      for(i=0;i<msglen;i++)
+      {
+        printf("%x ",(int)msg[i]);
+      }
+      printf("\n");
+      int coding=((PduXSm*)pdu)->get_message().get_dataCoding();
+      if(coding==DataCoding::DEFAULT)
+      {
+        Convert7BitToText(msg,msglen,buf,sizeof(buf));
+      }else if(coding==DataCoding::UCS2)
+      {
+        char bufx[256];
+        //len=msglen/2;
+        int l7=ConvertUCS2To7Bit((const short*)msg,msglen,bufx,sizeof(bufx));
+        Convert7BitToText(bufx,l7,buf,sizeof(bufx));
+      }
+      printf("after:");
+      for(i=0;i<msglen/2;i++)
+      {
+        printf("%x ",(int)buf[i]);
+      }
+      printf("\n");
+      printf("\nReceived:%s\n",buf);
       PduDeliverySmResp resp;
       resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
       resp.set_messageId("");
@@ -105,16 +133,20 @@ int main(int argc,char* argv[])
       fgets((char*)message,sizeof(message),stdin);
       for(int i=0;message[i];i++)
       {
-        if(message[i]<32)message[i]=32;
+        if(message[i]<32)message[i]=0;
       }
       int len=strlen((char*)message);
+      char buf7[256];
+      int len7=ConvertTextTo7Bit((char*)message,len,buf7,sizeof(buf7),CONV_ENCODING_ANSI);
+
       //s.setMessageBody(len,1,false,message);
-      s.setStrProperty("SMPP_SHORT_MESSAGE",(char*)message);
-      s.setIntProperty("SMPP_SM_LENGTH",len);
+      s.setStrProperty("SMPP_SHORT_MESSAGE",buf7);
+      s.setIntProperty("SMPP_SM_LENGTH",len7);
+      s.setIntProperty("SMPP_DATA_CODING",DataCoding::DEFAULT);
 
       fillSmppPduFromSms(&sm,&s);
       PduSubmitSmResp *resp=tr->submit(sm);
-      atr->submit(sm);
+//      atr->submit(sm);
       if(resp && resp->get_header().get_commandStatus()==0)
       {
         printf("Accepted:%d bytes\n",len);fflush(stdout);

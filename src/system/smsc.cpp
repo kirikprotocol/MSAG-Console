@@ -203,12 +203,29 @@ void Smsc::init(const SmscConfigs& cfg)
 
   tp.startTask(new SpeedMonitor(eventqueue));
 
-  smsc::profiler::Profile defProfile;
-  defProfile.codepage=0;
-  defProfile.reportoptions=0;
-  profiler=new smsc::profiler::Profiler(defProfile);
+  {
+    char *rep=cfg.cfgman->getString("profiler.defaultReport");
+    char *dc=cfg.cfgman->getString("profiler.defaultDataCoding");
+    char *str=rep;
+    while(*str=toupper(*str))str++;
+    str=dc;
+    while(*str=toupper(*str))str++;
+    smsc::profiler::Profile defProfile;
+    if(!strcmp(str,"DEFAULT"))
+      defProfile.codepage=profiler::ProfileCharsetOptions::Default;
+    else if(!strcmp(str,"UCS2"));
+      defProfile.codepage=profiler::ProfileCharsetOptions::Ucs2;
+    if(!strcmp(str,"NONE"))
+      defProfile.reportoptions=profiler::ProfileReportOptions::ReportNone;
+    else if(!strcmp(str,"FULL"))
+      defProfile.reportoptions=profiler::ProfileReportOptions::ReportFull;
+
+    profiler=new smsc::profiler::Profiler(defProfile);
+  }
   profiler->loadFromDB();
   tp.startTask(profiler);
+
+  smeman.registerSmeProxy(cfg.cfgman->getString("profiler.systemId"),profiler);
 
   smscHost=cfg.cfgman->getString("smpp.host");
   smscPort=cfg.cfgman->getInt("smpp.port");
