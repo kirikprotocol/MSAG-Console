@@ -42,11 +42,14 @@ public class Config implements Cloneable
   public Config(final File configFile) throws IOException, SAXException, ParserConfigurationException
   {
     this.configFile = configFile;
-    final FileReader reader = new FileReader(this.configFile);
+    final FileReader reader;
     try {
+      reader = new FileReader(this.configFile);
       parseNode("", Utils.parse(reader).getDocumentElement());
-    } finally {
       reader.close();
+    } catch (FileNotFoundException e) {
+      System.out.println("Failed to open config file \"" + this.configFile.getAbsolutePath() + '"');
+      throw e;
     }
   }
 
