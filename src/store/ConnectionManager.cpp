@@ -610,12 +610,14 @@ SMSId Connection::getMessagesCount()
 	return smsId;
 }
 
-void Connection::setSMS(const SMS &_sms)
+void Connection::store(const SMS &_sms, SMSId id) 
 	throw(StorageException)
 {
+	MutexGuard	guard(mutex);
+
+	smsId = id;
 	sms = _sms;
     
-	// set additional data
 	tm*	dt;
 
     dt = localtime(&(sms.validTime));
@@ -646,19 +648,10 @@ void Connection::setSMS(const SMS &_sms)
 	bRejectDuplicates = sms.rejectDuplicates ? 'Y':'N';
 	bHeaderIndicator = sms.messageBody.header ? 'Y':'N';
 	uState = (uint8_t) sms.state;
-}
-
-void Connection::store(const SMS &sms, SMSId id) 
-	throw(StorageException)
-{
-	MutexGuard	guard(mutex);
-
-	smsId = id;
     
 	try 
 	{
-        setSMS(sms);
-		// insert new sms row into table
+        // insert new sms row into table
 		checkErr(OCIStmtExecute(svchp, stmtStoreInsert, errhp, (ub4) 1, (ub4) 0,
 								(CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
 								OCI_DEFAULT));
@@ -672,10 +665,23 @@ void Connection::store(const SMS &sms, SMSId id)
 	}
 }
 
-const SMS& Connection::getSMS()
-	throw(StorageException)
+const SMS& Connection::retrive(SMSId id) 
+	throw(StorageException, NoSuchMessageException)
 {
-	// get additional data
+	MutexGuard	guard(mutex);
+
+	smsId = id;
+    sword status;
+	// retrive entire sms row from table
+	status = OCIStmtExecute(svchp, stmtRetriveAll, errhp, (ub4) 1, (ub4) 0,
+							(CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
+							OCI_DEFAULT);
+	if (status == OCI_NO_DATA)
+    {
+		throw NoSuchMessageException();
+	}
+	checkErr(status);
+	
 	sms.state = (State) uState;
     sms.statusReportRequested = (bStatusReport == 'Y');
 	sms.rejectDuplicates = (bRejectDuplicates == 'Y');
@@ -708,28 +714,8 @@ const SMS& Connection::getSMS()
 	dt.tm_year = year - 1900; dt.tm_mon = mon - 1; dt.tm_mday = mday;
 	dt.tm_hour = hour; dt.tm_min = min; dt.tm_sec = sec;
 	sms.validTime = mktime(&dt);
-
-    return sms;
-}
-
-const SMS& Connection::retrive(SMSId id) 
-	throw(StorageException, NoSuchMessageException)
-{
-	MutexGuard	guard(mutex);
-
-	smsId = id;
-    sword status;
-	// retrive entire sms row from table
-	status = OCIStmtExecute(svchp, stmtRetriveAll, errhp, (ub4) 1, (ub4) 0,
-							(CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
-							OCI_DEFAULT);
-	if (status == OCI_NO_DATA)
-    {
-		throw NoSuchMessageException();
-	}
-	checkErr(status);
     
-	return getSMS();
+	return sms;
 }
 
 sb4 Connection::failoverCallback(

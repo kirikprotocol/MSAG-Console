@@ -119,11 +119,6 @@ namespace smsc { namespace store
 		void checkErr(sword status) 
 			throw(StorageException);
 
-		void setSMS(const SMS &_sms) 
-			throw(StorageException);
-		const SMS& getSMS() 
-			throw(StorageException);
-        
         OCIFocbkStruct failover;
 		sb4 failoverCallback(dvoid *svchp, dvoid *envhp,
 							 dvoid *fo_ctx, ub4 fo_type, ub4 fo_event);

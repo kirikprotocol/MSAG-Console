@@ -92,7 +92,7 @@ SMSId StoreManager::store(const SMS &sms)
 	}
 }
 
-const SMS& StoreManager::retrive(SMSId id) 
+SMS StoreManager::retrive(SMSId id) 
 	throw(StorageException, NoSuchMessageException)
 {
     __require__(pool);
@@ -106,7 +106,7 @@ const SMS& StoreManager::retrive(SMSId id)
 			connection = pool->getConnection();
 			const SMS& sms = connection->retrive(id);
             pool->freeConnection(connection);
-			return sms;
+			return SMS(sms);
 		}
 		catch (ConnectionFailedException& exc) {
 			if (connection) pool->freeConnection(connection);

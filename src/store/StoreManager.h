@@ -64,7 +64,7 @@ namespace smsc { namespace store
         
         virtual SMSId store(const SMS &sms)  
 			throw(StorageException);
-        virtual const SMS& retrive(SMSId id)
+        virtual SMS retrive(SMSId id)
 			throw(StorageException, NoSuchMessageException);
     };
 
