@@ -508,7 +508,7 @@ extern "C" void clearSignalMask(void)
     sigset_t set;
     sigemptyset(&set);
     for(int i=1;i<=37;i++)
-        if(i!=SIGQUIT && i!=SIGBUS) sigaddset(&set,i);
+        if(i!=SIGQUIT && i!=SIGBUS && i!=SIGSEGV) sigaddset(&set,i);
     if(thr_sigsetmask(SIG_SETMASK, &set, NULL) != 0) {
         if (logger) smsc_log_error(logger, "Failed to clear signal mask");
     }
@@ -617,7 +617,7 @@ int main(void)
                 smsc_log_error(logger, "Connect to SMSC failed. Cause: %s", (msg) ? msg:"unknown");
                 bMCISmeIsConnecting = false;
                 setNeedReconnect(true);
-                if (exc.getReason() == SmppConnectException::Reason::bindFailed) throw exc;
+                // ??? if (exc.getReason() == SmppConnectException::Reason::bindFailed) throw exc;
                 sleep(cfg.timeOut);
                 session.close();
                 continue;

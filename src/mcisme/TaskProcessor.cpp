@@ -87,8 +87,7 @@ void TaskProcessor::initDataSource(ConfigView* config)
         std::auto_ptr<char> dsIdentity(config->getString("type"));
         const char* dsIdentityStr = dsIdentity.get();
         ds = DataSourceFactory::getDataSource(dsIdentityStr);
-        if (!ds) throw ConfigException("DataSource for '%s' identity "
-                                       "wasn't registered !", dsIdentityStr);
+        if (!ds) throw ConfigException("DataSource for '%s' identity wasn't registered !", dsIdentityStr);
         ds->init(config);
     } 
     catch (ConfigException& exc) {
@@ -131,7 +130,20 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     statistics = new StatisticsManager(dsStatConnection);
     if (statistics) statistics->Start();
     */
-    Task::init(ds); // + statistics
+    
+    bool inform = false;
+    try { config->getBool("forceInform"); } catch (...) { inform = false;
+        smsc_log_warn(logger, "Parameter <MCISme.forceInform> missed. Force inform for all abonents is off");
+    }
+    bool notify = false;
+    try { config->getBool("forceNotify"); } catch (...) { notify = false;
+        smsc_log_warn(logger, "Parameter <MCISme.forceNotify> missed. Force notify for all abonents is off");
+    }
+    int eventsPerMessage = 5;
+    try { config->getInt("maxEventsPerMessage"); } catch (...) { eventsPerMessage = 5;
+        smsc_log_warn(logger, "Parameter <MCISme.maxEventsPerMessage> is invalid. Using default %d", eventsPerMessage);
+    }
+    Task::init(ds, eventsPerMessage, inform, notify); // + statistics
 
     smsc_log_info(logger, "Load success.");
 }
@@ -382,20 +394,24 @@ void TaskProcessor::processEvent(const MissedCallEvent& event)
 {
     const char* abonent = event.to.c_str();
     checkAddress(abonent);
-
-    Message message;
+    
+    AbonentService service = Task::getService(abonent);
+    if (service == FULL_SERVICE || service == SUBSCRIPTION)
     {
-        TaskAccessor taskAccessor(this);
+        Message message;
+        {
+            TaskAccessor taskAccessor(this);
 
-        bool isNewTask = false;
-        Task* task = taskAccessor.getTask(abonent, isNewTask); // possible loads task
-        if (!task) throw Exception("Failed to obtain task for abonent: %s", abonent);
-        task->addEvent(event); // adds event to task chain & inassigned into DB 
-        smsc_log_debug(logger, "Event for %s added to %s task. Events=%d",
-                       abonent, (isNewTask) ? "new":"existed", task->eventsCount());
-        if (!isNewTask || !task->formatMessage(message)) return;
+            bool isNewTask = false;
+            Task* task = taskAccessor.getTask(abonent, isNewTask); // possible loads task
+            if (!task) throw Exception("Failed to obtain task for abonent: %s", abonent);
+            task->addEvent(event); // adds event to task chain & inassigned into DB 
+            smsc_log_debug(logger, "Event for %s added to %s task. Events=%d",
+                           abonent, (isNewTask) ? "new":"existed", task->eventsCount());
+            if (!isNewTask || !task->formatMessage(message)) return;
+        }
+        putToOutQueue(message);
     }
-    putToOutQueue(message);
 }
 
 void TaskProcessor::processMessage(const Message& message)
@@ -640,19 +656,18 @@ void TaskProcessor::processReceipt(Task* task, bool delivered, bool retry,
     for (int i=0; i<callers.Count(); i++)
     {
         smsc_log_debug(logger, "Event(s) %s to %s from %s", 
-                       (delivered ? "delivered":(retry ? "expired":"failed")),
-                       abonent.c_str(), callers[i].c_str());
+                       (delivered ? "delivered":(retry ? "expired":"failed")), abonent.c_str(), callers[i].c_str());
+        
+        if (!delivered || callers[i].length() <= 0) continue;
 
-        if (delivered) // TODO: send notification to caller
-        { 
-            // TODO: check notification option in subscription table
-            Message message;
-            message.abonent = callers[i]; 
+        AbonentService service = Task::getService(callers[i].c_str());
+        if (service == FULL_SERVICE || service == NOTIFICATION)
+        {
+            Message message; message.abonent = callers[i]; 
             message.message = "Abonent "+abonent+" is online";
             message.replace=false; message.notification = true;
             putToOutQueue(message);
         }
-        
     }
 }
 

@@ -33,6 +33,8 @@ namespace smsc { namespace mcisme
 
     struct Message
     {
+        static int maxEventsPerMessage;
+
         uint64_t    id;
         uint32_t    attempts;
         std::string abonent, message, smsc_id;
@@ -68,6 +70,18 @@ namespace smsc { namespace mcisme
         WAIT_RESP   = MESSAGE_WAIT_RESP,
         WAIT_RCPT   = MESSAGE_WAIT_RCPT
     } MessageState;
+
+    static const uint8_t ABONENT_NONE_SERVICE =  0; 
+    static const uint8_t ABONENT_SUBSCRIPTION = 10; 
+    static const uint8_t ABONENT_NOTIFICATION = 20;
+    static const uint8_t ABONENT_FULL_SERVICE = 30; 
+    
+    typedef enum {
+        NONE_SERVICE = ABONENT_NONE_SERVICE,
+        SUBSCRIPTION = ABONENT_SUBSCRIPTION,
+        NOTIFICATION = ABONENT_NOTIFICATION,
+        FULL_SERVICE = ABONENT_FULL_SERVICE
+    } AbonentService;
     
     struct TaskEvent : public MissedCallEvent
     {
@@ -88,6 +102,7 @@ namespace smsc { namespace mcisme
         static DataSource*  ds;
         static Logger*      logger;
         static uint64_t     currentId, sequenceId;
+        static bool         bInformAll, bNotifyAll;
 
         bool                bNeedReplace;
         std::string         abonent, cur_smsc_id;
@@ -100,11 +115,15 @@ namespace smsc { namespace mcisme
 
     public:
 
-        static void         init(DataSource* _ds);
+        static void         init(DataSource* _ds, int eventsPerMessage, bool inform=false, bool notify=false);
         static uint64_t     getNextId(Connection* connection=0);
         
-        static bool getMessage(const char* smsc_id, Message& message, Connection* connection=0);
+        static bool         getMessage(const char* smsc_id, Message& message, Connection* connection=0);
         static Hash<Task *> loadupAll();
+
+        static bool delService(const char* abonent);
+        static void setService(const char* abonent, const AbonentService& service);
+        static AbonentService getService(const char* abonent);
 
         Task(const std::string& _abonent)  
             : bNeedReplace(false), abonent(_abonent), cur_smsc_id(""), currentMessageId(0) {};

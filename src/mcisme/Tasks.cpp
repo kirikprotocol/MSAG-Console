@@ -3,15 +3,32 @@
 
 namespace smsc { namespace mcisme 
 {
+
 Logger*     Task::logger = 0;
 DataSource* Task::ds     = 0;
 uint64_t    Task::currentId  = 0;
 uint64_t    Task::sequenceId = 0;
+bool        Task::bInformAll = true;
+bool        Task::bNotifyAll = true;
+
+int         Message::maxEventsPerMessage = 5;
 
 /* ----------------------- Access to message ids generation (MCI_MSG_SEQ) -------------------- */
 
 const char* GET_NEXT_SEQID_ID   = "GET_NEXT_SEQID_ID";
 const char* GET_NEXT_SEQID_SQL  = "SELECT MCISME_MSG_SEQ.NEXTVAL FROM DUAL";
+
+/* ----------------------- Access to abonents service (inform & notify) (MCISME_ABONENTS) ---- */
+
+const char* GET_ABONENT_SVC_ID  = "GET_ABONENT_SVC_ID";
+const char* SET_ABONENT_SVC_ID  = "SET_ABONENT_SVC_ID";
+const char* INS_ABONENT_SVC_ID  = "INS_ABONENT_SVC_ID";
+const char* DEL_ABONENT_SVC_ID  = "DEL_ABONENT_SVC_ID";
+
+const char* GET_ABONENT_SVC_SQL = "SELECT SERVICE FROM MCISME_ABONENTS WHERE ABONENT=:ABONENT";
+const char* SET_ABONENT_SVC_SQL = "UPDATE MCISME_ABONENTS SET SEVICE=:SERVICE WHERE ABONENT=:ABONENT";
+const char* INS_ABONENT_SVC_SQL = "INSERT INTO MCISME_ABONENTS (ABONENT, SERVICE) VALUES (:ABONENT, :SERVICE)";
+const char* DEL_ABONENT_SVC_SQL = "DELETE MCISME_ABONENTS WHERE ABONENT=:ABONENT";
 
 /* ----------------------- Access to current messages set (MCI_MSG_SET) ---------------------- */
 
@@ -68,10 +85,12 @@ const char* OBTAIN_RESULTSET_ERROR_MESSAGE  = "Failed to obtain result set for %
 
 /* ----------------------- Static part ----------------------- */
 
-void Task::init(DataSource* _ds)
+void Task::init(DataSource* _ds, int eventsPerMessage, bool inform, bool notify)
 {
     Task::logger = Logger::getInstance("smsc.mcisme.Task");
     Task::ds = _ds; Task::currentId  = 0; Task::sequenceId = 0;
+    Task::bInformAll = inform; Task::bNotifyAll = notify;
+    Message::maxEventsPerMessage = eventsPerMessage;
 }
 uint64_t Task::getNextId(Connection* connection/*=0*/)
 {
@@ -202,6 +221,125 @@ Hash<Task *> Task::loadupAll()
     }
     
     return tasks;
+}
+
+bool Task::delService(const char* abonent)
+{
+    __require__(ds);
+
+    bool result = false;
+    Connection* connection = 0;
+    try
+    {   
+        connection = ds->getConnection();
+        if (!connection) throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
+
+        /* DELETE MCISME_ABONENTS WHERE ABONENT=:ABONENT */
+        Statement* delSvcStmt = connection->getStatement(DEL_ABONENT_SVC_ID, DEL_ABONENT_SVC_SQL);
+        if (!delSvcStmt)
+            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "delete abonent service");
+        
+        delSvcStmt->setString(1, abonent);
+        result = (delSvcStmt->executeUpdate()) ? true:false;
+        
+        if (connection) {
+            connection->commit();
+            ds->freeConnection(connection);
+        }
+    }
+    catch (Exception& exc) {
+        smsc_log_error(logger, "%s", exc.what());
+        try { if (connection) connection->rollback(); }
+        catch (...) { smsc_log_error(logger, ROLLBACK_TRANSACT_ERROR_MESSAGE); }
+        if (connection) ds->freeConnection(connection);
+    }
+    return result;
+}
+void Task::setService(const char* abonent, const AbonentService& service)
+{
+    __require__(ds);
+
+    Connection* connection = 0;
+    try
+    {   
+        connection = ds->getConnection();
+        if (!connection) throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
+        
+        /* UPDATE MCISME_ABONENTS SET SEVICE=:SERVICE WHERE ABONENT=:ABONENT */
+        Statement* setSvcStmt = connection->getStatement(SET_ABONENT_SVC_ID, SET_ABONENT_SVC_SQL);
+        if (!setSvcStmt)
+            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "update abonent service");
+        
+        setSvcStmt->setUint8 (1, (uint8_t)service);
+        setSvcStmt->setString(2, abonent);
+        if (!setSvcStmt->executeUpdate())
+        {
+            /* INSERT INTO MCISME_ABONENTS (ABONENT, SERVICE) VALUES (:ABONENT, :SERVICE) */
+            Statement* insSvcStmt = connection->getStatement(INS_ABONENT_SVC_ID, INS_ABONENT_SVC_SQL);
+            if (!insSvcStmt)
+                throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "insert abonent service");
+            
+            insSvcStmt->setString(1, abonent);
+            insSvcStmt->setUint8 (2, (uint8_t)service);
+            if (!insSvcStmt->executeUpdate())
+                throw Exception("Failed to new insert service record for abonent: %s", abonent);
+        }
+        
+        if (connection) {
+            connection->commit();
+            ds->freeConnection(connection);
+        }
+    }
+    catch (Exception& exc) {
+        smsc_log_error(logger, "%s", exc.what());
+        try { if (connection) connection->rollback(); }
+        catch (...) { smsc_log_error(logger, ROLLBACK_TRANSACT_ERROR_MESSAGE); }
+        if (connection) ds->freeConnection(connection);
+    }
+}
+AbonentService Task::getService(const char* abonent)
+{
+    __require__(ds);
+
+    if (bInformAll || bNotifyAll) return FULL_SERVICE;
+    
+    AbonentService service = NONE_SERVICE;
+    Connection* connection = 0;
+    try
+    {   
+        connection = ds->getConnection();
+        if (!connection) throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
+
+        /* SELECT SERVICE FROM MCISME_ABONENTS WHERE ABONENT=:ABONENT */
+        Statement* getSvcStmt = connection->getStatement(GET_ABONENT_SVC_ID, GET_ABONENT_SVC_SQL);
+        if (!getSvcStmt)
+            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "obtain abonent service");
+        
+        getSvcStmt->setString(1, abonent);
+        std::auto_ptr<ResultSet> rsGuard(getSvcStmt->executeQuery());
+        ResultSet* rs = rsGuard.get();
+        if (!rs)
+            throw Exception(OBTAIN_RESULTSET_ERROR_MESSAGE, "obtain abonent service");
+        
+        if (rs->fetchNext() && !rs->isNull(1))
+        {
+            switch(rs->getUint8(1))
+            {
+                case ABONENT_SUBSCRIPTION: service = SUBSCRIPTION; break;
+                case ABONENT_NOTIFICATION: service = NOTIFICATION; break;
+                case ABONENT_FULL_SERVICE: service = FULL_SERVICE; break;
+                case ABONENT_NONE_SERVICE:
+                default:                   service = NONE_SERVICE; break;
+            }
+        }
+        
+        if (connection) ds->freeConnection(connection);
+    }
+    catch (Exception& exc) {
+        smsc_log_error(logger, "%s", exc.what());
+        if (connection) ds->freeConnection(connection);
+    }
+    return service;
 }
 
 /* ----------------------- Main logic implementation ----------------------- */
