@@ -59,8 +59,22 @@ CStrSet* ConfigView::getSectionNames()
 {
     return config.getChildSectionNames(category);
 }
+CStrSet* ConfigView::getIntParamNames()
+    throw (ConfigException)
+{
+    return config.getChildIntParamNames(category);
+}
+CStrSet* ConfigView::getBoolParamNames()
+    throw (ConfigException)
+{
+    return config.getChildBoolParamNames(category);
+}
+CStrSet* ConfigView::getStrParamNames()
+    throw (ConfigException)
+{
+    return config.getChildStrParamNames(category);
+}
 
-        
 int32_t ConfigView::getInt(const char* param, const char* error)
     throw (ConfigException)
 {

@@ -36,7 +36,14 @@ namespace smsc { namespace util { namespace config
         };
         
         ConfigView* getSubConfig(const char* sub, bool full=false);
-        CStrSet *getSectionNames()
+        
+        CStrSet* getSectionNames()
+            throw (ConfigException);
+        CStrSet* getIntParamNames()
+            throw (ConfigException);
+        CStrSet* getBoolParamNames()
+            throw (ConfigException);
+        CStrSet* getStrParamNames()
             throw (ConfigException);
         
         char* getString(const char* param, const char* error=0)
