@@ -122,7 +122,7 @@ vector<int> SmeManagerTestCases::compareSmeInfo(const SmeInfo& sme1,
 
 TCResult* SmeManagerTestCases::addCorrectSme(SmeInfo* sme, int num)
 {
-	TCSelector s(num, 10);
+	TCSelector s(num, 11);
 	TCResult* res = new TCResult(TC_ADD_CORRECT_SME, s.getChoice());
 	for (; s.check(); s++)
 	{
@@ -131,46 +131,48 @@ TCResult* SmeManagerTestCases::addCorrectSme(SmeInfo* sme, int num)
 			setupRandomCorrectSmeInfo(sme);
 			switch(s.value())
 			{
-				case 1: //typeOfNumber вне диапазона
+				case 1: //ничего особенного
+					break;
+				case 2: //typeOfNumber вне диапазона
 					sme->typeOfNumber = rand2(0x7, 0xff);
 					break;
-				case 2: //numberingPlan вне диапазона
+				case 3: //numberingPlan вне диапазона
 					sme->numberingPlan = rand2(0x13, 0xff);
 					break;
-				case 3: //interfaceVersion вне диапазона
+				case 4: //interfaceVersion вне диапазона
 					sme->interfaceVersion = rand2(0x35, 0xff);
 					break;
-				case 4: //пустой addressRange
+				case 5: //пустой addressRange
 					sme->rangeOfAddress = "";
 					break;
-				case 5: //addressRange больше макс длины
+				case 6: //addressRange больше макс длины
 					{
 						auto_ptr<char> _addressRange =
 							rand_char(MAX_ADDRESS_RANGE_LENGTH + 1);
 						sme->rangeOfAddress = _addressRange.get();
 					}
 					break;
-				case 6: //пустой systemType
+				case 7: //пустой systemType
 					sme->systemType = "";
 					break;
-				case 7: //systemType больше макс длины
+				case 8: //systemType больше макс длины
 					{
 						auto_ptr<char> _systemType =
 							rand_char(MAX_SYSTEM_TYPE_LENGTH + 1);
 						sme->systemType = _systemType.get();
 					}
 					break;
-				case 8: //пустой password
+				case 9: //пустой password
 					sme->password = "";
 					break;
-				case 9: //password больше макс длины
+				case 10: //password больше макс длины
 					{
 						auto_ptr<char> _password =
 							rand_char(MAX_PASSWORD_LENGTH + 1);
 						sme->password = _password.get();
 					}
 					break;
-				case 10: //systemId больше макс длины
+				case 11: //systemId больше макс длины
 					{
 						auto_ptr<char> _systemId =
 							rand_char(MAX_SYSTEM_ID_LENGTH + 1);
