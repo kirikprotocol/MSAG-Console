@@ -167,6 +167,7 @@ void TestSme::executeCycle()
 	static int count = 0;
 	//каждый 10-ый цикл
 	if (count % 10 == 0)
+	//if (false)
 	{
 		count++;
 		tc.submitIncorrectDateFormatDbSmeCmd(rand0(1),
@@ -289,6 +290,7 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 	__cfg_addr__(profilerAddr);
 	__cfg_addr__(profilerAlias);
 	__cfg_str__(profilerSystemId);
+	__cfg_str__(mapProxySystemId);
 
 	vector<Address*> addr;
 	vector<SmeInfo*> smeInfo;
@@ -315,6 +317,12 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 	profilerInfo.systemId = profilerSystemId;
 	smeReg->registerSme(profilerAddr, profilerInfo, false, true);
 	smeReg->bindSme(profilerInfo.systemId);
+	//регистрация map proxy
+	SmeInfo mapProxyInfo;
+	SmeManagerTestCases::setupRandomCorrectSmeInfo(&mapProxyInfo);
+	mapProxyInfo.systemId = mapProxySystemId;
+	smeReg->registerSme("+123", mapProxyInfo, false, true);
+	smeReg->bindSme(mapProxyInfo.systemId);
 	//регистрация алиасов (самая простая схема)
 	for (int i = 0; i < numSme; i++)
 	{
