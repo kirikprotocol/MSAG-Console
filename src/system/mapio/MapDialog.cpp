@@ -1328,7 +1328,7 @@ USHORT_T MapDialog::Et96MapV1SendRInfoForSmConf (
     ET96MAP_PROV_ERR_T *provErrCode_p)
 {
 #if defined USE_MAP  
-  __trace__2("MAP::MapDialog::Et96MapV1SendRInfoForSmConf received ssn=%d, dialog=%d, invokeId=%d\n", localSsn, dialogueId, invokeId );
+  __trace2__("MAP::MapDialog::Et96MapV1SendRInfoForSmConf received ssn=%d, dialog=%d, invokeId=%d\n", localSsn, dialogueId, invokeId );
   if ( sms.get() != 0 ){
   __trace2__("MAP::DELIVERY_SM %d.%d.%s -> %d.%d.%s",
              sms->getOriginatingAddress().getTypeOfNumber(),
