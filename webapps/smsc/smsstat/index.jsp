@@ -162,7 +162,7 @@ while (i.hasNext()) {
           <%
           String errstr = null;
           try {
-            appContext.getLocaleMessages(request.getLocale()).getString("smsc.errcode."+errid.errcode);
+            errstr = appContext.getLocaleMessages(request.getLocale()).getString("smsc.errcode."+errid.errcode);
           } catch(Exception e) {
             System.err.println(e.getMessage());
           }
