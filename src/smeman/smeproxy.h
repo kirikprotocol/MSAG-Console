@@ -37,6 +37,7 @@ class SmeProxy
 {
 public: 
   //....
+  virtual ~SmeProxy() {}
   virtual void close() = 0;
   /// кидает exception если был достигнут лимит 
   /// и длина очереди еще не упала до допустимого значения
