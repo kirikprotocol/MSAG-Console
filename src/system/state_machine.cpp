@@ -2,6 +2,7 @@
 #include "system/smsc.hpp"
 #include "system/state_machine.hpp"
 #include <exception>
+#include "system/rescheduler.hpp"
 
 namespace smsc{
 namespace system{
@@ -34,11 +35,6 @@ int StateMachine::Execute()
   }
   __trace__("exit state machine");
   return 0;
-}
-
-static time_t Reschedule(time_t lasttry,int attempt)
-{
-  return lasttry+10*attempt;
 }
 
 StateType StateMachine::submit(Tuple& t)
@@ -76,7 +72,7 @@ StateType StateMachine::submit(Tuple& t)
   }
 
   try{
-    sms->setNextTime(Reschedule(time(NULL),1));
+    sms->setNextTime(RescheduleCalculator::calcNextTryTime(time(NULL),1));
     store->createSms(*sms,t.msgId);
   }catch(...)
   {
@@ -181,6 +177,15 @@ StateType StateMachine::forward(Tuple& t)
   if ( !has_route )
   {
     __warning__("FORWARD: No route");
+    try{
+      time_t now=time(NULL);
+      Descriptor d;
+      __trace__("FORWARD: change state to enroute");
+      store->changeSmsStateToEnroute(t.msgId,d,0,RescheduleCalculator::calcNextTryTime(now,sms.getAttemptsCount()));
+    }catch(...)
+    {
+      __trace__("FORWARD: failed to change state to enroute");
+    }
     return ERROR_STATE;
   }
   if(!dest_proxy)
@@ -190,7 +195,7 @@ StateType StateMachine::forward(Tuple& t)
       time_t now=time(NULL);
       Descriptor d;
       __trace__("FORWARD: change state to enroute");
-      store->changeSmsStateToEnroute(t.msgId,d,0,Reschedule(now,sms.getAttemptsCount()));
+      store->changeSmsStateToEnroute(t.msgId,d,0,RescheduleCalculator::calcNextTryTime(now,sms.getAttemptsCount()));
     }catch(...)
     {
       __trace__("FORWARD: failed to change state to enroute");
@@ -252,7 +257,7 @@ StateType StateMachine::alert(Tuple& t)
     Descriptor d;
     SMS sms;
     store->retriveSms((SMSId)t.msgId,sms);
-    store->changeSmsStateToEnroute(t.msgId,d,0,Reschedule(now,sms.getAttemptsCount()));
+    store->changeSmsStateToEnroute(t.msgId,d,0,RescheduleCalculator::calcNextTryTime(now,sms.getAttemptsCount()));
   }catch(...)
   {
   };

@@ -8,6 +8,8 @@
 #include "core/synchronization/Event.hpp"
 #include "system/scheduler.hpp"
 #include "util/Exception.hpp"
+#include "profiler/profiler.hpp"
+#include "system/rescheduler.hpp"
 
 namespace smsc{
 namespace system{
@@ -27,7 +29,7 @@ public:
   void handleSignal()throw()
   {
     smsc->stop();
-    trace("got a signal!");
+    //trace("got a signal!");
   }
 protected:
   Smsc* smsc;
@@ -179,15 +181,21 @@ void Smsc::init(const SmscConfigs& cfg)
   smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance());
   store=smsc::store::StoreManager::getMessageStore();
 
-  tp.startTask(new StateMachine(eventqueue,store,this));
-  tp.startTask(new StateMachine(eventqueue,store,this));
-  tp.startTask(new StateMachine(eventqueue,store,this));
-  tp.startTask(new StateMachine(eventqueue,store,this));
-  tp.startTask(new StateMachine(eventqueue,store,this));
+  {
+    int cnt=cfg.cfgman->getInt("core.state_machines_count");
+    for(int i=0;i<cnt;i++)
+    {
+      tp.startTask(new StateMachine(eventqueue,store,this));
+    }
+  }
+
+  RescheduleCalculator::Init(cfg.cfgman->getString("core.reschedule_table"));
 
   //smsc::admin::util::SignalHandler::registerShutdownHandler(new SmscSignalHandler(this));
 
   tp.startTask(new SpeedMonitor(eventqueue));
+
+  tp.startTask(new smsc::profiler::Profiler());
 
   smscHost=cfg.cfgman->getString("smpp.host");
   smscPort=cfg.cfgman->getInt("smpp.port");
