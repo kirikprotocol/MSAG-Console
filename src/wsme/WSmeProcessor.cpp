@@ -525,8 +525,7 @@ void LangManager::removeLang(const std::string mask)
 
 AdRepository::AdRepository(DataSource& _ds, ConfigView* config)
     throw(ConfigException, InitException) 
-        : log(Logger::getCategory("smsc.wsme.WSmeAdRepository")), 
-            ds(_ds), minAdId(0), maxAdId(0)
+        : log(Logger::getCategory("smsc.wsme.WSmeAdRepository")), ds(_ds)
 {
     loadUpAds();
 }
@@ -534,10 +533,11 @@ AdRepository::~AdRepository()
 {
     MutexGuard  guard(adsLock);
 
-    IntHash<Hash<std::string>*>::Iterator it = ads.First();
-    int id; Hash<std::string>* ids = 0;
-    while (it.Next(id, ids))
-        if (ids) delete ids;
+    for (AdsIterator it = ads.begin(); it != ads.end(); it++)
+    {
+        AdsVal* adsByLang = it->second;
+        if (adsByLang) delete adsByLang;
+    }
 }
 
 const char* SQL_LOAD_ADS = 
@@ -561,25 +561,24 @@ void AdRepository::loadUpAds()
         ResultSet* rs = statement->executeQuery();
         if (!rs) 
             throw InitException("Get results failed");
-
+        
         while (rs->fetchNext())
         {
             uint32_t id = rs->getUint32(1);
             const char* lang = (rs->isNull(2)) ? 0:rs->getString(2);
             const char* ad   = (rs->isNull(3)) ? 0:rs->getString(3);
 
-            Hash<std::string>* ids = 
-                (ads.Exist(id)) ? ads.Get(id):new Hash<std::string>(0);
+            AdsIterator it = ads.find(id);
+            bool bNewId = (it == ads.end());
+            AdsVal* adsByLang = (bNewId) ? new Hash<std::string>(0) : it->second;
+
             std::string adStr = ad ? ad:"";
-            if (ids && !ids->Exists(lang))
-                ids->Insert(lang, adStr);
-            if (!ads.Exist(id))
-                ads.Insert(id, ids);
-
-            if (id > maxAdId) maxAdId = id;
-            if (id < minAdId) minAdId = id;
+            if (adsByLang && !adsByLang->Exists(lang))
+                adsByLang->Insert(lang, adStr);
+            if (bNewId)
+                ads.insert(AdsPair(id, adsByLang));
         }
-
+        
         if (rs) delete rs;
         if (statement) delete statement;
         if (connection) ds.freeConnection(connection);
@@ -600,18 +599,28 @@ bool AdRepository::getAd(int id, const std::string lang, std::string& ad)
 {
     MutexGuard  guard(adsLock);
 
-    Hash<std::string>* ids = (ads.Exist(id)) ? ads.Get(id):0;
-    if (!ids || !ids->Exists(lang.c_str())) return false;
-    ad = ids->Get(lang.c_str());
+    AdsIterator it = ads.find(id);
+    bool bKeyFound = !(it == ads.end());
+    AdsVal* adsByLang = (bKeyFound) ? it->second : 0;
+    if (!adsByLang || !adsByLang->Exists(lang.c_str())) return false;
+    ad = adsByLang->Get(lang.c_str());
     return true;
 }
 int AdRepository::getFirstId()
 {
-    return minAdId;
+    MutexGuard  guard(adsLock);
+    
+    AdsIterator it = ads.begin();
+    return (it == ads.end()) ? -1:it->first;
 }
 int AdRepository::getNextId(int id)
 {
-    return (id+1)%(maxAdId+1);
+    MutexGuard  guard(adsLock);
+
+    AdsIterator it = ads.find(id);
+    if (it == ads.end()) return -1; // TODO: id not found, so what ???
+    if ((++it) == ads.end()) it = ads.begin();  // if id was last => do it first
+    return (it == ads.end()) ? -1:it->first;
 }
 
 const char* SQL_ADD_NEW_AD = 
@@ -621,15 +630,17 @@ void AdRepository::addAd(int id, const std::string lang, std::string ad)
 {
     MutexGuard  guard(adsLock);
 
-    Hash<std::string>* newIds = ads.Exist(id) ? 0:new Hash<std::string>(0);
-    Hash<std::string>* ids = (newIds) ? newIds:ads.Get(id);
+    AdsIterator it = ads.find(id);
+    bool bNewId = (it == ads.end());
+    AdsVal* newAdsByLang = (bNewId) ? new Hash<std::string>(0):0;
+    AdsVal* adsByLang = (newAdsByLang) ? newAdsByLang : it->second;
     
-    __require__(ids);
+    __require__(adsByLang); // new or founded
 
     const char* langStr = lang.c_str();
     const char* adStr = ad.c_str();
-    if (ids->Exists(langStr)) {
-        if (newIds) delete newIds;
+    if (adsByLang->Exists(langStr)) {
+        if (newAdsByLang) delete newAdsByLang; newAdsByLang=0;
         throw ProcessException("Ad with id='%d' and lang='%s' already defined", 
                                id, langStr);
     }
@@ -657,7 +668,7 @@ void AdRepository::addAd(int id, const std::string lang, std::string ad)
     }
     catch (Exception& exc)
     {
-        if (newIds) delete newIds; newIds=0;
+        if (newAdsByLang) delete newAdsByLang; newAdsByLang=0;
         if (statement) delete statement;
         if (connection) {
             try { connection->rollback(); } catch (Exception& eee) {
@@ -669,8 +680,8 @@ void AdRepository::addAd(int id, const std::string lang, std::string ad)
                                ", Cause: %s", id, langStr, exc.what());
     }
     
-    ids->Insert(langStr, ad);
-    if (!ads.Exist(id)) ads.Insert(id, ids);
+    adsByLang->Insert(langStr, ad);
+    if (bNewId) ads.insert(AdsPair(id, adsByLang));
 }
 
 const char* SQL_REMOVE_AD = 
@@ -680,11 +691,12 @@ void AdRepository::removeAd(int id, const std::string lang)
 {
     MutexGuard  guard(adsLock);
 
-    Hash<std::string>* ids = (ads.Exist(id)) ? ads.Get(id):0;
-    if (!ids)
+    AdsIterator it = ads.find(id);
+    AdsVal* adsByLang = (it == ads.end()) ? 0 : it->second;
+    if (!adsByLang)
         throw ProcessException("Ad with id='%d' and lang='%s' not defined", 
                                id, lang.c_str());
-    __require__(ids);
+    __require__(adsByLang);
 
     const char* langStr = lang.c_str();
     Statement* statement = 0; 
@@ -720,9 +732,11 @@ void AdRepository::removeAd(int id, const std::string lang)
                                ", Cause: %s", id, langStr, exc.what());
     }
 
-    ids->Delete(langStr);
-    if (ids->GetCount() <= 0) {
-        ads.Delete(id); delete ids;
+    adsByLang->Delete(langStr);
+    if (adsByLang->GetCount() <= 0) 
+    {
+        ads.erase(id); 
+        delete adsByLang;
     }
 }
 
@@ -866,14 +880,22 @@ bool AdHistory::getId(const std::string msisdn, int& id)
             id = idManager.getFirstId();
             __trace2__("History for '%s' not found, inserting id=%d",
                        msisdn.c_str(), id);
-            insertStmt = connection->createStatement(SQL_INSERT_HISTORY_INFO);
-            insertStmt->setString  (1, msisdn.c_str());
-            insertStmt->setInt32   (2, id);
-            insertStmt->setDateTime(3, time(NULL));
-            insertStmt->executeUpdate();
-            delete insertStmt; insertStmt = 0;
-            result = true;
-            __trace__("Inserted");
+            if (id>0)
+            {
+                insertStmt = connection->createStatement(SQL_INSERT_HISTORY_INFO);
+                insertStmt->setString  (1, msisdn.c_str());
+                insertStmt->setInt32   (2, id);
+                insertStmt->setDateTime(3, time(NULL));
+                insertStmt->executeUpdate();
+                delete insertStmt; insertStmt = 0;
+                result = true;
+                __trace__("Inserted");
+            }
+            else
+            {
+                __trace__("Wasn't inserted. No ads in DB.");
+                result = false;
+            }
         }
         else
         {
@@ -889,14 +911,22 @@ bool AdHistory::getId(const std::string msisdn, int& id)
             } else {
                 id = idManager.getNextId(last_id);
                 __trace2__("Last id=%d, newid=%d", last_id, id);
-                updateStmt = connection->createStatement(SQL_UPDATE_NOTIFY_HISTORY_INFO);
-                updateStmt->setInt32   (1, id);
-                updateStmt->setDateTime(2, time(NULL));
-                updateStmt->setString  (3, msisdn.c_str());
-                updateStmt->executeUpdate();
-                delete updateStmt; updateStmt = 0;
-                result = true;
-                __trace2__("Updated");
+                if (id>0)
+                {
+                    updateStmt = connection->createStatement(SQL_UPDATE_NOTIFY_HISTORY_INFO);
+                    updateStmt->setInt32   (1, id);
+                    updateStmt->setDateTime(2, time(NULL));
+                    updateStmt->setString  (3, msisdn.c_str());
+                    updateStmt->executeUpdate();
+                    delete updateStmt; updateStmt = 0;
+                    __trace__("Updated");
+                    result = true;
+                }
+                else
+                {
+                    __trace__("Wasn't updated. No ads in DB.");
+                    result = false;
+                }
             }
         }
         

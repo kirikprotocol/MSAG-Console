@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
+#include <map>
 
 #include <util/debug.h>
 #include <util/Logger.h>
@@ -115,6 +116,11 @@ namespace smsc { namespace wsme
         virtual int getNextId(int id) = 0;
     };
 
+    typedef Hash<std::string>       AdsVal;
+    typedef std::map<int, AdsVal*>  AdsMap;
+    typedef std::pair<int, AdsVal*> AdsPair;
+    typedef AdsMap::iterator        AdsIterator;
+
     class AdRepository : public AdIdManager
     {
     private:
@@ -122,9 +128,8 @@ namespace smsc { namespace wsme
         log4cpp::Category&  log;
         DataSource&         ds;
 
-        uint32_t           maxAdId, minAdId;
-        Mutex                       adsLock;
-        IntHash<Hash<std::string>*> ads;
+        Mutex  adsLock;
+        AdsMap ads;
 
         void loadUpAds()
             throw (InitException);
