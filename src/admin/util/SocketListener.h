@@ -100,7 +100,7 @@ public:
 	{
 		isShutdownSignaled = true;
 		sock.Abort();
-		smsc_log_debug(logger, "ServiceSocketListener: server socket closed");
+		smsc_log_debug(logger, "ServiceSocketListener: shutdown: server socket closed");
 		smsc_log_debug(logger, "ServiceSocketListener: dead");
 	}
 
@@ -109,7 +109,7 @@ public:
 		isShutdownSignaled = true;
 		isAbortSignaled = true;
 		sock.Abort();
-		smsc_log_debug(logger, "ServiceSocketListener: server socket closed");
+		smsc_log_debug(logger, "ServiceSocketListener: abort: server socket closed");
 		smsc_log_debug(logger, "ServiceSocketListener: dead");
 	}
 
