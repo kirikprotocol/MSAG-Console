@@ -13,6 +13,7 @@
 using namespace std;
 void mts(EINSS7_I97_ISUPHEAD_T *head,EINSS7_I97_CALLINGNUMB_T *calling,EINSS7_I97_CALLEDNUMB_T *called,EINSS7_I97_ORIGINALNUMB_T *original,EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp);
 void taif(EINSS7_I97_ISUPHEAD_T *head,EINSS7_I97_CALLINGNUMB_T *calling,EINSS7_I97_CALLEDNUMB_T *called,EINSS7_I97_ORIGINALNUMB_T *original,EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp);
+void taifmixed(EINSS7_I97_ISUPHEAD_T *head,EINSS7_I97_CALLINGNUMB_T *calling,EINSS7_I97_CALLEDNUMB_T *called,EINSS7_I97_ORIGINALNUMB_T *original,EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp);
 
 namespace smsc{
 namespace misscall{
@@ -241,6 +242,18 @@ struct Connection {
   }
 };
 
+static char *rediraddr = 0;
+static char  rediraddrbuf[32] = {0};
+
+void MissedCallProcessor::setRedirectionAddress(const char* address)
+{
+  if (address && strlen(address) < 32)
+  {
+    strcpy(rediraddrbuf,address);
+    rediraddr = rediraddrbuf;
+  }
+}
+
 static IntHash<Connection> connections;
 
 void MissedCallProcessor::setCircuits(Hash<Circuits>& circuits)
@@ -277,6 +290,7 @@ void MissedCallProcessor::setReleaseSettings(ReleaseSettings params)
   relCauses = params;
   if (relCauses.strategy == REDIRECT_STRATEGY) strategy = mts;
   if (relCauses.strategy == PREFIXED_STRATEGY) strategy = taif;
+  if (relCauses.strategy == MIXED_STRATEGY) strategy = taifmixed;
 }
 
 MissedCallProcessor* MissedCallProcessor::instance()
@@ -984,6 +998,24 @@ void mts(
     registerEvent(calling,original,eventType);
   }
 
+}
+void taifmixed(
+          EINSS7_I97_ISUPHEAD_T *head,
+          EINSS7_I97_CALLINGNUMB_T *calling,
+          EINSS7_I97_CALLEDNUMB_T *called,
+          EINSS7_I97_ORIGINALNUMB_T *original,
+          EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp
+         )
+{
+  UCHAR_T causeValue = relCauses.otherCause;
+  if (original)
+  {
+    mts(head,calling,called,original,redirectionInfo_sp);
+  }
+  else
+  {
+    taif(head,calling,called,original,redirectionInfo_sp);
+  }
 }
 USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
                                 USHORT_T resourceGroup,
