@@ -365,9 +365,11 @@ public:
                           status == SmppStatusSet::ESME_RTHROTTLED);
 
         const char* msgid = ((PduXSmResp*)pdu)->get_messageId();
+        std::string msgId = ""; 
         if (!msgid || msgid[0] == '\0') accepted = false;
+        else msgId = msgid;
 
-        processor.invokeProcessResponce(seqNum, accepted, retry, immediate, msgid);
+        processor.invokeProcessResponce(seqNum, accepted, retry, immediate, msgId);
     }
 
     void handleEvent(SmppHeader *pdu)
