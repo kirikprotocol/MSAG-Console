@@ -137,7 +137,7 @@ static void DropMapDialog_(unsigned dialogid){
       unsigned __dialogid_map = dialog->dialogid_map;
       unsigned __dialogid_smsc = 0;
       if ( dialog->chain.size() == 0 ) {
-        __trace2__("MAP::%s (state %d) associate:%p",__FUNCTION__,dialog->state,associate);
+        __trace2__("MAP::%s (state %d) associate:%p",__FUNCTION__,dialog->state,dialog->associate);
         if ( dialog->associate != 0 && dialog->state != MAPST_END )
         {
           //Et96MapPAbortInd(SSN,dialog->associate->dialogid_map,0,0,0);
