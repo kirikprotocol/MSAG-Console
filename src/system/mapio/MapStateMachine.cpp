@@ -1865,7 +1865,7 @@ USHORT_T Et96MapOpenInd (
   ET96MAP_USERDATA_T *specificInfo_sp)
 {
   try{
-    __map_trace2__("%s: dialog 0x%x ctx=%d dstref=%p orgref=%p",__FUNCTION__,dialogueId,appContext_sp->acType,destRef_sp,origRef_sp );
+    __map_trace2__("%s: dialog 0x%x ctx=%d ver=%d dstref=%p orgref=%p",__FUNCTION__,dialogueId,appContext_sp->acType,appContext_sp->version,destRef_sp,origRef_sp );
     DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialog(dialogueId,localSsn/*,0*/));
     __require__(dialog->ssn==localSsn);
     dialog->hasIndAddress = false;
