@@ -11,6 +11,7 @@ using smsc::sms::Address;
 using smsc::util::Logger;
 using smsc::smeman::SmeInfo;
 using smsc::smeman::SmeProxy;
+using smsc::test::sms::operator<<;
 using smsc::test::sms::SmsUtil;
 
 static Category& log = Logger::getCategory("RouteManagerTest");
@@ -76,21 +77,16 @@ void RouteManagerTest::addRouteMatch(const Address& origAddr, const Address& des
 void RouteManagerTest::execute()
 {
 /*
-addCorrectSme(1)->
-registerCorrectSmeProxy(1)->
-addCorrectRouteNotMatch(32)->
-
-addCorrectSme(2)->
-addCorrectRouteMatch(3)->
-
-lookupRoute(1){103}
+addCorrectSme(6)->registerCorrectSmeProxy(1)->addCorrectRouteMatch(1){1000}
 */
 	Address origAddr, destAddr;
 	SmsUtil::setupRandomCorrectAddress(&origAddr);
 	SmsUtil::setupRandomCorrectAddress(&destAddr);
+	cout << "origAddr = " << origAddr << endl;
+	cout << "destAddr = " << destAddr << endl;
 
-	addRouteNotMatch(origAddr, destAddr, 1, true, 32);
-	addRouteMatch(origAddr, destAddr, 2, false, 3);
+	addRouteMatch(origAddr, destAddr, 6, true, 1);
+	tcRoute.commit();
 	cout << *tcRoute.lookupRoute(origAddr, destAddr) << endl;
 
 /*
