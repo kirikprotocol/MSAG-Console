@@ -97,28 +97,30 @@ static void SendOkToSmsc(unsigned dialogid)
 
 static void QueryHlrVersion(MapDialog* dialog)
 {
-  USHORT_T result = 
-    Et96MapGetACVersionReq(SSN,&dialog->mshlrAddr,ET96MAP_SHORT_MSG_GATEWAY_CONTEXT);
-  if ( result != ET96MAP_E_OK ) {
-    throw MAPDIALOG_FATAL_ERROR(
-      FormatText("MAP::QueryHlrVersion: error 0x%x when GetAcVersion",result));
-  }
   string s_((char*)dialog->mshlrAddr.ss7Addr,(char*)dialog->mshlrAddr.ss7Addr+sizeof(dialog->mshlrAddr.ss7Addr));
   __trace2__("MAP::QueryHlrVersion: [store %s]=0x%x",s_.c_str(),dialog->dialogid_map);
   x_map[s_] = dialog->dialogid_map;
+  USHORT_T result = 
+    Et96MapGetACVersionReq(SSN,&dialog->mshlrAddr,ET96MAP_SHORT_MSG_GATEWAY_CONTEXT);
+  if ( result != ET96MAP_E_OK ) {
+    x_map.erase(s_);
+    throw MAPDIALOG_FATAL_ERROR(
+      FormatText("MAP::QueryHlrVersion: error 0x%x when GetAcVersion",result));
+  }
 }
 
 static void QueryMcsVersion(MapDialog* dialog)
 {
-  USHORT_T result = 
-    Et96MapGetACVersionReq(SSN,&dialog->destMscAddr,ET96MAP_SHORT_MSG_MT_RELAY);
-  if ( result != ET96MAP_E_OK ) {
-    throw MAPDIALOG_FATAL_ERROR(
-      FormatText("MAP::QueryMcsVersion: error 0x%x when GetAcVersion",result));
-  }
   string s_((char*)dialog->destMscAddr.ss7Addr,(char*)dialog->destMscAddr.ss7Addr+sizeof(dialog->destMscAddr.ss7Addr));
   __trace2__("MAP::QueryMcsVersion: [store %s]=0x%x",s_.c_str(),dialog->dialogid_map);
   x_map[s_] = dialog->dialogid_map;
+  USHORT_T result = 
+    Et96MapGetACVersionReq(SSN,&dialog->destMscAddr,ET96MAP_SHORT_MSG_MT_RELAY);
+  if ( result != ET96MAP_E_OK ) {
+    x_map.erase(s_);
+    throw MAPDIALOG_FATAL_ERROR(
+      FormatText("MAP::QueryMcsVersion: error 0x%x when GetAcVersion",result));
+  }
 }
 
 static inline 
