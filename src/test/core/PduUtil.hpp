@@ -25,6 +25,7 @@ using smsc::smpp::PduPartSm;
 using smsc::smpp::PduDataPartSm;
 using smsc::smpp::SmppOptional;
 using smsc::smpp::SmppCommandSet::SUBMIT_SM;
+using smsc::smpp::SmppCommandSet::SUBMIT_MULTI;
 using smsc::smpp::SmppCommandSet::DATA_SM;
 using smsc::smpp::SmppCommandSet::DELIVERY_SM;
 using smsc::core::synchronization::Mutex;
