@@ -185,16 +185,18 @@ public:
     }
     locker->msgId = msgId;
     locker->push_back(new CmdRecord(command));
+		locker->next_unlocked=0;
     if ( !locker->locked )
     {
       if ( last_unlocked )
       {
         last_unlocked->next_unlocked = locker;
         last_unlocked=locker;
-        locker->next_unlocked=0;
-      }else
+      }
+			else
       {
-        first_unlocked = last_unlocked = locker;
+        __require__(first_unlocked == 0);
+				first_unlocked = last_unlocked = locker;
       }
       event.Signal();
     }
@@ -215,47 +217,55 @@ public:
         trace("selanddeq: enter synchronized block");
       __synchronized__
         trace("selanddeq: got mutex");
-        Locker* locker = 0;
         Locker* prev = 0;
-        //unsigned long t = time(0);
         __watch__(first_unlocked);
         __watch__(last_unlocked);
         for (Locker* iter = first_unlocked;
-             iter != 0; iter = iter->next_unlocked )
+             iter != 0; ) //iter = iter->next_unlocked 
         {
-          cycle:
           __trace2__("iterate unlocked lockers:%lld",iter->msgId);
           bool success = iter->getNextCommand(result.command);
-          if ( success || !iter->cmds )
+					if ( success || !iter->cmds )
           {
-            if ( iter == last_unlocked ) last_unlocked = prev;
-            if ( prev ) prev->next_unlocked = iter->next_unlocked;
-            else first_unlocked = iter->next_unlocked;
-            if ( success )
+						Locker* locker = iter;
+						__watch__(locker);
+						iter = iter->next_unlocked;// prev не изменяется
+						__require__(!locker->locked);
+						
+						// удаляем из списка активных
+            if ( locker == last_unlocked ) last_unlocked = prev;
+            if ( prev )
+							 prev->next_unlocked = locker->next_unlocked;
+            else 
+						{
+							__require__( locker == first_unlocked );
+							first_unlocked = locker->next_unlocked;
+						}
+						
+						locker->next_unlocked = 0;
+
+            if ( success ) // получена доступная команда
             {
-              result.msgId = iter->msgId;
-              result.state = iter->state;
-              iter->locked = true;
-              iter->next_unlocked = 0;
+							locker->locked = true;
+              result.msgId = locker->msgId;
+              result.state = locker->state;
               __trace__("returning from selectAndDequeue");
               return;
             }
-            else //( !iter->cmds )
+            else //( !iter->cmds ) вообще нет команд
             {
-              if ( StateChecker::stateIsFinal(iter->state) )
+              if ( StateChecker::stateIsFinal(locker->state) )
               {
-                hash.remove(iter->msgId);
-                locker=iter;
-                iter=iter->next_unlocked;
+                hash.remove(locker->msgId);
                 delete locker;
-                if(!iter)break;
-                goto cycle;
               }
             }
           }
           else // есть только ожидающие команды
           {
-            prev = iter;
+            // выбераем следующую запись
+						prev = iter;
+						iter = iter->next_unlocked;
             // none
           }
         }
@@ -276,14 +286,20 @@ public:
     if ( !locker ) throw runtime_error("incorrect msgid");
     if ( !locker->locked ) throw runtime_error("locker is not locked, can't change state");
     locker->state = state;
+    
+		// разблокируем запись и добавляем в список активных
     locker->locked = false;
-    if ( last_unlocked )
+		if ( last_unlocked )
     {
       last_unlocked->next_unlocked = locker;
       last_unlocked = locker;
       locker->next_unlocked=0;
     }
-    else first_unlocked = last_unlocked = locker;
+    else
+		{
+			__require__(first_unlocked == 0);
+			first_unlocked = last_unlocked = locker;
+		}
     event.Signal();
   }
 #undef __synchronized__
