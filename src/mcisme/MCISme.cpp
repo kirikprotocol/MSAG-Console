@@ -247,12 +247,12 @@ public:
                        (message.replace) ? message.smsc_id.c_str():"", message.id, seqNumber,
                         message.abonent.c_str(), message.message.c_str());
 
-        if (message.message.length() > MAX_ALLOWED_MESSAGE_LENGTH) {
+/*        if (message.message.length() > MAX_ALLOWED_MESSAGE_LENGTH) {
             smsc_log_error(logger, "Message #%lld to send is too large: len=%d, max=%d",
                            message.id, message.message.length(), MAX_ALLOWED_MESSAGE_LENGTH);
             return false;
         }
-        
+*/        
         Address oa, da;
         const char* oaStr = processor.getAddress(); // TODO: caller address for notifications
         if (!oaStr || !convertMSISDNStringToAddress(oaStr, oa)) {
