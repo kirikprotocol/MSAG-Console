@@ -1276,6 +1276,11 @@ static void DoUSSRUserResponceError(const SmscCommand* cmd , MapDialog* dialog)
     throw runtime_error(
       FormatText("MAP::%s Resp return error 0x%x",__func__,result));
   CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+  {
+    MutexGuard ussd_map_guard( ussd_map_lock );
+    __map_trace2__("erase ussd lock for %lld", dialog->ussdSequence);
+    ussd_map.erase(dialog->ussdSequence);
+  }
   dialog->state = MAPST_END;
   if( cmd != 0 ) SendOkToSmsc(dialog);
   DropMapDialog(dialog);
@@ -1353,6 +1358,11 @@ static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
     throw runtime_error(
       FormatText("MAP::%s Resp return error 0x%x",__func__,result));
   CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+  {
+    MutexGuard ussd_map_guard( ussd_map_lock );
+    __map_trace2__("erase ussd lock for %lld", dialog->ussdSequence);
+    ussd_map.erase(dialog->ussdSequence);
+  }
   dialog->state = MAPST_END;
   SendOkToSmsc(dialog);
   DropMapDialog(dialog);
@@ -1662,6 +1672,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           catch(...)
           {
             MutexGuard ussd_map_guard( ussd_map_lock );
+            __map_trace2__("erase ussd lock for %lld", sequence);
             ussd_map.erase(sequence);
             throw;
           }
@@ -1767,6 +1778,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             DoUSSRUserResponceError(&cmd,dialog.get());
             {
               MutexGuard ussd_map_guard( ussd_map_lock );
+              __map_trace2__("erase ussd lock for %lld", dialog->ussdSequence);
               ussd_map.erase(dialog->ussdSequence);
             }
             dialog->dropChain = true;
@@ -1793,6 +1805,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
         {
           {
             MutexGuard ussd_map_guard( ussd_map_lock );
+            __map_trace2__("erase ussd lock for %lld", dialog->ussdSequence);
             ussd_map.erase(dialog->ussdSequence);
           }
           dialog->dropChain = true;
@@ -1811,6 +1824,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
         __map_trace2__("%s processing USSD Request closed submit response", __func__);
         {
           MutexGuard ussd_map_guard( ussd_map_lock );
+          __map_trace2__("erase ussd lock for %lld", dialog->ussdSequence);
           ussd_map.erase(dialog->ussdSequence);
         }
         DropMapDialog(dialog.get());
@@ -1820,6 +1834,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
         {
           {
             MutexGuard ussd_map_guard( ussd_map_lock );
+            __map_trace2__("erase ussd lock for %lld", dialog->ussdSequence);
             ussd_map.erase(dialog->ussdSequence);
           }
           dialog->dropChain = true;
@@ -1838,6 +1853,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
         __map_trace2__("%s processing USSD Notify close submit response", __func__);
         {
           MutexGuard ussd_map_guard( ussd_map_lock );
+          __map_trace2__("erase ussd lock for %lld", dialog->ussdSequence);
           ussd_map.erase(dialog->ussdSequence);
         }
         DropMapDialog(dialog.get());
