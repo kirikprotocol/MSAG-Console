@@ -112,7 +112,7 @@ function clickClickable(headId, bodyId)
 }
 </script>
 
-<table class=page_menu with="100%" >
+<table class=page_menu with="100%">
 <%--<tr>
 <td><input:select name="filterSelect" default="1"
     attributes="<%= as %>" options="<%= o %>"  /></td></tr> --%>
@@ -124,7 +124,7 @@ page_small_menu_begin(out);
 page_menu_button(out, "mbQuickFilter",  "Apply",  "Apply filter","return clickFilterSelect()",true);
 page_menu_button(out, "mbClear", "Clear", "Clear filter", "clickClear()");
 //page_menu_button(out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
-page_menu_space(out);
+//page_menu_space(out);
 page_small_menu_end(out);
 %>
 </tr>
