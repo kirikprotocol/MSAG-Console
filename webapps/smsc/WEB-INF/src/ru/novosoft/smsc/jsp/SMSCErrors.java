@@ -77,6 +77,7 @@ public class SMSCErrors
 			public static final String cantDelete = B + "cantDelete";
 			public static final String cantEdit = B + "cantEdit";
 			public static final String subjNotSpecified = B + "subjNotSpecified";
+			public static final String masksNotDefined = B +"masksNotDefined";
 		}
 
 		public static class routes
