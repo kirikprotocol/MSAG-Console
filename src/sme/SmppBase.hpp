@@ -97,9 +97,9 @@ public:
     {
       try{
         pdu=receivePdu();
-      }catch(exception& e)
+      }catch(...)//exception& e)
       {
-        __trace2__("ex:%s",e.what());
+        //__trace2__("ex:%s",e.what());
         if(!stopped)listener->handleError(smppErrorNetwork);
         break;
       }
