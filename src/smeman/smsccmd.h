@@ -80,6 +80,8 @@ enum CommandStatus{
 
 struct AbonentStatus{
   Address addr;
+  Address sourceAddr;
+  Address destAddr;
   int     status;
   int     userMessageReference;
   string  originalAddr;
@@ -94,6 +96,8 @@ struct AbonentStatus{
   }
   AbonentStatus(const AbonentStatus& as,int status):
     addr(as.addr),
+    sourceAddr(as.sourceAddr),
+    destAddr(as.destAddr),
     status(status),
     userMessageReference(as.userMessageReference),
     originalAddr(as.originalAddr),
