@@ -1,0 +1,1 @@
+license/signlicense signlicense -lcrypto -lsystem -lsocket -llog4cpp $(__LIBRARIES)
