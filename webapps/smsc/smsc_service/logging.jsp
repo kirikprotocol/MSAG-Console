@@ -41,7 +41,7 @@
   page_menu_space(out);
   page_menu_end(out);
 %><div class=content><%!
-  private static final String[] PRIORITIES = {"FATAL", "ALERT", "CRIT", "ERROR", "WARN", "NOTICE", "INFO", "DEBUG", "NOTSET"};
+  private static final String[] PRIORITIES = {"FATAL", "ERROR", "WARN", "INFO", "DEBUG", "NOTSET"};
 
   private static final StringBuffer createOption(StringBuffer result, final String priority, final String catPriority)
   {
