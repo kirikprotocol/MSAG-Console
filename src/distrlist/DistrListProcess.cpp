@@ -1,11 +1,14 @@
 // $Id$
 
 #include "DistrListProcess.h"
+#include "../system/status.h"
 #define DLP_TIMEOUT 1000
 #define WAIT_SUBMISSION (1000*8)
 
 namespace smsc{
 namespace distrlist{
+
+using namespace smsc::system;
 
 static uint32_t GetNextDialogId()
 {
@@ -109,11 +112,11 @@ int DistrListProcess::Execute()
         SubmitMulti(cmd);
       }catch(exception& e){
         __trace2__(":DPL: <exception> %s",e.what());
-        SmscCommand cmdR = SmscCommand::makeSubmitMultiResp(0,cmd->get_dialogId(),(unsigned)-1);
+        SmscCommand cmdR = SmscCommand::makeSubmitMultiResp(0,cmd->get_dialogId(),Status::CNTSUBDL);
         putIncomingCommand(cmdR);
       }catch(BIG_MULTI&){
         __trace2__(":DPL: <exception> counts of member of multi great then MAX_COUNT for task");
-        SmscCommand cmdR = SmscCommand::makeSubmitMultiResp(0,cmd->get_dialogId(),(unsigned)-1);
+        SmscCommand cmdR = SmscCommand::makeSubmitMultiResp(0,cmd->get_dialogId(),Status::CNTSUBDL);
         putIncomingCommand(cmdR);
       }
     }
@@ -255,7 +258,7 @@ void DistrListProcess::SubmitResp(SmscCommand& cmd)
 void DistrListProcess::SendSubmitResp(ListTask* task) // удаляет из списка и мапы
 {
   unsigned status = 0;
-  if ( task->count != task->submited_count ) status = (unsigned)-1; /// !!!!!! must be fixed
+  if ( task->count != task->submited_count ) status = Status::CNTSUBDL; /// !!!!!! must be fixed
   SmscCommand cmd = SmscCommand::makeSubmitMultiResp(0,task->cmd->get_dialogId(),status);
   if ( status != 0 ) {
     UnsuccessElement* ue = cmd->get_MultiResp()->get_unsuccess();
