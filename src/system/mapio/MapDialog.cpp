@@ -11,8 +11,6 @@ using namespace smsc::smeman;
 #define TP_VP_ENCH  2
 #define TP_VP_ABS   3
 
-#pragma pack(1)
-
 struct MicroString{
   unsigned len;
   char bytes[256];
@@ -58,6 +56,7 @@ void Convert7BitToText(
   }
 }
 
+#pragma pack(1)
 
 struct SMS_SUMBMIT_FORMAT_HEADER{
   union{
@@ -87,6 +86,8 @@ struct MAP_SMS_ADDRESS{
   };
   unsigned char val[10];
 };
+
+#pragma pack()
 
 void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
   sa->setTypeOfNumber(ma->st.ton);

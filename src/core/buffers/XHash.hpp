@@ -322,9 +322,9 @@ public:
   }
   int Get(const KT& key,VT& value)const
   {
-    __trace2__("MAP:: XHash value addr 0x%x",&value);
+    //__trace2__("MAP:: XHash value addr 0x%x",&value);
     Link* link=FindLink(key);
-    __trace2__("MAP:: XHash link 0x%x",link);
+    //__trace2__("MAP:: XHash link 0x%x",link);
     if(!link)return 0;
     value=link->_keyval._value;
     char b[256] = {0,};
@@ -332,9 +332,9 @@ public:
     for ( int i=0; i<sizeof(link->_keyval); ++i){
       k += sprintf(b+k,"%x ",((const unsigned char*)(&link->_keyval))[i]);
     }
-    __trace2__("MAP:: XHash _value %s",b);
-    __trace2__("MAP:: XHash _value 0x%x",link->_keyval._value);
-    __trace2__("MAP:: XHash value 0x%x",value);
+    //__trace2__("MAP:: XHash _value %s",b);
+    //__trace2__("MAP:: XHash _value 0x%x",link->_keyval._value);
+    //__trace2__("MAP:: XHash value 0x%x",value);
     return 1;
   }
 

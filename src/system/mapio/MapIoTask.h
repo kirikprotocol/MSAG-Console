@@ -98,6 +98,7 @@ extern void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
 class MapDialogContainer{
   static MapDialogContainer* container;
   static Mutex sync_object;
+  static Mutex sync;
   MapProxy proxy;
   XHash<ET96MAP_DIALOGUE_ID_T,MapDialog*,hash_func_ET96MAP_DID> hash;
   
@@ -114,6 +115,7 @@ public:
   }
   
   MapDialog* getDialog(ET96MAP_DIALOGUE_ID_T dialogueid){
+    MutexGuard g(sync);
     MapDialog* dlg = 0;
     __trace2__("MAP:: find for dialogid 0x%x, result addr 0x%x",dialogueid,&dlg);
     if ( hash.Get(dialogueid,dlg) ) {
@@ -124,6 +126,7 @@ public:
   }
   
   MapDialog* createDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn){
+    MutexGuard g(sync);
     MapDialog* dlg = new MapDialog(dialogueid,lssn);
     hash.Insert(dialogueid,dlg);
     __trace2__("MAP:: new dialog 0x%x for dialogid 0x%x",dlg,dialogueid);
@@ -131,6 +134,7 @@ public:
   }
   
   void dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid){
+    MutexGuard g(sync);
     MapDialog* item = 0;
     if ( hash.Get(dialogueid,item) ){
       __trace2__("MAP:: drop dialog 0x%x for dialogid 0x%x",item,dialogueid);
