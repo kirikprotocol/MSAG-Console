@@ -470,7 +470,7 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
           Convert7BitToSMSC7Bit(user_data+udh_len+1,symbols,&ms,x-(udh_len+1)*8);
           memcpy(b.get(),user_data,udh_len+1);
           memcpy(b.get()+udh_len+1,ms.bytes,ms.len);
-          sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,b.get(),udh_len+1+symbols);
+          sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)b.get(),udh_len+1+symbols);
           sms.setIntProperty(Tag::SMPP_SM_LENGTH,udh_len+1+symbols);
         }else{
           MicroString ms;
