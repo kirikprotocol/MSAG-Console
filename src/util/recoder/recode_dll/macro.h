@@ -3,8 +3,8 @@
 
 #ifdef _WIN32
 #define NORETURN  __declspec(noreturn)
-extern void* __cdecl operator new(size_t size);
-extern void __cdecl operator delete(void* mem);
+//extern void* __cdecl operator new(size_t size);
+//extern void __cdecl operator delete(void* mem);
 extern void NORETURN FatalError(const char* file,int lineno);
 extern void NORETURN __cdecl FatalError(const char* file,int lineno,const char* format,...);
 extern char* GetImagePath();

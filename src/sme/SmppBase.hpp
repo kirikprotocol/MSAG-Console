@@ -561,9 +561,11 @@ protected:
   };
 
 #ifdef _WIN32
-  friend InnerAsyncTransmitter;
-  friend InnerSyncTransmitter;
-  friend InnerListener;
+  /*
+  friend smsc::sme::SmppSession::InnerAsyncTransmitter;
+  friend smsc::sme::SmppSession::InnerSyncTransmitter;
+  friend smsc::sme::SmppSession::InnerListener;
+  */
 #endif
 
 public:

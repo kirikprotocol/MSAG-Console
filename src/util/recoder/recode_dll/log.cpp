@@ -34,7 +34,7 @@ void __cdecl Log_Message(const char* msg,...){
   va_start(arg,msg);
   int len = wvsprintf(text,msg,arg);
   wsprintf(text+len,"\r\n");
-  va_end(msg);
+  //va_end(msg);
   Log_Write(text);
 }
 

@@ -2,7 +2,9 @@
 
 #include "sms.h"
 
+#ifndef __FUNCTION__
 #define __FUNCTION__ __func__
+#endif
 
 namespace smsc{
 namespace sms {
