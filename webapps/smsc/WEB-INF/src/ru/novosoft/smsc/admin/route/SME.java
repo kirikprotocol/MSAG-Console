@@ -26,13 +26,14 @@ public class SME
 	private int smeN = 0;
 	private boolean wantAlias = false;
 	private int timeout = 0;
+	private boolean forceDC;
 
 	/**
 	 * Constructor
-	 * @param <b>id</b> уникальный идентификатор SME
-	 * @param <b>priority</b> приоритет этого SME
-	 * @param <b>type</b> тип SME. может быть SME.SMPP или SME.SS7
-	 * @param <b>typeOfNumber</b> тип номера SME? возможные значения: <dl compact>
+	 * @param id уникальный идентификатор SME
+	 * @param priority приоритет этого SME
+	 * @param type тип SME. может быть SME.SMPP или SME.SS7
+	 * @param typeOfNumber тип номера SME? возможные значения: <dl compact>
 	 * <dt>0</dt><dd>Unknown</dd>
 	 * <dt>1</dt><dd>International</dd>
 	 * <dt>2</dt><dd>National</dd>
@@ -41,7 +42,7 @@ public class SME
 	 * <dt>5</dt><dd>Alphanumeric</dd>
 	 * <dt>6</dt><dd>Abbreviated</dd>
 	 * </dl>
-	 * @param <b>numberingPlan</b> возможные значения: <dl compact>
+	 * @param numberingPlan возможные значения: <dl compact>
 	 * <dt>0</dt><dd>Unknown</dd>
 	 * <dt>1</dt><dd>ISDN (E163/E164)</dd>
 	 * <dt>3</dt><dd>Data (X.121)</dd>
@@ -53,15 +54,18 @@ public class SME
 	 * <dt>14</dt><dd>Internet (IP)</dd>
 	 * <dt>18</dt><dd>WAP Client Id (to be defined by WAP Forum)</dd>
 	 * </dl>
-	 * @param <b>interfaceVersion</b> Возможные значения: 0x34 (v3.4)
-	 * @param <b>systemType</b> <font color=red>???</font>
-	 * @param <b>password</b> пароль для доступа SME к SMSC
-	 * @param <b>addrRange</b> <font color=red>???</font>
-	 * @param <b>smeN</b> <font color=red>???</font>
+	 * @param interfaceVersion Возможные значения: 0x34 (v3.4)
+	 * @param systemType <font color=red>???</font>
+	 * @param password пароль для доступа SME к SMSC
+	 * @param addrRange <font color=red>???</font>
+	 * @param smeN <font color=red>???</font>
+	 * @param wantAlias
+	 * @param forceDC
+	 * @param timeout
 	 * @throws NullPointerException if id, systemType, password, or addrRange is null
 	 */
 	public SME(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType,
-				  String password, String addrRange, int smeN, boolean wantAlias, int timeout)
+				  String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout)
 			  throws NullPointerException
 	{
 		if (id == null || systemType == null || password == null || addrRange == null)
@@ -79,6 +83,7 @@ public class SME
 		this.smeN = smeN;
 		this.wantAlias = wantAlias;
 		this.timeout = timeout;
+		this.forceDC = forceDC;
 	}
 
 	public SME(Element smeElement)
@@ -128,6 +133,10 @@ public class SME
 			{
 				wantAlias = value.equalsIgnoreCase("yes") || value.equalsIgnoreCase("true");
 			}
+			else if (name.equals("forceDC"))
+			{
+				forceDC = Boolean.valueOf(value).booleanValue();
+			}
 			else if (name.equals("timeout"))
 			{
 				timeout = Integer.decode(value).intValue();
@@ -138,13 +147,6 @@ public class SME
 			throw new NullPointerException("SME System ID is null");
 	}
 
-/*	private void init(String id, byte type, int typeOfNumber, int numberingPlan,
-							int interfaceVersion, String systemType, String password,
-							String addrRange, int smeN)
-			  throws NullPointerException
-	{
-	}
-*/
 	public boolean equals(Object obj)
 	{
 		if (obj instanceof SME)
@@ -211,5 +213,15 @@ public class SME
 	public int getPriority()
 	{
 		return priority;
+	}
+
+	public boolean isForceDC()
+	{
+		return forceDC;
+	}
+
+	public void setForceDC(boolean forceDC)
+	{
+		this.forceDC = forceDC;
 	}
 }

@@ -24,6 +24,7 @@ public class ServiceAddInternal extends PageBean
 	protected String password = "";
 	protected int timeout = 8;
 	protected boolean wantAlias = false;
+	protected boolean forceDC = false;
 
 	protected String hostName = null;
 
@@ -76,7 +77,7 @@ public class ServiceAddInternal extends PageBean
 		{
 			hostsManager.addSme(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan,
 									  convertInterfaceVersion(interfaceVersion), systemType, password, rangeOfAddress,
-									  -1, wantAlias, timeout);
+									  -1, wantAlias, forceDC, timeout);
 			appContext.getStatuses().setServicesChanged(true);
 		}
 		catch (Throwable t)
@@ -215,5 +216,15 @@ public class ServiceAddInternal extends PageBean
 	public void setWantAlias(boolean wantAlias)
 	{
 		this.wantAlias = wantAlias;
+	}
+
+	public boolean isForceDC()
+	{
+		return forceDC;
+	}
+
+	public void setForceDC(boolean forceDC)
+	{
+		this.forceDC = forceDC;
 	}
 }

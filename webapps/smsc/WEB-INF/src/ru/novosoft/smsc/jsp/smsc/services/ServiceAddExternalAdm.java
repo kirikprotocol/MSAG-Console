@@ -42,6 +42,7 @@ public class ServiceAddExternalAdm extends PageBean
 	private String rangeOfAddress = null;
 	private String password = null;
 	private boolean wantAlias = false;
+	private boolean forceDC = false;
 	private int timeout = 8;
 
 	protected String mbNext = null;
@@ -191,6 +192,7 @@ public class ServiceAddExternalAdm extends PageBean
 															  rangeOfAddress,
 															  -1,
 															  wantAlias,
+															  forceDC,
 															  timeout),
 													ServiceInfo.STATUS_STOPPED);
 		}
@@ -499,5 +501,15 @@ public class ServiceAddExternalAdm extends PageBean
 	public void setTimeout(int timeout)
 	{
 		this.timeout = timeout;
+	}
+
+	public boolean isForceDC()
+	{
+		return forceDC;
+	}
+
+	public void setForceDC(boolean forceDC)
+	{
+		this.forceDC = forceDC;
 	}
 }

@@ -9,8 +9,8 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.SME;
 
 public class AddNonAdmServiceWizard
-{
-	private String systemId = null;
+{//toremove
+/*	private String systemId = null;
 	private String systemType = null;
 	private int typeOfNumber = -1;
 	private int numberingPlan = -1;
@@ -78,5 +78,5 @@ public class AddNonAdmServiceWizard
 	public String getRangeOfAddress()
 	{
 		return rangeOfAddress;
-	}
+	}  */
 }

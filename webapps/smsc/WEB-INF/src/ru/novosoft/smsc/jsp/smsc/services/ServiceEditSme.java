@@ -23,6 +23,7 @@ public class ServiceEditSme extends PageBean
 	protected String password = "";
 	protected int timeout = 8;
 	protected boolean wantAlias = false;
+	protected boolean forceDC = false;
 
 	protected String mbSave = null;
 	protected String mbCancel = null;
@@ -60,6 +61,7 @@ public class ServiceEditSme extends PageBean
 			password = sme.getPassword();
 			timeout = sme.getTimeout();
 			wantAlias = sme.isWantAlias();
+			forceDC = sme.isForceDC();
 		}
 
 		return RESULT_OK;
@@ -98,9 +100,7 @@ public class ServiceEditSme extends PageBean
 
 		try
 		{
-			SME sme = new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan,
-									convertInterfaceVersion(interfaceVersion), systemType, password, rangeOfAddress, -1,
-									wantAlias, timeout);
+			SME sme = new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password, rangeOfAddress, -1, wantAlias, forceDC, timeout);
 			if (hostsManager.isService(serviceId))
 				hostsManager.getServiceInfo(serviceId).setSme(sme);
 			appContext.getSmeManager().getSmes().remove(serviceId);
@@ -245,5 +245,15 @@ public class ServiceEditSme extends PageBean
 	public void setMbCancel(String mbCancel)
 	{
 		this.mbCancel = mbCancel;
+	}
+
+	public boolean isForceDC()
+	{
+		return forceDC;
+	}
+
+	public void setForceDC(boolean forceDC)
+	{
+		this.forceDC = forceDC;
 	}
 }

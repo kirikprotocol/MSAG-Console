@@ -81,6 +81,10 @@ MENU0_SELECTION = "MENU0_SERVICES";
 	<td><input class=check type="checkbox" name="wantAlias" <%=bean.isWantAlias() ? "checked" : ""%>></td>
 </tr>
 <tr class=row0>
+	<th class=label>force data coding:</th>
+	<td><input class=check type="checkbox" name="forceDC" <%=bean.isForceDC() ? "checked" : ""%>></td>
+</tr>
+<tr class=row0>
 	<th class=label>timeout:</th>
 	<td><input class=txt type="text" name="timeout" value="<%=bean.getTimeout()%>"></td>
 </tr>

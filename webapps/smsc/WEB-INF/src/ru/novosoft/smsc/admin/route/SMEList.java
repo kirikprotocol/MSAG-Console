@@ -93,6 +93,7 @@ public class SMEList
 			out.println("    <param name=\"addrRange\" value=\"" + sme.getAddrRange() + "\"/>");
 			out.println("    <param name=\"smeN\" value=\"" + sme.getSmeN() + "\"/>");
 			out.println("    <param name=\"wantAlias\" value=\"" + (sme.isWantAlias() ? "yes" : "no") + "\"/>");
+			out.println("    <param name=\"forceDC\" value=\"" + sme.isForceDC() + "\"/>");
 			out.println("    <param name=\"timeout\" value=\"" + sme.getTimeout() + "\"/>");
 
 			out.println("  </smerecord>");
