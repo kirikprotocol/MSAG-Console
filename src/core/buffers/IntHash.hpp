@@ -318,8 +318,8 @@ protected:
       }
     }
     if(okeys)delete [] okeys;
-    if(okeys)delete [] oval;
-    if(okeys)delete [] orefs;
+    if(oval)delete [] oval;
+    if(orefs)delete [] orefs;
   }
 
 }; //IntHash
