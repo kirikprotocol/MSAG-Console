@@ -227,7 +227,7 @@ DROP TABLE SMS_STAT_SME;
 CREATE TABLE SMS_STAT_SME
 (
   period       NUMBER(22)     NOT NULL,
-  systemid     VARCHAR2(15)   NOT NULL,
+  systemid     VARCHAR2(16)   NOT NULL,
   received     NUMBER(22)     NOT NULL,
   sent         NUMBER(22)     NOT NULL
 ) TABLESPACE SMSC_DATA;

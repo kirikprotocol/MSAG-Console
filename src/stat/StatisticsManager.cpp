@@ -22,7 +22,7 @@ void StatisticsManager::updateAccepted(const char* srcSmeId)
     MutexGuard  switchGuard(switchLock);
     
     acceptedCount[currentIndex]++;
-    if (srcSmeId)
+    if (srcSmeId && srcSmeId[0])
     {
         MutexGuard guard(smeStatLock);
 
@@ -58,7 +58,7 @@ void StatisticsManager::updateChanged(const char* dstSmeId,
         if (!counter) finalizedByRoute[currentIndex].Insert(routeId, 1);
         else (*counter)++;
     }
-    if (errcode == 0 && dstSmeId)
+    if (errcode == 0 && dstSmeId && dstSmeId[0])
     {
         MutexGuard guard(smeStatLock);
 
