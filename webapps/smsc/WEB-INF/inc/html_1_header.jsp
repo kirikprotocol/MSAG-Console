@@ -26,12 +26,17 @@
 		void main_menu_begin_item(JspWriter out, String menuId, String submenuId, String name) throws java.io.IOException
 		{
 			out.print("<td width=1% style='position:relative; top:0; left:0;'");
-			out.print(" onMouseOver='" + submenuId + ".runtimeStyle.visibility=\"visible\";'");
-			out.print(" onMouseOut='" + submenuId + ".runtimeStyle.visibility=\"hidden\";'>");
+      out.print(" onMouseOver='" + submenuId + ".runtimeStyle.visibility=\"visible\";document.all." + submenuId + "_h.runtimeStyle.visibility=\"visible\";");
+      out.print("document.all." + submenuId + "_h.runtimeStyle.width="+submenuId+".offsetWidth;");
+      out.print("document.all." + submenuId + "_h.runtimeStyle.height="+submenuId+".offsetHeight;");
+      out.print("' onMouseOut='" + submenuId + ".runtimeStyle.visibility=\"hidden\";document.all." + submenuId + "_h.runtimeStyle.visibility=\"hidden\";'>");
 			out.print("<a ID=" + menuId + ">" + name + "</a>");
+      out.print("<div height=50px id=" + submenuId + "_h2 class=hiddenLayer><iframe id=" + submenuId + "_h src='/images/blank.html' width='100%' height='100%'></iframe></div>");
 			out.print("<table class=submenu cellspacing=0 cellpadding=0 id=" + submenuId);
-			out.print(" onMouseOver='" + submenuId + ".runtimeStyle.visibility=\"visible\";'");
-			out.print(" onMouseOut='" + submenuId + ".runtimeStyle.visibility=\"hidden\";'>");
+			out.print(" onMouseOver='" + submenuId + ".runtimeStyle.visibility=\"visible\";document.all." + submenuId + "_h.runtimeStyle.visibility=\"visible\";");
+      out.print("document.all." + submenuId + "_h.runtimeStyle.width="+submenuId+".offsetWidth;");
+      out.print("document.all." + submenuId + "_h.runtimeStyle.height="+submenuId+".offsetHeight;");
+			out.print("' onMouseOut='" + submenuId + ".runtimeStyle.visibility=\"hidden\";document.all." + submenuId + "_h.runtimeStyle.visibility=\"hidden\";'>");
 		}
 		void main_menu_submenu_item(JspWriter out, String url, String id, String name) throws java.io.IOException
 		{
@@ -51,7 +56,8 @@
 		}
 		void main_menu_end_item(JspWriter out) throws java.io.IOException
 		{
-			out.print("</table></td>");
+			out.print("</table>");
+      out.print("</td>");
 		}
 		%>
 		<!-- main menu -->

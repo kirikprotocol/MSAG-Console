@@ -29,14 +29,18 @@ table.main_menu a:hover
 	cursor: hand;
 }
 
-table.main_menu table.submenu,
+table.main_menu table.submenu, table.main_menu div.hiddenLayer
 {
-	position:absolute; 
+	position:absolute;
 	top: 25px;
 	left:0px;
+}
+table.main_menu table.submenu,
+{
 	border: 1px solid #4E6E82;
 	background-color: #3A5867;
 	visibility: hidden;
+	z-index: 4;
 }
 table.main_menu table.submenu td
 {
@@ -53,4 +57,9 @@ table.main_menu table.submenu td.submenu_sel a
 table.main_menu table.submenu td a:hover
 {
 	color: white;
+}
+table.main_menu div.hiddenLayer
+{
+  z-index: 3;
+	visibility: hidden;
 }
