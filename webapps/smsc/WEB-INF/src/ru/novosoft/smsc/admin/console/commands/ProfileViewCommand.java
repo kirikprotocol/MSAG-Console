@@ -27,6 +27,11 @@ public class ProfileViewCommand implements Command
   private String showProfile(Profile profile, Alias alias)
       throws AdminException
   {
+    final byte aliasHide = profile.getAliasHide();
+    final String aliasHideStr =
+        ((aliasHide == Profile.ALIAS_HIDE_substitute) ? " substitute":
+         ((aliasHide == Profile.ALIAS_HIDE_false) ? " nohide":
+          ((aliasHide == Profile.ALIAS_HIDE_true) ? " hide":"unknown")));
     String divert = profile.getDivert();
     Mask aliasAlias = (alias != null) ? alias.getAlias():null;
     String result = "Profile '"+profile.getMask().getMask()+"'"+
@@ -34,8 +39,7 @@ public class ProfileViewCommand implements Command
       " Locale: "+profile.getLocale()+
       " Encoding: "+profile.getCodepageString()+
       " ussd7bit: "+((profile.isUssd7bit()) ? "on":"off")+
-      " Alias: "+((aliasAlias != null) ? aliasAlias.getMask():"-")+
-      (Profile.ALIAS_HIDE_true == profile.getAliasHide() ? " hide": Profile.ALIAS_HIDE_false == profile.getAliasHide() ? " nohide": Profile.ALIAS_HIDE_substitute == profile.getAliasHide() ? " substitute" : " unknown")+ //todo: check and reimplement
+      " Alias: "+((aliasAlias != null) ? aliasAlias.getMask():"-")+aliasHideStr+
       (profile.isAliasModifiable() ? " modifiable":" notmodifiable")+
       " Divert: "+((divert == null || divert.length() <= 0) ? "-":divert);
 

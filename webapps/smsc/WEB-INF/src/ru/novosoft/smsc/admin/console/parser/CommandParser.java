@@ -553,24 +553,24 @@ public CommandParser(ParserSharedInputState state) {
 		num = LT(1);
 		match(STR);
 		
-				    try {
-					    cmd.setServiceId(Integer.parseInt(num.getText()));
-				    } catch (NumberFormatException ex) {
-					    throw new NumberFormatException("Expecting integer value for <serviceid>");
-				    }
-				
+			    try {
+			        cmd.setServiceId(Integer.parseInt(num.getText()));
+			    } catch (NumberFormatException ex) {
+			        throw new NumberFormatException("Expecting integer value for <serviceid>");
+			    }
+			
 		}
 		{
 		match(OPT_PRI);
 		pri = LT(1);
 		match(STR);
 		
-				    try {
-					    cmd.setPriority(Integer.parseInt(pri.getText()));
-				    } catch (NumberFormatException ex) {
-					    throw new NumberFormatException("Expecting integer value for <priority>");
-				    }
-				
+			    try {
+			        cmd.setPriority(Integer.parseInt(pri.getText()));
+			    } catch (NumberFormatException ex) {
+			        throw new NumberFormatException("Expecting integer value for <priority>");
+			    }
+			
 		}
 		{
 		switch ( LA(1)) {
@@ -671,8 +671,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Alias mask expected");
-				
+			throw new RecognitionException("Alias mask expected");
+			
 		}
 		cmd.setAlias(mask.getText());
 		}
@@ -683,10 +683,10 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Alias address expected");
-				
+			throw new RecognitionException("Alias address expected");
+			
 		}
-		cmd.setAddress(addr.getText());	
+		cmd.setAddress(addr.getText());
 		}
 		{
 		switch ( LA(1)) {
@@ -765,8 +765,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Profile mask expected");
-				
+			throw new RecognitionException("Profile mask expected");
+			
 		}
 		cmd.setMask(mask.getText());
 		}
@@ -883,8 +883,8 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			catch (RecognitionException ex) {
 				
-					    throw new RecognitionException("Principal address expected");
-					
+				throw new RecognitionException("Principal address expected");
+				
 			}
 			cmd.setAddress(addr.getText());
 			}
@@ -896,16 +896,16 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			catch (RecognitionException ex) {
 				
-					    throw new RecognitionException("'numlist' integer value expected");
-					
+				throw new RecognitionException("'numlist' integer value expected");
+				
 			}
 			
-					    try {
-						cmd.setMaxLists(Integer.parseInt(numl.getText()));
-					    } catch (NumberFormatException ex) {
-						throw new NumberFormatException("Expecting integer value for <numlist>");
-					    }
-					
+				    try {
+					cmd.setMaxLists(Integer.parseInt(numl.getText()));
+				    } catch (NumberFormatException ex) {
+					throw new NumberFormatException("Expecting integer value for <numlist>");
+				    }
+				
 			}
 			{
 			match(OPT_NELEM);
@@ -915,22 +915,22 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			catch (RecognitionException ex) {
 				
-					    throw new RecognitionException("'numelem' integer value expected");
-					
+				throw new RecognitionException("'numelem' integer value expected");
+				
 			}
 			
-					    try {
-						cmd.setMaxElements(Integer.parseInt(nume.getText()));
-					    } catch (NumberFormatException ex) {
-						throw new NumberFormatException("Expecting integer value for <numelem>");
-					    }
-					
+				    try {
+					cmd.setMaxElements(Integer.parseInt(nume.getText()));
+				    } catch (NumberFormatException ex) {
+					throw new NumberFormatException("Expecting integer value for <numelem>");
+				    }
+				
 			}
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Command invalid. Syntax: add principal <principal_address> numlist <number> numelem <number>");
-				
+			throw new RecognitionException("Command invalid. Syntax: add principal <principal_address> numlist <number> numelem <number>");
+			
 		}
 		return cmd;
 	}
@@ -1011,16 +1011,16 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			catch (RecognitionException ex) {
 				
-					    throw new RecognitionException("'numelem' integer value expected");
-					
+				throw new RecognitionException("'numelem' integer value expected");
+				
 			}
 			
-					    try {
-						    cmd.setMaxElements(Integer.parseInt(nume.getText()));
-					    } catch (NumberFormatException ex) {
-						    throw new NumberFormatException("Expecting integer value for <numelem>");
-					    }
-					
+				    try {
+				        cmd.setMaxElements(Integer.parseInt(nume.getText()));
+				    } catch (NumberFormatException ex) {
+				        throw new NumberFormatException("Expecting integer value for <numelem>");
+				    }
+				
 			}
 			{
 			switch ( LA(1)) {
@@ -1033,12 +1033,10 @@ public CommandParser(ParserSharedInputState state) {
 				}
 				catch (RecognitionException ex) {
 					
-						    throw new RecognitionException("Owner address expected");
-						
+					throw new RecognitionException("Owner address expected");
+					
 				}
-				
-						    cmd.setOwner(owner.getText());
-						
+				cmd.setOwner(owner.getText());
 				break;
 			}
 			case EOF:
@@ -1054,8 +1052,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Command invalid. Syntax: add dl <dl_name> [owner <owner_address>] numelem <number>");
-				
+			throw new RecognitionException("Command invalid. Syntax: add dl <dl_name> [owner <owner_address>] numelem <number>");
+			
 		}
 		return cmd;
 	}
@@ -1078,8 +1076,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Submitter address expected");
-				
+			throw new RecognitionException("Submitter address expected");
+			
 		}
 		cmd.setSubmitter(submitter.getText());
 		}
@@ -1104,8 +1102,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Member address expected");
-				
+			throw new RecognitionException("Member address expected");
+			
 		}
 		cmd.setMember(member.getText());
 		}
@@ -1140,8 +1138,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Alias mask expected");
-				
+			throw new RecognitionException("Alias mask expected");
+			
 		}
 		cmd.setAlias(mask.getText());
 		}
@@ -1176,8 +1174,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Profile mask expected");
-				
+			throw new RecognitionException("Profile mask expected");
+			
 		}
 		cmd.setMask(mask.getText());
 		}
@@ -1199,8 +1197,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Principal address expected");
-				
+			throw new RecognitionException("Principal address expected");
+			
 		}
 		cmd.setAddress(addr.getText());
 		}
@@ -1251,10 +1249,10 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Submitter address expected");
-				
+			throw new RecognitionException("Submitter address expected");
+			
 		}
-		cmd.setSubmitter(submitter.getText());	
+		cmd.setSubmitter(submitter.getText());
 		}
 		return cmd;
 	}
@@ -1277,8 +1275,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Member address expected");
-				
+			throw new RecognitionException("Member address expected");
+			
 		}
 		cmd.setMember(member.getText());
 		}
@@ -1348,12 +1346,12 @@ public CommandParser(ParserSharedInputState state) {
 			num = LT(1);
 			match(STR);
 			
-					    try {
-						    cmd.setServiceId(Integer.parseInt(num.getText()));
-					    } catch (NumberFormatException ex) {
-						    throw new NumberFormatException("Expecting integer value for <serviceid>");
-					    }
-					
+				    try {
+					cmd.setServiceId(Integer.parseInt(num.getText()));
+				    } catch (NumberFormatException ex) {
+				        throw new NumberFormatException("Expecting integer value for <serviceid>");
+				    }
+				
 			break;
 		}
 		case EOF:
@@ -1381,12 +1379,12 @@ public CommandParser(ParserSharedInputState state) {
 			pri = LT(1);
 			match(STR);
 			
-					    try {
-						cmd.setPriority(Integer.parseInt(pri.getText()));		    
-					    } catch (NumberFormatException ex) {
-						throw new NumberFormatException("Expecting integer value for <priority>");
-					    }
-					
+				    try {
+					cmd.setPriority(Integer.parseInt(pri.getText()));		    
+				    } catch (NumberFormatException ex) {
+					throw new NumberFormatException("Expecting integer value for <priority>");
+				    }
+				
 			break;
 		}
 		case EOF:
@@ -1575,8 +1573,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Alias mask expected");
-				
+			throw new RecognitionException("Alias mask expected");
+			
 		}
 		cmd.setAlias(mask.getText());
 		}
@@ -1587,8 +1585,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Alias address expected");
-				
+			throw new RecognitionException("Alias address expected");
+			
 		}
 		cmd.setAddress(addr.getText());
 		}
@@ -1711,8 +1709,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Profile address expected");
-				
+			throw new RecognitionException("Profile address expected");
+			
 		}
 		cmd.setAddress(addr.getText());
 		}
@@ -1937,8 +1935,8 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			catch (RecognitionException ex) {
 				
-					    throw new RecognitionException("Principal address expected");
-					
+				throw new RecognitionException("Principal address expected");
+				
 			}
 			cmd.setAddress(addr.getText());
 			}
@@ -1950,12 +1948,12 @@ public CommandParser(ParserSharedInputState state) {
 				numl = LT(1);
 				match(STR);
 				
-						    try {
-							    cmd.setMaxLists(Integer.parseInt(numl.getText()));
-						    } catch (NumberFormatException ex) {
-							    throw new NumberFormatException("Expecting integer value for <numlist>");
-						    }
-						
+					    try {
+					        cmd.setMaxLists(Integer.parseInt(numl.getText()));
+					    } catch (NumberFormatException ex) {
+					        throw new NumberFormatException("Expecting integer value for <numlist>");
+					    }
+					
 				break;
 			}
 			case EOF:
@@ -1977,12 +1975,12 @@ public CommandParser(ParserSharedInputState state) {
 				nume = LT(1);
 				match(STR);
 				
-						    try {
-							    cmd.setMaxElements(Integer.parseInt(nume.getText()));
-						    } catch (NumberFormatException ex) {
-							    throw new NumberFormatException("Expecting integer value for <numelem>");
-						    }
-						
+					    try {
+					        cmd.setMaxElements(Integer.parseInt(nume.getText()));
+					    } catch (NumberFormatException ex) {
+					        throw new NumberFormatException("Expecting integer value for <numelem>");
+					    }
+					
 				break;
 			}
 			case EOF:
@@ -1998,8 +1996,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Command invalid. Syntax: alter principal <principal_address> [numlist <number>] [numelem <number>]");
-				
+			throw new RecognitionException("Command invalid. Syntax: alter principal <principal_address> [numlist <number>] [numelem <number>]");
+			
 		}
 		return cmd;
 	}
@@ -2112,16 +2110,16 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("'numelem' integer value expected");
-				
+			throw new RecognitionException("'numelem' integer value expected");
+			
 		}
 		
-				    try {
-					    cmd.setMaxElements(Integer.parseInt(nume.getText()));
-				    } catch (NumberFormatException ex) {
-					    throw new NumberFormatException("Expecting integer value for <numelem>");
-				    }
-				
+			    try {
+			        cmd.setMaxElements(Integer.parseInt(nume.getText()));
+			    } catch (NumberFormatException ex) {
+			        throw new NumberFormatException("Expecting integer value for <numelem>");
+			    }
+			
 		}
 		return cmd;
 	}
@@ -2154,8 +2152,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Alias mask expected");
-				
+			throw new RecognitionException("Alias mask expected");
+			
 		}
 		cmd.setAlias(mask.getText());
 		}
@@ -2190,8 +2188,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Profile address expected");
-				
+			throw new RecognitionException("Profile address expected");
+			
 		}
 		cmd.setAddress(addr.getText());
 		}
@@ -2213,8 +2211,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Principal address expected");
-				
+			throw new RecognitionException("Principal address expected");
+			
 		}
 		cmd.setAddress(addr.getText());
 		}
@@ -2266,8 +2264,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Address string expected");
-				
+			throw new RecognitionException("Address string expected");
+			
 		}
 		cmd.setAddress(addr.getText());
 		}
@@ -2293,8 +2291,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Address string expected");
-				
+			throw new RecognitionException("Address string expected");
+			
 		}
 		cmd.setAddress(addr.getText());
 		}
@@ -2320,8 +2318,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Address string expected");
-				
+			throw new RecognitionException("Address string expected");
+			
 		}
 		cmd.setAddress(addr.getText());
 		}
@@ -2347,9 +2345,9 @@ public CommandParser(ParserSharedInputState state) {
 				qname = LT(1);
 				match(QSTR);
 				
-						    out = qname.getText().trim();
-						    out = out.substring(1,out.length()-1);
-						
+					    out = qname.getText().trim();
+					    out = out.substring(1,out.length()-1);
+					
 				}
 				break;
 			}
@@ -2359,8 +2357,8 @@ public CommandParser(ParserSharedInputState state) {
 				name = LT(1);
 				match(STR);
 				
-						    out = name.getText();
-						
+					    out = name.getText();
+					
 				}
 				break;
 			}
@@ -2372,7 +2370,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-			throw new RecognitionException(ex.getMessage()+". "+msg+" expected. ");
+				    throw new RecognitionException(ex.getMessage()+". "+msg+" expected. ");
 				
 		}
 		return out;
@@ -2398,12 +2396,12 @@ public CommandParser(ParserSharedInputState state) {
 		catch (RecognitionException ex) {
 			
 			throw new RecognitionException(ex.getMessage()+". "+msg+" expected. ");
-				
+			
 		}
 		catch (NumberFormatException ex) {
 			
 			throw new RecognitionException(ex.getMessage()+". Long value for <"+msg+"> expected. ");
-				
+			
 		}
 		return id;
 	}
@@ -2424,9 +2422,9 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_SUBJ);
 			
-					    def.setType(RouteSrcDef.TYPE_SUBJECT);
-					    def.setSrc(getnameid("Subject name"));
-					
+				    def.setType(RouteSrcDef.TYPE_SUBJECT);
+				    def.setSrc(getnameid("Subject name"));
+				
 			}
 			break;
 		}
@@ -2437,9 +2435,9 @@ public CommandParser(ParserSharedInputState state) {
 			addr = LT(1);
 			match(STR);
 			
-					    def.setType(RouteSrcDef.TYPE_MASK); 
-					    def.setSrc(addr.getText());
-					
+				    def.setType(RouteSrcDef.TYPE_MASK); 
+				    def.setSrc(addr.getText());
+				
 			}
 			break;
 		}
@@ -2470,9 +2468,9 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_SUBJ);
 			
-					    def.setType(RouteDstDef.TYPE_SUBJECT);
-					    def.setDst(getnameid("Subject name"));
-					
+				    def.setType(RouteDstDef.TYPE_SUBJECT);
+				    def.setDst(getnameid("Subject name"));
+				
 			}
 			break;
 		}
@@ -2483,9 +2481,9 @@ public CommandParser(ParserSharedInputState state) {
 			addr = LT(1);
 			match(STR);
 			
-					    def.setType(RouteDstDef.TYPE_MASK); 
-					    def.setDst(addr.getText());
-					
+				    def.setType(RouteDstDef.TYPE_MASK); 
+				    def.setDst(addr.getText());
+				
 			}
 			break;
 		}
@@ -2497,9 +2495,9 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		{
 		
-				    if (needSmeId) def.setSmeId(getnameid("SME System id"));
-				    cmd.addDstDef(def);
-				
+			    if (needSmeId) def.setSmeId(getnameid("SME System id"));
+			    cmd.addDstDef(def);
+			
 		}
 	}
 	
@@ -2530,8 +2528,8 @@ public CommandParser(ParserSharedInputState state) {
 		catch (RecognitionException ex) {
 			
 			throw new RecognitionException(
-				    "Route srcdef missed or invalid. Syntax: src (subj <subject_name>|mask <mask>)+");
-				
+			"Route srcdef missed or invalid. Syntax: src (subj <subject_name>|mask <mask>)+");
+			
 		}
 	}
 	
@@ -2562,9 +2560,9 @@ public CommandParser(ParserSharedInputState state) {
 		catch (RecognitionException ex) {
 			
 			throw new RecognitionException(
-				    "Route dstdef missed or invalid. Syntax: dst (subj <subject_name>|mask <mask>"+
-				    ((needSmeId) ? " <systemid>)+":")+"));
-				
+				"Route dstdef missed or invalid. Syntax: dst (subj <subject_name>|mask <mask>"+
+				((needSmeId) ? " <systemid>)+":")+"));
+			
 		}
 	}
 	
@@ -2610,7 +2608,7 @@ public CommandParser(ParserSharedInputState state) {
 		catch (RecognitionException ex) {
 			
 			throw new RecognitionException("Route delivery mode expected. Syntax: (default|store|forward|datagram)");
-				
+			
 		}
 	}
 	
@@ -2866,9 +2864,9 @@ public CommandParser(ParserSharedInputState state) {
 		catch (RecognitionException ex) {
 			
 			throw new RecognitionException("Route flags expected. "+
-				   "Syntax: [active|inactive] [hide|nohide] [forceReplayPath] [forceDelivery]"+
-				   "(bill|nobill) (arc|noarc) (allow|deny) (receipt|noreceipt)");
-				
+				"Syntax: [active|inactive] [hide|nohide] [forceReplayPath] [forceDelivery]"+
+				"(bill|nobill) (arc|noarc) (allow|deny) (receipt|noreceipt)");
+			
 		}
 	}
 	
@@ -2889,7 +2887,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_INACTIVE:
 			{
 				match(OPT_INACTIVE);
-				cmd.setActive(false);	
+				cmd.setActive(false);
 				break;
 			}
 			case EOF:
@@ -3278,8 +3276,8 @@ public CommandParser(ParserSharedInputState state) {
 		catch (RecognitionException ex) {
 			
 			throw new RecognitionException("Route flags expected. "+
-				   "Syntax: [active|inactive] [hide|nohide] [bill|nobill] [arc|noarc] [allow|deny] [receipt|noreceipt]");
-				
+				"Syntax: [active|inactive] [hide|nohide] [bill|nobill] [arc|noarc] [allow|deny] [receipt|noreceipt]");
+			
 		}
 	}
 	
@@ -3321,8 +3319,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Subject mask list missed or invalid. Syntax: <subject_mask>(,<subject_mask>)*");
-				
+			throw new RecognitionException("Subject mask list missed or invalid. Syntax: <subject_mask>(,<subject_mask>)*");
+			
 		}
 	}
 	
@@ -3476,7 +3474,7 @@ public CommandParser(ParserSharedInputState state) {
 		catch (RecognitionException ex) {
 			
 			throw new RecognitionException("Profile devert options expected. Syntax: [absent][barred][blocked][capacity][unconditional] [modifiable|notmodifiable]");
-				
+			
 		}
 	}
 	
@@ -3527,7 +3525,7 @@ public CommandParser(ParserSharedInputState state) {
 		catch (RecognitionException ex) {
 			
 			throw new RecognitionException("Profile udh concat option expected. Syntax: udhconcat on|off");
-				
+			
 		}
 	}
 	
@@ -3545,13 +3543,19 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_HIDE:
 			{
 				match(OPT_HIDE);
-				cmd.setAliasHide(true);
+				cmd.setAliasHide(ProfileGenCommand.ALIAS_HIDE);
 				break;
 			}
 			case OPT_NOHIDE:
 			{
 				match(OPT_NOHIDE);
-				cmd.setAliasHide(false);
+				cmd.setAliasHide(ProfileGenCommand.ALIAS_NOHIDE);
+				break;
+			}
+			case OPT_SUBSTIT:
+			{
+				match(OPT_SUBSTIT);
+				cmd.setAliasHide(ProfileGenCommand.ALIAS_SUBSTIT);
 				break;
 			}
 			case EOF:
@@ -3597,8 +3601,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-			throw new RecognitionException("Profile alias options expected. Syntax: [hide|nohide] [modifiable|notmodifiable]");
-				
+			throw new RecognitionException("Profile alias options expected. Syntax: [hide|nohide|substitute] [modifiable|notmodifiable]");
+			
 		}
 	}
 	
@@ -3668,7 +3672,7 @@ public CommandParser(ParserSharedInputState state) {
 		catch (RecognitionException ex) {
 			
 			throw new RecognitionException("Profile encoding options expected. Syntax: (default|ucs2|latin1|ucs2-latin1) [ussd7bit]");
-				
+			
 		}
 	}
 	
@@ -3703,6 +3707,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"name\"",
 		"\"hide\"",
 		"\"nohide\"",
+		"\"substitute\"",
 		"\"bill\"",
 		"\"nobill\"",
 		"\"arc\"",

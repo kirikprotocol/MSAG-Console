@@ -12,11 +12,15 @@ import ru.novosoft.smsc.admin.profiler.Profile;
 
 public abstract class ProfileGenCommand implements Command
 {
+  public final static byte ALIAS_HIDE    = Profile.ALIAS_HIDE_true;
+  public final static byte ALIAS_NOHIDE  = Profile.ALIAS_HIDE_false;
+  public final static byte ALIAS_SUBSTIT = Profile.ALIAS_HIDE_substitute;
+
   protected byte report = Profile.REPORT_OPTION_None;
   protected byte codepage = Profile.CODEPAGE_Default;
   protected boolean ussd7bit = false;
 
-  protected boolean aliasHide = false;
+  protected byte aliasHide = ALIAS_NOHIDE;
   protected boolean aliasModifiable = false;
 
   protected String  divert = "";
@@ -76,7 +80,7 @@ public abstract class ProfileGenCommand implements Command
   public void setAliasOptions(boolean aliasOptions) {
     isAliasOptions = aliasOptions;
   }
-  public void setAliasHide(boolean aliasHide) {
+  public void setAliasHide(byte aliasHide) {
     this.aliasHide = aliasHide;  isAliasHide = true;
   }
   public void setAliasModifiable(boolean aliasModifiable) {

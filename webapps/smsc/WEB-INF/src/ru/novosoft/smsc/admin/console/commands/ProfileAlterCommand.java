@@ -31,7 +31,7 @@ public class ProfileAlterCommand extends ProfileGenCommand
                            "Syntax: alter profile <profile_address> "+
                            "[report (full|none)] [locale <locale_name>] "+
                            "[encoding (default|ucs2|latin1|ucs2-latin1) [ussd7bit]] "+
-                           "[alias [hide|nohide] [modifiable|notmodifiable]] "+
+                           "[alias [hide|nohide|substitute] [modifiable|notmodifiable]] "+
                            "[divert [(set <divert>)|clear] [(on|off) [absent][barred][blocked][capacity][unconditional]] "+
                            "[modifiable|notmodifiable]] [udhconcat on|off]");
             ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
@@ -52,7 +52,7 @@ public class ProfileAlterCommand extends ProfileGenCommand
                   profile.setUssd7bit(ussd7bit);
                 }
                 if (isReport) profile.setReportOptions(report);
-                if (isAliasHide) profile.setAliasHide(aliasHide ? Profile.ALIAS_HIDE_true : Profile.ALIAS_HIDE_false); //todo: reimplement
+                if (isAliasHide) profile.setAliasHide(aliasHide);
                 if (isAliasModifiable) profile.setAliasModifiable(aliasModifiable);
                 if (isDivert) profile.setDivert(divert);
                 if (isDivertActiveAbsent) profile.setDivertActiveAbsent(divertActiveOn ? divertActiveAbsent:false);

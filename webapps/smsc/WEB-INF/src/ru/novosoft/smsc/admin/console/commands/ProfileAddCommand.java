@@ -26,7 +26,7 @@ public class ProfileAddCommand extends ProfileGenCommand
 
     if (isAliasOptions && !isAliasHide && !isAliasModifiable) {
       ctx.setMessage("expecting alias option(s). " +
-                     "Syntax: alias [hide|nohide] [modifiable|notmodifiable]");
+                     "Syntax: alias [hide|nohide|substitute] [modifiable|notmodifiable]");
       ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
       return;
     }
@@ -47,8 +47,7 @@ public class ProfileAddCommand extends ProfileGenCommand
         throw new Exception("Locale '" + locale + "' is not registered");
 
       Profile profile = new Profile(profileMask, codepage, ussd7bit, report, locale,
-                                    aliasHide ? Profile.ALIAS_HIDE_true : Profile.ALIAS_HIDE_false, //todo: reimplement
-                                    aliasModifiable,
+                                    aliasHide, aliasModifiable,
                                     divert, divertActiveUnconditional, divertActiveAbsent,
                                     divertActiveBlocked, divertActiveBarred, divertActiveCapacity,
                                     divertModifiable, udhConcat, false); //todo: implement translit flag
