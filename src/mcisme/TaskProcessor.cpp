@@ -150,7 +150,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
         releaseSettings.detachInform = 0;
     }
     try { releaseSettings.skipUnknownCaller = releaseSettingsCfg->getBool("skipUnknownCaller"); } catch (...) {
-        smsc_log_warn(logger, "Parameter <MCISme.Reasons.Detach.inform> missed. Skip is switched off.");
+        smsc_log_warn(logger, "Parameter <MCISme.Reasons.skipUnknownCaller> missed. Skip is switched off.");
         releaseSettings.skipUnknownCaller = false;
     }
     try { releaseSettings.strategy = releaseSettingsCfg->getInt ("strategy"); } catch (...) {
