@@ -73,6 +73,7 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
         message.set_validityPeriod(smpp_time);
     }
   }
+	pdu->optional.set_userMessageReference(sms->getMessageReference());
   return true;
 }
 
@@ -129,7 +130,11 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
 
     sms->setDeliveryReport(message.registredDelivery);
   }
-  return true;
+  if ( pdu->optional.has_userMessageReference() )
+		sms->setMessageReference(pdu->optional.get_userMessageReference());
+	else
+		sms->setMessageReference(0);
+	return true;
 }
 
 };
