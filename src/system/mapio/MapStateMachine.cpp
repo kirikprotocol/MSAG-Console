@@ -366,6 +366,33 @@ static void CheckLockedByMO(MapDialog* dialog)
 
 static void QueryHlrVersion(MapDialog* dialog)
 {
+  switch( dialog->state ){
+      case MAPST_WaitHlrVersion:
+          dialog->version = 2;
+          dialog->hlrVersion = 2;
+          dialog->state = MAPST_RInfoFallBack;
+          SendRInfo(dialog);
+          break;
+      case MAPST_ImsiWaitACVersion:
+          dialog->version = 2;
+          dialog->state = MAPST_ImsiWaitOpenConf;
+          SendRInfo(dialog);
+          break;
+      default:
+          throw MAPDIALOG_BAD_STATE(
+                  FormatText("MAP::%s bad state %d, did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
+  }
+}
+
+static void QueryMcsVersion(MapDialog* dialog)
+{
+  dialog->version = 2;
+  SendSms(dialog);
+}
+
+/*
+static void QueryHlrVersion(MapDialog* dialog)
+{
   MutexGuard guard(x_map_lock);
   char text[128];
   SS7ToText(&dialog->mshlrAddr,text);
@@ -398,7 +425,7 @@ static void QueryMcsVersion(MapDialog* dialog)
       FormatText("MAP::QueryMcsVersion: error 0x%x when GetAcVersion",result),MAP_FALURE);
   }
 }
-
+*/
 static inline
 void SetVersion(ET96MAP_APP_CNTX_T& ac,unsigned version){
   if ( version > 3 || version == 0 ) throw runtime_error(
