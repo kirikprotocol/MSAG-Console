@@ -1949,7 +1949,10 @@ USHORT_T Et96MapV2InformSCInd (
 
 static bool NeedNotifyHLR(MapDialog* dialog)
 {
-  return !dialog->hlrWasNotified &&
+  if ( dialog->hlrVersion == 0 ) {
+    __trace2__("MAP::%s hlrVersion is NULL",__FUNCTION__);
+  }
+  return !dialog->hlrWasNotified && dialog->hlrVersion != 0 && 
     (!dialog->wasDelivered || 
       (dialog->wasDelivered && dialog->hasMwdStatus &&
         ( ((unsigned)dialog->subscriberAbsent != (unsigned)dialog->mwdStatus.mnrf)||
