@@ -217,7 +217,6 @@ public class RouteAlterCommand extends RouteGenCommand
             if (setBill) newRoute.setBilling(bill);
             if (setArc) newRoute.setArchiving(arc);
             if (setAllow) newRoute.setEnabling(allow);
-            //todo check reciept or !reciept
             if (setReciept) newRoute.setSuppressDeliveryReports(!reciept);
             if (setId) newRoute.setServiceId(serviceid);
             if (setPri) {

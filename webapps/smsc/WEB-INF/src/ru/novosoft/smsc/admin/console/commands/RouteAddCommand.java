@@ -104,7 +104,6 @@ public class RouteAddCommand extends RouteGenCommand
                 }
             }
 
-			//todo check reciept or !reciept
             smscRoute = new Route(route, priority, allow, bill, arc, !reciept,
                                   serviceid, srcList, dstList);
 
