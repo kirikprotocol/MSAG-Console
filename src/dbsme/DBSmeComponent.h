@@ -21,7 +21,7 @@ namespace smsc { namespace dbsme
     {
     private:
     
-        smsc::logger::Logger logger;
+        smsc::logger::Logger *logger;
 
         DBSmeAdmin         &admin;
         Methods            methods;

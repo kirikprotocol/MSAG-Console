@@ -45,7 +45,7 @@ Mutex DaemonCommandDispatcher::configManagerMutex;
 class ChildShutdownWaiter : public Thread
 {
 private:
-  smsc::logger::Logger logger;
+  smsc::logger::Logger *logger;
   bool isStopping;
 public:
   ChildShutdownWaiter()
@@ -73,20 +73,20 @@ public:
         case ECHILD:
           break;
         case EINTR:
-          logger.debug("interrupted");
+          smsc_log_debug(logger, "interrupted");
           break;
         case EINVAL:
-          logger.error("invalid arguments");
+          smsc_log_error(logger, "invalid arguments");
           break;
         default:
-          logger.error("unknown error");
+          smsc_log_error(logger, "unknown error");
           break;
         }
       }
       else if (chldpid > 0)
       {
 #ifdef SMSC_DEBUG
-        logger.debug("CHILD %u is finished", chldpid);
+        smsc_log_debug(logger, "CHILD %u is finished", chldpid);
 #endif
         MutexGuard a(DaemonCommandDispatcher::servicesListMutex);
         if (const char * const serviceId = DaemonCommandDispatcher::services.markServiceAsStopped(chldpid))
@@ -98,7 +98,7 @@ public:
 #ifdef SMSC_DEBUG
 /*      else
       {
-        logger.debug("waitpid returns %u ");
+        smsc_log_debug(logger, "waitpid returns %u ");
       }*/
 #endif
       sleep(1);
@@ -122,9 +122,9 @@ void DaemonCommandDispatcher::init(config::Manager * confManager) throw ()
   try {
     shutdownTimeout = configManager->getInt(CONFIG_SHUTDOWN_TIMEOUT);
   } catch (ConfigException &e) {
-    Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher").warn("Couldn't get shutdown timeout from config. Shutdown timeout setted to %i seconds. Please define \"%s\" properly in daemon config.\nNested: %s", shutdownTimeout, CONFIG_SHUTDOWN_TIMEOUT, e.what());
+    smsc_log_warn(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Couldn't get shutdown timeout from config. Shutdown timeout setted to %i seconds. Please define \"%s\" properly in daemon config.\nNested: %s", shutdownTimeout, CONFIG_SHUTDOWN_TIMEOUT, e.what());
   } catch (...) {
-    Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher").warn("Couldn't get shutdown timeout from config. Shutdown timeout setted to %i seconds. Please define \"%s\" properly in daemon config.\nNested: Unknown exception", shutdownTimeout, CONFIG_SHUTDOWN_TIMEOUT);
+    smsc_log_warn(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Couldn't get shutdown timeout from config. Shutdown timeout setted to %i seconds. Please define \"%s\" properly in daemon config.\nNested: Unknown exception", shutdownTimeout, CONFIG_SHUTDOWN_TIMEOUT);
   }
   addServicesFromConfig();
 
@@ -189,7 +189,7 @@ Response * DaemonCommandDispatcher::handle(const Command * const command)
 Response * DaemonCommandDispatcher::add_service(const CommandAddService * const command)
   throw (AdminException)
 {
-  /*  logger.debug("add service \"%s\" (%s) %u %s",
+  /*  smsc_log_debug(logger, "add service \"%s\" (%s) %u %s",
   command->getServiceName(),
   command->getCmdLine(),
   command->getPort(),
@@ -207,13 +207,13 @@ Response * DaemonCommandDispatcher::add_service(const CommandAddService * const 
     }
     else
     {
-      logger.warn("service id not specified");
+      smsc_log_warn(logger, "service id not specified");
       throw AdminException("service id not specified");
     }
   }
   else
   {
-    logger.warn("null command received");
+    smsc_log_warn(logger, "null command received");
     throw AdminException("null command received");
   }
 }
@@ -227,7 +227,7 @@ Response * DaemonCommandDispatcher::remove_service(const CommandRemoveService * 
       {
         MutexGuard guard(servicesListMutex);
         Service *s = services[command->getServiceId()];
-        logger.debug("remove service \"%s\"", command->getServiceId());
+        smsc_log_debug(logger, "remove service \"%s\"", command->getServiceId());
         if (s->getStatus() != Service::stopped)
         {
           s->kill();
@@ -239,13 +239,13 @@ Response * DaemonCommandDispatcher::remove_service(const CommandRemoveService * 
     }
     else
     {
-      logger.warn("service name not specified");
+      smsc_log_warn(logger, "service name not specified");
       throw AdminException("service name not specified");
     }
   }
   else
   {
-    logger.warn("null command received");
+    smsc_log_warn(logger, "null command received");
     throw AdminException("null command received");
   }
 }
@@ -254,7 +254,7 @@ Response * DaemonCommandDispatcher::remove_service(const CommandRemoveService * 
 Response * DaemonCommandDispatcher::set_service_startup_parameters(const CommandSetServiceStartupParameters * const command)
   throw (AdminException)
 {
-  logger.debug("set service startup parameters");
+  smsc_log_debug(logger, "set service startup parameters");
   if (command != 0)
   {
     if (command->getServiceId() != 0)
@@ -271,13 +271,13 @@ Response * DaemonCommandDispatcher::set_service_startup_parameters(const Command
     }
     else
     {
-      logger.warn("service name or service id not specified");
+      smsc_log_warn(logger, "service name or service id not specified");
       throw AdminException("service name or service id not specified");
     }
   }
   else
   {
-    logger.warn("null command received");
+    smsc_log_warn(logger, "null command received");
     throw AdminException("null command received");
   }
 }
@@ -285,13 +285,13 @@ Response * DaemonCommandDispatcher::set_service_startup_parameters(const Command
 Response * DaemonCommandDispatcher::list_services(const CommandListServices * const command)
   throw (AdminException)
 {
-  logger.debug("list services");
+  smsc_log_debug(logger, "list services");
   std::auto_ptr<char> text(0);
   {
     MutexGuard guard(servicesListMutex);
     text.reset(services.getText());
   }
-  logger.debug("services list:\n%s\n", text.get());
+  smsc_log_debug(logger, "services list:\n%s\n", text.get());
   return new Response(Response::Ok, text.get());
 }
 
@@ -299,7 +299,7 @@ Response * DaemonCommandDispatcher::list_services(const CommandListServices * co
 Response * DaemonCommandDispatcher::start_service(const CommandStartService * const command)
   throw (AdminException)
 {
-  logger.debug("start service");
+  smsc_log_debug(logger, "start service");
   if (command != 0)
   {
     if (command->getServiceId() != 0)
@@ -317,13 +317,13 @@ Response * DaemonCommandDispatcher::start_service(const CommandStartService * co
     }
     else
     {
-      logger.warn("service id not specified");
+      smsc_log_warn(logger, "service id not specified");
       throw AdminException("service id not specified");
     }
   }
   else
   {
-    logger.warn("null command received");
+    smsc_log_warn(logger, "null command received");
     throw AdminException("null command received");
   }
 }
@@ -331,12 +331,12 @@ Response * DaemonCommandDispatcher::start_service(const CommandStartService * co
 Response * DaemonCommandDispatcher::shutdown_service(const CommandShutdown * const command)
   throw (AdminException)
 {
-  logger.debug("shutdown service");
+  smsc_log_debug(logger, "shutdown service");
   if (command != 0)
   {
     if (command->getServiceId() != 0)
     {
-      logger.debug("shutdown service \"%s\"", command->getServiceId());
+      smsc_log_debug(logger, "shutdown service \"%s\"", command->getServiceId());
       {
         MutexGuard guard(servicesListMutex);
         services[command->getServiceId()]->shutdown();
@@ -345,13 +345,13 @@ Response * DaemonCommandDispatcher::shutdown_service(const CommandShutdown * con
     }
     else
     {
-      logger.warn("service id not specified");
+      smsc_log_warn(logger, "service id not specified");
       throw AdminException("service id not specified");
     }
   }
   else
   {
-    logger.warn("null command received");
+    smsc_log_warn(logger, "null command received");
     throw AdminException("null command received");
   }
 }
@@ -359,12 +359,12 @@ Response * DaemonCommandDispatcher::shutdown_service(const CommandShutdown * con
 Response * DaemonCommandDispatcher::kill_service(const CommandKillService * const command)
   throw (AdminException)
 {
-  logger.debug("kill service");
+  smsc_log_debug(logger, "kill service");
   if (command != 0)
   {
     if (command->getServiceId() != 0)
     {
-      logger.debug("kill service \"%s\"", command->getServiceId());
+      smsc_log_debug(logger, "kill service \"%s\"", command->getServiceId());
       {
         MutexGuard servicesGuard(servicesListMutex);
         services[command->getServiceId()]->kill();
@@ -375,13 +375,13 @@ Response * DaemonCommandDispatcher::kill_service(const CommandKillService * cons
     }
     else
     {
-      logger.warn("service id not specified");
+      smsc_log_warn(logger, "service id not specified");
       throw AdminException("service id not specified");
     }
   }
   else
   {
-    logger.warn("null command received");
+    smsc_log_warn(logger, "null command received");
     throw AdminException("null command received");
   }
 }
@@ -419,7 +419,7 @@ void DaemonCommandDispatcher::addServicesFromConfig()
       try {
         autostart = configManager->getBool((prefix+"autostart").c_str());
       } catch (AdminException &e) {
-        Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher").warn("Could not get autostart flag for service \"%s\", nested: %s", serviceId.get(), e.what());
+        smsc_log_warn(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Could not get autostart flag for service \"%s\", nested: %s", serviceId.get(), e.what());
       } catch (...)
       {
         //skip
@@ -430,13 +430,11 @@ void DaemonCommandDispatcher::addServicesFromConfig()
   }
   catch (AdminException &e)
   {
-    Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher").
-      error("Exception on adding services, nested: %s", e.what());
+    smsc_log_error(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Exception on adding services, nested: %s", e.what());
   }
   catch (...)
   {
-    Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher").
-      error("Exception on adding services");
+    smsc_log_error(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Exception on adding services");
   }
 }
 
@@ -483,7 +481,7 @@ void DaemonCommandDispatcher::putServiceToConfig(const char * const serviceId, c
   configManager->setString((serviceSectionName + ".args").c_str(), serviceArgs);
   configManager->setBool((serviceSectionName + ".autostart").c_str(), autostart);
   configManager->save();
-  logger.debug("new config saved");
+  smsc_log_debug(logger, "new config saved");
 }
 
 void DaemonCommandDispatcher::removeServiceFromConfig(const char * const serviceId)
@@ -513,7 +511,7 @@ void DaemonCommandDispatcher::startAllServices()
         servicePtr->start();
       } catch (...) {
         if (serviceId != NULL)
-          Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher").error("Couldn't start service \"%s\", skipped", serviceId);
+          smsc_log_error(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Couldn't start service \"%s\", skipped", serviceId);
       }
     }
   }
@@ -533,7 +531,7 @@ void DaemonCommandDispatcher::stopAllServices(unsigned int timeoutInSecs)
         allShutdowned = false;
         servicePtr->shutdown();
       } catch (...) {
-        Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher").error("Couldn't stop service \"%s\", skipped", serviceId == NULL ? "<unknown>" : serviceId);
+        smsc_log_error(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Couldn't stop service \"%s\", skipped", serviceId == NULL ? "<unknown>" : serviceId);
       }
     }
   }
@@ -549,10 +547,10 @@ void DaemonCommandDispatcher::stopAllServices(unsigned int timeoutInSecs)
       try {
         servicePtr->kill();
       } catch (AdminException &e) {
-        Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher").error("Couldn't kill service \"%s\", skipped, nested:\n%s", serviceId == NULL ? "<unknown>" : serviceId, e.what());
+        smsc_log_error(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Couldn't kill service \"%s\", skipped, nested:\n%s", serviceId == NULL ? "<unknown>" : serviceId, e.what());
       } catch (...) {
         if (serviceId != NULL)
-          Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher").error("Couldn't stop service \"%s\", skipped", serviceId);
+          smsc_log_error(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Couldn't stop service \"%s\", skipped", serviceId);
       }
     }
   }

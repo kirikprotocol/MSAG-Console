@@ -19,7 +19,7 @@ namespace smsc { namespace db
     {
     private:
 
-        static smsc::logger::Logger logger;
+        static smsc::logger::Logger *logger;
         static Array<void *>        handles;
         static Mutex                loadupLock;
 

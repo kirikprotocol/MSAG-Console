@@ -151,27 +151,27 @@ throw (AdminException)
 {
   try
   {
-    logger.debug("call \"%s\"", method.getName());
+    smsc_log_debug(logger, "call \"%s\"", method.getName());
     switch (method.getId())
     {
       case applyRoutesMethod:
-        logger.debug("applying routes...");
+        smsc_log_debug(logger, "applying routes...");
         applyRoutes();
-        logger.debug("routes applied");
+        smsc_log_debug(logger, "routes applied");
         return Variant("");
       case applyAliasesMethod:
-        logger.debug("applying aliases...");
+        smsc_log_debug(logger, "applying aliases...");
         applyAliases();
-        logger.debug("aliases applied");
+        smsc_log_debug(logger, "aliases applied");
         return Variant("");
       case profileLookupMethod:
-        logger.debug("lookup profile...");
+        smsc_log_debug(logger, "lookup profile...");
         return profileLookup(args);
       case profileLookupExMethod:
-        logger.debug("lookupEx profile...");
+        smsc_log_debug(logger, "lookupEx profile...");
         return profileLookupEx(args);
       case profileUpdateMethod:
-        logger.debug("update profile...");
+        smsc_log_debug(logger, "update profile...");
         return Variant((long)profileUpdate(args));
       case profileDeleteMethod:
         return Variant((long)profileDelete(args));
@@ -229,10 +229,10 @@ throw (AdminException)
                 return traceRoute(args);
 
       default:
-        logger.debug("unknown method \"%s\" [%u]", method.getName(), method.getId());
+        smsc_log_debug(logger, "unknown method \"%s\" [%u]", method.getName(), method.getId());
         throw AdminException("Unknown method \"%s\"", method.getName());
     }
-    logger.error("call \"%s\"[%u] done. Unreacheable code reached.", method.getName(), method.getId());
+    smsc_log_error(logger, "call \"%s\"[%u] done. Unreacheable code reached.", method.getName(), method.getId());
     return Variant("");
   }
   catch (AdminException &e)
@@ -294,17 +294,17 @@ return result;*/
 void SmscComponent::applyServices()
 throw (AdminException)
 {
-  logger.info("applying new services...");
+  smsc_log_info(logger, "applying new services...");
   reloadConfigsAndRestart();
-  logger.info("new services applied.");
+  smsc_log_info(logger, "new services applied.");
 }
 
 void SmscComponent::applySmscConfig()
 throw (AdminException)
 {
-  logger.info("applying new configs...");
+  smsc_log_info(logger, "applying new configs...");
   reloadConfigsAndRestart();
-  logger.info("new config applied.");
+  smsc_log_info(logger, "new config applied.");
 }
 
 void SmscComponent::reloadConfigsAndRestart()
@@ -318,12 +318,12 @@ throw (AdminException)
   }
   catch (std::exception &e)
   {
-    logger.error("Couldn't apply new config: %s", e.what());
+    smsc_log_error(logger, "Couldn't apply new config: %s", e.what());
     return;
   }
   catch (...)
   {
-    logger.error("Couldn't apply new config: unknown exception");
+    smsc_log_error(logger, "Couldn't apply new config: unknown exception");
     return;
   }
 }
@@ -331,19 +331,19 @@ throw (AdminException)
 std::string SmscComponent::flushStatistics(const Arguments &args)
 throw (AdminException)
 {
-  logger.debug("flushStatistics");
+  smsc_log_debug(logger, "flushStatistics");
   try
   {
     smsc_app_runner->getApp()->flushStatistics();
   }
   catch (std::exception &e)
   {
-    logger.error("Exception on flush statistics: %s", e.what());
+    smsc_log_error(logger, "Exception on flush statistics: %s", e.what());
     throw AdminException("Exception on flush statistics");
   }
   catch (...)
   {
-    logger.error("Unknown exception on flush statistics");
+    smsc_log_error(logger, "Unknown exception on flush statistics");
     throw AdminException("Unknown exception on flush statistics");
   }
   return "";
@@ -391,11 +391,11 @@ void SmscComponent::processCancelMessage(const std::string &sid, const std::stri
     */
 #endif
     smsc_app_runner->getApp()->cancelSms(id, src, dst);
-    logger.info("message %s[%s][%s] canceled", sid.c_str(), ssrc.c_str(), sdst.c_str());
+    smsc_log_info(logger, "message %s[%s][%s] canceled", sid.c_str(), ssrc.c_str(), sdst.c_str());
   }
   catch (...)
   {
-    logger.error("Couldn't cancel message %s[%s][%s]", sid.c_str(), ssrc.c_str(), sdst.c_str());
+    smsc_log_error(logger, "Couldn't cancel message %s[%s][%s]", sid.c_str(), ssrc.c_str(), sdst.c_str());
   }
 }
 
@@ -407,7 +407,7 @@ throw (AdminException)
     const char * const idsStr = args.Get("ids").getStringValue();
     const char * const sourcesStr = args.Get("sources").getStringValue();
     const char * const destinationsStr = args.Get("destinations").getStringValue();
-    logger.info("processCancelMessages: [%s], [%s], [%s]", idsStr, sourcesStr, destinationsStr);
+    smsc_log_info(logger, "processCancelMessages: [%s], [%s], [%s]", idsStr, sourcesStr, destinationsStr);
 
     StrArray ids = parseStringToStringList(idsStr);
     StrArray sources = parseStringToStringList(sourcesStr);
@@ -416,7 +416,7 @@ throw (AdminException)
        || (ids.Count() != destinations.Count())
        || (destinations.Count() != sources.Count()))
     {
-      logger.error("processCancelMessages failed: incorrect params");
+      smsc_log_error(logger, "processCancelMessages failed: incorrect params");
       throw AdminException("incorrect params");
     }
 
@@ -433,12 +433,12 @@ throw (AdminException)
   }
   catch (HashInvalidKeyException &e)
   {
-    logger.error("processCancelMessages failed: not all parameters defined");
+    smsc_log_error(logger, "processCancelMessages failed: not all parameters defined");
     throw AdminException("not all parameters defined");
   }
   catch (...)
   {
-    logger.error("processCancelMessages failed: unknown reason");
+    smsc_log_error(logger, "processCancelMessages failed: unknown reason");
     throw AdminException("unknown exception");
   }
 }
@@ -457,17 +457,17 @@ throw (AdminException)
     }
     catch (smsc::util::Exception &e)
     {
-      logger.error("Exception on starting SMSC: \"%s\"", e.what());
+      smsc_log_error(logger, "Exception on starting SMSC: \"%s\"", e.what());
       throw AdminException("Exception on starting SMSC: \"%s\"", e.what());
     }
     catch (std::exception &e)
     {
-      logger.error("Exception on starting SMSC: \"%s\"", e.what());
+      smsc_log_error(logger, "Exception on starting SMSC: \"%s\"", e.what());
       throw AdminException("Exception on starting SMSC: \"%s\"", e.what());
     }
     catch (...)
     {
-      logger.error("Unknown exception on starting SMSC");
+      smsc_log_error(logger, "Unknown exception on starting SMSC");
       throw AdminException("Unknown exception on starting SMSC");
     }
   }
@@ -493,19 +493,19 @@ throw (AdminException)
     catch (smsc::util::Exception &e)
     {
       isStopping = false;
-      logger.error("Exception on starting SMSC: \"%s\"", e.what());
+      smsc_log_error(logger, "Exception on starting SMSC: \"%s\"", e.what());
       throw AdminException("Exception on stopping SMSC: \"%s\"", e.what());
     }
     catch (std::exception &e)
     {
       isStopping = false;
-      logger.error("Exception on stopping SMSC: \"%s\"", e.what());
+      smsc_log_error(logger, "Exception on stopping SMSC: \"%s\"", e.what());
       throw AdminException("Exception on starting SMSC: \"%s\"", e.what());
     }
     catch (...)
     {
       isStopping = false;
-      logger.error("Unknown exception on stopping SMSC");
+      smsc_log_error(logger, "Unknown exception on stopping SMSC");
       throw AdminException("Unknown exception on starting SMSC");
     }
   }
@@ -526,16 +526,16 @@ void SmscComponent::abort()
     }
     catch (smsc::util::Exception &e)
     {
-      logger.error("Exception on aborting SMSC: \"%s\"", e.what());
+      smsc_log_error(logger, "Exception on aborting SMSC: \"%s\"", e.what());
       throw AdminException("Exception on aborting SMSC: \"%s\"", e.what());
     }
     catch (std::exception &e)
     {
-      logger.error("Exception on aborting SMSC: \"%s\"", e.what());
+      smsc_log_error(logger, "Exception on aborting SMSC: \"%s\"", e.what());
     }
     catch (...)
     {
-      logger.error("Unknown exception on aborting SMSC");
+      smsc_log_error(logger, "Unknown exception on aborting SMSC");
     }
   }
 }
@@ -553,16 +553,16 @@ void SmscComponent::dump()
     }
     catch (smsc::util::Exception &e)
     {
-      logger.error("Exception on starting SMSC: \"%s\"", e.what());
+      smsc_log_error(logger, "Exception on starting SMSC: \"%s\"", e.what());
       throw AdminException("Exception on dumping SMSC: \"%s\"", e.what());
     }
     catch (std::exception &e)
     {
-      logger.error("Exception on dumping SMSC: \"%s\"", e.what());
+      smsc_log_error(logger, "Exception on dumping SMSC: \"%s\"", e.what());
     }
     catch (...)
     {
-      logger.error("Unknown exception on dumping SMSC");
+      smsc_log_error(logger, "Unknown exception on dumping SMSC");
     }
   }
 }
@@ -887,7 +887,7 @@ throw (AdminException)
 #ifdef SMSC_DEBUG
       char addr_str[smsc::sms::MAX_ADDRESS_VALUE_LENGTH+1];
       address.getValue(addr_str);
-      logger.debug("lookup Profile:\n  %s: Address: \"%s\"[%u], numebring plan:%u, type of number:%u, ", addressString, addr_str, address.getLength(), address.getNumberingPlan(), address.getTypeOfNumber());
+      smsc_log_debug(logger, "lookup Profile:\n  %s: Address: \"%s\"[%u], numebring plan:%u, type of number:%u, ", addressString, addr_str, address.getLength(), address.getNumberingPlan(), address.getTypeOfNumber());
 #endif
       Variant result(StringListType);
       result.appendValueToStringList(getProfileCodepageStr(profile.codepage));
@@ -1000,7 +1000,7 @@ int SmscComponent::profileUpdate(const Arguments & args)
 #ifdef SMSC_DEBUG
       char addr_str[smsc::sms::MAX_ADDRESS_VALUE_LENGTH+9];
       address.toString(addr_str, sizeof(addr_str)/sizeof(addr_str[0]));
-      logger.debug("Update Profile:\n  %s: Address: \"%s\", codepage:%u, report options:%u, locale:%s", addressString, addr_str, profile.codepage, profile.reportoptions, profile.locale.c_str());
+      smsc_log_debug(logger, "Update Profile:\n  %s: Address: \"%s\", codepage:%u, report options:%u, locale:%s", addressString, addr_str, profile.codepage, profile.reportoptions, profile.locale.c_str());
 #endif
       if (isMask(address))
         return profiler->updatemask(address, profile);
@@ -1105,7 +1105,7 @@ void SmscComponent::smeUpdate(const Arguments & args)
 Variant SmscComponent::smeStatus(const Arguments & args)
 {
   Variant result(StringListType);
-  for (SmeIterator* i = getSmeAdmin()->iterator(); i != NULL;)
+  for (std::auto_ptr<SmeIterator> i(getSmeAdmin()->iterator()); i.get() != NULL;)
   {
     std::string status;
     status += i->getSmeInfo().systemId;
@@ -1173,7 +1173,7 @@ void SmscComponent::smeDisconnect(const Arguments & args)
     {
       if (i->getSmeProxy() != 0 && i->getSmeInfo().systemId == smeId)
       {
-        logger.debug("Disconnecting sme \"%s\"", smeId.c_str());
+        smsc_log_debug(logger, "Disconnecting sme \"%s\"", smeId.c_str());
         i->getSmeProxy()->disconnect();
       }
       if (!i->next())
@@ -1184,49 +1184,45 @@ void SmscComponent::smeDisconnect(const Arguments & args)
 
 Variant SmscComponent::logGetCategories(void)
 {
-  Variant result(service::StringListType);
-  Logger::LogCats * cats = Logger::getCurrentCategories();
-  for (Logger::LogCats::iterator i = cats->begin(); i != cats->end(); i++)
-  {
-    std::string tmp(i->first);
-    tmp += ",";
-    tmp += Logger::getLogLevelName(i->second);
-    result.appendValueToStringList(tmp.c_str());
-  }
-  delete cats;
-  return result;
-}
-
-void SmscComponent::setLogCat(const char * catStr)
-{
-  using namespace std;
-
-  auto_ptr<char> str(new char[strlen(catStr) +1]);
-  strcpy(str.get(), catStr);
-  char * delim_pos = strrchr(str.get(), ',');
-  if (delim_pos != NULL)
-  {
-    char * value = delim_pos+1;
-    *delim_pos = 0;
-
-  Logger::setCategoryLogLevel(str.get(), Logger::getLogLevel(value));
-  }
-  else
-  {
-    logger.error("misformatted logger category string: \"%s\"", catStr);
-  }
+	Variant result(service::StringListType);
+	const Logger::LogLevels & cats = Logger::getLogLevels();
+	char * k;
+	Logger::LogLevel level;
+	for (Logger::LogLevels::Iterator i = cats.getIterator(); i.Next(k, level); )
+	{
+		std::string tmp(k);
+		tmp += ","; 
+		tmp += Logger::getLogLevel(level);
+		result.appendValueToStringList(tmp.c_str());
+	}
+	return result;
 }
 
 void SmscComponent::logSetCategories(const Arguments & args)
 {
-  const StringList & cats = args.Get("categories").getStringListValue();
-  for (StringList::const_iterator i = cats.begin(); i != cats.end(); i++)
-  {
-    setLogCat(*i);
-  }
-  if( smsc_app_runner->getApp()->getMapProxy() != 0 ) {
-    dynamic_cast<MapProxy*>(smsc_app_runner->getApp()->getMapProxy())->checkLogging();
-  }
+	const StringList & cats = args.Get("categories").getStringListValue();
+	Logger::LogLevels levels;
+	for (StringList::const_iterator i = cats.begin(); i != cats.end(); i++)
+	{
+		std::auto_ptr<char> str(cStringCopy(*i));
+		char * delim_pos = strrchr(str.get(), ',');
+		if (delim_pos != NULL)
+		{
+			char * value = delim_pos+1;
+			*delim_pos = 0;
+			levels[str.get()] = Logger::getLogLevel(value);
+		}
+		else
+		{
+			smsc_log_error(logger, "misformatted logger category string: \"%s\"", str.get());
+		}
+	}
+
+	Logger::setLogLevels(levels);
+
+	if( smsc_app_runner->getApp()->getMapProxy() != 0 ) {
+		dynamic_cast<MapProxy*>(smsc_app_runner->getApp()->getMapProxy())->checkLogging();
+	}
 }
 
 Variant SmscComponent::applyLocaleResource()

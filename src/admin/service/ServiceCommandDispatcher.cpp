@@ -41,7 +41,7 @@ Response * ServiceCommandDispatcher::handle(const Command * const command)
 			response = listComponents((const CommandListComponents * const) command);
 			break;
 		default:
-			logger.warn("error in parsing: unknown command");
+			smsc_log_warn(logger, "error in parsing: unknown command");
 		}
 	
 		return response;

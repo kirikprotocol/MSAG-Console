@@ -92,14 +92,14 @@ Command* CommandReader::parseCommand(InputSource &source)
 
     if (id == Command::undefined)
     {
-      logger.warn("Unknown command \"%s\"", command_name.get());
+      smsc_log_warn(logger, "Unknown command \"%s\"", command_name.get());
       throw AdminException("Unknown command");
     }
     return createCommand(id,data);
   }
   catch (const ParseException &e)
   {
-    logger.warn("A parse error occured during parsing command: %s", e.what());
+    smsc_log_warn(logger, "A parse error occured during parsing command: %s", e.what());
     throw AdminException("An errors occured during parsing: %s", e.what());
   }
   catch (const XMLException& e)
@@ -107,13 +107,13 @@ Command* CommandReader::parseCommand(InputSource &source)
     char * message = DOMString(e.getMessage()).transcode();
     XMLExcepts::Codes code = e.getCode();
     unsigned int line = e.getSrcLine();
-    logger.warn("An error occured during parsing on line %d. Nested: %d: %s", line, code, message);
+    smsc_log_warn(logger, "An error occured during parsing on line %d. Nested: %d: %s", line, code, message);
     delete[] message;
     throw AdminException("An errors occured during parsing");
   }
   catch (const DOM_DOMException& e)
   {
-    logger.warn("A DOM error occured during parsing command. DOMException code: %i", e.code);
+    smsc_log_warn(logger, "A DOM error occured during parsing command. DOMException code: %i", e.code);
     throw AdminException("An errors occured during parsing");
   }
   catch (const AdminException & e)
@@ -122,7 +122,7 @@ Command* CommandReader::parseCommand(InputSource &source)
   }
   catch (...)
   {
-    logger.warn("An error occured during parsing command");
+    smsc_log_warn(logger, "An error occured during parsing command");
     throw AdminException("An errors occured during parsing");
   }
   throw AdminException("Fatal error: unreachible code reached in smsc::admin::protocol::CommandReader.parseCommand(InputSource &)");
@@ -133,7 +133,7 @@ char * CommandReader::getCommandName(DOM_Document data)
   DOM_Element commandElem = data.getDocumentElement();
   if (!commandElem.getNodeName().equals("command"))
   {
-    logger.warn("<command> tag not found in command");
+    smsc_log_warn(logger, "<command> tag not found in command");
     throw AdminException("<command> tag not found in command");
   }
   return commandElem.getAttribute("name").transcode();
@@ -169,7 +169,7 @@ Command * CommandReader::createCommand(Command::Id id, DOM_Document data) {
   case Command::set_service_startup_parameters:
     return new CommandSetServiceStartupParameters(data);
   default:
-    logger.warn("Unknown command id \"%i\"", id);
+    smsc_log_warn(logger, "Unknown command id \"%i\"", id);
     throw AdminException("Unknown command");
   }
 }

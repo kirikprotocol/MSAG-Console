@@ -99,7 +99,7 @@ const char * DistrListProcess::getSystemId() const
 int DistrListProcess::Execute()
 {
   SmscCommand cmd,resp,answ;
-  smsc::logger::Logger log=smsc::logger::Logger::getInstance("smsc.distrlist.process");
+  smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.distrlist.process");
   while(!isStopping)
   {
     CheckTimeouts();

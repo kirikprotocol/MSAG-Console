@@ -28,7 +28,7 @@ namespace smsc { namespace infosme
     {
     protected:
     
-        smsc::logger::Logger logger;
+        smsc::logger::Logger *logger;
         Connection*         connection;
         
         Hash<TaskStat>      statistics[2];

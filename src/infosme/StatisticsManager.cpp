@@ -84,14 +84,14 @@ int StatisticsManager::Execute()
     while (!bNeedExit)
     {
         int toSleep = calculateToSleep();
-        logger.debug("Start wait %d", toSleep);
+        smsc_log_debug(logger, "Start wait %d", toSleep);
         awakeEvent.Wait(toSleep); // Wait for next hour begins ...
-        logger.debug("End wait");
+        smsc_log_debug(logger, "End wait");
 
         flushCounters(switchCounters());
         bExternalFlush = false;
         doneEvent.Signal();
-        logger.debug("Statistics flushed");
+        smsc_log_debug(logger, "Statistics flushed");
     }
     exitEvent.Signal();
     return 0;
@@ -103,13 +103,13 @@ void StatisticsManager::Start()
     
     if (!bStarted)
     {
-        logger.info("Starting ...");
+        smsc_log_info(logger, "Starting ...");
         bExternalFlush = false;
         bNeedExit = false;
         awakeEvent.Wait(0);
         Thread::Start();
         bStarted = true;
-        logger.info("Started.");
+        smsc_log_info(logger, "Started.");
     }
 }
 void StatisticsManager::Stop()
@@ -118,13 +118,13 @@ void StatisticsManager::Stop()
     
     if (bStarted)
     {
-        logger.info("Stopping ...");
+        smsc_log_info(logger, "Stopping ...");
         bExternalFlush = true;
         bNeedExit = true;
         awakeEvent.Signal();
         exitEvent.Wait();
         bStarted = false;
-        logger.info("Stoped.");
+        smsc_log_info(logger, "Stoped.");
     }
 }
 
@@ -148,7 +148,7 @@ void StatisticsManager::delStatistics(std::string taskId)
     
     flushStatistics();
     
-    logger.debug("Deleting statistics for task '%s'", task_id);
+    smsc_log_debug(logger, "Deleting statistics for task '%s'", task_id);
 
     try
     {
@@ -165,12 +165,12 @@ void StatisticsManager::delStatistics(std::string taskId)
     {
         try { if (connection) connection->rollback(); }
         catch (Exception& exc) {
-            logger.error("Failed to roolback transaction (statistics). "
+            smsc_log_error(logger, "Failed to roolback transaction (statistics). "
                          "Details: %s", exc.what());
         } catch (...) {
-            logger.error("Failed to roolback transaction (statistics).");
+            smsc_log_error(logger, "Failed to roolback transaction (statistics).");
         }
-        logger.error("Error occurred during statistics deleting for task '%s'. "
+        smsc_log_error(logger, "Error occurred during statistics deleting for task '%s'. "
                      "Details: %s", task_id, exc.what());
     }
 }
@@ -210,7 +210,7 @@ const char* INSERT_TASK_STAT_STATE_SQL = (const char*)
 void StatisticsManager::flushCounters(short index)
 {
     uint32_t period = calculatePeriod();
-    logger.debug("Flushing statistics for period: %lu / %lu", period, time(NULL));
+    smsc_log_debug(logger, "Flushing statistics for period: %lu / %lu", period, time(NULL));
 
     try
     {
@@ -241,12 +241,12 @@ void StatisticsManager::flushCounters(short index)
     {
         try { if (connection) connection->rollback(); }
         catch (Exception& exc) {
-            logger.error("Failed to roolback transaction (statistics). "
+            smsc_log_error(logger, "Failed to roolback transaction (statistics). "
                          "Details: %s", exc.what());
         } catch (...) {
-            logger.error("Failed to roolback transaction (statistics).");
+            smsc_log_error(logger, "Failed to roolback transaction (statistics).");
         }
-        logger.error("Error occurred during statistics flushing. Details: %s", exc.what());
+        smsc_log_error(logger, "Error occurred during statistics flushing. Details: %s", exc.what());
     }
 
     statistics[index].Empty();

@@ -23,7 +23,7 @@ public:
 	CommandAddService(DOM_Document doc)	throw (AdminException)
 		: CommandService(add_service, doc)
 	{
-		logger.debug("Add service command");
+		smsc_log_debug(logger, "Add service command");
 		try
 		{
 			DOM_Element elem = doc.getDocumentElement();

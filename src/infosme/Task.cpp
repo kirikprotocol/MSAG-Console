@@ -167,7 +167,7 @@ const char* DELETE_NEW_MESSAGES_STATEMENT_SQL =
 
 void Task::trackIntegrity(bool clear, bool del, Connection* connection)
 {
-    logger.debug("trackIntegrity method called on task '%s'",
+    smsc_log_debug(logger, "trackIntegrity method called on task '%s'",
                  info.id.c_str());
     
     if (!info.trackIntegrity) return;
@@ -218,17 +218,17 @@ void Task::trackIntegrity(bool clear, bool del, Connection* connection)
     {
         try { if (connection) connection->rollback(); }
         catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
-        logger.error("Task '%s'. Failed to track task integrity. "
+        smsc_log_error(logger, "Task '%s'. Failed to track task integrity. "
                      "Details: %s", info.id.c_str(), exc.what());
     }
     catch (...) {
         try { if (connection) connection->rollback(); }
         catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
-        logger.error("Task '%s'. Failed to track task integrity.",
+        smsc_log_error(logger, "Task '%s'. Failed to track task integrity.",
                      info.id.c_str());
     }
     if (connection && connectionInternal) dsInt->freeConnection(connection);
@@ -248,7 +248,7 @@ const char* NEW_SD_INDEX_STATEMENT_SQL =
 
 void Task::createTable()
 {
-    logger.debug("createTable method called on task '%s'", info.id.c_str());
+    smsc_log_debug(logger, "createTable method called on task '%s'", info.id.c_str());
     
     MutexGuard guard(createTableLock);
     
@@ -286,11 +286,11 @@ void Task::createTable()
                 dsInt->freeConnection(connection);
             }
         } catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
         Exception eee("Task '%s'. Failed to create internal table. Details: %s",
                        info.id.c_str(), exc.what());
-        logger.error("%s", eee.what());
+        smsc_log_error(logger, "%s", eee.what());
         throw eee;
     }
     catch (...) {
@@ -300,11 +300,11 @@ void Task::createTable()
                 dsInt->freeConnection(connection);
             }
         } catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
         Exception eee("Task '%s'. Failed to create internal table. Cause is unknown.",
                        info.id.c_str());
-        logger.error("%s", eee.what());
+        smsc_log_error(logger, "%s", eee.what());
         throw eee;
     }
     if (connection) dsInt->freeConnection(connection);
@@ -314,7 +314,7 @@ const char* DROP_TABLE_STATEMENT_SQL = "DROP TABLE %s";
 
 void Task::dropTable()
 {
-    logger.debug("dropTable method called on task '%s'", info.id.c_str());
+    smsc_log_debug(logger, "dropTable method called on task '%s'", info.id.c_str());
     
     MutexGuard guard(createTableLock);
     
@@ -343,11 +343,11 @@ void Task::dropTable()
                 dsInt->freeConnection(connection);
             }
         } catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
         Exception eee("Task '%s'. Failed to drop internal table. Details: %s",
                        info.id.c_str(), exc.what());
-        logger.error("%s", eee.what());
+        smsc_log_error(logger, "%s", eee.what());
         throw eee;
     }
     catch (...) {
@@ -357,11 +357,11 @@ void Task::dropTable()
                 dsInt->freeConnection(connection);
             }
         } catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
         Exception eee("Task '%s'. Failed to drop internal table. Cause is unknown.",
                        info.id.c_str());
-        logger.error("%s", eee.what());
+        smsc_log_error(logger, "%s", eee.what());
         throw eee;
     }
     if (connection) dsInt->freeConnection(connection);
@@ -380,7 +380,7 @@ const char* CLEAR_MESSAGES_STATEMENT_SQL = (const char*)
 
 void Task::beginGeneration(Statistics* statistics)
 {
-    logger.debug("beginGeneration method called on task '%s'",
+    smsc_log_debug(logger, "beginGeneration method called on task '%s'",
                  info.id.c_str());
 
     {
@@ -440,7 +440,7 @@ void Task::beginGeneration(Statistics* statistics)
         {
             const char* abonentAddress = rs->getString(1);
             if (!abonentAddress || abonentAddress[0] == '\0' || !isMSISDNAddress(abonentAddress)) {
-                logger.warn("Task '%s'. Invalid abonent number '%s' selected.", 
+                smsc_log_warn(logger, "Task '%s'. Invalid abonent number '%s' selected.", 
                             info.id.c_str(), abonentAddress ? abonentAddress:"-");
             }
             else
@@ -485,12 +485,12 @@ void Task::beginGeneration(Statistics* statistics)
     {
         try { if (intConnection) intConnection->rollback(); }
         catch (Exception& exc) {
-            logger.error("Failed to roolback transaction on internal data source. "
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
                          "Details: %s", exc.what());
         } catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
-        logger.error("Task '%s'. Messages generation process failure. "
+        smsc_log_error(logger, "Task '%s'. Messages generation process failure. "
                      "Details: %s", info.id.c_str(), exc.what());
         
         trackIntegrity(true, true, intConnection); // delete flag & generated messages
@@ -501,12 +501,12 @@ void Task::beginGeneration(Statistics* statistics)
     {
         try { if (intConnection) intConnection->rollback(); }
         catch (Exception& exc) {
-            logger.error("Failed to roolback transaction on internal data source. "
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
                          "Details: %s", exc.what());
         } catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
-        logger.error("Task '%s'. Messages generation process failure.",
+        smsc_log_error(logger, "Task '%s'. Messages generation process failure.",
                      info.id.c_str());
 
         trackIntegrity(true, true, intConnection); // delete flag & generated messages
@@ -526,7 +526,7 @@ void Task::beginGeneration(Statistics* statistics)
 }
 void Task::endGeneration()
 {
-    logger.debug("endGeneration method called on task '%s'",
+    smsc_log_debug(logger, "endGeneration method called on task '%s'",
                  info.id.c_str());
     {
         MutexGuard guard(inGenerationLock);
@@ -542,7 +542,7 @@ const char* DELETE_MESSAGES_STATEMENT_SQL =
 
 void Task::dropAllMessages()
 {
-    logger.debug("dropAllMessages method called on task '%s'",
+    smsc_log_debug(logger, "dropAllMessages method called on task '%s'",
                  info.id.c_str());
 
     endGeneration();
@@ -572,24 +572,24 @@ void Task::dropAllMessages()
     {
         try { if (connection) connection->rollback(); }
         catch (Exception& exc) {
-            logger.error("Failed to roolback transaction on internal data source. "
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
                          "Details: %s", exc.what());
         } catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
-        logger.error("Task '%s'. Messages access failure. "
+        smsc_log_error(logger, "Task '%s'. Messages access failure. "
                      "Details: %s", info.id.c_str(), exc.what());
     }
     catch (...)
     {
         try { if (connection) connection->rollback(); }
         catch (Exception& exc) {
-            logger.error("Failed to roolback transaction on internal data source. "
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
                          "Details: %s", exc.what());
         } catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
-        logger.error("Task '%s'. Messages access failure.", 
+        smsc_log_error(logger, "Task '%s'. Messages access failure.", 
                      info.id.c_str());
     }
 
@@ -603,7 +603,7 @@ const char* RESET_MESSAGES_STATEMENT_SQL =
 
 void Task::resetWaiting(Connection* connection)
 {
-    logger.debug("resetWaiting method called on task '%s'",
+    smsc_log_debug(logger, "resetWaiting method called on task '%s'",
                  info.id.c_str());
     
     bool connectionInternal = false;
@@ -632,23 +632,23 @@ void Task::resetWaiting(Connection* connection)
     catch (Exception& exc) {
         try { if (connection) connection->rollback(); }
         catch (Exception& exc) {
-            logger.error("Failed to roolback transaction on internal data source. "
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
                          "Details: %s", exc.what());
         } catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
-        logger.error("Task '%s'. Messages access failure. "
+        smsc_log_error(logger, "Task '%s'. Messages access failure. "
                      "Details: %s", info.id.c_str(), exc.what());
     }
     catch (...) {
         try { if (connection) connection->rollback(); }
         catch (Exception& exc) {
-            logger.error("Failed to roolback transaction on internal data source. "
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
                          "Details: %s", exc.what());
         } catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
-        logger.error("Task '%s'. Messages access failure.", info.id.c_str());
+        smsc_log_error(logger, "Task '%s'. Messages access failure.", info.id.c_str());
     }
 
     if (connectionInternal && connection) dsInt->freeConnection(connection);
@@ -660,7 +660,7 @@ const char* DO_RETRY_MESSAGE_STATEMENT_SQL =
 
 bool Task::retryMessage(uint64_t msgId, time_t nextTime, Connection* connection)
 {
-    logger.debug("retryMessage method called on task '%s' for id=%lld",
+    smsc_log_debug(logger, "retryMessage method called on task '%s' for id=%lld",
                  info.id.c_str(), msgId);
 
     int wdTimerId = -1;
@@ -695,23 +695,23 @@ bool Task::retryMessage(uint64_t msgId, time_t nextTime, Connection* connection)
     catch (Exception& exc) {
         try { if (connection) connection->rollback(); }
         catch (Exception& exc) {
-            logger.error("Failed to roolback transaction on internal data source. "
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
                          "Details: %s", exc.what());
         } catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
-        logger.error("Task '%s'. doRetry(): Messages access failure. "
+        smsc_log_error(logger, "Task '%s'. doRetry(): Messages access failure. "
                      "Details: %s", info.id.c_str(), exc.what());
     }
     catch (...) {
         try { if (connection) connection->rollback(); }
         catch (Exception& exc) {
-            logger.error("Failed to roolback transaction on internal data source. "
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
                          "Details: %s", exc.what());
         } catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
-        logger.error("Task '%s'. doRetry(): Messages access failure.", 
+        smsc_log_error(logger, "Task '%s'. doRetry(): Messages access failure.", 
                      info.id.c_str());
     }
     
@@ -725,7 +725,7 @@ const char* DO_DELETE_MESSAGE_STATEMENT_SQL = "DELETE FROM %s WHERE ID=:ID";
 
 bool Task::deleteMessage(uint64_t msgId, Connection* connection)
 {
-    logger.debug("deleteMessage method called on task '%s' for id=%lld",
+    smsc_log_debug(logger, "deleteMessage method called on task '%s' for id=%lld",
                  info.id.c_str(), msgId);
 
     int wdTimerId = -1;
@@ -756,23 +756,23 @@ bool Task::deleteMessage(uint64_t msgId, Connection* connection)
     catch (Exception& exc) {
         try { if (connection) connection->rollback(); }
         catch (Exception& exc) {
-            logger.error("Failed to roolback transaction on internal data source. "
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
                          "Details: %s", exc.what());
         } catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
-        logger.error("Task '%s'. deleteMessage(): Messages access failure. "
+        smsc_log_error(logger, "Task '%s'. deleteMessage(): Messages access failure. "
                      "Details: %s", info.id.c_str(), exc.what());
     }
     catch (...) {
         try { if (connection) connection->rollback(); }
         catch (Exception& exc) {
-            logger.error("Failed to roolback transaction on internal data source. "
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
                          "Details: %s", exc.what());
         } catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
-        logger.error("Task '%s'. deleteMessage(): Messages access failure.", 
+        smsc_log_error(logger, "Task '%s'. deleteMessage(): Messages access failure.", 
                      info.id.c_str());
     }
     
@@ -787,7 +787,7 @@ const char* DO_ENROUTE_MESSAGE_STATEMENT_SQL =
 
 bool Task::enrouteMessage(uint64_t msgId, Connection* connection)
 {
-    logger.debug("enrouteMessage method called on task '%s' for id=%lld",
+    smsc_log_debug(logger, "enrouteMessage method called on task '%s' for id=%lld",
                  info.id.c_str(), msgId);
 
     int wdTimerId = -1;
@@ -821,23 +821,23 @@ bool Task::enrouteMessage(uint64_t msgId, Connection* connection)
     catch (Exception& exc) {
         try { if (connection) connection->rollback(); }
         catch (Exception& exc) {
-            logger.error("Failed to roolback transaction on internal data source. "
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
                          "Details: %s", exc.what());
         } catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
-        logger.error("Task '%s'. doEnroute(): Messages access failure. "
+        smsc_log_error(logger, "Task '%s'. doEnroute(): Messages access failure. "
                      "Details: %s", info.id.c_str(), exc.what());
     }
     catch (...) {
         try { if (connection) connection->rollback(); }
         catch (Exception& exc) {
-            logger.error("Failed to roolback transaction on internal data source. "
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
                          "Details: %s", exc.what());
         } catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
-        logger.error("Task '%s'. doEnroute(): Messages access failure.", 
+        smsc_log_error(logger, "Task '%s'. doEnroute(): Messages access failure.", 
                      info.id.c_str());
     }
     
@@ -857,7 +857,7 @@ const char* DO_WAIT_MESSAGE_STATEMENT_SQL = (const char*)
 
 bool Task::getNextMessage(Connection* connection, Message& message)
 {
-    logger.debug("getNextMessage method called on task '%s'",
+    smsc_log_debug(logger, "getNextMessage method called on task '%s'",
                  info.id.c_str());
     
     __require__(connection);
@@ -915,7 +915,7 @@ bool Task::getNextMessage(Connection* connection, Message& message)
             waitMessage->setUint8 (1, MESSAGE_WAIT_STATE);
             waitMessage->setUint64(2, fetchedMessage.id);
             if (waitMessage->executeUpdate() <= 0)
-                logger.warn("Failed to update message in getNextMessage() !!!");
+                smsc_log_warn(logger, "Failed to update message in getNextMessage() !!!");
                 // TODO: analyse it !
             {
                 MutexGuard guard(messagesCacheLock);
@@ -933,18 +933,18 @@ bool Task::getNextMessage(Connection* connection, Message& message)
     {
         try { if (connection) connection->rollback(); }
         catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
-        logger.error("Task '%s'. Messages access failure. "
+        smsc_log_error(logger, "Task '%s'. Messages access failure. "
                      "Details: %s", info.id.c_str(), exc.what());
     }
     catch (...)
     {
         try { if (connection) connection->rollback(); }
         catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
-        logger.error("Task '%s'. Messages access failure.", 
+        smsc_log_error(logger, "Task '%s'. Messages access failure.", 
                      info.id.c_str());
     }
     

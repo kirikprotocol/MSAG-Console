@@ -40,7 +40,7 @@ protected:
   char * getCommandName(DOM_Document data);
   void readMessageBody(XMLByte * buf, uint32_t len) throw (AdminException);
   uint32_t readMessageLength() throw (AdminException);
-  smsc::logger::Logger logger;
+  smsc::logger::Logger *logger;
   Socket * sock;
   DOMTreeReader reader;
 

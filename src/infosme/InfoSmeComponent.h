@@ -21,7 +21,7 @@ namespace smsc { namespace infosme
     {
     private:
     
-        smsc::logger::Logger logger;
+        smsc::logger::Logger *logger;
 
         InfoSmeAdmin       &admin;
         Methods            methods;

@@ -145,7 +145,7 @@ void ConnectionPool::loadPoolSize(ConfigView* config)
             size > SMSC_DS_DEFAULT_CONNECTION_POOL_SIZE_LIMIT)
         {
             size = SMSC_DS_DEFAULT_CONNECTION_POOL_SIZE;
-            log.warn("Maximum ConnectionPool size is incorrect "
+            smsc_log_warn(log, "Maximum ConnectionPool size is incorrect "
                      "(should be between 1 and %u) ! "
                      "Config parameter: <%s.%s> "
                      "Using default: %u",
@@ -157,7 +157,7 @@ void ConnectionPool::loadPoolSize(ConfigView* config)
     catch (ConfigException& exc) 
     {
         size = SMSC_DS_DEFAULT_CONNECTION_POOL_SIZE;
-        log.warn("Maximum ConnectionPool size wasn't specified ! "
+        smsc_log_warn(log, "Maximum ConnectionPool size wasn't specified ! "
                  "Config parameter: <%s.%s> "
                  "Using default: %u", 
                  config->getInstance(), sizeParam,

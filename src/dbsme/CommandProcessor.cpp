@@ -42,7 +42,7 @@ void CommandProcessor::init(ConfigView* config)
         const char* providerId = (const char *)i->c_str();
         if (!providerId || providerId[0] == '\0')
             throw ConfigException("Provider id empty or wasn't specified");
-        log.info("Loading DataProvider '%s' ...", providerId);
+        smsc_log_info(log, "Loading DataProvider '%s' ...", providerId);
 
         std::auto_ptr<ConfigView> providerCfgGuard(providersConfig->getSubConfig(providerId));
         ConfigView* providerConfig = providerCfgGuard.get();
@@ -67,12 +67,12 @@ void CommandProcessor::init(ConfigView* config)
                                       "Address already used by internal job !",
                                       providerId, (address) ? address:"");
             
-            log.info("Loaded DataProvider '%s'. Primary bind address is: %s", 
+            smsc_log_info(log, "Loaded DataProvider '%s'. Primary bind address is: %s", 
                      providerId, (address) ? address:"");
         }
         catch (ConfigException& exc)
         {
-            log.error("Load of CommandProcessor failed ! %s", exc.what());
+            smsc_log_error(log, "Load of CommandProcessor failed ! %s", exc.what());
             throw;
         }
     }
@@ -92,7 +92,7 @@ void CommandProcessor::clean()
     {
         if (!provider) continue;
         provider->finalize();
-        log.debug("Provider '%s' destructed.", id ? id:"");
+        smsc_log_debug(log, "Provider '%s' destructed.", id ? id:"");
     }
     allProviders.Empty();
     idxProviders.Empty();
@@ -163,7 +163,7 @@ void CommandProcessor::process(Command& command)
     if (!provider)
     {
         const char* message = messages.get(PROVIDER_NOT_FOUND);
-        log.error("%s Requesting: '.%d.%d.%s'", message ? message : PROVIDER_NOT_FOUND,
+        smsc_log_error(log, "%s Requesting: '.%d.%d.%s'", message ? message : PROVIDER_NOT_FOUND,
                   address.type, address.plan, address.value);
         throw CommandProcessException(message ? message : PROVIDER_NOT_FOUND);
     }
@@ -225,12 +225,12 @@ DataProvider::DataProvider(CommandProcessor* root, ConfigView* config,
         if (!jobId || jobId[0] == '\0')
             throw ConfigException("Job id empty or wasn't specified");
         
-        log.info("Loading Job '%s' ...", jobId);
+        smsc_log_info(log, "Loading Job '%s' ...", jobId);
         std::auto_ptr<ConfigView> jobCfgGuard(jobsConfig->getSubConfig(jobId));
         ConfigView* jobConfig = jobCfgGuard.get();
         if (!jobConfig) throw ConfigException("Job section missed !");
         createJob(jobId, jobConfig);
-        log.info("Loaded Job '%s'.", jobId);
+        smsc_log_info(log, "Loaded Job '%s'.", jobId);
     }
 
     usersCount[0] = 0; usersCount[1] = 0;
@@ -245,7 +245,7 @@ DataProvider::~DataProvider()
     {
         if (!job) continue;
         job->finalize();
-        log.debug("Job '%s' destructed.", id ? id:"");
+        smsc_log_debug(log, "Job '%s' destructed.", id ? id:"");
     }
     
     messages.clear();
@@ -379,7 +379,7 @@ void DataProvider::process(Command& command)
     if (!isEnabled())
     {
         const char* message = messages.get(SERVICE_NOT_AVAIL);
-        log.warn("%s Requesting address: '.%d.%d.%s'",
+        smsc_log_warn(log, "%s Requesting address: '.%d.%d.%s'",
                  message ? message:SERVICE_NOT_AVAIL,
                  destination.type, destination.plan, destination.value);
         throw CommandProcessException(message ? message:SERVICE_NOT_AVAIL);
@@ -402,7 +402,7 @@ void DataProvider::process(Command& command)
             if (!name || name[0] == '\0') 
             {
                 name = SMSC_DBSME_DEFAULT_JOB_NAME;
-                log.warn("Job name/alias missed! Requesting address: '.%d.%d.%s'",
+                smsc_log_warn(log, "Job name/alias missed! Requesting address: '.%d.%d.%s'",
                          destination.type, destination.plan, destination.value);
             }
             command.setJobName(name);
@@ -418,7 +418,7 @@ void DataProvider::process(Command& command)
         if (!upname || !(job = jg.get())) 
         {
             const char* message = messages.get(JOB_NOT_FOUND);
-            log.error("%s Requesting address: '.%d.%d.%s', name/alias: '%s'",
+            smsc_log_error(log, "%s Requesting address: '.%d.%d.%s', name/alias: '%s'",
                       message ? message:JOB_NOT_FOUND,
                       destination.type, destination.plan, destination.value,
                       (name) ? name:"");
@@ -427,24 +427,24 @@ void DataProvider::process(Command& command)
     }
 
     struct timeval utime, curtime;
-    if( log.isInfoEnabled() ) gettimeofday( &utime, 0 );
+    if( log->isInfoEnabled() ) gettimeofday( &utime, 0 );
     try 
     {
         job->process(command, *ds);
-        if( log.isInfoEnabled() ) {
+        if( log->isInfoEnabled() ) {
             long usecs;
             gettimeofday( &curtime, 0 );
             usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
-            log.info( "job %s processed in s=%ld us=%ld", job->getName(), curtime.tv_sec-utime.tv_sec, usecs );
+            smsc_log_info(log,  "job %s processed in s=%ld us=%ld", job->getName(), curtime.tv_sec-utime.tv_sec, usecs );
 	    }
     }
     catch (CommandProcessException& exc)
     {
-      if( log.isInfoEnabled() ) {
+      if( log->isInfoEnabled() ) {
           long usecs;
           gettimeofday( &curtime, 0 );
           usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
-          log.info( "job %s unsuccsess in s=%ld us=%ld", job->getName(), curtime.tv_sec-utime.tv_sec, usecs );
+          smsc_log_info(log,  "job %s unsuccsess in s=%ld us=%ld", job->getName(), curtime.tv_sec-utime.tv_sec, usecs );
       }
       throw;
     }
@@ -469,15 +469,15 @@ void CommandProcessor::addJob(std::string providerId, std::string jobId)
         provider->createJob(jobIdStr, &jobConfig);
     
     } catch (Exception& exc) {
-        log.error("Failed to add job '%s.%s'. Details: %s", 
+        smsc_log_error(log, "Failed to add job '%s.%s'. Details: %s", 
                   providerIdStr, jobIdStr, exc.what());
         throw;
     } catch (std::exception& exc) {
-        log.error("Failed to add job '%s.%s'. Details: %s",
+        smsc_log_error(log, "Failed to add job '%s.%s'. Details: %s",
                   providerIdStr, jobIdStr, exc.what());
         throw Exception("%s", exc.what());
     } catch (...) {
-        log.error("Failed to add job '%s.%s'. Cause is unknown", 
+        smsc_log_error(log, "Failed to add job '%s.%s'. Cause is unknown", 
                   providerIdStr, jobIdStr);
         throw Exception("Cause is unknown");
     }
@@ -496,15 +496,15 @@ void CommandProcessor::removeJob(std::string providerId, std::string jobId)
         provider->removeJob(jobIdStr);
     
     } catch (Exception& exc) {
-        log.error("Failed to remove job '%s.%s'. Details: %s",
+        smsc_log_error(log, "Failed to remove job '%s.%s'. Details: %s",
                   providerIdStr, jobIdStr, exc.what());
         throw;
     } catch (std::exception& exc) {
-        log.error("Failed to remove job '%s.%s'. Details: %s",
+        smsc_log_error(log, "Failed to remove job '%s.%s'. Details: %s",
                   providerIdStr, jobIdStr, exc.what());
         throw Exception("%s", exc.what());
     } catch (...) {
-        log.error("Failed to remove '%s.%s'. Cause is unknown",
+        smsc_log_error(log, "Failed to remove '%s.%s'. Cause is unknown",
                   providerIdStr, jobIdStr);
         throw Exception("Cause is unknown");
     }
@@ -530,15 +530,15 @@ void CommandProcessor::changeJob(std::string providerId, std::string jobId)
         provider->createJob(jobIdStr, &jobConfig);
     
     } catch (Exception& exc) {
-        log.error("Failed to change job '%s.%s'. Details: %s",
+        smsc_log_error(log, "Failed to change job '%s.%s'. Details: %s",
                   providerIdStr, jobIdStr, exc.what());
         throw;
     } catch (std::exception& exc) {
-        log.error("Failed to change job '%s.%s'. Details: %s",
+        smsc_log_error(log, "Failed to change job '%s.%s'. Details: %s",
                   providerIdStr, jobIdStr, exc.what());
         throw Exception("%s", exc.what());
     } catch (...) {
-        log.error("Failed to change '%s.%s'. Cause is unknown",
+        smsc_log_error(log, "Failed to change '%s.%s'. Cause is unknown",
                   providerIdStr, jobIdStr);
         throw Exception("Cause is unknown");
     }

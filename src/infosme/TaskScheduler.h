@@ -54,7 +54,7 @@ namespace smsc { namespace infosme
     {
     private:
 
-        Logger  logger;
+        Logger  *logger;
 
         TaskProcessorAdapter*   processor;
         Hash<Schedule*>         schedules;

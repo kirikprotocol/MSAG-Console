@@ -17,7 +17,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
                     responceWaitTime(0), receiptWaitTime(0), dsStatConnection(0),
                         statistics(0), protocolId(0), svcType(0), address(0)
 {
-    logger.info("Loading ...");
+    smsc_log_info(logger, "Loading ...");
 
     address = config->getString("Address");
     if (!address || !isMSISDNAddress(address))
@@ -57,7 +57,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     if (!dsIntConnection || !dsStatConnection)
         throw ConfigException("Failed to obtain connection(s) to internal data source.");
     
-    logger.info("Loading tasks ...");
+    smsc_log_info(logger, "Loading tasks ...");
     std::auto_ptr<ConfigView> tasksCfgGuard(config->getSubConfig("Tasks"));
     ConfigView* tasksCfg = tasksCfgGuard.get();
     std::auto_ptr< std::set<std::string> > setGuard(tasksCfg->getShortSectionNames());
@@ -69,7 +69,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
             const char* taskId = (const char *)i->c_str();
             if (!taskId || taskId[0] == '\0')
                 throw ConfigException("Task id empty or wasn't specified");
-            logger.info("Loading task '%s' ...", taskId);
+            smsc_log_info(logger, "Loading task '%s' ...", taskId);
             
             std::auto_ptr<ConfigView> taskConfigGuard(tasksCfg->getSubConfig(taskId));
             ConfigView* taskConfig = taskConfigGuard.get();
@@ -91,19 +91,19 @@ TaskProcessor::TaskProcessor(ConfigView* config)
         }
         catch (ConfigException& exc)
         {
-            logger.error("Load of tasks failed ! Config exception: %s", exc.what());
+            smsc_log_error(logger, "Load of tasks failed ! Config exception: %s", exc.what());
             throw;
         }
     }
-    logger.info("Tasks loaded.");
+    smsc_log_info(logger, "Tasks loaded.");
 
-    logger.info("Loading task schedules ...");
+    smsc_log_info(logger, "Loading task schedules ...");
     std::auto_ptr<ConfigView> schedulerCfgGuard(config->getSubConfig("Schedules"));
     ConfigView* schedulerCfg = schedulerCfgGuard.get();
     scheduler.init(this, schedulerCfg);
-    logger.info("Task schedules loaded.");
+    smsc_log_info(logger, "Task schedules loaded.");
     
-    logger.info("Load success.");
+    smsc_log_info(logger, "Load success.");
     
     statistics = new StatisticsManager(dsStatConnection);
     if (statistics) statistics->Start();
@@ -213,10 +213,10 @@ void TaskProcessor::Start()
     
     if (!bStarted)
     {
-        logger.info("Starting ...");
+        smsc_log_info(logger, "Starting ...");
 
         if (!isMessageSenderAssigned()) {
-            logger.error("Failed to start processing. Message sender is undefined.");
+            smsc_log_error(logger, "Failed to start processing. Message sender is undefined.");
             return;
         }
         {
@@ -228,7 +228,7 @@ void TaskProcessor::Start()
         awake.Wait(0);
         Thread::Start();
         bStarted = true;
-        logger.info("Started.");
+        smsc_log_info(logger, "Started.");
     }
 }
 void TaskProcessor::Stop()
@@ -237,12 +237,12 @@ void TaskProcessor::Stop()
     
     if (bStarted)
     {
-        logger.info("Stopping ...");
+        smsc_log_info(logger, "Stopping ...");
         bNeedExit = true;
         awake.Signal();
         exited.Wait();
         bStarted = false;
-        logger.info("Stoped.");
+        smsc_log_info(logger, "Stoped.");
     }
 }
 int TaskProcessor::Execute()
@@ -301,12 +301,12 @@ bool TaskProcessor::processTask(Task* task)
     {
         MutexGuard icGuard(dsIntConnectionLock);
         if (!task->getNextMessage(dsIntConnection, message)) {
-            //logger.debug("No messages found for task '%s'", info.id.c_str());
+            //smsc_log_debug(logger, "No messages found for task '%s'", info.id.c_str());
             return false;
         }
     }
 
-    logger.debug("Sending message #%lld for '%s': %s", 
+    smsc_log_debug(logger, "Sending message #%lld for '%s': %s", 
                  message.id, message.abonent.c_str(), message.message.c_str());
 
     MutexGuard msGuard(messageSenderLock);
@@ -318,7 +318,7 @@ bool TaskProcessor::processTask(Task* task)
                 MutexGuard snGuard(taskIdsBySeqNumLock);
                 if (taskIdsBySeqNum.Exist(seqNum))
                 {
-                    logger.warn("Sequence id=%d was already used !", seqNum);
+                    smsc_log_warn(logger, "Sequence id=%d was already used !", seqNum);
                     taskIdsBySeqNum.Delete(seqNum);
                 }
                 taskIdsBySeqNum.Insert(seqNum, TaskMsgId(info.id, message.id));
@@ -329,18 +329,18 @@ bool TaskProcessor::processTask(Task* task)
         
         if (!messageSender->send(message.abonent, message.message, info, seqNum))
         {
-            logger.error("Failed to send message #%lld for '%s'", 
+            smsc_log_error(logger, "Failed to send message #%lld for '%s'", 
                          message.id, message.abonent.c_str());
             
             MutexGuard snGuard(taskIdsBySeqNumLock);
             if (taskIdsBySeqNum.Exist(seqNum)) taskIdsBySeqNum.Delete(seqNum);
             return false;
         }
-        logger.debug("Sent message #%lld for '%s'", message.id, message.abonent.c_str());
+        smsc_log_debug(logger, "Sent message #%lld for '%s'", message.id, message.abonent.c_str());
     }
     else
     {
-        logger.error("No messageSender defined !!!");
+        smsc_log_error(logger, "No messageSender defined !!!");
         return false;
     }
 
@@ -396,7 +396,7 @@ void TaskProcessor::processWaitingEvents(time_t time)
         {
             MutexGuard guard(receiptsLock);
             ReceiptData* receiptPtr = receipts.GetPtr(timer.smscId.c_str());
-            if (receiptPtr) logger.warn("%s for smscId=%s wasn't received and timed out!", 
+            if (receiptPtr) smsc_log_warn(logger, "%s for smscId=%s wasn't received and timed out!", 
                                         ((receiptPtr->receipted) ? "Receipt":"Responce"),
                                         timer.smscId.c_str());
             
@@ -432,7 +432,7 @@ void TaskProcessor::processMessage(Task* task, Connection* connection, uint64_t 
             if (info.endDate <= 0 || (info.endDate > 0 && info.endDate >= nextTime))
             {
                 if (!task->retryMessage(msgId, nextTime, connection)) {
-                    logger.warn("Message #%lld not found for retry.", msgId);
+                    smsc_log_warn(logger, "Message #%lld not found for retry.", msgId);
                     statistics->incFailed(info.id);
                 } else {
                     needDelete = false;
@@ -461,16 +461,16 @@ const char* DEL_ID_MAPPING_STATEMENT_SQL = (const char*)
 void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool immediate,
                                     std::string smscId, bool internal)
 {
-    if (!internal) logger.debug("Responce: seqNum=%d, accepted=%d, retry=%d, immediate=%d",
+    if (!internal) smsc_log_debug(logger, "Responce: seqNum=%d, accepted=%d, retry=%d, immediate=%d",
                                 seqNum, accepted, retry, immediate);
-    else logger.debug("Responce for seqNum=%d is timed out.", seqNum);
+    else smsc_log_debug(logger, "Responce for seqNum=%d is timed out.", seqNum);
 
     TaskMsgId tmIds;
     {   
         TaskMsgId* tmIdsPtr = 0;
         MutexGuard snGuard(taskIdsBySeqNumLock);
         if (!(tmIdsPtr = taskIdsBySeqNum.GetPtr(seqNum))) {
-            if (!internal) logger.warn("processResponce(): Sequence number=%d is unknown !", seqNum);
+            if (!internal) smsc_log_warn(logger, "processResponce(): Sequence number=%d is unknown !", seqNum);
             return;
         }
         tmIds = *tmIdsPtr;
@@ -480,7 +480,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
     TaskGuard taskGuard = getTask(tmIds.taskId); 
     Task* task = taskGuard.get();
     if (!task) {
-        if (!internal) logger.warn("Unable to locate task '%s' for sequence number=%d", 
+        if (!internal) smsc_log_warn(logger, "Unable to locate task '%s' for sequence number=%d", 
                                    tmIds.taskId.c_str(), seqNum);
         return;
     }
@@ -495,7 +495,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
             if (info.endDate <= 0 || (info.endDate > 0 && info.endDate >= nextTime))
             {
                 if (!task->retryMessage(tmIds.msgId, nextTime)) {
-                    logger.warn("Message #%lld not found for retry.", tmIds.msgId);
+                    smsc_log_warn(logger, "Message #%lld not found for retry.", tmIds.msgId);
                     statistics->incFailed(tmIds.taskId);
                 } else {
                     needDelete = false;
@@ -566,7 +566,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
 
             if (receipt.receipted) // receipt already come
             {
-                logger.debug("Receipt come when responce is in process");
+                smsc_log_debug(logger, "Receipt come when responce is in process");
                 if (idMappingCreated)
                 {
                     Statement* delMapping = connection->getStatement(DEL_ID_MAPPING_STATEMENT_ID,
@@ -585,22 +585,22 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
         catch (Exception& exc) {
             try { if (connection) connection->rollback(); }
             catch (Exception& exc) {
-                logger.error("Failed to roolback transaction on internal data source. "
+                smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
                              "Details: %s", exc.what());
             } catch (...) {
-                logger.error("Failed to roolback transaction on internal data source.");
+                smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
             }
-            logger.error("Failed to process responce. Details: %s", exc.what());
+            smsc_log_error(logger, "Failed to process responce. Details: %s", exc.what());
         }
         catch (...) {
             try { if (connection) connection->rollback(); }
             catch (Exception& exc) {
-                logger.error("Failed to roolback transaction on internal data source. "
+                smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
                              "Details: %s", exc.what());
             } catch (...) {
-                logger.error("Failed to roolback transaction on internal data source.");
+                smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
             }
-            logger.error("Failed to process responce.");
+            smsc_log_error(logger, "Failed to process responce.");
         }
 
         if (connection) dsInternal->freeConnection(connection);
@@ -611,9 +611,9 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
 {
     const char* smsc_id = smscId.c_str();
 
-    if (!internal) logger.debug("Receipt : smscId=%s, delivered=%d, retry=%d",
+    if (!internal) smsc_log_debug(logger, "Receipt : smscId=%s, delivered=%d, retry=%d",
                                 smsc_id, delivered, retry);
-    else logger.debug("Responce/Receipt for smscId=%s is timed out. Cleanup.");
+    else smsc_log_debug(logger, "Responce/Receipt for smscId=%s is timed out. Cleanup.");
     
     if (!internal)
     {
@@ -690,22 +690,22 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
     catch (Exception& exc) {
         try { if (connection) connection->rollback(); }
         catch (Exception& exc) {
-            logger.error("Failed to roolback transaction on internal data source. "
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
                          "Details: %s", exc.what());
         } catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
-        logger.error("Failed to process receipt. Details: %s", exc.what());
+        smsc_log_error(logger, "Failed to process receipt. Details: %s", exc.what());
     }
     catch (...) {
         try { if (connection) connection->rollback(); }
         catch (Exception& exc) {
-            logger.error("Failed to roolback transaction on internal data source. "
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
                          "Details: %s", exc.what());
         } catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
+            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
-        logger.error("Failed to process receipt.");
+        smsc_log_error(logger, "Failed to process receipt.");
     }
     
     if (connection) dsInternal->freeConnection(connection);
@@ -744,15 +744,15 @@ void TaskProcessor::addTask(std::string taskId)
        
     } catch (Exception& exc) {
         if (task) task->destroy();
-        logger.error("Failed to add task '%s'. Details: %s", task_id, exc.what());
+        smsc_log_error(logger, "Failed to add task '%s'. Details: %s", task_id, exc.what());
         throw;
     } catch (std::exception& exc) {
         if (task) task->destroy();
-        logger.error("Failed to add task '%s'. Details: %s", task_id, exc.what());
+        smsc_log_error(logger, "Failed to add task '%s'. Details: %s", task_id, exc.what());
         throw Exception("%s", exc.what());
     } catch (...) {
         if (task) task->destroy();
-        logger.error("Failed to add task '%s'. Cause is unknown", task_id);
+        smsc_log_error(logger, "Failed to add task '%s'. Cause is unknown", task_id);
         throw Exception("Cause is unknown");
     }
 }
@@ -768,13 +768,13 @@ void TaskProcessor::removeTask(std::string taskId)
         if (statistics) statistics->delStatistics(taskId);
     
     } catch (Exception& exc) {
-        logger.error("Failed to remove task '%s'. Details: %s", task_id, exc.what());
+        smsc_log_error(logger, "Failed to remove task '%s'. Details: %s", task_id, exc.what());
         throw;
     } catch (std::exception& exc) {
-        logger.error("Failed to remove task '%s'. Details: %s", task_id, exc.what());
+        smsc_log_error(logger, "Failed to remove task '%s'. Details: %s", task_id, exc.what());
         throw Exception("%s", exc.what());
     } catch (...) {
-        logger.error("Failed to remove task '%s'. Cause is unknown", task_id);
+        smsc_log_error(logger, "Failed to remove task '%s'. Cause is unknown", task_id);
         throw Exception("Cause is unknown");
     }
 }
@@ -801,26 +801,26 @@ void TaskProcessor::changeTask(std::string taskId)
             throw ConfigException("Failed to obtail DataSource driver '%s' for task '%s'", 
                                   ds_id, task_id);
         if (!remTask(taskId))
-            logger.warn("Failed to change task. Task with id '%s' wasn't registered.", task_id);
+            smsc_log_warn(logger, "Failed to change task. Task with id '%s' wasn't registered.", task_id);
         task = new Task(&taskConfig, taskId, taskTablesPrefix, taskDs, dsInternal);
         if (!task) 
             throw Exception("New task create failed");
         if (!putTask(task)) {
-            logger.warn("Failed to change task with id '%s'. Task was re-registered", task_id);
+            smsc_log_warn(logger, "Failed to change task with id '%s'. Task was re-registered", task_id);
             task->destroy();
         }
     
     } catch (Exception& exc) {
         if (task) task->destroy();
-        logger.error("Failed to change task '%s'. Details: %s", task_id, exc.what());
+        smsc_log_error(logger, "Failed to change task '%s'. Details: %s", task_id, exc.what());
         throw;
     } catch (std::exception& exc) {
         if (task) task->destroy();
-        logger.error("Failed to change task '%s'. Details: %s", task_id, exc.what());
+        smsc_log_error(logger, "Failed to change task '%s'. Details: %s", task_id, exc.what());
         throw Exception("%s", exc.what());
     } catch (...) {
         if (task) task->destroy();
-        logger.error("Failed to change task '%s'. Cause is unknown", task_id);
+        smsc_log_error(logger, "Failed to change task '%s'. Cause is unknown", task_id);
         throw Exception("Cause is unknown");
     }
 }
@@ -900,15 +900,15 @@ void TaskProcessor::addSchedule(std::string scheduleId)
     
     } catch (Exception& exc) {
         if (schedule) delete schedule;
-        logger.error("Failed to add schedule '%s'. Details: %s", schedule_id, exc.what());
+        smsc_log_error(logger, "Failed to add schedule '%s'. Details: %s", schedule_id, exc.what());
         throw;
     } catch (std::exception& exc) {
         if (schedule) delete schedule;
-        logger.error("Failed to add schedule '%s'. Details: %s", schedule_id, exc.what());
+        smsc_log_error(logger, "Failed to add schedule '%s'. Details: %s", schedule_id, exc.what());
         throw Exception("%s", exc.what());
     } catch (...) {
         if (schedule) delete schedule;
-        logger.error("Failed add schedule '%s'. Cause is unknown", schedule_id);
+        smsc_log_error(logger, "Failed add schedule '%s'. Cause is unknown", schedule_id);
         throw Exception("Cause is unknown");
     }
 }
@@ -938,20 +938,20 @@ void TaskProcessor::changeSchedule(std::string scheduleId)
             throw Exception("New schedule create failed");
         if (!scheduler.changeSchedule(scheduleId, schedule)) {
             delete schedule;
-            logger.warn("Failed to change schedule with id '%s'. Schedule was re-registered", schedule_id);
+            smsc_log_warn(logger, "Failed to change schedule with id '%s'. Schedule was re-registered", schedule_id);
         }
     
     } catch (Exception& exc) {
         if (schedule) delete schedule;
-        logger.error("Failed to change schedule '%s'. Details: %s", schedule_id, exc.what());
+        smsc_log_error(logger, "Failed to change schedule '%s'. Details: %s", schedule_id, exc.what());
         throw;
     } catch (std::exception& exc) {
         if (schedule) delete schedule;
-        logger.error("Failed to change schedule '%s'. Details: %s", schedule_id, exc.what());
+        smsc_log_error(logger, "Failed to change schedule '%s'. Details: %s", schedule_id, exc.what());
         throw Exception("%s", exc.what());
     } catch (...) {
         if (schedule) delete schedule;
-        logger.error("Failed change schedule '%s'. Cause is unknown", schedule_id);
+        smsc_log_error(logger, "Failed change schedule '%s'. Cause is unknown", schedule_id);
         throw Exception("Cause is unknown");
     }
 }

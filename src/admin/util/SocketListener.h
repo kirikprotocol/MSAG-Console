@@ -42,7 +42,7 @@ public:
 		{
 			throw AdminException("socket fails");
 		}
-		logger.info("socket listener ready to start on port %i", portToListen);
+		smsc_log_info(logger, "socket listener ready to start on port %i", portToListen);
 	}
 
 	virtual int Execute()
@@ -51,7 +51,7 @@ public:
 		{
 			sock.StartServer();
 
-			logger.info("socket listener started");
+			smsc_log_info(logger, "socket listener started");
 
 			while (!isShutdownSignaled)
 			{
@@ -62,32 +62,32 @@ public:
 				else
 				{
 					if (isShutdownSignaled)
-						logger.info("ServiceSocketListener shutdown");
+						smsc_log_info(logger, "ServiceSocketListener shutdown");
 				}
 			}
 
 			__trace2__( "ServiceSocketListener::logger 0x%p", &logger );
-			logger.info("ServiceSocketListener sock abort");
+			smsc_log_info(logger, "ServiceSocketListener sock abort");
 
 			if (!isAbortSignaled)
 				_T_CommandDispatcher::shutdown();
 
 			__trace2__( "ServiceSocketListener::logger 0x%p", &logger );
-			logger.info("ServiceSocketListener pool shutdown");
+			smsc_log_info(logger, "ServiceSocketListener pool shutdown");
 			pool.shutdown();
 			__trace2__( "ServiceSocketListener::logger 0x%p", &logger );
-			logger.info("ServiceSocketListener stopped");
+			smsc_log_info(logger, "ServiceSocketListener stopped");
 
 		}
 		catch (std::exception &e)
 		{
-			logger.error("Exception on listener thread: %s\n", e.what());
+			smsc_log_error(logger, "Exception on listener thread: %s\n", e.what());
 		}
 		catch (...)
 		{
-			logger.error("Unknown Exception on listener thread\n");
+			smsc_log_error(logger, "Unknown Exception on listener thread\n");
 		}
-		logger.error("ServiceSocketListener: stopped all");
+		smsc_log_error(logger, "ServiceSocketListener: stopped all");
 		return 0;
 	}
 
@@ -95,8 +95,8 @@ public:
 	{
 		isShutdownSignaled = true;
 		sock.Abort();
-		logger.debug("ServiceSocketListener: server socket closed");
-		logger.debug("ServiceSocketListener: dead");
+		smsc_log_debug(logger, "ServiceSocketListener: server socket closed");
+		smsc_log_debug(logger, "ServiceSocketListener: dead");
 	}
 
 	void abort()
@@ -104,8 +104,8 @@ public:
 		isShutdownSignaled = true;
 		isAbortSignaled = true;
 		sock.Abort();
-		logger.debug("ServiceSocketListener: server socket closed");
-		logger.debug("ServiceSocketListener: dead");
+		smsc_log_debug(logger, "ServiceSocketListener: server socket closed");
+		smsc_log_debug(logger, "ServiceSocketListener: dead");
 	}
 
 protected:
@@ -113,7 +113,7 @@ protected:
 	bool isShutdownSignaled;
 	bool isAbortSignaled;
 	ThreadPool pool;
-	Logger logger;
+	Logger *logger;
 };
 
 }

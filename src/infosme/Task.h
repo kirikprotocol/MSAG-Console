@@ -51,7 +51,7 @@ namespace smsc { namespace infosme
     typedef enum {
         NEW         = MESSAGE_NEW_STATE,
         WAIT        = MESSAGE_WAIT_STATE,
-        ENROUTE     = MESSAGE_ENROUTE_STATE,
+        ENROUTE     = MESSAGE_ENROUTE_STATE
     } MessageState;
 
     struct Message
@@ -143,7 +143,7 @@ namespace smsc { namespace infosme
     friend class TaskGuard;
     protected:
         
-        smsc::logger::Logger logger;
+        smsc::logger::Logger *logger;
         OutputFormatter*   formatter;
 
     private:

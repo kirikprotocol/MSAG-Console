@@ -40,12 +40,12 @@ pid_t Service::start()
         tmpStream = freopen("service.err", "a",  stderr);
         if (!tmpStream)
         {
-          logger.error("reopen stderr error : %s",strerror(errno));
+          smsc_log_error(logger, "reopen stderr error : %s",strerror(errno));
         }
         tmpStream = freopen("service.out", "a",  stdout);
         if (!tmpStream)
         {
-          logger.error("reopen stdout error : %s",strerror(errno));
+          smsc_log_error(logger, "reopen stdout error : %s",strerror(errno));
         }
   sigset_t set;
   sigemptyset(&set);
@@ -60,7 +60,7 @@ pid_t Service::start()
           __warning__("Faield to update signal mask");
   }
         execv(service_exe, createArguments());
-        logger.error("Couldn't start service (\"%s/%s\"), nested: %u: %s",
+        smsc_log_error(logger, "Couldn't start service (\"%s/%s\"), nested: %u: %s",
                      service_dir.get(), service_exe, errno, strerror(errno));
         exit(-1);
         return 0;
@@ -108,7 +108,7 @@ void Service::shutdown()
     throw AdminException("Service is not running");
   }
 
-  logger.debug("sending %i signal to %u", smsc::system::SHUTDOWN_SIGNAL, pid);
+  smsc_log_debug(logger, "sending %i signal to %u", smsc::system::SHUTDOWN_SIGNAL, pid);
   int result = sigsend(P_PID, pid, smsc::system::SHUTDOWN_SIGNAL);
   if (result != 0)
   {

@@ -47,7 +47,7 @@ void DataProvider::init(ConfigView* config)
             const char* dsName = (const char *)i->c_str();
             if (!dsName)
                 throw ConfigException("DataSource name missed!");
-            logger.info("Loading DataSource '%s'.", dsName);
+            smsc_log_info(logger, "Loading DataSource '%s'.", dsName);
             
             std::auto_ptr<ConfigView> dsConfigGuard(config->getSubConfig(dsName));
             ConfigView* dsConfig = dsConfigGuard.get();
@@ -59,11 +59,11 @@ void DataProvider::init(ConfigView* config)
                 throw ConfigException("Failed to create DataSource '%s'", dsName);
 
             dss.Insert(dsName, ds);
-            logger.info("Loaded DataSource '%s'.", dsName);
+            smsc_log_info(logger, "Loaded DataSource '%s'.", dsName);
         }
         catch (ConfigException& exc)
         {
-            logger.error("Load of DataProvider failed ! Config exception: %s", exc.what());
+            smsc_log_error(logger, "Load of DataProvider failed ! Config exception: %s", exc.what());
             throw;
         }
     }

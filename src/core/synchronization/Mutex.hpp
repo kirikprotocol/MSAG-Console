@@ -69,7 +69,7 @@ protected:
 
 class MutexGuard{
 public:
-  MutexGuard(Mutex& lock):lock(lock)
+  MutexGuard(Mutex& _lock):lock(_lock)
   {
     lock.Lock();
   }

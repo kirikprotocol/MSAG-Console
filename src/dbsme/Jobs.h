@@ -108,7 +108,7 @@ namespace smsc { namespace dbsme
     friend class JobGuard;
     protected:
 
-        smsc::logger::Logger log;
+        smsc::logger::Logger *log;
 
         Event       usersCountEvent;
         Mutex       usersCountLock;
@@ -170,7 +170,7 @@ namespace smsc { namespace dbsme
         {
             __require__(key);
             
-            if (details) log.error("%s > %s", name, details); 
+            if (details) smsc_log_error(log, "%s > %s", name, details); 
             const char* message = (search) ? messages.get(key):0;
             throw CommandProcessException(message ? message:key);
         };

@@ -88,32 +88,32 @@ void SQLJob::process(Command& command, DataSource& ds)
     }
     catch(CommandProcessException& exc)
     {
-        try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
+        try{ connection->rollback(); } catch (...) {smsc_log_warn(log,  "Rollback failed");}
         ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
         throw;
     }
     catch(Exception& exc)
     {
-        try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
+        try{ connection->rollback(); } catch (...) {smsc_log_warn(log,  "Rollback failed");}
         ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
         error(SQL_JOB_DS_FAILURE, exc.what());
     }
     catch(std::exception& exc)
     {
-        try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
+        try{ connection->rollback(); } catch (...) {smsc_log_warn(log,  "Rollback failed");}
         ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
-        log.warn("std::exception catched");
+        smsc_log_warn(log, "std::exception catched");
         error(SQL_JOB_DS_FAILURE, exc.what());
     }
     catch(...)
     {
-        try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
+        try{ connection->rollback(); } catch (...) {smsc_log_warn(log,  "Rollback failed");}
         ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
-        log.warn("... catched");
+        smsc_log_warn(log, "... catched");
         error(SQL_JOB_DS_FAILURE, "");
     }
 
@@ -152,7 +152,7 @@ void SQLJob::process(Command& command, Statement& stmt)
         try {
             parser->parse(input, setAdapter, ctx);
         } catch (ParsingWarning& wng) {
-            log.warn("%s", wng.what());
+            smsc_log_warn(log, "%s", wng.what());
         }
     }
     catch (ParsingException& exc)
@@ -243,32 +243,32 @@ void PLSQLJob::process(Command& command, DataSource& ds)
     }
     catch(CommandProcessException& exc)
     {
-        try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
+        try{ connection->rollback(); } catch (...) {smsc_log_warn(log,  "Rollback failed");}
         ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
         throw;
     }
     catch(Exception& exc)
     {
-        try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
+        try{ connection->rollback(); } catch (...) {smsc_log_warn(log,  "Rollback failed");}
         ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
         error(SQL_JOB_DS_FAILURE, exc.what());
     }
     catch(std::exception& exc)
     {
-        try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
+        try{ connection->rollback(); } catch (...) {smsc_log_warn(log,  "Rollback failed");}
         ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
-        log.warn("std::exception catched");
+        smsc_log_warn(log, "std::exception catched");
         error(SQL_JOB_DS_FAILURE, exc.what());
     }
     catch(...)
     {
-        try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
+        try{ connection->rollback(); } catch (...) {smsc_log_warn(log,  "Rollback failed");}
         ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
-        log.warn("... catched");
+        smsc_log_warn(log, "... catched");
         error(SQL_JOB_DS_FAILURE, "");
     }
 
@@ -307,7 +307,7 @@ void PLSQLJob::process(Command& command, Routine& routine)
         try {
             parser->parse(input, routineAdapter, ctx);
         } catch (ParsingWarning& wng) {
-            log.warn("%s", wng.what());
+            smsc_log_warn(log, "%s", wng.what());
         }
         routine.execute();
         formatter->format(output, routineAdapter, ctx);

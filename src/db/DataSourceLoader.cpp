@@ -12,9 +12,9 @@ typedef DataSourceFactory* (*getDsfInstanceFn)(void);
 
 using smsc::logger::Logger;
 
-smsc::logger::Logger DataSourceLoader::logger = Logger::getInstance("smsc.db.DataSourceLoader");
-Array<void *>        DataSourceLoader::handles;
-Mutex                DataSourceLoader::loadupLock;
+smsc::logger::Logger *DataSourceLoader::logger = Logger::getInstance("smsc.db.DataSourceLoader");
+Array<void *>         DataSourceLoader::handles;
+Mutex                 DataSourceLoader::loadupLock;
 
 static DataSourceLoader _dataSourceLoader;
 
@@ -29,7 +29,7 @@ void DataSourceLoader::loadupDataSourceFactory(
 {
     MutexGuard guard(loadupLock);
 
-    logger.info("Loading '%s' library, identity is '%s' ...", dlpath, identity);
+    smsc_log_info(logger, "Loading '%s' library, identity is '%s' ...", dlpath, identity);
     void* dlhandle = dlopen(dlpath, RTLD_LAZY);
     if (dlhandle)
     {
@@ -44,14 +44,14 @@ void DataSourceLoader::loadupDataSourceFactory(
             }
             else
             {
-                logger.error("Load of '%s' library. Call to getDataSourceFactory() failed ! ", dlpath);
+                smsc_log_error(logger, "Load of '%s' library. Call to getDataSourceFactory() failed ! ", dlpath);
                 dlclose(dlhandle);
                 throw LoadupException();
             }
         }
         else
         {
-            logger.error("Load of '%s' library. Call to dlsym() failed ! ", dlpath);
+            smsc_log_error(logger, "Load of '%s' library. Call to dlsym() failed ! ", dlpath);
             dlclose(dlhandle);
             throw LoadupException();
         }
@@ -59,11 +59,11 @@ void DataSourceLoader::loadupDataSourceFactory(
     else
     {
         char buf[256];
-        logger.error("Load of '%s' at '%s' library. Call to dlopen() failed:%s ! ", dlpath,getcwd(buf,sizeof(buf)),strerror(errno));
+        smsc_log_error(logger, "Load of '%s' at '%s' library. Call to dlopen() failed:%s ! ", dlpath,getcwd(buf,sizeof(buf)),strerror(errno));
         throw LoadupException();
     }
     (void)handles.Push(dlhandle);
-    logger.info("Loading '%s' library done. Identity is '%s'.", dlpath, identity);
+    smsc_log_info(logger, "Loading '%s' library done. Identity is '%s'.", dlpath, identity);
 }
 
 void DataSourceLoader::loadup(ConfigView* config)
@@ -84,7 +84,7 @@ void DataSourceLoader::loadup(ConfigView* config)
 
         try
         {
-            logger.info("Loading DataSourceDriver for section '%s'.", section);
+            smsc_log_info(logger, "Loading DataSourceDriver for section '%s'.", section);
 
             std::auto_ptr<char> typeGuard(driverConfig->getString("type"));
             const char* type = typeGuard.get();
@@ -92,12 +92,12 @@ void DataSourceLoader::loadup(ConfigView* config)
             const char* dlpath = dlpathGuard.get();
             loadupDataSourceFactory(dlpath, type);
 
-            logger.info("Loaded DataSourceDriver for section '%s'. "
+            smsc_log_info(logger, "Loaded DataSourceDriver for section '%s'. "
                         "Bind type is: %s. Imported library: '%s'", section, type, dlpath);
         }
         catch (ConfigException& exc)
         {
-            logger.error("Loading of DataSourceDrivers failed ! Config exception: %s", exc.what());
+            smsc_log_error(logger, "Loading of DataSourceDrivers failed ! Config exception: %s", exc.what());
             throw;
         }
     }
@@ -110,14 +110,14 @@ void DataSourceLoader::unload()
 
    DataSourceFactory::unregisterFactories();
 
-   logger.info("Unloading DataSourceDrivers ...");
+   smsc_log_info(logger, "Unloading DataSourceDrivers ...");
    while (handles.Count())
    {
        void* handle=0L;
        (void) handles.Pop(handle);
        if (handle) dlclose(handle);
    }
-   logger.info("DataSourceDrivers unloaded");
+   smsc_log_info(logger, "DataSourceDrivers unloaded");
 }
 
 }}

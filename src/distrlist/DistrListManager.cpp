@@ -9,7 +9,7 @@ namespace smsc { namespace distrlist
     using namespace smsc::sms;
     using namespace core::buffers;
     
-smsc::logger::Logger DistrListManager::logger = 
+smsc::logger::Logger *DistrListManager::logger = 
     Logger::getInstance("smsc.distribution.DistrListManager");
 
 const char* FAILED_TO_OBTAIN_CONNECTION     = "Failed to obtain connection to DB";
@@ -67,7 +67,7 @@ void DistrListManager::addDistrList(string dlName, const Address& dlOwner)
     const char* dlNameStr  = dlName.c_str();
     string dlOwnerStdStr = dlOwner.toString();
     const char* dlOwnerStr = dlOwnerStdStr.c_str();
-    logger.debug("DistrListManager: addDistrList() called. dlName:'%s', dlOwner: '%s'",
+    smsc_log_debug(logger, "DistrListManager: addDistrList() called. dlName:'%s', dlOwner: '%s'",
                  dlNameStr, dlOwnerStr);
     
     Connection* connection = 0;
@@ -168,24 +168,24 @@ void DistrListManager::addDistrList(string dlName, const Address& dlOwner)
     }
     catch(Exception& exc) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(std::exception& exc) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(...) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
         Exception exc("... exception handled");
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw exc;
     }
     
@@ -196,7 +196,7 @@ void DistrListManager::deleteDistrList(string dlName)
     throw(SQLException, ListNotExistsException)
 {
     const char* dlNameStr  = dlName.c_str();
-    logger.debug("DistrListManager: deleteDistrList() called. dlName:'%s'", dlNameStr);
+    smsc_log_debug(logger, "DistrListManager: deleteDistrList() called. dlName:'%s'", dlNameStr);
     
     Connection* connection = 0;
     try
@@ -231,24 +231,24 @@ void DistrListManager::deleteDistrList(string dlName)
     }
     catch(Exception& exc) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(std::exception& exc) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(...) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
         Exception exc("... exception handled");
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw exc;
     }
     
@@ -261,7 +261,7 @@ DistrList DistrListManager::getDistrList(string dlName)
     DistrList list;
     const char* dlNameStr = dlName.c_str();
 
-    logger.debug("DistrListManager: getDistrList() called. dlName:'%s'", dlNameStr);
+    smsc_log_debug(logger, "DistrListManager: getDistrList() called. dlName:'%s'", dlNameStr);
     Connection* connection = 0;
     try
     {
@@ -286,18 +286,18 @@ DistrList DistrListManager::getDistrList(string dlName)
     }
     catch(Exception& exc) {
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(std::exception& exc) {
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(...) {
         if (connection) ds.freeConnection(connection);
         Exception exc("... exception handled");
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw exc;
     }
     
@@ -312,7 +312,7 @@ Array<DistrList> DistrListManager::list(const Address& dlOwner)
     
     string dlOwnerStdStr = dlOwner.toString();
     const char* dlOwnerStr = dlOwnerStdStr.c_str();
-    logger.debug("DistrListManager: list() called for owner '%s'", dlOwnerStr);
+    smsc_log_debug(logger, "DistrListManager: list() called for owner '%s'", dlOwnerStr);
     
     Connection* connection = 0;
     try
@@ -366,18 +366,18 @@ Array<DistrList> DistrListManager::list(const Address& dlOwner)
     }
     catch(Exception& exc) {
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(std::exception& exc) {
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(...) {
         if (connection) ds.freeConnection(connection);
         Exception exc("... exception handled");
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw exc;
     }
     
@@ -390,7 +390,7 @@ Array<DistrList> DistrListManager::list()
 {
     Array<DistrList> lists(0);
     
-    logger.debug("DistrListManager: list() called");
+    smsc_log_debug(logger, "DistrListManager: list() called");
     Connection* connection = 0;
     try
     {
@@ -423,18 +423,18 @@ Array<DistrList> DistrListManager::list()
     }
     catch(Exception& exc) {
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(std::exception& exc) {
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(...) {
         if (connection) ds.freeConnection(connection);
         Exception exc("... exception handled");
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw exc;
     }
     
@@ -450,7 +450,7 @@ Array<Address> DistrListManager::members(string dlName, const Address& submitter
     const char* dlNameStr = dlName.c_str();
     string submitterStdStr = submitter.toString();
     const char* submitterStr = submitterStdStr.c_str();
-    logger.debug("DistrListManager: members() called for dl '%s', submitter '%s'",
+    smsc_log_debug(logger, "DistrListManager: members() called for dl '%s', submitter '%s'",
                  dlNameStr, submitterStr);
     
     Connection* connection = 0;
@@ -499,18 +499,18 @@ Array<Address> DistrListManager::members(string dlName, const Address& submitter
     }
     catch(Exception& exc) {
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(std::exception& exc) {
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(...) {
         if (connection) ds.freeConnection(connection);
         Exception exc("... exception handled");
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw exc;
     }
     
@@ -525,7 +525,7 @@ bool DistrListManager::checkPermission(string dlName, const Address& submitter)
     const char* dlNameStr = dlName.c_str();
     string submitterStdStr = submitter.toString();
     const char* submitterStr = submitterStdStr.c_str();
-    logger.debug("DistrListManager: checkPermission() called for dl '%s', submitter '%s'",
+    smsc_log_debug(logger, "DistrListManager: checkPermission() called for dl '%s', submitter '%s'",
                  dlNameStr, submitterStr);
     
     Connection* connection = 0;
@@ -551,18 +551,18 @@ bool DistrListManager::checkPermission(string dlName, const Address& submitter)
     }
     catch(Exception& exc) {
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(std::exception& exc) {
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(...) {
         if (connection) ds.freeConnection(connection);
         Exception exc("... exception handled");
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw exc;
     }
     
@@ -575,7 +575,7 @@ void DistrListManager::addPrincipal(const Principal& prc)
 {
     string prcAddressStdStr = prc.address.toString();
     const char* prcAddressStr = prcAddressStdStr.c_str();
-    logger.debug("DistrListManager: addPrincipal() called. Addr:'%s' maxLst=%d, maxEl=%d",
+    smsc_log_debug(logger, "DistrListManager: addPrincipal() called. Addr:'%s' maxLst=%d, maxEl=%d",
                  (prcAddressStr) ? prcAddressStr:"null", prc.maxLst, prc.maxEl);
     
     Connection* connection = 0;
@@ -613,24 +613,24 @@ void DistrListManager::addPrincipal(const Principal& prc)
     }
     catch(Exception& exc) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(std::exception& exc) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(...) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
         Exception exc("... exception handled");
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw exc;
     }
     
@@ -642,7 +642,7 @@ void DistrListManager::deletePrincipal(const Address& address)
 {
     string prcAddressStdStr = address.toString();
     const char* prcAddressStr = prcAddressStdStr.c_str();
-    logger.debug("DistrListManager: deletePrincipal() called. Addr:'%s'",
+    smsc_log_debug(logger, "DistrListManager: deletePrincipal() called. Addr:'%s'",
                  (prcAddressStr) ? prcAddressStr:"null");
     
     Connection* connection = 0;
@@ -697,24 +697,24 @@ void DistrListManager::deletePrincipal(const Address& address)
     }
     catch(Exception& exc) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(std::exception& exc) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(...) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
         Exception exc("... exception handled");
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw exc;
     }
     
@@ -726,7 +726,7 @@ void DistrListManager::changePrincipal(const Principal& prc)
 {
     string prcAddressStdStr = prc.address.toString();
     const char* prcAddressStr = prcAddressStdStr.c_str();
-    logger.debug("DistrListManager: changePrincipal() called. Addr:'%s', maxLst=%ld, maxEl=%ld",
+    smsc_log_debug(logger, "DistrListManager: changePrincipal() called. Addr:'%s', maxLst=%ld, maxEl=%ld",
                  prcAddressStr, prc.maxEl, prc.maxLst);
     
     Connection* connection = 0;
@@ -794,24 +794,24 @@ void DistrListManager::changePrincipal(const Principal& prc)
     }
     catch(Exception& exc) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(std::exception& exc) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(...) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
         Exception exc("... exception handled");
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw exc;
     }
     
@@ -823,7 +823,7 @@ Principal DistrListManager::getPrincipal(const Address& address)
 {
     string prcAddressStdStr = address.toString();
     const char* prcAddressStr = prcAddressStdStr.c_str();
-    logger.debug("DistrListManager: getPrincipal() called. Addr:'%s'", prcAddressStr);
+    smsc_log_debug(logger, "DistrListManager: getPrincipal() called. Addr:'%s'", prcAddressStr);
     
     Principal prc;
     Connection* connection = 0;
@@ -852,18 +852,18 @@ Principal DistrListManager::getPrincipal(const Address& address)
     }
     catch(Exception& exc) {
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(std::exception& exc) {
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(...) {
         if (connection) ds.freeConnection(connection);
         Exception exc("... exception handled");
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw exc;
     }
     
@@ -878,7 +878,7 @@ void DistrListManager::addMember(string dlName, const Address& member)
     const char* dlNameStr = dlName.c_str();
     string memberStdStr = member.toString();
     const char* memberStr = memberStdStr.c_str();
-    logger.debug("DistrListManager: addMember() called. dlName:'%s' member:'%s'",
+    smsc_log_debug(logger, "DistrListManager: addMember() called. dlName:'%s' member:'%s'",
                  dlNameStr, memberStr);
     
     Connection* connection = 0;
@@ -952,24 +952,24 @@ void DistrListManager::addMember(string dlName, const Address& member)
     }
     catch(Exception& exc) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(std::exception& exc) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(...) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
         Exception exc("... exception handled");
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw exc;
     }
     
@@ -982,7 +982,7 @@ void DistrListManager::deleteMember(string dlName, const Address& member)
     const char* dlNameStr = dlName.c_str();
     string memberStdStr = member.toString();
     const char* memberStr = memberStdStr.c_str();
-    logger.debug("DistrListManager: deleteMember() called. dlName:'%s' member:'%s'",
+    smsc_log_debug(logger, "DistrListManager: deleteMember() called. dlName:'%s' member:'%s'",
                  dlNameStr, memberStr);
     
     Connection* connection = 0;
@@ -1021,24 +1021,24 @@ void DistrListManager::deleteMember(string dlName, const Address& member)
     }
     catch(Exception& exc) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(std::exception& exc) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(...) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
         Exception exc("... exception handled");
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw exc;
     }
     
@@ -1049,7 +1049,7 @@ void DistrListManager::deleteMembers(string dlName)
     throw(SQLException, ListNotExistsException)
 {
     const char* dlNameStr = dlName.c_str();
-    logger.debug("DistrListManager: deleteMembers() called. dlName:'%s'", dlNameStr);
+    smsc_log_debug(logger, "DistrListManager: deleteMembers() called. dlName:'%s'", dlNameStr);
     
     Connection* connection = 0;
     try
@@ -1082,24 +1082,24 @@ void DistrListManager::deleteMembers(string dlName)
     }
     catch(Exception& exc) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(std::exception& exc) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(...) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
         Exception exc("... exception handled");
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw exc;
     }
     
@@ -1113,7 +1113,7 @@ void DistrListManager::grantPosting(string dlName, const Address& submitter)
     const char* dlNameStr = dlName.c_str();
     string submitterStdStr = submitter.toString();
     const char* submitterStr = submitterStdStr.c_str();
-    logger.debug("DistrListManager: grantPosting() called. dlName:'%s', submitter: '%s'",
+    smsc_log_debug(logger, "DistrListManager: grantPosting() called. dlName:'%s', submitter: '%s'",
                  dlNameStr, submitterStr);
     
     Connection* connection = 0;
@@ -1179,24 +1179,24 @@ void DistrListManager::grantPosting(string dlName, const Address& submitter)
     }
     catch(Exception& exc) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(std::exception& exc) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(...) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
         Exception exc("... exception handled");
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw exc;
     }
     
@@ -1210,7 +1210,7 @@ void DistrListManager::revokePosting(string dlName, const Address& submitter)
     const char* dlNameStr = dlName.c_str();
     string submitterStdStr = submitter.toString();
     const char* submitterStr = submitterStdStr.c_str();
-    logger.debug("DistrListManager: revokePosting() called. dlName:'%s', submitter: '%s'",
+    smsc_log_debug(logger, "DistrListManager: revokePosting() called. dlName:'%s', submitter: '%s'",
                  dlNameStr, submitterStr);
     
     Connection* connection = 0;
@@ -1253,24 +1253,24 @@ void DistrListManager::revokePosting(string dlName, const Address& submitter)
     }
     catch(Exception& exc) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(std::exception& exc) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw;
     }
     catch(...) {
         try { if (connection) connection->rollback(); }
-        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        catch (...) { smsc_log_error(logger, FAILED_TO_ROLLBACK_TRANSACTION); }
         if (connection) ds.freeConnection(connection);
         Exception exc("... exception handled");
-        logger.error("%s", exc.what());
+        smsc_log_error(logger, "%s", exc.what());
         throw exc;
     }
     

@@ -39,7 +39,7 @@ namespace smsc { namespace infosme
     {
     private:
 
-        smsc::logger::Logger logger;
+        smsc::logger::Logger *logger;
 
         Hash<DataSource *>   dss;
         Mutex                dssLock;

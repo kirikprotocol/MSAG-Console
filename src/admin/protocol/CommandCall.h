@@ -67,7 +67,7 @@ public:
         args[name.get()] = Variant(value.get(), service::StringListType);
 			  break;
 			default:
-				logger.debug("creating ServiceCommand: unknown parameter type %s",
+				smsc_log_debug(logger, "creating ServiceCommand: unknown parameter type %s",
 										 type.get());
 			}
 		}
@@ -101,7 +101,7 @@ protected:
 	char * component;
 	Method method;
 	Arguments args;
-	smsc::logger::Logger logger;
+	smsc::logger::Logger *logger;
 //	ServiceCommand *serviceCommand;
 };
 

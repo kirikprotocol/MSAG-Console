@@ -93,32 +93,32 @@ int main (int argc, char *argv[])
 	
 		Logger::Init(config.getString("dumbtest.loggerInitFile"));
 		
-		Logger logger(Logger::getInstance("smsc.admin.service.test.ServiceSocketListenerTest"));
+		Logger *logger = Logger::getInstance("smsc.admin.service.test.ServiceSocketListenerTest");
 		
 		for (int i=0; i<argc; i++)
-			logger.debug("Param[%u]=\"%s\"", i, argv[i]);
+			smsc_log_debug(logger, "Param[%u]=\"%s\"", i, argv[i]);
 
-		logger.debug("Initializing service");
+		smsc_log_debug(logger, "Initializing service");
 		DumbServiceCommandHandler main_component;
 		ComponentManager::registerComponent(&main_component);
- 		logger.debug("Starting service");
+ 		smsc_log_debug(logger, "Starting service");
 
     ServiceSocketListener listener("smsc.admin.util.ServiceSocketListener");
 		std::auto_ptr<char> host(config.getString("dumbtest.host"));
     listener.init(host.get(), servicePort);
     listener.Start();
-    logger.debug("Service started");
+    smsc_log_debug(logger, "Service started");
 		registerSignalHandlers(&listener);
 
     listener.WaitFor();
 		Manager::deinit();
- 		logger.debug("Service stopped");
+ 		smsc_log_debug(logger, "Service stopped");
  	} catch (AdminException &e) {
- 		Logger::getInstance("smsc.admin.service.test.ServiceSocketListenerTest").debug("Exception occured: \"%s\"", e.what());
+ 		smsc_log_debug(Logger::getInstance("smsc.admin.service.test.ServiceSocketListenerTest"), "Exception occured: \"%s\"", e.what());
 	} catch (ConfigException &e) {
- 		Logger::getInstance("smsc.admin.service.test.ServiceSocketListenerTest").debug("Exception occured: \"%s\"", e.what());
+ 		smsc_log_debug(Logger::getInstance("smsc.admin.service.test.ServiceSocketListenerTest"), "Exception occured: \"%s\"", e.what());
  	} catch (...) {
- 		Logger::getInstance("smsc.admin.service.test.ServiceSocketListenerTest").debug("Unknown Exception occured");
+ 		smsc_log_debug(Logger::getInstance("smsc.admin.service.test.ServiceSocketListenerTest"), "Unknown Exception occured");
  	}
  	return 0;
 }

@@ -49,7 +49,7 @@ static int   unrespondedMessagesMax   = 100;
 static Event unrespondedMessagesEvent;
 static Mutex unrespondedMessagesLock;
 
-static smsc::logger::Logger logger = Logger::getInstance("smsc.infosme.InfoSme");
+static smsc::logger::Logger *logger = Logger::getInstance("smsc.infosme.InfoSme");
 
 static smsc::admin::service::ServiceSocketListener adminListener; 
 static bool bAdminListenerInited = false;
@@ -199,24 +199,24 @@ public:
         MutexGuard guard(sendLock);
         
         if (!session) {
-            logger.error("Smpp session is undefined for MessageSender.");
+            smsc_log_error(logger, "Smpp session is undefined for MessageSender.");
             return false;
         }
         SmppTransmitter* asyncTransmitter = session->getAsyncTransmitter();
         if (!asyncTransmitter) {
-            logger.error("Smpp transmitter is undefined for MessageSender.");
+            smsc_log_error(logger, "Smpp transmitter is undefined for MessageSender.");
             return false;
         }
         
         Address oa, da;
         const char* oaStr = processor.getAddress();
         if (!oaStr || !convertMSISDNStringToAddress(oaStr, oa)) {
-            logger.error("Invalid originating address '%s'", oaStr ? oaStr:"-");
+            smsc_log_error(logger, "Invalid originating address '%s'", oaStr ? oaStr:"-");
             return false;
         }
         const char* daStr = abonent.c_str();
         if (!daStr || !convertMSISDNStringToAddress(daStr, da)) {
-            logger.error("Invalid destination address '%s'", daStr ? daStr:"-");
+            smsc_log_error(logger, "Invalid destination address '%s'", daStr ? daStr:"-");
             return false;
         }
         
@@ -264,7 +264,7 @@ public:
             }
         } 
         catch (...) {
-            logger.error("Something is wrong with message body. Set/Get property failed"); 
+            smsc_log_error(logger, "Something is wrong with message body. Set/Get property failed"); 
             if (msgBuf) delete msgBuf; msgBuf = 0;
             return false;
         }
@@ -357,7 +357,7 @@ public:
                     case SMSC_SMPP_INT_UNDELIVERABLE_STATE:
                         break;
                     default:
-                        logger.warn("Invalid state=%d received in reciept !", msgState);
+                        smsc_log_warn(logger, "Invalid state=%d received in reciept !", msgState);
                         break;
                     }
                 }
@@ -423,15 +423,15 @@ public:
         switch (pdu->get_commandId())
         {
         case SmppCommandSet::DELIVERY_SM:
-            //logger.debug("Received DELIVERY_SM Pdu.");
+            //smsc_log_debug(logger, "Received DELIVERY_SM Pdu.");
             processReceipt(pdu);
             break;
         case SmppCommandSet::SUBMIT_SM_RESP:
-            //logger.debug("Received SUBMIT_SM_RESP Pdu.");
+            //smsc_log_debug(logger, "Received SUBMIT_SM_RESP Pdu.");
             processResponce(pdu);
             break;
         default:
-            logger.debug("Received unsupported Pdu !");
+            smsc_log_debug(logger, "Received unsupported Pdu !");
             break;
         }
         
@@ -440,17 +440,17 @@ public:
     
     void handleError(int errorCode)
     {
-        logger.error("Transport error handled! Code is: %d", errorCode);
+        smsc_log_error(logger, "Transport error handled! Code is: %d", errorCode);
         setNeedReconnect(true);
     }
 };
 
 static void appSignalHandler(int sig)
 {
-    logger.debug("Signal %d handled !", sig);
+    smsc_log_debug(logger, "Signal %d handled !", sig);
     if (sig==smsc::system::SHUTDOWN_SIGNAL || sig==SIGINT)
     {
-        logger.info("Stopping ...");
+        smsc_log_info(logger, "Stopping ...");
         if (bAdminListenerInited) adminListener.shutdown();
         setNeedStop(true);
     }
@@ -486,13 +486,13 @@ int main(void)
         try { unrespondedMessagesMax = tpConfig.getInt("unrespondedMessagesMax"); } catch (...) {};
         if (unrespondedMessagesMax <= 0) {
             unrespondedMessagesMax = 100;
-            logger.warn("Parameter 'unrespondedMessagesMax' value is invalid. Using default %d",
+            smsc_log_warn(logger, "Parameter 'unrespondedMessagesMax' value is invalid. Using default %d",
                         unrespondedMessagesMax);
         }
         try { unrespondedMessagesSleep = tpConfig.getInt("unrespondedMessagesSleep"); } catch (...) {};
         if (unrespondedMessagesSleep <= 0) {
             unrespondedMessagesSleep = 1000;
-            logger.warn("'unrespondedMessagesSleep' value is invalid. Using default %d",
+            smsc_log_warn(logger, "'unrespondedMessagesSleep' value is invalid. Using default %d",
                         unrespondedMessagesSleep);
         }
         TaskProcessor processor(&tpConfig);
@@ -513,7 +513,7 @@ int main(void)
             SmppSession             session(cfg, &listener);
             InfoSmeMessageSender    sender(processor, &session);
             
-            logger.info("Connecting to SMSC ... ");
+            smsc_log_info(logger, "Connecting to SMSC ... ");
             try
             {
                 listener.setSyncTransmitter(session.getSyncTransmitter());
@@ -531,7 +531,7 @@ int main(void)
             catch (SmppConnectException& exc)
             {
                 const char* msg = exc.what(); 
-                logger.error("Connect to SMSC failed. Cause: %s", (msg) ? msg:"unknown");
+                smsc_log_error(logger, "Connect to SMSC failed. Cause: %s", (msg) ? msg:"unknown");
                 bInfoSmeIsConnecting = false;
                 setNeedReconnect(true);
                 if (exc.getReason() == SmppConnectException::Reason::bindFailed) throw exc;
@@ -539,7 +539,7 @@ int main(void)
                 session.close();
                 continue;
             }
-            logger.info("Connected.");
+            smsc_log_info(logger, "Connected.");
             
             sigemptyset(&set);
             //sigaddset(&set, SIGINT);
@@ -556,7 +556,7 @@ int main(void)
                            stat.generated, stat.delivered, stat.retried, stat.failed);
                 }*/
             }
-            logger.info("Disconnecting from SMSC ...");
+            smsc_log_info(logger, "Disconnecting from SMSC ...");
             unrespondedMessagesEvent.Signal();
             processor.Stop();
             processor.assignMessageSender(0);
@@ -566,27 +566,27 @@ int main(void)
     catch (SmppConnectException& exc)
     {
         if (exc.getReason() == SmppConnectException::Reason::bindFailed)
-            logger.error("Failed to bind InfoSme. Exiting.");
+            smsc_log_error(logger, "Failed to bind InfoSme. Exiting.");
         resultCode = -1;
     }
     catch (ConfigException& exc) 
     {
-        logger.error("Configuration invalid. Details: %s Exiting.", exc.what());
+        smsc_log_error(logger, "Configuration invalid. Details: %s Exiting.", exc.what());
         resultCode = -2;
     }
     catch (Exception& exc) 
     {
-        logger.error("Top level Exception: %s Exiting.", exc.what());
+        smsc_log_error(logger, "Top level Exception: %s Exiting.", exc.what());
         resultCode = -3;
     }
     catch (exception& exc) 
     {
-        logger.error("Top level exception: %s Exiting.", exc.what());
+        smsc_log_error(logger, "Top level exception: %s Exiting.", exc.what());
         resultCode = -4;
     }
     catch (...) 
     {
-        logger.error("Unknown exception: '...' caught. Exiting.");
+        smsc_log_error(logger, "Unknown exception: '...' caught. Exiting.");
         resultCode = -5;
     }
     

@@ -97,9 +97,9 @@ int main(int argc, char **argv)
 			throw ConfigException("Couldn't redirect stderr");
 
 		Logger::Init(manager.getString(CONFIG_LOGGER_CONFIG_PARAMETER));
-		smsc::logger::Logger logger(Logger::getInstance("smsc.admin.daemon"));
+		smsc::logger::Logger *logger(Logger::getInstance("smsc.admin.daemon"));
 
-		logger.info("Starting...");
+		smsc_log_info(logger, "Starting...");
 
 		DaemonCommandDispatcher::init(&manager);
 		DaemonSocketListener listener("smsc.admin.daemon.DaemonSocketListener");
@@ -108,28 +108,28 @@ int main(int argc, char **argv)
 		DaemonCommandDispatcher::startAllServices();
 		listener.Start();
 
-		logger.info("Started");
+		smsc_log_info(logger, "Started");
 
 		main_listener = &listener;
 		setExtendedSignalHandler(smsc::system::SHUTDOWN_SIGNAL, shutdown_handler);
 		setExtendedSignalHandler(SIGPIPE, pipehandler);
 
 		listener.WaitFor();
-		logger.info("Stopped");
+		smsc_log_info(logger, "Stopped");
 		fprintf(stderr, "Daemon stopped\n");
 	}
 	catch (ConfigException &e)
 	{
-		Logger::getInstance("smsc.admin.daemon").info("ConfigException: %s\n\r", e.what());
+		smsc_log_info(Logger::getInstance("smsc.admin.daemon"), "ConfigException: %s\n\r", e.what());
 		exit(-1);
 	}
 	catch (AdminException &e)
 	{
-		Logger::getInstance("smsc.admin.daemon").info("AdminException: %s", e.what());
+		smsc_log_info(Logger::getInstance("smsc.admin.daemon"), "AdminException: %s", e.what());
 	}
 	catch (...)
 	{
-		Logger::getInstance("smsc.admin.daemon").info("Exception: <unknown>");
+		smsc_log_info(Logger::getInstance("smsc.admin.daemon"), "Exception: <unknown>");
 	}
 }
 

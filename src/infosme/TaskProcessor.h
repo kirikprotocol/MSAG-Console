@@ -158,7 +158,7 @@ namespace smsc { namespace infosme
     {
     protected:
 
-        smsc::logger::Logger logger;
+        smsc::logger::Logger *logger;
         ThreadPool           pool;
 
         Mutex               stopLock;
@@ -194,12 +194,12 @@ namespace smsc { namespace infosme
             try {
                 setMaxThreads(config->getInt("max"));
             } catch (ConfigException& exc) {
-                logger.warn("Maximum thread pool size wasn't specified !");
+                smsc_log_warn(logger, "Maximum thread pool size wasn't specified !");
             }
             try {
                 preCreateThreads(config->getInt("init"));
             } catch (ConfigException& exc) {
-                logger.warn("Precreated threads count in pool wasn't specified !");
+                smsc_log_warn(logger, "Precreated threads count in pool wasn't specified !");
             }
         };
     };
@@ -251,7 +251,7 @@ namespace smsc { namespace infosme
     {
     private:
 
-        smsc::logger::Logger logger;
+        smsc::logger::Logger *logger;
 
         ThreadManager taskManager;
         ThreadManager eventManager;

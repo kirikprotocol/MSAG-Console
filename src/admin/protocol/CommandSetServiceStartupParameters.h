@@ -11,7 +11,7 @@ public:
 	CommandSetServiceStartupParameters(DOM_Document doc)	throw (AdminException)
 		: CommandService(set_service_startup_parameters, doc)
 	{
-		logger.debug("Add service command");
+		smsc_log_debug(logger, "Add service command");
 		try
 		{
 			DOM_Element elem = doc.getDocumentElement();

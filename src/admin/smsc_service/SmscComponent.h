@@ -101,7 +101,6 @@ protected:
 	bool isStopping;
 
 private:
-	void setLogCat(const char * catStr);
 
 	class SmscAppRunner : public Thread
 	{
@@ -131,13 +130,13 @@ private:
 			catch (std::exception& e)
 			{
 				fprintf(stderr,"top level exception: %s\n",e.what());
-				runner_logger.error("SMSC execution exception: \"%s\", SMSC stopped.", e.what());
+				smsc_log_error(runner_logger, "SMSC execution exception: \"%s\", SMSC stopped.", e.what());
 				return(-1);
 			}
 			catch (...)
 			{
 				fprintf(stderr,"FATAL EXCEPTION!\n");
-				runner_logger.error("SMSC execution unknown exception.");
+				smsc_log_error(runner_logger, "SMSC execution unknown exception.");
 				return(-0);
 			}
 			_app->shutdown();
@@ -162,12 +161,12 @@ private:
 
 	protected:
 		std::auto_ptr<Smsc> _app;
-		smsc::logger::Logger runner_logger;
+		smsc::logger::Logger *runner_logger;
 	};
 
 protected:
 	std::auto_ptr<SmscAppRunner> smsc_app_runner;
-	smsc::logger::Logger logger;
+	smsc::logger::Logger *logger;
 };
 
 }

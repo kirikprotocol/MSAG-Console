@@ -68,7 +68,7 @@ protected:
 	
 	Id id;
 	DOM_Document data;
-	smsc::logger::Logger logger;
+	smsc::logger::Logger *logger;
 	static const uint8_t commands_quantity = 10;
 	static const _Command names[commands_quantity];
 	

@@ -31,7 +31,7 @@ protected:
 		setConfigId
 	};
 	Config config;
-	smsc::logger::Logger logger;
+	smsc::logger::Logger *logger;
 	std::string dumb_config;
 
 public:
@@ -78,28 +78,28 @@ public:
 		{
 		case getConfigId:
 			{
-				logger.debug("getConfig");
+				smsc_log_debug(logger, "getConfig");
 				return Variant(dumb_config.c_str());
 			}
 		case getLogsId:
-			logger.debug("getLogs");
+			smsc_log_debug(logger, "getLogs");
 			return Variant("1014980394 INFO smsc.admin.service.ServiceSocketListener : Admin socket listener started on port 6677\n\
 1014980424 DEBUG smsc.admin.service.CommandDispatcher : Command dispatcher \"192.168.2.72\" created.\n\
 1014980424 DEBUG smsc.admin.service.CommandDispatcher : Command dispather starting...\n");
 		case getMonId:
-			logger.debug("getMonitoring");
+			smsc_log_debug(logger, "getMonitoring");
 			return Variant("Monitoring Data");
 		case setConfigId:
 			return setConfig(args);
 		default:
-			logger.debug("Unknown method");
+			smsc_log_debug(logger, "Unknown method");
 			throw AdminException("Unknown method");
 		}
 	}
 
 	Variant setConfig(const Arguments &params)
 	{
-		logger.debug("setConfig:\n%s", params["config"].getStringValue());
+		smsc_log_debug(logger, "setConfig:\n%s", params["config"].getStringValue());
 
 		//setConfig
 		dumb_config = params["config"].getStringValue();

@@ -37,7 +37,7 @@ public:
 
 protected:
 	Socket * sock;
-	smsc::logger::Logger logger;
+	smsc::logger::Logger *logger;
 	const static char * const task_name;
 	char cl_addr[16];
 	CommandReader reader;

@@ -100,7 +100,7 @@ protected:
 	static const char * const service_exe;
 	std::auto_ptr<char> service_dir;
 	bool autostart;
-	Logger logger;
+	Logger *logger;
 
 	run_status status;
 

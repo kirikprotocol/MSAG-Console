@@ -26,7 +26,7 @@ namespace smsc { namespace distrlist
     {
     protected:
         
-        static smsc::logger::Logger logger;
+        static smsc::logger::Logger *logger;
         
         DataSource&     ds;
         

@@ -48,7 +48,7 @@ public:
 	static void shutdown();
 
 protected:
-	smsc::logger::Logger logger;
+	smsc::logger::Logger *logger;
 	static ServicesList services;
 	static config::Manager *configManager;
 	static unsigned int shutdownTimeout;

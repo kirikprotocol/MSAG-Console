@@ -53,7 +53,7 @@ namespace smsc { namespace dbsme
     friend class DataProvider;
     private:
 
-        smsc::logger::Logger    log;
+        smsc::logger::Logger    *log;
         MessageSet              messages;
 
         int     protocolId;
@@ -103,7 +103,7 @@ namespace smsc { namespace dbsme
     friend class ProviderGuard;
     protected:
 
-        smsc::logger::Logger    log;
+        smsc::logger::Logger    *log;
         MessageSet              messages;
         std::string             id;
 

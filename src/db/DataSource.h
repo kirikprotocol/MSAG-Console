@@ -256,7 +256,7 @@ namespace smsc { namespace db
     
     protected:
         
-		smsc::logger::Logger log;
+		smsc::logger::Logger *log;
 
         bool                isConnected, isDead;
         
@@ -447,7 +447,7 @@ namespace smsc { namespace db
     private:
 
         DataSource           &ds;
-        smsc::logger::Logger log;
+        smsc::logger::Logger *log;
 
         EventMonitor         monitor;
         

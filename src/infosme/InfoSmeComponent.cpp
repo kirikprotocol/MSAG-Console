@@ -85,7 +85,7 @@ Variant InfoSmeComponent::call(const Method& method, const Arguments& args)
 {
     try 
     {
-        logger.debug("call \"%s\"", method.getName());
+        smsc_log_debug(logger, "call \"%s\"", method.getName());
         
         switch (method.getId())
         {
@@ -143,22 +143,22 @@ Variant InfoSmeComponent::call(const Method& method, const Arguments& args)
             break;
         
         default:
-            logger.debug("unknown method \"%s\" [%u]", method.getName(), method.getId());
+            smsc_log_debug(logger, "unknown method \"%s\" [%u]", method.getName(), method.getId());
             throw AdminException("Unknown method \"%s\"", method.getName());
         }
 
         return Variant("");
     }
     catch (AdminException &e) {
-        logger.error("AdminException: %s", e.what());
+        smsc_log_error(logger, "AdminException: %s", e.what());
         throw e;
     }
     catch (std::exception& exc) {
-        logger.error("Exception: %s", exc.what());
+        smsc_log_error(logger, "Exception: %s", exc.what());
         throw AdminException("%s", exc.what());
     }
     catch (...) {
-        logger.error("... Exception");
+        smsc_log_error(logger, "... Exception");
         throw AdminException("Unknown exception was caught during call");
     }
 }

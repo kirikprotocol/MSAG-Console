@@ -41,7 +41,7 @@ using namespace smsc::admin::service;
 
 using namespace smsc::dbsme;
 
-static smsc::logger::Logger logger = Logger::getInstance("smsc.dbsme.DBSme");
+static smsc::logger::Logger *logger = Logger::getInstance("smsc.dbsme.DBSme");
 
 static smsc::admin::service::ServiceSocketListener adminListener;
 static bool bAdminListenerInited = false;
@@ -132,7 +132,7 @@ public:
         bool isReceipt = (request.hasIntProperty(Tag::SMPP_ESM_CLASS)) ?
             ((request.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3C) == 0x4) : false;
         if (isReceipt || ((PduXSm*)pdu)->get_optional().has_receiptedMessageId()) {
-            logger.warn("Unexpected sms receipt handled. Skipped.");
+            smsc_log_warn(logger, "Unexpected sms receipt handled. Skipped.");
             return;
         }
 
@@ -184,7 +184,7 @@ public:
                 failuresNoticedCount++;
             }
             command.setOutData(exc.what()); // Error processing SMS !;
-            logger.error( "std::exception caught while processing command: %s", exc.what() );
+            smsc_log_error(logger,  "std::exception caught while processing command: %s", exc.what() );
         }
         catch (...)
         {
@@ -193,7 +193,7 @@ public:
                 failuresNoticedCount++;
             }
             command.setOutData("Unknown error"); // Error processing SMS !;
-            logger.error( "... caught while processing command" );
+            smsc_log_error(logger,  "... caught while processing command" );
         }
 
         SMS response;
@@ -331,14 +331,14 @@ public:
             pool.setMaxThreads(maxThreads);
         }
         catch (ConfigException& exc) {
-            logger.warn("Maximum thread pool size wasn't specified !");
+            smsc_log_warn(logger, "Maximum thread pool size wasn't specified !");
         }
         try {
             int initThreads = config->getInt("init");
             pool.preCreateThreads(initThreads);
         }
         catch (ConfigException& exc) {
-            logger.warn("Precreated threads count in pool wasn't specified !");
+            smsc_log_warn(logger, "Precreated threads count in pool wasn't specified !");
         }
     };
 
@@ -369,7 +369,7 @@ public:
 
     void handleError(int errorCode)
     {
-        logger.error("Transport error handled! Code is: %d", errorCode);
+        smsc_log_error(logger, "Transport error handled! Code is: %d", errorCode);
         setNeedReconnect(true);
     }
 
@@ -441,7 +441,7 @@ public:
 struct DBSmeAdminHandler : public DBSmeAdmin
 {
     virtual void restart() {
-        logger.error("Administrator has requested restart");
+        smsc_log_error(logger, "Administrator has requested restart");
         setNeedReinit(true);
     }
     virtual void addJob(std::string providerId, std::string jobId) {
@@ -468,9 +468,9 @@ private:
 
 static void appSignalHandler(int sig)
 {
-    logger.debug("Signal %d handled !", sig);
+    smsc_log_debug(logger, "Signal %d handled !", sig);
     if (sig==SIGTERM || sig==SIGINT) {
-        logger.info("Stopping ...");
+        smsc_log_info(logger, "Stopping ...");
         setNeedStop(true);
     }
 }
@@ -504,7 +504,7 @@ int main(void)
 
     try
     {
-        logger.info(getStrVersion());
+        smsc_log_info(logger, getStrVersion());
         Manager::init("config.xml");
 
         ConfigView dsConfig(Manager::getInstance(), "StartupLoader");
@@ -551,7 +551,7 @@ int main(void)
             sigaddset(&set,smsc::system::SHUTDOWN_SIGNAL);
             sigset(smsc::system::SHUTDOWN_SIGNAL, appSignalHandler);
 
-            logger.info("Connecting to SMSC ... ");
+            smsc_log_info(logger, "Connecting to SMSC ... ");
             try
             {
                 listener.setTrans(session.getSyncTransmitter());
@@ -561,7 +561,7 @@ int main(void)
             catch (SmppConnectException& exc)
             {
                 const char* msg = exc.what();
-                logger.error("Connect to SMSC failed. Cause: %s", (msg) ? msg:"unknown");
+                smsc_log_error(logger, "Connect to SMSC failed. Cause: %s", (msg) ? msg:"unknown");
                 setNeedReconnect(true);
                 if (exc.getReason() == SmppConnectException::Reason::bindFailed) throw;
                 sleep(cfg.timeOut);
@@ -569,7 +569,7 @@ int main(void)
                 runner.shutdown();
                 continue;
             }
-            logger.info("Connected.");
+            smsc_log_info(logger, "Connected.");
 
             bDBSmeWaitEvent.Wait(0);
             while (!isNeedStop() && !isNeedReconnect() && !isNeedReinit())
@@ -581,30 +581,30 @@ int main(void)
                            requestsProcessingCount, requestsProcessedCount,
                            failuresNoticedCount);*/
             };
-            logger.info("Disconnecting from SMSC ...");
+            smsc_log_info(logger, "Disconnecting from SMSC ...");
             session.close();
             runner.shutdown();
         };
     }
     catch (SmppConnectException& exc) {
         if (exc.getReason() == SmppConnectException::Reason::bindFailed)
-            logger.error("Failed to bind DBSme. Exiting.");
+            smsc_log_error(logger, "Failed to bind DBSme. Exiting.");
         resultCode = -1;
     }
     catch (ConfigException& exc) {
-        logger.error("Configuration invalid. Details: %s Exiting.", exc.what());
+        smsc_log_error(logger, "Configuration invalid. Details: %s Exiting.", exc.what());
         resultCode = -2;
     }
     catch (Exception& exc) {
-        logger.error("Top level Exception: %s Exiting.", exc.what());
+        smsc_log_error(logger, "Top level Exception: %s Exiting.", exc.what());
         resultCode = -3;
     }
     catch (exception& exc) {
-        logger.error("Top level exception: %s Exiting.", exc.what());
+        smsc_log_error(logger, "Top level exception: %s Exiting.", exc.what());
         resultCode = -4;
     }
     catch (...) {
-        logger.error("Unknown exception: '...' caught. Exiting.");
+        smsc_log_error(logger, "Unknown exception: '...' caught. Exiting.");
         resultCode = -5;
     }
 

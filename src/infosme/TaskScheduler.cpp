@@ -25,12 +25,12 @@ void TaskScheduler::Start()
     
     if (!bStarted)
     {
-        logger.info("Starting ...");
+        smsc_log_info(logger, "Starting ...");
         bNeedExit = false;
         awake.Wait(0);
         Thread::Start();
         bStarted = true;
-        logger.info("Started.");
+        smsc_log_info(logger, "Started.");
     }
 }
 void TaskScheduler::Stop()
@@ -39,12 +39,12 @@ void TaskScheduler::Stop()
     
     if (bStarted)
     {
-        logger.info("Stopping ...");
+        smsc_log_info(logger, "Stopping ...");
         bNeedExit = true;
         awake.Signal();
         exited.Wait();
         bStarted = false;
-        logger.info("Stoped.");
+        smsc_log_info(logger, "Stoped.");
     }
 }
 
@@ -117,7 +117,7 @@ int TaskScheduler::Execute()
                     TaskGuard taskGuard = processor->getTask(task_id);
                     Task* task = taskGuard.get();
                     if (!task) { 
-                        logger.warn("Task '%s' not found.", task_id);
+                        smsc_log_warn(logger, "Task '%s' not found.", task_id);
                         continue;
                     }
                     
@@ -128,7 +128,7 @@ int TaskScheduler::Execute()
         catch (std::exception& exc) 
         {
             awake.Wait(0);
-            logger.error("Exception occurred during tasks scheduling : %s", exc.what());
+            smsc_log_error(logger, "Exception occurred during tasks scheduling : %s", exc.what());
         }
     }
     exited.Signal();
@@ -151,7 +151,7 @@ void TaskScheduler::init(TaskProcessorAdapter* processor, ConfigView* config)
             if (!scheduleId || scheduleId[0] == '\0')
                 throw ConfigException("Schedule id empty or wasn't specified.");
             
-            logger.info("Loading schedule '%s' ...", scheduleId);
+            smsc_log_info(logger, "Loading schedule '%s' ...", scheduleId);
             
             std::auto_ptr<ConfigView> scheduleConfigGuard(config->getSubConfig(scheduleId));
             ConfigView* scheduleConfig = scheduleConfigGuard.get();
@@ -164,7 +164,7 @@ void TaskScheduler::init(TaskProcessorAdapter* processor, ConfigView* config)
         }
         catch (ConfigException& exc)
         {
-            logger.error("Load of schedules failed! Config exception: %s", exc.what());
+            smsc_log_error(logger, "Load of schedules failed! Config exception: %s", exc.what());
             throw;
         }
     }
