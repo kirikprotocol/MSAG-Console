@@ -76,7 +76,8 @@ namespace smsc { namespace store
 
         public:
 
-            ReadyIdIterator(StorageConnectionPool* _pool, time_t retryTime)
+            ReadyIdIterator(StorageConnectionPool* _pool, 
+                            time_t retryTime, bool immediate=false)
                 throw(StorageException);
             virtual ~ReadyIdIterator();
 
@@ -296,7 +297,7 @@ namespace smsc { namespace store
          * Реализация метода MessageStore
          * @see MessageStore
          */
-        virtual IdIterator* getReadyForRetry(time_t retryTime)
+        virtual IdIterator* getReadyForRetry(time_t retryTime, bool immediate=false)
                 throw(StorageException);
 
         /**

@@ -1214,7 +1214,7 @@ RemoteStore::ReadyIdIterator::ReadyIdIterator(
         if (connection && !connection->isAvailable())
             connection->connect();
 
-        readyStmt = new ReadyByNextTimeStatement(connection, false);
+        readyStmt = new ReadyByNextTimeStatement(connection, immediate, false);
         readyStmt->bindRetryTime(retryTime);
         sword status = readyStmt->execute(OCI_DEFAULT, 0, 0);
         if (status != OCI_NO_DATA) connection->check(status);
