@@ -96,6 +96,10 @@ public:
 MessageStoreBusinessCycleTestTask::MessageStoreBusinessCycleTestTask(int _taskNum)
 	: TestTask("BusinessCycleTask", _taskNum), taskNum(_taskNum) {}
 
+#define PREPARE_FOR_NEW_SMS \
+	id.push_back(new SMSId()); \
+	sms.push_back(new SMS());
+
 void MessageStoreBusinessCycleTestTask::executeCycle()
 {
 	//проверить тест остановлен/замедлен
@@ -110,64 +114,140 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 		evt.Wait(MessageStoreBusinessCycleTest::delay);
 	}
 
-	SMSId id;
-	SMS sms;
+	vector<SMSId*> id;
+	vector<SMS*> sms;
 
-	//создание SM
-	process(tc.storeCorrectSM(&id, &sms, RAND_TC));
+	//Сохранение правильного sms (только одно sms создаем в цикле)
+	PREPARE_FOR_NEW_SMS
+	process(tc.storeCorrectSms(id.back(), sms.back(), RAND_TC));
 	
-	//сохранение правильного SM с параметрами похожими на уже существующий SM
-	//сохранение дублированного SM с отказом
-	//сохранение неправильного SM
-	//установка правильного статуса
-	//некорректное изменение статуса SM
-	//замещение SM
-	//некорректное замещение SM
-	//чтение SM
+	//Сохранение правильного sms с параметрами похожими на уже существующий sms
+	//Сохранение дублированного sms с отказом
+	//Сохранение корректного sms с замещением уже существующего
+	//Сохранение неправильного sms
+	//Обновление статуса sms в состоянии ENROUTE
+	//Корректное обновление существующего sms
+	//Некорректное обновление существующего sms
+	//Чтение существующего sms
 	for (TCSelector s(RAND_SET_TC, 15); s.check(); s++)
 	{
 		switch (s.value())
 		{
-			case 1:
-				{
-					SMSId newId;
-					SMS newSMS;
-					process(tc.storeCorrectSM(&newId, &newSMS, id, sms, RAND_TC));
-					process(tc.setCorrectSMStatus(newId, &newSMS, RAND_TC));
-					//process(tc.deleteExistentSM(newId));
-				}
+			case 1: //только одно sms создаем в цикле
+				PREPARE_FOR_NEW_SMS
+				process(tc.storeCorrectSms(id.back(), sms.back(),
+					*id[0], *sms[0], RAND_TC));
 				break;
 			case 2:
-				process(tc.storeRejectDuplicateSM(sms));
+				for (int i = 0; i < id.size(); i++)
+				{
+					process(tc.storeRejectDuplicateSms(*sms[i]));
+				}
 				break;
 			case 3:
-				process(tc.storeIncorrectSM(RAND_TC));
+				for (int i = 0; i < id.size(); i++)
+				{
+					process(tc.storeReplaceCorrectSms(*id[i], sms[i]));
+				}
 				break;
 			case 4:
-				process(tc.setCorrectSMStatus(id, &sms, RAND_TC));
+				process(tc.storeIncorrectSms(RAND_TC));
 				break;
 			case 5:
-				process(tc.setIncorrectSMStatus(id));
+				for (int i = 0; i < id.size(); i++)
+				{
+					process(tc.changeExistentSmsStateEnrouteToEnroute(*id[i],
+						sms[i], RAND_TC));
+				}
 				break;
 			case 6:
-				process(tc.replaceCorrectSM(id, &sms, RAND_TC));
+				for (int i = 0; i < id.size(); i++)
+				{
+					process(tc.replaceCorrectSms(*id[i], sms[i], RAND_TC));
+				}
 				break;
 			case 7:
-				process(tc.replaceIncorrectSM(id, sms, RAND_TC));
+				for (int i = 0; i < id.size(); i++)
+				{
+					process(tc.replaceIncorrectSms(*id[i], *sms[i], RAND_TC));
+				}
 				break;
 			default: //8..15
-				process(tc.loadExistentSM(id, sms));
+				for (int i = 0; i < id.size(); i++)
+				{
+					process(tc.loadExistentSms(*id[i], *sms[i]));
+				}
 		}
 	}
 
-	/*
-	//удаление SM
-	process(tc.deleteExistentSM(id));
+	//Перевод sms из ENROUTE в финальное состояние
+	for (int i = 0; i < id.size(); i++)
+	{
+		process(tc.changeExistentSmsStateEnrouteToFinal(*id[i], sms[i], RAND_TC));
+	}
+	
+	//Сохранение sms с замещением существующего sms финальном состоянии
+	//Перевод sms в финальном состоянии в любое другое состояние
+	//Обновление sms в финальном состоянии
+	//Чтение существующего sms
+	for (TCSelector s(RAND_SET_TC, 5); s.check(); s++)
+	{
+		switch (s.value())
+		{
+			case 1: //только одно sms создаем в цикле
+				PREPARE_FOR_NEW_SMS
+				process(tc.storeReplaceSmsInFinalState(id.back(), sms.back(),
+					*id[0], *sms[0]));
+				break;
+			case 2:
+				for (int i = 0; i < id.size(); i++)
+				{
+					process(tc.changeFinalSmsStateToAny(*id[i], RAND_TC));
+				}
+				break;
+			case 3:
+				for (int i = 0; i < id.size(); i++)
+				{
+					process(tc.replaceFinalSms(*id[i], *sms[i]));
+				}
+				break;
+			default: //4..5
+				for (int i = 0; i < id.size(); i++)
+				{
+					process(tc.loadExistentSms(*id[i], *sms[i]));
+				}
+		}
+	}
 
-	//изменение статуса несуществующих SM
-	//замещение несуществующих SM
-	//чтение несуществующих SM
-	//удаление несуществующих SM
+	//Перевод несуществующего sms в любое другое состояние
+	//Некорректное обновление несуществующего sms
+	//Чтение несуществующего sms
+	SMSId badId = 0xFFFFFFFFFFFFFFFF;
+	for (TCSelector s(RAND_SET_TC, 4); s.check(); s++)
+	{
+		switch (s.value())
+		{
+			case 1:
+				process(tc.changeFinalSmsStateToAny(badId, RAND_TC));
+				break;
+			case 2:
+				process(tc.replaceIncorrectSms(badId, *sms[0], RAND_TC));
+				//process(tc.replaceFinalSms(badId, *sms[0]);
+				break;
+			case 3:
+				process(tc.loadNonExistentSms(badId));
+				break;
+		}
+	}
+
+	//очистка памяти
+	for (int i = 0; i < id.size(); i++)
+	{
+		delete id[i];
+		delete sms[i];
+	}
+
+	/*
 	for (TCSelector s(RAND_SET_TC, 4); s.check(); s++)
 	{
 		switch (s.value())
@@ -386,6 +466,8 @@ void executeBusinessCycleTest(int numThreads)
 			cout << "Idle connections count = " <<
 				StoreManager::getIdleConnectionsCount() << endl;
 			cout << "Archiver status = " <<
+				StoreManager::isArchiverStarted() << endl;
+			cout << "Archivation status = " <<
 				(StoreManager::isArchivationInProgress() ? "running" : "idle") 
 				<< endl;
 		}
