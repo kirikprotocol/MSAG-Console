@@ -340,4 +340,14 @@ public class Config
     }
     return result;
   }
+
+  public boolean containsSection(String sectionName)
+  {
+    for (Iterator i = params.keySet().iterator(); i.hasNext();) {
+      String paramName = (String) i.next();
+      if (paramName.length() > sectionName.length() && paramName.charAt(sectionName.length()) == '.' && paramName.startsWith(sectionName))
+        return true;
+    }
+    return false;
+  }
 }

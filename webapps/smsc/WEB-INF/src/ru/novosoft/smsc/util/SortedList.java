@@ -33,13 +33,7 @@ public class SortedList extends LinkedList
 				if (o1 instanceof Comparable)
 					return ((Comparable) o1).compareTo(o2);
 				if (o2 instanceof Comparable)
-					return ((Comparable) o2).compareTo(o1);
-				if (o1 instanceof String && o2 instanceof String)
-				{
-					String s1 = (String) o1;
-					String s2 = (String) o2;
-					return s1.compareTo(s2);
-				}
+					return -((Comparable) o2).compareTo(o1);
 				return 0;
 			}
 		});

@@ -118,7 +118,7 @@ public class Index extends PageBean
 
 		int result = RESULT_OK;
 		if (serviceIds.length == 0)
-			return error(SMSCErrors.warning.hosts.noServicesSelected);
+			return warning(SMSCErrors.warning.hosts.noServicesSelected);
 
 		List notStartedIds = new LinkedList();
 
@@ -166,7 +166,7 @@ public class Index extends PageBean
 		int result = RESULT_OK;
 
 		if (serviceIds.length == 0)
-			return error(SMSCErrors.warning.hosts.noServicesSelected);
+			return warning(SMSCErrors.warning.hosts.noServicesSelected);
 
 		List notStoppedIds = new LinkedList();
 
@@ -198,7 +198,7 @@ public class Index extends PageBean
 		int result = RESULT_OK;
 
 		if (serviceIds.length == 0)
-			return error(SMSCErrors.warning.hosts.noServicesSelected);
+			return warning(SMSCErrors.warning.hosts.noServicesSelected);
 
 		try
 		{

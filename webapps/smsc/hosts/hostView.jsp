@@ -31,7 +31,7 @@ switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
 		return;
 	default:
 		STATUS.append("Error");
-		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction));
+		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 }
 TITLE = "Host \""+bean.getHostName()+":"+bean.getPort()+"\" view";
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%

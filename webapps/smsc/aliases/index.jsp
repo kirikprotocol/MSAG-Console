@@ -1,6 +1,9 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsc.aliases.Index,
-                 ru.novosoft.smsc.jsp.util.tables.DataItem"%>
+                 ru.novosoft.smsc.jsp.util.tables.DataItem,
+                 java.net.URLEncoder,
+                 ru.novosoft.smsc.jsp.SMSCJspException,
+                 ru.novosoft.smsc.jsp.SMSCErrors"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.aliases.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -29,7 +32,7 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 		return;
 	default:
 		STATUS.append("<span class=CF00>Error</span>");
-		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction));
+		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_ALIASES";
@@ -65,13 +68,6 @@ function setSort(sorting)
 		opForm.sort.value = "-<%=bean.getSort()%>";
 	else
 		opForm.sort.value = sorting;
-	opForm.submit();
-	return false;
-}
-function navigate(direction)
-{
-	document.all.jbutton.name = direction;
-	document.all.jbutton.value = direction;
 	opForm.submit();
 	return false;
 }

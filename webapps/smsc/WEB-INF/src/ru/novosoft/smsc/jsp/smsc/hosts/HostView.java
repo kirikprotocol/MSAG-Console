@@ -50,7 +50,7 @@ public class HostView extends SmscBean
 		catch (AdminException e)
 		{
 			services = new HashMap();
-			return error(SMSCErrors.warning.hosts.listFailed, hostName);
+			return warning(SMSCErrors.warning.hosts.listFailed, hostName);
 		}
 
 		return RESULT_OK;
@@ -133,7 +133,7 @@ public class HostView extends SmscBean
 	{
 		int result = RESULT_OK;
 		if (serviceIds.length == 0)
-			return error(SMSCErrors.warning.hosts.noServicesSelected);
+			return warning(SMSCErrors.warning.hosts.noServicesSelected);
 
 		List notStartedIds = new LinkedList();
 
@@ -173,7 +173,7 @@ public class HostView extends SmscBean
 		int result = RESULT_OK;
 
 		if (serviceIds.length == 0)
-			return error(SMSCErrors.warning.hosts.noServicesSelected);
+			return warning(SMSCErrors.warning.hosts.noServicesSelected);
 
 		List notStoppedIds = new LinkedList();
 

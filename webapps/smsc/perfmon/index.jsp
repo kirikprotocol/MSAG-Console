@@ -16,8 +16,8 @@
 	}
 %>
 	<applet code="ru.novosoft.smsc.perfmon.applet.PerfMon.class" width=100% height=100% archive="perfmon.jar">
-		<param name="locale.country" value="ru">
-		<param name="locale.language" value="ru">
+		<param name="locale.country" value="us">
+		<param name="locale.language" value="en">
 		<param name="pixPerSecond" value="4">
 		<param name="scale" value="80">
 		<param name="block" value="8">

@@ -2,6 +2,7 @@
 table.properties_list th
 {
 /*	background-color: #F8F6EE;*/
+  padding-right: 4px;
 }
 table.properties_list th a,
 table.properties_list th a:visited,

@@ -65,23 +65,63 @@ public abstract class PageBean
 
 	protected int error(String errorCode)
 	{
-		return _error(new SMSCJspException(errorCode));
+		return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_ERROR));
 	}
 
 	protected int error(String errorCode, String param)
 	{
-		return _error(new SMSCJspException(errorCode, param));
+		return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_ERROR, param));
 	}
 
 	protected int error(String errorCode, Throwable cause)
 	{
-		return _error(new SMSCJspException(errorCode, cause));
+		return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_ERROR, cause));
 	}
 
 	protected int error(String errorCode, String param, Throwable cause)
 	{
-		return _error(new SMSCJspException(errorCode, param, cause));
+		return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_ERROR, param, cause));
 	}
+
+  protected int warning(String errorCode)
+  {
+    return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_WARNING));
+  }
+
+  protected int warning(String errorCode, String param)
+  {
+    return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_WARNING, param));
+  }
+
+  protected int warning(String errorCode, Throwable cause)
+  {
+    return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_WARNING, cause));
+  }
+
+  protected int warning(String errorCode, String param, Throwable cause)
+  {
+    return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_WARNING, param, cause));
+  }
+
+  protected int message(String errorCode)
+  {
+    return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_MESSAGE));
+  }
+
+  protected int message(String errorCode, String param)
+  {
+    return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_MESSAGE, param));
+  }
+
+  protected int message(String errorCode, Throwable cause)
+  {
+    return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_MESSAGE, cause));
+  }
+
+  protected int message(String errorCode, String param, Throwable cause)
+  {
+    return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_MESSAGE, param, cause));
+  }
 
 	protected int _error(SMSCJspException e)
 	{

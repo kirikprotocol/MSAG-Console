@@ -20,7 +20,7 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 		break;
 	default:
 		STATUS.append("<span class=CF00>Error</span>");
-		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction));
+		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_LOCALE_RESOURCES";

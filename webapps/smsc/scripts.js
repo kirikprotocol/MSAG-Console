@@ -326,3 +326,20 @@ function noValidationSubmit(buttonElem)
   opForm.submit();
   return false;
 }
+
+function editSomething(editObjectName)
+{
+	opForm.all.jbutton.name = "mbEdit";
+	opForm.all.edit.value = editObjectName;
+	opForm.submit();
+	return false;
+}
+
+/** for navbar **/
+function navigate(direction)
+{
+	document.all.jbutton.name = direction;
+	document.all.jbutton.value = direction;
+	opForm.submit();
+	return false;
+}
