@@ -1069,7 +1069,7 @@ static long long NextSequence()
   return ++sequence;
 }
 
-static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog){  __trace2__("MAP::%s MAP.did:{0x%x}",__FUNCTION__,dialog->dialogid_map);  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0x0f;  unsigned encoding = sms->getIntProperty(Tag::SMPP_DATA_CODING);  ET96MAP_USSD_STRING_T ussdString = {0,};  unsigned text_len;  const unsigned char* text = (const unsigned char*)cmd->get_sms()->getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&text_len);  if ( text_len > 160 ) 
+static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog){  __trace2__("MAP::%s MAP.did:{0x%x}",__FUNCTION__,dialog->dialogid_map);  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0x0f;  unsigned encoding = cmd->get_sms()->getIntProperty(Tag::SMPP_DATA_CODING);  ET96MAP_USSD_STRING_T ussdString = {0,};  unsigned text_len;  const unsigned char* text = (const unsigned char*)cmd->get_sms()->getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&text_len);  if ( text_len > 160 ) 
     throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__FUNCTION__,dialog->dialogid_map,text_len));
 
   unsigned bytes = 0;
