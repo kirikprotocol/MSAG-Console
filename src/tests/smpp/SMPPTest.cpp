@@ -30,14 +30,15 @@ namespace smsc {
 				// adding test cases
 				CPPUNIT_TEST_SUITE( SMPPTest );
 				CPPUNIT_TEST( testBind );
-				//CPPUNIT_TEST( testAddition );
+				//CPPUNIT_TEST( testTransmitterReceiverEnquireLink );
 				//CPPUNIT_TEST_EXCEPTION( testException,  TestException );
 				CPPUNIT_TEST_SUITE_END();
 				// SME for testing
 				GenericSmeHandler sme;
 				GenericSmeHandler sme1;
-				GenericSmeHandler transmitter;
-				GenericSmeHandler receiver;
+				QueuedSmeHandler transmitter;
+				QueuedSmeHandler receiver;
+				QueuedSmeHandler sender;
 			public:
 				SMPPTest() : log(smsc::test::util::logger.getLog("smsc.test.smpp.SMPPTest")) {}
 				void setUp() {
@@ -53,7 +54,7 @@ namespace smsc {
 						ContextHandler root = config->getContext("smsc");
 						log.debug("Getting subcontext sme");
 						smsc::test::util::ContextHandlerList lst = root->findSubcontext("sme");
-						PduListenerHandler listener = new DeafListener();
+						PduListenerHandler listener = new SmppListener();
 						typedef smsc::test::util::ContextHandlerList::iterator CHI;
 						for (CHI itr = lst.begin(); itr != lst.end(); ++itr) {
 							ContextHandler ctx = *itr;
@@ -70,15 +71,20 @@ namespace smsc {
 								log.debug(sme1->toString());
 							} else if (name == "transmitter") {
 								log.debug("Creating \"transmitter\" by using SmeFactory");
-								transmitter = SmeFactory::createSme(ctx);
-								transmitter->setListener(listener);
+								GenericSmeHandler gh = SmeFactory::createSme(ctx);
+								transmitter = gh;
 								log.debug(transmitter->toString());
 							} else if (name == "receiver") {
 								log.debug("Creating \"receiver\" by using SmeFactory");
-								receiver = SmeFactory::createSme(ctx);
-								receiver->setListener(listener);
+								GenericSmeHandler gh = SmeFactory::createSme(ctx);
+								receiver = gh;
 								log.debug(receiver->toString());
-							}
+							}/* else if (name == "sender") {
+								log.debug("Creating \"sender\" by using SmeFactory");
+								sender = SmeFactory::createSme(ctx);
+								sender->setListener(listener);
+								log.debug(sender->toString());
+							}*/
 						}
 					} catch (std::runtime_error ex) {
 						std::cout <<  std::endl << ex.what();
@@ -94,7 +100,6 @@ namespace smsc {
 			protected:
 				// проверка различных вариантов соединения с SMSC
 				void testBind() {
-					// проверка простых вариантов bind & unbind
 					try {
 						log.debug("Testing simple binding & unbinding ...");
 						// transceiver
@@ -138,7 +143,46 @@ namespace smsc {
 					}
 				}
 
+				// проверка работы transmitter & receiver с одним sistem id
+				void testTransmitterReceiverEnquireLink() {
+				  try {
+					transmitter->bind(smsc::sme::BindType::Transmitter);
+					receiver->bind(smsc::sme::BindType::Receiver);
+
+					// проверка, что transmitter получает ответ на enquire_link
+					log.debug("Sending EnquireLink");
+					uint32_t sequence = transmitter->sendEquireLink();
+					log.debug("SequenceNumber = %u", sequence);
+					PduHandler pdu = transmitter->receiveWithSequence(sequence, 10000);
+					if(pdu != 0 && pdu->get_commandId() == smsc::smpp::SmppCommandSet::ENQUIRE_LINK_RESP) {
+					  log.debug("Transmitter received EnquireLinkResponse");
+					} else {
+					  log.error("testTransmitterReceiverEnquireLink: Transmitter did not receive EnquireLinkResponse");
+					  //CPPUNIT_FAIL("Test Error: testTransmitterReceiverEnquireLink: Transmitter did not receive EnquireLinkResponse");
+					}
+					// проверка, что receiver получает ответ на enquire_link
+					sequence = receiver->sendEquireLink();
+					pdu = receiver->receiveWithSequence(sequence, 10000);
+					if(pdu != 0 && pdu->get_commandId() == smsc::smpp::SmppCommandSet::ENQUIRE_LINK_RESP) {
+					  log.debug("Receiver received EnquireLinkResponse");
+					} else {
+					  log.error("testTransmitterReceiverEnquireLink: Receiver did not receive EnquireLinkResponse");
+					  //CPPUNIT_FAIL("Test Error: testTransmitterReceiverEnquireLink: Receiver did not receive EnquireLinkResponse");
+					}
+
+					//unbinding
+					receiver->unbind();
+					transmitter->unbind();
+				  } catch (PduListenerException &ex) {
+					  log.error("testTransmitterReceiverEnquireLink: PduListenerException : %s", ex.what());
+					  CPPUNIT_FAIL("Test Error: PduListenerException in testTransmitterReceiverEnquireLink()");
+				  }
+				}
+
 			private:
+
+				// проверка того, что нельзя забайндить два (transmitter | receiver | transmitter) как 
+				// в одном сокете, так и в разных
 				void checkDuplicateBinding(const int bindType) throw(PduListenerException) {
 					std::string mode;
 					switch (bindType) {

@@ -38,12 +38,30 @@ namespace smsc {
 				}
 			};
 
+			// usual dispose policy
+			template <class P> class UsualDeleter {
+			public:
+			  void dispose(P* object) {
+				delete object;
+			  }
+			};
+			
 			// handler
-			template <typename T, template <class> class CheckingPolicy=Exceptioner>
+			template 
+			<
+			  typename T, 
+			  template <typename> class CheckingPolicy = Exceptioner, 
+			  template <typename> class DisposePolicy = UsualDeleter
+			>
 			class Handler;
 
-			template <typename T, template <class> class CheckingPolicy>
-			class Handler : public CheckingPolicy<T> {
+			template 
+			<
+			  typename T, 
+			  template <typename> class CheckingPolicy, 
+			  template <typename> class DisposePolicy
+			>
+			class Handler : public CheckingPolicy<T>, public DisposePolicy<T> {
 			private:
 				T* objectPtr;
 				int* referenceCount;
@@ -51,7 +69,7 @@ namespace smsc {
 					if (referenceCount != 0) {
 						--(*referenceCount);
 						if ((*referenceCount) == 0 && objectPtr != 0) {
-							delete objectPtr;
+							dispose(objectPtr);
 							delete referenceCount;
 						}
 					}
@@ -69,7 +87,7 @@ namespace smsc {
 					}
 				}
 
-				Handler(const Handler<T>& handler) {
+				Handler(const Handler<T, CheckingPolicy, DisposePolicy> &handler) {
 					if (handler != 0) {
 						objectPtr = handler.objectPtr;
 						referenceCount = handler.referenceCount;
@@ -80,7 +98,35 @@ namespace smsc {
 					}
 				}
 
-				Handler& operator = (const Handler<T>& handler) {
+				template <typename T1>
+				Handler(Handler<T1, CheckingPolicy, DisposePolicy> &handler) {
+					if (handler != 0) {
+						objectPtr = static_cast<T*>(handler.getObjectPtr());
+						referenceCount = handler.getReferenceCountPtr();
+						++(*referenceCount);
+					} else {
+						objectPtr = 0;
+						referenceCount = 0;
+					}
+				}
+
+				template <typename T1>
+				Handler<T, CheckingPolicy, DisposePolicy>& operator = (Handler<T1, CheckingPolicy, DisposePolicy> &handler) {
+					if (objectPtr != handler.getObjectPtr()) {
+						release();
+						if(handler != 0) {
+						  objectPtr = static_cast<T*>(handler.getObjectPtr());
+						  referenceCount = handler.getReferenceCountPtr();
+						  ++(*referenceCount);
+						} else {
+						  objectPtr = 0;
+						  referenceCount = 0;
+						}
+					}
+					return *this;
+				}
+
+				Handler<T, CheckingPolicy, DisposePolicy>& operator = (const Handler<T, CheckingPolicy, DisposePolicy> &handler) {
 					if (objectPtr != handler.objectPtr) {
 						release();
 						if(handler != 0) {
@@ -95,7 +141,7 @@ namespace smsc {
 					return *this;
 				}
 
-				Handler& operator = (T* objectPtr) {
+				Handler<T, CheckingPolicy, DisposePolicy>& operator = (T* objectPtr) {
 					if (this->objectPtr != objectPtr) {
 						release();
 						this->objectPtr = objectPtr;
@@ -116,27 +162,27 @@ namespace smsc {
 					return handler.objectPtr == addr;
 				}*/
 
-				friend bool operator==(const Handler<T>& handler, const T* objectPtr) {
+				friend bool operator==(const Handler<T, CheckingPolicy, DisposePolicy>& handler, const T* objectPtr) {
 					return handler.objectPtr == objectPtr;
 				}
 
-				friend bool operator==(const T* objectPtr, const Handler<T>& handler) {
+				friend bool operator==(const T* objectPtr, const Handler<T, CheckingPolicy, DisposePolicy>& handler) {
 					return handler.objectPtr == objectPtr;
 				}
 
-				friend bool operator!=(const Handler<T>& handler, const T* objectPtr) {
+				friend bool operator!=(const Handler<T, CheckingPolicy, DisposePolicy>& handler, const T* objectPtr) {
 					return handler.objectPtr != objectPtr;
 				}
 
-				friend bool operator!=(const T* objectPtr, const Handler<T>& handler) {
+				friend bool operator!=(const T* objectPtr, const Handler<T, CheckingPolicy, DisposePolicy>& handler) {
 					return handler.objectPtr != objectPtr;
 				}
 
-				friend bool operator==(const Handler<T>& handler1, const Handler<T>& handler2) {
+				friend bool operator==(const Handler<T, CheckingPolicy, DisposePolicy>& handler1, const Handler<T, CheckingPolicy, DisposePolicy>& handler2) {
 					return handler1.objectPtr == handler2.objectPtr;
 				}
 
-				friend bool operator!=(const Handler<T>& handler1, const Handler<T>& handler2) {
+				friend bool operator!=(const Handler<T, CheckingPolicy, DisposePolicy>& handler1, const Handler<T, CheckingPolicy, DisposePolicy>& handler2) {
 					return handler1.objectPtr != handler2.objectPtr;
 				}
 
@@ -158,6 +204,10 @@ namespace smsc {
 
 				T* getObjectPtr() {
 				  return objectPtr;
+				}
+
+				int* getReferenceCountPtr() {
+				  return referenceCount;
 				}
 
 				~Handler() {

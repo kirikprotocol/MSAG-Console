@@ -162,7 +162,7 @@ namespace smsc {
 			void BasicSme::bind(const int bindType) throw(PduListenerException, IllegalSmeOperation) {
 				if(session == 0) {
 					if(listener != 0) {
-						session = new smsc::sme::SmppSession(cfg, listener.getObjectPtr());
+						session = new SmppSession(cfg, listener.getObjectPtr());
 					} else {
 						throw IllegalSmeOperation("IllegalSmeOperation: can't bind new session with null listener");
 					}
@@ -185,16 +185,33 @@ namespace smsc {
 						oldSess->close();
 						listener->checkError();
 					} catch (smsc::sme::SmppConnectException ex) {
-						//std::ostringstream msg;
-						//msg << "PduListenerException (non-fatal): smsc::sme::SmppConnectException occured\n" << ex.getReason();
-						// throw PduListenerException(msg.str(), ex.getReason());
+						std::ostringstream msg;
+						msg << "PduListenerException (non-fatal): smsc::sme::SmppConnectException occured\n" << ex.getReason();
+						throw PduListenerException(msg.str(), ex.getReason());
 					} catch (PduListenerException ex) {
-					  //std::ostringstream msg;
-					  //msg << "PduListenerException (non-fatal): smsc::sme::SmppConnectException occured\n" << ex.getReason();
+					  std::ostringstream msg;
+					  msg << "PduListenerException (non-fatal): smsc::sme::SmppConnectException occured\n" << ex.getErrorCode();
+					  log.info(msg.str());
+					  throw;
 					}
 				} else {
 					throw IllegalSmeOperation("IllegalSmeOperation: can't unbind null session");
 				}
+			}
+
+			uint32_t BasicSme::sendEquireLink() throw(PduListenerException, IllegalSmeOperation) {
+			  if(session == 0) {
+				throw IllegalSmeOperation("BasicSme Error: Can't send EnquireLink when the session is NULL");
+			  }
+			  uint32_t sequence = session->getNextSeq();
+			  smsc::smpp::PduEnquireLink pdu;
+			  pdu.get_header().set_commandId(smsc::smpp::SmppCommandSet::ENQUIRE_LINK);
+			  pdu.get_header().set_sequenceNumber(sequence);
+			  pdu.get_header().set_commandStatus(0);
+			  smsc::sme::SmppTransmitter *atrans = session->getAsyncTransmitter();
+			  atrans->sendPdu((smsc::smpp::SmppHeader*)&pdu);
+			  listener->checkError();
+			  return sequence;
 			}
 
 			///////////////////////////////////////////
@@ -254,6 +271,11 @@ namespace smsc {
 				  }
 				}
 			}
+
+			///////////////////////////////////////////
+			// QueuedSme
+			//////////////////////////////////////////
+			QueuedSme::Registrator QueuedSme::reg;
 
 		}	//namespace smpp
 	}	//namespace test
