@@ -219,6 +219,7 @@ __synchronized__
     memcpy(tmp,table,sizeof(RouteRecord*)*table_size);
     delete table;
     table = tmp;
+		table_size+=1024;
   }
 
   table[table_ptr++] = record.release();
