@@ -61,7 +61,11 @@ int main(int argc,char* argv[])
 		}
 		if (servicePort == 0)
 		{
-			servicePort = cfgs.cfgman->getInt("admin.port");
+      try {
+        servicePort = cfgs.cfgman->getInt("admin.port");
+      } catch (std::exception e)
+      { 
+      }
 		}
     if (servicePort == 0) {
       fprintf(stderr,"WARNING: admin port not specified, admin module disabled - smsc is not administrable\n");
