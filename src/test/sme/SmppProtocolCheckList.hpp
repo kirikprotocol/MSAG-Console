@@ -135,6 +135,8 @@ void submitSmTc()
 		"Отправка submit_sm реквеста с sme зарегистрированной как transmitter");
 	__reg_tc__("submitSm.transceiver",
 		"Отправка submit_sm реквеста с sme зарегистрированной как transceiver");
+	__reg_tc__("submitSm.forceDc",
+		"Отправка submit_sm реквеста с sme с установленным признаком forceDC");
 	//submitSm.correct
 	__reg_tc__("submitSm.correct",
 		"Отправка submit_sm pdu с правильными значениями полей");
