@@ -743,7 +743,7 @@ public:
         {
           data=(const unsigned char*)s.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
         }
-        if(len==0 || *data>len || *data>s.getIntProperty(Tag::SMPP_SM_LENGTH))
+        if(len==0 || *data>len)
         {
           throw Exception("SmscCommand: Invalid pdu (udhi length > message length)");
         }
