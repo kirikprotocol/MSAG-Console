@@ -40,6 +40,8 @@ public:
 	{
 		if (manager != 0)
 			throw ConfigException("Configuration manager already initialized");
+		if (config_filename != 0)
+			delete config_filename;
 		config_filename = cStringCopy(configurationFileName);
 		manager = new Manager();
 	}

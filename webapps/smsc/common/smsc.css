@@ -1,0 +1,32 @@
+table.main, tr.main, th.main, td.main {
+	vertical-align : top;
+}
+table.main {
+	border : thin inset;
+	width : 100%;
+}
+tr.main, th.main, td.main {
+	border : thin outset;
+}
+
+table.list, tr.list, td.list, th.lis {
+	vertical-align : top;
+}
+table.list {
+	border : thin inset;
+	width : 100%;
+}
+tr.list, td.list, th.list {
+	border : thin outset;
+}
+th.list {
+	background : #DDDDDD;
+}
+
+
+a.link {
+	color : Black;
+}
+a.link:visited {
+	color : #333333;
+}

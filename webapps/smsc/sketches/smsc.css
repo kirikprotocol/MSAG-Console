@@ -1,0 +1,32 @@
+table.main {
+	border : thin inset;
+	width : 100%;
+	vertical-align : top;
+}
+tr.main {
+	border : thin outset;
+	vertical-align : top;
+}
+td.main {
+	border : thin outset;
+	vertical-align : top;
+}
+
+table.list {
+	border : thin inset;
+	width : 100%;
+	vertical-align : top;
+}
+tr.list {
+	border : thin outset;
+	vertical-align : top;
+}
+th.list {
+	border : thin outset;
+	vertical-align : top;
+	background : #DDDDDD;
+}
+td.list {
+	border : thin outset;
+	vertical-align : top;
+}
