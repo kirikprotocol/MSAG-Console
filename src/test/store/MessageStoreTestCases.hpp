@@ -160,6 +160,17 @@ public:
 	void checkReadyForCancelSms(const vector<SMSId*>& ids,
 		const vector<SMS*>& sms, int num);
 
+	/**
+	 * Изменение seqNum для сообщения.
+	 */
+	void changeSmsConcatSequenceNumber(const SMSId id, SMS* sms);
+
+	/**
+	 * Получение списка sms-ок с конкатенацией.
+	 */
+	void checkConcatInitInfo(const vector<SMSId*>& ids,
+		const vector<SMS*>& sms);
+
 private:
 	MessageStore* msgStore;
 	CheckList* chkList;
@@ -178,6 +189,7 @@ private:
 	vector<int> checkReadyForCancelSms(const Address& oa, 
 		const Address& da, const char* svcType, const vector<SMSId*>& ids,
 		const vector<SMS*>& sms);
+	void rand_text(SMS* sms, char* sm, int len);
 };
 
 }

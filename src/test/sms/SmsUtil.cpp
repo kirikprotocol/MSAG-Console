@@ -1,5 +1,6 @@
 #include "SmsUtil.hpp"
 #include "test/util/Util.hpp"
+#include "test/util/TextUtil.hpp"
 #include <cstring>
 #include <map>
 #include <sstream>
@@ -166,6 +167,8 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, uint64_t 
 	__compare__(getPriority, 20);
 	__compare_str__(getSourceSmeId, 21);
 	__compare_str__(getDestinationSmeId, 22);
+	__compare__(getConcatMsgRef, 23);
+	__compare__(getConcatSeqNum, 24);
 	//body
 	__compare_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME, 101);
 	__compare_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG, 102);
@@ -204,6 +207,8 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, uint64_t 
 	__compare_int_body_tag__(SMPP_SET_DPF, 135);
 	__compare_int_body_tag__(SMPP_SOURCE_NETWORK_TYPE, 136);
 	__compare_int_body_tag__(SMPP_SOURCE_BEARER_TYPE, 137);
+	__compare_bin_body_tag__(SMSC_CONCATINFO, 138);
+	__compare_int_body_tag__(SMSC_DSTCODEPAGE, 140);
 	//bool attach;
 	return res;
 }
@@ -321,7 +326,7 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc, bool check)
 
 #define __set_int_body_tag__(tagName, value) \
 	if (mask[pos++]) { \
-		/*__trace2__("set_int_body_tag: " #tagName ", pos = %d", pos);*/ \
+		__trace2__("set_int_body_tag: " #tagName ", pos = %d", pos); \
 		uint32_t tmp = value; \
 		sms->setIntProperty(Tag::tagName, tmp); \
 		if (check) { \
@@ -341,10 +346,24 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc, bool check)
 		} else { delete data; } \
 	}
 
+#define __set_bin_text_body_tag__(tagName, length, dataCoding, udhInd) \
+	if (mask[pos++]) { \
+		int len = length; \
+		__trace2__("set_bin_body_tag: " #tagName ", pos = %d, length = %d", pos, len); \
+		char* data = new char[len + 1]; \
+		uint8_t dc = dataCoding; \
+		bool udhi = udhInd; \
+		rand_text2(len, data, dc, udhi, true); \
+		sms->setBinProperty(Tag::tagName, data, len); \
+		if (check) { \
+			binMap.insert(BinMap::value_type(Tag::tagName, CheckData(len, data))); \
+		} else { delete data; } \
+	}
+
 #define __set_bin_body_tag__(tagName, length) \
 	if (mask[pos++]) { \
 		int len = length; \
-		/*__trace2__("set_bin_body_tag: " #tagName ", pos = %d, length = %d", pos, len);*/ \
+		__trace2__("set_bin_body_tag: " #tagName ", pos = %d, length = %d", pos, len); \
 		char* data = new char[len + 1]; \
 		rand_uint8_t(len, (uint8_t*) data); \
 		sms->setBinProperty(Tag::tagName, data, len); \
@@ -386,7 +405,10 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc, bool check)
 	
 void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t includeMask, bool check)
 {
+	__trace__("+++begin");
 	__require__(sms);
+try
+{
 	SMS* p = sms;
 	//set & check fields
 	//sms->setState(...);
@@ -417,10 +439,13 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t includeMask, bool check)
 	__set_int__(int32_t, Priority, rand0(INT_MAX));
 	__set_str2__(SourceSmeId, MAX_SMESYSID_TYPE_LENGTH, RAND_LAT_NUM);
 	__set_str2__(DestinationSmeId, MAX_SMESYSID_TYPE_LENGTH, RAND_LAT_NUM);
+	__set_int__(uint8_t, ConcatMsgRef, rand0(255));
+	__set_int__(uint8_t, ConcatSeqNum, rand0(255));
 	//поля сохраняются в body случайным образом
 	//даже обязательные для sms поля могут не сохраняться в БД
 	auto_ptr<uint8_t> tmp = rand_uint8_t(8);
 	uint64_t randomMask = *((uint64_t*) tmp.get());
+	randomMask |= 0xc; //SMPP_ESM_CLASS & SMPP_DATA_CODING
 	Mask<uint64_t> mask(includeMask & randomMask);
 	int pos = 0;
 	__trace2__("mask = %s", mask.str());
@@ -438,11 +463,13 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t includeMask, bool check)
 	__set_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME, time(NULL) + rand0(24 * 3600));
 	__set_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG, rand0(2));
 	__set_int_body_tag__(SMPP_ESM_CLASS, rand0(255));
-	__set_int_body_tag__(SMPP_DATA_CODING, rand0(255));
+	bool udhInd = sms->getIntProperty(Tag::SMPP_ESM_CLASS) & UDHI_BIT;
+	uint8_t dataCoding = getDataCoding(RAND_TC);
+	__set_int_body_tag__(SMPP_DATA_CODING, dataCoding);
 	__set_int_body_tag__(SMPP_SM_LENGTH, msgLen);
 	__set_int_body_tag__(SMPP_REGISTRED_DELIVERY, rand0(255));
 	__set_int_body_tag__(SMPP_PROTOCOL_ID, rand0(255));
-	__set_bin_body_tag__(SMPP_SHORT_MESSAGE, msgLen);
+	__set_bin_text_body_tag__(SMPP_SHORT_MESSAGE, msgLen, dataCoding, udhInd);
 	__set_int_body_tag__(SMPP_PRIORITY, rand0(255));
 	__set_int_body_tag__(SMPP_USER_MESSAGE_REFERENCE, rand0(65535));
 	__set_int_body_tag__(SMPP_USSD_SERVICE_OP, rand0(255));
@@ -455,7 +482,7 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t includeMask, bool check)
 	__set_int_body_tag__(SMPP_LANGUAGE_INDICATOR, rand0(255));
 	__set_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS, rand0(255));
 	__set_int_body_tag__(SMPP_NUMBER_OF_MESSAGES, rand0(255));
-	__set_bin_body_tag__(SMPP_MESSAGE_PAYLOAD, rand1(MAX_PAYLOAD_LENGTH));
+	__set_bin_text_body_tag__(SMPP_MESSAGE_PAYLOAD, rand1(MAX_PAYLOAD_LENGTH), dataCoding, udhi);
 	__set_int_body_tag__(SMPP_DATA_SM, rand0(255));
 	__set_int_body_tag__(SMPP_MS_VALIDITY, rand0(255));
 	__set_int_body_tag__(SMPP_MSG_STATE, rand0(255));
@@ -472,7 +499,11 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t includeMask, bool check)
 	__set_int_body_tag__(SMPP_SET_DPF, rand0(255));
 	__set_int_body_tag__(SMPP_SOURCE_NETWORK_TYPE, rand0(255));
 	__set_int_body_tag__(SMPP_SOURCE_BEARER_TYPE, rand0(255));
-
+	if (!rand0(3))
+	{
+		__set_bin_body_tag__(SMSC_CONCATINFO, 3);
+		__set_int_body_tag__(SMSC_DSTCODEPAGE, rand0(255));
+	}
 	//check fileds
 	if (check)
 	{
@@ -513,6 +544,8 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t includeMask, bool check)
 		__check_int_body_tag__(SMPP_SET_DPF);
 		__check_int_body_tag__(SMPP_SOURCE_NETWORK_TYPE);
 		__check_int_body_tag__(SMPP_SOURCE_BEARER_TYPE);
+		__check_bin_body_tag__(SMSC_CONCATINFO);
+		__check_int_body_tag__(SMSC_DSTCODEPAGE);
 	}
 	//bool attach;
 	for (BinMap::iterator it = binMap.begin(); it != binMap.end(); it++)
@@ -525,6 +558,13 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t includeMask, bool check)
 		const CheckData data = it->second;
 		delete data.second;
 	}
+}
+catch (exception& e)
+{
+	__warning2__("setupRandomCorrectSms(): %s", e.what());
+	abort();
+}
+	__trace__("+++end");
 }
 
 void SmsUtil::clearSms(SMS* sms)
@@ -551,6 +591,8 @@ void SmsUtil::clearSms(SMS* sms)
 	sms->setPriority(0);
 	sms->setSourceSmeId("");
 	sms->setDestinationSmeId("");
+	sms->setConcatMsgRef(0);
+	sms->setConcatSeqNum(0);
 	sms->getMessageBody() = Body();
 	//bool attach;
 }
@@ -727,6 +769,8 @@ ostream& operator<< (ostream& os, SMS& sms)
 	__print_int__(Priority);
 	__print_str__(SourceSmeId);
 	__print_str__(DestinationSmeId);
+	__print_int__(ConcatMsgRef);
+	__print_int__(ConcatSeqNum);
 	//body
 	__print_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME);
 	__print_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG);
@@ -765,6 +809,8 @@ ostream& operator<< (ostream& os, SMS& sms)
 	__print_int_body_tag__(SMPP_SET_DPF);
 	__print_int_body_tag__(SMPP_SOURCE_NETWORK_TYPE);
 	__print_int_body_tag__(SMPP_SOURCE_BEARER_TYPE);
+	__print_bin_body_tag__(SMSC_CONCATINFO);
+	__print_int_body_tag__(SMSC_DSTCODEPAGE);
 	//bool attach;
 }
 

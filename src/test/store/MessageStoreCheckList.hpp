@@ -209,6 +209,18 @@ public:
 			"≈сть sms удовлетвор€ющие услови€м, но в финальном состо€нии, serviceType задан");
 		__reg_tc__("checkReadyForCancelSms.allOkWithServiceType",
 			"≈сть sms удовлетвор€ющие услови€м, в состо€нии ENROUTE, serviceType задан");
+		//changeSmsConcatSequenceNumber
+		__reg_tc__("changeSmsConcatSequenceNumber",
+			"»зменение ConcatSequenceNumber атрибута sms");
+		__reg_tc__("changeSmsConcatSequenceNumber.correct",
+			"—ообщение находитс€ в ENROUTE состо€нии и установлен опциональный атрибут SMSC_CONCATINFO");
+		__reg_tc__("changeSmsConcatSequenceNumber.noConcatInfo",
+			"—ообщение находитс€ в ENROUTE состо€нии, но опциональный атрибут SMSC_CONCATINFO не установлен");
+		__reg_tc__("changeSmsConcatSequenceNumber.finalState",
+			"—ообщение находитс€ в финальном состо€нии");
+		//getConcatInitInfo
+		__reg_tc__("getConcatInitInfo",
+			"ѕолучение данных дл€ инициализации механизмов обработки конкатенированных сообщений");
 		//прочее
 		//not implemented
 		/*

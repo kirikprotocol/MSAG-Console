@@ -38,7 +38,7 @@ void executeIntegrityTest(MessageStoreTestCases& tc, int listSize)
 	}
 	
 	bool duplicatesOk = rand0(1); //взаимоисключающие тест кейсы
-	for (TCSelector s(RAND_SET_TC, 15); s.check(); s++)
+	for (TCSelector s(RAND_SET_TC, 20); s.check(); s++)
 	{
 		switch (s.value())
 		{
@@ -110,14 +110,23 @@ void executeIntegrityTest(MessageStoreTestCases& tc, int listSize)
 			case 11:
 				tc.checkReadyForCancelSms(id, sms, RAND_TC);
 				break;
-			default: //case = 12..15
+			case 12:
+				tc.checkConcatInitInfo(id, sms);
+				break;
+			case 13:
+				for (int i = 0; i < id.size(); i++)
+				{
+					tc.changeSmsConcatSequenceNumber(*id[i], sms[i]);
+				}
+				break;
+			default: //case = 14..20
 				for (int i = 0; i < id.size(); i++)
 				{
 					tc.loadExistentSms(*id[i], *sms[i]);
 				}
 		}
 	}
-
+	
 	//добавить паузу, чтобы SMS::lastTime отличалось от предыдущего
 	if (!rand0(3))
 	{
@@ -131,7 +140,10 @@ void executeIntegrityTest(MessageStoreTestCases& tc, int listSize)
 			sms[i], RAND_TC);
 	}
 	
-	for (TCSelector s(RAND_SET_TC, 8); s.check(); s++)
+	//после перевода в финальное состояние
+	tc.checkConcatInitInfo(id, sms);
+	
+	for (TCSelector s(RAND_SET_TC, 12); s.check(); s++)
 	{
 		switch (s.value())
 		{
@@ -166,7 +178,16 @@ void executeIntegrityTest(MessageStoreTestCases& tc, int listSize)
 			case 6:
 				tc.checkReadyForCancelSms(id, sms, RAND_TC);
 				break;
-			default: //7..8
+			case 7:
+				tc.checkConcatInitInfo(id, sms);
+				break;
+			case 8:
+				for (int i = 0; i < id.size(); i++)
+				{
+					tc.changeSmsConcatSequenceNumber(*id[i], sms[i]);
+				}
+				break;
+			default: //9..12
 				for (int i = 0; i < id.size(); i++)
 				{
 					tc.loadExistentSms(*id[i], *sms[i]);
