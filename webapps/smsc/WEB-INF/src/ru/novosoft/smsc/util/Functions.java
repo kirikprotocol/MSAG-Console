@@ -19,6 +19,7 @@ import java.util.zip.*;
 public class Functions
 {
   private static Category logger = Category.getInstance(Functions.class);
+  private static final String backup_dir_name = "backup";
 
   public static boolean recursiveDeleteFolder(File folder)
   {
@@ -124,13 +125,15 @@ public class Functions
     }
   }
 
-  private static int filenameCounter = 0;
+  private static long filenameCounter = 0;
 
   public static synchronized File createTempFilename(String prefix, String suffix, File directory)
   {
     File file = new File(directory, prefix + suffix);
-    while (file.exists())
+    while (file.exists()) {
       file = new File(directory, prefix + (filenameCounter++) + suffix);
+      if (filenameCounter == Long.MAX_VALUE) filenameCounter = 0;
+    }
     return file;
   }
 
@@ -157,7 +160,14 @@ public class Functions
     // rename old config file to bakup file
     String oldFilename = oldFileRenameTo.getAbsolutePath();
     if (oldFileRenameTo.exists()) {
-      final File backFile = Functions.createTempFilename(oldFileRenameTo.getName(), suffix, oldFileRenameTo.getParentFile());
+      File backupDir = new File(oldFileRenameTo.getParentFile(), backup_dir_name);
+      if (!backupDir.exists()) {
+        if (!backupDir.mkdirs()) {
+          logger.error("Could not create backup directory \"" + backupDir.getAbsolutePath() + "\", using \"" + oldFileRenameTo.getParentFile().getAbsolutePath() + "\"");
+          backupDir = oldFileRenameTo.getParentFile();
+        }
+      }
+      final File backFile = Functions.createTempFilename(oldFileRenameTo.getName(), suffix, backupDir);
       if (!new File(oldFilename).renameTo(backFile))
         throw new IOException("Couldn't rename old file \"" + oldFilename + "\" to backup file \"" + backFile.getAbsolutePath() + '"');
     }
