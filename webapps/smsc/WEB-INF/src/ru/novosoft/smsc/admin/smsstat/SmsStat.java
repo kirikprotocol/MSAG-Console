@@ -222,7 +222,7 @@ public class SmsStat
   private void processRouteQuery(Connection connection, StatQuery query)
       throws SQLException
   {
-    Hashtable countersForRoute = new Hashtable();
+    HashMap countersForRoute = new HashMap();
     PreparedStatement stmt = null;
     ResultSet rs = null;
 
