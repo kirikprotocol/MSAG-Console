@@ -363,7 +363,15 @@ void DataProvider::process(Command& command)
         if (upname) delete upname;
     }
 
+    struct timeval utime, curtime;
+    if( logger.isInfoEnabled() ) gettimeofday( &utime, 0 );
     job->process(command, *ds);
+    if( logger.isInfoEnabled() ) {
+      long usecs;
+      gettimeofday( &curtime, 0 );
+      usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
+      log.info( "command processed in s=%ld us=%ld", message.primitive, curtime.tv_sec-utime.tv_sec, usecs );
+    }
 }
 
 }}
