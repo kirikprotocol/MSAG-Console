@@ -6,7 +6,8 @@
                  ru.novosoft.smsc.jsp.SMSCJspException,
                  ru.novosoft.smsc.jsp.util.tables.QueryResultSet,
                  ru.novosoft.smsc.jsp.util.tables.impl.mscman.MscDataItem,
-                 org.apache.log4j.Category"%>
+                 org.apache.log4j.Category,
+                 java.net.URLEncoder"%>
 <%@ page import="ru.novosoft.smsc.admin.mscman.*"%>
 <%@ page import="ru.novosoft.smsc.jsp.mscman.*"%>
 <jsp:useBean id="mscManagerFormBean" scope="session" class="ru.novosoft.smsc.jsp.mscman.MscManagerFormBean" />
@@ -23,7 +24,7 @@
     switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal))
     {
         case MscManagerFormBean.RESULT_DONE:
-            response.sendRedirect("index.jsp?refreshed=true");
+            response.sendRedirect("index.jsp?refreshed=true&prefix=" + URLEncoder.encode(bean.getPrefix(), "UTF-8"));
             return;
         case MscManagerFormBean.RESULT_FILTER:
         case MscManagerFormBean.RESULT_OK:
