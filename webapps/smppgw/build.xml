@@ -1,15 +1,21 @@
-<project default="" name="SMPP Gateway">
+<project default="update" name="SMPP Gateway">
 
-  <property name="smppgw_work" location="${work_path}/smppgw"/>
-  <property name="smppgw_dist" location="${dist_path}/smppgw.war"/>
+  <property environment="env"/>
   <property name="java_src" location="WEB-INF/src"/>
-  <property name="java_out" location="${smppgw_work}/out"/>
-  <property name="java_lib" location="${smppgw_work}/WEB-INF/lib"/>
+  <property name="java_out" location="${env.HOME}/build/classes/smppgw"/>
+  <property name="exploded" location="${env.HOME}/build/exploded/smppgw"/>
+  <property name="java_lib" location="${exploded}/WEB-INF/lib"/>
+
+  <property name="sibinco_lib" location="${env.HOME}/build/jars/sibinco_lib.jar"/>
+  <property name="tomcat_auth_lib" location="${env.HOME}/build/jars/sibinco_tomcat_auth.jar"/>
+  <property name="log4j_jar" location="WEB-INF/lib/log4j.jar"/>
+  <property name="servlet_jar" location="${env.CATALINA_HOME}/common/lib/servlet-api.jar"/>
 
   <target name="init">
     <tstamp/>
     <mkdir dir="${java_out}"/>
     <mkdir dir="${java_lib}"/>
+    <mkdir dir="${exploded}"/>
   </target>
 
   <target name="compile" depends="init" description="compile the sources">
@@ -17,25 +23,39 @@
     <native2ascii encoding="Cp1251" src="${java_src}/locales" dest="${java_out}/locales"/>
   </target>
 
-  <target name="dist" depends="clean,compile" description="generate the distribution">
+  <target name="build" depends="clean,compile" description="generate the distribution">
     <jar jarfile="${java_lib}/smppgw.jar">
       <fileset dir="${java_out}"/>
       <fileset dir="${java_src}" excludes="**/*.java,locales/**"/>
     </jar>
-    <copy file="${tomcat_auth_lib}" todir="${smppgw_work}/WEB-INF/lib"/>
-    <copy file="${sibinco_lib}" todir="${smppgw_work}/WEB-INF/lib"/>
-    <jar jarfile="${smppgw_dist}">
-      <manifest>
-        <attribute name="file" value="WEB-INF/MANIFEST.MF"/>
-      </manifest>
-      <fileset dir="." excludes="WEB-INF/classes/**,WEB-INF/src/**,SmppGW.*,build.xml"/>
-      <fileset dir="${smppgw_work}" includes="WEB-INF/lib/*.jar"/>
-    </jar>
+    <copy todir="${exploded}" preservelastmodified="yes">
+      <fileset dir="." includes="**/*.jsp **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc"/>
+    </copy>
+    <copy todir="${exploded}/WEB-INF/lib" preservelastmodified="yes">
+      <fileset file="${log4j_jar}"/>
+      <fileset file="${tomcat_auth_lib}"/>
+      <fileset file="${sibinco_lib}"/>
+    </copy>
+  </target>
+
+  <target name="install" depends="build" description="installs the webapp">
+    <copy todir="${env.CATALINA_HOME}/webapps/smppgw" preservelastmodified="yes">
+      <fileset dir="${exploded}"/>
+    </copy>
+  </target>
+
+  <target name="cvs_update">
+    <cvs command="update" compressionlevel="9" failonerror="yes"/>
+  </target>
+
+  <target name="update" depends="cvs_update,install" description="update existing installation">
+    <copy todir="${env.CATALINA_HOME}/webapps/smppgw" preservelastmodified="yes">
+      <fileset dir="${exploded}"/>
+    </copy>
   </target>
 
   <target name="clean" description="clean up">
     <delete dir="${java_out}"/>
-    <delete dir="${java_lib}"/>
-    <delete file="${smppgw_dist}"/>
+    <delete dir="${exploded}"/>
   </target>
 </project>

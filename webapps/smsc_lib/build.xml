@@ -1,10 +1,12 @@
-<project default="" name="Sibinco Library">
-  <property name="sl_work" location="${work_path}/sibinco_lib"/>
+<project default="update" name="Sibinco Library">
+
+  <property environment="env"/>
   <property name="java_src" location="src"/>
-  <property name="java_out" location="${sl_work}/out"/>
+  <property name="java_out" location="${env.HOME}/build/classes/tomcat_auth_lib"/>
+  <property name="jar_out" location="${env.HOME}/build/jars/sibinco_lib.jar"/>
+  <property name="log4j_jar" location="../smppgw/WEB-INF/lib/log4j.jar"/>
 
   <target name="init">
-    <tstamp/>
     <mkdir dir="${java_out}"/>
   </target>
 
@@ -12,15 +14,21 @@
     <javac srcdir="${java_src}" destdir="${java_out}" classpath="${log4j_jar}"/>
   </target>
 
-  <target name="dist" depends="clean,compile" description="generate the distribution">
-    <jar jarfile="${sibinco_lib}">
+  <target name="build" depends="clean,compile" description="generate the distribution">
+    <jar jarfile="${jar_out}/">
       <fileset dir="${java_out}"/>
-      <fileset dir="${java_src}" excludes="**/*.java"/>
+      <fileset dir="${java_src}" excludes="**/*.java **/*.class"/>
     </jar>
   </target>
 
+  <target name="cvs_update">
+    <cvs command="update" compressionlevel="9" failonerror="yes"/>
+  </target>
+
+  <target name="update" depends="cvs_update,build"/>
+
   <target name="clean" description="clean up">
     <delete dir="${java_out}"/>
-    <delete file="${sibinco_lib}"/>
+    <delete file="${jar_out}"/>
   </target>
 </project>
