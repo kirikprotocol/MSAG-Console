@@ -321,6 +321,10 @@ public:
     return mrCache.getNextMR(addr);
   }
 
+  SmeProxy* getMapProxy() {
+    return mapProxy;
+  }
+
 protected:
   smsc::system::smppio::SmppSocketsManager ssockman;
   smsc::smeman::SmeManager smeman;
