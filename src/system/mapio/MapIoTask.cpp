@@ -70,12 +70,12 @@ void MapIoTask::deinit()
 {
   USHORT_T result;
   warning_if(Et96MapUnbindReq(SSN)!=ET96MAP_E_OK);  
-  warning_if(MsgClose(MY_USER_ID)!=MSG_OK);
   result = MsgRel(MY_USER_ID,ETSIMAP_ID);
   if ( result != MSG_OK){
     __trace2__("MAP::error at MsgRel errcode 0x%hx",result);
   }
-  MsgExit();
+  warning_if(MsgClose(MY_USER_ID)!=MSG_OK);
+  warning_if(MsgExit()!=MSG_OK);
 }
 
 void MapIoTask::dispatcher()
@@ -162,7 +162,7 @@ void MapIoTask::init(unsigned timeout)
   __global_bind_counter = 0;
   err = MsgInit(MAXENTRIES);
   if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgInit, code 0x%hx",err); throw runtime_error("MsgInit error"); }
-	err = MsgOpen(MY_USER_ID);
+  err = MsgOpen(MY_USER_ID);
   if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgOpen, code 0x%hx",err); throw runtime_error("MsgInit error"); }
   err = MsgConn(MY_USER_ID,ETSIMAP_ID);
   if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgConn, code 0x%hx",err); throw runtime_error("MsgInit error"); }
