@@ -45,6 +45,8 @@ public class ServiceAddExternalAdm extends PageBean
 	private int interfaceVersion = -1;
 	private String rangeOfAddress = null;
 	private String password = null;
+	private boolean wantAlias = false;
+	private int timeout = 0;
 
 	protected String mbNext = null;
 	protected String mbCancel = null;
@@ -178,22 +180,22 @@ public class ServiceAddExternalAdm extends PageBean
 		try
 		{
 			serviceInfo = new ServiceInfo(serviceId,
-																			hostName,
-																			port,
-																			startupArgs,
-																			new SME(serviceId,
-																					  priority,
-																					  SME.SMPP,
-																					  typeOfNumber,
-																					  numberingPlan,
-																					  interfaceVersion,
-																					  systemType,
-																					  "",
-																					  rangeOfAddress,
-																					  -1,
-																					  false,
-																					  8),
-																			ServiceInfo.STATUS_STOPPED);
+													hostName,
+													port,
+													startupArgs,
+													new SME(serviceId,
+															  priority,
+															  SME.SMPP,
+															  typeOfNumber,
+															  numberingPlan,
+															  interfaceVersion,
+															  systemType,
+															  "",
+															  rangeOfAddress,
+															  -1,
+															  wantAlias,
+															  timeout),
+													ServiceInfo.STATUS_STOPPED);
 		}
 		catch (NullPointerException e)
 		{
@@ -225,7 +227,7 @@ public class ServiceAddExternalAdm extends PageBean
 	/************************************** ***********************************/
 
 	protected void checkServiceContent(File incomingZip)
-			  throws AdminException
+			throws AdminException
 	{
 		boolean serviceFound = false;
 		boolean confFound = false;
@@ -260,7 +262,7 @@ public class ServiceAddExternalAdm extends PageBean
 	}
 
 	protected File saveFileToTemp(InputStream in)
-			  throws AdminException
+			throws AdminException
 	{
 		File tmpFile = null;
 
@@ -287,7 +289,7 @@ public class ServiceAddExternalAdm extends PageBean
 	}
 
 	protected String extractSystemId(File incomingZip)
-			  throws AdminException
+			throws AdminException
 	{
 		try
 		{
@@ -482,5 +484,25 @@ public class ServiceAddExternalAdm extends PageBean
 	public void setPriority(int priority)
 	{
 		this.priority = priority;
+	}
+
+	public boolean isWantAlias()
+	{
+		return wantAlias;
+	}
+
+	public void setWantAlias(boolean wantAlias)
+	{
+		this.wantAlias = wantAlias;
+	}
+
+	public int getTimeout()
+	{
+		return timeout;
+	}
+
+	public void setTimeout(int timeout)
+	{
+		this.timeout = timeout;
 	}
 }

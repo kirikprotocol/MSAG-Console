@@ -151,6 +151,14 @@ switch (bean.getStage())
 	<th>Range of Address</th>
 	<td><input maxlength="41" type="text" name="rangeOfAddress" value="<%=bean.getRangeOfAddress() != null ? StringEncoderDecoder.encode(bean.getRangeOfAddress()) : ""%>"></td>
 </tr>
+<tr class=row0>
+	<th class=label>want alias:</th>
+	<td><input class=check type="checkbox" name="wantAlias" <%=bean.isWantAlias() ? "checked" : ""%>></td>
+</tr>
+<tr class=row0>
+	<th class=label>timeout:</th>
+	<td><input class=txt type="text" name="timeout" value="<%=bean.getTimeout()%>"></td>
+</tr>
 <tr class=rowLast>
 	<th>Password</th>
 	<td><input maxlength="41" type="text" name="password" value="<%=bean.getPassword() != null ? StringEncoderDecoder.encode(bean.getPassword()) : ""%>"></td>

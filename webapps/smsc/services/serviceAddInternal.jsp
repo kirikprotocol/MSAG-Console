@@ -76,6 +76,14 @@ MENU0_SELECTION = "MENU0_SERVICES";
 	<th class=label>range of address:</th>
 	<td><input class=txt maxlength="41" type="text" name="rangeOfAddress" value="<%=StringEncoderDecoder.encode(bean.getRangeOfAddress())%>"></td>
 </tr>
+<tr class=row0>
+	<th class=label>want alias:</th>
+	<td><input class=check type="checkbox" name="wantAlias" <%=bean.isWantAlias() ? "checked" : ""%>></td>
+</tr>
+<tr class=row0>
+	<th class=label>timeout:</th>
+	<td><input class=txt type="text" name="timeout" value="<%=bean.getTimeout()%>"></td>
+</tr>
 <tr class=rowLast>
 	<th class=label>password:</th>
 	<td><input class=txt maxlength="41" type="text" name="password" value="<%=StringEncoderDecoder.encode(bean.getPassword())%>"></td>

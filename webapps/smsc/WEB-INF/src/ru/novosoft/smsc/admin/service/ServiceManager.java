@@ -214,12 +214,14 @@ public class ServiceManager
 															int numberingPlan,
 															int interfaceVersion,
 															String rangeOfAddress,
-															String password
+															String password,
+															boolean wantAlias,
+															int timeout
 															)
 			throws AdminException
 	{
 		SME sme = new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, interfaceVersion, systemType, password,
-								rangeOfAddress, -1, false, 8);
+								rangeOfAddress, -1, wantAlias, timeout);
 		if (smsc.getSmes().getNames().contains(sme.getId()))
 			throw new AdminException("SME \"" + sme.getId() + "\" already exists");
 		smsc.getSmes().add(sme);

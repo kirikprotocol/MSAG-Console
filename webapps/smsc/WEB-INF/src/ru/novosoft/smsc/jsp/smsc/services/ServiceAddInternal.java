@@ -21,6 +21,8 @@ public class ServiceAddInternal extends PageBean
 	protected String interfaceVersion = "3.4";
 	protected String rangeOfAddress = "";
 	protected String password = "";
+	protected int timeout = 0;
+	protected boolean wantAlias = false;
 
 	protected String hostName = null;
 
@@ -70,7 +72,7 @@ public class ServiceAddInternal extends PageBean
 
 		try
 		{
-			serviceManager.addNonAdmService(serviceId, priority, systemType, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), rangeOfAddress, password);
+			serviceManager.addNonAdmService(serviceId, priority, systemType, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), rangeOfAddress, password, wantAlias, timeout);
 			appContext.getStatuses().setServicesChanged(true);
 		}
 		catch (Throwable t)
@@ -189,5 +191,25 @@ public class ServiceAddInternal extends PageBean
 	public void setPriority(int priority)
 	{
 		this.priority = priority;
+	}
+
+	public int getTimeout()
+	{
+		return timeout;
+	}
+
+	public void setTimeout(int timeout)
+	{
+		this.timeout = timeout;
+	}
+
+	public boolean isWantAlias()
+	{
+		return wantAlias;
+	}
+
+	public void setWantAlias(boolean wantAlias)
+	{
+		this.wantAlias = wantAlias;
 	}
 }
