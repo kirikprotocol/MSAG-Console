@@ -146,7 +146,7 @@ inline unsigned ConvertText27bit(
 #undef __pchar
 #undef __escape
   }
-  if( smsc::::_map_cat->isDebugEnabled() ){
+  if( smsc::logger::_map_cat->isDebugEnabled() ){
     {
       char b[chars+1];
       memcpy(b,text,chars);
