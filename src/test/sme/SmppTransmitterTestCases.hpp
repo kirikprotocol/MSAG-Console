@@ -47,7 +47,7 @@ public:
 
 	void sendDeliverySmResp(PduDeliverySmResp& pdu, bool sync, int delay = 0);
 
-	void sendInvalidPdu(PduWithOnlyHeader* pdu, bool sync);
+	void sendInvalidPdu(SmppHeader* pdu, bool sync);
 
 	/*
 		virtual PduSubmitSmResp* submit(PduSubmitSm& pdu)=0;
