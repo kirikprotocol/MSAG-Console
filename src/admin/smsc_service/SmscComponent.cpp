@@ -71,11 +71,11 @@ namespace smsc {
                 Method msc_clear     ((unsigned)mscClearMethod,      "msc_clear",      msc_params,   StringType);
                 Method msc_list      ((unsigned)mscListMethod,       "msc_list",       empty_params, StringListType);
 
-								Method sme_add         ((unsigned)smeAddMethod,         "sme_add",         sme_params,     BooleanType);
-								Method sme_remove      ((unsigned)smeRemoveMethod,      "sme_remove",      sme_id_params,  BooleanType);
-								Method sme_update      ((unsigned)smeUpdateMethod,      "sme_update",      sme_params,     BooleanType);
-								Method sme_isConnected ((unsigned)smeIsConnectedMethod, "sme_isConnected", empty_params,   StringListType);
-								Method sme_disconnect  ((unsigned)smeDisconnectMethod,  "sme_disconnect",  sme_ids_params, BooleanType);
+								Method sme_add        ((unsigned)smeAddMethod,        "sme_add",         sme_params,     BooleanType);
+								Method sme_remove     ((unsigned)smeRemoveMethod,     "sme_remove",      sme_id_params,  BooleanType);
+								Method sme_update     ((unsigned)smeUpdateMethod,     "sme_update",      sme_params,     BooleanType);
+								Method sme_status     ((unsigned)smeStatusMethod,     "sme_status",      empty_params,   StringListType);
+								Method sme_disconnect ((unsigned)smeDisconnectMethod, "sme_disconnect",  sme_ids_params, BooleanType);
 
                 methods[apply_routes     .getName()] = apply_routes;
                 methods[apply_aliases    .getName()] = apply_aliases;
@@ -94,11 +94,11 @@ namespace smsc {
                 methods[msc_clear     .getName()] = msc_clear;
                 methods[msc_list      .getName()] = msc_list;
 
-								methods[sme_add        .getName()] = sme_add;
-								methods[sme_remove     .getName()] = sme_remove;
-								methods[sme_update     .getName()] = sme_update;
-								methods[sme_isConnected.getName()] = sme_isConnected;
-								methods[sme_disconnect .getName()] = sme_disconnect;
+								methods[sme_add       .getName()] = sme_add;
+								methods[sme_remove    .getName()] = sme_remove;
+								methods[sme_update    .getName()] = sme_update;
+								methods[sme_status    .getName()] = sme_status;
+								methods[sme_disconnect.getName()] = sme_disconnect;
 
                 smsc_app_runner.reset(0);
             }
@@ -169,8 +169,8 @@ namespace smsc {
 										case smeUpdateMethod:
 										    smeUpdate(args);
 										    return Variant(true);
-										case smeIsConnectedMethod:
-												return smeIsConnected(args);
+										case smeStatusMethod:
+												return smeStatus(args);
 										case smeDisconnectMethod:
 												smeDisconnect(args);
 												return Variant(true);
@@ -757,12 +757,55 @@ namespace smsc {
 							getSmeAdmin()->updateSmeInfo(smeInfo.systemId, smeInfo);
 						}
 						
-						Variant SmscComponent::smeIsConnected(const Arguments & args)
+						Variant SmscComponent::smeStatus(const Arguments & args)
 						{
 							Variant result(StringListType);
 							for (SmeIterator* i = getSmeAdmin()->iterator(); i != NULL;)
 							{
-								result.appendValueToStringList(((i->getSmeProxy() != 0 ? std::string("+") : std::string("-")) + i->getSmeInfo().systemId).c_str());
+								SmeProxy * smeProxy = i->getSmeProxy();
+								std::string status;
+								status += i->getSmeInfo().systemId;
+								status += ",";
+								if (i->getSmeInfo().internal)
+								{
+									status += "internal";
+								}
+								else
+								{
+									if (smeProxy == NULL)
+									{
+										status += "disconnected";
+									}
+									else
+									{
+										switch (smeProxy->getBindMode())
+										{
+										case smeTX:
+											status += "tx,";
+											break;
+										case smeRX:
+											status += "rx,";
+											break;
+										case smeTRX:
+											status += "trx,";
+											break;
+										default:
+											status += "unknown,";
+										}
+										char inIP[128], outIP[128];
+										if (smeProxy->getPeers(inIP,outIP))
+										{
+											status += inIP;
+											status += ",";
+											status += outIP;
+										}
+										else
+										{
+											status += "unknown,unknown";
+										}
+									}
+								}
+								result.appendValueToStringList(status.c_str());
 								if (!i->next())
 									break;
 							}
