@@ -2,5 +2,6 @@
 -sme/testsme2 testsme2 -lcore-network -lsms -lsocket -lsme -lcore-threads -lthread
 #sme/testsme3 testsme3 -lcore-network -lsms -lsocket -lsme -lcore-threads -lthread
 sme/t t -lcore-network -lutil -lsms -lutil -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
+sme/flooder flooder -lcore-network -lutil -lsms -lutil -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
 #sme/t2 t2 -lcore-network -lutil -lsms -lutil -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
-sme/pingpont pingpong -lcore-network -lsms -lsocket -lcore-threads -lthread -lrt
+sme/pingpong pingpong -lcore-network -lutil -lsms -lutil -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll

@@ -2,6 +2,7 @@
 #include "sme/SmppBase.hpp"
 #include "sms/sms.h"
 #include <unistd.h>
+#include "util/smstext.h"
 
 #include "core/synchronization/Event.hpp"
 
@@ -9,6 +10,7 @@ using namespace smsc::sms;
 using namespace smsc::sme;
 using namespace smsc::smpp;
 using namespace smsc::core::synchronization;
+using namespace smsc::util;
 
 int stopped=0;
 SmppTransmitter *tr;
@@ -21,7 +23,8 @@ public:
   {
     if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
     {
-      const char *msg=((PduXSm*)pdu)->get_message().get_shortMessage();
+      char msg[256];
+      getPduText(((PduXSm*)pdu),msg,sizeof(msg));
       count=atoi(msg)+1;
       PduDeliverySmResp resp;
       resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
@@ -64,7 +67,8 @@ int main(int argc,char* argv[])
     ss.connect();
     PduSubmitSm sm;
     SMS s;
-    s.setOriginatingAddress(cfg.sid.length(),1,1,cfg.sid.c_str());
+    Address addr(cfg.sid.c_str());
+    s.setOriginatingAddress(addr);
     char msc[]="123";
     char imsi[]="123";
     s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
@@ -78,15 +82,17 @@ int main(int argc,char* argv[])
     sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
     int send=(argc==6)&&!strcmp(argv[5],"-start");
     char message[64];
+    s.setDestinationAddress(argv[4]);
+
     while(!stopped)
     {
       if(send)
       {
-        s.setDestinationAddress(strlen(argv[4]),1,1,argv[4]);
         sprintf(message,"%d",count);
         int len=strlen((char*)message);
-        s.setBinProperty("SMPP_SHORT_MESSAGE",(char*)message,len);
-        s.setIntProperty("SMPP_SM_LENGTH",len);
+        s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)message,len);
+        s.setIntProperty(Tag::SMPP_SM_LENGTH,len);
+        s.setIntProperty(Tag::SMPP_DATA_CODING,0);
 
         fillSmppPduFromSms(&sm,&s);
         PduSubmitSmResp *resp=tr->submit(sm);
