@@ -905,7 +905,7 @@ ostream& operator<< (ostream& os, PduAddress& addr)
 {
     os << "." << addr.get_typeOfNumber() <<
 		"." << addr.get_numberingPlan() <<
-		"." << addr.get_value();
+		"." << nvl(addr.get_value());
 	return os;
 }
 
