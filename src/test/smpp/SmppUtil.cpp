@@ -803,7 +803,7 @@ ostream& operator<< (ostream& os, PduDataPartSm& p)
 		for (int i = 0; i < size; i++) { \
 			os << (unsigned int) p.get_##prop()[i] << " "; \
 		} \
-		os << dec; \
+		os << dec << endl; \
 	}
 
 ostream& operator<< (ostream& os, SmppOptional& p)
