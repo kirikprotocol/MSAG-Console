@@ -1,4 +1,5 @@
 #include "SmppTransmitterTestCases.hpp"
+#include "test/TestConfig.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "util/debug.h"
@@ -9,6 +10,7 @@ namespace sme {
 
 using smsc::util::Logger;
 using namespace smsc::sms; //constants
+using namespace smsc::test; //config constants
 using namespace smsc::test::smpp; //constants, SmppUtil
 using namespace smsc::test::sms; //constants
 using namespace smsc::smpp;
@@ -147,6 +149,7 @@ vector<int> SmppTransmitterTestCases::submitAndRegisterSmSync(PduSubmitSm* pdu,
 	//отправить pdu
 	__dumpSubmitSmPdu__("SmppTransmitterTestCases::submitSmSyncBefore", systemId, pdu);
 	PduSubmitSmResp* respPdu = session->getSyncTransmitter()->submit(*pdu);
+	time_t respTime = time(NULL);
 	__dumpSubmitSmPdu__("SmppTransmitterTestCases::submitSmSyncAfter", systemId, pdu);
 	__dumpPdu__("SmppTransmitterTestCases::processSubmitSmRespSync", systemId, respPdu);
 	//финальна€ регистраци€ и проверка pdu
@@ -162,7 +165,7 @@ vector<int> SmppTransmitterTestCases::submitAndRegisterSmSync(PduSubmitSm* pdu,
 		{
 			pduData->smsId = SmppUtil::convert(respPdu->get_messageId());
 			pduData->responseFlag = PDU_REQUIRED_FLAG;
-			res = pduChecker->checkSubmitSmResp(pduData, *respPdu);
+			res = pduChecker->checkSubmitSmResp(pduData, *respPdu, respTime);
 			delete respPdu; //disposePdu
 		}
 		pduReg->updatePdu(pduData);
@@ -275,7 +278,8 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 					{
 						SmppTime t;
 						SmppUtil::time2string(
-							time(NULL) + __maxValidPeriod__ + 1, t, time(NULL), __numTime__);
+							time(NULL) + maxValidPeriod + timeCheckAccuracy, t,
+							time(NULL), __numTime__);
 						pdu->get_message().set_validityPeriod(t);
 					}
 					break;
