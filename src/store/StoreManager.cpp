@@ -11,6 +11,7 @@ namespace smsc { namespace store
 using namespace smsc::sms;
 
 MessageStore* StoreManager::instance = 0L;
+//Manager* StoreManager::config = 0L;
 
 MessageStore* StoreManager::getInstance() 
 	throw(ConnectionFailedException)
@@ -21,7 +22,7 @@ MessageStore* StoreManager::getInstance()
 StoreManager::StoreManager() 
 	throw(ConnectionFailedException)
 {
-    // It is needed to obtain init parameters from config here !
+    //__require__(StoreManager::config);
 
 	StoreConfig* config = new StoreConfig("ORJP", "smsc", "smsc");
     pool = new ConnectionPool(config, 100, 10);
@@ -61,7 +62,7 @@ SMSId StoreManager::store(SMS& sms)
 				iteration++;
 				continue;
             }
-			printf("Max tries count exided !\n");
+			printf("Max tries count exceeded !\n");
 			throw;
 		}
 	}
