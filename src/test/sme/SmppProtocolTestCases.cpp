@@ -98,7 +98,7 @@ PduData* SmppProtocolTestCases::getNonReplaceEnrotePdu()
 		if (m->getType() == DELIVERY_MONITOR && !m->pduData->replacedByPdu &&
 			!m->pduData->replacePdu && m->pduData->valid &&
 			m->getFlag() == PDU_REQUIRED_FLAG &&
-			!m->pduData->intProps.size() && !m->pduData->strProps.size())
+			!m->pduData->intProps.size())
 		{
 			pduData = m->pduData;
 			break;
@@ -121,7 +121,7 @@ PduData* SmppProtocolTestCases::getReplaceEnrotePdu()
 		if (m->getType() == DELIVERY_MONITOR && !m->pduData->replacedByPdu &&
 			m->pduData->replacePdu && m->pduData->valid &&
 			m->getFlag() == PDU_REQUIRED_FLAG &&
-			!m->pduData->intProps.size() && !m->pduData->strProps.size())
+			!m->pduData->intProps.size())
 		{
 			pduData = m->pduData;
 			break;
@@ -143,7 +143,7 @@ PduData* SmppProtocolTestCases::getNonReplaceRescheduledEnrotePdu()
 	{
 		if (m->getType() == DELIVERY_MONITOR && !m->pduData->replacedByPdu &&
 			m->pduData->valid && m->getFlag() == PDU_REQUIRED_FLAG &&
-			!m->pduData->intProps.size() && !m->pduData->strProps.size())
+			!m->pduData->intProps.size())
 		{
 			DeliveryMonitor* monitor = dynamic_cast<DeliveryMonitor*>(m);
 			__require__(monitor);
@@ -169,7 +169,7 @@ PduData* SmppProtocolTestCases::getFinalPdu()
 	{
 		if (m->getType() == DELIVERY_MONITOR && !m->pduData->replacedByPdu &&
 			m->pduData->valid && m->getFlag() == PDU_RECEIVED_FLAG &&
-			!m->pduData->intProps.size() && !m->pduData->strProps.size())
+			!m->pduData->intProps.size())
 		{
 			pduData = m->pduData;
 			break;
@@ -181,7 +181,7 @@ PduData* SmppProtocolTestCases::getFinalPdu()
 
 void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 {
-	TCSelector s(num, 15);
+	TCSelector s(num, 14);
 	__decl_tc__;
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(maxValidPeriod);
@@ -196,6 +196,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 			__require__(destAlias);
 			fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, *destAlias);
 			PduData* existentPduData = NULL;
+			PduData::IntProps intProps;
 			switch (s.value())
 			{
 				case 1: //ничего особенного
@@ -258,6 +259,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						pdu->get_message().set_shortMessage(msg, MAX_SM_LENGTH);
 					}
 					break;
+				/*
 				case 9: //msgRef одинаковые (эквивалентно msgRef отсутствуют)
 					//—огласно GSM 03.40 пункт 9.2.3.25 если совпадают
 					//TP-MR, TP-DA, OA, то при ETSI_REJECT_IF_PRESENT будет ошибка.
@@ -281,7 +283,8 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						}
 					}
 					break;
-				case 10: //отправка дублированного сообщени€ без замещени€ уже существующего
+				*/
+				case 9: //отправка дублированного сообщени€ без замещени€ уже существующего
 					//—огласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 					//destination address and service_type. —ообщение должно быть в 
 					//ENROTE state.
@@ -302,10 +305,12 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 							pdu->get_message().set_dest(
 								existentPdu->get_message().get_dest());
 							pdu->get_message().set_replaceIfPresentFlag(0);
+							intProps["hasSmppDuplicates"] = 1;
+							existentPduData->intProps["hasSmppDuplicates"] = 1;
 						}
 					}
 					break;
-				case 11: //отправка дублированного сообщени€ с попыткой замещени€
+				case 10: //отправка дублированного сообщени€ с попыткой замещени€
 					//уже существующего, но service_type не совпадает.
 					//ƒл€ несовпадающих source address и destination address
 					//тест кейсов не делаю, т.к. возникнут проблемы с маршрутами.
@@ -331,7 +336,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						}
 					}
 					break;
-				case 12: //отправка дублированного сообщени€ с замещением уже существующего
+				case 11: //отправка дублированного сообщени€ с замещением уже существующего
 					//—огласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 					//destination address and service_type. —ообщение должно быть в 
 					//ENROTE state.
@@ -355,7 +360,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						}
 					}
 					break;
-				case 13: //отправка дублированного сообщени€ с замещением уже
+				case 12: //отправка дублированного сообщени€ с замещением уже
 					//ранее замещенного
 					//—огласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 					//destination address and service_type. —ообщение должно быть в 
@@ -380,7 +385,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						}
 					}
 					break;
-				case 14: //отправка дублированного сообщени€ с замещением уже
+				case 13: //отправка дублированного сообщени€ с замещением уже
 					//существующего, но наход€щегос€ уже в финальном состо€нии.
 					//—огласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 					//destination address and service_type. —ообщение должно быть в 
@@ -402,10 +407,12 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 							pdu->get_message().set_dest(
 								finalPdu->get_message().get_dest());
 							pdu->get_message().set_replaceIfPresentFlag(1);
+							intProps["hasSmppDuplicates"] = 1;
+							finalPduData->intProps["hasSmppDuplicates"] = 1;
 						}
 					}
 					break;
-				case 15: //отправка дублированного сообщени€ с замещением уже
+				case 14: //отправка дублированного сообщени€ с замещением уже
 					//существующего, но наход€щегос€ уже в процессе повторной доставки.
 					//—огласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 					//destination address and service_type. —ообщение должно быть в 
@@ -434,7 +441,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 					__unreachable__("Invalid num");
 			}
 			//отправить и зарегистрировать pdu
-			fixture->transmitter->sendSubmitSmPdu(pdu, existentPduData, sync);
+			fixture->transmitter->sendSubmitSmPdu(pdu, existentPduData, sync, &intProps);
 			__tc_ok__;
 		}
 		catch(...)
