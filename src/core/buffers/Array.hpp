@@ -13,7 +13,7 @@
 #error This header is for use with C++ only
 #endif
 
-#include <new.h>
+#include <new>
 #include <stdexcept>
 
 namespace smsc{
