@@ -11,15 +11,18 @@ endif
 export CXX
 
 ifeq ($(CXX),CC)
-XERCES_LIB:=-lxerces-c-CC
+AR:=/usr/ccs/bin/ar
+export AR
+XERCES_LIB:=-lxerces-c
 SHARED_OPT:=-G
 else
 XERCES_LIB:=-lxerces-c
 SHARED_OPT:=-shared
 endif
 
-SSL_LIB:=-lssl -lcrypto
-
+SSL_DIR:=/usr/local/ssl
+#SSL_LIB:=-lssl -lcrypto
+SSL_LIB:=$(SSL_DIR)/lib/libcrypto.a
 
 export XERCES_LIB
 export SHARED_OPT
@@ -53,12 +56,13 @@ export SS7_STACK_HOME
 SS7_LIBRARY_NAME := einss7_r
 export SS7_LIBRARY_NAME
 
-CAMMON_INCLUDES = -I$(SMSC_SRCDIR) -I/usr/local/include -I$(SS7_STACK_HOME)/src -DEINSS7_THREADSAFE=1
+CAMMON_INCLUDES = -I$(SMSC_SRCDIR) -I/usr/local/include -I$(SSL_DIR)/include -I$(SS7_STACK_HOME)/src -DEINSS7_THREADSAFE=1
 # -DMAP_R12
 
 ifeq ($(LOG4CPP),YES)
 ifeq ($(CXX),CC)
-LOGGER_LIBRARY := /usr/local/lib/liblog4cpp-CC.a
+#LOGGER_LIBRARY := /usr/local/lib/liblog4cpp-CC.a
+LOGGER_LIBRARY := -llog4cpp
 else
 LOGGER_LIBRARY := -llog4cpp
 endif
@@ -80,7 +84,11 @@ CXXFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT -D_REENTRANT
 ifeq ($(CXX),CC)
 COMPFLAGS:=-features=extensions  -D_POSIX_PTHREAD_SEMANTICS
 endif
-LDFLAGS := -L$(SMSC_BUILDDIR)/lib
+ifeq ($(CXX),CC)
+LDFLAGS := -L$(SMSC_BUILDDIR)/lib -L/usr/local/lib/CC -L/usr/local/lib
+else
+LDFLAGS := -L$(SMSC_BUILDDIR)/lib -L/usr/local/lib
+endif
 
 ifneq ($(TRACE),YES)
 CFLAGS := $(CFLAGS) -DDISABLE_TRACING
