@@ -77,8 +77,8 @@ void SmppInputThread::killSocket(int idx)
   SmppSocketsManager *m=
     (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
   trace2("removing socket %p by input thread",s);
-  m->removeSocket(s);
-  if(ss->getProxy())
+  int rcnt=m->removeSocket(s);
+  if(!rcnt && ss->getProxy())
   {
     try{
       smeManager->unregisterSmeProxy(ss->getProxy()->getSystemId());
@@ -576,7 +576,16 @@ void SmppOutputThread::killSocket(int idx)
   trace2("removing socket %p by output thread",s);
   SmppSocketsManager *m=
     (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
-  m->removeSocket(s);
+  int rcnt=m->removeSocket(s);
+  if(!rcnt && ss->getProxy())
+  {
+    try{
+      smeManager->unregisterSmeProxy(ss->getProxy()->getSystemId());
+    }catch(...)
+    {
+    }
+    delete ss->getProxy();
+  }
   delete ss;
 }
 

@@ -24,7 +24,7 @@ void SmppSocketsManager::registerSocket(Socket* sock)
       return;
     }
   }
-  SmppOutputThread *out=new SmppOutputThread;
+  SmppOutputThread *out=new SmppOutputThread(smeManager);
   SmppInputThread *in=new SmppInputThread(smeManager);
 
   in->setInactivityTime(inactivityTime);
@@ -46,17 +46,18 @@ void SmppSocketsManager::registerSocket(Socket* sock)
 
 }
 
-void SmppSocketsManager::removeSocket(Socket* sock)
+int SmppSocketsManager::removeSocket(Socket* sock)
 {
   MutexGuard g(mtxRemove);
   int x=(int)sock->getData(0);
   x--;
   trace2("socket ref count for %p:%d",sock,x);
   sock->setData(0,(void*)x);
-  if(sock->getData(0))return;
+  if(x)return x;
   trace2("deleting socket:%p",sock);
   sock->Abort();
   delete sock;
+  return 0;
 }
 
 };//smppio

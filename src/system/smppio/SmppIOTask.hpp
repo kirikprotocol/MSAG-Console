@@ -64,6 +64,8 @@ protected:
 
 class SmppOutputThread:public SmppIOTask{
 public:
+  SmppOutputThread(smsc::smeman::SmeManager* manager):
+    smeManager(manager){}
   virtual ~SmppOutputThread();
   virtual void addSocket(Socket* sock,int to);
   virtual void removeSocket(Socket *sock);
@@ -72,6 +74,7 @@ public:
   virtual char* taskName(){return "SmppOutputThread";}
   void assignIn(SmppIOTask *in){inTask=in;}
 protected:
+  smsc::smeman::SmeManager* smeManager;
   SmppIOTask *inTask;
 };
 

@@ -22,7 +22,7 @@ public:
   SmppSocketsManager(ThreadPool *newtp,smsc::smeman::SmeManager* manager):
     tp(newtp),smeManager(manager){}
   void registerSocket(Socket* sock);
-  void removeSocket(Socket* sock);
+  int removeSocket(Socket* sock);
   void setSmppSocketTimeout(int to)
   {
     socketTimeOut=to;
