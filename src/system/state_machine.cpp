@@ -4192,6 +4192,7 @@ void StateMachine::submitReceipt(SMS& sms,int type)
 
       Profile profile=smsc->getProfiler()->lookup(dst);
       sms.setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
+      sms.setIntProperty(Tag::SMSC_UDH_CONCAT,profile.udhconcat);
 
       if(ri.smeSystemId!="MAP_PROXY")
       {
