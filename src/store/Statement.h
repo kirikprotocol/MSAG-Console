@@ -506,7 +506,7 @@ namespace smsc { namespace store
     protected:
 
         FullAddressValue    dstAddr;
-        int8_t              msgRef;
+        uint16_t            msgRef;
 
     public:
 
@@ -516,7 +516,7 @@ namespace smsc { namespace store
 
         void setDestination(const Address& dda);
 
-        uint8_t getMessageReference() {
+        uint16_t getMessageReference() {
             return msgRef;
         }
     };
