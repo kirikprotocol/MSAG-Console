@@ -162,6 +162,17 @@ int fillSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int d
 
 void transLiterateSms(SMS* sms,int datacoding);
 
+inline bool splitString(/*in,out*/string& head,/*out*/string& tail)
+{
+  string::size_type pos=head.find(' ');
+  if(pos==string::npos)return false;
+  string::size_type firstPos=pos;
+  while(head[pos]==' ')pos++;
+  tail=head.substr(pos);
+  head.erase(firstPos);
+  return true;
+}
+
 enum{
   psSingle,
   psMultiple,
