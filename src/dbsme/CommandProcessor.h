@@ -43,33 +43,42 @@ namespace smsc { namespace dbsme
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
+    static const char* PROVIDER_NOT_FOUND  = "PROVIDER_NOT_FOUND";
+    static const char* JOB_NOT_FOUND       = "JOB_NOT_FOUND";
+
     class DataProvider
     {
     protected:
 
         log4cpp::Category       &log;
+        MessageSet              messages;
+
         DataSource*             ds;
-        Hash<Job *>             jobs; // by job name
+        Hash<Job *>             jobs;       // by job name
     
     public:
         
-        DataProvider(ConfigView* config)
-            throw(ConfigException); 
         virtual ~DataProvider();
 
+        DataProvider(ConfigView* config, const MessageSet& set)
+            throw(ConfigException);
+        
         virtual void process(Command& command)
-            throw(ServiceNotFoundException, CommandProcessException);
+            throw(CommandProcessException);
     };
     
     class CommandProcessor
     {
     private:
 
+        log4cpp::Category       &log;
+        MessageSet              messages;
+
         int     protocolId;
         char*   svcType;
-
-        log4cpp::Category       &log;
+        
         Hash<DataProvider *>    providers;  // by provider address
+        
         
     public:
 
@@ -81,7 +90,7 @@ namespace smsc { namespace dbsme
         void init(ConfigView* config)
             throw(ConfigException);
         void process(Command& command)
-            throw(ServiceNotFoundException, CommandProcessException);
+            throw(CommandProcessException);
 
         const char* getSvcType() { return (svcType) ? svcType:"DbSme"; };
         int getProtocolId() { return protocolId; };

@@ -91,15 +91,13 @@ public:
         {
             processor.process(command);
         }
-        catch (Exception& exc)
+        catch (CommandProcessException& exc)
         {
             {
                 MutexGuard guard(countersLock);
-                //if (requestsProcessingCount) requestsProcessingCount--;
                 failuresNoticedCount++;
             }
-            //command.setOutData("Error processing SMS !");
-            command.setOutData(exc.what());
+            command.setOutData(exc.what()); // Error processing SMS !;
         }
 
         sms.setDestinationAddress(command.getFromAddress());

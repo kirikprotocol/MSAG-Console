@@ -22,7 +22,6 @@ void SQLJob::init(ConfigView* config)
     throw(ConfigException)
 {
     __require__(config);
-    
     __trace__("SQLJob loading ... ");
     
     sql = config->getString("sql", "SQL request wasn't defined !");
@@ -49,30 +48,35 @@ void SQLJob::process(Command& command, DataSource& ds)
     throw(CommandProcessException)
 {
     Connection* connection = ds.getConnection();
-    if (!connection) throw CommandProcessException();
+    if (!connection) error(SQL_JOB_DS_FAILURE, 
+                           "Failed to create DataSource connection!");
     Statement* stmt = 0;
-    
     try 
     {
-        stmt = connection->createStatement(sql);
-        if (stmt)
-        {
-            process(command, *stmt);
-            if (!isQuery) connection->commit();
-            delete stmt;
-        }
-        else
+        stmt = connection->createStatement(sql); // throws SQLException
+        if (!stmt) 
         {
             ds.freeConnection(connection);
-            throw CommandProcessException();
+            error(SQL_JOB_DS_FAILURE, 
+                  "Failed to create DataSource statement!");
         }
+        process(command, *stmt);             // throws CommandProcessException
+        if (!isQuery) connection->commit();  // throws SQLException
+        delete stmt;
+    }
+    catch(CommandProcessException& exc) 
+    {
+        if (stmt) delete stmt;
+        connection->rollback();
+        ds.freeConnection(connection);
+        throw;
     }
     catch(Exception& exc)
     {
         if (stmt) delete stmt;
         connection->rollback();
         ds.freeConnection(connection);
-        throw CommandProcessException(exc);
+        error(SQL_JOB_DS_FAILURE, exc.what());
     }
 
     ds.freeConnection(connection);
@@ -81,65 +85,87 @@ void SQLJob::process(Command& command, DataSource& ds)
 void SQLJob::process(Command& command, Statement& stmt) 
     throw(CommandProcessException)
 {
-    __trace__("SQL Job: Process command called ...");
-    
     ContextEnvironment ctx;
     ctx.exportStr(SMSC_DBSME_SQL_JOB_FROM_ADDR, command.getFromAddress().value);
     ctx.exportStr(SMSC_DBSME_SQL_JOB_TO_ADDR, command.getToAddress().value);
-    ctx.exportStr(SMSC_DBSME_SQL_JOB_NAME, command.getJobName());
+    ctx.exportStr(SMSC_DBSME_SQL_JOB_NAME, getName());
 
-    try
+    command.setOutData("");
+    
+    if (!parser || !formatter) 
+        error(SQL_JOB_INVALID_CONFIG, 
+              "IO Parser or Formatter wasn't defined!");
+    
+    std::string input = (command.getInData()) ? command.getInData():"";
+
+    try 
     {
-        command.setOutData("");
-
-        if (!parser || !formatter)
-            throw CommandProcessException("IO Parser or Formatter"
-                                          " wasn't defined !");
-        std::string input = 
-            (command.getInData()) ? command.getInData():"";
-
         SQLSetAdapter setAdapter(&stmt);
-        parser->parse(input, setAdapter, ctx);
+        parser->parse(input, setAdapter, ctx); 
+    }
+    catch (ParsingException& exc) 
+    {
+        error(SQL_JOB_INPUT_PARSE, exc.what());
+    }
+    catch (Exception& exc) 
+    {
+        error(SQL_JOB_DS_FAILURE, exc.what());
+    }
 
-        std::string output = "";
-        if (isQuery)
+    std::string output = "";
+    if (isQuery)
+    {
+        ResultSet* rs = 0;
+        try 
         {
-            ResultSet* rs = 0;
-            try 
-            {
-                if (rs = stmt.executeQuery())
-                {
-                    SQLGetAdapter getAdapter(rs);
-                    while (rs->fetchNext())
-                    {
-                        formatter->format(output, getAdapter, ctx);
-                    }
-                    delete rs;
-                }
-                else
-                    throw CommandProcessException("Result set of query "
-                                                  "execution is undefined !");
-            }
-            catch (Exception& exc)
-            {
-                if (rs) delete rs;
-                throw CommandProcessException(exc);
-            }
+            rs = stmt.executeQuery();
+            if (!rs)
+                error(SQL_JOB_DS_FAILURE, 
+                      "Result set of query execution is undefined!");
+            
+            SQLGetAdapter getAdapter(rs);
+            if (!rs->fetchNext()) 
+                error(SQL_JOB_QUERY_NULL, 
+                      "Result set of query execution is NULL!");
+            
+            do formatter->format(output, getAdapter, ctx);
+            while (rs->fetchNext());
+        } 
+        catch (FormattingException& exc)
+        {
+            error(SQL_JOB_OUTPUT_FORMAT, exc.what());
         }
-        else
+        catch (CommandProcessException& exc) 
+        {
+            if (rs) delete rs;
+            throw;
+        }
+        catch (Exception& exc) 
+        {
+            if (rs) delete rs;
+            error(SQL_JOB_DS_FAILURE, exc.what());
+        }
+        if (rs) delete rs;
+    }
+    else // Not query
+    {
+        try
         {
             uint32_t result = (uint32_t)stmt.executeUpdate();
             SQLGetRowsAdapter getAdapter(result);
             formatter->format(output, getAdapter, ctx);
         }
-        
-        command.setOutData(output.c_str()); 
+        catch (FormattingException& exc)
+        {
+            error(SQL_JOB_OUTPUT_FORMAT, exc.what());
+        }
+        catch (Exception& exc) 
+        {
+            error(SQL_JOB_DS_FAILURE, exc.what());
+        }
     }
-    catch(Exception& exc)
-    {
-        throw CommandProcessException(exc);
-    }
-    __trace__("SQL Job: Process command completed.");
+    
+    command.setOutData(output.c_str()); 
 }
 
 }}

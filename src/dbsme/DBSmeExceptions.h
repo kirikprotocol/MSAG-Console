@@ -7,7 +7,7 @@ namespace smsc { namespace dbsme
 {
     using smsc::util::Exception;
 
-    class ServiceNotFoundException : public Exception
+    /*class ServiceNotFoundException : public Exception
     {
     public:
 
@@ -16,7 +16,7 @@ namespace smsc { namespace dbsme
         ServiceNotFoundException(const char* name) 
             : Exception("Service for '%s' key not found !", name) {};
         virtual ~ServiceNotFoundException() throw() {};
-    };
+    };*/
     
     class CommandProcessException : public Exception
     {

@@ -25,6 +25,8 @@ CommandProcessor::CommandProcessor(ConfigView* config)
 void CommandProcessor::init(ConfigView* config)
     throw(ConfigException)
 {
+    messages.init(config);
+
     try { protocolId = config->getInt("ProtocolId"); }
     catch(ConfigException& exc) { protocolId = 0; };
     
@@ -44,7 +46,7 @@ void CommandProcessor::init(ConfigView* config)
         try
         {
             log.info("Loading DataProvider for section '%s'.", section);
-            DataProvider* provider = new DataProvider(providerConfig);
+            DataProvider* provider = new DataProvider(providerConfig, messages);
             address = providerConfig->getString("address");
             Address addr(address); AddressValue addr_val; addr.getValue(addr_val);
             if (providers.Exists(addr_val)) 
@@ -78,31 +80,32 @@ CommandProcessor::~CommandProcessor()
 
     providers.First();
     while (providers.Next(key, provider))
-    {
-        //printf("Deleting provider '%s' ...\n", key);
         if (provider) delete provider;
-        //printf("Provider deleted !\n");
-    }
-
+     
     if (svcType) delete svcType;
 }
 
 void CommandProcessor::process(Command& command)
-    throw(ServiceNotFoundException, CommandProcessException)
+    throw(CommandProcessException)
 {
     DataProvider* provider = 0;
     if (!providers.Exists(command.getToAddress().value))
-        throw ServiceNotFoundException(
-            (const char*)command.getToAddress().value);
+    {
+        const char* message = messages.get(PROVIDER_NOT_FOUND);
+        throw CommandProcessException("%s. (Requesting: '%s')", 
+                                      message ? message : PROVIDER_NOT_FOUND,
+                                      (const char*)command.getToAddress().value);
+    }
 
     providers.Get(command.getToAddress().value)->process(command);
 }
 
 /* --------------------- Command Processing (DataProvider) ----------------- */
 
-DataProvider::DataProvider(ConfigView* config)
+DataProvider::DataProvider(ConfigView* config, const MessageSet& set)
     throw(ConfigException) 
-        : ds(0), log(Logger::getCategory("smsc.dbsme.DataProvider"))
+        : log(Logger::getCategory("smsc.dbsme.DataProvider")), 
+            messages(set, config), ds(0)
 {
     ConfigView* dsConfig = config->getSubConfig("DataSource");
     char* dsIdentity = 0;
@@ -112,15 +115,9 @@ DataProvider::DataProvider(ConfigView* config)
         try 
         {
             ds = DataSourceFactory::getDataSource(dsIdentity);
-            if (ds)
-            {
-                ds->init(dsConfig);
-            }
-            else
-            {
-                throw ConfigException("DataSource for '%s' identity"
-                                      " wasn't registered !", dsIdentity);
-            }
+            if (ds) ds->init(dsConfig);
+            else throw ConfigException("DataSource for '%s' identity"
+                                       " wasn't registered !", dsIdentity);
         }
         catch (ConfigException& exc)
         {
@@ -160,7 +157,7 @@ DataProvider::DataProvider(ConfigView* config)
             Job* job = JobFactory::getJob(type);
             if (job)
             {
-                job->init(jobConfig);
+                job->init(jobConfig, messages);
                 jobs.Insert(name, job);
             }
             else
@@ -194,17 +191,13 @@ DataProvider::~DataProvider()
 
     jobs.First();
     while (jobs.Next(key, job))
-    {
-        //__trace2__("Deleting job '%s' ...\n", key);
         if (job) delete job;
-        //__trace__("Job deleted !\n");
-    }
 
     if (ds) delete ds;
 }
 
 void DataProvider::process(Command& command)
-    throw(ServiceNotFoundException, CommandProcessException)
+    throw(CommandProcessException)
 {
     const char* name = command.getJobName();
 
@@ -227,8 +220,12 @@ void DataProvider::process(Command& command)
         command.setJobName(name);
     }
     
-    if (!jobs.Exists(name))
-        throw ServiceNotFoundException(name);
+    if (!jobs.Exists(name)) 
+    {
+        const char* message = messages.get(JOB_NOT_FOUND);
+        throw CommandProcessException("%s. (Requesting: '%s')",
+                                      message ? message:JOB_NOT_FOUND, name);
+    }
     
     jobs.Get(name)->process(command, *ds);
 }
