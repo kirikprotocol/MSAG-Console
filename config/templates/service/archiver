@@ -1,0 +1,24 @@
+#! /bin/bash
+if [ -f logs/archiver.err ]; then
+  mv logs/archiver.err logs/archiver.err.old
+fi
+while true;
+do
+bin/ArchiveDaemon 1>/dev/null 2>>logs/archiver.err&
+PID=$!
+export PID
+trap "kill -s SIGTERM $PID;wait $PID; exit" SIGTERM
+wait $PID
+if [ -f core ]; then
+  DATE=`perl -e '($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);printf("%04d%02d%02d%02d%02d%02d",$year+1900,$mon+1,$mday,$hour,$min,$sec)'`
+
+  mkdir "$DATE"
+  mv core "$DATE"
+  mv logs/archiver.err "$DATE"
+  if [ -f logs/archiver.err.old ]; then
+    mv logs/archiver.err.old "$DATE"
+  fi
+  mv logs/archiver.log* "$DATE"
+  cp -p bin/archiver "$DATE"
+fi
+done

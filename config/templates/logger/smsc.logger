@@ -1,0 +1,5 @@
+root=@logger.default.category@, default
+
+appender.default.file.name=@logs.dir@/smsc.log
+appender.default.file.maxsize=200Mb
+appender.default.file.maxindex=4

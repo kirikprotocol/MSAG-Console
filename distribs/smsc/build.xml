@@ -134,7 +134,7 @@ Targets:
     </copy>
     <!-- database sql scripts -->
     <copy todir="${DISTR_DIR}/conf/sql">
-      <fileset dir="${TEMPL_DIR}/sql" includes="DBPrepare.sql DBDistrList.sql update/db_*.sql"/>
+      <fileset dir="${TEMPL_DIR}/sql" includes="DBPrepare.sql DBDistrList.sql updates/db_*.sql"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
 
