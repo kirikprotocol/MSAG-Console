@@ -47,7 +47,7 @@ Targets:
   </target>
 
   <target name="makeweb">
-    <untar compression="gzip" src="${SMSC_DIR}/config/tomcat/tomcat.tar.gz" dest="${DISTR_DIR}/tomcat"/>
+    <untar compression="gzip" src="${SMSC_DIR}/config/tomcat/tomcat.tar.gz" dest="${DISTR_DIR}" overwrite="yes"/>
     <ant dir="${WEBSRC_DIR}" target="build"/>
     <copy todir="${DISTR_DIR}/webapps">
       <fileset dir="${SMSC_DIR}/webapps" includes="images/**/*, styles/**/*, scripts/**/*"/>

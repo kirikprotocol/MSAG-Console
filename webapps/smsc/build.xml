@@ -14,18 +14,14 @@
   <property name="topmon_src" location="${java_src}/${topmon_path}"/>
   <property name="topmon_out" location="${java_out}/${topmon_path}"/>
 
-  <available file="${libs_path}/antlr.jar" property="CLASSPATH_OK" value="yes"/>
-  <fail unless="CLASSPATH_OK" message="No antlr.jar found"/>
-  <available file="${libs_path}/log4j.jar" property="CLASSPATH_OK" value="yes"/>
-  <fail unless="CLASSPATH_OK" message="No log4j.jar found"/>
   <fileset id="common_libs" dir="${libs_path}" includes="log4j.jar antlr.jar nsjsp.jar classes12.jar"/>
 
   <path id="classpath">
     <pathelement path="${java_out}"/>
     <fileset refid="common_libs"/>
-    <pathelement path="${servlet_jar}"/>
+    <fileset dir="${CATALINA_HOME}/common/lib" includes="servlet.jar"/>
+    <fileset dir="${CATALINA_HOME}/server/lib" includes="catalina.jar"/>
   </path>
-  <property name="servlet_jar" location="${CATALINA_HOME}/common/lib/servlet.jar"/>
 
   <target name="init">
     <tstamp/>

@@ -1,2 +1,4 @@
 build.properties
 extra_libs.list
+smsc.properties
+extra_lib_links.list
