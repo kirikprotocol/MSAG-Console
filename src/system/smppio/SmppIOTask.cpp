@@ -87,12 +87,14 @@ void SmppInputThread::killSocket(int idx)
     (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
   trace2("removing socket %p by input thread",s);
   int rcnt=m->removeSocket(s);
-  if(ss->getProxy())
+  if(!rcnt && ss->getProxy())
   {
     try{
+      __trace2__("unregistering smeId=%s",ss->getProxy()->getSystemId());
       smeManager->unregisterSmeProxy(ss->getProxy()->getSystemId());
     }catch(...)
     {
+      __trace2__("failed to unregister");
     }
     KillProxy(ss->getProxy());
   }
@@ -609,10 +611,12 @@ void SmppOutputThread::killSocket(int idx)
   int rcnt=m->removeSocket(s);
   if(!rcnt && ss->getProxy())
   {
+    __trace2__("unregistering smeId=%s",ss->getProxy()->getSystemId());
     try{
       smeManager->unregisterSmeProxy(ss->getProxy()->getSystemId());
     }catch(...)
     {
+      __trace2__("failed to unregister");
     }
     KillProxy(ss->getProxy());
   }
