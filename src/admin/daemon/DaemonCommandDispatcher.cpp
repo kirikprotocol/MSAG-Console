@@ -28,6 +28,7 @@ using smsc::admin::protocol::CommandSetServiceStartupParameters;
 using smsc::core::synchronization::MutexGuard;
 using smsc::util::setExtendedSignalHandler;
 using smsc::util::config::CStrSet;
+using smsc::util::config::ConfigException;
 using smsc::util::encode;
 using smsc::util::encodeDot;
 using smsc::util::decodeDot;
@@ -39,70 +40,107 @@ config::Manager *DaemonCommandDispatcher::configManager = 0;
 Mutex DaemonCommandDispatcher::configManagerMutex;
 
 
+///<summary>child shutdown waiter</summary>
 class ChildShutdownWaiter : public Thread
 {
 private:
-  DaemonCommandDispatcher * dispatcher;
-  log4cpp::Category &logger;
+	log4cpp::Category &logger;
+	bool isStopping;
 public:
-  ChildShutdownWaiter(DaemonCommandDispatcher *daemon_dispatcher) 
-    : dispatcher(daemon_dispatcher), logger(Logger::getCategory("smsc.admin.daemon.ChildShutdownWaiter"))
-  {};
+	ChildShutdownWaiter() 
+		: logger(Logger::getCategory("smsc.admin.daemon.ChildShutdownWaiter")), isStopping(false)
+	{};
 
-  virtual int Execute()
-  {
-    while (!dispatcher->isStopping)
-    {
-      pid_t chldpid = waitpid(-1, 0, 0);
-      if (chldpid == -1)
-      {
-        switch (errno)
-        {
-          case ECHILD:
-            break;
-          case EINTR:
-            logger.debug("interrupted");
-            break;
-          case EINVAL:
-            logger.error("invalid arguments");
-            break;
-          default:
-            logger.error("unknown error");
-            break;
-        }
-      } 
-      else if (chldpid > 0)
-      {
-        #ifdef SMSC_DEBUG
-        logger.debug("CHILD %u is finished", chldpid);
-        #endif
-        MutexGuard a(dispatcher->servicesListMutex);
-        if (const char * const serviceId = dispatcher->services.markServiceAsStopped(chldpid))
-        {
-          MutexGuard lock(dispatcher->configManagerMutex);
-          dispatcher->updateServiceFromConfig(dispatcher->services[serviceId]);
-        }
-      }
-      #ifdef SMSC_DEBUG
-      else
-      {
-        logger.debug("waitpid returns %u ");
-      }
-      #endif
-      sleep(1);
-    }
-    return 0;
-  }
+	void Stop()
+	{
+		isStopping = true;
+	}
+
+	virtual int Execute()
+	{
+		while (!isStopping)
+		{
+			pid_t chldpid = waitpid(-1, 0, 0);
+			if (chldpid == -1)
+			{
+				switch (errno)
+				{
+				case ECHILD:
+					break;
+				case EINTR:
+					logger.debug("interrupted");
+					break;
+				case EINVAL:
+					logger.error("invalid arguments");
+					break;
+				default:
+					logger.error("unknown error");
+					break;
+				}
+			} 
+			else if (chldpid > 0)
+			{
+#ifdef SMSC_DEBUG
+				logger.debug("CHILD %u is finished", chldpid);
+#endif
+				MutexGuard a(DaemonCommandDispatcher::servicesListMutex);
+				if (const char * const serviceId = DaemonCommandDispatcher::services.markServiceAsStopped(chldpid))
+				{
+					MutexGuard lock(DaemonCommandDispatcher::configManagerMutex);
+					DaemonCommandDispatcher::updateServiceFromConfig(DaemonCommandDispatcher::services[serviceId]);
+				}
+			}
+#ifdef SMSC_DEBUG
+/*			else
+			{
+				logger.debug("waitpid returns %u ");
+			}*/
+#endif
+			sleep(1);
+		}
+		return 0;
+	}
 };
 
-DaemonCommandDispatcher::DaemonCommandDispatcher(Socket * admSocket)
-: CommandDispatcher(admSocket, "smsc.admin.daemon.CommandDispatcher"),
-        logger(Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher"))
+static std::auto_ptr<ChildShutdownWaiter> childShutdownWaiter;
+unsigned int DaemonCommandDispatcher::shutdownTimeout;
+
+
+///<summary>daemon command dispatcher implementation</summary>
+
+/// static init
+void DaemonCommandDispatcher::init(config::Manager * confManager) throw ()
 {
-  childShutdownWaiter.reset(new ChildShutdownWaiter(this));
-  childShutdownWaiter->Start();
+	MutexGuard lock(configManagerMutex);
+	configManager = confManager;
+	shutdownTimeout = 10;
+	try {
+		shutdownTimeout = configManager->getInt(CONFIG_SHUTDOWN_TIMEOUT);
+	} catch (ConfigException &e) {
+		Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher").warn("Couldn't get shutdown timeout from config. Shutdown timeout setted to %i seconds. Please define \"%s\" properly in daemon config.\nNested: %s", shutdownTimeout, CONFIG_SHUTDOWN_TIMEOUT, e.what());
+	} catch (...) {
+		Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher").warn("Couldn't get shutdown timeout from config. Shutdown timeout setted to %i seconds. Please define \"%s\" properly in daemon config.\nNested: Unknown exception", shutdownTimeout, CONFIG_SHUTDOWN_TIMEOUT);
+	}
+	addServicesFromConfig();
+
+	childShutdownWaiter.reset(new ChildShutdownWaiter());
+	childShutdownWaiter->Start();
+}
+void DaemonCommandDispatcher::shutdown()
+{
+	stopAllServices(shutdownTimeout);
+	childShutdownWaiter->Stop();
 }
 
+
+/// constructor
+DaemonCommandDispatcher::DaemonCommandDispatcher(Socket * admSocket)
+	: CommandDispatcher(admSocket, "smsc.admin.daemon.CommandDispatcher"),
+	logger(Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher"))
+{
+}
+
+/// main command handler
 Response * DaemonCommandDispatcher::handle(const Command * const command)
 	throw (AdminException)
 {
@@ -142,37 +180,116 @@ Response * DaemonCommandDispatcher::handle(const Command * const command)
 	}
 }
 
-void DaemonCommandDispatcher::updateServiceFromConfig(Service * service)
+/// commands
+Response * DaemonCommandDispatcher::add_service(const CommandAddService * const command)
 	throw (AdminException)
 {
-	const char * const serviceId = service->getId();
-
-	std::string serviceSectionName = CONFIG_SERVICES_SECTION;
-	std::auto_ptr<char> tmpServiceId(encodeDot(cStringCopy(serviceId)));
-	serviceSectionName += tmpServiceId.get();
-
-	try {
-		/*std::string tmpName = serviceSectionName;
-		tmpName += ".name";
-		const char * const serviceName = configManager->getString(tmpName.c_str());*/
-		
-		std::string tmpName = serviceSectionName;
-		tmpName += ".port";
-		const in_port_t servicePort = configManager->getInt(tmpName.c_str());
-	
-		tmpName = serviceSectionName;
-		tmpName += ".args";
-		const char * const serviceArgs = configManager->getString(tmpName.c_str());
-
-		//service->setName(serviceName);
-		service->setPort(servicePort);
-		service->setArgs(serviceArgs);
-	}
-	catch (smsc::core::buffers::HashInvalidKeyException &e)
+	/*	logger.debug("add service \"%s\" (%s) %u %s",
+	command->getServiceName(),
+	command->getCmdLine(),
+	command->getPort(),
+	command->getConfigFileName());*/
+	if (command != 0)
 	{
-		throw AdminException("Service not found");
+		if (command->getServiceId() != 0/* && command->getServiceName() != 0*/)
+		{
+			{
+				MutexGuard guard(servicesListMutex);
+				services.add(new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), command->getServiceId(), /*command->getServiceName(), */command->getPort(), command->getArgs()));
+			}
+			putServiceToConfig(command->getServiceId(), /*command->getServiceName(), */command->getPort(), command->getArgs());
+			return new Response(Response::Ok, 0);
+		}
+		else
+		{
+			logger.warn("service id not specified");
+			throw AdminException("service id not specified");
+		}
+	}
+	else
+	{
+		logger.warn("null command received");
+		throw AdminException("null command received");
 	}
 }
+
+Response * DaemonCommandDispatcher::remove_service(const CommandRemoveService * const command) throw (AdminException)
+{
+	if (command != 0)
+	{
+		if (command->getServiceId() != 0)
+		{
+			{
+				MutexGuard guard(servicesListMutex);
+				Service *s = services[command->getServiceId()];
+				logger.debug("remove service \"%s\"", command->getServiceId());
+				if (s->getStatus() != Service::stopped)
+				{
+					s->kill();
+				}
+				services.remove(s->getId());
+			}
+			removeServiceFromConfig(command->getServiceId());
+			return new Response(Response::Ok, 0);
+		}
+		else
+		{
+			logger.warn("service name not specified");
+			throw AdminException("service name not specified");
+		}
+	}
+	else
+	{
+		logger.warn("null command received");
+		throw AdminException("null command received");
+	}
+}
+
+
+Response * DaemonCommandDispatcher::set_service_startup_parameters(const CommandSetServiceStartupParameters * const command)
+	throw (AdminException)
+{
+	logger.debug("set service startup parameters");
+	if (command != 0)
+	{
+		if (command->getServiceId() != 0)
+		{
+			MutexGuard guard(servicesListMutex);
+			Service *s = services[command->getServiceId()];
+			putServiceToConfig(command->getServiceId(), command->getPort(), command->getArgs());
+			if (s->getStatus() == Service::stopped)
+			{
+				s->setPort(command->getPort());
+				s->setArgs(command->getArgs());
+			}
+			return new Response(Response::Ok, 0);
+		}
+		else
+		{
+			logger.warn("service name or service id not specified");
+			throw AdminException("service name or service id not specified");
+		}
+	}
+	else
+	{
+		logger.warn("null command received");
+		throw AdminException("null command received");
+	}
+}
+
+Response * DaemonCommandDispatcher::list_services(const CommandListServices * const command)
+	throw (AdminException)
+{
+	logger.debug("list services");
+	std::auto_ptr<char> text(0);
+	{
+		MutexGuard guard(servicesListMutex);
+		text.reset(services.getText());
+	}
+	logger.debug("services list:\n%s\n", text.get());
+	return new Response(Response::Ok, text.get());
+}
+
 
 Response * DaemonCommandDispatcher::start_service(const CommandStartService * const command)
 	throw (AdminException)
@@ -192,6 +309,34 @@ Response * DaemonCommandDispatcher::start_service(const CommandStartService * co
 			char text[sizeof(pid_t)*3 +1];
 			snprintf(text, sizeof(text),  "%lu", (unsigned long) newPid);
 			return new Response(Response::Ok, text);
+		}
+		else
+		{
+			logger.warn("service id not specified");
+			throw AdminException("service id not specified");
+		}
+	}
+	else
+	{
+		logger.warn("null command received");
+		throw AdminException("null command received");
+	}
+}
+
+Response * DaemonCommandDispatcher::shutdown_service(const CommandShutdown * const command)
+	throw (AdminException)
+{
+	logger.debug("shutdown service");
+	if (command != 0)
+	{
+		if (command->getServiceId() != 0)
+		{
+			logger.debug("shutdown service \"%s\"", command->getServiceId());
+			{
+				MutexGuard guard(servicesListMutex);
+				services[command->getServiceId()]->shutdown();
+			}
+			return new Response(Response::Ok, 0);
 		}
 		else
 		{
@@ -236,245 +381,7 @@ Response * DaemonCommandDispatcher::kill_service(const CommandKillService * cons
 	}
 }
 
-Response * DaemonCommandDispatcher::shutdown_service(const CommandShutdown * const command)
-	throw (AdminException)
-{
-	logger.debug("shutdown service");
-	if (command != 0)
-	{
-		if (command->getServiceId() != 0)
-		{
-			logger.debug("shutdown service \"%s\"", command->getServiceId());
-			{
-				MutexGuard guard(servicesListMutex);
-				services[command->getServiceId()]->shutdown();
-			}
-			return new Response(Response::Ok, 0);
-		}
-		else
-		{
-			logger.warn("service id not specified");
-			throw AdminException("service id not specified");
-		}
-	}
-	else
-	{
-		logger.warn("null command received");
-		throw AdminException("null command received");
-	}
-}
-
-Response * DaemonCommandDispatcher::add_service(const CommandAddService * const command)
-	throw (AdminException)
-{
-/*	logger.debug("add service \"%s\" (%s) %u %s",
-							 command->getServiceName(),
-							 command->getCmdLine(),
-							 command->getPort(),
-							 command->getConfigFileName());*/
-	if (command != 0)
-	{
-		if (command->getServiceId() != 0/* && command->getServiceName() != 0*/)
-		{
-			{
-				MutexGuard guard(servicesListMutex);
-				services.add(new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), command->getServiceId(), /*command->getServiceName(), */command->getPort(), command->getArgs()));
-			}
-			putServiceToConfig(command->getServiceId(), /*command->getServiceName(), */command->getPort(), command->getArgs());
-			return new Response(Response::Ok, 0);
-		}
-		else
-		{
-			logger.warn("service id not specified");
-			throw AdminException("service id not specified");
-		}
-	}
-	else
-	{
-		logger.warn("null command received");
-		throw AdminException("null command received");
-	}
-}
-
-void DaemonCommandDispatcher::putServiceToConfig(const char * const serviceId,
-																								 //const char * const serviceName,
-																								 const in_port_t servicePort,
-																								 const char * const serviceArgs)
-{
-	MutexGuard lock(configManagerMutex);
-	std::string serviceSectionName = CONFIG_SERVICES_SECTION;
-	std::auto_ptr<char> tmpServiceId(encodeDot(cStringCopy(serviceId)));
-	serviceSectionName += tmpServiceId.get();
-
-	/*std::string tmpName = serviceSectionName;
-	tmpName += ".name";
-	configManager->setString(tmpName.c_str(), serviceName);*/
-	
-	std::string tmpName = serviceSectionName;
-	tmpName += ".port";
-	configManager->setInt(tmpName.c_str(), servicePort);
-
-	tmpName = serviceSectionName;
-	tmpName += ".args";
-	configManager->setString(tmpName.c_str(), serviceArgs);
-	configManager->save();
-  logger.debug("new config saved");
-}
-
-Response * DaemonCommandDispatcher::remove_service(const CommandRemoveService * const command)
-	throw (AdminException)
-{
-	if (command != 0)
-	{
-		if (command->getServiceId() != 0)
-		{
-			{
-				MutexGuard guard(servicesListMutex);
-				Service *s = services[command->getServiceId()];
-				logger.debug("remove service \"%s\"", command->getServiceId());
-				if (s->getStatus() != Service::stopped)
-				{
-					s->kill();
-				}
-				services.remove(s->getId());
-			}
-			removeServiceFromConfig(command->getServiceId());
-			return new Response(Response::Ok, 0);
-		}
-		else
-		{
-			logger.warn("service name not specified");
-			throw AdminException("service name not specified");
-		}
-	}
-	else
-	{
-		logger.warn("null command received");
-		throw AdminException("null command received");
-	}
-}
-
-void DaemonCommandDispatcher::removeServiceFromConfig(const char * const serviceId)
-{
-	MutexGuard lock(configManagerMutex);
-	std::string serviceSectionName = CONFIG_SERVICES_SECTION;
-
-	std::auto_ptr<char> tmpServiceName(encodeDot(cStringCopy(serviceId)));
-	serviceSectionName += tmpServiceName.get();
-	configManager->removeSection(serviceSectionName.c_str());
-	configManager->save();
-}
-
-Response * DaemonCommandDispatcher::list_services(const CommandListServices * const command)
-	throw (AdminException)
-{
-	logger.debug("list services");
-	std::auto_ptr<char> text(0);
-	{
-		MutexGuard guard(servicesListMutex);
-		text.reset(services.getText());
-	}
-	logger.debug("services list:\n%s\n", text.get());
-	return new Response(Response::Ok, text.get());
-}
-
-/*void DaemonCommandDispatcher::shutdown()
-{
-	smsc::admin::util::CommandDispatcher::shutdown();
-	logger.debug("shutdown");
-}*/
-
-void DaemonCommandDispatcher::childSignalListener(int signo,
-																									siginfo_t * info,
-																									void *some_pointer)
-	throw ()
-{
-/*	#ifdef SMSC_DEBUG
-		log4cpp::Category &log(Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher"));
-		//log.debug("some signal received");
-	#endif
-	
-	if (signo != SIGCHLD || info->si_signo != SIGCHLD)
-	{
-		return;
-	}
-	
-	#ifdef SMSC_DEBUG
-		log.debug("some CHILD signal received");
-	#endif
-	// ACTION: CHILD signal received
-	if (info->si_code <= 0)
-	{
-		{
-			#ifdef SMSC_DEBUG
-				log.debug("Handmaked signal from child (marking %lu child as dead)", (unsigned long)info->si_pid);
-			#endif
-			MutexGuard a(servicesListMutex);
-			if (const char * const serviceId = services.markServiceAsStopped(info->si_pid))
-			{
-				MutexGuard lock(configManagerMutex);
-				updateServiceFromConfig(services[serviceId]);
-			}
-
-			#ifdef SMSC_DEBUG
-				log.debug("%lu child marked as dead", (unsigned long)info->si_pid);
-			#endif
-		}
-	}
-	else
-	{
-		switch (info->si_code)
-		{
-		case CLD_EXITED:
-		case CLD_KILLED:
-		case CLD_DUMPED:
-			{
-				#ifdef SMSC_DEBUG
-					log.debug("marking %lu child as dead", (unsigned long)info->si_pid);
-				#endif
-				MutexGuard a(servicesListMutex);
-				if (const char * const serviceId = services.markServiceAsStopped(info->si_pid))
-				{
-					MutexGuard lock(configManagerMutex);
-					updateServiceFromConfig(services[serviceId]);
-				}
-				#ifdef SMSC_DEBUG
-					log.debug("%lu child marked as dead", (unsigned long)info->si_pid);
-				#endif
-			}
-			break;
-		case CLD_TRAPPED:
-		case CLD_STOPPED:
-		case CLD_CONTINUED:
-		default:
-			;// skip these signals
-		}
-	}
-*/
-}
-
-void DaemonCommandDispatcher::activateChildSignalHandler()
-{
-	setExtendedSignalHandler(SIGCHLD, childSignalListener);
-}
-void DaemonCommandDispatcher::startAllServices()
-{
-	char * serviceId = NULL;
-	Service *servicePtr = NULL;
-	services.First();
-	while (services.Next(serviceId, servicePtr) != 0)
-	{
-		if (servicePtr != NULL) {
-			try {
-				servicePtr->start();
-			} catch (...) {
-				if (serviceId != NULL)
-					Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher").error("Couldn't start service \"%s\", skipped", serviceId);
-			}
-		}
-	}
-}
-
+/// global helper methods
 void DaemonCommandDispatcher::addServicesFromConfig()
 	throw ()
 {
@@ -487,23 +394,33 @@ void DaemonCommandDispatcher::addServicesFromConfig()
 			char * dotpos = strrchr(fullServiceSection, '.');
 			//const size_t serviceNameBufLen = strlen(dotpos+1) +1;
 			std::auto_ptr<char> serviceId(decodeDot(cStringCopy(dotpos+1)));
-		
+
 			std::string prefix(fullServiceSection);
 			prefix += '.';
-		
+
 			/*std::string tmp = prefix;
 			tmp += "name";
 			std::auto_ptr<char> serviceName(configManager->getString(tmp.c_str()));*/
-		
+
 			std::string tmp = prefix;
 			tmp += "port";
 			in_port_t servicePort = configManager->getInt(tmp.c_str());
-		
+
 			tmp = prefix;
 			tmp += "args";
 			const char * const serviceArgs = configManager->getString(tmp.c_str());
 
-			services.add(new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), serviceId.get(), servicePort, serviceArgs));
+			bool autostart = true;
+			try {
+				autostart = configManager->getBool((prefix+"autostart").c_str());
+			} catch (AdminException &e) {
+				Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher").warn("Could not get autostart flag for service \"%s\", nested: %s", serviceId.get(), e.what());
+			} catch (...) 
+			{
+				//skip
+			}
+
+			services.add(new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), serviceId.get(), servicePort, serviceArgs, autostart));
 		}
 	}
 	catch (AdminException &e)
@@ -518,34 +435,129 @@ void DaemonCommandDispatcher::addServicesFromConfig()
 	}
 }
 
-Response * DaemonCommandDispatcher::set_service_startup_parameters(const CommandSetServiceStartupParameters * const command)
+void DaemonCommandDispatcher::updateServiceFromConfig(Service * service)
 	throw (AdminException)
 {
-	logger.debug("set service startup parameters");
-	if (command != 0)
+	const char * const serviceId = service->getId();
+
+	std::string serviceSectionName = CONFIG_SERVICES_SECTION;
+	std::auto_ptr<char> tmpServiceId(encodeDot(cStringCopy(serviceId)));
+	serviceSectionName += tmpServiceId.get();
+
+	try {
+		/*std::string tmpName = serviceSectionName;
+		tmpName += ".name";
+		const char * const serviceName = configManager->getString(tmpName.c_str());*/
+
+		std::string tmpName = serviceSectionName;
+		tmpName += ".port";
+		const in_port_t servicePort = configManager->getInt(tmpName.c_str());
+
+		tmpName = serviceSectionName;
+		tmpName += ".args";
+		const char * const serviceArgs = configManager->getString(tmpName.c_str());
+
+		//service->setName(serviceName);
+		service->setPort(servicePort);
+		service->setArgs(serviceArgs);
+	}
+	catch (smsc::core::buffers::HashInvalidKeyException &e)
 	{
-		if (command->getServiceId() != 0)
-		{
-			MutexGuard guard(servicesListMutex);
-			Service *s = services[command->getServiceId()];
-			putServiceToConfig(command->getServiceId(), command->getPort(), command->getArgs());
-			if (s->getStatus() == Service::stopped)
-			{
-				s->setPort(command->getPort());
-				s->setArgs(command->getArgs());
+		throw AdminException("Service not found");
+	}
+}
+
+void DaemonCommandDispatcher::putServiceToConfig(const char * const serviceId, const in_port_t servicePort, const char * const serviceArgs)
+{
+	MutexGuard lock(configManagerMutex);
+	std::string serviceSectionName = CONFIG_SERVICES_SECTION;
+	std::auto_ptr<char> tmpServiceId(encodeDot(cStringCopy(serviceId)));
+	serviceSectionName += tmpServiceId.get();
+
+	/*std::string tmpName = serviceSectionName;
+	tmpName += ".name";
+	configManager->setString(tmpName.c_str(), serviceName);*/
+
+	std::string tmpName = serviceSectionName;
+	tmpName += ".port";
+	configManager->setInt(tmpName.c_str(), servicePort);
+
+	tmpName = serviceSectionName;
+	tmpName += ".args";
+	configManager->setString(tmpName.c_str(), serviceArgs);
+	configManager->save();
+	logger.debug("new config saved");
+}
+
+void DaemonCommandDispatcher::removeServiceFromConfig(const char * const serviceId)
+{
+	MutexGuard lock(configManagerMutex);
+	std::string serviceSectionName = CONFIG_SERVICES_SECTION;
+
+	std::auto_ptr<char> tmpServiceName(encodeDot(cStringCopy(serviceId)));
+	serviceSectionName += tmpServiceName.get();
+	configManager->removeSection(serviceSectionName.c_str());
+	configManager->save();
+}
+
+
+
+/// 
+void DaemonCommandDispatcher::startAllServices()
+{
+	MutexGuard guard(servicesListMutex);
+	char * serviceId = NULL;
+	Service *servicePtr = NULL;
+	services.First();
+	while (services.Next(serviceId, servicePtr) != 0)
+	{
+		if (servicePtr != NULL && servicePtr->getAutostart()) {
+			try {
+				servicePtr->start();
+			} catch (...) {
+				if (serviceId != NULL)
+					Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher").error("Couldn't start service \"%s\", skipped", serviceId);
 			}
-			return new Response(Response::Ok, 0);
-		}
-		else
-		{
-			logger.warn("service name or service id not specified");
-			throw AdminException("service name or service id not specified");
 		}
 	}
-	else
+}
+
+void DaemonCommandDispatcher::stopAllServices(unsigned int timeoutInSecs)
+{
+	MutexGuard guard(servicesListMutex);
+	char * serviceId = NULL;
+	Service *servicePtr = NULL;
+	services.First();
+	bool allShutdowned = true;
+	while (services.Next(serviceId, servicePtr) != 0)
 	{
-		logger.warn("null command received");
-		throw AdminException("null command received");
+		if (servicePtr != NULL) {
+			try {
+				allShutdowned = false;
+				servicePtr->shutdown();
+			} catch (...) {
+				Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher").error("Couldn't stop service \"%s\", skipped", serviceId == NULL ? "<unknown>" : serviceId);
+			}
+		}
+	}
+	::time_t startTime = ::time(NULL);
+	while ((!allShutdowned) && ((::time(NULL) - startTime) > timeoutInSecs)) {
+		::sleep(timeoutInSecs);
+	}
+
+	services.First();
+	while (services.Next(serviceId, servicePtr) != 0)
+	{
+		if ((servicePtr != NULL) && (servicePtr->getStatus() != Service::stopped)) {
+			try {
+				servicePtr->kill();
+			} catch (AdminException &e) {
+				Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher").error("Couldn't kill service \"%s\", skipped, nested:\n%s", serviceId == NULL ? "<unknown>" : serviceId, e.what());
+			} catch (...) {
+				if (serviceId != NULL)
+					Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher").error("Couldn't stop service \"%s\", skipped", serviceId);
+			}
+		}
 	}
 }
 

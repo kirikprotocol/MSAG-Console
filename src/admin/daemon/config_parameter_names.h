@@ -13,6 +13,7 @@ static const char * const	CONFIG_PORT_PARAMETER = "admin.daemon.port";
 static const char * const	CONFIG_STDERR_PARAMETER = "admin.daemon.stderr";
 static const char * const	CONFIG_LOGGER_SECTION = "admin.daemon.logger.";
 static const char * const	CONFIG_LOGGER_CONFIG_PARAMETER = "admin.daemon.logger.configFile";
+static const char * const	CONFIG_SHUTDOWN_TIMEOUT = "admin.daemon.shutdown timeout";
 
 /*static const char * const	CONFIG_SERVICES_SECTION;
 static const char * const	CONFIG_HOME_PARAMETER;

@@ -20,71 +20,62 @@
 #include <core/threads/Thread.hpp>
 
 namespace smsc {
-  namespace admin {
-    namespace daemon {
+namespace admin {
+namespace daemon {
 
-      using smsc::admin::AdminException;
-      using namespace smsc::admin::protocol;
-      using smsc::admin::util::CommandDispatcher;
-      using smsc::core::network::Socket;
-      using smsc::core::synchronization::Mutex;
-      using smsc::core::synchronization::MutexGuard;
-      using smsc::util::Logger;
-      using smsc::util::config;
-      using smsc::core::threads::Thread;
+using smsc::admin::AdminException;
+using namespace smsc::admin::protocol;
+using smsc::admin::util::CommandDispatcher;
+using smsc::core::network::Socket;
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
+using smsc::util::Logger;
+using smsc::util::config;
+using smsc::core::threads::Thread;
 
-      class DaemonCommandDispatcher : public CommandDispatcher
-      {
-      public:
-        static void activateChildSignalHandler();
-		static void startAllServices();
+class DaemonCommandDispatcher : public CommandDispatcher
+{
+public:
+	static void startAllServices();
+	static void stopAllServices(unsigned int timeout_in_seconds);
 
-        inline static void init(config::Manager * confManager) throw ()
-        {
-          MutexGuard lock(configManagerMutex);
-          configManager = confManager;
-          addServicesFromConfig();
-        }
+	static void init(config::Manager * confManager) throw ();
 
-        DaemonCommandDispatcher(Socket * admSocket);
+	DaemonCommandDispatcher(Socket * admSocket);
 
-        virtual Response * handle(const Command * const command) throw (AdminException);
+	virtual Response * handle(const Command * const command) throw (AdminException);
 
-      protected:
-        static void addServicesFromConfig() throw ();
-        log4cpp::Category &logger;
-        static ServicesList services;
-        static Mutex servicesListMutex;
-        static config::Manager *configManager;
-        static Mutex configManagerMutex;
+	static void shutdown();
 
-        static void childSignalListener(int signo,
-                                        siginfo_t * info,
-                                        void *some_pointer) throw ();
+protected:
+	log4cpp::Category &logger;
+	static ServicesList services;
+	static config::Manager *configManager;
+	static unsigned int shutdownTimeout;
 
-        Response * start_service                  (const CommandStartService                * const command) throw (AdminException);
-        Response * kill_service                   (const CommandKillService                 * const command) throw (AdminException);
-        Response * shutdown_service               (const CommandShutdown                    * const command) throw (AdminException);
-        Response * add_service                    (const CommandAddService                  * const command) throw (AdminException);
-        Response * remove_service                 (const CommandRemoveService               * const command) throw (AdminException);
-        Response * list_services                  (const CommandListServices                * const command) throw (AdminException);
-        Response * set_service_startup_parameters (const CommandSetServiceStartupParameters * const command) throw (AdminException);
-        std::auto_ptr<Thread> childShutdownWaiter;
+	static Mutex servicesListMutex;
+	static Mutex configManagerMutex;
 
-        void putServiceToConfig(const char * const serviceId,
-                                //const char * const serviceName,
-                                const in_port_t servicePort,
-                                const char * const serviceArgs);
+	friend class ChildShutdownWaiter;
 
-        void removeServiceFromConfig(const char * const serviceId);
+	Response * add_service                    (const CommandAddService                  * const command) throw (AdminException);
+	Response * remove_service                 (const CommandRemoveService               * const command) throw (AdminException);
+	Response * set_service_startup_parameters (const CommandSetServiceStartupParameters * const command) throw (AdminException);
+	Response * list_services                  (const CommandListServices                * const command) throw (AdminException);
+	Response * start_service                  (const CommandStartService                * const command) throw (AdminException);
+	Response * shutdown_service               (const CommandShutdown                    * const command) throw (AdminException);
+	Response * kill_service                   (const CommandKillService                 * const command) throw (AdminException);
 
-        static void updateServiceFromConfig(Service * service) throw (AdminException);
 
-        friend class ChildShutdownWaiter;
-      };
+	static void addServicesFromConfig() throw ();
+	static void updateServiceFromConfig(Service * service) throw (AdminException);
+	void putServiceToConfig(const char * const serviceId, const in_port_t servicePort, const char * const serviceArgs);
+	void removeServiceFromConfig(const char * const serviceId);
 
-    }
-  }
+};
+
+}
+}
 }
 
 #endif // ifndef SMSC_ADMIN_DAEMON_DAEMON_COMMAND_DISPATCHER

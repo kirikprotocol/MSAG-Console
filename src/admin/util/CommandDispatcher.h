@@ -34,6 +34,7 @@ public:
 
 	virtual int Execute();
 	virtual const char* taskName(){return task_name;}
+	static void shutdown(){};
 
 protected:
 	Socket * sock;

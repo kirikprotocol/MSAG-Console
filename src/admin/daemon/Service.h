@@ -23,25 +23,25 @@ public:
   enum run_status { stopped, starting, running, stopping };
 
 	Service(const char * const services_dir,
-					const char * const serviceId,
-					//const char * const serviceName,
-					const in_port_t serviceAdminPort,
-					const char * const serviceArgs,
-					const pid_t servicePID = 0,
-          const run_status serviceStatus = stopped)
-		: logger(Logger::getCategory("smsc.admin.daemon.Service"))
+		const char * const serviceId,
+		const in_port_t serviceAdminPort,
+		const char * const serviceArgs,
+		const bool autostartFlag = true,
+		const pid_t servicePID = 0,
+		const run_status serviceStatus = stopped)
+		: logger(Logger::getCategory("smsc.admin.daemon.Service")), autostart(autostartFlag)
 	{
 		init(services_dir, serviceId, serviceAdminPort, serviceArgs, servicePID, serviceStatus);
 	}
 
 	Service()
-		: logger(Logger::getCategory("smsc.admin.daemon.Service"))
+		: logger(Logger::getCategory("smsc.admin.daemon.Service")), autostart(true)
 	{	
 		init(0, 0, 0, 0, 0, stopped);
 	}
 
 	Service(const Service & copy)
-		: logger(Logger::getCategory("smsc.admin.daemon.Service"))
+		: logger(Logger::getCategory("smsc.admin.daemon.Service")), autostart(copy.autostart)
 	{
 		init(copy.service_dir.get(), copy.id.get(), copy.port, copy.args.get(), copy.pid);
 	}
@@ -88,6 +88,7 @@ public:
 
   run_status getStatus() {return status;}
   void setStatus(run_status newStatus) { status = newStatus;}
+  bool getAutostart() {return autostart;}
 
 
 protected:
@@ -99,17 +100,17 @@ protected:
 	in_port_t port;
 	static const char * const service_exe;
 	std::auto_ptr<char> service_dir;
+	bool autostart;
 	Category &logger;
 
-  run_status status;
+	run_status status;
 
 	void init(const char * const services_dir,
-						const char * const serviceId,
-						//const char * const serviceName,
-						const in_port_t serviceAdminPort,
-						const char * const serviceArgs,
-						const pid_t servicePID = 0,
-            const run_status serviceStatus = stopped);
+		const char * const serviceId,
+		const in_port_t serviceAdminPort,
+		const char * const serviceArgs,
+		const pid_t servicePID = 0,
+		const run_status serviceStatus = stopped);
 };
 
 }

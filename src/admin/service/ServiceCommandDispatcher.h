@@ -30,12 +30,8 @@ using smsc::core::synchronization::MutexGuard;
 class ServiceCommandDispatcher : public smsc::admin::util::CommandDispatcher
 {
 public:
-	ServiceCommandDispatcher(Socket * admSocket)
-		: CommandDispatcher(admSocket,
-												//client_addr,
-												"smsc.admin.service.ServiceCommandDispatcher")
-	{
-	}
+	ServiceCommandDispatcher(Socket * admSocket) : CommandDispatcher(admSocket, "smsc.admin.service.ServiceCommandDispatcher")
+	{}
 
 	virtual Response * handle(const Command * const command) throw (AdminException);
 protected:

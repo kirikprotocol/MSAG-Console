@@ -24,36 +24,36 @@ using smsc::util::config::ConfigException;
 using smsc::util::config::Manager;
 
 namespace smsc {
-namespace admin {
-namespace daemon {
+	namespace admin {
+		namespace daemon {
 
-void daemonInit()
-{
-	if (getppid() != 1)
-	{
-		signal(SIGTSTP, SIG_IGN);
-		signal(SIGTTIN, SIG_IGN);
-		signal(SIGTTOU, SIG_IGN);
-		if (fork() != 0)
-		{
-			exit(0);
-		} else {
-			setsid();
+			void daemonInit()
+			{
+				if (getppid() != 1)
+				{
+					signal(SIGTSTP, SIG_IGN);
+					signal(SIGTTIN, SIG_IGN);
+					signal(SIGTTOU, SIG_IGN);
+					if (fork() != 0)
+					{
+						exit(0);
+					} else {
+						setsid();
+					}
+				}
+				struct rlimit flim;
+				getrlimit(RLIMIT_NOFILE, &flim);
+				for (rlim_t i=0; i<flim.rlim_max; i++)
+				{
+					close(i);
+				}
+				/*close(STDIN_FILENO);
+				close(STDOUT_FILENO);
+				close(STDERR_FILENO);*/
+			}
+
 		}
 	}
-	struct rlimit flim;
-	getrlimit(RLIMIT_NOFILE, &flim);
-	for (rlim_t i=0; i<flim.rlim_max; i++)
-	{
-		close(i);
-	}
-	/*close(STDIN_FILENO);
-	close(STDOUT_FILENO);
-	close(STDERR_FILENO);*/
-}
-
-}
-}
 }
 
 using smsc::admin::daemon::daemonInit;
@@ -63,13 +63,13 @@ static DaemonSocketListener * main_listener = 0;
 
 void pipehandler(int a, siginfo_t* info, void* p)
 {
-  fprintf(stderr, "BROKEN PIPE SIGNAL RECEIVED, ABORTING...\n");
-  //abort();
+	fprintf(stderr, "BROKEN PIPE SIGNAL RECEIVED, ABORTING...\n");
+	//abort();
 }
 
 void shutdown_handler(int a, siginfo_t* info, void* p)
 {
-  fprintf(stderr, "Shutdown signal %i received\n", a);
+	fprintf(stderr, "Shutdown signal %i received\n", a);
 	if (main_listener != 0)
 		main_listener->shutdown();
 }
@@ -89,7 +89,7 @@ int main(int argc, char **argv)
 		Manager::init(argv[1]);
 
 		chdir(Manager::getInstance().getString(CONFIG_HOME_PARAMETER));
-    Manager::deinit();
+		Manager::deinit();
 		Manager::init(argv[1]);
 		Manager &manager = Manager::getInstance();
 		FILE * redirected_stderr = freopen(manager.getString(CONFIG_STDERR_PARAMETER), "w", stderr);
@@ -98,14 +98,13 @@ int main(int argc, char **argv)
 
 		Logger::Init(manager.getString(CONFIG_LOGGER_CONFIG_PARAMETER));
 		log4cpp::Category &logger(Logger::getCategory("smsc.admin.daemon"));
-	
+
 		logger.info("Starting...");
-		
+
 		DaemonCommandDispatcher::init(&manager);
 		DaemonSocketListener listener("smsc.admin.daemon.DaemonSocketListener");
 		listener.init(manager.getString(CONFIG_HOST_PARAMETER),
-									manager.getInt(CONFIG_PORT_PARAMETER));
-		DaemonCommandDispatcher::activateChildSignalHandler();
+			manager.getInt(CONFIG_PORT_PARAMETER));
 		DaemonCommandDispatcher::startAllServices();
 		listener.Start();
 
@@ -113,11 +112,11 @@ int main(int argc, char **argv)
 
 		main_listener = &listener;
 		setExtendedSignalHandler(smsc::system::SHUTDOWN_SIGNAL, shutdown_handler);
-    setExtendedSignalHandler(SIGPIPE, pipehandler);
+		setExtendedSignalHandler(SIGPIPE, pipehandler);
 
 		listener.WaitFor();
 		logger.info("Stopped");
-    fprintf(stderr, "Daemon stopped\n");
+		fprintf(stderr, "Daemon stopped\n");
 	}
 	catch (ConfigException &e)
 	{

@@ -129,10 +129,10 @@ void Service::shutdown()
 }
 
 void Service::init(const char * const services_dir,
-									 const char * const serviceId,
-									 const in_port_t serviceAdminPort,
-									 const char * const serviceArgs,
-									 const pid_t servicePID,
+				   const char * const serviceId,
+				   const in_port_t serviceAdminPort,
+				   const char * const serviceArgs,
+				   const pid_t servicePID,
                    const run_status serviceStatus)
 {
 	service_dir.reset(new char[strlen(services_dir) + 1 + strlen(serviceId) + 1]);
@@ -143,7 +143,7 @@ void Service::init(const char * const services_dir,
 	id.reset(cStringCopy(serviceId));
 	port = serviceAdminPort;
 	pid = servicePID;
-  status = serviceStatus;
+	status = serviceStatus;
 	args.reset(cStringCopy(serviceArgs));
 }
 
