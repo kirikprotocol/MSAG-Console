@@ -717,7 +717,7 @@ USHORT_T  Et96MapV2SendRInfoForSmConf (
 extern "C"
 USHORT_T Et96MapV1SendRInfoForSmConf (
   ET96MAP_LOCAL_SSN_T localSsn,
-  ET96MAP_ET96MAP_DIALOGUE_ID_T dialogueId,
+  ET96MAP_DIALOGUE_ID_T dialogueId,
   ET96MAP_INVOKE_ID_T invokeId,
   ET96MAP_IMSI_T *imsi_sp
   ET96MAP_LOCATION_INFO_T *locationInfo_sp,
