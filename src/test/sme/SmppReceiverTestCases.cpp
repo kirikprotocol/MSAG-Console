@@ -213,132 +213,135 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 	__tc__("processDeliverySm.normalSms");
 	try
 	{
-		//перкрыть pduReg класса
-		PduRegistry* pduReg;
-		Address origAlias;
-		SmppUtil::convert(pdu.get_message().get_source(), &origAlias);
-		auto_ptr<const Address> origAddr = aliasReg->findAddressByAlias(origAlias);
-		if (!origAddr.get())
+		//в полученной pdu нет user_message_reference
+		if (!pdu.get_optional().has_userMessageReference())
 		{
 			__tc_fail__(1);
+			return;
 		}
-		else if (!(pduReg = smeReg->getPduRegistry(*origAddr)))
+		Address origAlias;
+		SmppUtil::convert(pdu.get_message().get_source(), &origAlias);
+		Address origAddr = aliasReg->findAddressByAlias(origAlias);
+		//сначала поиск pdu по деалиасенному адресу отправителя, потом алиасенному
+		for (bool cont = true; cont; )
 		{
-			ostringstream os;
-			os << "origAlias = " << origAlias << ", origAddr = " << *origAddr;
-			__trace2__("processNormalSms(2): %s",
-				os.str().c_str());
-			__tc_fail__(2);
-		}
-		//в полученной pdu нет user_message_reference
-		else if (!pdu.get_optional().has_userMessageReference())
-		{
-			__tc_fail__(3);
-		}
-		else
-		{
-			//получить оригинальную pdu
-			MutexGuard mguard(pduReg->getMutex());
-			vector<PduData*> tmp =
-				pduReg->getPdu(pdu.get_optional().get_userMessageReference());
-			PduData* pduData = NULL;
-			__trace2__("iterate pdu for msgRef = %d",
-				(int) pdu.get_optional().get_userMessageReference());
-			for (int i = 0; i < tmp.size(); i++)
+			//перкрыть pduReg класса
+			PduRegistry* pduReg = smeReg->getPduRegistry(origAddr);
+			if (!pduReg)
 			{
-				__require__(tmp[i]->pdu && tmp[i]->pdu->get_commandId() == SUBMIT_SM);
-				PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(tmp[i]->pdu);
-				__trace2__("\tserviceType = %s, shortMessage size = %d",
-					origPdu->get_message().get_serviceType(),
-					(int) origPdu->get_message().size_shortMessage());
-				//сравнить по service_type и short_message
-				if (!strcmp(pdu.get_message().get_serviceType(), origPdu->get_message().get_serviceType()) &&
-					pdu.get_message().size_shortMessage() == origPdu->get_message().size_shortMessage() &&
-					!memcmp(pdu.get_message().get_shortMessage(), origPdu->get_message().get_shortMessage(), pdu.get_message().size_shortMessage()))
+				__trace2__("processNormalSms(): pduReg not found for addr = %s", str(origAddr).get());
+				if (origAddr == origAlias)
 				{
-					pduData = tmp[i];
+					__tc_fail__(2);
 				}
-			}
-			//для user_message_reference из полученной pdu
-			//нет соответствующего оригинального pdu
-			if (!pduData)
-			{
-				__tc_fail__(4);
-			}
-			else if (pduData->pdu->get_commandId() != SUBMIT_SM)
-			{
-			   	__tc_fail__(5);
 			}
 			else
 			{
-				__tc_ok__;
-				PduSubmitSm* origPdu =
-					reinterpret_cast<PduSubmitSm*>(pduData->pdu);
-				//проверить правильность маршрута
-				__tc__("processDeliverySm.normalSms.checkRoute");
-				__tc_fail2__(routeChecker->checkRouteForNormalSms(*origPdu, pdu), 0);
-				__tc_ok_cond__;
-				//сравнить поля полученной и оригинальной pdu
-				__tc__("processDeliverySm.normalSms.checkMandatoryFields");
-				//поля хедера проверяются в processDeliverySm()
-				//message
-				__compareCStr__(1, get_message().get_serviceType());
-				//правильность адресов проверяется в routeChecker->checkRouteForNormalSms()
-				//__compareAddr__(get_message().get_source());
-				//__compareAddr__(get_message().get_dest());
-				__compare__(2, get_message().get_esmClass() & 0xfc); //без 2-ух младших битов
-				if ((pdu.get_message().get_esmClass() & ESM_CLASS_MESSAGE_TYPE_BITS) !=
-					ESM_CLASS_NORMAL_MESSAGE)
+				//получить оригинальную pdu
+				MutexGuard mguard(pduReg->getMutex());
+				vector<PduData*> tmp =
+					pduReg->getPdu(pdu.get_optional().get_userMessageReference());
+				PduData* pduData = NULL;
+				__trace2__("iterate pdu for pduReg = %p, msgRef = %d",
+					pduReg, (int) pdu.get_optional().get_userMessageReference());
+				for (int i = 0; i < tmp.size(); i++)
 				{
-					__tc_fail__(3);
+					__require__(tmp[i]->pdu && tmp[i]->pdu->get_commandId() == SUBMIT_SM);
+					PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(tmp[i]->pdu);
+					__trace2__("\tserviceType = %s, shortMessage size = %d",
+						origPdu->get_message().get_serviceType(),
+						(int) origPdu->get_message().size_shortMessage());
+					//сравнить по service_type и short_message
+					if (!strcmp(pdu.get_message().get_serviceType(), origPdu->get_message().get_serviceType()) &&
+						pdu.get_message().size_shortMessage() == origPdu->get_message().size_shortMessage() &&
+						!memcmp(pdu.get_message().get_shortMessage(), origPdu->get_message().get_shortMessage(), pdu.get_message().size_shortMessage()))
+					{
+						pduData = tmp[i];
+					}
 				}
-				__compare__(4, get_message().get_protocolId());
-				//в действительности, priority задается маршрутом и
-				//влияет на порядок доставки сообщений
-				__compare__(5, get_message().get_priorityFlag());
-				__compare__(6, get_message().get_registredDelivery());
-				__compare__(7, get_message().get_dataCoding());
-				__compare__(8, get_message().get_smLength());
-				__compareOStr__(9, get_message().get_shortMessage(),
-					get_message().size_shortMessage());
-				__tc_ok_cond__;
-				//optional
-				__tc__("processDeliverySm.normalSms.checkOptionalFields");
-				__tc_fail2__(SmppUtil::compareOptional(
-					pdu.get_optional(), origPdu->get_optional()), 0);
-				__tc_ok_cond__;
-				//проверка механизма повторной доставки
-				__tc__("processDeliverySm.normalSms.scheduleChecks");
-				__tc_fail2__(pduData->deliveryFlag.checkSchedule(recvTime), 0);
-				__tc_ok_cond__;
-				//отправить респонс
-				bool accepted = respSender->sendDeliverySmResp(pdu);
-				//обновить статус
-				__tc__("processDeliverySm.normalSms.checkAllowed");
-				__tc_fail2__(pduData->deliveryFlag.update(recvTime, accepted), 0);
-				__tc_ok_cond__;
-				//в случае повторной доставки изменить startTime для delivery receipt
-				__tc__("processDeliverySm.normalSms.checkDeliveryReceipt");
-				switch (pduData->deliveryReceiptFlag)
+				//для user_message_reference из полученной pdu
+				//нет соответствующего оригинального pdu
+				if (!pduData)
 				{
-					case PDU_REQUIRED_FLAG:
-					case PDU_MISSING_ON_TIME_FLAG:
-						{
-							time_t nextTime = pduData->deliveryFlag.getNextTime(recvTime);
-							pduData->deliveryReceiptFlag = PduReceiptFlag(PDU_REQUIRED_FLAG,
-								accepted ? recvTime : nextTime, pduData->validTime);
-						}
-						break;
-					case PDU_RECEIVED_FLAG:
-						__tc_fail__(1);
-						break;
-					case PDU_NOT_EXPECTED_FLAG:
-						break;
-					default:
-						__unreachable__("Invalid flag");
+					if (origAddr == origAlias)
+					{
+						__tc_fail__(3);
+					}
 				}
-				__tc_ok_cond__;
+				else
+				{
+					__tc_ok__;
+					__require__(pduData->pdu->get_commandId() == SUBMIT_SM);
+					PduSubmitSm* origPdu =
+						reinterpret_cast<PduSubmitSm*>(pduData->pdu);
+					//проверить правильность маршрута
+					__tc__("processDeliverySm.normalSms.checkRoute");
+					__tc_fail2__(routeChecker->checkRouteForNormalSms(*origPdu, pdu), 0);
+					__tc_ok_cond__;
+					//сравнить поля полученной и оригинальной pdu
+					__tc__("processDeliverySm.normalSms.checkMandatoryFields");
+					//поля хедера проверяются в processDeliverySm()
+					//message
+					__compareCStr__(1, get_message().get_serviceType());
+					//правильность адресов проверяется в routeChecker->checkRouteForNormalSms()
+					//__compareAddr__(get_message().get_source());
+					//__compareAddr__(get_message().get_dest());
+					__compare__(2, get_message().get_esmClass() & 0xfc); //без 2-ух младших битов
+					if ((pdu.get_message().get_esmClass() & ESM_CLASS_MESSAGE_TYPE_BITS) !=
+						ESM_CLASS_NORMAL_MESSAGE)
+					{
+						__tc_fail__(3);
+					}
+					__compare__(4, get_message().get_protocolId());
+					//в действительности, priority задается маршрутом и
+					//влияет на порядок доставки сообщений
+					__compare__(5, get_message().get_priorityFlag());
+					__compare__(6, get_message().get_registredDelivery());
+					__compare__(7, get_message().get_dataCoding());
+					__compare__(8, get_message().get_smLength());
+					__compareOStr__(9, get_message().get_shortMessage(),
+						get_message().size_shortMessage());
+					__tc_ok_cond__;
+					//optional
+					__tc__("processDeliverySm.normalSms.checkOptionalFields");
+					__tc_fail2__(SmppUtil::compareOptional(
+						pdu.get_optional(), origPdu->get_optional()), 0);
+					__tc_ok_cond__;
+					//проверка механизма повторной доставки
+					__tc__("processDeliverySm.normalSms.scheduleChecks");
+					__tc_fail2__(pduData->deliveryFlag.checkSchedule(recvTime), 0);
+					__tc_ok_cond__;
+					//отправить респонс
+					bool accepted = respSender->sendDeliverySmResp(pdu);
+					//обновить статус
+					__tc__("processDeliverySm.normalSms.checkAllowed");
+					__tc_fail2__(pduData->deliveryFlag.update(recvTime, accepted), 0);
+					__tc_ok_cond__;
+					//в случае повторной доставки изменить startTime для delivery receipt
+					__tc__("processDeliverySm.normalSms.checkDeliveryReceipt");
+					switch (pduData->deliveryReceiptFlag)
+					{
+						case PDU_REQUIRED_FLAG:
+						case PDU_MISSING_ON_TIME_FLAG:
+							{
+								time_t nextTime = pduData->deliveryFlag.getNextTime(recvTime);
+								pduData->deliveryReceiptFlag = PduReceiptFlag(PDU_REQUIRED_FLAG,
+									accepted ? recvTime : nextTime, pduData->validTime);
+							}
+							break;
+						case PDU_RECEIVED_FLAG:
+							__tc_fail__(1);
+							break;
+						case PDU_NOT_EXPECTED_FLAG:
+							break;
+						default:
+							__unreachable__("Invalid flag");
+					}
+					__tc_ok_cond__;
+				}
 			}
+			cont = origAddr != origAlias;
+			origAddr = origAlias;
 		}
 	}
 	catch(...)
@@ -378,13 +381,10 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu,
 			{
 				__tc_fail__(3);
 			}
-			else if (pduData->pdu->get_commandId() != SUBMIT_SM)
-			{
-				__tc_fail__(4);
-			}
 			else
 			{
 				__tc_ok__;
+				__require__(pduData->pdu->get_commandId() == SUBMIT_SM);
 				PduSubmitSm* origPdu =
 					reinterpret_cast<PduSubmitSm*>(pduData->pdu);
 				//Сравнить правильность маршрута
@@ -574,13 +574,10 @@ void SmppReceiverTestCases::processIntermediateNotification(
 			{
 				__tc_fail__(3);
 			}
-			else if (pduData->pdu->get_commandId() != SUBMIT_SM)
-			{
-				__tc_fail__(4);
-			}
 			else
 			{
 				__tc_ok__;
+				__require__(pduData->pdu->get_commandId() == SUBMIT_SM);
 				PduSubmitSm* origPdu =
 					reinterpret_cast<PduSubmitSm*>(pduData->pdu);
 				//Сравнить правильность маршрута
