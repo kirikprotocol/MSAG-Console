@@ -546,7 +546,7 @@ public:
         while(hash.Next(key,value))
         {
           __require__(value!=0);
-          size+=value->length()+4; 
+          size+=value->length()+4+1; 
         }
 				return size;
       }
