@@ -96,8 +96,9 @@ addCorrectSme(11)->registerCorrectSmeProxy(1)->addCorrectRouteMatch(5)->addIncor
 	route.smeSystemId = sme.systemId;
 	route.source = origAddr;
 	route.dest = destAddr;
-	cout << *tcRoute.addCorrectRouteNotMatch(&route, proxy, 5) << endl;
-	cout << *tcRoute.addIncorrectRoute(route, 1) << endl;
+	//cout << *tcRoute.addCorrectRouteNotMatch(&route, proxy, 5) << endl;
+	cout << *tcRoute.addCorrectRouteMatch(&route, proxy, RAND_TC) << endl;
+	//cout << *tcRoute.addIncorrectRoute(route, 1) << endl;
 	tcRoute.commit();
 	cout << *tcRoute.lookupRoute(origAddr, destAddr) << endl;
 
