@@ -31,6 +31,13 @@ public:
   {
     return cond_wait(cnd,&mutex);
   }
+  int wait(int msec)
+  {
+    timestruc_t tv;
+    tv.tv_sec=msec/1000;
+    tv.tv_nsec=(msec%1000)*1000000L;
+    return cond_timedwait(&event,&mutex,&tv);
+  }
   void notify()
   {
     cond_signal(&event);
