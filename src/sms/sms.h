@@ -494,6 +494,17 @@ namespace smsc { namespace sms
         {
             return originatingAddress; 
         };
+        
+        /**
+         * Возвращает адрес отправителя
+         * 
+         * @return адрес отправителя
+         * @see Address
+         */
+        inline Address& getOriginatingAddress()
+        {
+            return originatingAddress; 
+        };
 
         /**
          * Устанавливает адрес получателя
@@ -534,6 +545,17 @@ namespace smsc { namespace sms
          * @see Address
          */
         inline const Address& getDestinationAddress() const
+        {
+            return destinationAddress; 
+        };
+        
+        /**
+         * Возвращает адрес получателя
+         * 
+         * @return адрес получателя
+         * @see Address
+         */
+        inline Address& getDestinationAddress()
         {
             return destinationAddress; 
         };
@@ -811,6 +833,17 @@ namespace smsc { namespace sms
          * @see Body
          */
         inline const Body& getMessageBody() const
+        {
+            return messageBody; 
+        };
+        
+        /**
+         * Возвращает тело сообщения
+         * 
+         * @return тело сообщения
+         * @see Body
+         */
+        inline Body& getMessageBody()
         {
             return messageBody; 
         };
