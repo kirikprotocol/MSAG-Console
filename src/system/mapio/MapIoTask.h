@@ -129,7 +129,9 @@ public:
   }
   
   void registerSelf(SmeManager* smeman){
+    __trace2__("MAP::register MAP_PROXY");
     smeman->registerSmeProxy("MAP_PROXY",&proxy);
+    __trace2__("MAP::register MAP_PROXY OK");
   }
 };
 
