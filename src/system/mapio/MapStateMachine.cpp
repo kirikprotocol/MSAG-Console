@@ -43,6 +43,9 @@ string MscToString(const ET96MAP_ADDRESS_T* msc)
     if ( x1 <= 9 ) ost << x1;
     else break;
   }
+  string result = ost.str();
+  __trace2__("MSC: %s",result.c_str());
+  return result;
 }
 
 static string FormatText(const char* format,...)
