@@ -1,5 +1,5 @@
-#ifndef __core_threads_threadpool_hpp__
-#define __core_threads_threadpool_hpp__
+#ifndef __CORE_THREADS_THREADPOOL_HPP__
+#define __CORE_THREADS_THREADPOOL_HPP__
 
 #include "Thread.hpp"
 #include "ThreadedTask.hpp"
