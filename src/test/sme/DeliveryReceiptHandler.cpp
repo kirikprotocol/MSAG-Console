@@ -66,6 +66,7 @@ void DeliveryReceiptHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 				}
 				throw TCException();
 			case PDU_NOT_EXPECTED_FLAG:
+			case PDU_EXPIRED_FLAG:
 				__tc_fail__(2);
 				throw TCException();
 			default:

@@ -129,7 +129,7 @@ vector<int> ReschedulePduMonitor::update(time_t recvTime, RespPduFlag respFlag)
 					case RESP_PDU_MISSING:
 						if (!nextTime || nextTime > validTime)
 						{
-							setNotExpected();
+							setExpired();
 						}
 						else
 						{
@@ -147,6 +147,9 @@ vector<int> ReschedulePduMonitor::update(time_t recvTime, RespPduFlag respFlag)
 			break;
 		case PDU_NOT_EXPECTED_FLAG:
 			res.push_back(2);
+			break;
+		case PDU_EXPIRED_FLAG:
+			res.push_back(3);
 			break;
 		default:
 			__unreachable__("Unknown flag");
@@ -275,6 +278,13 @@ void PduMonitor::setNotExpected()
 	__trace2__("monitor set not expected: %s", str().c_str());
 }
 
+void PduMonitor::setExpired()
+{
+	flag = PDU_EXPIRED_FLAG;
+	checkTime = validTime;
+	__trace2__("monitor set expired: %s", str().c_str());
+}
+
 string PduMonitor::str() const
 {
 	ostringstream s;
@@ -312,6 +322,9 @@ string PduMonitor::str() const
 			break;
 		case PDU_NOT_EXPECTED_FLAG:
 			s << ", flag = not expected";
+			break;
+		case PDU_EXPIRED_FLAG:
+			s << ", flag = expired";
 			break;
 		default:
 			__unreachable__("Invalid pdu flag");
@@ -401,10 +414,8 @@ void DeliveryReceiptMonitor::reschedule(time_t _startTime)
 			validTime = startTime + maxValidPeriod;
 			flag = PDU_REQUIRED_FLAG;
 			break;
-		case PDU_RECEIVED_FLAG:
-		case PDU_NOT_EXPECTED_FLAG:
+		default:
 			__unreachable__("Invalid flag");
-			break;
 	}
 }
 
