@@ -15,12 +15,15 @@ const char* DEL_CURRENT_MSG_ID = "DEL_CURRENT_MSG_ID";
 const char* GET_CURRENT_MSG_ID = "GET_CURRENT_MSG_ID";
 const char* SET_CURRENT_MSG_ID = "SET_CURRENT_MSG_ID";
 
+/* ----------------------- Access to message ids generation (MCI_MSG_SEQ) -------------------- */
 const char* GET_NEXT_SEQID_SQL  = "SELECT MCI_MSG_SEQ.NEXTVAL FROM DUAL";
+/* ----------------------- Access to current messages set (MCI_MSG_SET) ---------------------- */
 const char* SELECT_MSG_TXT_SQL  = "SELECT MSG FROM MCI_MSG_SET SET WHERE ID=:ID";
 const char* CREATE_NEW_MSG_SQL  = "INSERT INTO MCI_MSG_SET (ID, ST, ABONENT, MSG) "
                                   "VALUES (:ID, :ST, :ABONENT, :MSG)";
 const char* UPDATE_MSG_TXT_SQL  = "UPDATE MCI_MSG_SET SET MSG=:MSG WHERE ID=:ID";
-
+const char* LOADUP_MESSAGES_SQL = "SELECT MSG FROM MCI_MSG_SET SET WHERE ID>=:ID AND ST=:ST"; // ???
+/* ----------------------- Access to current message ids (MCI_CUR_MSG) ----------------------- */
 const char* INS_CURRENT_MSG_SQL = "INSERT INTO MCI_CUR_MSG (ABONENT, ID) VALUES (:ABONENT, :ID)";
 const char* DEL_CURRENT_MSG_SQL = "DELETE FROM MCI_CUR_MSG WHERE ABONENT=:ABONENT";
 const char* GET_CURRENT_MSG_SQL = "SELECT ID FROM MCI_CUR_MSG WHERE ABONENT=:ABONENT"; // check is null
