@@ -25,7 +25,11 @@ public:
 
   ~AbonentInfoSme()
   {
-    smeman->unregisterSmeProxy(systemId);
+    try{
+      smeman->unregisterSmeProxy(systemId);
+    }catch(...)
+    {
+    }
   }
 
   const char* taskName(){return "AbonentInfo";}
