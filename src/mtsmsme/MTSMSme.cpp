@@ -91,16 +91,19 @@ public:
         std::set<std::string>* set = setGuard.get();
         for (std::set<std::string>::iterator i=set->begin(); i!=set->end(); i++)
         {
-            const char* address = (const char *)i->c_str();
-            if (!address || !address[0])
-                throw ConfigException("Address is empty or wasn't specified");
+            const char* section = (const char *)i->c_str();
+            if (!section || !section[0]) continue;
 
-            std::auto_ptr<ConfigView> addressConfigGuard(config->getSubConfig(address));
+            std::auto_ptr<ConfigView> addressConfigGuard(config->getSubConfig(section));
             ConfigView* addressConfig = addressConfigGuard.get();
 
+            const char* address = addressConfig->getString("address");
+            if (!address || !address[0])
+                throw ConfigException("Address is empty or wasn't specified");
             const char* alias = addressConfig->getString("alias");
             if (!alias || !alias[0])
                 throw ConfigException("Alias for address '%s' is empty or wasn't specified", address);
+
             if (!aliasByAddress.Exists(address)) {
                 Address aliasAddress;
                 if (convertMSISDNStringToAddress(alias, aliasAddress)) aliasByAddress.Insert(address, aliasAddress);
