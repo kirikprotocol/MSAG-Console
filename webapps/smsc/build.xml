@@ -13,6 +13,8 @@
   <property name="topmon_path" value="${smsc_package_path}/topmon"/>
   <property name="topmon_src" location="${java_src}/${topmon_path}"/>
   <property name="topmon_out" location="${java_out}/${topmon_path}"/>
+  <property name="console_src" location="${java_src}/${smsc_package_path}/admin/console"/>
+  <property name="console_out" location="${java_out}/${smsc_package_path}/admin/console"/>
   <property name="auth_path" value="${smsc_package_path}/util/auth"/>
 
   <fileset id="common_libs" dir="${libs_path}" includes="log4j.jar antlr.jar nsjsp.jar classes12.jar"/>
@@ -37,6 +39,7 @@
     <native2ascii encoding="Cp1251" src="${java_src}/locales" dest="${java_out}/locales"/>
     <native2ascii encoding="Cp1251" src="${perfmon_src}/applet" dest="${perfmon_out}/applet"/>
     <native2ascii encoding="Cp1251" src="${topmon_src}/applet" dest="${topmon_out}/applet"/>
+    <native2ascii encoding="Cp1251" src="${console_src}/commands" dest="${console_out}/commands"/>
   </target>
 
   <target name="build" depends="clean,compile" description="generate the distribution">
