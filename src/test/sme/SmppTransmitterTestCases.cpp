@@ -375,7 +375,7 @@ PduData* SmppTransmitterTestCases::registerReplaceSm(PduReplaceSm* pdu,
 		__require__(fixture->pduReg);
 		DeliveryReceiptMonitor* rcptMonitor =
 			fixture->pduReg->getDeliveryReceiptMonitor(
-				resPdu->get_optional().get_userMessageReference(), pduData);
+				resPdu->get_optional().get_userMessageReference());
 		__require__(rcptMonitor);
 		return pduData;
 	}

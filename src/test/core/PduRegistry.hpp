@@ -91,14 +91,9 @@ public:
 
 	void registerMonitor(PduMonitor* monitor);
 
-	vector<PduMonitor*> getMonitors(uint16_t msgRef) const;
 	ResponseMonitor* getResponseMonitor(uint32_t seqNum) const;
-	DeliveryMonitor* getDeliveryMonitor(uint16_t msgRef,
-		const string& serviceType) const;
-	DeliveryReceiptMonitor* getDeliveryReceiptMonitor(uint16_t msgRef,
-		PduData* pduData) const;
-	DeliveryReceiptMonitor* getDeliveryReceiptMonitor(uint16_t msgRef,
-		const string& smsId) const;
+	DeliveryMonitor* getDeliveryMonitor(uint16_t msgRef) const;
+	DeliveryReceiptMonitor* getDeliveryReceiptMonitor(uint16_t msgRef) const;
 	SmeAckMonitor* getSmeAckMonitor(uint16_t msgRef) const;
 
 	void removeMonitor(PduMonitor* monitor);
@@ -110,6 +105,9 @@ public:
 	int size() const;
 
 	void dump(FILE* log) const;
+
+protected:
+	PduMonitor* getMonitor(uint16_t msgRef, MonitorType type) const;
 };
 
 }

@@ -55,8 +55,8 @@ void PduRegistry::registerMonitor(PduMonitor* monitor)
 	TimeMap::const_iterator it = checkTimeMap.find(timeKey);
 	__require__(it == checkTimeMap.end());
 	checkTimeMap[timeKey] = monitor;
-	__trace2__("monitor registered: pduReg = %p, monitor = {%s}, pduData = {%s}",
-		this, monitor->str().c_str(), monitor->pduData->str().c_str());
+	__trace2__("monitor registered: pduReg = %p, monitor = %s",
+		this, monitor->str().c_str());
 }
 
 void PduRegistry::clear()
@@ -71,16 +71,22 @@ void PduRegistry::clear()
 	checkTimeMap.clear();
 }
 
-vector<PduMonitor*> PduRegistry::getMonitors(uint16_t msgRef) const
+PduMonitor* PduRegistry::getMonitor(uint16_t msgRef, MonitorType type) const
 {
-	vector<PduMonitor*> res;
 	MsgRefMap::const_iterator it = msgRefMap.lower_bound(MsgRefKey(msgRef, 0));
 	MsgRefMap::const_iterator end = msgRefMap.upper_bound(MsgRefKey(msgRef, UINT_MAX));
+	PduMonitor* monitor = NULL;
 	for (; it != end; it++)
 	{
-		res.push_back(it->second);
+		PduMonitor* m = it->second;
+		__require__(m);
+		if (m->getType() == type)
+		{
+			__require__(!monitor); //едиственный монитор для msgRef
+			monitor = m;
+		}
 	}
-	return res;
+	return monitor;
 }
 
 ResponseMonitor* PduRegistry::getResponseMonitor(uint32_t seqNum) const
@@ -89,81 +95,22 @@ ResponseMonitor* PduRegistry::getResponseMonitor(uint32_t seqNum) const
 	return (it == seqNumMap.end() ? NULL : it->second);
 }
 
-DeliveryMonitor* PduRegistry::getDeliveryMonitor(uint16_t msgRef,
-	const string& serviceType) const
+DeliveryMonitor* PduRegistry::getDeliveryMonitor(uint16_t msgRef) const
 {
-	vector<PduMonitor*> tmp = getMonitors(msgRef);
-	DeliveryMonitor* monitor = NULL;
-	for (int i = 0; i < tmp.size(); i++)
-	{
-		if (tmp[i]->getType() == DELIVERY_MONITOR && tmp[i]->pduData->valid)
-		{
-			DeliveryMonitor* m = dynamic_cast<DeliveryMonitor*>(tmp[i]);
-			__require__(m);
-			if (m->serviceType == serviceType)
-			{
-				__require__(!monitor);
-				monitor = m;
-				//break;
-			}
-		}
-	}
-	return monitor;
+	PduMonitor* m = getMonitor(msgRef, DELIVERY_MONITOR);
+	return (m ? dynamic_cast<DeliveryMonitor*>(m) : NULL);
 }
 
-DeliveryReceiptMonitor* PduRegistry::getDeliveryReceiptMonitor(uint16_t msgRef,
-	PduData* pduData) const
+DeliveryReceiptMonitor* PduRegistry::getDeliveryReceiptMonitor(uint16_t msgRef) const
 {
-	__require__(pduData);
-	vector<PduMonitor*> tmp = getMonitors(msgRef);
-	DeliveryReceiptMonitor* monitor = NULL;
-	for (int i = 0; i < tmp.size(); i++)
-	{
-		if (tmp[i]->getType() == DELIVERY_RECEIPT_MONITOR &&
-			tmp[i]->pduData->valid && tmp[i]->pduData == pduData)
-		{
-			__require__(!monitor);
-			monitor = dynamic_cast<DeliveryReceiptMonitor*>(tmp[i]);
-			__require__(monitor);
-			//break;
-		}
-	}
-	return monitor;
-}
-
-DeliveryReceiptMonitor* PduRegistry::getDeliveryReceiptMonitor(uint16_t msgRef,
-	const string& smsId) const
-{
-	vector<PduMonitor*> tmp = getMonitors(msgRef);
-	DeliveryReceiptMonitor* monitor = NULL;
-	for (int i = 0; i < tmp.size(); i++)
-	{
-		if (tmp[i]->getType() == DELIVERY_RECEIPT_MONITOR &&
-			tmp[i]->pduData->valid && tmp[i]->pduData->smsId == smsId)
-		{
-			monitor = dynamic_cast<DeliveryReceiptMonitor*>(tmp[i]);
-			__require__(monitor);
-			//break;
-		}
-	}
-	return monitor;
+	PduMonitor* m = getMonitor(msgRef, DELIVERY_RECEIPT_MONITOR);
+	return (m ? dynamic_cast<DeliveryReceiptMonitor*>(m) : NULL);
 }
 
 SmeAckMonitor* PduRegistry::getSmeAckMonitor(uint16_t msgRef) const
 {
-	vector<PduMonitor*> tmp = getMonitors(msgRef);
-	SmeAckMonitor* monitor = NULL;
-	for (int i = 0; i < tmp.size(); i++)
-	{
-		if (tmp[i]->getType() == SME_ACK_MONITOR && tmp[i]->pduData->valid)
-		{
-			__require__(!monitor);
-			monitor = dynamic_cast<SmeAckMonitor*>(tmp[i]);
-			__require__(monitor);
-			//break;
-		}
-	}
-	return monitor;
+	PduMonitor* m = getMonitor(msgRef, SME_ACK_MONITOR);
+	return (m ? dynamic_cast<SmeAckMonitor*>(m) : NULL);
 }
 
 void PduRegistry::removeMonitor(PduMonitor* monitor)
@@ -196,7 +143,8 @@ void PduRegistry::removeMonitor(PduMonitor* monitor)
 	int res = checkTimeMap.erase(TimeKey(monitor->getCheckTime(), monitor->getId()));
 	__require__(res);
 	//delete monitor;
-	__trace2__("monitor unregistered: pduReg = %p, pdu = {%s}", this, monitor->str().c_str());
+	__trace2__("monitor unregistered: pduReg = %p, monitor = %s",
+		this, monitor->str().c_str());
 }
 
 PduRegistry::PduMonitorIterator* PduRegistry::getMonitors(time_t t1, time_t t2) const
