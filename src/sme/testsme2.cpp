@@ -30,6 +30,7 @@ public:
       printf("%d          \r",cnt);fflush(stdout);
       sleep(1);
     }
+    return 0;
   }
   void stop(){stopped=true;}
 };

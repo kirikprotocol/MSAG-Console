@@ -10,6 +10,7 @@
 #include "core/synchronization/Mutex.hpp"
 #include "core/synchronization/Event.hpp"
 #include "core/buffers/IntHash.hpp"
+#include "util/debug.h"
 #include <time.h>
 #include <string>
 
@@ -57,7 +58,7 @@ enum SmppError{
 
 class SmppPduEventListener{
 public:
-  virtual void handleEvent(const SmppHeader *pdu)=0;
+  virtual void handleEvent(SmppHeader *pdu)=0;
   virtual void handleError(int errorCode)=0;
 };
 
@@ -88,8 +89,9 @@ public:
     {
       try{
         pdu=receivePdu();
-      }catch(...)
+      }catch(std::exception& e)
       {
+        __trace2__("ex:%s",e.what());
         listener->handleError(smppErrorNetwork);
         break;
       }
@@ -100,6 +102,7 @@ public:
         pdu=NULL;
       }
     }
+    __trace__("smpp reader exited");
     return 0;
   }
 protected:
@@ -113,7 +116,7 @@ protected:
     while(buf.offset<4)
     {
       int rd=socket->Read(buf.buffer+buf.offset,4-buf.offset);
-      if(rd<=0)throw Exception("SMPP transport connection error");
+      if(rd<=0)throw Exception("SMPP transport connection error 0");
       buf.offset+=rd;
     }
     int sz=ntohl(*((int*)buf.buffer));
@@ -121,7 +124,7 @@ protected:
     while(buf.offset<sz)
     {
       int rd=socket->Read(buf.current(),sz-buf.offset);
-      if(rd<=0)throw Exception("SMPP transport connection error");
+      if(rd<=0)throw Exception("SMPP transport connection error 1");
       buf.offset+=rd;
     }
     SmppStream s;
@@ -148,7 +151,7 @@ public:
     mon.Lock();
     while(!stopped)
     {
-      while(queue.Count()!=0 && !stopped)
+      while(queue.Count()==0 && !stopped)
       {
         mon.wait();
       }
@@ -164,6 +167,7 @@ public:
       delete pb.buf;
     }
     mon.Unlock();
+    return 0;
   }
   void enqueue(SmppHeader* pdu)
   {
@@ -187,6 +191,7 @@ protected:
   void sendPdu(PduBuffer& pb)
   {
     int count=0,wr;
+    __trace2__("writer:sending buffer %p, %d",pb.buf,pb.size);
     do{
       wr=socket->Write(pb.buf+count,pb.size-count);
       if(wr<=0)throw Exception("Failed to send smpp packet");
@@ -198,7 +203,7 @@ protected:
 
 class SmppTransmitter{
 public:
-  virtual SmppHeader* sendPdu(SmppHeader& pdu)=0;
+  virtual SmppHeader* sendPdu(SmppHeader* pdu)=0;
   virtual void sendGenericNack(PduGenericNack& pdu)=0;
   virtual void sendDeliverySmResp(PduDeliverySmResp& pdu)=0;
   virtual void sendDataSmResp(PduDataSmResp& pdu)=0;
@@ -212,7 +217,7 @@ public:
 
 class SmppBaseReceiver: SmppPduEventListener{
 public:
-  void handleEvent(const SmppHeader *pdu)
+  void handleEvent(SmppHeader *pdu)
   {
     using namespace smsc::smpp::SmppCommandSet;
     ////
@@ -225,7 +230,7 @@ public:
     {
       case GENERIC_NACK:      return processGenericNack(*(PduGenericNack*)pdu);
       case SUBMIT_SM_RESP:    return processSubmitSmResp(*(PduSubmitSmResp*)pdu);
-      case SUBMIT_MULTI:      return processMultiResp(*(PduMultiSmResp*)pdu);
+      case SUBMIT_MULTI_RESP: return processMultiResp(*(PduMultiSmResp*)pdu);
       case DELIVERY_SM:       return processDeliverySm(*(PduDeliverySm*)pdu);
       case DATA_SM:           return processDataSm(*(PduDataSm*)pdu);
       case DATA_SM_RESP:      return processDataSmResp(*(PduDataSmResp*)pdu);
@@ -254,6 +259,8 @@ struct SmeConfig{
   std::string sid;
   int timeOut;
   std::string password;
+  std::string systemType;
+  std::string origAddr;
 };
 
 class SmppSession{
@@ -262,6 +269,7 @@ protected:
     time_t timeOut;
     Event* event;
     SmppHeader *pdu;
+    int error;
   };
   class InnerListener:public SmppPduEventListener{
   public:
@@ -276,59 +284,103 @@ protected:
         session.listener->handleError(errorCode);
       }
     }
-    void handleEvent(const SmppHeader* pdu)
+    void handleEvent(SmppHeader* pdu)
     {
-
+      session.processIncoming(pdu);
     }
   };
   class InnerSyncTransmitter:public SmppTransmitter{
   public:
+
     InnerSyncTransmitter(SmppSession& s):session(s)
     {
     }
     virtual ~InnerSyncTransmitter()
     {
     }
-    SmppHeader* sendPdu(SmppHeader& pdu)
+    SmppHeader* sendPdu(SmppHeader* pdu)
     {
-      int seq=session.getNextSeq();
-      pdu.set_sequenceNumber(seq);
+      int seq=(const_cast<SmppHeader*>(pdu))->get_sequenceNumber();
       session.registerPdu(seq,&event);
-      session.writer.enqueue(&pdu);
+      session.writer.enqueue(pdu);
       event.Wait(10000);
       return session.getPduResponse(seq);
     };
-    void sendGenericNack(PduGenericNack& pdu){};
-    void sendDeliverySmResp(PduDeliverySmResp& pdu){};
-    void sendDataSmResp(PduDataSmResp& pdu){};
-    PduSubmitSmResp* submit(PduSubmitSm& pdu){};
-    PduMultiSmResp* submitm(PduMultiSm& pdu){};
-    PduDataSmResp* data(PduDataSm& pdu){};
-    PduQuerySmResp* query(PduQuerySm& pdu){};
-    PduCancelSmResp* cancel(PduCancelSm& pdu){};
-    PduReplaceSmResp* replace(PduReplaceSm& pdu){};
+
+    void sendGenericNack(PduGenericNack& pdu)
+    {
+      pdu.get_header().set_commandId(SmppCommandSet::GENERIC_NACK);
+      pdu.get_header().set_sequenceNumber(session.getNextSeq());
+      session.writer.enqueue((SmppHeader*)&pdu);
+    };
+    void sendDeliverySmResp(PduDeliverySmResp& pdu)
+    {
+      pdu.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+      pdu.get_header().set_sequenceNumber(session.getNextSeq());
+      session.writer.enqueue((SmppHeader*)&pdu);
+    };
+    void sendDataSmResp(PduDataSmResp& pdu)
+    {
+      pdu.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
+      pdu.get_header().set_sequenceNumber(session.getNextSeq());
+      session.writer.enqueue((SmppHeader*)&pdu);
+    };
+    PduSubmitSmResp* submit(PduSubmitSm& pdu)
+    {
+      pdu.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+      pdu.get_header().set_sequenceNumber(session.getNextSeq());
+      return (PduSubmitSmResp*)sendPdu((SmppHeader*)&pdu);
+    };
+    PduMultiSmResp* submitm(PduMultiSm& pdu)
+    {
+      pdu.get_header().set_commandId(SmppCommandSet::SUBMIT_MULTI);
+      pdu.get_header().set_sequenceNumber(session.getNextSeq());
+      return (PduMultiSmResp*)sendPdu((SmppHeader*)&pdu);
+    };
+    PduDataSmResp* data(PduDataSm& pdu)
+    {
+      pdu.get_header().set_commandId(SmppCommandSet::DATA_SM);
+      pdu.get_header().set_sequenceNumber(session.getNextSeq());
+      return (PduDataSmResp*)sendPdu((SmppHeader*)&pdu);
+    };
+    PduQuerySmResp* query(PduQuerySm& pdu)
+    {
+      pdu.get_header().set_commandId(SmppCommandSet::QUERY_SM);
+      pdu.get_header().set_sequenceNumber(session.getNextSeq());
+      return (PduQuerySmResp*)sendPdu((SmppHeader*)&pdu);
+    };
+    PduCancelSmResp* cancel(PduCancelSm& pdu)
+    {
+      pdu.get_header().set_commandId(SmppCommandSet::CANCEL_SM);
+      pdu.get_header().set_sequenceNumber(session.getNextSeq());
+      return (PduCancelSmResp*)sendPdu((SmppHeader*)&pdu);
+    };
+    PduReplaceSmResp* replace(PduReplaceSm& pdu)
+    {
+      pdu.get_header().set_commandId(SmppCommandSet::REPLACE_SM);
+      pdu.get_header().set_sequenceNumber(session.getNextSeq());
+      return (PduReplaceSmResp*)sendPdu((SmppHeader*)&pdu);
+    };
   protected:
     SmppSession& session;
     Event event;
   };
-  class InnerAsyncTransmitter:public SmppTransmitter{
+  class InnerAsyncTransmitter:public InnerSyncTransmitter{
   public:
-    InnerAsyncTransmitter(SmppSession& s):session(s)
+    InnerAsyncTransmitter(SmppSession& s):InnerSyncTransmitter(s)
+    {
+    }
+    virtual ~InnerAsyncTransmitter()
     {
     }
 
-    SmppHeader* sendPdu(SmppHeader& pdu){};
-    void sendGenericNack(PduGenericNack& pdu){};
-    void sendDeliverySmResp(PduDeliverySmResp& pdu){};
-    void sendDataSmResp(PduDataSmResp& pdu){};
-    PduSubmitSmResp* submit(PduSubmitSm& pdu){};
-    PduMultiSmResp* submitm(PduMultiSm& pdu){};
-    PduDataSmResp* data(PduDataSm& pdu){};
-    PduQuerySmResp* query(PduQuerySm& pdu){};
-    PduCancelSmResp* cancel(PduCancelSm& pdu){};
-    PduReplaceSmResp* replace(PduReplaceSm& pdu){};
-  protected:
-    SmppSession& session;
+    SmppHeader* sendPdu(SmppHeader* pdu)
+    {
+      int seq=pdu->get_sequenceNumber();
+      session.registerPdu(seq,&event);
+      session.writer.enqueue(pdu);
+      return NULL;
+    };
   };
 
 public:
@@ -363,8 +415,11 @@ public:
     pdu.get_header().set_commandId(SmppCommandSet::BIND_TRANCIEVER);
     pdu.set_systemId(cfg.sid.c_str());
     pdu.set_password(cfg.password.c_str());
-    SmppHeader *hdr=(SmppHeader*)&pdu;
-    PduBindTRXResp *resp=(PduBindTRXResp*)strans.sendPdu(*hdr);
+    pdu.set_systemType(cfg.systemType.c_str());
+    int seq=getNextSeq();
+    pdu.get_header().set_sequenceNumber(seq);
+
+    PduBindTRXResp *resp=(PduBindTRXResp*)strans.sendPdu((SmppHeader*)&pdu);
 
     if(!resp || resp->get_header().get_commandId()!=SmppCommandSet::BIND_TRANCIEVER_RESP ||
        resp->get_header().get_sequenceNumber()!=pdu.get_header().get_sequenceNumber())
@@ -376,6 +431,22 @@ public:
   void close()
   {
   }
+
+  int getNextSeq()
+  {
+    MutexGuard g(cntMutex);
+    return ++seqCounter;
+  }
+
+  SmppTransmitter* getSyncTransmitter()
+  {
+    return &strans;
+  }
+  SmppTransmitter* getAsyncTransmitter()
+  {
+    return &atrans;
+  }
+
 
 protected:
   SmeConfig cfg;
@@ -390,12 +461,6 @@ protected:
   Mutex cntMutex,lockMutex;
 
   IntHash<Lock> lock;
-
-  int getNextSeq()
-  {
-    MutexGuard g(cntMutex);
-    return ++seqCounter;
-  }
 
   void registerPdu(int seq,Event* event)
   {
@@ -418,15 +483,74 @@ protected:
     l.timeOut=time(NULL)+10;
     l.event=event;
     l.pdu=NULL;
+    l.error=0;
     lock.Insert(seq,l);
   }
   SmppHeader* getPduResponse(int seq)
   {
     MutexGuard g(lockMutex);
     if(!lock.Exist(seq))return NULL;
-    SmppHeader *retval=lock.Get(seq).pdu;
+    Lock &l=lock.Get(seq);
+    if(l.error)throw Exception("Unknown error");
+    SmppHeader *retval=l.pdu;
     lock.Delete(seq);
     return retval;
+  }
+  void processIncoming(SmppHeader* pdu)
+  {
+    using namespace smsc::smpp::SmppCommandSet;
+    MutexGuard g(lockMutex);
+    int seq=pdu->get_sequenceNumber();
+    switch(pdu->get_commandId())
+    {
+      //отдельно отработаем всякие разные респонсы.
+      case GENERIC_NACK://облом однако.
+      {
+        if(lock.Exist(seq))
+        {
+          Lock &l=lock.Get(seq);
+          if(l.event)
+          {
+            l.error=1;
+            l.event->Signal();
+            disposePdu(pdu);
+          }else
+          {
+            listener->handleEvent(pdu);
+            lock.Delete(seq);
+          }
+        }
+      }break;
+      case SUBMIT_SM_RESP:
+      case DATA_SM_RESP:
+      case QUERY_SM_RESP:
+      case CANCEL_SM_RESP:
+      case REPLACE_SM_RESP:
+      case SUBMIT_MULTI_RESP:
+      case BIND_TRANCIEVER_RESP:
+      {
+        if(lock.Exist(seq))
+        {
+          Lock &l=lock.Get(seq);
+          if(l.event)
+          {
+            l.pdu=pdu;
+            l.event->Signal();
+          }else
+          {
+            listener->handleEvent(pdu);
+            lock.Delete(seq);
+          }
+        }
+      }break;
+      // и отдельно собственно пришедшие smpp-шки.
+      case DELIVERY_SM:
+      case DATA_SM:
+      case ALERT_NOTIFICATION:
+      {
+        listener->handleEvent(pdu);
+      }break;
+    }
   }
 };
 

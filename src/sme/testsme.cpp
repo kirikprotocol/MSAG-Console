@@ -8,8 +8,9 @@
 #ifndef _WIN32
 #include <signal.h>
 #endif
-#include "sme/IntHash.hpp"
+#include "core/buffers/IntHash.hpp"
 
+using namespace smsc::core::buffers;
 using namespace smsc::util;
 using namespace smsc::core::threads;
 using namespace smsc::core::synchronization;

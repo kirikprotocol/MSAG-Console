@@ -1,3 +1,5 @@
 sme/testsme testsme -lcore-network -lsms -lsocket -lsme -lcore-threads -lthread
 sme/testsme2 testsme2 -lcore-network -lsms -lsocket -lsme -lcore-threads -lthread
 sme/testsme3 testsme3 -lcore-network -lsms -lsocket -lsme -lcore-threads -lthread
+sme/t t -lcore-network -lsms -lsocket -lcore-threads -lthread -lrt
+
