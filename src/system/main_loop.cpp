@@ -137,6 +137,7 @@ void Smsc::mainLoop()
   for(;;)
   {
 
+    try{
     do
     {
       // !!!TODO: taskcontainer expiration checks
@@ -146,13 +147,20 @@ void Smsc::mainLoop()
       while ( tasks.getExpired(&task) )
       {
         SMSId id = task.messageId;
-        __trace2__("enqueue timeout Alert: dialogId=%d, systemId=%s",
-          task.sequenceNumber,smeman.getSmeInfo(task.proxy_id).systemId.c_str());
+        __trace2__("enqueue timeout Alert: dialogId=%d, proxyUniqueId=%d",
+          task.sequenceNumber,task.proxy_id);
 
         eventqueue.enqueue(id,SmscCommand::makeAlert());
       }
     }
     while(!src_proxy);
+    }catch(...)
+    {
+      __trace__("shit happened");
+      abort();
+    }
+
+    try{
 
     SmscCommand cmd;
 
@@ -311,6 +319,11 @@ void Smsc::mainLoop()
     }
     __require__(cmd.getProxy()==src_proxy);
     eventqueue.enqueue(id,cmd);
+    }catch(...)
+    {
+      __trace__("another shit happened");
+      abort();
+    }
   }
 }
 

@@ -45,7 +45,7 @@ int Scheduler::Execute()
       {
         __trace2__("Scheduler: start check - now=%d, first=%d",t,timeLine.begin()->first);
       }
-      while(timeLine.size() && timeLine.begin()->first<t && ids.Count()<rescheduleLimit)
+      while(timeLine.size() && timeLine.begin()->first<=t && ids.Count()<rescheduleLimit)
       {
         ids.Push(timeLine.begin()->second);
         timeLine.erase(timeLine.begin());
