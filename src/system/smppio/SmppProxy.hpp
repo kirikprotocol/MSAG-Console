@@ -38,7 +38,6 @@ public:
     managerMonitor=NULL;
     proxyType=proxyTransceiver;
     opened=true;
-    forceDC=true;
   }
   virtual ~SmppProxy(){}
   virtual void close()
@@ -223,9 +222,10 @@ public:
     proxyType=newtype;
   }
 
-  void setId(const std::string& newid)
+  void setId(const std::string& newid,SmeIndex idx)
   {
     id=newid;
+    smeIndex=idx;
   }
 
   const char* getSystemId()const{return id.c_str();}
@@ -242,14 +242,10 @@ public:
     return cnt;
   }
 
-  void setForceDC(bool value)
-  {
-    forceDC=value;
-  }
 
-  bool getForceDC()
+  int getSmeIndex()
   {
-    return forceDC;
+    return smeIndex;
   }
 
   int getBindMode()
@@ -269,6 +265,7 @@ public:
 protected:
   mutable Mutex mutex,mutexin,mutexout;
   std::string id;
+  SmeIndex smeIndex;
   smsc::core::buffers::Array<SmscCommand> inqueue;
   smsc::core::buffers::PriorityQueue<SmscCommand,Array<SmscCommand>,0,31> outqueue;
   int seq;
@@ -278,7 +275,6 @@ protected:
   ProxyMonitor *managerMonitor;
   SmppSocket *smppSocket;
   int refcnt;
-  bool forceDC;
 };
 
 bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)

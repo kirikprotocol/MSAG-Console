@@ -394,8 +394,7 @@ int SmppInputThread::Execute()
                     bindpdu->get_systemId()?bindpdu->get_systemId():"",
                     bindpdu->get_password()?bindpdu->get_password():"",
                     proxy);
-                  proxy->setId(sid);
-                  proxy->setForceDC(si.forceDC);
+                  proxy->setId(sid,proxyIndex);
                   __trace2__("NEWPROXY: p=%p, smid=%s, forceDC=%s",proxy,sid.c_str(),si.forceDC?"true":"false");
                   resppdu.get_header().
                     set_commandStatus(SmppStatusSet::ESME_ROK);
@@ -539,7 +538,11 @@ int SmppInputThread::Execute()
               if(ss->getProxy())
               {
                 try{
-                  SmscCommand cmd(pdu,ss->getProxy()->getForceDC());
+                  SmscCommand cmd
+                  (
+                    pdu,
+                    smeManager->getSmeInfo(ss->getProxy()->getSmeIndex()).forceDC
+                  );
                   try{
                     if(ss->getProxy()->isOpened())
                     {
@@ -721,7 +724,7 @@ int SmppOutputThread::Execute()
       {
         SmscCommand cmd=ss->getProxy()->getOutgoingCommand();
 
-        SmppHeader *pdu=cmd.makePdu(ss->getProxy()->getForceDC());
+        SmppHeader *pdu=cmd.makePdu(smeManager->getSmeInfo(ss->getProxy()->getSmeIndex()).forceDC);
         int cmdid=pdu->get_commandId();
         trace2("SmppOutThread: commandId=%x, seq number:%d",
           pdu->get_commandId(),pdu->get_sequenceNumber());
