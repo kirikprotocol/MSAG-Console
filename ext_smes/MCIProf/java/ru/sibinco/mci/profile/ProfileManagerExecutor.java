@@ -41,10 +41,25 @@ public class ProfileManagerExecutor extends ProfileManagerState implements Execu
 
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
-    ProfileInfo info = getProfileInfo(state);
+    ProfileInfo info = null;
+    ProfileManagerException exc = (ProfileManagerException)state.getAttribute(Constants.ATTR_ERROR);
+    if (exc == null) {
+      try { info = getProfileInfo(state); }
+      catch (ProfileManagerException e) { exc = e; }
+    }
+    else {
+      logger.warn("Got stored exception", exc);
+      state.removeAttribute(Constants.ATTR_ERROR);
+    }
+
+    Message resp = new Message();
+    if (exc != null) {
+      final String msg = errorFormat.format(new Object[] {getErrorMessage(exc)});
+      resp.setMessageString(Transliterator.translit(msg));
+      return new ExecutorResponse(new Message[]{resp}, true);
+    }
     Object[] args = new Object[] {info.inform ? valueYes:valueNo, info.informFormat.getName(),
                                   info.notify ? valueYes:valueNo, info.notifyFormat.getName()};
-    Message resp = new Message();
     final String msg = pageFormat.format(args);
     resp.setMessageString(Transliterator.translit(msg));
     return new ExecutorResponse(new Message[]{resp}, false);

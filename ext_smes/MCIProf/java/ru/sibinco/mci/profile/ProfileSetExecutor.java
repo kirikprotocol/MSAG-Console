@@ -42,13 +42,22 @@ public class ProfileSetExecutor extends ProfileManagerState implements Executor
 
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
-    String reason = (String)state.getAttribute(Constants.ATTR_REASON);
+    ProfileManagerException exc = (ProfileManagerException)state.getAttribute(Constants.ATTR_ERROR);
+    Message resp = new Message();
+    if (exc != null) {
+      logger.warn("Got stored exception", exc);
+      state.removeAttribute(Constants.ATTR_ERROR);
+      final String msg = errorFormat.format(new Object [] {getErrorMessage(exc)});
+      resp.setMessageString(Transliterator.translit(msg));
+      return new ExecutorResponse(new Message[]{resp}, true);
+    }
+
+    final String reason = (String)state.getAttribute(Constants.ATTR_REASON);
     boolean inform = true;
     if      (reason.equals(Constants.INFORM)) inform = true;
     else if (reason.equals(Constants.NOTIFY)) inform = false;
     else throw new ExecutingException("Profile option '"+reason+"' is unknown",
                                       ErrorCode.PAGE_EXECUTOR_EXCEPTION);
-
     HashMap formats = new HashMap();
     String formatAlts = ""; int counter = 1;
     for (Iterator i = profileManager.getFormatAlts(inform); i.hasNext(); counter++) {
@@ -62,7 +71,7 @@ public class ProfileSetExecutor extends ProfileManagerState implements Executor
 
     Object args[] = new Object[] {inform ? valueInform:valueNotify, formatAlts};
     final String msg = pageFormat.format(args);
-    Message resp = new Message(); resp.setMessageString(Transliterator.translit(msg));
+    resp.setMessageString(Transliterator.translit(msg));
     return new ExecutorResponse(new Message[]{resp}, false);
   }
 

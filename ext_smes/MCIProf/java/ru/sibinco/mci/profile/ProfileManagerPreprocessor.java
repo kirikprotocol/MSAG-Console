@@ -35,43 +35,43 @@ public class ProfileManagerPreprocessor extends ProfileManagerState implements S
       msg = msg.trim();
       if (!msg.equals(Constants.OPTION_EXIT))
       {
-        ProfileInfo info = null;
-        try {
-          info = getProfileInfo(state);
-        } catch (Exception e) {
-          throw new ProcessingException(e, ErrorCode.PAGE_EXECUTOR_EXCEPTION);
-        }
-        if (formats == null) // set inform or notify flag
+        try
         {
-          if      (msg.equals("1")) info.inform = !info.inform;
-          else if (msg.equals("3")) info.notify = !info.notify;
-          else new ProcessingException("Profile option '"+msg+"' in unknown", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
-        }
-        else // set inform or notify message format type
-        {
-          String reason = (String)state.getAttribute(Constants.ATTR_REASON);
-          if (reason == null)
-            throw new ProcessingException("Profile option is undefined", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
-
-          boolean inform = true;
-          if      (reason.equals(Constants.INFORM)) inform = true;
-          else if (reason.equals(Constants.NOTIFY)) inform = false;
-          else throw new ProcessingException("Profile option '"+reason+"' in unknown", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
-          try {
-            FormatType format = (FormatType)formats.get(new Integer(msg));
-            if (format == null) throw new Exception("Profile message format is undefined");
-            if (inform) info.informFormat = format;
-            else info.notifyFormat = format;
-          } catch (Exception exc) {
-            String err = "Profile option is invalid '"+msg+"'";
-            logger.error(err, exc);
-            throw new ProcessingException(err, exc, ErrorCode.PAGE_EXECUTOR_EXCEPTION);
+          ProfileInfo info = getProfileInfo(state);
+          if (formats == null) // set inform or notify flag
+          {
+            if      (msg.equals("1")) info.inform = !info.inform;
+            else if (msg.equals("3")) info.notify = !info.notify;
+            else new ProcessingException("Profile option '"+msg+"' in unknown", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
           }
-        }
-        try {
+          else // set inform or notify message format type
+          {
+            String reason = (String)state.getAttribute(Constants.ATTR_REASON);
+            if (reason == null)
+              throw new ProcessingException("Profile option is undefined", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
+
+            boolean inform = true;
+            if      (reason.equals(Constants.INFORM)) inform = true;
+            else if (reason.equals(Constants.NOTIFY)) inform = false;
+            else throw new ProcessingException("Profile option '"+reason+"' in unknown", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
+            try {
+              FormatType format = (FormatType)formats.get(new Integer(msg));
+              if (format == null) throw new Exception("Profile message format is undefined");
+              if (inform) info.informFormat = format;
+              else info.notifyFormat = format;
+            } catch (Exception exc) {
+              String err = "Profile option is invalid '"+msg+"'";
+              logger.error(err, exc);
+              throw new ProcessingException(err, exc, ErrorCode.PAGE_EXECUTOR_EXCEPTION);
+            }
+          }
           setProfileInfo(state, info);
-        } catch (Exception e) {
-          throw new ProcessingException(e, ErrorCode.PAGE_EXECUTOR_EXCEPTION);
+          state.removeAttribute(Constants.ATTR_ERROR);
+        }
+        catch (ProfileManagerException exc)
+        {
+          state.setAttribute(Constants.ATTR_ERROR, exc);
+          logger.warn("Profile exception was stored in session");
         }
       }
     }

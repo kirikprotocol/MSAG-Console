@@ -1,12 +1,11 @@
 package ru.sibinco.mci.profile;
 
-import org.apache.log4j.Category;
 import ru.sibinco.smpp.appgw.scenario.resources.ScenarioResourceBundle;
 import ru.sibinco.smpp.appgw.scenario.ScenarioInitializationException;
 import ru.sibinco.smpp.appgw.scenario.ScenarioState;
-import ru.sibinco.smpp.appgw.scenario.ExecutingException;
 
 import java.util.Properties;
+import java.text.MessageFormat;
 
 /**
  * Created by IntelliJ IDEA.
@@ -17,18 +16,36 @@ import java.util.Properties;
  */
 public class ProfileManagerState
 {
-  private static Category logger = Category.getInstance(ProfileManagerState.class);
+  //private static Category logger = Category.getInstance(ProfileManagerState.class);
 
+  protected ScenarioResourceBundle systemBundle = null;
   protected ScenarioResourceBundle profileBundle = null;
   protected ProfileManager profileManager = null;
 
+  protected MessageFormat errorFormat = null;
+  protected String errorDB      = null;
+  protected String errorUnknown = null;
+
   public void init(Properties properties) throws ScenarioInitializationException
   {
-    profileBundle = (ScenarioResourceBundle) properties.get(Constants.BUNDLE_PROFILE);
+    try {
+      systemBundle  = (ScenarioResourceBundle) properties.get(Constants.BUNDLE_SYSTEM);
+      profileBundle = (ScenarioResourceBundle) properties.get(Constants.BUNDLE_PROFILE);
+      errorFormat   = new MessageFormat(systemBundle.getString(Constants.PAGE_ERR));
+      errorDB       = profileBundle.getString(Constants.ERROR_DB);
+      errorUnknown  = profileBundle.getString(Constants.ERROR_UNKNOWN);
+    } catch (Exception e) {
+      throw new ScenarioInitializationException("Init failed", e);
+    }
     profileManager = ProfileManager.getInstance();
   }
 
-  protected ProfileInfo getProfileInfo(ScenarioState state) throws ExecutingException
+  protected String getErrorMessage(ProfileManagerException exc)
+  {
+    if (exc.code == ProfileManagerException.DB_ERROR) return errorDB;
+    return errorUnknown;
+  }
+  protected ProfileInfo getProfileInfo(ScenarioState state) throws ProfileManagerException
   {
     ProfileInfo info = (ProfileInfo)state.getAttribute(Constants.ATTR_PROFILE);
     if (info == null) {
@@ -37,7 +54,7 @@ public class ProfileManagerState
     }
     return info;
   }
-  protected void setProfileInfo(ScenarioState state, ProfileInfo info)  throws ExecutingException
+  protected void setProfileInfo(ScenarioState state, ProfileInfo info)  throws ProfileManagerException
   {
     profileManager.setProfileInfo(state.getAbonent(), info);
     state.setAttribute(Constants.ATTR_PROFILE, info);

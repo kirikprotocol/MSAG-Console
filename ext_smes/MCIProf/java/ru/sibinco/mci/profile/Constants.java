@@ -47,6 +47,7 @@ public class Constants
   public final static String ERROR_NOT_ACCEPTED  = ERROR_PREFIX + "not_accepted";
   public final static String ERROR_CONNECT       = ERROR_PREFIX + "connect";
   public final static String ERROR_UNKNOWN       = ERROR_PREFIX + "unknown";
+  public final static String ERROR_DB            = ERROR_PREFIX + "db";
 
   public final static String ATTR_MAIN    = "MAIN";
   public final static String ATTR_ERROR   = "ERROR";

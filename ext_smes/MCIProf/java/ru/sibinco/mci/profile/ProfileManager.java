@@ -1,8 +1,6 @@
 package ru.sibinco.mci.profile;
 
-import ru.sibinco.smpp.appgw.scenario.ExecutingException;
 import ru.sibinco.smpp.appgw.scenario.ScenarioInitializationException;
-import ru.sibinco.smpp.appgw.scenario.ErrorCode;
 import ru.sibinco.smpp.appgw.util.ConnectionPool;
 
 import java.util.Iterator;
@@ -116,7 +114,7 @@ public class ProfileManager
   private final static String DEL_PROFILE_SQL =
       "DELETE FROM mcisme_abonents WHERE abonent=?";
 
-  public ProfileInfo getProfileInfo(String abonent) throws ExecutingException
+  public ProfileInfo getProfileInfo(String abonent) throws ProfileManagerException
   {
     Connection connection  = null;
     PreparedStatement stmt = null;
@@ -141,17 +139,17 @@ public class ProfileManager
       info.notifyFormat = getFormatType(notifyId, false);
       return info;
     }
-    catch (Exception e) {
-      logger.error("Query to DB failed", e);
-      throw new ExecutingException("Query to ProfileManager failed", e, ErrorCode.PAGE_EXECUTOR_EXCEPTION);
+    catch (Exception exc) {
+      logger.error("Query to DB failed", exc);
+      throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
     }
     finally {
       try { if (rs != null) rs.close(); }
-      catch (Throwable th) { logger.error("", th); }
+      catch (Throwable th) { logger.error(th); }
       try { if (stmt != null) stmt.close(); }
-      catch (Throwable th) { logger.error("", th); }
+      catch (Throwable th) { logger.error(th); }
       try { if (connection != null) connection.close(); }
-      catch (Throwable th) { logger.error("", th); }
+      catch (Throwable th) { logger.error(th); }
     }
   }
 
@@ -164,7 +162,7 @@ public class ProfileManager
     stmt.setLong  (pos++, info.notifyFormat.getId());
     return pos;
   }
-  public void setProfileInfo(String abonent, ProfileInfo info) throws ExecutingException
+  public void setProfileInfo(String abonent, ProfileInfo info) throws ProfileManagerException
   {
     Connection connection  = null;
     PreparedStatement stmt = null;
@@ -185,11 +183,11 @@ public class ProfileManager
       }
       connection.commit();
     }
-    catch (Exception e) {
+    catch (Exception exc) {
       try { if (connection != null) connection.rollback(); }
       catch (Throwable th) { logger.error("", th); }
-      logger.error("Update/Insert to DB failed", e);
-      throw new ExecutingException("Query to ProfileManager failed", e, ErrorCode.PAGE_EXECUTOR_EXCEPTION);
+      logger.error("Update/Insert to DB failed", exc);
+      throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
     }
     finally {
       try { if (stmt != null) stmt.close(); }
@@ -199,7 +197,7 @@ public class ProfileManager
     }
   }
 
-  public void delProfileInfo(String abonent) throws ExecutingException
+  public void delProfileInfo(String abonent) throws ProfileManagerException
   {
     Connection connection  = null;
     PreparedStatement stmt = null;
@@ -211,11 +209,11 @@ public class ProfileManager
       stmt.executeUpdate();
       connection.commit();
     }
-    catch (Exception e) {
+    catch (Exception exc) {
       try { if (connection != null) connection.rollback(); }
       catch (Throwable th) { logger.error("", th); }
-      logger.error("Delete form DB failed", e);
-      throw new ExecutingException("Query to ProfileManager failed", e, ErrorCode.PAGE_EXECUTOR_EXCEPTION);
+      logger.error("Delete form DB failed", exc);
+      throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
     }
     finally {
       try { if (stmt != null) stmt.close(); }
