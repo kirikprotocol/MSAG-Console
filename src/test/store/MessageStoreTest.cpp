@@ -3,8 +3,7 @@
 #include "util/config/Manager.h"
 #include "store/StoreManager.h"
 #include "MessageStoreTestCases.hpp"
-#include "test/util/TestTaskManager.hpp"
-#include "test/sms/SmsUtil.hpp"
+#include "MessageStoreCheckList.hpp"
 #include <iostream>
 #include <sstream>
 #include <sys/timeb.h>
@@ -20,11 +19,10 @@ using namespace smsc::test::util;
 using std::ostringstream;
 using log4cpp::Category;
 using smsc::util::Logger;
-using smsc::test::sms::SmsUtil;
 
 #define __new__ \
-	id.push_back(new SMSId); \
-	sms.push_back(new SMS);
+	id.push_back(new SMSId()); \
+	sms.push_back(new SMS());
 	
 void executeTest(MessageStoreTestCases& tc)
 {
@@ -34,28 +32,44 @@ void executeTest(MessageStoreTestCases& tc)
 	vector<SMS*> sms;
 	
 	__new__;
-	tc.storeCorrectSms(id.back(), sms.back(), 12);
+	/*
+	tc.storeCorrectSms(id.back(), sms.back(), 4);
 	tc.loadExistentSms(*id.back(), *sms.back());
-	tc.checkReadyForRetrySms(id, sms, 1);
+	tc.replaceCorrectSms(*id.back(), sms.back(), 2);
+	tc.loadExistentSms(*id.back(), *sms.back());
+	//tc.changeExistentSmsStateEnrouteToFinal(*id.back(), sms.back(), 2);
+	//tc.loadExistentSms(*id.back(), *sms.back());
+	*/
+
+	tc.storeCorrectSms(id.back(), sms.back(), 10);
+	tc.loadExistentSms(*id.back(), *sms.back());
+	tc.replaceIncorrectSms(*id.back(), *sms.back(), 3);
+	tc.loadExistentSms(*id.back(), *sms.back());
+	tc.replaceCorrectSms(*id.back(), sms.back(), 5);
+	tc.loadExistentSms(*id.back(), *sms.back());
+	tc.changeExistentSmsStateEnrouteToFinal(*id.back(), sms.back(), 6);
+	tc.loadExistentSms(*id.back(), *sms.back());
 
 /*
-	cout << *tc.storeCorrectSms(&id, &sms, 1) << endl;
-	cout << *tc.storeCorrectSms(&id2, &sms2, id, sms, 1) << endl;
-	cout << *tc.storeRejectDuplicateSms(sms) << endl;
-	cout << *tc.storeReplaceCorrectSms(&id, &sms) << endl;
-	cout << *tc.storeReplaceSmsInFinalState(&id2, &sms2, id, sms) << endl;
-	cout << *tc.storeIncorrectSms(1) << endl;
-	cout << *tc.storeAssertSms(1) << endl;
-	cout << *tc.changeExistentSmsStateEnrouteToEnroute(id, &sms, 1) << endl;
-	cout << *tc.changeExistentSmsStateEnrouteToFinal(id, &sms, 1) << endl;
-	cout << *tc.changeFinalSmsStateToAny(id, 1) << endl;
-	cout << *tc.replaceCorrectSms(id, &sms, 1) << endl;
-	cout << *tc.replaceIncorrectSms(id, sms, 1) << endl;
-	cout << *tc.replaceFinalSms(id, sms) << endl;
-	cout << *tc.loadExistentSms(id, sms) << endl;
-	cout << *tc.loadNonExistentSms(id) << endl;
-	cout << *tc.deleteExistentSms(id) << endl;
-	cout << *tc.deleteNonExistentSms(id) << endl;
+	tc.storeCorrectSms(id.back(), sms.back(), RAND_TC);
+	tc.storeSimilarSms(id.back(), sms.back(), const SMSId existentId, const SMS& existentSms, RAND_TC);
+	tc.storeDuplicateSms(id.back()p, sms.back()p, const SMSId existentId, const SMS& existentSms);
+	tc.storeRejectDuplicateSms(const SMS& existentSms);
+	tc.storeReplaceCorrectSms(id.back(), SMS* existentSms);
+	tc.storeReplaceSmsInFinalState(id.back(), sms.back(), const SMS& existentSms);
+	tc.storeIncorrectSms(RAND_TC);
+	tc.storeAssertSms(RAND_TC);
+	tc.changeExistentSmsStateEnrouteToEnroute(*id.back(), sms.back(), RAND_TC);
+	tc.changeExistentSmsStateEnrouteToFinal(*id.back(), sms.back(), RAND_TC);
+	tc.changeFinalSmsStateToAny(*id.back(), RAND_TC);
+	tc.replaceCorrectSms(*id.back(), sms.back(), RAND_TC);
+	tc.replaceIncorrectSms(*id.back(), const SMS& sms, RAND_TC);
+	tc.replaceFinalSms(*id.back(), const SMS& sms);
+	tc.loadExistentSms(*id.back(), const SMS& sms);
+	tc.loadNonExistentSms(*id.back());
+	tc.deleteExistentSms(*id.back());
+	tc.deleteNonExistentSms(*id.back());
+	tc.checkReadyForRetrySms(const vector<SMSId*>& ids, const vector<SMS*>& sms, RAND_TC);
 */
 }
 
@@ -65,8 +79,10 @@ int main(int argc, char* argv[])
 	{
 		Manager::init("config.xml");
 		StoreManager::startup(Manager::getInstance());
-		MessageStoreTestCases tc(StoreManager::getMessageStore()); //throws exception
+		MessageStoreCheckList chkList;
+		MessageStoreTestCases tc(StoreManager::getMessageStore(), false, &chkList); //throws exception
 		executeTest(tc);
+		chkList.save();
 		StoreManager::shutdown();
 		exit(0);
 	}
