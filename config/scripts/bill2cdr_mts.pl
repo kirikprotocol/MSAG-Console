@@ -28,20 +28,68 @@ my $crc='0'x32;
 
 our $eoln="\x0d\x0a";
 
-my $addrrx=qr'7913\d{7}|913\d{7}|383213\d{4}|383214\d{4}|383291\d{4}|383292\d{4}|383299\d{4}';
-my $mscrx=qr'79029860000|79139860001|79029869992';
-my $imsirx=qr'25001390\d{7}|2500598\d{8}';
-
-my $svclstfile=$0;
-if($svclstfile=~/[\\\/]/)
+my $basedir=$0;
+if($basedir=~/^(.*)[\\\/][^\\\/]+$/)
 {
-  $svclstfile=~s/([\\\/])[^\\\/]+$/$1roamed_services.lst/;
+  $basedir=$1;
 }else
 {
-  $svclstfile='roamed_services.lst';
+  $basedir='.';
 }
 
-print "svc=$svclstfile\n";
+my $addrrx;
+my $mscrx;
+my $imsirx;
+
+{
+  open(my $f,"$basedir/filters.ini") or die "Failed to open $basedir/filters.ini:$!";
+  my $h={};
+  while(<$f>)
+  {
+    s/[\x0d\x0a]//;
+    next if length($_)==0 || /^#/;
+    if(/(\w+)=(.*)/)
+    {
+      $h->{$1}=$2;
+    }else
+    {
+      print "Warning: Unrecognized line in filters.ini: $_\n";
+    }
+  }
+  my $varmap=[
+    {
+      var=>\$addrrx,
+      name=>'addr'
+    },
+    {
+      var=>\$mscrx,
+      name=>'msc'
+    },
+    {
+      var=>\$imsirx,
+      name=>'imsi'
+    }
+  ];
+
+  for my $v(@$varmap)
+  {
+    if(not exists($h->{$v->{name}}))
+    {
+      die "Parameter '".$v->{name}."' not found in filters.ini";
+    }
+    eval{
+      ${$v->{var}}=qr($h->{$v->{name}});
+    };
+    if($@)
+    {
+      die "Regexp compilation failed:$v->{name}=$h->{$v->{name}}, error=$@";
+    }
+  }
+}
+
+my $svclstfile="$basedir/roamed_services.lst";
+
+print "roamed_services:$svclstfile\n";
 
 my $svcrx;
 
@@ -66,18 +114,11 @@ if(-e $svclstfile)
     }
   }
 }
-print "svcrx=$svcrx\n";
+#print "svcrx=$svcrx\n";
 
-my $regionsfile=$0;
-if($regionsfile=~/[\\\/]/)
-{
-  $regionsfile=~s/([\\\/])[^\\\/]+$/$1regions.lst/;
-}else
-{
-  $regionsfile='regions.lst';
-}
+my $regionsfile="$basedir/regions.lst";
 
-print "Regions file:$regionsfile\n";
+print "Regions:$regionsfile\n";
 
 my @regions;
 
