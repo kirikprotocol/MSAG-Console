@@ -21,6 +21,8 @@ public:
   // возвращает строку из ресурса для ключа.
   std::string getString(const std::string& key) const throw ();
 
+  bool hasString(const std::string& key)const throw();
+
   // возвращает закэшированный форматтер.
   OutputFormatter* getFormatter(const std::string& key)throw();
 

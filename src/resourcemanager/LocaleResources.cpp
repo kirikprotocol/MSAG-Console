@@ -167,6 +167,12 @@ std::string LocaleResources::getString(const std::string & key) const throw ()
   }
 }
 
+bool LocaleResources::hasString(const std::string& key)const throw()
+{
+  return resources.find(key)!=resources.end();
+}
+
+
 OutputFormatter* LocaleResources::getFormatter(const std::string& key)throw()
 {
   std::map<std::string,OutputFormatter*>::const_iterator i=formatters.find(key);

@@ -175,7 +175,7 @@ std::string ResourceManager::getString(const std::string& locale, const std::str
 {
   MutexGuard g(mtx);
   _LocalesMap::const_iterator l = locales.find(locale);
-  if (l != locales.end())
+  if (l != locales.end() && l->second->hasString(key))
     return (l->second)->getString(key);
   else
   {
@@ -208,7 +208,7 @@ OutputFormatter* ResourceManager::getFormatter(const std::string& locale, const 
 {
   MutexGuard g(mtx);
   _LocalesMap::const_iterator l = locales.find(locale);
-  if (l != locales.end())
+  if (l != locales.end() && l->second->hasString(key))
     return (l->second)->getFormatter(key);
   else
   {
