@@ -2,6 +2,7 @@ package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.infosme.backend.Task;
 import ru.novosoft.smsc.util.SortedList;
+import ru.novosoft.smsc.util.Transliterator;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -16,6 +17,7 @@ public class TaskEdit extends InfoSmeBean
   private String mbDone = null;
   private String mbCancel = null;
 
+  private boolean transliterate = false;
   private boolean initialized = false;
   private boolean create = false;
   private String oldTask = null;
@@ -78,6 +80,7 @@ public class TaskEdit extends InfoSmeBean
       if (task.isContainsInConfig(getConfig()))
         return error("Task already exists", getId());
     }
+    if (transliterate) task.setTemplate(Transliterator.translit(task.getTemplate()));
     task.storeToConfig(getConfig());
     getInfoSmeContext().setChangedTasks(true);
     return RESULT_DONE;
@@ -115,6 +118,12 @@ public class TaskEdit extends InfoSmeBean
     this.task.setId(sectionName);
   }
 
+  public String getAddress() {
+    return task.getAddress();
+  }
+  public void setAddress(String address) {
+    this.task.setAddress(address);
+  }
   public String getProvider() {
     return task.getProvider();
   }
@@ -208,6 +217,35 @@ public class TaskEdit extends InfoSmeBean
   }
   public void setActivePeriodEnd(String activePeriodEnd) {
     this.task.setActivePeriodEnd(activePeriodEnd);
+  }
+
+  public String[] getActiveWeekDays() {
+    return (String[])(this.task.getActiveWeekDays().toArray());
+  }
+  public void setActiveWeekDays(String[] activeWeekDays) {
+    Collection awd = new ArrayList();
+    for(int i=0; i<activeWeekDays.length; i++) awd.add(activeWeekDays[i]);
+    this.task.setActiveWeekDays(awd);
+  }
+  public boolean isWeekDayActive(String weekday) {
+    return this.task.isWeekDayActive(weekday);
+  }
+  public String getActiveWeekDaysString()
+  {
+    String str = "";
+    Collection awd = this.task.getActiveWeekDays();
+    int total = (awd == null) ? 0:awd.size();
+    if (total > 0) {
+      int added=0;
+      if (task.isWeekDayActive("Mon")) { str += "Monday";    if (++added < total) str += ", "; }
+      if (task.isWeekDayActive("Tue")) { str += "Tuesday";   if (++added < total) str += ", "; }
+      if (task.isWeekDayActive("Wed")) { str += "Wednesday"; if (++added < total) str += ", "; }
+      if (task.isWeekDayActive("Thu")) { str += "Thursday";  if (++added < total) str += ", "; }
+      if (task.isWeekDayActive("Fri")) { str += "Friday";    if (++added < total) str += ", "; }
+      if (task.isWeekDayActive("Sat")) { str += "Saturday";  if (++added < total) str += ", "; }
+      if (task.isWeekDayActive("Sun"))   str += "Sunday";
+    }
+    return str;
   }
 
   public String getQuery() {
@@ -358,5 +396,12 @@ public class TaskEdit extends InfoSmeBean
   }
   public void setKeepHistory(boolean keepHistory) {
     task.setKeepHistory(keepHistory);
+  }
+
+  public boolean isTransliterate() {
+    return transliterate;
+  }
+  public void setTransliterate(boolean transliterate) {
+    this.transliterate = transliterate;
   }
 }
