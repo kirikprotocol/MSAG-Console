@@ -87,7 +87,7 @@ switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal
 		<option value="2000" <%= (rowsMaximum == 2000) ? "selected":""%>>2000</option>
 		<option value="5000" <%= (rowsMaximum >= 5000) ? "selected":""%>>5000</option>
 	</select>
-Per page:<select name="pageSize"><%int rowsToDisplay = bean.getPageSize();%>
+Per page:<select name="pageSize"><%int rowsToDisplay = bean.getPageSizeInt();%>
 		<option value="5" <%= (rowsToDisplay < 10) ?   "selected":""%>>5</option>
 		<option value="10" <%= (rowsToDisplay == 10) ? "selected":""%>>10</option>
 		<option value="20" <%= (rowsToDisplay == 20) ? "selected":""%>>20</option>
@@ -99,7 +99,7 @@ Per page:<select name="pageSize"><%int rowsToDisplay = bean.getPageSize();%>
 <input class=btn type="submit" name="mbQuery" value="Query !">
 <input class=btn type="submit" name="mbClear" value="Clear query parameters"></div>
 <%
-if (bean.getTotalSize()>0) {%>
+if (bean.getTotalSizeInt()>0) {%>
 <input type=hidden name=sort>
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
 <script>
@@ -134,10 +134,10 @@ function setSort(sorting)
   <th><a href="#" <%=bean.getSort().endsWith("status") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by delivery status" onclick='return setSort("status")'>Status</a></th>
 </tr></thead>
 <tbody><%
-int firstIndex = bean.getStartPosition()+1;
-int lastIndex = bean.getStartPosition()+bean.getPageSize();
-if (lastIndex >= bean.getTotalSize() || bean.getPageSize() < 0)
-	lastIndex = bean.getTotalSize();
+int firstIndex = bean.getStartPositionInt()+1;
+int lastIndex = bean.getStartPositionInt()+bean.getPageSizeInt();
+if (lastIndex >= bean.getTotalSizeInt() || bean.getPageSizeInt() < 0)
+	lastIndex = bean.getTotalSizeInt();
 
 {
   int rowN=0;
