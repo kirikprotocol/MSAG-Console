@@ -537,7 +537,7 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
   __trace2__("MAP:: user_data_encoding = 0x%x",user_data_coding);
   unsigned char user_data_len = *(unsigned char*)(ud->signalInfo+2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2);
   __trace2__("MAP:: user_data_len = %d",user_data_len);
-  if ( user_data_len > (ud->signalInfoLen-(2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2+1) )
+  if ( user_data_len > (ud->signalInfoLen-(2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2+1) ))
     throw runtime_error(FormatText("bad user_data_len %d",user_data_len));
   unsigned char* user_data = (unsigned char*)(ud->signalInfo+2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2+1);
   unsigned encoding = 0;
