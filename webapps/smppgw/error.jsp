@@ -39,6 +39,7 @@
       <div class=error>
         <div class=header>${e_message}</div>
         ${e_info}
+        <c:if test="${!empty cause}"><div class=header>Nested exception:</div>${cause.message}</c:if>
       </div>
     </sm:page><%
   } else if (exception instanceof SibincoException) {

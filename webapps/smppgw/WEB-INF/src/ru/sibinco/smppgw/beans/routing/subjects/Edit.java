@@ -11,9 +11,7 @@ import java.util.*;
 
 
 /**
- * Created by igork
- * Date: 20.04.2004
- * Time: 15:51:47
+ * Created by igork Date: 20.04.2004 Time: 15:51:47
  */
 public class Edit extends EditBean
 {
@@ -27,7 +25,7 @@ public class Edit extends EditBean
     return name;
   }
 
-  protected void load(String loadId) throws SmppgwJspException
+  protected void load(final String loadId) throws SmppgwJspException
   {
     final Subject subject = (Subject) appContext.getGwRoutingManager().getSubjects().get(loadId);
     if (subject != null) {
@@ -36,7 +34,7 @@ public class Edit extends EditBean
       masks = new String[subject.getMasks().size()];
       int counter = 0;
       for (Iterator i = subject.getMasks().iterator(); i.hasNext();) {
-        Mask mask = (Mask) i.next();
+        final Mask mask = (Mask) i.next();
         masks[counter++] = mask.getMask();
       }
       notes = subject.getNotes();
@@ -45,7 +43,7 @@ public class Edit extends EditBean
 
   protected void save() throws SmppgwJspException
   {
-    Map subjects = appContext.getGwRoutingManager().getSubjects();
+    final Map subjects = appContext.getGwRoutingManager().getSubjects();
     final Sme defSme = (Sme) appContext.getGwSmeManager().getSmes().get(defaultSme);
     if (defSme == null)
       throw new SmppgwJspException(Constants.errors.routing.subjects.DEFAULT_SME_NOT_FOUND, defaultSme);
@@ -71,7 +69,7 @@ public class Edit extends EditBean
           throw new SmppgwJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE, e);
         }
       } else {
-        Subject subject = (Subject) subjects.get(name);
+        final Subject subject = (Subject) subjects.get(name);
         subject.setDefaultSme(defSme);
         try {
           subject.setMasks(new MaskList(masks));
@@ -82,12 +80,13 @@ public class Edit extends EditBean
         subject.setNotes(notes);
       }
     }
+    appContext.getStatuses().setRoutesChanged(true);
     throw new DoneException();
   }
 
   public String getSmeIds()
   {
-    StringBuffer result = new StringBuffer();
+    final StringBuffer result = new StringBuffer();
     final List smes = new SortedList(appContext.getGwSmeManager().getSmes().keySet());
     for (Iterator i = smes.iterator(); i.hasNext();) {
       result.append((String) i.next());
@@ -102,7 +101,7 @@ public class Edit extends EditBean
     return name;
   }
 
-  public void setName(String name)
+  public void setName(final String name)
   {
     this.name = name;
   }
@@ -112,7 +111,7 @@ public class Edit extends EditBean
     return defaultSme;
   }
 
-  public void setDefaultSme(String defaultSme)
+  public void setDefaultSme(final String defaultSme)
   {
     this.defaultSme = defaultSme;
   }
@@ -122,7 +121,7 @@ public class Edit extends EditBean
     return masks;
   }
 
-  public void setMasks(String[] masks)
+  public void setMasks(final String[] masks)
   {
     this.masks = masks;
   }
@@ -132,7 +131,7 @@ public class Edit extends EditBean
     return notes;
   }
 
-  public void setNotes(String notes)
+  public void setNotes(final String notes)
   {
     this.notes = notes;
   }

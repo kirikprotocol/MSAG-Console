@@ -9,8 +9,8 @@
  attribute name="menu"      required="false" %><%@
  attribute name="form_method"     required="false" %><%@
  attribute name="form_uri"     required="false" %><%@
- attribute name="form_enctype"     required="false"
-%><%
+ attribute name="form_enctype"     required="false"%><%@
+ attribute name="onLoad"     required="false"%><%
   if (jspContext.getAttribute("beanClass") == null) //!pageContext
   {
     final StringBuffer buffer = new StringBuffer();
@@ -60,13 +60,29 @@
 
   <script src="/scripts/scripts.js" type="text/javascript"></script>
 </head>
-<body>
+<body onload="${onLoad}">
+  <%if (request.getUserPrincipal() != null) {%>
+  <OBJECT id="tdcSmppgwStatusObject" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
+    <PARAM NAME="DataURL" VALUE="gw/status/status.jsp">
+    <PARAM NAME="UseHeader" VALUE="True">
+    <PARAM NAME="TextQualifier" VALUE='"'>
+  </OBJECT>
+  <%}%>
   <script>
   function openPerfMon()
   {
     open("perfmon/index.jsp", null, "channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580");
     return false;
   }
+  <%if (request.getUserPrincipal() != null) {%>
+  function refreshTdcSmppgwStatusObject()
+  {
+    document.all.tdcSmppgwStatusObject.DataURL = document.all.tdcSmppgwStatusObject.DataURL;
+    document.all.tdcSmppgwStatusObject.reset();
+    window.setTimeout(refreshTdcSmppgwStatusObject, 5000);
+  }
+  refreshTdcSmppgwStatusObject();
+  <%}%>
   </script>
 
   <table height="100%" cellspacing=0 cellpadding=0 class=main_table>
@@ -130,7 +146,7 @@
       <table cellpadding=0 cellspacing=0 height=30px class=smsc_status>
         <tr>
           <th background="/images/smsc_17.jpg" nowrap>${title}</th>
-          <td >&nbsp;</td>
+          <td align="right">&nbsp;<%if (request.getUserPrincipal() != null) {%><span id="SmppgwStatusSpan" datasrc=#tdcSmppgwStatusObject DATAFORMATAS=html datafld="status"/><%}%></td>
           <td width=12px background="/images/smsc_19.jpg" style="padding-right:0px;"></td>
         </tr>
       </table>

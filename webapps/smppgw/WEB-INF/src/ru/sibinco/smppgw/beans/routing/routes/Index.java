@@ -7,9 +7,7 @@ import java.util.Collection;
 
 
 /**
- * Created by igork
- * Date: 19.04.2004
- * Time: 17:39:13
+ * Created by igork Date: 19.04.2004 Time: 17:39:13
  */
 public class Index extends TabledBeanImpl implements TabledBean
 {
@@ -21,5 +19,6 @@ public class Index extends TabledBeanImpl implements TabledBean
   protected void delete()
   {
     appContext.getGwRoutingManager().getRoutes().keySet().removeAll(checkedSet);
+    appContext.getStatuses().setRoutesChanged(true);
   }
 }

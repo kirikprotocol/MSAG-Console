@@ -7,14 +7,25 @@ package ru.sibinco.smppgw.backend;
 public class Statuses
 {
   private boolean configChanged = false;
+  private boolean routesChanged = false;
 
   public boolean isConfigChanged()
   {
     return configChanged;
   }
 
-  public void setConfigChanged(boolean configChanged)
+  public void setConfigChanged(final boolean configChanged)
   {
     this.configChanged = configChanged;
+  }
+
+  public boolean isRoutesChanged()
+  {
+    return routesChanged;
+  }
+
+  public void setRoutesChanged(final boolean routesChanged)
+  {
+    this.routesChanged = routesChanged;
   }
 }

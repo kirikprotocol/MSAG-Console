@@ -3,10 +3,10 @@
 <taglib xmlns="http://java.sun.com/xml/ns/j2ee"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee web-jsptaglibrary_2_0.xsd" version="2.0">
-  <description>A tag library.</description>
+  <description>SMPP GW global functions</description>
   <tlib-version>1.0</tlib-version>
-  <short-name>SmppgwTagLibrary</short-name>
-  <uri>/smppgw</uri>
+  <short-name>SmppgwTagLibrary:Functions</short-name>
+  <uri>/smppgw/func</uri>
   <function>
     <description>Checks if string is present in string array.</description>
     <name>contains</name>

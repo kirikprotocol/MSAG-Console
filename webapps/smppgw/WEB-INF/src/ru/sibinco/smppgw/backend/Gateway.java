@@ -8,21 +8,27 @@ import ru.sibinco.smppgw.backend.protocol.commands.Apply;
 
 
 /**
- * Created by igork
- * Date: 25.05.2004
- * Time: 15:50:34
+ * Created by igork Date: 25.05.2004 Time: 15:50:34
  */
 public class Gateway extends Proxy
 {
-  public Gateway(ServiceInfo gwServiceInfo)
+  private final String id;
+
+  public Gateway(final ServiceInfo gwServiceInfo)
   {
     super(gwServiceInfo.getHost(), gwServiceInfo.getPort());
+    id = gwServiceInfo.getId();
   }
 
-  public void apply() throws SibincoException
+  public void apply(final String subject) throws SibincoException
   {
-    Response response = super.runCommand(new Apply("all"));
+    final Response response = super.runCommand(new Apply(subject));
     if (response.getStatus() != Response.StatusOk)
       throw new SibincoException("Couldn't apply, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+  }
+
+  public String getId()
+  {
+    return id;
   }
 }

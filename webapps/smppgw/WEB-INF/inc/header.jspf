@@ -11,7 +11,8 @@
  taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%><%@
  taglib uri="http://java.sun.com/jsp/jstl/sql" prefix="sql"%><%@
  taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%><%@
- taglib prefix="sm" tagdir="/WEB-INF/tags"%><%@
+ taglib prefix="smf" uri="/smppgw/func"%><%@
+ taglib prefix="sm"    tagdir="/WEB-INF/tags"%><%@
  taglib prefix="sm-mm" tagdir="/WEB-INF/tags/main_menu"%><%@
  taglib prefix="sm-pm" tagdir="/WEB-INF/tags/page_menu"%><%@
  taglib prefix="sm-ed" tagdir="/WEB-INF/tags/edit"%><%@

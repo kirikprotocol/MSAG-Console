@@ -11,9 +11,7 @@ import java.io.*;
 
 
 /**
- * Created by igork
- * Date: 25.05.2004
- * Time: 16:15:27
+ * Created by igork Date: 25.05.2004 Time: 16:15:27
  */
 public class CommandWriter
 {
@@ -46,6 +44,7 @@ public class CommandWriter
     logger.debug("writing command " + command.getClass().getName() + " [" + command.getSystemId() + "]");
     final Document document = command.getDocument();
     try {
+      outBuffer.reset();
       transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, command.getSystemId());
       transformer.transform(new DOMSource(document), new StreamResult(outBuffer));
       writeLength(outBuffer.size());

@@ -17,9 +17,7 @@ import java.util.*;
 
 
 /**
- * Created by igork
- * Date: 20.04.2004
- * Time: 15:51:47
+ * Created by igork Date: 20.04.2004 Time: 15:51:47
  */
 public class Edit extends EditBean
 {
@@ -69,20 +67,20 @@ public class Edit extends EditBean
     return name;
   }
 
-  public void process(HttpServletRequest request, HttpServletResponse response) throws SmppgwJspException
+  public void process(final HttpServletRequest request, final HttpServletResponse response) throws SmppgwJspException
   {
     appContext = (SmppGWAppContext) request.getAttribute("appContext");
 
     destinations = new HashMap();
     for (Iterator i = request.getParameterMap().entrySet().iterator(); i.hasNext();) {
-      Map.Entry entry = (Map.Entry) i.next();
+      final Map.Entry entry = (Map.Entry) i.next();
       final String s = (String) entry.getKey();
       if (s.startsWith(DST_SME_PREFIX)) {
-        String subjName = s.substring(DST_SME_PREFIX.length());
-        String[] smeNameStrings = (String[]) entry.getValue();
-        StringBuffer smeName = new StringBuffer();
+        final String subjName = s.substring(DST_SME_PREFIX.length());
+        final String[] smeNameStrings = (String[]) entry.getValue();
+        final StringBuffer smeName = new StringBuffer();
         for (int j = 0; j < smeNameStrings.length; j++) {
-          String smeNameString = smeNameStrings[j];
+          final String smeNameString = smeNameStrings[j];
           if (smeNameString != null)
             smeName.append(smeNameString.trim());
         }
@@ -102,24 +100,22 @@ public class Edit extends EditBean
           throw new SmppgwJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION, e);
         }
       } else if (s.startsWith(DST_MASK_PREFIX)) {
-        String maskName = s.substring(DST_MASK_PREFIX.length());
+        final String maskName = s.substring(DST_MASK_PREFIX.length());
         if (maskName != null && maskName.trim().length() > 0) {
-          String[] smeNameStrings = (String[]) entry.getValue();
-          StringBuffer smeName = new StringBuffer();
+          final String[] smeNameStrings = (String[]) entry.getValue();
+          final StringBuffer smeName = new StringBuffer();
           for (int j = 0; j < smeNameStrings.length; j++) {
-            String smeNameString = smeNameStrings[j];
+            final String smeNameString = smeNameStrings[j];
             if (smeNameString != null)
               smeName.append(smeNameString.trim());
           }
-          Mask mask = null;
+          final Mask mask;
           try {
             mask = new Mask(maskName);
           } catch (SibincoException e) {
             logger.debug("Could not create destination mask", e);
             throw new SmppgwJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION_MASK, maskName, e);
           }
-          if (mask == null)
-            throw new SmppgwJspException(Constants.errors.routing.routes.DEST_SUBJ_NOT_FOUND, maskName);
           final String smeId = smeName.toString();
           final Sme sme = (Sme) appContext.getGwSmeManager().getSmes().get(smeId);
           if (sme == null)
@@ -138,7 +134,7 @@ public class Edit extends EditBean
     super.process(request, response);
   }
 
-  protected void load(String loadId) throws SmppgwJspException
+  protected void load(final String loadId) throws SmppgwJspException
   {
     if (dst_mask_sme_ == null && appContext.getGwSmeManager().getSmes().size() > 0)
       dst_mask_sme_ = (String) appContext.getGwSmeManager().getSmes().keySet().iterator().next();
@@ -147,10 +143,10 @@ public class Edit extends EditBean
     if (route != null) {
       name = route.getName();
 
-      List subjList = new ArrayList();
-      List maskList = new ArrayList();
+      final List subjList = new ArrayList();
+      final List maskList = new ArrayList();
       for (Iterator i = route.getSources().values().iterator(); i.hasNext();) {
-        Source source = (Source) i.next();
+        final Source source = (Source) i.next();
         if (source.isSubject()) {
           subjList.add(source.getName());
           srcSubjsSet.add(source.getName());
@@ -166,7 +162,7 @@ public class Edit extends EditBean
       subjList.clear();
 
       for (Iterator i = route.getDestinations().values().iterator(); i.hasNext();) {
-        Destination destination = (Destination) i.next();
+        final Destination destination = (Destination) i.next();
         if (destination.isSubject()) {
           subjList.add(destination.getName());
           dstSubjectsSet.add(destination.getName());
@@ -214,11 +210,11 @@ public class Edit extends EditBean
 
   protected void save() throws SmppgwJspException
   {
-    Map routes = appContext.getGwRoutingManager().getRoutes();
+    final Map routes = appContext.getGwRoutingManager().getRoutes();
 
     try {
-      Map sources = createSources();
-      Provider providerObj = (Provider) appContext.getProviderManager().getProviders().get(new Long(providerId));
+      final Map sources = createSources();
+      final Provider providerObj = (Provider) appContext.getProviderManager().getProviders().get(new Long(providerId));
 
       final TrafficRules trafficRules = new TrafficRules(trafficRules_allowReceive, trafficRules_allowAnswer, trafficRules_sendLimit,
                                                          trafficRules_allowPssrResp, trafficRules_allowUssrRequest, trafficRules_ussdMiDialogLimit,
@@ -228,39 +224,40 @@ public class Edit extends EditBean
           throw new SmppgwJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, name);
         routes.put(name,
                    new GwRoute(name, priority, enabling, billing, archiving, suppressDeliveryReports, active, serviceId,
-                               (Map) sources, destinations, srcSmeId, deliveryMode, forwardTo, hide, forceReplayPath,
+                               sources, destinations, srcSmeId, deliveryMode, forwardTo, hide, forceReplayPath,
                                notes, providerObj, trafficRules));
       } else {
         if (!getEditId().equals(name) && routes.containsKey(name))
           throw new SmppgwJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, name);
         routes.remove(getEditId());
         routes.put(name, new GwRoute(name, priority, enabling, billing, archiving, suppressDeliveryReports, active, serviceId,
-                                     (Map) sources, destinations, srcSmeId, deliveryMode, forwardTo, hide, forceReplayPath,
+                                     sources, destinations, srcSmeId, deliveryMode, forwardTo, hide, forceReplayPath,
                                      notes, providerObj, trafficRules));
       }
     } catch (SibincoException e) {
-      logger.debug("Could not create new subject", e);
+      logger.error("Could not create new subject", e);
       throw new SmppgwJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE, e);
     }
+    appContext.getStatuses().setRoutesChanged(true);
     throw new DoneException();
   }
 
   private Map createSources() throws SibincoException
   {
-    Map result = new HashMap();
+    final Map result = new HashMap();
     for (int i = 0; i < srcSubjs.length; i++) {
-      String srcSubj = srcSubjs[i];
-      Subject subject = (Subject) appContext.getGwRoutingManager().getSubjects().get(srcSubj);
+      final String srcSubj = srcSubjs[i];
+      final Subject subject = (Subject) appContext.getGwRoutingManager().getSubjects().get(srcSubj);
       if (subject != null) {
         final Source source = new Source(subject);
         result.put(source.getName(), source);
       }
     }
     for (int i = 0; i < srcMasks.length; i++) {
-      String srcMask = srcMasks[i];
+      final String srcMask = srcMasks[i];
       if (srcMask != null && srcMask.trim().length() > 0) {
-        Mask mask = new Mask(srcMask);
-        Source source = new Source(mask);
+        final Mask mask = new Mask(srcMask);
+        final Source source = new Source(mask);
         result.put(source.getName(), source);
       }
     }
@@ -274,8 +271,8 @@ public class Edit extends EditBean
 
   public String[] getProviderIds()
   {
-    Map providers = new TreeMap(appContext.getProviderManager().getProviders());
-    ArrayList result = new ArrayList(providers.size());
+    final Map providers = new TreeMap(appContext.getProviderManager().getProviders());
+    final ArrayList result = new ArrayList(providers.size());
     for (Iterator i = providers.keySet().iterator(); i.hasNext();) {
       result.add(String.valueOf(((Long) i.next()).longValue()));
     }
@@ -284,8 +281,8 @@ public class Edit extends EditBean
 
   public String[] getProviders()
   {
-    Map providers = new TreeMap(appContext.getProviderManager().getProviders());
-    ArrayList result = new ArrayList(providers.size());
+    final Map providers = new TreeMap(appContext.getProviderManager().getProviders());
+    final ArrayList result = new ArrayList(providers.size());
     for (Iterator i = providers.values().iterator(); i.hasNext();) {
       result.add(((Provider) i.next()).getName());
     }
@@ -297,7 +294,7 @@ public class Edit extends EditBean
     return name;
   }
 
-  public void setName(String name)
+  public void setName(final String name)
   {
     this.name = name;
   }
@@ -307,7 +304,7 @@ public class Edit extends EditBean
     return srcMasks;
   }
 
-  public void setSrcMasks(String[] srcMasks)
+  public void setSrcMasks(final String[] srcMasks)
   {
     this.srcMasks = srcMasks;
   }
@@ -317,7 +314,7 @@ public class Edit extends EditBean
     return srcSubjs;
   }
 
-  public void setSrcSubjs(String[] srcSubjs)
+  public void setSrcSubjs(final String[] srcSubjs)
   {
     this.srcSubjs = srcSubjs;
   }
@@ -327,7 +324,7 @@ public class Edit extends EditBean
     return dstMasks;
   }
 
-  public void setDstMasks(String[] dstMasks)
+  public void setDstMasks(final String[] dstMasks)
   {
     this.dstMasks = dstMasks;
   }
@@ -337,7 +334,7 @@ public class Edit extends EditBean
     return dstSubjs;
   }
 
-  public void setDstSubjs(String[] dstSubjs)
+  public void setDstSubjs(final String[] dstSubjs)
   {
     this.dstSubjs = dstSubjs;
   }
@@ -347,7 +344,7 @@ public class Edit extends EditBean
     return priority;
   }
 
-  public void setPriority(int priority)
+  public void setPriority(final int priority)
   {
     this.priority = priority;
   }
@@ -357,7 +354,7 @@ public class Edit extends EditBean
     return enabling;
   }
 
-  public void setEnabling(boolean enabling)
+  public void setEnabling(final boolean enabling)
   {
     this.enabling = enabling;
   }
@@ -367,7 +364,7 @@ public class Edit extends EditBean
     return archiving;
   }
 
-  public void setArchiving(boolean archiving)
+  public void setArchiving(final boolean archiving)
   {
     this.archiving = archiving;
   }
@@ -377,7 +374,7 @@ public class Edit extends EditBean
     return billing;
   }
 
-  public void setBilling(boolean billing)
+  public void setBilling(final boolean billing)
   {
     this.billing = billing;
   }
@@ -387,7 +384,7 @@ public class Edit extends EditBean
     return serviceId;
   }
 
-  public void setServiceId(int serviceId)
+  public void setServiceId(final int serviceId)
   {
     this.serviceId = serviceId;
   }
@@ -397,7 +394,7 @@ public class Edit extends EditBean
     return suppressDeliveryReports;
   }
 
-  public void setSuppressDeliveryReports(boolean suppressDeliveryReports)
+  public void setSuppressDeliveryReports(final boolean suppressDeliveryReports)
   {
     this.suppressDeliveryReports = suppressDeliveryReports;
   }
@@ -407,7 +404,7 @@ public class Edit extends EditBean
     return active;
   }
 
-  public void setActive(boolean active)
+  public void setActive(final boolean active)
   {
     this.active = active;
   }
@@ -417,7 +414,7 @@ public class Edit extends EditBean
     return srcSmeId;
   }
 
-  public void setSrcSmeId(String srcSmeId)
+  public void setSrcSmeId(final String srcSmeId)
   {
     this.srcSmeId = srcSmeId;
   }
@@ -427,7 +424,7 @@ public class Edit extends EditBean
     return deliveryMode;
   }
 
-  public void setDeliveryMode(String deliveryMode)
+  public void setDeliveryMode(final String deliveryMode)
   {
     this.deliveryMode = deliveryMode;
   }
@@ -437,7 +434,7 @@ public class Edit extends EditBean
     return forwardTo;
   }
 
-  public void setForwardTo(String forwardTo)
+  public void setForwardTo(final String forwardTo)
   {
     this.forwardTo = forwardTo;
   }
@@ -447,7 +444,7 @@ public class Edit extends EditBean
     return hide;
   }
 
-  public void setHide(boolean hide)
+  public void setHide(final boolean hide)
   {
     this.hide = hide;
   }
@@ -457,7 +454,7 @@ public class Edit extends EditBean
     return forceReplayPath;
   }
 
-  public void setForceReplayPath(boolean forceReplayPath)
+  public void setForceReplayPath(final boolean forceReplayPath)
   {
     this.forceReplayPath = forceReplayPath;
   }
@@ -467,7 +464,7 @@ public class Edit extends EditBean
     return notes;
   }
 
-  public void setNotes(String notes)
+  public void setNotes(final String notes)
   {
     this.notes = notes;
   }
@@ -477,7 +474,7 @@ public class Edit extends EditBean
     return provider;
   }
 
-  public void setProvider(String provider)
+  public void setProvider(final String provider)
   {
     this.provider = provider;
   }
@@ -487,7 +484,7 @@ public class Edit extends EditBean
     return providerId;
   }
 
-  public void setProviderId(long providerId)
+  public void setProviderId(final long providerId)
   {
     this.providerId = providerId;
   }
@@ -506,9 +503,9 @@ public class Edit extends EditBean
 
   public Map getAllUncheckedDstSubjects()
   {
-    Map result = new TreeMap();
+    final Map result = new TreeMap();
     for (Iterator i = appContext.getGwRoutingManager().getSubjects().values().iterator(); i.hasNext();) {
-      Subject subject = (Subject) i.next();
+      final Subject subject = (Subject) i.next();
       result.put(subject.getName(), subject.getDefaultSme().getId());
     }
     return result;
@@ -518,9 +515,9 @@ public class Edit extends EditBean
   {
     final GwRoute route = (GwRoute) appContext.getGwRoutingManager().getRoutes().get(getEditId());
     if (route != null) {
-      Map result = new TreeMap();
+      final Map result = new TreeMap();
       for (Iterator i = route.getDestinations().values().iterator(); i.hasNext();) {
-        Destination destination = (Destination) i.next();
+        final Destination destination = (Destination) i.next();
         if (destination.isSubject())
           result.put(destination.getName(), destination.getSme().getId());
       }
@@ -533,9 +530,9 @@ public class Edit extends EditBean
   {
     final GwRoute route = (GwRoute) appContext.getGwRoutingManager().getRoutes().get(getEditId());
     if (route != null) {
-      Map result = new TreeMap();
+      final Map result = new TreeMap();
       for (Iterator i = route.getDestinations().values().iterator(); i.hasNext();) {
-        Destination destination = (Destination) i.next();
+        final Destination destination = (Destination) i.next();
         if (!destination.isSubject())
           result.put(destination.getName(), destination.getSme().getId());
       }
@@ -549,7 +546,7 @@ public class Edit extends EditBean
     return dst_mask_sme_;
   }
 
-  public void setDst_mask_sme_(String dst_mask_sme_)
+  public void setDst_mask_sme_(final String dst_mask_sme_)
   {
     this.dst_mask_sme_ = dst_mask_sme_;
   }
@@ -559,7 +556,7 @@ public class Edit extends EditBean
     return trafficRules_allowReceive;
   }
 
-  public void setTrafficRules_allowReceive(boolean trafficRules_allowReceive)
+  public void setTrafficRules_allowReceive(final boolean trafficRules_allowReceive)
   {
     this.trafficRules_allowReceive = trafficRules_allowReceive;
   }
@@ -569,7 +566,7 @@ public class Edit extends EditBean
     return trafficRules_allowAnswer;
   }
 
-  public void setTrafficRules_allowAnswer(boolean trafficRules_allowAnswer)
+  public void setTrafficRules_allowAnswer(final boolean trafficRules_allowAnswer)
   {
     this.trafficRules_allowAnswer = trafficRules_allowAnswer;
   }
@@ -579,7 +576,7 @@ public class Edit extends EditBean
     return trafficRules_sendLimit;
   }
 
-  public void setTrafficRules_sendLimit(String trafficRules_sendLimit)
+  public void setTrafficRules_sendLimit(final String trafficRules_sendLimit)
   {
     this.trafficRules_sendLimit = trafficRules_sendLimit;
   }
@@ -589,7 +586,7 @@ public class Edit extends EditBean
     return trafficRules_allowPssrResp;
   }
 
-  public void setTrafficRules_allowPssrResp(boolean trafficRules_allowPssrResp)
+  public void setTrafficRules_allowPssrResp(final boolean trafficRules_allowPssrResp)
   {
     this.trafficRules_allowPssrResp = trafficRules_allowPssrResp;
   }
@@ -599,7 +596,7 @@ public class Edit extends EditBean
     return trafficRules_allowUssrRequest;
   }
 
-  public void setTrafficRules_allowUssrRequest(boolean trafficRules_allowUssrRequest)
+  public void setTrafficRules_allowUssrRequest(final boolean trafficRules_allowUssrRequest)
   {
     this.trafficRules_allowUssrRequest = trafficRules_allowUssrRequest;
   }
@@ -609,7 +606,7 @@ public class Edit extends EditBean
     return trafficRules_ussdMiDialogLimit;
   }
 
-  public void setTrafficRules_ussdMiDialogLimit(String trafficRules_ussdMiDialogLimit)
+  public void setTrafficRules_ussdMiDialogLimit(final String trafficRules_ussdMiDialogLimit)
   {
     this.trafficRules_ussdMiDialogLimit = trafficRules_ussdMiDialogLimit;
   }
@@ -619,7 +616,7 @@ public class Edit extends EditBean
     return trafficRules_allowUssdDialogInit;
   }
 
-  public void setTrafficRules_allowUssdDialogInit(boolean trafficRules_allowUssdDialogInit)
+  public void setTrafficRules_allowUssdDialogInit(final boolean trafficRules_allowUssdDialogInit)
   {
     this.trafficRules_allowUssdDialogInit = trafficRules_allowUssdDialogInit;
   }
@@ -629,7 +626,7 @@ public class Edit extends EditBean
     return trafficRules_ussdSiDialogLimit;
   }
 
-  public void setTrafficRules_ussdSiDialogLimit(String trafficRules_ussdSiDialogLimit)
+  public void setTrafficRules_ussdSiDialogLimit(final String trafficRules_ussdSiDialogLimit)
   {
     this.trafficRules_ussdSiDialogLimit = trafficRules_ussdSiDialogLimit;
   }
