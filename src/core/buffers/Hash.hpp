@@ -365,6 +365,13 @@ public:
     return link->_keyval._value;
   }
 
+  const T* GetPtr(pchashstr key)const
+  {
+    Link* link=FindLink(key);
+    if(!link)return 0;
+    return link->_keyval._value;
+  }
+
   T& operator[](pchashstr key)
   {
     unsigned index;
