@@ -15,9 +15,9 @@ DataSourceFactory*  getDataSourceFactory(void)
 
 
 #ifndef SPARC
-#define UINT64_SWAP_LE_BE_CONSTANT(val)   ((uint64_t) ( \
-     ((uint64_t)((uint64_t)(val) << 32)&0xffffffff00000000) |     \
-     ((uint64_t)((uint64_t)(val) >> 32)&0x00000000ffffffff)     ))
+#define UINT64_SWAP_LE_BE_CONSTANT(val)   ((uint64_t) (\
+     ((uint64_t)((uint64_t)(val) << 32)&0xffffffff00000000ull) |\
+     ((uint64_t)((uint64_t)(val) >> 32)&0x00000000ffffffffull) ))
 #else
 #define UINT64_SWAP_LE_BE_CONSTANT(val)   ((uint64_t) (val))
 #endif
