@@ -10,6 +10,7 @@
 #include "test/core/RouteRegistry.hpp"
 #include "test/core/RouteChecker.hpp"
 #include "SmppPduChecker.hpp"
+#include "SmppResponseSender.hpp"
 
 namespace smsc {
 namespace test {
@@ -30,19 +31,14 @@ class SmppReceiverTestCases : BaseTestCases, public SmppBaseReceiver
 {
 public:
 	SmppReceiverTestCases(const SmeSystemId& systemId, const Address& smeAddr,
-		const SmeRegistry* smeReg, const AliasRegistry* aliasReg,
-		const RouteRegistry* routeReg, RouteChecker* routeChecker,
-		SmppPduChecker* pduChecker, CheckList* chkList);
+		SmppResponseSender* respSender, const SmeRegistry* smeReg,
+		const AliasRegistry* aliasReg, const RouteRegistry* routeReg,
+		RouteChecker* routeChecker, SmppPduChecker* pduChecker, CheckList* chkList);
 
 	virtual ~SmppReceiverTestCases() {}
 
 	void setSession(SmppSession* sess) { session = sess; }
 	
-	/**
-	 * Отправка синхронного или асинхронного deliver_sm_resp.
-	 */
-	bool sendDeliverySmResp(PduDeliverySm& pdu, int num);
-
 	/**
 	 * Обработка submit_sm_resp pdu для асинхронного submit_sm реквеста.
 	 */
@@ -94,6 +90,7 @@ private:
 	SmppSession* session;
 	const SmeSystemId systemId;
 	const Address smeAddr;
+	SmppResponseSender* respSender;
 	const SmeRegistry* smeReg;
 	PduRegistry* pduReg;
 	const AliasRegistry* aliasReg;

@@ -58,13 +58,15 @@ using namespace smsc::smpp::SmppCommandSet; //constants
 using namespace smsc::smpp::SmppStatusSet; //constants
 
 SmppReceiverTestCases::SmppReceiverTestCases(const SmeSystemId& _systemId,
-	const Address& addr, const SmeRegistry* _smeReg,
-	const AliasRegistry* _aliasReg, const RouteRegistry* _routeReg,
-	RouteChecker* _routeChecker, SmppPduChecker* _pduChecker, CheckList* _chkList)
-	: systemId(_systemId), smeAddr(addr), smeReg(_smeReg),
-	aliasReg(_aliasReg), routeReg(_routeReg),
-	routeChecker(_routeChecker), pduChecker(_pduChecker), chkList(_chkList)
+	const Address& addr, SmppResponseSender* _respSender,
+	const SmeRegistry* _smeReg, const AliasRegistry* _aliasReg,
+	const RouteRegistry* _routeReg, RouteChecker* _routeChecker,
+	SmppPduChecker* _pduChecker, CheckList* _chkList)
+	: systemId(_systemId), smeAddr(addr), respSender(_respSender), smeReg(_smeReg),
+	aliasReg(_aliasReg), routeReg(_routeReg), routeChecker(_routeChecker),
+	pduChecker(_pduChecker), chkList(_chkList)
 {
+	__require__(respSender);
 	__require__(smeReg);
 	//__require__(aliasReg);
 	//__require__(routeReg);
@@ -78,98 +80,6 @@ Category& SmppReceiverTestCases::getLog()
 {
 	static Category& log = Logger::getCategory("SmppReceiverTestCases");
 	return log;
-}
-
-bool SmppReceiverTestCases::sendDeliverySmResp(PduDeliverySm& pdu, int num)
-{
-	int numTransmitter = 3; int numResp = 10;
-	TCSelector s(num, numTransmitter * numResp);
-	__decl_tc12__;
-	try
-	{
-		//выбрать синхронный или асинхронный трансмитер
-		bool sync;
-		SmppTransmitter* transmitter;
-		int num1 = s.value1(numTransmitter);
-		switch (num1)
-		{
-			case 1:
-				__tc1__("sendDeliverySmResp.sync");
-				transmitter = session->getSyncTransmitter();
-				sync = true;
-				break;
-			default:
-				__require__(num1 <= numTransmitter);
-				__tc1__("sendDeliverySmResp.async");
-				transmitter = session->getAsyncTransmitter();
-				sync = false;
-				break;
-		}
-		//отправить респонс
-		bool accepted;
-		PduDeliverySmResp respPdu;
-		respPdu.get_header().set_sequenceNumber(pdu.get_header().get_sequenceNumber());
-		int num2 = s.value2(numTransmitter);
-		switch (num2)
-		{
-			case 1: //не отправлять респонс
-				__tc2__("sendDeliverySmResp.notSend");
-				__trace__("sendDeliverySmRespNo");
-				accepted = false;
-				break;
-			case 2: //отправить респонс с кодом ошибки 0x1-0xff
-				__tc2__("sendDeliverySmResp.sendWithErrCode");
-				respPdu.get_header().set_commandStatus(rand1(0xff));
-				__trace2__("sendDeliverySmResp%sBeforeErr1", (sync ? "Sync" : "Async"));
-				transmitter->sendDeliverySmResp(respPdu);
-				__trace2__("sendDeliverySmResp%sAfterErr1", (sync ? "Sync" : "Async"));
-				accepted = false;
-				break;
-			case 3: //отправить респонс с кодом ошибки:
-				//0x100-0x3ff - Reserved for SMPP extension
-				//0x400-0x4ff - Reserved for SMSC vendor specific
-				__tc2__("sendDeliverySmResp.sendWithErrCode");
-				respPdu.get_header().set_commandStatus(rand2(0x100, 0x4ff));
-				__trace2__("sendDeliverySmResp%sBeforeErr2", (sync ? "Sync" : "Async"));
-				transmitter->sendDeliverySmResp(respPdu);
-				__trace2__("sendDeliverySmResp%sAfterErr2", (sync ? "Sync" : "Async"));
-				accepted = false;
-				break;
-			case 4: //отправить респонс с кодом ошибки >0x500 - Reserved
-				__tc2__("sendDeliverySmResp.sendWithErrCode");
-				respPdu.get_header().set_commandStatus(rand2(0x500, INT_MAX));
-				__trace2__("sendDeliverySmResp%sBeforeErr3", (sync ? "Sync" : "Async"));
-				transmitter->sendDeliverySmResp(respPdu);
-				__trace2__("sendDeliverySmResp%sAfterErr3", (sync ? "Sync" : "Async"));
-				accepted = false;
-				break;
-			case 5: //отправить респонс с неправильным sequence_number
-				__tc2__("sendDeliverySmResp.sendInvalidSequenceNumber");
-				respPdu.get_header().set_sequenceNumber(INT_MAX);
-				respPdu.get_header().set_commandStatus(ESME_ROK); //No Error
-				__trace2__("sendDeliverySmResp%sBeforeInvalidSeqNum", (sync ? "Sync" : "Async"));
-				transmitter->sendDeliverySmResp(respPdu);
-				__trace2__("sendDeliverySmResp%sAfterInvalidSeqNum", (sync ? "Sync" : "Async"));
-				accepted = false;
-				break;
-			default: //сказать что все ok и прекратить повторные доставки
-				__require__(num2 <= numResp);
-				__tc2__("sendDeliverySmResp.sendOk");
-				respPdu.get_header().set_commandStatus(ESME_ROK); //No Error
-				__trace2__("sendDeliverySmResp%sBeforeOk", (sync ? "Sync" : "Async"));
-				transmitter->sendDeliverySmResp(respPdu);
-				__trace2__("sendDeliverySmResp%sAfterOk", (sync ? "Sync" : "Async"));
-				accepted = true;
-				break;
-		}
-		__tc12_ok_cond__;
-		return accepted;
-	}
-	catch(...)
-	{
-		__tc12_fail__(s.value());
-		error();
-	}
 }
 
 void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
@@ -291,7 +201,7 @@ void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 	}
 	else //отправить респонс
 	{
-		bool accepted = sendDeliverySmResp(pdu, RAND_TC);
+		respSender->sendDeliverySmResp(pdu);
 	}
 	__dumpPdu__("processDeliverySmAfter", systemId, &pdu);
 }
@@ -403,7 +313,7 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 				__tc_fail2__(pduData->deliveryFlag.checkSchedule(recvTime), 0);
 				__tc_ok_cond__;
 				//отправить респонс
-				bool accepted = sendDeliverySmResp(pdu, RAND_TC);
+				bool accepted = respSender->sendDeliverySmResp(pdu);
 				//обновить статус
 				__tc__("processDeliverySm.normalSms.checkAllowed");
 				__tc_fail2__(pduData->deliveryFlag.update(recvTime, accepted), 0);
@@ -619,7 +529,7 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu,
 				__tc_fail2__(pduData->deliveryReceiptFlag.checkSchedule(recvTime), 0);
 				__tc_ok_cond__;
 				//отправить респонс
-				bool accepted = sendDeliverySmResp(pdu, RAND_TC);
+				bool accepted = respSender->sendDeliverySmResp(pdu);
 				//обновить статус
 				__tc__("processDeliverySm.deliveryReceipt.checkAllowed");
 				__tc_fail2__(pduData->deliveryReceiptFlag.update(recvTime, accepted), 0);
@@ -718,7 +628,7 @@ void SmppReceiverTestCases::processIntermediateNotification(
 				}
 				__tc_ok_cond__;
 				//отправить респонс
-				bool accepted = sendDeliverySmResp(pdu, RAND_TC);
+				bool accepted = respSender->sendDeliverySmResp(pdu);
 				//разрешена ли доставка pdu
 				__tc__("processDeliverySm.intermediateNotification.checkAllowed");
 				switch (pduData->intermediateNotificationFlag)
