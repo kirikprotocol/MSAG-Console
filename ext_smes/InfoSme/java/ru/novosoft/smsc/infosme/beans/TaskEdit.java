@@ -2,6 +2,7 @@ package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.infosme.backend.Task;
 import ru.novosoft.smsc.util.SortedList;
+import ru.novosoft.smsc.util.Transliterator;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -16,6 +17,7 @@ public class TaskEdit extends InfoSmeBean
   private String mbDone = null;
   private String mbCancel = null;
 
+  private boolean transliterate = false;
   private boolean initialized = false;
   private boolean create = false;
   private String oldTask = null;
@@ -78,6 +80,7 @@ public class TaskEdit extends InfoSmeBean
       if (task.isContainsInConfig(getConfig()))
         return error("Task already exists", getId());
     }
+    if (transliterate) task.setTemplate(Transliterator.translit(task.getTemplate()));
     task.storeToConfig(getConfig());
     getInfoSmeContext().setChangedTasks(true);
     return RESULT_DONE;
@@ -387,5 +390,12 @@ public class TaskEdit extends InfoSmeBean
   }
   public void setKeepHistory(boolean keepHistory) {
     task.setKeepHistory(keepHistory);
+  }
+
+  public boolean isTransliterate() {
+    return transliterate;
+  }
+  public void setTransliterate(boolean transliterate) {
+    this.transliterate = transliterate;
   }
 }

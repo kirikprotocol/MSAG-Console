@@ -180,6 +180,12 @@
   }%>
   </td>
 </tr>
+<%if (bean.isSmeRunning()) {%>
+<tr class=row<%=rowN++&1%>>
+  <th>transliterate template</th>
+  <td><input class=check type=checkbox id=transliterate name=transliterate value=true <%=bean.isTransliterate() ? "checked" : ""%>></td>
+</tr>
+<%}%>
 <tr class=row<%=rowN++&1%>>
   <th><label for=retryOnFail>Retry on fail (time)</label></th>
   <td><%if (bean.isSmeRunning()) {%>
