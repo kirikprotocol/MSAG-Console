@@ -60,10 +60,6 @@ void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
       char b[256] = {0,};
       memcpy(b,sa_val,ma->len);
       __trace2__("MAP::ConvAddrMap2Smc::adr value(%d) %s",ma->len,b);
-      __trace2__("MAP::ConvAddrMap2Smc::adr value(%d) %x %x %x",
-                 (unsigned*)sa_val,
-                 (unsigned*)sa_val+4,
-                 (unsigned*)sa_val+8,b);
     }
   }else{
     char c = 0;
@@ -88,10 +84,6 @@ void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
       char b[256] = {0,};
       memcpy(b,sa_val,(ma->addrLen-1)*2);
       __trace2__("MAP::ConvAddrMSISDN2Smc::adr value(%d) %s",(ma->addrLen-1)*2,b);
-      __trace2__("MAP::ConvAddrMSISDNp2Smc::adr value(%d) %x %x %x",
-                 (unsigned*)sa_val,
-                 (unsigned*)sa_val+4,
-                 (unsigned*)sa_val+8,b);
     }
     sa->setValue(ma->addrLen*2,sa_val);
   }else{
