@@ -17,9 +17,14 @@ import java.util.Set;
 
 public class AliasFilter implements Filter
 {
+  public static final int HIDE_NOFILTER = 0;
+  public static final int HIDE_SHOW_HIDE = 1;
+  public static final int HIDE_SHOW_NOHIDE = 2;
+
   private boolean empty = true;
   private MaskList aliases = null;
   private MaskList addresses = null;
+  private int hide = HIDE_NOFILTER;
 
 
   public AliasFilter()
@@ -27,15 +32,16 @@ public class AliasFilter implements Filter
     empty = true;
   }
 
-  public AliasFilter(String alias_masks, String address_masks)
+  public AliasFilter(String alias_masks, String address_masks, int hide_option)
   {
     aliases = new MaskList(alias_masks);
     addresses = new MaskList(address_masks);
-    if (empty = (aliases.isEmpty() && addresses.isEmpty()))
+    if (empty = (aliases.isEmpty() && addresses.isEmpty() && hide_option == HIDE_NOFILTER))
     {
       aliases = null;
       addresses = null;
     }
+    hide = hide_option;
   }
 
   public boolean isEmpty()
@@ -61,7 +67,11 @@ public class AliasFilter implements Filter
       return true;
 
     return isMaskAllowed(addresses, (String) item.getValue("Address"))
-            && isMaskAllowed(aliases, (String) item.getValue("Alias"));
+        && isMaskAllowed(aliases, (String) item.getValue("Alias"))
+        && (hide == HIDE_NOFILTER
+          || (hide == HIDE_SHOW_HIDE && ((Boolean) item.getValue("Hide")).booleanValue())
+          || (hide == HIDE_SHOW_NOHIDE && !((Boolean) item.getValue("Hide")).booleanValue())
+        );
   }
 
   public Set getAliasStrings()
@@ -78,5 +88,10 @@ public class AliasFilter implements Filter
       return new HashSet();
     else
       return addresses.getNames();
+  }
+
+  public int getHideOption()
+  {
+    return hide;
   }
 }

@@ -24,6 +24,8 @@ for (Iterator i = filter.getAddressStrings().iterator(); i.hasNext(); )
     addresses += '\n';
 }
 
+int hide_option = filter.getHideOption();
+
 Integer pagesizeI = (Integer) session.getAttribute("alias_page_size");
 int pagesize = pagesizeI == null ? 20 : pagesizeI.intValue();
 %>
@@ -33,15 +35,29 @@ int pagesize = pagesizeI == null ? 20 : pagesizeI.intValue();
 				<th class="list" colspan="2">Alias list options</th>
 			</tr>
 			<tr class="list">
-				<th class="list" nowrap width="10%">Aliases</th>
+				<th class="list" nowrap width="10%">Aliases<br>
+				<font size="-2">Enter aliases <br>
+				delimited by space</font></th>
 				<td class="list">
   				<textarea style="WIDTH: 100%" name="aliases" rows="5"><%=aliases%></textarea>
 				</td>
 			</tr>
 			<tr class="list">
-				<th class="list" nowrap width="10%">Addresses</th>
+				<th class="list" nowrap width="10%">Addresses<br>
+				<font size="-2">Enter aliases <br>
+				delimited by space</font></th>
 				<td class="list">
   				<textarea style="WIDTH: 100%" name="addresses" rows="5"><%=addresses%></textarea>
+				</td>
+			</tr>
+			<tr class="list">
+				<th class="list" nowrap width="10%">Hide</th>
+				<td class="list">
+				<select name="hide">
+					<option value="no_filter"<%=hide_option == filter.HIDE_NOFILTER    ? " SELECTED" : ""%>>Show all</option>
+					<option value="true"     <%=hide_option == filter.HIDE_SHOW_HIDE   ? " SELECTED" : ""%>>Show hided only</option>
+					<option value="false"    <%=hide_option == filter.HIDE_SHOW_NOHIDE ? " SELECTED" : ""%>>Show not hided only</option>
+				</select>
 				</td>
 			</tr>
 			<tr class="list">

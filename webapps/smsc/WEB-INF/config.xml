@@ -6,6 +6,9 @@
     <param name="webapp folder" type="string">/export/home/igork/install/tomcat/webapps/smsc</param>
   </section>
   <section name="daemons">
+    <section name="smsc">
+      <param name="port" type="int">6680</param>
+    </section>
   </section>
   <section name="smsc">
     <param name="host" type="string">smsc</param>
