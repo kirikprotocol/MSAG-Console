@@ -1,7 +1,13 @@
 #include "SmscComponent.h"
 #include "profiler/profiler.hpp"
 
+#ifdef SMPPGW
+#include <smppgw/smsc.hpp>
+#else
 #include <system/smsc.hpp>
+#endif
+
+#include "router/route_types.h"
 
 #include <util/config/Manager.h>
 #include <util/config/route/RouteConfig.h>
@@ -14,9 +20,11 @@ namespace smsc_service {
 
 using namespace smsc::system;
 using namespace smsc::profiler;
+using namespace smsc::router;
 using namespace smsc::core::buffers;
 using namespace smsc::util::config;
 using namespace smsc::util::config::route;
+
 
 using smsc::mscman::MscManager;
 using smsc::mscman::MscInfo;
@@ -836,6 +844,9 @@ const char * const getProfileMatchTypeStr(int matchType)
 
 Variant SmscComponent::profileLookupEx(const Arguments &args) throw (AdminException)
 {
+#ifdef SMPPGW
+  throw AdminException("Not supported by smppgw");
+#else
   try
   {
     Smsc * app;
@@ -857,7 +868,7 @@ Variant SmscComponent::profileLookupEx(const Arguments &args) throw (AdminExcept
       divertActive[0] = profile.divertActive         ? 'Y' : 'N';
       divertActive[1] = profile.divertActiveAbsent   ? 'Y' : 'N';
       divertActive[2] = profile.divertActiveBlocked  ? 'Y' : 'N';
-      divertActive[3] = profile.divertActiveBared    ? 'Y' : 'N';
+      divertActive[3] = profile.divertActiveBarred   ? 'Y' : 'N';
       divertActive[4] = profile.divertActiveCapacity ? 'Y' : 'N';
       divertActive[5] = 0;
       result.appendValueToStringList(divertActive);
@@ -877,10 +888,14 @@ Variant SmscComponent::profileLookupEx(const Arguments &args) throw (AdminExcept
   } catch (...) {
     throw AdminException("Unknown exception");
   }
+#endif
 }
 Variant SmscComponent::profileLookup(const Arguments &args)
 throw (AdminException)
 {
+#ifdef SMPPGW
+  throw AdminException("Not supported by smppgw");
+#else
   try
   {
     const char * const addressString = args.Get("address").getStringValue();
@@ -908,7 +923,7 @@ throw (AdminException)
       divertActive[0] = profile.divertActive         ? 'Y' : 'N';
       divertActive[1] = profile.divertActiveAbsent   ? 'Y' : 'N';
       divertActive[2] = profile.divertActiveBlocked  ? 'Y' : 'N';
-      divertActive[3] = profile.divertActiveBared    ? 'Y' : 'N';
+      divertActive[3] = profile.divertActiveBarred   ? 'Y' : 'N';
       divertActive[4] = profile.divertActiveCapacity ? 'Y' : 'N';
       divertActive[5] = 0;
       result.appendValueToStringList(divertActive);
@@ -923,6 +938,7 @@ throw (AdminException)
   {
     throw AdminException("Address not defined");
   }
+#endif
 }
 
 void setProfileFromString(Profile &profile, const StringList& profileStrings)
@@ -992,9 +1008,9 @@ throw (AdminException)
   profile.divertActive         =     ((divertActive[0] == 'Y') || (divertActive[0] == 'y')) ? true : false;
   profile.divertActiveAbsent   =     ((divertActive[1] == 'Y') || (divertActive[1] == 'y')) ? true : false;
   profile.divertActiveBlocked  =     ((divertActive[2] == 'Y') || (divertActive[2] == 'y')) ? true : false;
-  profile.divertActiveBared    =     ((divertActive[3] == 'Y') || (divertActive[3] == 'y')) ? true : false;
+  profile.divertActiveBarred   =     ((divertActive[3] == 'Y') || (divertActive[3] == 'y')) ? true : false;
   profile.divertActiveCapacity =     ((divertActive[4] == 'Y') || (divertActive[4] == 'y')) ? true : false;
-  
+
   profile.divertModifiable = (strcmp("true", divertModifiable) == 0) ? 1:0;
   if (strcmp("true", ussd7bit) == 0)
     profile.codepage |= 0x80;
@@ -1012,6 +1028,9 @@ bool isMask(const Address & address)
 
 int SmscComponent::profileUpdate(const Arguments & args)
 {
+#ifdef SMPPGW
+  throw AdminException("Not supported by smppgw");
+#else
   try
   {
     const char * const addressString = args.Get("address").getStringValue();
@@ -1041,10 +1060,14 @@ int SmscComponent::profileUpdate(const Arguments & args)
   {
     throw AdminException("Address or profile params not defined");
   }
+#endif
 }
 
 int SmscComponent::profileDelete(const Arguments & args)
 {
+#ifdef SMPPGW
+  throw AdminException("Not supported by smppgw");
+#else
   try
   {
     Smsc * app;
@@ -1063,6 +1086,7 @@ int SmscComponent::profileDelete(const Arguments & args)
   {
     throw AdminException("Address or profile params not defined");
   }
+#endif
 }
 
 void fillSmeInfo(SmeInfo & smeInfo, const Arguments & args)
@@ -1215,45 +1239,47 @@ void SmscComponent::smeDisconnect(const Arguments & args)
 
 Variant SmscComponent::logGetCategories(void)
 {
-	Variant result(service::StringListType);
-	std::auto_ptr<const Logger::LogLevels> cats(Logger::getLogLevels());
-	char * k;
-	Logger::LogLevel level;
-	for (Logger::LogLevels::Iterator i = cats->getIterator(); i.Next(k, level); )
-	{
-		std::string tmp(k);
-		tmp += ","; 
-		tmp += Logger::getLogLevel(level);
-		result.appendValueToStringList(tmp.c_str());
-	}
-	return result;
+  Variant result(service::StringListType);
+  std::auto_ptr<const Logger::LogLevels> cats(Logger::getLogLevels());
+  char * k;
+  Logger::LogLevel level;
+  for (Logger::LogLevels::Iterator i = cats->getIterator(); i.Next(k, level); )
+  {
+    std::string tmp(k);
+    tmp += ",";
+    tmp += Logger::getLogLevel(level);
+    result.appendValueToStringList(tmp.c_str());
+  }
+  return result;
 }
 
 void SmscComponent::logSetCategories(const Arguments & args)
 {
-	const StringList & cats = args.Get("categories").getStringListValue();
-	Logger::LogLevels levels;
-	for (StringList::const_iterator i = cats.begin(); i != cats.end(); i++)
-	{
-		std::auto_ptr<char> str(cStringCopy(*i));
-		char * delim_pos = strrchr(str.get(), ',');
-		if (delim_pos != NULL)
-		{
-			char * value = delim_pos+1;
-			*delim_pos = 0;
-			levels[str.get()] = Logger::getLogLevel(value);
-		}
-		else
-		{
-			smsc_log_error(logger, "misformatted logger category string: \"%s\"", str.get());
-		}
-	}
+  const StringList & cats = args.Get("categories").getStringListValue();
+  Logger::LogLevels levels;
+  for (StringList::const_iterator i = cats.begin(); i != cats.end(); i++)
+  {
+    std::auto_ptr<char> str(cStringCopy(*i));
+    char * delim_pos = strrchr(str.get(), ',');
+    if (delim_pos != NULL)
+    {
+      char * value = delim_pos+1;
+      *delim_pos = 0;
+      levels[str.get()] = Logger::getLogLevel(value);
+    }
+    else
+    {
+      smsc_log_error(logger, "misformatted logger category string: \"%s\"", str.get());
+    }
+  }
 
-	Logger::setLogLevels(levels);
+  Logger::setLogLevels(levels);
 
-	if( smsc_app_runner->getApp()->getMapProxy() != 0 ) {
-		dynamic_cast<MapProxy*>(smsc_app_runner->getApp()->getMapProxy())->checkLogging();
-	}
+#ifndef SMPPGW
+  if( smsc_app_runner->getApp()->getMapProxy() != 0 ) {
+    dynamic_cast<MapProxy*>(smsc_app_runner->getApp()->getMapProxy())->checkLogging();
+  }
+#endif
 }
 
 Variant SmscComponent::applyLocaleResource()

@@ -6,171 +6,185 @@
 #include <admin/service/Type.h>
 #include <core/synchronization/Mutex.hpp>
 #include <logger/Logger.h>
+#ifdef SMPPGW
+#include <smppgw/smsc.hpp>
+#else
 #include <system/smsc.hpp>
+#endif
+#include "smeman/smeadmin.h"
 
 namespace smsc {
 namespace admin {
 namespace smsc_service {
 
+#ifdef SMPPGW
+using smsc::smppgw::SmscConfigs;
+using smsc::smppgw::Smsc;
+#else
 using smsc::system::SmscConfigs;
+using smsc::system::Smsc;
+#endif
+
 using namespace smsc::admin::service;
 using smsc::core::threads::Thread;
-using smsc::system::Smsc;
 using smsc::admin::service::Component;
 using smsc::logger::Logger;
+
+
+
+using smsc::smeman::SmeAdministrator;
 
 class SmscComponent : public Component
 {
 public:
-	SmscComponent(SmscConfigs &all_configs);
-	virtual ~SmscComponent();
+  SmscComponent(SmscConfigs &all_configs);
+  virtual ~SmscComponent();
 
-	virtual const char * const getName() const
-	{
-		return "SMSC";
-	}
+  virtual const char * const getName() const
+  {
+    return "SMSC";
+  }
 
-	virtual const Methods & getMethods() const
-	{
-		return methods;
-	}
+  virtual const Methods & getMethods() const
+  {
+    return methods;
+  }
 
-	virtual Variant call(const Method & method, const Arguments & args)
-	throw (AdminException);
+  virtual Variant call(const Method & method, const Arguments & args)
+  throw (AdminException);
 
-	void runSmsc() throw (AdminException);
-	void stopSmsc() throw (AdminException);
-	bool isSmscRunning() {return smsc_app_runner.get() != 0;}
-	bool isSmscStopping() {return isStopping;}
-	void abort();
-	void dump();
+  void runSmsc() throw (AdminException);
+  void stopSmsc() throw (AdminException);
+  bool isSmscRunning() {return smsc_app_runner.get() != 0;}
+  bool isSmscStopping() {return isStopping;}
+  void abort();
+  void dump();
 
 protected:
-	Variant profileLookup(const Arguments &args) throw (AdminException);
-	Variant profileLookupEx(const Arguments &args) throw (AdminException);
-	int profileUpdate(const Arguments &args);
-	int profileDelete(const Arguments &args);	
+  Variant profileLookup(const Arguments &args) throw (AdminException);
+  Variant profileLookupEx(const Arguments &args) throw (AdminException);
+  int profileUpdate(const Arguments &args);
+  int profileDelete(const Arguments &args);
 
-	std::string flushStatistics(const Arguments &args) throw (AdminException);
-	std::string processCancelMessages(const Arguments &args) throw (AdminException);
-	void processCancelMessage(const std::string &sid, const std::string &ssrc, const std::string &sdst);
+  std::string flushStatistics(const Arguments &args) throw (AdminException);
+  std::string processCancelMessages(const Arguments &args) throw (AdminException);
+  void processCancelMessage(const std::string &sid, const std::string &ssrc, const std::string &sdst);
 
-	void applyRoutes() throw (AdminException);
-	void applyAliases() throw (AdminException);
-	void applySmscConfig() throw (AdminException);
-	void applyServices() throw (AdminException);
-	Variant applyLocaleResource() throw (AdminException);
-	void reloadConfigsAndRestart() throw (AdminException);
-	void reReadConfigs() throw (AdminException);
+  void applyRoutes() throw (AdminException);
+  void applyAliases() throw (AdminException);
+  void applySmscConfig() throw (AdminException);
+  void applyServices() throw (AdminException);
+  Variant applyLocaleResource() throw (AdminException);
+  void reloadConfigsAndRestart() throw (AdminException);
+  void reReadConfigs() throw (AdminException);
 
-	void mscRegistrate(const Arguments & args);
-	void mscUnregister(const Arguments & args);
-	void mscBlock(const Arguments & args);
-	void mscClear(const Arguments & args);
-	Variant mscList();
+  void mscRegistrate(const Arguments & args);
+  void mscUnregister(const Arguments & args);
+  void mscBlock(const Arguments & args);
+  void mscClear(const Arguments & args);
+  Variant mscList();
 
-	SmeAdministrator * getSmeAdmin();
-	void smeAdd(const Arguments & args);
-	void smeRemove(const Arguments & args);
-	void smeUpdate(const Arguments & args);
-	Variant smeStatus(const Arguments & args);
-	void smeDisconnect(const Arguments & args);
+  SmeAdministrator * getSmeAdmin();
+  void smeAdd(const Arguments & args);
+  void smeRemove(const Arguments & args);
+  void smeUpdate(const Arguments & args);
+  Variant smeStatus(const Arguments & args);
+  void smeDisconnect(const Arguments & args);
 
-	Variant logGetCategories(void);
-	void logSetCategories(const Arguments & args);
+  Variant logGetCategories(void);
+  void logSetCategories(const Arguments & args);
 
     Variant loadRoutes(void) throw (AdminException);
     Variant traceRoute(const Arguments &args) throw (AdminException);
 
-	SmscConfigs &configs;
-	Methods methods;
-	enum
-	{
-		applyRoutesMethod, applyAliasesMethod, applyServicesMethod, applySmscConfigMethod, applyLocaleResourceMethod,
-		profileLookupMethod, profileUpdateMethod, profileLookupExMethod, profileDeleteMethod,
-		flushStatisticsMethod, 
-		processCancelMessagesMethod,
-		mscRegistrateMethod, mscUnregisterMethod, mscBlockMethod, mscClearMethod, mscListMethod,
-		smeAddMethod, smeRemoveMethod, smeUpdateMethod, smeStatusMethod, smeDisconnectMethod,
-		logGetCategoriesMethod, logSetCategoriesMethod, 
-		traceRouteMethod, loadRoutesMethod
-	};
+  SmscConfigs &configs;
+  Methods methods;
+  enum
+  {
+    applyRoutesMethod, applyAliasesMethod, applyServicesMethod, applySmscConfigMethod, applyLocaleResourceMethod,
+    profileLookupMethod, profileUpdateMethod, profileLookupExMethod, profileDeleteMethod,
+    flushStatisticsMethod,
+    processCancelMessagesMethod,
+    mscRegistrateMethod, mscUnregisterMethod, mscBlockMethod, mscClearMethod, mscListMethod,
+    smeAddMethod, smeRemoveMethod, smeUpdateMethod, smeStatusMethod, smeDisconnectMethod,
+    logGetCategoriesMethod, logSetCategoriesMethod,
+    traceRouteMethod, loadRoutesMethod
+  };
 
-	smsc::core::synchronization::Mutex mutex;
+  smsc::core::synchronization::Mutex mutex;
     bool bTemporalRoutesManagerConfigLoaded;
-	bool isStopping;
+  bool isStopping;
 
 private:
 
-	class SmscAppRunner : public Thread
-	{
-	public:
-		SmscAppRunner(SmscConfigs &configs)
-		: _app(new Smsc()),
-				  runner_logger(Logger::getInstance("smsc.admin.smsc_service.SmscComponent.SmscAppRunner"))
-		{
-			_app->init(configs);
-		}
-		virtual ~SmscAppRunner()
-		{
-			_app.reset(0);
-		}
+  class SmscAppRunner : public Thread
+  {
+  public:
+    SmscAppRunner(SmscConfigs &configs)
+    : _app(new Smsc()),
+          runner_logger(Logger::getInstance("smsc.admin.smsc_service.SmscComponent.SmscAppRunner"))
+    {
+      _app->init(configs);
+    }
+    virtual ~SmscAppRunner()
+    {
+      _app.reset(0);
+    }
 
-		Smsc * getApp()
-		{
-			return _app.get();
-		}
+    Smsc * getApp()
+    {
+      return _app.get();
+    }
 
-		virtual int Execute()
-		{
-			try
-			{
-				_app->run();
-			}
-			catch (std::exception& e)
-			{
-				fprintf(stderr,"top level exception: %s\n",e.what());
-				smsc_log_error(runner_logger, "SMSC execution exception: \"%s\", SMSC stopped.", e.what());
-				return(-1);
-			}
-			catch (...)
-			{
-				fprintf(stderr,"FATAL EXCEPTION!\n");
-				smsc_log_error(runner_logger, "SMSC execution unknown exception.");
-				return(-0);
-			}
-			_app->shutdown();
-			fprintf(stderr,"SMSC finished\n");
-			return 0;
-		}
+    virtual int Execute()
+    {
+      try
+      {
+        _app->run();
+      }
+      catch (std::exception& e)
+      {
+        fprintf(stderr,"top level exception: %s\n",e.what());
+        smsc_log_error(runner_logger, "SMSC execution exception: \"%s\", SMSC stopped.", e.what());
+        return(-1);
+      }
+      catch (...)
+      {
+        fprintf(stderr,"FATAL EXCEPTION!\n");
+        smsc_log_error(runner_logger, "SMSC execution unknown exception.");
+        return(-0);
+      }
+      _app->shutdown();
+      fprintf(stderr,"SMSC finished\n");
+      return 0;
+    }
 
-		void stop()
-		{
-			_app->stop();
-		}
+    void stop()
+    {
+      _app->stop();
+    }
 
-		void abort()
-		{
-			_app->abortSmsc();
-		}
+    void abort()
+    {
+      _app->abortSmsc();
+    }
 
-		void dump()
-		{
-			_app->dumpSmsc();
-		}
+    void dump()
+    {
+      _app->dumpSmsc();
+    }
 
-	protected:
-		std::auto_ptr<Smsc> _app;
-		smsc::logger::Logger *runner_logger;
-	};
+  protected:
+    std::auto_ptr<Smsc> _app;
+    smsc::logger::Logger *runner_logger;
+  };
 
 protected:
-	std::auto_ptr<SmscAppRunner> smsc_app_runner;
-	smsc::logger::Logger *logger;
+  std::auto_ptr<SmscAppRunner> smsc_app_runner;
+  smsc::logger::Logger *logger;
 };
 
 }
 }
 }
 #endif // ifndef SMSC_ADMIN_SMSC_SMSCCOMPONENT
-
