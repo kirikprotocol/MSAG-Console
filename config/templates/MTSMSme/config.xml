@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
+<config>
+
+  <section name="MTSMSme">
+
+    <section name="Aliases">
+
+      <section name="765765765">
+        <param name="alias" type="string">765765</param>
+      </section>
+    </section>
+
+    <section name="SMSC">
+      <param name="host" type="string">localhost</param>
+      <param name="password" type="string">mtsmms</param>
+      <param name="port" type="int">9011</param>
+      <param name="sid" type="string">MTSMSme</param>
+      <param name="timeout" type="int">45</param>
+    </section>
+  </section>
+</config>
