@@ -213,7 +213,7 @@ unsigned ConvertSMSC7bit27bit(
 
 #pragma pack(1)
 
-struct SMS_SUMBMIT_FORMAT_HEADER{
+/*struct SMS_SUMBMIT_FORMAT_HEADER{
   union{
     struct{
       unsigned srr:1;
@@ -240,8 +240,23 @@ struct SMS_DELIVERY_FORMAT_HEADER{
     }s;
     unsigned char _val_01;
   }uu;
-};
+};*/
 
+struct SMS_SUMBMIT_FORMAT_HEADER{ 
+  union{                          
+    struct{                       
+      unsigned reply_path:1;      
+      unsigned udhi:1;            
+      unsigned srr:1;             
+      unsigned tp_vp:2;           
+      unsigned reject_dupl:1;     
+      unsigned mg_type_ind:2;     
+    };                            
+    unsigned char _val_01;        
+  };                              
+  unsigned char mr;               
+};                                
+                                  
 struct MAP_SMS_ADDRESS{
   unsigned char len;
   //unsigned char tonpi;
@@ -511,6 +526,8 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
   return ET96MAP_E_OK;
 }
 
+#if 0
+
 ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
 {
 #if defined USE_MAP
@@ -524,6 +541,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   MAP_SMS_ADDRESS* oa = (MAP_SMS_ADDRESS*)(pdu->signalInfo+1);
   oa->st.ton = sms->getOriginatingAddress().getTypeOfNumber();
   oa->st.npi = sms->getOriginatingAddress().getNumberingPlan();
+  oa->st.reserved_1 = 1;
   oa->len = sms->getOriginatingAddress().getLength();
   unsigned oa_length = (oa->len+1)/2; 
   __trace2__("MAP::mkDeliverPDU: oa_length: 0x%x", oa_length);
@@ -725,6 +743,10 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   return 0;
 #endif
 }
+
+#endif
+
+#include "MapDialogMkPDU.cpp"
 
 void MapDialog::Et96MapDelimiterInd(
   ET96MAP_LOCAL_SSN_T lssn,
