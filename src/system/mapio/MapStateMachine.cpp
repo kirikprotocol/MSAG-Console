@@ -583,9 +583,9 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
     }
   }
   {
+    unsigned INVALID = (unsigned)-1;
     if ( ssfh->udhi )
     {
-      unsigned INVALID = (unsigned)-1;
       unsigned ref = INVALID;
       unsigned msgNum = INVALID;
       unsigned msgCount = INVALID;
