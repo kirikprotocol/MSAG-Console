@@ -618,8 +618,6 @@ static void ForwardMO(MapDialog* dialog) {
   appContext.acType = ET96MAP_SHORT_MSG_MO_RELAY;
   SetVersion(appContext,dialog->version);
 
-  char addrVal[64];
-  int adrlen
   mkMapAddress( &fwdAddr, addr.value, addr.length );
   mkSS7GTAddress( &destAddr, &fwdAddr, 8 );
 
