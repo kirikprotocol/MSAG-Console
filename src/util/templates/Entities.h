@@ -55,6 +55,7 @@ namespace smsc { namespace util { namespace templates
     static const char*  ioTodayString       = "today";
     static const char*  ioTomorrowString    = "tomorrow";
     static const char*  ioYesterdayString   = "yesterday";
+    static const char*  ioInternalPatternString = "internal";
 
     static const char* SMSC_DBSME_IO_DEFAULT_FORMAT_PATTERN  = "dd.MM.yyyy HH:mm:ss";
     static const char* SMSC_DBSME_IO_DEFAULT_PARSE_PATTERN   = "%d.%d.%d %d:%d:%d %n";
