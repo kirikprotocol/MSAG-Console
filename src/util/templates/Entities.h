@@ -72,18 +72,20 @@ namespace smsc { namespace util { namespace templates
         "AM", "PM"
     };
     
-    const int ioEntityTypesNumber = 12;
+    const int ioEntityTypesNumber = 14;
     static const char* ioEntityTypeStrings[ioEntityTypesNumber]  = 
     { 
-        "int8", "int16", "int32", "uint8", "uint16", "uint32",
+        "int8", "int16", "int32", "int64",
+        "uint8", "uint16", "uint32", "uint64",
         "float", "double", "long-double", "date",
         "string", "text"
     };
     
     typedef enum { 
-        INT8 = 0, INT16 = 1, INT32 = 2, UINT8 = 3, UINT16 = 4, UINT32 = 5,
-        FLOAT = 6, DOUBLE = 7, LDOUBLE = 8, DATE = 9,
-        STRING = 10, TEXT = 11
+        INT8 = 0, INT16 = 1, INT32 = 2, INT64 = 3,
+        UINT8 = 4, UINT16 = 5, UINT32 = 6, UINT64 = 7,
+        FLOAT = 8, DOUBLE = 9, LDOUBLE = 10, DATE = 11,
+        STRING = 12, TEXT = 13
     } EntityType;
     
     struct FormatEntity

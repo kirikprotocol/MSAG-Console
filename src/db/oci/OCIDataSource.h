@@ -67,12 +67,16 @@ namespace smsc { namespace db { namespace oci
             throw(SQLException, InvalidArgumentException);
         virtual int32_t getInt32(int pos)
             throw(SQLException, InvalidArgumentException);
+        virtual int64_t getInt64(int pos)
+            throw(SQLException, InvalidArgumentException);
         
         virtual uint8_t getUint8(int pos)
             throw(SQLException, InvalidArgumentException);
         virtual uint16_t getUint16(int pos)
             throw(SQLException, InvalidArgumentException);
         virtual uint32_t getUint32(int pos)
+            throw(SQLException, InvalidArgumentException);
+        virtual uint64_t getUint64(int pos)
             throw(SQLException, InvalidArgumentException);
         
         virtual float getFloat(int pos)
@@ -149,12 +153,16 @@ namespace smsc { namespace db { namespace oci
             throw(SQLException);
         virtual void setInt32(int pos, int32_t val, bool null=false)
             throw(SQLException);
+        virtual void setInt64(int pos, int64_t val, bool null=false)
+            throw(SQLException);
         
         virtual void setUint8(int pos, uint8_t val, bool null=false)
             throw(SQLException);
         virtual void setUint16(int pos, uint16_t val, bool null=false)
             throw(SQLException);
         virtual void setUint32(int pos, uint32_t val, bool null=false)
+            throw(SQLException);
+        virtual void setUint64(int pos, uint64_t val, bool null=false)
             throw(SQLException);
         
         virtual void setFloat(int pos, float val, bool null=false)

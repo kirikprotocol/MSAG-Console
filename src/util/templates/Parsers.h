@@ -114,6 +114,18 @@ namespace smsc { namespace util { namespace templates
                 throw(ParsingException, AdapterException);
     };
     
+    class Int64Parser : public Parser
+    {
+    public:
+        
+        Int64Parser() : Parser(INT64) {};
+        virtual ~Int64Parser() {};
+        
+        virtual void parse(
+            std::string& input, FormatEntity& entity, SetAdapter& adapter)
+                throw(ParsingException, AdapterException);
+    };
+    
     class Uint8Parser : public Parser
     {
     public:
@@ -144,6 +156,18 @@ namespace smsc { namespace util { namespace templates
         
         Uint32Parser() : Parser(UINT32) {};
         virtual ~Uint32Parser() {};
+        
+        virtual void parse(
+            std::string& input, FormatEntity& entity, SetAdapter& adapter)
+                throw(ParsingException, AdapterException);
+    };
+    
+    class Uint64Parser : public Parser 
+    {
+    public:
+        
+        Uint64Parser() : Parser(UINT64) {};
+        virtual ~Uint64Parser() {};
         
         virtual void parse(
             std::string& input, FormatEntity& entity, SetAdapter& adapter)

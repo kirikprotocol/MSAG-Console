@@ -115,6 +115,18 @@ namespace smsc { namespace util { namespace templates
                 throw(FormattingException, AdapterException);
     };
     
+    class Int64Formatter : public Formatter
+    {
+    public:
+        
+        Int64Formatter() : Formatter(INT64) {};
+        virtual ~Int64Formatter() {};
+        
+        virtual void format(
+            std::string& output, FormatEntity& entity, GetAdapter& adapter)
+                throw(FormattingException, AdapterException);
+    };
+    
     class Uint8Formatter : public Formatter
     {
     public:
@@ -145,6 +157,18 @@ namespace smsc { namespace util { namespace templates
         
         Uint32Formatter() : Formatter(UINT32) {};
         virtual ~Uint32Formatter() {};
+        
+        virtual void format(
+            std::string& output, FormatEntity& entity, GetAdapter& adapter)
+                throw(FormattingException, AdapterException);
+    };
+    
+    class Uint64Formatter : public Formatter
+    {
+    public:
+        
+        Uint64Formatter() : Formatter(UINT64) {};
+        virtual ~Uint64Formatter() {};
         
         virtual void format(
             std::string& output, FormatEntity& entity, GetAdapter& adapter)

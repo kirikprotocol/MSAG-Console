@@ -443,6 +443,11 @@ void OCIStatement::setInt32(int pos, int32_t val, bool null)
     bind(pos, descriptor->type, descriptor->data,
          descriptor->size, (dvoid *) &descriptor->ind);
 }
+void OCIStatement::setInt64(int pos, int64_t val, bool null)
+    throw(SQLException)
+{
+    setInt32(pos, (int32_t)val, null);
+}
 void OCIStatement::setUint8(int pos, uint8_t val, bool null)
     throw(SQLException)
 {
@@ -490,6 +495,11 @@ void OCIStatement::setUint32(int pos, uint32_t val, bool null)
     }
     bind(pos, descriptor->type, descriptor->data,
          descriptor->size, (dvoid *) &descriptor->ind);
+}
+void OCIStatement::setUint64(int pos, uint64_t val, bool null)
+    throw(SQLException)
+{
+    setUint32(pos, (uint32_t)val, null);
 }
 void OCIStatement::setFloat(int pos, float val, bool null)
     throw(SQLException)
@@ -678,6 +688,11 @@ int32_t OCIResultSet::getInt32(int pos)
                                 (dvoid *) &result)); 
     return result;
 }
+int64_t OCIResultSet::getInt64(int pos)
+    throw(SQLException, InvalidArgumentException)
+{
+    return (int64_t)getInt32(pos);
+}
 uint8_t OCIResultSet::getUint8(int pos)
     throw(SQLException, InvalidArgumentException)
 {
@@ -707,6 +722,11 @@ uint32_t OCIResultSet::getUint32(int pos)
                                 (uword)OCI_NUMBER_UNSIGNED,
                                 (dvoid *) &result));    
     return result;
+}
+uint64_t OCIResultSet::getUint64(int pos)
+    throw(SQLException, InvalidArgumentException)
+{
+    return (uint64_t)getUint32(pos);
 }
 float OCIResultSet::getFloat(int pos)
     throw(SQLException, InvalidArgumentException)

@@ -15,9 +15,11 @@ OutputFormatter::OutputFormatter(const char* format)
     static Int8Formatter        _Int8Formatter;
     static Int16Formatter       _Int16Formatter;
     static Int32Formatter       _Int32Formatter;
+    static Int64Formatter       _Int64Formatter;
     static Uint8Formatter       _Uint8Formatter;
     static Uint16Formatter      _Uint16Formatter;
     static Uint32Formatter      _Uint32Formatter;
+    static Uint64Formatter      _Uint64Formatter;
     static StringFormatter      _StringFormatter;
     static TextFormatter        _TextFormatter;
     static FloatFormatter       _FloatFormatter;
@@ -104,6 +106,24 @@ void Int32Formatter::format(
         output += buff;
     }
 }
+void Int64Formatter::format(
+    std::string& output, FormatEntity& entity, GetAdapter& adapter)
+        throw(FormattingException, AdapterException)
+{
+    const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+
+    if ((!arg || adapter.isNull(arg)) && def)
+    {
+        output += def;
+    }
+    else if (!adapter.isNull(arg))
+    {
+        char    buff[64] = "";
+        sprintf(buff, "%lld", adapter.getInt64(arg));
+        output += buff;
+    }
+}
 void Uint8Formatter::format(
     std::string& output, FormatEntity& entity, GetAdapter& adapter)
         throw(FormattingException, AdapterException)
@@ -155,6 +175,24 @@ void Uint32Formatter::format(
     {
         char    buff[64] = "";
         sprintf(buff, "%lu", adapter.getUint32(arg));
+        output += buff;
+    }
+}
+void Uint64Formatter::format(
+    std::string& output, FormatEntity& entity, GetAdapter& adapter)
+        throw(FormattingException, AdapterException)
+{
+    const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+
+    if ((!arg || adapter.isNull(arg)) && def)
+    {
+        output += def;
+    }
+    else if (!adapter.isNull(arg))
+    {
+        char    buff[64] = "";
+        sprintf(buff, "%llu", adapter.getUint64(arg));
         output += buff;
     }
 }
