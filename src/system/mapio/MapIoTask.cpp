@@ -21,8 +21,6 @@ static bool MAP_aborting = false;
   #define CORRECT_BIND_COUNTER 2
   #define MAX_BIND_TIMEOUT 15
 
-string MapDialogContainer::USSD_ADRESS_VALUE = "79029869998";
-ET96MAP_LOCAL_SSN_T MapDialogContainer::ussdSSN = 6;
 //struct SMSC_FORWARD_RESPONSE_T {
 //  ET96MAP_DIALOGUE_ID_T dialogId;
 //};
@@ -350,6 +348,8 @@ int MapIoTask::Execute(){
 }
 
 string MapDialogContainer::SC_ADRESS_VALUE = "79029869999";
+string MapDialogContainer::USSD_ADRESS_VALUE = "79029869998";
+ET96MAP_LOCAL_SSN_T MapDialogContainer::ussdSSN = 6;
 
 void MapDialogContainer::abort()
 {
