@@ -599,7 +599,8 @@ namespace smsc { namespace sms
         /**
          * Default конструктор, просто инициализирует поле state как ENROUTE
          */
-        SMS() : state(ENROUTE), attempts(0), failureCause(0) 
+        SMS() : state(ENROUTE), lastTime(0), nextTime(0),
+                attempts(0), failureCause(0)
         {
             eServiceType[0]='\0';
         }; 
