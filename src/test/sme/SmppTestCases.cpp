@@ -242,12 +242,14 @@ void SmppTestCases::checkSubmitTime(time_t checkTime)
 			pduData->responseFlag = PDU_MISSING_ON_TIME_FLAG;
 		}
 		__tc_ok_cond__;
+		/*
 		if (pduData->complete())
 		{
 			 __removedPdu__("checkSubmitTime");
 			deleted++;
 			pduReg->removePdu(pduData);
 		}
+		*/
 	}
 	delete it;
 	__checkSummary__("checkSubmitTime");
@@ -295,12 +297,14 @@ void SmppTestCases::checkWaitTime(time_t checkTime)
 			pduData->intermediateNotificationFlag = PDU_MISSING_ON_TIME_FLAG;
 		}
 		__tc_ok_cond__;
+		/*
 		if (pduData->complete())
 		{
 			__removedPdu__("checkWaitTime");
 			deleted++;
 			pduReg->removePdu(pduData);
 		}
+		*/
 	}
 	delete it;
 	__checkSummary__("checkWaitTime");
