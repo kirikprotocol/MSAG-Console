@@ -190,12 +190,56 @@ namespace SmppCommandSet{ /* SMPP v3.4 (5.1.2.1) */
 
 namespace SmppStatusSet
 {
-  static const uint32_t ESME_ROK                    =  0x00000000;
-  static const uint32_t ESME_RSYSERR                =  0x00000008;
-  static const uint32_t ESME_RBINDFALD              =  0x0000000d;
-  static const uint32_t ESME_RINVSYSID              =  0x0000000f;
-  static const uint32_t ESME_RCANCELFAL             =  0x00000011;
-  static const uint32_t ESME_RREPLACEFAL            =  0x00000013;
+  static const uint32_t ESME_ROK                  = 0x00000000;
+  static const uint32_t ESME_RINVMSGLEN           = 0x00000001;
+  static const uint32_t ESME_RINVCMDLEN           = 0x00000002;
+  static const uint32_t ESME_RINVCMDID            = 0x00000003;
+  static const uint32_t ESME_RINVBNDSTS           = 0x00000004;
+  static const uint32_t ESME_RALYBND              = 0x00000005;
+  static const uint32_t ESME_RINVPRTFLG           = 0x00000006;
+  static const uint32_t ESME_RINVREGDLVFLG        = 0x00000007;
+  static const uint32_t ESME_RSYSERR              = 0x00000008;
+  static const uint32_t ESME_RINVSRCADR           = 0x0000000A;
+  static const uint32_t ESME_RINVDSTADR           = 0x0000000B;
+  static const uint32_t ESME_RINVMSGID            = 0x0000000C;
+  static const uint32_t ESME_RBINDFAIL            = 0x0000000D;
+  static const uint32_t ESME_RINVPASWD            = 0x0000000E;
+  static const uint32_t ESME_RINVSYSID            = 0x0000000F;
+  static const uint32_t ESME_RCANCELFAIL          = 0x00000011;
+  static const uint32_t ESME_RREPLACEFAIL         = 0x00000013;
+  static const uint32_t ESME_RMSGQFUL             = 0x00000014;
+  static const uint32_t ESME_RINVSERTYP           = 0x00000015;
+  static const uint32_t ESME_RINVNUMDESTS         = 0x00000033;
+  static const uint32_t ESME_RINVDLNAME           = 0x00000034;
+  static const uint32_t ESME_RINVDESTFLAG         = 0x00000040;
+  static const uint32_t ESME_RINVSUBREP           = 0x00000042;
+  static const uint32_t ESME_RINVESMCLASS         = 0x00000043;
+  static const uint32_t ESME_RCNTSUBDL            = 0x00000044;
+  static const uint32_t ESME_RSUBMITFAIL          = 0x00000045;
+  static const uint32_t ESME_RINVSRCTON           = 0x00000048;
+  static const uint32_t ESME_RINVSRCNPI           = 0x00000049;
+  static const uint32_t ESME_RINVDSTTON           = 0x00000050;
+  static const uint32_t ESME_RINVDSTNPI           = 0x00000051;
+  static const uint32_t ESME_RINVSYSTYP           = 0x00000053;
+  static const uint32_t ESME_RINVREPFLAG          = 0x00000054;
+  static const uint32_t ESME_RINVNUMMSGS          = 0x00000055;
+  static const uint32_t ESME_RTHROTTLED           = 0x00000058;
+  static const uint32_t ESME_RINVSCHED            = 0x00000061;
+  static const uint32_t ESME_RINVEXPIRY           = 0x00000062;
+  static const uint32_t ESME_RINVDFTMSGID         = 0x00000063;
+  static const uint32_t ESME_RX_T_APPN            = 0x00000064;
+  static const uint32_t ESME_RX_P_APPN            = 0x00000065;
+  static const uint32_t ESME_RX_R_APPN            = 0x00000066;
+  static const uint32_t ESME_RQUERYFAIL           = 0x00000067;
+  static const uint32_t ESME_RINVOPTPARSTREAM     = 0x000000C0;
+  static const uint32_t ESME_ROPTPARNOTALLWD      = 0x000000C1;
+  static const uint32_t ESME_RINVPARLEN           = 0x000000C2;
+  static const uint32_t ESME_RMISSINGOPTPARAM     = 0x000000C3;
+  static const uint32_t ESME_RINVOPTPARAMVAL      = 0x000000C4;
+  static const uint32_t ESME_RDELIVERYFAILURE     = 0x000000FE;
+  static const uint32_t ESME_RUNKNOWNERR          = 0x000000FF;
+
+
 };
 
 namespace AddrSubunitValue{ /* SMPP v3.4 (5.3.2.1) */
@@ -488,20 +532,20 @@ struct SmppOptional //: public MemoryManagerUnit
   inline uint32_t size() {
   return (uint32_t) (
   0
-  _o_int_property__(uint8_t,destAddrSubunit) 
-  _o_int_property__(uint8_t,sourceAddrSubunit) 
-  _o_int_property__(uint8_t,destNetworkType) 
-  _o_int_property__(uint8_t,sourceNetworkType) 
-  _o_int_property__(uint8_t,destBearerType) 
-  _o_int_property__(uint8_t,sourceBearerType) 
-  _o_int_property__(uint16_t,destTelematicsId) 
-  _o_int_property__(uint8_t,sourceTelematicsId) 
+  _o_int_property__(uint8_t,destAddrSubunit)
+  _o_int_property__(uint8_t,sourceAddrSubunit)
+  _o_int_property__(uint8_t,destNetworkType)
+  _o_int_property__(uint8_t,sourceNetworkType)
+  _o_int_property__(uint8_t,destBearerType)
+  _o_int_property__(uint8_t,sourceBearerType)
+  _o_int_property__(uint16_t,destTelematicsId)
+  _o_int_property__(uint8_t,sourceTelematicsId)
   _o_int_property__(uint32_t,qosTimeToLive)
-  _o_int_property__(uint8_t,payloadType) 
+  _o_int_property__(uint8_t,payloadType)
   _o_cstr_property__(additionalStatusInfoText)
-  _o_cstr_property__(receiptedMessageId) 
-  _o_int_property__(uint8_t,msMsgWaitFacilities) 
-  _o_int_property__(uint8_t,privacyIndicator) 
+  _o_cstr_property__(receiptedMessageId)
+  _o_int_property__(uint8_t,msMsgWaitFacilities)
+  _o_int_property__(uint8_t,privacyIndicator)
   _o_ostr_property__(sourceSubaddress)
   _o_ostr_property__(destSubaddress)
   _o_int_property__(uint16_t,userMessageReference)
@@ -545,20 +589,20 @@ struct SmppOptional //: public MemoryManagerUnit
   {
     dump_text("SmppOptional{");
     ++align;
-    _o_int_property__(uint8_t,destAddrSubunit) 
-    _o_int_property__(uint8_t,sourceAddrSubunit) 
-    _o_int_property__(uint8_t,destNetworkType) 
-    _o_int_property__(uint8_t,sourceNetworkType) 
-    _o_int_property__(uint8_t,destBearerType) 
-    _o_int_property__(uint8_t,sourceBearerType) 
-    _o_int_property__(uint16_t,destTelematicsId) 
-    _o_int_property__(uint8_t,sourceTelematicsId) 
+    _o_int_property__(uint8_t,destAddrSubunit)
+    _o_int_property__(uint8_t,sourceAddrSubunit)
+    _o_int_property__(uint8_t,destNetworkType)
+    _o_int_property__(uint8_t,sourceNetworkType)
+    _o_int_property__(uint8_t,destBearerType)
+    _o_int_property__(uint8_t,sourceBearerType)
+    _o_int_property__(uint16_t,destTelematicsId)
+    _o_int_property__(uint8_t,sourceTelematicsId)
     _o_int_property__(uint32_t,qosTimeToLive)
-    _o_int_property__(uint8_t,payloadType) 
+    _o_int_property__(uint8_t,payloadType)
     _o_cstr_property__(additionalStatusInfoText)
-    _o_cstr_property__(receiptedMessageId) 
-    _o_int_property__(uint8_t,msMsgWaitFacilities) 
-    _o_int_property__(uint8_t,privacyIndicator) 
+    _o_cstr_property__(receiptedMessageId)
+    _o_int_property__(uint8_t,msMsgWaitFacilities)
+    _o_int_property__(uint8_t,privacyIndicator)
     _o_ostr_property__(sourceSubaddress)
     _o_ostr_property__(destSubaddress)
     _o_int_property__(uint16_t,userMessageReference)
@@ -663,13 +707,13 @@ struct PduPartSm //: public MemoryManagerUnit
   //__int_property__(uint8_t,smLength)
   //__ostr_property__(shortMessage)
   OStr shortMessage;
-  inline void set_shortMessage(const char* __value,int __len) 
-  { 
-    //__require__(__value!=NULL); 
-    if ( !__value ) shortMessage.dispose(); 
+  inline void set_shortMessage(const char* __value,int __len)
+  {
+    //__require__(__value!=NULL);
+    if ( !__value ) shortMessage.dispose();
     else shortMessage.copy(__value,__len);
-  } 
-  inline const char* get_shortMessage() { return shortMessage.cstr(); } 
+  }
+  inline const char* get_shortMessage() { return shortMessage.cstr(); }
   inline int size_shortMessage(){ return shortMessage.size(); }
   inline uint8_t get_smLength(){ return (uint8_t)shortMessage.size(); }
 
@@ -700,7 +744,7 @@ struct PduPartSm //: public MemoryManagerUnit
                       _s_int_property__(uint8_t,replaceIfPresentFlag)
                       _s_int_property__(uint8_t,dataCoding)
                       _s_int_property__(uint8_t,smDefaultMsgId)
-                      _s_ostr_property__(shortMessage)); 
+                      _s_ostr_property__(shortMessage));
   }
   inline void dump(__LOG__ log,int align = 0)
   {
@@ -721,7 +765,7 @@ struct PduPartSm //: public MemoryManagerUnit
     dump_uint(dataCoding);
     dump_uint(smDefaultMsgId);
     //dump_uint(get_smLength());
-    dump_ostr(shortMessage); 
+    dump_ostr(shortMessage);
     --align;
     dump_text("} //PduPartSm");
   }
@@ -783,13 +827,13 @@ struct PduDataSmResp //: public SmppHeader //MemoryManagerUnit
 {
   __ref_property__(SmppHeader,header)
   __cstr_property__(messageId)
-	__ref_property__(SmppOptional,optional)
+  __ref_property__(SmppOptional,optional)
   inline uint32_t size()
   {
     return (uint32_t)(0
                       _s_ref_property__(SmppHeader,header)
                       _s_cstr_property__(messageId)
-											_s_ref_property__(SmppOptional,optional));
+                      _s_ref_property__(SmppOptional,optional));
 
   }
   inline void dump(__LOG__ log,int align = 0)
@@ -799,7 +843,7 @@ struct PduDataSmResp //: public SmppHeader //MemoryManagerUnit
     ++align;
     dump_cstr(messageId);
     optional.dump(log,align);
-		--align;
+    --align;
     dump_text("} //PduXSm");
   }
 };
@@ -918,8 +962,8 @@ struct PduDataPartSm //: public MemoryManagerUnit
     esmClass(0),
     registredDelivery(0),
     dataCoding(0) {}
-  
-	inline uint32_t size()
+
+  inline uint32_t size()
   {
     return (uint32_t)(0 /*+ 1 // sizeof(smLength)*/
                       _s_cstr_property__(serviceType)
@@ -948,22 +992,22 @@ struct PduDataPartSm //: public MemoryManagerUnit
 struct PduDataSm
 {
   __ref_property__(SmppHeader,header)
-	__ref_property__(PduDataPartSm,data)
+  __ref_property__(PduDataPartSm,data)
   __ref_property__(SmppOptional,optional)
   inline uint32_t size()
   {
     return (uint32_t)(0
                       _s_ref_property__(SmppHeader,header)
-											_s_ref_property__(PduDataPartSm,data)
-											_s_ref_property__(SmppOptional,optional));
+                      _s_ref_property__(PduDataPartSm,data)
+                      _s_ref_property__(SmppOptional,optional));
   }
   inline void dump(__LOG__ log,int align = 0)
   {
     dump_text("PduDataSm{");
     header.dump(log,align+1);
     ++align;
-		data.dump(log,align);
-		optional.dump(log,align);
+    data.dump(log,align);
+    optional.dump(log,align);
     --align;
     dump_text("} //PduDataSm");
   }
@@ -978,16 +1022,16 @@ struct PduQuerySm
   {
     return (uint32_t)(0
                       _s_ref_property__(SmppHeader,header)
-											_s_cstr_property__(messageId)
-											_s_ref_property__(PduAddress,source));
+                      _s_cstr_property__(messageId)
+                      _s_ref_property__(PduAddress,source));
   }
   inline void dump(__LOG__ log,int align = 0)
   {
     dump_text("PduQuerySm{");
     header.dump(log,align+1);
     ++align;
-		dump_cstr(messageId);
-		dump_text("source = "); source.dump(log,align);
+    dump_cstr(messageId);
+    dump_text("source = "); source.dump(log,align);
     --align;
     dump_text("} //PduQuerySm");
   }
@@ -997,27 +1041,27 @@ struct PduQuerySmResp
 {
   __ref_property__(SmppHeader,header)
   __cstr_property__(messageId)
-	__cstr_property__(finalDate)
-	__int_property__(uint8_t,messageState)
-	__int_property__(uint8_t,errorCode)
+  __cstr_property__(finalDate)
+  __int_property__(uint8_t,messageState)
+  __int_property__(uint8_t,errorCode)
   inline uint32_t size()
   {
     return (uint32_t)(0
                       _s_ref_property__(SmppHeader,header)
-											_s_cstr_property__(messageId)
-											_s_cstr_property__(finalDate)
-											_s_int_property__(uint8_t,messageState)
-											_s_int_property__(uint8_t,errorCode));
+                      _s_cstr_property__(messageId)
+                      _s_cstr_property__(finalDate)
+                      _s_int_property__(uint8_t,messageState)
+                      _s_int_property__(uint8_t,errorCode));
   }
   inline void dump(__LOG__ log,int align = 0)
   {
     dump_text("PduQuerySmResp{");
     header.dump(log,align+1);
     ++align;
-		dump_cstr(messageId);
-		dump_cstr(finalDate);
-		dump_uint(messageState);
-		dump_uint(errorCode);
+    dump_cstr(messageId);
+    dump_cstr(finalDate);
+    dump_uint(messageState);
+    dump_uint(errorCode);
     --align;
     dump_text("} //PduQuerySmResp");
   }
@@ -1028,17 +1072,17 @@ struct PduCancelSm
   __ref_property__(SmppHeader,header)
   __cstr_property__(serviceType)
   __cstr_property__(messageId)
-	__ref_property__(PduAddress,source)
+  __ref_property__(PduAddress,source)
   __ref_property__(PduAddress,dest)
 
   inline uint32_t size()
   {
     return (uint32_t)(0
                       _s_ref_property__(SmppHeader,header)
-											_s_cstr_property__(serviceType)
-											_s_cstr_property__(messageId)
-											_s_ref_property__(PduAddress,source)
-											_s_ref_property__(PduAddress,dest));
+                      _s_cstr_property__(serviceType)
+                      _s_cstr_property__(messageId)
+                      _s_ref_property__(PduAddress,source)
+                      _s_ref_property__(PduAddress,dest));
   }
   inline void dump(__LOG__ log,int align = 0)
   {
@@ -1060,31 +1104,31 @@ struct PduReplaceSm
   __int_property__(uint8_t,registredDelivery)
   __int_property__(uint8_t,smDefaultMsgId)
   OStr shortMessage;
-  inline void set_shortMessage(const char* __value,int __len) 
-  { 
-    //__require__(__value!=NULL); 
-    if ( !__value ) shortMessage.dispose(); 
+  inline void set_shortMessage(const char* __value,int __len)
+  {
+    //__require__(__value!=NULL);
+    if ( !__value ) shortMessage.dispose();
     else shortMessage.copy(__value,__len);
-  } 
-  inline const char* get_shortMessage() { return shortMessage.cstr(); } 
+  }
+  inline const char* get_shortMessage() { return shortMessage.cstr(); }
   inline int size_shortMessage(){ return shortMessage.size(); }
   inline uint8_t get_smLength(){ return (uint8_t)shortMessage.size(); }
   PduReplaceSm() :
     registredDelivery(0),
     smDefaultMsgId(0){}
-  
-	inline uint32_t size()
+
+  inline uint32_t size()
   {
-		return (uint32_t)(0 + 1 // sizeof(smLength)
-										_s_ref_property__(SmppHeader,header)
-										_s_cstr_property__(messageId)
-										_s_ref_property__(PduAddress,source)
-										_s_cstr_property__(scheduleDeliveryTime)
-										_s_cstr_property__(validityPeriod)
-										_s_int_property__(uint8_t,registredDelivery)
-										_s_int_property__(uint8_t,smDefaultMsgId)
-										_s_ostr_property__(shortMessage)); 
-	}
+    return (uint32_t)(0 + 1 // sizeof(smLength)
+                    _s_ref_property__(SmppHeader,header)
+                    _s_cstr_property__(messageId)
+                    _s_ref_property__(PduAddress,source)
+                    _s_cstr_property__(scheduleDeliveryTime)
+                    _s_cstr_property__(validityPeriod)
+                    _s_int_property__(uint8_t,registredDelivery)
+                    _s_int_property__(uint8_t,smDefaultMsgId)
+                    _s_ostr_property__(shortMessage));
+  }
   inline void dump(__LOG__ log,int align = 0)
   {
     dump_text("PduReplaceSm{");
@@ -1096,7 +1140,7 @@ struct PduReplaceSm
     dump_cstr(validityPeriod);
     dump_uint(registredDelivery);
     dump_uint(smDefaultMsgId);
-    dump_ostr(shortMessage); 
+    dump_ostr(shortMessage);
     --align;
     dump_text("} //PduReplaceSm");
   }
@@ -1107,23 +1151,23 @@ struct PduAlertNotification
   __ref_property__(SmppHeader,header)
   __ref_property__(PduAddress,source)
   __ref_property__(PduAddress,esme)
-	__ref_property__(SmppOptional,optional)
+  __ref_property__(SmppOptional,optional)
   inline uint32_t size()
   {
     return (uint32_t)(0
             _s_ref_property__(SmppHeader,header)
-						_s_ref_property__(PduAddress,source)
-						_s_ref_property__(PduAddress,esme)
-						_s_ref_property__(SmppOptional,optional));
+            _s_ref_property__(PduAddress,source)
+            _s_ref_property__(PduAddress,esme)
+            _s_ref_property__(SmppOptional,optional));
   }
   inline void dump(__LOG__ log,int align = 0)
   {
     dump_text("PduAlertNotification{");
     header.dump(log,align+1);
     ++align;
-		source.dump(log,align);
-		esme.dump(log,align);
-		optional.dump(log,align);
+    source.dump(log,align);
+    esme.dump(log,align);
+    optional.dump(log,align);
     --align;
     dump_text("} //PduAlertNotification");
   }
@@ -1234,59 +1278,59 @@ static inline void disposePdu(SmppHeader* _pdu)
   if ( !_pdu ) return;
   switch ( _pdu->commandId )
   {
-  case GENERIC_NACK:  
+  case GENERIC_NACK:
     delete(reinterpret_cast<PduGenericNack*>(_pdu)); break;
-  case BIND_RECIEVER: 
+  case BIND_RECIEVER:
     delete(reinterpret_cast<PduBindTRX*>(_pdu)); break;
-  case BIND_RECIEVER_RESP: 
+  case BIND_RECIEVER_RESP:
     delete(reinterpret_cast<PduBindTRXResp*>(_pdu)); break;
-  case BIND_TRANSMITTER: 
+  case BIND_TRANSMITTER:
     delete(reinterpret_cast<PduBindTRX*>(_pdu)); break;
-  case BIND_TRANSMITTER_RESP: 
+  case BIND_TRANSMITTER_RESP:
     delete(reinterpret_cast<PduBindTRXResp*>(_pdu)); break;
-  case QUERY_SM: 
+  case QUERY_SM:
     delete(reinterpret_cast<PduQuerySm*>(_pdu)); break;
-  case QUERY_SM_RESP: 
+  case QUERY_SM_RESP:
     delete(reinterpret_cast<PduQuerySmResp*>(_pdu));break;
-  case SUBMIT_SM: 
+  case SUBMIT_SM:
     delete(reinterpret_cast<PduSubmitSm*>(_pdu));  break;
-  case SUBMIT_SM_RESP: 
+  case SUBMIT_SM_RESP:
     delete(reinterpret_cast<PduSubmitSmResp*>(_pdu));  break;
-  case DELIVERY_SM: 
+  case DELIVERY_SM:
     delete(reinterpret_cast<PduDeliverySm*>(_pdu)); break;
-  case DELIVERY_SM_RESP: 
+  case DELIVERY_SM_RESP:
     delete(reinterpret_cast<PduDeliverySmResp*>(_pdu)); break;
-  case UNBIND: 
+  case UNBIND:
     delete(reinterpret_cast<PduUnbind*>(_pdu)); break;
-  case UNBIND_RESP: 
+  case UNBIND_RESP:
     delete(reinterpret_cast<PduUnbindResp*>(_pdu)); break;
-  case REPLACE_SM: 
+  case REPLACE_SM:
     delete(reinterpret_cast<PduReplaceSm*>(_pdu)); break;
-  case REPLACE_SM_RESP: 
+  case REPLACE_SM_RESP:
     delete(reinterpret_cast<PduReplaceSmResp*>(_pdu)); break;
-  case CANCEL_SM: 
+  case CANCEL_SM:
     delete(reinterpret_cast<PduCancelSm*>(_pdu)); break;
-  case CANCEL_SM_RESP: 
+  case CANCEL_SM_RESP:
     delete(reinterpret_cast<PduCancelSmResp*>(_pdu));break;
-  case BIND_TRANCIEVER: 
+  case BIND_TRANCIEVER:
     delete(reinterpret_cast<PduBindTRX*>(_pdu)); break;
-  case BIND_TRANCIEVER_RESP: 
+  case BIND_TRANCIEVER_RESP:
     delete(reinterpret_cast<PduBindTRXResp*>(_pdu)); break;
-  case OUTBIND: 
+  case OUTBIND:
     delete(reinterpret_cast<PduOutBind*>(_pdu)); break;
-  case ENQUIRE_LINK: 
+  case ENQUIRE_LINK:
     delete(reinterpret_cast<PduEnquireLink*>(_pdu)); break;
-  case ENQUIRE_LINK_RESP: 
+  case ENQUIRE_LINK_RESP:
     delete(reinterpret_cast<PduEnquireLinkResp*>(_pdu)); break;
-  case SUBMIT_MULTI: 
+  case SUBMIT_MULTI:
     delete(reinterpret_cast<PduMultiSm*>(_pdu)); break;
-  case SUBMIT_MULTI_RESP: 
+  case SUBMIT_MULTI_RESP:
     delete(reinterpret_cast<PduMultiSmResp*>(_pdu)); break;
-  case ALERT_NOTIFICATION: 
+  case ALERT_NOTIFICATION:
     delete(reinterpret_cast<PduAlertNotification*>(_pdu)); break;
-  case DATA_SM: 
+  case DATA_SM:
     delete(reinterpret_cast<PduDataSm*>(_pdu)); break;
-  case DATA_SM_RESP: 
+  case DATA_SM_RESP:
     delete(reinterpret_cast<PduDataSmResp*>(_pdu)); break;
   default:
     __unreachable__("this code is not reachable");
@@ -1296,4 +1340,3 @@ static inline void disposePdu(SmppHeader* _pdu)
 };
 };
 #endif
-
