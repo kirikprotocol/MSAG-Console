@@ -490,7 +490,7 @@ namespace smsc { namespace sms
          * @return адрес отправителя
          * @see Address
          */
-        inline Address& getOriginatingAddress() 
+        inline const Address& getOriginatingAddress() const 
         {
             return originatingAddress; 
         };
@@ -533,7 +533,7 @@ namespace smsc { namespace sms
          * @return адрес получателя
          * @see Address
          */
-        inline Address& getDestinationAddress() 
+        inline const Address& getDestinationAddress() const
         {
             return destinationAddress; 
         };
@@ -810,7 +810,7 @@ namespace smsc { namespace sms
          * @return тело сообщения
          * @see Body
          */
-        inline Body& getMessageBody() 
+        inline const Body& getMessageBody() const
         {
             return messageBody; 
         };
