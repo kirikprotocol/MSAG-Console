@@ -173,6 +173,7 @@ public:
 	}
 
 protected:
+  void findConfigFile();
 	/**
 	 * Читает конфигурацию.
 	 *

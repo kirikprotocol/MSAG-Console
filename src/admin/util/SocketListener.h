@@ -72,10 +72,10 @@ public:
 
 	void shutdown()
 	{
-		pool.shutdown();
-    sock.Close();
-    logger.debug("ServiceSocketListener: server socket closed");
 		isShutdownSignaled = true;
+    sock.Abort();
+		pool.shutdown();
+    logger.debug("ServiceSocketListener: server socket closed");
 	}
 
 protected:

@@ -101,7 +101,7 @@ int main(int argc,char* argv[])
       // start
       smsc_component.runSmsc();
       AdminSocketManager::start(admin_host, servicePort);
-      fprintf(stderr,"smsc started");
+      fprintf(stderr,"smsc started\n");
 
       //running
       AdminSocketManager::WaitFor();

@@ -35,6 +35,7 @@ Variant SmscComponent::call(const Method & method, const Arguments & args)
 void SmscComponent::runSmsc()
 	throw (AdminException)
 {
+  smsc::core::synchronization::MutexGuard guard(mutex);
 	if (smsc_app_runner.get() == 0)
 	{
 		smsc_app_runner.reset(new SmscAppRunner(configs));
@@ -47,6 +48,7 @@ void SmscComponent::runSmsc()
 void SmscComponent::stopSmsc()
 	throw (AdminException)
 {
+  smsc::core::synchronization::MutexGuard guard(mutex);
 	if (smsc_app_runner.get() != 0)
 	{
 		smsc_app_runner->stop();

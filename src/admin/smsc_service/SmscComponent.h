@@ -6,6 +6,7 @@
 #include <admin/service/Component.h>
 #include <admin/service/Method.h>
 #include <admin/service/Type.h>
+#include <core/synchronization/Mutex.hpp>
 #include <util/Logger.h>
 #include <system/smsc.hpp>
 
@@ -84,6 +85,8 @@ protected:
 	SmscConfigs &configs;
 	Methods methods;
 	enum {applyRoutesMethod, applyAliasesMethod, lookupProfileMethod, updateProfileMethod};
+
+  smsc::core::synchronization::Mutex mutex;
 
 private:
 	class SmscAppRunner : public Thread

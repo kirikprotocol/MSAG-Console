@@ -7,6 +7,7 @@
 #include <util/xml/DOMErrorLogger.h>
 #include <util/xml/init.h>
 #include <fstream>
+#include <sys/stat.h>
 
 namespace smsc   {
 namespace util   {
@@ -23,6 +24,7 @@ Manager::Manager()
 	throw(ConfigException)
 {
 	initXerces();
+  findConfigFile();
 	DOMParser *parser = createParser();
 
 	DOM_Document document = parse(parser, config_filename.get());
@@ -138,6 +140,35 @@ void Manager::writeHeader(std::ostream &out)
 void Manager::writeFooter(std::ostream &out)
 {
 	out << "</config>" << std::endl;
+}
+
+void Manager::findConfigFile() 
+{
+  if (config_filename.get() == 0) 
+    return;
+  
+  struct stat s;
+  std::auto_ptr<char> tmp_name(new char[strlen(config_filename.get())+10]);
+
+  strcpy(tmp_name.get(), config_filename.get());
+  if (stat(tmp_name.get(), &s) == 0)
+    return;
+
+  strcpy(tmp_name.get(), "conf/");
+  strcat(tmp_name.get(), config_filename.get());
+  if (stat(tmp_name.get(), &s) == 0)
+  {
+    config_filename = tmp_name;
+    return;
+  }
+  
+  strcpy(tmp_name.get(), "../conf/");
+  strcat(tmp_name.get(), config_filename.get());
+  if (stat(tmp_name.get(), &s) == 0)
+  {
+    config_filename = tmp_name;
+    return;
+  }
 }
 
 }

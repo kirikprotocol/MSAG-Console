@@ -23,8 +23,11 @@ public:
 
 	virtual void handleSignal() throw ()
 	{
-    smsc_component.stopSmsc();
+    fprintf(stderr, "Stop signal received\n");
 		AdminSocketManager::stop();
+    fprintf(stderr, "SMSC admin module stopped\n");
+    //smsc_component.stopSmsc();
+    //fprintf(stderr, "SMSC stopped\n");
 	}
 
 private:
