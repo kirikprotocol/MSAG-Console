@@ -69,7 +69,6 @@ public:
     MutexGuard g(mutex);
     if(inqueue.Count()==0)return false;
     inqueue.Shift(cmd);
-    __mapproxy_trace2__("get command:%p",*((void**)&cmd));
     return true;
   }
 
@@ -110,7 +109,6 @@ public:
 
   SmscCommand getOutgoingCommand()
   {
-    __mapproxy_trace__("getOutgoingCommand");
     MutexGuard g(mutex);
     SmscCommand cmd;
     outqueue.Shift(cmd);
@@ -154,7 +152,7 @@ public:
 
   uint32_t getNextSequenceNumber()
   {
-    MutexGuard g(mutex);
+    MutexGuard g(seqMutex);
     if (seq <  0x40000) seq = 0x40000;
     return seq++;
   }
@@ -176,6 +174,7 @@ public:
   }
 
 protected:
+  mutable Mutex seqMutex;
   mutable Mutex mutex;
   std::string id;
   MapIOQueue inqueue,outqueue;
