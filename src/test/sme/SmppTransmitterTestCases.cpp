@@ -173,8 +173,8 @@ void SmppTransmitterTestCases::checkRegisteredDelivery(Message& m)
 		(regDelivery & INTERMEDIATE_NOTIFICATION_REQUESTED))
 	{
 		SmppTime t;
-		time_t waitTime = time(NULL) + rand2(sequentialPduInterval, 60);
-		time_t validTime = waitTime + rand2(sequentialPduInterval, 60);
+		time_t waitTime = time(NULL) + rand2(sequentialPduInterval, maxWaitTime);
+		time_t validTime = waitTime + rand2(sequentialPduInterval, maxDeliveryPeriod);
 		m.set_scheduleDeliveryTime(
 			SmppUtil::time2string(waitTime, t, time(NULL), __numTime__));
 		m.set_validityPeriod(
@@ -405,7 +405,7 @@ void SmppTransmitterTestCases::submitSmCorrect(bool sync, int num)
 						__tc__("submitSm.correct.waitTimePast");
 						SmppTime t;
 						SmppUtil::time2string(
-							time(NULL) - rand1(60), t, time(NULL), __absoluteTime__);
+							time(NULL) - rand1(maxWaitTime), t, time(NULL), __absoluteTime__);
 						pdu->get_message().set_scheduleDeliveryTime(t);
 						//отменить подтверждения доставки и нотификации
 						pdu->get_message().set_registredDelivery(0);
@@ -631,7 +631,7 @@ void SmppTransmitterTestCases::submitSmCorrect(bool sync, int num)
 
 void SmppTransmitterTestCases::submitSmIncorrect(bool sync, int num)
 {
-	TCSelector s(num, 4);
+	TCSelector s(num, 10);
 	__decl_tc__;
 	__tc__("submitSm.incorrect");
 	for (; s.check(); s++)
@@ -642,43 +642,93 @@ void SmppTransmitterTestCases::submitSmIncorrect(bool sync, int num)
 			setupRandomCorrectSubmitSmPdu(pdu);
 			switch (s.value())
 			{
-				case 1: //срок валидности уже закончился
+				case 1: //неправильный адрес отправителя
+					{
+						__tc__("submitSm.incorrect.sourceAddr");
+						Address addr; PduAddress smppAddr;
+						SmsUtil::setupRandomCorrectAddress(&addr);
+						SmppUtil::convert(addr, &smppAddr);
+						pdu->get_message().set_source(smppAddr);
+					}
+					break;
+				case 2: //неправильный адрес получателя
+					{
+						__tc__("submitSm.incorrect.destAddr");
+						Address addr; PduAddress smppAddr;
+						SmsUtil::setupRandomCorrectAddress(&addr);
+						SmppUtil::convert(addr, &smppAddr);
+						pdu->get_message().set_dest(smppAddr);
+					}
+					break;
+				case 3: //неправильный формат validity_period
+					{
+						__tc__("submitSm.incorrect.validTimeFormat");
+						string t = pdu->get_message().get_validityPeriod();
+						t[rand0(MAX_SMPP_TIME_LENGTH - 1)] = 'a';
+						pdu->get_message().set_validityPeriod(t.c_str());
+					}
+					break;
+				case 4: //неправильный формат validity_period
+					{
+						__tc__("submitSm.incorrect.validTimeFormat");
+						string t = pdu->get_message().get_validityPeriod();
+						t.erase(rand0(MAX_SMPP_TIME_LENGTH - 1), 1);
+						pdu->get_message().set_validityPeriod(t.c_str());
+					}
+					break;
+				case 5: //неправильный формат schedule_delivery_time
+					{
+						__tc__("submitSm.incorrect.waitTimeFormat");
+						string t = pdu->get_message().get_scheduleDeliveryTime();
+						t[rand0(MAX_SMPP_TIME_LENGTH - 1)] = 'a';
+						pdu->get_message().set_scheduleDeliveryTime(t.c_str());
+					}
+					break;
+				case 6: //неправильный формат schedule_delivery_time
+					{
+						__tc__("submitSm.incorrect.waitTimeFormat");
+						string t = pdu->get_message().get_scheduleDeliveryTime();
+						t.erase(rand0(MAX_SMPP_TIME_LENGTH - 1), 1);
+						pdu->get_message().set_scheduleDeliveryTime(t.c_str());
+					}
+					break;
+				case 7: //срок валидности уже закончился
 					{
 						__tc__("submitSm.incorrect.validTimePast");
 						SmppTime t;
 						SmppUtil::time2string(
-							time(NULL) - rand1(60), t, time(NULL), __absoluteTime__);
+							time(NULL) - rand1(maxDeliveryPeriod), t, time(NULL), __absoluteTime__);
 						pdu->get_message().set_validityPeriod(t);
 					}
 					break;
-				case 2: //waitTime > validTime
+				case 8: //waitTime > validTime
 					{
 						__tc__("submitSm.incorrect.waitTimeInvalid1");
 						SmppTime t;
-						time_t validTime = time(NULL) + rand1(60);
-						time_t waitTime = validTime + rand1(60);
+						time_t validTime = time(NULL) + rand1(maxWaitTime);
+						time_t waitTime = validTime + rand1(maxWaitTime);
 						SmppUtil::time2string(waitTime, t, time(NULL), __numTime__);
 						pdu->get_message().set_scheduleDeliveryTime(t);
 						SmppUtil::time2string(validTime, t, time(NULL), __numTime__);
 						pdu->get_message().set_validityPeriod(t);
 					}
 					break;
-				case 3: //waitTime > validTime
+				case 9: //waitTime > validTime
 					{
 						__tc__("submitSm.incorrect.waitTimeInvalid2");
 						SmppTime t;
-						time_t waitTime = time(NULL) + maxValidPeriod + rand1(60);
+						time_t waitTime = time(NULL) + maxValidPeriod + rand1(maxWaitTime);
 						SmppUtil::time2string(waitTime, t, time(NULL), __numTime__);
 						pdu->get_message().set_scheduleDeliveryTime(t);
 						pdu->get_message().set_validityPeriod("");
 					}
 					break;
-				case 4: //waitTime > validTime
+				case 10: //waitTime > validTime
 					{
 						__tc__("submitSm.incorrect.waitTimeInvalid3");
 						SmppTime t;
-						time_t waitTime = time(NULL) + maxValidPeriod + rand1(60);
-						time_t validTime = waitTime + rand1(60);
+						time_t waitTime = time(NULL) + maxValidPeriod + rand1(maxWaitTime);
+						time_t validTime = waitTime + rand1(maxDeliveryPeriod);
 						SmppUtil::time2string(waitTime, t, time(NULL), __numTime__);
 						pdu->get_message().set_scheduleDeliveryTime(t);
 						SmppUtil::time2string(validTime, t, time(NULL), __numTime__);
@@ -891,7 +941,7 @@ void SmppTransmitterTestCases::replaceSm(bool sync, int num)
 						__tc__("replaceSm.waitTimePast");
 						SmppTime t;
 						SmppUtil::time2string(
-							time(NULL) - rand1(60), t, time(NULL), __absoluteTime__);
+							time(NULL) - rand1(maxWaitTime), t, time(NULL), __absoluteTime__);
 						pdu->set_scheduleDeliveryTime(t);
 						//отменить подтверждения доставки и нотификации
 						pdu->set_registredDelivery(0);
@@ -902,7 +952,7 @@ void SmppTransmitterTestCases::replaceSm(bool sync, int num)
 						__tc__("replaceSm.validTimePast");
 						SmppTime t;
 						SmppUtil::time2string(
-							time(NULL) - rand1(60), t, time(NULL), __absoluteTime__);
+							time(NULL) - rand1(maxDeliveryPeriod), t, time(NULL), __absoluteTime__);
 						pdu->set_validityPeriod(t);
 					}
 					break;
@@ -920,8 +970,8 @@ void SmppTransmitterTestCases::replaceSm(bool sync, int num)
 					{
 						__tc__("replaceSm.waitTimeInvalid");
 						SmppTime t;
-						time_t validTime = time(NULL) + rand1(60);
-						time_t waitTime = validTime + rand1(60);
+						time_t validTime = time(NULL) + rand1(maxWaitTime);
+						time_t waitTime = validTime + rand1(maxWaitTime);
 						SmppUtil::time2string(waitTime, t, time(NULL), __numTime__);
 						pdu->set_scheduleDeliveryTime(t);
 						SmppUtil::time2string(validTime, t, time(NULL), __numTime__);
@@ -1030,8 +1080,9 @@ void SmppTransmitterTestCases::sendDeliverySmResp(PduDeliverySmResp& pdu, bool s
 	}
 }
 
-void SmppTransmitterTestCases::sendDeliverySmRespOk(PduDeliverySm& pdu, bool sync)
+uint32_t SmppTransmitterTestCases::sendDeliverySmRespOk(PduDeliverySm& pdu, bool sync)
 {
+	__trace__("sendDeliverySmRespOk()");
 	__decl_tc__;
 	try
 	{
@@ -1041,18 +1092,21 @@ void SmppTransmitterTestCases::sendDeliverySmRespOk(PduDeliverySm& pdu, bool syn
 		respPdu.get_header().set_commandStatus(ESME_ROK); //No Error
 		sendDeliverySmResp(respPdu, sync);
 		__tc_ok__;
+		return ESME_ROK;
 	}
 	catch(...)
 	{
 		__tc_fail__(100);
 		error();
 	}
+	return 0xffffffff;
 }
 
-void SmppTransmitterTestCases::sendDeliverySmRespErr(PduDeliverySm& pdu,
+uint32_t SmppTransmitterTestCases::sendDeliverySmRespRetry(PduDeliverySm& pdu,
 	bool sync, int num)
 {
-	TCSelector s(num, 5);
+	__trace__("sendDeliverySmRespRetry()");
+	TCSelector s(num, 4);
 	__decl_tc__;
 	try
 	{
@@ -1061,41 +1115,90 @@ void SmppTransmitterTestCases::sendDeliverySmRespErr(PduDeliverySm& pdu,
 		switch (s.value())
 		{
 			case 1: //не отправлять респонс
-				__tc__("sendDeliverySmResp.notSend");
+				__tc__("sendDeliverySmResp.sendRetry.notSend");
+				respPdu.get_header().set_commandStatus(0xffffffff);
 				break;
-			case 2: //отправить респонс с кодом ошибки 0x1-0xff
-				__tc__("sendDeliverySmResp.sendWithErrCode");
-				respPdu.get_header().set_commandStatus(rand1(0xff));
+			case 2: //временная ошибка на стороне sme, запрос на повторную доставку
+				__tc__("sendDeliverySmResp.sendRetry.tempAppError");
+				respPdu.get_header().set_commandStatus(ESME_RX_T_APPN);
 				sendDeliverySmResp(respPdu, sync);
 				break;
-			case 3: //отправить респонс с кодом ошибки:
-				//0x100-0x3ff - Reserved for SMPP extension
-				//0x400-0x4ff - Reserved for SMSC vendor specific
-				__tc__("sendDeliverySmResp.sendWithErrCode");
-				respPdu.get_header().set_commandStatus(rand2(0x100, 0x4ff));
+			case 3: //переполнение очереди стороне sme
+				__tc__("sendDeliverySmResp.sendRetry.msgQueueFull");
+				respPdu.get_header().set_commandStatus(ESME_RMSGQFUL);
 				sendDeliverySmResp(respPdu, sync);
 				break;
-			case 4: //отправить респонс с кодом ошибки >0x500 - Reserved
-				__tc__("sendDeliverySmResp.sendWithErrCode");
-				respPdu.get_header().set_commandStatus(rand2(0x500, INT_MAX));
-				sendDeliverySmResp(respPdu, sync);
-				break;
-			case 5: //отправить респонс с неправильным sequence_number
-				__tc__("sendDeliverySmResp.sendInvalidSequenceNumber");
+			case 4: //отправить респонс с неправильным sequence_number
+				__tc__("sendDeliverySmResp.sendRetry.invalidSequenceNumber");
 				respPdu.get_header().set_sequenceNumber(INT_MAX);
-				respPdu.get_header().set_commandStatus(ESME_ROK); //No Error
+				respPdu.get_header().set_commandStatus(0xffffffff);
+				//respPdu.get_header().set_commandStatus(ESME_ROK); //No Error
 				sendDeliverySmResp(respPdu, sync);
 				break;
 			default:
 				__unreachable__("Invalid num");
 		}
 		__tc_ok__;
+		return respPdu.get_header().get_commandStatus();
 	}
 	catch(...)
 	{
 		__tc_fail__(s.value());
 		error();
 	}
+	return 0xffffffff;
+}
+
+uint32_t SmppTransmitterTestCases::sendDeliverySmRespError(PduDeliverySm& pdu,
+	bool sync, int num)
+{
+	__trace__("sendDeliverySmRespError()");
+	TCSelector s(num, 3);
+	__decl_tc__;
+	try
+	{
+		PduDeliverySmResp respPdu;
+		respPdu.get_header().set_sequenceNumber(pdu.get_header().get_sequenceNumber());
+		switch (s.value())
+		{
+			case 1: //отправить респонс с кодом ошибки 0x1-0x10f
+				__tc__("sendDeliverySmResp.sendError.standardError");
+				respPdu.get_header().set_commandStatus(rand1(0x10f));
+				break;
+			case 2: //отправить респонс с кодом ошибки:
+				//0x110-0x3ff - Reserved for SMPP extension
+				//0x400-0x4ff - Reserved for SMSC vendor specific
+				__tc__("sendDeliverySmResp.sendError.reservedError");
+				respPdu.get_header().set_commandStatus(rand2(0x110, 0x4ff));
+				break;
+			case 3: //отправить респонс с кодом ошибки >0x500 - Reserved
+				__tc__("sendDeliverySmResp.sendError.outRangeError");
+				respPdu.get_header().set_commandStatus(rand2(0x500, INT_MAX));
+				break;
+			/*
+			case 4: //неустранимая ошибка на стороне sme, отказ от всех последующих сообщений
+				__tc__("sendDeliverySmResp.sendError.permanentAppError");
+				respPdu.get_header().set_commandStatus(ESME_RX_P_APPN);
+				break;
+			*/
+			default:
+				__unreachable__("Invalid num");
+		}
+		//рекурсивный вызов, чтобы предотвратить закрытие smpp сессии
+		if (respPdu.get_header().get_commandStatus() == ESME_RX_P_APPN)
+		{
+			return sendDeliverySmRespError(pdu, sync, num);
+		}
+		sendDeliverySmResp(respPdu, sync);
+		__tc_ok__;
+		return respPdu.get_header().get_commandStatus();
+	}
+	catch(...)
+	{
+		__tc_fail__(s.value());
+		error();
+	}
+	return 0xffffffff;
 }
 
 }
