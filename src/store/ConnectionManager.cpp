@@ -484,7 +484,7 @@ void Connection::check(sword status)
     isDead = true;
 
     StorageException exc((const char *)errbuf, (int)errcode, (int)status);
-    log.error("Storage Exception : %s\n", exc.what());
+    log.error("Storage Exception : %s", exc.what());
     throw exc;
 }
 

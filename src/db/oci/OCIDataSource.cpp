@@ -179,7 +179,7 @@ void OCIConnection::check(sword status)
     isDead = true;
 
     SQLException exc((const char *)errbuf, (int)errcode, (int)status);
-    log.error("SQL Exception : %s\n", exc.what());
+    log.error("SQL Exception : %s", exc.what());
     throw exc;
 }
 
