@@ -167,6 +167,7 @@ public:
     static const int NOROUTE  = 4;
     static const int DBERROR  = 5;
     static const int INVALIDSCHEDULE = 6;
+    static const int INVALIDVALIDTIME = 7;
   };
 
   SmeProxy* getProxy(){return cmd->proxy;}
@@ -331,6 +332,7 @@ public:
     case Status::NOROUTE : return SmppStatusSet::ESME_RINVDSTADR;
     case Status::DBERROR : return SmppStatusSet::ESME_RSYSERR;
     case Status::INVALIDSCHEDULE : return SmppStatusSet::ESME_RINVSCHED;
+    case Status::INVALIDVALIDTIME : return SmppStatusSet::ESME_RINVEXPIRY;
     default : return SmppStatusSet::ESME_RUNKNOWNERR;
     }
   }
