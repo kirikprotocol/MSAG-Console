@@ -1276,7 +1276,7 @@ static void DoUSSRUserResponceError(const SmscCommand* cmd , MapDialog* dialog)
       FormatText("MAP::%s Resp return error 0x%x",__FUNCTION__,result));
   CloseMapDialog(dialog->dialogid_map,dialog->ssn);
   dialog->state = MAPST_END;
-  if( cmd != null ) SendOkToSmsc(dialog);
+  if( cmd != 0 ) SendOkToSmsc(dialog);
   DropMapDialog(dialog);
 }
 
