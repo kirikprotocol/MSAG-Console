@@ -1676,7 +1676,7 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
           // extract msc number
           if( version == 1 ) {
             dialog->s_msc = LocationInfoToString(locationInfo_sp);
-            __map_trace2__( "LocationInfo addr type: %s address: %s", locationInfo_sp->typeOfNumber==0x01?"roaming":"msc", dialog->s_msc );
+            __map_trace2__( "LocationInfo addr type: %s address: %s", locationInfo_sp->typeOfNumber==0x01?"roaming":"msc", dialog->s_msc.get() );
             mkSS7GTAddress( &dialog->destMscAddr, locationInfo_sp, 8 );
           } else {
             dialog->s_msc = MscToString(mscNumber_sp);
