@@ -49,6 +49,7 @@ StateType StateMachine::submit(Tuple& t)
   __trace2__("StateMachine::submit:%lld",t.msgId);
   
   SMS* sms = t.command->get_sms();
+  uint32_t dialogId =  t.command->get_dialogId();
 
   if(sms->getNextTime()==-1)
   {
@@ -75,7 +76,6 @@ StateType StateMachine::submit(Tuple& t)
 
   time_t now=time(NULL);
 
-  uint32_t dialogId =  t.command->get_dialogId();
   __trace2__("SUBMIT: seq=%d",dialogId);
   int dest_proxy_index;
   // route sms
