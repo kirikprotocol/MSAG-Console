@@ -8,9 +8,7 @@ namespace smsc {
 namespace admin {
 namespace protocol {
 
-using smsc::admin::service::StringType;
-using smsc::admin::service::BooleanType;
-using smsc::admin::service::LongType;
+using namespace smsc::admin::service;
 using smsc::util::encode;
 
 static const char * const RESPONSE_HEADER =
@@ -48,22 +46,37 @@ Response::Response(Status status, Variant v)
 	char buf[sizeof(long)*3+1] = {0};
 	const char * value = buf;
 	char *type = "unknown";
+	std::string str;
 	switch (v.getType())
 	{
-	case StringType:
+	case service::StringType:
 		value = v.getStringValue();
 		type = "string";
 		break;
-	case BooleanType:
+	case service::BooleanType:
 		value = v.getBooleanValue() ? "true" : "false";
 		type = "bool";
 		break;
-	case LongType:
+	case service::LongType:
 		snprintf(buf, sizeof(buf), "%li", v.getLongValue());
 		type = "int";
 		break;
+	case service::StringListType:
+		for (StringList::const_iterator i = v.getStringListValue().begin(); i != v.getStringListValue().end(); i++)
+		{
+			if (i != v.getStringListValue().begin())
+			{
+				str += ',';
+			}
+			str += *i;
+		}
+		value = str.c_str();
+		type = "stringlist";
+		break;
 	default:
-		throw AdminException("Unknown response value type");
+		char buff[1024];
+		snprintf(buff, 1000, "Unknown response value type: %u", v.getType());
+		throw AdminException(buff);
 	}
 
 	std::auto_ptr<char> encodedValue(encode(value));

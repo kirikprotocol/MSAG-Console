@@ -7,7 +7,7 @@ namespace smsc {
 namespace admin {
 namespace service {
 
-enum Type {StringType, LongType, BooleanType, undefined};
+enum Type {StringType, LongType, BooleanType, StringListType, undefined};
 
 Type cstr2Type(const char * const typestr);
 const char * const type2cstr(Type type);

@@ -14,7 +14,7 @@ import ru.novosoft.smsc.admin.protocol.Response;
 import ru.novosoft.smsc.admin.utli.Proxy;
 import ru.novosoft.smsc.util.xml.Utils;
 
-import java.util.Map;
+import java.util.*;
 
 
 public class Service extends Proxy
@@ -22,8 +22,7 @@ public class Service extends Proxy
 	ServiceInfo info = null;
 	private Category logger = Category.getInstance(this.getClass());
 
-	public Service(ServiceInfo info)
-			  throws AdminException
+	public Service(ServiceInfo info) throws AdminException
 	{
 		super(info.getHost(), info.getPort());
 		this.info = info;
@@ -40,11 +39,9 @@ public class Service extends Proxy
 	 * String Integer или Boolean класса.
 	 * @return Значение, которое вернул вызванный метод (String, Integer или Boolean)
 	 */
-	public Object call(Component component, Method method, Type returnType, Map arguments)
-			  throws AdminException
+	public Object call(Component component, Method method, Type returnType, Map arguments) throws AdminException
 	{
-		if (component != null && method != null
-				  && method.equals(component.getMethods().get(method.getName())))
+		if (component != null && method != null && method.equals(component.getMethods().get(method.getName())))
 		{
 			Response r = runCommand(new CommandCall(info.getId(), component.getName(), method.getName(), returnType, arguments));
 			if (r.getStatus() != Response.StatusOk)
@@ -59,6 +56,8 @@ public class Service extends Proxy
 					return Long.decode(Utils.getNodeText(resultElem));
 				case Type.BooleanType:
 					return Boolean.valueOf(Utils.getNodeText(resultElem));
+				case Type.StringListType:
+					return translateStringList(Utils.getNodeText(resultElem));
 				default:
 					throw new AdminException("Unknown result type");
 			}
@@ -73,19 +72,11 @@ public class Service extends Proxy
 				if (component != null)
 					logger.debug("Component: " + component.getName());
 				if (method != null)
-					logger.debug("Called method:"
-									 + "\n  name: " + method.getName()
-									 + "\n  type: " + method.getType().getName()
-									 + "\n  params: " + method.getParams()
-					);
+					logger.debug("Called method:" + "\n  name: " + method.getName() + "\n  type: " + method.getType().getName() + "\n  params: " + method.getParams());
 				if (component != null && component.getMethods().get(method.getName()) != null)
 				{
 					Method foundMethod = (Method) component.getMethods().get(method.getName());
-					logger.debug("Found method:"
-									 + "\n  name: " + foundMethod.getName()
-									 + "\n  type: " + foundMethod.getType().getName()
-									 + "\n  params: " + foundMethod.getParams()
-					);
+					logger.debug("Found method:" + "\n  name: " + foundMethod.getName() + "\n  type: " + foundMethod.getType().getName() + "\n  params: " + foundMethod.getParams());
 				}
 			}
 			catch (Throwable e)
@@ -96,8 +87,31 @@ public class Service extends Proxy
 		}
 	}
 
-	public void refreshComponents()
-			  throws AdminException
+	private List translateStringList(String listStr)
+	{
+		String buffer = "";
+		List result = new LinkedList();
+		for (int i = 0; i<listStr.length(); i++)
+		{
+			char c = listStr.charAt(i);
+			if (c == ',')
+			{
+				result.add(buffer);
+				buffer = "";
+				continue;
+			}
+			if (c == '\\' && i<(listStr.length()-1))
+			{
+				c=listStr.charAt(++i);
+			}
+         buffer += c;
+		}
+		if (buffer.length() > 0)
+			result.add(buffer);
+		return result;
+	}
+
+	public void refreshComponents() throws AdminException
 	{
 		Response r = runCommand(new CommandListComponents(info.getId()));
 		if (r.getStatus() != Response.StatusOk)
@@ -107,7 +121,7 @@ public class Service extends Proxy
 
 	protected void setInfo(ServiceInfo info)
 	{
-		logger.debug("Set info. Status: " + info.getStatusStr() + " [" + info.getStatus()+']');
+		logger.debug("Set info. Status: " + info.getStatusStr() + " [" + info.getStatus() + ']');
 		this.info = info;
 	}
 }

@@ -23,6 +23,10 @@ Type cstr2Type(const char * const typestr)
 	{
 		return BooleanType;
 	}
+	else if (strcmp(typestr, "stringlist") == 0)
+	{
+		return StringListType;
+	}
 	else
 	{
 		return undefined;
@@ -35,13 +39,12 @@ const char * const type2cstr(Type type)
 	{
 	case StringType:
 		return "string";
-		break;
 	case LongType:
 		return "int";
-		break;
 	case BooleanType:
 		return "bool";
-		break;
+  case StringListType:
+    return "stringlist";
 	default:
 		return 0;
 	}

@@ -21,13 +21,15 @@ public class Type
 	static final public byte StringType = 1;
 	static final public byte IntType = 2;
 	static final public byte BooleanType = 3;
+	static final public byte StringListType = 4;
 	static final public byte UnknownType = 0;
 
 	static final public Type[] Types = {
 		new Type("undefined", UnknownType), // must be on 0 position
 		new Type("string", StringType),
 		new Type("int", IntType),
-		new Type("bool", BooleanType)
+		new Type("bool", BooleanType),
+		new Type("stringlist", StringListType)
 	};
 
 	protected String name;

@@ -26,54 +26,8 @@ using smsc::util::Logger;
 class SmscComponent : public Component
 {
 public:
-  SmscComponent(SmscConfigs &all_configs)
-    : configs(all_configs),
-      logger(Logger::getCategory("smsc.admin.smsc_service.SmscComponent"))
-  {
-    Parameters empty_params;
-    Parameters lookup_params;
-    lookup_params["address"] = Parameter("address", StringType);
-    Parameters update_params;
-    update_params["address"] = Parameter("address", StringType);
-    update_params["profile"] = Parameter("profile", StringType);
-    Parameters cancelMessage_params;
-    cancelMessage_params["ids"] = Parameter("ids", StringType);
-    cancelMessage_params["sources"] = Parameter("sources", StringType);
-    cancelMessage_params["destinations"] = Parameter("destinations", StringType);
-
-    Method apply_routes((unsigned)applyRoutesMethod, "apply_routes",
-                        empty_params, StringType);
-    Method apply_aliases((unsigned)applyAliasesMethod, "apply_aliases",
-                         empty_params, StringType);
-    Method lookup_profile((unsigned)lookupProfileMethod, "lookup_profile",
-                          lookup_params, StringType);
-    Method update_profile((unsigned)updateProfileMethod, "update_profile",
-                          update_params, LongType);
-
-    Method flush_statistics((unsigned)flushStatisticsMethod, "flush_statistics",
-                      empty_params, StringType);
-    Method process_cancel_messages((unsigned)processCancelMessagesMethod, "process_cancel_messages",
-                          cancelMessage_params, StringType);
-    Method apply_smsc_config((unsigned)applySmscConfigMethod, "apply_smsc_config",
-                          empty_params, StringType);
-    Method apply_services((unsigned)applyServicesMethod, "apply_services",
-                          empty_params, StringType);
-
-    methods[apply_routes.getName()] = apply_routes;
-    methods[apply_aliases.getName()] = apply_aliases;
-    methods[lookup_profile.getName()] = lookup_profile;
-    methods[update_profile.getName()] = update_profile;
-    methods[flush_statistics.getName()] = flush_statistics;
-    methods[process_cancel_messages.getName()] = process_cancel_messages;
-    methods[apply_smsc_config.getName()] = apply_smsc_config;
-    methods[apply_services.getName()] = apply_services;
-
-    smsc_app_runner.reset(0);
-  }
-  virtual ~SmscComponent()
-  {
-    smsc_app_runner.reset(0);
-  }
+  SmscComponent(SmscConfigs &all_configs);
+  virtual ~SmscComponent();
 
   virtual const char * const getName() const
   {
@@ -107,11 +61,19 @@ protected:
   void reloadConfigsAndRestart() throw (AdminException);
   void reReadConfigs() throw (AdminException);
 
+
+	void mscRegistrate(const Arguments & args);
+	void mscUnregister(const Arguments & args);
+	void mscBlock(const Arguments & args);
+	void mscClear(const Arguments & args);
+	Variant mscList();
+
   SmscConfigs &configs;
   Methods methods;
   enum {applyRoutesMethod, applyAliasesMethod, lookupProfileMethod, updateProfileMethod, 
     flushStatisticsMethod, processCancelMessagesMethod, applySmscConfigMethod,
-    applyServicesMethod};
+    applyServicesMethod,
+    mscRegistrateMethod, mscUnregisterMethod, mscBlockMethod, mscClearMethod, mscListMethod};
 
   smsc::core::synchronization::Mutex mutex;
 

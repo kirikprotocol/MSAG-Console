@@ -347,9 +347,13 @@ public class Smsc extends Service
 		call(smsc_component, msc_clear_method, Type.Types[Type.StringType], args);
 	}
 
-	public synchronized void mscList(String msc) throws AdminException
+	public synchronized List mscList() throws AdminException
 	{
 		checkComponents();
 		Object result = call(smsc_component, msc_list_method, Type.Types[Type.StringListType], new HashMap());
+		if (result instanceof List)
+			return (List) result;
+		else
+			throw new AdminException("Error in response");
 	}
 }

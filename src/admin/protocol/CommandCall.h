@@ -62,6 +62,8 @@ public:
 																	 || (strcmp(value.get(),  "1") == 0)
 																	 || (strcmp(value.get(),  "-1") == 0)
 																	 || (strcmp(value.get(),  "yes") == 0));
+      case service::StringListType:
+        args[name.get()] = Variant(value.get(), service::StringListType);
 			default:
 				logger.debug("creating ServiceCommand: unknown parameter type %s",
 										 type.get());
