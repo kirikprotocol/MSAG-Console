@@ -211,7 +211,7 @@ public class DbsmeBean extends IndexBean
 
   protected boolean isProviderEquals(String providerName, String oldProviderName, String address, int connections,
                                      String dbInstance, String dbUserName, String dbUserPassword, String type, boolean watchdog,
-                                     String job_not_found, String ds_failure, String ds_connection_lost, String ds_statement_fail,
+                                     String service_not_available, String job_not_found, String ds_failure, String ds_connection_lost, String ds_statement_fail,
                                      String query_null, String input_parse, String output_format, String invalid_config)
   {
     String prefix = createProviderPrefix(providerName);
@@ -224,6 +224,7 @@ public class DbsmeBean extends IndexBean
             && config.isStringParamEquals(prefix + ".DataSource.type", type)
             && config.isBooleanParamEquals(prefix + ".DataSource.watchdog", watchdog)
 
+            && config.isStringParamEquals(prefix + ".MessageSet.SERVICE_NOT_AVAIL", service_not_available)
             && config.isStringParamEquals(prefix + ".MessageSet.JOB_NOT_FOUND", job_not_found)
             && config.isStringParamEquals(prefix + ".MessageSet.DS_FAILURE", ds_failure)
             && config.isStringParamEquals(prefix + ".MessageSet.DS_CONNECTION_LOST", ds_connection_lost)

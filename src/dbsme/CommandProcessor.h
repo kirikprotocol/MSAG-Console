@@ -209,21 +209,18 @@ namespace smsc { namespace dbsme
         
         ProviderGuard(DataProvider* provider=0) : provider(provider), counter(0) {
             if (!provider) return;
-            provider->log.debug("PG(%p)", provider);
             MutexGuard guard(provider->usersCountLock);
             counter = provider->getUserCounter(); 
             if (counter) (*counter)++;
         }
         ProviderGuard(const ProviderGuard& pg) : provider(pg.provider), counter(0) {
             if (!provider) return;
-            provider->log.debug("CPG(%p)", provider);
             MutexGuard guard(provider->usersCountLock);
             counter = provider->getUserCounter();
             if (counter) (*counter)++;
         }
         virtual ~ProviderGuard() {
             if (!provider || !counter) return;
-            provider->log.debug("~PG(%p)", provider);
             MutexGuard guard(provider->usersCountLock);
             (*counter)--; provider->usersCountEvent.Signal();
         }

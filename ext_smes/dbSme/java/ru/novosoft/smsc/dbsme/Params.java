@@ -28,6 +28,7 @@ public class Params extends DbsmeBean
   private int adminPort = 0;
 
   private String provider_not_found = null;
+  private String service_not_available = null;
   private String job_not_found = null;
   private String ds_failure = null;
   private String ds_connection_lost = null;
@@ -62,6 +63,7 @@ public class Params extends DbsmeBean
       adminPort = getInt("DBSme.Admin.port");
 
       provider_not_found = getOptionalString("DBSme.MessageSet.PROVIDER_NOT_FOUND");
+      service_not_available = getOptionalString("DBSme.MessageSet.SERVICE_NOT_AVAIL");
       job_not_found = getOptionalString("DBSme.MessageSet.JOB_NOT_FOUND");
       ds_failure = getOptionalString("DBSme.MessageSet.DS_FAILURE");
       ds_connection_lost = getOptionalString("DBSme.MessageSet.DS_CONNECTION_LOST");
@@ -104,15 +106,16 @@ public class Params extends DbsmeBean
     config.setString("DBSme.Admin.host", adminHost);
     config.setInt("DBSme.Admin.port", adminPort);
 
-    if (provider_not_found != null && provider_not_found.length() > 0) config.setString("DBSme.MessageSet.PROVIDER_NOT_FOUND", provider_not_found);
-    if (job_not_found != null && job_not_found.length() > 0) config.setString("DBSme.MessageSet.JOB_NOT_FOUND", job_not_found);
-    if (ds_failure != null && ds_failure.length() > 0) config.setString("DBSme.MessageSet.DS_FAILURE", ds_failure);
-    if (ds_connection_lost != null && ds_connection_lost.length() > 0) config.setString("DBSme.MessageSet.DS_CONNECTION_LOST", ds_connection_lost);
-    if (ds_statement_fail != null && ds_statement_fail.length() > 0) config.setString("DBSme.MessageSet.DS_STATEMENT_FAIL", ds_statement_fail);
-    if (query_null != null && query_null.length() > 0) config.setString("DBSme.MessageSet.QUERY_NULL", query_null);
-    if (input_parse != null && input_parse.length() > 0) config.setString("DBSme.MessageSet.INPUT_PARSE", input_parse);
-    if (output_format != null && output_format.length() > 0) config.setString("DBSme.MessageSet.OUTPUT_FORMAT", output_format);
-    if (invalid_config != null && invalid_config.length() > 0) config.setString("DBSme.MessageSet.INVALID_CONFIG", invalid_config);
+    if (provider_not_found != null && provider_not_found.length() > 0)       config.setString("DBSme.MessageSet.PROVIDER_NOT_FOUND", provider_not_found);   else config.removeParam("DBSme.MessageSet.PROVIDER_NOT_FOUND");
+    if (service_not_available != null && service_not_available.length() > 0) config.setString("DBSme.MessageSet.SERVICE_NOT_AVAIL", service_not_available); else config.removeParam("DBSme.MessageSet.SERVICE_NOT_AVAIL");
+    if (job_not_found != null && job_not_found.length() > 0)                 config.setString("DBSme.MessageSet.JOB_NOT_FOUND", job_not_found);             else config.removeParam("DBSme.MessageSet.JOB_NOT_FOUND");
+    if (ds_failure != null && ds_failure.length() > 0)                       config.setString("DBSme.MessageSet.DS_FAILURE", ds_failure);                   else config.removeParam("DBSme.MessageSet.DS_FAILURE");
+    if (ds_connection_lost != null && ds_connection_lost.length() > 0)       config.setString("DBSme.MessageSet.DS_CONNECTION_LOST", ds_connection_lost);   else config.removeParam("DBSme.MessageSet.DS_CONNECTION_LOST");
+    if (ds_statement_fail != null && ds_statement_fail.length() > 0)         config.setString("DBSme.MessageSet.DS_STATEMENT_FAIL", ds_statement_fail);     else config.removeParam("DBSme.MessageSet.DS_STATEMENT_FAIL");
+    if (query_null != null && query_null.length() > 0)                       config.setString("DBSme.MessageSet.QUERY_NULL", query_null);                   else config.removeParam("DBSme.MessageSet.QUERY_NULL");
+    if (input_parse != null && input_parse.length() > 0)                     config.setString("DBSme.MessageSet.INPUT_PARSE", input_parse);                 else config.removeParam("DBSme.MessageSet.INPUT_PARSE");
+    if (output_format != null && output_format.length() > 0)                 config.setString("DBSme.MessageSet.OUTPUT_FORMAT", output_format);             else config.removeParam("DBSme.MessageSet.OUTPUT_FORMAT");
+    if (invalid_config != null && invalid_config.length() > 0)               config.setString("DBSme.MessageSet.INVALID_CONFIG", invalid_config);           else config.removeParam("DBSme.MessageSet.INVALID_CONFIG");
 
     try {
       config.save();
@@ -458,5 +461,15 @@ public class Params extends DbsmeBean
     } catch (NumberFormatException e) {
       this.adminPort = 0;
     }
+  }
+
+  public String getService_not_available()
+  {
+    return service_not_available;
+  }
+
+  public void setService_not_available(String service_not_available)
+  {
+    this.service_not_available = service_not_available;
   }
 }

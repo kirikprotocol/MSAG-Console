@@ -82,6 +82,7 @@ startSection(out, "provider_properties", "Properties", true);
 finishSection(out);
 startSection(out, "Messages", "Messages", false);
 	startParams(out);
+    param(out, "SERVICE_NOT_AVAIL", "service_not_available", bean.getService_not_available());
 		param(out, "JOB_NOT_FOUND", "job_not_found", bean.getJob_not_found());
 		param(out, "DS_FAILURE", "ds_failure", bean.getDs_failure());
 		param(out, "DS_CONNECTION_LOST", "ds_connection_lost", bean.getDs_connection_lost());

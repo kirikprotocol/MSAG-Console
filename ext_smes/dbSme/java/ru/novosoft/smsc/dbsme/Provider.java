@@ -38,6 +38,7 @@ public class Provider extends DbsmeBean
   private String type = "";
   private boolean watchdog = false;
   private boolean enabled = false;
+  private String service_not_available = "";
   private String job_not_found = "";
   private String ds_failure = "";
   private String ds_connection_lost = "";
@@ -157,6 +158,7 @@ public class Provider extends DbsmeBean
         type = "";
         watchdog = false;
 
+        service_not_available = "";
         job_not_found = "";
         ds_failure = "";
         ds_connection_lost = "";
@@ -177,6 +179,7 @@ public class Provider extends DbsmeBean
         type = getString(prefix + ".DataSource.type");
         watchdog = getOptionalBool(prefix + ".DataSource.watchdog");
 
+        service_not_available = getOptionalString(prefix + ".MessageSet.SERVICE_NOT_AVAIL");
         job_not_found = getOptionalString(prefix + ".MessageSet.JOB_NOT_FOUND");
         ds_failure = getOptionalString(prefix + ".MessageSet.DS_FAILURE");
         ds_connection_lost = getOptionalString(prefix + ".MessageSet.DS_CONNECTION_LOST");
@@ -198,6 +201,7 @@ public class Provider extends DbsmeBean
     if (dbUserPassword == null) dbUserPassword = "";
     if (type == null) type = "";
 
+    if (service_not_available == null) service_not_available = "";
     if (job_not_found == null) job_not_found = "";
     if (ds_failure == null) ds_failure = "";
     if (ds_connection_lost == null) ds_connection_lost = "";
@@ -276,7 +280,7 @@ public class Provider extends DbsmeBean
   {
     final String newPrefix = createProviderPrefix(providerName);
     final boolean providerEquals = isProviderEquals(providerName, oldProviderName, address, connections, dbInstance, dbUserName, dbUserPassword, type, watchdog,
-                                                    job_not_found, ds_failure, ds_connection_lost, ds_statement_fail, query_null, input_parse, output_format, invalid_config);
+                                                    service_not_available, job_not_found, ds_failure, ds_connection_lost, ds_statement_fail, query_null, input_parse, output_format, invalid_config);
     final boolean enabledEquals = enabled == getOptionalBool(newPrefix + ".enabled");
 
     if (!providerEquals) {
@@ -287,7 +291,7 @@ public class Provider extends DbsmeBean
         final String oldProviderPrefix = createProviderPrefix(oldProviderName);
         if (!providerName.equals(oldProviderName) && config.containsSection(oldProviderPrefix))
           return error(DBSmeErrors.error.provider.providerAlreadyExists, providerName);
-        config.removeSection(oldProviderPrefix);
+        config.renameSection(oldProviderPrefix, newPrefix);
       }
       setProviderParamsToConfig(newPrefix);
       try {
@@ -340,6 +344,7 @@ public class Provider extends DbsmeBean
     else
       config.removeParam(providerPrefix + ".DataSource.watchdog");
 
+    if (service_not_available != null && service_not_available.length() > 0) config.setString(providerPrefix + ".MessageSet.SERVICE_NOT_AVAIL", service_not_available); else config.removeParam(providerPrefix + ".MessageSet.SERVICE_NOT_AVAIL");
     if (job_not_found != null && job_not_found.length() > 0) config.setString(providerPrefix + ".MessageSet.JOB_NOT_FOUND", job_not_found); else config.removeParam(providerPrefix + ".MessageSet.JOB_NOT_FOUND");
     if (ds_failure != null && ds_failure.length() > 0) config.setString(providerPrefix + ".MessageSet.DS_FAILURE", ds_failure); else config.removeParam(providerPrefix + ".MessageSet.DS_FAILURE");
     if (ds_connection_lost != null && ds_connection_lost.length() > 0) config.setString(providerPrefix + ".MessageSet.DS_CONNECTION_LOST", ds_connection_lost); else config.removeParam(providerPrefix + ".MessageSet.DS_CONNECTION_LOST");
@@ -667,5 +672,15 @@ public class Provider extends DbsmeBean
   public void setCheckedSet(Set checkedSet)
   {
     this.checkedSet = checkedSet;
+  }
+
+  public String getService_not_available()
+  {
+    return service_not_available;
+  }
+
+  public void setService_not_available(String service_not_available)
+  {
+    this.service_not_available = service_not_available;
   }
 }
