@@ -24,6 +24,7 @@ int main(void)
     const char* sql1 = "INSERT INTO SMS_TEST (TEMP, STR, DT)"
                         " VALUES (:TEMP, :STR, :DT)";
     const char* sql2 = "SELECT * FROM SMS_TEST";
+    const char* sql3 = "UPDATE SMS_TEST SET TEMP=TEMP";
     
     DataSourceLoader::loadupDataSourceFactory(
         "../db/oci/libdb_oci.so", OCI_DS_FACTORY_IDENTITY);
@@ -37,13 +38,14 @@ int main(void)
         {
             ConfigView* config = 
                 new ConfigView(Manager::getInstance(),
-                    "Applications.DBSme.DataProviders.SampleDataProvider1.DataSource");
+                    "DBSme.DataProviders.SampleDataProvider1.DataSource");
             
             ds->init(config);
             printf("Init Ok !\n");
             Connection* connection = ds->getConnection();
             if (connection)
             {
+                /*
                 Statement* statement1 = connection->createStatement(sql1);
                 if (statement1)
                 {
@@ -52,13 +54,17 @@ int main(void)
                         statement1->setInt32(1, i*10);
                         statement1->setString(2, "Testing string value");
                         statement1->setDateTime(3, i*100000);
+                        wdTimer = ds->startTimer(connection, 10);
                         int rows = statement1->executeUpdate();
                     }
                     delete statement1;
                 }
+                ds->stopTimer(wdTimer);
+
                 Statement* statement2 = connection->createStatement(sql2);
                 if (statement2)
                 {
+                    wdTimer = ds->startTimer(connection, 10);
                     ResultSet* rs = statement2->executeQuery();
                     if (rs)
                     {
@@ -89,7 +95,17 @@ int main(void)
                         delete rs;
                     }
                     delete statement2;
+                }*/
+                
+                Statement* statement3 = connection->createStatement(sql3);
+                if (statement3)
+                {
+                    int wdTimer = ds->startTimer(connection, 10);
+                    int rows = statement3->executeUpdate();
+                    ds->stopTimer(wdTimer);
+                    delete statement3;
                 }
+
                 ds->freeConnection(connection);
             }
             delete ds;
