@@ -1,7 +1,8 @@
 #include "ProfilerTestCases.hpp"
+#include "test/sms/SmsUtil.hpp"
+#include "test/core/ProfileUtil.hpp"
 #include "util/Logger.h"
 #include "util/config/Manager.h"
-#include "test/sms/SmsUtil.hpp"
 #include "ProfilerCheckList.hpp"
 #include "core/threads/ThreadPool.hpp"
 #include <sstream>
@@ -12,7 +13,7 @@ using smsc::profiler::Profile;
 using smsc::smeman::SmscCommand;
 using smsc::core::threads::ThreadPool;
 using smsc::test::sms::SmsUtil;
-using smsc::test::core::ProfileRegistry;
+using namespace smsc::test::core; //ProfileRegistry, ProfileUtil
 using namespace smsc::test::profiler; //ProfilerTestCases, ProfilerCheckList
 using namespace smsc::test::util; //TCSelector, Deletor
 using namespace std;
@@ -43,7 +44,7 @@ private:
 ProfilerFunctionalTest::ProfilerFunctionalTest(CheckList* _chkList)
 	: profiler(NULL), tc(NULL), chkList(_chkList)
 {
-	ProfilerTestCases::setupRandomCorrectProfile(defProfile);
+	ProfileUtil::setupRandomCorrectProfile(defProfile);
 	profileReg = new ProfileRegistry(defProfile);
 	reinit();
 }
@@ -63,7 +64,7 @@ void ProfilerFunctionalTest::executeTestCases(const Address& address)
 	//ѕоиск профил€ дл€ заданного адреса, 2/5
 	Address addr;
 	bool created = false;
-	for (TCSelector s(RAND_SET_TC, 5); s.check(); s++)
+	for (TCSelector s(RAND_SET_TC, 3); s.check(); s++)
 	{
 		switch (s.value())
 		{
@@ -77,12 +78,15 @@ void ProfilerFunctionalTest::executeTestCases(const Address& address)
 				tc->createProfileNotMatch(addr, RAND_TC);
 				created = true;
 				break;
+			/*
 			case 3:
 				if (created)
 				{
+					//update только дл€ полного адреса, дл€ маски нельз€
 					tc->updateProfile(addr);
 				}
 				break;
+			*/
 			default:
 				tc->lookup(address);
 		}
