@@ -82,7 +82,7 @@ extern void MAPSTATS_Restart();
 extern void MAPSTATS_Update(MAPSTATS);
 extern void MAPSTATS_DumpDialogLC(MapDialog*);
 extern void MAPSTATS_DumpDialog(MapDialog*);
-
+extern bool isMapBound();
 
 enum MapState{
   MAPST_UNKNOWN = 0,
@@ -396,6 +396,7 @@ public:
   }
 
   MapDialog* createOrAttachSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent, const SmscCommand& cmd){
+    if( !isMapBound() ) throw runtime_error("MAP is not bound yet");
     //if ( abonent.length() == 0 )
     //  throw runtime_error("MAP::createOrAttachSMSCDialog: can't create MT dialog without abonent");
     MutexGuard g(sync);

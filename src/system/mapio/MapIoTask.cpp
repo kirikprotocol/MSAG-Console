@@ -19,6 +19,7 @@ static bool MAP_dispatching = false;
 static bool MAP_isAlive = false;
 static bool MAP_aborting = false;
 #define CORRECT_BIND_COUNTER 2
+#define MAX_BIND_TIMEOUT 15
 
 //struct SMSC_FORWARD_RESPONSE_T {
 //  ET96MAP_DIALOGUE_ID_T dialogId;
@@ -124,6 +125,7 @@ void MapIoTask::dispatcher()
   log4cpp::Category& time_logger = smsc::util::Logger::getCategory("map.itime");
   
   message.receiver = MY_USER_ID;
+  int bindTimer = 0;
   for(;;){
     MAP_isAlive = true;
     if ( isStopping ) return;
@@ -131,6 +133,7 @@ void MapIoTask::dispatcher()
     gettimeofday( &curtime, 0 );
     result = EINSS7CpMsgRecv_r(&message,1000);
     if( time_logger.isDebugEnabled() ) gettimeofday( &utime, 0 );
+
     MAP_dispatching = false;
 /*    if ( ++timecounter == 60 ) {
       __trace2__("MAP: EINSS7CpMsgRecv_r TICK-TACK");
@@ -153,7 +156,14 @@ void MapIoTask::dispatcher()
       timecounter = 0;
     }
 */
-    if ( result == MSG_TIMEOUT ) continue;
+    if ( result == MSG_TIMEOUT ) {
+	if ( __global_bind_counter != CORRECT_BIND_COUNTER ){
+          if( ++bindTimer > MAX_BIND_TIMEOUT ) {
+      	    result = MSG_BROKEN_CONNECTION;
+	    __warn2__("MAP:: not all binders binded in timeout");
+          }
+        } else continue;
+    }
     if ( result == MSG_BROKEN_CONNECTION ){
       __map_warn2__("Broken connection");
 restart:
@@ -553,3 +563,10 @@ void MapProxy::checkLogging() {
 #endif
 }
 
+bool isMapBound() {
+#ifdef USE_MAP
+  return __global_bind_counter == CORRECT_BIND_COUNTER;
+#else
+  return false;
+#endif
+}
