@@ -101,10 +101,21 @@ void Smsc::mainLoop()
       hrtime_t eqEnd=gethrtime();
       info2(log,"eventQueue.enqueue time=%lld, size=%d",eqEnd-eqStart,sz);
     }
+
+    int stf=tcontrol->getConfig().shapeTimeFrame;
+    //int smt=tcontrol->getConfig().smoothTimeFrame;
+    int maxsms=tcontrol->getConfig().maxSmsPerSecond;
+
+
+    int maxScaled=1000*maxsms*stf;
+    maxScaled+=maxScaled/4;
+
+    int perSlot=1000*maxsms/(1000/tcontrol->getTotalCounter().getSlotRes());
+
     do
     {
       hrtime_t gfStart=gethrtime();
-      smeman.getFrame(frame,WAIT_DATA_TIMEOUT);
+      smeman.getFrame(frame,WAIT_DATA_TIMEOUT,tcontrol->getTotalCount()>maxScaled);
       hrtime_t gfEnd=gethrtime();
       if(frame.size()>0)info2(log,"getFrame time:%lld",gfEnd-gfStart);
       now = time(NULL);
@@ -254,15 +265,6 @@ void Smsc::mainLoop()
       }
     }
 
-    int stf=tcontrol->getConfig().shapeTimeFrame;
-    //int smt=tcontrol->getConfig().smoothTimeFrame;
-    int maxsms=tcontrol->getConfig().maxSmsPerSecond;
-
-
-    int maxScaled=1000*maxsms*stf;
-    maxScaled+=maxScaled/4;
-
-    int perSlot=1000*maxsms/(1000/tcontrol->getTotalCounter().getSlotRes());
 
     // main "delay/reject" cycle
 
@@ -302,19 +304,15 @@ void Smsc::mainLoop()
             {
               if((*i)->get_commandId()==SUBMIT)
               {
-                info2(log,"Sms %s->%s rejected: %d/%d",
-                (*i)->get_sms()->getOriginatingAddress().toString().c_str(),
-                (*i)->get_sms()->getDestinationAddress().toString().c_str(),
-                tcontrol->getTotalCount(),maxScaled);
-              }else
-              {
-                info2(log,"Sms id=%lld rejected",(*i)->get_forwardMsgId());
-              }
-              if((*i)->get_commandId()==SUBMIT)
-              {
+                info2(log,"Sms %s->%s sbm rejected: %d/%d (%d)",
+                  (*i)->get_sms()->getOriginatingAddress().toString().c_str(),
+                  (*i)->get_sms()->getDestinationAddress().toString().c_str(),
+                  tcontrol->getTotalCount(),maxScaled,perSlot);
                 RejectSms(*i);
               }else
               {
+                info2(log,"Sms id=%lld fwd rejected: %d/%d (%d)",(*i)->get_forwardMsgId(),
+                  tcontrol->getTotalCount(),maxScaled,perSlot);
                 scheduler->RejectForward((*i)->get_forwardMsgId());
               }
               continue;
@@ -333,6 +331,7 @@ void Smsc::mainLoop()
       //__warning2__("count=%d, smooth_cnt=%d",cntInstant,cntSmooth);
     }
   } // end of main loop
+  __warning__("end of mainloop");
 }
 
 
