@@ -62,6 +62,11 @@ public:
 	void processNormalSms(PduDeliverySm &pdu, time_t recvTime);
 
 	/**
+	 * ќтветные сообщение от внутренних sme SC доставл€ютс€ правильно.
+	 */
+	void processSmeAcknowledgement(PduDeliverySm &pdu, time_t recvTime);
+
+	/**
 	 * ѕодтверждени€ доставки (delivery receipts) работают правильно.
 	 */
 	void processDeliveryReceipt(PduDeliverySm &pdu, time_t recvTime);
@@ -104,6 +109,7 @@ private:
 
 	RespPduFlag isAccepted(uint32_t status);
 	void compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu);
+	void processProfilerAcknowledgement(PduData* pduData, PduDeliverySm &pdu);
 };
 
 }
