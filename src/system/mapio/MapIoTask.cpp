@@ -119,9 +119,9 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
       msg.primitive = SMSC_FORWARD_RESPONSE;
       msg.sender = MY_USER_ID;
       msg.receiver = MY_USER_ID;
-      msg.msg_p = (USHORT_T*)p;
+      msg.msg_p = (UCHAR_T*)p;
       msg.size = sizeof(SMSC_FORWARD_RESPONSE_T);
-      result =  MsgSend(&msg);
+      USHORT_T result =  MsgSend(&msg);
       if ( result != MSG_OK ){
         __trace2__("MAP::Et96MapV2ForwardSmMOInd MsgSend broken with code 0x%x",result);
         throw 0;
