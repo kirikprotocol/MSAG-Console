@@ -1895,7 +1895,7 @@ static void NotifyHLR(MapDialog* dialog)
   USHORT_T result;
   ET96MAP_APP_CNTX_T appContext;
   appContext.acType = ET96MAP_SHORT_MSG_GATEWAY_CONTEXT;
-  SetVersion(appContext,dialog->version);
+  SetVersion(appContext,dialog->hlrVersion);
   unsigned dialog_id = dialog->dialogid_map;
   __trace2__("MAP::%s dialogid:0x%x ssn:%d",__FUNCTION__,dialog_id,dialog->ssn);
   result = Et96MapOpenReq(
