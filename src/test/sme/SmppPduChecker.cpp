@@ -252,6 +252,12 @@ set<uint32_t> SmppPduChecker::checkDataSm(PduData* pduData)
 	{
 		res.insert(Status::NOROUTE);
 	}
+	time_t validTime = pdu.getValidTime();
+	time_t waitTime = pdu.getWaitTime(); //с учетом def директивы
+	if (waitTime > validTime)
+	{
+		res.insert(ESME_RINVSCHED);
+	}
 	if (!pduData->intProps.count("dataCoding"))
 	{
 		res.insert(ESME_RINVDCS);
