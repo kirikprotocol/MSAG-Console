@@ -241,9 +241,11 @@ void MapIoTask::init(unsigned timeout)
   __trace2__("MAP:: continue self initialization");
 //  err = MsgConn(USER01_ID,USER01_ID);
 //  if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgConn on self, code 0x%hx",err); throw runtime_error("MsgInit error"); }
+#ifndef DISABLE_TRACING
   MsgTraceOn( MY_USER_ID );
   MsgTraceOn( ETSIMAP_ID );
   MsgTraceOn( TCAP_ID );
+#endif
   __trace__("MAP: Bind");
   USHORT_T bind_res = Et96MapBindReq(MY_USER_ID, SSN);
   if(bind_res!=ET96MAP_E_OK){
