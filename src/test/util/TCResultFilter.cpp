@@ -138,11 +138,6 @@ void TCResultFilter::addResultStack(const TCResultStack& stack)
 	{
 		const TCResult* res = stack[i];
 		const char* tcId = res->getId();
-long addr = (long) tcId;
-if (addr == 0x1L)
-{
-	return;
-}
 		if (!resmap[tcId])
 		{
 			resmap[tcId] = new TCResultStackList();
@@ -150,6 +145,7 @@ if (addr == 0x1L)
 		if (failedTC == -1 && !res->value())
 		{
 			failedTC = i;
+			//break;
 		}
 	}
 	if (failedTC == -1)
@@ -161,6 +157,7 @@ if (addr == 0x1L)
 	//пометить, что результат по тест кейса добавлялся
 	const TCResult* failedRes = stack[failedTC];
 	TCResultStackList& stackList = *(resmap[failedRes->getId()]);
+	bool root = false;
 	for (int i = 0; i < stackList.size(); i++)
 	{
 		const TCResultStack& _stack = *(stackList[i]);
@@ -168,6 +165,15 @@ if (addr == 0x1L)
 		{
 			return;
 		}
+		root |= _stack == *failedRes;
+	}
+	
+	//добавить корневой результат в список стеков
+	if (!root)
+	{
+		TCResultStack* stack = new TCResultStack();
+		stack->push_back(new TCResult(*failedRes));
+		stackList.push_back(stack);
 	}
 
 	//добавить стек в список стеков
