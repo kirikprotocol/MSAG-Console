@@ -21,11 +21,17 @@ public class PrincipalListCommand implements Command
         try {
             DistributionListAdmin admin = ctx.getSmsc().getDistributionListAdmin();
             Iterator i = admin.principals().iterator();
-            while (i.hasNext()) {
-                Principal prc = (Principal)i.next();
-                ctx.addResult(prc.getAddress());
+            if (!i.hasNext()) {
+                ctx.setMessage("No principals defined");
+                ctx.setStatus(ctx.CMD_OK);
+            } else {
+                ctx.setMessage("Principals");
+                ctx.setStatus(ctx.CMD_LIST);
+                while (i.hasNext()) {
+                    Principal prc = (Principal)i.next();
+                    ctx.addResult(prc.getAddress());
+                }
             }
-            ctx.setStatus(ctx.CMD_LIST);
         } catch (Exception e) {
             ctx.setMessage("Couldn't list principals. Cause: "+e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);

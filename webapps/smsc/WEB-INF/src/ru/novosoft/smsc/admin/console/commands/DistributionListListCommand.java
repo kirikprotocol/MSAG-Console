@@ -22,12 +22,17 @@ public class DistributionListListCommand implements Command
         try {
             DistributionListAdmin admin = ctx.getSmsc().getDistributionListAdmin();
             Iterator i = admin.list().iterator();
-            while (i.hasNext()) {
-                DistributionList list = (DistributionList)i.next();
-                ctx.addResult(list.getName());
+            if (!i.hasNext()) {
+                ctx.setMessage("No distribution lists defined");
+                ctx.setStatus(CommandContext.CMD_OK);
+            } else {
+                ctx.setMessage("Distribution lists");
+                ctx.setStatus(CommandContext.CMD_LIST);
+                while (i.hasNext()) {
+                    DistributionList list = (DistributionList)i.next();
+                    ctx.addResult(list.getName());
+                }
             }
-            ctx.setMessage("Distribution lists");
-            ctx.setStatus(CommandContext.CMD_LIST);
         } catch (Exception e) {
             ctx.setMessage("Couldn't list distribution lists. Cause: "+e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);

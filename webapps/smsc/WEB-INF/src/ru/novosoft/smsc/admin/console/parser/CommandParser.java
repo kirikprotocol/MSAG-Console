@@ -631,40 +631,61 @@ public CommandParser(ParserSharedInputState state) {
 		cmd = new PrincipalAddCommand();
 		
 		
-		{
-		try { // for error handling
-			addr = LT(1);
-			match(STR);
+		try {      // for error handling
+			{
+			try { // for error handling
+				addr = LT(1);
+				match(STR);
+			}
+			catch (RecognitionException ex) {
+				
+					    throw new RecognitionException("Principal address expected");
+					
+			}
+			cmd.setAddress(addr.getText());
+			}
+			{
+			match(OPT_NLIST);
+			try { // for error handling
+				numl = LT(1);
+				match(STR);
+			}
+			catch (RecognitionException ex) {
+				
+					    throw new RecognitionException("'numlist' integer value expected");
+					
+			}
+			
+					    try {
+						cmd.setMaxLists(Integer.parseInt(numl.getText()));
+					    } catch (NumberFormatException ex) {
+						throw new NumberFormatException("Expecting integer value for <numlist>");
+					    }
+					
+			}
+			{
+			match(OPT_NELEM);
+			try { // for error handling
+				nume = LT(1);
+				match(STR);
+			}
+			catch (RecognitionException ex) {
+				
+					    throw new RecognitionException("'numelem' integer value expected");
+					
+			}
+			
+					    try {
+						cmd.setMaxElements(Integer.parseInt(nume.getText()));
+					    } catch (NumberFormatException ex) {
+						throw new NumberFormatException("Expecting integer value for <numelem>");
+					    }
+					
+			}
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Principal address expected");
-				
-		}
-		cmd.setAddress(addr.getText());
-		}
-		{
-		match(OPT_NLIST);
-		numl = LT(1);
-		match(STR);
-		
-				    try {
-					cmd.setMaxLists(Integer.parseInt(numl.getText()));
-				    } catch (NumberFormatException ex) {
-					throw new NumberFormatException("Expecting integer value for <numlist>");
-				    }
-				
-		}
-		{
-		match(OPT_NELEM);
-		nume = LT(1);
-		match(STR);
-		
-				    try {
-					cmd.setMaxElements(Integer.parseInt(nume.getText()));
-				    } catch (NumberFormatException ex) {
-					throw new NumberFormatException("Expecting integer value for <numelem>");
-				    }
+				    throw new RecognitionException("Command invalid. Syntax: add principal <principal_address> numlist <number> numelem <number>");
 				
 		}
 		return cmd;
@@ -673,49 +694,70 @@ public CommandParser(ParserSharedInputState state) {
 	public final DistributionListAddCommand  adddl() throws RecognitionException, TokenStreamException {
 		DistributionListAddCommand cmd;
 		
-		Token  owner = null;
 		Token  nume = null;
+		Token  owner = null;
 		
 		cmd = new DistributionListAddCommand();
 		
 		
-		{
-			
-				    cmd.setName(getnameid("Distribution list name"));
+		try {      // for error handling
+			{
 				
-		}
-		{
-		switch ( LA(1)) {
-		case OPT_OWNER:
-		{
-			match(OPT_OWNER);
-			owner = LT(1);
-			match(STR);
-			
-					    cmd.setOwner(owner.getText());
+					    cmd.setName(getnameid("Distribution list name"));
 					
-			break;
+			}
+			{
+			match(OPT_NELEM);
+			try { // for error handling
+				nume = LT(1);
+				match(STR);
+			}
+			catch (RecognitionException ex) {
+				
+					    throw new RecognitionException("'numelem' integer value expected");
+					
+			}
+			
+					    try {
+						cmd.setMaxElements(Integer.parseInt(nume.getText()));
+					    } catch (NumberFormatException ex) {
+						throw new NumberFormatException("Expecting integer value for <numelem>");
+					    }
+					
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_OWNER:
+			{
+				match(OPT_OWNER);
+				try { // for error handling
+					owner = LT(1);
+					match(STR);
+				}
+				catch (RecognitionException ex) {
+					
+						    throw new RecognitionException("Owner address expected");
+						
+				}
+				
+						    cmd.setOwner(owner.getText());
+						
+				break;
+			}
+			case EOF:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
 		}
-		case OPT_NELEM:
-		{
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		{
-		match(OPT_NELEM);
-		nume = LT(1);
-		match(STR);
-		
-				    try {
-					cmd.setMaxElements(Integer.parseInt(nume.getText()));
-				    } catch (NumberFormatException ex) {
-					throw new NumberFormatException("Expecting integer value for <numelem>");
-				    }
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Command invalid. Syntax: add dl <dl_name> [owner <owner_address>] numelem <number>");
 				
 		}
 		return cmd;
@@ -735,8 +777,15 @@ public CommandParser(ParserSharedInputState state) {
 				
 		}
 		{
-		submitter = LT(1);
-		match(STR);
+		try { // for error handling
+			submitter = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Submitter address expected");
+				
+		}
 		
 				    cmd.setSubmitter(submitter.getText());
 				
@@ -758,8 +807,15 @@ public CommandParser(ParserSharedInputState state) {
 				
 		}
 		{
-		member = LT(1);
-		match(STR);
+		try { // for error handling
+			member = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Member address expected");
+				
+		}
 		
 				    cmd.setMember(member.getText());
 				
@@ -872,8 +928,15 @@ public CommandParser(ParserSharedInputState state) {
 				
 		}
 		{
-		submitter = LT(1);
-		match(STR);
+		try { // for error handling
+			submitter = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Submitter address expected");
+				
+		}
 		
 				    cmd.setSubmitter(submitter.getText());
 				
@@ -895,8 +958,15 @@ public CommandParser(ParserSharedInputState state) {
 				
 		}
 		{
-		member = LT(1);
-		match(STR);
+		try { // for error handling
+			member = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Member address expected");
+				
+		}
 		
 				    cmd.setMember(member.getText());
 				
@@ -1278,70 +1348,77 @@ public CommandParser(ParserSharedInputState state) {
 		cmd = new PrincipalAlterCommand();
 		
 		
-		{
-		try { // for error handling
-			addr = LT(1);
-			match(STR);
+		try {      // for error handling
+			{
+			try { // for error handling
+				addr = LT(1);
+				match(STR);
+			}
+			catch (RecognitionException ex) {
+				
+					    throw new RecognitionException("Principal address expected");
+					
+			}
+			cmd.setAddress(addr.getText());
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_NLIST:
+			{
+				match(OPT_NLIST);
+				numl = LT(1);
+				match(STR);
+				
+						    try {
+							cmd.setMaxLists(Integer.parseInt(numl.getText()));
+						    } catch (NumberFormatException ex) {
+							throw new NumberFormatException("Expecting integer value for <numlist>");
+						    }
+						
+				break;
+			}
+			case EOF:
+			case OPT_NELEM:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_NELEM:
+			{
+				match(OPT_NELEM);
+				nume = LT(1);
+				match(STR);
+				
+						    try {
+							cmd.setMaxElements(Integer.parseInt(nume.getText()));
+						    } catch (NumberFormatException ex) {
+							throw new NumberFormatException("Expecting integer value for <numelem>");
+						    }
+						
+				break;
+			}
+			case EOF:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Principal address expected");
+				    throw new RecognitionException("Command invalid. Syntax: alter principal <principal_address> [numlist <number>] [numelem <number>]");
 				
-		}
-		cmd.setAddress(addr.getText());
-		}
-		{
-		switch ( LA(1)) {
-		case OPT_NLIST:
-		{
-			match(OPT_NLIST);
-			numl = LT(1);
-			match(STR);
-			
-					    try {
-						cmd.setMaxLists(Integer.parseInt(numl.getText()));
-					    } catch (NumberFormatException ex) {
-						throw new NumberFormatException("Expecting integer value for <numlist>");
-					    }
-					
-			break;
-		}
-		case EOF:
-		case OPT_NELEM:
-		{
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		{
-		switch ( LA(1)) {
-		case OPT_NELEM:
-		{
-			match(OPT_NELEM);
-			nume = LT(1);
-			match(STR);
-			
-					    try {
-						cmd.setMaxElements(Integer.parseInt(nume.getText()));
-					    } catch (NumberFormatException ex) {
-						throw new NumberFormatException("Expecting integer value for <numelem>");
-					    }
-					
-			break;
-		}
-		case EOF:
-		{
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
 		}
 		return cmd;
 	}
@@ -1361,8 +1438,15 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		{
 		match(OPT_NELEM);
-		nume = LT(1);
-		match(STR);
+		try { // for error handling
+			nume = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("'numelem' integer value expected");
+				
+		}
 		
 				    try {
 					cmd.setMaxElements(Integer.parseInt(nume.getText()));

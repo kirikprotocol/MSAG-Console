@@ -485,6 +485,18 @@ addprincipal returns [PrincipalAddCommand cmd] {
 	catch [RecognitionException ex] {
 	    throw new RecognitionException("Principal address expected");
 	}
+	exception[numl]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("'numlist' integer value expected");
+	}
+	exception[nume]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("'numelem' integer value expected");
+	}
+	exception
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Command invalid. Syntax: add principal <principal_address> numlist <number> numelem <number>");
+	}
 
 altprincipal returns [PrincipalAlterCommand cmd] {
     cmd = new PrincipalAlterCommand();
@@ -509,6 +521,11 @@ altprincipal returns [PrincipalAlterCommand cmd] {
 	catch [RecognitionException ex] {
 	    throw new RecognitionException("Principal address expected");
 	}
+	exception
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Command invalid. Syntax: alter principal <principal_address> [numlist <number>] [numelem <number>]");
+	}
+	
 
 delprincipal returns [PrincipalDeleteCommand cmd] {
     cmd = new PrincipalDeleteCommand();
@@ -536,9 +553,6 @@ adddl returns [DistributionListAddCommand cmd] {
 	:	({	
 		    cmd.setName(getnameid("Distribution list name"));
 		})
-		(OPT_OWNER owner:STR { 
-		    cmd.setOwner(owner.getText());
-		}) ?
 		(OPT_NELEM nume:STR  {
 		    try {
 			cmd.setMaxElements(Integer.parseInt(nume.getText()));
@@ -546,7 +560,22 @@ adddl returns [DistributionListAddCommand cmd] {
 			throw new NumberFormatException("Expecting integer value for <numelem>");
 		    }
 		})		
+		(OPT_OWNER owner:STR { 
+		    cmd.setOwner(owner.getText());
+		}) ?
 	;
+	exception[nume]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("'numelem' integer value expected");
+	}
+	exception[owner]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Owner address expected");
+	}
+	exception
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Command invalid. Syntax: add dl <dl_name> [owner <owner_address>] numelem <number>");
+	}
 
 altdl returns [DistributionListAlterCommand cmd] {
     cmd = new DistributionListAlterCommand();
@@ -562,6 +591,10 @@ altdl returns [DistributionListAlterCommand cmd] {
 		    }
 		})		
 	;
+	exception[nume]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("'numelem' integer value expected");
+	}
 
 
 viewdl returns [DistributionListViewCommand cmd] {
@@ -590,6 +623,10 @@ adddlmember returns [MemberAddCommand cmd] {
 		    cmd.setMember(member.getText());
 		})
 	;
+	exception[member]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Member address expected");
+	}
 
 deldlmember returns [MemberDeleteCommand cmd] {
     cmd = new MemberDeleteCommand();
@@ -601,6 +638,10 @@ deldlmember returns [MemberDeleteCommand cmd] {
 		    cmd.setMember(member.getText());
 		})
 	;
+	exception[member]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Member address expected");
+	}
 
 adddlsubmitter returns [SubmitterAddCommand cmd] {
     cmd = new SubmitterAddCommand();
@@ -612,6 +653,10 @@ adddlsubmitter returns [SubmitterAddCommand cmd] {
 		    cmd.setSubmitter(submitter.getText());
 		})
 	;
+	exception[submitter]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Submitter address expected");
+	}
 
 deldlsubmitter returns [SubmitterDeleteCommand cmd] {
     cmd = new SubmitterDeleteCommand();
@@ -623,3 +668,7 @@ deldlsubmitter returns [SubmitterDeleteCommand cmd] {
 		    cmd.setSubmitter(submitter.getText());
 		})
 	;
+	exception[submitter]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Submitter address expected");
+	}

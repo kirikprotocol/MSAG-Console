@@ -35,6 +35,7 @@ public class DistributionListManager implements DistributionListAdmin
         Connection connection = null;
         ResultSet rs = null;
         try {
+            connection = ds.getConnection();
             stmt = connection.prepareStatement(GET_PRINCIPALS_SQL);
             rs = stmt.executeQuery();
             while (rs.next()) {
@@ -146,6 +147,7 @@ public class DistributionListManager implements DistributionListAdmin
         Connection connection = null;
         ResultSet rs = null;
         try {
+            connection = ds.getConnection();
             stmt = connection.prepareStatement(GET_PRINCIPAL_SQL);
             stmt.setString(1, address);
             rs = stmt.executeQuery();
@@ -153,6 +155,8 @@ public class DistributionListManager implements DistributionListAdmin
                 throw new PrincipalNotExistsException(address);
             prc = new Principal(rs.getString(1), rs.getInt(2), rs.getInt(3));
             rs.close(); rs = null;
+        } catch (AdminException exc) {
+            throw exc;
         } catch (Exception exc) {
             exc.printStackTrace();
             throw new AdminException(exc.getMessage());
