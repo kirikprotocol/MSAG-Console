@@ -36,8 +36,13 @@ CXXFLAGS := $(CXXFLAGS) -DDISABLE_TRACING
 endif
 
 ifeq ($(LEAKTRACE),YES)
-LDFLAGS := $(LDFLAGS) -lcore-threads -lutil-leaktracing
+LDFLAGS := $(LDFLAGS) -lcore-threads -lutil-leaktracing -lcore-threads
 DEBUG := YES
+endif
+
+ifdef WARNINGS
+CFLAGS := $(CFLAGS) -Wall
+CXXFLAGS := $(CXXFLAGS) -Wall
 endif
 
 ifeq ($(DEBUG),YES)
@@ -86,7 +91,8 @@ update:
 
 docs:
 	@echo Generating docs
-	@perl -e 'while(<>){s!\$$\(DOCSDIR\)!$(SMSC_BUILDDIR)/docs/html!;print;}' <Doxyfile.tmpl >Doxyfile
+	@mkdir -p $(SMSC_BUILDDIR)/doc/html
+	@perl -e 'while(<>){s!\$$\(DOCSDIR\)!$(SMSC_BUILDDIR)/doc/html!;print;}' <Doxyfile.tmpl >Doxyfile
 	@doxygen Doxyfile
 	@rm Doxyfile
 
