@@ -869,7 +869,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
     sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST) ||
     (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&3)==1 ||
     (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&3)==2
-    ?4:0);
+    ?0x20:0);
   rpt.setDestinationAddress(sms.getOriginatingAddress());
   rpt.setMessageReference(sms.getMessageReference());
   rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,

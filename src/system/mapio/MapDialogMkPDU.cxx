@@ -43,7 +43,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
 #if defined USE_MAP
   memset(pdu,0,sizeof(ET96MAP_SM_RP_UI_T));
   int esm=sms->getIntProperty(Tag::SMPP_ESM_CLASS);
-  int isrcpt=(esm&4)==4;
+  int isrcpt=(esm&0x3c)==4 || (esm&0x3c)==0x20;
   SMS_DELIVERY_FORMAT_HEADER* header = (SMS_DELIVERY_FORMAT_HEADER*)pdu->signalInfo;
   header->uu.s.mg_type_ind = isrcpt?2:0;
   header->uu.s.mms = mms;
@@ -53,13 +53,12 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
   unsigned char *pdu_ptr = pdu->signalInfo+1;
   MAP_SMS_ADDRESS* oa;
   Address addr;
-  if((esm&4)==4)
+  if(isrcpt)
   {
 
     *pdu_ptr++=sms->getMessageReference();
     oa = (MAP_SMS_ADDRESS*)pdu_ptr;
     addr=sms->getStrProperty(Tag::SMSC_RECIPIENTADDRESS).c_str();
-
   }else
   {
     oa = (MAP_SMS_ADDRESS*)(pdu->signalInfo+1);
@@ -207,7 +206,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
       {
         case DELIVERED: *pdu_ptr++=0;break; //ok
         case EXPIRED: *pdu_ptr++=0x46;break; //expired
-        default: *pdu_ptr++=0x63;break; //failed
+        default: *pdu_ptr++=esm&0x3c==0x20?0x21:0x63;break; //busy:failed
       }
       //*pdu_ptr++=0;//0x6; //TP-Parameter-Indicator 0110
       //*pdu_ptr++=datacoding;

@@ -160,7 +160,7 @@ namespace smsc {
           addr_value);
         if ( scaned != 3 )
         {
-          scaned = sscanf(text,"+%[0123456789?]20s",addr_value);
+          scaned = sscanf(text,"+%20[0123456789?]s",addr_value);
           if ( scaned )
           {
             iplan = 1;//ISDN
@@ -168,7 +168,7 @@ namespace smsc {
           }
           else
           {
-            scaned = sscanf(text,"%[0123456789?]20s",addr_value);
+            scaned = sscanf(text,"%20[0123456789?]s",addr_value);
             if ( !scaned )
               throw runtime_error(string("bad address ")+text);
             else
@@ -198,10 +198,10 @@ namespace smsc {
         return (*this);
       };
 
-      inline int operator ==(const Address& addr) 
+      inline int operator ==(const Address& addr)
       {
-        return (length == addr.length && 
-                plan == addr.plan && type == addr.type && 
+        return (length == addr.length &&
+                plan == addr.plan && type == addr.type &&
                 memcmp(value, addr.value, length) == 0);
       };
 
@@ -544,7 +544,7 @@ namespace smsc {
       };
 
       struct StringHashFunc{
-        static inline int CalcHash(const string& key)
+        static inline unsigned int CalcHash(const string& key)
         {
           const unsigned char* curr = (const unsigned char*)key.c_str();
           unsigned count = *curr;
