@@ -245,7 +245,7 @@ StateType StateMachine::submit(Tuple& t)
 
   src_proxy=t.command.getProxy();
 
-  fprintf(stderr,"Submit: src_proxy=%p",src_proxy);
+  fprintf(stderr,"Submit: src_proxy=%p\n",src_proxy);
   __require__(src_proxy!=NULL);
 
   __trace2__("StateMachine::submit:%lld",t.msgId);
@@ -1123,14 +1123,17 @@ StateType StateMachine::cancel(Tuple& t)
     }
   }catch(...)
   {
-    t.command.getProxy()->putCommand
-    (
-      SmscCommand::makeCancelSmResp
+    if(!t.command->get_cancelSm().internall)
+    {
+      t.command.getProxy()->putCommand
       (
-        t.command->get_dialogId(),
-        SmscCommand::Status::CANCELFAIL
-      )
-    );
+        SmscCommand::makeCancelSmResp
+        (
+          t.command->get_dialogId(),
+          SmscCommand::Status::CANCELFAIL
+        )
+      );
+    }
     return t.state;
   }
   try{
