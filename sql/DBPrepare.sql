@@ -39,6 +39,10 @@ CREATE TABLE SMS_MSG
    BODY           RAW(1500)    NULL
 ) TABLESPACE SMSC_DATA INITRANS 40;
 
+DROP SEQUENCE SMS_MSG_SEQ;
+CREATE SEQUENCE SMS_MSG_SEQ INCREMENT BY 1000
+START WITH 0 MINVALUE 0 MAXVALUE 10000000000000000000000 CACHE 100;
+
 CREATE INDEX SMS_MSG_OA_IDX ON SMS_MSG (OA)
 TABLESPACE SMSC_IDX INITRANS 40;
 
@@ -124,10 +128,6 @@ CREATE TABLE SMS_ARC
    BODY           RAW(1500)    NULL
 ) TABLESPACE SMSC_DATA  INITRANS 40;
 
-DROP SEQUENCE SMS_BILL_SEQ;
-CREATE SEQUENCE SMS_BILL_SEQ INCREMENT BY 1 START WITH 1 CACHE 20;
-
-
 CREATE INDEX SMS_ARC_LAST_TRY_TIME_IDX ON SMS_ARC (LAST_TRY_TIME)
 TABLESPACE SMSC_IDX  INITRANS 40;
 
@@ -149,40 +149,6 @@ TABLESPACE SMSC_IDX NOLOGGING INITRANS 40;
 CREATE INDEX SMS_ARC_ROUTE_ID_IDX ON SMS_ARC (ROUTE_ID)
 TABLESPACE SMSC_IDX NOLOGGING INITRANS 40;
 
-
--- ********************** Billing table for SMSC ********************** --
-
-DROP TABLE SMS_BILL;
-CREATE TABLE SMS_BILL
-(
-   ID             NUMBER         NOT NULL    -- generated via sequence
-   		  CONSTRAINT SMS_BILL_PK PRIMARY KEY USING INDEX TABLESPACE SMSC_IDX INITRANS 40,
-   MSG_ID         NUMBER(22)     NOT NULL,   -- ID in SMS_MSG
-   CALL_DIRECTION VARCHAR2(5)    NOT NULL,   -- filled by stored procedure
-   RECORD_TYPE    NUMBER         NOT NULL,   -- filled by stored procedure
-   SUBMIT         DATE           NOT NULL,   -- SUBMIT_TIME from SMS_MSG
-   FINALIZED      DATE           NULL,       -- LAST_TIME from SMS_MSG
-   STATUS         NUMBER         NOT NULL,   -- LAST_RESULT from SMS_MSG
-   PAYER_ADDR     VARCHAR2(21)   NOT NULL,   -- filled by stored procedure (by OA/DDA)
-   PAYER_TON      NUMBER         NOT NULL,   -- filled by stored procedure (by OA/DDA)
-   PAYER_NPI      NUMBER         NOT NULL,   -- filled by stored procedure (by OA/DDA)
-   PAYER_IMSI     VARCHAR2(21)   NULL,       -- filled by stored procedure (by SRC/DST IMSI)
-   PAYER_MSC      VARCHAR2(21)   NULL,       -- filled by stored procedure (by SRC/DST MSC)
-   OTHER_ADDR     VARCHAR2(21)   NULL,       -- filled by stored procedure (by OA/DDA)
-   OTHER_TON      NUMBER         NULL,       -- filled by stored procedure (by OA/DDA)
-   OTHER_NPI      NUMBER         NULL,       -- filled by stored procedure (by OA/DDA)
-   ROUTE_ID       VARCHAR2(32)   NULL,       -- ROUTE_ID from SMS_MSG
-   SERVICE_CODE   NUMBER         NULL,       -- SERVICE_ID from SMS_MSG
-   TXT_LENGTH     NUMBER         NULL,       -- add it to SMS_MSG
-   UPLOAD_ID      NUMBER         NULL        -- skip it (used externally)
-) TABLESPACE SMSC_DATA INITRANS 40;
-
-CREATE INDEX SMS_BILL_UPLOAD_ID_IDX ON SMS_BILL (UPLOAD_ID) 
-TABLESPACE SMSC_IDX INITRANS 40;
-
-CREATE INDEX SMS_BILL_MSG_ID_IDX ON SMS_BILL (MSG_ID) 
-TABLESPACE SMSC_IDX INITRANS 40;
-
 CREATE OR REPLACE PROCEDURE DO_FINALIZE_SMS 
   (A_id IN NUMBER, A_st IN NUMBER, A_submitTime IN DATE, A_validTime IN DATE,
    A_attempts IN NUMBER, A_lastResult IN NUMBER, 
@@ -198,7 +164,6 @@ CREATE OR REPLACE PROCEDURE DO_FINALIZE_SMS
    A_bodyLen IN NUMBER, A_body IN RAW, A_arc IN NUMBER, A_bill IN NUMBER, 
    A_delete IN NUMBER, A_diverted IN NUMBER)
 IS
-   billId            NUMBER;
 BEGIN
    
    IF A_arc != 0 THEN
@@ -214,45 +179,6 @@ BEGIN
 	 A_srcMsc, A_srcImsi, A_srcSmeN, A_dstMsc, A_dstImsi, A_dstSmeN,
 	 A_routeId, A_svcId, A_prty, A_srcSmeId, A_dstSmeId, 
 	 A_txtLength, A_bodyLen, A_body);
-   END IF;
-   
-   IF A_bill != 0 THEN
-   	SELECT SMS_BILL_SEQ.NEXTVAL INTO billId FROM DUAL;
-   	INSERT INTO SMS_BILL 
-            (ID, MSG_ID, CALL_DIRECTION, RECORD_TYPE, SUBMIT, FINALIZED, STATUS,
-             PAYER_ADDR, PAYER_TON, PAYER_NPI, PAYER_IMSI, PAYER_MSC,
-             OTHER_ADDR, OTHER_TON, OTHER_NPI,
-             ROUTE_ID, SERVICE_CODE, TXT_LENGTH) 
-	VALUES 
-            (billId, A_id, 'O', 10, A_submitTime, A_lastTryTime, A_st, 
-      	     A_oaVal, A_oaTon, A_oaNpi, A_srcImsi, A_srcMsc,
-             A_daVal, A_daTon, A_daNpi, 
-             A_routeId, A_svcId, A_txtLength);
-   
-        SELECT SMS_BILL_SEQ.NEXTVAL INTO billId FROM DUAL;
-        INSERT INTO SMS_BILL 
-            (ID, MSG_ID, CALL_DIRECTION, RECORD_TYPE, SUBMIT, FINALIZED, STATUS,
-             PAYER_ADDR, PAYER_TON, PAYER_NPI, PAYER_IMSI, PAYER_MSC,
-             OTHER_ADDR, OTHER_TON, OTHER_NPI, 
-             ROUTE_ID, SERVICE_CODE, TXT_LENGTH) 
-        VALUES 
-            (billId, A_id, 'I', 20, A_submitTime, A_lastTryTime, A_st, 
-             A_daVal, A_daTon, A_daNpi, A_dstImsi, A_dstMsc,
-             A_oaVal, A_oaTon, A_oaNpi, 
-             A_routeId, A_svcId, A_txtLength);
-        IF A_diverted != 0 THEN
-            SELECT SMS_BILL_SEQ.NEXTVAL INTO billId FROM DUAL;
-            INSERT INTO SMS_BILL 
-                (ID, MSG_ID, CALL_DIRECTION, RECORD_TYPE, SUBMIT, FINALIZED, STATUS,
-                 PAYER_ADDR, PAYER_TON, PAYER_NPI, PAYER_IMSI, PAYER_MSC,
-                 OTHER_ADDR, OTHER_TON, OTHER_NPI,
-                 ROUTE_ID, SERVICE_CODE, TXT_LENGTH) 
-            VALUES 
-                (billId, A_id, 'O', 30, A_submitTime, A_lastTryTime, A_st, 
-      	         A_oaVal, A_oaTon, A_oaNpi, A_srcImsi, A_srcMsc,
-                 A_daVal, A_daTon, A_daNpi, 
-                 A_routeId, A_svcId, A_txtLength);
-        END IF;
    END IF;
    
    IF A_delete != 0 THEN
