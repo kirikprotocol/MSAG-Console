@@ -22,9 +22,6 @@ public class DateCountersSet extends CountersSet
     }
     public void addHourStat(HourCountersSet set) {
         byHours.addElement(set);
-        System.out.println("ADD HOUR a:"+set.accepted+
-                            " f:"+set.finalized+
-                            " r:"+set.rescheduled);
         super.increment(set);
     }
     public Collection getHourStat() {
