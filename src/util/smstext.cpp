@@ -344,7 +344,18 @@ int partitionSms(SMS* sms,int dstdc)
     len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get()+udhilen,len*3);
     if(udhi)memcpy(bufTr.get(),msg,udhilen);
     msg=bufTr.get();
-    dc=DataCoding::LATIN1;
+    if(dstdc==DataCoding::SMSC7BIT)
+    {
+      auto_ptr<char> buf7(new char[len*2+udhilen+1]);
+      len=ConvertLatin1ToSMSC7Bit(bufTr.get()+udhilen,len,buf7.get());
+      if(udhi)memcpy(buf7.get(),bufTr.get(),udhilen);
+      bufTr=buf7;
+      msg=bufTr.get();
+      dc=DataCoding::SMSC7BIT;
+    }else
+    {
+      dc=DataCoding::LATIN1;
+    }
     //len+=udhilen;
   }
   __require__(len>=0 && len<=65535);
@@ -446,10 +457,11 @@ int partitionSms(SMS* sms,int dstdc)
     if(parts>=256)return psErrorLength;
     for(int i=0;i<parts;i++)offsets[i]=i*maxlen;
   }
-  else
+  else //LATIN1&SMSC7BIT
   {
     int lastword=0;
     int lastpos=0;
+    int lastEsc=-2;
     int l=0,wl=0;
     maxlen*=8;
     maxlen/=7;
@@ -478,6 +490,8 @@ int partitionSms(SMS* sms,int dstdc)
         }else
         {
           if(l>maxlen)i--;
+          __trace2__("PARTITIONSMS: cut at %d (lastEsc=%d)",i,lastEsc);
+          if(i==lastEsc+1)i--;
           offsets[parts++]=i;
           lastpos=i;
           l=0;
@@ -509,6 +523,13 @@ int partitionSms(SMS* sms,int dstdc)
             l++;
             wl++;
           }
+        }
+      }else //SMSC7BIT
+      {
+        if(msg[i]==0x1b && lastEsc!=i-1)
+        {
+          lastEsc=i;
+          __trace2__("PARTITIONSMS: lastEsc=%d",i);
         }
       }
     }
@@ -544,9 +565,16 @@ void extractSmsPart(SMS* sms,int partnum)
     bufTr=auto_ptr<char>(new char[len*3]);
     len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get(),len*3);
     msg=bufTr.get();
+    if(dstdc==DataCoding::SMSC7BIT)
+    {
+      auto_ptr<char> buf7(new char[len*2+1]);
+      len=ConvertLatin1ToSMSC7Bit(bufTr.get(),len,buf7.get());
+      bufTr=buf7;
+      msg=bufTr.get();
+    }
   }
   int maxlen=134;
-  if(dstdc==DataCoding::LATIN1)
+  if(dstdc==DataCoding::LATIN1 || dstdc==DataCoding::SMSC7BIT)
   {
     maxlen=153;
   }
@@ -560,6 +588,21 @@ void extractSmsPart(SMS* sms,int partnum)
   if(dc==DataCoding::UCS2 && dstdc!=DataCoding::UCS2)
   {
     sms->setIntProperty(Tag::SMPP_DATA_CODING,dstdc);
+    if(sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
+    {
+      int dc=sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
+      int olddc=dc;
+      if((dc&0xc0)==0 || (dc&0xf0)==0xf0) //groups 00xx and 1111
+      {
+        dc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
+
+      }else if((dc&0xf0)==0xe0)
+      {
+        dc=0xd0 | (dc&0x0f);
+      }
+      sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
+      __trace2__("extractSmsPart: transliterate olddc(%x)->dc(%x)",olddc,dc);
+    }
   }
   uint8_t buf[256];
   buf[0]=5;

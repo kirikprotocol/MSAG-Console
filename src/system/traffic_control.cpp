@@ -85,23 +85,20 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
           break;
         }
 
+        /*
         if(cmd->get_commandId()==SUBMIT)
         {
           int scount=cfg.smsc->GetSmeScheduleCount(dstIdx,lookAhead);
 
           double speed=(double)responseCount*cfg.lookAheadTime/cfg.protectTimeFrame;
 
-          if(deliveryCount-responseCount>=cfg.allowedDeliveryFailures)
-          {
-            __info2__(log,"TC: deny - protect task container limit for %s: %d - %d",dest_proxy->getSystemId(),deliveryCount,responseCount);
-            break;
-          }
           if(speed>1 && speed<scount)
           {
             __info2__(log,"TC: deny - protect schedule limit for %s: %lf - %d",dest_proxy->getSystemId(),speed,scount);
             break;
           }
         }
+        */
 
         if(cmd->get_commandId()==SUBMIT && !sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
         {
@@ -125,20 +122,16 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
                 src_proxy->getSystemId(),deliveryCount,responseCount);
               break;
             }
-
+            /*
             int scount=cfg.smsc->GetSmeScheduleCount(idx,lookAhead);
             double speed=(double)responseCount*cfg.lookAheadTime/cfg.protectTimeFrame;
 
-            if(deliveryCount-responseCount>=cfg.allowedDeliveryFailures)
-            {
-              __info2__(log,"TC: deny - receipt protect task container limit for %s: %d/%d",src_proxy->getSystemId(),responseCount,deliveryCount);
-            }
             if(speed>1 && speed<scount)
             {
               __info2__(log,"TC: deny - receipt protect schedule limit for %s: %lf - %d",src_proxy->getSystemId(),speed,scount);
               break;
             }
-
+            */
             dsrccnt->Inc();
             __debug2__(log,"TC: receipt inc for %s",src_proxy->getSystemId());
           }
