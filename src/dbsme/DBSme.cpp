@@ -40,7 +40,7 @@ Mutex       countersLock;
 
 static log4cpp::Category& log = Logger::getCategory("smsc.dbsme.DBSme");
 
-const int   MAX_ALLOWED_MESSAGE_LENGTH = 200;
+const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
 
 class DBSmeTask : public ThreadedTask
 {
@@ -85,7 +85,8 @@ public:
         command.setJobName(0);
         
         char smsTextBuff[MAX_ALLOWED_MESSAGE_LENGTH+1];
-        getSmsText(&request, (char *)&smsTextBuff);
+        int smsTextBuffLen = getSmsText(&request, (char *)&smsTextBuff);
+        __require__(smsTextBuffLen < MAX_ALLOWED_MESSAGE_LENGTH);
         command.setInData((const char*)smsTextBuff);
         __trace2__("Input Data for DBSme '%s'", smsTextBuff);
         
