@@ -52,6 +52,8 @@ public:
                       empty_params, StringType);
     Method process_cancel_messages((unsigned)processCancelMessagesMethod, "process_cancel_messages",
                           cancelMessage_params, StringType);
+    Method apply_smsc_config((unsigned)applySmscConfigMethod, "apply_smsc_config",
+                          empty_params, StringType);
 
     methods[apply_routes.getName()] = apply_routes;
     methods[apply_aliases.getName()] = apply_aliases;
@@ -59,6 +61,7 @@ public:
     methods[update_profile.getName()] = update_profile;
     methods[flush_statistics.getName()] = flush_statistics;
     methods[process_cancel_messages.getName()] = process_cancel_messages;
+    methods[apply_smsc_config.getName()] = apply_smsc_config;
 
     smsc_app_runner.reset(0);
   }
@@ -93,11 +96,12 @@ protected:
   bool isSmscRunning() throw() {return smsc_app_runner.get() != 0;}
   void applyRoutes() throw (AdminException);
   void applyAliases() throw (AdminException);
+  void applySmscConfig() throw (AdminException);
   void reReadConfigs() throw (AdminException);
 
   SmscConfigs &configs;
   Methods methods;
-  enum {applyRoutesMethod, applyAliasesMethod, lookupProfileMethod, updateProfileMethod, flushStatisticsMethod, processCancelMessagesMethod};
+  enum {applyRoutesMethod, applyAliasesMethod, lookupProfileMethod, updateProfileMethod, flushStatisticsMethod, processCancelMessagesMethod, applySmscConfigMethod};
 
   smsc::core::synchronization::Mutex mutex;
 

@@ -17,16 +17,18 @@
 </tr>
 <tr class=row<%=(rowN++)&1%>>
 	<th class=label>roles:</th>
-	<td><input class=check type=checkbox name=roles id=role01 value="apply"    <%=bean.isUserInRole("apply")    ? "checked" : ""%>>&nbsp;<label for=role1>Apply config changes</label><br>
-		<input class=check type=checkbox name=roles id=role02 value="perfmon"  <%=bean.isUserInRole("perfmon")  ? "checked" : ""%>>&nbsp;<label for=role2>Perfomance monitoring</label><br>
-		<input class=check type=checkbox name=roles id=role03 value="smsView"  <%=bean.isUserInRole("smsView")  ? "checked" : ""%>>&nbsp;<label for=role2>SMS View</label><br>
-		<input class=check type=checkbox name=roles id=role04 value="users"    <%=bean.isUserInRole("users")    ? "checked" : ""%>>&nbsp;<label for=role3>Users</label><br>
-		<input class=check type=checkbox name=roles id=role05 value="routes"   <%=bean.isUserInRole("routes")   ? "checked" : ""%>>&nbsp;<label for=role4>Routes</label><br>
-		<input class=check type=checkbox name=roles id=role06 value="subjects" <%=bean.isUserInRole("subjects") ? "checked" : ""%>>&nbsp;<label for=role5>Subjects</label><br>
-		<input class=check type=checkbox name=roles id=role07 value="aliases"  <%=bean.isUserInRole("aliases")  ? "checked" : ""%>>&nbsp;<label for=role6>Aliases</label><br>
-		<input class=check type=checkbox name=roles id=role08 value="profiles" <%=bean.isUserInRole("profiles") ? "checked" : ""%>>&nbsp;<label for=role7>Profiles</label><br>
-		<input class=check type=checkbox name=roles id=role09 value="hosts"    <%=bean.isUserInRole("hosts")    ? "checked" : ""%>>&nbsp;<label for=role8>Hosts</label><br>
-		<input class=check type=checkbox name=roles id=role10 value="services" <%=bean.isUserInRole("services") ? "checked" : ""%>>&nbsp;<label for=role9>Services</label>
+	<td><input class=check type=checkbox name=roles id=role01 value="apply"         <%=bean.isUserInRole("apply")    ? "checked" : ""%>>&nbsp;<label for=role01>Apply config changes</label><br>
+		<input class=check type=checkbox name=roles id=role02 value="smsc_service"  <%=bean.isUserInRole("perfmon")  ? "checked" : ""%>>&nbsp;<label for=role02>SMSC configuration</label><br>
+		<input class=check type=checkbox name=roles id=role03 value="perfmon"       <%=bean.isUserInRole("perfmon")  ? "checked" : ""%>>&nbsp;<label for=role03>Perfomance monitoring</label><br>
+		<input class=check type=checkbox name=roles id=role04 value="smsView"       <%=bean.isUserInRole("smsView")  ? "checked" : ""%>>&nbsp;<label for=role04>SMS View</label><br>
+		<input class=check type=checkbox name=roles id=role05 value="smsstat"       <%=bean.isUserInRole("smsView")  ? "checked" : ""%>>&nbsp;<label for=role05>SMS Statistics</label><br>
+		<input class=check type=checkbox name=roles id=role06 value="users"         <%=bean.isUserInRole("users")    ? "checked" : ""%>>&nbsp;<label for=role06>Users</label><br>
+		<input class=check type=checkbox name=roles id=role07 value="routes"        <%=bean.isUserInRole("routes")   ? "checked" : ""%>>&nbsp;<label for=role07>Routes</label><br>
+		<input class=check type=checkbox name=roles id=role08 value="subjects"      <%=bean.isUserInRole("subjects") ? "checked" : ""%>>&nbsp;<label for=role08>Subjects</label><br>
+		<input class=check type=checkbox name=roles id=role09 value="aliases"       <%=bean.isUserInRole("aliases")  ? "checked" : ""%>>&nbsp;<label for=role09>Aliases</label><br>
+		<input class=check type=checkbox name=roles id=role10 value="profiles"      <%=bean.isUserInRole("profiles") ? "checked" : ""%>>&nbsp;<label for=role10>Profiles</label><br>
+		<input class=check type=checkbox name=roles id=role11 value="hosts"         <%=bean.isUserInRole("hosts")    ? "checked" : ""%>>&nbsp;<label for=role11>Hosts</label><br>
+		<input class=check type=checkbox name=roles id=role12 value="services"      <%=bean.isUserInRole("services") ? "checked" : ""%>>&nbsp;<label for=role12>Services</label>
 	</td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>

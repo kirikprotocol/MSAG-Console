@@ -28,10 +28,10 @@
 	<security-constraint>
 		<web-resource-collection>
 			<web-resource-name></web-resource-name>
-			<url-pattern>/smsc/smsview/*</url-pattern>
+			<url-pattern>/smsc/smsc_service/*</url-pattern>
 		</web-resource-collection>
 		<auth-constraint>
-			<role-name>smsView</role-name>
+			<role-name>smsc_service</role-name>
 		</auth-constraint>
 		<user-data-constraint><transport-guarantee>NONE</transport-guarantee></user-data-constraint>
 	</security-constraint>
@@ -43,6 +43,28 @@
 		</web-resource-collection>
 		<auth-constraint>
 			<role-name>perfmon</role-name>
+		</auth-constraint>
+		<user-data-constraint><transport-guarantee>NONE</transport-guarantee></user-data-constraint>
+	</security-constraint>
+
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name></web-resource-name>
+			<url-pattern>/smsc/smsview/*</url-pattern>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>smsView</role-name>
+		</auth-constraint>
+		<user-data-constraint><transport-guarantee>NONE</transport-guarantee></user-data-constraint>
+	</security-constraint>
+
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name></web-resource-name>
+			<url-pattern>/smsc/smsstat/*</url-pattern>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>smsstat</role-name>
 		</auth-constraint>
 		<user-data-constraint><transport-guarantee>NONE</transport-guarantee></user-data-constraint>
 	</security-constraint>
@@ -137,10 +159,16 @@
 		<role-name>apply</role-name>
 	</security-role>
 	<security-role>
+		<role-name>smsc_service</role-name>
+	</security-role>
+	<security-role>
 		<role-name>perfmon</role-name>
 	</security-role>
 	<security-role>
 		<role-name>smsView</role-name>
+	</security-role>
+	<security-role>
+		<role-name>smsstat</role-name>
 	</security-role>
 	<security-role>
 		<role-name>users</role-name>

@@ -36,12 +36,25 @@ Variant SmscComponent::call(const Method & method, const Arguments & args)
     return Variant(flushStatistics(args).c_str());
   case processCancelMessagesMethod:
     return Variant(processCancelMessages(args).c_str());
+  case applySmscConfigMethod:
+    applySmscConfig();
+    return Variant("");
   default:
     logger.debug("unknown method \"%s\" [%u]", method.getName(), method.getId());
     throw AdminException("Unknown method \"%s\"", method.getName());
   }
   logger.error("call \"%s\"[%u] done. Unreacheable code reached.", method.getName(), method.getId());
   return Variant("");
+}
+
+void SmscComponent::applySmscConfig()
+    throw (AdminException)
+{
+  logger.info("applying new config...");
+  stopSmsc();
+  reReadConfigs();
+  runSmsc();
+  logger.info("new config applied.");
 }
 
 std::string SmscComponent::flushStatistics(const Arguments &args)

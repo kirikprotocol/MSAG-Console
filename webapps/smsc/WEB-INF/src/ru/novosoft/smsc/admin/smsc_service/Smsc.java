@@ -10,15 +10,12 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.admin.utli.Proxy;
-import ru.novosoft.smsc.admin.daemon.Daemon;
 import ru.novosoft.smsc.admin.alias.AliasSet;
+import ru.novosoft.smsc.admin.daemon.Daemon;
 import ru.novosoft.smsc.admin.profiler.Profile;
-import ru.novosoft.smsc.admin.route.Mask;
-import ru.novosoft.smsc.admin.route.RouteList;
-import ru.novosoft.smsc.admin.route.SMEList;
-import ru.novosoft.smsc.admin.route.SubjectList;
+import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.admin.service.*;
+import ru.novosoft.smsc.admin.utli.Proxy;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.ProfileDataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.ProfileQuery;
@@ -309,13 +306,17 @@ public class Smsc extends Service
 	{
 		checkComponents();
 		String ids = "";
+		String srcs = "";
+		String dsts = "";
 		for (Iterator i = messageIds.iterator(); i.hasNext();)
 		{
 			CancelMessageData data = (CancelMessageData) i.next();
-			//ids += id + (i.hasNext() ? ", " : "");
+			ids += data.getMessageId() + (i.hasNext() ? ", " : "");
+			srcs += data.getSourceAddress() + (i.hasNext() ? ", " : "");
+			dsts += data.getDestinationAddress() + (i.hasNext() ? ", " : "");
 		}
 		Map params = new HashMap();
-		params.put("cancelMessageIds", ids);
+		params.put("cancelMessageIds", ids + "; " + srcs + "; " + dsts);
 		call(smsc_component, process_cancel_messages_method, Type.Types[Type.StringType], params);
 	}
 
@@ -400,6 +401,7 @@ public class Smsc extends Service
 	public void applyConfig(Config config)
 			throws AdminException
 	{
+		checkComponents();
 		saveSmscConfig(config);
 		if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
 			call(smsc_component, apply_smsc_config_method, Type.Types[Type.StringType], new HashMap());
