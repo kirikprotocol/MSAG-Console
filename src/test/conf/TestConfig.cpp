@@ -50,10 +50,10 @@ TestConfig::TestConfig()
 	//map proxy
 	strMap["mapProxySystemId"] = "MAP_PROXY";
 	//abonent info
-	addrMap["abonentInfoAddrSmpp"] = "+44444444444444"; //14 символов
-	addrMap["abonentInfoAliasSmpp"] = "444444444444440";
-	addrMap["abonentInfoAddrMap"] = "+555555555555555"; //15 символов
-	addrMap["abonentInfoAliasMap"] = "5555555555555550";
+	addrMap["abonentInfoAddrSme"] = "+44444444444444"; //14 символов
+	addrMap["abonentInfoAliasSme"] = "444444444444440";
+	addrMap["abonentInfoAddrMobile"] = "+555555555555555"; //15 символов
+	addrMap["abonentInfoAliasMobile"] = "5555555555555550";
 	strMap["abonentInfoSystemId"] = "abonentinfo";
 	strMap["abonentInfoServiceType"] = "AboN";
 	intMap["abonentInfoProtocolId"] = 10;
@@ -67,17 +67,6 @@ TestConfig::TestConfig()
 	strMap["emailSmeServiceType"] = "EmaiL";
 	intMap["emailSmeProtocolId"] = 13;
 	strMap["emailSmePassword"] = "emailSmePasswd";
-	//респонсы профайлера
-	strMap["profilerRespReportNone"] = 
-		"Уведомления доставки отключены (Delivery reports are disabled)";
-	strMap["profilerRespReportFull"] =
-		"Delivery reports are enabled";
-	strMap["profilerRespDataCodingDefault"] =
-		"Установлен режим приема сообщений в 7-bit кодировке (message character encoding is set to 7-bit)";
-	strMap["profilerRespDataCodingUcs2"] =
-		"Message character encoding is set to ucs2 encoding (now you will be able to receive messages with russian characters in the case your cell phone supports ucs2 messages)";
-	strMap["profilerRespInvalidCmdText"] =
-		"Неправильная команда (!@#$%^&*( )_+-=|\\:;'<,>.?/)";
 	//респонсы db sme
 	strMap["dbSmeRespProviderNoFound"] = "Адрес получателя не зарегистрирован";
 	strMap["dbSmeRespJobNotFound"] = "Job not found";
