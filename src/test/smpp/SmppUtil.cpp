@@ -1220,7 +1220,11 @@ ostream& operator<< (ostream& os, PduPartSm& p)
 	__prop__(source);
 	__prop__(dest);
 	__int_prop__(numberOfDests);
-	//__ptr_property__(PduDestAddress,dests)
+	for (int i = 0; i < p.get_numberOfDests(); i++)
+	{
+		os << "    dests[" << i << "]: flag = " << p.get_dests()[i].flag <<
+			", addr = " << static_cast<PduAddress&>(p.get_dests()[i]) << endl;
+	}
 	__int_prop__(esmClass);
 	__int_prop__(protocolId);
 	__int_prop__(priorityFlag);
