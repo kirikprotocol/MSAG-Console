@@ -66,7 +66,7 @@ void StoreManager::startup(Manager& config)
             pool = new ConnectionPool(config);
             archiver = new Archiver(config);
             generator = new IDGenerator(archiver->getLastUsedId());
-            //archiver->Start();
+            archiver->Start();
         }
         catch (StorageException& exc)
         {
@@ -112,7 +112,9 @@ SMSId StoreManager::doCreateSms(Connection* connection,
     Descriptor  dsc;
     sms.state = ENROUTE;
     sms.destinationDescriptor = dsc;
-    sms.lastTime = 0; sms.nextTime = 0; sms.failureCause = 0; sms.attempts = 0;
+    sms.lastTime = 0; sms.nextTime = 0; 
+    sms.failureCause = 0; sms.attempts = 0;
+    //sms.submitTime = time(NULL);
     
     if (flag == SMPP_OVERWRITE_IF_PRESENT)
     {
