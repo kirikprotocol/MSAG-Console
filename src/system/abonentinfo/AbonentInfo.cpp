@@ -41,16 +41,16 @@ int AbonentInfoSme::Execute()
       log.warn("Incorrect command received");
       continue;
     }
-    sms=cmd->get_sms();
-    resp=SmscCommand::makeDeliverySmResp(
-      sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
-      cmd->get_dialogId(),
-      SmscCommand::Status::OK);
-    putIncomingCommand(resp);
-
-    getSmsText(sms,body,sizeof(body));
     if(cmd->cmdid==smsc::smeman::DELIVERY)
     {
+      sms=cmd->get_sms();
+      resp=SmscCommand::makeDeliverySmResp(
+        sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
+        cmd->get_dialogId(),
+        SmscCommand::Status::OK);
+      putIncomingCommand(resp);
+
+      getSmsText(sms,body,sizeof(body));
       try{
         Address a(body);
         Address d;
