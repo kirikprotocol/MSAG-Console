@@ -5,20 +5,14 @@
  */
 package ru.novosoft.smsc.util.auth;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
+import org.w3c.dom.*;
+import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.util.xml.Utils;
 
-import javax.xml.parsers.FactoryConfigurationError;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
 import java.security.Principal;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class XmlAuthenticator implements Authenticator
 {
@@ -69,7 +63,7 @@ public class XmlAuthenticator implements Authenticator
 				}
 				users.put(name, new SmscPrincipal(name, password, roles));
 			}
-			AuthenticatorProxy.getInstance().registerAuthenticator("SMSC.SmscRealm", this);
+			AuthenticatorProxy.getInstance().registerAuthenticator(Constants.TomcatRealmName, this);
 			System.err.println("XmlAuthenticator.initialize success with " + users.values().size() + " users.");
 		}
 		catch (Exception e)
@@ -113,5 +107,4 @@ public class XmlAuthenticator implements Authenticator
 		SmscPrincipal ud = (SmscPrincipal) users.get(principal.getName());
 		return ud != null && ud.getRoles().contains(role);
 	}
-
 }

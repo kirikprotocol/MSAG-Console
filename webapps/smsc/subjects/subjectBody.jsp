@@ -1,6 +1,6 @@
 <%int rowN = 0;%>
 <%
-if (beanResult == bean.RESULT_OK)
+//if (beanResult == bean.RESULT_OK)
 {
 %>
 <table class=secRep cellspacing=0 cellpadding=2 width="100%">

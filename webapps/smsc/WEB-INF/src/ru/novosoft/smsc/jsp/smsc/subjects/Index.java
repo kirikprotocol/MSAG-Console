@@ -64,11 +64,7 @@ public class Index extends IndexBean
 		else if (mbEdit != null)
 			return RESULT_EDIT;
 		else if (mbDelete != null)
-		{
-			int dresult = deleteSubject();
-			if (dresult != RESULT_OK)
-				return result;
-		}
+			result = deleteSubject();
 
 		logger.debug("Subjects.Index - process with sorting [" + (String) preferences.getSubjectsSortOrder().get(0) + "]");
 		subjects = smsc.getSubjects().query(new SubjectQuery(pageSize, preferences.getSubjectsFilter(), preferences.getSubjectsSortOrder(), startPosition));
@@ -76,7 +72,7 @@ public class Index extends IndexBean
 
 		checkedSubjectsSet.addAll(Arrays.asList(checkedSubjects));
 
-		return RESULT_OK;
+		return result;
 	}
 
 	protected int deleteSubject()

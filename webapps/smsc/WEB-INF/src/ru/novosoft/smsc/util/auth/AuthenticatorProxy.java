@@ -24,15 +24,22 @@ public class AuthenticatorProxy
 
 	private Map authenticators = new HashMap();
 
-	public synchronized void registerAuthenticator(String realmName, Authenticator authenticator)
+	public void registerAuthenticator(String realmName, Authenticator authenticator)
 	{
 		System.out.println("AuthenticatorProxy.registerAuthenticator(\"" + realmName + "\", \"" + authenticator + "\")");
-		authenticators.put(realmName, authenticator);
+		synchronized (authenticators)
+		{
+			authenticators.put(realmName, authenticator);
+		}
 	}
 
-	public synchronized Principal authenticate(String realmName, String login, String password)
+	public Principal authenticate(String realmName, String login, String password)
 	{
-		Authenticator auth = (Authenticator) authenticators.get(realmName);
+		Authenticator auth;
+		synchronized (authenticators)
+		{
+			auth = (Authenticator) authenticators.get(realmName);
+		}
 		System.out.println("AuthenticatorProxy.authenticate(\"" + realmName + "\", \"" + login + "\", \"" + password+"\") auth="+auth);
 		if (auth == null)
 			return null;
@@ -40,10 +47,14 @@ public class AuthenticatorProxy
 			return auth.authenticate(login, password);
 	}
 
-	public synchronized boolean hasRole(String realmName, Principal principal, String role)
+	public boolean hasRole(String realmName, Principal principal, String role)
 	{
+		Authenticator auth;
 		System.out.println("AuthenticatorProxy.hasRole(\"" + realmName + "\", \"" + principal.getName() + "\", \"" + role + "\")");
-		Authenticator auth = (Authenticator) authenticators.get(realmName);
+		synchronized (authenticators)
+		{
+			auth = (Authenticator) authenticators.get(realmName);
+		}
 		if (auth == null)
 			return false;
 		else

@@ -9,11 +9,13 @@ import org.apache.catalina.realm.RealmBase;
 
 import java.security.Principal;
 
+import ru.novosoft.smsc.admin.Constants;
+
 public class SmscRealm extends RealmBase
 {
 	protected String getName()
 	{
-		return "SMSC.SmscRealm";
+		return Constants.TomcatRealmName;
 	}
 
 	protected String getPassword(String s)
