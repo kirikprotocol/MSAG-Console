@@ -1,4 +1,5 @@
 #include "ProfilerTestCases.hpp"
+#include "test/core/ProfileUtil.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include "util/debug.h"
 #include <algorithm>
@@ -8,10 +9,11 @@ namespace test {
 namespace profiler {
 
 using smsc::util::Logger;
-using smsc::test::sms::SmsUtil;
 using namespace std;
 using namespace smsc::sms; //constants
 using namespace smsc::profiler; //constants
+using namespace smsc::test::sms;
+using namespace smsc::test::core; //ProfileUtil, str()
 using namespace smsc::test::util;
 
 ProfilerTestCases::ProfilerTestCases(Profiler* _profiler,
@@ -27,23 +29,6 @@ Category& ProfilerTestCases::getLog()
 {
 	static Category& log = Logger::getCategory("ProfilerTestCases");
 	return log;
-}
-
-void ProfilerTestCases::setupRandomCorrectProfile(Profile& profile)
-{
-	profile.codepage = rand0(1); //Default=0, Ucs2=1
-	profile.reportoptions = rand0(1); //ReportNone=0, ReportFull=1
-}
-
-#define __compare__(errCode, field) \
-	if (p1.field != p2.field) { res.push_back(errCode); }
-	
-vector<int> ProfilerTestCases::compareProfiles(const Profile& p1, const Profile& p2)
-{
-	vector<int> res;
-	__compare__(1, codepage);
-	__compare__(2, reportoptions);
-	return res;
 }
 
 void ProfilerTestCases::fillAddressWithQuestionMarks(Address& addr, int len)
@@ -64,7 +49,7 @@ void ProfilerTestCases::createProfileMatch(Address& addr, int num)
 		try
 		{
 			Profile profile;
-			setupRandomCorrectProfile(profile);
+			ProfileUtil::setupRandomCorrectProfile(profile);
 			switch (s.value())
 			{
 				case 1: //адрес без знаков подстановки
@@ -114,7 +99,7 @@ void ProfilerTestCases::createProfileNotMatch(Address& addr, int num)
 		{
 			__tc__("createProfileMatch.noSubstSymbols");
 			Profile profile;
-			setupRandomCorrectProfile(profile);
+			ProfileUtil::setupRandomCorrectProfile(profile);
 			AddressValue addrVal;
 			uint8_t addrLen = addr.getValue(addrVal);
 			switch (s.value())
@@ -189,7 +174,7 @@ void ProfilerTestCases::updateProfile(const Address& addr)
 	try
 	{
 		Profile profile;
-		setupRandomCorrectProfile(profile);
+		ProfileUtil::setupRandomCorrectProfile(profile);
 		if (profileReg)
 		{
 			if (profileReg->checkExists(addr))
@@ -220,7 +205,9 @@ void ProfilerTestCases::lookup(const Address& addr)
 	{
 		const Profile& p1 = profiler->lookup(addr);
 		const Profile& p2 = profileReg->getProfile(addr);
-		__tc_fail2__(compareProfiles(p1, p2), 0);
+		__trace2__("ProfilerTestCases::lookup(): profiler.lookup() = {%s}, profileReg.getProfile() = {%s}",
+			str(p1).c_str(), str(p2).c_str());
+		__tc_fail2__(ProfileUtil::compareProfiles(p1, p2), 0);
 		__tc_ok_cond__;
 	}
 	catch(...)
@@ -229,7 +216,7 @@ void ProfilerTestCases::lookup(const Address& addr)
 	}
 }
 
-void ProfilerTestCases::putCommand(Address& addr, int num)
+void ProfilerTestCases::putCommand(const Address& addr, int num)
 {
 	TCSelector s(num, 9);
 	__decl_tc__;
@@ -294,6 +281,7 @@ void ProfilerTestCases::putCommand(Address& addr, int num)
 			sms.getMessageBody().setIntProperty(Tag::SMPP_SM_LENGTH, text.length());
 			sms.getMessageBody().setStrProperty(Tag::SMPP_SHORT_MESSAGE, text);
 			SmscCommand cmd = SmscCommand::makeSumbmitSm(sms, rand0(INT_MAX));
+			__trace2__("ProfilerTestCases::putCommand(): sms = %s", str(sms).c_str());
 			if (profileReg)
 			{
 				Profile profile = profileReg->getProfile(addr);
