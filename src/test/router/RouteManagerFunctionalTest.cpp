@@ -18,23 +18,68 @@ using smsc::test::util::CheckList;
 
 static Category& log = Logger::getCategory("RouteManagerFunctionalTest");
 
-void prepareForNewRoute(const Address& origAddr, const Address& destAddr,
-	vector<SmeInfo*>& sme, vector<TestRouteData*>& routeData,
-	vector<TCResultStack*>& stack, SmeManagerTestCases& tcSme)
+class RouteManagerFunctionalTest
 {
-	routeData.push_back(new TestRouteData(origAddr, destAddr));
-	//Для каждого маршрута - отдельная sme (для идентификации)
-	sme.push_back(new SmeInfo());
-	TCResult* res1 = tcSme.addCorrectSme(sme.back(), RAND_TC);
-	TCResult* res2 = tcSme.registerCorrectSmeProxy(sme.back()->systemId);
-	stack.back()->push_back(res1);
-	stack.back()->push_back(res2);
+	SmeManagerTestCases tcSme;
+	RouteManagerTestCases tcRoute;
+	vector<Address*> addr;
+	vector<SmeInfo*> sme;
+	RouteRegistry routeReg;
+	vector<TCResultStack*> stack;
+
+public:
+	~RouteManagerFunctionalTest();
+	void executeTest(TCResultFilter* filter, int numAddr);
+	void printRoutes();
+
+private:
+	TestRouteData* prepareForNewRoute(const Address& origAddr,
+		const Address& destAddr);
+	void executeTestCases(const Address& origAddr, const Address& destAddr);
+};
+
+RouteManagerFunctionalTest::~RouteManagerFunctionalTest()
+{
+	for (int i  = 0; i < addr.size(); i++)
+	{
+		delete addr[i];
+	}
+	for (int i = 0; i < sme.size(); i++)
+	{
+		delete sme[i];
+	}
+	for (int i = 0; i < stack.size(); i++)
+	{
+		delete stack[i];
+	}
 }
 
-void executeTestCases(const Address& origAddr, const Address& destAddr,
-	vector<SmeInfo*>& sme, vector<TestRouteData*>& routeData,
-	vector<TCResultStack*>& stack, SmeManagerTestCases& tcSme,
-	RouteManagerTestCases& tcRoute)
+void RouteManagerFunctionalTest::printRoutes()
+{
+	RouteRegistry::RouteIterator* it = routeReg.iterator();
+	for (; it->hasNext(); (*it)++)
+	{
+		ostringstream os;
+		os << **it << endl;
+		log.debug("%s", os.str().c_str());
+	}
+	delete it;
+}
+
+TestRouteData* RouteManagerFunctionalTest::prepareForNewRoute(
+	const Address& origAddr, const Address& destAddr)
+{
+	TestRouteData* routeData = new TestRouteData(origAddr, destAddr);
+	//Для каждого маршрута - отдельная sme (для идентификации)
+	sme.push_back(new SmeInfo());
+	stack.back()->push_back(tcSme.addCorrectSme(sme.back(), RAND_TC));
+	stack.back()->push_back(tcSme.registerCorrectSmeProxy(sme.back()->systemId,
+		&routeData->proxyId));
+	return routeData;
+}
+
+void RouteManagerFunctionalTest::executeTestCases(
+	const Address& origAddr, const Address& destAddr)
 {
 	log.debug("*** start ***");
 
@@ -42,60 +87,61 @@ void executeTestCases(const Address& origAddr, const Address& destAddr,
 	stack.push_back(new TCResultStack());
 
 	//Добавление корректного маршрута
-	prepareForNewRoute(origAddr, destAddr, sme, routeData, stack, tcSme);
-	TCResult* res = tcRoute.addCorrectRoute(sme.back()->systemId,
-		routeData.back(), RAND_TC);
-	stack.back()->push_back(res);
-
-	//Добавление корректного маршрута
 	//Добавление корректного маршрута с неправильными (непроверяемыми) значениями
 	//Добавление некорректного маршрута
 	//Поиск маршрута
-	for (TCSelector s(RAND_SET_TC, 5); s.check(); s++)
+	TestRouteData* routeData = NULL;
+	for (TCSelector s(RAND_SET_TC, 6); s.check(); s++)
 	{
 		switch (s.value())
 		{
 			case 1:
-				{
-					prepareForNewRoute(origAddr, destAddr, sme, routeData, stack, tcSme);
-					TCResult* res = tcRoute.addCorrectRoute(
-						sme.back()->systemId, routeData.back(), RAND_TC);
-					stack.back()->push_back(res);
-				}
-				break;
 			case 2:
 				{
-					prepareForNewRoute(origAddr, destAddr, sme, routeData, stack, tcSme);
-					TCResult* res = tcRoute.addCorrectRoute2(
-						sme.back()->systemId, routeData.back(), RAND_TC);
+					if (routeData)
+					{
+						delete routeData;
+					}
+					routeData = prepareForNewRoute(origAddr, destAddr);
+					TCResult* res = tcRoute.addCorrectRoute(
+						sme.back()->systemId, routeData, RAND_TC);
+					routeReg.putRoute(*routeData);
 					stack.back()->push_back(res);
 				}
 				break;
 			case 3:
 				{
-					TCResult* res = tcRoute.addIncorrectRoute(
-						sme.back()->systemId, *routeData.back()->route, RAND_TC);
+					if (routeData)
+					{
+						delete routeData;
+					}
+					routeData = prepareForNewRoute(origAddr, destAddr);
+					TCResult* res = tcRoute.addCorrectRoute2(
+						sme.back()->systemId, routeData, RAND_TC);
+					routeReg.putRoute(*routeData);
 					stack.back()->push_back(res);
 				}
 				break;
-			default: //case 4..5
+			case 4:
+				if (routeData)
 				{
-					TCResult* res = tcRoute.lookupRoute(origAddr, destAddr, routeData);
+					TCResult* res = tcRoute.addIncorrectRoute(
+						sme.back()->systemId, *routeData->route, RAND_TC);
+					stack.back()->push_back(res);
+				}
+				break;
+			default: //case 5..6
+				{
+					TCResult* res = tcRoute.lookupRoute(routeReg, origAddr, destAddr);
 					stack.back()->push_back(res);
 				}
 		}
 	}
 }
 
-void executeFunctionalTest(TCResultFilter* filter, int numAddr)
+void RouteManagerFunctionalTest::executeTest(
+	TCResultFilter* filter, int numAddr)
 {
-	SmeManagerTestCases tcSme;
-	RouteManagerTestCases tcRoute;
-	vector<Address*> addr;
-	vector<SmeInfo*> sme;
-	vector<TestRouteData*> routeData;
-	vector<TCResultStack*> stack;
-
 	//Подготовка списка адресов
 	for (int i = 0; i < numAddr; i++)
 	{
@@ -110,8 +156,7 @@ void executeFunctionalTest(TCResultFilter* filter, int numAddr)
 		{
 			Address& origAddr = *addr[i];
 			Address& destAddr = *addr[j];
-			executeTestCases(origAddr, destAddr, sme, routeData,
-				stack, tcSme, tcRoute);
+			executeTestCases(origAddr, destAddr);
 		}
 	}
 
@@ -122,13 +167,13 @@ void executeFunctionalTest(TCResultFilter* filter, int numAddr)
 		{
 			Address& origAddr = *addr[i];
 			Address& destAddr = *addr[j];
-			TCResult* res = tcRoute.lookupRoute(origAddr, destAddr, routeData);
+			TCResult* res = tcRoute.lookupRoute(routeReg, origAddr, destAddr);
 			filter->addResult(res);
 		}
 	}
 
 	//Итерирование по списку маршрутов
-	filter->addResult(tcRoute.iterateRoutes(routeData));
+	filter->addResult(tcRoute.iterateRoutes(routeReg));
 
 	//Удаление зарегистрированных sme
 	for (int i = 0; i < sme.size(); i++)
@@ -144,41 +189,18 @@ void executeFunctionalTest(TCResultFilter* filter, int numAddr)
 		{
 			Address& origAddr = *addr[i];
 			Address& destAddr = *addr[j];
-			TCResult* res = tcRoute.lookupRoute(origAddr, destAddr, routeData);
+			TCResult* res = tcRoute.lookupRoute(routeReg, origAddr, destAddr);
 			filter->addResult(res);
 		}
 	}
 
 	//Итерирование по списку маршрутов
-	filter->addResult(tcRoute.iterateRoutes(routeData));
+	filter->addResult(tcRoute.iterateRoutes(routeReg));
 
 	//обработка результатов
 	for (int i = 0; i < stack.size(); i++)
 	{
 		filter->addResultStack(*stack[i]);
-	}
-
-	//очистка памяти
-	for (int i = 0; i < sme.size(); i++)
-	{
-smsc::sms::AddressValue oa, od, oa2, od2;
-routeData[i]->origAddr.getValue(oa);
-routeData[i]->destAddr.getValue(od);
-routeData[i]->route->source.getValue(oa2);
-routeData[i]->route->source.getValue(od2);
-log.debug("%s\t%s\t(%s\t%s), match = %d, origAddrMatch = %f, destAddrMatch = %f",
-	oa, od, oa2, od2, routeData[i]->match,
-	routeData[i]->origAddrMatch, routeData[i]->destAddrMatch);
-		delete sme[i];
-		delete routeData[i];
-	}
-	for (int i  = 0; i < addr.size(); i++)
-	{
-		delete addr[i];
-	}
-	for (int i = 0; i < stack.size(); i++)
-	{
-		delete stack[i];
 	}
 }
 
@@ -204,11 +226,24 @@ void saveCheckList(TCResultFilter* filter)
  */
 int main(int argc, char* argv[])
 {
+	if (argc != 3)
+	{
+		cout << "Usage: RouteManagerFunctionalTest <numCycles> <numAddr>" << endl;
+		exit(0);
+	}
+
+	const int numCycles = atoi(argv[1]);
+	const int numAddr = atoi(argv[2]);
 	try
 	{
 		//Manager::init("config.xml");
 		TCResultFilter* filter = new TCResultFilter();
-		executeFunctionalTest(filter, 100);
+		for (int i = 0; i < numCycles; i++)
+		{
+			RouteManagerFunctionalTest test;
+			test.executeTest(filter, numAddr);
+			test.printRoutes();
+		}
 		saveCheckList(filter);
 		delete filter;
 	}
