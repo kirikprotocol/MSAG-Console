@@ -94,7 +94,7 @@ int main(void)
             if (config) delete config;
         }
     } 
-    catch (exception& exc) 
+    catch (Exception& exc) 
     {
         printf("Exception : %s\n", exc.what());
         return -1;

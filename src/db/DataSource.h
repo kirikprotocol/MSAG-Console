@@ -20,7 +20,7 @@
 #include <core/synchronization/Mutex.hpp>
 #include <core/synchronization/EventMonitor.hpp>
 
-#include "DataSourceExceptions.h"
+#include <db/exceptions/DataSourceExceptions.h>
 
 namespace smsc { namespace db
 {

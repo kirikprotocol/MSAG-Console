@@ -4,7 +4,7 @@
 #
 #
 
-CXXFLAGS := $(CXXFLAGS) -I. -I$(SMSC_SRCDIR)/dbsme -I/usr/local/include/xercesc -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/network/public
+CXXFLAGS := $(CXXFLAGS) -I. -I/usr/local/include/xercesc
 PACKAGE := db
 
 ifndef SMSC_SRCDIR
