@@ -444,7 +444,7 @@ public class SmsView
       message = "<< Unsupported encoding (" + encoding + ") ! >>";
     }
     //System.out.println("Msg: "+message);
-    return (encoding != DATA_CODING_UCS2) ? StringEncoderDecoder.encode(message):message;
+    return message;
   }
 
   private static String getHexString(byte val[])
