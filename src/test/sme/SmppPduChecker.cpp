@@ -1,18 +1,20 @@
 #include "SmppPduChecker.hpp"
 #include "test/smpp/SmppUtil.hpp"
+#include "test/TestConfig.hpp"
 
 namespace smsc {
 namespace test {
 namespace sme {
 
 using smsc::test::smpp::SmppUtil;
+using namespace smsc::test; //config constants
 using namespace smsc::test::core; //constants
 using namespace smsc::smpp::SmppCommandSet; //constants
 using namespace smsc::smpp::SmppStatusSet; //constants
 
-static const int NO_ROUTE = 11;
-static const int BAD_VALID_TIME = 12;
-static const int BAD_WAIT_TIME = 13;
+static const int NO_ROUTE = 21;
+static const int BAD_VALID_TIME = 22;
+static const int BAD_WAIT_TIME = 23;
 
 SmppPduChecker::SmppPduChecker(PduRegistry* _pduReg,
 	const RouteChecker* _routeChecker)
@@ -35,7 +37,7 @@ set<int> SmppPduChecker::checkSubmitSm(PduData* pduData)
 		res.insert(NO_ROUTE);
 	}
 	if (validTime < pduData->submitTime ||
-		validTime > pduData->submitTime + __maxValidPeriod__)
+		validTime > pduData->submitTime + maxValidPeriod)
 	{
 		res.insert(BAD_VALID_TIME);
 	}
@@ -47,7 +49,7 @@ set<int> SmppPduChecker::checkSubmitSm(PduData* pduData)
 }
 
 vector<int> SmppPduChecker::checkSubmitSmResp(
-	PduData* pduData, PduSubmitSmResp& respPdu)
+	PduData* pduData, PduSubmitSmResp& respPdu, time_t respTime)
 {
 	vector<int> res;
 	//respPdu
@@ -66,24 +68,25 @@ vector<int> SmppPduChecker::checkSubmitSmResp(
 		res.push_back(3);
 	}
 	//проверка флагов получения pdu
+	time_t respDelay = respTime - pduData->submitTime;
 	switch (pduData->responseFlag)
 	{
 		case PDU_REQUIRED_FLAG:
-			if (pduData->submitTime < __checkTime__)
+		case PDU_MISSING_ON_TIME_FLAG:
+			if (respDelay < 0)
 			{
 				res.push_back(4);
 			}
-			pduData->responseFlag = PDU_RECEIVED_FLAG;
-			break;
-		case PDU_MISSING_ON_TIME_FLAG:
+			else if (respDelay > timeCheckAccuracy)
+			{
+				res.push_back(5);
+			}
 			pduData->responseFlag = PDU_RECEIVED_FLAG;
 			break;
 		case PDU_RECEIVED_FLAG: //респонс уже получен ранее
-			res.push_back(5);
-			break;
-		case PDU_NOT_EXPECTED_FLAG: //респонс всегда должен быть
 			res.push_back(6);
 			break;
+		case PDU_NOT_EXPECTED_FLAG: //респонс всегда должен быть
 		default:
 			__unreachable__("Unknown pduData->responseFlag");
 	}
@@ -92,12 +95,12 @@ vector<int> SmppPduChecker::checkSubmitSmResp(
 		switch (pduData->deliveryFlag)
 		{
 			case PDU_REQUIRED_FLAG:
+			case PDU_MISSING_ON_TIME_FLAG:
 				pduData->deliveryFlag = PDU_NOT_EXPECTED_FLAG;
 				break;
 			case PDU_RECEIVED_FLAG:
 				res.push_back(7);
 				break;
-			case PDU_MISSING_ON_TIME_FLAG:
 			case PDU_NOT_EXPECTED_FLAG:
 				//ok
 				break;
@@ -107,12 +110,12 @@ vector<int> SmppPduChecker::checkSubmitSmResp(
 		switch (pduData->deliveryReceiptFlag)
 		{
 			case PDU_REQUIRED_FLAG:
+			case PDU_MISSING_ON_TIME_FLAG:
 				pduData->deliveryReceiptFlag = PDU_NOT_EXPECTED_FLAG;
 				break;
 			case PDU_RECEIVED_FLAG:
 				res.push_back(8);
 				break;
-			case PDU_MISSING_ON_TIME_FLAG:
 			case PDU_NOT_EXPECTED_FLAG:
 				//ok
 				break;
@@ -122,12 +125,12 @@ vector<int> SmppPduChecker::checkSubmitSmResp(
 		switch (pduData->intermediateNotificationFlag)
 		{
 			case PDU_REQUIRED_FLAG:
+			case PDU_MISSING_ON_TIME_FLAG:
 				pduData->intermediateNotificationFlag = PDU_NOT_EXPECTED_FLAG;
 				break;
 			case PDU_RECEIVED_FLAG:
 				res.push_back(9);
 				break;
-			case PDU_MISSING_ON_TIME_FLAG:
 			case PDU_NOT_EXPECTED_FLAG:
 				//ok
 				break;
@@ -148,6 +151,18 @@ vector<int> SmppPduChecker::checkSubmitSmResp(
 			for (PduData* replaceData = pduData->replacePdu; replaceData; )
 			{
 				//replaceData->responseFlag
+				if (replaceData->deliveryFlag == PDU_RECEIVED_FLAG)
+				{
+					res.push_back(11);
+				}
+				if (replaceData->deliveryReceiptFlag == PDU_RECEIVED_FLAG)
+				{
+					res.push_back(12);
+				}
+				if (replaceData->intermediateNotificationFlag == PDU_RECEIVED_FLAG)
+				{
+					res.push_back(13);
+				}
 				replaceData->deliveryFlag = PDU_NOT_EXPECTED_FLAG;
 				replaceData->deliveryReceiptFlag = PDU_NOT_EXPECTED_FLAG;
 				replaceData->intermediateNotificationFlag = PDU_NOT_EXPECTED_FLAG;
