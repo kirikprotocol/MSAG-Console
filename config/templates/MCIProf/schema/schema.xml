@@ -4,11 +4,28 @@
   <scenario id="0" active="1" sms="1" ussd="2" resources="resources.xml">
 
     <page id="MAIN_PAGE" question="0">
+      <pageExecutor class="ru.sibinco.mci.profile.EntryExecutor">
+        <initParam name="pagePrefixedStrategy" value="prefixed_entry"/>
+        <initParam name="pageRedirectStrategy" value="redirect_entry"/>
+      </pageExecutor>
+    </page>
+    
+    <page id="redirect_entry" question="0">
       <!-- Show MAIN dialog & set MAIN attribute -->
       <pageExecutor class="ru.sibinco.mci.profile.MainExecutor">
         <bundle name="system"/>
       </pageExecutor>
       <command name="1" target="divert_mgr"/>
+      <command name="2" target="profile_mgr"/>
+      <command name="3" target="smshelp_mgr"/>
+      <command name="(**)" target="EXIT_PAGE"/>
+    </page>
+    <page id="prefixed_entry" question="0">
+      <!-- Show MAIN dialog & set MAIN attribute -->
+      <pageExecutor class="ru.sibinco.mci.profile.MainExecutor">
+        <bundle name="system"/>
+      </pageExecutor>
+      <command name="1" target="profile_mgr_alt"/>
       <command name="2" target="profile_mgr"/>
       <command name="3" target="smshelp_mgr"/>
       <command name="(**)" target="EXIT_PAGE"/>
@@ -35,7 +52,7 @@
       <command name="2" target="divert_set"/>   <!-- отсутств.   -->
       <command name="3" target="divert_set"/>   <!-- не доступен -->
       <command name="4" target="divert_set"/>   <!-- безусл.     -->
-      <command name="(**)" target="MAIN_PAGE"/>
+      <command name="(**)" target="redirect_entry"/>
     </page>
     <page id="divert_set" question="0">
       <!-- Set divert reason attribute (занят/отсутств./не доступен/безусл.) -->
@@ -49,6 +66,24 @@
         <bundle name="divert"/>
       </pageExecutor>
       <command name="(**)" target="divert_mgr"/>
+    </page>
+
+    <page id="profile_mgr_alt" question="0">
+      <!-- if (!MAIN attr && !"0") change profile event mask & remove MAIN attribute -->
+      <pagePreProcessor class="ru.sibinco.mci.profile.ProfileManagerAltPreprocessor">
+        <bundle name="system"/>
+        <bundle name="profile"/>
+      </pagePreProcessor>
+      <!-- Query & show profile event maks info for resons -->
+      <pageExecutor class="ru.sibinco.mci.profile.ProfileManagerAltExecutor">
+        <bundle name="system"/>
+        <bundle name="profile"/>
+      </pageExecutor>
+      <command name="1" target="profile_mgr_alt"/>
+      <command name="2" target="profile_mgr_alt"/>
+      <command name="3" target="profile_mgr_alt"/>
+      <command name="4" target="profile_mgr_alt"/>
+      <command name="(**)" target="prefixed_entry"/>
     </page>
 
     <page id="profile_mgr" question="0">

@@ -46,7 +46,6 @@ public class ProfileManager
 
   private ProfileManager() throws ScenarioInitializationException
   {
-
     InputStream is = this.getClass().getClassLoader().getResourceAsStream(Constants.MCI_PROF_MTF_FILE);
     if (is == null)
       throw new ScenarioInitializationException("Failed to locate template properties file");
@@ -106,11 +105,11 @@ public class ProfileManager
   }
 
   private final static String GET_PROFILE_SQL =
-      "SELECT inform, notify, inform_id, notify_id FROM mcisme_abonents WHERE abonent=?";
+      "SELECT inform, notify, inform_id, notify_id, event_mask FROM mcisme_abonents WHERE abonent=?";
   private final static String SET_PROFILE_SQL =
-      "UPDATE mcisme_abonents SET inform=?, notify=?, inform_id=?, notify_id=? WHERE abonent=?";
+      "UPDATE mcisme_abonents SET inform=?, notify=?, inform_id=?, notify_id=?, event_mask=? WHERE abonent=?";
   private final static String INS_PROFILE_SQL =
-      "INSERT INTO mcisme_abonents (abonent, inform, notify, inform_id, notify_id) VALUES (?, ?, ?, ?, ?)";
+      "INSERT INTO mcisme_abonents (abonent, inform, notify, inform_id, notify_id, event_mask) VALUES (?, ?, ?, ?, ?, ?)";
   private final static String DEL_PROFILE_SQL =
       "DELETE FROM mcisme_abonents WHERE abonent=?";
 
@@ -134,9 +133,11 @@ public class ProfileManager
       result = rs.getString(pos++);
       info.notify = !(rs.wasNull() || result == null || result.length() <= 0 || result.trim().equals("N"));
       long informId = rs.getLong(pos++); if (rs.wasNull()) informId = DEFAULT_PROFILE_INFO.informFormat.getId();
-      long notifyId = rs.getLong(pos);   if (rs.wasNull()) notifyId = DEFAULT_PROFILE_INFO.notifyFormat.getId();
+      long notifyId = rs.getLong(pos++); if (rs.wasNull()) notifyId = DEFAULT_PROFILE_INFO.notifyFormat.getId();
+      int eventMask = rs.getInt(pos++);  if (rs.wasNull()) eventMask = ProfileInfo.MASK_ALL;
       info.informFormat = getFormatType(informId, true);
       info.notifyFormat = getFormatType(notifyId, false);
+      info.eventMask = eventMask;
       return info;
     }
     catch (Exception exc) {
@@ -160,6 +161,7 @@ public class ProfileManager
     stmt.setString(pos++, info.notify ? "Y":"N");
     stmt.setLong  (pos++, info.informFormat.getId());
     stmt.setLong  (pos++, info.notifyFormat.getId());
+    stmt.setInt   (pos++, info.eventMask);
     return pos;
   }
   public void setProfileInfo(String abonent, ProfileInfo info) throws ProfileManagerException

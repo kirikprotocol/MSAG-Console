@@ -25,6 +25,7 @@ public class ProfileManagerState
   protected MessageFormat errorFormat = null;
   protected String errorDB      = null;
   protected String errorUnknown = null;
+  protected String errorDenied  = null;
 
   public void init(Properties properties) throws ScenarioInitializationException
   {
@@ -34,10 +35,18 @@ public class ProfileManagerState
       errorFormat   = new MessageFormat(systemBundle.getString(Constants.PAGE_ERR));
       errorDB       = profileBundle.getString(Constants.ERROR_DB);
       errorUnknown  = profileBundle.getString(Constants.ERROR_UNKNOWN);
+      errorDenied   = profileBundle.getString(Constants.ERROR_DENIED);
     } catch (Exception e) {
       throw new ScenarioInitializationException("Init failed", e);
     }
     profileManager = ProfileManager.getInstance();
+  }
+
+  protected boolean checkEventMask(int userMask, int cause) {
+    return ((userMask & cause) == cause);
+  }
+  protected int switchEventMask(int userMask, int cause) {
+    return (((userMask & cause) == cause) ? (userMask & ~cause):(userMask | cause)) & ProfileInfo.MASK_ALL;
   }
 
   protected String getErrorMessage(ProfileManagerException exc)
