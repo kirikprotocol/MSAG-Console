@@ -932,6 +932,54 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
   }MAP_CATCH(dialogid_map,dialogid_smsc);
 }
 
+static inline 
+void DoProvErrorProcessing(ET96MAP_PROV_ERR_T *provErrCode_p )
+{
+  if ( provErrCode_p != 0 ){
+    if ( *provErrCode_p == 0x02 || // unsupported service
+         *provErrCode_p == 0x03 || // mystyped parametor
+         *provErrCode_p == 0x06 || // unexcpected responnse from peer
+         *provErrCode_p == 0x09 || // invalid responce recived
+         (*provErrCode_p > 0x0a && *provErrCode_p <= 0x10)) // unxpected component end other
+      throw MAPDIALOG_FATAL_ERROR(
+        FormatText("MAP::%s fatal *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p),
+        MAP_ERRORS_BASE+*provErrCode_p);
+    else
+      throw MAPDIALOG_TEMP_ERROR(
+        FormatText("MAP::%s temp *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p),
+        MAP_ERRORS_BASE+*provErrCode_p);
+  }
+}
+
+static inline
+void DoRInfoErrorProcessor(
+  ET96MAP_ERROR_ROUTING_INFO_FOR_SM_T *errorSendRoutingInfoForSm_sp,
+  ET96MAP_PROV_ERR_T *provErrCode_p )
+{
+  if ( errorSendRoutingInfoForSm_sp != 0 ){
+    bool fatal = false;
+    switch( errorSendRoutingInfoForSm_sp->errorCode){
+      case 1:case 11:case 13:case 21:fatal = true;
+      case 6:fatal = false;
+      default:fatal = true;
+    }
+    if ( fatal )
+      throw MAPDIALOG_FATAL_ERROR(
+        FormatText("MAP::%s fatal errorSendRoutingInfoForSm_sp->errorCode: 0x%x",
+                   __FUNCTION__,
+                   errorSendRoutingInfoForSm_sp->errorCode),
+                   MAP_ERRORS_BASE+errorSendRoutingInfoForSm_sp->errorCode);
+    else      
+      throw MAPDIALOG_TEMP_ERROR(
+        FormatText("MAP::%s temp errorSendRoutingInfoForSm_sp->errorCode: 0x%x",
+                 __FUNCTION__,
+                 errorSendRoutingInfoForSm_sp->errorCode),
+                 MAP_ERRORS_BASE+errorSendRoutingInfoForSm_sp->errorCode);
+  }
+  DoProvErrorProcessing(provErrCode_p);
+}
+
+
 extern "C"
 USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET96MAP_SS7_ADDR_T *ss7Address_sp,ET96MAP_APP_CONTEXT_T ac)
 {
@@ -1134,53 +1182,6 @@ void DoMTConfErrorProcessor(
   }
 }
 #endif
-
-static inline 
-void DoProvErrorProcessing(ET96MAP_PROV_ERR_T *provErrCode_p )
-{
-  if ( provErrCode_p != 0 ){
-    if ( *provErrCode_p == 0x02 || // unsupported service
-         *provErrCode_p == 0x03 || // mystyped parametor
-         *provErrCode_p == 0x06 || // unexcpected responnse from peer
-         *provErrCode_p == 0x09 || // invalid responce recived
-         (*provErrCode_p > 0x0a && *provErrCode_p <= 0x10)) // unxpected component end other
-      throw MAPDIALOG_FATAL_ERROR(
-        FormatText("MAP::%s fatal *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p),
-        MAP_ERRORS_BASE+*provErrCode_p);
-    else
-      throw MAPDIALOG_TEMP_ERROR(
-        FormatText("MAP::%s temp *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p),
-        MAP_ERRORS_BASE+*provErrCode_p);
-  }
-}
-
-static inline
-void DoRInfoErrorProcessor(
-  ET96MAP_ERROR_ROUTING_INFO_FOR_SM_T *errorSendRoutingInfoForSm_sp,
-  ET96MAP_PROV_ERR_T *provErrCode_p )
-{
-  if ( errorSendRoutingInfoForSm_sp != 0 ){
-    bool fatal = false;
-    switch( errorSendRoutingInfoForSm_sp->errorCode){
-      case 1:case 11:case 13:case 21:fatal = true;
-      case 6:fatal = false;
-      default:fatal = true;
-    }
-    if ( fatal )
-      throw MAPDIALOG_FATAL_ERROR(
-        FormatText("MAP::%s fatal errorSendRoutingInfoForSm_sp->errorCode: 0x%x",
-                   __FUNCTION__,
-                   errorSendRoutingInfoForSm_sp->errorCode),
-                   MAP_ERRORS_BASE+errorSendRoutingInfoForSm_sp->errorCode);
-    else      
-      throw MAPDIALOG_TEMP_ERROR(
-        FormatText("MAP::%s temp errorSendRoutingInfoForSm_sp->errorCode: 0x%x",
-                 __FUNCTION__,
-                 errorSendRoutingInfoForSm_sp->errorCode),
-                 MAP_ERRORS_BASE+errorSendRoutingInfoForSm_sp->errorCode);
-  }
-  DoProvErrorProcessing(provErrCode_p);
-}
 
 static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl( 
   ET96MAP_LOCAL_SSN_T localSsn,
