@@ -179,7 +179,7 @@ inline bool convertSarToUdh(SMS& sms)
     msg=sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
   }else
   {
-    sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+    msg=sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
   }
   unsigned int off=1;
   if(sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
