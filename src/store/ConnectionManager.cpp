@@ -395,7 +395,6 @@ void Connection::connect()
                              (ub4) OCI_ATTR_SESSION, errhp));
             
             isConnected = true; isDead = false;
-            log.info("DB connection recreated.");
         }
     }
     catch (StorageException& exc) 
