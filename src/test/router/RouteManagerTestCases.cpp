@@ -183,7 +183,6 @@ void RouteManagerTestCases::addCorrectRouteMatch(RouteInfo* route,
 		try
 		{
 			RouteUtil::setupRandomCorrectRouteInfo(route);
-			route->enabling = rand0(2);
 			tc1 = setupRandomAddressMatch(route->source, 's', s.value1(numMatch1));
 			tc2 = setupRandomAddressMatch(route->dest, 'd', s.value2(numMatch1));
 			char tcId[64];
@@ -212,7 +211,6 @@ void RouteManagerTestCases::addCorrectRouteNotMatch(RouteInfo* route,
 		{
 			char tcId[64];
 			RouteUtil::setupRandomCorrectRouteInfo(route);
-			route->enabling = rand0(2);
 			switch (s.value3(numMatch, numNotMatch))
 			{
 				case 1: //отличается origAddr
@@ -259,7 +257,6 @@ void RouteManagerTestCases::addCorrectRouteNotMatch2(RouteInfo* route,
 		try
 		{
 			RouteUtil::setupRandomCorrectRouteInfo(route);
-			route->enabling = rand0(2);
 			SmsUtil::setupRandomCorrectAddress(&route->source);
 			SmsUtil::setupRandomCorrectAddress(&route->dest);
 			switch(s.value())
