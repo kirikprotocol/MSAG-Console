@@ -546,7 +546,7 @@ public:
         while(hash.Next(key,value))
         {
           __require__(value!=0);
-          size+=value->length(); 
+          size+=value->length()+4; 
         }
 				return size;
       }
@@ -582,7 +582,7 @@ public:
           *(uint16_t*)(buffer+offs) = htons(tag);
           *(uint16_t*)(buffer+offs+2) = htons(len);
           offs+=4;
-					__trace2__("Str: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key:"NULL",len,offs,length);
+					__trace2__("Str::encode: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key:"NULL",len,offs,length);
           __require__(offs+len<=length);
           memcpy(buffer+offs,value->c_str(),len);
 					offs+=len;
@@ -601,7 +601,7 @@ public:
           pos+=4;
           __require__(pos+len<=length);
 					string* key = tag_hash.getStrKeyForString(tag);
-					__trace2__("Str: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key->c_str():"NULL",len,pos,length);
+					__trace2__("Str::decode: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key->c_str():"NULL",len,pos,length);
 					if ( key )
 					{
             __require__(*(buffer+pos+len-1) == 0);
@@ -626,7 +626,7 @@ public:
         {
           //__reqruire__(value!=0);
           //size+=value->length(); 
-					size+=4;
+					size+=4+4;
         }
 				return size;
       }
@@ -662,7 +662,7 @@ public:
           *(uint16_t*)(buffer+offs) = htons(tag);
           *(uint16_t*)(buffer+offs+2) = htons(4);
           offs+=4;
-					__trace2__("Int: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key:"NULL",len,offs,length);
+					__trace2__("Int::encode: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key:"NULL",len,offs,length);
           __require__(offs+len<=length);
           //memcpy(buffer+pos,value->c_str(),len);
 					*(uint32_t*)(buffer+offs) = htonl(*value); 
@@ -682,7 +682,7 @@ public:
           pos+=4;
           __require__(pos+len<=length);
           string* key = tag_hash.getStrKeyForInt(tag);
-					__trace2__("Int: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key->c_str():"NULL",len,pos,length);
+					__trace2__("Int::decode: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key->c_str():"NULL",len,pos,length);
           if ( key )
           {
             __require__(len == 4);
