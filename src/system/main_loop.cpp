@@ -170,6 +170,7 @@ void Smsc::mainLoop()
     }catch(...)
     {
       __trace2__("Source proxy died after selection\n");
+      continue;
     }
     switch(cmd->get_commandId())
     {
