@@ -47,6 +47,7 @@ public class Edit extends EditBean
   {
     final Map smscs = getGlobalSmscs();
     final Map smes = getGlobalSmes();
+    if (altHost==null) altHost="";
     final SmscInfo info = new SmscInfo(id, host, port, systemId, password, responseTimeout, uniqueMsgIdPrefix, altHost, altPort);
     smscs.put(id, info);
     if (isAdd()) {
