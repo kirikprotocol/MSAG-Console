@@ -16,8 +16,8 @@ using namespace smsc::test::util;
 /**
  * Предназначен для стресс тестирования и тестирования бизнес циклов Message 
  * Store на длительных временных интервалах.
- * Выполняет все корректные и некорректные test cases по работе с Message Store 
- * кроме assert test cases.
+ * Выполняет все корректные и некорректные тест кейсы по работе с Message Store 
+ * кроме assert тест кейсов.
  * Результат выполнения теста может быть следующий:
  * <ul>
  * <li>Обнаружение проблем в multi-thread окружении.
@@ -85,36 +85,84 @@ MessageStoreBusinessCycleTestTask::MessageStoreBusinessCycleTestTask(int _taskNu
 
 void MessageStoreBusinessCycleTestTask::executeCycle()
 {
-	//создаю SM для попытки дальнейшего создание дублированного SM
-	SMSId correctId;
-	SMS correctSM;
-	doStat(tc.storeCorrectSM(&correctId, &correctSM, RAND_TC));
+	SMSId id;
+	SMS sms;
 
-	//создаю SM, сразу читаю, замещаю, читаю и удаляю
-	for (int i = 0; i < 10; i++)
+	//создание SM
+	doStat(tc.storeCorrectSM(&id, &sms, RAND_TC));
+	
+	//сохранение правильного SM с параметрами похожими на уже существующий SM
+	//сохранение дублированного SM с замещением
+	//сохранение дублированного SM с отказом
+	//сохранение неправильного SM
+	//установка правильного статуса
+	//некорректное изменение статуса SM
+	//замещение SM
+	//некорректное замещение SM
+	//чтение SM
+	for (TCSelector s(RAND_SET_TC, 15); s.check(); s++)
 	{
-		SMSId id;
-		SMS sms;
-		doStat(tc.storeCorrectSM(&id, &sms, RAND_TC));
-		doStat(tc.setCorrectSMStatus(id, &sms, RAND_TC));
-		doStat(tc.replaceCorrectSM(id, &sms, RAND_TC));
-		doStat(tc.loadExistentSM(id, sms));
-		doStat(tc.deleteExistentSM(id));
+		switch (s.value())
+		{
+			case 1:
+				{
+					SMSId newId;
+					SMS newSMS;
+					doStat(tc.storeCorrectSM(&newId, &newSMS, id, sms, RAND_TC));
+					doStat(tc.deleteExistentSM(newId));
+				}
+				break;
+			case 2:
+				doStat(tc.storeReplaceSM(id, &sms));
+				break;
+			case 3:
+				doStat(tc.storeRejectDuplicateSM(sms));
+				break;
+			case 4:
+				doStat(tc.storeIncorrectSM(RAND_TC));
+				break;
+			case 5:
+				doStat(tc.setCorrectSMStatus(id, &sms, RAND_TC));
+				break;
+			case 6:
+				doStat(tc.setIncorrectSMStatus(id));
+				break;
+			case 7:
+				doStat(tc.replaceCorrectSM(id, &sms, RAND_TC));
+				break;
+			case 8:
+				doStat(tc.replaceIncorrectSM(id, sms, RAND_TC));
+				break;
+			default: //9..15
+				doStat(tc.loadExistentSM(id, sms));
+		}
 	}
 
-	//создаю и удаляю кривые SM
-	//doStat(tc.storeIncorrectSM(RAND_TC));
-	doStat(tc.storeDuplicateSM(correctSM, RAND_TC));
-	doStat(tc.setCorrectSMStatus(correctId, &correctSM, RAND_TC));
-	doStat(tc.setIncorrectSMStatus(correctId));
-	doStat(tc.replaceCorrectSM(correctId, &correctSM, RAND_TC));
-	doStat(tc.replaceIncorrectSM(correctId, correctSM, RAND_TC));
-	doStat(tc.loadExistentSM(correctId, correctSM));
-	doStat(tc.deleteExistentSM(correctId));
-	doStat(tc.setNonExistentSMStatus(correctId, RAND_TC));
-	doStat(tc.replaceNonExistentSM(correctId, RAND_TC));
-	doStat(tc.deleteNonExistentSM(correctId, RAND_TC));
-	doStat(tc.loadNonExistentSM(correctId, RAND_TC));
+	//удаление SM
+	doStat(tc.deleteExistentSM(id));
+
+	//изменение статуса несуществующих SM
+	//замещение несуществующих SM
+	//чтение несуществующих SM
+	//удаление несуществующих SM
+	for (TCSelector s(RAND_SET_TC, 4); s.check(); s++)
+	{
+		switch (s.value())
+		{
+			case 1:
+				doStat(tc.setNonExistentSMStatus(id, RAND_TC));
+				break;
+			case 2:
+				doStat(tc.replaceNonExistentSM(id, RAND_TC));
+				break;
+			case 3:
+				doStat(tc.loadNonExistentSM(id, RAND_TC));
+				break;
+			case 4:
+				doStat(tc.deleteNonExistentSM(id, RAND_TC));
+				break;
+		}
+	}
 }
 
 inline void MessageStoreBusinessCycleTestTask::onStopped()

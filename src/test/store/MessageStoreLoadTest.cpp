@@ -90,11 +90,7 @@ void MessageStoreLoadTestTask::executeCycle()
 	{
 		doStat(tc.storeCorrectSM(&id, &sms, RAND_TC));
 		doStat(tc.setCorrectSMStatus(id, &sms, RAND_TC));
-		//tc.createBillingRecord();
 	}
-	//tc.updateCorrectExistentSM(); ops++;
-	//tc.deleteExistentSM(); ops++;
-	//tc.loadExistentSM(); ops++;
 }
 
 inline void MessageStoreLoadTestTask::onStopped()
