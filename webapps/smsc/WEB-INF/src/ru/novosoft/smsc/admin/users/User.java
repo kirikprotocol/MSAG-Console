@@ -22,7 +22,7 @@ public class User implements Principal
 
 	private String login = null;
 	private String password = null;
-	private String[] roles = null;
+	private Set roles = null;
 	private String firstName = null;
 	private String lastName = null;
 	private String dept = null;
@@ -36,7 +36,7 @@ public class User implements Principal
 	{
 		this.login = login;
 		this.password = password;
-		this.roles = roles;
+		this.roles = new TreeSet(Arrays.asList(roles == null ? new String[0] : roles));
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.dept = dept;
@@ -52,7 +52,6 @@ public class User implements Principal
 		if (this.homePhone == null) this.homePhone = "";
 		if (this.cellPhone == null) this.cellPhone = "";
 		if (this.email == null) this.email = "";
-		if (this.roles == null) this.roles = new String[0];
 	}
 
 	public User(Element userElem)
@@ -60,14 +59,13 @@ public class User implements Principal
 		this.login = userElem.getAttribute("login");
 		this.password = userElem.getAttribute("password");
 
-		Collection rolesList = new HashSet();
+		this.roles = new TreeSet();
 		NodeList roleList = userElem.getElementsByTagName("role");
 		for (int i = 0; i < roleList.getLength(); i++)
 		{
 			Element roleElem = (Element) roleList.item(i);
-			rolesList.add(roleElem.getAttribute("name"));
+			this.roles.add(roleElem.getAttribute("name"));
 		}
-		this.roles = (String[]) rolesList.toArray(new String[0]);
 
 		this.firstName = userElem.getAttribute("firstName");
 		this.lastName = userElem.getAttribute("lastName");
@@ -84,7 +82,6 @@ public class User implements Principal
 		if (this.homePhone == null) this.homePhone = "";
 		if (this.cellPhone == null) this.cellPhone = "";
 		if (this.email == null) this.email = "";
-		if (this.roles == null) this.roles = new String[0];
 	}
 
 	public String getName()
@@ -128,13 +125,10 @@ public class User implements Principal
 		result += " cellPhone=\"" + StringEncoderDecoder.encode(cellPhone) + '"';
 		result += " email=\"" + StringEncoderDecoder.encode(email) + '"';
 		result += ">\n";
-		Arrays.sort(roles);
-		for (int i = 0; i < roles.length; i++)
-		{
-			String role = roles[i];
-			result += "\t\t<role name=\"" + StringEncoderDecoder.encode(role) + "\"/>\n";
-		}
-
+    for (Iterator i = roles.iterator(); i.hasNext();) {
+      String role = (String) i.next();
+      result += "\t\t<role name=\"" + StringEncoderDecoder.encode(role) + "\"/>\n";
+    }
 		result += "\t</user>\n";
 
 		return result;
@@ -160,16 +154,14 @@ public class User implements Principal
 		this.password = password;
 	}
 
-	public String[] getRoles()
+	public Collection getRoles()
 	{
 		return roles;
 	}
 
-	public void setRoles(String[] roles)
+	public void setRoles(Collection roles)
 	{
-		this.roles = roles;
-		if (this.roles == null)
-			this.roles = new String[0];
+		this.roles = roles == null ? new TreeSet() : new TreeSet(roles);
 	}
 
 	public String getFirstName()
@@ -241,4 +233,14 @@ public class User implements Principal
 	{
 		this.email = email;
 	}
+
+  public void grantRole(String roleName)
+  {
+    roles.add(roleName);
+  }
+
+  public void revokeRole(String roleName)
+  {
+    roles.remove(roleName);
+  }
 }

@@ -51,7 +51,7 @@ void printOptionsString(JspWriter out, HttpServletRequest request, List journalE
   String journalRowId = checkboxValue + "JournalRow";
   out.println("<tr class=row" + (rowN&1) + ">");
   final boolean isJournalHasEntries = journalEntries.size()>0;
-  out.println("  <td rowspan=" + (isJournalHasEntries ? 2 : 1) + " valign=top><input class=check type=checkbox name=checks value=" + checkboxValue + (!optionsChanged ? " disabled" : "") + "></td>");
+  out.println("  <td rowspan=" + (isJournalHasEntries ? 2 : 1) + " valign=top><input class=check type=checkbox name=checks value=" + checkboxValue + ((!optionsChanged && !isJournalHasEntries) ? " disabled" : "") + "></td>");
   String onClick = isJournalHasEntries ? " class=clickable onClick='click" + journalRowId + "()'" : "";
 	out.println("  <td " + onClick + "><div id=\"" + journalRowId + "_div\"" + (isJournalHasEntries ? "class=collapsing_list_closed" : "class=collapsing_list_empty") + ">" + name + "</div></td>");
 	out.println("  <td " + onClick + ">" + (optionsChanged ? "<span class=Cf00>changed</span>" : "clear") + "</td>");

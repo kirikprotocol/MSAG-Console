@@ -7,6 +7,7 @@ package ru.novosoft.smsc.jsp.smsc;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Journal;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.Statuses;
 
@@ -29,6 +30,7 @@ public class Index extends SmscBean
 
   private String mbApply = null;
   private String[] checks = null;
+  private Journal journal;
 
   protected int init(List errors)
   {
@@ -37,6 +39,8 @@ public class Index extends SmscBean
       return result;
 
     statuses = appContext.getStatuses();
+    journal = appContext.getJournal();
+
     if (checks == null)
       checks = new String[0];
 
@@ -79,7 +83,7 @@ public class Index extends SmscBean
     try {
       appContext.getSmsc().applyConfig();
       statuses.setSmscChanged(false);
-      appContext.getJournal().clear(smscSubjectTypes);
+      journal.clear(smscSubjectTypes);
       return RESULT_OK;
     } catch (AdminException e) {
       logger.error("Couldn't apply new SMSC config", e);
@@ -95,8 +99,8 @@ public class Index extends SmscBean
       statuses.setRoutesSaved(true);
       statuses.setSubjectsChanged(false);
       //statuses.setServicesChanged(false);
-      appContext.getJournal().clear(SubjectTypes.TYPE_route);
-      appContext.getJournal().clear(SubjectTypes.TYPE_subject);
+      journal.clear(SubjectTypes.TYPE_route);
+      journal.clear(SubjectTypes.TYPE_subject);
 
       return RESULT_OK;
     } catch (Throwable t) {
@@ -113,8 +117,8 @@ public class Index extends SmscBean
       statuses.setRoutesSaved(true);
       statuses.setSubjectsChanged(false);
       //statuses.setServicesChanged(false);
-      appContext.getJournal().clear(SubjectTypes.TYPE_route);
-      appContext.getJournal().clear(SubjectTypes.TYPE_subject);
+      journal.clear(SubjectTypes.TYPE_route);
+      journal.clear(SubjectTypes.TYPE_subject);
 
       return RESULT_OK;
     } catch (Throwable t) {
@@ -128,7 +132,7 @@ public class Index extends SmscBean
     try {
       smsc.applyAliases();
       statuses.setAliasesChanged(false);
-      appContext.getJournal().clear(SubjectTypes.TYPE_alias);
+      journal.clear(SubjectTypes.TYPE_alias);
 
       return RESULT_OK;
     } catch (Throwable t) {
@@ -141,7 +145,7 @@ public class Index extends SmscBean
   {
     smsc.applyProfiles();
     statuses.setProfilesChanged(false);
-    appContext.getJournal().clear(SubjectTypes.TYPE_profile);
+    journal.clear(SubjectTypes.TYPE_profile);
 
     return RESULT_OK;
   }
@@ -155,7 +159,7 @@ public class Index extends SmscBean
       return error(SMSCErrors.error.couldntApplyChanges, "Couldn't apply hosts", e);
     }
     statuses.setHostsChanged(false);
-    appContext.getJournal().clear(SubjectTypes.TYPE_host);
+    journal.clear(SubjectTypes.TYPE_host);
     return RESULT_OK;
   }
 
@@ -182,9 +186,16 @@ public class Index extends SmscBean
   private int applyUsers()
   {
     try {
-      appContext.getUserManager().apply();
-      statuses.setUsersChanged(false);
-      appContext.getJournal().clear(SubjectTypes.TYPE_user);
+      if (statuses.isUsersChanged()) {
+        appContext.getUserManager().apply();
+        statuses.setUsersChanged(false);
+        journal.clear(SubjectTypes.TYPE_user);
+      }
+      if (statuses.isWebXmlChanged()) {
+        appContext.getWebXmlConfig().save();
+        statuses.setWebXmlChanged(false);
+        journal.clear(SubjectTypes.TYPE_securityConstraint);
+      }
       return RESULT_OK;
     } catch (Exception e) {
       logger.error("Couldn't apply users", e);
@@ -256,31 +267,31 @@ public class Index extends SmscBean
 
   public List getJournalRoutes()
   {
-    return appContext.getJournal().getActions(SubjectTypes.TYPE_route);
+    return journal.getActions(SubjectTypes.TYPE_route);
   }
 
   public List getJournalSubjects()
   {
-    return appContext.getJournal().getActions(SubjectTypes.TYPE_subject);
+    return journal.getActions(SubjectTypes.TYPE_subject);
   }
 
   public List getJournalAliases()
   {
-    return appContext.getJournal().getActions(SubjectTypes.TYPE_alias);
+    return journal.getActions(SubjectTypes.TYPE_alias);
   }
 
   public List getJournalHosts()
   {
-    return appContext.getJournal().getActions(SubjectTypes.TYPE_host);
+    return journal.getActions(SubjectTypes.TYPE_host);
   }
 
   public List getJournalUsers()
   {
-    return appContext.getJournal().getActions(SubjectTypes.TYPE_user);
+    return journal.getActions(SubjectTypes.TYPE_user);
   }
 
   public List getJournalSmsc()
   {
-    return appContext.getJournal().getActions(smscSubjectTypes);
+    return journal.getActions(smscSubjectTypes);
   }
 }

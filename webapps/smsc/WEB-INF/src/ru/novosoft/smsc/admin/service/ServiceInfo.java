@@ -34,6 +34,7 @@ public class ServiceInfo
 	protected SME sme = null;
 	protected byte status = STATUS_STOPPED;
   private File serviceFolder;
+  private boolean autostart;
 
 
   public ServiceInfo(Element serviceElement, String serviceHost, SmeManager smeManager, String daemonServicesFolder) throws AdminException
@@ -41,8 +42,9 @@ public class ServiceInfo
 		host = serviceHost;
 		port = Integer.decode(serviceElement.getAttribute("port")).intValue();
 		id = serviceElement.getAttribute("id");
-
+    this.autostart = "true".equals(serviceElement.getAttribute("autostart"));
 		args = serviceElement.getAttribute("args");
+
 		if (id.equals(""))
 		{
 			throw new AdminException("services name or services system id not specified in response");
@@ -65,11 +67,12 @@ public class ServiceInfo
     this.serviceFolder = new File(daemonServicesFolder, id);
 	}
 
-	private ServiceInfo(String id, String host, int port, String serviceFolder, String args, long pid, SME sme, byte status)
+	private ServiceInfo(String id, String host, int port, String serviceFolder, String args, boolean autostart, long pid, SME sme, byte status)
 	{
 		this.host = host;
 		this.port = port;
 		this.args = args;
+    this.autostart = autostart;
 		this.pid = pid;
 		this.id = id;
 		this.sme = sme;
@@ -77,9 +80,9 @@ public class ServiceInfo
     this.serviceFolder = new File(serviceFolder);
 	}
 
-	public ServiceInfo(String id, String host, int port, String serviceFolder, String args, SME sme, byte status)
+	public ServiceInfo(String id, String host, int port, String serviceFolder, String args, boolean autostart, SME sme, byte status)
 	{
-		this(id, host, port, serviceFolder, args, 0, sme, status);
+		this(id, host, port, serviceFolder, args, autostart, 0, sme, status);
 	}
 
 
@@ -210,5 +213,10 @@ public class ServiceInfo
   public File getServiceFolder()
   {
     return serviceFolder;
+  }
+
+  public boolean isAutostart()
+  {
+    return autostart;
   }
 }

@@ -80,7 +80,7 @@ public class Smsc extends Service
 
   public Smsc(String smscHost, int smscPort, String smscConfFolderString, NSConnectionPool connectionPool) throws AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException
   {
-    super(new ServiceInfo(Constants.SMSC_SME_ID, smscHost, smscPort, "", "", null, ServiceInfo.STATUS_STOPPED));
+    super(new ServiceInfo(Constants.SMSC_SME_ID, smscHost, smscPort, "", "", true, null, ServiceInfo.STATUS_STOPPED));
 
     try {
       this.configFolder = new File(smscConfFolderString);

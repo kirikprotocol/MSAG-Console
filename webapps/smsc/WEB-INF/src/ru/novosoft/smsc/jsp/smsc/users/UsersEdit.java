@@ -34,7 +34,7 @@ public class UsersEdit extends UsersEditBean
         } else {
           password = "";
           confirmPassword = "";
-          setRoles(user.getRoles());
+          setRoles((String[]) user.getRoles().toArray(new String[0]));
           firstName = user.getFirstName();
           lastName = user.getLastName();
           dept = user.getDept();
@@ -65,7 +65,7 @@ public class UsersEdit extends UsersEditBean
 
       user.setLogin(login);
       user.setPassword(password);
-      user.setRoles(roles);
+      user.setRoles(Arrays.asList(roles));
       user.setFirstName(firstName);
       user.setLastName(lastName);
       user.setDept(dept);

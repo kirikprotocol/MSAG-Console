@@ -8,11 +8,12 @@ package ru.novosoft.smsc.jsp.smsc.services;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.jsp.Statuses;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.config.Config;
@@ -34,6 +35,7 @@ public class ServiceAddExternalAdm extends SmeBean
   private String hostName = null;
   private int port = -1;
   private String startupArgs = null;
+  protected boolean autostart = false;
 
   private String mbNext = null;
   private String mbCancel = null;
@@ -46,6 +48,9 @@ public class ServiceAddExternalAdm extends SmeBean
     int result = super.process(request);
     if (result != RESULT_OK)
       return result;
+
+    if (isSomethingChangedInWebApp())
+      warning(SMSCErrors.error.services.somethingGlobalIsChanged);
 
     if (mbCancel != null) {
       mbCancel = null;
@@ -68,6 +73,14 @@ public class ServiceAddExternalAdm extends SmeBean
       }
     } else
       return RESULT_OK;
+  }
+
+  private boolean isSomethingChangedInWebApp()
+  {
+    final Statuses s = appContext.getStatuses();
+    return s.isAliasesChanged() || s.isHostsChanged() || s.isProfilesChanged() || s.isRoutesChanged()
+            || s.isRoutesChanged() || s.isSmscChanged() || s.isSubjectsChanged() || s.isUsersChanged()
+            || s.isUsersChanged() || s.isWebXmlChanged();
   }
 
   protected void cleanup()
@@ -157,7 +170,7 @@ public class ServiceAddExternalAdm extends SmeBean
     try {
       serviceInfo = new ServiceInfo(serviceId, hostName, port,
                                     appContext.getHostsManager().getDaemonServicesFolder(hostName) + File.separatorChar + serviceId,
-                                    startupArgs, new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password, rangeOfAddress, -1, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit), ServiceInfo.STATUS_STOPPED);
+                                    startupArgs, autostart, new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password, rangeOfAddress, -1, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit), ServiceInfo.STATUS_STOPPED);
     } catch (AdminException e) {
       return error(SMSCErrors.error.services.coudntAddService, e);
     } catch (NullPointerException e) {
@@ -172,10 +185,29 @@ public class ServiceAddExternalAdm extends SmeBean
       logger.error("Adding service \"" + serviceInfo.getId() + "\" to host \"" + serviceInfo.getHost() + "\" failed", e);
       return error(SMSCErrors.error.services.coudntAddService, serviceInfo.getId(), e);
     }
+
+    int result = RESULT_DONE;
+    String roleName = appContext.getWebXmlConfig().addSecurityConstraint(serviceInfo.getId());
+    journalAppend(SubjectTypes.TYPE_securityConstraint, serviceInfo.getId(), Actions.ACTION_ADD);
+    appContext.getStatuses().setWebXmlChanged(true);
+    try {
+      logger.debug("Created security constraint for service \"" + serviceInfo.getId() + "\" with role \"" + roleName + "\", saving changes to WEB-INF/web.xml...");
+      appContext.getWebXmlConfig().save();
+      appContext.getJournal().clear(SubjectTypes.TYPE_securityConstraint);
+      appContext.getStatuses().setWebXmlChanged(false);
+    } catch (Throwable e) {
+      result = error(SMSCErrors.error.services.couldntSaveWebXml, e);
+      logger.error("Could not save WEB-INF/web.xml", e);
+    }
+/*    final String login = loginedPrincipal.getName();
+    appContext.getUserManager().getUser(login).grantRole(roleName);
+    journalAppend(SubjectTypes.TYPE_user, login, Actions.ACTION_MODIFY);
+    appContext.getStatuses().setUsersChanged(true);*/
+
     logger.info("New service \"" + serviceInfo.getId() + "\" added to host \"" + serviceInfo.getHost() + '"');
     stage = 0;
     cleanup();
-    return RESULT_DONE;
+    return result;
   }
 
   public List getHostNames()
@@ -323,5 +355,15 @@ public class ServiceAddExternalAdm extends SmeBean
   public void setMbCancel(String mbCancel)
   {
     this.mbCancel = mbCancel;
+  }
+
+  public boolean isAutostart()
+  {
+    return autostart;
+  }
+
+  public void setAutostart(boolean autostart)
+  {
+    this.autostart = autostart;
   }
 }

@@ -2,6 +2,8 @@
 page import="ru.novosoft.smsc.jsp.smsc.services.ServiceAddExternalAdm,
              ru.novosoft.util.jsp.MultipartServletRequest"%><jsp:useBean id="services_serviceAddExternalAdm" class="ru.novosoft.smsc.jsp.smsc.services.ServiceAddExternalAdm" scope="session"/><jsp:setProperty name="services_serviceAddExternalAdm" property="*"/><%
 
+//todo add autostart flag
+
 ru.novosoft.smsc.jsp.smsc.services.ServiceAddExternalAdm bean = services_serviceAddExternalAdm;
 
 MultipartServletRequest multi = (MultipartServletRequest)request.getAttribute("multipart.request");

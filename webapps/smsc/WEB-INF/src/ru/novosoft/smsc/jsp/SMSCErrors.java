@@ -44,7 +44,9 @@ public class SMSCErrors
 			public static final String couldntReceiveFile = B + "couldntReceiveFile";
 			public static final String hostNotSelected = B + "hostNotSelected";
 			public static final String incorrectPortValue = B + "incorrectPortValue";
-		}
+      public static final String couldntSaveWebXml = B + "couldntSaveWebXml";
+      public static final String somethingGlobalIsChanged = B + "somethingGlobalIsChanged";
+    }
 
 		public static class hosts
 		{

@@ -14,6 +14,7 @@ import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.util.jsp.AppContext;
 
 import javax.sql.DataSource;
@@ -22,23 +23,23 @@ import java.util.*;
 
 public interface SMSCAppContext extends AppContext
 {
-  public Config getConfig();
+  Config getConfig();
 
-  public HostsManager getHostsManager();
+  HostsManager getHostsManager();
 
-  public UserManager getUserManager();
+  UserManager getUserManager();
 
-  public Smsc getSmsc();
+  Smsc getSmsc();
 
-  public DataSource getConnectionPool();
+  DataSource getConnectionPool();
 
-  public UserPreferences getUserPreferences(java.security.Principal loginedPrincipal);
+  UserPreferences getUserPreferences(java.security.Principal loginedPrincipal);
 
-  public Statuses getStatuses();
+  Statuses getStatuses();
 
-  public void destroy();
+  void destroy();
 
-  public String getLocaleString(Locale locale, String key);
+  String getLocaleString(Locale locale, String key);
 
   SmeManager getSmeManager();
 
@@ -47,4 +48,6 @@ public interface SMSCAppContext extends AppContext
   ResourcesManager getResourcesManager();
 
   Journal getJournal();
+
+  WebXml getWebXmlConfig();
 }

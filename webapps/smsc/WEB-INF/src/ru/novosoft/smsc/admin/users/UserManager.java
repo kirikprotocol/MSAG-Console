@@ -153,4 +153,12 @@ public class UserManager implements DataSource
 	{
 		return (User) users.remove(userLogin);
 	}
+
+  public void removeRole(String roleName)
+  {
+    for (Iterator i = users.values().iterator(); i.hasNext();) {
+      User user = (User) i.next();
+      user.revokeRole(roleName);
+    }
+  }
 }

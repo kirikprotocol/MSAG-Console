@@ -36,7 +36,7 @@ public class Action
   {
     StringBuffer sb = new StringBuffer()
             .append("Action [time:").append(dateFormat.format(timestamp))
-            .append("user:").append(user)
+            .append(" user:").append(user)
             .append(" session:").append(sessionId)
             .append(" subjType:").append(SubjectTypes.typeToString(subjectType))
             .append(" subjId:").append(subjectId)

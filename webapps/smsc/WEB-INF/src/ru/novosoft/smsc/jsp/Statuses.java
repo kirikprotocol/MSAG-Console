@@ -40,4 +40,7 @@ public interface Statuses
 
 	boolean isSmscChanged();
 	void setSmscChanged(boolean smscChanged);
+
+  boolean isWebXmlChanged();
+  void setWebXmlChanged(boolean webXmlChanged);
 }

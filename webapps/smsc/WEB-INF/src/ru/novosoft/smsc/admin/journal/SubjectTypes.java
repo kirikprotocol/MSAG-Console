@@ -23,6 +23,7 @@ public abstract class SubjectTypes
   public static final byte TYPE_directive = 12;   //
   public static final byte TYPE_logger = 13;
   public static final byte TYPE_msc = 14;
+  public static final byte TYPE_securityConstraint = 15;
 
   public final static String typeToString(byte subjectType)
   {
@@ -55,6 +56,8 @@ public abstract class SubjectTypes
         return "logger";
       case TYPE_msc:
         return "msc";
+      case TYPE_securityConstraint:
+        return "security constraint";
       default:
         return "unknown";
     }
@@ -90,6 +93,9 @@ public abstract class SubjectTypes
       return TYPE_logger;
     if ("msc".equals(subjectType))
       return TYPE_msc;
+    if ("security constraint".equals(subjectType))
+      return TYPE_securityConstraint;
+
     return TYPE_UNKNOWN;
   }
 }

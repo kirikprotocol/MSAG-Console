@@ -7,6 +7,8 @@ package ru.novosoft.smsc.jsp.smsc.hosts;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
@@ -91,9 +93,24 @@ public class HostView extends SmscBean
     for (int i = 0; i < serviceIds.length; i++) {
       String id = serviceIds[i];
       try {
-        if (hostsManager.isService(id))
+        if (hostsManager.isService(id)) {
           hostsManager.removeService(id);
-        else
+          final String roleName = appContext.getWebXmlConfig().removeSecurityConstraint(id);
+          appContext.getStatuses().setWebXmlChanged(true);
+          journalAppend(SubjectTypes.TYPE_securityConstraint, id, Actions.ACTION_DEL);
+          appContext.getStatuses().setWebXmlChanged(true);
+          appContext.getUserManager().removeRole(roleName);
+          journalAppend(SubjectTypes.TYPE_user, null, Actions.ACTION_MODIFY);
+          try {
+            logger.debug("Removed security constraint for service \"" + id + "\" with role \"" + roleName + "\", saving changes to WEB-INF/web.xml...");
+            appContext.getWebXmlConfig().save();
+            appContext.getJournal().clear(SubjectTypes.TYPE_securityConstraint);
+            appContext.getStatuses().setWebXmlChanged(false);
+          } catch (Throwable e) {
+            error(SMSCErrors.error.services.couldntSaveWebXml, e);
+            logger.error("Could not save WEB-INF/web.xml", e);
+          }
+        } else
           hostsManager.removeSme(id);
         //appContext.getStatuses().setServicesChanged(true);
       } catch (Throwable e) {

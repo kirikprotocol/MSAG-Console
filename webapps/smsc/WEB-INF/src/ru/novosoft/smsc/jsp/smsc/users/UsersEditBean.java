@@ -28,6 +28,7 @@ public abstract class UsersEditBean extends SmscBean
   protected String mbCancel = null;
   protected String mbSave = null;
   protected Set rolesSet = new HashSet();
+  protected List serviceRoles = new LinkedList();
 
   protected int init(List errors)
   {
@@ -36,6 +37,7 @@ public abstract class UsersEditBean extends SmscBean
       return result;
 
     userManager = appContext.getUserManager();
+    serviceRoles = appContext.getWebXmlConfig().getRoleNames();
     return RESULT_OK;
   }
 
@@ -60,6 +62,11 @@ public abstract class UsersEditBean extends SmscBean
   public boolean isUserInRole(String rolename)
   {
     return rolesSet.contains(rolename);
+  }
+
+  public String getServiceIdFromRole(String roleName)
+  {
+    return appContext.getWebXmlConfig().getServiceIdFromRole(roleName);
   }
 
   /****************************************** properties ****************************************************/
@@ -185,5 +192,10 @@ public abstract class UsersEditBean extends SmscBean
   public void setMbSave(String mbSave)
   {
     this.mbSave = mbSave;
+  }
+
+  public List getServiceRoles()
+  {
+    return serviceRoles;
   }
 }

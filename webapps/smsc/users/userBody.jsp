@@ -1,4 +1,5 @@
-<div class=content>
+<%@ page import="java.util.*,
+                 ru.novosoft.smsc.util.StringEncoderDecoder"%><div class=content>
 <div class=page_subtitle>User info</div>
 <table class=properties_list cellspacing=0 cellspadding=0>
 <col width="15%">
@@ -18,7 +19,8 @@
 </tr>
 <tr class=row<%=(rowN++)&1%>>
 	<th>roles:</th>
-	<td><input class=check type=checkbox name=roles id=role01 value="apply"             <%=bean.isUserInRole("apply")            ? "checked" : ""%>>&nbsp;<label for=role01>Apply config changes</label><br>
+	<td>
+  <input class=check type=checkbox name=roles id=role01 value="apply"             <%=bean.isUserInRole("apply")            ? "checked" : ""%>>&nbsp;<label for=role01>Apply config changes</label><br>
 		<input class=check type=checkbox name=roles id=role02 value="smsc_service"      <%=bean.isUserInRole("smsc_service")     ? "checked" : ""%>>&nbsp;<label for=role02>SMSC configuration</label><br>
 		<input class=check type=checkbox name=roles id=role03 value="locale_resources"  <%=bean.isUserInRole("locale_resources") ? "checked" : ""%>>&nbsp;<label for=role03>Locale resources uploading and viewing</label><br>
 		<input class=check type=checkbox name=roles id=role04 value="dl"                <%=bean.isUserInRole("dl")               ? "checked" : ""%>>&nbsp;<label for=role04>Distribution Lists</label><br>
@@ -33,6 +35,17 @@
 		<input class=check type=checkbox name=roles id=role13 value="profiles"          <%=bean.isUserInRole("profiles")         ? "checked" : ""%>>&nbsp;<label for=role13>Profiles</label><br>
 		<input class=check type=checkbox name=roles id=role14 value="hosts"             <%=bean.isUserInRole("hosts")            ? "checked" : ""%>>&nbsp;<label for=role14>Hosts</label><br>
 		<input class=check type=checkbox name=roles id=role15 value="services"          <%=bean.isUserInRole("services")         ? "checked" : ""%>>&nbsp;<label for=role15>Services</label>
+    <%
+      if (bean.getServiceRoles().size() > 0)
+        out.print("<br>");
+      for (Iterator i = bean.getServiceRoles().iterator(); i.hasNext();) {
+        String roleName = (String) i.next();
+        String roleNameEnc = StringEncoderDecoder.encode(roleName);
+        %><input class=check type=checkbox id="role_check_<%=roleNameEnc%>" name=roles value="<%=roleNameEnc%>" <%=bean.isUserInRole(roleName) ? "checked" : ""%>>&nbsp;<label for="role_check_<%=roleNameEnc%>">External SME "<%=StringEncoderDecoder.encode(bean.getServiceIdFromRole(roleName))%>"</label><%
+        if (i.hasNext())
+          out.print("<br>");
+    }
+	%>
 	</td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>

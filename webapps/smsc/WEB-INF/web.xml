@@ -30,6 +30,8 @@
 	    <location>/error500.jsp</location>
 	</error-page>
 
+  <!-- security constraints -->
+  
 	<security-constraint>
 		<web-resource-collection>
 			<web-resource-name></web-resource-name>
@@ -187,6 +189,8 @@
 		<user-data-constraint><transport-guarantee>NONE</transport-guarantee></user-data-constraint>
 	</security-constraint>
 
+
+  <!-- login config-->
 	<login-config>
 		<auth-method>FORM</auth-method>
 		<realm-name>SMSC.SmscRealm</realm-name>
@@ -196,6 +200,8 @@
 		</form-login-config>
 	</login-config>
 
+  <!-- security roles -->
+  
 	<security-role>
 		<role-name>apply</role-name>
 	</security-role>

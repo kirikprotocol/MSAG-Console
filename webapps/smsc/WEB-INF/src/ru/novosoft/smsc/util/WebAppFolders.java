@@ -34,6 +34,11 @@ public class WebAppFolders
 		return webappFolder;
 	}
 
+  public static File getWebinfFolder()
+  {
+    return webinfFolder;
+  }
+
 	public static File getWebinfLibFolder()
 	{
 		return webinfLibFolder;
