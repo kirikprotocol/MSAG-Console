@@ -1,4 +1,4 @@
-CXXFLAGS := $(CXXFLAGS) -I/usr/local/include/xercesc -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/network/public
+CXXFLAGS := $(CXXFLAGS) -pg -a -I/usr/local/include/xercesc -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/network/public
 PACKAGE := test.test
 
 ifndef SMSC_SRCDIR
