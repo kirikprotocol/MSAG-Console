@@ -345,10 +345,6 @@ DATA_LENGTH               -- text or binary length (add it to SMS_MSG insteed of
 */
 void BillingStorage::createRecord(SMSId id, SMS& sms)
 {
-    MutexGuard guard(storageFileLock);
-
-    create();
-
     std::string out;
     out.reserve(512);
     bool isDiverted = sms.hasStrProperty(Tag::SMSC_DIVERTED_TO);
@@ -390,8 +386,13 @@ void BillingStorage::createRecord(SMSId id, SMS& sms)
         CSVFileEncoder::addSeparator(out);
     CSVFileEncoder::addUint32(out, sms.messageBody.getShortMessageLength(), true);
 
-    write(out.c_str(), out.length());
-    flush();
+    {
+        MutexGuard guard(storageFileLock);
+
+        this->create();
+        FileStorage::write(out.c_str(), out.length());
+        FileStorage::flush();
+    }
 }
 
 /*
@@ -454,8 +455,6 @@ void FileStorage::save(SMSId id, SMS& sms, fpos_t* pos /*= 0 (no getPos) */)
         sizeof(routeSize)+routeSize+sizeof(sms.serviceId)+sizeof(sms.priority)+
         sizeof(srcSmeSize)+srcSmeSize+sizeof(dstSmeSize)+dstSmeSize+
         sizeof(bodyBufferLen)+bodyBufferLen;
-
-    if (pos) FileStorage::getPos(pos);
 
     uint32_t writeBufferSize = recordSize+sizeof(recordSize)*2;
     TmpBuf<char, 2048> writeBufferGuard(writeBufferSize);
@@ -528,9 +527,41 @@ void FileStorage::save(SMSId id, SMS& sms, fpos_t* pos /*= 0 (no getPos) */)
 
     memcpy(position, &recordSize, sizeof(recordSize)); position+=sizeof(recordSize);
 
-    write(writeBuffer, writeBufferSize);
-    flush();
+    {
+        MutexGuard guard(storageFileLock);
+
+        initialize(false); // virtual method call (open for write or create destination file)
+        if (pos) FileStorage::getPos(pos);
+        FileStorage::write(writeBuffer, writeBufferSize);
+        FileStorage::flush();
+    }
 }
+
+class UnlockableMutexGuard 
+{
+protected:
+  
+    bool locked;
+    Mutex& lock;
+    Mutex  unlock;
+
+public:
+  
+    UnlockableMutexGuard(Mutex& _lock) : lock(_lock), locked(false) { 
+        MutexGuard guard(unlock);
+        locked = true; lock.Lock(); 
+    }
+    ~UnlockableMutexGuard() {
+        MutexGuard guard(unlock);
+        if (locked) lock.Unlock();
+        locked = false;
+    }
+    inline void Unlock() {
+        MutexGuard guard(unlock);
+        if (locked) lock.Unlock();
+        locked = false;
+    }
+};
 
 bool FileStorage::load(SMSId& id, SMS& sms, const fpos_t* pos /*= 0 (no setPos) */)
 {
@@ -542,19 +573,23 @@ bool FileStorage::load(SMSId& id, SMS& sms, const fpos_t* pos /*= 0 (no setPos) 
     int8_t routeSize = 0; int8_t srcSmeSize = 0; int8_t dstSmeSize = 0;
     int32_t textLen  = 0; int32_t bodyBufferLen = 0;
 
+    UnlockableMutexGuard unlockableGuard(storageFileLock);
+    initialize(true); // virtual method call (open for read or create destination file)
     if (pos) FileStorage::setPos(pos);
 
     try
     {
-        if (!read(&recordSize1, sizeof(recordSize1))) return false;
+        if (!FileStorage::read(&recordSize1, sizeof(recordSize1))) return false;
         else recordSize1 = ntohl(recordSize1);
 
         TmpBuf<char, 2048> readBufferGuard(recordSize1);
         char* readBuffer = readBufferGuard.get();
-        if (!read(readBuffer, recordSize1)) return false;
+        if (!FileStorage::read(readBuffer, recordSize1)) return false;
 
-        if (!read(&recordSize2, sizeof(recordSize2))) return false;
+        if (!FileStorage::read(&recordSize2, sizeof(recordSize2))) return false;
         else recordSize2 = ntohl(recordSize2);
+
+        unlockableGuard.Unlock();
 
         if (recordSize1 != recordSize2)
             throw Exception("Inconsistent archive file rs1=%u, rs2=%u", recordSize1, recordSize2);
@@ -720,9 +755,7 @@ void ArchiveStorage::create()
 
 void ArchiveStorage::createRecord(SMSId id, SMS& sms)
 {
-    MutexGuard guard(storageFileLock);
-    this->create();
-    save(id, sms);
+    FileStorage::save(id, sms, 0);
 }
 
 bool PersistentStorage::create(bool create)
@@ -798,14 +831,10 @@ void PersistentStorage::openWrite(fpos_t* pos /*= 0 (no getPos) */)
 }
 void PersistentStorage::writeRecord(SMSId id, SMS& sms, fpos_t* pos /*= 0 (no getPos) */)
 {
-    MutexGuard guard(storageFileLock);
-    this->open(false);
     FileStorage::save(id, sms, pos);
 }
 bool PersistentStorage::readRecord(SMSId& id, SMS& sms, const fpos_t* pos /*= 0 (no setPos) */)
 {
-    MutexGuard guard(storageFileLock);
-    this->open(true);
     return FileStorage::load(id, sms, pos);
 }
 
@@ -981,10 +1010,6 @@ static void parseMessageBody(const Body& body, std::string& message)
 
 void TextDumpStorage::writeRecord(SMSId id, SMS& sms)
 {
-    MutexGuard guard(storageFileLock);
-
-    this->open();
-
     std::string out = "";
     CSVFileEncoder::addUint64  (out, id);
     CSVFileEncoder::addDateTime(out, sms.submitTime);
@@ -1013,8 +1038,13 @@ void TextDumpStorage::writeRecord(SMSId id, SMS& sms)
     }
     CSVFileEncoder::addString  (out, message.c_str(), true);
 
-    write(out.c_str(), out.length());
-    flush();
+    {
+        MutexGuard guard(storageFileLock);
+
+        this->open();
+        FileStorage::write(out.c_str(), out.length());
+        FileStorage::flush();
+    }
 }
 
 bool TransactionStorage::open(bool create)
