@@ -5,6 +5,9 @@
 #include "util/debug.h"
 #include <memory>
 
+#define ENTER __trace2__("enter in %s",__PRETTY_FUNCTION__)
+#define LEAVE __trace2__("leave from %s",__PRETTY_FUNCTION__)
+
 extern void __qsort__ (void *const pbase, size_t total_elems, size_t size,int(*cmp)(const void*,const void*));
  
 namespace smsc{
@@ -75,39 +78,52 @@ int pattern_compare_adr(const void* pat1,const void* pat2){
 static inline void makeAliasFromValueByAddres(
   const AliasRecord& p,const AValue& val,Address &addr)
 {
-  char buf[21];
+  ENTER;
+	char buf[21];
   __require__(p.addr.defLength <= val.length );
   __require__(p.alias.defLength+val.length-p.addr.defLength < 21);
   memset(buf,0,21);
   int ln = 0;
-  memcpy(buf,p.alias.value,ln+=p.alias.defLength);
+  if (!(ln+p.alias.defLength<=21)) 
+		throw runtime_error("incorrect address->alias translation definition, result length > 21");
+	memcpy(buf,p.alias.value,ln+=p.alias.defLength);
+  if (!(ln+(val.length-p.addr.defLength)<=21-p.alias.defLength))
+		throw runtime_error("incorrect address->alias translation definition, result length > 21");
   memcpy(buf+p.alias.defLength,val.value+p.addr.defLength,
          ln+=(val.length-p.addr.defLength));
   __require__(ln < 21 );
   addr.setNumberingPlan(p.alias.numberingPlan);
   addr.setTypeOfNumber(p.alias.typeOfNumber);
   addr.setValue(ln,buf);
+	LEAVE;
 }
 
 static inline void makeAddressFromValueByAlias(
   const AliasRecord& p,const AValue& val,Address &addr)
 {
-  char buf[21];
+  ENTER;
+	char buf[21];
   __require__(p.alias.defLength <= val.length );
   __require__(p.addr.defLength+val.length-p.alias.defLength < 21);
   memset(buf,0,21);
   int ln = 0;
+  if(!(ln+p.addr.defLength<=21))
+		throw runtime_error("incorrect address->alias translation definition, result length > 21");
   memcpy(buf,p.addr.value,ln+=p.addr.defLength);
+  if(!(ln+(val.length-p.alias.defLength)<=21-p.addr.defLength))
+		throw runtime_error("incorrect address->alias translation definition, result length > 21");
   memcpy(buf+p.addr.defLength,val.value+p.alias.defLength,
          ln+=(val.length-p.alias.defLength));
   __require__(ln < 21 );
   addr.setNumberingPlan(p.addr.numberingPlan);
   addr.setTypeOfNumber(p.addr.typeOfNumber);
   addr.setValue(ln,buf);
+	LEAVE;
 }
 
 static inline void makeAPattern(APattern& pat, const Address& addr)
 {
+	ENTER;
   char buf[21];
   pat.numberingPlan = addr.getNumberingPlan();
   pat.typeOfNumber = addr.getTypeOfNumber();
@@ -138,22 +154,26 @@ static inline void makeAPattern(APattern& pat, const Address& addr)
   {
     pat.value[i] = buf[i] & pat.mask[i];
   }
+	LEAVE;
 }
 
 static inline void makeAValue(AValue& val, const Address& addr)
 {
-  val.numberingPlan = addr.getNumberingPlan();
+  ENTER;
+	val.numberingPlan = addr.getNumberingPlan();
   val.typeOfNumber = addr.getTypeOfNumber();
   int length = addr.getValue((char*)val.value);
   __require__ ( length < 21 );
   val.length = length;
+	LEAVE;
 }
 
 bool AliasManager::AddressToAlias(
   const Address& addr, Address& alias)
 {
 __synchronized__
-  if ( !table_ptr ) return false;
+  ENTER;
+	if ( !table_ptr ) return false;
   if (!sorted)
   {
     __qsort__(adr_table,table_ptr,sizeof(AliasRecord*),pattern_compare_adr);
@@ -175,7 +195,7 @@ __synchronized__
   record->ok_next = 0;
   AliasRecord* ok_adr = record;
   ok_adr->ok_next = 0;
-  for (AliasRecord** r = recordX-1; r != ali_table-1; --r )
+  for (AliasRecord** r = recordX-1; r != adr_table-1; --r )
   {
     if ( compare_patval((*r)->addr,val) == 0 )
     {
@@ -183,17 +203,16 @@ __synchronized__
       ok_adr = *r;
     }else break;
   }
-  for (AliasRecord** r = recordX+1; r != ali_table+table_ptr; ++r )
+  for (AliasRecord** r = recordX+1; r != adr_table+table_ptr; ++r )
   {
-    __require__(r < (ali_table+table_ptr));
-		if ( compare_patval((*r)->addr,val) == 0 )
+    if ( compare_patval((*r)->addr,val) == 0 )
     {
       (*r)->ok_next = ok_adr;
       ok_adr = *r;
     }else break;
   }
   record = 0;
-  int defLength = 0;
+  int defLength = -1;
   if ( ok_adr->ok_next ) 
   {
     while ( ok_adr )
@@ -213,6 +232,7 @@ __synchronized__
     ok_adr = record;
   }
   makeAliasFromValueByAddres(*ok_adr,val,alias);
+	LEAVE;
   return true;
 }
 
@@ -220,6 +240,7 @@ bool AliasManager::AliasToAddress(
   const Address& alias, Address&  addr)
 {
 __synchronized__
+	ENTER;
   if ( !table_ptr ) return false;
   if (!sorted)
   {
@@ -259,7 +280,7 @@ __synchronized__
     }else break;
   }
   record = 0;
-  int defLength = 0;
+  int defLength = -1;
   if ( ok_ali->ok_next ) 
   {
     while ( ok_ali )
@@ -279,12 +300,14 @@ __synchronized__
     ok_ali = record;
   }
   makeAddressFromValueByAlias(*ok_ali,val,addr);
+	LEAVE;
   return true;
 }
 
 void AliasManager::addAlias(const AliasInfo& info)
 {
-  auto_ptr<AliasRecord> rec(new AliasRecord);
+  ENTER;
+	auto_ptr<AliasRecord> rec(new AliasRecord);
   makeAPattern(rec->alias,info.alias);
   makeAPattern(rec->addr,info.addr);
   if ( table_ptr == table_size )
@@ -301,6 +324,7 @@ void AliasManager::addAlias(const AliasInfo& info)
   adr_table[table_ptr] = ali_table[table_ptr];
   ++table_ptr;
   sorted = false;
+	LEAVE;
 }
 
 void AliasManager::clean()
