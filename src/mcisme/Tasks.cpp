@@ -329,14 +329,15 @@ AbonentService Task::getService(const char* abonent)
                 case ABONENT_NOTIFICATION: service = (bInformAll) ? FULL_SERVICE:NOTIFICATION; break;
                 case ABONENT_FULL_SERVICE: service = FULL_SERVICE; break;
                 case ABONENT_NONE_SERVICE:
-                default: {
-                    if (bNotifyAll && bInformAll) service = FULL_SERVICE;
-                    else if (bNotifyAll) service = NOTIFICATION; 
-                    else if (bInformAll) service = SUBSCRIPTION;
-                    else service = NONE_SERVICE;
-                    break;
-                }
+                default:                   service = NONE_SERVICE; break;
             }
+        }
+
+        if (service == NONE_SERVICE)
+        {
+            if (bNotifyAll && bInformAll) service = FULL_SERVICE;
+            else if (bNotifyAll) service = NOTIFICATION; 
+            else if (bInformAll) service = SUBSCRIPTION;
         }
         
         if (connection) ds->freeConnection(connection);
