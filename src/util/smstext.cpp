@@ -194,27 +194,122 @@ int partitionSms(SMS* sms,int dstdc)
     len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get()+udhilen,len*3);
     if(udhi)memcpy(bufTr.get(),msg,udhilen);
     msg=bufTr.get();
-    len+=udhilen;
+    //len+=udhilen;
   }
   int maxlen=134,maxfulllen=140;
   if(dc==DataCoding::DEFAULT || dstdc==DataCoding::DEFAULT)
   {
-    if(udhi)
+    int xlen=len;
+    for(int i=udhilen;i<len;i++)
     {
-      maxfulllen=udhilen+(140-udhilen)*8/7;
-    }else
+      switch(msg[i])
+      {
+        case '{':
+        case '}':
+        case '[':
+        case ']':
+        case '~':
+        case '\\':
+        case '^':
+         xlen++;
+      }
+    }
+    xlen*=7;
+    if(udhilen+xlen/8+(xlen%8?1:0)<maxfulllen)return psSingle;
+  }else
+  {
+    if(udhilen+len<maxfulllen)return psSingle;
+  }
+  if(udhi)return psErrorUdhi;
+
+  int parts=1;
+  uint16_t offsets[256];
+  offsets[0]=0;
+  if(dc==DataCoding::UCS2 && dstdc==DataCoding::UCS2)
+  {
+    int lastword=0;
+    int lastpos=0;
+    for(int i=0;i<len/2;i++)
     {
-      maxlen=153;
-      maxfulllen=160;
+      unsigned short c;
+      memcpy(&c,msg+i*2,2);
+      if((i-lastpos)>=67)
+      {
+        if(lastword-lastpos<67)
+        {
+          offsets[parts++]=lastword+1;
+          lastpos=lastword+1;
+        }else
+        {
+          offsets[parts++]=i;
+          lastpos=i;
+        }
+        if(parts>=256)return psErrorLength;
+      }
+      if(c<=32)lastword=i;
     }
   }
-  if(len<maxfulllen)return psSingle;
-  if(udhi)return psErrorUdhi;
-  int parts=len/maxlen+(len%maxlen?1:0);
-  if(parts>256)return psErrorLength;
-  __trace2__("partitionSms: newlen=%d, parts=%d, maxlen=%d",len,parts,maxlen);
-  uint16_t offsets[256];
-  for(int i=0;i<parts;i++)offsets[i]=maxlen*i;
+  if(dc==DataCoding::BINARY)
+  {
+    parts=len/maxlen+((len%maxlen)?1:0);
+    if(parts>=256)return psErrorLength;
+    for(int i=0;i<parts;i++)offsets[i]=i*maxlen;
+  }
+  else
+  {
+    int lastword=0;
+    int lastpos=0;
+    int l=0,wl=0;
+    for(int i=0;i<len;i++)
+    {
+      unsigned char c;
+      c=msg[i];
+      if(l>=153)
+      {
+        __trace2__("PARTITIONSMS: part=%d, l=%d, wl=%d",parts,l,wl);
+        if(wl<153)
+        {
+          offsets[parts++]=lastword+1;
+          lastpos=lastword+1;
+          i=lastpos+1;
+          l=0;
+        }else
+        {
+          if(l>153)i--;
+          offsets[parts++]=i;
+          lastpos=i;
+          l=0;
+        }
+        __trace2__("PARTITIONSMS: part=%d, off=%d",parts-1,offsets[parts-1]);
+        if(parts>=256)return psErrorLength;
+      }
+      wl++;
+      l++;
+      if(c==32 || c==10 || c==13)
+      {
+        lastword=i;
+        wl=0;
+      }
+      if(dc==DataCoding::DEFAULT || dstdc==DataCoding::DEFAULT)
+      {
+        switch(msg[i])
+        {
+          case '{':
+          case '}':
+          case '[':
+          case ']':
+          case '~':
+          case '\\':
+          case '^':
+          {
+            l++;
+            wl++;
+          }
+        }
+      }
+    }
+  }
+  __trace2__("PARTITIONSMS: len=%d, parts=%d",len,parts);
   char bin[1+256*2];
   bin[0]=(char)parts;
   memcpy(bin+1,offsets,parts*2);
@@ -254,7 +349,7 @@ void extractSmsPart(SMS* sms,int partnum)
   unsigned int cilen;
   ConcatInfo *ci=(ConcatInfo *)sms->getBinProperty(Tag::SMSC_CONCATINFO,&cilen);
   int off=ci->off[partnum];
-  int newlen=len-off>maxlen?maxlen:len-off;
+  int newlen=ci->num==partnum+1?len-off:ci->off[partnum+1]-off;
   __trace2__("extractSmsPart: newlen=%d, part=%d/%d, maxlen=%d, off=%d, partlen=%d",len,partnum,(int)ci->num,maxlen,off,newlen);
   if(dc==DataCoding::UCS2 && dstdc!=DataCoding::UCS2)
   {
