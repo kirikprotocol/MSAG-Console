@@ -11,7 +11,16 @@ import ru.novosoft.smsc.admin.AdminException;
 
 public class ListNotExistsException extends AdminException
 {
-    public ListNotExistsException(String dl) {
-        super("List '"+dl+"' not exists");
-    }
+  private final String dl;
+
+  public ListNotExistsException(String dl)
+  {
+    super("List \"" + dl + "\" not exists");
+    this.dl = dl;
+  }
+
+  public String getDl()
+  {
+    return dl;
+  }
 }

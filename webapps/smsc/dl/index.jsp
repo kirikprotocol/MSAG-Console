@@ -1,5 +1,11 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.jsp.dl.*"%>
+<%@ page import="ru.novosoft.smsc.jsp.dl.*,
+                 java.net.URLEncoder,
+                 ru.novosoft.smsc.jsp.SMSCJspException,
+                 ru.novosoft.smsc.jsp.SMSCErrors,
+                 java.util.*,
+                 ru.novosoft.smsc.util.StringEncoderDecoder,
+                 ru.novosoft.smsc.admin.dl.DistributionList"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.jsp.dl.DistributionListAdminFormBean" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -66,23 +72,28 @@ function edit(dlName)
 
 <table class=list cellspacing=0>
 <col width="1%">
-<col width="99%" align=left>
+<col width="79%" align=left>
+<col width="20%" align=left>
 <thead>
 <tr>
 	<th>&nbsp;</th>
-	<th><a href="#" <%=bean.getSort().endsWith("name") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by name" onclick='return setSort("name")'>name</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("name")  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by name"  onclick='return setSort("name") '>name</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("owner") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by owner" onclick='return setSort("owner")'>owner</a></th>
 </tr>
 </thead>
 <tbody><%
 int row = 0;
-for (Iterator i = bean.getDlNames().iterator(); i.hasNext(); )
+for (Iterator i = bean.getDls().iterator(); i.hasNext(); )
 {
-	String name = (String) i.next();
+  DistributionList dl = (DistributionList) i.next();
+	String name = dl.getName();
 	String encName = StringEncoderDecoder.encode(name);
+  String encOwner = StringEncoderDecoder.encode(dl.getOwner() == null || dl.getOwner().trim().length() == 0 ? "SYSTEM" : dl.getOwner());
 	%>
 	<tr class=row<%=(row++)&1%>>
 		<td class=check><input class=check type=checkbox name=checkedDls value="<%=encName%>" <%=bean.isDlChecked(name) ? "checked" : ""%>></td>
 		<td class=name><a href="#" title="Edit distribution list" onClick='return edit("<%=encName%>")'><%=encName%></a></td>
+		<td><%=encOwner%></td>
 	</tr><%
 }
 %>

@@ -1,4 +1,4 @@
-<div class=content>
+<%@ page import="ru.novosoft.smsc.util.StringEncoderDecoder"%><div class=content>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Common values ~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <div class=page_subtitle>Distribution list</div>
 <table class=properties_list cellspacing=0>
@@ -12,11 +12,20 @@
 </tr>
 <tr class=row1>
 	<th>owner:</th>
-	<td>system</td>
+	<td><%
+      if (bean.isCreate()) {
+      %><input class=radio type=radio name=system id=systemTrue  value=true  onClick="checkSystemRadio();" <%=bean.isSystem() ? "checked" : ""%>><label for=systemTrue >&nbsp;SYSTEM</label>
+        <input class=radio type=radio name=system id=systemFalse value=false onClick="checkSystemRadio();" <%=bean.isSystem() ? "" : "checked"%>><label for=systemFalse>&nbsp;<input class=txt name=owner id=ownerAddress value="<%=StringEncoderDecoder.encode(bean.getOwner())%>" validation="address" onkeyup="resetValidation(this)"></label>
+        <script>function checkSystemRadio() {opForm.all.ownerAddress.disabled = opForm.all.systemTrue.checked;}
+        checkSystemRadio();</script><%
+      } else {
+        %><%=bean.isSystem() ? "SYSTEM" : StringEncoderDecoder.encode(bean.getOwner())%><%
+      }
+  %></td>
 </tr>
 <tr class=row0>
-	<th>maximum elements:</th>
-	<td><input class=txt name=maxElements value="<%=bean.getMaxElements()%>" <%=isEditing ? "readonly" : ""%>  validation="positive" onkeyup="resetValidation(this)"></td>
+	<th>maximum members count:</th>
+	<td><input class=txt name=maxElements value="<%=bean.getMaxElements()%>" validation="positive" onkeyup="resetValidation(this)"></td>
 </tr>
 </table>
 
@@ -31,7 +40,8 @@
 for (int i = 0; i<bean.getSubmitters().length; i++)
 {
 	%><tr class=row0>
-		<td colspan=2><input class=txt name=submitters value="<%=StringEncoderDecoder.encode(bean.getSubmitters()[i])%>" validation="address" onkeyup="resetValidation(this)"></td>
+		<td colspan=2><input class=txt name=submitters value="<%=StringEncoderDecoder.encode(bean.getSubmitters()[i])%>" validation="address" onkeyup="resetValidation(this)"
+        <%=isEditing && !bean.isSystem() && bean.getOwner().equals(bean.getSubmitters()[i]) ? "readonly" : ""%>></td>
 	</tr>
 	<%
 }
