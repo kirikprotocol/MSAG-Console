@@ -122,7 +122,7 @@ struct SmscConfigs{
 class Smsc
 {
 public:
-  Smsc():ssockman(&tp,&smeman),stopFlag(false),router_(0),aliaser_(0)
+  Smsc():ssockman(&tp,&smeman),stopFlag(false),router_(0),aliaser_(0),testRouter_(0)
   {
     submitOkCounter=0;
     submitErrCounter=0;
