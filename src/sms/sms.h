@@ -35,7 +35,8 @@ namespace smsc { namespace sms
 
         Address& operator =(const Address& addr) 
         {
-            lenght = addr.lenght; type = addr.type; plan = addr.plan; 
+            type = addr.type; plan = addr.plan; 
+            setValue(addr.lenght, addr.value);
             return (*this);
         };
        
@@ -92,7 +93,8 @@ namespace smsc { namespace sms
         
         Body& operator =(const Body& body) 
         {
-            header = body.header; lenght = body.lenght; scheme = body.scheme;
+            header = body.header; scheme = body.scheme;
+            setData(body.lenght, body.data);
             return (*this);
         };
 
@@ -125,7 +127,7 @@ namespace smsc { namespace sms
         char* getDecodedText();
     };
    
-    typedef enum { ENROUTE, DELIVERED, EXPIRED, UNDELIVERABLE, DELETED } State;
+    typedef enum { ENROUTE=1, DELIVERED=2, EXPIRED=3, UNDELIVERABLE=4, DELETED=5 } State;
    
     struct SMS 
     {

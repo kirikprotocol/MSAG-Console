@@ -22,15 +22,15 @@ namespace smsc { namespace store { namespace oci
     private:   
         bool            isOpened;
         
-	//OCIEnv 		*envhp; /* the environment handle */
-	//OCIServer 	*srvhp; /* the server handle */
-	//OCIError 	*errhp; /* the error handle */
-	//OCISession 	*usrhp; /* user session handle */
-	//OCISvcCtx 	*svchp; /* the service handle */
+	    //OCIEnv 		*envhp; /* the environment handle */
+	    //OCIServer 	*srvhp; /* the server handle */
+	    //OCIError 	    *errhp; /* the error handle */
+	    //OCISession 	*usrhp; /* user session handle */
+	    //OCISvcCtx 	*svchp; /* the service handle */
         
-	OCIEnv*         envhp;    /* environment handle  */
-        OCIError*       errhp;    /* error handle        */
-        OCISvcCtx*      svchp;    /* service handle      */
+	    OCIEnv*         envhp;  /* environment handle  */
+        OCIError*       errhp;  /* error handle        */
+        OCISvcCtx*      svchp;  /* service handle      */
 
     protected:
         void checkerror(OCIError *errhp, sword status);

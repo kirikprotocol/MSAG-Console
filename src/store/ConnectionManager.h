@@ -32,6 +32,8 @@ namespace smsc { namespace store
 	    OCIEnv*         envhp;  // OCI envirounment handle
         OCISvcCtx*      svchp;  // OCI service handle
 	    OCIError*       errhp;  // OCI error handle
+        OCIServer*      srvhp;  // OCI server handle
+        OCISession*     sesshp; // OCI session handle
         
         // OCI prepared 'store' statements
         OCIStmt*        storeStmthps[MAX_STORE_STATEMENTS]; 

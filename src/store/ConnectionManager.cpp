@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -23,16 +24,16 @@ StoreConfig::~StoreConfig()
 
 /* ----------------------------- ConnectionPool ------------------------ */
 static text* sqlStoreStmt0 = (text *)
-"UPDATE SMS_ID_LOCK SET ID=ID+1 WHERE TGT='SMS_MSG'";
+"UPDATE SMS_ID_LOCK SET ID=0 WHERE TGT='SMS_MSG_TABLE'";
 
 static text* sqlStoreStmt1 = (text *)
 "SELECT MAX(ID) FROM SMS_MSG";
             
 static text* sqlStoreStmt2 = (text *)
-"INSERT INTO SMS_MSG VALUES(:ID, :ST, :MR, :RM,\
+"INSERT INTO SMS_MSG VALUES (:ID, :ST, :MR, :RM,\
  :OA_LEN, :OA_TON, :OA_NPI, :OA_VAL, :DA_LEN, :DA_TON, :DA_NPI, :DA_VAL,\
  :VALID_TIME, :WAIT_TIME, :SUBMIT_TIME, :DELIVERY_TIME,\
- :SRR, :RD, :PRI, :PID, :FCS, :DCS, :UDHI, :UD)";
+ :SRR, :RD, :PRI, :PID, :FCS, :DCS, :UDHI, :UDL, :UD)";
 
 SingleConnectionPool::SingleConnectionPool(StoreConfig* _config)
     throw(ResourceAllocationException, AuthenticationException)
@@ -67,36 +68,53 @@ void SingleConnectionPool::connect()
         if (userName && userPwd && dbName)
         {
             sword       status;
-
-            /* initialize the mode to be the threaded environment */
-            status = OCIEnvCreate(&(conn->envhp), OCI_THREADED, (dvoid *)0,
-                                   0, 0, 0, (size_t) 0, (dvoid **)0);
-            if (status != OCI_SUCCESS || !(conn->envhp)) 
+            
+            (void) OCIInitialize((ub4) OCI_DEFAULT, (dvoid *)0,                         
+                                 (dvoid * (*)(dvoid *, size_t)) 0,                      
+                                 (dvoid * (*)(dvoid *, dvoid *, size_t))0,              
+                                 (void (*)(dvoid *, dvoid *)) 0 );                      
+                                                                              
+            (void) OCIEnvInit((OCIEnv **) &(conn->envhp), OCI_DEFAULT, (size_t) 0,             
+                                 (dvoid **) 0 );                                           
+                                                                              
+            (void) OCIHandleAlloc((dvoid *)(conn->envhp), (dvoid **)&(conn->errhp),
+                                   OCI_HTYPE_ERROR, (size_t) 0, (dvoid **) 0);                                 
+                                                                              
+            (void) OCIHandleAlloc((dvoid *)(conn->envhp), (dvoid **) &(conn->srvhp),
+                                   OCI_HTYPE_SERVER, (size_t) 0, (dvoid **) 0);                                 
+                                                                              
+            (void) OCIHandleAlloc((dvoid *)(conn->envhp), (dvoid **)&(conn->svchp),
+                                   OCI_HTYPE_SVCCTX, (size_t) 0, (dvoid **) 0);                                 
+                                                                              
+            (void) OCIServerAttach(conn->srvhp, conn->errhp, 
+                                   (text *)dbName, strlen(dbName), 0);           
+                                                                              
+            (void) OCIAttrSet((dvoid *)(conn->svchp), OCI_HTYPE_SVCCTX, 
+                              (dvoid *)(conn->srvhp), (ub4) 0, 
+                              OCI_ATTR_SERVER, (OCIError *)(conn->errhp));            
+                                                                              
+            (void) OCIHandleAlloc((dvoid *)(conn->envhp), (dvoid **)&(conn->sesshp),
+                                  (ub4) OCI_HTYPE_SESSION, (size_t) 0, (dvoid **) 0);   
+                                                                              
+            (void) OCIAttrSet((dvoid *)(conn->sesshp), (ub4) OCI_HTYPE_SESSION,                 
+                              (dvoid *)userName, (ub4)strlen(userName),          
+                              (ub4) OCI_ATTR_USERNAME, conn->errhp);                             
+                                                                              
+            (void) OCIAttrSet((dvoid *)(conn->sesshp), (ub4) OCI_HTYPE_SESSION,                 
+                              (dvoid *)userPwd, (ub4) strlen(userPwd),          
+                              (ub4) OCI_ATTR_PASSWORD, conn->errhp);                             
+                                                                              
+            status = OCISessionBegin (conn->svchp, conn->errhp, conn->sesshp,
+                                      OCI_CRED_RDBMS, (ub4) OCI_DEFAULT); 
+            if (status != OCI_SUCCESS) 
             {
-                throw ResourceAllocationException();
-            }
-
-            /* allocate an error handle */
-            status = OCIHandleAlloc ((dvoid *)(conn->envhp), 
-                                     (dvoid **)&(conn->errhp),
-                                      OCI_HTYPE_ERROR, 0, (dvoid **) 0);
-            if (status != OCI_SUCCESS || !(conn->errhp)) 
-            {
-                throw ResourceAllocationException();
-            }
-        
-            // logon to server database (allocate a service handle) 
-            status = OCILogon(conn->envhp, conn->errhp, &(conn->svchp),
-                                (OraText*)userName, strlen(userName),
-                                (OraText*)userPwd, strlen(userPwd),
-                                (OraText*)dbName, strlen(dbName));
-            if (status != OCI_SUCCESS || !(conn->svchp))
-            {
-                //checkerror(conn.errhp, status);
-                // free envirounment handle (error handle will be freed too)
                 (void) OCIHandleFree(conn->envhp, OCI_HTYPE_ENV);
                 throw AuthenticationException();
             }
+                                                                              
+            (void) OCIAttrSet((dvoid *)(conn->svchp), (ub4) OCI_HTYPE_SVCCTX,                  
+                              (dvoid *)(conn->sesshp), (ub4) 0, 
+                              (ub4) OCI_ATTR_SESSION, conn->errhp);                            
 
             // ----------- Prepare statements here --------------
 

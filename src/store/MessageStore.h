@@ -1,7 +1,7 @@
 #ifndef MESSAGE_STORE_DECLARATIONS
 #define MESSAGE_STORE_DECLARATIONS
 
-#include <sms.h>
+#include "sms/sms.h"
 #include "StoreExceptions.h"
 
 namespace smsc { namespace store
