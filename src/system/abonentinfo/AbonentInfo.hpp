@@ -18,9 +18,11 @@ using namespace smsc::profiler;
 
 class AbonentInfoSme:public SmeProxy,public ThreadedTask{
 public:
-  AbonentInfoSme(Profiler* profiler):profiler(profiler)
+  AbonentInfoSme(ProfilerInterface* profiler):profiler(profiler)
   {
   }
+
+  const char* taskName(){return "AbonentInfo";}
 
   virtual int Execute();
 
@@ -86,7 +88,6 @@ public:
     return SmeProxyPriorityDefault;
   }
 
-  //Profiler will never generate a command
   bool hasInput()const
   {
     MutexGuard g(mon);
@@ -102,6 +103,8 @@ public:
     return managerMonitor!=NULL;
   }
 
+  void close(){}
+
   uint32_t getNextSequenceNumber()
   {
     MutexGuard g(mon);
@@ -114,7 +117,7 @@ protected:
   int seq;
   SmeProxyState state;
   ProxyMonitor *managerMonitor;
-  Profiler* profiler;
+  ProfilerInterface* profiler;
 };
 
 };//abonentinfo
