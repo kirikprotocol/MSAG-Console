@@ -202,7 +202,28 @@ public:
     return dlg;
   }
   
-  MapDialog* createSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent){
+  /*MapDialog* createSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent){
+    if ( abonent.length() == 0 )
+      throw runtime_error("can't create MT dialog without abonent");
+    MutexGuard g(sync);
+    __trace2__("MAP::createSMSCDialog: try create SMSC dialog on abonent %s",abonent.c_str());
+    if ( lock_map.Exists(abonent) ) {
+      __trace2__("MAP::createSMSCDialog: locked");
+      return 0;
+    }
+    ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
+    MapDialog* dlg = new MapDialog(map_dialog,lssn);
+    dialogId_pool.pop_front();
+    dlg->dialogid_smsc = smsc_did;
+    dlg->abonent = abonent;
+    hash.Insert(map_dialog,dlg);
+    lock_map.Insert(abonent,1);
+    __trace2__("MAP:: new dialog 0x%p for dialogid 0x%x->0x%x",dlg,smsc_did,map_dialog);
+    dlg->AddRef();
+    return dlg;
+  }*/
+
+  MapDialog* createOrAtachSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent){
     if ( abonent.length() == 0 )
       throw runtime_error("can't create MT dialog without abonent");
     MutexGuard g(sync);
