@@ -17,6 +17,7 @@
 	replayPath (pass|force|suppress) "pass"
 	forceDelivery (true|false) "false"
 	aclId CDATA "-1"
+  allowBlocked (true|false) "false"
 >
 <!ELEMENT notes (#PCDATA)>
 <!ELEMENT source (subject | mask)>
