@@ -305,330 +305,174 @@ Connection::Connection(ConnectionPool* pool)
                             (dvoid *)sesshp, (ub4) 0,
                             (ub4) OCI_ATTR_SESSION, errhp));
 
-    // allocate statements handles
-    checkConnErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **) &stmtGetMessagesCount,
-                                OCI_HTYPE_STMT, 0, (dvoid **) 0));
-    checkConnErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **) &stmtStoreInsert,
-                                OCI_HTYPE_STMT, 0, (dvoid **) 0));
-    checkConnErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **) &stmtRetriveAll,
-                                OCI_HTYPE_STMT, 0, (dvoid **) 0));
-    checkConnErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **) &stmtRemove,
-                                OCI_HTYPE_STMT, 0, (dvoid **) 0));
+    // create & prepare statement for select max(id)
+    checkConnErr(stmtGetMessagesCount.
+                 create(envhp, svchp, errhp, sqlGetMessagesCount));
+    checkConnErr(stmtGetMessagesCount.
+                 define(1, SQLT_UIN, (dvoid *) &(smsId), 
+                        (sb4) sizeof(smsId), errhp));
 
-    // prepare statements
-    checkConnErr(OCIStmtPrepare(stmtGetMessagesCount, errhp, sqlGetMessagesCount,
-                                (ub4)strlen((char *)sqlGetMessagesCount),
-                                (ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT));
-    checkConnErr(OCIStmtPrepare(stmtStoreInsert, errhp, sqlStoreInsert,
-                                (ub4)strlen((char *)sqlStoreInsert),
-                                (ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT));
-    checkConnErr(OCIStmtPrepare(stmtRetriveAll, errhp, sqlRetriveAll,
-                                (ub4)strlen((char *)sqlRetriveAll),
-                                (ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT));
-    checkConnErr(OCIStmtPrepare(stmtRemove, errhp, sqlRemove,
-                                (ub4)strlen((char *)sqlRemove),
-                                (ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT));
+    // create & prepare statement for insertion
+    checkConnErr(stmtStoreInsert.
+                 create(envhp, svchp, errhp, sqlStoreInsert));
+    checkConnErr(stmtStoreInsert.
+                 bind(1 , SQLT_UIN, (dvoid *) &smsId, 
+                      (sb4) sizeof(smsId), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(2 , SQLT_UIN, (dvoid *) &(uState), 
+                      (sb4) sizeof(uState), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(3 , SQLT_UIN, (dvoid *) &(sms.messageReference), 
+                      (sb4) sizeof(sms.messageReference), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(4 , SQLT_UIN, (dvoid *) &(sms.messageIdentifier), 
+                      (sb4) sizeof(sms.messageIdentifier), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(5 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.lenght), 
+                      (sb4) sizeof(sms.originatingAddress.lenght), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(6 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.type), 
+                      (sb4) sizeof(sms.originatingAddress.type), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(7 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.plan), 
+                      (sb4) sizeof(sms.originatingAddress.plan), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(8 , SQLT_STR, (dvoid *) (sms.originatingAddress.value), 
+                      (sb4) sizeof(sms.originatingAddress.value), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(9 , SQLT_UIN, (dvoid *) &(sms.destinationAddress.lenght), 
+                      (sb4) sizeof(sms.destinationAddress.lenght), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(10, SQLT_UIN, (dvoid *) &(sms.destinationAddress.type), 
+                      (sb4) sizeof(sms.destinationAddress.type), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(11, SQLT_UIN, (dvoid *) &(sms.destinationAddress.plan), 
+                      (sb4) sizeof(sms.destinationAddress.plan), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(12, SQLT_STR, (dvoid *) (sms.destinationAddress.value), 
+                      (sb4) sizeof(sms.destinationAddress.value), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(13, SQLT_ODT, (dvoid *) &(validTime), 
+                      (sb4) sizeof(validTime), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(14, SQLT_ODT, (dvoid *) &(waitTime), 
+                      (sb4) sizeof(waitTime), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(15, SQLT_ODT, (dvoid *) &(submitTime), 
+                      (sb4) sizeof(submitTime), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(16, SQLT_ODT, (dvoid *) &(deliveryTime), 
+                      (sb4) sizeof(deliveryTime), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(17, SQLT_AFC, (dvoid *) &(bStatusReport), 
+                      (sb4) sizeof(bStatusReport), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(18, SQLT_AFC, (dvoid *) &(bRejectDuplicates), 
+                      (sb4) sizeof(bRejectDuplicates), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(19, SQLT_UIN, (dvoid *) &(sms.priority), 
+                      (sb4) sizeof(sms.priority), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(20, SQLT_UIN, (dvoid *) &(sms.protocolIdentifier), 
+                      (sb4) sizeof(sms.protocolIdentifier), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(21, SQLT_UIN, (dvoid *) &(sms.failureCause), 
+                      (sb4) sizeof(sms.failureCause), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(22, SQLT_UIN, (dvoid *) &(sms.messageBody.scheme), 
+                      (sb4) sizeof(sms.messageBody.scheme), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(23, SQLT_AFC, (dvoid *) &(bHeaderIndicator), 
+                      (sb4) sizeof(bHeaderIndicator), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(24, SQLT_UIN, (dvoid *) &(sms.messageBody.lenght), 
+                      (sb4) sizeof(sms.messageBody.lenght), errhp));
+    checkConnErr(stmtStoreInsert.
+                 bind(25, SQLT_BIN, (dvoid *) (sms.messageBody.data), 
+                      (sb4) sizeof(sms.messageBody.data), errhp));
     
-    // define placeholder for removing
-    checkConnErr(OCIBindByPos(stmtRemove, &bndRemoveId, errhp, (ub4) 1,
-                              (dvoid *) &smsId, (sb4) sizeof(smsId),
-                              SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
-                              (ub4)0, (ub4 *)0, OCI_DEFAULT));
-    checkConnErr(OCIDefineByPos(stmtRemove, &defRemoveRes, errhp, (ub4) 1,
-                                (dvoid *) &(smsId), (sword) sizeof(smsId), 
-                                SQLT_UIN, (dvoid *) 0, (ub2 *)0, 
-                                (ub2 *)0, OCI_DEFAULT));
+    // create & prepare statement for retriving
+    checkConnErr(stmtRetriveAll.
+                 create(envhp, svchp, errhp, sqlRetriveAll));
+    checkConnErr(stmtRetriveAll.
+                 define(1 , SQLT_UIN, (dvoid *) &(uState),
+                        (sb4) sizeof(uState), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(2 , SQLT_UIN, (dvoid *) &(sms.messageReference),
+                        (sb4) sizeof(sms.messageReference), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(3 , SQLT_UIN, (dvoid *) &(sms.messageIdentifier),
+                        (sb4) sizeof(sms.messageIdentifier), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(4 , SQLT_UIN, (dvoid *)&(sms.originatingAddress.lenght),
+                        (sb4) sizeof(sms.originatingAddress.lenght), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(5 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.type),
+                        (sb4) sizeof(sms.originatingAddress.type), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(6 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.plan),
+                        (sb4) sizeof(sms.originatingAddress.plan), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(7 , SQLT_STR, (dvoid *) (sms.originatingAddress.value),
+                        (sb4) sizeof(sms.originatingAddress.value), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(8 , SQLT_UIN, (dvoid *)&(sms.destinationAddress.lenght),
+                        (sb4) sizeof(sms.destinationAddress.lenght), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(9 , SQLT_UIN, (dvoid *) &(sms.destinationAddress.type),
+                        (sb4) sizeof(sms.destinationAddress.type), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(10, SQLT_UIN, (dvoid *) &(sms.destinationAddress.plan),
+                        (sb4) sizeof(sms.destinationAddress.plan), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(11, SQLT_STR, (dvoid *) (sms.destinationAddress.value),
+                        (sb4) sizeof(sms.destinationAddress.value), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(12, SQLT_ODT, (dvoid *) &(validTime),
+                        (sb4) sizeof(validTime), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(13, SQLT_ODT, (dvoid *) &(waitTime),
+                        (sb4) sizeof(waitTime), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(14, SQLT_ODT, (dvoid *) &(submitTime),
+                        (sb4) sizeof(submitTime), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(15, SQLT_ODT, (dvoid *) &(deliveryTime),
+                        (sb4) sizeof(deliveryTime), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(16, SQLT_AFC, (dvoid *) &(bStatusReport),
+                        (sb4) sizeof(bStatusReport), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(17, SQLT_AFC, (dvoid *) &(bRejectDuplicates),
+                        (sb4) sizeof(bRejectDuplicates), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(18, SQLT_UIN, (dvoid *) &(sms.priority),
+                        (sb4) sizeof(sms.priority), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(19, SQLT_UIN, (dvoid *) &(sms.protocolIdentifier),
+                        (sb4) sizeof(sms.protocolIdentifier), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(20, SQLT_UIN, (dvoid *) &(sms.failureCause),
+                        (sb4) sizeof(sms.failureCause), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(21, SQLT_UIN, (dvoid *) &(sms.messageBody.scheme),
+                        (sb4) sizeof(sms.messageBody.scheme), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(22, SQLT_AFC, (dvoid *) &(bHeaderIndicator),
+                        (sb4) sizeof(bHeaderIndicator), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(23, SQLT_UIN, (dvoid *) &(sms.messageBody.lenght),
+                        (sb4) sizeof(sms.messageBody.lenght), errhp));
+    checkConnErr(stmtRetriveAll.
+                 define(24, SQLT_BIN, (dvoid *) (sms.messageBody.data),
+                        (sb4) sizeof(sms.messageBody.data), errhp));
+    checkConnErr(stmtRetriveAll.
+                 bind(1, SQLT_UIN, (dvoid *) &(smsId),
+                      (sb4) sizeof(smsId), errhp));
     
-    // define placeholder for max(id)
-    checkConnErr(OCIDefineByPos(stmtGetMessagesCount, &defMaxId, errhp, (ub4) 1,
-                                (dvoid *) &(smsId), (sword) sizeof(smsId), 
-                                SQLT_UIN, (dvoid *) 0, (ub2 *)0, 
-                                (ub2 *)0, OCI_DEFAULT));
-
-    // bind sms placeholder fields for storing
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndStoreId, errhp, (ub4) 1,
-                              (dvoid *) &smsId, (sb4) sizeof(smsId),
-                              SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
-                              (ub4)0, (ub4 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndSt, errhp, (ub4) 2,
-                              (dvoid *) &(uState), 
-                              (sb4) sizeof(uState), SQLT_UIN, 
-                              (dvoid *) 0, (ub2 *)0, (ub2 *)0, (ub4)0,
-                              (ub4 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndMsgRef, errhp, (ub4) 3,
-                              (dvoid *) &(sms.messageReference),
-                              (sb4) sizeof(sms.messageReference), SQLT_UIN,
-                              (dvoid *)0,(ub2 *)0, (ub2 *)0, (ub4)0,
-                              (ub4 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndMsgInd, errhp, (ub4) 4,
-                              (dvoid *) &(sms.messageIdentifier),
-                              (sb4) sizeof(sms.messageIdentifier), SQLT_UIN,
-                              (dvoid *)0, (ub2 *)0, (ub2 *)0, (ub4)0,
-                              (ub4 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndOALen, errhp, (ub4) 5,
-                              (dvoid *) &(sms.originatingAddress.lenght),
-                              (sb4) sizeof(sms.originatingAddress.lenght),
-                              SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0, 
-                              (ub4)0, (ub4 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndOATon, errhp, (ub4) 6,
-                              (dvoid *) &(sms.originatingAddress.type),
-                              (sb4) sizeof(sms.originatingAddress.type),
-                              SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0, 
-                              (ub4)0, (ub4 *)0, OCI_DEFAULT)); 
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndOANpi, errhp, (ub4) 7,
-                              (dvoid *) &(sms.originatingAddress.plan),
-                              (sb4) sizeof(sms.originatingAddress.plan),
-                              SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0, 
-                              (ub4)0, (ub4 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndOAVal, errhp, (ub4) 8,
-                              (dvoid *)(sms.originatingAddress.value),
-                              (sb4) sizeof(sms.originatingAddress.value),
-                              SQLT_STR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
-                              (ub4)0, (ub4 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndDALen, errhp, (ub4) 9,
-                              (dvoid *) &(sms.destinationAddress.lenght),
-                              (sb4) sizeof(sms.destinationAddress.lenght),
-                              SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0, 
-                              (ub4)0, (ub4 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndDATon, errhp, (ub4) 10,
-                              (dvoid *) &(sms.destinationAddress.type),
-                              (sb4) sizeof(sms.destinationAddress.type),
-                              SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
-                              (ub4)0, (ub4 *)0, OCI_DEFAULT)); 
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndDANpi, errhp, (ub4) 11,
-                              (dvoid *) &(sms.destinationAddress.plan),
-                              (sb4) sizeof(sms.destinationAddress.plan),
-                              SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0, 
-                              (ub4)0, (ub4 *)0, OCI_DEFAULT)); 
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndDAVal, errhp, (ub4) 12,
-                              (dvoid *)(sms.destinationAddress.value),
-                              (sb4) sizeof(sms.destinationAddress.value),
-                              SQLT_STR, (dvoid *)0, (ub2 *)0, (ub2 *)0, 
-                              (ub4)0, (ub4 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndVTime, errhp, (ub4) 13,
-                              (dvoid *) &(validTime), 
-                              (sb4) sizeof(validTime),
-                              SQLT_ODT, (dvoid *)0, (ub2 *)0, (ub2 *)0, 
-                              (ub4)0, (ub4 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndWTime, errhp, (ub4) 14,
-                              (dvoid *) &(waitTime), 
-                              (sb4) sizeof(waitTime),
-                              SQLT_ODT, (dvoid *)0, (ub2 *)0, (ub2 *)0,
-                              (ub4)0, (ub4 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndSTime, errhp, (ub4) 15,
-                              (dvoid *) &(submitTime), 
-                              (sb4) sizeof(submitTime), SQLT_ODT, 
-                              (dvoid *)0, (ub2 *)0, (ub2 *)0, 
-                              (ub4)0, (ub4 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndDTime, errhp, (ub4) 16,
-                              (dvoid *) &(deliveryTime),
-                              (sb4) sizeof(deliveryTime), 
-                              SQLT_ODT, (dvoid *)0, (ub2 *)0, (ub2 *)0,
-                              (ub4)0, (ub4 *)0, OCI_DEFAULT)); 
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndSrr, errhp, (ub4) 17,
-                              (dvoid *) &(bStatusReport),
-                              (sb4) sizeof(bStatusReport), SQLT_AFC,
-                              (dvoid *) 0, (ub2 *)0, (ub2 *)0, 
-                              (ub4)0, (ub4 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndRd, errhp, (ub4) 18,
-                              (dvoid *) &(bRejectDuplicates),
-                              (sb4) sizeof(bRejectDuplicates), SQLT_AFC,
-                              (dvoid *) 0, (ub2 *)0, (ub2 *)0,
-                              (ub4)0, (ub4 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndMsgPri, errhp, (ub4) 19,
-                              (dvoid *) &(sms.priority), 
-                              (sb4) sizeof(sms.priority), SQLT_UIN,
-                              (dvoid *)0, (ub2 *)0, (ub2 *)0, 
-                              (ub4)0, (ub4 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndMsgPid, errhp, (ub4) 20,
-                              (dvoid *) &(sms.protocolIdentifier),
-                              (sb4) sizeof(sms.protocolIdentifier),
-                              SQLT_UIN, (dvoid *)0, (ub2 *)0, (ub2 *)0,
-                              (ub4)0, (ub4 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndFcs, errhp, (ub4) 21,
-                              (dvoid *) &(sms.failureCause),
-                              (sb4) sizeof(sms.failureCause), SQLT_UIN,
-                              (dvoid *) 0, (ub2 *)0, (ub2 *)0, (ub4)0,
-                              (ub4 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndDcs, errhp, (ub4) 22,
-                              (dvoid *) &(sms.messageBody.scheme),
-                              (sb4) sizeof(sms.messageBody.scheme),
-                              SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0, 
-                              (ub4)0, (ub4 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndUdhi, errhp, (ub4) 23,
-                              (dvoid *) &(bHeaderIndicator),
-                              (sb4) sizeof(bHeaderIndicator), SQLT_AFC,
-                              (dvoid *) 0, (ub2 *)0, (ub2 *)0, (ub4)0,
-                              (ub4 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndUdl, errhp, (ub4) 24,
-                              (dvoid *) &(sms.messageBody.lenght), 
-                              (sb4) sizeof(sms.messageBody.lenght), SQLT_UIN,
-                              (dvoid *) 0, (ub2 *)0, (ub2 *)0, (ub4)0,
-                              (ub4 *)0, OCI_DEFAULT));
-    
-    checkConnErr(OCIBindByPos(stmtStoreInsert, &bndUd, errhp, (ub4) 25,
-                              (dvoid *) (sms.messageBody.data),
-                              (sb4) sizeof(SMSData), 
-                              SQLT_BIN, (dvoid *)0, (ub2 *)0, (ub2 *)0,
-                              (ub4)0, (ub4 *)0, OCI_DEFAULT));
-
-    // define placeholders fields for retriving
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defSt, errhp, (ub4) 1,
-                                (dvoid *) &(uState), 
-                                (sword) sizeof(uState), SQLT_UIN,
-                                (dvoid *) 0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defMsgRef, errhp, (ub4) 2,
-                                (dvoid *) &(sms.messageReference), 
-                                (sword) sizeof(sms.messageReference), SQLT_UIN,
-                                (dvoid *) 0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defMsgInd, errhp, (ub4) 3,
-                                (dvoid *) &(sms.messageIdentifier), 
-                                (sword) sizeof(sms.messageIdentifier), SQLT_UIN,
-                                (dvoid *) 0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defOALen, errhp, (ub4) 4,
-                                (dvoid *) &(sms.originatingAddress.lenght), 
-                                (sword) sizeof(sms.originatingAddress.lenght),
-                                SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
-                                OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defOATon, errhp, (ub4) 5,
-                                (dvoid *) &(sms.originatingAddress.type), 
-                                (sword) sizeof(sms.originatingAddress.type),
-                                SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
-                                OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defOANpi, errhp, (ub4) 6,
-                                (dvoid *) &(sms.originatingAddress.plan), 
-                                (sword) sizeof(sms.originatingAddress.plan),
-                                SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
-                                OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defOAVal, errhp, (ub4) 7,
-                                (dvoid *)(sms.originatingAddress.value), 
-                                (sword) sizeof(sms.originatingAddress.value),
-                                SQLT_STR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
-                                OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defDALen, errhp, (ub4) 8,
-                                (dvoid *) &(sms.destinationAddress.lenght), 
-                                (sword) sizeof(sms.destinationAddress.lenght),
-                                SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
-                                OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defDATon, errhp, (ub4) 9,
-                                (dvoid *) &(sms.destinationAddress.type), 
-                                (sword) sizeof(sms.destinationAddress.type),
-                                SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
-                                OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defDANpi, errhp, (ub4) 10,
-                                (dvoid *) &(sms.destinationAddress.plan), 
-                                (sword) sizeof(sms.destinationAddress.plan),
-                                SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
-                                OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defDAVal, errhp, (ub4) 11,
-                                (dvoid *)(sms.destinationAddress.value), 
-                                (sword) sizeof(sms.destinationAddress.value),
-                                SQLT_STR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
-                                OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defVTime, errhp, (ub4) 12,
-                                (dvoid *) &(validTime), 
-                                (sword) sizeof(validTime), SQLT_ODT,
-                                (dvoid *) 0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defWTime, errhp, (ub4) 13,
-                                (dvoid *) &(waitTime), 
-                                (sb4) sizeof(waitTime), SQLT_ODT, 
-                                (dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defSTime, errhp, (ub4) 14,
-                                (dvoid *) &(submitTime), 
-                                (sb4) sizeof(submitTime), SQLT_ODT,
-                                (dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defDTime, errhp, (ub4) 15,
-                                (dvoid *) &(deliveryTime), 
-                                (sb4) sizeof(deliveryTime), SQLT_ODT,
-                                (dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defSrr, errhp, (ub4) 16,
-                                (dvoid *) &(bStatusReport), 
-                                (sb4) sizeof(bStatusReport), SQLT_AFC,
-                                (dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defRd, errhp, (ub4) 17,
-                                (dvoid *) &(bRejectDuplicates), 
-                                (sb4) sizeof(bRejectDuplicates), SQLT_AFC,
-                                (dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defMsgPri, errhp, (ub4) 18,
-                                (dvoid *) &(sms.priority), 
-                                (sb4) sizeof(sms.priority), SQLT_UIN,
-                                (dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defMsgPid, errhp, (ub4) 19,
-                                (dvoid *) &(sms.protocolIdentifier), 
-                                (sb4) sizeof(sms.protocolIdentifier), SQLT_UIN,
-                                (dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defFcs, errhp, (ub4) 20,
-                                (dvoid *) &(sms.failureCause), 
-                                (sb4) sizeof(sms.failureCause), SQLT_UIN,
-                                (dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defDcs, errhp, (ub4) 21,
-                                (dvoid *) &(sms.messageBody.scheme), 
-                                (sb4) sizeof(sms.messageBody.scheme), SQLT_UIN,
-                                (dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defUdhi, errhp, (ub4) 22,
-                                (dvoid *) &(bHeaderIndicator), 
-                                (sb4) sizeof(bHeaderIndicator), SQLT_AFC,
-                                (dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defUdl, errhp, (ub4) 23,
-                                (dvoid *) &(sms.messageBody.lenght), 
-                                (sb4) sizeof(sms.messageBody.lenght), SQLT_UIN,
-                                (dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
-    
-    checkConnErr(OCIDefineByPos(stmtRetriveAll, &defUd, errhp, (ub4) 24,
-                                (dvoid *) (sms.messageBody.data), 
-                                (sb4) sizeof(SMSData), 
-                                SQLT_BIN, (dvoid *)0, (ub2 *)0, 
-                                (ub2 *)0, OCI_DEFAULT));
-
-    checkConnErr(OCIBindByPos(stmtRetriveAll, &bndRetriveId, errhp, (ub4) 1,
-                              (dvoid *) &(smsId), (sb4) sizeof(smsId), 
-                              SQLT_UIN, (dvoid *)0, (ub2 *)0, (ub2 *)0,
-                              (ub4)0, (ub4 *)0, OCI_DEFAULT));
+    // create & prepare statement for removing
+    checkConnErr(stmtRemove.
+                 create(envhp, svchp, errhp, sqlRemove));
 }
 
 Connection::~Connection()
@@ -649,9 +493,7 @@ SMSId Connection::getMessagesCount()
 {
     MutexGuard  guard(mutex);
 
-    checkConnErr(OCIStmtExecute(svchp, stmtGetMessagesCount, errhp, 
-                                (ub4) 1, (ub4) 0, (CONST OCISnapshot *) NULL,
-                                (OCISnapshot *) NULL, OCI_DEFAULT));
+    checkConnErr(stmtGetMessagesCount.execute(errhp, OCI_DEFAULT));
     return smsId;
 }
 
@@ -696,11 +538,7 @@ void Connection::store(const SMS &_sms, SMSId id)
     
     try 
     {
-        // insert new sms row into table
-        checkErr(OCIStmtExecute(svchp, stmtStoreInsert, errhp, (ub4) 1, (ub4) 0,
-                                (CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
-                                OCI_DEFAULT));
-        
+        checkErr(stmtStoreInsert.execute(errhp, OCI_DEFAULT));
         checkErr(OCITransCommit(svchp, errhp, OCI_DEFAULT));
     } 
     catch (StorageException& exc) 
@@ -717,11 +555,7 @@ void Connection::retrive(SMSId id, SMS &_sms)
 
     smsId = id;
     sword status;
-    // retrive entire sms row from table
-    status = OCIStmtExecute(svchp, stmtRetriveAll, errhp, (ub4) 1, (ub4) 0,
-                            (CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
-                            OCI_DEFAULT);
-    if (status == OCI_NO_DATA)
+    if ((status = stmtRetriveAll.execute(errhp, OCI_DEFAULT)) == OCI_NO_DATA)
     {
         throw NoSuchMessageException();
     }
@@ -767,12 +601,15 @@ void Connection::remove(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
     MutexGuard  guard(mutex);
-
-    smsId = id;
-    checkErr(OCIStmtExecute(svchp, stmtRemove, errhp, (ub4) 1, (ub4) 0,
-                            (CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
-                            OCI_DEFAULT));
-    if (!smsId) {
+    
+    checkErr(stmtRemove.bind(1, SQLT_UIN, (dvoid *) &(id),
+                             (sb4) sizeof(id), errhp)); 
+    SMSId rows = 0;
+    checkErr(stmtRemove.define(1, SQLT_UIN, (dvoid *) &(rows),
+                               (sb4) sizeof(rows), errhp));
+    
+    checkErr(stmtRemove.execute(errhp, OCI_DEFAULT));
+    if (!rows) {
         throw NoSuchMessageException();
     }
     checkErr(OCITransCommit(svchp, errhp, OCI_DEFAULT));

@@ -12,6 +12,7 @@
 
 #include "StoreConfig.h"
 #include "StoreExceptions.h"
+#include "Statement.h"
 
 
 namespace smsc { namespace store 
@@ -116,29 +117,11 @@ namespace smsc { namespace store
         OCISession*     sesshp; // OCI session handle
         
         // OCI prepared statements
-        OCIStmt*        stmtGetMessagesCount;
-        OCIStmt*        stmtStoreInsert;
-        OCIStmt*        stmtRetriveAll;
-        OCIStmt*        stmtRemove;
-
-        OCIBind         *bndSt, *bndMsgRef, *bndMsgInd;
-        OCIBind         *bndOALen, *bndOATon, *bndOANpi, *bndOAVal;
-        OCIBind         *bndDALen, *bndDATon, *bndDANpi, *bndDAVal;
-        OCIBind         *bndVTime, *bndWTime, *bndSTime, *bndDTime;
-        OCIBind         *bndSrr, *bndRd, *bndMsgPri, *bndMsgPid;
-        OCIBind         *bndFcs, *bndDcs, *bndUdhi, *bndUdl, *bndUd;
-
-        OCIDefine       *defMaxId, *defSt, *defMsgRef, *defMsgInd;
-        OCIDefine       *defOALen, *defOATon, *defOANpi, *defOAVal;
-        OCIDefine       *defDALen, *defDATon, *defDANpi, *defDAVal;
-        OCIDefine       *defVTime, *defWTime, *defSTime, *defDTime;
-        OCIDefine       *defSrr, *defRd, *defMsgPri, *defMsgPid;
-        OCIDefine       *defFcs, *defDcs, *defUdhi, *defUdl, *defUd;
-        OCIBind         *bndStoreId, *bndRetriveId;
+        Statement       stmtGetMessagesCount;
+        Statement       stmtStoreInsert;
+        Statement       stmtRetriveAll;
+        Statement       stmtRemove;
         
-        OCIBind         *bndRemoveId;
-        OCIDefine       *defRemoveRes;
-
         SMS             sms;
         SMSId           smsId;
         
@@ -153,7 +136,7 @@ namespace smsc { namespace store
         char            bHeaderIndicator;
         
         Mutex           mutex;
-
+        
         void checkConnErr(sword status) 
             throw(ConnectionFailedException);
         
