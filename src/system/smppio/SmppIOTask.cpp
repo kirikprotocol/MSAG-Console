@@ -371,6 +371,8 @@ int SmppOutputThread::Execute()
 {
   Multiplexer::SockArray ready;
   Multiplexer::SockArray error;
+  Multiplexer::SockArray tokill;
+
   int i;
   while(!isStopping)
   {
@@ -431,7 +433,7 @@ int SmppOutputThread::Execute()
     mon.Unlock();
     if(mul.canWrite(ready,error,1000)>0)
     {
-      MutexGuard g(mon);
+      mon.Lock();
       for(i=0;i<sockets.Count();i++)
       {
         SmppSocket *ss=sockets[i];
@@ -455,7 +457,8 @@ int SmppOutputThread::Execute()
               break;
             }
           }
-          inTask->removeSocket(s);
+          //inTask->removeSocket(s);
+          tokill.Push(s);
           killSocket(i);
           i--;
         }
@@ -466,7 +469,8 @@ int SmppOutputThread::Execute()
         {
           if(sockets[j]->getSocket()==error[i])
           {
-            inTask->removeSocket(error[i]);
+            //inTask->removeSocket(error[i]);
+            tokill.Push(error[i]);
             killSocket(j);
             break;
           }
@@ -482,13 +486,20 @@ int SmppOutputThread::Execute()
           {
             if(sockets[j]==ss)
             {
-              inTask->removeSocket(ss->getSocket());
+              //inTask->removeSocket(ss->getSocket());
+              tokill.Push(ss->getSocket());
               killSocket(j);
               break;
             }
           }
         }
       }
+      mon.Unlock();
+      for(int j=0;j<tokill.Count();j++)
+      {
+        inTask->removeSocket(tokill[j]);
+      }
+      tokill.Clean();
     } // if ready
   } // main loop return
   for(i=sockets.Count()-1;i>=0;i--)
