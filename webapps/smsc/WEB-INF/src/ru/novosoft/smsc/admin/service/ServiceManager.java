@@ -382,6 +382,7 @@ public class ServiceManager
 	public synchronized int getCountRunningServices(String hostName)
 			  throws AdminException
 	{
+		refreshServices();
 		Set serviceIds = getServiceIds(hostName);
 		int result = 0;
 		for (Iterator i = serviceIds.iterator(); i.hasNext();)

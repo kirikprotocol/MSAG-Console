@@ -51,7 +51,7 @@ public class HostView extends HostsBean
 		catch (AdminException e)
 		{
 			services = new HashMap();
-			return error(SMSCErrors.warning.service.hosts.listFailed, hostName);
+			return error(SMSCErrors.warning.hosts.listFailed, hostName);
 		}
 
 		return RESULT_OK;
@@ -110,7 +110,7 @@ public class HostView extends HostsBean
 	{
 		int result = RESULT_OK;
 		if (serviceIds.length == 0)
-			return error(SMSCErrors.warning.service.hosts.noServicesSelected);
+			return error(SMSCErrors.warning.hosts.noServicesSelected);
 
 		List notStartedIds = new LinkedList();
 
@@ -150,7 +150,7 @@ public class HostView extends HostsBean
 		int result = RESULT_OK;
 
 		if (serviceIds.length == 0)
-			return error(SMSCErrors.warning.service.hosts.noServicesSelected);
+			return error(SMSCErrors.warning.hosts.noServicesSelected);
 
 		List notStoppedIds = new LinkedList();
 
@@ -176,6 +176,39 @@ public class HostView extends HostsBean
 		serviceIds = (String[]) notStoppedIds.toArray(new String[0]);
 		return result;
 	}
+
+	public int getServicesTotal()
+	{
+		if (hostName != null && hostName.length() > 0)
+		{
+			try
+			{
+				return serviceManager.getCountServices(hostName);
+			}
+			catch (AdminException e)
+			{
+				logger.warn("host \"" + hostName + "\" not found", e);
+			}
+		}
+		return 0;
+	}
+
+	public int getServicesRunning()
+	{
+		if (hostName != null && hostName.length() > 0)
+		{
+			try
+			{
+				return serviceManager.getCountRunningServices(hostName);
+			}
+			catch (AdminException e)
+			{
+				logger.warn("host \"" + hostName + "\" not found", e);
+			}
+		}
+		return 0;
+	}
+
 
 	public Collection getServices()
 	{

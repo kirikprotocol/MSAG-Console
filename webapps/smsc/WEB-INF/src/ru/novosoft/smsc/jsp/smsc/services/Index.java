@@ -95,7 +95,7 @@ public class Index extends PageBean
 	{
 		int result = RESULT_OK;
 		if (serviceIds.length == 0)
-			return error(SMSCErrors.warning.service.hosts.noServicesSelected);
+			return error(SMSCErrors.warning.hosts.noServicesSelected);
 
 		List notStartedIds = new LinkedList();
 
@@ -144,7 +144,7 @@ public class Index extends PageBean
 		int result = RESULT_OK;
 
 		if (serviceIds.length == 0)
-			return error(SMSCErrors.warning.service.hosts.noServicesSelected);
+			return error(SMSCErrors.warning.hosts.noServicesSelected);
 
 		List notStoppedIds = new LinkedList();
 
@@ -170,6 +170,38 @@ public class Index extends PageBean
 		}
 		serviceIds = (String[]) notStoppedIds.toArray(new String[0]);
 		return result;
+	}
+
+	public String getHost(String sId)
+	{
+		try
+		{
+			return serviceManager.getServiceInfo(sId).getHost();
+		}
+		catch (Throwable e)
+		{
+			error(SMSCErrors.error.services.couldntGetServiceInfo, e);
+			logger.error("Couldn't get service info for service \"" + sId + '"', e);
+			return "";
+		}
+	}
+
+	public byte getServiceStatus(String serviceId)
+	{
+		if (serviceManager.isService(serviceId))
+		{
+			try
+			{
+				return serviceManager.getServiceInfo(serviceId).getStatus();
+			}
+			catch (Throwable t)
+			{
+				logger.error("Couldn't get service info for service \"" + serviceId + '"', t);
+				error(SMSCErrors.error.services.couldntGetServiceInfo, serviceId);
+				return ServiceInfo.STATUS_UNKNOWN;
+			}
+		}
+		else return ServiceInfo.STATUS_RUNNING;
 	}
 
 	/*************************** Properties *******************************/

@@ -1,5 +1,4 @@
-<%@ page import="java.util.*" %>
-<%
+<%@page import="java.util.*"%><div class=CF00><%
 if (errorMessages.size() > 0)
 {
 	for(Iterator it = errorMessages.iterator(); it.hasNext();)
@@ -10,4 +9,4 @@ if (errorMessages.size() > 0)
 		%><%=(msg == null) ? code : msg%><BR><%
 	}
 }
-%>
+%></div>

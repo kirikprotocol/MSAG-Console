@@ -1,24 +1,39 @@
-<%@ include file="/WEB-INF/inc/code_header.jsp"%><%
-int total_hosts_count = 1;
-if(request.getParameter("mbAdd")!=null)
+<%@ include file="/WEB-INF/inc/code_header.jsp"%>
+<%@ page import="ru.novosoft.smsc.jsp.smsc.services.Index"%>
+<jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.Index"/>
+<jsp:setProperty name="bean" property="*"/>
+<%
+switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
 {
-	response.sendRedirect("serviceAdd.jsp");
-	return;
-} else if(request.getParameter("mbDelete")!=null)
-{
+	case Index.RESULT_DONE:
+		response.sendRedirect("index.jsp");
+		return;
+	case Index.RESULT_OK:
+		STATUS.append("Ok");
+		break;
+	case Index.RESULT_ERROR:
+		STATUS.append("<span class=CF00>Error</span>");
+		break;
+	case Index.RESULT_VIEW:
+		response.sendRedirect(CPATH+"/esme_"+URLEncoder.encode(bean.getServiceId())+"/index.jsp");
+		return;
+	case Index.RESULT_VIEW_HOST:
+		response.sendRedirect(CPATH+"/hosts/hostView.jsp?hostName="+bean.getHostId());
+		return;
+	case Index.RESULT_ADD:
+		response.sendRedirect("serviceAdd.jsp");
+		return;
+	default:
+		STATUS.append("<span class=CF00>Error</span>");
+		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction));
 }
-
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
-STATUS.append("hosts:").append(total_hosts_count);
 MENU0_SELECTION = "MENU0_SERVICES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 
 <%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
-<jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.Index"/>
-<jsp:setProperty name="bean" property="*"/>
-<%
-bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages);
-%>
+
+<%@ include file="/WEB-INF/inc/service_status.jsp"%>
 <input type=hidden ID=jbutton value="jbutton">
 <input type=hidden name=serviceId>
 <input type=hidden name=hostId>
@@ -40,7 +55,7 @@ function viewService(serviceId)
 }
 </script>
 <h1>Services list</h1>
-<span class=CF00><%@ include file="/WEB-INF/inc/messages.jsp"%></span>
+<%@ include file="/WEB-INF/inc/messages.jsp"%>
 <table class=rep0 cellspacing=1 width="100%">
 <col width="1%">
 <col width="60%" align=left>
@@ -62,16 +77,24 @@ for(Iterator i = bean.getSmeIds().iterator(); i.hasNext(); row++)
 String serviceId = (String) i.next();
 String encodedServiceId = StringEncoderDecoder.encode(serviceId);
 
-String hostName = "host "+serviceId;
 String serviceControl = (row == 0) ? "start" : "stop";
 String serviceStatus = (row == 0) ? "<span class='C800'>stopped</span>" : "<span class='C080'>runned</span>";
 List serviceIds = Arrays.asList(bean.getServiceIds());
 %>
 <tr class=row<%=row&1%>>
 	<td class=check><input class=check type=checkbox name=serviceIds value="<%=encodedServiceId%>" <%=serviceIds.contains(serviceId) ? "checked" : ""%>></td>
-	<td class=name><a href="#" title="View service info" onClick="return viewService('<%=encodedServiceId%>');"><%=encodedServiceId%></a></td>
-	<td class=name><a href="#" title="View host info" onClick="return viewHost('<%=hostName%>');"><%=hostName%></a></td>
-	<td><%=serviceStatus%></td>
+	<%
+	if (bean.isService(serviceId))
+	{
+		%><td class=name><a href="#" title="View service info" onClick="return viewService('<%=encodedServiceId%>');"><%=encodedServiceId%></a></td>
+		<td class=name><a href="#" title="View host info" onClick="return viewHost('<%=bean.getHost(serviceId)%>');"><%=bean.getHost(serviceId)%></a></td><%
+	}
+		else
+	{
+		%><td class=name><%=encodedServiceId%></td>
+		<td class=name>&nbsp;</td><%
+	}%>
+	<td><%=serviceStatus(serviceId, bean.getServiceStatus(serviceId))%></td>
 </tr>
 <%}}%>
 </tbody>

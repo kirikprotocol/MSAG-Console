@@ -8,6 +8,7 @@ package ru.novosoft.smsc.jsp;
 public class SMSCErrors
 {
 	private static String B = "";
+
 	public static class error
 	{
 		private static final String B = SMSCErrors.B + "error.";
@@ -23,15 +24,13 @@ public class SMSCErrors
 		{
 			private static final String B = SMSCErrors.error.B + "services.";
 			public static final String couldntStartInternalService = B + "couldntStartInternalService";
-			/*public static final String failed = B + "failed";
-			public static final String unknown = B + "unknown";
-			public static final String system = B + "system";*/
 			public static final String unknownAction = B + "unknownAction";
+			public static final String couldntGetServiceInfo = B + "couldntGetServiceInfo";
 		}
 
 		public static class hosts
 		{
-			private static final String B = services.B + "hosts.";
+			private static final String B = error.B + "hosts.";
 			public static final String daemonNotFound = B + "daemonNotFound";
 			public static final String serviceNotFound = B + "serviceNotFound";
 			public static final String couldntStartService = B + "couldntStartService";
@@ -49,17 +48,17 @@ public class SMSCErrors
 	{
 		private static final String B = SMSCErrors.B + "warning.";
 
-		public static class service
+		public static class services
 		{
 			private static final String B = SMSCErrors.warning.B + "services.";
+		}
 
-			public static class hosts
-			{
-				private static final String B = SMSCErrors.warning.service.B + "hosts.";
+		public static class hosts
+		{
+			private static final String B = warning.B + "hosts.";
 
-				public static final String listFailed = B + "listFailed";
-				public static final String noServicesSelected = B + "noServicesSelected";
-			}
+			public static final String listFailed = B + "listFailed";
+			public static final String noServicesSelected = B + "noServicesSelected";
 		}
 	}
 }
