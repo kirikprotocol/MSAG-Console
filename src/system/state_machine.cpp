@@ -656,7 +656,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
     __warning__("DELIVERYRESP: state of SMS isn't DELIVERING!!!");
     return t.state;
   }
-  smsc::sms::Descriptor d;
+  //smsc::sms::Descriptor d;
   SMS sms;
   try{
     store->retriveSms((SMSId)t.msgId,sms);
@@ -715,7 +715,9 @@ StateType StateMachine::deliveryResp(Tuple& t)
   }
   try{
     __trace__("change state to delivered");
-    store->changeSmsStateToDelivered(t.msgId,d);
+
+    store->changeSmsStateToDelivered(t.msgId,t.command->get_resp()->getDescriptor());
+
     __trace__("change state to delivered: ok");
   }catch(std::exception& e)
   {

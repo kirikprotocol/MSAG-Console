@@ -26,6 +26,7 @@ using std::auto_ptr;
 using namespace smsc::smpp;
 using smsc::sms::SMS;
 using smsc::sms::Address;
+using smsc::sms::Descriptor;
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
 
@@ -61,6 +62,7 @@ struct SmsResp
 private:
   char* messageId;
   uint32_t status;
+  Descriptor descriptor;
 public:
   void set_messageId(const char* msgid)
   {
@@ -72,6 +74,14 @@ public:
   void set_status(uint32_t st) { status = st; }
   const char* get_messageId() {return messageId;}
   uint32_t get_status() { return status; }
+  void setDescriptor(const Descriptor& dsc)
+  {
+    descriptor=dsc;
+  }
+  const Descriptor& getDescriptor()
+  {
+    return descriptor;
+  }
   SmsResp() : messageId(0), status(0) {};
   ~SmsResp() { if ( messageId ) delete messageId; }
 };
