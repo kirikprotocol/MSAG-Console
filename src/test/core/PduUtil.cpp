@@ -266,7 +266,7 @@ string PduData::str() const
 PduMonitor::PduMonitor(time_t _checkTime, time_t _validTime,
 	PduData* _pduData, PduFlag _flag)
 : checkTime(_checkTime), validTime(_validTime), pduData(_pduData), flag(_flag),
-	registered(false)
+	skipChecks(0), registered(false)
 {
 	__require__(pduData);
 	pduData->ref();
@@ -325,6 +325,12 @@ void PduMonitor::setError()
 	__trace2__("monitor set error: %s", str().c_str());
 }
 
+void PduMonitor::setSkipChecks(int val)
+{
+	skipChecks = val;
+	__trace2__("monitor set skip checks: %s", str().c_str());
+}
+
 string PduMonitor::str() const
 {
 	ostringstream s;
@@ -376,6 +382,7 @@ string PduMonitor::str() const
 			__unreachable__("Invalid pdu flag");
 	}
 	s << ", checkTime = " << checkTime << ", validTime = " << validTime;
+	s << ", skipChecks = " << skipChecks;
 	s << ", pduData = {" << pduData->str() << "}";
 	return s.str();
 }

@@ -121,6 +121,7 @@ protected:
 	time_t checkTime;
 	time_t validTime; //окончание доставки pdu
 	PduFlag flag; //флаг получения сообщения получателем
+	int skipChecks;
 	bool registered;
 
 public:
@@ -139,6 +140,9 @@ public:
 	void setNotExpected();
 	void setExpired();
 	void setError();
+	
+	int getSkipChecks() { return skipChecks; }
+	void setSkipChecks(int val);
 
 	bool isRegistered() const { return registered; }
 	void setRegistered(bool val) { registered = val; }
