@@ -368,7 +368,6 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	__require__(pdu);
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(maxDeliveryPeriod);
-	__cfg_int__(sequentialPduInterval);
 	PduPartSm& p = pdu->get_message();
 	SmppTime tmp;
 	//set & check fields
@@ -398,7 +397,6 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	__require__(pdu);
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(maxDeliveryPeriod);
-	__cfg_int__(sequentialPduInterval);
 	PduReplaceSm& p = *pdu;
 	SmppTime tmp;
 	//set & check fields

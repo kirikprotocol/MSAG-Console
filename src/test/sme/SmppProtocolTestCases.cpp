@@ -1580,8 +1580,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
 					__tc__("deliverySm.resp.sendRetry.sendAfterSmeTimeout");
 					commandStatus = DELIVERY_STATUS_NO_RESPONSE;
 					respPdu.get_header().set_commandStatus(ESME_ROK);
-					__cfg_int__(sequentialPduInterval);
-					int timeout = 1000 * (fixture->smeInfo.timeout + rand2(1, sequentialPduInterval));
+					int timeout = 1000 * (fixture->smeInfo.timeout + 1);
 					__trace2__("sendAfterSmeTimeout(): timeout = %d", timeout);
 					fixture->transmitter->sendDeliverySmResp(respPdu, sync, timeout);
 				}
