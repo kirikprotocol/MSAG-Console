@@ -15,7 +15,7 @@ using smsc::sms::SMSId;
 using namespace smsc::smpp;
 using namespace smsc::test::sms; //constants
 
-#define __maxValidPeriod__ (time(NULL) + 24 * 3600) //1 сутки
+#define __maxValidPeriod__ 24 * 3600 //1 сутки
 #define __checkTime__ (time(NULL) - 5) //5 секунд
 #define __numTime__ rand1(3)
 #define __absoluteTime__ rand1(2)
@@ -24,8 +24,8 @@ using namespace smsc::test::sms; //constants
 	if (pdu) { \
 		__trace2__("%s(): systemId = %s, sequenceNumber = %u, scheduleDeliveryTime = %ld, validityPeriod = %ld", \
 			tc, id.c_str(), (pdu)->get_header().get_sequenceNumber(), \
-			SmppUtil::string2time((pdu)->get_message().get_scheduleDeliveryTime()), \
-			SmppUtil::string2time((pdu)->get_message().get_validityPeriod())); \
+			SmppUtil::string2time((pdu)->get_message().get_scheduleDeliveryTime(), time(NULL)), \
+			SmppUtil::string2time((pdu)->get_message().get_validityPeriod(), time(NULL))); \
 		(pdu)->dump(TRACE_LOG_STREAM); \
 	} else { \
 		__trace2__("%s(): pdu = NULL", tc); \
@@ -117,8 +117,8 @@ public:
 	static Address* convert(PduAddress& smppAddr, Address* smsAddr);
 	static SMSId convert(const char* id);
 	static MessageId* convert(const SMSId& smsId, MessageId* smppId);
-	static const char* time2string(time_t t, char* str, int num);
-	static time_t string2time(const char* str);
+	static const char* time2string(time_t t, char* str, time_t base, int num);
+	static time_t string2time(const char* str, time_t base);
 
 	static bool compareAddresses(PduAddress& a1, PduAddress& a2);
 	static vector<int> compareOptional(SmppOptional& opt1, SmppOptional& opt2);
