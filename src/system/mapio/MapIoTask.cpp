@@ -375,7 +375,7 @@ void MapIoTask::dispatcher()
       while ( !ok ){
         try{
           deinit();
-          init();
+          init(30);
           if ( __global_bind_counter != CORRECT_BIND_COUNTER ){
             __trace2__("MAP:: waiting bind confirm");
             sleep(3);
@@ -448,7 +448,7 @@ USHORT_T  Et96MapOpenConf (
   return ET96MAP_E_OK;
 }
 
-void MapIoTask::init()
+void MapIoTask::init(unsigned timeout = 0)
 {
   USHORT_T err;
   __global_bind_counter = 0;
@@ -459,7 +459,7 @@ void MapIoTask::init()
   err = MsgConn(USER01_ID,ETSIMAP_ID);
   if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgConn, code 0x%hx",err); throw runtime_error("MsgInit error"); }
   __trace2__("MAP:: pause self and wait map initialization");
-  sleep(5);
+  sleep(timeout);
   __trace2__("MAP:: continue self initialization");
 //  err = MsgConn(USER01_ID,USER01_ID);
 //  if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgConn on self, code 0x%hx",err); throw runtime_error("MsgInit error"); }
