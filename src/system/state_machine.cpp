@@ -1674,6 +1674,7 @@ StateType StateMachine::submit(Tuple& t)
       if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0 ||
          (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x3)return;
       */
+      /*
       if(sandf)//store and forward mode
       {
         if(sms->lastResult!=Status::OK)
@@ -1722,7 +1723,7 @@ StateType StateMachine::submit(Tuple& t)
             __warning__("SUBMIT: failed to change state to enroute");
           }
         }
-      }else
+      }else*/
       {
         if(sms->lastResult!=Status::OK)
         {
