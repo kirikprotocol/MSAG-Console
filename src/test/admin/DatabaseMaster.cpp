@@ -29,7 +29,7 @@ using namespace std;
  * src_sme_id = ?0 (13 записей)
  * dst_sme_id = ?8 (6 записей)
  * route_id = ?8 (3 записи)
- * submit_time = [09.09.2001 7:40:00, 09.09.2001 7:50:00] (2 записи)
+ * submit_time = [09.09.2001 8:40:00, 09.09.2001 8:50:00] (2 записи)
  * id = 000000000000001? (1 запись)
  */
 struct DatabaseMaster
@@ -81,38 +81,14 @@ void DatabaseMaster::genProfiles(int count, int shift)
 	profiler.loadFromDB(dataSource);
 	for (int i = 0; i < count; i++)
 	{
-		string strAddr;
-		int reportOptions;
-		int codePage;
-		switch (i % 4)
-		{
-			case 0:
-				strAddr = ".0.0.";
-				reportOptions = 1;
-				codePage = 8;
-				break;
-			case 1:
-				strAddr = ".0.1.";
-				reportOptions = 1;
-				codePage = 0;
-				break;
-			case 2:
-				strAddr = ".1.0.";
-				reportOptions = 0;
-				codePage = 8;
-				break;
-			case 3:
-				strAddr = ".1.1.";
-				reportOptions = 0;
-				codePage = 0;
-				break;
-		}
-		strAddr += str(i);
 		Profile profile;
-		profile.codepage = codePage;
-		profile.reportoptions = reportOptions;
-		const Address addr(strAddr.c_str());
-		profiler.update(addr, profile);
+		profile.codepage = i & 0x2 ? 8 : 0;
+		profile.reportoptions = i & 0x1;
+		char tmp[8];
+		sprintf(tmp, "%02d", i);
+		profiler.update(Address(tmp), profile);
+		sprintf(tmp, "+%02d", i);
+		profiler.update(Address(tmp), profile);
 	}
 	profiler.stop();
 }
