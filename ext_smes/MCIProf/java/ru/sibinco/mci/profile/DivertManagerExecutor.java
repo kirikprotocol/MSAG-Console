@@ -1,7 +1,6 @@
 package ru.sibinco.mci.profile;
 
 import ru.sibinco.smpp.appgw.scenario.*;
-import ru.sibinco.smpp.appgw.scenario.resources.ScenarioResourceBundle;
 import ru.sibinco.smpp.appgw.util.Transliterator;
 import ru.aurorisoft.smpp.Message;
 
@@ -59,7 +58,6 @@ public class DivertManagerExecutor extends DivertManagerState implements Executo
                                   getValue(info.getNotavail()), getValue(info.getUncond())};
     Message resp = new Message();
     resp.setMessageString(pageFormat.format(args));
-    state.setAttribute(Constants.ATTR_MAIN, Constants.ATTR_MAIN);
     return new ExecutorResponse(new Message[]{resp}, false);
   }
 }
