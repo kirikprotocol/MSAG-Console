@@ -3,6 +3,7 @@
 #include "SmppBaseTestCases.hpp"
 #include "SmppTransmitterTestCases.hpp"
 #include "SmppReceiverTestCases.hpp"
+#include "SmscSmeTestCases.hpp"
 #include "SmppProtocolTestCases.hpp"
 #include "SmppProfilerTestCases.hpp"
 #include "test/smeman/SmeManagerTestCases.hpp"
@@ -69,6 +70,7 @@ class TestSme : public TestTask, SmppResponseSender
 	SmppBaseTestCases baseTc;
 	SmppTransmitterTestCases transmitterTc;
 	SmppReceiverTestCases receiverTc;
+	SmscSmeTestCases smscSmeTc;
 	SmppProtocolTestCases protocolTc;
 	SmppProfilerTestCases profilerTc;
 	time_t nextCheckTime;
@@ -82,7 +84,8 @@ public:
 	virtual ~TestSme() { delete fixture; }
 	virtual void executeCycle();
 	virtual void onStopped();
-	SmeAcknowledgementHandler* getProfilerAckHandler() { return &profilerTc; }
+	PduHandler* getDeliveryReceiptHandler() { return &smscSmeTc; }
+	PduHandler* getProfilerAckHandler() { return &profilerTc; }
 
 private:
 	virtual uint32_t sendDeliverySmResp(PduDeliverySm& pdu);
@@ -136,8 +139,8 @@ public:
 TestSme::TestSme(int num, const SmeConfig& config, SmppFixture* fixture)
 	: TestTask("TestSme", num), smeNum(num), nextCheckTime(0),
 	baseTc(config, fixture), receiverTc(fixture), transmitterTc(fixture),
-	session(config, &receiverTc), protocolTc(fixture), profilerTc(fixture),
-	boundOk(false), idx(0)
+	session(config, &receiverTc), smscSmeTc(fixture), protocolTc(fixture),
+	profilerTc(fixture), boundOk(false), idx(0)
 {
 	fixture->session = &session;
 	fixture->respSender = this;
@@ -513,8 +516,8 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 		SmppFixture* fixture = new SmppFixture(smeInfo[i]->systemId, *addr[i],
 			NULL, smeReg, aliasReg, routeReg, profileReg, smppChkList);
 		sme.push_back(new TestSme(i, config, fixture)); //throws Exception
-		//fixture->ackHandler[smscAddr] = sme.back()->getAckHandler();
-		fixture->ackHandler[profilerAddr] = sme.back()->getProfilerAckHandler();
+		fixture->pduHandler[smscAddr] = sme.back()->getDeliveryReceiptHandler();
+		fixture->pduHandler[profilerAddr] = sme.back()->getProfilerAckHandler();
 		smeReg->bindSme(smeInfo[i]->systemId);
 	}
 	__trace__("*** Route table ***");
@@ -567,6 +570,41 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	}
 	return sme;
 }
+
+/*
+void()
+{
+	__cfg_addr__(smscAddr);
+	__cfg_addr__(profilerAddr);
+	__cfg_addr__(profilerAlias);
+	ofstream report("routes.txt");
+	const vector<const Address*>& addrList = smeReg->getAddressList();
+	static string delim = "\t\t";
+	for (int i = 0; i < addrList.size(); i++)
+	{
+		for (int j = 0; j < addrList.size(); j++)
+		{
+			bool archived, billing;
+			if (cfgUtil.checkRouteArchBill(*addrList[i], *addrList[j],
+				archived, billing))
+			{
+				report << *addrList[i] << delim << *addrList[j] << delim <<
+					(archived ? "Y" : "N") << delim << (billing ? "Y" : "N") << endl;
+			}
+		}
+	}
+	//печать таблицы маршрутов sme<->profiler
+	for (int i = 0; i < numSme; i++)
+	{
+		cfgUtil.checkRoute2(*addr[i], smeInfo[i]->systemId, profilerAlias);
+	}
+	//печать таблицы маршрутов smsc->sme
+	for (int i = 0; i < numSme; i++)
+	{
+		cfgUtil.checkRoute(smscAddr, smscSystemId, *addr[i]);
+	}
+}
+*/
 
 void executeFunctionalTest(const string& smscHost, int smscPort)
 {
