@@ -1,7 +1,4 @@
 #! /bin/bash
-export LC_ALL=@LC_ALL@
-export NLS_LANG=@NLS_LANG@
-
 if [ -f logs/smppgw.err ]; then
   mv logs/smppgw.err logs/smppgw.err.old
 fi

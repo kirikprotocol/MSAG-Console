@@ -106,7 +106,7 @@ Targets:
     <ant antfile="${WEBSRC_DIR}/build.xml" dir="${WEBSRC_DIR}" target="update"/>
   </target>
 
-  <target name="configure">
+  <target name="configure" depends="create_distr_tree" >
     <!-- webapps configuration -->
     <copy todir="${DISTR_DIR}/conf" flatten="yes" >
       <fileset dir="${TEMPL_DIR}">
