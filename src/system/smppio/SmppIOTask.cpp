@@ -141,9 +141,11 @@ int SmppInputThread::Execute()
           s->setData(SOCKET_SLOT_INPUTSMPPSOCKET,(void*)ss);
           mul.add(s);
         }
-        if(s->getData(SOCKET_SLOT_KILL) || ss->isConnectionTimedOut())
+        bool to=false;
+        if(s->getData(SOCKET_SLOT_KILL) || (to=ss->isConnectionTimedOut()))
         {
           s->Close();
+          if(to)outTask->removeSocket(error[i]);
           killSocket(i);
           i--;
           continue;
