@@ -173,7 +173,10 @@ public:
       if(ferror(f))
         throw FileException(FileException::errReadFailed,filename.c_str());
       else
+      {
+        abort();
         throw FileException(FileException::errEndOfFile,filename.c_str());
+      }
     }
     return rv;
   }
