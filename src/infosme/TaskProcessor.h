@@ -128,8 +128,9 @@ namespace smsc { namespace infosme
 
     struct MessageSender
     {
+        virtual int  getSequenceNumber() = 0;
         virtual bool send(std::string abonent, std::string message, 
-                          TaskInfo info, int& seqNum) = 0;
+                          TaskInfo info, int seqNum) = 0;
         virtual ~MessageSender() {};
 
     protected:
@@ -220,6 +221,30 @@ namespace smsc { namespace infosme
         }
     };
 
+    struct ResponceTimer
+    {
+        time_t      timer;
+        int         seqNum;
+        
+        ResponceTimer(time_t timer=0, int seqNum=0): timer(timer), seqNum(seqNum) {};
+        ResponceTimer(const ResponceTimer& rt) : timer(rt.timer), seqNum(rt.seqNum) {};
+        ResponceTimer& operator=(const ResponceTimer& rt) {
+            timer = rt.timer; seqNum = rt.seqNum;
+        }
+
+    };
+    struct ReceiptTimer
+    {
+        time_t      timer;
+        std::string smscId;
+        
+        ReceiptTimer(time_t timer=0, std::string smscId=""): timer(timer), smscId(smscId) {};
+        ReceiptTimer(const ReceiptTimer& rt) : timer(rt.timer), smscId(rt.smscId) {};
+        ReceiptTimer& operator=(const ReceiptTimer& rt) {
+            timer = rt.timer; smscId = rt.smscId;
+        }
+    };
+
     class TaskProcessor : public TaskProcessorAdapter, public InfoSmeAdmin, public Thread
     {
     private:
@@ -253,7 +278,14 @@ namespace smsc { namespace infosme
         Mutex              taskIdsBySeqNumLock;
 
         Hash<ReceiptData>  receipts;
-        Mutex              receiptsLock; 
+        Mutex              receiptsLock;
+
+        Mutex                   responceWaitQueueLock;
+        Mutex                   receiptWaitQueueLock;
+        Array<ResponceTimer>    responceWaitQueue;
+        Array<ReceiptTimer>     receiptWaitQueue;
+        int                     responceWaitTime;
+        int                     receiptWaitTime;
         
         Connection*         dsStatConnection;
         StatisticsManager*  statistics;
@@ -262,15 +294,17 @@ namespace smsc { namespace infosme
         char*   svcType;
         char*   address;
         
+        void processWaitingEvents(time_t time);
         bool processTask(Task* task);
         void resetWaitingTasks();
         
+        virtual void processMessage (Task* task, Connection* connection, uint64_t msgId,
+                                     bool delivered, bool retry, bool immediate=false);
         friend class EventRunner;
-        virtual void processResponce(int seqNum, bool accepted, 
-                                     bool retry, bool immediate, std::string smscId="");
-        virtual void processReceipt (std::string smscId, bool delivered, bool retry);
-        virtual void processMessage (Task* task, Connection* connection, 
-                                     uint64_t msgId, bool delivered, bool retry);
+        virtual void processResponce(int seqNum, bool accepted, bool retry, bool immediate,
+                                     std::string smscId="", bool internal=false);
+        virtual void processReceipt (std::string smscId, 
+                                     bool delivered, bool retry, bool internal=false);
     
     public:
 

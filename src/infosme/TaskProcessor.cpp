@@ -14,8 +14,8 @@ TaskProcessor::TaskProcessor(ConfigView* config)
         logger(Logger::getCategory("smsc.infosme.TaskProcessor")), 
             bStarted(false), bNeedExit(false), taskTablesPrefix(0), 
                 dsInternalName(0), dsInternal(0), dsIntConnection(0), 
-                    messageSender(0), dsStatConnection(0), statistics(0),
-                        protocolId(0), svcType(0), address(0)
+                    messageSender(0), responceWaitTime(0), receiptWaitTime(0),
+                        dsStatConnection(0), statistics(0), protocolId(0), svcType(0), address(0)
 {
     logger.info("Loading ...");
 
@@ -27,6 +27,13 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     catch(ConfigException& exc) { protocolId = 0; };
     try { svcType = config->getString("SvcType"); }
     catch(ConfigException& exc) { svcType = 0; };
+    
+    responceWaitTime = parseTime(config->getString("responceWaitTime"));
+    if (responceWaitTime <= 0) 
+        throw ConfigException("Invalid value for 'responceWaitTime' parameter.");
+    receiptWaitTime = parseTime(config->getString("receiptWaitTime"));
+    if (receiptWaitTime <= 0) 
+        throw ConfigException("Invalid value for 'receiptWaitTime' parameter.");
     
     std::auto_ptr<ConfigView> tasksThreadPoolCfgGuard(config->getSubConfig("TasksThreadPool"));
     ConfigView* tasksThreadPoolCfg = tasksThreadPoolCfgGuard.get();
@@ -221,6 +228,7 @@ int TaskProcessor::Execute()
     while (!bNeedExit)
     {
         time_t currentTime = time(NULL);
+        processWaitingEvents(currentTime);
 
         {
             MutexGuard guard(tasksLock);
@@ -231,8 +239,6 @@ int TaskProcessor::Execute()
                     task->currentPriorityFrameCounter = 0;
                 }
         }
-
-        //logger.debug("%d tasks selected.", taskGuards.Count());
 
         int processed = 0;
         while (taskGuards.Count()>0)
@@ -255,8 +261,6 @@ int TaskProcessor::Execute()
             }
             delete taskGuard;
         }
-        
-        //logger.debug("%d tasks processed.", processed);
 
         if (!bNeedExit && processed <= 0) awake.Wait(switchTimeout);
     }
@@ -264,6 +268,66 @@ int TaskProcessor::Execute()
     return 0;
 }
 
+void TaskProcessor::processWaitingEvents(time_t time)
+{
+    int count = 0;
+    
+    do
+    {
+        ResponceTimer timer;
+        {
+            MutexGuard respGuard(responceWaitQueueLock);
+            if (responceWaitQueue.Count() > 0) {
+                timer = responceWaitQueue[0];
+                if (timer.timer > time) break;
+                responceWaitQueue.Shift(timer);
+            }
+            else break;
+        }
+
+        bool needProcess = false;
+        {
+            MutexGuard guard(taskIdsBySeqNumLock);
+            needProcess = taskIdsBySeqNum.Exist(timer.seqNum);
+        }
+        if (needProcess)
+            processResponce(timer.seqNum, false, true, true, "", true);
+        
+        {
+            MutexGuard respGuard(responceWaitQueueLock);
+            count = responceWaitQueue.Count();
+        }
+    }
+    while (count > 0);
+    
+    do
+    {
+        ReceiptTimer timer;
+        {
+            MutexGuard recptGuard(receiptWaitQueueLock);
+            if (receiptWaitQueue.Count() > 0) {
+                timer = receiptWaitQueue[0];
+                if (timer.timer > time) break;
+                receiptWaitQueue.Shift(timer);
+            } 
+            else break;
+        }
+
+        bool needProcess = false;
+        {
+            MutexGuard guard(receiptsLock);
+            needProcess = receipts.Exists(timer.smscId.c_str());
+        }
+        if (needProcess)
+            processReceipt (timer.smscId, false, true, true);
+
+        {
+            MutexGuard recptGuard(receiptWaitQueueLock);
+            count = receiptWaitQueue.Count();
+        }
+    }
+    while (count > 0);
+}
 bool TaskProcessor::processTask(Task* task)
 {
     __require__(task && dsIntConnection);
@@ -284,22 +348,31 @@ bool TaskProcessor::processTask(Task* task)
     MutexGuard msGuard(messageSenderLock);
     if (messageSender)
     {
-        int seqNum = 0;
-        if (!messageSender->send(message.abonent, message.message, info, seqNum)) {
-            logger.error("Failed to send message #%lld for '%s'", 
-                         message.id, message.abonent.c_str());
-            return false;
+        int seqNum = messageSender->getSequenceNumber();
+        {
+            {
+                MutexGuard snGuard(taskIdsBySeqNumLock);
+                if (taskIdsBySeqNum.Exist(seqNum))
+                {
+                    logger.warn("Sequence id=%d was already used !", seqNum);
+                    taskIdsBySeqNum.Delete(seqNum);
+                }
+                taskIdsBySeqNum.Insert(seqNum, TaskMsgId(info.id, message.id));
+            }
+            MutexGuard respGuard(responceWaitQueueLock);
+            responceWaitQueue.Push(ResponceTimer(time(NULL)+responceWaitTime, seqNum));
         }
         
-        //logger.debug("Sent message #%lld for '%s'", message.id, message.abonent.c_str());
-
-        MutexGuard snGuard(taskIdsBySeqNumLock);
-        if (taskIdsBySeqNum.Exist(seqNum))
+        if (!messageSender->send(message.abonent, message.message, info, seqNum))
         {
-            logger.warn("Sequence id=%d was already used !", seqNum);
-            taskIdsBySeqNum.Delete(seqNum);
+            logger.error("Failed to send message #%lld for '%s'", 
+                         message.id, message.abonent.c_str());
+            
+            MutexGuard snGuard(taskIdsBySeqNumLock);
+            if (taskIdsBySeqNum.Exist(seqNum)) taskIdsBySeqNum.Delete(seqNum);
+            return false;
         }
-        taskIdsBySeqNum.Insert(seqNum, TaskMsgId(info.id, message.id));
+        //logger.debug("Sent message #%lld for '%s'", message.id, message.abonent.c_str());
     }
     else
     {
@@ -310,8 +383,8 @@ bool TaskProcessor::processTask(Task* task)
     return true;
 }
 
-void TaskProcessor::processMessage(Task* task, Connection* connection, 
-                                   uint64_t msgId, bool delivered, bool retry)
+void TaskProcessor::processMessage(Task* task, Connection* connection, uint64_t msgId,
+                                   bool delivered, bool retry, bool immediate)
 {
     __require__(task && connection);
 
@@ -324,23 +397,23 @@ void TaskProcessor::processMessage(Task* task, Connection* connection,
     {
         bool needDelete = true;
         TaskInfo info = task->getInfo();
-        if (retry && info.retryOnFail && info.retryTime > 0)
+        if (retry && (immediate || (info.retryOnFail && info.retryTime > 0)))
         {
-            time_t nextTime = time(NULL)+info.retryTime;
+            time_t nextTime = time(NULL)+((immediate) ? 0:info.retryTime);
             if (info.endDate <= 0 || (info.endDate > 0 && info.endDate >= nextTime))
             {
-                if (!task->retryMessage(msgId, nextTime)) {
+                if (!task->retryMessage(msgId, nextTime, connection)) {
                     logger.warn("Message #%lld not found for retry.", msgId);
                     statistics->incFailed(info.id);
                 } else {
                     needDelete = false;
-                    statistics->incRetried(info.id);
+                    if (!immediate) statistics->incRetried(info.id);
                 }
             }
             else statistics->incFailed(info.id);
         }
         else statistics->incFailed(info.id);
-        if (needDelete) task->deleteMessage(msgId);
+        if (needDelete) task->deleteMessage(msgId, connection);
     }
 }
 
@@ -356,19 +429,19 @@ const char* DEL_ID_MAPPING_STATEMENT_ID = "DEL_ID_MAPPING_STATEMENT_ID";
 const char* DEL_ID_MAPPING_STATEMENT_SQL = (const char*)
 "DELETE FROM INFOSME_ID_MAPPING WHERE SMSC_ID=:SMSC_ID";
 
-void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, 
-                                    bool immediate, std::string smscId)
+void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool immediate,
+                                    std::string smscId, bool internal)
 {
-    logger.debug("Responce: seqNum=%d, accepted=%d, retry=%d, immediate=%d",
-                 seqNum, accepted, retry, immediate);
+    if (!internal) logger.debug("Responce: seqNum=%d, accepted=%d, retry=%d, immediate=%d",
+                                seqNum, accepted, retry, immediate);
+    else logger.debug("Responce for seqNum=%d is timed out.", seqNum);
 
     TaskMsgId tmIds;
-    
     {   
         TaskMsgId* tmIdsPtr = 0;
         MutexGuard snGuard(taskIdsBySeqNumLock);
         if (!(tmIdsPtr = taskIdsBySeqNum.GetPtr(seqNum))) {
-            logger.warn("processResponce(): Sequence number=%d is unknown !", seqNum);
+            if (!internal) logger.warn("processResponce(): Sequence number=%d is unknown !", seqNum);
             return;
         }
         tmIds = *tmIdsPtr;
@@ -378,13 +451,13 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry,
     TaskGuard taskGuard = getTask(tmIds.taskId); 
     Task* task = taskGuard.get();
     if (!task) {
-        logger.warn("Unable to locate task '%s' for sequence number=%d", 
-                    tmIds.taskId.c_str(), seqNum);
+        if (!internal) logger.warn("Unable to locate task '%s' for sequence number=%d", 
+                                   tmIds.taskId.c_str(), seqNum);
         return;
     }
     TaskInfo info = task->getInfo();
 
-    if (!accepted)
+    if (!accepted || internal)
     {
         bool needDelete = true;
         if (retry && (immediate || (info.retryOnFail && info.retryTime > 0)))
@@ -444,11 +517,16 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry,
                     receipt = *receiptPtr;
                     receipts.Delete(smsc_id);
                 } 
-                else receipts.Insert(smsc_id, receipt);
+                else {
+                    receipts.Insert(smsc_id, receipt);
+                    MutexGuard recptGuard(receiptWaitQueueLock);
+                    receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, smscId));
+                }
             }
             
             if (receipt.receipted) // receipt already come
             {
+                logger.debug("Receipt come when responce is in process");
                 Statement* delMapping = connection->getStatement(DEL_ID_MAPPING_STATEMENT_ID,
                                                                  DEL_ID_MAPPING_STATEMENT_SQL);
                 if (!delMapping)
@@ -486,18 +564,25 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry,
     }
 }
 
-void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool retry)
+void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool retry, bool internal)
 {
     const char* smsc_id = smscId.c_str();
 
-    logger.debug("Receipt : smscId=%s, delivered=%d, retry=%d",
-                 smsc_id, delivered, retry);
+    if (!internal) logger.debug("Receipt : smscId=%s, delivered=%d, retry=%d",
+                                smsc_id, delivered, retry);
+    else logger.debug("Receipt for smscId=%s is timed out", smsc_id);
+
     {
         MutexGuard guard(receiptsLock);
-        if (!receipts.Exists(smsc_id)) { // receipt come first => processing will be in responce !
+        if (!internal && !receipts.Exists(smsc_id)) 
+        {   // receipt come first => processing will be in responce !
+            logger.debug("Receipt come before responce");
             receipts.Insert(smsc_id, ReceiptData(true, delivered, retry));
+            MutexGuard recptGuard(receiptWaitQueueLock);
+            receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, smscId));
             return;
         }
+        else receipts.Delete(smsc_id);
     }
     
     Connection* connection = 0;
@@ -515,27 +600,30 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
         getMapping->setString(1, smsc_id);
         std::auto_ptr<ResultSet> rsGuard(getMapping->executeQuery());
         ResultSet* rs = rsGuard.get();
-        if (!rs || !rs->fetchNext())
+        if (!rs)
             throw Exception("processReceipt(): Failed to obtain result set for ids mapping.");
         
-        Statement* delMapping = connection->getStatement(DEL_ID_MAPPING_STATEMENT_ID,
-                                                         DEL_ID_MAPPING_STATEMENT_SQL);
-        if (!delMapping)
-            throw Exception("processReceipt(): Failed to create statement for ids mapping.");
+        if (rs->fetchNext())
+        {
+            Statement* delMapping = connection->getStatement(DEL_ID_MAPPING_STATEMENT_ID,
+                                                             DEL_ID_MAPPING_STATEMENT_SQL);
+            if (!delMapping)
+                throw Exception("processReceipt(): Failed to create statement for ids mapping.");
 
-        uint64_t msgId = rs->getUint64(1);
-        std::string taskId = rs->getString(2);
-        delMapping->setString(1, smsc_id);
-        delMapping->executeUpdate();
+            uint64_t msgId = rs->getUint64(1);
+            std::string taskId = rs->getString(2);
+            delMapping->setString(1, smsc_id);
+            delMapping->executeUpdate();
 
-        TaskGuard taskGuard = getTask(taskId); 
-        Task* task = taskGuard.get();
-        if (!task)
-            throw Exception("processReceipt(): Unable to locate task '%s' for smscId=%s",
-                            taskId.c_str(), smsc_id);
-        TaskInfo info = task->getInfo();
-        
-        processMessage(task, connection, msgId, delivered, retry);
+            TaskGuard taskGuard = getTask(taskId); 
+            Task* task = taskGuard.get();
+            if (!task)
+                throw Exception("processReceipt(): Unable to locate task '%s' for smscId=%s",
+                                taskId.c_str(), smsc_id);
+            TaskInfo info = task->getInfo();
+                                                                // if internal do it immidiate
+            processMessage(task, connection, msgId, delivered, retry, internal);
+        }
         connection->commit();
     }
     catch (Exception& exc) {

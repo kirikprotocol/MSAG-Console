@@ -163,7 +163,12 @@ public:
         session = 0;
     };
 
-    virtual bool send(std::string abonent, std::string message, TaskInfo info, int& seqNum)
+    virtual int getSequenceNumber()
+    {
+        MutexGuard guard(sendLock);
+        return (session) ? session->getNextSeq():0;
+    }
+    virtual bool send(std::string abonent, std::string message, TaskInfo info, int seqNum)
     {
         MutexGuard guard(sendLock);
         
@@ -240,11 +245,11 @@ public:
         if (msgBuf) delete msgBuf;
 
         PduSubmitSm sm;
+        sm.get_header().set_sequenceNumber(seqNum);
         sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
         fillSmppPduFromSms(&sm, &sms);
-        asyncTransmitter->submit(sm);
-        seqNum = sm.get_header().get_sequenceNumber();
-
+        asyncTransmitter->sendPdu(&(sm.get_header()));
+        
         waitUnrespondedMessages();
         return true;
     }
