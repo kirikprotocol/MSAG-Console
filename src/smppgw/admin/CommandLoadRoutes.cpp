@@ -29,15 +29,13 @@ using namespace smsc::util::config::route;
 
 
 CommandLoadRoutes::CommandLoadRoutes(const xercesc::DOMDocument * doc)
-  : Command((Command::Id)CommandIds::loadRoutes)
+  : SmppGwCommand((Command::Id)CommandIds::loadRoutes)
 {
   smsc_log_debug(logger, "LoadRoutes command");
-
-
 }
 
 
-smsc::admin::service::Variant CommandLoadRoutes::GetLoadResult(smsc::smppgw::Smsc * SmscApp)
+Response * CommandLoadRoutes::CreateResponse(smsc::smppgw::Smsc * SmscApp)
 {
   try
   {
@@ -46,6 +44,7 @@ smsc::admin::service::Variant CommandLoadRoutes::GetLoadResult(smsc::smppgw::Sms
           throw AdminException("Load routes config file failed.");
 
       vector<std::string> traceBuff;
+
       SmscApp->reloadTestRoutes(cfg);
       SmscApp->getTestRouterInstance()->enableTrace(true);
       SmscApp->getTestRouterInstance()->getTrace(traceBuff);
@@ -59,7 +58,7 @@ smsc::admin::service::Variant CommandLoadRoutes::GetLoadResult(smsc::smppgw::Sms
       for (int i=0; i<traceBuff.size(); i++)
           result.appendValueToStringList(traceBuff[i].c_str());
 
-      return result;
+      return new Response(Response::Ok, result);
   }
   catch (AdminException& aexc) {
       throw;

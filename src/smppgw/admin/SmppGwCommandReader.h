@@ -18,6 +18,10 @@ namespace admin {
 
 using namespace smsc::admin::protocol;
 using namespace smsc::core::network;
+using smsc::core::buffers::Hash;
+
+
+
 
 class SmppGwCommandReader : public CommandReader
 {
@@ -26,6 +30,12 @@ public:
   virtual ~SmppGwCommandReader();
   
 protected:
+
+
+  typedef Hash<int> _CommandList;
+  _CommandList commandlist;
+
+
   virtual int getCommandIdByName(const char * const command_name);
   virtual Command * createCommand(int id, const DOMDocument *data);
   

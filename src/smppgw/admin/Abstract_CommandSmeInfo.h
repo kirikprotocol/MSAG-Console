@@ -11,6 +11,7 @@
 #include <xercesc/dom/DOM.hpp>
 #include "admin/protocol/Command.h"
 #include "smeman/smeinfo.h"
+#include "SmppGwCommand.h"
 
 using namespace xercesc;
 
@@ -18,7 +19,7 @@ namespace smsc {
 namespace smppgw {
 namespace admin {
 
-class Abstract_CommandSmeInfo : public smsc::admin::protocol::Command
+class Abstract_CommandSmeInfo : public smsc::smppgw::admin::SmppGwCommand
 {
 public:
 	Abstract_CommandSmeInfo(const Command::Id id, const xercesc::DOMDocument * const document);

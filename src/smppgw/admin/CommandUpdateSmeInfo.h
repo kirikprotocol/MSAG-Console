@@ -18,6 +18,7 @@ class CommandUpdateSmeInfo : public Abstract_CommandSmeInfo
 {
 public:
 	CommandUpdateSmeInfo(const xercesc::DOMDocument * const document);
+    virtual Response * CreateResponse(smsc::smppgw::Smsc * SmscApp);
 };
 
 }

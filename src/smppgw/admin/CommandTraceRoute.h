@@ -9,7 +9,7 @@
 #define	_SMPPGW_ADMIN_CommandTraceRoute_H
 
 #include <xercesc/dom/DOM.hpp>
-#include "admin/protocol/Command.h"
+#include "SmppGwCommand.h"
 #include "smppgw/smsc.hpp"
 #include "admin/service/Variant.h"
 
@@ -18,13 +18,13 @@ namespace smppgw {
 namespace admin {
 
 
-class CommandTraceRoute : public smsc::admin::protocol::Command
+class CommandTraceRoute : public smsc::smppgw::admin::SmppGwCommand 
 {
 public:
   
   CommandTraceRoute(const xercesc::DOMDocument * doc);
   virtual ~CommandTraceRoute();
-  smsc::admin::service::Variant GetTraceResult(smsc::smppgw::Smsc * SmscApp);
+  virtual Response * CreateResponse(smsc::smppgw::Smsc * SmscApp);
 
 protected:
   std::string dstAddr;

@@ -8,11 +8,14 @@
 #ifndef _SMPPGW_ADMIN_SmppGwCommandDispatcher_H
 #define	_SMPPGW_ADMIN_SmppGwCommandDispatcher_H
 
+#include "CommandActions.h"
 #include "admin/AdminException.h"
 #include "admin/util/CommandDispatcher.h"
 #include "admin/protocol/ResponseWriter.h"
 #include "core/network/Socket.hpp"
 #include "core/threads/Thread.hpp"
+#include "core/buffers/Hash.hpp"
+
 
 #include "smppgw/smsc.hpp"
 #include "smppgw/admin/SmppGwCommandReader.h"
@@ -32,35 +35,23 @@ using namespace smsc::admin::util;
 using namespace smsc::smppgw;
 using smsc::admin::AdminException;
 using smsc::core::network::Socket;
+using smsc::smppgw::admin::Actions;
 
 class SmppGwCommandDispatcher : public CommandDispatcherTempl<SmppGwCommandReader, ResponseWriter>
 {
 public:
-	SmppGwCommandDispatcher(Socket * admSocket);
-	virtual ~SmppGwCommandDispatcher();
-	virtual Response *handle(const Command * const command) throw (AdminException);
-	static void shutdown();
-  
+  SmppGwCommandDispatcher(Socket * admSocket);
+  virtual ~SmppGwCommandDispatcher();
+  virtual Response *handle(const Command * const command) throw (AdminException);
+  virtual void DoActions(Actions::CommandActions actions);
+
+  static void shutdown();
   static void setGwConfigs(const SmscConfigs& cfg) { configs = &cfg; }
-  
   static void startGw();
   static void stopGw();
   static void abortGw();
   static void dumpGw();
 
-protected:
-  Response * apply(CommandApply*);
-  Response * applyConfig();
-  Response * applyRoutes();
-  Response * applyProviders();
-  Response * applySmscs();
-  Response * traceRoute(CommandTraceRoute*);
-  Response * loadRoutes(CommandLoadRoutes*);
-
-  Response * updateSmeInfo(CommandUpdateSmeInfo*);
-  Response * addSme(CommandAddSme*);
-  Response * deleteSme(CommandDeleteSme*);
-  
 private:
   static const SmscConfigs* configs;
 };

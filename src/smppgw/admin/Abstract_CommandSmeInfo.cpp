@@ -16,11 +16,12 @@ namespace smppgw {
 namespace admin {
 
 using namespace smsc::util::xml;
+using namespace smsc::smppgw::admin;
 //
 // Constructor
 ///
 Abstract_CommandSmeInfo::Abstract_CommandSmeInfo(const Command::Id id, const xercesc::DOMDocument * const document)
-  : Command(id)
+  : SmppGwCommand(id)
 {
   try {
     DOMElement *elem = document->getDocumentElement();

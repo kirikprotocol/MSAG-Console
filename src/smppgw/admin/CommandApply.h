@@ -9,13 +9,14 @@
 #define	_SMPPGW_ADMIN_CommandApply_H
 
 #include <xercesc/dom/DOM.hpp>
-#include "admin/protocol/Command.h"
+#include "SmppGwCommand.h"
+#include "CommandActions.h"
 
 namespace smsc {
 namespace smppgw {
 namespace admin {
 
-class CommandApply : public smsc::admin::protocol::Command
+class CommandApply : public smsc::smppgw::admin::SmppGwCommand 
 {
 public:
   enum subjects {
@@ -28,8 +29,10 @@ public:
   
   CommandApply(const xercesc::DOMDocument * document);
   virtual ~CommandApply();
+  virtual Response * CreateResponse(smsc::smppgw::Smsc * SmscApp);
+  virtual smsc::smppgw::admin::Actions::CommandActions GetActions();
   
-  subjects getSubject();
+  //subjects getSubject();
 
 private:
   subjects subj;

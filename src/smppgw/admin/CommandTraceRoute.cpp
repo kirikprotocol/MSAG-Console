@@ -55,23 +55,19 @@ inline char* getEncodedString(const char* const src)
 
 
 CommandTraceRoute::CommandTraceRoute(const xercesc::DOMDocument * doc)  
-  : Command((Command::Id)CommandIds::traceRoute)
+  : SmppGwCommand((Command::Id)CommandIds::traceRoute)
 {
   smsc_log_debug(logger, "TraceRoute command");
-  fprintf(stderr,"---- -10");
+  fprintf(stderr,"---- Entered CommandTraceRoute Constructor \n");
 
   try {
     DOMElement *elem = doc->getDocumentElement();
     DOMNodeList *list = elem->getElementsByTagName(XmlStr("param"));
 
-    fprintf(stderr,"---- -9");
-
     for (int i=0; i<list->getLength(); i++) {
       DOMElement *paramElem = (DOMElement*) list->item(i);
       XmlStr name(paramElem->getAttribute(XmlStr("name")));
       std::auto_ptr<char> value(getNodeText(*paramElem));
-
-      fprintf(stderr,"---- -8");
 
       if (::strcmp("srcAddress", name) == 0)
         srcAddr = value.get();
@@ -79,7 +75,7 @@ CommandTraceRoute::CommandTraceRoute(const xercesc::DOMDocument * doc)
         dstAddr = value.get();
       if (::strcmp("srcSysId", name) == 0) 
         srcSysId = value.get();
-      fprintf(stderr,"---- -7");
+      fprintf(stderr,"---- Passer reading document paramener %d \n",i);
 
     }
   } catch (...) {
@@ -94,13 +90,14 @@ CommandTraceRoute::~CommandTraceRoute()
   id = undefined;
 }
 
-smsc::admin::service::Variant CommandTraceRoute::GetTraceResult(smsc::smppgw::Smsc * SmscApp)
+Response * CommandTraceRoute::CreateResponse(smsc::smppgw::Smsc * SmscApp)
 {
   const char* _srcAddr  = srcAddr.data();
   const char* _dstAddr  = dstAddr.data();
   const char* _srcSysId = srcSysId.data();
 
-  fprintf(stderr,"---- Command parameters: %s,%s,%s\n",srcAddr.data(),dstAddr.data(),srcSysId.data());
+  fprintf(stderr,"---- Entered GetTraceResult()");
+  fprintf(stderr,"---- Received command parameters: %s,%s,%s \n",srcAddr.data(),dstAddr.data(),srcSysId.data());
 
 
   try
@@ -117,14 +114,12 @@ smsc::admin::service::Variant CommandTraceRoute::GetTraceResult(smsc::smppgw::Sm
       // 2..: Trace (if any)
 
       smsc::admin::service::Variant result(smsc::admin::service::StringListType);
-      fprintf(stderr,"---- 1");
+      fprintf(stderr,"---- Initialized GetTraceResult() \n");
 
 
       Address dealiased;
       char addrBuf[MAX_ADDRESS_VALUE_LENGTH+5];
       string dealiasText="There are no aliases for this address";
-
-      fprintf(stderr,"---- 2");
 
       if(SmscApp->AliasToAddress(Address(_dstAddr),dealiased))
       {
@@ -133,7 +128,7 @@ smsc::admin::service::Variant CommandTraceRoute::GetTraceResult(smsc::smppgw::Sm
         _dstAddr=addrBuf;
       }
 
-      fprintf(stderr,"---- 3");
+      fprintf(stderr,"---- Passed dealiasing dstAddr");
 
       if (_srcSysId)
       {
@@ -150,7 +145,7 @@ smsc::admin::service::Variant CommandTraceRoute::GetTraceResult(smsc::smppgw::Sm
               lookup(Address(_srcAddr), Address(_dstAddr), proxy, 0, &info);
       }
 
-      fprintf(stderr,"---- 4");
+      fprintf(stderr,"---- Passed lookup");
 
       vector<std::string> traceBuff;
       SmscApp->getTestRouterInstance()->getTrace(traceBuff);
@@ -206,7 +201,7 @@ smsc::admin::service::Variant CommandTraceRoute::GetTraceResult(smsc::smppgw::Sm
       for (int i=0; i<traceBuff.size(); i++)
           result.appendValueToStringList(traceBuff[i].c_str());
 
-      return result;
+      return new Response(Response::Ok, result);
   }
   catch (AdminException& aexc) {
       throw;

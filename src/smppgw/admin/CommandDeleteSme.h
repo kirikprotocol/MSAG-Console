@@ -10,7 +10,8 @@
 
 #include <xercesc/dom/DOM.hpp>
 #include "smeman/smetypes.h"
-#include "admin/protocol/Command.h"
+//#include "admin/protocol/Command.h"
+#include "SmppGwCommand.h"
 
 using smsc::smeman::SmeSystemId;
   
@@ -18,12 +19,14 @@ namespace smsc {
 namespace smppgw {
 namespace admin {
 
-class CommandDeleteSme : public smsc::admin::protocol::Command 
+class CommandDeleteSme : public smsc::smppgw::admin::SmppGwCommand 
 {
 public:
-	CommandDeleteSme(const xercesc::DOMDocument * const document);
+  CommandDeleteSme(const xercesc::DOMDocument * const document);
 
   const SmeSystemId& getSmeSystemId() const {return systemid;}
+  virtual Response * CreateResponse(smsc::smppgw::Smsc * SmscApp);
+
 private:
   SmeSystemId systemid;
 };

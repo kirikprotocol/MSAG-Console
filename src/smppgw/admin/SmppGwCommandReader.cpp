@@ -21,6 +21,12 @@ namespace admin {
 SmppGwCommandReader::SmppGwCommandReader(Socket * admSocket)
   : CommandReader(admSocket)
 {
+  commandlist["addSme"] = CommandIds::addSme;
+  commandlist["apply"] = CommandIds::apply;
+  commandlist["deleteSme"] = CommandIds::deleteSme;
+  commandlist["loadRoutes"] = CommandIds::loadRoutes;
+  commandlist["traceRoute"] = CommandIds::traceRoute;
+  commandlist["updateSmeInfo"] = CommandIds::updateSmeInfo;
 }
 
 SmppGwCommandReader::~SmppGwCommandReader()
@@ -31,19 +37,9 @@ int SmppGwCommandReader::getCommandIdByName(const char * const command_name)
 {
   fprintf(stderr,"---- Command received %s\n",command_name);
 
-  if (strcmp("apply", command_name) == 0)
-    return (Command::Id)CommandIds::apply;
-  if (strcmp("updateSmeInfo", command_name) == 0)
-    return (Command::Id)CommandIds::updateSmeInfo;
-  if (strcmp("addSme", command_name) == 0)
-    return (Command::Id)CommandIds::addSme;
-  if (strcmp("deleteSme", command_name) == 0)
-    return (Command::Id)CommandIds::deleteSme;
-  if (strcmp("traceRoute", command_name) == 0)
-    return (Command::Id)CommandIds::traceRoute;
-  if (strcmp("loadRoutes", command_name) == 0)
-    return (Command::Id)CommandIds::loadRoutes;
-  
+  if (commandlist.Exists(command_name)) {
+      return commandlist[command_name];
+  }
   return (Command::Id)CommandIds::unknown;
 }
 

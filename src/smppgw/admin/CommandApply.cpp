@@ -16,7 +16,7 @@ namespace admin {
 using namespace smsc::util::xml;
 
 CommandApply::CommandApply(const xercesc::DOMDocument * doc)  
-  : Command((Command::Id)CommandIds::apply)
+  : SmppGwCommand((Command::Id)CommandIds::apply)
 {
   smsc_log_debug(logger, "Apply command");
   subj = CommandApply::unknown;
@@ -54,9 +54,25 @@ CommandApply::~CommandApply()
   subj = CommandApply::unknown;
 }
 
-CommandApply::subjects CommandApply::getSubject()
+Response * CommandApply::CreateResponse(smsc::smppgw::Smsc * SmscApp)
 {
-  return subj;
+  return new Response(Response::Ok, "none");
+}
+
+Actions::CommandActions CommandApply::GetActions()
+{
+  Actions::CommandActions result;
+
+  switch (subj)
+  {
+    case CommandApply::config:
+      result.restart = true;
+    case CommandApply::routes:
+      result.reloadconfig = true;
+    case CommandApply::smscs:
+      result.restart = true;
+  }
+  return result;
 }
 
 }

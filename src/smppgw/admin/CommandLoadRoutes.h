@@ -13,19 +13,20 @@
 #include "admin/protocol/Command.h"
 #include "smppgw/smsc.hpp"
 #include "admin/service/Variant.h"
+#include "SmppGwCommand.h"
 
 namespace smsc {
 namespace smppgw {
 namespace admin {
 
 
-class CommandLoadRoutes : public smsc::admin::protocol::Command
+class CommandLoadRoutes : public smsc::smppgw::admin::SmppGwCommand 
 {
 public:
   
   CommandLoadRoutes(const xercesc::DOMDocument * document);
   virtual ~CommandLoadRoutes();
-  smsc::admin::service::Variant GetLoadResult(smsc::smppgw::Smsc * SmscApp);
+  virtual Response * CreateResponse(smsc::smppgw::Smsc * SmscApp);
 };
 
 }

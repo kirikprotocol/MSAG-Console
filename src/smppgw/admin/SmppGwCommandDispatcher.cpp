@@ -10,7 +10,7 @@
 #include "core/threads/Thread.hpp"
 #include "smppgw/smsc.hpp"
 #include "core/synchronization/Mutex.hpp"
-
+    
 namespace smsc {
 namespace smppgw {
 namespace admin {
@@ -153,26 +153,15 @@ SmppGwCommandDispatcher::~SmppGwCommandDispatcher()
 
 Response * SmppGwCommandDispatcher::handle(const Command * const command) throw (AdminException)
 {
+  SmppGwCommand * smppgwcommand;
+  Command * _command = const_cast <Command *> (command);
+
   try
   {
-    switch (command->getId())
-    {
-    case CommandIds::apply:
-      return apply((CommandApply*)command);
-    case CommandIds::updateSmeInfo:
-      return updateSmeInfo((CommandUpdateSmeInfo*)command);
-    case CommandIds::addSme:
-      return addSme((CommandAddSme*)command);
-    case CommandIds::deleteSme:
-      return deleteSme((CommandDeleteSme*)command);
-    case CommandIds::traceRoute: 
-      return traceRoute((CommandTraceRoute*)command);
-    case CommandIds::loadRoutes:
-      return loadRoutes((CommandLoadRoutes*)command);
+    smppgwcommand = static_cast <SmppGwCommand *> (_command);
+    DoActions(smppgwcommand->GetActions());
+    return smppgwcommand->CreateResponse(runner->getApp());
 
-    default:
-      return new Response(Response::Error, "Unknown command");
-    }
   } catch (AdminException &e) {
     return new Response(Response::Error, e.what());
   } catch (const char * const e) {
@@ -180,183 +169,26 @@ Response * SmppGwCommandDispatcher::handle(const Command * const command) throw 
   } catch (...) {
     return new Response(Response::Error, "Unknown exception");
   }
+}
+
+void SmppGwCommandDispatcher::DoActions(Actions::CommandActions actions)
+{
+    if (actions.restart) {
+      stopGw();
+      startGw();
+    }
+
+    if (actions.reloadconfig) {
+      configs->routesconfig->reload();
+      configs->smemanconfig->reload();
+      runner->getApp()->reloadRoutes(*configs);
+    }
 }
 
 void SmppGwCommandDispatcher::shutdown()
 {
   stopGw();
 }
-
-Response * SmppGwCommandDispatcher::addSme(CommandAddSme* command)
-{
-  try
-  {
-    runner->getApp()->getSmeAdmin()->addSme(command->getSmeInfo());
-    return new Response(Response::Ok, "none");
-  } catch (AdminException &e) {
-    return new Response(Response::Error, e.what());
-  } catch (const char * const e) {
-    return new Response(Response::Error, e);
-  } catch (...) {
-    return new Response(Response::Error, "Unknown exception");
-  }
-}
-
-Response * SmppGwCommandDispatcher::deleteSme(CommandDeleteSme* command)
-{
-  try
-  {
-    runner->getApp()->getSmeAdmin()->deleteSme(command->getSmeSystemId());
-    return new Response(Response::Ok, "none");
-  } catch (AdminException &e) {
-    return new Response(Response::Error, e.what());
-  } catch (const char * const e) {
-    return new Response(Response::Error, e);
-  } catch (...) {
-    return new Response(Response::Error, "Unknown exception");
-  }
-}
-
-Response * SmppGwCommandDispatcher::traceRoute(CommandTraceRoute* command)
-{
-  smsc::admin::service::Variant data;
-
-  try
-  {
-    data = command->GetTraceResult(runner->getApp());
-    return new Response(Response::Ok, data);
-  } catch (AdminException &e) {
-    return new Response(Response::Error, e.what());
-  } catch (const char * const e) {
-    return new Response(Response::Error, e);
-  } catch (...) {
-    return new Response(Response::Error, "Unknown exception");
-  }
-}
-
-Response * SmppGwCommandDispatcher::loadRoutes(CommandLoadRoutes* command)
-{
-  smsc::admin::service::Variant data;
-
-  try
-  {
-    data = command->GetLoadResult(runner->getApp());
-    return new Response(Response::Ok, data);
-  } catch (AdminException &e) {
-    return new Response(Response::Error, e.what());
-  } catch (const char * const e) {
-    return new Response(Response::Error, e);
-  } catch (...) {
-    return new Response(Response::Error, "Unknown exception");
-  }
-}
-
-
-Response * SmppGwCommandDispatcher::updateSmeInfo(CommandUpdateSmeInfo* command)
-{
-  try
-  {
-    runner->getApp()->getSmeAdmin()->updateSmeInfo(command->getSmeInfo().systemId, command->getSmeInfo());
-    return new Response(Response::Ok, "none");
-  } catch (AdminException &e) {
-    return new Response(Response::Error, e.what());
-  } catch (const char * const e) {
-    return new Response(Response::Error, e);
-  } catch (...) {
-    return new Response(Response::Error, "Unknown exception");
-  }
-}
-
-Response * SmppGwCommandDispatcher::apply(CommandApply* command)
-{
-  try
-  {
-    switch (command->getSubject())
-    {
-      case CommandApply::config:
-        return applyConfig();
-      case CommandApply::routes:
-        return applyRoutes();
-      case CommandApply::providers:
-        return applyProviders();
-      case CommandApply::smscs:
-        return applySmscs();
-    }
-    stopGw();
-    startGw();
-    return new Response(Response::Ok, "none");
-  } catch (AdminException &e) {
-    return new Response(Response::Error, e.what());
-  } catch (const char * const e) {
-    return new Response(Response::Error, e);
-  } catch (...) {
-    return new Response(Response::Error, "Unknown exception");
-  }
-}
-
-Response * SmppGwCommandDispatcher::applyConfig()
-{
-  try
-  {
-    stopGw();
-    startGw();
-    return new Response(Response::Ok, "none");
-  } catch (AdminException &e) {
-    return new Response(Response::Error, e.what());
-  } catch (const char * const e) {
-    return new Response(Response::Error, e);
-  } catch (...) {
-    return new Response(Response::Error, "Unknown exception");
-  }
-}
-
-Response * SmppGwCommandDispatcher::applyRoutes()
-{
-  try
-  {
-    configs->routesconfig->reload();
-    configs->smemanconfig->reload();
-    runner->getApp()->reloadRoutes(*configs);
-    return new Response(Response::Ok, "none");
-  } catch (AdminException &e) {
-    return new Response(Response::Error, e.what());
-  } catch (const char * const e) {
-    return new Response(Response::Error, e);
-  } catch (...) {
-    return new Response(Response::Error, "Unknown exception");
-  }
-}
-
-Response * SmppGwCommandDispatcher::applyProviders()
-{
-  try
-  {
-    // do nothing
-    return new Response(Response::Ok, "none");
-  } catch (AdminException &e) {
-    return new Response(Response::Error, e.what());
-  } catch (const char * const e) {
-    return new Response(Response::Error, e);
-  } catch (...) {
-    return new Response(Response::Error, "Unknown exception");
-  }
-}
-Response * SmppGwCommandDispatcher::applySmscs()
-{
-  try
-  {
-    stopGw();
-    startGw();
-    return new Response(Response::Ok, "none");
-  } catch (AdminException &e) {
-    return new Response(Response::Error, e.what());
-  } catch (const char * const e) {
-    return new Response(Response::Error, e);
-  } catch (...) {
-    return new Response(Response::Error, "Unknown exception");
-  }
-}
-
 }
 }
 }

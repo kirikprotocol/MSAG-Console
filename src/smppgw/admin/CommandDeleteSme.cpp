@@ -20,7 +20,7 @@ using namespace smsc::util::xml;
 // Constructor
 ///
 CommandDeleteSme::CommandDeleteSme(const xercesc::DOMDocument * const document)
-  : Command((Command::Id)CommandIds::deleteSme)
+  : SmppGwCommand((Command::Id)CommandIds::deleteSme)
 {
   try {
     DOMElement *elem = document->getDocumentElement();
@@ -35,6 +35,12 @@ CommandDeleteSme::CommandDeleteSme(const xercesc::DOMDocument * const document)
   } catch (...) {
     throw AdminException("Some exception occured");
   }
+}
+
+Response * CommandDeleteSme::CreateResponse(smsc::smppgw::Smsc * SmscApp)
+{
+  SmscApp->getSmeAdmin()->deleteSme(getSmeSystemId());
+  return new Response(Response::Ok, "none");
 }
 
 }
