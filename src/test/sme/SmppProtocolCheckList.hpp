@@ -19,10 +19,12 @@ void bindCorrectSmeTc()
 {
 	__reg_tc__("bindCorrectSme",
 		"Установление IP соединения с SC и регистрация");
+	/*
 	__reg_tc__("bindCorrectSme.bindReceiver",
 		"Регистрация ресивера с помощью bind_receiver pdu");
 	__reg_tc__("bindCorrectSme.bindTransmitter",
 		"Регистрация трансмиттера с помощью bind_transmitter pdu");
+	*/
 	__reg_tc__("bindCorrectSme.bindTransceiver",
 		"Регистрация трансивера с помощью bind_transceiver pdu");
 }
@@ -97,6 +99,8 @@ void submitSmTc()
 		"Значение schedule_delivery_time больше максимального validity_period для SC, срок валидности по умолчанию (validity_period = NULL)");
 	__reg_tc__("submitSm.incorrect.waitTimeInvalid3",
 		"Значения schedule_delivery_time меньше validity_period, но оба больше максимального validity_period для SC");
+	__reg_tc__("submitSm.incorrect.dataCoding",
+		"Недопустимые значения dataCoding");
 	//submitSm.assert
 	__reg_tc__("submitSm.assert",
 		"Заполнение и отправка submit_sm pdu с недопустимыми значениями полей");
@@ -173,6 +177,8 @@ void processRespTc()
 		"Если код ошибки ESME_RINVSCHED в поле command_status, то время schedule_delivery_time действительно задано неправильно");
 	__reg_tc__("processResp.checkCmdStatusInvalidValidTime",
 		"Если код ошибки ESME_RINVEXPIRY в поле command_status, то время validity_period действительно задано неправильно");
+	__reg_tc__("processResp.checkCmdStatusInvalidDataCoding",
+		"Если код ошибки ESME_RINVDCS в поле command_status, то кодировка сообщения действительно задана неправильно");
 	__reg_tc__("processResp.checkCmdStatusOther",
 		"Прочие коды ошибок соответствуют спецификации");
 }
@@ -347,7 +353,7 @@ void allProtocolTc()
 	processNormalSmsTc();
 	processDeliveryReceiptTc();
 	processSmeAckTc();
-	processIntermediateNotificationTc();
+	//processIntermediateNotificationTc();
 	//other
 	checkMissingPduTc();
 	notImplementedTc();
