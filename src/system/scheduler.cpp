@@ -123,20 +123,28 @@ int Scheduler::Execute()
   for(int i=0;i<startupCache.Count();i++)
   {
     StartupItem& si=startupCache[i];
-    SmeIndex idx=smsc->getSmeIndex(si.smeId);
-    if(idx!=INVALID_SME_INDEX)
-    {
-      timeLine.insert(TimeIdPair(si.schedTime,Data(si.id,idx)));
-      CacheItem *ci=smeCountCache.GetPtr(idx);
-      if(ci)
+    try{
+      SmeIndex idx=smsc->getSmeIndex(si.smeId);
+      if(idx!=INVALID_SME_INDEX)
       {
-        ci->totalCount++;
-      }else
-      {
-        CacheItem c;
-        c.totalCount=1;
-        smeCountCache.Insert(idx,c);
+        timeLine.insert(TimeIdPair(si.schedTime,Data(si.id,idx)));
+        CacheItem *ci=smeCountCache.GetPtr(idx);
+        if(ci)
+        {
+          ci->totalCount++;
+        }else
+        {
+          CacheItem c;
+          c.totalCount=1;
+          smeCountCache.Insert(idx,c);
+        }
       }
+    }catch(std::exception& e)
+    {
+      __warning2__("exception during startup item processing id=%lld, smeId=%s:%s",si.id,si.smeId,e.what());
+    }catch(...)
+    {
+      __warning2__("exception during startup item processing id=%lld, smeId=%s:unknown",si.id,si.smeId);
     }
     mon.Unlock();
     sched_yield();
@@ -179,6 +187,7 @@ int Scheduler::Execute()
       mon.wait(1000);
     }
   }
+  __trace2__("Exiting scheduler, isStopping=%s",isStopping?"true":"false");
   return 0;
 }
 
