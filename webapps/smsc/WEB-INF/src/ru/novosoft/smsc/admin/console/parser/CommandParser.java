@@ -356,62 +356,22 @@ public CommandParser(ParserSharedInputState state) {
 	public final AliasAddCommand  addalias() throws RecognitionException, TokenStreamException {
 		AliasAddCommand cmd;
 		
-		Token  maddr = null;
-		Token  manum = null;
-		Token  aaddr = null;
-		Token  aanum = null;
+		Token  mask = null;
+		Token  addr = null;
 		
 		cmd = new AliasAddCommand();
 		
 		
 		{
-		switch ( LA(1)) {
-		case ADDRESS:
+		mask = LT(1);
+		match(ADDRESS);
+		cmd.setAlias(mask.getText());
+		}
 		{
-			maddr = LT(1);
-			match(ADDRESS);
-			break;
+		addr = LT(1);
+		match(ADDRESS);
+		cmd.setAddress(addr.getText());	
 		}
-		case NUMBER:
-		{
-			manum = LT(1);
-			match(NUMBER);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		
-				    String mal = (maddr == null) ? manum.getText():maddr.getText();
-				    cmd.setAlias(mal);
-				
-		{
-		switch ( LA(1)) {
-		case ADDRESS:
-		{
-			aaddr = LT(1);
-			match(ADDRESS);
-			break;
-		}
-		case NUMBER:
-		{
-			aanum = LT(1);
-			match(NUMBER);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		
-				    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
-				    cmd.setAddress(aal);
-				
 		{
 		switch ( LA(1)) {
 		case OPT_HIDE:
@@ -505,36 +465,16 @@ public CommandParser(ParserSharedInputState state) {
 	public final ProfileAddCommand  addprofile() throws RecognitionException, TokenStreamException {
 		ProfileAddCommand cmd;
 		
-		Token  maddr = null;
-		Token  manum = null;
+		Token  mask = null;
 		
 		cmd = new ProfileAddCommand();
 		
 		
 		{
-		switch ( LA(1)) {
-		case ADDRESS:
-		{
-			maddr = LT(1);
-			match(ADDRESS);
-			break;
+		mask = LT(1);
+		match(ADDRESS);
+		cmd.setMask(mask.getText());
 		}
-		case NUMBER:
-		{
-			manum = LT(1);
-			match(NUMBER);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		
-				    String mal = (maddr == null) ? manum.getText():maddr.getText();
-				    cmd.setMask(mal);
-				
 		{
 		match(OPT_REPORT);
 		{
@@ -637,36 +577,16 @@ public CommandParser(ParserSharedInputState state) {
 	public final AliasDeleteCommand  delalias() throws RecognitionException, TokenStreamException {
 		AliasDeleteCommand cmd;
 		
-		Token  aaddr = null;
-		Token  aanum = null;
+		Token  addr = null;
 		
 		cmd = new AliasDeleteCommand();
 		
 		
 		{
-		switch ( LA(1)) {
-		case ADDRESS:
-		{
-			aaddr = LT(1);
-			match(ADDRESS);
-			break;
+		addr = LT(1);
+		match(ADDRESS);
+		cmd.setAlias(addr.getText());
 		}
-		case NUMBER:
-		{
-			aanum = LT(1);
-			match(NUMBER);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		
-				    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
-				    cmd.setAlias(aal);
-				
 		return cmd;
 	}
 	
@@ -835,62 +755,22 @@ public CommandParser(ParserSharedInputState state) {
 	public final AliasAlterCommand  altalias() throws RecognitionException, TokenStreamException {
 		AliasAlterCommand cmd;
 		
-		Token  maddr = null;
-		Token  manum = null;
-		Token  aaddr = null;
-		Token  aanum = null;
+		Token  mask = null;
+		Token  addr = null;
 		
 		cmd = new AliasAlterCommand();
 		
 		
 		{
-		switch ( LA(1)) {
-		case ADDRESS:
+		mask = LT(1);
+		match(ADDRESS);
+		cmd.setAlias(mask.getText());
+		}
 		{
-			maddr = LT(1);
-			match(ADDRESS);
-			break;
+		addr = LT(1);
+		match(ADDRESS);
+		cmd.setAddress(addr.getText());
 		}
-		case NUMBER:
-		{
-			manum = LT(1);
-			match(NUMBER);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		
-				    String mal = (maddr == null) ? manum.getText():maddr.getText();
-				    cmd.setAlias(mal);
-				
-		{
-		switch ( LA(1)) {
-		case ADDRESS:
-		{
-			aaddr = LT(1);
-			match(ADDRESS);
-			break;
-		}
-		case NUMBER:
-		{
-			aanum = LT(1);
-			match(NUMBER);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		
-				    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
-				    cmd.setAddress(aal);
-				
 		{
 		switch ( LA(1)) {
 		case OPT_HIDE:
@@ -1028,36 +908,16 @@ public CommandParser(ParserSharedInputState state) {
 	public final ProfileAlterCommand  altprofile() throws RecognitionException, TokenStreamException {
 		ProfileAlterCommand cmd;
 		
-		Token  aaddr = null;
-		Token  aanum = null;
+		Token  addr = null;
 		
 		cmd = new ProfileAlterCommand();
 		
 		
 		{
-		switch ( LA(1)) {
-		case ADDRESS:
-		{
-			aaddr = LT(1);
-			match(ADDRESS);
-			break;
+		addr = LT(1);
+		match(ADDRESS);
+		cmd.setAddress(addr.getText());
 		}
-		case NUMBER:
-		{
-			aanum = LT(1);
-			match(NUMBER);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		
-				    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
-				    cmd.setAddress(aal);
-				
 		{
 		match(OPT_REPORT);
 		{
@@ -1160,36 +1020,16 @@ public CommandParser(ParserSharedInputState state) {
 	public final AliasViewCommand  viewalias() throws RecognitionException, TokenStreamException {
 		AliasViewCommand cmd;
 		
-		Token  aaddr = null;
-		Token  aanum = null;
+		Token  mask = null;
 		
 		cmd = new AliasViewCommand();
 		
 		
 		{
-		switch ( LA(1)) {
-		case ADDRESS:
-		{
-			aaddr = LT(1);
-			match(ADDRESS);
-			break;
+		mask = LT(1);
+		match(ADDRESS);
+		cmd.setAlias(mask.getText());
 		}
-		case NUMBER:
-		{
-			aanum = LT(1);
-			match(NUMBER);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		
-				    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
-				    cmd.setAlias(aal);
-				
 		return cmd;
 	}
 	
@@ -1232,36 +1072,16 @@ public CommandParser(ParserSharedInputState state) {
 	public final ProfileViewCommand  viewprofile() throws RecognitionException, TokenStreamException {
 		ProfileViewCommand cmd;
 		
-		Token  aaddr = null;
-		Token  aanum = null;
+		Token  addr = null;
 		
 		cmd = new ProfileViewCommand();
 		
 		
 		{
-		switch ( LA(1)) {
-		case ADDRESS:
-		{
-			aaddr = LT(1);
-			match(ADDRESS);
-			break;
+		addr = LT(1);
+		match(ADDRESS);
+		cmd.setAddress(addr.getText());
 		}
-		case NUMBER:
-		{
-			aanum = LT(1);
-			match(NUMBER);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		
-				    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
-				    cmd.setAddress(aal);
-				
 		return cmd;
 	}
 	
@@ -1272,7 +1092,6 @@ public CommandParser(ParserSharedInputState state) {
 		Token  qname = null;
 		Token  name = null;
 		Token  addr = null;
-		Token  anum = null;
 		// Special command required !!!
 		RouteSrcDef def = new RouteSrcDef();
 		
@@ -1315,30 +1134,11 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			{
 			match(OPT_MASK);
-			{
-			switch ( LA(1)) {
-			case ADDRESS:
-			{
-				addr = LT(1);
-				match(ADDRESS);
-				break;
-			}
-			case NUMBER:
-			{
-				anum = LT(1);
-				match(NUMBER);
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
-			}
+			addr = LT(1);
+			match(ADDRESS);
 			
-					    String val = (addr == null) ? anum.getText():addr.getText(); 
 					    def.setType(RouteSrcDef.TYPE_MASK); 
-					    def.setSrc(val);
+					    def.setSrc(addr.getText());
 					
 			}
 			break;
@@ -1361,7 +1161,6 @@ public CommandParser(ParserSharedInputState state) {
 		Token  qname = null;
 		Token  name = null;
 		Token  addr = null;
-		Token  anum = null;
 		Token  qsys = null;
 		Token  isys = null;
 		// Special command required !!!
@@ -1406,30 +1205,11 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			{
 			match(OPT_MASK);
-			{
-			switch ( LA(1)) {
-			case ADDRESS:
-			{
-				addr = LT(1);
-				match(ADDRESS);
-				break;
-			}
-			case NUMBER:
-			{
-				anum = LT(1);
-				match(NUMBER);
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
-			}
+			addr = LT(1);
+			match(ADDRESS);
 			
-					    String val = (addr == null) ? anum.getText():addr.getText(); 
 					    def.setType(RouteDstDef.TYPE_MASK); 
-					    def.setDst(val);
+					    def.setDst(addr.getText());
 					
 			}
 			break;
@@ -1474,17 +1254,17 @@ public CommandParser(ParserSharedInputState state) {
 		
 		match(OPT_SRC);
 		{
-		int _cnt22=0;
-		_loop22:
+		int _cnt20=0;
+		_loop20:
 		do {
 			if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 				srcdef(cmd);
 			}
 			else {
-				if ( _cnt22>=1 ) { break _loop22; } else {throw new NoViableAltException(LT(1), getFilename());}
+				if ( _cnt20>=1 ) { break _loop20; } else {throw new NoViableAltException(LT(1), getFilename());}
 			}
 			
-			_cnt22++;
+			_cnt20++;
 		} while (true);
 		}
 	}
@@ -1496,17 +1276,17 @@ public CommandParser(ParserSharedInputState state) {
 		
 		match(OPT_DST);
 		{
-		int _cnt25=0;
-		_loop25:
+		int _cnt23=0;
+		_loop23:
 		do {
 			if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 				dstdef(cmd);
 			}
 			else {
-				if ( _cnt25>=1 ) { break _loop25; } else {throw new NoViableAltException(LT(1), getFilename());}
+				if ( _cnt23>=1 ) { break _loop23; } else {throw new NoViableAltException(LT(1), getFilename());}
 			}
 			
-			_cnt25++;
+			_cnt23++;
 		} while (true);
 		}
 	}
@@ -1676,33 +1456,13 @@ public CommandParser(ParserSharedInputState state) {
 		SubjectGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
 		
-		Token  maddr = null;
-		Token  manum = null;
+		Token  mask = null;
 		
 		{
-		switch ( LA(1)) {
-		case ADDRESS:
-		{
-			maddr = LT(1);
-			match(ADDRESS);
-			break;
+		mask = LT(1);
+		match(ADDRESS);
+		cmd.addMask(mask.getText());
 		}
-		case NUMBER:
-		{
-			manum = LT(1);
-			match(NUMBER);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		
-				    String mal = (maddr == null) ? manum.getText():maddr.getText();	
-				    cmd.addMask(mal);
-				
 	}
 	
 	public final void addsubj_masks(
@@ -1713,14 +1473,14 @@ public CommandParser(ParserSharedInputState state) {
 		{
 		addsubj_mask(cmd);
 		{
-		_loop65:
+		_loop63:
 		do {
 			if ((LA(1)==COMMA)) {
 				match(COMMA);
 				addsubj_mask(cmd);
 			}
 			else {
-				break _loop65;
+				break _loop63;
 			}
 			
 		} while (true);
@@ -1731,36 +1491,16 @@ public CommandParser(ParserSharedInputState state) {
 	public final ProfileDeleteCommand  delprofile() throws RecognitionException, TokenStreamException {
 		ProfileDeleteCommand cmd;
 		
-		Token  maddr = null;
-		Token  manum = null;
+		Token  mask = null;
 		
 		cmd = new ProfileDeleteCommand();
 		
 		
 		{
-		switch ( LA(1)) {
-		case ADDRESS:
-		{
-			maddr = LT(1);
-			match(ADDRESS);
-			break;
+		mask = LT(1);
+		match(ADDRESS);
+		cmd.setMask(mask.getText());
 		}
-		case NUMBER:
-		{
-			manum = LT(1);
-			match(NUMBER);
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		
-				    String mal = (maddr == null) ? manum.getText():maddr.getText();
-				    cmd.setMask(mal);
-				
 		return cmd;
 	}
 	

@@ -106,10 +106,9 @@ srcdef[RouteGenCommand cmd] { // Special command required !!!
 		    def.setType(RouteSrcDef.TYPE_SUBJECT);
 		    def.setSrc(out);
 		  }) 
-		| (OPT_MASK (addr:ADDRESS | anum:NUMBER) {
-		    String val = (addr == null) ? anum.getText():addr.getText(); 
+		| (OPT_MASK addr:ADDRESS {
 		    def.setType(RouteSrcDef.TYPE_MASK); 
-		    def.setSrc(val);
+		    def.setSrc(addr.getText());
 		  })
 		)
 		{
@@ -124,10 +123,9 @@ dstdef[RouteGenCommand cmd] { // Special command required !!!
 		    def.setType(RouteDstDef.TYPE_SUBJECT);
 		    def.setDst(out);
 		  }) 
-		| (OPT_MASK (addr:ADDRESS | anum:NUMBER) { 
-		    String val = (addr == null) ? anum.getText():addr.getText(); 
+		| (OPT_MASK addr:ADDRESS { 
 		    def.setType(RouteDstDef.TYPE_MASK); 
-		    def.setDst(val);
+		    def.setDst(addr.getText());
 		  })
 		)
 		(qsys:STRING | isys:ID)
@@ -226,55 +224,34 @@ viewroute returns [RouteViewCommand cmd] {
 addalias returns [AliasAddCommand cmd] {
     cmd = new AliasAddCommand();
 }
-	:	(maddr:ADDRESS | manum:NUMBER) {
-		    String mal = (maddr == null) ? manum.getText():maddr.getText();
-		    cmd.setAlias(mal);
-		}
-		(aaddr:ADDRESS | aanum:NUMBER) {
-		    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
-		    cmd.setAddress(aal);
-		}
-		( OPT_HIDE   { cmd.setHide(true);  }
-		| OPT_NOHIDE { cmd.setHide(false); })?
+	:	(mask:ADDRESS { cmd.setAlias(mask.getText());   })
+		(addr:ADDRESS { cmd.setAddress(addr.getText());	})
+		( OPT_HIDE    { cmd.setHide(true);  }
+		| OPT_NOHIDE  { cmd.setHide(false); })?
 	;
 delalias returns [AliasDeleteCommand cmd] {
     cmd = new AliasDeleteCommand();
 }
-	:	(aaddr:ADDRESS | aanum:NUMBER) {
-		    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
-		    cmd.setAlias(aal);
-		}
+	:	(addr:ADDRESS { cmd.setAlias(addr.getText()); })
 	;
 altalias returns [AliasAlterCommand cmd] {
     cmd = new AliasAlterCommand();
 }
-	:	(maddr:ADDRESS | manum:NUMBER) {
-		    String mal = (maddr == null) ? manum.getText():maddr.getText();
-		    cmd.setAlias(mal);
-		}
-		(aaddr:ADDRESS | aanum:NUMBER) {
-		    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
-		    cmd.setAddress(aal);
-		}
-		( OPT_HIDE   { cmd.setHide(true);  }
-		| OPT_NOHIDE { cmd.setHide(false); })?
+	:	(mask:ADDRESS { cmd.setAlias(mask.getText());  })
+		(addr:ADDRESS { cmd.setAddress(addr.getText()); })
+		( OPT_HIDE    { cmd.setHide(true);  }
+		| OPT_NOHIDE  { cmd.setHide(false); })?
 	;
 viewalias returns [AliasViewCommand cmd] {
     cmd = new AliasViewCommand();
 }
-	:	(aaddr:ADDRESS | aanum:NUMBER) {
-		    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
-		    cmd.setAlias(aal);
-		}
+	:	(mask:ADDRESS { cmd.setAlias(mask.getText()); })
 	;
 
 /* ----------------------- Subject command parsers --------------------- */
 
 addsubj_mask[SubjectGenCommand cmd]
-	:	(maddr:ADDRESS | manum:NUMBER) {
-		    String mal = (maddr == null) ? manum.getText():maddr.getText();	
-		    cmd.addMask(mal);
-		}
+	:	(mask:ADDRESS { cmd.addMask(mask.getText()); })
 	;
 addsubj_masks[SubjectGenCommand cmd]
 	:	(addsubj_mask[cmd] (COMMA addsubj_mask[cmd])*)
@@ -332,10 +309,7 @@ viewsubject returns [SubjectViewCommand cmd] {
 addprofile returns [ProfileAddCommand cmd] {
     cmd = new ProfileAddCommand();
 }
-	:	(maddr:ADDRESS | manum:NUMBER) {
-		    String mal = (maddr == null) ? manum.getText():maddr.getText();
-		    cmd.setMask(mal);
-		}
+	:	(mask:ADDRESS { cmd.setMask(mask.getText()); })
 		(OPT_REPORT (VAL_FULL { cmd.setFullReport(); }
 			   | VAL_NONE { cmd.setNoneReport(); } ))
 		(OPT_ENCODE (VAL_GSM7 { cmd.setGsm7Encoding(); }
@@ -344,28 +318,19 @@ addprofile returns [ProfileAddCommand cmd] {
 altprofile returns [ProfileAlterCommand cmd] {
     cmd = new ProfileAlterCommand();
 }
-	:	(aaddr:ADDRESS | aanum:NUMBER) {
-		    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
-		    cmd.setAddress(aal);
-		}
+	:	(addr:ADDRESS { cmd.setAddress(addr.getText()); })
 		(OPT_REPORT (VAL_FULL { cmd.setFullReport(); }
 			   | VAL_NONE { cmd.setNoneReport(); } ))
-		(OPT_ENCODE (VAL_GSM7 { cmd.setGsm7Encoding(); }
-			   | VAL_UCS2 { cmd.setUcs2Encoding(); } ))?
+		(OPT_ENCODE (VAL_GSM7 { cmd.setGsm7Encoding();  }
+			   | VAL_UCS2 { cmd.setUcs2Encoding();  } ))?
 	;
 delprofile returns [ProfileDeleteCommand cmd] {
     cmd = new ProfileDeleteCommand();
 }
-	:	(maddr:ADDRESS | manum:NUMBER) {
-		    String mal = (maddr == null) ? manum.getText():maddr.getText();
-		    cmd.setMask(mal);
-		}
+	:	(mask:ADDRESS { cmd.setMask(mask.getText()); })
 	;
 viewprofile returns [ProfileViewCommand cmd] {
     cmd = new ProfileViewCommand();
 }
-	:	(aaddr:ADDRESS | aanum:NUMBER) {
-		    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
-		    cmd.setAddress(aal);
-		}
+	:	(addr:ADDRESS { cmd.setAddress(addr.getText()); })
 	;
