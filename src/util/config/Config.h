@@ -146,6 +146,9 @@ public:
 
 	CStrSet *getChildSectionNames(const char * const sectionName);
 
+  CStrSet * Config::getChildIntParamNames(const char * const sectionName);
+  CStrSet * Config::getChildBoolParamNames(const char * const sectionName);
+  CStrSet * Config::getChildStrParamNames(const char * const sectionName);
 protected:
 	typedef Hash<int32_t> intParamsType;
 	typedef Hash<char *> strParamsType;

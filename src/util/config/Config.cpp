@@ -314,8 +314,8 @@ void collect_section_names_into_set(CStrSet &result,
 		{
 			char sectName[dotpos - name+1];
 			memcpy(sectName, name, dotpos - name);
-			sectName[dotpos - name] = 0;
-			result.insert(std::string(sectName)).second;
+      sectName[dotpos - name] = 0;
+			result.insert(std::string(sectName));
 		}
 	}
 }
@@ -332,6 +332,25 @@ void getChildSectionsFromHash(_HashType &hash,
 	{
 		collect_section_names_into_set(result, sectionName, sectionNameLen, name);
 	}
+}
+
+template<class _HashType, class _HashIteratorType, class _ValueType>
+void getChildParamsFromHash(_HashType &hash,
+                            const char * const sectionName,
+														size_t sectionNameLen,
+														CStrSet &result)
+{
+	char *name;
+	_ValueType value;
+  for (_HashIteratorType i = hash.getIterator(); i.Next(name, value); ) 
+  {
+    if (memcmp(name, sectionName, sectionNameLen) == 0) 
+    {
+      char paramName[strlen(name) -(sectionNameLen +1) +1];
+			strcpy(paramName, name +(sectionNameLen +1));
+      result.insert(std::string(paramName));
+    }
+  }
 }
 
 CStrSet* Config::getChildSectionNames(const char * const sectionName)
@@ -351,6 +370,41 @@ CStrSet* Config::getChildSectionNames(const char * const sectionName)
 		(strParams, sectionName, sectionNameLen, *result);
 	
 	return result;
+}
+
+CStrSet * Config::getChildIntParamNames(const char * const sectionName)
+{
+  std::auto_ptr<CStrSet> result(new CStrSet);
+	const size_t sectionNameLen = sectionName[strlen(sectionName)-1] == '.'
+		? strlen(sectionName)-1
+		: strlen(sectionName);
+	
+	getChildParamsFromHash<intParamsType, intParamsType::Iterator, int32_t>
+		(intParams, sectionName, sectionNameLen, *result);
+}
+
+CStrSet * Config::getChildBoolParamNames(const char * const sectionName)
+{
+  std::auto_ptr<CStrSet> result(new CStrSet);
+	const size_t sectionNameLen = sectionName[strlen(sectionName)-1] == '.'
+		? strlen(sectionName)-1
+		: strlen(sectionName);
+	
+	getChildParamsFromHash<boolParamsType, boolParamsType::Iterator, bool>
+		(boolParams, sectionName, sectionNameLen, *result);
+}
+
+CStrSet * Config::getChildStrParamNames(const char * const sectionName)
+{
+  std::auto_ptr<CStrSet> result(new CStrSet);
+	const size_t sectionNameLen = sectionName[strlen(sectionName)-1] == '.'
+		? strlen(sectionName)-1
+		: strlen(sectionName);
+
+	getChildParamsFromHash<strParamsType, strParamsType::Iterator, char *>
+		(strParams, sectionName, sectionNameLen, *result);
+	
+	return result.release();
 }
 
 }
