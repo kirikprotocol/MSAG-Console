@@ -6,6 +6,7 @@ namespace test {
 namespace sme {
 
 using smsc::test::smpp::SmppUtil;
+using namespace smsc::test::core; //constants
 using namespace smsc::smpp::SmppCommandSet; //constants
 using namespace smsc::smpp::SmppStatusSet; //constants
 
@@ -60,10 +61,75 @@ vector<int> SmppPduChecker::checkSubmitSmResp(
 	{
 		res.push_back(3);
 	}
-	//time
-	if (pduData->submitTime < __checkTime__)
+	//проверка флагов получения pdu
+	switch (pduData->responseFlag)
 	{
-		res.push_back(4);
+		case PDU_REQUIRED_FLAG:
+			if (pduData->submitTime < __checkTime__)
+			{
+				res.push_back(4);
+			}
+			pduData->responseFlag = PDU_RECEIVED_FLAG;
+			break;
+		case PDU_MISSING_ON_TIME_FLAG:
+			pduData->responseFlag = PDU_RECEIVED_FLAG;
+			break;
+		case PDU_RECEIVED_FLAG: //респонс уже получен ранее
+			res.push_back(5);
+			break;
+		case PDU_NOT_EXPECTED_FLAG: //респонс всегда должен быть
+			res.push_back(6);
+			break;
+		default:
+			__unreachable__("Unknown pduData->responseFlag");
+	}
+	if (respPdu.get_header().get_commandStatus() != ESME_ROK)
+	{
+		switch (pduData->deliveryFlag)
+		{
+			case PDU_REQUIRED_FLAG:
+				pduData->deliveryFlag = PDU_NOT_EXPECTED_FLAG;
+				break;
+			case PDU_RECEIVED_FLAG:
+				res.push_back(7);
+				break;
+			case PDU_MISSING_ON_TIME_FLAG:
+			case PDU_NOT_EXPECTED_FLAG:
+				//ok
+				break;
+			default:
+				__unreachable__("Unknown pduData->deliveryFlag");
+		}
+		switch (pduData->deliveryReceiptFlag)
+		{
+			case PDU_REQUIRED_FLAG:
+				pduData->deliveryReceiptFlag = PDU_NOT_EXPECTED_FLAG;
+				break;
+			case PDU_RECEIVED_FLAG:
+				res.push_back(8);
+				break;
+			case PDU_MISSING_ON_TIME_FLAG:
+			case PDU_NOT_EXPECTED_FLAG:
+				//ok
+				break;
+			default:
+				__unreachable__("Unknown pduData->deliveryReceiptFlag");
+		}
+		switch (pduData->intermediateNotificationFlag)
+		{
+			case PDU_REQUIRED_FLAG:
+				pduData->intermediateNotificationFlag = PDU_NOT_EXPECTED_FLAG;
+				break;
+			case PDU_RECEIVED_FLAG:
+				res.push_back(9);
+				break;
+			case PDU_MISSING_ON_TIME_FLAG:
+			case PDU_NOT_EXPECTED_FLAG:
+				//ok
+				break;
+			default:
+				__unreachable__("Unknown pduData->intermediateNotificationFlag");
+		}
 	}
 	//commandStatus
 	PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
@@ -78,19 +144,12 @@ vector<int> SmppPduChecker::checkSubmitSmResp(
 			//если данная pdu замещает предыдущую pdu
 			for (PduData* replaceData = pduData->replacePdu; replaceData; )
 			{
-				PduData* nextReplaceData = replaceData->replacePdu;
 				//replaceData->responseFlag
-				replaceData->deliveryFlag = true;
-				replaceData->deliveryReceiptFlag = true;
-				replaceData->intermediateNotificationFlag = true;
-				replaceData->replacePdu = NULL;
-				if (replaceData->complete())
-				{
-					pduReg->removePdu(replaceData);
-				}
-				replaceData = nextReplaceData;
+				replaceData->deliveryFlag = PDU_NOT_EXPECTED_FLAG;
+				replaceData->deliveryReceiptFlag = PDU_NOT_EXPECTED_FLAG;
+				replaceData->intermediateNotificationFlag = PDU_NOT_EXPECTED_FLAG;
+				replaceData = replaceData->replacePdu;
 			}
-			pduData->replacePdu = NULL;
 			break;
 		case ESME_RINVDSTADR: //Invalid Dest Addr
 			if (!pduRes.count(NO_ROUTE))
@@ -120,14 +179,6 @@ vector<int> SmppPduChecker::checkSubmitSmResp(
 				res.push_back(*it);
 			}
 	}
-	if (respPdu.get_header().get_commandStatus() != ESME_ROK)
-	{
-		pduData->deliveryFlag = true;
-		pduData->deliveryReceiptFlag = true;
-		pduData->intermediateNotificationFlag = true;
-
-	}
-	pduData->responseFlag = true;
 	return res;
 }
 
