@@ -29,7 +29,7 @@ public class DBSMEConfig
 	{
 		this.configurationFileName = configurationFileName;
 		System.out.println("configurationFileName.getCanonicalPath() = " + configurationFileName.getCanonicalPath());
-		this.config = new Config(Utils.parse(new FileReader(configurationFileName)));
+		this.config = new Config(new FileReader(configurationFileName));
 	}
 
 	public List getDataSourceDrivers()
