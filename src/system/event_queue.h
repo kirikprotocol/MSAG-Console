@@ -281,21 +281,21 @@ public:
             iter = iter->next_unlocked;// prev не изменяется
             __require__(!locker->locked);
 
-            // удаляем из списка активных
-            if ( locker == last_unlocked ) last_unlocked = prev;
-            if ( prev )
-               prev->next_unlocked = locker->next_unlocked;
-            else
-            {
-              __require__( locker == first_unlocked );
-              __watch__(locker->next_unlocked);
-              first_unlocked = locker->next_unlocked;
-            }
-
-            locker->next_unlocked = 0;
 
             if ( success ) // получена доступная команда
             {
+							// удаляем из списка активных
+							if ( locker == last_unlocked ) last_unlocked = prev;
+							if ( prev )
+								 prev->next_unlocked = locker->next_unlocked;
+							else
+							{
+								__require__( locker == first_unlocked );
+								__watch__(locker->next_unlocked);
+								first_unlocked = locker->next_unlocked;
+							}
+
+							locker->next_unlocked = 0;
               locker->locked = true;
               result.msgId = locker->msgId;
               result.state = locker->state;
@@ -308,11 +308,25 @@ public:
             {
               if ( StateChecker::stateIsFinal(locker->state) )
               {
+								// удаляем из списка активных
+								if ( locker == last_unlocked ) last_unlocked = prev;
+								if ( prev )
+									 prev->next_unlocked = locker->next_unlocked;
+								else
+								{
+									__require__( locker == first_unlocked );
+									__watch__(locker->next_unlocked);
+									first_unlocked = locker->next_unlocked;
+								}
+
+								locker->next_unlocked = 0;
                 hash.remove(locker->msgId);
                 delete locker;
-              }else
+              }
+							else
               {
-                locker->locked=true;
+                //locker->locked=true;
+								prev = iter;
               }
             }
           }
