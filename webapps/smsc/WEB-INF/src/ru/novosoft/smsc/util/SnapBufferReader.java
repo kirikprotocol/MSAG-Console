@@ -30,6 +30,7 @@ public class SnapBufferReader {
 
   public void fill( InputStream is, int len ) throws IOException {
 //      logger.debug("filling buffer with: "+len+" was used: "+offset);
+    if( buf.length < len ) buf = new byte[len];
     offset = 0;
     size = 0;
     int cnt = 0;
