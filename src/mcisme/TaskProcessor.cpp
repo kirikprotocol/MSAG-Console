@@ -490,10 +490,10 @@ void TaskProcessor::processEvent(const MissedCallEvent& event)
         if (profile.inform || Task::bInformAll)
         {
             task->addEvent(event); // add new event to task chain (inassigned to message in DB)
-            smsc_log_debug(logger, "Event: for %s added to %s task. Events=%d",
-                           abonent, (isNewTask) ? "new":"existed", task->getEventsCount());
-
             MessageState state = task->getCurrentState();
+            smsc_log_debug(logger, "Event: for %s added to %s task (state=%d). Events=%d",
+                           abonent, (isNewTask) ? "new":"existed", (int)state, task->getEventsCount());
+            
             if (!isNewTask && state != WAIT_RCPT) { 
                 smsc_log_debug(logger, "Event: is put off. Task for abonent %s "
                                "is already processing events (state=%d)", abonent, (int)state);
@@ -732,7 +732,17 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
         {
             if (!accepted)
             {
-                if (retry) // resend current message
+                if (cancel || cancel_failed)
+                {
+                    // it happens if cancel wasn't sent yet & task became WAIT_RESP (more events were added)
+                    smsc_log_warn(logger, "Responce: no need to cancel message #%lld (smscId=%s) for abonent %s. "
+                                  "Was already processed. However it got responce (c=%d, cf=%d) & it was skipped",
+                                  message.id, smsc_id ? smsc_id:"-", message.abonent.c_str(),
+                                  (int)cancel, (int)cancel_failed);
+                    // TODO: bWasReceipted = false; ??? return; ??? do not kill task !!!
+                    needKillTask = false;
+                }
+                else if (retry) // resend current message
                 {
                     isMessageToSend = true; messageToSend = message;
                     messageToSend.cancel = false; messageToSend.notification = false;
@@ -1038,8 +1048,8 @@ int ResponcesTracker::Execute()
                 receiptWaitQueue.Pop(rcptTimer);
                 const char* smsc_id = (rcptTimer.smscId.length() > 0) ? rcptTimer.smscId.c_str():0;
                 ReceiptData* receipt = (smsc_id) ? receipts.GetPtr(smsc_id):0;
-                smsc_log_warn(logger, "Responce for receipted smscId=%s is timed out. Deleting",
-                              smsc_id ? smsc_id:"-");
+                smsc_log_debug(logger, "Responce for receipted smscId=%s is timed out. Deleting",
+                               smsc_id ? smsc_id:"-");
                 if (receipt) receipts.Delete(smsc_id);
                 else responcesMonitor.wait(TRACKER_SERVICE_SLEEP/100);
             }
