@@ -45,11 +45,10 @@ public class DivertSetExecutor extends DivertManagerState implements Executor
       resp.setMessageString(errorFormat.format(new Object [] {getErrorMessage(exc)}));
       return new ExecutorResponse(new Message[]{resp}, true);
     }
-    if (checkReason((String)state.getAttribute(Constants.ATTR_REASON))) {
-      resp.setMessageString(pageFormat.format(new Object[] {"3>"+valueService}));
-    } else {
-      resp.setMessageString(pageFormat.format(new Object[] {""}));
-    }
+    String reason = (String)state.getAttribute(Constants.ATTR_REASON);
+    final String menuOpt = (checkReason(reason)) ? ("3>"+valueService):"";
+    resp.setMessageString(pageFormat.format(new Object[] {menuOpt}));
+    logger.debug("RS="+reason+",menu opt="+menuOpt+", msg="+resp.getMessageString());
     return new ExecutorResponse(new Message[]{resp}, false);
   }
 }
