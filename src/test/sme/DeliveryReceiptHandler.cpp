@@ -91,10 +91,11 @@ void DeliveryReceiptHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 				pduReg, pdu.get_optional().get_userMessageReference());
 			throw TCException();
 		}
+		//в редких случаях delivery receipt приходит раньше submit_sm_resp
 		if (!monitor->pduData->valid)
 		{
 			__tc_fail__(3);
-			throw TCException();
+			//throw TCException();
 		}
 		__tc_ok_cond__;
 		__tc__("processDeliverySm.deliveryReceipt.checkAllowed");

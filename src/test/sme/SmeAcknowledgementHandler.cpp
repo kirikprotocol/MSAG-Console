@@ -144,7 +144,7 @@ void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		if (!monitor->pduData->valid)
 		{
 			__tc_fail__(3);
-			throw TCException();
+			//throw TCException();
 		}
 		__tc_ok_cond__;
 		__tc__("processDeliverySm.smeAck.checkAllowed");
