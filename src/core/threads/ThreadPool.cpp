@@ -22,11 +22,13 @@ int PooledThread::Execute()
   int blocksheapquantum;
   sigset_t set;
   sigemptyset(&set);
-  for(int i=1;i<=37;i++)if(i!=16)sigaddset(&set,i);
+  for(int i=1;i<=37;i++)if(i!=16 && i!=SIGPROF)sigaddset(&set,i);
+
   if(pthread_sigmask(SIG_SETMASK,&set,NULL)!=0)
   {
     __warning__("failed to set thread signal mask!");
   };
+
 
   trace2("Pooled thread %p ready for tasks",this);
   if(!task)owner->releaseThread(this);
