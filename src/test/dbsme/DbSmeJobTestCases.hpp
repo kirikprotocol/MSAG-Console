@@ -2,8 +2,8 @@
 #define TEST_DBSME_DBSME_JOB_TEST_CASES
 
 #include "DbSmeRegistry.hpp"
-#include "DateFormatter.hpp"
-#include "NumberFormatter.hpp"
+#include "test/util/DateFormatter.hpp"
+#include "test/util/NumberFormatter.hpp"
 #include "test/conf/TestConfig.hpp"
 #include "test/util/CheckList.hpp"
 #include "test/util/Util.hpp"

@@ -12,13 +12,10 @@ template<class T>
 class auto_sync
 {
 	T* obj;
-
 	auto_sync(const auto_sync&) {}
 	auto_sync<T>& operator=(const auto_sync<T>& as) {}
-
 public:
 	auto_sync() : obj(NULL) {}
-
 	auto_sync(T* o) : obj(o)
 	{
 		if (obj)
@@ -64,3 +61,4 @@ public:
 }
 
 #endif /* TEST_UTIL_AUTO_SYNC */
+

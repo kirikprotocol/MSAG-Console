@@ -42,6 +42,8 @@ void SmeConfigGen::saveConfig(const char* configFileName)
 			sme->SME_N << "\"/>" << endl;
 		os << "\t<param name=\"wantAlias\" value=\"" <<
 			(sme->wantAlias ? "yes" : "no") << "\"/>" << endl;
+		os << "\t<param name=\"timeout\" value=\"" << sme->timeout <<
+            "\"/>" << endl;
 		os << "</smerecord>" << endl;
 		__tc_ok__;
 	}
