@@ -2,7 +2,8 @@
 %><%@ page import="ru.novosoft.smsc.jsp.smsc.localeResources.LocaleResourcesAdd,
                    ru.novosoft.util.jsp.MultipartServletRequest,
                    ru.novosoft.smsc.jsp.SMSCJspException,
-                   ru.novosoft.smsc.jsp.SMSCErrors"
+                   ru.novosoft.smsc.jsp.SMSCErrors,
+                   ru.novosoft.smsc.admin.Constants"
 %><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.localeResources.LocaleResourcesAdd"
 /><%
 TITLE = "Add Resource";
@@ -10,11 +11,8 @@ FORM_URI = CPATH+"/upload";
 FORM_METHOD = "POST";
 FORM_ENCTYPE = "multipart/form-data";
 MENU0_SELECTION = "MENU0_LOCALE_RESOURCES";
-MultipartServletRequest multi = (MultipartServletRequest)request.getAttribute("multipart.request");
-if (multi != null)
-	request = multi;
 %><jsp:setProperty name="bean" property="*"/><%
-switch(bean.process(multi))
+switch(bean.process(request))
 {
 	case LocaleResourcesAdd.RESULT_DONE:
 		response.sendRedirect(CPATH+"/locale_resources/index.jsp");

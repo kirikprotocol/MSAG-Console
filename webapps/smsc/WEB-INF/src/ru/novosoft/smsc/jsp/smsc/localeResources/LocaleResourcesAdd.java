@@ -8,6 +8,7 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.util.jsp.MultipartDataSource;
 import ru.novosoft.util.jsp.MultipartServletRequest;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
@@ -28,15 +29,16 @@ public class LocaleResourcesAdd extends PageBean
     return RESULT_OK;
   }
 
-  public int process(MultipartServletRequest multi)
+  public int process(HttpServletRequest request)
   {
-    int result = super.process(multi);
+    int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 
     if (mbCancel != null)
       return RESULT_DONE;
 
+    MultipartServletRequest multi = (MultipartServletRequest)request.getAttribute("multipart.request");
     if (multi != null) {
       MultipartDataSource dataFile = null;
       try {
