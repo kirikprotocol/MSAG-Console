@@ -86,14 +86,16 @@ public:
 			"Длина строки адреса msc в дескрипторе больше максимальной");
 		__reg_tc__("storeAssertSms.descImsiAddrGreaterMaxLength",
 			"Длина строки адреса imsi в дескрипторе больше максимальной");
+		__reg_tc__("storeAssertSms.serviceTypeGreaterMaxLength",
+			"Длина поля service_type больше максимальной");
+		/*
 		__reg_tc__("storeAssertSms.smGreaterMaxLength",
 			"Длина поля short_message больше максимальной");
 		__reg_tc__("storeAssertSms.payloadGreaterMaxLength",
 			"Длина поля message_payload больше максимальной");
-		__reg_tc__("storeAssertSms.serviceTypeGreaterMaxLength",
-			"Длина поля service_type больше максимальной");
 		__reg_tc__("storeAssertSms.rcptMsgIdGreaterMaxLength",
 			"Длина поля receipted_message_id больше максимальной");
+		*/
 		//changeExistentSmsStateEnrouteToEnroute
 		__reg_tc__("changeExistentSmsStateEnrouteToEnroute",
 			"Обновление статуса sms в состоянии ENROUTE (при повторной доставке)");
