@@ -759,6 +759,18 @@ void PersistentStorage::open(bool read)
     }
 }
 
+void PersistentStorage::openRead(const fpos_t* pos /*= 0 (no setPos) */)
+{
+    MutexGuard guard(storageFileLock);
+    this->open(true);
+    if (pos) FileStorage::setPos(pos);
+}
+void PersistentStorage::openWrite(fpos_t* pos /*= 0 (no getPos) */)
+{
+    MutexGuard guard(storageFileLock);
+    this->open(false);
+    if (pos) FileStorage::getPos(pos);
+}
 void PersistentStorage::writeRecord(SMSId id, SMS& sms, fpos_t* pos /*= 0 (no getPos) */)
 {
     MutexGuard guard(storageFileLock);

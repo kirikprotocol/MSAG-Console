@@ -161,7 +161,10 @@ namespace smsc { namespace store
             : FileStorage(), storageFileName(filename) { storageLocation = location; };
         virtual ~PersistentStorage() {};
 
+        void openRead(const fpos_t* pos=0);
         bool readRecord(SMSId& id, SMS& sms, const fpos_t* pos=0);
+        
+        void openWrite(fpos_t* pos=0);
         void writeRecord(SMSId id, SMS& sms, fpos_t* pos=0);
     };
 

@@ -219,8 +219,8 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
                     if (switchDate(lastProcessedTime, sms.lastTime, destinationFileName, destinationDirName, false)
                         || !arcDestination || !txtDestination)
                     {
-                        if (arcDestination) delete arcDestination;
-                        if (txtDestination) delete txtDestination;
+                        if (arcDestination) { delete arcDestination; arcDestination=0; }
+                        if (txtDestination) { delete txtDestination; txtDestination=0; }
 
                         std::string arcLocation = baseDirectory+'/'+destinationDirName;
                         std::string txtLocation = textDirectory+'/'+destinationDirName;
@@ -238,13 +238,21 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
                         lastProcessedTime = sms.lastTime;
                     }
 
-                    fpos_t position = 0;
-                    txtDestination->writeRecord(id, sms);
-                    arcDestination->writeRecord(id, sms, &position);
+                    try
+                    { 
+                        fpos_t position = 0;
+                        arcDestination->openWrite(&position);
+                        //smsc_log_debug(log, "Archive file position=%lld", position);
 
-                    //smsc_log_debug(log, "Archive file position=%lld", position);
-
-                    indexator->IndexateSms(destinationDirName, id, (uint64_t)position, sms);
+                        indexator->IndexateSms(destinationDirName, id, (uint64_t)position, sms);
+                        
+                        txtDestination->writeRecord(id, sms);
+                        arcDestination->writeRecord(id, sms);
+                    }
+                    catch (DiskHashDuplicateKeyException& duplicateExc) {
+                        smsc_log_warn(log, "Duplicate index key for file '%s'. Sms #%lld skipped. Details: %s.",
+                                      file.c_str(), id, duplicateExc.what());
+                    }
                 }
             }
             prtime=gethrtime()-prtime;
