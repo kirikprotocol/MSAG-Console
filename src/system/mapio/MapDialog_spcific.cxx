@@ -352,13 +352,13 @@ inline void ConvAddrMSISDN2Smc(const ET96MAP_ADDRESS_T* ma,Address* sa)
   if ( ma->addressLength != 0 ){
     char sa_val[21] = {0,};
     int i = 0;
-    for ( i=0; i<(ma->addressLength-1)*2;){
-      if ( (ma->address[(i>>1)+1]&0x0f) == 0xf ) break;
-      sa_val[i]=(ma->address[(i>>1)+1]&0x0f)+0x30;
+    for ( i=0; i<(ma->addressLength)*2;){
+      if ( (ma->address[(i>>1)]&0x0f) == 0xf ) break;
+      sa_val[i]=(ma->address[(i>>1)]&0x0f)+0x30;
       ++i;
-      if ( i<(ma->addressLength-1)*2 ){
-        if ( (ma->address[(i>>1)+1]>>4) == 0xf ) break;
-        sa_val[i] = (ma->address[(i>>1)+1]>>4)+0x30;
+      if ( i<(ma->addressLength)*2 ){
+        if ( (ma->address[(i>>1)]>>4) == 0xf ) break;
+        sa_val[i] = (ma->address[(i>>1)]>>4)+0x30;
         ++i;
       }else break;
     }
