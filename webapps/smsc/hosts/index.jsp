@@ -56,7 +56,7 @@ function viewHost(hostName)
 <col width="10%">
 <thead>
 <tr>
-	<th class=ico><img src="<%=CPATH%>/img/ico16_checked_sa.gif" class=ico16 alt=""></th>
+	<th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
 	<th>name</th>
 	<th>port</th>
 	<th title="services ( total / running)">services</th>

@@ -1,6 +1,6 @@
 <html>
 <head>
-	<link rel="STYLESHEET" type="text/css" href="../common.css">
+	<link rel="STYLESHEET" type="text/css" href="/styles/common.css">
 </head>
 <body style="margin: 0px 0px 0px 0px;">
 <%

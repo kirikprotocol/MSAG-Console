@@ -85,11 +85,11 @@ abonent number <input class=txt name=profile value="<%=bean.getProfile() != null
 	</tr>
 	<tr class=row<%=(rowN++)&1%>>
 		<th nowrap>alias hide</th>
-		<td><img src="<%=CPATH%>/img/ic_<%=bean.isAliasHide() ? "" : "not_"%>checked.gif"></td>
+		<td><img src="/images/ic_<%=bean.isAliasHide() ? "" : "not_"%>checked.gif"></td>
 	</tr>
 	<tr class=row<%=(rowN++)&1%>>
 		<th nowrap>alias modifiable</th>
-		<td><img src="<%=CPATH%>/img/ic_<%=bean.isAliasModifiable() ? "" : "not_"%>checked.gif"></td>
+		<td><img src="/images/ic_<%=bean.isAliasModifiable() ? "" : "not_"%>checked.gif"></td>
 	</tr>
 	<tr class=row<%=(rowN++)&1%>>
 		<th nowrap>divert</th>
@@ -97,11 +97,11 @@ abonent number <input class=txt name=profile value="<%=bean.getProfile() != null
 	</tr>
 	<tr class=row<%=(rowN++)&1%>>
 		<th nowrap>divert active</th>
-		<td><img src="<%=CPATH%>/img/ic_<%=bean.isDivertActive() ? "" : "not_"%>checked.gif"></td>
+		<td><img src="/images/ic_<%=bean.isDivertActive() ? "" : "not_"%>checked.gif"></td>
 	</tr>
 	<tr class=row<%=(rowN++)&1%>>
 		<th nowrap>divert modifiable</th>
-		<td><img src="<%=CPATH%>/img/ic_<%=bean.isDivertModifiable() ? "" : "not_"%>checked.gif"></td>
+		<td><img src="/images/ic_<%=bean.isDivertModifiable() ? "" : "not_"%>checked.gif"></td>
 	</tr>
 	</table>
 	</div>

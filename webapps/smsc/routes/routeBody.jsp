@@ -123,11 +123,11 @@ function srcSmeIdChanged()
 						%><option value="<%=encName%>"><%=encName%></option><%
 					}
 				}%></select></td>
-			<td><img src="<%=CPATH%>/img/but_add.gif" onclick="addSourceSubj()" style="cursor:hand;"></td>
+			<td><img src="/images/but_add.gif" onclick="addSourceSubj()" style="cursor:hand;"></td>
 		</tr><tr>
 			<td>Mask</td>
 			<td><input id=newSrcMask class=txt name=srcMasks validation="routeMask" onkeyup="resetValidation(this)"></td>
-			<td><img src="<%=CPATH%>/img/but_add.gif" onclick="addSourceMask(opForm.all.newSrcMask)" style="cursor:hand;"></td>
+			<td><img src="/images/but_add.gif" onclick="addSourceMask(opForm.all.newSrcMask)" style="cursor:hand;"></td>
 		</tr>
 		</table>
 	</td>
@@ -158,7 +158,7 @@ function srcSmeIdChanged()
 					%><option id="<%=encSmeId%>" value="<%=encSmeId%>"><%=encSmeId%></option><%
 				}
 				%></select></td>
-			<td><img src="<%=CPATH%>/img/but_add.gif" onclick="addDestSubj()" style="cursor:hand;"></td>
+			<td><img src="/images/but_add.gif" onclick="addDestSubj()" style="cursor:hand;"></td>
 		</tr>
 		<tr>
 			<td>Mask</td>
@@ -173,7 +173,7 @@ function srcSmeIdChanged()
 				%>
 				</select>
 			</td>
-			<td><img src="<%=CPATH%>/img/but_add.gif" onclick="addDestMask()" style="cursor:hand;"></td>
+			<td><img src="/images/but_add.gif" onclick="addDestMask()" style="cursor:hand;"></td>
 		</tr>
 		</table>
 	</td>
@@ -189,13 +189,13 @@ function srcSmeIdChanged()
 					newRow.className = "row" + ((tbl.rows.length+1) & 1);
 					newRow.id = "srcRow_" + (global_counter++);
 					newCell = document.createElement("td");
-					newCell.innerHTML = '<img src="<%=CPATH%>/img/mask.gif">';
+					newCell.innerHTML = '<img src="/images/mask.gif">';
 					newRow.appendChild(newCell);
 					newCell = document.createElement("td");
 					newCell.innerHTML = valueElem.value + '<input type=hidden name=srcMasks value="' + valueElem.value + '">';
 					newRow.appendChild(newCell);
 					newCell = document.createElement("td");
-					newCell.innerHTML = '<img src="<%=CPATH%>/img/but_del.gif" onClick="removeRow(opForm.all.sources_table, \'' + newRow.id + '\')" style="cursor: hand;">';
+					newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeRow(opForm.all.sources_table, \'' + newRow.id + '\')" style="cursor: hand;">';
 					newRow.appendChild(newCell);
 					valueElem.value = "";
 					valueElem.focus();
@@ -225,13 +225,13 @@ function srcSmeIdChanged()
 					newRow.className = "row" + ((tbl.rows.length+1) & 1);
 					newRow.id = "srcRow_" + (global_counter++);
 					newCell = document.createElement("td");
-					newCell.innerHTML = '<img src="<%=CPATH%>/img/subject.gif">';
+					newCell.innerHTML = '<img src="/images/subject.gif">';
 					newRow.appendChild(newCell);
 					newCell = document.createElement("td");
 					newCell.innerHTML = subjValue + '<input id=subjSrc type=hidden name=checkedSources value="' + subjValue + '">';
 					newRow.appendChild(newCell);
 					newCell = document.createElement("td");
-					newCell.innerHTML = '<img src="<%=CPATH%>/img/but_del.gif" onClick="removeSrcSubj(\'' + newRow.id + '\');" style="cursor: hand;">';
+					newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeSrcSubj(\'' + newRow.id + '\');" style="cursor: hand;">';
 					newRow.appendChild(newCell);
 					selectElem.options[selectElem.selectedIndex] = null;
 					selectElem.focus();
@@ -252,9 +252,9 @@ function srcSmeIdChanged()
 			String rowId = "subjRow_" + StringEncoderDecoder.encodeHEX(name);
 			if (bean.isSrcChecked(name)) {%>
 				<tr class=row<%=(rowN++)&1%> id="<%=rowId%>">
-					<td><img src="<%=CPATH%>/img/subject.gif"></td>
+					<td><img src="/images/subject.gif"></td>
 					<td><%=encName%><input id=subjSrc type=hidden name=checkedSources value="<%=encName%>"></td>
-					<td><img src="<%=CPATH%>/img/but_del.gif" onClick="removeSrcSubj('<%=rowId%>');" style="cursor: hand;"></td>
+					<td><img src="/images/but_del.gif" onClick="removeSrcSubj('<%=rowId%>');" style="cursor: hand;"></td>
 				</tr><%
 			}
 		}
@@ -263,9 +263,9 @@ function srcSmeIdChanged()
 			String rowId = "maskRow_" + StringEncoderDecoder.encodeHEX(bean.getSrcMasks()[i]);
 			%>
 			<tr class=row<%=(rowN++)&1%> id=<%=rowId%>>
-				<td><img src="<%=CPATH%>/img/mask.gif"></td>
+				<td><img src="/images/mask.gif"></td>
 				<td><%=bean.getSrcMasks()[i]%><input type=hidden name=srcMasks value="<%=bean.getSrcMasks()[i]%>"></td>
-				<td><img src="<%=CPATH%>/img/but_del.gif" onClick="removeRow(opForm.all.sources_table, '<%=rowId%>')" style="cursor: hand;"></td>
+				<td><img src="/images/but_del.gif" onClick="removeRow(opForm.all.sources_table, '<%=rowId%>')" style="cursor: hand;"></td>
 			</tr><%
 		}%>
 		</table>
@@ -296,7 +296,7 @@ function srcSmeIdChanged()
 					newRow.id = "srcRow_" + (global_counter++);
 					
 					newCell = document.createElement("td");
-					newCell.innerHTML = '<img src="<%=CPATH%>/img/mask.gif">';
+					newCell.innerHTML = '<img src="/images/mask.gif">';
 					newRow.appendChild(newCell);
 					
 					newCell = document.createElement("td");
@@ -311,7 +311,7 @@ function srcSmeIdChanged()
 					newRow.appendChild(newCell);
 					
 					newCell = document.createElement("td");
-					newCell.innerHTML = '<img src="<%=CPATH%>/img/but_del.gif" onClick="removeRow(opForm.all.destinations_table, \'' + newRow.id + '\')" style="cursor: hand;">';
+					newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeRow(opForm.all.destinations_table, \'' + newRow.id + '\')" style="cursor: hand;">';
 					newRow.appendChild(newCell);
 					opForm.all.newDstMask.value = "";
 					opForm.all.newDstMask.focus();
@@ -362,7 +362,7 @@ function srcSmeIdChanged()
 					newRow.id = "srcRow_" + (global_counter++);
 
 					newCell = document.createElement("td");
-					newCell.innerHTML = '<img src="<%=CPATH%>/img/subject.gif">';
+					newCell.innerHTML = '<img src="/images/subject.gif">';
 					newRow.appendChild(newCell);
 
 					newCell = document.createElement("td");
@@ -378,7 +378,7 @@ function srcSmeIdChanged()
 					newRow.appendChild(newCell);
 
 					newCell = document.createElement("td");
-					newCell.innerHTML = '<img src="<%=CPATH%>/img/but_del.gif" onClick="removeDestSubj(\'' + newRow.id + '\');" style="cursor: hand;">';
+					newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeDestSubj(\'' + newRow.id + '\');" style="cursor: hand;">';
 					newRow.appendChild(newCell);
 					selectElem.options[selectElem.selectedIndex] = null;
 					selectElem.focus();
@@ -404,7 +404,7 @@ function srcSmeIdChanged()
 				String hexName = StringEncoderDecoder.encodeHEX(name);
 				String rowId = "subjRow_" + StringEncoderDecoder.encodeHEX(name);
 				%><tr class=row<%=(rowN++)&1%> id=<%=rowId%>>
-					<td><img src="<%=CPATH%>/img/subject.gif"></td>
+					<td><img src="/images/subject.gif"></td>
 					<td><%=encName%><input id=subjDst type=hidden name=checkedDestinations value="<%=encName%>" defaultSme="<%=StringEncoderDecoder.encode(bean.getDefaultSubjectSme(name))%>"></td>
 					<td><select name=dst_sme_<%=hexName%>>
 						<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
@@ -416,7 +416,7 @@ function srcSmeIdChanged()
 						%>
 						</select>
 					</td>
-					<td><img src="<%=CPATH%>/img/but_del.gif" onClick="removeDestSubj('<%=rowId%>');" style="cursor: hand;"></td>
+					<td><img src="/images/but_del.gif" onClick="removeDestSubj('<%=rowId%>');" style="cursor: hand;"></td>
 				</tr><%
 			}
 		}
@@ -428,7 +428,7 @@ function srcSmeIdChanged()
 		String rowId = "maskRow_" + StringEncoderDecoder.encodeHEX(dstMask);
 		%>
 		<tr class=row<%=(rowN++)&1%> id="<%=rowId%>">
-			<td><img src="<%=CPATH%>/img/mask.gif"></td>
+			<td><img src="/images/mask.gif"></td>
 			<td><%=encMask%><input type=hidden name=dstMasks value="<%=encMask%>"></td>
 			<td><select name=dst_mask_sme_<%=hexMask%> onkeyup="resetValidation(this)">
 				<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
@@ -440,7 +440,7 @@ function srcSmeIdChanged()
 				%>
 				</select>
 			</td>
-			<td><img src="<%=CPATH%>/img/but_del.gif" onClick="removeRow(opForm.all.destinations_table, '<%=rowId%>')" style="cursor: hand;"></td>
+			<td><img src="/images/but_del.gif" onClick="removeRow(opForm.all.destinations_table, '<%=rowId%>')" style="cursor: hand;"></td>
 		</tr>
 		<%}%>
 		</table>

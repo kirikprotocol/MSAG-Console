@@ -27,7 +27,7 @@ img
 }
 img.button
 {
-	behavior : url(click_submit.htc);
+	behavior : url(/scripts/click_submit.htc);
 	cursor: hand;
 /*	position: relative;
 	top: 3px;*/
@@ -39,7 +39,7 @@ input, textarea, select
 	font-size: 100%;
 }
 input {
-	behavior : url(input.htc);
+	behavior : url(/scripts/input.htc);
 }
 textarea
 {
@@ -102,7 +102,7 @@ div.secSmsc
 	padding-left: 19px;
 	margin-left: 0px;
 	margin-bottom: 4px;
-	background-image: url(img/smsc_ico.gif);
+	background-image: url(/images/smsc_ico.gif);
 	font-size: small;
 	font-weight: bold;
 }

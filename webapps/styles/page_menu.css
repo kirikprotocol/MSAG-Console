@@ -25,7 +25,7 @@ table.page_menu a:visited
 	cursor: hand;
 	color: #161E49;
 	text-decoration : none;
-	behavior : url(click_submit.htc);
+	behavior : url(/scripts/click_submit.htc);
 	white-space : nowrap;
 }
 table.page_menu_background

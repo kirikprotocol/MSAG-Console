@@ -20,7 +20,7 @@ table.sme_menu a:visited
 	cursor: hand;
 	color: #006986;
 	text-decoration : none;
-	behavior : url(click_submit.htc);
+	behavior : url(/scripts/click_submit.htc);
 	white-space : nowrap;
 }
 
@@ -32,7 +32,7 @@ table.sme_menu a.disabled:visited
 	cursor: hand;
 	color: #768C8E;
 	text-decoration : none;
-	behavior : url(click_submit.htc);
+	behavior : url(/scripts/click_submit.htc);
 	white-space : nowrap;
 }
 

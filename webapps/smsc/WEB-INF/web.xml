@@ -10,26 +10,26 @@
 		<servlet-class>ru.novosoft.smsc.jsp.SMSCJspController</servlet-class>
 		<init-param>
 			<param-name>config</param-name>
-			<param-value>webapps/smsc/WEB-INF/config.xml</param-value>
+      <param-value>C:\work\cvs\smsc\src\webapp\smsc\WEB-INF\config.xml</param-value>
 		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
-	
+
 	<servlet-mapping>
 		<servlet-name>smsc</servlet-name>
 		<url-pattern>/smsc/*</url-pattern>
 	</servlet-mapping>
-	
+
 	<error-page>
 	    <error-code>403</error-code>
 	    <location>/error403.jsp</location>
 	</error-page>
-	
+
 	<error-page>
 	    <error-code>500</error-code>
 	    <location>/error500.jsp</location>
 	</error-page>
-	
+
 	<security-constraint>
 		<web-resource-collection>
 			<web-resource-name></web-resource-name>
@@ -42,7 +42,7 @@
 		</auth-constraint>
 		<user-data-constraint><transport-guarantee>NONE</transport-guarantee></user-data-constraint>
 	</security-constraint>
-	
+
 	<security-constraint>
 		<web-resource-collection>
 			<web-resource-name></web-resource-name>
@@ -195,7 +195,7 @@
 			<form-error-page>/login.jsp?loginError=yes</form-error-page>
 		</form-login-config>
 	</login-config>
-	
+
 	<security-role>
 		<role-name>apply</role-name>
 	</security-role>

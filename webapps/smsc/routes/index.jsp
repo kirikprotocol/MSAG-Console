@@ -82,7 +82,7 @@ function setSort(sorting)
 <col width="20%" align=center>
 <thead>
 <tr>
-	<th class=ico><img src="<%=CPATH%>/img/ico16_checked_sa.gif" class=ico16 alt=""></th>
+	<th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
 	<th><a href="#" <%=bean.getSort().endsWith("Route ID")                ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by name" onclick='return setSort("Route ID")'                        >name</a></th>
 	<th><a href="#" <%=bean.getSort().endsWith("active")                  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by active status" onclick='return setSort("active")'                 >active</a></th>
 
@@ -112,11 +112,11 @@ String encRouteId = StringEncoderDecoder.encode(routeId);
 <tr class=row<%=row&1%>>
 	<td><input class=check type=checkbox name=checkedRouteIds value="<%=encRouteId%>" <%=bean.isRouteChecked(routeId) ? "checked" : ""%>></td>
 	<td><a href="#" title="Edit route" onClick='return edit("<%=encRouteId%>")'><%=encRouteId%></a></td>
-	<td><%if (isActive                 ){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-	<td><%if (isEnabling               ){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-	<td><%if (isBilling                ){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-	<td><%if (isArchiving              ){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-	<td><%if (isSuppressDeliveryReports){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+	<td><%if (isActive                 ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+	<td><%if (isEnabling               ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+	<td><%if (isBilling                ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+	<td><%if (isArchiving              ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+	<td><%if (isSuppressDeliveryReports){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
 </tr>
 <%}}%>
 </tbody>

@@ -95,7 +95,7 @@ function editService(serviceId)
 <col width="28%" align=left>
 <thead>
 <tr>
-	<th class=ico><img src="<%=CPATH%>/img/ico16_checked_sa.gif" class=ico16 alt=""></th>
+	<th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
 	<th>&nbsp;</th>
 	<th>service</th>
 	<th>status</th>

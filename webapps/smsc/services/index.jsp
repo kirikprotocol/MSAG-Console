@@ -86,7 +86,7 @@ function editService(serviceId)
 <col width="1%" align=center>
 <thead>
 <tr>
-	<th class=ico><img src="<%=CPATH%>/img/ico16_checked_sa.gif" class=ico16 alt=""></th>
+	<th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
 	<th>&nbsp;</th>
 	<th>service</th>
 	<th>host</th>
@@ -127,7 +127,7 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 			%>&nbsp;<%
 		}
 	%></td>
-	<td class=name><%=bean.isServiceDisabled(serviceId) ? "<img src=\"" + CPATH + "/img/ic_disable.gif\" title='disabled'>" : "<img src=\"" + CPATH + "/img/ic_enable.gif\" title='enabled'>"%></td>
+	<td class=name><%=bean.isServiceDisabled(serviceId) ? "<img src=\"/images/ic_disable.gif\" width=10 height=10 title='disabled'>" : "<img src=\"/images/ic_enable.gif\" width=10 height=10 title='enabled'>"%></td>
 	<td class=name><%=smeStatus(serviceId)%></td>
 	<td class=name><%
 		if (bean.isService(serviceId))

@@ -7,11 +7,11 @@ div.collapsing_list_empty
 }
 div.collapsing_list_opened
 {
-	background-image: url(img/list_opened.gif);
+	background-image: url(/images/list_opened.gif);
 	cursor: hand;
 }
 div.collapsing_list_closed
 {
-	background-image: url(img/list_closed.gif);
+	background-image: url(/images/list_closed.gif);
 	cursor: hand;
 }

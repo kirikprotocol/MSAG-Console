@@ -12,19 +12,18 @@ ServerName:<%=request.getServerName()%>
 ServerPort:<%=request.getServerPort()%>
 ServletPath:<%=request.getServletPath()%>  --%>
 <base href="<%=request.getScheme()%>://<%=request.getServerName()%>:<%=request.getServerPort() + CPATH%>/">
-<%--link rel="STYLESHEET" type="text/css" href="style.jsp"--%>
-<link rel="STYLESHEET" type="text/css" href="colors.css">
-<link rel="STYLESHEET" type="text/css" href="common.css">
-<link rel="STYLESHEET" type="text/css" href="list.css">
-<link rel="STYLESHEET" type="text/css" href="properties_list.css">
-<link rel="STYLESHEET" type="text/css" href="main_menu.css">
-<link rel="STYLESHEET" type="text/css" href="collapsing_tree.css">
-<link rel="STYLESHEET" type="text/css" href="collapsing_list.css">
-<link rel="STYLESHEET" type="text/css" href="navbar.css">
-<link rel="STYLESHEET" type="text/css" href="messages.css">
-<link rel="STYLESHEET" type="text/css" href="page_menu.css">
-<link rel="STYLESHEET" type="text/css" href="sme_menu.css">
-<script src="scripts.js" type="text/javascript"></script>
+<link rel="STYLESHEET" type="text/css" href="/styles/colors.css">
+<link rel="STYLESHEET" type="text/css" href="/styles/common.css">
+<link rel="STYLESHEET" type="text/css" href="/styles/list.css">
+<link rel="STYLESHEET" type="text/css" href="/styles/properties_list.css">
+<link rel="STYLESHEET" type="text/css" href="/styles/main_menu.css">
+<link rel="STYLESHEET" type="text/css" href="/styles/collapsing_tree.css">
+<link rel="STYLESHEET" type="text/css" href="/styles/collapsing_list.css">
+<link rel="STYLESHEET" type="text/css" href="/styles/navbar.css">
+<link rel="STYLESHEET" type="text/css" href="/styles/messages.css">
+<link rel="STYLESHEET" type="text/css" href="/styles/page_menu.css">
+<link rel="STYLESHEET" type="text/css" href="/styles/sme_menu.css">
+<script src="/scripts/scripts.js" type="text/javascript"></script>
 <script>
 function openPerfMon()
 {
@@ -41,23 +40,23 @@ if (isServiceStatusNeeded || (ServiceIDForShowStatus != null && ServiceIDForShow
 <%@ include file="/WEB-INF/inc/calendar.jsp"%>
 <table height=100% cellspacing=0 cellpadding=0 class=main_table>
 <tr>
-	<td width=50 background="img/smsc_02.jpg" rowspan=3></td>
-	<td width=30 background="img/smsc_03.jpg" rowspan=3></td>
+	<td width=50 background="/images/smsc_02.jpg" rowspan=3></td>
+	<td width=30 background="/images/smsc_03.jpg" rowspan=3></td>
 	<td bgcolor=#F3F0E3 style="position: relative; top:0; left:0;">
 		<!-- background -->
 		<table cellspacing=0 cellpadding=0 height=100% style="position: absolute; top:0; left:0; z-index: -1;">
 		<tr>
-			<td width=12px background="img/smsc_24.jpg"></td>
+			<td width=12px background="/images/smsc_24.jpg"></td>
 			<td>&nbsp;</td>
-			<td width=12px background="img/smsc_26.jpg"></td>
+			<td width=12px background="/images/smsc_26.jpg"></td>
 		</tr>
 		</table>
 		<!-- "SMS Service Center" header -->
 		<table cellspacing=0 cellpadding=0>
 		<tr>
-			<td width=236><IMG SRC="img/smsc_04.jpg" WIDTH=236 HEIGHT=45 ALT=""></td>
+			<td width=236><IMG SRC="/images/smsc_04.jpg" WIDTH=236 HEIGHT=45 ALT=""></td>
 			<td bgcolor="#161E49"><span style="color: #6F77A3; font: bold 11px; vertical-align: -10px;">Version&nbsp;1.0</span></td>
-			<td width=12 background="img/smsc_06.jpg"></td>
+			<td width=12 background="/images/smsc_06.jpg"></td>
 		</tr>
 		</table>
 		<%!
@@ -145,19 +144,19 @@ if (isServiceStatusNeeded || (ServiceIDForShowStatus != null && ServiceIDForShow
 		</table>
 		<table id=MAIN_MENU_BACKGROUND_TABLE border=0 cellspacing=0 cellpadding=0 class=main_menu_background>
 			<tr>
-				<td width=80 background="img/smsc_13.jpg"></td>
-				<td background="img/smsc_14.jpg">&nbsp;</td>
-				<td width=80 background="img/smsc_16.jpg"></td>
+				<td width=80 background="/images/smsc_13.jpg"></td>
+				<td background="/images/smsc_14.jpg">&nbsp;</td>
+				<td width=80 background="/images/smsc_16.jpg"></td>
 			</tr>
 		</table>
 		<%-- SMSC Status --%>
 		<table cellpadding=0 cellspacing=0 height=30px class=smsc_status>
 		<tr>
-			<th background="img/smsc_17.jpg" nowrap><%=TITLE%></th>
+			<th background="/images/smsc_17.jpg" nowrap><%=TITLE%></th>
 			<td >&nbsp;<%if (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0){
 				%><%=StringEncoderDecoder.encode(ServiceIDForShowStatus)%>&nbsp;is&nbsp;<%=serviceStatus(ServiceIDForShowStatus)%><%
 			}%></td>
-			<td width=12px background="img/smsc_19.jpg" style="padding-right:0px;"></td>
+			<td width=12px background="/images/smsc_19.jpg" style="padding-right:0px;"></td>
 		</tr>
 		</table>
 		<span id="MENU0_NONE"></span>

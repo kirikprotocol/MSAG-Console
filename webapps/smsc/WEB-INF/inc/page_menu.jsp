@@ -46,9 +46,9 @@ void page_menu_end(JspWriter out) throws IOException
 
 	out.print("<table class=page_menu_background cellspacing=0px cellpadding=0px>");
 	out.print("<tr>");
-	out.print("<td width=80px background=\"" + CPATH + "/img/smsc_20.jpg\">&nbsp;</td>");
-	out.print("<td background=\"" + CPATH + "/img/smsc_21.jpg\">&nbsp;</td>");
-	out.print("<td width=80px background=\"" + CPATH + "/img/smsc_23.jpg\">&nbsp;</td>");
+	out.print("<td width=80px background=\"/images/smsc_20.jpg\">&nbsp;</td>");
+	out.print("<td background=\"/images/smsc_21.jpg\">&nbsp;</td>");
+	out.print("<td width=80px background=\"/images/smsc_23.jpg\">&nbsp;</td>");
 	out.print("</tr>");
 	out.print("</table>");
 	out.print("</div>");

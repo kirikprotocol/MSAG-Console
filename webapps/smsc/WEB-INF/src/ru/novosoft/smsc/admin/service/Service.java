@@ -22,7 +22,7 @@ public class Service extends Proxy {
   private ServiceInfo info = null;
   private Category logger = Category.getInstance(this.getClass());
 
-  public Service(ServiceInfo info) throws AdminException
+  public Service(ServiceInfo info)
   {
     super(info.getHost(), info.getPort());
     this.info = info;

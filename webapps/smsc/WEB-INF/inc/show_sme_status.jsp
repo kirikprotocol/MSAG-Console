@@ -7,13 +7,13 @@ String showSmeStatus(SmeStatus status)
 	{
 		if (status.isInternal())
 		{
-			result += "><img src=\"" + CPATH + "/img/ic_internal.gif\" title='internal'></span>";
+			result += "><img src=\"/images/ic_internal.gif\" width=10 height=10 title='internal'></span>";
 		}
 		else
 		{
 			if (!status.isConnected())
 			{
-				result += "><img src=\"" + CPATH + "/img/ic_disconnct.gif\" title='disconnected'></span>";
+				result += "><img src=\"/images/ic_disconnct.gif\" width=10 height=10 title='disconnected'></span>";
 			}
 			else
 			{

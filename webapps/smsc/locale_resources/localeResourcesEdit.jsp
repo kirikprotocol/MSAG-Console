@@ -41,7 +41,7 @@ include file="/WEB-INF/inc/collapsing_tree.jsp"%><%!
 		out.print("<tr class=row" + ((row++) & 1) + ">");
       out.print("<th><input class=txt id=\"newParamName_" + sectionFullName + "\" name=\"newParamName_" + sectionFullName + "\"></th>");
 		out.print("<td width=100% ><input class=txtW id=\"newParamValue_" + sectionFullName + "\" name=\"newParamValue_" + sectionFullName + "\"></td>");
-		out.print("<td><img src=\"" + CPATH + "/img/but_add.gif\" onclick=\"addParam('" + sectionFullName + "')\" title='Add new parameter'></td>");
+		out.print("<td><img src=\"/images/but_add.gif\" onclick=\"addParam('" + sectionFullName + "')\" title='Add new parameter'></td>");
 		out.print("</tr>");
 	}
 	void printAddSection(JspWriter out, Section section) throws IOException
@@ -49,13 +49,13 @@ include file="/WEB-INF/inc/collapsing_tree.jsp"%><%!
 		String sectionFullName = section.getFullName();
 		out.print("<div>");
 		out.print("<input class=txt id=\"newSectionInput_" + sectionFullName + "\" name=\"newSectionInput_" + sectionFullName + "\">");
-		out.print("<img src=\"" + CPATH + "/img/but_add.gif\" onclick=\"addSection('" + sectionFullName + "')\" title='Add new section' style='position:relative;top:4px'></div>");
+		out.print("<img src=\"/images/but_add.gif\" onclick=\"addSection('" + sectionFullName + "')\" title='Add new section' style='position:relative;top:4px'></div>");
 	}
 	void printResourceSection(JspWriter out, Section section) throws IOException
 	{
 		final String sectionFullName = section.getFullName();
 		startSection(out, sectionFullName, section.getName(), section.getParent() == null,
-						 "<img src=\"" + CPATH + "/img/but_del.gif\" onclick=\"removeSection('" + sectionFullName + "')\" title='Remove this section'>");
+						 "<img src=\"/images/but_del.gif\" onclick=\"removeSection('" + sectionFullName + "')\" title='Remove this section'>");
 		startParams(out, "paramTable_" + sectionFullName);
 		for (Iterator i = section.getParamNames().iterator(); i.hasNext();) {
 			String paramName = (String) i.next();
@@ -64,7 +64,7 @@ include file="/WEB-INF/inc/collapsing_tree.jsp"%><%!
 					sectionFullName + '.' + paramName,
 					section.getParam(paramName),
 					"paramRow_" + sectionFullName + Section.NAME_DELIMETER + paramName,
-					"<img src=\"" + CPATH + "/img/but_del.gif\" onclick=\"removeParam('" + sectionFullName + "', '" + paramName +"')\" title='Remove this parameter'>");
+					"<img src=\"/images/but_del.gif\" onclick=\"removeParam('" + sectionFullName + "', '" + paramName +"')\" title='Remove this parameter'>");
 		}
 		printAddParam(out, section);
 		finishParams(out);
@@ -106,7 +106,7 @@ function addParam(sectionName)
 	newCell.appendChild(inputElement);
 
 	imgElement = document.createElement("img");
-	imgElement.src = "<%=CPATH%>/img/but_del.gif";
+	imgElement.src = "/images/but_del.gif";
 	imgElement.setAttribute('sectionName', sectionName);
 	imgElement.setAttribute('paramName', paramNameElem.value);
 	imgElement.attachEvent("onclick", removeParam_Event);
@@ -143,7 +143,7 @@ function sectionHeader(sectionName, fullName)
 		+ sectionName
 		+ "</td>"
 		+ "<td>"
-		+ createImgButton("<%=CPATH%>/img/but_del.gif", "removeSection('" + fullName + "')", "Remove this section")
+		+ createImgButton("/images/but_del.gif", "removeSection('" + fullName + "')", "Remove this section")
 		+ "</td>"
 		+ "</tr></table></div>";
 }
@@ -157,7 +157,7 @@ function addSectionField(sectionFN)
 	return ""
 		+ "<div>"
 		+ createInput(newSectionInput, "txt")
-		+ createImgButton2("<%=CPATH%>/img/but_add.gif", "addSection('" + sectionFN + "')", "Add new section",  "position:relative;top:4px")
+		+ createImgButton2("/images/but_add.gif", "addSection('" + sectionFN + "')", "Add new section",  "position:relative;top:4px")
 		+ "</div>";
 }
 function addParamField(sectionFN)
@@ -175,7 +175,7 @@ function addParamField(sectionFN)
 		+   "</td><td>"
 		+     createInput(newParamValue, "txtW")
 		+   "</td><td>"
-		+     createImgButton("<%=CPATH%>/img/but_add.gif", "addParam('" + sectionFN + "')", "Add new param")
+		+     createImgButton("/images/but_add.gif", "addParam('" + sectionFN + "')", "Add new param")
 		+   "</td>"
 		+ "</tr>"
 		+ "</table>";

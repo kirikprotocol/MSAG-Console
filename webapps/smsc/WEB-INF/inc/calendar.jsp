@@ -1,5 +1,5 @@
-<link rel="STYLESHEET" type="text/css" href="<%=CPATH%>/calendar.css">
-<script src="<%=CPATH%>/calendar.js" type="text/javascript"></script>
+<link rel="STYLESHEET" type="text/css" href="/styles/calendar.css">
+<script src="/scripts/calendar.js" type="text/javascript"></script>
 <iframe id=calendarIFrame class=calendarHiddenLayer2></iframe>
 <div id=calendarPanel class=calendarHiddenLayer
   oncontextmenu="return false;"

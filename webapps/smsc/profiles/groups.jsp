@@ -70,7 +70,7 @@ function setSort(sorting)
 <col width="20%" align=left>
 <thead>
 <tr>
-	<th><img src="<%=CPATH%>/img/ico16_checked_sa.gif" class=ico16 alt=""></th>
+	<th><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
 	<th><a href="#" <%=bean.getSort().endsWith("mask")       ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by mask"        onclick='return setSort("mask")'      >mask</a></th>
 	<th><a href="#" <%=bean.getSort().endsWith("codeset")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by codepage"    onclick='return setSort("codeset")'   >codepage</a></th>
 	<th><a href="#" <%=bean.getSort().endsWith("reportinfo") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by report info" onclick='return setSort("reportinfo")'>report&nbsp;info</a></th>
@@ -105,11 +105,11 @@ final String encProfileMask = StringEncoderDecoder.encode(profileMask);
 	<td><%=StringEncoderDecoder.encode((String)item.getValue("Codepage"))%></td>
 	<td><%=StringEncoderDecoder.encode((String)item.getValue("Report info"))%></td>
 	<td><%=StringEncoderDecoder.encode((String)item.getValue("locale"))%></td>
-  <td align=center><%if (((Boolean)item.getValue("hidden"    )).booleanValue()){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-  <td align=center><%if (((Boolean)item.getValue("hidden_mod")).booleanValue()){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+  <td align=center><%if (((Boolean)item.getValue("hidden"    )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+  <td align=center><%if (((Boolean)item.getValue("hidden_mod")).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
   <td><%=StringEncoderDecoder.encode((String)item.getValue("divert"))%></td>
-  <td align=center><%if (((Boolean)item.getValue("divert_act"    )).booleanValue()){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-  <td align=center><%if (((Boolean)item.getValue("divert_mod"    )).booleanValue()){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+  <td align=center><%if (((Boolean)item.getValue("divert_act"    )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+  <td align=center><%if (((Boolean)item.getValue("divert_mod"    )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
 </tr>
 <%}}%>
 </tbody>

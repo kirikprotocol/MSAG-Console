@@ -99,7 +99,7 @@ function addDirectiveAlias()
   dCell.appendChild(createSelect("directive_" + aHex, d));
   r.appendChild(dCell);
   var bCell = document.createElement("td");
-  bCell.innerHTML = "<img src=\"<%=CPATH%>/img/but_del.gif\" onclick=\"removeDirectiveAlias('row_" + aHex + "')\" style=\"cursor:hand;\">";
+  bCell.innerHTML = "<img src=\"/images/but_del.gif\" onclick=\"removeDirectiveAlias('row_" + aHex + "')\" style=\"cursor:hand;\">";
   r.appendChild(bCell);
   aElem.value = "";
 
@@ -124,7 +124,7 @@ function addDirectiveAlias()
         <option value="unhide"   <%="unhide"  .equals(directive) ? "selected" : ""%>>unhide</option>
         <option value="flash"    <%="flash"   .equals(directive) ? "selected" : ""%>>flash</option>
       </select></td>
-      <td><img src="<%=CPATH%>/img/but_del.gif" onclick="removeDirectiveAlias('row_<%=aliasHex%>')" style="cursor:hand;"></td>
+      <td><img src="/images/but_del.gif" onclick="removeDirectiveAlias('row_<%=aliasHex%>')" style="cursor:hand;"></td>
     </tr><%
   }
 %>
@@ -139,7 +139,7 @@ function addDirectiveAlias()
         <option value="unhide"   >unhide</option>
         <option value="flash"    >flash</option>
       </select></td>
-  <td><img src="<%=CPATH%>/img/but_add.gif" onclick="addDirectiveAlias()" style="cursor:hand;"></td>
+  <td><img src="/images/but_add.gif" onclick="addDirectiveAlias()" style="cursor:hand;"></td>
 </tr>
 </table>
 </div>

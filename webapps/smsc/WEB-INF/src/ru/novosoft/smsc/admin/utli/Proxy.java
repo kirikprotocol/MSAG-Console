@@ -34,7 +34,6 @@ public class Proxy
 	private ResponseReader reader;
 
 	protected Proxy(String host, int port)
-			  throws AdminException
 	{
 		this.host = host;
 		this.port = port;

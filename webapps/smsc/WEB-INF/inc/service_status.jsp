@@ -31,19 +31,19 @@ String serviceStatus(String serviceId, String elem_id)
 		switch (status)
 		{
 			case ServiceInfo.STATUS_RUNNING:
-				result += "<img src=\"" + CPATH + "/img/ic_running.gif\" title='running'>";
+				result += "<img src=\"/images/ic_running.gif\" width=10 height=10 title='running'>";
 				break;
 			case ServiceInfo.STATUS_STOPPING:
-				result += "<img src=\"" + CPATH + "/img/ic_stopping.gif\" title='stopping'>";
+				result += "<img src=\"/images/ic_stopping.gif\" width=10 height=10 title='stopping'>";
 				break;
 			case ServiceInfo.STATUS_STOPPED:
-				result += "<img src=\"" + CPATH + "/img/ic_stopped.gif\" title='stopped'>";
+				result += "<img src=\"/images/ic_stopped.gif\" width=10 height=10 title='stopped'>";
 				break;
 			case ServiceInfo.STATUS_STARTING:
-				result += "<img src=\"" + CPATH + "/img/ic_starting.gif\" title='starting'>";
+				result += "<img src=\"/images/ic_starting.gif\" width=10 height=10 title='starting'>";
 				break;
 			default:
-				result += "<img src=\"" + CPATH + "/img/ic_unknown.gif\" title='unknown'>";
+				result += "<img src=\"/images/ic_unknown.gif\" width=10 height=10 title='unknown'>";
 				break;
 		}
 	}

@@ -62,7 +62,7 @@ function addFilterMask()
   var c1 = r.insertCell();
   c1.innerHTML = "<input class=txt name=filter_masks value=\"" + fm + "\" validation=\"mask\" onkeyup=\"resetValidation(this)\">";
   var c2 = r.insertCell();
-  c2.innerHTML = "<img src=\"<%=CPATH%>/img/but_del.gif\" onclick=\"removeFilterMask('" + r.id + "')\" style=\"cursor:hand;\">";
+  c2.innerHTML = "<img src=\"/images/but_del.gif\" onclick=\"removeFilterMask('" + r.id + "')\" style=\"cursor:hand;\">";
 
   fme.value = "";
   fme.focus();
@@ -79,14 +79,14 @@ function addFilterMask()
     final String filterMaskHex = StringEncoderDecoder.encodeHEX(filterMask);
     %><tr id=filterMaskRow_<%=filterMaskHex%>>
       <td><input class=txt name=filter_masks value="<%=StringEncoderDecoder.encode(filterMask)%>" validation="mask" onkeyup="resetValidation(this)"></td>
-      <td><img src="<%=CPATH%>/img/but_del.gif" onclick="removeFilterMask('filterMaskRow_<%=filterMaskHex%>')" style="cursor:hand;"></td>
+      <td><img src="/images/but_del.gif" onclick="removeFilterMask('filterMaskRow_<%=filterMaskHex%>')" style="cursor:hand;"></td>
       <td>&nbsp;</td>
     </tr><%
   }
 %>
 <tr>
   <td><input class=txt name=filter_masks value="" id=newFilterMask validation="mask" onkeyup="resetValidation(this)"></td>
-  <td><img src="<%=CPATH%>/img/but_add.gif" onclick="addFilterMask()" style="cursor:hand;"></td>
+  <td><img src="/images/but_add.gif" onclick="addFilterMask()" style="cursor:hand;"></td>
   <td>&nbsp;</td>
 </tr>
 </table>

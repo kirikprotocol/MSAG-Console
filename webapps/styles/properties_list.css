@@ -17,11 +17,11 @@ table.properties_list th a:hover
 }
 table.properties_list th a.up
 {
-	background-image: url(img/ico16_up.gif);
+	background-image: url(/images/ico16_up.gif);
 }
 table.properties_list th a.down
 {
-	background-image: url(img/ico16_down.gif);
+	background-image: url(/images/ico16_down.gif);
 }
 
 table.properties_list tr.row0

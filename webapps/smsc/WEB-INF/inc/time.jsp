@@ -1,5 +1,5 @@
-<link rel="STYLESHEET" type="text/css" href="<%=CPATH%>/time.css">
-<script src="<%=CPATH%>/time.js" type="text/javascript"></script>
+<link rel="STYLESHEET" type="text/css" href="/styles/time.css">
+<script src="/scripts/time.js" type="text/javascript"></script>
 <iframe id=timeIFrame class=timeHiddenLayer2></iframe>
 
 <div id=timePanel class=timeHiddenLayer oncontextmenu="return false;" onselectstart="return false;" ondragstart="return false;" onmousedown="return timeMD();" onmouseup="return timeMU();" onmousemove="return timeMM();" onlosecapture="return timeClose();" onfocusout="return timeClose();">

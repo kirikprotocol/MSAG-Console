@@ -292,16 +292,28 @@ public class Config implements Cloneable
   {
     File configXmlNew = Functions.createNewFilenameForSave(configFileToSave);
 
+    saveInternal(configXmlNew, encoding);
+
+    Functions.renameNewSavedFileToOriginal(configXmlNew, configFileToSave);
+  }
+
+  private void saveInternal(File fileToSaveTo, final String encoding) throws IOException, WrongParamTypeException
+  {
     // save new config to temp file
     SaveableConfigTree tree = new SaveableConfigTree(this);
-    PrintWriter out = new PrintWriter(new FileWriter(configXmlNew));
+    PrintWriter out = new PrintWriter(new FileWriter(fileToSaveTo));
     Functions.storeConfigHeader(out, "config", "configuration.dtd", encoding); // C++ code doesn't know about other codings // System.getProperty("file.encoding");
     tree.write(out, "  ");
     Functions.storeConfigFooter(out, "config");
     out.flush();
     out.close();
+  }
 
-    Functions.renameNewSavedFileToOriginal(configXmlNew, configFileToSave);
+  public void saveWithoutBackup() throws IOException, WrongParamTypeException
+  {
+    if (configFile == null)
+      throw new NullPointerException("config file not specified");
+    saveInternal(configFile, "ISO-8859-1");
   }
 
   public Collection getSectionChildShortParamsNames(String sectionName)
@@ -330,5 +342,31 @@ public class Config implements Cloneable
   public boolean containsParameter(String parameterName)
   {
     return params.containsKey(parameterName);
+  }
+
+  public void copySectionFromConfig(final Config configToCopyFrom, final String sectionName)
+  {
+    final int sectionNameLength = sectionName.length();
+    for (Iterator i = configToCopyFrom.getParameterNames().iterator(); i.hasNext();) {
+      String paramName = (String) i.next();
+      if (paramName.startsWith(sectionName) && paramName.charAt(sectionNameLength) == '.')
+        params.put(paramName, configToCopyFrom.params.get(paramName));
+    }
+  }
+
+  public static boolean isParamEquals(Config config1, Config config2, String fullParamName)
+  {
+    Object o1 = config1.params.get(fullParamName);
+    Object o2 = config2.params.get(fullParamName);
+    return (o1 == null && o2 == null)
+            || (o1 != null && o2 != null && o1.equals(o2));
+  }
+
+  public boolean isParamEquals(Config anotherConfig, String fullParamName)
+  {
+    Object o1 = this.params.get(fullParamName);
+    Object o2 = anotherConfig.params.get(fullParamName);
+    return (o1 == null && o2 == null)
+            || (o1 != null && o2 != null && o1.equals(o2));
   }
 }

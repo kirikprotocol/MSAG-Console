@@ -5,7 +5,7 @@ void sme_menu_begin(JspWriter out) throws IOException
    sme_menu_delimiter_needed = false;
 	out.print("<table class=sme_menu cellpadding=0px cellspacing=0px>");
 	out.print("<tr>");
-	out.print("<th width=12px background=\"" + CPATH + "/img/smsc_35.jpg\">&nbsp;</th>");
+	out.print("<th width=12px background=\"/images/smsc_35.jpg\">&nbsp;</th>");
 	out.print("<th width=12px>&nbsp;</th>");
 }
 void sme_menu_button(JspWriter out, String name, String value, String visibleName, String title) throws IOException
@@ -41,7 +41,7 @@ void sme_menu_space(JspWriter out) throws IOException
 }
 void sme_menu_end(JspWriter out) throws IOException
 {
-	out.print("<th width=12px background=\"" + CPATH + "/img/smsc_37.jpg\">&nbsp;</th>");
+	out.print("<th width=12px background=\"/images/smsc_37.jpg\">&nbsp;</th>");
 	out.print("</tr>");
 	out.print("</table>");
 

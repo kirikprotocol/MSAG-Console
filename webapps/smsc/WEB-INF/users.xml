@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="Cp1252"?>
+<?xml version="1.0" encoding="windows-1251"?>
 <!DOCTYPE users SYSTEM "file://users.dtd">
 
 <users>
@@ -19,7 +19,7 @@
 		<role name="subjects"/>
 		<role name="users"/>
 	</user>
-	<user login="igork" password="qwe" firstName="Èãîðü" lastName="Âèòàëüåâè÷" dept="??????" workPhone="íå çíàþ" homePhone="? ????" cellPhone="?? ?????" email="a@b">
+	<user login="igork" password="qwe" firstName="Èãîðü" lastName="Âèòàëüåâè÷" dept="äåïàðòàìåíò" workPhone="íå çíàþ" homePhone="? ????" cellPhone="?? ?????" email="a@b.ÿ">
 		<role name="apply"/>
 		<role name="services"/>
 	</user>

@@ -73,7 +73,7 @@ function setSort(sorting)
 <col width="25%" align=left>
 <thead>
 <tr>
-	<th class=ico><img src="<%=CPATH%>/img/ico16_checked_sa.gif" class=ico16 alt=""></th>
+	<th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
 	<th><a href="#" <%=bean.getSort().endsWith("login") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by login" onclick='return setSort("login")'>name</a></th>
 	<th><a href="#" <%=bean.getSort().endsWith("firstName") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by login" onclick='return setSort("firstName")'>first name</a></th>
 	<th><a href="#" <%=bean.getSort().endsWith("lastName") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by login" onclick='return setSort("lastName")'>last name</a></th>
