@@ -1134,9 +1134,12 @@ void UpdateSeqNumStatement::bindInc(int8_t inc)
          SQLT_UIN, (dvoid *)&(incVal), sizeof(incVal));
 }
 
+/*"SELECT DDA, MSG_REF, MAX(ID) FROM SMS_MSG\
+ WHERE MSG_REF IS NOT NULL GROUP BY DDA";*/
 const char* ConcatDataStatement::sql = (const char*)
-"SELECT DDA, MSG_REF, MAX(ID) FROM SMS_MSG\
- WHERE MSG_REF IS NOT NULL GROUP BY DDA";
+"SELECT DDA, MSG_REF FROM SMS_MSG WHERE ID IN\
+(SELECT MAX(ID) FROM SMS_MSG WHERE MSG_REF IS NOT NULL GROUP BY DDA)"
+
 ConcatDataStatement::ConcatDataStatement(Connection* connection, bool assign)
     throw(StorageException)
         : Statement(connection, ConcatDataStatement::sql, assign)
@@ -1146,7 +1149,7 @@ ConcatDataStatement::ConcatDataStatement(Connection* connection, bool assign)
     dstAddr[0] = '\0'; msgRef = 0;
     define(1, SQLT_STR, (dvoid *)  (dstAddr), (sb4) sizeof(dstAddr));
     define(2, SQLT_UIN, (dvoid *) &(msgRef), (sb4) sizeof(msgRef));
-    define(3, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
+    //define(3, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
 }
 
 /* --------------------- Sheduler's statements -------------------- */
