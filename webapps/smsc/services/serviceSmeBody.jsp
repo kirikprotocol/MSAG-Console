@@ -2,15 +2,15 @@
 <col width="15%" align=right>
 <col width="85%">
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>priority:</th>
+	<th>priority:</th>
 	<td><input class=txt type="text" name=priority maxlength=5 value="<%=bean.getPriority()%>" validation="priority" onkeyup="resetValidation(this)"></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>system type:</th>
+	<th>system type:</th>
 	<td><input class=txt type="text" name="systemType" value="<%=StringEncoderDecoder.encode(bean.getSystemType())%>" maxlength="13"></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>type of number:</th>
+	<th>type of number:</th>
 	<td><div class=select>
 		<select name="typeOfNumber">
 		<option value="0"<%=bean.getTypeOfNumberInt() == 0 ? " selected" : ""%>>Unknown</option>
@@ -24,7 +24,7 @@
 	</td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>numbering plan:</th>
+	<th>numbering plan:</th>
 	<td><div class=select>
 		<select name="numberingPlan">
 		<option value="0" <%=bean.getNumberingPlanInt() == 0  ? " selected" : ""%>>Unknown</option>
@@ -41,39 +41,39 @@
 	</td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>interface version:</th>
+	<th>interface version:</th>
 	<td><input class=txt type="text" name="interfaceVersion" value="3.4" readonly></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>range of address:</th>
+	<th>range of address:</th>
 	<td><input class=txt maxlength="41" type="text" name="rangeOfAddress" value="<%=StringEncoderDecoder.encode(bean.getRangeOfAddress())%>"></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label><label for="wantAlias_check_id">want alias:</label></th>
+	<th><label for="wantAlias_check_id">want alias:</label></th>
 	<td><input class=check type="checkbox" name="wantAlias" id="wantAlias_check_id" <%=bean.isWantAlias() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label><label for="forceDC_check_id">force data coding:</label></th>
+	<th><label for="forceDC_check_id">force data coding:</label></th>
 	<td><input class=check type="checkbox" name="forceDC" id="forceDC_check_id" <%=bean.isForceDC() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>timeout:</th>
+	<th>timeout:</th>
 	<td><input class=txt type="text" name="timeout" value="<%=bean.getTimeout()%>"></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>password:</th>
+	<th>password:</th>
 	<td><input class=txt maxlength="41" type="text" name="password" value="<%=StringEncoderDecoder.encode(bean.getPassword())%>"></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>receipt scheme name:</th>
+	<th>receipt scheme name:</th>
 	<td><input class=txt maxlength="32" type="text" name="receiptSchemeName" value="<%=StringEncoderDecoder.encode(bean.getReceiptSchemeName() == null ? "default" : bean.getReceiptSchemeName())%>"></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label><label for="disabled_check_id">disabled:</label></th>
+	<th><label for="disabled_check_id">disabled:</label></th>
 	<td><input class=check type="checkbox" name="disabled" id="disabled_check_id" <%=bean.isDisabled() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>mode:</th>
+	<th>mode:</th>
 	<td><div class=select>
 		<select name="mode">
 		<option value="<%=SME.MODE_TX%>"  <%=bean.getModeByte() == SME.MODE_TX  ? " selected" : ""%>>TX</option>

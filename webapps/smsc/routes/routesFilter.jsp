@@ -43,7 +43,7 @@ String name = (String) i.next();
 String encName = StringEncoderDecoder.encode(name);
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>&nbsp;</th>
+	<th>&nbsp;</th>
 	<td nowrap><input class=check id="src_chk_<%=encName%>" type=checkbox name=srcChks value="<%=encName%>" <%=bean.isSrcChecked(name) ? "checked" : ""%>>&nbsp;<label for="src_chk_<%=encName%>"><%=encName%></label></td>
 </tr>
 <%}
@@ -51,12 +51,12 @@ for (int i=0; i<bean.getSrcMasks().length; i++)
 {
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>&nbsp;</th>
+	<th>&nbsp;</th>
 	<td><input class=txt name=srcMasks value="<%=bean.getSrcMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to sources filter"></th>
+	<th><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to sources filter"></th>
 	<td><input class=txt name=srcMasks validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 
@@ -70,7 +70,7 @@ String name = (String) i.next();
 String encName = StringEncoderDecoder.encode(name);
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>&nbsp;</th>
+	<th>&nbsp;</th>
 	<td nowrap><input class=check id="dst_chk_<%=encName%>" type=checkbox name=dstChks value="<%=encName%>" <%=bean.isDstChecked(name) ? "checked" : ""%>>&nbsp;<label for="dst_chk_<%=encName%>"><%=encName%></label></td>
 </tr>
 <%}
@@ -78,12 +78,12 @@ for (int i=0; i<bean.getDstMasks().length; i++)
 {
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>&nbsp;</th>
+	<th>&nbsp;</th>
 	<td><input class=txt name=dstMasks value="<%=bean.getDstMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to destinations filter"></th>
+	<th><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to destinations filter"></th>
 	<td><input class=txt name=dstMasks validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 
@@ -97,7 +97,7 @@ String name = (String) i.next();
 String encName = StringEncoderDecoder.encode(name);
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>&nbsp;</th>
+	<th>&nbsp;</th>
 	<td nowrap><input class=check id="sme_<%=encName%>" type=checkbox name=smeChks value="<%=encName%>" <%=bean.isSmeChecked(name) ? "checked" : ""%>>&nbsp;<label for="sme_<%=encName%>"><%=encName%></label></td>
 </tr>
 <%}%>
@@ -106,15 +106,15 @@ String encName = StringEncoderDecoder.encode(name);
 <tr><td colspan=3 class=secInner><div class=secView>Options</div></td></tr>
 <%rowN = 0;%>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>&nbsp;</th>
+	<th>&nbsp;</th>
 	<td nowrap><input type="checkbox" name=strict <%=bean.isStrict() ? "checked" : ""%>>Strict Filter</td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>&nbsp;</th>
+	<th>&nbsp;</th>
 	<td nowrap><input type="checkbox" name=showSrc <%=bean.isShowSrc() ? "checked" : ""%>>Show sources list</td>
 </tr>
 <tr class=rowLast>
-	<th class=label>&nbsp;</th>
+	<th>&nbsp;</th>
 	<td nowrap><input type="checkbox" name=showDst <%=bean.isShowDst() ? "checked" : ""%>>Show destinations list</td>
 </tr>
 </table>

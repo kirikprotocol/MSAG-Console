@@ -34,11 +34,11 @@ page_menu_end(out);
 <col width="85%">
 <tbody>
 <tr class=row0>
-	<th class=label>host name:</th>
+	<th>host name:</th>
 	<td><input class=txt name=hostName value="<%=bean.getHostName()%>"></td>
 </tr>
 <tr class=rowLast>
-	<th class=label>host port:</th>
+	<th>host port:</th>
 	<td><input class=txt name=port size=10 value="<%=bean.getPort()%>" validation="port" onkeyup="resetValidation(this)"></td>
 </tr>
 </table>

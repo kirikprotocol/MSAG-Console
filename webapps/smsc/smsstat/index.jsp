@@ -35,19 +35,23 @@
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="/WEB-INF/inc/calendar.jsp"%>
+<div class=content>
 
-<div class=secQuestion>Query statistics</div>
-<table class=list width="100%">
+<div class=page_subtitle>Query statistics</div>
+<table class=properties_list cellspacing=0>
 <tr class=row0>
-	<th class=label>From Date:</th>
+	<th>From Date:</th>
 	<td nowrap><input type=text id="fromDate" name="fromDate" class=calendarField value="<%=bean.getFromDate()%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(fromDate, false, true);">...</button></td>
-	<th class=label>Till Date:</th>
+	<th>Till Date:</th>
 	<td nowrap><input type=text id="tillDate" name="tillDate" class=calendarField value="<%=bean.getTillDate()%>" maxlength=20><button class=calendarButton type=button onclick="return showCalendar(tillDate, false, true);">...</button></td>
 </tr>
 </table>
-<div class=secButtons>
-    <input class=btn type="submit" name="mbQuery" value="Query !">
-</div>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbQuery",  "Query !",  "Run query");
+page_menu_space(out);
+page_menu_end(out);
+%>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ results ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <%
 Statistics stat = bean.getStatistics();
@@ -55,18 +59,18 @@ if (stat != null) {
     CountersSet total = stat.getTotal();
     Collection dates = stat.getDateStat();
 %>
-<table class=list cellspacing=1 width="100%">
+<table class=list cellspacing=0>
 <tr>
-    <td colspan=4><div class=secView>General statistics</div></td>
+    <td colspan=4><div class=page_subtitle>General statistics</div></td>
 </tr>
 <tr class=row0>
-    <th class=label width="25%">&nbsp;</th>
+    <th width="25%">&nbsp;</th>
     <th width="25%"><div align=right>Accepted</div></th>
     <th width="25%"><div align=right>Finalized</div></th>
     <th width="25%"><div align=right>Rescheduled</div></th>
 </tr>
 <tr class=row1>
-    <th class=label>Total SMS processed:</th>
+    <th>Total SMS processed:</th>
     <td align=right><%= total.accepted%></td>
     <td align=right><%= total.finalized%></td>
     <td align=right><%= total.rescheduled%></td>
@@ -77,7 +81,7 @@ while (i.hasNext()) {
     DateCountersSet date = (DateCountersSet)i.next();
     SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
 %>  <tr class=row0>
-        <th class=label><%= formatter.format(date.getDate())%></th>
+        <th><%= formatter.format(date.getDate())%></th>
         <td align=right><%= date.accepted%></td>
         <td align=right><%= date.finalized%></td>
         <td align=right><%= date.rescheduled%></td>
@@ -87,7 +91,7 @@ while (i.hasNext()) {
     while (j.hasNext()) {
         HourCountersSet hour = (HourCountersSet)j.next();
     %>  <tr class=row1>
-            <th class=label>&nbsp;&nbsp;&nbsp;<%= ((hour.getHour() < 10)? "0"+hour.getHour():""+hour.getHour())%></th>
+            <th>&nbsp;&nbsp;&nbsp;<%= ((hour.getHour() < 10)? "0"+hour.getHour():""+hour.getHour())%></th>
             <td align=right><%= hour.accepted%></td>
             <td align=right><%= hour.finalized%></td>
             <td align=right><%= hour.rescheduled%></td>
@@ -105,7 +109,7 @@ while (i.hasNext()) {
     <th width="25%"><div align=right>SME Id</div></th>
     <th width="25%"><div align=right>Sent</div></th>
     <th width="25%"><div align=right>Received</div></th>
-    <th class=label width="25%">&nbsp;</th>
+    <th width="25%">&nbsp;</th>
 </tr><%
         while (i.hasNext()) {
             SmeIdCountersSet smeid = (SmeIdCountersSet)i.next();
@@ -128,8 +132,8 @@ while (i.hasNext()) {
 <tr class=row0>
     <th width="25%"><div align=right>Route Id</div></th>
     <th width="25%"><div align=right>Processed</div></th>
-    <th class=label width="25%">&nbsp;</th>
-    <th class=label width="25%">&nbsp;</th>
+    <th width="25%">&nbsp;</th>
+    <th width="25%">&nbsp;</th>
 </tr>  <%
         while (i.hasNext()) {
             RouteIdCountersSet routeid = (RouteIdCountersSet)i.next();
@@ -152,8 +156,8 @@ while (i.hasNext()) {
 <tr class=row0>
     <th width="25%"><div align=right>Error Code</div></th>
     <th width="25%"><div align=right>Count</div></th>
-    <th class=label width="25%">&nbsp;</th>
-    <th class=label width="25%">&nbsp;</th>
+    <th width="25%">&nbsp;</th>
+    <th width="25%">&nbsp;</th>
 </tr>  <%
         while (i.hasNext()) {
             ErrorCounterSet errid = (ErrorCounterSet)i.next();
@@ -176,7 +180,7 @@ while (i.hasNext()) {
 </table>
 <%
 } // stat != null%>
-
+</div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>
 

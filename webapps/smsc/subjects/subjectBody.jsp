@@ -9,11 +9,11 @@
 <col width="15%">
 <col width="85%">
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>name:</th>
+	<th>name:</th>
 	<td><input class=txt name=name value="<%=bean.getName()%>" <%=isNew?"":"readonly"%>></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>default SME:</th>
+	<th>default SME:</th>
 	<td><select name=defSme>
 		<%for (Iterator i = bean.getPossibleSmes().iterator(); i.hasNext(); )
 		{
@@ -38,7 +38,7 @@ for (int i=0; i<bean.getMasks().length; i++)
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
 	<td><input class=txt name=masks validation="mask" onkeyup="resetValidation(this)"></td>
-	<td class=label><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to subject"></td>
+	<td><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to subject"></td>
 </tr>
 </table>
 <%}%>

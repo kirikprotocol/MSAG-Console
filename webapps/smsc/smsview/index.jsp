@@ -37,10 +37,10 @@ switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal
 <div class=content>
 <%
 {%>
-<div class=secQuestion>Search parameters</div>
-<table class=list width="100%">
+<div class=page_subtitle>Search parameters</div>
+<table class=properties_list cell>
 <tr class=row0>
-	<th class=label>Storage:</th>
+	<th>Storage:</th>
 	<td nowrap><input class=radio type="radio" name="storageType" id=storageTypeArchive value="<%=
 			SmsQuery.SMS_ARCHIVE_STORAGE_TYPE%>" <%=
 			(bean.getStorageType()==SmsQuery.SMS_ARCHIVE_STORAGE_TYPE) ?
@@ -55,32 +55,32 @@ switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal
 	</td>
 </tr>
 <tr class=row1>
-	<th class=label>Source Address:</th>
-	<td><input class=txtW type="text" name="fromAddress"  value="<%=bean.getFromAddress()%>" size=25 maxlength=25></td>
-	<th class=label>Source SME Id:</th>
-	<td><input class=txtW type="text" name="srcSmeId"  value="<%=bean.getSrcSmeId()%>" size=17 maxlength=15></td>
+	<th>Source Address:</th>
+	<td><input class=txt type="text" name="fromAddress"  value="<%=bean.getFromAddress()%>" size=25 maxlength=25></td>
+	<th>Source SME Id:</th>
+	<td><input class=txt type="text" name="srcSmeId"  value="<%=bean.getSrcSmeId()%>" size=17 maxlength=15></td>
 </tr>
 <tr class=row0>
-	<th class=label>Destination Address:</th>
-	<td><input class=txtW type="text" name="toAddress" value="<%=bean.getToAddress()%>" size=25 maxlength=25></td>
-	<th class=label>Destination SME Id:</th>
-	<td><input class=txtW type="text" name="dstSmeId"  value="<%=bean.getDstSmeId()%>" size=17 maxlength=15></td>
+	<th>Destination Address:</th>
+	<td><input class=txt type="text" name="toAddress" value="<%=bean.getToAddress()%>" size=25 maxlength=25></td>
+	<th>Destination SME Id:</th>
+	<td><input class=txt type="text" name="dstSmeId"  value="<%=bean.getDstSmeId()%>" size=17 maxlength=15></td>
 </tr>
 <tr class=row1>
-	<th class=label>SMS Id:</th>
-	<td><input class=txtW type="text" name="smsId"  value="<%=bean.getSmsId()%>" size=16 maxlength=16></td>
-	<th class=label>Route Id:</th>
-	<td><input class=txtW type="text" name="routeId"  value="<%=bean.getRouteId()%>" size=32 maxlength=32></td>
+	<th>SMS Id:</th>
+	<td><input class=txt type="text" name="smsId"  value="<%=bean.getSmsId()%>" size=16 maxlength=16></td>
+	<th>Route Id:</th>
+	<td><input class=txt type="text" name="routeId"  value="<%=bean.getRouteId()%>" size=32 maxlength=32></td>
 </tr>
 <tr class=row0>
-	<th class=label>From Date:</th>
+	<th>From Date:</th>
 	<td nowrap><input type=text id=fromDate name=fromDate class=calendarField value="<%=bean.getFromDate()%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(fromDate, false, true);">...</button></td>
-	<th class=label>Till Date:</th>
+	<th>Till Date:</th>
 	<td nowrap><input type=text id="tillDate" name="tillDate" class=calendarField value="<%=bean.getTillDate()%>" maxlength=20><button class=calendarButton type=button onclick="return showCalendar(tillDate, false, true);">...</button></td>
 </tr>
 </table>
 <%}%>
-<div class=secButtons>Rows max:<select name="rowsMaximum"><%int rowsMaximum = bean.getRowsMaximum();%>
+Rows max:<select name="rowsMaximum"><%int rowsMaximum = bean.getRowsMaximum();%>
 		<option value="100" <%= (rowsMaximum  <= 100) ?   "selected":""%>>100</option>
 		<option value="200" <%= (rowsMaximum == 200) ? "selected":""%>>200</option>
 		<option value="300" <%= (rowsMaximum == 300) ? "selected":""%>>300</option>
@@ -99,9 +99,13 @@ Per page:<select name="pageSize"><%int rowsToDisplay = bean.getPageSizeInt();%>
 		<option value="50" <%= (rowsToDisplay == 50) ? "selected":""%>>50</option>
 		<option value="-1" <%= (rowsToDisplay < 0 || rowsToDisplay > 50) ?  "selected":""%>>All</option>
 	</select>
-<input class=btn type="submit" name="mbQuery" value="Query !">
-<input class=btn type="submit" name="mbClear" value="Clear query parameters"></div>
-<%
+</div><%
+page_menu_begin(out);
+page_menu_button(out, "mbQuery",  "Query !",  "Run query");
+page_menu_button(out, "mbClear", "Clear", "Clear query parameters");
+page_menu_space(out);
+page_menu_end(out);
+%><div class=content><%
 if (bean.getTotalSizeInt()>0) {%>
 <input type=hidden name=sort>
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
@@ -122,9 +126,9 @@ function setSort(sorting)
 <%
   SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 %>
-<div class=secView>Search results: <%= bean.getTotalRowsCount()%> rows matched by query</div>
-<%@ include file="/WEB-INF/inc/navbar.jsp"%>
-<table class=list cellspacing=1 width="100%">
+<div class=page_subtitle>Search results: <%= bean.getTotalRowsCount()%> rows matched by query</div>
+<%@ include file="/WEB-INF/inc/navbar_nofilter.jsp"%>
+<table class=list cellspacing=0>
 <thead>
 <tr class=row0>
   <th>&nbsp;</th>
@@ -188,7 +192,7 @@ if (lastIndex >= bean.getTotalSizeInt() || bean.getPageSizeInt() < 0)
         <%
             String errMessage = appContext.getLocaleString(request.getLocale(), "smsc.errcode."+row.getLastResult());
             if (errMessage == null) errMessage = appContext.getLocaleString(request.getLocale(), "smsc.errcode.unknown"); %>
-        <%= StringEncoderDecoder.encode(errMessage)%>
+        <%= StringEncoderDecoder.encode(errMessage == null ? "" : errMessage)%>
       </td>
   </tr>
   <tr class=row<%=rowN&1%>1>
@@ -197,11 +201,14 @@ if (lastIndex >= bean.getTotalSizeInt() || bean.getPageSizeInt() < 0)
 }}
 %></tbody>
 </table>
-<%@ include file="/WEB-INF/inc/navbar.jsp"%>
-<div class=secButtons>
-<input class=btn type="submit" name="mbRemove" value="Delete checked rows">
-<input class=btn type="submit" name="mbDelete" value="Delete All fetched rows">
-</div>
+<%@ include file="/WEB-INF/inc/navbar_nofilter.jsp"%>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbRemove",  "Delete checked rows",  "Delete checked rows");
+page_menu_button(out, "mbDelete", "Delete All fetched rows", "Delete All fetched rows");
+page_menu_space(out);
+page_menu_end(out);
+%>
 <% } %>
 </div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

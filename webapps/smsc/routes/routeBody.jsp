@@ -8,36 +8,36 @@
 <col width="98%">
 <tr><td colspan=3><div class=page_subtitle>Route information</div></td></tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>name:</th>
+	<th>name:</th>
 	<td colspan=2><input class=txt name=routeId value="<%=bean.getRouteId()%>"></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label><label title="integer from 0 to 32767">priority:</label></th>
+	<th><label title="integer from 0 to 32767">priority:</label></th>
 	<td colspan=2><input name=priority value="<%=bean.getPriority()%>" maxlength=5 class=txt validation="priority" onkeyup="resetValidation(this)"></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label><br></th>
+	<th><br></th>
 	<td colspan=2><input id=permissible class=check type=checkbox name=permissible <%=bean.isPermissible() ? "checked" : ""%>>&nbsp;<label for=permissible>allowed</label></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label><br></th>
+	<th><br></th>
 	<td colspan=2><input class=check type=checkbox id=billing name=billing <%=bean.isBilling() ? "checked" : ""%>>&nbsp;<label for=billing>billing</label></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label><br></th>
+	<th><br></th>
 	<td colspan=2><input id=archiving class=check type=checkbox name=archiving <%=bean.isArchiving() ? "checked" : ""%>>&nbsp;<label for=archiving>archiving</label></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>&nbsp;</th>
+	<th>&nbsp;</th>
 	<td colspan=2><input id=suppressDeliveryReports class=check type=checkbox name=suppressDeliveryReports <%=bean.isSuppressDeliveryReports() ? "checked" : ""%>>&nbsp;<label for=suppressDeliveryReports>suppress delivery reports</label></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>&nbsp;</th>
+	<th>&nbsp;</th>
 	<td colspan=2><input id=active class=check type=checkbox name=active <%=bean.isActive() ? "checked" : ""%>>&nbsp;<label for=active>active</label></td>
 </tr>
 
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>service ID:</th>
+	<th>service ID:</th>
 	<td colspan=2><input name=serviceId value="<%=bean.getServiceId()%>" maxlength=5 class=txt validation="route_serviceId" onkeyup="resetValidation(this)"></td>
 </tr>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ sources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>

@@ -32,6 +32,7 @@ switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal
 }
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
+<div class=content>
 <input type=hidden name=storageType>
 <input type=hidden name=smsId>
 <%
@@ -40,82 +41,82 @@ switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal
     SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMMM, yyyy HH:mm:ss");
     int rowN=0;
   %>
-<div class=secView>SMS #<%= row.getId()%></div>
-<table class=list cellspacing=1 width="100%">
+<div class=page_subtitle>SMS #<%= row.getId()%></div>
+<table class=properties_list cellspacing=0>
 <tbody>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top class=label>Originating Address</th>
+    <th width="1%" nowrap valign=top>Originating Address</th>
     <td nowrap valign=top>
       <%= StringEncoderDecoder.encode(row.getOriginatingAddressMask().getMask())%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top class=label>Destination Address</th>
+    <th width="1%" nowrap valign=top>Destination Address</th>
     <td nowrap valign=top>
       <%= StringEncoderDecoder.encode(row.getDestinationAddressMask().getMask())%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top class=label>Dealiased Destination Address</th>
+    <th width="1%" nowrap valign=top>Dealiased Destination Address</th>
     <td nowrap valign=top>
       <%= StringEncoderDecoder.encode(row.getDealiasedDestinationAddressMask().getMask())%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top class=label>Source SME Id</th>
+    <th width="1%" nowrap valign=top>Source SME Id</th>
     <td nowrap valign=top>
       <%= StringEncoderDecoder.encode(row.getSrcSmeId())%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top class=label>Destination SME Id</th>
+    <th width="1%" nowrap valign=top>Destination SME Id</th>
     <td nowrap valign=top>
       <%= StringEncoderDecoder.encode(row.getDstSmeId())%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top class=label>Route Id</th>
+    <th width="1%" nowrap valign=top>Route Id</th>
     <td nowrap valign=top>
       <%= StringEncoderDecoder.encode(row.getRouteId())%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top class=label>Status</th>
+    <th width="1%" nowrap valign=top>Status</th>
     <td nowrap valign=top>
       <%= StringEncoderDecoder.encode(row.getStatus())%> (<%=row.getLastResult()%>)
       <%
          String errMessage = appContext.getLocaleString(request.getLocale(), "smsc.errcode."+row.getLastResult());
          if (errMessage == null) errMessage = appContext.getLocaleString(request.getLocale(), "smsc.errcode.unknown");
       %>
-      <%= StringEncoderDecoder.encode(errMessage)%>
+      <%= StringEncoderDecoder.encode(errMessage == null ? "" : errMessage)%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top class=label>Submit Time</th>
+    <th width="1%" nowrap valign=top>Submit Time</th>
     <td nowrap valign=top>
       <%= (row.getSubmitTime()!= null) ? StringEncoderDecoder.encode(dateFormatter.format(row.getSubmitTime())):"&nbsp;"%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top class=label>Valid Time</th>
+    <th width="1%" nowrap valign=top>Valid Time</th>
     <td nowrap valign=top>
       <%= (row.getValidTime()!= null) ? StringEncoderDecoder.encode(dateFormatter.format(row.getValidTime())):"&nbsp;"%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top class=label>Last Try Time</th>
+    <th width="1%" nowrap valign=top>Last Try Time</th>
     <td nowrap valign=top>
       <%= (row.getLastTryTime()!= null) ? StringEncoderDecoder.encode(dateFormatter.format(row.getLastTryTime())):"&nbsp;"%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top class=label>Next Try Time</th>
+    <th width="1%" nowrap valign=top>Next Try Time</th>
     <td nowrap valign=top>
       <%= (row.getNextTryTime()!= null) ? StringEncoderDecoder.encode(dateFormatter.format(row.getNextTryTime())):"&nbsp;"%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top class=label>Decoded Message</th>
+    <th width="1%" nowrap valign=top>Decoded Message</th>
     <td nowrap valign=top>
       <%= (row.getText()!=null&&row.getText().startsWith("&#")?row.getText():StringEncoderDecoder.encode(row.getText()))%>&nbsp;
     </td>
@@ -123,8 +124,8 @@ switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal
 </tbody>
 </table>
 
-<div class=secView>SMS Body</div>
-<table class=list cellspacing=1 width="100%">
+<div class=page_subtitle>SMS Body</div>
+<table class=list cellspacing=0>
 <tbody>
   <%
     Hashtable ht = row.getBodyParameters();
@@ -133,7 +134,7 @@ switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal
       String key = (String)htke.nextElement();
       Object value = ht.get(key); %>
     <tr class=row<%=rowN++&1%>0>
-      <th width="1%" nowrap valign=top class=label><%
+      <th width="1%" nowrap valign=top><%
         String keyMsg = appContext.getLocaleString(request.getLocale(), "sms.body.tag."+key);
         if( keyMsg == null ) keyMsg = key;
       %><%= keyMsg%></th>
@@ -167,5 +168,6 @@ switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal
 </tbody>
 </table>
 <%}%>
+</div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

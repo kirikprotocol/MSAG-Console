@@ -71,7 +71,7 @@ switch (bean.getStage())
 	<col width="15%" align=right>
 	<col width="85%">
 	<tr class=row0>
-		<th class=label>Distribute:</th>
+		<th>Distribute:</th>
 		<td><input class=txt type=file name=distribute></td>
 	</tr>
 	</table>

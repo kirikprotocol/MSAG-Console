@@ -24,30 +24,35 @@
     }
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<table class=list cellspacing=0 cellspadding=1 width="100%">
+<div class=content>
+<table class=list cellspacing=0>
 <col width="15%" align=right>
 <col width="85%">
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Names ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=2 class=secInner><div class=secList>Names</div></td></tr>
+<tr><td colspan=2 class=secInner><div class=page_subtitle>Names</div></td></tr>
 <%
 int rowN = 0;
 for (int i=0; i<bean.getNames().length; i++)
 {
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label></th>
+	<td>&nbsp;</td>
 	<td><input class=txt name=names value="<%=bean.getNames()[i]%>"></td>
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label><input class=btn type=submit name=mbAdd value="Add" title="Add new distribution list name to filter.\nUses java regexp format"></th>
+	<td><input class=btn type=submit name=mbAdd value="Add" title="Add new distribution list name to filter.\nUses java regexp format"></td>
 	<td><input class=txt name=names></td>
 </tr>
 </table>
-<div class=secButtons>
-<input class=btn type=submit name=mbApply  value="Apply" title="Apply filter to distribution lists list">
-<input class=btn type=submit name=mbClear  value="Clear" title="Clear filter">
-<input class=btn type=submit name=mbCancel value="Cancel" title="Cancel filter editing">
 </div>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbApply",  "Apply",  "Apply filter to distribution lists list");
+page_menu_button(out, "mbClear", "Clear", "Clear filter");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel filter editing");
+page_menu_space(out);
+page_menu_end(out);
+%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

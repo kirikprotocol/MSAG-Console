@@ -32,11 +32,9 @@
     }
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-
-<table class=list cellspacing=1 width="100%">
-<tr>
-    <td colspan=4><div class=secView>Commutators status</div></td>
-</tr>
+<div class=content>
+<div class=page_subtitle>Commutators status</div>
+<table class=list cellspacing=0>
 <%  List mscList = bean.getMscs();
     if (mscList == null || mscList.size() <= 0) {%>
 <tr class=row0>
@@ -60,7 +58,7 @@
     <td><div align=right><%= StringEncoderDecoder.encode(info.getLockString())%></div></td>
     <td><div align=right><%= info.getfCount()%></div></td>
     <td>
-    <div class=secButtons align=right>
+    <div align=right>
         <input class=btn type="submit" name="mbBlock" value="Lock" onclick="this.form.mscKey.value='<%= info.getMscNum()%>'" <%= (info.ismLock()) ? "disabled":""%>>
         <input class=btn type="submit" name="mbClear" value="UnLock" onclick="this.form.mscKey.value='<%= info.getMscNum()%>'" <%= (info.isaLock() || info.ismLock()) ? "":"disabled"%>>
         <input class=btn type="submit" name="mbUnregister" value="UnRegister" onclick="this.form.mscKey.value='<%= info.getMscNum()%>'">
@@ -72,19 +70,17 @@
 </table>
 
 
-<div class=secQuestion>Register new Mobile Switching Center</div>
+<div class=page_subtitle>Register new Mobile Switching Center</div>
 <table class=list cellspacing=1 width="100%">
 <tr class=row0>
      <td width="55%">
         <input type="hidden" name="mscKey" value="none">
-        <input class=txtW type="text" name="mscNum" value="<%=bean.getMscNum()%>" size=21 maxlength=21>
+        <input class=txt type="text" name="mscNum" value="<%=bean.getMscNum()%>" size=21 maxlength=21>
     </td>
-<td width="45%"><div class=secButtons>
-        <input class=btn type="submit" name="mbRegister" value="Register">
-    </div></td>
+<td width="45%"><input class=btn type="submit" name="mbRegister" value="Register"></td>
 </tr>
 </table>
-
+</div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>
 

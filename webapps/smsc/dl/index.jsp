@@ -33,6 +33,7 @@
     }
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
+<div class=content>
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=sort>
@@ -56,7 +57,7 @@ function edit(dlName)
 }
 </script>
 
-<table class=list cellspacing=1 width="100%">
+<table class=list cellspacing=0>
 <col width="1%">
 <col width="99%" align=left>
 <thead>
@@ -81,9 +82,13 @@ for (Iterator i = bean.getDlNames().iterator(); i.hasNext(); )
 </tbody>
 </table>
 <%@ include file="/WEB-INF/inc/navbar.jsp"%>
-<div class=secButtons>
-<input class=btn type=submit name=mbAdd value="Add distribution list" title="Create new distribution list">
-<input class=btn type=submit name=mbDelete value="Delete distribution list(s)" title="Delete selected distribution lists">
 </div>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbAdd",  "Add distribution list",  "Create new distribution list");
+page_menu_button(out, "mbDelete", "Delete distribution list(s)", "Delete selected distribution list(s)");
+page_menu_space(out);
+page_menu_end(out);
+%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

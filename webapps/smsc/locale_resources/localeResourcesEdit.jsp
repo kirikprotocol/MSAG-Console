@@ -89,7 +89,7 @@ name="bean" property="*"
 				final String paramN = StringEncoderDecoder.encode(paramName);
 				final String paramRow = "paramRow_" + paramFN;
 				out.print("<tr class=row" + ((row++) & 1) + " id=\"" + paramRow + "\">");
-				out.print("<th class=label>" + paramN + "</th>");
+				out.print("<th>" + paramN + "</th>");
 				out.print("<td>");
 				createInput(out, paramFN, StringEncoderDecoder.encode(section.getParam(paramName)));
 				out.print("</td><td>");
