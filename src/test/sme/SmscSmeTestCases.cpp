@@ -80,6 +80,7 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 				s << " was successfully delivered on ";
 				s << df.format(t);
 				const pair<string, uint8_t> p = convert(s.str(), profile.codepage);
+				__trace2__("getExpectedResponse(): %s", p.first.c_str());
 				if (p.first.find(text) != string::npos)
 				{
 					return new AckText(p.first, p.second, valid);
@@ -106,6 +107,7 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 				}
 				//s << monitor->deliveryStatus;
 				const pair<string, uint8_t> p = convert(s.str(), profile.codepage);
+				__trace2__("getExpectedResponse(): %s", p.first.c_str());
 				if (p.first.find(text) != string::npos)
 				{
 					return new AckText(p.first, p.second, valid);
