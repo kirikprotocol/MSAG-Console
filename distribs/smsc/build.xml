@@ -50,6 +50,9 @@ Targets:
 
   <target name="makeweb">
     <untar compression="gzip" src="${SMSC_DIR}/config/tomcat/tomcat.tar.gz" dest="${DISTR_DIR}" overwrite="yes"/>
+    <chmod perm="775">
+      <fileset dir="${DISTR_DIR}" includes="bin/*.sh"/>
+    </chmod>
     <ant dir="${WEBSRC_DIR}" target="build"/>
     <copy todir="${DISTR_DIR}/webapps">
       <fileset dir="${SMSC_DIR}/webapps" includes="images/**/*, styles/**/*, scripts/**/*"/>
@@ -220,7 +223,7 @@ Targets:
     <symlink resource="../services/SMSC/conf/aliases.xml" link="${DISTR_DIR}/conf/aliases.xml" overwrite="yes"/>
 
     <!-- archiver configuration-->
-    <copy tofile="${DISTR_DIR}/services/ArchiveDaemon/logger.properties" file="${TEMPL_DIR}/logger/archiver.logger">
+    <copy tofile="${DISTR_DIR}/services/ArchiveDaemon/logger.properties" file="${TEMPL_DIR}/logger/archiver.logger" >
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <copy tofile="${DISTR_DIR}/services/ArchiveDaemon/bin/service" file="${TEMPL_DIR}/service/archiver">
@@ -228,7 +231,7 @@ Targets:
     </copy>
     <chmod file="${DISTR_DIR}/services/ArchiveDaemon/bin/service" perm="755"/>
     <copy todir="${DISTR_DIR}/services/ArchiveDaemon/conf" flatten="yes">
-      <fileset dir="${TEMPL_DIR}/archiver" includes="config.xml"/>
+      <fileset dir="${TEMPL_DIR}/archiver" includes="daemon.xml"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <symlink resource="../services/ArchiveDaemon/conf/config.xml" link="${DISTR_DIR}/conf/archiver.xml" overwrite="yes"/>
