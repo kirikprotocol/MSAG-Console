@@ -3,7 +3,6 @@
 
 #include "test/sme/SmppProfilerTestCases.hpp"
 #include "DbSmeRegistry.hpp"
-#include "DateFormatter.hpp"
 #include "DbSmeFormatJobTestCases.hpp"
 #include "DbSmeModifyJobTestCases.hpp"
 #include "DbSmeSelectJobTestCases.hpp"
@@ -24,15 +23,6 @@ using smsc::test::sme::SmppProfilerTestCases;
 using smsc::test::sme::SmeAcknowledgementHandler;
 using smsc::test::core::SmeAckMonitor;
 using smsc::test::core::PduData;
-using smsc::test::core::PduDataObject;
-
-struct DbSmeAck : public PduDataObject
-{
-	string text;
-	uint8_t dataCoding;
-	DbSmeAck(const string& _text, uint8_t _dataCoding)
-		: text(_text), dataCoding(_dataCoding) {}
-};
 
 /**
  * Тест кейсы для db sme.
@@ -89,7 +79,7 @@ public:
 	 * Получение ответных сообщений от db sme.
 	 */
 	virtual void processSmeAcknowledgement(SmeAckMonitor* monitor,
-		PduDeliverySm &pdu);
+		PduDeliverySm &pdu, time_t recvTime);
 
 protected:
 	DbSmeRegistry* dbSmeReg;
@@ -114,7 +104,7 @@ protected:
 	void sendDbSmePdu(const Address& addr, const string& input,
 		const string& output, bool sync, uint8_t dataCoding);
 	const string processJobFirstOutput(const string& text, DbSmeTestRecord* rec);
-	DbSmeAck* getExpectedResponse(SmeAckMonitor* monitor, PduDeliverySm &pdu,
+	AckText* getExpectedResponse(SmeAckMonitor* monitor, PduDeliverySm &pdu,
 		const string& text);
 };
 
