@@ -51,7 +51,7 @@ void SmeManagerTestCases::setupRandomCorrectSmeInfo(SmeInfo* info)
 	auto_ptr<char> _addressRange = rand_char(rand1(MAX_ADDRESS_RANGE_LENGTH));
 	info->rangeOfAddress = _addressRange.get();
 	//systemType
-	auto_ptr<char> _systemType = rand_char(rand1(MAX_SYSTEM_TYPE_LENGTH));
+	auto_ptr<char> _systemType = rand_char(MAX_SYSTEM_TYPE_LENGTH);
 	info->systemType = _systemType.get();
 	//password
 	auto_ptr<char> _password = rand_char(rand1(MAX_PASSWORD_LENGTH));
@@ -60,9 +60,9 @@ void SmeManagerTestCases::setupRandomCorrectSmeInfo(SmeInfo* info)
 	info->hostname = "localhost";
 	info->port = rand1(65535);
 	//systemId
-	auto_ptr<char> _systemId = rand_char(rand1(MAX_SYSTEM_ID_LENGTH));
+	auto_ptr<char> _systemId = rand_char(MAX_SYSTEM_ID_LENGTH);
 	info->systemId = _systemId.get();
-	info->SME_N = rand0(65535);
+	info->SME_N = rand0(INT_MAX);
 	info->disabled = rand0(1);
 }
 
@@ -474,13 +474,99 @@ debugSme(info);
 	return res;
 }
 
-TCResult* SmeManagerTestCases::registerCorrectSmeProxy(const SmeSystemId& systemId)
+void SmeManagerTestCases::checkSelectSmeStat(const vector<SmeInfo*>& sme,
+	const map<uint32_t, int>& statMap, TCResult* res)
+{
+	int minVal = INT_MAX;
+	int maxVal = 0;
+	for (map<uint32_t, int>::const_iterator it = statMap.begin();
+		 it != statMap.end(); it++)
+	{
+		if (minVal > it->second)
+		{
+			minVal = it->second;
+			continue;
+		}
+		if (maxVal < it->second)
+		{
+			maxVal = it->second;
+			continue;
+		}
+	}
+	if (minVal > maxVal)
+	{
+		res->addFailure(1);
+		return;
+	}
+	float tmp = (float) (maxVal - minVal) / (maxVal + minVal);
+	if (tmp > 0.1)
+	{
+		res->addFailure(2);
+	}
+	int enabledSmeCount = 0;
+	for (int i = 0; i < sme.size(); i++)
+	{
+		if (!sme[i]->disabled)
+		{
+			enabledSmeCount++;
+		}
+	}
+	if (enabledSmeCount != statMap.size())
+	{
+		res->addFailure(3);
+	}
+}
+
+TCResult* SmeManagerTestCases::selectSme(const vector<SmeInfo*>& sme, int num)
+{
+	TCSelector s(num, 2);
+	TCResult* res = new TCResult(TC_SELECT_SME, s.getChoice());
+	for (; s.check(); s++)
+	{
+		try
+		{
+			unsigned long timeout;
+			switch (s.value())
+			{
+				case 1:
+					timeout = 0;
+					break;
+				case 2:
+					timeout = rand1(5);
+					break;
+				default:
+					throw s;
+			}
+			map<uint32_t, int> statMap;
+			for (int i = 0; i < sme.size() * 100; i++)
+			{
+				SmeProxy* proxy = smeMan->selectSmeProxy(timeout);
+				if (proxy)
+				{
+					statMap[proxy->getUniqueId()]++;
+				}
+			}
+			checkSelectSmeStat(sme, statMap, res);
+		}
+		catch (...)
+		{
+			error();
+			res->addFailure(100);
+		}
+	}
+	return res;
+}
+
+TCResult* SmeManagerTestCases::registerCorrectSmeProxy(const SmeSystemId& systemId, uint32_t* proxyId)
 {
 	TCResult* res = new TCResult(TC_REGISTER_CORRECT_SME_PROXY);
 	try
 	{
-		TestSmeProxy* proxy = new TestSmeProxy(systemId);
+		CorrectSmeProxy* proxy = new CorrectSmeProxy();
 		smeMan->registerSmeProxy(systemId, proxy);
+		SmeIndex index = smeMan->lookup(systemId);
+		SmeProxy* tmp = smeMan->getSmeProxy(index);
+		*proxyId = tmp->getUniqueId();
 	}
 	catch(...)
 	{

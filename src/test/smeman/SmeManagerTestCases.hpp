@@ -4,14 +4,16 @@
 #include "smeman/smeman.h"
 #include "test/util/Util.hpp"
 #include "test/util/BaseTestCases.hpp"
+#include <map>
 #include <vector>
 
 namespace smsc {
 namespace test {
 namespace smeman {
 
-using std::vector;
 using std::ostream;
+using std::map;
+using std::vector;
 using log4cpp::Category;
 using smsc::test::util::TCResult;
 using smsc::test::util::BaseTestCases;
@@ -32,6 +34,7 @@ const char* const TC_ENABLE_NON_EXISTENT_SME = "enableNonExistentSme";
 const char* const TC_GET_EXISTENT_SME = "getExistentSme";
 const char* const TC_GET_NON_EXISTENT_SME = "getNonExistentSme";
 const char* const TC_ITERATE_SME = "iterateSme";
+const char* const TC_SELECT_SME = "selectSme";
 const char* const TC_REGISTER_CORRECT_SME_PROXY = "registerCorrectSmeProxy";
 
 ostream& operator<< (ostream& os, const SmeInfo& sme);
@@ -112,7 +115,13 @@ public:
 	 */
 	TCResult* iterateSme(const vector<SmeInfo*> sme);
 
-	TCResult* registerCorrectSmeProxy(const SmeSystemId& systemId);
+	/**
+	 * Выборка sme происходит равномерно.
+	 */
+	TCResult* selectSme(const vector<SmeInfo*>& sme, int num);
+
+	TCResult* registerCorrectSmeProxy(const SmeSystemId& systemId,
+		uint32_t* proxyId);
 
 protected:
 	virtual Category& getLog();
@@ -122,6 +131,8 @@ private:
 	
 	void setupRandomCorrectSmeInfo(SmeInfo* info);
 	vector<int> compareSmeInfo(const SmeInfo& info1, const SmeInfo& info2);
+	void checkSelectSmeStat(const vector<SmeInfo*>& sme,
+		const map<uint32_t, int>& statMap, TCResult* res);
 	void debugSme(SmeInfo& sme);
 };
 

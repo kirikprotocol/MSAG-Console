@@ -40,7 +40,7 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 	//Disable зарегистрированного sme, 1/6
 	//Enable зарегистрированного sme, 1/6
 	//Получение зарегистрированного sme, 2/6
-	bool emptySystemId = true; //можно создать только единственный sme
+	bool emptySystemId = false; //можно создать только единственный sme
 	for (TCSelector s(RAND_SET_TC, 6); s.check(); s++)
 	{
 		switch (s.value())
@@ -53,9 +53,9 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 				}
 				break;
 			case 2:
-				if (emptySystemId)
+				if (!emptySystemId)
 				{
-					emptySystemId = false;
+					emptySystemId = true;
 					prepareForNewSme(sme, stack);
 					TCResult* res = tc.addCorrectSmeWithEmptySystemId(sme.back());
 					stack.back()->push_back(res);
@@ -84,6 +84,15 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 				}
 		}
 	}
+
+	//Выборка sme происходит равномерно
+	for (int i = 0; i < sme.size(); i++)
+	{
+		uint32_t uniqueId;
+		TCResult* res = tc.registerCorrectSmeProxy(sme[i]->systemId, &uniqueId);
+		stack[i]->push_back(res);
+	}
+	filter->addResult(tc.selectSme(sme, RAND_TC));
 
 	//Итерирование по списку зарегистрированных sme
 	filter->addResult(tc.iterateSme(sme));
@@ -157,6 +166,8 @@ void saveCheckList(TCResultFilter* filter)
 		filter->getResults(TC_GET_NON_EXISTENT_SME));
 	cl.writeResult("Итерирование по списку зарегистрированных sme",
 		filter->getResults(TC_ITERATE_SME));
+	cl.writeResult("Выборка sme происходит равномерно",
+		filter->getResults(TC_SELECT_SME));
 }
 
 /**
@@ -165,17 +176,21 @@ void saveCheckList(TCResultFilter* filter)
  */
 int main(int argc, char* argv[])
 {
+	if (argc != 3)
+	{
+		cout << "Usage: RouteManagerFunctionalTest <numCycles> <numSme>" << endl;
+		exit(0);
+	}
+
+	const int numCycles = atoi(argv[1]);
+	const int numSme = atoi(argv[2]);
 	try
 	{
 		//Manager::init("config.xml");
 		TCResultFilter* filter = new TCResultFilter();
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < numCycles; i++)
 		{
-			executeFunctionalTest(filter, 1);
-		}
-		for (int i = 0; i < 100; i++)
-		{
-			executeFunctionalTest(filter, 5);
+			executeFunctionalTest(filter, numSme);
 		}
 		saveCheckList(filter);
 		delete filter;
