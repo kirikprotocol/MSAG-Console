@@ -89,6 +89,7 @@ public:
         logger.debug("waitpid returns %u ");
       }
       #endif
+      sleep(1);
     }
     return 0;
   }

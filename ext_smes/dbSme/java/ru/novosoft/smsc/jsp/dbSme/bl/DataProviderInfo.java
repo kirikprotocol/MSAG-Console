@@ -96,12 +96,14 @@ public class DataProviderInfo
 		return null;
 	}
 
-	public void createJob(String jobName, String jobType, boolean jobQuery, String jobSql, String jobInput, String jobOutput)
+	public void createJob(String jobName, String jobType, boolean jobQuery, String address, String alias, String jobSql, String jobInput, String jobOutput)
 	{
 		String prefix = getPrefixJobs() + '.' + jobName;
 		config.setString(prefix + ".name", jobName);
 		config.setString(prefix + ".type", jobType);
 		config.setBool(prefix + ".query", jobQuery);
+		config.setString(prefix + ".address", address);
+		config.setString(prefix + ".alias", alias);
 		config.setString(prefix + ".sql", jobSql);
 		config.setString(prefix + ".input", jobInput);
 		config.setString(prefix + ".output", jobOutput);
@@ -114,6 +116,8 @@ public class DataProviderInfo
 		config.removeParam(job.prefixName + ".name");
 		config.removeParam(job.prefixName + ".type");
 		config.removeParam(job.prefixName + ".query");
+		config.removeParam(job.prefixName + ".address");
+		config.removeParam(job.prefixName + ".alias");
 		config.removeParam(job.prefixName + ".sql");
 		config.removeParam(job.prefixName + ".input");
 		config.removeParam(job.prefixName + ".output");

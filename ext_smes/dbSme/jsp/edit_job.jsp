@@ -51,6 +51,14 @@ if (UC.isCreating())
 	<td><input class="edit" type="Checkbox" id="<%=UC.PARAM_Query%>" name="<%=UC.PARAM_Query%>" value="true"<%=UC.isQuery() ? " checked" : ""%>></td>
 </tr>
 <tr>
+	<th>Address</th>
+	<td><input class="edit" type="Text" name="<%=UC.PARAM_Address%>" value="<%=StringEncoderDecoder.encode(UC.getAddress())%>"></td>
+</tr>
+<tr>
+	<th>Alias</th>
+	<td><input class="edit" type="Text" name="<%=UC.PARAM_Alias%>" value="<%=StringEncoderDecoder.encode(UC.getAlias())%>"></td>
+</tr>
+<tr>
 	<th>Sql</th>
 	<td><textarea class="edit" cols="80" rows="5" name="<%=UC.PARAM_Sql%>"><%=StringEncoderDecoder.encode(UC.getSql())%></textarea>
 </tr>

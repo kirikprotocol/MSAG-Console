@@ -27,6 +27,8 @@ public class CCEditJob extends CC
 	public static final String PARAM_Input = "pInput";
 	public static final String PARAM_Output = "pOutput";
 	public static final String PARAM_IsCreating = "pIsCreating";
+	public static final String PARAM_Address = "pAddress";
+	public static final String PARAM_Alias = "pAlias";
 
 	public static final String BUTTON_Save = "bSave";
 	public static final String BUTTON_Cancel = "bCancel";
@@ -41,6 +43,8 @@ public class CCEditJob extends CC
 	protected String oldName = null;
 	protected String type = null;
 	protected boolean query = false;
+	protected String address = null;
+	protected String alias = null;
 	protected String sql = null;
 	protected String input = null;
 	protected String output = null;
@@ -52,7 +56,7 @@ public class CCEditJob extends CC
 	protected boolean isDeleteJobButton = false;
 
 	public int process(HttpServletRequest request, HttpServletResponse response)
-			  throws Exception
+			throws Exception
 	{
 		int result = super.process(request, response);
 		if (result == RESULT_Ok)
@@ -70,13 +74,13 @@ public class CCEditJob extends CC
 	}
 
 	protected int processSave()
-			  throws Exception
+			throws Exception
 	{
 		if (isCreating)
 		{
 			if (provider.getJob(name) != null)
 				return RESULT_Error;
-			provider.createJob(name, type, query, sql, input, output);
+			provider.createJob(name, type, query, address, alias, sql, input, output);
 		}
 		else
 		{
@@ -84,6 +88,8 @@ public class CCEditJob extends CC
 			job.setName(name);
 			job.setType(type);
 			job.setQuery(query);
+			job.setAddress(address);
+			job.setAlias(alias);
 			job.setSql(sql);
 			job.setInput(input);
 			job.setOutput(output);
@@ -104,6 +110,8 @@ public class CCEditJob extends CC
 		type = DEFAULT_Type;
 		query = false;
 		sql = "";
+		address = "";
+		alias = "";
 		input = "";
 		output = "";
 		isCreating = true;
@@ -111,7 +119,7 @@ public class CCEditJob extends CC
 	}
 
 	protected int processDelete()
-			  throws Exception
+			throws Exception
 	{
 		provider.deleteJob(oldName);
 		config.save();
@@ -159,15 +167,24 @@ public class CCEditJob extends CC
 
 				name = request.getParameter(PARAM_Name);
 				type = request.getParameter(PARAM_Type);
+				address = request.getParameter(PARAM_Address);
+				alias = request.getParameter(PARAM_Alias);
 				String queryStr = request.getParameter(PARAM_Query);
 				sql = request.getParameter(PARAM_Sql);
 				input = request.getParameter(PARAM_Input);
 				output = request.getParameter(PARAM_Output);
 
+				if (address == null)
+					address = "";
+				if (alias == null)
+					alias = "";
+
 				if ((name == null || type == null || sql == null || input == null || output == null) && !isCreating)
 				{
 					name = job.getName();
 					type = job.getType();
+					address = job.getAddress();
+					alias = job.getAlias();
 					sql = job.getSql();
 					input = job.getInput();
 					output = job.getOutput();
@@ -216,6 +233,16 @@ public class CCEditJob extends CC
 		return query;
 	}
 
+	public String getAddress()
+	{
+		return address;
+	}
+
+	public String getAlias()
+	{
+		return alias;
+	}
+
 	public String getSql()
 	{
 		return sql;
@@ -237,7 +264,7 @@ public class CCEditJob extends CC
 	}
 
 	public MessageSet getMessages()
-			  throws Config.ParamNotFoundException, Config.WrongParamTypeException
+			throws Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
 		return job.getMessages();
 	}

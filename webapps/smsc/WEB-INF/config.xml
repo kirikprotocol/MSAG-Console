@@ -10,18 +10,18 @@
   
   <section name="daemons">
     <section name="smsc">
-      <param name="port" type="int">6680</param>
+      <param name="port" type="int">6004</param>
     </section>
   </section>
   
   <section name="smsc">
     <param name="host" type="string">smsc</param>
-    <param name="port" type="int">6690</param>
+    <param name="port" type="int">6001</param>
   </section>
   
   <section name="perfmon">
-    <param name="appletport" type="int">6695</param>
-    <param name="smscport" type="int">6696</param>
+    <param name="appletport" type="int">6081</param>
+    <param name="smscport" type="int">6003</param>
   </section>
   
   <section name="profiler">
