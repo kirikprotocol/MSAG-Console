@@ -1025,7 +1025,7 @@ USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
   if ( provErrCode_p != 0 ){
     // error hadling
     SmscCommand cmd;
-    if ( *prevErrCode_p == 0x02 || // unsupported service
+    if ( *provErrCode_p == 0x02 || // unsupported service
          *provErrCode_p == 0x03 || // mystyped parametor
          *provErrCode_p == 0x06 || // unexcpected responnse from peer
          *provErrCode_p == 0x09 || // invalid responce recived
