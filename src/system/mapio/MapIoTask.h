@@ -131,6 +131,12 @@ public:
     ET96MAP_DIAGNOSTIC_INFO_T* diag,
     ET96MAP_USERDATA_T *ud,
     UCHAR_T priorityOrder);
+  virtual void Et96MapV2ForwardSmMTConf (
+    ET96MAP_LOCAL_SSN_T localSsn,
+    ET96MAP_DIALOGUE_ID_T dialogid,
+    ET96MAP_INVOKE_ID_T invokeId,
+    ET96MAP_ERROR_FORW_SM_MT_T *errorForwardSMmt_sp,
+    ET96MAP_PROV_ERR_T *provErrCode_p);
 };
 
 /**
