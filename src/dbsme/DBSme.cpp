@@ -36,6 +36,8 @@ Mutex       countersLock;
 using smsc::util::Logger;
 static log4cpp::Category& log = Logger::getCategory("smsc.dbsme.DBSme");
 
+const int   MAX_ALLOWED_MESSAGE_LENGTH = 200;
+
 class DBSmeTask : public ThreadedTask
 {
 protected:
@@ -55,89 +57,103 @@ public:
         return "DBSmeTask";
     };
 
-    virtual int Execute()
+    void process()
     {
-        if (pdu && pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
         {
-            printf("\nReceived:%s\n",
-                   ((PduXSm*)pdu)->get_message().get_shortMessage());
+            MutexGuard guard(countersLock);
+            requestsProcessingCount++;
+        }
+
+        PduDeliverySmResp smResp;
+        smResp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+        smResp.set_messageId("");
+        smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+        transmitter.sendDeliverySmResp(smResp);
+
+        SMS sms;
+        fetchSmsFromSmppPdu((PduXSm*)pdu, &sms);
+
+        Command command;
+        command.setFromAddress(sms.getOriginatingAddress());
+        command.setToAddress(sms.getDestinationAddress());
+        command.setJobName(0);
+
+        Body& body = sms.getMessageBody();
+
+        std::string input = body.getStrProperty(Tag::SMPP_SHORT_MESSAGE);
+        command.setInData(input.c_str());
+
+        try 
+        {
+            processor.process(command);
+        }
+        catch (Exception& exc)
+        {
             {
                 MutexGuard guard(countersLock);
-                requestsProcessingCount++;
+                requestsProcessingCount--;
+                failuresNoticedCount++;
             }
+            command.setOutData("Error processing SMS !");
+        }
 
-            PduDeliverySmResp smResp;
-            smResp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
-            smResp.set_messageId("");
-            smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-            transmitter.sendDeliverySmResp(smResp);
-        
-            SMS sms;
-            fetchSmsFromSmppPdu((PduXSm*)pdu, &sms);
+        sms.setDestinationAddress(command.getFromAddress());
+        sms.setOriginatingAddress(command.getToAddress());
+        sms.setArchivationRequested(false);
+        sms.setDeliveryReport(0);
+        sms.setValidTime(time(NULL)+3600);
 
-            Command command;
-            command.setFromAddress(sms.getOriginatingAddress());
-            command.setToAddress(sms.getDestinationAddress());
-            command.setJobName(0);
-            //command.setInData((const char *)sms.getMessageBody().getBuffer());
-            command.setInData((const char *)sms.messageBody.data);
+        char* out = (char *)command.getOutData();
+        int   outLen = (out) ? strlen(out) : 0;
+        char  buff[MAX_ALLOWED_MESSAGE_LENGTH+1];
+        PduSubmitSmResp* dlResp = 0;
+        while (outLen > 0)
+        {
+            int strLen = (outLen <= MAX_ALLOWED_MESSAGE_LENGTH) ?
+                          outLen : MAX_ALLOWED_MESSAGE_LENGTH;
+            strncpy(buff, out, strLen); buff[strLen] = '\0';
 
-            try 
-            {
-                processor.process(command);
-            }
-            catch (Exception& exc)
-            {
-                {
-                    MutexGuard guard(countersLock);
-                    requestsProcessingCount--;
-                    failuresNoticedCount++;
-                }
-                command.setOutData("Error processing SMS !");
-                disposePdu(pdu);
-            }
-
-            disposePdu(pdu);
-            sms.setDestinationAddress(command.getFromAddress());
-            sms.setOriginatingAddress(command.getToAddress());
-            sms.setArchivationRequested(false);
-            sms.setDeliveryReport(0);
-            sms.setValidTime(time(NULL)+3600);
-            
-            const char* out = command.getOutData();
-            int outLen = strlen(out);
-            outLen = (outLen > 200) ? 200 : outLen;
-            strncpy((char *)sms.messageBody.data, out, outLen);
-            sms.messageBody.data[outLen] = '\0';
-            
-            //sms.getMessageBody().setBuffer((uint8_t *)out, strlen(out));
+            body.setIntProperty(Tag::SMPP_SM_LENGTH, strLen);
+            body.setStrProperty(Tag::SMPP_SHORT_MESSAGE, buff);
 
             PduSubmitSm sm;
             sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
             fillSmppPduFromSms(&sm,&sms);
-            PduSubmitSmResp *dlResp=transmitter.submit(sm);
+            dlResp = transmitter.submit(sm);
+            if (dlResp) disposePdu((SmppHeader*)dlResp); dlResp = 0;
 
-            printf((dlResp && dlResp->get_header().get_commandStatus()==0) ?
-                   "Responce sent !\n" : "Responce wasn't send !\n");
-            
-            if (dlResp) disposePdu((SmppHeader*)dlResp);
-            
-            {
-                MutexGuard guard(countersLock);
-                requestsProcessingCount--;
-                requestsProcessedCount++;
-            }
+            out += strLen; outLen -= strLen;
         }
-        else if (pdu && pdu->get_commandId() == SmppCommandSet::SUBMIT_SM_RESP)
+
+        printf((dlResp && dlResp->get_header().get_commandStatus()==0) ?
+               "Responce sent !\n" : "Responce wasn't send !\n");
         {
-            printf("\nReceived async submit sm resp\n");
+            MutexGuard guard(countersLock);
+            requestsProcessingCount--;
+            requestsProcessedCount++;
         }
-        else
+    };
+
+    virtual int Execute()
+    {
+        __require__(pdu);
+
+        switch (pdu->get_commandId())
         {
-            printf("\nReceived HZ\n");
+        case SmppCommandSet::DELIVERY_SM:
+            printf("\nReceived DELIVERY_SM Pdu. Message: '%s'\n",
+                   ((PduXSm*)pdu)->get_message().get_shortMessage());
+            process();
+            break;
+        case SmppCommandSet::SUBMIT_SM_RESP:
+            printf("\nReceived SUBMIT_SM_RESP Pdu.\n");
+            break;
+        default:
+            printf("\nReceived unsupported Pdu !\n");
+            break;
         }
         
-        if (pdu) disposePdu(pdu);
+        disposePdu(pdu); pdu=0;
         return 0;
     };
 };
@@ -168,7 +184,7 @@ public:
         {
             int maxThreads = config->getInt("max");
             pool.setMaxThreads(maxThreads);
-            printf("Max treads count: %d\n", maxThreads);
+            printf("Max threads count: %d\n", maxThreads);
         }
         catch (ConfigException& exc) 
         {
