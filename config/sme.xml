@@ -12,6 +12,7 @@
   <param name="addrRange" value="902*"/>
   <param name="smeN" value="0"/>
   <param name="wantAlias" value="no"/>
+  <param name="timeout" value="8"/>
 </smerecord>
 <smerecord type="smpp" uid="profiler">
   <param name="typeOfNumber" value="1"/>
@@ -22,6 +23,7 @@
   <param name="addrRange" value="SNYjxzMH0e9sHQZ8Xn35"/>
   <param name="smeN" value="-1128792064"/>
   <param name="wantAlias" value="no"/>
+  <param name="timeout" value="8"/>
 </smerecord>
 <smerecord type="smpp" uid="abonentinfo">
   <param name="typeOfNumber" value="1"/>
@@ -32,5 +34,6 @@
   <param name="addrRange" value="SNYjxzMH0e9sHQZ8Xn35"/>
   <param name="smeN" value="-1128792064"/>
   <param name="wantAlias" value="no"/>
+  <param name="timeout" value="8"/>
 </smerecord>
 </records>

@@ -71,6 +71,7 @@ struct SmppSmeRecord
   char* addrRange;
   uint32_t smeN;
   bool wantAlias;
+  uint32_t timeout;
 };
 
 struct Ss7SmeRecord

@@ -25,6 +25,7 @@ struct SmeInfo
   SmeNType SME_N;
   bool  disabled;
   bool wantAlias;
+  uint32_t timeout;
   ~SmeInfo(){}
   SmeInfo(){}
 };

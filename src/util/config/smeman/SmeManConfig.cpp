@@ -108,6 +108,9 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
             } else if (strcmp(name.get(), "smeN") == 0)
             {
               record->recdata.smppSme.smeN = strtoll(value.get(), (char**)0, 0);
+            } else if (strcmp(name.get(), "timeout") == 0)
+            {
+              record->recdata.smppSme.timeout = strtoll(value.get(), (char**)0, 0);
             } else if (strcmp(name.get(),"wantAlias") == 0)
             {
               record->recdata.smppSme.wantAlias=!strcmp(value.get(),"yes");
@@ -190,6 +193,7 @@ SmeManConfig::status SmeManConfig::store(std::ostream &out) const
         out << "    <param name=\"password\"         value=\"" << rec->recdata.smppSme.password         << "\"/>" << std::endl;
         out << "    <param name=\"addrRange\"        value=\"" << rec->recdata.smppSme.addrRange        << "\"/>" << std::endl;
         out << "    <param name=\"smeN\"             value=\"" << (uint32_t)rec->recdata.smppSme.smeN             << "\"/>" << std::endl;
+        out << "    <param name=\"timeout\"          value=\"" << (uint32_t)rec->recdata.smppSme.timeout          << "\"/>" << std::endl;
         out << "    <param name=\"wantAlias\"        value=\"" << (rec->recdata.smppSme.wantAlias?"yes":"no")     << "\"/>" << std::endl;
         out << "  </smerecord>" << std::endl;
       } else {

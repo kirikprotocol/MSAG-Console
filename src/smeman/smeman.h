@@ -76,13 +76,8 @@ public:
   virtual bool attached(){__unreachable__("");return 0;}
   virtual void close() {__unreachable__("");}
   virtual uint32_t getIndex()const{ return idx;}
-  virtual unsigned long getPreferredTimeout() { 
-    MutexGuard guard(mutex);
-    if ( proxy )
-    {
-      return proxy->getPreferredTimeout();
-    }
-    else throw runtime_error("proxy unregistred");
+  virtual unsigned long getPreferredTimeout() {
+    return info.timeout;
   }
 };
 
