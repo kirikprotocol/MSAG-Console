@@ -25,6 +25,7 @@ RemoteStore* StoreManager::instance  = 0;
 
 log4cpp::Category& StoreManager::log = Logger::getCategory("smsc.store.StoreManager");
 log4cpp::Category& RemoteStore::log = Logger::getCategory("smsc.store.RemoteStore");
+log4cpp::Category& CachedStore::log = Logger::getCategory("smsc.store.CachedStore");
 
 #ifdef SMSC_FAKE_MEMORY_MESSAGE_STORE
 IntHash<SMS*> RemoteStore::fakeStore(100000);
@@ -43,6 +44,7 @@ void StoreManager::startup(Manager& config)
         try
         {
             instance = new RemoteStore(config);
+            //instance = new CachedStore(config);
 
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
             archiver = new Archiver(config);
@@ -1173,13 +1175,20 @@ SmsCache::SmsCache(int capacity=0)
 }
 SmsCache::~SmsCache()
 {
+    idCache.First();
+    SMSId id; IdxSMS* sms = 0;
+    while (idCache.Next(id, sms))
+        if (sms) delete sms;
+    
+    idCache.Clean();
+    mrCache.Clean();
+    stCache.Clean();
 }
 
 void SmsCache::putSms(IdxSMS* sm)
 {
     __require__(sm);
 
-    if (idCache.Exists(sm->id)) { /* ??? */ }
     idCache.Insert(sm->id, sm);
     mrCache.Insert(ComplexMrIdx(sm->originatingAddress,
                                 sm->dealiasedDestinationAddress,
@@ -1232,6 +1241,10 @@ SMS* SmsCache::getSms(const Address& oa, const Address& da,
         if (sm) id = sm->id;
     }
     return (SMS *)sm;
+}
+time_t SmsCache::getMinNextTime()
+{
+
 }
 /* ------------------------------- SMS Cache -------------------------------- */
 
@@ -1302,18 +1315,11 @@ CachedStore::CachedStore(Manager& config)
 {
     loadMaxUncommitedCount(config);
     loadSleepInterval(config);
-    
-    __require__(pool);
-    connection = (StorageConnection *)pool->getConnection();
-    
     Start();
 }
 CachedStore::~CachedStore() 
 {
     Stop(); // Flush cash here, apply updates & etc ... 
-    
-    if (pool && connection) 
-        pool->freeConnection(connection);
 }
 void CachedStore::Start() 
 {
@@ -1391,7 +1397,8 @@ void CachedStore::createSms(SMS& sms, SMSId id,
         {
             // Есть в кэше, состояние не финальное. 
             // Нужно игнорировать все update'ы этой sms !!!
-
+            
+            delUpdates(oldId);
             RemoteStore::createSms(sms, id, flag);
             MutexGuard guard(cacheMutex);
             cache.delSms(oldId);
@@ -1459,8 +1466,9 @@ void CachedStore::replaceSms(SMSId id, const Address& oa,
             throw NoSuchMessageException(id);
 
         // Есть в кэше, состояние не финальное. 
-        // Нужно игнорировать все update'ы этой sms !!!
-
+        // Нужно ли игнорировать все update'ы этой sms ???
+        
+        delUpdates(id);
         RemoteStore::replaceSms(id, oa, newMsg, newMsgLen, deliveryReport,
                                 validTime, waitTime);
         
@@ -1475,16 +1483,66 @@ void CachedStore::destroySms(SMSId id)
     {
        MutexGuard guard(cacheMutex);
        cache.delSms(id);
+       delUpdates(id);
     }
     RemoteStore::destroySms(id);
 }
 
+void CachedStore::actualizeUpdate(SMSId id, UpdateRecord* update)
+    throw(NoSuchMessageException)
+{
+    SMS sms; 
+    retriveSms(id, sms);
+    
+    MutexGuard guard(cacheMutex);
+    SMS* sm = cache.getSms(id);
+    if (!sm) throw NoSuchMessageException(id);
+    
+    switch (update->state)
+    {
+    case ENROUTE:
+        sm->state = ENROUTE;
+        sm->destinationDescriptor = update->dst;
+        sm->lastResult = update->fcs;
+        sm->lastTime = time(0);
+        sm->nextTime = update->nt;
+        sm->attempts++;
+        break;
+    case DELIVERED:
+        sm->state = DELIVERED;
+        sm->destinationDescriptor = update->dst;
+        sm->lastResult = 0;
+        sm->lastTime = time(0);
+        sm->nextTime = 0;
+        sm->attempts++;
+        break;
+    case EXPIRED:
+        sm->nextTime = 0;
+        sm->state = EXPIRED;
+        break;
+    case UNDELIVERABLE:
+        sm->state = UNDELIVERABLE;
+        sm->destinationDescriptor = update->dst;
+        sm->lastResult = update->fcs;
+        sm->lastTime = time(0);
+        sm->nextTime = 0;
+        sm->attempts++;
+        break;
+    case DELETED:
+        sm->nextTime = 0;
+        sm->state = DELETED;
+        break;
+    default:
+        log.error("Unknown state for update: %d", update->state);
+        break;
+    }
+}
 void CachedStore::addUpdate(SMSId id, UpdateRecord* update)
     throw(StorageException, NoSuchMessageException)
 {
     __require__(update);
 
-    SMS sms; retriveSms(id, sms);
+    actualizeUpdate(id, update);
 
     MutexGuard guard(updatesMutex);
     updates.insert(std::pair<SMSId, UpdateRecord*>(id, update));
@@ -1504,12 +1562,23 @@ void CachedStore::processUpdates()
 {
     MutexGuard guard(updatesMutex);
 
+    StorageConnection* connection = 0;
     try 
     {
+        connection = (StorageConnection *)pool->getConnection();
+        if (!connection) return;
+
         std::map<SMSId, UpdateRecord*>::iterator i;
         for (i = updates.begin(); i != updates.end(); ++i)
         {
-            processUpdate((*i).first, (*i).second);
+            try 
+            {
+                processUpdate(connection, (*i).first, (*i).second);
+            } 
+            catch (NoSuchMessageException& exc) 
+            {
+                log.error("Unable to update message. %s", exc.what());
+            }
         }
         connection->commit();
         updates.clear();
@@ -1518,7 +1587,7 @@ void CachedStore::processUpdates()
     {
         try 
         {
-            connection->rollback();
+            if (connection) connection->rollback();
             log.error("Failed to process updates. %s", exc.what());
         }
         catch (Exception& exc) 
@@ -1526,15 +1595,17 @@ void CachedStore::processUpdates()
             log.error("Failed to rollback updates. %s", exc.what());
         }
     }
+    if (connection) pool->freeConnection(connection);
 }
-void CachedStore::processUpdate(SMSId id, UpdateRecord* update)
+void CachedStore::processUpdate(StorageConnection* connection, 
+                                SMSId id, UpdateRecord* update)
     throw(StorageException, NoSuchMessageException)
 {
+    log.debug("processUpdate called for id = %lld.", id);
+
     __require__(update);
     __require__(connection);
     
-    connection->connect();
-
     switch (update->state)
     {
     case ENROUTE:
@@ -1558,6 +1629,12 @@ void CachedStore::processUpdate(SMSId id, UpdateRecord* update)
         log.error("Unknown state for update: %d", update->state);
         break;
     }
+
+    if (update->state != ENROUTE)
+    {
+        MutexGuard guard(cacheMutex);
+        cache.delSms(id);
+    }
     delete update;
 }
 
@@ -1566,12 +1643,14 @@ void CachedStore::changeSmsStateToEnroute(SMSId id, const Descriptor& dst,
                                           time_t nextTryTime)
     throw(StorageException, NoSuchMessageException)
 {
+    log.debug("Change to ENROUTE for id = %lld.", id);
     addUpdate(id, new UpdateRecord(ENROUTE, dst, failureCause, nextTryTime));
 }
 void CachedStore::changeSmsStateToDelivered(SMSId id,
                                             const Descriptor& dst)
     throw(StorageException, NoSuchMessageException)
 {
+    log.debug("Change to DELIVERED for id = %lld.", id);
     addUpdate(id, new UpdateRecord(DELIVERED, dst));
 }
 void CachedStore::changeSmsStateToUndeliverable(SMSId id,
@@ -1579,27 +1658,32 @@ void CachedStore::changeSmsStateToUndeliverable(SMSId id,
                                                 uint32_t failureCause)
     throw(StorageException, NoSuchMessageException)
 {
+    log.debug("Change to UNDELIVERABLE for id = %lld.", id);
     addUpdate(id, new UpdateRecord(UNDELIVERABLE, dst, failureCause));
 }
 void CachedStore::changeSmsStateToExpired(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
+    log.debug("Change to EXPIRED for id = %lld.", id);
     addUpdate(id, new UpdateRecord(EXPIRED));
 }
 void CachedStore::changeSmsStateToDeleted(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
+    log.debug("Change to DELETED for id = %lld.", id);
     addUpdate(id, new UpdateRecord(DELETED));
 }
 IdIterator* CachedStore::getReadyForRetry(time_t retryTime)
     throw(StorageException)
 {
-    return 0;
+    // temp impl
+    return RemoteStore::getReadyForRetry(retryTime);
 }
 time_t CachedStore::getNextRetryTime()
     throw(StorageException)
 {
-    return 0;
+    // temp impl
+    return RemoteStore::getNextRetryTime();
 }
 
 /* ------------------------------ Cached Store ------------------------------ */

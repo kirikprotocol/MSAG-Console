@@ -555,6 +555,8 @@ namespace smsc { namespace store
         XHash<ComplexMrIdx, IdxSMS*, ComplexMrIdx>  mrCache;
         XHash<ComplexStIdx, IdxSMS*, ComplexStIdx>  stCache;
 
+        std::multimap<time_t, IdxSMS*>              ntCache;
+
     public:
 
         SmsCache(int capacity=0);
@@ -568,6 +570,8 @@ namespace smsc { namespace store
                     const char* svc, SMSId& id);
         SMS* getSms(const Address& oa, const Address& da, 
                     uint16_t mr, SMSId& id);
+
+        time_t getMinNextTime();
     };
 
     class CachedStore : public RemoteStore, public Thread
@@ -577,26 +581,25 @@ namespace smsc { namespace store
         SmsCache                cache;
         Mutex                   cacheMutex;
 
-        StorageConnection*      connection;
-
         std::multimap<SMSId, UpdateRecord*> updates;
         Mutex                               updatesMutex;
         
-        int                                 maxUncommitedCount;
-        time_t                              maxSleepInterval;
-        
+        int maxUncommitedCount, maxSleepInterval;
         void loadMaxUncommitedCount(Manager& config);
         void loadSleepInterval(Manager& config); 
 
-        Event                               processEvent;
-        Event                               exitedEvent;
-        Mutex                               startLock;
-        bool                                bNeedExit;
-        bool                                bStarted;
+        Mutex   startLock;
+        bool    bStarted, bNeedExit;
+        Event   processEvent, exitedEvent;
+
+        static log4cpp::Category    &log;
         
         void addUpdate(SMSId id, UpdateRecord* update)
             throw(StorageException, NoSuchMessageException);
-        void processUpdate(SMSId id, UpdateRecord* update)
+        void actualizeUpdate(SMSId id, UpdateRecord* update)
+            throw(NoSuchMessageException);
+        void processUpdate(StorageConnection* connection,
+                           SMSId id, UpdateRecord* update)
             throw(StorageException, NoSuchMessageException);
         bool delUpdates(SMSId id);
         
