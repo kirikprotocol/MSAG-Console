@@ -324,7 +324,8 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						uint8_t dc = pdu->get_message().get_dataCoding();
 						if (fixture->smeInfo.forceDC)
 						{
-							bool res = SmppUtil::extractDataCoding(dc, dc);
+							bool simMsg;
+							bool res = SmppUtil::extractDataCoding(dc, dc, simMsg);
 							__require__(res);
 						}
 						auto_ptr<char> tmp = rand_text2(len, dc, udhi, false);
@@ -753,11 +754,12 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 					if (fixture->smeInfo.forceDC)
 					{
 						uint8_t dcs, dc;
+						bool simMsg;
 						do
 						{
 							dcs = rand0(255);
 						}
-						while (SmppUtil::extractDataCoding(dcs, dc));
+						while (SmppUtil::extractDataCoding(dcs, dc, simMsg));
 						pdu->get_message().set_dataCoding(dcs);
 					}
 					else
@@ -788,7 +790,8 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 						uint8_t dc = pdu->get_message().get_dataCoding();
 						if (fixture->smeInfo.forceDC)
 						{
-							bool res = SmppUtil::extractDataCoding(dc, dc);
+							bool simMsg;
+							bool res = SmppUtil::extractDataCoding(dc, dc, simMsg);
 							__require__(res);
 						}
 						auto_ptr<char> tmp = rand_text2(len, dc, udhi, false);
@@ -802,7 +805,8 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 						uint8_t dc = pdu->get_message().get_dataCoding();
 						if (fixture->smeInfo.forceDC)
 						{
-							bool res = SmppUtil::extractDataCoding(dc, dc);
+							bool simMsg;
+							bool res = SmppUtil::extractDataCoding(dc, dc, simMsg);
 							__require__(res);
 						}
 						auto_ptr<char> tmp = rand_text2(len, dc, udhi, false);
@@ -940,7 +944,8 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 			uint8_t dc = replacePdu->get_message().get_dataCoding();
 			if (fixture->smeInfo.forceDC)
 			{
-				bool res = SmppUtil::extractDataCoding(dc, dc);
+				bool simMsg;
+				bool res = SmppUtil::extractDataCoding(dc, dc, simMsg);
 				__require__(res);
 			}
 			switch (s.value())

@@ -549,9 +549,14 @@ PduData* SmppTransmitterTestCases::prepareSubmitSm(PduSubmitSm* pdu,
 	{
 		pduData->intProps["forceDC"] = 1;
 		uint8_t dc;
-		if (SmppUtil::extractDataCoding(pdu->get_message().get_dataCoding(), dc))
+		bool simMsg;
+		if (SmppUtil::extractDataCoding(pdu->get_message().get_dataCoding(), dc, simMsg))
 		{
 			pduData->intProps["dataCoding"] = dc;
+			if (simMsg)
+			{
+				pduData->intProps["simMsg"] = 1;
+			}
 		}
 	}
 	else
@@ -795,6 +800,8 @@ void SmppTransmitterTestCases::registerReplaceMonitors(PduSubmitSm* resPdu,
 		default: //SME_NO_ROUTE
 			__unreachable__("Invalid sme type");
 	}
+	//удалить мониторы replacePduData
+	replacePduData->ref(); //если будут удалены все мониторы, то и replacePduData будет удалено
 	CancelResult res =
 		cancelPduMonitors(replacePduData, pduData->sendTime, true, SMPP_ENROUTE_STATE);
 	__trace2__("replaced pdu:\n\tuserMessageReference = %d", (int) res.msgRef);
@@ -824,6 +831,8 @@ void SmppTransmitterTestCases::registerReplaceMonitors(PduSubmitSm* resPdu,
 	{
 		registerNotBoundReportMonitors(msgRef, waitTime, validTime, pduData);
 	}
+	//убрать лишний refCount
+	replacePduData->unref();
 }
 
 //предварительная регистрация pdu, требуется внешняя синхронизация
@@ -915,16 +924,19 @@ PduData* SmppTransmitterTestCases::prepareReplaceSm(PduReplaceSm* pdu,
 	{
 		pduData->intProps["forceDC"] = 1;
 	}
+	if (replacePduData && replacePduData->intProps.count("simMsg"))
+	{
+		pduData->intProps["simMsg"] = 1;
+	}
 	if (replacePduData && replacePduData->intProps.count("dataCoding"))
 	{
-		uint8_t dc = replacePduData->intProps["dataCoding"];
-		pduData->intProps["dataCoding"] = dc;
+		pduData->intProps["dataCoding"] = replacePduData->intProps["dataCoding"];
 		//дополнительные фишки для map proxy
 		const RouteInfo* routeInfo = fixture->routeChecker->getRouteInfoForNormalSms(
 			resPdu->get_message().get_source(), resPdu->get_message().get_dest());
 		if (routeInfo)
 		{
-			SmsMsg* msg = getSmsMsg(resPdu, dc);
+			SmsMsg* msg = getSmsMsg(resPdu, pduData->intProps["dataCoding"]);
 			__trace2__("sms msg registered: this = %p, udhi = %s, len = %d, dc = %d, orig dc = %d, valid = %s",
 				msg, msg->udhi ? "true" : "false", msg->len, (int) msg->dataCoding, (int) resPdu->get_message().get_dataCoding(), msg->valid ? "true" : "false");
 			msg->ref();

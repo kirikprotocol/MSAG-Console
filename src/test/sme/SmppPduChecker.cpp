@@ -131,6 +131,19 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 		pdu->get_message().get_validityPeriod(), MAX_SMPP_TIME_LENGTH);
 	__check_len__(ESME_RINVSCHED,
 		pdu->get_message().get_scheduleDeliveryTime(), MAX_SMPP_TIME_LENGTH);
+	//sim
+	if (pduData->intProps.count("simMsg"))
+	{
+		if (pdu->get_message().size_shortMessage() > MAX_MAP_SM_LENGTH)
+		{
+			res.insert(ESME_RINVMSGLEN);
+		}
+		else if (pdu->get_optional().has_messagePayload() &&
+			pdu->get_optional().size_messagePayload() > MAX_MAP_SM_LENGTH)
+		{
+			res.insert(ESME_RINVMSGLEN);
+		}
+	}
 	//map
 	if (pduData->objProps.count("map.msg"))
 	{
@@ -231,6 +244,19 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 		pdu->get_message().get_validityPeriod(), MAX_SMPP_TIME_LENGTH);
 	__check_len__(ESME_RINVSCHED,
 		pdu->get_message().get_scheduleDeliveryTime(), MAX_SMPP_TIME_LENGTH);
+	//sim
+	if (pduData->intProps.count("simMsg"))
+	{
+		if (pdu->get_message().size_shortMessage() > MAX_MAP_SM_LENGTH)
+		{
+			res.insert(ESME_RINVMSGLEN);
+		}
+		else if (pdu->get_optional().has_messagePayload() &&
+			pdu->get_optional().size_messagePayload() > MAX_MAP_SM_LENGTH)
+		{
+			res.insert(ESME_RINVMSGLEN);
+		}
+	}
 	//map
 	if (pduData->objProps.count("map.msg"))
 	{
