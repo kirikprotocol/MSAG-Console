@@ -589,6 +589,7 @@ public:
       void decode(uint8_t* buffer, int length)
       {
         hash.Empty();
+				if ( !buffer || !length ) return;
         for(int pos = 0; pos+4 < length; ++pos )
         {
           uint16_t tag = ntohs(*(uint16_t*)(buffer+pos));
@@ -666,6 +667,7 @@ public:
       void decode(uint8_t* buffer, int length)
       {
         hash.Empty();
+				if ( !buffer || !length ) return;
         for(int pos = 0; pos+4 < length; ++pos )
         {
           uint16_t tag = ntohs(*(uint16_t*)(buffer+pos));
@@ -771,13 +773,15 @@ public:
 
         void setBuffer(uint8_t* buffer, int length)
         {
-          encode(buffer,length);
+					//encode(buffer,length);
+					decode(buffer,length);
+					this->buff = buffer;
           //delete buffer;
         }
 
         void encode(uint8_t* buffer,int& length) const
         {
-          __require__( buffer != 0 );  
+          //__require__( buffer != 0 );  
           __require__( length >= 0 );
           __require__( length >= getRequiredBufferSize() );
           int offs;
@@ -794,7 +798,7 @@ public:
         
         void decode(uint8_t* buffer,int length)
         {
-          __require__( buffer != 0 );  
+          //__require__( buffer != 0 );  
           __require__( length >= 0 );
           temporaryBodyStr.decode(buffer,length);
           temporaryBodyInt.decode(buffer,length);
