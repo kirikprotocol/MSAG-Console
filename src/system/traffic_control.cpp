@@ -11,7 +11,6 @@ using namespace smsc::profiler;
 
 bool TrafficControl::processCommand(SmscCommand& cmd)
 {
-  MutexGuard g(mtx);
   bool rv=false;
   switch(cmd->get_commandId())
   {
@@ -53,11 +52,13 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
       bool isReceipt=sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID);
 
 
+      SmeProxy *src_proxy=cmd.getProxy();
+
+      /*
       if(!cfg.smsc->AliasToAddress(sms->getDestinationAddress(),dst))
       {
         dst=sms->getDestinationAddress();
       }
-      SmeProxy *src_proxy=cmd.getProxy();
 
       smsc::router::RouteInfo ri;
       SmeIndex dstIdx;
@@ -65,6 +66,10 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
       bool has_route = cfg.smsc->routeSms(sms->getOriginatingAddress(),
                                       dst,dstIdx,dest_proxy,&ri);
       if(!has_route)return true;
+
+      */
+
+      int dstIdx=cfg.smsc->getSmeIndex(sms->getDestinationSmeId());
 
       if(!isReceipt && cmd->get_commandId()==SUBMIT)
       {
@@ -80,7 +85,7 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
 
       if(cmd->get_commandId()==SUBMIT &&
          !sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID) &&
-         !ri.suppressDeliveryReports &&
+         !sms->getIntProperty(Tag::SMSC_SUPPRESS_REPORTS) &&
          (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&3)!=SMSC_TRANSACTION_MSG_MODE &&
          (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&3)!=SMSC_TRANSACTION_MSG_MODE)
       {
@@ -100,75 +105,53 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
             __info__(log,"receipt schedlimit");
             break;
           }
-          IntTimeSlotCounter *dsrccnt=getTSC(deliverCnt,idx);
-          IntTimeSlotCounter *rsrccnt=getTSC(responseCnt,idx);
-          int deliveryCount=dsrccnt->Get();
-          int responseCount=rsrccnt->Get();
-
-          if(deliveryCount-responseCount>cfg.protectThreshold)
           {
-            __info2__(log,"TC: deny - receipt protect threshold limit for %s: %d-%d",
-              src_proxy->getSystemId(),deliveryCount,responseCount);
-            break;
-          }
-          /*
-          int scount=cfg.smsc->GetSmeScheduleCount(idx,lookAhead);
-          double speed=(double)responseCount*cfg.lookAheadTime/cfg.protectTimeFrame;
+            MutexGuard g(mtx);
+            IntTimeSlotCounter *dsrccnt=getTSC(deliverCnt,idx);
+            IntTimeSlotCounter *rsrccnt=getTSC(responseCnt,idx);
+            int deliveryCount=dsrccnt->Get();
+            int responseCount=rsrccnt->Get();
 
-          if(speed>1 && speed<scount)
-          {
-            __info2__(log,"TC: deny - receipt protect schedule limit for %s: %lf - %d",src_proxy->getSystemId(),speed,scount);
-            break;
+            if(deliveryCount-responseCount>cfg.protectThreshold)
+            {
+              __info2__(log,"TC: deny - receipt protect threshold limit for %s: %d-%d",
+                src_proxy->getSystemId(),deliveryCount,responseCount);
+              break;
+            }
+            dsrccnt->Inc();
           }
-          */
-          dsrccnt->Inc();
           __debug2__(log,"TC: receipt inc for %s",src_proxy->getSystemId());
         }
       }
 
 
 
-      if(!dest_proxy)return true;
+      //if(!dest_proxy)return true;
 
 
-      //time_t lookAhead=time(NULL)+cfg.lookAheadTime;
 
-      IntTimeSlotCounter *dcnt=getTSC(deliverCnt,dstIdx);
-      IntTimeSlotCounter *rcnt=getTSC(responseCnt,dstIdx);
-
-      int deliveryCount=dcnt->Get();
-      int responseCount=rcnt->Get();
-
-      if(deliveryCount-responseCount>cfg.protectThreshold)
       {
-        __info2__(log,"TC: deny - protect threshold limit for %s: %d/%d",dest_proxy->getSystemId(),responseCount,deliveryCount);
-        break;
-      }
+        MutexGuard g(mtx);
+        IntTimeSlotCounter *dcnt=getTSC(deliverCnt,dstIdx);
+        IntTimeSlotCounter *rcnt=getTSC(responseCnt,dstIdx);
 
-      /*
-      if(cmd->get_commandId()==SUBMIT)
-      {
-        int scount=cfg.smsc->GetSmeScheduleCount(dstIdx,lookAhead);
+        int deliveryCount=dcnt->Get();
+        int responseCount=rcnt->Get();
 
-        double speed=(double)responseCount*cfg.lookAheadTime/cfg.protectTimeFrame;
-
-        if(speed>1 && speed<scount)
+        if(deliveryCount-responseCount>cfg.protectThreshold)
         {
-          __info2__(log,"TC: deny - protect schedule limit for %s: %lf - %d",dest_proxy->getSystemId(),speed,scount);
+          __info2__(log,"TC: deny - protect threshold limit for %s: %d/%d",sms->getDestinationSmeId(),responseCount,deliveryCount);
           break;
         }
+
+
+        if(!sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
+        {
+          __debug2__(log,"TC: inc for %s",sms->getDestinationSmeId());
+          dcnt->Inc();
+        }
       }
-      */
 
-
-      if(!sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
-      {
-        __debug2__(log,"TC: inc for %s",dest_proxy->getSystemId());
-        dcnt->Inc();
-      }
-
-      //totalCounter.Inc();
-      //__debug2__(log,"TC: inc total count(%d)",totalCounter.Get());
 
       rv=true;
 
@@ -180,12 +163,13 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
       {
         __debug2__(log,"TC: delresp for %s",cmd.getProxy()->getSystemId());
         getTSC(responseCnt,cmd.getProxy()->getSmeIndex())->Inc();
-      } // there is no break. там и задумано
+      } // there is no break. так и задумано
     default:
       return true;
   }
   if(!rv)
   {
+    MutexGuard g(mtx);
     totalCounter.Inc(-1);
   }
   return rv;
