@@ -256,9 +256,9 @@ static inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
   {
     __warning__ ("fill pdu error");
     //throw;
-		return false;
+    return false;
   }
-	return true;
+  return true;
 }
 
 
@@ -497,15 +497,17 @@ static inline SmppHeader* fetchSmppPdu(SmppStream* stream)
     //default:
     //  goto trap;
     }
-    __watch__(cmdid);
-    __unreachable__("");
+    dropPdu(stream);
+    __trace2__("fetchSmppPdu: unknown cmdid:%d",cmdid);
+    //__unreachable__("");
+    return 0;
   }
   catch (...)
   {
     dropPdu(stream);
     __warning__("parsing broken, reason: exception");
     //throw;
-		return 0;
+    return 0;
   }
   /* --- unreachable ---
   __check_smpp_stream_invariant__ ( stream );
@@ -514,7 +516,7 @@ static inline SmppHeader* fetchSmppPdu(SmppStream* stream)
     //dropPdu(stream); packet will droped by stream guard
     __warning__("parsing broken, reason: parse error");
     //throw BadStreamException();
-		return 0;
+    return 0;
 }
 
 };
