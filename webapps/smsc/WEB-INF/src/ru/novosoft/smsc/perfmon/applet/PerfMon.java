@@ -262,9 +262,10 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
           validate();
           invalidate();
           try {
-            Thread.currentThread().sleep(10);
+            Thread.currentThread().sleep(10000);
           } catch (InterruptedException e1) {
           }
+          ex.printStackTrace( System.out );
           System.out.println( "I/O error: "+ex.getMessage()+". Reconnecting..." );
         }
       }
