@@ -6,7 +6,7 @@
 #define __Cxx_Header__task_container_h__
 
 #include "sms/sms.h"
-#include "core/synchronyzation/Mutex.hpp"
+#include "core/synchronization/Mutex.hpp"
 
 namespace smsc{
 namespace system{
