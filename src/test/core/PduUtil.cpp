@@ -40,6 +40,7 @@ PduData::PduData(SmppHeader* _pdu, time_t _sendTime, IntProps* _intProps,
 : pdu(_pdu), sendTime(_sendTime), count(0), replacePdu(NULL), replacedByPdu(NULL)
 {
 	__require__(pdu);
+	__trace2__("Create pduData = %p", this);
 	if (_intProps)
 	{
 		intProps = *_intProps;
@@ -52,11 +53,11 @@ PduData::PduData(SmppHeader* _pdu, time_t _sendTime, IntProps* _intProps,
 	{
 		objProps = *_objProps;
 	}
-	__trace2__("PduData created = %p", this);
 }
 
 PduData::~PduData()
 {
+	__trace2__("Delete pduData = %p", this);
 	//разорвать связь с замещающей и замещаемой pdu
 	if (replacePdu)
 	{
@@ -74,18 +75,17 @@ PduData::~PduData()
 		__require__(it->second);
 		it->second->unref();
 	}
-	__trace2__("PduData deleted = %p", this);
 }
 
 void PduData::ref()
 {
-	//__trace2__("PduData::ref(): this = %p, count = %d", this, count);
+	__trace2__("PduData::ref(): this = %p, count = %d", this, count);
 	//MutexGuard mguard(mutex);
 	count++;
 }
 void PduData::unref()
 {
-	//__trace2__("PduData::unref(): this = %p, count = %d", this, count);
+	__trace2__("PduData::unref(): this = %p, count = %d", this, count);
 	__require__(count > 0);
 	//mutex.Lock();
 	count--;
