@@ -471,9 +471,9 @@ void executeBusinessCycleTest(int numThreads)
 		}
 		else if (cmd == "chklist")
 		{
-			const char* fileName = "message_store.chk";
-			chkList.save(fileName);
-			cout << "Check list saved to file " << fileName << endl;
+			chkList.save();
+			chkList.saveHtml();
+			cout << "Check list saved " << endl;
 		}
 		else if (cmd == "1")
 		{
@@ -532,6 +532,7 @@ int main(int argc, char* argv[])
 	{
 		Manager::init("config.xml");
 		StoreManager::startup(Manager::getInstance());
+		StoreManager::stopArchiver();
 		executeBusinessCycleTest(numThreads);
 		StoreManager::shutdown();
 	}
