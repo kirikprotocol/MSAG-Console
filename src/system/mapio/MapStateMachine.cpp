@@ -1134,8 +1134,10 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
               dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_map));
               if ( dialog.isnull() ) {
                 SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
+
                 throw MAPDIALOG_FATAL_ERROR(
                   FormatText("MAP::putCommand: Opss, here is no dialog with id x%x seq: %s",dialogid_smsc,s_seq.c_str()));
+
               }
               __map_trace2__("%s: dialogid 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
               if ( !dialog->isUSSD )
@@ -2395,6 +2397,8 @@ USHORT_T Et96MapV2InformSCInd (
     switch( dialog->state ){
     case MAPST_WaitRInfoClose:
       RememberMwdStatus(dialog.get(),msisdnAlert_sp,mwdStatus_sp);
+      break;
+    case MAPST_ImsiWaitCloseInd:
       break;
     default:
       throw MAPDIALOG_BAD_STATE(
