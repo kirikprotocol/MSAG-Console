@@ -143,7 +143,12 @@ void Smsc::init(const SmscConfigs& cfg)
         __trace2__("INIT: addSme %s(to=%d,wa=%s)",si.systemId.c_str(),si.timeout,si.wantAlias?"true":"false");
         //si.hostname=rec->recdata->smppSme.
         si.disabled=false;
-        smeman.addSme(si);
+        try{
+          smeman.addSme(si);
+        }catch(...)
+        {
+          log.warn("UNABLE TO REGISTER SME:%s",si.systemId.c_str());
+        }
       }
     }
   }
