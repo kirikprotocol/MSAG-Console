@@ -170,12 +170,12 @@ public class DivertManager
   private final static int ESC_SEMI   = ':';
   private final static int ESC_PROMPT = '<';
 
+  private final static String[] AUTH_FAILED   = {"FAILED", "ERROR", "FAILURE", "NOT ACCEPTED", "DENIED"};
   private final static String[] NVT_IO_DEVICE = {"NVT", "IO DEVICE", "DEVICE NUMBER", "NVT DEVICE"};
   private final static String[] USER_CODE     = {"USER", "CODE"};
   private final static String[] USER_PASSWORD = {"PASSWORD"};
   private final static String[] USER_DOMAIN   = {"DOMAIN"};
-  private final static String[] AUTH_FAILED   = {"FAILED", "ERROR"};
-
+  
   private boolean checkQuery(String[] sequence, String qwery)
   {
     for (int i=0; i<sequence.length; i++) {
