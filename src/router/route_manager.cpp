@@ -635,7 +635,7 @@ __synchronized__
   __require__(sme_table);
   // ....
   
-  SmeInfo src_smeinfo;
+  smsc::smeman::SmeInfo src_smeinfo;
   if ( srcidx ) src_smeinfo = sme_table->getSmeInfo(srcidx);
 
   if ( trace_enabled_ )
