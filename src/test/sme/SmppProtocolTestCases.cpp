@@ -327,6 +327,8 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 							__tc__("submitSm.correct.checkMap");
 							PduSubmitSm* existentPdu =
 								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
+							__require__(pdu->get_message().get_source() ==
+								existentPdu->get_message().get_source());
 							//pdu->get_message().set_source(...);
 							pdu->get_message().set_dest(
 								existentPdu->get_message().get_dest());
@@ -353,6 +355,8 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
 							pdu->get_message().set_serviceType(
 								nvl(existentPdu->get_message().get_serviceType()));
+							__require__(pdu->get_message().get_source() ==
+								existentPdu->get_message().get_source());
 							//pdu->get_message().set_source(...);
 							pdu->get_message().set_dest(
 								existentPdu->get_message().get_dest());
@@ -378,7 +382,11 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 							__tc__("submitSm.correct.serviceTypeNotMatch");
 							PduSubmitSm* existentPdu =
 								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
+							__require__(strcmp(nvl(pdu->get_message().get_serviceType()),
+								nvl(existentPdu->get_message().get_serviceType())));
 							//pdu->get_message().set_serviceType(...);
+							__require__(pdu->get_message().get_source() ==
+								existentPdu->get_message().get_source());
 							//pdu->get_message().set_source(...);
 							pdu->get_message().set_dest(
 								existentPdu->get_message().get_dest());
@@ -399,14 +407,22 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						{
 							__require__(existentPduData->pdu &&
 								existentPduData->pdu->get_commandId() == SUBMIT_SM);
-							__tc__("submitSm.correct.destAddrNotMatch");
 							PduSubmitSm* existentPdu =
 								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
-							pdu->get_message().set_serviceType(
-								nvl(existentPdu->get_message().get_serviceType()));
-							//pdu->get_message().set_source(...);
-							//pdu->get_message().set_dest(...);
-							pdu->get_message().set_replaceIfPresentFlag(1);
+							if (pdu->get_message().get_dest() !=
+								existentPdu->get_message().get_dest())
+							{
+								__tc__("submitSm.correct.destAddrNotMatch");
+								pdu->get_message().set_serviceType(
+									nvl(existentPdu->get_message().get_serviceType()));
+								__require__(pdu->get_message().get_source() ==
+									existentPdu->get_message().get_source());
+								//pdu->get_message().set_source(...);
+								__require__(pdu->get_message().get_dest() !=
+									existentPdu->get_message().get_dest());
+								//pdu->get_message().set_dest(...);
+								pdu->get_message().set_replaceIfPresentFlag(1);
+							}
 						}
 					}
 					break;
@@ -427,6 +443,8 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
 							pdu->get_message().set_serviceType(
 								nvl(replacePdu->get_message().get_serviceType()));
+							__require__(pdu->get_message().get_source() ==
+								replacePdu->get_message().get_source());
 							//pdu->get_message().set_source(...);
 							pdu->get_message().set_dest(
 								replacePdu->get_message().get_dest());
@@ -452,6 +470,8 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
 							pdu->get_message().set_serviceType(
 								nvl(replacePdu->get_message().get_serviceType()));
+							__require__(pdu->get_message().get_source() ==
+								replacePdu->get_message().get_source());
 							//pdu->get_message().set_source(...);
 							pdu->get_message().set_dest(
 								replacePdu->get_message().get_dest());
@@ -477,6 +497,8 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 								reinterpret_cast<PduSubmitSm*>(finalPduData->pdu);
 							pdu->get_message().set_serviceType(
 								nvl(finalPdu->get_message().get_serviceType()));
+							__require__(pdu->get_message().get_source() ==
+								finalPdu->get_message().get_source());
 							//pdu->get_message().set_source(...);
 							pdu->get_message().set_dest(
 								finalPdu->get_message().get_dest());
@@ -504,6 +526,8 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
 							pdu->get_message().set_serviceType(
 								nvl(replacePdu->get_message().get_serviceType()));
+							__require__(pdu->get_message().get_source() ==
+								replacePdu->get_message().get_source());
 							//pdu->get_message().set_source(...);
 							pdu->get_message().set_dest(
 								replacePdu->get_message().get_dest());
