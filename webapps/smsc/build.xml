@@ -13,6 +13,7 @@
   <property name="topmon_path" value="${smsc_package_path}/topmon"/>
   <property name="topmon_src" location="${java_src}/${topmon_path}"/>
   <property name="topmon_out" location="${java_out}/${topmon_path}"/>
+  <property name="auth_path" value="${smsc_package_path}/util/auth"/>
 
   <fileset id="common_libs" dir="${libs_path}" includes="log4j.jar antlr.jar nsjsp.jar classes12.jar"/>
 
@@ -40,7 +41,14 @@
 
   <target name="build" depends="clean,compile" description="generate the distribution">
     <jar jarfile="${java_lib}/smsc.jar">
-      <fileset dir="${java_out}" excludes="${perfmon_path}/applet/**, ${topmon_path}/applet/**" />
+      <fileset dir="${java_out}">
+        <exclude name="${perfmon_path}/applet/**"/>
+        <exclude name="${topmon_path}/applet/**"/>
+        <exclude name="${auth_path}/Authenticator.class"/>
+        <exclude name="${auth_path}/AuthenticatorProxy.class"/>
+        <exclude name="${auth_path}/SmscRealm.class"/>
+      </fileset>
+ 
     </jar>
     <mkdir dir="${exploded}/perfmon"/>
     <jar jarfile="${exploded}/perfmon/perfmon.jar">
@@ -70,16 +78,21 @@
     </copy>
   </target>
 
-  <target name="install" depends="build" description="installs the webapp">
+  <target name="update" depends="build" description="copy files to distributive except of config files">
     <copy todir="${CATALINA_BASE}/webapps/smsc" preservelastmodified="yes">
       <fileset dir="${exploded}"/>
     </copy>
+    <jar jarfile="${CATALINA_HOME}/server/lib/smsc_tomcat_server.jar">
+      <fileset dir="${java_out}" includes="${auth_path}/SmscRealm.class"/>
+    </jar>
+    <jar jarfile="${CATALINA_HOME}/common/lib/smsc_tomcat_common.jar">
+      <fileset dir="${java_out}" includes="${auth_path}/Authenticator.class ${auth_path}/AuthenticatorProxy.class"/>
+    </jar>
   </target>
 
-  <target name="update" depends="build" description="update existing installation">
-    <copy todir="${CATALINA_BASE}/webapps/smsc" preservelastmodified="yes">
-    </copy>
+  <target name="install" depends="update" description="installs the webapp">
   </target>
+
 
   <target name="clean" description="clean up">
     <delete dir="${java_out}"/>
