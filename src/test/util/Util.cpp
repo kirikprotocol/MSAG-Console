@@ -43,17 +43,25 @@ int rand1(int maxValue)
 	return rand2(1, maxValue);
 }
 
+static string randChars = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
 auto_ptr<uint8_t> rand_uint8_t(int length)
 {
 	uint8_t* res = new uint8_t[length];
 	for (int i = 0; i < length; i++)
 	{
-		res[i] = 65 + rand0(26);
+		res[i] = randChars[rand0(randChars.size() - 1)];
 	}
 	return auto_ptr<uint8_t>(res);
 }
 
-static string randChars = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+void rand_uint8_t(int length, uint8_t* buf)
+{
+	for (int i = 0; i < length; i++)
+	{
+		buf[i] = randChars[rand0(randChars.size() - 1)];
+	}
+}
 
 auto_ptr<char> rand_char(int length)
 {
