@@ -20,7 +20,7 @@
 		<param name="locale.language" value="ru">
 		<param name="pixPerSecond" value="4">
 		<param name="scale" value="80">
-		<param name="block" value="7">
+		<param name="block" value="8">
 		<param name="vLightGrid" value="4">
 		<param name="vMinuteGrid" value="6">
 		<param name="port" value="<%=port%>">
