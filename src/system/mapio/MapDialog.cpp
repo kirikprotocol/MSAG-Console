@@ -733,7 +733,7 @@ void MapDialog::Et96MapDelimiterInd(
 {
 #if defined USE_MAP
   __trace2__("MAP::MapDialog::Et96MapDelimiterInd");
-  if ( sms ){
+  if ( sms.get() != 0 ){
   __trace2__("MAP::DELIVERY_SM %d.%d.%s -> %d.%d.%s",
              sms->getOriginatingAddress().getTypeOfNumber(),
              sms->getOriginatingAddress().getNumberingPlan(),
@@ -799,7 +799,7 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
 {
 #if defined USE_MAP
   __trace2__("MAP::Et96MapCloseInd state: 0x%x",state);
-  if ( sms ){
+  if ( sms.get() != 0 ){
   __trace2__("MAP::DELIVERY_SM %d.%d.%s -> %d.%d.%s",
              sms->getOriginatingAddress().getTypeOfNumber(),
              sms->getOriginatingAddress().getNumberingPlan(),
@@ -905,7 +905,7 @@ void MapDialog::Et96MapV2ForwardSmMTConf (
   ET96MAP_PROV_ERR_T *provErrCode_p)
 {
 #if defined USE_MAP
-  if ( sms ){
+  if ( sms.get() != 0 ){
   __trace2__("MAP::DELIVERY_SM %d.%d.%s -> %d.%d.%s",
              sms->getOriginatingAddress().getTypeOfNumber(),
              sms->getOriginatingAddress().getNumberingPlan(),
@@ -965,7 +965,7 @@ USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
 {
 #if defined USE_MAP
   __trace2__( "Et96MapV2SendRInfoForSmConf received ssn=%d, dialog=%d, invokeId=%d\n", localSsn, dialogueId, invokeId );
-  if ( sms ){
+  if ( sms.get() != 0 ){
   __trace2__("MAP::DELIVERY_SM %d.%d.%s -> %d.%d.%s",
              sms->getOriginatingAddress().getTypeOfNumber(),
              sms->getOriginatingAddress().getNumberingPlan(),

@@ -307,6 +307,15 @@ USHORT_T Et96MapStateInd (
   return ET96MAP_E_OK;
 }
 
+void Et96MapIndicationError(USHORT_T error,UCHAR_T* errString)
+{
+  if ( errString ) {
+    __trace2__("MAP::Et96MapIndicationError: error 0x%hx text %s",error,errString);
+  }else{
+    __trace2__("MAP::Et96MapIndicationError: error 0x%hx",error);
+  }
+}
+
 } // extern "C"
 
 void MapIoTask::deinit()
@@ -415,6 +424,7 @@ void MapIoTask::init()
 {
   __trace2__("MapIoTask::init: no map stack on this platform");
 }
+
 #endif
 
 MapDialogContainer* MapDialogContainer::container = 0;
@@ -438,5 +448,6 @@ void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId)
   __trace2__("MAP::freeDialogueId: 0x%x",dialogueId);
   MapDialogContainer::getInstance()->dialogId_pool.push_back(dialogueId);
 }
+
 
 
