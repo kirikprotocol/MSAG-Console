@@ -1363,8 +1363,8 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
   dialog->isUSSD = true;
   __map_trace2__("%s: dialogid 0x%x",__func__,dialog->dialogid_map);
   if( !dialog->id_opened ) {
-    boolean dlg_found = false;
-    istringstream(string(cmd->get_sms()->getDestinationAddress().value))>>dialog->ussdSequence;
+    bool dlg_found = false;
+    istringstream(string(dialog->cmd->get_sms()->getDestinationAddress().value))>>dialog->ussdSequence;
     {
       MutexGuard ussd_map_guard( ussd_map_lock );
       USSD_MAP::iterator it = ussd_map.find(dialog->ussdSequence);
