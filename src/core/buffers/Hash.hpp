@@ -67,8 +67,8 @@ public:
   int operator==(const _strcon ptr)const {return str?!strcmp(str,ptr):0;}
   int operator==(pchashstr ptr){return str?!strcmp(str,ptr):0;}
   int operator==(pchashstr ptr)const{return str?!strcmp(str,ptr):0;}
-  phashstr operator phashstr(){return str;}
-  pchashstr operator phashstr() const {return str;}
+  operator phashstr(){return str;}
+  operator phashstr() const {return str;}
 };
 };
 
