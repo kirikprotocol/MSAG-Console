@@ -650,10 +650,13 @@ __synchronized__
   
   if ( trace_enabled_ ) {
     string s("lookup for alternative route with src proxy: '");
-    if ( srcidx ) 
-      s += sme_table->getSmeInfo(srcidx).systemId + "'";
-    else 
-      s += "default'";
+    if ( srcidx ) {
+      s += sme_table->getSmeInfo(srcidx).systemId;
+      trace_.push_back(sme_table->getSmeInfo(srcidx).systemId);
+    }else{
+      s += "default";
+    }
+    s += "'";
     trace_.push_back(s);
   }
 
