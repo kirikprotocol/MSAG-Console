@@ -4,12 +4,17 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
+#include <thread.h>
 #include <synch.h>
 #endif
 
 namespace smsc{
 namespace core{
 namespace synchronization{
+
+
+class Event;
+
 
 class Mutex{
 public:
@@ -18,7 +23,7 @@ public:
 #ifdef _WIN32
     mutex=CreateMutex(NULL,FALSE,NULL);
 #else
-    init_mutex(&mutex,USYNC_THREAD,NULL);
+    mutex_init(&mutex,USYNC_THREAD,NULL);
 #endif
   }
   ~Mutex()
@@ -26,7 +31,7 @@ public:
 #ifdef _WIN32
     CloseHandle(mutex);
 #else
-    mutex_destroy(mutex);
+    mutex_destroy(&mutex);
 #endif
   }
   void Lock()
@@ -46,13 +51,14 @@ public:
 #endif
   }
 
-private:
+protected:
 #ifdef _WIN32
   HANDLE mutex;
 #else
   mutex_t mutex;
+  friend class Event;
 #endif
-};
+};//Mutex
 
 };//synchronization
 };//core
