@@ -60,8 +60,13 @@ function validateField_mask(elem)
 	{
 		return true;
 	}
-	var r = RegExp("^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+)|\\d)\\d{0,20}\\?{0,21}$");
-	return elem.value == null || elem.value.match(r) == null
+	var pattern_header = "^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+)|(\\d)|(\\?))";
+	var pattern1 = pattern_header + "\\d{0,20}\\?{0,20}$";
+	var pattern2 = pattern_header + "(\\d|\\?){1,20}$";
+
+	var r1 = RegExp(pattern1);
+	var r2 = RegExp(pattern2);
+	return elem.value == null || elem.value.match(r1) == null || elem.value.match(r2) == null
 		? validationError(elem, "Invalid mask")
 		: true;
 }

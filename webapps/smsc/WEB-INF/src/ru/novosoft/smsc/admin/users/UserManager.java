@@ -101,7 +101,9 @@ public class UserManager implements DataSource
 				+ "<!DOCTYPE users SYSTEM \"file://users.dtd\">\n"
 				+ "\n"
 				+ "<users>\n";
-		for (Iterator i = users.values().iterator(); i.hasNext();)
+		List userLogins = new ArrayList(users.keySet());
+		Collections.sort(userLogins);
+		for (Iterator i = userLogins.iterator(); i.hasNext();)
 		{
 			User user = (User) i.next();
 			result += user.getXmlText();

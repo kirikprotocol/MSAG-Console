@@ -13,9 +13,9 @@ import java.io.PrintWriter;
 
 public class Mask
 {
-	private final static String full_pattern = "^\\.(0|1|2|3|4|5|6)\\.(0|1|3|4|6|8|9|10|14|18)\\.(\\d{1,21})(\\?*|\\**)$";
-	private final static String plus_pattern = "^\\+(\\d{1,21})(\\?*)$";
-	private final static String short_pattern = "^(\\d{1,21})(\\?*)$";
+	private static final String pattern_header = "^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+)|(\\d)|(\\?))";
+	private static final String pattern1 = pattern_header + "\\d{0,20}\\?{0,20}$";
+	private static final String pattern2 = pattern_header + "(\\d|\\?){1,20}$";
 
 	private String mask = null;
 
@@ -56,6 +56,6 @@ public class Mask
 		// 	[x]	==> .0.1.[x]
 		// где x - numeric string длиной от 1 до 21
 
-		return maskStr.matches(full_pattern) || maskStr.matches(short_pattern) || maskStr.matches(plus_pattern);
+		return maskStr.matches(pattern1) && maskStr.matches(pattern2);
 	}
 }

@@ -128,6 +128,7 @@ public class User implements Principal
 		result += " cellPhone=\"" + StringEncoderDecoder.encode(cellPhone) + '"';
 		result += " email=\"" + StringEncoderDecoder.encode(email) + '"';
 		result += ">\n";
+		Arrays.sort(roles);
 		for (int i = 0; i < roles.length; i++)
 		{
 			String role = roles[i];
