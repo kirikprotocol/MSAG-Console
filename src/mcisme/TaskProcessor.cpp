@@ -157,8 +157,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
         smsc_log_warn(logger, "Parameter <MCISme.Reasons.strategy> missed. Using default redirect strategy (MTS defualt)");
         releaseSettings.strategy = REDIRECT_STRATEGY;
     }
-    if (releaseSettings.strategy != PREFIXED_STRATEGY || 
-        releaseSettings.strategy != REDIRECT_STRATEGY) 
+    if (releaseSettings.strategy != PREFIXED_STRATEGY && releaseSettings.strategy != REDIRECT_STRATEGY) 
         throw ConfigException("Parameter <MCISme.Reasons.strategy> value '%d' is invalid.", 
                               releaseSettings.strategy);
     
