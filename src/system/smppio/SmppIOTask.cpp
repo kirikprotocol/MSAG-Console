@@ -513,6 +513,14 @@ int SmppInputThread::Execute()
                     //delete proxy;
                     err=true;
                   }
+                  catch(std::exception &ex)
+                  {
+                    resppdu.get_header().
+                      set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                    __trace2__("registration failed: %s", ex.what());
+                    //delete proxy;
+                    err=true;
+                  }
                   catch(...)
                   {
                     resppdu.get_header().
