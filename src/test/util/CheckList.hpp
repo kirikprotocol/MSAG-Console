@@ -5,7 +5,6 @@
 #include "TCResultFilter.hpp"
 #include <fstream>
 #include <map>
-#include <string>
 
 namespace smsc {
 namespace test {
@@ -17,40 +16,38 @@ namespace util {
 class CheckList
 {
 public:
-	static const std::string UNIT_TEST;
-	static const std::string SYSTEM_TEST;
-	static const std::string STANDARDS_TEST;
+	static const char* UNIT_TEST;
+	static const char* SYSTEM_TEST;
+	static const char* STANDARDS_TEST;
 
-	typedef std::map<std::string, CheckList*> CheckListMap;
+	typedef std::map<const char*, CheckList*> CheckListMap;
 	
 	/**
 	 * @return именованый checklist
 	 */
-	static CheckList& getCheckList(const std::string& name);
+	static CheckList& getCheckList(const char* name);
 
-	CheckList(const std::string& name);
+	CheckList(const char* name);
 	~CheckList();
 
 	/**
 	 * Начать новую группу/таблицу в checklist.
 	 */
-	void startNewGroup(const std::string& groupName,
-		const std::string& packageName);
+	void startNewGroup(const char* groupName, const char* packageName);
 
 	/**
 	 * Записать результаты тестирования (test case) в текущцю группу/таблицу
 	 */
-	void writeResult(const std::string& testCaseDesc, TCResult& result);
+	void writeResult(const char* tcDesc, const TCResult* result);
 
 	/**
-	 * Записать результаты тестирования (группы test case) в текущцю 
-	 * группу/таблицу
+	 * Записать результаты тестирования (test case) в текущцю группу/таблицу
 	 */
-	void writeResult(TCResultFilter& resultFilter);
+	void writeResult(const char* tcDesc, const TCResultStackList* stackList);
 
 private:
 	static CheckListMap* clists;
-	std::string name;
+	const char* name;
 	std::ofstream os;
 	int counter;
 };

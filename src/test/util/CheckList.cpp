@@ -1,6 +1,6 @@
 #include "CheckList.hpp"
+#include "util/debug.h"
 #include <map>
-#include <string>
 #include <fstream>
 
 namespace smsc {
@@ -9,15 +9,15 @@ namespace util {
 
 using namespace std;
 
-const string CheckList::UNIT_TEST = "unit_test";
-const string CheckList::SYSTEM_TEST = "system_test";
-const string CheckList::STANDARDS_TEST = "standards_test";
+const char* CheckList::UNIT_TEST = "unit_test";
+const char* CheckList::SYSTEM_TEST = "system_test";
+const char* CheckList::STANDARDS_TEST = "standards_test";
 CheckList::CheckListMap* CheckList::clists = new CheckList::CheckListMap();
 
-CheckList& CheckList::getCheckList(const string& name)
+CheckList& CheckList::getCheckList(const char* name)
 {
 	CheckList* chk = (*clists)[name];
-	if (chk == NULL)
+	if (!chk)
 	{
 		chk = new CheckList(name);
 		(*clists)[name] = chk;
@@ -25,15 +25,15 @@ CheckList& CheckList::getCheckList(const string& name)
 	return *chk;
 }
 
-CheckList::CheckList(const string& name_)
+CheckList::CheckList(const char* name_)
+	: name(name_), counter(1)
 {
-	name = name_;
-	counter = 1;
-	string tmp = "./" + name + ".chk";
-	os.open(tmp.data());
+	char fileName[100];
+	sprintf(fileName, "./%s.chk", name);
+	os.open(fileName);
 }
 
-void CheckList::startNewGroup(const string& groupName, const string& packageName)
+void CheckList::startNewGroup(const char* groupName, const char* packageName)
 {
 	counter = 1;
 	os << endl << "|" << groupName << endl;
@@ -41,50 +41,33 @@ void CheckList::startNewGroup(const string& groupName, const string& packageName
 	os << "№|Тест|Результат|Стек" << endl;
 }
 
-void CheckList::writeResult(const string& testCaseDesc, TCResult& result)
+void CheckList::writeResult(const char* tcDesc, const TCResult* result)
 {
-	os << counter++ << "|" << testCaseDesc << "|";
-	os << (result.value() ? "Да" : "Нет") << "|" << result << endl;
+	__require__(tcDesc);
+	os << counter++ << "|" << tcDesc << "|";
+	if (result)
+	{
+		os << (result->value() ? "Да" : "Нет") << *result << endl;
+	}
+	else
+	{
+		os << "-|" << endl;
+	}
 	os.flush();
 }
 
-void CheckList::writeResult(TCResultFilter& resultFilter)
+void CheckList::writeResult(const char* tcDesc, const TCResultStackList* stackList)
 {
-	for (TCResultFilter::TCMap::iterator it = resultFilter.resmap.begin();
-		 it != resultFilter.resmap.end(); it++)
+	__require__(tcDesc);
+	os << counter++ << "|" << tcDesc << "|";
+	if (stackList)
 	{
-		TCResultFilter::TCValue& tcVal = *it->second;
-		os << counter++ << "|" << tcVal.description << "|";
-		if (!tcVal.used)
-		{
-			os << "-|";
-		}
-		else if (tcVal.tcStacks.size() == 0)
-		{
-			os << "Да|";
-		}
-		else
-		{
-			os << "Нет|";
-			for (int i = 0; i < tcVal.tcStacks.size(); i++)
-			{
-				if (i > 0)
-				{
-					os << ",";
-				}
-				TCResultStack& stack = *tcVal.tcStacks[i];
-				for (int j = 0; j < stack.size(); j++)
-				{
-					if (j > 0)
-					{
-						os << "->";
-					}
-					TCResult& res = *stack[j];
-					os << res;
-				}
-			}
-		}
-		os << endl;
+		os << (stackList->size() == 0 ? "Да" : "Нет") << "|"
+			<< *stackList << endl;
+	}
+	else
+	{
+		os << "-|" << endl;
 	}
 	os.flush();
 }
