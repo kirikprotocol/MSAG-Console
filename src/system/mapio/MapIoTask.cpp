@@ -1,4 +1,7 @@
+#define EINSS7_THREADSAFE 1
+
 #include "MapIoTask.h"
+
 #define SSN 8
 #define MAXENTRIES 10
  
