@@ -35,6 +35,7 @@ const char* SMSC_LAST_ARCHIVE_FILE_EXTENSION = "rec";
 const char* SMSC_PREV_ARCHIVE_FILE_EXTENSION = "arc";
 const char* SMSC_TEXT_ARCHIVE_FILE_EXTENSION = "csv";
 const char* SMSC_ERRF_ARCHIVE_FILE_EXTENSION = "err";
+const char* SMSC_TRNS_ARCHIVE_FILE_EXTENSION = "trs";
 
 const char* SMSC_BILLING_FILE_NAME_PATTERN = "%04d%02d%02d_%02d%02d%02d";
 const char* SMSC_ARCHIVE_FILE_NAME_PATTERN = "%04d%02d%02d_%02d%02d%02d";
@@ -115,13 +116,17 @@ void FileStorage::findDirs (std::string location, Array<std::string>& dirs)
     FileStorage::findEntries(location, dirs, false, 0);    
 }
 
-void FileStorage::deleteFile(std::string location, std::string fileName)
+void FileStorage::deleteFile(std::string fullPath)
 {
-    std::string fullPath = location; fullPath +='/'; fullPath += fileName;
     if (remove(fullPath.c_str()) != 0) {
         Exception exc("Failed to remove file '%s'. Details: %s", fullPath.c_str(), strerror(errno));
         throw StorageException(exc.what());
     }
+}
+void FileStorage::deleteFile(std::string location, std::string fileName)
+{
+    std::string fullPath = location; fullPath +='/'; fullPath += fileName;
+    deleteFile(fullPath);
 }
 void FileStorage::rollErrorFile(std::string location, std::string fileName)
 {
@@ -203,6 +208,8 @@ void FileStorage::close()
 
 void FileStorage::getPos(fpos_t* pos)
 {
+    __require__(pos);
+
     if (storageFile && fgetpos(storageFile, pos) != 0) {
         int error = ferror(storageFile);
         Exception exc("Failed to get position in file. Details: %s", strerror(error));
@@ -212,6 +219,8 @@ void FileStorage::getPos(fpos_t* pos)
 }
 void FileStorage::setPos(const fpos_t* pos)
 {
+    __require__(pos);
+
     if (storageFile && fsetpos(storageFile, pos) != 0) {
         int error = ferror(storageFile);
         Exception exc("Failed to set position in file. Details: %s", strerror(error));
@@ -984,6 +993,58 @@ void TextDumpStorage::writeRecord(SMSId id, SMS& sms)
     
     write(out.c_str(), out.length());
     flush();
+}
+
+bool TransactionStorage::open()
+{
+    bool fileExists = true;
+    if (!storageFile)
+    {
+        fileExists = false;
+        const char* fullFilePathStr = storageFileName.c_str();
+        
+        storageFile = fopen(fullFilePathStr, "r");
+        if (storageFile)  { // opened for reading => exist
+            fclose(storageFile); storageFile = 0;
+            fileExists = true;
+        } 
+        
+        storageFile = fopen(fullFilePathStr, fileExists ? "rb+":"ab+");
+        if (!storageFile) {
+            Exception exc("Failed to open/create transactional file '%s'. Details: %s", 
+                          fullFilePathStr, strerror(errno));
+            throw StorageException(exc.what());
+        }
+    }
+    if (fseek(storageFile, 0, SEEK_SET)) {
+        int error = ferror(storageFile);
+        Exception exc("Failed to seek BOF. Details: %s", strerror(error));
+        fclose(storageFile); storageFile = 0;
+        throw StorageException(exc.what());
+    }
+    return fileExists;
+}
+
+bool TransactionStorage::getTransactionData(fpos_t* pos)
+{
+    __require__(pos);
+
+    MutexGuard guard(storageFileLock);
+    if (!this->open()) return false;
+    uint64_t value = 0;
+    bool result = FileStorage::read((void *)&value, sizeof(value));
+    *pos = (result) ? ((fpos_t)Uint64Converter::toHostOrder(value)):-1;
+    return result;
+}
+void TransactionStorage::setTransactionData(const fpos_t* pos)
+{
+    __require__(pos);
+
+    MutexGuard guard(storageFileLock);
+    this->open();
+    uint64_t value = Uint64Converter::toNetworkOrder((uint64_t)(*pos));
+    FileStorage::write((const void *)&value, sizeof(value));
+    FileStorage::flush();
 }
 
 

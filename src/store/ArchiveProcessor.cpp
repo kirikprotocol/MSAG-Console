@@ -210,12 +210,18 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
             hrtime_t prtime=gethrtime();
             long long count=0;
             {
+                Hash<fpos_t> trsFilesPositions;
+                std::string trsFileName = "";
+                
                 PersistentStorage source(location, file);
+                indexator->BeginTransaction(); // start transactional indecies
+
                 while (true)
                 {
                     SMSId id; SMS sms;
                     if (!source.readRecord(id, sms, 0)) break;
-                    count++;
+                    bool bNewArcFile = false; count++;
+
                     if (switchDate(lastProcessedTime, sms.lastTime, destinationFileName, destinationDirName, false)
                         || !arcDestination || !txtDestination)
                     {
@@ -224,10 +230,12 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
 
                         std::string arcLocation = baseDirectory+'/'+destinationDirName;
                         std::string txtLocation = textDirectory+'/'+destinationDirName;
+                                    trsFileName = arcLocation+'/'+destinationFileName; 
                         std::string arcFileName = destinationFileName;
                         std::string txtFileName = destinationFileName;
                         arcFileName += '.'; arcFileName += SMSC_PREV_ARCHIVE_FILE_EXTENSION;
                         txtFileName += '.'; txtFileName += SMSC_TEXT_ARCHIVE_FILE_EXTENSION;
+                        trsFileName += '.'; trsFileName += SMSC_TRNS_ARCHIVE_FILE_EXTENSION;
 
                         FileStorage::createDir(arcLocation);
                         FileStorage::createDir(txtLocation);
@@ -235,7 +243,7 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
                         arcDestination = new PersistentStorage(arcLocation, arcFileName);
                         txtDestination = new TextDumpStorage(txtLocation, txtFileName);
 
-                        lastProcessedTime = sms.lastTime;
+                        lastProcessedTime = sms.lastTime; bNewArcFile = true;
                     }
 
                     try
@@ -244,21 +252,53 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
                         arcDestination->openWrite(&position);
                         //smsc_log_debug(log, "Archive file position=%lld", position);
 
-                        indexator->IndexateSms(destinationDirName, id, (uint64_t)position, sms);
+                        if (bNewArcFile)
+                        {
+                            fpos_t trans_position = 0;
+                            TransactionStorage trsFile(trsFileName);
+                            if (trsFile.getTransactionData(&trans_position))
+                            {
+                                if (trans_position < 0 || position < trans_position)
+                                    throw Exception("Invalid transaction position=%lld, file end=%lld",
+                                                    trans_position, position);
+                                position = trans_position;
+                                arcDestination->setPos(&position);
+                            }
+                            else trsFile.setTransactionData(&position);
+                            bNewArcFile = false;
+                        }
                         
+                        indexator->IndexateSms(destinationDirName, id, (uint64_t)position, sms);
+
                         txtDestination->writeRecord(id, sms);
                         arcDestination->writeRecord(id, sms);
+                        arcDestination->getPos(&position);
+                        
+                        const char* trsFileNameStr = trsFileName.c_str();
+                        fpos_t* trsPosition = trsFilesPositions.GetPtr(trsFileNameStr);
+                        if (trsPosition) *trsPosition = position;
+                        else trsFilesPositions.Insert(trsFileNameStr, position);
                     }
                     catch (DiskHashDuplicateKeyException& duplicateExc) {
                         smsc_log_warn(log, "SMS #%lld in file '%s' skipped. Details: %s.",
                                       id, file.c_str(), duplicateExc.what());
                     }
+                } // while all records from source file will not be fetched
+
+                indexator->EndTransaction(); // flush transactional indecies
+                
+                // write endTransaction positions for all destination files
+                trsFilesPositions.First();
+                char* trsFileNameStr = 0; fpos_t* trsPosition = 0;
+                while (trsFilesPositions.Next(trsFileNameStr, trsPosition))
+                {
+                    if (!trsPosition || !trsFileNameStr || trsFileNameStr[0] == '\0') continue;
+                    TransactionStorage trsFile(trsFileNameStr);
+                    trsFile.setTransactionData(trsPosition);
                 }
             }
             prtime=gethrtime()-prtime;
-
             double tmInSec=(double)prtime/1000000000.0L;
-
             smsc_log_info(log,"Processed file '%s' in %lld msec, %lld sms found, processing speed %lf sms/sec",file.c_str(),prtime/1000000,count,(double)count/tmInSec);
 
             FileStorage::deleteFile(location, file);
@@ -269,12 +309,14 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
               smsc_log_info(log, "Rolling '%s' to '*.err' ...", file.c_str());
               FileStorage::rollErrorFile(location, file);
           } catch (...) { smsc_log_error(log, "Failed to rool error file '%s'", file.c_str()); }
+          indexator->RollBack();
         } catch (...) {
           smsc_log_error(log, "Error processing archive file '%s'. Reason is unknown", file.c_str());
           try {
               smsc_log_info(log, "Rolling '%s' to '*.err' ...", file.c_str());
               FileStorage::rollErrorFile(location, file);
           } catch (...) { smsc_log_error(log, "Failed to rool error file '%s'", file.c_str()); }
+          indexator->RollBack();
         }
     }
 

@@ -32,6 +32,7 @@ namespace smsc { namespace store
     extern const char* SMSC_LAST_ARCHIVE_FILE_EXTENSION;
     extern const char* SMSC_PREV_ARCHIVE_FILE_EXTENSION;
     extern const char* SMSC_TEXT_ARCHIVE_FILE_EXTENSION;
+    extern const char* SMSC_TRNS_ARCHIVE_FILE_EXTENSION;
 
     extern const char* SMSC_PERSIST_DIR_NAME_PATTERN;
 
@@ -40,6 +41,7 @@ namespace smsc { namespace store
     public:
 
         static bool createDir(std::string dir);
+        static void deleteFile(std::string fullPath);
         static void deleteFile(std::string location, std::string fileName);
         static void rollErrorFile(std::string location, std::string fileName);
         static void rollFileExtension(std::string location, const char* fileName, bool bill=true);
@@ -185,7 +187,24 @@ namespace smsc { namespace store
 
         void writeRecord(SMSId id, SMS& sms);
     };
+
+    class TransactionStorage : public FileStorage
+    {
+    protected:
+        
+        std::string storageFileName;
     
+        bool open();
+
+    public:
+
+        TransactionStorage(const std::string& fullFileName)
+            : FileStorage(), storageFileName(fullFileName) {};
+        virtual ~TransactionStorage() {};
+
+        bool getTransactionData(fpos_t* pos);
+        void setTransactionData(const fpos_t* pos);
+    };
 
 }}
 
