@@ -60,7 +60,7 @@
       <fileset dir="${TEMPL_DIR}/${esme_name}" includes="*.properties"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
-    <copy todir="${exploded}/schema">
+    <copy todir="${exploded}/schema" encoding="windows-1251" >
       <fileset dir="${TEMPL_DIR}/${esme_name}/schema" includes="**/*"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
