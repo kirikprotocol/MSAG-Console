@@ -60,7 +60,7 @@ Category& SmppReceiverTestCases::getLog()
 
 void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 {
-	__dumpPdu__("SmppReceiverTestCases::processSubmitSmResp", systemId, pdu);
+	__dumpPdu__("SmppReceiverTestCases::processSubmitSmRespBefore", systemId, pdu);
 	getLog().debug("[%d]\tprocessSubmitSmResp(): sequenceNumber = %u",
 		thr_self(), pdu.get_header().get_sequenceNumber());
 	if (!pduReg)
@@ -72,8 +72,7 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 	{
 		//получить оригинальную pdu
 		MutexGuard mguard(pduReg->getMutex());
-		PduData* pduData =
-			pduReg->getPdu(pdu.get_header().get_sequenceNumber());
+		PduData* pduData = pduReg->getPdu(pdu.get_header().get_sequenceNumber());
 		//для sequence number из респонса нет соответствующего pdu
 		if (!pduData)
 		{
@@ -81,12 +80,7 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 		}
 		else
 		{
-			//респонс был уже получен
-			if (pduData->responseFlag)
-			{
-				res->addFailure(2);
-			}
-			//обновить pduData по данным из респонса
+			//проверить и обновить pduData по данным из респонса
 			__require__(pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
 			PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
 			vector<int> tmp = pduChecker->checkSubmitSmResp(pduData, pdu);
@@ -94,17 +88,10 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 			{
 				res->addFailure(tmp[i] > 0 ? 10 + tmp[i] : tmp[i]);
 			}
-			//удалить, если все уже получено
-			if (pduData->complete())
-			{
-				pduReg->removePdu(pduData);
-			}
-			else
-			{
-				//обновить таблицу поиска по SMSId
-				pduData->smsId = SmppUtil::convert(pdu.get_messageId());
-				pduReg->updateSmsId(pduData);
-			}
+			//обновить таблицу поиска по SMSId
+			pduData->smsId = SmppUtil::convert(pdu.get_messageId());
+			pduReg->updatePdu(pduData);
+			__dumpPdu__("SmppReceiverTestCases::processSubmitSmRespAfter", systemId, pdu);
 		}
 	}
 	catch(...)
@@ -118,27 +105,30 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 
 void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 {
-	__dumpPdu__("SmppReceiverTestCases::processDeliverySm", systemId, pdu);
+	__dumpPdu__("SmppReceiverTestCases::processDeliverySmBefore", systemId, pdu);
 	getLog().debug("[%d]\tprocessDeliverySm(): sequenceNumber = %u",
 		thr_self(), pdu.get_header().get_sequenceNumber());
 	__require__(session);
 	TCResult* res = new TCResult(TC_PROCESS_DELIVERY_SM);
 	//общая проверка полей
-	__checkForNull__(1, get_message().get_scheduleDeliveryTime()); //1
-	__checkForNull__(2, get_message().get_validityPeriod()); //2
-	__checkForNull__(3, get_message().get_replaceIfPresentFlag()); //3
-	__checkForNull__(4, get_message().get_smDefaultMsgId()); //4
+	__checkForNull__(1, get_message().get_scheduleDeliveryTime());
+	__checkForNull__(2, get_message().get_validityPeriod());
+	__checkForNull__(3, get_message().get_replaceIfPresentFlag());
+	__checkForNull__(4, get_message().get_smDefaultMsgId());
 	bool okResp = false;
 	try
 	{
 		//отправить респонс
 		SmppTransmitter* transmitter;
+		bool sync;
 		switch (rand1(3))
 		{
 			case 1:
+				sync = true;
 				transmitter = session->getSyncTransmitter();
 				break;
 			default:
+				sync = false;
 				transmitter = session->getAsyncTransmitter();
 		}
 		PduDeliverySmResp respPdu;
@@ -146,14 +136,19 @@ void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 		switch (rand1(10))
 		{
 			case 1: //не отправлять респонс
+				__trace__("SmppReceiverTestCases::sendDeliverySmRespNo");
 				break;
 			case 2: //отправить респонс с кодом ошибки
 				respPdu.get_header().set_commandStatus(0x3); //Invalid Command ID
+				__trace2__("SmppReceiverTestCases::sendDeliverySmResp%sBeforeErr", (sync ? "Sync" : "Async"));
 				transmitter->sendDeliverySmResp(respPdu);
+				__trace2__("SmppReceiverTestCases::sendDeliverySmResp%sAfterErr", (sync ? "Sync" : "Async"));
 				break;
 			default: //сказать что все ok и прекратить повторные доставки
 				respPdu.get_header().set_commandStatus(ESME_ROK); //No Error
+				__trace2__("SmppReceiverTestCases::sendDeliverySmResp%sBeforeOk", (sync ? "Sync" : "Async"));
 				transmitter->sendDeliverySmResp(respPdu);
+				__trace2__("SmppReceiverTestCases::sendDeliverySmResp%sAfterOk", (sync ? "Sync" : "Async"));
 				okResp = true;
 		}
 		//обработать deliver_sm pdu
@@ -192,6 +187,7 @@ void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 		error();
 		res->addFailure(100);
 	}
+	__dumpPdu__("SmppReceiverTestCases::processDeliverySmAfter", systemId, pdu);
 	debug(res);
 	resultHandler->process(res);
 }
@@ -201,33 +197,54 @@ TCResult* SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu)
 	TCResult* res = new TCResult(TC_PROCESS_NORMAL_SMS);
 	try
 	{
-		//в полученной pdu нет user_message_reference
-		if (!pdu.get_optional().has_userMessageReference())
+		PduRegistry* pduReg; //перкрыть pduReg класса
+		Address origAlias, origAddr;
+		SmppUtil::convert(pdu.get_message().get_source(), &origAlias);
+		const AliasHolder* aliasHolder = aliasReg->findAddressByAlias(origAlias);
+		if (!aliasHolder)
 		{
 			res->addFailure(101);
 		}
+		else if (!aliasHolder->aliasToAddress(origAlias, origAddr))
+		{
+			ostringstream os;
+			os << "origAlias = " << origAlias << ", origAddr = " << origAddr;
+			__trace2__("SmppReceiverTestCases::processNormalSms(102): %s",
+				os.str().c_str());
+			res->addFailure(102);
+		}
+		else if (!(pduReg = smeReg->getPduRegistry(origAddr)))
+		{
+			ostringstream os;
+			os << "origAlias = " << origAlias << ", origAddr = " << origAddr;
+			__trace2__("SmppReceiverTestCases::processNormalSms(103): %s",
+				os.str().c_str());
+			res->addFailure(103);
+		}
+		//в полученной pdu нет user_message_reference
+		else if (!pdu.get_optional().has_userMessageReference())
+		{
+			res->addFailure(104);
+		}
 		else
 		{
-			Address origAlias, origAddr;
-			SmppUtil::convert(pdu.get_message().get_source(), &origAlias);
-			const AliasHolder* aliasHolder = aliasReg->findAddressByAlias(origAlias);
-			__require__(aliasHolder);
-			__require__(aliasHolder->aliasToAddress(origAlias, origAddr));
-			PduRegistry* pduReg = smeReg->getPduRegistry(origAddr);
-			__require__(pduReg);
-			MutexGuard mguard(pduReg->getMutex());
+			ostringstream os;
+			os << "origAlias = " << origAlias << ", origAddr = " << origAddr;
+			__trace2__("SmppReceiverTestCases::processNormalSms(): %s",
+				os.str().c_str());
 			//получить оригинальную pdu
-			PduData* pduData = pduReg->getPdu(
-				pdu.get_optional().get_userMessageReference());
+			MutexGuard mguard(pduReg->getMutex());
+			PduData* pduData =
+				pduReg->getPdu(pdu.get_optional().get_userMessageReference());
 			//для user_message_reference из полученной pdu
 			//нет соответствующего оригинального pdu
 			if (!pduData)
 			{
-				res->addFailure(102);
+				res->addFailure(105);
 			}
 			else if (pduData->pdu->get_commandId() != SUBMIT_SM)
 			{
-				res->addFailure(103);
+			   	res->addFailure(106);
 			}
 			else
 			{
@@ -235,16 +252,26 @@ TCResult* SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu)
 					reinterpret_cast<PduSubmitSm*>(pduData->pdu);
 				//данная pdu уже была доставлена или
 				//вообще не должна была доставляться
-				if (pduData->deliveryFlag)
+				switch (pduData->deliveryFlag)
 				{
-					res->addFailure(104);
+					case PDU_REQUIRED_FLAG:
+					case PDU_MISSING_ON_TIME_FLAG:
+						pduData->deliveryFlag = PDU_RECEIVED_FLAG;
+						break;
+					case PDU_RECEIVED_FLAG:
+						res->addFailure(107);
+						break;
+					case PDU_NOT_EXPECTED_FLAG:
+						res->addFailure(108);
+						break;
+					default:
+						__unreachable__("Unknown pduData->deliveryFlag");
 				}
-				pduData->deliveryFlag = true;
 				//неправильное время доставки
 				if (pduData->waitTime > time(NULL) ||
 					pduData->waitTime < __checkTime__)
 				{
-					res->addFailure(105);
+					res->addFailure(109);
 				}
 				//Сравнить правильность маршрута
 				vector<int> tmp = routeChecker->checkRouteForNormalSms(*origPdu, pdu);
@@ -278,11 +305,6 @@ TCResult* SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu)
 				{
 					res->addFailure(150 + tmp2[i]);
 				}
-				//закончить обработку
-				if (pduData->complete())
-				{
-					pduReg->removePdu(pduData);
-				}
 			}
 		}
 	}
@@ -311,10 +333,10 @@ TCResult* SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu)
 		else
 		{
 			__require__(pduReg);
-			MutexGuard mguard(pduReg->getMutex());
 			//получить оригинальную pdu
-			PduData* pduData = pduReg->getPdu(
-				SmppUtil::convert(pdu.get_optional().get_receiptedMessageId()));
+			MutexGuard mguard(pduReg->getMutex());
+			PduData* pduData =
+				pduReg->getPdu(SmppUtil::convert(pdu.get_optional().get_receiptedMessageId()));
 			//для receipted_message_id из полученной pdu
 			//нет соответствующего оригинального pdu
 			if (!pduData)
@@ -383,15 +405,25 @@ TCResult* SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu)
 						res->addFailure(210);
 				}
 				//Должно придти только одно подтверждение доставки
-				if (pduData->deliveryReceiptFlag)
+				switch (pduData->deliveryReceiptFlag)
 				{
-					res->addFailure(211);
+					case PDU_REQUIRED_FLAG:
+					case PDU_MISSING_ON_TIME_FLAG:
+						pduData->deliveryReceiptFlag = PDU_RECEIVED_FLAG;
+						break;
+					case PDU_RECEIVED_FLAG:
+						res->addFailure(211);
+						break;
+					case PDU_NOT_EXPECTED_FLAG:
+						res->addFailure(212);
+						break;
+					default:
+						__unreachable__("Unknown pduData->deliveryReceiptFlag");
 				}
-				pduData->deliveryReceiptFlag = true;
 				//время доставки должно быть не на много позже wait_time
 				if (pduData->waitTime < __checkTime__)
 				{
-					res->addFailure(212);
+					res->addFailure(213);
 				}
 				//Сравнить правильность маршрута
 				vector<int> tmp =
@@ -425,11 +457,6 @@ TCResult* SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu)
 				{
 					res->addFailure(250 + tmp2[i]);
 				}
-				//закончить обработку
-				if (pduData->complete())
-				{
-					pduReg->removePdu(pduData);
-				}
 			}
 		}
 	}
@@ -459,10 +486,10 @@ TCResult* SmppReceiverTestCases::processIntermediateNotification(
 		else
 		{
 			__require__(pduReg);
-			MutexGuard mguard(pduReg->getMutex());
 			//получить оригинальную pdu
-			PduData* pduData = pduReg->getPdu(
-				SmppUtil::convert(pdu.get_optional().get_receiptedMessageId()));
+			MutexGuard mguard(pduReg->getMutex());
+			PduData* pduData =
+				pduReg->getPdu(SmppUtil::convert(pdu.get_optional().get_receiptedMessageId()));
 			//для receipted_message_id из полученной pdu
 			//нет соответствующего оригинального pdu
 			if (!pduData)
@@ -487,7 +514,7 @@ TCResult* SmppReceiverTestCases::processIntermediateNotification(
 				//if (data->intermediateNotificationFlag) { ... }
 				if (pdu.get_optional().get_messageState() != SMPP_ENROUTE_STATE)
 				{
-					pduData->intermediateNotificationFlag = true;
+					pduData->intermediateNotificationFlag = PDU_RECEIVED_FLAG;
 				}
 				//время получения должно быть не на много позже wait_time
 				if (pduData->waitTime < __checkTime__)
@@ -525,11 +552,6 @@ TCResult* SmppReceiverTestCases::processIntermediateNotification(
 				for (int i = 0; i < tmp2.size(); i++)
 				{
 					res->addFailure(350 + tmp2[i]);
-				}
-				//закончить обработку
-				if (pduData->complete())
-				{
-					pduReg->removePdu(pduData);
 				}
 			}
 		}
@@ -587,6 +609,7 @@ void SmppReceiverTestCases::handleError(int errorCode)
 	TCResult* res = new TCResult(TC_HANDLE_ERROR);
 	res->addFailure(errorCode);
 	resultHandler->process(res);
+	abort();
 }
 
 }
