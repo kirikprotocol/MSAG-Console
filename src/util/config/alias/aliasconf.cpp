@@ -11,7 +11,7 @@
 #include <util/debug.h>
 #include <memory>
 #include "util/debug.h"
-#include "sms/sms.h"
+#include <sms/sms.h>
 
 namespace smsc {
 namespace util {
@@ -85,49 +85,31 @@ AliasConfig::status AliasConfig::load(const char * const filename)
       record->addrValue = 0;
       //record->addr = attrs.getNamedItem("addr").getNodeValue().transcode();
       {
-        char* dta = attrs.getNamedItem("addr").getNodeValue().transcode();
-        record->addrValue = new char[21]; memset(record->addrValue,0,21);
-        Address tmpAddr;
-        try{
-          tmpAddr=Address(dta);
-        }catch(...)
-        {
-          delete dta;
-          logger.warn("incorrect format of 'addr = \"%20s\"'",  dta);
-          continue;
-        }
-        record->addrTni=tmpAddr.type;
-        record->addrNpi=tmpAddr.plan;
-        memcpy(record->addrValue,tmpAddr.value,tmpAddr.length);
-        delete dta;
+				std::auto_ptr<char> dta(attrs.getNamedItem("addr").getNodeValue().transcode());
+        smsc::sms::Address a(dta.get());
+        record->addrValue = new char[smsc::sms::MAX_ADDRESS_VALUE_LENGTH]; 
+        a.getValue(record->addrValue);
+        record->addrNpi = a.getNumberingPlan();
+        record->addrTni = a.getTypeOfNumber();
         //continue;
       }
       //record->alias = attrs.getNameItem("alias").getNodeValue().transcode();
       {
+				std::auto_ptr<char> dta(attrs.getNamedItem("alias").getNodeValue().transcode());
+        smsc::sms::Address a(dta.get());
+        record->aliasValue = new char[smsc::sms::MAX_ADDRESS_VALUE_LENGTH]; 
+        a.getValue(record->addrValue);
+        record->aliasNpi = a.getNumberingPlan();
+        record->aliasTni = a.getTypeOfNumber();
         DOM_Node hide_attr_node = attrs.getNamedItem("hide");
-        record->hide=!hide_attr_node.isNull() && !strcmp(hide_attr_node.getNodeValue().transcode(),"true");
-        __trace2__("record->hide: %s",record->hide?"true":"false");
-        char* dta = attrs.getNamedItem("alias").getNodeValue().transcode();
-        record->aliasValue = new char[21]; memset(record->aliasValue,0,21);
-        Address tmpAddr;
-        try{
-          tmpAddr=Address(dta);
-        }catch(...)
+        if (!hide_attr_node.isNull())
         {
-          delete dta;
-          logger.warn("incorrect format of 'addr = \"%20s\"'",  dta);
-          continue;
+          std::auto_ptr<char> hideValue(hide_attr_node.getNodeValue().transcode());
+          record->hide = !strcmp(hideValue.get(),"true");
         }
-        record->aliasTni=tmpAddr.type;
-        record->aliasNpi=tmpAddr.plan;
-        memcpy(record->aliasValue,tmpAddr.value,tmpAddr.length);
-        delete dta;
         //continue;
       }
       DOM_NodeList childs = node.getChildNodes();
-      //logger.info("record added");
-      __trace2__("npi:%d,tni:%d,value:%20s",
-                 record->aliasNpi,record->aliasTni,record->aliasValue);
       records.push_back(record.release());
     }
   } catch (DOMTreeReader::ParseException &e) {
