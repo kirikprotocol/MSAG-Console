@@ -1,7 +1,11 @@
-#$Id$
-sms
-util
-#store
+alias
+config
 core
-smeman
 router
+sme
+smeman
+smpp
+sms
+#store
+test
+util
