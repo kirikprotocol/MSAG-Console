@@ -24,8 +24,30 @@ public:
     reflist=0;
     reflistsize=0;
 
-    emptycount=0;
   }
+  IntHash(const IntHash& src)
+  {
+    *this=src;
+  }
+
+  IntHash& operator=(const IntHash& src)
+  {
+    Empty();
+    size=src.size;
+    count=src.count;
+    keys=new int[size];
+    values=new T[size];
+    refcounts=new int[size];
+    memcpy(keys,src.keys,sizeof(int)*size);
+    memcpy(refcounts,src.refcounts,sizeof(int)*size);
+    for(int i=0;i<size;i++)
+    {
+      if(refcounts[i]!=0)values[i]=src.values[i];
+    }
+    reflist=0;
+    reflistsize=0;
+  }
+
   explicit IntHash(int n)
   {
     SetSize(n);
@@ -225,7 +247,6 @@ public:
     reflist=0;
     reflistsize=0;
 
-    emptycount=0;
   }
 
 
@@ -237,7 +258,6 @@ protected:
   int size;
   int *reflist;
   int reflistsize;
-  int emptycount;
 
   inline unsigned int HashKey(int key,int attempt)const
   {
