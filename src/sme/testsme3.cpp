@@ -38,7 +38,7 @@ public:
         src_addr = xsms.getOriginatingAddress();
         xsms.setDestinationAddress(src_addr);
         xsms.setOriginatingAddress(dest_addr);
-        xsms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSD_RESP);
+        xsms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_RESP);
       }
       // end of processing
       ////

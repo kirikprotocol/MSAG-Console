@@ -698,7 +698,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
           istringstream(s_seq) >> sequence;
           if ( sequence == 0 )
             throw MAPDIALOG_FATAL_ERROR(
-              FormatText("MAP::PutCommand: invaid USSD code 0x%llx",s_seq.c_str()));
+              FormatText("MAP::PutCommand: invaid sequence %s",s_seq.c_str()));
           try 
           {
             if ( serviceOp == USSD_PSSR_RESP ) 
