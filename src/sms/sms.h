@@ -781,7 +781,7 @@ public:
 
         void encode(uint8_t* buffer,int& length) const
         {
-          //__require__( buffer != 0 );  
+          __require__( buffer != 0 );  
           __require__( length >= 0 );
           __require__( length >= getRequiredBufferSize() );
           int offs;
