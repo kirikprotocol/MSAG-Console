@@ -180,7 +180,7 @@ PduFlag NormalSmsHandler::compareMsgTextMap(DeliveryMonitor* monitor,
 	}
 	if (concatMaxNum) //сегментированное сообщение
 	{
-		__trace2__("segmented messge received: refNum = %d, maxNum = %d, seqNum",
+		__trace2__("segmented messge received: refNum = %d, maxNum = %d, seqNum = %d",
 			concatRefNum, concatMaxNum, concatSeqNum);
 		if (pdu.get_message().get_dataCoding() ==
 			origPdu.get_message().get_dataCoding())
@@ -301,6 +301,8 @@ void NormalSmsHandler::registerIntermediateNotificationMonitor(
 	__require__(monitor && pduReg);
 	//intermediate notification monitor отправляется только после первой
 	//неудачной попытка доставки с rescheduling
+	//lastAttempt считается по времени попытки, поэтому в случае конкатенации для
+	//map proxy попытка применяется к серии кусочков
 	if (monitor->getLastAttempt())
 	{
 		return;
@@ -344,6 +346,8 @@ void NormalSmsHandler::registerIntermediateNotificationMonitor(
 		case RESP_PDU_OK:
 		case RESP_PDU_ERROR:
 			return; //повторных доставок не будет
+		case RESP_PDU_CONTINUE:
+			return; //продолжается доставка пачки
 		case RESP_PDU_RESCHED:
 			startTime = respTime;
 			break;
@@ -600,10 +604,13 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 		switch (respFlag)
 		{
 			case RESP_PDU_OK:
-				monitor->state = textFlag == PDU_REQUIRED_FLAG ? ENROUTE : DELIVERED;
+				monitor->state = DELIVERED;
 				break;
 			case RESP_PDU_ERROR:
 				monitor->state = UNDELIVERABLE;
+				break;
+			case RESP_PDU_CONTINUE:
+				monitor->state = ENROUTE;
 				break;
 			case RESP_PDU_RESCHED:
 			case RESP_PDU_MISSING:
