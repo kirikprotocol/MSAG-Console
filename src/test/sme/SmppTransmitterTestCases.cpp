@@ -1,5 +1,6 @@
 #include "SmppTransmitterTestCases.hpp"
 #include "SmppPduChecker.hpp"
+#include "Templates.hpp"
 #include "test/conf/TestConfig.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include "test/smpp/SmppUtil.hpp"
@@ -58,9 +59,9 @@ void SmppTransmitterTestCases::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 uint8_t SmppTransmitterTestCases::getRegisteredDelivery(PduData* pduData)
 {
 	__require__(pduData);
-	__require__(pduData->intProps.count("registredDelivery"));
 	__require__(pduData->objProps.count("senderData"));
-	uint8_t registredDelivery = (uint8_t) pduData->intProps["registredDelivery"];
+	SmsPduWrapper pdu(pduData);
+	uint8_t registredDelivery = pdu.getRegistredDelivery();
 	SenderData* senderData =
 		dynamic_cast<SenderData*>(pduData->objProps["senderData"]);
 	__require__(senderData->validProfile);
@@ -89,7 +90,7 @@ SmppTransmitterTestCases::checkActionLocked(DeliveryMonitor* monitor, time_t che
 	*/
 	//если доставлен хоть один кусочек конкатенированного map сообщения,
 	//то оно считается в delivering state и не канселится
-	bool mapLocked = 0;
+	bool mapLocked = false;
 	if (monitor->pduData->intProps.count("map.seqNum"))
 	{
 		mapLocked = monitor->pduData->intProps["map.seqNum"] > 1; //нумерация сегментов с 1
@@ -186,7 +187,7 @@ SmppTransmitterTestCases::CancelResult SmppTransmitterTestCases::cancelPduMonito
 {
 	__decl_tc__;
 	__require__(pduData);
-	SmsPduWrapper pdu(pduData->pdu, pduData->sendTime);
+	SmsPduWrapper pdu(pduData);
 	//delivery monitor
 	DeliveryMonitor* deliveryMonitor =
 		fixture->pduReg->getDeliveryMonitor(pdu.getMsgRef());
@@ -199,13 +200,21 @@ SmppTransmitterTestCases::CancelResult SmppTransmitterTestCases::cancelPduMonito
 		case NOT_LOCKED:
 			break;
 		case CHANGE_LOCKED: //канселить уже нельзя
-			__tc__("lockedSm.segmentedMap"); __tc_ok__;
-			return CancelResult(pdu.getMsgRef(), lockInfo.second, CancelResult::CANCEL_FAILED);
+			{
+				__tc__("lockedSm.segmentedMap"); __tc_ok__;
+				CancelResult res(pdu.getMsgRef(), lockInfo.second, CancelResult::CANCEL_FAILED);
+				__trace2__("cancelPduMonitors: msgRef = %d, cancelTime = %ld, status = %d",
+					(int) res.msgRef, res.cancelTime, res.status);
+				return res;
+			}
 		case ALL_LOCKED:
 			if (!lockInfo.second) //команда протухнет прежде, чем освободится лок
 			{
 				__tc__("lockedSm.deliveringState"); __tc_ok__;
-				return CancelResult(pdu.getMsgRef(), 0, CancelResult::CANCEL_FAILED);
+				CancelResult res(pdu.getMsgRef(), 0, CancelResult::CANCEL_FAILED);
+				__trace2__("cancelPduMonitors: msgRef = %d, cancelTime = %ld, status = %d",
+					(int) res.msgRef, res.cancelTime, res.status);
+				return res;
 			}
 			break;
 		case ALL_COND_LOCKED:
@@ -238,8 +247,11 @@ SmppTransmitterTestCases::CancelResult SmppTransmitterTestCases::cancelPduMonito
 		notifMonitor->state = state;
 		cancelMonitor(notifMonitor, cancelTime, condRequired, forceRemoveMonitors);
 	}
-	return CancelResult(pdu.getMsgRef(), lockInfo.second, condRequired ?
+	CancelResult res(pdu.getMsgRef(), lockInfo.second, condRequired ?
 		CancelResult::CANCEL_COND : CancelResult::CANCEL_OK);
+	__trace2__("cancelPduMonitors: msgRef = %d, cancelTime = %ld, status = %d",
+		(int) res.msgRef, res.cancelTime, res.status);
+	return res;
 }
 
 void SmppTransmitterTestCases::registerTransmitterReportMonitors(PduData* pduData)
@@ -250,7 +262,7 @@ void SmppTransmitterTestCases::registerTransmitterReportMonitors(PduData* pduDat
 	{
 		return;
 	}
-	SmsPduWrapper pdu(pduData->pdu, pduData->sendTime);
+	SmsPduWrapper pdu(pduData);
 	uint8_t regDelivery = getRegisteredDelivery(pduData);
 	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT ||
 		regDelivery == FAILURE_SMSC_DELIVERY_RECEIPT)
@@ -258,25 +270,20 @@ void SmppTransmitterTestCases::registerTransmitterReportMonitors(PduData* pduDat
 		bool reports = true;
 		if (pduData->intProps.count("ussdServiceOp"))
 		{
-			__tc__("sms.reports.deliveryReceipt.ussdServiceOp");
-			__tc_ok__;
-			__tc__("sms.reports.intermediateNotification.ussdServiceOp");
-			__tc_ok__;
+			__tc__("sms.reports.deliveryReceipt.ussdServiceOp"); __tc_ok__;
+			__tc__("sms.reports.intermediateNotification.ussdServiceOp"); __tc_ok__;
 			reports = false;
 		}
 		if (pduData->intProps.count("suppressDeliveryReports"))
 		{
-			__tc__("sms.reports.deliveryReceipt.suppressDeliveryReports");
-			__tc_ok__;
-			__tc__("sms.reports.intermediateNotification.suppressDeliveryReports");
-			__tc_ok__;
+			__tc__("sms.reports.deliveryReceipt.suppressDeliveryReports"); __tc_ok__;
+			__tc__("sms.reports.intermediateNotification.suppressDeliveryReports"); __tc_ok__;
 			reports = false;
 		}
 		if (reports)
 		{
 			//intermediate notification
-			__tc__("sms.reports.intermediateNotification.transmitter");
-			__tc_ok__;
+			__tc__("sms.reports.intermediateNotification.transmitter"); __tc_ok__;
 			IntermediateNotificationMonitor* notifMonitor =
 				new IntermediateNotificationMonitor(pdu.getMsgRef(),
 					pdu.getWaitTime(), pduData, PDU_REQUIRED_FLAG);
@@ -284,8 +291,7 @@ void SmppTransmitterTestCases::registerTransmitterReportMonitors(PduData* pduDat
 			notifMonitor->deliveryStatus = ESME_RINVBNDSTS;
 			fixture->pduReg->registerMonitor(notifMonitor);
 			//delivery receipt
-			__tc__("sms.reports.deliveryReceipt.transmitter");
-			__tc_ok__;
+			__tc__("sms.reports.deliveryReceipt.transmitter"); __tc_ok__;
 			DeliveryReceiptMonitor* rcptMonitor =
 				new DeliveryReceiptMonitor(pdu.getMsgRef(), pdu.getValidTime(),
 					pduData, PDU_REQUIRED_FLAG);
@@ -304,7 +310,7 @@ void SmppTransmitterTestCases::registerNotBoundReportMonitors(PduData* pduData)
 	{
 		return;
 	}
-	SmsPduWrapper pdu(pduData->pdu, pduData->sendTime);
+	SmsPduWrapper pdu(pduData);
 	uint8_t regDelivery = getRegisteredDelivery(pduData);
 	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT ||
 		regDelivery == FAILURE_SMSC_DELIVERY_RECEIPT)
@@ -312,25 +318,20 @@ void SmppTransmitterTestCases::registerNotBoundReportMonitors(PduData* pduData)
 		bool reports = true;
 		if (pduData->intProps.count("ussdServiceOp"))
 		{
-			__tc__("sms.reports.deliveryReceipt.ussdServiceOp");
-			__tc_ok__;
-			__tc__("sms.reports.intermediateNotification.ussdServiceOp");
-			__tc_ok__;
+			__tc__("sms.reports.deliveryReceipt.ussdServiceOp"); __tc_ok__;
+			__tc__("sms.reports.intermediateNotification.ussdServiceOp"); __tc_ok__;
 			reports = false;
 		}
 		if (pduData->intProps.count("suppressDeliveryReports"))
 		{
-			__tc__("sms.reports.deliveryReceipt.suppressDeliveryReports");
-			__tc_ok__;
-			__tc__("sms.reports.intermediateNotification.suppressDeliveryReports");
-			__tc_ok__;
+			__tc__("sms.reports.deliveryReceipt.suppressDeliveryReports"); __tc_ok__;
+			__tc__("sms.reports.intermediateNotification.suppressDeliveryReports"); __tc_ok__;
 			reports = false;
 		}
 		if (reports)
 		{
 			//intermediate notification
-			__tc__("sms.reports.intermediateNotification.notBound");
-			__tc_ok__;
+			__tc__("sms.reports.intermediateNotification.notBound"); __tc_ok__;
 			IntermediateNotificationMonitor* notifMonitor =
 				new IntermediateNotificationMonitor(pdu.getMsgRef(),
 					pdu.getWaitTime(), pduData, PDU_REQUIRED_FLAG);
@@ -338,8 +339,7 @@ void SmppTransmitterTestCases::registerNotBoundReportMonitors(PduData* pduData)
 			notifMonitor->deliveryStatus = Status::SMENOTCONNECTED;
 			fixture->pduReg->registerMonitor(notifMonitor);
 			//delivery receipt
-			__tc__("sms.reports.deliveryReceipt.notBound");
-			__tc_ok__;
+			__tc__("sms.reports.deliveryReceipt.notBound"); __tc_ok__;
 			DeliveryReceiptMonitor* rcptMonitor =
 				new DeliveryReceiptMonitor(pdu.getMsgRef(), pdu.getValidTime(),
 					pduData, PDU_REQUIRED_FLAG);
@@ -354,7 +354,7 @@ void SmppTransmitterTestCases::registerNormalSmeMonitors(PduData* pduData,
 	PduData* existentPduData)
 {
 	__require__(pduData);
-	SmsPduWrapper pdu(pduData->pdu, pduData->sendTime);
+	SmsPduWrapper pdu(pduData);
 	bool deliveryFlag = false;
 	bool transmitterReportsFlag = false;
 	bool notBoundReportsFlag = false;
@@ -393,7 +393,7 @@ void SmppTransmitterTestCases::registerNormalSmeMonitors(PduData* pduData,
 			//ENROTE state.
 			//data_sm с теми же source address, destination address и
 			//service_type замещать не должны!!!
-			SmsPduWrapper existentPdu(existentPduData->pdu, existentPduData->sendTime);
+			SmsPduWrapper existentPdu(existentPduData);
 			if (!strcmp(nvl(pdu.getServiceType()), nvl(existentPdu.getServiceType())))
 			{
 				if (pdu.isSubmitSm() && pdu.getSource() == existentPdu.getSource() &&
@@ -405,6 +405,16 @@ void SmppTransmitterTestCases::registerNormalSmeMonitors(PduData* pduData,
 					existentPduData->replacedByPdu = pduData;
 					CancelResult res =
 						cancelPduMonitors(existentPduData, pduData->sendTime, false, SMPP_ENROUTE_STATE);
+					switch (res.status)
+					{
+						case CancelResult::CANCEL_OK:
+							break;
+						case CancelResult::CANCEL_FAILED: //проверку времени освобождения лока не делаю
+							pduData->checkRes.insert(ESME_RSUBMITFAIL);
+							return;
+						default: //CancelResult::CANCEL_COND
+							__unreachable__("Invalid cancel result");
+					}
 					__trace2__("replaced pdu:\n\tuserMessageReference = %d", (int) res.msgRef);
 				}
 				else
@@ -439,7 +449,7 @@ void SmppTransmitterTestCases::registerExtSmeMonitors(PduData* pduData)
 	{
 		return;
 	}
-	SmsPduWrapper pdu(pduData->pdu, pduData->sendTime);
+	SmsPduWrapper pdu(pduData);
 	//предполагаю, что ext sme всегда запущено и на него есть маршрут
 	//ext sme всегда отправляет sme ack и, по ситуации, final delivery receipt
 	__require__(fixture->routeChecker->isDestReachable(
@@ -455,14 +465,12 @@ void SmppTransmitterTestCases::registerExtSmeMonitors(PduData* pduData)
 		bool report = true;
 		if (pduData->intProps.count("ussdServiceOp"))
 		{
-			__tc__("sms.reports.deliveryReceipt.ussdServiceOp");
-			__tc_ok__;
+			__tc__("sms.reports.deliveryReceipt.ussdServiceOp"); __tc_ok__;
 			report = false;
 		}
 		if (pduData->intProps.count("suppressDeliveryReports"))
 		{
-			__tc__("sms.reports.deliveryReceipt.suppressDeliveryReports");
-			__tc_ok__;
+			__tc__("sms.reports.deliveryReceipt.suppressDeliveryReports"); __tc_ok__;
 			report = false;
 		}
 		if (report)
@@ -485,7 +493,7 @@ void SmppTransmitterTestCases::registerNullSmeMonitors(PduData* pduData,
 	{
 		return;
 	}
-	SmsPduWrapper pdu(pduData->pdu, pduData->sendTime);
+	SmsPduWrapper pdu(pduData);
 	//предполагаю, что null sme всегда запущено и на него есть маршрут
 	//null sme не отправляет sme ack, а на deliver_sm сразу отправляет респонс
 	__require__(fixture->routeChecker->isDestReachable(
@@ -498,14 +506,12 @@ void SmppTransmitterTestCases::registerNullSmeMonitors(PduData* pduData,
 		bool report = true;
 		if (pduData->intProps.count("ussdServiceOp"))
 		{
-			__tc__("sms.reports.deliveryReceipt.ussdServiceOp");
-			__tc_ok__;
+			__tc__("sms.reports.deliveryReceipt.ussdServiceOp"); __tc_ok__;
 			report = false;
 		}
 		if (pduData->intProps.count("suppressDeliveryReports"))
 		{
-			__tc__("sms.reports.deliveryReceipt.suppressDeliveryReports");
-			__tc_ok__;
+			__tc__("sms.reports.deliveryReceipt.suppressDeliveryReports"); __tc_ok__;
 			report = false;
 		}
 		if (report)
@@ -524,25 +530,58 @@ SmsMsg* SmppTransmitterTestCases::getSmsMsg(PduData* pduData)
 {
 	__require__(pduData && pduData->pdu);
 	__require__(pduData->objProps.count("recipientData"));
-	__require__(pduData->intProps.count("dataCoding"));
-	
 	__cfg_int__(timeCheckAccuracy);
-	SmsPduWrapper pdu(pduData->pdu, 0);
+	SmsPduWrapper pdu(pduData);
 	RecipientData* recipientData =
 		dynamic_cast<RecipientData*>(pduData->objProps["recipientData"]);
+	//проверить наличие темплейта
+	if (pduData->strProps.count("directive.template"))
+	{
+		const string& templateName = pduData->strProps["directive.template"];
+		pair<string, uint8_t> p;
+		if (templateName == "t0")
+		{
+			p = T0::format(recipientData->profile);
+		}
+		else if (templateName == "t1")
+		{
+			const string& name = pduData->strProps.count("directive.template.t1.name") ?
+				pduData->strProps["directive.template.t1.name"] : "";
+			p = T1::format(recipientData->profile, name);
+		}
+		else if (templateName == "t2")
+		{
+			const string& name1 = pduData->strProps.count("directive.template.t2.name1") ?
+				pduData->strProps["directive.template.t2.name1"] : "";
+			const string& name2 = pduData->strProps.count("directive.template.t2.name2") ?
+				pduData->strProps["directive.template.t2.name2"] : "";
+			p = T2::format(recipientData->profile, name1, name2);
+		}
+		else
+		{
+			__unreachable__("Invalid template name");
+		}
+		int msgLen;
+		auto_ptr<char> msg = encode(p.first, p.second, msgLen, false);
+		return new SmsMsg(false, msg.get(), msgLen, p.second, recipientData->validProfile);
+	}
+	//сконвертировать текст
+	__require__(pduData->intProps.count("dataCoding"));
 	uint8_t dc = pduData->intProps["dataCoding"];
 	bool udhi = pdu.getEsmClass() & ESM_CLASS_UDHI_INDICATOR;
 	char* msg = NULL;
 	int len = 0;
 	uint8_t dataCoding;
 	int codePage = recipientData->profile.codepage;
+	int dirOffset = pduData->intProps.count("directive.offset") ?
+		pduData->intProps["directive.offset"] : 0;
 	if (pdu.isSubmitSm() && pdu.get_message().size_shortMessage() &&
 		!pdu.get_optional().has_messagePayload())
 	{
 		len = (int) (pdu.get_message().size_shortMessage() * 1.5);
 		msg = new char[len];
 		convert(udhi, dc, pdu.get_message().get_shortMessage(),
-			pdu.get_message().size_shortMessage(),
+			pdu.get_message().size_shortMessage(), dirOffset,
 			dataCoding, msg, len, codePage, false);
 	}
 	else if (pdu.isSubmitSm() && pdu.get_optional().has_messagePayload() &&
@@ -551,7 +590,7 @@ SmsMsg* SmppTransmitterTestCases::getSmsMsg(PduData* pduData)
 		len = (int) (pdu.get_optional().size_messagePayload() * 1.5);
 		msg = new char[len];
 		convert(udhi, dc, pdu.get_optional().get_messagePayload(),
-			pdu.get_optional().size_messagePayload(),
+			pdu.get_optional().size_messagePayload(), dirOffset,
 			dataCoding, msg, len, codePage, false);
 	}
 	else if (pdu.isDataSm() && pdu.get_optional().has_messagePayload())
@@ -559,14 +598,14 @@ SmsMsg* SmppTransmitterTestCases::getSmsMsg(PduData* pduData)
 		len = (int) (pdu.get_optional().size_messagePayload() * 1.5);
 		msg = new char[len];
 		convert(udhi, dc, pdu.get_optional().get_messagePayload(),
-			pdu.get_optional().size_messagePayload(),
+			pdu.get_optional().size_messagePayload(), dirOffset,
 			dataCoding, msg, len, codePage, false);
 	}
 	else
 	{
 		len = 1;
 		msg = new char[len];
-		convert(false, dc, "", 0, dataCoding, msg, len, codePage, false);
+		convert(false, dc, "", 0, 0, dataCoding, msg, len, codePage, false);
 	}
 	return new SmsMsg(udhi, msg, len, dataCoding, recipientData->validProfile);
 }
@@ -576,7 +615,7 @@ void SmppTransmitterTestCases::setupSenderRecipientData(PduData* pduData,
 {
 	__require__(pduData && pduData->pdu);
 	__cfg_int__(timeCheckAccuracy);
-	SmsPduWrapper pdu(pduData->pdu, 0);
+	SmsPduWrapper pdu(pduData);
 	//sender data
 	Address srcAddr;
 	SmppUtil::convert(pdu.getSource(), &srcAddr);
@@ -584,7 +623,8 @@ void SmppTransmitterTestCases::setupSenderRecipientData(PduData* pduData,
 	const Profile& senderProfile =
 		fixture->profileReg->getProfile(srcAddr, t1);
 	__require__(sendTime >= t1);
-	SenderData* senderData = new SenderData(srcAddr, senderProfile, true);
+	SenderData* senderData = new SenderData(&fixture->smeInfo, srcAddr,
+		senderProfile, true);
 	senderData->ref();
 	pduData->objProps["senderData"] = senderData;
 	//recipient data
@@ -611,7 +651,6 @@ PduData* SmppTransmitterTestCases::prepareSms(SmppHeader* header,
 	PduData* pduData = new PduData(header, sendTime, intProps, strProps, objProps);
 	setupSenderRecipientData(pduData, sendTime);
 	//other
-	pduData->intProps["registredDelivery"] = pdu.getRegistredDelivery();
 	if (pdu.get_optional().has_ussdServiceOp())
 	{
 		pduData->intProps["ussdServiceOp"] = pdu.get_optional().get_ussdServiceOp();
@@ -1020,7 +1059,7 @@ void SmppTransmitterTestCases::sendDataSmPdu(PduDataSm* pdu,
 void SmppTransmitterTestCases::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	PduData* replacePduData)
 {
-	SmsPduWrapper replacePdu(replacePduData->pdu, replacePduData->sendTime);
+	SmsPduWrapper replacePdu(replacePduData);
 	__require__(replacePduData->intProps.count("dataCoding"));
 	uint8_t dataCoding = replacePduData->intProps["dataCoding"];
 	bool udhi = replacePdu.getEsmClass() & ESM_CLASS_UDHI_INDICATOR;
@@ -1037,7 +1076,7 @@ void SmppTransmitterTestCases::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 void SmppTransmitterTestCases::registerReplaceMonitors(PduData* pduData,
 	PduData* replacePduData)
 {
-	SmsPduWrapper resPdu(pduData->pdu, pduData->sendTime);
+	SmsPduWrapper resPdu(pduData);
 	//мониторы
 	bool deliveryFlag = false;
 	bool transmitterReportsFlag = false;
@@ -1063,7 +1102,17 @@ void SmppTransmitterTestCases::registerReplaceMonitors(PduData* pduData,
 	replacePduData->ref(); //если будут удалены все мониторы, то и replacePduData будет удалено
 	CancelResult res =
 		cancelPduMonitors(replacePduData, pduData->sendTime, true, SMPP_ENROUTE_STATE);
-	__trace2__("replaced pdu:\n\tuserMessageReference = %d", (int) res.msgRef);
+	switch (res.status)
+	{
+		case CancelResult::CANCEL_OK:
+			break;
+		case CancelResult::CANCEL_FAILED: //проверку времени освобождения лока не делаю
+			pduData->checkRes.insert(ESME_RREPLACEFAIL);
+			return;
+		default: //CancelResult::CANCEL_COND
+			__unreachable__("Invalid cancel result");
+	}
+	__trace2__("replaced pdu:\n\tuserMessageReference", (int) res.msgRef);
 	//delivery monitor
 	if (deliveryFlag)
 	{
@@ -1102,7 +1151,7 @@ SmppHeader* SmppTransmitterTestCases::prepareResultSubmitSm(
 	resPdu->get_header().set_sequenceNumber(pdu->get_header().get_sequenceNumber());
 	if (replacePduData)
 	{
-		SmsPduWrapper replacePdu(replacePduData->pdu, replacePduData->sendTime);
+		SmsPduWrapper replacePdu(replacePduData);
 		resPdu->get_message().set_serviceType(nvl(replacePdu.getServiceType()));
 		resPdu->get_message().set_dest(replacePdu.getDest());
 		resPdu->get_message().set_esmClass(replacePdu.getEsmClass());
@@ -1167,7 +1216,7 @@ PduData* SmppTransmitterTestCases::prepareReplaceSm(PduReplaceSm* pdu,
 	PduFlag replacePduFlag = PDU_NOT_EXPECTED_FLAG;
 	if (replacePduData)
 	{
-		SmsPduWrapper replacePdu(replacePduData->pdu, replacePduData->sendTime);
+		SmsPduWrapper replacePdu(replacePduData);
 		DeliveryMonitor* monitor = fixture->pduReg->getDeliveryMonitor(replacePdu.getMsgRef());
 		if (monitor)
 		{
@@ -1178,7 +1227,6 @@ PduData* SmppTransmitterTestCases::prepareReplaceSm(PduReplaceSm* pdu,
 	PduData* pduData = new PduData(resHeader, sendTime, intProps, strProps, objProps);
 	setupSenderRecipientData(pduData, sendTime);
 	pduData->intProps["replaceSm"] = 1;
-	pduData->intProps["registredDelivery"] = pdu->get_registredDelivery();
 	if (resPdu.get_optional().has_ussdServiceOp())
 	{
 		pduData->intProps["ussdServiceOp"] = resPdu.get_optional().get_ussdServiceOp();
@@ -1382,7 +1430,7 @@ PduData* SmppTransmitterTestCases::prepareQuerySm(PduQuerySm* pdu,
 	pduData->checkRes = fixture->pduChecker->checkQuerySm(pduData, origPduData);
 	if (origPduData)
 	{
-		SmsPduWrapper origPdu(origPduData->pdu, origPduData->sendTime);
+		SmsPduWrapper origPdu(origPduData);
 		pduData->intProps["msgRef"] = origPdu.getMsgRef();
 	}
 	pduData->ref();
@@ -1534,6 +1582,16 @@ void SmppTransmitterTestCases::processCancelledMonitors(PduCancelSm* pdu,
 		__require__(!pdu->get_serviceType());
 		__require__(cancelPduData);
 		CancelResult res = cancelPduMonitors(cancelPduData, cancelTime, false, SMPP_DELETED_STATE);
+		switch (res.status)
+		{
+			case CancelResult::CANCEL_OK:
+				break;
+			case CancelResult::CANCEL_FAILED: //проверку времени освобождения лока не делаю
+				pduData->checkRes.insert(ESME_RCANCELFAIL);
+				return;
+			default: //CancelResult::CANCEL_COND
+				__unreachable__("Invalid cancel result");
+		}
 		__trace2__("cancelled pdu:\n\tuserMessageReference = %d", (int) res.msgRef);
 	}
 	else
@@ -1565,6 +1623,16 @@ void SmppTransmitterTestCases::processCancelledMonitors(PduCancelSm* pdu,
 		{
 			CancelResult res =
 				cancelPduMonitors(cancelPduDataList[i], cancelTime, false, SMPP_DELETED_STATE);
+			switch (res.status)
+			{
+				case CancelResult::CANCEL_OK:
+					break;
+				case CancelResult::CANCEL_FAILED: //проверку времени освобождения лока не делаю
+					//pduData->checkRes.insert(ESME_RCANCELFAIL);
+					continue;
+				default: //CancelResult::CANCEL_COND
+					__unreachable__("Invalid cancel result");
+			}
 			__trace2__("\tuserMessageReference = %d\n", (int) res.msgRef);
 		}
 	}
@@ -1579,7 +1647,7 @@ PduData* SmppTransmitterTestCases::prepareCancelSm(PduCancelSm* pdu,
 	PduFlag cancelPduFlag = PDU_NOT_EXPECTED_FLAG;
 	if (cancelPduData)
 	{
-		SmsPduWrapper cancelPdu(cancelPduData->pdu, cancelPduData->sendTime);
+		SmsPduWrapper cancelPdu(cancelPduData);
 		DeliveryMonitor* monitor = fixture->pduReg->getDeliveryMonitor(
 			cancelPdu.getMsgRef());
 		if (monitor)

@@ -82,13 +82,16 @@ protected:
 
 	struct CancelResult
 	{
-		static const int CANCEL_OK = 1;
-		static const int CANCEL_FAILED = 2;
-		static const int CANCEL_COND = 3;
+		enum
+		{
+			CANCEL_OK,
+			CANCEL_FAILED,
+			CANCEL_COND
+		};
 		uint16_t msgRef;
 		time_t cancelTime;
 		int status;
-		CancelResult(uint16_t _msgRef, time_t _cancelTime, bool _status)
+		CancelResult(uint16_t _msgRef, time_t _cancelTime, int _status)
 			: msgRef(_msgRef), cancelTime(_cancelTime), status(_status) {}
 	};
 
