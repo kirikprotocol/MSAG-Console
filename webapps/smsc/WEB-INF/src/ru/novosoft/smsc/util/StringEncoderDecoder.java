@@ -43,7 +43,7 @@ public class StringEncoderDecoder
           result.append( str.charAt(i) );
       }
     }
-    return result;
+    return result.toString();
   }
 
   public static String encodeHEX( String str ) {
