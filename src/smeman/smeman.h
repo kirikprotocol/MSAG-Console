@@ -142,7 +142,7 @@ public:
     MutexGuard guard(mutex);
     if ( proxy )
     {
-      proxy->getPeers(in,out);
+      return proxy->getPeers(in,out);
     }
     else throw runtime_error("proxy not connected");
   }

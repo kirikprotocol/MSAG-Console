@@ -1082,7 +1082,6 @@ Variant SmscComponent::smeStatus(const Arguments & args)
 	Variant result(StringListType);
 	for (SmeIterator* i = getSmeAdmin()->iterator(); i != NULL;)
 	{
-		SmeProxy * smeProxy = i->getSmeProxy();
 		std::string status;
 		status += i->getSmeInfo().systemId;
 		status += ",";
@@ -1092,36 +1091,43 @@ Variant SmscComponent::smeStatus(const Arguments & args)
 		}
 		else
 		{
-			if (smeProxy == NULL)
+			if (!i->isSmeConnected())
 			{
 				status += "disconnected";
 			}
 			else
 			{
-				switch (smeProxy->getBindMode())
-				{
-					case smeTX:
-						status += "tx,";
-						break;
-					case smeRX:
-						status += "rx,";
-						break;
-					case smeTRX:
-						status += "trx,";
-						break;
-					default:
-						status += "unknown,";
-				}
-				char inIP[128], outIP[128];
-				if (smeProxy->getPeers(inIP,outIP))
-				{
-					status += inIP;
-					status += ",";
-					status += outIP;
-				}
-				else
-				{
-					status += "unknown,unknown";
+				SmeProxy * smeProxy = i->getSmeProxy();
+				try {
+					std::string tmpStr;
+					switch (smeProxy->getBindMode())
+					{
+						case smeTX:
+							tmpStr += "tx,";
+							break;
+						case smeRX:
+							tmpStr += "rx,";
+							break;
+						case smeTRX:
+							tmpStr += "trx,";
+							break;
+						default:
+							tmpStr += "unknown,";
+					}
+					char inIP[128], outIP[128];
+					if (smeProxy->getPeers(inIP,outIP))
+					{
+						tmpStr += inIP;
+						tmpStr += ",";
+						tmpStr += outIP;
+					}
+					else
+					{
+						tmpStr += "unknown,unknown";
+					}
+					status += tmpStr;
+				} catch (...) {
+					status += "unknown,unknown,unknown";
 				}
 			}
 		}
