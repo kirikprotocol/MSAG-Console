@@ -28,7 +28,7 @@ function refreshTaskStatuses()
 {
 	document.all.tdcTasksStatuses.DataURL = document.all.tdcTasksStatuses.DataURL;
 	document.all.tdcTasksStatuses.reset();
-	window.setTimeout(refreshTaskStatuses, 1000);
+	window.setTimeout(refreshTaskStatuses, 5000);
 }
 refreshTaskStatuses();
 </script>
@@ -225,7 +225,7 @@ function setSort(sorting)
       String svcTypeEnc = StringEncoderDecoder.encode(svcType);
 
       %><tr class=row<%=rowN++&1%>>
-        <td><input class=check type=checkbox name=checked id=checked<%=idHex%> value="<%=idEnc%>" <%=bean.isTaskChecked(id) ? "checked" : ""%> onclick="checkCheckboxesForMbDeleteButton();"></td>
+        <td><input class=check type=checkbox name=checked id=checked<%=idHex%> value="<%=idEnc%>" <%=bean.isTaskChecked(id) ? "checked" : ""%> onclick="checkTasks();"></td>
         <td><label for=checked<%=idHex%>><%=nameEnc%></label></td>
         <td nowrap><%=providerEnc%></td>
         <td><%if (enabled       ){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
