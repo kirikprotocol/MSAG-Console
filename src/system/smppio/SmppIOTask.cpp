@@ -343,12 +343,12 @@ int SmppInputThread::Execute()
               if(!err)
               {
                 try{
-                  trace("try to register sme");
+                  std::string sid=bindpdu->get_systemId();
+                  __trace2__("try to register sme:%s",sid.c_str());
                   smeManager->registerSmeProxy(
                     bindpdu->get_systemId()?bindpdu->get_systemId():"",
                     bindpdu->get_password()?bindpdu->get_password():"",
                     proxy);
-                  std::string sid=bindpdu->get_systemId();
                   proxy->setId(sid);
                   SmeIndex proxyIndex=smeManager->lookup(sid);
                   SmeInfo si=smeManager->getSmeInfo(proxyIndex);
