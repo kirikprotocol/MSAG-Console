@@ -60,7 +60,7 @@ bool LoadConfig(ProxyConfig& pconf)
     pconf.left.systemType = left.systemType;
     pconf.left.origAddr = left.origAddr;
     pconf.left.password = left.password;
-    const ProxySmeConfig::sme& right = cfg.getRight();
+    const ProxySmeConfig::sme& right = cfg.getRigth();
     pconf.right.host = right.host;
     pconf.right.port = right.port;
     pconf.right.sid  = right.sid;
