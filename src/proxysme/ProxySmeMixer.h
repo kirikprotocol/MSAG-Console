@@ -74,7 +74,7 @@ public:
     return left_state_ == SESSION_UNRECOVERABLE ||right_state_ == SESSION_UNRECOVERABLE;
   }
   bool IsConnected() {
-    return left_state_ == SESSION_OK ||right_state_ == SESSION_OK;
+    return left_state_ == SESSION_OK && right_state_ == SESSION_OK;
   }
   void BrokenSession_(DIRECTION d) {
     if ( d == LEFT_TO_RIGHT ) left_state_ = SESSION_BROKEN;
