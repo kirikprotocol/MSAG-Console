@@ -27,8 +27,10 @@ namespace smsc { namespace mcisme
         
     public:
 
-        static bool bDefaultInform, bDefaultNotify;
-        static void init(DataSource* _ds, bool defaultInform=true, bool defaultNotify=false);
+        static uint8_t  defaultEventMask;
+        static bool     bDefaultInform, bDefaultNotify;
+        static void     init(DataSource* _ds, uint8_t defaultEventMask=0xFF,
+                             bool defaultInform=true, bool defaultNotify=false);
 
         static bool delProfile(const char* abonent, Connection* connection=0);
         static void setProfile(const char* abonent, const AbonentProfile& profile, Connection* connection=0);
@@ -42,7 +44,7 @@ namespace smsc { namespace mcisme
         int32_t informTemplateId, notifyTemplateId; // if -1 => default
         
         AbonentProfile() 
-            : eventMask(0xFF), 
+            : eventMask(AbonentProfiler::defaultEventMask), 
               inform(AbonentProfiler::bDefaultInform), notify(AbonentProfiler::bDefaultNotify),
               informTemplateId(-1), notifyTemplateId(-1) {};
         AbonentProfile(const AbonentProfile& pro) 

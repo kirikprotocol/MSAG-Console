@@ -42,6 +42,7 @@ public class ProfileManager
 
   private final static String DEFAULT_INFORM = "defaultInform";
   private final static String DEFAULT_NOTIFY = "defaultNotify";
+  private final static String DEFAULT_REASONS_MASK = "defaultReasonsMask";
   private final static String DEFAULT_INFORM_ID = "defaultInformId";
   private final static String DEFAULT_NOTIFY_ID = "defaultNotifyId";
   private final static String INFORM_TEMPLATE_PREFIX = "informTemplate.";
@@ -62,6 +63,12 @@ public class ProfileManager
       try { is.close(); } catch (Throwable th) {}
     }
 
+    try {
+      DEFAULT_PROFILE_INFO.eventMask = Integer.parseInt(properties.getProperty(DEFAULT_REASONS_MASK));
+    } catch (Exception e) {
+      DEFAULT_PROFILE_INFO.eventMask = ProfileInfo.MASK_ALL;
+      logger.warn("Parameter '"+DEFAULT_REASONS_MASK+"' missed. All masks on by default");
+    }
     try {
       DEFAULT_PROFILE_INFO.inform = Boolean.getBoolean(properties.getProperty(DEFAULT_INFORM));
     } catch (Exception e) {
@@ -141,7 +148,7 @@ public class ProfileManager
       stmt.setString(1, abonent);
       rs = stmt.executeQuery();
 
-      if (rs == null || !rs.next()) 
+      if (rs == null || !rs.next())
         return new ProfileInfo(DEFAULT_PROFILE_INFO);
 
       ProfileInfo info = new ProfileInfo();
@@ -154,7 +161,7 @@ public class ProfileManager
       else info.notify = !(result == null || result.length() <= 0 || result.trim().equalsIgnoreCase("N"));
       long informId  = rs.getLong(pos++); if (rs.wasNull()) informId = DEFAULT_PROFILE_INFO.informFormat.getId();
       long notifyId  = rs.getLong(pos++); if (rs.wasNull()) notifyId = DEFAULT_PROFILE_INFO.notifyFormat.getId();
-      info.eventMask = rs.getInt (pos++); if (rs.wasNull()) info.eventMask = ProfileInfo.MASK_ALL;
+      info.eventMask = rs.getInt (pos++); if (rs.wasNull()) info.eventMask = DEFAULT_PROFILE_INFO.eventMask;
       info.informFormat = getFormatType(informId, true);
       info.notifyFormat = getFormatType(notifyId, false);
       return info;

@@ -67,6 +67,19 @@ public class Options extends MCISmeBean
   private boolean informDetach        = false;
   private boolean informOther         = false;
 
+  private final static int MASK_NONE    = 0x00;
+  private final static int MASK_ABSENT  = 0x01;
+  private final static int MASK_BUSY    = 0x02;
+  private final static int MASK_NOREPLY = 0x04;
+  private final static int MASK_UNCOND  = 0x08;
+  private final static int MASK_DETACH  = 0x10;
+  private final static int MASK_ALL     = 0xFF;
+  private boolean defaultBusy           = false;
+  private boolean defaultNoReply        = false;
+  private boolean defaultUnconditional  = false;
+  private boolean defaultAbsent         = false;
+  private boolean defaultDetach         = false;
+
   private String  dataSourceType = "";
   private int     dataSourceConnections = 0;
   private String  dataSourceDbInstance = "";
@@ -119,6 +132,13 @@ public class Options extends MCISmeBean
           defaultNotify = false;
           logger.warn("Parameter 'MCISme.defaultNotify' wasn't specified. Defaul profile notify flag is off");
         }
+        int defaultReasonsMask;
+        try { defaultReasonsMask = getConfig().getInt("MCISme.defaultReasonsMask"); } catch (Throwable th) {
+          defaultReasonsMask = MASK_ALL;
+          logger.warn("Parameter 'MCISme.defaultReasonsMask' wasn't specified. Using full profile reasons mask");
+        }
+        setDefaultReasonsMask(defaultReasonsMask);
+
         try { maxCallersCount = getConfig().getInt("MCISme.maxCallersCount"); } catch (Throwable th) {
           maxCallersCount = -1;
           logger.warn("Parameter 'MCISme.maxCallersCount' wasn't specified. Callers check disabled");
@@ -202,6 +222,23 @@ public class Options extends MCISmeBean
     return result;
   }
 
+  private void setDefaultReasonsMask(int defaultReasonsMask) {
+    defaultBusy          = ((defaultReasonsMask & MASK_BUSY) == MASK_BUSY);
+    defaultAbsent        = ((defaultReasonsMask & MASK_ABSENT) == MASK_ABSENT);
+    defaultDetach        = ((defaultReasonsMask & MASK_DETACH) == MASK_DETACH);
+    defaultNoReply       = ((defaultReasonsMask & MASK_NOREPLY) == MASK_NOREPLY);
+    defaultUnconditional = ((defaultReasonsMask & MASK_UNCOND) == MASK_UNCOND);
+  }
+  private int getDefaultReasonsMask() {
+    int mask = MASK_NONE;
+    if (defaultBusy)          mask |= MASK_BUSY;
+    if (defaultAbsent)        mask |= MASK_ABSENT;
+    if (defaultDetach)        mask |= MASK_DETACH;
+    if (defaultNoReply)       mask |= MASK_NOREPLY;
+    if (defaultUnconditional) mask |= MASK_UNCOND;
+    return mask;
+  }
+
   public int process(HttpServletRequest request)
   {
     int result = super.process(request);
@@ -231,8 +268,8 @@ public class Options extends MCISmeBean
     getConfig().setBool  ("MCISme.forceNotify", forceNotify);
     getConfig().setBool  ("MCISme.defaultInform", defaultInform);
     getConfig().setBool  ("MCISme.defaultNotify", defaultNotify);
-    getConfig().setInt   ("MCISme.maxCallersCount",
-                          (!enabledCallers || maxCallersCount < 0) ? -1:maxCallersCount);
+    getConfig().setInt   ("MCISme.defaultReasonsMask", getDefaultReasonsMask());
+    getConfig().setInt   ("MCISme.maxCallersCount", (!enabledCallers || maxCallersCount < 0) ? -1:maxCallersCount);
 
     getConfig().setString(MCI_PROF_LOCATION_PARAM, mciProfLocation);
     if (mciProfLocation != null && mciProfLocation.trim().length() > 0) {
@@ -556,6 +593,37 @@ public class Options extends MCISmeBean
   }
   public void setDefaultNotify(boolean defaultNotify) {
     this.defaultNotify = defaultNotify;
+  }
+
+  public boolean isDefaultBusy() {
+    return defaultBusy;
+  }
+  public void setDefaultBusy(boolean defaultBusy) {
+    this.defaultBusy = defaultBusy;
+  }
+  public boolean isDefaultNoReply() {
+    return defaultNoReply;
+  }
+  public void setDefaultNoReply(boolean defaultNoReply) {
+    this.defaultNoReply = defaultNoReply;
+  }
+  public boolean isDefaultUnconditional() {
+    return defaultUnconditional;
+  }
+  public void setDefaultUnconditional(boolean defaultUnconditional) {
+    this.defaultUnconditional = defaultUnconditional;
+  }
+  public boolean isDefaultAbsent() {
+    return defaultAbsent;
+  }
+  public void setDefaultAbsent(boolean defaultAbsent) {
+    this.defaultAbsent = defaultAbsent;
+  }
+  public boolean isDefaultDetach() {
+    return defaultDetach;
+  }
+  public void setDefaultDetach(boolean defaultDetach) {
+    this.defaultDetach = defaultDetach;
   }
 
   public String getResponceWaitTime() {

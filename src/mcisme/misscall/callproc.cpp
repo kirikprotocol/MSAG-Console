@@ -785,7 +785,7 @@ void taif(
     if (strncmp(prefix,"21",2) == 0 )
     {
       causeValue = relCauses.detachCause;
-      eventType  = ABSENT;
+      eventType  = DETACH;
       inform     = relCauses.detachInform;
     }
     

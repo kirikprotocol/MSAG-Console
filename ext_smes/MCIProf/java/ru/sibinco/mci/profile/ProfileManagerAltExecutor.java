@@ -25,9 +25,10 @@ public class ProfileManagerAltExecutor extends ProfileManagerState implements Ex
 
   protected String valueYes = null;
   protected String valueNo  = null;
-  protected String valueAbsent  = null;
   protected String valueBusy    = null;
+  protected String valueDetach  = null;
   protected String valueNoreply = null;
+  protected String valueAbsent  = null;
   protected String valueUncond  = null;
 
   public void init(Properties properties) throws ScenarioInitializationException
@@ -37,9 +38,10 @@ public class ProfileManagerAltExecutor extends ProfileManagerState implements Ex
       pageFormat = new MessageFormat(profileBundle.getString(Constants.PAGE_INFO_ALT));
       valueYes = profileBundle.getString(Constants.VALUE_YES);
       valueNo  = profileBundle.getString(Constants.VALUE_NO);
-      valueAbsent  = systemBundle.getString(Constants.VALUE_ABSENT);
       valueBusy    = systemBundle.getString(Constants.VALUE_BUSY);
+      valueDetach  = systemBundle.getString(Constants.VALUE_DETACH);
       valueNoreply = systemBundle.getString(Constants.VALUE_NOREPLY);
+      valueAbsent  = systemBundle.getString(Constants.VALUE_ABSENT);
       valueUncond  = systemBundle.getString(Constants.VALUE_UNCOND);
     } catch (Exception e) {
       final String err = "Executor init error"; logger.error(err, e);
@@ -73,18 +75,16 @@ public class ProfileManagerAltExecutor extends ProfileManagerState implements Ex
     activeReasons = activeReasons.toUpperCase();
     String body = ""; int counter = 0;
 
-    if (activeReasons.indexOf('B') != -1)
-      body += Integer.toString(++counter)+">"+valueBusy+": "+
-              (checkEventMask(info.getEventMask(), ProfileInfo.MASK_BUSY) ? valueYes:valueNo)+"\r\n";
-    if (activeReasons.indexOf('N') != -1)
-      body += Integer.toString(++counter)+">"+valueNoreply+": "+
-              (checkEventMask(info.getEventMask(), ProfileInfo.MASK_NOREPLY) ? valueYes:valueNo)+"\r\n";
-    if (activeReasons.indexOf('A') != -1)
-      body += Integer.toString(++counter)+">"+valueAbsent+": "+
-              (checkEventMask(info.getEventMask(), ProfileInfo.MASK_ABSENT) ? valueYes:valueNo)+"\r\n";
-    if (activeReasons.indexOf('U') != -1)
-      body += Integer.toString(++counter)+">"+valueUncond+": "+
-              (checkEventMask(info.getEventMask(), ProfileInfo.MASK_UNCOND) ? valueYes:valueNo);
+    if (activeReasons.indexOf('B') != -1) body += (Integer.toString(++counter)+">"+valueBusy+": "+
+              (checkEventMask(info.getEventMask(), ProfileInfo.MASK_BUSY) ? valueYes:valueNo)+"\r\n");
+    if (activeReasons.indexOf('D') != -1) body += (Integer.toString(++counter)+">"+valueDetach+": "+
+              (checkEventMask(info.getEventMask(), ProfileInfo.MASK_DETACH) ? valueYes:valueNo)+"\r\n");
+    if (activeReasons.indexOf('N') != -1) body += (Integer.toString(++counter)+">"+valueNoreply+": "+
+              (checkEventMask(info.getEventMask(), ProfileInfo.MASK_NOREPLY) ? valueYes:valueNo)+"\r\n");
+    if (activeReasons.indexOf('A') != -1) body += (Integer.toString(++counter)+">"+valueAbsent+": "+
+              (checkEventMask(info.getEventMask(), ProfileInfo.MASK_ABSENT) ? valueYes:valueNo)+"\r\n");
+    if (activeReasons.indexOf('U') != -1) body += (Integer.toString(++counter)+">"+valueUncond+": "+
+              (checkEventMask(info.getEventMask(), ProfileInfo.MASK_UNCOND) ? valueYes:valueNo));
 
     String prefix = "";
     if (counter == 0) { prefix = errorDenied; body=""; }

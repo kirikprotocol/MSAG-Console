@@ -6,6 +6,7 @@ namespace smsc { namespace mcisme
 
 DataSource* AbonentProfiler::ds     = 0;
 Logger*     AbonentProfiler::logger = 0;
+uint8_t     AbonentProfiler::defaultEventMask = 0xFF;
 bool        AbonentProfiler::bDefaultInform = true;
 bool        AbonentProfiler::bDefaultNotify = false;
 
@@ -34,9 +35,11 @@ const char* DEL_ABONENT_PRO_SQL = "DELETE FROM MCISME_ABONENTS WHERE ABONENT=:AB
 
 /* ----------------------- Main logic implementation (static functions) --------------------------------- */
 
-void AbonentProfiler::init(DataSource* _ds, bool defaultInform/*=true*/, bool defaultNotify/*=true*/)
+void AbonentProfiler::init(DataSource* _ds, uint8_t _defaultEventMask/*=0xFF*/,
+                           bool defaultInform/*=true*/, bool defaultNotify/*=true*/)
 {
     AbonentProfiler::logger = Logger::getInstance("smsc.mcisme.AbonentProfiler");
+    AbonentProfiler::defaultEventMask = _defaultEventMask;
     AbonentProfiler::bDefaultInform = defaultInform;
     AbonentProfiler::bDefaultNotify = defaultNotify;
     AbonentProfiler::ds = _ds;
@@ -161,14 +164,14 @@ AbonentProfile AbonentProfiler::getProfile(const char* abonent, Connection* conn
             profile.notify   = (notStr && (notStr[0]=='Y' || notStr[0]=='y'));
             profile.informTemplateId = rs->isNull(3) ?   -1:rs->getUint32(3);
             profile.notifyTemplateId = rs->isNull(4) ?   -1:rs->getUint32(4);
-            profile.eventMask        = rs->isNull(5) ? 0xFF:rs->getUint8 (5);
+            profile.eventMask = rs->isNull(5) ? AbonentProfiler::defaultEventMask : rs->getUint8(5);
         } 
         else // if profile not exists => set default profile
         {
             profile.inform = AbonentProfiler::bDefaultInform;
             profile.notify = AbonentProfiler::bDefaultNotify;
             profile.informTemplateId = -1; profile.notifyTemplateId = -1;
-            profile.eventMask = 0xFF;
+            profile.eventMask = AbonentProfiler::defaultEventMask;
         }
         
         if (isConnectionGet) ds->freeConnection(connection);

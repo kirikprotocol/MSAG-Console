@@ -60,6 +60,7 @@ public class Constants
   public final static String VALUE_NOTIFY     = VALUE_PREFIX + NOTIFY;
   public final static String VALUE_ABSENT     = VALUE_PREFIX + "absent";
   public final static String VALUE_BUSY       = VALUE_PREFIX + "busy";
+  public final static String VALUE_DETACH     = VALUE_PREFIX + "detach";
   public final static String VALUE_NOREPLY    = VALUE_PREFIX + "noreply";
   public final static String VALUE_UNCOND     = VALUE_PREFIX + "uncond";
   public final static String VALUE_CHANGED    = VALUE_PREFIX + "changed";

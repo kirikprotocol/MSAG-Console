@@ -52,6 +52,8 @@ public class ProfileManagerAltPreprocessor extends ProfileManagerState implement
           logger.debug("Alt pre-processor old mask: "+oldEventMask);
           if      ((activeReasons.indexOf('B') != -1) && (switchReason == ++counter))
             info.eventMask = switchEventMask(oldEventMask, ProfileInfo.MASK_BUSY);
+          else if ((activeReasons.indexOf('D') != -1) && (switchReason == ++counter))
+            info.eventMask = switchEventMask(oldEventMask, ProfileInfo.MASK_DETACH);
           else if ((activeReasons.indexOf('N') != -1) && (switchReason == ++counter))
             info.eventMask = switchEventMask(oldEventMask, ProfileInfo.MASK_NOREPLY);
           else if ((activeReasons.indexOf('A') != -1) && (switchReason == ++counter))

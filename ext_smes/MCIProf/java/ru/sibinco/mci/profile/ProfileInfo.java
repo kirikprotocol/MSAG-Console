@@ -14,6 +14,7 @@ public class ProfileInfo
   public final static int MASK_BUSY    = 0x02;
   public final static int MASK_NOREPLY = 0x04;
   public final static int MASK_UNCOND  = 0x08;
+  public final static int MASK_DETACH  = 0x10;
   public final static int MASK_ALL     = 0xFF;
 
   protected boolean inform = true;

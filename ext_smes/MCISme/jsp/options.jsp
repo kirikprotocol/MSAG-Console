@@ -183,43 +183,51 @@ function switchEnableCallers() {
 switchEnableCallers();
 </script>
 <table class=properties_list cellspacing=0  width="100%">
-<col width="39%">
+<col width="38%">
+<col width="1%">
 <col width="1%">
 <col width="60%">
 <tr class=row<%=rowN++&1%>>
   <th>Reason</th>
   <th>Responce code</th>
   <th>Inform</th>
+  <th>Default profile</th>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Busy</th>
   <td><input class=txt name=causeBusy value="<%=StringEncoderDecoder.encode(bean.getCauseBusy())%>" validation="release_cause" onkeyup="resetValidation(this)"></td>
   <td><input class=check type=checkbox name=informBusy value=true <%=bean.isInformBusy() ? "checked" : ""%>></td>
+  <td><input class=check type=checkbox name=defaultBusy value=true <%=bean.isDefaultBusy() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>No Reply</th>
   <td><input class=txt name=causeNoReply value="<%=StringEncoderDecoder.encode(bean.getCauseNoReply())%>"  validation="release_cause" onkeyup="resetValidation(this)"></td>
   <td><input class=check type=checkbox name=informNoReply value=true <%=bean.isInformNoReply() ? "checked" : ""%>></td>
+  <td><input class=check type=checkbox name=defaultNoReply value=true <%=bean.isDefaultNoReply() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Unconditional</th>
   <td><input class=txt name=causeUnconditional value="<%=StringEncoderDecoder.encode(bean.getCauseUnconditional())%>"  validation="release_cause" onkeyup="resetValidation(this)"></td>
   <td><input class=check type=checkbox name=informUnconditional value=true <%=bean.isInformUnconditional() ? "checked" : ""%>></td>
+  <td><input class=check type=checkbox name=defaultUnconditional value=true <%=bean.isDefaultUnconditional() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Absent</th>
   <td><input class=txt name=causeAbsent value="<%=StringEncoderDecoder.encode(bean.getCauseAbsent())%>"  validation="release_cause" onkeyup="resetValidation(this)"></td>
   <td><input class=check type=checkbox name=informAbsent value=true <%=bean.isInformAbsent() ? "checked" : ""%>></td>
+  <td><input class=check type=checkbox name=defaultAbsent value=true <%=bean.isDefaultAbsent() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Detach</th>
   <td><input class=txt name=causeDetach value="<%=StringEncoderDecoder.encode(bean.getCauseDetach())%>"  validation="release_cause" onkeyup="resetValidation(this)"></td>
   <td><input class=check type=checkbox name=informDetach value=true <%=bean.isInformDetach() ? "checked" : ""%>></td>
+  <td><input class=check type=checkbox name=defaultDetach value=true <%=bean.isDefaultDetach() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Other</th>
   <td><input class=txt name=causeOther value="<%=StringEncoderDecoder.encode(bean.getCauseOther())%>"  validation="release_cause" onkeyup="resetValidation(this)"></td>
   <td><input class=check type=checkbox name=informOther value=true <%=bean.isInformOther() ? "checked" : ""%>></td>
+  <td>&nbsp;</td>
 </tr>
 </table>
 <div class=page_subtitle>Data Source</div>

@@ -194,6 +194,11 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     try { bDefaultNotify = config->getBool("defaultNotify"); } catch (...) { bDefaultNotify = false;
         smsc_log_warn(logger, "Parameter <MCISme.defaultNotify> missed. Defaul profile notify flag is off");
     }
+    int defaultReasonsMask = smsc::misscall::NONE;
+    try { defaultReasonsMask = config->getBool("defaultReasonsMask"); } catch (...) { 
+        defaultReasonsMask = smsc::misscall::ALL; // 0xFF;
+        smsc_log_warn(logger, "Parameter <MCISme.defaultReasonsMask> missed. All masks on by default");
+    }
 
     int rowsPerMessage = 5;
     try { rowsPerMessage = config->getInt("maxRowsPerMessage"); } catch (...) { rowsPerMessage = 5;
@@ -211,7 +216,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     statistics = new StatisticsManager(dsStatConnection);
     if (statistics) statistics->Start();
     
-    AbonentProfiler::init(ds, bDefaultInform, bDefaultNotify);
+    AbonentProfiler::init(ds, defaultReasonsMask, bDefaultInform, bDefaultNotify);
     Task::init(ds, statistics, rowsPerMessage, maxCallersCount);
     
     smsc_log_info(logger, "Load success.");

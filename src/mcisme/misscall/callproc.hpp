@@ -16,7 +16,8 @@ static const uint8_t NONE    = 0x00;
 static const uint8_t ABSENT  = 0x01;
 static const uint8_t BUSY    = 0x02; 
 static const uint8_t NOREPLY = 0x04; 
-static const uint8_t UNCOND  = 0x08; 
+static const uint8_t UNCOND  = 0x08;
+static const uint8_t DETACH  = 0x10; 
 static const uint8_t ALL     = 0xFF; 
 
 struct MissedCallEvent{

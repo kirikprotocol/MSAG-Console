@@ -217,11 +217,11 @@
 
     <page id="shortcut_svc_21" question="0" shortcut="21">
       <pageExecutor class="ru.sibinco.mci.EntryExecutor">
-        <initParam name="pagePrefixedStrategy" value="shortcut_svc_profile_noreply"/>
+        <initParam name="pagePrefixedStrategy" value="shortcut_svc_profile_detach"/>
         <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_busy_vm"/>
       </pageExecutor>
     </page>
-    <page id="shortcut_svc_profile_noreply" question="0">
+    <page id="shortcut_svc_profile_detach" question="0">
       <pageExecutor class="ru.sibinco.mci.profile.ProfileShortcutExecutor">
         <bundle name="system"/><bundle name="profile"/>
         <initParam name="shortcut" value="21"/>
@@ -236,17 +236,17 @@
 
     <page id="shortcut_svc_22" question="0" shortcut="22">
       <pageExecutor class="ru.sibinco.mci.EntryExecutor">
-        <initParam name="pagePrefixedStrategy" value="shortcut_svc_profile_absent"/>
+        <initParam name="pagePrefixedStrategy" value="shortcut_svc_profile_noreply"/>
         <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_busy_mci"/>
       </pageExecutor>
     </page>
-    <page id="shortcut_svc_profile_absent" question="0">
+    <page id="shortcut_svc_profile_noreply" question="0">
       <pageExecutor class="ru.sibinco.mci.profile.ProfileShortcutExecutor">
         <bundle name="system"/><bundle name="profile"/>
         <initParam name="shortcut" value="22"/>
       </pageExecutor>
     </page>
-    <page id="shortcut_svc_divert_busy_mci" question="0" >
+    <page id="shortcut_svc_divert_busy_mci" question="0">
       <pageExecutor class="ru.sibinco.mci.divert.DivertShortcutExecutor">
         <bundle name="system"/><bundle name="divert"/>
         <initParam name="shortcut" value="22"/>
@@ -255,6 +255,19 @@
 
     <page id="shortcut_svc_23" question="0" shortcut="23">
       <pageExecutor class="ru.sibinco.mci.EntryExecutor">
+        <initParam name="pagePrefixedStrategy" value="shortcut_svc_profile_absent"/>
+        <initParam name="pageRedirectStrategy" value="shortcut_svc_error"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_profile_absent" question="0">
+      <pageExecutor class="ru.sibinco.mci.profile.ProfileShortcutExecutor">
+        <bundle name="system"/><bundle name="profile"/>
+        <initParam name="shortcut" value="23"/>
+      </pageExecutor>
+    </page>
+
+    <page id="shortcut_svc_24" question="0" shortcut="24">
+      <pageExecutor class="ru.sibinco.mci.EntryExecutor">
         <initParam name="pagePrefixedStrategy" value="shortcut_svc_profile_uncond"/>
         <initParam name="pageRedirectStrategy" value="shortcut_svc_error"/>
       </pageExecutor>
@@ -262,7 +275,7 @@
     <page id="shortcut_svc_profile_uncond" question="0">
       <pageExecutor class="ru.sibinco.mci.profile.ProfileShortcutExecutor">
         <bundle name="system"/><bundle name="profile"/>
-        <initParam name="shortcut" value="23"/>
+        <initParam name="shortcut" value="24"/>
       </pageExecutor>
     </page>
 
