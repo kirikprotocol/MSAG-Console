@@ -83,6 +83,7 @@ namespace smsc { namespace dbsme
                 if (message)
                 {
                     this->set(key, message);
+                    __trace2__("Err-Msg: '%s'", message);
                     delete message;
                 }
             }
