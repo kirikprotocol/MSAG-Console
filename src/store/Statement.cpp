@@ -93,7 +93,7 @@ sword Statement::execute(ub4 mode, ub4 iters, ub4 rowoff)
     sword result = OCIStmtExecute(svchp, stmt, errhp, iters, rowoff,
                                   (CONST OCISnapshot *) NULL, 
                                   (OCISnapshot *) NULL, mode);
-    if (result != OCI_SUCCESS)
+    if (result != OCI_SUCCESS && result != OCI_NO_DATA)
     {
         __trace2__("Error ocurred during executing statement %d", stmt);
     }
@@ -1007,6 +1007,8 @@ SetBodyStatement::SetBodyStatement(Connection* connection, bool assign)
 void SetBodyStatement::setBody(Body& body)
     throw(StorageException)
 {
+    __trace2__("%d : Writing to BLOB ...", stmt);
+
     check(execute(OCI_DEFAULT, 1, 0));
 
     int isOpen = false;
@@ -1052,6 +1054,8 @@ GetBodyStatement::GetBodyStatement(Connection* connection, bool assign)
 bool GetBodyStatement::getBody(Body& body)
     throw(StorageException)
 {
+    __trace2__("%d : Reading from BLOB ...", stmt);
+
     check(execute(OCI_DEFAULT, 1, 0));
 
     bool ret = false;
