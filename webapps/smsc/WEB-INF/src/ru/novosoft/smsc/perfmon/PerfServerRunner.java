@@ -138,7 +138,7 @@ public class PerfServerRunner extends Thread {
     int i1 = readNetworkInt(in);
     int i2 = readNetworkInt(in);
 
-    return ((long) (i2) << 32) + (i1 & 0xFFFFFFFFL);
+    return ((long) (i1) << 32) + (i2 & 0xFFFFFFFFL);
   }
 
   protected void readSnap(InputStream istream, PerfSnap snap)
