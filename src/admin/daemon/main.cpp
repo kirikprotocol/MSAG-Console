@@ -10,17 +10,15 @@
 #include <admin/AdminException.h>
 #include <admin/daemon/DaemonSocketListener.h>
 #include <admin/daemon/config_parameter_names.h>
-#include <admin/daemon/DaemonShutdownHandler.h>
-#include <admin/util/SignalHandler.h>
 #include <util/config/ConfigException.h>
 #include <util/config/Manager.h>
 #include <util/Logger.h>
 #include <util/signal.hpp>
+#include <system/smscsignalhandlers.h>
 
 using smsc::admin::AdminException;
 using namespace smsc::admin::daemon;
 
-using smsc::admin::util::SignalHandler;
 using namespace smsc::util;
 using smsc::util::config::ConfigException;
 using smsc::util::config::Manager;
@@ -60,12 +58,20 @@ void daemonInit()
 
 using smsc::admin::daemon::daemonInit;
 using smsc::admin::daemon::DaemonCommandDispatcher;
-using smsc::admin::daemon::DaemonShutdownHandler;
+
+static DaemonSocketListener * main_listener = 0;
 
 void pipehandler(int a, siginfo_t* info, void* p)
 {
   fprintf(stderr, "BROKEN PIPE SIGNAL RECEIVED, ABORTING...\n");
   //abort();
+}
+
+void shutdown_handler(int a, siginfo_t* info, void* p)
+{
+  fprintf(stderr, "Shutdown signal %i received\n", a);
+	if (main_listener != 0)
+		main_listener->shutdown();
 }
 
 int main(int argc, char **argv)
@@ -102,10 +108,10 @@ int main(int argc, char **argv)
 		listener.Start();
 
 		DaemonCommandDispatcher::activateChildSignalHandler();
-    DaemonShutdownHandler shutdownHandler(listener);
-    DaemonShutdownHandler::registerShutdownHandler(&shutdownHandler);
 		logger.info("Started");
 
+		main_listener = &listener;
+		setExtendedSignalHandler(smsc::system::SHUTDOWN_SIGNAL, shutdown_handler);
     setExtendedSignalHandler(SIGPIPE, pipehandler);
 
 		listener.WaitFor();

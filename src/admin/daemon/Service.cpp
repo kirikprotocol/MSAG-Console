@@ -5,12 +5,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>
-#include <admin/util/Shutdownable.h>
-#include <admin/util/SignalHandler.h>
-//#include <admin/util/ShutdownSignalListener.h>
-
-//using smsc::admin::util::Shutdownable;
-using smsc::admin::util::SignalHandler;
+#include <system/smscsignalhandlers.h>
 
 namespace smsc {
 namespace admin {
@@ -100,7 +95,8 @@ void Service::shutdown()
 		throw AdminException("Service is not running");
 	}
 
-	int result = sigsend(P_PID, pid, SignalHandler::SHUTDOWN_SIGNAL);
+	logger.debug("sending %i signal to %u", smsc::system::SHUTDOWN_SIGNAL, pid);
+	int result = sigsend(P_PID, pid, smsc::system::SHUTDOWN_SIGNAL);
 	if (result != 0)
 	{
 		switch (errno)

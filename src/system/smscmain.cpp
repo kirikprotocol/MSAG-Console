@@ -9,7 +9,6 @@
 #include <admin/service/ComponentManager.h>
 #include <admin/service/ServiceSocketListener.h>
 #include <admin/smsc_service/SmscComponent.h>
-#include <admin/smsc_service/SmscShutdownHandler.h>
 #include <util/signal.hpp>
 #include <util/xml/init.h>
 #include <resourcemanager/ResourceManager.hpp>

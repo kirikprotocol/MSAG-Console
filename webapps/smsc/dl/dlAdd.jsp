@@ -1,8 +1,9 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.jsp.dl.*"%>
-<jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.dl.dlAdd" scope="session"/>
+<jsp:useBean id="dl_dlAdd_bean" class="ru.novosoft.smsc.jsp.dl.dlAdd" scope="session"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
+ru.novosoft.smsc.jsp.dl.dlAdd bean = dl_dlAdd_bean;
 TITLE = "Create distribution list";
 MENU0_SELECTION = "MENU0_DL";
 final boolean isEditing = false;

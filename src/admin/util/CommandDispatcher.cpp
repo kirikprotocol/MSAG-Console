@@ -8,7 +8,6 @@
 
 #include <log4cpp/NDC.hh>
 
-#include <admin/util/ShutdownableList.h>
 #include <core/network/Socket.hpp>
 #include <util/Logger.h>
 

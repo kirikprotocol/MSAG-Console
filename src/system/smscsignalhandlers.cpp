@@ -1,6 +1,6 @@
 #include <system/smscsignalhandlers.h>
 #include <system/smsc.hpp>
-#include <admin/smsc_service//SmscComponent.h>
+#include <admin/smsc_service/SmscComponent.h>
 #include <admin/service/ServiceSocketListener.h>
 
 namespace smsc {
@@ -27,6 +27,7 @@ void clearThreadSignalMask()
 
 void sigAbortDispatcher(int sig)
 {
+	fprintf(stderr, "Signal %i received, abort\n", sig);
 	if (_smsc != 0)
 	{
 		_smsc->abortSmsc();
@@ -42,6 +43,7 @@ void sigAbortDispatcher(int sig)
 
 void sigDumpDispatcher(int sig)
 {
+	fprintf(stderr, "Signal %i received, dump & shutdown\n", sig);
 	if (_smsc != 0)
 		_smsc->dumpSmsc();
 	else
@@ -55,6 +57,7 @@ void sigDumpDispatcher(int sig)
 
 void sigShutdownHandler(int signo)
 {
+	fprintf(stderr, "Signal %i received, shutdown\n", signo);
 	if (_smsc != 0)
 		_smsc->shutdown();
 	else
@@ -75,7 +78,8 @@ void registerSignalHandlers_internal()
 	sigaddset(&set, SIGFPE);
 	sigaddset(&set, SIGILL);
 	sigaddset(&set, SIGSEGV);
-	sigaddset(&set, SIGTERM);
+  sigaddset(&set, SIGALRM);
+	sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
 //#ifndef SPARC
 //	sigaddset(&set,SIGQUIT);
 //#endif
@@ -89,9 +93,8 @@ void registerSignalHandlers_internal()
 	sigset(SIGFPE,  sigDumpDispatcher);
 	sigset(SIGILL,  sigDumpDispatcher);
 	sigset(SIGSEGV, sigDumpDispatcher);
-	sigset(SIGTERM, sigDumpDispatcher);
   sigset(SIGALRM, sigDumpDispatcher);
-	sigset(SIGINT,  sigShutdownHandler);
+	sigset(smsc::system::SHUTDOWN_SIGNAL,  sigShutdownHandler);
 }
 
 void registerSmscSignalHandlers(Smsc * smsc)

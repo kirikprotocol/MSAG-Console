@@ -1,13 +1,14 @@
 #include <iostream>
+#include <signal.h>
 #include <admin/service/ComponentManager.h>
 #include <admin/service/AdminSocketManager.h>
 #include <admin/service/ServiceSocketListener.h>
 #include <admin/service/ServiceCommandDispatcher.h>
 #include <admin/service/test/DumbServiceCommandHandler.h>
-#include <admin/service/test/DumbServiceShutdownHandler.h>
 #include <util/config/Manager.h>
 #include <util/xml/init.h>
 #include <util/config/ConfigException.h>
+#include <system/smscsignalhandlers.h>
 
 using log4cpp::Category;
 using std::cout;
@@ -18,11 +19,65 @@ using smsc::admin::service::ComponentManager;
 using smsc::admin::service::ServiceSocketListener;
 using smsc::admin::service::ServiceCommandDispatcher;
 using smsc::admin::service::test::DumbServiceCommandHandler;
-using smsc::admin::service::test::DumbServiceShutdownHandler;
 using smsc::util::config::ConfigException;
 using smsc::util::config::Manager;
 using smsc::util::Logger;
 using smsc::util::xml::initXerces;
+
+void clearThreadSignalMask()
+{
+	sigset_t set;
+	sigemptyset(&set);
+	for(int i=1;i<=37;i++)if(i!=SIGQUIT)sigaddset(&set,i);
+	if(thr_sigsetmask(SIG_SETMASK,&set,NULL)!=0)
+	{
+		__warning__("failed to set thread signal mask!");
+	};
+}
+
+ServiceSocketListener* main_listener = 0;
+void sigAbortDispatcher(int signo)
+{
+	abort();
+}
+
+void sigShutdownHandler(int signo)
+{
+	if (main_listener != 0)
+		main_listener->shutdown();
+}
+
+void registerSignalHandlers(ServiceSocketListener * listener)
+{
+	main_listener = listener;
+	
+	sigset_t set;
+	sigemptyset(&set);
+	sigaddset(&set,17);
+	sigaddset(&set, SIGBUS);
+	sigaddset(&set, SIGFPE);
+	sigaddset(&set, SIGILL);
+	sigaddset(&set, SIGSEGV);
+	sigaddset(&set, SIGTERM);
+  sigaddset(&set, SIGALRM);
+	sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
+//#ifndef SPARC
+//	sigaddset(&set,SIGQUIT);
+//#endif
+
+	if(thr_sigsetmask(SIG_UNBLOCK,&set,NULL)!=0)
+	{
+		__warning__("Faield to update signal mask");
+	}
+	sigset(17,      sigAbortDispatcher);
+	sigset(SIGBUS,  sigAbortDispatcher);
+	sigset(SIGFPE,  sigAbortDispatcher);
+	sigset(SIGILL,  sigAbortDispatcher);
+	sigset(SIGSEGV, sigAbortDispatcher);
+	sigset(SIGTERM, sigAbortDispatcher);
+  sigset(SIGALRM, sigAbortDispatcher);
+	sigset(smsc::system::SHUTDOWN_SIGNAL,  sigShutdownHandler);
+}
 
 int main (int argc, char *argv[])
 {
@@ -56,10 +111,8 @@ int main (int argc, char *argv[])
     listener.init(host.get(), servicePort);
     listener.Start();
     logger.debug("Service started");
-		
-    DumbServiceShutdownHandler shutdown_handler(listener);
-		DumbServiceShutdownHandler::registerShutdownHandler(&shutdown_handler);
-		
+		registerSignalHandlers(&listener);
+
     listener.WaitFor();
 		Manager::deinit();
  		logger.debug("Service stopped");

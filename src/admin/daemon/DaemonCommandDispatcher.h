@@ -14,7 +14,6 @@
 #include <admin/protocol/CommandSetServiceStartupParameters.h>
 #include <admin/protocol/Response.h>
 #include <admin/util/CommandDispatcher.h>
-#include <admin/util/Shutdownable.h>
 #include <core/synchronization/Mutex.hpp>
 #include <util/Logger.h>
 #include <util/config/Manager.h>

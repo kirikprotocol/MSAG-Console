@@ -1,7 +1,6 @@
 #include "system/smsc.hpp"
 #include "system/smppio/SmppAcceptor.hpp"
 #include <memory>
-#include "admin/util/SignalHandler.h"
 #include "util/debug.h"
 #include "store/StoreManager.h"
 #include "system/state_machine.hpp"
@@ -583,22 +582,22 @@ void Smsc::shutdown()
 {
   __trace__("shutting down");
 
-  smeman.unregisterSmeProxy("DSTRLST");
+	smeman.unregisterSmeProxy("DSTRLST");
 
-  tp.shutdown();
+	tp.shutdown();
 
   if(mapProxy)
   {
-    MapDialogContainer::getInstance()->unregisterSelf(&smeman);
-    MapDialogContainer::dropInstance();
-  }
+		MapDialogContainer::getInstance()->unregisterSelf(&smeman);
+		MapDialogContainer::dropInstance();
+	}
 
   delete distlstman;
 
-  smsc::mscman::MscManager::shutdown();
+	smsc::mscman::MscManager::shutdown();
 
   smsc::store::StoreManager::shutdown();
-  if(dataSource)delete dataSource;
+	if(dataSource)delete dataSource;
 }
 
 void Smsc::reloadRoutes(const SmscConfigs& cfg)

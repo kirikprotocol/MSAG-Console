@@ -30,7 +30,6 @@
 #include "system/mrcache.hpp"
 
 #include <sys/types.h>
-#include <signal.h>
 
 
 namespace smsc{

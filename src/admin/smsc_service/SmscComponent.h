@@ -9,8 +9,6 @@
 #include <core/synchronization/Mutex.hpp>
 #include <util/Logger.h>
 #include <system/smsc.hpp>
-#include <admin/util/SignalHandler.h>
-#include <signal.h>
 
 namespace smsc {
 namespace admin {
