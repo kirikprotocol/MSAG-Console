@@ -9,6 +9,7 @@ namespace system{
 namespace abonentinfo{
 
 using smsc::util::getSmsText;
+using smsc::util::fillSms;
 using smsc::smeman;
 
 using namespace smsc::resourcemanager;
@@ -255,12 +256,15 @@ int AbonentInfoSme::Execute()
       s.setOriginatingAddress(as.destAddr);
       s.setDestinationAddress(as.sourceAddr);
       s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
+      fillSms(&s,answ.c_str(),len,CONV_ENCODING_CP1251,DataCoding::UCS2);
+      /*
       s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
       s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,answ.c_str(),len);
       s.setIntProperty(Tag::SMPP_SM_LENGTH,len);
+
+      */
       s.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
         as.userMessageReference);
-
 
       resp=SmscCommand::makeSumbmitSm(s,getNextSequenceNumber());
       putIncomingCommand(resp);
