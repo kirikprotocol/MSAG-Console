@@ -17,29 +17,76 @@ public class Mask
 	private static final String pattern1 = pattern_header + "\\d{1,20}\\?{0,19}$";
 	private static final String pattern2 = pattern_header + "(\\d|\\?){1,20}$";
 
+	private byte tone = 0;
+	private byte npi = 0;
 	private String mask = null;
 
 	public Mask(String mask)
-			  throws AdminException
+			throws AdminException
 	{
 		if (mask == null)
 			throw new NullPointerException("Mask string is null");
-		this.mask = mask.trim();
-		if (!isMaskValid(this.mask))
+		if (!isMaskValid(mask))
 			throw new AdminException("Mask \"" + this.mask + "\" is not valid");
+		parseMask(mask);
+	}
+
+	private void parseMask(String mask)
+			throws AdminException
+	{
+		if (mask.startsWith("."))
+		{
+			int dp = mask.indexOf('.', 1);
+			int dp2 = mask.indexOf('.', dp + 1);
+			if (dp < 0 || dp2 < 0)
+				throw new AdminException("Mask \"" + this.mask + "\" is not valid");
+
+			String toneStr = mask.substring(1, dp);
+			String npiStr = mask.substring(dp + 1, dp2);
+			try
+			{
+				this.tone = Byte.decode(toneStr).byteValue();
+				this.npi = Byte.decode(npiStr).byteValue();
+				this.mask = mask.substring(dp2 + 1);
+			}
+			catch (NumberFormatException e)
+			{
+				throw new AdminException("Mask \"" + this.mask + "\" is not valid, nested: " + e.getMessage());
+			}
+		}
+		else if (mask.startsWith("+"))
+		{
+			this.tone = 1;
+			this.npi = 1;
+			this.mask = mask.substring(1);
+		}
+		else
+		{
+			this.tone = 0;
+			this.npi = 1;
+			this.mask = mask;
+		}
 	}
 
 	public String getMask()
 	{
-		return mask;
+		if (tone == 1 && npi == 1)
+			return "+" + mask;
+		else if (tone == 0 && npi == 1)
+			return (mask);
+		else
+			return "." + tone + "." + npi + "." + mask;
 	}
 
 	public boolean equals(Object obj)
 	{
 		if (obj instanceof Mask)
-			return mask.equals(((Mask) obj).mask);
+		{
+			Mask m = (Mask) obj;
+			return m.tone == this.tone && m.npi == this.npi && m.mask.equals(this.mask);
+		}
 		else
-			return super.equals(obj);
+			return false;
 	}
 
 	public PrintWriter store(PrintWriter out)
@@ -67,5 +114,15 @@ public class Mask
 			return mask.length() - pos;
 		else
 			return 0;
+	}
+
+	public byte getTone()
+	{
+		return tone;
+	}
+
+	public byte getNpi()
+	{
+		return npi;
 	}
 }
