@@ -13,7 +13,21 @@
     
     <section name="DBSme">
 
-        <param name="SvcType" type="string">DBSme</param>
+        <section name="MessageSet">
+	    <param name="PROVIDER_NOT_FOUND" type="string">DataProvider not found!</param>
+	    <param name="JOB_NOT_FOUND" type="string">Job not found!</param>
+	    
+	    <param name="DS_FAILURE" type="string">Problem with DataSource!</param>
+	    <param name="DS_CONNECTION_LOST" type="string">Connection to DataSource lost!</param>
+	    <param name="DS_STATEMENT_FAIL" type="string">Failed to create SQL statement!</param>
+	    
+	    <param name="QUERY_NULL" type="string">Query result is NULL!</param>
+	    <param name="INPUT_PARSE" type="string">Input parsing error!</param>
+	    <param name="OUTPUT_FORMAT" type="string">Output formatting error!</param>
+	    <param name="INVALID_CONFIG" type="string">Configuration is invalid!</param>
+	</section>
+	
+	<param name="SvcType" type="string">DBSme</param>
         <param name="ProtocolId" type="int">111</param>
         
         <section name="ThreadPool">
