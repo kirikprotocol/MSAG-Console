@@ -144,8 +144,8 @@ Targets:
     </copy>
     <mkdir dir="${DISTR_DIR}/webapps/smsc/WEB-INF/classes/dtds"/>
     <copy todir="${DISTR_DIR}/webapps/smsc/WEB-INF/classes/dtds" preservelastmodified="yes" flatten="yes" >
-      <fileset dir="${SMSC_DIR}/config" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd SmeRecords.dtd smppgw/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd"/>
-      <fileset dir="${TEMPL_DIR}/smsc" includes="web-app_2_3.dtd"/> 
+      <fileset dir="${SMSC_DIR}/config" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd SmeRecords.dtd smppgw/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd webapp/users.dtd"/>
+      <fileset dir="${TEMPL_DIR}/smsc" includes="web-app_2_3.dtd"/>
     </copy>
     <!-- database sql scripts -->
     <copy todir="${DISTR_DIR}/conf/sql">
