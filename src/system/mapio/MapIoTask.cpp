@@ -141,7 +141,7 @@ USHORT_T Et96MapPAbortInd(ET96MAP_LOCAL_SSN_T lssn,
   }
   __trace2__("MAP::Et96MapPAbortInd: did 0x%x, reson 0x%x:'%s'",
              dialogid,
-             *reason,
+             reason,
              szReason);
   try{
     MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogid);
