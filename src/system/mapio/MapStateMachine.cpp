@@ -2015,7 +2015,7 @@ USHORT_T Et96MapOpenConf (
     case MAPST_WaitDelRepConf:
       if ( openResult == ET96MAP_RESULT_NOT_OK ){
         dialog->state = MAPST_MTFINAL;
-        __map_trace2__("%s: error refuse reason 0x%x",refuseReason_p?*refuseReason_p:0);
+        __map_trace2__("%s: error refuse reason 0x%x",__func__,refuseReason_p?*refuseReason_p:0);
         DropMapDialog(dialog.get());
       }
       // nothing;
