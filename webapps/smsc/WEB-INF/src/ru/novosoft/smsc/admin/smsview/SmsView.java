@@ -57,7 +57,8 @@ public class SmsView
       PreparedStatement stmt = null;
       try {
         connection = ds.getConnection();
-        if (connection == null) return set;
+        if (connection == null)
+            throw new AdminException("Failed to obtain connection to DB");
         String sql = prepareQueryString(query);
         stmt = connection.prepareStatement(sql);
         bindInput(stmt, query);
@@ -73,14 +74,43 @@ public class SmsView
       return set;
     }
 
-    public int delArchiveSmsSet(SmsSet set)
+    public int getSmsCount(SmsQuery query) throws AdminException
+    {
+        int count = 0;
+        Connection connection = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+          connection = ds.getConnection();
+          if (connection == null)
+              throw new AdminException("Failed to obtain connection to DB");
+          String sql = prepareCountString(query);
+          stmt = connection.prepareStatement(sql);
+          bindInput(stmt, query);
+          rs = stmt.executeQuery();
+          if (rs == null || !rs.next()) return 0;
+          count = rs.getInt(1);
+          rs.close();
+        } catch (Exception exc) {
+          System.out.println("Operation with DB failed !");
+          exc.printStackTrace();
+          throw new AdminException(exc.getMessage());
+        } finally {
+            try { if (stmt != null) stmt.close(); connection.close(); }
+            catch (Exception cexc) { cexc.printStackTrace(); }
+        }
+        return count;
+    }
+
+    public int delArchiveSmsSet(SmsSet set) throws AdminException
     {
       Connection connection = null;
       PreparedStatement stmt = null;
       int deleted = 0;
       try {
         connection = ds.getConnection();
-        if (connection == null) return 0;
+          if (connection == null)
+              throw new AdminException("Failed to obtain connection to DB");
         String sql = "DELETE FROM SMS_ARC WHERE ID=?";
         stmt = connection.prepareStatement(sql);
         for (int i=0; i<set.getRowsCount(); i++) {
@@ -94,6 +124,7 @@ public class SmsView
       } catch (Exception exc) {
         System.out.println("Operation with DB failed !");
         exc.printStackTrace();
+        throw new AdminException(exc.getMessage());
       } finally {
           try { if (stmt != null) stmt.close(); connection.close(); }
           catch (Exception cexc) { cexc.printStackTrace(); }
@@ -101,9 +132,10 @@ public class SmsView
       return deleted;
     }
 
-    public int delOperativeSmsSet(SmsSet set)
+    public int delOperativeSmsSet(SmsSet set) throws AdminException
     {
-      if (smsc == null) return -1;
+      if (smsc == null)
+          throw new AdminException("Smsc not defined");
       int deleted = 0;
 
       Vector output = new Vector();
@@ -122,7 +154,7 @@ public class SmsView
       catch (Exception exc) {
         System.out.println("Failed to cancel messages on SMSC!");
         exc.printStackTrace();
-        return -1;
+        throw new AdminException(exc.getMessage());
       }
       return deleted;
     }
@@ -181,7 +213,7 @@ public class SmsView
       }
     }
 
-    private String prepareQueryString(SmsQuery query) throws AdminException {
+    private String prepareQueryString(SmsQuery query) {
       String sql =
               "SELECT ID, ST, SUBMIT_TIME, VALID_TIME, ATTEMPTS, LAST_RESULT, "+
               "LAST_TRY_TIME, NEXT_TRY_TIME, OA, DA, DDA, MR, SVC_TYPE, "+
@@ -189,6 +221,13 @@ public class SmsView
               "ROUTE_ID, SVC_ID, PRTY, SRC_SME_ID, DST_SME_ID, "+
               "BODY_LEN, BODY FROM ";
 
+      sql += (query.getStorageType() == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) ?
+                  "SMS_MSG":"SMS_ARC";
+      sql += prepareWhereClause(query);
+      return sql;
+    }
+    private String prepareCountString(SmsQuery query) {
+      String sql = "SELECT COUNT(*) FROM ";
       sql += (query.getStorageType() == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) ?
                   "SMS_MSG":"SMS_ARC";
       sql += prepareWhereClause(query);
