@@ -12,7 +12,7 @@ using smsc::smeman;
 int AbonentInfoSme::Execute()
 {
   SmscCommand cmd,resp,answ;
-  char body[MAX_SHORT_MESSAGE_LENGTH];
+  char body[MAX_SHORT_MESSAGE_LENGTH+1];
   SMS *sms;
   Profile p;
   SMS s;
