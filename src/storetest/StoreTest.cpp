@@ -20,16 +20,7 @@ int main(void)
     try 
     {
         Manager::init("config.xml");
-        Manager& config = Manager::getInstance();
-        
-        unsigned poolSize = (unsigned)config.getInt("db.connections.max");
-        unsigned initSize = (unsigned)config.getInt("db.connections.init");
-        const char* dbInstance = config.getString("db.instance");
-        const char* dbUserName = config.getString("db.user");
-        const char* dbUserPassword = config.getString("db.password");
-        
-        store = StoreManager::startup(dbInstance, dbUserName, 
-                                      dbUserPassword, poolSize, initSize);
+        store = StoreManager::startup(Manager::getInstance());
         printf("Connect Ok !\n");
     } 
     catch (exception& exc) 
@@ -38,8 +29,7 @@ int main(void)
         return -1;
     }
 
-    //static char* oa = "123.456.7.890.123.456";
-    static char* oa = "";
+    static char* oa = "123.456.7.890.123.456";
     static char* da = "098.7.654.321";
     static char* body = "Test message's body !";
 
@@ -61,11 +51,11 @@ int main(void)
     sms.setFailureCause(5);
     sms.setMessageBody(strlen(body), 1, true, (uint8_t *)body);
     
-    const int NUM_OF_TEST_MESSAGES = 10000;
+    const int NUM_OF_TEST_MESSAGES = 1000;
 
     try 
     {
-        /*time_t begTime, endTime;
+        time_t begTime, endTime;
         printf("\nStoring %d messages, please wait ... \n", 
                 NUM_OF_TEST_MESSAGES);
         begTime = time(0L);
@@ -87,9 +77,9 @@ int main(void)
         }
         endTime = time(0L) - begTime;
         printf("Time spent for retriving: %d (sec)\nPerformance: %d (msg per sec)\n", 
-               endTime, NUM_OF_TEST_MESSAGES/endTime);*/
+               endTime, NUM_OF_TEST_MESSAGES/endTime);
 
-        SMSId id = store->store(sms);
+        /*SMSId id = store->store(sms);
         printf("Message stored, id = %d !\n", id);
 
         memset((void *)&sms, 0, sizeof(sms));
@@ -97,7 +87,7 @@ int main(void)
         store->retrive(id, sms);
         printf("Message retrived ! Body: %s\n", (char *)sms.messageBody.data);
         
-        /*store->remove(id);
+        store->remove(id);
         printf("Message removed !\n", id);*/
     } 
     catch (StoreException& exc) {

@@ -2,7 +2,9 @@
 #define STORE_MANAGER_DECLARATIONS
 
 #include <oci.h>
+
 #include <core/synchronization/Mutex.hpp>
+#include <util/config/Manager.h>
 #include <util/Logger.h>
 
 #include "StoreConfig.h"
@@ -14,6 +16,8 @@ namespace smsc { namespace store
     using namespace smsc::sms;
     using namespace smsc::core::synchronization;
     using smsc::util::Logger;
+    using smsc::util::config::Manager;
+    using smsc::util::config::ConfigException;
     
     class IDGenerator 
     {
@@ -52,10 +56,8 @@ namespace smsc { namespace store
 
     public:    
         
-        static MessageStore* startup(const char* db, const char* user, 
-                                     const char* password, 
-                                     unsigned size, unsigned init)
-            throw(ConnectionFailedException);
+        static MessageStore* startup(Manager& config)
+            throw(ConfigException, ConnectionFailedException);
         
         static void shutdown(); 
         

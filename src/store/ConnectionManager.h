@@ -6,16 +6,20 @@
 
 #include <core/synchronization/EventMonitor.hpp>
 #include <core/buffers/Array.hpp>
+#include <util/config/Manager.h>
 #include <sms/sms.h>
 
 #include "StoreConfig.h"
 #include "StoreExceptions.h"
 
-using namespace smsc::core::synchronization;
-using namespace smsc::core::buffers;
 
 namespace smsc { namespace store 
 {
+    using smsc::util::config::Manager;
+    using smsc::util::config::ConfigException;
+    using smsc::core::buffers::Array;
+    using namespace smsc::core::synchronization;
+    
     struct Connection;
     class ConnectionPool
     {
@@ -36,9 +40,8 @@ namespace smsc { namespace store
 
     public:
     
-        ConnectionPool(const char* db, const char* user, 
-                       const char* password, unsigned size, unsigned init) 
-            throw(ConnectionFailedException);
+        ConnectionPool(Manager& config) 
+            throw(ConfigException, ConnectionFailedException);
         
         virtual ~ConnectionPool(); 
         

@@ -5,24 +5,28 @@
 #include <oci.h>
 #include <orl.h>
 
+#include "ConnectionManager.h"
+
 #include <util/debug.h>
 #include <sms/sms.h>
-#include "ConnectionManager.h"
 
 namespace smsc { namespace store 
 {
 using namespace smsc::sms;
+using smsc::util::config::Manager;
+using smsc::util::config::ConfigException;
 
 /* ----------------------------- ConnectionPool ------------------------ */
-ConnectionPool::ConnectionPool(const char* db, 
-                               const char* user, 
-                               const char* password, 
-                               unsigned size, unsigned init)
-    throw(ConnectionFailedException)
-        : dbInstance(db), dbUserName(user), dbUserPassword(password),
-            size(size), count(init)
+ConnectionPool::ConnectionPool(Manager& config)
+    throw(ConfigException, ConnectionFailedException) 
 {
-    __require__(size >= init && dbInstance && dbUserName && dbUserPassword);
+    size = (unsigned)config.getInt("db.connections.max");
+    count = (unsigned)config.getInt("db.connections.init");
+    dbInstance = config.getString("db.instance");
+    dbUserName = config.getString("db.user");
+    dbUserPassword = config.getString("db.password");
+    
+    __require__(size >= count && dbInstance && dbUserName && dbUserPassword);
 
     for (int i=0; i<count; i++)
     {

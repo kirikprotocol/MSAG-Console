@@ -10,6 +10,7 @@ namespace smsc { namespace store
 /* ----------------------------- StoreManager -------------------------- */
 using namespace smsc::sms;
 using smsc::util::Logger;
+using smsc::util::config::Manager;
 
 Mutex StoreManager::mutex;
 ConnectionPool* StoreManager::pool = 0L;
@@ -17,10 +18,8 @@ IDGenerator* StoreManager::generator = 0L;
 StoreManager* StoreManager::instance = 0L;
 log4cpp::Category& StoreManager::log = Logger::getCategory("smsc.store.StoreManager");
 
-MessageStore* StoreManager::startup(const char* db, const char* user,
-                                    const char* password, 
-                                    unsigned size, unsigned init)
-    throw(ConnectionFailedException)
+MessageStore* StoreManager::startup(Manager& config)
+    throw(ConfigException, ConnectionFailedException)
 {
     log.info("Storage Manager is starting ... ");
     MutexGuard guard(mutex);
@@ -30,7 +29,7 @@ MessageStore* StoreManager::startup(const char* db, const char* user,
         Connection* connection = 0L; 
         try 
         {
-            pool = new ConnectionPool(db, user, password, size, init);
+            pool = new ConnectionPool(config);
             connection = pool->getConnection();
             generator = new IDGenerator(connection->getMessagesCount());
         }

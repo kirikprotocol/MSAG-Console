@@ -4,7 +4,7 @@
 #
 #
 
-CXXFLAGS := $(CXXFLAGS) -I. -I$(SMSC_SRCDIR)/core/sinchronization -I$(SMSC_SRCDIR)/sms -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/network/public -Iutil
+CXXFLAGS := $(CXXFLAGS) -I. -I/usr/local/include/xercesc -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/network/public
 PACKAGE := store
 
 ifndef SMSC_SRCDIR
