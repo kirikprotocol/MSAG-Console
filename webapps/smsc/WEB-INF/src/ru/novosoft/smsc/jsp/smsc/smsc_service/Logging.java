@@ -12,122 +12,202 @@ import java.security.Principal;
  * Date: 22.05.2003
  * Time: 19:10:03
  */
-public class Logging extends PageBean
-{
-	public final static String catParamNamePrefix = "category_";
+public class Logging extends PageBean {
+  public class LoggerCategoryInfo implements Comparable {
+    private String name;
+    private String fullName;
+    private String priority;
+    private Map childs;
 
-	private Map logCategories = null;;
-	private SortedList logCategoriesNames = null;
-	private String mbSave = null;
-	private String mbCancel = null;
+    public LoggerCategoryInfo(String name, String fullName, String priority)
+    {
+      this.name = name;
+      this.fullName = fullName;
+      this.priority = priority;
+      this.childs = new TreeMap();
+    }
 
-	protected int init(List errors)
-	{
-		int result = super.init(errors);
-		if (result != RESULT_OK)
-			return result;
+    public void addChild(String childFullName, String childPriority)
+    {
+      logger.debug("Adding child: name=\"" + fullName + "\" priority=" + priority + ",  childName=\"" + childFullName + "\" childPriority=" + childPriority);
+      if (isRoot()) {
+        final int dotPos = childFullName.indexOf('.');
+        if (dotPos > 0) {
+          final String childName = childFullName.substring(0, dotPos);
+          final int dotPos2 = childFullName.indexOf('.', dotPos + 1);
+          LoggerCategoryInfo child = getOrCreateChild(childName, dotPos2 < 0 ? childFullName : childFullName.substring(0, dotPos2), "NOTSET");
+          child.addChild(childFullName, childPriority);
+        } else {
+          childs.put(childFullName, new LoggerCategoryInfo(childFullName, childFullName, childPriority));
+        }
+      } else {
+        if (childFullName.length() > fullName.length() && childFullName.startsWith(fullName) && childFullName.charAt(fullName.length()) == '.') {
+          final int beginIndex = fullName.length() + 1;
+          final int endIndex = childFullName.indexOf('.', beginIndex);
+          final String childName = endIndex > 0 ? childFullName.substring(beginIndex, endIndex) : childFullName.substring(beginIndex);
+          if (endIndex > 0) {
+            LoggerCategoryInfo child = getOrCreateChild(childName, childFullName.substring(0, endIndex), "NOTSET");
+            child.addChild(childFullName, childPriority);
+          } else {
+            LoggerCategoryInfo child = getOrCreateChild(childName, childFullName, "NOTSET");
+            child.priority = childPriority;
+          }
+        } else {
+          logger.debug("Incorrect LoggerCategoryInfo.addChild algorithm");
+        }
+      }
+    }
 
-		try
-		{
-			logCategories = appContext.getSmsc().getLogCategories();
-			logCategoriesNames = new SortedList(logCategories.keySet());
-		}
-		catch (AdminException e)
-		{
-			logCategories = new HashMap();
-			logCategoriesNames = new SortedList(logCategories.keySet());
-			return error(SMSCErrors.error.smsc.couldntGetLogCats, e);
-		}
-		return result;
-	}
+    public boolean isRoot()
+    {
+      return fullName == null || fullName.length() == 0;
+    }
 
-	public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal, Map parameters)
-	{
-		int result = super.process(appContext, errors, loginedPrincipal);
-		if (result != RESULT_OK)
-			return result;
+    public boolean hasChilds()
+    {
+      return !childs.isEmpty();
+    }
 
-		if (mbSave != null)
-			return save(parameters);
-		else if (mbCancel != null)
-			return RESULT_DONE;
+    private LoggerCategoryInfo getOrCreateChild(final String childName, final String childFullName, final String childPriority)
+    {
+      LoggerCategoryInfo child = (LoggerCategoryInfo) childs.get(childName);
+      if (child == null) {
+        child = new LoggerCategoryInfo(childName, childFullName, childPriority);
+        childs.put(childName, child);
+      }
+      return child;
+    }
 
-		return result;
-	}
+    public int compareTo(Object o)
+    {
+      if (o instanceof LoggerCategoryInfo) {
+        LoggerCategoryInfo info = (LoggerCategoryInfo) o;
+        return name.compareTo(info.name);
+      } else
+        return 0;
+    }
 
-	private int save(Map parameters)
-	{
-		Map cats = new HashMap();
-		for (Iterator i = parameters.entrySet().iterator(); i.hasNext();)
-		{
-			Map.Entry entry = (Map.Entry) i.next();
-			String paramName = (String) entry.getKey();
-			if (paramName.startsWith(catParamNamePrefix))
-			{
-				cats.put(paramName.substring(catParamNamePrefix.length()), getParamValue(entry.getValue()));
-				logger.info("cat   param: " + paramName + ":=" + getParamValue(entry.getValue()));
-			}
-			else
-			{
-				logger.info("WRONG param: " + paramName + ":=" + getParamValue(entry.getValue()));
-			}
-		}
-		try
-		{
-			appContext.getSmsc().setLogCategories(cats);
-			return RESULT_DONE;
-		}
-		catch (AdminException e)
-		{
-			return error(SMSCErrors.error.smsc.couldntSetLogCats, e);
-		}
-	}
+    public String getName()
+    {
+      return name;
+    }
 
-	private String getParamValue(Object value)
-	{
-		if (value instanceof String)
-			return (String) value;
-		else if (value instanceof String[])
-		{
-			String result = "";
-			final String[] values = (String[]) value;
-			for (int i = 0; i < values.length; i++)
-			{
-				result += values[i];
-			}
-			return result;
-		}
-		else
-			return value.toString();
-	}
+    public String getFullName()
+    {
+      return fullName;
+    }
 
-	public List getCategoryNames()
-	{
-		return logCategoriesNames;
-	}
+    public String getPriority()
+    {
+      return priority;
+    }
 
-	public String getCategoryPriority(String categoryName)
-	{
-		return (String) logCategories.get(categoryName);
-	}
+    public Map getChilds()
+    {
+      return childs;
+    }
+  }
 
-	public String getMbSave()
-	{
-		return mbSave;
-	}
+  public final static String catParamNamePrefix = "category_";
 
-	public void setMbSave(String mbSave)
-	{
-		this.mbSave = mbSave;
-	}
+  private String mbSave = null;
+  private String mbCancel = null;
+  private LoggerCategoryInfo rootCategory;
 
-	public String getMbCancel()
-	{
-		return mbCancel;
-	}
+  protected int init(List errors)
+  {
+    int result = super.init(errors);
+    if (result != RESULT_OK)
+      return result;
 
-	public void setMbCancel(String mbCancel)
-	{
-		this.mbCancel = mbCancel;
-	}
+    try {
+      Map logCategories = appContext.getSmsc().getLogCategories();
+      String rootPriority = (String) logCategories.remove("");
+      if (rootPriority == null) rootPriority = "NOTSET";
+      rootCategory = new LoggerCategoryInfo("", "", rootPriority);
+      for (Iterator i = logCategories.entrySet().iterator(); i.hasNext();) {
+        Map.Entry entry = (Map.Entry) i.next();
+        rootCategory.addChild((String) entry.getKey(), (String) entry.getValue());
+      }
+    } catch (AdminException e) {
+      rootCategory = new LoggerCategoryInfo("", "", "NOTSET");
+      return error(SMSCErrors.error.smsc.couldntGetLogCats, e);
+    }
+    return result;
+  }
+
+  public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal, Map parameters)
+  {
+    int result = super.process(appContext, errors, loginedPrincipal);
+    if (result != RESULT_OK)
+      return result;
+
+    if (mbSave != null)
+      return save(parameters);
+    else if (mbCancel != null)
+      return RESULT_DONE;
+
+    return result;
+  }
+
+  private int save(Map parameters)
+  {
+    Map cats = new HashMap();
+    for (Iterator i = parameters.entrySet().iterator(); i.hasNext();) {
+      Map.Entry entry = (Map.Entry) i.next();
+      String paramName = (String) entry.getKey();
+      if (paramName.startsWith(catParamNamePrefix)) {
+        cats.put(paramName.substring(catParamNamePrefix.length()), getParamValue(entry.getValue()));
+        logger.info("cat   param: " + paramName + ":=" + getParamValue(entry.getValue()));
+      } else {
+        logger.info("WRONG param: " + paramName + ":=" + getParamValue(entry.getValue()));
+      }
+    }
+    try {
+      appContext.getSmsc().setLogCategories(cats);
+      return RESULT_DONE;
+    } catch (AdminException e) {
+      return error(SMSCErrors.error.smsc.couldntSetLogCats, e);
+    }
+  }
+
+  private String getParamValue(Object value)
+  {
+    if (value instanceof String)
+      return (String) value;
+    else if (value instanceof String[]) {
+      String result = "";
+      final String[] values = (String[]) value;
+      for (int i = 0; i < values.length; i++) {
+        result += values[i];
+      }
+      return result;
+    } else
+      return value.toString();
+  }
+
+  public LoggerCategoryInfo getRootCategory()
+  {
+    return rootCategory;
+  }
+
+  public String getMbSave()
+  {
+    return mbSave;
+  }
+
+  public void setMbSave(String mbSave)
+  {
+    this.mbSave = mbSave;
+  }
+
+  public String getMbCancel()
+  {
+    return mbCancel;
+  }
+
+  public void setMbCancel(String mbCancel)
+  {
+    this.mbCancel = mbCancel;
+  }
 }

@@ -94,13 +94,20 @@
 	}
 	void paramSelect(JspWriter out, String label, String id, Collection values, String selectedValue) throws IOException
 	{
-		paramSelect(out, label, id, values, selectedValue, null);
+		paramSelect(out, label, id, values, selectedValue, null, null);
 	}
-	void paramSelect(JspWriter out, String label, String id, Collection values, String selectedValue, String onChange) throws IOException
+  void paramSelect(JspWriter out, String label, String id, Collection values, String selectedValue, String onChange) throws IOException
+  {
+    paramSelect(out, label, id, values, selectedValue, onChange, null);
+  }
+	void paramSelect(JspWriter out, String label, String id, Collection values, String selectedValue, String onChange, String style) throws IOException
 	{
 		out.print("<tr class=row" + ((row++) & 1) + ">");
 		out.print("<th nowrap>" + label + ":</th>");
-		out.print("<td><select name=\"" + id + "\" id=\"" + id + "\"" + (onChange != null && onChange.length() > 0 ? " onchange=\"" + onChange + "\"" : "") + ">");
+		out.print("<td><select name=\"" + id + "\" id=\"" + id + "\""
+              + (onChange != null && onChange.length() > 0 ? " onchange=\"" + onChange + "\"" : "")
+              + (style    != null && style   .length() > 0 ? " style=\""    + style    + "\"" : "")
+              + ">");
 		for (Iterator i = values.iterator(); i.hasNext();) {
 			String value = (String) i.next();
 			final String encValue = StringEncoderDecoder.encode(value);

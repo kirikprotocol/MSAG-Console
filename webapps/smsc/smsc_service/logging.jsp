@@ -7,10 +7,14 @@
 				  ru.novosoft.smsc.util.StringEncoderDecoder,
 				  java.util.Iterator,
 				  ru.novosoft.smsc.jsp.SMSCErrors,
-				  ru.novosoft.smsc.jsp.SMSCJspException"
+				  ru.novosoft.smsc.jsp.SMSCJspException,
+              ru.novosoft.smsc.jsp.smsc.smsc_service.Logging,
+              java.util.Collection,
+              java.util.Arrays"
 %><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.smsc_service.Logging"
 /><jsp:setProperty name="bean" property="*"/><%
-	FORM_METHOD = "POST";
+  //todo ??????? ??????
+  FORM_METHOD = "POST";
 	TITLE = "SMSC";
 	MENU0_SELECTION = "MENU0_SMSC_LOGGING";
 	switch (bean.process(appContext, errorMessages, loginedUserPrincipal, request.getParameterMap()))
@@ -28,48 +32,65 @@
 			STATUS.append("<span class=CF00>Error</span>");
 			errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction));
 	}
-%><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<%
-page_menu_begin(out);
-page_menu_button(out, "mbSave",  "Save",  "Save user info");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel user editing", "clickCancel()");
-page_menu_space(out);
-page_menu_end(out);
-%><div class=content>
-<table class=properties_list cellspacing=1 width="100%">
-<col width="80%" align=left>
-<col width="20%" align=left>
-<thead>
-<tr>
-</tr>
-</thead>
-<tbody>
-<%
-	int rowN = 0;
-	for (Iterator i = bean.getCategoryNames().iterator(); i.hasNext();)
-	{
-		String catName = (String) i.next();
-		final String categoryPriority = bean.getCategoryPriority(catName);
-		final String catNameEnc = StringEncoderDecoder.encode(catName);
-		%><tr class=row<%=(rowN++)&1%>>
-			<th style="text-align:left;"><%=catNameEnc%>&nbsp;</th>
-			<td><select name="<%=bean.catParamNamePrefix + catNameEnc%>">
- 				<option value="FATAL"  <%="FATAL".equalsIgnoreCase(categoryPriority)  ? " selected" : ""%>>FATAL</option>
- 				<option value="ALERT"  <%="ALERT".equalsIgnoreCase(categoryPriority)  ? " selected" : ""%>>ALERT</option>
- 				<option value="CRIT"   <%="CRIT".equalsIgnoreCase(categoryPriority)   ? " selected" : ""%>>CRIT</option>
- 				<option value="ERROR"  <%="ERROR".equalsIgnoreCase(categoryPriority)  ? " selected" : ""%>>ERROR</option>
- 				<option value="WARN"   <%="WARN".equalsIgnoreCase(categoryPriority)   ? " selected" : ""%>>WARN</option>
- 				<option value="NOTICE" <%="NOTICE".equalsIgnoreCase(categoryPriority) ? " selected" : ""%>>NOTICE</option>
- 				<option value="INFO"   <%="INFO".equalsIgnoreCase(categoryPriority)   ? " selected" : ""%>>INFO</option>
- 				<option value="DEBUG"  <%="DEBUG".equalsIgnoreCase(categoryPriority)  ? " selected" : ""%>>DEBUG</option>
- 				<option value="NOTSET" <%="NOTSET".equalsIgnoreCase(categoryPriority) ? " selected" : ""%>>not set</option>
-			</select></td>
-		</tr><%
-	}
 %>
-</tbody>
-</table>
-</div><%
+<%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
+<%@ include file="/WEB-INF/inc/collapsing_tree.jsp"%>
+<%
+  page_menu_begin(out);
+  page_menu_button(out, "mbSave",  "Save",  "Save user info");
+  page_menu_button(out, "mbCancel", "Cancel", "Cancel user editing", "clickCancel()");
+  page_menu_space(out);
+  page_menu_end(out);
+%><div class=content><%!
+  private static final String[] PRIORITIES = {"FATAL", "ALERT", "CRIT", "ERROR", "WARN", "NOTICE", "INFO", "DEBUG", "NOTSET"};
+
+  private static final StringBuffer createOption(StringBuffer result, final String priority, final String catPriority)
+  {
+    return result.append("<option value=\"").append(priority).append('"').append(priority.equals(catPriority) ? " selected>" : ">").append(priority).append("</option>");
+  }
+  private static final String createSelection(String prefix, String catName, String catPriority)
+  {
+    StringBuffer result = new StringBuffer();
+    result.append("<select name=\"").append(prefix).append(catName).append("\" style=\"font-size:80%;\" onClick=\"window.event.cancelBubble = true;\">");
+    for (int i = 0; i < PRIORITIES.length; i++) {
+      createOption(result, PRIORITIES[i], catPriority);
+    }
+    return result.append("</select>").toString();
+  }
+
+  private final void printCategory(JspWriter out, Logging.LoggerCategoryInfo category) throws IOException
+  {
+    startSection(out, category.getFullName(), category.getName(), category.isRoot(), createSelection(Logging.catParamNamePrefix, category.getFullName(), category.getPriority()));
+    {
+      { // print childs that has not subchilds
+        boolean paramsStarted = false;
+        for (Iterator i = category.getChilds().values().iterator(); i.hasNext();) {
+          Logging.LoggerCategoryInfo child = (Logging.LoggerCategoryInfo) i.next();
+          if (!child.hasChilds())
+          {
+            if (!paramsStarted) {
+              startParams(out);
+              paramsStarted = true;
+            }
+            paramSelect(out, child.getName(), Logging.catParamNamePrefix + child.getFullName(), Arrays.asList(PRIORITIES), child.getPriority(), null, "font-size:80%;");
+          }
+        }
+        if (paramsStarted)
+          finishParams(out);
+      }
+      { // print childs with subchilds
+        for (Iterator i = category.getChilds().values().iterator(); i.hasNext();) {
+          Logging.LoggerCategoryInfo child = (Logging.LoggerCategoryInfo) i.next();
+          if (child.hasChilds())
+            printCategory(out, child);
+        }
+      }
+    }
+    finishSection(out);
+  }
+%><%
+  printCategory(out, bean.getRootCategory());
+%></div><%
 page_menu_begin(out);
 page_menu_button(out, "mbSave",  "Save",  "Save user info");
 page_menu_button(out, "mbCancel", "Cancel", "Cancel user editing", "clickCancel()");
