@@ -32,7 +32,7 @@ Statement::Statement(Connection* connection, const char* sql)
         : owner(connection)
 {
     __require__(owner);
-
+    
     envhp = owner->envhp; svchp = owner->svchp; errhp = owner->errhp;
     
     checkErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **) &stmt,
@@ -87,7 +87,8 @@ sword Statement::execute(ub4 mode, ub4 iters, ub4 rowoff)
 
 sword Statement::fetch()
 {
-    return OCI_SUCCESS; // Need to implement it later !
+    return OCIStmtFetch(stmt, errhp, (ub4) 1, (ub4) OCI_FETCH_NEXT,
+                        (ub4) OCI_DEFAULT);
 }
 
 ub4 Statement::getRowsAffectedCount()
@@ -343,7 +344,7 @@ RetriveStatement::RetriveStatement(Connection* connection)
 
 /* --------------------------- ReplaceStatement ----------------------- */        
 const char* ReplaceStatement::sql = (const char*)
-"UPDATE SMS_MSG SET MR=:MR\
+"UPDATE SMS_MSG SET MR=:MR,\
  DCS=:DCS, UDHI=:UDHI, UDL=:UDL, UD=:UD WHERE ID=:ID AND ST=:ST AND\
  OA_LEN=:OA_LEN AND OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL";
 
@@ -375,8 +376,7 @@ ReplaceStatement::ReplaceStatement(Connection* connection)
 }
 
 const char* ReplaceVTStatement::sql = (const char*)
-"UPDATE SMS_MSG SET MR=:MR\
- VALID_TIME=:VALID_TIME\
+"UPDATE SMS_MSG SET MR=:MR, VALID_TIME=:VT,\
  DCS=:DCS, UDHI=:UDHI, UDL=:UDL, UD=:UD WHERE ID=:ID AND ST=:ST AND\
  OA_LEN=:OA_LEN AND OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL";
 
@@ -410,8 +410,7 @@ ReplaceVTStatement::ReplaceVTStatement(Connection* connection)
 }
 
 const char* ReplaceWTStatement::sql = (const char*)
-"UPDATE SMS_MSG SET MR=:MR\
- WAIT_TIME=:WAIT_TIME\
+"UPDATE SMS_MSG SET MR=:MR, WAIT_TIME=:WT,\
  DCS=:DCS, UDHI=:UDHI, UDL=:UDL, UD=:UD WHERE ID=:ID AND ST=:ST AND\
  OA_LEN=:OA_LEN AND OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL";
 
@@ -445,8 +444,7 @@ ReplaceWTStatement::ReplaceWTStatement(Connection* connection)
 }
 
 const char* ReplaceVWTStatement::sql = (const char*)
-"UPDATE SMS_MSG SET MR=:MR\
- VALID_TIME=:VALID_TIME, WAIT_TIME=:WAIT_TIME\
+"UPDATE SMS_MSG SET MR=:MR, VALID_TIME=:VT, WAIT_TIME=:WT,\
  DCS=:DCS, UDHI=:UDHI, UDL=:UDL, UD=:UD WHERE ID=:ID AND ST=:ST AND\
  OA_LEN=:OA_LEN AND OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL";
 

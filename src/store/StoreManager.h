@@ -11,6 +11,7 @@
 #include "StoreConfig.h"
 #include "MessageStore.h"
 #include "ConnectionManager.h"
+#include "Archiver.h"
 
 namespace smsc { namespace store
 {
@@ -46,6 +47,7 @@ namespace smsc { namespace store
         static Mutex mutex;
 
         static IDGenerator          *generator;
+        static Archiver             *archiver;
         static StoreManager         *instance;
         static ConnectionPool       *pool;
         static log4cpp::Category    &log;

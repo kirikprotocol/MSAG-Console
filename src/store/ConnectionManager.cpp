@@ -348,7 +348,7 @@ Connection::~Connection()
 void Connection::connect() 
     throw(ConnectionFailedException) 
 {
-    if (isDead && isConnected) disconnect();
+    if (isConnected && isDead) disconnect();
     
     if (!isConnected)
     {
@@ -451,6 +451,18 @@ void Connection::disconnect()
     }
 }
 
+inline void Connection::commit()
+    throw(StorageException)
+{
+    checkErr(OCITransCommit(svchp, errhp, OCI_DEFAULT));
+}
+
+inline void Connection::rollback()
+    throw(StorageException)
+{
+    checkErr(OCITransRollback(svchp, errhp, OCI_DEFAULT));
+}
+
 SMSId Connection::getMessagesCount()
     throw(StorageException)
 {
@@ -494,11 +506,11 @@ void Connection::store(const SMS &sms, SMSId id)
     try 
     {
         checkErr(StoreStmt->execute(OCI_DEFAULT/*OCI_COMMIT_ON_SUCCESS*/));
-        checkErr(OCITransCommit(svchp, errhp, OCI_DEFAULT));
+        commit();
     } 
     catch (StorageException& exc) 
     {
-        checkErr(OCITransRollback(svchp, errhp, OCI_DEFAULT));
+        rollback();
         throw exc;
     }
 }
@@ -539,18 +551,18 @@ void Connection::remove(SMSId id)
     }
     catch (StorageException& exc) 
     {
-        checkErr(OCITransRollback(svchp, errhp, OCI_DEFAULT));
+        rollback();
         throw exc;
     }
     
     if (!RemoveStmt->wasRemoved()) 
     {
-        checkErr(OCITransRollback(svchp, errhp, OCI_DEFAULT));
+        rollback();
         NoSuchMessageException exc(id);
         //log.debug(exc.what());
         throw exc;
     }
-    checkErr(OCITransCommit(svchp, errhp, OCI_DEFAULT));
+    commit();
 }
 
 void Connection::replace(SMSId id, const SMS &sms) 
@@ -587,20 +599,20 @@ void Connection::replace(SMSId id, const SMS &sms)
     catch (StorageException& exc) 
     {
         delete ReplaceStmt;
-        checkErr(OCITransRollback(svchp, errhp, OCI_DEFAULT));
+        rollback();
         throw exc;
     }
 
     if (!ReplaceStmt->wasReplaced())
     {
         delete ReplaceStmt;
-        checkErr(OCITransRollback(svchp, errhp, OCI_DEFAULT));
+        rollback();
         NoSuchMessageException exc(id);
         //log.debug(exc.what());
         throw exc;
     }
     delete ReplaceStmt;
-    checkErr(OCITransCommit(svchp, errhp, OCI_DEFAULT));
+    commit();
 }
 
 void Connection::update(SMSId id, const State state, 
@@ -645,20 +657,20 @@ void Connection::update(SMSId id, const State state,
     catch (StorageException& exc) 
     {
         delete UpdateStmt;
-        checkErr(OCITransRollback(svchp, errhp, OCI_DEFAULT));
+        rollback();
         throw exc;
     }
 
     if (!UpdateStmt->wasUpdated())
     {
         delete UpdateStmt;
-        checkErr(OCITransRollback(svchp, errhp, OCI_DEFAULT));
+        rollback();
         NoSuchMessageException exc(id);
         //log.debug(exc.what());
         throw exc;
     }
     delete UpdateStmt;
-    checkErr(OCITransCommit(svchp, errhp, OCI_DEFAULT));
+    commit();
 }
 
 void Connection::checkErr(sword status) 

@@ -17,6 +17,7 @@ const unsigned SMSC_MAX_TRIES_TO_PROCESS_OPERATION = 3;
 const unsigned SMSC_MAX_TRIES_TO_PROCESS_OPERATION_LIMIT = 1000;
 
 Mutex StoreManager::mutex;
+Archiver* StoreManager::archiver = 0L;
 ConnectionPool* StoreManager::pool = 0L;
 IDGenerator* StoreManager::generator = 0L;
 StoreManager* StoreManager::instance = 0L;
@@ -66,6 +67,7 @@ void StoreManager::startup(Manager& config)
             pool = new ConnectionPool(config);
             connection = pool->getConnection();
             generator = new IDGenerator(connection->getMessagesCount());
+            archiver = new Archiver(config);
         }
         catch (StorageException& exc)
         {
@@ -94,11 +96,12 @@ void StoreManager::shutdown()
 {
     MutexGuard guard(mutex);
 
-    if (pool && instance && generator)
+    if (pool && instance && generator && archiver)
     {
         log.info("Storage Manager is shutting down ...");
         delete pool; pool = 0L;
         delete instance; instance = 0L;
+        delete archiver; archiver = 0L;
         delete generator; generator = 0L;
         log.info("Storage Manager was shutdowned.");
     }   

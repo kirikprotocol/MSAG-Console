@@ -57,12 +57,12 @@ namespace smsc { namespace store
         
         void checkErr(sword status) 
             throw(StorageException);
-        
+    
+    public:
+
         void connect()
             throw(ConnectionFailedException);
         void disconnect();
-
-    public:
 
         Connection(const char* instance, 
                    const char* user, const char* password);
@@ -71,8 +71,13 @@ namespace smsc { namespace store
         inline void setNextConnection(Connection* connection) {
             next = connection;
         };
+        
         inline Connection* getNextConnection(void) {
             return next;
+        };
+
+        inline bool isAvailable() {
+            return (isConnected && !isDead);
         };
 
         SMSId getMessagesCount()
@@ -85,9 +90,14 @@ namespace smsc { namespace store
             throw(StorageException, NoSuchMessageException);
         void replace(SMSId id, const SMS &sms) 
             throw(StorageException, NoSuchMessageException);
-        virtual void update(SMSId id, const State state, 
-                            time_t operationTime=0, uint8_t fcs=0) 
-            throw(StorageException, NoSuchMessageException); 
+        void update(SMSId id, const State state, 
+                    time_t operationTime=0, uint8_t fcs=0) 
+            throw(StorageException, NoSuchMessageException);
+
+        void commit()
+            throw(StorageException);
+        void rollback()
+            throw(StorageException);
     };
     
     struct ConnectionQueue

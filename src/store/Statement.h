@@ -21,19 +21,18 @@ namespace smsc { namespace store
         OCIError    *errhp;
         OCIStmt     *stmt;
         
-        Statement(Connection* connection, const char* sql) 
-            throw(StorageException);
-        
-        void checkErr(sword status) 
-            throw(StorageException);
-        
         void convertDateToOCIDate(time_t* sms_date, OCIDate* oci_date);
         void convertOCIDateToDate(OCIDate* oci_date, time_t* sms_date);
 
     public:
         
+        Statement(Connection* connection, const char* sql) 
+            throw(StorageException);
         virtual ~Statement();
 
+        void checkErr(sword status) 
+            throw(StorageException);
+        
         void bind(ub4 pos, ub2 type, 
                   dvoid* placeholder, sb4 size) 
             throw(StorageException);
