@@ -88,8 +88,6 @@ namespace stat {
         smsc::logger::Logger    *logger;
         DataSource              &ds;
 
-        CommonStat      statCommon[2];
-
         struct TotalStat{
           CommonStat common;
           ServiceStat service;

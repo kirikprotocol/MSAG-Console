@@ -70,7 +70,6 @@ void GWStatisticsManager::updateCounter(int counter,const StatInfo& si, int errc
   switch(counter)
   {
 #define INC_STAT(cnt,field) case cnt:{\
-      statCommon[currentIndex].field++; \
       if(smeSt)smeSt->field++; \
       if(routeSt)routeSt->field++; \
       }break;
@@ -102,7 +101,7 @@ void GWStatisticsManager::updateCounter(int counter,const StatInfo& si, int errc
 #undef UPDATE_SRV_STAT_CNT
   }
 
-  incError(statCommon[currentIndex].errors, errcode);
+  //incError(statCommon[currentIndex].errors, errcode);
 }
 
 
@@ -182,9 +181,11 @@ int GWStatisticsManager::calculateToSleep() // returns msecs to next hour
     return (((nextTime-currTime)*1000)+1);
 }
 
+/*
 const char* insertStatSmsSql = (const char*)
 "INSERT INTO smppgw_stat (period,accepted,rejected,delivered,temperror,permerror) "
 "VALUES (:period,:accepted,:rejected,:delivered,:temperror,:permerror)";
+*/
 
 const char* insertStatSmeSql = (const char*)
 "INSERT INTO smppgw_stat_sme ("
@@ -238,17 +239,18 @@ void GWStatisticsManager::flushCounters(int index)
 
 #define CREATE_STATEMENT(st) st##Stmt   = auto_ptr<Statement>(connection->createStatement(st##Sql))
         CREATE_STATEMENT(insertStatSme);
-        CREATE_STATEMENT(insertStatSms);
+        //CREATE_STATEMENT(insertStatSms);
         CREATE_STATEMENT(insertStatRoute);
         CREATE_STATEMENT(insertStatErr);
         CREATE_STATEMENT(insertStatSmeErr);
         CREATE_STATEMENT(insertStatRouteErr);
 #undef CREATE_STATEMENT
 
-        if (!insertStatSmeStmt.get() || !insertStatSmsStmt.get() || !insertStatRouteStmt.get() ||
+        if (!insertStatSmeStmt.get() || /*!insertStatSmsStmt.get() ||*/ !insertStatRouteStmt.get() ||
             !insertStatErrStmt.get() || !insertStatSmeErrStmt.get() || !insertStatRouteErrStmt.get())
             throw SQLException("Statistics: Failed to create service statements!");
 
+        /*
         try{
         insertStatSmsStmt->setUint32(1, period);
         insertStatSmsStmt->setInt32 (2, statCommon[index].accepted);
@@ -258,7 +260,8 @@ void GWStatisticsManager::flushCounters(int index)
         insertStatSmsStmt->setInt32 (6, statCommon[index].permerror);
         insertStatSmsStmt->executeUpdate();
         }catch(...){__trace__("insertStatSmsStmt failed");throw;}
-
+        */
+        /*
         try{
         insertStatErrStmt->setUint32(1, period);
         IntHash<int>::Iterator it = statCommon[index].errors.First();
@@ -270,6 +273,7 @@ void GWStatisticsManager::flushCounters(int index)
             insertStatErrStmt->executeUpdate();
         }
         }catch(...){__trace__("insertStatErrStmt failed");throw;}
+        */
 
         try{
         insertStatRouteStmt->setUint32(1, period);
@@ -359,7 +363,7 @@ void GWStatisticsManager::flushCounters(int index)
 
 void GWStatisticsManager::resetCounters(int index)
 {
-  statCommon[index].Reset();
+  //statCommon[index].Reset();
   totalStatBySmeId[index].Empty();
   commonStatByRoute[index].Empty();
 }
