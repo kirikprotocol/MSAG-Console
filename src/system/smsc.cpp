@@ -247,7 +247,7 @@ void Smsc::init(const SmscConfigs& cfg)
     }
   }
   // initialize aliases
-  {
+  /*{
     smsc::util::config::alias::AliasConfig::RecordIterator i =
                                 cfg.aliasconfig->getRecordIterator();
     while(i.hasRecord())
@@ -270,9 +270,12 @@ void Smsc::init(const SmscConfigs& cfg)
       aliaser.addAlias(ai);
     }
     aliaser.commit();
-  }
+  }*/
 
-  auto_ptr<RouteManager> router(new RouteManager());
+  reloadAliases(cfg);
+  reloadRoutes(cfg);
+
+  /*auto_ptr<RouteManager> router(new RouteManager());
 
   // initialize router (all->all)
   router->assign(&smeman);
@@ -300,7 +303,7 @@ void Smsc::init(const SmscConfigs& cfg)
       router.addRoute(rinfo);
     }
   }
-  */
+  //
   try{
     loadRoutes(router.get(),*cfg.routesconfig);
   }catch(...)
@@ -309,6 +312,7 @@ void Smsc::init(const SmscConfigs& cfg)
   }
 
   ResetRouteManager(router.release());
+  */
 
   smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance());
   store=smsc::store::StoreManager::getMessageStore();
@@ -537,6 +541,37 @@ void Smsc::reloadRoutes(const SmscConfigs& cfg)
     __warning__("Failed to load routes");
   }
   ResetRouteManager(router.release());
+}
+
+void Smsc::reloadAliases(const SmscConfigs& cfg)
+{
+  auto_ptr<AliasManager> aliaser(new AliasManager());
+  {
+    smsc::util::config::alias::AliasConfig::RecordIterator i =
+                                cfg.aliasconfig->getRecordIterator();
+    while(i.hasRecord())
+    {
+      smsc::util::config::alias::AliasRecord *rec;
+      i.fetchNext(rec);
+      __trace2__("adding %20s %20s",rec->addrValue,rec->aliasValue);
+      smsc::alias::AliasInfo ai;
+      ai.addr = smsc::sms::Address(
+        strlen(rec->addrValue),
+        rec->addrTni,
+        rec->addrNpi,
+        rec->addrValue);
+      ai.alias = smsc::sms::Address(
+        strlen(rec->aliasValue),
+        rec->aliasTni,
+        rec->aliasNpi,
+        rec->aliasValue);
+      ai.hide = rec->hide;
+      aliaser->addAlias(ai);
+    }
+    aliaser->commit();
+  }
+
+  ResetAliases(aliaser.release());
 }
 
 };//system

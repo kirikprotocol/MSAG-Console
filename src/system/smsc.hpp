@@ -31,52 +31,54 @@ namespace system{
 
 using smsc::sms::SMS;
 using smsc::smeman::SmeProxy;
+using smsc::alias::AliasManager;
 using smsc::router::RouteManager;
 using smsc::router::RouteInfo;
 
 //class smsc::store::MessageStore;
 
-class RouteManagerReffer
+template<class T>
+class Reffer
 {
   Mutex sync_;
-  RouteManager* manager_;
+  T* manager_;
   unsigned refCounter_;
 public:
-  RouteManager* operator->() { return manager_;}
-  RouteManagerReffer(RouteManager* manager)
+  T* operator->() { return manager_;}
+  Reffer(T* manager)
   {
     refCounter_ = 1;
     manager_ = manager;
-  }
-  virtual ~RouteManagerReffer()
-  {
-    delete manager_;
   }
   void Release() {
     MutexGuard g(sync_);
     if ( --refCounter_ == 0 )
       delete this;
   }
-  RouteManagerReffer* AddRef(){
+  Reffer* AddRef(){
     MutexGuard g(sync_);
     ++refCounter_;
     return this;
   }
+  static Reffer* Create(T* t) {return new Reffer(t);}
+protected:
+  virtual ~Reffer() {delete manager_;}
 private:
-  RouteManagerReffer& operator = (const RouteManagerReffer&);
-  RouteManagerReffer(const RouteManagerReffer&);
+  Reffer& operator = (const Reffer&);
+  Reffer(const Reffer&);
 };
 
-class RouteManagerGuard
+template<class T>
+class RefferGuard
 {
-  mutable RouteManagerReffer* reffer_;
+  mutable Reffer<T>* reffer_;
 public:
-  RouteManagerGuard(RouteManagerReffer* reffer) : reffer_(reffer) { reffer_->AddRef(); }
-  RouteManagerGuard(const RouteManagerGuard& g) : reffer_(g.reffer_){g.reffer_=0;}
-  ~RouteManagerGuard() { if ( reffer_ != 0 ) reffer_->Release(); reffer_ = 0; }
-  RouteManagerReffer& operator->() { return *reffer_; }
+  RefferGuard(Reffer<T>* reffer) : reffer_(reffer) { reffer_->AddRef(); }
+  RefferGuard(const RefferGuard& g) : reffer_(g.reffer_){g.reffer_=0;}
+  ~RefferGuard() { if ( reffer_ != 0 ) reffer_->Release(); reffer_ = 0; }
+  Reffer<T>& operator->() { return *reffer_; }
 private:
-  RouteManagerGuard& operator = (const RouteManagerGuard&);
+  RefferGuard& operator = (const RefferGuard&);
 };
 
 namespace StatEvents{
@@ -116,11 +118,11 @@ public:
 
   bool AliasToAddress(const Address& alias,Address& addr)
   {
-    return aliaser.AliasToAddress(alias,addr);
+    return getAliaserInstance()->AliasToAddress(alias,addr);
   }
   bool AddressToAlias(const Address& addr,Address& alias)
   {
-    return aliaser.AddressToAlias(addr,alias);
+    return getAliaserInstance()->AddressToAlias(addr,alias);
   }
 
   void notifyScheduler()
@@ -205,20 +207,34 @@ public:
     submit=submitCounter;
   }
 
-  RouteManagerGuard getRouterInstance()
+  RefferGuard<RouteManager> getRouterInstance()
   {
     MutexGuard g(routerSwitchMutex);
-    return RouteManagerGuard(router_);
+    return RefferGuard<RouteManager>(router_);
+  }
+
+  RefferGuard<AliasManager> getAliaserInstance()
+  {
+    MutexGuard g(aliasesSwitchMutex);
+    return RefferGuard<AliasManager>(aliaser_);
   }
 
   void ResetRouteManager(RouteManager* manager)
   {
     MutexGuard g(routerSwitchMutex);
     if ( router_ ) router_->Release();
-    router_ = new RouteManagerReffer(manager);
+    router_ = new Reffer<RouteManager>(manager);
+  }
+
+  void ResetAliases(AliasManager* manager)
+  {
+    MutexGuard g(aliasesSwitchMutex);
+    if ( aliaser_ ) aliaser_->Release();
+    aliaser_ = new Reffer<AliasManager>(manager);
   }
 
   void reloadRoutes(const SmscConfigs& cfg);
+  void reloadAliases(const SmscConfigs& cfg);
 
   void flushStatistics()
   {
@@ -230,10 +246,11 @@ protected:
   smsc::system::smppio::SmppSocketsManager ssockman;
   smsc::smeman::SmeManager smeman;
   Mutex routerSwitchMutex;
-  RouteManagerReffer* router_;
+  Mutex aliasesSwitchMutex;
+  Reffer<RouteManager>* router_;
+  Reffer<AliasManager>* aliaser_;
   EventQueue eventqueue;
   smsc::store::MessageStore *store;
-  smsc::alias::AliasManager aliaser;
   Scheduler *scheduler;
   smsc::profiler::Profiler *profiler;
   bool stopFlag;
