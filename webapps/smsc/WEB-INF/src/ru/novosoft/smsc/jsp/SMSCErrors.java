@@ -60,6 +60,15 @@ public class SMSCErrors
 			private static final String B = error.B + "aliases.";
 			public static final String alreadyExists = B + "alreadyExists";
 		}
+
+		public static class subjects
+		{
+			private static final String B = error.B + "subjects.";
+			public static final String alreadyExists = B + "alreadyExists";
+			public static final String cantAdd = B + "cantAdd";
+			public static final String cantEdit = B + "cantEdit";
+			public static final String subjNotSpecified = B + "subjNotSpecified";
+		}
 	}
 
 	public static class warning

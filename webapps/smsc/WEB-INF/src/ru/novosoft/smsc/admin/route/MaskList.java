@@ -29,7 +29,7 @@ public class MaskList
 	{
 		for (int i = 0; i < masks.length; i++)
 		{
-			String mask = masks[i];
+			String mask = masks[i].trim();
 			add(new Mask(mask));
 		}
 	}

@@ -12,6 +12,9 @@ import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.AliasQuery;
 
 import java.util.List;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.HashSet;
 
 public class Index extends SmscBean
 {
@@ -28,7 +31,11 @@ public class Index extends SmscBean
 	protected String editAddress = null;
 	protected boolean editHide = false;
 
+	protected String[] checkedAliases = new String[0];
+	protected Set checkedAliasesSet = new HashSet();
+
 	protected String mbAdd = null;
+	protected String mbDelete = null;
 	protected String mbEdit = null;
 	protected String mbFilter = null;
 	protected String mbFirst = null;
@@ -58,6 +65,12 @@ public class Index extends SmscBean
 			return RESULT_EDIT;
 		else if (mbFilter != null)
 			return RESULT_FILTER;
+		else if (mbDelete != null)
+		{
+			int dresult = deleteAliases();
+			if (dresult != RESULT_OK)
+				return result;
+		}
 		else if (mbFirst != null)
 			startPosition = 0;
 		else if (mbPrev != null)
@@ -71,6 +84,20 @@ public class Index extends SmscBean
 		aliases = smsc.getAliases().query(new AliasQuery(pageSize, up.getAliasesFilter(), up.getAliasesSortOrder(), startPosition));
 		totalSize = aliases.getTotalSize();
 
+		checkedAliasesSet.addAll(Arrays.asList(checkedAliases));
+
+		return RESULT_OK;
+	}
+
+	protected int deleteAliases()
+	{
+		for (int i = 0; i < checkedAliases.length; i++)
+		{
+			String alias = checkedAliases[i];
+			smsc.getAliases().remove(alias);
+		}
+		checkedAliases = new String[0];
+		checkedAliasesSet.clear();
 		return RESULT_OK;
 	}
 
@@ -83,6 +110,12 @@ public class Index extends SmscBean
 	{
 		return aliases.isLast();
 	}
+
+	public boolean isAliasChecked(String alias)
+	{
+		return checkedAliasesSet.contains(alias);
+	}
+
 
 	/******************** properties *************************/
 
@@ -216,7 +249,7 @@ public class Index extends SmscBean
 		this.editAddress = editAddress;
 	}
 
-	public boolean getEditHide()
+	public boolean isEditHide()
 	{
 		return editHide;
 	}
@@ -224,5 +257,25 @@ public class Index extends SmscBean
 	public void setEditHide(boolean editHide)
 	{
 		this.editHide = editHide;
+	}
+
+	public String[] getCheckedAliases()
+	{
+		return checkedAliases;
+	}
+
+	public void setCheckedAliases(String[] checkedAliases)
+	{
+		this.checkedAliases = checkedAliases;
+	}
+
+	public String getMbDelete()
+	{
+		return mbDelete;
+	}
+
+	public void setMbDelete(String mbDelete)
+	{
+		this.mbDelete = mbDelete;
 	}
 }

@@ -7,6 +7,7 @@ package ru.novosoft.smsc.admin.preferences;
 
 import ru.novosoft.smsc.jsp.util.tables.impl.ProfileFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.AliasFilter;
+import ru.novosoft.smsc.jsp.util.tables.impl.SubjectFilter;
 
 import java.util.Vector;
 
@@ -20,10 +21,15 @@ public class UserPreferences
 	private AliasFilter aliasesFilter = new AliasFilter();
 	private Vector aliasesSortOrder = new Vector();
 
+	private int subjectsPageSize = 20;
+	private SubjectFilter subjectsFilter = new SubjectFilter();
+	private Vector subjectsSortOrder = new Vector();
+
 	public UserPreferences()
 	{
 		this.profilesSortOrder.add("mask");
 		this.aliasesSortOrder.add("Alias");
+		this.subjectsSortOrder.add("Name");
 	}
 
 	public int getProfilesPageSize()
@@ -54,5 +60,20 @@ public class UserPreferences
 	public Vector getAliasesSortOrder()
 	{
 		return aliasesSortOrder;
+	}
+
+	public int getSubjectsPageSize()
+	{
+		return subjectsPageSize;
+	}
+
+	public SubjectFilter getSubjectsFilter()
+	{
+		return subjectsFilter;
+	}
+
+	public Vector getSubjectsSortOrder()
+	{
+		return subjectsSortOrder;
 	}
 }

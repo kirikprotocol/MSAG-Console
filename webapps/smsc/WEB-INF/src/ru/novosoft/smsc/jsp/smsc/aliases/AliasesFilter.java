@@ -9,9 +9,7 @@ import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SmscBean;
 import ru.novosoft.smsc.jsp.util.tables.impl.AliasFilter;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class AliasesFilter extends SmscBean
 {
@@ -43,8 +41,8 @@ public class AliasesFilter extends SmscBean
 		if (addresses == null)
 			addresses = new String[0];
 
-		aliases = trimMasks(aliases);
-		addresses = trimMasks(addresses);
+		aliases = trimStrings(aliases);
+		addresses = trimStrings(addresses);
 
 		return RESULT_OK;
 	}
@@ -66,23 +64,6 @@ public class AliasesFilter extends SmscBean
 			return RESULT_DONE;
 
 		return RESULT_OK;
-	}
-
-
-	protected String[] trimMasks(String[] masks)
-	{
-		Set newMasks = new HashSet();
-		for (int i = 0; i < masks.length; i++)
-		{
-			String mask = masks[i];
-			if (mask != null)
-			{
-				final String m = mask.trim();
-				if (m.length() > 0 && !newMasks.contains(m))
-					newMasks.add(m);
-			}
-		}
-		return (String[]) newMasks.toArray(new String[0]);
 	}
 
 

@@ -175,7 +175,16 @@ public class Smsc extends Service
 		{
 			final File smscConfFolder = getSmscConfFolder();
 
-			storeAliases(new PrintWriter(new FileOutputStream(new File(smscConfFolder, "aliases.xml")), true)).close();
+			final File aliasConfigFile = new File(smscConfFolder, "aliases.xml");
+			try
+			{
+				logger.debug("Storing alias config to \"" + aliasConfigFile.getCanonicalPath() + '"');
+			}
+			catch (IOException e)
+			{
+				logger.debug("Storing alias config to \"" + aliasConfigFile.getName() + "\", and couldn't get canonical path of this file...");
+			}
+			storeAliases(new PrintWriter(new FileOutputStream(aliasConfigFile), true)).close();
 
 			call(smsc_component, apply_aliases_method, Type.Types[Type.StringType], new HashMap());
 		}

@@ -16,17 +16,17 @@ public class Subject
 	private SME defaultSme = null;
 	private MaskList masks = null;
 
-	public Subject(String name, String masksString, SME defaultSME)
+	public Subject(String name, String[] masksStrings, SME defaultSME)
 	{
 		if (name == null)
 			throw new NullPointerException("Name is null");
-		if (masksString == null)
+		if (masksStrings == null)
 			throw new NullPointerException("Masks is null");
 		if (defaultSME == null)
 			throw new NullPointerException("DefaultSME is null");
 
 		this.name = name;
-		masks = new MaskList(masksString);
+		masks = new MaskList(masksStrings);
 		if (masks.size() == 0)
 			throw new NullPointerException("Masks is empty");
 		this.defaultSme = defaultSME;

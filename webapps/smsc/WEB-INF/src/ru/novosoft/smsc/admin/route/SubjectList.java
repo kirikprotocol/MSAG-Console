@@ -14,10 +14,7 @@ import ru.novosoft.smsc.jsp.util.tables.impl.SubjectDataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.SubjectQuery;
 
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 public class SubjectList
@@ -34,12 +31,12 @@ public class SubjectList
 		{
 			Element subjElem = (Element) subjList.item(i);
 			String name = subjElem.getAttribute("id");
-			String masks = "";
 			NodeList masksList = subjElem.getElementsByTagName("mask");
+			String[] masks = new String[masksList.getLength()];
 			for (int j = 0; j < masksList.getLength(); j++)
 			{
 				Element maskElem = (Element) masksList.item(j);
-				masks += maskElem.getAttribute("value") + "\n";
+				masks[j] = maskElem.getAttribute("value").trim();
 			}
 			SME defSme = smes.get(subjElem.getAttribute("defSme"));
 			if (defSme == null)
@@ -118,5 +115,10 @@ public class SubjectList
 			dataSource.add(subject);
 		}
 		return dataSource.query(query);
+	}
+
+	public boolean contains(String subjectName)
+	{
+		return subjects.keySet().contains(subjectName);
 	}
 }

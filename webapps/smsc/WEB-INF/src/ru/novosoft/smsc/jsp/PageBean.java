@@ -11,6 +11,8 @@ import ru.novosoft.smsc.admin.service.ServiceManager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 public abstract class PageBean
 {
@@ -85,5 +87,22 @@ public abstract class PageBean
 	{
 		errors.add(e);
 		return RESULT_ERROR;
+	}
+
+
+	protected String[] trimStrings(String[] masks)
+	{
+		Set newMasks = new HashSet();
+		for (int i = 0; i < masks.length; i++)
+		{
+			String mask = masks[i];
+			if (mask != null)
+			{
+				final String m = mask.trim();
+				if (m.length() > 0 && !newMasks.contains(m))
+					newMasks.add(m);
+			}
+		}
+		return (String[]) newMasks.toArray(new String[0]);
 	}
 }

@@ -13,14 +13,12 @@ public class Alias
 	private Mask address = null;
 	private Mask alias = null;
 	private boolean hide = false;
-	private int hash = 0;
 
 	public Alias(Mask address, Mask alias, boolean hide)
 	{
 		this.address = address;
 		this.alias = alias;
 		this.hide = hide;
-		hash = (address.getMask() + '|' + alias.getMask()).hashCode();
 	}
 
 	public Mask getAddress()
@@ -40,7 +38,7 @@ public class Alias
 
 	public int hashCode()
 	{
-		return hash;
+		return alias.getMask().hashCode();
 	}
 
 	public boolean equals(Object obj)
@@ -48,7 +46,7 @@ public class Alias
 		if (obj instanceof Alias)
 		{
 			Alias a = (Alias) obj;
-			return address.equals(a.address) && alias.equals(a.alias);
+			return alias.equals(a.alias);
 		}
 		else
 		{

@@ -67,6 +67,13 @@ public class AliasSet
 		return aliases.remove(a);
 	}
 
+	public boolean remove(String alias)
+	{
+		Alias a = new Alias(new Mask(alias), new Mask(alias), false);
+		dataSource.remove(a);
+		return aliases.remove(a);
+	}
+
 	public QueryResultSet query(AliasQuery query)
 	{
 		dataSource.clear();
