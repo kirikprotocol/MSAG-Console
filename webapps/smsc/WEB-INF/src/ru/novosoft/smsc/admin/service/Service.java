@@ -15,10 +15,10 @@ import ru.novosoft.smsc.admin.utli.Proxy;
 import ru.novosoft.smsc.util.xml.Utils;
 
 import java.util.*;
-import java.io.File;
 
 
-public class Service extends Proxy {
+public class Service extends Proxy
+{
   private ServiceInfo info = null;
   private Category logger = Category.getInstance(this.getClass());
 
@@ -39,11 +39,21 @@ public class Service extends Proxy {
    * String Integer или Boolean класса.
    * @return Значение, которое вернул вызванный метод (String, Integer или Boolean)
    */
-  public Object call(Component component, Method method, Type returnType, Map arguments) throws AdminException
+  public Object call(String componentId, String methodId, Type returnType, Map arguments) throws AdminException
   {
+    if (info.status != ServiceInfo.STATUS_RUNNING)
+      throw new AdminException("Service \"" + info.getId() + "\" is not running");
+
     refreshComponents();
 
-    if (component != null && method != null && method.equals(component.getMethods().get(method.getName()))) {
+    final Component component = (Component) info.getComponents().get(componentId);
+    if (component == null)
+      throw new AdminException("Service \"" + info.getId() + "\" is not connected");
+    final Method method = (Method) component.getMethods().get(methodId);
+    if (method == null)
+      throw new AdminException("Version of service \"" + info.getId() + "\" and SMSC Administration Application is not compatible");
+
+    if (method.equals(component.getMethods().get(method.getName()))) {
       Response r = runCommand(new CommandCall(info.getId(), component.getName(), method.getName(), returnType, arguments));
       if (r.getStatus() != Response.StatusOk)
         throw new AdminException("Error occured: " + r.getDataAsString());
@@ -107,7 +117,7 @@ public class Service extends Proxy {
     return result;
   }
 
-  public void refreshComponents() throws AdminException
+  private void refreshComponents() throws AdminException
   {
     if (info.getComponents().isEmpty()) {
       logger.debug("refreshComponents");
@@ -116,18 +126,18 @@ public class Service extends Proxy {
         throw new AdminException("Error occured: " + r.getDataAsString());
       info.setComponents(r.getData().getDocumentElement());
       logger.debug("found " + info.getComponents().keySet().size() + " components: " + info.getComponents().keySet());
-      checkComponents();
     }
   }
 
   protected void setInfo(ServiceInfo info)
   {
     logger.debug("Set info. Status: " + info.getStatusStr() + " [" + info.getStatus() + ']');
-    this.info = info;
-  }
 
-  protected void checkComponents()
-  {
-    logger.debug("checkComponents");
+    if (info.status == ServiceInfo.STATUS_RUNNING
+            && (info.components == null || info.components.size() == 0)
+            && this.info.components != null && this.info.components.size() > 0) {
+      info.components = this.info.components;
+    }
+    this.info = info;
   }
 }

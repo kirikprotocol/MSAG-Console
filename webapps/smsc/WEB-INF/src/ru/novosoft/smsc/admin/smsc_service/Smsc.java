@@ -18,7 +18,9 @@ import ru.novosoft.smsc.admin.profiler.ProfileEx;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.route.SmeStatus;
-import ru.novosoft.smsc.admin.service.*;
+import ru.novosoft.smsc.admin.service.Service;
+import ru.novosoft.smsc.admin.service.ServiceInfo;
+import ru.novosoft.smsc.admin.service.Type;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileDataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileQuery;
@@ -37,38 +39,43 @@ import java.util.*;
 
 public class Smsc extends Service
 {
+  private static final String SMSC_COMPONENT_ID = "SMSC";
+
+  private static final String APPLY_ALIASES_METHOD_ID = "apply_aliases";
+
+  private static final String APPLY_ROUTES_METHOD_ID = "apply_routes";
+  private static final String LOAD_ROUTES_METHOD_ID = "load_routes";
+  private static final String TRACE_ROUTE_METHOD_ID = "trace_route";
+
+  private static final String PROFILE_LOOKUP_METHOD_ID = "lookup_profile";
+  private static final String PROFILE_LOOKUP_EX_METHOD_ID = "profile_lookup_ex";
+  private static final String PROFILE_UPDATE_METHOD_ID = "update_profile";
+  private static final String PROFILE_DELETE_METHOD_ID = "profile_delete";
+
+  private static final String FLUSH_STATISTICS_METHOD_ID = "flush_statistics";
+  private static final String PROCESS_CANCEL_MESSAGES_METHOD_ID = "process_cancel_messages";
+  private static final String APPLY_SMSC_CONFIG_METHOD_ID = "apply_smsc_config";
+//  private static final String APPLY_SERVICES_METHOD_ID = "apply_services";
+  private static final String APPLY_LOCALE_RESOURCES_METHOD_ID = "apply_locale_resources";
+
+  private static final String MSC_REGISTRATE_METHOD_ID = "msc_registrate";
+  private static final String MSC_UNREGISTER_METHOD_ID = "msc_unregister";
+  private static final String MSC_BLOCK_METHOD_ID = "msc_block";
+  private static final String MSC_CLEAR_METHOD_ID = "msc_clear";
+  private static final String MSC_LIST_METHOD_ID = "msc_list";
+
+  private static final String SME_ADD_METHOD_ID = "sme_add";
+  private static final String SME_REMOVE_METHOD_ID = "sme_remove";
+  private static final String SME_UPDATE_METHOD_ID = "sme_update";
+  private static final String SME_STATUS_ID = "sme_status";
+  private static final String SME_DISCONNECT_ID = "sme_disconnect";
+
+  private static final String LOG_GET_CATEGORIES_ID = "log_get_categories";
+  private static final String LOG_SET_CATEGORIES_ID = "log_set_categories";
+
+
   private File configFolder = null;
-  private Component smsc_component = null;
-  private Method apply_routes_method = null;
-  private Method apply_aliases_method = null;
-  private Method load_routes_method = null;
-  private Method trace_route_method = null;
-  private Method profile_lookup_method = null;
-  private Method profile_lookup_ex_method = null;
-  private Method profile_update_method = null;
-  private Method profile_delete_method = null;
-  private Method flush_statistics_method = null;
-  private Method process_cancel_messages_method = null;
-  private Method apply_smsc_config_method = null;
-  private Method apply_services_method = null;
-  private Method apply_locale_resources_method = null;
-
-  private Method msc_registrate_method = null;
-  private Method msc_unregister_method = null;
-  private Method msc_block_method = null;
-  private Method msc_clear_method = null;
-  private Method msc_list_method = null;
-  private Method sme_add_method = null;
-  private Method sme_remove_method = null;
-  private Method sme_update_method = null;
-  private Method sme_status = null;
-  private Method sme_disconnect = null;
-  private Method log_get_categories = null;
-  private Method log_set_categories = null;
-
   private Map smeStatuses = new HashMap();
-
-
   private DistributionListAdmin distributionListAdmin = null;
 
   private AliasSet aliases = null;
@@ -122,8 +129,7 @@ public class Smsc extends Service
     if (getInfo().getStatus() != ServiceInfo.STATUS_RUNNING)
       throw new AdminException("SMSC is not running.");
 
-    refreshComponents();
-    Object res = call(smsc_component, load_routes_method, Type.Types[Type.StringListType], new HashMap());
+    Object res = call(SMSC_COMPONENT_ID, LOAD_ROUTES_METHOD_ID, Type.Types[Type.StringListType], new HashMap());
 
     return ((res instanceof List) ? (List) res : null);
   }
@@ -134,12 +140,11 @@ public class Smsc extends Service
     if (getInfo().getStatus() != ServiceInfo.STATUS_RUNNING)
       throw new AdminException("SMSC is not running.");
 
-    refreshComponents();
     HashMap args = new HashMap();
     args.put("dstAddress", dstAddress);
     args.put("srcAddress", srcAddress);
     args.put("srcSysId", srcSysId);
-    Object res = call(smsc_component, trace_route_method, Type.Types[Type.StringListType], args);
+    Object res = call(SMSC_COMPONENT_ID, TRACE_ROUTE_METHOD_ID, Type.Types[Type.StringListType], args);
 
     return ((res instanceof List) ? (List) res : null);
   }
@@ -148,8 +153,7 @@ public class Smsc extends Service
   {
     routeSubjectManager.apply();
     if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
-      refreshComponents();
-      call(smsc_component, apply_routes_method, Type.Types[Type.StringType], new HashMap());
+      call(SMSC_COMPONENT_ID, APPLY_ROUTES_METHOD_ID, Type.Types[Type.StringType], new HashMap());
     }
   }
 
@@ -164,8 +168,7 @@ public class Smsc extends Service
       Functions.renameNewSavedFileToOriginal(newFile, aliasConfigFile);
 
       if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
-        refreshComponents();
-        call(smsc_component, apply_aliases_method, Type.Types[Type.StringType], new HashMap());
+        call(SMSC_COMPONENT_ID, APPLY_ALIASES_METHOD_ID, Type.Types[Type.StringType], new HashMap());
       } else
         logger.debug("Couldn't call apply method on SMSC - SMSC is not running. Status is " + getInfo().getStatusStr() + " (" + getInfo().getStatus() + ")");
     } catch (FileNotFoundException e) {
@@ -182,10 +185,9 @@ public class Smsc extends Service
 
   public synchronized Profile profileLookup(Mask mask) throws AdminException
   {
-    refreshComponents();
     HashMap args = new HashMap();
     args.put("address", mask.getMask());
-    Object result = call(smsc_component, profile_lookup_method, Type.Types[Type.StringListType], args);
+    Object result = call(SMSC_COMPONENT_ID, PROFILE_LOOKUP_METHOD_ID, Type.Types[Type.StringListType], args);
     if (result instanceof List)
       return new Profile(mask, (List) result);
     else
@@ -194,10 +196,9 @@ public class Smsc extends Service
 
   public synchronized ProfileEx profileLookupEx(Mask mask) throws AdminException
   {
-    refreshComponents();
     HashMap args = new HashMap();
     args.put("address", mask.getMask());
-    Object result = call(smsc_component, profile_lookup_ex_method, Type.Types[Type.StringListType], args);
+    Object result = call(SMSC_COMPONENT_ID, PROFILE_LOOKUP_EX_METHOD_ID, Type.Types[Type.StringListType], args);
     if (result instanceof List)
       return new ProfileEx(mask, (List) result);
     else
@@ -206,7 +207,6 @@ public class Smsc extends Service
 
   public synchronized int profileUpdate(Mask mask, Profile newProfile) throws AdminException
   {
-    refreshComponents();
     HashMap args = new HashMap();
     args.put("address", mask.getMask());
     List profileArg = new LinkedList();
@@ -220,15 +220,14 @@ public class Smsc extends Service
     profileArg.add(newProfile.isDivertModifiable() ? "true" : "false");
 
     args.put("profile", profileArg);
-    return ((Long) call(smsc_component, profile_update_method, Type.Types[Type.IntType], args)).intValue();
+    return ((Long) call(SMSC_COMPONENT_ID, PROFILE_UPDATE_METHOD_ID, Type.Types[Type.IntType], args)).intValue();
   }
 
   public synchronized void profileDelete(Mask mask) throws AdminException
   {
-    refreshComponents();
     HashMap args = new HashMap();
     args.put("address", mask.getMask());
-    call(smsc_component, profile_delete_method, Type.Types[Type.IntType], args);
+    call(SMSC_COMPONENT_ID, PROFILE_DELETE_METHOD_ID, Type.Types[Type.IntType], args);
     profileDataSource.delete(mask);
   }
 
@@ -244,7 +243,6 @@ public class Smsc extends Service
 
   public synchronized void processCancelMessages(Collection messageIds) throws AdminException
   {
-    refreshComponents();
     StringBuffer ids = new StringBuffer(messageIds.size() * 10);
     StringBuffer srcs = new StringBuffer(messageIds.size() * 10);
     StringBuffer dsts = new StringBuffer(messageIds.size() * 10);
@@ -263,51 +261,12 @@ public class Smsc extends Service
     params.put("ids", ids.toString());
     params.put("sources", srcs.toString());
     params.put("destinations", dsts.toString());
-    call(smsc_component, process_cancel_messages_method, Type.Types[Type.StringType], params);
+    call(SMSC_COMPONENT_ID, PROCESS_CANCEL_MESSAGES_METHOD_ID, Type.Types[Type.StringType], params);
   }
 
   public synchronized void flushStatistics() throws AdminException
   {
-    refreshComponents();
-    call(smsc_component, flush_statistics_method, Type.Types[Type.StringType], new HashMap());
-  }
-
-  protected void checkComponents()
-  {
-    super.checkComponents();
-    if (apply_aliases_method == null || apply_routes_method == null || profile_lookup_method == null || profile_update_method == null || flush_statistics_method == null || process_cancel_messages_method == null || apply_smsc_config_method == null || apply_services_method == null || msc_registrate_method == null || msc_unregister_method == null || msc_block_method == null || msc_clear_method == null || msc_list_method == null || sme_add_method == null || sme_remove_method == null || sme_update_method == null || sme_status == null || sme_disconnect == null || log_get_categories == null || log_set_categories == null) {
-      smsc_component = (Component) getInfo().getComponents().get("SMSC");
-      apply_aliases_method = (Method) smsc_component.getMethods().get("apply_aliases");
-
-      apply_routes_method = (Method) smsc_component.getMethods().get("apply_routes");
-      load_routes_method = (Method) smsc_component.getMethods().get("load_routes");
-      trace_route_method = (Method) smsc_component.getMethods().get("trace_route");
-
-      profile_lookup_method = (Method) smsc_component.getMethods().get("lookup_profile");
-      profile_lookup_ex_method = (Method) smsc_component.getMethods().get("profile_lookup_ex");
-      profile_update_method = (Method) smsc_component.getMethods().get("update_profile");
-      profile_delete_method = (Method) smsc_component.getMethods().get("profile_delete");
-
-      flush_statistics_method = (Method) smsc_component.getMethods().get("flush_statistics");
-      process_cancel_messages_method = (Method) smsc_component.getMethods().get("process_cancel_messages");
-      apply_smsc_config_method = (Method) smsc_component.getMethods().get("apply_smsc_config");
-      apply_services_method = (Method) smsc_component.getMethods().get("apply_services");
-      apply_locale_resources_method = (Method) smsc_component.getMethods().get("apply_locale_resources");
-
-      msc_registrate_method = (Method) smsc_component.getMethods().get("msc_registrate");
-      msc_unregister_method = (Method) smsc_component.getMethods().get("msc_unregister");
-      msc_block_method = (Method) smsc_component.getMethods().get("msc_block");
-      msc_clear_method = (Method) smsc_component.getMethods().get("msc_clear");
-      msc_list_method = (Method) smsc_component.getMethods().get("msc_list");
-
-      sme_add_method = (Method) smsc_component.getMethods().get("sme_add");
-      sme_remove_method = (Method) smsc_component.getMethods().get("sme_remove");
-      sme_update_method = (Method) smsc_component.getMethods().get("sme_update");
-      sme_status = (Method) smsc_component.getMethods().get("sme_status");
-      sme_disconnect = (Method) smsc_component.getMethods().get("sme_disconnect");
-      log_get_categories = (Method) smsc_component.getMethods().get("log_get_categories");
-      log_set_categories = (Method) smsc_component.getMethods().get("log_set_categories");
-    }
+    call(SMSC_COMPONENT_ID, FLUSH_STATISTICS_METHOD_ID, Type.Types[Type.StringType], new HashMap());
   }
 
   public synchronized Config getSmscConfig()
@@ -334,47 +293,41 @@ public class Smsc extends Service
   public synchronized void applyConfig() throws AdminException
   {
     if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
-      refreshComponents();
-      call(smsc_component, apply_smsc_config_method, Type.Types[Type.StringType], new HashMap());
+      call(SMSC_COMPONENT_ID, APPLY_SMSC_CONFIG_METHOD_ID, Type.Types[Type.StringType], new HashMap());
     }
   }
 
   public synchronized void mscRegistrate(String msc) throws AdminException
   {
-    refreshComponents();
     HashMap args = new HashMap();
     args.put("msc", msc);
-    call(smsc_component, msc_registrate_method, Type.Types[Type.StringType], args);
+    call(SMSC_COMPONENT_ID, MSC_REGISTRATE_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized void mscUnregister(String msc) throws AdminException
   {
-    refreshComponents();
     HashMap args = new HashMap();
     args.put("msc", msc);
-    call(smsc_component, msc_unregister_method, Type.Types[Type.StringType], args);
+    call(SMSC_COMPONENT_ID, MSC_UNREGISTER_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized void mscBlock(String msc) throws AdminException
   {
-    refreshComponents();
     HashMap args = new HashMap();
     args.put("msc", msc);
-    call(smsc_component, msc_block_method, Type.Types[Type.StringType], args);
+    call(SMSC_COMPONENT_ID, MSC_BLOCK_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized void mscClear(String msc) throws AdminException
   {
-    refreshComponents();
     HashMap args = new HashMap();
     args.put("msc", msc);
-    call(smsc_component, msc_clear_method, Type.Types[Type.StringType], args);
+    call(SMSC_COMPONENT_ID, MSC_CLEAR_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized List mscList() throws AdminException
   {
-    refreshComponents();
-    Object result = call(smsc_component, msc_list_method, Type.Types[Type.StringListType], new HashMap());
+    Object result = call(SMSC_COMPONENT_ID, MSC_LIST_METHOD_ID, Type.Types[Type.StringListType], new HashMap());
     if (result instanceof List)
       return (List) result;
     else
@@ -442,26 +395,23 @@ public class Smsc extends Service
 
   public synchronized void smeAdd(SME sme) throws AdminException
   {
-    refreshComponents();
-    Object result = call(smsc_component, sme_add_method, Type.Types[Type.BooleanType], putSmeIntoMap(sme));
+    Object result = call(SMSC_COMPONENT_ID, SME_ADD_METHOD_ID, Type.Types[Type.BooleanType], putSmeIntoMap(sme));
     if (!(result instanceof Boolean && ((Boolean) result).booleanValue()))
       throw new AdminException("Error in response");
   }
 
   public synchronized void smeRemove(String smeId) throws AdminException
   {
-    refreshComponents();
     Map params = new HashMap();
     params.put("id", smeId);
-    Object result = call(smsc_component, sme_remove_method, Type.Types[Type.BooleanType], params);
+    Object result = call(SMSC_COMPONENT_ID, SME_REMOVE_METHOD_ID, Type.Types[Type.BooleanType], params);
     if (!(result instanceof Boolean && ((Boolean) result).booleanValue()))
       throw new AdminException("Error in response");
   }
 
   public synchronized void smeUpdate(SME sme) throws AdminException
   {
-    refreshComponents();
-    Object result = call(smsc_component, sme_update_method, Type.Types[Type.BooleanType], putSmeIntoMap(sme));
+    Object result = call(SMSC_COMPONENT_ID, SME_UPDATE_METHOD_ID, Type.Types[Type.BooleanType], putSmeIntoMap(sme));
     if (!(result instanceof Boolean && ((Boolean) result).booleanValue()))
       throw new AdminException("Error in response");
   }
@@ -470,10 +420,9 @@ public class Smsc extends Service
   {
     final long currentTime = System.currentTimeMillis();
     if (currentTime - Constants.ServicesRefreshTimeoutMillis > serviceRefreshTimeStamp) {
-      refreshComponents();
       serviceRefreshTimeStamp = currentTime;
       smeStatuses.clear();
-      Object result = call(smsc_component, sme_status, Type.Types[Type.StringListType], new HashMap());
+      Object result = call(SMSC_COMPONENT_ID, SME_STATUS_ID, Type.Types[Type.StringListType], new HashMap());
       if (!(result instanceof List))
         throw new AdminException("Error in response");
 
@@ -488,10 +437,9 @@ public class Smsc extends Service
 
   public synchronized void disconnectSmes(List smeIdsToDisconnect) throws AdminException
   {
-    refreshComponents();
     Map params = new HashMap();
     params.put("ids", smeIdsToDisconnect);
-    Object result = call(smsc_component, sme_disconnect, Type.Types[Type.BooleanType], params);
+    Object result = call(SMSC_COMPONENT_ID, SME_DISCONNECT_ID, Type.Types[Type.BooleanType], params);
     if (!(result instanceof Boolean && ((Boolean) result).booleanValue()))
       throw new AdminException("Error in response");
   }
@@ -499,8 +447,7 @@ public class Smsc extends Service
   public synchronized Map getLogCategories() throws AdminException
   {
     Map return_result = new HashMap();
-    refreshComponents();
-    Object resultO = call(smsc_component, log_get_categories, Type.Types[Type.StringListType], new HashMap());
+    Object resultO = call(SMSC_COMPONENT_ID, LOG_GET_CATEGORIES_ID, Type.Types[Type.StringListType], new HashMap());
     if (resultO instanceof List) {
       List result = (List) resultO;
       for (Iterator i = result.iterator(); i.hasNext();) {
@@ -520,7 +467,6 @@ public class Smsc extends Service
 
   public synchronized void setLogCategories(Map cats) throws AdminException
   {
-    refreshComponents();
     Map params = new HashMap();
     LinkedList catsList = new LinkedList();
     params.put("categories", catsList);
@@ -530,14 +476,13 @@ public class Smsc extends Service
       final String catPriority = (String) entry.getValue();
       catsList.add(catName + LOGGER_DELIMITER + catPriority);
     }
-    call(smsc_component, log_set_categories, Type.Types[Type.BooleanType], params);
+    call(SMSC_COMPONENT_ID, LOG_SET_CATEGORIES_ID, Type.Types[Type.BooleanType], params);
   }
 
   public synchronized void applyLocaleResources() throws AdminException
   {
     if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
-      refreshComponents();
-      call(smsc_component, apply_locale_resources_method, Type.Types[Type.StringType], new HashMap());
+      call(SMSC_COMPONENT_ID, APPLY_LOCALE_RESOURCES_METHOD_ID, Type.Types[Type.StringType], new HashMap());
     }
   }
 
