@@ -150,7 +150,7 @@ namespace smsc { namespace store
             return count;
         }
         inline unsigned getBusyConnectionsCount() {
-            return (size - count);
+            return (count-idleCount);
         }
         inline unsigned getIdleConnectionsCount() {
             return idleCount;

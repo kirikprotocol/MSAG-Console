@@ -176,7 +176,7 @@ Connection* ConnectionPool::pop(void)
     Connection *connection = idleHead;
     if (idleHead) 
     {
-        idleHead->setNextConnection(idleHead->getNextConnection());
+        idleHead = idleHead->getNextConnection();
     }
     if (!idleHead) idleTail = 0L;
 
@@ -188,7 +188,7 @@ ConnectionPool::~ConnectionPool()
 {
     MutexGuard  guard(monitor);
 
-    for (int i=0; i<connections.Count(); i++)
+    while (connections.Count())
     {
         Connection* connection=0L;
         (void) connections.Pop(connection);
@@ -202,6 +202,7 @@ ConnectionPool::~ConnectionPool()
 
 bool ConnectionPool::hasFreeConnections()
 {
+    MutexGuard  guard(monitor);
     return (idleCount || count < size);
 }
 
@@ -223,12 +224,18 @@ Connection* ConnectionPool::getConnection()
         return queue.connection;
     }
     
-    if (count < size) {
-        count++;
-        return (new Connection(dbInstance, dbUserName, dbUserPassword)); 
+    if (idleCount)
+    {
+        return pop();
     }
-    
-    return pop();
+    else if (count < size) 
+    {
+        Connection* connection =
+                    new Connection(dbInstance, dbUserName, dbUserPassword);
+        (void) connections.Push(connection);
+        count++;
+        return connection; 
+    }
 }
 
 void ConnectionPool::freeConnection(Connection* connection)
@@ -249,17 +256,25 @@ void ConnectionPool::freeConnection(Connection* connection)
     
     if (count > size)
     {
+        for (int i=0; i<connections.Count(); i++)
+        {
+            if (connections[i] == connection)
+            {
+                connections.Delete(i); break;
+            }
+        }
+        if (connection) delete connection;
         count--;
-        delete connection;
     }
-    else {
+    else 
+    {
         push(connection);
     }
 }
 
 void ConnectionPool::setSize(unsigned new_size) 
 {
-    if (!new_size || new_size == size) return;
+    if (!new_size || new_size == size || count>size) return;
     MutexGuard  guard(monitor);
     
     if (new_size > SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE_LIMIT)
@@ -277,7 +292,14 @@ void ConnectionPool::setSize(unsigned new_size)
         while(idleCount && counter--)
         {
             Connection* connection = pop();
-            delete connection;
+            for (int i=0; i<connections.Count(); i++)
+            {
+                if (connections[i] == connection)
+                {
+                    connections.Delete(i); break;
+                }
+            }
+            if (connection) delete connection;
             count--;
         }
     } 
@@ -289,12 +311,13 @@ void ConnectionPool::setSize(unsigned new_size)
             Connection* connection = 
                     new Connection(dbInstance, dbUserName, dbUserPassword);
             (void) connections.Push(connection);
-            
+            count++;
+
             // Notify waiting threads & give them new connections
             ConnectionQueue *queue = head;
             head = head->next;
             if (!head) tail = 0L;
-            queueLen--; count++;
+            queueLen--; 
             queue->connection = connection;
             monitor.notify(&(queue->condition));
         }
