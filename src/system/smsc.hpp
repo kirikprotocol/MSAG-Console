@@ -117,6 +117,7 @@ public:
     deliverOkCounter=0;
     deliverErrCounter=0;
     rescheduleCounter=0;
+    startTime=0;
   };
   ~Smsc();
   void init(const SmscConfigs& cfg);

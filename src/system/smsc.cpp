@@ -381,7 +381,8 @@ void Smsc::init(const SmscConfigs& cfg)
         &deliverErrCounter,
         &rescheduleCounter
       );
-      sm->setStartTime(time(NULL)+ut);
+      startTime=time(NULL)-ut;
+      sm->setStartTime(startTime);
       fclose(f);
       remove("stats.txt");
     }
@@ -526,7 +527,7 @@ void Smsc::init(const SmscConfigs& cfg)
 
 void Smsc::run()
 {
-  startTime=time(NULL);
+  if(startTime==0)startTime=time(NULL);
   {
     Event accstarted;
     smppio::SmppAcceptor *acc=new
