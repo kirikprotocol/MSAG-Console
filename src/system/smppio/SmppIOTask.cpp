@@ -486,7 +486,6 @@ int SmppInputThread::Execute()
 
                       smsc_log_debug(snmpLog,"register sme:%s successful",sid.c_str());
                       proxy->setId(sid,proxyIndex);
-                      proxy->putIncomingCommand(SmscCommand::makeSMEAlert(proxyIndex));
                       __trace2__("NEWPROXY: p=%p, smid=%s, forceDC=%s",proxy,sid.c_str(),si.forceDC?"true":"false");
                     }else
                     {
@@ -528,6 +527,14 @@ int SmppInputThread::Execute()
                     __trace__("registration failed: unknown reason");
                     //delete proxy;
                     err=true;
+                  }
+                  if(!err)
+                  {
+                    try{
+                      proxy->putIncomingCommand(SmscCommand::makeSMEAlert(proxyIndex));
+                    }catch(...)
+                    {
+                    }
                   }
                 }
                 resppdu.set_scInterfaceVersion(0x34);

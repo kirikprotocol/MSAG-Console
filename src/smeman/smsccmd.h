@@ -70,7 +70,8 @@ enum CommandId
   SUBMIT_MULTI_SM_RESP,   //23
   ALERT_NOTIFICATION,     //24
   SMEALERT,               //25
-  KILLMRCACHEITEM         //26
+  KILLMRCACHEITEM,        //26
+  KILLEXPIREDTRANSACTIONS //27
 };
 
 enum CommandStatus{
@@ -489,6 +490,7 @@ struct _SmscCommand
     case ENQUIRELINK:
     case ENQUIRELINK_RESP:
     case SMEALERT:
+    case KILLEXPIREDTRANSACTIONS:
       // nothing to delete
       break;
     default:
@@ -920,6 +922,18 @@ public:
     return cmd;
   }
 
+  static SmscCommand makeKillExpiredTransactions()
+  {
+    SmscCommand cmd;
+    cmd.cmd=new _SmscCommand;
+    _SmscCommand& _cmd=*cmd.cmd;
+    _cmd.ref_count=1;
+    _cmd.cmdid=KILLEXPIREDTRANSACTIONS;
+    _cmd.dta=0;
+    _cmd.dialogId=0;
+    return cmd;
+  }
+
   static void makeSMSBody(SMS* sms,const SmppHeader* pdu,bool forceDC)
   {
     const PduXSm* xsm = reinterpret_cast<const PduXSm*>(pdu);
@@ -1280,6 +1294,28 @@ public:
         unb->header.set_sequenceNumber(c.get_dialogId());
         unb->header.set_commandStatus(makeSmppStatus((uint32_t)c.status));
         return reinterpret_cast<SmppHeader*>(unb.release());
+      }
+    case REPLACE:
+      {
+        auto_ptr<PduReplaceSm> rpl(new PduReplaceSm);
+        rpl->header.set_commandId(SmppCommandSet::REPLACE_SM);
+        rpl->header.set_sequenceNumber(c.get_dialogId());
+        rpl->header.set_commandStatus(0);
+
+        const ReplaceSm *r=&c.get_replaceSm();
+
+        rpl->set_messageId(r->messageId.get());
+        rpl->set_source(Address2PduAddress(r->sourceAddr.get()));
+        char buf[64];
+        cTime2SmppTime(r->scheduleDeliveryTime,buf);
+        rpl->set_scheduleDeliveryTime(buf);
+        cTime2SmppTime(r->validityPeriod,buf);
+        rpl->set_validityPeriod(buf);
+        rpl->set_registredDelivery(r->registeredDelivery);
+        rpl->set_smDefaultMsgId(r->smDefaultMsgId);
+        rpl->shortMessage.copy(r->shortMessage.get(),r->smLength);
+
+        return reinterpret_cast<SmppHeader*>(rpl.release());
       }
     case REPLACE_RESP:
       {

@@ -347,6 +347,24 @@ void Smsc::init(const SmscConfigs& cfg)
   //mrCache.assignStore(store);
   smsc_log_info(log, "MR cache inited" );
 
+  {
+    using namespace smsc::db;
+    using smsc::util::config::ConfigView;
+    const char* OCI_DS_FACTORY_IDENTITY = "OCI";
+
+
+    std::auto_ptr<ConfigView> dsConfig(new smsc::util::config::ConfigView(*cfg.cfgman, "StartupLoader"));
+    DataSourceLoader::loadup(dsConfig.get());
+
+    dataSource = DataSourceFactory::getDataSource(OCI_DS_FACTORY_IDENTITY);
+    if (!dataSource) throw Exception("Failed to get DataSource");
+    std::auto_ptr<ConfigView> config(new ConfigView(*cfg.cfgman,"DataSource"));
+
+    dataSource->init(config.get());
+    smsc_log_info(log, "Datasource configured" );
+  }
+
+  StateMachine::dataSource=dataSource;
 
   {
     smsc_log_info(log, "Starting statemachines" );
@@ -400,22 +418,7 @@ void Smsc::init(const SmscConfigs& cfg)
     tp.startTask(sm);
     smsc_log_info(log, "Speedmonitor started" );
   }
-  {
-    using namespace smsc::db;
-    using smsc::util::config::ConfigView;
-    const char* OCI_DS_FACTORY_IDENTITY = "OCI";
 
-
-    std::auto_ptr<ConfigView> dsConfig(new smsc::util::config::ConfigView(*cfg.cfgman, "StartupLoader"));
-    DataSourceLoader::loadup(dsConfig.get());
-
-    dataSource = DataSourceFactory::getDataSource(OCI_DS_FACTORY_IDENTITY);
-    if (!dataSource) throw Exception("Failed to get DataSource");
-    std::auto_ptr<ConfigView> config(new ConfigView(*cfg.cfgman,"DataSource"));
-
-    dataSource->init(config.get());
-    smsc_log_info(log, "Datasource configured" );
-  }
   statMan=new smsc::smppgw::stat::GWStatisticsManager(*dataSource);
   tp2.startTask(statMan);
   smsc_log_info(log, "Statistics manager started" );
@@ -492,7 +495,13 @@ void Smsc::init(const SmscConfigs& cfg)
       gwcfg.smppTimeOut=cv->getInt((*it+".responseTimeout").c_str());
       GatewaySme *gwsme=new GatewaySme(gwcfg,&smeman);
       gwsme->setId(gwcfg.sid,smeman.lookup(gwcfg.sid));
-      gwsme->setPrefix(cv->getInt((*it+".uniqueMsgIdPrefix").c_str()));
+      uint8_t uid=cv->getInt((*it+".uniqueMsgIdPrefix").c_str());
+      if(gwSmeMap[uid])
+      {
+        throw Exception("Duplicate gwsmeid %d!",(int)uid);
+      }
+      gwSmeMap[uid]=gwsme;
+      gwsme->setPrefix(uid);
       smeman.registerInternallSmeProxy(gwcfg.sid,gwsme);
       tp.startTask(gwsme);
     }
@@ -548,12 +557,9 @@ void Smsc::run()
     __trace__("SMPPIO started");
     if(!acc->isStarted())
     {
-      throw Exception("Failed to start SMPP or MAP acceptor");
+      throw Exception("Failed to start SMPP or MAP eduler created in init");
     }
   }
-
-
-  // start rescheduler created in init
   // start on thread pool 2 to shutdown it after state machines
 
 #ifdef SNMP

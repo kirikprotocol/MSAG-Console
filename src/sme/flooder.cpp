@@ -8,6 +8,7 @@
 #include "util/timeslotcounter.hpp"
 #include "logger/Logger.h"
 #include <vector>
+#include "util/sleep.h"
 
 using namespace smsc::sms;
 using namespace smsc::sme;
@@ -22,6 +23,8 @@ const int MAX_UNRESPONDED_LOW=2000;
 
 
 int stopped=0;
+
+Mutex cntMutex;
 
 int sokcnt=0;
 int serrcnt=0;
@@ -42,12 +45,17 @@ public:
       resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
       resp.get_header().set_commandStatus(SmppStatusSet::ESME_ROK);
       trans->sendDeliverySmResp(resp);
-      reccnt++;
+      {
+        MutexGuard g(cntMutex);
+        reccnt++;
+      }
     }else
     if(pdu->get_commandId()==SmppCommandSet::SUBMIT_SM_RESP)
     {
       __trace2__("received submit sm resp:%x, seq=%d\n",pdu->get_commandStatus(),pdu->get_sequenceNumber());
       //printf("\nReceived async submit sm resp:%d\n",pdu->get_commandStatus());
+      MutexGuard g(cntMutex);
+
       if(pdu->get_commandStatus()==SmppStatusSet::ESME_ROK)
       {
         sokcnt++;
@@ -147,7 +155,7 @@ int main(int argc,char* argv[])
     delay=atoi(argv[7]);
   }
 
-  Event slev;
+  //Event slev;
 
   SmppSession ss(cfg,&lst);
   SmppTransmitter *tr=ss.getSyncTransmitter();
@@ -169,7 +177,7 @@ int main(int argc,char* argv[])
     //s.setSubmitTime(0);
     //s.setPriority(0);
     //s.setProtocolIdentifier(0);
-    s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
+    s.setIntProperty(Tag::SMPP_ESM_CLASS,2);
     s.setDeliveryReport(0);
     s.setArchivationRequested(false);
     s.setIntProperty(Tag::SMPP_MS_VALIDITY,3);
@@ -213,15 +221,19 @@ int main(int argc,char* argv[])
           if(i>=addrs.Count())i=0;
         }
       }
-      slev.Wait(delay);
+      //slev.Wait(delay);
+      millisleep(delay);
       time_t now=time(NULL);
       if((cnt%500)==0 || now-lasttime>5)
       {
-        printf("ut:%d sbm:%d sok:%d serr:%d recv:%d avgsp: %lf lstsp:%lf\n",
-          now-starttime,cnt,sokcnt,serrcnt,reccnt,
-          (double)sokcnt/(now-starttime),
-          (double)sok_time_cnt.Get()/30.0
-          );
+        {
+          MutexGuard g(cntMutex);
+          printf("ut:%d sbm:%d sok:%d serr:%d recv:%d avgsp: %lf lstsp:%lf\n",
+            now-starttime,cnt,sokcnt,serrcnt,reccnt,
+            (double)sokcnt/(now-starttime),
+            (double)sok_time_cnt.Get()/30.0
+            );
+        }
         fflush(stdout);
         lasttime=time(NULL);
       }

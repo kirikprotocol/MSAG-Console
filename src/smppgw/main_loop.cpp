@@ -149,10 +149,12 @@ void Smsc::mainLoop()
   Event e;
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.mainLoop");
   thr_setprio(thr_self(),127);
+  time_t lastKillTrCmd=time(NULL);
   for(;;)
   {
     do
     {
+
       smeman.getFrame(frame,WAIT_DATA_TIMEOUT);
       if ( stopFlag ) return;
       smsc::system::Task task;
@@ -164,6 +166,14 @@ void Smsc::mainLoop()
         //eventqueue.enqueue(id,SmscCommand::makeAlert(task.sms));
         generateAlert(id,task.sms);
       }
+
+      time_t now=time(NULL);
+      if(now-lastKillTrCmd>2)
+      {
+        eventqueue.enqueue(0,SmscCommand::makeKillExpiredTransactions());
+        lastKillTrCmd=now;
+      }
+
     }while(!frame.size());
 
 
@@ -344,7 +354,8 @@ void Smsc::processCommand(SmscCommand& cmd)
     case __CMD__(SUBMIT):
     {
       //SMS &sms=*cmd->get_sms();
-      id=1;//NEW ID!!!
+      static int idCounter=1;
+      id=idCounter++;//NEW ID!!!
       __trace2__("main loop submit: seq=%d, id=%lld",cmd->get_dialogId(),id);
       break;
     }

@@ -27,6 +27,7 @@
 
 #include "core/buffers/XHash.hpp"
 
+
 namespace smsc{
 namespace smppgw{
 
@@ -106,6 +107,8 @@ struct SmscConfigs{
   Hash<string> *licconfig;
 };
 
+class GatewaySme;
+
 class Smsc
 {
 public:
@@ -120,6 +123,7 @@ public:
     startTime=0;
     license.maxsms=0;
     license.expdate=0;
+    memset(gwSmeMap,0,sizeof(gwSmeMap));
   };
   ~Smsc();
   void init(const SmscConfigs& cfg);
@@ -298,6 +302,11 @@ public:
     }
   }
 
+  GatewaySme* getGwSme(uint8_t uid)
+  {
+    return gwSmeMap[uid];
+  }
+
 protected:
 
   void processCommand(SmscCommand& cmd);
@@ -342,6 +351,8 @@ protected:
   string ussdCenterAddr;
   int    ussdSSN;
   time_t startTime;
+
+  GatewaySme* gwSmeMap[256];
 
   int eventQueueLimit;
 

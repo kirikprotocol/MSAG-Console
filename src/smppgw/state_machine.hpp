@@ -43,6 +43,8 @@ public:
   time_t maxValidTime;
   Address scAddress;
 
+  static smsc::db::DataSource* dataSource;
+
 protected:
 
   smsc::system::EventQueue& eq;
@@ -54,6 +56,7 @@ protected:
   int protocolId;
   std::string smscSmeId;
 
+
   smsc::system::StateType submit(smsc::system::Tuple& t);
   smsc::system::StateType submitResp(smsc::system::Tuple& t);
   smsc::system::StateType delivery(smsc::system::Tuple& t);
@@ -63,6 +66,7 @@ protected:
   smsc::system::StateType query(smsc::system::Tuple& t);
   smsc::system::StateType cancel(smsc::system::Tuple& t);
 
+  void KillExpiredTrans();
 
 };
 

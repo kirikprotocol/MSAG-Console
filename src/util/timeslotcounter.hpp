@@ -85,6 +85,13 @@ public:
     slot[last]+=inc;
   }
 
+  void IncEven(T inc)
+  {
+    int mps=inc/slotSize;
+    if(mps==0)mps=1;
+    IncDistr(inc,mps);
+  }
+
   T Get()
   {
     Inc(0);

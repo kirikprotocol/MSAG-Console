@@ -23,6 +23,26 @@ namespace smpp{
 using std::string;
 using namespace smsc::sms;
 
+inline Address PduAddress2Address(const PduAddress& source)
+{
+  return Address(source.value.cstr()?strlen(source.value.cstr()):1,
+                 source.typeOfNumber,
+                 source.numberingPlan,
+                 source.value.cstr()?source.value.cstr():"0");
+}
+
+inline PduAddress Address2PduAddress(const Address& addr)
+{
+  PduAddress src;
+  char val[21];
+  int val_length = addr.getValue(val);
+  __require__ ( val_length <= (signed int)sizeof(val) );   // fatal if out of range !!!!
+  src.set_value(val);
+  src.set_typeOfNumber(addr.getTypeOfNumber());
+  src.set_numberingPlan(addr.getNumberingPlan());
+  return src;
+}
+
 inline void fillOptional(SmppOptional& optional,SMS* sms,bool forceDC=false)
 {
   if ( sms->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) )
@@ -103,16 +123,16 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,bool forceDC=false)
   }
 
   if ( sms->hasStrProperty(Tag::SMSC_SUPPORTED_LOCALE) )
-  	optional.set_supported_locale(sms->getStrProperty(Tag::SMSC_SUPPORTED_LOCALE).c_str());
+    optional.set_supported_locale(sms->getStrProperty(Tag::SMSC_SUPPORTED_LOCALE).c_str());
 
   if ( sms->hasStrProperty(Tag::SMSC_IMSI_ADDRESS) )
-  	optional.set_imsi_address(sms->getStrProperty(Tag::SMSC_IMSI_ADDRESS).c_str());
-  
+    optional.set_imsi_address(sms->getStrProperty(Tag::SMSC_IMSI_ADDRESS).c_str());
+
   if ( sms->hasStrProperty(Tag::SMSC_MSC_ADDRESS) )
-  	optional.set_msc_address(sms->getStrProperty(Tag::SMSC_MSC_ADDRESS).c_str());
+    optional.set_msc_address(sms->getStrProperty(Tag::SMSC_MSC_ADDRESS).c_str());
 
   if ( sms->hasIntProperty(Tag::SMSC_SUPPORTED_CODESET) )
-  	optional.set_supported_codeset( sms->getIntProperty(Tag::SMSC_SUPPORTED_CODESET) );
+    optional.set_supported_codeset( sms->getIntProperty(Tag::SMSC_SUPPORTED_CODESET) );
 }
 
 inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms,bool forceDC=false)
@@ -312,16 +332,16 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,bool forceDC=false)
   }
 
   if ( optional.has_supported_locale() )
-  	sms->setStrProperty( Tag::SMSC_SUPPORTED_LOCALE, optional.get_supported_locale() );
+    sms->setStrProperty( Tag::SMSC_SUPPORTED_LOCALE, optional.get_supported_locale() );
 
-	if ( optional.has_imsi_address() )
-		sms->setStrProperty( Tag::SMSC_IMSI_ADDRESS, optional.get_imsi_address() );
+  if ( optional.has_imsi_address() )
+    sms->setStrProperty( Tag::SMSC_IMSI_ADDRESS, optional.get_imsi_address() );
 
-	if ( optional.has_msc_address() )
-		sms->setStrProperty( Tag::SMSC_MSC_ADDRESS, optional.get_msc_address() );
+  if ( optional.has_msc_address() )
+    sms->setStrProperty( Tag::SMSC_MSC_ADDRESS, optional.get_msc_address() );
 
-	if ( optional.has_supported_codeset() )
-		sms->setIntProperty( Tag::SMSC_SUPPORTED_CODESET, optional.get_supported_codeset() );
+  if ( optional.has_supported_codeset() )
+    sms->setIntProperty( Tag::SMSC_SUPPORTED_CODESET, optional.get_supported_codeset() );
 
 }
 

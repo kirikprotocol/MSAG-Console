@@ -72,9 +72,9 @@ struct COStr //: public MemoryManagerUnit
   //void dispose() {if ( text ) smartFree(text); text = 0;}
   void dispose() {if ( text ) delete text; text = 0;}
   ~COStr(){ /*__trace__(__PRETTY_FUNCTION__); __watch__(text);*/ dispose(); }
-  operator const char*(){/*__require__(text!=NULL);*/ return text;}
-  const char* cstr(){/*__require__(text!=NULL);*/ return text;}
-  uint16_t size(){ return text ? strlen( text ) : 0 ; }
+  operator const char*()const{/*__require__(text!=NULL);*/ return text;}
+  const char* cstr()const{/*__require__(text!=NULL);*/ return text;}
+  uint16_t size()const{ return text ? strlen( text ) : 0 ; }
   void copy(const char* src)
   {
 //    __require__ ( src != NULL );
