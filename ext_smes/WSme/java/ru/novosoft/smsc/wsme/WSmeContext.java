@@ -13,6 +13,7 @@ import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.AdminException;
 
 import java.security.Principal;
+import java.util.HashMap;
 
 public class WSmeContext
 {
@@ -21,12 +22,11 @@ public class WSmeContext
   private WSme wsme = null;
   private Service wsmeService = null;
   private SMSCAppContext appContext;
-  private Principal loginedUserPrincipal;
+  private HashMap preferences = new HashMap();
 
-  private WSmeContext(SMSCAppContext appContext, Principal loginedUserPrincipal)
+  private WSmeContext(SMSCAppContext appContext)
   {
     this.appContext = appContext;
-    this.loginedUserPrincipal = loginedUserPrincipal;
     try {
       wsmeService = this.appContext.getHostsManager().getService(Constants.WSME_SME_ID);
       wsme = new WSme(wsmeService);
@@ -35,25 +35,36 @@ public class WSmeContext
       e.printStackTrace();
     }
   }
-  public static void init(SMSCAppContext appContext, Principal loginedUserPrincipal) {
+  public static void init(SMSCAppContext appContext) {
     if (instance == null) {
-      instance = new WSmeContext(appContext, loginedUserPrincipal);
+      instance = new WSmeContext(appContext);
     }
   }
   public static WSmeContext getInstance() {
     return instance;
   }
 
+  synchronized public WSmePreferences getWSmePreferences(Principal loginedUser)
+  {
+    WSmePreferences userPreferences = null;
+    Object obj = preferences.get(loginedUser.getName());
+    if (obj != null && obj instanceof WSmePreferences) {
+      System.out.println("Got old prefs for: "+loginedUser.getName());
+      userPreferences = (WSmePreferences)obj;
+    } else {
+      userPreferences = new WSmePreferences();
+      System.out.println("Got new prefs for: "+loginedUser.getName());
+      preferences.put(loginedUser.getName(), userPreferences);
+    }
+    return userPreferences;
+  }
+  synchronized public SMSCAppContext getAppContext() {
+    return appContext;
+  }
   synchronized public Service getWsmeService() {
     return wsmeService;
   }
   synchronized public WSme getWsme() {
     return wsme;
-  }
-  synchronized public Principal getLoginedUserPrincipal() {
-    return loginedUserPrincipal;
-  }
-  synchronized public SMSCAppContext getAppContext() {
-    return appContext;
   }
 }

@@ -11,6 +11,7 @@ import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.wsme.WSmeContext;
 import ru.novosoft.smsc.wsme.WSme;
 import ru.novosoft.smsc.wsme.WSmeErrors;
+import ru.novosoft.smsc.wsme.WSmePreferences;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.AdminException;
@@ -18,6 +19,7 @@ import ru.novosoft.smsc.admin.service.ServiceInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
+import java.security.Principal;
 
 public class WSmeFormBean extends IndexBean
 {
@@ -27,6 +29,7 @@ public class WSmeFormBean extends IndexBean
   public final static int RESULT_ADS = 4000;
 
   protected WSme wsme = null;
+  protected WSmePreferences wsmePreferences = null;
 
   private Config config = null;
   private Map params = new HashMap();
@@ -37,9 +40,9 @@ public class WSmeFormBean extends IndexBean
 
   private int menuSelection = RESULT_OK;
 
-  public int process(HttpServletRequest request, List errors)
+  public int process(HttpServletRequest request, List errors, Principal loginedUserPrincipal)
   {
-    int result = this.process(errors);
+    int result = this.process(errors, loginedUserPrincipal);
     if (result == RESULT_OK || result == RESULT_DONE)
     {
       result = processParams(request);
@@ -56,13 +59,16 @@ public class WSmeFormBean extends IndexBean
     return result;
   }
 
-  protected int process(List errors)
+  protected int process(List errors, Principal loginedUserPrincipal)
   {
     WSmeContext wSmeContext = WSmeContext.getInstance();
-    if (wsme == null) wsme = wSmeContext.getWsme();
+    if (wsme == null)
+      wsme = wSmeContext.getWsme();
+    if (wsmePreferences == null)
+      wsmePreferences = wSmeContext.getWSmePreferences(loginedUserPrincipal);
 
     int result = super.process(wSmeContext.getAppContext(),
-                               errors, wSmeContext.getLoginedUserPrincipal());
+                               errors, loginedUserPrincipal);
     if (result != RESULT_OK)
       return result;
 

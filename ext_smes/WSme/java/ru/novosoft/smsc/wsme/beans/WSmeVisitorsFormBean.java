@@ -9,10 +9,15 @@ package ru.novosoft.smsc.wsme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.Mask;
+import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.wsme.WSmeErrors;
+import ru.novosoft.smsc.wsme.WSmePreferences;
+import ru.novosoft.smsc.wsme.AdRow;
+import ru.novosoft.smsc.wsme.LangRow;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.security.Principal;
 
 public class WSmeVisitorsFormBean extends WSmeBaseFormBean
 {
@@ -20,10 +25,11 @@ public class WSmeVisitorsFormBean extends WSmeBaseFormBean
 
   private List visitors = new ArrayList();
 
-  public int process(List errors)
+  public int process(List errors, Principal loginedUserPrincipal)
   {
-    pageSize = 10;
-    int result = super.process(errors);
+    int result = super.process(errors, loginedUserPrincipal);
+    pageSize = (wsmePreferences != null) ?
+        wsmePreferences.getVisitorsPageSize():WSmePreferences.DEFAULT_visitorsPageSize;
     if (result != RESULT_OK && result != RESULT_VISITORS) return result;
     result = RESULT_OK;
 
@@ -80,7 +86,8 @@ public class WSmeVisitorsFormBean extends WSmeBaseFormBean
     int result = RESULT_OK;
     try {
       visitors = wsme.getVisitors();
-      visitors = getPaginatedList(visitors);
+      MaskList maskList = wsmePreferences.getVisitorsFilter().getMaskList();
+      visitors = getPaginatedList(getMaskFilteredList(visitors, maskList));
     }
     catch (AdminException exc) {
       clearPaginatedList(visitors);

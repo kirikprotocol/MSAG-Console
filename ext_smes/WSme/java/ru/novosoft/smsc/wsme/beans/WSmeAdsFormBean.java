@@ -9,9 +9,11 @@ package ru.novosoft.smsc.wsme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.wsme.WSmeErrors;
+import ru.novosoft.smsc.wsme.WSmePreferences;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.security.Principal;
 
 public class WSmeAdsFormBean extends WSmeBaseFormBean
 {
@@ -23,10 +25,11 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
 
   public final static char ID_LANG_SEPARATOR = '-';
 
-  public int process(List errors)
+  public int process(List errors, Principal loginedUserPrincipal)
   {
-    pageSize = 10;
-    int result = super.process(errors);
+    int result = super.process(errors, loginedUserPrincipal);
+    pageSize = (wsmePreferences != null) ?
+        wsmePreferences.getAdsPageSize():WSmePreferences.DEFAULT_adsPageSize;
     if (result != RESULT_OK && result != RESULT_ADS) return result;
     result = RESULT_OK;
 
@@ -90,6 +93,7 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
     int result = RESULT_OK;
     try {
       ads = wsme.getAds();
+      ads = getLangFilteredList(ads, wsmePreferences.getAdsFilter().getLangList());
       ads = getPaginatedList(ads);
     }
     catch (AdminException exc) {

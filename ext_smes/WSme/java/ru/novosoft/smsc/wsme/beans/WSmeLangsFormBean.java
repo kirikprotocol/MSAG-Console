@@ -9,10 +9,14 @@ package ru.novosoft.smsc.wsme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.Mask;
+import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.wsme.WSmeErrors;
+import ru.novosoft.smsc.wsme.WSmePreferences;
+import ru.novosoft.smsc.wsme.LangRow;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.security.Principal;
 
 public class WSmeLangsFormBean extends WSmeBaseFormBean
 {
@@ -21,10 +25,11 @@ public class WSmeLangsFormBean extends WSmeBaseFormBean
 
   private List langs = new ArrayList();
 
-  public int process(List errors)
+  public int process(List errors, Principal loginedUserPrincipal)
   {
-    pageSize = 10;
-    int result = super.process(errors);
+    int result = super.process(errors, loginedUserPrincipal);
+    pageSize = (wsmePreferences != null) ?
+        wsmePreferences.getLangsPageSize():WSmePreferences.DEFAULT_langsPageSize;
     if (result != RESULT_OK && result != RESULT_LANGS) return result;
     result = RESULT_OK;
 
@@ -80,6 +85,8 @@ public class WSmeLangsFormBean extends WSmeBaseFormBean
     int result = RESULT_OK;
     try {
       langs = wsme.getLangs();
+      langs = getMaskFilteredList(langs, wsmePreferences.getLangsFilter().getMaskList());
+      langs = getLangFilteredList(langs, wsmePreferences.getLangsFilter().getLangList());
       langs = getPaginatedList(langs);
     }
     catch (AdminException exc) {

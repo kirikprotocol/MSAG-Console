@@ -1,3 +1,3 @@
 <%
-WSmeContext.init(appContext, loginedUserPrincipal);
+WSmeContext.init(appContext);
 %>

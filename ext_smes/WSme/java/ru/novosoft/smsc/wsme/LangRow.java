@@ -14,7 +14,7 @@ public class LangRow
 
   public LangRow(String mask, String lang)
   {
-    this.mask = mask;
-    this.lang = lang;
+    this.mask = (mask != null) ? mask.trim():null;
+    this.lang = (lang != null) ? lang.trim():null;
   }
 }

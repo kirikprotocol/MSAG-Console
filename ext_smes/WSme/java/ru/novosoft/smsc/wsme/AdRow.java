@@ -16,7 +16,7 @@ public class AdRow
   public AdRow(int id, String lang, String ad)
   {
     this.id = id;
-    this.lang = lang;
-    this.ad = ad;
+    this.lang = (lang != null) ? lang.trim():null;
+    this.ad = (ad != null) ? ad.trim():null;
   }
 }

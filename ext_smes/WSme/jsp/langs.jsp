@@ -14,7 +14,7 @@
   //MENU1_SELECTION = "WSME_INDEX";
 
   int beanResult = bean.RESULT_OK;
-  switch(beanResult = bean.process(errorMessages))
+  switch(beanResult = bean.process(errorMessages, loginedUserPrincipal))
   {
     case WSmeFormBean.RESULT_VISITORS:
       response.sendRedirect("visitors.jsp");
@@ -26,6 +26,8 @@
       response.sendRedirect("index.jsp");
       return;
     case WSmeFormBean.RESULT_FILTER:
+      response.sendRedirect("langs_filter.jsp");
+      return;
     case WSmeFormBean.RESULT_LANGS:
       response.sendRedirect("langs.jsp?startPosition="+bean.getStartPosition()+
           "&pageSize="+bean.getPageSize());
