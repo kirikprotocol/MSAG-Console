@@ -408,7 +408,7 @@ public:
 static void appSignalHandler(int sig)
 {
     logger.debug("Signal %d handled !", sig);
-    if (sig==SIGTERM || sig==SIGINT)
+    if (sig==smsc::system::SHUTDOWN_SIGNAL || sig==SIGINT)
     {
         logger.info("Stopping ...");
         if (bAdminListenerInited) adminListener.shutdown();
@@ -430,7 +430,7 @@ int main(void)
     sigemptyset(&set);
     sigprocmask(SIG_SETMASK, &set, &old);
     sigset(smsc::system::SHUTDOWN_SIGNAL, appSignalHandler);
-    sigset(SIGINT, appSignalHandler);
+    //sigset(SIGINT, appSignalHandler);
 
     atexit(atExitHandler);
 
@@ -499,7 +499,7 @@ int main(void)
             logger.info("Connected.");
             
             sigemptyset(&set);
-            sigaddset(&set, SIGINT);
+            //sigaddset(&set, SIGINT);
             sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
             sigprocmask(SIG_SETMASK, &set, &old);
             

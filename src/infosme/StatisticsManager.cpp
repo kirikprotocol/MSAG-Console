@@ -181,7 +181,7 @@ void StatisticsManager::flushCounters(short index)
         if (!statement)
             throw Exception("Failed to obtain statement for statistic update");
 
-        logger.debug("Flushing statistics for period: %d / %d", period, time(0));
+        logger.debug("Flushing statistics for period: %lld / %lld", period, time(NULL));
         statement->setUint32(2, period);
         statistics[index].First();
         char* task_id = 0; TaskStat stat;

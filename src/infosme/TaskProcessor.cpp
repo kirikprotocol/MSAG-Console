@@ -13,9 +13,9 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     : TaskProcessorAdapter(), InfoSmeAdmin(), Thread(),
         logger(Logger::getCategory("smsc.infosme.TaskProcessor")), 
             bStarted(false), bNeedExit(false), taskTablesPrefix(0), 
-                dsInternalName(0), dsInternal(0), dsIntConnection(0), 
-                    messageSender(0), responceWaitTime(0), receiptWaitTime(0),
-                        dsStatConnection(0), statistics(0), protocolId(0), svcType(0), address(0)
+                dsInternal(0), dsIntConnection(0), messageSender(0), 
+                    responceWaitTime(0), receiptWaitTime(0), dsStatConnection(0),
+                        statistics(0), protocolId(0), svcType(0), address(0)
 {
     logger.info("Loading ...");
 
@@ -36,27 +36,22 @@ TaskProcessor::TaskProcessor(ConfigView* config)
         throw ConfigException("Invalid value for 'receiptWaitTime' parameter.");
     
     std::auto_ptr<ConfigView> tasksThreadPoolCfgGuard(config->getSubConfig("TasksThreadPool"));
-    ConfigView* tasksThreadPoolCfg = tasksThreadPoolCfgGuard.get();
-    taskManager.init(tasksThreadPoolCfg); // loads up thread pool for tasks
+    taskManager.init(tasksThreadPoolCfgGuard.get()); // loads up thread pool for tasks
     std::auto_ptr<ConfigView> eventsThreadPoolCfgGuard(config->getSubConfig("EventsThreadPool"));
-    ConfigView* eventsThreadPoolCfg = eventsThreadPoolCfgGuard.get();
-    taskManager.init(eventsThreadPoolCfg); // loads up thread pool for events
+    taskManager.init(eventsThreadPoolCfgGuard.get()); // loads up thread pool for events
     
     std::auto_ptr<ConfigView> providerCfgGuard(config->getSubConfig("DataProvider"));
-    ConfigView* providerCfg = providerCfgGuard.get();
-    provider.init(providerCfg);
+    provider.init(providerCfgGuard.get());
     
-    dsInternalName = providerCfg->getString("dsInternal", 
-                                            "Internal DataSource driver name missed.", true);
-    dsInternal = provider.getDataSource(dsInternalName);
+    std::auto_ptr<ConfigView> dsIntCfgGuard(config->getSubConfig("systemDataSource"));
+    dsInternal = provider.createDataSource(dsIntCfgGuard.get());
     if (!dsInternal)
-        throw ConfigException("Failed to obtail internal DataSource driver '%s'", dsInternalName);
-    logger.info("Internal DataSource driver '%s' obtained.", dsInternalName);
-
+        throw ConfigException("Failed to loadup internal DataSource");
+    
     dsIntConnection = dsInternal->getConnection();
     dsStatConnection = dsInternal->getConnection();
     if (!dsIntConnection || !dsStatConnection)
-        throw ConfigException("Failed to obtain connection to internal data source.");
+        throw ConfigException("Failed to obtain connection(s) to internal data source.");
     
     logger.info("Loading tasks ...");
     std::auto_ptr<ConfigView> tasksCfgGuard(config->getSubConfig("Tasks"));
@@ -130,9 +125,9 @@ TaskProcessor::~TaskProcessor()
     if (statistics) delete statistics;
     if (dsStatConnection) dsInternal->freeConnection(dsStatConnection);
 
-    if (dsIntConnection) dsInternal->freeConnection(dsIntConnection);
-    if (dsInternalName) delete dsInternalName;
     if (taskTablesPrefix) delete taskTablesPrefix;
+    if (dsIntConnection) dsInternal->freeConnection(dsIntConnection);
+    if (dsInternal) delete dsInternal;
 }
 
 bool TaskProcessor::putTask(Task* task)

@@ -266,7 +266,6 @@ namespace smsc { namespace infosme
         int         switchTimeout;
 
         const char* taskTablesPrefix;
-        const char* dsInternalName;
         DataSource* dsInternal;
         Connection* dsIntConnection;
         Mutex       dsIntConnectionLock;

@@ -43,8 +43,6 @@ namespace smsc { namespace infosme
 
         Hash<DataSource *>  dss;
         Mutex               dssLock;
-        
-        DataSource* createDataSource(ConfigView* config);
     
     public:
 
@@ -60,6 +58,8 @@ namespace smsc { namespace infosme
          */
         void init(ConfigView* config);
         
+        DataSource* createDataSource(ConfigView* config);
+
         DataSource* getDataSource(const char* dsid)
         {
             MutexGuard guard(dssLock);
