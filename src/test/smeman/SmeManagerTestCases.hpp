@@ -4,6 +4,7 @@
 #include "smeman/smeman.h"
 #include "test/util/Util.hpp"
 #include "test/util/BaseTestCases.hpp"
+#include "test/core/SmeRegistry.hpp"
 #include <map>
 #include <vector>
 
@@ -15,12 +16,10 @@ using std::ostream;
 using std::map;
 using std::vector;
 using log4cpp::Category;
+using smsc::test::core::SmeRegistry;
 using smsc::test::util::TCResult;
 using smsc::test::util::BaseTestCases;
-using smsc::smeman::SmeManager;
-using smsc::smeman::SmeSystemId;
-using smsc::smeman::SmeInfo;
-using smsc::smeman::SmeProxy;
+using namespace smsc::smeman; //SmeManager, SmeSystemId, SmeInfo, SmeProxy
 
 //implemented
 const char* const TC_ADD_CORRECT_SME = "addCorrectSme";
@@ -51,19 +50,19 @@ ostream& operator<< (ostream& os, const SmeInfo& sme);
 class SmeManagerTestCases : BaseTestCases
 {
 public:
-	SmeManagerTestCases(SmeManager* smeMan);
+	SmeManagerTestCases(SmeManager* smeMan, SmeRegistry* smeReg);
 
 	virtual ~SmeManagerTestCases() {}
 
 	/**
 	 * Регистрация sme с корректными параметрами.
 	 */
-	TCResult* addCorrectSme(SmeInfo* sme, int num);
+	TCResult* addCorrectSme(Address* smeAddr, SmeInfo* sme, int num);
 	
 	/**
 	 * Регистрация sme с пустым systemId.
 	 */
-	TCResult* addCorrectSmeWithEmptySystemId(SmeInfo* sme);
+	TCResult* addCorrectSmeWithEmptySystemId(Address* smeAddr, SmeInfo* sme);
 
 	/**
 	 * Регистрация sme с некорректными параметрами.
@@ -113,12 +112,12 @@ public:
 	/**
 	 * Итерирование по списку зарегистрированных sme.
 	 */
-	TCResult* iterateSme(const vector<SmeInfo*> sme);
+	TCResult* iterateSme();
 
 	/**
 	 * Выборка sme происходит равномерно.
 	 */
-	TCResult* selectSme(const vector<SmeInfo*>& sme, int num);
+	//TCResult* selectSme(int num);
 
 	TCResult* registerCorrectSmeProxy(const SmeSystemId& systemId, SmeProxy** proxy);
 
@@ -127,11 +126,10 @@ protected:
 
 private:
 	SmeManager* smeMan;
+	SmeRegistry* smeReg;
 	
 	void setupRandomCorrectSmeInfo(SmeInfo* sme);
 	vector<int> compareSmeInfo(const SmeInfo& sme1, const SmeInfo& sme2);
-	void checkSelectSmeStat(const vector<SmeInfo*>& sme,
-		const map<uint32_t, int>& statMap, TCResult* res);
 	void debugSme(const char* tc, SmeInfo& sme);
 };
 

@@ -9,10 +9,10 @@ namespace smsc {
 namespace test {
 namespace smeman {
 
-using namespace std;
-using namespace smsc::smeman; //SmeIndex, SmeIterator
-using namespace smsc::test::util;
 using smsc::util::Logger;
+using smsc::test::sms::SmsUtil;
+using namespace std;
+using namespace smsc::test::util;
 
 ostream& operator<< (ostream& os, const SmeInfo& sme)
 {
@@ -24,10 +24,11 @@ ostream& operator<< (ostream& os, const SmeInfo& sme)
 	os << ", port = " << sme.port;
 }
 
-SmeManagerTestCases::SmeManagerTestCases(SmeManager* _smeMan)
-	: smeMan(_smeMan)
+SmeManagerTestCases::SmeManagerTestCases(SmeManager* _smeMan, SmeRegistry* _smeReg)
+	: smeMan(_smeMan), smeReg(_smeReg)
 {
-	__require__(smeMan);
+	//__require__(smeMan);
+	__require__(smeReg);
 }
 
 Category& SmeManagerTestCases::getLog()
@@ -41,7 +42,7 @@ void SmeManagerTestCases::debugSme(const char* tc, SmeInfo& sme)
 	ostringstream os;
 	os << sme << endl;
 	getLog().debug("[%d]\t%s(): %s", thr_self(), tc, os.str().c_str());
-	//getLog().debugStream() << "[" << thr_self() << "]\t" << tc << "(): " << sme;
+	__trace2__("%s(): %s", tc, os.str().c_str());
 }
 
 void SmeManagerTestCases::setupRandomCorrectSmeInfo(SmeInfo* sme)
@@ -65,8 +66,8 @@ void SmeManagerTestCases::setupRandomCorrectSmeInfo(SmeInfo* sme)
 	//systemId
 	auto_ptr<char> _systemId = rand_char(MAX_SYSTEM_ID_LENGTH);
 	sme->systemId = _systemId.get();
-	sme->SME_N = rand0(INT_MAX);
-	sme->disabled = !rand0(3);
+	sme->SME_N = rand0(INT_MAX); //реально не используется
+	sme->disabled = !rand0(3); //реально не используется
 }
 
 vector<int> SmeManagerTestCases::compareSmeInfo(const SmeInfo& sme1,
@@ -120,7 +121,7 @@ vector<int> SmeManagerTestCases::compareSmeInfo(const SmeInfo& sme1,
 	return res;
 }
 
-TCResult* SmeManagerTestCases::addCorrectSme(SmeInfo* sme, int num)
+TCResult* SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int num)
 {
 	TCSelector s(num, 11);
 	TCResult* res = new TCResult(TC_ADD_CORRECT_SME, s.getChoice());
@@ -128,6 +129,7 @@ TCResult* SmeManagerTestCases::addCorrectSme(SmeInfo* sme, int num)
 	{
 		try
 		{
+			SmsUtil::setupRandomCorrectAddress(smeAddr);
 			setupRandomCorrectSmeInfo(sme);
 			switch(s.value())
 			{
@@ -182,8 +184,12 @@ TCResult* SmeManagerTestCases::addCorrectSme(SmeInfo* sme, int num)
 				default:
 					throw s;
 			}
-			smeMan->addSme(*sme);
+			smeReg->registerSme(*smeAddr, *sme);
 			debugSme("addCorrectSme", *sme);
+			if (smeMan)
+			{
+				smeMan->addSme(*sme);
+			}
 		}
 		catch(...)
 		{
@@ -195,15 +201,21 @@ TCResult* SmeManagerTestCases::addCorrectSme(SmeInfo* sme, int num)
 	return res;
 }
 
-TCResult* SmeManagerTestCases::addCorrectSmeWithEmptySystemId(SmeInfo* sme)
+TCResult* SmeManagerTestCases::addCorrectSmeWithEmptySystemId(Address* smeAddr,
+	SmeInfo* sme)
 {
 	TCResult* res = new TCResult(TC_ADD_CORRECT_SME, 1001);
 	try
 	{
+		SmsUtil::setupRandomCorrectAddress(smeAddr);
 		setupRandomCorrectSmeInfo(sme);
 		sme->systemId = "";
-		smeMan->addSme(*sme);
+		smeReg->registerSme(*smeAddr, *sme);
 		debugSme("addCorrectSmeWithEmptySystemId", *sme);
+		if (smeMan)
+		{
+			smeMan->addSme(*sme);
+		}
 	}
 	catch(...)
 	{
@@ -216,6 +228,7 @@ TCResult* SmeManagerTestCases::addCorrectSmeWithEmptySystemId(SmeInfo* sme)
 
 TCResult* SmeManagerTestCases::addIncorrectSme(const SmeInfo& existentSme)
 {
+	__require__(smeMan);
 	TCResult* res = new TCResult(TC_ADD_INCORRECT_SME);
 	try
 	{
@@ -239,7 +252,11 @@ TCResult* SmeManagerTestCases::deleteExistentSme(const SmeSystemId& systemId)
 	TCResult* res = new TCResult(TC_DELETE_EXISTENT_SME);
 	try
 	{
-		smeMan->deleteSme(systemId);
+		smeReg->deleteSme(systemId);
+		if (smeMan)
+		{
+			smeMan->deleteSme(systemId);
+		}
 	}
 	catch(...)
 	{
@@ -252,6 +269,7 @@ TCResult* SmeManagerTestCases::deleteExistentSme(const SmeSystemId& systemId)
 
 TCResult* SmeManagerTestCases::deleteNonExistentSme()
 {
+	__require__(smeMan);
 	TCResult* res = new TCResult(TC_DELETE_NON_EXISTENT_SME);
 	try
 	{
@@ -339,6 +357,7 @@ TCResult* SmeManagerTestCases::enableNonExistentSme()
 
 TCResult* SmeManagerTestCases::getExistentSme(const SmeInfo& sme, SmeProxy* proxy)
 {
+	__require__(smeMan);
 	TCResult* res = new TCResult(TC_GET_EXISTENT_SME);
 	try
 	{
@@ -362,6 +381,7 @@ TCResult* SmeManagerTestCases::getExistentSme(const SmeInfo& sme, SmeProxy* prox
 
 TCResult* SmeManagerTestCases::getNonExistentSme(const SmeSystemId& systemId, int num)
 {
+	__require__(smeMan);
 	TCSelector s(num, 2);
 	TCResult* res = new TCResult(TC_GET_NON_EXISTENT_SME, s.getChoice());
 	for (; s.check(); s++)
@@ -393,49 +413,42 @@ TCResult* SmeManagerTestCases::getNonExistentSme(const SmeSystemId& systemId, in
 	return res;
 }
 
-TCResult* SmeManagerTestCases::iterateSme(const vector<SmeInfo*> sme)
+TCResult* SmeManagerTestCases::iterateSme()
 {
+	__require__(smeMan);
 	TCResult* res = new TCResult(TC_ITERATE_SME);
 	try
 	{
-		SmeIterator* iter = smeMan->iterator();
-		int foundSme = 0;
-		int extraSme = 0;
+		int numSme = 0;
 		typedef map<int, int> MismatchMap;
 		MismatchMap mismatch;
+		SmeIterator* iter = smeMan->iterator();
 		while (iter->next())
 		{
+			numSme++;
 			//SmeProxy* proxy = iter->getSmeProxy();
 			//SmeIndex index = iter->getSmeIndex();
-			SmeInfo info = iter->getSmeInfo();
+			SmeInfo smeInfo1 = iter->getSmeInfo();
 			//debugSme(info);
 			bool found = false;
-			for (int i = 0; i < sme.size(); i++)
+			const SmeInfo* smeInfo2 = smeReg->getSme(smeInfo1.systemId);
+			if (smeInfo2)
 			{
-				if (sme[i]->systemId == info.systemId)
+				vector<int> tmp = compareSmeInfo(smeInfo1, *smeInfo2);
+				for (int i = 0; i < tmp.size(); i++)
 				{
-					found = true; foundSme++;
-					vector<int> tmp = compareSmeInfo(*sme[i], info);
-					for (int j = 0; j < tmp.size(); j++)
-					{
-						mismatch[tmp[j]]++;
-					}
-					break;
+					mismatch[tmp[i]]++;
 				}
 			}
-			if (!found)
+			//итератор вернул лишние sme
+			else
 			{
-				extraSme++;
+				mismatch[101]++;
 			}
 		}
 		delete iter;
-		//итератор вернул лишние sme
-		if (extraSme)
-		{
-			res->addFailure(101);
-		}
 		//итератор пропустил некоторые sme
-		if (foundSme != sme.size())
+		if (numSme != smeReg->size())
 		{
 			res->addFailure(102);
 		}
@@ -561,6 +574,7 @@ TCResult* SmeManagerTestCases::selectSme(const vector<SmeInfo*>& sme,
 TCResult* SmeManagerTestCases::registerCorrectSmeProxy(const SmeSystemId& systemId,
 	SmeProxy** proxy)
 {
+	__require__(smeMan);
 	TCResult* res = new TCResult(TC_REGISTER_CORRECT_SME_PROXY);
 	try
 	{
