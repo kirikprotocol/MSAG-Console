@@ -29,6 +29,11 @@
             <param name="password" type="string"></param>
         </section>  
 
+        <section name="Admin">
+            <param name="host" type="string">smsc</param>
+            <param name="port" type="int">9779</param>
+	</section>
+
         <section name="DataProviders">
         
             <section name="SampleDataProvider1">
