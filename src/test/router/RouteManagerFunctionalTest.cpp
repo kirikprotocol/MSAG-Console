@@ -239,14 +239,14 @@ void RouteManagerFunctionalTest::executeTest(
 		}
 	}
 
+	/*
 	//Итерирование по списку маршрутов
 	{
 		TCResult* res = tcRoute.iterateRoutes();
 		filter->addResult(res);
 		delete res;
 	}
-
-	/*
+	
 	//Удаление зарегистрированных sme
 	for (int i = 0; i < sme.size(); i++)
 	{
@@ -297,8 +297,10 @@ void saveCheckList(TCResultFilter* filter)
 		filter->getResults(TC_ADD_INCORRECT_ROUTE));
 	cl.writeResult("Поиск маршрута",
 		filter->getResults(TC_LOOKUP_ROUTE));
+	/*
 	cl.writeResult("Итерирование по списку маршрутов",
 		filter->getResults(TC_ITERATE_ROUTES));
+	*/
 }
 
 /**

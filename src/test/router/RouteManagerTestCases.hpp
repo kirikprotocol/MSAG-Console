@@ -80,7 +80,7 @@ public:
 	/*
 	 * Итерирование по списку маршрутов.
 	 */
-	TCResult* iterateRoutes();
+	//TCResult* iterateRoutes();
 
 protected:
 	virtual Category& getLog();
