@@ -18,6 +18,7 @@ namespace system{
 namespace mapio{
 
 #define MAP_PROXY_QUEUE_LIMIT 64
+#define MAP_DIALOGS_LIMIT 160
 
 using namespace smsc::smeman;
 using namespace smsc::core::synchronization;

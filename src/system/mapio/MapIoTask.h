@@ -265,7 +265,12 @@ public:
     if(container) delete container;
     container=NULL;
   }
-
+  
+  unsigned getNumberOfDialogs()
+  {
+    return lock_map.Count();
+  }
+  
   MapProxy* getProxy() {
     return &proxy;
   }
