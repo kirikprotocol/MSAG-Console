@@ -147,6 +147,17 @@ public:
     std::swap(autoFlush,swp.autoFlush);
   }
 
+  void SwapBuffers(File& swp)
+  {
+    if(inMemoryFile)
+    {
+      std::swap(buffer,swp.buffer);
+      std::swap(bufferSize,swp.bufferSize);
+      std::swap(fileSize,swp.fileSize);
+      std::swap(bufferPosition,swp.bufferPosition);
+    }
+  }
+
   void OpenInMemory(int sz)
   {
     if(inMemoryFile)return;

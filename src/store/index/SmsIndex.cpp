@@ -81,6 +81,8 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
     ds.dstAddrHash->Create((path+"dstaddr.idx").c_str(),config.addrHashSize,cached);
     ds.dstAddrData->Create((path+"dstaddr.dat").c_str(),config.addrRootSize,cached);
 
+    ds.Flush();
+
     CacheItem *ci=new CacheItem;
     ci->ds=ds;
     ci->lastUsage=time(NULL);

@@ -144,7 +144,7 @@ protected:
     DiskHashHeader h;
     h.size=size*reallocPercent/100;
 
-    g.OpenInMemory(DiskHashHeader::Size()+recsize*h.size);
+    if(isCached)g.OpenInMemory(DiskHashHeader::Size()+recsize*h.size);
 
     h.magic=_dh_magic;
     h.ver=_dh_ver;
@@ -195,17 +195,18 @@ protected:
     }
     //g.MemoryFlush();
     //g.Close();
-    f.Close();
-    size=h.size;
-    remove(name.c_str());
-    g.Rename(name.c_str());
-    /*
-
-    f.RWOpen(name.c_str());
-    f.OpenInMemory(0);
-
-    */
-    f.Swap(g);
+    if(isCached)
+    {
+      f.SwapBuffers(g);
+      g.Close();
+    }else
+    {
+      f.Close();
+      size=h.size;
+      remove(name.c_str());
+      g.Rename(name.c_str());
+      f.Swap(g);
+    }
     __warning__("rehashing finished");
   }
 
