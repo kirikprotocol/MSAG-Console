@@ -9,14 +9,21 @@ namespace test {
 namespace util {
 
 /**
- * Флаг задающий выполнение случайной тестовой процедуры в рамках test case.
+ * Флаг задающий выполнение всех тестовых процедур в рамках тест кейса.
+ */
+const int ALL_TC = 0;
+
+/**
+ * Флаг задающий выполнение случайной тестовой процедуры в рамках тест кейса.
  */
 const int RAND_TC = -1;
 
 /**
- * Флаг задающий выполнение всех тестовых процедур в рамках test case.
+ * Флаг задающий выполнение всех тестовых процедур, случайной тестовой процедуры,
+ * неупорядоченного набора случайных тестовых процедур или вообще ничего в 
+ * рамках тест кейса.
  */
-const int ALL_TC = 0;
+const int RAND_SET_TC = -2;
 
 int rand0(int maxValue);
 
@@ -27,7 +34,7 @@ std::auto_ptr<uint8_t> rand_uint8_t(int length);
 std::auto_ptr<char> rand_char(int length);
 
 /**
- * Класс для хранения результатов выполнения test case.
+ * Класс для хранения результатов выполнения тест кейса.
  */
 class TCResult
 {
@@ -49,19 +56,20 @@ public:
 };
 
 /**
- * Позволяет выбрать нужную или все процедуры в test case в зависимости от 
+ * Позволяет выбрать нужную или все процедуры в тест кейсе в зависимости от 
  * параметров.
  */
 class TCSelector
 {
 private:
-	int i;
-	bool first;
-	const int val;
-	const int maxVal;
+	int* val;
+	int pos; //текущая позиция по массиву val
+	int size;
+	int choice;
 
 public:
-	TCSelector(int val, int maxVal);
+	TCSelector(int val, int maxVal, int base = 0);
+	~TCSelector();
 	int value() const;
 	bool check() const;
 	TCSelector& operator++ (int);
@@ -102,26 +110,30 @@ inline bool TCResult::value() const
 }
 
 //TCSelector inline member functions definitions
+inline TCSelector::~TCSelector()
+{
+	delete[] val;
+}
+
 inline int TCSelector::value() const
 {
-	return i;
+	return val[pos];
 }
 
 inline bool TCSelector::check() const
 {
-	return (val == 0 ? i <= maxVal : first);
+	return (pos < size);
 }
 	
 inline TCSelector& TCSelector::operator++ (int)
 {
-	i++;
-	first = false;
+	pos++;
 	return *this;
 }
 
 inline int TCSelector::getChoice() const
 {
-	return (val == -1 ? i : val);
+	return choice;
 }
 
 }

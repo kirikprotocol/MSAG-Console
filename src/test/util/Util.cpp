@@ -54,20 +54,40 @@ bool TCResult::operator== (const TCResult& tcRes) const
 	return res;
 }
 
-TCSelector::TCSelector(int _val, int _maxVal)
-	: val(_val), maxVal(_maxVal), first(true)
+TCSelector::TCSelector(int _val, int _maxVal, int _base) : pos(0)
 {
-	if (val < 0)
+	switch (_val)
 	{
-		i = rand1(maxVal);
-	}
-	else if (val == 0)
-	{
-		i = 1;
-	}
-	else
-	{
-		i = val;
+		case ALL_TC:
+			val = new int[_maxVal];
+			for (int i = 0; i < _maxVal; i++)
+			{
+				val[i] = _base + i + 1;
+			}
+			size = _maxVal;
+			choice = ALL_TC;
+			break;
+		case RAND_TC:
+			val = new int(rand1(_maxVal));
+			size = 1;
+			choice = *val;
+			break;
+		case RAND_SET_TC:
+			size = rand0(_maxVal);
+			if (size > 0)
+			{
+				val = new int[size];
+				for (int i = 0; i < size; i++)
+				{
+					val[i] = _base + rand1(_maxVal);
+				}
+			}
+			choice = RAND_SET_TC;
+			break;
+		default:
+			val = new int(_val);
+			size = 1;
+			choice = _val;
 	}
 }
 
