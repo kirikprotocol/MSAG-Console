@@ -80,8 +80,10 @@ const uint8_t ESM_CLASS_STORE_AND_FORWARD_MODE = 0x3;
 const uint8_t ESM_CLASS_MESSAGE_TYPE_BITS = 0x3c;
 const uint8_t ESM_CLASS_NORMAL_MESSAGE = 0x0;
 const uint8_t ESM_CLASS_DELIVERY_RECEIPT = 0x4;
+const uint8_t ESM_CLASS_SME_ACKNOWLEDGEMENT = 0x10;
 const uint8_t ESM_CLASS_INTERMEDIATE_NOTIFICATION = 0x20;
 
+/*
 //registered_delivery (SMPP v3.4, 5.2.17):
 //SMSC Delivery Receipt:
 //xxxxxx00 - No SMSC Delivery Receipt requested (default)
@@ -98,6 +100,7 @@ const uint8_t FAILURE_SMSC_DELIVERY_RECEIPT = 0x2;
 //xxx0xxxx - No Intermediate notification requested
 //xxx1xxxx - Intermediate notification requested
 const uint8_t INTERMEDIATE_NOTIFICATION_REQUESTED = 0x10;
+*/
 
 //размеры структур и сами структуры
 const int MAX_SMPP_TIME_LENGTH = 16;
@@ -137,7 +140,8 @@ public:
 	
 	//»спользую вместо vector<int> operator==(SmppOptional&, SmppOptional&)
 	//дл€ возможности добавлени€ параметра compareFlag
-	static vector<int> compareOptional(SmppOptional& opt1, SmppOptional& opt2);
+	static vector<int> compareOptional(SmppOptional& opt1, SmppOptional& opt2,
+		uint64_t excludeMask = 0x0);
 
 	static void setupRandomCorrectAddress(PduAddress* addr, bool check = true);
 	static void setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
