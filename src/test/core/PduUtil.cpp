@@ -35,6 +35,105 @@ void PduDataObject::unref()
 	}
 }
 
+#define __get_wrapper_prop__(filed) \
+	switch (pdu->get_commandId()) { \
+		case SUBMIT_SM: \
+		case DELIVERY_SM: \
+			return get_message().get_##filed(); \
+		case DATA_SM: \
+			return get_data().get_##filed(); \
+		default: \
+			__unreachable__("Invalid commandId"); \
+	}
+
+const char* SmsPduWrapper::getServiceType() { __get_wrapper_prop__(serviceType); }
+PduAddress& SmsPduWrapper::getSource() { __get_wrapper_prop__(source); }
+PduAddress& SmsPduWrapper::getDest() { __get_wrapper_prop__(dest); }
+uint8_t SmsPduWrapper::getEsmClass() { __get_wrapper_prop__(esmClass); }
+uint8_t SmsPduWrapper::getRegistredDelivery() { __get_wrapper_prop__(registredDelivery); }
+uint8_t SmsPduWrapper::getDataCoding() { __get_wrapper_prop__(dataCoding); }
+
+time_t SmsPduWrapper::getWaitTime()
+{
+	switch (pdu->get_commandId())
+	{
+		case SUBMIT_SM:
+		case DELIVERY_SM:
+			return SmppUtil::getWaitTime(get_message().get_scheduleDeliveryTime(), sendTime);
+		case DATA_SM:
+			return sendTime;
+		default:
+			__unreachable__("Invalid commandId");
+	}
+}
+
+time_t SmsPduWrapper::getValidTime()
+{
+	__cfg_int__(maxValidPeriod);
+	switch (pdu->get_commandId())
+	{
+		case SUBMIT_SM:
+		case DELIVERY_SM:
+			return SmppUtil::getValidTime(get_message().get_validityPeriod(), sendTime);
+		case DATA_SM:
+			return (get_optional().has_qosTimeToLive() ?
+				sendTime + min((int) get_optional().get_qosTimeToLive(), maxValidPeriod) :
+				sendTime + maxValidPeriod);
+		default:
+			__unreachable__("Invalid commandId");
+	}
+}
+
+uint16_t SmsPduWrapper::getMsgRef()
+{
+	__require__(get_optional().has_userMessageReference());
+	return get_optional().get_userMessageReference();
+}
+
+SmppHeader& SmsPduWrapper::get_header()
+{
+	return *pdu;
+}
+
+PduPartSm& SmsPduWrapper::get_message()
+{
+	switch (pdu->get_commandId())
+	{
+		case SUBMIT_SM:
+			return reinterpret_cast<PduSubmitSm*>(pdu)->get_message();
+		case DELIVERY_SM:
+			return reinterpret_cast<PduDeliverySm*>(pdu)->get_message();
+		default:
+			__unreachable__("Invalid commandId");
+	}
+}
+
+PduDataPartSm& SmsPduWrapper::get_data()
+{
+	switch (pdu->get_commandId())
+	{
+		case DATA_SM:
+			return reinterpret_cast<PduDataSm*>(pdu)->get_data();
+		default:
+			__unreachable__("Invalid commandId");
+	}
+}
+
+SmppOptional& SmsPduWrapper::get_optional()
+{
+	switch (pdu->get_commandId())
+	{
+		case SUBMIT_SM:
+			return reinterpret_cast<PduSubmitSm*>(pdu)->get_optional();
+		case DELIVERY_SM:
+			return reinterpret_cast<PduDeliverySm*>(pdu)->get_optional();
+		case DATA_SM:
+			return reinterpret_cast<PduDataSm*>(pdu)->get_optional();
+		default:
+			__unreachable__("Invalid commandId");
+	}
+}
+
 PduData::PduData(SmppHeader* _pdu, time_t _sendTime, IntProps* _intProps,
 	StrProps* _strProps, ObjProps* _objProps)
 : pdu(_pdu), sendTime(_sendTime), count(0), replacePdu(NULL), replacedByPdu(NULL)

@@ -20,6 +20,13 @@ namespace core {
 using smsc::sms::Address;
 using smsc::test::smpp::SmppState;
 using smsc::smpp::SmppHeader;
+using smsc::smpp::PduAddress;
+using smsc::smpp::PduPartSm;
+using smsc::smpp::PduDataPartSm;
+using smsc::smpp::SmppOptional;
+using smsc::smpp::SmppCommandSet::SUBMIT_SM;
+using smsc::smpp::SmppCommandSet::DATA_SM;
+using smsc::smpp::SmppCommandSet::DELIVERY_SM;
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
 using std::string;
@@ -83,6 +90,38 @@ public:
 	PduDataObject& operator=(const PduDataObject&) { return *this; }
 	void ref();
 	void unref();
+};
+
+/**
+ * Wrapper для PduSubmitSm, PduDeliverySm и PduDataSm
+ */
+class SmsPduWrapper
+{
+	time_t sendTime;
+	SmppHeader* pdu;
+public:
+	SmsPduWrapper(SmppHeader* _pdu, time_t _sendTime)
+		: pdu(_pdu), sendTime(_sendTime) { __require__(pdu); }
+	~SmsPduWrapper() { /* не владелец submitPdu и dataPdu */ }
+
+	bool isSubmitSm() { return (pdu->get_commandId() == SUBMIT_SM); }
+	bool isDeliverSm() { return (pdu->get_commandId() == DELIVERY_SM); }
+	bool isDataSm() { return (pdu->get_commandId() == DATA_SM); }
+	
+	const char* getServiceType();
+	PduAddress& getSource();
+	PduAddress& getDest();
+	uint8_t getEsmClass();
+	uint8_t getRegistredDelivery();
+	uint8_t getDataCoding();
+	time_t getWaitTime();
+	time_t getValidTime();
+	uint16_t getMsgRef();
+
+	SmppHeader& get_header();
+	PduPartSm& get_message();
+	PduDataPartSm& get_data();
+	SmppOptional& get_optional();
 };
 
 class PduData
