@@ -195,6 +195,26 @@ public:
 
   int Count(){return count;}
 
+  void Empty()
+  {
+    if(keys)delete [] keys;
+    if(values)delete [] values;
+    if(refcounts)delete [] refcounts;
+    if(reflist)delete [] reflist;
+    keys=0;
+    values=0;
+    refcounts=0;
+
+    count=0;
+    size=0;
+
+    reflist=0;
+    reflistsize=0;
+
+    emptycount=0;
+  }
+
+
 protected:
   int *keys;
   int *refcounts;
