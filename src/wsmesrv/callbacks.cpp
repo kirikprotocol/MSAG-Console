@@ -1,3 +1,4 @@
+#include "ss7osdpn.h"
 #include "i97tcapapi.h"
 
 extern "C"{
