@@ -34,7 +34,8 @@ void SQLJob::process(Command& command, Statement& stmt)
     try
     {
         if (!parser || !formatter)
-            throw CommandProcessException();
+            throw CommandProcessException("IO Parser or Formatter"
+                                          " wasn't defined !");
 
         SQLSetAdapter setAdapter(&stmt);
             
@@ -43,7 +44,8 @@ void SQLJob::process(Command& command, Statement& stmt)
         parser->parse(input, (SetAdapter&)setAdapter);
 
         ResultSet* rs = (isQuery) ? stmt.executeQuery() : 0;
-
+        rs->fetchNext();
+        
         SQLGetAdapter getAdapter(rs);
 
         std::string output = "";
@@ -52,7 +54,7 @@ void SQLJob::process(Command& command, Statement& stmt)
     }
     catch(Exception& exc)
     {
-        throw CommandProcessException();
+        throw CommandProcessException(exc);
     }
 }
 

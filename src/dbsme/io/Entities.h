@@ -35,10 +35,12 @@ namespace smsc { namespace dbsme { namespace io
         virtual ~FormatRenderingException() throw() {};
     };
     
-    static const char SMSC_DBSME_IO_FORMAT_ENTITY_DELIMETER = '$';
-    static const char SMSC_DBSME_IO_FORMAT_STRING_DELIMETER = '\"';
-    static const char SMSC_DBSME_IO_FORMAT_ENTITY_ESCAPER   = '\\';
-    static const char SMSC_DBSME_IO_FORMAT_OPTION_ASSIGN    = '=';
+    static const char* SMSC_DBSME_IO_FORMAT_ARGUMENT_NUMBER  = "arg";
+
+    static const char  SMSC_DBSME_IO_FORMAT_ENTITY_DELIMETER = '$';
+    static const char  SMSC_DBSME_IO_FORMAT_STRING_DELIMETER = '\"';
+    static const char  SMSC_DBSME_IO_FORMAT_ENTITY_ESCAPER   = '\\';
+    static const char  SMSC_DBSME_IO_FORMAT_OPTION_ASSIGN    = '=';
 
     const int entityTypesNumber = 12;
     static const char* entityTypeStrings[entityTypesNumber]  = 
@@ -60,10 +62,13 @@ namespace smsc { namespace dbsme { namespace io
         EntityType          type;
         Hash<std::string>   options;
         std::string         str;
+        int                 position;
 
         FormatEntity(std::string line, bool type=true)
             throw(FormatRenderingException);
         virtual ~FormatEntity();
+
+        const char* getOption(const char* name);
 
     private:
 
@@ -84,9 +89,6 @@ namespace smsc { namespace dbsme { namespace io
         FormatEntityRenderer(const char* format, bool text = false)
             throw(FormatRenderingException);
         virtual ~FormatEntityRenderer();
-
-        void addEntity(FormatEntity* entity)
-            throw(FormatRenderingException);
     };
 
 }}}

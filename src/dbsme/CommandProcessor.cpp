@@ -67,7 +67,8 @@ void CommandProcessor::process(Command& command)
 {
     DataProvider* provider = 0;
     if (!providers.Exists(command.getToAddress().value))
-        throw ServiceNotFoundException(command.getToAddress().value);
+        throw ServiceNotFoundException(
+            (const char*)command.getToAddress().value);
 
     providers.Get(command.getToAddress().value)->process(command);
 }

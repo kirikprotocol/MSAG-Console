@@ -8,6 +8,16 @@ namespace smsc { namespace dbsme { namespace io
 
 using smsc::core::buffers::Hash;
 
+const char* FormatEntity::getOption(const char* name)
+{
+    if (options.Exists(name))
+    {
+        std::string str = options.Get(name);
+        return str.c_str();
+    }
+    return 0;
+}
+
 void FormatEntity::renderOptions(const char* line)
     throw(FormatRenderingException)
 {
@@ -21,6 +31,11 @@ void FormatEntity::renderOptions(const char* line)
             curPos++;
         while (isalnum(line[curPos])) 
             name += line[curPos++];
+        if (!name.length())
+        {
+            throw FormatRenderingException("FormatRenderingException: "
+                "Argument name expected. Parsing line: <%s>", line);
+        }
         while (isspace(line[curPos])) // skip spaces after 'name'
             curPos++;
         if (line[curPos++] != SMSC_DBSME_IO_FORMAT_OPTION_ASSIGN)
@@ -94,7 +109,7 @@ FormatEntity::FormatEntity(std::string line, bool type)
             //printf("Checking type: %s\n", entityTypeStrings[i]);
             if (raw == strstr(raw, entityTypeStrings[i]))
             {
-                type = (EntityType)i; str = "";
+                this->type = (EntityType)i; str = "";
                 break;
             }
         }
@@ -106,20 +121,20 @@ FormatEntity::FormatEntity(std::string line, bool type)
                                            "Parsing format string: <%s>", raw);
         }
         renderOptions(raw+strlen(entityTypeStrings[i]));
+        
+        const char* arg = getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_NUMBER);
+        if (!arg) 
+            throw FormatRenderingException("Argument number not defined !"
+                                           "Parsing format string: <%s>", raw);
+        position = atoi(arg);
     }
     else 
     {
-        str = line; type = TEXT;
+        str = line; this->type = TEXT; position = 0;
     }
 }
 FormatEntity::~FormatEntity()
 {
-}
-
-void FormatEntityRenderer::addEntity(FormatEntity* entity)
-    throw(FormatRenderingException)
-{
-
 }
 
 FormatEntityRenderer::FormatEntityRenderer(const char* format, bool text)
@@ -163,7 +178,7 @@ FormatEntityRenderer::FormatEntityRenderer(const char* format, bool text)
                 {
                     try
                     {
-                        addEntity(new FormatEntity(str, opened));
+                        (void)entities.Push(new FormatEntity(str, opened));
                     }
                     catch (Exception& exc)
                     {
@@ -191,7 +206,7 @@ FormatEntityRenderer::FormatEntityRenderer(const char* format, bool text)
     {
         try
         {
-            addEntity(new FormatEntity(str, opened));
+            (void)entities.Push(new FormatEntity(str, opened));
         }
         catch (Exception& exc)
         {

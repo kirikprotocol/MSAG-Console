@@ -48,7 +48,12 @@ int main(void)
         command.setToAddress(toAddress);
         //command.setJobName(SAMPLE_JOB_IDENTITY);
         command.setJobName(SQL_JOB_IDENTITY);
-        command.setInData("Sample input !!!");
+        /*command.setInData("-55 \t \t 666 \n -1573175230 129 3533 4364643 "
+                          "first \"second value\""
+                          " 243684.875874387835"
+                          " +5753.14e-10"
+                          " -45454.5e+7");*/
+        command.setInData("\"Testing string value\" 1");
 
         printf("\nInput  : '%s'\n",
                (command.getInData() ? command.getInData():""));
