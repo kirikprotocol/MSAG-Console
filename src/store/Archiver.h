@@ -113,9 +113,11 @@ namespace smsc { namespace store
         uint8_t     uState;
         char        bNeedArchivate;
 
-        sb2         indOA, indSrcMsc, indSrcImsi, indSrcSme;
-        sb2         indDA, indDstMsc, indDstImsi, indDstSme;
+        sb2         indSrcMsc, indSrcImsi, indSrcSme;
+        sb2         indDstMsc, indDstImsi, indDstSme;
         sb2         indBody, indLastTime;
+
+        FullAddressValue    oa, da, dda;
         
         char* loadDBInstance(Manager& config, const char* cat)
             throw(ConfigException);

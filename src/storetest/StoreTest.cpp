@@ -24,13 +24,13 @@ int main(void)
         StoreManager::startup(Manager::getInstance());
         printf("Connect Ok !\n");
     } 
-    catch (exception& exc) 
+    catch (Exception& exc) 
     {
         printf("Exception : %s\n", exc.what());
         return -1;
     }
 
-    static char* oa = "123.456.7.890.123.456";
+    static char* oa = "123.456.7.890";
     static char* da = "098.7.654.321";
     //static char* body = "";
     static char* body = "Test message's body !";
@@ -39,19 +39,18 @@ int main(void)
 
     Descriptor dsc(4, "MSC1", 5, "IMSI1", 511);
 
-    sms.setOriginatingAddress(strlen(oa), 1, 2, oa);
+    sms.setOriginatingAddress(strlen(oa), 111, 222, oa);
     sms.setOriginatingDescriptor(dsc);
-    sms.setDestinationAddress(strlen(da), 2, 1, da);
-    sms.setWaitTime((time_t)1000L);
+    sms.setDestinationAddress(strlen(da), 222, 111, da);
+    sms.setDealiasedDestinationAddress(strlen(da), 2, 1, da);
+    sms.setNextTime((time_t)1000L);
     sms.setValidTime((time_t)360000L);
     sms.setSubmitTime((time_t)100L);
     sms.setMessageReference(5);
-    sms.setPriority(1);
-    sms.setProtocolIdentifier(1);
     sms.setDeliveryReport(24);
     sms.setArchivationRequested(true);
     sms.setEServiceType("GSM");
-    sms.setMessageBody(strlen(body), 1, true, (uint8_t *)body);
+    //sms.setMessageBody(strlen(body), 1, true, (uint8_t *)body);
     
     const int NUM_OF_TEST_MESSAGES = 10000;
 
@@ -61,7 +60,9 @@ int main(void)
 
         SMSId id = store->getNextId();
         store->createSms(sms, id);
-        printf("Message was stored, id = %u !\n", id);
+        printf("Message was stored, id = %llu.\n", id);
+        store->retriveSms(id, sms);
+        printf("Message retrived, id = %llu.\n", id);
 
         /*time_t begTime, endTime;
         printf("\nStoring %d messages, please wait ... \n", 

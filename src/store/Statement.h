@@ -11,6 +11,29 @@ namespace smsc { namespace store
 {
     using namespace smsc::sms;
     
+    const int MAX_FULL_ADDRESS_VALUE_LENGTH = 30;
+    typedef char FullAddressValue[MAX_FULL_ADDRESS_VALUE_LENGTH];
+
+    static void convertAddressToString(const Address& address, char* string)
+    {
+        FullAddressValue value;
+        (void)address.getValue(value);
+        sprintf(string, "%hu.%hu.%s", 
+                address.getTypeOfNumber(), address.getNumberingPlan(), value);
+    };
+    static void convertStringToAddress(const char* string, Address& address)
+    {
+        int res, bytes=0;
+        unsigned type, plan;
+        res = sscanf(string, "%u.%u.%n", &type, &plan, &bytes);
+        __require__(res != EOF && res && bytes>0);
+
+        address.setTypeOfNumber(type);
+        address.setNumberingPlan(plan);
+        const char* rest = string+bytes;
+        address.setValue(strlen(rest), rest);
+    };
+    
     class Connection;
     class Statement
     {
@@ -109,7 +132,9 @@ namespace smsc { namespace store
         char        bNeedArchivate;
         
         sb2         indBody, indNextTime, indSvcType;
-        
+
+        FullAddressValue    oa, da, dda;
+
     public:
         
         StoreStatement(Connection* connection, bool assign=true)
@@ -128,6 +153,8 @@ namespace smsc { namespace store
     protected:
 
         ub4 count;
+        
+        FullAddressValue    oa, da, dda;
     
     public:
         
@@ -141,6 +168,8 @@ namespace smsc { namespace store
             throw(StorageException);
         void bindDestinationAddress(Address& da)
             throw(StorageException);
+        void bindDealiasedDestinationAddress(Address& dda)
+            throw(StorageException);
         
         bool needReject();
     };
@@ -150,6 +179,8 @@ namespace smsc { namespace store
     static const char* sql;
     protected:
         
+        FullAddressValue    oa, da, dda;
+
         NeedOverwriteStatement(Connection* connection, const char* sql,
                                bool assign=true)
             throw(StorageException);
@@ -163,6 +194,8 @@ namespace smsc { namespace store
         void bindOriginatingAddress(Address& oa)
             throw(StorageException);
         void bindDestinationAddress(Address& da)
+            throw(StorageException);
+        void bindDealiasedDestinationAddress(Address& dda)
             throw(StorageException);
         
         void getId(SMSId& id)
@@ -235,9 +268,11 @@ namespace smsc { namespace store
         
         char        bNeedArchivate;
         
-        sb2     indOA, indSrcMsc, indSrcImsi, indSrcSme;
-        sb2     indDA, indDstMsc, indDstImsi, indDstSme;
-        sb2     indSvc, indBody, indLastTime, indNextTime;
+        sb2         indSrcMsc, indSrcImsi, indSrcSme;
+        sb2         indDstMsc, indDstImsi, indDstSme;
+        sb2         indSvc, indBody, indLastTime, indNextTime;
+
+        FullAddressValue    oa, da, dda;
     
         RetriveStatement(Connection* connection, const char* sql,
                          bool assign=true) 
@@ -286,6 +321,8 @@ namespace smsc { namespace store
         uint8_t*    bodyBuffer;
 
         sb2         indBody;
+
+        FullAddressValue    oa;
 
         ReplaceStatement(Connection* connection, const char* sql,
                          bool assign=true) throw(StorageException);

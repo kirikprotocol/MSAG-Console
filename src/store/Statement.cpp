@@ -164,9 +164,8 @@ SetIdStatement::SetIdStatement(Connection* connection, const char* sql,
 
 /* ----------------------- NeedRejectStatement ---------------------- */
 const char* NeedRejectStatement::sql = (const char*)
-"SELECT NVL(COUNT(*), 0) FROM SMS_MSG WHERE ST=:ENROUTE AND MR=:MR\
- AND OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL\
- AND DA_TON=:OA_TON AND DA_NPI=:DA_NPI AND DA_VAL=:DA_VAL";
+"SELECT NVL(COUNT(*), 0) FROM SMS_MSG\
+ WHERE ST=:ENROUTE AND MR=:MR AND OA=:OA AND DDA=:DDA";
 
 NeedRejectStatement::NeedRejectStatement(Connection* connection, 
                                          bool assign)
@@ -183,19 +182,23 @@ void NeedRejectStatement::bindMr(dvoid* mr, sb4 size)
 {
     bind(2 , SQLT_UIN, mr, size);
 }
-void NeedRejectStatement::bindOriginatingAddress(Address& oa)
+void NeedRejectStatement::bindOriginatingAddress(Address& address)
     throw(StorageException)
 {
-    bind(3 , SQLT_UIN, (dvoid *)&(oa.type), (sb4) sizeof(oa.type)); 
-    bind(4 , SQLT_UIN, (dvoid *)&(oa.plan), (sb4) sizeof(oa.plan));
-    bind(5 , SQLT_STR, (dvoid *) (oa.value), (sb4) sizeof(oa.value));
+    convertAddressToString(address, oa);
+    bind(3 , SQLT_STR, (dvoid *)(oa), (sb4) sizeof(oa));
 }
-void NeedRejectStatement::bindDestinationAddress(Address& da)
+void NeedRejectStatement::bindDestinationAddress(Address& address)
     throw(StorageException)
 {
-    bind(6 , SQLT_UIN, (dvoid *)&(da.type), (sb4) sizeof(da.type)); 
-    bind(7 , SQLT_UIN, (dvoid *)&(da.plan), (sb4) sizeof(da.plan));
-    bind(8 , SQLT_STR, (dvoid *) (da.value), (sb4) sizeof(da.value));
+    /*convertAddressToString(address, da);
+    bind(3 , SQLT_STR, (dvoid *)(da), (sb4) sizeof(da));*/
+}
+void NeedRejectStatement::bindDealiasedDestinationAddress(Address& address)
+    throw(StorageException)
+{
+    convertAddressToString(address, dda);
+    bind(3 , SQLT_STR, (dvoid *)(dda), (sb4) sizeof(dda));
 }
 
 bool NeedRejectStatement::needReject()
@@ -206,9 +209,7 @@ bool NeedRejectStatement::needReject()
 /* ----------------------- NeedOverwriteStatement ---------------------- */
 const char* NeedOverwriteStatement::sql = (const char*)
 "SELECT ID FROM SMS_MSG WHERE ST=:ENROUTE\
- AND OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL\
- AND DA_TON=:OA_TON AND DA_NPI=:DA_NPI AND DA_VAL=:DA_VAL\
- AND SVC_TYPE IS NULL";
+ AND OA=:OA AND DDA=:DDA AND SVC_TYPE IS NULL";
 NeedOverwriteStatement::NeedOverwriteStatement(Connection* connection, 
                                                bool assign)
     throw(StorageException)
@@ -229,19 +230,23 @@ NeedOverwriteStatement::NeedOverwriteStatement(Connection* connection,
     define(1, SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
 }
 
-void NeedOverwriteStatement::bindOriginatingAddress(Address& oa)
+void NeedOverwriteStatement::bindOriginatingAddress(Address& address)
     throw(StorageException)
 {
-    bind(2 , SQLT_UIN, (dvoid *)&(oa.type), (sb4) sizeof(oa.type)); 
-    bind(3 , SQLT_UIN, (dvoid *)&(oa.plan), (sb4) sizeof(oa.plan));
-    bind(4 , SQLT_STR, (dvoid *) (oa.value), (sb4) sizeof(oa.value));
+    convertAddressToString(address, oa);
+    bind(2 , SQLT_STR, (dvoid *)(oa), (sb4) sizeof(oa));
 }
-void NeedOverwriteStatement::bindDestinationAddress(Address& da)
+void NeedOverwriteStatement::bindDestinationAddress(Address& address)
     throw(StorageException)
 {
-    bind(5 , SQLT_UIN, (dvoid *)&(da.type), (sb4) sizeof(da.type)); 
-    bind(6 , SQLT_UIN, (dvoid *)&(da.plan), (sb4) sizeof(da.plan));
-    bind(7 , SQLT_STR, (dvoid *) (da.value), (sb4) sizeof(da.value));
+    /*convertAddressToString(address, da);
+    bind(2 , SQLT_STR, (dvoid *)(da), (sb4) sizeof(da));*/
+}
+void NeedOverwriteStatement::bindDealiasedDestinationAddress(Address& address)
+    throw(StorageException)
+{
+    convertAddressToString(address, dda);
+    bind(3 , SQLT_STR, (dvoid *)(dda), (sb4) sizeof(dda));
 }
 
 void NeedOverwriteStatement::getId(SMSId& id)
@@ -252,9 +257,7 @@ void NeedOverwriteStatement::getId(SMSId& id)
 
 const char* NeedOverwriteSvcStatement::sql = (const char*)
 "SELECT ID FROM SMS_MSG WHERE ST=:ENROUTE\
- AND OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL\
- AND DA_TON=:OA_TON AND DA_NPI=:DA_NPI AND DA_VAL=:DA_VAL\
- AND SVC_TYPE=:SVC_TYPE";
+ AND OA=:OA AND DDA=:DDA AND SVC_TYPE=:SVC_TYPE";
 NeedOverwriteSvcStatement::NeedOverwriteSvcStatement(Connection* connection, 
                                                      bool assign=true)
     throw(StorageException)
@@ -265,7 +268,7 @@ NeedOverwriteSvcStatement::NeedOverwriteSvcStatement(Connection* connection,
 void NeedOverwriteSvcStatement::bindEServiceType(dvoid* type, sb4 size)
     throw(StorageException)
 {
-    bind(8 , SQLT_STR, type, size);
+    bind(4 , SQLT_STR, type, size);
 }
 
 /* ------------------------- OverwriteStatement ---------------------- */
@@ -351,14 +354,12 @@ void OverwriteStatement::bindSms(SMS& sms)
 
 /* --------------------------- StoreStatement ----------------------- */
 const char* StoreStatement::sql = (const char*)
-"INSERT INTO SMS_MSG (ID, ST, MR,\
- OA_TON, OA_NPI, OA_VAL, SRC_MSC, SRC_IMSI, SRC_SME_N,\
- DA_TON, DA_NPI, DA_VAL,\
+"INSERT INTO SMS_MSG (ID, ST, MR, OA, DA, DDA,\
+ SRC_MSC, SRC_IMSI, SRC_SME_N,\
  VALID_TIME, SUBMIT_TIME, ATTEMPTS, LAST_RESULT,\
  LAST_TRY_TIME, NEXT_TRY_TIME, SVC_TYPE, DR, BR, ARC, BODY, BODY_LEN)\
- VALUES (:ID, :ST, :MR,\
- :OA_TON, :OA_NPI, :OA_VAL, :SRC_MSC, :SRC_IMSI, :SRC_SME_N,\
- :DA_TON, :DA_NPI, :DA_VAL,\
+ VALUES (:ID, :ST, :MR, :OA, :DA, :DDA,\
+ :SRC_MSC, :SRC_IMSI, :SRC_SME_N,\
  :VALID_TIME, :SUBMIT_TIME, 0, 0, NULL, :NEXT_TRY_TIME,\
  :SVC, :DR, :BR, :ARC, :BODY, :BODY_LEN)";
 StoreStatement::StoreStatement(Connection* connection, bool assign)
@@ -381,25 +382,21 @@ void StoreStatement::bindSms(SMS& sms)
 
     bind(i++, SQLT_UIN, (dvoid *)&(sms.messageReference),
          (sb4) sizeof(sms.messageReference));
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.originatingAddress.type),
-         (sb4) sizeof(sms.originatingAddress.type)); 
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.originatingAddress.plan),
-         (sb4) sizeof(sms.originatingAddress.plan));
-    bind(i++, SQLT_STR, (dvoid *) (sms.originatingAddress.value), 
-         (sb4) sizeof(sms.originatingAddress.value));
+    
+    convertAddressToString(sms.originatingAddress, oa);
+    bind(i++, SQLT_STR, (dvoid *) (oa), (sb4) sizeof(oa));
+    convertAddressToString(sms.destinationAddress, da);
+    bind(i++, SQLT_STR, (dvoid *) (da), (sb4) sizeof(da));
+    convertAddressToString(sms.dealiasedDestinationAddress, dda);
+    bind(i++, SQLT_STR, (dvoid *) (dda), (sb4) sizeof(dda));
+
     bind(i++, SQLT_STR, (dvoid *) (sms.originatingDescriptor.msc),
          (sb4) sizeof(sms.originatingDescriptor.msc));
     bind(i++, SQLT_STR, (dvoid *) (sms.originatingDescriptor.imsi),
          (sb4) sizeof(sms.originatingDescriptor.imsi));
     bind(i++, SQLT_UIN, (dvoid *)&(sms.originatingDescriptor.sme),
          (sb4) sizeof(sms.originatingDescriptor.sme));
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.destinationAddress.type),
-         (sb4) sizeof(sms.destinationAddress.type)); 
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.destinationAddress.plan),
-         (sb4) sizeof(sms.destinationAddress.plan));
-    bind(i++, SQLT_STR, (dvoid *) (sms.destinationAddress.value),
-         (sb4) sizeof(sms.destinationAddress.value));
-    
+
     convertDateToOCIDate(&(sms.validTime), &validTime);
     bind(i++, SQLT_ODT, (dvoid *) &(validTime), 
          (sb4) sizeof(validTime));
@@ -441,9 +438,8 @@ void StoreStatement::bindSms(SMS& sms)
 
 /* --------------------------- RetriveStatement ----------------------- */
 const char* RetriveStatement::sql = (const char*)
-"SELECT ST, MR,\
- OA_TON, OA_NPI, OA_VAL, SRC_MSC, SRC_IMSI, SRC_SME_N,\
- DA_TON, DA_NPI, DA_VAL, DST_MSC, DST_IMSI, DST_SME_N,\
+"SELECT ST, MR, OA, DA, DDA,\
+ SRC_MSC, SRC_IMSI, SRC_SME_N, DST_MSC, DST_IMSI, DST_SME_N,\
  VALID_TIME, SUBMIT_TIME,\
  ATTEMPTS, LAST_RESULT, LAST_TRY_TIME, NEXT_TRY_TIME,\
  SVC_TYPE, DR, BR, ARC, BODY, BODY_LEN\
@@ -469,13 +465,11 @@ void RetriveStatement::defineSms(SMS& sms)
     define(i++, SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
     define(i++, SQLT_UIN, (dvoid *) &(sms.messageReference),
            (sb4) sizeof(sms.messageReference));
-    define(i++, SQLT_UIN, (dvoid *) &(sms.originatingAddress.type),
-           (sb4) sizeof(sms.originatingAddress.type));
-    define(i++, SQLT_UIN, (dvoid *) &(sms.originatingAddress.plan),
-           (sb4) sizeof(sms.originatingAddress.plan));
-    define(i++, SQLT_STR, (dvoid *) (sms.originatingAddress.value),
-           (sb4) sizeof(sms.originatingAddress.value),
-           (dvoid *)&(indOA));
+    
+    define(i++, SQLT_STR, (dvoid *) (oa), (sb4) sizeof(oa));
+    define(i++, SQLT_STR, (dvoid *) (da), (sb4) sizeof(da));
+    define(i++, SQLT_STR, (dvoid *) (dda), (sb4) sizeof(dda));
+
     define(i++, SQLT_STR, (dvoid *) (sms.originatingDescriptor.msc),
            (sb4) sizeof(sms.originatingDescriptor.msc),
            (dvoid *)&(indSrcMsc));
@@ -485,13 +479,6 @@ void RetriveStatement::defineSms(SMS& sms)
     define(i++, SQLT_UIN, (dvoid *) &(sms.originatingDescriptor.sme),
            (sb4) sizeof(sms.originatingDescriptor.sme),
            (dvoid *)&(indSrcSme));
-    define(i++, SQLT_UIN, (dvoid *) &(sms.destinationAddress.type),
-           (sb4) sizeof(sms.destinationAddress.type));
-    define(i++, SQLT_UIN, (dvoid *) &(sms.destinationAddress.plan),
-           (sb4) sizeof(sms.destinationAddress.plan));
-    define(i++, SQLT_STR, (dvoid *) (sms.destinationAddress.value),
-           (sb4) sizeof(sms.destinationAddress.value),
-           (dvoid *)&(indDA));
     define(i++, SQLT_STR, (dvoid *) (sms.destinationDescriptor.msc),
            (sb4) sizeof(sms.destinationDescriptor.msc), 
            (dvoid *)&indDstMsc);
@@ -535,20 +522,10 @@ void RetriveStatement::getSms(SMS& sms)
     sms.state = (State) uState;
     sms.needArchivate = (bNeedArchivate == 'Y');
     
-    if (indOA == OCI_IND_NOTNULL) {
-        sms.originatingAddress.length 
-            = strlen(sms.originatingAddress.value);
-    } else {
-        sms.originatingAddress.value[0] = '\0';
-        sms.originatingAddress.length = 0;
-    }
-    if (indDA == OCI_IND_NOTNULL) {
-        sms.destinationAddress.length 
-            = strlen(sms.destinationAddress.value);
-    } else {
-        sms.destinationAddress.value[0] = '\0';
-        sms.destinationAddress.length = 0;
-    }
+    convertStringToAddress(oa, sms.originatingAddress);
+    convertStringToAddress(da, sms.destinationAddress);
+    convertStringToAddress(dda, sms.dealiasedDestinationAddress);
+    
     if (indSrcImsi == OCI_IND_NOTNULL) {
         sms.originatingDescriptor.imsiLength 
             = strlen(sms.originatingDescriptor.imsi);
@@ -617,8 +594,7 @@ void DestroyStatement::bindId(SMSId id)
 /* --------------------------- ReplaceStatement ----------------------- */        
 const char* ReplaceStatement::sql = (const char*)
 "UPDATE SMS_MSG SET DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN\
- WHERE ID=:ID AND ST=:ENROUTE AND\
- OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL";
+ WHERE ID=:ID AND ST=:ENROUTE AND OA=:OA";
 
 ReplaceStatement::ReplaceStatement(Connection* connection, bool assign)
     throw(StorageException)
@@ -645,15 +621,12 @@ void ReplaceStatement::bindId(SMSId id)
     bind((CONST text *)"ID", (sb4) 2*sizeof(char), 
          SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
 }
-void ReplaceStatement::bindOriginatingAddress(Address& oa)
+void ReplaceStatement::bindOriginatingAddress(Address& address)
     throw(StorageException)
 {
-    bind((CONST text *)"OA_TON", (sb4) 6*sizeof(char),
-         SQLT_UIN, (dvoid *)&(oa.type), (sb4) sizeof(oa.type));
-    bind((CONST text *)"OA_NPI", (sb4) 6*sizeof(char),
-         SQLT_UIN, (dvoid *)&(oa.plan), (sb4) sizeof(oa.plan));
-    bind((CONST text *)"OA_VAL", (sb4) 6*sizeof(char),
-         SQLT_STR, (dvoid *) (oa.value), (sb4) sizeof(oa.value));
+    convertAddressToString(address, oa);
+    bind((CONST text *)"OA", (sb4) 2*sizeof(char),
+         SQLT_STR, (dvoid *) (oa), (sb4) sizeof(oa));
 }
 void ReplaceStatement::bindBody(Body& body)
     throw(StorageException)
@@ -693,8 +666,7 @@ void ReplaceStatement::bindWaitTime(time_t waitTime)
 const char* ReplaceVTStatement::sql = (const char*)
 "UPDATE SMS_MSG SET DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN,\
  VALID_TIME=:VT\
- WHERE ID=:ID AND ST=:ENROUTE AND\
- OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL";
+ WHERE ID=:ID AND ST=:ENROUTE AND OA=:OA";
 ReplaceVTStatement::ReplaceVTStatement(Connection* connection, bool assign)
     throw(StorageException)
         : ReplaceStatement(connection, ReplaceVTStatement::sql, assign) {}
@@ -702,8 +674,7 @@ ReplaceVTStatement::ReplaceVTStatement(Connection* connection, bool assign)
 const char* ReplaceWTStatement::sql = (const char*)
 "UPDATE SMS_MSG SET DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN,\
  NEXT_TRY_TIME=:WT, LAST_TRY_TIME=NULL\
- WHERE ID=:ID AND ST=:ENROUTE AND\
- OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL";
+ WHERE ID=:ID AND ST=:ENROUTE AND OA=:OA";
 ReplaceWTStatement::ReplaceWTStatement(Connection* connection, bool assign)
     throw(StorageException)
         : ReplaceStatement(connection, ReplaceWTStatement::sql, assign) {}
@@ -711,8 +682,7 @@ ReplaceWTStatement::ReplaceWTStatement(Connection* connection, bool assign)
 const char* ReplaceVWTStatement::sql = (const char*)
 "UPDATE SMS_MSG SET DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN,\
  VALID_TIME=:VT, NEXT_TRY_TIME=:WT, LAST_TRY_TIME=NULL\
- WHERE ID=:ID AND ST=:ENROUTE AND\
- OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL";
+ WHERE ID=:ID AND ST=:ENROUTE AND OA=:OA";
 ReplaceVWTStatement::ReplaceVWTStatement(Connection* connection, bool assign)
     throw(StorageException)
         : ReplaceStatement(connection, ReplaceVWTStatement::sql, assign) {}

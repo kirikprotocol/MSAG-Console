@@ -132,6 +132,8 @@ void StoreManager::doCreateSms(StorageConnection* connection,
         }
         needOverwriteStmt->bindOriginatingAddress(sms.originatingAddress);
         needOverwriteStmt->bindDestinationAddress(sms.destinationAddress);
+        needOverwriteStmt->bindDealiasedDestinationAddress(
+            sms.dealiasedDestinationAddress);
         
         sword result = needOverwriteStmt->execute();
         if (result != OCI_NO_DATA)
@@ -184,6 +186,8 @@ void StoreManager::doCreateSms(StorageConnection* connection,
         
         needRejectStmt->bindOriginatingAddress(sms.originatingAddress);
         needRejectStmt->bindDestinationAddress(sms.destinationAddress);
+        needRejectStmt->bindDealiasedDestinationAddress(
+            sms.dealiasedDestinationAddress);
         needRejectStmt->bindMr((dvoid *)&(sms.messageReference),
                                (sb4) sizeof(sms.messageReference));
         
