@@ -30,6 +30,7 @@ const char* const TC_ENABLE_EXISTENT_SME = "enableExistentSme";
 const char* const TC_ENABLE_NON_EXISTENT_SME = "enableNonExistentSme";
 const char* const TC_GET_EXISTENT_SME = "getExistentSme";
 const char* const TC_GET_NON_EXISTENT_SME = "getNonExistentSme";
+const char* const TC_ITERATE_SME = "iterateSme";
 
 //max values
 const int MAX_SYSTEM_ID_LENGTH = 15;
@@ -53,7 +54,7 @@ public:
 	/**
 	 * –егистраци€ sme с корректными параметрами.
 	 */
-	TCResult* addCorrectSme(SmeInfo* info, int num);
+	TCResult* addCorrectSme(SmeInfo* sme, int num);
 	
 	/**
 	 * –егистраци€ sme с некорректными параметрами.
@@ -63,7 +64,7 @@ public:
 	/**
 	 * ”даление зарегистрированного sme.
 	 */
-	TCResult* deleteExistentSme(const SmeSystemId& systemId);
+	TCResult* deleteExistentSme(const SmeSystemId& smeId);
 
 	/**
 	 * ”даление незарегистрированного/несуществующего sme.
@@ -73,7 +74,7 @@ public:
 	/**
 	 * Disable зарегистрированного sme.
 	 */
-	TCResult* disableExistentSme(SmeInfo* info);
+	TCResult* disableExistentSme(SmeInfo* sme);
 	
 	/**
 	 * Disable незарегистрированного/несуществующего sme.
@@ -83,7 +84,7 @@ public:
 	/**
 	 * Enable зарегистрированного sme.
 	 */
-	TCResult* enableExistentSme(SmeInfo* info);
+	TCResult* enableExistentSme(SmeInfo* sme);
 	
 	/**
 	 * Enable незарегистрированного/несуществующего sme.
@@ -93,12 +94,17 @@ public:
 	/**
 	 * ѕолучение зарегистрированного sme.
 	 */
-	TCResult* getExistentSme(const SmeInfo& info, SmeProxy* proxy);
+	TCResult* getExistentSme(const SmeInfo& sme, SmeProxy* proxy);
 	
 	/**
 	 * ѕолучение незарегистрированного/несуществующего sme.
 	 */
-	TCResult* getNonExistentSme(const SmeSystemId& systemId, int num);
+	TCResult* getNonExistentSme(const SmeSystemId& smeId, int num);
+
+	/**
+	 * »терирование по списку зарегистрированных sme.
+	 */
+	TCResult* iterateSme(const vector<SmeInfo*> sme);
 
 protected:
 	virtual Category& getLog();

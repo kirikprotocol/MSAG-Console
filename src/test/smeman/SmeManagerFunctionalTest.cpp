@@ -69,6 +69,9 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 		}
 	}
 
+	//»терирование по списку зарегистрированных sme
+	filter->addResult(tc.iterateSme(sme));
+
 	//”даление зарегистрированного sme
 	for (int i = 0; i < sme.size(); i++)
 	{
@@ -92,6 +95,9 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 	stack[0]->push_back(res1);
 	stack[0]->push_back(res2);
 	stack[0]->push_back(res3);
+
+	//»терирование по списку зарегистрированных sme
+	filter->addResult(tc.iterateSme(vector<SmeInfo*>()));
 
 	//обработка результатов
 	for (int i = 0; i < stack.size(); i++)
@@ -133,6 +139,8 @@ void saveCheckList(TCResultFilter* filter)
 		filter->getResults(TC_GET_EXISTENT_SME));
 	cl.writeResult("ѕолучение незарегистрированного/несуществующего sme",
 		filter->getResults(TC_GET_NON_EXISTENT_SME));
+	cl.writeResult("»терирование по списку зарегистрированных sme",
+		filter->getResults(TC_ITERATE_SME));
 }
 
 /**

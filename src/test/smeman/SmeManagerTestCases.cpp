@@ -1,15 +1,16 @@
 #include "SmeManagerTestCases.hpp"
 #include "test/core/CoreTestManager.hpp"
 #include "smeman/smetypes.h"
+#include <map>
 
 namespace smsc {
 namespace test {
 namespace smeman {
 
+using namespace std;
+using namespace smsc::smeman; //SmeIndex, SmeError, SmeIterator
 using namespace smsc::test::util;
 using smsc::util::Logger;
-using smsc::smeman::SmeIndex;
-using smsc::smeman::SmeError;
 using test::core::CoreTestManager;
 
 SmeManagerTestCases::SmeManagerTestCases()
@@ -31,16 +32,16 @@ void SmeManagerTestCases::setupRandomCorrectSmeInfo(SmeInfo* info)
 	auto_ptr<char> _addressRange = rand_char(rand1(MAX_ADDRESS_RANGE_LENGTH));
 	info->rangeOfAddress = _addressRange.get();
 	//systemType
-	auto_ptr<char> _systemType = rand_char(MAX_SYSTEM_TYPE_LENGTH);
+	auto_ptr<char> _systemType = rand_char(rand1(MAX_SYSTEM_TYPE_LENGTH));
 	info->systemType = _systemType.get();
 	//password
-	auto_ptr<char> _password = rand_char(MAX_PASSWORD_LENGTH);
+	auto_ptr<char> _password = rand_char(rand1(MAX_PASSWORD_LENGTH));
 	info->password = _password.get();
 	//hostname & port
 	info->hostname = "localhost";
 	info->port = rand1(65535);
 	//systemId
-	auto_ptr<char> _systemId = rand_char(MAX_SYSTEM_ID_LENGTH);
+	auto_ptr<char> _systemId = rand_char(rand1(MAX_SYSTEM_ID_LENGTH));
 	info->systemId = _systemId.get();
 	info->SME_N = rand0(65535);
 	info->disabled = rand0(1);
@@ -374,6 +375,69 @@ TCResult* SmeManagerTestCases::getNonExistentSme(const SmeSystemId& systemId, in
 			error();
 			res->addFailure(100);
 		}
+	}
+	debug(res);
+	return res;
+}
+
+TCResult* SmeManagerTestCases::iterateSme(const vector<SmeInfo*> sme)
+{
+	TCResult* res = new TCResult(TC_ITERATE_SME);
+	try
+	{
+		SmeIterator* iter = smeMan->iterator();
+		int foundSme = 0;
+		int extraSme = 0;
+		typedef map<int, int> MismatchMap;
+		MismatchMap mismatch;
+		while (iter->next())
+		{
+			//SmeProxy* proxy = iter->getSmeProxy();
+			//SmeIndex index = iter->getSmeIndex();
+			SmeInfo info = iter->getSmeInfo();
+			bool found = false;
+			for (int i = 0; i < sme.size(); i++)
+			{
+				if (sme[i]->systemId == info.systemId)
+				{
+					found = true; foundSme++;
+					vector<int> tmp = compareSmeInfo(*sme[i], info);
+					for (int j = 0; j < tmp.size(); j++)
+					{
+						mismatch[tmp[j]]++;
+					}
+					break;
+				}
+			}
+			if (!found)
+			{
+				extraSme++;
+			}
+		}
+		delete iter;
+		//итератор вернул лишние sme
+		if (extraSme)
+		{
+			res->addFailure(101);
+		}
+		//итератор пропустил некоторые sme
+		if (foundSme != sme.size())
+		{
+			res->addFailure(102);
+		}
+		//перечислить отличия в sme
+		for (MismatchMap::iterator it = mismatch.begin(); it != mismatch.end(); it++)
+		{
+			if (it->second)
+			{
+				res->addFailure(it->first);
+			}
+		}
+	}
+	catch(...)
+	{
+		error();
+		res->addFailure(100);
 	}
 	debug(res);
 	return res;
