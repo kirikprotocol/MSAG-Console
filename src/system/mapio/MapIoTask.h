@@ -44,8 +44,8 @@ extern "C" {
 
 class hash_func_ET96MAP_DID{
 public:
-  static inline int CalcHash(ET96MAP_DIALOGUE_ID_T id){
-    return (int)id;
+  static inline unsigned CalcHash(ET96MAP_DIALOGUE_ID_T id){
+    return (unsigned)id;
   }
 };
 

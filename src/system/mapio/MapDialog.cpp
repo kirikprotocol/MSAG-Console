@@ -501,9 +501,9 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
           throw runtime_error("MAP::mkDeliveryPDU: Opss, has no ms_validity");
         }
         unsigned ms_validity = sms->getIntProperty(Tag::MS_VALIDITY);
-        if ( ms_validity & 0x3 == 0x3 ){
+        if ( (ms_validity & 0x3) == 0x3 ){
           value = 0x40;
-        }else if ( ms_validity & 0x3 == 0 ){
+        }else if ( (ms_validity & 0x3) == 0 ){
           value = 0x00;
         }else{
           __trace2__("MAP::mkDeliveryPDU: Opss, ms_validity = 0x%x but must be 0x0 or 0x3",
