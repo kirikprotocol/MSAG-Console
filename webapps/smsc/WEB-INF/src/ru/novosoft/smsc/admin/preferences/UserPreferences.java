@@ -8,6 +8,7 @@ package ru.novosoft.smsc.admin.preferences;
 import ru.novosoft.smsc.jsp.util.tables.impl.*;
 
 import java.util.Vector;
+import java.util.Locale;
 
 public class UserPreferences
 {
@@ -36,6 +37,8 @@ public class UserPreferences
 	private int smsviewPageSize = 20;
 	private int smsviewMaxResults = 500;
 	private String smsviewSortOrder = "date";
+
+	private Locale locale = new Locale("ru");
 
 	public UserPreferences()
 	{
@@ -169,5 +172,10 @@ public class UserPreferences
 	public void setSmsviewSortOrder(String smsviewSortOrder)
 	{
 		this.smsviewSortOrder = smsviewSortOrder;
+	}
+
+	public Locale getLocale()
+	{
+		return locale;
 	}
 }

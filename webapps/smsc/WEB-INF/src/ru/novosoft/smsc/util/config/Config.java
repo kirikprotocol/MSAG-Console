@@ -78,12 +78,12 @@ public class Config
 			throw new WrongParamTypeException("Parameter \"" + paramName + "\" is not boolean");
 	}
 
-	private synchronized Object getParameter(String paramName)
+	public synchronized Object getParameter(String paramName)
 	{
 		return params.get(paramName);
 	}
 
-	private synchronized Set getParameterNames()
+	public synchronized Set getParameterNames()
 	{
 		return params.keySet();
 	}
@@ -178,7 +178,7 @@ public class Config
 		NodeList list = elem.getChildNodes();
 		for (int i = 0; i < list.getLength(); i++)
 		{
-			Node node = (Node) list.item(i);
+			Node node = list.item(i);
 			if (node.getNodeType() == Node.ELEMENT_NODE)
 			{
 				Element element = (Element) node;

@@ -30,8 +30,7 @@ import ru.novosoft.util.conpool.NSConnectionPool;
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
-import java.util.HashMap;
-import java.util.Collection;
+import java.util.*;
 
 
 public class Smsc extends Service
@@ -41,6 +40,8 @@ public class Smsc extends Service
 	private Method apply_aliases_method = null;
 	private Method lookup_profile_method = null;
 	private Method update_profile_method = null;
+	private Method flush_statistics_method = null;
+	private Method process_cancel_messages_method = null;
 	private ConfigManager configManager = null;
 
 	private SMEList smes = null;
@@ -77,6 +78,8 @@ public class Smsc extends Service
 			apply_aliases_method = (Method) smsc_component.getMethods().get("apply_aliases");
 			lookup_profile_method = (Method) smsc_component.getMethods().get("lookup_profile");
 			update_profile_method = (Method) smsc_component.getMethods().get("update_profile");
+			flush_statistics_method = (Method) smsc_component.getMethods().get("flush_statistics");
+			process_cancel_messages_method = (Method) smsc_component.getMethods().get("process_cancel_messages");
 		}
 		try
 		{
@@ -186,7 +189,7 @@ public class Smsc extends Service
 	public void applyProfiles()
 			throws AdminException
 	{
-		/*  todo */
+		/* todo applyProfiles */
 	}
 
 	public void applyAliases()
@@ -308,13 +311,21 @@ public class Smsc extends Service
 	public void processCancelMessages(Collection messageIds)
 			throws AdminException
 	{
-		/* todo */
+		String ids = "";
+		for (Iterator i = messageIds.iterator(); i.hasNext();)
+		{
+			String id = (String) i.next();
+			ids += id + (i.hasNext() ? ", " : "");
+		}
+		Map params = new HashMap();
+		params.put("cancelMessageIds", ids);
+		call(smsc_component, process_cancel_messages_method, Type.Types[Type.StringType], params);
 	}
 
 	public void flushStatistics()
 			throws AdminException
 	{
-		/*todo*/
+		call(smsc_component, flush_statistics_method, Type.Types[Type.StringType], new HashMap());
 	}
 
 	public void start(Daemon smscDaemon)
@@ -330,7 +341,9 @@ public class Smsc extends Service
 
 	protected void checkComponents() throws AdminException
 	{
-		if (apply_aliases_method == null || apply_routes_method == null || lookup_profile_method == null || update_profile_method == null)
+		if (apply_aliases_method == null || apply_routes_method == null || lookup_profile_method == null
+				|| update_profile_method == null || flush_statistics_method == null
+				|| process_cancel_messages_method == null)
 		{
 			refreshComponents();
 			smsc_component = (Component) getInfo().getComponents().get("SMSC");
@@ -338,6 +351,23 @@ public class Smsc extends Service
 			apply_aliases_method = (Method) smsc_component.getMethods().get("apply_aliases");
 			lookup_profile_method = (Method) smsc_component.getMethods().get("lookup_profile");
 			update_profile_method = (Method) smsc_component.getMethods().get("update_profile");
+			flush_statistics_method = (Method) smsc_component.getMethods().get("flush_statistics");
+			process_cancel_messages_method = (Method) smsc_component.getMethods().get("process_cancel_messages");
+		}
+	}
+
+	public Config getSmscConfig()
+	{
+		try
+		{
+			File confFile = new File(getSmscConfFolder(), "config.xml");
+			Document confDoc = Utils.parse(new FileInputStream(confFile));
+			return new Config(confDoc);
+		}
+		catch (Throwable t)
+		{
+			logger.error("Couldn't get SMSC config", t);
+			return null;
 		}
 	}
 }

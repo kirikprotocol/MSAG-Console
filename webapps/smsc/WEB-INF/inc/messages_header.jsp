@@ -3,7 +3,7 @@ page import="ru.novosoft.smsc.jsp.*"
 %><%
 	java.util.ResourceBundle messages = null;
 	if (appContext != null)
-		messages = appContext.getLocaleMessages(request.getLocale());
+		messages = appContext.getLocaleMessages(appContext.getUserPreferences().getLocale());
 /*	public static final java.util.ResourceBundle messages = appContext.getLocaleMessages(request.getLocale());
 	static
 	{

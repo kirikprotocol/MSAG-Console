@@ -16,6 +16,8 @@ rebuild: clean compile
 compile:
 	@echo compiling SMSC
 	@javac -sourcepath src -classpath $(CLASSPATH) -d classes `find src -name *.java`
+	@native2ascii -encoding windows-1251 <src/locales/messages_en.properties > classes/locales/messages_en.properties
+	@native2ascii -encoding windows-1251 <src/locales/messages_ru.properties > classes/locales/messages_ru.properties
 	@echo making jar
 	@mkdir -p $(SMSC_BUILDDIR)/jars
 	@jar -cf $(SMSC_BUILDDIR)/jars/smsc_tomcat_server.jar -C classes ru/novosoft/smsc/util/auth/SmscRealm.class

@@ -109,6 +109,7 @@ public class SMSCErrors
 			public static final String couldntStart = B + "couldntStart";
 			public static final String couldntStop = B + "couldntStop";
 			public static final String couldntRefreshComponents = B + "couldntRefreshComponents";
+			public static final String couldntGetConfig = B + "couldntGetConfig";
 		}
 	}
 
