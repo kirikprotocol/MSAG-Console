@@ -514,7 +514,7 @@ public:
 
   SmeProxy* getProxy()const{return cmd->proxy;}
   void setProxy(SmeProxy* newproxy){cmd->proxy=newproxy;}
-
+  bool IsOk() { return cmd != 0; }
   // specialized constructors (meta constructors)
   static SmscCommand makeSumbmitSm(const SMS& sms,uint32_t dialogId)
   {

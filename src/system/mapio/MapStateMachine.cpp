@@ -862,7 +862,7 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error = false,unsigned 
     {
       dialog->dropChain = true;
       try{
-        if ( dialog->isQueryAbonentStatus ){
+        if ( dialog->isQueryAbonentStatus && dialog->QueryAbonentCommand.IsOk() ){
           int status;
           status = AbonentStatus::UNKNOWNVALUE;
           SendAbonentStatusToSmsc(dialog.get(),status);
