@@ -11,31 +11,34 @@ using smsc::util::xml::DOMTreeReader;
 
 void LocaleResources::processParams(const DOM_Element &elem, LocaleResources::_stringmap & settings, const std::string &prefix)
 {
-	DOM_NodeList sectionList = elem.getElementsByTagName("section");
+	DOM_NodeList sectionList = elem.getChildNodes();
 	for (int i = 0; i < sectionList.getLength(); i++)
 	{
 		DOM_Node node = sectionList.item(i);
-		DOM_Element &sectionElem = *(DOM_Element*)(&node);
-		std::auto_ptr<char> sectionName(sectionElem.getAttribute("name").transcode());
-		std::string newPrefix = prefix;
-		if (!prefix.empty())
-			newPrefix += '.';
-		newPrefix += sectionName.get();
-		processParams(sectionElem, settings, newPrefix);
-	}
-
-	DOM_NodeList paramList = elem.getElementsByTagName("param");
-	for (int i = 0; i < paramList.getLength(); i++)
-	{
-		DOM_Node node = paramList.item(i);
-		DOM_Element &paramElem = *(DOM_Element*)(&node);
-		std::auto_ptr<char> name(paramElem.getAttribute("name").transcode());
-		std::auto_ptr<char> value(smsc::util::xml::getNodeText(paramElem));
-		std::string paramName = prefix;
-		if (!prefix.empty())
-			paramName += '.';
-		paramName += name.get();
-		settings[paramName] = value.get();
+		if (node.getNodeType() == DOM_Node::ELEMENT_NODE)
+		{
+			DOM_Element &elem = *(DOM_Element*)(&node);
+			std::auto_ptr<char> elemName(elem.getNodeName().transcode());
+			if (strcmp(elemName.get(), "section") == 0)
+			{
+				std::auto_ptr<char> sectionName(elem.getAttribute("name").transcode());
+				std::string newPrefix = prefix;
+				if (!prefix.empty())
+					newPrefix += '.';
+				newPrefix += sectionName.get();
+				processParams(elem, settings, newPrefix);
+			}
+			else if (strcmp(elemName.get(), "param") == 0)
+			{
+				std::auto_ptr<char> name(elem.getAttribute("name").transcode());
+				std::auto_ptr<char> value(smsc::util::xml::getNodeText(elem));
+				std::string paramName = prefix;
+				if (!prefix.empty())
+					paramName += '.';
+				paramName += name.get();
+				settings[paramName] = value.get();
+			}
+		}
 	}
 }
 
