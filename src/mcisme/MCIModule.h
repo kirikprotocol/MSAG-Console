@@ -16,6 +16,8 @@
 #define MCI_MODULE_TEST YES
 //#undef  MCI_MODULE_TEST
 
+extern "C" void clearSignalMask(void);
+
 namespace smsc { namespace mcisme 
 {
     using std::string;
@@ -136,6 +138,8 @@ namespace smsc { namespace mcisme
         
         virtual int Execute()
         {
+            clearSignalMask();
+
             while (!isNeedExit())
             {
                 try

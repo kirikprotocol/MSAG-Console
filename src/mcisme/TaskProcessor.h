@@ -23,6 +23,8 @@
 #include <core/synchronization/Event.hpp>
 #include <core/synchronization/EventMonitor.hpp>
 
+#include <system/smscsignalhandlers.h>
+
 #include <db/DataSource.h>
 
 #include "Tasks.h"

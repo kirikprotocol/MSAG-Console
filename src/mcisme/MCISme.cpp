@@ -23,6 +23,7 @@
 #include <admin/service/Component.h>
 #include <admin/service/ComponentManager.h>
 #include <admin/service/ServiceSocketListener.h>
+#include <system/smscsignalhandlers.h>
 #include <system/status.h>
 
 #include <util/timeslotcounter.hpp>
@@ -476,7 +477,7 @@ public:
     }
 };
 
-extern "C" static void appSignalHandler(int sig)
+extern "C" void appSignalHandler(int sig)
 {
     smsc_log_debug(logger, "Signal %d handled !", sig);
     if (sig==smsc::system::SHUTDOWN_SIGNAL || sig==SIGINT)
@@ -486,29 +487,44 @@ extern "C" static void appSignalHandler(int sig)
         setNeedStop(true);
     }
 }
-extern "C" static void atExitHandler(void)
+extern "C" void atExitHandler(void)
 {
     smsc::util::xml::TerminateXerces();
     smsc::logger::Logger::Shutdown();
 }
 
+extern "C" void setShutdownHandler(void)
+{
+    sigset_t set;
+    sigemptyset(&set); 
+    sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
+    if(!thr_sigsetmask(SIG_UNBLOCK, &set, NULL)) {
+        if (logger) smsc_log_error(logger, "Failed to set signal mask (shutdown handler)");
+    }
+    sigset(smsc::system::SHUTDOWN_SIGNAL, appSignalHandler);
+}
+extern "C" void clearSignalMask(void)
+{
+    sigset_t set;
+    sigemptyset(&set);
+    for(int i=1;i<=37;i++)if(i!=SIGQUIT)sigaddset(&set,i);
+    if(!thr_sigsetmask(SIG_SETMASK, &set, NULL)) {
+        if (logger) smsc_log_error(logger, "Failed to clear signal mask");
+    }
+}
+
 int main(void)
 {
-    int resultCode = 0;
-
     Logger::Init();
     logger = Logger::getInstance("smsc.mcisme.MCISme");
     
+    atexit(atExitHandler);
+    clearSignalMask();
+
     std::auto_ptr<ServiceSocketListener> adml(new ServiceSocketListener());
     adminListener = adml.get();
     
-    sigset_t set, old;
-    sigemptyset(&set);
-    sigprocmask(SIG_SETMASK, &set, &old);
-    sigset(smsc::system::SHUTDOWN_SIGNAL, appSignalHandler);
-
-    atexit(atExitHandler);
-
+    int resultCode = 0;
     try 
     {
         Manager::init("config.xml");
@@ -539,7 +555,6 @@ int main(void)
                           "The preffered max value is 500ms", unrespondedMessagesSleep);
         }
         
-        
         ConfigView adminConfig(manager, "MCISme.Admin");
         adminListener->init(adminConfig.getString("host"), adminConfig.getInt("port"));               
         bAdminListenerInited = true;
@@ -558,9 +573,6 @@ int main(void)
 
         while (!isNeedStop())
         {
-            sigemptyset(&set);
-            sigprocmask(SIG_SETMASK, &set, &old);
-            
             MCISmePduListener       listener(processor);
             SmppSession             session(cfg, &listener);
             MCISmeMessageSender     sender(processor, &session);
@@ -595,12 +607,13 @@ int main(void)
             smsc_log_info(logger, "Connected.");
             
             smsc_log_info(logger, "Running messages send loop...");
+            setShutdownHandler();
             processor.Run();
+            clearSignalMask();
             smsc_log_info(logger, "Message send loop exited.");
             
             smsc_log_info(logger, "Disconnecting from SMSC ...");
             TrafficControl::stopControl();
-            processor.Stop();
             processor.assignMessageSender(0);
             session.close();
         }

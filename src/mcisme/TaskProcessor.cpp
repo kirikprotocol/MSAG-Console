@@ -4,6 +4,7 @@
 #include "TaskProcessor.h"
 
 extern bool isMSISDNAddress(const char* string);
+extern "C" void clearSignalMask(void);
 
 namespace smsc { namespace mcisme 
 {
@@ -60,6 +61,8 @@ static void checkAddress(const char* address)
 
 int EventRunner::Execute()
 {
+    clearSignalMask();
+
     switch (method)
     {
     case processResponceMethod:
@@ -187,6 +190,7 @@ void TaskProcessor::Stop()
 }
 int TaskProcessor::Execute()
 {
+    clearSignalMask();
     static const char* ERROR_MESSAGE = "Failed to process missed call event. Details: %s";
     
     while (bInQueueOpen)
@@ -693,6 +697,8 @@ void ResponcesTracker::Stop()
 }
 int ResponcesTracker::Execute()
 {
+    clearSignalMask();
+
     static const int TRACKER_SERVICE_SLEEP = 1000;
     ResponceTimer respTimer; ReceiptTimer  rcptTimer;
     
