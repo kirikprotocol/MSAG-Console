@@ -264,7 +264,7 @@ namespace smsc { namespace db
         Hash<Statement *>   statementsRegistry;
         
         Connection() 
-            : next(0), log(Logger::getCategory("smsc.dbsme.Connection")),
+            : next(0), log(Logger::getCategory("smsc.db.Connection")),
                 isConnected(false), isDead(false) {};
 
     public:
