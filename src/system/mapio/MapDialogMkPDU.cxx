@@ -76,6 +76,12 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
     unsigned _7bit_text_len = ConvertText27bit((const unsigned char*)addr.value,addr.length,oa->val,&tmpX,0);
     oa->len = _7bit_text_len*2;
     oa_length = _7bit_text_len;
+    __map_trace2__("mkDeliverPDU: alphanum address 7blen=%d adlen=%d ",_7bit_text_len, addr.length);
+    if( _7bit_text_len*8-addr.length*7 == 7 ) {
+      unsigned char c = oa->val[_7bit_text_len-1];
+      oa->val[_7bit_text_len-1] = (0x0d<<1)|(oa->val[_7bit_text_len-1]&0x01);
+      __map_trace2__("mkDeliverPDU: remove@ was 0x%x now 0x%x",c, oa->val[_7bit_text_len-1]);
+    }
   }
   else
   {

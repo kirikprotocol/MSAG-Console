@@ -387,7 +387,7 @@ inline void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
     }
     sa->setValue(i,sa_val);
   }else{
-    throw runtime_error("MAP::ConvAddrMap2Smc  ET96MAP_SM_RP_OA_T length should be greater than 0");
+    throw runtime_error("MAP::ConvAddrMSISDN2Smc  ET96MAP_SM_RP_OA_T length should be greater than 0");
   }
 }
 
@@ -404,7 +404,7 @@ inline void ConvAddrMSISDN2Smc(const ET96MAP_ADDRESS_T* ma,Address* sa)
       } else {
         sa_val[i] = (ma->address[i/2]>>4)+0x30;
       }
-      if(sa_val[i] > 0x39 ) throw runtime_error("MAP::ConvAddrMap2Smc numeric address contains not digit.");
+      if(sa_val[i] > 0x39 ) throw runtime_error("MAP::ConvAddrMSISDN2Smc numeric address contains not digit.");
     }
     {
       char b[256] = {0,};
@@ -412,7 +412,7 @@ inline void ConvAddrMSISDN2Smc(const ET96MAP_ADDRESS_T* ma,Address* sa)
     }
     sa->setValue(i,sa_val);
   }else{
-    throw runtime_error("MAP::ConvAddrMap2Smc  ET96MAP_SM_RP_OA_T length should be greater than 0");
+    throw runtime_error("MAP::ConvAddrMSISDN2Smc  ET96MAP_SM_RP_OA_T length should be greater than 0");
   }
 }
 
@@ -428,6 +428,10 @@ inline void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
     MicroString text;
     Convert7BitToText(ma->val,(ma->len/2)*8/7,&text,0);
     if ( text.len == 0 ) throw runtime_error("MAP::ConvAddrMap2Smc: zero address");
+    if( text.bytes[text.len-1]==0x0d ) {
+      text.len--;
+      text.bytes[text.len]=0;
+    }
     sa->setValue(text.len,text.bytes);
   }
   else

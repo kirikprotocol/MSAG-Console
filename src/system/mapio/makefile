@@ -10,11 +10,11 @@ ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)
 endif
 
-CXXFLAGS:= $(CXXFLAGS) -Iinc
+CXXFLAGS:= $(CXXFLAGS) -I/opt/EABss7009/src
 
 ifneq ($(NOMAP),YES)
 ifeq ("$(MACHTYPE)","sparc-sun-solaris")
-__LIBRARIES := $(__LIBRARIES) -L/opt/EINss7166/lib -leinss7
+__LIBRARIES := $(__LIBRARIES) -L/opt/EABss7009/lib -leinss7_r
 CXXFLAGS := $(CXXFLAGS) -DUSE_MAP
 endif
 endif

@@ -51,6 +51,7 @@ static XMOMAP x_momap;
 static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc);
 static void PauseOnImsiReq(MapDialog* map);
 static const string SC_ADDRESS() { return MapDialogContainer::GetSCAdress(); }
+static const string USSD_ADDRESS() { return MapDialogContainer::GetUSSDAdress(); }
 static bool NeedNotifyHLR(MapDialog* dialog);
 static void ResponseAlertSC(MapDialog* dialog);
 static void SendErrToSmsc(unsigned dialogid,unsigned code);
@@ -225,13 +226,25 @@ static ET96MAP_SS7_ADDR_T* GetScAddr()
   static ET96MAP_SS7_ADDR_T scAddr;
   static bool initialized = false;
   if ( !initialized ) {
-    mkMapAddress( &m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
+    mkMapAddress( &m_scAddr, SC_ADDRESS().c_str(), SC_ADDRESS().length() );
     mkSS7GTAddress( &scAddr, &m_scAddr, 8 );
     initialized = true;
   }
   return &scAddr;
 }
 
+static ET96MAP_SS7_ADDR_T* GetUSSDAddr()
+{
+  static ET96MAP_ADDRESS_T m_ussdAddr;
+  static ET96MAP_SS7_ADDR_T ussdAddr;
+  static bool initialized = false;
+  if ( !initialized ) {
+    mkMapAddress( &m_ussdAddr, USSD_ADDRESS().c_str(), USSD_ADDRESS().length() );
+    mkSS7GTAddress( &ussdAddr, &m_ussdAddr, USSD_SSN );
+    initialized = true;
+  }
+  return &ussdAddr;
+}
 extern void MAPIO_TaskACVersionNotifier();
 void MAPIO_QueryMscVersionInternal()
 {
@@ -256,7 +269,7 @@ static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
     dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
     __map_trace2__("%s:DELIVERY_SM %s",__FUNCTION__,RouteToString(dialog).c_str());
     mkMapAddress( &dialog->m_msAddr, dialog->sms->getDestinationAddress().value, dialog->sms->getDestinationAddress().length );
-    mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
+    mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), SC_ADDRESS().length() );
     mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, SSN );
     mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
     if( dialog->sms->hasStrProperty( Tag::SMSC_FORWARD_MO_TO ) ) {
@@ -1413,11 +1426,9 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
       dialog->state = MAPST_WaitUSSDNotifyOpenConf;
     }
     ET96MAP_ADDRESS_T origAddr;
-    ET96MAP_SS7_ADDR_T ussdScAddr;
-    mkSS7GTAddress( &ussdScAddr, &dialog->m_scAddr, USSD_SSN );
     mkMapAddress( &origAddr, dialog->sms->getOriginatingAddress().value, dialog->sms->getOriginatingAddress().length );
 
-    result = Et96MapOpenReq( dialog->ssn, dialog->dialogid_map, &appContext, &dialog->mshlrAddr, &ussdScAddr, 0, &origAddr, &specificInfo );
+    result = Et96MapOpenReq( dialog->ssn, dialog->dialogid_map, &appContext, &dialog->mshlrAddr, GetUSSDAddr(), 0, &origAddr, &specificInfo );
     if ( result != ET96MAP_E_OK )
       throw runtime_error(
         FormatText("MAP::%s Et96MapOpenReq return error 0x%x",__FUNCTION__,result));
