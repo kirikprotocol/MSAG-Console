@@ -418,7 +418,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
     const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
     unsigned size_x = pdu_ptr-(unsigned char*)pdu->signalInfo;
     if ( text_len > size_x ){
-      __trace2_("MAP::mkDeliverPDU:  UCS2 text length(%d) > pdu_ptr-pdu->signalInfoLen(%d)",
+      __trace2__("MAP::mkDeliverPDU:  UCS2 text length(%d) > pdu_ptr-pdu->signalInfoLen(%d)",
                 text_len,
                 size_x);
       throw runtime_error("MAP::mkDeliverPDU:  UCS2 text length > pdu_ptr-pdu->signalInfoLen");
@@ -549,7 +549,7 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
 #endif
 }
 
-virtual void Et96MapV2ForwardSmMTConf (
+void MapDialog::Et96MapV2ForwardSmMTConf (
   ET96MAP_LOCAL_SSN_T localSsn,
   ET96MAP_DIALOGUE_ID_T dialogid,
   ET96MAP_INVOKE_ID_T invokeId,
