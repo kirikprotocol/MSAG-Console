@@ -629,7 +629,7 @@ void RetrieveStatement::defineSms(SMS& sms)
            (sb4) sizeof(sms.dstSmeId), &indDstSmeId);
     
     define(i++, SQLT_UIN, (dvoid *) &(sms.concatMsgRef), 
-           (sb4) sizeof(sms.concatMsgRef));
+           (sb4) sizeof(sms.concatMsgRef), &indMsgRef);
     define(i++, SQLT_UIN, (dvoid *) &(sms.concatSeqNum), 
            (sb4) sizeof(sms.concatSeqNum));
 }
@@ -684,7 +684,11 @@ bool RetrieveStatement::getSms(SMS& sms)
         sms.srcSmeId[0] = '\0';
     if (indDstSmeId != OCI_IND_NOTNULL)
         sms.dstSmeId[0] = '\0';
-
+    if (indMsgRef != OCI_IND_NOTNULL) {
+        sms.concatMsgRef = 0;
+        sms.concatSeqNum = 0;
+    }
+    
     if (indLastTime != OCI_IND_NOTNULL) sms.lastTime = 0;
     else convertOCIDateToDate(&lastTime, &(sms.lastTime));
     if (indNextTime != OCI_IND_NOTNULL) sms.nextTime = 0;

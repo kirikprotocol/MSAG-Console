@@ -258,7 +258,7 @@ namespace smsc { namespace store
         sb2         indSrcMsc, indSrcImsi, indSrcSme;
         sb2         indDstMsc, indDstImsi, indDstSme;
         sb2         indSvc, indBody, indLastTime, indNextTime;
-        sb2         indRouteId, indSrcSmeId, indDstSmeId;
+        sb2         indRouteId, indSrcSmeId, indDstSmeId, indMsgRef;
 
         FullAddressValue    oa, da, dda;
     
