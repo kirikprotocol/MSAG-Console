@@ -416,8 +416,8 @@ struct ShutdownThread : public Thread
 */
 int main(void)
 {
-    Logger::Init();
-    logger = Logger::getInstance("smsc.mtsmsme.MTSMSme");
+    smsc::logger::Logger::Init();
+    logger = smsc::logger::Logger::getInstance("smsc.mtsmsme.MTSMSme");
     
 /*    atexit(atExitHandler);
     clearSignalMask();
