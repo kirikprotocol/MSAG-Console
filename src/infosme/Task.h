@@ -78,6 +78,16 @@ namespace smsc { namespace infosme
         
         virtual ~Task() {};
 
+        inline int getId() {
+            return info.id;
+        }
+        inline int getPriority() {
+            return info.priority;
+        }
+        inline std::string getName() {
+            return info.name;
+        }
+
         /**
          * Initializes Task
          *

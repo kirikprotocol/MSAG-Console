@@ -7,6 +7,8 @@
 #include <string.h>
 #include <inttypes.h>
 
+#include <set>
+
 #include <logger/Logger.h>
 
 #include <util/config/ConfigView.h>
@@ -43,7 +45,7 @@ namespace smsc { namespace infosme
       beginProcessMethod, endProcessMethod, doNotifyMessageMethod, dropAllMessagesMethod
     } TaskMethod;
 
-    class TaskRunner : public ThreadedTask
+    class TaskRunner : public ThreadedTask // for task method execution 
     {
     private:
         
@@ -92,7 +94,59 @@ namespace smsc { namespace infosme
         };
     };
 
-    class TaskManager 
+    struct TaskHolder
+    {
+        Task* task;
+        
+        TaskHolder() : task(0) {};
+        TaskHolder(Task* task) : task(task) {};
+        TaskHolder(const TaskHolder& holder) : task(holder.task) {};
+        virtual ~TaskHolder() {};
+
+        TaskHolder& operator=(const TaskHolder& holder) {
+            task = holder.task;
+            return *this;
+        }
+        bool operator>(const TaskHolder& holder) const {
+            return (task && holder.task) ? 
+                task->getPriority() > holder.task->getPriority() : false;
+        }
+        bool operator<(const TaskHolder& holder) const {
+            return (task && holder.task) ? 
+                task->getPriority() < holder.task->getPriority() : false;
+        }
+        bool operator==(const TaskHolder& holder) const {
+            return (task && holder.task) ? 
+                (task->getPriority() == holder.task->getPriority() && 
+                 task == holder.task) : false;
+        }
+    };
+    
+    typedef std::multiset< TaskHolder, 
+                           std::greater<TaskHolder>, 
+                           std::allocator<TaskHolder> > TaskSet;
+    class TaskContainer
+    {
+    private:
+        
+        Mutex           tasksLock;
+        Hash<Task *>    tasksByName;        // hash by task name;
+        TaskSet         tasksByPriority;    // multiset sorted by descending priority
+        int             prioritySum;
+
+    public:
+        
+        TaskContainer() : prioritySum(0) {};
+        virtual ~TaskContainer();
+
+        bool addTask(Task* task);
+        bool removeTask(std::string taskName);
+        
+        Task* getNextTask();
+        Task* getTask(std::string taskName);
+    };
+
+    class TaskManager // for tasks execution on thread pool
     {
     private:
     
@@ -153,6 +207,7 @@ namespace smsc { namespace infosme
 
         TaskManager   manager;  
         DataProvider  provider;
+        TaskContainer container;
         TaskScheduler scheduler;
         
         Event       awake, exited;

@@ -43,6 +43,8 @@ int main(void/*int argc, char* argv[]*/)
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigException;
 
+    Logger::Init("log4cpp.infosme");
+
     PeriodicTaskFactory _periodicTaskFactory;
     TaskFactory::registerFactory(&_periodicTaskFactory, INFO_SME_PERIODIC_TASK_IDENTITY);
     DistributeTaskFactory _distributeTaskFactory;
