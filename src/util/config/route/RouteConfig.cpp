@@ -105,7 +105,7 @@ throw (SubjectNotFoundException)
     DOM_Node maskNode = srcElem.getElementsByTagName("mask").item(0);
     DOM_Element &maskElem = (DOM_Element &) maskNode;
     std::auto_ptr<char> mask(maskElem.getAttribute("value").transcode());
-    r->sources[mask.get()] = Subject(Mask(mask.get()));
+    r->sources[mask.get()] = Source(Mask(mask.get()));
   }
 }
 
