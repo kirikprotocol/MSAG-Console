@@ -1417,6 +1417,7 @@ StateType StateMachine::replace(Tuple& t)
     }catch(...)
     {
     }
+    return UNKNOWN_STATE;
   }
   if(t.command->get_replaceSm().scheduleDeliveryTime==-1)
   {
@@ -1434,7 +1435,32 @@ StateType StateMachine::replace(Tuple& t)
     }catch(...)
     {
     }
+    return UNKNOWN_STATE;
   }
+  time_t newvalid=t.command->get_replaceSm().validityPeriod?
+    t.command->get_replaceSm().validityPeriod:sms.getValidTime();
+  time_t newsched=t.command->get_replaceSm().scheduleDeliveryTime?
+    t.command->get_replaceSm().scheduleDeliveryTime:sms.getNextTime();
+
+  if(newsched>newvalid)
+  {
+    sms.lastResult=Status::INVSCHED;
+    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,&sms);
+    try{
+      t.command.getProxy()->putCommand
+      (
+        SmscCommand::makeReplaceSmResp
+        (
+          t.command->get_dialogId(),
+          Status::INVSCHED
+        )
+      );
+    }catch(...)
+    {
+    }
+    return UNKNOWN_STATE;
+  }
+
   try{
     Address addr(t.command->get_replaceSm().sourceAddr.get());
     store->replaceSms
