@@ -17,7 +17,7 @@ static void* ThreadRunner(void* obj)
 }
 #endif
 
-Thread::Thread():thread(-1)
+Thread::Thread():thread(0)
 {
 }
 
