@@ -956,6 +956,7 @@ public:
           }break;
           case SmppStatusSet::ESME_RX_T_APPN:
           case SmppStatusSet::ESME_RMSGQFUL:
+          case SmppStatusSet::ESME_RTHROTTLED:
           {
             ((SmsResp*)_cmd->dta)->set_status(
               MAKE_COMMAND_STATUS(CMD_ERR_TEMP,status)
