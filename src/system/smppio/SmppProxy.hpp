@@ -327,6 +327,11 @@ public:
         smppTransmitterSocket=0;
       }
     }
+    if(proxyType==proxyTransceiver)
+    {
+      smppReceiverSocket=0;
+      smppTransmitterSocket=0;
+    }
     int cnt=--refcnt;
     if(refcnt==1)close();
     return cnt;
