@@ -722,7 +722,7 @@ protected:
   {
     MutexGuard g(lockMutex);
     if(!lock.Exist(seq))return NULL;
-    Lock &l=lock.Get(seq);
+    const Lock &l=lock.Get(seq);
     if(l.error)
     {
       lock.Delete(seq);

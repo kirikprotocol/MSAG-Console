@@ -25,7 +25,6 @@ public:
     reflist=0;
     reflistsize=0;
 
-    emptycount=0;
   }
   IntHash(const IntHash& src)
   {
@@ -122,6 +121,19 @@ public:
   }
 
   const T& Get(int key)const
+  {
+    if(!size || !count)throw std::runtime_error("get on empty inthash");
+    unsigned int idx;
+    int attempt=0;
+    do{
+      idx=Index(key,attempt);
+      if(refcounts[idx]==0)throw std::runtime_error("get on empty inthash");
+      attempt++;
+    }while(keys[idx]!=key);
+    return values[idx];
+  }
+
+  T& Get(int key)
   {
     if(!size || !count)throw std::runtime_error("get on empty inthash");
     unsigned int idx;
