@@ -64,7 +64,8 @@ if (stat != null) {
     Collection dates = stat.getDateStat();
 %>
 <script language="JavaScript">
-  function showErr(obj) {
+  function showErrTable(id) {
+    Object obj = document.all("disNo"+id);
     if( obj.style.display != 'none' )
       obj.style.display='none';
     else
@@ -143,7 +144,7 @@ while (i.hasNext()) {
             SmeIdCountersSet sme = (SmeIdCountersSet)i.next();
         %>
         <tr class=row1>
-            <td width="22%" align=right><a href="#" onClick="return showErrTable(document.all.disNo<%=disNo%>)"><%= StringEncoderDecoder.encode(sme.smeid)%></a></td>
+            <td width="22%" align=right><a href="#" onClick="return showErrTable('<%=disNo%>')"><%= StringEncoderDecoder.encode(sme.smeid)%></a></td>
             <td width="13%" align=right><%= sme.accepted%></td>
             <td width="13%" align=right><%= sme.rejected%></td>
             <td width="13%" align=right><%= sme.delivered%></td>
