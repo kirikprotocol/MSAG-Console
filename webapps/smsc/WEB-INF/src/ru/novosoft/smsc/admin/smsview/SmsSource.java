@@ -104,6 +104,7 @@ public abstract class SmsSource
       stream.close();
 
       if( text != null && text.length>0 ) {
+         StringBuffer textBuffer = new StringBuffer(text.length);
          if( (esmClass & 0x40) == 0x40 ) {
            if(concatInfo != null) {
              int partsCount = concatInfo.length/2;
@@ -122,7 +123,6 @@ public abstract class SmsSource
          } else {
            convertMessage(textBuffer, text, 0, text.length, false, textEncoding);
          }
-         StringBuffer textBuffer = new StringBuffer(text.length);
          row.setTextEncoded(textEncoding == DATA_CODING_UCS2);
          row.setText(textBuffer.toString());
       }
