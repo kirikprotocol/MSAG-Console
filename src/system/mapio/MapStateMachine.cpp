@@ -1366,9 +1366,12 @@ static void PauseOnImsiReq(MapDialog* map)
       throw runtime_error(
         FormatText("MAP::%s has no SMS",__FUNCTION__));
     if ( !dialog->isUSSD )
+    {
       __trace2__("MAP::%s make MAP mkMapAddress",__FUNCTION__);
       mkMapAddress( &dialog->m_msAddr, map->sms->getOriginatingAddress().value, map->sms->getOriginatingAddress().length );
-    else {
+    }
+    else 
+    {
       __trace2__("MAP::%s using preparsed address",__FUNCTION__);
       if (!dialog->hasIndAddress )
         throw runtime_error("MAP::%s MAP.did:{0x%x} has no originating address");
