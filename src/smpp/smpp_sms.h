@@ -564,6 +564,7 @@ inline bool fillDataSmFromSms(PduDataSm* pdu,SMS* sms,bool forceDC=false)
   }
 
   fillOptional(pdu->optional,sms,forceDC);
+  data.set_esmClass(sms->getIntProperty(Tag::SMPP_ESM_CLASS));
   if(forceDC && sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
   {
     data.set_dataCoding((uint8_t)sms->getIntProperty(Tag::SMSC_ORIGINAL_DC));

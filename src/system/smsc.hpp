@@ -167,6 +167,12 @@ public:
     return smeman.getSmeInfo(smeman.lookup(sid));
   }
 
+  SmeProxy* getSmeProxy(const string& sid)
+  {
+    smsc::smeman::SmeIndex idx=smeman.lookup(sid);
+    if(idx==-1)return 0;
+    return smeman.getSmeProxy(idx);
+  }
 
   void submitSms(SMS* sms)
   {

@@ -1228,6 +1228,7 @@ StateType StateMachine::forward(Tuple& t)
 
     return EXPIRED_STATE;
   }
+
   if(sms.getState()!=ENROUTE_STATE)
   {
     __trace2__("FORWARD: sms is not in enroute (%d)",sms.getState());
@@ -1249,6 +1250,31 @@ StateType StateMachine::forward(Tuple& t)
     }
     return UNDELIVERABLE_STATE;
   }
+
+  if(!t.command->is_reschedulingForward() &&
+     sms.getIntProperty(Tag::SMPP_SET_DPF)==1 &&
+     sms.getAttemptsCount()==1)
+  {
+    try{
+      SmeProxy  *src_proxy=smsc->getSmeProxy(sms.getSourceSmeId());
+      int dialogId=src_proxy->getNextSequenceNumber();
+      SmscCommand cmd=SmscCommand::makeAlertNotificationCommand
+      (
+        dialogId,
+        sms.getDestinationAddress(),
+        sms.getOriginatingAddress(),
+        0
+      );
+      src_proxy->putCommand(cmd);
+    }catch(exception& e)
+    {
+      __trace2__("FORWARD: Failed to send AlertNotification:%s",e.what());
+    }catch(...)
+    {
+      __trace2__("FORWARD: Failed to send AlertNotification:unknown");
+    }
+  }
+
   smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
 
   SmeProxy *dest_proxy=0;
