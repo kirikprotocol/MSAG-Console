@@ -289,7 +289,7 @@ int Profiler::Execute()
       body[len]=0;
     }
     len=strlen(body);*/
-    len=getSmsText(sms,body);
+    len=getSmsText(sms,body,sizeof(body));
 
     __trace2__("Profiler: received %s from .%d.%d.%.20s",body,addr.type,addr.plan,addr.value);
 
