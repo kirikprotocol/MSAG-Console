@@ -788,7 +788,6 @@ const char* ReplaceStatement::sql = (const char*)
 "UPDATE SMS_MSG SET\
  DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN, TXT_LENGTH=:TXT_LENGTH\
  WHERE ID=:ID AND ST=:ENROUTE AND OA=:OA";
-
 ReplaceStatement::ReplaceStatement(Connection* connection, bool assign)
     throw(StorageException)
         : IdStatement(connection, ReplaceStatement::sql, assign) 
@@ -883,8 +882,8 @@ ReplaceWTStatement::ReplaceWTStatement(Connection* connection, bool assign)
         : ReplaceStatement(connection, ReplaceWTStatement::sql, assign) {}
 
 const char* ReplaceVWTStatement::sql = (const char*)
-"UPDATE SMS_MSG\
- SET DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN, TXT_LENGTH=:TXT_LENGTH,\
+"UPDATE SMS_MSG SET\
+ DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN, TXT_LENGTH=:TXT_LENGTH,\
  VALID_TIME=:VT, NEXT_TRY_TIME=:WT\
  WHERE ID=:ID AND ST=:ENROUTE AND OA=:OA";
 ReplaceVWTStatement::ReplaceVWTStatement(Connection* connection, bool assign)

@@ -227,6 +227,22 @@ namespace smsc { namespace store
             const uint8_t* newMsg, uint8_t newMsgLen,
             uint8_t deliveryReport, time_t validTime = 0, time_t nextTime = 0)
                 throw(StorageException, NoSuchMessageException) = 0; 
+        
+        /**
+         * Замещает тело сообщения SMS в хранилище сообщений.
+         * 
+         * @param id        идентификационный номер сообщения в хранилище
+         * @param sms       sms с новым телом
+         * @exception StorageException
+         *                   возникает при ошибке хранилища физической природы,
+         *                   т.н когда хранилище недоступно.
+         * @exception NoSuchMessageException
+         *                   возникает если сообщение с указанным id
+         *                   не существует в хранилище.
+         * @see SMS
+         */
+        virtual void replaceSms(SMSId id, const SMS& sms)
+                throw(StorageException, NoSuchMessageException) = 0; 
 
         /**
          * Изменяет аттрибуты SMS в хранилище сообщений.

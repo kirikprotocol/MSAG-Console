@@ -759,6 +759,124 @@ void RemoteStore::replaceSms(SMSId id, const Address& oa,
 #endif
 }
 
+void doReplaceSms(StorageConnection* connection, SMSId id, const SMS& sms)
+    throw(StorageException, NoSuchMessageException)
+{
+    __require__(connection);
+    
+    Body    body;
+    ReplaceVWTStatement* replaceStmt 
+        = connection->getReplaceVWTStatement();
+    RetrieveBodyStatement* retrieveBodyStmt
+        = connection->getRetrieveBodyStatement();
+    
+    try
+    {
+        retrieveBodyStmt->bindId(id);
+        retrieveBodyStmt->bindOriginatingAddress(sms.getOriginatingAddress());
+
+        sword status = retrieveBodyStmt->execute();
+        if (status == OCI_NO_DATA) throw NoSuchMessageException(id);
+        else connection->check(status);
+
+        if (!retrieveBodyStmt->getBody(body) ||
+             retrieveBodyStmt->getBodyLength() > MAX_BODY_LENGTH)
+        {
+            DestroyBodyStatement* destroyBodyStmt
+                = connection->getDestroyBodyStatement();
+
+            destroyBodyStmt->setSMSId(id);
+            destroyBodyStmt->destroyBody();
+        }
+        
+        body = sms.getMessageBody();
+        replaceStmt->bindId(id);
+        replaceStmt->bindBody(body);
+        replaceStmt->bindWaitTime(sms.nextTime);
+        replaceStmt->bindValidTime(sms.validTime);
+        replaceStmt->bindDeliveryReport((dvoid *) &sms.deliveryReport,
+                                        (sb4) sizeof(sms.deliveryReport));
+        replaceStmt->bindOriginatingAddress(sms.getOriginatingAddress());
+        
+        connection->check(replaceStmt->execute());
+
+        int bodyLen = body.getBufferLength();
+        if (bodyLen > MAX_BODY_LENGTH)
+        {
+            SetBodyStatement* setBodyStmt
+                = connection->getSetBodyStatement();
+
+            setBodyStmt->setSMSId(id);
+            setBodyStmt->setBody(body);
+        }
+    }
+    catch (StorageException& exc)
+    {
+        connection->rollback();
+        throw;
+    }
+
+    if (!replaceStmt->wasReplaced())
+    {
+        connection->rollback();
+        throw NoSuchMessageException(id);
+    }
+    connection->commit();
+}
+
+void RemoteStore::replaceSms(SMSId id, const SMS& sms)
+    throw(StorageException, NoSuchMessageException)
+{
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+    
+    __require__(pool);
+
+    StorageConnection* connection = 0L;
+    unsigned iteration=1;
+    while (true)
+    {
+        try
+        {
+            connection = (StorageConnection *)pool->getConnection();
+            if (connection)
+            {
+                doReplaceSms(connection, id, sms);
+                pool->freeConnection(connection);
+            }
+            break;
+        }
+        catch (NoSuchMessageException& exc)
+        {
+            if (connection) pool->freeConnection(connection);
+            throw;
+        }
+        catch (StorageException& exc)
+        {
+            if (connection) pool->freeConnection(connection);
+            if (iteration++ >= maxTriesCount)
+            {
+                log.warn("Max tries count to replace message "
+                         "#%d exceeded !\n", id);
+                throw;
+            }
+        }
+    }
+
+#else
+    
+    MutexGuard guard(fakeMutex);
+
+    if (!fakeStore.Exist(id))
+        throw NoSuchMessageException(id);
+
+    delete fakeStore.Get(id);
+    fakeStore.Delete(id);
+    fakeStore.Insert(id, new SMS(sms));
+    
+#endif
+}
+
+
 void RemoteStore::doChangeSmsStateToEnroute(StorageConnection* connection,
     SMSId id, const Descriptor& dst, uint32_t failureCause, time_t nextTryTime,
         bool skipAttempt)
@@ -1676,6 +1794,14 @@ void CachedStore::replaceSms(SMSId id, const Address& oa,
     
     RemoteStore::replaceSms(id, oa, newMsg, newMsgLen, deliveryReport,
                             validTime, waitTime);
+    MutexGuard cacheGuard(cacheMutex);
+    cache->delSms(id);
+}
+void CachedStore::replaceSms(SMSId id, const SMS& sms)
+    throw(StorageException, NoSuchMessageException)
+{
+    
+    RemoteStore::replaceSms(id, sms);
     MutexGuard cacheGuard(cacheMutex);
     cache->delSms(id);
 }
