@@ -541,6 +541,10 @@ namespace smsc { namespace sms
          * @return декодированное тело сообщени€. —ейчас NULL.
          */
         char* getDecodedText();
+
+				uint8_t* getBuffer();
+				int getBufferLength();
+				void setBuffer(uint8_t* buffer,int length);
     };
    
     const uint8_t SMSC_BYTE_ENROUTE_STATE       = (uint8_t)0;
