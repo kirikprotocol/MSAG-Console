@@ -352,21 +352,21 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
     {
       encoding = MAP_OCTET7BIT_ENCODING;
       sms.setIntProperty(Tag::MS_VALIDITY,0x3);
-      sms.setIntProperty(Tag::MS_FACILITES,
+      sms.setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,
                          (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
     }
     else if ( user_data_coding & 0xf0 == 0xd0 ) // 1101xxxx
     {
       encoding = MAP_OCTET7BIT_ENCODING;
       sms.setIntProperty(Tag::MS_VALIDITY,0x0);
-      sms.setIntProperty(Tag::MS_FACILITES,
+      sms.setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,
                          (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
     }
     else if ( user_data_coding & 0xf0 == 0xe0 ) // 1110xxxx
     {
       encoding = MAP_UCS2_ENCODING;
       sms.setIntProperty(Tag::MS_VALIDITY,0x0);
-      sms.setIntProperty(Tag::MS_FACILITES,
+      sms.setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,
                          (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
     }
     else if ( user_data_coding & 0xf0 == 0xf0 ) // 1111xxxx
