@@ -219,7 +219,7 @@ int Socket::InitServer(const char *host,int port,int timeout,int lng)
   if(sock==INVALID_SOCKET) return -1;
   if(bind(sock,(sockaddr*)&sockAddr,sizeof(sockAddr)))
   {
-    close(sock);
+    closesocket(sock);
     return -1;
   }
   linger l;
@@ -233,7 +233,7 @@ int Socket::StartServer()
 {
   if(listen(sock,SOMAXCONN))
   {
-    close(sock);
+    closesocket(sock);
     sock=0;
     return -1;
   }
