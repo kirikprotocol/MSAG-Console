@@ -132,6 +132,11 @@ int fillSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int d
     }
   }
   sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,dc);
+  sms->getMessageBody().dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
+  sms->getMessageBody().dropProperty(Tag::SMSC_RAW_PAYLOAD);
+  sms->getMessageBody().dropProperty(Tag::SMPP_SHORT_MESSAGE);
+  sms->getMessageBody().dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
+  sms->getMessageBody().dropIntProperty(Tag::SMPP_SM_LENGTH);
   if(datalen>255)
   {
     //sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,"",0);
