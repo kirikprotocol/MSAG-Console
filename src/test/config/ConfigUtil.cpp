@@ -13,9 +13,11 @@ namespace config {
 using std::string;
 using smsc::smeman::SmeInfo;
 using smsc::alias::AliasInfo;
+using smsc::router::RouteInfo;
 using smsc::test::conf::TestConfig;
 using smsc::test::smeman::SmeManagerTestCases;
 using smsc::test::core::RouteHolder;
+using smsc::test::core::RouteUtil;
 using smsc::test::sms::operator==;
 using namespace smsc::test::sms;
 using namespace smsc::test::util;
@@ -70,6 +72,50 @@ void ConfigUtil::setupSystemSme()
 	abonentInfoSme.systemId = abonentInfoSystemId;
 	smeReg->registerSme("+321", abonentInfoSme, false, true);
 	smeReg->bindSme(abonentInfoSme.systemId);
+}
+
+void ConfigUtil::setupSystemSmeRoutes()
+{
+	vector<const Address*> addr;
+	vector<const SmeSystemId*> smeId;
+	//smsc sme
+	__cfg_addr__(smscAddr);
+	__cfg_addr__(smscAlias);
+	__cfg_str__(smscSystemId);
+	addr.push_back(&smscAddr);
+	addr.push_back(&smscAlias);
+	smeId.push_back(&smscSystemId);
+	smeId.push_back(&smscSystemId);
+	//profiler
+	__cfg_addr__(profilerAddr);
+	__cfg_addr__(profilerAlias);
+	__cfg_str__(profilerSystemId);
+	addr.push_back(&profilerAddr);
+	addr.push_back(&profilerAlias);
+	smeId.push_back(&profilerSystemId);
+	smeId.push_back(&profilerSystemId);
+	//abonent info
+	__cfg_addr__(abonentInfoAddr);
+	__cfg_str__(abonentInfoSystemId);
+	addr.push_back(&abonentInfoAddr);
+	smeId.push_back(&abonentInfoSystemId);
+	//map proxy
+	__cfg_str__(mapProxySystemId);
+	//create routes
+	__require__(addr.size() == smeId.size());
+	for (int i = 0; i < addr.size(); i++)
+	{
+		for (int j = 0; j < addr.size(); j++)
+		{
+			RouteInfo route;
+			RouteUtil::setupRandomCorrectRouteInfo(&route);
+			route.source = *addr[i];
+			route.dest = *addr[j];
+			route.smeSystemId = *smeId[j];
+			route.enabling = true;
+			routeReg->putRoute(route, NULL);
+		}
+	}
 }
 
 void ConfigUtil::checkRoute(const Address& origAddr, const SmeSystemId& origSmeId,

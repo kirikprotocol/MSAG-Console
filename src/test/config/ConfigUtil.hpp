@@ -31,6 +31,7 @@ public:
 		__require__(routeReg);
 	}
 	void setupSystemSme();
+	void setupSystemSmeRoutes();
 	
 	void checkRoute(const Address& origAddr, const SmeSystemId& origSmeId,
 		const Address& destAlias, int* numRoutes = NULL, int* numBound = NULL);
