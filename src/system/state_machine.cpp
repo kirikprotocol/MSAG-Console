@@ -2250,10 +2250,6 @@ StateType StateMachine::deliveryResp(Tuple& t)
          sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS)
        ) ||
        (
-         !regdel &&
-         sms.getDeliveryReport()!=REPORT_ACK
-       ) ||
-       (
          sms.getDeliveryReport()==REPORT_NOACK
        ) ||
        (
@@ -2677,7 +2673,6 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
               (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==2 ||
               sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST);
 
-  if(!regdel && sms.getDeliveryReport()!=REPORT_ACK)return;
   if(!(sms.getDeliveryReport() || regdel))return;
   SMS *prpt=new SMS;
   SMS &rpt=*prpt;
@@ -2742,7 +2737,6 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   bool regdel=(sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x10)==0x10 ||
               sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST);
 
-  if(!regdel && sms.getDeliveryReport()!=REPORT_ACK)return;
   if(!(sms.getDeliveryReport() || regdel))return;
   __trace2__("sendNotifyReport: attemptsCount=%d",sms.getAttemptsCount());
   if(sms.getAttemptsCount()!=0)return;
