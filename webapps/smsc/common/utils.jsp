@@ -63,4 +63,17 @@ String maskStrings2String(Set maskStrings)
   }
   return masks;
 }
+
+int getIntegerParam(HttpServletRequest request, String paramName)
+{
+	String paramStr = request.getParameter(paramName);
+	if (paramStr == null)
+		return Integer.MIN_VALUE;
+	
+	try {
+		return Integer.decode(paramStr).intValue();
+	} catch (Throwable t) {
+		return Integer.MIN_VALUE;
+	}
+}
 %>

@@ -7,10 +7,8 @@
 	{
 		throw new Exception("Service or host name not defined");
 	} 
-
-  String serviceName = serviceManager.getServiceInfo(serviceId).getName();
-	serviceManager.removeService(serviceId);
 %>
-<h2>Remove service <i><%=serviceName%></i> from host <i><%=host%></i>: </h2>
-Service <i><%=serviceName%></i> removed from host <i><%=host%></i>.
+<h2>Remove service <i><%=serviceId%></i> from host <i><%=host%></i>: </h2>
+<%serviceManager.removeService(serviceId);%>
+Service <i><%=serviceId%></i> removed from host <i><%=host%></i>.
 <%@ include file="/common/footer.jsp"%>

@@ -14,565 +14,456 @@ import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.config.ConfigManager;
-import ru.novosoft.smsc.util.xml.Utils;
 
 import java.io.*;
 import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 
 public class ServiceManager
 {
-  static public class IsNotInitializedException extends Exception
-  {
-    IsNotInitializedException(String s)
-    {
-      super(s);
-    }
-  }
+	static public class IsNotInitializedException extends Exception
+	{
+		IsNotInitializedException(String s)
+		{
+			super(s);
+		}
+	}
 
 
-  protected final static String SYSTEM_ID_PARAM_NAME = "system id";
-  protected static ServiceManager serviceManager = null;
-  private static boolean isInitialized = false;
-  protected static File webappFolder = null;
-  protected static File webinfFolder = null;
-  protected static File webinfLibFolder = null;
-  protected static File workFolder = null;
-  protected static File daemonsFolder = null;
-  protected static Smsc smsc = null;
+	protected final static String SYSTEM_ID_PARAM_NAME = "system id";
+	protected static ServiceManager serviceManager = null;
+	private static boolean isInitialized = false;
+	protected static File webappFolder = null;
+	protected static File webinfFolder = null;
+	protected static File webinfLibFolder = null;
+	protected static File workFolder = null;
+	protected static File daemonsFolder = null;
+	protected static Smsc smsc = null;
 
-  public static ServiceManager getInstance()
-          throws IsNotInitializedException
-  {
-    try
-    {
-      Category.getInstance(ServiceManager.class.getName()).debug("current folder: " + (new File(".")).getCanonicalPath());
-    }
-    catch (IOException e)
-    {
-    }
-    if (!isInitialized)
-      throw new IsNotInitializedException("Service Manager is not initialized. Make ServiceManager.Init(...) call before ServiceManager.getInstance()");
-    if (serviceManager == null)
-      serviceManager = new ServiceManager();
-    return serviceManager;
-  }
+	public static ServiceManager getInstance()
+			  throws IsNotInitializedException
+	{
+		try
+		{
+			Category.getInstance(ServiceManager.class.getName()).debug("current folder: " + (new File(".")).getCanonicalPath());
+		}
+		catch (IOException e)
+		{
+		}
+		if (!isInitialized)
+			throw new IsNotInitializedException("Service Manager is not initialized. Make ServiceManager.Init(...) call before ServiceManager.getInstance()");
+		if (serviceManager == null)
+			serviceManager = new ServiceManager();
+		return serviceManager;
+	}
 
-  public static void init(ConfigManager cfgManager, Smsc smscenter)
-          throws Config.ParamNotFoundException, Config.WrongParamTypeException
-  {
-    configManager = cfgManager;
-    isInitialized = configManager != null;
-    webappFolder = new File(configManager.getConfig().getString("system.webapp folder"));
-    webinfFolder = new File(webappFolder, "WEB-INF");
-    webinfLibFolder = new File(webinfFolder, "lib");
-    workFolder = new File(webinfFolder, "work");
-    daemonsFolder = new File(webinfFolder, "daemons");
-    smsc = smscenter;
-  }
+	public static void init(ConfigManager cfgManager, Smsc smscenter)
+			  throws Config.ParamNotFoundException, Config.WrongParamTypeException
+	{
+		configManager = cfgManager;
+		isInitialized = configManager != null;
+		webappFolder = new File(configManager.getConfig().getString("system.webapp folder"));
+		webinfFolder = new File(webappFolder, "WEB-INF");
+		webinfLibFolder = new File(webinfFolder, "lib");
+		workFolder = new File(webinfFolder, "work");
+		daemonsFolder = new File(webinfFolder, "daemons");
+		smsc = smscenter;
+	}
 
 
-  private Map services = new HashMap();
-  private DaemonManager daemonManager = null;
-  protected static ConfigManager configManager = null;
-  protected Category logger = Category.getInstance(this.getClass().getName());
+	private Map services = new HashMap();
+	private DaemonManager daemonManager = null;
+	protected static ConfigManager configManager = null;
+	protected Category logger = Category.getInstance(this.getClass().getName());
 
-  protected ServiceManager()
-  {
-    logger.debug("creating ServiceManager");
-    daemonManager = new DaemonManager(smsc);
-    Config config = configManager.getConfig();
-    Set daemons = config.getSectionChildSectionNames("daemons");
-    for (Iterator i = daemons.iterator(); i.hasNext();)
-    {
-      String encodedName = (String) i.next();
-      String daemonName = StringEncoderDecoder.decodeDot(encodedName.substring(encodedName.lastIndexOf('.') + 1));
-      try
-      {
-        addDaemonInternal(daemonName, config.getInt(encodedName + ".port"));
-      }
-      catch (AdminException e)
-      {
-        logger.error("Couldn't add daemon \"" + encodedName + "\"", e);
-      }
-      catch (Config.ParamNotFoundException e)
-      {
-        logger.debug("Misconfigured daemon \"" + encodedName + "\", parameter port missing", e);
-      }
-      catch (Config.WrongParamTypeException e)
-      {
-        logger.debug("Misconfigured daemon \"" + encodedName + "\", parameter port misformatted", e);
-      }
-    }
-  }
+	protected ServiceManager()
+	{
+		logger.debug("creating ServiceManager");
+		daemonManager = new DaemonManager(smsc);
+		Config config = configManager.getConfig();
+		Set daemons = config.getSectionChildSectionNames("daemons");
+		for (Iterator i = daemons.iterator(); i.hasNext();)
+		{
+			String encodedName = (String) i.next();
+			String daemonName = StringEncoderDecoder.decodeDot(encodedName.substring(encodedName.lastIndexOf('.') + 1));
+			try
+			{
+				addDaemonInternal(daemonName, config.getInt(encodedName + ".port"));
+			}
+			catch (AdminException e)
+			{
+				logger.error("Couldn't add daemon \"" + encodedName + "\"", e);
+			}
+			catch (Config.ParamNotFoundException e)
+			{
+				logger.debug("Misconfigured daemon \"" + encodedName + "\", parameter port missing", e);
+			}
+			catch (Config.WrongParamTypeException e)
+			{
+				logger.debug("Misconfigured daemon \"" + encodedName + "\", parameter port misformatted", e);
+			}
+		}
+	}
 
-  protected void addDaemonInternal(String host, int port)
-          throws AdminException
-  {
-    Daemon d = daemonManager.addDaemon(host, port);
-    Map newServices = d.listServices();
-    for (Iterator i = newServices.keySet().iterator(); i.hasNext();)
-    {
-      ServiceInfo info = (ServiceInfo) newServices.get((String) i.next());
-      putService(new Service(info));
-    }
-  }
+	protected void addDaemonInternal(String host, int port)
+			  throws AdminException
+	{
+		Daemon d = daemonManager.addDaemon(host, port);
+		Map newServices = d.listServices();
+		for (Iterator i = newServices.keySet().iterator(); i.hasNext();)
+		{
+			ServiceInfo info = (ServiceInfo) newServices.get((String) i.next());
+			putService(new Service(info));
+		}
+	}
 
-  public synchronized void addDaemon(String host, int port)
-          throws AdminException
-  {
-    addDaemonInternal(host, port);
-    Config config = configManager.getConfig();
-    config.setInt("daemons." + StringEncoderDecoder.encodeDot(host) + ".port", port);
-    try
-    {
-      configManager.save();
-    }
-    catch (Exception e)
-    {
-      logger.error("Couldn't save config", e);
-    }
-  }
+	public synchronized void addDaemon(String host, int port)
+			  throws AdminException
+	{
+		addDaemonInternal(host, port);
+		Config config = configManager.getConfig();
+		config.setInt("daemons." + StringEncoderDecoder.encodeDot(host) + ".port", port);
+		try
+		{
+			configManager.save();
+		}
+		catch (Exception e)
+		{
+			logger.error("Couldn't save config", e);
+		}
+	}
 
-  public synchronized Set getHostNames()
-  {
-    return daemonManager.getHosts();
-  }
+	public synchronized Set getHostNames()
+	{
+		return daemonManager.getHosts();
+	}
 
-  protected File saveFileToTemp(InputStream in)
-          throws IOException
-  {
-    File tmpFile = File.createTempFile("SMSC_SME_distrib_", ".zip.tmp");
-    OutputStream out = new BufferedOutputStream(new FileOutputStream(tmpFile));
+	protected File saveFileToTemp(InputStream in)
+			  throws IOException
+	{
+		File tmpFile = File.createTempFile("SMSC_SME_distrib_", ".zip.tmp");
+		OutputStream out = new BufferedOutputStream(new FileOutputStream(tmpFile));
 
-    byte buffer[] = new byte[2048];
-    for (int readed = 0; (readed = in.read(buffer)) > -1;)
-    {
-      out.write(buffer, 0, readed);
-    }
+		byte buffer[] = new byte[2048];
+		for (int readed = 0; (readed = in.read(buffer)) > -1;)
+		{
+			out.write(buffer, 0, readed);
+		}
 
-    in.close();
-    out.close();
-    return tmpFile;
-  }
+		in.close();
+		out.close();
+		return tmpFile;
+	}
 
-  public synchronized String receiveNewService(InputStream in)
-          throws AdminException
-  {
-    try
-    {
-      File tmpFile = saveFileToTemp(in);
+	public synchronized AddAdmServiceWizard receiveNewServiceArchive(InputStream in)
+			  throws AdminException
+	{
+		AddAdmServiceWizard wizard = new AddAdmServiceWizard(in);
+		if (getServiceIds().contains(wizard.getSystemId()))
+			throw new AdminException("Service \"" + wizard.getSystemId() + "\" already exists");
+		else
+			return wizard;
+	}
 
-      ZipInputStream zin = new ZipInputStream(new BufferedInputStream(new FileInputStream(tmpFile)));
-      ZipEntry entry = zin.getNextEntry();
-      logger.debug("Receive new service:");
-      while (entry != null && !entry.getName().equals("config.xml"))
-      {
-        logger.debug("  Unzip entry: " + entry.getName());
-        entry = zin.getNextEntry();
-      }
-      if (entry == null)
-        throw new AdminException("/config.xml not found in distributive");
+	protected File getServiceFolder(String host, String serviceId)
+	{
+		return new File(new File(daemonsFolder, host), serviceId);
+	}
 
-      Config serviceConfig = new Config(Utils.parse(zin));
-      String systemId = serviceConfig.getString(SYSTEM_ID_PARAM_NAME);
+	public synchronized void addAdmService(AddAdmServiceWizard wizard)
+			  throws AdminException
+	{
+		if (getServiceIds().contains(wizard.getSystemId()))
+			throw new AdminException("Service \"" + wizard.getSystemId() + "\" already exists");
+		else
+		{
+			wizard.deploy(daemonsFolder, webappFolder, webinfLibFolder);
 
-      File renameTo = new File(workFolder, systemId + ".zip");
-      if (!tmpFile.renameTo(renameTo))
-        throw new AdminException("Couldn't rename \"" + tmpFile.getCanonicalPath() + "\" to \"" + renameTo.getCanonicalPath());
-      logger.debug("Received new service \"" + systemId + "\"");
-      return systemId;
-    }
-    catch (Config.ParamNotFoundException e)
-    {
-      throw new AdminException("Couldn't find parameter \"" + SYSTEM_ID_PARAM_NAME + "\" in distributive config, nested: " + e.getMessage());
-    }
-    catch (Config.WrongParamTypeException e)
-    {
-      throw new AdminException("Parameter \"" + SYSTEM_ID_PARAM_NAME + "\" in distributive config is not a string");
-    }
-    catch (Exception e)
-    {
-      throw new AdminException("Some exception occured, nested: " + e.getMessage());
-    }
-  }
+			ServiceInfo serviceInfo = new ServiceInfo(wizard.getSystemId(), wizard.getHost(), wizard.getPort(),
+																	wizard.getStartupArgs(), wizard.createSme());
 
-  protected void unZipFileFromArchive(File folderUnpackTo, String name, ZipInputStream zin)
-          throws IOException
-  {
-    File file = new File(folderUnpackTo, name);
-    file.getParentFile().mkdirs();
-    OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
-    for (int i = 0; (i = zin.read()) != -1; out.write(i)) ;
-    out.close();
-  }
+			Daemon d = getDaemon(serviceInfo.getHost());
+			if (services.containsKey(serviceInfo.getId()))
+				throw new AdminException("Service \"" + serviceInfo.getId() + "\" already present");
 
-  protected void unZipArchive(File folderUnpackTo, InputStream in)
-          throws IOException
-  {
-    ZipInputStream zin = new ZipInputStream(in);
-    for (ZipEntry e = zin.getNextEntry(); e != null; e = zin.getNextEntry())
-    {
-      unZipFileFromArchive(folderUnpackTo, e.getName(), zin);
-    }
-    zin.close();
-    in.close();
-  }
+			d.addService(serviceInfo);
+			putService(new Service(serviceInfo));
+			smsc.getSmes().add(serviceInfo.getSme());
+			logger.debug("service added");
+		}
+	}
 
-  protected File getServiceFolder(String host, String serviceId)
-  {
-    return new File(new File(daemonsFolder, host), serviceId);
-  }
+	protected boolean recursiveDeleteFolder(File folder)
+	{
+		String[] childNames = folder.list();
+		if (childNames != null)
+		{
+			for (int i = 0; i < childNames.length; i++)
+			{
+				File child = new File(folder, childNames[i]);
+				if (child.isDirectory())
+					recursiveDeleteFolder(child);
+				else
+					child.delete();
+			}
+		}
+		return folder.delete();
+	}
 
-  protected File getServiceJspsFolder(String serviceId)
-  {
-    return new File(webappFolder, "esme_" + serviceId);
-  }
+	public synchronized void removeService(String serviceId)
+			  throws AdminException
+	{
+		Service s = getService(serviceId);
+		String host = s.getInfo().getHost();
+		Daemon d = getDaemon(host);
+		d.removeService(serviceId);
+		services.remove(serviceId);
+		smsc.getSmes().remove(serviceId);
+		if (!recursiveDeleteFolder(getServiceFolder(host, serviceId))
+				  || !recursiveDeleteFolder(getServiceJspsFolder(webappFolder, serviceId)))
+			throw new AdminException("Service removed, but service files not deleted");
+	}
 
-  protected void moveJars(File serviceFolder, File jarsFolder)
-  {
-    File[] jars = serviceFolder.listFiles();
-    if (jars != null)
-    {
-      for (int i = 0; i < jars.length; i++)
-      {
-        if (jars[i].isFile() && jars[i].getName().endsWith(".jar"))
-        {
-          File newName = new File(jarsFolder, jars[i].getName());
-          try
-          {
-            jars[i].renameTo(newName);
-          }
-          catch (Exception e)
-          {
-            try
-            {
-              logger.warn("couldn't rename \"" + jars[i].getCanonicalPath() + "\" to \"" + newName.getCanonicalPath() + '"');
-            }
-            catch (IOException e1)
-            {
-            }
-          }
-        }
-      }
-    }
-  }
+	public synchronized void startService(String serviceId)
+			  throws AdminException
+	{
+		Service s = getService(serviceId);
+		Daemon d = getDaemon(s.getInfo().getHost());
+		s.getInfo().setPid(d.startService(serviceId));
+		if (s.getInfo().isRunning())
+		{
+			s.refreshComponents();
+		}
+	}
 
-  public synchronized void addService(/*String service,*/
-          String host,
-          int port,
-          String args,
-          String systemId,
-          String systemType,
-          int typeOfNumber,
-          int numberingPlan,
-          int interfaceVersion,
-          String rangeOfAddress,
-          String smeNType)
-          throws AdminException
-  {
-    logger.debug("Add service \"" + systemId + "\" (" + host + ':' + port + ")");
-    try
-    {
-      File serviceFolder = getServiceFolder(host, systemId);
-      File serviceWarFile = new File(workFolder, systemId + ".zip");
-      unZipArchive(serviceFolder,
-                   new BufferedInputStream(new FileInputStream(serviceWarFile)));
-      File jspFolder = new File(serviceFolder, "jsp");
-      File newJspFolder = getServiceJspsFolder(systemId);
-      if (!jspFolder.renameTo(newJspFolder))
-        throw new AdminException("Couldn't deploy JSP's (\"" + jspFolder.getCanonicalPath() + "\") to \"" + newJspFolder.getCanonicalPath() + "\"");
-      File newLogFolder = new File(serviceFolder, "log");
-      newLogFolder.mkdir();
-      moveJars(new File(serviceFolder, "lib"), webinfLibFolder);
-      serviceWarFile.delete();
-    }
-    catch (IOException e)
-    {
-      throw new AdminException("Couldn't unpack service, nested: " + e.getMessage());
-    }
+	public synchronized void killService(String serviceId)
+			  throws AdminException
+	{
+		Service s = getService(serviceId);
+		Daemon d = getDaemon(s.getInfo().getHost());
 
-    smsc.getSmes().add(new SME(systemId, SME.SMPP, typeOfNumber, numberingPlan, interfaceVersion,
-                               systemType, "", rangeOfAddress, Integer.decode(smeNType).intValue()));
-    ServiceInfo serviceInfo = new ServiceInfo(/*service, */systemId, host, port, args, smsc.getSmes());
+		d.killService(serviceId);
+		refreshService(serviceId);
+	}
 
-    Daemon d = getDaemon(serviceInfo.getHost());
-    if (services.containsKey(serviceInfo.getId()))
-      throw new AdminException("Service \"" + serviceInfo.getId() + "\" already present");
+	public synchronized void shutdownService(String serviceId)
+			  throws AdminException
+	{
+		getDaemon(getService(serviceId).getInfo().getHost()).shutdownService(serviceId);
+	}
 
-    //logger.debug("checkpoint 1");
-    d.addService(serviceInfo);
-    //logger.debug("checkpoint 2");
-    putService(new Service(serviceInfo));
-    logger.debug("service added");
-  }
+	public Object callServiceMethod(String hostName, String serviceId, String componentName,
+											  String methodName, String returnTypeName, Map args)
+			  throws AdminException
+	{
+		Service s = getService(serviceId);
+		if (!s.getInfo().getHost().equals(hostName))
+			throw new AdminException("Wrong host name (\"" + hostName + "\")");
+		Component c = (Component) s.getInfo().getComponents().get(componentName);
+		if (c == null)
+			throw new AdminException("Wrong component name (\"" + componentName + "\")");
+		Method m = (Method) c.getMethods().get(methodName);
+		if (m == null)
+			throw new AdminException("Wrong method name (\"" + methodName + "\")");
+		Type t = Type.getInstance(returnTypeName);
+		if (!m.getType().equals(t))
+			throw new AdminException("Wrong method return type (\"" + returnTypeName + "\")");
+		Map params = m.getParams();
+		if (!params.keySet().equals(args.keySet()))
+			throw new AdminException("Wrong arguments");
+		Map arguments = new HashMap();
+		for (Iterator i = params.values().iterator(); i.hasNext();)
+		{
+			Parameter p = (Parameter) i.next();
+			if (args.get(p.getName()) == null)
+				throw new AdminException("Parameter \"" + p.getName() + "\" not specified");
+			switch (p.getType().getId())
+			{
+				case Type.StringType:
+					{
+						arguments.put(p.getName(), args.get(p.getName()));
+						break;
+					}
+				case Type.IntType:
+					{
+						arguments.put(p.getName(), Integer.decode((String) args.get(p.getName())));
+						break;
+					}
+				case Type.BooleanType:
+					{
+						arguments.put(p.getName(), Boolean.valueOf((String) args.get(p.getName())));
+						break;
+					}
+				default:
+					{
+						throw new AdminException("Unknown parameter \"" + p.getName() + "\" type \"" + p.getType().getName() + "\"");
+					}
+			}
+		}
+		return s.call(c, m, t, arguments);
+	}
 
-  protected boolean recursiveDeleteFolder(File folder)
-  {
-    String[] childNames = folder.list();
-    if (childNames != null)
-    {
-      for (int i = 0; i < childNames.length; i++)
-      {
-        File child = new File(folder, childNames[i]);
-        if (child.isDirectory())
-          recursiveDeleteFolder(child);
-        else
-          child.delete();
-      }
-    }
-    return folder.delete();
-  }
+	public synchronized Set getServiceIds()
+	{
+		return services.keySet();
+	}
 
-  public synchronized void removeService(String serviceId)
-          throws AdminException
-  {
-    Service s = getService(serviceId);
-    String host = s.getInfo().getHost();
-    Daemon d = getDaemon(host);
-    d.removeService(serviceId);
-    services.remove(serviceId);
-    if (!recursiveDeleteFolder(getServiceFolder(host, serviceId))
-            || !recursiveDeleteFolder(getServiceJspsFolder(serviceId)))
-      throw new AdminException("Service removed, but service files not deleted");
-  }
+	/**
+	 * Gets service IDs from specified host
+	 * @param host Host to lookup for services
+	 * @return Service IDs (<code>String</code>s), that registered on specified host
+	 */
+	public synchronized Set getServiceIds(String host)
+			  throws AdminException
+	{
+		if (!getHostNames().contains(host))
+			throw new AdminException("Host \"" + host + "\" not connected");
 
-  public synchronized void startService(String serviceId)
-          throws AdminException
-  {
-    Service s = getService(serviceId);
-    Daemon d = getDaemon(s.getInfo().getHost());
-    s.getInfo().setPid(d.startService(serviceId));
-    if (s.getInfo().isRunning())
-    {
-      s.refreshComponents();
-    }
-  }
+		Set result = new HashSet();
+		for (Iterator i = services.keySet().iterator(); i.hasNext();)
+		{
+			Service s = getService((String) i.next());
+			if (s.getInfo().getHost().equals(host))
+				result.add(s.getInfo().getId());
+		}
+		return result;
+	}
 
-  public synchronized void killService(String serviceId)
-          throws AdminException
-  {
-    Service s = getService(serviceId);
-    Daemon d = getDaemon(s.getInfo().getHost());
+	public synchronized ServiceInfo getServiceInfo(String servoceId)
+			  throws AdminException
+	{
+		Service s = getService(servoceId);
+		return s.getInfo();
+	}
 
-    d.killService(serviceId);
-    refreshService(serviceId);
-  }
+	public synchronized void removeDaemon(String host)
+			  throws AdminException
+	{
+		daemonManager.removeDaemon(host);
+		refreshServices();
+		Config config = configManager.getConfig();
+		config.removeParam("daemons." + StringEncoderDecoder.encode(host) + ".port");
+		try
+		{
+			configManager.save();
+		}
+		catch (Exception e)
+		{
+			logger.error("Couldn't save config", e);
+		}
+	}
 
-  public synchronized void shutdownService(String serviceId)
-          throws AdminException
-  {
-    getDaemon(getService(serviceId).getInfo().getHost()).shutdownService(serviceId);
-  }
+	public synchronized int getCountRunningServices(String hostName)
+			  throws AdminException
+	{
+		Set serviceIds = getServiceIds(hostName);
+		int result = 0;
+		for (Iterator i = serviceIds.iterator(); i.hasNext();)
+		{
+			String serviceId = (String) i.next();
+			if (getServiceInfo(serviceId).isRunning())
+				result++;
+		}
+		return result;
+	}
 
-  public Object callServiceMethod(String hostName, String serviceId, String componentName,
-                                  String methodName, String returnTypeName, Map args)
-          throws AdminException
-  {
-    Service s = getService(serviceId);
-    if (!s.getInfo().getHost().equals(hostName))
-      throw new AdminException("Wrong host name (\"" + hostName + "\")");
-    Component c = (Component) s.getInfo().getComponents().get(componentName);
-    if (c == null)
-      throw new AdminException("Wrong component name (\"" + componentName + "\")");
-    Method m = (Method) c.getMethods().get(methodName);
-    if (m == null)
-      throw new AdminException("Wrong method name (\"" + methodName + "\")");
-    Type t = Type.getInstance(returnTypeName);
-    if (!m.getType().equals(t))
-      throw new AdminException("Wrong method return type (\"" + returnTypeName + "\")");
-    Map params = m.getParams();
-    if (!params.keySet().equals(args.keySet()))
-      throw new AdminException("Wrong arguments");
-    Map arguments = new HashMap();
-    for (Iterator i = params.values().iterator(); i.hasNext();)
-    {
-      Parameter p = (Parameter) i.next();
-      if (args.get(p.getName()) == null)
-        throw new AdminException("Parameter \"" + p.getName() + "\" not specified");
-      switch (p.getType().getId())
-      {
-        case Type.StringType:
-          {
-            arguments.put(p.getName(), args.get(p.getName()));
-            break;
-          }
-        case Type.IntType:
-          {
-            arguments.put(p.getName(), Integer.decode((String) args.get(p.getName())));
-            break;
-          }
-        case Type.BooleanType:
-          {
-            arguments.put(p.getName(), Boolean.valueOf((String) args.get(p.getName())));
-            break;
-          }
-        default:
-          {
-            throw new AdminException("Unknown parameter \"" + p.getName() + "\" type \"" + p.getType().getName() + "\"");
-          }
-      }
-    }
-    return s.call(c, m, t, arguments);
-  }
+	public synchronized int getCountServices(String hostName)
+			  throws AdminException
+	{
+		return getServiceIds(hostName).size();
+	}
 
-  public synchronized Set getServiceIds()
-  {
-    return services.keySet();
-  }
+	public synchronized void setStartupParameters(String serviceId, String host,
+																 /*String serviceName, */int port, String args)
+			  throws AdminException
+	{
+		Service s = getService(serviceId);
+		Daemon d = getDaemon(s.getInfo().getHost());
+		d.setServiceStartupParameters(serviceId, /*serviceName, */port, args);
+		if (!s.getInfo().isRunning())
+		{
+			replaceService(new Service(new ServiceInfo(serviceId, d.getHost(), port, args, (SME) smsc.getSmes().get(serviceId))));
+		}
+	}
 
-  /**
-   * Gets service IDs from specified host
-   * @param host Host to lookup for services
-   * @return Service IDs (<code>String</code>s), that registered on specified host
-   */
-  public synchronized Set getServiceIds(String host)
-          throws AdminException
-  {
-    if (!getHostNames().contains(host))
-      throw new AdminException("Host \"" + host + "\" not connected");
+	/************************************ helpers ******************************/
+	public synchronized void refreshServices()
+			  throws AdminException
+	{
+		services.clear();
+		for (Iterator i = daemonManager.getHosts().iterator(); i.hasNext();)
+		{
+			Daemon d = daemonManager.getDaemon((String) i.next());
+			Map infos = d.listServices();
+			for (Iterator j = infos.values().iterator(); j.hasNext();)
+				putService(new Service((ServiceInfo) j.next()));
+		}
+	}
 
-    Set result = new HashSet();
-    for (Iterator i = services.keySet().iterator(); i.hasNext();)
-    {
-      Service s = getService((String) i.next());
-      if (s.getInfo().getHost().equals(host))
-        result.add(s.getInfo().getId());
-    }
-    return result;
-  }
+	public synchronized void refreshService(String serviceId)
+			  throws AdminException
+	{
+		Service s = getService(serviceId);
+		Daemon d = daemonManager.getDaemon(s.getInfo().getHost());
+		Map infos = d.listServices();
+		for (Iterator j = infos.values().iterator(); j.hasNext();)
+			replaceService(new Service((ServiceInfo) j.next()));
+	}
 
-  public synchronized ServiceInfo getServiceInfo(String servoceId)
-          throws AdminException
-  {
-    Service s = getService(servoceId);
-    return s.getInfo();
-  }
+	protected Service getService(String serviceId)
+			  throws AdminException
+	{
+		Service s = (Service) services.get(serviceId);
+		if (s == null)
+			throw new AdminException("Unknown service \"" + serviceId + '"');
+		return s;
+	}
 
-  public synchronized void removeDaemon(String host)
-          throws AdminException
-  {
-    daemonManager.removeDaemon(host);
-    refreshServices();
-    Config config = configManager.getConfig();
-    config.removeParam("daemons." + StringEncoderDecoder.encode(host) + ".port");
-    try
-    {
-      configManager.save();
-    }
-    catch (Exception e)
-    {
-      logger.error("Couldn't save config", e);
-    }
-  }
+	protected void putService(Service s)
+			  throws AdminException
+	{
+		if (services.containsKey(s.getInfo().getId()))
+			throw new AdminException("Service \"" + s.getInfo().getId() + "\" already present");
+		replaceService(s);
+	}
 
-  public synchronized int getCountRunningServices(String hostName)
-          throws AdminException
-  {
-    Set serviceIds = getServiceIds(hostName);
-    int result = 0;
-    for (Iterator i = serviceIds.iterator(); i.hasNext();)
-    {
-      String serviceId = (String) i.next();
-      if (getServiceInfo(serviceId).isRunning())
-        result++;
-    }
-    return result;
-  }
+	protected void replaceService(Service s)
+			  throws AdminException
+	{
+		services.put(s.getInfo().getId(), s);
+		if (s.getInfo().isRunning())
+		{
+			try
+			{
+				s.refreshComponents();
+			}
+			catch (AdminException e)
+			{
+				s.getInfo().setPid(0);
+			}
+		}
+	}
 
-  public synchronized int getCountServices(String hostName)
-          throws AdminException
-  {
-    return getServiceIds(hostName).size();
-  }
+	protected Daemon getDaemon(String hostName)
+			  throws AdminException
+	{
+		Daemon d = daemonManager.getDaemon(hostName);
+		if (d == null)
+			throw new AdminException("Host \"" + hostName + "\" not connected");
+		return d;
+	}
 
-  public synchronized void setStartupParameters(String serviceId, String host,
-                                                /*String serviceName, */int port, String args)
-          throws AdminException
-  {
-    Service s = getService(serviceId);
-    Daemon d = getDaemon(s.getInfo().getHost());
-    d.setServiceStartupParameters(serviceId, /*serviceName, */port, args);
-    if (!s.getInfo().isRunning())
-    {
-      replaceService(new Service(new ServiceInfo(/*serviceName, */serviceId, d.getHost(), port, args, smsc.getSmes())));
-    }
-  }
+	protected void putDaemon(Daemon d)
+			  throws AdminException
+	{
+		if (services.containsKey(d.getHost()))
+			throw new AdminException("Host \"" + d.getHost() + "\" already connected");
+		services.put(d.getHost(), d);
+	}
 
-  /************************************ helpers ******************************/
-  public synchronized void refreshServices()
-          throws AdminException
-  {
-    services.clear();
-    for (Iterator i = daemonManager.getHosts().iterator(); i.hasNext();)
-    {
-      Daemon d = daemonManager.getDaemon((String) i.next());
-      Map infos = d.listServices();
-      for (Iterator j = infos.values().iterator(); j.hasNext();)
-        putService(new Service((ServiceInfo) j.next()));
-    }
-  }
+	static File getServiceJspsFolder(File webappFolder, String serviceId)
+	{
+		return new File(webappFolder, "esme_" + serviceId);
+	}
 
-  public synchronized void refreshService(String serviceId)
-          throws AdminException
-  {
-    Service s = getService(serviceId);
-    Daemon d = daemonManager.getDaemon(s.getInfo().getHost());
-    Map infos = d.listServices();
-    for (Iterator j = infos.values().iterator(); j.hasNext();)
-      replaceService(new Service((ServiceInfo) j.next()));
-  }
-
-  protected Service getService(String serviceId)
-          throws AdminException
-  {
-    Service s = (Service) services.get(serviceId);
-    if (s == null)
-      throw new AdminException("Unknown service \"" + serviceId + '"');
-    return s;
-  }
-
-  protected void putService(Service s)
-          throws AdminException
-  {
-    if (services.containsKey(s.getInfo().getId()))
-      throw new AdminException("Service \"" + s.getInfo().getId() + "\" already present");
-    replaceService(s);
-  }
-
-  protected void replaceService(Service s)
-          throws AdminException
-  {
-    services.put(s.getInfo().getId(), s);
-    if (s.getInfo().isRunning())
-    {
-      try
-      {
-        s.refreshComponents();
-      }
-      catch (AdminException e)
-      {
-        s.getInfo().setPid(0);
-      }
-    }
-  }
-
-  protected Daemon getDaemon(String hostName)
-          throws AdminException
-  {
-    Daemon d = daemonManager.getDaemon(hostName);
-    if (d == null)
-      throw new AdminException("Host \"" + hostName + "\" not connected");
-    return d;
-  }
-
-  protected void putDaemon(Daemon d)
-          throws AdminException
-  {
-    if (services.containsKey(d.getHost()))
-      throw new AdminException("Host \"" + d.getHost() + "\" already connected");
-    services.put(d.getHost(), d);
-  }
 }

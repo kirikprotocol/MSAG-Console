@@ -37,15 +37,17 @@ int pagesize = pagesizeI == null ? 20 : pagesizeI.intValue();
 			<tr class="list">
 				<th class="list" nowrap width="10%">Aliases<br>
 				<font size="-2">Enter aliases <br>
-				delimited by space</font></th>
+				delimited by space<br>
+				or new line</font></th>
 				<td class="list">
   				<textarea style="WIDTH: 100%" name="aliases" rows="5"><%=aliases%></textarea>
 				</td>
 			</tr>
 			<tr class="list">
 				<th class="list" nowrap width="10%">Addresses<br>
-				<font size="-2">Enter aliases <br>
-				delimited by space</font></th>
+				<font size="-2">Enter addresses<br>
+				delimited by space<br>
+				or new line</font></th>
 				<td class="list">
   				<textarea style="WIDTH: 100%" name="addresses" rows="5"><%=addresses%></textarea>
 				</td>

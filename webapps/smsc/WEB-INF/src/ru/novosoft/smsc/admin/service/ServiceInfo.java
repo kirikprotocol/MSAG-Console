@@ -17,57 +17,57 @@ import java.util.Map;
 
 public class ServiceInfo
 {
-//  protected String name = "";
-  protected String id = "";
-  protected String host = "";
-  protected int port = 0;
-  protected String args = "";
-  protected long pid = 0;
-  protected Map components = new HashMap();
-  protected SME sme = null;
+	protected String id = "";
+	protected String host = "";
+	protected int port = 0;
+	protected String args = "";
+	protected long pid = 0;
+	protected Map components = new HashMap();
+	protected SME sme = null;
 
 
-  public ServiceInfo(Element serviceElement, String serviceHost, SMEList smes)
-          throws AdminException
-  {
-    host = serviceHost;
-//    name = serviceElement.getAttribute("name");
-    pid = Long.decode(serviceElement.getAttribute("pid")).longValue();
-    port = Integer.decode(serviceElement.getAttribute("port")).intValue();
-    id = serviceElement.getAttribute("id");
+	public ServiceInfo(Element serviceElement, String serviceHost, SMEList smes)
+			  throws AdminException
+	{
+		host = serviceHost;
+		port = Integer.decode(serviceElement.getAttribute("port")).intValue();
+		id = serviceElement.getAttribute("id");
 
-    args = serviceElement.getAttribute("args");
-    if (/*name.equals("") ||*/ id.equals(""))
-    {
-      throw new AdminException("service name or service system id not specified in response");
-    }
-    sme = smes.get(id);
-    if (sme == null)
-      throw new AdminException("Unknown SME ID: \"" + id + '"');
-  }
+		args = serviceElement.getAttribute("args");
+		if (/*name.equals("") ||*/ id.equals(""))
+		{
+			throw new AdminException("service name or service system id not specified in response");
+		}
+		sme = smes.get(id);
+		if (sme == null)
+			throw new AdminException("Unknown SME ID: \"" + id + '"');
+	}
 
-  public ServiceInfo(/*String name, */String id, String host, int port, String args, long pid, SMEList smes)
-          throws AdminException
-  {
+	private ServiceInfo(String id, String host, int port, String args, long pid, SME sme)
+			  throws AdminException
+	{
 //    this.name = name;
-    this.host = host;
-    this.port = port;
-    this.args = args;
-    this.pid = pid;
-    this.id = id;
-    if (smes != null)
-    {
-      sme = smes.get(id);
-      if (sme == null)
-        throw new AdminException("Unknown SME ID: \"" + id + '"');
-    }
-  }
+		this.host = host;
+		this.port = port;
+		this.args = args;
+		this.pid = pid;
+		this.id = id;
+		this.sme = sme;
+/*
+		if (smes != null)
+		{
+		  sme = smes.get(id);
+		  if (sme == null)
+			 throw new AdminException("Unknown SME ID: \"" + id + '"');
+		}
+*/
+	}
 
-  public ServiceInfo(/*String name, */String id, String host, int port, String args, SMEList smes)
-          throws AdminException
-  {
-    this(/*name, */id, host, port, args, 0, smes);
-  }
+	public ServiceInfo(String id, String host, int port, String args, SME sme)
+			  throws AdminException
+	{
+		this(/*name, */id, host, port, args, 0, sme);
+	}
 
 
 /*  public String getName()
@@ -75,60 +75,60 @@ public class ServiceInfo
     return name;
   }
 */
-  public String getHost()
-  {
-    return host;
-  }
+	public String getHost()
+	{
+		return host;
+	}
 
-  public int getPort()
-  {
-    return port;
-  }
+	public int getPort()
+	{
+		return port;
+	}
 
-  public String getId()
-  {
-    return id;
-  }
+	public String getId()
+	{
+		return id;
+	}
 
-  public String getArgs()
-  {
-    return args;
-  }
+	public String getArgs()
+	{
+		return args;
+	}
 
-  public long getPid()
-  {
-    return pid;
-  }
+	public long getPid()
+	{
+		return pid;
+	}
 
-  public boolean isRunning()
-  {
-    return pid != 0;
-  }
+	public boolean isRunning()
+	{
+		return pid != 0;
+	}
 
-  public void setPid(long pid)
-  {
-    this.pid = pid;
-  }
+	public void setPid(long pid)
+	{
+		this.pid = pid;
+	}
 
-  public Map getComponents()
-  {
-    return components;
-  }
+	public Map getComponents()
+	{
+		return components;
+	}
 
-  public void setComponents(Element response)
-  {
-    components.clear();
-    NodeList list = response.getElementsByTagName("component");
-    for (int i = 0; i < list.getLength(); i++)
-    {
-      Element compElem = (Element) list.item(i);
-      Component c = new Component(compElem);
-      components.put(c.getName(), c);
-    }
-  }
+	public void setComponents(Element response)
+	{
+		components.clear();
+		NodeList list = response.getElementsByTagName("component");
+		for (int i = 0; i < list.getLength(); i++)
+		{
+			Element compElem = (Element) list.item(i);
+			Component c = new Component(compElem);
+			components.put(c.getName(), c);
+		}
+	}
 
-  public SME getSme()
-  {
-    return sme;
-  }
+	public SME getSme()
+	{
+		return sme;
+	}
 }
