@@ -1561,67 +1561,47 @@ IdIterator* RemoteStore::getReadyForCancel(const Address& oa,
     return (new CancelIdIterator(pool, oa, da, svcType));
 }
 
-RemoteStore::ConcatInitIterator::ConcatInitIterator(StorageConnectionPool* _pool)
-    throw(StorageException) 
-        : ConcatDataIterator(), pool(_pool), connection(0), concatStmt(0)
+int RemoteStore::getConcatMessageReference(Address& dda)
+    throw(StorageException)
 {
-#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+    int msgRef = -1;
 
-    isNull = false;
-    connection = pool->getConnection();
-    if (!connection) return;
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+    
+    Connection* connection = pool->getConnection();
+    if (!connection) 
+        throw StorageException("Get connection failed");
+    ConcatDataStatement* concatStmt = 0;
+
     try
     {
         if (connection && !connection->isAvailable()) 
             connection->connect();
         
         concatStmt = new ConcatDataStatement(connection, false);
-        sword status = concatStmt->execute(OCI_DEFAULT, 0, 0);
+        concatStmt->setDestination(dda);
+
+        sword status = concatStmt->execute();
         if (status != OCI_NO_DATA) connection->check(status);
-        else isNull = true;
+        else return -1;
+
+        msgRef = concatStmt->getMessageReference();
+
+        if (concatStmt) delete concatStmt;
+        if (connection) pool->freeConnection(connection);
     }
     catch (...)
     {
         if (concatStmt) delete concatStmt;
         if (connection) pool->freeConnection(connection);
-        connection = 0; concatStmt = 0;
         throw;
     }
-#endif
-}
-RemoteStore::ConcatInitIterator::~ConcatInitIterator()
-{
-#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-    
-    if (concatStmt) delete concatStmt;
-    if (pool && connection) pool->freeConnection(connection);
 
-#endif
-}
-bool RemoteStore::ConcatInitIterator::getNext()
-    throw(StorageException)
-{
-#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-
-    if (!isNull && concatStmt && connection && connection->isAvailable())
-    {
-        sword status = concatStmt->fetch();
-        if (status != OCI_NO_DATA)
-        {
-            connection->check(status);
-            return true;
-        }
-    }
-    return false;
+    return msgRef;
 #else
-    return false;
-#endif
-}
 
-ConcatDataIterator* RemoteStore::getConcatInitInfo()
-    throw(StorageException)
-{
-    return (new ConcatInitIterator(pool));
+    return -1;
+#endif
 }
 
 /* ------------------------------ Remote Store ------------------------------ */

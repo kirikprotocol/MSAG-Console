@@ -1189,8 +1189,8 @@ void UpdateSeqNumStatement::bindInc(int8_t inc)
 }
 
 const char* ConcatDataStatement::sql = (const char*)
-"SELECT DDA, MSG_REF FROM SMS_MSG WHERE ID IN\
- (SELECT MAX(ID) FROM SMS_MSG WHERE MSG_REF IS NOT NULL GROUP BY DDA)";
+"SELECT MSG_REF FROM SMS_MSG WHERE ID =\
+(SELECT MAX(T.ID) FROM SMS_MSG T WHERE T.MSG_REF IS NOT NULL AND T.DDA=:DDA)";
 ConcatDataStatement::ConcatDataStatement(Connection* connection, bool assign)
     throw(StorageException)
         : Statement(connection, ConcatDataStatement::sql, assign)
@@ -1198,9 +1198,14 @@ ConcatDataStatement::ConcatDataStatement(Connection* connection, bool assign)
     __trace2__("%p : ConcatDataStatement creating ...", stmt);
     
     dstAddr[0] = '\0'; msgRef = 0;
-    define(1, SQLT_STR, (dvoid *)  (dstAddr), (sb4) sizeof(dstAddr));
-    define(2, SQLT_UIN, (dvoid *) &(msgRef), (sb4) sizeof(msgRef));
+    define(1, SQLT_UIN, (dvoid *) &(msgRef), (sb4) sizeof(msgRef));
 }
+void ConcatDataStatement::setDestination(Address& dda)
+{
+    convertAddressToString(dda, dstAddr);   
+    bind(1, SQLT_STR, (dvoid *) (dstAddr), (sb4) sizeof(dstAddr));
+}
+
 
 /* --------------------- Sheduler's statements -------------------- */
 

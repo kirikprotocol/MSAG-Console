@@ -575,9 +575,8 @@ namespace smsc { namespace store
             throw(StorageException);
         ~ConcatDataStatement() {};
         
-        const char* getDestination() {
-            return dstAddr;
-        }
+        void setDestination(Address& dda);
+        
         uint8_t getMessageReference() {
             return msgRef;
         }

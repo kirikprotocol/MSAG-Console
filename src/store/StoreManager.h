@@ -124,32 +124,6 @@ namespace smsc { namespace store
                 throw(StorageException);
         };
 
-        class ConcatInitIterator : public ConcatDataIterator
-        {
-        private:
-            
-            bool                        isNull;
-            Connection*                 connection;
-            ConcatDataStatement*        concatStmt;
-            StorageConnectionPool*      pool;
-        
-        public:
-
-            ConcatInitIterator(StorageConnectionPool* _pool)
-                throw(StorageException);
-            virtual ~ConcatInitIterator();
-
-            virtual bool getNext()
-                throw(StorageException);
-            
-            virtual const char* getDestination() {
-                return (concatStmt) ? concatStmt->getDestination():0;
-            }
-            virtual uint8_t getMessageReference() {
-                return (concatStmt) ? concatStmt->getMessageReference():0;
-            }
-        };
-
         SMSId doCreateSms(StorageConnection* connection,
             SMS& sms, SMSId id, const CreateMode flag)
                 throw(StorageException, DuplicateMessageException);
@@ -312,7 +286,7 @@ namespace smsc { namespace store
          * Реализация метода MessageStore
          * @see MessageStore
          */
-        virtual ConcatDataIterator* getConcatInitInfo()
+        virtual int getConcatMessageReference(Address& dda)
                 throw(StorageException);
         
         /**
