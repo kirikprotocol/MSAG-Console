@@ -4,6 +4,10 @@ function clickSubmit()
 {
 /*	if (this.onclick != null && this.onclick() == false)
 		return false;*/
+	if (this.disabled)
+	{
+		return false;
+	}
 	if(this.jbuttonOnclick)
 	{  
 		var f;  
