@@ -1,5 +1,7 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.admin.smsview.*"%>
+<%@ page import="ru.novosoft.smsc.admin.smsview.*,
+                 ru.novosoft.smsc.util.*,
+                 java.text.*"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsview.*"%>
 <jsp:useBean id="smsViewBean" scope="session" class="ru.novosoft.smsc.jsp.smsview.SmsViewFormBean" />
 <%
@@ -114,15 +116,20 @@ function setSort(sorting)
 </script>
 <br>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ results ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
+<%
+  SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+%>
 <div class=secView>Search results</div>
 <%@ include file="/WEB-INF/inc/navbar.jsp"%>
 <table class=secRep cellspacing=1 width="100%">
 <thead>
 <tr class=row0>
-  <th><a href="#" <%=bean.getSort().endsWith("name")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by SMS Id" onclick='return setSort("name")'>SMS Id</a></th>
-  <th><a href="#" <%=bean.getSort().endsWith("date")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Date" onclick='return setSort("date")'>Date</a></th>
+  <th><a href="#" <%=bean.getSort().endsWith("name")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by SMS Id" onclick='return setSort("name")'>ID</a></th>
+  <th><a href="#" <%=bean.getSort().endsWith("date")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Date" onclick='return setSort("date")'>Date/Valid</a></th>
+  <th>Tried last/next</th>
   <th><a href="#" <%=bean.getSort().endsWith("from")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Source address" onclick='return setSort("from")'>Source</a></th>
   <th><a href="#" <%=bean.getSort().endsWith("to")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Destination address" onclick='return setSort("to")'>Destination</a></th>
+  <th>Route</th>
   <th><a href="#" <%=bean.getSort().endsWith("status") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by delivery status" onclick='return setSort("status")'>Status</a></th>
 </tr></thead>
 <tbody><%
@@ -134,11 +141,41 @@ if (lastIndex >= bean.getTotalSize() || bean.getPageSize() < 0)
 {int rowN=0; for (int cnt=firstIndex; cnt<=lastIndex; cnt++, rowN++) {
   SmsRow row = bean.getRow(cnt-1);
 %><tr class=row<%=rowN&1%>0>
-      <td nowrap><%= StringEncoderDecoder.encode(row.getIdString())%></td>
-      <td nowrap><%= StringEncoderDecoder.encode(row.getDateString())%></td>
-      <td nowrap><%= StringEncoderDecoder.encode(row.getFrom().trim())%></td>
-      <td nowrap><%= StringEncoderDecoder.encode(row.getToString().trim())%></td>
-      <td nowrap><%= StringEncoderDecoder.encode(row.getStatus())%></td>
+      <td nowrap>
+        <%= row.getIdLong()%><br>
+        <!--%= row.getAttempts()%-->
+      </td>
+      <td nowrap>
+        <%= StringEncoderDecoder.encode(dateFormatter.format(row.getSubmitTime()))%><br>
+        <%= StringEncoderDecoder.encode(dateFormatter.format(row.getValidTime()))%>
+      </td>
+      <td nowrap>
+        <%= StringEncoderDecoder.encode(dateFormatter.format(row.getLastTryTime()))%><br>
+        <%= StringEncoderDecoder.encode(dateFormatter.format(row.getNextTryTime()))%>
+      </td>
+      <td nowrap>
+        <%= StringEncoderDecoder.encode(row.getOriginatingAddress())%><br>
+        <%= StringEncoderDecoder.encode(row.getSrcSmeId())%>
+      </td>
+      <td nowrap>
+        <%= StringEncoderDecoder.encode(row.getDestinationAddress())%>
+        <%String dea = row.getDealiasedDestinationAddress();
+          if( dea != null && dea.trim().length() > 0 && !dea.equals(row.getDestinationAddress())) {
+        %>
+          (<%=dea%>)
+        <%
+          }
+        %>
+        <br>
+        <%= StringEncoderDecoder.encode(row.getDstSmeId())%>
+      </td>
+      <td>
+        <%= StringEncoderDecoder.encode(row.getRouteId())%>
+      </td>
+      <td nowrap>
+        <%= StringEncoderDecoder.encode(row.getStatus())%><br>
+        <%= StringEncoderDecoder.encode(appContext.getLocaleMessages(request.getLocale()).getString("smsc.errcode."+row.getLastResult()))%>
+      </td>
   </tr>
   <tr class=row<%=rowN&1%>1>
       <td colspan=5><%= (row.getText()!=null&&row.getText().startsWith("&#")?row.getText():StringEncoderDecoder.encode(row.getText()))%>&nbsp;</td>
