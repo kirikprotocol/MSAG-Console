@@ -105,7 +105,9 @@ void StoreManager::shutdown()
     {
         log.info("Storage Manager is shutting down ...");
         delete instance; instance = 0;
+        log.info("Storage Manager shutting down generator...");
         if (generator) delete generator; generator = 0;
+        log.info("Storage Manager shutting down archiver...");
         if (archiver) delete archiver; archiver = 0;
         log.info("Storage Manager was shutdowned.");
     }
@@ -153,7 +155,9 @@ RemoteStore::RemoteStore(Manager& config)
 RemoteStore::~RemoteStore() 
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+    log.info( "RemoteStore: Destroying connection pool" );
     if (pool) delete pool;
+    log.info( "RemoteStore: Connection pool destroyed" );
 #endif
 }
 SMSId RemoteStore::getNextId()
@@ -1691,7 +1695,9 @@ CachedStore::CachedStore(Manager& config)
 CachedStore::~CachedStore() 
 {
     MutexGuard  guard(cacheMutex);
+    log.info( "CachedStore: cleaning cache..." );
     if (cache) delete cache;
+    log.info( "CachedStore: cache cleaned." );
 }
 
 SMSId CachedStore::createSms(SMS& sms, SMSId id, const CreateMode flag)

@@ -258,7 +258,7 @@ void Archiver::Start()
 void Archiver::Stop() 
 {
     MutexGuard  guard(startLock);
-    
+    log.info( "Archiver: stopping..." );
     if (bStarted)
     {
         exit.Signal();
@@ -266,6 +266,7 @@ void Archiver::Stop()
         exited.Wait();
         bStarted = false;
     }
+    log.info( "Archiver: stopped..." );
 }
 
 void Archiver::startup()
