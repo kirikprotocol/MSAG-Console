@@ -94,6 +94,7 @@ const uint8_t SMSC_DELIVERY_RECEIPT_BITS = 0x3;
 const uint8_t NO_SMSC_DELIVERY_RECEIPT = 0x0;
 const uint8_t FINAL_SMSC_DELIVERY_RECEIPT = 0x1;
 const uint8_t FAILURE_SMSC_DELIVERY_RECEIPT = 0x2;
+const uint8_t SMSC_DELIVERY_RECEIPT_RESERVED = 0x3;
 //SME originated Acknowledgement - игнорируем
 //Intermediate Notification:
 //xxx0xxxx - No Intermediate notification requested
