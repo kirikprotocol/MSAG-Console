@@ -471,9 +471,9 @@ public:
   {
     if(!closed)return;
     if(socket.Init(cfg.host.c_str(),cfg.port,cfg.timeOut)==-1)
-      throw Exception("Failed to resolve smsc host");
+      throw SmppConnectException(SmppConnectException::Reason::networkResolve);
     if(socket.Connect()==-1)
-      throw Exception("Failed to connect to smsc host");
+      throw SmppConnectException(SmppConnectException::Reason::networkConnect);
     reader.Start();
     writer.Start();
     PduBindTRX pdu;
