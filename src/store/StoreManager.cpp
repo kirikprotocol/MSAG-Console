@@ -28,13 +28,28 @@ StoreManager::~StoreManager()
 SMSId StoreManager::store(SMS* message)
     throw(ResourceAllocationException)
 {
-    return 0;
+    Connection* conn;
+    if (pool && (conn = pool->getConnection())) 
+    {
+          
+        pool->freeConnection(conn);
+        return 0;
+    }
+    throw ResourceAllocationException();
 }
 
 SMS* StoreManager::retrive(SMSId id)
     throw(ResourceAllocationException, NoSuchMessageException)
 {
-    return 0L;
+    Connection* conn;
+    SMS*        sms;
+    if (pool && (conn = pool->getConnection())) 
+    {
+          
+        pool->freeConnection(conn);
+        return sms;
+    }
+    throw ResourceAllocationException();
 }
 /* ----------------------------- StoreManager -------------------------- */
 

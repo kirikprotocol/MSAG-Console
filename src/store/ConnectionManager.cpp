@@ -107,13 +107,17 @@ void SingleConnectionPool::disconnect()
 
 Connection* SingleConnectionPool::getConnection()
 {
-    // wait mutex here
+    while (lock); // replace it by mutex logic (own mutex here)
+    lock = true;
     return conn;
 }
 
 void SingleConnectionPool::freeConnection(Connection* connection)
 {
-    // free mutex here
+    // replace it by mutex logic (free mutex here)
+    if (conn == connection) {
+        lock = false;
+    }
 }
 /* ----------------------------- ConnectionPool ------------------------ */
 

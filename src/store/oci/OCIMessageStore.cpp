@@ -9,7 +9,7 @@ namespace smsc { namespace store { namespace oci
 
     using namespace smsc::store;
     
-/* --------------- OCIMessageStore ----------------- */    
+/* --------------- OCIMessageStore ----------------- */
 OCIMessageStore::OCIMessageStore(OCIStoreConfig* _config)
     : MessageStore(_config), isOpened(false),
 	envhp(0L), errhp(0L), svchp(0L)
@@ -17,7 +17,7 @@ OCIMessageStore::OCIMessageStore(OCIStoreConfig* _config)
 
 }
 
-OCIMessageStore::~OCIMessageStore() 
+OCIMessageStore::~OCIMessageStore()
 {
     close();
 }
@@ -57,18 +57,18 @@ void OCIMessageStore::checkerror(OCIError *errhp, sword status)
     }	
 }
  
-void OCIMessageStore::open() 
+void OCIMessageStore::open()
     throw(ResourceAllocationException, AuthenticationException)
 {
-    if (!isOpened) 
+    if (!isOpened)
     {
-        if (!config) throw (new AuthenticationException());
+        if (!config) throw (AuthenticationException());
         
         const char* userName = config->getUserName();
         const char* userPwd = config->getUserPwd();
         const char* dbName = config->getDbName();
         
-        if (userName && userPwd && dbName) 
+        if (userName && userPwd && dbName)
         {
             sword       status;
 
@@ -122,8 +122,8 @@ void OCIMessageStore::open()
 				    OCI_CRED_RDBMS, OCI_DEFAULT);
             if (status != OCI_SUCCESS) {
                 checkerror(errhp, status);
-		(void) OCIHandleFree(envhp, OCI_HTYPE_ENV);
-		throw AuthenticationException();
+		        (void) OCIHandleFree(envhp, OCI_HTYPE_ENV);
+		        throw AuthenticationException();
             }
 				    
 	    // set the user session attribute in the service context handle
@@ -136,26 +136,26 @@ void OCIMessageStore::open()
             }*/
 			
             // logon to server database (allocate a service handle) 
-            status = OCILogon(envhp, errhp, &svchp, 
+            status = OCILogon(envhp, errhp, &svchp,
                                 (OraText*)userName, strlen(userName),
-                                (OraText*)userPwd, strlen(userPwd), 
+                                (OraText*)userPwd, strlen(userPwd),
                                 (OraText*)dbName, strlen(dbName));
-            if (status != OCI_SUCCESS || !svchp) 
-	    {
+            if (status != OCI_SUCCESS || !svchp)
+            {
                 // free envirounment handle (error handle will be freed too)
-		checkerror(errhp, status);
+		        checkerror(errhp, status);
                 (void) OCIHandleFree(envhp, OCI_HTYPE_ENV);
                 throw AuthenticationException();
             }
             isOpened = true;
-        } 
+        }
         else throw AuthenticationException();
     }
 }
 
-void OCIMessageStore::close() 
+void OCIMessageStore::close()
 {
-    if (isOpened && envhp && errhp && svchp) 
+    if (isOpened && envhp && errhp && svchp)
     {
         sword       status;
         
@@ -168,7 +168,7 @@ void OCIMessageStore::close()
         isOpened = false;
     }
 }
- 
+
 sms::SMSId OCIMessageStore::store(sms::SMS* message)
     throw(ResourceAllocationException)
 {
