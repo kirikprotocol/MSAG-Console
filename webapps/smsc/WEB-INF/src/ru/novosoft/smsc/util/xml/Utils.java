@@ -32,13 +32,7 @@ public class Utils
     return result;
   }
 
-  static public Document parse(InputStream inputStream)
-          throws FactoryConfigurationError, ParserConfigurationException, SAXException, IOException, NullPointerException
-  {
-    return parse( new BufferedReader(new InputStreamReader(inputStream)));
-  }
-
-  static public Document parse(BufferedReader inputStream)
+  static public Document parse(Reader inputStream)
           throws FactoryConfigurationError, ParserConfigurationException, SAXException, IOException, NullPointerException
   {
     if (inputStream == null)

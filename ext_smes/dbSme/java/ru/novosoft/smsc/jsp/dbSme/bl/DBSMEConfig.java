@@ -9,14 +9,8 @@ import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.config.SaveableConfigTree;
 import ru.novosoft.smsc.util.xml.Utils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.io.*;
+import java.util.*;
 
 public class DBSMEConfig
 {
@@ -35,7 +29,7 @@ public class DBSMEConfig
 	{
 		this.configurationFileName = configurationFileName;
 		System.out.println("configurationFileName.getCanonicalPath() = " + configurationFileName.getCanonicalPath());
-		this.config = new Config(Utils.parse(new FileInputStream(configurationFileName)));
+		this.config = new Config(Utils.parse(new FileReader(configurationFileName)));
 	}
 
 	public List getDataSourceDrivers()
@@ -155,7 +149,7 @@ public class DBSMEConfig
 		OutputStream out = new FileOutputStream(tmpFile);
 	        String encoding = null; //System.getProperty("file.encoding");
 	        if( encoding == null ) encoding = "ISO-8859-1";
-	
+
 		out.write(("<?xml version=\"1.0\" encoding=\""+encoding+"\"?>\n").getBytes());
 		out.write("<!DOCTYPE config SYSTEM \"file://configuration.dtd\">\n\n".getBytes());
 		out.write("<config>\n".getBytes());

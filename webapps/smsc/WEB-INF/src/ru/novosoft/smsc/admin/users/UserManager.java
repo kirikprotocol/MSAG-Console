@@ -119,7 +119,7 @@ public class UserManager implements DataSource
 	protected void load(File file)
 			throws IOException, SAXException, ParserConfigurationException
 	{
-		Document document = Utils.parse(new FileInputStream(file));
+		Document document = Utils.parse(new FileReader(file));
 		NodeList userNodes = document.getElementsByTagName("user");
 		for (int i = 0; i < userNodes.getLength(); i++)
 		{

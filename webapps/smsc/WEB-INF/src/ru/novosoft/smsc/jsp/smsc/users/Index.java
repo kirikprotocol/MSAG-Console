@@ -87,6 +87,7 @@ public class Index extends IndexBean
 			userManager.removeUser(checkedUserLogin);
 		}
 		setCheckedUserLogins(new String[0]);
+		appContext.getStatuses().setUsersChanged(true);
 		return RESULT_OK;
 	}
 

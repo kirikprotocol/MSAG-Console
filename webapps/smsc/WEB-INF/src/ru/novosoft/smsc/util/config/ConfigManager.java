@@ -73,8 +73,7 @@ public class ConfigManager
   protected ConfigManager(String configFileName)
           throws FactoryConfigurationError, ParserConfigurationException, IOException, SAXException
   {
-    BufferedReader inputStream = new BufferedReader(new FileReader(configFileName));
-    config = new Config(Utils.parse(inputStream));
+    config = new Config(Utils.parse(new FileReader(configFileName)));
   }
 
   public Config getConfig()

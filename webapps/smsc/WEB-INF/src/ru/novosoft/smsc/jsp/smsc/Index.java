@@ -67,12 +67,38 @@ public class Index extends SmscBean
 
 	private int applyRoutes()
 	{
-		return routesSubjectsServices();
+		try
+		{
+			smsc.applyRoutes();
+			statuses.setRoutesChanged(false);
+			statuses.setSubjectsChanged(false);
+			statuses.setServicesChanged(false);
+
+			return RESULT_OK;
+		}
+		catch (Throwable t)
+		{
+			logger.error("Couldn't apply changes", t);
+			return error(SMSCErrors.error.couldntApplyChanges, t);
+		}
 	}
 
 	private int applySubjects()
 	{
-		return routesSubjectsServices();
+		try
+		{
+			smsc.applyRoutes();
+			statuses.setRoutesChanged(false);
+			statuses.setSubjectsChanged(false);
+			statuses.setServicesChanged(false);
+
+			return RESULT_OK;
+		}
+		catch (Throwable t)
+		{
+			logger.error("Couldn't apply changes", t);
+			return error(SMSCErrors.error.couldntApplyChanges, t);
+		}
 	}
 
 	private int applyAliases()
@@ -93,19 +119,33 @@ public class Index extends SmscBean
 
 	private int applyProfiles()
 	{
-		// todo
+		smsc.applyProfiles();
 		statuses.setProfilesChanged(false);
-		return error("not yet implemented");
+		return RESULT_OK;
 	}
 
 	private int applyHosts()
 	{
-		return routesSubjectsServices();
+		statuses.setHostsChanged(false);
+		return RESULT_OK;
 	}
 
 	private int applyServices()
 	{
-		return routesSubjectsServices();
+		try
+		{
+			smsc.applyServices();
+			statuses.setServicesChanged(false);
+			statuses.setSubjectsChanged(false);
+			statuses.setRoutesChanged(false);
+
+			return RESULT_OK;
+		}
+		catch (Throwable t)
+		{
+			logger.error("Couldn't apply changes", t);
+			return error(SMSCErrors.error.couldntApplyChanges, t);
+		}
 	}
 
 	private int applyUsers()
@@ -120,25 +160,6 @@ public class Index extends SmscBean
 		{
 			logger.error("Couldn't apply users", e);
 			return error(SMSCErrors.error.users.couldntApply, e);
-		}
-	}
-
-	private int routesSubjectsServices()
-	{
-		try
-		{
-			smsc.applyRoutes();
-			statuses.setRoutesChanged(false);
-			statuses.setSubjectsChanged(false);
-			statuses.setServicesChanged(false);
-			statuses.setHostsChanged(false);
-
-			return RESULT_OK;
-		}
-		catch (Throwable t)
-		{
-			logger.error("Couldn't apply changes", t);
-			return error(SMSCErrors.error.couldntApplyChanges, t);
 		}
 	}
 

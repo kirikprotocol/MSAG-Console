@@ -41,7 +41,7 @@ public:
 	{
 		isShutdownSignaled = false;
 
-		if (sock.InitServer(hostName, portToListen, 10) != 0)
+		if (sock.InitServer(hostName, portToListen, 10, 0) != 0)
 		{
 			throw AdminException("socket fails");
 		}

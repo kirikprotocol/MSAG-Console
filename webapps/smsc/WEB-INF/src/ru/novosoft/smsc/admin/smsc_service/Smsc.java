@@ -39,6 +39,7 @@ public class Smsc extends Service
 	private Method flush_statistics_method = null;
 	private Method process_cancel_messages_method = null;
 	private Method apply_smsc_config_method = null;
+	private Method apply_services_method = null;
 	private ConfigManager configManager = null;
 
 	private SMEList smes = null;
@@ -74,9 +75,9 @@ public class Smsc extends Service
 		try
 		{
 			final File smscConfFolder = getSmscConfFolder();
-			Document smesDoc = Utils.parse(new BufferedReader(new FileReader(new File(smscConfFolder, "sme.xml"))));
-			Document routesDoc = Utils.parse(new BufferedReader(new FileReader(new File(smscConfFolder, "routes.xml"))));
-			Document aliasesDoc = Utils.parse(new BufferedReader(new FileReader(new File(smscConfFolder, "aliases.xml"))));
+			Document smesDoc = Utils.parse(new FileReader(new File(smscConfFolder, "sme.xml")));
+			Document routesDoc = Utils.parse(new FileReader(new File(smscConfFolder, "routes.xml")));
+			Document aliasesDoc = Utils.parse(new FileReader(new File(smscConfFolder, "aliases.xml")));
 			smes = new SMEList(smesDoc.getDocumentElement());
 			subjects = new SubjectList(routesDoc.getDocumentElement(), smes);
 			routes = new RouteList(routesDoc.getDocumentElement(), subjects, smes);
@@ -182,10 +183,13 @@ public class Smsc extends Service
 		call(smsc_component, apply_routes_method, Type.Types[Type.StringType], new HashMap());
 	}
 
-	public synchronized void applyProfiles()
+	public synchronized void applyServices()
 			throws AdminException
 	{
-		/* todo applyProfiles */
+		checkComponents();
+      saveSmesConfig();
+		saveRoutesConfig();
+		call(smsc_component, apply_services_method, Type.Types[Type.StringType], new HashMap());
 	}
 
 	public synchronized void applyAliases()
@@ -255,6 +259,11 @@ public class Smsc extends Service
 			throws AdminException
 	{
 		return profileDataSource.query(query);
+	}
+
+	public synchronized void applyProfiles()
+	{
+		// nothing to do
 	}
 
 	public synchronized void saveSmesConfig()
@@ -340,7 +349,7 @@ public class Smsc extends Service
 		smscDaemon.shutdownService(Constants.SMSC_SME_ID);
 	}
 
-	protected void checkComponents() throws AdminException
+	protected void checkComponents()
 	{
 		if (apply_aliases_method == null || apply_routes_method == null || lookup_profile_method == null
 				|| update_profile_method == null || flush_statistics_method == null
@@ -357,6 +366,7 @@ public class Smsc extends Service
 				flush_statistics_method = (Method) smsc_component.getMethods().get("flush_statistics");
 				process_cancel_messages_method = (Method) smsc_component.getMethods().get("process_cancel_messages");
 				apply_smsc_config_method = (Method) smsc_component.getMethods().get("apply_smsc_config");
+				apply_services_method = (Method) smsc_component.getMethods().get("apply_services");
 			}
 			catch (AdminException e)
 			{
@@ -370,7 +380,7 @@ public class Smsc extends Service
 		try
 		{
 			File confFile = new File(getSmscConfFolder(), "config.xml");
-			Document confDoc = Utils.parse(new FileInputStream(confFile));
+			Document confDoc = Utils.parse(new FileReader(confFile));
 			return new Config(confDoc);
 		}
 		catch (Throwable t)

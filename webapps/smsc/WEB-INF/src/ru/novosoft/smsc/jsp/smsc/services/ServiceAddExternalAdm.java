@@ -300,7 +300,7 @@ public class ServiceAddExternalAdm extends PageBean
 			if (entry == null)
 				throw new AdminException("/config.xml not found in distributive");
 
-			Config serviceConfig = new Config(Utils.parse(zin));
+			Config serviceConfig = new Config(Utils.parse(new InputStreamReader(zin)));
 			return serviceConfig.getString(SYSTEM_ID_PARAM_NAME);
 		}
 		catch (IOException e)

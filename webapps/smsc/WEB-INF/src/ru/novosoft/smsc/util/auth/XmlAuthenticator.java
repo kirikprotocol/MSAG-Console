@@ -9,8 +9,7 @@ import org.w3c.dom.*;
 import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.util.xml.Utils;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.*;
 import java.security.Principal;
 import java.util.*;
 
@@ -46,7 +45,7 @@ public class XmlAuthenticator implements Authenticator
 		try
 		{
 			System.err.println("XmlAuthenticator.initialize. File \"" + config.getAbsolutePath() + '"');
-			Document document = Utils.parse(new FileInputStream(config));
+			Document document = Utils.parse(new FileReader(config));
 			NodeList usersNodeList = document.getElementsByTagName("user");
 			users = new HashMap();
 			for (int i = 0; i < usersNodeList.getLength(); i++)

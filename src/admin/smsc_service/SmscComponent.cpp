@@ -39,6 +39,9 @@ namespace smsc {
           case applySmscConfigMethod:
             applySmscConfig();
             return Variant("");
+          case applyServicesMethod:
+            applyServices();
+            return Variant("");
           default:
             logger.debug("unknown method \"%s\" [%u]", method.getName(), method.getId());
             throw AdminException("Unknown method \"%s\"", method.getName());
@@ -47,10 +50,25 @@ namespace smsc {
         return Variant("");
       }
 
+      void SmscComponent::applyServices()
+        throw (AdminException)
+      {
+        logger.info("applying new services...");
+        reloadConfigsAndRestart();
+        logger.info("new services applied.");
+      }
+      
       void SmscComponent::applySmscConfig()
+        throw (AdminException)
+      {
+        logger.info("applying new configs...");
+        reloadConfigsAndRestart();
+        logger.info("new config applied.");
+      }
+
+      void SmscComponent::reloadConfigsAndRestart()
       throw (AdminException)
       {
-        logger.info("applying new config...");
         try
         {
           stopSmsc();
@@ -67,7 +85,6 @@ namespace smsc {
           logger.error("Couldn't apply new config: unknown exception");
           return;
         }
-        logger.info("new config applied.");
       }
 
       std::string SmscComponent::flushStatistics(const Arguments &args)
