@@ -177,7 +177,8 @@ bool TaskProcessor::delTask(std::string taskId)
         if (!task) return false;
         awake.Signal();
     }
-    return (task) ? task->destroy():false;
+    if (task) task->destroy();
+    return (task) ? true:false;
 }
 bool TaskProcessor::hasTask(std::string taskId)
 {
@@ -711,11 +712,12 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
 
 /* ------------------------ Admin interface implementation ------------------------ */ 
 
-bool TaskProcessor::addTask(std::string taskId)
+void TaskProcessor::addTask(std::string taskId)
 {
     const char* task_id = taskId.c_str();
-    if (!task_id || task_id[0] == '\0') return false;
+    if (!task_id || task_id[0] == '\0') throw Exception("Task id is empty");
 
+    Task* task = 0;
     try
     {
         Manager::reinit();
@@ -732,29 +734,55 @@ bool TaskProcessor::addTask(std::string taskId)
         if (!taskDs)
             throw ConfigException("Failed to obtail DataSource driver '%s' for task '%s'", 
                                   ds_id, task_id);
-        if (!addTask(new Task(&taskConfig, taskId, taskTablesPrefix, taskDs, dsInternal)))
+        task = new Task(&taskConfig, taskId, taskTablesPrefix, taskDs, dsInternal);
+        if (!task) 
+            throw Exception("New task create failed");
+        if (!addTask(task))
             throw ConfigException("Failed to add task. Task with id '%s' already registered.",
                                   task_id);
-        return true;
-    }
-    catch (Exception& exc) {
+       
+    } catch (Exception& exc) {
+        if (task) task->destroy();
         logger.error("Failed to add task '%s'. Details: %s", task_id, exc.what());
+        throw;
+    } catch (std::exception& exc) {
+        if (task) task->destroy();
+        logger.error("Failed to add task '%s'. Details: %s", task_id, exc.what());
+        throw Exception("%s", exc.what());
+    } catch (...) {
+        if (task) task->destroy();
+        logger.error("Failed to add task '%s'. Cause is unknown", task_id);
+        throw Exception("Cause is unknown");
     }
-    catch (...) {}
-    return false;
 }
-bool TaskProcessor::removeTask(std::string taskId)
-{
-    scheduler.removeTask(taskId);
-    bool deleted = delTask(taskId);
-    if (statistics) statistics->delStatistics(taskId);
-    return deleted;
-}
-bool TaskProcessor::changeTask(std::string taskId)
+void TaskProcessor::removeTask(std::string taskId)
 {
     const char* task_id = taskId.c_str();
-    if (!task_id || task_id[0] == '\0') return false;
+    if (!task_id || task_id[0] == '\0') throw Exception("Task id is empty");
     
+    try
+    {
+        scheduler.removeTask(taskId);
+        if (!delTask(taskId)) throw Exception("Task not found.");  
+        if (statistics) statistics->delStatistics(taskId);
+    
+    } catch (Exception& exc) {
+        logger.error("Failed to remove task '%s'. Details: %s", task_id, exc.what());
+        throw;
+    } catch (std::exception& exc) {
+        logger.error("Failed to remove task '%s'. Details: %s", task_id, exc.what());
+        throw Exception("%s", exc.what());
+    } catch (...) {
+        logger.error("Failed to remove task '%s'. Cause is unknown", task_id);
+        throw Exception("Cause is unknown");
+    }
+}
+void TaskProcessor::changeTask(std::string taskId)
+{
+    const char* task_id = taskId.c_str();
+    if (!task_id || task_id[0] == '\0') throw Exception("Task id is empty");
+    
+    Task* task = 0;
     try
     {
         Manager::reinit();
@@ -772,18 +800,28 @@ bool TaskProcessor::changeTask(std::string taskId)
             throw ConfigException("Failed to obtail DataSource driver '%s' for task '%s'", 
                                   ds_id, task_id);
         if (!remTask(taskId))
-            logger.warn("Failed to change task. Task with id '%s' wasn't registered.",
-                        task_id);
-        if (!putTask(new Task(&taskConfig, taskId, taskTablesPrefix, taskDs, dsInternal)))
-            throw Exception("Failed to change task with id '%s'", task_id);
-        
-        return true;
-    }
-    catch (Exception& exc) {
+            logger.warn("Failed to change task. Task with id '%s' wasn't registered.", task_id);
+        task = new Task(&taskConfig, taskId, taskTablesPrefix, taskDs, dsInternal);
+        if (!task) 
+            throw Exception("New task create failed");
+        if (!putTask(task)) {
+            logger.warn("Failed to change task with id '%s'. Task was re-registered", task_id);
+            task->destroy();
+        }
+    
+    } catch (Exception& exc) {
+        if (task) task->destroy();
         logger.error("Failed to change task '%s'. Details: %s", task_id, exc.what());
+        throw;
+    } catch (std::exception& exc) {
+        if (task) task->destroy();
+        logger.error("Failed to change task '%s'. Details: %s", task_id, exc.what());
+        throw Exception("%s", exc.what());
+    } catch (...) {
+        if (task) task->destroy();
+        logger.error("Failed to change task '%s'. Cause is unknown", task_id);
+        throw Exception("Cause is unknown");
     }
-    catch (...) {}
-    return false;
 }
 bool TaskProcessor::startTask(std::string taskId)
 {
@@ -839,10 +877,10 @@ bool TaskProcessor::setTaskEnabled(std::string taskId, bool enabled)
     task->setEnabled(enabled);
     return true;
 }
-bool TaskProcessor::addSchedule(std::string scheduleId)
+void TaskProcessor::addSchedule(std::string scheduleId)
 {
     const char* schedule_id = scheduleId.c_str();
-    if (!schedule_id || schedule_id[0] == '\0') return false;
+    if (!schedule_id || schedule_id[0] == '\0') throw Exception("Schedule id is empty");
 
     Schedule* schedule = 0;
     try
@@ -854,27 +892,36 @@ bool TaskProcessor::addSchedule(std::string scheduleId)
         ConfigView scheduleConfig(config, scheduleSection);
         
         schedule = Schedule::create(&scheduleConfig, scheduleId);
-        bool result = scheduler.addSchedule(schedule);
-        if (!result && schedule) delete schedule;
-        return result;
-    }
-    catch (Exception& exc) {
+        if (!schedule) 
+            throw Exception("New schedule create failed");
+        if (!scheduler.addSchedule(schedule))
+            throw Exception("Schedule with id '%s' was alredy registered");
+    
+    } catch (Exception& exc) {
         if (schedule) delete schedule;
         logger.error("Failed to add schedule '%s'. Details: %s", schedule_id, exc.what());
-    }
-    catch (...) {
+        throw;
+    } catch (std::exception& exc) {
         if (schedule) delete schedule;
+        logger.error("Failed to add schedule '%s'. Details: %s", schedule_id, exc.what());
+        throw Exception("%s", exc.what());
+    } catch (...) {
+        if (schedule) delete schedule;
+        logger.error("Failed add schedule '%s'. Cause is unknown", schedule_id);
+        throw Exception("Cause is unknown");
     }
-    return false;
 }
-bool TaskProcessor::removeSchedule(std::string scheduleId)
-{
-    return scheduler.removeSchedule(scheduleId);
-}
-bool TaskProcessor::changeSchedule(std::string scheduleId)
+void TaskProcessor::removeSchedule(std::string scheduleId)
 {
     const char* schedule_id = scheduleId.c_str();
-    if (!schedule_id || schedule_id[0] == '\0') return false;
+    if (!schedule_id || schedule_id[0] == '\0') throw Exception("Schedule id is empty");
+    if (!scheduler.removeSchedule(scheduleId))
+        throw Exception("Schedule with id '%s' not found");
+}
+void TaskProcessor::changeSchedule(std::string scheduleId)
+{
+    const char* schedule_id = scheduleId.c_str();
+    if (!schedule_id || schedule_id[0] == '\0') throw Exception("Schedule id is empty");
 
     Schedule* schedule = 0;
     try
@@ -886,18 +933,26 @@ bool TaskProcessor::changeSchedule(std::string scheduleId)
         ConfigView scheduleConfig(config, scheduleSection);
         
         schedule = Schedule::create(&scheduleConfig, scheduleId);
-        bool result = scheduler.changeSchedule(scheduleId, schedule);
-        if (!result && schedule) delete schedule;
-        return result;
-    }
-    catch (Exception& exc) {
+        if (!schedule) 
+            throw Exception("New schedule create failed");
+        if (!scheduler.changeSchedule(scheduleId, schedule)) {
+            delete schedule;
+            logger.warn("Failed to change schedule with id '%s'. Schedule was re-registered", schedule_id);
+        }
+    
+    } catch (Exception& exc) {
         if (schedule) delete schedule;
         logger.error("Failed to change schedule '%s'. Details: %s", schedule_id, exc.what());
-    }
-    catch (...) {
+        throw;
+    } catch (std::exception& exc) {
         if (schedule) delete schedule;
+        logger.error("Failed to change schedule '%s'. Details: %s", schedule_id, exc.what());
+        throw Exception("%s", exc.what());
+    } catch (...) {
+        if (schedule) delete schedule;
+        logger.error("Failed change schedule '%s'. Cause is unknown", schedule_id);
+        throw Exception("Cause is unknown");
     }
-    return false;
 }
 
 

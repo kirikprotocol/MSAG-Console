@@ -26,24 +26,25 @@ namespace smsc { namespace infosme
         InfoSmeAdmin       &admin;
         Methods            methods;
         
-        enum {
+        enum
+        {
             startTaskProcessorMethod, stopTaskProcessorMethod, isTaskProcessorRunningMethod,
             startTaskSchedulerMethod, stopTaskSchedulerMethod, isTaskSchedulerRunningMethod,
             flushStatisticsMethod, 
-            addTasksMethod, removeTasksMethod, changeTasksMethod, 
+            addTaskMethod, removeTaskMethod, changeTaskMethod, 
             startTasksMethod, stopTasksMethod, 
             getGeneratingTasksMethod, getProcessingTasksMethod,
             isTaskEnabledMethod, setTaskEnabledMethod, 
-            addSchedulesMethod, removeSchedulesMethod, changeSchedulesMethod
+            addScheduleMethod, removeScheduleMethod, changeScheduleMethod
         };
         
         void error(const char* method, const char* param);
     
     protected:
 
-        void addTasks(const Arguments& args);
-        void removeTasks(const Arguments& args);
-        void changeTasks(const Arguments& args);
+        void addTask(const Arguments& args);
+        void removeTask(const Arguments& args);
+        void changeTask(const Arguments& args);
         
         void startTasks(const Arguments& args);
         void stopTasks(const Arguments& args); 
@@ -53,9 +54,9 @@ namespace smsc { namespace infosme
         void setTaskEnabled(const Arguments& args);
         bool isTaskEnabled(const Arguments& args);
         
-        void addSchedules(const Arguments& args);
-        void removeSchedules(const Arguments& args);
-        void changeSchedules(const Arguments& args);
+        void addSchedule(const Arguments& args);
+        void removeSchedule(const Arguments& args);
+        void changeSchedule(const Arguments& args);
         
     public:
     

@@ -390,9 +390,9 @@ namespace smsc { namespace infosme
             if (statistics) statistics->flushStatistics();
         }
         
-        virtual bool addTask(std::string taskId);
-        virtual bool removeTask(std::string taskId);
-        virtual bool changeTask(std::string taskId);
+        virtual void addTask(std::string taskId);
+        virtual void removeTask(std::string taskId);
+        virtual void changeTask(std::string taskId);
         
         virtual bool startTask(std::string taskId);
         virtual bool stopTask(std::string taskId);
@@ -402,9 +402,9 @@ namespace smsc { namespace infosme
         virtual bool isTaskEnabled(std::string taskId);
         virtual bool setTaskEnabled(std::string taskId, bool enabled);
         
-        virtual bool addSchedule(std::string scheduleId);
-        virtual bool removeSchedule(std::string scheduleId);
-        virtual bool changeSchedule(std::string scheduleId);
+        virtual void addSchedule(std::string scheduleId);
+        virtual void removeSchedule(std::string scheduleId);
+        virtual void changeSchedule(std::string scheduleId);
         
     };
 

@@ -33,9 +33,9 @@ namespace smsc { namespace infosme
 
         virtual void flushStatistics() = 0;
         
-        virtual bool addTask(std::string taskId) = 0;
-        virtual bool removeTask(std::string taskId) = 0; 
-        virtual bool changeTask(std::string taskId) = 0;
+        virtual void addTask(std::string taskId) = 0;
+        virtual void removeTask(std::string taskId) = 0; 
+        virtual void changeTask(std::string taskId) = 0;
         
         virtual bool startTask(std::string taskId) = 0;
         virtual bool stopTask(std::string taskId) = 0; 
@@ -45,9 +45,9 @@ namespace smsc { namespace infosme
         virtual bool isTaskEnabled(std::string taskId) = 0;
         virtual bool setTaskEnabled(std::string taskId, bool enabled) = 0;
         
-        virtual bool addSchedule(std::string scheduleId) = 0;
-        virtual bool removeSchedule(std::string scheduleId) = 0;
-        virtual bool changeSchedule(std::string scheduleId) = 0;
+        virtual void addSchedule(std::string scheduleId) = 0;
+        virtual void removeSchedule(std::string scheduleId) = 0;
+        virtual void changeSchedule(std::string scheduleId) = 0;
         
         InfoSmeAdmin() {};
 

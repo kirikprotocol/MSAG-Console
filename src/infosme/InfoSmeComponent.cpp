@@ -33,16 +33,19 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
     Method get_processing_tasks((unsigned)getProcessingTasksMethod, 
                                 "getProcessingTasksMethod", empty_params, StringListType);
 
+    Parameters id_params;
+    id_params[ARGUMENT_NAME_ID] = Parameter(ARGUMENT_NAME_ID, StringType);
+    Method add_task((unsigned)addTaskMethod, "addTask", id_params, StringType);
+    Method remove_task((unsigned)removeTaskMethod, "removeTask", id_params, StringType);
+    Method change_task((unsigned)changeTaskMethod, "changeTask", id_params, StringType);
+    Method add_schedule((unsigned)addScheduleMethod, "addSchedule", id_params, StringType);
+    Method remove_schedule((unsigned)removeScheduleMethod, "removeSchedule", id_params, StringType);
+    Method change_schedule((unsigned)changeScheduleMethod, "changeSchedule", id_params, StringType);
+
     Parameters ids_params;
     ids_params[ARGUMENT_NAME_IDS] = Parameter(ARGUMENT_NAME_IDS, StringListType);
-    Method add_tasks((unsigned)addTasksMethod, "addTasks", ids_params, StringType);
-    Method remove_tasks((unsigned)removeTasksMethod, "removeTasks", ids_params, StringType);
-    Method change_tasks((unsigned)changeTasksMethod, "changeTasks", ids_params, StringType);
     Method start_tasks((unsigned)startTasksMethod, "startTasks", ids_params, StringType);
     Method stop_tasks((unsigned)stopTasksMethod, "stopTasks", ids_params, StringType);
-    Method add_schedules((unsigned)addSchedulesMethod, "addSchedules", ids_params, StringType);
-    Method remove_schedules((unsigned)removeSchedulesMethod, "removeSchedules", ids_params, StringType);
-    Method change_schedules((unsigned)changeSchedulesMethod, "changeSchedules", ids_params, StringType);
 
     Parameters task_params;
     task_params[ARGUMENT_NAME_ID] = Parameter(ARGUMENT_NAME_ID, StringType);
@@ -59,18 +62,18 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
     methods[stop_task_scheduler.getName()]          = stop_task_scheduler;
     methods[is_task_scheduler_running.getName()]    = is_task_scheduler_running;
     methods[flush_statistics.getName()]             = flush_statistics;
-    methods[add_tasks.getName()]                    = add_tasks;
-    methods[remove_tasks.getName()]                 = remove_tasks;
-    methods[change_tasks.getName()]                 = change_tasks;
+    methods[add_task.getName()]                     = add_task;
+    methods[remove_task.getName()]                  = remove_task;
+    methods[change_task.getName()]                  = change_task;
     methods[start_tasks.getName()]                  = start_tasks;
     methods[stop_tasks.getName()]                   = stop_tasks;
     methods[get_generating_tasks.getName()]         = get_generating_tasks;
     methods[get_processing_tasks.getName()]         = get_processing_tasks;
     methods[is_task_enabled.getName()]              = is_task_enabled;
     methods[set_task_enabled.getName()]             = set_task_enabled;
-    methods[add_schedules.getName()]                = add_schedules;
-    methods[remove_schedules.getName()]             = remove_schedules;
-    methods[change_schedules.getName()]             = change_schedules;
+    methods[add_schedule.getName()]                 = add_schedule;
+    methods[remove_schedule.getName()]              = remove_schedule;
+    methods[change_schedule.getName()]              = change_schedule;
 }
 
 InfoSmeComponent::~InfoSmeComponent()
@@ -105,14 +108,14 @@ Variant InfoSmeComponent::call(const Method& method, const Arguments& args)
         case flushStatisticsMethod:
             admin.flushStatistics();
             break;
-        case addTasksMethod:
-            addTasks(args);
+        case addTaskMethod:
+            addTask(args);
             break;
-        case removeTasksMethod:
-            removeTasks(args);
+        case removeTaskMethod:
+            removeTask(args);
             break;
-        case changeTasksMethod:
-            changeTasks(args);
+        case changeTaskMethod:
+            changeTask(args);
             break;
         case startTasksMethod:
             startTasks(args);
@@ -129,14 +132,14 @@ Variant InfoSmeComponent::call(const Method& method, const Arguments& args)
         case setTaskEnabledMethod:
             setTaskEnabled(args);
             break;
-        case addSchedulesMethod:
-            addSchedules(args);
+        case addScheduleMethod:
+            addSchedule(args);
             break;
-        case removeSchedulesMethod:
-            removeSchedules(args);
+        case removeScheduleMethod:
+            removeSchedule(args);
             break;
-        case changeSchedulesMethod:
-            changeSchedules(args);
+        case changeScheduleMethod:
+            changeSchedule(args);
             break;
         
         default:
@@ -166,52 +169,58 @@ void InfoSmeComponent::error(const char* method, const char* param)
                     param, method);
 }
 
-void InfoSmeComponent::addTasks(const Arguments& args)
+void InfoSmeComponent::addTask(const Arguments& args)
 {
-    if (!args.Exists(ARGUMENT_NAME_IDS)) 
-        error("addTasks", ARGUMENT_NAME_IDS);
-    Variant arg = args[ARGUMENT_NAME_IDS];
-    if (arg.getType() != StringListType)
-        error("addTasks", ARGUMENT_NAME_IDS);
+    if (!args.Exists(ARGUMENT_NAME_ID)) 
+        error("addTask", ARGUMENT_NAME_ID);
+    Variant arg = args[ARGUMENT_NAME_ID];
+    const char* id = (arg.getType() == StringType) ? arg.getStringValue():0;
+    if (!id || id[0] == '\0')
+        error("addTask", ARGUMENT_NAME_ID);
     
-    StringList list = arg.getStringListValue();
-    for (StringList::iterator it=list.begin(); it != list.end(); it++) {
-        const char* taskId = *it;
-        if (!taskId || taskId[0] == '\0') continue;
-        if (!admin.addTask(taskId))
-            throw AdminException("Failed to add task '%s'", taskId);
+    try { admin.addTask(id);
+    } catch (Exception& exc) {
+        throw AdminException("Failed to add task '%s'. Cause: %s", id, exc.what());
+    } catch (std::exception& exc) {
+        throw AdminException("Failed to add task '%s'. Cause: %s", id, exc.what());
+    } catch (...) {
+        throw AdminException("Failed to add task '%s'. Cause is unknown", id);
     }
 }
-void InfoSmeComponent::removeTasks(const Arguments& args)
+void InfoSmeComponent::removeTask(const Arguments& args)
 {
-    if (!args.Exists(ARGUMENT_NAME_IDS)) 
-        error("removeTasks", ARGUMENT_NAME_IDS);
-    Variant arg = args[ARGUMENT_NAME_IDS];
-    if (arg.getType() != StringListType)
-        error("removeTasks", ARGUMENT_NAME_IDS);
+    if (!args.Exists(ARGUMENT_NAME_ID)) 
+        error("removeTask", ARGUMENT_NAME_ID);
+    Variant arg = args[ARGUMENT_NAME_ID];
+    const char* id = (arg.getType() == StringType) ? arg.getStringValue():0;
+    if (!id || id[0] == '\0')
+        error("removeTask", ARGUMENT_NAME_ID);
     
-    StringList list = arg.getStringListValue();
-    for (StringList::iterator it=list.begin(); it != list.end(); it++) {
-        const char* taskId = *it;
-        if (!taskId || taskId[0] == '\0') continue;
-        if (!admin.removeTask(taskId))
-            throw AdminException("Failed to remove task '%s'", taskId);
+    try { admin.removeTask(id);
+    } catch (Exception& exc) {
+        throw AdminException("Failed to remove task '%s'. Cause: %s", id, exc.what());
+    } catch (std::exception& exc) {
+        throw AdminException("Failed to remove task '%s'. Cause: %s", id, exc.what());
+    } catch (...) {
+        throw AdminException("Failed to remove task '%s'. Cause is unknown", id);
     }
 }
-void InfoSmeComponent::changeTasks(const Arguments& args)
+void InfoSmeComponent::changeTask(const Arguments& args)
 {
-    if (!args.Exists(ARGUMENT_NAME_IDS)) 
-        error("changeTasks", ARGUMENT_NAME_IDS);
-    Variant arg = args[ARGUMENT_NAME_IDS];
-    if (arg.getType() != StringListType)
-        error("changeTasks", ARGUMENT_NAME_IDS);
+    if (!args.Exists(ARGUMENT_NAME_ID)) 
+        error("changeTask", ARGUMENT_NAME_ID);
+    Variant arg = args[ARGUMENT_NAME_ID];
+    const char* id = (arg.getType() == StringType) ? arg.getStringValue():0;
+    if (!id || id[0] == '\0')
+        error("changeTask", ARGUMENT_NAME_ID);
     
-    StringList list = arg.getStringListValue();
-    for (StringList::iterator it=list.begin(); it != list.end(); it++) {
-        const char* taskId = *it;
-        if (!taskId || taskId[0] == '\0') continue;
-        if (!admin.changeTask(taskId))
-            throw AdminException("Failed to change task '%s'", taskId);
+    try { admin.changeTask(id);
+    } catch (Exception& exc) {
+        throw AdminException("Failed to change task '%s'. Cause: %s", id, exc.what());
+    } catch (std::exception& exc) {
+        throw AdminException("Failed to change task '%s'. Cause: %s", id, exc.what());
+    } catch (...) {
+        throw AdminException("Failed to change task '%s'. Cause is unknown", id);
     }
 }
 void InfoSmeComponent::startTasks(const Arguments& args)
@@ -291,52 +300,58 @@ void InfoSmeComponent::setTaskEnabled(const Arguments& args)
     if (!admin.setTaskEnabled(taskId, arg.getBooleanValue()))
         throw AdminException("Failed to shange enabled state for task '%s'", taskId);
 }
-void InfoSmeComponent::addSchedules(const Arguments& args)
+void InfoSmeComponent::addSchedule(const Arguments& args)
 {
-    if (!args.Exists(ARGUMENT_NAME_IDS)) 
-        error("addSchedules", ARGUMENT_NAME_IDS);
-    Variant arg = args[ARGUMENT_NAME_IDS];
-    if (arg.getType() != StringListType)
-        error("addSchedules", ARGUMENT_NAME_IDS);
+    if (!args.Exists(ARGUMENT_NAME_ID)) 
+        error("addSchedule", ARGUMENT_NAME_ID);
+    Variant arg = args[ARGUMENT_NAME_ID];
+    const char* id = (arg.getType() == StringType) ? arg.getStringValue():0;
+    if (!id || id[0] == '\0')
+        error("addSchedule", ARGUMENT_NAME_ID);
     
-    StringList list = arg.getStringListValue();
-    for (StringList::iterator it=list.begin(); it != list.end(); it++) {
-        const char* scheduleId = *it;
-        if (!scheduleId || scheduleId[0] == '\0') continue;
-        if (!admin.addSchedule(scheduleId))
-            throw AdminException("Failed to add schedule '%s'", scheduleId);
+    try { admin.addSchedule(id);
+    } catch (Exception& exc) {
+        throw AdminException("Failed to add schedule '%s'. Cause: %s", id, exc.what());
+    } catch (std::exception& exc) {
+        throw AdminException("Failed to add schedule '%s'. Cause: %s", id, exc.what());
+    } catch (...) {
+        throw AdminException("Failed to add schedule '%s'. Cause is unknown", id);
     }
 }
-void InfoSmeComponent::removeSchedules(const Arguments& args)
+void InfoSmeComponent::removeSchedule(const Arguments& args)
 {
-    if (!args.Exists(ARGUMENT_NAME_IDS)) 
-        error("removeSchedules", ARGUMENT_NAME_IDS);
-    Variant arg = args[ARGUMENT_NAME_IDS];
-    if (arg.getType() != StringListType)
-        error("removeSchedules", ARGUMENT_NAME_IDS);
+    if (!args.Exists(ARGUMENT_NAME_ID)) 
+        error("removeSchedule", ARGUMENT_NAME_ID);
+    Variant arg = args[ARGUMENT_NAME_ID];
+    const char* id = (arg.getType() == StringType) ? arg.getStringValue():0;
+    if (!id || id[0] == '\0')
+        error("removeSchedule", ARGUMENT_NAME_ID);
     
-    StringList list = arg.getStringListValue();
-    for (StringList::iterator it=list.begin(); it != list.end(); it++) {
-        const char* scheduleId = *it;
-        if (!scheduleId || scheduleId[0] == '\0') continue;
-        if (!admin.removeSchedule(scheduleId))
-            throw AdminException("Failed to remove schedule '%s'", scheduleId);
+    try { admin.removeSchedule(id);
+    } catch (Exception& exc) {
+        throw AdminException("Failed to remove schedule '%s'. Cause: %s", id, exc.what());
+    } catch (std::exception& exc) {
+        throw AdminException("Failed to remove schedule '%s'. Cause: %s", id, exc.what());
+    } catch (...) {
+        throw AdminException("Failed to remove schedule '%s'. Cause is unknown", id);
     }
 }
-void InfoSmeComponent::changeSchedules(const Arguments& args)
+void InfoSmeComponent::changeSchedule(const Arguments& args)
 {
-    if (!args.Exists(ARGUMENT_NAME_IDS)) 
-        error("changeSchedules", ARGUMENT_NAME_IDS);
-    Variant arg = args[ARGUMENT_NAME_IDS];
-    if (arg.getType() != StringListType)
-        error("changeSchedules", ARGUMENT_NAME_IDS);
+    if (!args.Exists(ARGUMENT_NAME_ID)) 
+        error("changeSchedule", ARGUMENT_NAME_ID);
+    Variant arg = args[ARGUMENT_NAME_ID];
+    const char* id = (arg.getType() == StringType) ? arg.getStringValue():0;
+    if (!id || id[0] == '\0')
+        error("changeSchedule", ARGUMENT_NAME_ID);
     
-    StringList list = arg.getStringListValue();
-    for (StringList::iterator it=list.begin(); it != list.end(); it++) {
-        const char* scheduleId = *it;
-        if (!scheduleId || scheduleId[0] == '\0') continue;
-        if (!admin.changeSchedule(scheduleId))
-            throw AdminException("Failed to change schedule '%s'", scheduleId);
+    try { admin.changeSchedule(id);
+    } catch (Exception& exc) {
+        throw AdminException("Failed to change schedule '%s'. Cause: %s", id, exc.what());
+    } catch (std::exception& exc) {
+        throw AdminException("Failed to change schedule '%s'. Cause: %s", id, exc.what());
+    } catch (...) {
+        throw AdminException("Failed to change schedule '%s'. Cause is unknown", id);
     }
 }
 
