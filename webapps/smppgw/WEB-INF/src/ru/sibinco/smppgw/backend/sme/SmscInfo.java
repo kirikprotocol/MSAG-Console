@@ -16,7 +16,8 @@ public class SmscInfo
   private int responseTimeout;
   private int uniqueMsgIdPrefix;
 
-  public SmscInfo(String id, String host, int port, String systemId, String password, int responseTimeout, int uniqueMsgIdPrefix)
+  public SmscInfo(final String id, final String host, final int port, final String systemId, final String password, final int responseTimeout,
+                  final int uniqueMsgIdPrefix)
   {
     this.id = id;
     this.host = host;
@@ -27,7 +28,7 @@ public class SmscInfo
     this.uniqueMsgIdPrefix = uniqueMsgIdPrefix;
   }
 
-  public SmscInfo(Config gwConfig, String smscSection) throws Config.WrongParamTypeException, Config.ParamNotFoundException
+  public SmscInfo(final Config gwConfig, final String smscSection) throws Config.WrongParamTypeException, Config.ParamNotFoundException
   {
     this.id = smscSection.substring(smscSection.lastIndexOf('.') + 1);
     this.host = gwConfig.getString(smscSection + ".host");
@@ -43,7 +44,7 @@ public class SmscInfo
     return id;
   }
 
-  public void setId(String id)
+  public void setId(final String id)
   {
     this.id = id;
   }
@@ -53,7 +54,7 @@ public class SmscInfo
     return host;
   }
 
-  public void setHost(String host)
+  public void setHost(final String host)
   {
     this.host = host;
   }
@@ -63,7 +64,7 @@ public class SmscInfo
     return port;
   }
 
-  public void setPort(int port)
+  public void setPort(final int port)
   {
     this.port = port;
   }
@@ -73,7 +74,7 @@ public class SmscInfo
     return systemId;
   }
 
-  public void setSystemId(String systemId)
+  public void setSystemId(final String systemId)
   {
     this.systemId = systemId;
   }
@@ -83,7 +84,7 @@ public class SmscInfo
     return password;
   }
 
-  public void setPassword(String password)
+  public void setPassword(final String password)
   {
     this.password = password;
   }
@@ -93,7 +94,7 @@ public class SmscInfo
     return responseTimeout;
   }
 
-  public void setResponseTimeout(int responseTimeout)
+  public void setResponseTimeout(final int responseTimeout)
   {
     this.responseTimeout = responseTimeout;
   }
@@ -103,8 +104,19 @@ public class SmscInfo
     return uniqueMsgIdPrefix;
   }
 
-  public void setUniqueMsgIdPrefix(int uniqueMsgIdPrefix)
+  public void setUniqueMsgIdPrefix(final int uniqueMsgIdPrefix)
   {
     this.uniqueMsgIdPrefix = uniqueMsgIdPrefix;
+  }
+
+  public void store(final Config gwConfig, final String sectionName)
+  {
+    final String fullName = sectionName + "." + id;
+    gwConfig.setString(fullName + ".host", host);
+    gwConfig.setInt(fullName + ".port", port);
+    gwConfig.setString(fullName + ".systemId", systemId);
+    gwConfig.setString(fullName + ".password", password);
+    gwConfig.setInt(fullName + ".responseTimeout", responseTimeout);
+    gwConfig.setInt(fullName + ".uniqueMsgIdPrefix", uniqueMsgIdPrefix);
   }
 }
