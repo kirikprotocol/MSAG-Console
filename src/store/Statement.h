@@ -257,9 +257,7 @@ namespace smsc { namespace store
         OCIDate vTime;
 
         ReplaceStatement(Connection* connection, const char* sql,
-                         bool assign=true)
-            throw(StorageException) 
-                : IdStatement(connection, sql, assign) {};
+                         bool assign=true) throw(StorageException);
     public:
         
         ReplaceStatement(Connection* connection, bool assign=true)

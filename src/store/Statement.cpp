@@ -594,6 +594,16 @@ ReplaceStatement::ReplaceStatement(Connection* connection, bool assign)
          SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE), 
          (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
 }
+ReplaceStatement::ReplaceStatement(Connection* connection, const char* sql,
+                                   bool assign)
+    throw(StorageException) 
+        : IdStatement(connection, sql, assign) 
+{
+    bind((CONST text *)"ENROUTE", (sb4) 7*sizeof(char), 
+         SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE), 
+         (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
+}
+
 void ReplaceStatement::bindId(SMSId id)
     throw(StorageException)
 {
