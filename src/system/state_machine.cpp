@@ -1115,7 +1115,7 @@ StateType StateMachine::submit(Tuple& t)
           newsms.messageBody.dropIntProperty(Tag::SMSC_MERGE_CONCAT);
           if(ri.smeSystemId=="MAP_PROXY")
           {
-            pres=partitionSms(sms,profile.codepage);
+            pres=partitionSms(&newsms,profile.codepage);
           }
         }
       }
