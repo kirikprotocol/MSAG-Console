@@ -18,8 +18,8 @@
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
 
-	int beanResult = bean.RESULT_OK;
-	switch(beanResult = bean.process(request))
+	int beanResult = bean.process(request);
+	switch(beanResult)
 	{
     case PageBean.RESULT_OK:
     case PageBean.RESULT_ERROR:
@@ -74,11 +74,15 @@ function edit(pName)
 <input type=hidden name=providerName>
 <table class=list cellspacing=1>
 <col width="1%">
+<col width="49%">
+<col width="49%">
+<col width="1%">
 <thead>
 <tr>
 	<th>&nbsp;</th>
 	<th><a href="#" <%=bean.getSort().endsWith("name") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by name" onclick='return setSort("name")'>name</a></th>
 	<th><a href="#" <%=bean.getSort().endsWith("address") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by address" onclick='return setSort("address")'>address</a></th>
+  <th><a href="#" <%=bean.getSort().endsWith("enabled") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by enabled flag" onclick='return setSort("enabled")'>enabled</a></th>
 </tr>
 </thead>
 <tbody>
@@ -90,11 +94,13 @@ function edit(pName)
 		String dpAddress = (String) item.getValue("address");
 		String encDpName = StringEncoderDecoder.encode(dpName);
 		String encDpAddress = StringEncoderDecoder.encode(dpAddress);
+    boolean dpEnabled = ((Boolean)item.getValue("enabled")).booleanValue();
 %>
 <tr class=row<%=(row++)&1%>>
 	<td><input class=check type=checkbox name=checked value="<%=encDpName%>" <%=bean.isDpChecked(dpName) ? "checked" : ""%>></td>
 	<td><a href="#" title="Edit provider" onClick='return edit("<%=encDpName%>")'><%=encDpName%></a></td>
 	<td><%=encDpAddress%></td>
+  <td align=center><%=dpEnabled ? "<img src=\"/images/ic_checked.gif\">": "&nbsp;"%></td>
 </tr>
 <%
 	}
@@ -104,9 +110,11 @@ function edit(pName)
 <%@ include file="/WEB-INF/inc/navbar_nofilter.jsp"%>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",    "Add",    "Create new data provider");
-page_menu_button(out, "mbDelete", "Delete", "Delete all checked data providers", "return confirm('Are you sure to delete all checked data providers?')");
+page_menu_button(out, "mbAdd",     "Add",     "Create new data provider");
+page_menu_button(out, "mbDelete",  "Delete",  "Delete all checked data providers", "return confirm('Are you sure to delete all checked data providers?')");
 page_menu_space(out);
+page_menu_button(out, "mbEnable",  "Enable",  "Enable checked data providers",  !bean.isConfigChanged());
+page_menu_button(out, "mbDisable", "Disable", "Disable checked data providers", !bean.isConfigChanged());
 page_menu_end(out);
 %>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

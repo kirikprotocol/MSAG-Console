@@ -20,6 +20,7 @@ public class SmeTransport extends Service
   private Method method_addJob = null;
   private Method method_removeJob = null;
   private Method method_changeJob = null;
+  private Method method_setProviderEnabled = null;
 
   public SmeTransport(ServiceInfo info)
   {
@@ -34,6 +35,7 @@ public class SmeTransport extends Service
     method_addJob = (Method) smeComponent.getMethods().get("addJob");
     method_removeJob = (Method) smeComponent.getMethods().get("removeJob");
     method_changeJob = (Method) smeComponent.getMethods().get("changeJob");
+    method_setProviderEnabled = (Method) smeComponent.getMethods().get("setProviderEnabled");
   }
 
   public synchronized void updateInfo(SMSCAppContext appContext) throws AdminException
@@ -74,4 +76,12 @@ public class SmeTransport extends Service
     call(smeComponent, method_changeJob, Type.Types[Type.StringType], params);
   }
 
+  public synchronized void setProviderEnabled(String providerId, boolean enabled) throws AdminException
+  {
+    refreshComponents();
+    Map params = new HashMap();
+    params.put("providerId", providerId);
+    params.put("enabled", new Boolean(enabled));
+    call(smeComponent, method_setProviderEnabled, Type.Types[Type.StringType], params);
+  }
 }

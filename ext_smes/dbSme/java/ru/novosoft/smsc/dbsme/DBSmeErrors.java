@@ -30,6 +30,8 @@ public class DBSmeErrors
       private static final String B = DBSmeErrors.error.B + "provider.";
       public static final String providerNotSpecified = "Provider not specified";//B + "providerNotSpecified";
       public static final String providerAlreadyExists = "Provider already exists";//B + "providerAlreadyExists";
+      public static final String couldNotEnableProviderBecouseConfigChanged = "Could not enable provider becouse config changed";
+      public static final String couldNotDisableProviderBecouseConfigChanged = "Could not disable provider becouse config changed";
     }
 
     public static class job

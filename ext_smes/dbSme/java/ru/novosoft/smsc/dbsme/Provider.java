@@ -9,7 +9,6 @@ import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractQueryImpl;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
-import ru.novosoft.smsc.util.config.Config;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -28,26 +27,27 @@ public class Provider extends DbsmeBean
 
   private boolean creating = false;
   private boolean initialized = false;
-  private String providerName = null;
-  private String oldProviderName = null;
+  private String providerName = "";
+  private String oldProviderName = "";
   private String prefix;
-  private String address = null;
+  private String address = "";
   private int connections = 0;
-  private String dbInstance = null;
-  private String dbUserName = null;
-  private String dbUserPassword = null;
-  private String type = null;
+  private String dbInstance = "";
+  private String dbUserName = "";
+  private String dbUserPassword = "";
+  private String type = "";
   private boolean watchdog = false;
-  private String job_not_found = null;
-  private String ds_failure = null;
-  private String ds_connection_lost = null;
-  private String ds_statement_fail = null;
-  private String query_null = null;
-  private String input_parse = null;
-  private String output_format = null;
-  private String invalid_config = null;
+  private boolean enabled = false;
+  private String job_not_found = "";
+  private String ds_failure = "";
+  private String ds_connection_lost = "";
+  private String ds_statement_fail = "";
+  private String query_null = "";
+  private String input_parse = "";
+  private String output_format = "";
+  private String invalid_config = "";
 
-  private QueryResultSet jobs = null;
+  private QueryResultSet jobs = new EmptyResultSet();
   private Set checkedSet = new HashSet();
   private String[] checked = new String[0];
   private String mbEdit = null;
@@ -148,6 +148,7 @@ public class Provider extends DbsmeBean
         providerName = "";
         oldProviderName = "";
         prefix = null;
+        enabled = false;
         address = "";
         connections = 0;
         dbInstance = "";
@@ -167,6 +168,7 @@ public class Provider extends DbsmeBean
       } else {
         oldProviderName = providerName;
         prefix = "DBSme.DataProviders." + StringEncoderDecoder.encodeDot(oldProviderName);
+        enabled = getOptionalBool(prefix + ".enabled");
         address = getString(prefix + ".address");
         connections = getInt(prefix + ".DataSource.connections");
         dbInstance = getString(prefix + ".DataSource.dbInstance");
@@ -258,11 +260,11 @@ public class Provider extends DbsmeBean
       logger.debug("  remove sec: " + prefix + ".Jobs." + checked[i]);
     }
 
+    getContext().setJobsChanged(true);
+
     int result = save(true);
     if (result != RESULT_DONE)
       return result;
-
-    getContext().setJobsChanged(true);
 
     checked = new String[0];
     checkedSet.clear();
@@ -270,94 +272,82 @@ public class Provider extends DbsmeBean
     return RESULT_REFRESH;
   }
 
-  private boolean isOptionalStringEqualsToConfig(String fullParamName, String param) throws Config.ParamNotFoundException, Config.WrongParamTypeException
-  {
-    final boolean containsParam = config.containsParameter(fullParamName);
-    return (((param == null || param.length() == 0) && !containsParam)
-            || (param != null && param.length() > 0 && containsParam && param.equals(config.getString(fullParamName))));
-  }
-
-  private boolean isProviderEquals() throws Config.ParamNotFoundException, Config.WrongParamTypeException
-  {
-    prefix = "DBSme.DataProviders." + StringEncoderDecoder.encodeDot(providerName);
-    return providerName.equals(oldProviderName)
-            && isOptionalStringEqualsToConfig(prefix + ".address", address)
-            && ((!config.containsParameter(prefix + ".DataSource.connections") && connections == 0) || connections == getInt(prefix + ".DataSource.connections"))
-            && isOptionalStringEqualsToConfig(prefix + ".DataSource.dbInstance", dbInstance)
-            && isOptionalStringEqualsToConfig(prefix + ".DataSource.dbUserName", dbUserName)
-            && isOptionalStringEqualsToConfig(prefix + ".DataSource.dbUserPassword", dbUserPassword)
-            && isOptionalStringEqualsToConfig(prefix + ".DataSource.type", type)
-            && ((!config.containsParameter(prefix + ".DataSource.watchdog") && !watchdog) || watchdog == getBool(prefix + ".DataSource.watchdog"))
-
-            && isOptionalStringEqualsToConfig(prefix + ".MessageSet.JOB_NOT_FOUND", job_not_found)
-            && isOptionalStringEqualsToConfig(prefix + ".MessageSet.DS_FAILURE", ds_failure)
-            && isOptionalStringEqualsToConfig(prefix + ".MessageSet.DS_CONNECTION_LOST", ds_connection_lost)
-            && isOptionalStringEqualsToConfig(prefix + ".MessageSet.DS_STATEMENT_FAIL", ds_statement_fail)
-            && isOptionalStringEqualsToConfig(prefix + ".MessageSet.QUERY_NULL", query_null)
-            && isOptionalStringEqualsToConfig(prefix + ".MessageSet.INPUT_PARSE", input_parse)
-            && isOptionalStringEqualsToConfig(prefix + ".MessageSet.OUTPUT_FORMAT", output_format)
-            && isOptionalStringEqualsToConfig(prefix + ".MessageSet.INVALID_CONFIG", invalid_config);
-  }
-
   private int save(boolean forceSave)
   {
-    String newPrefix = createProviderPrefix(providerName);
-    if (!creating) {
-      try {
-        if (!forceSave && isProviderEquals())
-          return RESULT_DONE;
-      } catch (Throwable e) {
-        //skip it
-        logger.error("Could not verify provider \"" + providerName + "\" (\"" + oldProviderName + "\")");
-      }
-      if (!newPrefix.equals(prefix)) {
-        final String tmp = getString(newPrefix + ".type");
-        if (tmp != null && tmp.length() > 0)
+    final String newPrefix = createProviderPrefix(providerName);
+    final boolean providerEquals = isProviderEquals(providerName, oldProviderName, address, connections, dbInstance, dbUserName, dbUserPassword, type, watchdog,
+                                                    job_not_found, ds_failure, ds_connection_lost, ds_statement_fail, query_null, input_parse, output_format, invalid_config);
+    final boolean enabledEquals = enabled == getOptionalBool(newPrefix + ".enabled");
+
+    if (!providerEquals) {
+      if (creating) {
+        if (config.containsSection(newPrefix))
           return error(DBSmeErrors.error.provider.providerAlreadyExists, providerName);
-        config.renameSection(prefix, newPrefix);
+      } else {
+        final String oldProviderPrefix = createProviderPrefix(oldProviderName);
+        if (!providerName.equals(oldProviderName) && config.containsSection(oldProviderPrefix))
+          return error(DBSmeErrors.error.provider.providerAlreadyExists, providerName);
+        config.removeSection(oldProviderPrefix);
       }
+      setProviderParamsToConfig(newPrefix);
+      try {
+        config.save();
+      } catch (Exception e) {
+        logger.error("Couldn't save temporary config, nested: " + e.getMessage(), e);
+        return error(DBSmeErrors.error.couldntSaveTempConfig, e);
+      }
+      getContext().setConfigChanged(true);
+      return RESULT_DONE;
+    } else {
+      if (forceSave) {
+        try {
+          config.save();
+        } catch (Exception e) {
+          logger.error("Couldn't save temporary config, nested: " + e.getMessage(), e);
+          return error(DBSmeErrors.error.couldntSaveTempConfig, e);
+        }
+      }
+      if (!enabledEquals) {
+        if (getContext().isConfigChanged()) {
+          return error(enabled ? DBSmeErrors.error.provider.couldNotEnableProviderBecouseConfigChanged : DBSmeErrors.error.provider.couldNotDisableProviderBecouseConfigChanged, providerName);
+        }
+        int result = setProviderEnabled(providerName, enabled);
+        if (result != RESULT_DONE)
+          return result;
+        try {
+          config.save();
+        } catch (Exception e) {
+          logger.error("Couldn't save temporary config, nested: " + e.getMessage(), e);
+          return error(DBSmeErrors.error.couldntSaveTempConfig, e);
+        }
+      }
+      return RESULT_DONE;
     }
-
-    config.setString(newPrefix + ".address", address);
-    config.setString(newPrefix + ".DataSource.type", type);
-    config.setInt(newPrefix + ".DataSource.connections", connections);
-    config.setString(newPrefix + ".DataSource.dbInstance", dbInstance);
-    config.setString(newPrefix + ".DataSource.dbUserName", dbUserName);
-    config.setString(newPrefix + ".DataSource.dbUserPassword", dbUserPassword);
-
-    if (watchdog)
-      config.setBool(newPrefix + ".DataSource.watchdog", watchdog);
-    else
-      config.removeParam(newPrefix + ".DataSource.watchdog");
-
-    if (job_not_found != null && job_not_found.length() > 0) config.setString(newPrefix + ".MessageSet.JOB_NOT_FOUND", job_not_found); else config.removeParam(newPrefix + ".MessageSet.JOB_NOT_FOUND");
-    if (ds_failure != null && ds_failure.length() > 0) config.setString(newPrefix + ".MessageSet.DS_FAILURE", ds_failure); else config.removeParam(newPrefix + ".MessageSet.DS_FAILURE");
-    if (ds_connection_lost != null && ds_connection_lost.length() > 0) config.setString(newPrefix + ".MessageSet.DS_CONNECTION_LOST", ds_connection_lost); else config.removeParam(newPrefix + ".MessageSet.DS_CONNECTION_LOST");
-    if (ds_statement_fail != null && ds_statement_fail.length() > 0) config.setString(newPrefix + ".MessageSet.DS_STATEMENT_FAIL", ds_statement_fail); else config.removeParam(newPrefix + ".MessageSet.DS_STATEMENT_FAIL");
-    if (query_null != null && query_null.length() > 0) config.setString(newPrefix + ".MessageSet.QUERY_NULL", query_null); else config.removeParam(newPrefix + ".MessageSet.QUERY_NULL");
-    if (input_parse != null && input_parse.length() > 0) config.setString(newPrefix + ".MessageSet.INPUT_PARSE", input_parse); else config.removeParam(newPrefix + ".MessageSet.INPUT_PARSE");
-    if (output_format != null && output_format.length() > 0) config.setString(newPrefix + ".MessageSet.OUTPUT_FORMAT", output_format); else config.removeParam(newPrefix + ".MessageSet.OUTPUT_FORMAT");
-    if (invalid_config != null && invalid_config.length() > 0) config.setString(newPrefix + ".MessageSet.INVALID_CONFIG", invalid_config); else config.removeParam(newPrefix + ".MessageSet.INVALID_CONFIG");
-
-    try {
-      config.save();
-    } catch (Exception e) {
-      logger.error("Couldn't save temporary config, nested: " + e.getMessage(), e);
-      return error(DBSmeErrors.error.couldntSaveTempConfig, e);
-    }
-
-    try {
-      getContext().setConfigChanged(!isProviderEquals());
-    } catch (Throwable e) {
-      //skip it
-    }
-
-    return RESULT_DONE;
   }
 
-  protected static String createProviderPrefix(String providerName)
+  private void setProviderParamsToConfig(final String providerPrefix)
   {
-    return "DBSme.DataProviders." + StringEncoderDecoder.encodeDot(providerName);
+    config.setBool(providerPrefix + ".enabled", enabled);
+    config.setString(providerPrefix + ".address", address);
+    config.setString(providerPrefix + ".DataSource.type", type);
+    config.setInt(providerPrefix + ".DataSource.connections", connections);
+    config.setString(providerPrefix + ".DataSource.dbInstance", dbInstance);
+    config.setString(providerPrefix + ".DataSource.dbUserName", dbUserName);
+    config.setString(providerPrefix + ".DataSource.dbUserPassword", dbUserPassword);
+
+    if (watchdog)
+      config.setBool(providerPrefix + ".DataSource.watchdog", watchdog);
+    else
+      config.removeParam(providerPrefix + ".DataSource.watchdog");
+
+    if (job_not_found != null && job_not_found.length() > 0) config.setString(providerPrefix + ".MessageSet.JOB_NOT_FOUND", job_not_found); else config.removeParam(providerPrefix + ".MessageSet.JOB_NOT_FOUND");
+    if (ds_failure != null && ds_failure.length() > 0) config.setString(providerPrefix + ".MessageSet.DS_FAILURE", ds_failure); else config.removeParam(providerPrefix + ".MessageSet.DS_FAILURE");
+    if (ds_connection_lost != null && ds_connection_lost.length() > 0) config.setString(providerPrefix + ".MessageSet.DS_CONNECTION_LOST", ds_connection_lost); else config.removeParam(providerPrefix + ".MessageSet.DS_CONNECTION_LOST");
+    if (ds_statement_fail != null && ds_statement_fail.length() > 0) config.setString(providerPrefix + ".MessageSet.DS_STATEMENT_FAIL", ds_statement_fail); else config.removeParam(providerPrefix + ".MessageSet.DS_STATEMENT_FAIL");
+    if (query_null != null && query_null.length() > 0) config.setString(providerPrefix + ".MessageSet.QUERY_NULL", query_null); else config.removeParam(providerPrefix + ".MessageSet.QUERY_NULL");
+    if (input_parse != null && input_parse.length() > 0) config.setString(providerPrefix + ".MessageSet.INPUT_PARSE", input_parse); else config.removeParam(providerPrefix + ".MessageSet.INPUT_PARSE");
+    if (output_format != null && output_format.length() > 0) config.setString(providerPrefix + ".MessageSet.OUTPUT_FORMAT", output_format); else config.removeParam(providerPrefix + ".MessageSet.OUTPUT_FORMAT");
+    if (invalid_config != null && invalid_config.length() > 0) config.setString(providerPrefix + ".MessageSet.INVALID_CONFIG", invalid_config); else config.removeParam(providerPrefix + ".MessageSet.INVALID_CONFIG");
   }
 
   public List getTypes()
@@ -657,5 +647,25 @@ public class Provider extends DbsmeBean
   public void setEdit(String edit)
   {
     this.edit = edit;
+  }
+
+  public boolean isEnabled()
+  {
+    return enabled;
+  }
+
+  public void setEnabled(boolean enabled)
+  {
+    this.enabled = enabled;
+  }
+
+  public Set getCheckedSet()
+  {
+    return checkedSet;
+  }
+
+  public void setCheckedSet(Set checkedSet)
+  {
+    this.checkedSet = checkedSet;
   }
 }

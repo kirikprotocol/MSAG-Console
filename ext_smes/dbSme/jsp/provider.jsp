@@ -61,7 +61,8 @@
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=sort>
 <%
-	if (beanResult == PageBean.RESULT_OK) {
+	//if (beanResult == PageBean.RESULT_OK)
+  {
 %>
 <div class=content>
 <div class=page_subtitle><%=StringEncoderDecoder.encode(bean.isCreating() ? "New provider" : bean.getProviderName())%></div>
@@ -69,6 +70,7 @@
 startSection(out, "provider_properties", "Properties", true);
 	startParams(out);
 		param(out, "name", "providerName", bean.getProviderName());
+    param(out, "enabled", "enabled", bean.isEnabled());
 		param(out, "address", "address", bean.getAddress(), null, null, false, "mask");
 		paramSelect(out, "type", "type", bean.getTypes(), bean.getType());
 		param(out, "connections", "connections", bean.getConnections(), null, null, false, "positive");
@@ -143,10 +145,10 @@ function setSort(sorting)
 <%finishSection(out);%>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",    "Add job",    "Create new job");
-page_menu_button(out, "mbDelete", "Delete jobs", "Delete all checked jobs", "return confirm('Are you sure to delete all checked jobs?')");
-page_menu_button(out, "mbDone",  "Done",  "");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel changes", "return noValidationSubmit(this);");
+page_menu_button(out, "mbAdd",    "Add job",     "Create new job",                                                                        beanResult == PageBean.RESULT_OK);
+page_menu_button(out, "mbDelete", "Delete jobs", "Delete all checked jobs", "return confirm('Are you sure to delete all checked jobs?')", beanResult == PageBean.RESULT_OK);
+page_menu_button(out, "mbDone",   "Done",        "",                                                                                      beanResult == PageBean.RESULT_OK);
+page_menu_button(out, "mbCancel", "Cancel",      "Cancel changes",          "return noValidationSubmit(this);");
 page_menu_space(out);
 page_menu_end(out);
 }

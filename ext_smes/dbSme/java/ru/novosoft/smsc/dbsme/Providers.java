@@ -3,6 +3,7 @@ package ru.novosoft.smsc.dbsme;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataItem;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractQueryImpl;
@@ -28,18 +29,21 @@ public class Providers extends DbsmeBean
   private String mbEdit = null;
 
   private String providerName = null;
-  private QueryResultSet providers = null;
+  private QueryResultSet providers = new EmptyResultSet();
   private String[] checked = new String[0];
   private Set checkedSet = new HashSet();
   private String mbAdd = null;
   private String mbDelete = null;
+  private String mbEnable = null;
+  private String mbDisable = null;
 
   private class _DataItem extends AbstractDataItem
   {
-    protected _DataItem(String name, String address)
+    protected _DataItem(String name, String address, boolean enabled)
     {
       values.put("name", name);
       values.put("address", address);
+      values.put("enabled", new Boolean(enabled));
     }
   }
 
@@ -48,7 +52,7 @@ public class Providers extends DbsmeBean
 
     public _DataSource()
     {
-      super(new String[]{"name", "address"});
+      super(new String[]{"name", "address", "enabled"});
     }
 
     public QueryResultSet query(_Query query_to_run)
@@ -56,14 +60,9 @@ public class Providers extends DbsmeBean
       clear();
       for (Iterator i = getSectionChildSectionNames(prefix).iterator(); i.hasNext();) {
         String fullProviderName = (String) i.next();
-        String dpName = StringEncoderDecoder.decodeDot(fullProviderName.substring(prefix_length + 1));
-        String dpAddress = "";
-        try {
-          dpAddress = getOptionalString(fullProviderName + ".address");
-        } catch (Exception e) {
-          logger.debug("Couldn't get provider address, nested: " + e.getMessage(), e);
-        }
-        add(new _DataItem(dpName, dpAddress));
+        add(new _DataItem(StringEncoderDecoder.decodeDot(fullProviderName.substring(prefix_length + 1)),
+                          getOptionalString(fullProviderName + ".address"),
+                          getOptionalBool(fullProviderName + ".enabled")));
       }
       return super.query(query_to_run);
     }
@@ -104,6 +103,7 @@ public class Providers extends DbsmeBean
       //sort = (String) preferences.getAliasesSortOrder().get(0);
       sort = "name";
     }
+    checkedSet.addAll(Arrays.asList(checked));
     return result;
   }
 
@@ -117,15 +117,48 @@ public class Providers extends DbsmeBean
       return RESULT_EDIT;
     if (mbAdd != null)
       return RESULT_ADD;
-    if (mbDelete != null)
-      return delete();
+    if (mbDelete != null) {
+      result = delete();
+      if (result == RESULT_DONE)
+        return result;
+    }
+    if (mbEnable != null) {
+      result = setEnabled(true);
+      if (result == RESULT_DONE)
+        return result;
+    }
+    if (mbDisable != null) {
+      result = setEnabled(false);
+      if (result == RESULT_DONE)
+        return result;
+    }
 
     Vector sortVector = new Vector();
     sortVector.add(sort);
     providers = new _DataSource().query(new _Query(pageSize, new _Filter(), sortVector, startPosition));
     totalSize = providers.getTotalSize();
 
-    checkedSet.addAll(Arrays.asList(checked));
+
+    return result;
+  }
+
+  private int setEnabled(boolean enable)
+  {
+    int result = RESULT_DONE;
+    logger.debug("setEnabled(" + enable + ")");
+    for (int i = 0; i < checked.length; i++) {
+      String providerId = checked[i];
+      int tmpResult = setProviderEnabled(providerId, enable);
+      if (tmpResult != RESULT_DONE)
+        result = tmpResult;
+    }
+
+    try {
+      config.save();
+    } catch (Exception e) {
+      logger.error("Couldn't save temporary config, nested: " + e.getMessage(), e);
+      return error(DBSmeErrors.error.couldntSaveTempConfig, e);
+    }
 
     return result;
   }
@@ -207,5 +240,30 @@ public class Providers extends DbsmeBean
   public void setMbDelete(String mbDelete)
   {
     this.mbDelete = mbDelete;
+  }
+
+  public boolean isConfigChanged()
+  {
+    return getContext().isConfigChanged();
+  }
+
+  public String getMbEnable()
+  {
+    return mbEnable;
+  }
+
+  public void setMbEnable(String mbEnable)
+  {
+    this.mbEnable = mbEnable;
+  }
+
+  public String getMbDisable()
+  {
+    return mbDisable;
+  }
+
+  public void setMbDisable(String mbDisable)
+  {
+    this.mbDisable = mbDisable;
   }
 }

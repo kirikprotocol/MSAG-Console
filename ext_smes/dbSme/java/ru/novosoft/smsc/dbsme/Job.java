@@ -116,7 +116,7 @@ public class Job extends DbsmeBean
     if (output_format == null) output_format = "";
     if (invalid_config == null) invalid_config = "";
 
-    providerWatchdog = getBool("DBSme.DataProviders." + StringEncoderDecoder.encodeDot(providerName) + ".DataSource.watchdog");
+    providerWatchdog = getOptionalBool("DBSme.DataProviders." + StringEncoderDecoder.encodeDot(providerName) + ".DataSource.watchdog");
     return result;
   }
 
