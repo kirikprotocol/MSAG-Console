@@ -21,9 +21,9 @@ public class XmlAuthenticator implements Authenticator
     private String getDtdName(final String systemId)
     {
       int index = systemId.lastIndexOf('/');
-      if (index < 0)
+      if (0 > index)
         index = systemId.lastIndexOf('\\');
-      if (index >= 0)
+      if (0 <= index)
         return systemId.substring(index + 1);
       else
         return systemId;
@@ -34,7 +34,7 @@ public class XmlAuthenticator implements Authenticator
       if (systemId.endsWith(".dtd")) {
         final String filename = "dtds/" + getDtdName(systemId);
         final InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(filename);
-        if (in != null) {
+        if (null != in) {
           final InputSource inputSource = new InputSource(in);
           return inputSource;
         }
@@ -48,7 +48,7 @@ public class XmlAuthenticator implements Authenticator
 
   public static synchronized XmlAuthenticator getInstance()
   {
-    if (instance == null)
+    if (null == instance)
       instance = new XmlAuthenticator();
     return instance;
   }
@@ -60,17 +60,17 @@ public class XmlAuthenticator implements Authenticator
   {
   }
 
-  public synchronized static void init(final File config)
-      throws Exception
+  public static synchronized void init(final File config)
+      throws ParserConfigurationException, SAXException, IOException
   {
-    if (instance == null)
+    if (null == instance)
       instance = new XmlAuthenticator();
     instance.initialize(config);
   }
 
   private Document parse(final Reader input) throws FactoryConfigurationError, ParserConfigurationException, SAXException, IOException, NullPointerException
   {
-    if (input == null)
+    if (null == input)
       throw new NullPointerException("input stream is null");
     final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     final DocumentBuilder builder = factory.newDocumentBuilder();
@@ -80,7 +80,7 @@ public class XmlAuthenticator implements Authenticator
   }
 
   private synchronized void initialize(final File config)
-      throws Exception
+      throws ParserConfigurationException, SAXException, IOException
   {
     try {
       System.out.println("initialize. File \"" + config.getAbsolutePath() + '"');
@@ -101,7 +101,15 @@ public class XmlAuthenticator implements Authenticator
       }
       AuthenticatorProxy.getInstance().registerAuthenticator(SibincoRealm.REALM_NAME, this);
       System.out.println("initialize success with " + users.values().size() + " users.");
-    } catch (Exception e) {
+    } catch (ParserConfigurationException e) {
+      System.out.println("initialize FAILED. Nested : " + e.getMessage());
+      e.printStackTrace();
+      throw e;
+    } catch (SAXException e) {
+      System.out.println("initialize FAILED. Nested : " + e.getMessage());
+      e.printStackTrace();
+      throw e;
+    } catch (IOException e) {
       System.out.println("initialize FAILED. Nested : " + e.getMessage());
       e.printStackTrace();
       throw e;
@@ -110,16 +118,16 @@ public class XmlAuthenticator implements Authenticator
 
   public synchronized Principal authenticate(final String login, final String password)
   {
-    if (users == null) {
+    if (null == users) {
       System.out.println("authenticate(\"" + login + "\", \"" + password + "\") FAILED - AUTHENTICATOR NOT INITIALIZED");
       return null;
     }
 
     final SibincoPrincipal principal = (SibincoPrincipal) users.get(login);
-    if (principal != null && principal.getPassword().equals(password)) {
+    if (null != principal && principal.getPassword().equals(password)) {
       return principal;
     } else {
-      if (principal == null)
+      if (null == principal)
         System.out.println("authenticate(\"" + login + "\", \"" + password + "\") FAILED - User not found.");
       else
         System.out.println("authenticate(\"" + login + "\", \"" + password + "\") FAILED - Incorrect password.");
@@ -130,11 +138,11 @@ public class XmlAuthenticator implements Authenticator
 
   public synchronized boolean hasRole(final Principal principal, final String role)
   {
-    if (users == null)
+    if (null == users)
       return false;
 
     final SibincoPrincipal ud = (SibincoPrincipal) users.get(principal.getName());
-    if (ud != null) {
+    if (null != ud) {
       final StringBuffer rolesString = new StringBuffer();
       for (Iterator i = ud.getRoles().iterator(); i.hasNext();) {
         final String roleName = (String) i.next();
@@ -142,6 +150,6 @@ public class XmlAuthenticator implements Authenticator
         if (i.hasNext()) rolesString.append(", ");
       }
     }
-    return ud != null && ud.getRoles().contains(role);
+    return null != ud && ud.getRoles().contains(role);
   }
 }
