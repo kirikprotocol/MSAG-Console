@@ -24,7 +24,10 @@ void page_menu_button(JspWriter out, String name, String value, String title, St
 {
 	if (page_menu_delimiter_needed)
 		out.print("<td width=1px>|</td>");
-	out.print("<td width=1px><input type=submit id=\"" + name + "\" name=\"" + name + "\" value=\"" + value + "\" title=\"" + title + "\"" + (enabled ? "" : " disabled") + ((onclick != null && onclick.length() > 0) ? (" onclick=\"" + onclick + '"') : "" ) +"></td>");
+	out.print("<td width=1px>");
+	//out.print("<input type=submit id=\"" + name + "\" name=\"" + name + "\" value=\"" + value + "\" title=\"" + title + "\"" + (enabled ? "" : " disabled") + ((onclick != null && onclick.length() > 0) ? (" onclick=\"" + onclick + '"') : "" ) +">");
+	out.print("<a id=\"" + name + "\" jbuttonName=\"" + name + "\" jbuttonValue=\"" + value + "\" title=\"" + title + "\"" + ((onclick != null && onclick.length() > 0) ? (" onclick=\"" + onclick + '"') : "" ) +">" + value + "</a>");
+	out.print("</td>");
 	page_menu_delimiter_needed = true;
 }
 void page_menu_space(JspWriter out) throws IOException

@@ -3,6 +3,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
+is_SMSC_status_needed = true;
 if (request.isUserInRole("super-admin"))
 {
 TITLE = "Configuration status";

@@ -1,0 +1,14 @@
+div.error
+{
+	color:red;
+}
+
+div.warning
+{
+	color: yellow;
+}
+
+div.message
+{
+	color: black;
+}

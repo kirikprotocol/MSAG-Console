@@ -2,7 +2,7 @@
 <%
 if (errorMessages.size() > 0)
 {
-	%><tr><td class=secTrace><%
+	%><div class=content><%
 	for(Iterator it = errorMessages.iterator(); it.hasNext();)
 	{
 		SMSCJspException exc = (SMSCJspException) it.next();
@@ -12,15 +12,15 @@ if (errorMessages.size() > 0)
 		msg = appContext.getLocaleString(appContext.getUserPreferences(loginedUserPrincipal).getLocale(), code);
 		if(code.startsWith("error."))
 		{
-			%><div class=err><%=(msg == null) ? code : msg%><%=(param == null) ? "" : ": " + param%></div><%
+			%><div class=error><%=(msg == null) ? code : msg%><%=(param == null) ? "" : ": " + param%></div><%
 		} else if(code.startsWith("warning."))
 		{
-			%><div class=warn><%=(msg == null) ? code : msg%><%=(param == null) ? "" : ": " + param%></div><%
+			%><div class=warning><%=(msg == null) ? code : msg%><%=(param == null) ? "" : ": " + param%></div><%
 		} else {
-			%><div class=msg><%=(msg == null) ? code : msg%><%=(param == null) ? "" : ": " + param%></div><%
+			%><div class=message><%=(msg == null) ? code : msg%><%=(param == null) ? "" : ": " + param%></div><%
 		}
 
 	}
-	%></td></tr><%
+	%></div><%
 }
 %>
