@@ -32,8 +32,8 @@ struct OStr //: public MemoryManagerUnit
   uint16_t size() { __require__ (length==0 || text!=NULL);return length; }
   void copy(const char* src, int src_length)
   {
-    __require__ ( src_length >= 0 );
-    __require__ ( src != NULL );
+    //__require__ ( src_length >= 0 );
+    //__require__ ( src != NULL );
     //length = 0;
     //if ( text ) smartFree(text);
     //if ( text ) delete text;
@@ -77,12 +77,12 @@ struct COStr //: public MemoryManagerUnit
   uint16_t size(){ return text ? strlen( text ) : 0 ; }
   void copy(const char* src)
   {
-    __require__ ( src != NULL );
+//    __require__ ( src != NULL );
     //if ( text ) smartFree(text);
     //if ( text ) delete text;
     dispose();
 
-    int length = strlen(src);
+    int length = src?strlen(src):0;
     if ( !length  ) return;
     //text = (char*)smartMalloc(length+1);
     text = new char[length+1];
