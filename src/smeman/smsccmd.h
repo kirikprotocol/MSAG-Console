@@ -52,7 +52,7 @@ public:
   {
     if(!msgid)return;
     if ( messageId ) delete( messageId);
-    messageId = new char[strlen(msgid+1)];
+    messageId = new char[strlen(msgid)+1];
     strcpy(messageId,msgid);
   }
   void set_status(uint32_t st) { status = st; }
