@@ -241,7 +241,9 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
             pdu_ptr+udh_len+1+1,
             x-(udh_len+1)*8);
           *pdu_ptr++ = x/7+symbols+1;
+          __trace2__("MAP::mkDeliverPDU: data length(symbols) 0x%x",x/7+symbols+1);
           pdu_ptr+= udh_len+_7bit_text_len+1;
+          __trace2__("MAP::mkDeliverPDU: data length(octets) 0x%x",udh_len+_7bit_text_len);
         }else{
           *pdu_ptr++ = text_len;
           pdu_ptr += ConvertSMSC7bit27bit(text,text_len,pdu_ptr);
