@@ -312,7 +312,7 @@ public:
 
   const BillingRule& getBillingRule(const char* name)const
   {
-    BillingRule** brPtr=rules.GetPtr(name);
+    BillingRule* const* brPtr=rules.GetPtr(name);
     if(brPtr)
     {
       return **brPtr;
