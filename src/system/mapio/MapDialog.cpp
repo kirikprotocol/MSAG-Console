@@ -212,7 +212,7 @@ unsigned ConvertSMSC7bit27bit(
   return _7bit_len;
 }
 
-bool ProvErrCodeFatal( p ) {
+bool ProvErrCodeFatal( ET96MAP_PROV_ERR_T p ) {
   return 
   (p == 0x02 || // unsupported service
    p == 0x03 || // mystyped parametor

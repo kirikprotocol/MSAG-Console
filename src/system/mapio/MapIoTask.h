@@ -148,6 +148,15 @@ public:
     ET96MAP_DIALOGUE_ID_T did,
     ET96MAP_USERDATA_T *ud,
     UCHAR_T priorityOrder);
+  virtual void  Et96MapOpenConf (
+    ET96MAP_LOCAL_SSN_T localSsn,
+    ET96MAP_DIALOGUE_ID_T dialogueId,
+    ET96MAP_OPEN_RESULT_T openResult,
+    ET96MAP_REFUSE_REASON_T *refuseReason_p,
+    ET96MAP_SS7_ADDR_T *respondingAddr_sp,
+    ET96MAP_APP_CNTX_T *appContext_sp,
+    ET96MAP_USERDATA_T *specificInfo_sp,
+    ET96MAP_PROV_ERR_T *provErrCode_p);
   void setInvokeId(ET96MAP_INVOKE_ID_T invokeId) {this->invokeId = invokeId;}
   // возвращает истину если это последнее сообщение в диалоге и далее диалог
   // должн быть закрыт
