@@ -1,6 +1,7 @@
 <%@include file="/common/header.jsp"%>
 
 <%@page import="ru.novosoft.smsc.admin.smsview.*"%>
+<%@page import="ru.novosoft.smsc.jsp.smsview.*"%>
 
 <jsp:useBean id="formBean" scope="session"
              class="ru.novosoft.smsc.jsp.smsview.SmsViewFormBean" />
@@ -10,6 +11,11 @@ if (request.getMethod().equals("POST"))
 %>
   <jsp:setProperty name="formBean" property="*" />
 <%
+  String fde = (String)request.getParameter("fromDateEnabled");
+  formBean.setFromDateEnabled(fde != null && fde.equalsIgnoreCase("on"));
+  String tde = (String)request.getParameter("tillDateEnabled");
+  formBean.setTillDateEnabled(tde != null && tde.equalsIgnoreCase("on"));
+
   if (request.getParameter("prev") != null) {
     formBean.processPrev();
   } else if (request.getParameter("next") != null) {
@@ -27,7 +33,7 @@ if (request.getMethod().equals("POST"))
 <h1 align="center">SMSC SmsView utilite</h1>
 <form action="smsview.jsp" method=POST>
 <center>
-<table cellpadding=4 cellspacing=2 border=0>
+<table width="90%" cellpadding=4 cellspacing=2 border=0>
 <tr>
     	<td colspan=3 valign=top>
     	<b>Source&nbsp;&nbsp;storage:&nbsp;&nbsp;</b>
@@ -50,11 +56,10 @@ if (request.getMethod().equals("POST"))
 
       <td colspan=1>
     	<b>Select&nbsp;from&nbsp;date:</b><br>
-    	<!--input type="text" name="fromDate" size=20
-        value="<!--jsp:getProperty name="formBean" property="fromDate" />" -->
-      <input type="text" name="fromDateDay" size=1
+      <input type="checkbox" name="fromDateEnabled"
+        <%= (formBean.getFromDateEnabled()) ? "checked":""%>>
+      <input type="text" name="fromDateDay" style="width:16pt;"
         value="<%= formBean.getFromDateDay()%>">
-      <b>-</b>
       <select name="fromDateMonth">
       <% int fromDateMonth = formBean.getFromDateMonth();%>
       <% for (int fdm=0; fdm<12; fdm++) { %>
@@ -63,17 +68,23 @@ if (request.getMethod().equals("POST"))
         </option>
       <% }%>
 	    </select>
-      <b>-</b>
-      <input type="text" name="fromDateYear" size=2
-        value="<%= formBean.getFromDateYear()%>">
-      &nbsp;&nbsp;
-      <input type="text" name="fromDateHour" size=1
+      <select name="fromDateYear">
+      <% int fromDateYear = formBean.getFromDateYear();%>
+      <% for (int fdy=SmsViewFormBean.START_YEAR_COUNTER;
+                  fdy<=SmsViewFormBean.FINISH_YEAR_COUNTER; fdy++) { %>
+        <option value="<%= fdy%>"
+          <%= (fdy == fromDateYear) ? "selected":""%>><%= fdy%>
+        </option>
+      <% }%>
+	    </select>
+      &nbsp;
+      <input type="text" name="fromDateHour" style="width:16pt;"
         value="<%= formBean.getFromDateHour()%>">
       <b>:</b>
-      <input type="text" name="fromDateMinute" size=1
+      <input type="text" name="fromDateMinute" style="width:16pt;"
         value="<%= formBean.getFromDateMinute()%>">
       <b>:</b>
-      <input type="text" name="fromDateSecond" size=1
+      <input type="text" name="fromDateSecond" style="width:16pt;"
         value="<%= formBean.getFromDateSecond()%>">
       </td>
 
@@ -100,9 +111,39 @@ if (request.getMethod().equals("POST"))
 
       <td colspan=1>
     	<b>Till&nbsp;date:</b><br>
-    	<input type="text" name="tillDate" size=20
-        value="<jsp:getProperty name="formBean" property="tillDate" />">
+      <input type="checkbox" name="tillDateEnabled"
+        <%= (formBean.getTillDateEnabled()) ? "checked":""%>>
+      <input type="text" name="toDateDay" style="width:16pt;"
+        value="<%= formBean.getToDateDay()%>">
+      <select name="toDateMonth">
+      <% int toDateMonth = formBean.getToDateMonth();%>
+      <% for (int fdm=0; fdm<12; fdm++) { %>
+        <option value="<%= fdm%>"
+          <%= (fdm == toDateMonth) ? "selected":""%>><%= formBean.monthesNames[fdm]%>
+        </option>
+      <% }%>
+	    </select>
+      <select name="toDateYear">
+      <% int toDateYear = formBean.getToDateYear();%>
+      <% for (int tdy=SmsViewFormBean.START_YEAR_COUNTER;
+                  tdy<=SmsViewFormBean.FINISH_YEAR_COUNTER; tdy++) { %>
+        <option value="<%= tdy%>"
+          <%= (tdy == toDateYear) ? "selected":""%>><%= tdy%>
+        </option>
+      <% }%>
+	    </select>
+      &nbsp;
+      <input type="text" name="toDateHour" style="width:16pt;"
+        value="<%= formBean.getToDateHour()%>">
+      <b>:</b>
+      <input type="text" name="toDateMinute" style="width:16pt;"
+        value="<%= formBean.getToDateMinute()%>">
+      <b>:</b>
+      <input type="text" name="toDateSecond" style="width:16pt;"
+        value="<%= formBean.getToDateSecond()%>">
       </td>
+
+
       <td colspan=1>
       <b>Rows&nbsp;to&nbsp;display:</b><br>
     	<select name="rowsToDisplay">

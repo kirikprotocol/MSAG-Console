@@ -23,6 +23,8 @@ public class SmsQuery
   private Date   fromDate = new Date();
   private Date   tillDate = new Date();
   private String sortBy = "Date";
+  private boolean fromDateEnabled = false;
+  private boolean tillDateEnabled = false;
 
   public int getStorageType() {
     return storageType;
@@ -42,15 +44,28 @@ public class SmsQuery
   public void setToAddress(String address){
     toAddress = address;
   };
-  public String getFromDate(){
+
+  public void setFromDateEnabled(boolean enabled) {
+    fromDateEnabled = enabled;
+  }
+  public boolean getFromDateEnabled() {
+    return fromDateEnabled;
+  }
+  public String getFromDate() {
     return fromDate.toString();
   };
-  public void setFromDate(Date date){
+  public void setFromDate(Date date) {
     fromDate = date;
   };
-  public void setFromDate(String date){
+  public void setFromDate(String date) {
     //fromDate = new Date(date);
   };
+  public void setTillDateEnabled(boolean enabled) {
+    tillDateEnabled = enabled;
+  }
+  public boolean getTillDateEnabled() {
+    return tillDateEnabled;
+  }
   public String getTillDate(){
     return tillDate.toString();
   };

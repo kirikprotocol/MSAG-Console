@@ -13,16 +13,26 @@ import ru.novosoft.smsc.admin.smsview.SmsRow;
 
 public class SmsViewFormBean extends SmsQuery
 {
+  public static int START_YEAR_COUNTER  = 2002;
+  public static int FINISH_YEAR_COUNTER = 2030;
+
   private SmsSet  rows = null;
   private SmsView view = new SmsView();
   private SMSCAppContext  context = null;
 
   private int fromDateDay = 1;
   private int fromDateMonth = 0;
-  private int fromDateYear = 2002;
+  private int fromDateYear = START_YEAR_COUNTER;
   private int fromDateHour = 0;
   private int fromDateMinute = 0;
   private int fromDateSecond = 0;
+
+  private int toDateDay = 1;
+  private int toDateMonth = 0;
+  private int toDateYear = START_YEAR_COUNTER;
+  private int toDateHour = 0;
+  private int toDateMinute = 0;
+  private int toDateSecond = 0;
 
   public String monthesNames[] = {
     "January", "February", "March", "April",
@@ -40,42 +50,31 @@ public class SmsViewFormBean extends SmsQuery
     return context;
   }
 
-  public void setFromDateDay(int day) {
-    fromDateDay = day;
-  }
-  public int getFromDateDay() {
-    return fromDateDay;
-  }
-  public void setFromDateMonth(int month) {
-    fromDateMonth = month;
-  }
-  public int getFromDateMonth() {
-    return fromDateMonth;
-  }
-  public void setFromDateYear(int year) {
-    fromDateYear = year;
-  }
-  public int getFromDateYear() {
-    return fromDateYear;
-  }
-  public void setFromDateHour(int hour) {
-    fromDateHour = hour;
-  }
-  public int getFromDateHour() {
-    return fromDateHour;
-  }
-  public void setFromDateMinute(int minute) {
-    fromDateMinute = minute;
-  }
-  public int getFromDateMinute() {
-    return fromDateMinute;
-  }
-  public void setFromDateSecond(int second) {
-    fromDateSecond = second;
-  }
-  public int getFromDateSecond() {
-    return fromDateSecond;
-  }
+  public void setFromDateDay(int day) { fromDateDay = day; }
+  public int getFromDateDay() { return fromDateDay; }
+  public void setFromDateMonth(int month) { fromDateMonth = month; }
+  public int getFromDateMonth() { return fromDateMonth; }
+  public void setFromDateYear(int year) { fromDateYear = year; }
+  public int getFromDateYear() { return fromDateYear; }
+  public void setFromDateHour(int hour) { fromDateHour = hour; }
+  public int getFromDateHour() { return fromDateHour; }
+  public void setFromDateMinute(int minute) { fromDateMinute = minute; }
+  public int getFromDateMinute() { return fromDateMinute; }
+  public void setFromDateSecond(int second) { fromDateSecond = second; }
+  public int getFromDateSecond() { return fromDateSecond; }
+
+  public void setToDateDay(int day) { toDateDay = day; }
+  public int getToDateDay() { return toDateDay; }
+  public void setToDateMonth(int month) { toDateMonth = month; }
+  public int getToDateMonth() { return toDateMonth; }
+  public void setToDateYear(int year) { toDateYear = year; }
+  public int getToDateYear() { return toDateYear; }
+  public void setToDateHour(int hour) { toDateHour = hour; }
+  public int getToDateHour() { return toDateHour; }
+  public void setToDateMinute(int minute) { toDateMinute = minute; }
+  public int getToDateMinute() { return toDateMinute; }
+  public void setToDateSecond(int second) { toDateSecond = second; }
+  public int getToDateSecond() { return toDateSecond; }
 
   public void processQuery() {
     rows = view.getSmsSet(this);
