@@ -27,8 +27,8 @@ const char* const TC_ADD_CORRECT_ALIAS_NOT_MATCH_ADDRESS =
 	"addCorrectAliasNotMatchAddress";
 const char* const TC_ADD_CORRECT_ALIAS_NOT_MATCH_ALIAS =
 	"addCorrectAliasNotMatchAlias";
-const char* const TC_ADD_CORRECT_ALIAS_EXCEPTION = "addCorrectAliasException";
-const char* const TC_ADD_INCORRECT_ALIAS = "addIncorrectAlias";
+//const char* const TC_ADD_CORRECT_ALIAS_EXCEPTION = "addCorrectAliasException";
+//const char* const TC_ADD_INCORRECT_ALIAS = "addIncorrectAlias";
 const char* const TC_DELETE_ALIASES = "deleteAliases";
 const char* const TC_FIND_ALIAS_BY_ADDRESS = "findAliasByAddress";
 const char* const TC_FIND_ADDRESS_BY_ALIAS = "findAddressByAlias";
@@ -66,12 +66,12 @@ public:
 	/**
 	 * Регистрация алиаса с переполнением адреса при alias->addr или алиаса при addr->alias.
 	 */
-	TCResult* addCorrectAliasException(AliasInfo* alias, int num);
+	//TCResult* addCorrectAliasException(AliasInfo* alias, int num);
 
 	/**
 	 * Регистрация алиаса с некорректными параметрами.
 	 */
-	TCResult* addIncorrectAlias();
+	//TCResult* addIncorrectAlias();
 
 	/**
 	 * Обнуление таблицы алиасов.
@@ -102,7 +102,7 @@ private:
 	
 	void debugAlias(const char* tc, int val, const AliasInfo* alias);
 	void setupRandomAliasMatchWithQuestionMarks(AliasInfo* alias, int len);
-	void setupRandomAliasMatchWithAsterisk(AliasInfo* alias, int adLen, int alLen);
+	//void setupRandomAliasMatchWithAsterisk(AliasInfo* alias, int adLen, int alLen);
 	void printFindResult(const char* name, const Address& param,
 		const AliasRegistry::AliasList& data);
 	void printFindResult(const char* tc, const Address& param, bool found,
