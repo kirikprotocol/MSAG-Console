@@ -434,7 +434,7 @@ int main(void)
             catch (SmppConnectException& exc)
             {
                 const char* msg = exc.what(); 
-                printf("Connect failed. Cause: %s\n", (msg) ? msg:"unknown");
+                printf("Connect failed.\nCause: %s\n", (msg) ? msg:"unknown");
                 bDBSmeIsConnected = false;
                 if (exc.getReason() == 
                     SmppConnectException::Reason::bindFailed) throw;
@@ -455,9 +455,14 @@ int main(void)
             printf("Disconnecting from SMSC ...\n");
         };
     }
+    catch (ConfigException& exc) 
+    {
+        log.error("Configuration invalid. Details: %s\n", exc.what());
+        return -2;
+    }
     catch (exception& exc) 
     {
-        log.error("Top level exception : %s\n", exc.what());
+        log.error("Top level exception: %s\n", exc.what());
         return -1;
     }
     return 0;

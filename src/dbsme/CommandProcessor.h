@@ -33,12 +33,11 @@
 
 namespace smsc { namespace dbsme 
 {
+    using namespace smsc::sms;
+
     using namespace smsc::core::buffers;
     using namespace smsc::db;
     
-    using smsc::sms::Address;
-    using smsc::sms::AddressValue;
-
     using smsc::util::Logger;
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
@@ -46,27 +45,7 @@ namespace smsc { namespace dbsme
     static const char* PROVIDER_NOT_FOUND  = "PROVIDER_NOT_FOUND";
     static const char* JOB_NOT_FOUND       = "JOB_NOT_FOUND";
 
-    class DataProvider
-    {
-    protected:
-
-        log4cpp::Category       &log;
-        MessageSet              messages;
-
-        DataSource*             ds;
-        Hash<Job *>             jobs;       // by job name
-    
-    public:
-        
-        virtual ~DataProvider();
-
-        DataProvider(ConfigView* config, const MessageSet& set)
-            throw(ConfigException);
-        
-        virtual void process(Command& command)
-            throw(CommandProcessException);
-    };
-    
+    class DataProvider;
     class CommandProcessor
     {
     private:
@@ -77,9 +56,9 @@ namespace smsc { namespace dbsme
         int     protocolId;
         char*   svcType;
         
-        Hash<DataProvider *>    providers;  // by provider address
-        
-        
+        Array<DataProvider *>   allProviders;   // all providers
+        Hash<DataProvider *>    idxProviders;   // by provider address
+    
     public:
 
         CommandProcessor();
@@ -94,6 +73,46 @@ namespace smsc { namespace dbsme
 
         const char* getSvcType() { return (svcType) ? svcType:"DbSme"; };
         int getProtocolId() { return protocolId; };
+
+        DataProvider* getProvider(const Address& address);
+        bool addProvider(const Address& address, DataProvider *provider);
+        bool addProviderIndex(const Address& address, DataProvider *provider);
+    };
+
+    class DataProvider
+    {
+    protected:
+
+        log4cpp::Category       &log;
+        MessageSet              messages;
+        
+        CommandProcessor*       owner;
+        DataSource*             ds;
+        
+        Array<Job *>            allJobs;
+        Hash<Job *>             jobsByAddress;  // jobs by address
+        Hash<Job *>             jobsByName;     // jobs by sybolic & digital name
+    
+        void createDataSource(ConfigView* config) 
+            throw(ConfigException);
+        void registerJob(Job* job, const char* address, 
+                         const char* alias, const char* name)
+            throw(ConfigException);
+        void createJob(ConfigView* jobConfig) 
+            throw(ConfigException);
+
+        Job* getJob(const Address& address);
+        Job* getJob(const char* name);
+    
+    public:
+        
+        DataProvider(CommandProcessor* root, ConfigView* config, 
+                     const MessageSet& set)
+            throw(ConfigException);
+        virtual ~DataProvider();
+        
+        virtual void process(Command& command)
+            throw(CommandProcessException);
     };
 
 }}
