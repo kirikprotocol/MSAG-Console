@@ -507,7 +507,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 }
 
 #define __trace_set_optional__(name, field) \
-	__trace2__(name "[%d]: " #field, pos - 1);
+	/*__trace2__(name "[%d]: " #field, pos - 1);*/
 	
 #define __set_optional_int__(type, field, value) \
 	if (mask[pos++]) { \
