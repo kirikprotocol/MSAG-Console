@@ -744,6 +744,8 @@ static string RouteToString(MapDialog* dialog)
 
 static bool SendSms(MapDialog* dialog){
   __trace2__("MAP::%s: MAP.did: 0x%x",__FUNCTION__,dialog->dialogid_map);
+  CheckLockedByMO(dialog);
+
   bool mms = dialog->chain.size() != 0;
   //if ( dialog->version < 2 ) mms = false;
   mms = false;
@@ -779,7 +781,6 @@ static bool SendSms(MapDialog* dialog){
     segmentation = true;
   }else{
     __trace2__("MAP::SendSMSCToMT: Et96MapVxForwardSmMTReq");
-    CheckLockedByMO(dialog);
     if ( dialog->version == 2 ) {
       result = Et96MapV2ForwardSmMTReq( dialog->ssn, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), FALSE);
     }else if ( dialog->version == 1 ){
@@ -1123,12 +1124,12 @@ void DoRInfoErrorProcessor(
 extern "C"
 USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET96MAP_SS7_ADDR_T *ss7Address_sp,ET96MAP_APP_CONTEXT_T ac)
 {
+  __trace2__("MAP::%s ",__FUNCTION__);
   unsigned dialogid_map = 0;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
     MAPIO_TaskACVersionNotifier();   
     if ( version == 3 ) version = 2;
-    __trace2__("MAP::%s ",__FUNCTION__);
     char text[32];
     SS7ToText(ss7Address_sp,text);
     string s_key(text);
@@ -1184,6 +1185,7 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
     }
     x_map.erase(s_key);
   }MAP_CATCH(dialogid_map,dialogid_smsc);
+  __trace2__("MAP::%s done",__FUNCTION__);
   return ET96MAP_E_OK;
 }
 
