@@ -1458,7 +1458,7 @@ StateType StateMachine::submit(Tuple& t)
         bool rightOrder=true;
         bool totalMoreUdh=false;
         bool differentDc=false;
-        bool haveBinDc=sms->getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::BINARY;
+        bool haveBinDc=isForwardTo?true:sms->getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::BINARY;
 
         if(!isForwardTo)
         {
