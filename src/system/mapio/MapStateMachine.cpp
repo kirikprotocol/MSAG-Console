@@ -900,7 +900,7 @@ USHORT_T Et96MapDelimiterInd(
     __trace2__("MAP::%s: %s",__PRETTY_FUNCTION__,RouteToString(dialog.get()).c_str());
     switch( dialog->state ){
     case MAPST_WaitSms:
-      dialog->state = MAPST_WaitSmsMOInd:
+      dialog->state = MAPST_WaitSmsMOInd;
       reason = ET96MAP_NO_REASON;
       result = Et96MapOpenResp(SSN,dialogId,ET96MAP_RESULT_OK,&reason,0,0,0);
       if ( result != ET96MAP_E_OK )
