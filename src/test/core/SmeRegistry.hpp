@@ -29,12 +29,12 @@ class SmeRegistry
 {
 	struct SmeData
 	{
-		const Address smeAlias;
+		const Address smeAddr;
 		const SmeInfo sme;
 		PduRegistry pduReg;
 		bool bound;
 		SmeData(const Address& addr, const SmeInfo& smeInfo)
-			: smeAlias(addr), sme(smeInfo), bound(false) {}
+			: smeAddr(addr), sme(smeInfo), bound(false) {}
 	};
 	typedef map<const Address, SmeData*, ltAddress> AddressMap;
 	typedef map<const SmeSystemId, SmeData*> SmeIdMap;
@@ -62,7 +62,7 @@ public:
 	SmeRegistry() {}
 	~SmeRegistry();
 
-	bool registerSme(const Address& smeAlias, const SmeInfo& sme);
+	bool registerSme(const Address& smeAddr, const SmeInfo& sme);
 
 	void deleteSme(const SmeSystemId& smeId);
 
@@ -74,7 +74,7 @@ public:
 
 	const SmeInfo* getSme(const SmeSystemId& smeId) const;
 	
-	PduRegistry* getPduRegistry(const Address& smeAlias) const;
+	PduRegistry* getPduRegistry(const Address& smeAddr) const;
 
 	const Address* getRandomAddress() const;
 
