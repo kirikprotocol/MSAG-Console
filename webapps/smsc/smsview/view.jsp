@@ -117,7 +117,7 @@ switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal
   </tr>
   <tr class=row<%=rowN++&1%>0>
     <th width="1%" nowrap valign=top>Decoded Message</th>
-    <td nowrap valign=top>
+    <td valign=top>
       <%= (row.getText()!=null&&row.getText().startsWith("&#")?row.getText():StringEncoderDecoder.encode(row.getText()))%>&nbsp;
     </td>
   </tr>
