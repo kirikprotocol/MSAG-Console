@@ -377,7 +377,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   {
     time_t t;
     time(&t);
-    struct tm* tms = gmtime(&t);  
+    struct tm* tms = localtime(&t);  
     MAP_TIMESTAMP* pdu_tm = (MAP_TIMESTAMP*)pdu_ptr;
     __trace2__("MAP::mkDeliverPDU:sizeof(pdu_tm) %d",sizeof(*pdu_tm));
     pdu_tm->year.first  =  ((tms->tm_year)%100)/10;
@@ -393,7 +393,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
     pdu_tm->min.second  = tms->tm_min%10;
     pdu_tm->sec.first  =  tms->tm_sec/10;
     pdu_tm->sec.second  = tms->tm_sec%10;
-    pdu_tm->tz = 6*4;
+    pdu_tm->tz = 0;
     pdu_ptr+=sizeof(MAP_TIMESTAMP);
   }
   if ( encoding == 0 ){ // 7bit
