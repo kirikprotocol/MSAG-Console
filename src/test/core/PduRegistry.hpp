@@ -28,7 +28,7 @@ using smsc::core::synchronization::MutexGuard;
  */
 class PduRegistry
 {
-	typedef map<const SMSId, PduData*> SmsIdMap;
+	typedef map<const string, PduData*> SmsIdMap;
 	typedef map<const uint32_t, PduData*> SeqNumMap;
 	typedef map<const uint16_t, PduData*> MsgRefMap;
 
@@ -54,6 +54,8 @@ class PduRegistry
 	TimeMap submitTimeMap;
 	TimeMap waitTimeMap;
 	TimeMap validTimeMap;
+
+	const char* toString(PduData* pduData) const;
 
 public:
 	struct PduDataIterator
@@ -109,7 +111,7 @@ public:
 	 * <li>SME Manual/User Acknowledgement.
 	 * </ul>
 	 */
-	PduData* getPdu(const SMSId smsId);
+	PduData* getPdu(const string& smsId);
 
 	void removePdu(PduData* pduData);
 

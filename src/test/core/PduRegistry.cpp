@@ -1,9 +1,12 @@
 #include "PduRegistry.hpp"
 #include "util/debug.h"
+#include <sstream>
 
 namespace smsc {
 namespace test {
 namespace core {
+
+using namespace std;
 
 PduRegistry::~PduRegistry()
 {
@@ -11,14 +14,33 @@ PduRegistry::~PduRegistry()
 	clear();
 }
 
+const char* PduRegistry::toString(PduData* pduData) const
+{
+	ostringstream s;
+	s << "pduReg = " << (void*) this <<
+		", smsId = " << pduData->smsId <<
+		", seqNum = " << pduData->pdu->get_sequenceNumber() <<
+		", msgRef = " << pduData->msgRef <<
+		", pdu = " << (void*) pduData->pdu <<
+		", replacePdu = " << (void*) pduData->replacePdu <<
+		", replacedByPdu = " << (void*) pduData->replacedByPdu <<
+		", submitTime = " << pduData->submitTime <<
+		", waitTime = " << pduData->waitTime <<
+		", validTime = " << pduData->validTime <<
+		", responseFlag = " << pduData->responseFlag <<
+		", deliveryFlag = " << (int) pduData->deliveryFlag <<
+		", deliveryReceiptFlag = " << (int) pduData->deliveryReceiptFlag <<
+		", intermediateNotificationFlag = " << pduData->intermediateNotificationFlag;
+	return s.str().c_str();
+}
+
 void PduRegistry::registerPdu(PduData* pduData)
 {
 	__require__(pduData && pduData->pdu);
-	__trace2__("PduRegistry::registerPdu(): pduReg = 0x%x, msgRef = %d, waitTime = %d, validTime = %d, seqNum = %u",
-		this, pduData->msgRef, pduData->waitTime, pduData->validTime, pduData->pdu->get_sequenceNumber());
+	__trace2__("PduRegistry::registerPdu(): %s", toString(pduData));
 	MsgRefMap::const_iterator it = msgRefMap.find(msgRef);
 	__require__(msgRef && it == msgRefMap.end()); //registerPdu() первый раз для данной pdu
-	if (pduData->smsId)
+	if (pduData->smsId.length())
 	{
 		idMap[pduData->smsId] = pduData;
 	}
@@ -47,9 +69,8 @@ void PduRegistry::registerPdu(PduData* pduData)
 void PduRegistry::updatePdu(PduData* pduData)
 {
 	__require__(pduData && pduData->pdu);
-	__trace2__("PduRegistry::updatePdu(): pduReg = 0x%x, msgRef = %d, seqNum = %u, smsId = %u, pdu = 0x%x, replacePdu = 0x%x, replacedByPdu = 0x%x",
-		this, pduData->msgRef, pduData->pdu->get_sequenceNumber(), (uint32_t) pduData->smsId, pduData->pdu, pduData->replacePdu, pduData->replacedByPdu);
-	if (pduData->smsId)
+	__trace2__("PduRegistry::updatePdu(): %s", toString(pduData));
+	if (pduData->smsId.length())
 	{
 		idMap[pduData->smsId] = pduData;
 	}
@@ -94,7 +115,7 @@ PduData* PduRegistry::getPdu(uint32_t seqNumber)
 	return (it == seqNumMap.end() ? NULL : it->second);
 }
 
-PduData* PduRegistry::getPdu(const SMSId smsId)
+PduData* PduRegistry::getPdu(const string& smsId)
 {
 	SmsIdMap::const_iterator it = idMap.find(smsId);
 	return (it != idMap.end() ? NULL : it->second);
@@ -103,8 +124,7 @@ PduData* PduRegistry::getPdu(const SMSId smsId)
 void PduRegistry::removePdu(PduData* pduData)
 {
 	__require__(pduData && pduData->pdu);
-	__trace2__("PduRegistry::removePdu(): pduReg = 0x%x, msgRef = %d, seqNum = %u, smsId = %u, pdu = 0x%x, replacePdu = 0x%x, replacedByPdu = 0x%x",
-		this, pduData->msgRef, pduData->pdu->get_sequenceNumber(), (uint32_t) pduData->smsId, pduData->pdu, pduData->replacePdu, pduData->replacedByPdu);
+	__trace2__("PduRegistry::removePdu(): %s", toString(pduData));
 	//разорвать связь с замещающей и замещаемой pdu
 	if (pduData->replacePdu)
 	{
@@ -114,7 +134,7 @@ void PduRegistry::removePdu(PduData* pduData)
 	{
 		pduData->replacedByPdu->replacePdu = NULL;
 	}
-	if (pduData->smsId)
+	if (pduData->smsId.length())
 	{
 		int res = idMap.erase(pduData->smsId);
 		__require__(res);
@@ -198,17 +218,7 @@ void PduRegistry::dump(FILE* log) const
 		strftime(submitTime, 20, fmt, localtime(&data->submitTime));
 		strftime(waitTime, 20, fmt, localtime(&data->waitTime));
 		strftime(validTime, 20, fmt, localtime(&data->validTime));
-		fprintf(log, "pduData[%u] = {smsId = %u, seqNum = %u, msgRef = %u",
-			it->first, (uint32_t) data->smsId,
-			(uint32_t) data->pdu->get_sequenceNumber(), (uint32_t) data->msgRef);
-		fprintf(log, ", submitTime = %s, waitTime = %s, validTime = %s",
-			submitTime, waitTime, validTime);
-		fprintf(log, ", responseFlag = %d, deliveryFlag = %d",
-			data->responseFlag, (int) data->deliveryFlag);
-		fprintf(log, ", deliveryReceiptFlag = %d, intermediateNotificationFlag = %d",
-			(int) data->deliveryReceiptFlag, data->intermediateNotificationFlag);
-		fprintf(log, ", pdu = 0x%x, replacePdu = 0x%x, replacedByPdu = 0x%x}\n",
-			data->pdu, data->replacePdu, data->replacedByPdu);
+		fprintf(log, "pduData[%u] = {%s}", it->first, toString(data));
 		switch (data->pdu->get_commandId())
 		{
 			case SUBMIT_SM:
