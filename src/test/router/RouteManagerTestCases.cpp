@@ -4,9 +4,9 @@
 #include "test/core/RouteUtil.hpp"
 #include "test/util/Util.hpp"
 #include "util/debug.h"
-#include <sys/types.h>
+#include <algorithm>
 #include <sstream>
-#include <util/debug.h>
+#include <sys/types.h>
 
 namespace smsc {
 namespace test {
@@ -133,9 +133,11 @@ TestCase* RouteManagerTestCases::setupRandomAddressNotMatch(Address& addr,
 			}
 			//break;
 		case 3: //отличающийся адрес
-			__tc_cond__("addCorrectRoute", "NotMatchValue");
-			addrVal[len - 1] = '@';
-			addr.setValue(addrLen, addrVal);
+			if (next_permutation(addrVal, addrVal + addrLen))
+			{
+				__tc_cond__("addCorrectRoute", "NotMatchValue");
+				addr.setValue(addrLen, addrVal);
+			}
 			break;
 		case 4: //адрес с несовпадающим typeOfNumber
 			__tc_cond__("addCorrectRoute", "NotMatchType");
