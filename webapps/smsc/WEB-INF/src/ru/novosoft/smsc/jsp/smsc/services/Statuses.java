@@ -15,6 +15,8 @@ import java.util.LinkedList;
 
 public class Statuses extends PageBean
 {
+	protected boolean colored = true;
+
 	public List getServiceIds()
 	{
 		return appContext.getSmeManager().getSmeNames();
@@ -47,5 +49,15 @@ public class Statuses extends PageBean
 			logger.error("Couldn't get service \"" + id + "\" connection status, nested: " + e.getMessage());
 			return null;
 		}
+	}
+
+	public boolean isColored()
+	{
+		return colored;
+	}
+
+	public void setColored(boolean colored)
+	{
+		this.colored = colored;
 	}
 }
