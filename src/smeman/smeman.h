@@ -8,6 +8,7 @@
 #include <inttypes.h>
 #include <vector>
 #include <list>
+#include <stdexcept>
 
 #include "util/debug.h"
 #include "smetypes.h"
@@ -23,13 +24,56 @@
 
 namespace smsc {
 namespace smeman {
-  
-struct SmeRecord
+
+using std::runtime_error;
+using std::string;
+
+class SmeProxyWrap;
+
+class SmeRecord : public SmeProxy
 {
-  SmeInfo info;
+public:
+  uint32_t uniqueId;
+	SmeInfo info;
   SmeProxy* proxy;
   bool deleted;
   SmeIndex idx;
+	Mutex mutex;
+	virtual void putCommand(const SmscCommand& command)
+	{
+		MutexGuard guard(mutex);
+		if ( proxy )
+		{
+			proxy->putCommand(command);
+		}
+		else throw runtime_error("proxy unregistred");
+	}
+	virtual SmscCommand getCommand()
+	{
+		MutexGuard guard(mutex);
+		if ( proxy )
+		{
+			return proxy->getCommand();
+		}
+		else throw runtime_error("proxy unregistred");
+	}
+	virtual uint32_t getNextSequenceNumber()
+	{
+		MutexGuard guard(mutex);
+		if ( proxy )
+		{
+			return proxy->getNextSequenceNumber();
+		}
+		else throw runtime_error("proxy unregistred");
+	}
+	virtual uint32_t getUniqueId() const {return uniqueId;}
+  virtual bool hasInput() const {__unreachable__("");return 0;}
+  virtual SmeProxyState getState() const {__unreachable__("");return INVALID;}
+  virtual void init(){__unreachable__("");}
+  virtual SmeProxyPriority getPriority() const {__unreachable__("");return 0;}
+  virtual void attachMonitor(ProxyMonitor* monitor) {__unreachable__("");}
+  virtual bool attached(){__unreachable__("");return 0;}
+  virtual void close() {__unreachable__("");}
 };
   
 using core::synchronization::Mutex; 
@@ -74,7 +118,7 @@ public:
 
   // SmeDispatcher implementation
   virtual SmeProxy* selectSmeProxy(unsigned long timeout=0,int* idx=0);
-	virtual ~SmeManager(){}
+  virtual ~SmeManager(){}
 };
 
 }; // namespace smeman

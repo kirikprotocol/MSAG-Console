@@ -49,6 +49,7 @@ public:
   virtual void attachMonitor(ProxyMonitor* monitor) = 0; // for detach monitor call with NULL
   virtual bool attached() = 0; // check what proxy has attached monitor (proxy is attached to dispatcher)
   virtual uint32_t getNextSequenceNumber() = 0;
+	virtual uint32_t getUniqueId() const {__unreachable__("must be implemented in proxy or wrapper");return 0;}
 };
 
 }; // namespace smeman

@@ -36,13 +36,13 @@ void Smsc::mainLoop()
   int src_proxy_index;
   int dest_proxy_index;
   SmeProxy* src_proxy;
-	
-	do 
-	{ 
-		src_proxy = smeman.selectSmeProxy(WAIT_DATA_TIMEOUT,&src_proxy_index);
-		if ( stopFlag ) return;
-	}	
-	while(!src_proxy);
+  
+  do 
+  { 
+    src_proxy = smeman.selectSmeProxy(WAIT_DATA_TIMEOUT,&src_proxy_index);
+    if ( stopFlag ) return;
+  } 
+  while(!src_proxy);
 
   SmscCommand cmd = src_proxy->getCommand();
   try
@@ -75,7 +75,8 @@ void Smsc::mainLoop()
         // store sms
         // create task
         uint32_t dialogId2 = dest_proxy->getNextSequenceNumber();
-        Task task((uint32_t)dest_proxy_index,dialogId2);
+        //Task task((uint32_t)dest_proxy_index,dialogId2);
+        Task task(dest_proxy->getUniqueId(),dialogId2);
         if ( !tasks.createTask(task) )
         {
           SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::ERROR);
@@ -100,7 +101,7 @@ void Smsc::mainLoop()
         //const char* messageId = cmd->get_resp()->get_messageId();
         Task task;
         // find and remove task
-        if (!tasks.findAndRemoveTask((uint32_t)src_proxy_index,dialogId,&task))
+        if (!tasks.findAndRemoveTask(src_proxy->getUniqueId(),dialogId,&task))
         {
           __warning__("responce on unpresent task");
           break;

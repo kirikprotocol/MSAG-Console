@@ -130,6 +130,11 @@ __synchronized__
   return record.info;
 }
 
+static uint32_t nextProxyUniqueId()
+{
+	static uint32_t unique = 0;
+	return unique++;
+}
 // ------ SmeRegistrar implementation --------------------------
 
 void SmeManager::registerSmeProxy(const SmeSystemId& systemId, SmeProxy* smeProxy)
@@ -149,27 +154,44 @@ __synchronized__
     __warning__("Sme proxy with tihs systemId already registered");
     throw runtime_error(string("proxy with id ")+systemId+" already exists");
   }
-  records[index].proxy = smeProxy;
+	{
+		MutexGuard guard(records[index].mutex);
+		records[index].proxy = smeProxy;
+		records[index].uniqueId = nextProxyUniqueId();
+	}
   dispatcher.attachSmeProxy(smeProxy,index);
 }
 
 void SmeManager::unregisterSmeProxy(const SmeSystemId& systemId)
 {
-__synchronized__
-
-  SmeIndex index = internalLookup(systemId);
-  if ( index == INVALID_SME_INDEX ) throw SmeError();
-  if ( records[index].proxy )
-    dispatcher.detachSmeProxy(records[index].proxy);
-  else
-    __warning__("unregister null proxy");
-  records[index].proxy = 0;
+	
+	SmeIndex index;
+	{
+		__synchronized__
+		index = internalLookup(systemId);
+		if ( index == INVALID_SME_INDEX ) throw SmeError();
+	}
+	
+	{
+		MutexGuard guard(records[index].mutex);
+		if ( records[index].proxy )
+			dispatcher.detachSmeProxy(records[index].proxy);
+		else
+			__warning__("unregister null proxy");
+		records[index].proxy = 0;
+	}
 }
 
 // SmeDispatcher implementation
 SmeProxy* SmeManager::selectSmeProxy(unsigned long timeout,int* idx)
 {
-  return dispatcher.dispatchIn(timeout,idx);
+	SmeProxy* proxy = dispatcher.dispatchIn(timeout,idx);
+	if ( proxy )
+	{
+	__synchronized__
+		return (SmeProxy*)&(records[*idx]);
+	}
+	else return 0;
 }
 
 SmeIndex SmeManager::internalLookup(const SmeSystemId& systemId) const
@@ -178,7 +200,7 @@ SmeIndex SmeManager::internalLookup(const SmeSystemId& systemId) const
   for ( Records::const_iterator p = records.begin(); p != records.end(); ++p )
   {
     if ( p->deleted ) continue;
-		if ( p->info.systemId.compare(systemId) == 0 ) return p->idx;
+    if ( p->info.systemId.compare(systemId) == 0 ) return p->idx;
   }
   return INVALID_SME_INDEX;
 }
