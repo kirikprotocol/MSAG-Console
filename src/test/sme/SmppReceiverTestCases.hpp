@@ -30,6 +30,7 @@ const char* const TC_PROCESS_DELIVERY_RECEIPT = "processDeliveryReceipt";
 const char* const TC_PROCESS_INTERMEDIATE_NOTIFICATION =
 	"processIntermediateNotification";
 const char* const TC_HANDLE_ERROR = "handleError";
+const char* const TC_SEND_DELIVERY_SM_RESP = "sendDeliverySmResp";
 
 /**
  * Абстрактный класс для обработки результатов тест кейсов для
@@ -56,6 +57,12 @@ public:
 	void setSession(SmppSession* sess) { session = sess; }
 	
 	/**
+	 * Отправка синхронного или асинхронного deliver_sm_resp.
+	 */
+	TCResult* sendDeliverySmResp(PduDeliverySm& pdu, bool sendResp,
+		bool& sync, bool& accepted, int num);
+
+	/**
 	 * Получение submit_sm_resp pdu для асинхронного submit_sm реквеста.
 	 */
 	virtual void processSubmitSmResp(PduSubmitSmResp &pdu);
@@ -68,17 +75,19 @@ public:
 	/**
 	 * Сообщения правильно доставляются от одного sme другому.
 	 */
-	TCResult* processNormalSms(PduDeliverySm &pdu);
+	TCResult* processNormalSms(PduDeliverySm &pdu, time_t recvTime, bool accepted);
 
 	/**
 	 * Подтверждения доставки (delivery receipts) работают правильно.
 	 */
-	TCResult* processDeliveryReceipt(PduDeliverySm &pdu);
+	TCResult* processDeliveryReceipt(PduDeliverySm &pdu,
+		time_t recvTime, bool accepted);
 
 	/**
 	 * Промежуточные нотификации (intermediate notifications) работают правильно.
 	 */
-	TCResult* processIntermediateNotification(PduDeliverySm &pdu);
+	TCResult* processIntermediateNotification(PduDeliverySm &pdu,
+		time_t recvTime, bool accepted);
 	
 	//not implemented
 	virtual void processGenericNack(PduGenericNack &pdu);
