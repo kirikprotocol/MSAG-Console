@@ -113,6 +113,7 @@ public class Options extends MCISmeBean
         address = getConfig().getString("MCISme.Address");
         svcType = getConfig().getString("MCISme.SvcType");
         protocolId = getConfig().getInt("MCISme.ProtocolId");
+        daysValid  = getConfig().getInt("MCISme.DaysValid");
         callingMask = getConfig().getString("MCISme.CallingMask");
         calledMask  = getConfig().getString("MCISme.CalledMask");
         unrespondedMessagesMax = getConfig().getInt("MCISme.unrespondedMessagesMax");
@@ -255,6 +256,7 @@ public class Options extends MCISmeBean
     getConfig().setString("MCISme.Address", address);
     getConfig().setString("MCISme.SvcType", svcType);
     getConfig().setInt   ("MCISme.ProtocolId",  protocolId);
+    getConfig().setInt   ("MCISme.DaysValid", daysValid);
     getConfig().setString("MCISme.CallingMask", callingMask);
     getConfig().setString("MCISme.CalledMask" , calledMask);
     getConfig().setInt   ("MCISme.unrespondedMessagesMax", unrespondedMessagesMax);
