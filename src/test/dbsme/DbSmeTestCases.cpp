@@ -714,14 +714,21 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	PduDeliverySm &pdu)
 {
 	__decl_tc__;
+	__cfg_addr__(profilerAddr);
 	__cfg_addr__(profilerAlias);
+	__cfg_addr__(dbSmeAddr);
 	__cfg_addr__(dbSmeAlias);
 	__cfg_str__(dbSmeServiceType);
 	__cfg_int__(dbSmeProtocolId);
 
 	Address srcAlias;
 	SmppUtil::convert(pdu.get_message().get_source(), &srcAlias);
-	if (srcAlias == profilerAlias)
+	Address destAddr;
+	SmppUtil::convert(pdu.get_message().get_dest(), &destAddr);
+	const SmeInfo* sme = fixture->smeReg->getSme(destAddr);
+	__require__(sme);
+	if ((sme->wantAlias && srcAlias == profilerAlias) ||
+		(!sme->wantAlias && srcAlias == profilerAddr))
 	{
 		SmppProfilerTestCases::processSmeAcknowledgement(monitor, pdu);
 		return;
@@ -735,7 +742,6 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	{
 		return;
 	}
-
 	const string text = decode(pdu.get_message().get_shortMessage(),
 		pdu.get_message().size_shortMessage(), pdu.get_message().get_dataCoding());
 	if (!monitor->pduData->objProps.count("output"))
@@ -749,25 +755,29 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	__require__(ack);
 	__tc__("processDbSmeRes.checkFields");
 	__check__(1, serviceType, dbSmeServiceType);
-	if (srcAlias != dbSmeAlias)
+	if (sme->wantAlias && srcAlias != dbSmeAlias)
 	{
 		__tc_fail__(2);
 	}
-	__check__(3, dataCoding, ack->dataCoding);
-	__check__(4, protocolId, dbSmeProtocolId);
-	__check__(5, priorityFlag, 0);
-	__check__(6, registredDelivery, 0);
-	__check__(7, replaceIfPresentFlag, 0);
+	else if (!sme->wantAlias && srcAlias != dbSmeAddr)
+	{
+		__tc_fail__(3);
+	}
+	__check__(4, dataCoding, ack->dataCoding);
+	__check__(5, protocolId, dbSmeProtocolId);
+	__check__(6, priorityFlag, 0);
+	__check__(7, registredDelivery, 0);
+	__check__(8, replaceIfPresentFlag, 0);
 	if (text.length() > getMaxChars(ack->dataCoding))
 	{
-		__tc_fail__(8);
+		__tc_fail__(9);
 	}
     SmppOptional opt;
 	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());
 	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 10);
 	__tc_ok_cond__;
 	__tc__("processDbSmeRes.output");
-	int pos = ack->text.find(text);
+	int pos = findPos(text, ack->text, getMaxChars(ack->dataCoding));
 	__trace2__("db sme cmd: pos = %d, input:\n%s\noutput:\n%s\nexpected:\n%s\n",
 		pos, monitor->pduData->strProps["input"].c_str(), text.c_str(), ack->text.c_str());
 	if (pos == string::npos)
@@ -789,6 +799,7 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 			if (text.length() != getMaxChars(ack->dataCoding) &&
 				ack->text.length() % getMaxChars(ack->dataCoding) != 0)
 			{
+				__trace2__("text length = %d", text.length());
 				__tc_fail__(1);
 			}
 			__tc_ok_cond__;
