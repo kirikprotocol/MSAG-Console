@@ -16,8 +16,11 @@ import java.util.*;
 public class SmsViewFormBean extends IndexBean
 {
   private SmsQuery query = new SmsQuery();
-  private SmsSet rows = null;
   private SmsView view = new SmsView();
+
+  private SmsSet rows = null;
+  private SmsRow row = null;
+  private String viewId = "";
 
   private int deletedRowsCount = 0;
   private int totalRowsCount = 0;
@@ -32,6 +35,7 @@ public class SmsViewFormBean extends IndexBean
   private String mbDelete = null;
   private String mbQuery = null;
   private String mbClear = null;
+  private String mbView = null;
   private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
   private String oldSort = null;
 
@@ -62,18 +66,13 @@ public class SmsViewFormBean extends IndexBean
       view.setSmsc(appContext.getSmsc());
     }
 
-    switch (getStorageType()) {
-      case SmsQuery.SMS_ARCHIVE_STORAGE_TYPE:
-        if (!request.isUserInRole("smsView") && !request.isUserInRole("smsView_archive"))
-          return error(SMSCErrors.error.smsview.AccessDeniedToArchive);
-        break;
-      case SmsQuery.SMS_OPERATIVE_STORAGE_TYPE:
-        if (!request.isUserInRole("smsView") && !request.isUserInRole("smsView_operative"))
-          return error(SMSCErrors.error.smsview.AccessDeniedToOperative);
-        break;
-      default:
-        //do nothing
-        break;
+    if (getStorageType() == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE) {
+      if (!request.isUserInRole("smsView") && !request.isUserInRole("smsView_archive"))
+        return error(SMSCErrors.error.smsview.AccessDeniedToArchive);
+    }
+    if (getStorageType() == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) {
+      if (!request.isUserInRole("smsView") && !request.isUserInRole("smsView_operative"))
+        return error(SMSCErrors.error.smsview.AccessDeniedToOperative);
     }
 
     if (mbRemove != null)
@@ -88,6 +87,8 @@ public class SmsViewFormBean extends IndexBean
       result = processQuery();
     else if (mbClear != null)
       result = clearQuery();
+    else if (mbView != null)
+      result = viewQuery();
     else
       result = processResortAndNavigate(false);
 
@@ -95,6 +96,7 @@ public class SmsViewFormBean extends IndexBean
     mbDelete = null;
     mbQuery = null;
     mbClear = null;
+    mbView = null;
 
     return result;
   }
@@ -148,7 +150,7 @@ public class SmsViewFormBean extends IndexBean
       totalRowsCount = view.getSmsCount(query);
       rows = view.getSmsSet(query);
       startPosition = 0;
-      totalSize = rows.getRowsCount();
+      totalSize = (rows == null) ? 0:rows.getRowsCount();
       processResortAndNavigate(true);
       return RESULT_OK;
     } catch (AdminException ex) {
@@ -169,13 +171,32 @@ public class SmsViewFormBean extends IndexBean
     return RESULT_OK;
   }
 
+  public int viewQuery()
+  {
+    try {
+      if (rows == null)
+        throw new Exception("There are no messages selected");
+      row = rows.getRow(viewId);
+      if (row == null)
+        throw new Exception("Message #"+viewId+" is not setected in main view");
+
+      return RESULT_OK;
+    } catch (Exception ex) {
+      ex.printStackTrace();
+      return error(SMSCErrors.error.smsview.QueryFailed, ex.getMessage());
+    }
+  }
+
   public int processDeleteSet(SmsSet set)
   {
     try {
-      if (getStorageType() == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE)
-        deletedRowsCount = view.delArchiveSmsSet(set);
-      else
+      int storage = getStorageType();
+      if (storage == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE)
         deletedRowsCount = view.delOperativeSmsSet(set);
+      else if (storage == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE)
+        throw new AdminException("Cancel is not suported for persistent archive storage!");
+      else
+        throw new AdminException("Storage type "+storage+" is invalid");
     } catch (AdminException ex) {
       ex.printStackTrace();
       return error(SMSCErrors.error.smsview.DeleteFailed, ex.getMessage());
@@ -187,7 +208,8 @@ public class SmsViewFormBean extends IndexBean
   public int processDeleteSelected()
   {
     SmsSet set = new SmsSet();
-    for (int i = 0; i < rows.getRowsCount(); i++) {
+    int rowsCount =  (rows == null) ? 0:rows.getRowsCount();
+    for (int i = 0; i < rowsCount; i++) {
       SmsRow row = rows.getRow(i);
       String rowId = Long.toString(row.getId());
       if (checkedRows.contains(rowId)) set.addRow(row);
@@ -210,93 +232,58 @@ public class SmsViewFormBean extends IndexBean
 
   /********************************* query delegeates *********************************/
 
-  public void setSort(String by)
-  {
+  public void setSort(String by) {
     sort = by;
   }
-
-  public String getSort()
-  {
+  public String getSort() {
     return sort;
   }
-
-  public int getStorageType()
-  {
+  public int getStorageType()  {
     return query.getStorageType();
   }
-
-  public void setStorageType(int type)
-  {
+  public void setStorageType(int type) {
     query.setStorageType(type);
   }
-
-  public int getRowsMaximum()
-  {
+  public int getRowsMaximum() {
     return query.getRowsMaximum();
   }
-
-  public void setRowsMaximum(int max)
-  {
+  public void setRowsMaximum(int max) {
     query.setRowsMaximum(max);
   }
-
-  public String getFromAddress()
-  {
+  public String getFromAddress() {
     return query.getFromAddress();
   }
-
-  public void setFromAddress(String address)
-  {
+  public void setFromAddress(String address) {
     query.setFromAddress(address);
   }
-
-  public String getToAddress()
-  {
+  public String getToAddress()  {
     return query.getToAddress();
   }
-
-  public void setToAddress(String address)
-  {
+  public void setToAddress(String address) {
     query.setToAddress(address);
   }
-
-  public String getSrcSmeId()
-  {
+  public String getSrcSmeId() {
     return query.getSrcSmeId();
   }
-
-  public void setSrcSmeId(String id)
-  {
+  public void setSrcSmeId(String id) {
     query.setSrcSmeId(id);
   }
-
-  public String getDstSmeId()
-  {
+  public String getDstSmeId() {
     return query.getDstSmeId();
   }
-
-  public void setDstSmeId(String id)
-  {
+  public void setDstSmeId(String id) {
     query.setDstSmeId(id);
   }
-
-  public String getRouteId()
-  {
+  public String getRouteId() {
     return query.getRouteId();
   }
-
-  public void setRouteId(String id)
-  {
+  public void setRouteId(String id) {
     query.setRouteId(id);
   }
-
-  public String getSmsId()
-  {
+  public String getSmsId() {
     return query.getSmsId();
   }
-
-  public void setSmsId(String id)
-  {
+  public void setSmsId(String id) {
     query.setSmsId(id);
   }
 
@@ -308,7 +295,6 @@ public class SmsViewFormBean extends IndexBean
     } else
       return "";
   }
-
   public void setFromDate(String dateString)
   {
     final boolean dateEnabled = dateString != null && dateString.trim().length() > 0;
@@ -332,7 +318,6 @@ public class SmsViewFormBean extends IndexBean
     } else
       return "";
   }
-
   public void setTillDate(String dateString)
   {
     final boolean dateEnabled = dateString != null && dateString.trim().length() > 0;
@@ -348,72 +333,67 @@ public class SmsViewFormBean extends IndexBean
     }
   }
 
-  public int getTotalRowsCount()
-  {
+  public int getTotalRowsCount() {
     return totalRowsCount;
   }
-
-  public int getDeletedRowsCount()
-  {
+  public int getDeletedRowsCount() {
     return deletedRowsCount;
   }
 
-  public String getMbDelete()
-  {
+  public String getMbDelete() {
     return mbDelete;
   }
-
-  public void setMbDelete(String mbDelete)
-  {
+  public void setMbDelete(String mbDelete) {
     this.mbDelete = mbDelete;
   }
-
-  public String getMbRemove()
-  {
+  public String getMbRemove() {
     return mbRemove;
   }
-
-  public void setMbRemove(String mbRemove)
-  {
+  public void setMbRemove(String mbRemove) {
     this.mbRemove = mbRemove;
   }
-
-  public String getMbQuery()
-  {
+  public String getMbQuery() {
     return mbQuery;
   }
-
-  public void setMbQuery(String mbQuery)
-  {
+  public void setMbQuery(String mbQuery) {
     this.mbQuery = mbQuery;
   }
-
-  public String getMbClear()
-  {
+  public String getMbClear() {
     return mbClear;
   }
-
-  public void setMbClear(String mbClear)
-  {
+  public void setMbClear(String mbClear) {
     this.mbClear = mbClear;
+  }
+  public String getMbView() {
+    return mbView;
+  }
+  public void setMbView(String mbView) {
+    this.mbView = mbView;
   }
 
   public String[] getCheckedRows()
   {
-    return (checkedRows == null) ?
-            null : (String[]) checkedRows.toArray();
+    return (checkedRows == null) ? null : (String[]) checkedRows.toArray();
   }
-
   public void setCheckedRows(String[] checkedRows)
   {
     for (int i = 0; i < checkedRows.length; i++)
       this.checkedRows.addElement(checkedRows[i]);
   }
-
   public boolean isRowChecked(long id)
   {
-    return (checkedRows == null) ?
-            false : checkedRows.contains(Long.toString(id));
+    return (checkedRows == null) ? false : checkedRows.contains(Long.toString(id));
+  }
+
+  public String getViewId() {
+    return viewId;
+  }
+  public void setViewId(String viewId) {
+    this.viewId = viewId;
+  }
+
+  public SmsRow getRow() {
+    return row;
   }
 
 }
