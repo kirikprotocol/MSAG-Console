@@ -209,8 +209,8 @@ public class SmsView
     }
     private String getLikeExpression(String str) {
       return (needLikeExpression(str)) ?
-              str.trim().replace('*', '%').replace('?', '_').toUpperCase() :
-              str.trim().toUpperCase();
+              str.trim().replace('*', '%').replace('?', '_') :
+              str.trim();
     }
     private void bindInput(PreparedStatement stmt, SmsQuery query)
       throws SQLException, AdminException
@@ -274,12 +274,12 @@ public class SmsView
 
     private void addWherePart(ArrayList list, String field, String str) {
         if (needExpression(str))
-            list.add("UPPER("+field+") "+((needLikeExpression(str)) ? "LIKE ?":"=?"));
+            list.add(field+((needLikeExpression(str)) ? " LIKE ?":"=?"));
     }
 
     private void addWherePartEQ(ArrayList list, String field, String str) {
         if (needExpression(str))
-            list.add("UPPER("+field+")=?");
+            list.add(field+"=?");
     }
   private String prepareWhereClause(SmsQuery query) {
     ArrayList list = new ArrayList();
