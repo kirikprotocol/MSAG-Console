@@ -137,7 +137,8 @@ enum MapState{
   MAPST_WaitSubmitUSSDRequestConf = 43,
   MAPST_WaitSubmitUSSDRequestCloseConf = 44,
   MAPST_WaitSubmitUSSDNotifyConf = 45,
-  MAPST_ReadyNextUSSDCmd = 46
+  MAPST_WaitSubmitUSSDNotifyCloseConf = 46,
+  MAPST_ReadyNextUSSDCmd = 47
 };
 
 class hash_func_ET96MAP_DID{

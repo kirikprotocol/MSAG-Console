@@ -1756,6 +1756,20 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
         DropMapDialog(dialog.get());
       }else if(dialog->state == MAPST_WaitSubmitUSSDNotifyConf) {
         __map_trace2__("%s processing USSD Notify submit response", __FUNCTION__);
+        if ( cmd->get_resp()->get_status() != 0 )
+        {
+          {
+            MutexGuard ussd_map_guard( ussd_map_lock );
+            ussd_map.erase(dialog->ussdSequence);
+          }
+          CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+          DropMapDialog(dialog.get());
+        } else {
+          dialog->state = MAPST_ReadyNextUSSDCmd;
+          __map_trace2__("set state %d for dlg 0x%p", dialog->state, dialog.get() );
+        }
+      }else if(dialog->state == MAPST_WaitSubmitUSSDNotifyCloseConf) {
+        __map_trace2__("%s processing USSD Notify close submit response", __FUNCTION__);
         {
           MutexGuard ussd_map_guard( ussd_map_lock );
           ussd_map.erase(dialog->ussdSequence);
@@ -2242,7 +2256,7 @@ USHORT_T Et96MapCloseInd(
       DropMapDialog(dialog.get());
       break;
     case MAPST_WaitUSSDNotifyClose:
-      dialog->state = MAPST_WaitSubmitUSSDNotifyConf;
+      dialog->state = MAPST_WaitSubmitUSSDNotifyCloseConf;
       SendSubmitCommand(dialog.get());
       break;
     case MAPST_WaitUSSDReqDelim:
