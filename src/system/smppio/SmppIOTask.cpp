@@ -73,7 +73,6 @@ void SmppInputThread::killSocket(int idx)
   SmppSocket *ss=sockets[idx];
   Socket *s=ss->getSocket();
   mul.remove(s);
-  delete ss;
   sockets.Delete(idx);
   SmppSocketsManager *m=
     (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
@@ -88,6 +87,7 @@ void SmppInputThread::killSocket(int idx)
     }
     delete ss->getProxy();
   }
+  delete ss;
 }
 
 
