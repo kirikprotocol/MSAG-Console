@@ -109,22 +109,6 @@ public:
                     smsTextBuff[textPos] == '#') smsTextBuff[textPos] = ' ';
                 textPos++;
             }
-            
-            // skip first paramenter
-            bool paramScanned = false; textPos = 0;
-            while (smsTextBuff[textPos] && textPos<smsTextBuffLen)
-            {
-                if (!isspace(smsTextBuff[textPos]))
-                {
-                    if (paramScanned) break;
-                    while (smsTextBuff[textPos] && textPos<smsTextBuffLen &&
-                           !isspace(smsTextBuff[textPos])) textPos++;
-                    paramScanned = true;
-                } else textPos++;
-            }
-            
-            inputData = (textPos >= smsTextBuffLen || !paramScanned) ?
-                        0 : (const char *)&smsTextBuff[textPos];
         }
         command.setInData(inputData);
         __trace2__("Input Data for DBSme '%s'", (inputData) ? inputData:"");
