@@ -1001,8 +1001,8 @@ static bool SendSms(MapDialog* dialog){
     throw MAPDIALOG_TEMP_ERROR("MSC BLOCKED",Status::BLOCKEDMSC);
 
   bool mms = dialog->chain.size() != 0;
-  //if ( dialog->version < 2 ) mms = false;
-  mms = false;
+  if ( dialog->version < 2 ) mms = false;
+//  mms = false;
   ET96MAP_APP_CNTX_T appContext;
   appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
   SetVersion(appContext,dialog->version);
@@ -1011,7 +1011,7 @@ static bool SendSms(MapDialog* dialog){
   bool segmentation = false;
 
 //  if ( mms )  { __map_trace2__("MAP::%s: MMS flag is set",__FUNCTION__); }
-  __map_trace2__("%s: chain size is %d",__FUNCTION__,dialog->chain.size());
+  __map_trace2__("%s: chain size is %d mms=%d",__FUNCTION__,dialog->chain.size(),mms);
 
   if ( !dialog->mms ) {
     result = Et96MapOpenReq(SSN,dialog->dialogid_map,&appContext,&dialog->destMscAddr,&dialog->scAddr,0,0,0);
