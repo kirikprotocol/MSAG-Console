@@ -58,7 +58,8 @@ public:
     trSmeAnswerEnd,
 
     trSmeUssdInit,
-    trSmeUssdCont,
+    trSmeUssdBillBegin,
+    trSmeUssdBillEnd,
     trSmeUssdEnd,
     trSmeUssdInvalid=trSmeBase|trInvalid,
     trSmeInvalid,
@@ -68,7 +69,8 @@ public:
     trScRequest,
 
     trScUssdInit,
-    trScUssdCont,
+    trScUssdBillBegin,
+    trScUssdBillEnd,
     trScUssdEnd,
     trScInvalid=trScBase|trInvalid
   };
@@ -89,7 +91,8 @@ public:
     TMON_NAME_TO_STR(trSmeAnswerEnd)
 
     TMON_NAME_TO_STR(trSmeUssdInit)
-    TMON_NAME_TO_STR(trSmeUssdCont)
+    TMON_NAME_TO_STR(trSmeUssdBillBegin)
+    TMON_NAME_TO_STR(trSmeUssdBillEnd)
     TMON_NAME_TO_STR(trSmeUssdEnd)
     TMON_NAME_TO_STR(trSmeUssdInvalid)
     TMON_NAME_TO_STR(trSmeInvalid)
@@ -97,7 +100,8 @@ public:
     TMON_NAME_TO_STR(trScRequest)
 
     TMON_NAME_TO_STR(trScUssdInit)
-    TMON_NAME_TO_STR(trScUssdCont)
+    TMON_NAME_TO_STR(trScUssdBillBegin)
+    TMON_NAME_TO_STR(trScUssdBillEnd)
     TMON_NAME_TO_STR(trScUssdEnd)
     TMON_NAME_TO_STR(trScInvalid)
     }
@@ -164,11 +168,11 @@ public:
           }else
           {
             i->second.trLen++;
-            return trSmeUssdCont;
+            return trSmeUssdBillEnd;
           }
         }else
         {
-          return trScUssdCont;
+          return trScUssdBillEnd;
         }
       }
       if(sop==USSR_REQUEST)
@@ -178,10 +182,10 @@ public:
           if(i->second.dir==TransactionInfo::S2C)
           {
             __trace__("wtf?????");
-            return trSmeUssdCont;
+            return trSmeInvalid;
           }else
           {
-            return trScUssdCont;
+            return trScUssdBillEnd;
           }
         }else
         {
@@ -242,7 +246,7 @@ public:
           return trSmeUssdEnd;
         }else
         {
-          return trScUssdCont;
+          return trScUssdBillBegin;
         }
       }
       if(sop==USSR_CONFIRM)
@@ -255,11 +259,11 @@ public:
           }else
           {
             i->second.trLen++;
-            return trScUssdCont;
+            return trScUssdBillBegin;
           }
         }else
         {
-          return trSmeUssdCont;
+          return trSmeUssdBillBegin;
         }
       }
     }
@@ -298,6 +302,28 @@ public:
       backMapping.insert(std::make_pair(makeKey(sms),lit));
       return st;
     }
+    if(st==trSmeUssdBillBegin || trScUssdBillBegin)
+    {
+      MutexGuard mg(mtx);
+      TransactionMap::iterator it=trMap.find(makeKey(sms));
+      if(it==trMap.end())
+      {
+        __warning__("trmon: fuck, transaction not found :-/\n");
+        return st==trSmeUssdBillBegin?trSmeUssdInvalid:trSmeInvalid;
+      }
+      TransactionInfo& ti=it->second;
+      ti.trId=billing::GetBillingInterface()->BeginTransaction(sms,true);
+      if(ti.trId==billing::InvalidTransactionId)
+      {
+        __trace__("TMon: billing denied transaction");
+        trMap.erase(it);
+        BackMapping::iterator bit=backMapping.find(makeKey(sms));
+        timeList.erase(bit->second);
+        backMapping.erase(bit);
+        return trDeniedByBilling;
+      }
+    }
+
     if(st==trSmeUssdEnd || st==trSmeAnswerEnd)
     {
       MutexGuard mg(mtx);
@@ -363,6 +389,27 @@ public:
       TimeList::iterator lit=--timeList.end();
       backMapping.insert(std::make_pair(makeKey(sms),lit));
     }
+    if(st==trScUssdBillBegin || st==trSmeUssdBillBegin)
+    {
+      MutexGuard mg(mtx);
+      TransactionMap::iterator it=trMap.find(makeKey(sms));
+      if(it==trMap.end())
+      {
+        __warning__("trmon: fuck, transaction not found :-/\n");
+        return trScInvalid;
+      }
+      TransactionInfo& ti=it->second;
+      ti.trId=billing::GetBillingInterface()->BeginTransaction(sms,false);
+      if(ti.trId==billing::InvalidTransactionId)
+      {
+        __trace__("TMon: billing denied transaction");
+        trMap.erase(it);
+        BackMapping::iterator bit=backMapping.find(makeKey(sms));
+        timeList.erase(bit->second);
+        backMapping.erase(bit);
+        return trDeniedByBilling;
+      }
+    }
     if(st==trScUssdEnd)
     {
       MutexGuard mg(mtx);
@@ -405,6 +452,34 @@ public:
              (oa==cmp.oa && da==cmp.da && mr<cmp.mr);
     }
   };
+
+  bool FinishBilling(const TransactionKey& key,bool ok)
+  {
+    billing::TransactionIdType trId;
+    {
+      MutexGuard mg(mtx);
+      TransactionMap::iterator it=trMap.find(key);
+      if(it==trMap.end())
+      {
+        __warning__("trmon: fuck, transaction not found :-/\n");
+        return false;
+      }
+      trId=it->second.trId;
+      it->second.trId=billing::InvalidTransactionId;
+    }
+    if(trId!=billing::InvalidTransactionId)
+    {
+      if(ok)
+      {
+        GetBillingInterface()->CommitTransaction(trId);
+      }else
+      {
+        GetBillingInterface()->RollbackTransaction(trId);
+      }
+    }
+
+    return true;
+  }
 
   bool FinishTransaction(const TransactionKey& key,bool ok)
   {
@@ -609,19 +684,34 @@ public:
     billing::TransactionIdType trId;
     TransactionMonitor::TransactionKey trKey;
     TransactionMonitor::TrSmsStatus trSt;
-    bool finishTransaction;
 
-    RegistryData():sme(0),seq(0),trId(billing::InvalidTransactionId),finishTransaction(false){}
-    RegistryData(SmeProxy* smeVal,int seqVal):sme(smeVal),seq(seqVal),trId(billing::InvalidTransactionId),finishTransaction(false)
+    enum TransactionFinishMode{
+      tfmContinue,
+      tfmFinishBilling,
+      tfmFinishFinal
+    };
+
+    TransactionFinishMode finishTransaction;
+
+    RegistryData():sme(0),seq(0),trId(billing::InvalidTransactionId),finishTransaction(tfmContinue){}
+    RegistryData(SmeProxy* smeVal,int seqVal):sme(smeVal),seq(seqVal),trId(billing::InvalidTransactionId),finishTransaction(tfmContinue)
     {
     }
     RegistryData(SmeProxy* smeVal,int seqVal,const RouteInfo& riVal,billing::TransactionIdType trIdVal=billing::InvalidTransactionId):
-      sme(smeVal),seq(seqVal),si(smeVal,riVal),trId(trIdVal)
+      sme(smeVal),seq(seqVal),si(smeVal,riVal),trId(trIdVal),finishTransaction(tfmContinue)
     {
     }
     RegistryData(SmeProxy* smeVal,int seqVal,const RouteInfo& riVal,const TransactionMonitor::TransactionKey& key,TransactionMonitor::TrSmsStatus st):
-      sme(smeVal),seq(seqVal),si(smeVal,riVal),trId(billing::InvalidTransactionId),trKey(key),finishTransaction(true),trSt(st)
+      sme(smeVal),seq(seqVal),si(smeVal,riVal),trId(billing::InvalidTransactionId),trKey(key),trSt(st)
     {
+      if(trSt==TransactionMonitor::trSmeUssdBillEnd || trSt==TransactionMonitor::trScUssdBillEnd)
+      {
+        finishTransaction=tfmFinishBilling;
+      }
+      else
+      {
+        finishTransaction=tfmFinishFinal;
+      }
     }
   };
 
@@ -634,9 +724,15 @@ public:
     {
       __trace2__("RR: response timed out:%d/%d",timeList.front().second->first.first,timeList.front().second->first.second);
       RegistryData& rd=timeList.front().second->second;
-      if(rd.finishTransaction)
+      if(rd.finishTransaction!=RegistryData::tfmContinue)
       {
-        tmon.FinishTransaction(rd.trKey,false);
+        if(rd.finishTransaction==RegistryData::tfmFinishBilling)
+        {
+          tmon.FinishBilling(rd.trKey,false);
+        }else
+        {
+          tmon.FinishTransaction(rd.trKey,false);
+        }
         smsc->updatePerformance(performance::Counters::cntDeliverErr);
         smsc->updateCounter(stat::Counters::cntTemp,rd.si,smsc::system::Status::DELIVERYTIMEDOUT);
         if(rd.trSt==TransactionMonitor::trScUssdEnd)
@@ -646,12 +742,13 @@ public:
         {
           smsc->updateCounter(stat::Counters::cntUssdTrFromSmeFailed,rd.si,smsc::system::Status::DELIVERYTIMEDOUT);
         }
-
-        if(rd.trId!=billing::InvalidTransactionId)
-        {
-          GetBillingInterface()->RollbackTransaction(rd.trId);
-        }
       }
+
+      if(rd.trId!=billing::InvalidTransactionId)
+      {
+        GetBillingInterface()->RollbackTransaction(rd.trId);
+      }
+
       backMapping.erase(timeList.front().second->first);
       mapping.erase(timeList.front().second);
       timeList.pop_front();
@@ -957,9 +1054,9 @@ void StateMachine::submitResp(SmscCommand& cmd)
         dst_proxy->putCommand(cmd);
         smsc->updatePerformance(st==0?performance::Counters::cntDelivered:performance::Counters::cntDeliverErr);
 
-        if(rd.finishTransaction)
+        if(rd.finishTransaction!=RespRegistry::RegistryData::tfmContinue)
         {
-          if(tmon.FinishTransaction(rd.trKey,st==0))
+          if(rd.finishTransaction==RespRegistry::RegistryData::tfmFinishFinal && tmon.FinishTransaction(rd.trKey,st==0))
           {
             smsc->updatePerformance(st==0?performance::Counters::cntTransOk:performance::Counters::cntTransFail);
             if(rd.trSt==TransactionMonitor::trSmeAnswerEnd)
@@ -969,6 +1066,9 @@ void StateMachine::submitResp(SmscCommand& cmd)
             {
               smsc->updateCounter(st==0?stat::Counters::cntUssdTrFromScOk:stat::Counters::cntUssdTrFromScFailed,rd.si,st);
             }
+          }else if(rd.finishTransaction==RespRegistry::RegistryData::tfmFinishBilling)
+          {
+            tmon.FinishBilling(rd.trKey,st==0);
           }
         }
 
@@ -1176,12 +1276,18 @@ void StateMachine::deliveryResp(SmscCommand& cmd)
       smsc->updateCounter(st==0?stat::Counters::cntDelivered:
         smsc::system::Status::isErrorPermanent(st)?stat::Counters::cntPerm:stat::Counters::cntTemp
         ,rd.si,st);
-      if(rd.finishTransaction)
+      if(rd.finishTransaction!=RespRegistry::RegistryData::tfmContinue)
       {
-        if(tmon.FinishTransaction(rd.trKey,st==0))
+        if(rd.finishTransaction!=RespRegistry::RegistryData::tfmFinishFinal)
         {
-          smsc->updateCounter(st==0?stat::Counters::cntUssdTrFromSmeOk:stat::Counters::cntUssdTrFromSmeFailed,rd.si,st);
-          smsc->updatePerformance(st==0?performance::Counters::cntTransOk:performance::Counters::cntTransFail);
+          if(tmon.FinishTransaction(rd.trKey,st==0))
+          {
+            smsc->updateCounter(st==0?stat::Counters::cntUssdTrFromSmeOk:stat::Counters::cntUssdTrFromSmeFailed,rd.si,st);
+            smsc->updatePerformance(st==0?performance::Counters::cntTransOk:performance::Counters::cntTransFail);
+          }
+        }else
+        {
+          tmon.FinishBilling(rd.trKey,st==0);
         }
       }
     }catch(...)
