@@ -103,7 +103,9 @@ Targets:
     <copy file="${BUILD_BIN}/db/oci/libdb_oci.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/libsimplebilling.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/smppgw/smppgw" todir="${DISTR_DIR}/services/smppgw/bin"/>
+    <chmod file="${DISTR_DIR}/services/smppgw/bin/smppgw" perm="755"/> 
     <copy file="${BUILD_BIN}/admin/daemon/smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
+    <chmod file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" perm="755"/>
     <copy todir="${DISTR_DIR}/conf" preservelastmodified="yes" flatten="yes" >
       <fileset dir="${SMSC_DIR}/config" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd SmeRecords.dtd smppgw/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd"/>
     </copy>
