@@ -36,7 +36,7 @@ public class AliasListCommand implements Command
             }
         }
         catch (Exception e) {
-            ctx.setMessage("Failed to list aliases. Cause: "+e.getMessage());
+            ctx.setMessage("Couldn't list aliases. Cause: "+e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             return;
         }

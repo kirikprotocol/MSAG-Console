@@ -22,22 +22,22 @@ public class ProfileAlterCommand extends ProfileGenCommand
 
     public void process(CommandContext ctx)
     {
-        String out = "Profile for address '"+address+"' ";
+        String out = "Profile for address '"+address+"'";
         try {
             Mask profileMask = new Mask(address);
             Profile profile = ctx.getSmsc().lookupProfile(profileMask);
             if (profile == null) {
-                ctx.setMessage(out+"not exists");
+                ctx.setMessage(out+" not found");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             } else {
                 profile.setCodepage(codepage);
                 profile.setReportOptions(report);
                 ctx.getSmsc().updateProfile(profileMask, profile);
-                ctx.setMessage(out+"altered");
+                ctx.setMessage(out+" altered");
                 ctx.setStatus(CommandContext.CMD_OK);
             }
         } catch (Exception e) {
-            ctx.setMessage("Failed to alter "+out+". Cause: "+e.getMessage());
+            ctx.setMessage("Couldn't alter "+out+". Cause: "+e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         }
     }

@@ -21,7 +21,7 @@ public class ApplyCommand implements Command
             ctx.setMessage("Changes applied succesfully");
             ctx.setStatus(CommandContext.CMD_OK);
         } catch (Exception e) {
-            ctx.setMessage("Failed to apply changes");
+            ctx.setMessage("Couldn't apply changes. Cause: "+e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             e.printStackTrace();
         }

@@ -59,14 +59,14 @@ public class RouteAlterCommand extends RouteGenCommand
 
     public void process(CommandContext ctx)
     {
-        String out = "Route '"+route+"' ";
+        String out = "Route '"+route+"'";
         try
         {
             RouteList list =  ctx.getSmsc().getRoutes();
 
             Route oldRoute = list.get(route);
             if (oldRoute == null) {
-                ctx.setMessage(out+"not exists");
+                ctx.setMessage(out+" not found");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                 return;
             }
@@ -88,7 +88,7 @@ public class RouteAlterCommand extends RouteGenCommand
                         } else if (def.getType() == RouteSrcDef.TYPE_SUBJECT) {
                             Subject subj = ctx.getSmsc().getSubjects().get(def.getSrc());
                             if (subj == null) {
-                                ctx.setMessage("Subject '"+def.getSrc()+"' in src definition not found. Failed to alter "+out);
+                                ctx.setMessage("Subject '"+def.getSrc()+"' in src definition not found. Couldn't alter "+out);
                                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                                 return;
                             }
@@ -120,7 +120,7 @@ public class RouteAlterCommand extends RouteGenCommand
                         Destination dst = null;
                         SME sme = ctx.getSmsc().getSmes().get(def.getSmeId());
                         if (sme == null) {
-                            ctx.setMessage("SME '"+def.getSmeId()+"' in dst definition not found. Failed to alter "+out);
+                            ctx.setMessage("SME '"+def.getSmeId()+"' in dst definition not found. Couldn't alter "+out);
                             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                             return;
                         }
@@ -129,7 +129,7 @@ public class RouteAlterCommand extends RouteGenCommand
                         } else if (def.getType() == RouteDstDef.TYPE_SUBJECT) {
                             Subject subj = ctx.getSmsc().getSubjects().get(def.getDst());
                             if (subj == null) {
-                                ctx.setMessage("Subject '"+def.getDst()+"' in dst definition not found. Failed to alter "+out);
+                                ctx.setMessage("Subject '"+def.getDst()+"' in dst definition not found. Couldn't alter "+out);
                                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                                 return;
                             }
@@ -169,12 +169,12 @@ public class RouteAlterCommand extends RouteGenCommand
             list.put(newRoute);
         }
         catch (Exception e) {
-            ctx.setMessage("Failed to add "+out+". Cause: "+e.getMessage());
+            ctx.setMessage("Couldn't add "+out+". Cause: "+e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             return;
         }
 
-        ctx.setMessage(out+"altered");
+        ctx.setMessage(out+" altered");
         ctx.setStatus(CommandContext.CMD_OK);
     }
 

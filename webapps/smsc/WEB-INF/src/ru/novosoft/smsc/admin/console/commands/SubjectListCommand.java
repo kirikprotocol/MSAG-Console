@@ -36,7 +36,7 @@ public class SubjectListCommand implements Command
             }
         }
         catch (Exception e) {
-            ctx.setMessage("Failed to list subjects. Cause: "+e.getMessage());
+            ctx.setMessage("Couldn't list subjects. Cause: "+e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             return;
         }

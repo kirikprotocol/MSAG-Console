@@ -37,13 +37,13 @@ public class RouteAddCommand extends RouteGenCommand
 
     public void process(CommandContext ctx)
     {
-        String out = "Route '"+route+"' ";
+        String out = "Route '"+route+"'";
         try
         {
             RouteList list =  ctx.getSmsc().getRoutes();
             Route smscRoute = list.get(route);
             if (smscRoute != null) {
-                ctx.setMessage(out+"already exists");
+                ctx.setMessage(out+" already exists");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                 return;
             }
@@ -58,7 +58,7 @@ public class RouteAddCommand extends RouteGenCommand
                     } else if (def.getType() == RouteSrcDef.TYPE_SUBJECT) {
                         Subject subj = ctx.getSmsc().getSubjects().get(def.getSrc());
                         if (subj == null) {
-                            ctx.setMessage("Subject '"+def.getSrc()+"' in src definition not found. Failed to add "+out);
+                            ctx.setMessage("Subject '"+def.getSrc()+"' in src definition not found. Couldn't add "+out);
                             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                             return;
                         }
@@ -78,7 +78,7 @@ public class RouteAddCommand extends RouteGenCommand
                     RouteDstDef def = (RouteDstDef)obj;
                     SME sme = ctx.getSmsc().getSmes().get(def.getSmeId());
                     if (sme == null) {
-                        ctx.setMessage("SME '"+def.getSmeId()+"' in dst definition not found. Failed to add "+out);
+                        ctx.setMessage("SME '"+def.getSmeId()+"' in dst definition not found. Couldn't add "+out);
                         ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                         return;
                     }
@@ -87,7 +87,7 @@ public class RouteAddCommand extends RouteGenCommand
                     } else if (def.getType() == RouteDstDef.TYPE_SUBJECT) {
                         Subject subj = ctx.getSmsc().getSubjects().get(def.getDst());
                         if (subj == null) {
-                            ctx.setMessage("Subject '"+def.getDst()+"' in dst definition not found. Failed to add "+out);
+                            ctx.setMessage("Subject '"+def.getDst()+"' in dst definition not found. Couldn't add "+out);
                             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                             return;
                         }
@@ -105,12 +105,12 @@ public class RouteAddCommand extends RouteGenCommand
             list.put(smscRoute);
         }
         catch (Exception e) {
-            ctx.setMessage("Failed to add "+out+". Cause: "+e.getMessage());
+            ctx.setMessage("Couldn't add "+out+". Cause: "+e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             return;
         }
 
-        ctx.setMessage(out+"added");
+        ctx.setMessage(out+" added");
         ctx.setStatus(CommandContext.CMD_OK);
     }
 

@@ -22,22 +22,22 @@ public class RouteDeleteCommand implements Command
 
     public void process(CommandContext ctx)
     {
-        String out = "Route '"+route+"' ";
+        String out = "Route '"+route+"'";
         try {
             Route oldRoute = ctx.getSmsc().getRoutes().remove(route);
             if (oldRoute == null) {
-                ctx.setMessage(out+"not exists");
+                ctx.setMessage(out+" not found");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                 return;
             }
         }
         catch (Exception e) {
-            ctx.setMessage("Failed to delete "+out+". Cause: "+e.getMessage());
+            ctx.setMessage("Couldn't delete "+out+". Cause: "+e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             return;
         }
 
-        ctx.setMessage(out+"deleted");
+        ctx.setMessage(out+" deleted");
         ctx.setStatus(CommandContext.CMD_OK);
     }
 

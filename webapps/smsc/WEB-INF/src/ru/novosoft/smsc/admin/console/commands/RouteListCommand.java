@@ -36,7 +36,7 @@ public class RouteListCommand implements Command
             }
         }
         catch (Exception e) {
-            ctx.setMessage("Failed to list routes. Cause: "+e.getMessage());
+            ctx.setMessage("Couldn't list routes. Cause: "+e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             return;
         }

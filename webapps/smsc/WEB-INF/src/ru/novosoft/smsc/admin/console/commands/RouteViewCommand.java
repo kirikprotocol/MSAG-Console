@@ -65,12 +65,12 @@ public class RouteViewCommand implements Command
 
     public void process(CommandContext ctx)
     {
-        String out = "Route '"+route+"' ";
+        String out = "Route '"+route+"'";
         try
         {
             Route smscRoute = ctx.getSmsc().getRoutes().get(route);
             if (smscRoute == null) {
-                ctx.setMessage(out+"not exists");
+                ctx.setMessage(out+" not found");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                 return;
             }
@@ -78,7 +78,7 @@ public class RouteViewCommand implements Command
             ctx.setStatus(CommandContext.CMD_OK);
         }
         catch (Exception e) {
-            ctx.setMessage("Failed to view "+out+". Cause: "+e.getMessage());
+            ctx.setMessage("Couldn't view "+out+". Cause: "+e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             return;
         }

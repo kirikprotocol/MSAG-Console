@@ -21,15 +21,15 @@ public class ProfileAddCommand extends ProfileGenCommand
 
     public void process(CommandContext ctx)
     {
-        String out = "Profile for mask '"+mask+"' ";
+        String out = "Profile for mask '"+mask+"'";
         try {
             Mask profileMask = new Mask(mask);
             Profile profile = new Profile(profileMask, codepage, report);
             ctx.getSmsc().updateProfile(profileMask, profile);
-            ctx.setMessage(out+"added");
+            ctx.setMessage(out+" added");
             ctx.setStatus(CommandContext.CMD_OK);
         } catch (Exception e) {
-            ctx.setMessage("Failed to add "+out+". Cause: "+e.getMessage());
+            ctx.setMessage("Couldn't add "+out+". Cause: "+e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         }
     }

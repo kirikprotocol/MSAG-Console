@@ -15,18 +15,18 @@ public class SubjectDeleteCommand extends SubjectGenCommand
 {
     public void process(CommandContext ctx)
     {
-        String out = "Subject '"+subject+"' ";
+        String out = "Subject '"+subject+"'";
         try {
             Subject smscSubject = ctx.getSmsc().getSubjects().remove(subject);
             if (smscSubject == null) {
-                ctx.setMessage(out+" not exists");
+                ctx.setMessage(out+" not found");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             } else {
                 ctx.setMessage(out+" deleted");
                 ctx.setStatus(CommandContext.CMD_OK);
             }
         } catch (Exception e) {
-            ctx.setMessage("Failed to delete "+out+". Cause: "+e.getMessage());
+            ctx.setMessage("Couldn't delete "+out+". Cause: "+e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         }
     }

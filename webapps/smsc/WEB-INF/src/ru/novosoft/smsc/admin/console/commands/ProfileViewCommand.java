@@ -32,18 +32,18 @@ public class ProfileViewCommand implements Command
 
     public void process(CommandContext ctx)
     {
-        String out = "Profile for address '"+address+"' ";
+        String out = "Profile for address '"+address+"'";
         try {
             Profile profile = ctx.getSmsc().lookupProfile(new Mask(address));
             if (profile != null) {
                 ctx.setMessage(showProfile(profile));
                 ctx.setStatus(CommandContext.CMD_OK);
             } else {
-                ctx.setMessage(out+"not found");
+                ctx.setMessage(out+" not found");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             }
         } catch (Exception e) {
-            ctx.setMessage("Failed to view "+out+". Cause: "+e.getMessage());
+            ctx.setMessage("Couldn't view "+out+". Cause: "+e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         }
     }

@@ -16,7 +16,7 @@ public class SubjectAddCommand extends SubjectGenCommand
 {
     public void process(CommandContext ctx)
     {
-        String out = "Subject '"+subject+"' ";
+        String out = "Subject '"+subject+"'";
         try {
             SME sme = ctx.getSmsc().getSmes().get(defaultSmeId);
             if (sme != null) {
@@ -25,12 +25,12 @@ public class SubjectAddCommand extends SubjectGenCommand
                 ctx.setMessage(out+" added");
                 ctx.setStatus(CommandContext.CMD_OK);
             } else {
-                ctx.setMessage("Failed to add "+out+
+                ctx.setMessage("Couldn't add "+out+
                                ". No default SME for id '"+defaultSmeId+"'");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             }
         } catch (Exception e) {
-            ctx.setMessage("Failed to add "+out+". Cause: "+e.getMessage());
+            ctx.setMessage("Couldn't add "+out+". Cause: "+e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         }
     }

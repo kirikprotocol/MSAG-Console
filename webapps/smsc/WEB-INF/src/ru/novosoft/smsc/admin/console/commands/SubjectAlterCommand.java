@@ -35,11 +35,11 @@ public class SubjectAlterCommand extends SubjectGenCommand
     }
     public void process(CommandContext ctx)
     {
-        String out = "Subject '"+subject+"' ";
+        String out = "Subject '"+subject+"'";
         try {
             Subject smscSubject = ctx.getSmsc().getSubjects().get(subject);
             if (smscSubject == null) {
-                ctx.setMessage(out+"not exists");
+                ctx.setMessage(out+" not found");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                 return;
             }
@@ -48,7 +48,7 @@ public class SubjectAlterCommand extends SubjectGenCommand
                 if (sme != null) {
                     smscSubject.setDefaultSme(sme);
                 } else {
-                    ctx.setMessage("Failed to alter "+out+
+                    ctx.setMessage("Couldn't alter "+out+
                                    ". No default SME for id '"+defaultSmeId+"'");
                     ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                 }
@@ -72,11 +72,11 @@ public class SubjectAlterCommand extends SubjectGenCommand
                 }
                 smscSubject.setMasks(newList);
             } else {
-                ctx.setMessage("Failed to alter "+out+". Cause: Unknown action");
+                ctx.setMessage("Couldn't alter "+out+". Cause: Unknown action");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             }
         } catch (Exception e) {
-            ctx.setMessage("Failed to alter "+out+". Cause: "+e.getMessage());
+            ctx.setMessage("Couldn't alter "+out+". Cause: "+e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         }
     }

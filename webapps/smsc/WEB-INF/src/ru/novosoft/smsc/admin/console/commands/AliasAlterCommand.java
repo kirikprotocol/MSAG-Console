@@ -49,7 +49,7 @@ public class AliasAlterCommand implements Command
                 ctx.setStatus(CommandContext.CMD_OK);
             } catch (Exception e) {
                 e.printStackTrace();
-                ctx.setMessage("Failed to alter "+out+". Cause: "+e.getMessage());
+                ctx.setMessage("Couldn't alter "+out+". Cause: "+e.getMessage());
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             }
         } else {
