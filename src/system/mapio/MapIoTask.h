@@ -5,17 +5,17 @@ $Id$
 #include <stdio.h>
 #include <malloc.h>
 #include <memory.h>
-#include "sms/sms.h"
-#include "smeman/smsccmd.h"
-#include "smeman/smeman.h"
+#include "../../sms/sms.h"
+#include "../../smeman/smsccmd.h"
+#include "../../smeman/smeman.h"
 using namespace std;
 using namespace smsc::sms;
 using namespace smsc::smeman;
 
-#include "core/buffers/XHash.hpp"
-#include "core/synchronization/Mutex.hpp"
-#include "core/synchronization/Event.hpp"
-#include "core/threads/ThreadedTask.hpp"
+#include "../../core/buffers/XHash.hpp"
+#include "../../core/synchronization/Mutex.hpp"
+#include "../../core/synchronization/Event.hpp"
+#include "../../core/threads/ThreadedTask.hpp"
 
 #include "MapProxy.h"
 

@@ -21,7 +21,6 @@ public:
   {
     if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
     {
-      count=atoi(msg)+1;
       PduDeliverySmResp resp;
       resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
       resp.set_messageId("");
@@ -39,7 +38,7 @@ public:
         src_addr = xsms.getOriginatingAddress();
         xsms.setDestinationAddress(src_addr);
         xsms.setOriginatingAddress(dest_addr);
-        xsms.setIntProperty(Tag::SMPP_SERVICE_OP,USSD_PSSD_RESP);
+        xsms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSD_RESP);
       }
       // end of processing
       ////
@@ -47,7 +46,7 @@ public:
       PduSubmitSm sm;
       sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
       fillSmppPduFromSms(&sm,&xsms);
-      PduSubmitSmResp *resp=tr->submit(sm);
+      PduSubmitSmResp *resp2 = tr->submit(sm);
     }
   }
   void handleError(int errorCode)
