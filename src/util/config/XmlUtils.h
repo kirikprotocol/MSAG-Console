@@ -4,7 +4,14 @@
 #include <xercesc/dom/DOM_Node.hpp>
 #include <xercesc/dom/DOM_Element.hpp>
 
-DOM_Node getElementChildByTagName(const DOM_Element & node, const char * const name);
-char * getNodeAttributeByName(const DOM_Node & node, const char * const name);
+namespace smsc   {
+namespace util   {
+namespace config {
+
+DOMString & createDOMString(const char * const str);
+
+}
+}
+}
 
 #endif // !SMSC_UTIL_CONFIG_XMLUTILS

@@ -1,11 +1,13 @@
 #ifndef CONFIGURATIONMANAGER_H_INCLUDED_C3A81BD4
 #define CONFIGURATIONMANAGER_H_INCLUDED_C3A81BD4
 
+#include <iostream>
+
 #include <xercesc/dom/DOM_Document.hpp>
 #include <log4cpp/Category.hh>
 
-#include "Db.h"
-#include "Map.h"
+#include "Database.h"
+#include "MapProtocol.h"
 #include "Log.h"
 #include "ConfigException.h"
 
@@ -42,7 +44,7 @@ public:
 	 *
 	 * @return Конфигурация базы данных
 	 */
-	Db &getDb() const {return *db;};
+	Database &getDatabase() const {return *db;};
 	/**
 	 * Возвращает конфигурацию логгера
 	 *
@@ -54,13 +56,15 @@ public:
 	 *
 	 * @return MAP protocol configuration
 	 */
-	Map &getMap() const {return *map;};
+	MapProtocol &getMapProtocol() const {return *map;};
 
 private:
+	void writeNode(std::ostream &out, DOM_Node & node, unsigned int tabs);
+	void writeHeader(std::ostream &out);
 	const char * config_filename;
 	DOM_Document document;
-	Db *db;
-	Map *map;
+	Database *db;
+	MapProtocol *map;
 	Log *log;
 	log4cpp::Category &cat;
 
