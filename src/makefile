@@ -111,8 +111,8 @@ CXXFLAGS := $(CXXFLAGS) -pg -g -a
 else
 ifdef OPTI
 ifeq ($(CXX),CC)
-# TODO!!!: OPTIMIZATION OPTIONS
-$(warning optimization options not yet ready)
+CXXFLAGS := -fast $(CXXFLAGS) -DDISABLE_ANY_CHECKS
+CFLAGS := -fast $(CFLAGS) -DDISABLE_ANY_CHECKS
 else
 CFLAGS := $(CFLAGS) -O2 -finline-limit=2048 -DDISABLE_ANY_CHECKS
 CXXFLAGS := $(CXXFLAGS) -O2 -finline-limit=2048 -DDISABLE_ANY_CHECKS
