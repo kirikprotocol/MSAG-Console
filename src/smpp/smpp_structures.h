@@ -64,9 +64,9 @@ namespace SmppOptionalTags{
   static const uint16_t alertOnMessageDelivery /*alert_on_message_delivery(5.3.2.41)*/ = 0x130c;
   static const uint16_t itsReplyType        /*its_reply_type(5.3.2.42)*/ = 0x1380;
   static const uint16_t itsSessionInfo    /*its_session_info(5.3.2.43)*/ = 0x1383;
-	/* SMSC specific */
-  static const uint16_t supported_locale		= 0x4100;
-  static const uint16_t supported_codeset		= 0x4101;
+  /* SMSC specific */
+  static const uint16_t supported_locale    = 0x4100;
+  static const uint16_t supported_codeset   = 0x4101;
   static const uint16_t imsi_address        = 0x4102;
   static const uint16_t msc_address         = 0x4103;
 }
@@ -117,8 +117,8 @@ namespace SmppOptionalLength{
   static const uint16_t itsReplyType        /*its_reply_type(5.3.2.42)*/ = 1;
   static const uint16_t itsSessionInfo    /*its_session_info(5.3.2.43)*/ = 2;
   /* SMSC_specific  */
-  static const uint16_t supported_locale		= 31;
-  static const uint16_t supported_codeset		= 2;
+  static const uint16_t supported_locale    = 31;
+  static const uint16_t supported_codeset   = 2;
   static const uint16_t imsi_address        = 31;
   static const uint16_t msc_address         = 31;
 }
@@ -170,10 +170,10 @@ namespace SmppOptionalFields{
   static const uint64_t itsReplyType       /*its_reply_type(5.3.2.42)*/ = BIT(42);
   static const uint64_t itsSessionInfo     /*its_session_info(5.3.2.43)*/ = BIT(43);
   /* SMSC_specific  */
-  static const uint16_t supported_locale		= BIT(44);
-  static const uint16_t supported_codeset		= BIT(45);
-  static const uint16_t imsi_address        = BIT(46);
-  static const uint16_t msc_address         = BIT(47);
+  static const uint64_t supported_locale    = BIT(44);
+  static const uint64_t supported_codeset   = BIT(45);
+  static const uint64_t imsi_address        = BIT(46);
+  static const uint64_t msc_address         = BIT(47);
 #undef BIT
 }
 
@@ -660,7 +660,7 @@ struct SmppOptional //: public MemoryManagerUnit
   _o_int_property__(uint8_t,itsReplyType)
   _o_intarr_property__(uint8_t,itsSessionInfo,2)
   _o_int_property__(uint8_t,ussdServiceOp)
-  _o_int_property__(bool,alertOnMessageDelivery) 
+  _o_int_property__(bool,alertOnMessageDelivery)
 
   /* SMSC_specific  */
 
@@ -731,10 +731,10 @@ struct SmppOptional //: public MemoryManagerUnit
 
   /* SMSC_specific  */
 
-	  _o_cstr_property__(supported_locale)
-	  _o_cstr_property__(imsi_address)
-	  _o_cstr_property__(msc_address)
-	  _o_int_property__(uint16_t,supported_codeset)
+    _o_cstr_property__(supported_locale)
+    _o_cstr_property__(imsi_address)
+    _o_cstr_property__(msc_address)
+    _o_int_property__(uint16_t,supported_codeset)
 
     --align;
     dump_text1("} //SmppOptional");
