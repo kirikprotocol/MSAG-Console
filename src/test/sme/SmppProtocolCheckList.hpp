@@ -255,20 +255,18 @@ void processDeliveryReceiptTc()
 		"ѕроверка правильности маршрута (определение sme по адресу отправител€ и адресу SC)");
 	__reg_tc__("processDeliverySm.deliveryReceipt.checkFields",
 		"ќбща€ проверка правильности полей");
-	__reg_tc__("processDeliverySm.deliveryReceipt.checkFieldsExt",
-		"ѕроверка правильности полей в с учетом запрошенных опций (none, final, failure) подтверждени€ и настроек профил€ на момент отправки оригинальной pdu");
-	__reg_tc__("processDeliverySm.deliveryReceipt.checkState",
-		"»нформации о статусе доставленной pdu €вл€етс€ корректной");
-	__reg_tc__("processDeliverySm.deliveryReceipt.checkErrorCode",
-		"»нформации о коде ошибке в случае недоставки pdu €вл€етс€ корректной");
-	__reg_tc__("processDeliverySm.deliveryReceipt.deliveryRescheduled",
-		"ѕодтверждение доставки доставл€етс€ сразу после окончани€ повторных доставок оригинального сообщени€");
+	__reg_tc__("processDeliverySm.deliveryReceipt.checkStatus",
+		"»нформации о статусе доставленной pdu (состо€ние, коде ошибки) €вл€етс€ корректной");
+	__reg_tc__("processDeliverySm.deliveryReceipt.checkText",
+		"“екст сообщени€ соответствует шаблону");
+	__reg_tc__("processDeliverySm.deliveryReceipt.multipleMessages",
+		"ƒлинный текст сообщени€ о доставки разбиваетс€ на несколько sms");
+	__reg_tc__("processDeliverySm.deliveryReceipt.recvTimeChecks",
+		"ѕодтверждени€ доставки доставл€ютс€ сразу после окончани€ повторных доставок оригинального сообщени€");
 	__reg_tc__("processDeliverySm.deliveryReceipt.failureDeliveryReceipt",
 		"ѕодтверждение доставки на ошибку не доставл€етс€ в случае успешной доставки оригинального сообщени€");
 	__reg_tc__("processDeliverySm.deliveryReceipt.expiredDeliveryReceipt",
 		"ѕодтверждение доставки на ошибку при истечении срока валидности доставл€етс€ в момент времени validity period");
-	__reg_tc__("processDeliverySm.deliveryReceipt.scheduleChecks",
-		" орректна€ работа механизма повторной доставки (правильное врем€, нет пропусков между повторными доставками, отсутствие дублей)");
 }
 
 void processSmeAckTc()
