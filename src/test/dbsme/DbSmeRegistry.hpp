@@ -66,6 +66,8 @@ public:
 
 	void putRecord(DbSmeTestRecord* rec);
 
+	void updateRecord(int newId, DbSmeTestRecord* rec);
+
 	DbSmeTestRecord* getRecord(int id);
 
 	DbSmeTestRecordIterator* getRecords() const;

@@ -14,12 +14,21 @@ DbSmeRegistry::~DbSmeRegistry()
 
 void DbSmeRegistry::putRecord(DbSmeTestRecord* rec)
 {
-	__require__(rec);
+	__require__(rec && rec->checkId());
 	RecordMap::iterator it = recordMap.find(rec->getId());
 	__require__(it == recordMap.end());
 	recordMap[rec->getId()] = rec;
 }
 	
+void DbSmeRegistry::updateRecord(int newId, DbSmeTestRecord* rec)
+{
+	__require__(rec && rec->checkId());
+	int res = recordMap.erase(rec->getId());
+	__require__(res);
+	rec->setId(newId);
+	recordMap[rec->getId()] = rec;
+}
+
 DbSmeTestRecord* DbSmeRegistry::getRecord(int id)
 {
 	RecordMap::iterator it = recordMap.find(id);
@@ -66,6 +75,7 @@ void DbSmeRegistry::clear()
 		__require__(it->second);
 		delete it->second;
 	}
+	recordMap.clear();
 }
 
 }
