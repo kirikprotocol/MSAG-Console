@@ -4,14 +4,16 @@ import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.daemon.Daemon;
-import ru.sibinco.lib.backend.daemon.ServiceInfo;
+import ru.sibinco.lib.backend.service.ServiceInfo;
 import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.lib.backend.util.conpool.NSConnectionPool;
+import ru.sibinco.lib.backend.service.ServiceInfo;
 import ru.sibinco.smppgw.backend.resources.ResourceManager;
 import ru.sibinco.smppgw.backend.routing.BillingManager;
 import ru.sibinco.smppgw.backend.routing.GwRoutingManager;
 import ru.sibinco.smppgw.backend.sme.*;
 import ru.sibinco.smppgw.backend.users.UserManager;
+import ru.sibinco.smppgw.backend.protocol.journal.Journal;
 import ru.sibinco.smppgw.perfmon.PerfServer;
 import ru.sibinco.tomcat_auth.XmlAuthenticator;
 
@@ -46,6 +48,8 @@ public class SmppGWAppContext
   private final Statuses statuses;
   private final DataSource connectionPool;
   private final BillingManager billingManager;
+  private Journal journal = new Journal();
+   private Smppgw smppgw = null;
 
   private SmppGWAppContext(final String config_filename) throws Throwable, ParserConfigurationException, SAXException, Config.WrongParamTypeException,
                                                                 Config.ParamNotFoundException, SibincoException
@@ -61,10 +65,11 @@ public class SmppGWAppContext
       gwSmeManager = new GwSmeManager(config.getString("sme_file"), gwConfig, providerManager);
       gwSmeManager.init();
       smscsManager = new SmscsManager(gwConfig);
+      resourceManager = new ResourceManager(new File(config.getString("gw_config_folder")));
+     // smppgw = new Smppgw(config.getString("gw daemon.host"), (int)config.getInt("gw daemon.port"), config.getString("gw_config_folder"), this);
       billingManager = new BillingManager(new File(config.getString("gw_config_folder"), "billing-rules.xml"));
       gwRoutingManager = new GwRoutingManager(new File(config.getString("gw_config_folder")), gwSmeManager, providerManager, billingManager);
       gwRoutingManager.init();
-      resourceManager = new ResourceManager(new File(config.getString("gw_config_folder")));
       gwDaemon = new Daemon(config.getString("gw daemon.host"), (int) config.getInt("gw daemon.port"), gwSmeManager, config.getString("gw daemon.folder"));
       final ServiceInfo gwServiceInfo = (ServiceInfo) gwDaemon.getServices().get(config.getString("gw name"));
       gateway = new Gateway(gwServiceInfo, (int) gwConfig.getInt("admin.port"));
@@ -96,9 +101,14 @@ public class SmppGWAppContext
   public static synchronized SmppGWAppContext getInstance(final String config_filename) throws Throwable, IOException, ParserConfigurationException,
                                                                                                Config.ParamNotFoundException, SAXException, SibincoException
   {
-    return null != instance
-           ? instance
-           : (instance = new SmppGWAppContext(config_filename));
+
+    if (null != instance) {
+      return instance;
+    }
+    else {
+      instance = new SmppGWAppContext(config_filename);
+      return instance ;
+    }
   }
 
   public Config getConfig()
@@ -164,5 +174,15 @@ public class SmppGWAppContext
   public DataSource getDataSource()
   {
     return connectionPool;
+  }
+
+  public Journal getJournal()
+  {
+    return journal;
+  }
+
+  public Smppgw getSmppgw()
+  {
+    return smppgw;
   }
 }

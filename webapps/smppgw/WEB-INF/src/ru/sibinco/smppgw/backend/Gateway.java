@@ -1,9 +1,10 @@
 package ru.sibinco.smppgw.backend;
 
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.lib.backend.daemon.ServiceInfo;
+import ru.sibinco.lib.backend.service.ServiceInfo;
 import ru.sibinco.lib.backend.protocol.Proxy;
 import ru.sibinco.lib.backend.protocol.Response;
+import ru.sibinco.lib.backend.service.ServiceInfo;
 import ru.sibinco.smppgw.backend.protocol.commands.*;
 import ru.sibinco.smppgw.backend.sme.GwSme;
 

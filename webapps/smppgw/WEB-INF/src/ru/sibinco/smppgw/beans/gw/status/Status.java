@@ -2,7 +2,8 @@ package ru.sibinco.smppgw.beans.gw.status;
 
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.daemon.Daemon;
-import ru.sibinco.lib.backend.daemon.ServiceInfo;
+import ru.sibinco.lib.backend.service.ServiceInfo;
+import ru.sibinco.lib.backend.service.ServiceInfo;
 import ru.sibinco.smppgw.beans.SmppgwBean;
 import ru.sibinco.smppgw.beans.SmppgwJspException;
 
