@@ -24,6 +24,8 @@
 #include <admin/service/ServiceSocketListener.h>
 #include <system/status.h>
 
+#include <util/timeslotcounter.hpp>
+
 #include "TaskProcessor.h"
 #include "InfoSmeComponent.h"
 
@@ -39,15 +41,17 @@ using namespace smsc::admin;
 using namespace smsc::admin::service;
 
 using namespace smsc::infosme;
+using smsc::util::TimeSlotCounter;
 
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
 const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
 
 static int   unrespondedMessagesSleep = 1000;
-static int   unrespondedMessagesCount = 0;
 static int   unrespondedMessagesMax   = 100;
-static Event unrespondedMessagesEvent;
-static Mutex unrespondedMessagesLock;
+static TimeSlotCounter<int> outgoingTraffic(1, 10);
+static TimeSlotCounter<int> incomingTraffic(1, 10);
+static Event trafficControlEvent; 
+static Mutex trafficControlLock;
 
 static smsc::logger::Logger *logger = 0;
 
@@ -167,16 +171,17 @@ private:
 
     void waitUnrespondedMessages()
     {
-        int count = 0;
+        int difference = 0;
         {
-            MutexGuard guard(unrespondedMessagesLock);
-            count = ++unrespondedMessagesCount;
+            MutexGuard guard(trafficControlLock);
+            outgoingTraffic.Inc();
+            difference = outgoingTraffic.Get() - incomingTraffic.Get();
         }
-        while (count >= unrespondedMessagesMax && !isNeedStop() && !isNeedReconnect())
+        while (difference >= unrespondedMessagesMax && !isNeedStop() && !isNeedReconnect())
         {
-            unrespondedMessagesEvent.Wait(unrespondedMessagesSleep);
-            MutexGuard guard(unrespondedMessagesLock);
-            count = unrespondedMessagesCount;
+            trafficControlEvent.Wait(unrespondedMessagesSleep);
+            MutexGuard guard(trafficControlLock);
+            difference = outgoingTraffic.Get() - incomingTraffic.Get();
         }
     }
 
@@ -292,9 +297,10 @@ protected:
 
     void respondMessage()
     {
-        MutexGuard guard(unrespondedMessagesLock);
-        if (unrespondedMessagesCount-- >= unrespondedMessagesMax) {
-            unrespondedMessagesEvent.Signal();
+        MutexGuard guard(trafficControlLock);
+        outgoingTraffic.Inc();
+        if ((outgoingTraffic.Get()-incomingTraffic.Get()) < unrespondedMessagesMax) {
+            trafficControlEvent.Signal();
         }
     }
 
@@ -560,7 +566,7 @@ int main(void)
                 }*/
             }
             smsc_log_info(logger, "Disconnecting from SMSC ...");
-            unrespondedMessagesEvent.Signal();
+            trafficControlEvent.Signal();
             processor.Stop();
             processor.assignMessageSender(0);
             session.close();
