@@ -214,7 +214,7 @@ struct MapDialog{
 //      require(dialogid_map < MAX_DIALOGID_POOLED); 
     if ( dialogid_map < MAX_DIALOGID_POOLED )
       freeDialogueId(dialogid_map);
-    }
+    //}
     if ( associate ) associate->Release();
     associate = 0;
     MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG);
