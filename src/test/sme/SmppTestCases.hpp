@@ -76,7 +76,7 @@ protected:
 
 private:
 	const SmeSystemId systemId;
-	const Address& smeAddr;
+	const Address smeAddr;
 	//external
 	const SmeRegistry* smeReg;
 	PduRegistry* pduReg;
