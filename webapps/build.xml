@@ -5,34 +5,29 @@
     <ant dir="tomcat_auth" target="compile"/>
     <ant dir="smsc_lib" target="compile"/>
     <ant dir="smppgw" target="compile"/>
-    <ant dir="smsc" target="compile"/>
   </target>
 
   <target name="build" depends="" description="generate the distribution">
     <ant dir="tomcat_auth" target="build"/>
     <ant dir="smsc_lib" target="build"/>
     <ant dir="smppgw" target="build"/>
-    <ant dir="smsc" target="build"/>
   </target>
   
   <target name="install" depends="" description="makes install">
     <ant dir="tomcat_auth" target="install"/>
     <ant dir="smsc_lib" target="build"/>
     <ant dir="smppgw" target="install"/>
-    <ant dir="smsc" target="install"/>
   </target>
 
   <target name="update" description="updates current installations">
     <ant dir="tomcat_auth" target="update"/>
     <ant dir="smsc_lib" target="update"/>
     <ant dir="smppgw" target="update"/>
-    <ant dir="smsc" target="install"/>
   </target>
 
   <target name="clean" description="clean up" >
     <ant dir="tomcat_auth" target="clean"/>
     <ant dir="smsc_lib" target="clean"/>
     <ant dir="smppgw" target="clean"/>
-    <ant dir="smsc" target="clean"/>
   </target>
 </project>

@@ -35,6 +35,10 @@ Targets:
     </echo>
   </target>
 
+  <target name="makedeps">
+    <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="deps"/>
+  </target>
+
   <target name="makegw">
     <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="smppgw"/>
     <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="admin"/>
