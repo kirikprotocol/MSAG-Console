@@ -52,9 +52,12 @@ public:
 	__field__(10, string, FromAddr)
 	DbSmeTestRecord* getDefInput() const { return defInput; }
 	void setDefInput(DbSmeTestRecord* defInput);
+	bool checkDefInput() const { return defInput; }
 
 	DbSmeTestRecord() : mask(11, false), defInput(NULL) {}
 	virtual ~DbSmeTestRecord();
+	//Обновляет все поля, кроме Job, Id и DateType
+	void update(const DbSmeTestRecord& rec);
 };
 
 class DbSmeRegistry
