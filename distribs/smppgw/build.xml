@@ -216,17 +216,17 @@ Targets:
       <exclude name="common/lib/sibinco_tomcat_auth_common.jar"/>
     </delete>
   </target>
-  
+
   <target name="tar" description="tar distr directory">
     <tar destfile="${DISTR_DIR}/smppgw_update.tar.gz" compression="gzip">
       <tarfileset dir="${DISTR_DIR}" mode="775">
         <include name="daemon/bin/smsc_ssdaemon"/>
-        <include name="/services/smppgw/bin/smppgw"/>
+        <include name="services/smppgw/bin/smppgw"/>
         <include name="tomcat/bin/*.sh"/>
       </tarfileset>
       <tarfileset dir="${DISTR_DIR}" mode="664">
         <exclude name="daemon/bin/smsc_ssdaemon"/>
-        <exclude name="/services/smppgw/bin/smppgw"/>
+        <exclude name="services/smppgw/bin/smppgw"/>
         <exclude name="tomcat/bin/*.sh"/>
         <include name="**/*"/>
       </tarfileset>
