@@ -168,6 +168,16 @@ namespace smsc { namespace infosme
         };
     };
     
+    struct MessageSender
+    {
+        virtual bool sendMessage(std::string abonent, std::string message, std::string& msgid) = 0;
+        virtual ~MessageSender() {};
+
+    protected:
+        
+        MessageSender() {};
+    };
+
     class TaskProcessor : public TaskProcessorAdapter, public Thread
     {
     private:
@@ -187,6 +197,9 @@ namespace smsc { namespace infosme
         const char* taskTablesPrefix;
         const char* dsInternalName;
         DataSource* dsInternal;
+
+        MessageSender*  messageSender;
+        Mutex           messageSenderLock;       
         
         void MainLoop(Connection* connection);
 
@@ -216,6 +229,12 @@ namespace smsc { namespace infosme
         virtual TaskContainerAdapter& getTaskContainerAdapter() {
             return container;
         }
+
+        void assignMessageSender(MessageSender* sender) {
+            MutexGuard guard(messageSenderLock);
+            messageSender = sender;
+        }
+
     };
 
 }}

@@ -81,7 +81,8 @@ TaskGuard TaskContainer::getNextTask()
 TaskProcessor::TaskProcessor(ConfigView* config)
     : TaskProcessorAdapter(), Thread(),
         logger(Logger::getCategory("smsc.infosme.TaskProcessor")), 
-            bStarted(false), bNeedExit(false), taskTablesPrefix(0), dsInternalName(0), dsInternal(0)
+            bStarted(false), bNeedExit(false), taskTablesPrefix(0), 
+                dsInternalName(0), dsInternal(0), messageSender(0)
 {
     logger.info("Loading ...");
 
@@ -150,9 +151,12 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     logger.info("Task schedules loaded.");
 
     logger.info("Load success.");
+    
+    scheduler.Start();
 }
 TaskProcessor::~TaskProcessor()
 {
+    scheduler.Stop();
     this->Stop();
 
     if (dsInternalName) delete dsInternalName;
@@ -169,7 +173,6 @@ void TaskProcessor::Start()
         awake.Wait(0);
         Thread::Start();
         bStarted = true;
-        scheduler.Start();
         logger.info("Started.");
     }
 }
@@ -182,7 +185,6 @@ void TaskProcessor::Stop()
         logger.info("Stopping ...");
         bNeedExit = true;
         awake.Signal();
-        scheduler.Stop();
         exited.Wait();
         bStarted = false;
         logger.info("Stoped.");
@@ -219,11 +221,32 @@ void TaskProcessor::MainLoop(Connection* connection)
 
     TaskGuard taskGuard = container.getNextTask(); 
     Task* task = taskGuard.get();
-    if (!task) return;
+    if (!task || !task->isEnabled()) return;
     
     TaskInfo info = task->getInfo();
-    logger.info("Executing task '%s'\t priority=%d", 
-                info.id.c_str(), info.priority);
+    time_t ct = time(NULL);
+    if (ct >=  info.endDate) return;
+
+    if (info.activePeriodStart > 0 && info.activePeriodEnd > 0)
+    {
+        if (info.activePeriodStart < info.activePeriodEnd) return;
+
+        tm dt; localtime_r(&ct, &dt);
+        
+        dt.tm_isdst = -1;
+        dt.tm_hour = info.activePeriodStart/3600;
+        dt.tm_min  = (info.activePeriodStart%3600)/60;
+        dt.tm_sec  = (info.activePeriodStart%3600)%60;
+        time_t apst = mktime(&dt);
+
+        dt.tm_isdst = -1;
+        dt.tm_hour = info.activePeriodEnd/3600;
+        dt.tm_min  = (info.activePeriodEnd%3600)/60;
+        dt.tm_sec  = (info.activePeriodEnd%3600)%60;
+        time_t apet = mktime(&dt);
+
+        if (ct < apst || ct > apet) return;
+    }
     
     Message message;
     if (task->getNextMessage(connection, message))
@@ -231,8 +254,14 @@ void TaskProcessor::MainLoop(Connection* connection)
         logger.info("Message #%lld for '%s': %s", 
                     message.id, message.abonent.c_str(), message.message.c_str());
         
-        // TODO: send sms here !!!
-        task->doRespondMessage(connection, message.id, false);
+        std::string smscId = "";
+        bool sent = false;
+        {
+            MutexGuard guard(messageSenderLock);
+            if (messageSender)
+                sent = messageSender->sendMessage(message.abonent, message.message, smscId);
+        }
+        task->doRespondMessage(connection, message.id, sent, smscId);
     }
 }
 

@@ -19,14 +19,22 @@
 #include <sms/sms.h>
 #include <util/xml/init.h>
 
+#include <admin/service/Component.h>
+#include <admin/service/ComponentManager.h>
+#include <admin/service/ServiceSocketListener.h>
+
 #include "TaskProcessor.h"
 
 using namespace smsc::sme;
 using namespace smsc::smpp;
 using namespace smsc::util;
+using namespace smsc::util::config;
 using namespace smsc::core::threads;
 using namespace smsc::core::buffers;
 using namespace smsc::system;
+
+using namespace smsc::admin;
+using namespace smsc::admin::service;
 
 using namespace smsc::infosme;
 
@@ -35,16 +43,94 @@ static bool bInfoIsConnected  = false;
 
 static log4cpp::Category& logger = Logger::getCategory("smsc.infosme.InfoSme");
 
-int main(void/*int argc, char* argv[]*/)
+static smsc::admin::service::ServiceSocketListener adminListener; 
+static bool bAdminListenerInited = false;
+
+class InfoSmeConfig : public SmeConfig
 {
-    using smsc::db::DataSourceLoader;
-    using smsc::util::config::Manager;
-    using smsc::util::config::ConfigException;
+private:
+    
+    char *strHost, *strSid, *strPassword, *strSysType, *strOrigAddr;
+
+public:
+    
+    InfoSmeConfig(ConfigView* config)
+        throw(ConfigException)
+            : SmeConfig(), strHost(0), strSid(0), strPassword(0), 
+                strSysType(0), strOrigAddr(0)
+    {
+        // Mandatory fields
+        strHost = config->getString("host", "SMSC host wasn't defined !");
+        host = strHost;
+        strSid = config->getString("sid", "WSme id wasn't defined !");
+        sid = strSid;
+        
+        port = config->getInt("port", "SMSC port wasn't defined !");
+        timeOut = config->getInt("timeout", "Connect timeout wasn't defined !");
+        
+        // Optional fields
+        try
+        {
+            strPassword = config->getString("password",
+                                            "WSme password wasn't defined !");
+            password = strPassword;
+        }
+        catch (ConfigException& exc) { password = ""; strPassword = 0; }
+        try
+        {
+            strSysType = config->getString("systemType", 
+                                           "WSme system type wasn't defined !");
+            systemType = strSysType;
+        }
+        catch (ConfigException& exc) { systemType = ""; strSysType = 0; }
+        try
+        {
+            strOrigAddr = config->getString("origAddress", 
+                                            "WSme originating address wasn't defined !");
+            origAddr = strOrigAddr;
+        }
+        catch (ConfigException& exc) { origAddr = ""; strOrigAddr = 0; }
+    };
+
+    virtual ~InfoSmeConfig()
+    {
+        if (strHost) delete strHost;
+        if (strSid) delete strSid;
+        if (strPassword) delete strPassword;
+        if (strSysType) delete strSysType;
+        if (strOrigAddr) delete strOrigAddr;
+    };
+};
+
+static void appSignalHandler(int sig)
+{
+    __trace2__("Signal %d handled !", sig);
+    if (sig==SIGTERM || sig==SIGINT)
+    {
+        __trace__("Stopping ...");
+        if (bAdminListenerInited) adminListener.shutdown();
+        bInfoSmeIsStopped = true;
+    }
+}
+void atExitHandler(void)
+{
+    smsc::util::xml::TerminateXerces();
+}
+
+int main(void)
+{
+    int resultCode = 0;
 
     Logger::Init("log4cpp.infosme");
+    atexit(atExitHandler);
 
     try 
     {
+        sigset_t set;
+        sigemptyset(&set);
+        sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
+        sigset(smsc::system::SHUTDOWN_SIGNAL, appSignalHandler);
+        
         Manager::init("config.xml");
         Manager& manager = Manager::getInstance();
 
@@ -53,6 +139,10 @@ int main(void/*int argc, char* argv[]*/)
         
         ConfigView tpConfig(manager, "InfoSme");
         TaskProcessor processor(&tpConfig);
+        
+        ConfigView smscConfig(manager, "WSme.SMSC");
+        InfoSmeConfig cfg(&smscConfig);
+        
         processor.Start();
         Event aaa;
         aaa.Wait(100000);
@@ -61,28 +151,33 @@ int main(void/*int argc, char* argv[]*/)
     {
         if (exc.getReason() == SmppConnectException::Reason::bindFailed)
             logger.error("Failed to bind InfoSme. Exiting.\n");
-        return -1;
+        resultCode = -1;
     }
     catch (ConfigException& exc) 
     {
         logger.error("Configuration invalid. Details: %s Exiting.\n", exc.what());
-        return -2;
+        resultCode = -2;
     }
     catch (Exception& exc) 
     {
         logger.error("Top level Exception: %s Exiting.\n", exc.what());
-        return -3;
+        resultCode = -3;
     }
     catch (exception& exc) 
     {
         logger.error("Top level exception: %s Exiting.\n", exc.what());
-        return -4;
+        resultCode = -4;
     }
     catch (...) 
     {
         logger.error("Unknown exception: '...' caught. Exiting.\n");
-        return -5;
+        resultCode = -5;
     }
     
-    return 0;
+    if (bAdminListenerInited)
+    {
+        adminListener.shutdown();
+        adminListener.WaitFor();
+    }
+    return resultCode;
 }
