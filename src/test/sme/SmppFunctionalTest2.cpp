@@ -188,7 +188,7 @@ void TestSme::executeCycle()
 			{
 				case 1: //правильный bind
 					evt.Wait(2000);
-					boundOk = baseTc.bindCorrectSme(RAND_TC);
+					boundOk = baseTc.bindCorrectSme();
 					if (!boundOk)
 					{
 						cout << "Bound failed" << endl;
@@ -375,10 +375,11 @@ void SmppFunctionalTest::printStat()
 	}
 }
 
-vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
-	const string& smscHost, int smscPort)
+vector<TestSme*> genConfig(int transceivers, int transmitters,
+	int receivers, int notConnected, const string& smscHost, int smscPort)
 {
-	__require__(numSme <= numAddr);
+	__require__(transceivers > 0 && transmitters > 0 &&
+		receivers > 0 && notConnected > 0);
 	__cfg_addr__(smscAddr);
 	__cfg_addr__(smscAlias);
 	__cfg_str__(smscSystemId);
@@ -399,11 +400,13 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	ConfigUtil cfgUtil(smeReg, aliasReg, routeReg);
 	cfgUtil.setupSystemSme();
 
+	int numSme = transceivers + transmitters + receivers;
+	int numAddr = numSme + notConnected;
 	vector<Address*> addr;
 	vector<Address*> alias;
 	vector<SmeInfo*> smeInfo;
 	addr.reserve(numAddr);
-	alias.reserve(numAlias);
+	alias.reserve(numAddr);
 	smeInfo.reserve(numAddr);
 	//регистрация sme
 	for (int i = 0; i < numAddr; i++)
@@ -416,7 +419,7 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 			str(*addr.back()).c_str(), smeInfo.back()->systemId.c_str());
 	}
 	//регистрация алиасов
-	for (int i = 0; i < numAlias; i++)
+	for (int i = 0; i < numAddr; i++)
 	{
 		alias.push_back(new Address());
 		SmsUtil::setupRandomCorrectAddress(alias.back(),
@@ -426,9 +429,9 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	}
 	for (int i = 0; i < numAddr; i++)
 	{
-		for (int j = 0; j < numAlias; j++)
+		for (int j = 0; j < numAddr; j++)
 		{
-			for (TCSelector s(RAND_SET_TC, 5); s.check(); s++)
+			for (TCSelector s(RAND_SET_TC, 3); s.check(); s++)
 			{
 				AliasInfo aliasInfo;
 				aliasInfo.addr = *addr[i];
@@ -436,14 +439,12 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 				switch (s.value())
 				{
 					case 1:
-					case 2:
-					case 3:
 						tcAlias.addCorrectAliasMatch(&aliasInfo, RAND_TC);
 						break;
-					case 4:
+					case 2:
 						tcAlias.addCorrectAliasNotMatchAddress(&aliasInfo, RAND_TC);
 						break;
-					case 5:
+					case 3:
 						tcAlias.addCorrectAliasNotMatchAlias(&aliasInfo, RAND_TC);
 						break;
 					default:
@@ -458,8 +459,7 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	{
 		if (!cfgUtil.checkAlias(*addr[i]))
 		{
-			cout << "Alias constraint d(a(A)) = A violated" << endl;
-			break;
+			__unreachable__("Alias constraint d(a(A)) = A violated");
 		}
 	}
 	//tcAlias->commit();
@@ -468,7 +468,7 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	{
 		for (int j = 0; j < numAddr; j++)
 		{
-			for (TCSelector s(RAND_SET_TC, 5); s.check(); s++)
+			for (TCSelector s(RAND_SET_TC, 3); s.check(); s++)
 			{
 				RouteInfo route;
 				route.source = *addr[i];
@@ -478,14 +478,12 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 				switch (s.value())
 				{
 					case 1:
-					case 2:
-					case 3:
 						tcRoute.addCorrectRouteMatch(&route, NULL, RAND_TC);
 						break;
-					case 4:
+					case 2:
 						tcRoute.addCorrectRouteNotMatch(&route, NULL, RAND_TC);
 						break;
-					case 5:
+					case 3:
 						tcRoute.addCorrectRouteNotMatch2(&route, NULL, RAND_TC);
 						break;
 					default:
@@ -517,13 +515,14 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 		SmeConfig config;
 		config.host = smscHost;
 		config.port = smscPort;
-		//config.sid = tmp.get();
 		config.sid = smeInfo[i]->systemId;
 		config.timeOut = 10;
 		config.password = smeInfo[i]->password;
 		//config.systemType;
 		//config.origAddr;
-		SmppFixture* fixture = new SmppFixture(*smeInfo[i], *addr[i],
+		SmeType smeType = i < transceivers ? SME_TRANSCEIVER :
+			(i < transceivers + transmitters ? SME_TRANSMITTER : SME_RECEIVER);
+		SmppFixture* fixture = new SmppFixture(smeType, *smeInfo[i], *addr[i],
 			NULL, smeReg, aliasReg, routeReg, profileReg, smppChkList);
 		sme.push_back(new TestSme(i, config, fixture)); //throws Exception
 		fixture->pduHandler[smscAddr] = sme.back()->getDeliveryReceiptHandler();
@@ -533,7 +532,7 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 		fixture->pduHandler[abonentInfoAddr] = sme.back()->getAbonentInfoAckHandler();
 		fixture->pduHandler[abonentInfoAlias] = sme.back()->getAbonentInfoAckHandler();
 		fixture->pduSender = pduSender;
-		smeReg->bindSme(smeInfo[i]->systemId);
+		smeReg->bindSme(smeInfo[i]->systemId, smeType);
 	}
 	__trace__("*** Route table ***");
 	//печать таблицы маршрутов sme->sme
@@ -588,9 +587,6 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	{
 		delete addr[i];
 		delete smeInfo[i];
-	}
-	for (int i = 0; i < numAlias; i++)
-	{
 		delete alias[i];
 	}
 	return sme;
@@ -662,7 +658,7 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 		if (help)
 		{
 			help = false;
-			cout << "conf <numAddr> <numAlias> <numSme> - generate config files" << endl;
+			cout << "conf <transceivers> [transmitters = 1] [receivers = 1] [notConnected = 1] - generate config files" << endl;
 			cout << "test <start|pause|resume> - pause/resume test execution" << endl;
 			cout << "stat - print statistics" << endl;
 			cout << "chklist - save checklist" << endl;
@@ -678,26 +674,28 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 		is >> cmd;
 		if (cmd == "conf")
 		{
-			int numAddr = -1, numAlias = -1, numSme = -1;
-			is >> numAddr;
-			is >> numAlias;
-			is >> numSme;
-			if (numAddr < 0 || numAlias < 0 || numSme < 0)
+			int transceivers = -1; //required
+			int transmitters = 1, receivers = 1, notConnected = 1; //optional
+			is >> transceivers;
+			is >> transmitters;
+			is >> receivers;
+			is >> notConnected;
+			if (transceivers < 0)
 			{
-				cout << "Required parameters missing" << endl;
+				cout << "Required param <transceivers> is missing" << endl;
 			}
-			else if (numAddr < numSme)
+			else if (transceivers > 0 && transmitters > 0 && receivers > 0 && notConnected > 0)
 			{
-				cout << "Must be: numAddr >= numSme" << endl;
-			}
-			else if (numAddr < numAlias)
-			{
-				cout << "Must be: numAddr >= numAlias" << endl;
+				sme = genConfig(transceivers, transmitters,
+					receivers, notConnected, smscHost, smscPort);
+				cout << "Config generated: transceivers = " << transceivers <<
+					", transmitters = " << transmitters <<
+					", receivers = " << receivers <<
+					", notConnected = " << notConnected << endl;
 			}
 			else
 			{
-				sme = genConfig(numAddr, numAlias, numSme, smscHost, smscPort);
-				cout << "Config generated" << endl;
+				cout << "All params must be greater than 0" << endl;
 			}
 		}
 		else if (cmd == "test")
