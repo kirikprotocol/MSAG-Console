@@ -183,21 +183,31 @@ if (request.getMethod().equals("POST")) {
 %>
 
 <hr size=0 align=center width="95%">
-<b>Total sms found </b><%= formBean.getRowsCount()%>
-<% if (formBean.getRowsCount()>0) { %>
-  <b>, displayed </b><%= firstIndex%>
-<% if (firstIndex != lastIndex) {%>... <%= lastIndex%> <%};%>
-<% } else { %>
-  <b>. Try to process another query. </b>
-<% } %>
-<hr size=0 align=center width="95%">
-
-<% if (formBean.getRowsCount()>0) { %>
-   <input type="submit" name="prev" value="<< Prev"
-     <%= formBean.isPrevEnabled() ? "":"disabled"%>>
-   <input type="submit" name="next" value="Next >>"
-     <%= formBean.isNextEnabled() ? "":"disabled"%>>
-<% } %>
+<table width="95%" cellpadding=4 cellspacing=2 border=0>
+<tr>
+  <% if (formBean.getRowsCount()>0) { %>
+  <td colspan=1 align=left>
+    <input type="submit" name="prev" value="<< Prev"
+      <%= formBean.isPrevEnabled() ? "":"disabled"%>>
+  </td>
+  <% } %>
+  <td colspan=1 align=center>
+    <b>Total sms found </b><%= formBean.getRowsCount()%>
+    <% if (formBean.getRowsCount()>0) { %>
+      <b>, displayed </b><%= firstIndex%>
+    <% if (firstIndex != lastIndex) {%>... <%= lastIndex%> <%};%>
+    <% } else { %>
+      <b>. Try to process another query. </b>
+    <% } %>
+  </td>
+  <% if (formBean.getRowsCount()>0) { %>
+  <td colspan=1 align=right>
+    <input type="submit" name="next" value="Next >>"
+      <%= formBean.isNextEnabled() ? "":"disabled"%>>
+  </td>
+  <% } %>
+</tr>
+</table>
 <hr size=0 align=center width="95%">
 
 <table width="95%" cellpadding=4 cellspacing=2 border=1>
@@ -220,17 +230,28 @@ if (request.getMethod().equals("POST")) {
   </tr>
 <% } %>
 </table>
-
 <hr size=0 align=center width="95%">
+
 <% if (formBean.getRowsCount()>0) { %>
-  <input type="submit" name="prev" value="<< Prev"
-    <%= formBean.isPrevEnabled() ? "":"disabled"%>>
-  <input type="submit" name="next" value="Next >>"
-    <%= formBean.isNextEnabled() ? "":"disabled"%>>
+<table width="95%" cellpadding=4 cellspacing=2 border=0>
+<tr>
+  <td colspan=1 align=left>
+    <input type="submit" name="prev" value="<< Prev"
+      <%= formBean.isPrevEnabled() ? "":"disabled"%>>
+  </td>
+  <td colspan=1 align=right>
+    <input type="submit" name="next" value="Next >>"
+      <%= formBean.isNextEnabled() ? "":"disabled"%>>
+  </td>
+</tr>
+</table>
+<hr size=0 align=center width="95%">
 <% } %>
+
 <% } %>
 
 </center>
 </form>
 </body>
+
 <%@include file="/common/footer.jsp"%>
