@@ -5,6 +5,7 @@
 
 #include "core/buffers/Hash.hpp"
 #include "util/Exception.hpp"
+#include <memory>
 
 
 namespace smsc {
