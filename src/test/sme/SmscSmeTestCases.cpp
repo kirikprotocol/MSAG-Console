@@ -31,9 +31,15 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 	__require__(monitor);
 	__require__(origPdu);
 	__cfg_int__(timeCheckAccuracy);
+	//профиль
+	Address srcAddr;
+	SmppUtil::convert(origPdu->get_message().get_source(), &srcAddr);
+	time_t t;
+	const Profile& profile = fixture->profileReg->getProfile(srcAddr, t);
+	bool valid = t + timeCheckAccuracy <= time(NULL);
+	//destAlias
 	Address destAlias;
 	SmppUtil::convert(origPdu->get_message().get_dest(), &destAlias);
-	string expected;
 	switch (monitor->deliveryFlag)
 	{
 		case PDU_RECEIVED_FLAG:
@@ -45,25 +51,27 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 				s << SmsUtil::configString(destAlias);
 				s << " was successfully delivered on ";
 				s << df.format(t);
-				expected = s.str();
-				if (expected == text)
+				const pair<string, uint8_t> p = convert(s.str(), profile.codepage);
+				if (p.first.find(text) != string::npos)
 				{
-					break;
+					return new AckText(p.first, p.second, valid);
 				}
 			}
 			break;
-		case PDU_NOT_EXPECTED_FLAG:
+		case PDU_ERROR_FLAG:
 		case PDU_EXPIRED_FLAG:
 			for (time_t t = monitor->pduData->submitTime;
 				  t <= monitor->pduData->submitTime + timeCheckAccuracy; t++)
 			{
-				static const DateFormatter df("dd-MMMM-yyyy hh:mm:ss t");
+				static const DateFormatter df1("HH:mm:ss");
+				static const DateFormatter df2("dd-MMMM-yyyy hh:mm:ss t");
 				ostringstream s;
+                s << "(" << df1.format(t) << ") ";
 				s << "Ваше сообщение отправленное по адресу ";
 				s << SmsUtil::configString(destAlias);
-				s << " sent at " << df.format(t);
-				s << " wasn't delivered, reason: ";
-				if (monitor->deliveryFlag == PDU_NOT_EXPECTED_FLAG)
+				s << " " << df2.format(t);
+				s << " не было доставлено: ";
+				if (monitor->deliveryFlag == PDU_ERROR_FLAG)
 				{
 					s << "permanent error"; //захардкожено
 				}
@@ -72,20 +80,15 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 					s << "expired"; //захардкожено
 				}
 				//s << monitor->deliveryStatus;
-				expected = s.str();
+				const pair<string, uint8_t> p = convert(s.str(), profile.codepage);
+				if (p.first.find(text) != string::npos)
+				{
+					return new AckText(p.first, p.second, valid);
+				}
 			}
 			break;
-		default:
-			expected = "Unknown";
 	}
-	//профиль
-	Address srcAddr;
-	SmppUtil::convert(origPdu->get_message().get_source(), &srcAddr);
-	time_t t;
-	const Profile& profile = fixture->profileReg->getProfile(srcAddr, t);
-	bool valid = t + timeCheckAccuracy <= time(NULL);
-	const pair<string, uint8_t> p = convert(expected, profile.codepage);
-	return new AckText(p.first, p.second, valid);
+	return new AckText("Unknown", DATA_CODING_SMSC_DEFAULT, valid);
 }
 
 #define __compare__(errCode, field, value) \
@@ -212,9 +215,17 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 			__tc_fail__(4);
 			break;
 		case PDU_EXPIRED_FLAG:
-			opt.set_messageState(SMPP_EXPIRED_STATE);
 			{
-				opt.set_messageState(SMPP_REJECTED_STATE);
+				opt.set_messageState(SMPP_EXPIRED_STATE);
+				uint8_t errCode[3];
+				*errCode = 3; //GSM
+				*((uint16_t*) (errCode + 1)) = rand0(65535);
+				opt.set_networkErrorCode(errCode);
+			}
+			break;
+		case PDU_ERROR_FLAG:
+			{
+				opt.set_messageState(SMPP_UNDELIVERABLE_STATE);
 				uint8_t errCode[3];
 				*errCode = 3; //GSM
 				*((uint16_t*) (errCode + 1)) = rand0(65535);
@@ -229,7 +240,7 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 	__tc_ok_cond__;
 	__tc__("processDeliverySm.deliveryReceipt.checkText");
 	int pos = ack->text.find(text);
-	__trace2__("delivery receipt: pos = %d, received:\n%s\nexpected:\n%s\n",
+	__trace2__("delivery receipt: pos = %d, received:\n%s\nexpected:\n%s",
 		pos, text.c_str(), ack->text.c_str());
 	if (pos == string::npos)
 	{
