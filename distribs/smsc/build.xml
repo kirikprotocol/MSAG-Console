@@ -252,4 +252,12 @@ Targets:
   <target name="distr" depends="create_distr, extra_libs, installweb, configure">
   </target>
 
+  <!-- external sme -->
+  <target name="dbSme_update">
+    <ant dir="${SMSC_DIR}/ext_smes" target="dbSme_update"/>
+  </target>
+  <target name="dbSme_distr">
+    <ant dir="${SMSC_DIR}/ext_smes" target="dbSme_distr"/>
+  </target>
+
 </project>
