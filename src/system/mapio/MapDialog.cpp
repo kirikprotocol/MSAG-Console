@@ -1127,6 +1127,7 @@ void  MapDialog::Et96MapOpenConf (
         throw runtime_error("MAP::MapDialog::Et96MapOpenConf: Et96MapDelimiterReq error");
       }
       __trace2__("MAP::MapDialog::Et96MapOpenConf: Et96MapDelimiterReq OK");
+      state = MAPST_WAIT_RINFO;
     }else{
       __trace2__("incorrect state, must be MAPST_OPENCONF(%d) but %d",
                           MAPST_OPENCONF,state);
