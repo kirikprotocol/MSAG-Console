@@ -530,7 +530,7 @@ void Smsc::init(const SmscConfigs& cfg)
   tp.startTask(cancelAgent);
   log.info( "Cancel agent started" );
 
-  alertAgent=new AlertAgent(eventqueue,store);
+  alertAgent=new AlertAgent(this,store);
   tp.startTask(alertAgent);
   log.info( "Alert agent started" );
 
