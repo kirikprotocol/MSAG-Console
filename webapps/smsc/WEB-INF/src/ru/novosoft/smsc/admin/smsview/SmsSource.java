@@ -139,9 +139,9 @@ public abstract class SmsSource
     if( udh ) {
       int headerLen = ((int)text[start])&0xff;  // convert negative byte to int
       if( headerLen > len-1 ) {
-        sb.append(StringEncoderDecoder.encode("<< UDH len greater then message len "+headerLen+"/"+(len-1)+">>"));
+        sb.append("<< UDH len greater then message len "+headerLen+"/"+(len-1)+">>");
       } else {
-        sb.append( StringEncoderDecoder.encode("<< UDH "+headerLen+" bytes >> ") );
+        sb.append( "<< UDH "+headerLen+" bytes >> " );
         int textLen = len-headerLen-1;
         if( textLen > 0 ) {
           byte msgText[] = new byte[textLen];
