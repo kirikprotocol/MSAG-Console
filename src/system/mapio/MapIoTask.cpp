@@ -118,7 +118,7 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
       //mdci->invokeId = invokeId;
       mdci->Et96MapV2ForwardSmMOInd(
         SSN,dialogId,invokeId,dstAddr,srcAddr,ud);
-      SMSC_FORWARD_RESPONSE_T* p = new SMSC_FORWARD_RESPONSE_T();
+      //SMSC_FORWARD_RESPONSE_T* p = new SMSC_FORWARD_RESPONSE_T();
       /*p->dialogId = dialogId;
       MSG_T msg;
       msg.primitive = SMSC_FORWARD_RESPONSE;

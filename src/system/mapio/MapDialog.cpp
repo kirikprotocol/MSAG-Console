@@ -15,6 +15,7 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
     ET96MAP_SM_RP_UI_T* ud )
 {
   __trace2__("MAP::MapDialog::Et96MapV2ForwardSmMOInd");
+  setInvokeId(invokeId);
   SMS sms;
   MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
   SmscCommand cmd = SmscCommand::makeSumbmitSm(sms,((uint32_t)dialogId)&0xffff);
