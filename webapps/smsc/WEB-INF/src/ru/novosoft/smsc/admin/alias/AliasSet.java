@@ -11,8 +11,8 @@ import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
-import ru.novosoft.smsc.jsp.util.tables.impl.AliasDataSource;
-import ru.novosoft.smsc.jsp.util.tables.impl.AliasQuery;
+import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasDataSource;
+import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasQuery;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import java.io.PrintWriter;

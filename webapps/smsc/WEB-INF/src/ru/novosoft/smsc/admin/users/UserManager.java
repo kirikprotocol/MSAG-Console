@@ -11,7 +11,7 @@ import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.jsp.util.tables.*;
 import ru.novosoft.smsc.jsp.util.tables.impl.QueryResultSetImpl;
-import ru.novosoft.smsc.jsp.util.tables.impl.UserDataItem;
+import ru.novosoft.smsc.jsp.util.tables.impl.user.UserDataItem;
 import ru.novosoft.smsc.util.auth.XmlAuthenticator;
 import ru.novosoft.smsc.util.xml.Utils;
 import ru.novosoft.smsc.util.Functions;

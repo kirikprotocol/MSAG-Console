@@ -3,10 +3,10 @@
  * Date: Nov 29, 2002
  * Time: 7:02:44 PM
  */
-package ru.novosoft.smsc.jsp.util.tables.impl;
+package ru.novosoft.smsc.jsp.util.tables.impl.user;
 
-import ru.novosoft.smsc.jsp.util.tables.Filter;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
+import ru.novosoft.smsc.jsp.util.tables.Filter;
 
 public class UserFilter implements Filter
 {

@@ -1,28 +1,31 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.admin.dl.*,
+<%--@ page import="ru.novosoft.smsc.admin.dl.*,
                  ru.novosoft.smsc.jsp.smsview.SmsViewFormBean,
-                 ru.novosoft.smsc.jsp.smsc.IndexBean"%>
+                 ru.novosoft.smsc.jsp.smsc.IndexBean"--%>
 <%@ page import="ru.novosoft.smsc.jsp.dl.*"%>
-<jsp:useBean id="dlBean" scope="page" class="ru.novosoft.smsc.jsp.dl.DistributionListAdminFormBean" />
-<%
-    DistributionListAdminFormBean bean = dlBean;
-%>
-<jsp:setProperty name="dlBean" property="*"/>
+<jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.jsp.dl.DistributionListAdminFormBean" />
+<jsp:setProperty name="bean" property="*"/>
 <%
     TITLE="Distribution lists";
-    //MENU0_SELECTION = "MENU0_DLSET";
+    MENU0_SELECTION = "MENU0_DL";
 
-    int beanResult = IndexBean.RESULT_OK;
-    switch(beanResult = bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
+    int beanResult = bean.RESULT_OK;
+    switch(beanResult = bean.process(appContext, errorMessages))
     {
-        case IndexBean.RESULT_DONE:
+        case DistributionListAdminFormBean.RESULT_DONE:
             response.sendRedirect("index.jsp");
             return;
-        case IndexBean.RESULT_FILTER:
-        case IndexBean.RESULT_OK:
+		case DistributionListAdminFormBean.RESULT_EDIT:
+			response.sendRedirect("dlEdit.jsp?name=" + URLEncoder.encode(bean.getEditDl()));
+			return;
+		case DistributionListAdminFormBean.RESULT_ADD:
+			response.sendRedirect("dlAdd.jsp");
+			return;
+        case DistributionListAdminFormBean.RESULT_FILTER:
+        case DistributionListAdminFormBean.RESULT_OK:
             STATUS.append("Ok");
             break;
-        case IndexBean.RESULT_ERROR:
+        case DistributionListAdminFormBean.RESULT_ERROR:
             STATUS.append("<span class=CF00>Error</span>");
             break;
         default:
@@ -31,8 +34,57 @@
     }
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-    <h1>Not implemented yet.</h1>
+<input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
+<input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
+<input type=hidden name=sort>
+<input type=hidden name=editDl>
+<script>
+function setSort(sorting)
+{
+	if (sorting == "<%=bean.getSort()%>")
+		opForm.sort.value = "-<%=bean.getSort()%>";
+	else
+		opForm.sort.value = sorting;
+	opForm.submit();
+	return false;
+}
+function edit(dlName)
+{
+	document.all.jbutton.name = "mbEdit";
+	opForm.editDl.value = dlName;
+	opForm.submit();
+	return false;
+}
+</script>
+
+<table class=secRep cellspacing=1 width="100%">
+<col width="1%">
+<col width="99%" align=left>
+<thead>
+<tr>
+	<th>&nbsp;</th>
+	<th><a href="#" <%=bean.getSort().endsWith("name") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by name" onclick='return setSort("name")'>alias</a></th>
+</tr>
+</thead>
+<tbody><%
+int row = 0;
+for (Iterator i = bean.getDlNames().iterator(); i.hasNext(); )
+{
+	String name = (String) i.next();
+	String encName = StringEncoderDecoder.encode(name);
+	%>
+	<tr class=row<%=(row++)&1%>>
+		<td class=check><input class=check type=checkbox name=checkedDls value="<%=encName%>" <%=bean.isDlChecked(name) ? "checked" : ""%>></td>
+		<td class=name><a href="#" title="Edit distribution list" onClick='return edit("<%=encName%>")'><%=encName%></a></td>
+	</tr><%
+}
+%>
+</tbody>
+</table>
+<%@ include file="/WEB-INF/inc/navbar.jsp"%>
+<div class=secButtons>
+<input class=btn type=submit name=mbAdd value="Add distribution list" title="Create new distribution list">
+<input class=btn type=submit name=mbDelete value="Delete distribution list(s)" title="Delete selected distribution lists">
+</div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>
-
-

@@ -1,6 +1,6 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsc.aliases.AliasesFilter,
-                 ru.novosoft.smsc.jsp.util.tables.impl.AliasFilter"%>
+					  ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasFilter"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.aliases.AliasesFilter"/>
 <jsp:setProperty name="bean" property="*"/>
 <%

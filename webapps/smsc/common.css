@@ -410,7 +410,7 @@ div.p
 	background-repeat: no-repeat;
 	padding-left:20px;
 }
-.secRep thead th a.up {	background-image: url(img/ico16_up.gif); }
+.secRep thead th a.up   {	background-image: url(img/ico16_up.gif); }
 .secRep thead th a.down {	background-image: url(img/ico16_down.gif); }
 .secRep thead th.ico
 {

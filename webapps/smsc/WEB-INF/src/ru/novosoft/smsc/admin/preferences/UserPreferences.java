@@ -6,6 +6,11 @@
 package ru.novosoft.smsc.admin.preferences;
 
 import ru.novosoft.smsc.jsp.util.tables.impl.*;
+import ru.novosoft.smsc.jsp.util.tables.impl.user.UserFilter;
+import ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter;
+import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteFilter;
+import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileFilter;
+import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasFilter;
 
 import java.util.Vector;
 import java.util.Locale;
@@ -40,6 +45,9 @@ public class UserPreferences
 
 	private int localeResourcesPageSize = 20;
 	private String localeResourcesSortOrder = "locale";
+
+	private int dlPageSize = 20;
+	private String dlSortOrder = "address";
 
 	private Locale locale = new Locale("ru");
 
@@ -200,5 +208,25 @@ public class UserPreferences
 	public void setLocaleResourcesSortOrder(String localeResourcesSortOrder)
 	{
 		this.localeResourcesSortOrder = localeResourcesSortOrder;
+	}
+
+	public int getDlPageSize()
+	{
+		return dlPageSize;
+	}
+
+	public void setDlPageSize(int dlPageSize)
+	{
+		this.dlPageSize = dlPageSize;
+	}
+
+	public String getDlSortOrder()
+	{
+		return dlSortOrder;
+	}
+
+	public void setDlSortOrder(String dlSortOrder)
+	{
+		this.dlSortOrder = dlSortOrder;
 	}
 }

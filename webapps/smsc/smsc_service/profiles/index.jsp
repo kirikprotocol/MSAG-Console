@@ -1,8 +1,8 @@
 <%@ include file="/common/header.jsp"%>
 <%@ include file="/smsc_service/menu.jsp"%>
 <%@ include file="/common/tables.jsp"%>
-<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.ProfileQuery"%>
-<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.ProfileFilter"%>
+<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileQuery"%>
+<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileFilter"%>
 <h4>Profiles</h4>
 <%
   String sort = request.getParameter("sort");
@@ -23,7 +23,7 @@
 		startPosition = 0;
 
   showTable(out, smsc.queryProfiles(new ProfileQuery(pagesize, filter, sortOrder, startPosition)), true);
-  
+
   if (startPosition > 0)
   {%><a href="?sort=<%=sort%>&startPosition=<%=startPosition - pagesize%>">prev</a><%}
   else

@@ -9,8 +9,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
-import ru.novosoft.smsc.jsp.util.tables.impl.RouteDataSource;
-import ru.novosoft.smsc.jsp.util.tables.impl.RouteQuery;
+import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteDataSource;
+import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteQuery;
 
 import java.io.PrintWriter;
 import java.util.*;

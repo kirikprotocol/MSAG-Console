@@ -19,6 +19,7 @@ function openPerfMon()
 	%><a ID=MENU0_HOME             href="<%=CPATH%>">Home</a><%
 	%><a ID=MENU0_SMSC             href="<%=CPATH%>/smsc_service/index.jsp">SMSC</a><%
 	%><a ID=MENU0_LOCALE_RESOURCES href="<%=CPATH%>/locale_resources/index.jsp">Resources</a><%
+	%><a ID=MENU0_DL               href="<%=CPATH%>/dl/index.jsp">Distribution lists</a><%
 	%><a ID=MENU0_PERFMON          href="<%=CPATH%>/perfmon/index.jsp" target="SMSC Perfomance monitor" onclick="return openPerfMon();">Monitor</a><%
 	%><a ID=MENU0_SMSVIEW          href="<%=CPATH%>/smsview/index.jsp">SMS view</a><%
 	%><a ID=MENU0_SMSSTAT          href="<%=CPATH%>/smsstat/index.jsp">Statistics</a><%

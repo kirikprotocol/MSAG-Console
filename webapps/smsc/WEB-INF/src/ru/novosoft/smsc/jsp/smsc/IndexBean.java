@@ -21,10 +21,6 @@ public abstract class IndexBean extends SmscBean
 	protected String sort = null;
 
 	protected String mbFilter = null;
-	protected String mbFirst = null;
-	protected String mbPrev = null;
-	protected String mbNext = null;
-	protected String mbLast = null;
 
 	public int process(SMSCAppContext appContext, List errors)
 	{
@@ -34,14 +30,6 @@ public abstract class IndexBean extends SmscBean
 
 		if (mbFilter != null)
 			return RESULT_FILTER;
-		else if (mbFirst != null)
-			startPosition = 0;
-		else if (mbPrev != null)
-			startPosition = startPosition > pageSize ? startPosition - pageSize : 0;
-		else if (mbNext != null)
-			startPosition += pageSize;
-		else if (mbLast != null)
-			startPosition = (totalSize / pageSize + (totalSize % pageSize == 0 ? -1 : 0)) * pageSize;
 
 		return RESULT_OK;
 	}
@@ -94,48 +82,15 @@ public abstract class IndexBean extends SmscBean
 		this.mbFilter = mbFilter;
 	}
 
-	public String getMbFirst()
-	{
-		return mbFirst;
-	}
-
-	public void setMbFirst(String mbFirst)
-	{
-		this.mbFirst = mbFirst;
-	}
-
-	public String getMbPrev()
-	{
-		return mbPrev;
-	}
-
-	public void setMbPrev(String mbPrev)
-	{
-		this.mbPrev = mbPrev;
-	}
-
-	public String getMbNext()
-	{
-		return mbNext;
-	}
-
-	public void setMbNext(String mbNext)
-	{
-		this.mbNext = mbNext;
-	}
-
-	public String getMbLast()
-	{
-		return mbLast;
-	}
-
-	public void setMbLast(String mbLast)
-	{
-		this.mbLast = mbLast;
-	}
-
 	public int getPageSize()
 	{
 		return pageSize;
+	}
+
+	protected void clear()
+	{
+		startPosition = totalSize = pageSize = 0;
+		sort = null;
+		mbFilter = null;
 	}
 }

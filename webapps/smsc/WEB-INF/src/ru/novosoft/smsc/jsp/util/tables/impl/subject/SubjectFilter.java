@@ -3,10 +3,10 @@
  * Date: 13.06.2002
  * Time: 15:44:31
  */
-package ru.novosoft.smsc.jsp.util.tables.impl;
+package ru.novosoft.smsc.jsp.util.tables.impl.subject;
 
-import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
 

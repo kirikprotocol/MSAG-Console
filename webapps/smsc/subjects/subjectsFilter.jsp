@@ -1,6 +1,6 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsc.subjects.SubjectsFilter,
-                 ru.novosoft.smsc.jsp.util.tables.impl.SubjectFilter"%>
+					  ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.subjects.SubjectsFilter"/>
 <jsp:setProperty name="bean" property="*"/>
 <%

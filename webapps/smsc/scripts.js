@@ -114,6 +114,27 @@ function validateField_email(elem)
 		: true;
 }
 
+function validateField_positive(elem)
+{
+	var intValue = elem.value/1;
+	return isNaN(intValue) || intValue <= 0
+		? validationError(elem, "value must be an integer and positive")
+		: true;
+}
+
+function validateField_address(elem)
+{
+	if (elem.value == null || elem.value.length == 0)
+	{
+		return true;
+	}
+	var r = RegExp("^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?\\d{1,20}$");
+	return elem.value == null || elem.value.match(r) == null
+		? validationError(elem, "Invalid address")
+		: true;
+}
+
+
 
 function validateField(elem)
 {
@@ -127,6 +148,8 @@ function validateField(elem)
 		case "route_serviceId": return validateField_route_serviceId(elem);
 		case "nonEmpty": return validateField_nonEmpty(elem);
 		case "email": return validateField_email(elem);
+		case "positive": return validateField_positive(elem);
+		case "address": return validateField_address(elem);
 	}
 	alert("unknown validation type:"+elem.validation);
 	return false;
@@ -138,7 +161,7 @@ function validateForm(frm)
 	var ts = frm.elements;
 	for (var i=ts.length-1; i>=0; i--)
 	{
-		var elem = opForm.elements(i);
+		var elem = frm.elements(i);
 		var validationClass = elem.validation;
 		if(validationClass != null)
 		{

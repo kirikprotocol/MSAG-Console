@@ -1,4 +1,4 @@
-<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.AliasFilter"%>
+<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasFilter"%>
 <%@ include file="/common/header.jsp"%>
 <%@ include file="/smsc_service/menu.jsp" %>
 <%@ include file="/common/list_selector.jsp"%>
@@ -7,7 +7,7 @@
 AliasFilter filter = (AliasFilter) session.getAttribute("alias_filter");
 if (filter == null)
   filter = new AliasFilter();
-  
+
 String aliases = "";
 for (Iterator i = filter.getAliasStrings().iterator(); i.hasNext(); )
 {

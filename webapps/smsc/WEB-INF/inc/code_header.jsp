@@ -1,8 +1,11 @@
-<%@page pageEncoding="windows-1251"%><%@page contentType="text/html; charset=windows-1251"%><%
+<%@
+page pageEncoding="windows-1251"%><%@
+page contentType="text/html; charset=windows-1251"%><%@
+page session="true"%><%
 String TITLE = "SMS Center Administration Console";
 String BROWSER_TITLE = null;
 StringBuffer STATUS = new StringBuffer("");
-String FORM_METHOD = "GET";
+String FORM_METHOD = "POST";
 String FORM_URI = (String)request.getAttribute("requestURI");
 if (FORM_URI == null)
 	FORM_URI = request.getRequestURI();

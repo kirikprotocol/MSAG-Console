@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-abstract class AbstractDataItem implements DataItem
+public abstract class AbstractDataItem implements DataItem
 {
   protected Map values = new HashMap();
 

@@ -8,6 +8,7 @@ if (errorMessages.size() > 0)
 		SMSCJspException exc = (SMSCJspException) it.next();
 		String code = exc.getMessage();
 		String msg = null;
+		String param = exc.getParam();
 		if (messages != null)
 		{
 			try { msg = messages.getString(code);}
@@ -15,12 +16,12 @@ if (errorMessages.size() > 0)
 		}
 		if(code.startsWith("error."))
 		{
-			%><div class=err><%=(msg == null) ? code : msg%></div><%
+			%><div class=err><%=(msg == null) ? code : msg%><%=(param == null) ? "" : ": " + param%></div><%
 		} else if(code.startsWith("warning."))
 		{
-			%><div class=warn><%=(msg == null) ? code : msg%></div><%
+			%><div class=warn><%=(msg == null) ? code : msg%><%=(param == null) ? "" : ": " + param%></div><%
 		} else {
-			%><div class=msg><%=(msg == null) ? code : msg%></div><%
+			%><div class=msg><%=(msg == null) ? code : msg%><%=(param == null) ? "" : ": " + param%></div><%
 		}
 		
 	}

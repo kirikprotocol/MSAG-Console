@@ -11,7 +11,7 @@ import ru.novosoft.smsc.util.SortedVector;
 import java.util.*;
 
 
-abstract class AbstractDataSourceImpl implements DataSource
+public abstract class AbstractDataSourceImpl implements DataSource
 {
 	protected Vector data = new Vector();
 	protected Map sorts = new HashMap();

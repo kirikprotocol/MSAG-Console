@@ -11,7 +11,7 @@ import ru.novosoft.smsc.jsp.util.tables.Filter;
 import java.util.Vector;
 
 
-abstract class AbstractQueryImpl implements Query
+public abstract class AbstractQueryImpl implements Query
 {
   protected int expectedResultsQuantity = 10;
   protected Filter filter = null;

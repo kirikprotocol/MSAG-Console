@@ -3,9 +3,10 @@
  * Date: Nov 29, 2002
  * Time: 5:42:31 PM
  */
-package ru.novosoft.smsc.jsp.util.tables.impl;
+package ru.novosoft.smsc.jsp.util.tables.impl.user;
 
 import ru.novosoft.smsc.admin.users.User;
+import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataItem;
 
 public class UserDataItem extends AbstractDataItem
 {

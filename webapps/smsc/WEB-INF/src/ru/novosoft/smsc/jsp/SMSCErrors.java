@@ -147,6 +147,23 @@ public class SMSCErrors
 			public static final String alreadyExists = B + "alreadyExists";
 			public static final String couldntReceiveFile = B + "couldntReceiveFile";
 		}
+
+		public static class dl
+		{
+			private static final String B = error.B + "dl.";
+			public static final String CouldntListDistributionLists = B + "CouldntListDistributionLists";
+			public static final String couldntdelete = B + "couldntdelete";
+			public static final String unknownDL = B + "unknownDL";
+			public static final String couldntadd = B + "couldntadd";
+			public static final String couldntaddAlreadyexists = B + "couldntaddAlreadyexists";
+			public static final String couldntListLists = B + "couldntListLists";
+			public static final String dlNotDefined = B + "dlNotDefined";
+			public static final String wildcardsNotAllowedInAddress = B + "wildcardsNotAllowedInAddress";
+			public static final String couldntSave = B + "couldntSave";
+			public static final String couldntGetSubmitters = B + "couldntGetSubmitters";
+			public static final String couldntGetMembers = B + "couldntGetMembers";
+			public static final String invalidAddress = B + "invalidAddress";
+		}
 	}
 
 	public static class warning

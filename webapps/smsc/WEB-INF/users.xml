@@ -5,6 +5,7 @@
 	<user login="a" password="qwe" firstName="Игорь" lastName="Каляткин" dept="Siberon" workPhone="none" homePhone="none" cellPhone="910698" email="igork@novosoft.ru">
 		<role name="aliases"/>
 		<role name="apply"/>
+		<role name="dl"/>
 		<role name="hosts"/>
 		<role name="locale_resources"/>
 		<role name="mscman"/>

@@ -1,7 +1,7 @@
 package ru.novosoft.smsc.jsp.smsc.users;
 
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
-import ru.novosoft.smsc.jsp.util.tables.impl.UserFilter;
+import ru.novosoft.smsc.jsp.util.tables.impl.user.UserFilter;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 
 import java.util.List;

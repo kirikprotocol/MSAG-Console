@@ -10,7 +10,7 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.NullResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
-import ru.novosoft.smsc.jsp.util.tables.impl.SubjectQuery;
+import ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectQuery;
 
 import java.util.*;
 

@@ -10,7 +10,7 @@ import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.NullResultSet;
-import ru.novosoft.smsc.jsp.util.tables.impl.AliasQuery;
+import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasQuery;
 
 import java.util.Arrays;
 import java.util.HashSet;

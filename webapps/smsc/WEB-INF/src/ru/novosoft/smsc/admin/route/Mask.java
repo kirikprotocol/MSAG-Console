@@ -23,11 +23,12 @@ public class Mask
 
 	public Mask(String mask) throws AdminException
 	{
-		if (mask == null)
+		String tmpMask = mask.trim();
+		if (tmpMask == null)
 			throw new NullPointerException("Mask string is null");
-		if (!isMaskValid(mask))
-			throw new AdminException("Mask \"" + this.mask + "\" is not valid");
-		parseMask(mask);
+		if (!isMaskValid(tmpMask))
+			throw new AdminException("Mask \"" + tmpMask + "\" is not valid");
+		parseMask(tmpMask);
 	}
 
 	private void parseMask(String mask) throws AdminException

@@ -1,8 +1,8 @@
 <%@ include file="/common/header.jsp"%>
 <%@ include file="/smsc_service/menu.jsp" %>
 <%@ include file="/common/tables.jsp"%>
-<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.RouteQuery"%>
-<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.RouteFilter"%>
+<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.route.RouteQuery"%>
+<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.route.RouteFilter"%>
 <%@ page import = "ru.novosoft.smsc.jsp.util.tables.QueryResultSet"%>
 <%@ include file="utils.jsp" %>
 <%
@@ -27,7 +27,7 @@ int pagesize = pagesizeI == null ? 20 : pagesizeI.intValue();
 QueryResultSet results = smsc.getRoutes().query(new RouteQuery(pagesize, route_filter, sortOrder, startPosition));
 %>
   <h4>Routes</h4><!--a href="show_smsc_data.jsp">Show SMSC data</a-->
-  <a href="route_filter.jsp">Filter</a> &nbsp;&nbsp;&nbsp; 
+  <a href="route_filter.jsp">Filter</a> &nbsp;&nbsp;&nbsp;
   <%=switch_trigger("index.jsp?", "route_show_source_adresses", "Show sources", "Hide sources", session, request)%>
   <%=switch_trigger("index.jsp?", "route_show_destination_adresses", "Show destinations", "Hide destinations", session, request)%>
 	<table class="list" cellspacing="0">
@@ -38,7 +38,7 @@ QueryResultSet results = smsc.getRoutes().query(new RouteQuery(pagesize, route_f
 			</tr>
     </thead>
 		<tbody>
-      <% 
+      <%
       for (Iterator i = results.iterator(); i.hasNext();) {
         DataItem routeItem = (DataItem) i.next();
         String routeId = (String) routeItem.getValue("Route ID");

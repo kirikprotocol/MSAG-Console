@@ -1,4 +1,4 @@
-<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.SubjectFilter"%>
+<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter"%>
 <%@ include file="/common/header_begin.jsp"%>
 <%@ include file="/common/list_selector.jsp"%>
 <%
@@ -9,11 +9,11 @@ if (action.equals("Clear filter"))
 {
   session.setAttribute("subject_filter", new SubjectFilter());
   pageContext.forward(subjectsPrefix + "/filter.jsp");
-} 
+}
 else if (action.equals("Refresh"))
 {
   pageContext.forward(subjectsPrefix + "/filter.jsp");
-} 
+}
 else if (action.equals("Apply filter"))
 {
   session.setAttribute("subject_filter",
@@ -23,7 +23,7 @@ else if (action.equals("Apply filter"))
                        );
   session.setAttribute("subject_page_size", Integer.decode(request.getParameter("pagesize")));
   response.sendRedirect(urlPrefix + subjectsPrefix + "/index.jsp");
-} 
+}
 else
   throw new Exception("Unknown action - Error in " + subjectsPrefix + "/filter.jsp");
 %>

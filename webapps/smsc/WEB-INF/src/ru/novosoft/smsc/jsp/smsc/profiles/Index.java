@@ -13,7 +13,7 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.NullResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
-import ru.novosoft.smsc.jsp.util.tables.impl.ProfileQuery;
+import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileQuery;
 
 import java.util.List;
 

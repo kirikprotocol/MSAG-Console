@@ -3,7 +3,7 @@
  * Date: 11.06.2002
  * Time: 17:14:45
  */
-package ru.novosoft.smsc.jsp.util.tables.impl;
+package ru.novosoft.smsc.jsp.util.tables.impl.alias;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.Mask;

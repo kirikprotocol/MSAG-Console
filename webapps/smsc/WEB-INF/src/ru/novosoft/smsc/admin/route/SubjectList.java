@@ -10,8 +10,8 @@ import org.w3c.dom.NodeList;
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
-import ru.novosoft.smsc.jsp.util.tables.impl.SubjectDataSource;
-import ru.novosoft.smsc.jsp.util.tables.impl.SubjectQuery;
+import ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectDataSource;
+import ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectQuery;
 
 import java.io.PrintWriter;
 import java.util.*;

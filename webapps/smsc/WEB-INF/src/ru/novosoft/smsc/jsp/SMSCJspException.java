@@ -7,7 +7,7 @@ package ru.novosoft.smsc.jsp;
 
 public class SMSCJspException extends Exception
 {
-	protected String param = null;
+	private String param = null;
 
 	public SMSCJspException(String message)
 	{
@@ -29,5 +29,10 @@ public class SMSCJspException extends Exception
 	{
 		super(message, cause);
 		this.param = param;
+	}
+
+	public String getParam()
+	{
+		return param;
 	}
 }

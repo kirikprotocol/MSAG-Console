@@ -9,7 +9,7 @@ import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.NullResultSet;
-import ru.novosoft.smsc.jsp.util.tables.impl.RouteQuery;
+import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteQuery;
 
 import java.util.Arrays;
 import java.util.HashSet;

@@ -1,8 +1,8 @@
 <%@ include file="/common/header.jsp"%>
 <%@ include file="/smsc_service/menu.jsp"%>
 <%@ include file="/common/tables.jsp"%>
-<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.SubjectQuery"%>
-<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.SubjectFilter"%>
+<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectQuery"%>
+<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter"%>
 <h4>Subjects</h4>
 <a href="filter.jsp">Filter</a>
 <%

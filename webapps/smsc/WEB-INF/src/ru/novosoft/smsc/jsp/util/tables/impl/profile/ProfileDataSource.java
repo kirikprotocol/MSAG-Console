@@ -3,12 +3,13 @@
  * Date: 28.08.2002
  * Time: 18:23:21
  */
-package ru.novosoft.smsc.jsp.util.tables.impl;
+package ru.novosoft.smsc.jsp.util.tables.impl.profile;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.jsp.util.tables.*;
+import ru.novosoft.smsc.jsp.util.tables.impl.QueryResultSetImpl;
 import ru.novosoft.util.conpool.NSConnectionPool;
 
 import java.sql.*;

@@ -3,9 +3,9 @@
  * Date: Nov 29, 2002
  * Time: 7:01:26 PM
  */
-package ru.novosoft.smsc.jsp.util.tables.impl;
+package ru.novosoft.smsc.jsp.util.tables.impl.user;
 
-import ru.novosoft.smsc.jsp.util.tables.Filter;
+import ru.novosoft.smsc.jsp.util.tables.impl.AbstractQueryImpl;
 
 import java.util.Vector;
 

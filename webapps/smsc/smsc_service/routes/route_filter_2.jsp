@@ -1,4 +1,4 @@
-<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.RouteFilter"%>
+<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.route.RouteFilter"%>
 <%@ include file="/common/header_begin.jsp"%>
 <%@ include file="/common/list_selector.jsp"%>
 <%@ include file="utils.jsp"%><%
@@ -9,11 +9,11 @@ if (action.equals("Clear filter"))
 {
   session.setAttribute("route_filter", new RouteFilter());
   pageContext.forward(routesPrefix + "/route_filter.jsp");
-} 
+}
 else if (action.equals("Refresh"))
 {
   pageContext.forward(routesPrefix + "/route_filter.jsp");
-} 
+}
 else if (action.equals("Apply filter"))
 {
   set_trigger_by_request_param("route_show_source_adresses"     , false, session, request);
@@ -30,7 +30,7 @@ else if (action.equals("Apply filter"))
                        );
   session.setAttribute("route_page_size", Integer.decode(request.getParameter("pagesize")));
   response.sendRedirect(urlPrefix + routesPrefix + "/index.jsp");
-} 
+}
 else
   throw new Exception("Unknown action - Error in " + routesPrefix + "/route_filter.jsp");
 %>

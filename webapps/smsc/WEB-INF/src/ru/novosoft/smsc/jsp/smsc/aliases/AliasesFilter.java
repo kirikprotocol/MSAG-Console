@@ -8,7 +8,7 @@ package ru.novosoft.smsc.jsp.smsc.aliases;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
-import ru.novosoft.smsc.jsp.util.tables.impl.AliasFilter;
+import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasFilter;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.MaskList;
 

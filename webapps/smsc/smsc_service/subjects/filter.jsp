@@ -1,4 +1,4 @@
-<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.SubjectFilter"%>
+<%@ page import = "ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter"%>
 <%@ include file="/common/header.jsp"%>
 <%@ include file="/smsc_service/menu.jsp" %>
 <%@ include file="/common/list_selector.jsp"%>
@@ -33,7 +33,7 @@ int pagesize = pagesizeI == null ? 20 : pagesizeI.intValue();
 			<tr class="list">
 				<th class="list" nowrap width="10%">Default SME's</th>
 				<td class="list">
-          <% for (Iterator i=serviceManager.getSmeIds().iterator(); i.hasNext(); ) { 
+          <% for (Iterator i=serviceManager.getSmeIds().iterator(); i.hasNext(); ) {
             String sme_name = (String) i.next();
             %><input type="checkbox" name="smes" <%=smes.contains(sme_name) ? "checked" : ""%> value="<%=StringEncoderDecoder.encode(sme_name)%>"><%=StringEncoderDecoder.encode(sme_name)%><br>
           <%}%>
