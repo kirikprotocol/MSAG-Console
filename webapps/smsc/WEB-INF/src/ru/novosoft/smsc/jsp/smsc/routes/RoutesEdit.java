@@ -74,6 +74,7 @@ public class RoutesEdit extends RouteBody
         }
         aclId = r.getAclId();
         allowBlocked = r.isAllowBlocked();
+        forceDelivery = r.isForceDelivery();
       }
     }
 
