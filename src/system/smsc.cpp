@@ -12,6 +12,7 @@
 #include "system/mapio/MapIoTask.h"
 #include "system/abonentinfo/AbonentInfo.hpp"
 #include "util/Logger.h"
+#include "system/smscsme.hpp"
 
 namespace smsc{
 namespace system{
@@ -129,7 +130,7 @@ void Smsc::init(const SmscConfigs& cfg)
         si.systemType=rec->recdata.smppSme.systemType;
         si.password=rec->recdata.smppSme.password;
         si.systemId=rec->smeUid;
-        si.timeout = rec->recdata.smppSme.timeout; 
+        si.timeout = rec->recdata.smppSme.timeout;
         si.wantAlias = rec->recdata.smppSme.wantAlias;
         //si.hostname=rec->recdata->smppSme.
         si.disabled=false;
@@ -287,6 +288,17 @@ void Smsc::init(const SmscConfigs& cfg)
       __trace2__("Failed to register abonentinfo Sme:%s",e.what());
       __warning__("Failed to register abonentinfo Sme");
     }
+  }
+
+  smscsme=new SmscSme("smscsme",&smeman);
+  tp.startTask(smscsme);
+  try{
+    smeman.registerSmeProxy("smscsme",smscsme);
+  }catch(exception& e)
+  {
+    log.warn("Failed to register smscsme");
+    __trace2__("Failed to register smscsme:%s",e.what());
+    __warning__("Failed to register smscsme");
   }
 
   smscHost=cfg.cfgman->getString("smpp.host");

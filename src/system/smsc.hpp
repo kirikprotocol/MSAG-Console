@@ -15,6 +15,7 @@
 #include "util/config/route/RouteConfig.h"
 #include "system/scheduler.hpp"
 #include "profiler/profiler.hpp"
+#include "system/smscsme.hpp"
 
 namespace smsc{
 namespace system{
@@ -70,6 +71,11 @@ public:
     return smeman.getSmeInfo(idx);
   }
 
+  void submitSms(SMS* sms)
+  {
+    smscsme->putSms(sms);
+  }
+
 protected:
   smsc::core::threads::ThreadPool tp;
   smsc::system::smppio::SmppSocketsManager ssockman;
@@ -83,6 +89,7 @@ protected:
   bool stopFlag;
   std::string smscHost;
   int smscPort;
+  SmscSme *smscsme;
 };
 
 };//system

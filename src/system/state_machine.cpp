@@ -6,6 +6,7 @@
 #include "profiler/profiler.hpp"
 #include "util/recoder/recode_dll.h"
 #include "core/buffers/Hash.hpp"
+#include "util/smstext.h"
 
 namespace smsc{
 namespace system{
@@ -14,6 +15,7 @@ using namespace smsc::smeman;
 using namespace smsc::sms;
 using namespace StateTypeValue;
 using namespace smsc::smpp;
+using namespace util;
 using std::exception;
 
 class ReceiptGetAdapter:public GetAdapter{
@@ -378,6 +380,7 @@ StateType StateMachine::submit(Tuple& t)
   try{
     // send delivery
     Address src;
+    __trace2__("SUBMIT: wantAlias=%s",smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias?"true":"false");
     if(smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias && smsc->AddressToAlias(sms->getOriginatingAddress(),src))
     {
       sms->setOriginatingAddress(src);
@@ -505,7 +508,7 @@ StateType StateMachine::forward(Tuple& t)
   try{
     // send delivery
     Address src;
-    if(smsc->AddressToAlias(sms.getOriginatingAddress(),src))
+    if(smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias && smsc->AddressToAlias(sms.getOriginatingAddress(),src))
     {
       sms.setOriginatingAddress(src);
     }
@@ -579,9 +582,28 @@ StateType StateMachine::deliveryResp(Tuple& t)
         if(p.reportoptions==smsc::profiler::ProfileReportOptions::ReportFull ||
            sms.getDeliveryReport())
         {
-          SMS rpt=sms;
+          SMS rpt;
+          rpt.setOriginatingAddress(scAddress);
+          char msc[]="123";
+          char imsi[]="123";
+          rpt.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+          rpt.setValidTime(0);
+          rpt.setDeliveryReport(0);
+          rpt.setArchivationRequested(false);
+          rpt.setEServiceType("SMSC");
+          rpt.setDestinationAddress(sms.getOriginatingAddress());
+          Array<SMS*> arr;
+          string out;
+          char addr[32];
+          sms.getDestinationAddress().getText(addr,sizeof(addr));
+          formatFailed(addr,"failed",out);
+          splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,p.codepage,arr);
+          for(int i=0;i<arr.Count();i++)
+          {
+            smsc->submitSms(arr[i]);
+            delete arr[i];
+          };
 
-          //rpt.
         }
         return ERROR_STATE;
       }
@@ -595,6 +617,38 @@ StateType StateMachine::deliveryResp(Tuple& t)
   {
     __trace2__("change state to delivered exception:%s",e.what());
     return DELIVERED_STATE;
+  }
+  try{
+    smsc::profiler::Profile p=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
+    if(p.reportoptions==smsc::profiler::ProfileReportOptions::ReportFull ||
+       sms.getDeliveryReport())
+    {
+      SMS rpt;
+      rpt.setOriginatingAddress(scAddress);
+      char msc[]="123";
+      char imsi[]="123";
+      rpt.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+      rpt.setValidTime(0);
+      rpt.setDeliveryReport(0);
+      rpt.setArchivationRequested(false);
+      rpt.setEServiceType("SMSC");
+      rpt.setDestinationAddress(sms.getOriginatingAddress());
+      Array<SMS*> arr;
+      string out;
+      char addr[32];
+      sms.getDestinationAddress().getText(addr,sizeof(addr));
+      formatDeliver(addr,out);
+      __trace2__("RECEIPT: addr %s",addr);
+      splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,p.codepage,arr);
+      for(int i=0;i<arr.Count();i++)
+      {
+        smsc->submitSms(arr[i]);
+      };
+
+    }
+  }catch(std::exception& e)
+  {
+    __trace2__("DELIVERY_RESP:failed to submit receipt");
   }
   return DELIVERED_STATE;
 }
