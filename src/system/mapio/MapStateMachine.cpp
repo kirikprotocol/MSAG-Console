@@ -1233,8 +1233,15 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                           SSN,
                           /*string(cmd->get_sms()->getDestinationAddress().value)*/"",
                           cmd));
+          } catch (ChainIsVeryLong& e) {
+            __map_trace2__("%s: %s ",__FUNCTION__,e.what());
+            SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::MSGQFUL));
+            //throw MAPDIALOG_TEMP_ERROR("MAP::PutCommand: can't create dialog");
+            return;
           } catch (exception& e) {
-            throw MAPDIALOG_TEMP_ERROR("MAP::PutCommand: can't create dialog");
+            __map_trace2__("%s: %s ",__FUNCTION__,e.what());
+            SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::THROTTLED));
+            return;//throw MAPDIALOG_TEMP_ERROR("MAP::PutCommand: can't create dialog");
           }
           if ( dialog.isnull() ) {
             //throw MAPDIALOG_TEMP_ERROR("Can't create or attach dialog");

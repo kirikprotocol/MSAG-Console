@@ -282,6 +282,10 @@ MKDID(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn)
     & 0xff00ffff;
 }
 
+struct ChainIsVeryLong : public runtime_error {
+  ChainIsVeryLong(const char* s) : runtime_error(s) {}
+};
+
 /**
   \class MapDialogContainer
 */
@@ -408,7 +412,7 @@ public:
         throw runtime_error("MAP::createOrAttachSMSCDialog: has no dialog for abonent ");
       }else if ( item->chain.size() > 25 ) {
         __mapdlg_trace2__("chain is verly long (%d)",item->chain.size());
-        throw runtime_error("chain is very long");
+        throw ChainIsVeryLong("chain is very long");
       }
       __mapdlg_trace2__("add command to chain, size %d",item->chain.size());
       item->chain.push_back(cmd);

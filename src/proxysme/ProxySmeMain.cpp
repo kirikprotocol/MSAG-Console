@@ -69,6 +69,7 @@ bool LoadConfig(ProxyConfig& pconf)
     pconf.right.origAddr = right.origAddr;
     pconf.right.password = right.password;
     pconf.quelimit = 100;
+    return true;
   }catch(exception& e) {
     smsc::util::Logger::getCategory("smsc.proxysme").error("can't laod config: %s",e.what());
     return false;
