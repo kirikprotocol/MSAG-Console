@@ -2,6 +2,9 @@
 $Id$
 */
 
+#ifndef __header_MAPIO_h__
+#define __header_MAPIO_h__
+
 #include <stdio.h>
 #include <malloc.h>
 #include <memory.h>
@@ -420,3 +423,5 @@ private:
   void init(unsigned timeout=0);
   void deinit();
 };
+
+#endif // __header_MAPIO_h__
