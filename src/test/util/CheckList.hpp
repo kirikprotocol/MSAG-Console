@@ -1,55 +1,70 @@
 #ifndef TEST_UTIL_CHECK_LIST
 #define TEST_UTIL_CHECK_LIST
 
-#include "Util.hpp"
-#include "TCResultFilter.hpp"
-#include <fstream>
+#include "core/synchronization/Mutex.hpp"
 #include <map>
+#include <set>
+#include <string>
+#include <vector>
 
 namespace smsc {
 namespace test {
 namespace util {
 
+using std::map;
+using std::set;
+using std::string;
+using std::vector;
+using smsc::core::synchronization::Mutex;
+
 /**
- * Вспомогательный класс для записи результатов в checklist.
+ * Данные и результаты тест кейса.
+ */
+struct TestCase
+{
+	const string id;
+	const string desc;
+	int correct;
+	int incorrect;
+	set<int> errCodes;
+	Mutex mutex;
+
+	TestCase(const string _id, const string _desc)
+		: id(_id), desc(_desc), correct(0), incorrect(0) {}
+	Mutex& getMutex() { return mutex; }
+};
+
+/**
+ * Основной класс для записи результатов в checklist.
  */
 class CheckList
 {
+	string name;
+	typedef map<const string, TestCase*> TcMap;
+	typedef vector<TestCase*> TcList;
+	TcMap tcMap;
+	TcList tcList;
+	mutable Mutex mutex;
+
 public:
-	static const char* UNIT_TEST;
-	static const char* SYSTEM_TEST;
-	static const char* STANDARDS_TEST;
-
-	typedef std::map<const char*, CheckList*> CheckListMap;
-	
-	/**
-	 * @return именованый checklist
-	 */
-	static CheckList& getCheckList(const char* name);
-
-	CheckList(const char* name);
-	~CheckList();
+	CheckList(const char* _name) : name(_name) {}
+	virtual ~CheckList();
 
 	/**
-	 * Начать новую группу/таблицу в checklist.
+	 * Тест кейс id должен быть в формате a.b.c...
+	 * Чтобы зарегистрировать тест кейс a.b.c, обязательно должны быть
+	 * зарегистрированы более высокоуровненые тест кейсы a и a.b.
+	 * Если тест кейс с таким id уже зарегистрирован, возвращается старый тест кейс.
 	 */
-	void startNewGroup(const char* groupName, const char* packageName);
+	TestCase* registerTc(const char* id, const char* desc);
 
 	/**
-	 * Записать результаты тестирования тест кейсов в текущцю группу/таблицу
+	 * Если тест кейс id незарегистрирован, кидается exception.
 	 */
-	void writeResult(const char* tcDesc, const TCResult* result);
+	TestCase* getTc(const char* id) const;
 
-	/**
-	 * Записать результаты тестирования тест кейсов в текущую группу/таблицу
-	 */
-	void writeResult(const char* tcDesc, const TCResultStackList* stackList);
-
-private:
-	static CheckListMap* clists;
-	const char* name;
-	std::ofstream os;
-	int counter;
+	void save(const char* fileName, bool printErrorCodes = true,
+		bool printExecCount = true, bool printTcIds = true) const;
 };
 
 }
@@ -57,3 +72,4 @@ private:
 }
 
 #endif /* TEST_UTIL_CHECK_LIST */
+
