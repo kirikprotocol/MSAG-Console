@@ -412,7 +412,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
 StateType StateMachine::alert(Tuple& t)
 {
   __trace__("ALERT!!!");
-  time_t now=time(NULL);
+  //time_t now=time(NULL);
   try{
     Descriptor d;
     SMS sms;
