@@ -1099,6 +1099,7 @@ StateType StateMachine::submit(Tuple& t)
           tmp=newtmp;
         }
         newsms.setIntProperty(Tag::SMSC_MERGE_CONCAT,3); // final state
+        newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(int)tmp.length());
         if(!totalMoreUdh && sms->getIntProperty(Tag::SMPP_DATA_CODING)!=DataCoding::BINARY)//make single text message
         {
           string newtmp;
@@ -1118,9 +1119,10 @@ StateType StateMachine::submit(Tuple& t)
             pres=partitionSms(&newsms,profile.codepage);
           }
         }
+      }else
+      {
+        newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(int)tmp.length());
       }
-
-      newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(int)tmp.length());
 
       try{
         store->replaceSms(t.msgId,newsms);
