@@ -94,6 +94,7 @@ Targets:
     <symlink resource="${SERVICE2HOME_PATH}/../conf/command_gw.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/locale_resources.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/routes.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/billing_rules.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
 
     <symlink resource="${DAEMON2HOME_PATH}/lib" link="${DISTR_DIR}/daemon"/>
     <symlink resource="${DAEMON2HOME_PATH}/logs" link="${DISTR_DIR}/daemon"/>
@@ -117,7 +118,7 @@ Targets:
       <fileset dir="${DISTR_DIR}/lib" includes="*"/>
     </chmod>
     <copy todir="${DISTR_DIR}/conf" preservelastmodified="yes" flatten="yes" >
-      <fileset dir="${SMSC_DIR}/config" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd SmeRecords.dtd smppgw/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd"/>
+      <fileset dir="${SMSC_DIR}/config" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd SmeRecords.dtd smppgw/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd smppgwbilling/billing-rules.dtd"/>
     </copy>
   </target>
 
@@ -172,7 +173,7 @@ Targets:
     </copy>
     <chmod file="${DISTR_DIR}/services/smppgw/bin/service" perm="755"/>
     <copy todir="${DISTR_DIR}/services/smppgw/conf" flatten="yes">
-      <fileset dir="${TEMPL_DIR}/smppgw" includes="config.xml routes.xml routes_.xml routes__.xml sme.xml"/>
+      <fileset dir="${TEMPL_DIR}/smppgw" includes="config.xml routes.xml routes_.xml routes__.xml sme.xml billing_rules.xml"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <symlink resource="../services/smppgw/conf/config.xml" link="${DISTR_DIR}/conf/smppgw.xml" overwrite="yes"/>
@@ -180,6 +181,7 @@ Targets:
     <symlink resource="../services/smppgw/conf/routes_.xml" link="${DISTR_DIR}/conf/routes_.xml" overwrite="yes"/>
     <symlink resource="../services/smppgw/conf/routes__.xml" link="${DISTR_DIR}/conf/routes__.xml" overwrite="yes"/>
     <symlink resource="../services/smppgw/conf/sme.xml" link="${DISTR_DIR}/conf/sme.xml" overwrite="yes"/>
+    <symlink resource="../services/smppgw/conf/billing_rules.xml" link="${DISTR_DIR}/conf/billing_rules.xml" overwrite="yes"/>
 
     <!-- turn scripts be executable -->
     <chmod perm="755">
