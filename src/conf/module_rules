@@ -82,6 +82,8 @@ rbuild: only
 		set -e; for i in $$XXXX; do make $$i.rbuild ; done ;\
 	fi
 
+newbuild:
+	@perl $(SMSC_SRCDIR)/conf/newbuild.pl $(PACKAGE)
 
 clean:
 	@echo "clean in $(PACKAGE)"
