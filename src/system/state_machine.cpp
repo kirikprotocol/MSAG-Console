@@ -461,13 +461,13 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     if(tmp.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
     {
       const char* tmpBody=tmp.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
-      char *dst=tmpBuf.getSize(len);
+      char *dst=tmpBuf.setSize(len);
       body=dst;
       memcpy(dst,tmpBody,len);
     }else
     {
       const char* tmpBody=tmp.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
-      char *dst=tmpBuf.getSize(len);
+      char *dst=tmpBuf.setSize(len);
       body=dst;
       memcpy(dst,tmpBody,len);
     }
@@ -4352,7 +4352,7 @@ StateType StateMachine::cancel(Tuple& t)
         __warning__("CANCEL: failed to send cancel response");
       }
     }
-    __warning2__("CANCEL: failed to cancel sms:%s",e.what());
+    __warning2__("CANCEL: failed to cancel sms with msgId=%lld:%s",t.msgId,e.what());
     return t.state;
   }
   int code=Status::OK;
@@ -4382,7 +4382,7 @@ StateType StateMachine::cancel(Tuple& t)
   }catch(std::exception& e)
   {
     code=Status::CANCELFAIL;
-    __warning2__("CANCEL: failed to cancel sms:%s",e.what());
+    __warning2__("CANCEL: failed to cancel sms with msgId=%lld:%s",t.msgId,e.what());
     return t.state;
   }
   if(!t.command->get_cancelSm().internall)

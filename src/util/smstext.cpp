@@ -182,7 +182,7 @@ void transLiterateSms(SMS* sms,int datacoding)
     len-=udhiDataLen;
   }
 
-  buf.getSize(len*2);
+  buf.setSize(len*2);
 
   int newlen;
 
@@ -191,19 +191,19 @@ void transLiterateSms(SMS* sms,int datacoding)
   if(sms->getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
   {
     len=ConvertUCS2ToMultibyte(msg,len,buf.get(),len*2,CONV_ENCODING_CP1251);
-    buf8.getSize(udhiDataLen+len*4+1);
+    buf8.setSize(udhiDataLen+len*4+1);
     newlen=Transliterate(buf.get(),len,CONV_ENCODING_CP1251,buf8.get()+udhiDataLen,len*3+1);
     dc=DataCoding::LATIN1;
     if(datacoding==DataCoding::SMSC7BIT)
     {
-      buf.getSize(newlen*2+1);
+      buf.setSize(newlen*2+1);
       newlen=ConvertLatin1ToSMSC7Bit(buf8.get()+udhiDataLen,newlen,buf.get());
       memcpy(buf8.get()+udhiDataLen,buf.get(),newlen);
       dc=DataCoding::SMSC7BIT;
     }
   }else if(sms->getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::LATIN1)
   {
-    buf8.getSize(udhiDataLen+len*2+1);
+    buf8.setSize(udhiDataLen+len*2+1);
     newlen=ConvertLatin1ToSMSC7Bit((char*)msg,len,buf8.get()+udhiDataLen);
     dc=DataCoding::SMSC7BIT;
   }else
