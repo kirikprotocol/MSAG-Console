@@ -120,8 +120,18 @@ bool Mixer::SendPdu(DIRECTION direct,SmppHeader* pdu)
   log_.info("Mixer::SendPdu: %s ",ToString(direct).c_str());
   try {
     switch ( direct ) {
-    case LEFT_TO_RIGHT:  right_->getAsyncTransmitter()->sendPdu(pdu);  break;
-    case RIGHT_TO_LEFT:  left_->getAsyncTransmitter()->sendPdu(pdu); break;
+    case LEFT_TO_RIGHT:  
+      if ( pdu->get_commandId() == SmppCommandSet::DELIVERY_SM_RESP )
+        right_->getAsyncTransmitter()->sendDeliverySmResp(*(PduDeliverySmResp*)pdu);  
+      else 
+        right_->getAsyncTransmitter()->sendPdu(pdu);  
+      break;
+    case RIGHT_TO_LEFT:  
+      if ( pdu->get_commandId() == SmppCommandSet::DELIVERY_SM_RESP )
+        left_->getAsyncTransmitter()->sendDeliverySmResp(*(PduDeliverySmResp*)pdu);  
+      else
+        left_->getAsyncTransmitter()->sendPdu(pdu); 
+      break;
     default:
       log_.error("Mixer::SendPdu: invalid direction ");
       return false;
