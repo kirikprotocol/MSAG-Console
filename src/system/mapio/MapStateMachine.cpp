@@ -1224,6 +1224,15 @@ USHORT_T Et96MapOpenInd (
         memcpy(&dialog->m_msAddr,specificInfo_sp->specificData+1,specificInfo_sp->specificInfoLen-1);
         dialog->m_msAddr.addressLength = x;
         dialog->hasIndAddress = true;
+#if !defined DISABLE_TRACING        
+        {
+          ostringstream ost;
+          unsigned dlen = specificInfo_sp->specificData[1];
+          for (unsigned i=0;i<dlen;++i) 
+            ost << hex << (((unsigned)*(specificInfo_sp->specificData+1+i))&0x0ff);
+          __trace2__("MAP::%s::adr(%d):%s",__FUNCTION__,x,ost.str().c_str());
+        }
+#endif
       }
     }
     if ( dialog.isnull() )
