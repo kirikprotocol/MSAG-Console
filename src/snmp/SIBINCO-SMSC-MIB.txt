@@ -1,0 +1,196 @@
+-- Copyright 2003 Sibinco. All Rights Reserved
+-- HISTORY
+-- 17-09-2003  Victor Ryzhkov     created
+
+    SIBINCO-SMSC-MIB DEFINITIONS ::= BEGIN
+	IMPORTS
+	    OBJECT-TYPE, enterprises, TimeTicks, Unsigned32, Counter32, Counter64,
+	    NOTIFICATION-TYPE
+--	    MODULE-IDENTITY, NOTIFICATION-TYPE
+		FROM SNMPv2-SMI
+	    DisplayString
+		FROM SNMPv2-TC;
+--	    TRAP-TYPE
+--		FROM RFC-1215;
+	    				    
+	    sibinco MODULE-IDENTITY
+		LAST-UPDATED "200309171500Z"
+		ORGANIZATION
+                    "Sibinco"
+                CONTACT-INFO
+                    "Sibinco
+                    41, Russkaya Str #501
+                    630090 Novosibirsk
+                    Russia
+
+                    Phone:  +7 3832 328133 ext 25
+                    Fax:    +7 3832 328133 ext 25
+                    Web:    http://www.sibinco.com/
+                    E-Mail: sales@sibinco.com"
+                DESCRIPTION
+                    "Sibinco root MIB module"
+                ::= { enterprises 17939 } -- self assigned
+
+		
+            -- 1.3.6.1.4.1.17939.1
+            smsc OBJECT IDENTIFIER ::= { sibinco 1 }
+	    smscnotifications OBJECT IDENTIFIER ::= { smsc 0 }
+	    --sme  OBJECT IDENTIFIER ::= { smsc 7 }
+	  	    
+            -- 1.3.6.1.4.1.17939.1.1
+	    smscDescr OBJECT-TYPE
+	    SYNTAX  DisplayString
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+		"Version string"
+	    ::= { smsc 1 }
+	    
+            -- 1.3.6.1.4.1.17939.1.2
+	    smscStatus OBJECT-TYPE
+	    SYNTAX  INTEGER {
+			unkn(0),
+			init(1),
+			oper(2),
+			shut(3),
+			term(4)
+		    }
+	    MAX-ACCESS  read-write
+	    STATUS      current
+	    DESCRIPTION
+		"The current state of system.
+		
+		The value unknown(0) is returned when the system's
+		true state is unknown; for example, when management
+		portion being started.
+					     		
+		The value init(1) is returned when the system is in
+		process of initialization.
+		
+		The value oper(2) is returned when the system
+		becomes operational.
+		
+		The value shut(3) is returned when the system is in
+		process of shutting down.
+		
+		Setting this variable to the value term(4) causes
+		the system to shuttting down. This action can be done
+		only in operational state."
+	    ::= { smsc 2 }
+
+            -- 1.3.6.1.4.1.17939.1.3
+            smscUpTime OBJECT-TYPE
+                SYNTAX TimeTicks
+                MAX-ACCESS read-only
+                STATUS current
+		DESCRIPTION
+		    "The time (in hundredths of a second) since the
+		    management portion was last re-initialized."
+		::= { smsc 3 }
+
+            smscStats OBJECT IDENTIFIER ::= { smsc 4 }
+		
+	    submitOK OBJECT-TYPE
+		SYNTAX Counter64
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+		    "submitOK"
+		::= { smscStats 1}
+		
+	    submitERR OBJECT-TYPE
+		SYNTAX Counter64
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+		    "submitERR"
+		::= { smscStats 2}
+		
+	    deliverOK OBJECT-TYPE
+		SYNTAX Counter64
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+		    "deliverOK"
+		::= { smscStats 3}
+		
+	    deliverERR OBJECT-TYPE
+		SYNTAX Counter64
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+		    "deliverERR"
+		::= { smscStats 4}
+	    
+	    rescheduled OBJECT-TYPE
+		SYNTAX Counter64
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+		    "rescheduled"
+		::= { smscStats 5}
+		
+            -- 1.3.6.1.4.1.17939.1.5
+        alertMessage OBJECT-TYPE
+	    SYNTAX OCTET STRING (SIZE(255))
+            MAX-ACCESS not-accessible
+            STATUS current
+	    DESCRIPTION
+		"The string object containing textual description of alert."
+	    ::= { smsc 5 }
+		
+	smeTable OBJECT-TYPE
+	    SYNTAX  SEQUENCE OF SmeEntry
+	    ACCESS  not-accessible
+	    STATUS  mandatory
+	    DESCRIPTION
+		"SME table."
+	    ::= { smsc 6 }
+
+
+	smeEntry OBJECT-TYPE
+	    SYNTAX  SmeEntry
+	    ACCESS  not-accessible
+	    STATUS  mandatory
+	    DESCRIPTION
+		"A route to a particular destination."
+	    INDEX   { smeSystemId }
+	    ::= { smeTable 1 }
+	    
+	SmeEntry ::=
+	    SEQUENCE {
+		smeSystemId DisplayString,
+		smeStatus INTEGER
+	    }
+	    
+	smeSystemId OBJECT-TYPE
+	    SYNTAX  DisplayString
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+		"SME system Id."
+	    ::= { smeEntry 1 }
+	    
+	smeStatus OBJECT-TYPE
+	    SYNTAX  INTEGER
+	    ACCESS  read-write
+	    STATUS  mandatory
+	    DESCRIPTION
+		"SME status."
+	    ::= { smeEntry 2 }
+-- trap section
+		
+	    smscStatusNotification NOTIFICATION-TYPE
+	    OBJECTS { smscStatus }
+	    STATUS current
+	    DESCRIPTION
+		"Notify about smsc state changing"
+	    ::= { smscnotifications 1 }
+	    
+	    smscAlert NOTIFICATION-TYPE
+	    OBJECTS { alertMessage }
+	    STATUS current
+	    DESCRIPTION
+		"Notify about smsc events"
+	    ::= { smscnotifications 2 }
+    END
