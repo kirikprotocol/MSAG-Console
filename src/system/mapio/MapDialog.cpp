@@ -212,6 +212,15 @@ unsigned ConvertSMSC7bit27bit(
   return _7bit_len;
 }
 
+bool ProvErrCodeFatal( p ) {
+  return 
+  (p == 0x02 || // unsupported service
+   p == 0x03 || // mystyped parametor
+   p == 0x06 || // unexcpected responnse from peer
+   p == 0x09 || // invalid responce recived
+  (p > 0x0a && p <= 0x10)); // unxpected component end other
+}
+
 #pragma pack(1)
 
 /*struct SMS_SUMBMIT_FORMAT_HEADER{
@@ -1052,6 +1061,86 @@ USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
   return ET96MAP_E_OK;
 }				       
 
+void  MapDialog::Et96MapOpenConf (
+  ET96MAP_LOCAL_SSN_T localSsn,
+  ET96MAP_DIALOGUE_ID_T dialogueId,
+  ET96MAP_OPEN_RESULT_T openResult,
+  ET96MAP_REFUSE_REASON_T *refuseReason_p,
+  ET96MAP_SS7_ADDR_T *respondingAddr_sp,
+  ET96MAP_APP_CNTX_T *appContext_sp,
+  ET96MAP_USERDATA_T *specificInfo_sp,
+  ET96MAP_PROV_ERR_T *provErrCode_p)
+{
+#if defined USE_MAP  
+  try{
+    __trace2__("MAP::MapDialog::Et96MapOpenConf: 0x%x", openResult);
+    if ( openResult != ET96MAP_RESULT_OK ){
+      __trace2__("MAP::MapDialog::Et96MapOpenConf: Opss, dialog is not opened!");
+      SmscCommand cmd;
+      bool fatal = false;
+      if ( provErrCode_p != 0 ){
+        __trace2__("MAP::MapDialog::Et96MapOpenConf: provErrCode 0x%x",*provErrCode_p);
+        fatal = fatal || provErrCodeFatal(*provErrCode_p){
+      }
+      if ( refuseReason_p ) {
+        const char* reason = "<Unknown-reason>"
+        switch ( *refuseReason_p ) {
+        case ET96MAP_NO_REASON: reason = "ET96MAP_NO_REASON"; break;
+        case ET96MAP_INV_DEST_REF: 
+          reason = "ET96MAP_INV_DEST_REF"; 
+          fatal = true;
+          break;
+        case ET96MAP_INV_ORIG_REF: reason = "ET96MAP_INV_ORIG_REF"; break;
+        case ET96MAP_APP_CONTEXT_NOT_SUPP: 
+          reason = "ET96MAP_APP_CONTEXT_NOT_SUPP"; 
+          fatal = true;
+          break;
+        case ET96MAP_NODE_NOT_REACHABLE: 
+          reason = "ET96MAP_NODE_NOT_REACHABLE"; 
+          fatal = true;
+          break;
+        case ET96MAP_VERS_INCOMPATIBLE: 
+          reason = "ET96MAP_VERS_INCOMPATIBLE"; 
+          fatal = true;
+          break;
+        }
+        __trace2__("MAP::MapDialog::Et96MapOpenConf: refuseReason_p 0x%x",
+                   *refuseReason_p,
+                   reason);
+      }
+      if ( fatal )
+        cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,MAKE_ERRORCODE(CMD_ERR_FATAL,MAP_NETWORKERROR));
+      else 
+        cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,MAKE_ERRORCODE(CMD_ERR_TEMP,MAP_NETWORKERROR));
+      throw runtime_error("MAP::MapDialog::Et96MapOpenConf: Opss, dialog is not opened!");
+    }
+    if ( state == MAPST_OPENCONF ){
+      result = Et96MapV2SendRInfoForSmReq(ssn, dialogid, 1, &m_msAddr, ET96MAP_DO_NOT_ATTEMPT_DELIVERY, &m_scAddr );
+      if ( result != ET96MAP_E_OK ) {
+        __trace2__("MAP::MapDialog::Et96MapOpenConf: Et96MapV2SendRInfoForSmReq error 0x%x",result);
+        throw runtime_error("MAP::MapDialog::Et96MapOpenConf: Et96MapV2SendRInfoSmReq error");
+      }
+      __trace2__("MAP::MapDialog::Et96MapOpenConf: Et96MapV2SendRInfoForSmReq OK");
+      result = Et96MapDelimiterReq(ssn, dialogid, 0, 0 );
+      if ( result != ET96MAP_E_OK ) {
+        __trace2__("MAP::MapDialog::Et96MapOpenConf: Et96MapDelimiterReq error 0x%x",result);
+        throw runtime_error("MAP::MapDialog::Et96MapOpenConf: Et96MapDelimiterReq error");
+      }
+      __trace2__("MAP::MapDialog::Et96MapOpenConf: Et96MapDelimiterReq OK");
+    }else{
+      __trace2__("incorrect state, must be MAPST_OPENCONF(%d) but %d",
+                          MAPST_OPENCONF,state);
+      throw runtime_error("incorrect state, must be MAPST_OPENCONF(%d) but %d",
+                          MAPST_OPENCONF,state);
+    }
+  }catch(...){
+    state = MAPST_BROKEN;
+    throw;
+  }
+#else
+#endif
+}
+
 bool MapDialog::ProcessCmd(const SmscCommand& cmd){
 #if defined USE_MAP  
   __trace2__("MAP::MapDialog::ProcessCmd");
@@ -1118,18 +1207,6 @@ bool MapDialog::ProcessCmd(const SmscCommand& cmd){
         throw runtime_error("MAP::MapDialog::ProcessCmdg: Et96MapOpenReq error");
       }
       __trace2__("MAP::MapDialog::ProcessCmdg: Et96MapOpenReq OK");
-     	result = Et96MapV2SendRInfoForSmReq(ssn, dialogid, 1, &m_msAddr, ET96MAP_DO_NOT_ATTEMPT_DELIVERY, &m_scAddr );
-      if ( result != ET96MAP_E_OK ) {
-        __trace2__("MAP::MapDialog::ProcessCmdg: Et96MapV2SendRInfoForSmReq error 0x%x",result);
-        throw runtime_error("MAP::MapDialog::ProcessCmdg: Et96MapV2SendRInfoSmReq error");
-      }
-      __trace2__("MAP::MapDialog::ProcessCmdg: Et96MapV2SendRInfoForSmReq OK");
-    	result = Et96MapDelimiterReq(ssn, dialogid, 0, 0 );
-      if ( result != ET96MAP_E_OK ) {
-        __trace2__("MAP::MapDialog::ProcessCmdg: Et96MapDelimiterReq error 0x%x",result);
-        throw runtime_error("MAP::MapDialog::ProcessCmdg: Et96MapDelimiterReq error");
-      }
-      __trace2__("MAP::MapDialog::ProcessCmdg: Et96MapDelimiterReq OK");
     }
     return false;
     default:
@@ -1207,15 +1284,15 @@ void MapProxy::putCommand(const SmscCommand& cmd)
 #if defined USE_MAP  
   //MutexGuard g(mutex);
   uint32_t did = cmd->get_dialogId();
-  MapDialog* dialog = 0;
+  DialogRefGuard dialog;
   __trace2__("MAPPROXY::putCommand");
   try
   {
     ET96MAP_DIALOGUE_ID_T dialogid = (ET96MAP_DIALOGUE_ID_T)did;
     if ( did > 0xffff ) {
       __trace2__("MAP::QueueProcessing: SMSC request");
-      dialog = MapDialogContainer::getInstance()->createSMSCDialog(did,SSN,cmd->get_sms()->getDestinationAddress().value);
-      if ( dialog == 0 ) {
+      dialog.assign(MapDialogContainer::getInstance()->createSMSCDialog(did,SSN,cmd->get_sms()->getDestinationAddress().value));
+      if ( dialog.isnull() ) {
         __trace2__("MAP::QueryProcessing: can't create SMSC->MS dialog, locked!");
         SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",did,MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,0));
         MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
@@ -1228,7 +1305,7 @@ void MapProxy::putCommand(const SmscCommand& cmd)
                  dialog->getDialogId());
     }else{
       __trace2__("MAP::QueueProcessing: MAP request");
-      dialog = MapDialogContainer::getInstance()->getDialog(did);
+      dialog.assign(MapDialogContainer::getInstance()->getDialog(did));
     }
     __trace2__("MAP:: process to dialog with ptr 0x%p",dialog);
     if ( dialog == 0 ){

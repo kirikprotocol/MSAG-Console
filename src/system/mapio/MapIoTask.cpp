@@ -100,8 +100,8 @@ USHORT_T Et96MapUAbortInd(ET96MAP_LOCAL_SSN_T lssn,
              *diag,
              szDiag);
   try{
-    MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogid);
-    if ( mdci ){
+    DialogRefGuard mdci(MapDialogContainer::getInstance()->getDialog(dialogid));
+    if ( !mdci.isnull() ){
       mdci->Et96MapUAbortInd(lssn,
                             dialogid,
                             reason,
@@ -126,8 +126,8 @@ USHORT_T Et96MapV2ForwardSmMTConf (
 {
   __trace2__("MAP::Et96MapV2ForwardSmMTConf: did 0x%x",dialogid);
   try{
-    MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogid);
-    if ( mdci ){
+    DialogRefGuard mdci(MapDialogContainer::getInstance()->getDialog(dialogid));
+    if ( !mdci.isnull() ){
       mdci->Et96MapV2ForwardSmMTConf(lssn,
                                     dialogid,
                                     invokeId,
@@ -168,8 +168,8 @@ USHORT_T Et96MapPAbortInd(ET96MAP_LOCAL_SSN_T lssn,
              reason,
              szReason);
   try{
-    MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogid);
-    if ( mdci ){
+    DialogRefGuard mdci(MapDialogContainer::getInstance()->getDialog(dialogid));
+    if ( !mdci.isnull() ){
       mdci->Et96MapPAbortInd(lssn,
                             dialogid,
                             reason,
@@ -183,25 +183,6 @@ USHORT_T Et96MapPAbortInd(ET96MAP_LOCAL_SSN_T lssn,
   }
   return ET96MAP_E_OK;
 }
-
-/*void mkAbonent(char* abonent,const ET96MAP_SS7_ADDR_T* a){
-  if ( a->ss7AddrLen != 0 ){
-    int i = 0;
-    for (; i<(a->ss7AddrLen-1)*2;){
-      if ( (a->ss7Addr[(i>>1)+1]&0x0f) == 0xf ) break;
-      abonent[i]=(a->ss7Addr[(i>>1)+1]&0x0f)+0x30;
-      ++i;
-      if ( i<(a->ss7AddrLen-1)*2 ){
-        if ( (a->ss7Addr[(i>>1)+1]>>4) == 0xf ) break;
-        abonent[i] = (a->ss7Addr[(i>>1)+1]>>4)+0x30;
-        ++i;
-      }else break;
-    }
-    __trace2__("MAP::mkAbonent value(%d) %s",(a->ss7AddrLen-1)*2,abonent);
-  }else{
-    throw runtime_error("MAP::mkAbonent ET96MAP_SM_RP_OA_T length should be greater than 0");
-  }
-}*/
 
 USHORT_T  Et96MapOpenInd(
 	ET96MAP_LOCAL_SSN_T lssn, 
@@ -218,8 +199,7 @@ USHORT_T  Et96MapOpenInd(
   try{
     //char abonent[32] = {0,};
     //mkAbonent(abonent,0/*srcAddr*/);
-    MapDialog* mdci = 
-		  MapDialogContainer::getInstance()->createDialog(dialogId,SSN/*,0*/);
+    DialogRefGuard mdci(MapDialogContainer::getInstance()->createDialog(dialogId,SSN/*,0*/));
     __trace2__("MAP:: create dialog with ptr 0x%p, dialogid 0x%x",mdci,dialogId);
   	//mdci->localSsn = SSN;
     ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
@@ -248,9 +228,9 @@ USHORT_T  Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T lssn,
 				       ET96MAP_PROV_ERR_T *provErrCode_p )
 {
 	__trace2__("MAP::Et96MapV2SendRInfoForSmConf ssn 0x%x, dalogid 0x%x",lssn,dialogId);
-  MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogId);
+  DialogRefGuard mdci(MapDialogContainer::getInstance()->getDialog(dialogId));
   __trace2__("MAP:: dialog with ptr 0x%p, dialogid 0x%x",mdci,dialogId);
-  if ( !mdci ) {
+  if ( mdci.isnull() ) {
     __trace2__("MAP::dialog is not present");
   }else{
   	try{
@@ -275,9 +255,9 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
 	ET96MAP_SM_RP_UI_T* ud ) 
 {
 	__trace2__("MAP::Et96MapV2ForwardSmMOInd ssn 0x%x, dalogid 0x%x",lssn,dialogId);
-  MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogId);
+  DialogRefGuard mdci(MapDialogContainer::getInstance()->getDialog(dialogId));
   __trace2__("MAP:: dialog with ptr 0x%p, dialogid 0x%x",mdci,dialogId);
-  if ( !mdci ) {
+  if ( mdci.isnull() ) {
     __trace2__("MAP::dialog is not present");
   }else{
   	try{
@@ -301,9 +281,9 @@ USHORT_T Et96MapDelimiterInd(
   __trace2__("MAP::Et96MapDelimiterInd lssn 0x%hx, dialogId 0x%hx",lssn,dialogId);
   //USHORT_T result = Et96MapCloseReq( SSN, dialogId, ET96MAP_NORMAL_RELEASE, 0, priorityOrder, 0 );
   //if( result != ET96MAP_E_OK ) return result;
-  MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogId);
+  DialogRefGuard mdci(MapDialogContainer::getInstance()->getDialog(dialogId));
   __trace2__("MAP:: dialog with ptr 0x%p, dialogid 0x%x",mdci,dialogId);
-  if ( !mdci ) {
+  if ( mdci.isnull() ) {
     __trace2__("MAP::dialog is not present");
   }else{
   	try{
@@ -355,8 +335,8 @@ USHORT_T  Et96MapCloseInd(ET96MAP_LOCAL_SSN_T ssn,
 {
   __trace2__("MAP::Et96MapCloseInd did 0x%x",dialogId);
   try{
-    MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogId);
-    if ( mdci ){
+    DialogRefGuard mdci(MapDialogContainer::getInstance()->getDialog(dialogId));
+    if ( !mdci.isnull() ){
       if ( mdci->Et96MapCloseInd(ssn,
                             dialogId,
                             ud,

@@ -66,6 +66,8 @@ extern void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
   \class MapDialog
 */
 class MapDialog{
+  Mutex mutex;
+  unsigned ref_count;
   MapDialogState state;
   ET96MAP_DIALOGUE_ID_T dialogid;
   unsigned smscDialogId;
@@ -83,13 +85,35 @@ class MapDialog{
  	ET96MAP_SM_RP_DA_T smRpDa;
   ET96MAP_SM_RP_OA_T smRpOa;
 public:
-  MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,
-    ET96MAP_LOCAL_SSN_T lssn) : state(MAPST_START), dialogid(dialogid),smscDialogId(0),ssn(lssn) 
+  MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn) : 
+    ref_count(1),
+    state(MAPST_START), 
+    dialogid(dialogid),
+    smscDialogId(0),
+    ssn(lssn) 
     {}
   virtual ~MapDialog(){
+    __trace2__("MAP::Dialog::~MapDialog 0x%x(0x%x)",dialogid,smscDialogId);
+    require ( ref_count == 0 );
     if ( smscDialogId != 0 ){
       freeDialogueId(dialogid);
     }
+  }
+  Mutex& getMutex(){
+    return mutex;
+  }
+  void Release(){
+    unsigned x = 0;
+    mutex.Lock();
+    x = --ref_count;
+    mutex.Unlock();
+    if ( ref_count == 0 ){
+      delete this;
+    }
+  }
+  void AddRef(){
+    MutexGuard(mutex);
+    ++ref_count;
   }
   USHORT_T getDialogId() { return dialogid; }
   void setDialogId(USHORT_T ndid) { dialogid = ndid; }
@@ -154,6 +178,28 @@ public:
     UCHAR_T priorityOrder);
 };
 
+class DialogRefGuard{
+  MapDialog* dialog;
+public:
+  DialogRefGuard(MapDialog* d = 0):dialog(d){
+    //d->AddRef();
+  }
+  ~DialogRefGuard(){
+    if ( dialog ) dialog->Release();
+  }
+  void asssign(MapDialog* d){
+    if ( dialog == d ) return;
+    if ( dialog ) dialog->Release();
+    dialog = d;
+  }
+  bool isnull(){
+    return dialog==0;
+  }
+  void forget(){
+    dialog = 0;
+  }
+};
+
 /**
   \class MapDialogCntItem
 */
@@ -199,6 +245,7 @@ public:
     __trace2__("MAP:: find for dialogid 0x%x, result addr 0x%p",dialogueid,&dlg);
     if ( hash.Get(dialogueid,dlg) ) {
       __trace2__("MAP:: find dialog 0x%p for dialogid 0x%x",dlg,dialogueid);
+      dlg->AddRef();
       return dlg;
     }
     else return 0;
@@ -216,6 +263,7 @@ public:
     hash.Insert(dialogueid,dlg);
     //lock_map.Insert(abonent,1);
     __trace2__("MAP:: new dialog 0x%p for dialogid 0x%x",dlg,dialogueid);
+    dlg->AddRef();
     return dlg;
   }
   
@@ -234,6 +282,7 @@ public:
     lock_map.Insert(abonent,1);
     __trace2__("MAP:: new dialog 0x%p for dialogid 0x%x->0x%x",dlg,smsc_did,map_dialog);
     dialogId_pool.pop_front();
+    dlg->AddRef();
     return dlg;
   }
   
@@ -263,7 +312,8 @@ public:
       __trace2__("MAP:: drop dialog 0x%p for dialogid 0x%x",item,dialogueid);
       if ( item->getAbonent() ) lock_map.Delete(item->getAbonent());
       hash.Delete(dialogueid);
-      delete item;
+      //delete item;
+      item->Release();
     }else{
       __trace2__("MAP::dropDialog: has no dialog for dialogid 0x%x",dialogueid);
     }
