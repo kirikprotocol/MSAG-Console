@@ -77,8 +77,13 @@ public:
 
         SMS request;
         fetchSmsFromSmppPdu((PduXSm*)pdu, &request);
+        Body& requestBody = request.getMessageBody();
         uint32_t userMessageReference =
-            request.getMessageBody().getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+            requestBody.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+        bool isRequestUSSD = 
+            requestBody.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ? 
+                (requestBody.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==USSD_PSSR)
+                    :false;
 
         Command command;
         command.setFromAddress(request.getOriginatingAddress());
@@ -89,8 +94,37 @@ public:
         int smsTextBuffLen = getSmsText(&request, 
             (char *)&smsTextBuff, sizeof(smsTextBuff));
         __require__(smsTextBuffLen < MAX_ALLOWED_MESSAGE_LENGTH);
-        command.setInData((const char*)smsTextBuff);
-        __trace2__("Input Data for DBSme '%s'", smsTextBuff);
+        
+        int textPos = 0;
+        const char* inputData = (const char *)&smsTextBuff[0];
+        if (isRequestUSSD)
+        {
+            // replace '*' & '#' by spaces
+            while (smsTextBuff[textPos] && textPos<smsTextBuffLen) 
+            {
+                if (smsTextBuff[textPos] == '*' ||
+                    smsTextBuff[textPos] == '#') smsTextBuff[textPos] = ' ';
+                textPos++;
+            }
+            
+            // skip first paramenter
+            bool paramScanned = false; textPos = 0;
+            while (smsTextBuff[textPos] && textPos<smsTextBuffLen)
+            {
+                if (!isspace(smsTextBuff[textPos]))
+                {
+                    if (paramScanned) break;
+                    while (smsTextBuff[textPos] && textPos<smsTextBuffLen &&
+                           !isspace(smsTextBuff[textPos])) textPos++;
+                    paramScanned = true;
+                } else textPos++;
+            }
+            
+            inputData = (textPos >= smsTextBuffLen || !paramScanned) ?
+                        0 : (const char *)&smsTextBuff[textPos];
+        }
+        command.setInData(inputData);
+        __trace2__("Input Data for DBSme '%s'", (inputData) ? inputData:"");
         
         try 
         {
@@ -121,6 +155,8 @@ public:
         body.setIntProperty(Tag::SMPP_PRIORITY, 0);
         body.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
                             userMessageReference);
+        if (isRequestUSSD) 
+            body.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, USSD_USSN);
         
         char* out = (char *)command.getOutData();
         int outLen = (out) ? strlen(out) : 0;
