@@ -81,6 +81,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="-Dvsnprintf=_vsnprintf"
 				Optimization="0"
 				AdditionalIncludeDirectories="../../../WIN32_SUPPORT,../../src"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
@@ -99,6 +100,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions="..\xercesc\xerces-c_1D.lib"
 				OutputFile=".\Debug/proxysme_prj.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
@@ -209,12 +211,43 @@
 					RelativePath="..\logger\Logger.cpp">
 				</File>
 			</Filter>
+			<Filter
+				Name="admin"
+				Filter="">
+				<File
+					RelativePath="..\admin\AdminException.cpp">
+				</File>
+				<File
+					RelativePath="..\admin\service\AdminSocketManager.cpp">
+				</File>
+				<File
+					RelativePath="..\admin\util\CommandDispatcher.cpp">
+				</File>
+				<File
+					RelativePath="..\admin\service\ComponentManager.cpp">
+				</File>
+				<File
+					RelativePath="..\admin\service\ServiceCommandDispatcher.cpp">
+				</File>
+				<File
+					RelativePath="..\admin\service\ServiceSocketListener.cpp">
+				</File>
+				<File
+					RelativePath="..\admin\service\Type.cpp">
+				</File>
+				<File
+					RelativePath="..\admin\service\Variant.cpp">
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl">
 			<File
 				RelativePath="proxysme.h">
+			</File>
+			<File
+				RelativePath=".\ProxySmeConfig.h">
 			</File>
 			<File
 				RelativePath="ProxySmeMixer.h">

@@ -51,7 +51,7 @@ public:
   }
   virtual const char* const getName() const {return "ProxySme";}
   virtual const Methods& getMethods() const {return methods_;}
-  virtual Variant call(const Method& method, const Arguments& args)
+  virtual Variant call(const Method& method, const Arguments& args) throw (AdminException);
   {
     if ( method.getId() == APPLAY_METHOD ) {
       smsc::util::Logger::getCategory("smsc.proxysme").info("applay method was called");

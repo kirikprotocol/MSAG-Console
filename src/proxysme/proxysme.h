@@ -33,7 +33,7 @@ using smsc::sme::SmeConfig;
 struct ProxyConfig {
   SmeConfig left,right;
   int quelimit;
-  string admin_host;
+  std::string admin_host;
   unsigned admin_port;
 };
 

@@ -26,7 +26,7 @@ using namespace smsc::smpp;
 using namespace smsc::core::synchronization;
 
 struct SMachineNotifier {
-  virtual SMachineBreak_() = 0;
+  virtual bool SMachineBreak_() = 0;
 };
 
 enum { END_PROCESSING, BREAK_PROCESSING };
