@@ -130,7 +130,7 @@ private:
 	
 	void setupRandomCorrectSmeInfo(SmeInfo* sme);
 	vector<int> compareSmeInfo(const SmeInfo& sme1, const SmeInfo& sme2);
-	void debugSme(const char* tc, const SmeInfo& sme);
+	void debugSme(const char* tc, const Address& smeAlias, const SmeInfo& sme);
 	void addSme(const char* tc, int num, const Address* smeAlias, const SmeInfo* sme);
 };
 

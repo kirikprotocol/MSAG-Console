@@ -1,5 +1,6 @@
 #include "SmeManagerTestCases.hpp"
 #include "SmeManagerUtil.hpp"
+#include "test/sms/SmsUtil.hpp"
 #include "smeman/smetypes.h"
 #include "util/debug.h"
 #include <map>
@@ -11,17 +12,18 @@ namespace smeman {
 
 using smsc::util::Logger;
 using smsc::test::sms::SmsUtil;
+using smsc::test::sms::operator<<;
 using namespace std;
 using namespace smsc::test::util;
 
 ostream& operator<< (ostream& os, const SmeInfo& sme)
 {
-	os << "systemId = " << sme.systemId << "(" << sme.systemId.length() << ")";
+	os << "{systemId = " << sme.systemId << "(" << sme.systemId.length() << ")";
 	os << ", disabled = " << (sme.disabled ? "true" : "false");
 	os << ", interfaceVersion = " << (int) sme.interfaceVersion;
 	os << ", systemType = " << sme.systemType;
 	os << ", hostname = " << sme.hostname;
-	os << ", port = " << sme.port;
+	os << ", port = " << sme.port << "}";
 }
 
 SmeManagerTestCases::SmeManagerTestCases(SmeManager* _smeMan, SmeRegistry* _smeReg)
@@ -37,10 +39,11 @@ Category& SmeManagerTestCases::getLog()
 	return log;
 }
 
-void SmeManagerTestCases::debugSme(const char* tc, const SmeInfo& sme)
+void SmeManagerTestCases::debugSme(const char* tc, const Address& smeAlias,
+	const SmeInfo& sme)
 {
 	ostringstream os;
-	os << sme << endl;
+	os << "smeAlias = " << smeAlias << ", sme = " << sme;
 	getLog().debug("[%d]\t%s(): %s", thr_self(), tc, os.str().c_str());
 	//__trace2__("%s(): %s", tc, os.str().c_str());
 }
@@ -126,7 +129,7 @@ void SmeManagerTestCases::addSme(const char* tc, int num,
 {
 	if (smeReg->registerSme(*smeAlias, *sme))
 	{
-		debugSme(tc, *sme);
+		debugSme(tc, *smeAlias, *sme);
 		if (smeMan)
 		{
 			smeMan->addSme(*sme);
@@ -143,7 +146,7 @@ TCResult* SmeManagerTestCases::addCorrectSme(Address* smeAlias, SmeInfo* sme, in
 	{
 		try
 		{
-			SmsUtil::setupRandomCorrectAddress(smeAlias);
+			SmsUtil::setupRandomCorrectAddress(smeAlias, 10, 20);
 			switch (s.value1(numAddr))
 			{
 				case 1: //по умолчанию случайные ton и npi
@@ -231,7 +234,7 @@ TCResult* SmeManagerTestCases::addCorrectSmeWithEmptySystemId(Address* smeAlias,
 	TCResult* res = new TCResult(TC_ADD_CORRECT_SME, 1001);
 	try
 	{
-		SmsUtil::setupRandomCorrectAddress(smeAlias);
+		SmsUtil::setupRandomCorrectAddress(smeAlias, 10, 20);
 		setupRandomCorrectSmeInfo(sme);
 		sme->systemId = "";
 		addSme("addCorrectSmeWithEmptySystemId", 1, smeAlias, sme);
