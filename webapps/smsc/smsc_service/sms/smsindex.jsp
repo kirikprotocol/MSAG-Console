@@ -31,7 +31,7 @@
           %><a href="smsview.jsp?page=<%= i%>"><%= i+1%></a>&nbsp;<%
         } else { %>[<%= i+1%>]&nbsp;<% }
       }
-      if (endInd < pagesCount) %>&nbsp;...<%
+      if (endInd < pagesCount) %>...<%
       %>&nbsp;<%
     }
     if (formBean.isPrevEnabled()) {
