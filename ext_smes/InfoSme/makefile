@@ -34,8 +34,8 @@ compile:
 	@mkdir -p $(SME_BUILDDIR)/jsp
 	@mkdir -p $(SME_BUILDDIR)/jsp/inc
 	@mkdir -p $(SME_BUILDDIR)/lib
-#	@cp -f service $(SME_BUILDDIR)/bin
-	@cp -f  $(SMSC_BUILDDIR)/bin/infosme/InfoSme $(SME_BUILDDIR)/bin/service
+	@cp -f service $(SME_BUILDDIR)/bin
+	@cp -f  $(SMSC_BUILDDIR)/bin/infosme/InfoSme $(SME_BUILDDIR)/bin/
 	@cp -f log4cpp.properties $(SME_BUILDDIR)/log4cpp.infosme
 	@cp -f $(SMSC_BUILDDIR)/jars/infosme.jar  $(SME_BUILDDIR)/lib/infosme.jar
 	@cp -f $(DB_OCI_LIB) $(SME_BUILDDIR)/lib/libdb_oci.so
