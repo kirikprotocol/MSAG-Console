@@ -11,6 +11,7 @@
 #include "util/regexp/RegExp.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "system/status.h"
+#include "resourcemanager/ResourceManager.hpp"
 
 namespace smsc{
 namespace system{
@@ -21,10 +22,12 @@ using namespace StateTypeValue;
 using namespace smsc::smpp;
 using namespace util;
 using namespace smsc::system;
+using namespace smsc::resourcemanager;
 using std::exception;
 using smsc::util::regexp::RegExp;
 using smsc::util::regexp::SMatch;
 using smsc::core::synchronization::Mutex;
+
 
 class ReceiptGetAdapter:public GetAdapter{
 public:
@@ -120,7 +123,6 @@ public:
 
 void StateMachine::formatDeliver(const FormatData& fd,std::string& out)
 {
-  if(!ofDelivered)return;
   ReceiptGetAdapter ga;
   ContextEnvironment ce;
   ce.exportStr("dest",fd.addr);
@@ -129,6 +131,15 @@ void StateMachine::formatDeliver(const FormatData& fd,std::string& out)
   ce.exportInt("lastResult",fd.lastResult);
   ce.exportInt("lastResultGsm",fd.lastResultGsm);
   ce.exportStr("msc",fd.msc);
+
+  string key="receipt.";
+  key+=fd.scheme;
+  key+=".";
+  key+="deliveredFormat";
+
+  __trace2__("RECEIPT: get formatter for key=%s",key.c_str());
+
+  OutputFormatter* ofDelivered=ResourceManager::getInstance()->getFormatter(fd.locale,key);
 
   try{
     ofDelivered->format(out,ga,ce);
@@ -139,16 +150,36 @@ void StateMachine::formatDeliver(const FormatData& fd,std::string& out)
 }
 void StateMachine::formatFailed(const FormatData& fd,std::string& out)
 {
-  if(!ofFailed)return;
   ReceiptGetAdapter ga;
   ContextEnvironment ce;
   ce.exportStr("dest",fd.addr);
-  ce.exportStr("error",fd.err);
+  char buf[32];
+  sprintf(buf,"%d",fd.lastResult);
+  string reason=ResourceManager::getInstance()->getString(fd.locale,((string)"reason.")+buf);
+  if(reason.length()==0)reason=buf;
+  ce.exportStr("reason",reason.c_str());
   ce.exportDat("date",fd.date);
   ce.exportStr("msgId",fd.msgId);
   ce.exportInt("lastResult",fd.lastResult);
   ce.exportInt("lastResultGsm",fd.lastResultGsm);
   ce.exportStr("msc",fd.msc);
+
+  string key="receipt.";
+  key+=fd.scheme;
+  key+=".";
+  if(fd.lastResult!=Status::DELETED)
+  {
+    key+="failedFormat";
+  }else
+  {
+    key+="deletedFormat";
+  }
+
+  __trace2__("RECEIPT: get formatter for key=%s",key.c_str());
+
+
+  OutputFormatter* ofFailed=ResourceManager::getInstance()->getFormatter(fd.locale,key);
+
 
   try{
     ofFailed->format(out,ga,ce);
@@ -160,16 +191,30 @@ void StateMachine::formatFailed(const FormatData& fd,std::string& out)
 
 void StateMachine::formatNotify(const FormatData& fd,std::string& out)
 {
-  if(!ofNotify)return;
   ReceiptGetAdapter ga;
   ContextEnvironment ce;
   ce.exportStr("dest",fd.addr);
-  ce.exportStr("reason",fd.err);
+  char buf[32];
+  sprintf(buf,"%d",fd.lastResult);
+  string reason=ResourceManager::getInstance()->getString(fd.locale,((string)"reason.")+buf);
+  if(reason.length()==0)reason=buf;
+  ce.exportStr("reason",reason.c_str());
   ce.exportDat("date",fd.date);
   ce.exportStr("msgId",fd.msgId);
   ce.exportInt("lastResult",fd.lastResult);
   ce.exportInt("lastResultGsm",fd.lastResultGsm);
   ce.exportStr("msc",fd.msc);
+
+  string key="receipt.";
+  key+=fd.scheme;
+  key+=".";
+  key+="notifyFormat";
+
+  __trace2__("RECEIPT: get formatter for key=%s",key.c_str());
+
+
+  OutputFormatter* ofNotify=ResourceManager::getInstance()->getFormatter(fd.locale,key);
+
 
   try{
     ofNotify->format(out,ga,ce);
@@ -454,7 +499,9 @@ StateType StateMachine::submit(Tuple& t)
     sms->getOriginatingAddress().plan,sms->getOriginatingAddress().value,
     profile.reportoptions,profile.codepage);
 
+  __trace2__("SUBMIT_SM: profile options=%d",profile.reportoptions);
   sms->setDeliveryReport(profile.reportoptions);
+  sms->setStrProperty(Tag::SMSC_RECEIPT_LOCALE,profile.locale.c_str());
 
   smsc::router::RouteInfo ri;
   bool has_route = smsc->routeSms(sms->getOriginatingAddress(),
@@ -1292,10 +1339,16 @@ StateType StateMachine::deliveryResp(Tuple& t)
     log.error("Failed to change state to delivered for sms %lld",t.msgId);
     return UNKNOWN_STATE;
   }
-  __trace__("DELIVERY_RESP: registerStatisticalEvent");
+  __trace__("DELIVERYRESP: registerStatisticalEvent");
   smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms);
   try{
     //smsc::profiler::Profile p=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
+    __trace2__("DELIVERYRESP: suppdelrep=%d, delrep=%d, regdel=%d, srr=%d",
+      sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS),
+      sms.getDeliveryReport(),
+      sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY),
+      sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST));
+
     if(!sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) && !sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS))
     {
       if(//p.reportoptions==smsc::profiler::ProfileReportOptions::ReportFull ||
@@ -1339,6 +1392,11 @@ StateType StateMachine::deliveryResp(Tuple& t)
         fd.lastResult=0;
         fd.lastResultGsm=0;
         fd.msc=d.msc;
+        string loc=sms.getStrProperty(Tag::SMSC_RECEIPT_LOCALE);
+        fd.locale=loc.c_str();
+        smsc::smeman::SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
+        fd.scheme=si.receiptSchemeName.c_str();
+
         formatDeliver(fd,out);
         rpt.getDestinationAddress().getText(addr,sizeof(addr));
         __trace2__("RECEIPT: sending receipt to %s:%s",addr,out.c_str());
@@ -1651,6 +1709,8 @@ StateType StateMachine::cancel(Tuple& t)
   }
   try{
     store->changeSmsStateToDeleted(t.msgId);
+    sms.lastResult=Status::DELETED;
+    sendFailureReport(sms,t.msgId,DELETED,"");
   }catch(...)
   {
     if(!t.command->get_cancelSm().internall)
@@ -1731,6 +1791,11 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   fd.msgId=msgid;
   fd.err=reason;
   fd.setLastResult(sms.lastResult);
+  string loc=sms.getStrProperty(Tag::SMSC_RECEIPT_LOCALE);
+  fd.locale=loc.c_str();
+  smsc::smeman::SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
+  fd.scheme=si.receiptSchemeName.c_str();
+
   formatFailed(fd,out);
   smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
   trimSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage);
@@ -1794,6 +1859,10 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   fd.msgId=msgid;
   fd.err=reason;
   fd.setLastResult(sms.lastResult);
+  string loc=sms.getStrProperty(Tag::SMSC_RECEIPT_LOCALE);
+  fd.locale=loc.c_str();
+  smsc::smeman::SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
+  fd.scheme=si.receiptSchemeName.c_str();
 
 
   formatNotify(fd,out);

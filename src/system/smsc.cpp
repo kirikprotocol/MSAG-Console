@@ -17,6 +17,7 @@
 #include "system/mapio/MapIoTask.h"
 #include "system/abonentinfo/AbonentInfo.hpp"
 #include "mscman/MscManager.h"
+#include "resourcemanager/ResourceManager.hpp"
 
 //#define ENABLE_MAP_SYM
 
@@ -351,16 +352,6 @@ void Smsc::init(const SmscConfigs& cfg)
     {
       StateMachine *m=new StateMachine(eventqueue,store,this);
       m->maxValidTime=maxValidTime;
-      try{
-        m->initFormatters(
-          cfg.cfgman->getString("core.receipt_delivered"),
-          cfg.cfgman->getString("core.receipt_failed"),
-          cfg.cfgman->getString("core.receipt_notify"));
-      }catch(exception& e)
-      {
-        log.warn("INIT: Delivery receipts init failed:%s",e.what());
-        __warning__("INIT: Delivery receipts init failed");
-      }
       Address addr(cfg.cfgman->getString("core.service_center_address"));
       m->scAddress=addr;
       tp.startTask(m);
@@ -416,6 +407,12 @@ void Smsc::init(const SmscConfigs& cfg)
 
   smsc::mscman::MscManager::startup(*dataSource,*cfg.cfgman);
 
+  smsc::resourcemanager::ResourceManager::init
+  (
+    cfg.cfgman->getString("core.locales"),
+    cfg.cfgman->getString("core.default_locale")
+  );
+
   {
     char *rep=cfg.cfgman->getString("profiler.defaultReport");
     char *dc=cfg.cfgman->getString("profiler.defaultDataCoding");
@@ -445,11 +442,6 @@ void Smsc::init(const SmscConfigs& cfg)
                &smeman,
                cfg.cfgman->getString("profiler.systemId"));
 
-    profiler->msgRepNone=cfg.cfgman->getString("profiler.msgReportNone");
-    profiler->msgRepFull=cfg.cfgman->getString("profiler.msgReportFull");
-    profiler->msgDCDef=cfg.cfgman->getString("profiler.msgDataCodingDefault");
-    profiler->msgDCUCS2=cfg.cfgman->getString("profiler.msgDataCodingUCS2");
-    profiler->msgError=cfg.cfgman->getString("profiler.msgError");
     profiler->serviceType=cfg.cfgman->getString("profiler.service_type");
     profiler->protocolId=cfg.cfgman->getInt("profiler.protocol_id");
   }

@@ -21,19 +21,17 @@ public:
                smsc::system::Smsc *app):
                eq(q),
                store(st),
-               smsc(app),
-               ofDelivered(0),
-               ofFailed(0)
+               smsc(app)
                {}
   virtual ~StateMachine()
   {
-    if(ofDelivered)delete ofDelivered;
-    if(ofFailed)delete ofFailed;
   }
 
   int Execute();
 
   struct FormatData{
+    const char* scheme;
+    const char* locale;
     const char* addr;
     time_t date;
     const char* msgId;
@@ -51,13 +49,6 @@ public:
       else lastResultGsm = 137;
     }
   };
-
-  void initFormatters(const char* deliver,const char* failed,const char* notify)
-  {
-    ofDelivered=new OutputFormatter(deliver);
-    ofFailed=new OutputFormatter(failed);
-    ofNotify=new OutputFormatter(notify);
-  }
 
   void formatDeliver(const FormatData&,std::string& out);
   void formatFailed(const FormatData&,std::string& out);
@@ -78,10 +69,6 @@ protected:
   EventQueue& eq;
   smsc::store::MessageStore* store;
   smsc::system::Smsc *smsc;
-
-  OutputFormatter *ofDelivered;
-  OutputFormatter *ofNotify;
-  OutputFormatter *ofFailed;
 
   StateType submit(Tuple& t);
   StateType forward(Tuple& t);

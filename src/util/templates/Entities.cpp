@@ -25,11 +25,11 @@ void FormatEntity::renderOptions(const char* line)
     throw(FormatRenderingException)
 {
     int curPos = 0;
-    
+
     while (line && line[curPos] != '\0')
     {
         std::string name = ""; std::string value = "";
-        
+
         while (isspace(line[curPos])) curPos++; // skip spaces before 'name'
         while (isalnum(line[curPos])) name += line[curPos++];
         if (!name.length())
@@ -40,11 +40,11 @@ void FormatEntity::renderOptions(const char* line)
         while (isspace(line[curPos])) curPos++; // skip spaces after 'name'
         if (line[curPos++] != SMSC_DBSME_IO_FORMAT_OPTION_ASSIGN)
             throw FormatRenderingException("FormatRenderingException: "
-                "'%c' sign expected. Parsing line: <%s>", 
+                "'%c' sign expected. Parsing line: <%s>",
                 SMSC_DBSME_IO_FORMAT_OPTION_ASSIGN, line);
         while (isspace(line[curPos])) curPos++; // skip spaces before 'value'
-        
-        if (line[curPos] == SMSC_DBSME_IO_FORMAT_STRING_DELIMETER) 
+
+        if (line[curPos] == SMSC_DBSME_IO_FORMAT_STRING_DELIMETER)
         {
             curPos++;
             bool stop = false;
@@ -64,7 +64,7 @@ void FormatEntity::renderOptions(const char* line)
                     if (!escape)
                     {
                         stop = true; curPos++;
-                        continue;   
+                        continue;
                     }
                     break;
                 default:
@@ -74,27 +74,27 @@ void FormatEntity::renderOptions(const char* line)
                     }
                     break;
                 }
-                
+
                 escape = false;
                 value += line[curPos++];
             }
             if (!stop)
             {
                 throw FormatRenderingException("FormatRenderingException: "
-                    "'%c' sign expected. Parsing line: <%s>", 
+                    "'%c' sign expected. Parsing line: <%s>",
                     SMSC_DBSME_IO_FORMAT_STRING_DELIMETER, line);
             }
         }
         else
         {
-            while (isalnum(line[curPos]) || 
-                   line[curPos] == '.' || line[curPos] == ',') 
+            while (isalnum(line[curPos]) ||
+                   line[curPos] == '.' || line[curPos] == ',')
                 value += line[curPos++];
         }
 
         if (ENTITY_TRACE) __trace2__("Result %s=%s", name.c_str(), value.c_str());
         options.Insert(name.c_str(), value);
-        
+
         while (isspace(line[curPos])) curPos++; // skip spaces after 'value'
     }
 }
@@ -128,33 +128,33 @@ FormatEntity::FormatEntity(std::string line, bool io, bool type)
                                            "Parsing format string: <%s>", raw);
         }
         renderOptions(raw+strlen(ioEntityTypeStrings[i]));
-        
+
         const char* arg = getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
         const char* def = getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
         const char* imp = getOption(SMSC_DBSME_IO_FORMAT_IMPORT_OPTION);
         const char* exp = getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
-        
+
         if (io) // formatter
         {
             if (!arg && !def && !imp)
                 throw FormatRenderingException(
                     "Neither '%s' nor '%s' nor '%s' option defined ! "
-                    "Parsing output format string: <%s>", 
+                    "Parsing output format string: <%s>",
                     SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION,
                     SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION,
                     SMSC_DBSME_IO_FORMAT_IMPORT_OPTION, raw);
         }
         else    // parser
         {
-            if (!arg && !exp) 
+            if (!arg && !exp)
                 throw FormatRenderingException(
                     "Neither '%s' nor '%s' option wasn't defined ! "
-                    "Parsing input format string: <%s>", 
+                    "Parsing input format string: <%s>",
                     SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION,
                     SMSC_DBSME_IO_FORMAT_EXPORT_OPTION, raw);
         }
     }
-    else 
+    else
     {
         this->type = ET_TEXT; int curPos = 0; bool escape = false;
         // Replace all \\->\, \" -> "
@@ -162,9 +162,9 @@ FormatEntity::FormatEntity(std::string line, bool io, bool type)
         {
             if (raw[curPos] == SMSC_DBSME_IO_FORMAT_ENTITY_ESCAPER)
             {
-                if (!escape) escape = true; 
-                else 
-                { 
+                if (!escape) escape = true;
+                else
+                {
                     str += SMSC_DBSME_IO_FORMAT_ENTITY_ESCAPER;
                     escape = false;
                 }
@@ -176,7 +176,7 @@ FormatEntity::FormatEntity(std::string line, bool io, bool type)
             }
             curPos++;
         }
-        if (escape) str += SMSC_DBSME_IO_FORMAT_ENTITY_ESCAPER; 
+        if (escape) str += SMSC_DBSME_IO_FORMAT_ENTITY_ESCAPER;
     }
 }
 FormatEntity::~FormatEntity()
@@ -187,31 +187,31 @@ FormatEntityRenderer::FormatEntityRenderer(const char* format, bool io)
     throw(FormatRenderingException)
 {
     if (ENTITY_TRACE) __trace2__("Format for parsing is: '%s'", format);
-    
+
     std::string str = "";
 
     int     curPos = 0;
     bool    opened = false;
     bool    escape = false;
     bool    ending = false;
-    
+
     while (format)
     {
         switch (format[curPos])
         {
         case SMSC_DBSME_IO_FORMAT_ENTITY_ESCAPER:
-            if (!escape) escape = true; 
-            else 
-            { 
+            if (!escape) escape = true;
+            else
+            {
                 str += SMSC_DBSME_IO_FORMAT_ENTITY_ESCAPER;
                 str += SMSC_DBSME_IO_FORMAT_ENTITY_ESCAPER;
                 escape = false;
             }
             curPos++;
             continue;
-        
+
         case SMSC_DBSME_IO_FORMAT_ENTITY_DELIMETER:
-            if (escape || 
+            if (escape ||
                 format[curPos+1] != SMSC_DBSME_IO_FORMAT_ENTITY_DELIMETER)
             {
                 str += format[curPos++];
@@ -221,18 +221,18 @@ FormatEntityRenderer::FormatEntityRenderer(const char* format, bool io)
             curPos += 2;
             ending = false;
             break;
-        
+
         case '\0':
-            if (escape) 
+            if (escape)
             {
                 str += SMSC_DBSME_IO_FORMAT_ENTITY_ESCAPER;
                 escape = false;
             }
-            ending = true; 
+            ending = true;
             break;
-        
+
         default:
-            if (escape) 
+            if (escape)
             {
                 str += SMSC_DBSME_IO_FORMAT_ENTITY_ESCAPER;
                 escape = false;
@@ -245,7 +245,7 @@ FormatEntityRenderer::FormatEntityRenderer(const char* format, bool io)
             const char* line = str.c_str();
             __trace2__("%s line: <%s>", (opened) ? "Inner":"Outer", line);
         }
-        
+
         if (opened || io)
         {
             try
@@ -261,13 +261,13 @@ FormatEntityRenderer::FormatEntityRenderer(const char* format, bool io)
                 throw;
             }
         }
-        
-        if (ending) break; 
+
+        if (ending) break;
         opened = !opened;
         str = "";
     }
 
-    if (opened) 
+    if (opened)
         throw FormatRenderingException("Closeup symbols expected '%c%c' !"
                                        "Parsing format string: <%s>",
                                        SMSC_DBSME_IO_FORMAT_ENTITY_DELIMETER,
@@ -375,5 +375,3 @@ void ContextEnvironment::reset()
 }
 
 }}}
-
-

@@ -159,6 +159,12 @@ public:
     return smeman.getSmeInfo(idx);
   }
 
+  smsc::smeman::SmeInfo getSmeInfo(const string& sid)
+  {
+    return smeman.getSmeInfo(smeman.lookup(sid));
+  }
+
+
   void submitSms(SMS* sms)
   {
     smscsme->putSms(sms);

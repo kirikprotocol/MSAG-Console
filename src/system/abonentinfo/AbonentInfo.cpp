@@ -1,6 +1,8 @@
 #include "system/abonentinfo/AbonentInfo.hpp"
 #include "util/smstext.h"
 #include "util/Logger.h"
+#include "resourcemanager/ResourceManager.hpp"
+#include <exception>
 
 namespace smsc{
 namespace system{
@@ -8,6 +10,101 @@ namespace abonentinfo{
 
 using smsc::util::getSmsText;
 using smsc::smeman;
+
+using namespace smsc::resourcemanager;
+
+class FakeGetAdapter:public GetAdapter{
+public:
+
+  virtual bool isNull(const char* key)
+      throw(AdapterException)
+  {
+    return false;
+  }
+
+  virtual const char* getString(const char* key)
+      throw(AdapterException)
+  {
+    return "";
+  }
+
+  virtual int8_t getInt8(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual int16_t getInt16(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual int32_t getInt32(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual int64_t getInt64(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+
+  virtual uint8_t getUint8(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual uint16_t getUint16(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual uint32_t getUint32(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual uint64_t getUint64(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+
+  virtual float getFloat(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual double getDouble(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual long double getLongDouble(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+
+  virtual time_t getDateTime(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+};
+
 
 int AbonentInfoSme::Execute()
 {
@@ -118,32 +215,40 @@ int AbonentInfoSme::Execute()
 
       p=smsc->getProfiler()->lookup(d);
 
-      char answ[MAX_SHORT_MESSAGE_LENGTH];
-      if(as.isMobileRequest)
+      string answ;
+      try{
+        if(as.isMobileRequest)
+        {
+          FakeGetAdapter ga;
+          ContextEnvironment ce;
+          ce.exportStr("abonent",as.originalAddr.c_str());
+          ce.exportStr("status",as.status==AbonentStatus::ONLINE? "Online":
+                                as.status==AbonentStatus::OFFLINE?"Offline":
+                                                                  "Unknown");
+          ce.exportStr("msc",as.msc.length()?as.msc.c_str():"unknown");
+          OutputFormatter* f=ResourceManager::getInstance()->getFormatter(p.locale,"abonentinfo.mobileFormat");
+          f->format(answ,ga,ce);
+        }else
+        {
+          FakeGetAdapter ga;
+          ContextEnvironment ce;
+          ce.exportStr("abonent",as.originalAddr.c_str());
+          ce.exportInt("status",as.status);
+          ce.exportInt("encoding",p.codepage);
+          ce.exportStr("msc",as.msc.length()?("+"+as.msc).c_str():"");
+          OutputFormatter* f=ResourceManager::getInstance()->getFormatter(p.locale,"abonentinfo.smeFormat");
+          __trace2__("AbonentInfo: formatter=%p",f);
+          f->format(answ,ga,ce);
+        }
+      }catch(std::exception& e)
       {
-        sprintf
-        (
-          answ,
-          "Abonent %s is %s. %s",
-            as.originalAddr.c_str(),
-            as.status==AbonentStatus::ONLINE? "Online":
-            as.status==AbonentStatus::OFFLINE?"Offline":
-                                              "Unknown",
-            as.status==AbonentStatus::UNKNOWNVALUE?"":
-            as.msc.length()?("msc +"+as.msc).c_str():
-            "msc unknown"
-        );
-      }else
+        __trace2__("AbonentInfo: Formatter exception %s",e.what());
+      }catch(...)
       {
-        sprintf(answ,"%s:%d,%d,%s",
-          as.originalAddr.c_str(),
-          as.status,
-          p.codepage,
-          as.msc.length()?("+"+as.msc).c_str():""
-          );
+        __trace2__("AbonentInfo: Formatter exception unknown");
       }
 
-      int len=strlen(answ);
+      int len=answ.length();
       //char buf7[MAX_SHORT_MESSAGE_LENGTH];
       //int len7=ConvertTextTo7Bit(answ,len,buf7,sizeof(buf7),CONV_ENCODING_ANSI);
 
@@ -151,7 +256,7 @@ int AbonentInfoSme::Execute()
       s.setDestinationAddress(as.sourceAddr);
       s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
       s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
-      s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,answ,len);
+      s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,answ.c_str(),len);
       s.setIntProperty(Tag::SMPP_SM_LENGTH,len);
       s.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
         as.userMessageReference);

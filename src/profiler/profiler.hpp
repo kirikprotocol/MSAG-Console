@@ -32,15 +32,18 @@ namespace ProfileCharsetOptions{
 struct Profile{
   int codepage;
   int reportoptions;
+  std::string locale;
   bool operator==(const Profile& src)
   {
     return codepage==src.codepage &&
-           reportoptions==src.reportoptions;
+           reportoptions==src.reportoptions &&
+           locale==src.locale;
   }
   void assign(const Profile& src)
   {
     codepage=src.codepage;
     reportoptions=src.reportoptions;
+    locale=src.locale;
   }
 };
 
@@ -169,12 +172,6 @@ public:
 
   void loadFromDB(smsc::db::DataSource *datasrc);
 
-  string msgRepNone;
-  string msgRepFull;
-  string msgDCDef;
-  string msgDCUCS2;
-  string msgError;
-
   string serviceType;
   int protocolId;
 
@@ -199,7 +196,7 @@ protected:
   void dbUpdate(const Address& addr,const Profile& profile);
   void dbInsert(const Address& addr,const Profile& profile);
 
-  void internal_update(int flag,const Address& addr,int value);
+  void internal_update(int flag,const Address& addr,int value,const char* svalue=NULL);
 
 };
 

@@ -17,12 +17,16 @@
 #include "util/smstext.h"
 #include "util/Logger.h"
 
+#include "resourcemanager/ResourceManager.hpp"
+
 namespace smsc{
 namespace profiler{
 
 using namespace smsc::core::buffers;
 using smsc::util::Exception;
 using namespace smsc::util;
+
+using namespace smsc::resourcemanager;
 
 struct HashKey{
   Address addr;
@@ -196,7 +200,7 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   using smsc::util::config::Manager;
   using smsc::util::config::ConfigView;
   using smsc::util::config::ConfigException;
-  const char *sql="UPDATE SMS_PROFILE SET reportinfo=:1, codeset=:2 where mask=:3";
+  const char *sql="UPDATE SMS_PROFILE SET reportinfo=:1, codeset=:2, locale=:4 where mask=:3";
   ConnectionGuard connection(ds);
   if(!connection.get())throw Exception("Profiler: Failed to get connection");
   auto_ptr<Statement> statement(connection->createStatement(sql));
@@ -204,9 +208,10 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   statement->setInt8(1,profile.reportoptions);
   statement->setInt8(2,profile.codepage);
   char addrbuf[30];
-  sprintf(addrbuf,".%d.%d.%s",addr.type,addr.plan,addr.value);
-  __trace2__("profiler: update %s",addrbuf);
+  addr.toString(addrbuf,sizeof(addrbuf));
+  __trace2__("profiler: update %s=%d,%d,%s",addrbuf,profile.reportoptions,profile.codepage,profile.locale.c_str());
   statement->setString(3,addrbuf);
+  statement->setString(4,profile.locale.c_str());
   statement->executeUpdate();
   connection->commit();
 }
@@ -217,29 +222,29 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   using smsc::util::config::Manager;
   using smsc::util::config::ConfigView;
   using smsc::util::config::ConfigException;
-  const char* sql = "INSERT INTO SMS_PROFILE (mask, reportinfo, codeset)"
-                      " VALUES (:1, :2, :3)";
+  const char* sql = "INSERT INTO SMS_PROFILE (mask, reportinfo, codeset, locale)"
+                      " VALUES (:1, :2, :3, :4)";
 
   ConnectionGuard connection(ds);
 
   if(!connection.get())throw Exception("Profiler: Failed to get connection");
   auto_ptr<Statement> statement(connection->createStatement(sql));
   char addrbuf[30];
-  AddressValue val;
-  addr.getValue(val);
-  sprintf(addrbuf,".%d.%d.%s",addr.type,addr.plan,val);
-  __trace2__("profiler: insert %s",addrbuf);
+  addr.toString(addrbuf,sizeof(addrbuf));
+  __trace2__("profiler: insert %s=%d,%d,%s",addrbuf,profile.reportoptions,profile.codepage,profile.locale.c_str());
   statement->setString(1, addrbuf);
   statement->setInt8(2, profile.reportoptions);
   statement->setInt8(3, profile.codepage);
+  statement->setString(4,profile.locale.c_str());
   statement->executeUpdate();
   connection->commit();
 }
 
 static const int _update_report=1;
 static const int _update_charset=2;
+static const int _update_locale=3;
 
-void Profiler::internal_update(int flag,const Address& addr,int value)
+void Profiler::internal_update(int flag,const Address& addr,int value,const char* svalue)
 {
   Profile profile;
   profile.assign(lookup(addr));
@@ -251,6 +256,10 @@ void Profiler::internal_update(int flag,const Address& addr,int value)
   if(flag==_update_charset)
   {
     profile.codepage=value;
+  }
+  if(flag==_update_locale)
+  {
+    profile.locale=svalue;
   }
   update(addr,profile);
 }
@@ -341,7 +350,27 @@ int Profiler::Execute()
         }
       }
     }else
-    if(!strncmp(body+i,"DEFAULT",4))
+    if(!strncmp(body+i,"LOCALE",6))
+    {
+      i+=7;
+      while(isspace(body[i]))i++;
+      int j=i;
+      while(body[i] && !isspace(body[i]))i++;
+      if(body[i])i--;
+      string loc;
+      loc.assign(body+j,i-j);
+      for(int i=0;i<loc.length();i++)loc.at(i)=tolower(loc.at(i));
+      __trace2__("Profiler: new locale %s",loc.c_str());
+      if(ResourceManager::getInstance()->isValidLocale(loc))
+      {
+        internal_update(_update_locale,addr,0,loc.c_str());
+        msg=4;
+      }else
+      {
+        msg=5;
+      }
+    }else
+    if(!strncmp(body+i,"DEFAULT",7))
     {
       msg=2;
       internal_update(_update_charset,addr,ProfileCharsetOptions::Default);
@@ -359,30 +388,40 @@ int Profiler::Execute()
 
     putIncomingCommand(resp);
     SMS ans;
-    const char *msgstr;
+    string msgstr="xxx";
+    Profile p=lookup(addr);
     switch(msg)
     {
       case 0:
       {
-        msgstr=msgRepNone.c_str();
+        msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgReportNone");
       }break;
       case 1:
       {
-        msgstr=msgRepFull.c_str();
+        msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgReportFull");
       }break;
       case 2:
       {
-        msgstr=msgDCDef.c_str();
+        msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgDefault");
       }break;
       case 3:
       {
-        msgstr=msgDCUCS2.c_str();
+        msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgUCS2");
+      }break;
+      case 4:
+      {
+        msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgLocaleChanged");
+      }break;
+      case 5:
+      {
+        msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgLocaleUnknown");
       }break;
       default:
       {
-        msgstr=msgError.c_str();
+        msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgError");
       };
     }
+    __trace2__("Profiler: msgstr=%s",msgstr.c_str());
     ans.setOriginatingAddress(sms->getDestinationAddress());
     ans.setDestinationAddress(sms->getOriginatingAddress());
     char msc[]="";
@@ -397,7 +436,7 @@ int Profiler::Execute()
       sms->getIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE));
 
     Profile pr=lookup(addr);
-    __trace2__("profiler response:%s!",msgstr);
+    __trace2__("profiler response:%s!",msgstr.c_str());
     /*
     if(pr.codepage==ProfileCharsetOptions::Default)
     {
@@ -423,7 +462,7 @@ int Profiler::Execute()
       putIncomingCommand(answer);
       delete smsarr[i];
     }*/
-    fillSms(&ans,msgstr,strlen(msgstr),CONV_ENCODING_CP1251,pr.codepage);
+    fillSms(&ans,msgstr.c_str(),msgstr.length(),CONV_ENCODING_CP1251,pr.codepage);
     SmscCommand answer=SmscCommand::makeSumbmitSm(ans,getNextSequenceNumber());
     putIncomingCommand(answer);
   }
@@ -438,7 +477,8 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
   using smsc::util::config::ConfigView;
   using smsc::util::config::ConfigException;
 
-  const char* sql = "SELECT * FROM SMS_PROFILE";
+  const char* sql = "SELECT MASK, REPORTINFO, CODESET ,LOCALE FROM SMS_PROFILE";
+
 
   ConnectionGuard connection(ds);
 
@@ -455,6 +495,7 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
     Address addr(dta);
     p.reportoptions=rs->getInt8(2);
     p.codepage=rs->getInt8(3);
+    p.locale=rs->getString(4);
     profiles->add(addr,p);
   }
 }
