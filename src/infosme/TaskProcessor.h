@@ -205,6 +205,7 @@ namespace smsc { namespace infosme
         DataSource* dsInternal;
         Connection* dsIntConnection;
         Mutex       dsIntConnectionLock;
+        int         dsCommitInterval;
 
         MessageSender*  messageSender;
         Mutex           messageSenderLock;
@@ -217,6 +218,8 @@ namespace smsc { namespace infosme
         char*   address;
         
         void MainLoop();
+
+        void dsInternalCommit(bool force=false);
 
     public:
 

@@ -99,14 +99,18 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     : TaskProcessorAdapter(), Thread(),
         logger(Logger::getCategory("smsc.infosme.TaskProcessor")), 
             bStarted(false), bNeedExit(false), taskTablesPrefix(0), 
-                dsInternalName(0), dsInternal(0), dsIntConnection(0), messageSender(0),
-                    protocolId(0), svcType(0), address(0)
+                dsInternalName(0), dsInternal(0), dsIntConnection(0), dsCommitInterval(1),
+                    messageSender(0), protocolId(0), svcType(0), address(0)
 {
     logger.info("Loading ...");
 
-    address = config->getString("address");
+    address = config->getString("Address");
     if (!address || !isMSISDNAddress(address))
         throw ConfigException("Address string '%s' is invalid", address ? address:"-");
+    
+    dsCommitInterval = config->getInt("dsIntCommitInterval");
+    if (dsCommitInterval <= 0)
+        throw ConfigException("dsIntCommitInterval is invalid, should be positive (in seconds)");
 
     try { protocolId = config->getInt("ProtocolId"); }
     catch(ConfigException& exc) { protocolId = 0; };
@@ -193,6 +197,27 @@ TaskProcessor::~TaskProcessor()
     if (dsInternalName) delete dsInternalName;
     if (taskTablesPrefix) delete taskTablesPrefix;
 }
+void TaskProcessor::dsInternalCommit(bool force)
+{
+    time_t currentTime = time(NULL);
+    static time_t nextTime = currentTime + dsCommitInterval;
+    
+    try 
+    {
+        if (force || nextTime <= currentTime) {
+            if (dsIntConnection) dsIntConnection->commit();
+            nextTime += dsCommitInterval;
+        }
+    }
+    catch (Exception& exc) {
+        logger.error("Failed to commit updates on internal data source. "
+                     "Details: %s", exc.what());
+    }
+    catch (...) {
+        logger.error("Failed to commit updates on internal data source.");
+    }
+}
+
 void TaskProcessor::Start()
 {
     MutexGuard guard(startLock);
@@ -220,6 +245,7 @@ void TaskProcessor::Stop()
         exited.Wait();
         bStarted = false;
         taskIdsBySeqNum.Empty();
+        dsInternalCommit(true);
         logger.info("Stoped.");
     }
 }
@@ -281,8 +307,7 @@ void TaskProcessor::MainLoop()
     {
         MutexGuard icGuard(dsIntConnectionLock);
         if (!task->getNextMessage(dsIntConnection, message)) return;
-        // TODO: Implement time dependent commit on dsIntConnection.
-        dsIntConnection->commit(); 
+        dsInternalCommit();
     }
 
     logger.debug("Message #%lld for '%s': %s", 
@@ -376,8 +401,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, std::
         }
     }
     
-    // TODO: Implement time dependent commit on dsIntConnection.
-    dsIntConnection->commit(); 
+    dsInternalCommit();
 }
 
 const char* GET_ID_MAPPING_STATEMENT_ID = "GET_ID_MAPPING_STATEMENT_ID";
@@ -443,8 +467,7 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered)
         logger.error("Failed to process receipt. Ids mapping failure.");
     }
     
-    // TODO: Implement time dependent commit on dsIntConnection.
-    dsIntConnection->commit(); 
+    dsInternalCommit();
 }
 
 }}
