@@ -324,7 +324,7 @@ void StringFormatter::format(std::string& output,
     const char* str = 0;
     const char* imp = entity.getOption(SMSC_DBSME_IO_FORMAT_IMPORT_OPTION);
     char* impVal = 0;
-    if (imp && ctx.importStr(imp, impVal) && impVal)
+    if (imp && ctx.importStr(imp, impVal) && impVal && impVal[0])
     {
         str = impVal;
     }
@@ -389,10 +389,10 @@ void FloatFormatter::format(std::string& output,
     FormatEntity& entity, GetAdapter& adapter, ContextEnvironment& ctx)
         throw(FormattingException, AdapterException)
 {
-    float value = 0;
+    double value = 0;
     const char* imp = entity.getOption(SMSC_DBSME_IO_FORMAT_IMPORT_OPTION);
-    float impVal = 0;
-    if (imp && ctx.importFlt(imp, impVal))
+    double impVal = 0;
+    if (imp && ctx.importDbl(imp, impVal))
     {
         value = impVal; 
     }
@@ -408,23 +408,24 @@ void FloatFormatter::format(std::string& output,
         }
         else if (!adapter.isNull(arg))
         {
-            value = adapter.getFloat(arg);
+            value = adapter.getDouble(arg);
         }
     }
     
-    char    format[16] = "%f";
+    //double dblval 
+    char    format[16] = "%lf";
     const char* pre = entity.getOption(SMSC_DBSME_IO_FORMAT_PRECISION_OPTION);
     int precision = 0; // after '.'
     if (pre && (precision = atoi(pre)) >=0)
     {
-        sprintf(format, "%%.%df", precision);
+        sprintf(format, "%%.%dlf", precision);
     }
     char    buff[128] = "";
     sprintf(buff, format, value);
     output += buff;
     
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
-    if (exp) ctx.exportFlt(exp, value);
+    if (exp) ctx.exportDbl(exp, value);
 }
 void DoubleFormatter::format(std::string& output,
     FormatEntity& entity, GetAdapter& adapter, ContextEnvironment& ctx)
@@ -460,7 +461,7 @@ void DoubleFormatter::format(std::string& output,
     {
         const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPONENT_OPTION);
         if (exp && strcmp(exp, "yes") == 0) {
-            sprintf(format, "%%.%dle", digits);
+            sprintf(format, "%%.%dle", digits-1);
         } else {
             sprintf(format, "%%.%dlg", digits);
         }
@@ -506,7 +507,7 @@ void LongDoubleFormatter::format(std::string& output,
     {
         const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPONENT_OPTION);
         if (exp && strcmp(exp, "yes") == 0) {
-            sprintf(format, "%%.%dLe", digits);
+            sprintf(format, "%%.%dLe", digits-1);
         } else {
             sprintf(format, "%%.%dLg", digits);
         }
@@ -547,6 +548,7 @@ void DateTimeFormatter::format(std::string& output,
             localtime_r(&date, &tmdt);
             tmdt.tm_hour = tmdt.tm_min = tmdt.tm_sec = 0;
             date = mktime(&tmdt);
+            date -= (tmdt.tm_isdst==1) ? 3600:0;
         }
         else if (strcmp(def, ioTomorrowString) == 0)
         {
@@ -554,6 +556,7 @@ void DateTimeFormatter::format(std::string& output,
             localtime_r(&date, &tmdt);
             tmdt.tm_hour = tmdt.tm_min = tmdt.tm_sec = 0;
             date = mktime(&tmdt);
+            date -= (tmdt.tm_isdst==1) ? 3600:0;
         }
         else if (strcmp(def, ioYesterdayString) == 0)
         {
@@ -561,6 +564,7 @@ void DateTimeFormatter::format(std::string& output,
             localtime_r(&date, &tmdt);
             tmdt.tm_hour = tmdt.tm_min = tmdt.tm_sec = 0;
             date = mktime(&tmdt);
+            date -= (tmdt.tm_isdst==1) ? 3600:0;
         }
         else
         {
@@ -578,12 +582,11 @@ void DateTimeFormatter::format(std::string& output,
     }
     else return;
     
-    localtime_r(&date, &tmdt);
+    localtime_r(&date, &tmdt); // ???
 
     if (pattern) // format date by user-desired pattern
     {
         int curPos = 0;
-        bool needAMPM = false;
         
         while (pattern[curPos])
         {
@@ -603,17 +606,17 @@ void DateTimeFormatter::format(std::string& output,
             }
             case 'h':
             {
-                char str[16];
+                char str[16]; int hhhh = 0;
                 strftime(str, sizeof(str), "%I", &tmdt);
-                sscanf(str, "%d", &tmdt.tm_hour);
+                sscanf(str, "%d", &hhhh);
 
                 if (pattern[++curPos] == 'h') {
                     curPos++;
-                    sprintf(buff, "%02d", tmdt.tm_hour);
+                    sprintf(buff, "%02d", hhhh);
                 } else 
-                    sprintf(buff, "%d", tmdt.tm_hour);
+                    sprintf(buff, "%d", hhhh);
 
-                output += buff; needAMPM = true;
+                output += buff;
                 continue;
             }
             case 'H':
@@ -624,7 +627,7 @@ void DateTimeFormatter::format(std::string& output,
                 } else
                     sprintf(buff, "%d", tmdt.tm_hour);
 
-                output += buff; needAMPM = false;
+                output += buff;
                 continue;
             }
             case 'm':
@@ -689,11 +692,7 @@ void DateTimeFormatter::format(std::string& output,
             case 't':
             {
                 curPos++;
-                if (needAMPM)
-                {
-                    output += ioDayTimeParts[
-                        (tmdt.tm_hour>=0 && tmdt.tm_hour<12) ? 0:1];
-                }
+                output += ioDayTimeParts[(tmdt.tm_hour>=0 && tmdt.tm_hour<12) ? 0:1];
                 continue;
             }
             case 'y':
@@ -726,7 +725,7 @@ void DateTimeFormatter::format(std::string& output,
                 if (isalnum(pattern[curPos]))
                 {
                     throw FormattingException("Incorrect Date/Time format! "
-                                              "Delimenter or format option expected. "
+                                              "Delimiter or format option expected. "
                                               "Pattern is: '%s', position %d",
                                               pattern, curPos);
                 }
