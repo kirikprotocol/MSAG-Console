@@ -125,7 +125,7 @@ void ThreadPool::shutdown()
     }
     Unlock();
     if(time(NULL)-sdstart>60)abort();
-    Wait(2000);
+    Wait();
   }
   Lock();
   for(int i=0;i<freeThreads.Count();i++)
