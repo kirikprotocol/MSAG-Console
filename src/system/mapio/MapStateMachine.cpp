@@ -1095,7 +1095,7 @@ USHORT_T Et96MapOpenInd (
           x = x*2-1;
         else 
           x = x*2;
-        memcpy(&dialog->m_msAddr,specificInfo_sp->specificData+1,sizeof(ET96MAP_ADDRESS));
+        memcpy(&dialog->m_msAddr,specificInfo_sp->specificData+1,sizeof(ET96MAP_ADDRESS_T));
         dialog->m_msAddr.addressLength = x;
         dialog->hasIndAddress = true;
       }
