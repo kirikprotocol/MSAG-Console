@@ -106,16 +106,22 @@ static const int MAP_UNEXPECTED_LINKED_OPERATION=1151;
 static const int MAP_ERR_BASE=1152;
 static const int UNKSUBSCRIBER=1153; //Unknown subscriber
 static const int UNDEFSUBSCRIBER=1157; //Unidentified subscriber
-static const int ILLEGALSUBSCRIBER=1161; //Illegal subscriber
-static const int INVEQUIPMENT=1164; //Illegal Equipment
-static const int CALLBARRED=1165; //Call Barred
-static const int FACILITYNOTSUPP=1173; //Facility Not Supported
-static const int ABSENTSUBSCR=1179; //Absent Subscriber
+static const int ABSENTSUBSCRIBERSM=1158; // 6 - Absent subscriber SM
+static const int ILLEGALSUBSCRIBER=1161; // 9 - Illegal subscriber
+static const int INVEQUIPMENT=1164; // 12 - Illegal Equipment
+static const int CALLBARRED=1165; // 13 - Call Barred
+static const int CALLBARRED=1167; // 15 - CUG reject
+static const int FACILITYNOTSUPP=1173; // 21 - Facility Not Supported
+static const int ABSENTSUBSCR=1179; // 27 - Absent Subscriber
 static const int SUBSCRBUSYMT=1183; //Subscriber Busy for MT SMS.
 static const int SMDELIFERYFAILURE=1184; //SM Delivery Failure
-static const int SYSFAILURE=1186; //System Failure
-static const int DATAMISSING=1187; //Data Missing
-static const int UNEXPDATA=1188; //Unexpected Data value
+static const int SYSFAILURE=1186; // 34 - System Failure
+static const int DATAMISSING=1187; // 35 - Data Missing
+static const int UNEXPDATA=1188; // 36 - Unexpected Data value
+static const int UNKALPHABET=1223; // 71 - Unknown alphabet
+static const int USSDBUSY=1224; // 72 - USSD busy
+static const int INVPRBRESLIM=1258; // 106 - Invoke problem. Resource limitation
+static const int INVPRBINITREL=1259; // 107 - Invoke problem. Initiating release
 
 
 
