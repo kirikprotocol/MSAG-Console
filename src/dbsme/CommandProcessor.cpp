@@ -61,7 +61,7 @@ void CommandProcessor::init(ConfigView* config)
                                       "Address already in use !", 
                                       providerId, (address) ? address:"");
             
-            DataProvider* provider = new DataProvider(this, providerConfig, messages); 
+            DataProvider* provider = new DataProvider(this, providerConfig, providerId, messages); 
             if (!addProvider(providerId, addr, provider)) 
                 throw ConfigException("Failed to bind DataProvider '%s' to address: '%s'. "
                                       "Address already used by internal job !",
@@ -204,10 +204,11 @@ void DataProvider::createDataSource(ConfigView* config)
     }
 }
 
-DataProvider::DataProvider(CommandProcessor* root, ConfigView* config, const MessageSet& mset)
+DataProvider::DataProvider(CommandProcessor* root, ConfigView* config, 
+                           const char* providerId, const MessageSet& mset)
     throw(ConfigException) 
         : log(Logger::getInstance("smsc.dbsme.DataProvider")), messages(mset, config),
-            bFinalizing(false), bEnabled(false), owner(root), ds(0)
+            id(providerId), bFinalizing(false), bEnabled(false), owner(root), ds(0)
 {
     createDataSource(config);
 
@@ -330,7 +331,8 @@ void DataProvider::createJob(const char* id, ConfigView* jobConfig)
                               (type) ? type:"");
     try 
     {
-        job->init(jobConfig, messages);
+        std::string queryId = this->id; queryId += '.'; queryId += id;
+        job->init(jobConfig, queryId.c_str(), messages);
         registerJob(job, id, address, alias, name);
     } 
     catch (...) {
@@ -338,15 +340,15 @@ void DataProvider::createJob(const char* id, ConfigView* jobConfig)
         throw;
     }
 }
-void DataProvider::removeJob(const char* id)
+void DataProvider::removeJob(const char* jobId)
 {
-    __require__(id && owner);
+    __require__(jobId && owner);
 
     MutexGuard guard(jobsLock);
 
     Job* job = 0; 
-    if (!allJobs.Exists(id) || !(job = allJobs.Get(id)))
-        throw Exception("Job '%s' not registered", id);
+    if (!allJobs.Exists(jobId) || !(job = allJobs.Get(jobId)))
+        throw Exception("Job '%s' not registered", jobId);
     
     char* name = 0; Job* foundJob = 0; jobsByName.First();
     while (jobsByName.Next(name, foundJob)) {
@@ -361,8 +363,13 @@ void DataProvider::removeJob(const char* id)
         }
     }
     
-    allJobs.Delete(id);
+    allJobs.Delete(jobId);
     job->finalize();
+
+    if (ds) {
+        std::string queryId = this->id; queryId += '.'; queryId += jobId;
+        ds->closeRegisteredQueries(queryId.c_str());
+    }
 }
 
 void DataProvider::process(Command& command)
