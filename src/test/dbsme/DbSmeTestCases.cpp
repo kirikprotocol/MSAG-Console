@@ -151,7 +151,7 @@ void DbSmeTestCases::sendDbSmePdu(const Address& addr, const string& input,
 		auto_ptr<char> msg = encode(input, dataCoding, msgLen);
 		pdu->get_message().set_shortMessage(msg.get(), msgLen);
 		pdu->get_message().set_dataCoding(dataCoding);
-		fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync, intProps, strProps, objProps, false);
+		fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync, intProps, strProps, objProps, PDU_EXT_SME);
 		__tc_ok__;
 	}
 	catch(...)
