@@ -54,6 +54,16 @@ public interface DistributionListAdmin
         throws AdminException, PrincipalNotExistsException;
 
     /**
+     * Updates principal's maxList and/or maxElements limits
+     *
+     * @param prc principal with altered maxList and/or maxElements limits
+     * @throws AdminException
+     * @throws PrincipalNotExistsException if specified principal doesn't exists
+     */
+    public void alterPrincipal(Principal prc, boolean altLists, boolean altElements)
+        throws AdminException, PrincipalNotExistsException;
+
+    /**
      * Adds new member into specified list
      *
      * @param dlname distribution list name to add to
@@ -156,5 +166,15 @@ public interface DistributionListAdmin
      * @throws ListNotExistsException if list with specified name doesn't exist
      */
     public DistributionList getDistributionList(String dlname)
+        throws AdminException, ListNotExistsException;
+
+    /**
+     * Changes maxElements limit in distribution list
+     *
+     * @param dlname distribution list name to be updated
+     * @throws AdminException
+     * @throws ListNotExistsException if list with specified name doesn't exist
+     */
+    public void alterDistributionList(String dlname, int maxElements)
         throws AdminException, ListNotExistsException;
 }

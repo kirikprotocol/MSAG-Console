@@ -166,6 +166,54 @@ public class DistributionListManager implements DistributionListAdmin
         return prc;
     }
 
+    private final static String ALT_PRINCIPAL_LIST_SQL =
+        "UPDATE DL_PRINCIPALS SET MAX_LST=? WHERE ADDRESS=?";
+    private final static String ALT_PRINCIPAL_ELEM_SQL =
+        "UPDATE DL_PRINCIPALS SET MAX_EL=? WHERE ADDRESS=?";
+    public void alterPrincipal(Principal prc, boolean altLists, boolean altElements)
+        throws AdminException, PrincipalNotExistsException
+    {
+        PreparedStatement stmt = null;
+        Connection connection = null;
+        ResultSet rs = null;
+        try {
+            connection = ds.getConnection();
+            stmt = connection.prepareStatement(CHECK_PRINCIPAL_SQL);
+            stmt.setString(1 , prc.getAddress());
+            rs = stmt.executeQuery();
+            if (!rs.next() || rs.getInt(1) == 0)
+              throw new PrincipalNotExistsException(prc.getAddress());
+            rs.close(); rs = null; stmt.close();
+
+            if (altLists) {
+                stmt = connection.prepareStatement(ALT_PRINCIPAL_LIST_SQL);
+                stmt.setInt(1, prc.getMaxLists());
+                stmt.setString(2, prc.getAddress());
+                stmt.executeUpdate();
+                stmt.close();
+            }
+            if (altElements) {
+                stmt = connection.prepareStatement(ALT_PRINCIPAL_ELEM_SQL);
+                stmt.setInt(1, prc.getMaxElements());
+                stmt.setString(2, prc.getAddress());
+                stmt.executeUpdate();
+                stmt.close();
+            }
+            connection.commit();
+        } catch (AdminException exc) {
+            throw exc;
+        } catch (Exception exc) {
+            exc.printStackTrace();
+            throw new AdminException(exc.getMessage());
+        } finally {
+            try { if (stmt != null) stmt.close(); connection.close(); }
+            catch (Exception cexc) {
+                cexc.printStackTrace();
+                throw new AdminException(cexc.getMessage());
+            }
+        }
+    }
+
     private final static String CHECK_MEMBER_SQL =
         "SELECT NVL(COUNT(*), 0) FROM DL_MEMBERS WHERE LIST=? AND ADDRESS=?";
     private final static String ADD_MEMBER_SQL =
@@ -333,6 +381,8 @@ public class DistributionListManager implements DistributionListAdmin
             stmt.setString(1, dlname);
             stmt.setString(2, submitter);
             stmt.executeUpdate();
+
+            connection.commit();
         } catch (AdminException exc) {
             throw exc;
         } catch (Exception exc) {
@@ -376,6 +426,8 @@ public class DistributionListManager implements DistributionListAdmin
             stmt.setString(1, dlname);
             stmt.setString(2, submitter);
             stmt.executeUpdate();
+
+            connection.commit();
         } catch (AdminException exc) {
             throw exc;
         } catch (Exception exc) {
@@ -454,6 +506,8 @@ public class DistributionListManager implements DistributionListAdmin
                  stmt.setNull  (3, java.sql.Types.VARCHAR);
             else stmt.setString(3, dl.getOwner());
             stmt.executeUpdate();
+
+            connection.commit();
         } catch (AdminException exc) {
             throw exc;
         } catch (Exception exc) {
@@ -500,6 +554,8 @@ public class DistributionListManager implements DistributionListAdmin
             stmt = connection.prepareStatement(DELETE_DL_SQL);
             stmt.setString(1, dlname);
             stmt.executeUpdate();
+
+            connection.commit();
         } catch (AdminException exc) {
             throw exc;
         } catch (Exception exc) {
@@ -582,4 +638,42 @@ public class DistributionListManager implements DistributionListAdmin
         }
         return list;
     }
+
+    private final static String ALT_DL_SQL =
+        "UPDATE DL_SET SET MAX_EL=? WHERE LIST=?";
+    public void alterDistributionList(String dlname, int maxElements)
+        throws AdminException, ListNotExistsException
+    {
+        PreparedStatement stmt = null;
+        Connection connection = null;
+        ResultSet rs = null;
+        try {
+            connection = ds.getConnection();
+            stmt = connection.prepareStatement(CHECK_DL_SQL);
+            stmt.setString(1, dlname);
+            rs = stmt.executeQuery();
+            if (!rs.next() || rs.getInt(1) == 0)
+              throw new ListNotExistsException(dlname);
+            rs.close(); rs = null; stmt.close();
+
+            stmt = connection.prepareStatement(ALT_DL_SQL);
+            stmt.setInt(1, maxElements);
+            stmt.setString(2, dlname);
+            stmt.executeUpdate(); stmt.close();
+
+            connection.commit();
+        } catch (AdminException exc) {
+            throw exc;
+        } catch (Exception exc) {
+            exc.printStackTrace();
+            throw new AdminException(exc.getMessage());
+        } finally {
+            try { if (stmt != null) stmt.close(); connection.close(); }
+            catch (Exception cexc) {
+                cexc.printStackTrace();
+                throw new AdminException(cexc.getMessage());
+            }
+        }
+    }
+
 }
