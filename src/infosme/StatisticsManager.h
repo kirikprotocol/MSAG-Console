@@ -55,6 +55,7 @@ namespace smsc { namespace infosme
 
         virtual void flushStatistics();
         virtual bool getStatistics(std::string taskId, TaskStat& stat);
+        virtual void delStatistics(std::string taskId);
 
         virtual void incGenerated(std::string taskId, unsigned inc=1);
         virtual void incDelivered(std::string taskId, unsigned inc=1);

@@ -138,6 +138,44 @@ void StatisticsManager::flushStatistics()
     doneEvent.Wait();
 }
 
+const char* DELETE_TASK_STAT_STATE_ID = "DELETE_TASK_STAT_STATE_ID";
+const char* DELETE_TASK_STAT_STATE_SQL = (const char*)
+"DELETE FROM INFOSME_TASKS_STAT WHERE task_id=:task_id";
+
+void StatisticsManager::delStatistics(std::string taskId)
+{
+    const char* task_id = taskId.c_str();
+    if (!task_id || task_id[0] == '\0') return;
+    
+    flushStatistics();
+    
+    logger.debug("Deleting statistics for task '%s'", task_id);
+
+    try
+    {
+        std::auto_ptr<Statement> statementGuard(connection->createStatement(DELETE_TASK_STAT_STATE_SQL));
+        Statement* statement = statementGuard.get();
+        if (!statement)
+            throw Exception("Failed to obtain statement for statistics delete");
+        
+        statement->setString(1, task_id);
+        statement->executeUpdate();
+        connection->commit();
+    }
+    catch (Exception& exc)
+    {
+        try { if (connection) connection->rollback(); }
+        catch (Exception& exc) {
+            logger.error("Failed to roolback transaction (statistics). "
+                         "Details: %s", exc.what());
+        } catch (...) {
+            logger.error("Failed to roolback transaction (statistics).");
+        }
+        logger.error("Error occurred during statistics deleting for task '%s'. "
+                     "Details: %s", task_id, exc.what());
+    }
+}
+
 short StatisticsManager::switchCounters()
 {
     MutexGuard  switchGuard(switchLock);
@@ -173,20 +211,22 @@ const char* INSERT_TASK_STAT_STATE_SQL = (const char*)
 void StatisticsManager::flushCounters(short index)
 {
     uint32_t period = calculatePeriod();
+    logger.debug("Flushing statistics for period: %lu / %lu", period, time(NULL));
 
     try
     {
         Statement* statement = connection->getStatement(INSERT_TASK_STAT_STATE_ID, 
                                                         INSERT_TASK_STAT_STATE_SQL);
         if (!statement)
-            throw Exception("Failed to obtain statement for statistic update");
-
-        logger.debug("Flushing statistics for period: %lld / %lld", period, time(NULL));
+            throw Exception("Failed to obtain statement for statistics update");
+        
         statement->setUint32(2, period);
         statistics[index].First();
         char* task_id = 0; TaskStat stat;
         while (statistics[index].Next(task_id, stat))
         {
+            if (!task_id || task_id[0] == '\0') continue;
+            
             statement->setString(1, task_id);
             statement->setUint32(3, stat.generated);
             statement->setUint32(4, stat.delivered);
@@ -200,7 +240,13 @@ void StatisticsManager::flushCounters(short index)
     }
     catch (Exception& exc)
     {
-        if (connection) connection->rollback();
+        try { if (connection) connection->rollback(); }
+        catch (Exception& exc) {
+            logger.error("Failed to roolback transaction (statistics). "
+                         "Details: %s", exc.what());
+        } catch (...) {
+            logger.error("Failed to roolback transaction (statistics).");
+        }
         logger.error("Error occurred during statistics flushing. Details: %s", exc.what());
     }
 

@@ -238,5 +238,14 @@ bool TaskScheduler::removeSchedule(std::string id)
     return true;
 }
 
+void TaskScheduler::removeTask(std::string taskId)
+{
+    MutexGuard guard(schedulesLock);
+
+    char* key = 0; Schedule* schedule = 0; schedules.First();
+    while (schedules.Next(key, schedule))
+        if (schedule) removeTask(taskId);
+}
+
 }}
 

@@ -101,23 +101,30 @@ namespace smsc { namespace infosme
         bool addSchedule(Schedule* schedule);
 
         /**
-         * Changes task(s) schedule in scheduling plan and reactivates scheduler.
+         * Changes schedule in scheduling plan and reactivates scheduler.
          * If schedule not found returns false, else returns true.
          *
-         * @param id            id of old shedule
+         * @param id            shedule id 
          * @param schedule      new shedule
          * @return false if schedule not found, else returns true.
          */
         bool changeSchedule(std::string id, Schedule* schedule);
         
         /**
-         * Removes task schedule from scheduling plan.
+         * Removes task(s) schedule from scheduling plan.
          * If schedule not found returns false, else returns true.
          * 
          * @param id            schedule id
          * @return false if schedule not found, else returns true.
          */
         bool removeSchedule(std::string id);
+
+        /**
+         * Removes task from all registered schedules
+         *
+         * @param taskId        task id to be removed
+         */
+        void removeTask(std::string taskId);
     };
 
 }}

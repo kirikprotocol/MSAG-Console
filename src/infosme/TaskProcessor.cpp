@@ -737,7 +737,10 @@ bool TaskProcessor::addTask(std::string taskId)
 }
 bool TaskProcessor::removeTask(std::string taskId)
 {
-    return delTask(taskId);
+    scheduler.removeTask(taskId);
+    bool deleted = delTask(taskId);
+    if (statistics) statistics->delStatistics(taskId);
+    return deleted;
 }
 bool TaskProcessor::changeTask(std::string taskId)
 {
