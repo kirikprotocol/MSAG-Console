@@ -41,7 +41,11 @@ static void DropMapDialog_(unsigned dialogid){
 }
 
 static void DropMapDialog(MapDialog* dialog){
-  MapDialogContainer::getInstance()->dropDialog(dialog->dialogid_map);
+  DropMapDialog_(dialog->dialogid_map);
+}
+
+static unsigned RemapDialog(MapDialog* dialog){
+  return MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map);
 }
 
 struct MAPDIALOG_ERROR : public runtime_error
@@ -565,7 +569,7 @@ USHORT_T Et96MapOpenConf (
     if ( dialog.isnull() ) {throw 
       MAPDIALOG_HEREISNO_ID(
         FormatText("MAP::dialog 0x%x is not present",dialogid_map));}
-    __trace2__("MAP::%s:DELIVERY_SM %s",__PRETTY_FUNCTION__,RouteToString(dialog));
+    __trace2__("MAP::%s:DELIVERY_SM %s",__PRETTY_FUNCTION__,RouteToString(dialog.get()));
     switch( dialog->state ){
     case MAPST_RInfoFallBack:
     case MAPST_WaitSpecOpenConf:
@@ -670,7 +674,7 @@ USHORT_T  Et96MapV2SendRInfoForSmConf (
         FormatText("MAP::%s dialog 0x%x is not present",__PRETTY_FUNCTION__,_di));
     }
     dialogid_smsc = dialog->dialogid_smsc;
-    __trace2__("MAP::%s:DELIVERY_SM %s",__PRETTY_FUNCTION__,RouteToString(dialog));
+    __trace2__("MAP::%s:DELIVERY_SM %s",__PRETTY_FUNCTION__,RouteToString(dialog.get()));
     DoRInfoErrorProcessor(dialog,errorSendRoutingInfoForSm_sp,provErrCode_p));
     switch( dialog->state ){
     case MAPST_WaitRInfoConf:
@@ -741,12 +745,12 @@ USHORT_T Et96MapCloseInd(
       throw MAPDIALOG_HEREISNO_ID(
         FormatText("MAP::dialog 0x%x is not present",_di));}
     dialogid_smsc = dialog->dialogid_smsc;
-    __trace2__("MAP::%s:DELIVERY_SM %s",__PRETTY_FUNCTION__,RouteToString(dialog));
+    __trace2__("MAP::%s:DELIVERY_SM %s",__PRETTY_FUNCTION__,RouteToString(dialog.get()));
     switch( dialog->state ){
     case MAPST_WaitRInfoClose:
       MapDialogContainer::getInstance()->reAssignDialog(dialogueId);
       dialogueId = dialog->dialogid;
-      QueryMcsVersion(dialog);
+      QueryMcsVersion(dialog.get());
       dialog->state = MAPST_WaitMcsVersion;
       break;
     case MAPST_WaitSmsClose:
@@ -780,10 +784,10 @@ USHORT_T Et96MapDelimiterInd(
         FormatText("MAP::%s dialog 0x%x is not present",__PRETTY_FUNCTION__,_di));
     }
     dialogid_smsc = dialog->dialogid_smsc;
-    __trace2__("MAP::%s:DELIVERY_SM %s",__PRETTY_FUNCTION__,RouteToString(dialog));
+    __trace2__("MAP::%s:DELIVERY_SM %s",__PRETTY_FUNCTION__,RouteToString(dialog.get()));
     switch( dialog->state ){
     case MAPST_WaitSpecDelimeter:
-      SendSegmentedSms(dialog);
+      SendSegmentedSms(dialog.get());
       dialog->state = MAPST_WaitSmsConf;
       break;
     //case MAPST_WaitSmsClose:
@@ -878,7 +882,7 @@ USHORT_T Et96MapV2ForwardSmMOInd (
       throw MAPDIALOG_ERROR(
         FormatText("MAP::%s dialog 0x%x is not present",__PRETTY_FUNCTION__,dialogueId));
     }
-    __trace2__("MAP::%s: %s",__PRETTY_FUNCTION__,RouteToString(dialog));
+    __trace2__("MAP::%s: %s",__PRETTY_FUNCTION__,RouteToString(dialog.get()));
     switch( dialog->state ){
     case MAPST_WaitSms:
       dialog->state = MAPST_WaitSmsMODelimiter2;
@@ -925,7 +929,7 @@ USHORT_T Et96MapDelimiterInd(
       throw MAPDIALOG_ERROR(
         FormatText("MAP::%s dialog 0x%x is not present",__PRETTY_FUNCTION__,dialogueId));
     }
-    __trace2__("MAP::%s: %s",__PRETTY_FUNCTION__,RouteToString(dialog));
+    __trace2__("MAP::%s: %s",__PRETTY_FUNCTION__,RouteToString(dialog.get()));
     switch( dialog->state ){
     case MAPST_WaitSms:
       dialog->state = MAPST_WaitSmsMOInd:
@@ -942,12 +946,12 @@ USHORT_T Et96MapDelimiterInd(
       open_confirmed = true;
       break;
     case MAPST_WaitSmsMODelimiter2:
-      SendSubmitCommand(dialog);
+      SendSubmitCommand(dialog.get());
       dialog->state = MAPST_WaitSubmitCmdConf;
       break;
     case MAPST_WaitSmsMODelimiter:
       open_confirmed = true;
-      SendSubmitCommand(dialog);
+      SendSubmitCommand(dialog.get());
       dialog->state = MAPST_WaitSubmitCmdConf;
       break;
     default:
