@@ -196,7 +196,7 @@ void MapIoTask::dispatcher()
       const int destAddrPos = 6;
       const int destRefPos = destAddrPos+message.msg_p[destAddrPos]+1;
       __map_trace2__("destRefPos = %d", destRefPos);
-      const int orgAddrPos = destRefPos+(message.msg_p[destRefPos]+1)/2+1;
+      const int orgAddrPos = destRefPos+message.msg_p[destRefPos]+1;
       __map_trace2__("orgAddrPos = %d", orgAddrPos);
       const int orgRefPos = orgAddrPos+message.msg_p[orgAddrPos]+1;
       __map_trace2__("orgRefPos = %d", orgRefPos);
