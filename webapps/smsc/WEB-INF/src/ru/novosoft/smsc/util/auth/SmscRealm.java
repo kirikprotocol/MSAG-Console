@@ -6,35 +6,34 @@
 package ru.novosoft.smsc.util.auth;
 
 import org.apache.catalina.realm.RealmBase;
+import ru.novosoft.smsc.admin.Constants;
 
 import java.security.Principal;
 
-import ru.novosoft.smsc.admin.Constants;
-
 public class SmscRealm extends RealmBase
 {
-	protected String getName()
-	{
-		return Constants.TomcatRealmName;
-	}
+  protected String getName()
+  {
+    return Constants.TomcatRealmName;
+  }
 
-	protected String getPassword(String s)
-	{
-		return null;
-	}
+  protected String getPassword(String s)
+  {
+    return null;
+  }
 
-	protected Principal getPrincipal(String s)
-	{
-		return null;
-	}
+  protected Principal getPrincipal(String s)
+  {
+    return null;
+  }
 
-	public Principal authenticate(String login, String password)
-	{
-		return AuthenticatorProxy.getInstance().authenticate(getName(), login, password);
-	}
+  public Principal authenticate(String login, String password)
+  {
+    return AuthenticatorProxy.getInstance().authenticate(getName(), login, password);
+  }
 
-	public boolean hasRole(Principal principal, String role)
-	{
-		return AuthenticatorProxy.getInstance().hasRole(getName(), principal, role);
-	}
+  public boolean hasRole(Principal principal, String role)
+  {
+    return AuthenticatorProxy.getInstance().hasRole(getName(), principal, role);
+  }
 }

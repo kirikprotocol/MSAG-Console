@@ -18,6 +18,7 @@ private boolean isServiceStatusColored = false;
 private boolean isServiceStatusNeeded = false;
 private java.util.List errorMessages = new ArrayList();
 %><%
+errorMessages.clear();
 request.setAttribute(Constants.SMSC_ERROR_MESSAGES_ATTRIBUTE_NAME, errorMessages);
 FORM_URI = (String)request.getAttribute("requestURI");
 if (FORM_URI == null)
