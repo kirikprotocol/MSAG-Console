@@ -66,12 +66,13 @@ void MacroSleep()
 }
 
 /// обрабатывает комманды поступающие в очередь из SMPP API
-void SMachine::ProcessCommands()
+unsigned SMachine::ProcessCommands(SMachineNotifier& notifier)
 {
   stopIt_ = IS_RUNNING;
   while (stopIt_ == IS_RUNNING) {
+    if ( notifier.SMachineBreak_()) return BREAK_PROCESSING;
     while ( !mixer_.IsConnected() ) {
-      if ( mixer_.IsUnrecoverable() ) return;
+      if ( mixer_.IsUnrecoverable() ) return END_PROCESSING;
       if ( !mixer_.Connect() ) {
         smsc::util::Logger::getCategory("smsc.proxysme").error("can't connect left/right smscs");
         MacroSleep();
@@ -93,6 +94,7 @@ void SMachine::ProcessCommands()
     }
     MicroSleep();
   }
+  return END_PROCESSING;
 }
 
 /// транслирует пакет DELIVER_SM -> SUBMIT_SM

@@ -33,6 +33,8 @@ using smsc::sme::SmeConfig;
 struct ProxyConfig {
   SmeConfig left,right;
   int quelimit;
+  string admin_host;
+  unsigned admin_port;
 };
 
 extern void MicroSleep();

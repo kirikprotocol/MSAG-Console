@@ -25,6 +25,12 @@ SMSC_SMEPROXY_BEGIN
 using namespace smsc::smpp;
 using namespace smsc::core::synchronization;
 
+struct SMachineNotifier {
+  virtual SMachineBreak_() = 0;
+};
+
+enum { END_PROCESSING, BREAK_PROCESSING };
+
 /// стет машина для обработки пакетов
 class SMachine //: public smsc::core::threads::Thread
 {
@@ -39,7 +45,7 @@ public:
   SMachine(Queue&,Mixer&,const ProxyConfig&);
   virtual ~SMachine();
 //  virtual int Execute();
-  void ProcessCommands();
+  unsigned ProcessCommands(SMachineNotifier& notifier);
 private:
   void TranslateToSubmitAndSend(DIRECTION direct,SmppHeader*);
   void TranslateToDeliverRespAndSend(DIRECTION direct,SmppHeader*);
