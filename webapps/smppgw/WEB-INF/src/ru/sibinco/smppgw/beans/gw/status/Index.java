@@ -40,19 +40,19 @@ public class Index extends SmppgwBean
       throw new SmppgwJspException(Constants.errors.status.COULDNT_GET_DAEMON);
     }
     final ServiceInfo info = gwDaemon.getServiceInfo(appContext.getGateway().getId());
-    if (info != null) {
+    if (null != info) {
       final byte gwStatus = info.getStatus();
-      gwRunning = gwStatus == ServiceInfo.STATUS_RUNNING;
-      gwStopped = gwStatus == ServiceInfo.STATUS_STOPPED;
+      gwRunning = ServiceInfo.STATUS_RUNNING == gwStatus;
+      gwStopped = ServiceInfo.STATUS_STOPPED == gwStatus;
     }
 
-    if (mbStart != null)
+    if (null != mbStart)
       start();
-    if (mbStop != null)
+    if (null != mbStop)
       stop();
-    if (mbRestore != null)
+    if (null != mbRestore)
       restore();
-    else if (mbApply != null)
+    else if (null != mbApply)
       apply();
   }
 
@@ -78,7 +78,7 @@ public class Index extends SmppgwBean
 
   private void restore()
   {
-    if (subj != null && subj.length > 0)
+    if (null != subj && 0 < subj.length)
       for (int i = 0; i < subj.length; i++) {
         final String s = subj[i];
         if ("config".equals(s))
@@ -92,7 +92,7 @@ public class Index extends SmppgwBean
 
   private void apply() throws SmppgwJspException
   {
-    if (subj != null && subj.length > 0)
+    if (null != subj && 0 < subj.length)
       for (int i = 0; i < subj.length; i++) {
         final String s = subj[i];
         if ("config".equals(s))
@@ -106,6 +106,7 @@ public class Index extends SmppgwBean
   {
     try {
       appContext.getGwRoutingManager().apply();
+      appContext.getGwSmeManager().apply();
       appContext.getGateway().apply("routes");
       appContext.getStatuses().setRoutesChanged(false);
     } catch (SibincoException e) {
@@ -118,6 +119,7 @@ public class Index extends SmppgwBean
   {
     try {
       appContext.getProviderManager().store(appContext.getGwConfig());
+      appContext.getGwSmeManager().apply();
       appContext.getGwConfig().save();
       appContext.getGateway().apply("config");
       appContext.getStatuses().setConfigChanged(false);

@@ -1,6 +1,7 @@
 package ru.sibinco.smppgw.backend.sme;
 
 import org.apache.log4j.Logger;
+import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 import ru.sibinco.lib.backend.sme.Sme;
 import ru.sibinco.lib.backend.sme.SmeManager;
@@ -13,27 +14,27 @@ import java.util.*;
 
 
 /**
- * Created by igork
- * Date: 24.03.2004
- * Time: 18:05:53
+ * Created by igork Date: 24.03.2004 Time: 18:05:53
  */
 public class GwSmeManager extends SmeManager
 {
   private Logger logger = Logger.getLogger(this.getClass());
+  private final ProviderManager providerManager;
 
-  public GwSmeManager(String configFilename, Config gwConfig)
+  public GwSmeManager(final String configFilename, final Config gwConfig, final ProviderManager providerManager)
       throws IOException, ParserConfigurationException, SAXException, Config.WrongParamTypeException, Config.ParamNotFoundException
   {
     super(configFilename);
+    this.providerManager = providerManager;
     final Map smes = getSmes();
     final Map smscs = getSmscs(gwConfig);
-    final List providers = getProviders(gwConfig);
+    //final Map providers = providerManager.getProviders();
 
-    for (Iterator i = new Vector(smes.keySet()).iterator(); i.hasNext();) {
-      String smeId = (String) i.next();
-      Sme sme = (Sme) smes.get(smeId);
-      SmscInfo smscInfo = (SmscInfo) smscs.get(smeId);
-      if (smscInfo != null) {
+    for (Iterator i = new ArrayList(smes.keySet()).iterator(); i.hasNext();) {
+      final String smeId = (String) i.next();
+      final Sme sme = (Sme) smes.get(smeId);
+      final SmscInfo smscInfo = (SmscInfo) smscs.get(smeId);
+      if (null != smscInfo) {
         logger.debug("register SME \"" + smeId + "\" as SMSC");
         smes.put(smeId, new GwSme(sme, smscInfo));
       } else {
@@ -43,22 +44,17 @@ public class GwSmeManager extends SmeManager
     }
   }
 
-  private List getProviders(Config gwConfig)
+  protected Sme createSme(final Element smeRecord)
   {
-    List results = new LinkedList();
-    Set providersSections = gwConfig.getSectionChildShortSectionNames(Constants.SECTION_NAME_SME_PROVIDERS);
-    for (Iterator i = providersSections.iterator(); i.hasNext();) {
-      //todo: implement
-    }
-    return results;
+    return new GwSme(smeRecord, providerManager);
   }
 
-  private Map getSmscs(Config gwConfig) throws Config.WrongParamTypeException, Config.ParamNotFoundException
+  private Map getSmscs(final Config gwConfig) throws Config.WrongParamTypeException, Config.ParamNotFoundException
   {
-    Map results = new HashMap();
-    Set smscsSections = gwConfig.getSectionChildShortSectionNames(Constants.SECTION_NAME_SMSC_CONNECTIONS);
+    final Map results = new HashMap();
+    final Set smscsSections = gwConfig.getSectionChildShortSectionNames(Constants.SECTION_NAME_SMSC_CONNECTIONS);
     for (Iterator i = smscsSections.iterator(); i.hasNext();) {
-      String smscId = (String) i.next();
+      final String smscId = (String) i.next();
       results.put(smscId, new SmscInfo(gwConfig, Constants.SECTION_NAME_SMSC_CONNECTIONS + "." + smscId));
     }
     return results;

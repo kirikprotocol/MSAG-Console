@@ -1,12 +1,13 @@
 package ru.sibinco.lib.backend.sme;
 
+import org.apache.log4j.Logger;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
+import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.util.xml.Utils;
 
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.*;
 
 
@@ -15,29 +16,34 @@ import java.util.*;
  */
 public class SmeManager
 {
-  private final Map smes;
-//  private final String configFilename;
+  private Logger logger = Logger.getLogger(this.getClass());
+
+  private final Map smes = Collections.synchronizedMap(new HashMap());
+  private final String configFilename;
 
   public SmeManager(final String configFilename) throws IOException, ParserConfigurationException, SAXException
   {
-//    this.configFilename = configFilename;
-    smes = load(configFilename);
+    this.configFilename = configFilename;
   }
 
-  private Map load(final String configFilename) throws IOException, ParserConfigurationException, SAXException, NullPointerException
+  public synchronized void init() throws IOException, ParserConfigurationException, SAXException
   {
-    final Map result = new HashMap();
+    smes.clear();
     final Document document = Utils.parse(configFilename);
     final NodeList records = document.getDocumentElement().getElementsByTagName("smerecord");
     for (int i = 0; i < records.getLength(); i++) {
       final Element smeRecord = (Element) records.item(i);
-      final Sme sme = new Sme(smeRecord);
-      result.put(sme.getId(), sme);
+      final Sme sme = createSme(smeRecord);
+      smes.put(sme.getId(), sme);
     }
-    return Collections.synchronizedMap(result);
   }
 
-  public PrintWriter store(final PrintWriter out)
+  protected Sme createSme(final Element smeRecord)
+  {
+    return new Sme(smeRecord);
+  }
+
+  public synchronized PrintWriter store(final PrintWriter out)
   {
     final List values = new LinkedList(smes.values());
     Collections.sort(values, new Comparator()
@@ -57,5 +63,15 @@ public class SmeManager
   public Map getSmes()
   {
     return smes;
+  }
+
+  public void apply() throws SibincoException
+  {
+    try {
+      store(new PrintWriter(new FileWriter(configFilename))).close();
+    } catch (IOException e) {
+      logger.error("Couldn't save SMEs config", e);
+      throw new SibincoException("Couldn't save SMEs config", e);
+    }
   }
 }

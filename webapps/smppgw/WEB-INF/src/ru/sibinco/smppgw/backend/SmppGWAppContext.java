@@ -47,8 +47,9 @@ public class SmppGWAppContext
       config = new Config(new File(config_filename));
       gwConfig = new Config(new File(config.getString("gw_config")));
       userManager = new UserManager(config.getString("users_config_file"));
-      gwSmeManager = new GwSmeManager(config.getString("sme_file"), gwConfig);
       providerManager = new ProviderManager(gwConfig);
+      gwSmeManager = new GwSmeManager(config.getString("sme_file"), gwConfig, providerManager);
+      gwSmeManager.init();
       smscsManager = new SmscsManager(gwConfig);
       gwRoutingManager = new GwRoutingManager(new File(config.getString("gw_config_folder")), gwSmeManager, providerManager);
       gwRoutingManager.init();

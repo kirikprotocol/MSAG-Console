@@ -1,5 +1,8 @@
 package ru.sibinco.smppgw.backend.sme;
 
+import org.apache.log4j.Category;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import ru.sibinco.lib.backend.sme.Sme;
 
 import java.io.PrintWriter;
@@ -10,8 +13,28 @@ import java.io.PrintWriter;
  */
 public class GwSme extends Sme
 {
+  private Category logger = Category.getInstance(this.getClass());
+
   private Provider provider;
   private SmscInfo smscInfo;
+
+  public GwSme(final Element smeElement, final ProviderManager providerManager)
+  {
+    super(smeElement);
+    final NodeList list = smeElement.getElementsByTagName("param");
+    for (int i = 0; i < list.getLength(); i++) {
+      final Element paramElem = (Element) list.item(i);
+      final String name = paramElem.getAttribute("name");
+      final String value = paramElem.getAttribute("value");
+      try {
+        if ("providerId".equals(name)) {
+          provider = (Provider) providerManager.getProviders().get(Long.decode(value));
+        }
+      } catch (NumberFormatException e) {
+        logger.error("Int parameter \"" + name + "\" misformatted: " + value + ", skipped", e);
+      }
+    }
+  }
 
   public GwSme(final String id, final int priority, final byte type, final int typeOfNumber, final int numberingPlan, final int interfaceVersion,
                final String systemType, final String password, final String addrRange, final int smeN, final boolean wantAlias, final boolean forceDC,
