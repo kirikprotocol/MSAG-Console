@@ -75,6 +75,7 @@ public:
       {
         ci->count--;
       }
+      ci->totalCount--;
     }
     timeLine.erase(timeLine.begin());
     return SmscCommand::makeForward(d.idx,d.id,d.resched);
@@ -132,6 +133,7 @@ protected:
   struct CacheItem{
     time_t lastUpdate;
     int count;
+    int totalCount;
   };
   IntHash<CacheItem> smeCountCache;
 

@@ -18,6 +18,16 @@ void Scheduler::Init(MessageStore* st,Smsc* psmsc)
         st->retriveSms(id,s);
         SmeIndex idx=psmsc->getSmeIndex(s.dstSmeId);
         timeLine.insert(TimeIdPair(it->getTime(),Data(id,idx)));
+        CacheItem *ci=smeCountCache.GetPtr(idx);
+        if(ci)
+        {
+          ci->totalCount++;
+        }else
+        {
+          CacheItem c;
+          c.totalCount=1;
+          smeCountCache.Insert(idx,c);
+        }
       }
       __trace2__("Scheduler: init ok - %d messages for rescheduling",timeLine.size());
     }catch(std::exception& e)
@@ -123,6 +133,16 @@ void Scheduler::ChangeSmsSchedule(SMSId id,time_t newtime,SmeIndex idx)
   MutexGuard guard(mon);
   timeLine.insert(TimeIdPair(newtime,Data(id,idx)));
   __trace2__("Scheduler: changesmsschedule %lld -> %d",id,newtime);
+  CacheItem *ci=smeCountCache.GetPtr(idx);
+  if(ci)
+  {
+    ci->totalCount++;
+  }else
+  {
+    CacheItem c;
+    c.totalCount++;
+    smeCountCache.Insert(idx,c);
+  }
   mon.notify();
   __trace2__("Scheduler: notify");
 }

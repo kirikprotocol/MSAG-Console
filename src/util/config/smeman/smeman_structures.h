@@ -75,6 +75,7 @@ struct SmppSmeRecord
   bool forceDC;
   uint32_t timeout;
   uint32_t proclimit;
+  uint32_t schedlimit;
   char* receiptSchemeName;
   bool disabled;
   ModeType mode;

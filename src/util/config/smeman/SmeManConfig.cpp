@@ -117,6 +117,9 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
             } else if (strcmp(name.get(), "proclimit") == 0)
             {
               record->recdata.smppSme.proclimit = strtoll(value.get(), (char**)0, 0);
+            } else if (strcmp(name.get(), "schedlimit") == 0)
+            {
+              record->recdata.smppSme.schedlimit = strtoll(value.get(), (char**)0, 0);
             } else if (strcmp(name.get(),"forceDC") == 0)
             {
               record->recdata.smppSme.forceDC=!strcmp(value.get(),"true");
