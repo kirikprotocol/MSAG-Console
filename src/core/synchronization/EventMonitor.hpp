@@ -25,7 +25,7 @@ public:
   }
   int wait()
   {
-    return cond_wait(&event,mutex);
+    return cond_wait(&event,&mutex);
   }
   void notify()
   {
@@ -33,7 +33,7 @@ public:
   }
   void notifyAll()
   {
-    conf_broadcast(&event);
+    cond_broadcast(&event);
   }
 protected:
   cond_t event;
