@@ -131,9 +131,10 @@ int Scheduler::Execute()
         timeLine.erase(tmpit);
       }
     }
-    if(timeLine.begin()->first<t)
+    if(timeLine.size()>0 && timeLine.begin()->first<t)
     {
       if(prxmon)prxmon->Signal();
+      mon.wait(100);
     }else
     {
       mon.wait(1000);
