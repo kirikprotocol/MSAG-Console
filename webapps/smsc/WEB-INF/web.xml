@@ -240,6 +240,7 @@
     </web-resource-collection>
     <auth-constraint>
       <role-name>service_operator</role-name>
+      <role-name>services</role-name>
     </auth-constraint>
     <user-data-constraint>
       <transport-guarantee>NONE</transport-guarantee>
