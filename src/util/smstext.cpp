@@ -338,7 +338,7 @@ int partitionSms(SMS* sms,int dstdc)
   auto_ptr<char> buf8;
   auto_ptr<char> bufTr;
   len-=udhilen;
-  if(dc==DataCoding::UCS2 && dstdc!=DataCoding::UCS2)
+  if(dc==DataCoding::UCS2 && (dstdc&DataCoding::UCS2)!=DataCoding::UCS2)
   {
     buf8=auto_ptr<char>(new char[len]);
     short *data=(short*)(msg+udhilen);
@@ -561,7 +561,7 @@ void extractSmsPart(SMS* sms,int partnum)
   __trace2__("extractSmsPart: len=%d, dc=%d, dstdc=%d",len,dc,dstdc);
   auto_ptr<char> buf8;
   auto_ptr<char> bufTr;
-  if(dc==DataCoding::UCS2 && dstdc!=DataCoding::UCS2)
+  if(dc==DataCoding::UCS2 && (dstdc&DataCoding::UCS2)!=DataCoding::UCS2)
   {
     buf8=auto_ptr<char>(new char[len]);
     ConvertUCS2ToMultibyte((short*)msg,len,buf8.get(),len,CONV_ENCODING_CP1251);
@@ -589,8 +589,9 @@ void extractSmsPart(SMS* sms,int partnum)
   int newlen=ci->num==partnum+1?len-off:ci->off[partnum+1]-off;
   __trace2__("extractSmsPart: newlen=%d, part=%d/%d, maxlen=%d, off=%d, partlen=%d",len,partnum,(int)ci->num,maxlen,off,newlen);
   __require__(newlen<=160);
-  if(dc==DataCoding::UCS2 && dstdc!=DataCoding::UCS2)
+  if(dc==DataCoding::UCS2 && (dstdc&DataCoding::UCS2)!=DataCoding::UCS2)
   {
+    if(dstdc==DataCoding::UCS2|DataCoding::LATIN1)dstdc=DataCoding::LATIN1;
     sms->setIntProperty(Tag::SMPP_DATA_CODING,dstdc);
     if(sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
     {
