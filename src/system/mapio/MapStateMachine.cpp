@@ -1344,7 +1344,7 @@ static void PauseOnImsiReq(MapDialog* map)
     if ( map->sms.get() == 0 ) 
       throw runtime_error(
         FormatText("MAP::%s has no SMS",__FUNCTION__));
-    mkMapAddress( &dialog->m_msAddr, map->sms->getOriginatingAddress().value, dialog->sms->getOriginatingAddress().length );
+    mkMapAddress( &dialog->m_msAddr, map->sms->getOriginatingAddress().value, map->sms->getOriginatingAddress().length );
     mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
     mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
     mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
