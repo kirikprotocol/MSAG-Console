@@ -26,6 +26,7 @@
 #include <vector>
 #include <sstream>
 #include <iostream>
+#include <sys/stat.h>
 
 //#define LOAD_TEST
 
@@ -905,6 +906,13 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 	}
 }
 
+bool env()
+{
+    int res = mkdir("pdu", S_IRWXU|S_IRWXG);
+	__trace__("Failed to create dir: pdu");
+	return (res == 0);
+}
+
 int main(int argc, char* argv[])
 {
 	if (argc != 1 && argc != 3)
@@ -918,6 +926,11 @@ int main(int argc, char* argv[])
 	{
 		smscHost = argv[1];
 		smscPort = atoi(argv[2]);
+	}
+	if (!env())
+	{
+		cout << "Failed to prepare environment" << endl;
+		exit(-1);
 	}
 	smeReg = new SmeRegistry();
 	aliasReg = new AliasRegistry();
