@@ -1,6 +1,7 @@
 #ifndef TEST_EMAIL_SMTP_SESSION
 #define TEST_EMAIL_SMTP_SESSION
 
+#include "MimeMessage.hpp"
 #include "core/network/Socket.hpp"
 #include "util/Exception.hpp"
 
@@ -23,13 +24,15 @@ public:
 	SmtpSession() : connected(false) {}
 	~SmtpSession()
 	{
-		if (connected) { quitCmd(); }
+		if (connected) { quit(); }
 	}
 	void connect(const char* smtpHost, int smtpPort = 25);
-	void mailCmd(const char* reversePath);
-	void rcptCmd(const char* forwardPath);
-	void dataCmd(const char* msg);
-	void quitCmd();
+	void send(const MimeMessage& msg);
+	void helo();
+	void mail(const char* reversePath);
+	void rcpt(const char* forwardPath);
+	void data(const char* msg);
+	void quit();
 };
 
 }
@@ -37,3 +40,4 @@ public:
 }
 
 #endif /* TEST_EMAIL_SMTP_SESSION */
+

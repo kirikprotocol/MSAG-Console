@@ -15,7 +15,7 @@ void SmtpSession::checkOutput(const char* outputStart, const char* outputEnd)
 	{
 		return;
 	}
-	char buf[1024];
+	char buf[256];
 	if (s.Gets(buf, sizeof(buf)) <= 0)
 	{
 		throw Exception("socket gets() failed");
@@ -60,9 +60,28 @@ void SmtpSession::connect(const char* smtpHost, int smtpPort)
 	}
 	checkOutput("220 ", NULL);
 	connected = true;
+	helo();
 }
 
-void SmtpSession::mailCmd(const char* reversePath)
+void SmtpSession::send(const MimeMessage& msg)
+{
+	mail(msg.getFrom());
+	const vector<const char*>& recipients = msg.getRecipients();
+	for (int i = 0; i < recipients.size(); i++)
+	{
+		rcpt(recipients[i]);
+	}
+	ostringstream os;
+	msg.writeTo(os);
+	data(os.str().c_str());
+}
+
+void SmtpSession::helo()
+{
+	smtpCmd("helo smsc\n", "250 ", "pleased to meet you");
+}
+
+void SmtpSession::mail(const char* reversePath)
 {
 	__require__(reversePath);
 	ostringstream os;
@@ -70,7 +89,7 @@ void SmtpSession::mailCmd(const char* reversePath)
 	smtpCmd(os.str().c_str(), "250 ", "Sender ok");
 }
 
-void SmtpSession::rcptCmd(const char* forwardPath)
+void SmtpSession::rcpt(const char* forwardPath)
 {
 	__require__(forwardPath);
 	ostringstream os;
@@ -78,7 +97,7 @@ void SmtpSession::rcptCmd(const char* forwardPath)
 	smtpCmd(os.str().c_str(), "250 ", "Recipient ok");
 }
 
-void SmtpSession::dataCmd(const char* msg)
+void SmtpSession::data(const char* msg)
 {
 	__require__(msg);
 	smtpCmd("data\n", NULL, NULL);
@@ -87,7 +106,7 @@ void SmtpSession::dataCmd(const char* msg)
 	smtpCmd(os.str().c_str(), "250 ", "Message accepted for delivery");
 }
 
-void SmtpSession::quitCmd()
+void SmtpSession::quit()
 {
 	smtpCmd("quit", "221 ", "closing connection");
 	connected = false;
