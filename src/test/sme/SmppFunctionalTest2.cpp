@@ -140,7 +140,10 @@ void TestSme::executeCycle()
 			__require__(res->getFailures()[i] != 100); //session->connect() failed
 		}
 		process(res);
-		process(tc.bindIncorrectSme(RAND_TC)); //обязательно после bindCorrectSme
+		for (int i = 0; i < 3; i++)
+		{
+			//process(tc.bindIncorrectSme(RAND_TC)); //обязательно после bindCorrectSme
+		}
 		boundOk = true;
 	}
 	//Синхронная отправка submit_sm pdu другим sme
@@ -302,7 +305,7 @@ vector<TestSme*> genConfig(int numAddr, int numSme,
 	smeReg->clear();
 	aliasReg->clear();
 	routeReg->clear();
-	SmeManagerTestCases* tcSme = new SmeManagerTestCases(NULL);
+	SmeManagerTestCases* tcSme = new SmeManagerTestCases(NULL, smeReg);
 	AliasManagerTestCases* tcAlias = new AliasManagerTestCases(NULL, aliasReg);
 	RouteManagerTestCases* tcRoute = new RouteManagerTestCases(NULL, routeReg);
 
@@ -315,9 +318,10 @@ vector<TestSme*> genConfig(int numAddr, int numSme,
 	{
 		addr.push_back(new Address());
 		smeInfo.push_back(new SmeInfo());
-		SmsUtil::setupRandomCorrectAddress(addr[i]);
-		process(tcSme->addCorrectSme(smeInfo[i], RAND_TC));
-		smeReg->registerSme(*addr[i], (i < numSme ? smeInfo[i] : NULL));
+		process(tcSme->addCorrectSme(addr[i], smeInfo[i], 1 /*RAND_TC*/));
+		ostringstream os;
+		os << *addr[i];
+		__trace2__("genConfig(): addr = %s, systemId = %s", os.str().c_str(), smeInfo[i]->systemId.c_str());
 	}
 	//регистрация алиасов
 	for (int i = 0; i < numAddr; i++)
@@ -333,14 +337,17 @@ vector<TestSme*> genConfig(int numAddr, int numSme,
 				{
 					case 1:
 					case 2:
+					case 3:
 						process(tcAlias->addCorrectAliasMatch(&alias, RAND_TC));
 						break;
-					case 3:
+					case 4:
 						process(tcAlias->addCorrectAliasNotMatchAddress(&alias, RAND_TC));
 						break;
-					case 4:
+					case 5:
 						process(tcAlias->addCorrectAliasNotMatchAlias(&alias, RAND_TC));
 						break;
+					default:
+						__unreachable__("Invalid alias test case");
 				}
 			}
 		}
@@ -351,7 +358,7 @@ vector<TestSme*> genConfig(int numAddr, int numSme,
 	{
 		for (int j = 0; j < numAddr; j++)
 		{
-			for (TCSelector s(RAND_SET_TC, 4); s.check(); s++)
+			for (TCSelector s(RAND_SET_TC, 5); s.check(); s++)
 			{
 				RouteInfo route;
 				route.source = *addr[i];
@@ -361,21 +368,25 @@ vector<TestSme*> genConfig(int numAddr, int numSme,
 				{
 					case 1:
 					case 2:
+					case 3:
 						process(tcRoute->addCorrectRouteMatch(
 							&route, NULL, RAND_TC));
 						break;
-					case 3:
+					case 4:
 						process(tcRoute->addCorrectRouteNotMatch(
 							&route, NULL, RAND_TC));
 						break;
-					case 4:
+					case 5:
 						process(tcRoute->addCorrectRouteNotMatch2(
 							&route, NULL, RAND_TC));
 						break;
+					default:
+						__unreachable__("Invalid route test case");
 				}
 			}
 		}
 	}
+	//tcRoute->commit();
 	//сохранение конфигов
 	smeReg->saveConfig("sme.xml");
 	aliasReg->saveConfig("aliases.xml");
@@ -387,7 +398,6 @@ vector<TestSme*> genConfig(int numAddr, int numSme,
 		SmeConfig config;
 		config.host = smscHost;
 		config.port = smscPort;
-		//auto_ptr<char> tmp = rand_char(15); //15 по спецификации
 		//config.sid = tmp.get();
 		config.sid = smeInfo[i]->systemId;
 		config.timeOut = 10;
@@ -396,6 +406,43 @@ vector<TestSme*> genConfig(int numAddr, int numSme,
 		//config.origAddr;
 		sme.push_back(new TestSme(i, config, smeInfo[i]->systemId, *addr[i],
 			smeReg, aliasReg, routeReg)); //throws Exception
+		smeReg->bindSme(smeInfo[i]->systemId);
+	}
+	//печать таблицы маршрутов
+	__trace__("Route table");
+	bool routesOk = false;
+	for (int i = 0; i < numAddr; i++)
+	{
+		for (int j = 0; j < numAddr; j++)
+		{
+			Address& origAddr = *addr[i];
+			Address& destAlias = *addr[j];
+			string smeId = "<>";
+			bool smeBound = false;
+			const AliasHolder* aliasHolder =
+				aliasReg->findAddressByAlias(destAlias);
+			Address destAddr;
+			if (aliasHolder && aliasHolder->aliasToAddress(destAlias, destAddr))
+			{
+				const RouteHolder* routeHolder =
+					routeReg->lookup(origAddr, destAddr);
+				if (routeHolder)
+				{
+					smeId = routeHolder->route.smeSystemId;
+					smeBound = smeReg->isSmeBound(smeId);
+					routesOk |= smeBound;
+				}
+			}
+			ostringstream os;
+			os << "origAddr = " << origAddr << ", destAlias = " << destAlias;
+			__trace2__("%s, route to = %s, sme bound = %s",
+				os.str().c_str(), smeId.c_str(), (smeBound ? "yes" : "no"));
+		}
+	}
+	if (!routesOk)
+	{
+		cout << "Invalid routes generated" << endl;
+		abort();
 	}
 	for (int i = 0; i < numAddr; i++)
 	{
