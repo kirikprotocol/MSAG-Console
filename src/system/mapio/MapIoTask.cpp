@@ -397,7 +397,7 @@ void MAPSTATS_Flush(unsigned x,bool dump)
     case MAPSTATS__SEC: 
       {
         log4cpp::Category* log = MAPSTATS_GetLoggerSec();
-        log->info(":MAPSTS:SEC: opened(in/out) %d/%d, closed(in/out) %d/%d, dialogs %d, recv %d",
+        log->info("op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d, rcv %d",
           MAPSTATS_open_in[0],
           MAPSTATS_open_out[0],
           MAPSTATS_close_in[0],
@@ -406,10 +406,11 @@ void MAPSTATS_Flush(unsigned x,bool dump)
           MAPSTATS_recv[0]
           );
       }
+      break;
     case MAPSTATS__MIN:
       {
-        log4cpp::Category* log = MAPSTATS_GetLoggerSec();
-        log->info(":MAPSTS:MIN: opened(in/out) %d/%d, closed(in/out) %d/%d, dialogs %d, recv %d",
+        log4cpp::Category* log = MAPSTATS_GetLoggerMin();
+        log->info("op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d, rcv %d",
           MAPSTATS_open_in[1],
           MAPSTATS_open_out[1],
           MAPSTATS_close_in[1],
@@ -418,10 +419,11 @@ void MAPSTATS_Flush(unsigned x,bool dump)
           MAPSTATS_recv[1]
           );
       }
+      break;
     case MAPSTATS__HOUR:
       {
-        log4cpp::Category* log = MAPSTATS_GetLoggerSec();
-        log->info(":MAPSTS:HOUR: opened(in/out) %d/%d, closed(in/out) %d/%d, dialogs %d, recv %d",
+        log4cpp::Category* log = MAPSTATS_GetLoggerHour();
+        log->info("op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d, rcv %d",
           MAPSTATS_open_in[2],
           MAPSTATS_open_out[2],
           MAPSTATS_close_in[2],
@@ -430,6 +432,7 @@ void MAPSTATS_Flush(unsigned x,bool dump)
           MAPSTATS_recv[2]
           );
       }
+      break;
     }
   }
   int from = 0, to = 0;
