@@ -55,6 +55,11 @@ public:
 	TCResult* addCorrectSme(SmeInfo* sme, int num);
 	
 	/**
+	 * Регистрация sme с пустым systemId.
+	 */
+	TCResult* addCorrectSmeWithEmptySystemId(SmeInfo* info);
+
+	/**
 	 * Регистрация sme с некорректными параметрами.
 	 */
 	TCResult* addIncorrectSme(const SmeInfo& existentSme);

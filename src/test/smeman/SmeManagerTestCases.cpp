@@ -99,81 +99,91 @@ vector<int> SmeManagerTestCases::compareSmeInfo(const SmeInfo& info1,
 	return res;
 }
 
-TCResult* SmeManagerTestCases::addCorrectSme(SmeInfo* infop, int num)
+TCResult* SmeManagerTestCases::addCorrectSme(SmeInfo* info, int num)
 {
-	TCSelector s(num, 11);
+	TCSelector s(num, 10);
 	TCResult* res = new TCResult(TC_ADD_CORRECT_SME, s.getChoice());
 	for (; s.check(); s++)
 	{
 		try
 		{
-			SmeInfo info;
-			setupRandomCorrectSmeInfo(&info);
+			setupRandomCorrectSmeInfo(info);
 			switch(s.value())
 			{
 				case 1: //typeOfNumber вне диапазона
-					info.typeOfNumber = rand2(0x7, 0xff);
+					info->typeOfNumber = rand2(0x7, 0xff);
 					break;
 				case 2: //numberingPlan вне диапазона
-					info.numberingPlan = rand2(0x13, 0xff);
+					info->numberingPlan = rand2(0x13, 0xff);
 					break;
 				case 3: //interfaceVersion вне диапазона
-					info.interfaceVersion = rand2(0x35, 0xff);
+					info->interfaceVersion = rand2(0x35, 0xff);
 					break;
 				case 4: //пустой addressRange
-					info.rangeOfAddress = "";
+					info->rangeOfAddress = "";
 					break;
 				case 5: //addressRange больше макс длины
 					{
 						auto_ptr<char> _addressRange =
 							rand_char(MAX_ADDRESS_RANGE_LENGTH + 1);
-						info.rangeOfAddress = _addressRange.get();
+						info->rangeOfAddress = _addressRange.get();
 					}
 					break;
 				case 6: //пустой systemType
-					info.systemType = "";
+					info->systemType = "";
 					break;
 				case 7: //systemType больше макс длины
 					{
 						auto_ptr<char> _systemType =
 							rand_char(MAX_SYSTEM_TYPE_LENGTH + 1);
-						info.systemType = _systemType.get();
+						info->systemType = _systemType.get();
 					}
 					break;
 				case 8: //пустой password
-					info.password = "";
+					info->password = "";
 					break;
 				case 9: //password больше макс длины
 					{
 						auto_ptr<char> _password =
 							rand_char(MAX_PASSWORD_LENGTH + 1);
-						info.password = _password.get();
+						info->password = _password.get();
 					}
 					break;
-				case 10: //пустой systemId
-					info.systemId = "";
-					break;
-				case 11: //systemId больше макс длины
+				case 10: //systemId больше макс длины
 					{
 						auto_ptr<char> _systemId =
 							rand_char(MAX_SYSTEM_ID_LENGTH + 1);
-						info.systemId = _systemId.get();
+						info->systemId = _systemId.get();
 					}
 					break;
 				default:
 					throw s;
 			}
-			smeMan->addSme(info);
-			if (infop)
-			{
-				*infop = info;
-			}
+			smeMan->addSme(*info);
 		}
 		catch(...)
 		{
 			error();
 			res->addFailure(s.value());
 		}
+	}
+	debug(res);
+	return res;
+}
+
+TCResult* SmeManagerTestCases::addCorrectSmeWithEmptySystemId(SmeInfo* info)
+{
+	TCResult* res = new TCResult(TC_ADD_CORRECT_SME, 1001);
+	try
+	{
+		setupRandomCorrectSmeInfo(info);
+		info->systemId = "";
+		smeMan->addSme(*info);
+	}
+	catch(...)
+	{
+		error();
+		res->addFailure(100);
 	}
 	debug(res);
 	return res;
