@@ -2462,6 +2462,12 @@ USHORT_T Et96MapOpenInd (
 {
   try{
     __map_trace2__("%s: dialog 0x%x ctx=%d ver=%d dstref=%p orgref=%p",__func__,dialogueId,appContext_sp->acType,appContext_sp->version,destRef_sp,origRef_sp );
+    if( appContext_sp->version == 1 && appContext_sp->acType == ET96MAP_NETWORK_FUNCTIONAL_SS_CONTEXT ) {
+      // reject USSD request version 1
+      __map_trace2__("%s: aborting USSD v1 dialog 0x%x", __func__, dialogueId );
+      USHORT_T res = Et96MapUAbortReq( localSsn, dialogueId, 0, 0, 0, 0 );
+      return ET96MAP_E_OK;
+    }
     DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialog(dialogueId,localSsn,appContext_sp->version));
     __require__(dialog->ssn==localSsn);
     dialog->hasIndAddress = false;
