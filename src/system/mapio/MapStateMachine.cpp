@@ -465,7 +465,7 @@ static void SendSegmentedSms(MapDialog* dialog)
   }else if ( dialog->version == 1 ) {
     result = Et96MapV1ForwardSmMT_MOReq( SSN, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get());
   }else throw runtime_error(
-    RormatText("MAP::SendSegmentedSms: incorrect dialog version %d",dialog->version));
+    FormatText("MAP::SendSegmentedSms: incorrect dialog version %d",dialog->version));
   if( result != ET96MAP_E_OK )
     throw MAPDIALOG_FATAL_ERROR(
       FormatText("MAP::SendSegmentedSms: Et96MapVxForwardSmMTReq error 0x%x",result));
