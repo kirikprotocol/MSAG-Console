@@ -28,6 +28,7 @@ class TCResultStackList : public std::vector<const TCResultStack*>
 {
 public:
 	virtual ~TCResultStackList();
+	void push_back(const TCResultStack* stack);
 	friend std::ostream& operator<< (std::ostream& os,
 		const TCResultStackList& stackList);
 };

@@ -52,13 +52,21 @@ TCResultStackList::~TCResultStackList()
 	}
 }
 
+void TCResultStackList::push_back(const TCResultStack* stack)
+{
+	if (stack)
+	{
+		vector<const TCResultStack*>::push_back(stack);
+	}
+}
+
 ostream& operator<< (ostream& os, const TCResultStackList& stackList)
 {
 	for (int i = 0; i < stackList.size(); i++)
 	{
 		if (i > 0)
 		{
-			os << ",";
+			os << ";";
 		}
 		const TCResultStack& stack = *stackList[i];
 		for (int j = 0; j < stack.size(); j++)
@@ -130,6 +138,11 @@ void TCResultFilter::addResultStack(const TCResultStack& stack)
 	{
 		const TCResult* res = stack[i];
 		const char* tcId = res->getId();
+long addr = (long) tcId;
+if (addr == 0x1L)
+{
+	return;
+}
 		if (!resmap[tcId])
 		{
 			resmap[tcId] = new TCResultStackList();
