@@ -378,6 +378,7 @@ namespace smsc { namespace sms
         
         bool        statusReportRequested;
         bool        rejectDuplicates;
+        bool        needArchivate;
         
         uint8_t     failureCause;
         
@@ -407,6 +408,7 @@ namespace smsc { namespace sms
             protocolIdentifier(sms.protocolIdentifier),
             statusReportRequested(sms.statusReportRequested),
             rejectDuplicates(sms.rejectDuplicates),
+            needArchivate(sms.needArchivate),
             failureCause(sms.failureCause), 
             messageBody(sms.messageBody) 
         {};
@@ -431,6 +433,7 @@ namespace smsc { namespace sms
             protocolIdentifier = sms.protocolIdentifier;
             statusReportRequested = sms.statusReportRequested;
             rejectDuplicates = sms.rejectDuplicates;
+            needArchivate = sms.needArchivate;
             failureCause = sms.failureCause;
             messageBody = sms.messageBody;
         };
@@ -775,6 +778,28 @@ namespace smsc { namespace sms
         inline bool isRejectDuplicates() const 
         {
             return rejectDuplicates;
+        };
+        
+        /**
+         * Устанавливает признак, нужно ли архивировать сообщение после 
+         * успешной или неуспешной попытке доставки 
+         * 
+         * @param arc    признак, нужно ли архивировать сообщение 
+         */
+        inline void setArchivationRequested(bool arc) 
+        {
+            needArchivate = arc;
+        };
+        
+        /**
+         * Возвращает признак, нужно ли архивировать сообщение после 
+         * успешной или неуспешной попытке доставки 
+         * 
+         * @return признак, нужно ли нужно ли архивировать сообщение (да / нет)
+         */
+        inline bool isArchivationRequested() const 
+        {
+            return needArchivate;
         };
        
         /**
