@@ -1510,6 +1510,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                   __map_trace2__("%s: ussd lock found for %lld dialogid 0x%x ssn %d  (state %d)",__FUNCTION__,sequence,dialogid_map,dialog_ssn);
                   dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_map,dialog_ssn));
                   __require__(dialog->ssn == dialog_ssn);
+                  __map_trace2__("state %d for dlg 0x%p", dialog->state, dialog.get() );
                   dlg_found = true;
                 }
               }
@@ -1737,6 +1738,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           DropMapDialog(dialog.get());
         } else {
           dialog->state == MAPST_ReadyNextUSSDCmd;
+          __map_trace2__("set state %d for dlg 0x%p", dialog->state, dialog.get() );
         }
       }else if(dialog->state == MAPST_WaitSubmitUSSDRequestCloseConf) {
         __map_trace2__("%s processing USSD Request closed submit response", __FUNCTION__);
