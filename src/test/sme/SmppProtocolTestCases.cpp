@@ -33,6 +33,7 @@ void SmppProtocolTestCases::submitSmAssert(int num)
 	__decl_tc__;
 	for (; s.check(); s++)
 	{
+		__trace2__("submitSmAssert(%d)", s.value());
 		try
 		{
 			PduSubmitSm pdu;
@@ -241,6 +242,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 	__tc__("submitSm.correct");
 	for (; s.check(); s++)
 	{
+		__trace2__("submitSmCorrect(%d)", s.value());
 		try
 		{
 			PduSubmitSm* pdu = new PduSubmitSm();
@@ -303,6 +305,8 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 					{
 						__tc__("submitSm.correct.smLengthMarginal");
 						pdu->get_message().set_shortMessage(NULL, 0);
+						pdu->get_message().set_esmClass(
+							pdu->get_message().get_esmClass() & ~ESM_CLASS_UDHI_INDICATOR);
 						//pdu->get_message().set_shortMessage("", 0);
 					}
 					break;
@@ -315,7 +319,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 					}
 					break;
 				case 10: //messagePayload максимальной длины
-					if (!pdu->get_optional().has_messagePayload())
+					if (!pdu->get_message().size_shortMessage())
 					{
 						__tc__("submitSm.correct.messagePayloadLengthMarginal");
 						auto_ptr<char> tmp = rand_char(MAX_PAYLOAD_LENGTH);
@@ -351,6 +355,7 @@ void SmppProtocolTestCases::submitSmCorrectComplex(bool sync, int num)
 	__tc__("submitSm.correct");
 	for (; s.check(); s++)
 	{
+		__trace2__("submitSmCorrectComplex(%d)", s.value());
 		try
 		{
 			PduSubmitSm* pdu = new PduSubmitSm();
@@ -612,6 +617,7 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 	__tc__("submitSm.incorrect");
 	for (; s.check(); s++)
 	{
+		__trace2__("submitSmIncorrect(%d)", s.value());
 		try
 		{
 			PduSubmitSm* pdu = new PduSubmitSm();
@@ -826,6 +832,7 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 	__tc__("replaceSm.correct");
 	for (; s.check(); s++)
 	{
+		__trace2__("replaceSmCorrect(%d)", s.value());
 		try
 		{
 			PduReplaceSm* pdu = new PduReplaceSm();
@@ -964,6 +971,7 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 	__tc__("replaceSm.correct"); //correct пока не выполнились case
 	for (; s.check(); s++)
 	{
+		__trace2__("replaceSmIncorrect(%d)", s.value());
 		try
 		{
 			PduReplaceSm* pdu = new PduReplaceSm();
@@ -1165,6 +1173,7 @@ void SmppProtocolTestCases::querySmCorrect(bool sync, int num)
 	__tc__("querySm.correct");
 	for (; s.check(); s++)
 	{
+		__trace2__("querySmCorrect(%d)", s.value());
 		try
 		{
 			PduQuerySm* pdu = new PduQuerySm();
@@ -1233,6 +1242,7 @@ void SmppProtocolTestCases::querySmIncorrect(bool sync, int num)
 	__tc__("querySm.incorrect");
 	for (; s.check(); s++)
 	{
+		__trace2__("querySmIncorrect(%d)", s.value());
 		try
 		{
 			PduQuerySm* pdu = new PduQuerySm();
@@ -1333,6 +1343,7 @@ void SmppProtocolTestCases::cancelSmCorrect(bool sync, int num)
 	__tc__("cancelSm.correct");
 	for (; s.check(); s++)
 	{
+		__trace2__("cancelSmCorrect(%d)", s.value());
 		try
 		{
 			PduCancelSm* pdu = new PduCancelSm();
@@ -1418,6 +1429,7 @@ void SmppProtocolTestCases::cancelSmIncorrect(bool sync, int num)
 	__tc__("cancelSm.incorrect");
 	for (; s.check(); s++)
 	{
+		__trace2__("cancelSmIncorrect(%d)", s.value());
 		try
 		{
 			static /* const */ PduAddress nullAddr;
