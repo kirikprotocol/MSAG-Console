@@ -24,10 +24,13 @@ int SmppAcceptor::Execute()
     {
       trace2("accept failed. error:%s",strerror(errno));
       //break;
+      if(isStopping)break;
+      continue;
     }
     trace2("Connection accepted:%p",clnt);
     sm->registerSocket(clnt);
   }
+  trace("SmppAcceptor: quiting");
   return 0;
 }
 

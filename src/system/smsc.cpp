@@ -2,6 +2,8 @@
 #include "system/smppio/SmppAcceptor.hpp"
 #include "util/config/smeman/SmeManConfig.h"
 #include <memory>
+#include "admin/util/SignalHandler.h"
+#include "util/debug.h"
 
 namespace smsc{
 namespace system{
@@ -11,6 +13,19 @@ using std::string;
 using namespace smsc::sms;
 using namespace smsc::smeman;
 using namespace smsc::router;
+
+
+class SmscSignalHandler:public smsc::admin::util::SignalHandler{
+public:
+  SmscSignalHandler(Smsc *app):smsc(app){}
+  void handleSignal()throw()
+  {
+    smsc->stop();
+    trace("got a signal!");
+  }
+protected:
+  Smsc* smsc;
+};
 
 Smsc::~Smsc()
 {
@@ -93,12 +108,13 @@ void Smsc::init()
       router.addRoute(rinfo);
     }
   }
+  smsc::admin::util::SignalHandler::registerShutdownHandler(new SmscSignalHandler(this));
 }
 
 void Smsc::run()
 {
   // некоторые действия до основного цикла
-  for(;;)mainLoop();
+  mainLoop();
   // и после него
 }
 

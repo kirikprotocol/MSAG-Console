@@ -37,6 +37,10 @@ public:
   {
     taskEvent.Signal();
   }
+  void stopTask()
+  {
+    if(task)task->stop();
+  }
 protected:
   Event taskEvent;
   ThreadPool *owner;

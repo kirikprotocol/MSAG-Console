@@ -1,1 +1,1 @@
-system/smsc smscmain -lrouter -lsystem -lsystem-smppio -lcore-threads -lthread -lsocket -lcore-buffers -lcore-network -lsystem -lsystem-smppio -lutil-config -llog4cpp -lxerces-c -lutil -lutil-xml -lsmeman -lutil-config-smeman
+system/smsc smscmain -lrouter -lsystem -lsystem-smppio -lcore-threads -lthread -lsocket -lcore-buffers -lcore-network -lsystem -lsystem-smppio -lutil-config -llog4cpp -lxerces-c -lutil -lutil-xml -lsmeman -lutil-config-smeman -lrt -ladmin-util -lutil

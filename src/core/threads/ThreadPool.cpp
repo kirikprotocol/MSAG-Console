@@ -1,5 +1,6 @@
 #include "ThreadPool.hpp"
 #include <exception>
+#include <signal.h>
 
 namespace smsc{
 namespace core{
@@ -18,6 +19,14 @@ int PooledThread::Execute()
 {
   int rawheapsize;
   int blocksheapquantum;
+  sigset_t set;
+  sigemptyset(&set);
+  sigaddset(&set,16);
+  if(thr_sigsetmask(SIG_SETMASK,&set,NULL)!=0)
+  {
+    __warning__("failed to set thread signal mask!");
+  };
+
   trace2("Pooled thread %p ready for tasks\n",this);
   if(!task)owner->releaseThread(this);
   for(;;)
@@ -63,8 +72,20 @@ ThreadPool::ThreadPool()
   maxThreads=256;
 }
 
+static void disp(int sig){}
+
 ThreadPool::~ThreadPool()
 {
+  sigset(16,disp);
+  Lock();
+  trace("stopping tasks");
+  for(int i=0;i<usedThreads.Count();i++)
+  {
+    usedThreads[i]->stopTask();
+    usedThreads[i]->Kill(16);
+  }
+  trace("all tasks are notified");
+
   for(;;)
   {
     Lock();
@@ -81,6 +102,7 @@ ThreadPool::~ThreadPool()
   {
     freeThreads[i]->assignTask(NULL);
     freeThreads[i]->processTask();
+    freeThreads[i]->WaitFor();
     delete freeThreads[i];
   }
 }

@@ -289,7 +289,7 @@ void* MemoryHeap::getRawMem(int size)
   __require__(lastRawPage->memPage!=NULL);
   for(;;)
   {
-    havespace=lastRawPage->pageSize-lastRawPage->pageUsage>size+sizeof(int);
+    havespace=lastRawPage->pageSize-lastRawPage->pageUsage>(int)(size+sizeof(int));
     if(!havespace && lastRawPage->next)
     {
       lastRawPage=lastRawPage->next;

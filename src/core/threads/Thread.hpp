@@ -21,6 +21,12 @@ public:
   void Start();
   void Start(int stacksize);
   int WaitFor();
+#ifndef _WIN32
+  int Kill(int sig)
+  {
+    return thr_kill(thread,sig);
+  }
+#endif
 
 protected:
 #ifdef _WIN32

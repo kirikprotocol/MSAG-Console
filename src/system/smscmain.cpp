@@ -19,6 +19,7 @@ int main(int argc,char* argv[])
     fprintf(stderr,"FATAL EXCEPTION!\n");
     exit(-0);
   }
+  fprintf(stderr,"quiting smsc\n");
   delete app;
   return 0;
 }

@@ -78,7 +78,7 @@ int SmppInputThread::Execute()
   Multiplexer::SockArray ready;
   Multiplexer::SockArray error;
   int i;
-  for(;;)
+  for(;!isStopping;)
   {
     {
       MutexGuard g(mon);
@@ -87,6 +87,7 @@ int SmppInputThread::Execute()
         trace("in:wait for sockets");
         //mon.wait();
         mon.wait();
+        if(isStopping)return 0;
         trace("in:got new socket");
       }
       for(i=0;i<sockets.Count();i++)
@@ -108,7 +109,7 @@ int SmppInputThread::Execute()
       }
     }
     trace("in: canRead\n");
-    if(mul.canRead(ready,error,10)>0)
+    if(mul.canRead(ready,error,1000)>0)
     {
       MutexGuard g(mon);
       for(i=0;i<sockets.Count();i++)
@@ -305,13 +306,14 @@ int SmppOutputThread::Execute()
   Multiplexer::SockArray ready;
   Multiplexer::SockArray error;
   int i;
-  for(;;)
+  for(;!isStopping;)
   {
     mon.Lock();
     while(sockets.Count()==0)
     {
       trace("out:wait for sockets");
       mon.wait();
+      if(isStopping)return 0;
       trace("out:got new socket");
     }
     int cnt=0;
@@ -359,7 +361,7 @@ int SmppOutputThread::Execute()
       continue;
     }
     mon.Unlock();
-    if(mul.canWrite(ready,error,10)>0)
+    if(mul.canWrite(ready,error,1000)>0)
     {
       MutexGuard g(mon);
       for(i=0;i<sockets.Count();i++)
