@@ -14,7 +14,7 @@ import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.List;
 
 public class Lookup extends PageBean
 {
@@ -26,6 +26,7 @@ public class Lookup extends PageBean
 
   private String profile = null;
   private String codepage = null;
+  private boolean ussd7bit = false;
   private String reportOptions = null;
   private String locale = null;
   private boolean aliasHide = false;
@@ -62,6 +63,7 @@ public class Lookup extends PageBean
       try {
         ProfileEx p = appContext.getSmsc().profileLookupEx(new Mask(profile));
         codepage = p.getCodepageString();
+        ussd7bit = p.isUssd7bit();
         reportOptions = p.getReportOptionsString();
         locale = p.getLocale();
         aliasHide = p.isAliasHide();
@@ -135,6 +137,11 @@ public class Lookup extends PageBean
   public String getCodepage()
   {
     return codepage;
+  }
+
+  public boolean isUssd7bit()
+  {
+    return ussd7bit;
   }
 
   public String getReportOptions()
