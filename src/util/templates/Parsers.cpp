@@ -82,7 +82,7 @@ void Int8Parser::parse(std::string& input,
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
         if (!(str && *str) && def) str = def;
         if ((result = sscanf(str, "%d%n", &value, &bytes)) == EOF
-            || !result || !bytes || bytes<0)
+            || !result || !bytes || bytes<0 || value != (int8_t)value)
             throw ParsingException("Error scanning int8 type. "
                                    "Processing string: '%s'", str);
         if (str != def) input.erase(0, bytes);
@@ -115,7 +115,7 @@ void Int16Parser::parse(std::string& input,
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
         if (!(str && *str) && def) str = def;
         if ((result = sscanf(str, "%d%n", &value, &bytes)) == EOF
-            || !result || !bytes || bytes<0)
+            || !result || !bytes || bytes<0 || value != (int16_t)value)
             throw ParsingException("Error scanning int16 type. "
                                    "Processing string: '%s'", str);
         if (str != def) input.erase(0, bytes);
@@ -217,7 +217,7 @@ void Uint8Parser::parse(std::string& input,
             throw ParsingException("Error scanning uint8 type. Unexpected '-' "
                                    "Processing string: '%s'", str);
         if ((result = sscanf(str, "%u%n", &value, &bytes)) == EOF
-            || !result || !bytes || bytes<0)
+            || !result || !bytes || bytes<0 || value != (uint8_t)value)
             throw ParsingException("Error scanning uint8 type. "
                                    "Processing string: '%s'", str);
         if (str != def) input.erase(0, bytes);
@@ -253,7 +253,7 @@ void Uint16Parser::parse(std::string& input,
             throw ParsingException("Error scanning uint16 type. Unexpected '-' "
                                    "Processing string: '%s'", str);
         if ((result = sscanf(str, "%u%n", &value, &bytes)) == EOF
-            || !result || !bytes || bytes<0)
+            || !result || !bytes || bytes<0 || value != (uint16_t)value)
             throw ParsingException("Error scanning uint16 type. "
                                    "Processing string: '%s'", str);
         if (str != def) input.erase(0, bytes);
