@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+<config>
+    
+    <section name="StartupLoader">
+        <section name="DataSourceDrivers">
+            <section name="OCIDataSourceDriver">
+                <param name="type" type="string">OCI</param>
+                <param name="loadup" type="string">../db/oci/libdb_oci.so</param>
+            </section>
+        </section>
+    </section>
+    
+    <section name="InfoSme">
+
+        <param name="SvcType" type="string">DBSme</param>
+        <param name="ProtocolId" type="int">111</param>
+        
+        <section name="ThreadPool">
+            <param name="max" type="int">15</param>
+            <param name="init" type="int">5</param>
+        </section>  
+            
+        <section name="SMSC">
+            <param name="host" type="string">smsc</param>
+            <param name="port" type="int">9229</param>
+            <param name="sid" type="string">2</param>
+            <param name="timeout" type="int">10</param>
+            <param name="password" type="string">2</param>
+        </section>  
+
+	<section name="DataProvider">
+	    
+	    <param name="dsInternal" type="string">INTERNAL_DS</param>
+	    
+	    <section name="INTERNAL_DS">
+		<param name="type" type="string">OCI</param>
+                <param name="connections" type="int">10</param>
+                <param name="dbInstance" type="string">smsc</param>
+                <param name="dbUserName" type="string">smsc_makar</param>
+                <param name="dbUserPassword" type="string">smsc_makar</param>
+	        <param name="watchdog" type="bool">true</param>
+            </section>
+            <section name="WORKING_DS1">
+		<param name="type" type="string">OCI</param>
+                <param name="connections" type="int">5</param>
+                <param name="dbInstance" type="string">smsc</param>
+                <param name="dbUserName" type="string">smsc_makar</param>
+                <param name="dbUserPassword" type="string">smsc_makar</param>
+	        <param name="watchdog" type="bool">true</param>
+            </section>
+            <section name="WORKING_DS2">
+		<param name="type" type="string">OCI</param>
+                <param name="connections" type="int">5</param>
+                <param name="dbInstance" type="string">smsc</param>
+                <param name="dbUserName" type="string">smsc_makar</param>
+                <param name="dbUserPassword" type="string">smsc_makar</param>
+	        <param name="watchdog" type="bool">true</param>
+            </section>
+	</section>
+
+	<section name="Tasks">
+	    <param name="switchTimeout" type="int">1000</param>
+	    
+	    <section name="Task1">
+		<param name="dsId" type="string">INTERNAL_DS</param>
+		<param name="enabled" type="bool">true</param>
+		<param name="priority" type="int">10</param>
+		<param name="retryOnFail" type="bool">true</param>
+		<param name="replaceMessage" type="bool">false</param>
+		<param name="endDate" type="string">07.05.2003 00:00:00</param>
+		<param name="retryTime" type="string">03:10:10</param>
+		<param name="validityPeriod" type="string">01:00:00</param>
+		<param name="validityDate" type="string"></param>
+		<param name="activePeriodStart" type="string">09:00:00</param>
+		<param name="activePeriodEnd" type="string">20:00:00</param>
+		<param name="query" type="string">
+		    select ...
+		</param>
+		<param name="template" type="string">
+		    Hi, $$string arg=1$$
+		</param>
+		<param name="svcType" type="string">TASK_1</param>
+	    </section>
+	    
+	    <section name="Task2">
+		<param name="dsId" type="string">INTERNAL_DS</param>
+		<param name="enabled" type="bool">true</param>
+		<param name="priority" type="int">10</param>
+		<param name="retryOnFail" type="bool">true</param>
+		<param name="replaceMessage" type="bool">false</param>
+		<param name="endDate" type="string">07.05.2003 00:00:00</param>
+		<param name="retryTime" type="string">03:10:10</param>
+		<param name="validityPeriod" type="string">01:00:00</param>
+		<param name="validityDate" type="string"></param>
+		<param name="activePeriodStart" type="string">09:00:00</param>
+		<param name="activePeriodEnd" type="string">20:00:00</param>
+		<param name="query" type="string">
+		    select ...
+		</param>
+		<param name="template" type="string">
+		    Hi, $$string arg=1$$
+		</param>
+		<param name="svcType" type="string">TASK_1</param>
+	    </section>
+	</section>
+	
+	<section name="Schedules">
+	</section>
+	
+    </section>
+    
+</config>
