@@ -49,6 +49,26 @@ public:
     return retval;
 #endif
   }
+  int Wait(int timeout)
+  {
+#ifdef _WIN32
+    return WaitForSingleObject(event,timeout);
+#else
+    mutex.Lock();
+    if(signaled)
+    {
+      signaled=0;
+      mutex.Unlock();
+      return 0;
+    }
+    timestruc_t tv;
+    tv.tv_sec=timeout/1000;
+    tv.tv_nsec=(timeout%1000)*1000000L;
+    int retval=cond_timedwait(&event,&mutex.mutex,&tv);
+    mutex.Unlock();
+    return retval;
+#endif
+  }
   void Signal()
   {
 #ifdef _WIN32
