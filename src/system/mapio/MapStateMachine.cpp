@@ -511,7 +511,7 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
     map<string,unsigned>::iterator it = x_map.find(s_);
     if ( it == x_map.end() ){
       //throw MAPDIALOG_FATAL_ERROR("MAP::Et96MapGetACVersionConf has no address for AC resolving");
-      throw runtime_error(,"MAP::Et96MapGetACVersionConf has no address for AC resolving");
+      throw runtime_error("MAP::Et96MapGetACVersionConf has no address for AC resolving");
     }
     dialogid_map = it->second;
     x_map.erase(it);
@@ -526,19 +526,19 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
       switch( dialog->state ){
       case MAPST_WaitHlrVersion:
         dialog->version = version;
-        SendRInfo(dialog);
+        SendRInfo(dialog.get());
         dialog->state = MAPST_SendingRInfo;
         break;
       case MAPST_WaitMcsVersion:
         dialog->version = version;
-        if ( SendSms(dialog) == SMS_SEGMENTATION )
+        if ( SendSms(dialog.get()) == SMS_SEGMENTATION )
           dialog->state = MAPST_WaitSpecOpenConf;
         else
           dialog->state = MAPST_WaitOpenConf;
         break;
       default:
         throw MAPDIALOG_BAD_STATE(
-          FormatText("MAP::%s bad state %d, did 0x%x, SMSC.did 0x%x",__PRETTY_FUNCTION__,dialog->state,dialog->dialogid,dialog->dialogid_smsc));
+          FormatText("MAP::%s bad state %d, did 0x%x, SMSC.did 0x%x",__PRETTY_FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
       }
       dialog->state  = MAPST_SendingRInfo;
     }
@@ -574,15 +574,15 @@ USHORT_T Et96MapOpenConf (
         if ( refuseReason_p && *refuseReason_p == ET96MAP_APP_CONTEXT_NOT_SUPP ){
           if ( dialog->version != 1 ){
             --dialog->version;
-            dialogid_map = RemapDialog(dialog);
+            dialogid_map = RemapDialog(dialog.get());
             switch ( dialog_state ) {
             case MAPST_RInfoFallBack: 
               dialog->state = MAPST_SendingRInfo;
-              SendRInfo(dialog);
+              SendRInfo(dialog.get());
               break;
             case MAPST_WaitSpecOpenConf:
             case MAPST_WaitOpenConf:
-              if ( SendSms(dialog) == SMS_SEGMENTATION )
+              if ( SendSms(dialog.get()) == SMS_SEGMENTATION )
                 dialog->state = MAPST_WaitSpecOpenConf;
               else
                 dialog->state = MAPST_WaitOpenConf;
