@@ -12,6 +12,7 @@ namespace sme {
 
 using smsc::util::Logger;
 using smsc::util::Exception;
+using smsc::sme::SmppInvalidBindState;
 using smsc::test::conf::TestConfig;
 using namespace smsc::sms; //constants
 using namespace smsc::profiler; //constants, Profile
@@ -421,6 +422,29 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 	PduData::StrProps* strProps, PduData::ObjProps* objProps, PduType pduType)
 {
 	__decl_tc__;
+	if (fixture->smeType != SME_TRANSMITTER && fixture->smeType != SME_TRANSCEIVER)
+	{
+		__require__(fixture->smeType == SME_RECEIVER);
+		try
+		{
+			__tc__("submitSm.receiver");
+			if (sync)
+			{
+				fixture->session->getSyncTransmitter()->submit(*pdu);
+			}
+			else
+			{
+				fixture->session->getAsyncTransmitter()->submit(*pdu);
+			}
+			__tc_fail__(1);
+		}
+		catch (SmppInvalidBindState&)
+		{
+			__tc_ok__;
+			return;
+		}
+		throw Exception("Missing invalid bind exception");
+	}
 	try
 	{
 		if (fixture->pduReg)
@@ -429,24 +453,21 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 			{
 				__tc__("submitSm.sync");
 				PduData* pduData;
-				time_t submitTime;
 				{
 					MutexGuard mguard(fixture->pduReg->getMutex());
 					pdu->get_header().set_sequenceNumber(0); //не известен
-					submitTime = time(NULL);
-					pduData = registerSubmitSm(pdu, existentPduData, submitTime,
+					pduData = registerSubmitSm(pdu, existentPduData, time(NULL),
 						intProps, strProps, objProps, pduType); //all times, msgRef
 				}
 				//__dumpSubmitSmPdu__("submitSmSyncBefore", fixture->smeInfo.systemId, pdu);
 				PduSubmitSmResp* respPdu =
 					fixture->session->getSyncTransmitter()->submit(*pdu);
-				time_t respTime = time(NULL);
 				{
 					MutexGuard mguard(fixture->pduReg->getMutex());
 					__dumpSubmitSmPdu__("submitSmSyncAfter", fixture->smeInfo.systemId, pdu);
 					if (respPdu)
 					{
-						processSubmitSmSync(pduData, respPdu, respTime);
+						processSubmitSmSync(pduData, respPdu, time(NULL));
 					}
 					else
 					{
@@ -734,6 +755,29 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 	PduData::StrProps* strProps, PduData::ObjProps* objProps)
 {
 	__decl_tc__;
+	if (fixture->smeType != SME_TRANSMITTER && fixture->smeType != SME_TRANSCEIVER)
+	{
+		__require__(fixture->smeType == SME_RECEIVER);
+		try
+		{
+			__tc__("replaceSm.receiver");
+			if (sync)
+			{
+				fixture->session->getSyncTransmitter()->replace(*pdu);
+			}
+			else
+			{
+				fixture->session->getAsyncTransmitter()->replace(*pdu);
+			}
+			__tc_fail__(1);
+		}
+		catch (SmppInvalidBindState&)
+		{
+			__tc_ok__;
+			return;
+		}
+		throw Exception("Missing invalid bind exception");
+	}
 	try
 	{
 		if (fixture->pduReg)

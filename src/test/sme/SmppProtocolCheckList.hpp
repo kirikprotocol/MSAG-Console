@@ -66,8 +66,12 @@ void unbindTc()
 void submitSmTc()
 {
 	__reg_tc__("submitSm", "Тест кейсы для submit_sm");
-	__reg_tc__("submitSm.sync", "Отправка синхронного submit_sm pdu");
-	__reg_tc__("submitSm.async", "Отправка асинхронного submit_sm pdu");
+	__reg_tc__("submitSm.sync",
+		"Отправка синхронного submit_sm pdu");
+	__reg_tc__("submitSm.async",
+		"Отправка асинхронного submit_sm pdu");
+	__reg_tc__("submitSm.receiver",
+		"При отправке submit_sm с sme зарегистрированой как receiver SmppSession бросает exception");
 	//submitSm.correct
 	__reg_tc__("submitSm.correct",
 		"Отправка submit_sm pdu с правильными значениями полей");
@@ -175,6 +179,8 @@ void replaceSmTc()
 		"Отправка синхронного replace_sm pdu");
 	__reg_tc__("replaceSm.async",
 		"Отправка асинхронного replace_sm pdu");
+	__reg_tc__("replaceSm.receiver",
+		"При отправке replace_sm с sme зарегистрированой как receiver SmppSession бросает exception");
 	//replaceSm.correct
 	__reg_tc__("replaceSm.correct",
 		"Отправка replace_sm pdu с правильными значениями полей");
