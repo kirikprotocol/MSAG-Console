@@ -221,13 +221,13 @@ void SmppPduChecker::processSubmitSmResp(ResponseMonitor* monitor,
 		//обновить smsId у delivery receipt монитора
 		monitor->pduData->strProps["smsId"] = respPdu.get_messageId();
 	}
-	else
+	//set<uint32_t> checkRes = checkSubmitSm(monitor->pduData);
+	const set<uint32_t>& checkRes = monitor->pduData->checkRes;
+	if (checkRes.size())
 	{
 		__require__(!monitor->pduData->replacedByPdu);
 		__require__(!monitor->pduData->replacePdu);
 	}
-	//set<uint32_t> checkRes = checkSubmitSm(monitor->pduData);
-	const set<uint32_t>& checkRes = monitor->pduData->checkRes;
 	switch (respPdu.get_header().get_commandStatus())
 	{
 		case ESME_ROK:
@@ -311,13 +311,13 @@ void SmppPduChecker::processReplaceSmResp(ResponseMonitor* monitor,
 		monitor->pduData->pdu->get_sequenceNumber());
 	__tc_ok_cond__;
 	//проверка ошибок
-	if (respPdu.get_header().get_commandStatus() != ESME_ROK)
+	//set<uint32_t> checkRes = checkReplaceSm(monitor->pduData);
+	const set<uint32_t>& checkRes = monitor->pduData->checkRes;
+	if (checkRes.size())
 	{
 		__require__(!monitor->pduData->replacedByPdu);
 		__require__(!monitor->pduData->replacePdu);
 	}
-	//set<uint32_t> checkRes = checkReplaceSm(monitor->pduData);
-	const set<uint32_t>& checkRes = monitor->pduData->checkRes;
 	switch (respPdu.get_header().get_commandStatus())
 	{
 		case ESME_ROK:
