@@ -375,6 +375,23 @@ public:
     processLimit=newProcLimit;
   }
 
+  /**
+   * need for statistics
+   **/
+  void mapPacketReceived()
+  {
+    MutexGuard g(sync);
+    MAPSTATS_Update(MAPSTATS_GSMRECV);
+  }
+
+  /**
+   * need for statistics
+   **/
+  void restartStatistics() {
+    MutexGuard g(sync);
+    MAPSTATS_Restart();
+  }
+
   static void destroyInstance(){
     MutexGuard g(sync_object);
     if ( container ) {

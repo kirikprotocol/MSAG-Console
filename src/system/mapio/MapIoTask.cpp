@@ -147,7 +147,7 @@ void MapIoTask::dispatcher()
       }
     }
 
-    MAPSTATS_Update(MAPSTATS_GSMRECV);
+    MapDialogContainer::getInstance()->mapPacketReceived();
 
     __map_trace2__("MsgRecv receive msg with receiver 0x%hx sender 0x%hx prim 0x%hx size %d",message.receiver,message.sender,message.primitive,message.size);
     if ( message.primitive == 0x8b && message.msg_p[6] >= 0x04 ) {
@@ -252,7 +252,7 @@ void MapIoTask::init(unsigned timeout)
     __map_trace2__("USSD Bind error 0x%hx",bind_res);
     throw runtime_error("bind error");
   }
-  MAPSTATS_Restart();
+  MapDialogContainer::getInstance()->restartStatistics();
   __map_trace__("Ok");
 }
 
@@ -365,10 +365,10 @@ void setMapProxyLimits(int timeout, int limit)
 }
 
 
-Mutex& MAPSTATS_GetMutex(){
+/*Mutex& MAPSTATS_GetMutex(){
   static Mutex mutex;
   return mutex;
-}
+}*/
 
 smsc::logger::Logger* MAPSTATS_GetLoggerSec() {
   static smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("map.stat.sec");
@@ -504,7 +504,7 @@ void MAPSTATS_Update_(MAPSTATS stats)
 
 void MAPSTATS_Restart()
 {
-  MutexGuard _mg(MAPSTATS_GetMutex());
+//  MutexGuard _mg(MAPSTATS_GetMutex());
   MAPSTATS_Flush(MAPSTATS__SEC,false);
   MAPSTATS_Flush(MAPSTATS__MIN,false);
   MAPSTATS_Flush(MAPSTATS__HOUR,false);
@@ -518,7 +518,7 @@ void MAPSTATS_Restart()
 
 void MAPSTATS_Update(MAPSTATS stats)
 {
-  MutexGuard _mg(MAPSTATS_GetMutex());
+//  MutexGuard _mg(MAPSTATS_GetMutex());
   time_t cur_time = time(0);
   if ( cur_time > MAPSTATS_last_time_hour+60*60 ) {
     // dump one hour stats

@@ -50,7 +50,7 @@ inline char GetChar(const unsigned char*& ptr,unsigned& shift){
   return val;
 }
 
-class VeryLongText{};
+class VeryLongText: runtime_error {};
 
 inline void PutChar(unsigned char*& ptr,unsigned& shift,unsigned char val8bit,unsigned char* ptr_end){
   if ( ptr >= ptr_end ) throw VeryLongText();

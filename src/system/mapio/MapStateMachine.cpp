@@ -1150,7 +1150,10 @@ static string RouteToString(MapDialog* dialog)
   TryDestroyDialog(__dialogid_map,true,err.code,__ssn);\
 }catch(exception& e){\
   __map_trace2__("%s: exception dialogid 0x%x/0x%x <exception>:%s",__func__,__dialogid_map,__dialogid_smsc, e.what());\
-  TryDestroyDialog(__dialogid_map,true,MAKE_ERRORCODE(CMD_ERR_FATAL,0),__ssn);\
+  TryDestroyDialog(__dialogid_map,true,MAKE_ERRORCODE(CMD_ERR_FATAL,Status::SYSFAILURE),__ssn);\
+}catch(...){\
+  __map_trace2__("%s: exception dialogid 0x%x/0x%x <exception>:...",__func__,__dialogid_map,__dialogid_smsc);\
+  TryDestroyDialog(__dialogid_map,true,MAKE_ERRORCODE(CMD_ERR_FATAL,Status::SYSFAILURE),__ssn);\
 }
 
 static bool SendSms(MapDialog* dialog){
@@ -2855,6 +2858,24 @@ USHORT_T Et96MapDelimiterInd(
   catch(exception& e)
   {
     __map_trace2__("%s: dialogid 0x%x <exception>:%s",__func__,dialogueId,e.what());
+    if ( !open_confirmed ){
+      ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
+      //MapDialogContainer::getInstance()->dropDialog(dialogueId);
+      DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn));
+      if ( !dialog.isnull() ) {
+        dialog->state = MAPST_ABORTED;
+        __require__(dialog->ssn==localSsn);
+        Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0);
+        Et96MapCloseReq(localSsn,dialogueId,ET96MAP_NORMAL_RELEASE,0,0,0);
+        DropMapDialog(dialog.get());
+      }
+    } else {
+      TryDestroyDialog(dialogueId,localSsn);
+    }
+  }
+  catch(...)
+  {
+    __map_trace2__("%s: dialogid 0x%x <exception>: ...",__func__,dialogueId);
     if ( !open_confirmed ){
       ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
       //MapDialogContainer::getInstance()->dropDialog(dialogueId);
