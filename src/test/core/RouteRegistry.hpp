@@ -23,6 +23,7 @@ using smsc::test::sms::ltAddress;
 class RouteRegistry
 {
 public:
+	typedef vector<const TestRouteData*> RouteList;
 	typedef map<const RouteId, const TestRouteData*> RouteMap;
 	class RouteIterator
 	{
@@ -58,11 +59,10 @@ public:
 	 */
 	const Address* getRandomNonReachableDestAddress(const Address& origAddr) const;
 
-	const vector<const SmeProxy*> lookup(const Address& origAddr,
+	const RouteList lookup(const Address& origAddr,
 		const Address& destAddr) const;
 
 private:
-	typedef vector<const TestRouteData*> RouteList;
 	typedef map<const Address, RouteList, ltAddress> AddressMap;
 	AddressMap addrMap;
 	RouteMap routeMap;

@@ -50,9 +50,12 @@ RouteRegistry::~RouteRegistry()
 
 void RouteRegistry::putRoute(const TestRouteData& data)
 {
-	TestRouteData* routeData = new TestRouteData(data);
-	addrMap[data.origAddr].push_back(routeData);
-	routeMap[data.route->routeId] = routeData;
+	if (data.route)
+	{
+		TestRouteData* routeData = new TestRouteData(data);
+		addrMap[data.origAddr].push_back(routeData);
+		routeMap[data.route->routeId] = routeData;
+	}
 }
 
 const RouteInfo* RouteRegistry::getRoute(RouteId routeId) const
@@ -115,58 +118,53 @@ const Address* RouteRegistry::getRandomNonReachableDestAddress(
 	return (res.size() ? new Address(res[rand0(res.size() - 1)]->destAddr) : NULL);
 }
 
-const vector<const SmeProxy*> RouteRegistry::lookup(const Address& origAddr,
+const RouteRegistry::RouteList RouteRegistry::lookup(const Address& origAddr,
 	const Address& destAddr) const
 {
-	vector<const SmeProxy*> res;
+	RouteList res;
 	AddressMap::const_iterator it = addrMap.find(origAddr);
 	if (it == addrMap.end())
 	{
 		return res;
 	}
 	const RouteList& routes = it->second;
-	RouteList tmp;
 	//приоритеты маршрутов: destAddr, origAddr
 	for (int i = 0; i < routes.size(); i++)
 	{
 		//общие проверки
-		if (!routes[i]->match || routes[i]->proxy == NULL ||
+		if (!routes[i]->match ||
 			!SmsUtil::compareAddresses(destAddr, routes[i]->destAddr))
 		{
 			continue;
 		}
-		if (!tmp.size())
+		if (!res.size())
 		{
-			tmp.push_back(routes[i]);
+			res.push_back(routes[i]);
 			continue;
 		}
 		//destAddr
-		if (tmp.back()->destAddrMatch < routes[i]->destAddrMatch)
+		if (res.back()->destAddrMatch < routes[i]->destAddrMatch)
 		{
-			tmp.clear();
-			tmp.push_back(routes[i]);
+			res.clear();
+			res.push_back(routes[i]);
 			continue;
 		}
-		if (tmp.back()->destAddrMatch > routes[i]->destAddrMatch)
+		if (res.back()->destAddrMatch > routes[i]->destAddrMatch)
 		{
 			continue;
 		}
 		//origAddr
-		if (tmp.back()->origAddrMatch < routes[i]->origAddrMatch)
+		if (res.back()->origAddrMatch < routes[i]->origAddrMatch)
 		{
-			tmp.clear();
-			tmp.push_back(routes[i]);
+			res.clear();
+			res.push_back(routes[i]);
 			continue;
 		}
-		if (tmp.back()->origAddrMatch == routes[i]->origAddrMatch)
+		if (res.back()->origAddrMatch == routes[i]->origAddrMatch)
 		{
-			tmp.push_back(routes[i]);
+			res.push_back(routes[i]);
 			continue;
 		}
-	}
-	for (int i = 0; i < tmp.size(); i++)
-	{
-		res.push_back(tmp[i]->proxy);
 	}
 	return res;
 }
