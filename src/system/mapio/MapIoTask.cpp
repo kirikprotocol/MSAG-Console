@@ -109,7 +109,7 @@ USHORT_T Et96MapV1SendRInfoForSmConf (
   }else{
   	try{
       __trace2__("MAP::mdci->Et96MapV1SendRInfoForSmConf");
-      mdci->Et96MapV2SendRInfoForSmConf(
+      mdci->Et96MapV1SendRInfoForSmConf(
         SSN,dialogId,invokeId,imsi_sp,locationInfo_sp,lmsi_sp,mwdSet,errorSendRoutingInfoForSm_sp,provErrCode_p);
       __trace2__("MAP::mdci->Et96MapV1SendRInfoForSmConf OK");
   	}catch(...){
