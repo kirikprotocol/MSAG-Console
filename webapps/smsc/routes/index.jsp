@@ -12,6 +12,8 @@
                  java.text.DateFormat"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.routes.Index"/>
 <jsp:setProperty name="bean" property="*"/>
+<%@ taglib uri="http://jakarta.apache.org/taglibs/input-1.0" prefix="input" %>
+
 <%
 TITLE = "Routes";
 switch(bean.process(request))
@@ -91,6 +93,28 @@ function clickClickable(headId, bodyId)
   }
 }
 </script>
+
+<%
+String[] Filtered = { "name", "active", "allow","billing","archiving","reports" };
+
+%>
+Filter By:        <%=Filtered[0]%>,<%=Filtered[1]%>,<%=Filtered[2]%>,<%=Filtered[3]%>,<%=Filtered[4]%>,<%=Filtered[5]%>
+
+<%
+java.util.HashMap a = new java.util.HashMap();
+// a.put("multiple", null);
+
+java.util.Hashtable o = new java.util.Hashtable();
+o.put("name", "1");
+o.put("active", "2");
+o.put("allow", "3");
+o.put("billing", "1");
+o.put("archiving", "2");
+o.put("reports", "3");
+%>
+<input:select name="mbFilter" default="1"
+    attributes="<%= a %>" options="<%= o %>" />
+
 <table class=list cellspacing=0 cellpadding=0 id=ROUTE_LIST_TABLE>
 <col width="1%">
 <col width="60%" align=left>
