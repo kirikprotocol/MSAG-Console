@@ -2118,11 +2118,14 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
       __map_trace2__("MAP::<nonfatal exepction> %s",e.what());
       SendErrToSmsc(dialog->dialogid_smsc,e.code);
       dialog->dialogid_smsc = 0; // далее смсцентр ничего не знает о диалоге
+      dialog->wasDelivered = false;
     }
 
     switch( dialog->state ){
     case MAPST_WaitSmsConf:
-      dialog->wasDelivered = true;
+      if( dialog->dialogid_smsc != 0 ) {
+        dialog->wasDelivered = true;
+      }
       dialog->state = MAPST_WaitSmsClose;
       break;
     default:
