@@ -1,7 +1,7 @@
 #include "profiler/profiler.hpp"
 #include <vector>
 #include "core/buffers/Array.hpp"
-#include "profiler/XHash.hpp"
+#include "core/buffers/XHash.hpp"
 
 #include "util/config/Manager.h"
 #include "util/config/ConfigView.h"
@@ -61,7 +61,7 @@ static int CalcHash(const HashKey& key)
 }
 };
 
-class ProfilesTable: public XHash<HashKey,Profile,HashFunc>
+class ProfilesTable: public smsc::core::buffers::XHash<HashKey,Profile,HashFunc>
 {
   Profile defaultProfile;
 public:
