@@ -63,15 +63,15 @@ vector<int> PduReceiptFlag::checkSchedule(time_t recvTime) const
 	else
 	{
 		int attempt, lastAttempt = -1;
-		time_t diff, lastDiff;
+		time_t diff, lastDiff = 0;
 		time_t nextTime = eval(recvTime, attempt, diff);
-		__trace2__("PduReceiptFlag::update(): this = 0x%x, recvTime = %ld, startTime = %ld, endTime = %ld, attempt = %d, diff = %d, nextTime = %ld",
-			this, recvTime, startTime, endTime, attempt, diff, nextTime);
 		if (lastTime)
 		{
 			__require__(lastTime >= startTime && lastTime <= endTime + timeCheckAccuracy);
 			eval(lastTime, lastAttempt, lastDiff);
 		}
+		__trace2__("PduReceiptFlag::checkSchedule(): this = %p, startTime = %ld, endTime = %ld, recvTime = %ld, attempt = %d, diff = %ld, lastTime = %ld, lastAttempt = %d, lastDiff = %ld",
+			this, startTime, endTime, recvTime, attempt, diff, lastTime, lastAttempt, lastDiff);
 		if (attempt - lastAttempt != 1)
 		{
 			res.push_back(3);
@@ -118,6 +118,8 @@ vector<int> PduReceiptFlag::update(time_t recvTime, bool accepted)
 
 bool PduReceiptFlag::isPduMissing(time_t checkTime) const
 {
+	__trace2__("PduReceiptFlag::isPduMissing(): this = %p, statTime = %ld, endTime = %ld, checkTime = %ld",
+		this, startTime, endTime, checkTime);
 	if (checkTime < startTime || flag != PDU_REQUIRED_FLAG)
 	{
 		return false;
@@ -127,16 +129,20 @@ bool PduReceiptFlag::isPduMissing(time_t checkTime) const
 		return true;
 	}
 	int attempt, lastAttempt = -1;
-	time_t diff;
+	time_t diff, lastDiff = 0;
 	eval(checkTime, attempt, diff);
-	__trace2__("PduReceiptFlag::isPduMissing(): this = 0x%x, recvTime = %ld, statTime = %ld, endTime = %ld, attempt = %d, diff = %d",
-		this, checkTime, startTime, endTime, attempt, diff);
 	if (lastTime)
 	{
 		__require__(lastTime >= startTime && lastTime <= endTime + timeCheckAccuracy);
-		eval(lastTime, lastAttempt, diff);
+		eval(lastTime, lastAttempt, lastDiff);
 	}
-	return (attempt - lastAttempt != 1);
+	if (attempt - lastAttempt != 1)
+	{
+		__trace2__("PduReceiptFlag::isPduMissing(): this = %p, startTime = %ld, endTime = %ld, checkTime = %ld, attempt = %d, diff = %ld, lastTime = %ld, lastAttempt = %d, lastDiff = %ld",
+			this, startTime, endTime, checkTime, attempt, diff, lastTime, lastAttempt, lastDiff);
+		return true;
+	}
+	return false;
 }
 
 Mutex PduData::mutex = Mutex();
