@@ -24,7 +24,7 @@ using std::sort;
 int calcDefLengthAndCheck(Address* addr)
 {
   int cnt = 0;
-  throw_if_fail(addr->lenght<20);
+  throw_if_fail(addr->lenght<=20);
   for ( int i=0; i < addr->lenght; ++i )
   {
     if ( addr->value[i] == '?' || addr->value[i] == '*' ) break;
