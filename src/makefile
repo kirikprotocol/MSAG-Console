@@ -20,8 +20,11 @@ endif
 
 SSL_DIR:=/usr/local/ssl
 ifeq ($(CXX),CC)
-#SSL_LIB:=$(SSL_DIR)/lib/libcrypto.a $(SSL_DIR)/lib/libssl.a
+ifeq ($(SNMP),YES)
 SSL_LIB:=-lcrypto -lssl
+else
+SSL_LIB:=$(SSL_DIR)/lib/libcrypto.a $(SSL_DIR)/lib/libssl.a
+endif
 else
 SSL_LIB:=-lcrypto -lssl
 endif
