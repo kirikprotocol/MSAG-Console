@@ -108,7 +108,7 @@ RouteInfo RouteManagerFunctionalTest::prepareForNewRoute(
 	stack.back()->push_back(tcSme.addCorrectSme(&smeAlias, sme.back(), RAND_TC));
 	if (createProxy)
 	{
-		SmeProxy* p;
+		SmeProxy* p = NULL;
 		stack.back()->push_back(tcSme.registerCorrectSmeProxy(
 			sme.back()->systemId, &p));
 		proxy.push_back(p);
