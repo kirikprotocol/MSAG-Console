@@ -20,6 +20,11 @@ class MissedCallListener{
   public:
     virtual void missed(MissedCallEvent event) = 0;
 };
+struct Circuits {
+  int  hsn;
+  int  spn;
+  long ts;
+};
 class MissedCallProcessor{
   public:
     static MissedCallProcessor* instance();
@@ -28,6 +33,7 @@ class MissedCallProcessor{
     void addMissedCallListener(MissedCallListener* listener);
     void removeMissedCallListener();
     void fireMissedCallEvent(MissedCallEvent& event);
+    void setCircuits(Circuits cics);
   private:
     MissedCallProcessor();
     MissedCallListener* listener;

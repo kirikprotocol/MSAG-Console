@@ -9,6 +9,7 @@ namespace misscall{
 namespace util{
 extern void pack_addr(UCHAR_T* dst, const char* src, int len);
 extern void unpack_addr(char* dst, UCHAR_T* src, int len);
+extern std::string getTypeOfServiceDescription(UCHAR_T typeOfService);
 extern std::string getCalledNumberDescription(EINSS7_I97_CALLEDNUMB_T* called);
 extern std::string getCallingNumberDescription(EINSS7_I97_CALLINGNUMB_T* calling);
 extern std::string getRedirectingNumberDescription(EINSS7_I97_REDIRECTINGNUMB_T* redirNumb);
@@ -25,6 +26,7 @@ extern const char* getStackStatusDescription(UCHAR_T mmState);
 extern const char* getCongLevelDescription(UCHAR_T congLevel);
 extern const char* getIsupBindStatusDescription(UCHAR_T result);
 extern const char* getModuleName(USHORT_T moduleId);
+extern const char* getReturnCodeDescription(USHORT_T code);
 }//namespace util
 }//namespace misscall
 }//namespace smsc

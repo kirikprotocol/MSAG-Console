@@ -13,21 +13,128 @@ namespace misscall{
 using smsc::logger::Logger;
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
+using smsc::misscall::util::getReturnCodeDescription;
 
 #define MAXENTRIES 1000
 #define USER USER02_ID
 #define MGMT_VER 6
-void unblockCurcuits()
-{
-  UCHAR_T UBL[]={0x00/*HSN*/, 0x00/*SPN*/, 0xFE, 0xFF, 0xFE, 0xFF/*TS MASK*/,0x00/*NO FORCE*/};
-  EINSS7_MgmtApiSendOrderReq(USER,MGMT_ID,ISUP_ID,0x0B/*UNBLOCK CURCUITS*/,sizeof(UBL),UBL,NO_WAIT);
-}
+
 int going;
 
-enum {INIT,WORKING} state;
 Logger* missedCallProcessorLogger = 0;
 Mutex MissedCallProcessor::lock;
 MissedCallProcessor* volatile MissedCallProcessor::processor = 0;
+
+enum State{
+      INIT,
+      MGMTBINDING,
+      MGMTBOUND,
+      MGMTBINDERROR,
+      WAITINGSTACK,
+      STACKOK,
+      ISUPBINDING,
+      ISUPBOUND,
+      LINKUP,
+      ISUPBINDERROR,
+      UNBLOCKING,
+      WORKING
+} state;
+std::string getStateDescription(State state)
+{
+  switch(state)
+  {
+    case INIT: return "INIT";
+    case MGMTBINDING: return "MGMTBINDING";
+    case MGMTBOUND: return "MGMTBOUND";
+    case MGMTBINDERROR: return "MGMTBINDERROR";
+    case WAITINGSTACK: return "WAITINGSTACK";
+    case STACKOK: return "STACKOK";
+    case ISUPBINDING: return "ISUPBINDING";
+    case ISUPBOUND: return "ISUPBOUND";
+    case ISUPBINDERROR: return "ISUPBINDERROR";
+    case UNBLOCKING: return "UNBLOCKING";
+    case WORKING: return "WORKING";
+    case LINKUP: return "LINKUP";
+  }
+}
+static void changeState(State nstate)
+{
+  state = nstate;
+  smsc_log_debug(missedCallProcessorLogger,
+                 "MissedCallProcessor:%s",
+                 getStateDescription(state).c_str());
+}
+struct Timer {
+  struct timeval time;
+  int            status;
+};
+
+static Timer conftimer;
+static Timer stacktimer;
+static Timer waitstacktimer;
+
+#define MAXCONFTIME 5000
+
+static void setTimer(Timer *timer, long milliseconds)
+{
+  gettimeofday(&(timer->time), NULL);
+  long sec = milliseconds / 1000L;
+  long usec = (milliseconds % 1000L) * 1000L;
+  timer->time.tv_sec += sec;
+  timer->time.tv_usec += usec;
+  if (timer->time.tv_usec > 1000000L)
+  {
+    timer->time.tv_usec -= 1000000L;
+    timer->time.tv_sec ++;
+  }
+  timer->status = 1;
+}
+static void cancelTimer(Timer *timer)
+{
+  timer->status = 0;
+}
+static int checkTimer(Timer *timer)
+{
+  if (!(timer->status)) 
+  {
+    return 0;
+  }
+  struct timeval now;
+  gettimeofday(&now, NULL);
+  return (now.tv_sec > timer->time.tv_sec || 
+          (now.tv_sec == timer->time.tv_sec && now.tv_usec >= timer->time.tv_usec));
+}
+/*
+ * @-> INIT -> MGMTBINDING --> MGMTBOUND
+ *                         |
+ *                         --> STACKOK
+ * --> MGMTBOUND -> WAITINGSTACK --> STACKOK
+ *  |                            |
+ *  --------------<---------------
+ * --> STACKOK -> ISUPBINDING -> ISUPBOUND
+ * --> ISUPBOUND --(RGAVAIL)--> LINKUP
+ *  |             |
+ *  --(RGUNAVAIL)--
+ * --> LINKUP -> UNBLOCKING -> WORKING
+ */
+
+static UCHAR_T UBL[]={0x00/*HSN*/, 0x00/*SPN*/, 0xFE, 0xFF, 0xFE, 0xFF/*TS MASK*/,0x00/*NO FORCE*/};
+
+USHORT_T unblockCurcuits()
+{
+  return EINSS7_MgmtApiSendOrderReq(USER,MGMT_ID,ISUP_ID,0x0B/*UNBLOCK CURCUITS*/,sizeof(UBL),UBL,NO_WAIT);
+}
+
+void MissedCallProcessor::setCircuits(Circuits cics)
+{
+  UBL[0] = cics.hsn;
+  UBL[1] = cics.spn;
+  UBL[2] = cics.ts & 0xFF;
+  UBL[3] = cics.ts >> 8 & 0xFF;
+  UBL[4] = cics.ts >> 16 & 0xFF;
+  UBL[5] = cics.ts >> 24 & 0xFF;
+}
+
 MissedCallProcessor* MissedCallProcessor::instance()
 {
   if ( processor == 0 ) {
@@ -75,41 +182,178 @@ int MissedCallProcessor::run()
   
   result = EINSS7CpMsgInitNoSig(MAXENTRIES);
   if (result != 0) {
-    smsc_log_error(missedCallProcessorLogger,"MsgInit Failed with code %d",result);
-    goto failed_msginit;
+    smsc_log_error(missedCallProcessorLogger,
+                   "MsgInit Failed with code %d(%s)",
+                   result,getReturnCodeDescription(result));
+    goto msginit;
   }
 
   result = MsgOpen(USER);
   if (result != 0) {
-    smsc_log_error(missedCallProcessorLogger,"MsgOpen failed with code %d",result);
-    goto failed_msgopen;
+    smsc_log_error(missedCallProcessorLogger,
+                   "MsgOpen failed with code %d(%s)",
+                   result,getReturnCodeDescription(result));
+    goto msgexit;
   }
 
   result = MsgConn(USER,ISUP_ID);
   if (result != 0) {
-    smsc_log_error(missedCallProcessorLogger,"MsgConn to ISUP failed with code %d",result);
-    goto failed_msgconnisup;
+    smsc_log_error(missedCallProcessorLogger,
+                   "MsgConn to ISUP failed with code %d(%s)",
+                   result,getReturnCodeDescription(result));
+    goto msgclose;
   }
   result = MsgConn(USER,MGMT_ID);
   if (result != 0) {
-    smsc_log_error(missedCallProcessorLogger,"MsgConn to MGMT failed with code %d",result);
-    goto failed_msgconnmgmt;
+    smsc_log_error(missedCallProcessorLogger,
+                   "MsgConn to MGMT failed with code %d(%s)",
+                   result,getReturnCodeDescription(result));
+    goto msgrelisup;
   }
-  result = EINSS7_I97IsupBindReq(USER);
-  if( result != EINSS7_I97_REQUEST_OK ) {
-    smsc_log_error(missedCallProcessorLogger,"EINSS7_I97IsupBindReg() failed with code %d",result);
-    goto failed_sndbindisup;
-  }
-  result = EINSS7_MgmtApiSendBindReq(USER,MGMT_ID,MGMT_VER,NO_WAIT);
-  if( result != EINSS7_MGMTAPI_REQUEST_OK ) {
-    smsc_log_error(missedCallProcessorLogger,"EINSS7_MgmtApiSendBindReq() failed with code %d",result);
-    goto failed_sndbindmgmt;
-  }
-  smsc_log_debug(missedCallProcessorLogger,"MissedCallProcessor is started up");
   MSG_T message;
 
   going = 1;
+  changeState(INIT);
   while (going) {
+    switch ( state )
+    {
+      case INIT:
+        /*
+         * Bind to Management module, await confirmation
+         * return if not confirmed in specified period of time
+         */
+        result = EINSS7_MgmtApiSendBindReq(USER,MGMT_ID,MGMT_VER,NO_WAIT);
+        if( EINSS7_MGMTAPI_REQUEST_OK == result)
+        {
+          changeState(MGMTBINDING);
+          setTimer(&conftimer,MAXCONFTIME);
+        }
+        else
+        {
+          smsc_log_error(missedCallProcessorLogger,
+                         "EINSS7_MgmtApiSendBindReq() failed with code %d(%s)",
+                         result,getReturnCodeDescription(result));
+          goto msgrelmgmt;
+        }
+        break;
+      case MGMTBOUND:
+        /*
+         * Query Stack state, awaiting ss7 stack running
+         */
+        if (checkTimer(&stacktimer))
+        {
+          cancelTimer(&stacktimer);
+          smsc_log_error(missedCallProcessorLogger,
+                         "ss7 stack is still not running, exiting...");
+          goto unbindmgmt;
+        }
+        if (checkTimer(&waitstacktimer))
+        {
+          cancelTimer(&waitstacktimer);
+          result = EINSS7_MgmtApiSendMgmtReq(USER,
+                                             MGMT_ID,
+                                             9,    /*Stack State Query (SSQ)*/
+                                             0,    /* length */
+                                             NULL, /* data buffer */
+                                             NO_WAIT);
+          if( EINSS7_MGMTAPI_REQUEST_OK == result)
+          {
+            changeState(WAITINGSTACK);
+            setTimer(&conftimer,MAXCONFTIME);
+          }
+          else
+          {
+            smsc_log_error(missedCallProcessorLogger,
+                           "EINSS7_MgmtApiSendMgmtReq failed with code %d(%s)",
+                           result,getReturnCodeDescription(result));
+            goto unbindmgmt;
+          }
+        }
+        break;
+
+      case STACKOK:
+        result = EINSS7_I97IsupBindReq(USER);
+        if( result != EINSS7_I97_REQUEST_OK )
+        {
+          smsc_log_error(missedCallProcessorLogger,
+                         "EINSS7_I97IsupBindReg() failed with code %d(%s)",
+                         result,getReturnCodeDescription(result));
+          goto unbindmgmt;
+        }
+        else
+        {
+          changeState(ISUPBINDING);
+          setTimer(&conftimer,MAXCONFTIME);
+        }
+        break;
+      case ISUPBOUND:
+        if (checkTimer(&stacktimer))
+        {
+          smsc_log_error(missedCallProcessorLogger,
+                         "Resource group availability timer is expired",
+                         result,getReturnCodeDescription(result));
+          goto unbindisup;
+        }
+        break;
+      case LINKUP:
+        result = unblockCurcuits();
+        if( result != EINSS7_MGMTAPI_REQUEST_OK )
+        {
+          smsc_log_error(missedCallProcessorLogger,
+                         "EINSS7_I97IsupBindReg() failed with code %d(%s)",
+                         result,getReturnCodeDescription(result));
+          goto unbindisup;
+        }
+        else
+        {
+          changeState(UNBLOCKING);
+          setTimer(&conftimer,MAXCONFTIME);
+        }
+        break;
+
+      /*
+       * Timer events
+       */
+      case MGMTBINDING:
+        if (checkTimer(&conftimer))
+        {
+          smsc_log_error(missedCallProcessorLogger,
+                         "EINSS7_MgmtApiSendBindReq() confirmation timer is expired");
+          goto unbindmgmt; /* just in case */
+        }
+        break;
+      case ISUPBINDING:
+        if (checkTimer(&conftimer))
+        {
+          smsc_log_error(missedCallProcessorLogger,
+                         "EINSS7_I97IsupBindReg() confirmation timer is expired");
+          goto unbindisup; /* just in case */
+        }
+        break;
+      case WAITINGSTACK:
+        if (checkTimer(&conftimer))
+        {
+          smsc_log_error(missedCallProcessorLogger,
+                         "EINSS7_MgmtApiSendMgmtReq() confirmation timer is expired");
+          goto unbindmgmt;
+        }
+        break;
+      case UNBLOCKING:
+        if (checkTimer(&conftimer))
+        {
+          smsc_log_error(missedCallProcessorLogger,
+                         "EINSS7_MgmtApiSendOrderReq() confirmation timer is expired");
+          goto unbindmgmt;
+        }
+        break;
+      case MGMTBINDERROR:
+        goto unbindmgmt;
+        break;
+      case ISUPBINDERROR:
+        goto unbindisup;
+        break;
+    } /* end of switch ( state ) */
+
     message.receiver = USER;
     //result = EINSS7CpMsgRecv_r( &message, 1000 );
     result = MsgRecvEvent( &message, 0, 0, 1000 );
@@ -117,7 +361,9 @@ int MissedCallProcessor::run()
       continue;
     }
     if( result != MSG_OK ) {
-      smsc_log_error(missedCallProcessorLogger,"MsgRecvEvent failed: %d", result );
+      smsc_log_error(missedCallProcessorLogger,
+                     "MsgRecvEvent failed: %d(%s)",
+                     result,getReturnCodeDescription(result));
       going = 0;
       break;
     }
@@ -128,32 +374,61 @@ int MissedCallProcessor::run()
       {
         case ISUP_ID:
           result = EINSS7_I97IsupHandleInd(&message);
-          if( result != EINSS7_I97_REQUEST_OK ) {
-            smsc_log_error(missedCallProcessorLogger,"ISUP callback function return code %d ",result);
+          if( EINSS7_I97_REQUEST_OK != result )
+          {
+            smsc_log_error(missedCallProcessorLogger,
+                           "ISUP callback function return code %d(%s)",
+                           result,getReturnCodeDescription(result));
           }
           break;
         case MGMT_ID:
           result = EINSS7_MgmtApiReceivedXMMsg(&message);
-          if( result != EINSS7_MGMTAPI_RETURN_OK ) {
-            smsc_log_error(missedCallProcessorLogger,"MGMT callback function return code %d ",result);
+          if( EINSS7_MGMTAPI_RETURN_OK != result )
+          {
+            smsc_log_error(missedCallProcessorLogger,
+                           "MGMT callback function return code %d(%s)",
+                           result,getReturnCodeDescription(result));
           }
           break;
       }
       EINSS7CpReleaseMsgBuffer(&message);
     }
   }
-  EINSS7_MgmtApiSendUnbindReq(USER,MGMT_ID);
-failed_sndbindmgmt:
-  EINSS7_I97IsupUnBindReq();
-failed_sndbindisup:
-  MsgRel(USER,MGMT_ID);
-failed_msgconnmgmt:
-  MsgRel(USER,ISUP_ID);
-failed_msgconnisup:
-  MsgClose(USER);
-failed_msgopen:
+
+unbindisup:
+  result = EINSS7_I97IsupUnBindReq();
+  if( result != 0 )
+    smsc_log_error(missedCallProcessorLogger,
+                   "EINSS7_I97IsupUnBindReq failed with code %d(%s)",
+                    result,getReturnCodeDescription(result));
+unbindmgmt:
+  result = EINSS7_MgmtApiSendUnbindReq(USER,MGMT_ID);
+  if( result != 0 )
+    smsc_log_error(missedCallProcessorLogger,
+                   "EINSS7_MgmtApiSendUnbindReq(%d,%d) failed with code %d(%s)",
+                    USER,MGMT_ID,result,getReturnCodeDescription(result));
+msgrelmgmt:
+  result = MsgRel(USER,MGMT_ID);
+  if( result != 0 )
+    smsc_log_error(missedCallProcessorLogger,
+                   "MsgRel(%d,%d) failed with code %d(%s)",
+                    USER,MGMT_ID,result,getReturnCodeDescription(result));
+
+msgrelisup:
+  result = MsgRel(USER,ISUP_ID);
+  if( result != 0 )
+    smsc_log_error(missedCallProcessorLogger,
+                   "MsgRel(%d,%d) failed with code %d(%s)",
+                    USER,ISUP_ID,result,getReturnCodeDescription(result));
+msgclose:
+  result = MsgClose(USER);
+  if( result != 0 )
+    smsc_log_error(missedCallProcessorLogger,
+                   "MsgClose(%d) failed with code %d(%s)",
+                    USER,result,getReturnCodeDescription(result));
+msgexit:
   MsgExit();
-failed_msginit:
+msginit:
   smsc_log_debug(missedCallProcessorLogger,"MissedCallProcessor is down");
   return result;
 }
@@ -172,7 +447,22 @@ failed_msginit:
 using smsc::misscall::MissedCallEvent;
 using smsc::misscall::MissedCallProcessor;
 using smsc::misscall::missedCallProcessorLogger;
+using smsc::misscall::ISUPBINDING;
+using smsc::misscall::MGMTBINDING;
+using smsc::misscall::MGMTBOUND;
+using smsc::misscall::MGMTBINDERROR;
+using smsc::misscall::WAITINGSTACK;
+using smsc::misscall::STACKOK;
+using smsc::misscall::ISUPBOUND;
+using smsc::misscall::LINKUP;
+using smsc::misscall::ISUPBINDERROR;
+using smsc::misscall::UNBLOCKING;
+using smsc::misscall::WORKING;
+using smsc::misscall::state;
 using smsc::logger::Logger;
+using smsc::misscall::conftimer;
+using smsc::misscall::stacktimer;
+using smsc::misscall::waitstacktimer;
 using namespace smsc::misscall::util;
 using smsc::sms::MAX_FULL_ADDRESS_VALUE_LENGTH;
 
@@ -239,6 +529,20 @@ USHORT_T EINSS7_I97IsupBindConf(USHORT_T isupUserID,UCHAR_T result)
   smsc_log_debug(missedCallProcessorLogger,
                  "IsupBindConf %s",
                  getIsupBindStatusDescription(result));
+  if ( state == ISUPBINDING )
+  {
+    cancelTimer(&conftimer);
+    if (result == EINSS7_I97_BIND_OK ||
+        result == EINSS7_I97_SAME_CC_BOUND)
+    {
+      changeState(ISUPBOUND);
+      setTimer(&stacktimer,60000); /* max wait for MTP_RESUME */
+    }
+    else
+    {
+      changeState(ISUPBINDERROR);
+    }
+  }
   return EINSS7_I97_REQUEST_OK;
 }
 USHORT_T releaseConnection(EINSS7_I97_ISUPHEAD_T *isupHead_sp, UCHAR_T causeValue)
@@ -280,9 +584,9 @@ USHORT_T releaseConnection(EINSS7_I97_ISUPHEAD_T *isupHead_sp, UCHAR_T causeValu
   {
     smsc_log_error(
                    missedCallProcessorLogger,
-                   "IsupReleaseReq %s failed with error code %d",
+                   "IsupReleaseReq %s failed with error code %d(%s)",
                    getHeadDescription(isupHead_sp).c_str(),
-                   res
+                   res,getReturnCodeDescription(res)
                   );
   }
   return res;
@@ -334,7 +638,7 @@ USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
   releaseConnection(isupHead_sp,causeValue);
   /*
    * some exchange doesn't provide redirection information
-   * so use presence of original called number as
+   * so let's use presence of original called number as
    * call forward/divert indication
    */
   if (original)
@@ -361,9 +665,9 @@ USHORT_T confirmReleaseConnection(EINSS7_I97_ISUPHEAD_T* isupHead)
   {
     smsc_log_error(
                    missedCallProcessorLogger,
-                   "IsupReleaseResp %s failed with error code %d",
+                   "IsupReleaseResp %s failed with error code %d(%s)",
                    getHeadDescription(isupHead).c_str(),
-                   res
+                   res,getReturnCodeDescription(res)
                   );
   }
   return res;
@@ -399,6 +703,8 @@ USHORT_T EINSS7_I97IsupReleaseInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
 /*-------------------------------------------------------------------*/
 /* BindConf                                                          */
 /* OrderConf                                                         */
+/* MgmtConf                                                          */
+/* ResourceInd                                                       */
 /*********************************************************************/
 using smsc::misscall::util::getResultDescription;
 using smsc::misscall::util::getStackStatusDescription;
@@ -414,7 +720,27 @@ USHORT_T EINSS7_MgmtApiHandleBindConf(UCHAR_T length,
                  getResultDescription(result),
                  getStackStatusDescription(mmState),
                  xmRevision);
-  unblockCurcuits();
+  if ( state == MGMTBINDING )
+  {
+    cancelTimer(&conftimer);
+    if ( result == 0 ) /* Success Bind */
+    {
+      if ( mmState == 4 ) /* Stack is running */
+      {
+        changeState(STACKOK);
+      }
+      else
+      {
+        changeState(MGMTBOUND);
+        setTimer(&stacktimer,20000); /* wait stack running during 20 sec*/
+        setTimer(&waitstacktimer,0); /* check state immediately after mgmt bind */
+      }
+    }
+    else
+    {
+      changeState(MGMTBINDERROR);
+    }
+  }
   return EINSS7_MGMTAPI_RETURN_OK;
 }
 USHORT_T EINSS7_MgmtApiHandleOrderConf(USHORT_T moduleId,
@@ -429,8 +755,59 @@ USHORT_T EINSS7_MgmtApiHandleOrderConf(USHORT_T moduleId,
                  getModuleName(moduleId),
                  orderId,
                  getResultDescription(orderResult));
+  if ( state == UNBLOCKING &&
+       moduleId == ISUP_ID && 
+       orderId == 0x0B /*UNBLOCK CURCUITS*/)
+  {
+    cancelTimer(&conftimer);
+    if (orderResult == 0) /* Success */
+    {
+      changeState(WORKING);
+    }
+    else
+    {
+      changeState(ISUPBINDERROR);
+    }
+  }
   return EINSS7_MGMTAPI_RETURN_OK;
 }
+USHORT_T EINSS7_MgmtApiHandleMgmtConf(UCHAR_T typeOfService,
+                                      USHORT_T length,
+                                      UCHAR_T *data_p)
+{
+  smsc_log_debug(missedCallProcessorLogger,
+                 "MgmtConf Service=%s DataLength=%d",
+                  getTypeOfServiceDescription(typeOfService).c_str(),
+                  length);
+  if ( state == WAITINGSTACK &&
+       typeOfService == 9 /* type = "Stack State Query (SSQ)" */)
+  {
+    cancelTimer(&conftimer);
+    if (*data_p == 4)       /* StackState = "Running" */
+    {
+      changeState(STACKOK);
+      cancelTimer(&stacktimer);
+    }
+    else
+    {
+      changeState(MGMTBOUND);
+      setTimer(&waitstacktimer,1500);
+    }
+  }
+  return EINSS7_MGMTAPI_RETURN_OK;
+}
+USHORT_T EINSS7_I97IsupResourceInd(USHORT_T resourceGroup,
+                                   UCHAR_T rgstate)
+{
+  smsc_log_debug(missedCallProcessorLogger, "ResourceInd RG=%d is %s",resourceGroup,rgstate?"available":"unavailable");
+  if ( state == ISUPBOUND /* && rgstate */ )
+  {
+    cancelTimer(&stacktimer);
+    changeState(LINKUP); 
+  }
+  return EINSS7_I97_REQUEST_OK;
+}
+
 void _mprint_msg(MSG_T* message)
 {
   char *text = new char[message->size*4+1];

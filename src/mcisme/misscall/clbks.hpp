@@ -33,7 +33,6 @@ USHORT_T EINSS7_I97IsupCircuitCancellationInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp
 extern "C" {
 USHORT_T EINSS7_MgmtApiHandleBindConf(UCHAR_T length,UCHAR_T result,UCHAR_T mmState,UCHAR_T xmRevision);
 USHORT_T EINSS7_MgmtApiHandleOrderConf(USHORT_T moduleId,UCHAR_T orderId,UCHAR_T orderResult,UCHAR_T resultInfo,UCHAR_T lengthOfInfo,UCHAR_T *orderInfo_p);
-USHORT_T EINSS7_MgmtApiHandleMgmtConf(UCHAR_T typeOfService,USHORT_T length,UCHAR_T *data_p);
 USHORT_T EINSS7_MgmtApiHandleInitConf(USHORT_T moduleId,UCHAR_T result,ULONG_T offset);
 USHORT_T EINSS7_MgmtApiHandleStartConf(USHORT_T moduleId,UCHAR_T result);
 USHORT_T EINSS7_MgmtApiHandleStopConf(USHORT_T moduleId,UCHAR_T result);

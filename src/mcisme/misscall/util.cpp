@@ -93,6 +93,25 @@ std::string getOriginalNumberDescription(EINSS7_I97_ORIGINALNUMB_T* origNumb)
   return &addr[0];
 }
 
+std::string getTypeOfServiceDescription(UCHAR_T typeOfService) {
+  switch(typeOfService) {
+    case 0:  return "End Of Service Request (EOSR)";
+    case 1:  return "SysLog Info Service (SLIS)";
+    case 2:  return "Reserved for future use";
+    case 3:  return "Service Request Failed (SRF)";
+    case 4:  return "Reserved for future use";
+    case 5:  return "Reserved for future use";
+    case 6:  return "Configuration Query (CONQ)";
+    case 7:  return "Configuration Index Query (CIQ)";
+    case 8:  return "System Trace Query (SYSTRCQ)";
+    case 9:  return "Stack State Query (SSQ)";
+    case 10: return "Set Config Info Query (SCIQ)";
+    case 11: return "Get Config Info Query (GCIQ)";
+    case 12: return "Read Binary Data (RBD)";
+    case 13: return "Write Binary Data (WBD)";
+  }
+}
+
 std::string getRedirectionInfoDescription(EINSS7_I97_REDIRECTIONINFO_T* redirectionInfo)
 {
   if (!redirectionInfo) return "";
@@ -516,6 +535,137 @@ const char* getModuleName(USHORT_T moduleId)
     case MGMT1_ID: return "MGMT1_ID";
     case MGMT2_ID: return "MGMT2_ID";
     default: return "UNKNOWN MODULE";
+  }
+}
+
+const char* getReturnCodeDescription(USHORT_T code)
+{
+  switch(code)
+  {
+    case 1000: return "MSG TIMEOUT";
+    case 1001: return "MSG OUT OF MEMORY";
+    case 1002: return "MSG ID NOT FOUND";
+    case 1003: return "MSG QUEUE NOT OPEN";
+    case 1004: return "MSG NOT OPEN";
+    case 1005: return "MSG SIZE ERROR";
+    case 1006: return "MSG INTERNAL QUEUE FULL";
+    case 1007: return "MSG ERR";
+    case 1008: return "MSG SYSTEM INTERRUPT";
+    case 1009: return "MSG NOT CONNECTED";
+    case 1010: return "MSG NOT ACCEPTED";
+    case 1011: return "MSG BROKEN CONNECTION";
+    case 1012: return "MSG NOT MPOWNER";
+    case 1013: return "MSG BAD FD";
+    case 1014: return "MSG ARG VAL";
+    case 1015: return "MSG APPL EVENT";
+    case 1016: return "MSG OPEN FAILED";
+    case 1017: return "MSG WOULD BLOCK";
+    case 1018: return "MSG GETBUF FAIL";
+    case 1019: return "MSG RELBUF FAIL";
+    case 1024: return "MSG INSTANCE NOT FOUND";
+    case 1020: return "TIME INIT FAILED";
+    case 1021: return "TOO MANY TIMERS";
+    case 1022: return "NAME NOT FOUND";
+    case 1023: return "MSG ID NOT IN CONFIG FILE";
+    case 1030: return "XMEM INVALID USERID";
+    case 1031: return "XMEM OUT OF MEMORY";
+    case 1032: return "XMEM INVALID POINTER";
+    case 1033: return "XMEM INIT DONE";
+    case 1034: return "XMEM INVALID PARAMETER";
+    case 1035: return "XMEM INVALID SIZE";
+    case 1036: return "XMEM CORRUPT MEM";
+    case 1040: return "THREAD MI PROBLEM";
+    case 1041: return "THREAD KC PROBLEM";
+    case 1042: return "THREAD CI PROBLEM";
+    case 1043: return "MPOWNER CLOSED";
+    case 1044: return "TIME NOT INIT";
+    case 1045: return "NO TOKEN";
+    case 1060: return "INVALID SOCKET";
+    case 1061: return "SOCKET ERROR";
+    case 1062: return "INVALID EVENT";
+    case 1063: return "EVENT ERROR";
+    case 1070: return "MSG POOL ALREADY CREATED";
+    case 1071: return "MSG POOL MAX NUMBER REACHED";
+    case 1072: return "INVALID POINTER";
+    case 1124: return "MSG MSGDELAY ERROR";
+    case 1100: return "MSG UNKNOWN FILE";
+    case 1101: return "MSG IPA UNKNOWN MODULE";
+    case 1102: return "MSG IPA SYNTAX ERROR";
+    case 1103: return "MSG IPA NOT MPOWNER";
+    case 1104: return "MSG IPA MISSING ADDRESS";
+    case 1105: return "MSG IPA MULTIPLE ENTRIES";
+    case 1106: return "MSG INTERACT UNKNOWN MODULE";
+    case 1107: return "MSG INTERACT SYNTAX ERROR";
+    case 1108: return "MSG INTERACT MULTIPLE ENTRIES";
+    case 1109: return "MSG INTERACT NOT MPOWNER";
+    case 1110: return "MSG BUFSIZE ERROR";
+    case 1111: return "MSG MAXENTRIES ERROR";
+    case 1112: return "MSG CONFIG ERR";
+    case 1113: return "LOG WRITEMODE ERROR";
+    case 1114: return "LOG FILESIZE ERROR";
+    case 1115: return "LOG FILEPATH ERROR";
+    case 1116: return "LOG INTERNALBUFFER ERROR";
+    case 1117: return "LOG FILEFORMAT ERROR";
+    case 1118: return "MSG HBLOST ERROR";
+    case 1119: return "MSG HBRATE ERROR";
+    case 1120: return "MSG MSGNONBLOCK ERROR";
+    case 1121: return "MSG SYSTIME ERROR";
+    case 1122: return "LOG PROCPATH ERROR";
+    case 1123: return "LOG FILEPROP ERROR";
+    case 1125: return "MSG HBOFF NOT MPOWNER";
+    case 1126: return "MSG HBOFF SYNTAX ERROR";
+    case 1127: return "MSG UXDOM SYNTAX ERROR";
+    case 1128: return "MSG UXDOM NOT AVAILABLE";
+    case 1129: return "MSG UXDOM ARG ERROR";
+    case 1130: return "LOG BACKFILEPROP ERROR";
+    case 1131: return "LOG LD IPA ERROR";
+    case 1132: return "LOG FLUSH ERROR";
+    case 1133: return "LOGD SOCKET ERROR";
+    case 1134: return "LOGD BIND ERROR";
+    case 1135: return "LOG NOT INITIATED";
+    case 1136: return "MSGINIT DONE";
+    case 1137: return "NO THREAD CREATED";
+    case 1138: return "STOP SOCKET ERROR";
+    case 1139: return "SIGNAL ERROR";
+    case 1140: return "MSG NO BUFFER";
+    case 1141: return "MUTEX INIT FAILED";
+    case 1142: return "COND INIT FAILED";
+    case 1143: return "ANOTHER THREAD CLOSING CON";
+    case 1144: return "AUTOSETUP ADDR";
+    case 1145: return "NO IPC EXIST";
+    case 1146: return "CREATE IPC ERROR";
+    case 1147: return "EMPTY BUFFER";
+    case 1148: return "READ SOCKET BUFFER ERROR";
+    case 1149: return "WRITE SOCKET BUFFER ERROR";
+    case 1150: return "SEND BUFFER ERROR";
+    case 1151: return "MSG SEND FAIL";
+    case 1152: return "MSGINIT NOT DONE";
+    case 1153: return "NOT IMPLEMENTED";
+    case 1154: return "TIMER NOT IN USE";
+    case 1155: return "MSG CONNTYPE NOT MPOWNER";
+    case 1156: return "LOGALARM SYNTAX ERROR";
+    case 1157: return "UNIXSOCKPATH ERROR";
+    case 1158: return "MSGNODELAY ERROR";
+    case 1159: return "MSGTRACEON ERROR";
+    case 1160: return "MSGCONNTYPE ERROR";
+    case 1161: return "TESTMODULE ERROR";
+    case 1162: return "NO CPMANAGER ERROR";
+    case 1163: return "CONNTIMEOUT ERROR";
+    case 1164: return "SOCKETTIMEOUT ERROR";
+    case 1165: return "FILEACCESSTYPE ERROR";
+    case 1400: return "MSG ZBUF CREATE FAIL";
+    case 1401: return "MSG ZBUF DELETE FAIL";
+    case 1402: return "MSG ZBUF SEND FAIL";
+    case 1450: return "CPMGMT NOT USED";
+    case 1251: return "MSGREGBROKENCONNFAIL";
+    case 1252: return "MSGREGISTERCALLBACKFAIL";
+    case 1500: return "MSG OSE SYNTAX ERROR";
+    case 1502: return "MSG APPL EVENT EXTERNAL";
+    case 1503: return "CELLO BAD IPADDR";
+    case 1504: return "CELLO UNSUPP FAMILY";
+    case 1505: return "EXTSIGREGISTERCALLBACKFAIL";
+    case 1506: return "MSG OSE UNKNOWN MODULE";
+    default:   return "UNKNOWN CODE";
   }
 }
 }//namespace util

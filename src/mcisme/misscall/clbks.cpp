@@ -22,7 +22,6 @@ using smsc::misscall::missedCallProcessorLogger;
 /* SuspendInd                                                        */
 /* ResumeInd                                                         */
 /* MiscInd                                                           */
-/* ResourceInd                                                       */
 /* ReportInd                                                         */
 /* CongInd                                                           */
 /* CircuitReservationConf                                            */
@@ -92,12 +91,6 @@ USHORT_T EINSS7_I97IsupMiscInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
   smsc_log_warn(missedCallProcessorLogger, "EMPTY CALLBACK: EINSS7_I97IsupMiscInd");
   return EINSS7_I97_REQUEST_OK;
 }
-USHORT_T EINSS7_I97IsupResourceInd(USHORT_T resourceGroup,
-                                   UCHAR_T state)
-{
-  smsc_log_warn(missedCallProcessorLogger, "ResourceInd RG=%d is %s",resourceGroup,state?"available":"unavailable");
-  return EINSS7_I97_REQUEST_OK;
-}
 USHORT_T EINSS7_I97IsupReportInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
                                  EINSS7_I97_REPORTINFO_T *reportInfo_sp)
 {
@@ -136,7 +129,6 @@ USHORT_T EINSS7_I97IsupCircuitCancellationInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp
 /*********************************************************************/
 /* MGMT EMPTY CALLBACKS                                              */
 /*-------------------------------------------------------------------*/
-/* MgmtConf                                                          */
 /* InitConf                                                          */
 /* StartConf                                                         */
 /* StopConf                                                          */
@@ -149,13 +141,6 @@ USHORT_T EINSS7_I97IsupCircuitCancellationInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp
 /* SysInfoInd                                                        */
 /* SysInfoInd                                                        */
 /*********************************************************************/
-USHORT_T EINSS7_MgmtApiHandleMgmtConf(UCHAR_T typeOfService,
-                                      USHORT_T length,
-                                      UCHAR_T *data_p)
-{
-  smsc_log_warn(missedCallProcessorLogger, "EMPTY CALLBACK: EINSS7_MgmtApiHandleMgmtConf");
-  return EINSS7_MGMTAPI_RETURN_OK;
-}
 USHORT_T EINSS7_MgmtApiHandleInitConf(USHORT_T moduleId,
                                       UCHAR_T result,
                                       ULONG_T offset)
