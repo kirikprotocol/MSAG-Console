@@ -376,6 +376,7 @@ bool MapDialog::ProcessCmd(const SmscCommand& cmd){
       }
       __trace2__("MAP::MapDialog::ProcessCmdg: Et96MapDelimiterReq OK");
     }
+    return false;
     default:
       __trace2__("MAP::MapDialog::ProcessCmdg: here is no command %d",cmd->get_commandId());
       return true;
