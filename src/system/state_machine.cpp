@@ -457,11 +457,19 @@ void StateMachine::processDirectives(SMS& sms,Profile& p)
     Directive d(i,len-i);
     offsets.Push(d);
   }
+  for(i=offsets.Count()-1;i>=0;i--)
+  {
+    if(offsets[i-1].end==offsets[i].start)
+    {
+      offsets[i-1].end=offsets[i].end;
+      offsets.Delete(i);
+    }
+  }
   if(sms.getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::SMSC7BIT)
   {
     int pos=0;
     int fix=0;
-    for(int i=0;i<len;i++)
+    for(int i=0;i<=len;i++)
     {
       if(offsets[pos].start==i)
       {
@@ -482,14 +490,6 @@ void StateMachine::processDirectives(SMS& sms,Profile& p)
     {
       offsets[i].start*=2;
       offsets[i].end*=2;
-    }
-  }
-  for(i=offsets.Count()-1;i>=0;i--)
-  {
-    if(offsets[i-1].end==offsets[i].start)
-    {
-      offsets[i-1].end=offsets[i].end;
-      offsets.Delete(i);
     }
   }
   string newtext;

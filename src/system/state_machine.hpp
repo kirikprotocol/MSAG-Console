@@ -6,6 +6,7 @@
 #include "system/event_queue.h"
 #include "util/templates/Formatters.h"
 #include <string>
+#include "profiler/profiler.hpp"
 
 namespace smsc{
 namespace system{
@@ -59,6 +60,8 @@ public:
   time_t maxValidTime;
   Address scAddress;
 
+  static void processDirectives(SMS& sms,smsc::profiler::Profile& p);
+
 protected:
 
   EventQueue& eq;
@@ -80,7 +83,6 @@ protected:
   void sendFailureReport(SMS& sms,MsgIdType msgId,int state,const char* reason);
   void sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason);
 
-  void processDirectives(SMS& sms,smsc::profiler::Profile& p);
 };
 
 };//system
