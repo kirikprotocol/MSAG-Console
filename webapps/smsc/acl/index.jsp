@@ -108,21 +108,22 @@ MENU0_SELECTION = "MENU0_ACL";
       var global_counter = 0;
       function addAclAddress()
       {
-        var valueElem = opForm.all.new_address;
+        var valueElem = opForm.all.new_address_qweqwe;
         var addr = valueElem.value;
         if (addr != null && addr.length > 0) {
           var tbl = opForm.all.addresses_table;
           var newRow = tbl.insertRow(tbl.rows.length);
           newRow.className = "row" + ((tbl.rows.length) & 1);
-          newRow.id = "addrRow_" + (global_counter++);
+          newRow.id = "addrRow_" + (global_counter);
           newCell = document.createElement("td");
-          newCell.innerHTML = addr + "<input type=hidden name=new_address value=\"" + addr + "\">";
+          newCell.innerHTML = addr + "<input type=hidden name=new_address id=new_address_" + global_counter + " value=\"" + addr + "\">";
           newRow.appendChild(newCell);
           newCell = document.createElement("td");
           newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeRow(opForm.all.addresses_table, \'' + newRow.id + '\')" style="cursor: hand;">';
           newRow.appendChild(newCell);
           valueElem.value = "";
           valueElem.focus();
+          global_counter++;
           return false;
         } else
           return false;
@@ -144,7 +145,7 @@ MENU0_SELECTION = "MENU0_ACL";
       }
       %>
         <tr class=row<%=row++%2%>>
-          <td><input class=txt name=new_address id=new_address></td>
+          <td><input class=txt name=new_address id=new_address_qweqwe></td>
           <td><%addButton(out, "add address", "add address", "add address", "return addAclAddress()");%></td>
         </tr>
       </table></div><%
