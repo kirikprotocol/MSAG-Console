@@ -1,0 +1,57 @@
+#include "system/smsc.hpp"
+#include "system/alert_agent.hpp"
+
+namespace smsc{
+namespace system{
+
+int AlertAgent::Execute()
+{
+  mon.Lock();
+  Array<SMSId> ids;
+  SMS s;
+  while(!isStopping)
+  {
+    if(queue.Count()==0)mon.wait();
+    if(queue.Count()==0)continue;
+    SmscCommand cmd;
+    queue.Pop(cmd);
+    mon.Unlock();
+    ////
+    // processing here
+
+    try{
+      smsc::store::IdIterator *it=store->getReadyForDelivery(cmd->get_address());
+      SMSId id;
+      while(it->getNextId(id))
+      {
+        ids.Push(id);
+      }
+      delete it;
+      __trace2__("AlertAgent: found %d messages",ids.Count());
+      time_t now=time(NULL);
+      for(int i=0;i<ids.Count();i++)
+      {
+        try{
+          store->retriveSms(ids[i],s);
+          psmsc->UpdateSmsSchedule(s.getNextTime(),ids[i],now);
+        }catch(...)
+        {
+          __warning2__("AlertAgent: failed to retrieve sms: %lld",ids[i]);
+        }
+      }
+      ids.Clean();
+    }catch(...)
+    {
+      __trace__("AlertAgent: database exception");
+    }
+
+    // end of processing
+    ////
+    mon.Lock();
+  }
+  mon.Unlock();
+  return 0;
+}
+
+};//system
+};//smsc
