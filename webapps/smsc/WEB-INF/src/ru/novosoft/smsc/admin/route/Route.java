@@ -122,7 +122,8 @@ public class Route
     for (int i = 0; i < notesList.getLength(); i++)
       notes += Utils.getNodeText(notesList.item(i));
     forceDelivery = Boolean.valueOf(routeElem.getAttribute("forceDelivery")).booleanValue();
-    aclId = Long.decode(routeElem.getAttribute("aclId")).longValue();
+    final String aclIdStr = routeElem.getAttribute("aclId");
+    aclId = aclIdStr != null && aclIdStr.trim().length() > 0 ? Long.decode(aclIdStr).longValue() : -1;
   }
 
   public String getName()
