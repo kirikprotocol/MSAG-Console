@@ -1793,12 +1793,15 @@ USHORT_T Et96MapPAbortInd(
   __map_trace2__("%s: dialogid 0x%x provReason 0x%x",__FUNCTION__,dialogueId,provReason);
   MAP_TRY{
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId));
-    if ( dialog.isnull() )
-      throw runtime_error(
-        FormatText("MAP::%s MAP.did:{0x%x} is not present",__FUNCTION__,dialogueId));
-    dialogid_smsc = dialog->dialogid_smsc;
-    dialog->id_opened = false;
-    throw MAPDIALOG_TEMP_ERROR("PABORT",MAP_ERRORS_BASE+provReason);
+    if ( dialog.isnull() ) {
+      //throw runtime_error(
+      //  FormatText("MAP::%s MAP.did:{0x%x} is not present",__FUNCTION__,dialogueId));
+      __map_trace2__("MAP::%s MAP.did:{0x%x} is not present",__FUNCTION__,dialogueId);
+    }else{
+      dialogid_smsc = dialog->dialogid_smsc;
+      dialog->id_opened = false;
+      throw MAPDIALOG_TEMP_ERROR("PABORT",MAP_ERRORS_BASE+provReason);
+    }
   }MAP_CATCH(dialogid_map,dialogid_smsc);
   return ET96MAP_E_OK;
 }
