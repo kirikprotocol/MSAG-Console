@@ -270,6 +270,16 @@ int SmppInputThread::Execute()
                   assignProxy(proxy);
               }
             }break;
+            case SmppCommandSet::UNBIND:
+            {
+              PduUnbindResp resp;
+              resp.get_header().set_commandId(SmppCommandSet::UNBIND_RESP);
+              resp.get_header().set_commandStatus(SmppStatusSet::ESME_ROK);
+              resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+              SmscCommand cmd(pdu);
+              ss->getProxy()->putIncomingCommand(cmd);
+              //ss->getSocket()->setData(SOCKET_SLOT_KILL,1);
+            }break;
             default:
             {
               SmscCommand cmd(pdu);

@@ -46,20 +46,20 @@ int AbonentInfoSme::Execute()
       cmd->get_dialogId(),
       SmscCommand::Status::OK);
     putIncomingCommand(resp);
-    
+
     getSmsText(sms,body);
     Address a(body);
     p=profiler->lookup(a);
     char answ[MAX_SHORT_MESSAGE_LENGTH];
     sprintf(answ,"%s:%d,%d",body,1,p.codepage);
-    
+
     int len=strlen(answ);
     char buf7[MAX_SHORT_MESSAGE_LENGTH];
     int len7=ConvertTextTo7Bit(answ,len,buf7,sizeof(buf7),CONV_ENCODING_ANSI);
 
     s.setOriginatingAddress(sms->getDestinationAddress());
     s.setDestinationAddress(sms->getOriginatingAddress());
-    s.setStrProperty(Tag::SMPP_SHORT_MESSAGE,buf7);
+    s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,buf7,len7);
     s.setIntProperty(Tag::SMPP_SM_LENGTH,len7);
     s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
 
