@@ -202,7 +202,7 @@ void MapIoTask::dispatcher()
     result = MsgRecv_NW(&message);
     
     if ( result == MSG_TIMEOUT ) continue;
-    if ( result == MSG_OK ) {
+    if ( result != MSG_OK ) {
       __trace2__("MAP: error at MsgRecv with code x%hx",result);
       return;
     }

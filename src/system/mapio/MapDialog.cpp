@@ -25,6 +25,7 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
 }
 
 bool MapDialog::ProcessCmd(SmscCommand& cmd){
+  __trace2__("MapDialog::ProcessCmdToMsg: 0x%x",cmd->get_commandId());
   switch ( cmd->get_commandId() ){
   case SUBMIT_RESP: {
       USHORT_T result = Et96MapV2ForwardSmMOResp(ssn,dialogid,invokeId,0);
