@@ -220,9 +220,13 @@ void operator delete(void* mem)
 static void PrintTrace()
 {
   void* trace[TRACESIZE];
-  BackTrace(trace);
-  DumpTrace(trace);
-}
+  smsc::util::BackTrace(trace);
+  for(int i=0;i<TRACESIZE;i++)
+  {
+    if(!trace[i])break;
+    printf("{0x%08X}\n",trace[i]);
+  }
+}	      
 
 void operator delete[](void* mem)
 {
@@ -236,6 +240,6 @@ void operator delete[](void* mem)
     fprintf(stderr,"FATAL ERROR: delete [] NULL\n");
     void *trace[TRACESIZE];
     PrintTrace();
-    assert(mem!=NULL);
+    //assert(mem!=NULL);
   }
 }
