@@ -61,10 +61,11 @@ inline time_t smppTime2CTime(COStr& str)
   struct tm dtm;
   const char* dta = str.cstr();
   __ret0_if_fail__ ( str != 0 );
-  __ret0_if_fail__ ( strlen(dta) == 9 );
+  __ret0_if_fail__ ( strlen(dta) == 16 );
   scaned =
     sscanf(dta,
   //        YY MM DD hh mm ss t  nn p
+            00,00,00,00,00,28,0,00,R
           "%2d%2d%2d%2d%2d%2d%1d%2d%c",
           &dtm.tm_year,
           &dtm.tm_mon,
