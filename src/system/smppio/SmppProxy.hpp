@@ -109,8 +109,11 @@ public:
       trace2("put command:total %d commands",outqueue.Count());
       outqueue.Push(cmd,cmd->get_priority());
     }
-    if(smppReceiverSocket)smppReceiverSocket->notifyOutThread();
-    if(smppTransmitterSocket)smppTransmitterSocket->notifyOutThread();
+    {
+      MutexGuard g(mutex);
+      if(smppReceiverSocket)smppReceiverSocket->notifyOutThread();
+      if(smppTransmitterSocket)smppTransmitterSocket->notifyOutThread();
+    }
   }
   virtual bool getCommand(SmscCommand& cmd)
   {
@@ -161,8 +164,11 @@ public:
         if(!opened)return;
         outqueue.Push(errresp,errresp->get_priority());
       }
-      if(smppReceiverSocket)smppReceiverSocket->notifyOutThread();
-      if(smppTransmitterSocket)smppTransmitterSocket->notifyOutThread();
+      {
+        MutexGuard g(mutex);
+        if(smppReceiverSocket)smppReceiverSocket->notifyOutThread();
+        if(smppTransmitterSocket)smppTransmitterSocket->notifyOutThread();
+      }
       return;
     }
     /*if(cmd->get_commandId()==ENQUIRELINK)
@@ -458,14 +464,14 @@ protected:
     }
   }
 
-  int seq;
+  volatile int seq;
   int proxyType;
   bool opened;
   SmeProxyState state;
   ProxyMonitor *managerMonitor;
-  SmppSocket *smppReceiverSocket;
-  SmppSocket *smppTransmitterSocket;
-  int refcnt;
+  volatile SmppSocket *smppReceiverSocket;
+  volatile SmppSocket *smppTransmitterSocket;
+  volatile int refcnt;
   int totalLimit;
   int submitLimit;
   int submitCount;

@@ -157,10 +157,12 @@ public:
     lastUpdate(0)
   {
     log=smsc::logger::Logger::getInstance("smppdump");
+    running=false;
   }
   int Execute()
   {
     SmppHeader *pdu;
+    running=true;
     while(!stopped)
     {
       try{
@@ -183,9 +185,16 @@ public:
         break;
       }
     }
+    running=false;
     __trace__("smpp reader exited");
     return 0;
   }
+
+  bool isRunning()
+  {
+    return running;
+  }
+
 protected:
   SmppPduEventListener *listener;
   Socket *socket;
@@ -193,6 +202,7 @@ protected:
   int idleTimeout;
   int disconnectTimeout;
   smsc::logger::Logger* log;
+  volatile bool running;
 
   time_t lastUpdate;
 
@@ -267,11 +277,13 @@ public:
     listener(lst),
     socket(sock)
   {
+    running=false;
   }
   int Execute()
   {
     PduBuffer pb;
     mon.Lock();
+    running=true;
     while(!stopped)
     {
       while(queue.Count()==0 && !stopped)
@@ -296,6 +308,7 @@ public:
     }
     __trace__("Exiting smppwriter");
     mon.Unlock();
+    running=false;
     return 0;
   }
   void Stop()
@@ -317,11 +330,18 @@ public:
     queue.Push(pb);
     mon.notify();
   }
+
+  bool isRunning()
+  {
+    return running;
+  }
+
 protected:
   Array<PduBuffer> queue;
   EventMonitor mon;
   SmppPduEventListener *listener;
   Socket *socket;
+  bool running;
 
   void sendPdu(PduBuffer& pb)
   {
@@ -661,8 +681,8 @@ public:
     reader.Stop();
     writer.Stop();
     socket.Close();
-    reader.WaitFor();
-    writer.WaitFor();
+    if(reader.isRunning())reader.WaitFor();
+    if(reader.isRunning())writer.WaitFor();
     closed=true;
   }
 

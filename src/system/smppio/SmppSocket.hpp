@@ -76,7 +76,7 @@ public:
     inThread=in;
     outThread=out;
   }
-  void assignProxy(SmppProxy *p){proxy=p;}
+  void assignProxy(SmppProxy *p)volatile{proxy=p;}
   SmppProxy* getProxy()
   {
     return proxy;
@@ -103,9 +103,9 @@ public:
 
   char* getBuffer(int length);
 
-  Socket* getSocket(){return socket;}
+  Socket* getSocket()volatile{return socket;}
 
-  void notifyOutThread();
+  void notifyOutThread()volatile;
 
   void setChannelType(int ct)
   {

@@ -131,7 +131,7 @@ smsc::smpp::SmppHeader* SmppSocket::decode()
   return pdu;
 }
 
-void SmppSocket::notifyOutThread()
+void SmppSocket::notifyOutThread()volatile
 {
   if(outThread)outThread->notify();
 }
