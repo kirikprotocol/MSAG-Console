@@ -35,6 +35,12 @@
 #include "sms/sms_tags.h"
 
 namespace smsc {
+
+namespace util{
+extern log4cpp::Category* _sms_err_cat;
+};
+
+
 namespace sms  {
 
 extern void UCS_htons(char* buffer, const char* orig, unsigned len, unsigned esm_class);
@@ -806,6 +812,8 @@ public:
 * @version 1.0
 * @see MessageStore
 */
+
+
 struct SMS
 {
   State       state;
@@ -1639,6 +1647,18 @@ struct SMS
   }
 
   ~SMS() {}
+
+  bool Invalidate(const char* file,int line)
+  {
+    if(messageBody.hasBinProperty(Tag::SMSC_RAW_PAYLOAD) &&
+       messageBody.hasBinProperty(Tag::SMSC_RAW_SHORTMESSAGE))
+    {
+      util::_sms_err_cat->warn("both rawpayload and rawshortmessage present at %s:%d",file,line);
+      return false;
+    }
+    return true;
+  }
+
 };
 
 };//sms

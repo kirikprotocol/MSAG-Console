@@ -343,7 +343,7 @@ void Smsc::processCommand(SmscCommand& cmd)
   {
     case __CMD__(SUBMIT):
     {
-      if(cmd->get_sms()->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
+      if((cmd->get_sms()->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40) && !strcmp(cmd.getProxy()->getSystemId(),"MAP_PROXY"))
       {
         SMS &sms=*cmd->get_sms();
         unsigned int len;

@@ -13,6 +13,7 @@ log4cpp::Category *_trace_cat=NULL;
 log4cpp::Category *_map_cat=NULL;
 log4cpp::Category *_mapdlg_cat=NULL;
 log4cpp::Category *_mapproxy_cat=NULL;
+log4cpp::Category *_sms_err_cat=NULL;
 
 /*!
  * retrieves log4cpp::Category instance for given category name
@@ -58,6 +59,7 @@ void Logger::Init(const std::string &configFileName)
   _map_cat=&getCategory("map");
   _mapdlg_cat=&getCategory("map.dialog");
   _mapproxy_cat=&getCategory("map.proxy");
+  _sms_err_cat=&getCategory("sms.error");
 }
 
 /*!

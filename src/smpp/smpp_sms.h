@@ -264,9 +264,17 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,bool forceDC=false)
 
 
   if ( optional.has_messagePayload() )
+  {
     sms->setBinProperty(Tag::SMSC_RAW_PAYLOAD,
                                optional.get_messagePayload(),
                                optional.size_messagePayload());
+  }else
+  {
+    if(!sms->hasBinProperty(Tag::SMSC_RAW_SHORTMESSAGE))
+    {
+      sms->setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,"",0);
+    }
+  }
 
   if ( optional.has_messageState() )
   {
@@ -320,9 +328,12 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms,bool forceDC=false)
     //__require__ ( message.shortMessage.size() == message.smLength );
     //sms->setMessageBody(message.smLength, message.dataCoding, false, message.shortMessage.cstr());
     //sms->setMessageBody((unsigned char)message.shortMessage.size(), (unsigned char)message.dataCoding, false, (uint8_t*)message.shortMessage.cstr());
-    sms->setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,
-                        message.shortMessage.cstr()?message.shortMessage.cstr():"",message.shortMessage.length);
-    sms->setIntProperty(Tag::SMPP_SM_LENGTH,(uint32_t)message.shortMessage.size());
+    if(message.shortMessage.length)
+    {
+      sms->setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,
+                          message.shortMessage.cstr()?message.shortMessage.cstr():"",message.shortMessage.length);
+      sms->setIntProperty(Tag::SMPP_SM_LENGTH,(uint32_t)message.shortMessage.size());
+    }
     int dc=(uint32_t)message.dataCoding;
     if(forceDC)
     {

@@ -685,7 +685,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
 
 StateType StateMachine::submit(Tuple& t)
 {
-  __require__(t.state==UNKNOWN_STATE || t.state==ENROUTE_STATE);
+  __require__(t.state==UNKNOWN_STATE || t.state==ENROUTE_STATE || t.state==ERROR_STATE);
 
   SmeProxy *src_proxy,*dest_proxy=0;
 
@@ -694,6 +694,14 @@ StateType StateMachine::submit(Tuple& t)
   __require__(src_proxy!=NULL);
 
   SMS* sms = t.command->get_sms();
+
+  if(!sms->Invalidate(__FILE__,__LINE__))
+  {
+    smsLog->warn("Invalidate of %lld failed\n",t.msgId);
+    submitResp(t,sms,Status::SUBMITFAIL);
+    return ERROR_STATE;
+  }
+
   uint32_t dialogId =  t.command->get_dialogId();
 
   smsLog->debug("SBM: Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s",
@@ -702,6 +710,13 @@ StateType StateMachine::submit(Tuple& t)
     sms->getDestinationAddress().toString().c_str(),
     src_proxy->getSystemId()
   );
+
+  if(t.state==ERROR_STATE)
+  {
+    smsLog->warn("SMS in error state\n");
+    submitResp(t,sms,Status::SUBMITFAIL);
+    return ERROR_STATE;
+  }
 
 
   ////
@@ -1311,6 +1326,11 @@ StateType StateMachine::submit(Tuple& t)
       {
         sms->setNextTime(now);
       }
+      if(!sms->Invalidate(__FILE__,__LINE__))
+      {
+         smsLog->warn("Invalidate of %lld failed",t.msgId);
+         throw "Invalid sms";
+      }
       store->createSms(*sms,t.msgId,
         sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG)?smsc::store::SMPP_OVERWRITE_IF_PRESENT:smsc::store::CREATE_NEW);
     }catch(...)
@@ -1749,6 +1769,13 @@ StateType StateMachine::forward(Tuple& t)
     smsLog->warn("FWD: failed to retriveSms %lld",t.msgId);
     return UNKNOWN_STATE;
   }
+
+  if(!sms.Invalidate(__FILE__,__LINE__))
+  {
+    smsLog->warn("Invalidate of %lld failed",t.msgId);
+    return ERROR_STATE;
+  }
+
   if(sms.getState()==EXPIRED_STATE)
   {
     smsLog->warn("FWD: sms in expired state msgId=%lld",t.msgId);
@@ -2690,6 +2717,13 @@ StateType StateMachine::alert(Tuple& t)
       return UNKNOWN_STATE;
     }
   }
+
+  if(!sms.Invalidate(__FILE__,__LINE__))
+  {
+    smsLog->warn("Invalidate of %lld failed",t.msgId);
+    return ERROR_STATE;
+  }
+
   char bufsrc[64],bufdst[64];
   sms.getOriginatingAddress().toString(bufsrc,sizeof(bufsrc));
   sms.getDestinationAddress().toString(bufdst,sizeof(bufdst));
