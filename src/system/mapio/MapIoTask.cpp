@@ -10,7 +10,7 @@ using namespace std;
 //#define SMSC_FORWARD_RESPONSE 0x001
 
 static unsigned __global_bind_counter = 0;
-static unsigned __pingPongWaitConter = 0;
+static unsigned __pingPongWaitCounter = 0;
 static bool MAP_dispatching = false;
 static bool MAP_isAlive = false;
 #define CORRECT_BIND_COUNTER 2
@@ -21,7 +21,7 @@ static bool MAP_isAlive = false;
 
 MAPIO_TaskACVersionNotifier()
 {
-  __pingPongWaitConter = 0;
+  __pingPongWaitCounter = 0;
 }
 extern void MAPIO_QueryMscVersionInternal();
 
@@ -116,7 +116,7 @@ void MapIoTask::dispatcher()
           result = MSG_BROKEN_CONNECTION;
         }
       }
-      ++__pingPongWaitConter;
+      ++__pingPongWaitCounter;
 
       if ( __global_bind_counter != CORRECT_BIND_COUNTER ){
         result = MSG_BROKEN_CONNECTION;
@@ -187,7 +187,7 @@ void MapIoTask::init(unsigned timeout)
 {
   USHORT_T err;
   __global_bind_counter = 0;
-  __pingPongWaitConter = 0;
+  __pingPongWaitCounter = 0;
   err = MsgInit(MAXENTRIES);
   if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgInit, code 0x%hx",err); throw runtime_error("MsgInit error"); }
   err = MsgOpen(MY_USER_ID);

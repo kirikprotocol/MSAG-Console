@@ -129,6 +129,29 @@ static string RouteToString(MapDialog*);
 static void QueryHlrVersion(MapDialog*);
 static void QueryMcsVersion(MapDialog*);
 
+static ET96MAP_SS7_ADDR_T* GetScAddr()
+{
+  static ET96MAP_ADDRESS_T m_scAddr;
+  static ET96MAP_SS7_ADDR_T scAddr;
+  static initialized = false;
+  if ( !initialized ) {
+    mkMapAddress( &m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
+    mkSS7GTAddress( &scAddr, &m_scAddr, 8 );
+    initialized = true;
+  }
+  return &scAddr;
+}
+
+extern MAPIO_TaskACVersionNotifier();
+void MAPIO_QueryMscVersionInternal()
+{
+  USHORT_T result = 
+    Et96MapGetACVersionReq(SSN,GetScAdd(),ET96MAP_SHORT_MSG_MT_RELAY);
+  if ( result != ET96MAP_E_OK ) {
+    throw runtime_error(FormatText("MAP::QueryMcsVersion: error 0x%x when GetAcVersion",result));
+  }
+}
+
 static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
 {
   __trace2__("MAP::%s: ",__FUNCTION__);
@@ -986,6 +1009,7 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
   unsigned dialogid_map = 0;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
+    MAPIO_TaskACVersionNotifier();   
     if ( version == 3 ) version = 2;
     __trace2__("MAP::%s ",__FUNCTION__);
     char text[32];
