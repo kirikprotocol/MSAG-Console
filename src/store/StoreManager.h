@@ -100,11 +100,11 @@ namespace smsc { namespace store
         
         static Mutex mutex;
 
-        static IDGenerator          *generator;
-        static Archiver             *archiver;
-        static StoreManager         *instance;
-        static ConnectionPool       *pool;
-        static log4cpp::Category    &log;
+        static IDGenerator              *generator;
+        static Archiver                 *archiver;
+        static StoreManager             *instance;
+        static StorageConnectionPool    *pool;
+        static log4cpp::Category        &log;
         
         static unsigned             maxTriesCount;
         static void loadMaxTriesCount(Manager& config);
@@ -131,34 +131,34 @@ namespace smsc { namespace store
         StoreManager() : MessageStore() {};
         virtual ~StoreManager() {};
         
-        SMSId doCreateSms(Connection* connection,
+        SMSId doCreateSms(StorageConnection* connection,
             SMS& sms, const CreateMode flag)
                 throw(StorageException, DuplicateMessageException);
-        void doRetriveSms(Connection* connection, 
+        void doRetriveSms(StorageConnection* connection, 
             SMSId id, SMS& sms)
                 throw(StorageException, NoSuchMessageException);
-        void doReplaceSms(Connection* connection, 
+        void doReplaceSms(StorageConnection* connection, 
             SMSId id, const Address& oa, 
             const Body& newBody, uint8_t deliveryReport,
             time_t validTime = 0, time_t waitTime = 0)
                 throw(StorageException, NoSuchMessageException);
-        void doDestroySms(Connection* connection, SMSId id) 
+        void doDestroySms(StorageConnection* connection, SMSId id) 
                 throw(StorageException, NoSuchMessageException);
         
-        void doChangeSmsStateToEnroute(Connection* connection,
+        void doChangeSmsStateToEnroute(StorageConnection* connection,
             SMSId id, const Descriptor& dst,
             uint8_t failureCause, time_t nextTryTime)
                 throw(StorageException, NoSuchMessageException);
-        void doChangeSmsStateToDelivered(Connection* connection, 
+        void doChangeSmsStateToDelivered(StorageConnection* connection, 
             SMSId id, const Descriptor& dst)
                 throw(StorageException, NoSuchMessageException);
-        void doChangeSmsStateToUndeliverable(Connection* connection, 
+        void doChangeSmsStateToUndeliverable(StorageConnection* connection, 
             SMSId id, const Descriptor& dst, uint8_t failureCause)
                 throw(StorageException, NoSuchMessageException);
-        void doChangeSmsStateToExpired(Connection* connection, 
+        void doChangeSmsStateToExpired(StorageConnection* connection, 
             SMSId id)
                 throw(StorageException, NoSuchMessageException);
-        void doChangeSmsStateToDeleted(Connection* connection,
+        void doChangeSmsStateToDeleted(StorageConnection* connection,
             SMSId id) 
                 throw(StorageException, NoSuchMessageException);
     
@@ -371,9 +371,17 @@ namespace smsc { namespace store
         virtual void changeSmsStateToDeleted(SMSId id) 
                 throw(StorageException, NoSuchMessageException); 
        
+        /**
+         * Реализация метода MessageStore
+         * @see MessageStore 
+         */
         virtual IdIterator* getReadyForRetry(time_t retryTime) 
                 throw(StorageException);
         
+        /**
+         * Реализация метода MessageStore
+         * @see MessageStore 
+         */
         virtual time_t getNextRetryTime() 
                 throw(StorageException);
     

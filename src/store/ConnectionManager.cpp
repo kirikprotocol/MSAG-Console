@@ -17,7 +17,7 @@ using smsc::util::Logger;
 using smsc::util::config::Manager;
 using smsc::util::config::ConfigException;
 
-/* ----------------------------- ConnectionPool ------------------------ */
+/* ---------------------- Abstract Connection Management --------------------*/
 
 const unsigned SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE = 200;
 const unsigned SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE_LIMIT = 10000;
@@ -129,10 +129,9 @@ void ConnectionPool::loadDBUserPassword(Manager& config)
 
 ConnectionPool::ConnectionPool(Manager& config) throw(ConfigException) 
     : log(Logger::getCategory("smsc.store.ConnectionPool")),
-        dbInstance(0L), dbUserName(0L), dbUserPassword(0L),
-            head(0L), tail(0L), queueLen(0),
-                idleHead(0L), idleTail(0L), idleCount(0)
-                
+        head(0L), tail(0L), queueLen(0), 
+            idleHead(0L), idleTail(0L), idleCount(0),
+                dbInstance(0L), dbUserName(0L), dbUserPassword(0L)
 {
     loadMaxSize(config);
     loadInitSize(config);
@@ -148,14 +147,11 @@ ConnectionPool::ConnectionPool(Manager& config) throw(ConfigException)
     }
 
     __require__(dbInstance && dbUserName && dbUserPassword);
+}
 
-    for (unsigned i=0; i<count; i++)
-    {
-        Connection* connection = 
-                    new Connection(dbInstance, dbUserName, dbUserPassword);
-        connections.Push(connection);
-        push(connection);
-    }
+Connection* ConnectionPool::newConnection()
+{
+    return (new Connection(dbInstance, dbUserName, dbUserPassword));
 }
 
 void ConnectionPool::push(Connection* connection)
@@ -231,7 +227,7 @@ Connection* ConnectionPool::getConnection()
     }
     else if (count < size) 
     {
-        connection = new Connection(dbInstance, dbUserName, dbUserPassword);
+        connection = newConnection();
         (void) connections.Push(connection);
         count++;
     }
@@ -308,8 +304,7 @@ void ConnectionPool::setSize(unsigned new_size)
         unsigned counter = new_size - size;
         while (head && counter--)
         {
-            Connection* connection = 
-                    new Connection(dbInstance, dbUserName, dbUserPassword);
+            Connection* connection = newConnection();
             (void) connections.Push(connection);
             count++;
 
@@ -334,12 +329,7 @@ Connection::Connection(const char* instance,
     : log(Logger::getCategory("smsc.store.Connection")),
         next(0L), isConnected(false), isDead(false), 
         dbInstance(instance), dbUserName(user), dbUserPassword(password), 
-        envhp(0L), svchp(0L), srvhp(0L), errhp(0L), sesshp(0L),
-        needOverwriteSvcStmt(0L), needOverwriteStmt(0L), needRejectStmt(0L), 
-        overwriteStmt(0L), storeStmt(0L), retriveStmt(0L), destroyStmt(0L), 
-        replaceStmt(0L), replaceVTStmt(0L), replaceWTStmt(0L), replaceVWTStmt(0L), 
-        toEnrouteStmt(0L), toDeliveredStmt(0L), toUndeliverableStmt(0L),
-        toExpiredStmt(0L), toDeletedStmt(0L)
+        envhp(0L), svchp(0L), srvhp(0L), errhp(0L), sesshp(0L)
 {
     __require__(dbInstance && dbUserName && dbUserPassword);
 }
@@ -389,25 +379,6 @@ void Connection::connect()
                              (dvoid *)sesshp, (ub4) 0,
                              (ub4) OCI_ATTR_SESSION, errhp));
             
-            storeStmt = new StoreStatement(this); 
-            destroyStmt = new DestroyStatement(this); 
-            retriveStmt = new RetriveStatement(this); 
-            needRejectStmt = new NeedRejectStatement(this); 
-            needOverwriteStmt = new NeedOverwriteStatement(this); 
-            needOverwriteSvcStmt = new NeedOverwriteSvcStatement(this);
-            overwriteStmt = new OverwriteStatement(this);
-            
-            replaceStmt = new ReplaceStatement(this); 
-            replaceVTStmt = new ReplaceVTStatement(this); 
-            replaceWTStmt = new ReplaceWTStatement(this); 
-            replaceVWTStmt = new ReplaceVWTStatement(this); 
-            
-            toEnrouteStmt = new ToEnrouteStatement(this);
-            toDeliveredStmt = new ToDeliveredStatement(this);
-            toUndeliverableStmt = new ToUndeliverableStatement(this);
-            toExpiredStmt = new ToExpiredStatement(this);
-            toDeletedStmt = new ToDeletedStatement(this);
-
             isConnected = true; isDead = false;
         }
     }
@@ -454,103 +425,6 @@ void Connection::rollback()
     throw(StorageException)
 {
     check(OCITransRollback(svchp, errhp, OCI_DEFAULT));
-}
-
-NeedOverwriteSvcStatement* Connection::getNeedOverwriteSvcStatement() 
-    throw(ConnectionFailedException)
-{
-    connect();
-    return needOverwriteSvcStmt;
-}
-NeedOverwriteStatement* Connection::getNeedOverwriteStatement() 
-    throw(ConnectionFailedException) 
-{
-    connect();
-    return needOverwriteStmt;
-}
-NeedRejectStatement* Connection::getNeedRejectStatement()
-    throw(ConnectionFailedException) 
-{
-    connect();
-    return needRejectStmt;
-}
-OverwriteStatement* Connection::getOverwriteStatement() 
-    throw(ConnectionFailedException)
-{
-    connect();
-    return overwriteStmt;
-}
-StoreStatement* Connection::getStoreStatement() 
-    throw(ConnectionFailedException) 
-{
-    connect();
-    return storeStmt;
-}
-RetriveStatement* Connection::getRetriveStatement() 
-    throw(ConnectionFailedException) 
-{
-    connect();
-    return retriveStmt;
-}
-DestroyStatement* Connection::getDestroyStatement() 
-    throw(ConnectionFailedException) 
-{
-    connect();
-    return destroyStmt;
-}
-ReplaceStatement* Connection::getReplaceStatement() 
-    throw(ConnectionFailedException)
-{
-    connect();
-    return replaceStmt;
-}
-ReplaceVTStatement* Connection::getReplaceVTStatement() 
-    throw(ConnectionFailedException)
-{
-    connect();
-    return replaceVTStmt;
-}
-ReplaceWTStatement* Connection::getReplaceWTStatement() 
-    throw(ConnectionFailedException)
-{
-    connect();
-    return replaceWTStmt;
-}
-ReplaceVWTStatement* Connection::getReplaceVWTStatement()
-    throw(ConnectionFailedException)
-{
-    connect();
-    return replaceVWTStmt;
-}
-ToEnrouteStatement* Connection::getToEnrouteStatement()
-    throw(ConnectionFailedException)
-{
-    connect();
-    return toEnrouteStmt;
-}
-ToDeliveredStatement* Connection::getToDeliveredStatement()
-    throw(ConnectionFailedException)
-{
-    connect();
-    return toDeliveredStmt;
-}
-ToUndeliverableStatement* Connection::getToUndeliverableStatement()
-    throw(ConnectionFailedException)
-{
-    connect();
-    return toUndeliverableStmt;
-}
-ToExpiredStatement* Connection::getToExpiredStatement()
-    throw(ConnectionFailedException)
-{
-    connect();
-    return toExpiredStmt;
-}
-ToDeletedStatement* Connection::getToDeletedStatement()
-    throw(ConnectionFailedException)
-{
-    connect();
-    return toDeletedStmt;
 }
 
 void Connection::check(sword status) 
@@ -607,6 +481,167 @@ void Connection::check(sword status)
     StorageException exc((const char *)errbuf, (int)errcode, (int)status);
     log.error("Storage Exception : %s\n", exc.what());
     throw exc;
+}
+
+/* ---------------------- Storage Connection Management ---------------------*/
+        
+StorageConnectionPool::StorageConnectionPool(Manager& config) 
+    throw(ConfigException)
+        : ConnectionPool(config)
+{
+    for (unsigned i=0; i<count; i++)
+    {
+        Connection* connection = new StorageConnection(
+            dbInstance, dbUserName, dbUserPassword); 
+        connections.Push(connection);
+        push(connection);
+    }
+}
+        
+Connection* StorageConnectionPool::newConnection()
+{
+    return (new StorageConnection(dbInstance, dbUserName, dbUserPassword));
+}
+
+StorageConnection::StorageConnection(const char* instance, 
+                                     const char* user, const char* password) 
+    : Connection(instance, user, password), 
+        needOverwriteSvcStmt(0L), needOverwriteStmt(0L), needRejectStmt(0L), 
+        overwriteStmt(0L), storeStmt(0L), retriveStmt(0L), destroyStmt(0L), 
+        replaceStmt(0L), replaceVTStmt(0L), replaceWTStmt(0L), replaceVWTStmt(0L), 
+        toEnrouteStmt(0L), toDeliveredStmt(0L), toUndeliverableStmt(0L),
+        toExpiredStmt(0L), toDeletedStmt(0L)
+{}
+
+void StorageConnection::connect()
+    throw(ConnectionFailedException)
+{
+    if (isAvailable()) return;
+    
+    Connection::connect();
+    try
+    {
+        storeStmt = new StoreStatement(this); 
+        destroyStmt = new DestroyStatement(this); 
+        retriveStmt = new RetriveStatement(this); 
+        needRejectStmt = new NeedRejectStatement(this); 
+        needOverwriteStmt = new NeedOverwriteStatement(this); 
+        needOverwriteSvcStmt = new NeedOverwriteSvcStatement(this);
+        overwriteStmt = new OverwriteStatement(this);
+
+        replaceStmt = new ReplaceStatement(this); 
+        replaceVTStmt = new ReplaceVTStatement(this); 
+        replaceWTStmt = new ReplaceWTStatement(this); 
+        replaceVWTStmt = new ReplaceVWTStatement(this); 
+
+        toEnrouteStmt = new ToEnrouteStatement(this);
+        toDeliveredStmt = new ToDeliveredStatement(this);
+        toUndeliverableStmt = new ToUndeliverableStatement(this);
+        toExpiredStmt = new ToExpiredStatement(this);
+        toDeletedStmt = new ToDeletedStatement(this);
+    }
+    catch (StorageException& exc) 
+    {
+        Connection::disconnect();    
+        throw ConnectionFailedException(exc);
+    }
+}
+
+NeedOverwriteSvcStatement* StorageConnection::getNeedOverwriteSvcStatement() 
+    throw(ConnectionFailedException)
+{
+    connect();
+    return needOverwriteSvcStmt;
+}
+NeedOverwriteStatement* StorageConnection::getNeedOverwriteStatement() 
+    throw(ConnectionFailedException) 
+{
+    connect();
+    return needOverwriteStmt;
+}
+NeedRejectStatement* StorageConnection::getNeedRejectStatement()
+    throw(ConnectionFailedException) 
+{
+    connect();
+    return needRejectStmt;
+}
+OverwriteStatement* StorageConnection::getOverwriteStatement() 
+    throw(ConnectionFailedException)
+{
+    connect();
+    return overwriteStmt;
+}
+StoreStatement* StorageConnection::getStoreStatement() 
+    throw(ConnectionFailedException) 
+{
+    connect();
+    return storeStmt;
+}
+RetriveStatement* StorageConnection::getRetriveStatement() 
+    throw(ConnectionFailedException) 
+{
+    connect();
+    return retriveStmt;
+}
+DestroyStatement* StorageConnection::getDestroyStatement() 
+    throw(ConnectionFailedException) 
+{
+    connect();
+    return destroyStmt;
+}
+ReplaceStatement* StorageConnection::getReplaceStatement() 
+    throw(ConnectionFailedException)
+{
+    connect();
+    return replaceStmt;
+}
+ReplaceVTStatement* StorageConnection::getReplaceVTStatement() 
+    throw(ConnectionFailedException)
+{
+    connect();
+    return replaceVTStmt;
+}
+ReplaceWTStatement* StorageConnection::getReplaceWTStatement() 
+    throw(ConnectionFailedException)
+{
+    connect();
+    return replaceWTStmt;
+}
+ReplaceVWTStatement* StorageConnection::getReplaceVWTStatement()
+    throw(ConnectionFailedException)
+{
+    connect();
+    return replaceVWTStmt;
+}
+ToEnrouteStatement* StorageConnection::getToEnrouteStatement()
+    throw(ConnectionFailedException)
+{
+    connect();
+    return toEnrouteStmt;
+}
+ToDeliveredStatement* StorageConnection::getToDeliveredStatement()
+    throw(ConnectionFailedException)
+{
+    connect();
+    return toDeliveredStmt;
+}
+ToUndeliverableStatement* StorageConnection::getToUndeliverableStatement()
+    throw(ConnectionFailedException)
+{
+    connect();
+    return toUndeliverableStmt;
+}
+ToExpiredStatement* StorageConnection::getToExpiredStatement()
+    throw(ConnectionFailedException)
+{
+    connect();
+    return toExpiredStmt;
+}
+ToDeletedStatement* StorageConnection::getToDeletedStatement()
+    throw(ConnectionFailedException)
+{
+    connect();
+    return toDeletedStmt;
 }
 
 }}

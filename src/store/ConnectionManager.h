@@ -70,13 +70,13 @@ namespace smsc { namespace store
 
         Connection*     next;
         Mutex           mutex;
+        
+        Array<Statement *>          statements;
 
-        bool    isConnected, isDead;
-        
-        const char* dbInstance;
-        const char* dbUserName;
-        const char* dbUserPassword;
-        
+        inline void assign(Statement* statement) {
+            statements.Push(statement);
+        };
+    
         inline void setNextConnection(Connection* connection) {
             next = connection;
         };
@@ -84,6 +84,14 @@ namespace smsc { namespace store
         inline Connection* getNextConnection(void) {
             return next;
         };
+    
+    protected:
+
+        bool    isConnected, isDead;
+
+        const char* dbInstance;
+        const char* dbUserName;
+        const char* dbUserPassword;
         
         OCIEnv*         envhp;  // OCI envirounment handle
         OCISvcCtx*      svchp;  // OCI service handle
@@ -91,31 +99,6 @@ namespace smsc { namespace store
         OCIError*       errhp;  // OCI error handle
         OCISession*     sesshp; // OCI session handle
         
-        Array<Statement *>          statements;
-
-        NeedOverwriteSvcStatement*  needOverwriteSvcStmt;
-        NeedOverwriteStatement*     needOverwriteStmt;
-        NeedRejectStatement*        needRejectStmt;
-        OverwriteStatement*         overwriteStmt;
-        StoreStatement*             storeStmt;
-        RetriveStatement*           retriveStmt;
-        DestroyStatement*           destroyStmt;
-        
-        ReplaceStatement*           replaceStmt;
-        ReplaceVTStatement*         replaceVTStmt;
-        ReplaceWTStatement*         replaceWTStmt;
-        ReplaceVWTStatement*        replaceVWTStmt;
-        
-        ToEnrouteStatement*         toEnrouteStmt;
-        ToDeliveredStatement*       toDeliveredStmt;
-        ToUndeliverableStatement*   toUndeliverableStmt;
-        ToExpiredStatement*         toExpiredStmt;
-        ToDeletedStatement*         toDeletedStmt;
-        
-        inline void assign(Statement* statement) {
-            statements.Push(statement);
-        };
-    
     public:
 
         /**
@@ -144,14 +127,12 @@ namespace smsc { namespace store
         /**
          * В случае отсутствия реального соединения с базой данных
          * делается попытка его создания.
-         * Кроме того, метод создаёт набор предопределённых
-         * (сохранённых) SQL операторов.
          * 
          * @exception ConnectionFailedException
          *                   возникает в случае неуспеха попытки
          *                   получения соединения
          */
-        void connect()
+        virtual void connect()
             throw(ConnectionFailedException);
         
         /**
@@ -159,7 +140,7 @@ namespace smsc { namespace store
          * Также уничтожает все SQL операторы ассоциированные
          * с данным соединением.  
          */
-        void disconnect();
+        virtual void disconnect();
         
         /**
          * Сервисный метод, используется для проверки корректности
@@ -171,7 +152,7 @@ namespace smsc { namespace store
          *                   исклучительная ситуация возникающая по ошибке
          *                   любого рода, идентифицированного параметром status
          */
-        void check(sword status) 
+        virtual void check(sword status) 
             throw(StorageException);
         
         /**
@@ -182,7 +163,7 @@ namespace smsc { namespace store
          *                   возникает в случае ошибки при commit'е
          *                   на соединении
          */
-        void commit()
+        virtual void commit()
             throw(StorageException);
         
         /**
@@ -193,7 +174,7 @@ namespace smsc { namespace store
          *                   возникает в случае ошибки при rollback'е
          *                   на соединении
          */
-        void rollback()
+        virtual void rollback()
             throw(StorageException);
 
         /**
@@ -208,6 +189,240 @@ namespace smsc { namespace store
             return (isConnected && !isDead);
         };
 
+    };
+    
+    /**
+     * Структура, используется внутренне в реализации
+     * класса ConnectionPool для организации "справедливого"
+     * распределения соединений по запрашивающим потокам.
+     * 
+     * @author Victor V. Makarov
+     * @version 1.0
+     * @see Connection
+     * @see ConnectionPool
+     */
+    struct ConnectionQueue
+    {
+        cond_t              condition;
+        Connection*         connection;
+        ConnectionQueue*    next;
+    };
+
+    /**
+     * Класс реализует контроль набора соединений с базой данных.
+     * Обеспечивает выдачу и возврат соединений.
+     * 
+     * @author Victor V. Makarov
+     * @version 1.0
+     * @see Connection
+     */
+    class ConnectionPool
+    {
+    private:
+
+        log4cpp::Category    &log;
+        
+        EventMonitor    monitor;
+        ConnectionQueue *head,*tail;
+        unsigned        maxQueueSize;
+        unsigned        queueLen;
+        
+        Connection      *idleHead, *idleTail;
+        unsigned        idleCount;
+        
+        void loadMaxSize(Manager& config);
+        void loadInitSize(Manager& config);
+        
+        void loadDBInstance(Manager& config)
+            throw(ConfigException);
+        void loadDBUserName(Manager& config)
+            throw(ConfigException);
+        void loadDBUserPassword(Manager& config)
+            throw(ConfigException);
+    
+    protected:
+        
+        const char* dbInstance;
+        const char* dbUserName;
+        const char* dbUserPassword;
+        
+        Array<Connection *> connections;
+
+        unsigned    size;
+        unsigned    count;
+
+        void push(Connection* connection);
+        Connection* pop(void);
+
+        virtual Connection* newConnection();
+    
+    public:
+    
+        /**
+         * Конструктор, создаёт контроллер для набора соединений.
+         * Извлекает набор конфигурационных параметров и инициализирует
+         * несколько соединений с базой данных (по параметру).
+         * 
+         * @param config интерфес для получения конфигурационных параметров
+         * @exception ConfigException
+         *                   возникает в случае некорректности и/или
+         *                   неполноты набора конфигурационных параметров.
+         * @see Connection
+         * @see smsc::util::config::Manager
+         */
+        ConnectionPool(Manager& config) 
+            throw(ConfigException);
+        
+        /**
+         * Деструктор, уничтожает контроллер соединений
+         * и сами соединения с базой данных
+         */
+        virtual ~ConnectionPool(); 
+        
+        /**
+         * Меняет размер пула соединений с хранилищем.
+         * В один момент времени одно соединение может использоваться
+         * только одним потоком управления.
+         * 
+         * @param size   новый размер пула соединений
+         */
+        void setSize(unsigned _size);
+        
+        /**
+         * @return текущий размер пула соединений
+         */
+        inline unsigned getSize() {
+            return size;
+        }
+        /**
+         * @return текущее количество соединений в пуле
+         */
+        inline unsigned getConnectionsCount() {
+            return count;
+        }
+        /**
+         * @return текущее количество занятых соединений
+         */
+        inline unsigned getBusyConnectionsCount() {
+            return (count-idleCount);
+        }
+        /**
+         * @return текущее количество простаивающих соединений
+         */
+        inline unsigned getIdleConnectionsCount() {
+            return idleCount;
+        }
+        /**
+         * @return текущее количество запросов ожидающих обработку
+         * @see ConnectionPool
+         */
+        inline unsigned getPendingQueueLength() {
+            return queueLen;
+        }
+        
+        /**
+         * @return признак, есть ли свободные соединения
+         */
+        bool hasFreeConnections();
+        
+        /**
+         * Возвращает свободное соединение для использования.
+         * Соединения выдаются в порядке очерёдности запросов.
+         * Блокируется до наличия свободного соединения.
+         * После использования соединение должно быть возвращено
+         * в пул посредством метода ConnectionPool::freeConnection()
+         * 
+         * @return свободное соединение для использования
+         * @see ConnectionPool::freeConnection()
+         */
+        Connection* getConnection();
+        
+        /**
+         * Возвращает соединение в пул, полученное посредством 
+         * ConnectionPool::getConnection()
+         * 
+         * @param connection
+         * @see ConnectionPool::getConnection()
+         */
+        void freeConnection(Connection* connection);
+    };
+
+    /**
+     * Класс реализует понятие соединения с хранилищем сообщений.
+     * В дополнение к функциональности предоставляемой базовым
+     * классом содержит ряд подготовленных SQL операторов для
+     * непосредственного взаимодейсвия с хранилищем.
+     * 
+     * Реализация основана на базе средств СУБД Oracle и
+     * с использованием средств разработки Oracle Call Interface.
+     * 
+     * @author Victor V. Makarov
+     * @version 1.0
+     * @see Connection
+     * @see StorageConnectionPool
+     * @see Statement
+     */
+    class StorageConnection : public Connection
+    {
+    private:
+        
+        NeedOverwriteSvcStatement*  needOverwriteSvcStmt;
+        NeedOverwriteStatement*     needOverwriteStmt;
+        NeedRejectStatement*        needRejectStmt;
+        OverwriteStatement*         overwriteStmt;
+        StoreStatement*             storeStmt;
+        RetriveStatement*           retriveStmt;
+        DestroyStatement*           destroyStmt;
+        
+        ReplaceStatement*           replaceStmt;
+        ReplaceVTStatement*         replaceVTStmt;
+        ReplaceWTStatement*         replaceWTStmt;
+        ReplaceVWTStatement*        replaceVWTStmt;
+        
+        ToEnrouteStatement*         toEnrouteStmt;
+        ToDeliveredStatement*       toDeliveredStmt;
+        ToUndeliverableStatement*   toUndeliverableStmt;
+        ToExpiredStatement*         toExpiredStmt;
+        ToDeletedStatement*         toDeletedStmt;
+        
+    public:
+
+        /**
+         * Конструктор, инициализирует, но не создаёт логического
+         * соединения с хранилищем сообщений. Для получения реального соединения
+         * необходимо использовать метод connect().
+         * 
+         * @param instance алиас для базы данных
+         * @param user     имя пользователя
+         * @param password пароль пользователя
+         * @see StorageConnection::connect()
+         */
+        StorageConnection(const char* instance, 
+                          const char* user, const char* password);
+        /**
+         * Деструктор, уничтожает логическое соединение с
+         * базой данных, если таковое было открыто.
+         * Также уничтожает все SQL операторы ассоциированные
+         * с данным соединением.
+         * 
+         * @see Connection::~Connection()
+         */
+        virtual ~StorageConnection() {};
+        
+        /**
+         * В случае отсутствия реального соединения с базой данных
+         * делается попытка его создания.
+         * Кроме того, метод создаёт набор предопределённых
+         * (сохранённых) SQL операторов.
+         *
+         * @see Connection::connect() 
+         * @exception ConnectionFailedException
+         *                   возникает в случае неуспеха попытки
+         *                   получения соединения
+         */
+        virtual void connect()
+            throw(ConnectionFailedException);
+        
         /**
          * @return подготовленный (хранимый) SQL оператор
          * @exception ConnectionFailedException
@@ -341,154 +556,53 @@ namespace smsc { namespace store
     };
     
     /**
-     * Структура, используется внутренне в реализации
-     * класса ConnectionPool для организации "справедливого"
-     * распределения соединений по запрашивающим потокам.
-     * 
-     * @author Victor V. Makarov
-     * @version 1.0
-     * @see Connection
-     * @see ConnectionPool
-     */
-    struct ConnectionQueue
-    {
-        cond_t              condition;
-        Connection*         connection;
-        ConnectionQueue*    next;
-    };
-
-    /**
-     * Класс реализует контроль набора соединений с базой данных.
+     * Класс реализует контроль набора соединений с хранилищем сообщений.
      * Обеспечивает выдачу и возврат соединений.
+     * Расширяет функциональность предоставляемую базовым классом
+     * для работы только с экземплярами StorageConnection.
      * 
      * @author Victor V. Makarov
      * @version 1.0
-     * @see Connection
+     * @see ConnectionPool
+     * @see StorageConnection
      */
-    class ConnectionPool
+    class StorageConnectionPool : public ConnectionPool
     {
-    private:
-
-        log4cpp::Category    &log;
+    protected:
         
-        const char* dbInstance;
-        const char* dbUserName;
-        const char* dbUserPassword;
-
-        EventMonitor    monitor;
-        ConnectionQueue *head,*tail;
-        unsigned        maxQueueSize;
-        unsigned        queueLen;
-
-        Array<Connection *> connections;
-        unsigned        size;
-        unsigned        count;
-        
-        Connection      *idleHead, *idleTail;
-        unsigned        idleCount;
-        
-        void push(Connection* connection);
-        Connection* pop(void);
-
-        void loadMaxSize(Manager& config);
-        void loadInitSize(Manager& config);
-        
-        void loadDBInstance(Manager& config)
-            throw(ConfigException);
-        void loadDBUserName(Manager& config)
-            throw(ConfigException);
-        void loadDBUserPassword(Manager& config)
-            throw(ConfigException);
+        /**
+         * Создаёт экземпляр StorageConnection. 
+         * Используется внутренне при помещении нового соединения в пул
+         * 
+         * @return новый экземпляр StorageConnection
+         * @see StorageConnection
+         */
+        virtual Connection* newConnection();
 
     public:
-    
+
         /**
-         * Конструктор, создаёт контроллер для набора соединений.
-         * Извлекает набор конфигурационных параметров и инициализирует
-         * несколько соединений с базой данных (по параметру).
+         * Конструктор, создаёт контроллер для набора соединений
+         * с хранилищем сообщений.
          * 
          * @param config интерфес для получения конфигурационных параметров
          * @exception ConfigException
          *                   возникает в случае некорректности и/или
          *                   неполноты набора конфигурационных параметров.
-         * @see Connection
+         * @see ConnectionPool
+         * @see StorageConnection
          * @see smsc::util::config::Manager
          */
-        ConnectionPool(Manager& config) 
+        StorageConnectionPool(Manager& config) 
             throw(ConfigException);
         
         /**
          * Деструктор, уничтожает контроллер соединений
-         * и сами соединения с базой данных
-         */
-        virtual ~ConnectionPool(); 
-        
-        /**
-         * Меняет размер пула соединений с хранилищем.
-         * В один момент времени одно соединение может использоваться
-         * только одним потоком управления.
-         * 
-         * @param size   новый размер пула соединений
-         */
-        void setSize(unsigned _size);
-        
-        /**
-         * @return текущий размер пула соединений
-         */
-        inline unsigned getSize() {
-            return size;
-        }
-        /**
-         * @return текущее количество соединений в пуле
-         */
-        inline unsigned getConnectionsCount() {
-            return count;
-        }
-        /**
-         * @return текущее количество занятых соединений
-         */
-        inline unsigned getBusyConnectionsCount() {
-            return (count-idleCount);
-        }
-        /**
-         * @return текущее количество простаивающих соединений
-         */
-        inline unsigned getIdleConnectionsCount() {
-            return idleCount;
-        }
-        /**
-         * @return текущее количество запросов ожидающих обработку
+         * и сами соединения с хранилищем сообщений.
+         *
          * @see ConnectionPool
          */
-        inline unsigned getPendingQueueLength() {
-            return queueLen;
-        }
-        
-        /**
-         * @return признак, есть ли свободные соединения
-         */
-        bool hasFreeConnections();
-        
-        /**
-         * Возвращает свободное соединение для использования.
-         * Соединения выдаются в порядке очерёдности запросов.
-         * Блокируется до наличия свободного соединения.
-         * После использования соединение должно быть возвращено
-         * в пул посредством метода ConnectionPool::freeConnection()
-         * 
-         * @return свободное соединение для использования
-         * @see ConnectionPool::freeConnection()
-         */
-        Connection* getConnection();
-        
-        /**
-         * Возвращает соединение в пул, полученное посредством 
-         * ConnectionPool::getConnection()
-         * 
-         * @param connection
-         * @see ConnectionPool::getConnection()
-         */
-        void freeConnection(Connection* connection);
+        virtual ~StorageConnectionPool() {}; 
     };
 
 }}

@@ -18,7 +18,7 @@ const unsigned SMSC_MAX_TRIES_TO_PROCESS_OPERATION_LIMIT = 1000;
 
 Mutex StoreManager::mutex;
 Archiver* StoreManager::archiver = 0L;
-ConnectionPool* StoreManager::pool = 0L;
+StorageConnectionPool* StoreManager::pool = 0L;
 IDGenerator* StoreManager::generator = 0L;
 StoreManager* StoreManager::instance = 0L;
 unsigned StoreManager::maxTriesCount = SMSC_MAX_TRIES_TO_PROCESS_OPERATION;
@@ -63,7 +63,7 @@ void StoreManager::startup(Manager& config)
         loadMaxTriesCount(config);
         try 
         {
-            pool = new ConnectionPool(config);
+            pool = new StorageConnectionPool(config);
             archiver = new Archiver(config);
             generator = new IDGenerator(archiver->getLastUsedId());
             archiver->Start();
@@ -101,7 +101,7 @@ void StoreManager::shutdown()
     }   
 }
 
-SMSId StoreManager::doCreateSms(Connection* connection,
+SMSId StoreManager::doCreateSms(StorageConnection* connection,
     SMS& sms, const CreateMode flag)
         throw(StorageException, DuplicateMessageException)
 {
@@ -201,13 +201,13 @@ SMSId StoreManager::createSms(SMS& sms, const CreateMode flag)
     
     SMSId id=0;
 
-    Connection* connection = 0L;
+    StorageConnection* connection = 0L;
     unsigned iteration=1;
     while (true)
     {
         try 
         {
-            connection = pool->getConnection();
+            connection = (StorageConnection *)pool->getConnection();
             id = doCreateSms(connection, sms, flag);
             pool->freeConnection(connection);
             break;
@@ -231,7 +231,7 @@ SMSId StoreManager::createSms(SMS& sms, const CreateMode flag)
     return id;
 }
 
-void StoreManager::doRetriveSms(Connection* connection, 
+void StoreManager::doRetriveSms(StorageConnection* connection, 
     SMSId id, SMS &sms)
         throw(StorageException, NoSuchMessageException)
 {
@@ -258,13 +258,13 @@ void StoreManager::retriveSms(SMSId id, SMS &sms)
 {
     __require__(pool);
     
-    Connection* connection = 0L;
+    StorageConnection* connection = 0L;
     unsigned iteration=1;
     while (true)
     {
         try 
         {
-            connection = pool->getConnection();
+            connection = (StorageConnection *)pool->getConnection();
             doRetriveSms(connection, id, sms);
             pool->freeConnection(connection);
             break;
@@ -287,7 +287,7 @@ void StoreManager::retriveSms(SMSId id, SMS &sms)
     }
 }
 
-void StoreManager::doDestroySms(Connection* connection, SMSId id) 
+void StoreManager::doDestroySms(StorageConnection* connection, SMSId id) 
     throw(StorageException, NoSuchMessageException)
 {
     __require__(connection);
@@ -318,13 +318,13 @@ void StoreManager::destroySms(SMSId id)
 {
     __require__(pool);
     
-    Connection* connection = 0L;
+    StorageConnection* connection = 0L;
     unsigned iteration=1;
     while (true)
     {
         try 
         {
-            connection = pool->getConnection();
+            connection = (StorageConnection *)pool->getConnection();
             doDestroySms(connection, id);
             pool->freeConnection(connection);
             break;
@@ -347,7 +347,7 @@ void StoreManager::destroySms(SMSId id)
     }
 }
 
-void StoreManager::doReplaceSms(Connection* connection, 
+void StoreManager::doReplaceSms(StorageConnection* connection, 
     SMSId id, const Address& oa, 
     const Body& newBody, uint8_t deliveryReport,
     time_t validTime, time_t waitTime)
@@ -406,13 +406,13 @@ void StoreManager::replaceSms(SMSId id, const Address& oa,
 {
     __require__(pool);
     
-    Connection* connection = 0L;
+    StorageConnection* connection = 0L;
     unsigned iteration=1;
     while (true)
     {
         try 
         {
-            connection = pool->getConnection();
+            connection = (StorageConnection *)pool->getConnection();
             doReplaceSms(connection, id, oa, newBody,
                          deliveryReport, validTime, waitTime);
             pool->freeConnection(connection);
@@ -436,7 +436,7 @@ void StoreManager::replaceSms(SMSId id, const Address& oa,
     }
 } 
 
-void StoreManager::doChangeSmsStateToEnroute(Connection* connection,
+void StoreManager::doChangeSmsStateToEnroute(StorageConnection* connection,
     SMSId id, const Descriptor& dst, uint8_t failureCause, time_t nextTryTime) 
         throw(StorageException, NoSuchMessageException)
 {
@@ -474,13 +474,13 @@ void StoreManager::changeSmsStateToEnroute(SMSId id,
 {
     __require__(pool);
     
-    Connection* connection = 0L;
+    StorageConnection* connection = 0L;
     unsigned iteration=1;
     while (true)
     {
         try 
         {
-            connection = pool->getConnection();
+            connection = (StorageConnection *)pool->getConnection();
             doChangeSmsStateToEnroute(connection, id, dst,
                                       failureCause, nextTryTime);
             pool->freeConnection(connection);
@@ -504,7 +504,7 @@ void StoreManager::changeSmsStateToEnroute(SMSId id,
     }
 }
 
-void StoreManager::doChangeSmsStateToDelivered(Connection* connection, 
+void StoreManager::doChangeSmsStateToDelivered(StorageConnection* connection, 
     SMSId id, const Descriptor& dst)
         throw(StorageException, NoSuchMessageException)
 {
@@ -538,13 +538,13 @@ void StoreManager::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
 {
     __require__(pool);
     
-    Connection* connection = 0L;
+    StorageConnection* connection = 0L;
     unsigned iteration=1;
     while (true)
     {
         try 
         {
-            connection = pool->getConnection();
+            connection = (StorageConnection *)pool->getConnection();
             doChangeSmsStateToDelivered(connection, id, dst);
             archiver->incrementFinalizedCount();
             pool->freeConnection(connection);
@@ -568,9 +568,10 @@ void StoreManager::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
     }
 }
 
-void StoreManager::doChangeSmsStateToUndeliverable(Connection* connection, 
-    SMSId id, const Descriptor& dst, uint8_t failureCause)
-       throw(StorageException, NoSuchMessageException)
+void StoreManager::doChangeSmsStateToUndeliverable(
+    StorageConnection* connection, SMSId id, 
+        const Descriptor& dst, uint8_t failureCause)
+            throw(StorageException, NoSuchMessageException)
 {
     __require__(connection);
 
@@ -605,13 +606,13 @@ void StoreManager::changeSmsStateToUndeliverable(SMSId id,
 {
     __require__(pool);
     
-    Connection* connection = 0L;
+    StorageConnection* connection = 0L;
     unsigned iteration=1;
     while (true)
     {
         try 
         {
-            connection = pool->getConnection();
+            connection = (StorageConnection *)pool->getConnection();
             doChangeSmsStateToUndeliverable(connection, id,
                                             dst,failureCause);
             archiver->incrementFinalizedCount();
@@ -636,8 +637,9 @@ void StoreManager::changeSmsStateToUndeliverable(SMSId id,
     }
 }
 
-void StoreManager::doChangeSmsStateToExpired(Connection* connection, SMSId id)
-    throw(StorageException, NoSuchMessageException)
+void StoreManager::doChangeSmsStateToExpired(
+    StorageConnection* connection, SMSId id)
+        throw(StorageException, NoSuchMessageException)
 {
     __require__(connection);
 
@@ -667,13 +669,13 @@ void StoreManager::changeSmsStateToExpired(SMSId id)
 {
     __require__(pool);
     
-    Connection* connection = 0L;
+    StorageConnection* connection = 0L;
     unsigned iteration=1;
     while (true)
     {
         try 
         {
-            connection = pool->getConnection();
+            connection = (StorageConnection *)pool->getConnection();
             doChangeSmsStateToExpired(connection, id);
             archiver->incrementFinalizedCount();
             pool->freeConnection(connection);
@@ -697,8 +699,9 @@ void StoreManager::changeSmsStateToExpired(SMSId id)
     }
 }
 
-void StoreManager::doChangeSmsStateToDeleted(Connection* connection, SMSId id) 
-    throw(StorageException, NoSuchMessageException)
+void StoreManager::doChangeSmsStateToDeleted(
+    StorageConnection* connection, SMSId id) 
+        throw(StorageException, NoSuchMessageException)
 {
     __require__(connection);
 
@@ -729,13 +732,13 @@ void StoreManager::changeSmsStateToDeleted(SMSId id)
 {
     __require__(pool);
     
-    Connection* connection = 0L;
+    StorageConnection* connection = 0L;
     unsigned iteration=1;
     while (true)
     {
         try 
         {
-            connection = pool->getConnection();
+            connection = (StorageConnection *)pool->getConnection();
             doChangeSmsStateToDeleted(connection, id);
             archiver->incrementFinalizedCount();
             pool->freeConnection(connection);
@@ -765,7 +768,8 @@ StoreManager::ReadyIdIterator::ReadyIdIterator(time_t retryTime)
     throw(StorageException) : IdIterator()
 {
     connection = StoreManager::pool->getConnection();
-    if (readyStmt = new ReadyByNextTimeStatement(connection, false))
+    readyStmt = new ReadyByNextTimeStatement(connection, false);
+    if (readyStmt)
     {
         readyStmt->bindRetryTime(retryTime);
         connection->check(readyStmt->execute(OCI_DEFAULT, 0, 0));
