@@ -1100,6 +1100,10 @@ void SmscComponent::smeUpdate(const Arguments & args)
   SmeInfo smeInfo;
   fillSmeInfo(smeInfo, args);
   getSmeAdmin()->updateSmeInfo(smeInfo.systemId, smeInfo);
+  Smsc * app;
+  if (isSmscRunning() && (app = smsc_app_runner->getApp())) {
+
+  }
 }
 
 Variant SmscComponent::smeStatus(const Arguments & args)

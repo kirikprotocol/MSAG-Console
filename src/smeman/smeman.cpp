@@ -157,6 +157,13 @@ __synchronized__
   bool internal=r->info.internal;
   r->info=newinfo;
   r->info.internal=internal;
+  {
+    MutexGuard mg(r->mutex);
+    if(r->proxy)
+    {
+      r->proxy->updateSmeInfo(r->info);
+    }
+  }
 }
 
 
