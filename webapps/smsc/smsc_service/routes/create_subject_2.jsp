@@ -9,18 +9,20 @@
   <script language="JavaScript">
     function updateAndClose()
     {
-      var src = window.opener.document.body.all("available_src");
-      var dst = window.opener.document.body.all("available_dst");
-      var oOptionSrc = window.opener.document.createElement("OPTION");
-      oOptionSrc.text="<%=name%>";
-      oOptionSrc.value="<%=name%>";
-      var oOptionDst = window.opener.document.createElement("OPTION");
-      oOptionDst.text="<%=name%>";
-      oOptionDst.value="<%=name%>";
-
-      src.add(oOptionSrc);
-      dst.add(oOptionDst);
-      window.close();
+      if (window.opener != null) {
+        var src = window.opener.document.body.all("available_src");
+        var dst = window.opener.document.body.all("available_dst");
+        var oOptionSrc = window.opener.document.createElement("OPTION");
+        oOptionSrc.text="<%=name%>";
+        oOptionSrc.value="<%=name%>";
+        var oOptionDst = window.opener.document.createElement("OPTION");
+        oOptionDst.text="<%=name%>";
+        oOptionDst.value="<%=name%>";
+  
+        src.add(oOptionSrc);
+        dst.add(oOptionDst);
+        window.close();
+      }
     }
   </script>
 </head>

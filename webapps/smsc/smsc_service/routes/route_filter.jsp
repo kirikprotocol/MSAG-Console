@@ -1,5 +1,5 @@
 <%@ include file="/common/header.jsp"%>
-<%@ include file="menu.jsp" %>
+<%@ include file="/smsc_service/menu.jsp" %>
 <%@ include file="/common/list_selector.jsp"%>
 <form method="post" action="route_filter_2.jsp">
 	<table class="list" cellspacing="0">

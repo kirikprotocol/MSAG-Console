@@ -1,5 +1,5 @@
 <%@ include file="/common/header.jsp"%>
-<%@ include file="menu.jsp" %>
+<%@ include file="/smsc_service/menu.jsp" %>
 <%@ include file="utils.jsp" %>
 <%
 boolean show_source_adresses = process_trigger("show_source_adresses", session, request);
@@ -24,10 +24,10 @@ boolean show_destination_adresses = process_trigger("show_destination_adresses",
             <font color="<%=route.isEnabling() ? "green" : "red"%>"><%=route.getName()%></font>
             <%
             if (show_source_adresses) {
-              %><br><font size="-2"><%=show_sources(route)%></font><%
+              %><br><font style="font-size: small;"><%=show_sources(route)%></font><%
             }
             if (show_destination_adresses) {
-              %><br><font size="-2"><%=show_destinations(route)%></font><%
+              %><br><font style="font-size: small;"><%=show_destinations(route)%></font><%
             }
             %>
           </td>

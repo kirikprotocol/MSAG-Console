@@ -1,4 +1,5 @@
 <%@ include file="/common/header_begin.jsp"%>
+<%@ include file="/common/scripts.jsp"%>
 <%@ include file="utils.jsp"%>
 </head>
 <body>
@@ -7,7 +8,7 @@
   <table class="list" cellspacing="0">
     <tr class="list">
       <th class="list" width="1%" nowrap>Subject&nbsp;name</th>
-      <td class="list" width="99%"><input type="text" name="name"></td>
+      <td class="list" width="99%"><input type="text" name="name" id="subject_name"></td>
     </tr>
     <tr class="list">
       <th class="list" width="1%" nowrap>Default&nbsp;SME</th>
@@ -18,7 +19,7 @@
       <td class="list" width="99%"><textarea name="masks" style="WIDTH: 100%" rows=5></textarea></td>
     </tr>
   </table>
-  <input type="Submit">
+  <input type="Submit" onclick="return checkMasks(masks.value) && checkName(subject_name.value)">
 </form>
 </body>
 </html>

@@ -1,5 +1,5 @@
 <%@ include file="/common/header.jsp"%>
-<%@ include file="menu.jsp" %>
+<%@ include file="/smsc_service/menu.jsp" %>
 <%!
 String showSources(Route route)
 {
