@@ -72,6 +72,7 @@ void Int8Formatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
+            else throw FormattingException("Default value missed (int8).");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -105,6 +106,7 @@ void Int16Formatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
+            else throw FormattingException("Default value missed (int16).");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -138,6 +140,7 @@ void Int32Formatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
+            else throw FormattingException("Default value missed (int32).");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -171,6 +174,7 @@ void Int64Formatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
+            else throw FormattingException("Default value missed (int64).");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -204,6 +208,7 @@ void Uint8Formatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
+            else throw FormattingException("Default value missed (uint8).");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -237,6 +242,7 @@ void Uint16Formatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
+            else throw FormattingException("Default value missed (uint16).");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -270,6 +276,7 @@ void Uint32Formatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
+            else throw FormattingException("Default value missed (uint32).");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -303,6 +310,7 @@ void Uint64Formatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
+            else throw FormattingException("Default value missed (uint64).");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -335,7 +343,9 @@ void StringFormatter::format(std::string& output,
         
         if (!arg || adapter.isNull(arg))
         {
-            str = (def) ? def:0;
+            if (!def) 
+                throw FormattingException("Default value missed (string).");
+            else str = def;
         }
         else if (!adapter.isNull(arg))
         {
@@ -404,6 +414,7 @@ void FloatFormatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
+            else throw FormattingException("Default value missed (float).");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -446,6 +457,7 @@ void DoubleFormatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
+            else throw FormattingException("Default value missed (double).");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -492,6 +504,7 @@ void LongDoubleFormatter::format(std::string& output,
         if (!arg || adapter.isNull(arg))
         {
             if (def) output += def;
+            else throw FormattingException("Default value missed (long-double).");
             return;
         }
         else if (!adapter.isNull(arg))
@@ -574,13 +587,13 @@ void DateTimeFormatter::format(std::string& output,
     }
     else if (!def && !arg)
     {
-        return;
+        throw FormattingException("Default value missed (date).");
     }
     else if (!adapter.isNull(arg))
     {
         date = adapter.getDateTime(arg);
     }
-    else return;
+    else throw FormattingException("Default value missed (date).");
     
     localtime_r(&date, &tmdt); // ???
 
