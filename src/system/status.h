@@ -127,7 +127,7 @@ static const int FACILITYNOTSUPP=1173; // 21 - Facility Not Supported
 static const int ABSENTSUBSCR=1179; // 27 - Absent Subscriber
 static const int SUBSCRBUSYMT=1183; //Subscriber Busy for MT SMS.
 static const int SMDELIFERYFAILURE=1184; //SM Delivery Failure
-static const int MSGWLISTFULL=1185; // 
+static const int MSGWLISTFULL=1185; //
 static const int SYSFAILURE=1186; // 34 - System Failure
 static const int DATAMISSING=1187; // 35 - Data Missing !
 static const int UNEXPDATA=1188; // 36 - Unexpected Data value !
@@ -141,7 +141,7 @@ static const bool errorStatus[1280] = {
 1, //Message Length is invalid
 1, //Command Length is invalid
 1, //Invalid Command ID
-1, //Incorrect BIND Status for given command
+0, //Incorrect BIND Status for given command
 1, //ESME Already in Bound State
 1, //Invalid Priority Flag
 1, //Invalid Registered Delivery Flag
@@ -1256,7 +1256,7 @@ static const bool errorStatus[1280] = {
 1,
 1,
 1,
-1, 
+1,
 0, // MAP_PROVIDER_REASON_BASE, MAP_ABNORMAL_DIALOGUE = 1120
 0, // MAP_PROVIDER_MALFUNCTION = 1121
 0, // MAP_TRANSACTION_RELEASED = 1122
