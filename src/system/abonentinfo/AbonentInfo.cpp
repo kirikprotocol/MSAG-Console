@@ -210,7 +210,7 @@ int AbonentInfoSme::Execute()
     if(cmd->cmdid==smsc::smeman::QUERYABONENTSTATUS_RESP)
     {
       AbonentStatus &as=cmd->get_abonentStatus();
-      Address d=as.addr;
+      Address d=as.sourceAddr;
       __trace2__("AbonentInfo: QueryAbonentStatus->response for %s",
         as.originalAddr.c_str());
 
