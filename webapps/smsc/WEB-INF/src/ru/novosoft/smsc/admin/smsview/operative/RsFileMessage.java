@@ -69,19 +69,28 @@ public class RsFileMessage  extends Message
     sms.setAttempts((int) Message.readUInt32(is));
     sms.setLastResult((int) Message.readUInt32(is));
     try {
-      String address=Message.readString(is,Message.readUInt8(is)+2);
+      int len=Message.readUInt8(is);
+      String type=Message.readString(is,1);
+      String plan=Message.readString(is,1);
+      String address=Message.readString(is,len);
       sms.setOriginatingAddress(address);
     } catch (AdminException e) {
       throw new IOException(e.getMessage());
     }
     try {
-      String address=Message.readString(is,Message.readUInt8(is)+2);
+      int len=Message.readUInt8(is);
+      String type=Message.readString(is,1);
+      String plan=Message.readString(is,1);
+      String address=Message.readString(is,len);
       sms.setDestinationAddress(address);
     } catch (AdminException e) {
       throw new IOException(e.getMessage());
     }
     try {
-      String address=Message.readString(is,Message.readUInt8(is)+2);
+      int len=Message.readUInt8(is);
+      String type=Message.readString(is,1);
+      String plan=Message.readString(is,1);
+      String address=Message.readString(is,len);
       sms.setDealiasedDestinationAddress(address);
     } catch (AdminException e) {
       throw new IOException(e.getMessage());

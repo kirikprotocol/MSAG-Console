@@ -29,7 +29,9 @@ public class SmsOperativeSource extends SmsSource
   {
     //  context = ArchiveDaemonContext.getInstance(appContext);
     Smsc smsc = appContext.getSmsc();
-    String absolutePath = smsc.getConfigFolder().getAbsolutePath();
+    String configPath = smsc.getConfigFolder().getAbsolutePath();
+    int len=configPath.lastIndexOf("\\");
+    String absolutePath=configPath.substring(0,len);
     Config config = smsc.getSmscConfig();
 
     try {
@@ -130,7 +132,7 @@ public class SmsOperativeSource extends SmsSource
     SmsRow sms = ((RsFileMessage) responce).getSms();
 
     if (needExpression(query.getSmsId())) {
-      if (String.valueOf(sms.getId()).equalsIgnoreCase(query.getSmsId())) return false;
+      if (!String.valueOf(sms.getId()).equalsIgnoreCase(query.getSmsId())) allowed = false;
     }
     String abAddress = query.getAbonentAddress();
     String smsOrAdd = sms.getOriginatingAddress();
@@ -150,7 +152,7 @@ public class SmsOperativeSource extends SmsSource
       if (needExpression(query.getToAddress()) && needSmsExpression(smsDDAdd)) {
         if (!smsDDAdd.equalsIgnoreCase(query.getToAddress())) allowedDDAddress = false;
       }
-      if (!allowedOrAddress && !allowedDDAddress) allowedAddress = false;
+      if (!allowedOrAddress || !allowedDDAddress) allowedAddress = false;
     }
     String RouteId = query.getRouteId();
     String smsRouteId = sms.getRouteId();
@@ -192,7 +194,7 @@ public class SmsOperativeSource extends SmsSource
     if (query.getLastResult() != SmsQuery.SMS_UNDEFINED_VALUE) {// list.add("LAST_RESULT=" + query.getLastResult());
       if (sms.getLastResult() != query.getLastResult()) allowedLastResult = false;
     }
-    return allowedSmsId && allowedAbAddress && allowedAddress && allowedRouteId && allowedSmeId &&
+    return allowed && allowedSmsId && allowedAbAddress && allowedAddress && allowedRouteId && allowedSmeId &&
             allowedSrcSmeId && allowedDstSmeId && allowedFromTime && allowedTillTime && allowedStatus &&
             allowedLastResult;
   }
