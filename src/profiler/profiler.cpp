@@ -177,6 +177,7 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   __trace2__("profiler: update %s",addrbuf);
   statement->setString(3,addrbuf);
   statement->executeUpdate();
+  connection->commit();
 }
 
 void Profiler::dbInsert(const Address& addr,const Profile& profile)
@@ -199,6 +200,7 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   statement->setInt8(2, profile.reportoptions);
   statement->setInt8(3, profile.codepage);
   statement->executeUpdate();
+  connection->commit();
 }
 
 static const int _update_report=1;
