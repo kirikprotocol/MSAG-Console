@@ -90,6 +90,12 @@ public:
     if(key>=SOCKET_MAX_KEY)return NULL;
     return data[key];
   }
+  int setTimeOut(int newto)
+  {
+    int old=timeOut;
+    timeOut=newto;
+    return old;
+  }
 };//Socket
 
 };//network
