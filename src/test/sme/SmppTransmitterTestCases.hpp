@@ -15,59 +15,37 @@ namespace sme {
 using log4cpp::Category;
 using smsc::sme::SmppSession;
 using namespace smsc::smpp; //pdu
-using namespace smsc::test::util; //TCResult, BaseTestCases
+using namespace smsc::test::util; //CheckList, BaseTestCases
 using namespace smsc::test::core; //SmeRegistry, PduRegistry, ...
-
-const char* const TC_SUBMIT_SM_SYNC = "submitSmSync";
-const char* const TC_SUBMIT_SM_ASYNC = "submitSmAsync";
-const char* const TC_SUBMIT_SM_ASSERT = "submitSmAssert";
-
-/**
- * Абстрактный класс для сбора статистики по billing и archived pdu.
- */
-struct StatHandler
-{
-	virtual void updateStat(bool billing, bool archived) = NULL;
-};
 
 class SmppTransmitterTestCases : BaseTestCases
 {
 public:
 	SmppTransmitterTestCases(SmppSession* session, const SmeSystemId& systemId,
-		const Address& smeAddr, const SmeRegistry* smeReg, StatHandler* statHandler,
-		RouteChecker* routeChecker, SmppPduChecker* pduChecker);
+		const Address& smeAddr, const SmeRegistry* smeReg,
+		RouteChecker* routeChecker, SmppPduChecker* pduChecker, CheckList* chkList);
 	
 	virtual ~SmppTransmitterTestCases() {}
 
 	/**
-	 * Синхронная отправка submit_sm pdu другим sme.
+	 * Отправка submit_sm pdu другим sme.
 	 */
-	TCResult* submitSmSync(int num);
-
-	/**
-	 * Асинхронная отправка submit_sm pdu другим sme.
-	 */
-	TCResult* submitSmAsync(int num);
+	void submitSm(bool sync, int num);
 
 	/**
 	 * Заполнение и отправка submit_sm pdu с недопустимыми значениями полей.
 	 */
-	TCResult* submitSmAssert(int num);
+	void submitSmAssert(int num);
 
 	/**
-	 * Синхронное замещение ранее отправленной submit_sm pdu.
+	 * Замещение ранее отправленной submit_sm pdu.
 	 */
-	TCResult* replaceSmSync(int num);
-
-	/**
-	 * Асинхронное замещение ранее отправленнй submit_sm pdu.
-	 */
-	TCResult* replaceSmAsync(int num);
+	void replaceSm(bool sync, int num);
 
 	/**
 	 * Заполнение и отправка replace_sm pdu с недопустимыми значениями полей.
 	 */
-	TCResult* replaceSmAssert(int num);
+	void replaceSmAssert(int num);
 	
 	/*
 		virtual PduSubmitSmResp* submit(PduSubmitSm& pdu)=0;
@@ -91,15 +69,21 @@ private:
 	const Address smeAddr;
 	const SmeRegistry* smeReg;
 	PduRegistry* pduReg;
-	StatHandler* statHandler;
 	RouteChecker* routeChecker;
 	SmppPduChecker* pduChecker;
+	CheckList* chkList;
 
-	void fillSubmitSmPduData(PduData* pduData, PduSubmitSm* pdu,
-		PduData* replacePduData);
-	vector<int> submitAndRegisterSmSync(PduSubmitSm* pdu, PduData* replacePduData);
-	vector<int> submitAndRegisterSmAsync(PduSubmitSm* pdu, PduData* replacePduData);
-	TCResult* submitSm(const char* tc, bool sync, int num);
+	PduData* getNonReplaceEnrotePdu();
+	PduData* getReplaceEnrotePdu();
+	PduData* getNonReplaceRescheduledEnrotePdu();
+	template <class Message>
+	void checkRegisteredDelivery(Message& m);
+	PduData* registerSubmitSm(PduSubmitSm* pdu, PduData* replacePduData);
+	void processSubmitSmSync(PduData* pduData, PduSubmitSmResp* respPdu);
+	void processSubmitSmAsync(PduData* pduData, PduSubmitSmResp* respPdu);
+	PduData* registerReplaceSm(PduReplaceSm* pdu, PduData* replacePduData);
+	void processReplaceSmSync(PduData* pduData, PduReplaceSmResp* respPdu);
+	void processReplaceSmAsync(PduData* pduData, PduReplaceSmResp* respPdu);
 };
 
 }

@@ -4,6 +4,7 @@
 #include "smpp/smpp_structures.h"
 #include "test/core/PduRegistry.hpp"
 #include "test/core/RouteChecker.hpp"
+#include "test/util/CheckList.hpp"
 #include <set>
 #include <vector>
 
@@ -16,21 +17,29 @@ using std::vector;
 using smsc::test::core::PduRegistry;
 using smsc::test::core::RouteChecker;
 using smsc::test::core::PduData;
+using smsc::test::util::CheckList;
 using namespace smsc::smpp; //pdu
 
 class SmppPduChecker
 {
 public:
-	SmppPduChecker(PduRegistry* pduReg, const RouteChecker* routeChecker);
+	SmppPduChecker(PduRegistry* pduReg, const RouteChecker* routeChecker,
+		CheckList* chkList);
 	~SmppPduChecker() {}
 	
 	set<int> checkSubmitSm(PduData* pduData);
-	vector<int> checkSubmitSmResp(PduData* pduData, PduSubmitSmResp& respPdu,
+	void processSubmitSmResp(PduData* pduData, PduSubmitSmResp& respPdu,
+		time_t respTime);
+	void processReplaceSmResp(PduData* pduData, PduReplaceSmResp& respPdu,
 		time_t respTime);
 
 private:
 	const RouteChecker* routeChecker;
 	PduRegistry* pduReg;
+	CheckList* chkList;
+
+	template <class Resp>
+	void processResp(PduData* pduData, Resp& respPdu, time_t respTime);
 };
 
 }

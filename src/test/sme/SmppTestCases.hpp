@@ -12,14 +12,8 @@ namespace sme {
 using log4cpp::Category;
 using smsc::sme::SmppSession;
 using smsc::sme::SmeConfig;
-using namespace smsc::test::util; //TCResult, BaseTestCases
+using namespace smsc::test::util; //BaseTestCases, CheckList
 using namespace smsc::test::core; //SmeRegistry, PduRegistry, ...
-
-//implemented
-const char* const TC_BIND_CORRECT_SME = "bindCorrectSme";
-const char* const TC_BIND_INCORRECT_SME = "bindIncorrectSme";
-const char* const TC_CHECK_MISSING_PDU = "checkMissingPdu";
-const char* const TC_UNBIND = "unbind";
 
 /**
  * Этот класс содержит все test cases необходимые для тестирования sme.
@@ -31,7 +25,7 @@ public:
 	SmppTestCases(const SmeConfig& config, const SmeSystemId& systemId,
 		const Address& smeAddr, const SmeRegistry* smeReg,
 		const AliasRegistry* aliasReg, const RouteRegistry* routeReg,
-		ResultHandler* resultHandler, StatHandler* statHandler); //throws Exception
+		CheckList* chkList); //throws Exception
 	
 	virtual ~SmppTestCases();
 
@@ -48,22 +42,22 @@ public:
 	/**
 	 * Bind sme зарегистрированной в smsc.
 	 */
-	TCResult* bindCorrectSme(int num);
+	void bindCorrectSme(int num);
 
 	/**
 	 * Bind sme с неправильными параметрами.
 	 */
-	TCResult* bindIncorrectSme(int num);
+	void bindIncorrectSme(int num);
 	
 	/**
 	 * Все подтверждений доставки, нотификации и sms доставляются и не теряются.
 	 */
-	TCResult* checkMissingPdu();
+	void checkMissingPdu();
 	
 	/**
 	 * Unbind для sme.
 	 */
-	TCResult* unbind();
+	void unbind();
 
 protected:
 	virtual Category& getLog();
@@ -83,10 +77,11 @@ private:
 	SmppPduChecker* pduChecker;
 	SmppReceiverTestCases* receiver;
 	SmppTransmitterTestCases* transmitter;
+	CheckList* chkList;
 
-	int checkSubmitTime(time_t checkTime);
-	int checkWaitTime(time_t checkTime);
-	int checkValidTime(time_t checkTime);
+	void checkSubmitTime(time_t checkTime);
+	void checkWaitTime(time_t checkTime);
+	void checkValidTime(time_t checkTime);
 };
 
 }

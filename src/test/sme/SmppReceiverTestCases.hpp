@@ -18,28 +18,10 @@ namespace sme {
 using log4cpp::Category;
 using smsc::sme::SmppBaseReceiver;
 using smsc::sme::SmppSession;
+using smsc::test::util::CheckList;
 using namespace smsc::smpp; //pdu
-using namespace smsc::test::util; //TCResult, BaseTestCases
+using namespace smsc::test::util; //BaseTestCases
 using namespace smsc::test::core; //SmeRegistry, PduRegistry, ...
-
-//implemented
-const char* const TC_PROCESS_SUBMIT_SM_RESP = "processSubmitSmResp";
-const char* const TC_PROCESS_DELIVERY_SM = "processDeliverySm";
-const char* const TC_PROCESS_NORMAL_SMS = "processNormalSms";
-const char* const TC_PROCESS_DELIVERY_RECEIPT = "processDeliveryReceipt";
-const char* const TC_PROCESS_INTERMEDIATE_NOTIFICATION =
-	"processIntermediateNotification";
-const char* const TC_HANDLE_ERROR = "handleError";
-const char* const TC_SEND_DELIVERY_SM_RESP = "sendDeliverySmResp";
-
-/**
- * Абстрактный класс для обработки результатов тест кейсов для
- * асинхронных pdu.
- */
-struct ResultHandler
-{
-	virtual void process(TCResult* res) = NULL;
-};
 
 /**
  * Тест кейсы для обработки результатов асинхронных pdu.
@@ -49,8 +31,8 @@ class SmppReceiverTestCases : BaseTestCases, public SmppBaseReceiver
 public:
 	SmppReceiverTestCases(const SmeSystemId& systemId, const Address& smeAddr,
 		const SmeRegistry* smeReg, const AliasRegistry* aliasReg,
-		const RouteRegistry* routeReg, ResultHandler* handler,
-		RouteChecker* routeChecker, SmppPduChecker* pduChecker);
+		const RouteRegistry* routeReg, RouteChecker* routeChecker,
+		SmppPduChecker* pduChecker, CheckList* chkList);
 
 	virtual ~SmppReceiverTestCases() {}
 
@@ -59,41 +41,42 @@ public:
 	/**
 	 * Отправка синхронного или асинхронного deliver_sm_resp.
 	 */
-	TCResult* sendDeliverySmResp(PduDeliverySm& pdu, bool sendResp,
-		bool& sync, bool& accepted, int num);
+	bool sendDeliverySmResp(PduDeliverySm& pdu, int num);
 
 	/**
-	 * Получение submit_sm_resp pdu для асинхронного submit_sm реквеста.
+	 * Обработка submit_sm_resp pdu для асинхронного submit_sm реквеста.
 	 */
 	virtual void processSubmitSmResp(PduSubmitSmResp &pdu);
 
 	/**
-	 * Получение асинхронного deliver_sm pdu.
+	 * Обработка replace_sm_resp pdu для асинхронного replace_sm реквеста.
+	 */
+	virtual void processReplaceSmResp(PduReplaceSmResp &pdu);
+
+	/**
+	 * Обработка асинхронного deliver_sm pdu.
 	 */
 	virtual void processDeliverySm(PduDeliverySm &pdu);
 	
 	/**
 	 * Сообщения правильно доставляются от одного sme другому.
 	 */
-	TCResult* processNormalSms(PduDeliverySm &pdu, time_t recvTime, bool accepted);
+	void processNormalSms(PduDeliverySm &pdu, time_t recvTime);
 
 	/**
 	 * Подтверждения доставки (delivery receipts) работают правильно.
 	 */
-	TCResult* processDeliveryReceipt(PduDeliverySm &pdu,
-		time_t recvTime, bool accepted);
+	void processDeliveryReceipt(PduDeliverySm &pdu, time_t recvTime);
 
 	/**
 	 * Промежуточные нотификации (intermediate notifications) работают правильно.
 	 */
-	TCResult* processIntermediateNotification(PduDeliverySm &pdu,
-		time_t recvTime, bool accepted);
+	void processIntermediateNotification(PduDeliverySm &pdu, time_t recvTime);
 	
 	//not implemented
 	virtual void processGenericNack(PduGenericNack &pdu);
 	virtual void processDataSm(PduDataSm &pdu);
 	virtual void processMultiResp(PduMultiSmResp &pdu);
-	virtual void processReplaceSmResp(PduReplaceSmResp &pdu);
 	virtual void processDataSmResp(PduDataSmResp &pdu);
 	virtual void processQuerySmResp(PduQuerySmResp &pdu);
 	virtual void processCancelSmResp(PduCancelSmResp &pdu);
@@ -115,9 +98,9 @@ private:
 	PduRegistry* pduReg;
 	const AliasRegistry* aliasReg;
 	const RouteRegistry* routeReg;
-	ResultHandler* resultHandler;
 	RouteChecker* routeChecker;
 	SmppPduChecker* pduChecker;
+	CheckList* chkList;
 };
 
 }
