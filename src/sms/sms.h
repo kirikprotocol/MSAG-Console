@@ -548,6 +548,7 @@ public:
           __require__(value!=0);
           size+=value->length()+4+1; 
         }
+				__trace2__("TemporaryBodyStr size: %d",size);
 				return size;
       }
       
@@ -628,6 +629,7 @@ public:
           //size+=value->length(); 
 					size+=4+4;
         }
+				__trace2__("TemporaryBodyInt size: %d",size);
 				return size;
       }
       
@@ -805,9 +807,10 @@ public:
         
         int getRequiredBufferSize() const
         {
-          return temporaryBodyStr.getRequiredBufferSize()+
+          int size = temporaryBodyStr.getRequiredBufferSize()+
                  temporaryBodyInt.getRequiredBufferSize();
-
+					__trace2__("RequiredBufferSize: %d",size);
+					return size;
         };
         
         void decode(uint8_t* buffer,int length)
