@@ -236,6 +236,9 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
   {
     
     time_t t = sms->getSubmitTime();
+    if( isrcpt && sms->hasIntProperty(Tag::SMSC_RECEIPTED_MSG_SUBMIT_TIME) ) {
+      t = sms->getIntProperty(Tag::SMSC_RECEIPTED_MSG_SUBMIT_TIME);
+    }
 //    time(&t);
     struct tm tms;
     localtime_r(&t,&tms);
