@@ -516,6 +516,7 @@ inline bool fetchSmsFromDataSmPdu(PduDataSm* pdu,SMS* sms,bool forceDC=false)
   }
 
   fetchOptionals(pdu->optional,sms);
+  sms->setEServiceType(pdu->data.get_serviceType());
   if(pdu->optional.has_qosTimeToLive())
   {
     sms->setValidTime(time(NULL)+pdu->optional.get_qosTimeToLive());
