@@ -8,11 +8,19 @@
 package ru.novosoft.smsc.admin.console.commands;
 
 
-public class SubjectViewCommand implements Command
+import ru.novosoft.smsc.admin.console.SmscCommand;
+import ru.novosoft.smsc.admin.console.commands.exceptions.CommandProcessException;
+import ru.novosoft.smsc.admin.smsc_service.Smsc;
+
+public class SubjectViewCommand extends SmscCommand
 {
     private final static String OPTION_SUBJECT = "subject";
 
-    public String process(String cmd) {
+    public SubjectViewCommand(Smsc smsc) {
+        super(smsc);
+    }
+
+    public String process(String cmd) throws CommandProcessException {
         return "SubjectViewCommand";
     }
 }

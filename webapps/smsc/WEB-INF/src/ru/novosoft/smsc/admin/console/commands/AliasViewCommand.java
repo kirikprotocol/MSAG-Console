@@ -13,7 +13,6 @@ import ru.novosoft.smsc.admin.console.commands.exceptions.CommandProcessExceptio
 import ru.novosoft.smsc.admin.console.commands.exceptions.CommandParseException;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.alias.Alias;
-import ru.novosoft.smsc.jsp.util.tables.impl.AliasQuery;
 
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -44,11 +43,11 @@ public class AliasViewCommand extends SmscCommand
         String out;
         if (alias == null || alias.length() == 0) {
             Iterator i = smsc.getAliases().iterator();
-            out = (i.hasNext()) ? "Aliases:\r\n" : "No aliases defined";
+            out = (i.hasNext()) ? "Aliases:" : "No aliases defined";
             while (i.hasNext()) {
                 Alias smscAlias = (Alias)i.next();
                 if (smscAlias != null) {
-                    out += showAlias(smscAlias) + "\r\n";
+                    out += "\r\n" + showAlias(smscAlias);
                 }
             }
         }

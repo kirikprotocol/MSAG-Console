@@ -8,16 +8,16 @@
 package ru.novosoft.smsc.admin.console.commands;
 
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
+import ru.novosoft.smsc.admin.console.SmscCommand;
+import ru.novosoft.smsc.admin.console.commands.exceptions.CommandProcessException;
 
-public class ApplyCommand implements Command
+public class ApplyCommand extends SmscCommand
 {
-    private Smsc smsc;
-
     public ApplyCommand(Smsc smsc) {
-        this.smsc = smsc;
+        super(smsc);
     }
 
-    public String process(String cmd)
+    public String process(String cmd) throws CommandProcessException
     {
         String output = "";
         try {

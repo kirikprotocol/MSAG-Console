@@ -7,6 +7,8 @@
  */
 package ru.novosoft.smsc.admin.console;
 
+import ru.novosoft.smsc.admin.console.commands.exceptions.CommandProcessException;
+
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
@@ -48,7 +50,12 @@ public class Session extends Thread
                     writer.flush(); sleep(1000);
                     break;
                 }
-                String output = owner.processCommand(input.trim());
+                String output;
+                try {
+                    output = owner.processCommand(input.trim());
+                } catch (CommandProcessException e) {
+                    output = "Failed. "+e.getMessage();
+                }
                 writer.println(output+'\r');
                 writer.flush();
             }

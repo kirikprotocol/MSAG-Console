@@ -8,11 +8,20 @@
 package ru.novosoft.smsc.admin.console.commands;
 
 
-public class SubjectDeleteCommand implements Command
+import ru.novosoft.smsc.admin.console.Command;
+import ru.novosoft.smsc.admin.console.SmscCommand;
+import ru.novosoft.smsc.admin.console.commands.exceptions.CommandProcessException;
+import ru.novosoft.smsc.admin.smsc_service.Smsc;
+
+public class SubjectDeleteCommand extends SmscCommand
 {
     private final static String OPTION_SUBJECT = "subject";
 
-    public String process(String cmd) {
+    public SubjectDeleteCommand(Smsc smsc) {
+        super(smsc);
+    }
+
+    public String process(String cmd) throws CommandProcessException {
         return "SubjectDeleteCommand";
     }
 }

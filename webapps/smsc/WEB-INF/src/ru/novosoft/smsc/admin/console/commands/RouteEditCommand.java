@@ -8,7 +8,11 @@
 package ru.novosoft.smsc.admin.console.commands;
 
 
-public class RouteEditCommand implements Command
+import ru.novosoft.smsc.admin.console.SmscCommand;
+import ru.novosoft.smsc.admin.console.commands.exceptions.CommandProcessException;
+import ru.novosoft.smsc.admin.smsc_service.Smsc;
+
+public class RouteEditCommand extends SmscCommand
 {
     private final static String OPTION_ROUTE = "route";
     private final static String OPTION_BR = "br";
@@ -23,7 +27,11 @@ public class RouteEditCommand implements Command
     private final static String OPTION_MASKS = "masks";
     private final static String OPTION_SME = "sme";
 
-    public String process(String cmd) {
+    public RouteEditCommand(Smsc smsc) {
+        super(smsc);
+    }
+
+    public String process(String cmd) throws CommandProcessException {
         return "RouteEditCommand";
     }
 }

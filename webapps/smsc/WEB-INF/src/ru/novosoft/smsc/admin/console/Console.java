@@ -12,6 +12,7 @@ import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.util.config.Config;
 
 import ru.novosoft.smsc.admin.console.commands.*;
+import ru.novosoft.smsc.admin.console.commands.exceptions.*;
 
 import java.net.Socket;
 import java.net.ServerSocket;
@@ -56,37 +57,44 @@ public class Console extends Thread
     {
         commands = new CommandGroup();
 
-        CommandGroup alias = new CommandGroup();
-        alias.register(ACTION_ADD, new AliasAddCommand());
-        alias.register(ACTION_DELETE, new AliasDeleteCommand());
-        alias.register(ACTION_EDIT, new AliasEditCommand());
-        alias.register(ACTION_VIEW, new AliasViewCommand());
-        commands.register(COMMAND_ALIAS, alias);
+        try {
+            CommandGroup alias = new CommandGroup();
+            alias.register(ACTION_ADD, new AliasAddCommand(smsc));
+            alias.register(ACTION_DELETE, new AliasDeleteCommand(smsc));
+            alias.register(ACTION_EDIT, new AliasEditCommand(smsc));
+            alias.register(ACTION_VIEW, new AliasViewCommand(smsc));
+            commands.register(COMMAND_ALIAS, alias);
 
-        CommandGroup profile = new CommandGroup();
-        profile.register(ACTION_ADD, new ProfileAddCommand());
-        profile.register(ACTION_DELETE, new ProfileDeleteCommand());
-        profile.register(ACTION_EDIT, new ProfileEditCommand());
-        commands.register(COMMAND_PROFILE, profile);
+            CommandGroup profile = new CommandGroup();
+            profile.register(ACTION_ADD, new ProfileAddCommand(smsc));
+            profile.register(ACTION_DELETE, new ProfileDeleteCommand(smsc));
+            profile.register(ACTION_EDIT, new ProfileEditCommand(smsc));
+            commands.register(COMMAND_PROFILE, profile);
 
-        CommandGroup subject = new CommandGroup();
-        subject.register(ACTION_ADD, new SubjectAddCommand());
-        subject.register(ACTION_DELETE, new SubjectDeleteCommand());
-        subject.register(ACTION_VIEW, new SubjectViewCommand());
-        subject.register(ACTION_EDIT, new SubjectEditCommand());
-        commands.register(COMMAND_SUBJECT, subject);
+            CommandGroup subject = new CommandGroup();
+            subject.register(ACTION_ADD, new SubjectAddCommand(smsc));
+            subject.register(ACTION_DELETE, new SubjectDeleteCommand(smsc));
+            subject.register(ACTION_VIEW, new SubjectViewCommand(smsc));
+            subject.register(ACTION_EDIT, new SubjectEditCommand(smsc));
+            commands.register(COMMAND_SUBJECT, subject);
 
-        CommandGroup route = new CommandGroup();
-        route.register(ACTION_ADD, new RouteAddCommand());
-        route.register(ACTION_DELETE, new RouteDeleteCommand());
-        route.register(ACTION_EDIT, new RouteEditCommand());
-        commands.register(COMMAND_ROUTE, route);
+            CommandGroup route = new CommandGroup();
+            route.register(ACTION_ADD, new RouteAddCommand(smsc));
+            route.register(ACTION_DELETE, new RouteDeleteCommand(smsc));
+            route.register(ACTION_EDIT, new RouteEditCommand(smsc));
+            commands.register(COMMAND_ROUTE, route);
 
-        ApplyCommand apply = new ApplyCommand(smsc);
-        commands.register(COMMAND_APPLY, apply);
+            ApplyCommand apply = new ApplyCommand(smsc);
+            commands.register(COMMAND_APPLY, apply);
+        }
+        catch (CommandRegisterException e) {
+            logger.error("Commands registration failed", e);
+        }
     }
 
-    public String processCommand(String command) {
+    public String processCommand(String command)
+        throws CommandProcessException
+    {
         return commands.process(command);
     }
 

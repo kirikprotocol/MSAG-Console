@@ -8,13 +8,21 @@
 package ru.novosoft.smsc.admin.console.commands;
 
 
-public class ProfileEditCommand implements Command
+import ru.novosoft.smsc.admin.console.SmscCommand;
+import ru.novosoft.smsc.admin.console.commands.exceptions.CommandProcessException;
+import ru.novosoft.smsc.admin.smsc_service.Smsc;
+
+public class ProfileEditCommand extends SmscCommand
 {
     private final static String OPTION_ADDRESS = "address";
     private final static String OPTION_CP = "cp";
     private final static String OPTION_REP = "rep";
 
-    public String process(String cmd) {
+    public ProfileEditCommand(Smsc smsc) {
+        super(smsc);
+    }
+
+    public String process(String cmd) throws CommandProcessException {
         return "ProfileEditCommand";
     }
 }

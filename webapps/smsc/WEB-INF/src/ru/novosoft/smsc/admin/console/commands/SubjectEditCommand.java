@@ -8,13 +8,21 @@
 package ru.novosoft.smsc.admin.console.commands;
 
 
-public class SubjectEditCommand implements Command
+import ru.novosoft.smsc.admin.console.SmscCommand;
+import ru.novosoft.smsc.admin.console.commands.exceptions.CommandProcessException;
+import ru.novosoft.smsc.admin.smsc_service.Smsc;
+
+public class SubjectEditCommand extends SmscCommand
 {
     private final static String OPTION_SUBJECT = "subject";
     private final static String OPTION_ADDMASKS = "addmasks";
     private final static String OPTION_MASKS = "masks";
 
-    public String process(String cmd) {
+    public SubjectEditCommand(Smsc smsc) {
+        super(smsc);
+    }
+
+    public String process(String cmd) throws CommandProcessException {
         return "SubjectEditCommand";
     }
 }
