@@ -55,9 +55,10 @@ void SmppTransmitterTestCases::checkRegisteredDelivery(Message& m)
 	__require__(t <= time(NULL)); //с точностью до секунды
 	if (hasDeliveryReceipt(m, profile) || hasIntermediateNotification(m, profile))
 	{
-		SmppTime t;
 		time_t waitTime = time(NULL) + rand2(sequentialPduInterval, maxWaitTime);
-		time_t validTime = waitTime + rand2(sequentialPduInterval, maxDeliveryPeriod);
+		time_t validTime = SmppUtil::adjustValidTime(waitTime,
+			waitTime + rand2(sequentialPduInterval, maxDeliveryPeriod));
+		SmppTime t;
 		m.set_scheduleDeliveryTime(
 			SmppUtil::time2string(waitTime, t, time(NULL), __numTime__));
 		m.set_validityPeriod(
