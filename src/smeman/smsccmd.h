@@ -68,10 +68,10 @@ struct _SmscCommand
     {
     case DELIVERY:
     case SUBMIT:
-      delete ( (SMS*)dta );
+      delete ( (SMS*)dta );	break;
     case DELIVERY_RESP:
     case SUBMIT_RESP:
-      delete ( (SmsResp*)dta );
+      delete ( (SmsResp*)dta );	break;
     case UNKNOWN:
       __unreachable__("incorrect state dat != NULL && cmdid == UNKNOWN");
     default:
@@ -112,8 +112,8 @@ class SmscCommand
   }
 
 
-	void dispose() // for debuging ;(
-		{ if ( cmd ) delete cmd; }
+  void dispose() // for debuging ;(
+    { if (cmd) unref(cmd); }
 
 public:
   
@@ -172,12 +172,12 @@ public:
     _cmd.dialogId = dialogId;
     return cmd;
   }
-	~SmscCommand() { dispose(); }
-  //SmscCommand() : cmd (0) {}
-  SmscCommand(SmppHeader* pdu=0) : cmd (0)
+  ~SmscCommand() { dispose(); }
+  SmscCommand() : cmd (0) {}
+  SmscCommand(SmppHeader* pdu) : cmd (0)
   {
-    if (!pdu) return;
-		//__require__ ( pdu != NULL );
+    //if (!pdu) return;
+    __require__ ( pdu != NULL );
     auto_ptr<_SmscCommand> _cmd(ref(new _SmscCommand()));
     switch ( pdu->commandId )
     {
