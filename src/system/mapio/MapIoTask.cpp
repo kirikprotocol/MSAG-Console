@@ -82,7 +82,7 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
   MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogId);
   __trace2__("MAP:: dialog with ptr %x, dialogid 0x%x",mdci,dialogId);
   if ( !mdci ) {
-    __trace2__("MAP::dialog is not present")
+    __trace2__("MAP::dialog is not present");
   }else{
   	try{
       __trace2__("MAP::mdci->Et96MapV2ForwardSmMOInd");

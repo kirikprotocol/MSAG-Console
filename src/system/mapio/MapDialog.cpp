@@ -242,9 +242,9 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
   return ET96MAP_E_OK;
 }
 
-ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS& sms)
+ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms)
 {
-
+  return 0;
 }
 
 
