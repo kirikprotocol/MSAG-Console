@@ -1,3 +1,6 @@
+drop table SMS_ACL;
+drop table SMS_ACLINFO;
+
 CREATE TABLE SMS_ACLINFO 
 (
   ID           INTEGER NOT NULL
