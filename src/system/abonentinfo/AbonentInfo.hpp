@@ -5,6 +5,7 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/ThreadedTask.hpp"
 #include "profiler/profiler.hpp"
+#include "util/debug.h"
 
 namespace smsc{
 namespace system{
@@ -25,10 +26,12 @@ public:
 
   ~AbonentInfoSme()
   {
+    __trace__("try to unregister abonentinfo sme");
     try{
       smeman->unregisterSmeProxy(systemId);
     }catch(...)
     {
+      __trace__("failed to unregister abonentinfo sme");
     }
   }
 
