@@ -12,7 +12,7 @@
   try {
     ru.sibinco.smppgw.beans.SmppgwBean bean = (ru.sibinco.smppgw.beans.SmppgwBean) Thread.currentThread().getContextClassLoader().loadClass(className).getConstructor(new Class[0]).newInstance(new Object[0]);
     request.setAttribute("bean", bean);
-    pageContext.setAttribute("bean", bean);
+    jspContext.setAttribute("bean", bean); //!pageContext
     %><jsp:setProperty name="bean" property="*"/><%
     bean.process(request, response);
   } catch (ru.sibinco.smppgw.beans.CancelException e) {

@@ -11,7 +11,7 @@
  attribute name="form_uri"     required="false" %><%@
  attribute name="form_enctype"     required="false"
 %><%
-  if (pageContext.getAttribute("beanClass") == null)
+  if (jspContext.getAttribute("beanClass") == null) //!pageContext
   {
     final StringBuffer buffer = new StringBuffer();
     final String servletPath = request.getServletPath();
@@ -34,7 +34,7 @@
     final String generatedBeanClass = buffer.substring(1);
     try {
       Thread.currentThread().getContextClassLoader().loadClass("ru.sibinco.smppgw.beans." + generatedBeanClass);
-      pageContext.setAttribute("generatedBeanClass", generatedBeanClass);
+      jspContext.setAttribute("generatedBeanClass", generatedBeanClass); //!pageContext
     } catch(ClassNotFoundException e) {
       //skip it
     }
@@ -93,10 +93,10 @@
       <!-- main menu -->
       <sm-mm:menu>
         <sm-mm:section menuId="MENU_SMPPGW_menu" submenuId="MENU_SMPPGW_submenu" name="SMPP&nbsp;Gateway">
+          <sm-mm:item url="gw/status"                name="Status"          title=""/>
           <sm-mm:item url="gw/config"                name="Configuration"   title=""/>
           <sm-mm:item url="gw/providers"             name="Providers"       title=""/>
           <sm-mm:item url="gw/smscs"                 name="Service centers" title=""/>
-          <sm-mm:item url="smsc_service/status.jsp"  name="Status"          title=""/>
           <sm-mm:item url="smsc_service/logging.jsp" name="Logging"         title=""/>
           <sm-mm:item url="gw/users"                 name="Users"           title=""/>
           <sm-mm:item url="gw/resources"             name="Resources"       title=""/>
