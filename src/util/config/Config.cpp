@@ -381,6 +381,8 @@ CStrSet * Config::getChildIntParamNames(const char * const sectionName)
 	
 	getChildParamsFromHash<intParamsType, intParamsType::Iterator, int32_t>
 		(intParams, sectionName, sectionNameLen, *result);
+
+  return result.release();
 }
 
 CStrSet * Config::getChildBoolParamNames(const char * const sectionName)
@@ -392,6 +394,8 @@ CStrSet * Config::getChildBoolParamNames(const char * const sectionName)
 	
 	getChildParamsFromHash<boolParamsType, boolParamsType::Iterator, bool>
 		(boolParams, sectionName, sectionNameLen, *result);
+
+  return result.release();
 }
 
 CStrSet * Config::getChildStrParamNames(const char * const sectionName)

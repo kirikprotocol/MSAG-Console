@@ -188,8 +188,9 @@ RouteConfig::status RouteConfig::reload()
   __trace2__("smsc::util::config::route::RouteConfig - Reload routes");
   clear();
   std::auto_ptr<char> tmp = config_filename;
-  load(tmp.get());
+  status result = load(tmp.get());
   __trace2__("smsc::util::config::route::RouteConfig - loaded %u routes, %u subjects", routes.size(), subjects.GetCount());
+  return result;
 }
 
 RouteConfig::status RouteConfig::store(const char * const filename) const

@@ -170,8 +170,9 @@ AliasConfig::status AliasConfig::reload()
   __trace2__("smsc::util::config::alias::AliasConfig - Reload config");
   clear();
   std::auto_ptr<char> tmp = config_filename;
-  load(tmp.get());
+  status result = load(tmp.get());
   __trace2__("smsc::util::config::alias::AliasConfig - loaded %u records", records.size());
+  return result;
 }
 
 
