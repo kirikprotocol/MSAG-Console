@@ -17,12 +17,18 @@ SmeRegistry::~SmeRegistry()
 	clear();
 }
 
-void SmeRegistry::registerSme(const Address& smeAddr, const SmeInfo& sme)
+bool SmeRegistry::registerSme(const Address& smeAlias, const SmeInfo& sme)
 {
-	SmeData* smeData = new SmeData(smeAddr, sme);
-	addrMap[smeAddr] = smeData;
+	if (addrMap.find(smeAlias) != addrMap.end() ||
+		smeIdMap.find(sme.systemId) != smeIdMap.end())
+	{
+		return false;
+	}
+	SmeData* smeData = new SmeData(smeAlias, sme);
+	addrMap[smeAlias] = smeData;
 	smeIdMap[sme.systemId] = smeData;
-	addrList.push_back(new Address(smeAddr));
+	addrList.push_back(new Address(smeAlias));
+	return true;
 }
 
 void SmeRegistry::deleteSme(const SmeSystemId& smeId)
@@ -34,11 +40,11 @@ void SmeRegistry::deleteSme(const SmeSystemId& smeId)
 	}
 	SmeData* smeData = it->second;
 	smeIdMap.erase(it);
-	bool res = addrMap.erase(smeData->smeAddr);
+	bool res = addrMap.erase(smeData->smeAlias);
 	__require__(res);
 	for (AddressList::iterator it2 = addrList.begin(); it2 != addrList.end(); it2++)
 	{
-		if (SmsUtil::compareAddresses(**it2, smeData->smeAddr))
+		if (SmsUtil::compareAddresses(**it2, smeData->smeAlias))
 		{
 			delete smeData;
 			delete *it2;
@@ -86,9 +92,9 @@ const SmeInfo* SmeRegistry::getSme(const SmeSystemId& smeId) const
 	return (it == smeIdMap.end() ? NULL : &it->second->sme);
 }
 
-PduRegistry* SmeRegistry::getPduRegistry(const Address& smeAddr) const
+PduRegistry* SmeRegistry::getPduRegistry(const Address& smeAlias) const
 {
-	AddressMap::const_iterator it = addrMap.find(smeAddr);
+	AddressMap::const_iterator it = addrMap.find(smeAlias);
 	return (it == addrMap.end() ? NULL : &it->second->pduReg);
 }
 
@@ -114,7 +120,7 @@ void SmeRegistry::dump(FILE* log) const
 	{
 		const SmeData* smeData = it->second;
 		ostringstream os;
-		os << smeData->smeAddr;
+		os << smeData->smeAlias;
 		fprintf(TRACE_LOG_STREAM, "Sme = (systemId = %s, address = %s)\n",
 			smeData->sme.systemId.c_str(), os.str().c_str());
 		smeData->pduReg.dump(TRACE_LOG_STREAM);
