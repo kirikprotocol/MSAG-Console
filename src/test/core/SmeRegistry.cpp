@@ -138,6 +138,11 @@ const Address* SmeRegistry::getRandomAddress() const
 	return addrList[rand0(addrList.size() - 1)];
 }
 
+const vector<const Address*>& SmeRegistry::getAddressList()
+{
+	return addrList;
+}
+
 SmeRegistry::SmeIterator* SmeRegistry::iterator() const
 {
 	return new SmeIterator(smeIdMap.begin(), smeIdMap.end());

@@ -91,6 +91,7 @@ public:
 	PduRegistry* getPduRegistry(const Address& smeAddr) const;
 
 	const Address* getRandomAddress() const;
+	const vector<const Address*>& getAddressList();
 
 	SmeIterator* iterator() const;
 
