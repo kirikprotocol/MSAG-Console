@@ -108,6 +108,11 @@ public abstract class SmsSource
          if( (esmClass & 0x40) == 0x40 ) {
            if(concatInfo != null) {
              int partsCount = concatInfo.length/2;
+             StringBuffer sb = new StringBuffer();
+             for( int i = 0; i < concatInfo.length; i++ ) {
+               sb.append( Integer.toHexString(((int)concatInfo[i]))&0xFF) ).append(' ');
+             }
+             System.out.println("Concat info: "+sb.toString());
              for( int i = 0; i < partsCount; i++ ) {
                int offset = ((((int)concatInfo[i*2])&0xFF)<<8)|(((int)concatInfo[i*2+1])&0xFF);
                int len = text.length-offset;
