@@ -1276,8 +1276,8 @@ USHORT_T Et96MapCloseInd(
         dialog->state = MAPST_CLOSED;
         dialogid_smsc = dialog->dialogid_smsc;
         //throw MAPDIALOG_ERROR(dialog->routeErr,"lisy error");
-        SendErrToSmsc(dialog,dialog->routeErr);
-        DropMapDialog(dialog);
+        SendErrToSmsc(dialog->dialogid_map,dialog->routeErr);
+        DropMapDialog(dialog.get());
       }
       break;
     case MAPST_WaitSmsClose:
