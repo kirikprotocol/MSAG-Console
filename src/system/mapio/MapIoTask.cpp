@@ -194,7 +194,7 @@ USHORT_T  Et96MapOpenInd(
 {
 	__trace2__("MAP::Et96MapOpenInd ssn 0x%x, dalogid 0x%x",lssn,dialogId);
   __trace2__("MAP::Et96MapOpenInd appCtx->type:0x%x, appCtx->version:0x%x ",appCtx->acType,appCtx->version); 
-	try{
+  try{
     MapDialog* mdci = 
 		  MapDialogContainer::getInstance()->createDialog(dialogId,SSN);
     __trace2__("MAP:: create dialog with ptr %x, dialogid 0x%x",mdci,dialogId);
@@ -278,6 +278,20 @@ USHORT_T Et96MapDelimiterInd(
   __trace2__("MAP::Et96MapDelimiterInd lssn 0x%hx, dialogId 0x%hx",lssn,dialogId);
   //USHORT_T result = Et96MapCloseReq( SSN, dialogId, ET96MAP_NORMAL_RELEASE, 0, priorityOrder, 0 );
   //if( result != ET96MAP_E_OK ) return result;
+  MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogId);
+  __trace2__("MAP:: dialog with ptr %x, dialogid 0x%x",mdci,dialogId);
+  if ( !mdci ) {
+    __trace2__("MAP::dialog is not present");
+  }else{
+  	try{
+      __trace2__("MAP::mdci->Et96MapDelimiterInd");
+      mdci->Et96MapDelimiterInd(SSN,dialogId,priorityOrder);
+      __trace2__("MAP::mdci->Et96MapDelimiterInd OK");
+  	}catch(...){
+  		__trace__("MAP::Et96MapDelimiterInd catch exception");
+      CloseAndRemoveDialog(SSN,dialogId);
+  	}
+  }
   return ET96MAP_E_OK;
 }
 

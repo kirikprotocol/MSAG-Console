@@ -451,9 +451,9 @@ void MapDialog::Et96MapDelimiterInd(
   UCHAR_T priorityOrder)
 {
 #if defined USE_MAP
-  __trace2__("MAP::MapDialog::Et96MapDelimiterInd:);
+  __trace2__("MAP::MapDialog::Et96MapDelimiterInd");
   if ( state == MAPST_START ){
-    __trace2__("MAP::MapDialog::Et96MapDelimiterInd: send Req);
+    __trace2__("MAP::MapDialog::Et96MapDelimiterInd: send Req");
     Et96MapDelimiterReq(ssn,dialogId,priorityOrder,0);
   }
 #endif

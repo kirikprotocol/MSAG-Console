@@ -137,6 +137,10 @@ public:
     ET96MAP_INVOKE_ID_T invokeId,
     ET96MAP_ERROR_FORW_SM_MT_T *errorForwardSMmt_sp,
     ET96MAP_PROV_ERR_T *provErrCode_p);
+  virtual void Et96MapDelimiterInd(
+    ET96MAP_LOCAL_SSN_T lssn,
+    ET96MAP_DIALOGUE_ID_T dialogId,
+    UCHAR_T priorityOrder);
 };
 
 /**
