@@ -301,75 +301,118 @@ void Config::removeSection(const char * const sectionName)
 }
 
 void collect_section_names_into_set(CStrSet &result,
-																		const char * const sectionName,
-																		const size_t sectionNameLen,
-																		const char * const name)
+									const char * const sectionName,
+									const size_t sectionNameLen,
+									const char * const name)
 {
 	if (strlen(name) >= sectionNameLen
-			&& name[sectionNameLen] == '.'
-			&& memcmp(name, sectionName, sectionNameLen) == 0)
+		&& name[sectionNameLen] == '.'
+		&& memcmp(name, sectionName, sectionNameLen) == 0)
 	{
 		char* dotpos = strchr(name+sectionNameLen+1, '.');
 		if (dotpos != 0)
 		{
 			char sectName[dotpos - name+1];
 			memcpy(sectName, name, dotpos - name);
-      sectName[dotpos - name] = 0;
+			sectName[dotpos - name] = 0;
 			result.insert(std::string(sectName));
 		}
 	}
 }
 
-template<class _HashType, class _HashIteratorType, class _ValueType>
+void collect_short_section_names_into_set(CStrSet &result,
+										  const char * const sectionName,
+										  const size_t sectionNameLen,
+										  const char * const name)
+{
+	if (strlen(name) >= sectionNameLen
+		&& name[sectionNameLen] == '.'
+		&& memcmp(name, sectionName, sectionNameLen) == 0)
+	{
+		char* dotpos = strchr(name+sectionNameLen+1, '.');
+		if (dotpos != 0)
+		{
+			char sectName[dotpos - name+1];
+			memcpy(sectName, name, dotpos - name);
+			sectName[dotpos - name] = 0;
+			char * shortSectName = strrchr(sectName, '.');
+			if (shortSectName == NULL)
+				shortSectName = sectName;
+			else
+				shortSectName++;
+
+			result.insert(std::string(shortSectName));
+		}
+	}
+}
+
+template<class _HashType, class _HashIteratorType, class _ValueType, void(*collect_func)(CStrSet &,
+												  const char * const ,
+												  const size_t ,
+												  const char * const)>
 void getChildSectionsFromHash(_HashType &hash,
-															const char * const sectionName,
-															size_t sectionNameLen,
-															CStrSet &result)
+							  const char * const sectionName,
+							  size_t sectionNameLen,
+							  CStrSet &result)
 {
 	char *name;
 	_ValueType value;
 	for (_HashIteratorType i = hash.getIterator(); i.Next(name, value); )
 	{
-		collect_section_names_into_set(result, sectionName, sectionNameLen, name);
+		collect_func(result, sectionName, sectionNameLen, name);
 	}
 }
 
 template<class _HashType, class _HashIteratorType, class _ValueType>
 void getChildParamsFromHash(_HashType &hash,
-                            const char * const sectionName,
-														size_t sectionNameLen,
-														CStrSet &result)
+							const char * const sectionName,
+							size_t sectionNameLen,
+							CStrSet &result)
 {
 	char *name;
 	_ValueType value;
-  for (_HashIteratorType i = hash.getIterator(); i.Next(name, value); ) 
-  {
-    if (memcmp(name, sectionName, sectionNameLen) == 0) 
-    {
-      char paramName[strlen(name) -(sectionNameLen +1) +1];
+	for (_HashIteratorType i = hash.getIterator(); i.Next(name, value); ) 
+	{
+		if (memcmp(name, sectionName, sectionNameLen) == 0) 
+		{
+			char paramName[strlen(name) -(sectionNameLen +1) +1];
 			strcpy(paramName, name +(sectionNameLen +1));
-      result.insert(std::string(paramName));
-    }
-  }
+			result.insert(std::string(paramName));
+		}
+	}
 }
 
-CStrSet* Config::getChildSectionNames(const char * const sectionName)
+template<void(*collect_func)(CStrSet &,
+							 const char * const ,
+							 const size_t ,
+							 const char * const)>
+CStrSet* Config::_getChildSectionNames(const char * const sectionName)
 {
 	CStrSet *result = new CStrSet;
 	const size_t sectionNameLen = sectionName[strlen(sectionName)-1] == '.'
 		? strlen(sectionName)-1
 		: strlen(sectionName);
 	
-	getChildSectionsFromHash<intParamsType, intParamsType::Iterator, int32_t>
+	getChildSectionsFromHash<intParamsType, intParamsType::Iterator, int32_t, collect_func>
 		(intParams, sectionName, sectionNameLen, *result);
 
-	getChildSectionsFromHash<boolParamsType, boolParamsType::Iterator, bool>
+	getChildSectionsFromHash<boolParamsType, boolParamsType::Iterator, bool, collect_func>
 		(boolParams, sectionName, sectionNameLen, *result);
 	
-	getChildSectionsFromHash<strParamsType, strParamsType::Iterator, char *>
+	getChildSectionsFromHash<strParamsType, strParamsType::Iterator, char *, collect_func>
 		(strParams, sectionName, sectionNameLen, *result);
 	
 	return result;
+}
+
+CStrSet* Config::getChildSectionNames(const char * const sectionName)
+{
+	return _getChildSectionNames<collect_section_names_into_set>(sectionName);
+}
+
+CStrSet* Config::getChildShortSectionNames(const char * const sectionName)
+{
+	return _getChildSectionNames<collect_short_section_names_into_set>(sectionName);
 }
 
 CStrSet * Config::getChildIntParamNames(const char * const sectionName)

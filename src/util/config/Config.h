@@ -160,11 +160,18 @@ public:
     void removeSection(const char * const sectionName);
 
     CStrSet *getChildSectionNames(const char * const sectionName);
+	CStrSet* getChildShortSectionNames(const char * const sectionName);
     CStrSet *getChildIntParamNames(const char * const sectionName);
     CStrSet *getChildBoolParamNames(const char * const sectionName);
     CStrSet *getChildStrParamNames(const char * const sectionName);
 
 protected:
+	template<void(*collect_func)(CStrSet &,
+								const char * const ,
+								const size_t ,
+								const char * const)>
+	CStrSet* _getChildSectionNames(const char * const sectionName);
+
     typedef Hash<int32_t> intParamsType;
     typedef Hash<char *> strParamsType;
     typedef Hash<bool> boolParamsType;
