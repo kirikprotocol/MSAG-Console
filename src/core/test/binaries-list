@@ -10,3 +10,4 @@
 -core/test/multi multi -lcore-network $(SOCKETLIB) -lcore-threads -lthread
 -core/test/map map -lthread -lcore-threads
 -core/test/a a -lthread -lcore-threads
+core/test/qtest qtest -lcore-threads -lthread

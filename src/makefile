@@ -60,7 +60,7 @@ OS=`uname`
 ifeq ($(OS),Linux)
 export SOCKETLIB=
 else
-SOCKETLIB=-lsocket
+export SOCKETLIB=-lsocket
 endif
 
 

@@ -19,6 +19,12 @@ const char * const ucs2("UCS-2BE");
 const char * const ucs2("UCS-2LE");
 #endif
 
+#ifdef linux
+typedef char** iconvinputarg_t;
+#else
+typedef const char** iconvinputarg_t;
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////
 /// SmscTranscoder
 ///////////////////////////////////////////////////////////////////////////////
@@ -55,7 +61,7 @@ unsigned int SmscTranscoder::transcodeFrom(const XMLByte *const srcData,
   size_t lastInLeft = inbytesleft;
   while (inbytesleft > 0 && outbytesleft > 0) {
     size_t tmp = sizeof(XMLCh);
-    size_t ret = iconv(iconvHandlerFrom, const_cast<char**>(&inbuf), &inbytesleft, &outbuf, &tmp);
+    size_t ret = iconv(iconvHandlerFrom, (iconvinputarg_t)&inbuf, &inbytesleft, &outbuf, &tmp);
     outbytesleft -= (sizeof(XMLCh)-tmp);
     if (ret != (size_t)-1 || errno == E2BIG) {
       *(charSizesPtr++)= lastInLeft - inbytesleft;
@@ -83,7 +89,7 @@ unsigned int SmscTranscoder::transcodeTo(const XMLCh *const srcData,
   size_t outbytesleft = maxBytes;
   const char *inbuf = (const char * const)srcData;
   char * outbuf = (char *)toFill;
-  size_t ret = iconv(iconvHandlerTo, const_cast<char**>(&inbuf), &inbytesleft, &outbuf, &outbytesleft);
+  size_t ret = iconv(iconvHandlerTo, (iconvinputarg_t)&inbuf, &inbytesleft, &outbuf, &outbytesleft);
   if (ret != (size_t)-1) {
     if ((XMLByte*)outbuf < toFill + maxBytes)
       *outbuf = 0;
@@ -100,7 +106,7 @@ bool SmscTranscoder::canTranscodeTo(const unsigned int toCheck) const
   size_t inbytesleft = sizeof(XMLCh);
   char outbuf[4];
   size_t outbytesleft = sizeof(outbuf);
-  size_t ret = iconv(iconvHandlerTo, (char**)&inbuf, &inbytesleft, (char**)&outbuf, &outbytesleft);
+  size_t ret = iconv(iconvHandlerTo, (iconvinputarg_t)&inbuf, &inbytesleft, (char**)&outbuf, &outbytesleft);
   return ret != (size_t)-1;
 }
 

@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
+#include <thread.h>
 #include <errno.h>
 #include <unistd.h>
 #include <vector>
@@ -43,7 +44,7 @@ pid_t Service::start()
         for (rlim_t i=0; i<flim.rlim_max; i++) {
           close(i);
         }
-        
+
         FILE* tmpStream;
         tmpStream = freopen("service.err", "a",  stderr);
         if (!tmpStream)

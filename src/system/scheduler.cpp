@@ -1,5 +1,6 @@
 #include "system/smsc.hpp"
 #include "system/scheduler.hpp"
+#include <thread.h>
 
 namespace smsc{
 namespace system{

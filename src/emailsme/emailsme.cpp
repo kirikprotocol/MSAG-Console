@@ -10,13 +10,17 @@
 #define NAMEDBRACKETS
 #include "util/regexp/RegExp.cpp"
 #include "core/buffers/Array.hpp"
-#include <signal.h>
+
 #include "db/DataSource.h"
 #include "db/DataSourceLoader.h"
 #include "util/templates/Formatters.h"
 #include "util/xml/init.h"
 
 #include "emailsme/util/PipedChild.hpp"
+
+#include <signal.h>
+#include <thread.h>
+
 
 using namespace smsc::sms;
 using namespace smsc::sme;
@@ -714,7 +718,7 @@ extern "C"  void ctrlc(int sig)
 extern "C" void atExitHandler(void)
 {
   smsc::util::xml::TerminateXerces();
-	smsc::logger::Logger::Shutdown();
+  smsc::logger::Logger::Shutdown();
 }
 
 int main(int argc,char* argv[])

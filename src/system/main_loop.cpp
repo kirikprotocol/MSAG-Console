@@ -5,6 +5,7 @@
 #include "smsc.hpp"
 #include <memory>
 #include <vector>
+#include <thread.h>
 
 #include <exception>
 

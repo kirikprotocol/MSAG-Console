@@ -36,7 +36,7 @@ public:
   {
     t.Finish();
     long long ms=t.Get();
-    printf("%s:count=%d,time=%lldms,speed=%.2f/sec\n",msg,count,ms,(double)(count*1000.0L/ms));
+    printf("%s:count=%d,time=%lldms,speed=%.2f/sec\n",msg,count,ms,(double)(count*1000.0/ms));
   }
 protected:
   const char* msg;

@@ -4,6 +4,8 @@
 //#include "admin/smsc_service/SmscComponent.h"
 #include "admin/service/ServiceSocketListener.h"
 
+#include <thread.h>
+
 namespace smsc {
 namespace smppgw {
 
