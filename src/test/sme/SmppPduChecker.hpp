@@ -24,7 +24,7 @@ public:
 	SmppPduChecker(PduRegistry* pduReg, const RouteChecker* routeChecker);
 	~SmppPduChecker() {}
 	
-	set<int> checkSubmitSm(PduSubmitSm* pdu);
+	set<int> checkSubmitSm(PduData* pduData);
 	vector<int> checkSubmitSmResp(PduData* pduData, PduSubmitSmResp& respPdu);
 
 private:
