@@ -19,7 +19,7 @@ inline hrtime_t gethrtime()
   static hrtime_t freq=gethrfreq();
   hrtime_t rv;
   QueryPerformanceCounter((LARGE_INTEGER*)&rv);
-  rv=rv*1000000000i64/freq;
+  rv=rv*1000000000ll/freq;
   return rv;
 }
 #endif
