@@ -20,14 +20,17 @@ public class MscManager
         this.smsc = smsc;
     }
 
-    public List list() {
-        // todo: implement it
+    private List fakeList() {
         ArrayList lst = new ArrayList();
         lst.add(new MscInfo("32133", false, false, 0));
         lst.add(new MscInfo("12345", true, false, 10));
         lst.add(new MscInfo("54321", true, true, 100));
         lst.add(new MscInfo("32177", false, true, 1000));
         return lst;
+    }
+    public List list() {
+        // todo: implement it
+        return fakeList();
     }
     public void register(String msc) {
         // todo: implement it

@@ -35,7 +35,7 @@
 <%
     List mscList = bean.getMscs();
     if (mscList == null || mscList.size() <= 0) {
-    %><div align=left>No commutators defined.</div><%
+    %><div align=left>No commutators defined</div><%
     } else { int posIdx = 0;%>
 <table class=secRep cellspacing=1 width="100%">
 <tr>

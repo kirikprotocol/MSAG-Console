@@ -7,12 +7,15 @@
  */
 package ru.novosoft.smsc.admin.mscman;
 
+import java.util.StringTokenizer;
+
 public class MscInfo
 {
-    private final static String TOTALLY_LOCKED = "Locked totally";
     private final static String MANUAL_LOCKED = "Locked manually";
     private final static String AUT0_LOCKED = "Locked automatically";
     private final static String NOT_LOCKED = "Available";
+
+    private final static String FIELDS_SEPARATOR = ";";
 
     private String   mscNum = "";
     private boolean  mLock  = false;
@@ -20,8 +23,22 @@ public class MscInfo
     private int      fCount = 0;
 
     public MscInfo() {}
-    public MscInfo(String str) {
-        // todo: implement deserialization
+    public MscInfo(String str)
+    {
+        try {
+            StringTokenizer st = new StringTokenizer(str, FIELDS_SEPARATOR);
+            String mscNum = st.nextToken();
+            if (mscNum == null) mscNum = "";
+            String mLockStr = st.nextToken();
+            mLock = (mLockStr == null) ? false:(mLockStr.equalsIgnoreCase("true"));
+            String aLockStr = st.nextToken();
+            aLock = (aLockStr == null) ? false:(aLockStr.equalsIgnoreCase("true"));
+            String fcStr = st.nextToken();
+            fCount = Integer.parseInt(fcStr);
+        } catch (Exception exc) {
+            exc.printStackTrace();
+            // todo: report error here
+        }
     }
     public MscInfo(String mscNum, boolean mLock, boolean aLock, int fCount) {
         this.mscNum = mscNum; this.mLock = mLock;
@@ -35,7 +52,6 @@ public class MscInfo
         this.mscNum = mscNum;
     }
     public String getLockString() {
-        if (mLock && aLock) return TOTALLY_LOCKED;
         if (mLock) return MANUAL_LOCKED;
         if (aLock) return AUT0_LOCKED;
         return NOT_LOCKED;
