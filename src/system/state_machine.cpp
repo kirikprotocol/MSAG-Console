@@ -2977,8 +2977,11 @@ StateType StateMachine::deliveryResp(Tuple& t)
       sms.setIntProperty(Tag::SMSC_DSTCODEPAGE,dc);
       sms.setIntProperty(Tag::SMSC_DIVERTFLAGS,df|DF_UNCOND);
 
-      sms.getMessageBody().dropProperty(Tag::SMSC_CONCATINFO);
-      partitionSms(&sms,dc);
+      if(!sms.hasIntProperty(Tag::SMSC_MERGE_CONCAT))
+      {
+        sms.getMessageBody().dropProperty(Tag::SMSC_CONCATINFO);
+        partitionSms(&sms,dc);
+      }
 
     }else // first part was delivered to original address
     {
