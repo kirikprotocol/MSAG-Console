@@ -387,6 +387,7 @@ public:
 
   void registerSelf(SmeManager* smeman);
   void unregisterSelf(SmeManager* smeman);
+  void abort();
 };
 
 inline

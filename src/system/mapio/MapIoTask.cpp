@@ -230,12 +230,12 @@ void MapIoTask::init(unsigned timeout)
   USHORT_T err;
   __global_bind_counter = 0;
   __pingPongWaitCounter = 0;
-  err = MsgInit(MAXENTRIES);
+  err = EINSS7CpMsgInitNoSig(MAXENTRIES);
   if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgInit, code 0x%hx",err); throw runtime_error("MsgInit error"); }
   err = MsgOpen(MY_USER_ID);
-  if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgOpen, code 0x%hx",err); throw runtime_error("MsgInit error"); }
+  if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgOpen, code 0x%hx",err); throw runtime_error("MsgOpen error"); }
   err = MsgConn(MY_USER_ID,ETSIMAP_ID);
-  if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgConn, code 0x%hx",err); throw runtime_error("MsgInit error"); }
+  if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgConn, code 0x%hx",err); throw runtime_error("MsgConn error"); }
   __trace2__("MAP:: pause self and wait map initialization");
   sleep(timeout);
   __trace2__("MAP:: continue self initialization");
@@ -292,6 +292,13 @@ int MapIoTask::Execute(){
     __trace2__("exception in mapio: %s",e.what());
   }
   return 0;
+}
+
+void MapDialogContainer::abort()
+{
+#ifdef USE_MAP
+  EINSS7CpMsgInitNoSig();
+#endif
 }
 
 int MapTracker::Execute(){

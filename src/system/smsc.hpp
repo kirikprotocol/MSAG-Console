@@ -19,7 +19,7 @@
 #include "system/cancel_agent.hpp"
 #include "system/alert_agent.hpp"
 #include "system/performance.hpp"
-
+#include "system/mapio/MapIoTask.h"
 #include "db/DataSource.h"
 #include "db/DataSourceLoader.h"
 
@@ -242,6 +242,7 @@ public:
       fclose(f);
     }
     statMan->flushStatistics();
+    system::mapio::MapDialogContainer::getInstance()->abort();
     kill(getpid(),9);
   }
 
