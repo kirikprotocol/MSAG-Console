@@ -3141,6 +3141,8 @@ void StateMachine::changeSmsStateToEnroute(SMS& sms,SMSId id,const Descriptor& d
                                            uint32_t failureCause,time_t nextTryTime,
                                            bool skipAttempt)
 {
+  if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x1 ||
+     (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)return;
   smsLog->debug("ENROUTE: msgId=%lld;lr=%d;or=%d;ntt=%u;ac=%d",id,sms.getLastResult(),sms.oldResult,nextTryTime,sms.getAttemptsCount());
   store->changeSmsStateToEnroute(id,d,failureCause,nextTryTime,sms.getAttemptsCount()+(skipAttempt?0:1));
   sms.setNextTime(nextTryTime);

@@ -73,11 +73,16 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
         __trace2__("smeschedcount for %s = %d",si.systemId.c_str(),cfg.smsc->GetSmeScheduleCount(dstIdx,0));
         if(si.schedlimit!=0 && cfg.smsc->GetSmeScheduleCount(dstIdx,0)>=si.schedlimit)
         {
+          __info2__(log,"schedlimit");
           break;
         }
       }
 
-      if(cmd->get_commandId()==SUBMIT && !sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
+      if(cmd->get_commandId()==SUBMIT &&
+         !sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID) &&
+         !ri.suppressDeliveryReports &&
+         (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&3)!=SMSC_TRANSACTION_MSG_MODE &&
+         (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&3)!=SMSC_TRANSACTION_MSG_MODE)
       {
         smsc::profiler::Profile profile=cfg.smsc->getProfiler()->lookup(sms->getOriginatingAddress());
 
@@ -92,6 +97,7 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
           __trace2__("smeschedcount(receipt) for %s=%d",src_proxy->getSystemId(),cfg.smsc->GetSmeScheduleCount(idx,0));
           if(si.schedlimit!=0 && cfg.smsc->GetSmeScheduleCount(idx,0)>=si.schedlimit)
           {
+            __info2__(log,"receipt schedlimit");
             break;
           }
           IntTimeSlotCounter *dsrccnt=getTSC(deliverCnt,idx);
