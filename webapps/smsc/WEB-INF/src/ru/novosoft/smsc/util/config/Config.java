@@ -369,4 +369,44 @@ public class Config implements Cloneable
     return (o1 == null && o2 == null)
             || (o1 != null && o2 != null && o1.equals(o2));
   }
+
+  public boolean isParamEquals(String fullParamName, Object paramValue)
+  {
+    Object o1 = this.params.get(fullParamName);
+    return (o1 == null && paramValue == null)
+            || (o1 != null && paramValue != null && o1.equals(paramValue));
+  }
+
+  public boolean isStringParamEquals(String fullParamName, String paramValue)
+  {
+    Object o1 = this.params.get(fullParamName);
+    if (o1 instanceof String) {
+      String s1 = (String) o1;
+      return ((s1 == null || s1.length() == 0) && (paramValue == null || paramValue.length() == 0))
+              || (s1 != null && s1.length() > 0 && paramValue != null && paramValue.length() > 0 && o1.equals(paramValue));
+    } else
+      return false;
+  }
+
+  public boolean isBooleanParamEquals(String fullParamName, boolean paramValue)
+  {
+    final Object o1 = this.params.get(fullParamName);
+    if (o1 instanceof Boolean) {
+      final Boolean b1 = (Boolean) o1;
+      final boolean v1 = b1 == null ? false : b1.booleanValue();
+      return v1 == paramValue;
+    } else
+      return false;
+  }
+
+  public boolean isIntParamEquals(String fullParamName, int paramValue)
+  {
+    final Object o1 = this.params.get(fullParamName);
+    if (o1 instanceof Integer) {
+      final Integer i1 = (Integer) o1;
+      final int v1 = i1 == null ? 0 : i1.intValue();
+      return v1 == paramValue;
+    } else
+      return false;
+  }
 }

@@ -90,8 +90,8 @@ public class SmeStatus
 		}
 		catch (NoSuchElementException e)
 		{
-			logger.debug("Init string misformatted", e);
-			throw new AdminException("Init string misformatted, nested: " + e.getMessage());
+			logger.debug("Init string misformatted: \"" + initString + '"', e);
+			throw new AdminException("Init string misformatted \"" + initString + "\", nested: " + e.getMessage());
 		}
 		//logger.debug("result: "+id+"[int="+internal+",conn="+connected+",mode="+bindMode+",("+inAddress+"|"+outAddress+")");
 	}
