@@ -133,8 +133,8 @@ void SetVersion(ET96MAP_APP_CNTX_T& ac,unsigned version){
     FormatText("MAP::%s: Opss, version = %d, why?",__FUNCTION__,version));
   switch(version){
   case 3:
-    ac.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_3;
-    break;
+  //  ac.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_3;
+  //  break;
   case 2:
     ac.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
     break;
@@ -548,6 +548,7 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
   unsigned dialogid_map = 0;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
+    if ( version == 3 ) version = 2;
     __trace2__("MAP::%s ",__FUNCTION__);
     char text[32];
     SS7ToText(ss7Address_sp,text);
