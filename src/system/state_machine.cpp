@@ -1273,6 +1273,42 @@ StateType StateMachine::submit(Tuple& t)
 
       *sms=newsms;
 
+      int status=Status::OK;
+      try{
+        store->createSms(*sms,t.msgId,smsc::store::CREATE_NEW);
+      }catch(...)
+      {
+        status=Status::SYSERR;
+      }
+      smsc->getTempStore().Delete(t.msgId);
+
+      char buf[64];
+      sprintf(buf,"%lld",t.msgId);
+
+      SmscCommand resp = SmscCommand::makeSubmitSmResp
+                           (
+                             status==Status::OK?buf:"0",
+                             dialogId,
+                             status,
+                             sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                           );
+      try{
+        src_proxy->putCommand(resp);
+      }catch(...)
+      {
+        smsLog->warn("SBM: failed to put response command SUBMIT_OK Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+          t.msgId,dialogId,
+          sms->getOriginatingAddress().toString().c_str(),
+          sms->getDestinationAddress().toString().c_str(),
+          src_proxy->getSystemId(),
+          ri.smeSystemId.c_str()
+        );
+      }
+
+      if(status!=Status::OK)
+      {
+        return ERROR_STATE;
+      }
       // let deliver begin!
 
       allowCreateSms=false;
