@@ -254,7 +254,7 @@ int Profiler::Execute()
    	for(i=0;i<len;i++)body[i]=toupper(body[i]);
    	i=0;
    	while(!isalpha(body[i]) && i<len)i++;
-    if(!strncmp(body,"REPORT",6))
+    if(!strncmp(body+i,"REPORT",6))
     {
       i+=7;
       while(i<len && !isalpha(body[i]))i++;
@@ -271,12 +271,12 @@ int Profiler::Execute()
         }
       }
     }else
-    if(!strncmp(body,"UCS2",4))
+    if(!strncmp(body+i,"UCS2",4))
     {
       internal_update(_update_charset,addr,ProfileCharsetOptions::Ucs2);
 
     }else
-    if(!strncmp(body,"DEFAULT",4))
+    if(!strncmp(body+i,"DEFAULT",4))
     {
       internal_update(_update_charset,addr,ProfileCharsetOptions::Default);
     }else
