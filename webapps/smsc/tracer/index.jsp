@@ -53,6 +53,7 @@
 </table>
 </div><%
 page_menu_begin(out);
+page_menu_button(out, "mbCheck", "Loadup & Check", "Load & Check routing configuration");
 page_menu_button(out, "mbTrace", "Trace route", "Trace route");
 page_menu_space(out);
 page_menu_end(out);
