@@ -470,7 +470,15 @@ enum{
   msg7BitUssdOff,
   msgDivertStatus,
   msgConcatOn,
-  msgConcatOff
+  msgConcatOff,
+  msgDivertAbsOn,
+  msgDivertAbsOff,
+  msgDivertBlkOn,
+  msgDivertBlkOff,
+  msgDivertBarOn,
+  msgDivertBarOff,
+  msgDivertCapOn,
+  msgDivertCapOff
 };
 
 class DummyGetAdapter:public GetAdapter{
@@ -785,6 +793,10 @@ int Profiler::Execute()
               msg=msgDivertChanged;
               internal_update(_update_divert,addr,0,div.c_str());
             }
+          }
+          else if(arg1=="STATUS")
+          {
+            msg=msgDivertStatus;
           }else
           {
             //(abs|absent)|(blk|blocked)|(bar|barred)|(cap|capacity)
@@ -805,21 +817,24 @@ int Profiler::Execute()
               int onbit=arg2=="ON"?update_div_cond_OnBit:0;
               if(onbit || arg2=="OFF")
               {
-                msg=msgDivertStatus;
                 if(arg1=="ABS" || arg1=="ABSENT")
                 {
+                  msg=onbit?msgDivertAbsOn:msgDivertAbsOff;
                   internal_update(_update_divert_cond,addr,update_div_cond_Absent|onbit,0);
                 }else
                 if(arg1=="BLK" || arg1=="BLOCKED")
                 {
+                  msg=onbit?msgDivertBlkOn:msgDivertBlkOff;
                   internal_update(_update_divert_cond,addr,update_div_cond_Blocked|onbit,0);
                 }else
                 if(arg1=="BAR" || arg1=="BARRED")
                 {
+                  msg=onbit?msgDivertBarOn:msgDivertBarOff;
                   internal_update(_update_divert_cond,addr,update_div_cond_Barred|onbit,0);
                 }else
                 if(arg1=="CAP" || arg1=="CAPACITY")
                 {
+                  msg=onbit?msgDivertCapOn:msgDivertCapOff;
                   internal_update(_update_divert_cond,addr,update_div_cond_Capacity|onbit,0);
                 }
               }
@@ -849,10 +864,51 @@ int Profiler::Execute()
 
       putIncomingCommand(resp);
       SMS ans;
-      string msgstr;
+      string msgstr,shortmsg;
       Profile p=lookup(addr);
+#define SIMPLERESP(msg) \
+      case msg: \
+      { \
+        msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler." #msg);\
+      }break
+
+
       switch(msg)
       {
+        SIMPLERESP(msgReportNone);
+        SIMPLERESP(msgReportFull);
+        SIMPLERESP(msgReportFinal);
+        SIMPLERESP(msgDefault);
+        SIMPLERESP(msgUCS2);
+        SIMPLERESP(msgLatin1);
+        SIMPLERESP(msgUCS2AndLat);
+        SIMPLERESP(msgLocaleChanged);
+        SIMPLERESP(msgLocaleUnknown);
+        SIMPLERESP(msgHide);
+        SIMPLERESP(msgUnhide);
+        SIMPLERESP(msgDivertOn);
+        SIMPLERESP(msgDivertOff);
+        SIMPLERESP(msgDivertChanged);
+        SIMPLERESP(msgInvalidParam);
+        SIMPLERESP(msg7BitUssdOn);
+        SIMPLERESP(msg7BitUssdOff);
+        SIMPLERESP(msgConcatOn);
+        SIMPLERESP(msgConcatOff);
+        SIMPLERESP(msgDivertAbsOn);
+        SIMPLERESP(msgDivertAbsOff);
+        SIMPLERESP(msgDivertBlkOn);
+        SIMPLERESP(msgDivertBlkOff);
+        SIMPLERESP(msgDivertBarOn);
+        SIMPLERESP(msgDivertBarOff);
+        SIMPLERESP(msgDivertCapOn);
+        SIMPLERESP(msgDivertCapOff);
+        //SIMPLERESP(msgAccessDenied);
+        case msgAccessDenied:
+        {
+          msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgModificationDenied");
+        }break;
+
+        /*
         case msgReportNone:
         {
           msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgReportNone");
@@ -925,8 +981,10 @@ int Profiler::Execute()
         {
           msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msg7BitUssdOff");
         }break;
+        */
         case msgDivertStatus:
         {
+          shortmsg=ResourceManager::getInstance()->getString(p.locale,"profiler.divstatus.short");
           string en,dis;
 #define DIV_ST(fld,name) \
           if(p.fld) \
@@ -960,6 +1018,7 @@ int Profiler::Execute()
           {
           }
         }break;
+        /*
         case msgConcatOn:
         {
           msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgConcatOn");
@@ -968,6 +1027,33 @@ int Profiler::Execute()
         {
           msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgConcatOff");
         }break;
+        case msgDivertAbsOn:
+        {
+          msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgDivertAbsOn");
+        }break;
+        case msgDivertAbsOff:
+        {
+          msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgDivertAbsOff");
+        }break;
+        case msgDivertBloOn:
+        {
+        }break;
+        case msgDivertBloOff:
+        {
+        }break;
+        case msgDivertBarOn:
+        {
+        }break;
+        case msgDivertBarOff:
+        {
+        }break;
+        case msgDivertCapOn:
+        {
+        }break;
+        case msgDivertCapOff:
+        {
+        }break;
+        */
         default:
         {
           msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgError");
@@ -1021,9 +1107,22 @@ int Profiler::Execute()
         putIncomingCommand(answer);
         delete smsarr[i];
       }*/
-      fillSms(&ans,msgstr.c_str(),msgstr.length(),CONV_ENCODING_CP1251,ProfileCharsetOptions::Ucs2);
-      SmscCommand answer=SmscCommand::makeSumbmitSm(ans,getNextSequenceNumber());
-      putIncomingCommand(answer);
+      if(msg==msgDivertStatus && ans.getIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+      {
+        fillSms(&ans,shortmsg.c_str(),msgstr.length(),CONV_ENCODING_CP1251,ProfileCharsetOptions::Ucs2);
+        SmscCommand answer=SmscCommand::makeSumbmitSm(ans,getNextSequenceNumber());
+        putIncomingCommand(answer);
+        fillSms(&ans,msgstr.c_str(),msgstr.length(),CONV_ENCODING_CP1251,ProfileCharsetOptions::Ucs2);
+        ans.getMessageBody().dropIntProperty(Tag::SMPP_USSD_SERVICE_OP);
+        ans.setIntProperty(Tag::SMPP_ESM_CLASS,ans.getIntProperty(Tag::SMPP_ESM_CLASS)&(~3));
+        answer=SmscCommand::makeSumbmitSm(ans,getNextSequenceNumber());
+        putIncomingCommand(answer);
+      }else
+      {
+        fillSms(&ans,msgstr.c_str(),msgstr.length(),CONV_ENCODING_CP1251,ProfileCharsetOptions::Ucs2);
+        SmscCommand answer=SmscCommand::makeSumbmitSm(ans,getNextSequenceNumber());
+        putIncomingCommand(answer);
+      }
     }catch(exception& e)
     {
       __warning2__("EXCEPTION IN PROFILER: %s",e.what());
