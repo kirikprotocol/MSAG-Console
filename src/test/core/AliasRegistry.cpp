@@ -8,15 +8,7 @@ using namespace smsc::sms; //AddressValue, constants
 
 AliasRegistry::~AliasRegistry()
 {
-	for (AddressMap::iterator it = addrMap.begin(); it != addrMap.end(); it++)
-	{
-		AliasList& list = it->second;
-		for (int i = 0; i < list.size(); i++)
-		{
-			delete list[i];
-		}
-	}
-	//для aliasMap ничего удалять не нужно, т.к. объекты в aliasMap и addrMap общие
+	clear();
 }
 
 bool AliasRegistry::putAlias(const AliasInfo& alias)
@@ -35,6 +27,15 @@ bool AliasRegistry::putAlias(const AliasInfo& alias)
 
 void AliasRegistry::clear()
 {
+	for (AddressMap::iterator it = addrMap.begin(); it != addrMap.end(); it++)
+	{
+		AliasList& list = it->second;
+		for (int i = 0; i < list.size(); i++)
+		{
+			delete list[i];
+		}
+	}
+	//для aliasMap ничего удалять не нужно, т.к. объекты в aliasMap и addrMap общие
 	addrMap.clear();
 	aliasMap.clear();
 }

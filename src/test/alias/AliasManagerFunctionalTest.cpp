@@ -165,8 +165,12 @@ void AliasManagerFunctionalTest::executeTest(
 		{
 			Address& origAlias = *addr[i];
 			Address& origAddr = *addr[j];
-			filter->addResult(tc.findAliasByAddress(origAddr));
-			filter->addResult(tc.findAddressByAlias(origAlias));
+			TCResult* res1 = tc.findAliasByAddress(origAddr);
+			TCResult* res2 = tc.findAddressByAlias(origAlias);
+			filter->addResult(res1);
+			filter->addResult(res2);
+			delete res1;
+			delete res2;
 		}
 	}
 
@@ -183,8 +187,12 @@ void AliasManagerFunctionalTest::executeTest(
 		{
 			Address& origAlias = *addr[i];
 			Address& origAddr = *addr[j];
-			filter->addResult(tc.findAliasByAddress(origAddr));
-			filter->addResult(tc.findAddressByAlias(origAlias));
+			TCResult* res1 = tc.findAliasByAddress(origAddr);
+			TCResult* res2 = tc.findAddressByAlias(origAlias);
+			filter->addResult(res1);
+			filter->addResult(res2);
+			delete res1;
+			delete res2;
 		}
 	}
 
