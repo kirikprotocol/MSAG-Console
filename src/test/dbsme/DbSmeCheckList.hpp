@@ -115,12 +115,8 @@ void incorrectInputTc()
 void processDbSmeRes()
 {
 	__reg_tc__("processDbSmeRes", "Ответные сообщения от db sme");
-	__reg_tc__("processDbSmeRes.dataCoding",
-		"Ответные сообщения приходят в дефолтной кодировке SC");
-	__reg_tc__("processDbSmeRes.serviceType",
-		"Ответные сообщения приходят с service_type в соответствии с настройками db sme");
-	__reg_tc__("processDbSmeRes.protocolId",
-		"Ответные сообщения приходят с protocol_id в соответствии с настройками db sme");
+	__reg_tc__("processDbSmeRes.checkFields",
+		"Значения полей pdu source_addr, data_coding, service_type, protocol_id соответствуют настройкам db sme");
 	__reg_tc__("processDbSmeRes.longOutput",
 		"В случае большого размера ответного сообщения db sme правильно распределяет ответ по нескольким sms");
 	__reg_tc__("processDbSmeRes.longOutputLimit",
