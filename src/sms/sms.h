@@ -1012,7 +1012,7 @@ namespace smsc {
           __require__( length >= 0 );
           temporaryBodyStr.decode(buffer,length);
           temporaryBodyInt.decode(buffer,length);
-          temporaryBodyInt.decode(buffer,length);
+          temporaryBodyBin.decode(buffer,length);
         };
         
         void setStrProperty(const string& s,const string& value) 
