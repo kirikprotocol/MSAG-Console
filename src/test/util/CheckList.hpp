@@ -34,7 +34,8 @@ public:
 	/**
 	 * Начать новую группу/таблицу в checklist.
 	 */
-	void startNewGroup(const std::string& groupName);
+	void startNewGroup(const std::string& groupName,
+		const std::string& packageName);
 
 	/**
 	 * Записать результаты тестирования (test case) в текущцю группу/таблицу

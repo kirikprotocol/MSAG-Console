@@ -33,19 +33,21 @@ CheckList::CheckList(const string& name_)
 	os.open(tmp.data());
 }
 
-void CheckList::startNewGroup(const string& groupName)
+void CheckList::startNewGroup(const string& groupName, const string& packageName)
 {
 	counter = 1;
-	os << endl << groupName << endl;
+	os << endl << "|" << groupName << endl;
+	os << "|Покрытие кода для " << packageName << "|" << endl;
 	os << "№|Тест|Результат|Стек" << endl;
 }
 
 void CheckList::writeResult(const string& testCaseDesc, TCResult& result)
 {
 	os << counter++ << "|" << testCaseDesc << "|";
-	os << (result.value() ? "Ok" : "Failed") << "|";
+	os << (result.value() ? "Да" : "Нет") << "|";
 	result.print(os);
 	os << endl;
+	os.flush();
 }
 
 void CheckList::writeResult(TCResultFilter& resultFilter)
@@ -55,25 +57,38 @@ void CheckList::writeResult(TCResultFilter& resultFilter)
 	{
 		TCResultFilter::TCValue& tcVal = *it->second;
 		os << counter++ << "|" << tcVal.description << "|";
-		os << (tcVal.tcStacks.size() == 0 ? "Ok" : "Failed") << "|";
-		for (int i = 0; i < tcVal.tcStacks.size(); i++)
+		if (!tcVal.used)
 		{
-			if (i > 0)
+			os << "-|";
+		}
+		else if (tcVal.tcStacks.size() == 0)
+		{
+			os << "Да|";
+		}
+		else
+		{
+			os << "Нет|";
+			for (int i = 0; i < tcVal.tcStacks.size(); i++)
 			{
-				os << ",";
-			}
-			TCResultStack& stack = *tcVal.tcStacks[i];
-			for (int j = 0; j < stack.size(); j++)
-			{
-				if (j > 0)
+				if (i > 0)
 				{
-					os << "->";
+					os << ",";
 				}
-				TCResult& res = *stack[j];
-				os << res.getId() << "(" << res.getChoice() << ")";
+				TCResultStack& stack = *tcVal.tcStacks[i];
+				for (int j = 0; j < stack.size(); j++)
+				{
+					if (j > 0)
+					{
+						os << "->";
+					}
+					TCResult& res = *stack[j];
+					os << res.getId() << "(" << res.getChoice() << ")";
+				}
 			}
 		}
+		os << endl;
 	}
+	os.flush();
 }
 
 }
