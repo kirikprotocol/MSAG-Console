@@ -150,6 +150,8 @@ protected:
 	const string getOutputString(const DbSmeTestRecord* rec,
 		const DbSmeTestRecord* defOutput, bool& res);
 	time_t getDate(DateType dtType, time_t now = 0);
+	const time_t getOutputDate(const DbSmeTestRecord* rec,
+		const DbSmeTestRecord* defOutput, bool& res);
 	const string getOutputDate(const DbSmeTestRecord* rec,
 		const DbSmeTestRecord* defOutput, const DateFormatter& df, bool& res);
 };

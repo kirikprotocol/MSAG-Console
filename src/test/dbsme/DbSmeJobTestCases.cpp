@@ -183,8 +183,8 @@ time_t DbSmeJobTestCases::getDate(DateType dtType, time_t now)
 	return mktime(&lt);
 }
 
-const string DbSmeJobTestCases::getOutputDate(const DbSmeTestRecord* rec,
-	const DbSmeTestRecord* defOutput, const DateFormatter& df, bool& res)
+const time_t DbSmeJobTestCases::getOutputDate(const DbSmeTestRecord* rec,
+	const DbSmeTestRecord* defOutput, bool& res)
 {
 	__decl_tc__;
 	//res = true;
@@ -194,7 +194,7 @@ const string DbSmeJobTestCases::getOutputDate(const DbSmeTestRecord* rec,
 		if (rec->checkDate())
 		{
 			__tc__("processDbSmeRes.input.date"); __tc_ok__;
-			return df.format(rec->getDate());
+			return rec->getDate();
 		}
 		if (rec->getDefInput() && rec->getDefInput()->checkDate())
 		{
@@ -216,7 +216,7 @@ const string DbSmeJobTestCases::getOutputDate(const DbSmeTestRecord* rec,
 				default:
 					__unreachable__("Invalid dtType");
 			}
-			return df.format(rec->getDefInput()->getDate());
+			return rec->getDefInput()->getDate();
 		}
 	}
 	if (defOutput && defOutput->checkDate())
@@ -240,10 +240,16 @@ const string DbSmeJobTestCases::getOutputDate(const DbSmeTestRecord* rec,
 			default:
 				__unreachable__("Invalid dtType");
 		}
-		return df.format(defOutput->getDate());
+		return defOutput->getDate();
 	}
 	res = false;
-	return "";
+	return 0;
+}
+
+const string DbSmeJobTestCases::getOutputDate(const DbSmeTestRecord* rec,
+	const DbSmeTestRecord* defOutput, const DateFormatter& df, bool& res)
+{
+	return df.format(getOutputDate(rec, defOutput, res));
 }
 
 }
