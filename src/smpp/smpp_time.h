@@ -82,6 +82,7 @@ inline time_t smppTime2CTime(COStr& str)
   }
   if (utcfix == '+' || utcfix == '-' )
 	{
+		dtm.tm_isdst = 0;
 		__trace2_if_fail__( scaned == 9, "!!!!! input time: %.16s\n",dta);
 		__ret0_if_fail__ ( scaned == 9 );
 		__ret0_if_fail__ ( dtm.tm_mon >= 1 && dtm.tm_mon <= 12 );
