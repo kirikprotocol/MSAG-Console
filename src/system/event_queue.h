@@ -181,20 +181,24 @@ public:
     {
       locker = new Locker;
       hash.put(msgId,locker);
-      if ( last_unlocked )
-      {
-        last_unlocked->next_unlocked = locker;
-        last_unlocked=locker;
-      }else
-      {
-        first_unlocked = last_unlocked = locker;
-      }
       locker->state = StateTypeValue::UNKNOWN_STATE;
     }
     locker->msgId = msgId;
     locker->push_back(new CmdRecord(command));
     if ( !locker->locked )
+    {
+      if ( last_unlocked )
+      {
+        last_unlocked->next_unlocked = locker;
+        last_unlocked=locker;
+        locker->next_unlocked=0;
+      }else
+      {
+        first_unlocked = last_unlocked = locker;
+      }
       event.Signal();
+    }
+    __trace2__("enqueue: last unlocked=%p",last_unlocked);
   }
 
 
@@ -202,20 +206,25 @@ public:
   // записи в одном из финальных состояний при отсутствии команд удаляуются
   // для записей имеющих команды выберает доступную для текущего состояния команду
   // если нет записей с доступными командами ожидает нотификации
-  bool selectAndDequeue(Tuple& result,volatile bool* quitting)
+  void selectAndDequeue(Tuple& result,volatile bool* quitting)
   {
+    __trace__("enter selectAndDequeue");
     for(;;)
     {
       {
+        trace("selanddeq: enter synchronized block");
       __synchronized__
+        trace("selanddeq: got mutex");
         Locker* locker = 0;
         Locker* prev = 0;
         //unsigned long t = time(0);
+        __watch__(first_unlocked);
+        __watch__(last_unlocked);
         for (Locker* iter = first_unlocked;
-             iter != 0; prev = iter, iter = iter->next_unlocked )
+             iter != 0; iter = iter->next_unlocked )
         {
-          __trace2__("iterate unlocked lockers:%lld",iter->msgId);
           cycle:
+          __trace2__("iterate unlocked lockers:%lld",iter->msgId);
           bool success = iter->getNextCommand(result.command);
           if ( success || !iter->cmds )
           {
@@ -228,7 +237,8 @@ public:
               result.state = iter->state;
               iter->locked = true;
               iter->next_unlocked = 0;
-              return true;
+              __trace__("returning from selectAndDequeue");
+              return;
             }
             else //( !iter->cmds )
             {
@@ -245,12 +255,15 @@ public:
           }
           else // есть только ожидающие команды
           {
+            prev = iter;
             // none
           }
         }
       }
+      __trace__("selanddeq:wait");
       event.Wait();
-      if(!hash.getCount() && *quitting)return false;
+      __trace__("selanddeq:wait finished");
+      if(*quitting)return;
     }
   }
 

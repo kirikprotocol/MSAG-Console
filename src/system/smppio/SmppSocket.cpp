@@ -1,3 +1,7 @@
+#ifndef DISABLE_TRACING
+#define DISABLE_TRACING
+#endif
+
 #include "system/smppio/SmppSocket.hpp"
 #include <string.h>
 

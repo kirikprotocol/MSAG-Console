@@ -1,4 +1,6 @@
+#ifndef DISABLE_TRACING
 #define DISABLE_TRACING
+#endif
 
 #include "system/smppio/SmppIOTask.hpp"
 #include "system/smppio/SmppProxy.hpp"

@@ -115,6 +115,10 @@ void Smsc::init()
   store=smsc::store::StoreManager::getMessageStore();
 
   tp.startTask(new StateMachine(eventqueue,store,this));
+  tp.startTask(new StateMachine(eventqueue,store,this));
+  tp.startTask(new StateMachine(eventqueue,store,this));
+  tp.startTask(new StateMachine(eventqueue,store,this));
+  tp.startTask(new StateMachine(eventqueue,store,this));
 
   smsc::admin::util::SignalHandler::registerShutdownHandler(new SmscSignalHandler(this));
 }
