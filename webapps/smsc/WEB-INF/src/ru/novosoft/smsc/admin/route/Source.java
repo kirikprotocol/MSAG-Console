@@ -80,7 +80,7 @@ public class Source
 		if (isSubject())
 			out.println("      <subject id=\"" + StringEncoderDecoder.encode(subj.getName()) + "\"/>");
 		else
-			out.println("      <mask value=\"" + StringEncoderDecoder.encode(mask.getMask()) + "\"/>");
+			out.println("      <mask value=\"" + StringEncoderDecoder.encode(mask.getNormalizedMask()) + "\"/>");
 		out.println("    </source>");
 		return out;
 	}

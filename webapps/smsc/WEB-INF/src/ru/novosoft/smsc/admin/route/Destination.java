@@ -17,13 +17,13 @@ public class Destination extends Source
 	private SME sme = null;
 
 	public Destination(Subject subj)
-			  throws AdminException
+			throws AdminException
 	{
 		this(subj, subj.getDefaultSme());
 	}
 
 	public Destination(Subject subj, SME sme)
-			  throws AdminException
+			throws AdminException
 	{
 		super(subj);
 
@@ -32,7 +32,7 @@ public class Destination extends Source
 	}
 
 	public Destination(Mask mask, SME sme)
-			  throws AdminException
+			throws AdminException
 	{
 		super(mask);
 		if ((this.sme = sme) == null)
@@ -40,11 +40,11 @@ public class Destination extends Source
 	}
 
 	public Destination(Element dstElem, SubjectList subjects, SMEList smes)
-			  throws AdminException
+			throws AdminException
 	{
 		super(dstElem, subjects);
 		sme = smes.get(dstElem.getAttribute("sme"));
-		if ((this.sme = sme) == null)
+		if (sme == null)
 			throw new AdminException("Unknown SME \"" + dstElem.getAttribute("sme") + '"');
 	}
 
@@ -64,7 +64,7 @@ public class Destination extends Source
 		if (isSubject())
 			out.println("      <subject id=\"" + StringEncoderDecoder.encode(subj.getName()) + "\"/>");
 		else
-			out.println("      <mask value=\"" + StringEncoderDecoder.encode(mask.getMask()) + "\"/>");
+			out.println("      <mask value=\"" + StringEncoderDecoder.encode(mask.getNormalizedMask()) + "\"/>");
 		out.println("    </destination>");
 		return out;
 	}
