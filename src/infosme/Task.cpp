@@ -44,6 +44,31 @@ int parseTime(const char* str)
     return hour*3600+minute*60+second;
 }
 
+Task::Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt) 
+    : logger(Logger::getCategory("smsc.infosme.Task")), formatter(0),
+        usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt), 
+            bInProcess(false), bTableCreated(false)
+{
+    __require__(dsOwn && dsInt);
+    this->info = info; this->dsOwn = dsOwn; this->dsInt = dsInt;
+    formatter = new OutputFormatter(info.msgTemplate.c_str());
+    //TODO: Call createTable();
+}
+Task::Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
+     DataSource* dsOwn, DataSource* dsInt)
+    : logger(Logger::getCategory("smsc.infosme.Task")), formatter(0),
+        usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt), 
+            bInProcess(false), bTableCreated(false)
+{
+    init(config, taskId, tablePrefix);
+    formatter = new OutputFormatter(info.msgTemplate.c_str());
+    //TODO: Call createTable();
+}
+Task::~Task()
+{
+    if (formatter) delete formatter;
+}
+
 void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
 {
     __require__(config);
@@ -96,8 +121,6 @@ void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
     info.dsUncommited = 1;
     try { info.dsUncommited = config->getInt("uncommited"); } catch(...) {}
     if (info.dsUncommited < 0) info.dsUncommited = 1;
-
-    //TODO: Call createTable();
 }
 
 bool Task::isInProcess()
@@ -314,12 +337,19 @@ void Task::endProcess()
     inProcessEvent.Signal();
     processEndEvent.Wait();
 }
-void Task::doNotifyMessage(StateInfo& info)
+
+void Task::doRespondMessage(uint64_t msgId, bool acepted, std::string smscId)
 {
 }
+
+void Task::doReceiptMessage(std::string smscId, bool delivered)
+{
+}
+
 void Task::dropAllMessages()
 {
 }
+
 bool Task::getNextMessage(Connection* connection, Message& message)
 {
     return false;

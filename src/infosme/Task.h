@@ -43,8 +43,6 @@ namespace smsc { namespace infosme
     extern time_t parseDate(const char* str);
     extern int    parseTime(const char* str);
     
-    static const char* TASK_TABLE_NAME_PREFIX = "INFOSME_TABLE_";
-
     static const uint8_t MESSAGE_NEW_STATE          = 0;
     static const uint8_t MESSAGE_ENROUTE_STATE      = 10;
     static const uint8_t MESSAGE_DELIVERED_STATE    = 20;
@@ -59,8 +57,11 @@ namespace smsc { namespace infosme
 
     struct Message
     {
-
+        uint64_t    id;
+        std::string abonent;
+        std::string message;
     };
+
     struct StateInfo
     {
 
@@ -168,31 +169,13 @@ namespace smsc { namespace infosme
 
         virtual void init(ConfigView* config, std::string taskId, std::string tablePrefix);
 
-        virtual ~Task() {
-            if (formatter) delete formatter;
-        };
+        virtual ~Task();
 
     public:
         
-        Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt) 
-            : logger(Logger::getCategory("smsc.infosme.Task")), formatter(0),
-                usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt), 
-                    bInProcess(false), bTableCreated(false)
-                
-        {
-            __require__(dsOwn && dsInt);
-            this->info = info; this->dsOwn = dsOwn; this->dsInt = dsInt;
-            formatter = new OutputFormatter(info.msgTemplate.c_str());
-        }
+        Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt);
         Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
-             DataSource* dsOwn, DataSource* dsInt)
-            : logger(Logger::getCategory("smsc.infosme.Task")), formatter(0),
-                usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt), 
-                    bInProcess(false), bTableCreated(false)
-        {
-            init(config, taskId, tablePrefix);
-            formatter = new OutputFormatter(info.msgTemplate.c_str());
-        }
+             DataSource* dsOwn, DataSource* dsInt);
         
         void finalize()
         {
@@ -246,15 +229,29 @@ namespace smsc { namespace infosme
         void endProcess();
         
         /**
-         * ћен€ет состо€ние отправленного сообщени€ из спец.таблицы задачи.
-         * —осто€ни€: accepted, delivered, expired, ... ???
-         * ¬ыполн€етс€ из потока SmppTransport на ThreadPool'е по получению
-         * submitResponce или deliveryReceipt.
+         * ѕроизводит обработку непосредственного ответа на отправленное сообщение.
+         * ≈сли сообщение не было прин€то в обработку серсис центром, то его состо€ние
+         * мен€етс€ на FAILED, иначе сообщению присваиваетс€ номер пришедший от
+         * серсис центра и сообщение ставитс€ на ожидание в состо€нии ENROUTE.
          * »спользует connection из внутреннего источника данных.
          *
-         * @param info
+         * @param msgId         идентификатор сообщени€ в таблице задачи 
+         * @param smscId        номер присвоенный smsc
+         * @param acepted       признак, прин€то ли сообщение к доставке.
          */
-        void doNotifyMessage(StateInfo& info);
+        void doRespondMessage(uint64_t msgId, bool acepted, std::string smscId="");
+
+        /**
+         * ѕроизводит обработку отчЄта о доставке сообщени€. ≈сли сообщение было 
+         * доставлено, то мен€ет его состо€ние на DELIVERED, иначе, если установлен
+         * флаг retryOnFail & retryTime, то переводит сообщение в состо€ние NEW и
+         * выставл€ет новое значение в поле SEND_DATE, чистит поле MESSAGE_ID.
+         * ≈сли же флаг не выставлен, то переводит сообщение в состо€ние FAILED.
+         *
+         * @param smscId        номер присвоенный smsc
+         * @param delivered     признак, доставленно ли сообщение
+         */
+        void doReceiptMessage(std::string smscId, bool delivered);
 
         /**
          * ќстанавливает процесс генерации сообщений дл€ отправки в спец.таблицу задачи
@@ -307,7 +304,9 @@ namespace smsc { namespace infosme
         virtual void invokeEndProcess(Task* task) = 0;
         virtual void invokeBeginProcess(Task* task) = 0;
         virtual void invokeDropAllMessages(Task* task) = 0;
-        virtual void invokeDoNotifyMessage(Task* task, const StateInfo& info) = 0;
+        virtual void invokeDoRespondMessage(Task* task, uint64_t msgId, 
+                                            bool acepted, std::string smscId="") = 0;
+        virtual void invokeDoReceiptMessage(Task* task, std::string smscId, bool delivered) = 0;
         
         virtual ~TaskInvokeAdapter() {};
 
