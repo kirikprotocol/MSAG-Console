@@ -423,10 +423,12 @@ template<class T> unsigned CalcSize(T* arr,unsigned count)
 
 #define __LOG__ void*
 #define dump_text
+#define dump_text1
 #define dump_uint
 #define dump_int
 #define dump_ostr
 #define dump_cstr
+
 
 #else
 #define __LOG__ FILE*

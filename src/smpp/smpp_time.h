@@ -20,8 +20,12 @@ inline bool cTime2SmppTime(time_t tval,char* buffer)
   buffer[0] = 0;
   buffer[16] = 0;
   if ( !tval ) return true;
+#ifdef _WIN32
+  struct tm dtm=*gmtime(&tval);
+#else
   struct tm dtm;
   gmtime_r(&tval,&dtm); // *gmtime(tval);
+#endif
   //__trace2__("input time: %s",asctime(&dtm));
   dtm.tm_mon+=1;
   dtm.tm_year-=100; // year = x-(1900+100)

@@ -2,8 +2,27 @@
 #define __SMSC_UTIL_TIMESLOTCOUNTER_HPP__
 
 #include <stdlib.h>
-#include <sys/time.h>
 #include <algorithm>
+#ifndef _WIN32
+#include <sys/time.h>
+#else
+#include <windows.h>
+typedef __int64 hrtime_t;
+inline hrtime_t gethrfreq()
+{
+  hrtime_t freq;
+  QueryPerformanceFrequency((LARGE_INTEGER*)&freq);
+  return freq;
+}
+inline hrtime_t gethrtime()
+{
+  static hrtime_t freq=gethrfreq();
+  hrtime_t rv;
+  QueryPerformanceCounter((LARGE_INTEGER*)&rv);
+  rv=rv*1000000000i64/freq;
+  return rv;
+}
+#endif
 
 namespace smsc{
 namespace util{

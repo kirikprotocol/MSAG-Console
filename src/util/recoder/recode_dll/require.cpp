@@ -3,10 +3,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#if defined _WIN32
+#ifdef _WIN32
 
-void* __cdecl operator new(size_t size) { return LocalAlloc(LMEM_FIXED,size); }
-void __cdecl operator delete(void* mem) { LocalFree(mem); }
+//void* __cdecl operator new(size_t size) { return LocalAlloc(LMEM_FIXED,size); }
+//void __cdecl operator delete(void* mem) { LocalFree(mem); }
 
 void FatalError(const char* file,int line){
   char* buff = new char[strlen(file)+128];

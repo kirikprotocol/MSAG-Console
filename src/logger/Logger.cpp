@@ -1,7 +1,11 @@
 #include "logger/Logger.h"
 
 #include <stdio.h>
+#ifndef _WIN32
 #include <strings.h>
+#else
+#include <string.h>
+#endif
 
 #include "logger/additional/StderrAppender.h"
 #include "logger/additional/RollingFileAppender.h"
