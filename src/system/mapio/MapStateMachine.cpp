@@ -1219,7 +1219,7 @@ static void SendNextMMS(MapDialog* dialog)
         DropMapDialog(dialog);
         return;
       } else {
-        __map_trace__("SendNextMMS: no messages in chain. Waiting long message next part");
+        __map_trace2__("SendNextMMS: no messages in chain. Waiting long message next part for %d", dialog->sms.get()->getConcatMsgRef());
         dialog->state = MAPST_WaitNextMMS;
         return;
       }
