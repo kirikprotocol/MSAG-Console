@@ -60,10 +60,10 @@ Thread::~Thread()
   WaitFor();
 #ifdef _WIN32
   //_endthread();
+  if ( thread ) CloseHandle(thread);
 #else
   //thr_destroy(thread);
 #endif
-  if ( thread ) CloseHandle(thread);
 }
 
 int Thread::WaitFor()
