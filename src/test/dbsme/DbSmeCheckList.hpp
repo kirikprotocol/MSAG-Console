@@ -1,13 +1,13 @@
 #ifndef TEST_DBSME_DBSME_CHECK_LIST
 #define TEST_DBSME_DBSME_CHECK_LIST
 
-#include "test/sme/SmppProfilerCheckList.hpp"
+#include "test/sme/SystemSmeCheckList.hpp"
 
 namespace smsc {
 namespace test {
 namespace dbsme {
 
-using smsc::test::sme::SmppProfilerCheckList;
+using smsc::test::sme::SystemSmeCheckList;
 
 #define __reg_tc__(id, desc) \
 	registerTc(id, desc)
@@ -15,7 +15,7 @@ using smsc::test::sme::SmppProfilerCheckList;
 #define __hide_tc__(id) \
 	hideTc(id)
 
-class DbSmeCheckList : public SmppProfilerCheckList
+class DbSmeCheckList : public SystemSmeCheckList
 {
 
 void correctJobTc()
@@ -255,7 +255,7 @@ void processDbSmeRes()
 
 public:
 	DbSmeCheckList()
-		: SmppProfilerCheckList("Результаты функционального тестирования db sme", "dbsme.chk")
+		: SystemSmeCheckList("Результаты функционального тестирования db sme", "dbsme.chk")
 	{
 		__hide_tc__("bindIncorrectSme");
 		__hide_tc__("submitSm.correct");

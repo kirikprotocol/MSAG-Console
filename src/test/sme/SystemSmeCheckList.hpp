@@ -1,5 +1,5 @@
-#ifndef TEST_SME_SMPP_PROFILER_CHECK_LIST
-#define TEST_SME_SMPP_PROFILER_CHECK_LIST
+#ifndef TEST_SME_SYSTEM_SME_CHECK_LIST
+#define TEST_SME_SYSTEM_SME_CHECK_LIST
 
 #include "SmppProtocolCheckList.hpp"
 
@@ -10,9 +10,9 @@ namespace sme {
 #define __reg_tc__(id, desc) \
 	registerTc(id, desc)
 	
-class SmppProfilerCheckList : public SmppProtocolCheckList
+class SystemSmeCheckList : public SmppProtocolCheckList
 {
-void allProfilerTc()
+void profilerTc()
 {
 	//updateProfile
 	__reg_tc__("updateProfile",
@@ -66,18 +66,27 @@ void allProfilerTc()
 		"При отсутствии в тексте сообщения русских символов приходит в 7-bit кодировке, при наличии русских симовлов приходит либо в 7-bit (транслитерация), либо в UCS2 в зависимости от текущих настроек профиля");
 }
 
+void smscSmeTc()
+{
+	//updateProfile
+	__reg_tc__("submitPduToSmscSme",
+		"Отправка smpp сообщений smsc sme");
+}
+
 public:
-	SmppProfilerCheckList()
-		: SmppProtocolCheckList("Результаты функционального тестирования Profiler через протокол SMPP", "smpp_profiler.chk")
+	SystemSmeCheckList()
+	: SmppProtocolCheckList("Результаты функционального тестирования Profiler и SmscSme через протокол SMPP", "system_sme.chk")
 	{
-		allProfilerTc();
+		profilerTc();
+		smscSmeTc();
 	}
 
 protected:
-	SmppProfilerCheckList(const char* name, const char* fileName)
-		: SmppProtocolCheckList(name, fileName)
+	SystemSmeCheckList(const char* name, const char* fileName)
+	: SmppProtocolCheckList(name, fileName)
 	{
-		allProfilerTc();
+		profilerTc();
+		smscSmeTc();
 	}
 };
 
@@ -85,5 +94,5 @@ protected:
 }
 }
 
-#endif /* TEST_SME_SMPP_PROFILER_CHECK_LIST */
+#endif /* TEST_SME_SYSTEM_SME_CHECK_LIST */
 

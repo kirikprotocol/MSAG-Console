@@ -13,7 +13,7 @@
 #include "test/alias/AliasManagerTestCases.hpp"
 #include "test/router/RouteManagerTestCases.hpp"
 #include "test/util/TestTaskManager.hpp"
-#include "SmppProfilerCheckList.hpp"
+#include "SystemSmeCheckList.hpp"
 #include "util/debug.h"
 //#include <memory>
 #include <vector>
