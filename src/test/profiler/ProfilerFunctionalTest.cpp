@@ -1,5 +1,6 @@
 #include "ProfilerTestCases.hpp"
 #include "test/sms/SmsUtil.hpp"
+#include "test/util/TextUtil.hpp"
 #include "test/core/ProfileUtil.hpp"
 #include "core/threads/ThreadPool.hpp"
 #include "smeman/smeproxy.h"
@@ -159,7 +160,7 @@ void ProfilerFunctionalTest::executeTest(int numAddr)
 	addr1.push_back(Address(".0.0.0"));
 	addr1.push_back(Address(".0.0.1"));
 	addr2.push_back(Address(".0.0.79029246519"));
-	addr2.push_back(Address(".0.1.0"));
+	//addr2.push_back(Address(".0.1.0"));
 	//На каждый адрес регистрация случайного количества профилей
 	for (int i = 0; i < addr1.size(); i++)
 	{
@@ -167,7 +168,7 @@ void ProfilerFunctionalTest::executeTest(int numAddr)
 	}
 	for (int i = 0; i < addr2.size(); i++)
 	{
-		tc->putCommand(addr2[i], RAND_TC);
+		tc->putCommand(addr2[i], getDataCoding(RAND_TC), RAND_TC);
 	}
 	sleep(1);
 	reinit();
@@ -187,7 +188,7 @@ void ProfilerFunctionalTest::executeTest(int numAddr)
 	}
 	for (int i = 0; i < addr2.size(); i++)
 	{
-		tc->putCommand(addr2[i], RAND_TC);
+		tc->putCommand(addr2[i], getDataCoding(RAND_TC), RAND_TC);
 	}
 	sleep(1);
 	reinit();
@@ -224,9 +225,9 @@ int main(int argc, char* argv[])
 	{
 		//Manager::init("config.xml");
 		ProfilerCheckList chkList;
+		ProfilerFunctionalTest test(&chkList);
 		for (int i = 0; i < numCycles; i++)
 		{
-			ProfilerFunctionalTest test(&chkList);
 			test.executeTest(numAddr);
 		}
 		__trace__("Before save checklist");

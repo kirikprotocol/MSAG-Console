@@ -230,8 +230,7 @@ void ProfilerTestCases::lookup(const Address& addr)
 void ProfilerTestCases::putCommand(const Address& addr, uint8_t dataCoding, int num)
 {
 	__require__(profiler);
-	int numTc = 9; int numDataCoding = 2;
-	TCSelector s(num, numTc * numDataCoding);
+	TCSelector s(num, 9);
 	__decl_tc12__;
 	for (; s.check(); s++)
 	{
@@ -242,7 +241,7 @@ void ProfilerTestCases::putCommand(const Address& addr, uint8_t dataCoding, int 
 			sms.setOriginatingAddress(addr);
 			string text;
 			int cmdType, codepage, reportoptions;
-			switch (s.value1(numTc))
+			switch (s.value())
 			{
 				case 1: //report none
 					__tc1__("putCommand.reportOptions.reportNoneMixedCase");
@@ -362,6 +361,10 @@ void ProfilerTestCases::onSubmit(SmscCommand& cmd)
 		__tc_fail__(1);
 	}
 	__tc_ok_cond__;
+	//поиск по алиасенному srcAddr
+	time_t t;
+	Profile profile = profileReg->getProfile(ackSms->getOriginatingAddress(), t);
+	//проверки
 	__tc__("getCommand.submit.checkFields");
 	__cfg_int__(maxValidPeriod);
 	__cfg_addr__(profilerAddr);
@@ -382,10 +385,6 @@ void ProfilerTestCases::onSubmit(SmscCommand& cmd)
 	sms.setEServiceType(profilerServiceType.c_str());
 	sms.setIntProperty(Tag::SMPP_SCHEDULE_DELIVERY_TIME, sms.getSubmitTime());
 	sms.setIntProperty(Tag::SMPP_ESM_CLASS, ESM_CLASS_NORMAL_MESSAGE);
-	sms.setIntProperty(Tag::SMPP_DATA_CODING, DATA_CODING_SMSC_DEFAULT);
-	//поиск по алиасенному srcAddr
-	time_t t;
-	Profile profile = profileReg->getProfile(ackSms->getOriginatingAddress(), t);
 	string text;
 	if (cmdType == UPDATE_REPORT_OPTIONS)
 	{
@@ -424,8 +423,10 @@ void ProfilerTestCases::onSubmit(SmscCommand& cmd)
 		__cfg_str__(cmdRespInvalidCmdText);
 		text = cmdRespInvalidCmdText;
 	}
+	uint8_t dataCoding = getDataCoding(profile.codepage);
 	int msgLen;
-	auto_ptr<char> msg = encode(text, DATA_CODING_SMSC_DEFAULT, msgLen);
+	auto_ptr<char> msg = encode(text, dataCoding, msgLen);
+	sms.setIntProperty(Tag::SMPP_DATA_CODING, dataCoding);
 	sms.setIntProperty(Tag::SMPP_SM_LENGTH, msgLen);
 	sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, msg.get(), msgLen);
 	__tc_fail2__(SmsUtil::compareMessages(*ackSms, sms), 0);

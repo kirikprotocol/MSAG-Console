@@ -47,6 +47,10 @@ public:
 			"Текст команды в дефолтной кодировке SC");
 		__reg_tc__("putCommand.cmdTextUcs2",
 			"Текст команды в кодировке UCS2");
+		/*
+		__reg_tc__("putCommand.cmdTextInvalidDataCoding",
+			"Недопустимая кодировка текста команды");
+		*/
 		__reg_tc__("putCommand.reportOptions",
 			"Изменение опций уведомления о доставке");
 		__reg_tc__("putCommand.reportOptions.reportNoneMixedCase",
