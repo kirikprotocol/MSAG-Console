@@ -267,6 +267,11 @@ StateType StateMachine::forward(Tuple& t)
   }
   try{
     // send delivery
+    Address src;
+    if(smsc->AddressToAlias(sms.getOriginatingAddress(),src))
+    {
+      sms.setOriginatingAddress(src);
+    }
     sms.setDestinationAddress(sms.getDealiasedDestinationAddress());
     SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
     dest_proxy->putCommand(delivery);
