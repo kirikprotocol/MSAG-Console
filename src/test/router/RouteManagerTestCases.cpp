@@ -107,7 +107,7 @@ void RouteManagerTestCases::setupRandomAddressNotMatch(Address& addr, int num)
 			}
 			//break;
 		case 2: //отличающийся адрес
-			addrVal[len - 1] = '+';
+			addrVal[len - 1] = '@';
 			addr.setValue(addrLen, addrVal);
 			break;
 		case 3: //адрес с несовпадающим typeOfNumber
