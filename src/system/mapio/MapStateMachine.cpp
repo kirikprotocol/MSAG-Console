@@ -293,6 +293,7 @@ static void CheckLockedByMO(MapDialog* dialog)
     __trace2__("MAP:UDHI:%s locked, recv(%d)",__FUNCTION__,it->second.parts);
     if ( it->second.startTime+GetMOLockTimeout() <= time(0) )
     {
+      __trace2__("MAP:UDHI:%s time expired, unlocked",__FUNCTION__);
       x_momap.erase(it);
     }
     else{
@@ -599,10 +600,12 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
             ref = udh[ptr+2];
             msgCount = udh[ptr+3];
             msgNum   = udh[ptr+4];
+            __trace2__(":MAP:UDHI: tag 0, len %d",elLength);
           }else{
             ref = ntohs(*(unsigned short*)(udh+ptr+2));
             msgCount = udh[ptr+4];
             msgNum   = udh[ptr+5];
+            __trace2__(":MAP:UDHI: tag 8, len %d",elLength);
           }
         }
         else ptr+=elLength;
