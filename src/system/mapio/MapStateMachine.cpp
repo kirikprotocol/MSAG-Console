@@ -565,6 +565,7 @@ void ResponseMO(MapDialog* dialog,unsigned status)
 {
   ET96MAP_ERROR_FORW_SM_MO_T err ;
   memset(&err,0,sizeof(ET96MAP_ERROR_FORW_SM_MO_T));
+  dialog->wasDelivered = true;
   switch ( status )
   {
   case Status::OK: break;
