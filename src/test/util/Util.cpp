@@ -35,7 +35,7 @@ auto_ptr<char> rand_char(int length)
 	char* res = new char[length + 1];
 	for (int i = 0; i < length; i++)
 	{
-		res[i] = 64 + rand1(26);
+		res[i] = 'A' + rand0(25);
 	}
 	res[length] = 0;
 	return auto_ptr<char>(res);
