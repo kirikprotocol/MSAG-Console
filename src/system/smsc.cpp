@@ -235,6 +235,7 @@ void Smsc::init(const SmscConfigs& cfg)
         si.wantAlias = rec->recdata.smppSme.wantAlias;
         si.forceDC = rec->recdata.smppSme.forceDC;
         si.proclimit=rec->recdata.smppSme.proclimit;
+        si.schedlimit=rec->recdata.smppSme.schedlimit;
         si.receiptSchemeName= rec->recdata.smppSme.receiptSchemeName;
         if(si.rangeOfAddress.length() && !re.Compile(si.rangeOfAddress.c_str(),OP_OPTIMIZE|OP_STRICT))
         {
@@ -722,11 +723,11 @@ void Smsc::shutdown()
 {
   __trace__("shutting down");
 
-  smeman.unregisterSmeProxy("DSTRLST");
-  smeman.unregisterSmeProxy("scheduler");
-
   tp.shutdown();
   tp2.shutdown();
+
+  smeman.unregisterSmeProxy("DSTRLST");
+  smeman.unregisterSmeProxy("scheduler");
 
   if(mapProxy)
   {
