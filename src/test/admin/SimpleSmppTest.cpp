@@ -11,23 +11,40 @@ using namespace smsc::sme;
 using namespace smsc::smpp::SmppCommandSet;
 using namespace smsc::test::smpp;
 
-class SimpleSmppTest : public SmppPduEventListener
+class SimpleSmppListener : public SmppPduEventListener
+{
+	const string systemId;
+	SmppSession* session;
+
+public:
+	SimpleSmppListener(const string& _systemId) : systemId(_systemId) {}
+	void setSession(SmppSession* _session) { session = _session; }
+	virtual void handleEvent(SmppHeader* pdu);
+	virtual void handleError(int errorCode);
+};
+
+struct SessionData
+{
+	SmppSession* session;
+	SimpleSmppListener* listener;
+};
+
+class SimpleSmppTest
 {
 	const string host;
 	const int port;
-	typedef map<const string, SmppSession*> Sessions;
+	typedef map<const string, SessionData*> Sessions;
 	Sessions sessions;
 	string selectedId;
 
 public:
 	SimpleSmppTest(const string& _host, int _port)
-		: host(host), port(port) {}
+		: host(_host), port(_port) {}
 	void bind(const string& systemId, const string& passwd);
 	void select(const string& systemId);
+	void list();
 	void unbind();
 	void submit(const string& src, const string& dest);
-	virtual void handleEvent(SmppHeader* pdu);
-	virtual void handleError(int errorCode);
 };
 
 #define __check_exception__ \
@@ -44,9 +61,13 @@ void SimpleSmppTest::bind(const string& systemId, const string& passwd)
 	config.password = passwd;
 	try
 	{
-		SmppSession* sess = new SmppSession(config, this);
-		sess->connect();
-		sessions[systemId] = sess;
+		SessionData* data = new SessionData();
+		data->listener = new SimpleSmppListener(systemId);
+		data->session = new SmppSession(config, data->listener);
+		data->listener->setSession(data->session);
+		data->session->connect();
+		sessions[systemId] = data;
+		select(systemId);
 	}
 	__check_exception__
 }
@@ -63,10 +84,19 @@ void SimpleSmppTest::select(const string& systemId)
 	cout << "session " << systemId << " selected" << endl;
 }
 
+void SimpleSmppTest::list()
+{
+	cout << "sessions:" << endl;
+	for (Sessions::const_iterator it = sessions.begin(); it != sessions.end(); it++)
+	{
+		cout << "  " << it->first << endl;
+	}
+}
+
 #define __check_selected__ \
 	Sessions::iterator it = sessions.find(selectedId); \
-	SmppSession* selectedSess = it == sessions.end() ? NULL : it->second; \
-	if (!selectedSess) { \
+	SessionData* data = it == sessions.end() ? NULL : it->second; \
+	if (!data) { \
 		cout << "no session selected" << endl; \
 		return; \
 	}
@@ -76,7 +106,10 @@ void SimpleSmppTest::unbind()
 	__check_selected__;
 	try
 	{
-		selectedSess->close();
+		data->session->close();
+		delete data->session;
+		delete data->listener;
+		sessions.erase(it);
 	}
 	__check_exception__
 }
@@ -94,49 +127,58 @@ void SimpleSmppTest::submit(const string& src, const string& dest)
 		const Address destAddr(dest.c_str());
 		pdu.get_message().set_source(*SmppUtil::convert(srcAddr, &addr));
 		pdu.get_message().set_dest(*SmppUtil::convert(destAddr, &addr));
+		//неменденная доставка
+		pdu.get_message().set_scheduleDeliveryTime("");
+		pdu.get_message().set_validityPeriod("");
 		pdu.get_optional().set_userMessageReference(++msgRef);
-		PduSubmitSmResp* respPdu = selectedSess->getSyncTransmitter()->submit(pdu);
-		cout << "submit: sme = " << selectedId <<
-			", seqNum = " << pdu.get_header().get_sequenceNumber() <<
-			", commandStatus = " << respPdu->get_header().get_commandStatus() <<
-			", msgRef = " << pdu.get_optional().get_userMessageReference() << endl;
+		PduSubmitSmResp* respPdu = data->session->getSyncTransmitter()->submit(pdu);
+		dumpPdu("submit", selectedId, reinterpret_cast<SmppHeader*>(&pdu));
+		char res[128];
+		sprintf(res, "submit: sme = %s, seqNum = %u, commandStatus = 0x%x, msgRef = %u",
+			selectedId.c_str(), pdu.get_header().get_sequenceNumber(),
+			respPdu->get_header().get_commandStatus(),
+			(uint32_t) pdu.get_optional().get_userMessageReference());
+		cout << res << endl;
 	}
 	__check_exception__
 }
 
-void SimpleSmppTest::handleEvent(SmppHeader* pdu)
+void SimpleSmppListener::handleEvent(SmppHeader* pdu)
 {
 	__require__(pdu);
-	dumpPdu("handleEvent", selectedId, pdu);
+	dumpPdu("handleEvent", systemId, pdu);
+	char res[128];
 	switch (pdu->get_commandId())
 	{
 		case GENERIC_NACK:
-			cout << "handle generick_nack: sme = " << selectedId <<
-				", seqNum = " << pdu->get_sequenceNumber() <<
-				", commandStatus = " << pdu->get_commandStatus() << endl;
+			sprintf(res, "handle generick_nack: sme = %s, seqNum = %u, commandStatus = 0x%x",
+				systemId.c_str(), pdu->get_sequenceNumber(), pdu->get_commandStatus());
 			break;
 		case SUBMIT_SM_RESP:
-			cout << "handle submit_sm_resp: sme = " << selectedId <<
-				", seqNum = " << pdu->get_sequenceNumber() <<
-				", commandStatus = " << pdu->get_commandStatus() << endl;
+			sprintf(res, "handle submit_sm_resp: sme = %s, seqNum = %u, commandStatus = 0x%x",
+				systemId.c_str(), pdu->get_sequenceNumber(), pdu->get_commandStatus());
 			break;
 		case DELIVERY_SM:
 			{
 				PduDeliverySm* p = reinterpret_cast<PduDeliverySm*>(pdu);
 				__require__(p->get_optional().has_userMessageReference());
-				uint16_t msgRef = p->get_optional().get_userMessageReference();
-				cout << "handle delivery_sm: sme = " << selectedId <<
-					", msgRef = " << (int) msgRef << endl;
+				sprintf(res, "handle delivery_sm: sme = %s, msgRef = %u",
+					systemId.c_str(), (uint32_t) p->get_optional().get_userMessageReference());
 			}
 			break;
 		default:
-			cout << "handle pdu: commandId = " << pdu->get_commandId() << endl;
+			sprintf(res, "handle pdu: sme = %s, commandId = 0x%x",
+				systemId.c_str(), pdu->get_commandId());
 	}
+	cout << res << endl;
 }
 
-void SimpleSmppTest::handleError(int errorCode)
+void SimpleSmppListener::handleError(int errorCode)
 {
-	cout << "fatal error = " << errorCode << " in sme = " << selectedId << endl;
+	char res[128];
+	sprintf(res, "handle error: sme = %s, errorCode = %d",
+		systemId.c_str(), errorCode);
+	cout << res << endl;
 }
 
 void executeTest(const string& smscHost, int smscPort)
@@ -153,6 +195,7 @@ void executeTest(const string& smscHost, int smscPort)
 			help = false;
 			cout << "bind <systemId> <password> - bind sme" << endl;
 			cout << "select <systemId> - select sme" << endl;
+			cout << "list - list sessions" << endl;
 			cout << "unbind - unbind selected sme" << endl;
 			cout << "submit <src> <dest> - submit sms" << endl;
 			cout << "quit - quit test" << endl;
@@ -182,6 +225,11 @@ void executeTest(const string& smscHost, int smscPort)
 				test.select(systemId);
 				continue;
 			}
+		}
+		else if (cmd == "list")
+		{
+			test.list();
+			continue;
 		}
 		else if (cmd == "unbind")
 		{
