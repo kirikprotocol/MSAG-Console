@@ -36,6 +36,7 @@ compile:
 	@cp -f $(SMSC_BUILDDIR)/jars/emailsme.jar  $(SME_BUILDDIR)/lib/emailsme.jar
 	@cp -f ../../src/emailsme/mailreaper.pl $(SME_BUILDDIR)/bin/
 	@cp -f ../../config/emailsme/config.xml $(SME_BUILDDIR)/conf/config.xml
+	@cp -f ../../config/emailsme/mdAgent.conf $(SME_BUILDDIR)/conf/mdAgent.conf
 	@cp -f ../../config/configuration.dtd $(SME_BUILDDIR)/conf/configuration.dtd
 	@cp -f ../../config/command.dtd $(SME_BUILDDIR)/conf/command.dtd
 	@cp -f ../../config/response.dtd $(SME_BUILDDIR)/conf/response.dtd

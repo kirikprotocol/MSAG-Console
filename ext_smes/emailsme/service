@@ -22,6 +22,7 @@ if [ ! -L logs ]; then
   ln -s ../../../../../../logs logs
 fi
 
+chmod +x bin/mailreaper.pl
 chmod +x bin/emailsme
 
 echo $$ >pid
