@@ -15,9 +15,11 @@ public class SmscInfo
   private String password;
   private int responseTimeout;
   private int uniqueMsgIdPrefix;
+  private String altHost;
+  private int altPort;
 
   public SmscInfo(final String id, final String host, final int port, final String systemId, final String password, final int responseTimeout,
-                  final int uniqueMsgIdPrefix)
+                  final int uniqueMsgIdPrefix, final String altHost, final int altPort)
   {
     this.id = id;
     this.host = host;
@@ -26,6 +28,8 @@ public class SmscInfo
     this.password = password;
     this.responseTimeout = responseTimeout;
     this.uniqueMsgIdPrefix = uniqueMsgIdPrefix;
+    this.altHost = altHost;
+    this.altPort = altPort;
   }
 
   public SmscInfo(final Config gwConfig, final String smscSection) throws Config.WrongParamTypeException, Config.ParamNotFoundException
@@ -37,6 +41,13 @@ public class SmscInfo
     this.password = gwConfig.getString(smscSection + ".password");
     this.responseTimeout = (int) gwConfig.getInt(smscSection + ".responseTimeout");
     this.uniqueMsgIdPrefix = (int) gwConfig.getInt(smscSection + ".uniqueMsgIdPrefix");
+    try {
+      this.altHost = gwConfig.getString(smscSection + ".altHost");
+      this.altPort = (int) gwConfig.getInt(smscSection + ".altPort");
+    } catch (Config.ParamNotFoundException e) {
+      this.altHost = "";
+      this.altPort = -1;
+    }
   }
 
   public String getId()
@@ -118,5 +129,27 @@ public class SmscInfo
     gwConfig.setString(fullName + ".password", password);
     gwConfig.setInt(fullName + ".responseTimeout", responseTimeout);
     gwConfig.setInt(fullName + ".uniqueMsgIdPrefix", uniqueMsgIdPrefix);
+    gwConfig.setString(fullName + ".altHost", altHost);
+    gwConfig.setInt(fullName + ".altPort", altPort);
+  }
+
+  public String getAltHost()
+  {
+    return altHost;
+  }
+
+  public void setAltHost(String altHost)
+  {
+    this.altHost = altHost;
+  }
+
+  public int getAltPort()
+  {
+    return altPort;
+  }
+
+  public void setAltPort(int altPort)
+  {
+    this.altPort = altPort;
   }
 }

@@ -115,7 +115,14 @@ public class Index extends SmppgwBean
       final Config gwConfig = appContext.getGwConfig();
       appContext.getSmscsManager().store(gwConfig);
       appContext.getGwConfig().save();
-      appContext.getGateway().apply("smscs");
+      try {
+        appContext.getGateway().apply("smscs");
+      } catch (SibincoException e) {
+        if (Proxy.StatusConnected == appContext.getGateway().getStatus()) {
+          logger.debug("Couldn't apply Service centers", e);
+          throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_SMSCS, e);
+        }
+      }
       appContext.getStatuses().setSmscsChanged(false);
     } catch (Throwable e) {
       logger.debug("Couldn't apply Service centers", e);

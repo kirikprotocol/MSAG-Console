@@ -22,6 +22,8 @@ public class Edit extends EditBean
   private String password;
   private int responseTimeout;
   private int uniqueMsgIdPrefix;
+  private String altHost;
+  private int altPort;
 
   protected void load(final String loadId) throws SmppgwJspException
   {
@@ -37,13 +39,15 @@ public class Edit extends EditBean
     this.password = info.getPassword();
     this.responseTimeout = info.getResponseTimeout();
     this.uniqueMsgIdPrefix = info.getUniqueMsgIdPrefix();
+    this.altHost = info.getAltHost();
+    this.altPort = info.getAltPort();
   }
 
   protected void save() throws SmppgwJspException
   {
     final Map smscs = getGlobalSmscs();
     final Map smes = getGlobalSmes();
-    final SmscInfo info = new SmscInfo(id, host, port, systemId, password, responseTimeout, uniqueMsgIdPrefix);
+    final SmscInfo info = new SmscInfo(id, host, port, systemId, password, responseTimeout, uniqueMsgIdPrefix, altHost, altPort);
     smscs.put(id, info);
     if (isAdd()) {
       if (smes.containsKey(id)) {
@@ -153,5 +157,25 @@ public class Edit extends EditBean
   public void setUniqueMsgIdPrefix(final int uniqueMsgIdPrefix)
   {
     this.uniqueMsgIdPrefix = uniqueMsgIdPrefix;
+  }
+
+  public String getAltHost()
+  {
+    return altHost;
+  }
+
+  public void setAltHost(final String altHost)
+  {
+    this.altHost = altHost;
+  }
+
+  public int getAltPort()
+  {
+    return altPort;
+  }
+
+  public void setAltPort(final int altPort)
+  {
+    this.altPort = altPort;
   }
 }
