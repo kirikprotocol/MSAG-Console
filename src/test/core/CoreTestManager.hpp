@@ -23,6 +23,7 @@ public:
 	static RouteManager* getRouteManager();
 
 private:
+	static bool inited;
 	static SmeManager* smeMan;
     static RouteManager* routeMan;
 	

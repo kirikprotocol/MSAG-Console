@@ -1,6 +1,4 @@
 #include "CoreTestManager.hpp"
-#include <cstdlib>
-#include <ctime>
 
 namespace smsc {
 namespace test {
@@ -13,16 +11,21 @@ using smsc::core::synchronization::MutexGuard;
 
 SmeManager* CoreTestManager::smeMan = NULL;
 RouteManager* CoreTestManager::routeMan = NULL;
+bool CoreTestManager::inited = false;
 
 void CoreTestManager::init()
 {
 	static Mutex lock;
-	MutexGuard mguard(lock);
-	if (!smeMan && !routeMan)
+	if (!inited)
 	{
-		smeMan = new SmeManager();
-		routeMan = new RouteManager();
-		routeMan->assign(smeMan);
+		MutexGuard mguard(lock);
+		if (!inited)
+		{
+			inited = true;
+			smeMan = new SmeManager();
+			routeMan = new RouteManager();
+			routeMan->assign(smeMan);
+		}
 	}
 }
 
