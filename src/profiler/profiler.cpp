@@ -123,13 +123,13 @@ public:
     {
       if(!k.defLength)
       {
-        debug2(log,"lookup %s(default profile):%s",address.toString().c_str(),DumpProfile(defaultProfile).c_str());
+        //debug2(log,"lookup %s(default profile):%s",address.toString().c_str(),DumpProfile(defaultProfile).c_str());
         return defaultProfile;
       }
       k.defLength--;
     }
     exact=k.defLength==address.length;
-    debug2(log,"lookup %s(%s):%s",exact?"exact":"mask",address.toString().c_str(),DumpProfile(defaultProfile).c_str());
+    //debug2(log,"lookup %s(%s):%s",exact?"exact":"mask",address.toString().c_str(),DumpProfile(defaultProfile).c_str());
     return *p;
   }
   Profile& findEx(const Address& address,int& matchType,string& matchAddr)
