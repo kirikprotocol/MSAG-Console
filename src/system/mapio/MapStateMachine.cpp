@@ -1422,6 +1422,7 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
       throw runtime_error(
         FormatText("MAP::%s Et96MapOpenReq return error 0x%x",__FUNCTION__,result));
   }
+  dialog->invokeId++;
   ET96MAP_ALERTING_PATTERN_T alertPattern = ET96MAP_ALERTING_PATTERN_LEVEL2;
   if( serviceOp == USSD_USSR_REQ ) {
     result = Et96MapV2UnstructuredSSRequestReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, ussdEncoding, ussdString, &alertPattern);
