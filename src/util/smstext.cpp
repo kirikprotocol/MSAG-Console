@@ -68,17 +68,33 @@ int splitSms(SMS* tmplSms,const char *text,int length,ConvEncodingEnum encoding,
   return dest.Count();
 }
 
-int fillSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int datacoding)
+int fillSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int datacoding,int trimLen)
 {
   int buflen=length*2+4;
   auto_ptr<char> buf(new char[buflen]);
   bool hb=hasHighBit(text,length);
   int dc;
   int datalen;
-  if(hb && datacoding==DataCoding::UCS2)
+  if(hb && (datacoding&DataCoding::UCS2)==DataCoding::UCS2)
   {
     ConvertMultibyteToUCS2(text,length,(short*)buf.get(),buflen,encoding);
     dc=DataCoding::UCS2;
+    if(trimLen)
+    {
+      if(length<=trimLen/2)
+      {
+        datalen=length*2;
+      }else
+      {
+        datalen=trimLen;
+        short d[1];
+        ConvertMultibyteToUCS2(".",1,d,1,CONV_ENCODING_ANSI);
+        short *b=(short*)buf.get();
+        b[trimLen/2-1]=d[0];
+        b[trimLen/2-2]=d[0];
+        b[trimLen/2-3]=d[0];
+      }
+    }
     datalen=length*2;
   }else
   {
@@ -90,7 +106,28 @@ int fillSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int d
         buf=auto_ptr<char>(new char[buflen]);
       }
     }while(datalen==-1);
-    dc=DataCoding::LATIN1;
+    if((datacoding&DataCoding::LATIN1)==DataCoding::LATIN1)
+    {
+      dc=DataCoding::LATIN1;
+    }else
+    {
+      char *buf2=new char[datalen*2];
+      datalen=ConvertLatin1ToSMSC7Bit(buf.get(),datalen,buf2);
+      buf=auto_ptr<char>(buf2);
+      dc=DataCoding::SMSC7BIT;
+    }
+    if(trimLen)
+    {
+      trimLen*=8;
+      trimLen/=7;
+      if(datalen>trimLen)
+      {
+        datalen=trimLen;
+        buf.get()[trimLen-1]='.';
+        buf.get()[trimLen-2]='.';
+        buf.get()[trimLen-3]='.';
+      }
+    }
   }
   sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,dc);
   if(datalen>255)
@@ -107,56 +144,7 @@ int fillSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int d
 }
 
 
-int trimSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int datacoding)
-{
-  int buflen=length*2+4;
-  auto_ptr<char> buf(new char[buflen]);
-  bool hb=hasHighBit(text,length);
-  int dc;
-  int datalen;
-  if(hb && datacoding==DataCoding::UCS2)
-  {
-    ConvertMultibyteToUCS2(text,length,(short*)buf.get(),buflen,encoding);
-    dc=DataCoding::UCS2;
-    if(length<=70)
-    {
-      datalen=length*2;
-    }else
-    {
-      datalen=140;
-      short d[1];
-      ConvertMultibyteToUCS2(".",1,d,1,CONV_ENCODING_ANSI);
-      short *b=(short*)buf.get();
-      b[69]=d[0];
-      b[68]=d[0];
-      b[67]=d[0];
-    }
-  }else
-  {
-    do{
-      datalen=Transliterate(text,length,encoding,buf.get(),buflen);
-      if(datalen==-1)
-      {
-        buflen*=2;
-        buf=auto_ptr<char>(new char[buflen]);
-      }
-    }while(datalen==-1);
-    if(datalen>160)
-    {
-      datalen=160;
-      buf.get()[159]='.';
-      buf.get()[158]='.';
-      buf.get()[157]='.';
-    }
-    dc=DataCoding::LATIN1;
-  }
-  sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,dc);
-  sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf.get(),datalen);
-  sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,datalen);
-  return datalen;
-}
-
-void transLiterateSms(SMS* sms)
+void transLiterateSms(SMS* sms,int datacoding)
 {
   char udhiData[257];
   int udhiDataLen=0;
@@ -186,10 +174,32 @@ void transLiterateSms(SMS* sms)
   }
 
   buf=auto_ptr<char>(new char[len*2]);
-  len=ConvertUCS2ToMultibyte(msg,len,buf.get(),len*2,CONV_ENCODING_CP1251);
-  buf8=auto_ptr<char>(new char[udhiDataLen+len*3+1]);
-  int newlen=Transliterate(buf.get(),len,CONV_ENCODING_CP1251,buf8.get()+udhiDataLen,len*3);
-  sms->setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
+
+  int newlen;
+
+  int dc;
+
+  if(sms->getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
+  {
+    len=ConvertUCS2ToMultibyte(msg,len,buf.get(),len*2,CONV_ENCODING_CP1251);
+    buf8=auto_ptr<char>(new char[udhiDataLen+len*4+1]);
+    newlen=Transliterate(buf.get(),len,CONV_ENCODING_CP1251,buf8.get()+udhiDataLen,len*3);
+    dc=DataCoding::LATIN1;
+    if(datacoding==DataCoding::SMSC7BIT)
+    {
+      buf=auto_ptr<char>(new char[newlen*2+1]);
+      newlen=ConvertLatin1ToSMSC7Bit(buf8.get()+udhiDataLen,newlen,buf.get());
+      memcpy(buf8.get()+udhiDataLen,buf.get(),newlen);
+      dc=DataCoding::SMSC7BIT;
+    }
+  }else if(sms->getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::LATIN1)
+  {
+    buf8=auto_ptr<char>(new char[udhiDataLen+len*2+1]);
+    newlen=ConvertLatin1ToSMSC7Bit((char*)msg,len,buf8.get()+udhiDataLen);
+    dc=DataCoding::SMSC7BIT;
+  }
+
+  sms->setIntProperty(Tag::SMPP_DATA_CODING,dc);
   __trace2__("SUBMIT: converting ucs2->text(%d->%d)",len,newlen);
   if(udhi)
   {

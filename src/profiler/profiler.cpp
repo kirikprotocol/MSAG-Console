@@ -347,6 +347,8 @@ enum{
   msgReportFull,
   msgDefault,
   msgUCS2,
+  msgLatin1,
+  msgUCS2AndLat,
   msgLocaleChanged,
   msgLocaleUnknown,
   msgHide,
@@ -508,6 +510,16 @@ int Profiler::Execute()
         msg=msgDefault;
         internal_update(_update_charset,addr,ProfileCharsetOptions::Default);
       }else
+      if(!strncmp(body+i,"LATIN1",6))
+      {
+        msg=msgLatin1;
+        internal_update(_update_charset,addr,ProfileCharsetOptions::Latin1);
+      }else
+      if(!strncmp(body+i,"UCS2ANDLAT",10))
+      {
+        msg=msgUCS2AndLat;
+        internal_update(_update_charset,addr,ProfileCharsetOptions::Ucs2AndLat);
+      }else
       if(!strncmp(body+i,"UCS2",4))
       {
         msg=msgUCS2;
@@ -556,6 +568,14 @@ int Profiler::Execute()
       case msgUCS2:
       {
         msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgUCS2");
+      }break;
+      case msgLatin1:
+      {
+        msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgLatin1");
+      }break;
+      case msgUCS2AndLat:
+      {
+        msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgUCS2AndLat");
       }break;
       case msgLocaleChanged:
       {

@@ -29,8 +29,10 @@ namespace ProfileReportOptions{
 };
 
 namespace ProfileCharsetOptions{
-  const int Default    =0;
+  const int Default    =smsc::smpp::DataCoding::SMSC7BIT;
+  const int Latin1     =smsc::smpp::DataCoding::LATIN1;
   const int Ucs2       =smsc::smpp::DataCoding::UCS2;
+  const int Ucs2AndLat =smsc::smpp::DataCoding::UCS2 | smsc::smpp::DataCoding::LATIN1;
 };
 
 namespace ProfilerMatchType{

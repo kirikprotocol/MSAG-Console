@@ -119,10 +119,9 @@ static inline bool hasHighBit(const char* buf,int len)
 int splitSms(SMS* tmplSms,const char *text,int length,ConvEncodingEnum encoding,int datacoding,
              Array<SMS*>& dest);
 
-int trimSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int datacoding);
-int fillSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int datacoding);
+int fillSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int datacoding,int trimLen=65535);
 
-void transLiterateSms(SMS* sms);
+void transLiterateSms(SMS* sms,int datacoding);
 
 enum{
   psSingle,

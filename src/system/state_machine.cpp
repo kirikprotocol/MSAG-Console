@@ -1306,11 +1306,22 @@ StateType StateMachine::submit(Tuple& t)
     //
     if(!sms->hasBinProperty(Tag::SMSC_CONCATINFO) && sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3)
     {
-      if(sms->getIntProperty(Tag::SMSC_DSTCODEPAGE)==smsc::profiler::ProfileCharsetOptions::Default &&
-         sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
+      using namespace smsc::profiler::ProfileCharsetOptions;
+      if(
+         (
+           (sms->getIntProperty(Tag::SMSC_DSTCODEPAGE)==Default ||
+            sms->getIntProperty(Tag::SMSC_DSTCODEPAGE)==Latin1
+           )
+           && sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2
+         ) ||
+         (
+           (sms->getIntProperty(Tag::SMSC_DSTCODEPAGE)&Latin1)!=Latin1 &&
+           sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::LATIN1
+         )
+        )
       {
         try{
-          transLiterateSms(sms);
+          transLiterateSms(sms,sms->getIntProperty(Tag::SMSC_DSTCODEPAGE));
           if(sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
           {
             int dc=sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
@@ -1644,10 +1655,21 @@ StateType StateMachine::forward(Tuple& t)
     {
       if(sms.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3)
       {
-        if(sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)==smsc::profiler::ProfileCharsetOptions::Default &&
-           sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
+        using namespace smsc::profiler::ProfileCharsetOptions;
+        if(
+           (
+             (sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)==Default ||
+              sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)==Latin1
+             )
+             && sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2
+           ) ||
+           (
+             (sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)&Latin1)!=Latin1 &&
+             sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::LATIN1
+           )
+          )
         {
-          transLiterateSms(&sms);
+          transLiterateSms(&sms,sms.getIntProperty(Tag::SMSC_DSTCODEPAGE));
           if(sms.hasIntProperty(Tag::SMSC_ORIGINAL_DC))
           {
             int dc=sms.getIntProperty(Tag::SMSC_ORIGINAL_DC);
@@ -2063,7 +2085,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       formatDeliver(fd,out);
       rpt.getDestinationAddress().getText(addr,sizeof(addr));
       __trace2__("RECEIPT: sending receipt to %s:%s",addr,out.c_str());
-      trimSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage);
+      fillSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,140);
       smsc->submitSms(prpt);
       /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
       for(int i=0;i<arr.Count();i++)
@@ -2474,7 +2496,7 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   fd.scheme=si.receiptSchemeName.c_str();
 
   formatFailed(fd,out);
-  trimSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage);
+  fillSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,140);
   smsc->submitSms(prpt);
   /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
   for(int i=0;i<arr.Count();i++)
@@ -2538,7 +2560,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
 
 
   formatNotify(fd,out);
-  trimSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage);
+  fillSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,140);
   smsc->submitSms(prpt);
   /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
   for(int i=0;i<arr.Count();i++)
