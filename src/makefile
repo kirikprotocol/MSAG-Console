@@ -30,7 +30,7 @@ CFLAGS := $(CAMMON_INCLUDES)
 CXXFLAGS := $(CAMMON_INCLUDES)
 LDFLAGS := -L$(SMSC_BUILDDIR)/lib
 
-ifdef DEBUG
+ifeq ($(DEBUG),"YES")
 CFLAGS := $(CFLAGS) -g
 CXXFLAGS := $(CXXFLAGS) -g
 export DEBUG
@@ -87,7 +87,7 @@ deps:
 	@echo "build dependencies"
 	@if [ -n "$(MODULES)" ]; then \
 	    XXXX="$(MODULES)"; \
-	    set -e; for i in $$XXXX; do make $$i.deps ; done; \
+	    set -e; for i in $$XXXX; do make -s $$i.deps ; done; \
 	fi
 
 $(SMSC_BUILDDIR): $(SMSC_BUILDDIR_LIST)
