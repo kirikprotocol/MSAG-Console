@@ -173,11 +173,13 @@ __synchronized__
 void RouteManager::addRoute(const RouteInfo& routeInfo)
 {
 __synchronized__
+	__require__(sme_table);
   auto_ptr<RouteRecord> r(new RouteRecord);
   r->info = routeInfo;
   r->src_def = calcDefLengthAndCheck(&r->info.source);
   r->dest_def = calcDefLengthAndCheck(&r->info.dest);
   r->next = new_first_record;
+	r->proxyIdx = sme_table->lookup(r->info.smeSystemId);
   new_first_record = r.release();
 }
 
@@ -209,6 +211,7 @@ RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& cmp
         }
         else break;
       }
+			return node->record;
     }
 		else // strong
 				return node->record;
@@ -251,7 +254,8 @@ RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& cmp )
 				goto find_by_source;
 			}
     }
-		else return 0; // not found
+		// else find by source
+		//else return 0; // not found
 find_by_source:    
 		// find by source
     {
@@ -277,7 +281,7 @@ find_by_source:
 			}
     }
   }
-  //return 0;
+  return 0;
 }
 
 inline 
