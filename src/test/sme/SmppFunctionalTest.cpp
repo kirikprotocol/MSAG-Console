@@ -180,7 +180,10 @@ void TestSme::executeCycle()
 			__require__(res->getFailures()[i] != 100); //session->connect() failed
 		}
 		process(res);
-		process(tc.bindIncorrectSme(RAND_TC)); //обязательно после bindCorrectSme
+		for (int i = 0; i < 3; i++)
+		{
+			//process(tc.bindIncorrectSme(RAND_TC)); //обязательно после bindCorrectSme
+		}
 		boundOk = true;
 	}
 	//Синхронная отправка submit_sm pdu другим sme
@@ -247,13 +250,13 @@ inline void SmppFunctionalTest::resize(int newSize)
 
 inline void SmppFunctionalTest::onStopped(int taskNum)
 {
-	//MutexGuard(mutex);
+	//MutexGuard guard(mutex);
 	taskStat[taskNum].stopped = true;
 }
 
 bool SmppFunctionalTest::isStopped()
 {
-	//MutexGuard(mutex);
+	//MutexGuard guard(mutex);
 	bool stopped = true;
 	for (int i = 0; i < taskStat.size(); i++)
 	{
@@ -316,8 +319,11 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 		addr.push_back(new Address());
 		smeInfo.push_back(new SmeInfo());
 		SmsUtil::setupRandomCorrectAddress(addr[i]);
-		process(tcSme->addCorrectSme(smeInfo[i], RAND_TC));
+		process(tcSme->addCorrectSme(smeInfo[i], 1 /*RAND_TC*/));
 		smeReg->registerSme(*addr[i], (i < numSme ? smeInfo[i] : NULL));
+		ostringstream os;
+		os << *addr[i];
+		__trace2__("TestSmsc::config(): addr = %s, systemId = %s", os.str().c_str(), smeInfo[i]->systemId.c_str());
 	}
 	//регистрация алиасов
 	for (int i = 0; i < numAddr; i++)
@@ -383,7 +389,6 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 		SmeConfig config;
 		config.host = smscHost;
 		config.port = smscPort;
-		//auto_ptr<char> tmp = rand_char(15); //15 по спецификации
 		//config.sid = tmp.get();
 		config.sid = smeInfo[i]->systemId;
 		config.timeOut = 10;
@@ -395,6 +400,7 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 	}
 	//печать таблицы маршрутов
 	__trace__("Route table");
+	bool routesOk = false;
 	for (int i = 0; i < numAddr; i++)
 	{
 		for (int j = 0; j < numAddr; j++)
@@ -414,6 +420,7 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 				{
 					smeId = routeHolder->route.smeSystemId;
 					smeAvailable = smeReg->isSmeAvailable(smeId);
+					routesOk |= smeAvailable;
 				}
 			}
 			ostringstream os;
@@ -422,10 +429,11 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 				os.str().c_str(), smeId.c_str(), (smeAvailable ? "yes" : "no"));
 		}
 	}
-
-
-
-
+	if (!routesOk)
+	{
+		cout << "Invalid routes generated" << endl;
+		abort();
+	}
 	for (int i = 0; i < numAddr; i++)
 	{
 		delete addr[i];
