@@ -37,6 +37,7 @@ public:
     prxmon=0;
     smsCount=0;
     log=smsc::logger::Logger::getInstance("sched");
+    queueOrder=qoTimeLine;
   }
   int Execute();
   const char* taskName(){return "scheduler";}
@@ -192,13 +193,23 @@ public:
       return -1;
   }
 
-  void getSmsCounts(int& totalCnt,int& tlLength,int& regSize,int& inProcCnt)
+  struct SchedulerCounts{
+    int timeLineCount;
+    int timeLineSize;
+    int firstTimeCount;
+    int regSize;
+    int inProcCount;
+  };
+
+  void getCounts(SchedulerCounts& scCnt)
   {
     MutexGuard g(mon);
-    totalCnt=smsCount;
-    tlLength=timeLine.size();
-    regSize=chainRegistry.size();
-    inProcCnt=procMap.size();
+
+    scCnt.timeLineCount=smsCount;
+    scCnt.timeLineSize=timeLine.size();
+    scCnt.firstTimeCount=firstQueue.Count();
+    scCnt.regSize=chainRegistry.size();
+    scCnt.inProcCount=procMap.size();
   }
 
   virtual void close(){}
@@ -210,51 +221,50 @@ public:
 
   }
 
+
   virtual bool getCommand(SmscCommand& cmd)
   {
     MutexGuard guard(mon);
-    if(firstQueue.Count())
+    SchedulerData sd;
+    if(queueOrder==qoFirstTime && ftPop(sd))
     {
-      SchedulerData sd;
-      firstQueue.Pop(sd);
-      cmd=SmscCommand::makeForward(sd.id,sd.resched);
-      debug2(log,"firstForward: id=%lld",sd.id);
-      return true;
-    }
-
-    time_t t=time(NULL);
-    if(timeLine.size()!=0)
-    {
-      static time_t lastUpdate=time(NULL)-1;
-      if(lastUpdate!=t)
-      {
-        debug2(log,"headTime=%d, now=%d",timeLine.headTime(),t);
-        lastUpdate=t;
-      }
+      queueOrder=qoTimeLine;
     }else
+    if(queueOrder==qoTimeLine && tlPop(sd))
     {
-      //debug(log,"Sc: queue empty");
-    }
-    if(timeLine.size()==0 || timeLine.headTime()>t)
+      queueOrder=qoFirstTime;
+    }else if(!ftPop(sd) && !tlPop(sd))
     {
       return false;
     }
-    SchedulerData d;
-    Chain* c=timeLine.Pop(this);
-    if(!c)return false;
-    if(!ChainPop(c,d))
-    {
-      UpdateChainChedule(c);
-      debug2(log,"Chain::Pop failed, rescheduled to %d",c->headTime);
-      timeLine.Add(c,this);
-      return false;
-    }
-
-    debug2(log,"makeFwd: id=%lld, addr=%s, c=%p",d.id,c->addr.toString().c_str(),c);
-    AddProcessingChain(d.id,c);
-    cmd=SmscCommand::makeForward(d.id,d.resched);
+    cmd=SmscCommand::makeForward(sd.id,sd.resched);
     return true;
   }
+
+  virtual int getCommandEx(std::vector<SmscCommand>& cmds,int& mx,SmeProxy* prx)
+  {
+    MutexGuard guard(mon);
+    int cnt=0;
+    bool order=true;
+    SchedulerData sd;
+    for(int i=0;i<mx;i++)
+    {
+      if((order && (ftPop(sd) || tlPop(sd))) || (!order && (tlPop(sd) || ftPop(sd))))
+      {
+        SmscCommand cmd=SmscCommand::makeForward(sd.id,sd.resched);
+        cmd.setProxy(prx);
+        cmds.push_back(cmd);
+        cnt++;
+        order=!order;
+      }else
+      {
+        break;
+      }
+    }
+    mx=cnt;
+    return 0;
+  }
+
 
   virtual SmeProxyState getState()const
   {
@@ -321,6 +331,51 @@ public:
     SMSId id;
     bool resched;
   };
+
+  bool tlPop(SchedulerData& d)
+  {
+    time_t t=time(NULL);
+    if(timeLine.size()!=0)
+    {
+      static time_t lastUpdate=time(NULL)-1;
+      if(lastUpdate!=t)
+      {
+        debug2(log,"headTime=%d, now=%d",timeLine.headTime(),t);
+        lastUpdate=t;
+      }
+    }else
+    {
+      //debug(log,"Sc: queue empty");
+    }
+    if(timeLine.size()==0 || timeLine.headTime()>t)
+    {
+      return false;
+    }
+    Chain* c=timeLine.Pop(this);
+    if(!c)return false;
+    if(!ChainPop(c,d))
+    {
+      UpdateChainChedule(c);
+      debug2(log,"Chain::Pop failed, rescheduled to %d",c->headTime);
+      timeLine.Add(c,this);
+      return false;
+    }
+
+    debug2(log,"makeFwd: id=%lld, addr=%s, c=%p",d.id,c->addr.toString().c_str(),c);
+    AddProcessingChain(d.id,c);
+    return true;
+  }
+
+  bool ftPop(SchedulerData& sd)
+  {
+    if(firstQueue.Count())
+    {
+      firstQueue.Pop(sd);
+      debug2(log,"firstForward: id=%lld",sd.id);
+      return true;
+    }
+    return false;
+  }
 
   struct Chain{
     Address addr;
@@ -767,7 +822,16 @@ public:
 
   }
 
+  time_t tlHeadTime()
+  {
+    MutexGuard mg(mon);
+    return timeLine.headTime();
+  }
+
   int smsCount;
+
+  enum QueueOrder{qoTimeLine,qoFirstTime};
+  QueueOrder queueOrder;
 
 
   Mutex seqMtx;
