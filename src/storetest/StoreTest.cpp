@@ -33,11 +33,21 @@ int main(void)
     try {
         store = StoreManager::getInstance();
         printf("Connect Ok !\n");
-        SMSId id = store->store(&sms);
-        printf("Message stored !\n");
-        //store->retrive(id);
+        
+		/*time_t begTime = time(0L);
+        for (int i=0; i<10000; i++)
+		{
+			SMSId id = store->store(sms);
+        }
+		time_t endTime = time(0L);
+        printf("Time spent: %d !\n", endTime - begTime);*/
+		
+		SMSId id = store->store(sms);
+		printf("Message stored, id = %d !\n", id);
+
+        //sms = store->retrive(id);
     } 
-    catch (exception& exc) {
+    catch (StoreException& exc) {
         printf("Exception : %s\n", exc.what());
         return -1;
     }

@@ -1,43 +1,62 @@
 #ifndef STRORE_EXCEPTIONS_DECLARATIONS
 #define STRORE_EXCEPTIONS_DECLARATIONS
 
+#include <string.h>
 #include <exception>
 
 using std::exception;
 
 namespace smsc { namespace store
 {
-    class AuthenticationException : public exception
+    class StoreException : public exception
     {
-    public:
-        AuthenticationException() {};
-        virtual ~AuthenticationException() throw() {};
+	private:
+		
+		int	  code;
+		char  cause[512];
+
+	public:
+		
+		StoreException(int _code, const char* _cause) : code(_code) {
+			//cause = strdup(_cause);
+			sprintf(cause, "Code - %d, Cause - %s", _code, _cause);
+		};
+        
+		virtual ~StoreException() throw() {
+			//if (cause) free(cause);
+		};
        
         virtual const char* what() const throw() {
-            return "Unable to authenticate user to DB !";
-        };    
-    };
-   
-    class ResourceAllocationException : public exception
-    {
-    public:
-        ResourceAllocationException() {};
-        virtual ~ResourceAllocationException() throw() {};
-        
-        virtual const char* what() const throw() {
-            return "Unable to allocate resources for DB !";
-        };    
+            return cause;
+        };
+		
+		inline int getErrorCode() {
+			return code;
+		};
     };
     
-    class NoSuchMessageException : public exception
+	class AuthenticationException : public StoreException
     {
     public:
-        NoSuchMessageException() {};
-        virtual ~NoSuchMessageException() throw() {};
-        
-        virtual const char* what() const throw() {
-            return "Unable to find message with such id in DB !";
-        };    
+        AuthenticationException() : StoreException(-1, 
+			"Unable to authenticate user to DB !") {};
+        virtual ~AuthenticationException() throw() {};
+    };
+   
+    class ResourceAllocationException : public StoreException
+    {
+    public:
+        ResourceAllocationException() : StoreException(-1, 
+			"Unable to allocate resources for DB !") {};
+		virtual ~ResourceAllocationException() throw() {};
+    };
+    
+    class NoSuchMessageException : public StoreException
+    {
+    public:
+        NoSuchMessageException() : StoreException(-1, 
+			"Unable to find message with such id in DB !") {};
+		virtual ~NoSuchMessageException() throw() {};
     };
 
 }}
