@@ -117,6 +117,8 @@ public:
   virtual int Execute(){
     try{
       init();
+      startevent->Signal();
+      is_started = true;
       dispatcher();
       //deinit();
     }catch(std::exception& e){
@@ -125,7 +127,7 @@ public:
   }
   virtual const char* taskName() { return "MapIoTask";}
   bool isStarted() {return is_started;}
-  MapIoTask(Event* startevent) : startevent(startevent) {}
+  MapIoTask(Event* startevent) : startevent(startevent),is_started(false) {}
   ~MapIoTask() {deinit();}
 private:
   Event* startevent;
