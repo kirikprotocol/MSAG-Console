@@ -105,6 +105,7 @@ ostream& operator<< (ostream& os, const AliasInfo& alias)
 {
 	os << "alias = " << alias.alias;
 	os << ", addr = " << alias.addr;
+	os << ", hide = " << (alias.hide ? "true" : "false");
 	return os;
 }
 
