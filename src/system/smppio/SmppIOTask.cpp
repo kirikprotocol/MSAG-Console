@@ -25,6 +25,15 @@ const int SOCKET_SLOT_INPUTMULTI=4;
 const int SOCKET_SLOT_OUTPUTMULTI=5;
 const int SOCKET_SLOT_KILL=6;
 
+
+static void KillProxy(SmppProxy* proxy)
+{
+  if(!proxy->Unref())
+  {
+    delete proxy;
+  }
+}
+
 SmppInputThread::~SmppInputThread()
 {
   while(sockets.Count())
@@ -78,14 +87,14 @@ void SmppInputThread::killSocket(int idx)
     (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
   trace2("removing socket %p by input thread",s);
   int rcnt=m->removeSocket(s);
-  if(!rcnt && ss->getProxy())
+  if(ss->getProxy())
   {
     try{
       smeManager->unregisterSmeProxy(ss->getProxy()->getSystemId());
     }catch(...)
     {
     }
-    delete ss->getProxy();
+    KillProxy(ss->getProxy());
   }
   delete ss;
 }
@@ -394,7 +403,7 @@ int SmppInputThread::Execute()
               try{
                 if(ss->getProxy() && ss->getProxy()->isOpened())
                 {
-                  __trace__("UNBINDRESP sent for %p",ss->getProxy());
+                  __trace2__("UNBINDRESP sent for %p",ss->getProxy());
                   ss->getProxy()->putCommand
                   (
                     SmscCommand::makeUnbindResp
@@ -403,7 +412,8 @@ int SmppInputThread::Execute()
                       Status::OK
                     )
                   );
-                  //ss->getProxy()->close();
+                  ss->getProxy()->close();
+                  KillProxy(ss->getProxy());
                   ss->assignProxy(0);
                 }else
                 {
@@ -586,7 +596,7 @@ void SmppOutputThread::killSocket(int idx)
     }catch(...)
     {
     }
-    delete ss->getProxy();
+    KillProxy(ss->getProxy());
   }
   delete ss;
 }
@@ -650,7 +660,7 @@ int SmppOutputThread::Execute()
           {
             __trace__("SmppOutputThread: failed to unregister");
           }
-          delete ss->getProxy();
+          KillProxy(ss->getProxy());
           ss->assignProxy(0);
         }
       }

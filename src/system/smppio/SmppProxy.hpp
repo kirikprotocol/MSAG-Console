@@ -31,6 +31,7 @@ public:
   {
     smppSocket->assignProxy(this);
     seq=1;
+    refcnt=2;
     managerMonitor=NULL;
     proxyType=proxyTransceiver;
     opened=true;
@@ -220,6 +221,13 @@ public:
     return opened;
   }
 
+  int Unref()
+  {
+    MutexGuard g(mutex);
+    int cnt=--refcnt;
+    return cnt;
+  }
+
 protected:
   mutable Mutex mutex,mutexin,mutexout;
   std::string id;
@@ -231,6 +239,7 @@ protected:
   SmeProxyState state;
   ProxyMonitor *managerMonitor;
   SmppSocket *smppSocket;
+  int refcnt;
 };
 
 bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
