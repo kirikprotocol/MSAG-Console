@@ -751,7 +751,12 @@ void DateTimeFormatter::format(std::string& output,
     }
     else // format date by default format
     {
-        ctime_r(&date, buff);   
+        ctime_r(&date, buff);
+        int buffLen = strlen(buff);
+        while (buffLen-- >= 0)
+            if (buff[buffLen] == '\r' || buff[buffLen] == '\n') 
+                buff[buffLen] = '\0';
+            else break;
         output += buff;
     }
     
