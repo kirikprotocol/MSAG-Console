@@ -130,6 +130,11 @@ Command* CommandReader::parseCommand(DOMInputSource &source)
 char * CommandReader::getCommandName(const DOMDocument *data)
 {
   DOMElement *commandElem = data->getDocumentElement();
+  if (!commandElem)
+  {
+    smsc_log_error(logger, "DTD file for command not found");
+    throw AdminException("DTD file for command not found");
+  }
   if (XMLString::compareString(commandElem->getNodeName(), XmlStr("command")) != 0)
   {
     smsc_log_warn(logger, "<command> tag not found in command");
