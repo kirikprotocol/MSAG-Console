@@ -15,6 +15,8 @@ int main(void)
 	static char* da = "098.7.654.321";
 	static char* body = "Test message's body !";
 
+	memset((void *)&sms, 0, sizeof(sms));
+
 	sms.setState(ENROUTE);
 	sms.setOriginatingAddress(strlen(oa), 1, 2, oa);
 	sms.setDestinationAddress(strlen(da), 2, 1, da);
@@ -38,7 +40,8 @@ int main(void)
         printf("Connect Ok !\n");
         
 		time_t begTime, endTime;
-        printf("\nStoring %d messages, please wait ... \n", NUM_OF_TEST_MESSAGES);
+        printf("\nStoring %d messages, please wait ... \n", 
+				NUM_OF_TEST_MESSAGES);
 		begTime = time(0L);
         for (int i=0; i<NUM_OF_TEST_MESSAGES; i++)
 		{
@@ -48,8 +51,9 @@ int main(void)
         printf("Time spent for storing: %d (sec)\nPerformance: %d (msg per sec)\n",
 			    endTime, NUM_OF_TEST_MESSAGES/endTime);
 		
-		begTime = time(0L);
-		printf("\nRetriving %d messages, please wait ... \n", NUM_OF_TEST_MESSAGES);
+        begTime = time(0L);
+		printf("\nRetriving %d messages, please wait ... \n",
+			   NUM_OF_TEST_MESSAGES);
 		for (int i=1; i<NUM_OF_TEST_MESSAGES+1; i++)
 		{
 			sms = store->retrive((SMSId)i);

@@ -10,7 +10,7 @@
 namespace smsc { namespace sms
 {
     const int MAX_ADDRESS_VALUE_LENGTH = 21;
-    const int MAX_SHORT_MESSAGE_LENGTH = 256;
+    const int MAX_SHORT_MESSAGE_LENGTH = 170;
     
     typedef char		AddressValue[MAX_ADDRESS_VALUE_LENGTH+1];
     typedef uint8_t  	SMSData[MAX_SHORT_MESSAGE_LENGTH];
@@ -45,7 +45,7 @@ namespace smsc { namespace sms
        
         inline void setValue(uint8_t _len, const char* _value) 
         {
-            __require__(_len<sizeof(AddressValue));
+            __require__(_len && _value && _len<sizeof(AddressValue));
             
 			memcpy(value, _value, _len*sizeof(uint8_t));
             value[lenght = _len] = '\0';
@@ -105,7 +105,7 @@ namespace smsc { namespace sms
 
         inline void setData(uint8_t _len, const uint8_t* _data) 
         {
-            __require__(_len<=sizeof(SMSData));
+            __require__(_len && _data && _len<=sizeof(SMSData));
             
 			memcpy(data, _data, _len*sizeof(uint8_t));
             lenght = _len;

@@ -42,27 +42,43 @@ CREATE TABLE SMS_MSG
 	DCS		NUMBER(3)	NULL,
 	UDHI		CHAR(1)		NULL,
 	UDL		NUMBER(3)	NULL,
-	UD		RAW(256)	NOT NULL
+	UD		RAW(170)	NOT NULL
 ) TABLESPACE SMSC_DATA INITRANS 200 NOLOGGING;
 
 /*CREATE INDEX ID_IDX ON SMS_MSG (ID ASC) 
 NOSORT NOCOMPRESS NOLOGGING PARALLEL
 TABLESPACE SMSC1;*/
-
-/*CREATE OR REPLACE FUNCTION insert_new_msg (st NUMBER, mr NUMBER, rm NUMBER,
-	ao_len NUMBER, ao_ton NUMBER, ao_npi NUMBER, ao_val VARCHAR2,
+CREATE OR REPLACE FUNCTION insert_new_msg 
+       (id NUMBER, st NUMBER, mr NUMBER, rm NUMBER,
+	oa_len NUMBER, oa_ton NUMBER, oa_npi NUMBER, oa_val VARCHAR2,
 	da_len NUMBER, da_ton NUMBER, da_npi NUMBER, da_val VARCHAR2,
 	valid_time DATE, wait_time DATE, submit_time DATE, delivery_time DATE,
 	srr CHAR, rd CHAR, pri NUMBER, pid NUMBER,
-	fcs NUMBER, dcs NUMBER, udhi CHAR, ud VARCHAR2)
-RETURN NUMBER PARALLEL_ENABLE IS msg_id NUMBER;
+	fcs NUMBER, dcs NUMBER, udhi CHAR, udl NUMBER, ud RAW)
+RETURN NUMBER IS 
+msg_id NUMBER;
 BEGIN
 	SELECT SMS_MSG_ID_SEQUENCE.NEXTVAL INTO msg_id FROM DUAL;
 	INSERT INTO SMS_MSG VALUES (msg_id, st, mr, rm, 
 		oa_len, oa_ton, oa_npi, oa_val, da_len, da_ton, da_npi, da_val,
 		valid_time, wait_time, submit_time, delivery_time,
-       		srr, rd, pri, pid, fcs, dcs, udhi, ud);
+       		srr, rd, pri, pid, fcs, dcs, udhi, udl, ud);
 	RETURN (msg_id);
-END insert_new_msg;*/
+END insert_new_msg;
 
-
+CREATE OR REPLACE PROCEDURE INSERT_NEW_MSG 
+   (id IN OUT NUMBER, st NUMBER, mr NUMBER, rm NUMBER,
+    oa_len NUMBER, oa_ton NUMBER, oa_npi NUMBER, oa_val VARCHAR2,
+    da_len NUMBER, da_ton NUMBER, da_npi NUMBER, da_val VARCHAR2,
+    valid_time DATE, wait_time DATE, submit_time DATE, delivery_time DATE,
+    srr CHAR, rd CHAR, pri NUMBER, pid NUMBER, fcs NUMBER,
+    dcs NUMBER, udhi CHAR, udl NUMBER, ud RAW)
+    IS 
+BEGIN
+	SELECT SMS_MSG_ID_SEQUENCE.NEXTVAL INTO id FROM DUAL;
+	INSERT INTO SMS_MSG VALUES 
+        (id, st, mr, rm,
+         oa_len, oa_ton, oa_npi, oa_val, da_len, da_ton, da_npi, da_val,
+         valid_time, wait_time, submit_time, delivery_time,
+         srr, rd, pri, pid, fcs, dcs, udhi, udl, ud);
+END INSERT_NEW_MSG;

@@ -125,8 +125,7 @@ namespace smsc { namespace store
 		OCIDate     	validTime;
 		OCIDate			submitTime;
 		OCIDate     	deliveryTime;
-		OCIRaw*			rawUd;	
-
+        
 		uint8_t			uState;
 		char			bStatusReport;
 		char			bRejectDuplicates;

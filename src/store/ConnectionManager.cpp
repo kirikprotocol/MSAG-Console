@@ -85,16 +85,24 @@ void ConnectionPool::checkErr(sword status, Connection* connection)
 	case OCI_SUCCESS_WITH_INFO:
 		//throw StoreException(status, "OCI_SUCCESS_WITH_INFO");
 		return;
+	
+	case OCI_NO_DATA:
+		strcpy((char *)errbuf, "OCI_NODATA");
+		break;
         
 	case OCI_NEED_DATA:
 		strcpy((char *)errbuf, "OCI_NEED_DATA");
 		break;
         
-	case OCI_NO_DATA:
-		strcpy((char *)errbuf, "OCI_NODATA");
+	case OCI_STILL_EXECUTING:
+		strcpy((char *)errbuf, "OCI_STILL_EXECUTE");
 		break;
-        
-	case OCI_ERROR:
+    
+	case OCI_INVALID_HANDLE:
+		strcpy((char *)errbuf, "OCI_INVALID_HANDLE");
+		break;
+                
+    case OCI_ERROR:
         if (errhp = connection->errhp)
 		{
 			(void) OCIErrorGet (errhp, (ub4) 1, (text *) NULL,
@@ -103,15 +111,9 @@ void ConnectionPool::checkErr(sword status, Connection* connection)
 			status = errcode;
         }
 		break;	
-	case OCI_INVALID_HANDLE:
-		strcpy((char *)errbuf, "OCI_INVALID_HANDLE");
-		break;
-                
-	case OCI_STILL_EXECUTING:
-		strcpy((char *)errbuf, "OCI_STILL_EXECUTE");
-		break;
 
-    default:
+	default:
+		strcpy((char *)errbuf, "OCI_UNKNOWN_ERROR");
 		break;
 	}
 	
@@ -189,20 +191,25 @@ void ConnectionPool::freeConnection(Connection* connection)
 /* ----------------------------- ConnectionPool ------------------------ */
 
 /* ------------------------------- Connection -------------------------- */
-text* Connection::sqlStoreLock = (text *)
+/*text* Connection::sqlStoreLock = (text *)
 "UPDATE SMS_ID_LOCK SET ID=0 WHERE TGT='SMS_MSG_TABLE'";
 
 text* Connection::sqlStoreMaxId = (text *)
 "SELECT NVL(MAX(ID), 0) FROM SMS_MSG";
 
-/*text* Connection::sqlStoreMaxId = (text *)
-"SELECT NVL(ID, 0) FROM SMS_ID_LOCK WHERE TGT='SMS_MSG_TABLE'";*/
-            
 text* Connection::sqlStoreInsert = (text *)
 "INSERT INTO SMS_MSG VALUES (:ID, :ST, :MR, :RM,\
  :OA_LEN, :OA_TON, :OA_NPI, :OA_VAL, :DA_LEN, :DA_TON, :DA_NPI, :DA_VAL,\
  :VALID_TIME, :WAIT_TIME, :SUBMIT_TIME, :DELIVERY_TIME,\
- :SRR, :RD, :PRI, :PID, :FCS, :DCS, :UDHI, :UDL, :UD)";
+ :SRR, :RD, :PRI, :PID, :FCS, :DCS, :UDHI, :UDL, :UD)";*/
+
+text* Connection::sqlStoreInsert = (text *)
+"BEGIN\
+ INSERT_NEW_MSG (:ID, :ST, :MR, :RM,\
+ :OA_LEN, :OA_TON, :OA_NPI, :OA_VAL, :DA_LEN, :DA_TON, :DA_NPI, :DA_VAL,\
+ :VALID_TIME, :WAIT_TIME, :SUBMIT_TIME, :DELIVERY_TIME,\
+ :SRR, :RD, :PRI, :PID, :FCS, :DCS, :UDHI, :UDL, :UD);\
+ END;";
 
 text* Connection::sqlRetriveAll = (text *)
 "SELECT ST, MR, RM, OA_LEN, OA_TON, OA_NPI, OA_VAL, DA_LEN, DA_TON,\
@@ -212,9 +219,11 @@ text* Connection::sqlRetriveAll = (text *)
 Connection::Connection(ConnectionPool* pool) 
 	throw(ConnectionFailedException) 
 		: owner(pool), envhp(0L), errhp(0L), 
-			svchp(0L), srvhp(0L), sesshp(0L), rawUd(0L)
+			svchp(0L), srvhp(0L), sesshp(0L)//, rawUd(0L)
 {
     StoreConfig* config = owner->getConfig();
+
+	__require__(config);
 
 	const char* userName = config->getUserName();
 	const char* userPwd = config->getUserPwd();
@@ -265,22 +274,22 @@ Connection::Connection(ConnectionPool* pool)
 	*/
 
 	// allocate statements handles
-	checkConnErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **) &stmtStoreLock,
+	/*checkConnErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **) &stmtStoreLock,
 								OCI_HTYPE_STMT, 0, (dvoid **) 0));
 	checkConnErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&stmtStoreMaxId,
-								OCI_HTYPE_STMT, 0, (dvoid **) 0));
+								OCI_HTYPE_STMT, 0, (dvoid **) 0));*/
 	checkConnErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&stmtStoreInsert,
 								OCI_HTYPE_STMT, 0, (dvoid **) 0));
 	checkConnErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **) &stmtRetriveAll,
 								OCI_HTYPE_STMT, 0, (dvoid **) 0));
 
 	// prepare statements
-	checkConnErr(OCIStmtPrepare(stmtStoreLock, errhp, sqlStoreLock,
+	/*checkConnErr(OCIStmtPrepare(stmtStoreLock, errhp, sqlStoreLock,
 								(ub4)strlen((char *)sqlStoreLock),
 								(ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT));
 	checkConnErr(OCIStmtPrepare(stmtStoreMaxId, errhp, sqlStoreMaxId,
 								(ub4)strlen((char *)sqlStoreMaxId),
-								(ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT));
+								(ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT));*/
 	checkConnErr(OCIStmtPrepare(stmtStoreInsert, errhp, sqlStoreInsert,
 								(ub4)strlen((char *)sqlStoreInsert),
 								(ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT));
@@ -289,10 +298,12 @@ Connection::Connection(ConnectionPool* pool)
 								(ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT));
 
 	// define placeholder for max(id)
-	checkConnErr(OCIDefineByPos(stmtStoreMaxId, &defhp, errhp, (ub4) 1,
+	/*checkConnErr(OCIDefineByPos(stmtStoreMaxId, &defhp, errhp, (ub4) 1,
 								(dvoid *) &smsId, (sword) sizeof(smsId),
 								SQLT_INT, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
-								OCI_DEFAULT));
+								OCI_DEFAULT));*/
+	/*checkConnErr(OCIRawAssignBytes(envhp, errhp, (ub1 
+*)(sms.messageBody.data), (ub4) sizeof(sms.messageBody.data), &rawUd));*/
 
 	// bind sms placeholder fields for storing
 	checkConnErr(OCIBindByPos(stmtStoreInsert, &bndStoreId, errhp, (ub4) 1,
@@ -437,11 +448,18 @@ Connection::Connection(ConnectionPool* pool)
 							  (sb4) sizeof(sms.messageBody.lenght), SQLT_UIN,
 							  (dvoid *) 0, (ub2 *)0, (ub2 *)0, (ub4)0,
 							  (ub4 *)0, OCI_DEFAULT));
-
+	
 	checkConnErr(OCIBindByPos(stmtStoreInsert, &bndUd, errhp, (ub4) 25,
-							  (dvoid *) &(rawUd), (sb4) sizeof(rawUd), 
+							  (dvoid *) &sms.messageBody.data,
+							  (sb4) sizeof(sms.messageBody.data), 
 							  SQLT_BIN, (dvoid *)0, (ub2 *)0, (ub2 *)0,
 							  (ub4)0, (ub4 *)0, OCI_DEFAULT));
+
+    // define placeholder for message id returned by stored procedure
+	checkConnErr(OCIDefineByPos(stmtStoreInsert, &defhp, errhp, (ub4) 1,
+								(dvoid *) &smsId, (sword) sizeof(smsId),
+								SQLT_INT, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
+								OCI_DEFAULT));
 
 	// define placeholders fields for retriving
 	checkConnErr(OCIDefineByPos(stmtRetriveAll, &defSt, errhp, (ub4) 1,
@@ -566,9 +584,10 @@ Connection::Connection(ConnectionPool* pool)
 								(dvoid *) &(sms.messageBody.lenght), 
 								(sb4) sizeof(sms.messageBody.lenght), SQLT_UIN,
 								(dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
-
+    
 	checkConnErr(OCIDefineByPos(stmtRetriveAll, &defUd, errhp, (ub4) 24,
-								(dvoid *) &(rawUd), (sb4) sizeof(rawUd), 
+								(dvoid *) sms.messageBody.data, 
+								(sb4) sizeof(sms.messageBody.data), 
 								SQLT_BIN, (dvoid *)0, (ub2 *)0, 
 								(ub2 *)0, OCI_DEFAULT));
 
@@ -621,9 +640,6 @@ void Connection::setSMS(SMS& _sms)
 	OCIDateSetTime(&deliveryTime, (ub1)(dt->tm_hour), 
 				   (ub1)(dt->tm_min), (ub1)(dt->tm_sec));
 	
-	checkErr(OCIRawAssignBytes(envhp, errhp, (ub1 *)(sms.messageBody.data),
-								(ub4) sizeof(sms.messageBody.data), &rawUd));
-
 	bStatusReport = sms.statusReportRequested ? 'Y':'N';
 	bRejectDuplicates = sms.rejectDuplicates ? 'Y':'N';
 	bHeaderIndicator = sms.messageBody.header ? 'Y':'N';
@@ -639,13 +655,7 @@ SMS& Connection::getSMS()
 	sms.rejectDuplicates = (bRejectDuplicates == 'Y');
 	sms.messageBody.header = (bHeaderIndicator == 'Y');
     
-	ub4 sz = OCIRawSize(envhp, (CONST OCIRaw *)rawUd);
-    ub1* buff = OCIRawPtr(envhp, (CONST OCIRaw *)rawUd);
-	if (sz <= sizeof(sms.messageBody.data)) {
-		memcpy((void *)buff, (void *)sms.messageBody.data, sz);
-	}
-    
-	tm	dt;
+    tm	dt;
 	sb2	year;
 	ub1	mon, mday, hour, min, sec;
 
@@ -685,6 +695,7 @@ SMSId Connection::store(SMS& sms)
 	
 	try 
 	{
+        /*
 		// lock table
 		checkErr(OCIStmtExecute(svchp, stmtStoreLock, errhp, (ub4) 1, (ub4) 0,
 								(CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
@@ -696,8 +707,8 @@ SMSId Connection::store(SMS& sms)
 								OCI_DEFAULT));
     
 		smsId++; // If no data present in table smsId = 0 (NVL used)
-    
-		// insert new sms row into table
+    	*/
+        // insert new sms row into table
 		checkErr(OCIStmtExecute(svchp, stmtStoreInsert, errhp, (ub4) 1, (ub4) 0,
 								(CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
 								OCI_DEFAULT));
@@ -719,8 +730,7 @@ SMS& Connection::retrive(SMSId id)
 	MutexGuard	guard(mutex);
 
 	smsId = id;
-    
-	sword status;
+    sword status;
 	// retrive entire sms row from table
 	status = OCIStmtExecute(svchp, stmtRetriveAll, errhp, (ub4) 1, (ub4) 0,
 							(CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
@@ -730,8 +740,8 @@ SMS& Connection::retrive(SMSId id)
 		throw NoSuchMessageException();
 	}
 	checkErr(status);
-
-    return getSMS();
+    
+	return getSMS();
 }
 
 sb4 Connection::failoverCallback(
@@ -752,7 +762,6 @@ void Connection::checkConnErr(sword status)
 	{
 		throw ConnectionFailedException(exc);
 	}
-	
 }
 
 void Connection::checkErr(sword status) 
