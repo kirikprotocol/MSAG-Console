@@ -29,86 +29,104 @@ if (request.getMethod().equals("POST"))
 <center>
 <table cellpadding=4 cellspacing=2 border=0>
 <tr>
-    	<td valign=left>
-    	<table cellpadding=4 cellspacing=2 border=0>
-    	<tr>
-    	<td valign=top>
+    	<td colspan=3 valign=top>
     	<b>Source&nbsp;&nbsp;storage:&nbsp;&nbsp;</b>
-    	  <input type="radio" name="storageType"
-          value="<%= SmsQuery.SMS_ARCHIVE_STORAGE_TYPE%>"
+    	<input type="radio" name="storageType"
+        value="<%= SmsQuery.SMS_ARCHIVE_STORAGE_TYPE%>"
           <%= (formBean.getStorageType()==SmsQuery.SMS_ARCHIVE_STORAGE_TYPE) ?
               "checked":""%>>Archive&nbsp;&nbsp;
-      	<input type="radio" name="storageType"
-	        value="<%= SmsQuery.SMS_OPERATIVE_STORAGE_TYPE%>"
+      <input type="radio" name="storageType"
+        value="<%= SmsQuery.SMS_OPERATIVE_STORAGE_TYPE%>"
           <%= (formBean.getStorageType()==SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) ?
               "checked":""%>>Operative&nbsp;&nbsp;
     	</td>
-    	</tr>
-    	<tr>
-    	<td valign=top>
-    	<b>From&nbsp;Address:&nbsp;&nbsp;</b>
-    	<input type="text" name="fromAddress"
-        value="<jsp:getProperty name="formBean" property="fromAddress" />" size=25></td>
-    	<td valign=top>
-    	<b>To&nbsp;Address:&nbsp;&nbsp;</b>
-    	<input type="text" name="toAddress"
-        value="<jsp:getProperty name="formBean" property="toAddress" />" size=25></td>
-    	</tr>
-
-    	<tr>
-    	<td valign=top>
-    	<b>From&nbsp;Date:&nbsp;&nbsp;</b>
-    	<input type="text" name="fromDate" size=20
-        value="<jsp:getProperty name="formBean" property="fromDate" />"></td>
-    	<td valign=top>
-    	<b>Till&nbsp;Date:&nbsp;&nbsp;</b>
-    	<input type="text" name="tillDate" size=20
-        value="<jsp:getProperty name="formBean" property="tillDate" />"></td>
-    	</tr>
-	</table>
-	</td>
-
-	<td valign=right>
-	<table cellpadding=0 cellspacing=2 border=0>
-	<tr><td><b>Sort&nbsp;by:</b>&nbsp;</td></tr>
-	<tr><td>
-	<select name="sortBy">
-	    <option value="Date"
-        <%= (formBean.getSortBy().equalsIgnoreCase("Date")) ? "selected":""%>>Date</option>
-	    <option value="Status"
-        <%= (formBean.getSortBy().equalsIgnoreCase("Status")) ? "selected":""%>>Status</option>
-	    <option value="From"
-        <%= (formBean.getSortBy().equalsIgnoreCase("From")) ? "selected":""%>>From</option>
-	    <option value="To"
-        <%= (formBean.getSortBy().equalsIgnoreCase("To")) ? "selected":""%>>To</option>
-	</select>
-	</td></tr>
-	<tr><td><b>Rows&nbsp;to&nbsp;display:</b>&nbsp;</td></tr>
-	<tr><td>
-	<select name="rowsToDisplay">
-      <% int rowsToDisplay = formBean.getRowsToDisplay();%>
-	    <option value="5"
-        <%= (rowsToDisplay < 10) ? "selected":""%>>5</option>
-	    <option value="10"
-        <%= (rowsToDisplay == 10) ? "selected":""%>>10</option>
-	    <option value="20"
-        <%= (rowsToDisplay == 20) ? "selected":""%>>20</option>
-	    <option value="30"
-        <%= (rowsToDisplay == 30) ? "selected":""%>>30</option>
-	    <option value="40"
-        <%= (rowsToDisplay == 40) ? "selected":""%>>40</option>
-	    <option value="50"
-        <%= (rowsToDisplay == 50) ? "selected":""%>>50</option>
-	    <option value="-1"
-        <%= (rowsToDisplay < 0 ||
-             rowsToDisplay > 50) ? "selected":""%>>All</option>
-	</select>
-	</td></tr>
-	</table>
-	</td>
 </tr>
 <tr>
-   	<td align=center colspan=2>
+    	<td colspan=1>
+      <b>Source&nbsp;address:</b><br>
+    	<input type="text" name="fromAddress"
+        value="<jsp:getProperty name="formBean" property="fromAddress" />" size=25>
+      </td>
+
+      <td colspan=1>
+    	<b>Select&nbsp;from&nbsp;date:</b><br>
+    	<!--input type="text" name="fromDate" size=20
+        value="<!--jsp:getProperty name="formBean" property="fromDate" />" -->
+      <input type="text" name="fromDateDay" size=1
+        value="<%= formBean.getFromDateDay()%>">
+      <b>-</b>
+      <select name="fromDateMonth">
+      <% int fromDateMonth = formBean.getFromDateMonth();%>
+      <% for (int fdm=0; fdm<12; fdm++) { %>
+        <option value="<%= fdm%>"
+          <%= (fdm == fromDateMonth) ? "selected":""%>><%= formBean.monthesNames[fdm]%>
+        </option>
+      <% }%>
+	    </select>
+      <b>-</b>
+      <input type="text" name="fromDateYear" size=2
+        value="<%= formBean.getFromDateYear()%>">
+      &nbsp;&nbsp;
+      <input type="text" name="fromDateHour" size=1
+        value="<%= formBean.getFromDateHour()%>">
+      <b>:</b>
+      <input type="text" name="fromDateMinute" size=1
+        value="<%= formBean.getFromDateMinute()%>">
+      <b>:</b>
+      <input type="text" name="fromDateSecond" size=1
+        value="<%= formBean.getFromDateSecond()%>">
+      </td>
+
+      <td colspan=1>
+    	<b>Sort&nbsp;results&nbsp;by:</b><br>
+      <select name="sortBy">
+	      <option value="Date"
+          <%= (formBean.getSortBy().equalsIgnoreCase("Date")) ? "selected":""%>>Date</option>
+	      <option value="Status"
+          <%= (formBean.getSortBy().equalsIgnoreCase("Status")) ? "selected":""%>>Status</option>
+	      <option value="From"
+          <%= (formBean.getSortBy().equalsIgnoreCase("From")) ? "selected":""%>>From</option>
+	      <option value="To"
+          <%= (formBean.getSortBy().equalsIgnoreCase("To")) ? "selected":""%>>To</option>
+      </select>
+	    </td>
+</tr>
+<tr>
+      <td colspan=1>
+    	<b>Destination&nbsp;address:</b><br>
+    	<input type="text" name="toAddress"
+        value="<jsp:getProperty name="formBean" property="toAddress" />" size=25>
+      </td>
+
+      <td colspan=1>
+    	<b>Till&nbsp;date:</b><br>
+    	<input type="text" name="tillDate" size=20
+        value="<jsp:getProperty name="formBean" property="tillDate" />">
+      </td>
+      <td colspan=1>
+      <b>Rows&nbsp;to&nbsp;display:</b><br>
+    	<select name="rowsToDisplay">
+        <% int rowsToDisplay = formBean.getRowsToDisplay();%>
+	      <option value="5"
+          <%= (rowsToDisplay < 10) ? "selected":""%>>5</option>
+	      <option value="10"
+          <%= (rowsToDisplay == 10) ? "selected":""%>>10</option>
+	      <option value="20"
+          <%= (rowsToDisplay == 20) ? "selected":""%>>20</option>
+	      <option value="30"
+          <%= (rowsToDisplay == 30) ? "selected":""%>>30</option>
+	      <option value="40"
+          <%= (rowsToDisplay == 40) ? "selected":""%>>40</option>
+	      <option value="50"
+          <%= (rowsToDisplay == 50) ? "selected":""%>>50</option>
+	      <option value="-1"
+          <%= (rowsToDisplay < 0 ||
+               rowsToDisplay > 50) ? "selected":""%>>All</option>
+	    </select>
+      </td>
+</tr>
+<tr>
+   	<td align=center colspan=3>
     	<input type="submit" name="query" value="Query !">
   	</td>
 </tr>
@@ -121,7 +139,7 @@ if (request.getMethod().equals("POST")) {
       formBean.getRowsToDisplay() < 0) lastIndex = formBean.getRowsCount();
 %>
 <tr>
-    <td align=left colspan=2>
+    <td align=left colspan=3>
     <b>Total sms found </b><%= formBean.getRowsCount()%>
     <% if (formBean.getRowsCount()>0) { %>
         <b>, displayed </b><%= firstIndex%>
@@ -132,7 +150,7 @@ if (request.getMethod().equals("POST")) {
     </td>
 </tr>
 <tr>
-    <td align=center colspan=2>
+    <td align=center colspan=3>
     <% if (formBean.getRowsCount()>0) { %>
       <input type="submit" name="prev" value="<< Prev"
        <%= formBean.isPrevEnabled() ? "":"disabled"%>>
@@ -142,8 +160,7 @@ if (request.getMethod().equals("POST")) {
     </td>
 </tr>
 <tr>
-    <td colspan=2>
-    <!--table cellpadding=4 cellspacing=2 border=1-->
+    <td colspan=3>
     <table width="100%" border=1>
       <tr>
       <td width="30%"><b>Date</b></td>
@@ -167,7 +184,7 @@ if (request.getMethod().equals("POST")) {
     </td>
 </tr>
 <tr>
-    <td align=center colspan=2>
+    <td align=center colspan=3>
     <% if (formBean.getRowsCount()>0) { %>
       <input type="submit" name="prev" value="<< Prev"
        <%= formBean.isPrevEnabled() ? "":"disabled"%>>
