@@ -10,18 +10,17 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.alias.AliasSet;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.DistributionListManager;
-import ru.novosoft.smsc.admin.alias.AliasSet;
 import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.admin.service.*;
-import ru.novosoft.smsc.admin.utli.Proxy;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileDataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileQuery;
 import ru.novosoft.smsc.util.*;
-import ru.novosoft.smsc.util.config.*;
+import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.xml.Utils;
 import ru.novosoft.util.conpool.NSConnectionPool;
 
@@ -65,24 +64,10 @@ public class Smsc extends Service
 	private Category logger = Category.getInstance(this.getClass());
 	private long serviceRefreshTimeStamp = 0;
 
-	public Smsc(ConfigManager configManager, NSConnectionPool connectionPool) throws AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException
+	public Smsc(Config config, NSConnectionPool connectionPool) throws AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
-		super(new ServiceInfo(Constants.SMSC_SME_ID, configManager.getConfig().getString("smsc.host"), configManager.getConfig().getInt("smsc.port"), "", null, ServiceInfo.STATUS_STOPPED));
+		super(new ServiceInfo(Constants.SMSC_SME_ID, config.getString("smsc.host"), config.getInt("smsc.port"), "", null, ServiceInfo.STATUS_STOPPED));
 
-
-/*toremove
-		try
-		{
-			refreshComponents();
-		}
-		catch (AdminException e)
-		{
-			logger.error("Couldn't connect to SMSC", e);
-		}
-
-		if (getStatus() == Proxy.StatusConnected)
-			checkComponents();
-*/
 		try
 		{
 			final File smscConfFolder = WebAppFolders.getSmscConfFolder();
@@ -158,7 +143,8 @@ public class Smsc extends Service
 			{
 				refreshComponents();
 				call(smsc_component, apply_aliases_method, Type.Types[Type.StringType], new HashMap());
-			}else
+			}
+			else
 				logger.debug("Couldn't call apply method on SMSC - SMSC is not running. Status is " + getInfo().getStatusStr() + " (" + getInfo().getStatus() + ")");
 		}
 		catch (FileNotFoundException e)
@@ -263,8 +249,7 @@ public class Smsc extends Service
 		try
 		{
 			File confFile = new File(WebAppFolders.getSmscConfFolder(), "config.xml");
-			Document confDoc = Utils.parse(new FileReader(confFile));
-			return new Config(confDoc);
+			return new Config(confFile);
 		}
 		catch (Throwable t)
 		{
@@ -277,16 +262,7 @@ public class Smsc extends Service
 	{
 		try
 		{
-			SaveableConfigTree tree = new SaveableConfigTree(config);
-			File tmpFile = File.createTempFile("smsc_config_", ".xml.tmp", WebAppFolders.getSmscConfFolder());
-			PrintWriter out = new PrintWriter(new FileWriter(tmpFile));
-			Functions.storeConfigHeader(out, "config", "configuration.dtd");
-			tree.write(out, "  ");
-			Functions.storeConfigFooter(out, "config");
-			out.flush();
-			out.close();
-
-			tmpFile.renameTo(new File(WebAppFolders.getSmscConfFolder(), "config.xml"));
+			config.save("ISO-8859-1");
 		}
 		catch (Throwable t)
 		{

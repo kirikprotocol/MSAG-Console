@@ -28,6 +28,14 @@ public interface ResourcesManager
 	void add(String localeName, InputStream resourceStream) throws IOException;
 
 	/**
+	 * rename existing file to needed resource file
+	 * @param localeName
+	 * @param resourceFile existing file with resources for this locale
+	 * @return true, if locale file sucessfully added
+	 */
+	boolean add(String localeName, File resourceFile);
+
+	/**
 	 * @return список имён локалей (<code>String</code>), для которых есть ресурсы
 	 */
 	List list();

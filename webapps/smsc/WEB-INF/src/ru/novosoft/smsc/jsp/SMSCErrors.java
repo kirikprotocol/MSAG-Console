@@ -152,6 +152,8 @@ public class SMSCErrors
 			public static final String wrongFileName = B + "wrongFileName";
 			public static final String alreadyExists = B + "alreadyExists";
 			public static final String couldntReceiveFile = B + "couldntReceiveFile";
+			public static final String couldntCreateFile = B + "couldntCreateFile";
+			public static final String couldntStoreFile = B + "couldntStoreFile";
 		}
 
 		public static class dl
@@ -171,12 +173,12 @@ public class SMSCErrors
 			public static final String invalidAddress = B + "invalidAddress";
 		}
 
-        public static class smsview
-        {
-            private static final String B = error.B + "smsview.";
-            public static final String QueryFailed = B + "QueryFailed";
-            public static final String DeleteFailed = B + "DeleteFailed";
-        }
+		public static class smsview
+		{
+			private static final String B = error.B + "smsview.";
+			public static final String QueryFailed = B + "QueryFailed";
+			public static final String DeleteFailed = B + "DeleteFailed";
+		}
 	}
 
 	public static class warning

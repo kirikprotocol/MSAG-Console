@@ -6,12 +6,15 @@
 TITLE = "Resource view";
 switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 {
-	case LocaleResourcesView.RESULT_DONE:
-		response.sendRedirect("index.jsp");
-		return;
 	case LocaleResourcesView.RESULT_OK:
 		STATUS.append("Ok");
 		break;
+	case LocaleResourcesView.RESULT_DONE:
+		response.sendRedirect("index.jsp");
+		return;
+	case LocaleResourcesView.RESULT_EDIT:
+		response.sendRedirect("localeResourcesEdit.jsp?locale=" + URLEncoder.encode(bean.getLocale()));
+		return;
 	case LocaleResourcesView.RESULT_ERROR:
 		STATUS.append("<span class=CF00>Error</span>");
 		break;
@@ -22,11 +25,12 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_LOCALE_RESOURCES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<input type=hidden name=locale value="<%=bean.getLocale()%>"> 
+<input type=hidden name=locale value="<%=bean.getLocale()%>">
 
 <iframe width="100%" height="400px" src="localeResourcesResourceFile.jsp?locale=<%=URLEncoder.encode(bean.getLocale())%>"></iframe>
 
 <div class=secButtons>
+<input class=btn type=submit name=mbEdit value="Edit" title="Edit this resource file">
 <input class=btn type=submit name=mbDone value="Done" title="Return to locales list">
 </div>
 

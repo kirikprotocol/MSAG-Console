@@ -13,7 +13,6 @@ import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.config.Config;
-import ru.novosoft.smsc.util.xml.Utils;
 import ru.novosoft.util.jsp.MultipartDataSource;
 import ru.novosoft.util.jsp.MultipartServletRequest;
 
@@ -249,7 +248,7 @@ public class ServiceAddExternalAdm extends SmeBean
 			if (entry == null)
 				throw new AdminException("/config.xml not found in distributive");
 
-			Config serviceConfig = new Config(Utils.parse(new InputStreamReader(zin)));
+			Config serviceConfig = new Config(new InputStreamReader(zin));
 			return serviceConfig.getString(SYSTEM_ID_PARAM_NAME);
 		}
 		catch (IOException e)

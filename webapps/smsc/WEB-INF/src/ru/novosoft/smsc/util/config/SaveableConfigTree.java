@@ -51,21 +51,18 @@ public class SaveableConfigTree
 		}
 	}
 
-	public void write(OutputStream out, String prefix)
-			throws ConfigManager.WrongParamTypeException, IOException
+	public void write(OutputStream out, String prefix) throws Config.WrongParamTypeException, IOException
 	{
 		write(new PrintWriter(new OutputStreamWriter(out)), prefix);
 	}
 
-	public void write(PrintWriter out, String prefix)
-			throws ConfigManager.WrongParamTypeException, IOException
+	public void write(PrintWriter out, String prefix) throws Config.WrongParamTypeException, IOException
 	{
 		writeParams(out, prefix, params);
 		writeSections(out, prefix, sections);
 	}
 
-	private void writeParams(PrintWriter out, String prefix, Map parameters)
-			throws ConfigManager.WrongParamTypeException, IOException
+	private void writeParams(PrintWriter out, String prefix, Map parameters) throws Config.WrongParamTypeException
 	{
 		List paramNames = new ArrayList(parameters.keySet());
 		Collections.sort(paramNames, new Comparator()
@@ -100,13 +97,12 @@ public class SaveableConfigTree
 			}
 			else
 			{
-				throw new ConfigManager.WrongParamTypeException("unknown type of parameter " + paramName);
+				throw new Config.WrongParamTypeException("unknown type of parameter " + paramName);
 			}
 		}
 	}
 
-	private void writeSections(PrintWriter out, String prefix, Map secs)
-			throws IOException, ConfigManager.WrongParamTypeException
+	private void writeSections(PrintWriter out, String prefix, Map secs) throws IOException, Config.WrongParamTypeException
 	{
 		List secNames = new ArrayList(secs.keySet());
 		Collections.sort(secNames, new Comparator()

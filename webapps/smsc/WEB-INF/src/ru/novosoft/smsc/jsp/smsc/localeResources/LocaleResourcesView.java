@@ -12,8 +12,12 @@ import java.util.List;
  */
 public class LocaleResourcesView extends PageBean
 {
+	public static final int RESULT_EDIT = PageBean.PRIVATE_RESULT;
+	public static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 1;
+
 	private String locale = null;
 	private String mbDone = null;
+	private String mbEdit = null;
 
 	protected int init(List errors)
 	{
@@ -38,6 +42,9 @@ public class LocaleResourcesView extends PageBean
 
 		if (mbDone != null)
 			return RESULT_DONE;
+		else if (mbEdit != null)
+			return RESULT_EDIT;
+
 		return RESULT_OK;
 	}
 
@@ -59,5 +66,15 @@ public class LocaleResourcesView extends PageBean
 	public void setMbDone(String mbDone)
 	{
 		this.mbDone = mbDone;
+	}
+
+	public String getMbEdit()
+	{
+		return mbEdit;
+	}
+
+	public void setMbEdit(String mbEdit)
+	{
+		this.mbEdit = mbEdit;
 	}
 }

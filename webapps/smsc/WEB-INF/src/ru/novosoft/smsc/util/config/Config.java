@@ -5,21 +5,23 @@
 */
 package ru.novosoft.smsc.util.config;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.*;
+import org.xml.sax.SAXException;
+import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.xml.Utils;
 
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
 import java.util.*;
 
 
 public class Config
 {
+	File configFile = null;
 	protected Map params = new HashMap();
 
 
-	public class ParamNotFoundException extends Exception
+	public static class ParamNotFoundException extends Exception
 	{
 		public ParamNotFoundException(String s)
 		{
@@ -28,7 +30,7 @@ public class Config
 	}
 
 
-	public class WrongParamTypeException extends Exception
+	public static class WrongParamTypeException extends Exception
 	{
 		public WrongParamTypeException(String s)
 		{
@@ -36,14 +38,18 @@ public class Config
 		}
 	}
 
-
-	public Config(Document doc)
+	public Config(File configFile) throws IOException, SAXException, ParserConfigurationException
 	{
-		parseNode("", doc.getDocumentElement());
+		this.configFile = configFile;
+		parseNode("", Utils.parse(new FileReader(this.configFile)).getDocumentElement());
 	}
 
-	public synchronized int getInt(String paramName)
-			  throws ParamNotFoundException, WrongParamTypeException
+	public Config(Reader configReader) throws IOException, SAXException, ParserConfigurationException
+	{
+		parseNode("", Utils.parse(configReader).getDocumentElement());
+	}
+
+	public synchronized int getInt(String paramName) throws ParamNotFoundException, WrongParamTypeException
 	{
 		Object value = params.get(paramName);
 		if (value == null)
@@ -54,8 +60,7 @@ public class Config
 			throw new WrongParamTypeException("Parameter \"" + paramName + "\" is not integer");
 	}
 
-	public synchronized String getString(String paramName)
-			  throws ParamNotFoundException, WrongParamTypeException
+	public synchronized String getString(String paramName) throws ParamNotFoundException, WrongParamTypeException
 	{
 		Object value = params.get(paramName);
 		if (value == null)
@@ -66,8 +71,7 @@ public class Config
 			throw new WrongParamTypeException("Parameter \"" + paramName + "\" is not string");
 	}
 
-	public synchronized boolean getBool(String paramName)
-			  throws ParamNotFoundException, WrongParamTypeException
+	public synchronized boolean getBool(String paramName) throws ParamNotFoundException, WrongParamTypeException
 	{
 		Object value = params.get(paramName);
 		if (value == null)
@@ -78,7 +82,7 @@ public class Config
 			throw new WrongParamTypeException("Parameter \"" + paramName + "\" is not boolean");
 	}
 
-	public Object getParameter(String paramName)
+	public synchronized Object getParameter(String paramName)
 	{
 		return params.get(paramName);
 	}
@@ -119,9 +123,7 @@ public class Config
 		for (Iterator i = params.keySet().iterator(); i.hasNext();)
 		{
 			String name = (String) i.next();
-			if (name.length() > (dotpos + 1)
-					  && name.startsWith(sectionName)
-					  && name.lastIndexOf('.') > dotpos)
+			if (name.length() > (dotpos + 1) && name.startsWith(sectionName) && name.lastIndexOf('.') > dotpos)
 			{
 				result.add(name.substring(0, name.indexOf('.', dotpos + 1)));
 			}
@@ -140,9 +142,7 @@ public class Config
 		for (Iterator i = params.keySet().iterator(); i.hasNext();)
 		{
 			String name = (String) i.next();
-			if (name.length() > (dotpos + 1)
-					  && name.startsWith(sectionName)
-					  && name.lastIndexOf('.') == dotpos)
+			if (name.length() > (dotpos + 1) && name.startsWith(sectionName) && name.lastIndexOf('.') == dotpos)
 			{
 				result.add(name);
 			}
@@ -171,9 +171,7 @@ public class Config
 
 	protected void parseNode(final String prefix, final Element elem)
 	{
-		String fullName = prefix == null || prefix.equals("")
-				  ? elem.getAttribute("name")
-				  : prefix + "." + elem.getAttribute("name");
+		String fullName = prefix == null || prefix.equals("") ? elem.getAttribute("name") : prefix + "." + elem.getAttribute("name");
 
 		NodeList list = elem.getChildNodes();
 		for (int i = 0; i < list.getLength(); i++)
@@ -192,9 +190,7 @@ public class Config
 
 	protected void parseParamNode(final String prefix, final Element elem)
 	{
-		String fullName = prefix == null || prefix.equals("")
-				  ? elem.getAttribute("name")
-				  : prefix + "." + elem.getAttribute("name");
+		String fullName = prefix == null || prefix.equals("") ? elem.getAttribute("name") : prefix + "." + elem.getAttribute("name");
 		String type = elem.getAttribute("type");
 		String value = Utils.getNodeText(elem);
 		if (type.equalsIgnoreCase("int"))
@@ -211,11 +207,45 @@ public class Config
 		}
 	}
 
-	public void removeSection(final String sectionName)
+	public synchronized void removeSection(final String sectionName)
 	{
 		for (Iterator i = getSectionChildSectionNames(sectionName).iterator(); i.hasNext();)
-         removeSection((String) i.next());
+			removeSection((String) i.next());
 		for (Iterator i = getSectionChildParamsNames(sectionName).iterator(); i.hasNext();)
 			removeParam((String) i.next());
+	}
+
+	public synchronized void save(String encoding) throws IOException, WrongParamTypeException
+	{
+		File c = new File(configFile.getAbsolutePath());
+		try
+		{
+			save(configFile, encoding);
+		}
+		finally
+		{
+			configFile = c;
+		}
+	}
+
+	public synchronized void save(File configFileToSave, String encoding) throws IOException, WrongParamTypeException
+	{
+		SaveableConfigTree tree = new SaveableConfigTree(this);
+		File tmpFile = File.createTempFile(configFileToSave.getName(), ".tmp", configFileToSave.getParentFile());
+		PrintWriter out = new PrintWriter(new FileWriter(tmpFile));
+		Functions.storeConfigHeader(out, "config", "configuration.dtd", encoding);
+		//// C++ code doesn't know about other codings // System.getProperty("file.encoding");
+		tree.write(out, "  ");
+		Functions.storeConfigFooter(out, "config");
+		out.flush();
+		out.close();
+
+		File c = new File(configFileToSave.getAbsolutePath());
+		final File backFile = File.createTempFile(configFileToSave.getName(), ".bak", configFileToSave.getParentFile());
+		configFileToSave.renameTo(backFile);
+		//throw new IOException("Couldn't rename old config file \"" + configFileToSave.getAbsolutePath() + "\" to backup file \"" + backFile.getAbsolutePath() + '"');
+		if (!tmpFile.renameTo(c))
+			throw new IOException("Couldn't rename new file \"" + tmpFile.getAbsolutePath() + "\" to old config file \"" + c.getAbsolutePath() + '"');
+		backFile.delete();
 	}
 }

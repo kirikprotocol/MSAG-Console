@@ -33,6 +33,14 @@ public class ResourcesManagerImpl implements ResourcesManager
 		tmpFile.renameTo(file);
 	}
 
+	public boolean add(String localeName, File resourceFile)
+	{
+		File file = createFile(localeName);
+		if (file.exists())
+			file.delete();
+		return resourceFile.renameTo(file);
+	}
+
 	public List list()
 	{
 		SortedList result = new SortedList();
