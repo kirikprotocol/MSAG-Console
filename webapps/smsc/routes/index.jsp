@@ -102,14 +102,14 @@ java.util.HashMap a = new java.util.HashMap();
 // a.put("multiple", null);
 
 java.util.Hashtable o = new java.util.Hashtable();
-o.put("reportsname", "0");
+o.put("name", "0");
 o.put("active", "1");
 o.put("allow", "2");
 o.put("billing", "3");
 o.put("archiving", "4");
-o.put("name", "5");
+o.put("reports", "5");
 %>
-<input:select name="mbFilter" default="5"
+<input:select name="mbFilter" default="0"
     attributes="<%= a %>" options="<%= o %>" />
 <br>
 <table class=list cellspacing=0 cellpadding=0 id=ROUTE_LIST_TABLE>
