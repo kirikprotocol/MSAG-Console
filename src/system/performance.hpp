@@ -17,6 +17,7 @@ using namespace smsc::core::synchronization;
 using smsc::core::buffers::Array;
 using smsc::core::network::Socket;
 
+#pragma pack(1)
 struct PerformanceCounter{
   int lastSecond;
   int average;
@@ -44,6 +45,8 @@ struct PerformanceData{
   time_t uptime;
   time_t now;
 };
+
+#pragma pack()
 
 class PerformanceListener{
 public:
