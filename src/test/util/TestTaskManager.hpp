@@ -1,7 +1,6 @@
 #ifndef TEST_UTIL_TEST_TASK_MANAGER
 #define TEST_UTIL_TEST_TASK_MANAGER
 
-#include "core/threads/ThreadedTask.hpp"
 #include "core/threads/ThreadPool.hpp"
 #include <iostream>
 #include <vector>
@@ -15,21 +14,28 @@ using namespace std;
 class TestTask : public smsc::core::threads::ThreadedTask
 {
 private:
-	int taskNum;
-	bool flag;
+	char* name;
+	bool executeFlag;
 	bool stopped;
 
 public:
-	TestTask(int _taskNum)
-		: taskNum(_taskNum), flag(true), stopped(false) {}
+	TestTask(int taskNum)
+		: executeFlag(true), stopped(false)
+	{
+		name = new char[15];
+		sprintf(name, "Task_%d", taskNum);
+	}
 
-	virtual ~TestTask() {}
+	virtual ~TestTask()
+	{
+		delete[] name;
+	}
 
-	virtual void executeCycle() = 0; //abstract
+	virtual void executeCycle() = NULL; //abstract
 
 	virtual int Execute()
 	{
-		while (flag)
+		while (executeFlag)
 		{
 			executeCycle();
 		}
@@ -37,16 +43,14 @@ public:
 		return 0;
 	}
 
-	const char* taskName()
+	virtual const char* taskName()
 	{
-		char* buf = new char[15];
-		sprintf(buf, "Task %d", taskNum);
-		return buf;
+		return name;
 	}
 
 	void stop()
 	{
-		flag = false;
+		executeFlag = false;
 	}
 
 	bool isStopped() const
@@ -85,14 +89,16 @@ public:
 		{
 			tasks[i]->stop();
 		}
-		sleep(1);
-		for (int i = 0; !isStopped() && i < 10; i++)
+		sleep(5);
+		while (!isStopped())
 		{
-			sleep(1);
-		}
-		if (!isStopped())
-		{
-			throw exception();
+			cout << "Some tasks are still running. Stop (s) or wait (w) ?: ";
+			char ch;
+			cin >> ch;
+			if (ch == 's')
+			{
+				throw exception();
+			}
 		}
 	}
 
