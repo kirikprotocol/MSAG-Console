@@ -8,7 +8,8 @@
                  ru.novosoft.smsc.jsp.SMSCJspException,
                  ru.novosoft.smsc.jsp.SMSCErrors,
                  java.util.*,
-                 ru.novosoft.smsc.util.StringEncoderDecoder"%>
+                 ru.novosoft.smsc.util.StringEncoderDecoder,
+                 java.text.DateFormat"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.routes.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -151,17 +152,41 @@ for(Iterator i = bean.getRoutes().iterator(); i.hasNext(); row++)
 </table>
 <%@ include file="/WEB-INF/inc/navbar.jsp"%>
 </div><%
-page_menu_begin(out);
-page_menu_button(out, "mbAdd",  "Add route",  "Add new route");
-page_menu_button(out, "mbDelete", "Delete route(s)", "Delete selected route(s)");
-if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
-  if (!bean.getAppContext().getStatuses().isRoutesRestored())
-    page_menu_button(out, "mbSave", "Save current", "Save current routing configuration");
-if (bean.getAppContext().getStatuses().isRoutesSaved() && !bean.getAppContext().getStatuses().isRoutesRestored())
-    page_menu_button(out, "mbRestore", "Load saved", "Load saved routing configuration");
-if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
-    page_menu_button(out, "mbLoad", "Restore applied", "Restore applied routing configuration");
-page_menu_space(out);
-page_menu_end(out);%>
+  final Locale locale = request.getLocale();
+  Calendar restoreCalendar = new GregorianCalendar(locale);
+  DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM, locale);
+  String restoreDate = null;
+  final Date restoreFileDate = bean.getRestoreFileDate();
+  if (restoreFileDate != null) {
+    restoreCalendar.setTime(restoreFileDate);
+    restoreDate = dateFormat.format(restoreFileDate);
+  }
+  String loadDate = null;
+  final Date loadFileDate = bean.getLoadFileDate();
+  if (loadFileDate != null) {
+    restoreCalendar.setTime(loadFileDate);
+    loadDate = dateFormat.format(loadFileDate);
+  }
+
+  page_menu_begin(out);
+  page_menu_button(out, "mbAdd",  "Add route",  "Add new route");
+  page_menu_button(out, "mbDelete", "Delete route(s)", "Delete selected route(s)");
+  if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
+    if (!bean.getAppContext().getStatuses().isRoutesRestored())
+      page_menu_button(out, "mbSave", "Save current", "Save current routing configuration");
+  if (bean.getAppContext().getStatuses().isRoutesSaved() && !bean.getAppContext().getStatuses().isRoutesRestored())
+    page_menu_button(out, "mbRestore", "Load saved", "Load saved routing configuration",
+                     restoreDate != null
+                        ? "return confirm('Date of saved file is " + restoreDate + ". Are you sure to load this file?');"
+                        : null
+                     );
+  if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
+    page_menu_button(out, "mbLoad", "Restore applied", "Restore applied routing configuration",
+                     loadDate != null
+                        ? "return confirm('Date of restore file is " + loadDate + ". Are you sure to load this file?');"
+                        : null
+                     );
+  page_menu_space(out);
+  page_menu_end(out);%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

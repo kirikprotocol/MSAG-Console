@@ -1,8 +1,10 @@
 package ru.novosoft.smsc.admin.smsc_service;
 
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.RouteList;
 import ru.novosoft.smsc.admin.route.SubjectList;
-import ru.novosoft.smsc.admin.AdminException;
+
+import java.util.Date;
 
 /**
  * Created by igork
@@ -11,17 +13,25 @@ import ru.novosoft.smsc.admin.AdminException;
  */
 public interface RouteSubjectManager
 {
-	RouteList getRoutes();
+  RouteList getRoutes();
+
   SubjectList getSubjects();
 
-	void apply() throws AdminException;   // save to primary config (Applied)
+  void apply() throws AdminException;   // save to primary config (Applied)
+
   void load() throws AdminException;    // load from primary config (Applied)
 
   void save() throws AdminException;    // save to temporal config (Saved)
+
   void restore() throws AdminException; // load from temporal config (Saved)
+
+  Date getRestoreFileDate() throws AdminException; // get modified date of temporal config
+
+  Date getLoadFileDate() throws AdminException; // get modified date of primary config
 
   void trace() throws AdminException;   // save to traceable config (Traceable)
 
-	boolean isSmeUsed(String smeId);
+  boolean isSmeUsed(String smeId);
+
   boolean hasSavedConfiguration();
 }

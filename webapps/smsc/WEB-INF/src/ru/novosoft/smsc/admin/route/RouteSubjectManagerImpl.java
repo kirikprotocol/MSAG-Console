@@ -18,6 +18,7 @@ import ru.novosoft.smsc.util.xml.Utils;
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
+import java.util.Date;
 import java.util.Iterator;
 
 
@@ -122,6 +123,32 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager
   synchronized public void restore() throws AdminException
   {
     loadFromFile(SMSC_ROUTES_TEMPORAL_CONFIG);
+  }
+
+  public Date getRestoreFileDate() throws AdminException // get modified date of temporal config
+  {
+    File tempConfFile = new File(WebAppFolders.getSmscConfFolder(), SMSC_ROUTES_TEMPORAL_CONFIG);
+    if (tempConfFile.exists()) {
+      final long lastModified = tempConfFile.lastModified();
+      if (lastModified != 0) {
+        System.out.println("lastModified = " + lastModified);
+        return new Date(lastModified);
+      } else
+        System.out.println("tempConfFile.lastModified() == 0");
+    } else
+      System.out.println("!tempConfFile.exists(), \"" + tempConfFile.getAbsolutePath() + '"');
+    return null;
+  }
+
+  public Date getLoadFileDate() throws AdminException // get modified date of primary config
+  {
+    File tempConfFile = new File(WebAppFolders.getSmscConfFolder(), SMSC_ROUTES_PRIMARY_CONFIG);
+    if (tempConfFile.exists()) {
+      final long lastModified = tempConfFile.lastModified();
+      if (lastModified != 0)
+        return new Date(lastModified);
+    }
+    return null;
   }
 
   synchronized public void apply() throws AdminException

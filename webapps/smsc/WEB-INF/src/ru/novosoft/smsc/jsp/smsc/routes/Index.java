@@ -6,8 +6,8 @@
 package ru.novosoft.smsc.jsp.smsc.routes;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
@@ -112,6 +112,16 @@ public class Index extends IndexBean
     return RESULT_OK;
   }
 
+  public Date getRestoreFileDate() // get modified date of temporal config
+  {
+    try {
+      return routeSubjectManager.getRestoreFileDate();
+    } catch (AdminException e) {
+      logger.debug("Could not get date of saved temporal config file", e);
+      return null;
+    }
+  }
+
   protected int restoreRoutes() // loads saved configuration
   {
     try {
@@ -145,6 +155,16 @@ public class Index extends IndexBean
     return RESULT_OK;
   }
 
+  public Date getLoadFileDate() // get modified date of primary config
+  {
+    try {
+      return routeSubjectManager.getLoadFileDate();
+    } catch (AdminException e) {
+      logger.debug("Could not get date of saved config file", e);
+      return null;
+    }
+  }
+
   public boolean isRouteChecked(String alias)
   {
     return checkedRouteIdsSet.contains(alias);
@@ -155,7 +175,9 @@ public class Index extends IndexBean
     return routes;
   }
 
-  /******************** properties *************************/
+  /**
+   * ***************** properties ************************
+   */
 
   public String getEditRouteId()
   {
