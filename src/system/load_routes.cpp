@@ -71,6 +71,7 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
             {
               makeAddress(rinfo.source,*src_mask_it);
               rinfo.smeSystemId = dest.getSmeIdString();//dest.smeId;
+              rinfo.srcSmeSystemId = route->getSrcSmeSystemId();
               __trace2__("sme sysid: %s",rinfo.smeSystemId.c_str());
               rinfo.billing = route->isBilling();
               //rinfo.paid =
