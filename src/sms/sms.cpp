@@ -14,6 +14,8 @@ int Body::getRequiredBufferSize() const
   int blength = 0;
   for(int i=0;i<=SMS_LAST_TAG;i++)
   {
+    if ( i == Tag::SMPP_SHORT_MESSAGE ) continue;
+    if ( i == Tag::SMPP_MESSAGE_PAYLOAD ) continue;
     if(prop.properties[i].isSet)
     {
       switch(prop.properties[i].type)
