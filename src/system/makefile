@@ -6,7 +6,7 @@
 
 PACKAGE := system
 
-CXXFLAGS := $(CXXFLAGS) -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/network/public
+CXXFLAGS := $(CXXFLAGS) -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/network/public -Imapio/inc
 
 __LIBRARIES := $(ORACLE_LIB)/libclntsh.so $(SMSC_BUILDDIR)/bin/db/exceptions/libdb_exc.so
 

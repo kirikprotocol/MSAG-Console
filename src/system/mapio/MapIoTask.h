@@ -9,7 +9,9 @@ $Id$
 #include "core/synchronization/Mutex.hpp"
 #include "core/synchronization/Event.hpp"
 #include "core/threads/ThreadedTask.hpp"
+
 #include "MapProxy.h"
+
 using smsc::system::mapio::MapProxy;
 
 using smsc::core::buffers::XHash;
@@ -108,17 +110,26 @@ public:
   }
 };
 
+/*
+*/
 class MapIoTask : public ThreadedTask{
 public:
   virtual int Execute(){
-    //init();
-    dispatcher();
-    //deinit();
+    try{
+      init();
+      dispatcher();
+      //deinit();
+    }catch(std::exception& e){
+      __trace2__("exception in mapio: %s",e.what());
+    }
   }
-  bool isStarted();
-  MapIoTask(Event* startevent) {init();}
+  virtual const char* taskName() { return "MapIoTask";}
+  bool isStarted() {return is_started;}
+  MapIoTask(Event* startevent) : startevent(startevent) {}
   ~MapIoTask() {deinit();}
 private:
+  Event* startevent;
+  bool is_started;
   void dispatcher();
   void init();
   void deinit();

@@ -5,7 +5,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <stdexcept>
+using std::runtime_error;
+ 
 #if !defined ( __Cpp_Header__smsc_util_debug_h__ )
 #define __Cpp_Header__smsc_util_debug_h__
 

@@ -9,6 +9,7 @@
 #include "util/Exception.hpp"
 #include "system/rescheduler.hpp"
 #include "util/config/route/RouteConfig.h"
+#include "system/mapio/MapIoTask.h"
 
 namespace smsc{
 namespace system{
@@ -226,11 +227,16 @@ void Smsc::run()
         &accstarted
       );
     tp.startTask(acc);
+    Event mapiostarted;
+    MapIoTask* mapio = new MapIoTask(&mapiostarted);
+    tp.startTask(mapio);
     accstarted.Wait();
-    if(!acc->isStarted())
+    mapiostarted.Wait();
+    if(!acc->isStarted()||!mapio->isStarted())
     {
       throw Exception("Failed to start smpp acceptor");
     }
+
   }
 
   scheduler=new Scheduler(eventqueue,store);
