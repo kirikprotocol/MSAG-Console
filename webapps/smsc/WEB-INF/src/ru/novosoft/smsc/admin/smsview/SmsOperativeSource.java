@@ -5,11 +5,14 @@ import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.smsview.archive.Message;
 import ru.novosoft.smsc.admin.smsview.operative.RsFileMessage;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.jsp.SMSCJspException;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.config.Config;
 
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+
 
 /**
  * Created by IntelliJ IDEA.
@@ -32,8 +35,11 @@ public class SmsOperativeSource extends SmsSource
     //  context = ArchiveDaemonContext.getInstance(appContext);
     Smsc smsc = appContext.getSmsc();
     String configPath = smsc.getConfigFolder().getAbsolutePath();
-    int len = configPath.lastIndexOf("/") + 1; //windows
-    // if (len <0) len = configPath.lastIndexOf("/") + 1;//Solaris
+    String dirPrefics="/"; //Solaris
+    int len = configPath.lastIndexOf(dirPrefics) + 1; //Solaris
+    if (len <1) { dirPrefics="\\";//Windows
+      len = configPath.lastIndexOf(dirPrefics) + 1;//Windows
+    }
     String absolutePath = configPath.substring(0, len);
     Config config = smsc.getSmscConfig();
 
@@ -44,9 +50,15 @@ public class SmsOperativeSource extends SmsSource
     } catch (Config.WrongParamTypeException e) {
       e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
     }
-    if (smsstorePath.indexOf("/") != 0)
+    if (smsstorePath.indexOf(dirPrefics) != 0)
       smsstorePath = absolutePath + smsstorePath;
-
+      FileInputStream input = null;
+      try {
+      input = new FileInputStream(smsstorePath);
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+      throw new AdminException(e.getMessage());
+    }
   }
 
   protected void load(File file) throws IOException
@@ -85,11 +97,11 @@ public class SmsOperativeSource extends SmsSource
         if (responce == null)
           throw new AdminException("Message from file  is NULL");
         if (!allReaded || ((RsFileMessage) responce).isBodyRecived()) {
+          SmsRow smsNew = ((RsFileMessage) responce).getSms();
+          Long msgId = new Long(smsNew.getId());
+          SmsRow smsOld = (SmsRow) smes.get(msgId);
+          if (smsOld != null) {smes.remove(msgId);set.setHasMore(false);}
           if (!set.isHasMore()) {
-            SmsRow smsNew = ((RsFileMessage) responce).getSms();
-            Long msgId = new Long(smsNew.getId());
-            SmsRow smsOld = (SmsRow) smes.get(msgId);
-            if (smsOld != null) smes.remove(msgId);
             //set.addRow(smsNew);
             smes.put(msgId, smsNew);
           }
@@ -137,6 +149,7 @@ public class SmsOperativeSource extends SmsSource
     boolean allowedTillTime = true;
     boolean allowedStatus = true;
     boolean allowedLastResult = true;
+    boolean finalResult=true;
     final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
     SmsRow sms = ((RsFileMessage) responce).getSms();
 
@@ -203,9 +216,10 @@ public class SmsOperativeSource extends SmsSource
     if (query.getLastResult() != SmsQuery.SMS_UNDEFINED_VALUE) {// list.add("LAST_RESULT=" + query.getLastResult());
       if (sms.getLastResult() != query.getLastResult()) allowedLastResult = false;
     }
-    return allowed && allowedSmsId && allowedAbAddress && allowedAddress && allowedRouteId && allowedSmeId &&
+    finalResult= allowed && allowedSmsId && allowedAbAddress && allowedAddress && allowedRouteId && allowedSmeId &&
             allowedSrcSmeId && allowedDstSmeId && allowedFromTime && allowedTillTime && allowedStatus &&
             allowedLastResult;
+    return finalResult;
   }
 
 
@@ -221,14 +235,14 @@ public class SmsOperativeSource extends SmsSource
     return message;
   }
 
-  public int getSmsCount(SmsQuery query) throws AdminException
+  public SmsSet getSmsCount(SmsQuery query) throws AdminException
   {
     InputStream input = null;
     SmsSet set = new SmsSet();
     set.setHasMore(true);
     Map smes = new HashMap();
     int rowsMaximum = query.getRowsMaximum();
-    if (rowsMaximum == 0) return 0;
+    if (rowsMaximum == 0) return set;
     boolean allReaded = false;
     int toReceive = (rowsMaximum < MAX_SMS_FETCH_SIZE) ? rowsMaximum : MAX_SMS_FETCH_SIZE;
     int smsCount = 0;
@@ -246,11 +260,11 @@ public class SmsOperativeSource extends SmsSource
           if (responce == null)
             throw new AdminException("Message from file  is NULL");
           if (!allReaded || ((RsFileMessage) responce).isBodyRecived()) {
+            SmsRow smsNew = ((RsFileMessage) responce).getSms();
+            Long msgId = new Long(smsNew.getId());
+            SmsRow smsOld = (SmsRow) smes.get(msgId);
+            if (smsOld != null) {smes.remove(msgId);  smsCount--;set.setHasMore(false);}
             if (!set.isHasMore()) {
-              SmsRow smsNew = ((RsFileMessage) responce).getSms();
-              Long msgId = new Long(smsNew.getId());
-              SmsRow smsOld = (SmsRow) smes.get(msgId);
-              if (smsOld != null) smes.remove(msgId);
               //set.addRow(smsNew);
               smes.put(msgId, smsNew);
             }
@@ -285,9 +299,9 @@ public class SmsOperativeSource extends SmsSource
       } catch (Exception exc) {
       }
       ;
-
-    }
-    return smsCount;
+       set.addAll(smes.values());
+    }  set.setSmesRows(smsCount);
+    return set;
   }
 
   private boolean needExpression(String str)

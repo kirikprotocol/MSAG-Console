@@ -46,17 +46,22 @@ public class SmsView
     throw new AdminException("Unsupported storage type: " + storage);
   }
 
-  public int getSmsCount(SmsQuery query) throws AdminException
+
+     public int getArhiveCount(SmsQuery query) throws AdminException
   {
-    int storage = query.getStorageType();
+   /* int storage = query.getStorageType();
     if (storage == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE)
       return operative.getSmsCount(query);
     else if (storage == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE)
-      return archive.getSmsCount(query);
+     */ return archive.getSmsCount(query);
 
-    throw new AdminException("Unsupported storage type: " + storage);
+   // throw new AdminException("Unsupported storage type: " + storage);
   }
 
+  public SmsSet getOperativeCount(SmsQuery query) throws AdminException
+  {
+      return operative.getSmsCount(query);
+  }
   public int delOperativeSmsSet(SmsSet set) throws AdminException
   {
     if (smsc == null) throw new AdminException("Smsc not defined");

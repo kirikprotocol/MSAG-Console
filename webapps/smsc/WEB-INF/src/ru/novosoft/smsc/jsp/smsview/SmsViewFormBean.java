@@ -204,11 +204,22 @@ public class SmsViewFormBean extends IndexBean
         throw new AdminException("Archive Daemon is not running. ");
       }
 
-      rows = view.getSmsSet(query);
-      if (!exactRowsCount)
+      if (!exactRowsCount) {
+        rows = view.getSmsSet(query);
         totalRowsCount = rows.getRowsCount();
+      }
       else {
-        totalRowsCount = view.getSmsCount(query);
+        int storage = query.getStorageType();
+         if (storage == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) {
+           rows=view.getOperativeCount(query);
+          totalRowsCount=rows.getSmesRows();
+         }
+         else if (storage == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE) {
+            rows = view.getSmsSet(query);
+            totalRowsCount= view.getArhiveCount(query);
+         }
+         else  throw new AdminException("Unsupported storage type: " + storage);
+       // totalRowsCount = view.getSmsCount(query);
         if (rows != null) rows.setHasMore(false);
       }
       startPosition = 0;
