@@ -94,6 +94,8 @@ struct VClientData{
   int src_port;
   int dst_port;
 
+  int respStatus;
+
   string sourceAddress;
 
   FILE *cmdfile;
@@ -143,6 +145,7 @@ struct VClientData{
     sleepTill=0;
     sleepTillMsec=0;
     waitStart=0;
+    respStatus=0;
   }
 
 }defVC;
@@ -169,6 +172,8 @@ bool& waitResp=defVC.waitResp;
 int& waitRespTimeout=defVC.waitRespTimeout;
 int& lastMr=defVC.lastMr;
 
+int& respStatus=defVC.respStatus;
+
 string& sourceAddress=defVC.sourceAddress;
 
 FILE*& cmdfile=defVC.cmdfile;
@@ -192,8 +197,8 @@ Option options[]={
 {"temperr",'i',&temperrProb},
 {"noresp",'i',&dontrespProb},
 {"permerr",'i',&permErrProb},
-{"respdelaymin",'r',&respDelayMin},
-{"respdelaymax",'r',&respDelayMax},
+{"respmindelay",'i',&respDelayMin},
+{"respmaxdelay",'i',&respDelayMax},
 {"mode",'m',&mode},
 {"datasm",'b',&dataSm},
 {"ussd",'i',&ussd},
@@ -208,6 +213,7 @@ Option options[]={
 {"wrtimeot",'i',&waitRespTimeout},
 {"autoanswer",'b',&autoAnswer},
 {"hexinput",'b',&hexinput},
+{"respstatus",'i',&respStatus},
 };
 
 const int optionsCount=sizeof(options)/sizeof(Option);
@@ -828,6 +834,7 @@ public:
       if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
       {
         PduDeliverySmResp resp;
+        resp.get_header().set_commandStatus(respStatus);
         resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
         resp.set_messageId("");
         resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
@@ -835,6 +842,7 @@ public:
       }else
       {
         PduDataSmResp resp;
+        resp.get_header().set_commandStatus(respStatus);
         resp.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
         resp.set_messageId("");
         resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
