@@ -55,7 +55,7 @@ const char* Archiver::loadDBUserPassword(Manager& config, const char* cat)
     }
 }
 
-const unsigned SMSC_ARCHIVER_AWAKE_INTERVAL_LIMIT = 100000;
+const unsigned SMSC_ARCHIVER_AWAKE_INTERVAL_LIMIT = 10000000;
 const unsigned SMSC_ARCHIVER_AWAKE_INTERVAL_DEFAULT = 1000;
 
 void Archiver::loadAwakeInterval(Manager& config)
