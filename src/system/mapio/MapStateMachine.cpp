@@ -853,7 +853,7 @@ USHORT_T Et96MapCloseInd(
       // penging processing
       dialog->state = MAPST_CLOSED;
       SendOkToSmsc(dialog->dialogid_smsc);
-      DropMapDialog(dialog->dialogid_map);
+      DropMapDialog(dialog.get());
       break;
     default:
       throw MAPDIALOG_BAD_STATE(
