@@ -35,12 +35,24 @@ if(-e $svclstfile)
 {
   open(F,$svclstfile);
   my @l=<F>;
+  close F;
   s/[\x0d\x0a]//g for(@l);
+  @l=grep !/^$/,@l;
+  @l=grep !/^#/,@l;
   if(@l)
   {
     $svcrx='^(?:'.join('|',@l).')$';
+    eval {
+    $svcrx=qr($svcrx);
+    };
+    if($@)
+    {
+      print "roamed_services.lst contain invalid regexp pattern. Error is:$@\n";
+      exit;
+    }
   }
 }
+print "svcrx=$svcrx\n";
 
 @OUT_FIELDS=(
 {value=>'-1',width=>6},
