@@ -153,10 +153,12 @@ public class CCEditDatasource extends CC
 			}
 			catch (Config.ParamNotFoundException e)
 			{
+				e.printStackTrace();
 				return RESULT_Error;
 			}
 			catch (Config.WrongParamTypeException e)
 			{
+				e.printStackTrace();
 				return RESULT_Error;
 			}
 		}

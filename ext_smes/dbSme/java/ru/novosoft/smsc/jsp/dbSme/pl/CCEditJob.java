@@ -204,10 +204,12 @@ public class CCEditJob extends CC
 		}
 		catch (Config.ParamNotFoundException e)
 		{
+			e.printStackTrace();
 			return RESULT_Error;
 		}
 		catch (Config.WrongParamTypeException e)
 		{
+			e.printStackTrace();
 			return RESULT_Error;
 		}
 		return RESULT_Ok;

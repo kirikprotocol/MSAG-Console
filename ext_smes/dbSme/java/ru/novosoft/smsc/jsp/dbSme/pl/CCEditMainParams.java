@@ -132,6 +132,7 @@ public class CCEditMainParams extends CC
 		}
 		catch (NumberFormatException e)
 		{
+			e.printStackTrace();
 			return RESULT_Error;
 		}
 
