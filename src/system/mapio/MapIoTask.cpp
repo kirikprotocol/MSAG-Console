@@ -307,6 +307,8 @@ void MapDialogContainer::abort()
 {
 #ifdef USE_MAP
   MAP_aborting = true;
+  MsgClose(MY_USER_ID);
+  MsgExit();
   EINSS7CpMsgClean();
 #endif
 }
