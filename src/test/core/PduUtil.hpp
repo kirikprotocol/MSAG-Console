@@ -37,12 +37,93 @@ typedef enum
 	RESP_PDU_MISSING = 0x3 //респонс pdu не отправлена
 } RespPduFlag;
 
-//normal sms, delivery receipt
-class PduReceiptFlag
+typedef enum
 {
-	PduFlag flag;
+	RESPONSE_MONITOR = 0x1,
+	DELIVERY_MONITOR = 0x2,
+	DELIVERY_RECEIPT_MONITOR = 0x3,
+	INTERMEDIATE_NOTIFICATION_MONITOR = 0x4,
+	SME_ACK_MONITOR = 0x5
+} MonitorType;
+
+class PduData
+{
+	int count;
+public:
+	typedef map<const string, int> IntProps;
+	typedef map<const string, string> StrProps;
+
+	SmppHeader* const pdu;
+	const time_t submitTime;
+	const uint16_t msgRef;
+	string smsId;
+	bool valid;
+	map<const string, int> intProps;
+	map<const string, string> strProps;
+	PduData* replacePdu; //pdu, которая должна быть заменена текущей pdu
+	PduData* replacedByPdu; //pdu, которая замещает текущую pdu
+	
+	PduData(SmppHeader* pdu, time_t submitTime, uint16_t msgRef,
+		IntProps* intProps = NULL, StrProps* strProps = NULL);
+	~PduData();
+	
+	void ref();
+	void unref();
+};
+
+/**
+ * Абстрактный базовый класс для всех типов мониторов.
+ */
+class PduMonitor
+{
+protected:
+	static Mutex mutex;
+	static uint32_t counter;
+
+	uint32_t id; //внутренний уникальный номер pdu
+	time_t checkTime;
+	time_t validTime; //окончание доставки pdu
+	PduFlag flag; //флаг получения сообщения получателем
+
+public:
+	PduData* const pduData;
+
+	PduMonitor(time_t checkTime, time_t validTime, PduData* pduData, PduFlag flag);
+	virtual ~PduMonitor();
+
+	uint32_t getId() { return id; }
+	PduFlag getFlag() { return flag; }
+	time_t getCheckTime() { return checkTime; }
+	time_t getValidTime() { return validTime; }
+	
+	void setMissingOnTime();
+	void setReceived();
+	void setNotExpected();
+	virtual MonitorType getType() const = NULL;
+	virtual string str() const;
+
+private:
+	PduMonitor(const PduMonitor& monitor) { __unreachable__("Invalid"); }
+	PduMonitor& operator=(const PduMonitor& monitor) { __unreachable__("Invalid"); }
+};
+
+struct ResponseMonitor : public PduMonitor
+{
+	uint32_t sequenceNumber;
+
+	ResponseMonitor(uint32_t seqNum, PduData* pduData, PduFlag flag);
+	virtual ~ResponseMonitor();
+
+	void setFlag(PduFlag _flag) { flag = _flag; }
+	virtual MonitorType getType() const { return RESPONSE_MONITOR; }
+	virtual string str() const;
+};
+
+//normal sms, delivery receipt
+class ReschedulePduMonitor : public PduMonitor
+{
+protected:
 	time_t startTime; //начало доставки pdu
-	time_t endTime; //окончание доставки pdu
 	time_t lastTime;
 	int lastAttempt;
 
@@ -50,18 +131,12 @@ class PduReceiptFlag
 		time_t& calcTime) const;
 
 public:
-	PduReceiptFlag(PduFlag flg, time_t start, time_t end) :
-		flag(flg), startTime(start), endTime(end), lastTime(0), lastAttempt(0)
-	{
-		//__require__(startTime <= endTime);
-	}
+	ReschedulePduMonitor(time_t _startTime, time_t validTime, PduData* pduData,
+		PduFlag flag);
 
-	PduReceiptFlag& operator= (PduFlag _flag) { flag = _flag; }
-	
-	bool operator== (PduFlag _flag) { return (flag == _flag); }
-	bool operator!= (PduFlag _flag) { return (flag != _flag); }
-
-	time_t getNextTime(time_t t) const;
+	time_t getStartTime() const { return startTime; }
+	time_t getLastTime() const { return lastTime; }
+	time_t calcNextTime(time_t t) const;
 
 	/**
 	 * Проверки:
@@ -78,65 +153,57 @@ public:
 	 */
 	vector<int> update(time_t recvTime, RespPduFlag respFlag);
 
-	bool isPduMissing(time_t checkTime) const;
-
-	operator PduFlag() const { return flag; }
+	virtual MonitorType getType() const = NULL;
+	virtual string str() const;
 };
 
-/**
- * Структура для хранения данных pdu.
- */
-struct PduData
+struct DeliveryMonitor : public ReschedulePduMonitor
 {
-	typedef map<const string, int> IntProps;
-	typedef map<const string, string> StrProps;
+	//uint32_t submitStatus;
+	const string serviceType;
 
-	static Mutex mutex;
-	static uint32_t counter;
-	uint32_t id; //внутренний уникальный номер pdu
-	string smsId;
-	const uint16_t msgRef;
-	const time_t submitTime;
-	const time_t waitTime;
-	const time_t validTime;
-	SmppHeader* pdu;
-	uint32_t submitStatus;
+	DeliveryMonitor(const string& _serviceType, time_t waitTime,
+		time_t validTime, PduData* pduData, PduFlag flag);
+	virtual ~DeliveryMonitor();
+
+	virtual MonitorType getType() const { return DELIVERY_MONITOR; }
+	virtual string str() const;
+};
+
+struct DeliveryReceiptMonitor : public ReschedulePduMonitor
+{
+	uint8_t regDelivery; //значение из профиля отправителя на момент отправки submit_sm
+	PduFlag deliveryFlag; //флаг доставки сообщения
 	uint32_t deliveryStatus;
-	int reportOptions; //значение из профиля отправителя на момент отправки submit_sm
-	int responseFlag; //флаг получения респонса
-	PduReceiptFlag deliveryFlag; //флаг получения сообщения получателем
-	PduReceiptFlag deliveryReceiptFlag; //флаг получения подтверждения доставки
-	int intermediateNotificationFlag; //флаг получения всех нотификаций
-	PduData* replacePdu; //pdu, которая должна быть заменена текущей pdu
-	PduData* replacedByPdu; //pdu, которая замещает текущую pdu
-	map<const string, int> intProps;
-	map<const string, string> strProps;
 
-	PduData(uint16_t _msgRef, time_t _submitTime, time_t _waitTime,
-		time_t _validTime, SmppHeader* _pdu, const string _smsId = "")
-		: smsId(_smsId), msgRef(_msgRef), submitTime(_submitTime),
-		waitTime(_waitTime), validTime(_validTime), pdu(_pdu),
-		submitStatus(0), deliveryStatus(0), reportOptions(-1),
-		responseFlag(PDU_REQUIRED_FLAG),
-		deliveryFlag(PDU_REQUIRED_FLAG, waitTime, validTime),
-		deliveryReceiptFlag(PDU_REQUIRED_FLAG, waitTime, validTime),
-		intermediateNotificationFlag(PDU_REQUIRED_FLAG),
-		replacePdu(NULL), replacedByPdu(NULL)
-	{
-		MutexGuard mguard(mutex);
-		id = counter++;
-	}
+	DeliveryReceiptMonitor(time_t startTime, PduData* pduData, PduFlag flag);
+	virtual ~DeliveryReceiptMonitor();
 
-	~PduData()
-	{
-		//disposePdu(pdu);
-	}
+	void reschedule(time_t startTime);
+	virtual MonitorType getType() const { return DELIVERY_RECEIPT_MONITOR; }
+	virtual string str() const;
+};
 
-	bool complete()
-	{
-		return responseFlag && ((int) deliveryFlag) &&
-			((int) deliveryReceiptFlag) && ((int) intermediateNotificationFlag);
-	}
+struct SmeAckMonitor : public PduMonitor
+{
+	const time_t startTime;
+	SmeAckMonitor(time_t startTime, PduData* pduData, PduFlag flag);
+	virtual ~SmeAckMonitor();
+
+	virtual MonitorType getType() const { return SME_ACK_MONITOR; }
+	virtual string str() const;
+};
+
+struct IntermediateNotificationMonitor : public PduMonitor
+{
+	uint8_t regDelivery; //значение из профиля отправителя на момент отправки submit_sm
+
+	IntermediateNotificationMonitor(time_t startTime, PduData* pduData,
+		PduFlag flag);
+	virtual ~IntermediateNotificationMonitor();
+
+	virtual MonitorType getType() const { return INTERMEDIATE_NOTIFICATION_MONITOR; }
+	virtual string str() const;
 };
 
 }

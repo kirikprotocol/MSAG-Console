@@ -10,108 +10,66 @@ using namespace std;
 
 PduRegistry::~PduRegistry()
 {
-	__trace2__("~PduRegistry(): size = %d", msgRefMap.size());
+	__trace2__("~PduRegistry(): size = %d", checkTimeMap.size());
 	clear();
 }
 
-const char* PduRegistry::toString(PduData* pduData) const
+void PduRegistry::registerMonitor(PduMonitor* monitor)
 {
-	ostringstream s;
-	s << "pduReg = " << (void*) this <<
-		", smsId = " << pduData->smsId <<
-		", seqNum = " << pduData->pdu->get_sequenceNumber() <<
-		", msgRef = " << pduData->msgRef <<
-		", pdu = " << (void*) pduData->pdu <<
-		", submitStatus = " << pduData->submitStatus <<
-		", deliveryStatus = " << pduData->deliveryStatus <<
-		", replacePdu = " << (void*) pduData->replacePdu <<
-		", replacedByPdu = " << (void*) pduData->replacedByPdu <<
-		", submitTime = " << pduData->submitTime <<
-		", waitTime = " << pduData->waitTime <<
-		", validTime = " << pduData->validTime <<
-		", responseFlag = " << pduData->responseFlag <<
-		", deliveryFlag = " << (int) pduData->deliveryFlag <<
-		", deliveryReceiptFlag = " << (int) pduData->deliveryReceiptFlag <<
-		", intermediateNotificationFlag = " << pduData->intermediateNotificationFlag;
-	return s.str().c_str();
-}
-
-void PduRegistry::registerPdu(PduData* pduData)
-{
-	__require__(pduData && pduData->pdu);
-	__trace2__("PduRegistry::registerPdu(): %s", toString(pduData));
+	__require__(monitor);
 	/*
-	if (pduData->smsId.length())
+	if (!monitor->getCheckTime())
 	{
-		idMap[pduData->smsId] = pduData;
+		__trace2__("monitor registration rejected: pduReg = %p, %s", this, monitor->str().c_str());
+		return;
 	}
 	*/
-	if (pduData->pdu->get_sequenceNumber())
+	//регистрирую все мониторы, включая checkTime = 0
+	switch (monitor->getType())
 	{
-		seqNumMap[pduData->pdu->get_sequenceNumber()] = pduData;
+		case RESPONSE_MONITOR:
+			{
+				ResponseMonitor* m = dynamic_cast<ResponseMonitor*>(monitor);
+				__require__(m);
+				SeqNumMap::const_iterator it = seqNumMap.find(m->sequenceNumber);
+				__require__(it == seqNumMap.end());
+				seqNumMap[m->sequenceNumber] = m;
+			}
+			break;
+		case DELIVERY_MONITOR:
+		case DELIVERY_RECEIPT_MONITOR:
+		case INTERMEDIATE_NOTIFICATION_MONITOR:
+		case SME_ACK_MONITOR:
+			{
+				MsgRefKey msgRefKey = MsgRefKey(monitor->pduData->msgRef,
+					monitor->getId());
+				MsgRefMap::const_iterator it = msgRefMap.find(msgRefKey);
+				__require__(it == msgRefMap.end());
+				msgRefMap[msgRefKey] = monitor;
+			}
+			break;
+		default:
+			__unreachable__("Invalid monitor type");
 	}
-	if (pduData->msgRef)
-	{
-		msgRefMap[MsgRefKey(pduData->msgRef, pduData->id)] = pduData;
-	}
-	if (pduData->submitTime)
-	{
-		submitTimeMap[TimeKey(pduData->submitTime, pduData->id)] = pduData;
-	}
-	if (pduData->waitTime)
-	{
-		waitTimeMap[TimeKey(pduData->waitTime, pduData->id)] = pduData;
-	}
-	if (pduData->validTime)
-	{
-		validTimeMap[TimeKey(pduData->validTime, pduData->id)] = pduData;
-	}
-}
-
-void PduRegistry::updatePdu(PduData* pduData)
-{
-	__require__(pduData && pduData->pdu);
-	__trace2__("PduRegistry::updatePdu(): %s", toString(pduData));
-	//smsId и sequenceNumber становятся известны позже из submit_sm_resp
-	//для того же самого smsId могут меняются pduData при replace_sm и при откате replace_sm
-	/*
-	if (pduData->smsId.length())
-	{
-		idMap[pduData->smsId] = pduData;
-	}
-	*/
-	if (pduData->pdu->get_sequenceNumber())
-	{
-		seqNumMap[pduData->pdu->get_sequenceNumber()] = pduData;
-	}
+	checkTimeMap[TimeKey(monitor->getCheckTime(), monitor->getId())] = monitor;
+	__trace2__("monitor registered: pduReg = %p, %s", this, monitor->str().c_str());
 }
 
 void PduRegistry::clear()
 {
-	__trace2__("PduRegistry::clear(): pduReg = 0x%x", this);
-	if (lastRemovedPduData)
+	__trace2__("PduRegistry::clear(): pduReg = %x", this);
+	for (TimeMap::iterator it = checkTimeMap.begin(); it != checkTimeMap.end(); it++)
 	{
-		disposePdu(lastRemovedPduData->pdu);
-		delete lastRemovedPduData;
-		lastRemovedPduData = NULL;
+		delete it->second;
 	}
-	for (MsgRefMap::iterator it = msgRefMap.begin(); it != msgRefMap.end(); it++)
-	{
-		PduData* pduData = it->second;
-		disposePdu(pduData->pdu);
-		delete pduData;
-	}
-	//idMap.clear();
 	seqNumMap.clear();
 	msgRefMap.clear();
-	submitTimeMap.clear();
-	waitTimeMap.clear();
-	validTimeMap.clear();
+	checkTimeMap.clear();
 }
 
-vector<PduData*> PduRegistry::getPdu(uint16_t msgRef) const
+vector<PduMonitor*> PduRegistry::getMonitors(uint16_t msgRef) const
 {
-	vector<PduData*> res;
+	vector<PduMonitor*> res;
 	MsgRefMap::const_iterator it = msgRefMap.lower_bound(MsgRefKey(msgRef, 0));
 	MsgRefMap::const_iterator end = msgRefMap.upper_bound(MsgRefKey(msgRef, UINT_MAX));
 	for (; it != end; it++)
@@ -121,107 +79,137 @@ vector<PduData*> PduRegistry::getPdu(uint16_t msgRef) const
 	return res;
 }
 
-PduData* PduRegistry::getPdu(uint32_t seqNumber) const
+ResponseMonitor* PduRegistry::getResponseMonitor(uint32_t seqNum) const
 {
-	SeqNumMap::const_iterator it = seqNumMap.find(seqNumber);
+	SeqNumMap::const_iterator it = seqNumMap.find(seqNum);
 	return (it == seqNumMap.end() ? NULL : it->second);
 }
 
-/*
-PduData* PduRegistry::getPdu(const string& smsId) const
+DeliveryMonitor* PduRegistry::getDeliveryMonitor(uint16_t msgRef,
+	const string& serviceType) const
 {
-	SmsIdMap::const_iterator it = idMap.find(smsId);
-	return (it != idMap.end() ? NULL : it->second);
-}
-*/
-
-void PduRegistry::removePdu(PduData* pduData)
-{
-	__require__(pduData && pduData->pdu);
-	__trace2__("PduRegistry::removePdu(): %s", toString(pduData));
-	/*
-	if (pduData->smsId.length())
+	vector<PduMonitor*> tmp = getMonitors(msgRef);
+	DeliveryMonitor* monitor = NULL;
+	for (int i = 0; i < tmp.size(); i++)
 	{
-		int res = idMap.erase(pduData->smsId);
-		__require__(res || pduData->replacedByPdu || pduData->submitStatus);
+		if (tmp[i]->getType() == DELIVERY_MONITOR && tmp[i]->pduData->valid)
+		{
+			DeliveryMonitor* m = dynamic_cast<DeliveryMonitor*>(tmp[i]);
+			__require__(m);
+			if (m->serviceType == serviceType)
+			{
+				__require__(!monitor);
+				monitor = m;
+				//break;
+			}
+		}
 	}
-	*/
-	if (pduData->msgRef)
-	{
-		int res = msgRefMap.erase(MsgRefKey(pduData->msgRef, pduData->id));
-		__require__(res);
-	}
-	if (pduData->pdu->get_sequenceNumber())
-	{
-		int res = seqNumMap.erase(pduData->pdu->get_sequenceNumber());
-		__require__(res);
-	}
-	if (pduData->submitTime)
-	{
-		int res = submitTimeMap.erase(TimeKey(pduData->submitTime, pduData->id));
-		__require__(res);
-	}
-	if (pduData->waitTime)
-	{
-		int res = waitTimeMap.erase(TimeKey(pduData->waitTime, pduData->id));
-		__require__(res);
-	}
-	if (pduData->validTime)
-	{
-		int res = validTimeMap.erase(TimeKey(pduData->validTime, pduData->id));
-		__require__(res);
-	}
-	//разорвать связь с замещающей и замещаемой pdu
-	if (pduData->replacePdu)
-	{
-		pduData->replacePdu->replacedByPdu = NULL;
-	}
-	if (pduData->replacedByPdu)
-	{
-		pduData->replacedByPdu->replacePdu = NULL;
-	}
-	//удалить
-	if (lastRemovedPduData)
-	{
-		disposePdu(lastRemovedPduData->pdu);
-		delete lastRemovedPduData;
-	}
-	lastRemovedPduData = pduData;
+	return monitor;
 }
 
-PduData* PduRegistry::getLastRemovedPdu() const
+DeliveryReceiptMonitor* PduRegistry::getDeliveryReceiptMonitor(uint16_t msgRef,
+	PduData* pduData) const
 {
-	return lastRemovedPduData;
+	__require__(pduData);
+	vector<PduMonitor*> tmp = getMonitors(msgRef);
+	DeliveryReceiptMonitor* monitor = NULL;
+	for (int i = 0; i < tmp.size(); i++)
+	{
+		if (tmp[i]->getType() == DELIVERY_RECEIPT_MONITOR &&
+			tmp[i]->pduData->valid && tmp[i]->pduData == pduData)
+		{
+			__require__(!monitor);
+			monitor = dynamic_cast<DeliveryReceiptMonitor*>(tmp[i]);
+			__require__(monitor);
+			//break;
+		}
+	}
+	return monitor;
 }
 
-PduRegistry::PduDataIterator* PduRegistry::getPduBySubmitTime(time_t t1, time_t t2)
+DeliveryReceiptMonitor* PduRegistry::getDeliveryReceiptMonitor(uint16_t msgRef,
+	const string& smsId) const
 {
-	TimeMap::iterator it1 = submitTimeMap.lower_bound(TimeKey(t1, 0));
-	TimeMap::iterator it2 = submitTimeMap.lower_bound(TimeKey(t2, ULONG_MAX));
-	return new PduDataIterator(it1, it2);
+	vector<PduMonitor*> tmp = getMonitors(msgRef);
+	DeliveryReceiptMonitor* monitor = NULL;
+	for (int i = 0; i < tmp.size(); i++)
+	{
+		if (tmp[i]->getType() == DELIVERY_RECEIPT_MONITOR &&
+			tmp[i]->pduData->valid && tmp[i]->pduData->smsId == smsId)
+		{
+			monitor = dynamic_cast<DeliveryReceiptMonitor*>(tmp[i]);
+			__require__(monitor);
+			//break;
+		}
+	}
+	return monitor;
 }
 
-PduRegistry::PduDataIterator* PduRegistry::getPduByWaitTime(time_t t1, time_t t2)
+SmeAckMonitor* PduRegistry::getSmeAckMonitor(uint16_t msgRef) const
 {
-	TimeMap::iterator it1 = waitTimeMap.lower_bound(TimeKey(t1, 0));
-	TimeMap::iterator it2 = waitTimeMap.lower_bound(TimeKey(t2, ULONG_MAX));
-	return new PduDataIterator(it1, it2);
+	vector<PduMonitor*> tmp = getMonitors(msgRef);
+	SmeAckMonitor* monitor = NULL;
+	for (int i = 0; i < tmp.size(); i++)
+	{
+		if (tmp[i]->getType() == SME_ACK_MONITOR && tmp[i]->pduData->valid)
+		{
+			__require__(!monitor);
+			monitor = dynamic_cast<SmeAckMonitor*>(tmp[i]);
+			__require__(monitor);
+			//break;
+		}
+	}
+	return monitor;
 }
 
-PduRegistry::PduDataIterator* PduRegistry::getPduByValidTime(time_t t1, time_t t2)
+void PduRegistry::removeMonitor(PduMonitor* monitor)
 {
-	TimeMap::iterator it1 = validTimeMap.lower_bound(TimeKey(t1, 0));
-	TimeMap::iterator it2 = validTimeMap.lower_bound(TimeKey(t2, ULONG_MAX));
-	return new PduDataIterator(it1, it2);
+	__require__(monitor);
+	switch (monitor->getType())
+	{
+		case RESPONSE_MONITOR:
+			{
+				ResponseMonitor* m = dynamic_cast<ResponseMonitor*>(monitor);
+				__require__(m);
+				int res = seqNumMap.erase(m->sequenceNumber);
+				__require__(res);
+			}
+			break;
+		case DELIVERY_MONITOR:
+		case DELIVERY_RECEIPT_MONITOR:
+		case INTERMEDIATE_NOTIFICATION_MONITOR:
+		case SME_ACK_MONITOR:
+			{
+				int res = msgRefMap.erase(MsgRefKey(monitor->pduData->msgRef,
+					monitor->getId()));
+				__require__(res);
+			}
+			break;
+		default:
+			__unreachable__("Invalid monitor type");
+
+	}
+	int res = checkTimeMap.erase(TimeKey(monitor->getCheckTime(), monitor->getId()));
+	__require__(res);
+	//delete monitor;
+	__trace2__("monitor unregistered: pduReg = %p, %s", this, monitor->str().c_str());
+}
+
+PduRegistry::PduMonitorIterator* PduRegistry::getMonitors(time_t t1, time_t t2) const
+{
+	TimeMap::const_iterator it1 = checkTimeMap.lower_bound(TimeKey(t1, 0));
+	TimeMap::const_iterator it2 = checkTimeMap.lower_bound(TimeKey(t2, ULONG_MAX));
+	return new PduMonitorIterator(it1, it2);
 }
 
 int PduRegistry::size() const
 {
-	return seqNumMap.size();
+	return checkTimeMap.size();
 }
 
 void PduRegistry::dump(FILE* log) const
 {
+	/*
 	using namespace smsc::smpp;
 	using namespace smsc::smpp::SmppCommandSet;
 	fprintf(log, "PduRegistry::dump()\n");
@@ -246,6 +234,7 @@ void PduRegistry::dump(FILE* log) const
 				data->pdu->dump(log, 1);
 		}
 	}
+	*/
 }
 
 }

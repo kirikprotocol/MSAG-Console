@@ -13,8 +13,6 @@ namespace test {
 namespace core {
 
 using std::map;
-using std::multimap;
-using std::pair;
 using std::vector;
 using smsc::sms::SMSId;
 using smsc::sms::Address;
@@ -29,7 +27,7 @@ using smsc::core::synchronization::MutexGuard;
 class PduRegistry
 {
 	//typedef map<const string, PduData*> SmsIdMap;
-	typedef map<const uint32_t, PduData*> SeqNumMap;
+	typedef map<const uint32_t, ResponseMonitor*> SeqNumMap;
 
 	struct MsgRefKey
 	{
@@ -41,7 +39,7 @@ class PduRegistry
 			return (msgRef == key.msgRef ? (id < key.id) : (msgRef < key.msgRef));
 		}
 	};
-	typedef map<const MsgRefKey, PduData*> MsgRefMap;
+	typedef map<const MsgRefKey, PduMonitor*> MsgRefMap;
 
 	struct TimeKey
 	{
@@ -53,35 +51,30 @@ class PduRegistry
 			return (time == key.time ? (id < key.id) : (time < key.time));
 		}
 	};
-	typedef map<const TimeKey, PduData*> TimeMap;
+	typedef map<const TimeKey, PduMonitor*> TimeMap;
 
 	Mutex mutex;
 	uint16_t msgRef;
-	PduData* lastRemovedPduData;
 
 	//SmsIdMap idMap;
 	SeqNumMap seqNumMap;
 	MsgRefMap msgRefMap;
-	TimeMap submitTimeMap;
-	TimeMap waitTimeMap;
-	TimeMap validTimeMap;
-
-	const char* toString(PduData* pduData) const;
+	TimeMap checkTimeMap;
 
 public:
-	struct PduDataIterator
+	struct PduMonitorIterator
 	{
-		TimeMap::iterator it1;
-		TimeMap::iterator it2;
-		PduDataIterator(TimeMap::iterator i1, TimeMap::iterator i2)
+		TimeMap::const_iterator it1;
+		TimeMap::const_iterator it2;
+		PduMonitorIterator(TimeMap::const_iterator i1, TimeMap::const_iterator i2)
 			: it1(i1), it2(i2) {}
-		virtual PduData* next()
+		virtual PduMonitor* next()
 		{
 			return (it1 != it2 ? (it1++)->second : NULL);
 		}
 	};
 
-	PduRegistry() : msgRef(0), lastRemovedPduData(NULL) {}
+	PduRegistry() : msgRef(0) {}
 	~PduRegistry();
 
 	Mutex& getMutex()
@@ -95,44 +88,23 @@ public:
 		return ++msgRef;
 	}
 
-	void registerPdu(PduData* pduData);
+	void registerMonitor(PduMonitor* monitor);
 
-	void updatePdu(PduData* pduData);
+	vector<PduMonitor*> getMonitors(uint16_t msgRef) const;
+	ResponseMonitor* getResponseMonitor(uint32_t seqNum) const;
+	DeliveryMonitor* getDeliveryMonitor(uint16_t msgRef,
+		const string& serviceType) const;
+	DeliveryReceiptMonitor* getDeliveryReceiptMonitor(uint16_t msgRef,
+		PduData* pduData) const;
+	DeliveryReceiptMonitor* getDeliveryReceiptMonitor(uint16_t msgRef,
+		const string& smsId) const;
+	SmeAckMonitor* getSmeAckMonitor(uint16_t msgRef) const;
+
+	void removeMonitor(PduMonitor* monitor);
 
 	void clear();
 
-	/**
-	 * Поиск оригинального pdu при получении его на стороне получателя.
-	 */
-	vector<PduData*> getPdu(uint16_t msgRef) const;
-
-	/**
-	 * Поиск оригинального pdu при получении респонса на стороне отправителя.
-	 */
-	PduData* getPdu(uint32_t seqNumber) const;
-	
-	/**
-	 * Поиск оригинального pdu при получении статус репорта или
-	 * нотификации на стороне отправителя.
-	 * Используется для:
-	 * <ul>
-	 * <li>SMSC Delivery Receipt.
-	 * <li>Intermediate Notification.
-	 * <li>SME Delivery Acknowledgement.
-	 * <li>SME Manual/User Acknowledgement.
-	 * </ul>
-	 */
-	//PduData* getPdu(const string& smsId) const;
-
-	void removePdu(PduData* pduData);
-
-	PduData* getLastRemovedPdu() const;
-
-	PduDataIterator* getPduBySubmitTime(time_t t1, time_t t2);
-	
-	PduDataIterator* getPduByWaitTime(time_t t1, time_t t2);
-
-	PduDataIterator* getPduByValidTime(time_t t1, time_t t2);
+	PduMonitorIterator* getMonitors(time_t t1, time_t t2) const;
 
 	int size() const;
 

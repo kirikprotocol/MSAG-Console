@@ -1,13 +1,15 @@
 #include "PduUtil.hpp"
 #include "util/debug.h"
+#include <sstream>
 
 namespace smsc {
 namespace test {
 namespace core {
 
 using smsc::test::conf::TestConfig;
+using namespace std;
 
-void PduReceiptFlag::eval(time_t time, int& attempt, time_t& diff,
+void ReschedulePduMonitor::eval(time_t time, int& attempt, time_t& diff,
 	time_t& nextTime, time_t& calcTime) const
 {
 	__require__(time);
@@ -35,7 +37,7 @@ void PduReceiptFlag::eval(time_t time, int& attempt, time_t& diff,
 		{
 			nextTime += rescheduleTimes[rescheduleTimes.size() - 1];
 		}
-		if (nextTime > endTime)
+		if (nextTime > validTime)
 		{
 			nextTime = 0;
 		}
@@ -43,7 +45,12 @@ void PduReceiptFlag::eval(time_t time, int& attempt, time_t& diff,
 	attempt--;
 }
 
-time_t PduReceiptFlag::getNextTime(time_t t) const
+ReschedulePduMonitor::ReschedulePduMonitor(time_t _startTime, time_t validTime,
+	PduData* pduData, PduFlag flag)
+: PduMonitor(_startTime, validTime, pduData, flag), startTime(_startTime),
+	lastTime(0), lastAttempt(0) {}
+
+time_t ReschedulePduMonitor::calcNextTime(time_t t) const
 {
 	int attempt;
 	time_t diff, nextTime, calcTime;
@@ -51,23 +58,23 @@ time_t PduReceiptFlag::getNextTime(time_t t) const
 	return nextTime;
 }
 
-vector<int> PduReceiptFlag::checkSchedule(time_t recvTime) const
+vector<int> ReschedulePduMonitor::checkSchedule(time_t recvTime) const
 {
 	vector<int> res;
 	__cfg_int__(timeCheckAccuracy);
 	if (recvTime < startTime)
 	{
-		__trace2__("PduReceiptFlag::checkSchedule(): this = %p, startTime = %ld, endTime = %ld, recvTime = %ld is less startTime",
-			this, startTime, endTime, recvTime);
+		__trace2__("check schedule: %s, recvTime = %ld is less startTime",
+			str().c_str(), recvTime);
 		res.push_back(1);
 	}
-	else if (recvTime > endTime + timeCheckAccuracy)
+	else if (recvTime > validTime + timeCheckAccuracy)
 	{
-		__trace2__("PduReceiptFlag::checkSchedule(): this = %p, startTime = %ld, endTime = %ld, recvTime = %ld is greater endTime",
-			this, startTime, endTime, recvTime);
+		__trace2__("check schedule: %s, recvTime = %ld is greater validTime",
+			str().c_str(), recvTime);
 		res.push_back(2);
 	}
-	//else if (lastTime && (lastTime < startTime || lastTime > endTime))
+	//else if (lastTime && (lastTime < startTime || lastTime > validTime))
 	else
 	{
 		int attempt, lastAttempt = -1;
@@ -76,11 +83,11 @@ vector<int> PduReceiptFlag::checkSchedule(time_t recvTime) const
 		eval(recvTime, attempt, diff, nextTime, calcTime);
 		if (lastTime)
 		{
-			__require__(lastTime >= startTime && lastTime <= endTime + timeCheckAccuracy);
+			__require__(lastTime >= startTime && lastTime <= validTime + timeCheckAccuracy);
 			eval(lastTime, lastAttempt, lastDiff, lastNextTime, lastCalcTime);
 		}
-		__trace2__("PduReceiptFlag::checkSchedule(): this = %p, startTime = %ld, endTime = %ld, recvTime = %ld, attempt = %d, calcTime = %ld, diff = %ld, lastTime = %ld, lastAttempt = %d, lastCalcTime = %ld, lastDiff = %ld",
-			this, startTime, endTime, recvTime, attempt, calcTime, diff, lastTime, lastAttempt, lastCalcTime, lastDiff);
+		__trace2__("check schedule: %s, recvTime = %ld, attempt = %d, calcTime = %ld, diff = %ld, lastAttempt = %d, lastCalcTime = %ld, lastDiff = %ld",
+			str().c_str(), recvTime, attempt, calcTime, diff, lastAttempt, lastCalcTime, lastDiff);
 		if (attempt - lastAttempt != 1)
 		{
 			res.push_back(3);
@@ -97,7 +104,7 @@ vector<int> PduReceiptFlag::checkSchedule(time_t recvTime) const
 	return res;
 }
 
-vector<int> PduReceiptFlag::update(time_t recvTime, RespPduFlag respFlag)
+vector<int> ReschedulePduMonitor::update(time_t recvTime, RespPduFlag respFlag)
 {
 	vector<int> res;
 	PduFlag prevFlag = flag;
@@ -114,21 +121,25 @@ vector<int> PduReceiptFlag::update(time_t recvTime, RespPduFlag respFlag)
 				{
 					case RESP_PDU_OK:
 					case RESP_PDU_ERROR:
-						flag = PDU_RECEIVED_FLAG;
+						setReceived();
 						lastTime = recvTime;
 						break;
 					case RESP_PDU_RESCHED:
 					case RESP_PDU_MISSING:
-						if (!nextTime || nextTime > endTime)
+						if (!nextTime || nextTime > validTime)
 						{
-							flag = PDU_RECEIVED_FLAG;
+							setNotExpected();
+						}
+						else
+						{
+							checkTime = nextTime;
 						}
 						lastTime = recvTime;
 						break;
 					/*
 					case RESP_PDU_MISSING:
 						//lastTime и nextTime с учетом 8 секундного timeout
-						if (!nextTime || nextTime + 8 > endTime)
+						if (!nextTime || nextTime + 8 > validTime)
 						{
 							flag = PDU_RECEIVED_FLAG;
 						}
@@ -149,30 +160,282 @@ vector<int> PduReceiptFlag::update(time_t recvTime, RespPduFlag respFlag)
 		default:
 			__unreachable__("Unknown flag");
 	}
-	__trace2__("PduReceiptFlag::update(): this = %p, startTime = %ld, endTime = %ld, recvTime = %ld, respFlag = %d, flag: %d -> %d, attempt = %d, calcTime = %ld, diff = %ld",
-		this, startTime, endTime, recvTime, respFlag, prevFlag, flag, attempt, calcTime, diff);
+	__trace2__("update monitor: %s, recvTime = %ld, respFlag = %d, flag: %d -> %d, attempt = %d, calcTime = %ld, diff = %ld",
+		str().c_str(), recvTime, respFlag, flag, prevFlag, attempt, calcTime, diff);
 	return res;
 }
 
-bool PduReceiptFlag::isPduMissing(time_t checkTime) const
+Mutex PduMonitor::mutex = Mutex();
+uint32_t PduMonitor::counter = 1;
+
+PduData::PduData(SmppHeader* _pdu, time_t _submitTime, uint16_t _msgRef,
+	IntProps* _intProps, StrProps* _strProps)
+: pdu(_pdu), submitTime(_submitTime), msgRef(_msgRef), valid(false), count(0),
+	replacePdu(NULL), replacedByPdu(NULL)
 {
-	__trace2__("PduReceiptFlag::isPduMissing(): this = %p, startTime = %ld, endTime = %ld, checkTime = %ld, lastTime = %ld, lastAttempt = %d",
-		this, startTime, endTime, checkTime, lastTime, lastAttempt);
-	__cfg_int__(timeCheckAccuracy);
-	if (checkTime < startTime || flag != PDU_REQUIRED_FLAG)
+	__require__(pdu);
+	if (_intProps)
 	{
-		return false;
+		intProps = *_intProps;
 	}
-	else if (checkTime > endTime + timeCheckAccuracy)
+	if (_strProps)
 	{
-		return true;
+		strProps = *_strProps;
 	}
-	time_t nextTime = lastTime ? getNextTime(lastTime) : startTime;
-	return nextTime < checkTime;
+	__trace2__("PduData created = %p", this);
 }
 
-Mutex PduData::mutex = Mutex();
-uint32_t PduData::counter = 1;
+PduData::~PduData()
+{
+	//разорвать связь с замещающей и замещаемой pdu
+	if (replacePdu)
+	{
+		replacePdu->replacedByPdu = NULL;
+	}
+	if (replacedByPdu)
+	{
+		replacedByPdu->replacePdu = NULL;
+	}
+	if (!count)
+	{
+		__require__(pdu);
+		disposePdu(pdu);
+	}
+	__trace2__("PduData deleted = %p", this);
+}
+
+void PduData::ref()
+{
+	count++;
+}
+void PduData::unref()
+{
+	count--;
+	if (!count)
+	{
+		delete this;
+	}
+}
+
+PduMonitor::PduMonitor(time_t _checkTime, time_t _validTime,
+	PduData* _pduData, PduFlag _flag)
+: checkTime(_checkTime), validTime(_validTime), pduData(_pduData), flag(_flag)
+{
+	__require__(pduData);
+	pduData->ref();
+	if (flag != PDU_REQUIRED_FLAG)
+	{
+		checkTime = validTime;
+	}
+	MutexGuard mguard(mutex);
+	id = counter++;
+}
+	
+PduMonitor::~PduMonitor()
+{
+	__require__(pduData);
+	pduData->unref();
+}
+
+void PduMonitor::setMissingOnTime()
+{
+	flag = PDU_MISSING_ON_TIME_FLAG;
+	checkTime = validTime;
+	__trace2__("monitor set missing: %s", str().c_str());
+}
+	
+void PduMonitor::setReceived()
+{
+	flag = PDU_RECEIVED_FLAG;
+	checkTime = validTime;
+	__trace2__("monitor set received: %s", str().c_str());
+}
+
+void PduMonitor::setNotExpected()
+{
+	flag = PDU_NOT_EXPECTED_FLAG;
+	checkTime = validTime;
+	__trace2__("monitor set not expected: %s", str().c_str());
+}
+
+string PduMonitor::str() const
+{
+	ostringstream s;
+	switch (getType())
+	{
+		case RESPONSE_MONITOR:
+			s << "type = response";
+			break;
+		case DELIVERY_MONITOR:
+			s << "type = delivery";
+			break;
+		case DELIVERY_RECEIPT_MONITOR:
+			s << "type = delivery receipt";
+			break;
+		case INTERMEDIATE_NOTIFICATION_MONITOR:
+			s << "type = intermediate notification";
+			break;
+		case SME_ACK_MONITOR:
+			s << "type = sme ack";
+			break;
+		default:
+			__unreachable__("Invalid monitor type");
+	}
+	switch (flag)
+	{
+		case PDU_REQUIRED_FLAG:
+			s << ", flag = required";
+			break;
+		case PDU_MISSING_ON_TIME_FLAG:
+			s << ", flag = missing";
+			break;
+		case PDU_RECEIVED_FLAG:
+			s << ", flag = received";
+			break;
+		case PDU_NOT_EXPECTED_FLAG:
+			s << ", flag = not expected";
+			break;
+		default:
+			__unreachable__("Invalid pdu flag");
+	}
+	s << ", pduData = " << (void*) pduData;
+	s << ", valid = " << (pduData->valid ? "true" : "false");
+	s << ", checkTime = " << checkTime << ", validTime = " << validTime;
+	return s.str();
+}
+
+ResponseMonitor::ResponseMonitor(uint32_t seqNum, PduData* pduData, PduFlag flag)
+: PduMonitor(pduData->submitTime, pduData->submitTime, pduData, flag),
+	sequenceNumber(seqNum)
+{
+	__trace2__("monitor created: %s", str().c_str());
+}
+
+ResponseMonitor::~ResponseMonitor()
+{
+	__trace2__("monitor deleted: %s", str().c_str());
+}
+
+string ResponseMonitor::str() const
+{
+	ostringstream s;
+	s << PduMonitor::str() << ", sequenceNumber = " << sequenceNumber;
+	return s.str();
+}
+
+string ReschedulePduMonitor::str() const
+{
+	ostringstream s;
+	s << PduMonitor::str() << ", startTime = " << startTime <<
+		", lastTime = " << lastTime << ", lastAttempt = " << lastAttempt;
+	return s.str();
+}
+
+DeliveryMonitor::DeliveryMonitor(const string& _serviceType, time_t waitTime,
+	time_t validTime, PduData* pduData, PduFlag flag)
+: ReschedulePduMonitor(waitTime, validTime, pduData, flag),
+	serviceType(_serviceType)
+{
+	__trace2__("monitor created: %s", str().c_str());
+}
+
+DeliveryMonitor::~DeliveryMonitor()
+{
+	__trace2__("monitor deleted: %s", str().c_str());
+}
+
+string DeliveryMonitor::str() const
+{
+	ostringstream s;
+	s << ReschedulePduMonitor::str() << ", serviceType = " << serviceType;
+	return s.str();
+}
+
+DeliveryReceiptMonitor::DeliveryReceiptMonitor(time_t startTime,
+	PduData* pduData, PduFlag flag)
+: ReschedulePduMonitor(startTime, 0, pduData, flag), regDelivery(0xff),
+	deliveryFlag(PDU_REQUIRED_FLAG), deliveryStatus(0)
+{
+	__cfg_int__(maxValidPeriod);
+	validTime = startTime + maxValidPeriod;
+	if (flag != PDU_REQUIRED_FLAG)
+	{
+		checkTime = validTime;
+	}
+	__trace2__("monitor created: %s", str().c_str());
+}
+
+DeliveryReceiptMonitor::~DeliveryReceiptMonitor()
+{
+	__trace2__("monitor deleted: %s", str().c_str());
+}
+
+void DeliveryReceiptMonitor::reschedule(time_t _startTime)
+{
+	//решедулить только если pdu ни разу не была получена
+	__require__(!lastTime && !lastAttempt);
+	__cfg_int__(maxValidPeriod);
+	startTime = _startTime;
+	validTime = startTime + maxValidPeriod;
+}
+
+string DeliveryReceiptMonitor::str() const
+{
+	ostringstream s;
+	s << ReschedulePduMonitor::str() << ", regDelivery = " << (int) regDelivery <<
+		", deliveryFlag = " << (int) deliveryFlag << ", deliveryStatus = " <<
+		deliveryStatus;
+	return s.str();
+}
+
+SmeAckMonitor::SmeAckMonitor(time_t _startTime, PduData* pduData, PduFlag flag)
+: PduMonitor(_startTime, 0, pduData, flag), startTime(_startTime)
+{
+	__cfg_int__(maxValidPeriod);
+	validTime = startTime + maxValidPeriod;
+	if (flag != PDU_REQUIRED_FLAG)
+	{
+		checkTime = validTime;
+	}
+	__trace2__("monitor created: %s", str().c_str());
+}
+
+SmeAckMonitor::~SmeAckMonitor()
+{
+	__trace2__("monitor deleted: %s", str().c_str());
+}
+
+string SmeAckMonitor::str() const
+{
+	ostringstream s;
+	s << PduMonitor::str() << ", startTime = " << startTime;
+	return s.str();
+}
+
+IntermediateNotificationMonitor::IntermediateNotificationMonitor(
+	time_t startTime, PduData* pduData, PduFlag flag)
+: PduMonitor(startTime, 0, pduData, flag), regDelivery(0xff)
+{
+	__cfg_int__(maxValidPeriod);
+	validTime = startTime + maxValidPeriod;
+	if (flag != PDU_REQUIRED_FLAG)
+	{
+		checkTime = validTime;
+	}
+	__trace2__("monitor created: %s", str().c_str());
+}
+
+IntermediateNotificationMonitor::~IntermediateNotificationMonitor()
+{
+	__trace2__("monitor deleted: %s", str().c_str());
+}
+
+string IntermediateNotificationMonitor::str() const
+{
+	ostringstream s;
+	s << PduMonitor::str() << ", regDelivery = " << (int) regDelivery;
+	return s.str();
+}
 
 }
 }
