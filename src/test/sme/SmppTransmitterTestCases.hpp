@@ -27,7 +27,7 @@ class SmppTransmitterTestCases : BaseTestCases
 public:
 	SmppTransmitterTestCases(SmppSession* session, const SmeSystemId& systemId,
 		const Address& smeAddr, const SmeRegistry* smeReg,
-		SmppPduChecker* pduChecker);
+		RouteChecker* routeChecker, SmppPduChecker* pduChecker);
 	
 	virtual ~SmppTransmitterTestCases() {}
 
@@ -68,8 +68,13 @@ private:
 	const Address smeAddr;
 	const SmeRegistry* smeReg;
 	PduRegistry* pduReg;
+	RouteChecker* routeChecker;
 	SmppPduChecker* pduChecker;
 
+	void fillSubmitSmPduData(PduData* pduData, PduSubmitSm* pdu,
+		PduData* replacePduData);
+	vector<int> submitAndRegisterSmSync(PduSubmitSm* pdu, PduData* replacePduData);
+	vector<int> submitAndRegisterSmAsync(PduSubmitSm* pdu, PduData* replacePduData);
 	TCResult* submitSm(const char* tc, bool sync, int num);
 };
 

@@ -16,12 +16,13 @@ using namespace smsc::smpp::SmppCommandSet;
 
 SmppTransmitterTestCases::SmppTransmitterTestCases(SmppSession* sess,
 	const SmeSystemId& id, const Address& addr, const SmeRegistry* _smeReg,
-	SmppPduChecker* _pduChecker)
+	RouteChecker* _routeChecker, SmppPduChecker* _pduChecker)
 	: session(sess), systemId(id), smeAddr(addr), smeReg(_smeReg),
-	pduChecker(_pduChecker)
+	routeChecker(_routeChecker), pduChecker(_pduChecker)
 {
 	__require__(session);
 	__require__(smeReg);
+	__require__(routeChecker);
 	__require__(pduChecker);
 	pduReg = smeReg->getPduRegistry(smeAddr); //может быть NULL
 }
@@ -102,7 +103,103 @@ TCResult* SmppTransmitterTestCases::submitSmAsync(int num)
 	return submitSm(TC_SUBMIT_SM_ASYNC, false, num);
 }
 
+void SmppTransmitterTestCases::fillSubmitSmPduData(PduData* pduData,
+	PduSubmitSm* pdu, PduData* replacePduData)
+{
+	//дл€ флагов самые простые проверки, остальное делаетс€ в
+	//checkSubmitSmResp, checkSubmitTime, checkWaitTime, checkValidTime
+	//pduData.responseFlag = PDU_REQUIRED_FLAG;
+	pduData->deliveryFlag = routeChecker->isDestReachable(
+		pdu->get_message().get_dest(), false) ?
+		PDU_REQUIRED_FLAG : PDU_NOT_EXPECTED_FLAG;
+	pduData->deliveryReceiptFlag =
+		(pdu->get_message().get_registredDelivery() &
+		SMSC_DELIVERY_RECEIPT_BITS == NO_SMSC_DELIVERY_RECEIPT ?
+		PDU_NOT_EXPECTED_FLAG : PDU_REQUIRED_FLAG);
+	pduData->intermediateNotificationFlag =
+		(pdu->get_message().get_registredDelivery() &
+		INTERMEDIATE_NOTIFICATION_REQUESTED ?
+		PDU_REQUIRED_FLAG : PDU_NOT_EXPECTED_FLAG);
+	pduData->replacePdu = replacePduData;
+	if (replacePduData)
+	{
+		replacePduData->replacedByPdu = pduData;
+	}
+}
+
+//метод имеет внутреннюю синхронизацию по pduData->mutex
+vector<int> SmppTransmitterTestCases::submitAndRegisterSmSync(PduSubmitSm* pdu,
+	PduData* replacePduData)
+{
+	__require__(pduReg);
+	//предварительна€ регистраци€ pdu
+	PduData* pduData;
+	{
+		MutexGuard mguard(pduReg->getMutex());
+		pduData = new PduData(pdu->get_optional().get_userMessageReference(),
+			time(NULL),
+			SmppUtil::string2time(pdu->get_message().get_scheduleDeliveryTime()),
+			SmppUtil::string2time(pdu->get_message().get_validityPeriod()),
+			reinterpret_cast<SmppHeader*>(pdu));
+		pdu->get_header().set_sequenceNumber(0);
+		fillSubmitSmPduData(pduData, pdu, replacePduData);
+		pduReg->registerPdu(pduData);
+	}
+	//отправить pdu
+	__dumpPdu2__("SmppTransmitterTestCases::submitSmSyncBefore", systemId, pdu);
+	PduSubmitSmResp* respPdu = session->getSyncTransmitter()->submit(*pdu);
+	__dumpPdu2__("SmppTransmitterTestCases::submitSmSyncAfter", systemId, pdu);
+	__dumpPdu2__("SmppTransmitterTestCases::processSubmitSmRespSync", systemId, respPdu);
+	//финальна€ регистраци€ и проверка pdu
+	vector<int> res;
+	{
+		MutexGuard mguard(pduReg->getMutex());
+		if (!respPdu)
+		{
+			pduData->responseFlag = PDU_MISSING_ON_TIME_FLAG;
+			res.push_back(100);
+		}
+		else
+		{
+			pduData->smsId = SmppUtil::convert(respPdu->get_messageId());
+			pduData->responseFlag = PDU_REQUIRED_FLAG;
+			res = pduChecker->checkSubmitSmResp(pduData, *respPdu);
+			delete respPdu; //disposePdu
+		}
+		pduReg->updatePdu(pduData);
+	}
+	return res;
+}
+
 //метод имеет внутреннюю синхронизацию по pduReg->getMutex()
+vector<int> SmppTransmitterTestCases::submitAndRegisterSmAsync(PduSubmitSm* pdu,
+	PduData* replacePduData)
+{
+	__require__(pduReg);
+	//отправить pdu
+	__dumpPdu2__("SmppTransmitterTestCases::submitSmAsyncBefore", systemId, pdu);
+	MutexGuard mguard(pduReg->getMutex());
+	PduSubmitSmResp* respPdu = session->getAsyncTransmitter()->submit(*pdu);
+	__dumpPdu2__("SmppTransmitterTestCases::submitSmAsyncAfter", systemId, pdu);
+	__dumpPdu2__("SmppTransmitterTestCases::processSubmitSmRespAsync", systemId, respPdu);
+	//регистраци€ pdu
+	PduData* pduData = new PduData(pdu->get_optional().get_userMessageReference(),
+		time(NULL),
+		SmppUtil::string2time(pdu->get_message().get_scheduleDeliveryTime()),
+		SmppUtil::string2time(pdu->get_message().get_validityPeriod()),
+		reinterpret_cast<SmppHeader*>(pdu));
+	fillSubmitSmPduData(pduData, pdu, replacePduData);
+    pduData->responseFlag = PDU_REQUIRED_FLAG;
+	pduReg->registerPdu(pduData);
+	vector<int> res;
+	if (respPdu)
+	{
+		res.push_back(100);
+		delete respPdu; //disposePdu
+	}
+	return res;
+}
+
 TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 {
 	TCSelector s(num, 10);
@@ -124,11 +221,6 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 			__require__(tmp);
 			SmppUtil::convert(*tmp, &destAddr);
 			pdu->get_message().set_dest(destAddr);
-			if (pduReg)
-			{
-				pduReg->getMutex().Lock();
-				pdu->get_optional().set_userMessageReference(pduReg->nextMsgRef());
-			}
 			PduData* replacePduData = NULL;
 			switch (s.value())
 			{
@@ -194,6 +286,7 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 					//ƒл€ SMPP все должно работать независимо от msgRef.
 					if (pduReg)
 					{
+						MutexGuard mguard(pduReg->getMutex());
 						PduRegistry::PduDataIterator* it =
 							pduReg->getPduByWaitTime(time(NULL) + rand2(20, 30), LONG_MAX);
 						PduData* pendingPduData = it->next();
@@ -218,6 +311,7 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 					//ENROTE state.
 					if (pduReg)
 					{
+						MutexGuard mguard(pduReg->getMutex());
 						PduRegistry::PduDataIterator* it =
 							pduReg->getPduByWaitTime(time(NULL) + rand2(20, 30), LONG_MAX);
 						PduData* pendingPduData = it->next();
@@ -243,6 +337,7 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 					//ENROTE state.
 					if (pduReg)
 					{
+						MutexGuard mguard(pduReg->getMutex());
 						PduRegistry::PduDataIterator* it =
 							pduReg->getPduByWaitTime(time(NULL) + rand2(20, 30), LONG_MAX);
 						replacePduData = it->next();
@@ -272,80 +367,46 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 					throw s;
 			}
 			//отправить и зарегистрировать pdu
-			PduSubmitSmResp* respPdu = NULL;
-			if (sync)
-			{
-				__dumpPdu2__("SmppTransmitterTestCases::submitSmSyncBefore", systemId, pdu);
-				respPdu = session->getSyncTransmitter()->submit(*pdu);
-				__dumpPdu2__("SmppTransmitterTestCases::submitSmSyncAfter", systemId, pdu);
-				__dumpPdu2__("SmppTransmitterTestCases::processSubmitSmRespSync", systemId, respPdu);
-				getLog().debug("[%d]\tsubmitSmSync(%d): sequenceNumber = %d",
-					thr_self(), s.value(), pdu->get_header().get_sequenceNumber());
-				if (!respPdu)
-				{
-					res->addFailure(101);
-				}
-			}
-			else
-			{
-				__dumpPdu2__("SmppTransmitterTestCases::submitSmAsyncBefore", systemId, pdu);
-				respPdu = session->getAsyncTransmitter()->submit(*pdu);
-				__dumpPdu2__("SmppTransmitterTestCases::submitSmAsyncAfter", systemId, pdu);
-				__dumpPdu2__("SmppTransmitterTestCases::processSubmitSmRespAsync", systemId, respPdu);
-				getLog().debug("[%d]\tsubmitSmAsync(%d): sequenceNumber = %d",
-					thr_self(), s.value(), pdu->get_header().get_sequenceNumber());
-				if (respPdu)
-				{
-					res->addFailure(102);
-				}
-			}
 			if (pduReg)
 			{
-				//«арегистрировать pdu
-				PduData pduData(reinterpret_cast<SmppHeader*>(pdu));
-				if (respPdu)
+				pdu->get_optional().set_userMessageReference(pduReg->nextMsgRef());
+				vector<int> checkRes;
+				if (sync)
 				{
-					pduData.smsId = SmppUtil::convert(respPdu->get_messageId());
-					pduData.responseFlag = true;
+					checkRes = submitAndRegisterSmSync(pdu, replacePduData);
+					getLog().debug("[%d]\tsubmitSmSync(%d): sequenceNumber = %d",
+						thr_self(), s.value(), pdu->get_header().get_sequenceNumber());
 				}
-				pduData.msgRef = pdu->get_optional().get_userMessageReference();
-				pduData.submitTime = time(NULL);
-				pduData.waitTime =
-					SmppUtil::string2time(pdu->get_message().get_scheduleDeliveryTime());
-				pduData.validTime =
-					SmppUtil::string2time(pdu->get_message().get_validityPeriod());
-				//pduData.responseFlag = false;
-				pduData.deliveryFlag = false;
-				//если delivery receipt и intermediate notifications не должно быть,
-				//помечаем их как уже полученные 
-				pduData.deliveryReceiptFlag =
-					pdu->get_message().get_registredDelivery() &
-					SMSC_DELIVERY_RECEIPT_BITS == NO_SMSC_DELIVERY_RECEIPT;
-				pduData.intermediateNotificationFlag =
-					pdu->get_message().get_registredDelivery() &
-					INTERMEDIATE_NOTIFICATION_REQUESTED;
-				pduData.replacePdu = replacePduData;
-				pduReg->putPdu(pduData);
-				//проверить респонс
-				if (respPdu)
+				else
 				{
-					vector<int> tmp =
-						pduChecker->checkSubmitSmResp(&pduData, *respPdu);
-					for (int i = 0; i < tmp.size(); i++)
-					{
-						res->addFailure(tmp[i] > 0 ? 110 + tmp[i] : tmp[i]);
-					}
+					checkRes = submitAndRegisterSmAsync(pdu, replacePduData);
+					getLog().debug("[%d]\tsubmitSmAsync(%d): sequenceNumber = %d",
+						thr_self(), s.value(), pdu->get_header().get_sequenceNumber());
 				}
-				pduReg->getMutex().Unlock();
+				for (int i = 0; i < checkRes.size(); i++)
+				{
+					res->addFailure(checkRes[i] > 0 ? 100 + checkRes[i] : checkRes[i]);
+				}
 				//pdu life time определ€етс€ PduRegistry
 				//disposePdu(pdu);
 			}
 			else
 			{
-				//если ничего провер€ть не надо (дл€ performance testing)
+				if (sync)
+				{
+					PduSubmitSmResp* respPdu =
+						session->getSyncTransmitter()->submit(*pdu);
+					if (respPdu)
+					{
+						delete respPdu; //disposePdu
+					}
+				}
+				else
+				{
+					session->getAsyncTransmitter()->submit(*pdu);
+				}
 				delete pdu; //disposePdu
 			}
-			delete respPdu; //disposePdu
 		}
 		catch(...)
 		{
