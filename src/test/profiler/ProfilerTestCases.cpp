@@ -239,6 +239,8 @@ void ProfilerTestCases::putCommand(const Address& addr, uint8_t dataCoding, int 
 			SMS sms;
 			SmsUtil::setupRandomCorrectSms(&sms);
 			sms.setOriginatingAddress(addr);
+			__cfg_addr__(profilerAddr);
+			sms.setDestinationAddress(profilerAddr);
 			string text;
 			int cmdType, codepage, reportoptions;
 			switch (s.value())
@@ -354,6 +356,7 @@ void ProfilerTestCases::onSubmit(SmscCommand& cmd)
 	__decl_tc__;
 	SMS* ackSms = cmd->get_sms();
 	__require__(ackSms);
+	__trace2__("onSubmit(): sms = %s", str(*ackSms).c_str());
 	int cmdType;
 	__tc__("getCommand.submit.checkDialogId");
 	if (profileReg->unregisterDialogId(cmd->get_dialogId(), cmdType))
@@ -383,20 +386,20 @@ void ProfilerTestCases::onSubmit(SmscCommand& cmd)
 	__ignore__(BillingRecord);
 	__ignore_bool__(ArchivationRequested);
 	sms.setEServiceType(profilerServiceType.c_str());
-	sms.setIntProperty(Tag::SMPP_SCHEDULE_DELIVERY_TIME, sms.getSubmitTime());
+	//sms.setIntProperty(Tag::SMPP_SCHEDULE_DELIVERY_TIME, sms.getSubmitTime());
 	sms.setIntProperty(Tag::SMPP_ESM_CLASS, ESM_CLASS_NORMAL_MESSAGE);
 	string text;
 	if (cmdType == UPDATE_REPORT_OPTIONS)
 	{
-		__cfg_str__(cmdRespReportNone);
-		__cfg_str__(cmdRespReportFull);
+		__cfg_str__(profilerRespReportNone);
+		__cfg_str__(profilerRespReportFull);
 		switch (profile.reportoptions)
 		{
 			case ProfileReportOptions::ReportNone:
-				text = cmdRespReportNone;
+				text = profilerRespReportNone;
 				break;
 			case ProfileReportOptions::ReportFull:
-				text = cmdRespReportFull;
+				text = profilerRespReportFull;
 				break;
 			default:
 				__unreachable__("Invalid reportoptions");
@@ -404,15 +407,15 @@ void ProfilerTestCases::onSubmit(SmscCommand& cmd)
 	}
 	else if (cmdType == UPDATE_CODE_PAGE)
 	{
-		__cfg_str__(cmdRespDataCodingDefault);
-		__cfg_str__(cmdRespDataCodingUcs2);
+		__cfg_str__(profilerRespDataCodingDefault);
+		__cfg_str__(profilerRespDataCodingUcs2);
 		switch (profile.codepage)
 		{
 			case ProfileCharsetOptions::Default:
-				text = cmdRespDataCodingDefault;
+				text = profilerRespDataCodingDefault;
 				break;
 			case ProfileCharsetOptions::Ucs2:
-				text = cmdRespDataCodingUcs2;
+				text = profilerRespDataCodingUcs2;
 				break;
 			default:
 				__unreachable__("Invalid codepage");
@@ -420,8 +423,8 @@ void ProfilerTestCases::onSubmit(SmscCommand& cmd)
 	}
 	else if (cmdType == INCORRECT_COMMAND_TEXT)
 	{
-		__cfg_str__(cmdRespInvalidCmdText);
-		text = cmdRespInvalidCmdText;
+		__cfg_str__(profilerRespInvalidCmdText);
+		text = profilerRespInvalidCmdText;
 	}
 	uint8_t dataCoding = getDataCoding(profile.codepage);
 	int msgLen;

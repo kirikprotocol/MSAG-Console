@@ -467,7 +467,7 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 					__tc__("processDeliverySm.normalSms.checkOptionalFields");
 					//отключить message_payload, который проверяется в compareMsgText()
 					__tc_fail2__(SmppUtil::compareOptional(
-						pdu.get_optional(), origPdu->get_optional(), 0x80000000), 0);
+						pdu.get_optional(), origPdu->get_optional(), OPT_MSG_PAYLOAD), 0);
 					__tc_ok_cond__;
 					//проверка механизма повторной доставки
 					__tc__("processDeliverySm.normalSms.scheduleChecks");
@@ -480,7 +480,7 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 					//обновить статус delivery монитора
 					__tc__("processDeliverySm.normalSms.checkAllowed");
 					pduReg->removeMonitor(monitor);
-					__tc_fail2__(monitor->update(recvTime, respFlag), 0);
+						__tc_fail2__(monitor->update(recvTime, respFlag), 0);
 					pduReg->registerMonitor(monitor);
 					__tc_ok_cond__;
 					//обновить статус delivery receipt монитора
@@ -838,7 +838,7 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu,
 				//обновить статус
 				__tc__("processDeliverySm.deliveryReceipt.checkAllowed");
 				pduReg->removeMonitor(monitor);
-				__tc_fail2__(monitor->update(recvTime, respFlag), 0);
+					__tc_fail2__(monitor->update(recvTime, respFlag), 0);
 				pduReg->registerMonitor(monitor);
 				__tc_ok_cond__;
 			}
@@ -1022,7 +1022,7 @@ void SmppReceiverTestCases::processGenericNack(PduGenericNack &pdu)
 
 void SmppReceiverTestCases::processDataSm(PduDataSm &pdu)
 {
-	__dumpPdu__("processDataSm", fixture->systemId, &pdu);
+	//__dumpPdu__("processDataSm", fixture->systemId, &pdu);
 	__decl_tc__;
 	__tc__("processDataSm");
 	__tc_fail__(100);
@@ -1030,7 +1030,7 @@ void SmppReceiverTestCases::processDataSm(PduDataSm &pdu)
 
 void SmppReceiverTestCases::processMultiResp(PduMultiSmResp &pdu)
 {
-	__dumpPdu__("processMultiResp", fixture->systemId, &pdu);
+	//__dumpPdu__("processMultiResp", fixture->systemId, &pdu);
 	__decl_tc__;
 	__tc__("processMultiResp");
 	__tc_fail__(100);
@@ -1038,7 +1038,7 @@ void SmppReceiverTestCases::processMultiResp(PduMultiSmResp &pdu)
 
 void SmppReceiverTestCases::processDataSmResp(PduDataSmResp &pdu)
 {
-	__dumpPdu__("processDataSmResp", fixture->systemId, &pdu);
+	//__dumpPdu__("processDataSmResp", fixture->systemId, &pdu);
 	__decl_tc__;
 	__tc__("processDataSmResp");
 	__tc_fail__(100);
@@ -1046,7 +1046,7 @@ void SmppReceiverTestCases::processDataSmResp(PduDataSmResp &pdu)
 
 void SmppReceiverTestCases::processQuerySmResp(PduQuerySmResp &pdu)
 {
-	__dumpPdu__("processQuerySmResp", fixture->systemId, &pdu);
+	//__dumpPdu__("processQuerySmResp", fixture->systemId, &pdu);
 	__decl_tc__;
 	__tc__("processQuerySmResp");
 	__tc_fail__(100);
@@ -1054,7 +1054,7 @@ void SmppReceiverTestCases::processQuerySmResp(PduQuerySmResp &pdu)
 
 void SmppReceiverTestCases::processCancelSmResp(PduCancelSmResp &pdu)
 {
-	__dumpPdu__("processCancelSmResp", fixture->systemId, &pdu);
+	//__dumpPdu__("processCancelSmResp", fixture->systemId, &pdu);
 	__decl_tc__;
 	__tc__("processCancelSmResp");
 	__tc_fail__(100);
@@ -1062,7 +1062,7 @@ void SmppReceiverTestCases::processCancelSmResp(PduCancelSmResp &pdu)
 
 void SmppReceiverTestCases::processAlertNotification(PduAlertNotification &pdu)
 {
-	__dumpPdu__("processAlertNotification", fixture->systemId, &pdu);
+	//__dumpPdu__("processAlertNotification", fixture->systemId, &pdu);
 	__decl_tc__;
 	__tc__("processAlertNotification");
 	__tc_fail__(100);
