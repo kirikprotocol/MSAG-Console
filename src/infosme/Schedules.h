@@ -29,16 +29,16 @@ namespace smsc { namespace infosme
 
     struct Advanced
     {
-        time_t  startDate;  // if -1 not defined
-        time_t  endDate;    // if -1 not defined
-        bool    repeat;     // default false
+        time_t  startDate;  // if -1 not defined, only YYYY.MM.dd
+        time_t  endDate;    // if -1 not defined, only YYYY.MM.dd
+        bool    repeat;     // default false, following used if repeat == true
         int     everyNSec;  // if -1 not defined. In seconds (minutes, hours), 
-        time_t  untilTime;  // if -1 not defined. only HH:mm:ss
+        time_t  endTime;    // if -1 not defined. only HH:mm:ss
 
         Advanced(time_t startDate = -1, time_t endDate = -1, bool repeat=false, 
-                 int everyNSec = -1, time_t untilTime = -1)
+                 int everyNSec = -1, time_t endTime = -1)
             : startDate(startDate), endDate(endDate), repeat(repeat),
-              everyNSec(everyNSec), untilTime(untilTime) {};
+              everyNSec(everyNSec), endTime(endTime) {};
     };
 
     struct Schedule
@@ -73,11 +73,13 @@ namespace smsc { namespace infosme
     struct OnceSchedule : public Schedule
     {
         time_t  startTime;  // only HH:mm:ss
-        time_t  runOnDate;  // date YYYY.MM.dd HH:mm:ss
-
-        OnceSchedule(time_t startTime, time_t runOnDate)
+        time_t  startDate;  // YYYY.MM.dd
+        
+        // Has no startTime & endDate in advanced
+        
+        OnceSchedule(time_t startTime, time_t startDate)
             : Schedule(ONCE), 
-              startTime(startTime), runOnDate(runOnDate) {};
+              startTime(startTime), startDate(startDate) {};
 
         virtual time_t calulateNextTime();
     };
