@@ -171,7 +171,12 @@ void TestSme::executeCycle()
 	//Bind sme с неправильными параметрами
 	if (!boundOk)
 	{
-		process(tc.bindCorrectSme(RAND_TC));
+		TCResult* res = tc.bindCorrectSme(RAND_TC);
+		for (int i = 0; i < res->getFailures().size(); i++)
+		{
+			__require__(res->getFailures()[i] != 100); //session->connect() failed
+		}
+		process(res);
 		process(tc.bindIncorrectSme(RAND_TC)); //обязательно после bindCorrectSme
 		boundOk = true;
 	}
@@ -344,6 +349,7 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 			}
 		}
 	}
+	tcAlias->commit();
 	//регистрация маршрутов
 	for (int i = 0; i < numAddr; i++)
 	{
