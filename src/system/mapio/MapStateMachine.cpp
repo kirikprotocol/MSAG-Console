@@ -101,7 +101,7 @@ static string FormatText(const char* format,...)
   return string(b.get());
 }
 
-#define MAP_ERRORS_BASE 0x480
+#define MAP_ERRORS_BASE Status::MAP_ERR_BASE 
 #define MAP_FALURE (/*MAP_ERRORS_BASE+34*/8)
 
 struct MAPDIALOG_ERROR : public runtime_error
@@ -1262,11 +1262,11 @@ void DoProvErrorProcessing(ET96MAP_PROV_ERR_T *provErrCode_p )
          (*provErrCode_p > 0x0a && *provErrCode_p <= 0x10)) // unxpected component end other
       throw MAPDIALOG_FATAL_ERROR(
         FormatText("MAP::%s fatal *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p),
-        MAP_ERRORS_BASE+*provErrCode_p);
+        Status::MAP_PROVIDER_ERR_BASE+*provErrCode_p);
     else
       throw MAPDIALOG_TEMP_ERROR(
         FormatText("MAP::%s temp *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p),
-        MAP_ERRORS_BASE+*provErrCode_p);
+        Status::MAP_PROVIDER_ERR_BASE+*provErrCode_p);
   }
 }
 
@@ -1496,10 +1496,10 @@ void DoMTConfErrorProcessor(
          *provErrCode_p == 0x09 || // invalid responce recived
          (*provErrCode_p > 0x0a && *provErrCode_p <= 0x10)) // unxpected component end other
       throw MAPDIALOG_FATAL_ERROR(
-        FormatText("MAP::%s fatal *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p),MAP_ERRORS_BASE+*provErrCode_p);
+      FormatText("MAP::%s fatal *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p),Status::MAP_PROVIDER_ERR_BASE+*provErrCode_p);
     else
       throw MAPDIALOG_TEMP_ERROR(
-        FormatText("MAP::%s temp *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p),MAP_ERRORS_BASE+*provErrCode_p);
+      FormatText("MAP::%s temp *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p),Status::MAP_PROVIDER_ERR_BASE+*provErrCode_p);
   }
 }
 #endif
@@ -1914,7 +1914,7 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
     
     if ( provErrCode_p && *provErrCode_p == ET96MAP_NO_RESPONSE_FROM_PEER ) {
       MscManager::getMscStatus().report(dialog->s_msc.c_str(),false);
-      throw MAPDIALOG_TEMP_ERROR("MSC",/*BLOCKEDMSC*/0);
+      throw MAPDIALOG_TEMP_ERROR("MSC",/*BLOCKEDMSC*/Status::MAP_PROVIDER_ERR_BASE+ET96MAP_NO_RESPONSE_FROM_PEER);
     }
 
     DoProvErrorProcessing(provErrCode_p);
