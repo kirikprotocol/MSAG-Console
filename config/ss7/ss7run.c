@@ -82,17 +82,17 @@ int initcp() {
   USHORT_T res;
   if ( (res = EINSS7CpMsgInitNoSig(QUEUE_SIZE)) != MSG_INIT_OK) {
     fprintf(stderr, "FAILED: initializing message handling. code %hu \n", res);
-    return res;
+    return -1;
   }
 
   if ( (res = MsgOpen(USERID)) != MSG_OPEN_OK) {
     fprintf(stderr, "FAILED: opening message port for user %d. code %hu \n", USERID, res);
-    return res;
+    return -1;
   }
 
   if( (res = MsgConn( USERID, MGMT_ID)) != RETURN_OK) {
     fprintf(stderr, "FAILED: connecting to user %d. code %hu\n", MGMT_ID, res);
-    return res;
+    return -1;
   }
   return 0;
 }
@@ -115,7 +115,7 @@ int ss7run(char* cfg, USHORT_T modnum, char* argv[]) {
   res = EINSS7_MgmtApiSendBindReq(USERID,MGMT_ID,6,WAIT);
   if (res != EINSS7_MGMTAPI_RETURN_OK) {
     fprintf(stderr, "FAILED: binding to user %d. code %hu\n", MGMT_ID, res);
-    return res;
+    return -1;
   }
 
   if (status != BOUND) {
@@ -134,7 +134,7 @@ int ss7run(char* cfg, USHORT_T modnum, char* argv[]) {
 
   if (res != EINSS7_MGMTAPI_RETURN_OK) {
     fprintf(stderr, "FAILED: ss7 stack state query. code %hu\n", res);
-    return res ;
+    return -1;
   }
 
   if (status != SIDLE) {
@@ -164,7 +164,7 @@ int ss7run(char* cfg, USHORT_T modnum, char* argv[]) {
   free(modids);
   if (res != EINSS7_MGMTAPI_RETURN_OK) {
     fprintf(stderr, "FAILED: ss7 stack init. code %hu\n", res);
-    return res ;
+    return -1;
   }
 
   if (status != SINIT) {
@@ -178,12 +178,12 @@ int ss7run(char* cfg, USHORT_T modnum, char* argv[]) {
 
   if (res != EINSS7_MGMTAPI_RETURN_OK) {
     fprintf(stderr, "FAILED: ss7 stack start. code %hu\n", res);
-    return res ;
+    return -1;
   }
 
   if (status != SRUN) {
     fprintf(stderr, "FAILED: ss7 stack start.\n");
-    return -1 ;
+    return -1;
   }
   res = EINSS7_MgmtApiSendOrderReq(USERID, /*senderID*/
                                    MGMT_ID, /*receiverID*/
@@ -195,13 +195,14 @@ int ss7run(char* cfg, USHORT_T modnum, char* argv[]) {
 
   if (res != EINSS7_MGMTAPI_RETURN_OK) {
     fprintf(stderr, "FAILED: start all links. code %hu\n", res);
-    return res ;
+    return -1;
   }
 
   if (status != LINKRUN) {
     fprintf(stderr, "FAILED: start all links.\n");
     return -1 ;
   }
+  return 0;
 }
 
 /*********************************************************************/
