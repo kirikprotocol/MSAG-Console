@@ -259,7 +259,12 @@ public:
                 if(!ok)
                 {
                   __watch__(iter1);
-                  __watch__(iter2);
+                  iter2=first_unlocked;
+                  while(iter2)
+                  {
+                    __trace2__("ptr:%p, id:%lld",iter2,iter2->msgId);
+                    iter2=iter2->next_unlocked;
+                  }
                   __require__(ok);
                 }
               }
@@ -284,18 +289,39 @@ public:
 
             if ( success ) // получена доступная команда
             {
-							// удаляем из списка активных
-							if ( locker == last_unlocked ) last_unlocked = prev;
-							if ( prev )
-								 prev->next_unlocked = locker->next_unlocked;
-							else
-							{
-								__require__( locker == first_unlocked );
-								__watch__(locker->next_unlocked);
-								first_unlocked = locker->next_unlocked;
-							}
+              // удаляем из списка активных
+              {
+              __trace__("dump list before");
+              Locker *iter2=first_unlocked;
+              while(iter2)
+              {
+                __trace2__("ptr:%p, id:%lld",iter2,iter2->msgId);
+                iter2=iter2->next_unlocked;
+              }
+              }
 
-							locker->next_unlocked = 0;
+              __trace2__("success:%p",locker);
+              if ( locker == last_unlocked ) last_unlocked = prev;
+              if ( prev )
+                 prev->next_unlocked = locker->next_unlocked;
+              else
+              {
+                __require__( locker == first_unlocked );
+                __watch__(locker->next_unlocked);
+                first_unlocked = locker->next_unlocked;
+              }
+
+              {
+              __trace__("dump list after");
+              Locker *iter2=first_unlocked;
+              while(iter2)
+              {
+                __trace2__("ptr:%p, id:%lld",iter2,iter2->msgId);
+                iter2=iter2->next_unlocked;
+              }
+              }
+
+              locker->next_unlocked = 0;
               locker->locked = true;
               result.msgId = locker->msgId;
               result.state = locker->state;
@@ -308,25 +334,25 @@ public:
             {
               if ( StateChecker::stateIsFinal(locker->state) )
               {
-								// удаляем из списка активных
-								if ( locker == last_unlocked ) last_unlocked = prev;
-								if ( prev )
-									 prev->next_unlocked = locker->next_unlocked;
-								else
-								{
-									__require__( locker == first_unlocked );
-									__watch__(locker->next_unlocked);
-									first_unlocked = locker->next_unlocked;
-								}
+                // удаляем из списка активных
+                if ( locker == last_unlocked ) last_unlocked = prev;
+                if ( prev )
+                   prev->next_unlocked = locker->next_unlocked;
+                else
+                {
+                  __require__( locker == first_unlocked );
+                  __watch__(locker->next_unlocked);
+                  first_unlocked = locker->next_unlocked;
+                }
 
-								locker->next_unlocked = 0;
+                locker->next_unlocked = 0;
                 hash.remove(locker->msgId);
                 delete locker;
               }
-							else
+              else
               {
                 //locker->locked=true;
-								prev = iter;
+                prev = locker;
               }
             }
           }
@@ -360,6 +386,15 @@ public:
 
     // разблокируем запись и добавляем в список активных
     locker->locked = false;
+
+    {Locker *iter2=first_unlocked;
+    __trace__("change state: list before");
+    while(iter2)
+    {
+      __trace2__("ptr:%p, id:%lld",iter2,iter2->msgId);
+      iter2=iter2->next_unlocked;
+    }}
+
     if ( last_unlocked )
     {
       last_unlocked->next_unlocked = locker;
@@ -371,6 +406,14 @@ public:
       __require__(first_unlocked == 0);
       first_unlocked = last_unlocked = locker;
     }
+
+    {Locker *iter2=first_unlocked;
+    __trace__("change state: list after");
+    while(iter2)
+    {
+      __trace2__("ptr:%p, id:%lld",iter2,iter2->msgId);
+      iter2=iter2->next_unlocked;
+    }}
     __watch__(first_unlocked);
     __watch__(last_unlocked);
     event.Signal();
