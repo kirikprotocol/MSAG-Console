@@ -91,25 +91,25 @@ public:
       switch(cmd->get_commandId())
       {
         case DELIVERY:
-          errresp=SmscCommand::makeDeliverySmResp("",cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS);
+          errresp=SmscCommand::makeDeliverySmResp("",cmd->get_dialogId(),SmscCommand::Status::INVALIDBINDSTATE);
           break;
         case SUBMIT:
-          errresp=SmscCommand::makeSubmitSmResp("",cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS);
+          errresp=SmscCommand::makeSubmitSmResp("",cmd->get_dialogId(),SmscCommand::Status::INVALIDBINDSTATE);
           break;
         case QUERY:
-          errresp=SmscCommand::makeQuerySmResp(cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS,0,0,0,0);
+          errresp=SmscCommand::makeQuerySmResp(cmd->get_dialogId(),SmscCommand::Status::INVALIDBINDSTATE,0,0,0,0);
           break;
         case UNBIND:
-          errresp=SmscCommand::makeUnbindResp(cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS);
+          errresp=SmscCommand::makeUnbindResp(cmd->get_dialogId(),SmscCommand::Status::INVALIDBINDSTATE);
           break;
         case REPLACE:
-          errresp=SmscCommand::makeReplaceSmResp(cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS);
+          errresp=SmscCommand::makeReplaceSmResp(cmd->get_dialogId(),SmscCommand::Status::INVALIDBINDSTATE);
           break;
         case CANCEL:
-          errresp=SmscCommand::makeCancelSmResp(cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS);
+          errresp=SmscCommand::makeCancelSmResp(cmd->get_dialogId(),SmscCommand::Status::INVALIDBINDSTATE);
           break;
         default:
-          errresp=SmscCommand::makeGenericNack(cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS);
+          errresp=SmscCommand::makeGenericNack(cmd->get_dialogId(),SmscCommand::Status::INVALIDBINDSTATE);
       }
       //cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS
       //putCommand(errresp);

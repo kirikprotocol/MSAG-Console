@@ -282,6 +282,8 @@ struct _SmscCommand
     case REPLACE_RESP:
     case QUERY_RESP:
     case CANCEL_RESP:
+    case ENQUIRELINK:
+    case ENQUIRELINK_RESP:
       // nothing to delete
       break;
     default:
@@ -366,6 +368,7 @@ public:
     static const int REPLACEFAIL = 9;
     static const int QUERYFAIL = 10;
     static const int CANCELFAIL = 11;
+    static const int INVALIDBINDSTATE = 12;
   };
 
   SmeProxy* getProxy(){return cmd->proxy;}
@@ -688,6 +691,7 @@ public:
     case Status::REPLACEFAIL :       return SmppStatusSet::ESME_RREPLACEFAIL;
     case Status::QUERYFAIL :         return SmppStatusSet::ESME_RQUERYFAIL;
     case Status::CANCELFAIL:         return SmppStatusSet::ESME_RCANCELFAIL;
+    case Status::INVALIDBINDSTATE:   return SmppStatusSet::ESME_RINVBNDSTS;
 
     default : return SmppStatusSet::ESME_RUNKNOWNERR;
     }
