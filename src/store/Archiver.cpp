@@ -424,6 +424,13 @@ void Archiver::archivate(bool first)
 
         if (status != OCI_NO_DATA)
             storageSelectStmt->check(status);
+	    
+        if (uncommited)
+        {
+            billingConnection->commit();
+            storageConnection->commit();
+            decrementFinalizedCount(uncommited);
+        }
     }
     catch (StorageException& exc)
     {
@@ -432,12 +439,6 @@ void Archiver::archivate(bool first)
         throw exc;
     }
 
-    if (uncommited)
-    {
-        billingConnection->commit();
-        storageConnection->commit();
-        decrementFinalizedCount(uncommited);
-    }
 }
 
 const char* Archiver::billingMaxIdSql = (const char*)
