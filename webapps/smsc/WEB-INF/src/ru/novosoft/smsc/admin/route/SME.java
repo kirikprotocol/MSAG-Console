@@ -26,7 +26,8 @@ public class SME
 	private int smeN = 0;
 	private boolean wantAlias = false;
 	private int timeout = 0;
-	private boolean forceDC;
+	private boolean forceDC = false;
+	private String receiptSchemeName = null;
 
 	/**
 	 * Constructor
@@ -62,10 +63,11 @@ public class SME
 	 * @param wantAlias
 	 * @param forceDC
 	 * @param timeout
+	 * @param receiptSchemeName ASCIIZ[32] с именем схемы отчетов о доставке
 	 * @throws NullPointerException if id, systemType, password, or addrRange is null
 	 */
 	public SME(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType,
-				  String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout)
+				  String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName)
 			  throws NullPointerException
 	{
 		if (id == null || systemType == null || password == null || addrRange == null)
@@ -84,11 +86,15 @@ public class SME
 		this.wantAlias = wantAlias;
 		this.timeout = timeout;
 		this.forceDC = forceDC;
+		this.receiptSchemeName = receiptSchemeName;
+		if (this.receiptSchemeName == null)
+			this.receiptSchemeName = "default";
 	}
 
 	public SME(Element smeElement)
 			  throws NullPointerException
 	{
+		this.receiptSchemeName = "default";
 		this.id = smeElement.getAttribute("uid").trim();
 		this.type = smeElement.getAttribute("type").equals("smpp") ? SMPP : SS7;
 		NodeList list = smeElement.getElementsByTagName("param");
@@ -140,6 +146,10 @@ public class SME
 			else if (name.equals("timeout"))
 			{
 				timeout = Integer.decode(value).intValue();
+			}
+			else if (name.equals("ASCIIZ с именем схемы отчетов о доставке"))
+			{
+				receiptSchemeName = value;
 			}
 		}
 
@@ -223,5 +233,10 @@ public class SME
 	public void setForceDC(boolean forceDC)
 	{
 		this.forceDC = forceDC;
+	}
+
+	public String getReceiptSchemeName()
+	{
+		return receiptSchemeName;
 	}
 }

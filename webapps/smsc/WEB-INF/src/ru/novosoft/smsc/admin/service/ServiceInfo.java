@@ -34,8 +34,7 @@ public class ServiceInfo
 	protected byte status = STATUS_STOPPED;
 
 
-	public ServiceInfo(Element serviceElement, String serviceHost, SMEList smes)
-			  throws AdminException
+	public ServiceInfo(Element serviceElement, String serviceHost, SMEList smes) throws AdminException
 	{
 		host = serviceHost;
 		port = Integer.decode(serviceElement.getAttribute("port")).intValue();
@@ -50,8 +49,9 @@ public class ServiceInfo
 		{
 			if (smes.contains(id))
 				throw new AdminException("Couldn't add new SMSC - already presented");
-			sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0);
-		}  else
+			sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "");
+		}
+		else
 		{
 			sme = smes.get(id);
 		}

@@ -8,6 +8,7 @@
 	enabling (true | false) "true"
 	priority CDATA #REQUIRED
 	serviceId CDATA #REQUIRED
+	suppressDeliveryReports (true|false) "false"
 >
 <!ELEMENT source (subject | mask)>
 <!ELEMENT destination (subject | mask)>

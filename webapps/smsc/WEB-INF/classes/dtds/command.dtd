@@ -5,7 +5,7 @@
     <!ATTLIST command service CDATA #IMPLIED>
     <!ATTLIST command component CDATA #IMPLIED>
     <!ATTLIST command method CDATA #IMPLIED>
-    <!ATTLIST command returnType (string|int|bool) #IMPLIED>
+    <!ATTLIST command returnType (string|int|bool|stringlist) #IMPLIED>
     
 <!ELEMENT service (#PCDATA)>
     <!ATTLIST service id CDATA #REQUIRED>
@@ -15,4 +15,4 @@
 
 <!ELEMENT param (#PCDATA)>
     <!ATTLIST param name CDATA #REQUIRED>
-    <!ATTLIST param type (string|int|bool) #REQUIRED>
+    <!ATTLIST param type (string|int|bool|stringlist) #REQUIRED>

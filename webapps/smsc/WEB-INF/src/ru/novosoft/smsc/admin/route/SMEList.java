@@ -9,6 +9,7 @@ import org.apache.log4j.Category;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import java.io.PrintWriter;
 import java.util.*;
@@ -56,8 +57,7 @@ public class SMEList
 		return smes.keySet();
 	}
 
-	public SME add(SME sme)
-			throws AdminException
+	public SME add(SME sme) throws AdminException
 	{
 		if (smes.containsKey(sme.getId()))
 			throw new AdminException("Sme \"" + sme.getId() + "\" already contained in list");
@@ -79,22 +79,32 @@ public class SMEList
 
 	public PrintWriter store(PrintWriter out)
 	{
-		for (Iterator i = smes.values().iterator(); i.hasNext();)
+		List values = new LinkedList(smes.values());
+		Collections.sort(values, new Comparator(){
+			public int compare(Object o1, Object o2)
+			{
+				SME s1 = (SME) o1;
+				SME s2 = (SME) o2;
+				return s1.getId().compareTo(s2.getId());
+			}
+		});
+		for (Iterator i = values.iterator(); i.hasNext();)
 		{
 			SME sme = (SME) i.next();
 			out.println("  <smerecord type=\"" + (sme.getType() == SME.SMPP ? "smpp" : "ss7") + "\" uid=\"" + sme.getId() + "\">");
 
-			out.println("    <param name=\"priority\" value=\"" + sme.getPriority() + "\"/>");
-			out.println("    <param name=\"typeOfNumber\" value=\"" + sme.getTypeOfNumber() + "\"/>");
-			out.println("    <param name=\"numberingPlan\" value=\"" + sme.getNumberingPlan() + "\"/>");
-			out.println("    <param name=\"interfaceVersion\" value=\"" + sme.getInterfaceVersion() + "\"/>");
-			out.println("    <param name=\"systemType\" value=\"" + sme.getSystemType() + "\"/>");
-			out.println("    <param name=\"password\" value=\"" + sme.getPassword() + "\"/>");
-			out.println("    <param name=\"addrRange\" value=\"" + sme.getAddrRange() + "\"/>");
-			out.println("    <param name=\"smeN\" value=\"" + sme.getSmeN() + "\"/>");
-			out.println("    <param name=\"wantAlias\" value=\"" + (sme.isWantAlias() ? "yes" : "no") + "\"/>");
-			out.println("    <param name=\"forceDC\" value=\"" + sme.isForceDC() + "\"/>");
-			out.println("    <param name=\"timeout\" value=\"" + sme.getTimeout() + "\"/>");
+			out.println("    <param name=\"priority\"          value=\"" + sme.getPriority() + "\"/>");
+			out.println("    <param name=\"typeOfNumber\"      value=\"" + sme.getTypeOfNumber() + "\"/>");
+			out.println("    <param name=\"numberingPlan\"     value=\"" + sme.getNumberingPlan() + "\"/>");
+			out.println("    <param name=\"interfaceVersion\"  value=\"" + sme.getInterfaceVersion() + "\"/>");
+			out.println("    <param name=\"systemType\"        value=\"" + StringEncoderDecoder.encode(sme.getSystemType()) + "\"/>");
+			out.println("    <param name=\"password\"          value=\"" + StringEncoderDecoder.encode(sme.getPassword()) + "\"/>");
+			out.println("    <param name=\"addrRange\"         value=\"" + StringEncoderDecoder.encode(sme.getAddrRange()) + "\"/>");
+			out.println("    <param name=\"smeN\"              value=\"" + sme.getSmeN() + "\"/>");
+			out.println("    <param name=\"wantAlias\"         value=\"" + (sme.isWantAlias() ? "yes" : "no") + "\"/>");
+			out.println("    <param name=\"forceDC\"           value=\"" + sme.isForceDC() + "\"/>");
+			out.println("    <param name=\"timeout\"           value=\"" + sme.getTimeout() + "\"/>");
+			out.println("    <param name=\"receiptSchemeName\" value=\"" + StringEncoderDecoder.encode(sme.getReceiptSchemeName()) + "\"/>");
 
 			out.println("  </smerecord>");
 		}

@@ -96,78 +96,15 @@ switch (bean.getStage())
 	<%}
 	break;
 	case 3:
-	{%>
-
-
-<table class=secRep cellspacing=0 cellspadding=1 width="100%">
-<tr class=row0>
-	<th>System Id</th>
-	<td><input type="text" name="serviceId" readonly value="<%=StringEncoderDecoder.encode(bean.getServiceId())%>"></td>
-</tr>
-<tr class=row0>
-	<th>System Type</th>
-	<td><input type="text" name="systemType" value="<%=bean.getSystemType() != null ? StringEncoderDecoder.encode(bean.getSystemType()) : ""%>" maxlength="13"></td>
-</tr>
-<tr class=row1>
-	<th class=label>priority:</th>
-	<td><input class=txt type="text" name=priority maxlength=5 value="<%=bean.getPriority()%>" validation="priority" onkeyup="resetValidation(this)"></td>
-</tr>
-<tr class=row0>
-	<th>Type of number</th>
-	<td>
-		<select name="typeOfNumber">
-		<option value="0"<%=bean.getTypeOfNumber() == 0 ? " selected" : ""%>>Unknown</option>
-		<option value="1"<%=bean.getTypeOfNumber() == 1 ? " selected" : ""%>>International</option>
-		<option value="2"<%=bean.getTypeOfNumber() == 2 ? " selected" : ""%>>National</option>
-		<option value="3"<%=bean.getTypeOfNumber() == 3 ? " selected" : ""%>>Network Specific</option>
-		<option value="4"<%=bean.getTypeOfNumber() == 4 ? " selected" : ""%>>Subscriber Number</option>
-		<option value="5"<%=bean.getTypeOfNumber() == 5 ? " selected" : ""%>>Alphanumeric</option>
-		<option value="6"<%=bean.getTypeOfNumber() == 6 ? " selected" : ""%>>Abbreviated</option>
-		</select>
-	</td>
-</tr>
-<tr class=row0>
-	<th>Numbering plan</th>
-	<td>
-		<select name="numberingPlan">
-		<option value="0" <%=bean.getNumberingPlan() == 0  ? " selected" : ""%>>Unknown</option>
-		<option value="1" <%=bean.getNumberingPlan() == 1  ? " selected" : ""%>>ISDN (E163/E164)</option>
-		<option value="3" <%=bean.getNumberingPlan() == 3  ? " selected" : ""%>>Data (X.121)</option>
-		<option value="4" <%=bean.getNumberingPlan() == 4  ? " selected" : ""%>>Telex (F.69)</option>
-		<option value="6" <%=bean.getNumberingPlan() == 6  ? " selected" : ""%>>Land Mobile (E.212)</option>
-		<option value="8" <%=bean.getNumberingPlan() == 8  ? " selected" : ""%>>National</option>
-		<option value="9" <%=bean.getNumberingPlan() == 9  ? " selected" : ""%>>Private</option>
-		<option value="10"<%=bean.getNumberingPlan() == 10 ? " selected" : ""%>>ERMES</option>
-		<option value="14"<%=bean.getNumberingPlan() == 14 ? " selected" : ""%>>Internet (IP)</option>
-		<option value="18"<%=bean.getNumberingPlan() == 18 ? " selected" : ""%>>WAP Client Id (to be defined by WAP Forum)</option>
-		</select>
-	</td>
-</tr>
-<tr class=row0>
-	<th>Interface version</th>
-	<td><input type="text" name="interfaceVersion" value="3.4" readonly></td>
-</tr>
-<tr class=row0>
-	<th>Range of Address</th>
-	<td><input maxlength="41" type="text" name="rangeOfAddress" value="<%=bean.getRangeOfAddress() != null ? StringEncoderDecoder.encode(bean.getRangeOfAddress()) : ""%>"></td>
-</tr>
-<tr class=row0>
-	<th class=label>want alias:</th>
-	<td><input class=check type="checkbox" name="wantAlias" <%=bean.isWantAlias() ? "checked" : ""%>></td>
-</tr>
-<tr class=row0>
-	<th class=label>force data coding:</th>
-	<td><input class=check type="checkbox" name="forceDC" <%=bean.isForceDC() ? "checked" : ""%>></td>
-</tr>
-<tr class=row0>
-	<th class=label>timeout:</th>
-	<td><input class=txt type="text" name="timeout" value="<%=bean.getTimeout()%>"></td>
-</tr>
-<tr class=rowLast>
-	<th>Password</th>
-	<td><input maxlength="41" type="text" name="password" value="<%=bean.getPassword() != null ? StringEncoderDecoder.encode(bean.getPassword()) : ""%>"></td>
-</tr>
-</table>
+	{
+		int rowN = 0;%>
+		<table class=secRep cellspacing=0 cellspadding=1 width="100%">
+		<tr class=row<%=(rowN++)&1;%>>
+			<th>System Id</th>
+			<td><input type="text" name="serviceId" readonly value="<%=StringEncoderDecoder.encode(bean.getServiceId())%>"></td>
+		</tr>
+		<%@include file="serviceSmeBody.jsp"%>
+		</table>
 	<%}
 	break;
 	default:

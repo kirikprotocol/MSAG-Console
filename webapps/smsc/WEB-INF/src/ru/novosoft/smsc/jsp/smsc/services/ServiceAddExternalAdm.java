@@ -5,12 +5,13 @@
  */
 package ru.novosoft.smsc.jsp.smsc.services;
 
-import org.apache.log4j.Category;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.jsp.*;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.xml.Utils;
 import ru.novosoft.util.jsp.MultipartDataSource;
@@ -23,30 +24,17 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-public class ServiceAddExternalAdm extends PageBean
+public class ServiceAddExternalAdm extends SmeBean
 {
-	protected final static String SYSTEM_ID_PARAM_NAME = "system id";
+	private final static String SYSTEM_ID_PARAM_NAME = "system id";
 
-	protected Category logger = Category.getInstance(this.getClass());
-
-	protected byte stage = 0;
-	private String serviceId = null;
-	private int priority = 0;
+	private byte stage = 0;
 	private String hostName = null;
 	private int port = -1;
 	private String startupArgs = null;
-	private String systemType = null;
-	private int typeOfNumber = -1;
-	private int numberingPlan = -1;
-	private int interfaceVersion = -1;
-	private String rangeOfAddress = null;
-	private String password = null;
-	private boolean wantAlias = false;
-	private boolean forceDC = false;
-	private int timeout = 8;
 
-	protected String mbNext = null;
-	protected String mbCancel = null;
+	private String mbNext = null;
+	private String mbCancel = null;
 
 	private File incomingZip = null;
 
@@ -85,7 +73,7 @@ public class ServiceAddExternalAdm extends PageBean
 			return RESULT_OK;
 	}
 
-	protected void cleanup()
+	private void cleanup()
 	{
 		if (incomingZip != null && incomingZip.isFile() && incomingZip.exists())
 			incomingZip.delete();
@@ -107,8 +95,7 @@ public class ServiceAddExternalAdm extends PageBean
 				return error("Service distributive not attached");
 			if (dataFile.getContentType().equals("application/x-zip-compressed"))
 			{
-				java.io.InputStream is = dataFile.getInputStream();
-				incomingZip = saveFileToTemp(is);
+				incomingZip = Functions.saveFileToTemp(dataFile.getInputStream(), "SMSC_SME_distrib_", ".zip.tmp");
 				dataFile.close();
 				dataFile = null;
 
@@ -147,7 +134,7 @@ public class ServiceAddExternalAdm extends PageBean
 		}
 	}
 
-	protected int processStage2()
+	private int processStage2()
 	{
 		if (hostName == null || hostName.length() < 1)
 			error("Host not selected");
@@ -166,7 +153,7 @@ public class ServiceAddExternalAdm extends PageBean
 			return RESULT_ERROR;
 	}
 
-	protected int processStage3()
+	private int processStage3()
 	{
 		if (hostsManager.getSmeIds().contains(serviceId))
 			return error(SMSCErrors.error.services.alreadyExists, serviceId);
@@ -177,24 +164,7 @@ public class ServiceAddExternalAdm extends PageBean
 		ServiceInfo serviceInfo = null;
 		try
 		{
-			serviceInfo = new ServiceInfo(serviceId,
-													hostName,
-													port,
-													startupArgs,
-													new SME(serviceId,
-															  priority,
-															  SME.SMPP,
-															  typeOfNumber,
-															  numberingPlan,
-															  interfaceVersion,
-															  systemType,
-															  "",
-															  rangeOfAddress,
-															  -1,
-															  wantAlias,
-															  forceDC,
-															  timeout),
-													ServiceInfo.STATUS_STOPPED);
+			serviceInfo = new ServiceInfo(serviceId, hostName, port, startupArgs, new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, "", rangeOfAddress, -1, wantAlias, forceDC, timeout, receiptSchemeName), ServiceInfo.STATUS_STOPPED);
 		}
 		catch (NullPointerException e)
 		{
@@ -223,8 +193,7 @@ public class ServiceAddExternalAdm extends PageBean
 
 	/************************************** ***********************************/
 
-	protected void checkServiceContent(File incomingZip)
-			throws AdminException
+	private void checkServiceContent(File incomingZip) throws AdminException
 	{
 		boolean serviceFound = false;
 		boolean confFound = false;
@@ -258,35 +227,7 @@ public class ServiceAddExternalAdm extends PageBean
 		}
 	}
 
-	protected File saveFileToTemp(InputStream in)
-			throws AdminException
-	{
-		File tmpFile = null;
-
-		try
-		{
-			tmpFile = File.createTempFile("SMSC_SME_distrib_", ".zip.tmp");
-			OutputStream out = new BufferedOutputStream(new FileOutputStream(tmpFile));
-
-			byte buffer[] = new byte[2048];
-			for (int readed = 0; (readed = in.read(buffer)) > -1;)
-			{
-				out.write(buffer, 0, readed);
-			}
-
-			in.close();
-			out.close();
-		}
-		catch (IOException e)
-		{
-			logger.error("Couldn't save incoming services archive to temporary file", e);
-			throw new AdminException("Couldn't save incoming services archive to temporary file, nested: " + e.getMessage());
-		}
-		return tmpFile;
-	}
-
-	protected String extractSystemId(File incomingZip)
-			throws AdminException
+	private String extractSystemId(File incomingZip) throws AdminException
 	{
 		try
 		{
@@ -352,11 +293,6 @@ public class ServiceAddExternalAdm extends PageBean
 		this.stage = stage;
 	}
 
-	public String getServiceId()
-	{
-		return serviceId;
-	}
-
 	public String getHostName()
 	{
 		return hostName;
@@ -387,72 +323,6 @@ public class ServiceAddExternalAdm extends PageBean
 		this.startupArgs = startupArgs;
 	}
 
-	public String getSystemType()
-	{
-		return systemType;
-	}
-
-	public void setSystemType(String systemType)
-	{
-		this.systemType = systemType;
-	}
-
-	public int getTypeOfNumber()
-	{
-		return typeOfNumber;
-	}
-
-	public void setTypeOfNumber(int typeOfNumber)
-	{
-		this.typeOfNumber = typeOfNumber;
-	}
-
-	public int getNumberingPlan()
-	{
-		return numberingPlan;
-	}
-
-	public void setNumberingPlan(int numberingPlan)
-	{
-		this.numberingPlan = numberingPlan;
-	}
-
-	public String getInterfaceVersion()
-	{
-		return "" + ((interfaceVersion >> 4) & 0x0F) + '.' + (interfaceVersion & 0x0F);
-	}
-
-	public void setInterfaceVersion(String newInterfaceVersion)
-	{
-		int pos = newInterfaceVersion.indexOf('.');
-		if (pos > 0)
-		{
-			this.interfaceVersion = (Integer.parseInt(newInterfaceVersion.substring(0, pos)) << 4) + Integer.parseInt(newInterfaceVersion.substring(pos + 1));
-		}
-		else
-			this.interfaceVersion = 0x34;
-	}
-
-	public String getRangeOfAddress()
-	{
-		return rangeOfAddress;
-	}
-
-	public void setRangeOfAddress(String rangeOfAddress)
-	{
-		this.rangeOfAddress = rangeOfAddress;
-	}
-
-	public String getPassword()
-	{
-		return password;
-	}
-
-	public void setPassword(String password)
-	{
-		this.password = password;
-	}
-
 	public String getMbNext()
 	{
 		return mbNext;
@@ -471,45 +341,5 @@ public class ServiceAddExternalAdm extends PageBean
 	public void setMbCancel(String mbCancel)
 	{
 		this.mbCancel = mbCancel;
-	}
-
-	public int getPriority()
-	{
-		return priority;
-	}
-
-	public void setPriority(int priority)
-	{
-		this.priority = priority;
-	}
-
-	public boolean isWantAlias()
-	{
-		return wantAlias;
-	}
-
-	public void setWantAlias(boolean wantAlias)
-	{
-		this.wantAlias = wantAlias;
-	}
-
-	public int getTimeout()
-	{
-		return timeout;
-	}
-
-	public void setTimeout(int timeout)
-	{
-		this.timeout = timeout;
-	}
-
-	public boolean isForceDC()
-	{
-		return forceDC;
-	}
-
-	public void setForceDC(boolean forceDC)
-	{
-		this.forceDC = forceDC;
 	}
 }
