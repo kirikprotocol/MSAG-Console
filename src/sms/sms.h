@@ -759,11 +759,11 @@ namespace smsc {
             string* key = tag_hash.getStrKeyForInt(tag);
             if ( key )
             {
-              __trace2__("Idec: tag=%hd key=%s len=%hd pos=%d length=%d val=%d",tag,key?key->c_str():"NULL",len,pos,length,ntohl(*(uint32_t*)(buffer+pos)));
               __require__(len == 4);
               uint32_t tmp;
               memcpy(&tmp,buffer+pos,4);
               hash[key->c_str()] = ntohl(tmp);
+              __trace2__("Idec: tag=%hd key=%s len=%hd pos=%d length=%d val=%d",tag,key?key->c_str():"NULL",len,pos,length,ntohl(tmp));
             }
             pos+=len;
           }
