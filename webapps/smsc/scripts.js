@@ -60,6 +60,21 @@ function validateField_mask(elem)
 		: true;
 }
 
+function validateField_routeMask(elem)
+{
+	var r = RegExp("^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))\\d{0,21}\\?{0,21}$");
+	if (elem.value == null || elem.value.length == 0)
+	{
+		return true;
+	}
+	else
+	{
+		return elem.value.match(r) == null
+			? validationError(elem, "Invalid mask")
+			: true;
+	}
+}
+
 function validateField_select(elem)
 {
 	return (elem.selectedIndex == 0) 
@@ -105,6 +120,7 @@ function validateField(elem)
 	{
 		case "port":return validateField_port(elem);
 		case "mask":return validateField_mask(elem);
+		case "routeMask":return validateField_routeMask(elem);
 		case "select":return validateField_select(elem);
 		case "priority":return validateField_priority(elem);
 		case "route_serviceId": return validateField_route_serviceId(elem);

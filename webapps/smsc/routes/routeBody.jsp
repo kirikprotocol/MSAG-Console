@@ -46,12 +46,12 @@ for (int i=0; i<bean.getSrcMasks().length; i++)
 %>
 <tr class=row<%=(rowN++)&1%>>
 	<td>&nbsp;</td>
-	<td colspan=2><input class=txtW name=srcMasks value="<%=bean.getSrcMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
+	<td colspan=2><input class=txtW name=srcMasks value="<%=bean.getSrcMasks()[i]%>" validation="routeMask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
 	<td><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to sources"></td>
-	<td colspan=2><input class=txtW name=srcMasks validation="mask" onkeyup="resetValidation(this)"></td>
+	<td colspan=2><input class=txtW name=srcMasks validation="routeMask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Destinations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <tr><td colspan=3 class=secInner><div class=secList>Destinations</div></td></tr>
@@ -84,7 +84,7 @@ String encMask = StringEncoderDecoder.encode(dstMask);
 %>
 <tr class=row<%=(rowN++)&1%>>
 <td>&nbsp;</td>
-	<td><input class=txtW name=dstMasks value="<%=encMask%>" validation="mask"></td>
+	<td><input class=txtW name=dstMasks value="<%=encMask%>" validation="routeMask"></td>
 	<td><select name=dst_mask_sme_<%=encMask%> onkeyup="resetValidation(this)">
 		<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
 		{
@@ -99,7 +99,7 @@ String encMask = StringEncoderDecoder.encode(dstMask);
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
 	<td><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to destinations"></td>
-	<td><input class=txtW name=dstMasks validation="mask" onkeyup="resetValidation(this)"></td>
+	<td><input class=txtW name=dstMasks validation="routeMask" onkeyup="resetValidation(this)"></td>
 	<td><select name=dst_mask_sme_>
 		<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
 		{
