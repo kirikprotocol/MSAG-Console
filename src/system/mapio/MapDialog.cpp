@@ -473,7 +473,7 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
     {
       if ( user_data_coding & 0x4 ) encoding = MAP_8BIT_ENCODING;
       else encoding = MAP_OCTET7BIT_ENCODING;
-      sms.setIntProperty(Tag::MS_DESTADDRSUBUNIT,user_data_coding&0x3);
+      sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,user_data_coding&0x3);
     }
     else{
       __trace2__("MAP::DIALOG::ForwardReq: unknown coding scheme 0x%x",user_data_coding);
@@ -1251,7 +1251,7 @@ USHORT_T MapDialog::Et96MapV1ForwardSmMOInd (
     {
       if ( user_data_coding & 0x4 ) encoding = MAP_8BIT_ENCODING;
       else encoding = MAP_OCTET7BIT_ENCODING;
-      sms.setIntProperty(Tag::MS_DESTADDRSUBUNIT,user_data_coding&0x3);
+      sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,user_data_coding&0x3);
     }
     else{
       __trace2__("MAP::DIALOG::ForwardReq: unknown coding scheme 0x%x",user_data_coding);
