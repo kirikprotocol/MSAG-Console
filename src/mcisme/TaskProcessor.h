@@ -336,7 +336,7 @@ namespace smsc { namespace mcisme
         void processEvent(const MissedCallEvent& event);
         void processMessage(const Message& message);
 
-        virtual void missed(MissedCallEvent& event) {
+        virtual void missed(MissedCallEvent event) {
             putToInQueue(event);
         };
         
