@@ -215,7 +215,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAddress(
 			case 3: //в адресе отличается addressValue
 				{
 					memcpy(tmp, addrVal, addrLen);
-					tmp[rand0(addrLen - 1)] = '+';
+					tmp[rand0(addrLen - 1)] = '@';
 					alias->addr.setValue(addrLen, tmp);
 				}
 				break;
@@ -302,7 +302,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAlias(
 			case 3: //в алиасе отличается addressValue
 				{
 					memcpy(tmp, aliasVal, aliasLen);
-					tmp[rand0(aliasLen - 1)] = '+';
+					tmp[rand0(aliasLen - 1)] = '@';
 					alias->alias.setValue(aliasLen, tmp);
 				}
 				break;
