@@ -54,7 +54,7 @@ select * from dual
 $$date pattern = "d/M/yy h:m:s t" export = "dt" default = "now" $$
 						</param>
 <param name="output" type="string">
-Date: $$date pattern = "!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/wMMMMMMMMwwyyWyyyyWWyyyyyydyyyyyyyyddhdddhhddddhhhMhhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt" import = "dt" $$
+Date: $$date pattern = "!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/wMMMMMMMMHwwyyHHWyyyyHHHWWyyyyyydHHHHyyyyyyyyddshdddsshhddddssshhhMsssshhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt" import = "dt" $$
 </param>
 					</section>
 
@@ -71,7 +71,7 @@ select * from dual
 $$date  pattern  =  "dd.MM.yyyy hh-mm-ss t"  export  =  "dt"  default  =  "today"  $$
 						</param>
 <param name="output" type="string">
-Date: $$date  pattern  =  "!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/wMMMMMMMMwwyyWyyyyWWyyyyyydyyyyyyyyddhdddhhddddhhhMhhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt"  import  =  "dt"  $$
+Date: $$date  pattern  =  "!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/wMMMMMMMMHwwyyHHWyyyyHHHWWyyyyyydHHHHyyyyyyyyddshdddsshhddddssshhhMsssshhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt"  import  =  "dt"  $$
 </param>
 					</section>
 
@@ -88,7 +88,7 @@ select * from dual
 $$date	pattern	=	"d-MMM-yy H m s"	export	=	"dt"	default	=	"yesterday"	$$
 						</param>
 <param name="output" type="string">
-Date: $$date	pattern	=	"!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/wMMMMMMMMwwyyWyyyyWWyyyyyydyyyyyyyyddhdddhhddddhhhMhhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt"	import	=	"dt"	$$
+Date: $$date	pattern	=	"!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/wMMMMMMMMHwwyyHHWyyyyHHHWWyyyyyydHHHHyyyyyyyyddshdddsshhddddssshhhMsssshhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt"	import	=	"dt"	$$
 </param>
 					</section>
 
@@ -105,7 +105,7 @@ select * from dual
 $$date		pattern		=		"dd MMMM yyyy HH.mm.ss"		export		=		"dt"		default		=		"tomorrow"		$$
 						</param>
 <param name="output" type="string">
-Date: $$date		pattern		=		"!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/wMMMMMMMMwwyyWyyyyWWyyyyyydyyyyyyyyddhdddhhddddhhhMhhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt"		import		=		"dt"		$$
+Date: $$date		pattern		=		"!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/wMMMMMMMMHwwyyHHWyyyyHHHWWyyyyyydHHHHyyyyyyyyddshdddsshhddddssshhhMsssshhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt"		import		=		"dt"		$$
 </param>
 					</section>
 

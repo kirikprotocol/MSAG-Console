@@ -73,7 +73,7 @@ const string DbSmeDateFormatJobTestCases::processJobFirstOutput(const string& te
 {
 	__decl_tc__;
 	__tc__("processDbSmeRes.select.singleRecord"); __tc_ok__;
-	static const DateFormatter df("!@#$%^&*( )_+-=|\\:;\'<,>.?/wMMMMMMMMwwyyWyyyyWWyyyyyydyyyyyyyyddhdddhhddddhhhMhhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt");
+	static const DateFormatter df("!@#$%^&*( )_+-=|\\:;\'<,>.?/wMMMMMMMMHwwyyHHWyyyyHHHWWyyyyyydHHHHyyyyyyyyddshdddsshhddddssshhhMsssshhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt");
 	static const string prefix("\nDate: ");
 	int jobNum;
 	if (!sscanf(rec->getJob().c_str(), "DateFormatJob%d", &jobNum))
