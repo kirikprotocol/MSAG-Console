@@ -120,7 +120,7 @@ void ProfilerFunctionalTest::executeTestCases(const Address& address)
 	//ѕоиск профил€ дл€ заданного адреса, 2/5
 	Address addr;
 	bool created = false;
-	for (TCSelector s(RAND_SET_TC, 3); s.check(); s++)
+	for (TCSelector s(RAND_SET_TC, 5); s.check(); s++)
 	{
 		switch (s.value())
 		{
@@ -134,15 +134,12 @@ void ProfilerFunctionalTest::executeTestCases(const Address& address)
 				tc->createProfileNotMatch(addr, RAND_TC);
 				created = true;
 				break;
-			/*
 			case 3:
 				if (created)
 				{
-					//update только дл€ полного адреса, дл€ маски нельз€
 					tc->updateProfile(addr);
 				}
 				break;
-			*/
 			default:
 				tc->lookup(address);
 		}
@@ -219,7 +216,8 @@ int main(int argc, char* argv[])
 			test.executeTest(numAddr);
 		}
 		__trace__("Before save checklist");
-		chkList.saveHtml();
+		chkList.save();
+		//chkList.saveHtml();
 	}
 	catch (...)
 	{
