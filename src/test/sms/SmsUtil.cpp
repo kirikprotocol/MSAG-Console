@@ -12,8 +12,7 @@ using namespace smsc::test::util;
 
 bool SmsUtil::compareAddresses(const Address& a1, const Address& a2)
 {
-	bool res = &a1 != NULL && &a2 != NULL &&
-		a1.getLenght() == a2.getLenght() &&
+	bool res = a1.getLenght() == a2.getLenght() &&
 		a1.getTypeOfNumber() == a2.getTypeOfNumber() &&
 		a1.getNumberingPlan() == a2.getNumberingPlan();
 	if (res)
@@ -28,8 +27,7 @@ bool SmsUtil::compareAddresses(const Address& a1, const Address& a2)
 	
 bool SmsUtil::compareDescriptors(const Descriptor& d1, const Descriptor& d2)
 {
-	bool res = &d1 != NULL && &d2 != NULL &&
-		d1.getMscLenght() == d2.getMscLenght() &&
+	bool res = d1.getMscLenght() == d2.getMscLenght() &&
 		d1.getImsiLenght() == d2.getImsiLenght() &&
 		d1.getSmeNumber() == d2.getSmeNumber();
 	if (res)
@@ -51,8 +49,7 @@ bool SmsUtil::compareDescriptors(const Descriptor& d1, const Descriptor& d2)
 
 bool SmsUtil::compareMessageBodies(const Body& b1, const Body& b2)
 {
-	bool res = &b1 != NULL && &b2 != NULL &&
-		b1.isHeaderIndicator() == b2.isHeaderIndicator() &&
+	bool res = b1.isHeaderIndicator() == b2.isHeaderIndicator() &&
 		b1.getCodingScheme() == b2.getCodingScheme() &&
 		b1.getDataLenght() == b2.getDataLenght();
 	if (res)
@@ -65,10 +62,11 @@ bool SmsUtil::compareMessageBodies(const Body& b1, const Body& b2)
 	return res;
 }
 
-vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2)
+vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2,
+	SmsCompareFlag flag)
 {
 	vector<int> res;
-	if (sms1.getState() != sms2.getState())
+	if (!(flag & IGNORE_STATE) && sms1.getState() != sms2.getState())
 	{
 		res.push_back(1);
 	}
@@ -82,12 +80,14 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2)
 	{
 		res.push_back(3);
 	}
-	if (!compareDescriptors(sms1.getOriginatingDescriptor(),
+	if (!(flag & IGNORE_ORIGINATING_DESCRIPTOR) &&
+		!compareDescriptors(sms1.getOriginatingDescriptor(),
 		sms2.getOriginatingDescriptor()))
 	{
 		res.push_back(4);
 	}
-	if (!compareDescriptors(sms1.getDestinationDescriptor(),
+	if (!(flag & IGNORE_DESTINATION_DESCRIPTOR) &&
+		!compareDescriptors(sms1.getDestinationDescriptor(),
 		sms2.getDestinationDescriptor()))
 	{
 		res.push_back(5);
@@ -105,11 +105,12 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2)
 		res.push_back(8);
 	}
 	//совпадение с точностью до 1-ой секунды
-	if (abs(sms1.getLastTime() - sms2.getLastTime()) > 1)
+	if (!(flag & IGNORE_LAST_TIME) &&
+		abs(sms1.getLastTime() - sms2.getLastTime()) > 1)
 	{
 		res.push_back(9);
 	}
-	if (sms1.getNextTime() != sms2.getNextTime())
+	if (!(flag & IGNORE_NEXT_TIME) && sms1.getNextTime() != sms2.getNextTime())
 	{
 		res.push_back(10);
 	}
@@ -129,15 +130,18 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2)
 	{
 		res.push_back(14);
 	}
-	if (sms1.isArchivationRequested() != sms2.isArchivationRequested())
+	if (!(flag & IGNORE_ARCHIVATION_REQUESTED) &&
+		sms1.isArchivationRequested() != sms2.isArchivationRequested())
 	{
 		res.push_back(15);
 	}
-	if (sms1.getFailureCause() != sms2.getFailureCause())
+	if (!(flag & IGNORE_FAILURE_CAUSE) &&
+		sms1.getFailureCause() != sms2.getFailureCause())
 	{
 		res.push_back(16);
 	}
-	if (sms1.getAttemptsCount() != sms2.getAttemptsCount())
+	if (!(flag & IGNORE_ATTEMPTS_COUNT) &&
+		sms1.getAttemptsCount() != sms2.getAttemptsCount())
 	{
 		res.push_back(17);
 	}
@@ -244,6 +248,26 @@ void SmsUtil::clearSms(SMS* sms)
 	//sms->setAttemptsCount();
 	sms->setMessageBody(0, 0, false, NULL);
 	sms->setEServiceType("");
+}
+
+bool ltAddress::operator() (const Address& a1, const Address& a2) const
+{
+	if (a1.getTypeOfNumber() != a2.getTypeOfNumber())
+	{
+		return a1.getTypeOfNumber() < a2.getTypeOfNumber();
+	}
+	if (a1.getNumberingPlan() != a2.getNumberingPlan())
+	{
+		return a1.getNumberingPlan() < a2.getNumberingPlan();
+	}
+	if (a1.getLenght() != a2.getLenght())
+	{
+		return a1.getLenght() < a2.getLenght();
+	}
+	AddressValue val1, val2;
+	a1.getValue(val1);
+	a2.getValue(val2);
+	return memcmp(val1, val2, a1.getLenght()) < 0;
 }
 
 }
