@@ -1,4 +1,7 @@
 
+#if !defined __header_DistrListProcess_h__
+#define __header_DistrListProcess_h__
+
 #include "../sms/sms.h"
 #include "../smeman/smeman.h"
 #include "../core/synchronization/EventMonitor.hpp"
@@ -18,7 +21,6 @@ using namespace smsc::smeman;
 using namespace smsc::core::threads;
 using namespace smsc::core::synchronization;
 using namespace smsc::core::buffers;
-using smsc::system::Smsc;
 using namespace std;
 
 class DistrListProcess : public ThreadedTask, public SmeProxy{
@@ -85,3 +87,5 @@ protected:
 
 }} // namespaces
 
+
+#endif // __header_DistrListProcess_h__
