@@ -85,7 +85,7 @@ int main(int argc,char* argv[])
         s.setDestinationAddress(strlen(argv[4]),1,1,argv[4]);
         sprintf(message,"%d",count);
         int len=strlen((char*)message);
-        s.setStrProperty("SMPP_SHORT_MESSAGE",(char*)message);
+        s.setBinProperty("SMPP_SHORT_MESSAGE",(char*)message,len);
         s.setIntProperty("SMPP_SM_LENGTH",len);
 
         fillSmppPduFromSms(&sm,&s);

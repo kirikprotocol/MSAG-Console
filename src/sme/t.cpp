@@ -2,11 +2,12 @@
 #include "sme/SmppBase.hpp"
 #include "sms/sms.h"
 #include <unistd.h>
-#include "util/recoder/recode_dll.h"
+#include "util/smstext.h"
 
 using namespace smsc::sms;
 using namespace smsc::sme;
 using namespace smsc::smpp;
+using namespace smsc::util;
 
 int stopped=0;
 
@@ -17,7 +18,7 @@ public:
     if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
     {
       char buf[256];
-      const char *msg=((PduXSm*)pdu)->get_message().get_shortMessage();
+      /*const char *msg=((PduXSm*)pdu)->get_message().get_shortMessage();
       int msglen=((PduXSm*)pdu)->get_message().get_smLength();
       int i;
       printf("before:");
@@ -44,7 +45,8 @@ public:
       for(i=0;i<msglen;i++)
       {
         printf("%x ",(int)(unsigned char)buf[i]);
-      }
+      }*/
+      getPduText((PduXSm*)pdu,buf);
       printf("\n");
       printf("\nReceived:%s\n",buf);
       PduDeliverySmResp resp;
@@ -80,7 +82,7 @@ int main(int argc,char* argv[])
     return -1;
   }
   SmeConfig cfg;
-  cfg.host="0.0.0.0";
+  cfg.host="smsc";
 
   cfg.port=argc>2?atoi(argv[2]):9001;
   cfg.sid=argv[1];
@@ -145,21 +147,25 @@ int main(int argc,char* argv[])
       //int len7=ConvertTextTo7Bit((char*)message,len,buf7,sizeof(buf7),CONV_ENCODING_ANSI);
 
       //s.setMessageBody(len,1,false,message);
-      s.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,message,len);
-      s.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,len);
-      s.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
-
-      fillSmppPduFromSms(&sm,&s);
-      PduSubmitSmResp *resp=tr->submit(sm);
-//      atr->submit(sm);
-      if(resp && resp->get_header().get_commandStatus()==0)
+      //s.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,message,len);
+      //s.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,len);
+      //s.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
+      Array<SMS*> smsarr;
+      splitSms(&s,message,len,CONV_ENCODING_KOI8R,DataCoding::DEFAULT,smsarr);
+      for(int x=0;x<smsarr.Count();x++)
       {
-        printf("Accepted:%d bytes\n",len);fflush(stdout);
-      }else
-      {
-        printf("Wasn't accepted\n");fflush(stdout);
+        fillSmppPduFromSms(&sm,smsarr[x]);
+        PduSubmitSmResp *resp=tr->submit(sm);
+  //      atr->submit(sm);
+        if(resp && resp->get_header().get_commandStatus()==0)
+        {
+          printf("Accepted:%d bytes\n",len);fflush(stdout);
+        }else
+        {
+          printf("Wasn't accepted\n");fflush(stdout);
+        }
+        if(resp)disposePdu((SmppHeader*)resp);
       }
-      if(resp)disposePdu((SmppHeader*)resp);
     }
   }
   catch(std::exception& e)

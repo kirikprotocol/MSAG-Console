@@ -399,7 +399,7 @@ public:
     seqCounter(0),
     strans(*this),
     atrans(*this),
-    closed(false)
+    closed(true)
   {
   }
   ~SmppSession()
@@ -408,6 +408,7 @@ public:
   }
   void connect()
   {
+    if(!closed)return;
     if(socket.Init(cfg.host.c_str(),cfg.port,cfg.timeOut)==-1)
       throw Exception("Failed to resolve smsc host");
     if(socket.Connect()==-1)
@@ -431,6 +432,7 @@ public:
       disposePdu((SmppHeader*)resp);
       throw Exception("Unable to bind sme");
     }
+    closed=false;
   }
   void close()
   {
