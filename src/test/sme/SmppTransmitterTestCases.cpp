@@ -380,6 +380,70 @@ void SmppTransmitterTestCases::registerNullSmeMonitors(PduSubmitSm* pdu,
 	}
 }
 
+MapMsg* SmppTransmitterTestCases::getMapMsg(PduSubmitSm* pdu)
+{
+	__cfg_int__(timeCheckAccuracy);
+	Address addr;
+	SmppUtil::convert(pdu->get_message().get_dest(), &addr);
+	addr = fixture->aliasReg->findAddressByAlias(addr);
+	time_t t;
+	const Profile& profile = fixture->profileReg->getProfile(addr, t);
+	bool valid = t + timeCheckAccuracy <= time(NULL);
+	bool udhi = pdu->get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
+	char* msg = NULL;
+	int len = 0;
+	uint8_t dataCoding;
+	int numSegments = 0;
+	if (pdu->get_message().size_shortMessage() &&
+		!pdu->get_optional().has_messagePayload())
+	{
+		len = (int) (pdu->get_message().size_shortMessage() * 1.5);
+		msg = new char[len];
+		convert(udhi, pdu->get_message().get_dataCoding(),
+			pdu->get_message().get_shortMessage(),
+			pdu->get_message().size_shortMessage(),
+			dataCoding, msg, len, profile.codepage, false);
+	}
+	else if (pdu->get_optional().has_messagePayload() &&
+		!pdu->get_message().size_shortMessage())
+	{
+		len = (int) (pdu->get_optional().size_messagePayload() * 1.5);
+		msg = new char[len];
+		convert(udhi, pdu->get_message().get_dataCoding(),
+			pdu->get_optional().get_messagePayload(),
+			pdu->get_optional().size_messagePayload(),
+			dataCoding, msg, len, profile.codepage, false);
+	}
+	if (dataCoding == DEFAULT || dataCoding == SMSC7BIT)
+	{
+		int msgLen = len;
+		//проверить на символы из расширенного набора
+		for (int i = udhi ? 1 + *(unsigned char*) msg : 0; i < len; i++)
+		{
+			switch (msg[i])
+			{
+				case '|':
+				case '^':
+				case '{':
+				case '}':
+				case '[':
+				case ']':
+				case '~':
+				case '\\':
+					msgLen++;
+					break;
+			}
+		}
+		numSegments = (msgLen + 152) / 153;
+	}
+	else //UCS2, BINARY
+	{
+		numSegments = (len + 133) / 134;
+	}
+
+	return new MapMsg(udhi, msg, len, dataCoding, numSegments, valid);
+}
+
 //предварительна€ регистраци€ pdu, требуетс€ внешн€€ синхронизаци€
 PduData* SmppTransmitterTestCases::prepareSubmitSm(PduSubmitSm* pdu,
 	PduData* existentPduData, time_t submitTime, PduData::IntProps* intProps,
@@ -407,6 +471,15 @@ PduData* SmppTransmitterTestCases::prepareSubmitSm(PduSubmitSm* pdu,
 	if (pdu->get_optional().has_ussdServiceOp())
 	{
 		pduData->intProps["ussdServiceOp"] = pdu->get_optional().get_ussdServiceOp();
+	}
+	//дополнительные фишки дл€ map proxy
+	const RouteInfo* routeInfo = fixture->routeChecker->getRouteInfoForNormalSms(
+		pdu->get_message().get_source(), pdu->get_message().get_dest());
+	if (routeInfo && routeInfo->smeSystemId == "MAP_PROXY")
+	{
+		MapMsg* msg = getMapMsg(pdu);
+		msg->ref();
+		pduData->objProps["map.msg"] = msg;
 	}
 	pduData->checkRes = fixture->pduChecker->checkSubmitSm(pduData);
 	pduData->ref();

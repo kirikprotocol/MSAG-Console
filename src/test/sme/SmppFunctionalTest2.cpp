@@ -436,8 +436,8 @@ int TestSmeErr::Execute()
 vector<TestSme*> genConfig(int transceivers, int transmitters, int receivers,
 	int notConnected, int errSme, const string& smscHost, int smscPort)
 {
-	__require__(transceivers > 0 && transmitters > 0 &&
-		receivers > 0 && notConnected > 0);
+	__require__(transceivers >= 0 && transmitters >= 0 &&
+		receivers >= 0 && notConnected >= 0);
 	__cfg_addr__(smscAddr);
 	__cfg_addr__(smscAlias);
 	__cfg_str__(smscSystemId);
@@ -475,6 +475,10 @@ vector<TestSme*> genConfig(int transceivers, int transmitters, int receivers,
 		addr.push_back(new Address());
 		smeInfo.push_back(new SmeInfo());
 		smeInfo.back()->wantAlias = rand0(1);
+		if (i == 0)
+		{
+			smeInfo.back()->systemId = "MAP_PROXY";
+		}
 		tcSme.addCorrectSme(addr.back(), smeInfo.back(), RAND_TC);
 		__trace2__("register sme: addr = %s, systemId = %s",
 			str(*addr.back()).c_str(), smeInfo.back()->systemId.c_str());

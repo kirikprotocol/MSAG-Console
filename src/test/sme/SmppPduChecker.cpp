@@ -75,6 +75,30 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 		pdu->get_message().get_validityPeriod(), MAX_SMPP_TIME_LENGTH);
 	__check_len__(ESME_RINVSCHED,
 		pdu->get_message().get_scheduleDeliveryTime(), MAX_SMPP_TIME_LENGTH);
+	//map
+	if (pduData->objProps.count("map.msg"))
+	{
+		MapMsg* msg = dynamic_cast<MapMsg*>(pduData->objProps["map.msg"]);
+		__require__(msg);
+		if (msg->udhi)
+		{
+			int msgLen = msg->len;
+			if (msg->dataCoding == DEFAULT || msg->dataCoding == SMSC7BIT)
+			{
+				int udhLen = 1 + *(unsigned char*) msg->msg;
+				int textLen = msg->len - udhLen;
+				msgLen = udhLen + (textLen + 7) * 7 / 8;
+			}
+			if (msgLen > MAX_MAP_SM_LENGTH)
+			{
+				res.insert(ESME_RINVMSGLEN);
+			}
+		}
+		else if (msg->numSegments > 255)
+		{
+			res.insert(ESME_RINVMSGLEN);
+		}
+	}
 	//без проверки на bind статус
 	SmeType destType = fixture->routeChecker->isDestReachable(
 		pdu->get_message().get_source(), pdu->get_message().get_dest());
@@ -436,6 +460,10 @@ void SmppPduChecker::processSubmitSmResp(ResponseMonitor* monitor,
 		case ESME_RINVBNDSTS:
 			__tc__("submitSm.resp.checkCmdStatusInvalidBindStatus");
 			__check__(1, checkRes.count(ESME_RINVBNDSTS));
+			break;
+		case ESME_RINVMSGLEN:
+			__tc__("submitSm.resp.checkCmdStatusInvalidMsgLen");
+			__check__(1, checkRes.count(ESME_RINVMSGLEN));
 			break;
 		case ESME_RSUBMITFAIL:
 			__tc__("submitSm.resp.checkCmdStatusSubmitFailed");

@@ -85,9 +85,9 @@ void NormalSmsHandler::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu,
 	__cfg_int__(timeCheckAccuracy);
 	Address destAddr;
 	SmppUtil::convert(pdu.get_message().get_dest(), &destAddr);
-	time_t profileUpdateTime;
-	int codePage = fixture->profileReg->getProfile(destAddr, profileUpdateTime).codepage;
-	if (abs(recvTime - profileUpdateTime) < timeCheckAccuracy)
+	time_t t;
+	int codePage = fixture->profileReg->getProfile(destAddr, t).codepage;
+	if (abs(recvTime - t) < timeCheckAccuracy)
 	{
 		//профайл может быть неконсистентным
 		return;
@@ -110,50 +110,187 @@ void NormalSmsHandler::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu,
 		origPdu.get_optional().get_messagePayload() : NULL;
 	int origMpLen = origPdu.get_optional().has_messagePayload() ?
 		origPdu.get_optional().size_messagePayload() : 0;
-	//игнорирую опциональный language_indicator
-	switch(codePage)
+
+	__tc__("deliverySm.normalSms.checkDataCoding");
+	if (codePage == ProfileCharsetOptions::Default &&
+		origDc == UCS2 && dc != DEFAULT)
 	{
-		case ProfileCharsetOptions::Default:
-			__tc__("deliverySm.normalSms.checkDataCoding");
-			if (dc != DEFAULT)
+		__tc_fail__(1);
+	}
+	else if (dc != origDc)
+	{
+		__tc_fail__(2);
+	}
+	__tc_ok_cond__;
+	if (dc == origDc)
+	{
+		__tc__("deliverySm.normalSms.checkTextEqualDataCoding");
+	}
+	else
+	{
+		__tc__("deliverySm.normalSms.checkTextDiffDataCoding");
+	}
+	__tc_fail2__(compare(origUdhi, origDc, origSm, origSmLen,
+		udhi, dc, sm, smLen, false), 0);
+	__tc_fail2__(compare(origUdhi, origDc, origMp, origMpLen,
+		udhi, dc, mp, mpLen, false), 20);
+	__tc_ok_cond__;
+	//игнорирую опциональный language_indicator
+}
+
+PduFlag NormalSmsHandler::compareMsgTextMap(DeliveryMonitor* monitor,
+	PduSubmitSm& origPdu, PduDeliverySm& pdu, RespPduFlag respFlag)
+{
+	__require__(monitor);
+	__decl_tc__;
+	MapMsg* msg = dynamic_cast<MapMsg*>(monitor->pduData->objProps["map.msg"]);
+	__require__(msg);
+	if (!msg->valid)
+	{
+		return PDU_COND_REQUIRED_FLAG;
+	}
+	__tc__("deliverySm.normalSms.map.checkDataCoding");
+	if (pdu.get_message().get_dataCoding() != msg->dataCoding)
+	{
+		__tc_fail__(1);
+	}
+	__tc_ok_cond__;
+	int concatRefNum = 0, concatMaxNum = 0, concatSeqNum = 0;
+	bool udhi = pdu.get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
+	int udhLen = 0;
+	if (udhi && pdu.get_message().size_shortMessage())
+	{
+		unsigned char* sm = (unsigned char*) pdu.get_message().get_shortMessage();
+		udhLen = 1 + *sm;
+		for (int i = 1; i < udhLen; )
+		{
+			//ie - informational element
+			int ieId = sm[i++];
+			int ieLen = sm[i++];
+			if (ieId == 0) //Concatenated short messages, 8-bit reference number
 			{
-				__tc_fail__(1);
+				__require__(ieLen == 3);
+				concatRefNum = sm[i++];
+				concatMaxNum = sm[i++];
+				concatSeqNum = sm[i++];
+				break;
 			}
-			__tc_ok_cond__;
-			if (dc == DEFAULT)
+			i += ieLen;
+		}
+	}
+	if (concatMaxNum) //сегментированное сообщение
+	{
+		__trace2__("segmented messge received: refNum = %d, maxNum = %d, seqNum",
+			concatRefNum, concatMaxNum, concatSeqNum);
+		if (pdu.get_message().get_dataCoding() ==
+			origPdu.get_message().get_dataCoding())
+		{
+			__tc__("deliverySm.normalSms.map.checkLongSmsEqualDataCoding");
+		}
+		else
+		{
+			__tc__("deliverySm.normalSms.map.checkLongSmsDiffDataCoding");
+		}
+		if (concatMaxNum != msg->numSegments)
+		{
+			__tc_fail__(1);
+		}
+		//refNum
+		if (!msg->refNum)
+		{
+			msg->refNum = concatRefNum;
+		}
+		else if (msg->refNum != concatRefNum)
+		{
+			__tc_fail__(2);
+		}
+		//seqNum
+		if (msg->seqNum != concatSeqNum)
+		{
+			__tc_fail__(3);
+		}
+		if (respFlag == RESP_PDU_OK) //отправлен ESME_ROK респонс на SC
+		{
+			msg->seqNum = concatSeqNum + 1;
+		}
+		//length
+		const char* sm = pdu.get_message().get_shortMessage() + udhLen;
+		int smLen = pdu.get_message().size_shortMessage() - udhLen;
+		if (msg->dataCoding == DEFAULT || msg->dataCoding == SMSC7BIT)
+		{
+			int smLenCorrect = smLen;
+			for (int i = 0; i < smLen; i++)
 			{
-				if (origDc == DEFAULT)
+				switch (sm[i])
 				{
-					__tc__("deliverySm.normalSms.checkTextEqualDataCoding");
+					case '|':
+					case '^':
+					case '{':
+					case '}':
+					case '[':
+					case ']':
+					case '~':
+					case '\\':
+						smLenCorrect++;
+						break;
 				}
-				else
-				{
-					__tc__("deliverySm.normalSms.checkTextDiffDataCoding");
-				}
-				__tc_fail2__(compare(origUdhi, origDc, origSm, origSmLen,
-					udhi, dc, sm, smLen, false), 0);
-				__tc_fail2__(compare(origUdhi, origDc, origMp, origMpLen,
-					udhi, dc, mp, mpLen, false), 20);
-				__tc_ok_cond__;
 			}
-			break;
-		case ProfileCharsetOptions::Ucs2:
-			if (dc == origDc)
+			if (smLenCorrect != 153 && smLen != msg->len - msg->offset)
 			{
-				__tc__("deliverySm.normalSms.checkTextEqualDataCoding");
+				__tc_fail__(6);
 			}
-			else
+		}
+		else
+		{
+			if (msg->dataCoding == UCS2 && smLen % 2)
 			{
-				__tc__("deliverySm.normalSms.checkTextDiffDataCoding");
+				__tc_fail__(7);
 			}
-			__tc_fail2__(compare(origUdhi, origDc, origSm, origSmLen,
-				udhi, dc, sm, smLen, false), 0);
-			__tc_fail2__(compare(origUdhi, origDc, origMp, origMpLen,
-				udhi, dc, mp, mpLen, false), 20);
-			__tc_ok_cond__;
-			break;
-		default:
-			__unreachable__("Invalid profile");
+			if (smLen != 134 && smLen != msg->len - msg->offset)
+			{
+				__tc_fail__(8);
+			}
+		}
+		//sm
+		if (msg->offset + smLen > msg->len)
+		{
+			__tc_fail__(4);
+		}
+		else if (memcmp(sm, msg->msg + msg->offset, smLen))
+		{
+			__tc_fail__(5);
+		}
+		msg->offset += smLen;
+		return (msg->offset < msg->len ? PDU_REQUIRED_FLAG : PDU_NOT_EXPECTED_FLAG);
+	}
+	else //не сегментированное сообщение
+	{
+		if (pdu.get_message().get_dataCoding() ==
+			origPdu.get_message().get_dataCoding())
+		{
+			__tc__("deliverySm.normalSms.map.checkShortSmsEqualDataCoding");
+		}
+		else
+		{
+			__tc__("deliverySm.normalSms.map.checkShortSmsDiffDataCoding");
+		}
+		if (pdu.get_message().size_shortMessage() == msg->len &&
+			memcmp(pdu.get_message().get_shortMessage(), msg->msg, msg->len) == 0)
+		{
+			__tc_ok__;
+		}
+		else if (pdu.get_optional().has_messagePayload() &&
+			pdu.get_optional().size_messagePayload() == msg->len &&
+			memcmp(pdu.get_optional().get_messagePayload(), msg->msg, msg->len) == 0)
+		{
+			__tc_ok__;
+		}
+		else
+		{
+			__tc_fail__(1);
+		}
+		//то, что размер сообщений в байтах <= 140 проверяется в SmppPduChecker
+		return PDU_NOT_EXPECTED_FLAG;
 	}
 }
 
@@ -412,11 +549,6 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 		__compare__(5, get_message().get_priorityFlag());
 		__compare__(6, get_message().get_registredDelivery());
 		__tc_ok_cond__;
-		//сравнить текст
-		if (fixture->profileReg)
-		{
-			compareMsgText(*origPdu, pdu, recvTime);
-		}
 		//optional
 		__tc__("deliverySm.normalSms.checkOptionalFields");
 		//отключить message_payload, который проверяется в compareMsgText()
@@ -431,14 +563,44 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 		pair<uint32_t, time_t> deliveryResp =
 			fixture->respSender->sendDeliverySmResp(pdu);
 		RespPduFlag respFlag = isAccepted(deliveryResp.first);
+		//сравнить текст
+		PduFlag textFlag = PDU_NOT_EXPECTED_FLAG; //получены все сегменты
+		if (fixture->smeInfo.systemId == "MAP_PROXY")
+		{
+			textFlag = compareMsgTextMap(monitor, *origPdu, pdu, respFlag);
+		}
+		else if (fixture->profileReg)
+		{
+			compareMsgText(*origPdu, pdu, recvTime);
+		}
 		//обновить статус delivery монитора
-		__tc__("deliverySm.normalSms.checkAllowed");
 		pduReg->removeMonitor(monitor);
+		switch (textFlag)
+		{
+			case PDU_REQUIRED_FLAG:
+				if (respFlag == RESP_PDU_OK)
+				{
+					respFlag = RESP_PDU_CONTINUE;
+				}
+				break;
+			case PDU_COND_REQUIRED_FLAG:
+				monitor->setCondRequired();
+				if (respFlag == RESP_PDU_OK)
+				{
+					respFlag = RESP_PDU_CONTINUE;
+				}
+				break;
+			case PDU_NOT_EXPECTED_FLAG:
+				break;
+			default:
+				__unreachable__("Invalid text flag");
+		}
+		__tc__("deliverySm.normalSms.checkAllowed");
 		__tc_fail2__(monitor->update(recvTime, respFlag), 0);
 		switch (respFlag)
 		{
 			case RESP_PDU_OK:
-				monitor->state = DELIVERED;
+				monitor->state = textFlag == PDU_REQUIRED_FLAG ? ENROUTE : DELIVERED;
 				break;
 			case RESP_PDU_ERROR:
 				monitor->state = UNDELIVERABLE;

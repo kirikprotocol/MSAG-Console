@@ -17,6 +17,7 @@ using smsc::smpp::PduDeliverySm;
 using smsc::smeman::SmeInfo;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::CheckList;
+using smsc::test::core::PduFlag;
 using smsc::test::core::PduRegistry;
 using smsc::test::core::DeliveryMonitor;
 
@@ -45,7 +46,10 @@ protected:
 
 	virtual Category& getLog();
 	vector<int> checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2) const;
+
 	void compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu, time_t recvTime);
+	PduFlag compareMsgTextMap(DeliveryMonitor* monitor, PduSubmitSm& origPdu,
+		PduDeliverySm& pdu, RespPduFlag respFlag);
 
 	void registerIntermediateNotificationMonitor(const DeliveryMonitor* monitor,
 		PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime,

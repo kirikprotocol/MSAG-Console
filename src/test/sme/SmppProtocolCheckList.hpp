@@ -249,6 +249,8 @@ void submitSmTc()
 		"Если код ошибки ESME_RSYSERR в поле command_status, то на стороне SC действительно возникла неустранимая ошибка (transaction rollback при сохранении сообщения)");
 	__reg_tc__("submitSm.resp.checkCmdStatusInvalidBindStatus",
 		"Если код ошибки ESME_RINVBNDSTS в поле command_status, то действительно sme зарегистрированна как receiver");
+	__reg_tc__("submitSm.resp.checkCmdStatusInvalidMsgLen",
+		"Если код ошибки ESME_RINVMSGLEN в поле command_status, то действительно длина сообщения неправильная (например, наличие udhi в длинном MT сообщении)");
 	__reg_tc__("submitSm.resp.checkCmdStatusSubmitFailed",
 		"Если код ошибки ESME_RSUBMITFAIL в поле command_status, то pdu действительно некорректная (присутствуют оба поля short_message и message_payload и т.п.)");
 	__reg_tc__("submitSm.resp.checkCmdStatusNoRoute",
@@ -365,18 +367,34 @@ void deliverySmTc()
 		"Проверка правильности маршрута (определение sme по адресу отправителя и алиасу получателя)");
 	__reg_tc__("deliverySm.normalSms.checkMandatoryFields",
 		"Сравнение обязательных полей отправленной (submit_sm, data_sm, replace_sm) и полученной (deliver_sm) pdu");
-	__reg_tc__("deliverySm.normalSms.checkDataCoding",
-		"Кодировка текста sms соответствует настройкам профиля получателя");
-	__reg_tc__("deliverySm.normalSms.checkTextEqualDataCoding",
-		"Для одинаковых кодировок в профилях отправителя и получателя текст sms совпадает");
-	__reg_tc__("deliverySm.normalSms.checkTextDiffDataCoding",
-		"Для различных кодировок в профилях отправителя и получателя текст sms правильно преобразуется из одной кодировки в другую");
 	__reg_tc__("deliverySm.normalSms.checkOptionalFields",
 		"Сравнение опциональных полей отправленной (submit_sm, data_sm, replace_sm) и полученной (deliver_sm) pdu");
 	__reg_tc__("deliverySm.normalSms.scheduleChecks",
 		"Корректная работа механизма повторной доставки (правильное время, нет пропусков между повторными доставками, отсутствие дублей)");
 	__reg_tc__("deliverySm.normalSms.ussdServiceOp",
 		"Если установлено опциональное поле ussd_service_op, то SC выполняет единственную попытку доставки сообщения");
+	//deliverySm.normalSms.notMap
+	__reg_tc__("deliverySm.normalSms.notMap",
+		"Sms получателем которых являются sme, а не мобильные телефоны");
+	__reg_tc__("deliverySm.normalSms.notMap.checkDataCoding",
+		"Кодировка текста sms соответствует настройкам профиля получателя на момент начала доставки");
+	__reg_tc__("deliverySm.normalSms.notMap.checkEqualDataCoding",
+		"Если сообщение отправлено в кодировке, которую понимает получатель, поля short_message и/или message_payload проносятся без изменений");
+	__reg_tc__("deliverySm.normalSms.notMap.checkDiffDataCoding",
+		"Если сообщение отправлено в ucs2, а в профиле получателя прописано default, то значение полей short_message и/или message_payload правильно транслитерируется с учетом udh");
+	//deliverySm.normalSms.map
+	__reg_tc__("deliverySm.normalSms.map",
+		"Sms получателем которых являются мобильные телефоны");
+	__reg_tc__("deliverySm.normalSms.map.checkDataCoding",
+		"Кодировка текста sms соответствует настройкам профиля получателя на момент отправки сообщения");
+	__reg_tc__("deliverySm.normalSms.map.checkShortSmsEqualDataCoding",
+		"В коротких сообщениях (<=140 байт) отправленных в кодировке, которую понимает получатель, поля short_message и/или message_payload проносятся без изменений");
+	__reg_tc__("deliverySm.normalSms.map.checkShortSmsDiffDataCoding",
+		"В коротких сообщениях (<=140 байт) отправленных в ucs2, а в профиле получателя прописано default, значения полей short_message и/или message_payload правильно транслитерируется с учетом udh");
+	__reg_tc__("deliverySm.normalSms.map.checkLongSmsEqualDataCoding",
+		"Длинные сообщения (>140 байт) без udhi отправленные в кодировке, которую понимает получатель, правильно разбиваются на сегменты соответствующие полям short_message и/или message_payload оригинального сообщения");
+	__reg_tc__("deliverySm.normalSms.map.checkLongSmsDiffDataCoding",
+		"Длинные сообщения (>140 байт) без udhi отправленных в ucs2, а в профиле получателя прописано default, правильно разбиваются на сегменты соответствующие транслитерированным значениям полей short_message и/или message_payload оригинального сообщения");
 	//deliverySm.reports
 	__reg_tc__("deliverySm.reports",
 		"Отчеты о доставке (подтверждения доставки и промежуточные нотификации)");
