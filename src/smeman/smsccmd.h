@@ -342,6 +342,8 @@ public:
         xsm->header.set_commandId(SmppCommandSet::DELIVERY_SM);
         xsm->header.set_sequenceNumber(c.get_dialogId());
         fillSmppPduFromSms(xsm.get(),c.get_sms());
+				xsm->message.set_scheduleDeliveryTime(0);
+				xsm->message.set_validityPeriod(0);
         return reinterpret_cast<SmppHeader*>(xsm.release());
       }
     case SUBMIT_RESP:
