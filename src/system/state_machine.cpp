@@ -2510,6 +2510,7 @@ StateType StateMachine::submit(Tuple& t)
 
 StateType StateMachine::forward(Tuple& t)
 {
+  __trace2__("FWD: id=%lld",t.msgId);
   SMS sms;
   if(smsc->getTempStore().Get(t.msgId,sms))
   {
@@ -2992,10 +2993,15 @@ StateType StateMachine::forward(Tuple& t)
     sms.setLastResult(errstatus);
     smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
 //    sendNotifyReport(sms,t.msgId,errtext);
-    if(Status::isErrorPermanent(errstatus))
-      sendFailureReport(sms,t.msgId,errstatus,"system failure");
-    else
-      sendNotifyReport(sms,t.msgId,"system failure");
+    try{
+      if(Status::isErrorPermanent(errstatus))
+        sendFailureReport(sms,t.msgId,errstatus,"system failure");
+      else
+        sendNotifyReport(sms,t.msgId,"system failure");
+    }catch(std::exception& e)
+    {
+      __warning2__("failed to submit receipt:%s",e.what());
+    }
     try{
       //time_t now=time(NULL);
       Descriptor d;
@@ -4443,86 +4449,91 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
 
 void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
 {
-  if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ||
-     sms.getDeliveryReport()==REPORT_NOACK ||
-     sms.getDeliveryReport()==ProfileReportOptions::ReportFinal ||
-     sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS))return;
-  bool regdel=(sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x10)==0x10 ||
-              sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST);
+  try{
+    if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ||
+       sms.getDeliveryReport()==REPORT_NOACK ||
+       sms.getDeliveryReport()==ProfileReportOptions::ReportFinal ||
+       sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS))return;
+    bool regdel=(sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x10)==0x10 ||
+                sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST);
 
-  if(!(sms.getDeliveryReport() || regdel))return;
-  __trace2__("sendNotifyReport: attemptsCount=%d",sms.getAttemptsCount());
-  if(sms.getAttemptsCount()!=0)return;
-  if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1 ||
-     (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)return;
-  SMS rpt;
-  rpt.setOriginatingAddress(scAddress);
-  char msc[]="";
-  char imsi[]="";
-  rpt.lastResult=sms.lastResult;
-  rpt.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
-  rpt.setValidTime(0);
-  rpt.setDeliveryReport(0);
-  rpt.setArchivationRequested(false);
-  //rpt.setIntProperty(Tag::SMPP_ESM_CLASS,regdel?0x20:0);
-  rpt.setDestinationAddress(sms.getOriginatingAddress());
-  rpt.setMessageReference(sms.getMessageReference());
-  rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
-    sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
-  rpt.setIntProperty(Tag::SMPP_MSG_STATE,SmppMessageState::ENROUTE);
-  char addr[64];
-  sms.getDestinationAddress().getText(addr,sizeof(addr));
-  rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
-  rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,time(NULL));
+    if(!(sms.getDeliveryReport() || regdel))return;
+    __trace2__("sendNotifyReport: attemptsCount=%d",sms.getAttemptsCount());
+    if(sms.getAttemptsCount()!=0)return;
+    if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1 ||
+       (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)return;
+    SMS rpt;
+    rpt.setOriginatingAddress(scAddress);
+    char msc[]="";
+    char imsi[]="";
+    rpt.lastResult=sms.lastResult;
+    rpt.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+    rpt.setValidTime(0);
+    rpt.setDeliveryReport(0);
+    rpt.setArchivationRequested(false);
+    //rpt.setIntProperty(Tag::SMPP_ESM_CLASS,regdel?0x20:0);
+    rpt.setDestinationAddress(sms.getOriginatingAddress());
+    rpt.setMessageReference(sms.getMessageReference());
+    rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
+      sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+    rpt.setIntProperty(Tag::SMPP_MSG_STATE,SmppMessageState::ENROUTE);
+    char addr[64];
+    sms.getDestinationAddress().getText(addr,sizeof(addr));
+    rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
+    rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,time(NULL));
 
-  char msgid[60];
-  sprintf(msgid,"%lld",msgId);
-  rpt.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,msgid);
-  //Array<SMS*> arr;
-  string out;
-  sms.getDestinationAddress().getText(addr,sizeof(addr));
-  FormatData fd;
-  char ddest[64];
-  Address ddestaddr=sms.getDealiasedDestinationAddress();
-  Address tmp;
-  if(!smsc->AddressToAlias(ddestaddr,tmp))
+    char msgid[60];
+    sprintf(msgid,"%lld",msgId);
+    rpt.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,msgid);
+    //Array<SMS*> arr;
+    string out;
+    sms.getDestinationAddress().getText(addr,sizeof(addr));
+    FormatData fd;
+    char ddest[64];
+    Address ddestaddr=sms.getDealiasedDestinationAddress();
+    Address tmp;
+    if(!smsc->AddressToAlias(ddestaddr,tmp))
+    {
+      sms.getDealiasedDestinationAddress().getText(ddest,sizeof(ddest));
+    }else
+    {
+      sms.getDestinationAddress().getText(ddest,sizeof(ddest));
+    }
+    fd.ddest=ddest;
+    const Descriptor& d=sms.getDestinationDescriptor();
+    fd.msc=d.msc;
+    fd.date=sms.getSubmitTime();
+    fd.addr=addr;
+    fd.msgId=msgid;
+    fd.err=reason;
+    fd.setLastResult(sms.lastResult);
+    smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
+    fd.locale=profile.locale.c_str();
+    smsc::smeman::SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
+    fd.scheme=si.receiptSchemeName.c_str();
+
+
+    formatNotify(fd,out);
+    //if(sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
+    //{
+    //  fillSms(&rpt,"",0,CONV_ENCODING_CP1251,profile.codepage,0);
+    //}else
+    //{
+    fillSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,0);
+
+    //}
+    //fillSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,140);
+    //smsc->submitSms(prpt);
+    submitReceipt(rpt,0x20);
+    /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
+    for(int i=0;i<arr.Count();i++)
+    {
+      smsc->submitSms(arr[i]);
+    };*/
+  }catch(...)
   {
-    sms.getDealiasedDestinationAddress().getText(ddest,sizeof(ddest));
-  }else
-  {
-    sms.getDestinationAddress().getText(ddest,sizeof(ddest));
+    __warning__("notify report failed");
   }
-  fd.ddest=ddest;
-  const Descriptor& d=sms.getDestinationDescriptor();
-  fd.msc=d.msc;
-  fd.date=sms.getSubmitTime();
-  fd.addr=addr;
-  fd.msgId=msgid;
-  fd.err=reason;
-  fd.setLastResult(sms.lastResult);
-  smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
-  fd.locale=profile.locale.c_str();
-  smsc::smeman::SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
-  fd.scheme=si.receiptSchemeName.c_str();
-
-
-  formatNotify(fd,out);
-  //if(sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
-  //{
-  //  fillSms(&rpt,"",0,CONV_ENCODING_CP1251,profile.codepage,0);
-  //}else
-  //{
-  fillSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,0);
-
-  //}
-  //fillSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,140);
-  //smsc->submitSms(prpt);
-  submitReceipt(rpt,0x20);
-  /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
-  for(int i=0;i<arr.Count();i++)
-  {
-    smsc->submitSms(arr[i]);
-  };*/
 }
 
 time_t StateMachine::rescheduleSms(SMS& sms)
