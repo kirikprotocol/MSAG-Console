@@ -30,8 +30,9 @@ public class MainExecutor implements Executor
     systemBundle = (ScenarioResourceBundle) properties.get(Constants.BUNDLE_SYSTEM);
     try {
       pageFormat =  new MessageFormat(Transliterator.translit(systemBundle.getString(Constants.PAGE_MAIN)));
-    } catch (ScenarioResourceBundleException e) {
+    } catch (Exception e) {
       logger.error("", e);
+      throw new ScenarioInitializationException(e.getMessage());
     }
   }
 

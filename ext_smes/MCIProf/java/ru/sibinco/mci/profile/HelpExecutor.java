@@ -33,6 +33,7 @@ public class HelpExecutor implements Executor
       pageManual = Transliterator.translit(helpBundle.getString(Constants.PAGE_MAN));
     } catch (ScenarioResourceBundleException e) {
       logger.error("", e);
+      throw new ScenarioInitializationException(e.getMessage());
     }
   }
 
@@ -42,5 +43,5 @@ public class HelpExecutor implements Executor
     Message manual = new Message(); manual.setMessageString(pageManual);
     return new ExecutorResponse(new Message[]{resp, manual}, false);
   }
-  
+
 }

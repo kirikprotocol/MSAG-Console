@@ -53,8 +53,7 @@ public class ProfileSetExecutor extends ProfileManagerState implements Executor
 
     HashMap formats = new HashMap();
     String formatAlts = ""; int counter = 1;
-    Collection alts = profileManager.getFormatAlts(inform);
-    for (Iterator i=alts.iterator(); i.hasNext(); counter++) {
+    for (Iterator i = profileManager.getFormatAlts(inform); i.hasNext(); counter++) {
       FormatType alt = (FormatType)i.next();
       formats.put(new Integer(counter), alt);
       formatAlts += ""+counter+">"+alt.getName();

@@ -11,8 +11,8 @@ public class ProfileInfo
 {
   protected boolean inform = false;
   protected boolean notify = false;
-  protected FormatType informFormat = null;
-  protected FormatType notifyFormat = null;
+  protected FormatType informFormat = new FormatType();
+  protected FormatType notifyFormat = new FormatType();
 
   public ProfileInfo() {
   }

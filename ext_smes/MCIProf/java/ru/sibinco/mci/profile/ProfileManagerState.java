@@ -4,6 +4,7 @@ import org.apache.log4j.Category;
 import ru.sibinco.smpp.appgw.scenario.resources.ScenarioResourceBundle;
 import ru.sibinco.smpp.appgw.scenario.ScenarioInitializationException;
 import ru.sibinco.smpp.appgw.scenario.ScenarioState;
+import ru.sibinco.smpp.appgw.scenario.ExecutingException;
 
 import java.util.Properties;
 
@@ -27,7 +28,7 @@ public class ProfileManagerState
     profileManager = ProfileManager.getInstance();
   }
 
-  protected ProfileInfo getProfileInfo(ScenarioState state)
+  protected ProfileInfo getProfileInfo(ScenarioState state) throws ExecutingException
   {
     ProfileInfo info = (ProfileInfo)state.getAttribute(Constants.ATTR_PROFILE);
     if (info == null) {
@@ -36,7 +37,7 @@ public class ProfileManagerState
     }
     return info;
   }
-  protected void setProfileInfo(ScenarioState state, ProfileInfo info)
+  protected void setProfileInfo(ScenarioState state, ProfileInfo info)  throws ExecutingException
   {
     profileManager.setProfileInfo(state.getAbonent(), info);
     state.setAttribute(Constants.ATTR_PROFILE, info);

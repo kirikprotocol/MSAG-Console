@@ -47,4 +47,7 @@ public class Constants
   public final static String ATTR_FORMATS = "FORMATS";
 
   public final static String OPTION_EXIT = "0";
+
+  public final static String MCI_PROF_MTF_FILE    = "templates.properties";
+  public final static String MCI_PROF_MSC_FILE    = "commutator.properties";
 }
