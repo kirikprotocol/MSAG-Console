@@ -119,7 +119,7 @@ protected:
                 {
                     const char* msgid = 
                         ((PduXSm*)pdu)->get_optional().get_receiptedMessageId();
-                    if (msgid && msgid[1] != '\0') {
+                    if (msgid && msgid[0] != '\0') {
                         __trace2__("Got receipt, msgid=%s", msgid);
                         processor.processReceipt(msgid, true);
                     }
@@ -236,7 +236,7 @@ public:
     {
         __require__(pdu);
         __trace2__("WSme: Processing PDU.\n");
-
+        
         switch (pdu->get_commandId())
         {
         case SmppCommandSet::DELIVERY_SM:
@@ -424,6 +424,7 @@ void atExitHandler(void)
 int main(void) 
 {
     int resultCode = 0;
+    Logger::Init("log4cpp.wsme");
 
     using smsc::db::DataSourceLoader;
     using smsc::util::config::Manager;
