@@ -1,5 +1,6 @@
 #include "util/config/Manager.h"
 #include "store/StoreManager.h"
+#include "core/synchronization/Event.hpp"
 #include "MessageStoreTestCases.hpp"
 #include "test/util/CheckList.hpp"
 #include "test/util/Util.hpp"
@@ -16,15 +17,12 @@ using log4cpp::Category;
 using smsc::util::Logger;
 using smsc::util::config::Manager;
 using smsc::store::StoreManager;
+using smsc::core::synchronization::Event;
 
-#define PREPARE_FOR_NEW_SMS \
-	id.push_back(new SMSId()); \
-	sms.push_back(new SMS()); \
-	stack.push_back(new TCResultStack());
-	
+static Category& log = Logger::getCategory("smsc.test.store.IntegrityTest");
+
 void debug(TCResult* res)
 {
-	static Category& log = Logger::getCategory("smsc.test.store.IntegrityTest");
 	if (res)
 	{
 		ostringstream os;
@@ -33,10 +31,16 @@ void debug(TCResult* res)
 	}
 }
 
+#define PREPARE_FOR_NEW_SMS \
+	id.push_back(new SMSId()); \
+	sms.push_back(new SMS()); \
+	stack.push_back(new TCResultStack());
+	
 void executeIntegrityTest(TCResultFilter* filter, int listSize)
 {
 	cout << ".";
-	MessageStoreTestCases tc; //throws exception
+	log.debug("*** start ***\n");
+	static MessageStoreTestCases tc; //throws exception
 	vector<SMSId*> id;
 	vector<SMS*> sms;
 	vector<TCResultStack*> stack;
@@ -51,13 +55,15 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 	}
 	
 	//Сохранение правильного sms с параметрами похожими на уже существующий sms, 1/15
+	//Сохранение дублированного sms, 1/15
 	//Сохранение дублированного sms с отказом, 1/15
 	//Сохранение корректного sms с замещением уже существующегоб 1/15
 	//Сохранение неправильного sms, 1/15
 	//Обновление статуса sms в состоянии ENROUTE, 1/15
 	//Корректное обновление существующего sms, 1/15
     //Некорректное обновление существующего sms, 1/15
-	//Чтение существующего sms, 8/15
+	//Чтение существующего sms, 7/15
+	bool duplicatesOk = rand0(1); //взаимоисключающие тест кейсы
 	for (TCSelector s(RAND_SET_TC, 15); s.check(); s++)
 	{
 		switch (s.value())
@@ -73,6 +79,16 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				}
 				break;
 			case 2:
+				for (int i = 0; duplicatesOk && i < listSize; i++)
+				{
+					PREPARE_FOR_NEW_SMS
+					TCResult* res = tc.storeDuplicateSms(id.back(), sms.back(),
+						*id[i], *sms[i]);
+					debug(res);
+					stack.back()->push_back(res);
+				}
+				break;
+			case 3:
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.storeRejectDuplicateSms(*sms[i]);
@@ -80,15 +96,15 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 					stack[i]->push_back(res);
 				}
 				break;
-			case 3:
-				for (int i = 0; i < id.size(); i++)
+			case 4:
+				for (int i = 0; !duplicatesOk && i < id.size(); i++)
 				{
 					TCResult* res = tc.storeReplaceCorrectSms(*id[i], sms[i]);
 					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
-			case 4:
+			case 5:
 				{
 					TCResult* res = tc.storeIncorrectSms(RAND_TC);
 					debug(res);
@@ -96,7 +112,14 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 					//stack[i]->push_back(res);
 				}
 				break;
-			case 5:
+			case 6:
+				//добавить паузу, чтобы SMS::lastTime отличалось от предыдущего
+				if (!rand0(3))
+				{
+					static Event evt;
+					evt.Wait(1100);
+					log.debug("*** wait ***\n");
+				}
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.changeExistentSmsStateEnrouteToEnroute(
@@ -105,7 +128,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 					stack[i]->push_back(res);
 				}
 				break;
-			case 6:
+			case 7:
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.replaceCorrectSms(*id[i], sms[i], RAND_TC);
@@ -113,7 +136,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 					stack[i]->push_back(res);
 				}
 				break;
-			case 7:
+			case 8:
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.replaceIncorrectSms(*id[i], *sms[i], RAND_TC);
@@ -121,7 +144,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 					stack[i]->push_back(res);
 				}
 				break;
-			default: //case = 8..15
+			default: //case = 9..15
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.loadExistentSms(*id[i], *sms[i]);
@@ -131,6 +154,13 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 		}
 	}
 
+	//добавить паузу, чтобы SMS::lastTime отличалось от предыдущего
+	if (!rand0(3))
+	{
+		static Event evt;
+		evt.Wait(1100);
+		log.debug("*** wait ***\n");
+	}
 	//Перевод sms из ENROUTE в финальное состояние, 1/1
 	for (int i = 0; i < id.size(); i++)
 	{
@@ -160,10 +190,15 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < listSize; i++)
 				{
 					PREPARE_FOR_NEW_SMS
-					TCResult* res = tc.storeReplaceSmsInFinalState(id.back(),
+					TCResult* res1 = tc.storeReplaceSmsInFinalState(id.back(),
 						sms.back(), *id[i], *sms[i]);
-					debug(res);
-					stack[i]->push_back(res);
+					debug(res1);
+					stack.back()->push_back(res1);
+					//обязательно перевести созданное сообщение в финальной состояние
+					TCResult* res2 = tc.changeExistentSmsStateEnrouteToFinal(
+						*id.back(), sms.back(), RAND_TC);
+					debug(res2);
+					stack.back()->push_back(res2);
 				}
 				break;
 			case 3:
@@ -244,7 +279,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 #endif
 
 	//обработка результатов
-	for (int i = 0; i < listSize; i++)
+	for (int i = 0; i < stack.size(); i++)
 	{
 		filter->addResultStack(*stack[i]);
 	}
@@ -266,6 +301,8 @@ void saveCheckList(TCResultFilter* filter)
 	//имплементированные тест кейсы
 	cl.writeResult("Сохранение правильного sms",
 		filter->getResults(TC_STORE_CORRECT_SMS));
+	cl.writeResult("Сохранение дублированного sms",
+		filter->getResults(TC_STORE_DUPLICATE_SMS));
 	cl.writeResult("Сохранение дублированного sms с отказом",
 		filter->getResults(TC_STORE_REJECT_DUPLICATE_SMS));
 	cl.writeResult("Сохранение корректного sms с замещением уже существующего",
