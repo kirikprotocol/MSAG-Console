@@ -1,6 +1,6 @@
 #binary name				source name			libraries
-test/MessageStoreLoadTest               MessageStoreLoadTest            -ltest-store -ltest-util $(__OTHER)
-test/MessageStoreIntegrityTestTC	MessageStoreIntegrityTestTC	-ltest-store -ltest-util $(__OTHER)
-test/MessageStoreBusinessCycleTest	MessageStoreBusinessCycleTest	-ltest-store -ltest-util $(__OTHER)
-test/MessageStoreBenchmarkTest		MessageStoreBenchmarkTest	-ltest-store -ltest-util $(__OTHER)
--test/MessageStoreTest			MessageStoreTest		-ltest-store -ltest-util $(__OTHER)
+test/MessageStoreLoadTest               MessageStoreLoadTest            -ltest-store -ltest-util -ltest-sms $(__OTHER)
+test/MessageStoreIntegrityTestTC	MessageStoreIntegrityTestTC	-ltest-store -ltest-util -ltest-sms $(__OTHER)
+test/MessageStoreBusinessCycleTest	MessageStoreBusinessCycleTest	-ltest-store -ltest-util -ltest-sms $(__OTHER)
+-test/MessageStoreBenchmarkTest		MessageStoreBenchmarkTest	-ltest-store -ltest-util -ltest-sms $(__OTHER)
+test/MessageStoreTest			MessageStoreTest		-ltest-store -ltest-util -ltest-sms $(__OTHER)
