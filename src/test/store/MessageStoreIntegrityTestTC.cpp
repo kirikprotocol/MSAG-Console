@@ -76,27 +76,53 @@ int main(int argc, char* argv[])
 	MessageStoreTestCases tc; //throws StoreException
     TCResultFilter* filter = newFilter();
 
-	//выполнение тестов
-	SMSId id;
-	SMS sms;
+	//создаю SM для дальнейшей проверки на создание дублированного SM
+	SMSId correctId;
+	SMS correctSM;
+	delete tc.storeCorrectSM(&correctId, &correctSM, RAND_TC);
+
+	//создаю SM и сразу читаю
+	cout << "Цикл 1: создание & чтение" << endl;
 	for (int i = 0; i < 10; i++)
 	{
-cout << "i = " << i << endl;
+		cout << "i = " << i << endl;
+		SMSId id;
+		SMS sms;
 		TCResultStack stack;
 		stack.push_back(tc.storeCorrectSM(&id, &sms, RAND_TC));
 		stack.push_back(tc.loadExistentSM(id, sms));
 		filter->addResultStack(stack);
 	}
-	filter->addResult(*tc.storeIncorrectSM(sms, ALL_TC));
+	//создаю список не читая, а потом буду читать этот список
+	const int listSize = 10;
+	for (int j = 0; j < 5; j++)
+	{
+		SMSId id[listSize];
+		SMS sms[listSize];
+		cout << "Цикл 2: создание SM" << endl;
+		for (int i = 0; i < listSize; i++)
+		{
+			cout << "i = " << i << endl;
+			filter->addResult(*tc.storeCorrectSM(&id[i], &sms[i], RAND_TC));
+		}
+		cout << "Цикл 2: чтение SM" << endl;
+		for (int i = 0; i < listSize; i++)
+		{
+			cout << "i = " << i << endl;
+			filter->addResult(*tc.loadExistentSM(id[i], sms[i]));
+		}
+	}
+	//прочее
+	cout << "Прочее" << endl;
+	filter->addResult(*tc.storeIncorrectSM(correctSM, ALL_TC));
 	filter->addResult(*tc.loadNonExistentSM());
 	filter->addResult(*tc.storeAssertSM(ALL_TC));
 	
 	//сохранить checklist
-cout << "Save checklist" << endl;
+	cout << "Сохранение checklist" << endl;
 	CheckList& cl = CheckList::getCheckList(CheckList::UNIT_TEST);
 	cl.startNewGroup("Message Store", "smsc::store");
 	cl.writeResult(*filter);
-
 
 	/*
 	//Изменение статуса SM
