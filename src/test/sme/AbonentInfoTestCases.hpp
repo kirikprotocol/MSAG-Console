@@ -33,7 +33,8 @@ protected:
 	
 	AckText* getExpectedResponse(const string& input,
 		const Address& smeAddr, time_t submitTime);
-	void sendAbonentInfoPdu(const string& input, bool sync, uint8_t dataCoding);
+	void sendAbonentInfoPdu(const string& input, bool sync,
+		uint8_t dataCoding, bool correct);
 	AckText* getExpectedResponse(SmeAckMonitor* monitor,
 		const string& text, time_t recvTime);
 	void processSmeAcknowledgement(SmeAckMonitor* monitor,

@@ -97,7 +97,7 @@ AckText* AbonentInfoTestCases::getExpectedResponse(const string& input,
 }
 
 void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
-	bool sync, uint8_t dataCoding)
+	bool sync, uint8_t dataCoding, bool correct)
 {
 	__decl_tc12__;
 	try
@@ -139,14 +139,19 @@ void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
 				__unreachable__("Invalid data coding");
 		}
 		int msgLen;
-		auto_ptr<char> msg = encode(input, dataCoding, msgLen);
+		auto_ptr<char> msg = encode(input, dataCoding, msgLen, false);
 		pdu->get_message().set_shortMessage(msg.get(), msgLen);
 		pdu->get_message().set_dataCoding(dataCoding);
 		//отправить pdu
 		PduData::StrProps strProps;
 		strProps["abonentInfoTc.input"] = input;
 		PduData::ObjProps objProps;
-		AckText* ack = getExpectedResponse(input, abonentInfoAlias, time(NULL));
+		AckText* ack = NULL;
+		if (correct)
+		{
+			ack = getExpectedResponse(input, abonentInfoAlias, time(NULL));
+			__require__(ack);
+		}
 		if (ack)
 		{
 			ack->ref();
@@ -203,7 +208,7 @@ void AbonentInfoTestCases::queryAbonentInfoCorrect(bool sync,
 			default:
 				__unreachable__("Invalid numAddrFormat");
 		}
-		sendAbonentInfoPdu(input, sync, dataCoding);
+		sendAbonentInfoPdu(input, sync, dataCoding, true);
 	}
 }
 
@@ -211,10 +216,11 @@ void AbonentInfoTestCases::queryAbonentInfoIncorrect(bool sync,
 	uint8_t dataCoding, int num)
 {
 	__decl_tc__;
-	TCSelector s(num, 4);
+	TCSelector s(num, 6);
 	for (; s.check(); s++)
 	{
 		string input;
+		bool correct = false;
 		switch (s.value())
 		{
 			case 1: //некорректный формат адреса
@@ -228,15 +234,27 @@ void AbonentInfoTestCases::queryAbonentInfoIncorrect(bool sync,
 			case 3: //некорректные симводы в адресе
 				__tc__("queryAbonentInfo.incorrect.invalidSymbols"); __tc_ok__;
 				input = "???";
+				correct = true; //прожевывает
 				break;
 			case 4: //лишние слова в команде
 				__tc__("queryAbonentInfo.incorrect.extraWords"); __tc_ok__;
 				input = "+123 abc";
+				correct = true; //берет только +123
+				break;
+			case 5: //заведомо неправильный ton
+				__tc__("queryAbonentInfo.incorrect.tonNpi"); __tc_ok__;
+				input = ".1000.1.123";
+				correct = true; //берет 1000 & 0xff
+				break;
+			case 6: //заведомо неправильный npi
+				__tc__("queryAbonentInfo.incorrect.tonNpi"); __tc_ok__;
+				input = ".1.1000.123";
+				correct = true; //берет 1000 & 0xff
 				break;
 			default:
 				__unreachable__("Invalid num");
 		}
-		sendAbonentInfoPdu(input, sync, dataCoding);
+		sendAbonentInfoPdu(input, sync, dataCoding, correct);
 	}
 }
 
@@ -268,7 +286,7 @@ void AbonentInfoTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	__decl_tc__;
 	//декодировать
 	const string text = decode(pdu.get_message().get_shortMessage(),
-		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding());
+		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding(), false);
 	if (!monitor->pduData->objProps.count("abonentInfoTc.output"))
 	{
 		__unreachable__("specific to abonent info internals");
