@@ -7,7 +7,7 @@
 
 namespace smsc { namespace sms
 {
-    const int MAX_ADDRESS_VALUE_LENGTH = 10;
+    const int MAX_ADDRESS_VALUE_LENGTH = 21;
     const int MAX_SMS_ID_VALUE_LENGTH  = 21;
     const int MAX_SHORT_MESSAGE_LENGTH = 256;
     
@@ -154,7 +154,42 @@ namespace smsc { namespace sms
         Body        messageBody;    // Encoded & compressed message body
 
         
-        inline void setState(State state) {
+		SMS() : state(ENROUTE) {}; 
+        
+		SMS(const SMS& sms) :
+			state(sms.state), 
+			originatingAddress(sms.originatingAddress),
+			destinationAddress(sms.destinationAddress), 
+			waitTime(sms.waitTime), validTime(sms.validTime),
+			submitTime(sms.submitTime), deliveryTime(sms.deliveryTime),
+			messageReference(sms.messageReference), 
+			messageIdentifier(sms.messageIdentifier),
+			priority(sms.priority),
+			protocolIdentifier(sms.protocolIdentifier),
+			statusReportRequested(sms.statusReportRequested),
+			rejectDuplicates(sms.rejectDuplicates),
+			failureCause(sms.failureCause), 
+			messageBody(sms.messageBody) 
+		{};
+        
+        SMS& operator =(const SMS& sms) 
+		{
+			state = sms.state; 
+			originatingAddress = sms.originatingAddress;
+			destinationAddress = sms.destinationAddress;
+			waitTime = sms.waitTime; validTime = sms.validTime; 
+			submitTime = sms.submitTime; deliveryTime = sms.deliveryTime;
+			messageReference = sms.messageReference; 
+			messageIdentifier = sms.messageIdentifier;
+			priority = sms.priority; 
+			protocolIdentifier = sms.protocolIdentifier;
+			statusReportRequested = sms.statusReportRequested;
+			rejectDuplicates = sms.rejectDuplicates;
+			failureCause = sms.failureCause;
+			messageBody = sms.messageBody;
+		};
+		
+		inline void setState(State state) {
             this->state = state;
         };
         inline State getState() {
