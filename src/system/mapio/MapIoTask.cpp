@@ -542,7 +542,7 @@ int MapTracker::Execute(){
   for(;;){
     time_t t = time(0);
     while(time(0)<(t+15)&&!isStopping)e.Wait(1000*(time(0)-(t+15)));
-    if ( isStopping ) return;
+    if ( isStopping ) return 0;
     if ( MAP_dispathing && !MAP_isAlive ) {
       __trace2__("\n\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
                  "MAP is DEAD"
@@ -552,6 +552,7 @@ int MapTracker::Execute(){
 #else
   e.Wait();
 #endif
+  return 0;
 }
 
 
