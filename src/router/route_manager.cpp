@@ -635,6 +635,12 @@ __synchronized__
   __require__(sme_table);
   // ....
   
+  if ( trace_enabled_ ) {
+    ostringstream ost;
+    ost << srcidx;
+    trace_.push_back(ost.str());
+  }
+  
   if ( trace_enabled_ )
     trace_.push_back(string("lookup for: ")+AddrToString(source)+"("+
       (srcidx?sme_table->getSmeInfo(srcidx).systemId:string("default"))
