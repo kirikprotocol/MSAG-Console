@@ -4,6 +4,7 @@
 #include "core/synchronization/Mutex.hpp"
 #include "core/threads/Thread.hpp"
 #include "util/debug.h"
+#include <new>
 
 #define TRACESIZE 10
 
@@ -48,10 +49,10 @@ public:
   }
 };
 
+const int LH_HASHSIZE=1024;
+const int LH_DEFAULTBUCKETSIZE=16;
 
-static class LeakHunter{
-#define LH_HASHSIZE 1024
-#define LH_DEFAULTBUCKETSIZE 16
+class LeakHunter{
   BlockInfo *memblocks[LH_HASHSIZE];
   int memcounts[LH_HASHSIZE];
   int memsizes[LH_HASHSIZE];
@@ -80,7 +81,11 @@ public:
 
   void DumpTrace(void**);
 
-} lh;
+};
+
+
+static LeakHunter* lh=NULL;
+static mutex_t mtx=DEFAULTMUTEX;
 
 void LeakHunter::Init()
 {
@@ -197,12 +202,36 @@ int LeakHunter::RegisterDealloc(void* ptr)
   return 0;
   //throw "DELETE UNALLOCATED BLOCK";
 }
+
+void deletelh()
+{
+  lh->~LeakHunter();
+  free(lh);
+}
+
+void initlh()
+{
+  using namespace std;
+  if(!lh)
+  {
+    mutex_lock(&mtx);
+    if(!lh)
+    {
+      void *mem=malloc(sizeof(LeakHunter));
+      lh=new(mem)LeakHunter();
+      atexit(deletelh);
+    }
+    mutex_unlock(&mtx);
+  }
+}
+
 }//leaktracing
 }//util
 }//smsc;
 
 void* operator new(unsigned int size)
 {
+  smsc::util::leaktracing::initlh();
   void* mem=malloc(size);
   //printf("ALLOC:%x(%d)\n",mem,size);
   if(!mem)
@@ -215,12 +244,13 @@ void* operator new(unsigned int size)
     fprintf(stderr,"new:0x%08x(%d)\n",mem,size);
     smsc::util::leaktracing::PrintTrace();
   }
-  smsc::util::leaktracing::lh.RegisterAlloc(mem,size);
+  smsc::util::leaktracing::lh->RegisterAlloc(mem,size);
   return mem;
 }
 
 void* operator new[](unsigned int size)
 {
+  smsc::util::leaktracing::initlh();
   void* mem=malloc(size);
   if(!mem)
   {
@@ -232,12 +262,13 @@ void* operator new[](unsigned int size)
     fprintf(stderr,"new[]:0x%08x(%d)\n",mem,size);
     smsc::util::leaktracing::PrintTrace();
   }
-  smsc::util::leaktracing::lh.RegisterAlloc(mem,size);
+  smsc::util::leaktracing::lh->RegisterAlloc(mem,size);
   return mem;
 }
 
 void operator delete(void* mem)
 {
+  smsc::util::leaktracing::initlh();
   if(mem)
   {
     if(getenv("LHFULLREPORT"))
@@ -245,7 +276,7 @@ void operator delete(void* mem)
       fprintf(stderr,"delete:0x%08x\n",mem);
       smsc::util::leaktracing::PrintTrace();
     }
-    if(smsc::util::leaktracing::lh.RegisterDealloc(mem))
+    if(smsc::util::leaktracing::lh->RegisterDealloc(mem))
     {
       free(mem);
     }
@@ -255,6 +286,7 @@ void operator delete(void* mem)
 void operator delete[](void* mem)
 {
   //printf("FREE:%x\n",mem);
+  smsc::util::leaktracing::initlh();
   if(mem)
   {
     if(getenv("LHFULLREPORT"))
@@ -262,7 +294,7 @@ void operator delete[](void* mem)
       fprintf(stderr,"delete[]:0x%08x\n",mem);
       smsc::util::leaktracing::PrintTrace();
     }
-    if(smsc::util::leaktracing::lh.RegisterDealloc(mem))
+    if(smsc::util::leaktracing::lh->RegisterDealloc(mem))
     {
       free(mem);
     }
