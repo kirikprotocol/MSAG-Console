@@ -114,7 +114,7 @@ public:
 	static PduAddress* convert(const Address& smsAddr, PduAddress* smppAddr);
 	static Address* convert(PduAddress& smppAddr, Address* smsAddr);
 	static SMSId convert(const char* id);
-	static MessageId* convert(const SMSId& smsId, MessageId* smppId);
+	static MessageId& convert(const SMSId& smsId, MessageId& smppId);
 	static const char* time2string(time_t t, char* str, time_t base, int num);
 	static time_t string2time(const char* str, time_t base);
 
@@ -123,6 +123,10 @@ public:
 
 	static int setupRandomCorrectShortMessage(ShortMessage* msg);
 	static void setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu);
+	static void setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu);
+	static void setupRandomCorrectOptionalParams(SmppOptional& opt,
+		uint64_t mask = 0xffffffffffffffff);
+
 };
 
 }
