@@ -1264,7 +1264,7 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
   smsc_log_info(log,"load time=%lld",st/1000000l);
   int mc,bu,bn;
   profiles->GetStats(mc,bu,bn);
-  smsc_log_info(log,"hash stats max=%d,bucks used=%d,count=%d,bucks num=%d\n",mc,bu,profiles->Count(),bn);
+  smsc_log_info(log,"hash stats max=%d,bucks used=%d,count=%d,bucks num=%d",mc,bu,profiles->Count(),bn);
 }
 
 }//profiler
