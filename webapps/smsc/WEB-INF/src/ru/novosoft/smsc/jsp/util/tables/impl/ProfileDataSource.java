@@ -137,7 +137,7 @@ public class ProfileDataSource implements DataSource
 				for (Iterator i = filter.getMasks().iterator(); i.hasNext();)
 				{
 					Mask mask = (Mask) i.next();
-					result += "mask like '" + mask.getFullMask() + "%'" + (i.hasNext() ? " or " : "");
+					result += "mask like '" + mask.getNormalizedMask() + "%'" + (i.hasNext() ? " or " : "");
 				}
 				result += ')';
 			}

@@ -73,10 +73,10 @@ public class Mask
 		else if (tone == 0 && npi == 1)
 			return (mask);
 		else
-			return getFullMask();
+			return getNormalizedMask();
 	}
 
-	public String getFullMask()
+	public String getNormalizedMask()
 	{
 		return "." + tone + "." + npi + "." + mask;
 	}
@@ -94,7 +94,7 @@ public class Mask
 
 	public PrintWriter store(PrintWriter out)
 	{
-		out.println("    <mask value=\"" + StringEncoderDecoder.encode(mask) + "\"/>");
+		out.println("    <mask value=\"" + StringEncoderDecoder.encode(getNormalizedMask()) + "\"/>");
 		return out;
 	}
 

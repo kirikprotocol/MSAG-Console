@@ -2,41 +2,46 @@
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 
 <config>
-  
-  <section name="system">
-    <param name="webapp folder" type="string">/export/home/igork/install/tomcat/webapps/smsc</param>
-    <param name="users" type="string">users.xml</param>
-  </section>
-  
-  <section name="daemons">
-    <section name="smsc">
-      <param name="port" type="int">6004</param>
-    </section>
-  </section>
-  
-  <section name="smsc">
-    <param name="host" type="string">smsc</param>
-    <param name="port" type="int">6001</param>
-  </section>
-  
-  <section name="perfmon">
-    <param name="appletport" type="int">6081</param>
-    <param name="smscport" type="int">6003</param>
-  </section>
-  
-  <section name="profiler">
-    <section name="jdbc">
-      <param name="source" type="string">jdbc:oracle:thin:@dbs.novosoft.ru:1521:ORCL</param>
-      <param name="user" type="string">smsc3</param>
-      <param name="password" type="string">smsc3</param>
-      <param name="driver" type="string">oracle.jdbc.driver.OracleDriver</param>
-    </section>
-  </section>
-
   <section name="console">
     <param name="enabled" type="bool">true</param>
     <param name="humanPort" type="int">14228</param>
     <param name="scriptPort" type="int">14229</param>
   </section>
-  
+
+  <section name="daemons">
+    <section name="194/149/226/82">
+      <param name="port" type="int">6011</param>
+    </section>
+
+    <section name="smsc">
+      <param name="port" type="int">6010</param>
+    </section>
+
+  </section>
+
+  <section name="perfmon">
+    <param name="appletport" type="int">6081</param>
+    <param name="smscport" type="int">6002</param>
+  </section>
+
+  <section name="profiler">
+    <section name="jdbc">
+      <param name="driver" type="string">oracle.jdbc.driver.OracleDriver</param>
+      <param name="password" type="string">smsc3</param>
+      <param name="source" type="string">jdbc:oracle:thin:@dbs.novosoft.ru:1521:ORCL</param>
+      <param name="user" type="string">smsc3</param>
+    </section>
+
+  </section>
+
+  <section name="smsc">
+    <param name="host" type="string">smsc</param>
+    <param name="port" type="int">6003</param>
+  </section>
+
+  <section name="system">
+    <param name="users" type="string">users.xml</param>
+    <param name="webapp folder" type="string">/export/home/igork/install/tomcat/webapps/smsc</param>
+  </section>
+
 </config>

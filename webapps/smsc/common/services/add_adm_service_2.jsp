@@ -18,7 +18,7 @@ request = (HttpServletRequest)multi;
 
 //ServiceManagerImpl hostsManager = ((SMSCAppContext)request.getAttribute("appContext")).getServiceManager();
 
-AddAdmServiceWizard wizard = null;
+//AddAdmServiceWizard wizard = null;
 MultipartDataSource dataFile = null;
 try {
 	dataFile = multi.getMultipartDataSource("distribute");

@@ -2,21 +2,21 @@
 <%@ page errorPage="/common/error.jsp"%>
 <%@ include file="/common/header_begin.jsp"%>
 <%
-AddAdmServiceWizard wizard = (AddAdmServiceWizard) session.getAttribute("AddAdmServiceWizard");
+//AddAdmServiceWizard wizard = (AddAdmServiceWizard) session.getAttribute("AddAdmServiceWizard");
 if (wizard == null)
 {
 	%><meta http-equiv="Refresh" content="0;url=<%=urlPrefix+servicesPrefix%>/add_adm_service.jsp"/></head></html><%
 } else {
 
 	String systemId = wizard.getSystemId();
-	
+
 	String systemType = request.getParameter("system_type") == null ? "" : request.getParameter("system_type");
 	int    typeOfNumber     = getIntegerParam(request, "type of number");
 	int    numberingPlan    = getIntegerParam(request, "numbering plan");
 	int    interfaceVersion = 0x34;//getIntegerParam(request, "interface version");
 	String rangeOfAddress   = request.getParameter("range of address") == null ? "" : request.getParameter("range of address");
-	
-	if (systemType.length() > 0 
+
+	if (systemType.length() > 0
 		&& typeOfNumber     != Integer.MIN_VALUE
 		&& numberingPlan    != Integer.MIN_VALUE
 		&& interfaceVersion != Integer.MIN_VALUE

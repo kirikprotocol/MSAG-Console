@@ -2,7 +2,7 @@
 <%@ page errorPage="/common/error.jsp"%>
 <%@ include file="/common/header_begin.jsp"%>
 <%
-AddAdmServiceWizard wizard = (AddAdmServiceWizard) session.getAttribute("AddAdmServiceWizard");
+//AddAdmServiceWizard wizard = (AddAdmServiceWizard) session.getAttribute("AddAdmServiceWizard");
 if (wizard == null)
 {
 	%><meta http-equiv="Refresh" content="0;url=<%=urlPrefix+servicesPrefix%>/add_adm_service.jsp"/></head></html><%

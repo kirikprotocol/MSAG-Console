@@ -1,17 +1,25 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="windows-1251"?>
 <!DOCTYPE users SYSTEM "file://users.dtd">
 
 <users>
-	<user login="igork" password="asdlkj" firstName="Èãîðü" lastName="????????" dept="??????" workPhone="íå çíàþ" homePhone="? ????" cellPhone="?? ?????" email="a@b">
+	<user login="a" password="qwe" firstName="Èãîðü" lastName="Êàëÿòêèí" dept="Siberon" workPhone="none" homePhone="none" cellPhone="910698" email="igork@novosoft.ru">
 		<role name="aliases"/>
 		<role name="apply"/>
 		<role name="hosts"/>
+		<role name="mscman"/>
+		<role name="perfmon"/>
 		<role name="profiles"/>
 		<role name="routes"/>
 		<role name="services"/>
 		<role name="smsView"/>
+		<role name="smsc_service"/>
+		<role name="smsstat"/>
 		<role name="subjects"/>
 		<role name="users"/>
+	</user>
+	<user login="igork" password="qwe" firstName="Èãîðü" lastName="Âèòàëüåâè÷" dept="??????" workPhone="íå çíàþ" homePhone="? ????" cellPhone="?? ?????" email="a@b">
+		<role name="apply"/>
+		<role name="services"/>
 	</user>
 	<user login="superadmin" password="123" firstName="first" lastName="last" dept="dept" workPhone="work" homePhone="home" cellPhone="cell" email="email@email.com">
 		<role name="aliases"/>

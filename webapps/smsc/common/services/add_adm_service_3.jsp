@@ -1,8 +1,8 @@
 <%@ page isErrorPage="false"%>
 <%@ page errorPage="/common/error.jsp"%>
 <%@ include file="/common/header_begin.jsp"%>
-<% 
-AddAdmServiceWizard wizard = (AddAdmServiceWizard) session.getAttribute("AddAdmServiceWizard");
+<%
+//AddAdmServiceWizard wizard = (AddAdmServiceWizard) session.getAttribute("AddAdmServiceWizard");
 if (wizard == null)
 {
 	%><meta http-equiv="Refresh" content="0;url=<%=urlPrefix+servicesPrefix%>/add_adm_service.jsp"/></head></html><%
@@ -28,7 +28,7 @@ if (host.length()>0 && port > 0)
 			field.focus();
 			return false;
 		}
-		
+
 		var n = parseInt(val);
 		if (n == null || n == NaN || isNaN(n) || n.length == 0)
 		{
@@ -36,17 +36,17 @@ if (host.length()>0 && port > 0)
 			field.focus();
 			return false;
 		}
-	
+
 		if (n < 100 || n > 65535)
 		{
 			alert("Port must be in range from 100 to 65535");
 			field.focus();
 			return false;
 		}
-		
+
 		return true;
 	}
-	
+
 	function checkFile(field)
 	{
 		var val = field.value;
