@@ -79,19 +79,25 @@ PduData::~PduData()
 void PduData::ref()
 {
 	//__trace2__("PduData::ref(): this = %p, count = %d", this, count);
-	MutexGuard mguard(mutex);
+	//MutexGuard mguard(mutex);
 	count++;
 }
 void PduData::unref()
 {
 	//__trace2__("PduData::unref(): this = %p, count = %d", this, count);
 	__require__(count > 0);
-	mutex.Lock();
+	//mutex.Lock();
 	count--;
 	if (!count)
 	{
 		delete this;
 	}
+	/*
+	else
+	{
+		mutex.Unlock();
+	}
+	*/
 }
 
 string PduData::str() const
