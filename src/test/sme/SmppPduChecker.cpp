@@ -22,6 +22,7 @@ static const int INVALID_WAIT_TIME = 3;
 static const int INVALID_DATA_CODING = 4;
 static const int INVALID_SERVICE_TYPE = 5;
 static const int INVALID_SOURCE_ADDR = 6;
+static const int TRANSACTION_ROLLBACK = 7;
 
 set<int> SmppPduChecker::checkSubmitSm(PduData* pduData)
 {
@@ -62,14 +63,13 @@ set<int> SmppPduChecker::checkSubmitSm(PduData* pduData)
 	{
 		res.insert(INVALID_SERVICE_TYPE);
 	}
-	if (fixture->smeInfo.rangeOfAddress.length())
+	if (fixture->smeInfo.rangeOfAddress.length() && fixture->smeAddr != srcAddr)
 	{
-		AddressValue addrVal;
-		srcAddr.getValue(addrVal);
-		if (fixture->smeInfo.rangeOfAddress.find(addrVal) == string::npos)
-		{
-			res.insert(INVALID_SOURCE_ADDR);
-		}
+		res.insert(INVALID_SOURCE_ADDR);
+	}
+	if (string("-----") == nvl(pdu->get_message().get_serviceType()))
+	{
+		res.insert(TRANSACTION_ROLLBACK);
 	}
 	return res;
 }
@@ -118,6 +118,13 @@ void SmppPduChecker::processReplaceSmResp(ResponseMonitor* monitor,
 	//дальнейшая обработка
 	processResp(monitor, respPdu, respTime);
 }
+
+#define __check__(tcId, errCode) \
+	__tc__(tcId); \
+	if (!pduRes.count(errCode)) { \
+		__tc_fail__(1); \
+	} \
+	__tc_ok_cond__;
 
 //Resp = PduSubmitSmResp, PduReplaceSmResp
 template <class Resp>
@@ -199,52 +206,25 @@ void SmppPduChecker::processResp(ResponseMonitor* monitor,
 			}
 			break;
 		case ESME_RINVDSTADR: //Invalid Dest Addr
-			__tc__("processResp.checkCmdStatusInvalidDestAddr");
-			if (!pduRes.count(NO_ROUTE))
-			{
-				__tc_fail__(1);
-			}
-			__tc_ok_cond__;
+			__check__("processResp.checkCmdStatusInvalidDestAddr", NO_ROUTE);
 			break;
 		case ESME_RINVSCHED: //Invalid Scheduled Delivery Time
-			__tc__("processResp.checkCmdStatusInvalidWaitTime");
-			if (!pduRes.count(INVALID_WAIT_TIME))
-			{
-				__tc_fail__(1);
-			}
-			__tc_ok_cond__;
+			__check__("processResp.checkCmdStatusInvalidWaitTime", INVALID_WAIT_TIME);
 			break;
 		case ESME_RINVEXPIRY: //Invalid message validity period
-			__tc__("processResp.checkCmdStatusInvalidValidTime");
-			if (!pduRes.count(INVALID_VALID_TIME))
-			{
-				__tc_fail__(1);
-			}
-			__tc_ok_cond__;
+			__check__("processResp.checkCmdStatusInvalidValidTime", INVALID_VALID_TIME);
 			break;
 		case ESME_RINVDCS:
-			__tc__("processResp.checkCmdStatusInvalidDataCoding");
-			if (!pduRes.count(INVALID_DATA_CODING))
-			{
-				__tc_fail__(1);
-			}
-			__tc_ok_cond__;
+			__check__("processResp.checkCmdStatusInvalidDataCoding", INVALID_DATA_CODING);
 			break;
 		case ESME_RINVSERTYP:
-			__tc__("processResp.checkCmdStatusInvalidServiceType");
-			if (!pduRes.count(INVALID_SERVICE_TYPE))
-			{
-				__tc_fail__(1);
-			}
-			__tc_ok_cond__;
+			__check__("processResp.checkCmdStatusInvalidServiceType", INVALID_SERVICE_TYPE);
 			break;
 		case ESME_RINVSRCADR:
-			__tc__("processResp.checkCmdStatusInvalidSourceAddr");
-			if (!pduRes.count(INVALID_SOURCE_ADDR))
-			{
-				__tc_fail__(1);
-			}
-			__tc_ok_cond__;
+			__check__("processResp.checkCmdStatusInvalidSourceAddr", INVALID_SOURCE_ADDR);
+			break;
+		case ESME_RSYSERR:
+			__check__("processResp.checkCmdStatusSystemError", TRANSACTION_ROLLBACK);
 			break;
 		default:
 			__tc__("processResp.checkCmdStatusOther");
@@ -319,11 +299,21 @@ void SmppPduChecker::processGenericNack(GenericNackMonitor* monitor,
 			__tc__("processGenericNack.checkStatusInvalidCommandId");
 			switch (monitor->pduData->pdu->get_commandId())
 			{
-				case UNBIND:
-				case ENQUIRE_LINK:
-				case SUBMIT_SM:
-				case DELIVERY_SM:
+				case BIND_TRANSMITTER:
+				case BIND_RECIEVER:
 				case BIND_TRANCIEVER:
+				case UNBIND:
+				case UNBIND_RESP:
+				case SUBMIT_SM:
+				//case SUBMIT_MULTI:
+				//case DATA_SM:
+				//case DATA_SM_RESP:
+				case DELIVERY_SM_RESP:
+				//case QUERY_SM:
+				//case CANCEL_SM:
+				//case REPLACE_SM:
+				case ENQUIRE_LINK:
+				case ENQUIRE_LINK_RESP:
 				case GENERIC_NACK:
 					__tc_fail__(1);
 					break;

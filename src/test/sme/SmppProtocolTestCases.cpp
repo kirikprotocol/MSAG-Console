@@ -455,7 +455,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 
 void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 {
-	TCSelector s(num, 11);
+	TCSelector s(num, 12);
 	__decl_tc__;
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(maxValidPeriod);
@@ -568,6 +568,10 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 				case 11: //недопустимый dataCoding
 					__tc__("submitSm.incorrect.dataCoding");
 					pdu->get_message().set_dataCoding(rand1(255));
+					break;
+				case 12:
+					__tc__("submitSm.incorrect.transactionRollback");
+					pdu->get_message().set_serviceType("-----");
 					break;
 				default:
 					__unreachable__("Invalid num");
@@ -741,7 +745,7 @@ void SmppProtocolTestCases::querySmIncorrect(bool sync, int num)
 void SmppProtocolTestCases::sendInvalidPdu(bool sync, int num)
 {
 	__decl_tc__;
-	TCSelector s(num, 15);
+	TCSelector s(num, 14);
 	for (; s.check(); s++)
 	{
 		try
@@ -818,6 +822,12 @@ void SmppProtocolTestCases::sendInvalidPdu(bool sync, int num)
 					break;
 				case 14:
 					__tc__("sendInvalidPdu.response");
+					pdu = reinterpret_cast<SmppHeader*>(new PduDataSmResp());
+					pdu->set_commandId(DATA_SM_RESP);
+					break;
+				/*
+				case 15:
+					__tc__("sendInvalidPdu.response");
 					{
 						PduMultiSmResp* p = new PduMultiSmResp();
 						p->set_sme(NULL);
@@ -825,11 +835,7 @@ void SmppProtocolTestCases::sendInvalidPdu(bool sync, int num)
 					}
 					pdu->set_commandId(SUBMIT_MULTI_RESP);
 					break;
-				case 15:
-					__tc__("sendInvalidPdu.response");
-					pdu = reinterpret_cast<SmppHeader*>(new PduDataSmResp());
-					pdu->set_commandId(DATA_SM_RESP);
-					break;
+				*/
 				default:
 					__unreachable__("Invalid num");
 			}
@@ -880,7 +886,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespOk(
 		__tc_fail__(100);
 		error();
 	}
-	return make_pair(0xffffffff, time(NULL));
+	return make_pair(DELIVERY_STATUS_NO_RESPONSE, time(NULL));
 }
 
 pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
@@ -899,7 +905,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
 		{
 			case 1: //не отправлять респонс
 				__tc__("sendDeliverySmResp.sendRetry.notSend");
-				commandStatus = 0xffffffff;
+				commandStatus = DELIVERY_STATUS_NO_RESPONSE;
 				break;
 			case 2: //временная ошибка на стороне sme, запрос на повторную доставку
 				__tc__("sendDeliverySmResp.sendRetry.tempAppError");
@@ -915,7 +921,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
 				break;
 			case 4: //отправить респонс с неправильным sequence_number
 				__tc__("sendDeliverySmResp.sendRetry.invalidSequenceNumber");
-				commandStatus = 0xffffffff;
+				commandStatus = DELIVERY_STATUS_NO_RESPONSE;
 				respPdu.get_header().set_sequenceNumber(INT_MAX);
 				respPdu.get_header().set_commandStatus(ESME_ROK);
 				fixture->transmitter->sendDeliverySmResp(respPdu, sync);
@@ -923,7 +929,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
 			case 5: //отправить респонс после sme timeout
 				{
 					__tc__("sendDeliverySmResp.sendRetry.sendAfterSmeTimeout");
-					commandStatus = 0xffffffff;
+					commandStatus = DELIVERY_STATUS_NO_RESPONSE;
 					respPdu.get_header().set_commandStatus(ESME_ROK);
 					__cfg_int__(sequentialPduInterval);
 					int timeout = 1000 * (fixture->smeInfo.timeout + rand2(1, sequentialPduInterval));
@@ -943,7 +949,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
 		__tc_fail__(s.value());
 		error();
 	}
-	return make_pair(0xffffffff, time(NULL));
+	return make_pair(DELIVERY_STATUS_NO_RESPONSE, time(NULL));
 }
 
 pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespError(
@@ -1003,7 +1009,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespError(
 		__tc_fail__(s.value());
 		error();
 	}
-	return make_pair(0xffffffff, time(NULL));
+	return make_pair(DELIVERY_STATUS_NO_RESPONSE, time(NULL));
 }
 
 }

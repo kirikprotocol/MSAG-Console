@@ -103,6 +103,8 @@ void submitSmTc()
 		"Значения schedule_delivery_time меньше validity_period, но оба больше максимального validity_period для SC");
 	__reg_tc__("submitSm.incorrect.dataCoding",
 		"Недопустимые значения dataCoding");
+	__reg_tc__("submitSm.incorrect.transactionRollback",
+		"Специальные sms эмулирующие transaction rollback на стороне сервера БД");
 	//submitSm.assert
 	__reg_tc__("submitSm.assert",
 		"Заполнение и отправка submit_sm pdu с недопустимыми значениями полей");
@@ -201,6 +203,8 @@ void processRespTc()
 		"Если код ошибки ESME_RINVSERTYP в поле command_status, то длина поля service_type действительно задана неправильно");
 	__reg_tc__("processResp.checkCmdStatusInvalidSourceAddr",
 		"Если код ошибки ESME_RINVSRCADR в поле command_status, то адрес отправителя действительно не соответствует address range для данной sme в конфигурации sme.xml SC");
+	__reg_tc__("processResp.checkCmdStatusSystemError",
+		"Если код ошибки ESME_RSYSERR в поле command_status, то на стороне SC действительно возникла неустранимая ошибка (transaction rollback при сохранении сообщения)");
 	__reg_tc__("processResp.checkCmdStatusOther",
 		"Прочие коды ошибок соответствуют спецификации");
 }
@@ -209,7 +213,7 @@ void processGenericNackTc()
 {
 	__reg_tc__("processGenericNack", "Получение generic_nack pdu");
 	__reg_tc__("processGenericNack.sync",
-		"Получение generic_nack pdu при некорректных синхронных запросах");
+		"Exception при некорректных синхронных запросах");
 	__reg_tc__("processGenericNack.async",
 		"Получение generic_nack pdu при при некорректных асинхронных запросах");
 	__reg_tc__("processGenericNack.checkHeader",
@@ -323,7 +327,7 @@ void processDeliveryReportTc()
 	__reg_tc__("processDeliverySm.deliveryReport.intermediateNotification.noRescheduling",
 		"Промежуточная нотификация не доставляется в случае, если sms не была зарешедулена");
 	__reg_tc__("processDeliverySm.deliveryReport.intermediateNotification.recvTimeChecks",
-		"Промежуточные нотификации приходят в момент времени первой зарешедуленой попытки доставки оригинальной pdu");
+		"Время доставки промежуточной нотификации соответсвует времени первой зарешедуленой попытки доставки оригинальной pdu");
 	__reg_tc__("processDeliverySm.deliveryReport.intermediateNotification.checkStatus",
 		"Информации о статусе pdu (состояние, код ошибки) является корректной");
 	__reg_tc__("processDeliverySm.deliveryReport.intermediateNotification.checkText",
