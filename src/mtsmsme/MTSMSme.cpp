@@ -84,9 +84,31 @@ public:
     
     AliasManager(ConfigView* config) throw(ConfigException)
     {
-        MutexGuard guard(aliasLock);
+        MutexGuard guard(aliasLock); // init alias mapping
+        
+        smsc_log_info(logger, "Address to alias mapping loading ...");
+        std::auto_ptr< std::set<std::string> > setGuard(config->getShortSectionNames());
+        std::set<std::string>* set = setGuard.get();
+        for (std::set<std::string>::iterator i=set->begin(); i!=set->end(); i++)
+        {
+            const char* address = (const char *)i->c_str();
+            if (!address || !address[0])
+                throw ConfigException("Address is empty or wasn't specified");
 
-        // TODO: init alias mapping
+            std::auto_ptr<ConfigView> addressConfigGuard(config->getSubConfig(address));
+            ConfigView* addressConfig = addressConfigGuard.get();
+
+            const char* alias = addressConfig->getString("alias");
+            if (!alias || !alias[0])
+                throw ConfigException("Alias for address '%s' is empty or wasn't specified", address);
+            if (!aliasByAddress.Exists(address)) {
+                Address aliasAddress;
+                if (convertMSISDNStringToAddress(alias, aliasAddress)) aliasByAddress.Insert(address, aliasAddress);
+                else smsc_log_warn(logger, "Alias '%s' for address '%s' has invalid format", alias, address);
+            }
+            else smsc_log_warn(logger, "Alias for address '%s' already defined", address);
+        }
+        smsc_log_info(logger, "Address to alias mapping loaded");
     }
 
     bool getAliasForAddress(const Address& address, Address& alias)
@@ -132,7 +154,7 @@ public:
                 continue;
             }
             smsc_log_warn(logger, "RequestController shutdown: request for seqNum=%d skipped", seqNum);    
-            request->setSendResult(Status::SMENOTCONNECTED); // TODO: errorcode ???
+            request->setSendResult(Status::SMENOTCONNECTED); // TODO: what errorcode ???
         }
 
     };
@@ -147,16 +169,21 @@ public:
         requestBySeqNum.Insert(seqNum, request);
         return true;
     }
-    Request* getRequest(int seqNum)
+    bool stateRequest(int seqNum, int status)
     {
-        MutexGuard guard(requestLock);
-        Request** request = requestBySeqNum.GetPtr(seqNum);
-        if (!request) {
-            smsc_log_error(logger, "RequestController: Request is undefined for seqNum=%d", seqNum);    
-            return 0;
+        Request* request = 0;
+        {
+            MutexGuard guard(requestLock);
+            Request** requestPtr = requestBySeqNum.GetPtr(seqNum);
+            if (!requestPtr || !(*requestPtr)) {
+                smsc_log_error(logger, "RequestController: Request is undefined for seqNum=%d", seqNum);    
+                return false;
+            }
+            request = *requestPtr;
+            requestBySeqNum.Delete(seqNum);
         }
-        requestBySeqNum.Delete(seqNum);
-        return *request;
+        request->setSendResult(status);
+        return true;
     }
 };
 
@@ -250,8 +277,10 @@ public:
         
         int seqNum = pdu->get_sequenceNumber();
         int status = pdu->get_commandStatus();
-
-        // TODO: Search and report status to Request via RequestController
+        
+        // search and report status to Request via RequestController
+        smsc_log_info(logger, "Got responce for seqNum=%d (status=%d)", seqNum, status);
+        controller.stateRequest(seqNum, status);
     }
     void handleEvent(SmppHeader *pdu)
     {
@@ -407,7 +436,7 @@ int main(void)
         AliasManager aliaser(&aliasConfig);
 
         RequestProcessor* processor = RequestProcessor::getInstance();
-        // TODO: check processor is not null !!!
+        if (!processor) throw Exception("RequestProcessor is undefined");
 
         while (!isNeedStop())
         {
