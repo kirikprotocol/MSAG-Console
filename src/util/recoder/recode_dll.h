@@ -2,6 +2,9 @@
 $Id$
 */
 
+#if !defined HEADER_RECODE_DLL_H
+#define HEADER_RECODE_DLL_H
+
 #ifdef _WIN32 
 
 #ifdef RECODE_DLL_EXPORTS
@@ -47,3 +50,6 @@ RECODE_DLL_API int RECODE_DECL ConvertUCS2To7Bit(const short* ucs2, int ucs2buff
                                      char* bit7buf, int bit7buf_size);
 
 }
+
+
+#endif // HEADER_RECODE_DLL_H
