@@ -31,8 +31,8 @@ const string decode(const char* text, int len, uint8_t dataCoding,
 	bool hostByteOrder);
 const pair<string, uint8_t> convert(const string& text, int profileCodePage);
 
-vector<int> compare(uint8_t dc1, const char* str1, int len1,
-	uint8_t dc2, const char* str2, int len2, bool hostByteOrder);
+vector<int> compare(bool udhi1, uint8_t dc1, const char* str1, int len1,
+	bool udhi2, uint8_t dc2, const char* str2, int len2, bool hostByteOrder);
 
 uint8_t getDataCoding(int num);
 uint8_t getTextDataCoding(int num);

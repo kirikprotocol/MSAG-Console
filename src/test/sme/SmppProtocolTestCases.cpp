@@ -603,7 +603,7 @@ void SmppProtocolTestCases::submitSmCorrectComplex(bool sync, int num)
 
 void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 {
-	TCSelector s(num, 13 /*18*/);
+	TCSelector s(num, 13 /*19*/);
 	__decl_tc__;
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(maxValidPeriod);
@@ -749,6 +749,17 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 					pdu->get_message().set_serviceType("-----");
 					break;
 				/*
+				case 13: //некорректна€ длина udh
+					__tc__("submitSm.incorrect.udhiLength");
+					pdu->get_message().set_esmClass(
+						pdu->get_message().get_esmClass() | ESM_CLASS_UDHI_INDICATOR);
+					{
+						int len = rand1(5);
+						char buf[len];
+						*buf = (unsigned char) (len + rand1(10));
+						pdu->get_message().set_shortMessage(buf, len);
+					}
+					break;
 				case 13: //длина service_type больше допустимой
 					{
 						__tc__("submitSm.incorrect.serviceTypeLength");
@@ -827,7 +838,7 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 			if (!replacePduData)
 			{
 				__tc__("replaceSm.incorrect.messageId");
-				SmppUtil::setupRandomCorrectReplaceSmPdu(pdu, DEFAULT);
+				SmppUtil::setupRandomCorrectReplaceSmPdu(pdu, DEFAULT, false);
 				PduAddress srcAddr;
 				SmppUtil::convert(fixture->smeAddr, &srcAddr);
 				pdu->set_source(srcAddr);
@@ -965,7 +976,7 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 			if (!replacePduData)
 			{
 				__tc__("replaceSm.incorrect.messageId");
-				SmppUtil::setupRandomCorrectReplaceSmPdu(pdu, DEFAULT);
+				SmppUtil::setupRandomCorrectReplaceSmPdu(pdu, DEFAULT, false);
 				PduAddress srcAddr;
 				SmppUtil::convert(fixture->smeAddr, &srcAddr);
 				pdu->set_source(srcAddr);

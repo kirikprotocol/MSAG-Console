@@ -308,6 +308,26 @@ vector<int> SmppUtil::compareOptional(SmppOptional& p1, SmppOptional& p2,
 	return res;
 }
 
+auto_ptr<char> rand_text2(int& length, uint8_t dataCoding, bool udhi,
+	bool hostByteOrder)
+{
+	if (!udhi)
+	{
+		return rand_text(length, dataCoding, hostByteOrder);
+	}
+	int headerLen = rand0(length - 1);
+	auto_ptr<uint8_t> header = rand_uint8_t(headerLen);
+	int msgLen = length - headerLen - 1;
+	auto_ptr<char> msg = rand_text(msgLen, dataCoding, hostByteOrder);
+	__require__(headerLen + msgLen + 1 <= length);
+	length = headerLen + msgLen + 1;
+	char* buf = new char[length];
+	*buf = (unsigned char) headerLen;
+	memcpy(buf + 1, header.get(), headerLen);
+	memcpy(buf + headerLen + 1, msg.get(), msgLen);
+	return auto_ptr<char>(buf);
+}
+
 #define __trace_set__(name) \
 	/*__trace__(name ": " #field);*/
 	
@@ -325,11 +345,12 @@ vector<int> SmppUtil::compareOptional(SmppOptional& p1, SmppOptional& p2,
 	if (check) { __require__(p.size_##field() == len_##field && \
 		!strncmp(p.get_##field(), str_##field.get(), len_##field)); }
 
-#define __set_bin__(field, length, dataCoding) \
+#define __set_bin__(field, length, dataCoding, udhi) \
 	__trace_set__("set_bin"); \
 	int len_##field = length; \
 	uint8_t dc_##field = dataCoding; \
-	auto_ptr<char> str_##field = rand_text(len_##field, dc_##field, false); \
+	bool udhi_##field = udhi; \
+	auto_ptr<char> str_##field = rand_text2(len_##field, dc_##field, udhi_##field, false); \
 	p.set_##field(str_##field.get(), len_##field); \
 	if (check) { __require__(p.size_##field() == len_##field && \
 		!memcmp(p.get_##field(), str_##field.get(), len_##field)); }
@@ -378,17 +399,18 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	uint8_t dataCoding = getDataCoding(RAND_TC);
 	__set_int__(uint8_t, dataCoding, dataCoding);
 	__set_int__(uint8_t, smDefaultMsgId, rand0(255)); //хбз что это такое
+	bool udhi = pdu->get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
 	if (useShortMessage)
 	{
 		mask &= ~OPT_MSG_PAYLOAD; //исключить message_payload
-		__set_bin__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH), dataCoding);
+		__set_bin__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH), dataCoding, udhi);
 	}
 	mask &= ~OPT_USER_MSG_REF; //исключить userMessageReference
-	setupRandomCorrectOptionalParams(pdu->get_optional(), dataCoding, mask, check);
+	setupRandomCorrectOptionalParams(pdu->get_optional(), dataCoding, udhi, mask, check);
 }
 
 void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
-	uint8_t dataCoding, uint64_t mask, bool check)
+	uint8_t dataCoding, bool udhi, uint64_t mask, bool check)
 {
 	__require__(pdu);
 	__cfg_int__(maxWaitTime);
@@ -404,7 +426,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	__set_cstr2__(validityPeriod, time2string(validTime, tmp, time(NULL), __numTime__));
 	__set_int__(uint8_t, registredDelivery, rand0(255));
 	__set_int__(uint8_t, smDefaultMsgId, rand0(255)); //хбз что это такое
-	__set_bin__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH), dataCoding);
+	__set_bin__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH), dataCoding, udhi);
 }
 
 #define __trace_set_optional__(name, field) \
@@ -415,7 +437,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 		__trace_set_optional__("set_optional_int", field); \
 		type tmp_##field = value; \
 		opt.set_##field(tmp_##field); \
-		if (check) { intMap.insert(IntMap::value_type(#field, tmp_##field)); } \
+		if (check) { intMap[#field] = tmp_##field; } \
 	}
 
 #define __set_optional_intarr__(field, value, length) \
@@ -427,7 +449,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 		if (check) { \
 			uint32_t int_##field; \
 			memcpy(&int_##field, tmp_##field, length); \
-			intMap.insert(IntMap::value_type(#field, int_##field)); \
+			intMap[#field] = int_##field; \
 		} \
 	}
 
@@ -438,23 +460,24 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 		auto_ptr<char> str_##field = rand_char(len_##field); \
 		opt.set_##field(str_##field.get(), len_##field); \
 		if (check) { \
-			OStr tmp_##field; \
-			tmp_##field.copy(str_##field.get(), len_##field); \
-			ostrMap.insert(OStrMap::value_type(#field, tmp_##field)); \
+			ostrMap[#field].copy(str_##field.get(), len_##field); \
 		} \
 	}
 
-#define __set_optional_bin__(field, length, dataCoding) \
+#define __set_optional_bin__(field, length, dataCoding, udhi) \
 	if (mask[pos++]) { \
 		__trace_set_optional__("set_optional_bin", field); \
 		int len_##field = length; \
 		uint8_t dc_##field = dataCoding; \
-		auto_ptr<char> str_##field = rand_text(len_##field, dc_##field, false); \
+		bool udhi_##field = udhi; \
+		auto_ptr<char> str_##field = rand_text2(len_##field, dc_##field, udhi, false); \
 		opt.set_##field(str_##field.get(), len_##field); \
 		if (check) { \
+			/* у чена OStr(OStr&) не работает дл€ пустого OStr */ \
 			OStr tmp_##field; \
-			tmp_##field.copy((char*) str_##field.get(), len_##field); \
+			tmp_##field.copy("0", 1); \
 			ostrMap.insert(OStrMap::value_type(#field, tmp_##field)); \
+			ostrMap[#field].copy(str_##field.get(), len_##field); \
 		} \
 	}
 
@@ -464,9 +487,11 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 		auto_ptr<char> str_##field = rand_char(length); \
 		opt.set_##field(str_##field.get()); \
 		if (check) { \
+			/* у чена COStr(COStr&) не работает дл€ пустого COStr */ \
 			COStr tmp_##field; \
-			tmp_##field.copy(str_##field.get()); \
+			tmp_##field.copy("0"); \
 			cstrMap.insert(CStrMap::value_type(#field, tmp_##field)); \
+			cstrMap[#field].copy(str_##field.get()); \
 		} \
 	}
 
@@ -511,7 +536,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	}
 
 void SmppUtil::setupRandomCorrectOptionalParams(SmppOptional& opt,
-	uint8_t dataCoding, uint64_t _mask, bool check)
+	uint8_t dataCoding, bool udhi, uint64_t _mask, bool check)
 {
 	//пол€ сохран€ютс€ случайным образом
 	auto_ptr<uint8_t> tmp = rand_uint8_t(8);
@@ -559,7 +584,7 @@ void SmppUtil::setupRandomCorrectOptionalParams(SmppOptional& opt,
 	__skip__; //__set_optional_int__(uint8_t, msAvailableStatus, rand0(255));
 	//int errCode = rand0(INT_MAX);
 	__skip__; //__set_optional_intarr__(networkErrorCode, (uint8_t*) &errCode, 3);
-	__set_optional_bin__(messagePayload, rand1(65535), dataCoding);
+	__set_optional_bin__(messagePayload, rand1(65535), dataCoding, udhi);
 	__skip__; //__set_optional_int__(uint8_t, deliveryFailureReason, rand0(255));
 	__set_optional_int__(uint8_t, moreMessagesToSend, rand0(255));
 	//отключить messageState, поскольку отправл€етс€ только в репортах

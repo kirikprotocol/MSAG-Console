@@ -191,6 +191,8 @@ void submitSmTc()
 		"Недопустимые значения dataCoding");
 	__reg_tc__("submitSm.incorrect.bothMessageFields",
 		"Заданы оба поля short_message и message_payload");
+	__reg_tc__("submitSm.incorrect.udhiLength",
+		"Длина udh при выставленном флаге udhi задана некорректно");
 	__reg_tc__("submitSm.incorrect.serviceTypeLength",
 		"Длина поля service_type больше допустимой");
 	__reg_tc__("submitSm.incorrect.sourceAddrLength",

@@ -71,6 +71,8 @@ const uint8_t ESM_CLASS_DELIVERY_RECEIPT = 0x4;
 const uint8_t ESM_CLASS_SME_ACKNOWLEDGEMENT = 0x10;
 const uint8_t ESM_CLASS_INTERMEDIATE_NOTIFICATION = 0x20;
 
+const uint8_t ESM_CLASS_UDHI_INDICATOR = 0x40;
+
 //registered_delivery (SMPP v3.4, 5.2.17):
 //SMSC Delivery Receipt:
 //xxxxxx00 - No SMSC Delivery Receipt requested (default)
@@ -139,9 +141,9 @@ public:
 	static void setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 		bool useShortMessage, uint64_t mask = OPT_ALL, bool check = true);
 	static void setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
-		uint8_t dataCoding, uint64_t mask = OPT_ALL, bool check = true);
+		uint8_t dataCoding, bool udhi, uint64_t mask = OPT_ALL, bool check = true);
 	static void setupRandomCorrectOptionalParams(SmppOptional& opt,
-		uint8_t dataCoding, uint64_t mask = OPT_ALL, bool check = true);
+		uint8_t dataCoding, bool udhi, uint64_t mask = OPT_ALL, bool check = true);
 
 	static SmppHeader* copyPdu(SmppHeader* pdu);
 };

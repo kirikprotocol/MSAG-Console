@@ -82,7 +82,7 @@ auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen,
 				short* _msg = (short*) msg;
 				msgLen = ConvertMultibyteToUCS2(text.c_str(), text.length(),
 					_msg, len, CONV_ENCODING_CP1251);
-				if (!hostByteOrder)
+				if (!hostByteOrder && htons(0x1234) != 0x1234)
 				{
 					//установить сетевой порядок
 					for (int i = 0; i < msgLen / 2; i++)
@@ -105,6 +105,7 @@ auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen,
 	return auto_ptr<char>(msg);
 }
 
+//todo: add udhi
 const string decode(const char* text, int len, uint8_t dataCoding,
 	bool hostByteOrder)
 {
@@ -117,7 +118,7 @@ const string decode(const char* text, int len, uint8_t dataCoding,
 			{
 				char buf[len + 1];
 				int bufLen;
-				if (hostByteOrder)
+				if (hostByteOrder || ntohs(0x1234) == 0x1234)
 				{
 					bufLen = ConvertUCS2ToMultibyte((const short*) text, len,
 						buf, sizeof(buf), CONV_ENCODING_CP1251);
@@ -126,12 +127,12 @@ const string decode(const char* text, int len, uint8_t dataCoding,
 				{
 					//перекодировать из сетевого порядока
 					short tmp[len / 2];
-					memcpy(tmp, text, len);
+					const short* _text = (const short*) text;
 					for (int i = 0; i < len / 2; i++)
 					{
-						*(tmp + i) = ntohs(*(tmp + i));
+						tmp[i] = ntohs(*(_text + i));
 					}
-					bufLen = ConvertUCS2ToMultibyte(tmp, len,
+					bufLen = ConvertUCS2ToMultibyte(tmp, sizeof(tmp),
 						buf, sizeof(buf), CONV_ENCODING_CP1251);
 				}
 				return string(buf, bufLen);
@@ -155,7 +156,7 @@ const pair<string, uint8_t> convert(const string& text, int profileCodePage)
 		case ProfileCharsetOptions::Default:
 			if (hasHighBit(text.c_str(), text.length()))
 			{
-				char buf[2 * text.length()];
+				char buf[3 * text.length() + 1]; //щ -> sch
 				int bufLen = Transliterate(text.c_str(), text.length(),
 					CONV_ENCODING_CP1251, buf, sizeof(buf));
 				return make_pair(string(buf, bufLen), DEFAULT);
@@ -179,10 +180,16 @@ const pair<string, uint8_t> convert(const string& text, int profileCodePage)
 	//return ...;
 }
 
-vector<int> compare(uint8_t dc1, const char* str1, int len1,
-	uint8_t dc2, const char* str2, int len2, bool hostByteOrder)
+vector<int> compare(bool udhi1, uint8_t dc1, const char* str1, int len1,
+	bool udhi2, uint8_t dc2, const char* str2, int len2, bool hostByteOrder)
 {
 	vector<int> res;
+	//udhi
+	if (udhi1 != udhi2)
+	{
+		res.push_back(1);
+		return res;
+	}
 	//допустимая кодировка dc1
 	switch (dc1)
 	{
@@ -191,7 +198,7 @@ vector<int> compare(uint8_t dc1, const char* str1, int len1,
 		case BINARY:
 			break;
 		default:
-			res.push_back(1);
+			res.push_back(2);
 			return res;
 	}
 	//допустимая кодировка dc2
@@ -202,58 +209,92 @@ vector<int> compare(uint8_t dc1, const char* str1, int len1,
 		case BINARY:
 			break;
 		default:
-			res.push_back(2);
+			res.push_back(3);
 			return res;
 	}
+	//нет текста
+	if (!len1 && len2)
+	{
+		res.push_back(4);
+		return res;
+	}
+	if (len1 && !len2)
+	{
+		res.push_back(5);
+		return res;
+	}
+	if (!len1 && !len2)
+	{
+		return res;
+	}
+	//проверки
+	__require__(str1 && str2);
 	if (dc1 == dc2)
 	{
 		if (len1 != len2)
 		{
-			res.push_back(3);
+			res.push_back(6);
 		}
 		else if (memcmp(str1, str2, len1))
 		{
-			res.push_back(4);
+			res.push_back(7);
 		}
 	}
 	//DEFAULT -> UCS2 не бывает
 	//UCS2 -> DEFAULT (в транслит)
 	else if (dc1 == UCS2 && dc2 == DEFAULT)
 	{
-		char defBuf[len1 + 1];
-		int defLen;
-		if (hostByteOrder)
+		char mbBuf[len1 + 1];
+		int mbLen;
+		int udhLen = udhi1 ? 1 + (unsigned char) *str1 : 0;
+		//udh проходит без изменений
+		if (udhLen)
 		{
-			defLen = ConvertUCS2ToMultibyte((const short*) str1, len1,
-				defBuf, sizeof(defBuf), CONV_ENCODING_CP1251);
+			if (udhLen < len2)
+			{
+				res.push_back(8);
+			}
+			else if (memcmp(str1, str2, udhLen))
+			{
+				res.push_back(9);
+			}
+		}
+		//остальное транслитерируется
+		if (hostByteOrder || ntohs(0x1234) == 0x1234)
+		{
+			int ucs2Len = len1 - udhLen;
+			const short* usc2Buf = (const short*) (str1 + udhLen);
+			mbLen = ConvertUCS2ToMultibyte(usc2Buf, ucs2Len,
+				mbBuf, sizeof(mbBuf), CONV_ENCODING_CP1251);
 		}
 		else
 		{
-			short buf[len1 / 2];
-			const short* _str1 = (const short*) str1;
-			for (int i = 0; i < len1 / 2; i++)
+			int ucs2Len = (len1 - udhLen) / 2;
+			short ucs2Buf[ucs2Len];
+			const short* _str1 = (const short*) (str1 + udhLen);
+			for (int i = 0; i < ucs2Len; i++)
 			{
-				*(buf + i) = ntohs(*(_str1 + i));
+				ucs2Buf[i] = ntohs(*(_str1 + i));
 			}
-			defLen = ConvertUCS2ToMultibyte(buf, len1,
-				defBuf, sizeof(defBuf), CONV_ENCODING_CP1251);
+			mbLen = ConvertUCS2ToMultibyte(ucs2Buf, ucs2Len,
+				mbBuf, sizeof(mbBuf), CONV_ENCODING_CP1251);
 		}
-		char transBuf[len1 + 1];
-		int transLen = Transliterate(defBuf, defLen,
+		char transBuf[(int) (len1 * 1.5) + 1]; //щ -> sch
+		int transLen = Transliterate(mbBuf, mbLen,
 			CONV_ENCODING_CP1251, transBuf, sizeof(transBuf));
-		if (transLen != len2)
+		if (transLen + udhLen != len2)
 		{
-			res.push_back(5);
+			res.push_back(10);
 		}
-		else if (memcmp(transBuf, str2, len2))
+		else if (memcmp(transBuf, str2 + udhLen, transLen))
 		{
-			res.push_back(6);
+			res.push_back(11);
 			//__trace2__("transBuf: %s\nstr2: %s", transBuf, str2);
 		}
 	}
 	else
 	{
-		res.push_back(7);
+		res.push_back(12);
 	}
 	return res;
 }

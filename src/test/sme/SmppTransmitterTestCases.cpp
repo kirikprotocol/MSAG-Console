@@ -599,7 +599,8 @@ void SmppTransmitterTestCases::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	__require__(replacePduData && replacePduData->pdu->get_commandId() == SUBMIT_SM);
 	PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(replacePduData->pdu);
 	uint8_t dataCoding = origPdu->get_message().get_dataCoding();
-	SmppUtil::setupRandomCorrectReplaceSmPdu(pdu, dataCoding);
+	bool udhi = origPdu->get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
+	SmppUtil::setupRandomCorrectReplaceSmPdu(pdu, dataCoding, udhi);
 	//source
 	PduAddress srcAddr;
 	SmppUtil::convert(fixture->smeAddr, &srcAddr);
