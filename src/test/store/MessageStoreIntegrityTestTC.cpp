@@ -235,8 +235,6 @@ void executeIntegrityTest(MessageStoreTestCases& tc, int listSize)
 //Сохранение неправильного sms с проверкой на assert
 #ifdef ASSERT_THROW_IF_FAIL
 	tc.storeAssertSms(ALL_TC);
-	filter->addResult(res);
-	delete res;
 #endif
 
 	//очистка памяти
