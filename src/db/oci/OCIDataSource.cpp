@@ -103,25 +103,16 @@ void OCIConnection::disconnect()
     {
         Connection::disconnect();
 
-        while (statements.Count())
-        {
-            Statement* statement=0L;
-            (void) statements.Pop(statement);
-            if (statement) delete statement;
+        MutexGuard  guard(doConnectLock);
+        if (errhp && svchp) {
+        // logoff from database server
+            (void) OCILogoff(svchp, errhp);
+        }
+        if (envhp) {
+        // free envirounment handle, all derrived handles will be freed too
+            (void) OCIHandleFree(envhp, OCI_HTYPE_ENV);
         }
         
-        {
-            MutexGuard  guard(doConnectLock);
-            if (errhp && svchp) {
-            // logoff from database server
-                (void) OCILogoff(svchp, errhp);
-            }
-            if (envhp) {
-            // free envirounment handle, all derrived handles will be freed too
-                (void) OCIHandleFree(envhp, OCI_HTYPE_ENV);
-            }
-        }
-
         isConnected = false; isDead = false;
         svchp = 0; envhp = 0; errhp = 0;
     }

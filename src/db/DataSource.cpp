@@ -26,11 +26,6 @@ bool Connection::unregisterStatement(const char* id)
     statementsRegistry.Delete(id);
     return true;
 }
-void Connection::unregisterAllStatements()
-{
-    MutexGuard guard(statementsRegistryLock);
-    statementsRegistry.Empty();
-}
 Statement* Connection::getStatement(const char* id)
 {
     MutexGuard guard(statementsRegistryLock);
@@ -40,7 +35,13 @@ Statement* Connection::getStatement(const char* id)
 }
 void Connection::disconnect()
 {
-    unregisterAllStatements();
+    MutexGuard guard(statementsRegistryLock);
+
+    char* key = 0; Statement* statement = 0; statementsRegistry.First();
+    while (statementsRegistry.Next(key, statement))
+        if (statement) delete statement;
+    
+    statementsRegistry.Empty();
 }
 
 void ConnectionPool::loadPoolSize(ConfigView* config)

@@ -259,7 +259,6 @@ namespace smsc { namespace db
         log4cpp::Category   &log;
 
         bool                isConnected, isDead;
-        Array<Statement *>  statements;
         
         Mutex               statementsRegistryLock;
         Hash<Statement *>   statementsRegistry;
@@ -283,7 +282,6 @@ namespace smsc { namespace db
 
         bool registerStatement(const char* id, Statement* statement);
         bool unregisterStatement(const char* id);
-        void unregisterAllStatements();
         Statement* getStatement(const char* id);
         
         virtual void connect() 
