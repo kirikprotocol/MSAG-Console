@@ -378,8 +378,11 @@ void MapIoTask::dispatcher()
     }
     
     __trace2__("MAP: MsgRecv receive msg with "
-               "recver 0x%hx,sender 0x%hx,prim 0x%hx",message.receiver,message.sender,message.primitive);
-    
+               "recver 0x%hx,sender 0x%hx,prim 0x%hx, size %d",message.receiver,message.sender,message.primitive,message.size);
+    if( message.primitive == 0x8b && message.msg_p[5] == 0x04 ) {
+      __trace2__("MAP: MsgRecv hatching msg to reset priority order " );
+      message.msg_p[5] = 0;
+    }
     Et96MapHandleIndication(&message);
   }
 }
