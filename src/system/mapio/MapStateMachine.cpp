@@ -1306,7 +1306,7 @@ static void DoUSSRUserResponceError(const SmscCommand* cmd , MapDialog* dialog)
   error.errorCode = 34; /*Sytem failure */
   error.u.systemFailureNetworkResource_s.networkResourcePresent = 0;
   ET96MAP_USSD_STRING_T ussdString = {0,};
-  const unsigned char text[256];
+  unsigned char text[256];
   if( cmd ) {
     if( cmd->get_commandId() == SUBMIT_RESP ) {
       sprintf( text, "Rejected %d", cmd->get_resp()->get_status() );
