@@ -22,6 +22,7 @@ const char* PduRegistry::toString(PduData* pduData) const
 		", seqNum = " << pduData->pdu->get_sequenceNumber() <<
 		", msgRef = " << pduData->msgRef <<
 		", pdu = " << (void*) pduData->pdu <<
+		", submitStatus = " << pduData->submitStatus <<
 		", deliveryStatus = " << pduData->deliveryStatus <<
 		", replacePdu = " << (void*) pduData->replacePdu <<
 		", replacedByPdu = " << (void*) pduData->replacedByPdu <<
@@ -135,7 +136,7 @@ void PduRegistry::removePdu(PduData* pduData)
 	if (pduData->smsId.length())
 	{
 		int res = idMap.erase(pduData->smsId);
-		__require__(res || pduData->replacedByPdu || pduData->deliveryStatus);
+		__require__(res || pduData->replacedByPdu || pduData->submitStatus);
 	}
 	if (pduData->msgRef)
 	{
