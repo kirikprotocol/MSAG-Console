@@ -111,6 +111,7 @@ namespace smsc { namespace mcisme
         void Stop() {
             MutexGuard guard(stopLock);
             bStopping = true;
+            // TODO: correct threads shutdown !!!
         }
         bool startThread(ThreadedTask* task) {
             MutexGuard guard(stopLock);
@@ -186,11 +187,11 @@ namespace smsc { namespace mcisme
         bool            bStarted, bNeedExit;
         Event           exitedEvent;
 
-        EventMonitor              responcesMonitor;
-        IntHash<Message>          messages;
-        Hash   <ReceiptData>      receipts;
-        Array  <ResponceTimer>    responceWaitQueue; // used for responce waiting after submit|replace
-        Array  <ReceiptTimer>     receiptWaitQueue;  // used for responce waiting after receipt come
+        EventMonitor                responcesMonitor;
+        IntHash<Message>            messages;
+        Hash<ReceiptData>           receipts;
+        CyclicQueue<ResponceTimer>  responceWaitQueue; // used for responce waiting after submit|replace
+        CyclicQueue<ReceiptTimer>   receiptWaitQueue;  // used for responce waiting after receipt come
 
         int                       responceWaitTime, receiptWaitTime;
 

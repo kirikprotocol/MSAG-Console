@@ -106,8 +106,8 @@ namespace smsc { namespace mcisme
         static bool getMessage(const char* smsc_id, Message& message, Connection* connection=0);
         static Hash<Task *> loadupAll();
 
-        Task(std::string abonent)  
-            : bNeedReplace(false), abonent(abonent), cur_smsc_id(""), currentMessageId(0) {};
+        Task(const std::string& _abonent)  
+            : bNeedReplace(false), abonent(_abonent), cur_smsc_id(""), currentMessageId(0) {};
         virtual ~Task() {};
         
         void loadup();

@@ -106,6 +106,7 @@ uint64_t Task::getNextId(Connection* connection/*=0*/)
             if (connection && isConnectionGet) ds->freeConnection(connection);
         }
         catch (Exception& exc) {
+            smsc_log_error(logger, "%s", exc.what());
             if (connection && isConnectionGet) ds->freeConnection(connection);
             throw;
         }
@@ -151,6 +152,7 @@ bool Task::getMessage(const char* smsc_id, Message& message, Connection* connect
         if (connection && isConnectionGet) ds->freeConnection(connection);
     }
     catch (Exception& exc) {
+        smsc_log_error(logger, "%s", exc.what());
         if (connection && isConnectionGet) ds->freeConnection(connection);
         throw;
     }
@@ -193,6 +195,7 @@ Hash<Task *> Task::loadupAll()
         if (connection) ds->freeConnection(connection);
     }
     catch (Exception& exc) {
+        smsc_log_error(logger, "%s", exc.what());
         if (connection) ds->freeConnection(connection);
         throw;
     }
@@ -264,6 +267,7 @@ void Task::loadup(uint64_t currId, Connection* connection/*=0*/) // private
         if (connection && isConnectionGet) ds->freeConnection(connection);
     }
     catch (Exception& exc) {
+        smsc_log_error(logger, "%s", exc.what());
         if (connection && isConnectionGet) ds->freeConnection(connection);
         throw;
     }
@@ -301,6 +305,7 @@ void Task::loadup()
         if (connection) ds->freeConnection(connection);
     }
     catch (Exception& exc) {
+        smsc_log_error(logger, "%s", exc.what());
         if (connection) ds->freeConnection(connection);
         throw;
     }
@@ -365,8 +370,9 @@ void Task::addEvent(const MissedCallEvent& event)
         ds->freeConnection(connection);
         events.Push(newEvent);
     } 
-    catch (...)
+    catch (Exception& exc)
     {
+        smsc_log_error(logger, "%s", exc.what());
         try { if (connection) connection->rollback(); }
         catch (...) { smsc_log_error(logger, ROLLBACK_TRANSACT_ERROR_MESSAGE); }
         if (connection) ds->freeConnection(connection);
@@ -405,29 +411,25 @@ bool Task::formatMessage(Message& message)
         if (!assignEvtStmt)
             throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "assign event to message");
 
-        bool bUpdated = false;
         for (int i=0; i<events.Count(); i++) // add maximum events from chain to message
         {
             if (!message.addEvent(events[i], false)) break;
-            if (events[i].msg_id == 0)
-            {
-                events[i].msg_id = currentMessageId;
-                
-                assignEvtStmt->setUint64(1, events[i].msg_id);
-                assignEvtStmt->setUint64(2, events[i].id);
+            
+            events[i].msg_id = currentMessageId;
 
-                if (!assignEvtStmt->executeUpdate())
-                    throw Exception("Failed to assign event #%lld to message #%lld",
-                                    events[i].id, events[i].msg_id);
-                bUpdated = true;
-            }
+            assignEvtStmt->setUint64(1, events[i].msg_id);
+            assignEvtStmt->setUint64(2, events[i].id);
+            if (!assignEvtStmt->executeUpdate())
+                throw Exception("Failed to assign event #%lld to message #%lld",
+                                events[i].id, events[i].msg_id);
         }
 
-        if (bUpdated) connection->commit();
+        connection->commit();
         ds->freeConnection(connection);
     } 
-    catch (...)
+    catch (Exception& exc)
     {
+        smsc_log_error(logger, "%s", exc.what());
         try { if (connection) connection->rollback(); }
         catch (...) { smsc_log_error(logger, ROLLBACK_TRANSACT_ERROR_MESSAGE); }
         if (connection) ds->freeConnection(connection);
@@ -513,8 +515,9 @@ void Task::waitResponce(const char* smsc_id)
         connection->commit();
         ds->freeConnection(connection);
     } 
-    catch (...)
+    catch (Exception& exc)
     {
+        smsc_log_error(logger, "%s", exc.what());
         try { if (connection) connection->rollback(); }
         catch (...) { smsc_log_error(logger, ROLLBACK_TRANSACT_ERROR_MESSAGE); }
         if (connection) ds->freeConnection(connection);
@@ -538,8 +541,9 @@ void Task::waitReceipt(const char* smsc_id)
         connection->commit();
         ds->freeConnection(connection);
     } 
-    catch (...)
+    catch (Exception& exc)
     {
+        smsc_log_error(logger, "%s", exc.what());
         try { if (connection) connection->rollback(); }
         catch (...) { smsc_log_error(logger, ROLLBACK_TRANSACT_ERROR_MESSAGE); }
         if (connection) ds->freeConnection(connection);
@@ -568,8 +572,9 @@ void Task::waitReceipt(int eventCount, const char* smsc_id)
         if (events.Count()>0 && eventCount>0) // shifting events
             events.Delete(0, (events.Count()>=eventCount) ? eventCount:events.Count());
     } 
-    catch (...)
+    catch (Exception& exc)
     {
+        smsc_log_error(logger, "%s", exc.what());
         try { if (connection) connection->rollback(); }
         catch (...) { smsc_log_error(logger, ROLLBACK_TRANSACT_ERROR_MESSAGE); }
         if (connection) ds->freeConnection(connection);
@@ -644,8 +649,9 @@ Array<std::string> Task::finalizeMessage(const char* smsc_id,
         connection->commit();
         ds->freeConnection(connection);
     } 
-    catch (...)
+    catch (Exception& exc)
     {
+        smsc_log_error(logger, "%s", exc.what());
         try { if (connection) connection->rollback(); }
         catch (...) { smsc_log_error(logger, ROLLBACK_TRANSACT_ERROR_MESSAGE); }
         if (connection) ds->freeConnection(connection);

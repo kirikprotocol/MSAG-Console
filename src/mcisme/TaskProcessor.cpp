@@ -73,6 +73,9 @@ int EventRunner::Execute()
         __trace2__("Invalid method '%d' invoked by event.", method);
         return -1;
     }
+
+    // TODO: correct threads shutdown in EventManager !!!
+
     return 0;
 }
 
@@ -280,6 +283,9 @@ Task* TaskProcessor::getTask(const char* abonent, bool& newone)
     lockedTasks.Insert(abonent, task);
     tasks.Insert(abonent, task);
     newone = true;
+
+    smsc_log_debug(logger, "Task for abonent %s created. Events=%d", abonent, task->eventsCount());
+
     return task;
 }
 bool TaskProcessor::freeTask(const char* abonent)
@@ -295,6 +301,9 @@ bool TaskProcessor::delTask(const char* abonent)
     MutexGuard guard(tasksMonitor);
     Task** taskPtr = tasks.GetPtr(abonent);
     if (!taskPtr) return false;
+    
+    smsc_log_debug(logger, "Task for abonent %s killed. Events=%d", abonent, (*taskPtr)->eventsCount());
+
     delete *taskPtr;
     tasks.Delete(abonent);
     lockedTasks.Delete(abonent);
@@ -402,7 +411,7 @@ void TaskProcessor::processMessage(const Message& message)
         return;
     }
     
-    smsc_log_debug(logger, "Sent message #%lld to '%s'.", message.id, message.abonent.c_str());
+    //smsc_log_debug(logger, "Sent message #%lld to '%s'.", message.id, message.abonent.c_str());
 }
 
 /* ------------------------ Main processing ------------------------ */ 
@@ -424,10 +433,15 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
     SmscIdAccessor smscIdAccessor(this, smsc_id); // lock smsc_id if exists
     if (smsc_id) smsc_log_debug(logger, "Responce lock smscId=%s", smsc_id);
     
+    ReceiptData receipt; // check waiting receipt existance
+    bool bWasReceipted = responcesTracker.popReceiptData(smsc_id, receipt);
+
     bool  needKillTask = false;
     bool  isMessageToSend = false;
     Message messageToSend;
     {
+        // TODO: Events can be added while task in not locked by followed code !!!
+
         TaskAccessor taskAccessor(this);
         Task* task = taskAccessor.getTask(message.abonent.c_str());
         if (!task) { // Task MUST be in map for valid responce !!!
@@ -455,16 +469,24 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                 if (replace && replace_failed)
                 {
                     smsc_log_debug(logger, "Message #%lld (smsc_id=%s) replace error for abonent: %s",
-                                   message.id, smsc_id ? smsc_id:"-",message.abonent.c_str());
-                    
+                                   message.id, smsc_id ? smsc_id:"-", message.abonent.c_str());
                     if (smsc_id)
                     {
-                        // set new current message but keep old task events
-                        task->waitReceipt(0, smsc_id);
-                        // try send more events via submit next message 
-                        if (task->formatMessage(messageToSend)) { 
-                            isMessageToSend = true; 
-                            messageToSend.replace = false;
+                        if (message.isFull() || bWasReceipted) {
+                            // set new current message & skip task events for old message
+                            task->waitReceipt(message.eventCount, smsc_id);
+                        }
+                        else {
+                            // set new current message but keep old task events
+                            task->waitReceipt(0, smsc_id);
+                        }
+
+                        // try send more events via submit next message (do not replace)
+                        if (task->formatMessage(messageToSend))
+                        { 
+                            smsc_log_debug(logger, "Task has %d events more to send for abonent: %s (replace error)",
+                                           messageToSend.eventCount, messageToSend.abonent.c_str());
+                            isMessageToSend = true; messageToSend.replace = false;
                         } 
                         // if no more events to send => kill task
                         else needKillTask = true;
@@ -484,19 +506,23 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
         {
             if (message.eventCount < task->eventsCount()) // some events were added to task
             {
-                if (message.isFull()) // sent message is full
+                if (message.isFull() || bWasReceipted) // sent message is full or was receipted
                 {
                     // set new current message & skip task events for old message
                     task->waitReceipt(message.eventCount, smsc_id);
+                    
                     // try send more events via submit next message 
-                    if (task->formatMessage(messageToSend)) { 
-                        isMessageToSend = true; 
-                        messageToSend.replace = false;
+                    if (task->formatMessage(messageToSend))
+                    { 
+                        smsc_log_debug(logger, "Task has %d events more to send for abonent: %s (%s)",
+                                       messageToSend.eventCount, messageToSend.abonent.c_str(), 
+                                       (bWasReceipted) ? "on receipt":"msg full");
+                        isMessageToSend = true; messageToSend.replace = false;
                     } 
                     // if no more events to send => kill task
                     else needKillTask = true;
                 }
-                else // sent message could be extended
+                else // sent message could be extended and wasn't receipted yet
                 {
                     if (task->formatMessage(messageToSend))
                     {
@@ -514,16 +540,20 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
             }
             else // no events were added to task => set current message wait receipt & kill task
             {
-                task->waitReceipt(smsc_id);
+                if (message.isFull() || bWasReceipted) 
+                     task->waitReceipt(message.eventCount, smsc_id); // roll current
+                else task->waitReceipt(smsc_id);                     // do not roll current
                 needKillTask = true;
             }
-            
-            ReceiptData receipt; // check for processed receipt
-            if (responcesTracker.popReceiptData(smsc_id, receipt))
-                processReceipt(task, receipt.delivered, receipt.retry, smsc_id);
-
-            if (needKillTask) taskAccessor.delTask(message.abonent.c_str());
         }
+
+        if (bWasReceipted) //  process receipt waiting for responce on this smsc_id
+        {
+            smsc_log_debug(logger, "Processing waiting receipt for smscId=%s.", smsc_id);
+            processReceipt(task, receipt.delivered, receipt.retry, smsc_id);
+        }
+        
+        if (needKillTask) taskAccessor.delTask(message.abonent.c_str());
     }
     
     if (isMessageToSend) putToOutQueue(messageToSend);
@@ -568,16 +598,16 @@ void TaskProcessor::processReceipt(Task* task, bool delivered, bool retry,
 {
     std::string        abonent = task->getAbonent();
     Array<std::string> callers = task->finalizeMessage(smsc_id, delivered, retry, msg_id);
-    if (delivered)
+    
+    for (int i=0; i<callers.Count(); i++)
     {
-        for (int i=0; i<callers.Count(); i++)
-        {
-            smsc_log_debug(logger, "Event(s) delivered to %s from %s",
-                           abonent.c_str(), callers[i].c_str());
-            
-            // TODO: send notification(s) to caller(s)
-        }
+        smsc_log_debug(logger, "Event(s) %s to %s from %s",
+                       (delivered ? "delivered":(retry ? "expired":"failed")),
+                       abonent.c_str(), callers[i].c_str());
+
+        // TODO: send notification(s) to caller(s)
     }
+
     // do not kill task here !!!
 }
 
@@ -622,61 +652,57 @@ void ResponcesTracker::Stop()
 }
 int ResponcesTracker::Execute()
 {
-    time_t lastCurrent = -1;
-
+    static const int TRACKER_SERVICE_SLEEP = 1000;
     ResponceTimer respTimer; ReceiptTimer  rcptTimer;
+    
     while (!bNeedExit)
     {
         MutexGuard guard(responcesMonitor);
-        
-        time_t nextTime = -1;
         time_t currentTime = time(NULL);
+        time_t nextTime = -1;
         
-        if (currentTime > lastCurrent) {
-            printf("In/Out queues: %04ld/%04ld\r", processor->getInQueueSize(), processor->getOutQueueSize());
-            fflush(stdout);
-            lastCurrent = currentTime;
-        }
-        
-        if (responceWaitQueue.Count() > 0)
+        while (!bNeedExit && responceWaitQueue.Count() > 0)
         {
-            respTimer = responceWaitQueue[0];
-            if (respTimer.timer <= currentTime)
+            respTimer = responceWaitQueue.Front();
+            if (respTimer.timer > currentTime) {
+                nextTime = respTimer.timer;
+                break;
+            }
+            else
             {
-                responceWaitQueue.Shift(respTimer);
+                responceWaitQueue.Pop(respTimer);
                 Message* message = messages.GetPtr(respTimer.seqNum);
                 if (message) {
                     smsc_log_warn(logger, "Responce for message #%lld is timed out", message->id);
                     processor->putToOutQueue(*message, true);
                     messages.Delete(respTimer.seqNum);
                 }
-                else { responcesMonitor.wait(100); continue; }
+                else responcesMonitor.wait(TRACKER_SERVICE_SLEEP/100); 
             }
-            else nextTime = respTimer.timer;
         }
 
-        if (receiptWaitQueue.Count() > 0)
+        while (!bNeedExit && receiptWaitQueue.Count() > 0)
         {
-            rcptTimer = receiptWaitQueue[0];
-            if (rcptTimer.timer <= currentTime)
+            rcptTimer = receiptWaitQueue.Front();
+            if (rcptTimer.timer > currentTime) {
+                nextTime = (rcptTimer.timer < nextTime) ? rcptTimer.timer : nextTime;
+                break;
+            }
+            else
             {
-                receiptWaitQueue.Shift(rcptTimer);
+                receiptWaitQueue.Pop(rcptTimer);
                 const char* smsc_id = rcptTimer.smscId.c_str();
                 ReceiptData* receipt = receipts.GetPtr(smsc_id);
                 if (receipt) {
                     smsc_log_warn(logger, "Responce for receipted smsc_id=%s is timed out", smsc_id);
                     receipts.Delete(smsc_id);
                 } 
-                else if (nextTime < 0) { responcesMonitor.wait(100); continue; }
-            }
-            else if (nextTime<0 || nextTime>rcptTimer.timer) {
-                nextTime = rcptTimer.timer;
+                else responcesMonitor.wait(TRACKER_SERVICE_SLEEP/100);
             }
         }
         
-        if (nextTime < 0) responcesMonitor.wait();
-        else if (nextTime <= currentTime) responcesMonitor.wait(100);
-        else responcesMonitor.wait((currentTime-nextTime)*1000);
+        if (!bNeedExit) responcesMonitor.wait((nextTime > 0 && nextTime < currentTime) ? 
+                                              (currentTime-nextTime)*1000:TRACKER_SERVICE_SLEEP);
     }
     exitedEvent.Signal();
     return 0;
@@ -686,8 +712,7 @@ void ResponcesTracker::cleanup()
 {
     MutexGuard guard(responcesMonitor);
     messages.Empty(); receipts.Empty();
-    responceWaitQueue.Clean(); receiptWaitQueue.Clean();
-    responcesMonitor.notifyAll();
+    //responceWaitQueue.Clean(); receiptWaitQueue.Clean();
 }
 bool ResponcesTracker::putResponceData(int seqNum, const Message& message)
 {
@@ -696,7 +721,6 @@ bool ResponcesTracker::putResponceData(int seqNum, const Message& message)
     if (messagePtr) return false;
     messages.Insert(seqNum, message);
     responceWaitQueue.Push(ResponceTimer(time(NULL)+responceWaitTime, seqNum));
-    responcesMonitor.notifyAll();
     return true;
 }
 bool ResponcesTracker::popResponceData(int seqNum, Message& message)
@@ -706,7 +730,6 @@ bool ResponcesTracker::popResponceData(int seqNum, Message& message)
     if (!messagePtr) return false;
     message = *messagePtr;
     messages.Delete(seqNum);
-    responcesMonitor.notifyAll();
     return true;
 }
 
@@ -717,7 +740,6 @@ bool ResponcesTracker::putReceiptData(const char* smsc_id, const ReceiptData& re
     if (receiptPtr) return false;
     receipts.Insert(smsc_id, receipt);
     receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, smsc_id));
-    responcesMonitor.notifyAll();
     return true;
 }
 bool ResponcesTracker::popReceiptData(const char* smsc_id, ReceiptData& receipt)            
@@ -727,7 +749,6 @@ bool ResponcesTracker::popReceiptData(const char* smsc_id, ReceiptData& receipt)
     if (!receiptPtr) return false;
     receipt = *receiptPtr;
     receipts.Delete(smsc_id);
-    responcesMonitor.notifyAll();
     return true;
 }
 
