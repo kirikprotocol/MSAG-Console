@@ -1641,6 +1641,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     //  //dialog->sms->setStrProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,message_reference.str());
     //}
     //SendSubmitCommand (dialog.get());
+    dialog->invokeId = invokeId;
   }MAP_CATCH(__dialogid_map,0);
   return ET96MAP_E_OK;
 }
