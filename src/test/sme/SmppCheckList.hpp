@@ -138,6 +138,8 @@ void replaceSmTc()
 
 void updateProfileTc()
 {
+	__reg_tc__("updateProfile",
+		"Отправка сообщений менеджеру профилей");
 	__reg_tc__("updateProfile.cmdTextDefault",
 		"Текст команды в дефолтной кодировке SC");
 	__reg_tc__("updateProfile.cmdTextUcs2",
@@ -309,14 +311,6 @@ void processSmeAckTc()
 		"Общая проверка правильности полей");
 	__reg_tc__("processDeliverySm.smeAck.scheduleChecks",
 		"Корректная работа механизма повторной доставки (правильное время, нет пропусков между повторными доставками, отсутствие дублей)");
-	__reg_tc__("processDeliverySm.smeAck.profiler",
-		"Сообщения от менеджера профилей");
-	__reg_tc__("processDeliverySm.smeAck.profiler.reportOptions",
-		"Подтверждения об изменении настроек получения уведомлений о доставке");
-	__reg_tc__("processDeliverySm.smeAck.profiler.codePage",
-		"Подтверждения об изменении настроек режима приема сообщений на русском языке");
-	__reg_tc__("processDeliverySm.smeAck.profiler.incorrectCmdText",
-		"Уведомление о неправильном тексте команды");
 }
 
 void processIntermediateNotificationTc()
@@ -337,6 +331,18 @@ void processIntermediateNotificationTc()
 	*/
 	__reg_tc__("processDeliverySm.intermediateNotification.checkTime",
 		"Правильное время доставки");
+}
+
+void processUpdateProfileTc()
+{
+	__reg_tc__("processUpdateProfile",
+		"Получение сообщений от менеджера профилей");
+	__reg_tc__("processUpdateProfile.reportOptions",
+		"Подтверждения об изменении настроек получения уведомлений о доставке");
+	__reg_tc__("processUpdateProfile.codePage",
+		"Подтверждения об изменении настроек режима приема сообщений на русском языке");
+	__reg_tc__("processUpdateProfile.incorrectCmdText",
+		"Уведомление о неправильном тексте команды");
 }
 
 void checkMissingPduTc()
@@ -394,7 +400,6 @@ public:
 		unbindTc();
 		submitSmTc();
 		replaceSmTc();
-		updateProfileTc();
 		sendDeliverySmRespTc();
 		//receiver
 		processRespTc();
@@ -403,6 +408,9 @@ public:
 		processDeliveryReceiptTc();
 		processSmeAckTc();
 		processIntermediateNotificationTc();
+		//profiler
+		updateProfileTc();
+		processUpdateProfileTc();
 		//other
 		checkMissingPduTc();
 		notImplementedTc();
