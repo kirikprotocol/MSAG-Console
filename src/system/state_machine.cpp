@@ -583,10 +583,17 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     OutputFormatter *f=ResourceManager::getInstance()->getFormatter(p.locale,tmplname);
     if(!f)
     {
+      __warning2__("template %s not found for locale %s",tmplname.c_str(),p.locale.c_str());
       newtext.assign(body,tmplstart,tmpllen);
     }else
     {
-      f->format(newtext,ga,ce);
+      try{
+        f->format(newtext,ga,ce);
+      }catch(exception& e)
+      {
+        __warning2__("failed to format template %s for locale %s: %s",tmplname.c_str(),p.locale.c_str(),e.what());
+        newtext.assign(body,tmplstart,tmpllen);
+      }
     }
     udhi=false;
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)&(~0x40));
@@ -700,6 +707,8 @@ StateType StateMachine::submit(Tuple& t)
   __require__(src_proxy!=NULL);
 
   SMS* sms = t.command->get_sms();
+
+  sms->setSourceSmeId(t.command->get_sourceId());
 
   if(!sms->Invalidate(__FILE__,__LINE__))
   {
@@ -914,7 +923,6 @@ StateType StateMachine::submit(Tuple& t)
   int prio=sms->getPriority()+ri.priority;
   if(prio>SmeProxyPriorityMax)prio=SmeProxyPriorityMax;
   sms->setPriority(prio);
-  sms->setSourceSmeId(t.command->get_sourceId());
 
   //smsc->routeSms(sms,dest_proxy_index,dest_proxy);
   if ( !has_route )
