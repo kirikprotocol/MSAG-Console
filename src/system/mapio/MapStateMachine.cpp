@@ -176,7 +176,7 @@ void ResponseMO(MapDialog* dialog,unsigned status)
     SSN,
     dialog->dialogid_map,
     dialog->invokeId,
-    (cmd->get_resp()->get_status()!=SmscCommand::Status::OK)?&err:0);
+    (status!=SmscCommand::Status::OK)?&err:0);
   if ( result != ET96MAP_E_OK ) {
     __trace2__("MAP::MapDialog::ProcessCmd: Et96MapV2ForwardSmMOResp return error 0x%hx",result);
   }else{
@@ -184,7 +184,7 @@ void ResponseMO(MapDialog* dialog,unsigned status)
   }
 }
 
-static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud)
+static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_SM_RP_OA_T *srcAddr)
 {
   __trace2__("MAP::%s",__PRETTY_FUNCTION__);  
   auto_ptr<SMS> _sms ( new SMS() );
@@ -306,7 +306,7 @@ static void SendSubmitCommand(MapDialog* dialog)
     throw runtime_error("MAP::hereis no SMS for submiting");
   MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
   SmscCommand cmd = SmscCommand::makeSumbmitSm(
-    dialog->sms.get(),((uint32_t)dialog->dialogid_map)&0xffff);
+    *dialog->sms.get(),((uint32_t)dialog->dialogid_map)&0xffff);
   proxy->putIncomingCommand(cmd);
   //dialog->sms = 0;
 }
@@ -880,7 +880,7 @@ USHORT_T Et96MapV2ForwardSmMOInd (
         FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__PRETTY_FUNCTION__,dialog->state,dialogid_map,dialogid_smsc));
     }
     dialog->invokeId = invokeId;
-    AttachSmsToDialog(dialog,smRpUi_sp);
+    AttachSmsToDialog(dialog,smRpUi_sp,smRpOa_sp);
   }
   catch(exception& e)
   {
