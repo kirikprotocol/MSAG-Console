@@ -25,6 +25,7 @@ static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string&
 static void PauseOnImsiReq(MapDialog* map);
 static const string& SC_ADDRESS() { static string s("79029869999"); return s;}
 static bool NeedNotifyHLR(MapDialog* dialog);
+static void ResponseAlertSC(MapDialog* dialog);
 
 static void AbortMapDialog(unsigned dialogid,unsigned ssn)
 {
