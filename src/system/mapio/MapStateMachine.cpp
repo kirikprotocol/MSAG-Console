@@ -1380,7 +1380,7 @@ static void PauseOnImsiReq(MapDialog* map)
         auto_ptr<char> b(new char[sizeof(ET96MAP_ADDRESS_T)*3+1]);
         memset(b.get(),0,sizeof(ET96MAP_ADDRESS_T)*3+1);
         for ( int i=0,k=0; i < sizeof(ET96MAP_ADDRESS_T); ++i ) {
-          k += sprintf(b.get()+k,"%02x ",(unsigned)*(((unsigned char*)&map->m_msAddr)+i)));
+          k += sprintf(b.get()+k,"%02x ",((unsigned int)*(((unsigned char*)&map->m_msAddr)+i)))&0xff);
         }
         __trace2__("MAP::%s ARRDDRESS: %s",__FUNCTION__,b.get());
       }
