@@ -9,6 +9,7 @@ import ru.novosoft.smsc.util.config.Config;
 
 import java.util.*;
 
+
 /**
  * Created by igork
  * Date: Aug 26, 2003
@@ -131,6 +132,17 @@ class Reshedules
         logger.error("Misformatted reshedule table: param \"" + fullSheduleName + "\" is not string, skipped");
       }
     }
+
+    try {
+      currentConfig.setString(RESHEDULE_DEFAULT, config.getString(RESHEDULE_DEFAULT));
+    } catch (Config.ParamNotFoundException e) {
+      logger.error("Default reschedule not defined");
+      currentConfig.removeParam(RESHEDULE_DEFAULT);
+    } catch (Config.WrongParamTypeException e) {
+      logger.error("Default reschedule misformatted", e);
+      currentConfig.removeParam(RESHEDULE_DEFAULT);
+    }
+
     appContext.getSmsc().saveSmscConfig(config = currentConfig);
     appContext.getStatuses().setSmscChanged(true);
   }
