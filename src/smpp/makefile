@@ -4,7 +4,7 @@
 #
 #
 
-PACKAGE := core
+PACKAGE := smpp
 
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)
