@@ -18,14 +18,14 @@ DbSmeTestRecord* DbSmeInsertJobTestCases::createDefaultInput()
 	__decl_tc__;
 	DbSmeTestRecord* rec = new DbSmeTestRecord();
 	rec->setJob("InsertJob");
-	rec->defInput = new DbSmeTestRecord();
-	rec->defInput->setInt16(16);
-	rec->defInput->setInt32(32);
-	rec->defInput->setFloat(16.16);
-	rec->defInput->setDouble(32.32);
-	rec->defInput->setString("xxx");
-	rec->defInput->setDateType(DT_TODAY);
-	rec->defInput->setDate(getDate(DT_TODAY));
+	rec->setDefInput(new DbSmeTestRecord());
+	rec->getDefInput()->setInt16(16);
+	rec->getDefInput()->setInt32(32);
+	rec->getDefInput()->setFloat(16.16);
+	rec->getDefInput()->setDouble(32.32);
+	rec->getDefInput()->setString("xxx");
+	rec->getDefInput()->setDateType(DT_TODAY);
+	rec->getDefInput()->setDate(getDate(DT_TODAY));
 	__tc__("submitDbSmeCmd.correct.job.insert"); __tc_ok__;
 	return rec;
 }
@@ -127,14 +127,14 @@ DbSmeTestRecord* DbSmeUpdateJobTestCases::createJobInput(bool params)
 {
 	__decl_tc__;
 	DbSmeTestRecord* rec = new DbSmeTestRecord();
-	rec->defInput = new DbSmeTestRecord();
-	rec->defInput->setInt16(17);
-	rec->defInput->setInt32(33);
-	rec->defInput->setFloat(17.17);
-	rec->defInput->setDouble(33.33);
-	rec->defInput->setString("zzz");
-	rec->defInput->setDateType(DT_TODAY);
-	rec->defInput->setDate(getDate(DT_TODAY));
+	rec->setDefInput(new DbSmeTestRecord());
+	rec->getDefInput()->setInt16(17);
+	rec->getDefInput()->setInt32(33);
+	rec->getDefInput()->setFloat(17.17);
+	rec->getDefInput()->setDouble(33.33);
+	rec->getDefInput()->setString("zzz");
+	rec->getDefInput()->setDateType(DT_TODAY);
+	rec->getDefInput()->setDate(getDate(DT_TODAY));
 	__tc__("submitDbSmeCmd.correct.job.update"); __tc_ok__;
 	rec->setJob("UpdateJob1");
 	if (params)
@@ -168,6 +168,9 @@ DbSmeTestRecord* DbSmeUpdateJobTestCases::createDuplicateKeyJobInput()
 	return rec;
 }
 
+#define __update__(field) \
+	if (rec->check##field()) { r->set##field(rec->get##field()); }
+
 const string DbSmeUpdateJobTestCases::processJobFirstOutput(const string& text,
 	DbSmeTestRecord* rec)
 {
@@ -192,11 +195,17 @@ const string DbSmeUpdateJobTestCases::processJobFirstOutput(const string& text,
 		while (DbSmeTestRecord* r = it->next())
 		{
 			__require__(r->checkId());
-			int id = r->getId();
+
 			rowsAffected++;
 			//обновить запись
-			*r = *rec;
-			r->setId(id);
+			__update__(Int16);
+			__update__(Int32);
+			__update__(Float);
+			__update__(Double);
+			__update__(Date);
+			__update__(String);
+			__update__(QuotedString);
+			__update__(FromAddr);
 		}
 		delete it;
 		__tc__("processDbSmeRes.update.recordsAffected"); __tc_ok__;
@@ -221,7 +230,10 @@ const string DbSmeUpdateJobTestCases::processJobFirstOutput(const string& text,
 			while (DbSmeTestRecord* r = it->next())
 			{
 				//обновить id
-				dbSmeReg->updateRecord(rec->getId(), r);
+				if (rec->getId() != r->getId())
+				{
+					dbSmeReg->updateRecord(rec->getId(), r);
+				}
 			}
 			delete it;
 			__tc__("processDbSmeRes.update.recordsAffected"); __tc_ok__;
