@@ -3,5 +3,5 @@
  taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%><%@
  tag body-content="empty"%><%@
  attribute name="name" required="true" %><%@
- attribute name="value" required="false"%><input type="text" id="${fn:escapeXml(name)}" name="${fn:escapeXml(name)}" class=calendarField 
+ attribute name="value" required="false"%><input type="text" id="${fn:escapeXml(name)}" name="${fn:escapeXml(name)}" class=calendarField
   value="${!empty value ? value : fn:escapeXml(bean[name])}" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(${fn:escapeXml(name)}, false, true);">...</button>

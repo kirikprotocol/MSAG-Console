@@ -67,6 +67,7 @@
 </head>
 <body onload="${onLoad}">
 
+  <!--calendar-->
   <iframe id=calendarIFrame class=calendarHiddenLayer2 src="/images/blank.html"></iframe>
   <div id=calendarPanel class=calendarHiddenLayer
     oncontextmenu="return false;"
@@ -147,6 +148,7 @@
   </tr>
   </table>
   </div>
+  <!--end of calendar-->
 
   <%if (request.getUserPrincipal() != null) {%>
   <OBJECT id="tdcSmppgwStatusObject" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
