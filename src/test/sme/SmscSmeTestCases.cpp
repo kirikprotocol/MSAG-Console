@@ -42,7 +42,7 @@ void SmscSmeTestCases::submitSm(bool sync)
 	{
 		PduSubmitSm* pdu = new PduSubmitSm();
 		__cfg_addr__(smscAlias);
-		fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, smscAlias);
+		fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, smscAlias, rand0(5));
 		fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync, NULL, NULL, NULL, PDU_NULL_ERR);
 		__tc_ok__;
 	}

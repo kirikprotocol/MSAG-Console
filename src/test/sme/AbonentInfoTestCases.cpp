@@ -120,9 +120,9 @@ void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
 			default:
 				__unreachable__("Invalid address");
 		}
-
+		//отключить short_message & message_payload
 		fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, abonentInfoAlias,
-			OPT_ALL & ~OPT_MSG_PAYLOAD); //отключить messagePayload
+			false, OPT_ALL & ~OPT_MSG_PAYLOAD);
 		//установить немедленную доставку
 		pdu->get_message().set_esmClass(0x0); //иначе abonent info отлупит
 		pdu->get_message().set_scheduleDeliveryTime("");
@@ -230,6 +230,7 @@ void AbonentInfoTestCases::queryAbonentInfoIncorrect(bool sync,
 			case 2: //некорректная длина адреса
 				__tc__("queryAbonentInfo.incorrect.addrLength"); __tc_ok__;
 				input = "+123456789012345678901234567890";
+				correct = true; //берет первые 20 символов
 				break;
 			case 3: //некорректные симводы в адресе
 				__tc__("queryAbonentInfo.incorrect.invalidSymbols"); __tc_ok__;
