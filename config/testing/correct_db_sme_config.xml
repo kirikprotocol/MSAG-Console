@@ -392,6 +392,90 @@ $$long-double arg=7$$
 $$string arg=9$$
 </param>
 					</section>
+
+					<section name="ProcedureJob">
+						<param name="name" type="string">ProcedureJob</param>
+						<param name="type" type="string">pl/sql-job</param>
+						<param name="commit" type="bool">true</param>
+						<param name="function" type="bool">false</param>
+						<param name="sql" type="string">
+test_proc(:str, :dt, :flt, :dbl, :ldbl, :int8, :int16, :int32, :int64);
+						</param>
+						<param name="input" type="string">
+$$int8 arg="int8" default=8$$
+$$int16 arg="int16" default=16$$
+$$int32 arg="int32" default=32$$
+$$int64 arg="int64" default=64$$
+$$float arg="flt" default=16.16$$
+$$double arg="dbl" default=32.32$$
+$$long-double arg="ldbl" default=64.64$$
+$$string arg="str" default="xxx"$$
+$$date arg="dt" pattern="dd-MM-yyyy HH:mm:ss" default="today"$$
+						</param>
+<param name="output" type="string">
+job-name: $$string import="job-name"$$
+float: $$float arg="flt"$$
+double: $$double digits="3" exponent="yes" arg="dbl"$$
+long-double: $$long-double digits="2" exponent="no" arg="ldbl"$$
+date: $$date pattern="dd-MM-yyyy HH:mm:ss" arg="dt"$$
+string: $$string arg="str"$$
+int8: $$int8 arg="int8"$$
+int16: $$int16 arg="int16"$$
+int32: $$int32 arg="int32"$$
+int64: $$int64 arg="int64"$$
+</param>
+					</section>
+
+					<section name="FunctionJob">
+						<param name="name" type="string">FunctionJob</param>
+						<param name="type" type="string">pl/sql-job</param>
+						<param name="commit" type="bool">false</param>
+						<param name="function" type="bool">true</param>
+						<param name="sql" type="string">
+test_func(:dt, :str, :uint8, :uint16, :uint32, :uint64, :flt, :dbl, :ldbl);
+						</param>
+						<param name="input" type="string">
+$$uint8 arg="uint8" default=8$$
+$$uint16 arg="uint16" default=16$$
+$$uint32 arg="uint32" default=32$$
+$$uint64 arg="uint64" default=64$$
+$$float arg="flt" default=16.16$$
+$$double arg="dbl" default=32.32$$
+$$long-double arg="ldbl" default=64.64$$
+$$string arg="str" default="xxx"$$
+$$date arg="dt" pattern="dd-MM-yyyy HH:mm:ss" default="today"$$
+						</param>
+<param name="output" type="string">
+job-name: $$string import="job-name"$$
+return: $$int32 arg="return"$$
+date: $$date pattern="dd-MM-yyyy HH:mm:ss" arg="dt"$$
+string: $$string arg="str"$$
+uint8: $$uint8 arg="uint8"$$
+uint16: $$uint16 arg="uint16"$$
+uint32: $$uint32 arg="uint32"$$
+uint64: $$uint64 arg="uint64"$$
+float: $$float arg="flt"$$
+double: $$double digits="3" exponent="yes" arg="dbl"$$
+long-double: $$long-double digits="2" exponent="no" arg="ldbl"$$
+</param>
+					</section>
+
+					<section name="ExceptionJob">
+						<param name="name" type="string">ExceptionJob</param>
+						<param name="type" type="string">pl/sql-job</param>
+						<param name="commit" type="bool">true</param>
+						<param name="function" type="bool">false</param>
+						<param name="sql" type="string">
+test_exception(:param);
+						</param>
+						<param name="input" type="string">
+$$uint32 arg="param" default=1$$
+						</param>
+<param name="output" type="string">
+job-name: $$string import="job-name"$$
+</param>
+					</section>
+
 				</section>
 			</section>
 		</section>
