@@ -33,7 +33,7 @@
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="/WEB-INF/inc/calendar.jsp"%>
 
-<div class=secQuestion>Statistics parameters</div>
+<div class=secQuestion>Query statistics</div>
 <table class=secRep width="100%">
 <tr class=row0>
 	<th class=label>From Date:</th>
@@ -63,7 +63,7 @@ if (stat != null) {
     <th width="25%"><div align=right>Rescheduled</div></th>
 </tr>
 <tr class=row1>
-    <th class=label>Total:</th>
+    <th class=label>Total SMS processed:</th>
     <td align=right><%= total.accepted%></td>
     <td align=right><%= total.finalized%></td>
     <td align=right><%= total.rescheduled%></td>
@@ -96,7 +96,7 @@ while (i.hasNext()) {
     if (i.hasNext()) {
 %>
 <tr>
-    <td colspan=4><div class=secView>SME activity statistics</div></td>
+    <td colspan=4><div class=secView>SME activity</div></td>
 </tr>
 <tr class=row0>
     <th width="25%"><div align=right>SME Id</div></th>
@@ -120,7 +120,7 @@ while (i.hasNext()) {
     if (i.hasNext()) {
 %>
 <tr>
-    <td colspan=4> <div class=secView>Route traffic statistics</div></td>
+    <td colspan=4> <div class=secView>Traffic by routes</div></td>
 </tr>
 <tr class=row0>
     <th width="25%"><div align=right>Route Id</div></th>
@@ -144,7 +144,7 @@ while (i.hasNext()) {
     if (i.hasNext()) {
 %>
 <tr>
-    <td colspan=4><div class=secView>SMS Status statistics</div></td>
+    <td colspan=4><div class=secView>SMS delivery state</div></td>
 </tr>
 <tr class=row0>
     <th width="25%"><div align=right>Error Code</div></th>
