@@ -38,6 +38,7 @@ public abstract class Session extends Thread
   private OutputStream os = null;
 
   private boolean needRemove = true;
+  private boolean closed     = false;
 
   public Session(Console owner, Socket socket) {
     this.owner = owner;  this.socket = socket; resetTimer();
@@ -235,23 +236,27 @@ public abstract class Session extends Thread
       }
 
       synchronized(closeSemaphore) {
-          if (needRemove) owner.removeSession(this);
-          closeSemaphore.notifyAll();
+          closed = true; closeSemaphore.notifyAll();
       }
+      if (needRemove) owner.removeSession(this);
   }
+
 
   public void close(boolean remove)
   {
       synchronized(closeSemaphore) {
-          needRemove = remove; isStopping = true;
-          try {
-              if (is != null) is.close();
-              if (os != null) os.close();
-              if (socket != null) socket.close();
-              closeSemaphore.wait();
+          if (!closed)
+          {
+            needRemove = remove; isStopping = true;
+            try {
+                if (is != null) is.close();
+                if (os != null) os.close();
+                if (socket != null) socket.close();
+                closeSemaphore.wait();
+            }
+            catch (InterruptedException e) {}
+            catch (Exception e) {}
           }
-          catch (InterruptedException e) {}
-          catch (Exception e) {}
       }
   }
 
