@@ -14,47 +14,16 @@ class SnmpAgent;
 
 class SnmpAppender : public smsc::logger::Appender {
 public:
-	SnmpAppender(const char * const _name, SnmpAgent *agent)
-		: Appender(_name)
+	SnmpAppender(const char * const _name, SnmpAgent *_agent)
+		: Appender(_name), agent(_agent)
 	{}
 	virtual ~SnmpAppender() {};
-		
-private:
-	SnmpAgent *agent;
-};
-#ifdef LOGGER_LIB_LOG4CPP
-/*
-using log4cpp::LayoutAppender;
-using log4cpp::LoggingEvent;
-class SnmpAppender : public LayoutAppender {
-public:
-	SnmpAppender(const std::string& name, SnmpAgent *agent);
-	virtual ~SnmpAppender();
-	virtual void close();
+  
+ 	virtual void log(const char logLevelName, const char * const category, const char * const message) throw();
 
-protected:
-	virtual void _append(const LoggingEvent& event);
 private:
 	SnmpAgent *agent;
 };
-*/
-#else
-/*
-using log4cplus::Appender;
-using log4cplus::spi::InternalLoggingEvent;
-class SnmpAppender : public Appender {
-public:
-	SnmpAppender(const std::string& name, SnmpAgent *agent);
-	virtual ~SnmpAppender();
-	virtual void close();
-
-protected:
-	virtual void append(const InternalLoggingEvent& event);
-private:
-	SnmpAgent *agent;
-};
-*/
-#endif
 
 }
 }

@@ -62,8 +62,7 @@
       {
         log = smsc::logger::Logger::getInstance("sms.snmp");
         smsc::logger::Logger *tlog=smsc::logger::Logger::getInstance("sms.snmp.alarm");//TODO implement SNMP Appender
-    // TODO implement addAppender
-        //tlog.addAppender(new SnmpAppender("-",this));
+        tlog->setAppender(new SnmpAppender("-",this));
         agentlog = (void*)log;
         agent = (void*)this;
         smsc = _smsc;
@@ -111,10 +110,10 @@
         smsc_log_debug(log, "smsc status changed to %d, trap sent, saved = %d(%d)",newstatus,*statusSave,sizeof(status));
       }
 
-      void SnmpAgent::trap(std::string &message)
+      void SnmpAgent::trap(const char * const message)
       {
         struct timeval t;t.tv_sec=0,t.tv_usec=10000;
-        snmp_alarm_register_hr(t, 0, sendAlarmNotification, strdup(message.c_str()));
+        snmp_alarm_register_hr(t, 0, sendAlarmNotification, strdup(message));
       }
 
     }//snmp name space

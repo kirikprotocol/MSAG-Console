@@ -17,7 +17,7 @@ public:
   virtual const char *taskName();
   virtual int Execute();
   void statusChange(smscStatus status);
-  void trap(std::string &message);
+  void trap(const char * const message);
   void init();
 protected:
   smsc::logger::Logger* log;

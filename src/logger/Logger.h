@@ -82,6 +82,11 @@ public:
 	inline const char * const getName() const throw() {
 		return name;
 	}
+  
+  inline void setAppender(Appender * newAppender) {
+    MutexGuard guard(mutex);
+    appender = newAppender;
+  }
 
 	inline bool isLogLevelEnabled(const LogLevel _logLevel) throw() {
 		MutexGuard guard(mutex);
@@ -211,7 +216,7 @@ private:
 	Logger(const char * const logCategoryName, const LogLevel logLevel, Appender * const appender);
 	LogLevel logLevel;
 	const char* const name;
-	Appender * const appender;
+	Appender * appender;
 	Mutex mutex;
 
 	// disable copying
