@@ -76,6 +76,10 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
   
   Parameters acl_id_params;
   acl_id_params["id"] = Parameter("id", LongType);
+  Parameters acl_create_params;
+  acl_create_params["name"] = Parameter("name", StringType);
+  acl_create_params["description"] = Parameter("description", StringType);
+  acl_create_params["addresses"] = Parameter("addresses", StringListType);
   Parameters acl_full_params;
   acl_full_params["id"] = Parameter("id", LongType);
   acl_full_params["name"] = Parameter("name", StringType);
@@ -134,7 +138,7 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
   Method acl_list_names       ((unsigned)aclListNamesMethod,       "acl_list_names",        empty_params,                StringListType);
   Method acl_get              ((unsigned)aclGetMethod,             "acl_get",               acl_id_params,               StringListType);
   Method acl_remove           ((unsigned)aclRemoveMethod,          "acl_remove",            acl_id_params,               BooleanType);
-  Method acl_create           ((unsigned)aclCreateMethod,          "acl_create",            acl_full_params,             BooleanType);
+  Method acl_create           ((unsigned)aclCreateMethod,          "acl_create",            acl_create_params,           BooleanType);
   Method acl_update_info      ((unsigned)aclUpdateInfoMethod,      "acl_update_info",       acl_info_params,             BooleanType);
   Method acl_lookup_addresses ((unsigned)aclLookupAddressesMethod, "acl_lookup_addresses",  acl_lookup_addresses_params, StringListType);
   Method acl_remove_addresses ((unsigned)aclRemoveAddressesMethod, "acl_remove_addresses",  acl_addresses_params,        BooleanType);
@@ -1409,7 +1413,6 @@ Variant SmscComponent::aclRemove(const Arguments & args) throw (AdminException)
 Variant SmscComponent::aclCreate(const Arguments & args) throw (AdminException)
 {
   try {
-    AclIdent aclId = args.Get("id").getLongValue();
     const char * const name = args.Get("name").getStringValue();
     const char * const description = args.Get("description").getStringValue();
     
@@ -1426,7 +1429,7 @@ Variant SmscComponent::aclCreate(const Arguments & args) throw (AdminException)
     }
     
     AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
-    aclmgr->create(aclId, name, description, phones);    
+    aclmgr->create2(name, description, phones);    
     
     Variant result("created");
     return result;
