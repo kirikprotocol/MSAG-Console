@@ -225,10 +225,10 @@ function setSort(sorting)
   }%>
 </div><%
   page_menu_begin(out);
-  page_menu_button(out, "mbEnableTask",  "Enable",  "");
-  page_menu_button(out, "mbDisableTask", "Disable", "");
-  page_menu_button(out, "mbStartTask",   "Start", "Start messages generation");
-  page_menu_button(out, "mbStopTask",    "Stop",  "Stop messages generation");
+  page_menu_button(out, "mbEnableTask",  "Enable",  "Enable selected tasks");
+  page_menu_button(out, "mbDisableTask", "Disable", "Disable selected tasks");
+  page_menu_button(out, "mbStartTask",   "Start generation", "Start messages generation for selected tasks");
+  page_menu_button(out, "mbStopTask",    "Stop generation",  "Stop messages generation for selected tasks");
   page_menu_space(out);
   page_menu_end(out);
 %>
