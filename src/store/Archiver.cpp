@@ -314,6 +314,7 @@ int Archiver::Execute()
     } 
     while (!exit.isSignaled());
     
+    exit.Wait();
     exited.Signal();
     __trace__("Archiver exited !");
     return 0;
