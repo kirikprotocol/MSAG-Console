@@ -1002,6 +1002,7 @@ int RegExp::Compile(const RECHAR* src,int options)
   }else
   {
     errorcode=errNone;
+    minlength=0;
     if(options&OP_OPTIMIZE)Optimize();
   }
   return result;
