@@ -831,58 +831,73 @@ public CommandParser(ParserSharedInputState state) {
 		cmd = new ProfileAlterCommand();
 		
 		
-		{
-		try { // for error handling
-			addr = LT(1);
-			match(STR);
-		}
-		catch (RecognitionException ex) {
-			
-				    throw new RecognitionException("Profile address expected");
+		try {      // for error handling
+			{
+			try { // for error handling
+				addr = LT(1);
+				match(STR);
+			}
+			catch (RecognitionException ex) {
 				
-		}
-		cmd.setAddress(addr.getText());
-		}
-		{
-		match(OPT_REPORT);
-		{
-		switch ( LA(1)) {
-		case VAL_FULL:
-		{
-			match(VAL_FULL);
-			cmd.setFullReport();
-			break;
-		}
-		case VAL_NONE:
-		{
-			match(VAL_NONE);
-			cmd.setNoneReport();
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		}
-		{
-		switch ( LA(1)) {
-		case OPT_ENCODE:
-		{
-			match(OPT_ENCODE);
+					    throw new RecognitionException("Profile address expected");
+					
+			}
+			cmd.setAddress(addr.getText());
+			}
 			{
 			switch ( LA(1)) {
-			case VAL_DEF:
+			case OPT_REPORT:
 			{
-				match(VAL_DEF);
-				cmd.setGsm7Encoding();
+				{
+				match(OPT_REPORT);
+				{
+				switch ( LA(1)) {
+				case VAL_FULL:
+				{
+					match(VAL_FULL);
+					cmd.setFullReport();
+					break;
+				}
+				case VAL_NONE:
+				{
+					match(VAL_NONE);
+					cmd.setNoneReport();
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				}
 				break;
 			}
-			case VAL_UCS2:
+			case OPT_ENCODE:
 			{
-				match(VAL_UCS2);
-				cmd.setUcs2Encoding();
+				{
+				match(OPT_ENCODE);
+				{
+				switch ( LA(1)) {
+				case VAL_DEF:
+				{
+					match(VAL_DEF);
+					cmd.setGsm7Encoding();
+					break;
+				}
+				case VAL_UCS2:
+				{
+					match(VAL_UCS2);
+					cmd.setUcs2Encoding();
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				}
 				break;
 			}
 			default:
@@ -891,17 +906,11 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			}
 			}
-			break;
 		}
-		case EOF:
-		{
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Syntax: alter profile <profile_address> (report (full|none) | encoding (ucs2|default))");
+				
 		}
 		return cmd;
 	}

@@ -398,14 +398,18 @@ altprofile returns [ProfileAlterCommand cmd] {
     cmd = new ProfileAlterCommand();
 }
 	:	(addr:STR  { cmd.setAddress(addr.getText()); })
-		(OPT_REPORT (VAL_FULL { cmd.setFullReport(); }
-			   | VAL_NONE { cmd.setNoneReport(); } ))
-		(OPT_ENCODE (VAL_DEF  { cmd.setGsm7Encoding();  }
-			   | VAL_UCS2 { cmd.setUcs2Encoding();  } ))?
+		((OPT_REPORT (VAL_FULL { cmd.setFullReport(); }
+			     |VAL_NONE { cmd.setNoneReport(); } ))
+		|(OPT_ENCODE (VAL_DEF  { cmd.setGsm7Encoding();  }
+			     |VAL_UCS2 { cmd.setUcs2Encoding();  } )))
 	;
 	exception[addr]
 	catch [RecognitionException ex] {
 	    throw new RecognitionException("Profile address expected");
+	}
+	exception
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Syntax: alter profile <profile_address> (report (full|none) | encoding (ucs2|default))");
 	}
 delprofile returns [ProfileDeleteCommand cmd] {
     cmd = new ProfileDeleteCommand();
