@@ -165,6 +165,9 @@ void TestSme::process(const TCResult* res)
 	delete res;
 }
 
+//TestSmeTaskManager
+	TestSmeTaskManager() {}
+	virtual bool isStopped() const;
 //SmppTest
 void SmppTest::process(const Address& origAddr, const TCResult* res)
 {
