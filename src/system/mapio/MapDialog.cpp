@@ -117,7 +117,7 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
   __trace2__("MAP::DIALOG::ForwardReaq: MSA tonpi.va(8):0x%x, ton(3):0x%x, npi(4):0x%x, len(8):%d",
              msa->tonpi,msa->st.ton,msa->st.npi,msa->len);
   //__trace2__("MAP::DIALOG::ForwardReaq: user_data_len = user_data_len");
-  unsigned msa_len = msa->len/2+msa_len%2;
+  unsigned msa_len = msa->len/2+msa->len%2+2;
   unsigned char protocol_id = *(unsigned char*)(ud->signalInfo+2+msa_len);
   __trace2__("MAP::DIALOG::ForwardReaq: protocol_id = 0x%x",protocol_id);
   unsigned char user_data_coding = *(unsigned char*)(ud->signalInfo+2+msa_len+1);
