@@ -90,7 +90,7 @@ inline T& __fetch_x__ (SmppStream* stream, T& data)
   __check_smpp_stream_is_readable__(stream);
   __throw_if_fail__ ( stream->dataOffset+sizeof(T) <= stream->dataLength,
                       BadStreamException );
-  data = *((T*)stream->buffer);
+  data = *((T*)stream->buffer+stream->dataOffset);
   stream->dataOffset+=sizeof(T);
 //  int wasread = read(stream->chanel,&data,sizeof(T));
         //__watch__(wasread);
@@ -120,8 +120,8 @@ inline void __fill_x__ (SmppStream* stream, T& data)
   __throw_if_fail__ ( stream->dataOffset+sizeof(T) <= stream->dataLength ,
                       BadStreamException);
   //*((T*)stream->buffer) = data;
-  memcpy(stream->buffer,&data,sizeof(T));
-  stream->dataOffset+sizeof(T);
+  memcpy(stream->buffer+stream->dataOffset,&data,sizeof(T));
+  stream->dataOffset+=sizeof(T);
 //  int writen = write(stream->chanel,&data,sizeof(T));
 //  __throw_if_fail__(writen==sizeof(T),BadStreamException);
   //stream->dataOffset+=sizeof(T);
