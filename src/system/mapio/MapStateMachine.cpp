@@ -1265,7 +1265,7 @@ static void DoUSSRUserResponceError(const SmscCommand* cmd , MapDialog* dialog)
   if ( dialog->version == 2 )
   {
     result = Et96MapV2ProcessUnstructuredSSRequestResp(
-      dialog->ssn,dialog->dialogid_map,dialog->invokeId,
+      dialog->ssn,dialog->dialogid_map,++(dialog->invokeId),
       &ussdEncoding,
       &ussdString,
       &error);
@@ -1354,7 +1354,7 @@ static void DoUSSRUserResponce( MapDialog* dialog)
   if ( dialog->version == 2 )
   {
     result = Et96MapV2ProcessUnstructuredSSRequestResp(
-      dialog->ssn,dialog->dialogid_map,dialog->invokeId,
+      dialog->ssn,dialog->dialogid_map,++(dialog->invokeId),
       &ussdEncoding,
       &ussdString,
       0);
