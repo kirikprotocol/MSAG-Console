@@ -1582,10 +1582,11 @@ int RemoteStore::getConcatMessageReference(const Address& dda)
         concatStmt->setDestination(dda);
 
         sword status = concatStmt->execute();
-        if (status != OCI_NO_DATA) connection->check(status);
-        else return -1;
-
-        msgRef = concatStmt->getMessageReference();
+        if (status != OCI_NO_DATA) {
+            connection->check(status);
+            msgRef = concatStmt->getMessageReference();
+        }
+        else msgRef=-1;
 
         if (concatStmt) delete concatStmt;
         if (connection) pool->freeConnection(connection);
