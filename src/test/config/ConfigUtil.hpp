@@ -43,9 +43,6 @@ public:
 		const Address& destAlias);
 	
 	bool checkAlias(const Address& addr);
-
-	bool checkRouteArchBill(const Address& srcAddr,
-		const Address& destAlias, bool& archived, bool& billing);
 };
 
 }
