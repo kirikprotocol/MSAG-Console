@@ -358,7 +358,7 @@ namespace DataCoding{
 #define __ptr2_property__(type,field,counter) \
   type* field;\
   inline void set_##field(type* value,unsigned count) {\
-    delete field; \
+    if ( field ) delete[] field; \
     field = new type[count]; \
     for ( unsigned i=0; i<count; ++i ) { field[i] = value[i]; }\
     counter = count; } \
@@ -768,7 +768,9 @@ struct PduPartSm //: public MemoryManagerUnit
   inline uint8_t get_smLength(){ return (uint8_t)shortMessage.size(); }
   ~PduPartSm()
   {
-    delete dests;
+    //__trace2__("::%s:",__FUNCTION__);
+    if (dests) delete[] dests;
+    dests = 0;
   }
   PduPartSm() :
     numberOfDests(0),
@@ -779,7 +781,10 @@ struct PduPartSm //: public MemoryManagerUnit
     registredDelivery(0),
     replaceIfPresentFlag(0),
     dataCoding(0),
-    smDefaultMsgId(0){}
+    smDefaultMsgId(0)
+  {
+    //__trace2__("::%s:",__FUNCTION__);
+  }
   inline uint32_t size(bool multi)
   {
     return (uint32_t)(0 + 1 // sizeof(smLength)
@@ -846,7 +851,14 @@ struct PduXSm //: public SmppHeader//public MemoryManagerUnit
     optional.dump(log,align+1);
     dump_text("} //PduXSm");
   }
-  //~PduXSm(){}
+  PduXSm()
+  {
+    //__trace2__("::%s:",__FUNCTION__);
+  }
+  ~PduXSm()
+  {
+    //__trace2__("::%s:",__FUNCTION__);
+  }
 };
 
 struct PduXSmResp //: public SmppHeader //MemoryManagerUnit
@@ -937,6 +949,12 @@ struct PduMultiSmResp //: public SmppHeader//MemoryManagerUnit
     dump_cstr(messageId);
     --align;
     dump_text("} //PduMultiResp");
+  }
+  ~PduMultiSmResp()
+  {
+//    __trace2__("::%s:",__FUNCTION__);
+    if (sme) delete[] sme;
+    sme = 0;
   }
 };
 

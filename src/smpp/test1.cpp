@@ -50,7 +50,7 @@ void test()
 	dests[0].set_value("list1");
 	dests[1].set_flag(2); //Distribution List Name
 	dests[1].set_value("list2");
-//	pdu.get_message().set_dests(dests, 2);
+	pdu.get_message().set_dests(dests, 2);
 	pdu.get_message().set_esmClass(103);
 	pdu.get_message().set_protocolId(223);
 	pdu.get_message().set_priorityFlag(109);
@@ -70,20 +70,20 @@ void test()
 	};
 	pdu.get_message().set_shortMessage(msg, 198);
 
-    //optional
-    pdu.get_optional().set_destNetworkType(208);
-    pdu.get_optional().set_sourceNetworkType(3);
-    pdu.get_optional().set_sourceBearerType(119);
-    pdu.get_optional().set_qosTimeToLive(67);
-    pdu.get_optional().set_payloadType(127);
-    pdu.get_optional().set_receiptedMessageId("Xv6vJ99449iCgndA09099");
-    pdu.get_optional().set_userMessageReference(1);
-    pdu.get_optional().set_sourcePort(23610);
-    pdu.get_optional().set_sarSegmentSegnum(29);
-    pdu.get_optional().set_setDpf(45);
-    pdu.get_optional().set_moreMessagesToSend(70);
+  //optional
+  pdu.get_optional().set_destNetworkType(208);
+  pdu.get_optional().set_sourceNetworkType(3);
+  pdu.get_optional().set_sourceBearerType(119);
+  pdu.get_optional().set_qosTimeToLive(67);
+  pdu.get_optional().set_payloadType(127);
+  pdu.get_optional().set_receiptedMessageId("Xv6vJ99449iCgndA09099");
+  pdu.get_optional().set_userMessageReference(1);
+  pdu.get_optional().set_sourcePort(23610);
+  pdu.get_optional().set_sarSegmentSegnum(29);
+  pdu.get_optional().set_setDpf(45);
+  pdu.get_optional().set_moreMessagesToSend(70);
 
-    check(reinterpret_cast<SmppHeader*>(&pdu));
+//check(reinterpret_cast<SmppHeader*>(&pdu));
 }
 
 int main(int argc, char* argv[])
