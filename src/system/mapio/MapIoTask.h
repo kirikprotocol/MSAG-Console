@@ -74,7 +74,8 @@ public:
   }
 };
 
-extern void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
+void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
+//ET96MAP_DIALOGUE_ID_T allocateDialogueId();
 
 /**
   \class MapDialog
@@ -85,7 +86,7 @@ struct MapDialog{
   ET96MAP_DIALOGUE_ID_T dialogid_map;
   unsigned dialogid_smsc;
   ET96MAP_INVOKE_ID_T invokeId;
-  auto_ptr<char> abonent;
+  string abonent;
   auto_ptr<SMS> sms;
   auto_ptr<ET96MAP_SM_RP_UI_T> auto_ui;
   ET96MAP_APP_CNTX_T appContext;
@@ -100,16 +101,15 @@ struct MapDialog{
   MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned version=2) : 
     ref_count(1),
     state(MAPST_START), 
-    dialogid(dialogid),
-    smscDialogId(0),
-    ssn(lssn),
+    dialogid_map(dialogid),
+    dialogid_smsc(0),
     version(version)
     {}
   virtual ~MapDialog(){
-    __trace2__("MAP::Dialog::~MapDialog 0x%x(0x%x)",dialogid,smscDialogId);
+    __trace2__("MAP::Dialog::~MapDialog 0x%x(0x%x)",dialogid_map,dialogid_smsc);
     require ( ref_count == 0 );
-    if ( smscDialogId != 0 ){
-      freeDialogueId(dialogid);
+    if ( dialogid_smsc != 0 && dialogid_map != 0){
+      freeDialogueId(dialogid_map);
     }
   }
   Mutex& getMutex(){return mutex;}
@@ -130,28 +130,19 @@ private:
 class DialogRefGuard{
   MapDialog* dialog;
 public:
-  DialogRefGuard(MapDialog* d = 0):dialog(d){
-    //d->AddRef();
-  }
-  ~DialogRefGuard(){
-    if ( dialog ) dialog->Release();
-  }
+  DialogRefGuard(MapDialog* d = 0):dialog(d){/*d->AddRef();*/}
+  ~DialogRefGuard(){if ( dialog ) dialog->Release();}
   void assign(MapDialog* d){
     if ( dialog == d ) return;
     if ( dialog ) dialog->Release();
     dialog = d;
   }
-  bool isnull(){
-    return dialog==0;
-  }
-  void forget(){
-    dialog = 0;
-  }
+  bool isnull(){return dialog==0;}
+  void forget(){dialog = 0;}
   MapDialog* operator->() { return dialog; }
   MapDialog* get() { return dialog; }
 };
 
-extern ET96MAP_DIALOGUE_ID_T allocateDialogueId();
 
 /**
   \class MapDialogContainer
@@ -164,7 +155,8 @@ class MapDialogContainer{
   XHash<ET96MAP_DIALOGUE_ID_T,MapDialog*,hash_func_ET96MAP_DID> hash;
   Hash<unsigned> lock_map;
   list<unsigned> dialogId_pool;
-  friend void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
+  void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
+  //ET96MAP_DIALOGUE_ID_T allocateDialogueId();
 public:
   static MapDialogContainer* getInstance(){
     MutexGuard g(sync_object);
@@ -201,7 +193,9 @@ public:
     return dlg;
   }
   
-  MapDialog* createSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const char* abonent){
+  MapDialog* createSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent){
+    if ( abonent.length() == 0 )
+      throw runtime_exception("can't create MT dialog without abonent");
     MutexGuard g(sync);
     __trace2__("MAP::createSMSCDialog: try create SMSC dialog on abonent %s",abonent);
     if ( lock_map.Exists(abonent) ) {
@@ -210,12 +204,12 @@ public:
     }
     ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
     MapDialog* dlg = new MapDialog(map_dialog,lssn);
-    dlg->setSMSCDialogId (smsc_did);
-    dlg->setAbonent(abonent);
+    dialogId_pool.pop_front();
+    dlg->dialogid_smsc = smsc_did;
+    dlg->abonent = abonent;
     hash.Insert(map_dialog,dlg);
     lock_map.Insert(abonent,1);
     __trace2__("MAP:: new dialog 0x%p for dialogid 0x%x->0x%x",dlg,smsc_did,map_dialog);
-    dialogId_pool.pop_front();
     dlg->AddRef();
     return dlg;
   }
@@ -229,14 +223,14 @@ public:
       __trace2__("MAP:: reassign dialog: here is no did 0x%x",did);
       throw runtime_error("MAP:: reassign dialog: here is no did");
     }
-    ET96MAP_DIALOGUE_ID_T map_dialogid = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
+    ET96MAP_DIALOGUE_ID_T dialogid_map = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
     dialogId_pool.push_back(did);
-    dlg->setDialogId (map_dialogid);
-    hash.Delete(did);
-    hash.Insert(map_dialogid,dlg);
-    __trace2__("MAP:: reassign dialog 0x%x->0x%x",did,map_dialogid);
+    dlg->dialogid_map = dialogid_map;
     dialogId_pool.pop_front();
-    return map_dialogid;
+    hash.Delete(did);
+    hash.Insert(dialogid_map,dlg);
+    __trace2__("MAP:: reassign dialog 0x%x->0x%x",did,dialogid_map);
+    return dialogid_map;
   }
   
   void dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid){
@@ -244,9 +238,8 @@ public:
     MapDialog* item = 0;
     if ( hash.Get(dialogueid,item) ){
       __trace2__("MAP:: drop dialog 0x%p for dialogid 0x%x",item,dialogueid);
-      if ( item->getAbonent() ) lock_map.Delete(item->getAbonent());
+      if ( item->abonent.length() != 0 ) lock_map.Delete(item->abonent);
       hash.Delete(dialogueid);
-      //delete item;
       item->Release();
     }else{
       __trace2__("MAP::dropDialog: has no dialog for dialogid 0x%x",dialogueid);
@@ -260,6 +253,16 @@ public:
     __trace2__("MAP::register MAP_PROXY OK");
   }
 };
+
+void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId)
+{
+  __trace2__("MAP::% dialogid 0x%x retuned to pool",__PRETTY_FUNCTION__,dialogueId);
+  MapDialogContainer::getInstance()->dialogId_pool.push_back(dialogueId);
+}
+/*ET96MAP_DIALOGUE_ID_T allocateDialogueId()
+{
+}*/
+
 
 class MapTracker : public ThreadedTask{
 public:
