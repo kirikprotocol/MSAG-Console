@@ -44,7 +44,7 @@
 		<param name="reschedule_table" type="string">30s,20s</param>
 		<param name="receipt_delivered" type="string">Your message sent to address $$string import="dest"$$ was successfully delivered on $$date pattern="dd MMMM yyyy, HH:mm:ss" import="date"$$</param>
 		<param name="receipt_failed" type="string">($$date pattern="HH:mm:ss" import="date"$$) Ваше сообщение отправленное $$string import="dest"$$ $$date pattern="dd-MMMM-yyyy hh:mm:ss t" import="date"$$ не было доставлено: $$string import="error"$$</param>
-		<param name="service_center_address" type="string">+111111111111</param>
+		<param name="service_center_address" type="string">+11111111111</param>
 		<param name="systemId" type="string">smscsme</param>
 		<param name="service_type" type="string">SmSc</param>
 		<param name="protocol_id" type="int">3</param>
