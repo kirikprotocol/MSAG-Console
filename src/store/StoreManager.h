@@ -511,10 +511,11 @@ namespace smsc { namespace store
         SmsCache    cache;
         Mutex       cacheMutex;
 
-        int         maxCashCapacity;
-        
+        int         maxCacheCapacity;
+        void loadMaxCacheCapacity(Manager& config);
+
         static log4cpp::Category    &log;
-        
+    
     public:
 
         CachedStore(Manager& config) 

@@ -1245,7 +1245,7 @@ SMS* SmsCache::getSms(SMSId id)
 
 /* ------------------------------ Cached Store ------------------------------ */
 
-void CachedStore::loadMaxCacheCapacity()
+void CachedStore::loadMaxCacheCapacity(Manager& config)
 {
     try
     {
@@ -1264,7 +1264,7 @@ CachedStore::CachedStore(Manager& config)
         : RemoteStore(config), cache(SMSC_MAX_SMS_CACHE_CAPACITY), 
             maxCacheCapacity(SMSC_MAX_SMS_CACHE_CAPACITY)
 {
-    loadMaxCacheCapacity();
+    loadMaxCacheCapacity(config);
 }
 CachedStore::~CachedStore() 
 {
