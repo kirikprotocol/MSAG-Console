@@ -86,6 +86,8 @@ void incorrectInputTc()
 void processDbSmeRes()
 {
 	__reg_tc__("processDbSmeRes", "Ответные сообщения от db sme");
+	__reg_tc__("processDbSmeRes.dataCoding",
+		"Ответные сообщения приходят в дефолтной кодировке SC");
 	//processDbSmeRes.input
 	__reg_tc__("processDbSmeRes.input",
 		"Значения параметров правильно зачитываются из input");
