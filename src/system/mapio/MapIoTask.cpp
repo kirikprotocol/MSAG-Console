@@ -101,7 +101,7 @@ USHORT_T Et96MapV1SendRInfoForSmConf (
     ET96MAP_ERROR_ROUTING_INFO_FOR_SM_T *errorSendRoutingInfoForSm_sp,
     ET96MAP_PROV_ERR_T *provErrCode_p)
 {
-  __trace2__("MAP::Et96MapV1SendRInfoForSmConf dlg 0x%x",dialogueId);
+  __trace2__("MAP::Et96MapV1SendRInfoForSmConf dlg 0x%x",dialogId);
   DialogRefGuard mdci(MapDialogContainer::getInstance()->getDialog(dialogId));
   __trace2__("MAP:: dialog with ptr 0x%p, dialogid 0x%x",mdci.get(),dialogId);
   if ( mdci.isnull() ) {
@@ -109,8 +109,7 @@ USHORT_T Et96MapV1SendRInfoForSmConf (
   }else{
   	try{
       __trace2__("MAP::mdci->Et96MapV1SendRInfoForSmConf");
-      mdci->Et96MapV1SendRInfoForSmConf(
-        SSN,dialogId,invokeId,imsi_sp,locationInfo_sp,lmsi_sp,mwdSet,errorSendRoutingInfoForSm_sp,provErrCode_p);
+      mdci->Et96MapV1SendRInfoForSmConf(SSN,dialogId,invokeId,imsi_sp,locationInfo_sp,lmsi_sp,mwdSet,errorSendRoutingInfoForSm_sp,provErrCode_p);
       __trace2__("MAP::mdci->Et96MapV1SendRInfoForSmConf OK");
   	}catch(...){
   		__trace__("MAP::Et96MapV1SendRInfoForSmConf catch exception");
