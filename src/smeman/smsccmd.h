@@ -7,10 +7,15 @@
 
 #include "sms/sms.h"
 #include "smpp/smpp_structures.h"
+#include "smpp/smpp_sms.h"
 #include <string.h>
+#include <memory>
 
 namespace smsc{
 namespace smeman{
+
+using std::auto_ptr;
+using namespace smsc::smpp;
 
 enum CommandId
 {
@@ -26,7 +31,7 @@ struct SmsResp
 private:
   char* messageId;
 public:
-  void setMassgeId(const char* msgid)
+  void setMessageId(const char* msgid)
   {
     if ( messageId ) delete( messageId);
     messageId = new char[strlen(msgid+1)];
@@ -39,17 +44,17 @@ public:
 
 struct _SmscCommand
 {
-  int ref_count;
+  mutable int ref_count;
   CommandId cmdid;
   void* dta;
-  _SmscCommand() : ref_count(0), dta(0), smsresp(0){};
+  _SmscCommand() : ref_count(0), dta(0){};
   ~_SmscCommand()
   {
     switch ( cmdid )
     {
-    case DELICERY:
+    case DELIVERY:
     case SUBMIT:
-      delete ( (SMS*)dta );
+      delete ( (smsc::sms::SMS*)dta );
     case DELIVERY_RESP:
     case SUBMIT_RESP:
       delete ( (SmsResp*)dta );
@@ -57,6 +62,7 @@ struct _SmscCommand
       __unreachable__("incorrect state dat != NULL && cmdid == UNKNOWN");
     default:
       __unreachable__("unprocessed cmdid");
+		}
   }
 };
 
@@ -77,19 +83,22 @@ class SmscCommand
   {
     __require__ ( cmd != 0 );
     __require__ ( cmd->ref_count >= 0 );
-    ++cmd->ref_counter;
-    return this;
+    ++cmd->ref_count;
+    return cmd;
   }
-  void copy(const _SmscCommand& _cmd)
+  
+	void copy(const _SmscCommand& _cmd)
   {
     if ( cmd ) unref(cmd);
-    cmd = ref(_cmd);
+    cmd = ref(const_cast<_SmscCommand*>(&_cmd));
   }
+
 public:
-  SmscCommand(SmppHeader* pdu)
+  SmscCommand(SmppHeader* pdu) : cmd (0)
   {
-    auto_ptr<_SmscCommand> _cmd(ref(new _SmscCommand()));
-    switch ( _pdu->commandId )
+		__require__ ( pdu != NULL );
+		auto_ptr<_SmscCommand> _cmd(ref(new _SmscCommand()));
+    switch ( pdu->commandId )
     {
       //case GENERIC_NACK:  reinterpret_cast<PduGenericNack*>(_pdu)->dump(log); break;
       //case BIND_RECIEVER: reinterpret_cast<PduBindTRX*>(_pdu)->dump(log); break;
@@ -98,8 +107,8 @@ public:
       //case BIND_TRANSMITTER_RESP: reinterpret_cast<PduBindTRXResp*>(_pdu)->dump(log); break;
       //case QUERY_SM: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
       //case QUERY_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
-    case SmppCommandSet::SUBMIT_SM:   _cmd->comdid = DELIVERY; goto sms_pdu;
-    case SmppCommandSet::DELIVERY_SM: _cmd->comdid = SUBMIT; goto sms_pdu;
+    case SmppCommandSet::SUBMIT_SM:  _cmd->cmdid = DELIVERY; goto sms_pdu;
+    case SmppCommandSet::DELIVERY_SM: _cmd->cmdid = SUBMIT; goto sms_pdu;
     case SmppCommandSet::SUBMIT_SM_RESP: _cmd->cmdid = SUBMIT_RESP; goto sms_resp;
     case SmppCommandSet::DELIVERY_SM_RESP: _cmd->cmdid = DELIVERY_RESP; goto sms_resp;
       //case DELIVERY_SM: reinterpret_cast<PduDeliverySm*>(_pdu)->dump(log); break;
@@ -124,29 +133,43 @@ public:
     __unreachable__("command id is not processed");
     sms_pdu:
     {
-      PduXSm* xsm = reinterpret_cast<PduXSm*>(_pdu);
-      fetchSmsFromSmppPdu(xsm,&_cmd->sms);
-      return;
+			PduXSm* xsm = reinterpret_cast<PduXSm*>(pdu);
+			(smsc::sms::SMS*)_cmd->dta =  new smsc::sms::SMS;
+      fetchSmsFromSmppPdu(xsm,(smsc::sms::SMS*)(_cmd->dta));
+			//delete (smsc::sms::SMS*)_cmd; _cmd = 0;
+      goto end_construct;
     }
     sms_resp:
     {
-      PduXSmResp* xsm = reinterpret_cast<PduXSmResp*>(_pdu);
+      PduXSmResp* xsm = reinterpret_cast<PduXSmResp*>(pdu);
+			(SmsResp*)_cmd->dta = new SmsResp;
       //fetchSmsFromSmppPdu(xsm,&_cmd->sms);
-      _cmd->resp->setMessageId(xsm->get_messageId());
-      return;
+      ((SmsResp*)_cmd->dta)->setMessageId(xsm->get_messageId());
+			//delete (*(SmsResp*))_cmd; _cmd = 0;
+      goto end_construct;
     }
     // unreachable
+		//_pdu.release();
+		end_construct:
+			cmd = _cmd.release();
+			return;
   }
-  SmscCommand(conat SmscCommand& _cmd)
+
+  SmscCommand(const SmscCommand& _cmd)
   {
-    cmd = ref(_cmd);
+   // copy(_cmd.cmd);
+   // if ( cmd ) unref(cmd);
+    cmd = ref((_SmscCommand*)(&_cmd.cmd));
+  }
+
+  const SmscCommand& operator = (const SmscCommand& _cmd)
+  {
+    // copy(_cmd.cmd);
+    if ( cmd ) unref(cmd);
+    cmd = ref((_SmscCommand*)(&_cmd.cmd));
     return _cmd;
   }
-  const SmscCommand& operator = (const SmscCommand& _cmd);
-  {
-    copy(_cmd);
-    return _cmd;
-  }
+
   _SmscCommand* operator->()
   {
     return cmd;
@@ -157,3 +180,4 @@ public:
 }; //smsc
 
 #endif
+
