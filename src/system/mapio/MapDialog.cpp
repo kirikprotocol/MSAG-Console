@@ -510,7 +510,8 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
     sms.setIntProperty(Tag::SMPP_SM_LENGTH,user_data_len);
     sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,protocol_id);
     sms.setMessageReference(ssfh->mr);
-    if ( ssfh->srr ) sms.setDeliveryReport(1);
+    //if ( ssfh->srr ) sms.setDeliveryReport(1);
+    if ( ssfh->srr ) sms.setIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST,1);
     ConvAddrMSISDN2Smc(srcAddr,&src_addr);
     sms.setOriginatingAddress(src_addr);
     ConvAddrMap2Smc(msa,&dest_addr);
