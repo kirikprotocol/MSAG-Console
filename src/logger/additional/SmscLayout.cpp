@@ -1,4 +1,7 @@
 #ifndef LOGGER_LIB_LOG4CPP
+
+#if 0
+
 #include <stdio.h>
 #include "SmscLayout.h"
 #include "core/buffers/TmpBuf.hpp"
@@ -92,4 +95,7 @@ log4cplus::tstring SmscLayoutFactory::getTypeName()
 
 }
 }
+
+#endif //if 0
+
 #endif //LOGGER_LIB_LOG4CPP
