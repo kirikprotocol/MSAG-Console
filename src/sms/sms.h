@@ -658,6 +658,7 @@ namespace smsc { namespace sms
             messageBody = sms.messageBody;
             
             strncpy(eServiceType, sms.eServiceType, sizeof(EService));
+            return (*this);
         };
         
         /**
