@@ -1,7 +1,6 @@
 #include "SmeManagerTestCases.hpp"
 #include "test/util/Util.cpp"
-#include "test/util/TCResultFilter.hpp"
-#include "test/util/CheckList.hpp"
+#include "SmeManagerCheckList.hpp"
 #include "util/Logger.h"
 
 using namespace smsc::test::util;
@@ -10,21 +9,13 @@ using log4cpp::Category;
 using smsc::util::Logger;
 using smsc::smeman::SmeInfo;
 using smsc::smeman::SmeProxy;
-using smsc::test::util::CheckList;
 static Category& log = Logger::getCategory("SmeManagerFunctionalTest");
 
-inline void prepareForNewSme(vector<SmeInfo*>& sme, vector<TCResultStack*>& stack)
-{
-	sme.push_back(new SmeInfo());
-	stack.push_back(new TCResultStack());
-}
-
-void executeFunctionalTest(TCResultFilter* filter, int listSize)
+void executeFunctionalTest(int listSize, CheckList* chkList)
 {
 	SmeManager smeMan;
 	SmeRegistry smeReg;
-	SmeManagerTestCases tc(&smeMan, &smeReg);
-	vector<TCResultStack*> stack;
+	SmeManagerTestCases tc(&smeMan, &smeReg, chkList);
 
 	log.debug("*** start ***");
 
@@ -33,9 +24,7 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 	{
 		Address smeAddr;
 		SmeInfo sme;
-		TCResult* res = tc.addCorrectSme(&smeAddr, &sme, RAND_TC);
-		stack.push_back(new TCResultStack());
-		stack.back()->push_back(res);
+		tc.addCorrectSme(&smeAddr, &sme, RAND_TC);
 	}
 
 	//–егистраци€ sme с некорректными параметрами, 1/6
@@ -55,8 +44,7 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 					SmeRegistry::SmeIterator* it = smeReg.iterator();
 					while (const SmeInfo* sme = it->next())
 					{
-						TCResult* res = tc.addIncorrectSme(*sme);
-						stack[i++]->push_back(res);
+						tc.addIncorrectSme(*sme);
 					}
 					delete it;
 				}
@@ -68,24 +56,20 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 					emptySystemId = true;
 					Address smeAddr;
 					SmeInfo sme;
-					TCResult* res = tc.addCorrectSmeWithEmptySystemId(&smeAddr, &sme);
-					stack.push_back(new TCResultStack());
-					stack.back()->push_back(res);
+					tc.addCorrectSmeWithEmptySystemId(&smeAddr, &sme);
 				}
 				break;
 			/*
 			case 3:
 				for (int i = 0; i < sme.size(); i++)
 				{
-					TCResult* res = tc.disableExistentSme(sme[i]);
-					stack[i]->push_back(res);
+					tc.disableExistentSme(sme[i]);
 				}
 				break;
 			case 4:
 				for (int i = 0; i < sme.size(); i++)
 				{
-					TCResult* res = tc.enableExistentSme(sme[i]);
-					stack[i]->push_back(res);
+					tc.enableExistentSme(sme[i]);
 				}
 				break;
 			*/
@@ -96,8 +80,7 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 					while (const SmeInfo* sme = it->next())
 					{
 						SmeProxy* proxy;
-						TCResult* res = tc.getExistentSme(*sme, proxy);
-						stack[i++]->push_back(res);
+						tc.getExistentSme(*sme, proxy);
 					}
 					delete it;
 				}
@@ -111,16 +94,15 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 		while (const SmeInfo* sme = it->next())
 		{
 			SmeProxy* proxy;
-			TCResult* res = tc.registerCorrectSmeProxy(sme->systemId, &proxy);
-			stack[i++]->push_back(res);
+			tc.registerCorrectSmeProxy(sme->systemId, &proxy);
 		}
 		delete it;
 	}
 	
-	//filter->addResult(tc.selectSme(sme, RAND_TC));
+	//tc.selectSme(sme, RAND_TC);
 
 	//»терирование по списку зарегистрированных sme
-	filter->addResult(tc.iterateSme());
+	tc.iterateSme();
 
 	//”даление зарегистрированного sme
 	vector<string> smeId;
@@ -130,8 +112,7 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 		while (const SmeInfo* sme = it->next())
 		{
 			smeId.push_back(sme->systemId);
-			TCResult* res = tc.deleteExistentSme(sme->systemId);
-			stack[i++]->push_back(res);
+			tc.deleteExistentSme(sme->systemId);
 		}
 		delete it;
 	}
@@ -139,65 +120,18 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 	//ѕолучение незарегистрированного/несуществующего sme
 	for (int i = 0; i < smeId.size(); i++)
 	{
-		TCResult* res = tc.getNonExistentSme(smeId[i], RAND_TC);
-		stack[i]->push_back(res);
+		tc.getNonExistentSme(smeId[i], RAND_TC);
 	}
 
 	//”даление незарегистрированного/несуществующего sme
 	//Disable незарегистрированного/несуществующего sme
 	//Enable незарегистрированного/несуществующего sme
-	stack[0]->push_back(tc.deleteNonExistentSme());
-	//stack[0]->push_back(tc.disableNonExistentSme());
-	//stack[0]->push_back(tc.enableNonExistentSme());
+	tc.deleteNonExistentSme();
+	//tc.disableNonExistentSme();
+	//tc.enableNonExistentSme();
 
 	//»терирование по списку зарегистрированных sme
-	filter->addResult(tc.iterateSme());
-
-	//обработка результатов
-	for (int i = 0; i < stack.size(); i++)
-	{
-		filter->addResultStack(*stack[i]);
-	}
-
-	//очистка пам€ти
-	for (int i = 0; i < stack.size(); i++)
-	{
-		delete stack[i];
-	}
-}
-
-void saveCheckList(TCResultFilter* filter)
-{
-	cout << "—охранение checklist" << endl;
-	CheckList& cl = CheckList::getCheckList(CheckList::UNIT_TEST);
-	cl.startNewGroup("SME Manager", "smsc::smeman");
-	//имплементированные тест кейсы
-	cl.writeResult("–егистраци€ sme с корректными параметрами",
-		filter->getResults(TC_ADD_CORRECT_SME));
-	cl.writeResult("–егистраци€ sme с некорректными параметрами",
-		filter->getResults(TC_ADD_INCORRECT_SME));
-	cl.writeResult("”даление зарегистрированного sme",
-		filter->getResults(TC_DELETE_EXISTENT_SME));
-	cl.writeResult("”даление незарегистрированного/несуществующего sme",
-		filter->getResults(TC_DELETE_NON_EXISTENT_SME));
-	/*
-	cl.writeResult("Disable зарегистрированного sme",
-		filter->getResults(TC_DISABLE_EXISTENT_SME));
-	cl.writeResult("Disable незарегистрированного/несуществующего sme",
-		filter->getResults(TC_DISABLE_NON_EXISTENT_SME));
-	cl.writeResult("Enable зарегистрированного sme",
-		filter->getResults(TC_ENABLE_EXISTENT_SME));
-	cl.writeResult("Enable незарегистрированного/несуществующего sme",
-		filter->getResults(TC_ENABLE_NON_EXISTENT_SME));
-	*/
-	cl.writeResult("ѕолучение зарегистрированного sme",
-		filter->getResults(TC_GET_EXISTENT_SME));
-	cl.writeResult("ѕолучение незарегистрированного/несуществующего sme",
-		filter->getResults(TC_GET_NON_EXISTENT_SME));
-	cl.writeResult("»терирование по списку зарегистрированных sme",
-		filter->getResults(TC_ITERATE_SME));
-	cl.writeResult("¬ыборка sme происходит равномерно",
-		filter->getResults(TC_SELECT_SME));
+	tc.iterateSme();
 }
 
 /**
@@ -217,13 +151,12 @@ int main(int argc, char* argv[])
 	try
 	{
 		//Manager::init("config.xml");
-		TCResultFilter* filter = new TCResultFilter();
+		SmeManagerCheckList chkList;
 		for (int i = 0; i < numCycles; i++)
 		{
-			executeFunctionalTest(filter, numSme);
+			executeFunctionalTest(numSme, &chkList);
 		}
-		saveCheckList(filter);
-		delete filter;
+		chkList.save();
 	}
 	catch (...)
 	{

@@ -17,24 +17,9 @@ using std::map;
 using std::vector;
 using log4cpp::Category;
 using smsc::test::core::SmeRegistry;
-using smsc::test::util::TCResult;
+using smsc::test::util::CheckList;
 using smsc::test::util::BaseTestCases;
 using namespace smsc::smeman; //SmeManager, SmeSystemId, SmeInfo, SmeProxy
-
-//implemented
-const char* const TC_ADD_CORRECT_SME = "addCorrectSme";
-const char* const TC_ADD_INCORRECT_SME = "addIncorrectSme";
-const char* const TC_DELETE_EXISTENT_SME = "deleteExistentSme";
-const char* const TC_DELETE_NON_EXISTENT_SME = "deleteNonExistentSme";
-//const char* const TC_DISABLE_EXISTENT_SME = "disableExistentSme";
-//const char* const TC_DISABLE_NON_EXISTENT_SME = "disableNonExistentSme";
-//const char* const TC_ENABLE_EXISTENT_SME = "enableExistentSme";
-//const char* const TC_ENABLE_NON_EXISTENT_SME = "enableNonExistentSme";
-const char* const TC_GET_EXISTENT_SME = "getExistentSme";
-const char* const TC_GET_NON_EXISTENT_SME = "getNonExistentSme";
-const char* const TC_ITERATE_SME = "iterateSme";
-const char* const TC_SELECT_SME = "selectSme";
-const char* const TC_REGISTER_CORRECT_SME_PROXY = "registerCorrectSmeProxy";
 
 ostream& operator<< (ostream& os, const SmeInfo& sme);
 
@@ -50,76 +35,77 @@ ostream& operator<< (ostream& os, const SmeInfo& sme);
 class SmeManagerTestCases : BaseTestCases
 {
 public:
-	SmeManagerTestCases(SmeManager* smeMan, SmeRegistry* smeReg);
+	SmeManagerTestCases(SmeManager* smeMan, SmeRegistry* smeReg,
+		CheckList* chkList);
 
 	virtual ~SmeManagerTestCases() {}
 
 	/**
 	 * –егистраци€ sme с корректными параметрами.
 	 */
-	TCResult* addCorrectSme(Address* smeAddr, SmeInfo* sme, int num);
+	void addCorrectSme(Address* smeAddr, SmeInfo* sme, int num);
 	
 	/**
 	 * –егистраци€ sme с пустым systemId.
 	 */
-	TCResult* addCorrectSmeWithEmptySystemId(Address* smeAddr, SmeInfo* sme);
+	void addCorrectSmeWithEmptySystemId(Address* smeAddr, SmeInfo* sme);
 
 	/**
 	 * –егистраци€ sme с некорректными параметрами.
 	 */
-	TCResult* addIncorrectSme(const SmeInfo& existentSme);
+	void addIncorrectSme(const SmeInfo& existentSme);
 
 	/**
 	 * ”даление зарегистрированного sme.
 	 */
-	TCResult* deleteExistentSme(const SmeSystemId& smeId);
+	void deleteExistentSme(const SmeSystemId& smeId);
 
 	/**
 	 * ”даление незарегистрированного/несуществующего sme.
 	 */
-	TCResult* deleteNonExistentSme();
+	void deleteNonExistentSme();
 	
 	/**
 	 * Disable зарегистрированного sme.
 	 */
-	//TCResult* disableExistentSme(SmeInfo* sme);
+	//void disableExistentSme(SmeInfo* sme);
 	
 	/**
 	 * Disable незарегистрированного/несуществующего sme.
 	 */
-	//TCResult* disableNonExistentSme();
+	//void disableNonExistentSme();
 	
 	/**
 	 * Enable зарегистрированного sme.
 	 */
-	//TCResult* enableExistentSme(SmeInfo* sme);
+	//void enableExistentSme(SmeInfo* sme);
 	
 	/**
 	 * Enable незарегистрированного/несуществующего sme.
 	 */
-	//TCResult* enableNonExistentSme();
+	//void enableNonExistentSme();
 
 	/**
 	 * ѕолучение зарегистрированного sme.
 	 */
-	TCResult* getExistentSme(const SmeInfo& sme, SmeProxy* proxy);
+	void getExistentSme(const SmeInfo& sme, SmeProxy* proxy);
 	
 	/**
 	 * ѕолучение незарегистрированного/несуществующего sme.
 	 */
-	TCResult* getNonExistentSme(const SmeSystemId& smeId, int num);
+	void getNonExistentSme(const SmeSystemId& smeId, int num);
 
 	/**
 	 * »терирование по списку зарегистрированных sme.
 	 */
-	TCResult* iterateSme();
+	void iterateSme();
 
 	/**
 	 * ¬ыборка sme происходит равномерно.
 	 */
-	//TCResult* selectSme(int num);
+	//void selectSme(int num);
 
-	TCResult* registerCorrectSmeProxy(const SmeSystemId& systemId, SmeProxy** proxy);
+	void registerCorrectSmeProxy(const SmeSystemId& systemId, SmeProxy** proxy);
 
 protected:
 	virtual Category& getLog();
@@ -127,6 +113,7 @@ protected:
 private:
 	SmeManager* smeMan;
 	SmeRegistry* smeReg;
+	CheckList* chkList;
 	
 	void setupRandomCorrectSmeInfo(SmeInfo* sme);
 	vector<int> compareSmeInfo(const SmeInfo& sme1, const SmeInfo& sme2);

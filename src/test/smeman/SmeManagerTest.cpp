@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
 		//Manager::init("config.xml");
 		SmeManager smeMan;
 		SmeRegistry smeReg;
-		SmeManagerTestCases tc(&smeMan, &smeReg);
+		SmeManagerTestCases tc(&smeMan, &smeReg, NULL);
 		Address addr, addr2;
 		SmeInfo sme, sme2;
 /*
@@ -24,32 +24,32 @@ registerCorrectSmeProxy(1)->
 deleteExistentSme(1){100}
 */
 
-		cout << *tc.addCorrectSme(&addr, &sme, 4) << endl;
+		tc.addCorrectSme(&addr, &sme, 4);
 		SmeProxy* proxy;
-		cout << *tc.registerCorrectSmeProxy(sme.systemId, &proxy) << endl;
-		//cout << *tc.selectSme(v, 1) << endl;
+		tc.registerCorrectSmeProxy(sme.systemId, &proxy);
+		//tc.selectSme(v, 1);
 
 /*
-		cout << *tc.enableExistentSme(&sme) << endl;
-		cout << *tc.disableExistentSme(&sme) << endl;
-		cout << *tc.addCorrectSmeWithEmptySystemId(&sme2) << endl;
-		cout << *tc.registerCorrectSmeProxy(sme.systemId, &proxyId) << endl;
-		cout << *tc.addIncorrectSme(sme) << endl;
-		cout << *tc.deleteExistentSme(sme.systemId) << endl;
-		cout << *tc.getNonExistentSme(sme.systemId, 1) << endl;
-		cout << *tc.getNonExistentSme("", 2) << endl;
-		cout << *tc.iterateSme(v) << endl;
+		tc.enableExistentSme(&sme);
+		tc.disableExistentSme(&sme);
+		tc.addCorrectSmeWithEmptySystemId(&sme2);
+		tc.registerCorrectSmeProxy(sme.systemId, &proxyId);
+		tc.addIncorrectSme(sme);
+		tc.deleteExistentSme(sme.systemId);
+		tc.getNonExistentSme(sme.systemId, 1);
+		tc.getNonExistentSme("", 2);
+		tc.iterateSme(v);
 		SmeProxy* proxy;
-		cout << *tc.getExistentSme(sme, proxy) << endl;
+		tc.getExistentSme(sme, proxy);
 		uint32_t proxyId;
-		cout << *tc.registerCorrectSmeProxy(sme.systemId, &proxyId) << endl;
+		tc.registerCorrectSmeProxy(sme.systemId, &proxyId);
 		v.push_back(&sme);
-		cout << *tc.selectSme(v, 2) << endl;
+		tc.selectSme(v, 2);
 */		
 	}
 	catch (...)
 	{
-		cout << "Failed to execute test. See the logs" << endl;
+		cout << "Failed to execute test. See the logs";
 	}
 	return 0;
 }

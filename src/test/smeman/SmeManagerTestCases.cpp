@@ -26,11 +26,13 @@ ostream& operator<< (ostream& os, const SmeInfo& sme)
 	os << ", port = " << sme.port << "}";
 }
 
-SmeManagerTestCases::SmeManagerTestCases(SmeManager* _smeMan, SmeRegistry* _smeReg)
-	: smeMan(_smeMan), smeReg(_smeReg)
+SmeManagerTestCases::SmeManagerTestCases(SmeManager* _smeMan, SmeRegistry* _smeReg,
+	CheckList* _chkList)
+	: smeMan(_smeMan), smeReg(_smeReg), chkList(_chkList)
 {
 	//__require__(smeMan);
 	__require__(smeReg);
+	//__require__(chkList);
 }
 
 Category& SmeManagerTestCases::getLog()
@@ -73,54 +75,24 @@ void SmeManagerTestCases::setupRandomCorrectSmeInfo(SmeInfo* sme)
 	sme->disabled = !rand0(3); //реально не используется
 }
 
+#define __compare__(field, errCode) \
+	if (sme1.field != sme2.field) { res.push_back(errCode); }
+
 vector<int> SmeManagerTestCases::compareSmeInfo(const SmeInfo& sme1,
 	const SmeInfo& sme2)
 {
 	vector<int> res;
-	if (sme1.typeOfNumber != sme2.typeOfNumber)
-	{
-		res.push_back(1);
-	}
-	if (sme1.numberingPlan != sme2.numberingPlan)
-	{
-		res.push_back(2);
-	}
-	if (sme1.interfaceVersion != sme2.interfaceVersion)
-	{
-		res.push_back(3);
-	}
-	if (sme1.rangeOfAddress != sme2.rangeOfAddress)
-	{
-		res.push_back(4);
-	}
-	if (sme1.systemType != sme2.systemType)
-	{
-		res.push_back(5);
-	}
-	if (sme1.password != sme2.password)
-	{
-		res.push_back(6);
-	}
-	if (sme1.hostname != sme2.hostname)
-	{
-		res.push_back(7);
-	}
-	if (sme1.port != sme2.port)
-	{
-		res.push_back(8);
-	}
-	if (sme1.systemId != sme2.systemId)
-	{
-		res.push_back(9);
-	}
-	if (sme1.SME_N != sme2.SME_N)
-	{
-		res.push_back(10);
-	}
-	if (sme1.disabled != sme2.disabled)
-	{
-		res.push_back(11);
-	}
+	__compare__(typeOfNumber, 1);
+	__compare__(numberingPlan, 2);
+	__compare__(interfaceVersion, 3);
+	__compare__(rangeOfAddress, 4);
+	__compare__(systemType, 5);
+	__compare__(password, 6);
+	__compare__(hostname, 7);
+	__compare__(port, 8);
+	__compare__(systemId, 9);
+	__compare__(SME_N, 10);
+	__compare__(disabled, 11);
 	return res;
 }
 
@@ -137,11 +109,11 @@ void SmeManagerTestCases::addSme(const char* tc, int num,
 	}
 }
 
-TCResult* SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int num)
+void SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int num)
 {
 	int numAddr = 3; int numSme = 11;
 	TCSelector s(num, numAddr * numSme);
-	TCResult* res = new TCResult(TC_ADD_CORRECT_SME, s.getChoice());
+	__decl_tc__;
 	for (; s.check(); s++)
 	{
 		try
@@ -166,41 +138,51 @@ TCResult* SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int
 			switch(s.value2(numAddr))
 			{
 				case 1: //ничего особенного
+					__tc__("addCorrectSme");
 					break;
 				case 2: //typeOfNumber вне диапазона
+					__tc__("addCorrectSme.invalidType");
 					sme->typeOfNumber = rand2(0x7, 0xff);
 					break;
 				case 3: //numberingPlan вне диапазона
+					__tc__("addCorrectSme.invalidPlan");
 					sme->numberingPlan = rand2(0x13, 0xff);
 					break;
 				case 4: //interfaceVersion вне диапазона
+					__tc__("addCorrectSme.invalidVersion");
 					sme->interfaceVersion = rand2(0x35, 0xff);
 					break;
 				case 5: //пустой addressRange
+					__tc__("addCorrectSme.invalidAddressRangeLength");
 					sme->rangeOfAddress = "";
 					break;
 				case 6: //addressRange больше макс длины
 					{
+						__tc__("addCorrectSme.invalidAddressRangeLength");
 						auto_ptr<char> _addressRange =
 							rand_char(MAX_ADDRESS_RANGE_LENGTH + 1);
 						sme->rangeOfAddress = _addressRange.get();
 					}
 					break;
 				case 7: //пустой systemType
+					__tc__("addCorrectSme.invalidSystemTypeLength");
 					sme->systemType = "";
 					break;
 				case 8: //systemType больше макс длины
 					{
+						__tc__("addCorrectSme.invalidSystemTypeLength");
 						auto_ptr<char> _systemType =
 							rand_char(MAX_SYSTEM_TYPE_LENGTH + 1);
 						sme->systemType = _systemType.get();
 					}
 					break;
 				case 9: //пустой password
+					__tc__("addCorrectSme.invalidPasswordLength");
 					sme->password = "";
 					break;
 				case 10: //password больше макс длины
 					{
+						__tc__("addCorrectSme.invalidPasswordLength");
 						auto_ptr<char> _password =
 							rand_char(MAX_PASSWORD_LENGTH + 1);
 						sme->password = _password.get();
@@ -208,50 +190,51 @@ TCResult* SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int
 					break;
 				case 11: //systemId больше макс длины
 					{
+						__tc__("addCorrectSme.invalidSystemIdLength");
 						auto_ptr<char> _systemId =
 							rand_char(MAX_SYSTEM_ID_LENGTH + 1);
 						sme->systemId = _systemId.get();
 					}
 					break;
 				default:
-					throw s;
+					__unreachable__("Invalid num");
 			}
 			addSme("addCorrectSme", s.value(), smeAddr, sme);
+			__tc_ok__;
 		}
 		catch(...)
 		{
+			__tc_fail__(s.value());
 			error();
-			res->addFailure(s.value());
 		}
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* SmeManagerTestCases::addCorrectSmeWithEmptySystemId(Address* smeAddr,
+void SmeManagerTestCases::addCorrectSmeWithEmptySystemId(Address* smeAddr,
 	SmeInfo* sme)
 {
-	TCResult* res = new TCResult(TC_ADD_CORRECT_SME, 1001);
+	__decl_tc__;
+	__tc__("addCorrectSme.systemIdEmpty");
 	try
 	{
 		SmsUtil::setupRandomCorrectAddress(smeAddr, 10, 20);
 		setupRandomCorrectSmeInfo(sme);
 		sme->systemId = "";
 		addSme("addCorrectSmeWithEmptySystemId", 1, smeAddr, sme);
+		__tc_ok__;
 	}
 	catch(...)
 	{
+		__tc_fail__(100);
 		error();
-		res->addFailure(100);
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* SmeManagerTestCases::addIncorrectSme(const SmeInfo& existentSme)
+void SmeManagerTestCases::addIncorrectSme(const SmeInfo& existentSme)
 {
 	__require__(smeMan);
-	TCResult* res = new TCResult(TC_ADD_INCORRECT_SME);
+	__decl_tc__;
+	__tc__("addIncorrectSme.invalidSystemId");
 	try
 	{
 		SmeInfo info;
@@ -261,154 +244,153 @@ TCResult* SmeManagerTestCases::addIncorrectSme(const SmeInfo& existentSme)
 		if (smeMan)
 		{
 			smeMan->addSme(info);
-			res->addFailure(101);
+			__tc_fail__(101);
 		}
 	}
 	catch(...)
 	{
-		//ok
+		__tc_ok__;
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* SmeManagerTestCases::deleteExistentSme(const SmeSystemId& systemId)
+void SmeManagerTestCases::deleteExistentSme(const SmeSystemId& systemId)
 {
-	TCResult* res = new TCResult(TC_DELETE_EXISTENT_SME);
+	__decl_tc__;
+	__tc__("deleteSme.existentSme");
 	try
 	{
 		smeReg->deleteSme(systemId);
 		if (smeMan)
 		{
 			smeMan->deleteSme(systemId);
+			__tc_ok__;
 		}
 	}
 	catch(...)
 	{
+		__tc_fail__(100);
 		error();
-		res->addFailure(100);
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* SmeManagerTestCases::deleteNonExistentSme()
+void SmeManagerTestCases::deleteNonExistentSme()
 {
 	__require__(smeMan);
-	TCResult* res = new TCResult(TC_DELETE_NON_EXISTENT_SME);
+	__decl_tc__;
+	__tc__("deleteSme.nonExistentSme");
 	try
 	{
 		auto_ptr<char> _systemId = rand_char(MAX_SYSTEM_ID_LENGTH);
 		smeMan->deleteSme(_systemId.get());
-		res->addFailure(101);
+		__tc_fail__(101);
 	}
 	catch(...)
 	{
-		//ok
+		__tc_ok__;
 	}
-	debug(res);
-	return res;
 }
 
 /*
-TCResult* SmeManagerTestCases::disableExistentSme(SmeInfo* sme)
+void SmeManagerTestCases::disableExistentSme(SmeInfo* sme)
 {
-	TCResult* res = new TCResult(TC_DISABLE_EXISTENT_SME);
+	__decl_tc__;
+	__tc__("disableExistentSme");
 	try
 	{
 		smeMan->disableSme(sme->systemId);
 		sme->disabled = true;
+		__tc_ok__;
 	}
 	catch(...)
 	{
 		error();
-		res->addFailure(100);
+		__tc_fail__(100);
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* SmeManagerTestCases::disableNonExistentSme()
+void SmeManagerTestCases::disableNonExistentSme()
 {
-	TCResult* res = new TCResult(TC_DISABLE_NON_EXISTENT_SME);
+	__decl_tc__;
+	__tc__("disableNonExistentSme");
 	try
 	{
 		auto_ptr<char> _systemId = rand_char(MAX_SYSTEM_ID_LENGTH);
 		smeMan->disableSme(_systemId.get());
-		res->addFailure(101);
+		__tc_fail__(101);
 	}
 	catch(...)
 	{
-		//ok
+		__tc_ok__;
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* SmeManagerTestCases::enableExistentSme(SmeInfo* sme)
+void SmeManagerTestCases::enableExistentSme(SmeInfo* sme)
 {
-	TCResult* res = new TCResult(TC_ENABLE_EXISTENT_SME);
+	__decl_tc__;
+	__tc__("enableExistentSme");
 	try
 	{
 		smeMan->enableSme(sme->systemId);
 		sme->disabled = false;
+		__tc_ok__;
 	}
 	catch(...)
 	{
+		__tc_fail__(100);
 		error();
-		res->addFailure(100);
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* SmeManagerTestCases::enableNonExistentSme()
+void SmeManagerTestCases::enableNonExistentSme()
 {
-	TCResult* res = new TCResult(TC_ENABLE_NON_EXISTENT_SME);
+	__decl_tc__;
+	__tc__("enableNonExistentSme");
 	try
 	{
 		auto_ptr<char> _systemId = rand_char(MAX_SYSTEM_ID_LENGTH);
 		smeMan->enableSme(_systemId.get());
-		res->addFailure(101);
+		__tc_fail__(101);
 	}
 	catch(...)
 	{
-		//ok
+		__tc_ok__;
 	}
-	debug(res);
-	return res;
 }
 */
 
-TCResult* SmeManagerTestCases::getExistentSme(const SmeInfo& sme, SmeProxy* proxy)
+void SmeManagerTestCases::getExistentSme(const SmeInfo& sme, SmeProxy* proxy)
 {
 	__require__(smeMan);
-	TCResult* res = new TCResult(TC_GET_EXISTENT_SME);
+	__decl_tc__;
+	__tc__("getSme.existentSme");
 	try
 	{
 		SmeIndex index = smeMan->lookup(sme.systemId);
 		SmeInfo _sme = smeMan->getSmeInfo(index);
-		vector<int> tmp = compareSmeInfo(sme, _sme);
-		for (int i = 0; i < tmp.size(); i++)
-		{
-			res->addFailure(tmp[i]);
-		}
 		proxy = smeMan->getSmeProxy(index);
+		vector<int> tmp = compareSmeInfo(sme, _sme);
+		if (tmp.size())
+		{
+			__tc_fail2__(tmp);
+		}
+		else
+		{
+			__tc_ok__;
+		}
 	}
 	catch(...)
 	{
+		__tc_fail__(100);
 		error();
-		res->addFailure(100);
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* SmeManagerTestCases::getNonExistentSme(const SmeSystemId& systemId, int num)
+void SmeManagerTestCases::getNonExistentSme(const SmeSystemId& systemId, int num)
 {
 	__require__(smeMan);
 	TCSelector s(num, 2);
-	TCResult* res = new TCResult(TC_GET_NON_EXISTENT_SME, s.getChoice());
+	__decl_tc__;
+	__tc__("getSme.nonExistentSme");
 	for (; s.check(); s++)
 	{
 		try
@@ -425,23 +407,22 @@ TCResult* SmeManagerTestCases::getNonExistentSme(const SmeSystemId& systemId, in
 					}
 					break;
 				default:
-					throw s;
+					__unreachable__("Invalid num");
 			}
-			res->addFailure(101);
+			__tc_fail__(101);
 		}
 		catch(...)
 		{
-			//ok
+			__tc_ok__;
 		}
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* SmeManagerTestCases::iterateSme()
+void SmeManagerTestCases::iterateSme()
 {
 	__require__(smeMan);
-	TCResult* res = new TCResult(TC_ITERATE_SME);
+	__decl_tc__;
+	__tc__("iterateSme");
 	try
 	{
 		int numSme = 0;
@@ -472,27 +453,32 @@ TCResult* SmeManagerTestCases::iterateSme()
 			}
 		}
 		delete iter;
+		bool flag = true;
 		//итератор пропустил некоторые sme
 		if (numSme != smeReg->size())
 		{
-			res->addFailure(102);
+			__tc_fail__(102);
+			flag = false;
 		}
 		//перечислить отличия в sme
 		for (MismatchMap::iterator it = mismatch.begin(); it != mismatch.end(); it++)
 		{
 			if (it->second)
 			{
-				res->addFailure(it->first);
+				__tc_fail__(it->first);
+				flag = false;
 			}
+		}
+		if (flag)
+		{
+			__tc_ok__;
 		}
 	}
 	catch(...)
 	{
+		__tc_fail__(100);
 		error();
-		res->addFailure(100);
 	}
-	debug(res);
-	return res;
 }
 
 /*
@@ -510,7 +496,7 @@ void SmeManagerTestCases::setupRandomSmeProxy(const vector<SmeProxy*>& proxy)
 }
 
 void SmeManagerTestCases::checkSelectSmeStat(const vector<SmeInfo*>& sme,
-	const map<uint32_t, int>& statMap, TCResult* res)
+	const map<uint32_t, int>& statMap, void res)
 {
 	int minVal = INT_MAX;
 	int maxVal = 0;
@@ -530,13 +516,13 @@ void SmeManagerTestCases::checkSelectSmeStat(const vector<SmeInfo*>& sme,
 	}
 	if (minVal > maxVal)
 	{
-		res->addFailure(1);
+		__tc_fail__(1);
 		return;
 	}
 	float tmp = (float) (maxVal - minVal) / (maxVal + minVal);
 	if (tmp > 0.1)
 	{
-		res->addFailure(2);
+		__tc_fail__(2);
 	}
 	int enabledSmeCount = 0;
 	for (int i = 0; i < sme.size(); i++)
@@ -548,15 +534,15 @@ void SmeManagerTestCases::checkSelectSmeStat(const vector<SmeInfo*>& sme,
 	}
 	if (enabledSmeCount != statMap.size())
 	{
-		res->addFailure(3);
+		__tc_fail__(3);
 	}
 }
 
-TCResult* SmeManagerTestCases::selectSme(const vector<SmeInfo*>& sme,
+void SmeManagerTestCases::selectSme(const vector<SmeInfo*>& sme,
 	const vector<SmeProxy*>& proxy, int num)
 {
 	TCSelector s(num, 2);
-	TCResult* res = new TCResult(TC_SELECT_SME, s.getChoice());
+	void res = new TCResult(TC_SELECT_SME, s.getChoice());
 	for (; s.check(); s++)
 	{
 		try
@@ -571,7 +557,7 @@ TCResult* SmeManagerTestCases::selectSme(const vector<SmeInfo*>& sme,
 					timeout = 100 * rand1(5);
 					break;
 				default:
-					throw s;
+					__unreachable__("Invalid num");
 			}
 			map<uint32_t, int> statMap;
 			for (int i = 0; i < 100; i++)
@@ -589,18 +575,19 @@ TCResult* SmeManagerTestCases::selectSme(const vector<SmeInfo*>& sme,
 		catch (...)
 		{
 			error();
-			res->addFailure(100);
+			__tc_fail__(100);
 		}
 	}
 	return res;
 }
 */
 
-TCResult* SmeManagerTestCases::registerCorrectSmeProxy(const SmeSystemId& systemId,
+void SmeManagerTestCases::registerCorrectSmeProxy(const SmeSystemId& systemId,
 	SmeProxy** proxy)
 {
 	__require__(smeMan);
-	TCResult* res = new TCResult(TC_REGISTER_CORRECT_SME_PROXY);
+	__decl_tc__;
+	__tc__("registerSmeProxy");
 	try
 	{
 		CorrectSmeProxy* tmp = new CorrectSmeProxy();
@@ -614,14 +601,13 @@ TCResult* SmeManagerTestCases::registerCorrectSmeProxy(const SmeSystemId& system
 		__trace2__("registerCorrectSmeProxy(): systemId = %s, proxyId = %u",
 			systemId.c_str(), (*proxy)->getUniqueId());
 		*/
+		__tc_ok__;
 	}
 	catch(...)
 	{
+		__tc_fail__(100);
 		error();
-		res->addFailure(100);
 	}
-	debug(res);
-	return res;
 }
 
 }
