@@ -421,6 +421,9 @@ void Smsc::init(const SmscConfigs& cfg)
         cfg.cfgman->getString("abonentinfo.systemId"));
     abonentInfo->servType=cfg.cfgman->getString("abonentinfo.service_type");
     abonentInfo->protId=cfg.cfgman->getInt("abonentinfo.protocol_id");
+    Address hr=Address(cfg.cfgman->getString("abonentinfo.mobile_access_address"));
+    Address m=Address(cfg.cfgman->getString("abonentinfo.mobile_access_address"));
+    abonentInfo->setSources(hr,m);
     tp.startTask(abonentInfo);
     try{
       smeman.registerInternallSmeProxy(
@@ -499,6 +502,7 @@ void Smsc::run()
     tp.startTask(new MapTracker());
     MapDialogContainer::getInstance()->registerSelf(&smeman);
     mapProxy=MapDialogContainer::getInstance()->getProxy();
+    MapDialogContainer::getInstance()->getProxy()->setId("MAP_PROXY");
   }
 
   scheduler=new Scheduler(eventqueue,store);

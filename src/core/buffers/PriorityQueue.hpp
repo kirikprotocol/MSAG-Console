@@ -69,7 +69,7 @@ public:
         bestval=val;
       }
     }
-    __trace2__("PQ: pop - best=%d");
+    __trace2__("PQ: pop - best=%d",best);
     counts[best]++;
     //if(counts[best]>=best)counts[best]=0;
     queue[best].Shift(item);

@@ -101,6 +101,7 @@ void Body::decode(uint8_t* buffer,int length)
     tag=ntohs(tag);
     int type=tag>>8;
     tag&=0xff;
+    __require__(tag<=SMS_LAST_TAG);
     switch(type)
     {
       case SMS_INT_TAG:
@@ -132,6 +133,7 @@ void Body::decode(uint8_t* buffer,int length)
         prop.properties[tag].setBin((const char*)buffer+offset,len);
         offset+=len;
       }break;
+      default:__unreachable__("SMS decoding failure");
     }
   }
 };

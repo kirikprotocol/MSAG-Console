@@ -64,7 +64,7 @@ public:
     {
       MutexGuard g(mutexout);
       if(!opened)return;
-      if(outqueue.Count()==SMPP_PROXY_QUEUE_LIMIT)
+      if(cmd->get_commandId()!=SUBMIT_RESP && outqueue.Count()>=SMPP_PROXY_QUEUE_LIMIT)
       {
         throw ProxyQueueLimitException();
       }
@@ -150,7 +150,7 @@ public:
       {
         return;
       }
-      if(inqueue.Count()==SMPP_PROXY_QUEUE_LIMIT)
+      if(inqueue.Count()>=SMPP_PROXY_QUEUE_LIMIT)
       {
         throw ProxyQueueLimitException();
       }

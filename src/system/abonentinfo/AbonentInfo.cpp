@@ -35,6 +35,7 @@ int AbonentInfoSme::Execute()
     }
     if(!hasOutput())continue;
     cmd=getOutgoingCommand();
+    if(cmd->cmdid==smsc::smeman::SUBMIT_RESP)continue;
     if(cmd->cmdid!=smsc::smeman::DELIVERY && cmd->cmdid!=smsc::smeman::QUERYABONENTSTATUS_RESP)
     {
       __trace2__("AbonentInfoSme: incorrect command submitted:%d",cmd->cmdid);
@@ -58,14 +59,21 @@ int AbonentInfoSme::Execute()
         {
           d=a;
         }
-        SmscCommand cmd=
-          SmscCommand::makeQueryAbonentStatus
-          (
-            d,
-            body,
-            sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)
-          );
+        SmscCommand cmd=SmscCommand::makeQueryAbonentStatus(d);
+        cmd->get_abonentStatus().originalAddr=body;
+        cmd->get_abonentStatus().userMessageReference=
+          sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+        cmd->get_abonentStatus().isMobileRequest=sms->getDestinationAddress()==hrSrc;
+
+        char a1[32];
+        sms->getDestinationAddress().toString(a1,sizeof(a1));
+        char a2[32];
+        hrSrc.toString(a2,sizeof(a2));
+        __trace2__("AbonentInfo: destaddr=%s, hrAddr=%s",a1,a2);
+
+
         putIncomingCommand(cmd);
+        __trace2__("AbonentInfo: delivery->QueryAbonentStatus for %s",body);
       }
       catch(...)
       {
@@ -75,14 +83,30 @@ int AbonentInfoSme::Execute()
     if(cmd->cmdid==smsc::smeman::QUERYABONENTSTATUS_RESP)
     {
       Address d=cmd->get_abonentStatus().addr;
+      __trace2__("AbonentInfo: QueryAbonentStatus->response for %s",
+        cmd->get_abonentStatus().originalAddr.c_str());
 
       p=smsc->getProfiler()->lookup(d);
 
       char answ[MAX_SHORT_MESSAGE_LENGTH];
-      sprintf(answ,"%s:%d,%d",
-        cmd->get_abonentStatus().originalAddr.c_str(),
-        cmd->get_abonentStatus().status,
-        p.codepage);
+      if(cmd->get_abonentStatus().isMobileRequest)
+      {
+        sprintf
+        (
+          answ,
+          "Abonent %s is %s",
+          cmd->get_abonentStatus().originalAddr.c_str(),
+            cmd->get_abonentStatus().status==AbonentStatus::ONLINE? "Online":
+            cmd->get_abonentStatus().status==AbonentStatus::OFFLINE?"Offline":
+                                                                    "Unknown"
+        );
+      }else
+      {
+        sprintf(answ,"%s:%d,%d",
+          cmd->get_abonentStatus().originalAddr.c_str(),
+          cmd->get_abonentStatus().status,
+          p.codepage);
+      }
 
       int len=strlen(answ);
       //char buf7[MAX_SHORT_MESSAGE_LENGTH];

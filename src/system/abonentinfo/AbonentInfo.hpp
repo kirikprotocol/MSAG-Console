@@ -136,6 +136,12 @@ public:
     return seq++;
   }
 
+  void setSources(const Address& hr,const Address& m)
+  {
+    hrSrc=hr;
+    mSrc=m;
+  }
+
   const char* getSystemId()const{return systemId.c_str();}
 
   string servType;
@@ -151,6 +157,8 @@ protected:
   Smsc *smsc;
   string systemId;
   SmeProxyPriority prio;
+  Address hrSrc;
+  Address mSrc;
 };
 
 };//abonentinfo

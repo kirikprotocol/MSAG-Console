@@ -82,19 +82,21 @@ struct AbonentStatus{
   int     status;
   int     userMessageReference;
   string  originalAddr;
+  bool isMobileRequest;
 
-  AbonentStatus(const Address& addr,const char* oaddr,int umr):
+  AbonentStatus(const Address& addr):
     addr(addr),
     status(0),
-    userMessageReference(umr),
-    originalAddr(oaddr)
+    userMessageReference(0),
+    isMobileRequest(false)
   {
   }
   AbonentStatus(const AbonentStatus& as,int status):
     addr(as.addr),
     status(status),
     userMessageReference(as.userMessageReference),
-    originalAddr(as.originalAddr)
+    originalAddr(as.originalAddr),
+    isMobileRequest(as.isMobileRequest)
   {
   }
   static const int OFFLINE=0;
@@ -588,14 +590,14 @@ public:
     return cmd;
   }
 
-  static SmscCommand makeQueryAbonentStatus(const Address& addr,const char* oaddr,int umr)
+  static SmscCommand makeQueryAbonentStatus(const Address& addr)
   {
     SmscCommand cmd;
     cmd.cmd = new _SmscCommand;
     _SmscCommand& _cmd = *cmd.cmd;
     _cmd.ref_count = 1;
     _cmd.cmdid = QUERYABONENTSTATUS;
-    _cmd.dta = new AbonentStatus(addr,oaddr,umr);
+    _cmd.dta = new AbonentStatus(addr);
     _cmd.dialogId = 0;
     return cmd;
   }

@@ -276,6 +276,7 @@ int Profiler::Execute()
     }
     if(!hasOutput())continue;
     cmd=getOutgoingCommand();
+    if(cmd->cmdid==smsc::smeman::SUBMIT_RESP)continue;
     if(cmd->cmdid!=smsc::smeman::DELIVERY)
     {
       __warning2__("Profiler: incorrect command submitted - %d",cmd->cmdid);
