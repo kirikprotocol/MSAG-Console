@@ -343,3 +343,17 @@ function navigate(direction)
 	opForm.submit();
 	return false;
 }
+
+/** disable Delete button, if none of checkboxes checked **/
+function checkCheckboxesForMbDeleteButton()
+{
+  var inputs = opForm.getElementsByTagName("input");
+  var disabledDelete = true;
+  for (i = 0; i < inputs.length; i++)
+  {
+    var inp = inputs[i];
+    if (inp.type == "checkbox")
+      disabledDelete &= !inp.checked;
+  }
+  opForm.all.mbDelete.disabled = disabledDelete;
+}

@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.*;
 
 /**
  * Created by igork
@@ -99,4 +100,29 @@ public class Functions
 	{
 		return (SMSCAppContext) request.getAttribute("appContext");
 	}
+
+  public static String collectionToString(final Collection collection, final String delimeter)
+  {
+    StringBuffer result = new StringBuffer();
+    for (Iterator i = collection.iterator(); i.hasNext();) {
+      result.append(i.next().toString());
+      if (i.hasNext())
+        result.append(delimeter);
+    }
+    return result.toString();
+  }
+
+  /**
+   * Parses string to values by StringTokenizer and adds values to collection in order returned by StringTokenizer.
+   * @param checkedTasksSet values will be added to this collection
+   * @param values string to tokenize
+   * @param delimeter string values delimiter
+   * @param trimValues if true, each value will be trimmed before add to collection
+   */
+  public static void addValuesToCollection(Collection checkedTasksSet, final String values, final String delimeter, boolean trimValues)
+  {
+    for (StringTokenizer i = new StringTokenizer(values, delimeter, false); i.hasMoreTokens();) {
+      checkedTasksSet.add(trimValues ? i.nextToken().trim() : i.nextToken());
+    }
+  }
 }
