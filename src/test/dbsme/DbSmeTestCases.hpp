@@ -1,8 +1,7 @@
 #ifndef TEST_DBSME_DBSME_TEST_CASES
 #define TEST_DBSME_DBSME_TEST_CASES
 
-#include "test/util/BaseTestCases.hpp"
-#include "test/sme/SmppFixture.hpp"
+#include "test/sme/SmeAcknowledgementHandler.hpp"
 #include "test/sme/SmppTransmitterTestCases.hpp"
 #include "DbSmeRegistry.hpp"
 #include "DbSmeFormatJobTestCases.hpp"
@@ -29,11 +28,10 @@ using smsc::test::core::PduData;
 /**
  * Тест кейсы для db sme.
  */
-class DbSmeTestCases : public BaseTestCases,
-	public SmeAcknowledgementHandler
+class DbSmeTestCases : public SmeAcknowledgementHandler
 {
 public:
-	DbSmeTestCases(SmppFixture* _fixture, DbSmeRegistry* _dbSmeReg);
+	DbSmeTestCases(SmppFixture* fixture, DbSmeRegistry* dbSmeReg);
 	
 	virtual ~DbSmeTestCases() {}
 
@@ -84,8 +82,6 @@ public:
 		PduDeliverySm &pdu, time_t recvTime);
 
 protected:
-	SmppFixture* fixture;
-	CheckList* chkList;
 	DbSmeRegistry* dbSmeReg;
 	DbSmeDateFormatJobTestCases dateFormatTc;
 	DbSmeOtherFormatJobTestCases otherFormatTc;
@@ -108,7 +104,7 @@ protected:
 	void sendDbSmePdu(const Address& addr, const string& input,
 		const string& output, bool sync, uint8_t dataCoding);
 	const string processJobFirstOutput(const string& text, DbSmeTestRecord* rec);
-	AckText* getExpectedResponse(SmeAckMonitor* monitor, PduDeliverySm &pdu,
+	AckText* getExpectedResponse(SmeAckMonitor* monitor, PduDeliverySm& pdu,
 		const string& text, time_t recvTime);
 };
 
