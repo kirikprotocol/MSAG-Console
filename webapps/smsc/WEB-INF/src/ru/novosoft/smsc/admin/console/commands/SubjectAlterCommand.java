@@ -44,7 +44,7 @@ public class SubjectAlterCommand extends SubjectGenCommand
                 return;
             }
             if (defaultSmeId != null) {
-                SME sme = ctx.getSmeManager().getSmes().get(defaultSmeId);
+                SME sme = ctx.getSmeManager().get(defaultSmeId);
                 if (sme != null) {
                     smscSubject.setDefaultSme(sme);
                     ctx.setMessage(out+" altered. Default sme changed");

@@ -8,7 +8,7 @@ package ru.novosoft.smsc.admin.daemon;
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.admin.route.SMEList;
+import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.config.Config;
 
@@ -21,7 +21,7 @@ public class DaemonManager
 	private Daemon smscDaemon = null;
 	private Category logger = Category.getInstance(this.getClass());
 
-	public DaemonManager(SMEList smes, Config config)
+	public DaemonManager(SmeManager smeManager, Config config)
 	{
 		Set daemonNames = config.getSectionChildSectionNames("daemons");
 		logger.debug("Initializing daemon manager");
@@ -32,7 +32,7 @@ public class DaemonManager
 			try
 			{
 				final int port = config.getInt(encodedName + ".port");
-				add(daemonName, port, smes);
+				add(daemonName, port, smeManager);
 				logger.debug("Daemon \"" + daemonName + ':' + port + "\" added");
 			}
 			catch (AdminException e)
@@ -51,10 +51,9 @@ public class DaemonManager
 		logger.debug("Daemon manager initialized");
 	}
 
-	public Daemon add(String host, int port, SMEList smeList)
-			throws AdminException
+	public Daemon add(String host, int port, SmeManager smeManager) throws AdminException
 	{
-		final Daemon d = new Daemon(host, port, smeList);
+		final Daemon d = new Daemon(host, port, smeManager);
 		daemons.add(d);
 		try
 		{
@@ -69,8 +68,7 @@ public class DaemonManager
 	}
 
 
-	public Daemon remove(String host)
-			throws AdminException
+	public Daemon remove(String host) throws AdminException
 	{
 		final Daemon daemon = daemons.get(host);
 		if (daemon.isContainsSmsc())
@@ -82,8 +80,7 @@ public class DaemonManager
 		return daemon;
 	}
 
-	public Daemon get(String host)
-			throws AdminException
+	public Daemon get(String host) throws AdminException
 	{
 		return daemons.get(host);
 	}
@@ -96,8 +93,7 @@ public class DaemonManager
 		return daemons.getHostNames();
 	}
 
-	private void findSmscDaemon()
-			throws AdminException
+	private void findSmscDaemon() throws AdminException
 	{
 		smscDaemon = null;
 		for (Iterator i = daemons.iterator(); i.hasNext();)
@@ -139,13 +135,13 @@ public class DaemonManager
 		return null;
 	}
 
-	public Map refreshServices(SMEList smeList) throws AdminException
+	public Map refreshServices(SmeManager smeManager) throws AdminException
 	{
 		Map result = new HashMap();
 		for (Iterator i = daemons.iterator(); i.hasNext();)
 		{
 			Daemon daemon = (Daemon) i.next();
-			result.putAll(daemon.refreshServices(smeList));
+			result.putAll(daemon.refreshServices(smeManager));
 		}
 		return result;
 	}

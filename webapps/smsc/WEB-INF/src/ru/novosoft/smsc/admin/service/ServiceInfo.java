@@ -9,8 +9,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import ru.novosoft.smsc.admin.route.SME;
-import ru.novosoft.smsc.admin.route.SMEList;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +34,7 @@ public class ServiceInfo
 	protected byte status = STATUS_STOPPED;
 
 
-	public ServiceInfo(Element serviceElement, String serviceHost, SMEList smes) throws AdminException
+	public ServiceInfo(Element serviceElement, String serviceHost, SmeManager smeManager) throws AdminException
 	{
 		host = serviceHost;
 		port = Integer.decode(serviceElement.getAttribute("port")).intValue();
@@ -47,13 +47,13 @@ public class ServiceInfo
 		}
 		if (id.equals(Constants.SMSC_SME_ID))
 		{
-			if (smes.contains(id))
+			if (smeManager.contains(id))
 				throw new AdminException("Couldn't add new SMSC - already presented");
 			sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX);
 		}
 		else
 		{
-			sme = smes.get(id);
+			sme = smeManager.get(id);
 		}
 
 		setStatusStr(serviceElement.getAttribute("status"));

@@ -62,7 +62,7 @@ public class ServiceAddInternal extends SmeBean
 		try
 		{
 			hostsManager.addSme(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password, rangeOfAddress, -1, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode);
-			appContext.getStatuses().setServicesChanged(true);
+			//appContext.getStatuses().setServicesChanged(true);
 		}
 		catch (Throwable t)
 		{

@@ -8,6 +8,7 @@ package ru.novosoft.smsc.admin.route;
 import org.w3c.dom.Element;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import java.io.PrintWriter;
@@ -71,7 +72,7 @@ public class Route
 		active = false;
 	}
 
-	public Route(Element routeElem, SubjectList subjects, SMEList smes) throws AdminException
+	public Route(Element routeElem, SubjectList subjects, SmeManager smeManager) throws AdminException
 	{
 		name = routeElem.getAttribute("id");
 		if (name.length() > Constants.ROUTE_ID_MAXLENGTH)
@@ -79,7 +80,7 @@ public class Route
 			throw new AdminException("Route name is too long: " + name.length() + " chars \"" + name + '"');
 		}
 		src = new SourceList(routeElem, subjects);
-		dst = new DestinationList(routeElem, subjects, smes);
+		dst = new DestinationList(routeElem, subjects, smeManager);
 		priority = Integer.decode(routeElem.getAttribute("priority")).intValue();
 		enabling = routeElem.getAttribute("enabling").equalsIgnoreCase("true");
 		archiving = routeElem.getAttribute("archiving").equalsIgnoreCase("true");

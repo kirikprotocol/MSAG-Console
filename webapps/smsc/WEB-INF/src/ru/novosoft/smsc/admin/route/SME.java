@@ -296,7 +296,7 @@ public class SME
 		return mode;
 	}
 
-	private String getModeStr()
+	public String getModeStr()
 	{
 		switch (mode)
 		{
@@ -322,4 +322,23 @@ public class SME
 		return 0;
 	}
 
+	public void update(SME newSme)
+	{
+		id = newSme.getId();
+		priority = newSme.getPriority();
+		type = newSme.getType();
+		typeOfNumber = newSme.getTypeOfNumber();
+		numberingPlan = newSme.getNumberingPlan();
+		interfaceVersion = newSme.getInterfaceVersion();
+		systemType = newSme.getSystemType();
+		password = newSme.getPassword();
+		addrRange = newSme.getAddrRange();
+		smeN = newSme.getSmeN();
+		wantAlias = newSme.isWantAlias();
+		timeout = newSme.getTimeout();
+		forceDC = newSme.isForceDC();
+		receiptSchemeName = newSme.getReceiptSchemeName();
+		disabled = newSme.isDisabled();
+		mode = newSme.getMode();
+	}
 }

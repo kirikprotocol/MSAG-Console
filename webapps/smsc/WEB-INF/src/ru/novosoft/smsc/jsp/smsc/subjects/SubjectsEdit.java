@@ -69,7 +69,7 @@ public class SubjectsEdit extends SmscBean
 			if (s == null)
 				return error(SMSCErrors.error.subjects.subjNotFound, name);
 
-			final SME defaultSme = smeManager.getSmes().get(defSme);
+			final SME defaultSme = smeManager.get(defSme);
 			if (defaultSme == null)
 				return error(SMSCErrors.error.subjects.defaultSmeNotFound, defSme);
 			s.setDefaultSme(defaultSme);

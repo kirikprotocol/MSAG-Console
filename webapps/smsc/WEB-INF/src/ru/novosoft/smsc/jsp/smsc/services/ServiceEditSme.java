@@ -31,7 +31,7 @@ public class ServiceEditSme extends SmeBean
 			SME sme = null;
 			try
 			{
-				sme = appContext.getSmeManager().getSmes().get(serviceId);
+				sme = appContext.getSmeManager().get(serviceId);
 			}
 			catch (AdminException e)
 			{
@@ -95,9 +95,8 @@ public class ServiceEditSme extends SmeBean
 			SME sme = new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password, rangeOfAddress, -1, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode);
 			if (hostsManager.isService(serviceId))
 				hostsManager.getServiceInfo(serviceId).setSme(sme);
-			appContext.getSmeManager().getSmes().remove(serviceId);
-			appContext.getSmeManager().getSmes().add(sme);
-			appContext.getStatuses().setServicesChanged(true);
+			appContext.getSmeManager().update(sme);
+			//appContext.getStatuses().setServicesChanged(true);
 		}
 		catch (Throwable t)
 		{

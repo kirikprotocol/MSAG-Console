@@ -97,14 +97,17 @@ Variant::Variant(const char * const value, Type variant_type)
     break;
   case LongType:
     longValue = atol(value);
+		break;
   case BooleanType:
     boolValue =    (strcmp(value,  "true") == 0)
                 || (strcmp(value,  "on") == 0)
                 || (strcmp(value,  "1") == 0)
                 || (strcmp(value,  "-1") == 0)
                 || (strcmp(value,  "yes") == 0);
+		break;
   case service::StringListType:
     appendStringList(stringListValue = new StringList, value);
+	  break;
   default:
     type = undefined;
     throw AdminException("Unknow type of variant to create");

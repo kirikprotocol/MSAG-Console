@@ -58,8 +58,8 @@ public class Index extends SmscBean
 			return applyProfiles();
 		else if (mbHostsApply != null)
 			return applyHosts();
-		else if (mbServicesApply != null)
-			return applyServices();
+//		else if (mbServicesApply != null)
+//			return applyServices();
 		else if (mbUsersApply != null)
 			return applyUsers();
 		else if (mbSmscApply != null)
@@ -87,10 +87,10 @@ public class Index extends SmscBean
 	{
 		try
 		{
-			smsc.applyRoutes();
+			smsc.applyRoutes(routeSubjectManager);
 			statuses.setRoutesChanged(false);
 			statuses.setSubjectsChanged(false);
-			statuses.setServicesChanged(false);
+			//statuses.setServicesChanged(false);
 
 			return RESULT_OK;
 		}
@@ -105,10 +105,10 @@ public class Index extends SmscBean
 	{
 		try
 		{
-			smsc.applyRoutes();
+			smsc.applyRoutes(routeSubjectManager);
 			statuses.setRoutesChanged(false);
 			statuses.setSubjectsChanged(false);
-			statuses.setServicesChanged(false);
+			//statuses.setServicesChanged(false);
 
 			return RESULT_OK;
 		}
@@ -148,6 +148,7 @@ public class Index extends SmscBean
 		return RESULT_OK;
 	}
 
+/*
 	private int applyServices()
 	{
 		try
@@ -166,6 +167,7 @@ public class Index extends SmscBean
 		}
 	}
 
+*/
 	private int applyUsers()
 	{
 		try
@@ -206,10 +208,12 @@ public class Index extends SmscBean
 		return statuses.isHostsChanged();
 	}
 
+/*
 	public boolean isServicesChanged()
 	{
 		return statuses.isServicesChanged();
 	}
+*/
 
 	public boolean isUsersChanged()
 	{

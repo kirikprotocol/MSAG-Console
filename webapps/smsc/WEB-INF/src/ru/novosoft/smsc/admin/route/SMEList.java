@@ -104,4 +104,11 @@ public class SMEList
 			throw new AdminException("SME \"" + smeId + "\" not found");
 	}
 
+	public SME update(SME newSme) throws AdminException
+	{
+		SME oldSme = get(newSme.getId());
+		oldSme.update(newSme);
+		return oldSme;
+	}
+
 }

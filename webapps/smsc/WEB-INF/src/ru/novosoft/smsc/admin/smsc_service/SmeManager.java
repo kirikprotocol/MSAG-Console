@@ -2,10 +2,9 @@ package ru.novosoft.smsc.admin.smsc_service;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.SME;
-import ru.novosoft.smsc.admin.route.SMEList;
 
-import java.util.List;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Created by igork
@@ -14,10 +13,7 @@ import java.util.Collection;
  */
 public interface SmeManager
 {
-	SME add(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType,
-			  String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName,
-			  boolean disabled, byte mode)
-			throws AdminException;
+	SME add(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName, boolean disabled, byte mode) throws AdminException;
 
 	SME add(SME newSme) throws AdminException;
 
@@ -25,12 +21,14 @@ public interface SmeManager
 
 	SME remove(String id) throws AdminException;
 
+	SME update(SME newSme) throws AdminException;
+
 	boolean contains(String id);
 
 	void removeAllIfSme(Collection serviceIds) throws AdminException;
 
 	List getSmeNames();
-	SMEList getSmes();
+//	SMEList getSmes();
 
 	void save() throws AdminException;
 }

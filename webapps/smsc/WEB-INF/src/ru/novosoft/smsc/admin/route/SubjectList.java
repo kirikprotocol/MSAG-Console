@@ -9,6 +9,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectDataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectQuery;
@@ -23,7 +24,7 @@ public class SubjectList
 	private SubjectDataSource dataSource = new SubjectDataSource();
 	private Category logger = Category.getInstance(this.getClass());
 
-	public SubjectList(Element listElement, SMEList smes)
+	public SubjectList(Element listElement, SmeManager smeManager)
 			  throws AdminException
 	{
 		NodeList subjList = listElement.getElementsByTagName("subject_def");
@@ -38,7 +39,7 @@ public class SubjectList
 				Element maskElem = (Element) masksList.item(j);
 				masks[j] = maskElem.getAttribute("value").trim();
 			}
-			SME defSme = smes.get(subjElem.getAttribute("defSme"));
+			SME defSme = smeManager.get(subjElem.getAttribute("defSme"));
 			if (defSme == null)
 				throw new AdminException("Unknown SME \"" + subjElem.getAttribute("defSme") + '"');
 			try

@@ -48,9 +48,11 @@ public class Smsc extends Service
 	private Method msc_block_method = null;
 	private Method msc_clear_method = null;
 	private Method msc_list_method = null;
+	private Method sme_add_method = null;
+	private Method sme_remove_method = null;
+	private Method sme_update_method = null;
 
-	private SmeManager smeManager = null;
-	private RouteSubjectManager routeSubjectManager;
+
 	private DistributionListAdmin distributionListAdmin = null;
 
 	private AliasSet aliases = null;
@@ -58,12 +60,10 @@ public class Smsc extends Service
 
 	private Category logger = Category.getInstance(this.getClass());
 
-	public Smsc(ConfigManager configManager, NSConnectionPool connectionPool, SmeManager smeManager, RouteSubjectManager routeSubjectManager) throws AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException
+	public Smsc(ConfigManager configManager, NSConnectionPool connectionPool) throws AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
 		super(new ServiceInfo(Constants.SMSC_SME_ID, configManager.getConfig().getString("smsc.host"), configManager.getConfig().getInt("smsc.port"), "", null, ServiceInfo.STATUS_STOPPED));
 
-		this.smeManager = smeManager;
-		this.routeSubjectManager = routeSubjectManager;
 
 		try
 		{
@@ -121,15 +121,15 @@ public class Smsc extends Service
 		return out;
 	}
 
-	public synchronized void applyRoutes() throws AdminException
+	public synchronized void applyRoutes(RouteSubjectManager routeSubjectManager) throws AdminException
 	{
 		checkComponents();
-		smeManager.save();
 		routeSubjectManager.save();
 		if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
 			call(smsc_component, apply_routes_method, Type.Types[Type.StringType], new HashMap());
 	}
 
+/*
 	public synchronized void applyServices() throws AdminException
 	{
 		checkComponents();
@@ -139,6 +139,7 @@ public class Smsc extends Service
 			call(smsc_component, apply_services_method, Type.Types[Type.StringType], new HashMap());
 	}
 
+*/
 	public synchronized void applyAliases() throws AdminException
 	{
 		checkComponents();
@@ -232,19 +233,7 @@ public class Smsc extends Service
 
 	protected void checkComponents()
 	{
-		if (apply_aliases_method == null || 
-		    apply_routes_method == null || 
-		    lookup_profile_method == null || 
-		    update_profile_method == null || 
-		    flush_statistics_method == null || 
-		    process_cancel_messages_method == null || 
-		    apply_smsc_config_method == null ||
-		    apply_services_method == null ||
-		    msc_registrate_method == null || 
-		    msc_unregister_method == null || 
-		    msc_block_method == null || 
-		    msc_clear_method == null || 
-		    msc_list_method == null)
+		if (apply_aliases_method == null || apply_routes_method == null || lookup_profile_method == null || update_profile_method == null || flush_statistics_method == null || process_cancel_messages_method == null || apply_smsc_config_method == null || apply_services_method == null || msc_registrate_method == null || msc_unregister_method == null || msc_block_method == null || msc_clear_method == null || msc_list_method == null || sme_add_method == null || sme_remove_method == null || sme_update_method == null)
 		{
 			try
 			{
@@ -265,6 +254,9 @@ public class Smsc extends Service
 				msc_clear_method = (Method) smsc_component.getMethods().get("msc_clear");
 				msc_list_method = (Method) smsc_component.getMethods().get("msc_list");
 
+				sme_add_method = (Method) smsc_component.getMethods().get("sme_add");
+				sme_remove_method = (Method) smsc_component.getMethods().get("sme_remove");
+				sme_update_method = (Method) smsc_component.getMethods().get("sme_update");
 			}
 			catch (AdminException e)
 			{
@@ -398,5 +390,52 @@ public class Smsc extends Service
 	public DistributionListAdmin getDistributionListAdmin()
 	{
 		return distributionListAdmin;
+	}
+
+	private Map putSmeIntoMap(SME sme)
+	{
+		Map params = new HashMap();
+		params.put("id", sme.getId());
+		params.put("priority", new Integer(sme.getPriority()));
+		params.put("typeOfNumber", new Integer(sme.getTypeOfNumber()));
+		params.put("numberingPlan", new Integer(sme.getNumberingPlan()));
+		params.put("interfaceVersion", new Integer(sme.getInterfaceVersion()));
+		params.put("systemType", sme.getSystemType());
+		params.put("password", sme.getPassword());
+		params.put("addrRange", sme.getAddrRange());
+		params.put("smeN", new Integer(sme.getSmeN()));
+		params.put("wantAlias", new Boolean(sme.isWantAlias()));
+		params.put("forceDC", new Boolean(sme.isForceDC()));
+		params.put("timeout", new Integer(sme.getTimeout()));
+		params.put("receiptSchemeName", sme.getReceiptSchemeName());
+		params.put("disabled", new Boolean(sme.isDisabled()));
+		params.put("mode", sme.getModeStr());
+		return params;
+	}
+
+	public void smeAdd(SME sme) throws AdminException
+	{
+		checkComponents();
+		Object result = call(smsc_component, sme_add_method, Type.Types[Type.BooleanType], putSmeIntoMap(sme));
+		if (!(result instanceof Boolean && ((Boolean)result).booleanValue()))
+			throw new AdminException("Error in response");
+	}
+
+	public void smeRemove(String smeId) throws AdminException
+	{
+		checkComponents();
+		Map params = new HashMap();
+		params.put("id", smeId);
+		Object result = call(smsc_component, sme_remove_method, Type.Types[Type.BooleanType], params);
+		if (!(result instanceof Boolean && ((Boolean) result).booleanValue()))
+			throw new AdminException("Error in response");
+	}
+
+	public void smeUpdate(SME sme) throws AdminException
+	{
+		checkComponents();
+		Object result = call(smsc_component, sme_update_method, Type.Types[Type.BooleanType], putSmeIntoMap(sme));
+		if (!(result instanceof Boolean && ((Boolean) result).booleanValue()))
+			throw new AdminException("Error in response");
 	}
 }

@@ -17,7 +17,7 @@ public class ApplyCommand implements Command
         try {
             ctx.getSmsc().applyProfiles();
             ctx.getSmsc().applyAliases();
-            ctx.getSmsc().applyRoutes();
+            ctx.getSmsc().applyRoutes(ctx.getRouteSubjectManager());
             ctx.setMessage("Changes applied succesfully");
             ctx.setStatus(CommandContext.CMD_OK);
         } catch (Exception e) {

@@ -8,6 +8,7 @@ package ru.novosoft.smsc.admin.route;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteDataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteQuery;
@@ -25,14 +26,14 @@ public class RouteList
 	{
 	}
 
-	public RouteList(Element routeListElement, SubjectList subjects, SMEList smes)
+	public RouteList(Element routeListElement, SubjectList subjects, SmeManager smeManager)
 			throws AdminException
 	{
 		NodeList routeList = routeListElement.getElementsByTagName("route");
 		for (int i = 0; i < routeList.getLength(); i++)
 		{
 			Element routeElem = (Element) routeList.item(i);
-			put(new Route(routeElem, subjects, smes));
+			put(new Route(routeElem, subjects, smeManager));
 		}
 	}
 

@@ -59,20 +59,26 @@ protected:
   void applyServices() throw (AdminException);
   void reloadConfigsAndRestart() throw (AdminException);
   void reReadConfigs() throw (AdminException);
-
-
+  
 	void mscRegistrate(const Arguments & args);
 	void mscUnregister(const Arguments & args);
 	void mscBlock(const Arguments & args);
 	void mscClear(const Arguments & args);
 	Variant mscList();
 
+	SmeAdministrator * getSmeAdmin();
+	void smeAdd(const Arguments & args);
+	void smeRemove(const Arguments & args);
+	void smeUpdate(const Arguments & args);
+
+
   SmscConfigs &configs;
   Methods methods;
   enum {applyRoutesMethod, applyAliasesMethod, lookupProfileMethod, updateProfileMethod, 
     flushStatisticsMethod, processCancelMessagesMethod, applySmscConfigMethod,
     applyServicesMethod,
-    mscRegistrateMethod, mscUnregisterMethod, mscBlockMethod, mscClearMethod, mscListMethod};
+    mscRegistrateMethod, mscUnregisterMethod, mscBlockMethod, mscClearMethod, mscListMethod,
+		smeAddMethod, smeRemoveMethod, smeUpdateMethod};
 
   smsc::core::synchronization::Mutex mutex;
   bool isStopping;

@@ -67,7 +67,7 @@ public class SubjectsAdd extends SmscBean
 			}
 			try
 			{
-				routeSubjectManager.getSubjects().add(new Subject(name, masks, smeManager.getSmes().get(defSme)));
+				routeSubjectManager.getSubjects().add(new Subject(name, masks, smeManager.get(defSme)));
 				appContext.getStatuses().setSubjectsChanged(true);
 				return RESULT_DONE;
 			}

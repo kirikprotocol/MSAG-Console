@@ -8,6 +8,7 @@ package ru.novosoft.smsc.admin.route;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 
 import java.io.PrintWriter;
 import java.util.*;
@@ -21,13 +22,13 @@ public class DestinationList
 	{
 	}
 
-	public DestinationList(Element destinationListElement, SubjectList subjects, SMEList smes)
+	public DestinationList(Element destinationListElement, SubjectList subjects, SmeManager smeManager)
 			throws AdminException
 	{
 		NodeList list = destinationListElement.getElementsByTagName("destination");
 		for (int i = 0; i < list.getLength(); i++)
 		{
-			add(new Destination((Element) list.item(i), subjects, smes));
+			add(new Destination((Element) list.item(i), subjects, smeManager));
 		}
 	}
 

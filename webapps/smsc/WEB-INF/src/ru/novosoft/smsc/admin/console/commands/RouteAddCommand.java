@@ -84,7 +84,7 @@ public class RouteAddCommand extends RouteGenCommand
                 Object obj = dsts.get(i);
                 if (obj != null && obj instanceof RouteDstDef) {
                     RouteDstDef def = (RouteDstDef)obj;
-                    SME sme = ctx.getSmeManager().getSmes().get(def.getSmeId());
+                    SME sme = ctx.getSmeManager().get(def.getSmeId());
                     if (sme == null) {
                         ctx.setMessage("SME '"+def.getSmeId()+"' in dst definition not found. Couldn't add "+out);
                         ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);

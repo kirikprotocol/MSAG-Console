@@ -6,6 +6,7 @@ import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.route.SMEList;
+import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.util.*;
 import ru.novosoft.smsc.util.xml.Utils;
 
@@ -24,9 +25,11 @@ public class SmeManagerImpl implements SmeManager
 	private Category logger = Category.getInstance(this.getClass());
 	private SMEList smes = null;
 	private File smeConfigFile = null;
+	private Smsc smsc;
 
-	public SmeManagerImpl() throws AdminException
+	public SmeManagerImpl(Smsc smsc) throws AdminException
 	{
+		this.smsc = smsc;
 		try
 		{
 			smeConfigFile = new File(WebAppFolders.getSmscConfFolder(), "sme.xml");
@@ -60,7 +63,7 @@ public class SmeManagerImpl implements SmeManager
 		}
 	}
 
-	public void removeAllIfSme(Collection serviceIds) throws AdminException
+	public synchronized void removeAllIfSme(Collection serviceIds) throws AdminException
 	{
 		for (Iterator i = serviceIds.iterator(); i.hasNext();)
 		{
@@ -72,42 +75,52 @@ public class SmeManagerImpl implements SmeManager
 		}
 	}
 
-	public SME remove(String id) throws AdminException
+	public synchronized SME remove(String id) throws AdminException
 	{
-		return smes.remove(id);
+		SME removedSme = smes.remove(id);
+		save();
+		if (smsc.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+			smsc.smeRemove(id);
+		return removedSme;
 	}
 
-	public boolean contains(String id)
+	public synchronized boolean contains(String id)
 	{
 		return smes.contains(id);
 	}
 
-	public SME get(String id) throws AdminException
+	public synchronized SME get(String id) throws AdminException
 	{
 		return smes.get(id);
 	}
 
-	public SME add(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName, boolean disabled, byte mode) throws AdminException
+	public synchronized SME add(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName, boolean disabled, byte mode) throws AdminException
 	{
 		return add(new SME(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, smeN, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode));
 	}
 
-	public SME add(SME newSme) throws AdminException
+	public synchronized SME add(SME newSme) throws AdminException
 	{
-		return smes.add(newSme);
+		smes.add(newSme);
+		save();
+		if (smsc.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+			smsc.smeAdd(newSme);
+		return newSme;
 	}
 
-	public List getSmeNames()
+	public synchronized List getSmeNames()
 	{
 		return new SortedList(smes.getNames());
 	}
 
+/*
 	public SMEList getSmes()
 	{
 		return smes;
 	}
+*/
 
-	public void save() throws AdminException
+	public synchronized void save() throws AdminException
 	{
 		try
 		{
@@ -122,5 +135,14 @@ public class SmeManagerImpl implements SmeManager
 		{
 			throw new AdminException("Couldn't save new smes settings: Couldn't write to destination config file: " + e.getMessage());
 		}
+	}
+
+	public synchronized SME update(SME newSme) throws AdminException
+	{
+		SME updatedSme = smes.update(newSme);
+		save();
+		if (smsc.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+			smsc.smeUpdate(updatedSme);
+		return updatedSme;
 	}
 }

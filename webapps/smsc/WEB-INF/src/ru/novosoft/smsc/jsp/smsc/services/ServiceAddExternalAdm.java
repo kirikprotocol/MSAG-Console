@@ -182,7 +182,7 @@ public class ServiceAddExternalAdm extends SmeBean
 		try
 		{
 			hostsManager.deployAdministrableService(incomingZip, serviceInfo);
-			appContext.getStatuses().setServicesChanged(true);
+			//appContext.getStatuses().setServicesChanged(true);
 		}
 		catch (AdminException e)
 		{

@@ -148,7 +148,7 @@ public class RouteAlterCommand extends RouteGenCommand
                         if (action == ACTION_ADD)
                         {
                             Destination dst = null;
-                            SME sme = ctx.getSmeManager().getSmes().get(def.getSmeId());
+                            SME sme = ctx.getSmeManager().get(def.getSmeId());
                             if (sme == null) {
                                 ctx.setMessage("SME '"+def.getSmeId()+"' in dst definition not found. Couldn't alter "+out);
                                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);

@@ -56,14 +56,17 @@ public:
 				break;
 			case service::LongType:
 				args[name.get()] = Variant(atol(value.get()));
+			  break;
 			case service::BooleanType:
 				args[name.get()] = Variant(   (strcmp(value.get(),  "true") == 0)
 																	 || (strcmp(value.get(),  "on") == 0)
 																	 || (strcmp(value.get(),  "1") == 0)
 																	 || (strcmp(value.get(),  "-1") == 0)
 																	 || (strcmp(value.get(),  "yes") == 0));
+			  break;
       case service::StringListType:
         args[name.get()] = Variant(value.get(), service::StringListType);
+			  break;
 			default:
 				logger.debug("creating ServiceCommand: unknown parameter type %s",
 										 type.get());

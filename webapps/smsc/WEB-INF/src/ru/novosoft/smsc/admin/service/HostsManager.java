@@ -46,8 +46,8 @@ public class HostsManager
 	 */
 	public synchronized Daemon addHost(String host, int port) throws AdminException
 	{ //? add smes
-		final Daemon daemon = daemonManager.add(host, port, smeManager.getSmes());
-		for (Iterator i = daemon.getServiceIds(smeManager.getSmes()).iterator(); i.hasNext();)
+		final Daemon daemon = daemonManager.add(host, port, smeManager);
+		for (Iterator i = daemon.getServiceIds(smeManager).iterator(); i.hasNext();)
 		{
 			String serviceId = (String) i.next();
 			if (serviceManager.contains(serviceId))
@@ -76,7 +76,7 @@ public class HostsManager
 		final Daemon daemon = daemonManager.get(host);
 		if (daemon.isContainsSmsc())
 			throw new AdminException("Couldn't remove host \"" + host + "\": host contains SMSC");
-		final List serviceIds = daemon.getServiceIds(smeManager.getSmes());
+		final List serviceIds = daemon.getServiceIds(smeManager);
 		for (Iterator i = serviceIds.iterator(); i.hasNext();)
 		{
 			String serviceId = (String) i.next();
@@ -176,7 +176,7 @@ public class HostsManager
 		if (currentTime - Constants.ServicesRefreshTimeoutMillis > serviceRefreshTimeStamp)
 		{
 			serviceRefreshTimeStamp = currentTime;
-			Map services = daemonManager.refreshServices(smeManager.getSmes());
+			Map services = daemonManager.refreshServices(smeManager);
 			logger.debug("Refresh services: " + services.size() + " services found");
 			serviceManager.updateServices(services);
 		}

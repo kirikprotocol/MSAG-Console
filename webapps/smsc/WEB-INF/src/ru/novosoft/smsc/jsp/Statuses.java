@@ -27,10 +27,10 @@ public interface Statuses
 
 	void setHostsChanged(boolean hostsChanged);
 
-	boolean isServicesChanged();
+/*	boolean isServicesChanged();
 
 	void setServicesChanged(boolean servicesChanged);
-
+*/
 	boolean isUsersChanged();
 
 	void setUsersChanged(boolean usersChanged);

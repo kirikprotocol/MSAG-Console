@@ -7,6 +7,7 @@ package ru.novosoft.smsc.admin.route;
 
 import org.w3c.dom.Element;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import java.io.PrintWriter;
@@ -39,11 +40,11 @@ public class Destination extends Source
 			throw new AdminException("SME is null");
 	}
 
-	public Destination(Element dstElem, SubjectList subjects, SMEList smes)
+	public Destination(Element dstElem, SubjectList subjects, SmeManager smeManager)
 			throws AdminException
 	{
 		super(dstElem, subjects);
-		sme = smes.get(dstElem.getAttribute("sme"));
+		sme = smeManager.get(dstElem.getAttribute("sme"));
 		if (sme == null)
 			throw new AdminException("Unknown SME \"" + dstElem.getAttribute("sme") + '"');
 	}

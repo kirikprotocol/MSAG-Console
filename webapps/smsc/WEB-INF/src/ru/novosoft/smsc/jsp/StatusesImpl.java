@@ -12,7 +12,7 @@ public class StatusesImpl implements Statuses
 	private boolean aliasesChanged = false;
 	private boolean profilesChanged = false;
 	private boolean hostsChanged = false;
-	private boolean servicesChanged = false;
+	//private boolean servicesChanged = false;
 	private boolean usersChanged = false;
 	private boolean smscChanged = false;
 
@@ -66,6 +66,7 @@ public class StatusesImpl implements Statuses
 		this.hostsChanged = hostsChanged;
 	}
 
+/*
 	public boolean isServicesChanged()
 	{
 		return servicesChanged;
@@ -75,6 +76,7 @@ public class StatusesImpl implements Statuses
 	{
 		this.servicesChanged = servicesChanged;
 	}
+*/
 
 	public boolean isUsersChanged()
 	{

@@ -10,8 +10,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import ru.novosoft.smsc.admin.protocol.*;
-import ru.novosoft.smsc.admin.route.SMEList;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.utli.Proxy;
 import ru.novosoft.smsc.util.SortedList;
@@ -24,15 +24,15 @@ public class Daemon extends Proxy
 	private Category logger = Category.getInstance(this.getClass().getName());
 	private Map services = new HashMap();
 
-	public Daemon(String host, int port, SMEList smeList)
+	public Daemon(String host, int port, SmeManager smeManager)
 			throws AdminException
 	{
 		super(host, port);
 		connect(host, port);
-		refreshServices(smeList);
+		refreshServices(smeManager);
 	}
 
-	protected Map refreshServices(SMEList smeList) throws AdminException
+	protected Map refreshServices(SmeManager smeManager) throws AdminException
 	{
 		Response r = runCommand(new CommandListServices());
 		if (r.getStatus() != Response.StatusOk)
@@ -44,7 +44,7 @@ public class Daemon extends Proxy
 		for (int i = 0; i < list.getLength(); i++)
 		{
 			final Element serviceElement = (Element) list.item(i);
-			ServiceInfo newInfo = new ServiceInfo(serviceElement, host, smeList);
+			ServiceInfo newInfo = new ServiceInfo(serviceElement, host, smeManager);
 			services.put(newInfo.getId(), newInfo);
 		}
 		return services;
@@ -139,10 +139,10 @@ public class Daemon extends Proxy
 		getServiceInfo(serviceId).setStatus(ServiceInfo.STATUS_STOPPED);
 	}
 
-	public List getServiceIds(SMEList smeList) throws AdminException
+	public List getServiceIds(SmeManager smeManager) throws AdminException
 	{
 		if (services.size() == 0)
-			refreshServices(smeList);
+			refreshServices(smeManager);
 		return new SortedList(services.keySet());
 	}
 

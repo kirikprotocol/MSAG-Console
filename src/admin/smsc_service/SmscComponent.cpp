@@ -33,6 +33,25 @@ namespace smsc {
                 Parameters msc_params;
                 msc_params["msc"] = Parameter("msc", StringType);
 
+								Parameters sme_params;
+                sme_params["id"                ] = Parameter("id"                , StringType);
+                sme_params["priority"          ] = Parameter("priority"          , LongType);
+                sme_params["typeOfNumber"      ] = Parameter("typeOfNumber"      , LongType);
+                sme_params["numberingPlan"     ] = Parameter("numberingPlan"     , LongType);
+                sme_params["interfaceVersion"  ] = Parameter("interfaceVersion"  , LongType);
+                sme_params["systemType"        ] = Parameter("systemType"        , StringType);
+                sme_params["password"          ] = Parameter("password"          , StringType);
+                sme_params["addrRange"         ] = Parameter("addrRange"         , StringType);
+                sme_params["smeN"              ] = Parameter("smeN"              , LongType);
+                sme_params["wantAlias"         ] = Parameter("wantAlias"         , BooleanType);
+                sme_params["forceDC"           ] = Parameter("forceDC"           , BooleanType);
+                sme_params["timeout"           ] = Parameter("timeout"           , LongType);
+                sme_params["receiptSchemeName" ] = Parameter("receiptSchemeName" , StringType);
+                sme_params["disabled"          ] = Parameter("disabled"          , BooleanType);
+                sme_params["mode"              ] = Parameter("mode"              , StringType);
+								Parameters sme_id_params;
+                sme_id_params["id"] = Parameter("id", StringType);
+
                 Method apply_routes     ((unsigned)applyRoutesMethod,     "apply_routes",      empty_params, StringType);
                 Method apply_aliases    ((unsigned)applyAliasesMethod,    "apply_aliases",     empty_params, StringType);
                 Method apply_smsc_config((unsigned)applySmscConfigMethod, "apply_smsc_config", empty_params, StringType);
@@ -50,6 +69,10 @@ namespace smsc {
                 Method msc_clear     ((unsigned)mscClearMethod,      "msc_clear",      msc_params,   StringType);
                 Method msc_list      ((unsigned)mscListMethod,       "msc_list",       empty_params, StringListType);
 
+								Method sme_add       ((unsigned)smeAddMethod,    "sme_add",    sme_params,    BooleanType);
+								Method sme_remove    ((unsigned)smeRemoveMethod, "sme_remove", sme_id_params, BooleanType);
+								Method sme_update    ((unsigned)smeUpdateMethod, "sme_update", sme_params,    BooleanType);
+
                 methods[apply_routes     .getName()] = apply_routes;
                 methods[apply_aliases    .getName()] = apply_aliases;
                 methods[apply_smsc_config.getName()] = apply_smsc_config;
@@ -66,6 +89,10 @@ namespace smsc {
                 methods[msc_block     .getName()] = msc_block;
                 methods[msc_clear     .getName()] = msc_clear;
                 methods[msc_list      .getName()] = msc_list;
+
+								methods[sme_add   .getName()] = sme_add;
+								methods[sme_remove.getName()] = sme_remove;
+								methods[sme_update.getName()] = sme_update;
 
                 smsc_app_runner.reset(0);
             }
@@ -126,6 +153,16 @@ namespace smsc {
                         return Variant("");
                     case mscListMethod:
                         return mscList();
+
+										case smeAddMethod:
+											  smeAdd(args);
+										    return Variant(true);
+										case smeRemoveMethod:
+										    smeRemove(args);
+										    return Variant(true);
+										case smeUpdateMethod:
+										    smeUpdate(args);
+										    return Variant(true);
     
                     default:
                         logger.debug("unknown method \"%s\" [%u]", method.getName(), method.getId());
@@ -647,6 +684,67 @@ namespace smsc {
                     throw AdminException("Address or profile params not defined");
                 }
             }
+
+
+						void fillSmeInfo(SmeInfo & smeInfo, const Arguments & args)
+						{
+							smeInfo.systemId          = args.Get("id").getStringValue();
+							smeInfo.typeOfNumber      = args.Get("typeOfNumber").getLongValue();
+							smeInfo.numberingPlan     = args.Get("numberingPlan").getLongValue();
+							smeInfo.interfaceVersion  = args.Get("interfaceVersion").getLongValue();
+							smeInfo.rangeOfAddress    = args.Get("addrRange").getStringValue();
+							smeInfo.systemType        = args.Get("systemType").getStringValue();
+							smeInfo.password          = args.Get("password").getStringValue();
+							smeInfo.priority          = args.Get("priority").getLongValue();
+							smeInfo.SME_N             = args.Get("smeN").getLongValue();
+							smeInfo.disabled          = args.Get("disabled").getBooleanValue();
+							smeInfo.wantAlias         = args.Get("wantAlias").getBooleanValue();
+							smeInfo.forceDC           = args.Get("forceDC").getBooleanValue();
+							smeInfo.receiptSchemeName = args.Get("receiptSchemeName").getStringValue();
+							smeInfo.timeout           = args.Get("timeout").getLongValue();
+							const char * const mode = args.Get("mode").getStringValue();
+							if (stricmp(mode,  "tx") == 0)
+							{
+								smeInfo.bindMode = smeTX;
+							} 
+							else if (stricmp(mode, "rx") == 0)
+							{
+								smeInfo.bindMode = smeRX;
+							} 
+							else if (stricmp(mode, "trx") == 0)
+							{
+								smeInfo.bindMode = smeTRX;
+							}
+						}
+
+						SmeAdministrator * SmscComponent::getSmeAdmin()
+						{
+							Smsc * app;
+							SmeAdministrator * smeAdmin;
+							if (isSmscRunning() && (app = smsc_app_runner->getApp()) && (smeAdmin = app->getSmeAdmin()))
+								return smeAdmin;
+							else
+									throw   AdminException("SMSC is not running");
+						}
+
+						void SmscComponent::smeAdd(const Arguments & args)
+						{
+							SmeInfo smeInfo;
+							fillSmeInfo(smeInfo, args);
+							getSmeAdmin()->addSme(smeInfo);
+						}
+
+						void SmscComponent::smeRemove(const Arguments & args)
+						{
+							getSmeAdmin()->deleteSme(args.Get("id").getStringValue());
+						}
+
+						void SmscComponent::smeUpdate(const Arguments & args)
+						{
+							SmeInfo smeInfo;
+							fillSmeInfo(smeInfo, args);
+							getSmeAdmin()->updateSmeInfo(smeInfo.systemId, smeInfo);
+						}
 
         }
     }

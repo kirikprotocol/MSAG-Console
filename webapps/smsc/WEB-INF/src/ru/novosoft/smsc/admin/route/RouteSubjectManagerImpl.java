@@ -10,6 +10,7 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.smsc_service.RouteSubjectManager;
+import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.xml.Utils;
@@ -26,14 +27,14 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager
 	private SubjectList subjects = null;
 	private Category logger = Category.getInstance(this.getClass());
 
-	public RouteSubjectManagerImpl(SMEList smeList) throws AdminException
+	public RouteSubjectManagerImpl(SmeManager smeManager) throws AdminException
 	{
 		try
 		{
 			final File smscConfFolder = WebAppFolders.getSmscConfFolder();
 			Document routesDoc = Utils.parse(new FileReader(new File(smscConfFolder, "routes.xml")));
-			subjects = new SubjectList(routesDoc.getDocumentElement(), smeList);
-			routes = new RouteList(routesDoc.getDocumentElement(), subjects, smeList);
+			subjects = new SubjectList(routesDoc.getDocumentElement(), smeManager);
+			routes = new RouteList(routesDoc.getDocumentElement(), subjects, smeManager);
 		}
 		catch (FactoryConfigurationError error)
 		{

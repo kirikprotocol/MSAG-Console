@@ -108,7 +108,7 @@ public class Index extends PageBean
 					hostsManager.removeService(id);
 				else
 					hostsManager.removeSme(id);
-				appContext.getStatuses().setServicesChanged(true);
+				//appContext.getStatuses().setServicesChanged(true);
 			}
 			catch (Throwable e)
 			{

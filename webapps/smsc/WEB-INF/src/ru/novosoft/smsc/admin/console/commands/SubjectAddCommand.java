@@ -18,7 +18,7 @@ public class SubjectAddCommand extends SubjectGenCommand
     {
         String out = "Subject '"+subject+"'";
         try {
-            SME sme = ctx.getSmeManager().getSmes().get(defaultSmeId);
+            SME sme = ctx.getSmeManager().get(defaultSmeId);
             if (sme != null) {
                 Subject smscSubject = new Subject(subject, masks, sme);
                 ctx.getRouteSubjectManager().getSubjects().add(smscSubject);

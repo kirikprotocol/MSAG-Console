@@ -52,7 +52,7 @@ public class RoutesEdit extends RouteBody
 				srcMasks = (String[]) r.getSources().getMaskNames().toArray(new String[0]);
 				checkedDestinations = (String[]) r.getDestinations().getSubjectNames().toArray(new String[0]);
 				dstMasks = (String[]) r.getDestinations().getMaskNames().toArray(new String[0]);
-				dst_mask_sme_ = smeManager.getSmes().size() > 0 ? (String) smeManager.getSmeNames().iterator().next() : "";
+				dst_mask_sme_ = smeManager.getSmeNames().size() > 0 ? (String) smeManager.getSmeNames().iterator().next() : "";
 
 				for (int i = 0; i < checkedDestinations.length; i++)
 				{
@@ -161,7 +161,7 @@ public class RoutesEdit extends RouteBody
 			{
 				String destination = checkedDestinations[i];
 				Subject subj = routeSubjectManager.getSubjects().get(destination);
-				SME sme = smeManager.getSmes().get((String) selectedSmes.get(destination));
+				SME sme = smeManager.get((String) selectedSmes.get(destination));
 				destinations.add(new Destination(subj, sme));
 			}
 			for (int i = 0; i < dstMasks.length; i++)
@@ -170,7 +170,7 @@ public class RoutesEdit extends RouteBody
 				String smeId = (String) selectedMaskSmes.get(mask);
 				if (smeId == null)
 					smeId = dst_mask_sme_;
-				SME sme = smeManager.getSmes().get(smeId);
+				SME sme = smeManager.get(smeId);
 				destinations.add(new Destination(new Mask(mask), sme));
 			}
 
