@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <oci.h>
 #include <orl.h>
+
 #include <util/debug.h>
 #include "StoreManager.h"
 

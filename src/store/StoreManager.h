@@ -17,14 +17,10 @@
  * @see SMS
  */
 
-#include <oci.h>
-#include <orl.h>
-
 #include <core/synchronization/Mutex.hpp>
 #include <util/config/Manager.h>
 #include <util/Logger.h>
 
-#include "StoreConfig.h"
 #include "MessageStore.h"
 #include "ConnectionManager.h"
 #include "Archiver.h"
