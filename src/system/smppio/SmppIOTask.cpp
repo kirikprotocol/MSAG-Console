@@ -297,9 +297,13 @@ int SmppInputThread::Execute()
             case SmppCommandSet::DELIVERY_SM:
             case SmppCommandSet::DELIVERY_SM_RESP:
             {
-              SmscCommand cmd(pdu);
               try{
-                ss->getProxy()->putIncomingCommand(cmd);
+                SmscCommand cmd(pdu);
+                try{
+                  ss->getProxy()->putIncomingCommand(cmd);
+                }catch(...)
+                {
+                }
                 break;
               }catch(...)
               {
@@ -310,6 +314,7 @@ int SmppInputThread::Execute()
             }
             default:
             {
+              __trace__("Generating generic nack!");
               SmscCommand cmd=
                 SmscCommand::makeGenericNack
                 (

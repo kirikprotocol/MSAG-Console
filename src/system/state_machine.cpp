@@ -8,6 +8,8 @@
 #include "core/buffers/Hash.hpp"
 #include "util/smstext.h"
 #include "util/Logger.h"
+#include "util/regexp/RegExp.hpp"
+#include "core/synchronization/Mutex.hpp"
 
 namespace smsc{
 namespace system{
@@ -18,6 +20,9 @@ using namespace StateTypeValue;
 using namespace smsc::smpp;
 using namespace util;
 using std::exception;
+using smsc::util::regexp::RegExp;
+using smsc::util::regexp::SMatch;
+using smsc::core::synchronization::Mutex;
 
 class ReceiptGetAdapter:public GetAdapter{
 public:
@@ -169,6 +174,48 @@ int StateMachine::Execute()
   return 0;
 }
 
+Hash<RegExp*> reCache;
+Mutex reCacheMtx;
+static struct CacheKiller{
+~CacheKiller()
+{
+  char* key;
+  RegExp* re;
+  reCache.First();
+  while(reCache.Next(key,re))
+  {
+    delete re;
+  }
+  reCache.Empty();
+}
+}ck;
+
+bool checkSourceAddress(const std::string& pattern,const Address& src)
+{
+  char buf[32];
+  src.toString(buf,sizeof(buf));
+  MutexGuard g(reCacheMtx);
+  RegExp **reptr=reCache.GetPtr(pattern.c_str());
+  RegExp *re;
+  if(!reptr)
+  {
+    re=new RegExp();
+    if(!re->Compile(pattern.c_str(),OP_OPTIMIZE|OP_STRICT))
+    {
+      smsc::util::Logger::getCategory("smsc.system.StateMachine").
+        error("Failed to compile address range regexp");
+    }
+    reCache.Insert(pattern.c_str(),re);
+  }else
+  {
+    re=*reptr;
+  }
+  SMatch m[10];
+  int n=10;
+  return re->Match(buf,m,n);
+}
+
+
 StateType StateMachine::submit(Tuple& t)
 {
   __require__(t.state==UNKNOWN_STATE);
@@ -216,6 +263,19 @@ StateType StateMachine::submit(Tuple& t)
     {
     }
     __warning__("SUBMIT_SM: invalid valid time");
+    return ERROR_STATE;
+  }
+
+  if(src_proxy->getSourceAddressRange().length() &&
+     !checkSourceAddress(src_proxy->getSourceAddressRange(),sms->getOriginatingAddress()))
+  {
+    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::INVSRC);
+    try{
+      src_proxy->putCommand(resp);
+    }catch(...)
+    {
+    }
+    __warning__("SUBMIT_SM: invalid source address");
     return ERROR_STATE;
   }
 

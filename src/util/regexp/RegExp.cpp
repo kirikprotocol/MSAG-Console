@@ -3100,6 +3100,7 @@ int RegExp::Optimize()
   PREOpCode jumps[MAXDEPTH];
   int jumpcount=0;
   if(havefirst)return 1;
+  if(!code)return 0;
   memset(first,0,sizeof(first));
   PREOpCode op;
   for(op=code;;op=op->next)
@@ -3334,7 +3335,7 @@ int RegExp::SearchEx(const char* datastart,const char* textstart,const char* tex
 void RegExp::TrimTail(prechar& end)
 {
   if(havelookahead)return;
-  if(code->bracket.nextalt)return;
+  if(!code || code->bracket.nextalt)return;
   PREOpCode op=code->bracket.pairindex->prev;
   while(OP.op==opClosingBracket)
   {

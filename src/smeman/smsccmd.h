@@ -266,6 +266,7 @@ public:
     _cmd.cmdid=GENERIC_NACK;
     _cmd.dta=(void*)status;
     _cmd.dialogId=dialogId;
+    return cmd;
   }
 
   static SmscCommand makeUnbindResp(uint32_t dialogId,uint32_t status)
@@ -277,6 +278,7 @@ public:
     _cmd.cmdid=UNBIND_RESP;
     _cmd.dta=(void*)status;
     _cmd.dialogId=dialogId;
+    return cmd;
   }
 
 

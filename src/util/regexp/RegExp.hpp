@@ -29,7 +29,7 @@ namespace util{
 namespace regexp{
 
 #ifdef SMSC_DEBUG
-#define _DEBUG
+//#define _DEBUG
 #endif
 
 #define NAMEDBRACKETS

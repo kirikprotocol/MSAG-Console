@@ -32,6 +32,8 @@ class ProxyQueueLimitException : public std::exception
   virtual const char* what() const throw() {return "";}
 };
 
+static std::string nullstr="";
+
 // abstract
 class SmeProxy
 {
@@ -53,6 +55,7 @@ public:
   virtual uint32_t getUniqueId() const {__unreachable__("must be implemented in proxy or wrapper");return 0;}
   virtual uint32_t getIndex() const {__unreachable__("must be implemented in proxy or wrapper");return 0;}
   virtual unsigned long getPreferredTimeout() { return 8; }
+  virtual const std::string& getSourceAddressRange(){return nullstr;};
 };
 
 }; // namespace smeman

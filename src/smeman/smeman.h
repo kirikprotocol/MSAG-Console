@@ -79,6 +79,10 @@ public:
   virtual unsigned long getPreferredTimeout() {
     return info.timeout;
   }
+  virtual const std::string& getSourceAddressRange()
+  {
+    return info.rangeOfAddress;
+  }
 };
 
 using core::synchronization::Mutex;

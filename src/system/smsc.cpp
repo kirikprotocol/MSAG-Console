@@ -13,6 +13,7 @@
 #include "system/abonentinfo/AbonentInfo.hpp"
 #include "util/Logger.h"
 #include "system/smscsme.hpp"
+#include "util/regexp/RegExp.hpp"
 
 //#define ENABLE_MAP_SYM
 
@@ -111,6 +112,7 @@ void Smsc::init(const SmscConfigs& cfg)
   //smemancfg.load("sme.xml");
   {
     smsc::util::config::smeman::SmeManConfig::RecordIterator i=cfg.smemanconfig->getRecordIterator();
+    smsc::util::regexp::RegExp re;
     while(i.hasRecord())
     {
       smsc::util::config::smeman::SmeRecord *rec;
@@ -140,6 +142,10 @@ void Smsc::init(const SmscConfigs& cfg)
         si.systemId=rec->smeUid;
         si.timeout = rec->recdata.smppSme.timeout;
         si.wantAlias = rec->recdata.smppSme.wantAlias;
+        if(si.rangeOfAddress.length() && !re.Compile(si.rangeOfAddress.c_str(),OP_OPTIMIZE|OP_STRICT))
+        {
+          log.error("Failed to compile rangeOfAddress for sme %s",si.systemId.c_str());
+        }
         __trace2__("INIT: addSme %s(to=%d,wa=%s)",si.systemId.c_str(),si.timeout,si.wantAlias?"true":"false");
         //si.hostname=rec->recdata->smppSme.
         si.disabled=false;
@@ -329,6 +335,7 @@ void Smsc::init(const SmscConfigs& cfg)
   smscHost=cfg.cfgman->getString("smpp.host");
   smscPort=cfg.cfgman->getInt("smpp.port");
 
+  smsc::util::regexp::RegExp::InitLocale();
 }
 
 void Smsc::run()
