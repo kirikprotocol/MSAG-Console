@@ -1,4 +1,5 @@
 #binary name			source name			libraries
-test/RouteManagerFunctionalTest	RouteManagerFunctionalTest	-ltest-router -ltest-smeman -ltest-core -ltest-sms -ltest-core -ltest-util -lrouter -lsmeman -lutil-config -lutil -llog4cpp -lxerces-c1_5_2 -lrt -ltest-core
-test/RouteManagerTest		RouteManagerTest		-ltest-router -ltest-smeman -ltest-sms -ltest-core -ltest-util -lrouter -lsmeman -lutil-config -lutil -llog4cpp -lxerces-c1_5_2 -lrt
+test/RouteManagerFunctionalTest	RouteManagerFunctionalTest	-ltest-router -ltest-smeman -ltest-core -ltest-sms -ltest-core -ltest-util -lrouter -lsmeman -lsms -lutil-config -lutil -llog4cpp -lxerces-c1_5_2 -lrt -ltest-core
+-test/RouteManagerTest		RouteManagerTest		-ltest-router -ltest-smeman -ltest-sms -ltest-core -ltest-util -lrouter -lsmeman -lsms -lutil-config -lutil -llog4cpp -lxerces-c1_5_2 -lrt
+-test/RouteManagerTest2		RouteManagerTest2		-ltest-router -ltest-smeman -ltest-sms -ltest-core -ltest-util -lrouter -lsmeman -lsms -lutil-config -lutil -llog4cpp -lxerces-c1_5_2 -lrt
 
