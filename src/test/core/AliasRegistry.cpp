@@ -19,17 +19,18 @@ AliasRegistry::~AliasRegistry()
 	//дл€ aliasMap ничего удал€ть не нужно, т.к. объекты в aliasMap и addrMap общие
 }
 
-void AliasRegistry::putAlias(const AliasInfo& alias)
+bool AliasRegistry::putAlias(const AliasInfo& alias)
 {
 	//дублированные алиасы не сохран€ютс€
 	if (addrMap.find(alias.addr) != addrMap.end() ||
 		aliasMap.find(alias.alias) != aliasMap.end())
 	{
-		return;
+		return false;
 	}
 	AliasHolder* holder = new AliasHolder(alias);
 	addrMap[alias.addr].push_back(holder);
 	aliasMap[alias.alias].push_back(holder);
+	return true;
 }
 
 void AliasRegistry::clear()

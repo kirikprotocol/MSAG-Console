@@ -25,7 +25,7 @@ public:
 
 	virtual ~AliasRegistry();
 
-	void putAlias(const AliasInfo& alias);
+	bool putAlias(const AliasInfo& alias);
 
 	void clear();
 	
