@@ -74,6 +74,7 @@ void ConfigurationMaster::genSmeConfig()
 		os << "\t<param name=\"addrRange\" value=\"\"/>" << endl;
 		os << "\t<param name=\"smeN\" value=\"0\"/>" << endl;
 		os << "\t<param name=\"wantAlias\" value=\"yes\"/>" << endl;
+		os << "\t<param name=\"forceDC\" value=\"false\"/>" << endl;
 		os << "\t<param name=\"timeout\" value=\"10\"/>" << endl;
 		os << "\t<param name=\"priority\" value=\"32\"/>" << endl;
 		os << "</smerecord>" << endl;
@@ -104,9 +105,10 @@ void ConfigurationMaster::genRouteConfig()
 	//id - latin, route to itself, with "?"
 	for (int i = 0; i < count; i++)
 	{
-		os << "<route id=\"" << str1("route", i) << "\" " <<
-			"billing=\"false\" archiving=\"false\" enabling=\"false\" " <<
-			"priority=\"" << i << "\" serviceId=\"" << i << "\">" << endl;
+		os << "<route id=\"" << str1("route", i) <<
+			"\" billing=\"false\" archiving=\"false\" enabling=\"false\"" <<
+			" priority=\"" << i << "\" serviceId=\"" << i <<
+			"\" suppressDeliveryReports=\"false\">" << endl;
 		os << "\t<source>" << endl;
 		os << "\t\t<subject id=\"" << str1("subject", i) << "\"/>" << endl;
 		os << "\t</source>" << endl;
@@ -125,9 +127,10 @@ void ConfigurationMaster::genRouteConfig()
 	for (int i = 0; i < count; i++)
 	{
 		int i2 = (i + 1) % count;
-		os << "<route id=\"" << str1("маршрут", i) << "\" " <<
-			"billing=\"true\" archiving=\"true\" enabling=\"true\" " <<
-			"priority=\"" << i << "\" serviceId=\"" << i << "\">" << endl;
+		os << "<route id=\"" << str1("маршрут", i) <<
+			"\" billing=\"true\" archiving=\"true\" enabling=\"true\"" <<
+			" priority=\"" << i << "\" serviceId=\"" << i <<
+			"\" suppressDeliveryReports=\"true\">" << endl;
 		os << "\t<source>" << endl;
 		os << "\t\t<subject id=\"" << str1("субъект", i) << "\"/>" << endl;
 		os << "\t</source>" << endl;
