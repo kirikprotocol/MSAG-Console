@@ -73,6 +73,16 @@ protected:
       return crc32(crc,&no,4);
     }
 
+    uint32_t CalcHdrCrc()
+    {
+      int rv=fldcrc(0,magic);
+      rv=fldcrc(rv,ver);
+      rv=fldcrc(rv,count);
+      rv=fldcrc(rv,size);
+      rv=fldcrc(rv,flags);
+      return rv;
+    }
+
     void Write(File& f)
     {
       f.WriteNetInt32(magic);
@@ -80,11 +90,7 @@ protected:
       f.WriteNetInt32(count);
       f.WriteNetInt32(size);
       f.WriteNetInt32(flags);
-      hdrcrc32=fldcrc(0,magic);
-      hdrcrc32=fldcrc(hdrcrc32,ver);
-      hdrcrc32=fldcrc(hdrcrc32,count);
-      hdrcrc32=fldcrc(hdrcrc32,size);
-      hdrcrc32=fldcrc(hdrcrc32,flags);
+      hdrcrc32=CalcHdrCrc();
       f.WriteNetInt32(hdrcrc32);
     }
     static int Size()
@@ -189,7 +195,7 @@ public:
     h.Read(f);
     if(h.magic!=_dh_magic)throw RTERROR("invalid file magic");
     if(h.ver!=_dh_ver)throw RTERROR("incompatible version!");
-    uint32_t crc=crc32(0,&h,h.Size()-sizeof(uint32_t));
+    uint32_t crc=h.CalcHdrCrc();
     if(crc!=h.hdrcrc32)throw RTERROR("header crc failire");
     size=h.size;
     count=h.count;
