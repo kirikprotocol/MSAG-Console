@@ -184,8 +184,20 @@ void AbonentInfoTestCases::queryAbonentInfoCorrect(bool sync,
 		switch (s.value1(numAddr))
 		{
 			case 1: //существующий адрес
-				__tc__("queryAbonentInfo.correct.existentAddr"); __tc_ok__;
-				addr = *fixture->smeReg->getRandomAddress();
+				{
+					addr = *fixture->smeReg->getRandomAddress();
+					const RouteInfo* routeInfo =
+						fixture->routeChecker->getRouteInfoForNormalSms(fixture->smeAddr, addr);
+					if (routeInfo && routeInfo->smeSystemId == "MAP_PROXY")
+					{
+						__tc__("queryAbonentInfo.correct.nonExistentAddr"); __tc_ok__;
+						SmsUtil::setupRandomCorrectAddress(&addr);
+					}
+					else
+					{
+						__tc__("queryAbonentInfo.correct.existentAddr"); __tc_ok__;
+					}
+				}
 				break;
 			case 2: //несуществующий адрес
 				__tc__("queryAbonentInfo.correct.nonExistentAddr"); __tc_ok__;
