@@ -96,14 +96,19 @@ void NormalSmsHandler::checkSourceAddr(DeliveryMonitor* monitor, SmppHeader* hea
 		dynamic_cast<SenderData*>(monitor->pduData->objProps["senderData"]);
 	//алиасенный адрес
 	PduAddress aliasedAddr;
-	Address addr;
-	SmppUtil::convert(origPdu.getSource(), &addr);
-	addr = fixture->aliasReg->findAliasByAddress(addr);
-	SmppUtil::convert(addr, &aliasedAddr);
+	{
+		Address srcAddr;
+		SmppUtil::convert(origPdu.getSource(), &srcAddr);
+		Address aliasedSrcAddr = fixture->aliasReg->findAliasByAddress(srcAddr);
+		SmppUtil::convert(aliasedSrcAddr, &aliasedAddr);
+		__trace2__("checkSourceAddr(): srcAddr = %s, aliasedAddr = %s, wantAlias = %s",
+			str(srcAddr).c_str(), str(aliasedSrcAddr).c_str(), fixture->smeInfo.wantAlias ? "true" : "false");
+	}
 	if (fixture->smeInfo.wantAlias)
 	{
 		if (monitor->pduData->intProps.count("directive.hide"))
 		{
+			__trace2__("checkSourceAddr(): directive.hide = %d", monitor->pduData->intProps["directive.hide"]);
 			if (monitor->pduData->intProps["directive.hide"])
 			{
 				__tc__("sms.normalSms.checkSourceAddr.hideDirective");
@@ -118,14 +123,20 @@ void NormalSmsHandler::checkSourceAddr(DeliveryMonitor* monitor, SmppHeader* hea
 		else if (senderData->validProfile)
 		{
 			__tc__("sms.normalSms.checkSourceAddr.nohideDirective");
+			__trace2__("checkSourceAddr(): directive.hide = null, profile.hide = %d, profile.valid = true", senderData->profile.hide);
 			if (senderData->profile.hide)
 			{
 				__check__(1, pdu.getSource() == aliasedAddr);
 			}
 			else
 			{
-				__check__(1, pdu.getSource() == origPdu.getSource());
+				__check__(2, pdu.getSource() == origPdu.getSource());
 			}
+		}
+		else
+		{
+			__tc__("sms.normalSms.checkSourceAddr.nohideDirective");
+			__trace__("checkSourceAddr(): directive.hide = null, profile.valid = false");
 		}
 	}
 	else

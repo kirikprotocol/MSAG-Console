@@ -60,6 +60,8 @@ public:
 
 protected:
 	virtual Category& getLog();
+	void updateProfile(Profile& profile, PduData::IntProps* intProps,
+		PduData::StrProps* strProps, PduData::ObjProps* objProps);
 	void sendUpdateProfilePdu(const string& text, PduData::IntProps* intProps,
 		PduData::StrProps* strProps, PduData::ObjProps* objProps, bool sync,
 		uint8_t dataCoding);

@@ -6,7 +6,7 @@
 #include "system/scheduler.hpp"
 #include "system/smppio/SmppAcceptor.hpp"
 #include "system/state_machine.hpp"
-#include "admin/util/SignalHandler.h"
+//#include "admin/util/SignalHandler.h"
 #include "store/StoreManager.h"
 #include "test/sme/SmppProfilerTestCases.hpp"
 #include "test/smeman/SmeManagerTestCases.hpp"
@@ -68,6 +68,7 @@ public:
 
 private:
 	virtual bool sendDeliverySmResp(PduDeliverySm& pdu);
+	virtual bool sendDataSmResp(PduDataSm& pdu);
 	virtual void updateStat();
 };
 

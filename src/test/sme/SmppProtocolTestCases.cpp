@@ -1560,15 +1560,15 @@ void SmppProtocolTestCases::correctDirectives(SmppHeader* header, PduData::IntPr
 	{
 		dirCont = correctDefDirectives(header, intProps, num[2]);
 	}
-	//template директивы
-	if (dirCont)
-	{
-		dirCont = correctTemplateDirectives(header, intProps, strProps, num[3]);
-	}
 	//hide директивы
 	if (dirCont)
 	{
-		dirCont = correctHideDirectives(header, intProps, num[4]);
+		dirCont = correctHideDirectives(header, intProps, num[3]);
+	}
+	//template директивы (после темплейта другие директивы запрещены)
+	if (dirCont)
+	{
+		dirCont = correctTemplateDirectives(header, intProps, strProps, num[4]);
 	}
 }
 

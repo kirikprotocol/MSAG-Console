@@ -242,10 +242,13 @@ int TestSmeFunc::Execute()
 	seq.push_back(52);
 	seq.push_back(53);
 	seq.push_back(54);
+	seq.push_back(55);
+	/*
 	seq.push_back(61);
 	seq.push_back(62);
 	seq.push_back(71);
 	seq.push_back(72);
+	*/
 	//seq.push_back(100);
 #ifdef ASSERT
 	seq.push_back(101);
@@ -326,7 +329,7 @@ void TestSmeFunc::executeCycle()
 			protocolTc.dataSmIncorrect(rand0(1), RAND_TC);
 			break;
 		case 13:
-			protocolTc.correctDirectives(rand0(1), TestCaseId(4));
+			protocolTc.correctDirectives(rand0(1), TestCaseId(5));
 			break;
 		case 14:
 			protocolTc.incorrectDirectives(rand0(1), TestCaseId(2));
@@ -341,7 +344,10 @@ void TestSmeFunc::executeCycle()
 		case 53: //обновление локали
 			profilerTc.updateLocaleCorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 			break;
-		case 54: //обновление профиля некорректными данными
+		case 54: //обновление hide опции
+			profilerTc.updateHideOptionsCorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
+			break;
+		case 55: //обновление профиля некорректными данными
 			profilerTc.updateProfileIncorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 			break;
 		//abonent info
@@ -1027,6 +1033,7 @@ int main(int argc, char* argv[])
 	defProfile.codepage = ProfileCharsetOptions::Default;
 	defProfile.reportoptions = ProfileReportOptions::ReportNone;
 	defProfile.locale = "en_us";
+	defProfile.hide = 1; //true
 	profileReg = new ProfileRegistry(defProfile);
 	smppChkList = new SystemSmeCheckList();
 	configChkList = new ConfigGenCheckList();

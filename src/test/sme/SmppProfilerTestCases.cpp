@@ -34,6 +34,29 @@ Category& SmppProfilerTestCases::getLog()
 	return log;
 }
 
+void SmppProfilerTestCases::updateProfile(Profile& profile,
+	PduData::IntProps* intProps, PduData::StrProps* strProps,
+	PduData::ObjProps* objProps)
+{
+	if (intProps && intProps->count("profilerTc.reportOptions"))
+	{
+		profile.reportoptions = (*intProps)["profilerTc.reportOptions"];
+	}
+	if (intProps && intProps->count("profilerTc.codePage"))
+	{
+		profile.codepage = (*intProps)["profilerTc.codePage"];
+	}
+	if (strProps && strProps->count("profilerTc.locale") &&
+		(*strProps)["profilerTc.locale"].length())
+	{
+		profile.locale = (*strProps)["profilerTc.locale"];
+	}
+	if (intProps && intProps->count("profilerTc.hide"))
+	{
+		profile.hide = (*intProps)["profilerTc.hide"];
+	}
+}
+
 void SmppProfilerTestCases::sendUpdateProfilePdu(const string& _text,
 	PduData::IntProps* intProps, PduData::StrProps* strProps,
 	PduData::ObjProps* objProps, bool sync, uint8_t dataCoding)
@@ -135,19 +158,7 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& _text,
 		{
 			time_t t;
 			Profile profile = fixture->profileReg->getProfile(fixture->smeAddr, t);
-			if (intProps && intProps->count("profilerTc.reportOptions"))
-			{
-				profile.reportoptions = (*intProps)["profilerTc.reportOptions"];
-			}
-			if (intProps && intProps->count("profilerTc.codePage"))
-			{
-				profile.codepage = (*intProps)["profilerTc.codePage"];
-			}
-			if (strProps && strProps->count("profilerTc.locale") &&
-				(*strProps)["profilerTc.locale"].length())
-			{
-				profile.locale = (*strProps)["profilerTc.locale"];
-			}
+			updateProfile(profile, intProps, strProps, objProps);
 			fixture->profileReg->putProfile(fixture->smeAddr, profile);
 		}
 	}
@@ -374,8 +385,8 @@ void SmppProfilerTestCases::updateProfileIncorrect(bool sync,
 			};
 			static const string invalidHideCmd[] =
 			{
-				"hid", "hide2", "inhid", "unhide2"
-				//"locale2 en_us"
+				"hid", "unhid"
+				//"hide2", "unhide2"
 			};
 			string text;
 			switch (s.value())
@@ -425,23 +436,8 @@ AckText* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	Profile profile = senderData->profile;
 	bool valid = senderData->validProfile;
 	//проапдейтить профиль получателя
-	if (monitor->pduData->intProps.count("profilerTc.reportOptions"))
-	{
-		profile.reportoptions = monitor->pduData->intProps["profilerTc.reportOptions"];
-	}
-	if (monitor->pduData->intProps.count("profilerTc.codePage"))
-	{
-		profile.codepage = monitor->pduData->intProps["profilerTc.codePage"];
-	}
-	if (monitor->pduData->strProps.count("profilerTc.locale") &&
-		monitor->pduData->strProps["profilerTc.locale"].length())
-	{
-		profile.locale = monitor->pduData->strProps["profilerTc.locale"];
-	}
-	if (monitor->pduData->intProps.count("profilerTc.hide"))
-	{
-		profile.hide = monitor->pduData->intProps["profilerTc.hide"];
-	}
+	updateProfile(profile, &monitor->pduData->intProps, &monitor->pduData->strProps,
+		&monitor->pduData->objProps);
 	//проверка profiler reportOptions
 	if (monitor->pduData->intProps.count("profilerTc.reportOptions"))
 	{
