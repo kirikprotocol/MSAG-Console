@@ -190,7 +190,7 @@ int partitionSms(SMS* sms,int dstdc)
     short *data=(short*)(msg+udhilen);
     ConvertUCS2ToMultibyte(data,len,buf8.get(),len,CONV_ENCODING_CP1251);
     len/=2;
-    bufTr=auto_ptr<char>(new char[udhilen+len*3]);
+    bufTr=auto_ptr<char>(new char[udhilen+len*3+3]);
     len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get()+udhilen,len*3);
     if(udhi)memcpy(bufTr.get(),msg,udhilen);
     msg=bufTr.get();
