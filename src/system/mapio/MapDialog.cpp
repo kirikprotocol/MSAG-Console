@@ -432,7 +432,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
     pdu_ptr += text_len;
   }
   pdu->signalInfoLen  = pdu_ptr-(unsigned char*)pdu->signalInfo;
-  if ( pdu->signalInfoLen > 140 ) header->uu.s.mms = 1;
+  //if ( pdu->signalInfoLen > 140 ) header->uu.s.mms = 1;
   __trace2__("MAP::mkDeliverPDU: signalInfoLen 0x%x",pdu->signalInfoLen);
   {
     char text[sizeof(*pdu)*4] = {0,};
@@ -458,6 +458,21 @@ void MapDialog::Et96MapDelimiterInd(
   if ( state == MAPST_START ){
     __trace2__("MAP::MapDialog::Et96MapDelimiterInd: send Req");
     Et96MapDelimiterReq(ssn,dialogId,priorityOrder,0);
+  }
+  else if ( state == MAPST_WAIT_SEGMINTATION )
+  {
+    state = MAPST_READY_FOR_CLOSE;
+    __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq");
+    result = Et96MapV2ForwardSmMTReq( SSN, dialogid, 1, &smRpDa, &smRpOa, auto_ui.get(), FALSE);
+    if( result != ET96MAP_E_OK ) {
+      __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq error 0x%x",result);
+    }
+    __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq OK");
+    result = Et96MapDelimiterReq( SSN, dialogid, 0, 0 );
+    if( result != ET96MAP_E_OK ) {
+      __trace2__("MAP::Et96MapCloseInd:Et96MapDelimiterReq error 0x%x",result);
+    }
+    __trace2__("MAP::send response to SMSC");
   }
 #endif
 }
@@ -516,7 +531,6 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
         throw runtime_error("MAP::MapDialog::Et96MapCloseInd Et96MapOpenReq error");
       }
   
-      ET96MAP_SM_RP_OA_T smRpOa;
   	  smRpOa.typeOfAddress = ET96MAP_ADDRTYPE_SCADDR;
   	  smRpOa.addrLen = (m_scAddr.addressLength+1)/2+1;
   	  smRpOa.addr[0] = m_scAddr.typeOfAddress;
@@ -527,24 +541,26 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
       auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(ui=new ET96MAP_SM_RP_UI_T);
       mkDeliverPDU(sms.get(),ui);
   
-      if ( ui->signalInfoLen > 140 ) {
+      if ( ui->signalInfoLen > 98 ) {
         __trace2__("MAP::Et96MapCloseInd:Et96MapDelimiterReq");
         result = Et96MapDelimiterReq( SSN, dialogid, 0, 0 );
         if( result != ET96MAP_E_OK ) {
           __trace2__("MAP::Et96MapCloseInd:Et96MapDelimiterReq error 0x%x",result);
         }
+        state = MAPST_WAIT_SEGMINTATION;
+      }else{
+        __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq");
+    	  result = Et96MapV2ForwardSmMTReq( SSN, dialogid, 1, &smRpDa, &smRpOa, auto_ui.get(), FALSE);
+    	  if( result != ET96MAP_E_OK ) {
+          __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq error 0x%x",result);
+    	  }
+        __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq OK");
+      	result = Et96MapDelimiterReq( SSN, dialogid, 0, 0 );
+        if( result != ET96MAP_E_OK ) {
+          __trace2__("MAP::Et96MapCloseInd:Et96MapDelimiterReq error 0x%x",result);
+        }
+        __trace2__("MAP::send response to SMSC");
       }
-      __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq");
-  	  result = Et96MapV2ForwardSmMTReq( SSN, dialogid, 1, &smRpDa, &smRpOa, ui, FALSE);
-  	  if( result != ET96MAP_E_OK ) {
-        __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq error 0x%x",result);
-  	  }
-      __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq OK");
-    	result = Et96MapDelimiterReq( SSN, dialogid, 0, 0 );
-      if( result != ET96MAP_E_OK ) {
-        __trace2__("MAP::Et96MapCloseInd:Et96MapDelimiterReq error 0x%x",result);
-      }
-      __trace2__("MAP::send response to SMSC");
       //return true;// :) optimization
       return false;
     }catch(exception& e){

@@ -349,6 +349,15 @@ void MapIoTask::dispatcher()
     result = EINSS7CpMsgRecv_r(&message,1000);
 
     if ( result == MSG_TIMEOUT ) continue;
+    if ( result == MSG_BROKEN_CONNECTION ){
+      warning_if(MsgRel(MY_USER_ID,ETSIMAP_ID)!=MSG_OK);
+      err = MsgConn(USER01_ID,ETSIMAP_ID);
+      if ( err != MSG_OK ) { 
+        __trace2__("MAP: Error at MsgConn, code 0x%hx",err); 
+        throw runtime_error("MAP::MapIoTask: MsgConn error"); 
+      }
+      continue;
+    }
     if ( result != MSG_OK ) {
       __trace2__("MAP: error at MsgRecv with code x%hx",result);
       return;
@@ -370,8 +379,8 @@ void MapIoTask::init()
   if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgOpen, code 0x%hx",err); throw runtime_error("MsgInit error"); }
   err = MsgConn(USER01_ID,ETSIMAP_ID);
   if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgConn, code 0x%hx",err); throw runtime_error("MsgInit error"); }
-  err = MsgConn(USER01_ID,USER01_ID);
-  if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgConn on self, code 0x%hx",err); throw runtime_error("MsgInit error"); }
+//  err = MsgConn(USER01_ID,USER01_ID);
+//  if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgConn on self, code 0x%hx",err); throw runtime_error("MsgInit error"); }
   MsgTraceOn( MY_USER_ID );
   MsgTraceOn( ETSIMAP_ID );
   MsgTraceOn( TCAP_ID );

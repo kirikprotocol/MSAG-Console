@@ -55,7 +55,8 @@ enum MapDialogState {
   MAPST_READY_FOR_SENDSMS,
   MAPST_WAIT_RINFO,
   MAPST_RINFOIND,
-  MAPST_READY_FOR_CLOSE
+  MAPST_READY_FOR_CLOSE,
+  MAPST_WAIT_SEGMINTATION
 };
 
 extern void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
@@ -79,6 +80,7 @@ class MapDialog{
   ET96MAP_SS7_ADDR_T destMscAddr;
   ET96MAP_SS7_ADDR_T mshlrAddr;
  	ET96MAP_SM_RP_DA_T smRpDa;
+  ET96MAP_SM_RP_OA_T smRpOa;
 public:
   MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,
     ET96MAP_LOCAL_SSN_T lssn) : state(MAPST_START), dialogid(dialogid),ssn(lssn), smscDialogId(0) 
