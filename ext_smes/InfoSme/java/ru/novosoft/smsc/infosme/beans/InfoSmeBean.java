@@ -26,7 +26,8 @@ public class InfoSmeBean extends PageBean
   public static final int RESULT_PROVIDERS = PageBean.PRIVATE_RESULT + 5;
   public static final int RESULT_TASKS = PageBean.PRIVATE_RESULT + 6;
   public static final int RESULT_SHEDULES = PageBean.PRIVATE_RESULT + 7;
-  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 8;
+  public static final int RESULT_MESSAGES = PageBean.PRIVATE_RESULT + 8;
+  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 9;
 
 
   private String mbMenu = null;
@@ -85,6 +86,8 @@ public class InfoSmeBean extends PageBean
       return RESULT_TASKS;
     else if ("shedules".equals(mbMenu))
       return RESULT_SHEDULES;
+    else if ("messages".equals(mbMenu))
+      return RESULT_MESSAGES;
     else
       return result;
   }
