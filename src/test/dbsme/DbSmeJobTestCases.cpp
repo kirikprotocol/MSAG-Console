@@ -47,6 +47,7 @@ void DbSmeJobTestCases::processJobOutput(const string& text, DbSmeTestRecord* re
 		//pdu порезана на куски по 200 байт
 		if (pos + text.length() < expected.length() && text.length() != 200)
 		{
+			__trace2__("pos = %d, text len = %d, expected len = %d", pos, text.length(), expected.length());
 			__tc_fail__(1);
 		}
 		expected.erase(pos, text.length());
