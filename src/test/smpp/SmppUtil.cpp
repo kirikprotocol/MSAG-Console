@@ -1,12 +1,15 @@
 #include "SmppUtil.hpp"
 #include "test/util/Util.hpp"
 #include "sms/sms.h"
+#include "util/debug.h"
 #include <ctime>
+#include <map>
 
 namespace smsc {
 namespace test {
 namespace smpp {
 
+using std::map;
 using namespace smsc::sms; //constants
 using namespace smsc::test::util;
 //using smsc::test::sms::SmsUtil;
@@ -30,6 +33,7 @@ Address* SmppUtil::convert(PduAddress& smppAddr, Address* smsAddr)
 	return smsAddr;
 }
 
+/*
 SMSId SmppUtil::convert(const char* id)
 {
     return atol(id);
@@ -40,6 +44,7 @@ MessageId& SmppUtil::convert(const SMSId& smsId, MessageId& smppId)
 	sprintf(smppId, "%d", smsId);
 	return smppId;
 }
+*/
 
 const char* SmppUtil::time2string(time_t lt, char* str, time_t base, int num)
 {
@@ -108,238 +113,386 @@ time_t SmppUtil::string2time(const char* str, time_t base)
 	}
 }
 
+/*
 bool SmppUtil::compareAddresses(PduAddress& a1, PduAddress& a2)
 {
 	return (a1.get_typeOfNumber() == a2.get_typeOfNumber() &&
 		a1.get_numberingPlan() == a2.get_numberingPlan() &&
 		strcmp(a1.get_value(), a2.get_value()) == 0);
 }
+*/
 
-#define __compare_optional__(field, expr, errCode) \
-	if ((opt1.has_##field() && !opt2.has_##field()) || \
-		(!opt1.has_##field() && opt2.has_##field()) || \
-		(opt1.has_##field() && opt2.has_##field() && (expr))) \
+#define __compare__(field, expr, errCode) \
+	if ((p1.has_##field() && !p2.has_##field()) || \
+		(!p1.has_##field() && p2.has_##field()) || \
+		(p1.has_##field() && p2.has_##field() && (expr))) \
 	{ res.push_back(errCode); }
 
-#define __compare_optional_int__(field, errCode) \
-	__compare_optional__(field, opt1.get_##field() != opt2.get_##field(), errCode)
+#define __compare_int__(field, errCode) \
+	__compare__(field, p1.get_##field() != p2.get_##field(), errCode)
 
-#define __compare_optional_intarr__(field, errCode) \
-	__compare_optional__(field, sizeof(opt1.get_##field()) != sizeof(opt2.get_##field()) || \
-		memcmp(opt1.get_##field(), opt2.get_##field(), sizeof(opt1.get_##field())), errCode)
+#define __compare_intarr__(field, errCode) \
+	__compare__(field, sizeof(p1.get_##field()) != sizeof(p2.get_##field()) || \
+		memcmp(p1.get_##field(), p2.get_##field(), sizeof(p1.get_##field())), errCode)
 
-#define __compare_optional_cstr__(field, errCode) \
-	__compare_optional__(field, !strcmp(opt1.get_##field(), opt2.get_##field()), errCode)
+#define __compare_cstr__(field, errCode) \
+	__compare__(field, !strcmp(p1.get_##field(), p2.get_##field()), errCode)
 
-#define __compare_optional_ostr__(field, errCode) \
-	__compare_optional__(field, opt1.size_##field() != opt2.size_##field() || \
-		strncmp(opt1.get_##field(), opt2.get_##field(), opt1.size_##field()), errCode)
+#define __compare_ostr__(field, errCode) \
+	__compare__(field, p1.size_##field() != p2.size_##field() || \
+		strncmp(p1.get_##field(), p2.get_##field(), p1.size_##field()), errCode)
 
-vector<int> SmppUtil::compareOptional(SmppOptional& opt1, SmppOptional& opt2)
+vector<int> SmppUtil::compareOptional(SmppOptional& p1, SmppOptional& p2)
 {
 	vector<int> res;
-	__compare_optional_int__(destAddrSubunit, 1);
-	__compare_optional_int__(sourceAddrSubunit, 2);
-	__compare_optional_int__(destNetworkType, 3);
-	__compare_optional_int__(sourceNetworkType, 4);
-	__compare_optional_int__(destBearerType, 5);
-	__compare_optional_int__(sourceBearerType, 6);
-	__compare_optional_int__(destTelematicsId, 7);
-	__compare_optional_int__(sourceTelematicsId, 8);
-	__compare_optional_int__(qosTimeToLive, 9);
-	__compare_optional_int__(payloadType, 10);
-	__compare_optional_cstr__(additionalStatusInfoText, 11);
-	__compare_optional_cstr__(receiptedMessageId, 12);
-	__compare_optional_int__(msMsgWaitFacilities, 13);
-	__compare_optional_int__(privacyIndicator, 14);
-	__compare_optional_ostr__(sourceSubaddress, 15);
-	__compare_optional_ostr__(destSubaddress, 16);
-	__compare_optional_int__(userMessageReference, 17);
-	__compare_optional_int__(userResponseCode, 18);
-	__compare_optional_int__(languageIndicator, 19);
-	__compare_optional_int__(sourcePort, 20);
-	__compare_optional_int__(destinationPort, 21);
-	__compare_optional_int__(sarMsgRefNum, 22);
-	__compare_optional_int__(sarTotalSegments, 23);
-	__compare_optional_int__(sarSegmentSegnum, 24);
-	__compare_optional_int__(scInterfaceVersion, 25);
-	__compare_optional_int__(displayTime, 26);
-	__compare_optional_int__(msValidity, 27);
-	__compare_optional_int__(dpfResult, 28);
-	__compare_optional_int__(setDpf, 29);
-	__compare_optional_int__(msAvailableStatus, 30);
-	__compare_optional_intarr__(networkErrorCode, 31);
-	__compare_optional_ostr__(messagePayload, 32);
-	__compare_optional_int__(deliveryFailureReason, 33);
-	__compare_optional_int__(moreMessagesToSend, 34);
-	__compare_optional_int__(messageState, 35);
-	__compare_optional_ostr__(callbackNum, 36);
-	__compare_optional_int__(callbackNumPresInd, 37);
-	__compare_optional_ostr__(callbackNumAtag, 38);
-	__compare_optional_int__(numberOfMessages, 39);
-	__compare_optional_int__(smsSignal, 40);
-	__compare_optional_int__(alertOnMessageDelivery, 41);
-	__compare_optional_int__(itsReplyType, 42);
-	__compare_optional_intarr__(itsSessionInfo, 43);
-	__compare_optional_int__(ussdServiceOp, 44);
+	__compare_int__(destAddrSubunit, 1);
+	__compare_int__(sourceAddrSubunit, 2);
+	__compare_int__(destNetworkType, 3);
+	__compare_int__(sourceNetworkType, 4);
+	__compare_int__(destBearerType, 5);
+	__compare_int__(sourceBearerType, 6);
+	__compare_int__(destTelematicsId, 7);
+	__compare_int__(sourceTelematicsId, 8);
+	__compare_int__(qosTimeToLive, 9);
+	__compare_int__(payloadType, 10);
+	__compare_cstr__(additionalStatusInfoText, 11);
+	__compare_cstr__(receiptedMessageId, 12);
+	__compare_int__(msMsgWaitFacilities, 13);
+	__compare_int__(privacyIndicator, 14);
+	__compare_ostr__(sourceSubaddress, 15);
+	__compare_ostr__(destSubaddress, 16);
+	__compare_int__(userMessageReference, 17);
+	__compare_int__(userResponseCode, 18);
+	__compare_int__(languageIndicator, 19);
+	__compare_int__(sourcePort, 20);
+	__compare_int__(destinationPort, 21);
+	__compare_int__(sarMsgRefNum, 22);
+	__compare_int__(sarTotalSegments, 23);
+	__compare_int__(sarSegmentSegnum, 24);
+	__compare_int__(scInterfaceVersion, 25);
+	__compare_int__(displayTime, 26);
+	__compare_int__(msValidity, 27);
+	__compare_int__(dpfResult, 28);
+	__compare_int__(setDpf, 29);
+	__compare_int__(msAvailableStatus, 30);
+	__compare_intarr__(networkErrorCode, 31);
+	__compare_ostr__(messagePayload, 32);
+	__compare_int__(deliveryFailureReason, 33);
+	__compare_int__(moreMessagesToSend, 34);
+	__compare_int__(messageState, 35);
+	__compare_ostr__(callbackNum, 36);
+	__compare_int__(callbackNumPresInd, 37);
+	__compare_ostr__(callbackNumAtag, 38);
+	__compare_int__(numberOfMessages, 39);
+	__compare_int__(smsSignal, 40);
+	__compare_int__(alertOnMessageDelivery, 41);
+	__compare_int__(itsReplyType, 42);
+	__compare_intarr__(itsSessionInfo, 43);
+	__compare_int__(ussdServiceOp, 44);
 	return res;
 }
 
-int SmppUtil::setupRandomCorrectShortMessage(ShortMessage* msg)
-{
-	if (msg)
-	{
-		int len = rand1(MAX_SHORT_MESSAGE_LENGTH);
-		rand_char(len, *msg);
-		return len;
-	}
-}
+#define __set_int__(type, field, value) \
+	__trace__("set_int: " #field); \
+	type tmp_##field = value; \
+	p.set_##field(tmp_##field); \
+	__require__(p.get_##field() == tmp_##field);
 
-#define __set_message__(field, value) \
-	pdu->get_message().set_##field(value)
+#define __set_ostr__(field, length) \
+	__trace__("set_ostr: " #field); \
+	int len_##field = length; \
+	auto_ptr<char> str_##field = rand_char(len_##field); \
+	p.set_##field(str_##field.get(), len_##field); \
+	__require__(p.size_##field() == len_##field && \
+		!strncmp(p.get_##field(), str_##field.get(), len_##field));
+
+#define __set_cstr__(field, length) \
+	__trace__("set_cstr: " #field); \
+	auto_ptr<char> str_##field = rand_char(length); \
+	p.set_##field(str_##field.get()); \
+	__require__(!strcmp(p.get_##field(), str_##field.get()));
+
+#define __set_cstr2__(field, value) \
+	__trace__("set_cstr2: " #field); \
+	const char* val_##field = value; \
+	p.set_##field(val_##field); \
+	__require__(!strcmp(p.get_##field(), val_##field));
+	
+#define __set_addr__(field) \
+	__trace__("set_addr: " #field); \
+	PduAddress tmp_##field; \
+	setupRandomCorrectAddress(&tmp_##field); \
+	p.set_##field(tmp_##field); \
+	__require__(p.get_##field() == tmp_##field);
+
+void SmppUtil::setupRandomCorrectAddress(PduAddress* addr)
+{
+	__require__(addr);
+	PduAddress& p = *addr;
+	__set_int__(uint8_t, typeOfNumber, rand0(255));
+	__set_int__(uint8_t, numberingPlan, rand0(255));
+	__set_cstr__(value, rand1(MAX_ADDRESS_VALUE_LENGTH));
+}
 
 void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu)
 {
+	__require__(pdu);
+	PduPartSm& p = pdu->get_message();
 	SmppTime tmp;
-	//PduPartSm
-	EService serviceType;
-	rand_char(MAX_ESERVICE_TYPE_LENGTH, serviceType);
-	__set_message__(serviceType, serviceType);
-	//__set_message__(source, ...);
-	//__set_message__(dest, ...);
-	__set_message__(esmClass, rand0(255));
-	__set_message__(protocolId, rand0(255));
-	__set_message__(priorityFlag, rand0(255));
+	//set & check fields
+	__set_cstr__(serviceType, MAX_ESERVICE_TYPE_LENGTH);
+	__set_addr__(source);
+	__set_addr__(dest);
+	__set_int__(uint8_t, esmClass, rand0(255));
+	__set_int__(uint8_t, protocolId, rand0(255));
+	__set_int__(uint8_t, priorityFlag, rand0(255));
 	time_t waitTime = time(NULL) + rand1(60);
 	time_t validTime = waitTime + rand1(60);
-	__set_message__(scheduleDeliveryTime, time2string(waitTime, tmp, time(NULL), __numTime__));
-	__set_message__(validityPeriod, time2string(validTime, tmp, time(NULL), __numTime__));
-	__set_message__(registredDelivery, rand0(255));
-	__set_message__(replaceIfPresentFlag, !rand0(10));
-	__set_message__(dataCoding, rand0(255));
-	__set_message__(smDefaultMsgId, rand0(255)); //хбз что это такое
-	ShortMessage msg;
-	int len = setupRandomCorrectShortMessage(&msg);
-	pdu->get_message().set_shortMessage(msg, len);
-	//SmppOptional
+	__set_cstr2__(scheduleDeliveryTime, time2string(waitTime, tmp, time(NULL), __numTime__));
+	__set_cstr2__(validityPeriod, time2string(validTime, tmp, time(NULL), __numTime__));
+	__set_int__(uint8_t, registredDelivery, rand0(255));
+	__set_int__(uint8_t, replaceIfPresentFlag, !rand0(10));
+	__set_int__(uint8_t, dataCoding, rand0(255));
+	__set_int__(uint8_t, smDefaultMsgId, rand0(255)); //хбз что это такое
+	__set_ostr__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH));
 	setupRandomCorrectOptionalParams(pdu->get_optional());
 }
 
-#undef __set_message__
-#define __set_message__(field, value) \
-	pdu->set_##field(value)
-
 void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu)
 {
+	__require__(pdu);
+	PduReplaceSm& p = *pdu;
 	SmppTime tmp;
-	//__set_message__(messageId, ...);
-	//__set_message__(source, ...);
+	//set & check fields
+	__set_cstr__(messageId, MAX_MSG_ID_LENGTH);
+	__set_addr__(source);
 	time_t waitTime = time(NULL) + rand1(60);
 	time_t validTime = waitTime + rand1(60);
-	__set_message__(scheduleDeliveryTime, time2string(waitTime, tmp, time(NULL), __numTime__));
-	__set_message__(validityPeriod, time2string(validTime, tmp, time(NULL), __numTime__));
-	__set_message__(registredDelivery, rand0(255));
-	__set_message__(smDefaultMsgId, rand0(255)); //хбз что это такое
-	ShortMessage msg;
-	int len = setupRandomCorrectShortMessage(&msg);
-	pdu->set_shortMessage(msg, len);
+	__set_cstr2__(scheduleDeliveryTime, time2string(waitTime, tmp, time(NULL), __numTime__));
+	__set_cstr2__(validityPeriod, time2string(validTime, tmp, time(NULL), __numTime__));
+	__set_int__(uint8_t, registredDelivery, rand0(255));
+	__set_int__(uint8_t, smDefaultMsgId, rand0(255)); //хбз что это такое
+	__set_ostr__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH));
 }
 
-#define __set_optional__(field, value) \
+#define __set_optional_int__(type, field, value) \
 	if ((mask >>= 1) & 0x1) { \
-		__trace__("set_optional: " #field); \
-		opt.set_##field(value); \
+		__trace__("set_optional_int: " #field); \
+		type tmp_##field = value; \
+		intMap.insert(IntMap::value_type(#field, tmp_##field)); \
+		opt.set_##field(tmp_##field); \
 	}
 
-#define __set_optional_ostr__(field, len) \
+#define __set_optional_intarr__(field, value, length) \
+	if ((mask >>= 1) & 0x1) { \
+		__require__(length <= 4); \
+		__trace__("set_optional_intarr: " #field); \
+		uint8_t* tmp_##field = value; \
+		uint32_t int_##field; \
+		memcpy(&int_##field, tmp_##field, length); \
+		intMap.insert(IntMap::value_type(#field, int_##field)); \
+		opt.set_##field(tmp_##field); \
+	}
+
+#define __set_optional_ostr__(field, length) \
 	if ((mask >>= 1) & 0x1) { \
 		__trace__("set_optional_ostr: " #field); \
-		auto_ptr<char> str = rand_char(len); \
-		opt.set_##field(str.get(), len); \
+		int len_##field = length; \
+		auto_ptr<char> str_##field = rand_char(len_##field); \
+		OStr tmp_##field; \
+		tmp_##field.copy(str_##field.get(), len_##field); \
+		ostrMap.insert(OStrMap::value_type(#field, tmp_##field)); \
+		opt.set_##field(str_##field.get(), len_##field); \
 	}
 
-#define __set_optional_cstr__(field, len) \
+#define __set_optional_cstr__(field, length) \
 	if ((mask >>= 1) & 0x1) { \
 		__trace__("set_optional_cstr: " #field); \
-		auto_ptr<char> str = rand_char(len); \
-		opt.set_##field(str.get()); \
+		auto_ptr<char> str_##field = rand_char(length); \
+		COStr tmp_##field; \
+		tmp_##field.copy(str_##field.get()); \
+		cstrMap.insert(CStrMap::value_type(#field, tmp_##field)); \
+		opt.set_##field(str_##field.get()); \
+	}
+
+#define __check_optional_int__(field) \
+	IntMap::const_iterator it_##field = intMap.find(#field); \
+	if (it_##field == intMap.end()) { \
+		__require__(!opt.has_##field()); \
+	} else { \
+		__require__(opt.has_##field() && \
+			opt.get_##field() == it_##field->second); \
+	}
+	
+#define __check_optional_intarr__(field) \
+	IntMap::const_iterator it_##field = intMap.find(#field); \
+	if (it_##field == intMap.end()) { \
+		__require__(!opt.has_##field()); \
+	} else { \
+		__require__(opt.has_##field() && \
+			memcmp(opt.get_##field(), &it_##field->second, sizeof(opt.get_##field()))); \
+	}
+	
+#define __check_optional_ostr__(field) \
+	OStrMap::iterator it_##field = ostrMap.find(#field); \
+	if (it_##field == ostrMap.end()) { \
+		__require__(!opt.has_##field()); \
+	} else { \
+		__require__(opt.has_##field() && \
+			opt.size_##field() == it_##field->second.size() && \
+			!memcmp(opt.get_##field(), it_##field->second.cstr(), opt.size_##field())); \
+	}
+
+#define __check_optional_cstr__(field) \
+	CStrMap::iterator it_##field = cstrMap.find(#field); \
+	if (it_##field == cstrMap.end()) { \
+		__require__(!opt.has_##field()); \
+	} else { \
+		__require__(opt.has_##field() && \
+			!strcmp(opt.get_##field(), it_##field->second.cstr())); \
 	}
 
 void SmppUtil::setupRandomCorrectOptionalParams(SmppOptional& opt, uint64_t mask)
 {
+	//пол€ сохран€ютс€ случайным образом
 	auto_ptr<uint8_t> tmp = rand_uint8_t(8);
 	mask &= *((uint64_t*) tmp.get());
 	__trace2__("SmppUtil::setupRandomCorrectOptionalParams(): mask = %#llu", mask);
-	__set_optional__(destAddrSubunit, rand0(255));
-	__set_optional__(sourceAddrSubunit, rand0(255));
-	__set_optional__(destNetworkType, rand0(255));
-	__set_optional__(sourceNetworkType, rand0(255));
-	__set_optional__(destBearerType, rand0(255));
-	__set_optional__(sourceBearerType, rand0(255));
-	__set_optional__(destTelematicsId, rand0(65535));
-	__set_optional__(sourceTelematicsId, rand0(255));
-	__set_optional__(qosTimeToLive, rand0(INT_MAX));
-	__set_optional__(payloadType, rand0(255));
+
+	typedef map<const string, uint32_t> IntMap;
+	typedef map<const string, COStr> CStrMap;
+	typedef map<const string, OStr> OStrMap;
+	CStrMap cstrMap;
+	OStrMap ostrMap;
+	IntMap intMap;
+
+	//set fields
+	__set_optional_int__(uint8_t, destAddrSubunit, rand0(255));
+	__set_optional_int__(uint8_t, sourceAddrSubunit, rand0(255));
+	__set_optional_int__(uint8_t, destNetworkType, rand0(255));
+	__set_optional_int__(uint8_t, sourceNetworkType, rand0(255));
+	__set_optional_int__(uint8_t, destBearerType, rand0(255));
+	__set_optional_int__(uint8_t, sourceBearerType, rand0(255));
+	__set_optional_int__(uint16_t, destTelematicsId, rand0(65535));
+	__set_optional_int__(uint8_t, sourceTelematicsId, rand0(255));
+	__set_optional_int__(uint32_t, qosTimeToLive, rand0(INT_MAX));
+	__set_optional_int__(uint8_t, payloadType, rand0(255));
 	__set_optional_cstr__(additionalStatusInfoText, rand1(255));
-	MessageId msgId;
-	__set_optional__(receiptedMessageId, convert(rand1(INT_MAX), msgId));
-	__set_optional__(msMsgWaitFacilities, rand0(255));
-	__set_optional__(privacyIndicator, rand0(255));
+	__set_optional_cstr__(receiptedMessageId, rand1(MAX_MSG_ID_LENGTH));
+	__set_optional_int__(uint8_t, msMsgWaitFacilities, rand0(255));
+	__set_optional_int__(uint8_t, privacyIndicator, rand0(255));
 	__set_optional_ostr__(sourceSubaddress, rand2(2, 22));
 	__set_optional_ostr__(destSubaddress, rand2(2, 22));
-	__set_optional__(userMessageReference, rand0(65535));
-	__set_optional__(userResponseCode, rand0(255));
-	__set_optional__(languageIndicator, rand0(255));
-	__set_optional__(sourcePort, rand0(65535));
-	__set_optional__(destinationPort, rand0(65535));
-	__set_optional__(sarMsgRefNum, rand0(65535));
-	__set_optional__(sarTotalSegments, rand1(255));
-	__set_optional__(sarSegmentSegnum, rand1(255));
-	__set_optional__(scInterfaceVersion, rand0(255));
-	__set_optional__(displayTime, rand0(255));
-	__set_optional__(msValidity, rand0(255));
-	__set_optional__(dpfResult, rand0(255));
-	__set_optional__(setDpf, rand0(255));
-	__set_optional__(msAvailableStatus, rand0(255));
+	__set_optional_int__(uint16_t, userMessageReference, rand0(65535));
+	__set_optional_int__(uint8_t, userResponseCode, rand0(255));
+	__set_optional_int__(uint8_t, languageIndicator, rand0(255));
+	__set_optional_int__(uint16_t, sourcePort, rand0(65535));
+	__set_optional_int__(uint16_t, destinationPort, rand0(65535));
+	__set_optional_int__(uint16_t, sarMsgRefNum, rand0(65535));
+	__set_optional_int__(uint8_t, sarTotalSegments, rand1(255));
+	__set_optional_int__(uint8_t, sarSegmentSegnum, rand1(255));
+	__set_optional_int__(uint8_t, scInterfaceVersion, rand0(255));
+	__set_optional_int__(uint8_t, displayTime, rand0(255));
+	__set_optional_int__(uint8_t, msValidity, rand0(255));
+	__set_optional_int__(uint8_t, dpfResult, rand0(255));
+	__set_optional_int__(uint8_t, setDpf, rand0(255));
+	__set_optional_int__(uint8_t, msAvailableStatus, rand0(255));
 	int errCode = rand0(INT_MAX);
-	__set_optional__(networkErrorCode, (uint8_t*) &errCode);
+	__set_optional_intarr__(networkErrorCode, (uint8_t*) &errCode, 3);
 	__set_optional_ostr__(messagePayload, rand0(65535));
-	__set_optional__(deliveryFailureReason, rand0(255));
-	__set_optional__(moreMessagesToSend, rand0(255));
-	__set_optional__(messageState, rand0(255));
+	__set_optional_int__(uint8_t, deliveryFailureReason, rand0(255));
+	__set_optional_int__(uint8_t, moreMessagesToSend, rand0(255));
+	__set_optional_int__(uint8_t, messageState, rand0(255));
 	__set_optional_ostr__(callbackNum, rand2(4, 19));
-	__set_optional__(callbackNumPresInd, rand0(255));
+	__set_optional_int__(uint8_t, callbackNumPresInd, rand0(255));
 	__set_optional_ostr__(callbackNumAtag, rand0(65));
-	__set_optional__(numberOfMessages, rand0(255));
-	__set_optional__(smsSignal, rand0(65535));
-	__set_optional__(alertOnMessageDelivery, rand0(1));
-	__set_optional__(itsReplyType, rand0(255));
+	__set_optional_int__(uint8_t, numberOfMessages, rand0(255));
+	__set_optional_int__(uint16_t, smsSignal, rand0(65535));
+	__set_optional_int__(bool, alertOnMessageDelivery, rand0(1));
+	__set_optional_int__(uint8_t, itsReplyType, rand0(255));
 	int sessInfo = rand0(INT_MAX);
-	__set_optional__(itsSessionInfo, (uint8_t*) &sessInfo);
-	__set_optional__(ussdServiceOp, rand0(255));
+	__set_optional_intarr__(itsSessionInfo, (uint8_t*) &sessInfo, 3);
+	__set_optional_int__(uint8_t, ussdServiceOp, rand0(255));
+	//check fields
+	__check_optional_int__(destAddrSubunit);
+	__check_optional_int__(sourceAddrSubunit);
+	__check_optional_int__(destNetworkType);
+	__check_optional_int__(sourceNetworkType);
+	__check_optional_int__(destBearerType);
+	__check_optional_int__(sourceBearerType);
+	__check_optional_int__(destTelematicsId);
+	__check_optional_int__(sourceTelematicsId);
+	__check_optional_int__(qosTimeToLive);
+	__check_optional_int__(payloadType);
+	__check_optional_cstr__(additionalStatusInfoText);
+	__check_optional_cstr__(receiptedMessageId);
+	__check_optional_int__(msMsgWaitFacilities);
+	__check_optional_int__(privacyIndicator);
+	__check_optional_ostr__(sourceSubaddress);
+	__check_optional_ostr__(destSubaddress);
+	__check_optional_int__(userMessageReference);
+	__check_optional_int__(userResponseCode);
+	__check_optional_int__(languageIndicator);
+	__check_optional_int__(sourcePort);
+	__check_optional_int__(destinationPort);
+	__check_optional_int__(sarMsgRefNum);
+	__check_optional_int__(sarTotalSegments);
+	__check_optional_int__(sarSegmentSegnum);
+	__check_optional_int__(scInterfaceVersion);
+	__check_optional_int__(displayTime);
+	__check_optional_int__(msValidity);
+	__check_optional_int__(dpfResult);
+	__check_optional_int__(setDpf);
+	__check_optional_int__(msAvailableStatus);
+	__check_optional_intarr__(networkErrorCode);
+	__check_optional_ostr__(messagePayload);
+	__check_optional_int__(deliveryFailureReason);
+	__check_optional_int__(moreMessagesToSend);
+	__check_optional_int__(messageState);
+	__check_optional_ostr__(callbackNum);
+	__check_optional_int__(callbackNumPresInd);
+	__check_optional_ostr__(callbackNumAtag);
+	__check_optional_int__(numberOfMessages);
+	__check_optional_int__(smsSignal);
+	__check_optional_int__(alertOnMessageDelivery);
+	__check_optional_int__(itsReplyType);
+	__check_optional_intarr__(itsSessionInfo);
+	__check_optional_int__(ussdServiceOp);
 }
 
 /*
 void SmppUtil::setupRandomCorrectSubmitMultiPdu(PduMultiSm* pdu)
 {
 	//PduPartSm
-	__set_message__(serviceType(c_str);
-	__set_message__(source(PduAddress);
-	__set_message__(numberOfDests(uint8_t);
-	__set_message__(dests(PduDestAddress);
-	__set_message__(esmClass(uint8_t);
-	__set_message__(protocolId(uint8_t);
-	__set_message__(priorityFlag(uint8_t);
-	__set_message__(scheduleDeliveryTime(c_str);
-	__set_message__(validityPeriod(c_str);
-	__set_message__(registredDelivery(uint8_t);
-	__set_message__(replaceIfPresentFlag(uint8_t);
-	__set_message__(dataCoding(uint8_t);
-	__set_message__(smDefaultMsgId(uint8_t);
-	__set_message__(shortMessage(const char* __value,int __len) ;
+	__set__(serviceType(c_str);
+	__set__(source(PduAddress);
+	__set__(numberOfDests(uint8_t);
+	__set__(dests(PduDestAddress);
+	__set__(esmClass(uint8_t);
+	__set__(protocolId(uint8_t);
+	__set__(priorityFlag(uint8_t);
+	__set__(scheduleDeliveryTime(c_str);
+	__set__(validityPeriod(c_str);
+	__set__(registredDelivery(uint8_t);
+	__set__(replaceIfPresentFlag(uint8_t);
+	__set__(dataCoding(uint8_t);
+	__set__(smDefaultMsgId(uint8_t);
+	__set__(shortMessage(const char* __value,int __len) ;
 	//SmppOptional
 }
 */
+
+bool operator==(PduAddress& a1, PduAddress& a2)
+{
+	return (a1.get_typeOfNumber() == a2.get_typeOfNumber() &&
+		a1.get_numberingPlan() == a2.get_numberingPlan() &&
+		strcmp(a1.get_value(), a2.get_value()) == 0);
+}
+
+bool operator!=(PduAddress& a1, PduAddress& a2)
+{
+	return !operator==(a1, a2);
+}
 
 }
 }
