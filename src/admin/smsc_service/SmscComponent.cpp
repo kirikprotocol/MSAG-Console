@@ -655,14 +655,15 @@ Variant SmscComponent::traceRoute(const Arguments &args)
             info.dest  .getText(dstAddressText, sizeof(dstAddressText));
             
             //todo encode/decode ';' & ':' simbols
-            sprintf(routeText, "priority:%u;billing:%s;archiving:%s;enabling:%s;"
-                              "suppress delivery reports:%s;service id:%d;route id:%s;"
-                              "sme system id:%s;source sme system id:%s;"
-                              "source address:%s;destination address:%s", 
-                    info.priority, (info.billing) ? "yes":"no", (info.archived) ? "yes":"no",
-                    (info.enabling) ? "yes":"no", (info.suppressDeliveryReports) ? "yes":"no",
-                    info.serviceId, info.routeId.c_str(), info.smeSystemId.c_str(),
-                    info.srcSmeSystemId.c_str(), srcAddressText, dstAddressText);
+            sprintf(routeText, "route id:%s;source address:%s;destination address:%s;"
+                               "sme system id:%s;source sme system id:%s;"
+                               "priority:%u;service id:%d;" 
+                               "billing:%s;archiving:%s;enabling:%s;suppress delivery reports:%s", 
+                    info.routeId.c_str(), srcAddressText, dstAddressText, 
+                    info.smeSystemId.c_str(), info.srcSmeSystemId.c_str(), 
+                    info.priority, info.serviceId,
+                    (info.billing) ? "yes":"no" , (info.archived) ? "yes":"no",
+                    (info.enabling) ? "yes":"no", (info.suppressDeliveryReports) ? "yes":"no");
             result.appendValueToStringList(routeText);
         }
         else {
