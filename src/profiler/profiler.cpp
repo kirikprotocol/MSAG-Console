@@ -247,7 +247,6 @@ int Profiler::Execute()
   char body[MAX_SHORT_MESSAGE_LENGTH+1];
 //  char buf[MAX_SHORT_MESSAGE_LENGTH+1];
 //  int coding;
-  int status=MAKE_COMMAND_STATUS(CMD_OK,0);
 
 //  char *str=body;
   int msg;
@@ -265,6 +264,12 @@ int Profiler::Execute()
       continue;
     }
     sms = cmd->get_sms();
+    int status=MAKE_COMMAND_STATUS(CMD_OK,0);
+    if(sms->getIntProperty(Tag::SMPP_ESM_CLASS)!=0)
+    {
+      status=MAKE_COMMAND_STATUS(CMD_ERR_PERM,0);
+    };
+
     Address& addr=sms->getOriginatingAddress();
     //len = sms->getMessageBody().getData( (uint8_t*)body );
     /*strncpy(buf,sms->getStrProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE).c_str(),sizeof(buf));
@@ -326,7 +331,9 @@ int Profiler::Execute()
     }
     resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty("SMPP_RECEIPTED_MESSAGE_ID").c_str(),
                                            cmd->get_dialogId(),status);
+
     putIncomingCommand(resp);
+    if(sms->getIntProperty(Tag::SMPP_ESM_CLASS)!=0)continue;
     SMS ans;
     const char *msgstr;
     switch(msg)
