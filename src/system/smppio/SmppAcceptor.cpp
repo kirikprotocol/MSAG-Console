@@ -23,7 +23,8 @@ int SmppAcceptor::Execute()
   }
   Socket *clnt;
   started=true;
-  startNotify->Signal();
+  __trace2__("signal smpp acceptor start:%p",startNotify);
+  startNotify->SignalAll();
 
   linger l;
   l.l_onoff=1;
