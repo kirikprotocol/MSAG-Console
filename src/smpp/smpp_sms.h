@@ -1,5 +1,5 @@
 /*
-	$Id$
+  $Id$
 */
 
 //
@@ -31,6 +31,46 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
   }
   else*/
   {
+    PduPartSm& message = pdu->get_message();
+    PduAddress& src = message.get_source();
+    {
+      char val[21];
+      Address& addr = sms->getOriginatingAddress();
+      int val_length = addr.getValue((uint8_t*)val);
+      __require__ ( val_length <= sizeof(val) );   // fatal if out of range !!!!
+      src.set_value(val);
+      src.set_typeOfNumber(addr.getTypeOfNumber());
+      src.set_numberingPlan(addr.getNumberingPlan());
+    }
+    PduAddress& dest = message.get_dest();
+    {
+      char val[21];
+      Address& addr = sms->getDestinationAddress();
+      int val_length = addr.getValue((uint8_t*)val);
+      __require__ ( val_length <= sizeof(val) );   // fatal if out of range !!!!
+      dest.set_value(val);
+      dest.set_typeOfNumber(addr.getTypeOfNumber());
+      dest.set_numberingPlan(addr.getNumberingPlan());
+    }
+    {
+      char msg[256];
+      smsc::sms::Body& sms_body = sms->getMessageBody();
+      int msg_length = sms_body.getData((uint8_t*)msg);
+      __require__(msg_length <= sizeof(msg));
+      message.set_shortMessage(msg,msg_length);
+      //message.set_smLength((uint8_t)msg_length);
+      message.set_dataCoding((uint8_t)sms_body.getCodingScheme());
+    }
+    message.set_protocolId(sms->getProtocolIdentifier());
+    message.set_priorityFlag(sms->getPriority());
+    message.set_registredDelivery(sms->isStatusReportRequested());
+    {
+      char smpp_time[SMPP_TIME_BUFFER_LENGTH];
+      if ( cTime2SmppTime(sms->getWaitTime(),smpp_time) )
+				message.set_scheduleDeliveryTime(smpp_time);
+      if ( cTime2SmppTime(sms->getValidTime(),smpp_time) )
+				message.set_validityPeriod(smpp_time);
+    }
   }
 }
 
@@ -69,9 +109,9 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
       sms->setDestinationAddress(destinationAddr);
     }
     
-    __require__ ( message.shortMessage.size() == message.smLength );
+    //__require__ ( message.shortMessage.size() == message.smLength );
 //    sms->setMessageBody(message.smLength, message.dataCoding, false, message.shortMessage.cstr());
-    sms->setMessageBody((unsigned char)message.smLength, (unsigned char)message.dataCoding, false, (uint8_t*)message.shortMessage.cstr());
+    sms->setMessageBody((unsigned char)message.shortMessage.size(), (unsigned char)message.dataCoding, false, (uint8_t*)message.shortMessage.cstr());
     sms->setProtocolIdentifier(message.protocolId);
     sms->setPriority(message.priorityFlag);
     
