@@ -69,8 +69,9 @@ protected:
 	string getRandomWord();
 	string getRandomWords();
 	void processDateFormatJobAck(const string& text, const DbSmeTestRecord* rec,
-		time_t submitTime, int dateJobNum);
-	void processOtherFormatJobAck(const string& text, const DbSmeTestRecord* rec);
+		PduData* pduData, int dateJobNum);
+	void processOtherFormatJobAck(const string& text, const DbSmeTestRecord* rec,
+		PduData* pduData);
 };
 
 }
