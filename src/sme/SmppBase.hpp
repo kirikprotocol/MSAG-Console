@@ -116,7 +116,7 @@ protected:
     while(buf.offset<4)
     {
       int rd=socket->Read(buf.buffer+buf.offset,4-buf.offset);
-      if(rd<=0)throw Exception("SMPP transport connection error 0");
+      if(rd<=0)throw Exception("SMPP transport network error (receiving header)");
       buf.offset+=rd;
     }
     int sz=ntohl(*((int*)buf.buffer));
@@ -124,7 +124,7 @@ protected:
     while(buf.offset<sz)
     {
       int rd=socket->Read(buf.current(),sz-buf.offset);
-      if(rd<=0)throw Exception("SMPP transport connection error 1");
+      if(rd<=0)throw Exception("SMPP transport network error (receiving body)");
       buf.offset+=rd;
     }
     SmppStream s;
@@ -166,8 +166,14 @@ public:
       }
       delete pb.buf;
     }
+    __trace2__("Exiting smppwriter\n");
     mon.Unlock();
     return 0;
+  }
+  void Stop()
+  {
+    stopped=true;
+    mon.notify();
   }
   void enqueue(SmppHeader* pdu)
   {
@@ -392,16 +398,13 @@ public:
     writer(&innerListener,&socket),
     seqCounter(0),
     strans(*this),
-    atrans(*this)
+    atrans(*this),
+    closed(false)
   {
   }
   ~SmppSession()
   {
-    socket.Close();
-    reader.Stop();
-    writer.Stop();
-    reader.WaitFor();
-    writer.WaitFor();
+    close();
   }
   void connect()
   {
@@ -430,6 +433,13 @@ public:
   }
   void close()
   {
+    if(closed)return;
+    reader.Stop();
+    writer.Stop();
+    socket.Close();
+    reader.WaitFor();
+    writer.WaitFor();
+    closed=true;
   }
 
   int getNextSeq()
@@ -459,6 +469,7 @@ protected:
   InnerSyncTransmitter strans;
   InnerAsyncTransmitter atrans;
   Mutex cntMutex,lockMutex;
+  bool closed;
 
   IntHash<Lock> lock;
 

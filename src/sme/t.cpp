@@ -100,9 +100,14 @@ int main(int argc,char* argv[])
       }
       disposePdu((SmppHeader*)resp);
     }
-  }catch(...)
+  }
+  catch(std::exception& e)
   {
-    printf("exception\n");
+    printf("Exception: %s\n",e.what());
+  }
+  catch(...)
+  {
+    printf("unknown exception\n");
   }
   ss.close();
   printf("Exiting\n");
